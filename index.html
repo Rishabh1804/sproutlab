@@ -1997,6 +1997,41 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mdi-home-bar { flex:1; min-width:0; }
 .mdi-home-val { font-weight:700; width:28px; text-align:right; }
 
+/* ── Diet Quick Picker ── */
+.diet-quick-picker {
+  margin-bottom:var(--sp-8); display:flex; flex-direction:column; gap:var(--sp-8);
+}
+.dqp-label {
+  font-size:var(--fs-xs); font-weight:700; color:var(--light);
+  text-transform:uppercase; letter-spacing:var(--ls-wide);
+  margin-bottom:2px;
+}
+.dqp-pills {
+  display:flex; flex-wrap:wrap; gap:var(--sp-4);
+}
+.dqp-pill {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:5px 12px; border-radius:var(--r-2xl);
+  font-size:var(--fs-xs); font-weight:600;
+  background:var(--sage-light); color:var(--tc-sage);
+  border:1px solid rgba(140,190,160,0.15);
+  cursor:pointer; transition:all var(--ease-fast);
+  white-space:nowrap;
+}
+.dqp-pill:active { transform:scale(0.95); background:var(--sage); color:white; }
+[data-theme="dark"] .dqp-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .dqp-pill:active { background:#3d7a60; color:var(--body-bg); }
+.dqp-same {
+  padding:5px 10px; border-radius:var(--r-2xl);
+  font-size:var(--fs-xs); font-weight:500;
+  background:var(--warm); color:var(--mid);
+  border:1px solid var(--border-subtle);
+  cursor:pointer; transition:all var(--ease-fast);
+  white-space:nowrap;
+}
+.dqp-same:active { transform:scale(0.95); background:var(--sky-light); color:var(--tc-sky); }
+[data-theme="dark"] .dqp-same { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
+
 /* ── Tabs (moved to v1.9 section) ── */
 .tab-save-btn {
   flex:0 0 42px; padding:6px 0; border:none; border-radius:var(--r-lg);
@@ -4435,6 +4470,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
         </div>
         <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The ✨ insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+
+        <!-- Quick Picker: Frequent + Same As -->
+        <div id="dietQuickPicker" class="diet-quick-picker" style="display:none;">
+          <div id="dietFreqWrap" style="display:none;">
+            <div class="dqp-label">Frequent</div>
+            <div class="dqp-pills" id="dietFreqPills"></div>
+          </div>
+          <div id="dietSameAsWrap" style="display:none;">
+            <div class="dqp-label">Same as</div>
+            <div class="dqp-pills" id="dietSameAsPills"></div>
+          </div>
+        </div>
+
         <div class="meal-cards">
           <div class="meal-card breakfast">
             <div class="meal-label">🌤 Breakfast <span class="meal-skip-btn" id="skip-breakfast" onclick="event.stopPropagation();skipSingleMeal('breakfast')" style="display:none;">skip</span></div>
@@ -14655,6 +14703,104 @@ function loadFeedingDay() {
   ['breakfast','lunch','dinner','snack'].forEach(m => updateMealInsight(m));
   updateFeedingSaveBtn();
   updateMealSkipButtons();
+  renderDietQuickPicker();
+}
+
+// ── Diet Quick Picker: Frequent foods + Same-as pills ──
+let _dietActiveMeal = 'breakfast';
+let _dietFocusListenersSet = false;
+
+function renderDietQuickPicker() {
+  const picker = document.getElementById('dietQuickPicker');
+  if (!picker) return;
+
+  // Set up focus tracking on first render
+  if (!_dietFocusListenersSet) {
+    ['breakfast','lunch','dinner','snack'].forEach(m => {
+      const el = document.getElementById('meal-' + m);
+      if (el) el.addEventListener('focus', () => { _dietActiveMeal = m; });
+    });
+    _dietFocusListenersSet = true;
+  }
+
+  let hasContent = false;
+
+  // 1. Frequent foods (top 8 individual foods)
+  const freqWrap = document.getElementById('dietFreqWrap');
+  const freqEl = document.getElementById('dietFreqPills');
+  if (freqWrap && freqEl) {
+    const top = getTopMeals(8);
+    if (top.length > 0) {
+      freqWrap.style.display = '';
+      freqEl.innerHTML = top.map(m =>
+        `<div class="dqp-pill" onclick="insertDietFood('${escHtml(m.name).replace(/'/g, "\\\\'")}')" title="${m.count}× logged">${escHtml(m.name)}</div>`
+      ).join('');
+      hasContent = true;
+    } else {
+      freqWrap.style.display = 'none';
+    }
+  }
+
+  // 2. Same-as: yesterday's meals + today's other meals
+  const sameWrap = document.getElementById('dietSameAsWrap');
+  const sameEl = document.getElementById('dietSameAsPills');
+  if (sameWrap && sameEl) {
+    const currentDate = document.getElementById('feedingDate').value;
+    const meals = [];
+    const seen = new Set();
+    function addSame(label, value, targetMeal) {
+      if (!value || value === '—skipped—' || seen.has(value)) return;
+      const short = value.length > 25 ? value.substring(0, 23) + '…' : value;
+      meals.push({ label, value, short, targetMeal });
+      seen.add(value);
+    }
+
+    // Yesterday's meals
+    const yd = new Date(currentDate); yd.setDate(yd.getDate() - 1);
+    const ydEntry = feedingData[toDateStr(yd)] || {};
+    addSame('🕐 Yd B', ydEntry.breakfast, 'breakfast');
+    addSame('🕐 Yd L', ydEntry.lunch, 'lunch');
+    addSame('🕐 Yd D', ydEntry.dinner, 'dinner');
+    addSame('🕐 Yd S', ydEntry.snack, 'snack');
+
+    // 2 days ago
+    const d2 = new Date(currentDate); d2.setDate(d2.getDate() - 2);
+    const d2Entry = feedingData[toDateStr(d2)] || {};
+    addSame('2d B', d2Entry.breakfast, 'breakfast');
+    addSame('2d L', d2Entry.lunch, 'lunch');
+    addSame('2d D', d2Entry.dinner, 'dinner');
+
+    if (meals.length > 0) {
+      sameWrap.style.display = '';
+      sameEl.innerHTML = meals.map(m =>
+        `<div class="dqp-same" onclick="fillDietMeal('${m.targetMeal}','${escHtml(m.value).replace(/'/g, "\\\\'")}')" title="${escHtml(m.value)}">${m.label} <span style="opacity:0.6;">${escHtml(m.short)}</span></div>`
+      ).join('');
+      hasContent = true;
+    } else {
+      sameWrap.style.display = 'none';
+    }
+  }
+
+  picker.style.display = hasContent ? '' : 'none';
+}
+
+function insertDietFood(food) {
+  const inp = document.getElementById('meal-' + _dietActiveMeal);
+  if (!inp || inp.disabled) return;
+  // Append to existing value
+  const current = inp.value.trim();
+  inp.value = current ? current + ', ' + food : food;
+  updateMealInsight(_dietActiveMeal);
+  inp.focus();
+}
+
+function fillDietMeal(meal, value) {
+  const inp = document.getElementById('meal-' + meal);
+  if (!inp || inp.disabled) return;
+  inp.value = value;
+  _dietActiveMeal = meal;
+  updateMealInsight(meal);
+  inp.focus();
 }
 
 function saveFeedingDay() {
@@ -14667,6 +14813,8 @@ function saveFeedingDay() {
     snack:     document.getElementById('meal-snack').disabled ? (existing.snack || '') : document.getElementById('meal-snack').value,
   };
   save(KEYS.feeding, feedingData);
+  // Auto-introduce any new foods from all meal slots
+  autoIntroduceFoodsFromDay(d);
   renderFeedingHistory();
   renderTips();
   renderFoods();
@@ -14674,6 +14822,30 @@ function saveFeedingDay() {
   const btn = document.getElementById('saveFeedBtn');
   btn.textContent = '✓ Saved!';
   setTimeout(() => btn.textContent = 'Save', 1500);
+}
+
+// Scan all meals for a given date and auto-add new foods to Foods Introduced
+function autoIntroduceFoodsFromDay(dateStr) {
+  const entry = feedingData[dateStr];
+  if (!entry) return;
+  let added = false;
+  ['breakfast','lunch','dinner','snack'].forEach(meal => {
+    if (!isRealMeal(entry[meal])) return;
+    entry[meal].split(/[,+]/).forEach(f => {
+      const clean = f.trim();
+      if (clean.length <= 1) return;
+      const base = _baseFoodName(clean.toLowerCase());
+      const alreadyExists = foods.some(fi => {
+        const fb = _baseFoodName(fi.name.toLowerCase().trim());
+        return fb === base || fb.includes(base) || base.includes(fb);
+      });
+      if (!alreadyExists) {
+        foods.push({ name: clean, reaction: 'ok', date: dateStr });
+        added = true;
+      }
+    });
+  });
+  if (added) save(KEYS.foods, foods);
 }
 
 function changeDate(dir) {
@@ -19299,6 +19471,9 @@ function saveQLFeed() {
   day[_qlMeal] = day[_qlMeal] ? day[_qlMeal] + ', ' + food : food;
   save(KEYS.feeding, feeding);
   feedingData = feeding;
+
+  // Auto-introduce new foods
+  autoIntroduceFoodsFromDay(dateStr);
 
   // Build nutrient flash for toast
   const NUTRIENT_EMOJI = { iron:'🩸', calcium:'🦴', protein:'💪', 'vitamin C':'🍊', fibre:'🌾', 'vitamin A':'👁️', 'omega-3':'🧠', zinc:'🛡️' };
