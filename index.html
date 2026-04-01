@@ -1725,6 +1725,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   transition:background var(--ease-fast); cursor:pointer;
 }
 .nh-cell.nh-0 { background:rgba(0,0,0,0.04); color:var(--light); }
+.nh-cell.nh-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 6px); color:var(--light); font-size:10px; }
 .nh-cell.nh-1 { color:var(--tc-sage); }
 .nh-cell.nh-2 { color:white; }
 .nh-cell.nh-3 { color:white; }
@@ -1756,6 +1757,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .nh-row-zinc .nh-3     { background:rgba(240,190,160,0.8); }
 
 [data-theme="dark"] .nh-cell.nh-0 { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .nh-cell.nh-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.04) 3px,rgba(255,255,255,0.04) 6px); }
 [data-theme="dark"] .nh-cell.nh-1 { opacity:0.85; }
 
 .nh-detail-panel {
@@ -23656,6 +23658,7 @@ function computeNutrientHeatmap(windowDays) {
   const days = [];
   const grid = {}; // nutrient → [count per day]
   const foodSources = {}; // 'nutrient:dayIdx' → [food names]
+  const hasData = []; // per day: true if any meal logged
 
   HEATMAP_NUTRIENTS.forEach(n => { grid[n.key] = []; });
 
@@ -23672,9 +23675,11 @@ function computeNutrientHeatmap(windowDays) {
     HEATMAP_NUTRIENTS.forEach(n => { nutCount[n.key] = 0; nutFoods[n.key] = []; });
 
     const entry = feedingData[ds];
+    let dayHasMeals = false;
     if (entry) {
       ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
         if (!isRealMeal(entry[meal])) return;
+        dayHasMeals = true;
         const items = parseMealNutrition(entry[meal]);
         items.forEach(item => {
           (item.nutrients || []).forEach(n => {
@@ -23686,6 +23691,7 @@ function computeNutrientHeatmap(windowDays) {
         });
       });
     }
+    hasData.push(dayHasMeals);
 
     HEATMAP_NUTRIENTS.forEach(n => {
       grid[n.key].push(nutCount[n.key]);
@@ -23693,17 +23699,17 @@ function computeNutrientHeatmap(windowDays) {
     });
   }
 
-  // Summary stats
+  // Summary stats — only count days with data
+  const daysWithData = hasData.filter(Boolean).length;
   const gaps = [];
   const strong = [];
   HEATMAP_NUTRIENTS.forEach(n => {
-    const total = grid[n.key].reduce((s, v) => s + v, 0);
-    const daysHit = grid[n.key].filter(v => v > 0).length;
-    if (daysHit <= 1) gaps.push(n.label);
-    if (daysHit >= 5) strong.push(n.label);
+    const daysHit = grid[n.key].filter((v, i) => v > 0 && hasData[i]).length;
+    if (daysWithData >= 3 && daysHit <= 1) gaps.push(n.label);
+    if (daysWithData >= 5 && daysHit >= Math.min(5, daysWithData)) strong.push(n.label);
   });
 
-  return { days, grid, foodSources, gaps, strong };
+  return { days, grid, foodSources, gaps, strong, hasData, daysWithData };
 }
 
 function renderInfoNutrientHeatmap() {
@@ -23714,51 +23720,63 @@ function renderInfoNutrientHeatmap() {
   if (!summaryEl) return;
 
   // Summary line
-  const gapCount = data.gaps.length;
-  const summaryText = gapCount === 0
-    ? '<span style="color:var(--tc-sage);font-weight:600;">Full coverage all week</span>'
-    : `<span style="color:var(--tc-amber);font-weight:600;">${gapCount} nutrient${gapCount > 1 ? 's' : ''} had gaps</span> · ${data.gaps.join(', ')}`;
+  let summaryText;
+  if (data.daysWithData === 0) {
+    summaryText = '<span class="t-light">No meals logged this week — start logging to see nutrient coverage</span>';
+  } else if (data.gaps.length === 0) {
+    summaryText = `<span style="color:var(--tc-sage);font-weight:600;">Good coverage</span> <span class="t-light">· ${data.daysWithData} day${data.daysWithData > 1 ? 's' : ''} tracked</span>`;
+  } else {
+    summaryText = `<span style="color:var(--tc-amber);font-weight:600;">${data.gaps.length} gap${data.gaps.length > 1 ? 's' : ''}</span> <span class="t-light">· ${data.gaps.join(', ')}</span>`;
+  }
   summaryEl.innerHTML = `<div class="t-sm">${summaryText}</div>`;
 
   // Day headers
   let gridHtml = '<div class="nh-grid">';
-  gridHtml += '<div class="nh-header"></div>'; // empty corner cell
-  data.days.forEach(ds => {
+  gridHtml += '<div class="nh-header"></div>';
+  data.days.forEach((ds, i) => {
     const d = new Date(ds);
     const dayName = d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2);
     const isToday = ds === today();
-    gridHtml += `<div class="nh-header" style="${isToday ? 'color:var(--tc-rose);' : ''}">${dayName}</div>`;
+    const noData = !data.hasData[i];
+    gridHtml += `<div class="nh-header" style="${isToday ? 'color:var(--tc-rose);font-weight:700;' : ''}${noData ? 'opacity:0.4;' : ''}">${dayName}</div>`;
   });
 
   // Nutrient rows
   HEATMAP_NUTRIENTS.forEach(n => {
     gridHtml += `<div class="nh-label">${n.emoji} ${n.label}</div>`;
     data.grid[n.key].forEach((count, dayIdx) => {
-      const level = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : 3;
+      const noData = !data.hasData[dayIdx];
       const foods = data.foodSources[n.key + ':' + dayIdx] || [];
-      const tooltip = foods.length > 0 ? foods.join(', ') : 'No source';
-      gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${tooltip}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')">${count > 0 ? count : '·'}</div>`;
+
+      if (noData) {
+        // No meals logged — distinct "no data" cell
+        gridHtml += `<div class="nh-cell nh-nodata" title="No meals logged">–</div>`;
+      } else if (count === 0) {
+        // Meals logged but nutrient absent — real gap
+        gridHtml += `<div class="nh-cell nh-0 ${n.cssClass}" title="Gap" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')">·</div>`;
+      } else {
+        // Nutrient present — colored fill, tap to see sources
+        const level = count <= 2 ? 1 : count <= 4 ? 2 : 3;
+        gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${foods.join(', ')}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')"></div>`;
+      }
     });
   });
   gridHtml += '</div>';
 
   // Legend
-  gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:flex-end;flex-wrap:wrap;">
-    <span class="t-xs t-light">0</span>
-    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(0,0,0,0.04);"></div>
-    <span class="t-xs t-light">1</span>
-    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div>
-    <span class="t-xs t-light">2</span>
-    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div>
-    <span class="t-xs t-light">3+</span>
-    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div>
+  gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">
+    <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:10px;aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
+    <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:10px;aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
+    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
+    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
+    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
   </div>`;
 
   gridEl.innerHTML = gridHtml;
 
   // Strong nutrients callout
   if (data.strong.length > 0) {
-    detailEl.innerHTML = `<div class="t-sm" style="color:var(--tc-sage);"><strong>Strong this week:</strong> ${data.strong.join(', ')} — present 5+ days</div>`;
+    detailEl.innerHTML = `<div class="t-sm" style="color:var(--tc-sage);"><strong>Strong this week:</strong> ${data.strong.join(', ')}</div>`;
   } else {
     detailEl.innerHTML = '';
   }
@@ -23769,6 +23787,7 @@ let _nhDetailOpen = null;
 function showHeatmapDetail(nutrientKey, dayIdx, dateStr) {
   const data = computeNutrientHeatmap(7);
   const foods = data.foodSources[nutrientKey + ':' + dayIdx] || [];
+  const count = data.grid[nutrientKey][dayIdx] || 0;
   const nutInfo = HEATMAP_NUTRIENTS.find(n => n.key === nutrientKey);
   const dayLabel = new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -23777,7 +23796,6 @@ function showHeatmapDetail(nutrientKey, dayIdx, dateStr) {
 
   const detailId = nutrientKey + ':' + dayIdx;
   if (_nhDetailOpen === detailId) {
-    // Toggle off
     const panel = detailEl.querySelector('.nh-detail-panel');
     if (panel) panel.classList.remove('open');
     _nhDetailOpen = null;
@@ -23785,9 +23803,12 @@ function showHeatmapDetail(nutrientKey, dayIdx, dateStr) {
   }
   _nhDetailOpen = detailId;
 
-  const content = foods.length > 0
-    ? `<strong>${nutInfo.emoji} ${nutInfo.label}</strong> on ${dayLabel}: ${foods.join(', ')}`
-    : `<strong>${nutInfo.emoji} ${nutInfo.label}</strong> on ${dayLabel}: no sources logged`;
+  let content;
+  if (foods.length > 0) {
+    content = `<strong>${nutInfo.emoji} ${nutInfo.label}</strong> on ${dayLabel} — from ${foods.join(', ')} (${count} source${count > 1 ? 's' : ''})`;
+  } else {
+    content = `<strong>${nutInfo.emoji} ${nutInfo.label}</strong> on ${dayLabel} — no sources in logged meals. Try adding ${nutInfo.key === 'iron' ? 'ragi, spinach, or dal' : nutInfo.key === 'calcium' ? 'curd, paneer, or ragi' : nutInfo.key === 'omega-3' ? 'walnut, flaxseed, or ghee' : nutInfo.key === 'zinc' ? 'dal, oats, or sesame' : 'more variety'}.`;
+  }
 
   detailEl.innerHTML = `<div class="nh-detail-panel open">${content}</div>`;
 }
