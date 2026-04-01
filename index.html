@@ -1704,25 +1704,27 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 
 /* ── Nutrient Heatmap ── */
 .nh-grid {
-  display:grid; grid-template-columns:auto repeat(7, 1fr);
+  display:grid; grid-template-columns:72px repeat(7, 1fr);
   gap:3px; font-size:var(--fs-xs); min-width:0;
+  width:100%;
 }
 .nh-header {
   text-align:center; font-weight:600; color:var(--light);
-  padding:2px 0; font-size:var(--fs-xs);
+  padding:4px 0; font-size:var(--fs-xs);
 }
 .nh-label {
   display:flex; align-items:center; gap:var(--sp-4);
-  padding-right:var(--sp-8); font-weight:600; color:var(--mid);
+  font-weight:600; color:var(--mid);
   white-space:nowrap; font-size:var(--fs-xs);
+  overflow:hidden;
 }
 .nh-cell {
-  aspect-ratio:1; border-radius:var(--r-md); min-height:24px;
+  aspect-ratio:1; border-radius:var(--r-md); min-height:28px; max-height:40px;
   display:flex; align-items:center; justify-content:center;
   font-size:var(--fs-xs); font-weight:600;
-  transition:background var(--ease-fast); cursor:default;
+  transition:background var(--ease-fast); cursor:pointer;
 }
-.nh-cell.nh-0 { background:var(--glass); color:var(--light); }
+.nh-cell.nh-0 { background:rgba(0,0,0,0.04); color:var(--light); }
 .nh-cell.nh-1 { color:var(--tc-sage); }
 .nh-cell.nh-2 { color:white; }
 .nh-cell.nh-3 { color:white; }
@@ -1753,7 +1755,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .nh-row-zinc .nh-2     { background:rgba(240,190,160,0.5); }
 .nh-row-zinc .nh-3     { background:rgba(240,190,160,0.8); }
 
-[data-theme="dark"] .nh-cell.nh-0 { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .nh-cell.nh-0 { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .nh-cell.nh-1 { opacity:0.85; }
 
 .nh-detail-panel {
@@ -23735,15 +23737,15 @@ function renderInfoNutrientHeatmap() {
       const level = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : 3;
       const foods = data.foodSources[n.key + ':' + dayIdx] || [];
       const tooltip = foods.length > 0 ? foods.join(', ') : 'No source';
-      gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${tooltip}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')">${count || ''}</div>`;
+      gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${tooltip}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')">${count > 0 ? count : '·'}</div>`;
     });
   });
   gridHtml += '</div>';
 
   // Legend
-  gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:flex-end;">
+  gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:flex-end;flex-wrap:wrap;">
     <span class="t-xs t-light">0</span>
-    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:var(--glass);"></div>
+    <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(0,0,0,0.04);"></div>
     <span class="t-xs t-light">1</span>
     <div style="width:14px;height:14px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div>
     <span class="t-xs t-light">2</span>
