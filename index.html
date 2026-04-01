@@ -1786,6 +1786,45 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .tab-panel { display:none; min-width:0; }
 .tab-panel.active { display:block; animation:fadeUp 0.3s ease both; }
 
+/* ── Welcome Guide ── */
+.welcome-guide {
+  background:linear-gradient(135deg, var(--blush), var(--peach-light));
+  border:1.5px solid rgba(242,168,184,0.25);
+}
+[data-theme="dark"] .welcome-guide { background:linear-gradient(135deg, rgba(60,35,45,0.5), rgba(60,45,35,0.5)); }
+.wg-header { display:flex; align-items:flex-start; justify-content:space-between; }
+.wg-close {
+  width:28px; height:28px; border:none; background:transparent; cursor:pointer;
+  font-size:var(--icon-base); color:var(--light); border-radius:var(--r-full);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.wg-close:hover { background:rgba(0,0,0,0.06); }
+.wg-steps { margin-top:var(--sp-12); }
+.wg-step {
+  display:none; gap:var(--sp-12); align-items:flex-start;
+  animation:fadeUp 0.25s ease both;
+}
+.wg-step.active { display:flex; }
+.wg-step-num {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background:var(--rose); color:white; font-size:var(--fs-sm); font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.wg-step-body { flex:1; min-width:0; }
+.wg-step-body strong { display:block; font-size:var(--fs-md); color:var(--text); margin-bottom:4px; }
+.wg-step-body span { font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); }
+.wg-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:var(--sp-16); gap:var(--sp-8);
+}
+.wg-btn { min-width:80px; }
+.wg-dots { display:flex; gap:6px; align-items:center; }
+.wg-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--light); opacity:0.3; transition:all var(--ease-fast);
+}
+.wg-dot.active { background:var(--rose); opacity:1; width:20px; border-radius:4px; }
+
 /* ── Simple Mode ── */
 body.simple-mode .tab-btn[aria-label="Insights tab"],
 body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
@@ -3742,6 +3781,59 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <div class="tab-panel active" id="tab-home">
     <div class="grid">
 
+      <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
+      <div class="card col-full card-hero welcome-guide" id="welcomeGuide" style="display:none;">
+        <div class="wg-header">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Welcome to Ziva's Dashboard</div>
+          <button class="wg-close" onclick="dismissWelcomeGuide()" aria-label="Close">✕</button>
+        </div>
+        <div class="t-sm t-light mt-4" id="wgSubtitle">A quick walkthrough to get you started — 5 steps</div>
+
+        <div class="wg-steps" id="wgSteps">
+          <div class="wg-step active" data-step="0">
+            <div class="wg-step-num">1</div>
+            <div class="wg-step-body">
+              <strong>Log meals with Quick Log</strong>
+              <span>Tap the <strong>+</strong> button at the bottom → <strong>Feed</strong> → pick a meal (B/L/D/S) → type what Ziva ate → Save. Takes 10 seconds.</span>
+            </div>
+          </div>
+          <div class="wg-step" data-step="1">
+            <div class="wg-step-num">2</div>
+            <div class="wg-step-body">
+              <strong>Log sleep & poop</strong>
+              <span>Same <strong>+</strong> button → <strong>Sleep</strong> (bedtime + wake time) or <strong>Poop</strong> (consistency + color). Naps have their own option too.</span>
+            </div>
+          </div>
+          <div class="wg-step" data-step="2">
+            <div class="wg-step-num">3</div>
+            <div class="wg-step-body">
+              <strong>The Ziva Score</strong>
+              <span>The big number on Home combines sleep, diet, poop, medical & milestones into one score. <strong>It drops when data isn't logged</strong> — not because Ziva is doing poorly, but because the app needs your input. Tap it to see the breakdown.</span>
+            </div>
+          </div>
+          <div class="wg-step" data-step="3">
+            <div class="wg-step-num">4</div>
+            <div class="wg-step-body">
+              <strong>"Can I Give This?"</strong>
+              <span>In the <strong>Track → Diet</strong> tab, scroll to the <strong>Can I Give This?</strong> card. Type any food to check if it's safe for Ziva's age, what nutrients it has, and what to pair it with.</span>
+            </div>
+          </div>
+          <div class="wg-step" data-step="4">
+            <div class="wg-step-num">5</div>
+            <div class="wg-step-body">
+              <strong>Add new foods to the tracker</strong>
+              <span>In <strong>Track → Diet</strong>, find the <strong>Foods Introduced</strong> card. Type the food name, set the date, and mark it OK or Watch. This builds Ziva's food history and powers the nutrition analysis.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wg-nav">
+          <button class="btn btn-ghost wg-btn" id="wgPrev" onclick="wgNav(-1)" style="display:none;">← Back</button>
+          <div class="wg-dots" id="wgDots"></div>
+          <button class="btn btn-rose wg-btn" id="wgNext" onclick="wgNav(1)">Next →</button>
+        </div>
+      </div>
+
       <!-- ─── TIER 1: PROFILE VITALS ─── -->
       <div class="card col-full card-hero hero-home">
         <div style="margin-bottom:14px;">
@@ -5227,6 +5319,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
         </div>
 
+        <button class="btn btn-rose" onclick="showWelcomeGuide();closeSettingsSidebar();" style="width:100%;padding:12px;font-size:var(--fs-base);">📖 Show Getting Started Guide</button>
         <button class="btn btn-lav" onclick="window.print()" style="width:100%;padding:12px;font-size:var(--fs-base);">🖨 Print Dashboard</button>
 
         <button class="btn btn-rose" id="pwaInstallBtn" onclick="promptPWAInstall()" style="width:100%;padding:12px;font-size:var(--fs-base);display:none;">📲 Add to Home Screen</button>
@@ -18939,6 +19032,78 @@ function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 // v1.9 — DARK MODE
 // ─────────────────────────────────────────
 // ─────────────────────────────────────────
+// WELCOME GUIDE
+// ─────────────────────────────────────────
+
+let _wgStep = 0;
+const _wgTotalSteps = 5;
+
+function showWelcomeGuide() {
+  const el = document.getElementById('welcomeGuide');
+  if (!el) return;
+  _wgStep = 0;
+  el.style.display = '';
+  wgRender();
+  switchTab('home');
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function dismissWelcomeGuide() {
+  const el = document.getElementById('welcomeGuide');
+  if (el) el.style.display = 'none';
+  localStorage.setItem('ziva_guide_seen', 'true');
+}
+
+function wgNav(dir) {
+  _wgStep = Math.max(0, Math.min(_wgTotalSteps - 1, _wgStep + dir));
+  if (_wgStep >= _wgTotalSteps - 1 && dir > 0) {
+    // Last step — next becomes "Got it!"
+  }
+  wgRender();
+}
+
+function wgRender() {
+  // Show active step
+  document.querySelectorAll('.wg-step').forEach((el, i) => {
+    el.classList.toggle('active', i === _wgStep);
+  });
+
+  // Dots
+  const dotsEl = document.getElementById('wgDots');
+  if (dotsEl) {
+    dotsEl.innerHTML = Array.from({ length: _wgTotalSteps }, (_, i) =>
+      `<div class="wg-dot${i === _wgStep ? ' active' : ''}"></div>`
+    ).join('');
+  }
+
+  // Nav buttons
+  const prevBtn = document.getElementById('wgPrev');
+  const nextBtn = document.getElementById('wgNext');
+  if (prevBtn) prevBtn.style.display = _wgStep === 0 ? 'none' : '';
+  if (nextBtn) {
+    if (_wgStep === _wgTotalSteps - 1) {
+      nextBtn.textContent = 'Got it ✓';
+      nextBtn.onclick = dismissWelcomeGuide;
+    } else {
+      nextBtn.textContent = 'Next →';
+      nextBtn.onclick = () => wgNav(1);
+    }
+  }
+
+  // Subtitle
+  const sub = document.getElementById('wgSubtitle');
+  if (sub) sub.textContent = `Step ${_wgStep + 1} of ${_wgTotalSteps}`;
+}
+
+function initWelcomeGuide() {
+  const seen = localStorage.getItem('ziva_guide_seen');
+  if (!seen) {
+    // First open — show guide after a short delay so the app renders first
+    setTimeout(showWelcomeGuide, 500);
+  }
+}
+
+// ─────────────────────────────────────────
 // SIMPLE MODE
 // ─────────────────────────────────────────
 
@@ -24321,6 +24486,7 @@ function isPWA() {
 initDarkMode();
 initSimpleMode();
 init();
+initWelcomeGuide();
 </script>
 </body>
 </html>
