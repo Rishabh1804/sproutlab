@@ -11478,6 +11478,115 @@ function deleteFood(i) {
 // ─────────────────────────────────────────
 // NUTRITION KNOWLEDGE BASE
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// FOOD SYNERGY DATABASE
+// ─────────────────────────────────────────
+// Each entry: [food1, food2, reason, type]
+// type: 'absorption' (one helps absorb the other), 'complete' (together form complete nutrition), 'digestion' (one aids digestion of other)
+const FOOD_SYNERGIES = [
+  // Iron + Vitamin C = enhanced iron absorption (most critical for babies)
+  ['ragi', 'orange', 'Vitamin C boosts iron absorption from ragi', 'absorption'],
+  ['ragi', 'tomato', 'Vitamin C boosts iron absorption from ragi', 'absorption'],
+  ['ragi', 'lemon', 'Vitamin C boosts iron absorption from ragi', 'absorption'],
+  ['ragi', 'amla', 'Amla\'s vitamin C supercharges ragi\'s iron', 'absorption'],
+  ['spinach', 'tomato', 'Vitamin C boosts iron absorption from spinach', 'absorption'],
+  ['spinach', 'lemon', 'Vitamin C boosts iron absorption from spinach', 'absorption'],
+  ['spinach', 'orange', 'Vitamin C boosts iron absorption from spinach', 'absorption'],
+  ['beetroot', 'orange', 'Vitamin C boosts iron absorption from beetroot', 'absorption'],
+  ['beetroot', 'lemon', 'Vitamin C boosts iron absorption from beetroot', 'absorption'],
+  ['moong dal', 'tomato', 'Vitamin C boosts iron & protein absorption from dal', 'absorption'],
+  ['masoor dal', 'tomato', 'Vitamin C boosts iron absorption from dal', 'absorption'],
+  ['masoor dal', 'lemon', 'Lemon enhances iron absorption from dal', 'absorption'],
+  ['moong dal', 'lemon', 'Lemon enhances iron absorption from dal', 'absorption'],
+  ['poha', 'lemon', 'Lemon doubles iron absorption from poha', 'absorption'],
+  ['bajra', 'amla', 'Amla\'s vitamin C boosts bajra\'s iron and zinc', 'absorption'],
+  ['oats', 'strawberry', 'Vitamin C boosts iron absorption from oats', 'absorption'],
+  ['oats', 'blueberry', 'Vitamin C + antioxidant synergy', 'absorption'],
+  ['date (fruit)', 'orange', 'Vitamin C boosts iron absorption from dates', 'absorption'],
+  ['pomegranate', 'beetroot', 'Double iron + vitamin C synergy', 'absorption'],
+
+  // Fat + Fat-soluble vitamins (A, D, E, K)
+  ['carrot', 'ghee', 'Ghee helps absorb beta-carotene (vitamin A) from carrot', 'absorption'],
+  ['sweet potato', 'ghee', 'Ghee helps absorb beta-carotene from sweet potato', 'absorption'],
+  ['pumpkin', 'ghee', 'Ghee helps absorb beta-carotene from pumpkin', 'absorption'],
+  ['spinach', 'ghee', 'Ghee helps absorb vitamins A and K from spinach', 'absorption'],
+  ['carrot', 'curd', 'Fat in curd helps absorb carrot\'s vitamin A', 'absorption'],
+  ['mango', 'curd', 'Fat in curd helps absorb mango\'s vitamin A', 'absorption'],
+  ['broccoli', 'ghee', 'Ghee helps absorb vitamin K from broccoli', 'absorption'],
+  ['drumstick', 'ghee', 'Ghee helps absorb fat-soluble vitamins from drumstick', 'absorption'],
+
+  // Complete protein combos (complementary amino acids)
+  ['rice', 'moong dal', 'Complete protein — rice + dal cover all amino acids', 'complete'],
+  ['rice', 'masoor dal', 'Complete protein — rice + dal cover all amino acids', 'complete'],
+  ['rice', 'toor dal', 'Complete protein — rice + dal cover all amino acids', 'complete'],
+  ['rice', 'rajma', 'Complete protein — rice + beans', 'complete'],
+  ['rice', 'curd', 'Complete protein + probiotics for gut health', 'complete'],
+  ['ragi', 'moong dal', 'Complete protein + double iron', 'complete'],
+  ['ragi', 'curd', 'Calcium powerhouse — both are top calcium sources', 'complete'],
+  ['oats', 'almonds', 'Complete protein + healthy fats for brain', 'complete'],
+  ['idli', 'curd', 'Fermented duo — excellent for gut health', 'complete'],
+  ['dosa', 'curd', 'Fermented duo — excellent for gut health', 'complete'],
+
+  // Calcium + Vitamin D (bone health)
+  ['paneer', 'ghee', 'Ghee\'s vitamin D helps absorb paneer\'s calcium', 'absorption'],
+  ['curd', 'sesame', 'Double calcium — strongest bone-health combo', 'complete'],
+  ['ragi', 'sesame', 'Double calcium + double iron', 'complete'],
+
+  // Digestion helpers
+  ['banana', 'curd', 'Banana\'s fibre + curd\'s probiotics aid digestion', 'digestion'],
+  ['papaya', 'curd', 'Papaya enzymes + probiotics — digestion powerhouse', 'digestion'],
+  ['rice', 'ghee', 'Ghee makes rice easier to digest, adds healthy fats', 'digestion'],
+  ['khichdi', 'ghee', 'Ghee aids digestion of khichdi', 'digestion'],
+
+  // Brain development combos
+  ['walnut', 'ghee', 'Omega-3 + DHA — top brain development combo', 'complete'],
+  ['avocado', 'banana', 'Healthy fats + potassium — brain + energy', 'complete'],
+  ['almonds', 'date (fruit)', 'Brain-boosting fats + iron + natural energy', 'complete'],
+  ['flaxseed', 'curd', 'Omega-3 + protein + calcium in one meal', 'complete'],
+];
+
+// Build lookup for fast synergy checking
+const _synergyIndex = {};
+FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+  const key1 = f1 + '|' + f2;
+  const key2 = f2 + '|' + f1;
+  _synergyIndex[key1] = { food1: f1, food2: f2, reason, type };
+  _synergyIndex[key2] = { food1: f2, food2: f1, reason, type };
+});
+
+function getSynergy(food1, food2) {
+  // Direct match
+  const direct = _synergyIndex[food1 + '|' + food2];
+  if (direct) return direct;
+  // Substring match (e.g. 'carrot puree' contains 'carrot')
+  for (const [f1, f2, reason, type] of FOOD_SYNERGIES) {
+    if ((food1.includes(f1) || f1.includes(food1)) && (food2.includes(f2) || f2.includes(food2))) {
+      return { food1: f1, food2: f2, reason, type };
+    }
+    if ((food1.includes(f2) || f2.includes(food1)) && (food2.includes(f1) || f1.includes(food2))) {
+      return { food1: f2, food2: f1, reason, type };
+    }
+  }
+  return null;
+}
+
+function getMealSynergies(mealStr) {
+  if (!mealStr) return [];
+  const mealFoods = [];
+  mealStr.split(/[,+]/).forEach(f => {
+    const clean = f.trim().toLowerCase();
+    if (clean.length > 1) mealFoods.push(clean);
+  });
+  const found = [];
+  for (let a = 0; a < mealFoods.length; a++) {
+    for (let b = a + 1; b < mealFoods.length; b++) {
+      const syn = getSynergy(mealFoods[a], mealFoods[b]);
+      if (syn) found.push(syn);
+    }
+  }
+  return found;
+}
+
 const NUTRITION = {
   // ── GRAINS & STAPLES ──
   'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'] },
@@ -11822,6 +11931,23 @@ function getMealInsight(mealStr) {
   }
   if (allTags.includes('healthy-fats') && allTags.includes('iron-rich') && allTags.includes('vitamin-C')) {
     parts.push('🌟 Excellent combo — iron + fat + Vit C = maximum absorption');
+  }
+
+  // Synergy detection from FOOD_SYNERGIES database
+  const synergies = getMealSynergies(mealStr);
+  if (synergies.length > 0) {
+    // Show up to 2 synergies, avoid duplicating iron+vitC already covered above
+    const shown = new Set();
+    synergies.forEach(syn => {
+      if (shown.size >= 2) return;
+      const key = syn.food1 + syn.food2;
+      if (shown.has(key)) return;
+      // Skip if iron+vitC synergy already mentioned above
+      if (syn.type === 'absorption' && syn.reason.includes('iron absorption') && allTags.includes('iron-rich') && (allTags.includes('vitamin-C') || allTags.includes('iron-absorption'))) return;
+      shown.add(key);
+      const emoji = syn.type === 'absorption' ? '🔗' : syn.type === 'complete' ? '✨' : '🌿';
+      parts.push(`${emoji} ${syn.reason}`);
+    });
   }
 
   return parts.join(' · ');
@@ -12873,6 +12999,50 @@ function renderTips() {
   const active = ALL_TIPS.filter(t => {
     try { return t.condition(feedingData); } catch { return false; }
   });
+
+  // Generate dynamic synergy tips based on today's meals
+  const todayEntry = feedingData[today()];
+  if (todayEntry) {
+    const todayFoods = [];
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      if (!isRealMeal(todayEntry[meal])) return;
+      todayEntry[meal].split(/[,+]/).forEach(f => {
+        const clean = f.trim().toLowerCase();
+        if (clean.length > 1) todayFoods.push(clean);
+      });
+    });
+
+    // Find synergy suggestions: foods in today's meals that have synergy partners not yet used today
+    const todaySet = new Set(todayFoods);
+    const suggestedSynergies = [];
+    const seen = new Set();
+    todayFoods.forEach(food => {
+      FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+        let match = null, partner = null;
+        if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
+        else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+        if (!match || !partner) return;
+        // Check partner not already in today's meals
+        const partnerUsed = todayFoods.some(tf => tf.includes(partner) || partner.includes(tf));
+        if (partnerUsed) return;
+        const key = match + '|' + partner;
+        if (seen.has(key)) return;
+        seen.add(key);
+        suggestedSynergies.push({ food: match, partner, reason, type });
+      });
+    });
+
+    // Add up to 3 synergy tips
+    suggestedSynergies.slice(0, 3).forEach(syn => {
+      const emoji = syn.type === 'absorption' ? '🔗' : syn.type === 'complete' ? '✨' : '🌿';
+      active.push({
+        type: 'add',
+        icon: emoji,
+        title: `Add ${syn.partner} today`,
+        body: `${syn.reason}. You already have ${syn.food} in today's meals — pairing with ${syn.partner} would boost nutrition.`,
+      });
+    });
+  }
   if (countEl) countEl.textContent = `${active.length} active`;
   if (active.length === 0) {
     list.innerHTML = '<div class="tips-empty">Great variety this week — no specific tips right now! 🌟</div>';
@@ -23979,18 +24149,24 @@ function renderInfoComboFreq() {
       const flag1 = data.poopFlags[p.food1];
       const flag2 = data.poopFlags[p.food2];
       const poopSafe = !flag1 && !flag2;
+      const gapsFilled = allNutrients.filter(n => currentGaps.has(n.toLowerCase()));
 
       // Build reason
       let reason = '';
+      // 0. Known synergy pair? (highest priority)
+      const synergy = getSynergy(p.food1, p.food2);
+      if (synergy) {
+        const emoji = synergy.type === 'absorption' ? '🔗' : synergy.type === 'complete' ? '✨' : '🌿';
+        reason = emoji + ' ' + synergy.reason;
+      }
       // 1. Fills a current gap?
-      const gapsFilled = allNutrients.filter(n => currentGaps.has(n.toLowerCase()));
-      if (gapsFilled.length > 0) {
+      else if (gapsFilled.length > 0) {
         reason = 'Fills gap: ' + gapsFilled.slice(0, 2).join(', ');
       }
-      // 2. Iron + Vit C synergy?
+      // 2. Iron + Vit C synergy? (generic, not in synergy DB)
       else if ((allTags.includes('iron-rich') || allNutrients.includes('iron')) &&
                (allNutrients.includes('vitamin C') || allTags.includes('vitamin-C'))) {
-        reason = 'Iron + Vitamin C synergy';
+        reason = '🔗 Iron + Vitamin C synergy';
       }
       // 3. Good nutrient coverage?
       else if (allNutrients.length >= 4) {
