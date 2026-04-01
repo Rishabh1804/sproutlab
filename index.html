@@ -1933,6 +1933,70 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 [data-theme="dark"] .sp-gap-chip { background:rgba(70,55,35,0.3); }
 
+/* ── Hydration Intelligence ── */
+.hy-grid {
+  display:grid; grid-template-columns:52px repeat(7, 1fr);
+  gap:3px; font-size:var(--fs-xs); min-width:0; width:100%;
+}
+.hy-header {
+  text-align:center; font-weight:600; color:var(--light);
+  padding:4px 0; font-size:var(--fs-xs);
+}
+.hy-label {
+  display:flex; align-items:center; gap:2px;
+  font-weight:600; color:var(--mid); white-space:nowrap;
+  font-size:var(--fs-xs); overflow:hidden;
+}
+.hy-cell {
+  aspect-ratio:1; border-radius:var(--r-md); min-height:28px; max-height:40px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:600; transition:background var(--ease-fast);
+}
+.hy-cell.hy-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 6px); color:var(--light); }
+.hy-temp-hot { background:rgba(240,100,80,0.15); color:rgba(200,60,40,0.9); }
+.hy-temp-warm { background:rgba(240,180,100,0.15); color:var(--tc-amber); }
+.hy-temp-cool { background:rgba(130,185,210,0.15); color:var(--tc-sky); }
+.hy-hydra-0 { background:rgba(0,0,0,0.04); color:var(--light); }
+.hy-hydra-1 { background:rgba(100,180,230,0.2); color:var(--tc-sky); }
+.hy-hydra-2 { background:rgba(100,180,230,0.45); color:white; }
+.hy-hydra-3 { background:rgba(100,180,230,0.7); color:white; }
+.hy-poop-ok { background:rgba(140,190,160,0.2); }
+.hy-poop-hard { background:rgba(240,100,80,0.2); color:var(--tc-rose); }
+.hy-poop-loose { background:rgba(240,180,100,0.2); color:var(--tc-amber); }
+[data-theme="dark"] .hy-cell.hy-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.04) 3px,rgba(255,255,255,0.04) 6px); }
+[data-theme="dark"] .hy-temp-hot { background:rgba(240,100,80,0.2); }
+[data-theme="dark"] .hy-hydra-1 { opacity:0.85; }
+.hy-alert-item {
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+  padding:4px 0; font-size:var(--fs-sm); line-height:var(--lh-relaxed);
+}
+
+/* ── Meal Diversity Index ── */
+.mdi-bar {
+  display:flex; height:5px; border-radius:var(--r-full);
+  background:rgba(0,0,0,0.06); overflow:hidden; margin-top:3px;
+}
+[data-theme="dark"] .mdi-bar { background:rgba(255,255,255,0.06); }
+.mdi-bar-fill {
+  height:100%; border-radius:var(--r-full);
+  transition:width var(--ease-med);
+}
+.mdi-great { background:var(--sage); }
+.mdi-ok { background:var(--amber); }
+.mdi-low { background:var(--rose); }
+.mdi-home-wrap {
+  margin-top:8px; padding:8px 12px; border-radius:var(--r-lg);
+  background:var(--warm);
+}
+[data-theme="dark"] .mdi-home-wrap { background:rgba(255,255,255,0.04); }
+.mdi-home-row {
+  display:flex; align-items:center; gap:var(--sp-8);
+  font-size:var(--fs-xs);
+}
+.mdi-home-label { font-weight:600; color:var(--mid); width:40px; }
+.mdi-home-bar { flex:1; min-width:0; }
+.mdi-home-val { font-weight:700; width:28px; text-align:right; }
+
 /* ── Tabs (moved to v1.9 section) ── */
 .tab-save-btn {
   flex:0 0 42px; padding:6px 0; border:none; border-radius:var(--r-lg);
@@ -3896,6 +3960,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 <symbol id="zi-handshake" viewBox="0 0 24 24"><path d="M7 11l-4-2v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M17 11l4-2v6l-4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M7 11c2-1 4-1 5 0s3 1 5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M7 15c2-1 4-1 5 0s3 1 5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
 <symbol id="zi-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.15"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
 <symbol id="zi-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v5.5L5.5 18a1.5 1.5 0 001.3 2.2h10.4a1.5 1.5 0 001.3-2.2L14 8.5V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M7.5 15h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-drop" viewBox="0 0 24 24"><path d="M12 2.5C12 2.5 5 10.5 5 15a7 7 0 0014 0c0-4.5-7-12.5-7-12.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/></symbol>
 </defs>
 </svg>
 <div class="app">
@@ -5204,13 +5269,21 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div class="t-sm t-light mt-4">Consistency trends, frequency patterns, food-poop delay mapping, new food watch windows, and color anomaly detection.</div>
       </div>
 
-      <!-- ─── CROSS-DOMAIN (placeholder) ─── -->
+      <!-- ─── CROSS-DOMAIN ─── -->
       <div class="home-section-label sec-t3 col-full">Cross-Domain</div>
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Coming Soon</div>
+
+      <!-- Hydration Intelligence -->
+      <div class="card card-daily col-full" id="infoHydrationCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoHydrationBody','infoHydrationChevron')">
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-drop"/></svg></div> Hydration Intelligence</div>
+          <span class="collapse-chevron" id="infoHydrationChevron">▾</span>
         </div>
-        <div class="t-sm t-light mt-4">Food→Sleep, Food→Poop combos, Sleep→Milestones, Medical→Sleep, Food→Growth correlations.</div>
+        <div id="infoHydrationSummary" class="mt-4"></div>
+        <div id="infoHydrationBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoHydrationGrid" class="mt-4"></div>
+          <div id="infoHydrationAlerts" class="mt-8"></div>
+          <div id="infoHydrationCorr" class="mt-8"></div>
+        </div>
       </div>
 
     </div>
@@ -12268,7 +12341,16 @@ function updateMealInsight(meal) {
   const box  = document.getElementById('insight-' + meal);
   const text = document.getElementById('insight-' + meal + '-text');
   if (insight) {
-    text.textContent = insight;
+    // Add diversity hint for multi-food meals
+    let diversityHint = '';
+    const foodItems = val.split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+    if (foodItems.length >= 2) {
+      const groupSet = new Set();
+      foodItems.forEach(f => { const cls = classifyFoodToGroup(f); if (cls) groupSet.add(cls.groupLabel); });
+      if (groupSet.size >= 3) diversityHint = ' · 🌈 ' + groupSet.size + ' food groups';
+      else if (groupSet.size === 1 && foodItems.length >= 3) diversityHint = ' · 🔄 all from ' + [...groupSet][0].toLowerCase();
+    }
+    text.innerHTML = insight + diversityHint;
     box.style.display = 'flex';
   } else {
     box.style.display = 'none';
@@ -23854,6 +23936,93 @@ function renderQLFreqPills() {
 }
 
 // ── Meal progress on Home ──
+
+// ── MEAL DIVERSITY INDEX ──
+// Shannon entropy-based diversity per meal slot + today aggregate
+
+function computeMealDiversity(dateStr) {
+  dateStr = dateStr || today();
+  const entry = feedingData[dateStr];
+  const meals = ['breakfast','lunch','dinner','snack'];
+  const mealLabels = { breakfast:'B', lunch:'L', dinner:'D', snack:'S' };
+  const results = {};
+  let totalFoods = 0;
+  const allGroups = new Set();
+  const allFoodsList = [];
+
+  meals.forEach(m => {
+    if (!entry || !isRealMeal(entry[m])) {
+      results[m] = { foods: 0, groups: 0, entropy: 0, score: 0, label: mealLabels[m], items: [] };
+      return;
+    }
+    const foodItems = entry[m].split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+    const groupSet = new Set();
+    foodItems.forEach(f => {
+      const cls = classifyFoodToGroup(f);
+      if (cls) { groupSet.add(cls.group); allGroups.add(cls.group); }
+      allFoodsList.push(f);
+    });
+
+    // Shannon entropy: -Σ(p * log2(p)) across food groups
+    const groupCounts = {};
+    foodItems.forEach(f => {
+      const cls = classifyFoodToGroup(f);
+      const g = cls ? cls.group : '_other';
+      groupCounts[g] = (groupCounts[g] || 0) + 1;
+    });
+    const total = foodItems.length;
+    let entropy = 0;
+    if (total > 1) {
+      Object.values(groupCounts).forEach(c => {
+        const p = c / total;
+        if (p > 0) entropy -= p * Math.log2(p);
+      });
+    }
+
+    // Normalize to 0-100 score: max entropy for N groups = log2(N)
+    const maxEntropy = total > 1 ? Math.log2(Math.min(Object.keys(groupCounts).length, 5)) : 1;
+    const score = total === 0 ? 0 : total === 1 ? 20 : Math.round(Math.min((entropy / Math.max(maxEntropy, 0.01)) * 60 + (groupSet.size * 10), 100));
+
+    results[m] = { foods: total, groups: groupSet.size, entropy: +entropy.toFixed(2), score, label: mealLabels[m], items: foodItems };
+    totalFoods += total;
+  });
+
+  // Day-level aggregate
+  const dayGroupCounts = {};
+  allFoodsList.forEach(f => {
+    const cls = classifyFoodToGroup(f);
+    const g = cls ? cls.group : '_other';
+    dayGroupCounts[g] = (dayGroupCounts[g] || 0) + 1;
+  });
+  let dayEntropy = 0;
+  if (allFoodsList.length > 1) {
+    Object.values(dayGroupCounts).forEach(c => {
+      const p = c / allFoodsList.length;
+      if (p > 0) dayEntropy -= p * Math.log2(p);
+    });
+  }
+  const maxDayEntropy = allFoodsList.length > 1 ? Math.log2(Math.min(Object.keys(dayGroupCounts).length, 7)) : 1;
+  const dayScore = allFoodsList.length === 0 ? 0 : allFoodsList.length === 1 ? 15 : Math.round(Math.min((dayEntropy / Math.max(maxDayEntropy, 0.01)) * 55 + (allGroups.size * 8), 100));
+
+  // Rut detection: is any single food >40% of all items today?
+  const foodFreq = {};
+  allFoodsList.forEach(f => { foodFreq[f] = (foodFreq[f] || 0) + 1; });
+  let rutFood = null;
+  Object.entries(foodFreq).forEach(([f, c]) => {
+    if (allFoodsList.length >= 3 && (c / allFoodsList.length) > 0.4) rutFood = f;
+  });
+
+  return { meals: results, dayScore, dayEntropy: +dayEntropy.toFixed(2), totalFoods, totalGroups: allGroups.size, rutFood };
+}
+
+function getMdiColor(score) {
+  return score >= 60 ? 'mdi-great' : score >= 35 ? 'mdi-ok' : 'mdi-low';
+}
+
+function getMdiTextColor(score) {
+  return score >= 60 ? 'var(--tc-sage)' : score >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)';
+}
+
 function renderHomeMealProgress() {
   const card = document.getElementById('homeMealProgressCard');
   const el = document.getElementById('homeMealProgressContent');
@@ -23907,6 +24076,35 @@ function renderHomeMealProgress() {
     html += `<div style="text-align:center;font-size:var(--fs-xs);color:var(--light);margin-top:6px;">${realMeals}/3 logged${skipped > 0 ? ' · ' + skipped + ' skipped' : ''} · <span style="color:var(--tc-sky);cursor:pointer;" onclick="skipMeals(['${emptyNames.join("','")}'])">Skip remaining</span></div>`;
   } else {
     html += `<div style="text-align:center;font-size:var(--fs-xs);color:var(--tc-sage);margin-top:6px;font-weight:600;">✅ All accounted for (${realMeals} logged, ${skipped} skipped)</div>`;
+  }
+
+  // ── Meal Diversity Index (visible in Simple Mode) ──
+  if (realMeals >= 2) {
+    const mdi = computeMealDiversity(today());
+    const dayColor = getMdiColor(mdi.dayScore);
+    const dayTextColor = getMdiTextColor(mdi.dayScore);
+    const dayLabel = mdi.dayScore >= 60 ? 'Great variety' : mdi.dayScore >= 35 ? 'OK variety' : 'Low variety';
+    const pct = Math.min(mdi.dayScore, 100);
+
+    html += `<div class="mdi-home-wrap">`;
+    html += `<div class="mdi-home-row"><span style="font-weight:600;color:var(--mid);font-size:var(--fs-xs);">Today's diversity</span><span style="margin-left:auto;font-weight:700;font-size:var(--fs-xs);color:${dayTextColor};">${dayLabel} · ${mdi.totalGroups} group${mdi.totalGroups !== 1 ? 's' : ''}</span></div>`;
+    html += `<div class="mdi-bar"><div class="mdi-bar-fill ${dayColor}" style="width:${pct}%;"></div></div>`;
+
+    // Per-meal mini bars
+    html += `<div style="display:flex;gap:var(--sp-4);margin-top:6px;">`;
+    ['breakfast','lunch','dinner','snack'].forEach(mk => {
+      const md = mdi.meals[mk];
+      if (md.foods === 0) return;
+      const c = getMdiColor(md.score);
+      const barPct = Math.min(md.score, 100);
+      html += `<div style="flex:1;min-width:0;"><div class="t-xs" style="color:var(--light);text-align:center;">${md.label}</div><div class="mdi-bar"><div class="mdi-bar-fill ${c}" style="width:${barPct}%;"></div></div></div>`;
+    });
+    html += `</div>`;
+
+    if (mdi.rutFood) {
+      html += `<div class="t-xs" style="color:var(--tc-amber);margin-top:4px;">🔄 ${mdi.rutFood} appears a lot today — try swapping one meal</div>`;
+    }
+    html += `</div>`;
   }
 
   el.innerHTML = html;
@@ -24193,6 +24391,7 @@ function renderInfo() {
   renderInfoComboFreq();
   renderInfoMealBreakdown();
   renderInfoSmartPairing();
+  renderInfoHydration();
 }
 
 function renderInfoFoodIntro() {
@@ -25107,6 +25306,279 @@ function getSynergyPairings(rawFoods) {
   });
   suggestions.sort((a, b) => b._score - a._score);
   return suggestions.slice(0, 4);
+}
+
+// ── CROSS-DOMAIN: HYDRATION INTELLIGENCE ──
+
+const WEATHER_CACHE_KEY = 'ziva_weather_cache';
+let _weatherCache = {};
+try { _weatherCache = JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY)) || {}; } catch { _weatherCache = {}; }
+
+function saveWeatherCache() {
+  // Keep last 60 days max
+  const keys = Object.keys(_weatherCache).sort();
+  if (keys.length > 60) {
+    keys.slice(0, keys.length - 60).forEach(k => delete _weatherCache[k]);
+  }
+  localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(_weatherCache));
+}
+
+// Fetch historical weather for a date range from open-meteo archive API
+let _weatherFetchInFlight = false;
+function fetchHistoricalWeather(startDate, endDate) {
+  if (_weatherFetchInFlight) return Promise.resolve();
+  _weatherFetchInFlight = true;
+  const lat = 22.8, lon = 86.18;
+  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=${startDate}&end_date=${endDate}`)
+    .then(r => r.json())
+    .then(data => {
+      _weatherFetchInFlight = false;
+      if (data.daily && data.daily.time) {
+        data.daily.time.forEach((d, i) => {
+          _weatherCache[d] = {
+            maxTemp: Math.round(data.daily.temperature_2m_max[i]),
+            humidity: Math.round(data.daily.relative_humidity_2m_max[i]),
+            code: data.daily.weather_code[i],
+          };
+        });
+        saveWeatherCache();
+      }
+    })
+    .catch(() => { _weatherFetchInFlight = false; });
+}
+
+function getWeatherForDate(dateStr) {
+  return _weatherCache[dateStr] || null;
+}
+
+// Compute hydration score for a day: count of hydrating/cooling foods
+function computeDayHydration(dateStr) {
+  const dayFoods = extractDayFoods(dateStr);
+  let hydraCount = 0;
+  const hydraFoods = [];
+  dayFoods.forEach(f => {
+    const nut = getNutrition(f);
+    if (nut && (nut.tags.includes('hydrating') || nut.tags.includes('cooling'))) {
+      hydraCount++;
+      hydraFoods.push(f);
+    }
+    // Also count explicit hydrating items not in NUTRITION
+    if (['coconut water','buttermilk','chaas','lassi','nimbu pani','lemon water','ors'].some(h => f.includes(h))) {
+      if (!hydraFoods.includes(f)) { hydraCount++; hydraFoods.push(f); }
+    }
+  });
+  return { hydraCount, hydraFoods, hasMeals: dayFoods.length > 0 };
+}
+
+// Get worst poop consistency for a date
+function getPoopConsistencyForDate(dateStr) {
+  const dayPoops = poopData.filter(p => p.date === dateStr);
+  if (dayPoops.length === 0) return null;
+  const CON_RANK = { pellet:0, hard:1, watery:2, loose:3, normal:4, soft:5 };
+  let worst = 'soft';
+  dayPoops.forEach(p => {
+    if ((CON_RANK[p.consistency] ?? 5) < (CON_RANK[worst] ?? 5)) worst = p.consistency;
+  });
+  return worst;
+}
+
+function computeHydrationIntelligence(windowDays) {
+  windowDays = windowDays || 7;
+  const todayDate = new Date(today());
+  const days = [];
+
+  for (let i = windowDays - 1; i >= 0; i--) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const wx = getWeatherForDate(ds);
+    const hydra = computeDayHydration(ds);
+    const poop = getPoopConsistencyForDate(ds);
+
+    days.push({
+      date: ds,
+      temp: wx ? wx.maxTemp : null,
+      humidity: wx ? wx.humidity : null,
+      wxCode: wx ? wx.code : null,
+      hydraCount: hydra.hydraCount,
+      hydraFoods: hydra.hydraFoods,
+      hasMeals: hydra.hasMeals,
+      poopConsistency: poop,
+    });
+  }
+
+  // Correlations
+  let hotDays = 0, hotDaysHard = 0, hotDaysHydrated = 0;
+  let coolDays = 0, coolDaysHard = 0;
+  const alerts = [];
+
+  days.forEach(d => {
+    if (d.temp === null) return;
+    if (d.temp >= 34) {
+      hotDays++;
+      if (d.poopConsistency === 'hard' || d.poopConsistency === 'pellet') hotDaysHard++;
+      if (d.hydraCount >= 1) hotDaysHydrated++;
+    } else if (d.temp < 28) {
+      coolDays++;
+      if (d.poopConsistency === 'hard' || d.poopConsistency === 'pellet') coolDaysHard++;
+    }
+  });
+
+  // Heat→hard poop correlation
+  const hotHardRate = hotDays >= 2 ? (hotDaysHard / hotDays) : null;
+  const coolHardRate = coolDays >= 2 ? (coolDaysHard / coolDays) : null;
+  if (hotHardRate !== null && hotHardRate > 0.3 && (coolHardRate === null || hotHardRate > coolHardRate + 0.15)) {
+    alerts.push({ icon: '🌡️', text: `Hard stools are ${Math.round(hotHardRate * 100)}% more likely on hot days (≥34°C) — increase hydrating foods on hot days` });
+  }
+
+  // Today's weather advisory
+  const todayData = days[days.length - 1];
+  if (todayData.temp !== null && todayData.temp >= 34 && todayData.hasMeals && todayData.hydraCount === 0) {
+    alerts.unshift({ icon: '💧', text: `It's ${todayData.temp}°C today and no hydrating foods logged yet — try watermelon, lauki, coconut water, or buttermilk` });
+  } else if (todayData.temp !== null && todayData.temp >= 34 && todayData.hydraCount >= 1) {
+    alerts.push({ icon: '✅', text: `Hot day (${todayData.temp}°C) but hydration covered — ${todayData.hydraFoods.join(', ')}` });
+  }
+
+  // Seasonal pattern
+  const avgTemp = days.filter(d => d.temp !== null).reduce((s, d) => s + d.temp, 0) / Math.max(days.filter(d => d.temp !== null).length, 1);
+  let season = 'moderate';
+  if (avgTemp >= 34) season = 'hot';
+  else if (avgTemp >= 28) season = 'warm';
+  else if (avgTemp < 20) season = 'cool';
+
+  const seasonTip = season === 'hot' ? 'Summer peak — prioritize lauki, watermelon, coconut water, buttermilk, cucumber daily'
+    : season === 'warm' ? 'Warm weather — include at least 1 hydrating food per day'
+    : season === 'cool' ? 'Cool weather — warm soups and sattu are great for hydration + warmth'
+    : null;
+
+  return { days, alerts, hotDays, hotDaysHard, hotDaysHydrated, season, seasonTip, avgTemp: Math.round(avgTemp) };
+}
+
+function renderInfoHydration() {
+  const summaryEl = document.getElementById('infoHydrationSummary');
+  const gridEl = document.getElementById('infoHydrationGrid');
+  const alertsEl = document.getElementById('infoHydrationAlerts');
+  const corrEl = document.getElementById('infoHydrationCorr');
+  if (!summaryEl) return;
+
+  // Check if we need to fetch weather data
+  const todayStr = today();
+  const startDate = toDateStr(new Date(new Date(todayStr).getTime() - 6 * 86400000));
+  const needsFetch = !_weatherCache[todayStr] || !_weatherCache[startDate];
+
+  if (needsFetch) {
+    // Fetch last 14 days for correlation data
+    const fetchStart = toDateStr(new Date(new Date(todayStr).getTime() - 13 * 86400000));
+    summaryEl.innerHTML = '<div class="t-sm t-light">Loading weather data...</div>';
+    fetchHistoricalWeather(fetchStart, todayStr).then(() => {
+      _renderHydrationContent();
+    });
+  } else {
+    _renderHydrationContent();
+  }
+}
+
+function _renderHydrationContent() {
+  const summaryEl = document.getElementById('infoHydrationSummary');
+  const gridEl = document.getElementById('infoHydrationGrid');
+  const alertsEl = document.getElementById('infoHydrationAlerts');
+  const corrEl = document.getElementById('infoHydrationCorr');
+  if (!summaryEl) return;
+
+  const data = computeHydrationIntelligence(7);
+
+  // Summary
+  const daysWithWeather = data.days.filter(d => d.temp !== null).length;
+  if (daysWithWeather === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">Weather data unavailable — check connection</div>';
+    gridEl.innerHTML = '';
+    alertsEl.innerHTML = '';
+    corrEl.innerHTML = '';
+    return;
+  }
+
+  const seasonEmoji = data.season === 'hot' ? '🔥' : data.season === 'warm' ? '☀️' : data.season === 'cool' ? '❄️' : '🌤️';
+  summaryEl.innerHTML = `<div class="t-sm">${seasonEmoji} <strong>${data.avgTemp}°C avg</strong> <span class="t-light">this week</span>${data.alerts.length > 0 ? ` · <span style="color:var(--tc-amber);font-weight:600;">${data.alerts.length} alert${data.alerts.length > 1 ? 's' : ''}</span>` : ' · <span style="color:var(--tc-sage);font-weight:600;">hydration OK</span>'}</div>`;
+
+  // 3-row grid: Temperature | Hydrating Foods | Poop Consistency
+  let gridHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-4);">7-Day Hydration Map</div>';
+  gridHtml += '<div class="hy-grid">';
+
+  // Headers
+  gridHtml += '<div class="hy-header"></div>';
+  data.days.forEach(d => {
+    const dt = new Date(d.date);
+    const dayName = dt.toLocaleDateString('en-IN', { weekday:'short' }).slice(0, 2);
+    const isToday = d.date === today();
+    gridHtml += `<div class="hy-header" style="${isToday ? 'color:var(--tc-rose);font-weight:700;' : ''}">${dayName}</div>`;
+  });
+
+  // Row 1: Temperature
+  gridHtml += '<div class="hy-label">🌡️ Temp</div>';
+  data.days.forEach(d => {
+    if (d.temp === null) {
+      gridHtml += '<div class="hy-cell hy-nodata">–</div>';
+    } else {
+      const cls = d.temp >= 34 ? 'hy-temp-hot' : d.temp >= 28 ? 'hy-temp-warm' : 'hy-temp-cool';
+      gridHtml += `<div class="hy-cell ${cls}">${d.temp}°</div>`;
+    }
+  });
+
+  // Row 2: Hydrating food count
+  gridHtml += '<div class="hy-label">💧 Hydra</div>';
+  data.days.forEach(d => {
+    if (!d.hasMeals) {
+      gridHtml += '<div class="hy-cell hy-nodata">–</div>';
+    } else {
+      const lvl = d.hydraCount === 0 ? 'hy-hydra-0' : d.hydraCount <= 1 ? 'hy-hydra-1' : d.hydraCount <= 2 ? 'hy-hydra-2' : 'hy-hydra-3';
+      const label = d.hydraCount === 0 ? '·' : d.hydraCount;
+      gridHtml += `<div class="hy-cell ${lvl}" title="${d.hydraFoods.join(', ') || 'none'}">${label}</div>`;
+    }
+  });
+
+  // Row 3: Poop consistency
+  gridHtml += '<div class="hy-label">💩 Poop</div>';
+  data.days.forEach(d => {
+    if (d.poopConsistency === null) {
+      gridHtml += '<div class="hy-cell hy-nodata">–</div>';
+    } else {
+      const cls = (d.poopConsistency === 'hard' || d.poopConsistency === 'pellet') ? 'hy-poop-hard'
+        : (d.poopConsistency === 'watery' || d.poopConsistency === 'loose') ? 'hy-poop-loose'
+        : 'hy-poop-ok';
+      const label = d.poopConsistency.slice(0, 3);
+      gridHtml += `<div class="hy-cell ${cls}">${label}</div>`;
+    }
+  });
+
+  gridHtml += '</div>';
+
+  // Legend
+  gridHtml += '<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">';
+  gridHtml += '<div class="hy-cell hy-temp-hot" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">H</div><span class="t-xs t-light">≥34°</span>';
+  gridHtml += '<div class="hy-cell hy-temp-warm" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">W</div><span class="t-xs t-light">28-33°</span>';
+  gridHtml += '<div class="hy-cell hy-hydra-2" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;"></div><span class="t-xs t-light">Hydrated</span>';
+  gridHtml += '<div class="hy-cell hy-poop-hard" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">!</div><span class="t-xs t-light">Hard</span>';
+  gridHtml += '</div>';
+
+  gridEl.innerHTML = gridHtml;
+
+  // Alerts
+  if (data.alerts.length > 0) {
+    let alertHtml = '';
+    data.alerts.forEach(a => {
+      alertHtml += `<div class="hy-alert-item"><span>${a.icon}</span><span>${a.text}</span></div>`;
+    });
+    alertsEl.innerHTML = alertHtml;
+  } else {
+    alertsEl.innerHTML = '';
+  }
+
+  // Season tip
+  if (data.seasonTip) {
+    corrEl.innerHTML = `<div class="t-sm" style="color:var(--mid);"><strong>Season tip:</strong> ${data.seasonTip}</div>`;
+  } else {
+    corrEl.innerHTML = '';
+  }
 }
 
 // ── Update renderInfo ──
