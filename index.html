@@ -2028,6 +2028,32 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .dqp-same:active { transform:scale(0.95); background:var(--sky-light); color:var(--tc-sky); }
 [data-theme="dark"] .dqp-same { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
 
+/* ── Sleep In-Progress Banner ── */
+.sip-banner {
+  padding:var(--sp-12) 14px; border-radius:var(--r-xl);
+  background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(180,160,220,0.08));
+  border:1.5px solid rgba(99,102,241,0.2);
+  display:flex; align-items:center; gap:var(--sp-12); flex-wrap:wrap;
+}
+[data-theme="dark"] .sip-banner { background:linear-gradient(135deg, rgba(99,102,241,0.12), rgba(180,160,220,0.1)); border-color:rgba(99,102,241,0.25); }
+.sip-pulse {
+  width:10px; height:10px; border-radius:var(--r-full);
+  background:var(--tc-indigo); flex-shrink:0;
+  animation:sipPulse 2s ease-in-out infinite;
+}
+@keyframes sipPulse {
+  0%, 100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.8); }
+}
+.sip-elapsed { font-size:var(--fs-lg); font-weight:800; color:var(--tc-indigo); }
+.sip-end-btn {
+  padding:6px 16px; border-radius:var(--r-2xl); border:none;
+  background:var(--tc-indigo); color:white; font-weight:700;
+  font-size:var(--fs-sm); font-family:'Nunito',sans-serif;
+  cursor:pointer; margin-left:auto;
+}
+.sip-end-btn:active { transform:scale(0.95); opacity:0.9; }
+
 /* ── Tabs (moved to v1.9 section) ── */
 .tab-save-btn {
   flex:0 0 42px; padding:6px 0; border:none; border-radius:var(--r-lg);
@@ -4852,6 +4878,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- ─── TIER 2: ACTIONS ─── -->
       <div class="home-section-label sec-t1 col-full">Log Sleep</div>
 
+      <!-- In-progress sleep/nap banner -->
+      <div class="col-full" id="sleepInProgressBanner" style="display:none;"></div>
+
       <!-- SLEEP LOG FORM -->
       <div class="card card-action col-full overflow-visible" id="sleepNightCard">
         <div class="card-header">
@@ -4891,6 +4920,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="sleepCancelBtn" onclick="cancelSleepEdit('night')">Cancel</button>
+            <button class="btn btn-ghost" onclick="startSleepNow('night')" id="sleepStartBtn" title="Start tracking now — end later">▶ Start Now</button>
             <button class="btn-primary bp-indigo" onclick="addSleepEntry()" id="sleepSaveBtn">Save Sleep Log</button>
           </div>
         </div>
@@ -4925,6 +4955,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="napCancelBtn" onclick="cancelSleepEdit('nap')">Cancel</button>
+            <button class="btn btn-ghost" onclick="startSleepNow('nap')" id="napStartBtn" title="Start tracking now — end later">▶ Start Now</button>
             <button class="btn-primary bp-indigo" onclick="addNapEntry()" id="napSaveBtn">Save Nap</button>
           </div>
         </div>
@@ -5438,7 +5469,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <button class="stepper-btn stepper-ctx-indigo" onclick="adjQLWake(1)">+</button>
         </div>
       </div>
-      <button class="ql-save ql-save-sleep" onclick="saveQLSleep()">Save Sleep ✓</button>
+      <div class="d-flex gap-8" style="flex-wrap:wrap;">
+        <button class="btn btn-ghost" style="flex:1;min-width:100px;" onclick="startSleepNow('night');closeQuickLogAll();">▶ Start Now</button>
+        <button class="ql-save ql-save-sleep" style="flex:1;min-width:100px;" onclick="saveQLSleep()">Save Sleep ✓</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5461,7 +5495,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <input type="time" id="qlNapEnd" class="form-input input-ctx-lav">
         </div>
       </div>
-      <button class="ql-save ql-save-nap" onclick="saveQLNap()">Save Nap ✓</button>
+      <div class="d-flex gap-8" style="flex-wrap:wrap;">
+        <button class="btn btn-ghost" style="flex:1;min-width:100px;" onclick="startSleepNow('nap');closeQuickLogAll();">▶ Start Now</button>
+        <button class="ql-save ql-save-nap" style="flex:1;min-width:100px;" onclick="saveQLNap()">Save Nap ✓</button>
+      </div>
     </div>
   </div>
 </div>
@@ -16003,6 +16040,121 @@ function addNapEntry() {
   setTimeout(drawSleepChart, 60);
 }
 
+// ── Real-time sleep/nap tracking ──
+
+const SLEEP_INPROGRESS_KEY = 'ziva_sleep_inprogress';
+
+function startSleepNow(type) {
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 5); // HH:MM
+  const dateStr = toDateStr(now);
+
+  const entry = {
+    type, // 'night' or 'nap'
+    date: dateStr,
+    startTime: timeStr,
+    startTs: now.toISOString(),
+  };
+
+  localStorage.setItem(SLEEP_INPROGRESS_KEY, JSON.stringify(entry));
+
+  const label = type === 'night' ? 'Bedtime' : 'Nap';
+  showQLToast(`▶ ${label} started at ${formatTimeShort(timeStr)}`, 3000);
+
+  renderSleepInProgressBanner();
+}
+
+function endSleepNow() {
+  const raw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+  if (!raw) return;
+  const ip = JSON.parse(raw);
+
+  const now = new Date();
+  const endTime = now.toTimeString().slice(0, 5);
+  const endDate = toDateStr(now);
+
+  const entry = {
+    date: ip.date,
+    bedtime: ip.startTime,
+    wakeTime: endTime,
+    type: ip.type,
+    notes: '',
+    ts: now.toISOString(),
+  };
+
+  if (ip.type === 'nap') {
+    entry.napType = classifyNapType(ip.startTime);
+    entry.quality = null;
+  } else {
+    entry.wakeUps = 0;
+  }
+
+  sleepData.push(entry);
+  sleepData.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.ts || '').localeCompare(a.ts || ''));
+  save(KEYS.sleep, sleepData);
+
+  localStorage.removeItem(SLEEP_INPROGRESS_KEY);
+
+  const dur = calcSleepDuration(ip.startTime, endTime);
+  const label = ip.type === 'night' ? 'Night sleep' : 'Nap';
+  showQLToast(`✓ ${label} logged — ${dur.h}h ${dur.m}m`, 3000);
+
+  renderSleep();
+  renderHomeSleep();
+  renderSleepInProgressBanner();
+  setTimeout(drawSleepChart, 60);
+}
+
+function cancelSleepInProgress() {
+  localStorage.removeItem(SLEEP_INPROGRESS_KEY);
+  renderSleepInProgressBanner();
+}
+
+let _sipInterval = null;
+
+function renderSleepInProgressBanner() {
+  const banner = document.getElementById('sleepInProgressBanner');
+  if (!banner) return;
+
+  const raw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+  if (!raw) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    if (_sipInterval) { clearInterval(_sipInterval); _sipInterval = null; }
+    return;
+  }
+
+  const ip = JSON.parse(raw);
+  const label = ip.type === 'night' ? '🌙 Night sleep' : '💤 Nap';
+
+  function updateElapsed() {
+    const started = new Date(ip.startTs);
+    const now = new Date();
+    const diffMs = now - started;
+    const mins = Math.floor(diffMs / 60000);
+    const hrs = Math.floor(mins / 60);
+    const m = mins % 60;
+    const elapsed = hrs > 0 ? `${hrs}h ${m}m` : `${m}m`;
+
+    banner.innerHTML = `<div class="sip-banner">
+      <div class="sip-pulse"></div>
+      <div>
+        <div class="t-sm" style="font-weight:600;color:var(--tc-indigo);">${label} in progress</div>
+        <div class="t-xs t-light">Started ${formatTimeShort(ip.startTime)}</div>
+      </div>
+      <div class="sip-elapsed">${elapsed}</div>
+      <button class="sip-end-btn" onclick="endSleepNow()">■ End Now</button>
+      <button class="btn btn-ghost" style="font-size:var(--fs-xs);padding:4px 8px;" onclick="cancelSleepInProgress()">✕</button>
+    </div>`;
+  }
+
+  banner.style.display = '';
+  updateElapsed();
+
+  if (_sipInterval) clearInterval(_sipInterval);
+  _sipInterval = setInterval(updateElapsed, 30000); // update every 30s
+}
+
 function editSleepEntry(idx) {
   const entry = sleepData[idx];
   if (!entry) return;
@@ -16117,6 +16269,7 @@ function renderSleep() {
   updateSleepDayLabel('sleepDate', 'sleepDayLabel');
   updateSleepDayLabel('napDate', 'napDayLabel');
 
+  renderSleepInProgressBanner();
   renderSleepStats();
   renderSleepLog();
   renderSleepTips();
@@ -16516,8 +16669,11 @@ function renderHomeSleep() {
   const lastNight = getLastNightSleep();
   const todayNaps = getTodayNaps();
 
-  if (!lastNight && todayNaps.length === 0) {
-    // No data at all — prompt to log
+  // Check for in-progress sleep/nap
+  const ipRaw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+  const hasInProgress = !!ipRaw;
+
+  if (!lastNight && todayNaps.length === 0 && !hasInProgress) {
     card.style.display = '';
     el.innerHTML = `<div class="info-strip is-indigo tappable" onclick="switchTab('sleep')">
       <span><svg class="zi"><use href="#zi-moon"/></svg></span>
@@ -16529,6 +16685,26 @@ function renderHomeSleep() {
 
   card.style.display = '';
   let html = '';
+
+  // In-progress banner on Home
+  if (hasInProgress) {
+    const ip = JSON.parse(ipRaw);
+    const started = new Date(ip.startTs);
+    const diffMs = Date.now() - started.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    const hrs = Math.floor(mins / 60);
+    const m = mins % 60;
+    const elapsed = hrs > 0 ? `${hrs}h ${m}m` : `${m}m`;
+    const label = ip.type === 'night' ? '🌙 Sleep' : '💤 Nap';
+    html += `<div class="sip-banner" style="margin-bottom:8px;">
+      <div class="sip-pulse"></div>
+      <div>
+        <div class="t-sm" style="font-weight:600;color:var(--tc-indigo);">${label} in progress · ${elapsed}</div>
+        <div class="t-xs t-light">Since ${formatTimeShort(ip.startTime)}</div>
+      </div>
+      <button class="sip-end-btn" onclick="endSleepNow()">■ End</button>
+    </div>`;
+  }
 
   if (lastNight) {
     const dur = calcSleepDuration(lastNight.bedtime, lastNight.wakeTime);
