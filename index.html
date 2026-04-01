@@ -384,6 +384,16 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .meal-card.snack     { background:var(--amber-light); border-color:rgba(240,200,120,0.5); }
 
 .meal-label { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:6px; display:flex; align-items:center; gap:var(--sp-8); }
+.meal-time-input {
+  margin-left:auto; width:70px; padding:2px 6px;
+  border:1px solid var(--border-subtle); border-radius:var(--r-md);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:500;
+  color:var(--mid); background:transparent; outline:none;
+  text-transform:none; letter-spacing:0;
+}
+.meal-time-input:focus { border-color:var(--tc-peach); color:var(--text); }
+[data-theme="dark"] .meal-time-input { border-color:rgba(255,255,255,0.1); color:var(--mid); }
+[data-theme="dark"] .meal-time-input:focus { border-color:var(--tc-peach); color:var(--text); }
 .meal-skip-btn { font-size:var(--fs-xs); font-weight:500; color:var(--light); text-transform:none; letter-spacing:normal; cursor:pointer; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); background:var(--surface); border:1px solid var(--border-subtle); transition:all var(--ease-fast); margin-left:auto; }
 .meal-skip-btn:hover { background:var(--peach-light); color:var(--tc-caution); }
 .meal-skip-btn.skipped { background:var(--peach-light); color:var(--tc-caution); pointer-events:none; }
@@ -2053,6 +2063,12 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   cursor:pointer; margin-left:auto;
 }
 .sip-end-btn:active { transform:scale(0.95); opacity:0.9; }
+.sip-tab-dot {
+  position:absolute; top:4px; right:4px;
+  width:7px; height:7px; border-radius:var(--r-full);
+  background:var(--tc-indigo);
+  animation:sipPulse 2s ease-in-out infinite;
+}
 
 /* ── Tabs (moved to v1.9 section) ── */
 .tab-save-btn {
@@ -2815,6 +2831,7 @@ body.simple-mode .ins-card-alert-intel,
   font-size:var(--fs-sm); font-weight:600; white-space:nowrap;
   cursor:pointer; transition:all var(--ease-fast);
   border:1.5px solid transparent; background:transparent; color:var(--mid);
+  position:relative;
 }
 .track-sub-btn:active { transform:scale(0.96); }
 .track-sub-btn.active { background:var(--blush); border-color:var(--rose); color:var(--tc-rose); font-weight:700; box-shadow:0 1px 6px rgba(242,168,184,0.2); }
@@ -4495,7 +4512,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
         <div class="meal-cards">
           <div class="meal-card breakfast">
-            <div class="meal-label">🌤 Breakfast <span class="meal-skip-btn" id="skip-breakfast" onclick="event.stopPropagation();skipSingleMeal('breakfast')" style="display:none;">skip</span></div>
+            <div class="meal-label">🌤 Breakfast <span class="meal-skip-btn" id="skip-breakfast" onclick="event.stopPropagation();skipSingleMeal('breakfast')" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-breakfast" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-breakfast"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('breakfast')" onfocus="onMealFocus('breakfast')" autocomplete="off">
@@ -4504,7 +4521,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <div class="meal-insight" id="insight-breakfast" style="display:none;"><span class="meal-insight-icon">✨</span><span id="insight-breakfast-text"></span></div>
           </div>
           <div class="meal-card lunch">
-            <div class="meal-label">☀️ Lunch <span class="meal-skip-btn" id="skip-lunch" onclick="event.stopPropagation();skipSingleMeal('lunch')" style="display:none;">skip</span></div>
+            <div class="meal-label">☀️ Lunch <span class="meal-skip-btn" id="skip-lunch" onclick="event.stopPropagation();skipSingleMeal('lunch')" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-lunch" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-lunch"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('lunch')" onfocus="onMealFocus('lunch')" autocomplete="off">
@@ -4513,7 +4530,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon">✨</span><span id="insight-lunch-text"></span></div>
           </div>
           <div class="meal-card dinner">
-            <div class="meal-label">🌙 Dinner <span class="meal-skip-btn" id="skip-dinner" onclick="event.stopPropagation();skipSingleMeal('dinner')" style="display:none;">skip</span></div>
+            <div class="meal-label">🌙 Dinner <span class="meal-skip-btn" id="skip-dinner" onclick="event.stopPropagation();skipSingleMeal('dinner')" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-dinner"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('dinner')" onfocus="onMealFocus('dinner')" autocomplete="off">
@@ -4522,7 +4539,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <div class="meal-insight" id="insight-dinner" style="display:none;"><span class="meal-insight-icon">✨</span><span id="insight-dinner-text"></span></div>
           </div>
           <div class="meal-card snack">
-            <div class="meal-label">🍪 Snack <span class="meal-skip-btn" id="skip-snack" onclick="event.stopPropagation();skipSingleMeal('snack')" style="display:none;">skip</span></div>
+            <div class="meal-label">🍪 Snack <span class="meal-skip-btn" id="skip-snack" onclick="event.stopPropagation();skipSingleMeal('snack')" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-snack" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-snack"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('snack')" onfocus="onMealFocus('snack')" autocomplete="off">
@@ -4920,7 +4937,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="sleepCancelBtn" onclick="cancelSleepEdit('night')">Cancel</button>
-            <button class="btn btn-ghost" onclick="startSleepNow('night')" id="sleepStartBtn" title="Start tracking now — end later">▶ Start Now</button>
+            <button class="btn btn-ghost" onclick="startSleepNow('night')" id="sleepStartBtn" title="Uses entered time, or current time if empty">▶ Start</button>
             <button class="btn-primary bp-indigo" onclick="addSleepEntry()" id="sleepSaveBtn">Save Sleep Log</button>
           </div>
         </div>
@@ -4955,7 +4972,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="napCancelBtn" onclick="cancelSleepEdit('nap')">Cancel</button>
-            <button class="btn btn-ghost" onclick="startSleepNow('nap')" id="napStartBtn" title="Start tracking now — end later">▶ Start Now</button>
+            <button class="btn btn-ghost" onclick="startSleepNow('nap')" id="napStartBtn" title="Uses entered time, or current time if empty">▶ Start</button>
             <button class="btn-primary bp-indigo" onclick="addNapEntry()" id="napSaveBtn">Save Nap</button>
           </div>
         </div>
@@ -5433,6 +5450,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <input type="text" id="qlFeedInput" class="form-input input-ctx-peach" placeholder="e.g. ragi porridge, dal rice..." autocomplete="off" oninput="updateQLFeedDropdown()">
           <div class="meal-dropdown" id="qlFeedDropdown"></div>
         </div>
+      </div>
+      <div class="d-flex gap-8 items-center">
+        <label class="micro-label" style="margin:0;">Time</label>
+        <input type="time" id="qlFeedTime" class="form-input input-ctx-peach" style="width:90px;padding:5px 8px;font-size:var(--fs-sm);">
+        <span class="t-xs t-light">optional</span>
       </div>
       <div id="qlSameAsWrap" style="display:none;">
         <label class="micro-label">Quick repeat</label>
@@ -11582,13 +11604,13 @@ function renderFeedingHistory() {
             <div class="hd-chevron">▾</div>
           </div>
           <div class="hd-content">
-            ${entry.breakfast ? `<div class="history-meal-row"><span class="history-meal-label">🌤 Break.</span><span class="history-meal-val">${escHtml(entry.breakfast)}</span></div>` : ''}
+            ${entry.breakfast ? `<div class="history-meal-row"><span class="history-meal-label">🌤 Break.${entry.breakfast_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.breakfast_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.breakfast)}</span></div>` : ''}
             ${bInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${bInsight}</span></div>` : ''}
-            ${entry.lunch ? `<div class="history-meal-row"><span class="history-meal-label">☀️ Lunch</span><span class="history-meal-val">${escHtml(entry.lunch)}</span></div>` : ''}
+            ${entry.lunch ? `<div class="history-meal-row"><span class="history-meal-label">☀️ Lunch${entry.lunch_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.lunch_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.lunch)}</span></div>` : ''}
             ${lInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${lInsight}</span></div>` : ''}
-            ${entry.dinner ? `<div class="history-meal-row"><span class="history-meal-label">🌙 Dinner</span><span class="history-meal-val">${escHtml(entry.dinner)}</span></div>` : ''}
+            ${entry.dinner ? `<div class="history-meal-row"><span class="history-meal-label">🌙 Dinner${entry.dinner_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.dinner_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.dinner)}</span></div>` : ''}
             ${dInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${dInsight}</span></div>` : ''}
-            ${entry.snack ? `<div class="history-meal-row"><span class="history-meal-label">🍪 Snack</span><span class="history-meal-val">${escHtml(entry.snack)}</span></div>` : ''}
+            ${entry.snack ? `<div class="history-meal-row"><span class="history-meal-label">🍪 Snack${entry.snack_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.snack_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.snack)}</span></div>` : ''}
             ${sInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${sInsight}</span></div>` : ''}
             <div class="fx g8 fx-end mt-8">
               <button class="ms-action-btn" onclick="event.stopPropagation();document.getElementById('feedingDate').value='${dateKey}';loadFeedingDay();switchTab('diet');">✏️ Edit</button>
@@ -13562,6 +13584,25 @@ function renderComboResult(r) {
     html += `<div class="combo-section"><div class="combo-section-title">🤝 Pairs well with</div><div class="combo-body">${r.pairs_well_with}</div></div>`;
   }
 
+  // Ziva's history with these foods
+  const queryFoods2 = r._queryFoods || [];
+  if (queryFoods2.length > 0) {
+    let historyHtml = '';
+    queryFoods2.forEach(food => {
+      const h = getFoodHistory(food);
+      if (h) historyHtml += h;
+    });
+    if (historyHtml) {
+      html += `<div class="combo-section"><div class="combo-section-title">📋 Ziva's History</div>${historyHtml}</div>`;
+    }
+
+    // Sleep correlation
+    const sleepHtml = getFoodSleepCorrelation(queryFoods2);
+    if (sleepHtml) {
+      html += `<div class="combo-section"><div class="combo-section-title">😴 Sleep Connection</div>${sleepHtml}</div>`;
+    }
+  }
+
   html += `</div>`;
   el.innerHTML = html;
 }
@@ -14716,13 +14757,19 @@ function loadFeedingDay() {
   const entry = feedingData[d] || { breakfast:'', lunch:'', dinner:'', snack:'' };
   ['breakfast','lunch','dinner','snack'].forEach(m => {
     const input = document.getElementById('meal-' + m);
+    const timeInput = document.getElementById('mealtime-' + m);
     const val = entry[m] || '';
     if (val === '—skipped—') {
       input.value = '';
       input.disabled = true;
+      if (timeInput) { timeInput.value = ''; timeInput.disabled = true; }
     } else {
       input.value = val;
       input.disabled = false;
+      if (timeInput) {
+        timeInput.value = entry[m + '_time'] || '';
+        timeInput.disabled = false;
+      }
     }
   });
   ['breakfast','lunch','dinner','snack'].forEach(m => updateMealInsight(m));
@@ -14862,6 +14909,15 @@ function saveFeedingDay() {
     dinner:    document.getElementById('meal-dinner').disabled ? (existing.dinner || '') : document.getElementById('meal-dinner').value,
     snack:     document.getElementById('meal-snack').disabled ? (existing.snack || '') : document.getElementById('meal-snack').value,
   };
+  // Save optional meal times
+  ['breakfast','lunch','dinner','snack'].forEach(m => {
+    const timeVal = document.getElementById('mealtime-' + m)?.value || '';
+    if (timeVal) {
+      feedingData[d][m + '_time'] = timeVal;
+    } else if (feedingData[d][m + '_time']) {
+      // Keep existing time if not cleared
+    }
+  });
   save(KEYS.feeding, feedingData);
   // Auto-introduce any new foods from all meal slots
   autoIntroduceFoodsFromDay(d);
@@ -16046,14 +16102,56 @@ const SLEEP_INPROGRESS_KEY = 'ziva_sleep_inprogress';
 
 function startSleepNow(type) {
   const now = new Date();
-  const timeStr = now.toTimeString().slice(0, 5); // HH:MM
-  const dateStr = toDateStr(now);
+  let timeStr, dateStr, startTs;
+
+  if (type === 'night') {
+    // Check if bedtime field has a value
+    const bedField = document.getElementById('sleepBedtime');
+    const dateField = document.getElementById('sleepDate');
+    const fieldTime = bedField?.value;
+    const fieldDate = dateField?.value;
+    if (fieldTime) {
+      timeStr = fieldTime;
+      dateStr = fieldDate || toDateStr(now);
+      // Build a proper timestamp from the entered date+time
+      const built = new Date(dateStr + 'T' + timeStr + ':00');
+      startTs = built.toISOString();
+    } else {
+      timeStr = now.toTimeString().slice(0, 5);
+      dateStr = toDateStr(now);
+      startTs = now.toISOString();
+    }
+  } else {
+    // Nap — check napStart field
+    const startField = document.getElementById('napStart');
+    const dateField = document.getElementById('napDate');
+    const fieldTime = startField?.value;
+    const fieldDate = dateField?.value;
+    if (fieldTime) {
+      timeStr = fieldTime;
+      dateStr = fieldDate || toDateStr(now);
+      const built = new Date(dateStr + 'T' + timeStr + ':00');
+      startTs = built.toISOString();
+    } else {
+      timeStr = now.toTimeString().slice(0, 5);
+      dateStr = toDateStr(now);
+      startTs = now.toISOString();
+    }
+  }
+
+  // Check if there's already an in-progress entry
+  const existing = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+  if (existing) {
+    const ep = JSON.parse(existing);
+    const elabel = ep.type === 'night' ? 'sleep' : 'nap';
+    if (!confirm(`A ${elabel} is already in progress (started ${formatTimeShort(ep.startTime)}). Replace it?`)) return;
+  }
 
   const entry = {
-    type, // 'night' or 'nap'
+    type,
     date: dateStr,
     startTime: timeStr,
-    startTs: now.toISOString(),
+    startTs,
   };
 
   localStorage.setItem(SLEEP_INPROGRESS_KEY, JSON.stringify(entry));
@@ -16062,6 +16160,8 @@ function startSleepNow(type) {
   showQLToast(`▶ ${label} started at ${formatTimeShort(timeStr)}`, 3000);
 
   renderSleepInProgressBanner();
+  updateSleepTabIndicator();
+  renderHomeSleep();
 }
 
 function endSleepNow() {
@@ -16070,8 +16170,16 @@ function endSleepNow() {
   const ip = JSON.parse(raw);
 
   const now = new Date();
-  const endTime = now.toTimeString().slice(0, 5);
-  const endDate = toDateStr(now);
+  let endTime;
+
+  // Check if the user entered a wake/end time in the form
+  if (ip.type === 'night') {
+    const wakeField = document.getElementById('sleepWakeTime');
+    endTime = (wakeField?.value) || now.toTimeString().slice(0, 5);
+  } else {
+    const endField = document.getElementById('napEnd');
+    endTime = (endField?.value) || now.toTimeString().slice(0, 5);
+  }
 
   const entry = {
     date: ip.date,
@@ -16102,12 +16210,27 @@ function endSleepNow() {
   renderSleep();
   renderHomeSleep();
   renderSleepInProgressBanner();
+  updateSleepTabIndicator();
   setTimeout(drawSleepChart, 60);
 }
 
 function cancelSleepInProgress() {
   localStorage.removeItem(SLEEP_INPROGRESS_KEY);
   renderSleepInProgressBanner();
+  updateSleepTabIndicator();
+}
+
+// Refresh the pulsing dot on the sleep sub-tab button
+function updateSleepTabIndicator() {
+  const sleepBtn = document.querySelector('.track-sub-btn[data-key="sleep"]');
+  if (!sleepBtn) return;
+  const existingDot = sleepBtn.querySelector('.sip-tab-dot');
+  const hasIP = !!localStorage.getItem(SLEEP_INPROGRESS_KEY);
+  if (hasIP && !existingDot) {
+    sleepBtn.insertAdjacentHTML('beforeend', '<span class="sip-tab-dot"></span>');
+  } else if (!hasIP && existingDot) {
+    existingDot.remove();
+  }
 }
 
 let _sipInterval = null;
@@ -18534,8 +18657,13 @@ function renderTrackSubBar() {
       const sv = d && d.score !== null && d.score !== undefined ? Math.round(d.score) : '';
       if (sv !== '') scoreHtml = ` <span class="tsb-score">${sv}</span>`;
     }
-    return `<button class="track-sub-btn${active}" onclick="switchTrackSub('${t.key}')">
-      <span class="tsb-icon">${t.icon}</span>${scoreHtml}
+    // In-progress sleep indicator
+    let sipDot = '';
+    if (t.key === 'sleep' && localStorage.getItem(SLEEP_INPROGRESS_KEY)) {
+      sipDot = '<span class="sip-tab-dot"></span>';
+    }
+    return `<button class="track-sub-btn${active}" data-key="${t.key}" onclick="switchTrackSub('${t.key}')">
+      <span class="tsb-icon">${t.icon}</span>${scoreHtml}${sipDot}
     </button>`;
   }).join('');
 
@@ -19502,6 +19630,8 @@ function openQuickModal(type) {
       p.classList.toggle('active', p.dataset.meal === _qlMeal);
     });
     document.getElementById('qlFeedInput').value = '';
+    const qlTimeEl = document.getElementById('qlFeedTime');
+    if (qlTimeEl) qlTimeEl.value = '';
     const qlDD = document.getElementById('qlFeedDropdown');
     if (qlDD) qlDD.classList.remove('open');
     renderQLSameAsPills();
@@ -19658,6 +19788,9 @@ function saveQLFeed() {
   const prevMealValue = day[undoMealKey] || '';
 
   day[_qlMeal] = day[_qlMeal] ? day[_qlMeal] + ', ' + food : food;
+  // Save meal time if entered
+  const qlTime = document.getElementById('qlFeedTime')?.value;
+  if (qlTime) day[_qlMeal + '_time'] = qlTime;
   save(KEYS.feeding, feeding);
   feedingData = feeding;
 
@@ -24583,7 +24716,193 @@ function renderHomeMealProgress() {
     html += `</div>`;
   }
 
+  // Food query shortcut — accessible from Home, visible in Simple Mode
+  html += `<div style="margin-top:8px;text-align:center;">
+    <span class="dqp-pill" style="font-size:var(--fs-xs);" onclick="openHomeFoodQuery()">🔍 Can I give this?</span>
+  </div>`;
+
   el.innerHTML = html;
+}
+
+// Open "Can I Give This?" from Home without tab switch
+function openHomeFoodQuery() {
+  // Create a modal overlay with the food checker
+  const existing = document.getElementById('homeFoodQueryOverlay');
+  if (existing) { existing.remove(); return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'homeFoodQueryOverlay';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:420px;max-height:85vh;overflow-y:auto;">
+      <div class="modal-header">
+        <div class="modal-title">🔍 Can I Give This?</div>
+        <button class="modal-close" onclick="document.getElementById('homeFoodQueryOverlay').remove()">✕</button>
+      </div>
+      <div style="padding:0 16px 16px;">
+        <div style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:10px;line-height:var(--lh-relaxed);">Check any food — safety, nutrition, best pairings, and Ziva's history with it.</div>
+        <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-bottom:10px;">
+          <input type="text" id="homeFoodQueryInput" placeholder="e.g. kiwi, paneer + rice..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')runHomeFoodQuery()">
+          <button class="btn btn-sage" onclick="runHomeFoodQuery()" style="min-width:70px;">Check</button>
+        </div>
+        <div id="homeFoodQueryResult"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  setTimeout(() => document.getElementById('homeFoodQueryInput')?.focus(), 200);
+}
+
+function runHomeFoodQuery() {
+  const input = document.getElementById('homeFoodQueryInput');
+  const query = input?.value.trim();
+  if (!query) return;
+
+  // Reuse the existing checkFoodCombo logic but render into our modal
+  const resultEl = document.getElementById('homeFoodQueryResult');
+  if (!resultEl) return;
+
+  // Parse foods from query
+  const rawFoods = query.split(/[+,&]|with|and/).map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
+  const mo = getAgeInMonths();
+  const introducedSet = new Set(foods.map(f => f.name.toLowerCase()));
+
+  // Build the result using checkFoodCombo's logic — call it and capture
+  document.getElementById('comboInput').value = query;
+  checkFoodCombo();
+  const comboResultEl = document.getElementById('comboResult');
+  let resultHtml = comboResultEl ? comboResultEl.innerHTML : '';
+
+  // Add Ziva's history with this food
+  let historyHtml = '';
+  rawFoods.forEach(food => {
+    const history = getFoodHistory(food);
+    if (history) historyHtml += history;
+  });
+
+  // Add sleep correlation if available
+  let sleepHtml = getFoodSleepCorrelation(rawFoods);
+
+  if (historyHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">📋 Ziva's History</div>${historyHtml}</div>`;
+  if (sleepHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">😴 Sleep Connection</div>${sleepHtml}</div>`;
+
+  resultEl.innerHTML = resultHtml;
+}
+
+// Get Ziva's history with a specific food — last given, frequency, reaction, poop after
+function getFoodHistory(foodName) {
+  const lower = foodName.toLowerCase().trim();
+  const base = _baseFoodName(lower);
+
+  // Find in foods introduced
+  const introduced = foods.find(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
+
+  // Find last time given in feeding data
+  let lastDate = null, lastMeal = null, timesSeen = 0;
+  const sortedDates = Object.keys(feedingData).sort().reverse();
+  for (const ds of sortedDates) {
+    const entry = feedingData[ds];
+    if (!entry) continue;
+    for (const meal of ['breakfast','lunch','dinner','snack']) {
+      if (!isRealMeal(entry[meal])) continue;
+      if (entry[meal].toLowerCase().includes(base) || entry[meal].toLowerCase().includes(lower)) {
+        timesSeen++;
+        if (!lastDate) { lastDate = ds; lastMeal = meal; }
+      }
+    }
+  }
+
+  if (!introduced && !lastDate) return '';
+
+  let html = '<div class="combo-body">';
+
+  if (introduced) {
+    const rxLabel = introduced.reaction === 'watch' ? '<span style="color:var(--tc-amber);">⚠ Watch</span>' : '<span style="color:var(--tc-sage);">✅ Fine</span>';
+    html += `<div>Introduced: ${formatDate(introduced.date)} · Reaction: ${rxLabel}</div>`;
+  } else {
+    html += `<div style="color:var(--tc-amber);">🆕 Not yet in Foods Introduced list</div>`;
+  }
+
+  if (lastDate) {
+    const timeStr = feedingData[lastDate]?.[lastMeal + '_time'];
+    html += `<div>Last given: ${formatDate(lastDate)} at ${lastMeal}${timeStr ? ' (' + formatTimeShort(timeStr) + ')' : ''} · ${timesSeen}× total</div>`;
+
+    // Check poop after last time
+    const nextDay = addDays(lastDate, 1);
+    const poopsAfter = poopData.filter(p => p.date === lastDate || p.date === nextDay);
+    if (poopsAfter.length > 0) {
+      const worst = poopsAfter.reduce((w, p) => {
+        const rank = { pellet:0, hard:1, watery:2, loose:3, normal:4, soft:5 };
+        return (rank[p.consistency] ?? 5) < (rank[w] ?? 5) ? p.consistency : w;
+      }, 'soft');
+      const poopOk = worst === 'soft' || worst === 'normal';
+      html += `<div>Poop after: ${poopOk ? '✅ normal' : '⚠ ' + worst}</div>`;
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Compute food→sleep correlation for specific foods
+function getFoodSleepCorrelation(rawFoods) {
+  if (sleepData.length < 5) return '';
+
+  const MEAL_KEYS = ['breakfast','lunch','dinner','snack'];
+  const foodLowers = rawFoods.map(f => f.toLowerCase().trim());
+  const bases = foodLowers.map(f => _baseFoodName(f));
+
+  // For each night sleep, check if any of the query foods appeared in that day's meals
+  let withFood = [], withoutFood = [];
+
+  sleepData.filter(s => s.type === 'night' && s.bedtime && s.wakeTime).forEach(s => {
+    const dur = calcSleepDuration(s.bedtime, s.wakeTime);
+    if (!dur || dur.total <= 0) return;
+
+    const dayFoods = extractDayFoods(s.date);
+    const prevDay = addDays(s.date, -1);
+    const prevFoods = extractDayFoods(prevDay);
+    const allDayFoods = [...dayFoods, ...prevFoods]; // dinner could be night-before
+
+    const hasFood = bases.some(base =>
+      allDayFoods.some(df => df.includes(base) || base.includes(df))
+    );
+
+    const nightData = { duration: dur.total, wakeups: s.wakeUps || 0 };
+    if (hasFood) withFood.push(nightData);
+    else withoutFood.push(nightData);
+  });
+
+  if (withFood.length < 2 || withoutFood.length < 2) return '';
+
+  const avgWith = Math.round(withFood.reduce((s, n) => s + n.duration, 0) / withFood.length);
+  const avgWithout = Math.round(withoutFood.reduce((s, n) => s + n.duration, 0) / withoutFood.length);
+  const wakeWith = +(withFood.reduce((s, n) => s + n.wakeups, 0) / withFood.length).toFixed(1);
+  const wakeWithout = +(withoutFood.reduce((s, n) => s + n.wakeups, 0) / withoutFood.length).toFixed(1);
+
+  const diffMin = avgWith - avgWithout;
+  const foodLabel = rawFoods.join(' + ');
+
+  let html = '<div class="combo-body">';
+  html += `<div>With ${escHtml(foodLabel)}: <strong>${Math.floor(avgWith/60)}h ${avgWith%60}m</strong> avg sleep · ${wakeWith} wakeups <span class="t-light">(${withFood.length} nights)</span></div>`;
+  html += `<div>Without: <strong>${Math.floor(avgWithout/60)}h ${avgWithout%60}m</strong> avg · ${wakeWithout} wakeups <span class="t-light">(${withoutFood.length} nights)</span></div>`;
+
+  if (Math.abs(diffMin) >= 15) {
+    const better = diffMin > 0;
+    html += `<div style="margin-top:4px;color:${better ? 'var(--tc-sage)' : 'var(--tc-amber)'};">
+      ${better ? '✅' : '⚠'} ${Math.abs(diffMin)} min ${better ? 'longer' : 'shorter'} sleep on days with ${escHtml(foodLabel)}
+      ${!better && wakeWith > wakeWithout ? ' · more wakeups too' : ''}
+    </div>`;
+  } else {
+    html += `<div class="t-light" style="margin-top:4px;">No significant sleep difference detected (need more data)</div>`;
+  }
+
+  html += '</div>';
+  return html;
 }
 
 function skipMeals(mealKeys) {
