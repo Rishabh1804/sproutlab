@@ -6398,6 +6398,7 @@ function init() {
     // Migrate old milestone statuses to 5-stage model
     milestones.forEach(m => migrateMilestoneStatus(m));
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
+    _deduplicateFoods();
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
@@ -11672,10 +11673,12 @@ function _categorizeFoods() {
     Object.keys(FOOD_TAX[p].subs).forEach(s => { grouped[p][s] = []; });
   });
   foods.forEach((f, i) => {
-    const lower = f.name.toLowerCase();
+    const lower = f.name.toLowerCase().trim();
+    const base = _baseFoodName(lower);
     let placed = false;
+    // Try exact key match first, then base food match, then substring
     for (const { key, pid, sid } of _foodTaxFlat) {
-      if (lower.includes(key)) {
+      if (lower === key || base === key || lower.includes(key) || key.includes(base)) {
         grouped[pid][sid].push({ ...f, _i: i });
         placed = true;
         break;
@@ -11688,9 +11691,77 @@ function _categorizeFoods() {
         if (firstSub) { grouped[cat][firstSub].push({ ...f, _i: i }); placed = true; }
       }
     }
-    if (!placed) grouped.spices.warm.push({ ...f, _i: i });
+    // Fallback: try classifyFoodToGroup which uses broader matching
+    if (!placed) {
+      const cls = classifyFoodToGroup(lower) || classifyFoodToGroup(base);
+      if (cls && grouped[cls.group]) {
+        const firstSub = Object.keys(grouped[cls.group])[0];
+        if (firstSub) { grouped[cls.group][firstSub].push({ ...f, _i: i }); placed = true; }
+      }
+    }
+    // Final fallback: genuinely unknown — skip rather than misclassify into spices
+    if (!placed) {
+      // Put in best-guess group or first group of the taxonomy
+      const guess = _guessGroupFromNutrition(lower);
+      if (guess && grouped[guess]) {
+        const firstSub = Object.keys(grouped[guess])[0];
+        if (firstSub) grouped[guess][firstSub].push({ ...f, _i: i });
+      }
+    }
   });
   return grouped;
+}
+
+// Strip form/preparation words to get base food name
+const _FORM_WORDS = ['puree','mash','mashed','porridge','powder','boiled','steamed','fried','roasted','soaked','grated','chopped','sliced','crushed','ground','paste','juice','soup','broth','water','cooked','raw','dried','fresh','baby','homemade','organic','(fruit)','(dry)'];
+function _baseFoodName(name) {
+  let base = name.toLowerCase().trim();
+  _FORM_WORDS.forEach(w => { base = base.replace(new RegExp('\\b' + w + '\\b', 'g'), ''); });
+  return base.replace(/\s+/g, ' ').trim();
+}
+
+// Guess food group from nutrition tags
+function _guessGroupFromNutrition(name) {
+  const nut = getNutrition(name) || getNutrition(_baseFoodName(name));
+  if (!nut) return null;
+  const tags = nut.tags || [];
+  if (tags.includes('fermented') || tags.includes('gut-health')) return 'grains'; // idli, dosa
+  if (tags.includes('healthy-fats') || tags.includes('omega-3')) return 'nuts';
+  if (tags.includes('hydrating') || tags.includes('cooling')) return 'vegs';
+  if (tags.includes('bone-health') && tags.includes('protein-rich')) return 'dairy';
+  if (tags.includes('iron-rich') || tags.includes('protein-rich')) return 'grains';
+  if (tags.includes('vitamin-C') || tags.includes('antioxidant')) return 'fruits';
+  return null;
+}
+
+// Deduplicate foods array — merge entries that are form variants of the same base food
+function _deduplicateFoods() {
+  if (!foods || foods.length === 0) return;
+  const seen = {}; // baseName → index in deduped array
+  const deduped = [];
+
+  foods.forEach(f => {
+    const lower = f.name.toLowerCase().trim();
+    const base = _baseFoodName(lower);
+    const key = base || lower;
+
+    if (seen.hasOwnProperty(key)) {
+      // Merge: keep earliest date, escalate reaction to 'watch' if either is watch
+      const existing = deduped[seen[key]];
+      if (f.date && (!existing.date || f.date < existing.date)) existing.date = f.date;
+      if (f.reaction === 'watch') existing.reaction = 'watch';
+    } else {
+      seen[key] = deduped.length;
+      // Use the cleanest name: prefer shorter or capitalized version
+      const cleanName = f.name.trim();
+      deduped.push({ name: cleanName, reaction: f.reaction, date: f.date });
+    }
+  });
+
+  if (deduped.length < foods.length) {
+    foods = deduped;
+    save(KEYS.foods, foods);
+  }
 }
 
 function renderFoods() {
@@ -11815,7 +11886,18 @@ function renderFoodCatSubContent(pid, sid) {
     html += `<div style="padding:16px;text-align:center;color:var(--light);font-size:var(--fs-base);">No foods introduced yet</div>`;
   }
 
-  const remaining = sub.keys.filter(k => !introducedLower.has(k));
+  const introducedBases = new Set(foods.map(f => _baseFoodName(f.name.toLowerCase().trim())));
+  const introducedLowerFull = new Set(foods.map(f => f.name.toLowerCase().trim()));
+  const remaining = sub.keys.filter(k => {
+    // Check exact match, base match, or substring match (either direction)
+    if (introducedLowerFull.has(k)) return false;
+    if (introducedBases.has(k)) return false;
+    // Check if any introduced food contains this key or vice versa
+    for (const base of introducedBases) {
+      if (base.includes(k) || k.includes(base)) return false;
+    }
+    return true;
+  });
   if (remaining.length > 0) {
     html += `<div style="margin-top:10px;padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:${_foodColorMap[col]};border:1px solid ${_foodBorderMap[col]};">
       <div style="font-size:var(--fs-sm);font-weight:600;color:${_foodTextMap[col]};margin-bottom:6px;">Not yet tried (${remaining.length})</div>
@@ -11838,7 +11920,22 @@ function addFood() {
   const val = document.getElementById('foodInput').value.trim();
   const dt  = document.getElementById('foodDate').value;
   if (!val) return;
-  foods.push({ name:val, reaction:currentReaction, date:dt||today() });
+
+  // Check if base food already exists
+  const base = _baseFoodName(val.toLowerCase());
+  const existingIdx = foods.findIndex(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
+  if (existingIdx >= 0) {
+    // Update existing: keep earlier date, escalate reaction
+    const existing = foods[existingIdx];
+    if (dt && (!existing.date || dt < existing.date)) existing.date = dt;
+    if (currentReaction === 'watch') existing.reaction = 'watch';
+  } else {
+    foods.push({ name:val, reaction:currentReaction, date:dt||today() });
+  }
+
   document.getElementById('foodInput').value = '';
   document.getElementById('foodDate').value = today();
   renderFoods();
@@ -14498,9 +14595,13 @@ function pickMealFood(meal, food) {
   closeMealDropdown(meal);
   updateMealInsight(meal);
   inp.focus();
-  // Auto-add to Foods Introduced if not already tracked
+  // Auto-add to Foods Introduced if not already tracked (base food matching)
   const lower = food.toLowerCase().trim();
-  const alreadyIntroduced = foods.some(f => f.name.toLowerCase().trim() === lower);
+  const base = _baseFoodName(lower);
+  const alreadyIntroduced = foods.some(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
   if (!alreadyIntroduced && lower.length > 1) {
     foods.push({ name: food, reaction: 'ok', date: today() });
     save(KEYS.foods, foods);
@@ -14509,10 +14610,17 @@ function pickMealFood(meal, food) {
 }
 
 function addNewFoodFromMeal(meal, foodName) {
-  // Add to the foods introduced list
-  foods.push({ name: foodName, reaction: 'ok', date: today() });
-  save(KEYS.foods, foods);
-  renderFoods();
+  // Check if base food already introduced
+  const base = _baseFoodName(foodName.toLowerCase().trim());
+  const alreadyExists = foods.some(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
+  if (!alreadyExists) {
+    foods.push({ name: foodName, reaction: 'ok', date: today() });
+    save(KEYS.foods, foods);
+    renderFoods();
+  }
 
   // Add to FOOD_SUGGESTIONS under a dynamic "Added" category so it shows in future searches
   if (!FOOD_SUGGESTIONS['✨ Added']) FOOD_SUGGESTIONS['✨ Added'] = [];
@@ -23791,9 +23899,13 @@ function pickQLFood(food) {
   input.value = parts.join(', ') + ', ';
   dd.classList.remove('open');
   input.focus();
-  // Auto-add to Foods Introduced if not already tracked
+  // Auto-add to Foods Introduced if not already tracked (base food matching)
   const lower = food.toLowerCase().trim();
-  const alreadyIntroduced = foods.some(f => f.name.toLowerCase().trim() === lower);
+  const base = _baseFoodName(lower);
+  const alreadyIntroduced = foods.some(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
   if (!alreadyIntroduced && lower.length > 1) {
     foods.push({ name: food, reaction: 'ok', date: today() });
     save(KEYS.foods, foods);
