@@ -1997,15 +1997,11 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mdi-home-bar { flex:1; min-width:0; }
 .mdi-home-val { font-weight:700; width:28px; text-align:right; }
 
-/* ── Diet Quick Picker ── */
-.diet-quick-picker {
-  margin-bottom:var(--sp-8); display:flex; flex-direction:column; gap:var(--sp-8);
+/* ── Diet Quick Picker (per-meal zones) ── */
+.dqp-zone {
+  display:none; padding:4px 0 6px;
 }
-.dqp-label {
-  font-size:var(--fs-xs); font-weight:700; color:var(--light);
-  text-transform:uppercase; letter-spacing:var(--ls-wide);
-  margin-bottom:2px;
-}
+.dqp-zone.has-pills { display:block; }
 .dqp-pills {
   display:flex; flex-wrap:wrap; gap:var(--sp-4);
 }
@@ -4471,21 +4467,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
         <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The ✨ insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
 
-        <!-- Quick Picker: Frequent + Same As -->
-        <div id="dietQuickPicker" class="diet-quick-picker" style="display:none;">
-          <div id="dietFreqWrap" style="display:none;">
-            <div class="dqp-label">Frequent</div>
-            <div class="dqp-pills" id="dietFreqPills"></div>
-          </div>
-          <div id="dietSameAsWrap" style="display:none;">
-            <div class="dqp-label">Same as</div>
-            <div class="dqp-pills" id="dietSameAsPills"></div>
-          </div>
-        </div>
-
         <div class="meal-cards">
           <div class="meal-card breakfast">
             <div class="meal-label">🌤 Breakfast <span class="meal-skip-btn" id="skip-breakfast" onclick="event.stopPropagation();skipSingleMeal('breakfast')" style="display:none;">skip</span></div>
+            <div class="dqp-zone" id="dqp-breakfast"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('breakfast')" onfocus="onMealFocus('breakfast')" autocomplete="off">
               <div class="meal-dropdown" id="md-breakfast"></div>
@@ -4494,6 +4479,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="meal-card lunch">
             <div class="meal-label">☀️ Lunch <span class="meal-skip-btn" id="skip-lunch" onclick="event.stopPropagation();skipSingleMeal('lunch')" style="display:none;">skip</span></div>
+            <div class="dqp-zone" id="dqp-lunch"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('lunch')" onfocus="onMealFocus('lunch')" autocomplete="off">
               <div class="meal-dropdown" id="md-lunch"></div>
@@ -4502,6 +4488,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="meal-card dinner">
             <div class="meal-label">🌙 Dinner <span class="meal-skip-btn" id="skip-dinner" onclick="event.stopPropagation();skipSingleMeal('dinner')" style="display:none;">skip</span></div>
+            <div class="dqp-zone" id="dqp-dinner"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('dinner')" onfocus="onMealFocus('dinner')" autocomplete="off">
               <div class="meal-dropdown" id="md-dinner"></div>
@@ -4510,6 +4497,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
           <div class="meal-card snack">
             <div class="meal-label">🍪 Snack <span class="meal-skip-btn" id="skip-snack" onclick="event.stopPropagation();skipSingleMeal('snack')" style="display:none;">skip</span></div>
+            <div class="dqp-zone" id="dqp-snack"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('snack')" onfocus="onMealFocus('snack')" autocomplete="off">
               <div class="meal-dropdown" id="md-snack"></div>
@@ -14706,91 +14694,114 @@ function loadFeedingDay() {
   renderDietQuickPicker();
 }
 
-// ── Diet Quick Picker: Frequent foods + Same-as pills ──
-let _dietActiveMeal = 'breakfast';
-let _dietFocusListenersSet = false;
+// ── Diet Quick Picker: per-meal frequent + same-as zones ──
 
 function renderDietQuickPicker() {
-  const picker = document.getElementById('dietQuickPicker');
-  if (!picker) return;
+  const currentDate = document.getElementById('feedingDate')?.value || today();
+  const topFoods = getTopMeals(6);
 
-  // Set up focus tracking on first render
-  if (!_dietFocusListenersSet) {
-    ['breakfast','lunch','dinner','snack'].forEach(m => {
-      const el = document.getElementById('meal-' + m);
-      if (el) el.addEventListener('focus', () => { _dietActiveMeal = m; });
+  // Get previous days' meals for same-as pills
+  const prevDays = [];
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(currentDate); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds];
+    if (entry) prevDays.push({ offset: i, date: ds, entry });
+  }
+
+  const MEAL_KEYS = ['breakfast','lunch','dinner','snack'];
+  const MEAL_LABELS = { breakfast:'B', lunch:'L', dinner:'D', snack:'S' };
+  const DAY_LABELS = { 1:'Yd', 2:'2d ago', 3:'3d ago' };
+
+  MEAL_KEYS.forEach(meal => {
+    const zone = document.getElementById('dqp-' + meal);
+    if (!zone) return;
+
+    const inp = document.getElementById('meal-' + meal);
+    const isDisabled = inp && inp.disabled;
+    const hasValue = inp && inp.value && inp.value !== '—skipped—';
+
+    // Don't show pills if meal already has content or is skipped
+    if (isDisabled || hasValue) {
+      zone.innerHTML = '';
+      zone.classList.remove('has-pills');
+      return;
+    }
+
+    let pills = [];
+
+    // 1. Same-as: same meal slot from previous days
+    prevDays.forEach(pd => {
+      const val = pd.entry[meal];
+      if (!val || val === '—skipped—') return;
+      const short = val.length > 22 ? val.substring(0, 20) + '…' : val;
+      const label = DAY_LABELS[pd.offset] || pd.offset + 'd';
+      pills.push(`<div class="dqp-same" onclick="fillDietMeal('${meal}','${escHtml(val).replace(/'/g, "\\\\'")}')" title="${escHtml(val)}">${label} <span style="opacity:0.6;">${escHtml(short)}</span></div>`);
     });
-    _dietFocusListenersSet = true;
-  }
 
-  let hasContent = false;
+    // 2. Same-as: today's OTHER meal slots that already have content
+    const todayEntry = feedingData[currentDate] || {};
+    const MEAL_EMOJI = { breakfast:'🌤', lunch:'☀️', dinner:'🌙', snack:'🍪' };
+    MEAL_KEYS.forEach(otherMeal => {
+      if (otherMeal === meal) return;
+      const val = document.getElementById('meal-' + otherMeal)?.value || todayEntry[otherMeal] || '';
+      if (!val || val === '—skipped—') return;
+      const short = val.length > 20 ? val.substring(0, 18) + '…' : val;
+      pills.push(`<div class="dqp-same" onclick="fillDietMeal('${meal}','${escHtml(val).replace(/'/g, "\\\\'")}')" title="${escHtml(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span style="opacity:0.6;">${escHtml(short)}</span></div>`);
+    });
 
-  // 1. Frequent foods (top 8 individual foods)
-  const freqWrap = document.getElementById('dietFreqWrap');
-  const freqEl = document.getElementById('dietFreqPills');
-  if (freqWrap && freqEl) {
-    const top = getTopMeals(8);
-    if (top.length > 0) {
-      freqWrap.style.display = '';
-      freqEl.innerHTML = top.map(m =>
-        `<div class="dqp-pill" onclick="insertDietFood('${escHtml(m.name).replace(/'/g, "\\\\'")}')" title="${m.count}× logged">${escHtml(m.name)}</div>`
-      ).join('');
-      hasContent = true;
+    // 2. Top frequent foods for this meal slot (from meal-specific history)
+    const mealFreq = getMealSlotTopFoods(meal, 4);
+    mealFreq.forEach(f => {
+      pills.push(`<div class="dqp-pill" onclick="insertDietFood('${meal}','${escHtml(f.name).replace(/'/g, "\\\\'")}')" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
+    });
+
+    // 3. If no meal-specific foods, show general top foods
+    if (mealFreq.length === 0 && topFoods.length > 0) {
+      topFoods.slice(0, 3).forEach(f => {
+        pills.push(`<div class="dqp-pill" onclick="insertDietFood('${meal}','${escHtml(f.name).replace(/'/g, "\\\\'")}')" title="${f.count}× logged">${escHtml(f.name)}</div>`);
+      });
+    }
+
+    if (pills.length > 0) {
+      zone.innerHTML = '<div class="dqp-pills">' + pills.join('') + '</div>';
+      zone.classList.add('has-pills');
     } else {
-      freqWrap.style.display = 'none';
+      zone.innerHTML = '';
+      zone.classList.remove('has-pills');
     }
-  }
-
-  // 2. Same-as: yesterday's meals + today's other meals
-  const sameWrap = document.getElementById('dietSameAsWrap');
-  const sameEl = document.getElementById('dietSameAsPills');
-  if (sameWrap && sameEl) {
-    const currentDate = document.getElementById('feedingDate').value;
-    const meals = [];
-    const seen = new Set();
-    function addSame(label, value, targetMeal) {
-      if (!value || value === '—skipped—' || seen.has(value)) return;
-      const short = value.length > 25 ? value.substring(0, 23) + '…' : value;
-      meals.push({ label, value, short, targetMeal });
-      seen.add(value);
-    }
-
-    // Yesterday's meals
-    const yd = new Date(currentDate); yd.setDate(yd.getDate() - 1);
-    const ydEntry = feedingData[toDateStr(yd)] || {};
-    addSame('🕐 Yd B', ydEntry.breakfast, 'breakfast');
-    addSame('🕐 Yd L', ydEntry.lunch, 'lunch');
-    addSame('🕐 Yd D', ydEntry.dinner, 'dinner');
-    addSame('🕐 Yd S', ydEntry.snack, 'snack');
-
-    // 2 days ago
-    const d2 = new Date(currentDate); d2.setDate(d2.getDate() - 2);
-    const d2Entry = feedingData[toDateStr(d2)] || {};
-    addSame('2d B', d2Entry.breakfast, 'breakfast');
-    addSame('2d L', d2Entry.lunch, 'lunch');
-    addSame('2d D', d2Entry.dinner, 'dinner');
-
-    if (meals.length > 0) {
-      sameWrap.style.display = '';
-      sameEl.innerHTML = meals.map(m =>
-        `<div class="dqp-same" onclick="fillDietMeal('${m.targetMeal}','${escHtml(m.value).replace(/'/g, "\\\\'")}')" title="${escHtml(m.value)}">${m.label} <span style="opacity:0.6;">${escHtml(m.short)}</span></div>`
-      ).join('');
-      hasContent = true;
-    } else {
-      sameWrap.style.display = 'none';
-    }
-  }
-
-  picker.style.display = hasContent ? '' : 'none';
+  });
 }
 
-function insertDietFood(food) {
-  const inp = document.getElementById('meal-' + _dietActiveMeal);
+// Get top foods for a specific meal slot
+function getMealSlotTopFoods(mealKey, n) {
+  const counts = {};
+  Object.values(feedingData).forEach(day => {
+    const val = day[mealKey];
+    if (!val || val === '—skipped—') return;
+    val.split(',').forEach(item => {
+      const trimmed = item.trim();
+      if (trimmed.length <= 2) return;
+      const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
+      if (!counts[normalized]) counts[normalized] = { display: trimmed, count: 0 };
+      counts[normalized].count++;
+    });
+  });
+  return Object.values(counts)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n)
+    .map(m => ({ name: m.display.charAt(0).toUpperCase() + m.display.slice(1), count: m.count }));
+}
+
+function insertDietFood(meal, food) {
+  const inp = document.getElementById('meal-' + meal);
   if (!inp || inp.disabled) return;
-  // Append to existing value
   const current = inp.value.trim();
   inp.value = current ? current + ', ' + food : food;
-  updateMealInsight(_dietActiveMeal);
+  updateMealInsight(meal);
+  // Hide the zone after inserting since meal now has content
+  const zone = document.getElementById('dqp-' + meal);
+  if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
   inp.focus();
 }
 
@@ -14798,8 +14809,10 @@ function fillDietMeal(meal, value) {
   const inp = document.getElementById('meal-' + meal);
   if (!inp || inp.disabled) return;
   inp.value = value;
-  _dietActiveMeal = meal;
   updateMealInsight(meal);
+  // Hide the zone after filling
+  const zone = document.getElementById('dqp-' + meal);
+  if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
   inp.focus();
 }
 
@@ -24943,8 +24956,11 @@ function showHeatmapDetail(nutrientKey, dayIdx, dateStr) {
 function computeFoodCombos(windowDays) {
   windowDays = windowDays || 30;
   const todayDate = new Date(today());
-  const pairCounts = {}; // "food1|food2" → { count, meals: [{date, meal}] }
+  const pairCounts = {}; // "food1|food2" → { count, meals: [{date, meal}], dates:[] }
   let totalMeals = 0;
+
+  // Track per-day meal combos for streak detection
+  const dayMealPairs = {}; // date → Set of pair keys
 
   for (let i = 0; i < windowDays; i++) {
     const d = new Date(todayDate);
@@ -24953,62 +24969,149 @@ function computeFoodCombos(windowDays) {
     const entry = feedingData[ds];
     if (!entry) continue;
 
+    if (!dayMealPairs[ds]) dayMealPairs[ds] = new Set();
+
     ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
       if (!isRealMeal(entry[meal])) return;
       totalMeals++;
 
-      // Parse individual foods from the meal string
       const mealFoods = [];
       entry[meal].split(/[,+]/).forEach(f => {
         const clean = f.trim().toLowerCase();
         if (clean.length > 1) mealFoods.push(clean);
       });
 
-      // Generate all sorted 2-food pairs
       for (let a = 0; a < mealFoods.length; a++) {
         for (let b = a + 1; b < mealFoods.length; b++) {
           const pair = [mealFoods[a], mealFoods[b]].sort().join('|');
-          if (!pairCounts[pair]) pairCounts[pair] = { count: 0, meals: [] };
+          if (!pairCounts[pair]) pairCounts[pair] = { count: 0, meals: [], dates: [] };
           pairCounts[pair].count++;
-          if (pairCounts[pair].meals.length < 3) {
+          if (pairCounts[pair].meals.length < 5) {
             pairCounts[pair].meals.push({ date: ds, meal });
           }
+          if (!pairCounts[pair].dates.includes(ds)) pairCounts[pair].dates.push(ds);
+          dayMealPairs[ds].add(pair);
         }
       }
     });
   }
-
-  // Sort by frequency
-  const allPairs = Object.entries(pairCounts).map(([key, val]) => {
-    const [food1, food2] = key.split('|');
-    return { food1, food2, count: val.count, meals: val.meals };
-  });
-  allPairs.sort((a, b) => b.count - a.count);
-
-  const topPairs = allPairs.filter(p => p.count >= 2).slice(0, 8);
-  const oncePairs = allPairs.filter(p => p.count === 1).slice(0, 6);
-  const totalUniquePairs = allPairs.length;
-
-  // Ruttiness: how repetitive are meals? top pair count / total meals
-  const ruttiness = totalMeals > 0 && topPairs.length > 0
-    ? Math.round((topPairs[0].count / totalMeals) * 100)
-    : 0;
-  const uniqueness = totalMeals > 0
-    ? Math.round((totalUniquePairs / totalMeals) * 100)
-    : 0;
 
   // Cross-reference with poop correlations
   let poopFlags = {};
   try {
     const corr = computeFoodPoopCorrelations();
     if (corr && corr.results) {
-      corr.results.forEach(r => {
-        poopFlags[r.food] = r.status;
-      });
+      corr.results.forEach(r => { poopFlags[r.food] = r.status; });
     }
-  } catch (e) { /* poop data may not exist */ }
+  } catch (e) {}
 
-  return { topPairs, oncePairs, totalUniquePairs, totalMeals, ruttiness, uniqueness, poopFlags };
+  // Get nutrient gaps for scoring
+  const heatmap = computeNutrientHeatmap(7);
+  const currentGaps = new Set((heatmap.gaps || []).map(g => g.toLowerCase()));
+
+  // Enrich each pair with nutritional intelligence
+  const allPairs = Object.entries(pairCounts).map(([key, val]) => {
+    const [food1, food2] = key.split('|');
+    const items1 = parseMealNutrition(food1);
+    const items2 = parseMealNutrition(food2);
+    const allNutrients = [...new Set([...items1.flatMap(i => i.nutrients || []), ...items2.flatMap(i => i.nutrients || [])])];
+    const allTags = [...new Set([...items1.flatMap(i => i.tags || []), ...items2.flatMap(i => i.tags || [])])];
+
+    // Nutrient density: count of key nutrients covered
+    const KEY_NUT = ['iron','calcium','protein','vitamin C','fibre','vitamin A','omega-3','zinc'];
+    const keyNutsHit = KEY_NUT.filter(n => allNutrients.includes(n));
+    const density = keyNutsHit.length;
+
+    // Synergy check
+    const synergy = getSynergy(food1, food2);
+
+    // Gap-filling
+    const gapsFilled = allNutrients.filter(n => currentGaps.has(n.toLowerCase()));
+
+    // Poop flags
+    const flag1 = poopFlags[food1];
+    const flag2 = poopFlags[food2];
+    const poopSafe = !flag1 && !flag2;
+    const poopRisk = (flag1 === 'likely' || flag1 === 'suspected' || flag2 === 'likely' || flag2 === 'suspected');
+
+    // Iron + VitC synergy (even if not in FOOD_SYNERGIES)
+    const hasIronVitC = (allTags.includes('iron-rich') || allNutrients.includes('iron')) &&
+                        (allNutrients.includes('vitamin C') || allTags.includes('vitamin-C') || allTags.includes('iron-absorption'));
+
+    // Frequency verdict
+    let freqVerdict, freqColor;
+    if (val.count >= 8) { freqVerdict = 'Very frequent'; freqColor = 'var(--tc-amber)'; }
+    else if (val.count >= 5) { freqVerdict = 'Frequent'; freqColor = 'var(--tc-sage)'; }
+    else if (val.count >= 2) { freqVerdict = 'Regular'; freqColor = 'var(--mid)'; }
+    else { freqVerdict = 'Tried once'; freqColor = 'var(--light)'; }
+
+    // Recommendation
+    let recommendation, recIcon;
+    if (poopRisk) {
+      recommendation = 'Reduce — linked to poop issues';
+      recIcon = '⚠️';
+    } else if (synergy && density >= 3) {
+      recommendation = val.count >= 8 ? 'Great combo but vary meals too' : 'Excellent — increase frequency';
+      recIcon = '⭐';
+    } else if (synergy || hasIronVitC) {
+      recommendation = val.count >= 8 ? 'Good synergy — maintain but add variety' : 'Good synergy — can increase';
+      recIcon = '✅';
+    } else if (density >= 4) {
+      recommendation = val.count >= 8 ? 'Nutrient-dense but overused — rotate alternatives' : 'Nutrient-dense — great to continue';
+      recIcon = '✅';
+    } else if (density >= 2) {
+      recommendation = val.count >= 8 ? 'Decent but repetitive — try swapping one food' : 'Decent — keep in rotation';
+      recIcon = '👍';
+    } else if (density <= 1 && val.count >= 3) {
+      recommendation = 'Low nutrient density — pair with iron/calcium source';
+      recIcon = '📉';
+    } else {
+      recommendation = density === 0 ? 'Unknown nutrition — tag these foods' : 'OK — keep exploring';
+      recIcon = '➖';
+    }
+
+    // Streak detection: consecutive days this pair appeared
+    let maxStreak = 0, currentStreak = 0;
+    const sortedDates = val.dates.sort();
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) { currentStreak = 1; }
+      else {
+        const prev = new Date(sortedDates[i - 1]);
+        const cur = new Date(sortedDates[i]);
+        const diff = Math.round((cur - prev) / 86400000);
+        currentStreak = diff === 1 ? currentStreak + 1 : 1;
+      }
+      if (currentStreak > maxStreak) maxStreak = currentStreak;
+    }
+
+    return {
+      food1, food2, count: val.count, meals: val.meals, dates: val.dates,
+      density, keyNutsHit, synergy, gapsFilled, hasIronVitC,
+      poopSafe, poopRisk, flag1, flag2,
+      freqVerdict, freqColor, recommendation, recIcon,
+      maxStreak, allNutrients, allTags,
+    };
+  });
+
+  allPairs.sort((a, b) => b.count - a.count);
+
+  const topPairs = allPairs.filter(p => p.count >= 2).slice(0, 10);
+  const oncePairs = allPairs.filter(p => p.count === 1).slice(0, 6);
+  const totalUniquePairs = allPairs.length;
+
+  const ruttiness = totalMeals > 0 && topPairs.length > 0
+    ? Math.round((topPairs[0].count / totalMeals) * 100) : 0;
+  const uniqueness = totalMeals > 0
+    ? Math.round((totalUniquePairs / totalMeals) * 100) : 0;
+
+  // Best combo (highest density + synergy)
+  const bestCombo = [...allPairs].sort((a, b) => {
+    const sa = (a.density * 2) + (a.synergy ? 5 : 0) + (a.hasIronVitC ? 3 : 0) - (a.poopRisk ? 10 : 0);
+    const sb = (b.density * 2) + (b.synergy ? 5 : 0) + (b.hasIronVitC ? 3 : 0) - (b.poopRisk ? 10 : 0);
+    return sb - sa;
+  })[0] || null;
+
+  return { topPairs, oncePairs, totalUniquePairs, totalMeals, ruttiness, uniqueness, poopFlags, bestCombo };
 }
 
 function renderInfoComboFreq() {
@@ -25018,7 +25121,6 @@ function renderInfoComboFreq() {
   const onceEl = document.getElementById('infoComboOnce');
   if (!summaryEl) return;
 
-  // Summary
   if (data.totalMeals === 0) {
     summaryEl.innerHTML = '<div class="t-sm t-light">No meals logged yet</div>';
     topEl.innerHTML = '';
@@ -25026,43 +25128,72 @@ function renderInfoComboFreq() {
     return;
   }
 
-  summaryEl.innerHTML = `<div class="fx-row g12" style="align-items:center;flex-wrap:wrap;">
+  // Summary with best combo highlight
+  let summaryHtml = `<div class="fx-row g12" style="align-items:center;flex-wrap:wrap;">
     <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals</span></div>
     <div class="t-sm" style="color:var(--light);">·</div>
     <div class="t-sm" style="color:${data.uniqueness >= 60 ? 'var(--tc-sage)' : data.uniqueness >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)'};font-weight:600;">${data.uniqueness}% variety</div>
   </div>`;
+  if (data.bestCombo && data.bestCombo.density >= 3) {
+    summaryHtml += `<div class="t-xs mt-4" style="color:var(--tc-sage);">⭐ Best combo: <strong>${escHtml(data.bestCombo.food1)} + ${escHtml(data.bestCombo.food2)}</strong> (${data.bestCombo.density} key nutrients${data.bestCombo.synergy ? ' + synergy' : ''})</div>`;
+  }
+  summaryEl.innerHTML = summaryHtml;
 
-  // Top combos
+  // Top combos with full intelligence
   let topHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Most Frequent Pairs</div>';
   if (data.topPairs.length === 0) {
     topHtml += '<div class="t-sm t-light">Not enough data yet — need meals with 2+ foods</div>';
   } else {
-    topHtml += '<div class="fx-col g4">';
-    data.topPairs.forEach((p, i) => {
-      // Check poop flags for either food
-      const flag1 = data.poopFlags[p.food1];
-      const flag2 = data.poopFlags[p.food2];
-      const hasFlag = flag1 || flag2;
-      const flagFood = flag1 ? p.food1 : flag2 ? p.food2 : null;
-      const flagStatus = flag1 || flag2;
-
-      let poopBadge = '';
-      if (flagStatus === 'likely' || flagStatus === 'suspected') {
-        poopBadge = ` <span class="t-xs" style="color:var(--tc-rose);">⚠ ${flagFood} linked to poop issues</span>`;
-      } else if (flagStatus === 'watch') {
-        poopBadge = ` <span class="t-xs" style="color:var(--tc-amber);">👀 ${flagFood} under watch</span>`;
-      }
-
+    topHtml += '<div class="fx-col g8">';
+    data.topPairs.forEach(p => {
       const barPct = Math.max((p.count / data.topPairs[0].count) * 100, 8);
 
-      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;">
+      // Nutrient badges
+      let nutBadges = '';
+      if (p.keyNutsHit.length > 0) {
+        const NUT_EMOJI = { iron:'🩸', calcium:'🦴', protein:'💪', 'vitamin C':'🍊', fibre:'🌾', 'vitamin A':'🥕', 'omega-3':'🐟', zinc:'🥜' };
+        nutBadges = p.keyNutsHit.slice(0, 4).map(n => `<span title="${n}">${NUT_EMOJI[n] || '•'}</span>`).join('');
+      }
+
+      // Synergy badge
+      let synergyBadge = '';
+      if (p.synergy) {
+        const emoji = p.synergy.type === 'absorption' ? '🔗' : p.synergy.type === 'complete' ? '✨' : '🌿';
+        synergyBadge = `<span class="t-xs" style="color:var(--tc-lav);font-weight:600;">${emoji} ${p.synergy.type}</span>`;
+      } else if (p.hasIronVitC) {
+        synergyBadge = '<span class="t-xs" style="color:var(--tc-lav);font-weight:600;">🔗 iron+vitC</span>';
+      }
+
+      // Poop badge
+      let poopBadge = '';
+      if (p.poopRisk) {
+        const flagFood = p.flag1 ? p.food1 : p.food2;
+        poopBadge = `<span class="t-xs" style="color:var(--tc-rose);">⚠ ${flagFood} poop issue</span>`;
+      }
+
+      // Streak badge
+      let streakBadge = '';
+      if (p.maxStreak >= 3) {
+        streakBadge = `<span class="t-xs" style="color:var(--tc-amber);">🔥 ${p.maxStreak}-day streak</span>`;
+      }
+
+      // Density indicator
+      const densityLabel = p.density >= 4 ? 'Nutrient-rich' : p.density >= 2 ? 'Decent' : p.density === 0 ? 'Unknown' : 'Light';
+      const densityColor = p.density >= 4 ? 'var(--tc-sage)' : p.density >= 2 ? 'var(--mid)' : 'var(--light)';
+
+      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;flex-wrap:wrap;">
         <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--sage-light);border-radius:var(--r-xl);z-index:0;"></div>
-        <div class="li-body" style="position:relative;z-index:1;">
-          <strong>${escHtml(p.food1)} + ${escHtml(p.food2)}</strong>
-          <span class="t-sm t-light">${p.count}× in 30 days${poopBadge}</span>
-        </div>
-        <div class="li-actions" style="position:relative;z-index:1;">
-          <span class="t-sm" style="font-weight:700;color:var(--tc-sage);">${p.count}</span>
+        <div class="li-body" style="position:relative;z-index:1;min-width:0;">
+          <div class="fx-row g4" style="align-items:center;flex-wrap:wrap;">
+            <strong>${escHtml(p.food1)} + ${escHtml(p.food2)}</strong>
+            <span class="t-xs" style="color:${p.freqColor};font-weight:600;">${p.count}×</span>
+            ${nutBadges ? `<span class="t-xs">${nutBadges}</span>` : ''}
+          </div>
+          <div class="fx-row g8" style="flex-wrap:wrap;margin-top:2px;">
+            <span class="t-xs" style="color:${densityColor};font-weight:500;">${densityLabel} · ${p.density}/8</span>
+            ${synergyBadge}${poopBadge}${streakBadge}
+          </div>
+          <div class="t-xs" style="margin-top:2px;">${p.recIcon} <span style="color:var(--mid);">${p.recommendation}</span></div>
         </div>
       </div>`;
     });
@@ -25070,65 +25201,32 @@ function renderInfoComboFreq() {
   }
   topEl.innerHTML = topHtml;
 
-  // Tried once — combos worth revisiting with reasons
+  // Tried once — worth revisiting
   let onceHtml = '';
   if (data.oncePairs.length > 0) {
-    // Get current nutrient gaps for reasoning
-    const heatmap = computeNutrientHeatmap(7);
-    const currentGaps = new Set(heatmap.gaps.map(g => g.toLowerCase()));
-
     onceHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Tried Once — Worth Revisiting?</div>';
     onceHtml += '<div class="fx-col g4">';
     data.oncePairs.forEach(p => {
-      // Get nutrition for both foods (use parseMealNutrition which does substring matching)
-      const items1 = parseMealNutrition(p.food1);
-      const items2 = parseMealNutrition(p.food2);
-      const allNutrients = [...new Set([...items1.flatMap(i => i.nutrients || []), ...items2.flatMap(i => i.nutrients || [])])];
-      const allTags = [...new Set([...items1.flatMap(i => i.tags || []), ...items2.flatMap(i => i.tags || [])])];
-
-      // Check poop safety
-      const flag1 = data.poopFlags[p.food1];
-      const flag2 = data.poopFlags[p.food2];
-      const poopSafe = !flag1 && !flag2;
-      const gapsFilled = allNutrients.filter(n => currentGaps.has(n.toLowerCase()));
-
-      // Build reason
       let reason = '';
-      // 0. Known synergy pair? (highest priority)
-      const synergy = getSynergy(p.food1, p.food2);
-      if (synergy) {
-        const emoji = synergy.type === 'absorption' ? '🔗' : synergy.type === 'complete' ? '✨' : '🌿';
-        reason = emoji + ' ' + synergy.reason;
-      }
-      // 1. Fills a current gap?
-      else if (gapsFilled.length > 0) {
-        reason = 'Fills gap: ' + gapsFilled.slice(0, 2).join(', ');
-      }
-      // 2. Iron + Vit C synergy? (generic, not in synergy DB)
-      else if ((allTags.includes('iron-rich') || allNutrients.includes('iron')) &&
-               (allNutrients.includes('vitamin C') || allTags.includes('vitamin-C'))) {
+      if (p.synergy) {
+        const emoji = p.synergy.type === 'absorption' ? '🔗' : p.synergy.type === 'complete' ? '✨' : '🌿';
+        reason = emoji + ' ' + p.synergy.reason;
+      } else if (p.gapsFilled.length > 0) {
+        reason = 'Fills gap: ' + p.gapsFilled.slice(0, 2).join(', ');
+      } else if (p.hasIronVitC) {
         reason = '🔗 Iron + Vitamin C synergy';
-      }
-      // 3. Good nutrient coverage?
-      else if (allNutrients.length >= 4) {
-        reason = allNutrients.slice(0, 3).join(', ');
-      }
-      // 4. Poop safe?
-      else if (poopSafe && allNutrients.length > 0) {
-        reason = 'No poop issues · ' + allNutrients.slice(0, 2).join(', ');
-      }
-      // 5. Unknown nutrition
-      else {
+      } else if (p.density >= 4) {
+        reason = p.keyNutsHit.slice(0, 3).join(', ');
+      } else if (p.poopSafe && p.density > 0) {
+        reason = 'No poop issues · ' + p.keyNutsHit.slice(0, 2).join(', ');
+      } else {
         reason = 'Try again to build data';
       }
-
-      // Poop warning overrides chip color
-      const chipClass = (flag1 === 'likely' || flag1 === 'suspected' || flag2 === 'likely' || flag2 === 'suspected') ? 'is-warn' : 'is-sage';
 
       onceHtml += `<div class="list-item li-row">
         <div class="li-body">
           <strong>${escHtml(p.food1)} + ${escHtml(p.food2)}</strong>
-          <span class="t-sm t-light">${reason}</span>
+          <span class="t-sm t-light">${reason}${p.density > 0 ? ' · ' + p.density + '/8 nutrients' : ''}</span>
         </div>
       </div>`;
     });
