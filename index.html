@@ -1768,6 +1768,171 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .nh-detail-panel.open { display:block; animation:fadeUp 0.2s ease both; }
 [data-theme="dark"] .nh-detail-panel { background:rgba(255,255,255,0.04); }
 
+/* ── Meal Nutrient Breakdown (Feature 4) ── */
+.mb-meal-grid { display:flex; flex-direction:column; gap:var(--sp-8); }
+.mb-meal-card {
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-xl);
+  background:var(--warm); position:relative; overflow:hidden;
+}
+[data-theme="dark"] .mb-meal-card { background:rgba(255,255,255,0.04); }
+.mb-meal-label {
+  font-size:var(--fs-sm); font-weight:700; color:var(--text);
+  margin-bottom:2px;
+}
+.mb-meal-score {
+  font-size:var(--fs-lg); font-weight:800; line-height:1.1;
+}
+.mb-meal-nutrients {
+  font-size:var(--fs-xs); color:var(--light); margin-top:2px;
+}
+.mb-meal-bar {
+  position:absolute; bottom:0; left:0; height:3px;
+  border-radius:0 var(--r-full) var(--r-full) 0;
+  transition:width var(--ease-med);
+}
+.mb-dist-bar {
+  display:flex; height:24px; border-radius:var(--r-full);
+  overflow:hidden; background:rgba(0,0,0,0.04);
+}
+[data-theme="dark"] .mb-dist-bar { background:rgba(255,255,255,0.06); }
+.mb-dist-seg {
+  display:flex; align-items:center; justify-content:center;
+  font-size:var(--fs-xs); font-weight:700; color:var(--text);
+  transition:flex var(--ease-med); min-width:0;
+}
+.mb-alert-item {
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+  padding:6px 0; font-size:var(--fs-sm); line-height:var(--lh-relaxed);
+}
+.mb-alert-item.alert-good { color:var(--tc-sage); }
+.mb-alert-item.alert-warn { color:var(--tc-amber); }
+.mb-weekly-row {
+  display:grid; grid-template-columns:64px repeat(4, 1fr);
+  gap:3px; align-items:center;
+}
+.mb-weekly-cell {
+  aspect-ratio:1.6; border-radius:var(--r-md); min-height:22px; max-height:32px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:600; transition:background var(--ease-fast);
+}
+[data-theme="dark"] .mb-weekly-cell { opacity:0.85; }
+
+/* ── Smart Pairing Suggestions (Feature 5) ── */
+.sp-pair-card {
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-xl);
+  background:var(--warm); transition:background var(--ease-fast);
+}
+[data-theme="dark"] .sp-pair-card { background:rgba(255,255,255,0.04); }
+.sp-pair-foods {
+  font-size:var(--fs-sm); font-weight:600; color:var(--text);
+}
+.sp-pair-reason {
+  font-size:var(--fs-xs); color:var(--light); margin-top:2px;
+  line-height:var(--lh-relaxed);
+}
+.sp-pair-type {
+  display:inline-block; padding:1px 8px; border-radius:var(--r-full);
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:var(--ls-wide); margin-top:4px;
+}
+.sp-type-absorption { background:rgba(220,100,120,0.12); color:var(--tc-rose); }
+.sp-type-complete { background:rgba(180,160,220,0.15); color:var(--tc-lav); }
+.sp-type-digestion { background:rgba(140,190,160,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .sp-type-absorption { background:rgba(220,100,120,0.2); }
+[data-theme="dark"] .sp-type-complete { background:rgba(180,160,220,0.2); }
+[data-theme="dark"] .sp-type-digestion { background:rgba(140,190,160,0.2); }
+.sp-gap-chip {
+  display:inline-block; padding:2px 8px; border-radius:var(--r-full);
+  font-size:var(--fs-xs); font-weight:600;
+  background:var(--amber-light); color:var(--tc-amber);
+  text-transform:capitalize;
+}
+[data-theme="dark"] .sp-gap-chip { background:rgba(70,55,35,0.3); }
+
+/* ── Meal Breakdown ── */
+.mb-meal-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-8);
+}
+.mb-meal-card {
+  padding:var(--sp-12); border-radius:var(--r-xl);
+  background:var(--warm); position:relative; overflow:hidden;
+}
+[data-theme="dark"] .mb-meal-card { background:rgba(255,255,255,0.04); }
+.mb-meal-label {
+  font-size:var(--fs-xs); font-weight:700; text-transform:uppercase;
+  letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:var(--sp-4);
+}
+.mb-meal-score {
+  font-size:var(--fs-xl); font-weight:800; line-height:1;
+  font-family:'Bricolage Grotesque',sans-serif;
+}
+.mb-meal-bar {
+  position:absolute; bottom:0; left:0; right:0; height:3px;
+  border-radius:0 0 var(--r-xl) var(--r-xl);
+  transition:width var(--ease-med);
+}
+.mb-meal-nutrients {
+  margin-top:var(--sp-4); font-size:var(--fs-xs); color:var(--light);
+  line-height:var(--lh-relaxed);
+}
+.mb-dist-bar {
+  display:flex; gap:2px; height:20px; border-radius:var(--r-lg); overflow:hidden;
+  margin-top:var(--sp-8);
+}
+.mb-dist-seg {
+  border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:700; color:white; min-width:16px;
+  transition:flex var(--ease-med);
+}
+.mb-alert-item {
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-xl);
+  font-size:var(--fs-sm); line-height:var(--lh-relaxed);
+}
+.mb-alert-item.alert-warn { background:var(--amber-light); color:var(--tc-amber); }
+.mb-alert-item.alert-good { background:var(--sage-light); color:var(--tc-sage); }
+[data-theme="dark"] .mb-alert-item.alert-warn { background:rgba(70,55,35,0.3); }
+[data-theme="dark"] .mb-alert-item.alert-good { background:rgba(50,70,60,0.3); }
+.mb-weekly-row {
+  display:grid; grid-template-columns:56px repeat(4, 1fr); gap:3px;
+  align-items:center; font-size:var(--fs-xs);
+}
+.mb-weekly-cell {
+  height:24px; border-radius:var(--r-sm); display:flex;
+  align-items:center; justify-content:center; font-weight:600;
+}
+
+/* ── Smart Pairing ── */
+.sp-pair-card {
+  padding:var(--sp-12); border-radius:var(--r-xl);
+  background:var(--warm); display:flex; flex-direction:column; gap:var(--sp-4);
+}
+[data-theme="dark"] .sp-pair-card { background:rgba(255,255,255,0.04); }
+.sp-pair-foods {
+  font-weight:700; font-size:var(--fs-base); color:var(--text);
+}
+.sp-pair-reason {
+  font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed);
+}
+.sp-pair-type {
+  display:inline-block; padding:2px 8px; border-radius:var(--r-full);
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:var(--ls-wide);
+}
+.sp-type-absorption { background:rgba(220,100,120,0.12); color:var(--tc-rose); }
+.sp-type-complete { background:rgba(140,190,160,0.15); color:var(--tc-sage); }
+.sp-type-digestion { background:rgba(180,160,220,0.15); color:var(--tc-lav); }
+[data-theme="dark"] .sp-type-absorption { background:rgba(220,100,120,0.2); }
+[data-theme="dark"] .sp-type-complete { background:rgba(140,190,160,0.2); }
+[data-theme="dark"] .sp-type-digestion { background:rgba(180,160,220,0.2); }
+.sp-gap-chip {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  padding:4px 12px; border-radius:var(--r-full);
+  font-size:var(--fs-xs); font-weight:600;
+  background:var(--amber-light); color:var(--tc-amber);
+}
+[data-theme="dark"] .sp-gap-chip { background:rgba(70,55,35,0.3); }
+
 /* ── Tabs (moved to v1.9 section) ── */
 .tab-save-btn {
   flex:0 0 42px; padding:6px 0; border:none; border-radius:var(--r-lg);
@@ -4993,6 +5158,34 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- Meal Nutrient Breakdown -->
+      <div class="card card-daily col-full" id="infoMealBreakdownCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoMealBreakdownBody','infoMealBreakdownChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-spoon"/></svg></div> Meal Breakdown</div>
+          <span class="collapse-chevron" id="infoMealBreakdownChevron">▾</span>
+        </div>
+        <div id="infoMealBreakdownSummary" class="mt-4"></div>
+        <div id="infoMealBreakdownBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoMealBreakdownGrid" class="mt-4"></div>
+          <div id="infoMealBreakdownAlerts" class="mt-8"></div>
+          <div id="infoMealBreakdownWeekly" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Smart Pairing Suggestions -->
+      <div class="card card-daily col-full" id="infoSmartPairingCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSmartPairingBody','infoSmartPairingChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Smart Pairings</div>
+          <span class="collapse-chevron" id="infoSmartPairingChevron">▾</span>
+        </div>
+        <div id="infoSmartPairingSummary" class="mt-4"></div>
+        <div id="infoSmartPairingBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoSmartPairingTop" class="mt-4"></div>
+          <div id="infoSmartPairingGaps" class="mt-8"></div>
+          <div id="infoSmartPairingUnused" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- ─── SLEEP INTELLIGENCE (placeholder) ─── -->
       <div class="home-section-label sec-t3 col-full">Sleep Intelligence</div>
       <div class="card card-info col-full">
@@ -5026,7 +5219,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <!-- FOOTER -->
 
   <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text" style="font-size:var(--fs-sm);color:var(--light);letter-spacing:var(--ls-wide);">Ziva's Dashboard v2.6 · Made with 💕</div>
+    <div class="footer-text" style="font-size:var(--fs-sm);color:var(--light);letter-spacing:var(--ls-wide);">Ziva's Dashboard v2.7 · Made with 💕</div>
   </div>
 
 </div><!-- /app -->
@@ -12755,8 +12948,16 @@ function checkFoodCombo() {
     donts = generateDonts(rawFoods, tags, mo);
   }
 
-  // ── 7. Pairing suggestions ──
-  if (hasIron && !tags.includes('vitamin-C')) {
+  // ── 7. Pairing suggestions (synergy-aware) ──
+  const synergyPairs = getSynergyPairings(rawFoods);
+  if (synergyPairs.length > 0) {
+    const lines = synergyPairs.map(s => {
+      let line = `${s.emoji} <strong>${s.partner}</strong> — ${s.reason}`;
+      if (s.gapsFilled && s.gapsFilled.length > 0) line += ` (fills ${s.gapsFilled.join(', ')} gap)`;
+      return line;
+    });
+    pairsWellWith = lines.join('<br>');
+  } else if (hasIron && !tags.includes('vitamin-C')) {
     pairsWellWith = 'Add lemon, orange, mango, or tomato for Vitamin C to boost iron absorption.';
   } else if (tags.includes('vitamin-A') && !tags.includes('healthy-fats')) {
     pairsWellWith = 'Add ghee or coconut oil — fat helps absorb Vitamin A.';
@@ -12797,6 +12998,7 @@ function checkFoodCombo() {
     recipe: recipeText,
     dos, donts,
     pairs_well_with: pairsWellWith,
+    _queryFoods: rawFoods,
   };
 
   // Cache
@@ -13085,7 +13287,26 @@ function renderComboResult(r) {
     html += `</div></div>`;
   }
 
-  if (r.pairs_well_with) {
+  // Smart synergy-aware pairings (enhanced Feature 5)
+  const queryFoods = (r._queryFoods || []);
+  if (queryFoods.length > 0 && typeof getSynergyPairings === 'function') {
+    const pairings = getSynergyPairings(queryFoods);
+    if (pairings.length > 0) {
+      html += `<div class="combo-section"><div class="combo-section-title">🤝 Smart Pairings</div>`;
+      html += `<div class="fx-col g4">`;
+      pairings.forEach(p => {
+        const gapNote = p.gapsFilled && p.gapsFilled.length > 0 ? ` · fills ${p.gapsFilled.join(', ')}` : '';
+        html += `<div class="sp-pair-card" style="cursor:pointer;" onclick="document.getElementById('comboInput').value='${escHtml(queryFoods.join(' + '))} + ${escHtml(p.partner)}';activateBtn('comboCheckBtn',true);checkFoodCombo();">
+          <div class="sp-pair-foods">${p.emoji} Add <strong>${escHtml(p.partner)}</strong></div>
+          <div class="sp-pair-reason">${escHtml(p.reason)}${gapNote}</div>
+          <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    } else if (r.pairs_well_with) {
+      html += `<div class="combo-section"><div class="combo-section-title">🤝 Pairs well with</div><div class="combo-body">${r.pairs_well_with}</div></div>`;
+    }
+  } else if (r.pairs_well_with) {
     html += `<div class="combo-section"><div class="combo-section-title">🤝 Pairs well with</div><div class="combo-body">${r.pairs_well_with}</div></div>`;
   }
 
@@ -23970,6 +24191,8 @@ function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
   renderInfoComboFreq();
+  renderInfoMealBreakdown();
+  renderInfoSmartPairing();
 }
 
 function renderInfoFoodIntro() {
@@ -24426,6 +24649,464 @@ function renderInfoComboFreq() {
     onceHtml += '</div>';
   }
   onceEl.innerHTML = onceHtml;
+}
+
+// ── FOOD INTELLIGENCE: MEAL NUTRIENT BREAKDOWN (Feature 4) ──
+
+const MEAL_SLOTS = [
+  { key: 'breakfast', label: 'Breakfast', short: 'B', emoji: '🌤', color: 'rgba(240,180,140,0.7)' },
+  { key: 'lunch',    label: 'Lunch',     short: 'L', emoji: '☀️', color: 'rgba(140,190,160,0.7)' },
+  { key: 'dinner',   label: 'Dinner',    short: 'D', emoji: '🌙', color: 'rgba(130,185,210,0.7)' },
+  { key: 'snack',    label: 'Snack',     short: 'S', emoji: '🍪', color: 'rgba(180,160,220,0.7)' },
+];
+const KEY_NUTRIENTS_MB = ['iron', 'calcium', 'protein', 'vitamin C', 'fibre', 'vitamin A', 'omega-3', 'zinc'];
+
+function computeMealBreakdown(windowDays) {
+  windowDays = windowDays || 7;
+  const todayDate = new Date(today());
+  // Per-meal aggregate: nutrientHits, totalNutrients, mealCount, uniqueFoods
+  const mealStats = {};
+  MEAL_SLOTS.forEach(m => {
+    mealStats[m.key] = { nutrientHits: {}, totalNutrientCount: 0, mealCount: 0, uniqueFoods: new Set(), dayScores: [] };
+    KEY_NUTRIENTS_MB.forEach(n => { mealStats[m.key].nutrientHits[n] = 0; });
+  });
+
+  // Per-day breakdown for today's detail view
+  const todayBreakdown = {};
+  const dailyDistributions = []; // [{date, meals:{breakfast:score,...}, total}]
+
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds];
+    if (!entry) continue;
+
+    const dayDist = { date: ds, meals: {}, total: 0 };
+
+    MEAL_SLOTS.forEach(m => {
+      const val = entry[m.key];
+      if (!isRealMeal(val)) {
+        dayDist.meals[m.key] = 0;
+        return;
+      }
+      mealStats[m.key].mealCount++;
+      const items = parseMealNutrition(val);
+      const dayNutrients = new Set();
+
+      items.forEach(item => {
+        if (!mealStats[m.key].uniqueFoods.has(item.food)) mealStats[m.key].uniqueFoods.add(item.food);
+        (item.nutrients || []).forEach(n => {
+          if (KEY_NUTRIENTS_MB.includes(n)) {
+            mealStats[m.key].nutrientHits[n]++;
+            dayNutrients.add(n);
+          }
+        });
+      });
+
+      const mealScore = dayNutrients.size; // how many key nutrients this meal hits
+      mealStats[m.key].totalNutrientCount += mealScore;
+      mealStats[m.key].dayScores.push(mealScore);
+      dayDist.meals[m.key] = mealScore;
+      dayDist.total += mealScore;
+
+      // Today's detail
+      if (i === 0) {
+        todayBreakdown[m.key] = {
+          foods: items.map(it => it.food),
+          nutrients: [...dayNutrients],
+          score: mealScore
+        };
+      }
+    });
+
+    if (dayDist.total > 0) dailyDistributions.push(dayDist);
+  }
+
+  // Compute per-meal density score (avg nutrients per meal)
+  const mealDensity = {};
+  let totalAllNutrients = 0;
+  MEAL_SLOTS.forEach(m => {
+    const s = mealStats[m.key];
+    mealDensity[m.key] = s.mealCount > 0 ? +(s.totalNutrientCount / s.mealCount).toFixed(1) : 0;
+    totalAllNutrients += s.totalNutrientCount;
+  });
+
+  // Distribution: what % of total nutrient hits does each meal carry?
+  const distribution = {};
+  MEAL_SLOTS.forEach(m => {
+    distribution[m.key] = totalAllNutrients > 0
+      ? Math.round((mealStats[m.key].totalNutrientCount / totalAllNutrients) * 100)
+      : 0;
+  });
+
+  // Alerts
+  const alerts = [];
+  // Check if one meal carries >55% of all nutrition
+  MEAL_SLOTS.forEach(m => {
+    if (distribution[m.key] > 55 && mealStats[m.key].mealCount >= 3) {
+      alerts.push({ type: 'warn', text: `${m.label} carries ${distribution[m.key]}% of all nutrients — try spreading nutrition more evenly across meals.` });
+    }
+  });
+  // Check for consistently empty meals
+  MEAL_SLOTS.forEach(m => {
+    if (mealStats[m.key].mealCount >= 3 && mealDensity[m.key] < 1) {
+      alerts.push({ type: 'warn', text: `${m.label} averages <1 key nutrient per meal — consider adding an iron or calcium source.` });
+    }
+  });
+  // Check for good balance
+  const densities = MEAL_SLOTS.map(m => mealDensity[m.key]).filter(d => d > 0);
+  if (densities.length >= 3) {
+    const max = Math.max(...densities);
+    const min = Math.min(...densities);
+    if (max - min <= 1.5) {
+      alerts.push({ type: 'good', text: 'Nutrients are well distributed across meals — great balance!' });
+    }
+  }
+  // Check for a star meal
+  MEAL_SLOTS.forEach(m => {
+    if (mealDensity[m.key] >= 4 && mealStats[m.key].mealCount >= 3) {
+      alerts.push({ type: 'good', text: `${m.label} is your nutrient powerhouse — averaging ${mealDensity[m.key]} key nutrients per meal.` });
+    }
+  });
+
+  // Weekly per-meal heatmap data (last 7 days, per meal slot, nutrient density)
+  const weeklyGrid = []; // [{date, scores:{breakfast:n, ...}}]
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds];
+    const row = { date: ds, scores: {} };
+    MEAL_SLOTS.forEach(m => {
+      if (!entry || !isRealMeal(entry[m.key])) { row.scores[m.key] = -1; return; } // -1 = no data
+      const items = parseMealNutrition(entry[m.key]);
+      const nuts = new Set();
+      items.forEach(item => { (item.nutrients || []).forEach(n => { if (KEY_NUTRIENTS_MB.includes(n)) nuts.add(n); }); });
+      row.scores[m.key] = nuts.size;
+    });
+    weeklyGrid.push(row);
+  }
+
+  return { mealStats, mealDensity, distribution, todayBreakdown, alerts, weeklyGrid, totalAllNutrients };
+}
+
+function renderInfoMealBreakdown() {
+  const data = computeMealBreakdown(7);
+  const summaryEl = document.getElementById('infoMealBreakdownSummary');
+  const gridEl = document.getElementById('infoMealBreakdownGrid');
+  const alertsEl = document.getElementById('infoMealBreakdownAlerts');
+  const weeklyEl = document.getElementById('infoMealBreakdownWeekly');
+  if (!summaryEl) return;
+
+  if (data.totalAllNutrients === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No meals with recognized nutrition this week</div>';
+    gridEl.innerHTML = '';
+    alertsEl.innerHTML = '';
+    weeklyEl.innerHTML = '';
+    return;
+  }
+
+  // Find strongest meal
+  let strongest = null; let strongestVal = 0;
+  MEAL_SLOTS.forEach(m => {
+    if (data.mealDensity[m.key] > strongestVal) { strongestVal = data.mealDensity[m.key]; strongest = m; }
+  });
+
+  summaryEl.innerHTML = `<div class="fx-row g12" style="align-items:center;flex-wrap:wrap;">
+    <div class="t-sm"><strong>${strongest ? strongest.emoji + ' ' + strongest.label : '—'}</strong> <span class="t-light">is the strongest meal</span></div>
+    <div class="t-sm" style="color:var(--light);">·</div>
+    <div class="t-sm" style="color:var(--light);">${strongestVal} avg nutrients</div>
+  </div>`;
+
+  // Per-meal density cards
+  const maxDensity = Math.max(...MEAL_SLOTS.map(m => data.mealDensity[m.key]), 1);
+  let gridHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Nutrient Density by Meal</div>';
+  gridHtml += '<div class="mb-meal-grid">';
+  MEAL_SLOTS.forEach(m => {
+    const density = data.mealDensity[m.key];
+    const pct = Math.round((density / 8) * 100); // out of 8 key nutrients max
+    const stats = data.mealStats[m.key];
+    const topNutrients = Object.entries(stats.nutrientHits).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0).slice(0, 3).map(([k]) => k);
+
+    gridHtml += `<div class="mb-meal-card">
+      <div class="mb-meal-label">${m.emoji} ${m.label}</div>
+      <div class="mb-meal-score" style="color:${density >= 3 ? 'var(--tc-sage)' : density >= 1.5 ? 'var(--tc-amber)' : 'var(--light)'};">${density}</div>
+      <div class="mb-meal-nutrients">${topNutrients.length > 0 ? topNutrients.join(', ') : 'no data'}</div>
+      <div class="mb-meal-bar" style="width:${Math.max(pct, 4)}%;background:${m.color};"></div>
+    </div>`;
+  });
+  gridHtml += '</div>';
+
+  // Distribution bar
+  gridHtml += '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-top:var(--sp-16);margin-bottom:var(--sp-4);">Daily Distribution</div>';
+  gridHtml += '<div class="mb-dist-bar">';
+  MEAL_SLOTS.forEach(m => {
+    const pct = data.distribution[m.key];
+    if (pct > 0) {
+      gridHtml += `<div class="mb-dist-seg" style="flex:${pct};background:${m.color};" title="${m.label}: ${pct}%">${pct > 12 ? m.short : ''}</div>`;
+    }
+  });
+  gridHtml += '</div>';
+  gridHtml += '<div class="fx-row g12 mt-4" style="justify-content:center;flex-wrap:wrap;">';
+  MEAL_SLOTS.forEach(m => {
+    gridHtml += `<div class="fx-row g4" style="align-items:center;"><div style="width:10px;height:10px;border-radius:var(--r-sm);background:${m.color};"></div><span class="t-xs t-light">${m.short} ${data.distribution[m.key]}%</span></div>`;
+  });
+  gridHtml += '</div>';
+
+  gridEl.innerHTML = gridHtml;
+
+  // Alerts
+  if (data.alerts.length > 0) {
+    let alertHtml = '<div class="fx-col g4">';
+    data.alerts.forEach(a => {
+      const cls = a.type === 'warn' ? 'alert-warn' : 'alert-good';
+      const icon = a.type === 'warn' ? '⚠️' : '✅';
+      alertHtml += `<div class="mb-alert-item ${cls}"><span>${icon}</span><span>${a.text}</span></div>`;
+    });
+    alertHtml += '</div>';
+    alertsEl.innerHTML = alertHtml;
+  } else {
+    alertsEl.innerHTML = '';
+  }
+
+  // Weekly mini-heatmap (7 days × 4 meals)
+  let weeklyHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">7-Day Meal Quality</div>';
+  // Header row
+  weeklyHtml += '<div class="mb-weekly-row">';
+  weeklyHtml += '<div></div>';
+  MEAL_SLOTS.forEach(m => {
+    weeklyHtml += `<div class="t-xs" style="text-align:center;color:var(--light);font-weight:600;">${m.short}</div>`;
+  });
+  weeklyHtml += '</div>';
+
+  data.weeklyGrid.forEach(row => {
+    const d = new Date(row.date);
+    const dayLabel = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' });
+    const isToday = row.date === today();
+    weeklyHtml += '<div class="mb-weekly-row">';
+    weeklyHtml += `<div class="t-xs" style="color:${isToday ? 'var(--tc-rose)' : 'var(--light)'};font-weight:${isToday ? '700' : '500'};">${dayLabel}</div>`;
+    MEAL_SLOTS.forEach((m, mi) => {
+      const score = row.scores[m.key];
+      if (score === -1) {
+        weeklyHtml += '<div class="mb-weekly-cell" style="background:rgba(0,0,0,0.03);color:var(--light);font-size:10px;">–</div>';
+      } else {
+        const alpha = score === 0 ? 0.08 : Math.min(0.2 + (score / 8) * 0.6, 0.8);
+        const baseColor = MEAL_SLOTS[mi].color.replace(/[\d.]+\)$/, `${alpha})`);
+        weeklyHtml += `<div class="mb-weekly-cell" style="background:${baseColor};color:${score >= 3 ? 'var(--tc-sage)' : score > 0 ? 'var(--mid)' : 'var(--light)'};font-size:var(--fs-xs);">${score}</div>`;
+      }
+    });
+    weeklyHtml += '</div>';
+  });
+
+  weeklyEl.innerHTML = weeklyHtml;
+}
+
+// ── FOOD INTELLIGENCE: SMART PAIRING SUGGESTIONS (Feature 5) ──
+
+function computeSmartPairings() {
+  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  const todayFoods = extractDayFoods(today());
+  const todayFoodSet = new Set(todayFoods);
+
+  // Current nutrient gaps (from heatmap data)
+  const heatmap = computeNutrientHeatmap(7);
+  const currentGaps = heatmap.gaps.map(g => g.toLowerCase());
+  const gapSet = new Set(currentGaps);
+
+  // 1. Top synergy pairs from introduced foods
+  const usedPairs = []; // pairs already used together in recent meals
+  const unusedPairs = []; // introduced but never paired
+
+  // Check which synergies involve introduced foods
+  const combos = computeFoodCombos(30);
+  FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+    const f1Match = [...introducedSet].find(f => f.includes(f1) || f1.includes(f));
+    const f2Match = [...introducedSet].find(f => f.includes(f2) || f2.includes(f));
+    if (!f1Match || !f2Match) return; // both must be introduced
+
+    // Check if they've been paired in recent meals
+    const paired = combos.topPairs.some(p =>
+      (p.food1.includes(f1) || f1.includes(p.food1)) && (p.food2.includes(f2) || f2.includes(p.food2)) ||
+      (p.food1.includes(f2) || f2.includes(p.food1)) && (p.food2.includes(f1) || f1.includes(p.food2))
+    );
+
+    const entry = { food1: f1Match, food2: f2Match, reason, type, synergyFood1: f1, synergyFood2: f2 };
+
+    // Score by: gap-filling (3), today-actionable (2), type=absorption (1)
+    let score = 0;
+    const n1 = getNutrition(f1Match);
+    const n2 = getNutrition(f2Match);
+    const allNuts = [...new Set([...(n1?.nutrients || []), ...(n2?.nutrients || [])])];
+    const gapsFilled = allNuts.filter(n => gapSet.has(n.toLowerCase()));
+    if (gapsFilled.length > 0) { score += gapsFilled.length * 3; entry.gapsFilled = gapsFilled; }
+    if (todayFoodSet.has(f1Match) || todayFoodSet.has(f2Match)) score += 2;
+    if (type === 'absorption') score += 1;
+    entry._score = score;
+
+    if (paired) usedPairs.push(entry);
+    else unusedPairs.push(entry);
+  });
+
+  unusedPairs.sort((a, b) => b._score - a._score);
+  usedPairs.sort((a, b) => b._score - a._score);
+
+  // 2. Gap-filling pairing suggestions (not synergy-based)
+  const gapSuggestions = [];
+  if (currentGaps.length > 0) {
+    currentGaps.forEach(gap => {
+      // Find introduced foods that provide this nutrient
+      const providers = [...introducedSet].filter(f => {
+        const nut = getNutrition(f);
+        return nut?.nutrients?.some(n => n.toLowerCase() === gap);
+      }).slice(0, 3);
+      if (providers.length > 0) {
+        gapSuggestions.push({ nutrient: gap, foods: providers });
+      }
+    });
+  }
+
+  // 3. Today-actionable: synergies from today's foods with untried partners
+  const todayActionable = [];
+  todayFoods.forEach(food => {
+    FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+      let match = null, partner = null;
+      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
+      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      if (!match || !partner) return;
+      // Partner not already in today's meals
+      if (todayFoods.some(tf => tf.includes(partner) || partner.includes(tf))) return;
+      // Partner must be introduced
+      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      todayActionable.push({ food: match, partner, reason, type });
+    });
+  });
+
+  return {
+    unusedPairs: unusedPairs.slice(0, 6),
+    usedPairs: usedPairs.slice(0, 4),
+    gapSuggestions,
+    todayActionable: todayActionable.slice(0, 3),
+    totalSynergies: FOOD_SYNERGIES.length,
+    usedCount: usedPairs.length,
+    unusedCount: unusedPairs.length
+  };
+}
+
+function renderInfoSmartPairing() {
+  const data = computeSmartPairings();
+  const summaryEl = document.getElementById('infoSmartPairingSummary');
+  const topEl = document.getElementById('infoSmartPairingTop');
+  const gapsEl = document.getElementById('infoSmartPairingGaps');
+  const unusedEl = document.getElementById('infoSmartPairingUnused');
+  if (!summaryEl) return;
+
+  const totalKnown = data.usedCount + data.unusedCount;
+  if (totalKnown === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">Introduce more foods to unlock synergy pairings</div>';
+    topEl.innerHTML = '';
+    gapsEl.innerHTML = '';
+    unusedEl.innerHTML = '';
+    return;
+  }
+
+  const pctUsed = totalKnown > 0 ? Math.round((data.usedCount / totalKnown) * 100) : 0;
+  summaryEl.innerHTML = `<div class="fx-row g12" style="align-items:center;flex-wrap:wrap;">
+    <div class="t-sm"><strong>${data.usedCount}</strong><span class="t-light"> of ${totalKnown} synergies used</span></div>
+    <div class="t-sm" style="color:var(--light);">·</div>
+    <div class="t-sm" style="color:${pctUsed >= 50 ? 'var(--tc-sage)' : pctUsed >= 25 ? 'var(--tc-amber)' : 'var(--tc-rose)'};font-weight:600;">${pctUsed}% coverage</div>
+  </div>`;
+
+  // Today's actionable pairings
+  let topHtml = '';
+  if (data.todayActionable.length > 0) {
+    topHtml += '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Add Today</div>';
+    topHtml += '<div class="fx-col g4">';
+    data.todayActionable.forEach(a => {
+      const emoji = a.type === 'absorption' ? '🔗' : a.type === 'complete' ? '✨' : '🌿';
+      topHtml += `<div class="sp-pair-card">
+        <div class="sp-pair-foods">${emoji} Add <strong>${escHtml(a.partner)}</strong> to pair with ${escHtml(a.food)}</div>
+        <div class="sp-pair-reason">${escHtml(a.reason)}</div>
+        <div><span class="sp-pair-type sp-type-${a.type}">${a.type}</span></div>
+      </div>`;
+    });
+    topHtml += '</div>';
+  }
+  topEl.innerHTML = topHtml;
+
+  // Gap-filling suggestions
+  let gapHtml = '';
+  if (data.gapSuggestions.length > 0) {
+    gapHtml += '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Fill Nutrient Gaps</div>';
+    gapHtml += '<div class="fx-col g4">';
+    data.gapSuggestions.forEach(g => {
+      gapHtml += `<div class="list-item li-row">
+        <div class="li-body">
+          <span class="sp-gap-chip">${escHtml(g.nutrient)}</span>
+          <span class="t-sm t-light" style="margin-top:2px;">Try ${g.foods.map(f => '<strong>' + escHtml(f) + '</strong>').join(', ')}</span>
+        </div>
+      </div>`;
+    });
+    gapHtml += '</div>';
+  }
+  gapsEl.innerHTML = gapHtml;
+
+  // Unused synergy pairs to try
+  let unusedHtml = '';
+  if (data.unusedPairs.length > 0) {
+    unusedHtml += '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Untried Synergies</div>';
+    unusedHtml += '<div class="fx-col g4">';
+    data.unusedPairs.forEach(p => {
+      const emoji = p.type === 'absorption' ? '🔗' : p.type === 'complete' ? '✨' : '🌿';
+      let extra = '';
+      if (p.gapsFilled && p.gapsFilled.length > 0) {
+        extra = ` · fills ${p.gapsFilled.slice(0, 2).join(', ')} gap`;
+      }
+      unusedHtml += `<div class="sp-pair-card">
+        <div class="sp-pair-foods">${emoji} ${escHtml(p.food1)} + ${escHtml(p.food2)}</div>
+        <div class="sp-pair-reason">${escHtml(p.reason)}${extra}</div>
+        <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
+      </div>`;
+    });
+    unusedHtml += '</div>';
+  }
+  unusedEl.innerHTML = unusedHtml;
+}
+
+// ── ENHANCE checkFoodCombo with synergy-aware pairing suggestions ──
+
+function getSynergyPairings(rawFoods) {
+  const suggestions = [];
+  const seen = new Set();
+  rawFoods.forEach(food => {
+    FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+      let match = null, partner = null;
+      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
+      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      if (!match || !partner) return;
+      // Don't suggest if partner is already in the query
+      if (rawFoods.some(rf => rf.includes(partner) || partner.includes(rf))) return;
+      const key = partner;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const emoji = type === 'absorption' ? '🔗' : type === 'complete' ? '✨' : '🌿';
+      suggestions.push({ partner, reason, type, emoji, matchedWith: food });
+    });
+  });
+
+  // Also check nutrient gaps
+  const heatmap = computeNutrientHeatmap(7);
+  const gapNutrients = new Set(heatmap.gaps.map(g => g.toLowerCase()));
+
+  // Score: gap-filling first, then absorption type
+  suggestions.forEach(s => {
+    const nut = getNutrition(s.partner);
+    const gapsFilled = (nut?.nutrients || []).filter(n => gapNutrients.has(n.toLowerCase()));
+    s._score = gapsFilled.length * 3 + (s.type === 'absorption' ? 2 : 1);
+    s.gapsFilled = gapsFilled;
+  });
+  suggestions.sort((a, b) => b._score - a._score);
+  return suggestions.slice(0, 4);
 }
 
 // ── Update renderInfo ──
