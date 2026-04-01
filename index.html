@@ -1786,6 +1786,17 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .tab-panel { display:none; min-width:0; }
 .tab-panel.active { display:block; animation:fadeUp 0.3s ease both; }
 
+/* ── Simple Mode ── */
+body.simple-mode .tab-btn[aria-label="Insights tab"],
+body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
+body.simple-mode .stat-pills-grid { display:none !important; }
+body.simple-mode #homePoopCard { display:none !important; }
+body.simple-mode .ca-view-all { display:none; }
+body.simple-mode #insightsTrendsCard { display:none; }
+body.simple-mode .ins-card-corr,
+body.simple-mode .ins-card-cross,
+body.simple-mode .ins-card-alert-intel,
+
 /* ── Doctor visits ── */
 .visit-list { display:flex; flex-direction:column; gap:var(--sp-8); }
 .visit-item {
@@ -5153,6 +5164,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--peach-light);border:1.5px solid rgba(250,212,180,0.3);">
           <div style="font-size:var(--fs-base);font-weight:600;color:var(--tc-caution);margin-bottom:8px;">⚙️ Preferences</div>
           <div class="fx-col g12">
+            <div class="d-flex items-center justify-between">
+              <div>
+                <div class="t-md">Simple mode</div>
+                <div class="t-sub">Clean view — essentials only</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
+                <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" style="opacity:0;width:0;height:0;" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
             <div class="d-flex items-center justify-between">
               <label class="t-md">Height unit</label>
               <select id="settingsHeightUnit" onchange="saveHeightUnitPref()" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
@@ -18917,6 +18938,45 @@ function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 // ─────────────────────────────────────────
 // v1.9 — DARK MODE
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// SIMPLE MODE
+// ─────────────────────────────────────────
+
+function isSimpleMode() {
+  return document.body.classList.contains('simple-mode');
+}
+
+function toggleSimpleMode() {
+  const on = document.getElementById('settingsSimpleMode')?.checked ?? true;
+  if (on) {
+    document.body.classList.add('simple-mode');
+    localStorage.setItem('ziva_simple_mode', 'true');
+  } else {
+    document.body.classList.remove('simple-mode');
+    localStorage.setItem('ziva_simple_mode', 'false');
+  }
+  // If currently on a hidden tab, redirect to home
+  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  if (on && (currentTab === 'insights' || currentTab === 'info')) {
+    switchTab('home');
+  }
+  // Re-render home to apply alert filtering
+  if (currentTab === 'home') {
+    renderHomeContextAlerts();
+  }
+}
+
+function initSimpleMode() {
+  const saved = localStorage.getItem('ziva_simple_mode');
+  // Default to simple mode ON (new users and existing users without preference)
+  const isSimple = saved !== 'false';
+  if (isSimple) {
+    document.body.classList.add('simple-mode');
+  }
+  const toggle = document.getElementById('settingsSimpleMode');
+  if (toggle) toggle.checked = isSimple;
+}
+
 function toggleDarkMode() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -20756,8 +20816,13 @@ function renderHomeContextAlerts() {
   const watchAlerts = alerts.filter(a => a.severity === 'watch');
   const infoAlerts = alerts.filter(a => a.severity === 'info');
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
-  const homeWarnings = [...actionAlerts, ...watchAlerts.slice(0, 3)];
-  const homePositives = positiveAlerts.slice(0, 2);
+
+  // Simple mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
+  const simple = isSimpleMode();
+  const homeWarnings = simple
+    ? actionAlerts
+    : [...actionAlerts, ...watchAlerts.slice(0, 3)];
+  const homePositives = simple ? [] : positiveAlerts.slice(0, 2);
   const remainingWarnings = actionAlerts.length + watchAlerts.length + infoAlerts.length - homeWarnings.length;
   const remainingPositives = positiveAlerts.length - homePositives.length;
 
@@ -24254,6 +24319,7 @@ function isPWA() {
 // START
 // ─────────────────────────────────────────
 initDarkMode();
+initSimpleMode();
 init();
 </script>
 </body>
