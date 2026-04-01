@@ -23969,11 +23969,11 @@ function renderInfoComboFreq() {
     onceHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Tried Once — Worth Revisiting?</div>';
     onceHtml += '<div class="fx-col g4">';
     data.oncePairs.forEach(p => {
-      // Get nutrition for both foods
-      const nut1 = getNutrition(p.food1);
-      const nut2 = getNutrition(p.food2);
-      const allNutrients = [...new Set([...(nut1?.nutrients || []), ...(nut2?.nutrients || [])])];
-      const allTags = [...new Set([...(nut1?.tags || []), ...(nut2?.tags || [])])];
+      // Get nutrition for both foods (use parseMealNutrition which does substring matching)
+      const items1 = parseMealNutrition(p.food1);
+      const items2 = parseMealNutrition(p.food2);
+      const allNutrients = [...new Set([...items1.flatMap(i => i.nutrients || []), ...items2.flatMap(i => i.nutrients || [])])];
+      const allTags = [...new Set([...items1.flatMap(i => i.tags || []), ...items2.flatMap(i => i.tags || [])])];
 
       // Check poop safety
       const flag1 = data.poopFlags[p.food1];
