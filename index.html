@@ -23959,13 +23959,61 @@ function renderInfoComboFreq() {
   }
   topEl.innerHTML = topHtml;
 
-  // Tried once — combos worth revisiting
+  // Tried once — combos worth revisiting with reasons
   let onceHtml = '';
   if (data.oncePairs.length > 0) {
+    // Get current nutrient gaps for reasoning
+    const heatmap = computeNutrientHeatmap(7);
+    const currentGaps = new Set(heatmap.gaps.map(g => g.toLowerCase()));
+
     onceHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Tried Once — Worth Revisiting?</div>';
-    onceHtml += '<div class="fx-wrap g4">';
+    onceHtml += '<div class="fx-col g4">';
     data.oncePairs.forEach(p => {
-      onceHtml += `<span class="info-food-chip is-sage">${escHtml(p.food1)} + ${escHtml(p.food2)}</span>`;
+      // Get nutrition for both foods
+      const nut1 = getNutrition(p.food1);
+      const nut2 = getNutrition(p.food2);
+      const allNutrients = [...new Set([...(nut1?.nutrients || []), ...(nut2?.nutrients || [])])];
+      const allTags = [...new Set([...(nut1?.tags || []), ...(nut2?.tags || [])])];
+
+      // Check poop safety
+      const flag1 = data.poopFlags[p.food1];
+      const flag2 = data.poopFlags[p.food2];
+      const poopSafe = !flag1 && !flag2;
+
+      // Build reason
+      let reason = '';
+      // 1. Fills a current gap?
+      const gapsFilled = allNutrients.filter(n => currentGaps.has(n.toLowerCase()));
+      if (gapsFilled.length > 0) {
+        reason = 'Fills gap: ' + gapsFilled.slice(0, 2).join(', ');
+      }
+      // 2. Iron + Vit C synergy?
+      else if ((allTags.includes('iron-rich') || allNutrients.includes('iron')) &&
+               (allNutrients.includes('vitamin C') || allTags.includes('vitamin-C'))) {
+        reason = 'Iron + Vitamin C synergy';
+      }
+      // 3. Good nutrient coverage?
+      else if (allNutrients.length >= 4) {
+        reason = allNutrients.slice(0, 3).join(', ');
+      }
+      // 4. Poop safe?
+      else if (poopSafe && allNutrients.length > 0) {
+        reason = 'No poop issues · ' + allNutrients.slice(0, 2).join(', ');
+      }
+      // 5. Unknown nutrition
+      else {
+        reason = 'Try again to build data';
+      }
+
+      // Poop warning overrides chip color
+      const chipClass = (flag1 === 'likely' || flag1 === 'suspected' || flag2 === 'likely' || flag2 === 'suspected') ? 'is-warn' : 'is-sage';
+
+      onceHtml += `<div class="list-item li-row">
+        <div class="li-body">
+          <strong>${escHtml(p.food1)} + ${escHtml(p.food2)}</strong>
+          <span class="t-sm t-light">${reason}</span>
+        </div>
+      </div>`;
     });
     onceHtml += '</div>';
   }
