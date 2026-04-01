@@ -3297,6 +3297,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ql-fab.ql-fab-open { transform:translateX(-50%) rotate(45deg); background:var(--mid); box-shadow:0 4px 16px rgba(0,0,0,0.2); }
 [data-theme="dark"] .ql-fab { background:linear-gradient(135deg, #c06878, #a05868); box-shadow:0 4px 20px rgba(0,0,0,0.4); }
 [data-theme="dark"] .ql-fab.ql-fab-open { background:var(--light); }
+[data-theme="dark"] .dark-toggle { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.15); box-shadow:0 4px 16px rgba(0,0,0,0.4); color:var(--text); }
+[data-theme="dark"] .home-fab { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.15); box-shadow:0 4px 16px rgba(0,0,0,0.4); color:var(--text); }
 /* Dark mode QL save buttons — brighter for visibility */
 [data-theme="dark"] .ql-save-feed  { background:linear-gradient(135deg, #d4a848, #c49838); color:#1a1520; }
 [data-theme="dark"] .ql-save-sleep { background:linear-gradient(135deg, #7080b8, #6070a8); }
@@ -3764,7 +3766,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
               <div class="hsp-label">Days to vacc</div>
             </div>
             <div class="home-stat-pill hsp-sage" onclick="switchTab('diet')">
-              <div class="hsp-icon">${zi('sprout')}</div>
+              <div class="hsp-icon"><svg class="zi"><use href="#zi-sprout"/></svg></div>
               <div class="hsp-val" id="homeSolidDays">—</div>
               <div class="hsp-label">Days on solids</div>
             </div>
