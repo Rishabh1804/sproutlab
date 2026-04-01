@@ -4875,6 +4875,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- Food Combo Frequency -->
+      <div class="card card-daily col-full" id="infoComboFreqCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoComboBody','infoComboChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-link"/></svg></div> Food Combos</div>
+          <span class="collapse-chevron" id="infoComboChevron">▾</span>
+        </div>
+        <div id="infoComboSummary" class="mt-4"></div>
+        <div id="infoComboBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoComboTop" class="mt-4"></div>
+          <div id="infoComboOnce" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- ─── SLEEP INTELLIGENCE (placeholder) ─── -->
       <div class="home-section-label sec-t3 col-full">Sleep Intelligence</div>
       <div class="card card-info col-full">
@@ -23554,6 +23567,7 @@ let _infoRendered = false;
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
+  renderInfoComboFreq();
 }
 
 function renderInfoFoodIntro() {
@@ -23813,7 +23827,152 @@ function showHeatmapDetail(nutrientKey, dayIdx, dateStr) {
   detailEl.innerHTML = `<div class="nh-detail-panel open">${content}</div>`;
 }
 
-// ── Update renderInfo to include heatmap ──
+// ── FOOD INTELLIGENCE: COMBO FREQUENCY ──
+
+function computeFoodCombos(windowDays) {
+  windowDays = windowDays || 30;
+  const todayDate = new Date(today());
+  const pairCounts = {}; // "food1|food2" → { count, meals: [{date, meal}] }
+  let totalMeals = 0;
+
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds];
+    if (!entry) continue;
+
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      if (!isRealMeal(entry[meal])) return;
+      totalMeals++;
+
+      // Parse individual foods from the meal string
+      const mealFoods = [];
+      entry[meal].split(/[,+]/).forEach(f => {
+        const clean = f.trim().toLowerCase();
+        if (clean.length > 1) mealFoods.push(clean);
+      });
+
+      // Generate all sorted 2-food pairs
+      for (let a = 0; a < mealFoods.length; a++) {
+        for (let b = a + 1; b < mealFoods.length; b++) {
+          const pair = [mealFoods[a], mealFoods[b]].sort().join('|');
+          if (!pairCounts[pair]) pairCounts[pair] = { count: 0, meals: [] };
+          pairCounts[pair].count++;
+          if (pairCounts[pair].meals.length < 3) {
+            pairCounts[pair].meals.push({ date: ds, meal });
+          }
+        }
+      }
+    });
+  }
+
+  // Sort by frequency
+  const allPairs = Object.entries(pairCounts).map(([key, val]) => {
+    const [food1, food2] = key.split('|');
+    return { food1, food2, count: val.count, meals: val.meals };
+  });
+  allPairs.sort((a, b) => b.count - a.count);
+
+  const topPairs = allPairs.filter(p => p.count >= 2).slice(0, 8);
+  const oncePairs = allPairs.filter(p => p.count === 1).slice(0, 6);
+  const totalUniquePairs = allPairs.length;
+
+  // Ruttiness: how repetitive are meals? top pair count / total meals
+  const ruttiness = totalMeals > 0 && topPairs.length > 0
+    ? Math.round((topPairs[0].count / totalMeals) * 100)
+    : 0;
+  const uniqueness = totalMeals > 0
+    ? Math.round((totalUniquePairs / totalMeals) * 100)
+    : 0;
+
+  // Cross-reference with poop correlations
+  let poopFlags = {};
+  try {
+    const corr = computeFoodPoopCorrelations();
+    if (corr && corr.results) {
+      corr.results.forEach(r => {
+        poopFlags[r.food] = r.status;
+      });
+    }
+  } catch (e) { /* poop data may not exist */ }
+
+  return { topPairs, oncePairs, totalUniquePairs, totalMeals, ruttiness, uniqueness, poopFlags };
+}
+
+function renderInfoComboFreq() {
+  const data = computeFoodCombos(30);
+  const summaryEl = document.getElementById('infoComboSummary');
+  const topEl = document.getElementById('infoComboTop');
+  const onceEl = document.getElementById('infoComboOnce');
+  if (!summaryEl) return;
+
+  // Summary
+  if (data.totalMeals === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No meals logged yet</div>';
+    topEl.innerHTML = '';
+    onceEl.innerHTML = '';
+    return;
+  }
+
+  summaryEl.innerHTML = `<div class="fx-row g12" style="align-items:center;flex-wrap:wrap;">
+    <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals</span></div>
+    <div class="t-sm" style="color:var(--light);">·</div>
+    <div class="t-sm" style="color:${data.uniqueness >= 60 ? 'var(--tc-sage)' : data.uniqueness >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)'};font-weight:600;">${data.uniqueness}% variety</div>
+  </div>`;
+
+  // Top combos
+  let topHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Most Frequent Pairs</div>';
+  if (data.topPairs.length === 0) {
+    topHtml += '<div class="t-sm t-light">Not enough data yet — need meals with 2+ foods</div>';
+  } else {
+    topHtml += '<div class="fx-col g4">';
+    data.topPairs.forEach((p, i) => {
+      // Check poop flags for either food
+      const flag1 = data.poopFlags[p.food1];
+      const flag2 = data.poopFlags[p.food2];
+      const hasFlag = flag1 || flag2;
+      const flagFood = flag1 ? p.food1 : flag2 ? p.food2 : null;
+      const flagStatus = flag1 || flag2;
+
+      let poopBadge = '';
+      if (flagStatus === 'likely' || flagStatus === 'suspected') {
+        poopBadge = ` <span class="t-xs" style="color:var(--tc-rose);">⚠ ${flagFood} linked to poop issues</span>`;
+      } else if (flagStatus === 'watch') {
+        poopBadge = ` <span class="t-xs" style="color:var(--tc-amber);">👀 ${flagFood} under watch</span>`;
+      }
+
+      const barPct = Math.max((p.count / data.topPairs[0].count) * 100, 8);
+
+      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--sage-light);border-radius:var(--r-xl);z-index:0;"></div>
+        <div class="li-body" style="position:relative;z-index:1;">
+          <strong>${escHtml(p.food1)} + ${escHtml(p.food2)}</strong>
+          <span class="t-sm t-light">${p.count}× in 30 days${poopBadge}</span>
+        </div>
+        <div class="li-actions" style="position:relative;z-index:1;">
+          <span class="t-sm" style="font-weight:700;color:var(--tc-sage);">${p.count}</span>
+        </div>
+      </div>`;
+    });
+    topHtml += '</div>';
+  }
+  topEl.innerHTML = topHtml;
+
+  // Tried once — combos worth revisiting
+  let onceHtml = '';
+  if (data.oncePairs.length > 0) {
+    onceHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-8);">Tried Once — Worth Revisiting?</div>';
+    onceHtml += '<div class="fx-wrap g4">';
+    data.oncePairs.forEach(p => {
+      onceHtml += `<span class="info-food-chip is-sage">${escHtml(p.food1)} + ${escHtml(p.food2)}</span>`;
+    });
+    onceHtml += '</div>';
+  }
+  onceEl.innerHTML = onceHtml;
+}
+
+// ── Update renderInfo ──
 
 // ─────────────────────────────────────────
 // PWA — SERVICE WORKER & INSTALL
