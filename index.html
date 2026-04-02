@@ -37,12 +37,12 @@
   --shadow:   rgba(180,120,120,0.10);
   /* Semantic text colors */
   --tc-sage:    #3a7060;
-  --tc-rose:    #b0485e;
+  --tc-rose:    #9e3e52;
   --tc-lav:     #6e5e9a;
-  --tc-sky:     #3a7090;
+  --tc-sky:     #336580;
   --tc-warn:    #856404;
   --tc-danger:  #c44040;
-  --tc-caution: #946225;
+  --tc-caution: #875a20;
   /* Sleep / Indigo */
   --indigo:     #9ba8d8;
   --indigo-light: #edf0fa;
@@ -54,6 +54,12 @@
   --surface-warn:    #fffdf5;
   --surface-warn-grad: linear-gradient(135deg, #fff8e1, #fffdf5);
   --surface-neutral: #fffdf8;
+  --surface-sage:    rgba(61,122,96,0.12);
+  --surface-rose:    rgba(224,112,112,0.10);
+  --surface-amber:   rgba(138,100,24,0.12);
+  --surface-lav:     rgba(201,184,232,0.10);
+  --surface-caution: rgba(240,180,80,0.08);
+  --surface-sky:     rgba(58,112,144,0.08);
   --glass: rgba(255,255,255,0.5);
   --glass-strong: rgba(255,255,255,0.6);
   --card-bg: #ffffff;
@@ -491,7 +497,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 }
 .history-day-header:hover { filter:brightness(0.97); }
 .hd-date { flex-shrink:0; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
-.hd-summary { flex:1; font-size:var(--fs-base); font-weight:400; color:var(--mid); min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd-summary { flex:1; font-size:var(--fs-base); font-weight:400; color:var(--mid); min-width:0; }
 .hd-chevron { flex-shrink:0; font-size:var(--icon-xs); color:var(--light); transition:transform var(--ease-fast); }
 .history-day.expanded .hd-chevron { transform:rotate(180deg); }
 .history-day.expanded .history-day-header { background:var(--peach-light); }
@@ -1132,7 +1138,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 }
 .diet-stat-label {
   font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--light); margin-top:3px;
-  line-height:var(--lh-snug); overflow:hidden; text-overflow:ellipsis;
+  line-height:var(--lh-snug);
 }
 .diet-stat-val.ds-val-sm { font-size:var(--fs-base); }
 .diet-stat-icon { font-size:var(--icon-base); margin-bottom:3px; }
@@ -1409,7 +1415,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   display:flex; align-items:center; gap:var(--sp-8);
 }
 .supp-alert-icon { font-size:var(--icon-md); flex-shrink:0; }
-.supp-alert-title { flex:1; font-size:var(--fs-md); font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.supp-alert-title { flex:1; font-size:var(--fs-md); font-weight:600; color:var(--text); }
 .supp-alert.done .supp-alert-title { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-title { color:var(--tc-rose); }
 .supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; }
@@ -1547,6 +1553,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   box-shadow:0 2px 12px rgba(180,120,120,0.08);
   border-radius:var(--r-xl);
   background:linear-gradient(135deg, var(--white) 60%, var(--warm));
+  border-left:3px solid var(--border-subtle);
 }
 .card.card-daily .card-title {
   font-size:var(--fs-base); font-family:'Nunito',sans-serif;
@@ -2015,14 +2022,6 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-legend { display:flex; gap:var(--sp-12); flex-wrap:wrap; margin-top:var(--sp-8); }
 .mi-legend-item { display:flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--mid); }
 .mi-legend-dot { width:10px; height:10px; border-radius:var(--r-sm); flex-shrink:0; }
-.mi-stat-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:var(--sp-8); }
-.mi-stat-card { background:var(--surface-alt); border-radius:var(--r-md); padding:var(--sp-12); text-align:center; }
-.mi-stat-num { font-size:var(--fs-xl); font-weight:700; color:var(--text); }
-.mi-stat-label { font-size:var(--fs-xs); color:var(--light); margin-top:2px; }
-.mi-insight { background:var(--surface-alt); border-radius:var(--r-md); padding:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); border-left:3px solid var(--tc-lav); }
-.mi-insight-warn { border-left-color:var(--tc-amber); }
-.mi-insight-good { border-left-color:var(--tc-sage); }
-.mi-insight-danger { border-left-color:var(--tc-rose); }
 .mi-vacc-row { display:flex; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-8) 0; border-bottom:1px solid var(--border); }
 .mi-vacc-row:last-child { border-bottom:none; }
 .mi-vacc-dot { width:8px; height:8px; border-radius:var(--r-full); margin-top:5px; flex-shrink:0; }
@@ -2066,8 +2065,6 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-nodata { font-size:var(--fs-sm); color:var(--light); text-align:center; padding:var(--sp-16) 0; }
 
 /* MI dark mode */
-[data-theme="dark"] .mi-stat-card { background:rgba(255,255,255,0.04); }
-[data-theme="dark"] .mi-insight { background:rgba(255,255,255,0.04); }
 [data-theme="dark"] .mi-recovery-entry { background:rgba(255,255,255,0.04); }
 [data-theme="dark"] .mi-food-bar { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .mi-sleep-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.04) 3px,rgba(255,255,255,0.04) 6px); }
@@ -3412,6 +3409,12 @@ body.simple-mode .ins-card-alert-intel,
   --surface-warn:    rgba(255,193,7,0.06);
   --surface-warn-grad: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(255,193,7,0.04));
   --surface-neutral: rgba(255,253,248,0.04);
+  --surface-sage:    rgba(122,192,160,0.10);
+  --surface-rose:    rgba(224,144,168,0.10);
+  --surface-amber:   rgba(212,168,72,0.10);
+  --surface-lav:     rgba(184,168,224,0.10);
+  --surface-caution: rgba(232,184,112,0.08);
+  --surface-sky:     rgba(128,184,216,0.08);
   --glass: rgba(255,255,255,0.06);
   --glass-strong: rgba(255,255,255,0.08);
   --card-bg: var(--surface);
@@ -4072,7 +4075,7 @@ body.simple-mode .ins-card-alert-intel,
 .dsh-comp-pill .dcp-bar.dcb-low  { background:rgba(224,112,112,0.12); color:#a03030; }
 .dsh-comp-pill .dcp-text { min-width:0; }
 .dsh-comp-pill .dcp-name { font-size:var(--fs-xs); color:var(--text); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-tight); line-height:var(--lh-tight); }
-.dsh-comp-pill .dcp-detail { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-tight); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.dsh-comp-pill .dcp-detail { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-tight); max-width:100%; }
 .dsh-comp-pill .dcp-weight { font-size:var(--fs-2xs); color:var(--light); }
 .dsh-stale { opacity:0.55; }
 .dsh-stale .dsh-number::before { content:'~'; font-size:0.7em; }
@@ -4211,7 +4214,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   font-size:var(--fs-xs); padding:4px 10px; border-radius:var(--r-full);
   background:var(--sage-light); border:1px solid rgba(181,213,197,0.4);
   color:var(--tc-sage); cursor:pointer; white-space:nowrap;
-  max-width:140px; overflow:hidden; text-overflow:ellipsis;
+  max-width:140px;
   transition:transform var(--ease-fast), background var(--ease-fast);
 }
 .ql-freq-pill:active { transform:scale(0.95); background:#3d7a60; color:white; }
@@ -4236,7 +4239,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .meal-prog-slot.mps-empty:active { background:var(--peach-light); }
 .meal-prog-label { font-weight:600; color:var(--mid); }
 .meal-prog-icon { font-size:var(--icon-base); }
-.meal-prog-food { color:var(--tc-sage); font-size:var(--fs-2xs); max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+.meal-prog-food { color:var(--tc-sage); font-size:var(--fs-2xs); max-width:90px; text-align:center; }
 .ql-row { display:flex; gap:var(--sp-12); }
 .ql-row > * { flex:1; }
 
@@ -7174,9 +7177,9 @@ const DEFAULT_FEEDING = {
 const MS_STAGES = ['not_started','emerging','practicing','consistent','mastered'];
 const MS_STAGE_META = {
   not_started: { label:'Not Started', icon:'⬜', pct:0, color:'var(--light)' },
-  emerging:    { label:'Emerging',    icon:zi('sprout'), pct:25, color:'#8a6418' },
+  emerging:    { label:'Emerging',    icon:zi('sprout'), pct:25, color:'var(--tc-amber)' },
   practicing:  { label:'Practicing',  icon:zi('target'), pct:50, color:'#886520' },
-  consistent:  { label:'Consistent',  icon:zi('check'), pct:75, color:'#3d7a60' },
+  consistent:  { label:'Consistent',  icon:zi('check'), pct:75, color:'var(--tc-sage)' },
   mastered:    { label:'Mastered',    icon:zi('star'), pct:100, color:'#1a7a42' },
 };
 
@@ -8518,7 +8521,7 @@ function renderHomeVacc() {
   }
   wrap.style.display = '';
 
-  const urgency = safe <= 3 ? 'var(--tc-danger)' : safe <= 7 ? 'var(--tc-caution)' : '#6e5e9a';
+  const urgency = safe <= 3 ? 'var(--tc-danger)' : safe <= 7 ? 'var(--tc-caution)' : 'var(--tc-lav)';
   const bookedData = load(KEYS.vaccBooked, null);
   const isBooked = bookedData && bookedData.vaccName === upcoming.name;
   const apptLabel = isBooked ? getVaccApptLabel(bookedData) : null;
@@ -9168,7 +9171,7 @@ function showFullDoctorSummary() {
         .meta{color:#888;font-size:var(--icon-xs);margin-bottom:16px;}
         .item{margin:2px 0;} .check{color:var(--tc-sage);} .warn{color:var(--tc-caution);} .adv{color:var(--tc-rose);}
         .actions{display:flex;gap:var(--sp-8);margin:20px 0;} .actions button{padding:10px 20px;border:none;border-radius:var(--r-lg);font-size:var(--icon-sm);font-weight:600;cursor:pointer;}
-        .btn-print{background:#3d7a60;color:white;} .btn-copy{background:#3a7a8a;color:white;} .btn-share{background:#7e66b4;color:white;}
+        .btn-print{background:var(--tc-sage);color:white;} .btn-copy{background:var(--tc-sky);color:white;} .btn-share{background:#7e66b4;color:white;}
         @media print{.actions{display:none !important;}}
       </style></head><body>`);
     
@@ -10204,7 +10207,7 @@ function renderVelocity() {
     <div class="velocity-gauge vg-lav">
       <div class="vg-icon">🌟</div>
       <div class="vg-info">
-        <div><span class="vg-value" style="color:${doubled ? 'var(--tc-sage)' : '#6e5e9a'};">${ratio}×</span><span class="vg-unit">birth wt</span></div>
+        <div><span class="vg-value" style="color:${doubled ? 'var(--tc-sage)' : 'var(--tc-lav)'};">${ratio}×</span><span class="vg-unit">birth wt</span></div>
         <div class="vg-label">${doubled ? '✓ Doubled!' : 'Approaching 2×'}</div>
         <div class="vg-context">${refLabel}: ${wtPct.text} · ${birth.wt}→${lastWt.wt} kg</div>
       </div>
@@ -11134,7 +11137,7 @@ function checkSymptoms() {
     html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
 
     if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? '#c0392b' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
       html += '<div class="sc-section-body" style="font-weight:600;">' + escHtml(e.emergency) + '</div></div>';
     }
     html += '</div>';
@@ -11230,8 +11233,8 @@ function renderDoctorContact() {
           </div>
         </div>
         <div style="display:flex;gap:var(--sp-8);align-items:center;margin-top:8px;padding-left:46px;">
-          ${doc.phone ? `<a href="tel:${doc.phone}" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:#3d7a60;display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">📞 Call</a>` : ''}
-          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:#3a7a8a;display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">📍 Map</a>` : ''}
+          ${doc.phone ? `<a href="tel:${doc.phone}" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sage);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">📞 Call</a>` : ''}
+          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sky);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">📍 Map</a>` : ''}
           <div style="margin-left:auto;display:flex;gap:var(--sp-4);">
             <button class="note-btn" onclick="editDoctor(${i})" aria-label="Edit doctor">✏️</button>
             <button class="note-btn del-note-btn" onclick="deleteDoctor(${i})" aria-label="Remove doctor">🗑</button>
@@ -11348,12 +11351,12 @@ function renderVacc() {
       if (isBooked) {
         const apptLabel = getVaccApptLabel(bookedData);
         if (apptLabel) {
-          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')">
+          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')">
             <span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span>
             <span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span>
           </div>`;
         } else {
-          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')">
+          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')">
             <span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span>
             <span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Tap to add date & time</span>
           </div>`;
@@ -11477,7 +11480,7 @@ function renderVaccInfoPanel(vaccName) {
   const schedInfo = VACC_SCHEDULE.find(s => normVacc(s.name) === normVacc(vaccName));
   const guidance = getVaccGuidance(vaccName);
 
-  let html = `<div style="padding:14px;border-radius:var(--r-xl);background:linear-gradient(135deg,var(--lav-light),#f8f5ff);border:1.5px solid rgba(110,94,154,0.15);margin-top:10px;">`;
+  let html = `<div style="padding:14px;border-radius:var(--r-xl);background:linear-gradient(135deg,var(--lav-light),var(--lav-light));border:1.5px solid rgba(110,94,154,0.15);margin-top:10px;">`;
 
   // Protects against
   if (schedInfo) {
@@ -11528,7 +11531,7 @@ function renderVaccInfoPanel(vaccName) {
       <span class="t-icon shrink-0">📞</span>
       <div class="flex-1">
         <div style="font-size:var(--fs-sm);color:var(--mid);line-height:var(--lh-relaxed);">${escHtml(guidance.whenToCall)}</div>
-        ${doc && doc.phone ? `<a href="tel:${doc.phone}" style="display:inline-flex;align-items:center;gap:var(--sp-8);margin-top:6px;padding:6px 14px;border-radius:var(--r-xl);background:#3d7a60;color:white;text-decoration:none;font-size:var(--fs-base);font-weight:700;font-family:'Nunito',sans-serif;">
+        ${doc && doc.phone ? `<a href="tel:${doc.phone}" style="display:inline-flex;align-items:center;gap:var(--sp-8);margin-top:6px;padding:6px 14px;border-radius:var(--r-xl);background:var(--tc-sage);color:white;text-decoration:none;font-size:var(--fs-base);font-weight:700;font-family:'Nunito',sans-serif;">
           📞 Call ${escHtml(doc.name)}
         </a>` : ''}
       </div>
@@ -11695,7 +11698,7 @@ function renderVaccPastList() {
   el.innerHTML = past.map(v => {
     const realIdx = vaccData.indexOf(v);
     const reasonNote = v.dateChangeReason ? `<div style="font-size:var(--fs-xs);color:var(--tc-warn);">📝 ${escHtml(v.dateChangeReason)}</div>` : '';
-    return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:6px 8px;border-radius:var(--r-lg);background:rgba(201,184,232,0.1);border-left:var(--accent-w) solid var(--lavender);">
+    return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:6px 8px;border-radius:var(--r-lg);background:var(--surface-lav);border-left:var(--accent-w) solid var(--lavender);">
       <span style="font-size:var(--icon-xs);">✅</span>
       <div class="flex-1-min">
         <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);">${escHtml(v.name)}</div>
@@ -11836,7 +11839,7 @@ function renderVaccItem(v, status) {
   const colors = {
     missing: { bg:'var(--surface-danger)', border:'var(--tc-danger)', badge:'#fde8ed', badgeText:'#c44058', badgeLabel:'MISSING' },
     recommended: { bg:'var(--surface-warn)', border:'#ffc107', badge:'#fff8e1', badgeText:'#856404', badgeLabel:'RECOMMENDED' },
-    optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'#6e5e9a', badgeLabel:'OPTIONAL' },
+    optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'var(--tc-lav)', badgeLabel:'OPTIONAL' },
     upcoming: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--sky-light)', badgeText:'#3a7090', badgeLabel:v.age },
   };
   const c = colors[status];
@@ -11848,8 +11851,8 @@ function renderVaccItem(v, status) {
     if (isBooked) {
       const apptLabel = getVaccApptLabel(bookedData);
       bookingHtml = apptLabel
-        ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);font-size:var(--fs-xs);"><span style="font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
-        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);font-size:var(--fs-xs);cursor:pointer;" onclick="openVaccApptModal('${escAttr(v.name)}')"><span style="font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-weight:400;color:var(--light);">Add date</span></div>`;
+        ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:var(--surface-sage);font-size:var(--fs-xs);"><span style="font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
+        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:var(--surface-sage);font-size:var(--fs-xs);cursor:pointer;" onclick="openVaccApptModal('${escAttr(v.name)}')"><span style="font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-weight:400;color:var(--light);">Add date</span></div>`;
     }
   }
   return `<div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:8px 10px;border-radius:var(--r-lg);background:${c.bg};border-left:var(--accent-w) solid ${c.border};margin-bottom:4px;">
@@ -11882,15 +11885,15 @@ function renderVaccHistory() {
   // Upcoming vaccination highlight
   if (upcoming) {
     const daysTo = Math.max(0, Math.ceil((new Date(upcoming.date) - new Date()) / 86400000));
-    const urgency = daysTo <= 7 ? 'var(--tc-danger)' : daysTo <= 14 ? 'var(--tc-caution)' : '#6e5e9a';
+    const urgency = daysTo <= 7 ? 'var(--tc-danger)' : daysTo <= 14 ? 'var(--tc-caution)' : 'var(--tc-lav)';
     const uInfo = schedLookup[normVacc(upcoming.name)];
     const bookedData = load(KEYS.vaccBooked, null);
     const isBooked = bookedData && bookedData.vaccName === upcoming.name;
     const apptLabel = isBooked ? getVaccApptLabel(bookedData) : null;
     const bookingBadge = isBooked
       ? (apptLabel
-        ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);"><span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
-        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:rgba(61,122,96,0.12);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')"><span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Add date & time</span></div>`)
+        ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);"><span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
+        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" onclick="openVaccApptModal('${escAttr(upcoming.name)}')"><span style="font-size:var(--fs-xs);font-weight:600;color:var(--tc-sage);">✅ Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Add date & time</span></div>`)
       : (daysTo <= 14 ? `<div style="margin-top:6px;"><button class="btn btn-sage" style="padding:6px 14px;font-size:var(--fs-xs);" onclick="markVaccBooked('${escAttr(upcoming.name)}')">📅 Book appointment</button></div>` : '');
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:var(--lav-light);border-left:var(--accent-w) solid ${urgency};margin-bottom:14px;">
@@ -12199,13 +12202,13 @@ function renderMilestones() {
         metaHtml += `<span class="milestone-meta-badge meta-done"><svg class="zi"><use href="#zi-star"/></svg> Mastered</span>`;
         metaHtml += `<span class="milestone-meta-badge meta-age">at ${ageAtDate(m.masteredAt)}</span>`;
       } else if (m.status === 'consistent' && m.consistentAt) {
-        metaHtml += `<span class="milestone-meta-badge meta-done" style="background:rgba(61,122,96,0.12);color:#3d7a60;">✅ Consistent</span>`;
+        metaHtml += `<span class="milestone-meta-badge meta-done" style="background:var(--surface-sage);color:var(--tc-sage);">✅ Consistent</span>`;
         metaHtml += `<span class="milestone-meta-badge meta-age">since ${ageAtDate(m.consistentAt)}</span>`;
       } else if (m.status === 'practicing' && m.practicingAt) {
         metaHtml += `<span class="milestone-meta-badge meta-progress">🔄 Practicing</span>`;
         metaHtml += `<span class="milestone-meta-badge meta-age">since ${ageAtDate(m.practicingAt)}</span>`;
       } else if (m.status === 'emerging' && m.emergingAt) {
-        metaHtml += `<span class="milestone-meta-badge meta-progress" style="background:rgba(138,100,24,0.12);color:#8a6418;">🌱 Emerging</span>`;
+        metaHtml += `<span class="milestone-meta-badge meta-progress" style="background:var(--surface-amber);color:var(--tc-amber);">🌱 Emerging</span>`;
         metaHtml += `<span class="milestone-meta-badge meta-age">since ${ageAtDate(m.emergingAt)}</span>`;
       }
       if (m.emergingAt && m.masteredAt) {
@@ -12536,10 +12539,10 @@ function renderCategoryWheels() {
   if (!el) return;
 
   const catMeta = {
-    motor:     { icon:zi('run'), label:'Motor',     color:'#3d7a60' },
+    motor:     { icon:zi('run'), label:'Motor',     color:'var(--tc-sage)' },
     language:  { icon:zi('chat'), label:'Language',   color:'#3a7090' },
     social:    { icon:zi('handshake'), label:'Social',     color:'#966525' },
-    cognitive: { icon:zi('brain'), label:'Cognitive',  color:'#6e5e9a' },
+    cognitive: { icon:zi('brain'), label:'Cognitive',  color:'var(--tc-lav)' },
   };
 
   const R = 22, C = 2 * Math.PI * R;
@@ -13240,7 +13243,7 @@ Object.entries(FOOD_TAX).forEach(([pid, parent]) => {
 
 const _foodColorMap = { sage:'var(--sage-light)', rose:'var(--rose-light)', peach:'var(--peach-light)', sky:'var(--sky-light)', lav:'var(--lav-light)', amber:'var(--amber-light)' };
 const _foodBorderMap = { sage:'rgba(181,213,197,0.4)', rose:'rgba(242,168,184,0.3)', peach:'rgba(250,212,180,0.4)', sky:'rgba(168,207,224,0.4)', lav:'rgba(201,184,232,0.4)', amber:'rgba(232,184,109,0.3)' };
-const _foodTextMap = { sage:'#3a7060', rose:'#b0485e', peach:'var(--tc-caution)', sky:'#3a7090', lav:'#6e5e9a', amber:'var(--tc-amber)' };
+const _foodTextMap = { sage:'#3a7060', rose:'#b0485e', peach:'var(--tc-caution)', sky:'#3a7090', lav:'var(--tc-lav)', amber:'var(--tc-amber)' };
 
 function _categorizeFoods() {
   const cachedCats = JSON.parse(localStorage.getItem('ziva_food_categories') || '{}');
@@ -17644,7 +17647,7 @@ function renderFeverEpisodeCard() {
   const escalations = _computeFeverEscalations(ep);
   if (escalations.length > 0) {
     escalations.forEach(e => {
-      html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:' + (e.severity === 'emergency' ? 'rgba(224,112,112,0.1)' : 'rgba(240,180,80,0.08)') + ';font-size:var(--fs-sm);font-weight:600;color:' + (e.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + e.icon + ' ' + escHtml(e.text) + '</div>';
+      html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:' + (e.severity === 'emergency' ? 'var(--surface-rose)' : 'var(--surface-caution)') + ';font-size:var(--fs-sm);font-weight:600;color:' + (e.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + e.icon + ' ' + escHtml(e.text) + '</div>';
     });
   }
 
@@ -18392,7 +18395,7 @@ function renderDiarrhoeaEpisodeCard() {
   // Escalation warnings
   const escalations = _computeDiarrhoeaEscalations(ep);
   escalations.forEach(e => {
-    const bgColor = e.severity === 'emergency' ? 'rgba(224,112,112,0.1)' : e.severity === 'positive' ? 'rgba(58,112,96,0.08)' : 'rgba(240,180,80,0.08)';
+    const bgColor = e.severity === 'emergency' ? 'var(--surface-rose)' : e.severity === 'positive' ? 'var(--surface-sage)' : 'var(--surface-caution)';
     const textColor = e.severity === 'emergency' ? 'var(--tc-danger)' : e.severity === 'positive' ? 'var(--tc-sage)' : 'var(--tc-caution)';
     html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:' + bgColor + ';font-size:var(--fs-sm);font-weight:600;color:' + textColor + ';">' + e.icon + ' ' + escHtml(e.text) + '</div>';
   });
@@ -18852,10 +18855,10 @@ function renderVomitingEpisodeCard() {
   html += '</ul></div>';
 
   // Escalations
-  if (isProjectile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(224,112,112,0.1);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Projectile vomiting detected — seek medical attention</div>';
-  if (hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(224,112,112,0.1);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Green/bile vomiting — seek immediate care</div>';
+  if (isProjectile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:var(--surface-rose);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Projectile vomiting detected — seek medical attention</div>';
+  if (hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:var(--surface-rose);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Green/bile vomiting — seek immediate care</div>';
   const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
-  if (durationH > 12 && !isProjectile && !hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(240,180,80,0.08);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Vomiting persisting >12 hours — call your paediatrician</div>';
+  if (durationH > 12 && !isProjectile && !hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:var(--surface-caution);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Vomiting persisting >12 hours — call your paediatrician</div>';
 
   // Recovery check
   if (ep.episodes.length >= 2) {
@@ -19131,7 +19134,7 @@ function renderColdEpisodeCard() {
   else html += '<li>Call doctor if: rapid breathing, wheezing, blue lips, or cough >7 days</li>';
   html += '</ul></div>';
 
-  if (durationDays > 7) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(240,180,80,0.08);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Cold/cough for ' + durationDays + ' days — consider doctor visit</div>';
+  if (durationDays > 7) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:var(--surface-caution);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Cold/cough for ' + durationDays + ' days — consider doctor visit</div>';
 
   // Improvement
   if (ep.dailyLogs.length >= 2) {
@@ -19628,7 +19631,7 @@ function renderMilestoneHistory() {
     motor:    { icon:zi('run'), color:'var(--sage)', bg:'var(--sage-light)', textColor:'#3a7060' },
     language: { icon:zi('chat'), color:'var(--sky)', bg:'var(--sky-light)', textColor:'#3a7090' },
     social:   { icon:zi('handshake'), color:'var(--peach)', bg:'var(--peach-light)', textColor:'#926030' },
-    cognitive:{ icon:zi('brain'), color:'var(--lavender)', bg:'var(--lav-light)', textColor:'#6e5e9a' },
+    cognitive:{ icon:zi('brain'), color:'var(--lavender)', bg:'var(--lav-light)', textColor:'var(--tc-lav)' },
   };
 
   let html = '';
@@ -29645,7 +29648,7 @@ function runHomeSymptomCheck() {
     html += '<div class="sc-section"><div class="sc-section-title">What to do</div><div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
     html += '<div class="sc-section"><div class="sc-section-title">Precautions</div><div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
     if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? '#c0392b' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
       html += '<div class="sc-section-body" style="font-weight:600;">' + escHtml(e.emergency) + '</div></div>';
     }
     html += '</div>';
@@ -32774,8 +32777,8 @@ function renderInfoNutrientHeatmap() {
 
   // Legend
   gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">
-    <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:10px;aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
-    <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:10px;aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
+    <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
+    <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
     <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
     <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
     <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
@@ -33344,7 +33347,7 @@ function renderInfoMealBreakdown() {
     MEAL_SLOTS.forEach((m, mi) => {
       const score = row.scores[m.key];
       if (score === -1) {
-        weeklyHtml += '<div class="mb-weekly-cell" style="background:rgba(0,0,0,0.03);color:var(--light);font-size:10px;">–</div>';
+        weeklyHtml += '<div class="mb-weekly-cell" style="background:rgba(0,0,0,0.03);color:var(--light);font-size:var(--fs-2xs);">–</div>';
       } else {
         const alpha = score === 0 ? 0.08 : Math.min(0.2 + (score / 8) * 0.6, 0.8);
         const baseColor = MEAL_SLOTS[mi].color.replace(/[\d.]+\)$/, `${alpha})`);
@@ -33878,11 +33881,11 @@ function renderInfoIllnessFreq() {
   if (timelineEl) timelineEl.innerHTML = tlHtml;
 
   // Breakdown stats
-  let bHtml = '<div class="mi-stat-grid">';
-  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + data.freqPer30 + '</div><div class="mi-stat-label">per 30 days</div></div>';
-  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgGapDays !== null ? data.avgGapDays + 'd' : '–') + '</div><div class="mi-stat-label">avg gap</div></div>';
-  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgDuration || '–') + '</div><div class="mi-stat-label">avg duration (days)</div></div>';
-  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + data.totalResolved + '</div><div class="mi-stat-label">resolved</div></div>';
+  let bHtml = '<div class="si-stat-grid">';
+  bHtml += '<div class="si-stat"><div class="si-stat-val">' + data.freqPer30 + '</div><div class="si-stat-label">per 30 days</div></div>';
+  bHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgGapDays !== null ? data.avgGapDays + 'd' : '–') + '</div><div class="si-stat-label">avg gap</div></div>';
+  bHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgDuration || '–') + '</div><div class="si-stat-label">avg duration (days)</div></div>';
+  bHtml += '<div class="si-stat"><div class="si-stat-val">' + data.totalResolved + '</div><div class="si-stat-label">resolved</div></div>';
   bHtml += '</div>';
   if (breakdownEl) breakdownEl.innerHTML = bHtml;
 
@@ -33890,7 +33893,7 @@ function renderInfoIllnessFreq() {
   if (insightsEl) {
     if (data.insights.length > 0) {
       insightsEl.innerHTML = data.insights.map(ins =>
-        '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+        '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
       ).join('');
     } else {
       insightsEl.innerHTML = '';
@@ -34020,7 +34023,7 @@ function renderInfoVaccFever() {
   // Insights
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight">' + ins.text + '</div>'
+      '<div class="si-insight">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34162,7 +34165,7 @@ function renderInfoIllnessFood() {
   // Insights
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight mi-insight-warn">' + ins.text + '</div>'
+      '<div class="si-insight si-insight-warn">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34306,7 +34309,7 @@ function renderInfoRecovery() {
 
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+      '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34456,18 +34459,18 @@ function renderInfoIllnessSleep() {
 
   // Stats cards
   if (data.sickNights > 0) {
-    let statsHtml = '<div class="mi-stat-grid">';
-    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgSickDuration || '–') + '</div><div class="mi-stat-label">avg sick night (h)</div></div>';
-    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgHealthyDuration || '–') + '</div><div class="mi-stat-label">avg healthy night (h)</div></div>';
-    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgSickWakeUps || '–') + '</div><div class="mi-stat-label">wake-ups (sick)</div></div>';
-    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgHealthyWakeUps || '–') + '</div><div class="mi-stat-label">wake-ups (healthy)</div></div>';
+    let statsHtml = '<div class="si-stat-grid">';
+    statsHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgSickDuration || '–') + '</div><div class="si-stat-label">avg sick night (h)</div></div>';
+    statsHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgHealthyDuration || '–') + '</div><div class="si-stat-label">avg healthy night (h)</div></div>';
+    statsHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgSickWakeUps || '–') + '</div><div class="si-stat-label">wake-ups (sick)</div></div>';
+    statsHtml += '<div class="si-stat"><div class="si-stat-val">' + (data.avgHealthyWakeUps || '–') + '</div><div class="si-stat-label">wake-ups (healthy)</div></div>';
     statsHtml += '</div>';
     if (overlayEl) overlayEl.innerHTML += statsHtml;
   }
 
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight">' + ins.text + '</div>'
+      '<div class="si-insight">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34591,7 +34594,7 @@ function renderInfoFoodReaction() {
 
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+      '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34727,7 +34730,7 @@ function renderInfoRepetition() {
 
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : ins.type === 'good' ? 'mi-insight-good' : '') + '">' + ins.text + '</div>'
+      '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -34914,7 +34917,7 @@ function renderInfoTexture() {
       // Headers
       html += '<div class="mi-tex-week-label"></div>';
       TEXTURE_STAGES.forEach(s => {
-        html += '<div style="text-align:center;font-size:10px;color:var(--light);">' + s.icon + '</div>';
+        html += '<div style="text-align:center;font-size:var(--fs-2xs);color:var(--light);">' + s.icon + '</div>';
       });
       // Rows
       activeWeeks.forEach(w => {
@@ -34937,7 +34940,7 @@ function renderInfoTexture() {
 
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
-      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : ins.type === 'good' ? 'mi-insight-good' : '') + '">' + ins.text + '</div>'
+      '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'
     ).join('');
   }
 }
@@ -35114,10 +35117,10 @@ function _renderHydrationContent() {
 
   // Legend
   gridHtml += '<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">';
-  gridHtml += '<div class="hy-cell hy-temp-hot" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">H</div><span class="t-xs t-light">≥34°</span>';
-  gridHtml += '<div class="hy-cell hy-temp-warm" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">W</div><span class="t-xs t-light">28-33°</span>';
+  gridHtml += '<div class="hy-cell hy-temp-hot" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:var(--fs-2xs);">H</div><span class="t-xs t-light">≥34°</span>';
+  gridHtml += '<div class="hy-cell hy-temp-warm" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:var(--fs-2xs);">W</div><span class="t-xs t-light">28-33°</span>';
   gridHtml += '<div class="hy-cell hy-hydra-2" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;"></div><span class="t-xs t-light">Hydrated</span>';
-  gridHtml += '<div class="hy-cell hy-poop-hard" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:9px;">!</div><span class="t-xs t-light">Hard</span>';
+  gridHtml += '<div class="hy-cell hy-poop-hard" style="width:16px;height:16px;min-height:auto;aspect-ratio:auto;font-size:var(--fs-2xs);">!</div><span class="t-xs t-light">Hard</span>';
   gridHtml += '</div>';
 
   gridEl.innerHTML = gridHtml;
