@@ -1965,6 +1965,81 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 [data-theme="dark"] .sp-gap-chip { background:rgba(70,55,35,0.3); }
 
+/* ── Medical Intelligence ── */
+.mi-timeline { display:flex; flex-direction:column; gap:var(--sp-8); }
+.mi-tl-row { display:flex; align-items:center; gap:var(--sp-8); min-height:28px; }
+.mi-tl-month { width:48px; font-size:var(--fs-xs); color:var(--light); text-align:right; flex-shrink:0; }
+.mi-tl-bar { flex:1; display:flex; gap:2px; align-items:center; min-height:20px; }
+.mi-tl-block { height:18px; border-radius:var(--r-sm); min-width:6px; position:relative; cursor:default; }
+.mi-tl-block[title]:hover { opacity:0.8; }
+.mi-tl-block.mi-fever { background:var(--tc-rose); }
+.mi-tl-block.mi-diarrhoea { background:var(--tc-amber); }
+.mi-tl-block.mi-vomiting { background:var(--tc-caution); }
+.mi-tl-block.mi-cold { background:var(--tc-sky); }
+.mi-legend { display:flex; gap:var(--sp-12); flex-wrap:wrap; margin-top:var(--sp-8); }
+.mi-legend-item { display:flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--mid); }
+.mi-legend-dot { width:10px; height:10px; border-radius:var(--r-sm); flex-shrink:0; }
+.mi-stat-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:var(--sp-8); }
+.mi-stat-card { background:var(--surface-alt); border-radius:var(--r-md); padding:var(--sp-12); text-align:center; }
+.mi-stat-num { font-size:var(--fs-xl); font-weight:700; color:var(--text); }
+.mi-stat-label { font-size:var(--fs-xs); color:var(--light); margin-top:2px; }
+.mi-insight { background:var(--surface-alt); border-radius:var(--r-md); padding:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); border-left:3px solid var(--tc-lav); }
+.mi-insight-warn { border-left-color:var(--tc-amber); }
+.mi-insight-good { border-left-color:var(--tc-sage); }
+.mi-insight-danger { border-left-color:var(--tc-rose); }
+.mi-vacc-row { display:flex; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-8) 0; border-bottom:1px solid var(--border); }
+.mi-vacc-row:last-child { border-bottom:none; }
+.mi-vacc-dot { width:8px; height:8px; border-radius:var(--r-full); margin-top:5px; flex-shrink:0; }
+.mi-vacc-info { flex:1; }
+.mi-vacc-name { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.mi-vacc-detail { font-size:var(--fs-xs); color:var(--light); margin-top:2px; }
+.mi-vacc-fever { font-size:var(--fs-xs); color:var(--tc-rose); font-weight:500; margin-top:2px; }
+.mi-food-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; border-bottom:1px solid var(--border); }
+.mi-food-row:last-child { border-bottom:none; }
+.mi-food-name { font-size:var(--fs-sm); font-weight:600; color:var(--text); min-width:80px; }
+.mi-food-bar { flex:1; height:6px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:hidden; }
+.mi-food-fill { height:100%; border-radius:var(--r-full); }
+.mi-food-count { font-size:var(--fs-xs); color:var(--light); width:40px; text-align:right; }
+.mi-recovery-entry { background:var(--surface-alt); border-radius:var(--r-md); padding:var(--sp-12); }
+.mi-recovery-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-8); }
+.mi-recovery-type { font-size:var(--fs-xs); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); }
+.mi-recovery-dates { font-size:var(--fs-xs); color:var(--light); }
+.mi-recovery-metric { display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-sm); padding:4px 0; }
+.mi-recovery-label { color:var(--mid); }
+.mi-recovery-val { font-weight:600; }
+.mi-sleep-grid { display:grid; grid-template-columns:48px repeat(7, 1fr); gap:3px; font-size:var(--fs-xs); }
+.mi-sleep-header { text-align:center; color:var(--light); font-weight:500; padding:2px 0; }
+.mi-sleep-label { display:flex; align-items:center; justify-content:flex-end; padding-right:4px; color:var(--light); }
+.mi-sleep-cell { text-align:center; border-radius:var(--r-sm); padding:4px 2px; min-height:24px; display:flex; align-items:center; justify-content:center; }
+.mi-sleep-normal { background:rgba(140,190,160,0.15); color:var(--tc-sage); }
+.mi-sleep-disrupted { background:rgba(240,180,100,0.2); color:var(--tc-amber); }
+.mi-sleep-sick { background:rgba(230,100,100,0.15); color:var(--tc-rose); }
+.mi-sleep-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 6px); color:var(--light); }
+.mi-frt-entry { padding:var(--sp-8) 0; border-bottom:1px solid var(--border); }
+.mi-frt-entry:last-child { border-bottom:none; }
+.mi-frt-header { display:flex; justify-content:space-between; align-items:center; }
+.mi-frt-food { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.mi-frt-status { font-size:var(--fs-xs); font-weight:500; padding:2px 8px; border-radius:var(--r-full); }
+.mi-frt-status-ok { background:rgba(140,190,160,0.2); color:var(--tc-sage); }
+.mi-frt-status-watch { background:rgba(240,180,100,0.2); color:var(--tc-amber); }
+.mi-frt-status-react { background:rgba(230,100,100,0.15); color:var(--tc-rose); }
+.mi-frt-timeline { display:flex; align-items:center; gap:4px; margin-top:var(--sp-4); padding:4px 0; }
+.mi-frt-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; }
+.mi-frt-line { flex:1; height:2px; background:var(--border); }
+.mi-frt-event { font-size:10px; color:var(--light); white-space:nowrap; }
+.mi-nodata { font-size:var(--fs-sm); color:var(--light); text-align:center; padding:var(--sp-16) 0; }
+
+/* MI dark mode */
+[data-theme="dark"] .mi-stat-card { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .mi-insight { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .mi-recovery-entry { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .mi-food-bar { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .mi-sleep-nodata { background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.04) 3px,rgba(255,255,255,0.04) 6px); }
+[data-theme="dark"] .mi-vacc-row { border-bottom-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .mi-food-row { border-bottom-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .mi-frt-entry { border-bottom-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .mi-frt-line { background:rgba(255,255,255,0.1); }
+
 /* ── Hydration Intelligence ── */
 .hy-grid {
   display:grid; grid-template-columns:52px repeat(7, 1fr);
@@ -5822,6 +5897,89 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div class="t-sm t-light mt-4">Consistency trends, frequency patterns, food-poop delay mapping, new food watch windows, and color anomaly detection.</div>
       </div>
 
+      <!-- ─── MEDICAL INTELLIGENCE ─── -->
+      <div class="home-section-label sec-t3 col-full">Medical Intelligence</div>
+
+      <!-- Illness Frequency -->
+      <div class="card card-daily col-full" id="infoIllnessFreqCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoIllnessFreqBody','infoIllnessFreqChevron')">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-heart"/></svg></div> Illness Frequency</div>
+          <span class="collapse-chevron" id="infoIllnessFreqChevron">▾</span>
+        </div>
+        <div id="infoIllnessFreqSummary" class="mt-4"></div>
+        <div id="infoIllnessFreqBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoIllnessFreqTimeline" class="mt-4"></div>
+          <div id="infoIllnessFreqBreakdown" class="mt-8"></div>
+          <div id="infoIllnessFreqInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Vaccination ↔ Fever Correlation -->
+      <div class="card card-daily col-full" id="infoVaccFeverCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoVaccFeverBody','infoVaccFeverChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-shield"/></svg></div> Vaccination & Fever</div>
+          <span class="collapse-chevron" id="infoVaccFeverChevron">▾</span>
+        </div>
+        <div id="infoVaccFeverSummary" class="mt-4"></div>
+        <div id="infoVaccFeverBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoVaccFeverTimeline" class="mt-4"></div>
+          <div id="infoVaccFeverInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Illness ↔ Food Correlation -->
+      <div class="card card-daily col-full" id="infoIllnessFoodCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoIllnessFoodBody','infoIllnessFoodChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-spoon"/></svg></div> Illness & Food Link</div>
+          <span class="collapse-chevron" id="infoIllnessFoodChevron">▾</span>
+        </div>
+        <div id="infoIllnessFoodSummary" class="mt-4"></div>
+        <div id="infoIllnessFoodBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoIllnessFoodCorrelations" class="mt-4"></div>
+          <div id="infoIllnessFoodInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Post-Illness Recovery -->
+      <div class="card card-daily col-full" id="infoRecoveryCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoRecoveryBody','infoRecoveryChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Post-Illness Recovery</div>
+          <span class="collapse-chevron" id="infoRecoveryChevron">▾</span>
+        </div>
+        <div id="infoRecoverySummary" class="mt-4"></div>
+        <div id="infoRecoveryBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoRecoveryWeight" class="mt-4"></div>
+          <div id="infoRecoveryAppetite" class="mt-8"></div>
+          <div id="infoRecoveryInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Illness ↔ Sleep Impact -->
+      <div class="card card-daily col-full" id="infoIllnessSleepCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoIllnessSleepBody','infoIllnessSleepChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Illness & Sleep</div>
+          <span class="collapse-chevron" id="infoIllnessSleepChevron">▾</span>
+        </div>
+        <div id="infoIllnessSleepSummary" class="mt-4"></div>
+        <div id="infoIllnessSleepBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoIllnessSleepOverlay" class="mt-4"></div>
+          <div id="infoIllnessSleepInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- New Food → Reaction Timeline -->
+      <div class="card card-daily col-full" id="infoFoodReactionCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoFoodReactionBody','infoFoodReactionChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-alert"/></svg></div> Food Reaction Timeline</div>
+          <span class="collapse-chevron" id="infoFoodReactionChevron">▾</span>
+        </div>
+        <div id="infoFoodReactionSummary" class="mt-4"></div>
+        <div id="infoFoodReactionBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoFoodReactionTimeline" class="mt-4"></div>
+          <div id="infoFoodReactionInsights" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- ─── CROSS-DOMAIN ─── -->
       <div class="home-section-label sec-t3 col-full">Cross-Domain</div>
 
@@ -5845,7 +6003,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <!-- FOOTER -->
 
   <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text" style="font-size:var(--fs-sm);color:var(--light);letter-spacing:var(--ls-wide);">Ziva's Dashboard v2.7 · Made with 💕</div>
+    <div class="footer-text" style="font-size:var(--fs-sm);color:var(--light);letter-spacing:var(--ls-wide);">Ziva's Dashboard v2.10 · Made with 💕</div>
   </div>
 
 </div><!-- /app -->
@@ -28995,6 +29153,12 @@ function renderInfo() {
   renderInfoMealBreakdown();
   renderInfoSmartPairing();
   renderInfoAdoption();
+  renderInfoIllnessFreq();
+  renderInfoVaccFever();
+  renderInfoIllnessFood();
+  renderInfoRecovery();
+  renderInfoIllnessSleep();
+  renderInfoFoodReaction();
   renderInfoHydration();
 }
 
@@ -30069,6 +30233,858 @@ function getPoopConsistencyForDate(dateStr) {
     if ((CON_RANK[p.consistency] ?? 5) < (CON_RANK[worst] ?? 5)) worst = p.consistency;
   });
   return worst;
+}
+
+// ═══════════════════════════════════════
+// MEDICAL INTELLIGENCE (v2.10)
+// ═══════════════════════════════════════
+
+// ── Helper: collect ALL resolved + active episodes across 4 types ──
+function _getAllEpisodes() {
+  const episodes = [];
+  (_feverEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'fever', emoji: '🌡️' }));
+  (_diarrhoeaEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'diarrhoea', emoji: '💩' }));
+  (_vomitingEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'vomiting', emoji: '🤮' }));
+  (_coldEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'cold', emoji: '🤧' }));
+  return episodes.sort((a, b) => (a.startedAt || '').localeCompare(b.startedAt || ''));
+}
+
+function _episodeDurationDays(ep) {
+  const start = new Date(ep.startedAt);
+  const end = ep.resolvedAt ? new Date(ep.resolvedAt) : new Date();
+  return Math.max(1, Math.ceil((end - start) / 86400000));
+}
+
+function _episodeDateRange(ep) {
+  const s = new Date(ep.startedAt);
+  const e = ep.resolvedAt ? new Date(ep.resolvedAt) : new Date();
+  return { startDate: toDateStr(s), endDate: toDateStr(e), startMs: s.getTime(), endMs: e.getTime() };
+}
+
+// ════════════════════════════════════════
+// 1. ILLNESS FREQUENCY ANALYSIS
+// ════════════════════════════════════════
+
+function computeIllnessFrequency() {
+  const all = _getAllEpisodes();
+  if (all.length === 0) return null;
+
+  // Count by type
+  const typeCounts = { fever: 0, diarrhoea: 0, vomiting: 0, cold: 0 };
+  all.forEach(e => { if (typeCounts[e.illnessType] !== undefined) typeCounts[e.illnessType]++; });
+
+  // Monthly breakdown for timeline (last 6 months)
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const label = d.toLocaleDateString('en-IN', { month: 'short' });
+    months.push({ key, label, episodes: [] });
+  }
+  all.forEach(ep => {
+    const epMonth = (ep.startedAt || '').slice(0, 7);
+    const m = months.find(mo => mo.key === epMonth);
+    if (m) m.episodes.push(ep);
+  });
+
+  // Frequency per 30 days (rolling)
+  const resolved = all.filter(e => e.status === 'resolved');
+  const last60 = resolved.filter(e => {
+    const d = new Date(e.startedAt);
+    return (now - d) < 60 * 86400000;
+  });
+  const freqPer30 = last60.length > 0 ? (last60.length / 2).toFixed(1) : 0;
+
+  // Average gap between episodes
+  let avgGapDays = null;
+  if (resolved.length >= 2) {
+    const sorted = resolved.slice().sort((a, b) => (a.startedAt || '').localeCompare(b.startedAt || ''));
+    let gapSum = 0;
+    for (let i = 1; i < sorted.length; i++) {
+      gapSum += (new Date(sorted[i].startedAt) - new Date(sorted[i - 1].startedAt)) / 86400000;
+    }
+    avgGapDays = Math.round(gapSum / (sorted.length - 1));
+  }
+
+  // Average duration
+  const resolvedDurations = resolved.map(e => _episodeDurationDays(e));
+  const avgDuration = resolvedDurations.length > 0 ? (resolvedDurations.reduce((a, b) => a + b, 0) / resolvedDurations.length).toFixed(1) : null;
+
+  // Insights
+  const insights = [];
+  const last60Days = all.filter(e => (now - new Date(e.startedAt)) < 60 * 86400000);
+  if (last60Days.length >= 3) {
+    insights.push({ type: 'warn', text: last60Days.length + ' illness episodes in the last 2 months — worth discussing with your paediatrician at the next visit.' });
+  }
+  // Co-occurring illness detection
+  for (let i = 0; i < all.length; i++) {
+    for (let j = i + 1; j < all.length; j++) {
+      const a = _episodeDateRange(all[i]);
+      const b = _episodeDateRange(all[j]);
+      if (a.startMs <= b.endMs && b.startMs <= a.endMs && all[i].illnessType !== all[j].illnessType) {
+        insights.push({
+          type: 'info',
+          text: all[i].emoji + ' ' + all[i].illnessType + ' and ' + all[j].emoji + ' ' + all[j].illnessType + ' overlapped around ' +
+            formatDate(all[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
+        });
+        break; // only report first overlap
+      }
+    }
+  }
+
+  return { all, typeCounts, months, freqPer30, avgGapDays, avgDuration, totalResolved: resolved.length, insights };
+}
+
+function renderInfoIllnessFreq() {
+  const summaryEl = document.getElementById('infoIllnessFreqSummary');
+  const timelineEl = document.getElementById('infoIllnessFreqTimeline');
+  const breakdownEl = document.getElementById('infoIllnessFreqBreakdown');
+  const insightsEl = document.getElementById('infoIllnessFreqInsights');
+  if (!summaryEl) return;
+
+  const data = computeIllnessFrequency();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">No illness episodes recorded yet</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (breakdownEl) breakdownEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  const activeCount = data.all.filter(e => e.status === 'active').length;
+  const activeBadge = activeCount > 0 ? ' · <span style="color:var(--tc-rose);font-weight:600;">' + activeCount + ' active</span>' : '';
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.all.length + ' episode' + (data.all.length !== 1 ? 's' : '') +
+    '</strong> total' + activeBadge + (data.avgDuration ? ' · <span class="t-light">avg ' + data.avgDuration + ' days</span>' : '') + '</div>';
+
+  // Timeline — 6-month horizontal bar chart
+  const typeColors = { fever: 'var(--tc-rose)', diarrhoea: 'var(--tc-amber)', vomiting: 'var(--tc-caution)', cold: 'var(--tc-sky)' };
+  let tlHtml = '<div class="mi-timeline">';
+  data.months.forEach(m => {
+    tlHtml += '<div class="mi-tl-row"><div class="mi-tl-month">' + m.label + '</div><div class="mi-tl-bar">';
+    if (m.episodes.length === 0) {
+      tlHtml += '<div style="font-size:var(--fs-xs);color:var(--light);">—</div>';
+    } else {
+      m.episodes.forEach(ep => {
+        const dur = _episodeDurationDays(ep);
+        const w = Math.max(12, Math.min(dur * 18, 120));
+        const color = typeColors[ep.illnessType] || 'var(--light)';
+        tlHtml += '<div class="mi-tl-block mi-' + ep.illnessType + '" style="width:' + w + 'px;background:' + color + ';" title="' +
+          ep.emoji + ' ' + ep.illnessType + ' · ' + dur + 'd · ' + formatDate(ep.startedAt).replace(/, \d{4}$/, '') + '"></div>';
+      });
+    }
+    tlHtml += '</div></div>';
+  });
+  tlHtml += '</div>';
+  tlHtml += '<div class="mi-legend">';
+  [['fever', '🌡️', 'Fever'], ['diarrhoea', '💩', 'Diarrhoea'], ['vomiting', '🤮', 'Vomiting'], ['cold', '🤧', 'Cold']].forEach(([k, em, lbl]) => {
+    if (data.typeCounts[k] > 0) {
+      tlHtml += '<div class="mi-legend-item"><div class="mi-legend-dot" style="background:' + typeColors[k] + ';"></div>' + lbl + ' (' + data.typeCounts[k] + ')</div>';
+    }
+  });
+  tlHtml += '</div>';
+  if (timelineEl) timelineEl.innerHTML = tlHtml;
+
+  // Breakdown stats
+  let bHtml = '<div class="mi-stat-grid">';
+  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + data.freqPer30 + '</div><div class="mi-stat-label">per 30 days</div></div>';
+  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgGapDays !== null ? data.avgGapDays + 'd' : '–') + '</div><div class="mi-stat-label">avg gap</div></div>';
+  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgDuration || '–') + '</div><div class="mi-stat-label">avg duration (days)</div></div>';
+  bHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + data.totalResolved + '</div><div class="mi-stat-label">resolved</div></div>';
+  bHtml += '</div>';
+  if (breakdownEl) breakdownEl.innerHTML = bHtml;
+
+  // Insights
+  if (insightsEl) {
+    if (data.insights.length > 0) {
+      insightsEl.innerHTML = data.insights.map(ins =>
+        '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+      ).join('');
+    } else {
+      insightsEl.innerHTML = '';
+    }
+  }
+}
+
+// ════════════════════════════════════════
+// 2. VACCINATION ↔ FEVER CORRELATION
+// ════════════════════════════════════════
+
+function computeVaccFeverCorrelation() {
+  const pastVacc = (vaccData || []).filter(v => !v.upcoming && v.date);
+  const feverEps = (_feverEpisodes || []).filter(e => e.startedAt);
+  if (pastVacc.length === 0) return null;
+
+  // Group vaccinations by date
+  const vaccByDate = {};
+  pastVacc.forEach(v => {
+    if (!vaccByDate[v.date]) vaccByDate[v.date] = [];
+    vaccByDate[v.date].push(v.name);
+  });
+
+  const results = [];
+  const vaccDates = Object.keys(vaccByDate).sort();
+  let feverWithin72hCount = 0;
+
+  vaccDates.forEach(vDate => {
+    const vMs = new Date(vDate).getTime();
+    const names = vaccByDate[vDate];
+
+    // Look for fever episodes starting within 72h of vaccination
+    const matchingFever = feverEps.find(fe => {
+      const feMs = new Date(fe.startedAt).getTime();
+      const diffH = (feMs - vMs) / 3600000;
+      return diffH >= 0 && diffH <= 72;
+    });
+
+    const entry = {
+      date: vDate,
+      vaccines: names,
+      hadFever: !!matchingFever,
+      feverEpisode: matchingFever || null,
+      peakTemp: matchingFever ? matchingFever.peakTemp : null,
+      feverDuration: matchingFever ? _episodeDurationDays(matchingFever) : null
+    };
+    if (matchingFever) feverWithin72hCount++;
+    results.push(entry);
+  });
+
+  const feverRate = vaccDates.length > 0 ? Math.round((feverWithin72hCount / vaccDates.length) * 100) : 0;
+
+  // Insights
+  const insights = [];
+  if (feverWithin72hCount > 0) {
+    insights.push({
+      type: 'info',
+      text: 'Post-vaccination fever occurred after ' + feverWithin72hCount + ' of ' + vaccDates.length +
+        ' vaccination dates (' + feverRate + '%). This is common and usually resolves within 24-48 hours.'
+    });
+  }
+  // Check if specific vaccines caused fever more often
+  const vaccFeverMap = {};
+  results.forEach(r => {
+    r.vaccines.forEach(v => {
+      if (!vaccFeverMap[v]) vaccFeverMap[v] = { total: 0, fever: 0 };
+      vaccFeverMap[v].total++;
+      if (r.hadFever) vaccFeverMap[v].fever++;
+    });
+  });
+
+  return { results, feverWithin72hCount, totalVaccDates: vaccDates.length, feverRate, insights, vaccFeverMap };
+}
+
+function renderInfoVaccFever() {
+  const summaryEl = document.getElementById('infoVaccFeverSummary');
+  const timelineEl = document.getElementById('infoVaccFeverTimeline');
+  const insightsEl = document.getElementById('infoVaccFeverInsights');
+  if (!summaryEl) return;
+
+  const data = computeVaccFeverCorrelation();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">No vaccination data available</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  if (data.feverWithin72hCount > 0) {
+    summaryEl.innerHTML = '<div class="t-sm">🌡️ Fever after <strong>' + data.feverWithin72hCount + '/' + data.totalVaccDates +
+      '</strong> vaccination dates <span class="t-light">(' + data.feverRate + '% rate)</span></div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm" style="color:var(--tc-sage);font-weight:500;">✅ No post-vaccination fevers detected across ' + data.totalVaccDates + ' vaccination dates</div>';
+  }
+
+  // Timeline
+  let tlHtml = '';
+  data.results.forEach(r => {
+    const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
+    tlHtml += '<div class="mi-vacc-row">';
+    tlHtml += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
+    tlHtml += '<div class="mi-vacc-info">';
+    tlHtml += '<div class="mi-vacc-name">' + r.vaccines.join(', ') + '</div>';
+    tlHtml += '<div class="mi-vacc-detail">' + formatDate(r.date) + '</div>';
+    if (r.hadFever) {
+      tlHtml += '<div class="mi-vacc-fever">🌡️ Fever within 72h — peak ' + (r.peakTemp || '?') + '°F, lasted ' + (r.feverDuration || '?') + ' day(s)</div>';
+    }
+    tlHtml += '</div></div>';
+  });
+  if (timelineEl) timelineEl.innerHTML = tlHtml;
+
+  // Insights
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 3. ILLNESS ↔ FOOD CORRELATION
+// ════════════════════════════════════════
+
+function computeIllnessFoodCorrelation() {
+  // Cross-reference diarrhoea and vomiting episode start dates with foods logged 24-48h prior
+  const targetEpisodes = [
+    ...(_diarrhoeaEpisodes || []).map(e => ({ ...e, illnessType: 'diarrhoea', emoji: '💩' })),
+    ...(_vomitingEpisodes || []).map(e => ({ ...e, illnessType: 'vomiting', emoji: '🤮' }))
+  ].filter(e => e.startedAt);
+
+  if (targetEpisodes.length === 0) return null;
+
+  const foodOccurrences = {}; // foodName -> { total episodes where present, episode details }
+
+  targetEpisodes.forEach(ep => {
+    const epStart = new Date(ep.startedAt);
+    // Look at foods 24-48h before episode start
+    const foodsInWindow = new Set();
+
+    for (let h = 12; h <= 48; h += 12) {
+      const checkDate = toDateStr(new Date(epStart.getTime() - h * 3600000));
+      const dayData = feedingData[checkDate];
+      if (!dayData) continue;
+
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+        if (!dayData[meal]) return;
+        const mealFoods = dayData[meal].split(/[,+&]/).map(f => _baseFoodName(f.trim())).filter(f => f);
+        mealFoods.forEach(f => foodsInWindow.add(f));
+      });
+    }
+
+    foodsInWindow.forEach(food => {
+      if (!foodOccurrences[food]) foodOccurrences[food] = { count: 0, episodes: [] };
+      foodOccurrences[food].count++;
+      foodOccurrences[food].episodes.push({
+        type: ep.illnessType,
+        emoji: ep.emoji,
+        date: ep.startedAt
+      });
+    });
+  });
+
+  // Score: foods that appear before multiple illness episodes are suspicious
+  // But filter out foods that are eaten daily (they'll correlate with everything)
+  const totalIllnessEps = targetEpisodes.length;
+  const feedDates = Object.keys(feedingData);
+  const totalFeedDays = feedDates.length || 1;
+
+  const correlations = Object.entries(foodOccurrences)
+    .map(([food, data]) => {
+      // How often is this food eaten overall?
+      let daysWithFood = 0;
+      feedDates.forEach(d => {
+        const day = feedingData[d];
+        const allMeals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean).join(',');
+        if (allMeals.toLowerCase().includes(food.toLowerCase())) daysWithFood++;
+      });
+      const foodFreq = daysWithFood / totalFeedDays;
+      const illnessRate = data.count / totalIllnessEps;
+
+      // Suspicion score: high if food appears before illness often, but isn't eaten every day
+      const suspicion = foodFreq > 0 ? illnessRate / foodFreq : illnessRate;
+
+      return {
+        food,
+        illnessCount: data.count,
+        totalEpisodes: totalIllnessEps,
+        daysEaten: daysWithFood,
+        totalDays: totalFeedDays,
+        foodFreq: Math.round(foodFreq * 100),
+        suspicion: Math.round(suspicion * 100) / 100,
+        episodes: data.episodes
+      };
+    })
+    .filter(c => c.illnessCount >= 2 || (c.illnessCount >= 1 && c.suspicion > 1.5))
+    .sort((a, b) => b.suspicion - a.suspicion)
+    .slice(0, 8);
+
+  // Insights
+  const insights = [];
+  const highSuspicion = correlations.filter(c => c.suspicion > 2 && c.illnessCount >= 2);
+  highSuspicion.forEach(c => {
+    insights.push({
+      type: 'warn',
+      text: c.food + ' was eaten 24-48h before ' + c.illnessCount + ' of ' + c.totalEpisodes +
+        ' diarrhoea/vomiting episodes, but is only eaten ' + c.foodFreq + '% of days. Worth watching.'
+    });
+  });
+
+  return { correlations, totalEpisodes: totalIllnessEps, insights };
+}
+
+function renderInfoIllnessFood() {
+  const summaryEl = document.getElementById('infoIllnessFoodSummary');
+  const corrEl = document.getElementById('infoIllnessFoodCorrelations');
+  const insightsEl = document.getElementById('infoIllnessFoodInsights');
+  if (!summaryEl) return;
+
+  const data = computeIllnessFoodCorrelation();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">No diarrhoea or vomiting episodes to cross-reference</div>';
+    if (corrEl) corrEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  if (data.correlations.length > 0) {
+    summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.correlations.length + ' food' + (data.correlations.length !== 1 ? 's' : '') +
+      '</strong> linked to illness episodes <span class="t-light">· analysing ' + data.totalEpisodes + ' episode(s)</span></div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm" style="color:var(--tc-sage);">✅ No clear food-illness patterns detected across ' + data.totalEpisodes + ' episode(s)</div>';
+  }
+
+  // Correlation bars
+  if (corrEl && data.correlations.length > 0) {
+    const maxSusp = Math.max(...data.correlations.map(c => c.suspicion), 1);
+    let html = '';
+    data.correlations.forEach(c => {
+      const pct = Math.round((c.suspicion / maxSusp) * 100);
+      const barColor = c.suspicion > 2 ? 'var(--tc-rose)' : c.suspicion > 1 ? 'var(--tc-amber)' : 'var(--tc-sage)';
+      const emojiList = c.episodes.map(e => e.emoji).join('');
+      html += '<div class="mi-food-row">';
+      html += '<div class="mi-food-name">' + c.food + '</div>';
+      html += '<div class="mi-food-bar"><div class="mi-food-fill" style="width:' + pct + '%;background:' + barColor + ';"></div></div>';
+      html += '<div class="mi-food-count" title="Before ' + c.illnessCount + '/' + c.totalEpisodes + ' episodes">' + emojiList + ' ' + c.illnessCount + '/' + c.totalEpisodes + '</div>';
+      html += '</div>';
+    });
+    corrEl.innerHTML = html;
+  } else if (corrEl) {
+    corrEl.innerHTML = '';
+  }
+
+  // Insights
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight mi-insight-warn">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 4. POST-ILLNESS RECOVERY
+// ════════════════════════════════════════
+
+function computePostIllnessRecovery() {
+  const resolved = _getAllEpisodes().filter(e => e.status === 'resolved' && e.resolvedAt);
+  if (resolved.length === 0) return null;
+
+  const recoveries = [];
+
+  resolved.forEach(ep => {
+    const resolveDate = toDateStr(new Date(ep.resolvedAt));
+    const startDate = toDateStr(new Date(ep.startedAt));
+    const dur = _episodeDurationDays(ep);
+
+    // Weight recovery: find closest weight before and after illness
+    const gSorted = (growthData || []).filter(g => g.wt).sort((a, b) => a.date.localeCompare(b.date));
+    let wtBefore = null, wtAfter = null;
+    for (let i = gSorted.length - 1; i >= 0; i--) {
+      if (gSorted[i].date <= startDate) { wtBefore = gSorted[i]; break; }
+    }
+    for (let i = 0; i < gSorted.length; i++) {
+      if (gSorted[i].date >= resolveDate) { wtAfter = gSorted[i]; break; }
+    }
+
+    // Appetite recovery: compare meals/day during illness vs 7 days after
+    let mealsPerDayDuring = null, mealsPerDayAfter = null;
+    const epRange = _episodeDateRange(ep);
+    let illMeals = 0, illDays = 0, recMeals = 0, recDays = 0;
+
+    const resolveDateObj = new Date(ep.resolvedAt);
+    for (let d = new Date(ep.startedAt); d <= resolveDateObj; d.setDate(d.getDate() + 1)) {
+      const ds = toDateStr(d);
+      const fd = feedingData[ds];
+      if (fd) {
+        const count = [fd.breakfast, fd.lunch, fd.dinner, fd.snack].filter(m => m && m.trim()).length;
+        illMeals += count;
+        illDays++;
+      }
+    }
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(resolveDateObj.getTime() + i * 86400000);
+      const ds = toDateStr(d);
+      const fd = feedingData[ds];
+      if (fd) {
+        const count = [fd.breakfast, fd.lunch, fd.dinner, fd.snack].filter(m => m && m.trim()).length;
+        recMeals += count;
+        recDays++;
+      }
+    }
+    if (illDays > 0) mealsPerDayDuring = (illMeals / illDays).toFixed(1);
+    if (recDays > 0) mealsPerDayAfter = (recMeals / recDays).toFixed(1);
+
+    recoveries.push({
+      illnessType: ep.illnessType,
+      emoji: ep.emoji,
+      startDate,
+      resolveDate,
+      duration: dur,
+      wtBefore: wtBefore ? { wt: wtBefore.wt, date: wtBefore.date } : null,
+      wtAfter: wtAfter ? { wt: wtAfter.wt, date: wtAfter.date } : null,
+      weightChange: (wtBefore && wtAfter) ? Math.round((wtAfter.wt - wtBefore.wt) * 100) / 100 : null,
+      mealsPerDayDuring,
+      mealsPerDayAfter,
+      appetiteRecovery: (mealsPerDayDuring && mealsPerDayAfter) ? (parseFloat(mealsPerDayAfter) >= parseFloat(mealsPerDayDuring) ? 'recovered' : 'still low') : null
+    });
+  });
+
+  // Insights
+  const insights = [];
+  const wtDrops = recoveries.filter(r => r.weightChange !== null && r.weightChange < 0);
+  if (wtDrops.length > 0) {
+    insights.push({
+      type: 'info',
+      text: 'Weight dipped during ' + wtDrops.length + ' illness episode(s). Small dips are normal — steady recovery over 1-2 weeks is expected.'
+    });
+  }
+  const lowAppetite = recoveries.filter(r => r.appetiteRecovery === 'still low');
+  if (lowAppetite.length > 0) {
+    insights.push({
+      type: 'warn',
+      text: 'Appetite took longer than a week to recover after ' + lowAppetite.length + ' episode(s). Offer favourite foods and small frequent meals.'
+    });
+  }
+
+  return { recoveries: recoveries.slice(-5), insights };
+}
+
+function renderInfoRecovery() {
+  const summaryEl = document.getElementById('infoRecoverySummary');
+  const weightEl = document.getElementById('infoRecoveryWeight');
+  const appetiteEl = document.getElementById('infoRecoveryAppetite');
+  const insightsEl = document.getElementById('infoRecoveryInsights');
+  if (!summaryEl) return;
+
+  const data = computePostIllnessRecovery();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">No resolved episodes to analyse</div>';
+    if (weightEl) weightEl.innerHTML = '';
+    if (appetiteEl) appetiteEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  const withWt = data.recoveries.filter(r => r.weightChange !== null);
+  const withApp = data.recoveries.filter(r => r.appetiteRecovery);
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.recoveries.length + '</strong> resolved episode(s) analysed' +
+    (withWt.length > 0 ? ' · <span class="t-light">' + withWt.length + ' with weight data</span>' : '') + '</div>';
+
+  // Recovery entries
+  let html = '';
+  data.recoveries.forEach(r => {
+    html += '<div class="mi-recovery-entry">';
+    html += '<div class="mi-recovery-header">';
+    html += '<div class="mi-recovery-type" style="color:' + (r.illnessType === 'fever' ? 'var(--tc-rose)' : r.illnessType === 'diarrhoea' ? 'var(--tc-amber)' : r.illnessType === 'cold' ? 'var(--tc-sky)' : 'var(--tc-caution)') + ';">' + r.emoji + ' ' + r.illnessType + '</div>';
+    html += '<div class="mi-recovery-dates">' + formatDate(r.startDate).replace(/, \d{4}$/, '') + ' → ' + formatDate(r.resolveDate).replace(/, \d{4}$/, '') + ' (' + r.duration + 'd)</div>';
+    html += '</div>';
+
+    if (r.weightChange !== null) {
+      const sign = r.weightChange >= 0 ? '+' : '';
+      const color = r.weightChange < 0 ? 'var(--tc-rose)' : 'var(--tc-sage)';
+      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Weight change</div><div class="mi-recovery-val" style="color:' + color + ';">' + sign + r.weightChange + ' kg</div></div>';
+    }
+    if (r.mealsPerDayDuring !== null) {
+      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day during illness</div><div class="mi-recovery-val">' + r.mealsPerDayDuring + '</div></div>';
+    }
+    if (r.mealsPerDayAfter !== null) {
+      const appColor = r.appetiteRecovery === 'recovered' ? 'var(--tc-sage)' : 'var(--tc-amber)';
+      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day after (7d)</div><div class="mi-recovery-val" style="color:' + appColor + ';">' + r.mealsPerDayAfter + (r.appetiteRecovery === 'recovered' ? ' ✅' : ' ↓') + '</div></div>';
+    }
+    html += '</div>';
+  });
+
+  if (weightEl) weightEl.innerHTML = html;
+  if (appetiteEl) appetiteEl.innerHTML = '';
+
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 5. ILLNESS ↔ SLEEP IMPACT
+// ════════════════════════════════════════
+
+function computeIllnessSleepImpact() {
+  const allEpisodes = _getAllEpisodes().filter(e => e.startedAt);
+  if (allEpisodes.length === 0 || !sleepData || sleepData.length === 0) return null;
+
+  // Build a date → illness map
+  const illnessDays = {};
+  allEpisodes.forEach(ep => {
+    const range = _episodeDateRange(ep);
+    const start = new Date(range.startDate);
+    const end = new Date(range.endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const ds = toDateStr(d);
+      if (!illnessDays[ds]) illnessDays[ds] = [];
+      illnessDays[ds].push(ep.illnessType);
+    }
+  });
+
+  // Compute sleep metrics for last 28 days with illness overlay
+  const now = new Date();
+  const days = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const ds = toDateStr(d);
+    const nightSleep = sleepData.find(s => s.date === ds && s.type === 'night');
+    let durationH = null;
+    if (nightSleep && nightSleep.bedtime && nightSleep.wakeTime) {
+      const [bh, bm] = nightSleep.bedtime.split(':').map(Number);
+      const [wh, wm] = nightSleep.wakeTime.split(':').map(Number);
+      let mins = (wh * 60 + wm) - (bh * 60 + bm);
+      if (mins < 0) mins += 1440;
+      durationH = Math.round(mins / 6) / 10; // 1 decimal
+    }
+    const sick = illnessDays[ds] || [];
+    days.push({
+      date: ds,
+      day: d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2),
+      hasSleep: !!nightSleep,
+      duration: durationH,
+      wakeUps: nightSleep ? (nightSleep.wakeUps || 0) : null,
+      isSick: sick.length > 0,
+      illnessTypes: sick
+    });
+  }
+
+  // Compute averages: sick nights vs healthy nights
+  const sickNights = days.filter(d => d.isSick && d.hasSleep);
+  const healthyNights = days.filter(d => !d.isSick && d.hasSleep);
+
+  const avgSickDuration = sickNights.length > 0 ? (sickNights.reduce((s, d) => s + (d.duration || 0), 0) / sickNights.length).toFixed(1) : null;
+  const avgHealthyDuration = healthyNights.length > 0 ? (healthyNights.reduce((s, d) => s + (d.duration || 0), 0) / healthyNights.length).toFixed(1) : null;
+  const avgSickWakeUps = sickNights.length > 0 ? (sickNights.reduce((s, d) => s + (d.wakeUps || 0), 0) / sickNights.length).toFixed(1) : null;
+  const avgHealthyWakeUps = healthyNights.length > 0 ? (healthyNights.reduce((s, d) => s + (d.wakeUps || 0), 0) / healthyNights.length).toFixed(1) : null;
+
+  const insights = [];
+  if (avgSickDuration && avgHealthyDuration) {
+    const diff = (parseFloat(avgHealthyDuration) - parseFloat(avgSickDuration)).toFixed(1);
+    if (diff > 0.5) {
+      insights.push({ type: 'info', text: 'Ziva sleeps about ' + diff + 'h less on sick nights (' + avgSickDuration + 'h vs ' + avgHealthyDuration + 'h healthy). Disruption is normal during illness.' });
+    }
+  }
+  if (avgSickWakeUps && avgHealthyWakeUps) {
+    const diff = (parseFloat(avgSickWakeUps) - parseFloat(avgHealthyWakeUps)).toFixed(1);
+    if (diff > 0.5) {
+      insights.push({ type: 'info', text: 'Wake-ups increase by ~' + diff + ' per night during illness (' + avgSickWakeUps + ' vs ' + avgHealthyWakeUps + ' healthy).' });
+    }
+  }
+
+  // Build 4-week grid (7 cols)
+  const weeks = [];
+  for (let w = 0; w < 4; w++) {
+    weeks.push(days.slice(w * 7, (w + 1) * 7));
+  }
+
+  return { days, weeks, sickNights: sickNights.length, healthyNights: healthyNights.length, avgSickDuration, avgHealthyDuration, avgSickWakeUps, avgHealthyWakeUps, insights };
+}
+
+function renderInfoIllnessSleep() {
+  const summaryEl = document.getElementById('infoIllnessSleepSummary');
+  const overlayEl = document.getElementById('infoIllnessSleepOverlay');
+  const insightsEl = document.getElementById('infoIllnessSleepInsights');
+  if (!summaryEl) return;
+
+  const data = computeIllnessSleepImpact();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">Need both sleep and illness data to analyse</div>';
+    if (overlayEl) overlayEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  if (data.sickNights > 0) {
+    summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.sickNights + '</strong> sick night(s) in last 28 days · ' +
+      (data.avgSickDuration ? '<span class="t-light">' + data.avgSickDuration + 'h avg vs ' + data.avgHealthyDuration + 'h healthy</span>' : '') + '</div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm" style="color:var(--tc-sage);">✅ No illness-disrupted nights in the last 28 days</div>';
+  }
+
+  // 4-week grid: each cell shows duration + color-coded by sick/healthy/nodata
+  let gridHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-4);">28-Day Sleep & Illness Overlay</div>';
+  gridHtml += '<div class="mi-sleep-grid">';
+
+  // Day headers
+  gridHtml += '<div class="mi-sleep-header"></div>';
+  const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  dayLabels.forEach(dl => { gridHtml += '<div class="mi-sleep-header">' + dl + '</div>'; });
+
+  // Rows (weeks)
+  data.weeks.forEach((week, wi) => {
+    gridHtml += '<div class="mi-sleep-label">W' + (wi + 1) + '</div>';
+    week.forEach(day => {
+      if (!day.hasSleep) {
+        gridHtml += '<div class="mi-sleep-cell mi-sleep-nodata" title="' + day.date + '">–</div>';
+      } else {
+        const cls = day.isSick ? 'mi-sleep-sick' : (day.wakeUps >= 3 ? 'mi-sleep-disrupted' : 'mi-sleep-normal');
+        const label = day.duration ? day.duration + 'h' : '?';
+        const tip = day.date + (day.isSick ? ' · 🤒 sick' : '') + ' · ' + (day.wakeUps || 0) + ' wake-ups';
+        gridHtml += '<div class="mi-sleep-cell ' + cls + '" title="' + tip + '">' + label + '</div>';
+      }
+    });
+    // Pad if week has fewer than 7 days
+    for (let p = week.length; p < 7; p++) {
+      gridHtml += '<div class="mi-sleep-cell mi-sleep-nodata">–</div>';
+    }
+  });
+  gridHtml += '</div>';
+
+  // Legend
+  gridHtml += '<div class="mi-legend" style="margin-top:var(--sp-8);">';
+  gridHtml += '<div class="mi-legend-item"><div class="mi-legend-dot" style="background:rgba(140,190,160,0.4);"></div>Healthy</div>';
+  gridHtml += '<div class="mi-legend-item"><div class="mi-legend-dot" style="background:rgba(230,100,100,0.3);"></div>Sick night</div>';
+  gridHtml += '<div class="mi-legend-item"><div class="mi-legend-dot" style="background:rgba(240,180,100,0.3);"></div>Disrupted (3+ wakes)</div>';
+  gridHtml += '</div>';
+
+  if (overlayEl) overlayEl.innerHTML = gridHtml;
+
+  // Stats cards
+  if (data.sickNights > 0) {
+    let statsHtml = '<div class="mi-stat-grid">';
+    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgSickDuration || '–') + '</div><div class="mi-stat-label">avg sick night (h)</div></div>';
+    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgHealthyDuration || '–') + '</div><div class="mi-stat-label">avg healthy night (h)</div></div>';
+    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgSickWakeUps || '–') + '</div><div class="mi-stat-label">wake-ups (sick)</div></div>';
+    statsHtml += '<div class="mi-stat-card"><div class="mi-stat-num">' + (data.avgHealthyWakeUps || '–') + '</div><div class="mi-stat-label">wake-ups (healthy)</div></div>';
+    statsHtml += '</div>';
+    if (overlayEl) overlayEl.innerHTML += statsHtml;
+  }
+
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 6. NEW FOOD → REACTION TIMELINE
+// ════════════════════════════════════════
+
+function computeFoodReactionTimeline() {
+  if (!foods || foods.length === 0) return null;
+
+  // For each introduced food, check if any illness started within 48h of introduction
+  const allEpisodes = _getAllEpisodes().filter(e => e.startedAt);
+
+  const timelines = foods.map(f => {
+    const introDate = f.date;
+    if (!introDate) return null;
+    const introMs = new Date(introDate).getTime();
+
+    const events = [{ type: 'introduced', date: introDate, label: 'Introduced' }];
+
+    // Check for illness episodes starting within 48h after introduction
+    const nearbyEpisodes = allEpisodes.filter(ep => {
+      const epMs = new Date(ep.startedAt).getTime();
+      const diffH = (epMs - introMs) / 3600000;
+      return diffH >= 0 && diffH <= 48;
+    });
+
+    nearbyEpisodes.forEach(ep => {
+      events.push({
+        type: 'symptom',
+        date: ep.startedAt,
+        label: ep.emoji + ' ' + ep.illnessType,
+        illnessType: ep.illnessType,
+        resolved: ep.status === 'resolved'
+      });
+    });
+
+    // Check reaction status from foods array
+    const status = f.reaction === 'ok' ? 'ok' : f.reaction === 'watch' ? 'watch' : f.reaction === 'reaction' ? 'reaction' : 'ok';
+
+    return {
+      name: f.name,
+      introDate,
+      status,
+      events,
+      hasIllnessLink: nearbyEpisodes.length > 0,
+      nearbyEpisodeCount: nearbyEpisodes.length
+    };
+  }).filter(Boolean);
+
+  // Sort: foods with illness links first, then by date descending
+  timelines.sort((a, b) => {
+    if (a.hasIllnessLink && !b.hasIllnessLink) return -1;
+    if (!a.hasIllnessLink && b.hasIllnessLink) return 1;
+    return (b.introDate || '').localeCompare(a.introDate || '');
+  });
+
+  const withLinks = timelines.filter(t => t.hasIllnessLink);
+  const insights = [];
+  if (withLinks.length > 0) {
+    insights.push({
+      type: 'info',
+      text: withLinks.length + ' food(s) had illness episodes start within 48h of introduction. Correlation is not causation — but worth noting for your paediatrician.'
+    });
+  }
+
+  return { timelines, withLinks: withLinks.length, total: timelines.length, insights };
+}
+
+function renderInfoFoodReaction() {
+  const summaryEl = document.getElementById('infoFoodReactionSummary');
+  const timelineEl = document.getElementById('infoFoodReactionTimeline');
+  const insightsEl = document.getElementById('infoFoodReactionInsights');
+  if (!summaryEl) return;
+
+  const data = computeFoodReactionTimeline();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">No introduced foods to analyse</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.total + '</strong> foods tracked' +
+    (data.withLinks > 0 ? ' · <span style="color:var(--tc-amber);font-weight:600;">' + data.withLinks + ' with illness overlap</span>' : ' · <span style="color:var(--tc-sage);font-weight:600;">no illness overlaps</span>') + '</div>';
+
+  // Show foods with illness links first, then last 5 others
+  if (timelineEl) {
+    const toShow = data.timelines.filter(t => t.hasIllnessLink);
+    // Add recent introductions (up to 5) that don't have links
+    const recent = data.timelines.filter(t => !t.hasIllnessLink).slice(0, 5);
+    const display = [...toShow, ...recent];
+
+    let html = '';
+    display.forEach(t => {
+      const statusCls = t.status === 'ok' ? 'mi-frt-status-ok' : t.status === 'watch' ? 'mi-frt-status-watch' : 'mi-frt-status-react';
+      const statusLabel = t.status === 'ok' ? '✅ OK' : t.status === 'watch' ? '👁 Watch' : '⚠️ Reaction';
+
+      html += '<div class="mi-frt-entry">';
+      html += '<div class="mi-frt-header">';
+      html += '<div class="mi-frt-food">' + t.name + '</div>';
+      html += '<div class="mi-frt-status ' + statusCls + '">' + statusLabel + '</div>';
+      html += '</div>';
+
+      // Visual timeline: dot → line → dot
+      html += '<div class="mi-frt-timeline">';
+      t.events.forEach((ev, i) => {
+        const dotColor = ev.type === 'introduced' ? 'var(--tc-sage)' : ev.type === 'symptom' ? 'var(--tc-rose)' : 'var(--tc-sage)';
+        if (i > 0) html += '<div class="mi-frt-line"></div>';
+        html += '<div class="mi-frt-dot" style="background:' + dotColor + ';" title="' + ev.label + '"></div>';
+        html += '<div class="mi-frt-event">' + ev.label + '<br>' + formatDate(ev.date).replace(/, \d{4}$/, '') + '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+    });
+
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+    ).join('');
+  }
 }
 
 function computeHydrationIntelligence(windowDays) {
