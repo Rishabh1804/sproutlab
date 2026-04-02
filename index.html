@@ -2399,6 +2399,19 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .si-readiness-bar { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .si-ww-sleep { background:rgba(155,168,216,0.1); }
 [data-theme="dark"] .si-report-ring { box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+.si-scatter-dot { transition:opacity 0.2s; }
+.si-factor-row { display:flex; align-items:center; gap:var(--sp-8); padding:6px 0; }
+.si-factor-icon { font-size:var(--fs-base); width:24px; text-align:center; flex-shrink:0; }
+.si-factor-text { font-size:var(--fs-sm); flex:1; min-width:0; }
+.si-factor-impact { font-size:var(--fs-xs); font-weight:700; min-width:40px; text-align:right; }
+.si-regression-bar { display:flex; align-items:flex-end; gap:2px; height:48px; margin:var(--sp-8) 0; }
+.si-reg-col { flex:1; border-radius:2px 2px 0 0; min-width:0; transition:height 0.3s ease; }
+.si-reg-label { font-size:var(--fs-2xs); color:var(--light); text-align:center; margin-top:2px; }
+.si-reg-cause { display:flex; align-items:center; gap:var(--sp-8); padding:6px 10px; border-radius:var(--r-md); background:rgba(240,180,80,0.06); margin:var(--sp-4) 0; font-size:var(--fs-xs); }
+.si-reg-cause-icon { font-size:var(--fs-sm); flex-shrink:0; }
+.si-reg-cause-text { flex:1; color:var(--mid); }
+[data-theme="dark"] .si-reg-cause { background:rgba(240,180,80,0.04); }
+.si-sub-label { font-size:var(--fs-2xs); color:var(--light); text-transform:uppercase; letter-spacing:var(--ls-wide); }
 
 /* ── Episode Entry Edit System ── */
 .ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:4px; padding-right:4px; margin:0 -4px; }
@@ -6106,6 +6119,45 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div id="infoSleepNapTransitionBody" class="collapse-body" style="display:none;">
           <div id="infoSleepNapTransitionChecklist" class="mt-4"></div>
           <div id="infoSleepNapTransitionInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Day-Night Correlation -->
+      <div class="card card-daily col-full" id="infoSleepDayNightCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepDayNightBody','infoSleepDayNightChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-halfcircle"/></svg></div> Day-Night Correlation</div>
+          <span class="collapse-chevron" id="infoSleepDayNightChevron">▾</span>
+        </div>
+        <div id="infoSleepDayNightSummary" class="mt-4"></div>
+        <div id="infoSleepDayNightBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepDayNightChart" class="mt-4"></div>
+          <div id="infoSleepDayNightInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Best Night Predictor -->
+      <div class="card card-daily col-full" id="infoSleepBestNightCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepBestNightBody','infoSleepBestNightChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-crystal"/></svg></div> Best Night Predictor</div>
+          <span class="collapse-chevron" id="infoSleepBestNightChevron">▾</span>
+        </div>
+        <div id="infoSleepBestNightSummary" class="mt-4"></div>
+        <div id="infoSleepBestNightBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepBestNightFactors" class="mt-4"></div>
+          <div id="infoSleepBestNightInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Sleep Regression Detection -->
+      <div class="card card-daily col-full" id="infoSleepRegressionCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepRegressionBody','infoSleepRegressionChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-warn"/></svg></div> Sleep Regression</div>
+          <span class="collapse-chevron" id="infoSleepRegressionChevron">▾</span>
+        </div>
+        <div id="infoSleepRegressionSummary" class="mt-4"></div>
+        <div id="infoSleepRegressionBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepRegressionTimeline" class="mt-4"></div>
+          <div id="infoSleepRegressionInsights" class="mt-8"></div>
         </div>
       </div>
 
@@ -13053,13 +13105,44 @@ function _categorizeFoods() {
   return grouped;
 }
 
+// ── Food Name Normalization ──
+const _FOOD_ALIASES = {
+  'moringa': 'drumstick', 'drumstick (moringa)': 'drumstick',
+  'dates': 'date', 'date puree': 'date', 'date (fruit)': 'date',
+  'ghee (cow)': 'ghee', 'cow ghee': 'ghee',
+  'dahi': 'curd', 'yogurt': 'curd', 'yoghurt': 'curd',
+  'lauki': 'bottle gourd', 'bottle gourd (lauki)': 'bottle gourd',
+  'grapes (green': 'grape', 'grapes': 'grape', 'green grapes': 'grape',
+  'ragi porridge': 'ragi',
+  'sweet potato': 'sweet potato', 'shakarkandi': 'sweet potato',
+  'til': 'sesame',
+};
+
 // Strip form/preparation words to get base food name
-const _FORM_WORDS = ['puree','mash','mashed','porridge','powder','boiled','steamed','fried','roasted','soaked','grated','chopped','sliced','crushed','ground','paste','juice','soup','broth','water','cooked','raw','dried','fresh','baby','homemade','organic','(fruit)','(dry)'];
+const _FORM_WORDS = ['puree','mash','mashed','porridge','powder','boiled','steamed','fried','roasted','soaked','grated','chopped','sliced','crushed','ground','paste','juice','soup','broth','water','cooked','raw','dried','fresh','baby','homemade','organic'];
 function _baseFoodName(name) {
   let base = name.toLowerCase().trim();
-  _FORM_WORDS.forEach(w => { base = base.replace(new RegExp('\\b' + w + '\\b', 'g'), ''); });
-  return base.replace(/\s+/g, ' ').trim();
+  // Strip leading quantity fractions and measurements
+  base = base.replace(/^[½¼¾⅓⅔]\s*/, '');
+  base = base.replace(/^[\d.]+\s*(g|ml|tsp|tbsp|cup|piece|pcs?|slice|nos?\.?)\s*/i, '');
+  // Direct alias match first (before any stripping)
+  if (_FOOD_ALIASES[base]) return _FOOD_ALIASES[base];
+  // Strip parenthetical qualifiers: "(cow)", "(moringa)", "(lauki)", "(fruit)", etc.
+  const withoutParen = base.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  if (_FOOD_ALIASES[withoutParen]) return _FOOD_ALIASES[withoutParen];
+  // Strip form words
+  let stripped = withoutParen;
+  _FORM_WORDS.forEach(w => { stripped = stripped.replace(new RegExp('\\b' + w + '\\b', 'g'), ''); });
+  stripped = stripped.replace(/\s+/g, ' ').trim();
+  if (_FOOD_ALIASES[stripped]) return _FOOD_ALIASES[stripped];
+  // Depluralize simple trailing 's'
+  const singular = stripped.endsWith('s') && stripped.length > 3 ? stripped.slice(0, -1) : stripped;
+  if (_FOOD_ALIASES[singular]) return _FOOD_ALIASES[singular];
+  return stripped || withoutParen || base;
 }
+
+// Convenience alias — normalizeFoodName delegates to _baseFoodName
+function normalizeFoodName(raw) { return _baseFoodName(raw || ''); }
 
 // Guess food group from nutrition tags
 function _guessGroupFromNutrition(name) {
@@ -13298,6 +13381,7 @@ function deleteFood(i) {
 // ─────────────────────────────────────────
 // NUTRITION KNOWLEDGE BASE
 // ─────────────────────────────────────────
+
 // ─────────────────────────────────────────
 // FOOD SYNERGY DATABASE
 // ─────────────────────────────────────────
@@ -13593,6 +13677,12 @@ function getNutrition(foodName) {
   const lower = foodName.toLowerCase();
   if (NUTRITION[lower]) return NUTRITION[lower];
   if (nutritionCache[lower]) return nutritionCache[lower];
+  // Try normalized name
+  const norm = normalizeFoodName(lower);
+  if (norm !== lower) {
+    if (NUTRITION[norm]) return NUTRITION[norm];
+    if (nutritionCache[norm]) return nutritionCache[norm];
+  }
   return null;
 }
 
@@ -14359,6 +14449,7 @@ function checkFoodCombo() {
   const rawFoods = query.split(/[+,&]|with|and/).map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
   const mo = getAgeInMonths();
   const introducedSet = new Set(foods.map(f => f.name.toLowerCase()));
+  const introducedNormSet = new Set(foods.map(f => normalizeFoodName(f.name)));
 
   let verdict = 'safe';
   let verdictEmoji = '✅';
@@ -14393,9 +14484,10 @@ function checkFoodCombo() {
     }
   });
 
-  // ── 3. Check introduction status ──
+  // ── 3. Check introduction status (normalized) ──
   rawFoods.forEach(food => {
-    const isIntroduced = [...introducedSet].some(f => f.includes(food) || food.includes(f));
+    const norm = normalizeFoodName(food);
+    const isIntroduced = introducedNormSet.has(norm) || [...introducedSet].some(f => f.includes(food) || food.includes(f));
     if (!isIntroduced && food.length > 2) {
       newFoods.push(food);
     }
@@ -30505,6 +30597,596 @@ function renderInfoSleepNapTransition() {
   }
 }
 
+// ── Day-Night Nap Correlation ──
+
+function computeDayNightCorrelation() {
+  // Gather 21 days: for each day, get nap stats + that night's sleep quality
+  const dayPairs = [];
+  for (let i = 0; i < 21; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const naps = sleepData.filter(s => s.date === ds && s.type === 'nap' && s.bedtime && s.wakeTime);
+    const night = sleepData.find(s => s.date === ds && s.type === 'night' && s.bedtime && s.wakeTime);
+    if (!night || naps.length === 0) continue;
+
+    let napTotalMin = 0;
+    naps.forEach(n => { napTotalMin += calcSleepDuration(n.bedtime, n.wakeTime).total; });
+    const nightDur = calcSleepDuration(night.bedtime, night.wakeTime);
+    const wakes = getWakeCount(night);
+    const nightScore = getDailySleepScore(ds);
+    if (!nightScore) continue;
+
+    // Last nap end → bedtime gap
+    const sortedNaps = naps.slice().sort((a, b) => b.wakeTime.localeCompare(a.wakeTime));
+    const lastNapEnd = sortedNaps[0].wakeTime;
+    const [lnh, lnm] = lastNapEnd.split(':').map(Number);
+    const [bh, bm] = night.bedtime.split(':').map(Number);
+    let lastGapMin = (bh * 60 + bm) - (lnh * 60 + lnm);
+    if (lastGapMin < 0) lastGapMin += 1440;
+
+    dayPairs.push({
+      dateStr: ds, napCount: naps.length, napTotalMin,
+      nightMin: nightDur.total, wakes, score: nightScore.score,
+      lastGapMin
+    });
+  }
+
+  if (dayPairs.length < 5) return { insufficient: true, count: dayPairs.length, needed: 5 };
+
+  // Bucket by nap count
+  const napBuckets = {};
+  dayPairs.forEach(p => {
+    if (!napBuckets[p.napCount]) napBuckets[p.napCount] = [];
+    napBuckets[p.napCount].push(p);
+  });
+
+  const bucketStats = Object.keys(napBuckets).sort((a, b) => a - b).map(k => {
+    const items = napBuckets[k];
+    const avgScore = Math.round(items.reduce((s, p) => s + p.score, 0) / items.length);
+    const avgWakes = (items.reduce((s, p) => s + p.wakes, 0) / items.length).toFixed(1);
+    const avgNapMin = Math.round(items.reduce((s, p) => s + p.napTotalMin, 0) / items.length);
+    return { napCount: parseInt(k), days: items.length, avgScore, avgWakes, avgNapMin };
+  });
+
+  // Optimal nap count (highest avg score with >=2 data points)
+  const validBuckets = bucketStats.filter(b => b.days >= 2);
+  const optimal = validBuckets.length > 0 ? validBuckets.reduce((a, b) => a.avgScore > b.avgScore ? a : b) : null;
+
+  // Nap duration sweet spot: bucket by 30-min bands
+  const durBands = {};
+  dayPairs.forEach(p => {
+    const band = Math.floor(p.napTotalMin / 30) * 30;
+    const label = band < 30 ? '<30m' : band < 60 ? '30m' : Math.floor(band / 60) + 'h' + (band % 60 > 0 ? band % 60 + 'm' : '');
+    if (!durBands[band]) durBands[band] = { label, scores: [] };
+    durBands[band].scores.push(p.score);
+  });
+  const bandStats = Object.keys(durBands).sort((a, b) => a - b).map(k => {
+    const b = durBands[k];
+    return { band: parseInt(k), label: b.label, avgScore: Math.round(b.scores.reduce((a, c) => a + c, 0) / b.scores.length), days: b.scores.length };
+  });
+  const bestBand = bandStats.filter(b => b.days >= 2).reduce((a, b) => (a && a.avgScore >= b.avgScore) ? a : b, null);
+
+  // Last-gap correlation: short vs long gap
+  const avgGap = Math.round(dayPairs.reduce((s, p) => s + p.lastGapMin, 0) / dayPairs.length);
+  const shortGap = dayPairs.filter(p => p.lastGapMin < avgGap);
+  const longGap = dayPairs.filter(p => p.lastGapMin >= avgGap);
+  const shortAvgScore = shortGap.length > 0 ? Math.round(shortGap.reduce((s, p) => s + p.score, 0) / shortGap.length) : 0;
+  const longAvgScore = longGap.length > 0 ? Math.round(longGap.reduce((s, p) => s + p.score, 0) / longGap.length) : 0;
+
+  return {
+    insufficient: false, dayPairs, bucketStats, optimal,
+    bandStats, bestBand, avgGap, shortAvgScore, longAvgScore,
+    count: dayPairs.length
+  };
+}
+
+function renderInfoSleepDayNight() {
+  const summaryEl = document.getElementById('infoSleepDayNightSummary');
+  const chartEl = document.getElementById('infoSleepDayNightChart');
+  const insightEl = document.getElementById('infoSleepDayNightInsights');
+  if (!summaryEl) return;
+
+  const data = computeDayNightCorrelation();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days with nap+night data (have ' + data.count + ')</div>';
+    if (chartEl) chartEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  const optText = data.optimal ? data.optimal.napCount + ' nap' + (data.optimal.napCount !== 1 ? 's' : '') + ' → avg score ' + data.optimal.avgScore : 'No clear pattern';
+  summaryEl.innerHTML = '<div class="t-sm">Best nights follow <strong>' + optText + '</strong> · ' + data.count + ' days analyzed</div>';
+
+  if (chartEl) {
+    let html = '';
+
+    // Nap count → night score bars
+    html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Nap count vs night score</div>';
+    data.bucketStats.forEach(b => {
+      const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+      const isOpt = data.optimal && b.napCount === data.optimal.napCount;
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + b.napCount + ' nap' + (b.napCount !== 1 ? 's' : '') + '</div>';
+      html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isOpt ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
+      html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + '</div>';
+      html += '</div>';
+    });
+
+    // Nap duration bands
+    if (data.bandStats.length > 1) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Nap duration vs night score</div>';
+      data.bandStats.forEach(b => {
+        const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+        const isBest = data.bestBand && b.band === data.bestBand.band;
+        html += '<div class="si-bar-row">';
+        html += '<div class="si-bar-label">' + b.label + '</div>';
+        html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isBest ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
+        html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + ' <span style="font-size:var(--fs-2xs);color:var(--light);font-weight:400;">(' + b.days + 'd)</span></div>';
+        html += '</div>';
+      });
+    }
+
+    // Last gap stat
+    html += '<div class="si-stat-grid" style="margin-top:var(--sp-12);">';
+    const gapH = Math.floor(data.avgGap / 60);
+    const gapM = data.avgGap % 60;
+    html += '<div class="si-stat"><div class="si-stat-val">' + gapH + 'h ' + gapM + 'm</div><div class="si-stat-label">Avg last-nap gap</div></div>';
+    const gapDelta = data.longAvgScore - data.shortAvgScore;
+    const gapColor = Math.abs(gapDelta) < 5 ? 'var(--light)' : gapDelta > 0 ? 'var(--tc-sage)' : 'var(--tc-amber)';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:' + gapColor + ';">' + (gapDelta > 0 ? '+' : '') + gapDelta + '</div><div class="si-stat-label">Longer gap effect</div></div>';
+    html += '</div>';
+
+    chartEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.optimal && data.bucketStats.length > 1) {
+      const others = data.bucketStats.filter(b => b.napCount !== data.optimal.napCount && b.days >= 2);
+      if (others.length > 0) {
+        const worstBucket = others.reduce((a, b) => a.avgScore < b.avgScore ? a : b);
+        const delta = data.optimal.avgScore - worstBucket.avgScore;
+        if (delta >= 10) {
+          html += '<div class="si-insight si-insight-good">' + data.optimal.napCount + ' nap' + (data.optimal.napCount !== 1 ? 's' : '') + ' produce night scores ' + delta + ' points higher than ' + worstBucket.napCount + ' nap' + (worstBucket.napCount !== 1 ? 's' : '') + '.</div>';
+        }
+      }
+    }
+    if (data.bestBand) {
+      html += '<div class="si-insight si-insight-info">Best nights follow ~' + data.bestBand.label + ' of total daytime nap (avg score ' + data.bestBand.avgScore + ').</div>';
+    }
+    const gapDelta = data.longAvgScore - data.shortAvgScore;
+    if (gapDelta >= 8) {
+      html += '<div class="si-insight si-insight-info">A longer gap between last nap and bedtime correlates with better nights (+' + gapDelta + ' pts).</div>';
+    } else if (gapDelta <= -8) {
+      html += '<div class="si-insight si-insight-warn">A longer gap before bed is linked to worse sleep (' + gapDelta + ' pts). Ziva may be getting overtired.</div>';
+    }
+    if (!html) {
+      html = '<div class="si-insight si-insight-info">No strong pattern yet — more data will reveal nap-night correlations.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Best Night Predictor ──
+
+function computeBestNightPredictor() {
+  // Gather 30 days of multi-factor data
+  const nightData = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const night = sleepData.find(s => s.date === ds && s.type === 'night' && s.bedtime && s.wakeTime);
+    if (!night) continue;
+
+    const sc = getDailySleepScore(ds);
+    if (!sc) continue;
+
+    const naps = sleepData.filter(s => s.date === ds && s.type === 'nap' && s.bedtime && s.wakeTime);
+    let napTotalMin = 0;
+    naps.forEach(n => { napTotalMin += calcSleepDuration(n.bedtime, n.wakeTime).total; });
+
+    // Bedtime in normalized minutes
+    const btMin = _siBedtimeToMin(night.bedtime);
+
+    // Dinner foods
+    const feedEntry = feedingData[ds];
+    const dinnerFoods = feedEntry && feedEntry.dinner ? feedEntry.dinner.split(',').map(f => normalizeFoodName(f.trim()).toLowerCase()).filter(Boolean) : [];
+    const hasDinner = dinnerFoods.length > 0;
+
+    // Last nap gap
+    let lastGapMin = null;
+    if (naps.length > 0) {
+      const sortedNaps = naps.slice().sort((a, b) => b.wakeTime.localeCompare(a.wakeTime));
+      const [lnh, lnm] = sortedNaps[0].wakeTime.split(':').map(Number);
+      const [bh, bm] = night.bedtime.split(':').map(Number);
+      let gap = (bh * 60 + bm) - (lnh * 60 + lnm);
+      if (gap < 0) gap += 1440;
+      if (gap > 0 && gap < 720) lastGapMin = gap;
+    }
+
+    nightData.push({
+      dateStr: ds, score: sc.score, napCount: naps.length,
+      napTotalMin, btMin, dinnerFoods, hasDinner, lastGapMin,
+      wakes: getWakeCount(night)
+    });
+  }
+
+  if (nightData.length < 7) return { insufficient: true, count: nightData.length, needed: 7 };
+
+  const avgScore = Math.round(nightData.reduce((s, n) => s + n.score, 0) / nightData.length);
+
+  // Split into good (above avg) and bad (below avg) nights
+  const goodNights = nightData.filter(n => n.score >= avgScore + 5);
+  const badNights = nightData.filter(n => n.score < avgScore - 5);
+
+  const factors = [];
+
+  // Factor 1: Bedtime range
+  const goodBtMins = goodNights.filter(n => n.btMin !== null).map(n => n.btMin);
+  const badBtMins = badNights.filter(n => n.btMin !== null).map(n => n.btMin);
+  if (goodBtMins.length >= 2 && badBtMins.length >= 2) {
+    const goodAvgBt = Math.round(goodBtMins.reduce((a, b) => a + b, 0) / goodBtMins.length);
+    const badAvgBt = Math.round(badBtMins.reduce((a, b) => a + b, 0) / badBtMins.length);
+    const delta = goodAvgBt - badAvgBt;
+    if (Math.abs(delta) >= 10) {
+      factors.push({
+        icon: '🌙', label: 'Bedtime',
+        detail: 'Best nights: ' + _siMinToBedtime(goodAvgBt) + ' avg · Worst: ' + _siMinToBedtime(badAvgBt),
+        impact: delta < 0 ? 'Earlier is better' : 'Later is better',
+        impactVal: Math.abs(delta),
+        positive: true
+      });
+    }
+  }
+
+  // Factor 2: Nap count
+  const goodNapAvg = goodNights.length > 0 ? (goodNights.reduce((s, n) => s + n.napCount, 0) / goodNights.length).toFixed(1) : 0;
+  const badNapAvg = badNights.length > 0 ? (badNights.reduce((s, n) => s + n.napCount, 0) / badNights.length).toFixed(1) : 0;
+  if (goodNights.length >= 2 && badNights.length >= 2) {
+    const delta = (parseFloat(goodNapAvg) - parseFloat(badNapAvg)).toFixed(1);
+    if (Math.abs(delta) >= 0.3) {
+      factors.push({
+        icon: '💤', label: 'Nap count',
+        detail: 'Good nights avg: ' + goodNapAvg + ' · Bad nights: ' + badNapAvg,
+        impact: (delta > 0 ? '+' : '') + delta + ' naps',
+        impactVal: Math.abs(parseFloat(delta)) * 20,
+        positive: parseFloat(delta) > 0
+      });
+    }
+  }
+
+  // Factor 3: Nap duration
+  const goodNapDur = goodNights.filter(n => n.napTotalMin > 0);
+  const badNapDur = badNights.filter(n => n.napTotalMin > 0);
+  if (goodNapDur.length >= 2 && badNapDur.length >= 2) {
+    const goodAvg = Math.round(goodNapDur.reduce((s, n) => s + n.napTotalMin, 0) / goodNapDur.length);
+    const badAvg = Math.round(badNapDur.reduce((s, n) => s + n.napTotalMin, 0) / badNapDur.length);
+    const delta = goodAvg - badAvg;
+    if (Math.abs(delta) >= 15) {
+      factors.push({
+        icon: '⏱', label: 'Nap duration',
+        detail: 'Good nights: ' + Math.floor(goodAvg / 60) + 'h ' + (goodAvg % 60) + 'm · Bad: ' + Math.floor(badAvg / 60) + 'h ' + (badAvg % 60) + 'm',
+        impact: (delta > 0 ? '+' : '') + delta + ' min',
+        impactVal: Math.abs(delta),
+        positive: delta > 0
+      });
+    }
+  }
+
+  // Factor 4: Last wake window before bed
+  const goodGaps = goodNights.filter(n => n.lastGapMin !== null);
+  const badGaps = badNights.filter(n => n.lastGapMin !== null);
+  if (goodGaps.length >= 2 && badGaps.length >= 2) {
+    const goodAvg = Math.round(goodGaps.reduce((s, n) => s + n.lastGapMin, 0) / goodGaps.length);
+    const badAvg = Math.round(badGaps.reduce((s, n) => s + n.lastGapMin, 0) / badGaps.length);
+    const delta = goodAvg - badAvg;
+    if (Math.abs(delta) >= 10) {
+      factors.push({
+        icon: '☀️', label: 'Last wake window',
+        detail: 'Good nights: ' + Math.floor(goodAvg / 60) + 'h ' + (goodAvg % 60) + 'm · Bad: ' + Math.floor(badAvg / 60) + 'h ' + (badAvg % 60) + 'm',
+        impact: (delta > 0 ? 'Longer' : 'Shorter') + ' is better',
+        impactVal: Math.abs(delta),
+        positive: true
+      });
+    }
+  }
+
+  // Factor 5: Dinner foods — find foods that appear more on good vs bad nights
+  const goodFoods = {};
+  const badFoods = {};
+  goodNights.forEach(n => n.dinnerFoods.forEach(f => { goodFoods[f] = (goodFoods[f] || 0) + 1; }));
+  badNights.forEach(n => n.dinnerFoods.forEach(f => { badFoods[f] = (badFoods[f] || 0) + 1; }));
+  const sleepFriendlyFoods = [];
+  const sleepDisruptFoods = [];
+  Object.keys(goodFoods).forEach(f => {
+    const goodRate = goodNights.length > 0 ? goodFoods[f] / goodNights.length : 0;
+    const badRate = badNights.length > 0 ? (badFoods[f] || 0) / badNights.length : 0;
+    if (goodRate >= 0.3 && goodRate > badRate + 0.15) sleepFriendlyFoods.push(f);
+  });
+  Object.keys(badFoods).forEach(f => {
+    const badRate = badNights.length > 0 ? badFoods[f] / badNights.length : 0;
+    const goodRate = goodNights.length > 0 ? (goodFoods[f] || 0) / goodNights.length : 0;
+    if (badRate >= 0.3 && badRate > goodRate + 0.15) sleepDisruptFoods.push(f);
+  });
+  if (sleepFriendlyFoods.length > 0) {
+    factors.push({
+      icon: '🍽', label: 'Sleep-friendly dinners',
+      detail: sleepFriendlyFoods.slice(0, 4).join(', '),
+      impact: 'Correlates with better nights',
+      impactVal: 15,
+      positive: true
+    });
+  }
+  if (sleepDisruptFoods.length > 0) {
+    factors.push({
+      icon: '⚠️', label: 'Dinner watch list',
+      detail: sleepDisruptFoods.slice(0, 4).join(', '),
+      impact: 'Correlates with worse nights',
+      impactVal: 15,
+      positive: false
+    });
+  }
+
+  // Sort factors by impact
+  factors.sort((a, b) => b.impactVal - a.impactVal);
+
+  // Best night recipe
+  const bestNight = nightData.reduce((a, b) => a.score > b.score ? a : b);
+
+  return {
+    insufficient: false, factors, avgScore,
+    goodCount: goodNights.length, badCount: badNights.length,
+    bestNight, sleepFriendlyFoods, sleepDisruptFoods,
+    count: nightData.length
+  };
+}
+
+function renderInfoSleepBestNight() {
+  const summaryEl = document.getElementById('infoSleepBestNightSummary');
+  const factorsEl = document.getElementById('infoSleepBestNightFactors');
+  const insightEl = document.getElementById('infoSleepBestNightInsights');
+  if (!summaryEl) return;
+
+  const data = computeBestNightPredictor();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
+    if (factorsEl) factorsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const factorCount = data.factors.length;
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + factorCount + ' factor' + (factorCount !== 1 ? 's' : '') + '</strong> identified from ' + data.count + ' nights · Avg score ' + data.avgScore + '</div>';
+
+  if (factorsEl) {
+    let html = '';
+    if (data.factors.length === 0) {
+      html = '<div class="si-nodata">No clear patterns found yet — more data will reveal what drives Ziva\'s best nights.</div>';
+    } else {
+      data.factors.forEach(f => {
+        const impactColor = f.positive ? 'var(--tc-sage)' : 'var(--tc-amber)';
+        html += '<div class="si-factor-row">';
+        html += '<div class="si-factor-icon">' + f.icon + '</div>';
+        html += '<div class="si-factor-text"><div style="font-weight:600;">' + f.label + '</div><div style="font-size:var(--fs-2xs);color:var(--light);">' + f.detail + '</div></div>';
+        html += '<div class="si-factor-impact" style="color:' + impactColor + ';">' + f.impact + '</div>';
+        html += '</div>';
+      });
+    }
+
+    // Best night card
+    const bn = data.bestNight;
+    html += '<div class="si-stat-grid" style="margin-top:var(--sp-12);">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + bn.score + '</div><div class="si-stat-label">Best night</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + bn.napCount + '</div><div class="si-stat-label">Naps that day</div></div>';
+    html += '</div>';
+
+    factorsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    // Generate the "recipe" for a good night
+    const positiveFactors = data.factors.filter(f => f.positive);
+    if (positiveFactors.length >= 2) {
+      html += '<div class="si-insight si-insight-good">Best night recipe: ' + positiveFactors.slice(0, 3).map(f => f.label.toLowerCase()).join(' + ') + '.</div>';
+    }
+    if (data.sleepDisruptFoods.length > 0) {
+      html += '<div class="si-insight si-insight-warn">Watch these dinner foods — they appear more often before poor sleep: ' + data.sleepDisruptFoods.slice(0, 3).join(', ') + '.</div>';
+    }
+    if (!html) {
+      html = '<div class="si-insight si-insight-info">Keep logging — patterns become clearer with 2+ weeks of data.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Sleep Regression Detection ──
+
+function computeSleepRegression() {
+  // Gather 30 days of daily sleep scores
+  const dayScores = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const sc = getDailySleepScore(ds);
+    if (sc) dayScores.push({ dateStr: ds, score: sc.score, wakes: sc.wakes, dayIndex: i });
+  }
+
+  if (dayScores.length < 10) return { insufficient: true, count: dayScores.length, needed: 10 };
+
+  // Split into baseline (days 14–30) and recent (days 0–13)
+  const recent = dayScores.filter(d => d.dayIndex < 14);
+  const baseline = dayScores.filter(d => d.dayIndex >= 14);
+
+  if (baseline.length < 3 || recent.length < 3) return { insufficient: true, count: dayScores.length, needed: 10 };
+
+  const baselineAvg = Math.round(baseline.reduce((s, d) => s + d.score, 0) / baseline.length);
+  const recentAvg = Math.round(recent.reduce((s, d) => s + d.score, 0) / recent.length);
+  const scoreDrop = baselineAvg - recentAvg;
+
+  const baselineWakes = (baseline.reduce((s, d) => s + d.wakes, 0) / baseline.length).toFixed(1);
+  const recentWakes = (recent.reduce((s, d) => s + d.wakes, 0) / recent.length).toFixed(1);
+  const wakeIncrease = (parseFloat(recentWakes) - parseFloat(baselineWakes)).toFixed(1);
+
+  // Detect consecutive bad nights (below baseline avg - 10)
+  const threshold = baselineAvg - 10;
+  let maxConsecBad = 0;
+  let currentStreak = 0;
+  const recentChron = recent.slice().sort((a, b) => b.dayIndex - a.dayIndex); // oldest first
+  recentChron.forEach(d => {
+    if (d.score < threshold) { currentStreak++; maxConsecBad = Math.max(maxConsecBad, currentStreak); }
+    else currentStreak = 0;
+  });
+
+  // Regression severity
+  let severity = 'none';
+  let severityLabel = 'No regression';
+  let severityColor = 'var(--tc-sage)';
+  if (scoreDrop >= 20 && maxConsecBad >= 5) {
+    severity = 'severe';
+    severityLabel = 'Significant regression';
+    severityColor = 'var(--tc-danger)';
+  } else if (scoreDrop >= 12 && maxConsecBad >= 3) {
+    severity = 'moderate';
+    severityLabel = 'Moderate regression';
+    severityColor = 'var(--tc-amber)';
+  } else if (scoreDrop >= 6 && maxConsecBad >= 2) {
+    severity = 'mild';
+    severityLabel = 'Mild dip';
+    severityColor = 'var(--tc-caution)';
+  }
+
+  // Cross-reference: recent milestones
+  const recentMilestones = (milestones || []).filter(m => {
+    if (!isMsStarted(m)) return false;
+    const mDate = m.emergingAt || m.practicingAt || m.consistentAt || m.masteredAt;
+    if (!mDate) return false;
+    const dayDiff = (new Date() - new Date(mDate)) / 86400000;
+    return dayDiff >= 0 && dayDiff <= 21;
+  }).map(m => {
+    const stage = m.status || 'unknown';
+    return { text: m.text, stage, cat: m.cat || '' };
+  });
+
+  // Cross-reference: recent vaccinations
+  const recentVaccs = (vaccData || []).filter(v => {
+    if (v.upcoming || !v.date) return false;
+    const dayDiff = (new Date() - new Date(v.date)) / 86400000;
+    return dayDiff >= 0 && dayDiff <= 14;
+  }).map(v => ({ name: v.name || v.vaccine || 'Vaccine', date: v.date }));
+
+  // Possible causes
+  const causes = [];
+  const motorMs = recentMilestones.filter(m => m.cat === 'Gross Motor' || m.cat === 'Fine Motor');
+  if (motorMs.length > 0 && severity !== 'none') {
+    causes.push({ icon: '🏃', text: 'Motor milestone burst: ' + motorMs.map(m => m.text).slice(0, 2).join(', ') });
+  }
+  if (recentVaccs.length > 0 && severity !== 'none') {
+    causes.push({ icon: '💉', text: 'Recent vaccination: ' + recentVaccs.map(v => v.name).slice(0, 2).join(', ') + ' (' + formatDate(recentVaccs[0].date) + ')' });
+  }
+  const cogMs = recentMilestones.filter(m => m.cat === 'Cognitive' || m.cat === 'Language');
+  if (cogMs.length > 0 && severity !== 'none') {
+    causes.push({ icon: '🧠', text: 'Cognitive/language leap: ' + cogMs.map(m => m.text).slice(0, 2).join(', ') });
+  }
+  if (recentMilestones.length >= 3 && severity !== 'none') {
+    causes.push({ icon: '🚀', text: 'Developmental leap — ' + recentMilestones.length + ' milestones progressing simultaneously' });
+  }
+  const ageM = ageAt().months;
+  // Known regression windows
+  const regressionWindows = [
+    { ageStart: 3.5, ageEnd: 4.5, label: '4-month regression' },
+    { ageStart: 7.5, ageEnd: 9, label: '8-month regression' },
+    { ageStart: 11, ageEnd: 13, label: '12-month regression' },
+    { ageStart: 17, ageEnd: 19, label: '18-month regression' },
+    { ageStart: 23, ageEnd: 25, label: '24-month regression' }
+  ];
+  const ageWindow = regressionWindows.find(w => ageM >= w.ageStart && ageM <= w.ageEnd);
+  if (ageWindow && severity !== 'none') {
+    causes.push({ icon: '📅', text: 'Age-typical: ' + ageWindow.label + ' window (common at this age)' });
+  }
+
+  return {
+    insufficient: false, dayScores, recent, baseline,
+    baselineAvg, recentAvg, scoreDrop, baselineWakes, recentWakes, wakeIncrease,
+    maxConsecBad, severity, severityLabel, severityColor,
+    recentMilestones, recentVaccs, causes, ageWindow,
+    count: dayScores.length
+  };
+}
+
+function renderInfoSleepRegression() {
+  const summaryEl = document.getElementById('infoSleepRegressionSummary');
+  const timelineEl = document.getElementById('infoSleepRegressionTimeline');
+  const insightEl = document.getElementById('infoSleepRegressionInsights');
+  if (!summaryEl) return;
+
+  const data = computeSleepRegression();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + data.severityColor + ';font-weight:700;">' + data.severityLabel + '</span> — recent avg ' + data.recentAvg + ' vs baseline ' + data.baselineAvg + '</div>';
+
+  if (timelineEl) {
+    let html = '';
+
+    // Score timeline bars (recent 14 days, oldest→newest)
+    html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Last 14 nights</div>';
+    const recentSorted = data.recent.slice().sort((a, b) => b.dayIndex - a.dayIndex); // oldest first
+    html += '<div class="si-regression-bar">';
+    recentSorted.forEach(d => {
+      const pct = Math.max(8, d.score);
+      const color = d.score >= 70 ? 'var(--tc-sage)' : d.score >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+      html += '<div class="si-reg-col" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '"></div>';
+    });
+    html += '</div>';
+
+    // Baseline reference line label
+    html += '<div style="display:flex;justify-content:space-between;margin-top:2px;">';
+    html += '<div class="si-reg-label">' + (recentSorted.length > 0 ? formatDate(recentSorted[0].dateStr).slice(0, 6) : '') + '</div>';
+    html += '<div class="si-reg-label">Today</div>';
+    html += '</div>';
+
+    // Stats
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:' + (data.scoreDrop >= 10 ? 'var(--tc-danger)' : 'var(--tc-sage)') + ';">' + (data.scoreDrop > 0 ? '-' : '+') + Math.abs(data.scoreDrop) + '</div><div class="si-stat-label">Score change</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:' + (parseFloat(data.wakeIncrease) > 0.5 ? 'var(--tc-amber)' : 'var(--tc-sage)') + ';">' + (parseFloat(data.wakeIncrease) > 0 ? '+' : '') + data.wakeIncrease + '</div><div class="si-stat-label">Wake change</div></div>';
+    html += '</div>';
+
+    // Possible causes
+    if (data.causes.length > 0) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Possible causes</div>';
+      data.causes.forEach(c => {
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + c.icon + '</div><div class="si-reg-cause-text">' + c.text + '</div></div>';
+      });
+    }
+
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.severity === 'none') {
+      html += '<div class="si-insight si-insight-good">No sleep regression detected. Ziva\'s sleep has been stable.</div>';
+    } else if (data.severity === 'mild') {
+      html += '<div class="si-insight si-insight-info">A mild dip is normal — it often resolves within a few days. Keep the routine consistent.</div>';
+    } else if (data.severity === 'moderate') {
+      html += '<div class="si-insight si-insight-warn">Moderate regression lasting ' + data.maxConsecBad + ' consecutive bad nights. Stick to the bedtime routine and avoid introducing new sleep associations.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-warn">Significant sleep disruption detected. This is likely developmental and typically lasts 1–3 weeks. Maintain consistency — this will pass.</div>';
+    }
+    if (data.ageWindow && data.severity !== 'none') {
+      html += '<div class="si-insight si-insight-info">Ziva is in the ' + data.ageWindow.label + ' window — a well-documented period of sleep disruption tied to neurological development.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -30519,6 +31201,9 @@ function renderInfo() {
   renderInfoSleepWakeWindows();
   renderInfoSleepReport();
   renderInfoSleepNapTransition();
+  renderInfoSleepDayNight();
+  renderInfoSleepBestNight();
+  renderInfoSleepRegression();
   renderInfoIllnessFreq();
   renderInfoVaccFever();
   renderInfoIllnessFood();
@@ -31323,7 +32008,9 @@ function renderInfoMealBreakdown() {
 // ── FOOD INTELLIGENCE: SMART PAIRING SUGGESTIONS (Feature 5) ──
 
 function computeSmartPairings() {
-  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  const introducedRaw = (foods || []).map(f => f.name.toLowerCase().trim());
+  const introducedSet = new Set(introducedRaw);
+  const introducedNormSet = new Set(introducedRaw.map(f => normalizeFoodName(f)));
   const todayFoods = extractDayFoods(today());
   const todayFoodSet = new Set(todayFoods);
 
@@ -31332,22 +32019,88 @@ function computeSmartPairings() {
   const currentGaps = heatmap.gaps.map(g => g.toLowerCase());
   const gapSet = new Set(currentGaps);
 
-  // 1. Top synergy pairs from introduced foods
-  const usedPairs = []; // pairs already used together in recent meals
-  const unusedPairs = []; // introduced but never paired
+  // Helper: does a meal-logged food string match a synergy base name?
+  // Uses normalization so "carrot puree" → "carrot", "moringa" → "drumstick", etc.
+  function _mealFoodMatches(mealItem, synergyName) {
+    const norm = normalizeFoodName(mealItem);
+    if (norm === synergyName || norm.includes(synergyName) || synergyName.includes(norm)) return true;
+    // Also check raw (for compound items like "khichdi (masoor dal)")
+    if (mealItem.includes(synergyName) || synergyName.includes(mealItem)) return true;
+    return false;
+  }
 
-  // Check which synergies involve introduced foods
-  const combos = computeFoodCombos(30);
+  // Khichdi-style compound foods: a single logged item that implies multiple base foods
+  const COMPOUND_FOODS = {
+    'khichdi': ['rice', 'dal', 'moong dal'],
+    'masoor dal khichdi': ['rice', 'masoor dal'],
+    'moong dal khichdi': ['rice', 'moong dal'],
+    'dal khichdi': ['rice', 'dal'],
+    'curd rice': ['rice', 'curd'],
+    'dahi rice': ['rice', 'curd'],
+    'dal rice': ['rice', 'dal'],
+    'idli': ['rice', 'urad dal'],
+    'dosa': ['rice', 'urad dal'],
+  };
+
+  // Expand a meal-logged food into all base foods it represents
+  function _expandMealFood(mealItem) {
+    const result = [mealItem];
+    for (const [compound, components] of Object.entries(COMPOUND_FOODS)) {
+      if (mealItem.includes(compound)) {
+        components.forEach(c => result.push(c));
+      }
+    }
+    return result;
+  }
+
+  // Expand a meal's food list, deduplicating
+  function _expandMealFoods(mealFoods) {
+    const all = [];
+    mealFoods.forEach(f => _expandMealFood(f).forEach(e => all.push(e)));
+    return [...new Set(all)];
+  }
+
+  // Build set of synergy keys that have been used in any recent meal
+  const usedSynergyKeys = new Set(); // "f1|f2" keys
+  const todayDate = new Date(today());
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds];
+    if (!entry) continue;
+
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+      if (!isRealMeal(entry[meal])) return;
+      const raw = entry[meal].split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+      const expanded = _expandMealFoods(raw);
+
+      // Check every synergy against this expanded meal
+      FOOD_SYNERGIES.forEach(([f1, f2]) => {
+        const hasF1 = expanded.some(e => _mealFoodMatches(e, f1));
+        const hasF2 = expanded.some(e => _mealFoodMatches(e, f2));
+        if (hasF1 && hasF2) {
+          usedSynergyKeys.add(f1 + '|' + f2);
+        }
+      });
+    });
+  }
+
+  // 1. Classify synergies as used vs unused
+  const usedPairs = [];
+  const unusedPairs = [];
+
   FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
-    const f1Match = [...introducedSet].find(f => f.includes(f1) || f1.includes(f));
-    const f2Match = [...introducedSet].find(f => f.includes(f2) || f2.includes(f));
-    if (!f1Match || !f2Match) return; // both must be introduced
+    // Check if both synergy foods are introduced (using normalized names)
+    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => f.includes(f1) || f1.includes(f));
+    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => f.includes(f2) || f2.includes(f));
+    if (!f1Introduced || !f2Introduced) return;
 
-    // Check if they've been paired in recent meals
-    const paired = combos.topPairs.some(p =>
-      (p.food1.includes(f1) || f1.includes(p.food1)) && (p.food2.includes(f2) || f2.includes(p.food2)) ||
-      (p.food1.includes(f2) || f2.includes(p.food1)) && (p.food2.includes(f1) || f1.includes(p.food2))
-    );
+    // Find display names for the matched foods
+    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || f.includes(f1) || f1.includes(f)) || f1;
+    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || f.includes(f2) || f2.includes(f)) || f2;
+
+    const paired = usedSynergyKeys.has(f1 + '|' + f2);
 
     const entry = { food1: f1Match, food2: f2Match, reason, type, synergyFood1: f1, synergyFood2: f2 };
 
@@ -31385,17 +32138,23 @@ function computeSmartPairings() {
   }
 
   // 3. Today-actionable: synergies from today's foods with untried partners
+  const todayExpanded = _expandMealFoods(todayFoods);
   const todayActionable = [];
-  todayFoods.forEach(food => {
+  const seenActionable = new Set();
+  todayExpanded.forEach(food => {
     FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
       let match = null, partner = null;
-      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      if (_mealFoodMatches(food, f1)) { match = f1; partner = f2; }
+      else if (_mealFoodMatches(food, f2)) { match = f2; partner = f1; }
       if (!match || !partner) return;
       // Partner not already in today's meals
-      if (todayFoods.some(tf => tf.includes(partner) || partner.includes(tf))) return;
-      // Partner must be introduced
-      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      if (todayExpanded.some(tf => _mealFoodMatches(tf, partner))) return;
+      // Partner must be introduced (check normalized)
+      if (!introducedNormSet.has(partner) && ![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      // Deduplicate
+      const key = match + '|' + partner;
+      if (seenActionable.has(key)) return;
+      seenActionable.add(key);
       todayActionable.push({ food: match, partner, reason, type });
     });
   });
@@ -31496,6 +32255,8 @@ function renderInfoSmartPairing() {
 function getSynergyPairings(rawFoods) {
   const suggestions = [];
   const seen = new Set();
+  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  const mo = getAgeInMonths();
   rawFoods.forEach(food => {
     FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
       let match = null, partner = null;
@@ -31504,6 +32265,11 @@ function getSynergyPairings(rawFoods) {
       if (!match || !partner) return;
       // Don't suggest if partner is already in the query
       if (rawFoods.some(rf => rf.includes(partner) || partner.includes(rf))) return;
+      // Age-safety check
+      const rule = AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')] || Object.entries(AGE_RULES).find(([k]) => partner.includes(k))?.[1];
+      if (rule && mo < rule.minMonth) return;
+      // Must be already introduced
+      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
       const key = partner;
       if (seen.has(key)) return;
       seen.add(key);
