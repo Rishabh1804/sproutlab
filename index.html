@@ -1561,6 +1561,28 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   color:var(--tc-rose);
 }
 
+/* ── Compact vitals quick pills ── */
+.hvq-pill {
+  display:inline-flex; align-items:baseline; gap:3px;
+  padding:3px 8px; border-radius:var(--r-full);
+  font-family:'Fraunces',serif; font-size:var(--fs-sm); font-weight:600;
+  color:var(--text); background:var(--warm);
+  border:1px solid var(--border-subtle);
+  cursor:pointer; transition:all var(--ease-fast);
+}
+.hvq-pill:active { transform:scale(0.95); }
+.hvq-label { font-family:'Nunito',sans-serif; font-size:var(--fs-2xs); font-weight:500; color:var(--light); text-transform:uppercase; letter-spacing:var(--ls-tight); }
+.zs-ring-mini {
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  border:2.5px solid var(--sage); background:var(--sage-light);
+  cursor:pointer; transition:all var(--ease-fast); flex-shrink:0;
+}
+.zs-ring-mini:active { transform:scale(0.9); }
+.zs-number-mini { font-family:'Fraunces',serif; font-size:var(--fs-sm); font-weight:700; color:var(--tc-sage); }
+[data-theme="dark"] .hvq-pill { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .zs-ring-mini { background:rgba(58,112,96,0.15); border-color:rgba(181,213,197,0.3); }
+
 /* ── Home reco food ── */
 .reco-item {
   display:flex; align-items:flex-start; gap:var(--sp-8);
@@ -3934,6 +3956,72 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .psf-home-wrap:active { background:rgba(58,112,96,0.12); }
 [data-theme="dark"] .psf-home-wrap { background:rgba(255,255,255,0.04); }
 [data-theme="dark"] .psf-home-wrap:active { background:rgba(181,213,197,0.1); }
+
+/* ── Diet Intelligence Banner ── */
+.dib-card {
+  padding:10px 12px; border-radius:var(--r-lg); margin-bottom:10px;
+  font-size:var(--fs-xs); line-height:var(--lh-relaxed);
+}
+.dib-reaction {
+  background:rgba(250,212,180,0.15); border:1px solid rgba(250,212,180,0.3);
+  color:var(--mid);
+}
+.dib-reaction strong { color:var(--tc-caution); }
+.dib-synergy {
+  background:var(--sage-light); border:1px solid rgba(140,190,160,0.2);
+  color:var(--mid);
+}
+.dib-synergy-pill {
+  display:inline-flex; align-items:center; gap:3px;
+  padding:3px 10px; border-radius:var(--r-2xl);
+  font-size:var(--fs-xs); font-weight:600;
+  background:rgba(58,112,96,0.08); color:var(--tc-sage);
+  cursor:pointer; transition:all var(--ease-fast);
+  margin:2px 2px 2px 0;
+}
+.dib-synergy-pill:active { background:var(--sage); color:white; }
+[data-theme="dark"] .dib-reaction { background:rgba(250,212,180,0.06); border-color:rgba(250,212,180,0.15); }
+[data-theme="dark"] .dib-synergy { background:rgba(58,112,96,0.08); border-color:rgba(181,213,197,0.1); }
+[data-theme="dark"] .dib-synergy-pill { background:rgba(181,213,197,0.1); }
+
+/* ── Symptom Checker ── */
+.sc-result { border-radius:var(--r-lg); padding:14px; margin-bottom:10px; }
+.sc-emergency { background:rgba(220,60,60,0.08); border:1.5px solid rgba(220,60,60,0.3); }
+.sc-warning { background:rgba(240,180,80,0.08); border:1.5px solid rgba(240,180,80,0.25); }
+.sc-mild { background:rgba(58,112,96,0.06); border:1.5px solid rgba(58,112,96,0.2); }
+.sc-sev-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:var(--r-full);
+  font-size:var(--fs-xs); font-weight:700; margin-bottom:8px;
+}
+.sc-emergency .sc-sev-badge { background:rgba(220,60,60,0.12); color:#c0392b; }
+.sc-warning .sc-sev-badge { background:rgba(240,180,80,0.15); color:#b8860b; }
+.sc-mild .sc-sev-badge { background:rgba(58,112,96,0.1); color:var(--tc-sage); }
+.sc-title { font-weight:700; font-size:var(--fs-md); color:var(--text); margin-bottom:6px; }
+.sc-section { margin-top:10px; }
+.sc-section-title { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); margin-bottom:4px; }
+.sc-section-body { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
+.sc-doctor-card {
+  margin-top:12px; padding:12px; border-radius:var(--r-lg);
+  background:rgba(220,60,60,0.05); border:1px solid rgba(220,60,60,0.15);
+  display:flex; align-items:center; gap:var(--sp-12); flex-wrap:wrap;
+}
+.sc-doctor-card a { color:#c0392b; font-weight:700; text-decoration:none; }
+.sc-quick-chip {
+  padding:5px 12px; border-radius:var(--r-2xl);
+  font-size:var(--fs-xs); font-weight:600;
+  background:var(--warm); color:var(--mid);
+  border:1px solid var(--border-subtle);
+  cursor:pointer; transition:all var(--ease-fast);
+}
+.sc-quick-chip:active { background:var(--sage-light); color:var(--tc-sage); }
+[data-theme="dark"] .sc-result { border-color:rgba(255,255,255,0.1); }
+[data-theme="dark"] .sc-emergency { background:rgba(220,60,60,0.06); border-color:rgba(220,60,60,0.2); }
+[data-theme="dark"] .sc-warning { background:rgba(240,180,80,0.06); border-color:rgba(240,180,80,0.15); }
+[data-theme="dark"] .sc-mild { background:rgba(58,112,96,0.05); border-color:rgba(58,112,96,0.15); }
+[data-theme="dark"] .sc-doctor-card { background:rgba(220,60,60,0.04); border-color:rgba(220,60,60,0.12); }
+[data-theme="dark"] .sc-doctor-card a { color:#e74c3c; }
+[data-theme="dark"] .sc-quick-chip { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.08); }
 [data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
 [data-theme="dark"] .ql-freq-pill:active { background:#3d7a60; color:var(--body-bg); }
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }
@@ -4220,81 +4308,91 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
-      <!-- ─── TIER 1: PROFILE VITALS ─── -->
-      <div class="card col-full card-hero hero-home">
-        <div style="margin-bottom:14px;">
-          <div style="font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-normal);color:var(--light);margin-bottom:2px;">Age Today</div>
-          <div id="homePreciseAge" class="hero-stat">—</div>
-        </div>
-        <!-- ZIVA SCORE HERO -->
-        <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
-          <div class="zs-ring" id="zsRing" onclick="openScorePopup()">
-            <div class="zs-number" id="zsNumber">—</div>
-            <div class="zs-label">Ziva Score</div>
-            <div class="zs-trend" id="zsTrend"></div>
+      <!-- ─── TIER 1: COMPACT VITALS (expandable) ─── -->
+      <div class="card col-full card-hero hero-home" id="homeVitalsCard" onclick="toggleHomeVitals()" style="cursor:pointer;">
+        <!-- Collapsed: key vitals in one row -->
+        <div id="homeVitalsCollapsed">
+          <div style="display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-normal);color:var(--light);margin-bottom:1px;">Age Today</div>
+              <div id="homePreciseAge" class="hero-stat" style="font-size:var(--fs-lg);">—</div>
+            </div>
+            <div class="zs-ring-mini" id="zsRingMini" style="display:none;" onclick="event.stopPropagation();openScorePopup()">
+              <span class="zs-number-mini" id="zsNumberMini">—</span>
+            </div>
+            <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;" id="homeVitalsQuick">
+              <div class="hvq-pill" onclick="event.stopPropagation();switchTab('growth')"><span id="homeWeightQuick">—</span> <span class="hvq-label">wt</span></div>
+              <div class="hvq-pill" onclick="event.stopPropagation();switchTab('sleep')"><span id="homeLastSleepQuick">—</span> <span class="hvq-label">sleep</span></div>
+              <div class="hvq-pill" onclick="event.stopPropagation();switchTab('medical')"><span id="homeVaccQuick">—</span> <span class="hvq-label">vacc</span></div>
+            </div>
+            <span class="collapse-chevron" id="homeVitalsChevron" style="font-size:var(--fs-sm);color:var(--light);">▾</span>
           </div>
-          <div class="zs-domains" id="zsDomains"></div>
         </div>
-        <div class="zs-breakdown" id="zsBreakdown"></div>
-        <div class="stat-pills-grid">
-            <div class="home-stat-pill hsp-rose" id="homeWeightPill" onclick="switchTab('growth');setTimeout(()=>document.getElementById('pbadge-wt')?.scrollIntoView({behavior:'smooth',block:'center'}),100)">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-scale"/></svg></div>
-              <div class="hsp-val" id="homeWeight">—</div>
-              <div class="hsp-label">Weight</div>
-              <div class="hsp-trend" id="homeTrendWeight"></div>
+        <!-- Expanded: full details -->
+        <div id="homeVitalsExpanded" style="display:none;" onclick="event.stopPropagation();">
+          <div style="border-top:1px solid var(--border-subtle);margin-top:12px;padding-top:12px;">
+            <!-- ZIVA SCORE HERO -->
+            <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
+              <div class="zs-ring" id="zsRing" onclick="openScorePopup()">
+                <div class="zs-number" id="zsNumber">—</div>
+                <div class="zs-label">Ziva Score</div>
+                <div class="zs-trend" id="zsTrend"></div>
+              </div>
+              <div class="zs-domains" id="zsDomains"></div>
             </div>
-            <div class="home-stat-pill hsp-sky" id="homeHeightPill" onclick="switchTab('growth');setTimeout(()=>document.getElementById('pbadge-ht')?.scrollIntoView({behavior:'smooth',block:'center'}),100)">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-ruler"/></svg></div>
-              <div class="hsp-val" id="homeHeight">—</div>
-              <div class="hsp-label">Height</div>
-              <div class="hsp-trend" id="homeTrendHeight"></div>
-            </div>
-            <div class="home-stat-pill hsp-lav" id="homeVaccPill" onclick="switchTab('medical');setTimeout(()=>document.getElementById('medVaccCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-syringe"/></svg></div>
-              <div class="hsp-val" id="homeVaccDays">—</div>
-              <div class="hsp-label">Days to vacc</div>
-            </div>
-            <div class="home-stat-pill hsp-sage" onclick="switchTab('diet')">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-sprout"/></svg></div>
-              <div class="hsp-val" id="homeSolidDays">—</div>
-              <div class="hsp-label">Days on solids</div>
-            </div>
-            <div class="home-stat-pill hsp-indigo" onclick="switchTab('sleep');setTimeout(()=>document.getElementById('sleepLogCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-moon"/></svg></div>
-              <div class="hsp-val" id="homeLastSleep">—</div>
-              <div class="hsp-label">Last night</div>
-            </div>
-            <div class="home-stat-pill hsp-indigo" id="homeAvgSleepScorePill" onclick="switchTab('sleep');setTimeout(()=>document.getElementById('sleepChartCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-bars"/></svg></div>
-              <div class="hsp-val" id="homeAvgSleepScore">—</div>
-              <div class="hsp-label">Sleep score (7d)</div>
-              <div class="hsp-trend" id="homeTrendSleep"></div>
-            </div>
-            <div class="home-stat-pill hsp-amber" onclick="switchTab('poop')">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-diaper"/></svg></div>
-              <div class="hsp-val" id="homePoopToday">—</div>
-              <div class="hsp-label">Poops today</div>
-              <div class="hsp-trend" id="homeTrendPoop"></div>
-            </div>
-            <div class="home-stat-pill hsp-peach" id="homeStreakPill" onclick="switchTab('diet')">
-              <div class="hsp-icon"><svg class="zi"><use href="#zi-flame"/></svg></div>
-              <div class="hsp-val" id="homeStreak">—</div>
-              <div class="hsp-label">Day streak</div>
+            <div class="zs-breakdown" id="zsBreakdown"></div>
+            <div class="stat-pills-grid">
+              <div class="home-stat-pill hsp-rose" id="homeWeightPill" onclick="switchTab('growth');setTimeout(()=>document.getElementById('pbadge-wt')?.scrollIntoView({behavior:'smooth',block:'center'}),100)">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-scale"/></svg></div>
+                <div class="hsp-val" id="homeWeight">—</div>
+                <div class="hsp-label">Weight</div>
+                <div class="hsp-trend" id="homeTrendWeight"></div>
+              </div>
+              <div class="home-stat-pill hsp-sky" id="homeHeightPill" onclick="switchTab('growth');setTimeout(()=>document.getElementById('pbadge-ht')?.scrollIntoView({behavior:'smooth',block:'center'}),100)">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-ruler"/></svg></div>
+                <div class="hsp-val" id="homeHeight">—</div>
+                <div class="hsp-label">Height</div>
+                <div class="hsp-trend" id="homeTrendHeight"></div>
+              </div>
+              <div class="home-stat-pill hsp-lav" id="homeVaccPill" onclick="switchTab('medical');setTimeout(()=>document.getElementById('medVaccCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-syringe"/></svg></div>
+                <div class="hsp-val" id="homeVaccDays">—</div>
+                <div class="hsp-label">Days to vacc</div>
+              </div>
+              <div class="home-stat-pill hsp-sage" onclick="switchTab('diet')">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-sprout"/></svg></div>
+                <div class="hsp-val" id="homeSolidDays">—</div>
+                <div class="hsp-label">Days on solids</div>
+              </div>
+              <div class="home-stat-pill hsp-indigo" onclick="switchTab('sleep');setTimeout(()=>document.getElementById('sleepLogCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-moon"/></svg></div>
+                <div class="hsp-val" id="homeLastSleep">—</div>
+                <div class="hsp-label">Last night</div>
+              </div>
+              <div class="home-stat-pill hsp-indigo" id="homeAvgSleepScorePill" onclick="switchTab('sleep');setTimeout(()=>document.getElementById('sleepChartCard')?.scrollIntoView({behavior:'smooth',block:'start'}),100)">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-bars"/></svg></div>
+                <div class="hsp-val" id="homeAvgSleepScore">—</div>
+                <div class="hsp-label">Sleep score (7d)</div>
+                <div class="hsp-trend" id="homeTrendSleep"></div>
+              </div>
+              <div class="home-stat-pill hsp-amber" onclick="switchTab('poop')">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-diaper"/></svg></div>
+                <div class="hsp-val" id="homePoopToday">—</div>
+                <div class="hsp-label">Poops today</div>
+                <div class="hsp-trend" id="homeTrendPoop"></div>
+              </div>
+              <div class="home-stat-pill hsp-peach" id="homeStreakPill" onclick="switchTab('diet')">
+                <div class="hsp-icon"><svg class="zi"><use href="#zi-flame"/></svg></div>
+                <div class="hsp-val" id="homeStreak">—</div>
+                <div class="hsp-label">Day streak</div>
+              </div>
             </div>
           </div>
+        </div>
       </div>
 
       <!-- ─── TIER 2: TODAY'S ACTIONS ─── -->
       <div class="home-section-label sec-t1 col-full">Today</div>
-
-      <!-- ─── UNIFIED ALERTS (v2.3 — merged Reminders + Context Alerts + Wins) ─── -->
-      <div class="card card-daily col-full" id="homeUnifiedAlertsCard" style="display:none;border-left:none;">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-bell"/></svg></div> What's Happening</div>
-          <span class="t-sm t-light" id="unifiedAlertsCount"></span>
-        </div>
-        <div id="unifiedAlertsContent" class="fx-col g8"></div>
-      </div>
 
       <!-- TODAY'S MEALS PROGRESS -->
       <div class="card card-daily col-full" id="homeMealProgressCard">
@@ -4303,6 +4401,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <span class="collapse-chevron">›</span>
         </div>
         <div id="homeMealProgressContent" class="mt-8"></div>
+      </div>
+
+      <!-- ─── UNIFIED ALERTS (v2.3 — merged Reminders + Context Alerts + Wins) ─── -->
+      <div class="card card-daily col-full" id="homeUnifiedAlertsCard" style="display:none;border-left:none;">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-bell"/></svg></div> What's Happening</div>
+          <span class="t-sm t-light" id="unifiedAlertsCount"></span>
+        </div>
+        <div id="unifiedAlertsContent" class="fx-col g8"></div>
       </div>
 
       <!-- SLEEP SUMMARY -->
@@ -4553,6 +4660,20 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- SYMPTOM CHECKER -->
+      <div class="card card-action col-full" id="symptomCheckerCard">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Symptom Checker</div>
+        </div>
+        <div style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:10px;line-height:var(--lh-relaxed);">Describe what you're noticing — fever, rash, fussiness, vomiting, etc. Get age-appropriate guidance and know when to call the doctor.</div>
+        <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-bottom:10px;">
+          <input type="text" id="symptomInput" placeholder="e.g. fever, rash on face, not eating..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')checkSymptoms()">
+          <button class="btn btn-sage" onclick="checkSymptoms()" style="min-width:70px;">Check</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--sp-4);margin-bottom:10px;" id="symptomQuickChips"></div>
+        <div id="symptomResult"></div>
+      </div>
+
       <!-- ─── VISIT PREP (relocated from Home in v2.3) ─── -->
       <div class="card card-action col-full" id="doctorPrepCard" style="display:none;">
         <div class="card-header">
@@ -4591,6 +4712,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           </div>
         </div>
         <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The ✨ insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+
+        <div id="dietIntelBanner"></div>
 
         <div class="meal-cards">
           <div class="meal-card breakfast">
@@ -7076,9 +7199,49 @@ function renderHome() {
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
   updateHomeZenState();
   updateStatPillTrends();
+  syncVitalsQuick();
 }
 
 // Show "all clear" when no action cards are visible
+function toggleHomeVitals() {
+  const collapsed = document.getElementById('homeVitalsCollapsed');
+  const expanded = document.getElementById('homeVitalsExpanded');
+  const chevron = document.getElementById('homeVitalsChevron');
+  if (!collapsed || !expanded) return;
+  const isExpanded = expanded.style.display !== 'none';
+  expanded.style.display = isExpanded ? 'none' : '';
+  if (chevron) chevron.textContent = isExpanded ? '▾' : '▴';
+  // Hide quick pills when expanded (full pills visible)
+  const quick = document.getElementById('homeVitalsQuick');
+  if (quick) quick.style.display = isExpanded ? '' : 'none';
+}
+
+function syncVitalsQuick() {
+  // Sync weight
+  const wt = document.getElementById('homeWeight');
+  const wtQ = document.getElementById('homeWeightQuick');
+  if (wt && wtQ) wtQ.textContent = wt.textContent;
+  // Sync last sleep
+  const sl = document.getElementById('homeLastSleep');
+  const slQ = document.getElementById('homeLastSleepQuick');
+  if (sl && slQ) slQ.textContent = sl.textContent;
+  // Sync vacc days
+  const vc = document.getElementById('homeVaccDays');
+  const vcQ = document.getElementById('homeVaccQuick');
+  if (vc && vcQ) vcQ.textContent = vc.textContent;
+  // Sync mini score ring
+  const scoreNum = document.getElementById('zsNumber');
+  const miniNum = document.getElementById('zsNumberMini');
+  const miniRing = document.getElementById('zsRingMini');
+  if (scoreNum && miniNum && miniRing) {
+    const val = scoreNum.textContent;
+    if (val && val !== '—') {
+      miniNum.textContent = val;
+      miniRing.style.display = '';
+    }
+  }
+}
+
 function updateHomeZenState() {
   // v2.3: Zen state is now controlled by renderHomeContextAlerts (unified card)
   // This function is kept for backward compat but is a no-op — zen logic moved to unified renderer
@@ -9801,6 +9964,294 @@ function orderMedicalCards() {
 // ─────────────────────────────────────────
 function getPrimaryDoctor() {
   return doctors.find(d => d.primary) || doctors[0] || null;
+}
+
+
+// ── Symptom Checker ──
+
+const SYMPTOM_DB = [
+  {
+    id: 'fever-high',
+    keywords: ['fever','temperature','hot','burning up','102','103','104','105','high fever'],
+    severity: 'emergency',
+    title: 'High Fever',
+    condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
+    whatToDo: 'Give paracetamol (Calpol) only if prescribed by your doctor. Sponge with lukewarm water (never cold). Keep Ziva lightly dressed. Breastfeed frequently to prevent dehydration.',
+    precautions: 'Do NOT give aspirin. Do NOT use ice or cold water for sponging. Do NOT over-bundle. Monitor every 30 minutes.',
+    emergency: 'Seek immediate medical attention if: fever exceeds 102\u00B0F (under 6 months) or 104\u00B0F (over 6 months), lasts more than 24 hours, is accompanied by rash, stiff neck, difficulty breathing, or Ziva is unusually limp or unresponsive.',
+    callDoctor: true
+  },
+  {
+    id: 'fever-mild',
+    keywords: ['fever','temperature','warm','low grade','99','100','101','mild fever'],
+    severity: 'warning',
+    title: 'Mild Fever (99\u2013101\u00B0F)',
+    whatToDo: 'Monitor temperature every 2 hours. Keep Ziva comfortable and lightly dressed. Offer breast milk or fluids frequently. A mild fever after vaccination is normal for 1\u20132 days.',
+    precautions: 'Watch for escalation above 102\u00B0F. Note if fever came within 48 hours of vaccination (usually normal). Track other symptoms like rash, vomiting, or fussiness.',
+    emergency: 'Call doctor if fever persists beyond 48 hours, rises above 102\u00B0F, or is accompanied by lethargy, refusal to feed, or rash.',
+    callDoctor: false
+  },
+  {
+    id: 'vomiting',
+    keywords: ['vomiting','vomit','throwing up','projectile','spitting up','spit up'],
+    severity: 'warning',
+    title: 'Vomiting',
+    whatToDo: 'Keep Ziva upright for 20\u201330 minutes after feeding. Offer small, frequent feeds instead of large ones. If breastfeeding, continue normally. Avoid introducing new foods until vomiting stops.',
+    precautions: 'Track frequency \u2014 occasional spit-up is normal, repeated forceful vomiting is not. Watch for signs of dehydration: fewer wet diapers, dry mouth, no tears, sunken fontanelle.',
+    emergency: 'Seek immediate care if: vomiting is projectile or contains blood/bile (green), Ziva shows signs of dehydration, vomiting persists more than 12 hours, or is accompanied by high fever or lethargy.',
+    callDoctor: true
+  },
+  {
+    id: 'diarrhoea',
+    keywords: ['diarrhoea','diarrhea','loose stool','watery stool','loose motion','runny poop','frequent poop'],
+    severity: 'warning',
+    title: 'Diarrhoea / Loose Stools',
+    whatToDo: 'Continue breastfeeding \u2014 it helps fight infection. Offer ORS (Oral Rehydration Solution) in small sips if prescribed. Avoid fruit juices. Keep the diaper area clean and dry to prevent rash.',
+    precautions: 'Count wet diapers to monitor hydration (minimum 6/day is normal). Check for blood or mucus in stool. Avoid anti-diarrhoeal medicines unless prescribed. Wash hands thoroughly before handling food.',
+    emergency: 'Call doctor immediately if: blood or mucus in stool, fewer than 4 wet diapers in 24 hours, sunken eyes or fontanelle, Ziva is unusually lethargic, or diarrhoea lasts more than 48 hours.',
+    callDoctor: true
+  },
+  {
+    id: 'rash',
+    keywords: ['rash','spots','bumps','red skin','hives','eczema','patches','blotchy','itchy','redness'],
+    severity: 'warning',
+    title: 'Skin Rash',
+    whatToDo: 'Note when the rash appeared and what Ziva ate or was exposed to in the previous 24\u201348 hours. Keep the area clean and dry. Avoid scratching \u2014 use mittens if needed. Apply a mild, fragrance-free moisturizer for dry patches.',
+    precautions: 'If a new food was introduced recently, this could be a food allergy \u2014 stop that food and note it. Avoid harsh soaps or new detergents. Do NOT apply any cream without doctor\u2019s advice.',
+    emergency: 'Seek immediate care if: rash spreads rapidly, is accompanied by swelling of face/lips/tongue, difficulty breathing, or Ziva seems very unwell. Hives with breathing difficulty = possible anaphylaxis \u2014 call emergency immediately.',
+    callDoctor: true
+  },
+  {
+    id: 'cough-cold',
+    keywords: ['cough','cold','runny nose','stuffy nose','congestion','sneeze','sneezing','blocked nose','mucus','phlegm','nasal'],
+    severity: 'mild',
+    title: 'Cold / Cough / Congestion',
+    whatToDo: 'Use saline nasal drops (Nasivion Mini) before feeds to clear the nose. Run a humidifier in the room. Elevate the head end of the mattress slightly. Offer warm breast milk frequently. Gentle steam inhalation (hold Ziva in a steamy bathroom for 5\u201310 minutes).',
+    precautions: 'Do NOT give OTC cough or cold medicines to babies. Do NOT use Vicks or menthol products. Avoid exposure to cigarette smoke. Keep room well-ventilated but not too cold.',
+    emergency: 'Call doctor if: breathing becomes rapid or laboured (look for chest retractions), wheezing, blue tint around lips or nails, cough persists more than 7 days, or Ziva refuses to feed.',
+    callDoctor: false
+  },
+  {
+    id: 'breathing',
+    keywords: ['breathing','breathless','wheeze','wheezing','chest','gasping','noisy breathing','rapid breathing','laboured'],
+    severity: 'emergency',
+    title: 'Breathing Difficulty',
+    whatToDo: 'Keep Ziva upright. Clear the nose with saline drops and a nasal aspirator. Stay calm. Count breaths per minute (normal: 30\u201350 for 6\u201312 months).',
+    precautions: 'Look for: chest retracting with each breath, flaring nostrils, grunting sounds, blue tint around lips. These are signs of serious respiratory distress.',
+    emergency: 'THIS IS AN EMERGENCY if you see chest retractions, blue lips, or more than 60 breaths per minute. Call your doctor immediately or go to the nearest emergency room.',
+    callDoctor: true
+  },
+  {
+    id: 'not-eating',
+    keywords: ['not eating','refusing food','won\'t eat','lost appetite','no appetite','refusing feed','rejecting','fussy eating','food refusal','not hungry'],
+    severity: 'mild',
+    title: 'Refusing Food / Poor Appetite',
+    whatToDo: 'Don\u2019t force-feed. Offer small portions of favourite foods. Continue breastfeeding. Check for teething (swollen gums, drooling) which commonly reduces appetite. Try again in 30\u201360 minutes.',
+    precautions: 'Track how long the refusal lasts. 1\u20132 meals is normal during teething or minor illness. Check for mouth sores or thrush (white patches inside mouth). Monitor wet diapers for hydration.',
+    emergency: 'Call doctor if: refusal lasts more than 24 hours, combined with fever or lethargy, fewer wet diapers, or Ziva seems in pain while swallowing.',
+    callDoctor: false
+  },
+  {
+    id: 'teething',
+    keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
+    severity: 'mild',
+    title: 'Teething Discomfort',
+    whatToDo: 'Offer a clean, chilled teething ring. Gently massage gums with a clean finger. Cold fruit puree (chilled banana or apple) can soothe gums. Wipe drool frequently to prevent chin rash.',
+    precautions: 'Do NOT use teething gels containing benzocaine or lidocaine. Do NOT give homeopathic teething tablets. Mild fever (up to 100.4\u00B0F) can accompany teething but high fever is NOT caused by teething \u2014 investigate other causes.',
+    emergency: 'Call doctor if: fever exceeds 101\u00B0F (teething alone doesn\u2019t cause high fever), gums bleed or look infected, or Ziva is inconsolable for hours.',
+    callDoctor: false
+  },
+  {
+    id: 'constipation',
+    keywords: ['constipation','constipated','hard stool','no poop','straining','pellet','not pooping','painful poop','hasn\'t pooped'],
+    severity: 'mild',
+    title: 'Constipation',
+    whatToDo: 'Increase water intake between meals. Offer high-fibre foods: prune puree, pear, papaya, sweet potato. Gentle tummy massage in clockwise circles. Bicycle leg movements can help.',
+    precautions: 'Do NOT use suppositories or laxatives without doctor\u2019s advice. A breastfed baby may go 3\u20135 days without pooping \u2014 this is normal if stools are soft when they come. Hard, pellet-like stools are the real concern.',
+    emergency: 'Call doctor if: no stool for 5+ days with visible discomfort, blood in stool, abdomen is hard/distended, or Ziva is in obvious pain.',
+    callDoctor: false
+  },
+  {
+    id: 'crying-fussy',
+    keywords: ['crying','fussy','irritable','cranky','inconsolable','screaming','colic','unsettled','won\'t stop crying','fussiness'],
+    severity: 'mild',
+    title: 'Excessive Crying / Fussiness',
+    whatToDo: 'Check for common causes: hunger, wet diaper, tiredness, temperature (too hot/cold), teething. Try: swaddling, gentle rocking, white noise, skin-to-skin contact. Feed if due. Check for hair tourniquet (strand of hair wrapped around fingers/toes).',
+    precautions: 'Note when crying is worst \u2014 evening fussiness (5\u20138 PM) is common at this age. Track if it\u2019s associated with feeding (could be reflux or food sensitivity).',
+    emergency: 'Seek care if: crying is high-pitched and unlike normal crying, accompanied by fever or vomiting, Ziva draws legs up to abdomen (possible intussusception), or nothing calms her for more than 3 hours.',
+    callDoctor: false
+  },
+  {
+    id: 'eye-issue',
+    keywords: ['eye','eyes','watery eye','sticky eye','discharge','red eye','swollen eye','pink eye','conjunctivitis','crusty'],
+    severity: 'warning',
+    title: 'Eye Discharge / Redness',
+    whatToDo: 'Clean gently with a cotton ball soaked in cooled boiled water, wiping from inner to outer corner. Use a fresh cotton ball for each wipe and each eye. Breastmilk drops in the eye can help mild cases (2 drops, 3\u20134 times a day).',
+    precautions: 'Wash hands before and after cleaning. Do NOT share towels. A blocked tear duct (common in babies) causes watery/sticky discharge without redness and usually resolves by 12 months.',
+    emergency: 'Call doctor if: redness with thick yellow/green discharge (possible bacterial infection), swelling around the eye, Ziva rubs eyes constantly, or vision seems affected.',
+    callDoctor: true
+  },
+  {
+    id: 'ear-issue',
+    keywords: ['ear','ears','ear pain','pulling ear','tugging ear','ear infection','ear discharge','ear wax'],
+    severity: 'warning',
+    title: 'Ear Pain / Pulling',
+    whatToDo: 'Ear-pulling alone is often just exploration at this age. But if combined with fever, fussiness, or difficulty sleeping, it may indicate an ear infection. Keep Ziva\u2019s head elevated during sleep.',
+    precautions: 'Do NOT insert anything into the ear canal. Do NOT use ear drops without prescription. Note if ear-pulling started after a cold (ear infections often follow upper respiratory infections).',
+    emergency: 'Call doctor if: fluid or pus draining from the ear, ear-pulling with fever above 101\u00B0F, Ziva is inconsolable especially when lying down, or hearing seems affected.',
+    callDoctor: true
+  },
+  {
+    id: 'fall-injury',
+    keywords: ['fall','fell','hit head','bump','bruise','injury','dropped','tumble','rolled off','fell off'],
+    severity: 'emergency',
+    title: 'Fall / Head Injury',
+    whatToDo: 'Stay calm. Apply a cold compress (wrapped in cloth) to any bump for 10\u201315 minutes. Observe Ziva closely for the next 24 hours. Let her rest but check on her every 2 hours if sleeping.',
+    precautions: 'Minor bumps from rolling or crawling height are usually not serious. Watch for: unusual drowsiness, repeated vomiting, unequal pupils, difficulty waking, clear fluid from nose/ears.',
+    emergency: 'SEEK IMMEDIATE CARE if: loss of consciousness (even brief), vomiting more than once, seizure, clear fluid from nose/ears, unequal pupil size, Ziva is unusually sleepy and hard to wake, or the fall was from more than 3 feet.',
+    callDoctor: true
+  },
+  {
+    id: 'allergy',
+    keywords: ['allergy','allergic','swelling','swollen','hives','anaphylaxis','reaction','food allergy','lip swelling','tongue swelling'],
+    severity: 'emergency',
+    title: 'Allergic Reaction',
+    whatToDo: 'Stop the suspected food immediately. Note what was eaten and when symptoms started. For mild hives: cool compress can help. Do NOT give antihistamines without doctor\u2019s advice for babies.',
+    precautions: 'If a new food was introduced, mark it as \u201Cwatch\u201D in the app. Do NOT re-introduce the suspected food without medical guidance. Take a photo of any rash for the doctor.',
+    emergency: 'CALL EMERGENCY (or go to ER) IMMEDIATELY if: swelling of lips, tongue, or throat; difficulty breathing or swallowing; Ziva becomes limp or unresponsive. This could be anaphylaxis and requires immediate medical intervention.',
+    callDoctor: true
+  },
+  {
+    id: 'dehydration',
+    keywords: ['dehydration','dehydrated','dry mouth','no tears','sunken','fontanelle','fewer diapers','dark urine','dry lips','not peeing'],
+    severity: 'emergency',
+    title: 'Signs of Dehydration',
+    whatToDo: 'Offer breast milk or ORS frequently in small amounts. If breastfed, nurse more often. Keep track of wet diapers \u2014 aim for at least 6 in 24 hours.',
+    precautions: 'Signs to watch: dry mouth/lips, sunken fontanelle (soft spot on head), no tears when crying, dark concentrated urine, fewer than 4 wet diapers in 24 hours.',
+    emergency: 'Seek immediate medical attention if: sunken fontanelle, no wet diaper for 6+ hours, Ziva is lethargic or unusually sleepy, dry mouth with no tears, or skin doesn\u2019t spring back when gently pinched.',
+    callDoctor: true
+  },
+  {
+    id: 'sleep-issue',
+    keywords: ['not sleeping','sleep','insomnia','waking up','restless','won\'t sleep','night waking','sleep regression'],
+    severity: 'mild',
+    title: 'Sleep Disturbance',
+    whatToDo: 'Check for obvious causes: teething, hunger, wet diaper, temperature, overtiredness. Maintain a consistent bedtime routine. Ensure the room is dark, cool (24\u201326\u00B0C), and quiet.',
+    precautions: 'Sleep regressions are common at 6, 8\u201310, and 12 months and typically last 2\u20134 weeks. Developmental leaps (learning to crawl, stand) can disrupt sleep temporarily. Avoid screens 1 hour before bed.',
+    emergency: 'Call doctor if: sleep disruption is accompanied by fever, breathing issues, or inconsolable crying. Snoring or gasping during sleep should be evaluated.',
+    callDoctor: false
+  }
+];
+
+const SYMPTOM_QUICK_CHIPS = ['Fever','Cough/Cold','Rash','Vomiting','Not eating','Teething','Constipation','Crying a lot','Fall/injury'];
+
+function initSymptomChips() {
+  const el = document.getElementById('symptomQuickChips');
+  if (!el) return;
+  el.innerHTML = SYMPTOM_QUICK_CHIPS.map(s =>
+    '<span class="sc-quick-chip" onclick="document.getElementById(\'symptomInput\').value=\'' + s + '\';checkSymptoms()">' + s + '</span>'
+  ).join('');
+}
+
+function checkSymptoms() {
+  const input = document.getElementById('symptomInput');
+  const query = (input?.value || '').trim().toLowerCase();
+  if (!query) return;
+  const resultEl = document.getElementById('symptomResult');
+  if (!resultEl) return;
+
+  const mo = getAgeInMonths();
+  const matches = [];
+
+  SYMPTOM_DB.forEach(function(entry) {
+    var score = 0;
+    entry.keywords.forEach(function(kw) {
+      if (query.includes(kw.toLowerCase())) score += 2;
+      // Partial match
+      var words = kw.toLowerCase().split(' ');
+      words.forEach(function(w) {
+        if (w.length > 3 && query.includes(w)) score += 1;
+      });
+    });
+    if (score > 0) {
+      // Check condition function for severity upgrade
+      var finalSeverity = entry.severity;
+      if (entry.condition && entry.condition(query, mo)) {
+        finalSeverity = 'emergency';
+      }
+      matches.push({ entry: entry, score: score, severity: finalSeverity });
+    }
+  });
+
+  if (matches.length === 0) {
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about Ziva, always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML(false) + '</div>';
+    return;
+  }
+
+  // Sort: emergency first, then by score
+  var SEV_RANK = { emergency: 0, warning: 1, mild: 2 };
+  matches.sort(function(a, b) {
+    return (SEV_RANK[a.severity] || 2) - (SEV_RANK[b.severity] || 2) || b.score - a.score;
+  });
+
+  // Show top 2 matches max
+  var html = '';
+  var shown = matches.slice(0, 2);
+  var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
+
+  shown.forEach(function(m) {
+    var e = m.entry;
+    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
+    var sevLabel = m.severity === 'emergency' ? '\u{1F6A8} Emergency' : m.severity === 'warning' ? '\u26A0\uFE0F Monitor closely' : '\u2705 Usually manageable';
+
+    html += '<div class="sc-result ' + sevClass + '">';
+    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
+    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
+
+    html += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
+    html += '<div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
+
+    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
+    html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
+
+    if (e.emergency) {
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? '#c0392b' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section-body" style="font-weight:600;">' + escHtml(e.emergency) + '</div></div>';
+    }
+    html += '</div>';
+  });
+
+  // Show doctor contact if any match calls for it or is emergency
+  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
+    html += _scDoctorCardHTML(hasEmergency);
+  }
+
+  // Disclaimer
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts \u2014 you know Ziva best.</div>';
+
+  resultEl.innerHTML = html;
+}
+
+function _scDoctorCardHTML(isEmergency) {
+  var doc = getPrimaryDoctor();
+  if (!doc) {
+    return '<div class="sc-doctor-card"><span style="font-size:var(--fs-sm);color:var(--mid);">No doctor saved yet \u2014 </span><a href="#" onclick="event.preventDefault();openDoctorModal()" style="color:var(--tc-sage) !important;font-weight:600;">+ Add Doctor</a></div>';
+  }
+  var html = '<div class="sc-doctor-card">';
+  html += '<div style="flex:1;min-width:0;">';
+  html += '<div style="font-weight:700;color:var(--text);font-size:var(--fs-sm);">' + (isEmergency ? '\u{1F4DE} ' : '') + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
+  if (doc.phone) {
+    html += '<a href="tel:' + doc.phone + '" style="font-size:var(--fs-md);display:inline-block;margin-top:4px;">' + (isEmergency ? '\u260E\uFE0F Call Now: ' : '\u260E\uFE0F ') + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+  }
+  if (doc.address) {
+    html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:2px;">' + escHtml(doc.address) + '</div>';
+  }
+  html += '</div>';
+  if (doc.location) {
+    html += '<a href="' + doc.location + '" target="_blank" rel="noopener" style="font-size:var(--fs-xl);text-decoration:none;">📍</a>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function renderDoctorContact() {
@@ -14859,6 +15310,7 @@ function loadFeedingDay() {
   updateFeedingSaveBtn();
   updateMealSkipButtons();
   renderDietQuickPicker();
+  renderDietIntelBanner();
 }
 
 // ── Diet Quick Picker: per-meal frequent + same-as zones ──
@@ -14940,6 +15392,215 @@ function renderDietQuickPicker() {
   });
 }
 
+// ── Diet Intelligence Banner: reaction window + synergy suggestions ──
+
+function renderDietIntelBanner() {
+  const el = document.getElementById('dietIntelBanner');
+  if (!el) return;
+  const currentDate = document.getElementById('feedingDate')?.value || today();
+  if (currentDate !== today()) { el.innerHTML = ''; return; }
+
+  let html = '';
+
+  // 1. New food reaction window (3-day rule)
+  const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const recentIntros = (foods || []).filter(f => {
+    if (!f.date) return false;
+    const fDate = new Date(f.date);
+    return fDate >= threeDaysAgo && f.date !== today();
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (recentIntros.length > 0) {
+    const newest = recentIntros[0];
+    const introDate = new Date(newest.date);
+    const clearDate = new Date(introDate); clearDate.setDate(clearDate.getDate() + 3);
+    const daysLeft = Math.ceil((clearDate - new Date()) / 86400000);
+    if (daysLeft > 0) {
+      html += `<div class="dib-card dib-reaction">🆕 <strong>${escHtml(newest.name)}</strong> introduced ${formatDate(newest.date)} — watch window: <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</strong>. Avoid new foods until ${formatDate(toDateStr(clearDate))}.</div>`;
+    }
+  }
+
+  // 2. Proactive meal combo suggestions — based on actual meal archetypes from history
+  const todayEntry = feedingData[currentDate] || {};
+  const MEAL_KEYS = ['breakfast','lunch','dinner','snack'];
+  const todayFoodsPerMeal = {};
+  const emptyMeals = [];
+  MEAL_KEYS.forEach(m => {
+    const val = document.getElementById('meal-' + m)?.value || todayEntry[m] || '';
+    if (isRealMeal(val)) {
+      todayFoodsPerMeal[m] = val.split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+    } else if (val !== '—skipped—') {
+      emptyMeals.push(m);
+    }
+  });
+
+  const allTodayFoods = Object.values(todayFoodsPerMeal).flat();
+
+  if (emptyMeals.length > 0) {
+    const nextMeal = emptyMeals[0];
+    const templates = getMealTemplates(nextMeal);
+    const MEAL_LABELS_FULL = { breakfast:'breakfast', lunch:'lunch', dinner:'dinner', snack:'snack' };
+
+    if (templates.length > 0) {
+      // Pick templates that don't fully duplicate today's foods
+      const best = templates.filter(t => {
+        const overlap = t.foods.filter(f => allTodayFoods.some(tf => tf.includes(f) || f.includes(tf)));
+        return overlap.length < t.foods.length;
+      }).slice(0, 2);
+
+      if (best.length > 0) {
+        html += '<div class="dib-card dib-synergy">';
+        html += '<div style="font-weight:600;margin-bottom:6px;">\u{1F4A1} ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
+        best.forEach(function(t, idx) {
+          var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
+          var escapedCombo = escHtml(comboStr).replace(/'/g, "\\'");
+          html += '<div class="dib-combo-row" onclick="fillDietMeal(\'' + nextMeal + '\',\'' + escapedCombo + '\')" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
+          html += '<div style="flex:1;min-width:0;">';
+          html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + escHtml(t.label) + '</span>';
+          html += '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">';
+          t.foods.forEach(function(f) {
+            html += '<span class="dib-synergy-pill" style="pointer-events:none;">' + escHtml(capitalize(f)) + '</span>';
+          });
+          html += '</div>';
+          if (t.reason) html += '<div class="t-xs" style="color:var(--light);margin-top:2px;">' + escHtml(t.reason) + '</div>';
+          html += '</div>';
+          html += '<span style="color:var(--light);font-size:var(--fs-sm);">tap \u2192</span>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    }
+
+    // Fallback: if no templates, show pair-based synergy suggestions
+    if (templates.length === 0 && allTodayFoods.length > 0) {
+      var suggestions = [];
+      var seen = new Set();
+      var introducedSet = new Set((foods || []).map(function(f){ return f.name.toLowerCase().trim(); }));
+
+      allTodayFoods.forEach(function(food) {
+        FOOD_SYNERGIES.forEach(function(syn) {
+          var f1 = syn[0], f2 = syn[1], reason = syn[2], type = syn[3];
+          var match = null, partner = null;
+          if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
+          else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+          if (!match || !partner) return;
+          if (allTodayFoods.some(function(tf){ return tf.includes(partner) || partner.includes(tf); })) return;
+          if (![...introducedSet].some(function(f){ return f.includes(partner) || partner.includes(f); })) return;
+          if (seen.has(partner)) return;
+          seen.add(partner);
+          suggestions.push({ match: match, partner: partner, reason: reason, type: type });
+        });
+      });
+
+      if (suggestions.length > 0) {
+        var top = suggestions.slice(0, 3);
+        html += '<div class="dib-card dib-synergy">\u{1F517} For ' + MEAL_LABELS_FULL[nextMeal] + ', try pairing with today\'s meals: ';
+        top.forEach(function(s) {
+          var emoji = s.type === 'absorption' ? '\u{1F517}' : s.type === 'complete' ? '\u2728' : '\u{1F33F}';
+          html += '<span class="dib-synergy-pill" onclick="insertDietFood(\'' + nextMeal + '\',\'' + escHtml(s.partner).replace(/'/g, "\\'") + '\')" title="' + escHtml(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
+        });
+        html += '</div>';
+      }
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+// ── Meal Template Engine: mines feeding history for archetype combos ──
+
+function getMealTemplates(mealKey) {
+  var combos = {};
+  var dates = Object.keys(feedingData).sort();
+
+  dates.forEach(function(ds) {
+    var entry = feedingData[ds];
+    var val = entry && entry[mealKey];
+    if (!isRealMeal(val)) return;
+    var foodItems = val.split(/[,+]/).map(function(f){ return f.trim().toLowerCase(); }).filter(function(f){ return f.length > 1; });
+    if (foodItems.length < 2) return;
+
+    var bases = foodItems.map(function(f){ return _baseFoodName(f); });
+    var key = bases.slice().sort().join('|');
+
+    if (!combos[key]) {
+      combos[key] = { foods: bases, display: foodItems, count: 0, lastDate: ds };
+    }
+    combos[key].count++;
+    combos[key].lastDate = ds;
+  });
+
+  var sorted = Object.values(combos)
+    .sort(function(a, b) { return b.count - a.count || b.lastDate.localeCompare(a.lastDate); });
+
+  var templates = [];
+  var seenBases = new Set();
+
+  sorted.forEach(function(combo) {
+    var baseKey = combo.foods.slice().sort().join('|');
+    var isDup = false;
+    for (var seen of seenBases) {
+      var seenFoods = seen.split('|');
+      var overlap = combo.foods.filter(function(f){ return seenFoods.includes(f); }).length;
+      if (overlap >= Math.ceil(combo.foods.length * 0.6)) { isDup = true; break; }
+    }
+    if (isDup) return;
+    seenBases.add(baseKey);
+
+    var groups = new Set();
+    combo.foods.forEach(function(f) {
+      var cls = classifyFoodToGroup(f);
+      if (cls) groups.add(cls.groupLabel);
+    });
+
+    var label = '';
+    var reason = '';
+    var hasGrain = combo.foods.some(function(f){ return ['ragi','rice','oats','bajra','wheat'].some(function(g){ return f.includes(g); }); });
+    var hasDal = combo.foods.some(function(f){ return ['dal','moong','masoor','toor','khichdi'].some(function(g){ return f.includes(g); }); });
+    var hasFruit = combo.foods.some(function(f){ return ['banana','apple','pear','avocado','mango','blueberry','grape','orange','date','blackberry'].some(function(g){ return f.includes(g); }); });
+    var hasVeg = combo.foods.some(function(f){ return ['carrot','beetroot','spinach','moringa','drumstick','bottle gourd','lauki','beans','pumpkin','broccoli'].some(function(g){ return f.includes(g); }); });
+    var hasNut = combo.foods.some(function(f){ return ['almond','walnut','cashew','peanut'].some(function(g){ return f.includes(g); }); });
+    var hasFat = combo.foods.some(function(f){ return ['ghee','coconut oil','butter'].some(function(g){ return f.includes(g); }); });
+
+    if (hasGrain && hasDal && hasVeg) {
+      label = '\u{1F35A} Khichdi + veggies';
+      reason = 'Complete protein + iron + vitamins';
+    } else if (hasGrain && hasDal) {
+      label = '\u{1F35A} Grain + dal combo';
+      reason = 'Complete protein \u2014 amino acid balance';
+    } else if (hasGrain && hasNut && hasFruit) {
+      label = '\u{1F33E} Porridge + fruit + nuts';
+      reason = 'Energy + healthy fats + brain development';
+    } else if (hasGrain && hasFruit) {
+      label = '\u{1F33E} Porridge + fruit';
+      reason = 'Energy + vitamins + gentle on tummy';
+    } else if (hasFruit && combo.foods.length >= 3) {
+      label = '\u{1F353} Fruit bowl';
+      reason = 'Vitamins + hydration + antioxidants';
+    } else if (hasFruit && combo.foods.length >= 2) {
+      label = '\u{1F34E} Fruit mix';
+      reason = 'Variety of vitamins + easy digestion';
+    } else if (hasVeg && combo.foods.length >= 2) {
+      label = '\u{1F955} Veggie medley';
+      reason = 'Iron + fibre + micronutrients';
+    } else {
+      label = '\u{1F37D}\uFE0F ' + combo.count + '\u00D7 combo';
+      reason = groups.size + ' food group' + (groups.size !== 1 ? 's' : '');
+    }
+
+    templates.push({
+      foods: combo.display,
+      label: label,
+      reason: reason,
+      count: combo.count,
+      groups: groups.size,
+      lastDate: combo.lastDate
+    });
+  });
+
+  return templates.slice(0, 5);
+}
+
 // Get top foods for a specific meal slot
 function getMealSlotTopFoods(mealKey, n) {
   const counts = {};
@@ -14969,6 +15630,7 @@ function insertDietFood(meal, food) {
   // Hide the zone after inserting since meal now has content
   const zone = document.getElementById('dqp-' + meal);
   if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
+  renderDietIntelBanner();
   inp.focus();
 }
 
@@ -14980,6 +15642,7 @@ function fillDietMeal(meal, value) {
   // Hide the zone after filling
   const zone = document.getElementById('dqp-' + meal);
   if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
+  renderDietIntelBanner();
   inp.focus();
 }
 
@@ -15008,6 +15671,7 @@ function saveFeedingDay() {
   renderTips();
   renderFoods();
   renderDietStats();
+  renderDietIntelBanner();
   showPostSaveFlash(d);
 }
 
@@ -18951,7 +19615,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') renderMilestoneStats();
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -21896,6 +22560,75 @@ function computeAlerts() {
       tab: 'diet', dismissable: true
     });
   });
+
+  // ─── 18. DINNER→BEDTIME GAP WARNING ───
+  {
+    const todayEntry = feedingData[todayStr];
+    const dinnerTime = todayEntry && todayEntry.dinner_time;
+    if (dinnerTime && nowH >= 18) {
+      // Find tonight's bedtime — check sleep in-progress or last night's data
+      let bedtime = null;
+      const sip = load('ziva_sleep_inprogress', null);
+      if (sip && sip.type === 'night' && sip.startTime) {
+        bedtime = sip.startTime;
+      } else {
+        // Check if tonight's sleep already logged
+        const tonightSleep = sleepData.filter(s => s.type === 'night' && s.date === todayStr);
+        if (tonightSleep.length > 0) bedtime = tonightSleep[tonightSleep.length - 1].bedtime;
+      }
+      if (bedtime) {
+        const dinnerMins = parseInt(dinnerTime.split(':')[0]) * 60 + parseInt(dinnerTime.split(':')[1]);
+        const bedMins = parseInt(bedtime.split(':')[0]) * 60 + parseInt(bedtime.split(':')[1]);
+        const gapMins = bedMins >= dinnerMins ? bedMins - dinnerMins : (bedMins + 1440) - dinnerMins;
+        if (gapMins > 0 && gapMins < 60) {
+          const key = 'dinner-bed-gap-' + todayStr;
+          if (!isDismissed(key)) {
+            alerts.push({
+              id: 'dinner-bed-gap', key,
+              severity: 'watch', icon: '🕐',
+              title: 'Dinner→bed gap is only ' + gapMins + ' min',
+              body: 'Ziva had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
+              tip: 'Aim for 60–90 minutes between the last meal and bedtime. Tomorrow, try shifting dinner 15–20 minutes earlier.',
+              action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
+              tab: 'sleep', dismissable: true
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ─── 19. NEW FOOD REACTION WINDOW (3-day rule) ───
+  {
+    const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const recentIntros = (foods || []).filter(f => {
+      if (!f.date) return false;
+      const fDate = new Date(f.date);
+      return fDate >= threeDaysAgo && f.date !== todayStr;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (recentIntros.length > 0) {
+      const newest = recentIntros[0];
+      const introDate = new Date(newest.date);
+      const clearDate = new Date(introDate); clearDate.setDate(clearDate.getDate() + 3);
+      const daysLeft = Math.ceil((clearDate - new Date()) / 86400000);
+      if (daysLeft > 0) {
+        const key = 'reaction-window-' + sanitizeAlertKey(newest.name);
+        if (!isDismissed(key)) {
+          const clearDateStr = toDateStr(clearDate);
+          alerts.push({
+            id: 'reaction-window', key,
+            severity: 'info', icon: '🆕',
+            title: newest.name + ' — watch window (' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' left)',
+            body: newest.name + ' was introduced on ' + formatDate(newest.date) + '. Wait until ' + formatDate(clearDateStr) + ' before introducing another new food, so any reactions can be clearly attributed.',
+            tip: 'Watch for: rashes, unusual fussiness, vomiting, diarrhoea, or changes in poop within 48–72 hours of a new food.',
+            action: { label: 'View Foods', fn: 'switchTab("diet")' },
+            tab: 'diet', dismissable: true
+          });
+        }
+      }
+    }
+  }
 
   // ═══════════════════════════════════════
   // POSITIVE ALERTS (🎉)
@@ -25043,9 +25776,10 @@ function renderHomeMealProgress() {
     html += `</div>`;
   }
 
-  // Food query shortcut — accessible from Home, visible in Simple Mode
-  html += `<div style="margin-top:8px;text-align:center;">
+  // Food query + symptom checker shortcuts — accessible from Home, visible in Simple Mode
+  html += `<div style="margin-top:8px;text-align:center;display:flex;justify-content:center;gap:var(--sp-8);flex-wrap:wrap;">
     <span class="dqp-pill" style="font-size:var(--fs-xs);" onclick="openHomeFoodQuery()">🔍 Can I give this?</span>
+    <span class="dqp-pill" style="font-size:var(--fs-xs);background:var(--rose-light);color:var(--tc-caution);border-color:rgba(220,120,80,0.15);" onclick="openHomeSymptomChecker()">🩺 Symptom checker</span>
   </div>`;
 
   el.innerHTML = html;
@@ -25087,6 +25821,112 @@ function closeHomeFoodQuery() {
   const el = document.getElementById('homeFoodQueryOverlay');
   if (el) el.remove();
   document.body.style.overflow = '';
+}
+
+function openHomeSymptomChecker() {
+  const existing = document.getElementById('homeSymptomOverlay');
+  if (existing) { existing.remove(); document.body.style.overflow = ''; return; }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'homeSymptomOverlay';
+  overlay.className = 'modal-overlay open';
+  overlay.style.overscrollBehavior = 'contain';
+
+  // Build quick chips HTML
+  const chipsHtml = SYMPTOM_QUICK_CHIPS.map(s =>
+    '<span class="sc-quick-chip" onclick="document.getElementById(\'homeSymptomInput\').value=\'' + s + '\';runHomeSymptomCheck()">' + s + '</span>'
+  ).join('');
+
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:420px;max-height:85vh;overflow-y:auto;padding:20px;">
+      <div class="ql-modal-header">
+        <div class="ql-modal-title">🩺 Symptom Checker</div>
+        <button class="ql-modal-close" onclick="closeHomeSymptomChecker()">✕</button>
+      </div>
+      <div>
+        <div style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:10px;line-height:var(--lh-relaxed);">Describe what you're noticing — get age-appropriate guidance and know when to call the doctor.</div>
+        <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-bottom:10px;">
+          <input type="text" id="homeSymptomInput" placeholder="e.g. fever, rash, not eating..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')runHomeSymptomCheck()">
+          <button class="btn btn-sage" onclick="runHomeSymptomCheck()" style="min-width:70px;">Check</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--sp-4);margin-bottom:10px;">${chipsHtml}</div>
+        <div id="homeSymptomResult"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+  overlay.onclick = e => { if (e.target === overlay) closeHomeSymptomChecker(); };
+  setTimeout(() => document.getElementById('homeSymptomInput')?.focus(), 200);
+}
+
+function closeHomeSymptomChecker() {
+  const el = document.getElementById('homeSymptomOverlay');
+  if (el) el.remove();
+  document.body.style.overflow = '';
+}
+
+function runHomeSymptomCheck() {
+  const input = document.getElementById('homeSymptomInput');
+  const query = (input?.value || '').trim();
+  if (!query) return;
+  const resultEl = document.getElementById('homeSymptomResult');
+  if (!resultEl) return;
+
+  // Run the symptom matching logic directly
+  const queryLower = query.toLowerCase();
+  const mo = getAgeInMonths();
+  const matches = [];
+
+  SYMPTOM_DB.forEach(function(entry) {
+    var score = 0;
+    entry.keywords.forEach(function(kw) {
+      if (queryLower.includes(kw.toLowerCase())) score += 2;
+      var words = kw.toLowerCase().split(' ');
+      words.forEach(function(w) {
+        if (w.length > 3 && queryLower.includes(w)) score += 1;
+      });
+    });
+    if (score > 0) {
+      var finalSeverity = entry.severity;
+      if (entry.condition && entry.condition(queryLower, mo)) finalSeverity = 'emergency';
+      matches.push({ entry: entry, score: score, severity: finalSeverity });
+    }
+  });
+
+  if (matches.length === 0) {
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing differently, or tap the chips above. If you\'re concerned, always call your paediatrician.</div>' + _scDoctorCardHTML(false) + '</div>';
+    return;
+  }
+
+  var SEV_RANK = { emergency: 0, warning: 1, mild: 2 };
+  matches.sort(function(a, b) { return (SEV_RANK[a.severity] || 2) - (SEV_RANK[b.severity] || 2) || b.score - a.score; });
+
+  var html = '';
+  var shown = matches.slice(0, 2);
+  var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
+
+  shown.forEach(function(m) {
+    var e = m.entry;
+    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
+    var sevLabel = m.severity === 'emergency' ? '\u{1F6A8} Emergency' : m.severity === 'warning' ? '\u26A0\uFE0F Monitor closely' : '\u2705 Usually manageable';
+    html += '<div class="sc-result ' + sevClass + '">';
+    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
+    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
+    html += '<div class="sc-section"><div class="sc-section-title">What to do</div><div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
+    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div><div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
+    if (e.emergency) {
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? '#c0392b' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section-body" style="font-weight:600;">' + escHtml(e.emergency) + '</div></div>';
+    }
+    html += '</div>';
+  });
+
+  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
+    html += _scDoctorCardHTML(hasEmergency);
+  }
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician.</div>';
+  resultEl.innerHTML = html;
 }
 
 function runHomeFoodQuery() {
