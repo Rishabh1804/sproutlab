@@ -2836,24 +2836,24 @@ body.simple-mode .ins-card-alert-intel,
   background:var(--surface); border-radius:var(--r-xl);
   padding:4px; margin-bottom:var(--sp-24);
   box-shadow:0 4px 20px var(--card-shadow);
-  overflow:hidden;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
 }
 .tab-bar::-webkit-scrollbar { display:none; }
 
 /* ── Track Tab Sub-Navigation ── */
 .track-sub-bar {
-  display:flex; gap:var(--sp-4); padding:6px 12px; overflow:hidden;
+  display:flex; gap:var(--sp-4); padding:6px 12px; overflow-x:auto; -webkit-overflow-scrolling:touch;
   background:var(--cream); position:sticky; top:0; z-index:20;
   border-bottom:1px solid var(--border-subtle);
 }
 .track-sub-bar::-webkit-scrollbar { display:none; }
 .track-sub-btn {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
-  padding:8px 4px; border-radius:var(--r-full);
+  flex:1 0 auto; display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
+  padding:8px 10px; border-radius:var(--r-full);
   font-size:var(--fs-sm); font-weight:600; white-space:nowrap;
   cursor:pointer; transition:all var(--ease-fast);
   border:1.5px solid transparent; background:transparent; color:var(--mid);
-  position:relative;
+  position:relative; min-width:0;
 }
 .track-sub-btn:active { transform:scale(0.96); }
 .track-sub-btn.active { background:var(--blush); border-color:var(--rose); color:var(--tc-rose); font-weight:700; box-shadow:0 1px 6px rgba(242,168,184,0.2); }
@@ -2862,13 +2862,13 @@ body.simple-mode .ins-card-alert-intel,
 .track-sub-panel { display:none; }
 .track-sub-panel.active { display:block; }
 .tab-btn {
-  flex:1; padding:8px 2px 6px; border:none; border-radius:var(--r-lg);
+  flex:1 0 auto; padding:8px 8px 6px; border:none; border-radius:var(--r-lg);
   background:transparent; cursor:pointer;
   font-family:'Nunito', sans-serif; font-size:var(--fs-xs); font-weight:700;
   color:var(--mid); transition:all var(--ease-med); letter-spacing:var(--ls-normal);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-4);
-  min-height:48px; min-width:0;
-  text-transform:uppercase;
+  min-height:48px; min-width:56px;
+  text-transform:uppercase; white-space:nowrap;
 }
 .tab-btn:hover { background:var(--blush); color:var(--tc-rose); }
 .tab-btn.active {
