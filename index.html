@@ -2412,6 +2412,19 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .si-reg-cause-text { flex:1; color:var(--mid); }
 [data-theme="dark"] .si-reg-cause { background:rgba(240,180,80,0.04); }
 .si-sub-label { font-size:var(--fs-2xs); color:var(--light); text-transform:uppercase; letter-spacing:var(--ls-wide); }
+/* ── Poop Intelligence (.pi-*) ── */
+.pi-color-timeline { display:flex; gap:3px; flex-wrap:wrap; margin:var(--sp-8) 0; }
+.pi-color-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,0.08); flex-shrink:0; }
+.pi-watch-progress { height:8px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; margin:var(--sp-4) 0; }
+.pi-watch-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
+.pi-amount-bar { display:flex; align-items:center; gap:var(--sp-4); }
+.pi-amount-track { flex:1; height:12px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.pi-amount-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; background:var(--tc-amber); }
+.pi-symptom-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; display:inline-block; }
+.pi-symptom-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+[data-theme="dark"] .pi-color-dot { border-color:rgba(255,255,255,0.1); }
+[data-theme="dark"] .pi-watch-progress { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .pi-amount-track { background:rgba(255,255,255,0.06); }
 
 /* ── Episode Entry Edit System ── */
 .ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:4px; padding-right:4px; margin:0 -4px; }
@@ -6161,13 +6174,111 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
-      <!-- ─── POOP INTELLIGENCE (placeholder) ─── -->
+      <!-- ─── POOP INTELLIGENCE ─── -->
       <div class="home-section-label sec-t3 col-full">Poop Intelligence</div>
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Coming Soon</div>
+
+      <!-- 1. Consistency Trend -->
+      <div class="card card-daily col-full" id="infoPoopConsistencyCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopConsistencyBody','infoPoopConsistencyChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-chart"/></svg></div> Consistency Trend</div>
+          <span class="collapse-chevron" id="infoPoopConsistencyChevron">▾</span>
         </div>
-        <div class="t-sm t-light mt-4">Consistency trends, frequency patterns, food-poop delay mapping, new food watch windows, and color anomaly detection.</div>
+        <div id="infoPoopConsistencySummary" class="mt-4"></div>
+        <div id="infoPoopConsistencyBody" class="collapse-body" style="display:none;">
+          <div id="infoPoopConsistencyBars" class="mt-4"></div>
+          <div id="infoPoopConsistencyInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 2. Frequency Pattern -->
+      <div class="card card-daily col-full" id="infoPoopFrequencyCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopFrequencyBody','infoPoopFrequencyChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-clock"/></svg></div> Frequency Pattern</div>
+          <span class="collapse-chevron" id="infoPoopFrequencyChevron">▾</span>
+        </div>
+        <div id="infoPoopFrequencySummary" class="mt-4"></div>
+        <div id="infoPoopFrequencyBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopFrequencyBars" class="mt-4"></div>
+          <div id="infoPoopFrequencyInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 3. Food-Poop Delay -->
+      <div class="card card-daily col-full" id="infoPoopFoodDelayCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopFoodDelayBody','infoPoopFoodDelayChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-timer"/></svg></div> Food-Poop Delay</div>
+          <span class="collapse-chevron" id="infoPoopFoodDelayChevron">▾</span>
+        </div>
+        <div id="infoPoopFoodDelaySummary" class="mt-4"></div>
+        <div id="infoPoopFoodDelayBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopFoodDelayList" class="mt-4"></div>
+          <div id="infoPoopFoodDelayInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 4. New Food Watch -->
+      <div class="card card-daily col-full" id="infoPoopFoodWatchCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopFoodWatchBody','infoPoopFoodWatchChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-scope"/></svg></div> New Food Watch</div>
+          <span class="collapse-chevron" id="infoPoopFoodWatchChevron">▾</span>
+        </div>
+        <div id="infoPoopFoodWatchSummary" class="mt-4"></div>
+        <div id="infoPoopFoodWatchBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopFoodWatchList" class="mt-4"></div>
+          <div id="infoPoopFoodWatchInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 5. Color Anomaly -->
+      <div class="card card-daily col-full" id="infoPoopColorCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopColorBody','infoPoopColorChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-palette"/></svg></div> Color Anomaly</div>
+          <span class="collapse-chevron" id="infoPoopColorChevron">▾</span>
+        </div>
+        <div id="infoPoopColorSummary" class="mt-4"></div>
+        <div id="infoPoopColorBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopColorTimeline" class="mt-4"></div>
+          <div id="infoPoopColorInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 6. Amount Trend -->
+      <div class="card card-daily col-full" id="infoPoopAmountCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopAmountBody','infoPoopAmountChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bars"/></svg></div> Amount Trend</div>
+          <span class="collapse-chevron" id="infoPoopAmountChevron">▾</span>
+        </div>
+        <div id="infoPoopAmountSummary" class="mt-4"></div>
+        <div id="infoPoopAmountBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopAmountBars" class="mt-4"></div>
+          <div id="infoPoopAmountInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 7. Symptom Tracker -->
+      <div class="card card-daily col-full" id="infoPoopSymptomsCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopSymptomsBody','infoPoopSymptomsChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-warn"/></svg></div> Symptom Tracker</div>
+          <span class="collapse-chevron" id="infoPoopSymptomsChevron">▾</span>
+        </div>
+        <div id="infoPoopSymptomsSummary" class="mt-4"></div>
+        <div id="infoPoopSymptomsBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopSymptomsTimeline" class="mt-4"></div>
+          <div id="infoPoopSymptomsInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- 8. Poop Score Report -->
+      <div class="card card-daily col-full" id="infoPoopReportCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoPoopReportBody','infoPoopReportChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Poop Score Report</div>
+          <span class="collapse-chevron" id="infoPoopReportChevron">▾</span>
+        </div>
+        <div id="infoPoopReportSummary" class="mt-4"></div>
+        <div id="infoPoopReportBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoPoopReportDetails" class="mt-4"></div>
+          <div id="infoPoopReportInsights" class="mt-8"></div>
+        </div>
       </div>
 
       <!-- ─── MEDICAL INTELLIGENCE ─── -->
@@ -31187,6 +31298,1162 @@ function renderInfoSleepRegression() {
   }
 }
 
+// ════════════════════════════════════════
+// POOP INTELLIGENCE — 8 Features
+// ════════════════════════════════════════
+
+// ── Helper: gather poop entries for a window ──
+function _piGetPoops(windowDays) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - windowDays);
+  const cutoffStr = toDateStr(cutoff);
+  return poopData.filter(p => p.date && p.date >= cutoffStr).sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
+}
+
+// ── Helper: poop color hex values ──
+const POOP_COLOR_HEX = {
+  yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
+  orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
+};
+
+// ── Feature 1: Consistency Trend ──
+
+function computeConsistencyTrend(windowDays) {
+  windowDays = windowDays || 14;
+  const entries = _piGetPoops(windowDays);
+  const CON_SCALE = { runny: 1, loose: 1, watery: 1, soft: 2, normal: 3, hard: 4, pellets: 5, pellet: 5 };
+  // Group by date
+  const dayMap = {};
+  entries.forEach(p => {
+    if (!dayMap[p.date]) dayMap[p.date] = [];
+    dayMap[p.date].push(p);
+  });
+  const days = Object.keys(dayMap).sort();
+  if (days.length < 5) return { insufficient: true, count: days.length, needed: 5 };
+
+  // Daily avg consistency score
+  const dailyScores = days.map(d => {
+    const vals = dayMap[d].map(p => CON_SCALE[p.consistency] ?? 3);
+    const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+    return { dateStr: d, avg, count: vals.length };
+  });
+
+  // Split into recent 7d vs previous 7d
+  const recent = dailyScores.slice(-7);
+  const previous = dailyScores.slice(0, -7);
+  const recentAvg = recent.reduce((s, d) => s + d.avg, 0) / recent.length;
+  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : recentAvg;
+
+  // Trend direction
+  const delta = recentAvg - prevAvg;
+  let trend = 'stable';
+  if (delta >= 0.5) trend = 'firming';
+  else if (delta <= -0.5) trend = 'loosening';
+
+  // Std deviation for "mixed" detection
+  const allVals = dailyScores.map(d => d.avg);
+  const mean = allVals.reduce((s, v) => s + v, 0) / allVals.length;
+  const stdDev = Math.sqrt(allVals.reduce((s, v) => s + (v - mean) * (v - mean), 0) / allVals.length);
+  if (stdDev > 1.5) trend = 'mixed';
+
+  // Alert: 5+ consecutive days firming/loosening
+  let consecutiveFirm = 0, consecutiveLoose = 0, firmAlert = false, looseAlert = false;
+  dailyScores.forEach(d => {
+    if (d.avg >= 3.5) { consecutiveFirm++; consecutiveLoose = 0; }
+    else if (d.avg <= 2.0) { consecutiveLoose++; consecutiveFirm = 0; }
+    else { consecutiveFirm = 0; consecutiveLoose = 0; }
+    if (consecutiveFirm >= 5) firmAlert = true;
+    if (consecutiveLoose >= 5) looseAlert = true;
+  });
+
+  // Most common consistency
+  const conCounts = {};
+  entries.forEach(p => { conCounts[p.consistency] = (conCounts[p.consistency] || 0) + 1; });
+  const mostCommon = Object.entries(conCounts).sort((a, b) => b[1] - a[1])[0];
+
+  // Consistency color map for bars
+  const CON_COLORS = { runny: 'var(--tc-sky)', loose: 'var(--tc-sky)', watery: 'var(--tc-sky)', soft: 'var(--tc-sage)', normal: '#6fcf97', hard: 'var(--tc-amber)', pellets: 'var(--tc-danger)', pellet: 'var(--tc-danger)' };
+
+  // Per-day consistency distribution (for stacked bar)
+  const dayDistributions = dailyScores.map(d => {
+    const dist = {};
+    dayMap[d.dateStr].forEach(p => { dist[p.consistency] = (dist[p.consistency] || 0) + 1; });
+    const total = dayMap[d.dateStr].length;
+    return { dateStr: d.dateStr, dist, total };
+  });
+
+  const CON_LABEL = { runny: 'Runny', loose: 'Loose', watery: 'Watery', soft: 'Soft', normal: 'Normal', hard: 'Hard', pellets: 'Pellets', pellet: 'Pellets' };
+  const avgLabel = recentAvg <= 1.5 ? 'Runny' : recentAvg <= 2.5 ? 'Soft' : recentAvg <= 3.5 ? 'Normal' : recentAvg <= 4.5 ? 'Hard' : 'Pellets';
+
+  return {
+    insufficient: false, trend, recentAvg: +recentAvg.toFixed(1), prevAvg: +prevAvg.toFixed(1),
+    avgLabel, mostCommon: mostCommon ? mostCommon[0] : 'normal', stdDev: +stdDev.toFixed(1),
+    firmAlert, looseAlert, dailyScores, dayDistributions, conCounts,
+    CON_COLORS, CON_LABEL, count: days.length
+  };
+}
+
+function renderInfoPoopConsistencyTrend() {
+  const summaryEl = document.getElementById('infoPoopConsistencySummary');
+  const barsEl = document.getElementById('infoPoopConsistencyBars');
+  const insightEl = document.getElementById('infoPoopConsistencyInsights');
+  if (!summaryEl) return;
+
+  const data = computeConsistencyTrend();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need 5 days of data (have ' + data.count + ')</div>';
+    if (barsEl) barsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const trendIcon = data.trend === 'firming' ? '↗' : data.trend === 'loosening' ? '↘' : data.trend === 'mixed' ? '↕' : '→';
+  const trendColor = (data.trend === 'firming' || data.trend === 'loosening') ? 'var(--tc-amber)' : data.trend === 'mixed' ? 'var(--tc-caution)' : 'var(--tc-sage)';
+  const trendLabel = data.trend.charAt(0).toUpperCase() + data.trend.slice(1);
+  summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + trendColor + ';font-weight:600;">' + trendIcon + ' ' + trendLabel + '</span> · avg consistency: <strong>' + data.avgLabel + '</strong></div>';
+
+  if (barsEl) {
+    let html = '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Daily consistency</div>';
+    const displayDays = data.dayDistributions.slice(-10);
+    const conOrder = ['runny', 'watery', 'loose', 'soft', 'normal', 'hard', 'pellets', 'pellet'];
+    displayDays.forEach(d => {
+      const dayLabel = formatDate(d.dateStr).slice(0, 6);
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + dayLabel + '</div>';
+      html += '<div class="si-bar-track" style="display:flex;overflow:hidden;">';
+      conOrder.forEach(con => {
+        const count = d.dist[con] || 0;
+        if (count === 0) return;
+        const pct = (count / d.total) * 100;
+        html += '<div style="width:' + pct + '%;height:100%;background:' + data.CON_COLORS[con] + ';"></div>';
+      });
+      html += '</div>';
+      html += '<div class="si-bar-val" style="font-size:var(--fs-2xs);color:var(--light);">' + d.total + '</div>';
+      html += '</div>';
+    });
+
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + data.recentAvg + '</div><div class="si-stat-label">Recent avg</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--light);">' + data.prevAvg + '</div><div class="si-stat-label">Previous avg</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + (data.CON_LABEL[data.mostCommon] || data.mostCommon) + '</div><div class="si-stat-label">Most common</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.count + '</div><div class="si-stat-label">Days tracked</div></div>';
+    html += '</div>';
+    barsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.firmAlert) {
+      html += '<div class="si-insight si-insight-warn">Consistency has been firming over the past week. Try more fluids and fibre-rich foods (pear, prune, oats).</div>';
+    } else if (data.looseAlert) {
+      html += '<div class="si-insight si-insight-warn">Stools have been getting looser. Check for new foods, teething, or possible infection.</div>';
+    } else if (data.trend === 'mixed') {
+      html += '<div class="si-insight si-insight-info">Consistency has been quite variable — check if specific foods are causing swings.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-good">Consistency has been stable and healthy — great digestive balance.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 2: Frequency Pattern ──
+
+function computePoopFrequencyPattern(windowDays) {
+  windowDays = windowDays || 14;
+  const entries = _piGetPoops(windowDays);
+  // Build daily counts
+  const dayCounts = {};
+  const dayTimes = {};
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    dayCounts[ds] = 0;
+    dayTimes[ds] = [];
+  }
+  entries.forEach(p => {
+    if (dayCounts[p.date] !== undefined) {
+      dayCounts[p.date]++;
+      if (p.time) dayTimes[p.date].push(p.time);
+    }
+  });
+  const days = Object.keys(dayCounts).sort();
+  const counts = days.map(d => dayCounts[d]);
+  const daysWithData = counts.filter(c => c > 0).length;
+  if (daysWithData < 5) return { insufficient: true, count: daysWithData, needed: 5 };
+
+  // Averages
+  const avg7d = counts.slice(-7).reduce((s, v) => s + v, 0) / 7;
+  const avg14d = counts.reduce((s, v) => s + v, 0) / windowDays;
+
+  // Time-of-day buckets
+  const buckets = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+  Object.values(dayTimes).forEach(times => {
+    times.forEach(t => {
+      const h = parseInt(t.split(':')[0], 10);
+      if (h >= 5 && h < 11) buckets.morning++;
+      else if (h >= 11 && h < 16) buckets.afternoon++;
+      else if (h >= 16 && h < 21) buckets.evening++;
+      else buckets.night++;
+    });
+  });
+  const totalBucket = Object.values(buckets).reduce((s, v) => s + v, 0);
+  const mostCommonTime = Object.entries(buckets).sort((a, b) => b[1] - a[1])[0][0];
+
+  // Variability
+  const meanCount = counts.reduce((s, v) => s + v, 0) / counts.length;
+  const stdDev = Math.sqrt(counts.reduce((s, v) => s + (v - meanCount) * (v - meanCount), 0) / counts.length);
+  const zeroDays = counts.filter(c => c === 0).length;
+  const regularity = Math.max(0, Math.min(100, Math.round(100 - stdDev * 20 - zeroDays * 10)));
+
+  // Longest gap
+  let longestGapH = 0;
+  for (let i = 1; i < entries.length; i++) {
+    const prev = new Date(entries[i - 1].date + 'T' + (entries[i - 1].time || '12:00'));
+    const curr = new Date(entries[i].date + 'T' + (entries[i].time || '12:00'));
+    const gapH = (curr - prev) / 3600000;
+    if (gapH > longestGapH) longestGapH = gapH;
+  }
+
+  // Alerts
+  const lastPoop = getLastPoop();
+  let gapAlert = false, gapHours = 0;
+  if (lastPoop) {
+    const lastTs = new Date(lastPoop.date + 'T' + (lastPoop.time || '12:00'));
+    gapHours = Math.round((Date.now() - lastTs.getTime()) / 3600000);
+    if (gapHours >= 48) gapAlert = true;
+  }
+
+  const todayCount = dayCounts[today()] || 0;
+  const highCountAlert = todayCount >= 4;
+
+  const freqTrend = avg14d > 0 && avg7d < avg14d - 0.5 ? 'dropping' : avg7d > avg14d + 0.5 ? 'increasing' : 'stable';
+
+  return {
+    insufficient: false, avg7d: +avg7d.toFixed(1), avg14d: +avg14d.toFixed(1),
+    buckets, totalBucket, mostCommonTime, regularity, longestGapH: Math.round(longestGapH),
+    zeroDays, gapAlert, gapHours, highCountAlert, todayCount, freqTrend,
+    dayCounts, days, count: daysWithData
+  };
+}
+
+function renderInfoPoopFrequency() {
+  const summaryEl = document.getElementById('infoPoopFrequencySummary');
+  const barsEl = document.getElementById('infoPoopFrequencyBars');
+  const insightEl = document.getElementById('infoPoopFrequencyInsights');
+  if (!summaryEl) return;
+
+  const data = computePoopFrequencyPattern();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need 5 days of data (have ' + data.count + ')</div>';
+    if (barsEl) barsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const timeLabel = data.mostCommonTime.charAt(0).toUpperCase() + data.mostCommonTime.slice(1);
+  summaryEl.innerHTML = '<div class="t-sm">Avg <strong>' + data.avg7d + '</strong>/day · Most common: <strong>' + timeLabel + '</strong> · Regularity: <strong>' + data.regularity + '%</strong></div>';
+
+  if (barsEl) {
+    let html = '';
+    // Time-of-day distribution
+    html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Time of day</div>';
+    const bucketLabels = { morning: '☀️ Morning', afternoon: '🌤 Afternoon', evening: '🌅 Evening', night: '🌙 Night' };
+    html += '<div class="si-stat-grid">';
+    Object.entries(data.buckets).forEach(([k, v]) => {
+      const pct = data.totalBucket > 0 ? Math.round((v / data.totalBucket) * 100) : 0;
+      html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + pct + '%</div><div class="si-stat-label">' + bucketLabels[k] + '</div></div>';
+    });
+    html += '</div>';
+
+    // Daily count bars
+    html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Daily poops</div>';
+    const displayDays = data.days.slice(-10);
+    const maxCount = Math.max(...displayDays.map(d => data.dayCounts[d]), 1);
+    displayDays.forEach(d => {
+      const count = data.dayCounts[d];
+      const pct = Math.max(4, (count / maxCount) * 100);
+      const color = count === 0 ? 'var(--tc-danger)' : count >= 4 ? 'var(--tc-caution)' : 'var(--tc-amber)';
+      const dayLabel = formatDate(d).slice(0, 6);
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + dayLabel + '</div>';
+      html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + pct + '%;background:' + color + ';"></div></div>';
+      html += '<div class="si-bar-val" style="color:' + color + ';">' + count + '</div>';
+      html += '</div>';
+    });
+
+    // Stats
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.avg7d + '</div><div class="si-stat-label">7d avg</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.avg14d + '</div><div class="si-stat-label">14d avg</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.longestGapH + 'h</div><div class="si-stat-label">Longest gap</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.zeroDays + '</div><div class="si-stat-label">Zero days</div></div>';
+    html += '</div>';
+    barsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.gapAlert) {
+      html += '<div class="si-insight si-insight-warn">It\'s been ' + data.gapHours + ' hours since the last poop. Watch for straining or discomfort.</div>';
+    }
+    if (data.highCountAlert) {
+      html += '<div class="si-insight si-insight-warn">' + data.todayCount + ' poops today — monitor for diarrhoea signs.</div>';
+    }
+    if (data.freqTrend === 'dropping') {
+      html += '<div class="si-insight si-insight-info">Frequency has dropped from ' + data.avg14d + ' to ' + data.avg7d + '/day. Could be dietary — check fibre intake.</div>';
+    }
+    if (data.regularity >= 70 && !data.gapAlert && !data.highCountAlert) {
+      html += '<div class="si-insight si-insight-good">Ziva has a regular pattern — most poops happen in the ' + data.mostCommonTime + '.</div>';
+    } else if (data.regularity < 50 && !data.gapAlert && !data.highCountAlert) {
+      html += '<div class="si-insight si-insight-info">Poop timing is unpredictable. This is normal at this age but watch for discomfort.</div>';
+    } else if (!data.gapAlert && !data.highCountAlert && data.freqTrend !== 'dropping') {
+      html += '<div class="si-insight si-insight-info">Moderate regularity — Ziva\'s pattern is developing. Avg ' + data.avg7d + '/day.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 3: Food-Poop Delay ──
+
+function computeFoodPoopDelay(windowDays) {
+  windowDays = windowDays || 30;
+  const correlations = computeFoodPoopCorrelations();
+  if (!correlations || !correlations.results || correlations.results.length === 0) {
+    return { insufficient: true, reason: 'no-correlations' };
+  }
+
+  const flagged = correlations.results.filter(r => r.status === 'watch' || r.status === 'suspected' || r.status === 'likely');
+  if (flagged.length === 0) return { insufficient: true, reason: 'no-flagged' };
+
+  const MEAL_ESTIMATES = { breakfast: '08:00', lunch: '12:00', dinner: '18:00', snack: '15:00' };
+  const foodDelays = [];
+  let allDelays = [];
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - windowDays);
+  const cutoffStr = toDateStr(cutoffDate);
+
+  flagged.forEach(corr => {
+    const foodName = corr.food;
+    const delays = [];
+    const consistencies = {};
+
+    // Find all dates food was eaten (within window)
+    Object.keys(feedingData).forEach(dateStr => {
+      if (dateStr < cutoffStr) return;
+      const entry = feedingData[dateStr];
+      if (!entry) return;
+      let foundMeal = null;
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+        const val = entry[meal];
+        if (!val) return;
+        const normalized = val.split(/[,+]/).map(f => normalizeFoodName(f.trim()));
+        if (normalized.includes(normalizeFoodName(foodName))) foundMeal = meal;
+      });
+      if (!foundMeal) return;
+
+      // Estimate food time
+      const foodTime = entry[foundMeal + 'Time'] || MEAL_ESTIMATES[foundMeal];
+
+      // Find poops 6–48h after
+      const foodTs = new Date(dateStr + 'T' + foodTime).getTime();
+      const minTs = foodTs + 6 * 3600000;
+      const maxTs = foodTs + 48 * 3600000;
+
+      poopData.forEach(p => {
+        if (!p.date) return;
+        const poopTs = new Date(p.date + 'T' + (p.time || '12:00')).getTime();
+        if (poopTs >= minTs && poopTs <= maxTs) {
+          const delayH = (poopTs - foodTs) / 3600000;
+          delays.push(delayH);
+          allDelays.push(delayH);
+          if (p.consistency) consistencies[p.consistency] = (consistencies[p.consistency] || 0) + 1;
+        }
+      });
+    });
+
+    if (delays.length >= 2) {
+      const avgDelay = delays.reduce((s, v) => s + v, 0) / delays.length;
+      const minDelay = Math.min(...delays);
+      const maxDelay = Math.max(...delays);
+      const usualCon = Object.entries(consistencies).sort((a, b) => b[1] - a[1])[0];
+      foodDelays.push({
+        food: foodName, avgDelayH: +avgDelay.toFixed(1), minDelayH: +minDelay.toFixed(1),
+        maxDelayH: +maxDelay.toFixed(1), usualConsistency: usualCon ? usualCon[0] : 'normal',
+        occurrences: delays.length, status: corr.status
+      });
+    }
+  });
+
+  if (foodDelays.length === 0) return { insufficient: true, reason: 'no-delay-data' };
+
+  const globalAvg = allDelays.length > 0 ? +(allDelays.reduce((s, v) => s + v, 0) / allDelays.length).toFixed(1) : 0;
+  foodDelays.sort((a, b) => a.avgDelayH - b.avgDelayH);
+  const fastest = foodDelays[0];
+  const slowest = foodDelays[foodDelays.length - 1];
+
+  return { insufficient: false, foodDelays, globalAvg, fastest, slowest, count: foodDelays.length };
+}
+
+function renderInfoPoopFoodDelay() {
+  const summaryEl = document.getElementById('infoPoopFoodDelaySummary');
+  const listEl = document.getElementById('infoPoopFoodDelayList');
+  const insightEl = document.getElementById('infoPoopFoodDelayInsights');
+  if (!summaryEl) return;
+
+  const data = computeFoodPoopDelay();
+  if (data.insufficient) {
+    const msg = data.reason === 'no-correlations' ? 'Need food-poop correlation data first' :
+      data.reason === 'no-flagged' ? 'No flagged foods detected — all clear' : 'Need more food-poop pairs for delay analysis';
+    summaryEl.innerHTML = '<div class="si-nodata">' + msg + '</div>';
+    if (listEl) listEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  summaryEl.innerHTML = '<div class="t-sm">Avg gut transit: <strong>~' + data.globalAvg + 'h</strong> · <strong>' + data.count + '</strong> foods tracked</div>';
+
+  if (listEl) {
+    let html = '';
+    data.foodDelays.forEach(fd => {
+      const statusIcon = fd.status === 'likely' ? '🔴' : fd.status === 'suspected' ? '🟠' : '🟡';
+      const conLabel = fd.usualConsistency.charAt(0).toUpperCase() + fd.usualConsistency.slice(1);
+      html += '<div class="si-factor-row">';
+      html += '<div class="si-factor-icon">' + statusIcon + '</div>';
+      html += '<div class="si-factor-text"><strong>' + escHtml(fd.food) + '</strong> → ' + conLabel + ' <span style="color:var(--light);">(' + fd.occurrences + '×)</span></div>';
+      html += '<div class="si-factor-impact" style="color:var(--tc-amber);">' + fd.minDelayH + '–' + fd.maxDelayH + 'h</div>';
+      html += '</div>';
+    });
+
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + escHtml(data.fastest.food) + '</div><div class="si-stat-label">Fastest (~' + data.fastest.avgDelayH + 'h)</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + escHtml(data.slowest.food) + '</div><div class="si-stat-label">Slowest (~' + data.slowest.avgDelayH + 'h)</div></div>';
+    html += '</div>';
+    listEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    data.foodDelays.forEach(fd => {
+      if (fd.status === 'likely' || fd.status === 'suspected') {
+        html += '<div class="si-insight si-insight-warn">' + escHtml(fd.food) + ' correlates with ' + fd.usualConsistency + ' stools (' + fd.occurrences + '× observed) with ~' + fd.avgDelayH + 'h delay.</div>';
+      }
+    });
+    if (!html) {
+      html += '<div class="si-insight si-insight-info">Tracking food-to-poop timing for flagged foods. More data will improve accuracy.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 4: New Food Watch Window ──
+
+function computeNewFoodWatch() {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+  const weekAgoStr = toDateStr(weekAgo);
+
+  // Find recently introduced foods
+  const recentFoods = (foods || []).filter(f => f.date && f.date >= weekAgoStr);
+  if (recentFoods.length === 0) return { insufficient: true, reason: 'no-new-foods' };
+
+  const ABNORMAL_CON = ['hard', 'pellets', 'runny', 'watery'];
+  const watches = [];
+
+  recentFoods.forEach(food => {
+    const introDate = new Date(food.date + 'T08:00:00');
+    const windowEnd = new Date(introDate.getTime() + 72 * 3600000);
+    const hoursElapsed = (now - introDate) / 3600000;
+    const isOpen = hoursElapsed < 72;
+    const hoursRemaining = Math.max(0, 72 - hoursElapsed);
+
+    // Collect poops within the 72h window
+    const windowPoops = poopData.filter(p => {
+      if (!p.date) return false;
+      const pTs = new Date(p.date + 'T' + (p.time || '12:00'));
+      return pTs >= introDate && pTs <= windowEnd;
+    });
+
+    // Flag abnormals
+    const abnormals = windowPoops.filter(p =>
+      ABNORMAL_CON.includes(p.consistency) ||
+      ['red', 'white', 'black'].includes(p.color) ||
+      p.blood || p.mucus
+    );
+
+    let status = 'no-data';
+    if (windowPoops.length > 0 && abnormals.length > 0) status = 'flagged';
+    else if (windowPoops.length > 0 && abnormals.length === 0 && !isOpen) status = 'clear';
+    else if (windowPoops.length > 0 && abnormals.length === 0 && isOpen) status = 'watching';
+    else if (windowPoops.length === 0 && isOpen) status = 'watching';
+    else if (windowPoops.length === 0 && !isOpen) status = 'no-data';
+
+    const progressPct = Math.min(100, Math.round((hoursElapsed / 72) * 100));
+    const normalPoops = windowPoops.length - abnormals.length;
+
+    watches.push({
+      name: food.name, introDate: food.date, status, isOpen,
+      hoursElapsed: Math.round(hoursElapsed), hoursRemaining: Math.round(hoursRemaining),
+      progressPct, totalPoops: windowPoops.length, normalPoops,
+      abnormals: abnormals.map(p => ({ consistency: p.consistency, color: p.color })),
+      reaction: food.reaction
+    });
+  });
+
+  const active = watches.filter(w => w.isOpen);
+  const resolved = watches.filter(w => !w.isOpen);
+
+  return { insufficient: false, watches, active, resolved, count: watches.length };
+}
+
+function renderInfoPoopFoodWatch() {
+  const summaryEl = document.getElementById('infoPoopFoodWatchSummary');
+  const listEl = document.getElementById('infoPoopFoodWatchList');
+  const insightEl = document.getElementById('infoPoopFoodWatchInsights');
+  if (!summaryEl) return;
+
+  const data = computeNewFoodWatch();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">No new foods introduced in the last 7 days</div>';
+    if (listEl) listEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + data.active.length + '</strong> active watch(es) · <strong>' + data.resolved.length + '</strong> recently resolved</div>';
+
+  if (listEl) {
+    let html = '';
+    // Active watches first
+    if (data.active.length > 0) {
+      html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Active</div>';
+      data.active.forEach(w => {
+        const icon = w.status === 'flagged' ? '⚠️' : '🟡';
+        html += '<div class="si-check-row">';
+        html += '<div class="si-check-icon">' + icon + '</div>';
+        html += '<div class="si-check-text"><strong>' + escHtml(w.name) + '</strong> — ' + w.hoursElapsed + 'h ago, watching for ' + w.hoursRemaining + ' more hours';
+        if (w.totalPoops > 0) html += ' (' + w.normalPoops + ' normal poop' + (w.normalPoops !== 1 ? 's' : '') + ')';
+        html += '</div></div>';
+        html += '<div class="pi-watch-progress"><div class="pi-watch-fill" style="width:' + w.progressPct + '%;background:' + (w.status === 'flagged' ? 'var(--tc-caution)' : 'var(--tc-amber)') + ';"></div></div>';
+      });
+    }
+
+    // Resolved
+    if (data.resolved.length > 0) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Recently resolved</div>';
+      data.resolved.forEach(w => {
+        const icon = w.status === 'clear' ? '✅' : w.status === 'flagged' ? '⚠️' : '❓';
+        const detail = w.status === 'clear' ? 'no adverse reactions' :
+          w.status === 'flagged' ? w.abnormals.map(a => a.consistency || a.color).join(', ') + ' detected' : 'no poop data';
+        html += '<div class="si-check-row">';
+        html += '<div class="si-check-icon">' + icon + '</div>';
+        html += '<div class="si-check-text">' + escHtml(w.name) + ' — ' + detail + '</div>';
+        html += '</div>';
+      });
+    }
+    listEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    data.watches.forEach(w => {
+      if (w.status === 'flagged') {
+        const issues = w.abnormals.map(a => a.consistency || a.color).join(', ');
+        html += '<div class="si-insight si-insight-warn">' + escHtml(w.name) + ' may have caused ' + issues + '. Consider waiting a few days before offering again.</div>';
+      } else if (w.status === 'clear') {
+        html += '<div class="si-insight si-insight-good">3-day watch for ' + escHtml(w.name) + ' complete — no adverse reactions detected.</div>';
+      } else if (w.status === 'watching') {
+        const daysDone = Math.floor(w.hoursElapsed / 24);
+        html += '<div class="si-insight si-insight-info">Watching ' + escHtml(w.name) + ' — ' + daysDone + ' of 3 days complete. So far, so good.</div>';
+      }
+    });
+    if (!html) {
+      html += '<div class="si-insight si-insight-info">All recent food watches are pending data.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 5: Color Anomaly Detection ──
+
+function computePoopColorAnomalies(windowDays) {
+  windowDays = windowDays || 14;
+  const entries = _piGetPoops(windowDays);
+  const daysSet = new Set(entries.map(p => p.date));
+  if (daysSet.size < 5) return { insufficient: true, count: daysSet.size, needed: 5 };
+
+  // Color distribution
+  const colorDist = {};
+  entries.forEach(p => {
+    if (p.color) colorDist[p.color] = (colorDist[p.color] || 0) + 1;
+  });
+  const colorTotal = Object.values(colorDist).reduce((s, v) => s + v, 0);
+  const total = colorTotal || entries.length;
+  const dominant = Object.entries(colorDist).sort((a, b) => b[1] - a[1])[0];
+  const dominantColor = dominant ? dominant[0] : 'brown';
+
+  // Build timeline (per day, ordered)
+  const dayEntries = {};
+  entries.forEach(p => {
+    if (!dayEntries[p.date]) dayEntries[p.date] = [];
+    dayEntries[p.date].push(p.color || 'brown');
+  });
+
+  // Anomaly detection
+  const anomalies = [];
+  const ALERT_COLORS = ['red', 'white', 'black'];
+
+  // Check diet cross-reference for context
+  const dietFoods48h = (dateStr) => {
+    const recentDietFoods = [];
+    for (let i = 0; i <= 2; i++) {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() - i);
+      const ds = toDateStr(d);
+      recentDietFoods.push(...extractDayFoods(ds));
+    }
+    return recentDietFoods;
+  };
+
+  // Check meds for iron
+  const hasIronSupplement = (meds || []).some(m => m.active && /iron|feronia|ferrous/i.test(m.name + ' ' + (m.brand || '')));
+
+  entries.forEach(p => {
+    if (!p.color) return;
+    if (!ALERT_COLORS.includes(p.color) && !(p.color === 'green' && colorDist.green && colorDist.green / total > 0.5)) return;
+
+    const recentFoods = dietFoods48h(p.date);
+    let context = '', severity = 'needs-attention';
+
+    if (p.color === 'red') {
+      const hasBeet = recentFoods.some(f => /beet|tomato/i.test(f));
+      if (hasBeet) { context = 'Beetroot/tomato in recent diet — likely diet-related'; severity = 'diet-related'; }
+      else { context = 'No dietary explanation — monitor and consult doctor if it recurs'; severity = 'needs-attention'; }
+    } else if (p.color === 'white') {
+      context = 'Pale/white stool can indicate a bile duct issue — contact paediatrician';
+      severity = 'urgent';
+    } else if (p.color === 'black') {
+      if (hasIronSupplement) { context = 'Iron supplement active — likely normal'; severity = 'diet-related'; }
+      else { context = 'No iron supplement found — possible upper GI concern, contact doctor'; severity = 'urgent'; }
+    } else if (p.color === 'green') {
+      const hasGreens = recentFoods.some(f => /spinach|peas|palak|broccoli/i.test(f));
+      if (hasGreens) { context = 'Leafy greens in recent diet — likely food-related'; severity = 'diet-related'; }
+      else { context = 'Frequent green stools — could be teething, fast transit, or mild infection'; severity = 'safe'; }
+    }
+
+    anomalies.push({ date: p.date, color: p.color, context, severity });
+  });
+
+  // Overall severity
+  let overallSeverity = 'safe';
+  if (anomalies.some(a => a.severity === 'urgent')) overallSeverity = 'urgent';
+  else if (anomalies.some(a => a.severity === 'needs-attention')) overallSeverity = 'needs-attention';
+  else if (anomalies.some(a => a.severity === 'diet-related')) overallSeverity = 'diet-related';
+
+  const severityLabel = { safe: 'All clear', 'diet-related': 'Diet-related', 'needs-attention': 'Watch', urgent: 'Alert' };
+
+  return {
+    insufficient: false, colorDist, total, dominantColor, anomalies, dayEntries,
+    overallSeverity, severityLabel: severityLabel[overallSeverity] || 'Safe',
+    count: daysSet.size, POOP_COLOR_HEX
+  };
+}
+
+function renderInfoPoopColorAnomaly() {
+  const summaryEl = document.getElementById('infoPoopColorSummary');
+  const timelineEl = document.getElementById('infoPoopColorTimeline');
+  const insightEl = document.getElementById('infoPoopColorInsights');
+  if (!summaryEl) return;
+
+  const data = computePoopColorAnomalies();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need 5 days of data (have ' + data.count + ')</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const domLabel = data.dominantColor.charAt(0).toUpperCase() + data.dominantColor.slice(1);
+  const sevColor = data.overallSeverity === 'urgent' ? 'var(--tc-danger)' : data.overallSeverity === 'needs-attention' ? 'var(--tc-caution)' : 'var(--tc-sage)';
+  summaryEl.innerHTML = '<div class="t-sm"><strong>' + domLabel + '</strong> dominant · ' + data.total + ' entries · <span style="color:' + sevColor + ';font-weight:600;">' + data.severityLabel + '</span></div>';
+
+  if (timelineEl) {
+    let html = '';
+
+    // Color distribution bar
+    html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Color distribution</div>';
+    html += '<div class="si-bar-track" style="display:flex;overflow:hidden;height:20px;">';
+    const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
+    sortedColors.forEach(([color, count]) => {
+      const pct = (count / data.total) * 100;
+      const hex = POOP_COLOR_HEX[color] || '#8B6914';
+      html += '<div style="width:' + pct + '%;background:' + hex + ';height:100%;" title="' + color + ': ' + count + '"></div>';
+    });
+    html += '</div>';
+    // Color legend
+    html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:var(--sp-4);">';
+    sortedColors.forEach(([color, count]) => {
+      const hex = POOP_COLOR_HEX[color] || '#8B6914';
+      html += '<div style="display:flex;align-items:center;gap:4px;font-size:var(--fs-2xs);color:var(--light);">';
+      html += '<div class="pi-color-dot" style="width:10px;height:10px;background:' + hex + ';"></div>';
+      html += color + ' (' + count + ')</div>';
+    });
+    html += '</div>';
+
+    // Color timeline
+    html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Color timeline (last 14 days)</div>';
+    const days = Object.keys(data.dayEntries).sort();
+    days.forEach(d => {
+      const dayLabel = formatDate(d).slice(0, 6);
+      html += '<div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:2px;">';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--light);min-width:42px;text-align:right;">' + dayLabel + '</div>';
+      html += '<div class="pi-color-timeline">';
+      data.dayEntries[d].forEach(c => {
+        const hex = POOP_COLOR_HEX[c] || '#8B6914';
+        html += '<div class="pi-color-dot" style="background:' + hex + ';" title="' + c + '"></div>';
+      });
+      html += '</div></div>';
+    });
+
+    // Anomaly cards
+    if (data.anomalies.length > 0) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Anomalies</div>';
+      const seen = new Set();
+      data.anomalies.forEach(a => {
+        const key = a.date + a.color;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const emoji = a.color === 'red' ? '🔴' : a.color === 'black' ? '⚫' : a.color === 'white' ? '⚪' : '🟢';
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + emoji + '</div><div class="si-reg-cause-text">' + a.color.charAt(0).toUpperCase() + a.color.slice(1) + ' stool on ' + formatDate(a.date) + ' — ' + a.context + '</div></div>';
+      });
+    }
+
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.overallSeverity === 'safe') {
+      html += '<div class="si-insight si-insight-good">Healthy color range. Brown and yellow are expected at Ziva\'s age.</div>';
+    } else if (data.overallSeverity === 'diet-related') {
+      html += '<div class="si-insight si-insight-info">Some color variations detected but all appear diet-related — no concern.</div>';
+    } else if (data.overallSeverity === 'needs-attention') {
+      html += '<div class="si-insight si-insight-warn">Unusual stool color detected without dietary explanation. Monitor and consult doctor if it recurs.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-warn">Concerning stool color detected — please contact your paediatrician.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 6: Amount Trend ──
+
+function computePoopAmountTrend(windowDays) {
+  windowDays = windowDays || 14;
+  const entries = _piGetPoops(windowDays);
+  const AMOUNT_SCALE = { small: 1, medium: 2, large: 3 };
+
+  // Group by date
+  const dayMap = {};
+  entries.forEach(p => {
+    if (!dayMap[p.date]) dayMap[p.date] = [];
+    dayMap[p.date].push(p);
+  });
+  const days = Object.keys(dayMap).sort();
+  if (days.length < 5) return { insufficient: true, count: days.length, needed: 5 };
+
+  // Daily avg amount
+  const dailyAmounts = days.map(d => {
+    const vals = dayMap[d].map(p => AMOUNT_SCALE[p.amount] ?? 2);
+    const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+    return { dateStr: d, avg, count: vals.length };
+  });
+
+  // 7d averages
+  const recent = dailyAmounts.slice(-7);
+  const previous = dailyAmounts.slice(0, -7);
+  const recentAvg = recent.reduce((s, d) => s + d.avg, 0) / recent.length;
+  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : recentAvg;
+
+  let trend = 'stable';
+  if (recentAvg - prevAvg >= 0.3) trend = 'larger';
+  else if (recentAvg - prevAvg <= -0.3) trend = 'smaller';
+
+  const avgLabel = recentAvg <= 1.4 ? 'Small' : recentAvg <= 2.4 ? 'Medium' : 'Large';
+
+  // Most common amount
+  const amountCounts = {};
+  entries.forEach(p => { amountCounts[p.amount || 'medium'] = (amountCounts[p.amount || 'medium'] || 0) + 1; });
+  const mostCommon = Object.entries(amountCounts).sort((a, b) => b[1] - a[1])[0];
+
+  // Large-after-gap detection
+  let largeAfterGap = 0;
+  const sorted = [...entries].sort((a, b) => (a.date + (a.time || '12:00')).localeCompare(b.date + (b.time || '12:00')));
+  for (let i = 1; i < sorted.length; i++) {
+    const prevTs = new Date(sorted[i - 1].date + 'T' + (sorted[i - 1].time || '12:00'));
+    const currTs = new Date(sorted[i].date + 'T' + (sorted[i].time || '12:00'));
+    const gapH = (currTs - prevTs) / 3600000;
+    if (gapH >= 24 && sorted[i].amount === 'large') largeAfterGap++;
+  }
+
+  // Cross-reference: small + hard = constipation signal
+  let constipationSignal = false, diarrhoeaSignal = false;
+  entries.forEach(p => {
+    if (p.amount === 'small' && (p.consistency === 'hard' || p.consistency === 'pellets')) constipationSignal = true;
+    if (p.amount === 'large' && (p.consistency === 'runny' || p.consistency === 'watery')) diarrhoeaSignal = true;
+  });
+
+  return {
+    insufficient: false, trend, recentAvg: +recentAvg.toFixed(1), prevAvg: +prevAvg.toFixed(1),
+    avgLabel, mostCommon: mostCommon ? mostCommon[0] : 'medium', largeAfterGap,
+    constipationSignal, diarrhoeaSignal, dailyAmounts, count: days.length
+  };
+}
+
+function renderInfoPoopAmountTrend() {
+  const summaryEl = document.getElementById('infoPoopAmountSummary');
+  const barsEl = document.getElementById('infoPoopAmountBars');
+  const insightEl = document.getElementById('infoPoopAmountInsights');
+  if (!summaryEl) return;
+
+  const data = computePoopAmountTrend();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need 5 days of data (have ' + data.count + ')</div>';
+    if (barsEl) barsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const trendIcon = data.trend === 'larger' ? '↗' : data.trend === 'smaller' ? '↘' : '→';
+  summaryEl.innerHTML = '<div class="t-sm">Avg amount: <strong>' + data.avgLabel + '</strong> · Trend: <strong>' + trendIcon + ' ' + data.trend + '</strong></div>';
+
+  if (barsEl) {
+    let html = '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Daily amounts</div>';
+    const displayDays = data.dailyAmounts.slice(-10);
+    displayDays.forEach(d => {
+      const dayLabel = formatDate(d.dateStr).slice(0, 6);
+      const pct = Math.round((d.avg / 3) * 100);
+      const amtLabel = d.avg <= 1.4 ? 'S' : d.avg <= 2.4 ? 'M' : 'L';
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + dayLabel + '</div>';
+      html += '<div class="pi-amount-track"><div class="pi-amount-fill" style="width:' + pct + '%;"></div></div>';
+      html += '<div class="si-bar-val" style="color:var(--tc-amber);">' + amtLabel + '</div>';
+      html += '</div>';
+    });
+
+    html += '<div class="si-stat-grid">';
+    const mcLabel = (data.mostCommon || 'medium').charAt(0).toUpperCase() + (data.mostCommon || 'medium').slice(1);
+    html += '<div class="si-stat"><div class="si-stat-val">' + mcLabel + '</div><div class="si-stat-label">Most common</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + data.largeAfterGap + '</div><div class="si-stat-label">Large after gap</div></div>';
+    html += '</div>';
+    barsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.trend === 'smaller') {
+      html += '<div class="si-insight si-insight-warn">Poop amounts have been getting smaller — watch for constipation signs.</div>';
+    } else if (data.largeAfterGap >= 2) {
+      html += '<div class="si-insight si-insight-info">Several large poops after long gaps — Ziva may be holding. Check for discomfort.</div>';
+    } else if (data.constipationSignal) {
+      html += '<div class="si-insight si-insight-warn">Small + hard stools detected — a constipation signal. Increase fluids and fibre.</div>';
+    } else if (data.diarrhoeaSignal) {
+      html += '<div class="si-insight si-insight-warn">Large + runny stools detected — possible diarrhoea. Monitor hydration.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-good">Consistent amounts — healthy pattern.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 7: Symptom Tracker ──
+
+function computePoopSymptomTracker(windowDays) {
+  windowDays = windowDays || 30;
+  const entries = _piGetPoops(windowDays);
+  if (entries.length === 0) return { insufficient: true, count: 0, needed: 1 };
+
+  const bloodEntries = entries.filter(p => p.blood);
+  const mucusEntries = entries.filter(p => p.mucus);
+  const cooccurrence = entries.filter(p => p.blood && p.mucus).length;
+
+  if (bloodEntries.length === 0 && mucusEntries.length === 0) {
+    // Still build timeline (all clean days) for visual consistency
+    const cleanTimeline = [];
+    for (let i = windowDays - 1; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      cleanTimeline.push({ dateStr: toDateStr(d), hasBlood: false, hasMucus: false, hasAny: false });
+    }
+    return {
+      insufficient: false, severity: 'none', bloodCount: 0, mucusCount: 0, cooccurrence: 0,
+      trend: 'stable', triggerFoods: [], illnessRelated: [], timeline: cleanTimeline,
+      lastBloodDate: null, lastMucusDate: null, count: entries.length
+    };
+  }
+
+  // Trend: recent 14d vs previous 14d
+  const mid = new Date();
+  mid.setDate(mid.getDate() - 14);
+  const midStr = toDateStr(mid);
+  const recentSymptoms = entries.filter(p => p.date >= midStr && (p.blood || p.mucus)).length;
+  const prevSymptoms = entries.filter(p => p.date < midStr && (p.blood || p.mucus)).length;
+  let trend = 'stable';
+  if (recentSymptoms > prevSymptoms + 1) trend = 'increasing';
+  else if (recentSymptoms < prevSymptoms - 1) trend = 'decreasing';
+
+  // Severity
+  let severity = 'rare';
+  if (bloodEntries.length >= 3) severity = 'concerning';
+  else if (bloodEntries.length + mucusEntries.length >= 3) severity = 'recurring';
+
+  // Trigger foods (foods eaten 24–48h before symptom entries)
+  const triggerFoods = {};
+  const symptomDates = [...new Set([...bloodEntries, ...mucusEntries].map(p => p.date))];
+  symptomDates.forEach(dateStr => {
+    for (let lag = 1; lag <= 2; lag++) {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() - lag);
+      const lagFoods = extractDayFoods(toDateStr(d));
+      lagFoods.forEach(f => {
+        const norm = normalizeFoodName(f);
+        triggerFoods[norm] = (triggerFoods[norm] || 0) + 1;
+      });
+    }
+  });
+  const topTriggers = Object.entries(triggerFoods).filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // Illness cross-reference
+  const illnessRelated = [];
+  const episodes = _getAllEpisodes();
+  symptomDates.forEach(dateStr => {
+    const dateMs = new Date(dateStr).getTime();
+    episodes.forEach(ep => {
+      const range = _episodeDateRange(ep);
+      if (dateMs >= range.startMs && dateMs <= range.endMs) {
+        illnessRelated.push({ date: dateStr, illness: ep.illnessType });
+      }
+    });
+  });
+
+  // Timeline: per day, mark symptom presence
+  const allDays = [];
+  for (let i = windowDays - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const dayPoops = entries.filter(p => p.date === ds);
+    const hasBlood = dayPoops.some(p => p.blood);
+    const hasMucus = dayPoops.some(p => p.mucus);
+    allDays.push({ dateStr: ds, hasBlood, hasMucus, hasAny: hasBlood || hasMucus });
+  }
+
+  const lastBlood = bloodEntries.length > 0 ? bloodEntries[bloodEntries.length - 1].date : null;
+  const lastMucus = mucusEntries.length > 0 ? mucusEntries[mucusEntries.length - 1].date : null;
+
+  return {
+    insufficient: false, severity, bloodCount: bloodEntries.length, mucusCount: mucusEntries.length,
+    cooccurrence, trend, triggerFoods: topTriggers, illnessRelated, timeline: allDays,
+    lastBloodDate: lastBlood, lastMucusDate: lastMucus, count: entries.length
+  };
+}
+
+function renderInfoPoopSymptoms() {
+  const summaryEl = document.getElementById('infoPoopSymptomsSummary');
+  const timelineEl = document.getElementById('infoPoopSymptomsTimeline');
+  const insightEl = document.getElementById('infoPoopSymptomsInsights');
+  if (!summaryEl) return;
+
+  const data = computePoopSymptomTracker();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need at least 1 poop entry (have ' + data.count + ')</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const sevLabel = data.severity.charAt(0).toUpperCase() + data.severity.slice(1);
+  const sevColor = data.severity === 'concerning' ? 'var(--tc-danger)' : data.severity === 'recurring' ? 'var(--tc-caution)' : 'var(--tc-sage)';
+  summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + sevColor + ';font-weight:600;">' + sevLabel + '</span> · blood: ' + data.bloodCount + ', mucus: ' + data.mucusCount + ' in 30d</div>';
+
+  if (timelineEl) {
+    let html = '';
+
+    // 30-day dot timeline
+    html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Last 30 days</div>';
+    html += '<div class="pi-symptom-row">';
+    data.timeline.forEach(d => {
+      const color = d.hasBlood ? 'var(--tc-danger)' : d.hasMucus ? 'var(--tc-caution)' : 'var(--warm)';
+      const border = d.hasAny ? 'none' : '1px solid rgba(0,0,0,0.06)';
+      html += '<div class="pi-symptom-dot" style="background:' + color + ';border:' + border + ';" title="' + formatDate(d.dateStr) + (d.hasBlood ? ' — blood' : '') + (d.hasMucus ? ' — mucus' : '') + '"></div>';
+    });
+    html += '</div>';
+
+    // Trigger foods
+    if (data.triggerFoods.length > 0) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Potential trigger foods</div>';
+      data.triggerFoods.forEach(([food, count]) => {
+        html += '<div class="si-factor-row">';
+        html += '<div class="si-factor-icon">🍽</div>';
+        html += '<div class="si-factor-text">' + escHtml(food) + '</div>';
+        html += '<div class="si-factor-impact" style="color:var(--tc-caution);">' + count + '× before symptoms</div>';
+        html += '</div>';
+      });
+    }
+
+    // Stat grid
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-danger);">' + (data.lastBloodDate ? formatDate(data.lastBloodDate).slice(0, 6) : '—') + '</div><div class="si-stat-label">Last blood</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-caution);">' + (data.lastMucusDate ? formatDate(data.lastMucusDate).slice(0, 6) : '—') + '</div><div class="si-stat-label">Last mucus</div></div>';
+    html += '</div>';
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.severity === 'none') {
+      html += '<div class="si-insight si-insight-good">No blood or mucus detected in 30 days — healthy.</div>';
+    } else if (data.severity === 'rare') {
+      if (data.mucusCount > 0 && data.bloodCount === 0) {
+        html += '<div class="si-insight si-insight-info">Isolated mucus detected — small amounts are normal. Monitor.</div>';
+      } else {
+        html += '<div class="si-insight si-insight-info">Rare symptom occurrence — continue monitoring.</div>';
+      }
+    } else if (data.severity === 'concerning') {
+      html += '<div class="si-insight si-insight-warn">Blood detected ' + data.bloodCount + ' times this month. Please consult your paediatrician.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-warn">Recurring symptoms detected. Monitor patterns and discuss with your doctor.</div>';
+    }
+    if (data.illnessRelated.length > 0) {
+      const types = [...new Set(data.illnessRelated.map(i => i.illness))].join(', ');
+      html += '<div class="si-insight si-insight-info">Some symptoms coincided with active illness (' + types + ') — likely illness-related.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Feature 8: Poop Score Report Card ──
+
+function computePoopReport(windowDays) {
+  windowDays = windowDays || 7;
+  const scores = [];
+  const details = [];
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const sc = calcPoopScore(ds);
+    if (sc && !sc.isCarryForward) {
+      scores.push(sc.score);
+      details.push({ dateStr: ds, ...sc });
+    }
+  }
+  if (scores.length < 3) return { insufficient: true, count: scores.length, needed: 3 };
+
+  const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const best = details.reduce((a, b) => a.score > b.score ? a : b);
+  const worst = details.reduce((a, b) => a.score < b.score ? a : b);
+
+  // Previous week
+  const prevScores = [];
+  for (let i = windowDays; i < windowDays * 2; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const sc = calcPoopScore(toDateStr(d));
+    if (sc && !sc.isCarryForward) prevScores.push(sc.score);
+  }
+  const prevAvg = prevScores.length >= 3 ? Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length) : null;
+
+  // Component averages
+  const avgConsistency = Math.round(details.reduce((s, d) => s + (d.components.consistency || 0), 0) / details.length);
+  const avgFrequency = Math.round(details.reduce((s, d) => s + (d.components.frequency || 0), 0) / details.length);
+  const avgColor = Math.round(details.reduce((s, d) => s + (d.components.color || 0), 0) / details.length);
+  const avgSymptoms = Math.round(details.reduce((s, d) => s + (d.components.symptoms || 0), 0) / details.length);
+
+  // Weakest component
+  const components = [
+    { name: 'consistency', score: avgConsistency, advice: 'Consistency is the biggest drag on your score — try more fibre' },
+    { name: 'frequency', score: avgFrequency, advice: 'Frequency has been irregular — track meal timing alongside poops' },
+    { name: 'color', score: avgColor, advice: 'Unusual colors detected this week — check diet or consult doctor' },
+    { name: 'symptoms', score: avgSymptoms, advice: 'Blood or mucus detected — discuss with your paediatrician' }
+  ];
+  const weakest = components.reduce((a, b) => a.score < b.score ? a : b);
+
+  return {
+    insufficient: false, avgScore, best, worst, prevAvg, details,
+    avgConsistency, avgFrequency, avgColor, avgSymptoms, weakest,
+    count: scores.length
+  };
+}
+
+function renderInfoPoopReport() {
+  const summaryEl = document.getElementById('infoPoopReportSummary');
+  const detailsEl = document.getElementById('infoPoopReportDetails');
+  const insightEl = document.getElementById('infoPoopReportInsights');
+  if (!summaryEl) return;
+
+  const data = computePoopReport();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need 3 days of poop data (have ' + data.count + ')</div>';
+    if (detailsEl) detailsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const lbl = getScoreLabel(data.avgScore);
+  const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
+  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
+  summaryEl.innerHTML = '<div class="t-sm">Poop score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
+    (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
+
+  if (detailsEl) {
+    let html = '<div class="si-report-hero">';
+
+    // Score ring (amber theme)
+    html += '<div class="si-report-ring" style="background:' + _siRingBg(lbl.label) + ';border-color:' + _siRingBorder(lbl.label) + ';">';
+    html += '<div class="si-report-number" style="color:' + _siRingText(lbl.label) + ';">' + data.avgScore + '</div>';
+    html += '<div class="si-report-label" style="color:' + _siRingText(lbl.label) + ';">' + lbl.text + '</div>';
+    html += '</div>';
+
+    // Stats column
+    html += '<div class="si-report-stats">';
+    html += '<div style="font-size:var(--fs-xs);color:var(--mid);line-height:1.6;">';
+    html += '💩 Consistency: <strong>' + data.avgConsistency + '</strong>/100<br>';
+    html += '📊 Frequency: <strong>' + data.avgFrequency + '</strong>/100<br>';
+    html += '🎨 Color: <strong>' + data.avgColor + '</strong>/100<br>';
+    html += '🩺 Symptoms: <strong>' + data.avgSymptoms + '</strong>/100';
+    html += '</div>';
+
+    // Mini sparkline
+    html += '<div class="si-sparkline" style="margin-top:var(--sp-8);">';
+    data.details.slice().reverse().forEach(d => {
+      const pct = Math.max(4, d.score);
+      const color = d.score >= 70 ? 'var(--tc-sage)' : d.score >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+      html += '<div class="si-spark-bar" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '"></div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+
+    // Best/worst
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + data.best.score + '</div><div class="si-stat-label">Best: ' + formatDate(data.best.dateStr).slice(0, 6) + '</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + data.worst.score + '</div><div class="si-stat-label">Worst: ' + formatDate(data.worst.dateStr).slice(0, 6) + '</div></div>';
+    html += '</div>';
+    detailsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.weakest.score < 80) {
+      html += '<div class="si-insight si-insight-warn">' + data.weakest.advice + '.</div>';
+    }
+    if (data.avgScore >= 75) {
+      html += '<div class="si-insight si-insight-good">Strong poop week — keep the diet consistent.</div>';
+    } else if (data.avgScore >= 50) {
+      html += '<div class="si-insight si-insight-info">Some digestive variability this week. Review flagged days for patterns.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-warn">Poop health needs attention this week. Check consistency and frequency patterns above.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -31204,6 +32471,14 @@ function renderInfo() {
   renderInfoSleepDayNight();
   renderInfoSleepBestNight();
   renderInfoSleepRegression();
+  renderInfoPoopConsistencyTrend();
+  renderInfoPoopFrequency();
+  renderInfoPoopFoodDelay();
+  renderInfoPoopFoodWatch();
+  renderInfoPoopColorAnomaly();
+  renderInfoPoopAmountTrend();
+  renderInfoPoopSymptoms();
+  renderInfoPoopReport();
   renderInfoIllnessFreq();
   renderInfoVaccFever();
   renderInfoIllnessFood();
