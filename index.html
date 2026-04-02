@@ -2049,6 +2049,70 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .dqp-pill:active { transform:scale(0.95); background:var(--sage); color:white; }
 [data-theme="dark"] .dqp-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
 [data-theme="dark"] .dqp-pill:active { background:#3d7a60; color:var(--body-bg); }
+
+/* ── Today's Suggestions (Home) ── */
+.sg-row { display:flex; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
+.sg-row:last-child { border-bottom:none; }
+.sg-row-icon { font-size:var(--fs-sm); flex-shrink:0; width:20px; text-align:center; padding-top:2px; }
+.sg-row-body { flex:1; min-width:0; }
+.sg-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); margin-bottom:var(--sp-4); }
+.sg-chip { display:inline-flex; align-items:center; padding:3px 10px; border-radius:var(--r-full); font-size:var(--fs-xs); font-weight:500; background:rgba(181,213,197,0.15); border:1px solid rgba(58,112,96,0.12); color:var(--tc-sage); cursor:pointer; transition:transform 0.1s,background 0.15s; }
+.sg-chip:active { transform:scale(0.95); background:var(--sage); color:white; }
+.sg-reason { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); }
+.sg-tag { display:inline-block; font-size:var(--fs-2xs); text-transform:uppercase; letter-spacing:var(--ls-wide); font-weight:600; padding:1px 6px; border-radius:var(--r-sm); margin-left:var(--sp-4); vertical-align:middle; }
+.sg-tag-gap { background:rgba(220,120,80,0.1); color:var(--tc-rose); }
+.sg-tag-syn { background:rgba(58,112,96,0.08); color:var(--tc-sage); }
+.sg-tag-tpl { background:rgba(140,120,180,0.1); color:var(--tc-lav); }
+.sg-tag-hyd { background:rgba(100,160,210,0.1); color:var(--tc-sky); }
+.sg-status { flex-shrink:0; width:24px; text-align:center; font-size:var(--fs-sm); padding-top:2px; }
+.sg-status-pending { opacity:0.3; }
+.sg-status-used { color:var(--tc-sage); }
+.sg-status-missed { color:var(--light); opacity:0.5; }
+.sg-counter { font-size:var(--fs-xs); color:var(--light); font-weight:500; }
+.sg-more-toggle { font-size:var(--fs-xs); color:var(--tc-sage); cursor:pointer; padding:var(--sp-4) 0; text-align:center; font-weight:500; }
+.sg-more-toggle:active { opacity:0.7; }
+
+/* ── Adoption Tracker (Info) ── */
+.sa-heatmap { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.sa-day-label { font-size:var(--fs-2xs); color:var(--light); text-align:center; font-weight:500; }
+.sa-cell { width:100%; aspect-ratio:1; border-radius:var(--r-md); transition:transform 0.1s; }
+.sa-cell-empty { background:rgba(0,0,0,0.03); border:1px dashed rgba(0,0,0,0.08); }
+.sa-cell-today { box-shadow:0 0 0 2px var(--tc-sage); }
+.sa-cell-0   { background:rgba(220,60,60,0.25); }
+.sa-cell-25  { background:rgba(240,180,80,0.3); }
+.sa-cell-50  { background:rgba(240,200,80,0.35); }
+.sa-cell-75  { background:rgba(120,190,120,0.35); }
+.sa-cell-100 { background:rgba(58,112,96,0.4); }
+.sa-type-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; }
+.sa-type-icon { font-size:var(--fs-sm); flex-shrink:0; width:20px; text-align:center; }
+.sa-type-label { font-size:var(--fs-xs); font-weight:500; flex-shrink:0; min-width:80px; }
+.sa-type-bar { flex:1; height:6px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:hidden; }
+.sa-type-fill { height:100%; border-radius:var(--r-full); transition:width 0.3s ease; }
+.sa-type-fill-gap { background:var(--tc-rose); }
+.sa-type-fill-syn { background:var(--tc-sage); }
+.sa-type-fill-tpl { background:var(--tc-lav); }
+.sa-type-fill-hyd { background:var(--tc-sky); }
+.sa-type-pct { font-size:var(--fs-xs); font-weight:600; flex-shrink:0; min-width:32px; text-align:right; }
+.sa-foods { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); padding-top:var(--sp-4); }
+.sa-foods strong { color:var(--text); font-weight:600; }
+
+/* Dark mode — suggestions */
+[data-theme="dark"] .sg-row { border-bottom-color:rgba(255,255,255,0.04); }
+[data-theme="dark"] .sg-chip { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .sg-chip:active { background:#3d7a60; color:var(--body-bg); }
+[data-theme="dark"] .sg-tag-gap { background:rgba(220,120,80,0.15); }
+[data-theme="dark"] .sg-tag-syn { background:rgba(58,112,96,0.12); }
+[data-theme="dark"] .sg-tag-tpl { background:rgba(140,120,180,0.15); }
+[data-theme="dark"] .sg-tag-hyd { background:rgba(100,160,210,0.15); }
+/* Dark mode — adoption */
+[data-theme="dark"] .sa-cell-empty { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .sa-cell-0   { background:rgba(220,60,60,0.3); }
+[data-theme="dark"] .sa-cell-25  { background:rgba(240,180,80,0.3); }
+[data-theme="dark"] .sa-cell-50  { background:rgba(240,200,80,0.3); }
+[data-theme="dark"] .sa-cell-75  { background:rgba(120,190,120,0.3); }
+[data-theme="dark"] .sa-cell-100 { background:rgba(58,112,96,0.35); }
+[data-theme="dark"] .sa-type-bar { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .sa-foods strong { color:var(--text); }
 .dqp-same {
   padding:5px 10px; border-radius:var(--r-2xl);
   font-size:var(--fs-xs); font-weight:500;
@@ -4403,6 +4467,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div id="homeMealProgressContent" class="mt-8"></div>
       </div>
 
+      <!-- TODAY'S SUGGESTIONS -->
+      <div class="card card-daily col-full" id="homeSuggestionsCard" style="display:none;">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bulb"/></svg></div> Today's Suggestions</div>
+          <span class="sg-counter" id="homeSuggestionsCount"></span>
+        </div>
+        <div id="homeSuggestionsContent" class="mt-4"></div>
+      </div>
+
       <!-- ─── UNIFIED ALERTS (v2.3 — merged Reminders + Context Alerts + Wins) ─── -->
       <div class="card card-daily col-full" id="homeUnifiedAlertsCard" style="display:none;border-left:none;">
         <div class="card-header">
@@ -5540,6 +5613,20 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- Suggestion Adoption Tracker -->
+      <div class="card card-info col-full" id="infoAdoptionCard" style="display:none;">
+        <div class="card-header" onclick="toggleHistoryCard('infoAdoptionBody','infoAdoptionChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chart"/></svg></div> Suggestion Adoption</div>
+          <span class="collapse-chevron" id="infoAdoptionChevron">▾</span>
+        </div>
+        <div id="infoAdoptionSummary" class="mt-4"></div>
+        <div id="infoAdoptionBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoAdoptionHeatmap" class="mt-4"></div>
+          <div id="infoAdoptionTypes" class="mt-8"></div>
+          <div id="infoAdoptionFoods" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- ─── SLEEP INTELLIGENCE (placeholder) ─── -->
       <div class="home-section-label sec-t3 col-full">Sleep Intelligence</div>
       <div class="card card-info col-full">
@@ -6202,6 +6289,7 @@ const KEYS = {
   alertsActive:  'ziva_alerts_active',
   alertsHistory: 'ziva_alerts_history',
   vaccBooked:    'ziva_vacc_booked',
+  suggestions:   'ziva_suggestions',
 };
 
 function load(key, def) {
@@ -7193,6 +7281,7 @@ function renderHome() {
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
   renderHomeMealProgress();
+  renderHomeSuggestions();
   renderHomeSleep();
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
@@ -15601,6 +15690,527 @@ function getMealTemplates(mealKey) {
   return templates.slice(0, 5);
 }
 
+// ── TODAY'S SUGGESTIONS + ADOPTION TRACKER (v2.8) ──
+
+let _suggestionsData = {};
+try { _suggestionsData = JSON.parse(localStorage.getItem(KEYS.suggestions)) || {}; } catch { _suggestionsData = {}; }
+
+function pruneOldSuggestions() {
+  const keys = Object.keys(_suggestionsData).sort();
+  if (keys.length <= 45) return;
+  keys.slice(0, keys.length - 45).forEach(k => delete _suggestionsData[k]);
+}
+
+function getTypeAdoptionRate(type, days) {
+  const todayDate = new Date(today());
+  let adopted = 0, total = 0;
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const dayData = _suggestionsData[ds];
+    if (!dayData || !dayData.items) continue;
+    dayData.items.forEach(item => {
+      if (item.type === type) {
+        total++;
+        if (item.adopted) adopted++;
+      }
+    });
+  }
+  return total > 0 ? adopted / total : 0;
+}
+
+function _sgNextEmptyMeal() {
+  const entry = feedingData[today()] || {};
+  const order = ['breakfast', 'lunch', 'snack', 'dinner'];
+  for (const m of order) {
+    const val = entry[m];
+    if (val === SKIPPED_MEAL) continue; // skip skipped meals
+    if (!val || !isRealMeal(val)) return m;
+  }
+  return null;
+}
+
+function generateDailySuggestions() {
+  const todayStr = today();
+
+  // Already generated today? Reuse.
+  if (_suggestionsData[todayStr] && _suggestionsData[todayStr].generated) {
+    return _suggestionsData[todayStr];
+  }
+
+  pruneOldSuggestions();
+
+  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  if (introducedSet.size < 3) return null; // too few foods to suggest
+
+  const todayFoods = extractDayFoods(todayStr);
+  const todayFoodSet = new Set(todayFoods);
+
+  // Reaction window: exclude foods introduced in last 3 days
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const recentIntroNames = new Set(
+    (foods || []).filter(f => f.date && new Date(f.date) >= threeDaysAgo)
+      .map(f => _baseFoodName(f.name.toLowerCase().trim()))
+  );
+
+  // Already used today
+  const todayBases = new Set(todayFoods.map(f => _baseFoodName(f)));
+
+  function isEligible(food) {
+    const base = _baseFoodName(food.toLowerCase().trim());
+    if (recentIntroNames.has(base)) return false;
+    if (todayBases.has(base)) return false;
+    if (!introducedSet.has(food) && ![...introducedSet].some(i => _baseFoodName(i) === base)) return false;
+    return true;
+  }
+
+  const candidates = [];
+  const usedFoods = new Set(); // dedup across suggestions
+
+  // 1. Nutrient gap suggestions
+  try {
+    const heatmap = computeNutrientHeatmap(7);
+    const gaps = heatmap.gaps || [];
+    gaps.slice(0, 3).forEach(gap => {
+      const providers = [...introducedSet].filter(f => {
+        if (!isEligible(f)) return false;
+        if (usedFoods.has(_baseFoodName(f))) return false;
+        const nut = getNutrition(f) || getNutrition(_baseFoodName(f));
+        return nut && nut.nutrients && nut.nutrients.some(n => n.toLowerCase() === gap.toLowerCase());
+      }).slice(0, 2);
+      if (providers.length === 0) return;
+      providers.forEach(f => usedFoods.add(_baseFoodName(f)));
+      // Check for absorption booster
+      const nutrientEmoji = { iron: '🩸', calcium: '🦴', protein: '💪', 'vitamin c': '🍊', fibre: '🌾', 'vitamin a': '👁️', 'omega-3': '🧠', zinc: '🛡️' };
+      const emoji = nutrientEmoji[gap.toLowerCase()] || '🩸';
+      let reason = gap + ' gap — ' + providers.join(' + ');
+      if (gap.toLowerCase() === 'iron') {
+        const vitCFood = [...introducedSet].find(f =>
+          isEligible(f) && !usedFoods.has(_baseFoodName(f)) &&
+          (getNutrition(f) || getNutrition(_baseFoodName(f)))?.nutrients?.some(n => n.toLowerCase() === 'vitamin c')
+        );
+        if (vitCFood) {
+          providers.push(vitCFood);
+          usedFoods.add(_baseFoodName(vitCFood));
+          reason = 'Iron gap — ' + providers.slice(0, -1).join(', ') + ' + ' + vitCFood + ' boosts absorption';
+        }
+      }
+      candidates.push({
+        id: 'sg-gap-' + gap.toLowerCase().replace(/\s/g, ''),
+        type: 'nutrient-gap',
+        foods: providers,
+        reason: reason,
+        emoji: emoji,
+        adopted: false, matchedMeal: null, matchedAt: null
+      });
+    });
+  } catch (e) { /* nutrient gap best effort */ }
+
+  // 2. Synergy suggestions
+  try {
+    const pairings = computeSmartPairings();
+    // unusedPairs: both foods not yet paired together (food1, food2)
+    // todayActionable: one food already in today's meals (food), partner is the suggestion (partner)
+    const synItems = [];
+    (pairings.unusedPairs || []).forEach(pair => {
+      const pairFoods = [pair.food1, pair.food2].filter(f => f && isEligible(f) && !usedFoods.has(_baseFoodName(f)));
+      if (pairFoods.length >= 2) {
+        synItems.push({ foods: pairFoods, reason: pair.reason || 'Untried synergy pairing' });
+      }
+    });
+    (pairings.todayActionable || []).forEach(pair => {
+      // partner is the one to suggest; food is already in today's meals
+      if (pair.partner && isEligible(pair.partner) && !usedFoods.has(_baseFoodName(pair.partner))) {
+        const partnerDisplay = pair.partner;
+        const todayDisplay = pair.food || '';
+        const reason = pair.reason ? pair.reason : ('Pairs with today\'s ' + todayDisplay);
+        synItems.push({ foods: [partnerDisplay], reason: reason, pairWith: todayDisplay });
+      }
+    });
+    synItems.slice(0, 2).forEach(si => {
+      si.foods.forEach(f => usedFoods.add(_baseFoodName(f)));
+      candidates.push({
+        id: 'sg-syn-' + si.foods.map(f => _baseFoodName(f)).join('-'),
+        type: 'synergy',
+        foods: si.foods,
+        reason: si.reason,
+        emoji: '✨',
+        adopted: false, matchedMeal: null, matchedAt: null
+      });
+    });
+  } catch (e) { /* synergy best effort */ }
+
+  // 3. Template suggestions
+  try {
+    const nextMeal = _sgNextEmptyMeal() || 'lunch';
+    const templates = getMealTemplates(nextMeal);
+    templates.slice(0, 2).forEach(tpl => {
+      const tplFoods = (tpl.foods || tpl.display || [])
+        .filter(f => isEligible(f) && !usedFoods.has(_baseFoodName(f)));
+      if (tplFoods.length < 2) return;
+      tplFoods.forEach(f => usedFoods.add(_baseFoodName(f)));
+      candidates.push({
+        id: 'sg-tpl-' + tplFoods.slice(0, 2).map(f => _baseFoodName(f)).join('-'),
+        type: 'template',
+        foods: tplFoods,
+        reason: (tpl.label ? tpl.label.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, '') + ' — ' : '') + (tpl.reason || 'Familiar combo'),
+        emoji: '🍽️',
+        adopted: false, matchedMeal: null, matchedAt: null
+      });
+    });
+  } catch (e) { /* template best effort */ }
+
+  // 4. Hydration suggestion
+  try {
+    const hydra = computeHydrationIntelligence(7);
+    if (hydra.season === 'hot' || hydra.season === 'warm') {
+      const hydraFoodsList = ['watermelon', 'cucumber', 'coconut water', 'buttermilk', 'lauki', 'musk melon', 'curd'];
+      const eligible = hydraFoodsList.filter(f =>
+        isEligible(f) && !usedFoods.has(_baseFoodName(f)) &&
+        ([...introducedSet].some(i => _baseFoodName(i) === _baseFoodName(f)))
+      ).slice(0, 2);
+      if (eligible.length > 0) {
+        eligible.forEach(f => usedFoods.add(_baseFoodName(f)));
+        const tempStr = hydra.avgTemp ? ' (' + hydra.avgTemp + '°C)' : '';
+        candidates.push({
+          id: 'sg-hyd-' + todayStr,
+          type: 'hydration',
+          foods: eligible,
+          reason: 'Hydration — ' + (hydra.season === 'hot' ? 'hot' : 'warm') + ' day' + tempStr,
+          emoji: '💧',
+          adopted: false, matchedMeal: null, matchedAt: null
+        });
+      }
+    }
+  } catch (e) { /* hydration best effort */ }
+
+  // Rank by priority × (1 + adoption boost)
+  const basePriority = { 'nutrient-gap': 4, 'synergy': 3, 'template': 2, 'hydration': 1 };
+  candidates.forEach(c => {
+    const boost = getTypeAdoptionRate(c.type, 14);
+    c._score = (basePriority[c.type] || 1) * (1 + boost);
+  });
+  candidates.sort((a, b) => b._score - a._score);
+
+  const items = candidates.slice(0, 4).map((c, i) => ({
+    id: c.id || ('sg-' + i),
+    type: c.type,
+    foods: c.foods,
+    reason: c.reason,
+    emoji: c.emoji,
+    adopted: false,
+    matchedMeal: null,
+    matchedAt: null
+  }));
+
+  const dayEntry = {
+    generated: new Date().toISOString(),
+    items: items,
+    adoptionRate: 0
+  };
+
+  _suggestionsData[todayStr] = dayEntry;
+  save(KEYS.suggestions, _suggestionsData);
+  return dayEntry;
+}
+
+function renderHomeSuggestions() {
+  const card = document.getElementById('homeSuggestionsCard');
+  const content = document.getElementById('homeSuggestionsContent');
+  const counter = document.getElementById('homeSuggestionsCount');
+  if (!card || !content) return;
+
+  const data = generateDailySuggestions();
+  if (!data || !data.items || data.items.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = '';
+  const items = data.items;
+  const adopted = items.filter(i => i.adopted).length;
+  const total = items.length;
+  if (counter) counter.textContent = adopted > 0 ? adopted + '/' + total + ' used' : '';
+
+  const TAG_CLASS = { 'nutrient-gap': 'sg-tag-gap', 'synergy': 'sg-tag-syn', 'template': 'sg-tag-tpl', 'hydration': 'sg-tag-hyd' };
+  const TAG_LABEL = { 'nutrient-gap': 'gap', 'synergy': 'synergy', 'template': 'favourite', 'hydration': 'hydration' };
+  const todayStr = today();
+  const isToday = true; // we only show today's suggestions on Home
+
+  // Show 3 by default, 4th behind "show more"
+  const showCount = 3;
+  let html = '';
+  items.forEach((item, idx) => {
+    const hidden = idx >= showCount ? ' style="display:none;" data-sg-extra' : '';
+    const statusIcon = item.adopted ? '✅' : '⬜';
+    const statusClass = item.adopted ? 'sg-status-used' : 'sg-status-pending';
+
+    html += '<div class="sg-row"' + hidden + '>';
+    html += '<div class="sg-row-icon">' + (item.emoji || '💡') + '</div>';
+    html += '<div class="sg-row-body">';
+    html += '<div class="sg-chips">';
+    item.foods.forEach(f => {
+      const display = f.charAt(0).toUpperCase() + f.slice(1);
+      const escaped = escHtml(f).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      html += '<span class="sg-chip" onclick="sgTapChip(\'' + escaped + '\')">' + escHtml(display) + '</span>';
+    });
+    const tagCls = TAG_CLASS[item.type] || 'sg-tag-gap';
+    const tagLabel = TAG_LABEL[item.type] || item.type;
+    html += '<span class="sg-tag ' + tagCls + '">' + tagLabel + '</span>';
+    html += '</div>';
+    html += '<div class="sg-reason">' + escHtml(item.reason) + '</div>';
+    html += '</div>';
+    html += '<div class="sg-status ' + statusClass + '">' + statusIcon + '</div>';
+    html += '</div>';
+  });
+
+  if (items.length > showCount) {
+    html += '<div class="sg-more-toggle" id="sgMoreToggle" onclick="sgToggleMore()">Show 1 more ▾</div>';
+  }
+
+  content.innerHTML = html;
+}
+
+function sgToggleMore() {
+  const extras = document.querySelectorAll('[data-sg-extra]');
+  const toggle = document.getElementById('sgMoreToggle');
+  if (!toggle || extras.length === 0) return;
+  const isHidden = extras[0].style.display === 'none';
+  extras.forEach(el => el.style.display = isHidden ? '' : 'none');
+  toggle.textContent = isHidden ? 'Show less ▴' : ('Show ' + extras.length + ' more ▾');
+}
+
+function sgTapChip(food) {
+  // Find next empty meal and open Quick Log with prefill
+  const nextMeal = _sgNextEmptyMeal();
+  if (!nextMeal) {
+    showQLToast('All meals are filled for today');
+    return;
+  }
+  openQuickLog();
+  openQuickModal('feed');
+  // Set meal + prefill after modal opens (openQuickModal resets _qlMeal via detectMealType)
+  setTimeout(function() {
+    _qlMeal = nextMeal;
+    const inp = document.getElementById('qlFeedInput');
+    if (inp) {
+      inp.value = food;
+      inp.focus();
+      updateQLFeedDropdown();
+    }
+    // Select correct meal pill
+    document.querySelectorAll('.ql-meal-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.meal === nextMeal);
+    });
+  }, 50);
+}
+
+function matchSuggestionsAfterSave(dateStr) {
+  const dayData = _suggestionsData[dateStr];
+  if (!dayData || !dayData.items) return;
+
+  const dayFoods = extractDayFoods(dateStr);
+  const dayBases = new Set(dayFoods.map(f => _baseFoodName(f)));
+
+  let changed = false;
+  dayData.items.forEach(item => {
+    if (item.adopted) return; // already matched
+    // Check if any suggested food appears in today's meals
+    const match = item.foods.some(f => {
+      const base = _baseFoodName(f.toLowerCase().trim());
+      return dayBases.has(base) || dayFoods.some(df => df.includes(f.toLowerCase().trim()) || f.toLowerCase().trim().includes(df));
+    });
+    if (match) {
+      item.adopted = true;
+      item.matchedAt = new Date().toISOString();
+      // Find which meal it matched
+      const entry = feedingData[dateStr] || {};
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+        if (item.matchedMeal) return;
+        const val = (entry[m] || '').toLowerCase();
+        if (item.foods.some(f => val.includes(f.toLowerCase().trim()))) {
+          item.matchedMeal = m;
+        }
+      });
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    const adoptedCount = dayData.items.filter(i => i.adopted).length;
+    dayData.adoptionRate = adoptedCount / dayData.items.length;
+    save(KEYS.suggestions, _suggestionsData);
+    // Refresh Home card if visible
+    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    if (curTab === 'home') renderHomeSuggestions();
+  }
+}
+
+function computeAdoptionStats(windowDays) {
+  windowDays = windowDays || 30;
+  const todayDate = new Date(today());
+  const days = [];
+  let totalAdopted = 0, totalItems = 0;
+  const byType = { 'nutrient-gap': { adopted: 0, total: 0 }, 'synergy': { adopted: 0, total: 0 }, 'template': { adopted: 0, total: 0 }, 'hydration': { adopted: 0, total: 0 } };
+  const foodAdopted = {}, foodIgnored = {};
+
+  for (let i = windowDays - 1; i >= 0; i--) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const dayData = _suggestionsData[ds];
+
+    if (!dayData || !dayData.items || dayData.items.length === 0) {
+      days.push({ date: ds, rate: null, items: 0 });
+      continue;
+    }
+
+    const dayAdopted = dayData.items.filter(it => it.adopted).length;
+    const dayTotal = dayData.items.length;
+    const rate = dayTotal > 0 ? dayAdopted / dayTotal : 0;
+    days.push({ date: ds, rate: rate, items: dayTotal, adopted: dayAdopted });
+
+    totalAdopted += dayAdopted;
+    totalItems += dayTotal;
+
+    dayData.items.forEach(item => {
+      if (byType[item.type]) {
+        byType[item.type].total++;
+        if (item.adopted) byType[item.type].adopted++;
+      }
+      (item.foods || []).forEach(f => {
+        const base = _baseFoodName(f.toLowerCase().trim());
+        if (item.adopted) {
+          foodAdopted[base] = (foodAdopted[base] || 0) + 1;
+        } else if (ds !== today()) {
+          // only count as ignored if day is in the past
+          foodIgnored[base] = (foodIgnored[base] || 0) + 1;
+        }
+      });
+    });
+  }
+
+  const overallRate = totalItems > 0 ? totalAdopted / totalItems : 0;
+
+  // Weekly trend: compare last 7 days vs previous 7
+  const recentDays = days.slice(-7).filter(d => d.rate !== null);
+  const prevDays = days.slice(-14, -7).filter(d => d.rate !== null);
+  const recentAvg = recentDays.length > 0 ? recentDays.reduce((s, d) => s + d.rate, 0) / recentDays.length : 0;
+  const prevAvg = prevDays.length > 0 ? prevDays.reduce((s, d) => s + d.rate, 0) / prevDays.length : 0;
+  let trend = 'stable';
+  if (recentDays.length >= 2 && prevDays.length >= 2) {
+    if (recentAvg > prevAvg + 0.1) trend = 'improving';
+    else if (recentAvg < prevAvg - 0.1) trend = 'declining';
+  }
+
+  // Top adopted/ignored (last 14 days)
+  const topAdopted = Object.entries(foodAdopted).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const topIgnored = Object.entries(foodIgnored).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  return { days, overallRate, totalAdopted, totalItems, byType, trend, topAdopted, topIgnored };
+}
+
+function renderInfoAdoption() {
+  const card = document.getElementById('infoAdoptionCard');
+  const summaryEl = document.getElementById('infoAdoptionSummary');
+  const heatmapEl = document.getElementById('infoAdoptionHeatmap');
+  const typesEl = document.getElementById('infoAdoptionTypes');
+  const foodsEl = document.getElementById('infoAdoptionFoods');
+  if (!card || !summaryEl) return;
+
+  const data = computeAdoptionStats(30);
+
+  // Need at least 2 days of data to show the card
+  const daysWithData = data.days.filter(d => d.rate !== null).length;
+  if (daysWithData < 2) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  // Summary line
+  const pct = Math.round(data.overallRate * 100);
+  const trendIcon = data.trend === 'improving' ? '↗' : data.trend === 'declining' ? '↘' : '→';
+  const trendColor = data.trend === 'improving' ? 'var(--tc-sage)' : data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--light)';
+  const trendLabel = data.trend === 'improving' ? 'improving' : data.trend === 'declining' ? 'declining' : 'steady';
+  summaryEl.innerHTML = '<div class="fx-row g8" style="align-items:center;flex-wrap:wrap;">' +
+    '<div class="t-sm" style="font-weight:600;">' + pct + '% overall</div>' +
+    '<div class="t-sm" style="color:var(--light);">·</div>' +
+    '<div class="t-sm" style="color:' + trendColor + ';font-weight:500;">' + trendIcon + ' ' + trendLabel + '</div>' +
+    '</div>';
+
+  // Heatmap: 7 columns, start from Monday
+  const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  let hmHtml = '<div class="sa-heatmap">';
+  // Day headers
+  DAY_LABELS.forEach(d => { hmHtml += '<div class="sa-day-label">' + d + '</div>'; });
+
+  // Pad to start on correct weekday (Monday = 0)
+  const firstDate = new Date(data.days[0].date);
+  const firstDow = (firstDate.getDay() + 6) % 7; // Mon=0 .. Sun=6
+  for (let p = 0; p < firstDow; p++) {
+    hmHtml += '<div class="sa-cell sa-cell-empty"></div>';
+  }
+
+  const todayStr = today();
+  data.days.forEach(d => {
+    const isToday = d.date === todayStr;
+    let cls = 'sa-cell';
+    if (d.rate === null) {
+      cls += ' sa-cell-empty';
+    } else {
+      const r = d.rate;
+      if (r >= 0.8) cls += ' sa-cell-100';
+      else if (r >= 0.6) cls += ' sa-cell-75';
+      else if (r >= 0.4) cls += ' sa-cell-50';
+      else if (r > 0) cls += ' sa-cell-25';
+      else cls += ' sa-cell-0';
+    }
+    if (isToday) cls += ' sa-cell-today';
+    const title = d.rate !== null ? (d.date + ': ' + Math.round(d.rate * 100) + '% (' + d.adopted + '/' + d.items + ')') : (d.date + ': no suggestions');
+    hmHtml += '<div class="' + cls + '" title="' + title + '"></div>';
+  });
+  hmHtml += '</div>';
+  if (heatmapEl) heatmapEl.innerHTML = hmHtml;
+
+  // Type breakdown
+  const typeConfig = [
+    { key: 'nutrient-gap', icon: '🩸', label: 'Nutrient gap', fillCls: 'sa-type-fill-gap' },
+    { key: 'synergy', icon: '✨', label: 'Synergy', fillCls: 'sa-type-fill-syn' },
+    { key: 'template', icon: '🍽️', label: 'Template', fillCls: 'sa-type-fill-tpl' },
+    { key: 'hydration', icon: '💧', label: 'Hydration', fillCls: 'sa-type-fill-hyd' },
+  ];
+  let typesHtml = '';
+  typeConfig.forEach(tc => {
+    const d = data.byType[tc.key];
+    const pct = d.total > 0 ? Math.round((d.adopted / d.total) * 100) : 0;
+    const fillW = d.total > 0 ? pct : 0;
+    typesHtml += '<div class="sa-type-row">';
+    typesHtml += '<div class="sa-type-icon">' + tc.icon + '</div>';
+    typesHtml += '<div class="sa-type-label">' + tc.label + '</div>';
+    typesHtml += '<div class="sa-type-bar"><div class="sa-type-fill ' + tc.fillCls + '" style="width:' + fillW + '%;"></div></div>';
+    typesHtml += '<div class="sa-type-pct" style="color:' + (pct >= 60 ? 'var(--tc-sage)' : pct >= 30 ? 'var(--tc-amber)' : 'var(--tc-rose)') + ';">' + pct + '%</div>';
+    typesHtml += '</div>';
+  });
+  if (typesEl) typesEl.innerHTML = typesHtml;
+
+  // Top adopted / often skipped
+  let foodsHtml = '';
+  if (data.topAdopted.length > 0) {
+    foodsHtml += '<div class="sa-foods">Top adopted: <strong>' +
+      data.topAdopted.map(([f, c]) => f + ' (' + c + '×)').join(', ') +
+      '</strong></div>';
+  }
+  if (data.topIgnored.length > 0) {
+    foodsHtml += '<div class="sa-foods">Often skipped: ' +
+      data.topIgnored.map(([f, c]) => f + ' (0/' + c + ')').join(', ') +
+      '</div>';
+  }
+  if (foodsEl) foodsEl.innerHTML = foodsHtml;
+}
+
 // Get top foods for a specific meal slot
 function getMealSlotTopFoods(mealKey, n) {
   const counts = {};
@@ -15673,6 +16283,7 @@ function saveFeedingDay() {
   renderDietStats();
   renderDietIntelBanner();
   showPostSaveFlash(d);
+  matchSuggestionsAfterSave(d);
 }
 
 // ── Post-Save Nutrition Flash ──
@@ -20813,6 +21424,7 @@ function saveQLFeed() {
 
   closeQuickLogAll();
   showQLToast(toastMsg, hasNutrientFlash ? 4000 : 3000, undoFn);
+  matchSuggestionsAfterSave(dateStr);
 
   // Refresh if on diet tab or home
   const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -26387,6 +26999,7 @@ function renderInfo() {
   renderInfoComboFreq();
   renderInfoMealBreakdown();
   renderInfoSmartPairing();
+  renderInfoAdoption();
   renderInfoHydration();
 }
 
