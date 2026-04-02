@@ -99,6 +99,25 @@
   --overlay-bg:    rgba(60,40,40,0.5);
 }
 
+/* ── Text Zoom ── */
+:root[data-zoom="med"] {
+  --fs-2xs:0.644rem; --fs-xs:0.748rem; --fs-sm:0.863rem;
+  --fs-base:0.978rem; --fs-md:1.093rem; --fs-lg:1.265rem;
+  --fs-xl:1.553rem; --fs-2xl:1.840rem; --fs-3xl:2.300rem;
+}
+:root[data-zoom="high"] {
+  --fs-2xs:0.728rem; --fs-xs:0.845rem; --fs-sm:0.975rem;
+  --fs-base:1.105rem; --fs-md:1.235rem; --fs-lg:1.430rem;
+  --fs-xl:1.755rem; --fs-2xl:2.080rem; --fs-3xl:2.600rem;
+}
+
+/* Greeting card exemption — always Low */
+.header {
+  --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem;
+  --fs-base:0.85rem; --fs-md:0.95rem; --fs-lg:1.1rem;
+  --fs-xl:1.35rem; --fs-2xl:1.6rem; --fs-3xl:2.0rem;
+}
+
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 /* ── Accessibility ── */
@@ -1294,6 +1313,23 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 input:checked + .toggle-track { background:var(--sage); }
 input:checked + .toggle-track::before { transform:translateX(20px); }
 
+/* ── Zoom Slider ── */
+.zoom-slider-wrap { padding:var(--sp-8) 0; }
+.zoom-slider { -webkit-appearance:none; appearance:none; width:100%; height:6px;
+  border-radius:var(--r-full); background:var(--border-subtle); outline:none; }
+.zoom-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none;
+  width:24px; height:24px; border-radius:50%; background:var(--tc-indigo);
+  cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+.zoom-slider::-moz-range-thumb { width:24px; height:24px; border-radius:50%;
+  background:var(--tc-indigo); cursor:pointer; border:none;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+.zoom-ticks { display:flex; justify-content:space-between; padding:4px 2px 0;
+  font-size:var(--fs-2xs); color:var(--light); font-weight:600;
+  text-transform:uppercase; letter-spacing:var(--ls-wide); }
+.zoom-preview { margin-top:var(--sp-8); padding:10px 14px; border-radius:var(--r-md);
+  background:var(--warm); font-size:var(--fs-base); color:var(--text);
+  text-align:center; transition:font-size 0.2s ease; }
+
 /* ── Growth facts ── */
 .growth-fact {
   display:flex; align-items:flex-start; gap:var(--sp-12);
@@ -2370,14 +2406,15 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .ep-entry-tap:active { background:rgba(255,255,255,0.04); }
 .ep-edit-overlay {
   position:fixed; inset:0; background:rgba(60,40,40,0.2);
-  backdrop-filter:blur(2px); z-index:110;
+  backdrop-filter:blur(2px); z-index:1010;
   display:flex; align-items:flex-end; justify-content:center;
   animation:fadeIn 0.15s ease;
 }
 .ep-edit-sheet {
-  background:white; border-radius:var(--r-xl) var(--r-xl) 0 0; padding:20px 20px 28px;
+  background:white; border-radius:var(--r-xl) var(--r-xl) 0 0; padding:20px 20px calc(28px + env(safe-area-inset-bottom, 0px));
   box-shadow:0 -8px 40px rgba(0,0,0,0.15); max-width:400px; width:100%;
   animation:epSlideUp 0.2s ease;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));
 }
 @keyframes epSlideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
 .ep-edit-title { font-size:var(--fs-base); font-weight:700; color:var(--text); margin-bottom:14px; }
@@ -4456,6 +4493,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sidebar-save-btn { background:rgba(58,112,96,0.12); }
 [data-theme="dark"] .sidebar-save-btn:active { background:#3d7a60; }
 [data-theme="dark"] .sidebar-overlay { background:rgba(0,0,0,0.55); }
+[data-theme="dark"] .zoom-slider { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .zoom-preview { background:var(--base); }
 [data-theme="dark"] .insights-fab { background:linear-gradient(135deg, #c09030, #a07828); box-shadow:0 4px 16px rgba(0,0,0,0.4); }
 [data-theme="dark"] .insights-fab.fab-active { background:var(--light); }
 [data-theme="dark"] .insights-popup { background:var(--body-bg); box-shadow:0 -8px 32px rgba(0,0,0,0.5); }
@@ -6413,6 +6452,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <!-- Settings sub-tabs (horizontally scrollable) -->
   <div class="sidebar-tabs">
     <button class="settings-tab active-st" id="st-general" onclick="switchSettingsTab('general')">⚙️ General</button>
+    <button class="settings-tab" id="st-display" onclick="switchSettingsTab('display')">🎨 Display</button>
     <button class="settings-tab" id="st-data" onclick="switchSettingsTab('data')">💾 Data</button>
     <button class="settings-tab" id="st-recovery" onclick="switchSettingsTab('recovery')">🔄 Recovery</button>
   </div>
@@ -6428,32 +6468,12 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <div style="font-size:var(--fs-base);font-weight:600;color:var(--tc-caution);margin-bottom:8px;">⚙️ Preferences</div>
           <div class="fx-col g12">
             <div class="d-flex items-center justify-between">
-              <div>
-                <div class="t-md">Simple mode</div>
-                <div class="t-sub">Clean view — essentials only</div>
-              </div>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
-                <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" style="opacity:0;width:0;height:0;" checked>
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-            <div class="d-flex items-center justify-between">
               <label class="t-md">Height unit</label>
               <select id="settingsHeightUnit" onchange="saveHeightUnitPref()" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
                 <option value="ft">Feet & Inches (2′ 2″)</option>
                 <option value="cm">Centimetres (66 cm)</option>
                 <option value="in">Inches (26 in)</option>
               </select>
-            </div>
-            <div class="d-flex items-center justify-between">
-              <div>
-                <div class="t-md">Dark mode</div>
-                <div class="t-sub">Easier on eyes at 2 AM</div>
-              </div>
-              <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
-                <input type="checkbox" id="settingsDarkMode" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
-                <span class="toggle-track"></span>
-              </label>
             </div>
             <div class="d-flex items-center justify-between">
               <div>
@@ -6505,6 +6525,55 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
 
         <div style="font-size:var(--fs-sm);color:var(--light);line-height:var(--lh-relaxed);">Your data lives in this browser's localStorage (~5 MB limit). Export regularly via the Data tab to keep a backup.</div>
+      </div>
+    </div>
+
+    <!-- DISPLAY TAB -->
+    <div class="settings-pane" id="sp-display">
+      <div class="fx-col g12">
+        <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--indigo-light);border:1.5px solid rgba(155,168,216,0.3);">
+          <div style="font-size:var(--fs-base);font-weight:600;color:var(--tc-indigo);margin-bottom:8px;">🎨 Display</div>
+          <div class="fx-col g12">
+
+            <!-- Dark Mode (moved from General) -->
+            <div class="d-flex items-center justify-between">
+              <div>
+                <div class="t-md">Dark mode</div>
+                <div class="t-sub">Easier on eyes at 2 AM</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
+                <input type="checkbox" id="settingsDarkMode" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <!-- Simple Mode (moved from General) -->
+            <div class="d-flex items-center justify-between">
+              <div>
+                <div class="t-md">Simple mode</div>
+                <div class="t-sub">Clean view — essentials only</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
+                <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" style="opacity:0;width:0;height:0;" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <!-- Text Zoom (new) -->
+            <div>
+              <div class="t-md">Text size</div>
+              <div class="t-sub">Adjust reading comfort</div>
+              <div class="zoom-slider-wrap">
+                <input type="range" id="settingsZoomSlider" class="zoom-slider" min="0" max="2" step="1" value="0" oninput="setZoomLevel(['low','med','high'][this.value])">
+                <div class="zoom-ticks">
+                  <span>Low</span><span>Med</span><span>High</span>
+                </div>
+              </div>
+              <div class="zoom-preview" id="zoomPreview">Aa — This is how text will look</div>
+            </div>
+
+          </div>
+        </div>
       </div>
     </div>
 
@@ -23370,7 +23439,7 @@ function quickSave() { quickSaveNow(); }
 
 function switchSettingsTab(tab) {
   // Toggle sub-tab buttons
-  ['general','data','recovery'].forEach(t => {
+  ['general','display','data','recovery'].forEach(t => {
     const btn = document.getElementById('st-' + t);
     const pane = document.getElementById('sp-' + t);
     if (btn) btn.classList.toggle('active-st', t === tab);
@@ -23379,13 +23448,12 @@ function switchSettingsTab(tab) {
   // Lazy-load tab-specific data
   if (tab === 'data') updateStorageUsage();
   if (tab === 'recovery') { updateLastSavedDisplay(); renderAutosaveInfo(); }
+  if (tab === 'display') renderDisplaySettings();
   if (tab === 'general') {
     const swipeEl = document.getElementById('settingsSwipeTabs');
     if (swipeEl) swipeEl.checked = localStorage.getItem('ziva_swipe_tabs') !== 'off';
     const dietEl = document.getElementById('settingsDietPref');
     if (dietEl) dietEl.value = getDietPref();
-    const darkEl = document.getElementById('settingsDarkMode');
-    if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
     const refStdEl = document.getElementById('settingsRefStd');
     if (refStdEl) refStdEl.value = _referenceStandard;
   }
@@ -23398,7 +23466,7 @@ function saveSwipePref() {
 
 // ── Settings sub-tab swipe ──
 (function() {
-  const STABS = ['general','data','recovery'];
+  const STABS = ['general','display','data','recovery'];
   let sx = 0, sy = 0;
   document.addEventListener('touchstart', e => {
     const wrap = e.target.closest('.settings-pane-wrap');
@@ -24334,6 +24402,8 @@ function toggleSimpleMode() {
   if (currentTab === 'home') {
     renderHomeContextAlerts();
   }
+  // Reset zoom to mode default
+  setZoomLevel(on ? 'med' : 'low');
 }
 
 function initSimpleMode() {
@@ -24345,6 +24415,48 @@ function initSimpleMode() {
   }
   const toggle = document.getElementById('settingsSimpleMode');
   if (toggle) toggle.checked = isSimple;
+}
+
+// ── Text Zoom ──
+function setZoomLevel(level) {
+  const valid = ['low','med','high'];
+  if (!valid.includes(level)) level = 'low';
+  const html = document.documentElement;
+  if (level === 'low') {
+    html.removeAttribute('data-zoom');
+  } else {
+    html.setAttribute('data-zoom', level);
+  }
+  localStorage.setItem('ziva_zoom_level', level);
+  // Sync slider if open
+  const slider = document.getElementById('settingsZoomSlider');
+  if (slider) slider.value = valid.indexOf(level);
+}
+
+function initZoomLevel() {
+  const saved = localStorage.getItem('ziva_zoom_level');
+  if (saved) {
+    setZoomLevel(saved);
+  } else {
+    // Infer from simple mode
+    const isSimple = document.body.classList.contains('simple-mode');
+    setZoomLevel(isSimple ? 'med' : 'low');
+  }
+}
+
+function renderDisplaySettings() {
+  // Sync dark mode toggle
+  const darkEl = document.getElementById('settingsDarkMode');
+  if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
+  // Sync simple mode toggle
+  const simpleEl = document.getElementById('settingsSimpleMode');
+  if (simpleEl) simpleEl.checked = document.body.classList.contains('simple-mode');
+  // Sync zoom slider
+  const slider = document.getElementById('settingsZoomSlider');
+  if (slider) {
+    const level = localStorage.getItem('ziva_zoom_level') || 'low';
+    slider.value = ['low','med','high'].indexOf(level);
+  }
 }
 
 function toggleDarkMode() {
@@ -32968,6 +33080,7 @@ function isPWA() {
 // ─────────────────────────────────────────
 initDarkMode();
 initSimpleMode();
+initZoomLevel();
 init();
 initWelcomeGuide();
 </script>
