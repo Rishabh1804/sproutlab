@@ -5903,7 +5903,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- Illness Frequency -->
       <div class="card card-daily col-full" id="infoIllnessFreqCard">
         <div class="card-header" onclick="toggleHistoryCard('infoIllnessFreqBody','infoIllnessFreqChevron')">
-          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-heart"/></svg></div> Illness Frequency</div>
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Illness Frequency</div>
           <span class="collapse-chevron" id="infoIllnessFreqChevron">▾</span>
         </div>
         <div id="infoIllnessFreqSummary" class="mt-4"></div>
@@ -5930,7 +5930,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- Illness ↔ Food Correlation -->
       <div class="card card-daily col-full" id="infoIllnessFoodCard">
         <div class="card-header" onclick="toggleHistoryCard('infoIllnessFoodBody','infoIllnessFoodChevron')">
-          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-spoon"/></svg></div> Illness & Food Link</div>
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-scope"/></svg></div> Illness & Food Link</div>
           <span class="collapse-chevron" id="infoIllnessFoodChevron">▾</span>
         </div>
         <div id="infoIllnessFoodSummary" class="mt-4"></div>
@@ -5957,7 +5957,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- Illness ↔ Sleep Impact -->
       <div class="card card-daily col-full" id="infoIllnessSleepCard">
         <div class="card-header" onclick="toggleHistoryCard('infoIllnessSleepBody','infoIllnessSleepChevron')">
-          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Illness & Sleep</div>
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-moon"/></svg></div> Illness & Sleep</div>
           <span class="collapse-chevron" id="infoIllnessSleepChevron">▾</span>
         </div>
         <div id="infoIllnessSleepSummary" class="mt-4"></div>
@@ -5970,7 +5970,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- New Food → Reaction Timeline -->
       <div class="card card-daily col-full" id="infoFoodReactionCard">
         <div class="card-header" onclick="toggleHistoryCard('infoFoodReactionBody','infoFoodReactionChevron')">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-alert"/></svg></div> Food Reaction Timeline</div>
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-warn"/></svg></div> Food Reaction Timeline</div>
           <span class="collapse-chevron" id="infoFoodReactionChevron">▾</span>
         </div>
         <div id="infoFoodReactionSummary" class="mt-4"></div>
@@ -30294,7 +30294,7 @@ function computeIllnessFrequency() {
     const d = new Date(e.startedAt);
     return (now - d) < 60 * 86400000;
   });
-  const freqPer30 = last60.length > 0 ? (last60.length / 2).toFixed(1) : 0;
+  const freqPer30 = last60.length > 0 ? (last60.length / 2).toFixed(1) : '0';
 
   // Average gap between episodes
   let avgGapDays = null;
@@ -30317,18 +30317,25 @@ function computeIllnessFrequency() {
   if (last60Days.length >= 3) {
     insights.push({ type: 'warn', text: last60Days.length + ' illness episodes in the last 2 months — worth discussing with your paediatrician at the next visit.' });
   }
-  // Co-occurring illness detection
-  for (let i = 0; i < all.length; i++) {
-    for (let j = i + 1; j < all.length; j++) {
-      const a = _episodeDateRange(all[i]);
-      const b = _episodeDateRange(all[j]);
-      if (a.startMs <= b.endMs && b.startMs <= a.endMs && all[i].illnessType !== all[j].illnessType) {
+  // Co-occurring illness detection (last 6 months only, deduplicated by type pair)
+  const seenPairs = new Set();
+  const recent = all.filter(e => (now - new Date(e.startedAt)) < 180 * 86400000);
+  coLoop:
+  for (let i = 0; i < recent.length; i++) {
+    for (let j = i + 1; j < recent.length; j++) {
+      if (recent[i].illnessType === recent[j].illnessType) continue;
+      const pairKey = [recent[i].illnessType, recent[j].illnessType].sort().join('+');
+      if (seenPairs.has(pairKey)) continue;
+      const a = _episodeDateRange(recent[i]);
+      const b = _episodeDateRange(recent[j]);
+      if (a.startMs <= b.endMs && b.startMs <= a.endMs) {
+        seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: all[i].emoji + ' ' + all[i].illnessType + ' and ' + all[j].emoji + ' ' + all[j].illnessType + ' overlapped around ' +
-            formatDate(all[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
+          text: recent[i].emoji + ' ' + recent[i].illnessType + ' and ' + recent[j].emoji + ' ' + recent[j].illnessType + ' overlapped around ' +
+            formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
-        break; // only report first overlap
+        if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights
       }
     }
   }
@@ -30496,9 +30503,31 @@ function renderInfoVaccFever() {
     summaryEl.innerHTML = '<div class="t-sm" style="color:var(--tc-sage);font-weight:500;">✅ No post-vaccination fevers detected across ' + data.totalVaccDates + ' vaccination dates</div>';
   }
 
-  // Timeline
+  // Timeline — show most recent 5, toggle for rest
+  const CAP = 5;
+  const showAll = data.results.length <= CAP;
+  const visibleResults = showAll ? data.results : data.results.slice(-CAP);
+  const hiddenCount = data.results.length - visibleResults.length;
+
   let tlHtml = '';
-  data.results.forEach(r => {
+  if (!showAll) {
+    tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier ▾\':\'Hide earlier ▴\';">Show ' + hiddenCount + ' earlier ▾</div>';
+    tlHtml += '<div style="display:none;">';
+    data.results.slice(0, hiddenCount).forEach(r => {
+      const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
+      tlHtml += '<div class="mi-vacc-row">';
+      tlHtml += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
+      tlHtml += '<div class="mi-vacc-info">';
+      tlHtml += '<div class="mi-vacc-name">' + r.vaccines.join(', ') + '</div>';
+      tlHtml += '<div class="mi-vacc-detail">' + formatDate(r.date) + '</div>';
+      if (r.hadFever) {
+        tlHtml += '<div class="mi-vacc-fever">🌡️ Fever within 72h — peak ' + (r.peakTemp || '?') + '°F, lasted ' + (r.feverDuration || '?') + ' day(s)</div>';
+      }
+      tlHtml += '</div></div>';
+    });
+    tlHtml += '</div>';
+  }
+  visibleResults.forEach(r => {
     const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
     tlHtml += '<div class="mi-vacc-row">';
     tlHtml += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
@@ -30692,8 +30721,9 @@ function computePostIllnessRecovery() {
     const epRange = _episodeDateRange(ep);
     let illMeals = 0, illDays = 0, recMeals = 0, recDays = 0;
 
-    const resolveDateObj = new Date(ep.resolvedAt);
-    for (let d = new Date(ep.startedAt); d <= resolveDateObj; d.setDate(d.getDate() + 1)) {
+    const resolveDateObj = new Date(resolveDate + 'T00:00:00');
+    const startDateObj = new Date(startDate + 'T00:00:00');
+    for (let d = new Date(startDateObj); d <= resolveDateObj; d.setDate(d.getDate() + 1)) {
       const ds = toDateStr(d);
       const fd = feedingData[ds];
       if (fd) {
@@ -30911,10 +30941,13 @@ function renderInfoIllnessSleep() {
   let gridHtml = '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-bottom:var(--sp-4);">28-Day Sleep & Illness Overlay</div>';
   gridHtml += '<div class="mi-sleep-grid">';
 
-  // Day headers
+  // Day headers — use actual weekday labels from first week
   gridHtml += '<div class="mi-sleep-header"></div>';
-  const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-  dayLabels.forEach(dl => { gridHtml += '<div class="mi-sleep-header">' + dl + '</div>'; });
+  const firstWeek = data.weeks[0] || [];
+  for (let c = 0; c < 7; c++) {
+    const dayLabel = firstWeek[c] ? firstWeek[c].day : '';
+    gridHtml += '<div class="mi-sleep-header">' + dayLabel + '</div>';
+  }
 
   // Rows (weeks)
   data.weeks.forEach((week, wi) => {
