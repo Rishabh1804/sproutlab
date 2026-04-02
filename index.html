@@ -2076,6 +2076,21 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .mi-frt-entry { border-bottom-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .mi-frt-line { background:rgba(255,255,255,0.1); }
 
+/* ── Medical Intelligence Phase 2 ── */
+.mi-adherence-row { display:flex; flex-wrap:wrap; gap:3px; }
+.mi-adherence-dot { width:14px; height:14px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; font-size:8px; }
+.mi-adherence-dot.mi-adh-done { background:rgba(58,112,96,0.2); color:var(--tc-sage); }
+.mi-adherence-dot.mi-adh-missed { background:rgba(230,100,100,0.2); color:var(--tc-rose); }
+.mi-adherence-dot.mi-adh-skipped { background:rgba(240,180,80,0.2); color:var(--tc-amber); }
+.mi-adherence-dot.mi-adh-late { background:rgba(180,180,180,0.2); color:var(--mid); }
+.mi-adherence-dot.mi-adh-future { background:rgba(0,0,0,0.03); }
+.mi-velocity-range { position:relative; height:8px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:visible; margin:var(--sp-8) 0; }
+.mi-velocity-expected { position:absolute; top:0; height:100%; border-radius:var(--r-full); background:rgba(58,112,96,0.15); }
+.mi-velocity-marker { position:absolute; top:-4px; width:16px; height:16px; border-radius:var(--r-full); border:2px solid var(--surface); box-shadow:0 1px 4px rgba(0,0,0,0.15); transform:translateX(-50%); }
+[data-theme="dark"] .mi-adherence-dot.mi-adh-future { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .mi-velocity-range { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .mi-velocity-marker { border-color:var(--surface); }
+
 /* ── Texture Progression ── */
 .mi-tex-stage { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; }
 .mi-tex-icon { width:32px; height:32px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
@@ -6378,6 +6393,64 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <div id="infoHydrationGrid" class="mt-4"></div>
           <div id="infoHydrationAlerts" class="mt-8"></div>
           <div id="infoHydrationCorr" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Supplement Adherence -->
+      <div class="card card-daily col-full" id="infoSupplementCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSupplementBody','infoSupplementChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-pill"/></svg></div> Supplement Adherence</div>
+          <span class="collapse-chevron" id="infoSupplementChevron">▾</span>
+        </div>
+        <div id="infoSupplementSummary" class="t-sm mt-4"></div>
+        <div id="infoSupplementBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoSupplementCalendar" class="mt-4"></div>
+          <div id="infoSupplementGrid" class="mt-8"></div>
+          <div id="infoSupplementTiming" class="mt-8"></div>
+          <div id="infoSupplementInsight" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Vaccination Recovery -->
+      <div class="card card-daily col-full" id="infoVaccRecoveryCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoVaccRecoveryBody','infoVaccRecoveryChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-shield"/></svg></div> Vaccination Recovery</div>
+          <span class="collapse-chevron" id="infoVaccRecoveryChevron">▾</span>
+        </div>
+        <div id="infoVaccRecoverySummary" class="t-sm mt-4"></div>
+        <div id="infoVaccRecoveryBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoVaccRecoveryList" class="mt-4"></div>
+          <div id="infoVaccRecoveryGrid" class="mt-8"></div>
+          <div id="infoVaccRecoveryPredict" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Growth Velocity Alerts -->
+      <div class="card card-daily col-full" id="infoGrowthVelocityCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoGrowthVelocityBody','infoGrowthVelocityChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-ruler"/></svg></div> Growth Velocity Alerts</div>
+          <span class="collapse-chevron" id="infoGrowthVelocityChevron">▾</span>
+        </div>
+        <div id="infoGrowthVelocitySummary" class="t-sm mt-4"></div>
+        <div id="infoGrowthVelocityBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoGrowthVelocityBar" class="mt-4"></div>
+          <div id="infoGrowthVelocityPercentile" class="mt-8"></div>
+          <div id="infoGrowthVelocityGrid" class="mt-8"></div>
+          <div id="infoGrowthVelocityInsight" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Doctor Visit Prep -->
+      <div class="card card-daily col-full" id="infoVisitPrepCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoVisitPrepBody','infoVisitPrepChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-steth"/></svg></div> Doctor Visit Preparation</div>
+          <span class="collapse-chevron" id="infoVisitPrepChevron">▾</span>
+        </div>
+        <div id="infoVisitPrepSummary" class="t-sm mt-4"></div>
+        <div id="infoVisitPrepBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoVisitPrepSections" class="mt-4"></div>
+          <div id="infoVisitPrepConcerns" class="mt-8"></div>
+          <div id="infoVisitPrepInsight" class="mt-8"></div>
         </div>
       </div>
 
@@ -32486,6 +32559,10 @@ function renderInfo() {
   renderInfoIllnessSleep();
   renderInfoFoodReaction();
   renderInfoHydration();
+  renderInfoSupplementAdherence();
+  renderInfoVaccRecovery();
+  renderInfoGrowthVelocity();
+  renderInfoVisitPrep();
 }
 
 function renderInfoFoodIntro() {
@@ -35064,7 +35141,1015 @@ function _renderHydrationContent() {
   }
 }
 
-// ── Update renderInfo ──
+// ════════════════════════════════════════
+// MEDICAL INTELLIGENCE PHASE 2
+// ════════════════════════════════════════
+
+// ── Feature 1: Supplement Adherence & Timing ──
+
+function computeSupplementAdherence(windowDays) {
+  if (windowDays === undefined) windowDays = 30;
+  const activeMeds = (meds || []).filter(function(m) { return m.active; });
+  if (activeMeds.length === 0) return null;
+  var todayStr = today();
+  var todayD = new Date(todayStr);
+  var trackingSince = (medChecks && medChecks._trackingSince) ? medChecks._trackingSince : null;
+  var results = [];
+
+  activeMeds.forEach(function(med) {
+    var medStart = med.start || trackingSince || todayStr;
+    var doneCount = 0, skippedCount = 0, missedCount = 0, lateCount = 0;
+    var times = []; // minutes since midnight
+    var streakCurrent = 0, streakLongest = 0, streakRunning = true;
+    var dayOfWeekMisses = [0,0,0,0,0,0,0]; // Sun-Sat
+    var dayOfWeekTotal = [0,0,0,0,0,0,0];
+    var calendar = []; // {date, status}
+    var recentDone = 0, recentTotal = 0, prevDone = 0, prevTotal = 0;
+
+    for (var i = 0; i < windowDays; i++) {
+      var d = new Date(todayD);
+      d.setDate(d.getDate() - i);
+      var ds = toDateStr(d);
+      if (ds < medStart) continue;
+      if (ds > todayStr) continue;
+      var dayEntry = medChecks ? medChecks[ds] : null;
+      var status = dayEntry ? dayEntry[med.name] : undefined;
+      var dow = d.getDay();
+
+      var calStatus = 'missed';
+      if (status && status.indexOf('done') === 0) {
+        var timeStr = status.replace('done:', '');
+        if (timeStr === 'late') {
+          lateCount++;
+          calStatus = 'late';
+          doneCount++; // late still counts as done for adherence
+        } else {
+          doneCount++;
+          calStatus = 'done';
+          // Parse time
+          var parsed = _parseSupplementTime(timeStr);
+          if (parsed !== null) times.push(parsed);
+        }
+      } else if (status === 'skipped') {
+        skippedCount++;
+        calStatus = 'skipped';
+        dayOfWeekMisses[dow]++;
+      } else if (ds === todayStr) {
+        // Today with no entry yet — don't count as missed, skip entirely
+        continue;
+      } else {
+        missedCount++;
+        calStatus = 'missed';
+        dayOfWeekMisses[dow]++;
+      }
+
+      dayOfWeekTotal[dow]++;
+
+      // Streak (counting from today backward)
+      if (streakRunning) {
+        if (calStatus === 'done' || calStatus === 'late') {
+          streakCurrent++;
+        } else {
+          streakRunning = false;
+        }
+      }
+
+      // Trend: first 14 days = recent, next 14 = previous
+      if (i < 14) { recentTotal++; if (calStatus === 'done' || calStatus === 'late') recentDone++; }
+      else if (i < 28) { prevTotal++; if (calStatus === 'done' || calStatus === 'late') prevDone++; }
+
+      calendar.push({ date: ds, status: calStatus });
+    }
+
+    // Longest streak in window
+    var tempStreak = 0;
+    // calendar is newest-first, iterate oldest-first for longest streak
+    for (var j = calendar.length - 1; j >= 0; j--) {
+      if (calendar[j].status === 'done' || calendar[j].status === 'late') {
+        tempStreak++;
+        if (tempStreak > streakLongest) streakLongest = tempStreak;
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    var totalDays = doneCount + skippedCount + missedCount;
+    var adherenceRate = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
+    var onTimeRate = totalDays > 0 ? Math.round(((doneCount - lateCount) / totalDays) * 100) : 0;
+
+    // Timing analysis
+    var timingAnalysis = null;
+    if (times.length >= 3) {
+      var avgMin = Math.round(times.reduce(function(s,v){return s+v;}, 0) / times.length);
+      var variance = times.reduce(function(s,v){return s + (v - avgMin) * (v - avgMin);}, 0) / times.length;
+      var stdDev = Math.round(Math.sqrt(variance));
+      var earliest = Math.min.apply(null, times);
+      var latest = Math.max.apply(null, times);
+      var consistency = stdDev < 60 ? 'Consistent' : (stdDev < 120 ? 'Variable' : 'Irregular');
+      // Most common window
+      var windows = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+      times.forEach(function(t) {
+        if (t >= 300 && t < 660) windows.morning++;
+        else if (t >= 660 && t < 960) windows.afternoon++;
+        else if (t >= 960 && t < 1260) windows.evening++;
+        else windows.night++;
+      });
+      var bestWindow = 'morning';
+      var bestWindowCount = 0;
+      Object.keys(windows).forEach(function(k) { if (windows[k] > bestWindowCount) { bestWindowCount = windows[k]; bestWindow = k; } });
+      timingAnalysis = { avgMin: avgMin, stdDev: stdDev, earliest: earliest, latest: latest, consistency: consistency, bestWindow: bestWindow };
+    }
+
+    // Day-of-week pattern
+    var flaggedDays = [];
+    for (var dow2 = 0; dow2 < 7; dow2++) {
+      if (dayOfWeekTotal[dow2] >= 2 && dayOfWeekMisses[dow2] / dayOfWeekTotal[dow2] >= 0.5) {
+        flaggedDays.push(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dow2]);
+      }
+    }
+
+    // Trend
+    var recentRate = recentTotal > 0 ? Math.round((recentDone / recentTotal) * 100) : 0;
+    var prevRate = prevTotal > 0 ? Math.round((prevDone / prevTotal) * 100) : 0;
+    var trend = recentTotal < 7 ? 'insufficient' : (recentRate > prevRate + 10 ? 'improving' : (recentRate < prevRate - 10 ? 'declining' : 'stable'));
+
+    results.push({
+      name: med.name,
+      adherenceRate: adherenceRate,
+      onTimeRate: onTimeRate,
+      doneCount: doneCount,
+      skippedCount: skippedCount,
+      missedCount: missedCount,
+      lateCount: lateCount,
+      currentStreak: streakCurrent,
+      longestStreak: streakLongest,
+      totalDays: totalDays,
+      timing: timingAnalysis,
+      flaggedDays: flaggedDays,
+      calendar: calendar,
+      trend: trend,
+      recentRate: recentRate,
+      prevRate: prevRate
+    });
+  });
+
+  return results.length > 0 ? results : null;
+}
+
+function _parseSupplementTime(str) {
+  // Parse 'HH:MM am/pm' or 'HH:MM AM/PM' to minutes since midnight
+  if (!str || str === 'late') return null;
+  str = str.trim().toLowerCase();
+  var match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!match) return null;
+  var h = parseInt(match[1], 10);
+  var m = parseInt(match[2], 10);
+  var ampm = match[3];
+  if (ampm === 'pm' && h !== 12) h += 12;
+  if (ampm === 'am' && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+function _minutesToTimeStr(mins) {
+  var h = Math.floor(mins / 60);
+  var m = mins % 60;
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  var h12 = h % 12 || 12;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+function renderInfoSupplementAdherence() {
+  var data = computeSupplementAdherence(30);
+  var summaryEl = document.getElementById('infoSupplementSummary');
+  var calEl = document.getElementById('infoSupplementCalendar');
+  var gridEl = document.getElementById('infoSupplementGrid');
+  var timingEl = document.getElementById('infoSupplementTiming');
+  var insightEl = document.getElementById('infoSupplementInsight');
+  if (!summaryEl) return;
+
+  if (!data || data.length === 0) {
+    summaryEl.innerHTML = '<span class="t-sm" style="color:var(--light);">No active supplements being tracked</span>';
+    if (calEl) calEl.innerHTML = '';
+    if (gridEl) gridEl.innerHTML = '';
+    if (timingEl) timingEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  var med = data[0]; // Primary supplement (Vitamin D3)
+
+  // Summary
+  var timingLabel = med.timing ? med.timing.consistency : 'N/A';
+  var trendIcon = med.trend === 'improving' ? '↗' : (med.trend === 'declining' ? '↘' : '→');
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">' + escHtml(med.name) + ': ' + med.adherenceRate + '% adherence · ' + med.currentStreak + ' day streak · Timing: ' + timingLabel + ' ' + trendIcon + '</span>';
+
+  // 30-day dot calendar (newest first in data, display oldest→newest left→right)
+  if (calEl) {
+    var html = '<div class="si-sub-label">Last 30 Days</div>';
+    html += '<div class="mi-adherence-row">';
+    var calSorted = med.calendar.slice().reverse(); // oldest first
+    calSorted.forEach(function(c) {
+      var cls = 'mi-adh-' + c.status;
+      var sym = c.status === 'done' ? '✓' : (c.status === 'skipped' ? '–' : (c.status === 'late' ? '✓' : '✗'));
+      var dateLabel = new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      html += '<div class="mi-adherence-dot ' + cls + '" title="' + dateLabel + ': ' + c.status + '">' + sym + '</div>';
+    });
+    html += '</div>';
+    // Legend
+    html += '<div class="mi-legend" style="margin-top:var(--sp-4);">';
+    html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-done" style="width:10px;height:10px;font-size:0;"></div> Done</div>';
+    html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-missed" style="width:10px;height:10px;font-size:0;"></div> Missed</div>';
+    html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-skipped" style="width:10px;height:10px;font-size:0;"></div> Skipped</div>';
+    html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-late" style="width:10px;height:10px;font-size:0;"></div> Late</div>';
+    html += '</div>';
+    calEl.innerHTML = html;
+  }
+
+  // Stat grid
+  if (gridEl) {
+    var avgTimeStr = med.timing ? _minutesToTimeStr(med.timing.avgMin) : '—';
+    gridEl.innerHTML = '<div class="si-stat-grid">' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:' + (med.adherenceRate >= 90 ? 'var(--tc-sage)' : (med.adherenceRate >= 70 ? 'var(--tc-amber)' : 'var(--tc-rose)')) + ';">' + med.adherenceRate + '%</div><div class="si-stat-label">Adherence</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-indigo);">' + med.currentStreak + '</div><div class="si-stat-label">Current streak</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val">' + avgTimeStr + '</div><div class="si-stat-label">Avg time</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-rose);">' + (med.missedCount + med.skippedCount) + '</div><div class="si-stat-label">Missed/skipped</div></div>' +
+      '</div>';
+  }
+
+  // Timing analysis
+  if (timingEl) {
+    if (med.timing) {
+      var tHtml = '<div class="si-sub-label">Timing Pattern</div>';
+      tHtml += '<div style="font-size:var(--fs-sm);color:var(--mid);margin-top:var(--sp-4);">Usually given in the <strong>' + med.timing.bestWindow + '</strong> · Average: ' + _minutesToTimeStr(med.timing.avgMin) + ' · Range: ' + _minutesToTimeStr(med.timing.earliest) + ' – ' + _minutesToTimeStr(med.timing.latest) + '</div>';
+      if (med.flaggedDays.length > 0) {
+        tHtml += '<div style="font-size:var(--fs-sm);color:var(--tc-amber);margin-top:var(--sp-4);">⚠ Tends to be missed on ' + med.flaggedDays.join(', ') + '</div>';
+      }
+      timingEl.innerHTML = tHtml;
+    } else {
+      timingEl.innerHTML = '<div style="font-size:var(--fs-xs);color:var(--light);">Need more data for timing analysis</div>';
+    }
+  }
+
+  // Insight
+  if (insightEl) {
+    var iHtml = '';
+    if (med.adherenceRate === 100) {
+      iHtml = '<div class="si-insight si-insight-good">100% adherence this month — excellent consistency!</div>';
+    } else if (med.adherenceRate >= 90) {
+      iHtml = '<div class="si-insight si-insight-good">Strong adherence at ' + med.adherenceRate + '%. ' + (med.missedCount + med.skippedCount) + ' missed days — try setting a daily alarm.</div>';
+    } else if (med.adherenceRate >= 70) {
+      iHtml = '<div class="si-insight si-insight-warn">Adherence has room for improvement at ' + med.adherenceRate + '%.' + (med.flaggedDays.length > 0 ? ' Most misses happen on ' + med.flaggedDays.join(', ') + '.' : '') + '</div>';
+    } else {
+      iHtml = '<div class="si-insight si-insight-warn">' + escHtml(med.name) + ' was missed ' + (med.missedCount + med.skippedCount) + ' times this month. Consider linking it to a fixed daily routine (e.g., after morning feed).</div>';
+    }
+    if (med.timing) {
+      if (med.timing.consistency === 'Consistent') {
+        iHtml += '<div class="si-insight si-insight-info">Usually given around ' + _minutesToTimeStr(med.timing.avgMin) + ' — consistent timing helps absorption.</div>';
+      } else if (med.timing.consistency !== 'Consistent') {
+        iHtml += '<div class="si-insight si-insight-info">Administration time varies by ±' + Math.round(med.timing.stdDev) + ' minutes. A fixed time each day is ideal.</div>';
+      }
+    }
+    insightEl.innerHTML = iHtml;
+  }
+}
+
+// ── Feature 2: Vaccination Recovery Tracking ──
+
+function computeVaccRecovery() {
+  var pastVacc = (vaccData || []).filter(function(v) { return !v.upcoming && v.date; });
+  if (pastVacc.length === 0) return null;
+
+  // Group by date
+  var vaccByDate = {};
+  pastVacc.forEach(function(v) {
+    if (!vaccByDate[v.date]) vaccByDate[v.date] = [];
+    vaccByDate[v.date].push(v.name);
+  });
+  var vaccDates = Object.keys(vaccByDate).sort();
+
+  // Get fever correlation data
+  var feverData = computeVaccFeverCorrelation();
+  var feverByDate = {};
+  if (feverData && feverData.results) {
+    feverData.results.forEach(function(r) {
+      feverByDate[r.date] = r;
+    });
+  }
+
+  var profiles = [];
+  var totalSleepRecDays = 0, sleepRecCount = 0;
+  var totalPoopRecDays = 0, poopRecCount = 0;
+
+  vaccDates.forEach(function(vDate) {
+    var vaccines = vaccByDate[vDate];
+
+    // Sleep impact: 7 days pre + 7 days post
+    var sleepBaseline = _getAvgScore(vDate, -7, -1, 'sleep');
+    var sleepPost = [];
+    var sleepRecoveryDays = null;
+    var sleepWorstDay = null;
+    var sleepWorstDelta = 0;
+
+    if (sleepBaseline !== null && sleepBaseline.count >= 3) {
+      for (var d = 0; d <= 6; d++) {
+        var ds = _offsetDateStr(vDate, d);
+        var sleepObj = getDailySleepScore(ds);
+        var score = (sleepObj && typeof sleepObj.score === 'number') ? sleepObj.score : null;
+        if (score !== null) {
+          sleepPost.push({ day: d, score: score, delta: score - sleepBaseline.avg });
+          if (score - sleepBaseline.avg < sleepWorstDelta) {
+            sleepWorstDelta = score - sleepBaseline.avg;
+            sleepWorstDay = d;
+          }
+        } else {
+          sleepPost.push({ day: d, score: null, delta: null });
+        }
+      }
+      // Recovery: first day score >= baseline - 5
+      for (var r = 0; r < sleepPost.length; r++) {
+        if (sleepPost[r].score !== null && sleepPost[r].score >= sleepBaseline.avg - 5) {
+          sleepRecoveryDays = r;
+          break;
+        }
+      }
+      if (sleepRecoveryDays === null && sleepPost.length > 0) sleepRecoveryDays = 7; // not recovered within window
+      if (sleepRecoveryDays !== null) { totalSleepRecDays += sleepRecoveryDays; sleepRecCount++; }
+    }
+
+    // Poop impact
+    var poopBaseline = _getAvgScore(vDate, -7, -1, 'poop');
+    var poopPost = [];
+    var poopRecoveryDays = null;
+    var poopWorstDay = null;
+    var poopWorstDelta = 0;
+
+    if (poopBaseline !== null && poopBaseline.count >= 3) {
+      for (var p = 0; p <= 6; p++) {
+        var pds = _offsetDateStr(vDate, p);
+        var pScore = calcPoopScore(pds);
+        var pVal = (pScore && typeof pScore.score === 'number') ? pScore.score : null;
+        if (pVal !== null) {
+          poopPost.push({ day: p, score: pVal, delta: pVal - poopBaseline.avg });
+          if (pVal - poopBaseline.avg < poopWorstDelta) {
+            poopWorstDelta = pVal - poopBaseline.avg;
+            poopWorstDay = p;
+          }
+        } else {
+          poopPost.push({ day: p, score: null, delta: null });
+        }
+      }
+      for (var r2 = 0; r2 < poopPost.length; r2++) {
+        if (poopPost[r2].score !== null && poopPost[r2].score >= poopBaseline.avg - 5) {
+          poopRecoveryDays = r2;
+          break;
+        }
+      }
+      if (poopRecoveryDays === null && poopPost.length > 0) poopRecoveryDays = 7;
+      if (poopRecoveryDays !== null) { totalPoopRecDays += poopRecoveryDays; poopRecCount++; }
+    }
+
+    // Fever info
+    var feverInfo = feverByDate[vDate] || null;
+
+    profiles.push({
+      date: vDate,
+      vaccines: vaccines,
+      sleep: {
+        baseline: sleepBaseline ? sleepBaseline.avg : null,
+        postScores: sleepPost,
+        recoveryDays: sleepRecoveryDays,
+        worstDay: sleepWorstDay,
+        insufficient: sleepBaseline === null || sleepBaseline.count < 3
+      },
+      poop: {
+        baseline: poopBaseline ? poopBaseline.avg : null,
+        postScores: poopPost,
+        recoveryDays: poopRecoveryDays,
+        worstDay: poopWorstDay,
+        insufficient: poopBaseline === null || poopBaseline.count < 3
+      },
+      fever: {
+        occurred: feverInfo ? feverInfo.hadFever : false,
+        peakTemp: feverInfo ? feverInfo.peakTemp : null,
+        durationDays: feverInfo ? feverInfo.feverDuration : null
+      }
+    });
+  });
+
+  var avgSleepRec = sleepRecCount > 0 ? Math.round(totalSleepRecDays / sleepRecCount * 10) / 10 : null;
+  var avgPoopRec = poopRecCount > 0 ? Math.round(totalPoopRecDays / poopRecCount * 10) / 10 : null;
+  var feverRateVal = feverData ? feverData.feverRate : 0;
+
+  // Upcoming prediction
+  var upcoming = (vaccData || []).filter(function(v) { return v.upcoming; }).sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+  var nextVacc = upcoming.length > 0 ? upcoming[0] : null;
+  var prediction = null;
+  if (nextVacc && profiles.length > 0) {
+    var daysUntil = Math.ceil((new Date(nextVacc.date) - new Date(today())) / 86400000);
+    prediction = {
+      name: nextVacc.name,
+      date: nextVacc.date,
+      daysUntil: daysUntil,
+      expectedSleepDays: avgSleepRec,
+      expectedPoopDays: avgPoopRec,
+      feverLikely: feverRateVal > 50
+    };
+  }
+
+  return {
+    profiles: profiles,
+    avgSleepRecovery: avgSleepRec,
+    avgPoopRecovery: avgPoopRec,
+    feverRate: feverRateVal,
+    totalVaccDates: vaccDates.length,
+    prediction: prediction
+  };
+}
+
+function _offsetDateStr(baseDate, offsetDays) {
+  var d = new Date(baseDate);
+  d.setDate(d.getDate() + offsetDays);
+  return toDateStr(d);
+}
+
+function _getAvgScore(baseDate, fromDay, toDay, type) {
+  var total = 0, count = 0;
+  for (var i = fromDay; i <= toDay; i++) {
+    var ds = _offsetDateStr(baseDate, i);
+    var score = null;
+    if (type === 'sleep') {
+      var sleepResult = getDailySleepScore(ds);
+      score = (sleepResult && typeof sleepResult.score === 'number') ? sleepResult.score : null;
+    } else if (type === 'poop') {
+      var ps = calcPoopScore(ds);
+      score = (ps && typeof ps.score === 'number') ? ps.score : null;
+    }
+    if (score !== null && typeof score === 'number') {
+      total += score;
+      count++;
+    }
+  }
+  return count > 0 ? { avg: Math.round(total / count), count: count } : null;
+}
+
+function renderInfoVaccRecovery() {
+  var data = computeVaccRecovery();
+  var summaryEl = document.getElementById('infoVaccRecoverySummary');
+  var listEl = document.getElementById('infoVaccRecoveryList');
+  var gridEl = document.getElementById('infoVaccRecoveryGrid');
+  var predictEl = document.getElementById('infoVaccRecoveryPredict');
+  if (!summaryEl) return;
+
+  if (!data || data.profiles.length === 0) {
+    summaryEl.innerHTML = '<span class="t-sm" style="color:var(--light);">No past vaccinations to analyze</span>';
+    if (listEl) listEl.innerHTML = '';
+    if (gridEl) gridEl.innerHTML = '';
+    if (predictEl) predictEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  var sleepStr = data.avgSleepRecovery !== null ? data.avgSleepRecovery + 'd sleep' : '—';
+  var poopStr = data.avgPoopRecovery !== null ? data.avgPoopRecovery + 'd poop' : '—';
+  var nextStr = data.prediction ? ' · Next: ' + escHtml(data.prediction.name) + ' in ' + data.prediction.daysUntil + ' days' : '';
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">Avg recovery: ' + sleepStr + ', ' + poopStr + nextStr + '</span>';
+
+  // Per-vaccination rows
+  if (listEl) {
+    var html = '<div class="si-sub-label">Per-Vaccination Recovery</div>';
+    // Show last 4 vaccination dates (most relevant)
+    var showProfiles = data.profiles.slice(-4).reverse();
+    showProfiles.forEach(function(p) {
+      var dateLabel = new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+      var vaccNames = p.vaccines.length <= 2 ? p.vaccines.join(', ') : p.vaccines.slice(0, 2).join(', ') + ' +' + (p.vaccines.length - 2);
+      var sleepRec = p.sleep.insufficient ? '—' : (p.sleep.recoveryDays !== null ? p.sleep.recoveryDays + 'd' : '—');
+      var poopRec = p.poop.insufficient ? '—' : (p.poop.recoveryDays !== null ? p.poop.recoveryDays + 'd' : '—');
+      var feverBadge = p.fever.occurred ? '<span style="color:var(--tc-rose);font-size:var(--fs-xs);font-weight:500;">🌡 ' + (p.fever.peakTemp ? p.fever.peakTemp + '°' : 'Yes') + '</span>' : '<span style="color:var(--tc-sage);font-size:var(--fs-xs);">No fever</span>';
+
+      html += '<div class="si-check-row" style="flex-wrap:wrap;">';
+      html += '<div style="flex:1;min-width:120px;"><div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);">' + dateLabel + '</div><div style="font-size:var(--fs-xs);color:var(--light);">' + escHtml(vaccNames) + '</div></div>';
+      html += '<div style="display:flex;gap:var(--sp-12);align-items:center;flex-wrap:wrap;">';
+      html += '<span style="font-size:var(--fs-xs);color:var(--mid);">😴 ' + sleepRec + '</span>';
+      html += '<span style="font-size:var(--fs-xs);color:var(--mid);">💩 ' + poopRec + '</span>';
+      html += feverBadge;
+      html += '</div></div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  // Stat grid
+  if (gridEl) {
+    gridEl.innerHTML = '<div class="si-stat-grid">' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-indigo);">' + (data.avgSleepRecovery !== null ? data.avgSleepRecovery + 'd' : '—') + '</div><div class="si-stat-label">Avg sleep recovery</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + (data.avgPoopRecovery !== null ? data.avgPoopRecovery + 'd' : '—') + '</div><div class="si-stat-label">Avg poop recovery</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-rose);">' + data.feverRate + '%</div><div class="si-stat-label">Fever rate</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val">' + data.totalVaccDates + '</div><div class="si-stat-label">Vacc dates</div></div>' +
+      '</div>';
+  }
+
+  // Prediction
+  if (predictEl) {
+    if (data.prediction) {
+      var pred = data.prediction;
+      var pHtml = '<div class="si-insight si-insight-info">';
+      pHtml += '<strong>' + escHtml(pred.name) + '</strong> is due ' + new Date(pred.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      if (pred.daysUntil >= 0) pHtml += ' (' + pred.daysUntil + ' days away)';
+      pHtml += '. ';
+      if (pred.expectedSleepDays !== null) {
+        pHtml += 'Based on past patterns, expect ~' + pred.expectedSleepDays + ' days of sleep disruption';
+        if (pred.expectedPoopDays !== null) pHtml += ' and ~' + pred.expectedPoopDays + ' days of poop changes';
+        pHtml += '. ';
+      }
+      if (pred.feverLikely) {
+        pHtml += 'Fever is likely — keep paracetamol ready.';
+      } else {
+        pHtml += 'Fever is less common based on history.';
+      }
+      pHtml += '</div>';
+      predictEl.innerHTML = pHtml;
+    } else {
+      predictEl.innerHTML = '';
+    }
+  }
+}
+
+// ── Feature 3: Growth Velocity Alerts ──
+
+function computeGrowthVelocity() {
+  var gd = (growthData || []).filter(function(g) { return g.date; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+  if (gd.length < 2) return { insufficient: true, needed: 2, count: gd.length };
+
+  var todayStr = today();
+
+  // WEIGHT VELOCITY
+  var weightEntries = gd.filter(function(g) { return typeof g.wt === 'number' && g.wt > 0; });
+  var weightResult = null;
+  if (weightEntries.length >= 2) {
+    var wLatest = weightEntries[weightEntries.length - 1];
+    var wPrev = weightEntries[weightEntries.length - 2];
+    var wDaysBetween = Math.max(1, Math.round((new Date(wLatest.date) - new Date(wPrev.date)) / 86400000));
+    var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
+    var gPerDay = Math.round(wGainG / wDaysBetween * 10) / 10;
+
+    // Expected velocity by age
+    var ageMo = ageMonthsAt(wLatest.date);
+    var expectedRange;
+    if (ageMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
+    else if (ageMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
+    else if (ageMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
+    else expectedRange = { min: 8, max: 13, label: '9–12 months' };
+
+    var wStatus;
+    if (gPerDay < expectedRange.min * 0.5) wStatus = 'plateau';
+    else if (gPerDay < expectedRange.min) wStatus = 'slow';
+    else if (gPerDay > expectedRange.max * 1.3) wStatus = 'fast';
+    else wStatus = 'on-track';
+
+    // Plateau detection
+    var isPlateau = wGainG < 50 && wDaysBetween >= 14;
+    if (isPlateau) wStatus = 'plateau';
+
+    // Freshness
+    var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
+    var weightStale = daysSinceWeight > 21;
+
+    // Total gain since birth
+    var birthWeight = weightEntries[0].wt;
+    var totalGainG = Math.round((wLatest.wt - birthWeight) * 1000);
+
+    weightResult = {
+      latest: wLatest,
+      prev: wPrev,
+      gPerDay: gPerDay,
+      gainG: wGainG,
+      daysBetween: wDaysBetween,
+      expectedRange: expectedRange,
+      status: wStatus,
+      isPlateau: isPlateau,
+      daysSince: daysSinceWeight,
+      stale: weightStale,
+      totalGainG: totalGainG
+    };
+  }
+
+  // HEIGHT VELOCITY
+  var heightEntries = gd.filter(function(g) { return typeof g.ht === 'number' && g.ht > 0; });
+  var heightResult = null;
+  if (heightEntries.length >= 2) {
+    var hLatest = heightEntries[heightEntries.length - 1];
+    var hPrev = heightEntries[heightEntries.length - 2];
+    var hDaysBetween = Math.max(1, Math.round((new Date(hLatest.date) - new Date(hPrev.date)) / 86400000));
+    var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
+    var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
+
+    var hAgeMo = ageMonthsAt(hLatest.date);
+    var hExpected = (hAgeMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
+    var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
+
+    var daysSinceHeight = Math.round((new Date(todayStr) - new Date(hLatest.date)) / 86400000);
+
+    heightResult = {
+      latest: hLatest,
+      prev: hPrev,
+      cmPerMonth: cmPerMonth,
+      cmGain: cmGain,
+      daysBetween: hDaysBetween,
+      expectedRange: hExpected,
+      status: hStatus,
+      daysSince: daysSinceHeight,
+      stale: daysSinceHeight > 30
+    };
+  }
+
+  // PERCENTILE TRACKING
+  var percentiles = [];
+  weightEntries.forEach(function(we) {
+    var ageMo = ageMonthsAt(we.date);
+    var ref = getGrowthRef(ageMo);
+    if (ref && ref.wt) {
+      var pctResult = calcPercentile(we.wt, ref.wt.p3, ref.wt.p50, ref.wt.p97, ref.wt.p15, ref.wt.p85);
+      percentiles.push({ date: we.date, weight: we.wt, percentile: pctResult.pct });
+    }
+  });
+
+  // Crossing detection
+  var crossings = [];
+  for (var i = 1; i < percentiles.length; i++) {
+    var diff = percentiles[i].percentile - percentiles[i - 1].percentile;
+    if (Math.abs(diff) > 15) {
+      crossings.push({
+        from: percentiles[i - 1].percentile,
+        to: percentiles[i].percentile,
+        direction: diff > 0 ? 'climbing' : 'dropping',
+        date: percentiles[i].date
+      });
+    }
+  }
+
+  var latestPercentile = percentiles.length > 0 ? percentiles[percentiles.length - 1].percentile : null;
+
+  // Weight-for-height check
+  var proportionFlag = null;
+  if (latestPercentile !== null && heightEntries.length > 0) {
+    var hLatestEntry = heightEntries[heightEntries.length - 1];
+    var hAgeMo2 = ageMonthsAt(hLatestEntry.date);
+    var hRef = getGrowthRef(hAgeMo2);
+    if (hRef && hRef.ht) {
+      var hPctResult = calcPercentile(hLatestEntry.ht, hRef.ht.p3, hRef.ht.p50, hRef.ht.p97, hRef.ht.p15, hRef.ht.p85);
+      if (Math.abs(latestPercentile - hPctResult.pct) > 30) {
+        proportionFlag = { weightPct: latestPercentile, heightPct: hPctResult.pct };
+      }
+    }
+  }
+
+  return {
+    insufficient: false,
+    weight: weightResult,
+    height: heightResult,
+    percentiles: percentiles,
+    latestPercentile: latestPercentile,
+    crossings: crossings,
+    proportionFlag: proportionFlag
+  };
+}
+
+function renderInfoGrowthVelocity() {
+  var data = computeGrowthVelocity();
+  var summaryEl = document.getElementById('infoGrowthVelocitySummary');
+  var barEl = document.getElementById('infoGrowthVelocityBar');
+  var pctEl = document.getElementById('infoGrowthVelocityPercentile');
+  var gridEl = document.getElementById('infoGrowthVelocityGrid');
+  var insightEl = document.getElementById('infoGrowthVelocityInsight');
+  if (!summaryEl) return;
+
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<span class="t-sm" style="color:var(--light);">Need ' + data.needed + ' weight entries (have ' + data.count + ')</span>';
+    if (barEl) barEl.innerHTML = '';
+    if (pctEl) pctEl.innerHTML = '';
+    if (gridEl) gridEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  // Summary line
+  var wStr = data.weight ? data.weight.gPerDay + 'g/day (' + data.weight.status + ')' : '—';
+  var hStr = data.height ? data.height.cmPerMonth + 'cm/mo (' + data.height.status + ')' : '—';
+  var pStr = data.latestPercentile !== null ? Math.round(data.latestPercentile) + 'th' : '—';
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + pStr + ' percentile</span>';
+
+  // Velocity bar
+  if (barEl && data.weight) {
+    var w = data.weight;
+    var rangeMin = Math.max(0, w.expectedRange.min - 5);
+    var rangeMax = w.expectedRange.max + 10;
+    var totalRange = rangeMax - rangeMin;
+    var expLeftPct = Math.round(((w.expectedRange.min - rangeMin) / totalRange) * 100);
+    var expWidthPct = Math.round(((w.expectedRange.max - w.expectedRange.min) / totalRange) * 100);
+    var markerPct = Math.max(0, Math.min(100, Math.round(((w.gPerDay - rangeMin) / totalRange) * 100)));
+    var markerColor = w.status === 'on-track' ? 'var(--tc-sage)' : (w.status === 'slow' || w.status === 'plateau' ? 'var(--tc-amber)' : 'var(--tc-sky)');
+
+    var bHtml = '<div class="si-sub-label">Weight Velocity (' + w.expectedRange.label + ' expected: ' + w.expectedRange.min + '–' + w.expectedRange.max + ' g/day)</div>';
+    bHtml += '<div class="mi-velocity-range">';
+    bHtml += '<div class="mi-velocity-expected" style="left:' + expLeftPct + '%;width:' + expWidthPct + '%;"></div>';
+    bHtml += '<div class="mi-velocity-marker" style="left:' + markerPct + '%;background:' + markerColor + ';"></div>';
+    bHtml += '</div>';
+    bHtml += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--light);"><span>' + rangeMin + '</span><span style="color:var(--text);font-weight:600;">' + w.gPerDay + ' g/day</span><span>' + rangeMax + '</span></div>';
+    barEl.innerHTML = bHtml;
+  } else if (barEl) {
+    barEl.innerHTML = '';
+  }
+
+  // Percentile trend
+  if (pctEl && data.percentiles.length >= 2) {
+    var html = '<div class="si-sub-label">Percentile History</div>';
+    data.percentiles.slice(-5).forEach(function(p) {
+      var dateLabel = new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      var pctVal = Math.round(p.percentile);
+      var color = pctVal < 15 ? 'var(--tc-amber)' : (pctVal > 85 ? 'var(--tc-sky)' : 'var(--tc-sage)');
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + dateLabel + '</div>';
+      html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + pctVal + '%;background:' + color + ';"></div></div>';
+      html += '<div class="si-bar-val" style="color:' + color + ';">' + pctVal + 'th</div>';
+      html += '</div>';
+    });
+    if (data.crossings.length > 0) {
+      var latest = data.crossings[data.crossings.length - 1];
+      var crossColor = latest.direction === 'climbing' ? 'si-insight-good' : 'si-insight-warn';
+      html += '<div class="si-insight ' + crossColor + '">Crossed from ' + Math.round(latest.from) + 'th to ' + Math.round(latest.to) + 'th percentile — ' + latest.direction + '.</div>';
+    }
+    pctEl.innerHTML = html;
+  } else if (pctEl) {
+    pctEl.innerHTML = '';
+  }
+
+  // Stat grid
+  if (gridEl) {
+    var latestWt = data.weight ? data.weight.latest.wt + ' kg' : '—';
+    var latestHt = data.height ? data.height.latest.ht + ' cm' : '—';
+    var daysSince = data.weight ? data.weight.daysSince + 'd ago' : '—';
+    var totalGain = data.weight ? (data.weight.totalGainG / 1000).toFixed(1) + ' kg' : '—';
+    gridEl.innerHTML = '<div class="si-stat-grid">' +
+      '<div class="si-stat"><div class="si-stat-val">' + latestWt + '</div><div class="si-stat-label">Latest weight</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val">' + latestHt + '</div><div class="si-stat-label">Latest height</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val">' + daysSince + '</div><div class="si-stat-label">Since measurement</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + totalGain + '</div><div class="si-stat-label">Total gain</div></div>' +
+      '</div>';
+  }
+
+  // Insights
+  if (insightEl) {
+    var iHtml = '';
+    if (data.weight) {
+      var w2 = data.weight;
+      if (w2.status === 'on-track') {
+        iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
+      } else if (w2.status === 'slow') {
+        iHtml += '<div class="si-insight si-insight-warn">Weight gain has slowed to ' + w2.gPerDay + 'g/day — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. Review caloric intake.</div>';
+      } else if (w2.status === 'plateau') {
+        iHtml += '<div class="si-insight si-insight-warn">Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days. This could be normal after illness or a dietary gap.</div>';
+      } else if (w2.status === 'fast') {
+        iHtml += '<div class="si-insight si-insight-info">Weight gain at ' + w2.gPerDay + 'g/day is above the expected range. Monitor proportionality.</div>';
+      }
+      if (w2.stale) {
+        iHtml += '<div class="si-insight si-insight-warn">Last weight measurement was ' + w2.daysSince + ' days ago. Time for a weigh-in!</div>';
+      }
+    }
+    if (data.height && data.height.stale) {
+      iHtml += '<div class="si-insight si-insight-warn">Last height measurement was ' + data.height.daysSince + ' days ago. Time for a measurement!</div>';
+    }
+    if (data.proportionFlag) {
+      iHtml += '<div class="si-insight si-insight-info">Weight (' + Math.round(data.proportionFlag.weightPct) + 'th) and height (' + Math.round(data.proportionFlag.heightPct) + 'th) percentiles differ significantly. Mention this at the next visit.</div>';
+    }
+    insightEl.innerHTML = iHtml;
+  }
+}
+
+// ── Feature 4: Doctor Visit Preparation ──
+
+function computeVisitPrep() {
+  var todayStr = today();
+  // Find last visit
+  var pastVisits = (visits || []).filter(function(v) { return v.date && v.date <= todayStr; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+  var lastVisit = pastVisits.length > 0 ? pastVisits[pastVisits.length - 1] : null;
+  var sinceDate = lastVisit ? lastVisit.date : toDateStr(DOB);
+  var daysSince = Math.round((new Date(todayStr) - new Date(sinceDate)) / 86400000);
+
+  var changes = 0;
+  var sections = {};
+
+  // 1. Growth changes
+  var growthSince = (growthData || []).filter(function(g) { return g.date > sinceDate; });
+  var weightGrowth = growthSince.filter(function(g) { return typeof g.wt === 'number' && g.wt > 0; });
+  var heightGrowth = growthSince.filter(function(g) { return typeof g.ht === 'number' && g.ht > 0; });
+  var gvData = computeGrowthVelocity();
+  var weightDelta = null, heightDelta = null;
+  if (weightGrowth.length >= 1) {
+    var allW = (growthData || []).filter(function(g) { return typeof g.wt === 'number' && g.wt > 0 && g.date <= sinceDate; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    var refW = allW.length > 0 ? allW[allW.length - 1].wt : null;
+    var latestW = weightGrowth[weightGrowth.length - 1].wt;
+    if (refW !== null) weightDelta = Math.round((latestW - refW) * 1000);
+  }
+  if (heightGrowth.length >= 1) {
+    var allH = (growthData || []).filter(function(g) { return typeof g.ht === 'number' && g.ht > 0 && g.date <= sinceDate; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    var refH = allH.length > 0 ? allH[allH.length - 1].ht : null;
+    var latestH = heightGrowth[heightGrowth.length - 1].ht;
+    if (refH !== null) heightDelta = Math.round((latestH - refH) * 10) / 10;
+  }
+  var latestPct = (gvData && !gvData.insufficient) ? gvData.latestPercentile : null;
+  sections.growth = {
+    emoji: '⚖️',
+    label: 'Growth',
+    items: [],
+    hasData: weightGrowth.length > 0 || heightGrowth.length > 0
+  };
+  if (weightDelta !== null) { sections.growth.items.push('Gained ' + weightDelta + 'g'); changes++; }
+  if (heightDelta !== null) { sections.growth.items.push('Grew ' + heightDelta + 'cm'); changes++; }
+  if (latestPct !== null) sections.growth.items.push(Math.round(latestPct) + 'th percentile');
+  if (gvData && !gvData.insufficient && gvData.weight) sections.growth.items.push(gvData.weight.status + ' velocity');
+
+  // 2. Milestone changes
+  var newMilestones = (milestones || []).filter(function(m) {
+    return isMsDone(m) && m.masteredAt && m.masteredAt > sinceDate;
+  });
+  var inProgressMs = (milestones || []).filter(function(m) { return isMsActive(m); });
+  sections.milestones = {
+    emoji: '🧠',
+    label: 'Milestones',
+    items: [],
+    hasData: newMilestones.length > 0 || inProgressMs.length > 0
+  };
+  if (newMilestones.length > 0) {
+    var topMs = newMilestones.slice(-3).map(function(m) { return m.text; });
+    sections.milestones.items.push(newMilestones.length + ' new: ' + topMs.join(', '));
+    changes += newMilestones.length;
+  }
+  if (inProgressMs.length > 0) {
+    sections.milestones.items.push(inProgressMs.length + ' in progress');
+  }
+
+  // 3. Sleep summary (last 7 days)
+  var sleepScores = [];
+  for (var si = 0; si < 7; si++) {
+    var sds = _offsetDateStr(todayStr, -si);
+    var sObj = getDailySleepScore(sds);
+    var sscore = (sObj && typeof sObj.score === 'number') ? sObj.score : null;
+    if (sscore !== null) sleepScores.push(sscore);
+  }
+  var avgSleep = sleepScores.length > 0 ? Math.round(sleepScores.reduce(function(s,v){return s+v;},0) / sleepScores.length) : null;
+  var regData = computeSleepRegression();
+  sections.sleep = {
+    emoji: '😴',
+    label: 'Sleep',
+    items: [],
+    hasData: sleepScores.length > 0
+  };
+  if (avgSleep !== null) sections.sleep.items.push('Score ' + avgSleep + '/100 (7d avg)');
+  if (regData && regData.inRegression) { sections.sleep.items.push('Sleep regression active'); changes++; }
+
+  // 4. Diet summary
+  var newFoodsSince = (foods || []).filter(function(f) { return f.date && f.date > sinceDate; });
+  sections.diet = {
+    emoji: '🍽',
+    label: 'Diet',
+    items: [],
+    hasData: newFoodsSince.length > 0
+  };
+  if (newFoodsSince.length > 0) {
+    sections.diet.items.push(newFoodsSince.length + ' new foods introduced');
+    changes += newFoodsSince.length;
+    var reactionFoods = newFoodsSince.filter(function(f) { return f.reaction && f.reaction !== 'ok'; });
+    if (reactionFoods.length > 0) sections.diet.items.push(reactionFoods.length + ' with reactions');
+  }
+
+  // 5. Poop summary (last 7d)
+  var poopScores = [];
+  for (var pi = 0; pi < 7; pi++) {
+    var pds = _offsetDateStr(todayStr, -pi);
+    var psc = calcPoopScore(pds);
+    if (psc && typeof psc.score === 'number') poopScores.push(psc.score);
+  }
+  var avgPoop = poopScores.length > 0 ? Math.round(poopScores.reduce(function(s,v){return s+v;},0) / poopScores.length) : null;
+  sections.poop = {
+    emoji: '💩',
+    label: 'Poop',
+    items: [],
+    hasData: poopScores.length > 0
+  };
+  if (avgPoop !== null) sections.poop.items.push('Score ' + avgPoop + '/100 (7d avg)');
+
+  // 6. Medical summary
+  var vaccSince = (vaccData || []).filter(function(v) { return !v.upcoming && v.date && v.date > sinceDate; });
+  var episodesSince = _getAllEpisodes().filter(function(e) { return e.startedAt && e.startedAt > sinceDate; });
+  var suppData = computeSupplementAdherence(Math.min(daysSince, 90));
+  var suppRate = (suppData && suppData.length > 0) ? suppData[0].adherenceRate : null;
+
+  sections.medical = {
+    emoji: '💊',
+    label: 'Medical',
+    items: [],
+    hasData: vaccSince.length > 0 || episodesSince.length > 0 || suppRate !== null
+  };
+  if (vaccSince.length > 0) { sections.medical.items.push(vaccSince.length + ' vaccine doses given'); changes += vaccSince.length; }
+  if (episodesSince.length > 0) { sections.medical.items.push(episodesSince.length + ' illness episodes'); changes += episodesSince.length; }
+  if (suppRate !== null) sections.medical.items.push('Supplement adherence: ' + suppRate + '%');
+
+  // Active concerns
+  var concerns = [];
+  if (gvData && !gvData.insufficient) {
+    if (gvData.weight && (gvData.weight.status === 'slow' || gvData.weight.status === 'plateau')) {
+      concerns.push({ type: 'warn', text: 'Weight gain is ' + gvData.weight.status + ' (' + gvData.weight.gPerDay + 'g/day)' });
+    }
+    if (gvData.weight && gvData.weight.stale) {
+      concerns.push({ type: 'info', text: 'Weight measurement is ' + gvData.weight.daysSince + ' days old' });
+    }
+    if (gvData.crossings && gvData.crossings.length > 0) {
+      var lastCross = gvData.crossings[gvData.crossings.length - 1];
+      if (lastCross.direction === 'dropping') {
+        concerns.push({ type: 'warn', text: 'Percentile dropped from ' + Math.round(lastCross.from) + 'th to ' + Math.round(lastCross.to) + 'th' });
+      }
+    }
+    if (gvData.proportionFlag) {
+      concerns.push({ type: 'info', text: 'Weight/height percentile mismatch (' + Math.round(gvData.proportionFlag.weightPct) + ' vs ' + Math.round(gvData.proportionFlag.heightPct) + ')' });
+    }
+  }
+  if (regData && regData.inRegression) {
+    concerns.push({ type: 'warn', text: 'Sleep regression detected' });
+  }
+  // Active illness
+  var activeEps = _getAllEpisodes().filter(function(e) { return e.status === 'active'; });
+  activeEps.forEach(function(e) {
+    concerns.push({ type: 'warn', text: 'Active ' + e.illnessType + ' episode' });
+  });
+
+  return {
+    lastVisit: lastVisit,
+    sinceDate: sinceDate,
+    daysSince: daysSince,
+    changes: changes,
+    sections: sections,
+    concerns: concerns,
+    overdue: daysSince > 45
+  };
+}
+
+function renderInfoVisitPrep() {
+  var data = computeVisitPrep();
+  var summaryEl = document.getElementById('infoVisitPrepSummary');
+  var sectionsEl = document.getElementById('infoVisitPrepSections');
+  var concernsEl = document.getElementById('infoVisitPrepConcerns');
+  var insightEl = document.getElementById('infoVisitPrepInsight');
+  if (!summaryEl) return;
+
+  // Summary
+  var sinceLabel = data.lastVisit ? new Date(data.sinceDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'birth';
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">' + data.daysSince + ' days since last visit (' + sinceLabel + ') · ' + data.changes + ' changes to discuss</span>';
+
+  // Sections
+  if (sectionsEl) {
+    var html = '';
+    var sectionOrder = ['growth', 'milestones', 'sleep', 'diet', 'poop', 'medical'];
+    sectionOrder.forEach(function(key) {
+      var sec = data.sections[key];
+      if (!sec) return;
+      var itemStr = sec.items.length > 0 ? sec.items.join(' · ') : 'No changes';
+      var itemColor = sec.hasData ? 'var(--mid)' : 'var(--light)';
+      html += '<div class="si-check-row">';
+      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + sec.emoji + '</span>';
+      html += '<div style="flex:1;"><div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);">' + sec.label + '</div>';
+      html += '<div style="font-size:var(--fs-xs);color:' + itemColor + ';">' + escHtml(itemStr) + '</div></div>';
+      html += '</div>';
+    });
+    sectionsEl.innerHTML = html;
+  }
+
+  // Concerns
+  if (concernsEl) {
+    if (data.concerns.length > 0) {
+      var cHtml = '<div class="si-sub-label">Active Concerns</div>';
+      data.concerns.forEach(function(c) {
+        var cls = c.type === 'warn' ? 'si-insight-warn' : 'si-insight-info';
+        cHtml += '<div class="si-insight ' + cls + '">' + escHtml(c.text) + '</div>';
+      });
+      concernsEl.innerHTML = cHtml;
+    } else {
+      concernsEl.innerHTML = '';
+    }
+  }
+
+  // Insight
+  if (insightEl) {
+    var iHtml = '';
+    if (data.concerns.length === 0 && data.changes > 0) {
+      iHtml = '<div class="si-insight si-insight-good">All clear since last visit. Routine checkup items only.</div>';
+    } else if (data.concerns.length > 0) {
+      iHtml = '<div class="si-insight si-insight-info">Key items to discuss: ' + data.concerns.map(function(c) { return c.text; }).join('; ') + '.</div>';
+    }
+    if (data.overdue) {
+      iHtml += '<div class="si-insight si-insight-warn">Consider scheduling a visit — it\'s been ' + data.daysSince + ' days since the last one.</div>';
+    }
+    insightEl.innerHTML = iHtml;
+  }
+}
 
 // ─────────────────────────────────────────
 // PWA — SERVICE WORKER & INSTALL
