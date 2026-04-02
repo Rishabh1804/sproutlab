@@ -2040,6 +2040,28 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .mi-frt-entry { border-bottom-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .mi-frt-line { background:rgba(255,255,255,0.1); }
 
+/* ── Texture Progression ── */
+.mi-tex-stage { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; }
+.mi-tex-icon { width:32px; height:32px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.mi-tex-info { flex:1; }
+.mi-tex-label { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.mi-tex-detail { font-size:var(--fs-xs); color:var(--light); margin-top:2px; }
+.mi-tex-bar { height:4px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); margin-top:4px; overflow:hidden; }
+.mi-tex-fill { height:100%; border-radius:var(--r-full); transition:width 0.3s ease; }
+.mi-tex-connector { width:2px; height:12px; background:var(--border); margin-left:15px; }
+.mi-tex-week-grid { display:grid; gap:2px; font-size:10px; margin-top:var(--sp-8); }
+.mi-tex-week-label { display:flex; align-items:center; justify-content:flex-end; padding-right:4px; color:var(--light); font-size:var(--fs-xs); }
+.mi-tex-week-cell { text-align:center; border-radius:var(--r-sm); padding:3px 1px; min-height:20px; display:flex; align-items:center; justify-content:center; }
+.mi-tex-puree { background:rgba(200,160,220,0.2); color:rgba(150,100,180,0.9); }
+.mi-tex-mashed { background:rgba(240,180,100,0.2); color:var(--tc-amber); }
+.mi-tex-soft { background:rgba(140,190,160,0.2); color:var(--tc-sage); }
+.mi-tex-finger { background:rgba(100,180,230,0.2); color:var(--tc-sky); }
+.mi-tex-mixed { background:rgba(230,160,160,0.15); color:var(--tc-rose); }
+[data-theme="dark"] .mi-tex-bar { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .mi-tex-connector { background:rgba(255,255,255,0.1); }
+[data-theme="dark"] .mi-tex-icon { color:inherit; }
+[data-theme="dark"] .mi-tex-week-cell { color:inherit; }
+
 /* ── Hydration Intelligence ── */
 .hy-grid {
   display:grid; grid-template-columns:52px repeat(7, 1fr);
@@ -2301,6 +2323,41 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .ve-home-banner { background:rgba(220,120,80,0.05); }
 [data-theme="dark"] .ce-home-banner { background:rgba(100,160,210,0.05); }
 [data-theme="dark"] .ce-symptom-row { border-bottom-color:rgba(255,255,255,0.03); }
+
+/* ── Episode Entry Edit System ── */
+.ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:4px; padding-right:4px; margin:0 -4px; }
+.ep-entry-tap:active { background:rgba(0,0,0,0.04); }
+[data-theme="dark"] .ep-entry-tap:active { background:rgba(255,255,255,0.04); }
+.ep-edit-overlay {
+  position:fixed; inset:0; background:rgba(60,40,40,0.2);
+  backdrop-filter:blur(2px); z-index:110;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn 0.15s ease;
+}
+.ep-edit-sheet {
+  background:white; border-radius:var(--r-xl) var(--r-xl) 0 0; padding:20px 20px 28px;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.15); max-width:400px; width:100%;
+  animation:epSlideUp 0.2s ease;
+}
+@keyframes epSlideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+.ep-edit-title { font-size:var(--fs-base); font-weight:700; color:var(--text); margin-bottom:14px; }
+.ep-edit-field { margin-bottom:12px; }
+.ep-edit-label { font-size:var(--fs-xs); font-weight:600; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-wide); margin-bottom:4px; }
+.ep-edit-input { width:100%; padding:8px 12px; border:1px solid var(--border-subtle); border-radius:var(--r-md); font-size:var(--fs-sm); background:var(--warm); color:var(--text); box-sizing:border-box; }
+.ep-edit-input:focus { border-color:var(--indigo); outline:none; }
+.ep-edit-btns { display:flex; gap:var(--sp-8); justify-content:space-between; margin-top:16px; }
+.ep-edit-btns .btn { flex:1; }
+.ep-time-row { display:flex; align-items:center; gap:var(--sp-8); padding:6px 0; margin-bottom:var(--sp-4); }
+.ep-time-row label { font-size:var(--fs-xs); font-weight:600; color:var(--mid); white-space:nowrap; }
+.ep-time-row input[type="time"] { flex:1; padding:6px 10px; border:1px solid var(--border-subtle); border-radius:var(--r-md); font-size:var(--fs-sm); background:var(--warm); color:var(--text); }
+.ep-time-row input[type="time"]:focus { border-color:var(--indigo); outline:none; }
+.ep-time-row .ep-now-btn { padding:6px 12px; border:1px solid var(--border-subtle); border-radius:var(--r-md); font-size:var(--fs-xs); font-weight:600; background:var(--warm); color:var(--mid); cursor:pointer; }
+.ep-time-row .ep-now-btn:active { background:var(--surface); }
+[data-theme="dark"] .ep-edit-sheet { background:var(--surface); }
+[data-theme="dark"] .ep-edit-input { background:var(--base); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .ep-time-row input[type="time"] { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--text); }
+[data-theme="dark"] .ep-time-row .ep-now-btn { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--light); }
+
 .dqp-same {
   padding:5px 10px; border-radius:var(--r-2xl);
   font-size:var(--fs-xs); font-weight:500;
@@ -5876,6 +5933,32 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <div id="infoAdoptionHeatmap" class="mt-4"></div>
           <div id="infoAdoptionTypes" class="mt-8"></div>
           <div id="infoAdoptionFoods" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Food Repetition Fatigue -->
+      <div class="card card-daily col-full" id="infoRepetitionCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoRepetitionBody','infoRepetitionChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-hourglass"/></svg></div> Food Repetition</div>
+          <span class="collapse-chevron" id="infoRepetitionChevron">▾</span>
+        </div>
+        <div id="infoRepetitionSummary" class="mt-4"></div>
+        <div id="infoRepetitionBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoRepetitionBars" class="mt-4"></div>
+          <div id="infoRepetitionInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Texture Progression Tracking -->
+      <div class="card card-daily col-full" id="infoTextureCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoTextureBody','infoTextureChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-sprout"/></svg></div> Texture Progression</div>
+          <span class="collapse-chevron" id="infoTextureChevron">▾</span>
+        </div>
+        <div id="infoTextureSummary" class="mt-4"></div>
+        <div id="infoTextureBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoTextureTimeline" class="mt-4"></div>
+          <div id="infoTextureInsights" class="mt-8"></div>
         </div>
       </div>
 
@@ -16659,6 +16742,113 @@ function renderInfoAdoption() {
   if (foodsEl) foodsEl.innerHTML = foodsHtml;
 }
 
+// ── EPISODE ENTRY EDIT/DELETE SYSTEM (shared across all illness trackers) ──
+
+/**
+ * Returns the current time as HH:MM string
+ */
+function _epNowTimeStr() { return new Date().toTimeString().slice(0, 5); }
+
+/**
+ * Converts a HH:MM time string to a full ISO string for today (or yesterday if time > now suggesting it was yesterday)
+ */
+function _epTimeToISO(timeStr) {
+  if (!timeStr) return new Date().toISOString();
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  // If the selected time is >2h in the future, assume they meant yesterday
+  if (d.getTime() > Date.now() + 7200000) d.setDate(d.getDate() - 1);
+  return d.toISOString();
+}
+
+/**
+ * Returns HTML for a shared time picker row used before log chips
+ * @param {string} id - unique id prefix for the time input
+ */
+function _epTimePickerHTML(id) {
+  return '<div class="ep-time-row">' +
+    '<label>⏱ Time:</label>' +
+    '<input type="time" id="' + id + 'TimeInput" value="' + _epNowTimeStr() + '">' +
+    '<span class="ep-now-btn" onclick="document.getElementById(\'' + id + 'TimeInput\').value=_epNowTimeStr()">Now</span>' +
+    '</div>';
+}
+
+/**
+ * Gets the selected time from a time picker as ISO string
+ */
+function _epGetSelectedTime(id) {
+  const el = document.getElementById(id + 'TimeInput');
+  return el ? _epTimeToISO(el.value) : new Date().toISOString();
+}
+
+/**
+ * Opens an edit bottom sheet for an episode entry.
+ * @param {object} opts
+ *   - title: string (e.g. "Edit Stool Entry")
+ *   - fields: array of { label, id, type, value, options? }
+ *   - onSave: function(values) called with { id: newValue } map
+ *   - onDelete: function() called when delete is tapped
+ */
+function _epEditEntry(opts) {
+  const overlay = document.createElement('div');
+  overlay.className = 'ep-edit-overlay';
+
+  let fieldsHTML = '';
+  (opts.fields || []).forEach(f => {
+    fieldsHTML += '<div class="ep-edit-field">';
+    fieldsHTML += '<div class="ep-edit-label">' + escHtml(f.label) + '</div>';
+    if (f.type === 'time') {
+      const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? f.value.split('T')[1].slice(0, 5) : f.value) : _epNowTimeStr();
+      fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + timeVal + '">';
+    } else if (f.type === 'select' && f.options) {
+      fieldsHTML += '<select class="ep-edit-input" id="epEdit_' + f.id + '">';
+      f.options.forEach(o => {
+        const sel = o.value === f.value ? ' selected' : '';
+        fieldsHTML += '<option value="' + escHtml(o.value) + '"' + sel + '>' + escHtml(o.label) + '</option>';
+      });
+      fieldsHTML += '</select>';
+    } else if (f.type === 'number') {
+      fieldsHTML += '<input type="number" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + (f.value || '') + '" step="' + (f.step || '0.1') + '" inputmode="decimal">';
+    } else {
+      fieldsHTML += '<input type="text" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(f.value || '') + '">';
+    }
+    fieldsHTML += '</div>';
+  });
+
+  overlay.innerHTML = '<div class="ep-edit-sheet">' +
+    '<div class="ep-edit-title">' + escHtml(opts.title || 'Edit Entry') + '</div>' +
+    fieldsHTML +
+    '<div class="ep-edit-btns">' +
+    '<button class="btn btn-rose" id="epEditDelete">Delete</button>' +
+    '<button class="btn btn-ghost" id="epEditCancel">Cancel</button>' +
+    '<button class="btn btn-sky" id="epEditSave">Save</button>' +
+    '</div></div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#epEditCancel').onclick = () => overlay.remove();
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.querySelector('#epEditDelete').onclick = () => {
+    overlay.remove();
+    if (opts.onDelete) {
+      confirmAction('Delete this entry?', opts.onDelete, 'Delete');
+    }
+  };
+
+  overlay.querySelector('#epEditSave').onclick = () => {
+    const values = {};
+    (opts.fields || []).forEach(f => {
+      const el = document.getElementById('epEdit_' + f.id);
+      if (el) values[f.id] = el.value;
+    });
+    overlay.remove();
+    if (opts.onSave) opts.onSave(values);
+  };
+}
+
+
 // ── FEVER EPISODE TRACKING (v2.9) ──
 
 let _feverEpisodes = [];
@@ -16929,7 +17119,8 @@ function renderFeverEpisodeCard() {
   html += '<div class="fe-timeline">';
   showReadings.slice(0, maxShow).forEach((r, i) => {
     const rs = getFeverSeverity(r.temp);
-    html += '<div class="fe-tl-entry">';
+    const origIdx = ep.readings.length - 1 - i;
+    html += '<div class="fe-tl-entry ep-entry-tap" onclick="feEditReading(' + origIdx + ')">';
     html += '<div class="fe-tl-dot" style="background:' + rs.color + ';"></div>';
     if (i < Math.min(showReadings.length, maxShow) - 1) html += '<div class="fe-tl-line"></div>';
     html += '<div class="fe-tl-time">' + _feverTimeShort(r.time) + '</div>';
@@ -16945,8 +17136,9 @@ function renderFeverEpisodeCard() {
   // Medicine section
   html += '<div class="fe-section-title">Medicine</div>';
   if (ep.doses.length > 0) {
-    ep.doses.slice().reverse().forEach(d => {
-      html += '<div class="fe-dose-row">💊 ' + escHtml(d.medicine) + ' ' + escHtml(d.dose) + ' at ' + _feverTimeShort(d.time) + '</div>';
+    ep.doses.slice().reverse().forEach((d, i) => {
+      const origIdx = ep.doses.length - 1 - i;
+      html += '<div class="fe-dose-row ep-entry-tap" onclick="feEditDose(' + origIdx + ')">💊 ' + escHtml(d.medicine) + ' ' + escHtml(d.dose) + ' at ' + _feverTimeShort(d.time) + '</div>';
     });
     if (doseCD) {
       if (doseCD.available) {
@@ -16966,15 +17158,17 @@ function renderFeverEpisodeCard() {
 
   // Actions section
   html += '<div class="fe-section-title">Actions</div>';
+  html += _epTimePickerHTML('feAction');
   const ACTION_CHIPS = ['Lukewarm sponging', 'Breastfed', 'Fluids given', 'Changed clothes', 'Doctor called'];
   html += '<div class="fe-action-chips">';
   ACTION_CHIPS.forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logFeverAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+    html += '<span class="fe-action-chip" onclick="logFeverAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'feAction\'))">' + a + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
-    ep.actions.slice().reverse().slice(0, 5).forEach(a => {
-      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    ep.actions.slice().reverse().slice(0, 5).forEach((a, i) => {
+      const origIdx = ep.actions.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="feEditAction(' + origIdx + ')">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -17100,6 +17294,92 @@ function feLogDosePrompt() {
   if (dose === null) return;
   logFeverDose('Crocin / Paracetamol', dose, null, '');
   showQLToast('💊 Dose logged');
+}
+
+// ── Fever Edit/Delete ──
+
+function feEditReading(idx) {
+  const ep = getActiveFeverEpisode();
+  if (!ep || !ep.readings[idx]) return;
+  const r = ep.readings[idx];
+  _epEditEntry({
+    title: 'Edit Temperature Reading',
+    fields: [
+      { label: 'Temperature (°F)', id: 'temp', type: 'number', value: r.temp, step: '0.1' },
+      { label: 'Time', id: 'time', type: 'time', value: r.time },
+      { label: 'Notes', id: 'notes', type: 'text', value: r.notes || '' }
+    ],
+    onSave: function(v) {
+      ep.readings[idx].temp = parseFloat(v.temp) || r.temp;
+      ep.readings[idx].time = _epTimeToISO(v.time);
+      ep.readings[idx].notes = v.notes || '';
+      ep.peakTemp = Math.max(...ep.readings.map(x => x.temp));
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard(); renderHomeFeverBanner();
+      showQLToast('🌡️ Reading updated');
+    },
+    onDelete: function() {
+      ep.readings.splice(idx, 1);
+      if (ep.readings.length > 0) ep.peakTemp = Math.max(...ep.readings.map(x => x.temp));
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard(); renderHomeFeverBanner();
+      showQLToast('🌡️ Reading deleted');
+    }
+  });
+}
+
+function feEditDose(idx) {
+  const ep = getActiveFeverEpisode();
+  if (!ep || !ep.doses[idx]) return;
+  const d = ep.doses[idx];
+  _epEditEntry({
+    title: 'Edit Medicine Dose',
+    fields: [
+      { label: 'Medicine', id: 'medicine', type: 'text', value: d.medicine },
+      { label: 'Dose', id: 'dose', type: 'text', value: d.dose },
+      { label: 'Time', id: 'time', type: 'time', value: d.time }
+    ],
+    onSave: function(v) {
+      ep.doses[idx].medicine = v.medicine || d.medicine;
+      ep.doses[idx].dose = v.dose || d.dose;
+      ep.doses[idx].time = _epTimeToISO(v.time);
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard();
+      showQLToast('💊 Dose updated');
+    },
+    onDelete: function() {
+      ep.doses.splice(idx, 1);
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard();
+      showQLToast('💊 Dose deleted');
+    }
+  });
+}
+
+function feEditAction(idx) {
+  const ep = getActiveFeverEpisode();
+  if (!ep || !ep.actions[idx]) return;
+  const a = ep.actions[idx];
+  _epEditEntry({
+    title: 'Edit Action',
+    fields: [
+      { label: 'Action', id: 'action', type: 'text', value: a.action },
+      { label: 'Time', id: 'time', type: 'time', value: a.time }
+    ],
+    onSave: function(v) {
+      ep.actions[idx].action = v.action || a.action;
+      ep.actions[idx].time = _epTimeToISO(v.time);
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard();
+      showQLToast('✏️ Action updated');
+    },
+    onDelete: function() {
+      ep.actions.splice(idx, 1);
+      save(KEYS.feverEpisodes, _feverEpisodes);
+      renderFeverEpisodeCard();
+      showQLToast('🗑️ Action deleted');
+    }
+  });
 }
 
 function feResolvePrompt() {
@@ -17568,18 +17848,27 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<div class="de-hydra-track"><div class="de-hydra-fill" style="width:' + hydPct + '%;background:' + hydColor + ';"></div></div>';
   html += '<div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/' + hydraTarget + '</div>';
   html += '</div>';
+  html += _epTimePickerHTML('deHydra');
   html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
-  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper()">🩲 Log wet diaper</span>';
+  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">🩲 Log wet diaper</span>';
   html += '<span class="fe-action-chip" onclick="deLogFluidPrompt()">💧 Log fluid</span>';
   html += '</div>';
   if (ep.fluids.length > 0) {
-    ep.fluids.slice().reverse().slice(0, 3).forEach(f => {
-      html += '<div class="fe-action-entry">' + _feverTimeShort(f.time) + ' — ' + escHtml(f.type) + (f.amount ? ' (' + escHtml(f.amount) + ')' : '') + '</div>';
+    ep.fluids.slice().reverse().slice(0, 3).forEach((f, i) => {
+      const origIdx = ep.fluids.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="deEditFluid(' + origIdx + ')">' + _feverTimeShort(f.time) + ' — ' + escHtml(f.type) + (f.amount ? ' (' + escHtml(f.amount) + ')' : '') + '</div>';
+    });
+  }
+  if (ep.wetDiapers.length > 0) {
+    ep.wetDiapers.slice().reverse().slice(0, 3).forEach((w, i) => {
+      const origIdx = ep.wetDiapers.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="deEditWetDiaper(' + origIdx + ')">' + _feverTimeShort(w.time) + ' — 🩲 Wet diaper</div>';
     });
   }
 
   // Log stool
   html += '<div class="fe-section-title">Stool Log</div>';
+  html += _epTimePickerHTML('deStool');
   html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
   html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'watery\')">💧 Watery</span>';
   html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'runny\')">🟡 Runny</span>';
@@ -17595,12 +17884,13 @@ function renderDiarrhoeaEpisodeCard() {
   if (ep.stools.length > 0) {
     const conEmoji = { watery: '💧', runny: '🟡', soft: '🟢', normal: '✅', hard: '🪨', loose: '🟡' };
     const showStools = ep.stools.slice().reverse().slice(0, 6);
-    showStools.forEach(s => {
+    showStools.forEach((s, i) => {
+      const origIdx = ep.stools.length - 1 - i;
       const emoji = conEmoji[s.consistency] || '🟡';
       let flags = '';
       if (s.blood) flags += ' 🩸';
       if (s.mucus) flags += ' 🫧';
-      html += '<div class="de-stool-entry">';
+      html += '<div class="de-stool-entry ep-entry-tap" onclick="deEditStool(' + origIdx + ')">';
       html += '<span>' + emoji + '</span>';
       html += '<span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(s.time) + '</span>';
       html += '<span style="font-size:var(--fs-sm);font-weight:500;">' + (s.consistency || 'loose') + flags + '</span>';
@@ -17614,15 +17904,17 @@ function renderDiarrhoeaEpisodeCard() {
 
   // Actions
   html += '<div class="fe-section-title">Actions</div>';
+  html += _epTimePickerHTML('deAction');
   const DE_ACTIONS = ['Breastfed', 'ORS given', 'Applied diaper cream', 'Changed diaper', 'Doctor called', 'Washed hands'];
   html += '<div class="fe-action-chips">';
   DE_ACTIONS.forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logDiarrhoeaAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+    html += '<span class="fe-action-chip" onclick="logDiarrhoeaAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'deAction\'))">' + a + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
-    ep.actions.slice().reverse().slice(0, 5).forEach(a => {
-      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    ep.actions.slice().reverse().slice(0, 5).forEach((a, i) => {
+      const origIdx = ep.actions.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="deEditAction(' + origIdx + ')">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -17665,7 +17957,8 @@ function deLogStoolPrompt(consistency) {
   if (!getActiveDiarrhoeaEpisode()) {
     startDiarrhoeaEpisode('manual');
   }
-  logDiarrhoeaStool(consistency, '', blood, mucus, null, '');
+  const timeStr = _epGetSelectedTime('deStool');
+  logDiarrhoeaStool(consistency, '', blood, mucus, timeStr, '');
   // Reset checkboxes
   if (bloodEl) bloodEl.checked = false;
   if (mucusEl) mucusEl.checked = false;
@@ -17677,8 +17970,118 @@ function deLogFluidPrompt() {
   const type = prompt('Fluid type:\n' + FLUID_TYPES.map((f, i) => (i + 1) + '. ' + f).join('\n') + '\n\nEnter name or number:', 'ORS');
   if (type === null) return;
   const resolved = FLUID_TYPES[parseInt(type) - 1] || type;
-  logDiarrhoeaFluid(resolved, '', null);
+  const timeStr = _epGetSelectedTime('deHydra');
+  logDiarrhoeaFluid(resolved, '', timeStr);
   showQLToast('💧 ' + resolved + ' logged');
+}
+
+// ── Diarrhoea Edit/Delete ──
+
+function deEditStool(idx) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep || !ep.stools[idx]) return;
+  const s = ep.stools[idx];
+  _epEditEntry({
+    title: 'Edit Stool Entry',
+    fields: [
+      { label: 'Consistency', id: 'consistency', type: 'select', value: s.consistency,
+        options: [{value:'watery',label:'💧 Watery'},{value:'runny',label:'🟡 Runny'},{value:'soft',label:'🟢 Soft'},{value:'normal',label:'✅ Normal'},{value:'hard',label:'🪨 Hard'}] },
+      { label: 'Time', id: 'time', type: 'time', value: s.time },
+      { label: 'Notes', id: 'notes', type: 'text', value: s.notes || '' }
+    ],
+    onSave: function(v) {
+      ep.stools[idx].consistency = v.consistency || s.consistency;
+      ep.stools[idx].time = _epTimeToISO(v.time);
+      ep.stools[idx].notes = v.notes || '';
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard(); renderHomeDiarrhoeaBanner();
+      showQLToast('💩 Stool entry updated');
+    },
+    onDelete: function() {
+      ep.stools.splice(idx, 1);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard(); renderHomeDiarrhoeaBanner();
+      showQLToast('🗑️ Stool entry deleted');
+    }
+  });
+}
+
+function deEditFluid(idx) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep || !ep.fluids[idx]) return;
+  const f = ep.fluids[idx];
+  _epEditEntry({
+    title: 'Edit Fluid Entry',
+    fields: [
+      { label: 'Type', id: 'type', type: 'text', value: f.type },
+      { label: 'Amount', id: 'amount', type: 'text', value: f.amount || '' },
+      { label: 'Time', id: 'time', type: 'time', value: f.time }
+    ],
+    onSave: function(v) {
+      ep.fluids[idx].type = v.type || f.type;
+      ep.fluids[idx].amount = v.amount || '';
+      ep.fluids[idx].time = _epTimeToISO(v.time);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('💧 Fluid entry updated');
+    },
+    onDelete: function() {
+      ep.fluids.splice(idx, 1);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('🗑️ Fluid entry deleted');
+    }
+  });
+}
+
+function deEditWetDiaper(idx) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep || !ep.wetDiapers[idx]) return;
+  const w = ep.wetDiapers[idx];
+  _epEditEntry({
+    title: 'Edit Wet Diaper Entry',
+    fields: [
+      { label: 'Time', id: 'time', type: 'time', value: w.time }
+    ],
+    onSave: function(v) {
+      ep.wetDiapers[idx].time = _epTimeToISO(v.time);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('🩲 Wet diaper updated');
+    },
+    onDelete: function() {
+      ep.wetDiapers.splice(idx, 1);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('🗑️ Wet diaper deleted');
+    }
+  });
+}
+
+function deEditAction(idx) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep || !ep.actions[idx]) return;
+  const a = ep.actions[idx];
+  _epEditEntry({
+    title: 'Edit Action',
+    fields: [
+      { label: 'Action', id: 'action', type: 'text', value: a.action },
+      { label: 'Time', id: 'time', type: 'time', value: a.time }
+    ],
+    onSave: function(v) {
+      ep.actions[idx].action = v.action || a.action;
+      ep.actions[idx].time = _epTimeToISO(v.time);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('✏️ Action updated');
+    },
+    onDelete: function() {
+      ep.actions.splice(idx, 1);
+      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      renderDiarrhoeaEpisodeCard();
+      showQLToast('🗑️ Action deleted');
+    }
+  });
 }
 
 function deResolvePrompt() {
@@ -17887,18 +18290,18 @@ function logVomitingFluid(type, timeStr) {
   renderVomitingEpisodeCard();
 }
 
-function logVomitingWetDiaper() {
+function logVomitingWetDiaper(timeStr) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
-  ep.wetDiapers.push({ time: new Date().toISOString() });
+  ep.wetDiapers.push({ time: timeStr || new Date().toISOString() });
   save(KEYS.vomitingEpisodes, _vomitingEpisodes);
   renderVomitingEpisodeCard();
 }
 
-function logVomitingAction(action) {
+function logVomitingAction(action, timeStr) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
-  ep.actions.push({ time: new Date().toISOString(), action: action });
+  ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
   save(KEYS.vomitingEpisodes, _vomitingEpisodes);
   renderVomitingEpisodeCard();
 }
@@ -17946,34 +18349,39 @@ function renderVomitingEpisodeCard() {
   const hydPct = Math.min(100, Math.round((wetToday / 6) * 100));
   const hydColor = wetToday >= 6 ? 'var(--tc-sage)' : wetToday >= 4 ? 'var(--tc-amber)' : 'var(--tc-danger)';
   html += '<div class="de-hydra-bar"><div class="de-hydra-label">Wet diapers today</div><div class="de-hydra-track"><div class="de-hydra-fill" style="width:' + hydPct + '%;background:' + hydColor + ';"></div></div><div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/6</div></div>';
-  html += '<div class="fe-action-chips"><span class="fe-action-chip" onclick="logVomitingWetDiaper()">🩲 Wet diaper</span><span class="fe-action-chip" onclick="voLogFluidPrompt()">💧 Log fluid</span></div>';
+  html += _epTimePickerHTML('voHydra');
+  html += '<div class="fe-action-chips"><span class="fe-action-chip" onclick="logVomitingWetDiaper(_epGetSelectedTime(\'voHydra\'))">🩲 Wet diaper</span><span class="fe-action-chip" onclick="voLogFluidPrompt()">💧 Log fluid</span></div>';
 
   // Log vomiting
   html += '<div class="fe-section-title">Vomiting Log</div>';
+  html += _epTimePickerHTML('voLog');
   html += '<div class="fe-action-chips">';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'spit-up\')">🤢 Spit-up</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'vomit\')">🤮 Vomit</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'projectile\')">🚨 Projectile</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'bile\')">🟢 Bile/green</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'spit-up\', _epGetSelectedTime(\'voLog\'))">🤢 Spit-up</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'vomit\', _epGetSelectedTime(\'voLog\'))">🤮 Vomit</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'projectile\', _epGetSelectedTime(\'voLog\'))">🚨 Projectile</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'bile\', _epGetSelectedTime(\'voLog\'))">🟢 Bile/green</span>';
   html += '</div>';
 
   if (ep.episodes.length > 0) {
-    ep.episodes.slice().reverse().slice(0, 6).forEach(e => {
+    ep.episodes.slice().reverse().slice(0, 6).forEach((e, i) => {
+      const origIdx = ep.episodes.length - 1 - i;
       const icon = e.type === 'projectile' ? '🚨' : e.type === 'bile' ? '🟢' : e.type === 'spit-up' ? '🤢' : '🤮';
-      html += '<div class="de-stool-entry"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span style="font-size:var(--fs-sm);font-weight:500;">' + (e.type || 'vomit') + '</span></div>';
+      html += '<div class="de-stool-entry ep-entry-tap" onclick="voEditEntry(' + origIdx + ')"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span style="font-size:var(--fs-sm);font-weight:500;">' + (e.type || 'vomit') + '</span></div>';
     });
   }
 
   // Actions
   html += '<div class="fe-section-title">Actions</div>';
+  html += _epTimePickerHTML('voAction');
   html += '<div class="fe-action-chips">';
   ['Kept upright 30min', 'Small feed given', 'Breastfed', 'Doctor called'].forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logVomitingAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+    html += '<span class="fe-action-chip" onclick="logVomitingAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'voAction\'))">' + a + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
-    ep.actions.slice().reverse().slice(0, 4).forEach(a => {
-      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    ep.actions.slice().reverse().slice(0, 4).forEach((a, i) => {
+      const origIdx = ep.actions.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="voEditAction(' + origIdx + ')">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -18010,8 +18418,66 @@ function renderVomitingEpisodeCard() {
 function voLogFluidPrompt() {
   const type = prompt('Fluid given:', 'Breast milk');
   if (type === null) return;
-  logVomitingFluid(type, null);
+  const timeStr = _epGetSelectedTime('voHydra');
+  logVomitingFluid(type, timeStr);
   showQLToast('💧 ' + type + ' logged');
+}
+
+// ── Vomiting Edit/Delete ──
+
+function voEditEntry(idx) {
+  const ep = getActiveVomitingEpisode();
+  if (!ep || !ep.episodes[idx]) return;
+  const e = ep.episodes[idx];
+  _epEditEntry({
+    title: 'Edit Vomiting Entry',
+    fields: [
+      { label: 'Type', id: 'type', type: 'select', value: e.type,
+        options: [{value:'spit-up',label:'🤢 Spit-up'},{value:'vomit',label:'🤮 Vomit'},{value:'projectile',label:'🚨 Projectile'},{value:'bile',label:'🟢 Bile/green'}] },
+      { label: 'Time', id: 'time', type: 'time', value: e.time },
+      { label: 'Notes', id: 'notes', type: 'text', value: e.notes || '' }
+    ],
+    onSave: function(v) {
+      ep.episodes[idx].type = v.type || e.type;
+      ep.episodes[idx].time = _epTimeToISO(v.time);
+      ep.episodes[idx].notes = v.notes || '';
+      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      renderVomitingEpisodeCard(); renderHomeVomitingBanner();
+      showQLToast('🤮 Entry updated');
+    },
+    onDelete: function() {
+      ep.episodes.splice(idx, 1);
+      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      renderVomitingEpisodeCard(); renderHomeVomitingBanner();
+      showQLToast('🗑️ Entry deleted');
+    }
+  });
+}
+
+function voEditAction(idx) {
+  const ep = getActiveVomitingEpisode();
+  if (!ep || !ep.actions[idx]) return;
+  const a = ep.actions[idx];
+  _epEditEntry({
+    title: 'Edit Action',
+    fields: [
+      { label: 'Action', id: 'action', type: 'text', value: a.action },
+      { label: 'Time', id: 'time', type: 'time', value: a.time }
+    ],
+    onSave: function(v) {
+      ep.actions[idx].action = v.action || a.action;
+      ep.actions[idx].time = _epTimeToISO(v.time);
+      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      renderVomitingEpisodeCard();
+      showQLToast('✏️ Action updated');
+    },
+    onDelete: function() {
+      ep.actions.splice(idx, 1);
+      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      renderVomitingEpisodeCard();
+      showQLToast('🗑️ Action deleted');
+    }
+  });
 }
 
 function voResolvePrompt() {
@@ -18116,10 +18582,10 @@ function logColdDailySymptoms(symptoms, severity, notes) {
   renderColdEpisodeCard(); renderHomeColdBanner();
 }
 
-function logColdAction(action) {
+function logColdAction(action, timeStr) {
   const ep = getActiveColdEpisode();
   if (!ep) return;
-  ep.actions.push({ time: new Date().toISOString(), action: action });
+  ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
   save(KEYS.coldEpisodes, _coldEpisodes);
   renderColdEpisodeCard();
 }
@@ -18185,14 +18651,16 @@ function renderColdEpisodeCard() {
 
   // Actions
   html += '<div class="fe-section-title">Actions</div>';
+  html += _epTimePickerHTML('ceAction');
   html += '<div class="fe-action-chips">';
   ['Saline drops', 'Steam inhalation', 'Humidifier on', 'Elevated mattress', 'Breastfed', 'Doctor called'].forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logColdAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+    html += '<span class="fe-action-chip" onclick="logColdAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'ceAction\'))">' + a + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
-    ep.actions.slice().reverse().slice(0, 4).forEach(a => {
-      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    ep.actions.slice().reverse().slice(0, 4).forEach((a, i) => {
+      const origIdx = ep.actions.length - 1 - i;
+      html += '<div class="fe-action-entry ep-entry-tap" onclick="ceEditAction(' + origIdx + ')">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -18244,6 +18712,34 @@ function ceSetSeverity(sev) {
 
 function ceResolvePrompt() {
   confirmAction('Has the cold/cough resolved? (Symptoms mostly cleared for 24+ hours)', function() { resolveColdEpisode(); showQLToast('✅ Cold episode resolved'); }, 'Resolve');
+}
+
+// ── Cold Edit/Delete ──
+
+function ceEditAction(idx) {
+  const ep = getActiveColdEpisode();
+  if (!ep || !ep.actions[idx]) return;
+  const a = ep.actions[idx];
+  _epEditEntry({
+    title: 'Edit Action',
+    fields: [
+      { label: 'Action', id: 'action', type: 'text', value: a.action },
+      { label: 'Time', id: 'time', type: 'time', value: a.time }
+    ],
+    onSave: function(v) {
+      ep.actions[idx].action = v.action || a.action;
+      ep.actions[idx].time = _epTimeToISO(v.time);
+      save(KEYS.coldEpisodes, _coldEpisodes);
+      renderColdEpisodeCard();
+      showQLToast('✏️ Action updated');
+    },
+    onDelete: function() {
+      ep.actions.splice(idx, 1);
+      save(KEYS.coldEpisodes, _coldEpisodes);
+      renderColdEpisodeCard();
+      showQLToast('🗑️ Action deleted');
+    }
+  });
 }
 
 function renderHomeColdBanner() {
@@ -29153,6 +29649,8 @@ function renderInfo() {
   renderInfoMealBreakdown();
   renderInfoSmartPairing();
   renderInfoAdoption();
+  renderInfoRepetition();
+  renderInfoTexture();
   renderInfoIllnessFreq();
   renderInfoVaccFever();
   renderInfoIllnessFood();
@@ -30509,36 +31007,28 @@ function renderInfoVaccFever() {
   const visibleResults = showAll ? data.results : data.results.slice(-CAP);
   const hiddenCount = data.results.length - visibleResults.length;
 
+  function _vaccRow(r) {
+    const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
+    let h = '<div class="mi-vacc-row">';
+    h += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
+    h += '<div class="mi-vacc-info">';
+    h += '<div class="mi-vacc-name">' + r.vaccines.join(', ') + '</div>';
+    h += '<div class="mi-vacc-detail">' + formatDate(r.date) + '</div>';
+    if (r.hadFever) {
+      h += '<div class="mi-vacc-fever">🌡️ Fever within 72h — peak ' + (r.peakTemp || '?') + '°F, lasted ' + (r.feverDuration || '?') + ' day(s)</div>';
+    }
+    h += '</div></div>';
+    return h;
+  }
+
   let tlHtml = '';
   if (!showAll) {
     tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier ▾\':\'Hide earlier ▴\';">Show ' + hiddenCount + ' earlier ▾</div>';
     tlHtml += '<div style="display:none;">';
-    data.results.slice(0, hiddenCount).forEach(r => {
-      const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
-      tlHtml += '<div class="mi-vacc-row">';
-      tlHtml += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
-      tlHtml += '<div class="mi-vacc-info">';
-      tlHtml += '<div class="mi-vacc-name">' + r.vaccines.join(', ') + '</div>';
-      tlHtml += '<div class="mi-vacc-detail">' + formatDate(r.date) + '</div>';
-      if (r.hadFever) {
-        tlHtml += '<div class="mi-vacc-fever">🌡️ Fever within 72h — peak ' + (r.peakTemp || '?') + '°F, lasted ' + (r.feverDuration || '?') + ' day(s)</div>';
-      }
-      tlHtml += '</div></div>';
-    });
+    data.results.slice(0, hiddenCount).forEach(r => { tlHtml += _vaccRow(r); });
     tlHtml += '</div>';
   }
-  visibleResults.forEach(r => {
-    const dotColor = r.hadFever ? 'var(--tc-rose)' : 'var(--tc-sage)';
-    tlHtml += '<div class="mi-vacc-row">';
-    tlHtml += '<div class="mi-vacc-dot" style="background:' + dotColor + ';"></div>';
-    tlHtml += '<div class="mi-vacc-info">';
-    tlHtml += '<div class="mi-vacc-name">' + r.vaccines.join(', ') + '</div>';
-    tlHtml += '<div class="mi-vacc-detail">' + formatDate(r.date) + '</div>';
-    if (r.hadFever) {
-      tlHtml += '<div class="mi-vacc-fever">🌡️ Fever within 72h — peak ' + (r.peakTemp || '?') + '°F, lasted ' + (r.feverDuration || '?') + ' day(s)</div>';
-    }
-    tlHtml += '</div></div>';
-  });
+  visibleResults.forEach(r => { tlHtml += _vaccRow(r); });
   if (timelineEl) timelineEl.innerHTML = tlHtml;
 
   // Insights
@@ -31116,6 +31606,352 @@ function renderInfoFoodReaction() {
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : '') + '">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 7. FOOD REPETITION FATIGUE
+// ════════════════════════════════════════
+
+function computeFoodRepetition() {
+  const dates = Object.keys(feedingData).sort();
+  if (dates.length < 5) return null;
+
+  // Look at last 14 days of feeding data
+  const now = new Date();
+  const recentDates = dates.filter(d => (now - new Date(d)) < 14 * 86400000).sort();
+  if (recentDates.length < 5) return null;
+
+  // Count food appearances per day (how many days out of recent does each food appear)
+  const foodDayCount = {}; // food → number of days it appeared in
+  const totalDays = recentDates.length;
+
+  recentDates.forEach(d => {
+    const day = feedingData[d];
+    if (!day) return;
+    const allMeals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean).join(',');
+    const dayFoods = new Set();
+    allMeals.split(/[,+&]/).forEach(f => {
+      const base = _baseFoodName(f.trim());
+      if (base && base.length > 1) dayFoods.add(base);
+    });
+    dayFoods.forEach(f => {
+      if (!foodDayCount[f]) foodDayCount[f] = { count: 0, mealDates: [] };
+      foodDayCount[f].count++;
+      foodDayCount[f].mealDates.push(d);
+    });
+  });
+
+  // Find foods appearing in >60% of days over 5+ day stretches
+  const fatigued = [];
+  const warned = [];
+
+  Object.entries(foodDayCount).forEach(([food, data]) => {
+    const pct = Math.round((data.count / totalDays) * 100);
+
+    // Check for consecutive streak of 5+ days
+    let maxStreak = 1, streak = 1;
+    const sortedDates = data.mealDates.sort();
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1]);
+      const curr = new Date(sortedDates[i]);
+      const gap = Math.round((curr - prev) / 86400000);
+      if (gap <= 1) {
+        streak++;
+        maxStreak = Math.max(maxStreak, streak);
+      } else {
+        streak = 1;
+      }
+    }
+
+    if (pct >= 60 && maxStreak >= 5) {
+      fatigued.push({ food, pct, days: data.count, totalDays, streak: maxStreak });
+    } else if (pct >= 50 && maxStreak >= 4) {
+      warned.push({ food, pct, days: data.count, totalDays, streak: maxStreak });
+    }
+  });
+
+  // Sort by percentage descending
+  fatigued.sort((a, b) => b.pct - a.pct);
+  warned.sort((a, b) => b.pct - a.pct);
+  const all = [...fatigued, ...warned].slice(0, 8);
+
+  const insights = [];
+  if (fatigued.length > 0) {
+    insights.push({
+      type: 'warn',
+      text: fatigued.map(f => f.food).join(', ') + (fatigued.length === 1 ? ' appears' : ' appear') +
+        ' in most meals. Try rotating with alternatives to ensure nutrient variety and prevent food fatigue.'
+    });
+  }
+  if (fatigued.length === 0 && warned.length === 0) {
+    insights.push({
+      type: 'good',
+      text: 'Good variety in the last 2 weeks — no food is dominating the diet.'
+    });
+  }
+
+  return { fatigued, warned, all, totalDays, insights };
+}
+
+function renderInfoRepetition() {
+  const summaryEl = document.getElementById('infoRepetitionSummary');
+  const barsEl = document.getElementById('infoRepetitionBars');
+  const insightsEl = document.getElementById('infoRepetitionInsights');
+  if (!summaryEl) return;
+
+  const data = computeFoodRepetition();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">Need at least 5 days of meal data</div>';
+    if (barsEl) barsEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary
+  if (data.fatigued.length > 0) {
+    summaryEl.innerHTML = '<div class="t-sm"><span style="color:var(--tc-amber);font-weight:600;">⚠️ ' + data.fatigued.length +
+      ' food' + (data.fatigued.length !== 1 ? 's' : '') + ' over-repeated</span> <span class="t-light">in the last ' + data.totalDays + ' days</span></div>';
+  } else if (data.warned.length > 0) {
+    summaryEl.innerHTML = '<div class="t-sm"><span style="color:var(--tc-amber);">' + data.warned.length +
+      ' nearing repetition</span> <span class="t-light">· ' + data.totalDays + ' days analysed</span></div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm" style="color:var(--tc-sage);font-weight:500;">✅ Good food variety across ' + data.totalDays + ' days</div>';
+  }
+
+  // Bar chart
+  if (barsEl && data.all.length > 0) {
+    let html = '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);">Food frequency over ' + data.totalDays + ' days (threshold: 60%)</div>';
+    data.all.forEach(f => {
+      const isFatigued = f.pct >= 60 && f.streak >= 5;
+      const barColor = isFatigued ? 'var(--tc-rose)' : f.pct >= 50 ? 'var(--tc-amber)' : 'var(--tc-sage)';
+      html += '<div class="mi-food-row">';
+      html += '<div class="mi-food-name">' + f.food + '</div>';
+      html += '<div class="mi-food-bar"><div class="mi-food-fill" style="width:' + f.pct + '%;background:' + barColor + ';"></div></div>';
+      html += '<div class="mi-food-count">' + f.pct + '% · ' + f.streak + 'd</div>';
+      html += '</div>';
+    });
+    // 60% threshold line label
+    html += '<div class="t-xs t-light" style="text-align:right;margin-top:2px;">streak = consecutive days</div>';
+    barsEl.innerHTML = html;
+  } else if (barsEl) {
+    barsEl.innerHTML = '';
+  }
+
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : ins.type === 'good' ? 'mi-insight-good' : '') + '">' + ins.text + '</div>'
+    ).join('');
+  }
+}
+
+// ════════════════════════════════════════
+// 8. TEXTURE PROGRESSION TRACKING
+// ════════════════════════════════════════
+
+const TEXTURE_STAGES = [
+  { key: 'puree', label: 'Purees', icon: '🥣', keywords: ['puree', 'pureed', 'strained', 'juice'], color: 'rgba(170,130,200,0.7)' },
+  { key: 'mashed', label: 'Mashed / Porridge', icon: '🥄', keywords: ['mashed', 'porridge', 'khichdi', ' dal ', ' dal,', 'halwa', 'sheera', 'cereal', 'oatmeal', 'dalia', 'suji', 'ragi porridge', 'rice porridge', 'congee'], color: 'var(--tc-amber)' },
+  { key: 'soft', label: 'Soft Chunks', icon: '🥕', keywords: ['boiled', 'steamed', 'soft', 'cooked', 'idli', 'dosa', 'paratha', 'roti', 'chapati', 'upma', 'poha', 'pancake'], color: 'var(--tc-sage)' },
+  { key: 'finger', label: 'Finger Foods', icon: '🤏', keywords: ['finger', 'stick', 'wedge', 'slice', 'toast', 'biscuit', 'cracker', 'puff', 'makhana', 'cheerio'], color: 'var(--tc-sky)' }
+];
+
+function _classifyMealTexture(mealText) {
+  if (!mealText || !mealText.trim()) return null;
+  const lower = ' ' + mealText.toLowerCase().replace(/[,+&()/]/g, ' ') + ' ';
+
+  // Check from most advanced to least — finger food keywords override softer ones
+  for (let i = TEXTURE_STAGES.length - 1; i >= 0; i--) {
+    const stage = TEXTURE_STAGES[i];
+    if (stage.keywords.some(kw => lower.includes(kw))) return stage.key;
+  }
+
+  // Default heuristic: if food names are bare (no texture keyword), classify by age context
+  // Whole fruit/veg names without "puree"/"mashed" suggest soft/finger stage
+  const bareWords = ['banana', 'avocado', 'apple', 'pear', 'blueberry', 'mango', 'papaya', 'curd', 'yogurt', 'paneer', 'cheese', 'egg'];
+  if (bareWords.some(w => lower.includes(w))) return 'soft';
+
+  return 'mashed'; // conservative default for unclassified entries
+}
+
+function computeTextureProgression() {
+  const dates = Object.keys(feedingData).sort();
+  if (dates.length < 3) return null;
+
+  // Classify each day's dominant texture
+  const dayTextures = [];
+  dates.forEach(d => {
+    const day = feedingData[d];
+    if (!day) return;
+    const meals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean);
+    if (meals.length === 0) return;
+
+    const textures = meals.map(m => _classifyMealTexture(m)).filter(Boolean);
+    if (textures.length === 0) return;
+
+    // Dominant texture = most advanced texture present that day
+    const stageOrder = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+    const maxTexture = textures.reduce((best, t) => stageOrder[t] > stageOrder[best] ? t : best, textures[0]);
+    const allTextures = [...new Set(textures)];
+
+    dayTextures.push({
+      date: d,
+      dominant: maxTexture,
+      all: allTextures,
+      isMixed: allTextures.length > 1
+    });
+  });
+
+  if (dayTextures.length === 0) return null;
+
+  // Compute stage percentages across all days
+  const stageCounts = { puree: 0, mashed: 0, soft: 0, finger: 0 };
+  dayTextures.forEach(dt => {
+    dt.all.forEach(t => { if (stageCounts[t] !== undefined) stageCounts[t]++; });
+  });
+  const total = dayTextures.length;
+
+  // Current stage = dominant texture in most recent 5 days
+  const recent = dayTextures.slice(-5);
+  const recentDominants = recent.map(d => d.dominant);
+  const recentCounts = {};
+  recentDominants.forEach(t => { recentCounts[t] = (recentCounts[t] || 0) + 1; });
+  const stageIdx = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+  const currentStage = Object.entries(recentCounts).sort((a, b) => b[1] - a[1] || (stageIdx[b[0]] || 0) - (stageIdx[a[0]] || 0))[0][0];
+
+  // First appearance of each stage
+  const firstSeen = {};
+  dayTextures.forEach(dt => {
+    dt.all.forEach(t => {
+      if (!firstSeen[t]) firstSeen[t] = dt.date;
+    });
+  });
+
+  // Weekly breakdown (last 6 weeks)
+  const now = new Date();
+  const weeks = [];
+  for (let w = 5; w >= 0; w--) {
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (w + 1) * 7);
+    const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - w * 7);
+    const weekLabel = weekStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const weekDays = dayTextures.filter(dt => {
+      const dtDate = new Date(dt.date);
+      return dtDate >= weekStart && dtDate < weekEnd;
+    });
+    const weekTextures = {};
+    weekDays.forEach(wd => {
+      wd.all.forEach(t => { weekTextures[t] = (weekTextures[t] || 0) + 1; });
+    });
+    weeks.push({ label: weekLabel, textures: weekTextures, totalDays: weekDays.length });
+  }
+
+  // Insights
+  const insights = [];
+  const currentIdx = stageIdx[currentStage];
+  const stageInfo = TEXTURE_STAGES[currentIdx];
+
+  if (currentIdx === 0 && total >= 14) {
+    insights.push({ type: 'warn', text: 'Still mostly purees after 2+ weeks of solids. Consider introducing mashed textures to support chewing development.' });
+  } else if (currentIdx <= 1 && total >= 21) {
+    insights.push({ type: 'info', text: 'Mostly purees and mashed foods. Around 7-8 months, babies benefit from soft chunks and finger foods for oral motor development.' });
+  }
+
+  // Check for regression (going back to purees after advancing)
+  if (dayTextures.length >= 10) {
+    const firstHalf = dayTextures.slice(0, Math.floor(dayTextures.length / 2));
+    const secondHalf = dayTextures.slice(Math.floor(dayTextures.length / 2));
+    const firstAvg = firstHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / secondHalf.length;
+    if (secondAvg < firstAvg - 0.3) {
+      insights.push({ type: 'warn', text: 'Texture seems to be going backwards recently. If Ziva is refusing chunks, try offering both purees and chunks at the same meal.' });
+    }
+  }
+
+  if (stageCounts.finger > 0) {
+    insights.push({ type: 'good', text: 'Finger foods are being introduced — great for pincer grasp development and self-feeding confidence.' });
+  }
+
+  return { dayTextures, stageCounts, total, currentStage, currentStageInfo: stageInfo, firstSeen, weeks, insights };
+}
+
+function renderInfoTexture() {
+  const summaryEl = document.getElementById('infoTextureSummary');
+  const timelineEl = document.getElementById('infoTextureTimeline');
+  const insightsEl = document.getElementById('infoTextureInsights');
+  if (!summaryEl) return;
+
+  const data = computeTextureProgression();
+  if (!data) {
+    summaryEl.innerHTML = '<div class="mi-nodata">Need at least 3 days of meal data</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Summary — current stage
+  const stageInfo = data.currentStageInfo;
+  summaryEl.innerHTML = '<div class="t-sm">Current: <strong>' + stageInfo.icon + ' ' + stageInfo.label + '</strong> <span class="t-light">· ' + data.total + ' days analysed</span></div>';
+
+  // Stage progression — vertical timeline with bars
+  if (timelineEl) {
+    let html = '';
+
+    // Stage breakdown
+    TEXTURE_STAGES.forEach((stage, i) => {
+      const count = data.stageCounts[stage.key] || 0;
+      const pct = data.total > 0 ? Math.round((count / data.total) * 100) : 0;
+      const isCurrent = stage.key === data.currentStage;
+      const firstDate = data.firstSeen[stage.key];
+
+      html += '<div class="mi-tex-stage">';
+      html += '<div class="mi-tex-icon" style="background:' + (count > 0 ? stage.color : 'var(--surface-alt)') + ';' + (isCurrent ? 'box-shadow:0 0 0 2px ' + stage.color + ';' : '') + '">' + stage.icon + '</div>';
+      html += '<div class="mi-tex-info">';
+      html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">● current</span>' : '') + '</div>';
+      if (count > 0) {
+        html += '<div class="mi-tex-detail">' + count + ' day' + (count !== 1 ? 's' : '') + ' (' + pct + '%)' + (firstDate ? ' · first: ' + formatDate(firstDate).replace(/, \d{4}$/, '') : '') + '</div>';
+        html += '<div class="mi-tex-bar"><div class="mi-tex-fill" style="width:' + pct + '%;background:' + stage.color + ';"></div></div>';
+      } else {
+        html += '<div class="mi-tex-detail" style="color:var(--light);">Not yet introduced</div>';
+      }
+      html += '</div></div>';
+      if (i < TEXTURE_STAGES.length - 1) {
+        html += '<div class="mi-tex-connector"></div>';
+      }
+    });
+
+    // Weekly texture heatmap
+    const activeWeeks = data.weeks.filter(w => w.totalDays > 0);
+    if (activeWeeks.length > 0) {
+      html += '<div class="t-sm" style="font-weight:600;color:var(--mid);margin-top:var(--sp-16);margin-bottom:var(--sp-4);">Weekly Texture Mix</div>';
+      html += '<div class="mi-tex-week-grid" style="grid-template-columns:56px repeat(' + TEXTURE_STAGES.length + ', 1fr);">';
+      // Headers
+      html += '<div class="mi-tex-week-label"></div>';
+      TEXTURE_STAGES.forEach(s => {
+        html += '<div style="text-align:center;font-size:10px;color:var(--light);">' + s.icon + '</div>';
+      });
+      // Rows
+      activeWeeks.forEach(w => {
+        html += '<div class="mi-tex-week-label">' + w.label + '</div>';
+        TEXTURE_STAGES.forEach(s => {
+          const count = w.textures[s.key] || 0;
+          if (count === 0) {
+            html += '<div class="mi-tex-week-cell" style="color:var(--light);">·</div>';
+          } else {
+            const cls = 'mi-tex-' + s.key;
+            html += '<div class="mi-tex-week-cell ' + cls + '">' + count + '</div>';
+          }
+        });
+      });
+      html += '</div>';
+    }
+
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightsEl) {
+    insightsEl.innerHTML = data.insights.map(ins =>
+      '<div class="mi-insight ' + (ins.type === 'warn' ? 'mi-insight-warn' : ins.type === 'good' ? 'mi-insight-good' : '') + '">' + ins.text + '</div>'
     ).join('');
   }
 }
