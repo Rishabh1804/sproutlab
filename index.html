@@ -385,7 +385,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 
 .meal-label { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:6px; display:flex; align-items:center; gap:var(--sp-8); }
 .meal-time-input {
-  margin-left:auto; width:70px; padding:2px 6px;
+  margin-left:auto; width:90px; padding:2px 6px;
   border:1px solid var(--border-subtle); border-radius:var(--r-md);
   font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:500;
   color:var(--mid); background:transparent; outline:none;
@@ -396,7 +396,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 [data-theme="dark"] .meal-time-input:focus { border-color:var(--tc-peach); color:var(--text); }
 .meal-skip-btn { font-size:var(--fs-xs); font-weight:500; color:var(--light); text-transform:none; letter-spacing:normal; cursor:pointer; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); background:var(--surface); border:1px solid var(--border-subtle); transition:all var(--ease-fast); margin-left:auto; }
 .meal-skip-btn:hover { background:var(--peach-light); color:var(--tc-caution); }
-.meal-skip-btn.skipped { background:var(--peach-light); color:var(--tc-caution); pointer-events:none; }
+.meal-skip-btn.skipped { background:var(--peach-light); color:var(--tc-caution); cursor:pointer; }
 
 /* ── Meal autocomplete ── */
 
@@ -3852,6 +3852,88 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .ql-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 [data-theme="dark"] .ql-toast { background:var(--mid); color:var(--body-bg); }
+
+/* ── Post-Save Nutrition Flash ── */
+.psf-overlay {
+  position:fixed; inset:0; z-index:1050;
+  display:flex; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,0.25);
+  opacity:0; pointer-events:none;
+  transition:opacity 0.25s ease;
+  padding:0 12px 100px;
+}
+.psf-overlay.open { opacity:1; pointer-events:auto; }
+.psf-card {
+  width:100%; max-width:400px;
+  background:var(--card-bg); border-radius:var(--r-2xl);
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  transform:translateY(40px);
+  transition:transform 0.3s var(--ease-spring, cubic-bezier(0.34,1.56,0.64,1));
+  overflow:hidden;
+}
+.psf-overlay.open .psf-card { transform:translateY(0); }
+.psf-header {
+  display:flex; align-items:center; gap:var(--sp-8);
+  padding:14px 16px 10px;
+}
+.psf-check {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--sage); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:700; flex-shrink:0;
+}
+.psf-title {
+  font-family:'Nunito',sans-serif; font-weight:700;
+  font-size:var(--fs-md); color:var(--text); line-height:1.2;
+}
+.psf-subtitle {
+  font-size:var(--fs-xs); color:var(--light); margin-top:1px;
+}
+.psf-body { padding:0 16px 14px; }
+.psf-nutrients {
+  display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
+}
+.psf-nut {
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:var(--fs-xs); font-weight:600;
+  padding:3px 8px; border-radius:var(--r-full);
+  background:rgba(58,112,96,0.08); color:var(--tc-sage);
+}
+.psf-nut.missed {
+  background:rgba(200,120,80,0.08); color:var(--tc-amber);
+  font-weight:500;
+}
+.psf-tip {
+  font-size:var(--fs-sm); color:var(--mid);
+  line-height:var(--lh-relaxed);
+  padding:8px 10px; border-radius:var(--r-lg);
+  background:var(--sage-light);
+}
+.psf-tip strong { color:var(--text); }
+.psf-synergy {
+  font-size:var(--fs-xs); color:var(--tc-sage);
+  margin-top:6px; font-weight:600;
+}
+.psf-dismiss {
+  display:block; width:100%; padding:10px;
+  text-align:center; font-size:var(--fs-xs);
+  color:var(--light); border:none; background:none;
+  border-top:1px solid var(--sage-light); cursor:pointer;
+  font-family:'Nunito',sans-serif;
+}
+[data-theme="dark"] .psf-card { background:var(--card-bg); box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+[data-theme="dark"] .psf-nut { background:rgba(181,213,197,0.1); }
+[data-theme="dark"] .psf-nut.missed { background:rgba(200,160,100,0.1); }
+[data-theme="dark"] .psf-tip { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .psf-dismiss { border-top-color:var(--card-border); }
+.psf-home-wrap {
+  margin-top:10px; padding:10px 12px; border-radius:var(--r-lg);
+  background:var(--sage-light); cursor:pointer;
+  transition:background var(--ease-fast);
+}
+.psf-home-wrap:active { background:rgba(58,112,96,0.12); }
+[data-theme="dark"] .psf-home-wrap { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .psf-home-wrap:active { background:rgba(181,213,197,0.1); }
 [data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
 [data-theme="dark"] .ql-freq-pill:active { background:#3d7a60; color:var(--body-bg); }
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }
@@ -5567,6 +5649,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 <!-- Quick Log Toast -->
 <div class="ql-toast" id="qlToast"></div>
+<div class="psf-overlay" id="psfOverlay" onclick="if(event.target===this)dismissPostSaveFlash()"></div>
 
 <!-- v2.4: FAB + Popup removed — Insights tab is one tap away -->
 
@@ -14925,9 +15008,241 @@ function saveFeedingDay() {
   renderTips();
   renderFoods();
   renderDietStats();
+  showPostSaveFlash(d);
+}
+
+// ── Post-Save Nutrition Flash ──
+
+let _psfTimer = null;
+let _lastPsfData = null; // Persisted flash data for home card
+
+function showPostSaveFlash(dateStr) {
+  const overlay = document.getElementById('psfOverlay');
+  if (!overlay) return;
+
+  const entry = feedingData[dateStr];
+  if (!entry) return;
+
+  const MEALS = ['breakfast','lunch','dinner','snack'];
+  const MEAL_LABELS = { breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner', snack:'Snack' };
+  const MEAL_EMOJI = { breakfast:'🌤', lunch:'☀️', dinner:'🌙', snack:'🍪' };
+  const NUTRIENT_EMOJI = { iron:'🩸', calcium:'🦴', protein:'💪', 'vitamin C':'🍊', fibre:'🌾', 'vitamin A':'👁️', 'omega-3':'🧠', zinc:'🛡️' };
+
+  // 1. Gather all nutrients from today's meals
+  const allNutrients = new Set();
+  const allTags = new Set();
+  const allFoods = [];
+  const mealFoods = {};
+  let loggedMeals = 0;
+  let emptyMeals = [];
+
+  MEALS.forEach(m => {
+    const val = entry[m];
+    if (!isRealMeal(val)) {
+      if (val !== '—skipped—') emptyMeals.push(m);
+      return;
+    }
+    loggedMeals++;
+    mealFoods[m] = val;
+    const items = parseMealNutrition(val);
+    items.forEach(item => {
+      (item.nutrients || []).forEach(n => allNutrients.add(n));
+      (item.tags || []).forEach(t => allTags.add(t));
+      allFoods.push(item.food);
+    });
+  });
+
+  if (loggedMeals === 0) {
+    // Nothing logged — just show quick confirmation
+    _psfFallbackToast();
+    return;
+  }
+
+  // 2. Covered vs missing key nutrients
+  const covered = KEY_NUTRIENTS.filter(n => allNutrients.has(n));
+  const missing = KEY_NUTRIENTS.filter(n => !allNutrients.has(n));
+
+  // 3. Food group diversity
+  const groupSet = new Set();
+  allFoods.forEach(f => {
+    const cls = classifyFoodToGroup(f);
+    if (cls) groupSet.add(cls.groupLabel);
+  });
+
+  // 4. Detect synergies present in today's meals
+  const synergiesFound = [];
+  const allFoodLower = allFoods.map(f => f.toLowerCase());
+  FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
+    const hasF1 = allFoodLower.some(f => f.includes(f1) || f1.includes(f));
+    const hasF2 = allFoodLower.some(f => f.includes(f2) || f2.includes(f));
+    if (hasF1 && hasF2) synergiesFound.push({ reason, type });
+  });
+
+  // 5. Build next-meal suggestion
+  let tipHtml = '';
+  if (missing.length > 0 && emptyMeals.length > 0) {
+    const topGap = missing[0]; // Most important missing nutrient (iron first in KEY_NUTRIENTS)
+    const nextMeal = emptyMeals[0];
+    // Find introduced foods that provide this nutrient
+    const providers = (foods || []).filter(f => {
+      const nut = getNutrition(f.name);
+      return nut && nut.nutrients && nut.nutrients.some(n => n.toLowerCase() === topGap.toLowerCase());
+    }).slice(0, 3).map(f => f.name);
+
+    if (providers.length > 0) {
+      // Check if any synergy partner exists for the suggestion
+      let synergyHint = '';
+      providers.forEach(p => {
+        if (synergyHint) return;
+        FOOD_SYNERGIES.forEach(([f1, f2, reason]) => {
+          if (synergyHint) return;
+          const pLow = p.toLowerCase();
+          if (pLow.includes(f1) || f1.includes(pLow)) {
+            const partner = (foods || []).find(fi => fi.name.toLowerCase().includes(f2));
+            if (partner) synergyHint = ' + ' + partner.name + ' (better absorption)';
+          } else if (pLow.includes(f2) || f2.includes(pLow)) {
+            const partner = (foods || []).find(fi => fi.name.toLowerCase().includes(f1));
+            if (partner) synergyHint = ' + ' + partner.name + ' (better absorption)';
+          }
+        });
+      });
+
+      tipHtml = `<div class="psf-tip">💡 For <strong>${MEAL_LABELS[nextMeal].toLowerCase()}</strong>, try <strong>${escHtml(providers[0])}${synergyHint ? escHtml(synergyHint) : ''}</strong> to add ${NUTRIENT_EMOJI[topGap] || ''} ${topGap}</div>`;
+    } else {
+      tipHtml = `<div class="psf-tip">💡 ${MEAL_LABELS[nextMeal]} is open — a good chance to add ${NUTRIENT_EMOJI[topGap] || ''} ${topGap}</div>`;
+    }
+  } else if (missing.length > 0 && emptyMeals.length === 0) {
+    // All meals logged but some nutrients missing
+    const topGap = missing[0];
+    tipHtml = `<div class="psf-tip">💡 Tomorrow, aim to include a ${topGap} source like ${_suggestFoodForNutrient(topGap)}</div>`;
+  } else if (missing.length === 0) {
+    tipHtml = `<div class="psf-tip" style="background:rgba(58,112,96,0.08);color:var(--tc-sage);font-weight:600;">🌟 All 8 key nutrients covered today!</div>`;
+  }
+
+  // 6. Build header summary
+  const headerText = loggedMeals === 1
+    ? MEAL_LABELS[MEALS.find(m => isRealMeal(entry[m]))] + ' saved'
+    : loggedMeals + ' meals saved';
+  const subText = covered.length + '/' + KEY_NUTRIENTS.length + ' key nutrients · ' + groupSet.size + ' food group' + (groupSet.size !== 1 ? 's' : '');
+
+  // 7. Synergy line
+  let synergyHtml = '';
+  if (synergiesFound.length > 0) {
+    const best = synergiesFound[0];
+    const emoji = best.type === 'absorption' ? '🔗' : best.type === 'complete' ? '✨' : '🌿';
+    synergyHtml = `<div class="psf-synergy">${emoji} ${escHtml(best.reason)}</div>`;
+  }
+
+  // 8. Render
+  let nutrientHtml = '';
+  covered.forEach(n => {
+    nutrientHtml += `<span class="psf-nut">${NUTRIENT_EMOJI[n] || '·'} ${n}</span>`;
+  });
+  // Show up to 3 missing
+  missing.slice(0, 3).forEach(n => {
+    nutrientHtml += `<span class="psf-nut missed">${NUTRIENT_EMOJI[n] || '·'} ${n}</span>`;
+  });
+  if (missing.length > 3) {
+    nutrientHtml += `<span class="psf-nut missed">+${missing.length - 3} more</span>`;
+  }
+
+  // Persist for home card
+  _lastPsfData = {
+    dateStr, headerText, subText, covered: [...covered], missing: [...missing],
+    synergy: synergiesFound.length > 0 ? synergiesFound[0] : null,
+    tipHtml, nutrientHtml, synergyHtml, groups: groupSet.size, loggedMeals
+  };
+
+  overlay.innerHTML = `<div class="psf-card">
+    <div class="psf-header">
+      <div class="psf-check">✓</div>
+      <div>
+        <div class="psf-title">${headerText}</div>
+        <div class="psf-subtitle">${subText}</div>
+      </div>
+    </div>
+    <div class="psf-body">
+      <div class="psf-nutrients">${nutrientHtml}</div>
+      ${synergyHtml}
+      ${tipHtml}
+    </div>
+    <button class="psf-dismiss" onclick="dismissPostSaveFlash()">Tap to dismiss</button>
+  </div>`;
+
+  overlay.classList.add('open');
+
+  // Auto-dismiss after 6s
+  if (_psfTimer) clearTimeout(_psfTimer);
+  _psfTimer = setTimeout(dismissPostSaveFlash, 6000);
+}
+
+function dismissPostSaveFlash() {
+  const overlay = document.getElementById('psfOverlay');
+  if (overlay) overlay.classList.remove('open');
+  if (_psfTimer) { clearTimeout(_psfTimer); _psfTimer = null; }
+  // Refresh home to show persisted summary
+  renderHomeMealProgress();
+}
+
+function openDiversityDetail() {
+  switchTab('info');
+  // Wait for info tab to render, then expand and scroll to Meal Breakdown
+  setTimeout(() => {
+    const body = document.getElementById('infoMealBreakdownBody');
+    const chevron = document.getElementById('infoMealBreakdownChevron');
+    if (body && body.style.display === 'none') {
+      body.style.display = '';
+      if (chevron) chevron.textContent = '▴';
+    }
+    const card = document.getElementById('infoMealBreakdownCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function showPsfReview() {
+  if (!_lastPsfData) return;
+  const d = _lastPsfData;
+  const overlay = document.getElementById('psfOverlay');
+  if (!overlay) return;
+
+  overlay.innerHTML = `<div class="psf-card">
+    <div class="psf-header">
+      <div class="psf-check">✓</div>
+      <div>
+        <div class="psf-title">${d.headerText}</div>
+        <div class="psf-subtitle">${d.subText}</div>
+      </div>
+    </div>
+    <div class="psf-body">
+      <div class="psf-nutrients">${d.nutrientHtml}</div>
+      ${d.synergyHtml}
+      ${d.tipHtml}
+    </div>
+    <button class="psf-dismiss" onclick="dismissPostSaveFlash()">Tap to dismiss</button>
+  </div>`;
+
+  overlay.classList.add('open');
+  if (_psfTimer) clearTimeout(_psfTimer);
+  // No auto-dismiss on review — user taps to close
+}
+
+function _suggestFoodForNutrient(nutrient) {
+  const suggestions = {
+    iron: 'ragi, spinach, or masoor dal',
+    calcium: 'ragi, curd, or paneer',
+    protein: 'moong dal, paneer, or curd',
+    'vitamin C': 'orange, tomato, or amla',
+    fibre: 'banana, oats, or sweet potato',
+    'vitamin A': 'carrot, sweet potato, or mango',
+    'omega-3': 'walnuts, flaxseed, or avocado',
+    zinc: 'bajra, oats, or dal'
+  };
+  return suggestions[nutrient] || 'a variety of foods';
+}
+
+function _psfFallbackToast() {
   const btn = document.getElementById('saveFeedBtn');
-  btn.textContent = '✓ Saved!';
-  setTimeout(() => btn.textContent = 'Save', 1500);
+  if (btn) { btn.textContent = '✓ Saved!'; setTimeout(() => btn.textContent = 'Save', 1500); }
 }
 
 // Scan all meals for a given date and auto-add new foods to Foods Introduced
@@ -24695,7 +25010,7 @@ function renderHomeMealProgress() {
     const dayLabel = mdi.dayScore >= 60 ? 'Great variety' : mdi.dayScore >= 35 ? 'OK variety' : 'Low variety';
     const pct = Math.min(mdi.dayScore, 100);
 
-    html += `<div class="mdi-home-wrap">`;
+    html += `<div class="mdi-home-wrap" onclick="openDiversityDetail()" style="cursor:pointer;">`;
     html += `<div class="mdi-home-row"><span style="font-weight:600;color:var(--mid);font-size:var(--fs-xs);">Today's diversity</span><span style="margin-left:auto;font-weight:700;font-size:var(--fs-xs);color:${dayTextColor};">${dayLabel} · ${mdi.totalGroups} group${mdi.totalGroups !== 1 ? 's' : ''}</span></div>`;
     html += `<div class="mdi-bar"><div class="mdi-bar-fill ${dayColor}" style="width:${pct}%;"></div></div>`;
 
@@ -24716,6 +25031,18 @@ function renderHomeMealProgress() {
     html += `</div>`;
   }
 
+  // ── Persisted Post-Save Summary ──
+  if (_lastPsfData && _lastPsfData.dateStr === today()) {
+    const d = _lastPsfData;
+    html += `<div class="psf-home-wrap" onclick="showPsfReview()">`;
+    html += `<div style="display:flex;align-items:center;gap:var(--sp-8);margin-bottom:6px;">`;
+    html += `<span style="font-weight:600;color:var(--mid);font-size:var(--fs-xs);">Nutrition snapshot</span>`;
+    html += `<span style="margin-left:auto;font-size:var(--fs-xs);color:var(--light);">${d.covered.length}/${d.covered.length + d.missing.length} nutrients · tap to review</span>`;
+    html += `</div>`;
+    html += `<div class="psf-nutrients" style="margin-bottom:0;">${d.nutrientHtml}</div>`;
+    html += `</div>`;
+  }
+
   // Food query shortcut — accessible from Home, visible in Simple Mode
   html += `<div style="margin-top:8px;text-align:center;">
     <span class="dqp-pill" style="font-size:var(--fs-xs);" onclick="openHomeFoodQuery()">🔍 Can I give this?</span>
@@ -24728,18 +25055,19 @@ function renderHomeMealProgress() {
 function openHomeFoodQuery() {
   // Create a modal overlay with the food checker
   const existing = document.getElementById('homeFoodQueryOverlay');
-  if (existing) { existing.remove(); return; }
+  if (existing) { existing.remove(); document.body.style.overflow = ''; return; }
 
   const overlay = document.createElement('div');
   overlay.id = 'homeFoodQueryOverlay';
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
+  overlay.style.overscrollBehavior = 'contain';
   overlay.innerHTML = `
-    <div class="modal" style="max-width:420px;max-height:85vh;overflow-y:auto;">
-      <div class="modal-header">
-        <div class="modal-title">🔍 Can I Give This?</div>
-        <button class="modal-close" onclick="document.getElementById('homeFoodQueryOverlay').remove()">✕</button>
+    <div class="modal" style="max-width:420px;max-height:85vh;overflow-y:auto;padding:20px;">
+      <div class="ql-modal-header">
+        <div class="ql-modal-title">🔍 Can I Give This?</div>
+        <button class="ql-modal-close" onclick="closeHomeFoodQuery()">✕</button>
       </div>
-      <div style="padding:0 16px 16px;">
+      <div>
         <div style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:10px;line-height:var(--lh-relaxed);">Check any food — safety, nutrition, best pairings, and Ziva's history with it.</div>
         <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-bottom:10px;">
           <input type="text" id="homeFoodQueryInput" placeholder="e.g. kiwi, paneer + rice..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')runHomeFoodQuery()">
@@ -24750,8 +25078,15 @@ function openHomeFoodQuery() {
     </div>
   `;
   document.body.appendChild(overlay);
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  document.body.style.overflow = 'hidden';
+  overlay.onclick = e => { if (e.target === overlay) closeHomeFoodQuery(); };
   setTimeout(() => document.getElementById('homeFoodQueryInput')?.focus(), 200);
+}
+
+function closeHomeFoodQuery() {
+  const el = document.getElementById('homeFoodQueryOverlay');
+  if (el) el.remove();
+  document.body.style.overflow = '';
 }
 
 function runHomeFoodQuery() {
@@ -24920,14 +25255,39 @@ function skipMeals(mealKeys) {
 function skipSingleMeal(mealKey) {
   const dateStr = document.getElementById('feedingDate')?.value || today();
   if (!feedingData[dateStr]) feedingData[dateStr] = { breakfast:'', lunch:'', dinner:'', snack:'' };
+
+  // If already skipped → unskip
+  if (feedingData[dateStr][mealKey] === '—skipped—') {
+    unskipSingleMeal(mealKey);
+    return;
+  }
+
   if (feedingData[dateStr][mealKey] && feedingData[dateStr][mealKey] !== '—skipped—') return; // already has food
   feedingData[dateStr][mealKey] = '—skipped—';
   save(KEYS.feeding, feedingData);
   const input = document.getElementById('meal-' + mealKey);
   if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
+  const timeInput = document.getElementById('mealtime-' + mealKey);
+  if (timeInput) { timeInput.value = ''; timeInput.disabled = true; }
   updateMealSkipButtons();
   renderHomeMealProgress();
+  renderDietQuickPicker();
   showQLToast('⏭️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
+}
+
+function unskipSingleMeal(mealKey) {
+  const dateStr = document.getElementById('feedingDate')?.value || today();
+  if (!feedingData[dateStr]) return;
+  feedingData[dateStr][mealKey] = '';
+  save(KEYS.feeding, feedingData);
+  const input = document.getElementById('meal-' + mealKey);
+  if (input) { input.value = ''; input.placeholder = 'Type to search foods...'; input.disabled = false; }
+  const timeInput = document.getElementById('mealtime-' + mealKey);
+  if (timeInput) { timeInput.value = ''; timeInput.disabled = false; }
+  updateMealSkipButtons();
+  renderHomeMealProgress();
+  renderDietQuickPicker();
+  showQLToast('↩️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
 }
 
 function updateMealSkipButtons() {
@@ -24941,8 +25301,9 @@ function updateMealSkipButtons() {
     const val = entry[m] || '';
     if (val === '—skipped—') {
       btn.style.display = '';
-      btn.textContent = 'skipped';
+      btn.textContent = 'skipped ↩';
       btn.classList.add('skipped');
+      btn.title = 'Tap to unskip';
       if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
     } else if (val && val.trim()) {
       btn.style.display = 'none'; // has food, no skip needed
