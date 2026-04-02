@@ -2113,6 +2113,81 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .sa-cell-100 { background:rgba(58,112,96,0.35); }
 [data-theme="dark"] .sa-type-bar { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .sa-foods strong { color:var(--text); }
+
+/* ── Fever Episode Tracking ── */
+.fe-card { position:relative; }
+.fe-temp-display { font-size:var(--fs-2xl); font-weight:800; line-height:1.1; text-align:center; padding:var(--sp-8) 0 var(--sp-4); }
+.fe-severity { display:inline-block; font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); padding:2px 10px; border-radius:var(--r-full); text-align:center; }
+.fe-severity-low { background:rgba(240,180,80,0.12); color:var(--tc-amber); }
+.fe-severity-mild { background:rgba(240,180,80,0.15); color:var(--tc-amber); }
+.fe-severity-moderate { background:rgba(220,120,80,0.12); color:var(--tc-caution); }
+.fe-severity-high { background:rgba(224,112,112,0.12); color:var(--tc-danger); }
+.fe-severity-critical { background:rgba(224,112,112,0.18); color:var(--tc-danger); animation:fe-pulse 1.5s ease-in-out infinite; }
+@keyframes fe-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.fe-last-reading { font-size:var(--fs-xs); color:var(--light); text-align:center; margin-top:var(--sp-4); }
+.fe-input-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; background:rgba(0,0,0,0.02); border-radius:var(--r-lg); padding:10px 12px; margin:var(--sp-8) 0; }
+.fe-input-row input[type="number"] { width:80px; padding:8px 10px; border-radius:var(--r-md); border:1.5px solid var(--sage-light); font-family:'Nunito',sans-serif; font-size:var(--fs-base); font-weight:700; background:var(--body-bg); color:var(--text); text-align:center; outline:none; }
+.fe-input-row input[type="number"]:focus { border-color:var(--sage); }
+.fe-input-row input[type="time"] { padding:8px 6px; border-radius:var(--r-md); border:1.5px solid var(--sage-light); font-family:'Nunito',sans-serif; font-size:var(--fs-sm); background:var(--body-bg); color:var(--text); outline:none; }
+.fe-input-label { font-size:var(--fs-xs); color:var(--light); }
+.fe-countdown { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; }
+.fe-countdown-text { font-size:var(--fs-sm); font-weight:600; flex-shrink:0; }
+.fe-countdown-bar { flex:1; height:6px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:hidden; }
+.fe-countdown-fill { height:100%; border-radius:var(--r-full); transition:width 1s linear; background:var(--tc-sage); }
+.fe-countdown-fill.fe-overdue { background:var(--tc-danger); animation:fe-pulse 1.5s ease-in-out infinite; }
+.fe-section-title { font-size:var(--fs-xs); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); padding:var(--sp-8) 0 var(--sp-4); border-top:1px solid rgba(0,0,0,0.04); margin-top:var(--sp-8); }
+.fe-timeline { display:flex; flex-direction:column; gap:0; }
+.fe-tl-entry { display:flex; align-items:center; gap:var(--sp-8); padding:5px 0; position:relative; }
+.fe-tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.fe-tl-line { position:absolute; left:4px; top:18px; bottom:-5px; width:2px; background:rgba(0,0,0,0.06); }
+.fe-tl-entry:last-child .fe-tl-line { display:none; }
+.fe-tl-time { font-size:var(--fs-xs); color:var(--light); min-width:60px; }
+.fe-tl-temp { font-size:var(--fs-sm); font-weight:700; }
+.fe-tl-notes { font-size:var(--fs-xs); color:var(--light); margin-left:var(--sp-4); }
+.fe-dose-row { display:flex; align-items:center; gap:var(--sp-8); padding:5px 0; font-size:var(--fs-sm); }
+.fe-dose-next { font-size:var(--fs-xs); color:var(--tc-sage); font-weight:500; padding:var(--sp-4) 0; }
+.fe-action-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); padding:var(--sp-4) 0; }
+.fe-action-chip { display:inline-flex; align-items:center; padding:4px 10px; border-radius:var(--r-full); font-size:var(--fs-xs); font-weight:500; background:rgba(181,213,197,0.15); border:1px solid rgba(58,112,96,0.12); color:var(--tc-sage); cursor:pointer; transition:transform 0.1s; }
+.fe-action-chip:active { transform:scale(0.95); background:var(--sage); color:white; }
+.fe-action-entry { font-size:var(--fs-xs); color:var(--mid); padding:3px 0; }
+.fe-guidance { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-4) 0; }
+.fe-guidance li { margin-bottom:3px; }
+.fe-resolve { text-align:center; padding:var(--sp-12) 0 var(--sp-4); }
+.fe-sparkline { display:block; margin:var(--sp-8) auto; }
+.fe-history-entry { padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
+.fe-history-entry:last-child { border-bottom:none; }
+.fe-history-date { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.fe-history-detail { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); }
+.fe-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:10px 14px; border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid transparent; }
+.fe-home-banner-low, .fe-home-banner-mild { background:rgba(240,180,80,0.08); border-left-color:var(--tc-amber); }
+.fe-home-banner-moderate { background:rgba(220,120,80,0.08); border-left-color:var(--tc-caution); }
+.fe-home-banner-high, .fe-home-banner-critical { background:rgba(224,112,112,0.1); border-left-color:var(--tc-danger); }
+.fe-home-banner-info { flex:1; min-width:0; }
+.fe-home-banner-temp { font-size:var(--fs-base); font-weight:700; }
+.fe-home-banner-sub { font-size:var(--fs-xs); color:var(--light); }
+.fe-diet-banner { padding:12px 14px; border-radius:var(--r-lg); border-left:4px solid var(--tc-caution); background:rgba(240,180,80,0.06); margin-bottom:var(--sp-8); }
+.fe-diet-title { font-size:var(--fs-sm); font-weight:700; color:var(--tc-caution); margin-bottom:var(--sp-4); }
+.fe-diet-body { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-relaxed); }
+.fe-diet-body strong { color:var(--text); font-weight:600; }
+.fe-more-toggle { font-size:var(--fs-xs); color:var(--tc-sage); cursor:pointer; padding:var(--sp-4) 0; text-align:center; font-weight:500; }
+
+/* Dark mode — fever */
+[data-theme="dark"] .fe-input-row { background:rgba(255,255,255,0.03); }
+[data-theme="dark"] .fe-input-row input[type="number"], [data-theme="dark"] .fe-input-row input[type="time"] { background:var(--body-bg); border-color:rgba(181,213,197,0.15); }
+[data-theme="dark"] .fe-countdown-bar { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .fe-section-title { border-top-color:rgba(255,255,255,0.04); }
+[data-theme="dark"] .fe-tl-line { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .fe-action-chip { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .fe-action-chip:active { background:#3d7a60; color:var(--body-bg); }
+[data-theme="dark"] .fe-history-entry { border-bottom-color:rgba(255,255,255,0.04); }
+[data-theme="dark"] .fe-home-banner-low, [data-theme="dark"] .fe-home-banner-mild { background:rgba(240,180,80,0.06); }
+[data-theme="dark"] .fe-home-banner-moderate { background:rgba(220,120,80,0.06); }
+[data-theme="dark"] .fe-home-banner-high, [data-theme="dark"] .fe-home-banner-critical { background:rgba(224,112,112,0.08); }
+[data-theme="dark"] .fe-diet-banner { background:rgba(240,180,80,0.05); }
+[data-theme="dark"] .fe-severity-low, [data-theme="dark"] .fe-severity-mild { background:rgba(240,180,80,0.15); }
+[data-theme="dark"] .fe-severity-moderate { background:rgba(220,120,80,0.15); }
+[data-theme="dark"] .fe-severity-high { background:rgba(224,112,112,0.15); }
+[data-theme="dark"] .fe-severity-critical { background:rgba(224,112,112,0.2); }
 .dqp-same {
   padding:5px 10px; border-radius:var(--r-2xl);
   font-size:var(--fs-xs); font-weight:500;
@@ -4456,6 +4531,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       </div>
 
       <!-- ─── TIER 2: TODAY'S ACTIONS ─── -->
+      <!-- ─── FEVER BANNER (appears when active) ─── -->
+      <div class="col-full" id="homeFeverBanner" style="display:none;"></div>
+
       <div class="home-section-label sec-t1 col-full">Today</div>
 
       <!-- TODAY'S MEALS PROGRESS -->
@@ -4643,6 +4721,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
       <!-- ─── DOMAIN SCORE HERO ─── -->
       <div class="card col-full card-hero hero-medical" id="medicalDomainHero" style="display:none;"></div>
+
+      <!-- ─── ACTIVE FEVER EPISODE ─── -->
+      <div class="card card-action col-full fe-card" id="feverEpisodeCard" style="display:none;"></div>
+
+      <!-- ─── FEVER HISTORY ─── -->
+      <div class="card card-info col-full" id="feverHistoryCard" style="display:none;">
+        <div class="card-header" onclick="toggleHistoryCard('feverHistoryBody','feverHistoryChevron')">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Fever History</div>
+          <span class="collapse-chevron" id="feverHistoryChevron">▾</span>
+        </div>
+        <div id="feverHistorySummary" class="mt-4"></div>
+        <div id="feverHistoryBody" class="collapse-body" style="display:none;"></div>
+      </div>
 
       <!-- ─── TIER 1: STATS ─── -->
       <div class="card card-daily col-full card-gradient-cool" id="medStatsCard">
@@ -6290,6 +6381,7 @@ const KEYS = {
   alertsHistory: 'ziva_alerts_history',
   vaccBooked:    'ziva_vacc_booked',
   suggestions:   'ziva_suggestions',
+  feverEpisodes: 'ziva_fever_episodes',
 };
 
 function load(key, def) {
@@ -7277,6 +7369,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 function renderHome() {
   updateHeader();
+  renderHomeFeverBanner();
   renderHeroScore();
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
@@ -10313,6 +10406,14 @@ function checkSymptoms() {
   // Show doctor contact if any match calls for it or is emergency
   if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
     html += _scDoctorCardHTML(hasEmergency);
+  }
+
+  // Track this fever CTA
+  var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
+  if (isFeverMatch && !getActiveFeverEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="promptFeverTrack()" style="width:100%;">🌡️ Track this fever</button></div>';
+  } else if (isFeverMatch && getActiveFeverEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🌡️ Fever episode already being tracked</div>';
   }
 
   // Disclaimer
@@ -15491,6 +15592,9 @@ function renderDietIntelBanner() {
 
   let html = '';
 
+  // 0. Fever diet guidance (if active episode)
+  html += renderDietFeverBanner();
+
   // 1. New food reaction window (3-day rule)
   const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const recentIntros = (foods || []).filter(f => {
@@ -15733,16 +15837,59 @@ function _sgNextEmptyMeal() {
 
 function generateDailySuggestions() {
   const todayStr = today();
+  const activeFever = getActiveFeverEpisode();
 
-  // Already generated today? Reuse.
+  // Already generated today? Reuse — unless fever state changed
   if (_suggestionsData[todayStr] && _suggestionsData[todayStr].generated) {
-    return _suggestionsData[todayStr];
+    const wasFeverMode = !!_suggestionsData[todayStr]._feverMode;
+    if (!!activeFever === wasFeverMode) {
+      return _suggestionsData[todayStr];
+    }
+    // Fever state changed — regenerate
+    delete _suggestionsData[todayStr];
   }
 
   pruneOldSuggestions();
 
   const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   if (introducedSet.size < 3) return null; // too few foods to suggest
+
+  // ── ILLNESS MODE: override suggestions when fever is active ──
+  if (activeFever) {
+    const feverFoods = getFeverDietFoods();
+    const todayFoods = extractDayFoods(todayStr);
+    const todayBases = new Set(todayFoods.map(f => _baseFoodName(f)));
+    const eligible = feverFoods.filter(f => !todayBases.has(_baseFoodName(f)));
+
+    const items = [];
+    // Hydration suggestions
+    const hydraFoods = eligible.filter(f => {
+      const nut = getNutrition(f) || getNutrition(_baseFoodName(f));
+      return nut && (nut.tags.includes('hydrating') || nut.tags.includes('cooling'));
+    }).slice(0, 2);
+    if (hydraFoods.length > 0) {
+      items.push({ id: 'sg-fever-hydra', type: 'hydration', foods: hydraFoods, reason: 'Hydration — essential during fever', emoji: '💧', adopted: false, matchedMeal: null, matchedAt: null });
+    }
+    // Easy-digest suggestions
+    const easyFoods = eligible.filter(f => {
+      if (hydraFoods.includes(f)) return false;
+      const nut = getNutrition(f) || getNutrition(_baseFoodName(f));
+      return nut && nut.tags.includes('easy-digest');
+    }).slice(0, 2);
+    if (easyFoods.length > 0) {
+      items.push({ id: 'sg-fever-easy', type: 'nutrient-gap', foods: easyFoods, reason: 'Light, easy-digest foods for recovery', emoji: '🤒', adopted: false, matchedMeal: null, matchedAt: null });
+    }
+    // General gentle foods
+    const remaining = eligible.filter(f => !hydraFoods.includes(f) && !easyFoods.includes(f)).slice(0, 2);
+    if (remaining.length > 0) {
+      items.push({ id: 'sg-fever-gentle', type: 'template', foods: remaining, reason: 'Gentle foods — offer small amounts', emoji: '🍽️', adopted: false, matchedMeal: null, matchedAt: null });
+    }
+
+    const dayEntry = { generated: new Date().toISOString(), items: items.slice(0, 4), adoptionRate: 0, _feverMode: true, _illnessNote: 'Illness mode — focusing on gentle, hydrating foods' };
+    _suggestionsData[todayStr] = dayEntry;
+    save(KEYS.suggestions, _suggestionsData);
+    return dayEntry;
+  }
 
   const todayFoods = extractDayFoods(todayStr);
   const todayFoodSet = new Set(todayFoods);
@@ -15908,7 +16055,8 @@ function generateDailySuggestions() {
   const dayEntry = {
     generated: new Date().toISOString(),
     items: items,
-    adoptionRate: 0
+    adoptionRate: 0,
+    _feverMode: false
   };
 
   _suggestionsData[todayStr] = dayEntry;
@@ -15942,6 +16090,12 @@ function renderHomeSuggestions() {
   // Show 3 by default, 4th behind "show more"
   const showCount = 3;
   let html = '';
+
+  // Illness mode header
+  if (data._illnessNote) {
+    html += '<div style="font-size:var(--fs-xs);color:var(--tc-caution);font-weight:600;padding:var(--sp-4) 0;">' + escHtml(data._illnessNote) + '</div>';
+  }
+
   items.forEach((item, idx) => {
     const hidden = idx >= showCount ? ' style="display:none;" data-sg-extra' : '';
     const statusIcon = item.adopted ? '✅' : '⬜';
@@ -16210,6 +16364,722 @@ function renderInfoAdoption() {
   }
   if (foodsEl) foodsEl.innerHTML = foodsHtml;
 }
+
+// ── FEVER EPISODE TRACKING (v2.9) ──
+
+let _feverEpisodes = [];
+try { _feverEpisodes = JSON.parse(localStorage.getItem(KEYS.feverEpisodes)) || []; } catch { _feverEpisodes = []; }
+if (!Array.isArray(_feverEpisodes)) _feverEpisodes = [];
+
+let _feverCountdownInterval = null;
+
+function getActiveFeverEpisode() {
+  return _feverEpisodes.find(e => e.status === 'active') || null;
+}
+
+function getFeverSeverity(tempF) {
+  if (tempF >= 104) return { tier: 'critical', label: 'Critical — seek care', checkMins: 15, color: 'var(--tc-danger)' };
+  if (tempF >= 102.1) return { tier: 'high', label: 'High fever', checkMins: 30, color: 'var(--tc-danger)' };
+  if (tempF >= 100.5) return { tier: 'moderate', label: 'Moderate', checkMins: 60, color: 'var(--tc-caution)' };
+  if (tempF >= 99.1) return { tier: 'mild', label: 'Mild fever', checkMins: 120, color: 'var(--tc-amber)' };
+  return { tier: 'low-grade', label: 'Low-grade', checkMins: 240, color: 'var(--tc-amber)' };
+}
+
+function getParacetamolDose(weightKg) {
+  if (!weightKg || weightKg < 3) return null;
+  const lowMg = Math.round(weightKg * 10);
+  const highMg = Math.round(weightKg * 15);
+  // Crocin drops: 100mg/ml
+  const lowMl = (lowMg / 100).toFixed(1);
+  const highMl = (highMg / 100).toFixed(1);
+  return { lowMg, highMg, lowMl, highMl, display: lowMl + '–' + highMl + ' ml' };
+}
+
+function pruneFeverEpisodes() {
+  if (_feverEpisodes.length > 20) {
+    _feverEpisodes = _feverEpisodes.slice(-20);
+  }
+}
+
+function startFeverEpisode(tempF, source) {
+  // Don't create if one is already active
+  if (getActiveFeverEpisode()) return getActiveFeverEpisode();
+  pruneFeverEpisodes();
+  const now = new Date().toISOString();
+  const episode = {
+    id: 'fe-' + Date.now(),
+    status: 'active',
+    startedAt: now,
+    resolvedAt: null,
+    readings: [{ time: now, temp: tempF, notes: '' }],
+    doses: [],
+    actions: [],
+    peakTemp: tempF,
+    triggerSource: source || 'manual',
+    notes: '',
+    resolvedNotes: ''
+  };
+  _feverEpisodes.push(episode);
+  save(KEYS.feverEpisodes, _feverEpisodes);
+  _startFeverCountdown();
+  return episode;
+}
+
+function logFeverReading(tempF, timeStr, notes) {
+  const ep = getActiveFeverEpisode();
+  if (!ep) return;
+  const time = timeStr || new Date().toISOString();
+  ep.readings.push({ time: time, temp: tempF, notes: notes || '' });
+  if (tempF > ep.peakTemp) ep.peakTemp = tempF;
+  save(KEYS.feverEpisodes, _feverEpisodes);
+  renderFeverEpisodeCard();
+  renderHomeFeverBanner();
+}
+
+function logFeverDose(medicine, dose, timeStr, notes) {
+  const ep = getActiveFeverEpisode();
+  if (!ep) return;
+  ep.doses.push({
+    time: timeStr || new Date().toISOString(),
+    medicine: medicine || 'Crocin / Paracetamol',
+    dose: dose || '',
+    notes: notes || ''
+  });
+  save(KEYS.feverEpisodes, _feverEpisodes);
+  renderFeverEpisodeCard();
+}
+
+function logFeverAction(action, timeStr) {
+  const ep = getActiveFeverEpisode();
+  if (!ep) return;
+  ep.actions.push({
+    time: timeStr || new Date().toISOString(),
+    action: action
+  });
+  save(KEYS.feverEpisodes, _feverEpisodes);
+  renderFeverEpisodeCard();
+}
+
+function resolveFeverEpisode(notes) {
+  const ep = getActiveFeverEpisode();
+  if (!ep) return;
+  ep.status = 'resolved';
+  ep.resolvedAt = new Date().toISOString();
+  ep.resolvedNotes = notes || '';
+  save(KEYS.feverEpisodes, _feverEpisodes);
+  _stopFeverCountdown();
+  renderFeverEpisodeCard();
+  renderFeverHistory();
+  renderHomeFeverBanner();
+  renderHome();
+}
+
+function getFeverCheckCountdown() {
+  const ep = getActiveFeverEpisode();
+  if (!ep || ep.readings.length === 0) return null;
+  const lastReading = ep.readings[ep.readings.length - 1];
+  const sev = getFeverSeverity(lastReading.temp);
+  const lastTime = new Date(lastReading.time).getTime();
+  const elapsed = (Date.now() - lastTime) / 60000; // minutes
+  const remaining = sev.checkMins - elapsed;
+  return { remaining: Math.round(remaining), total: sev.checkMins, overdue: remaining <= 0, elapsed: Math.round(elapsed) };
+}
+
+function getFeverDoseCountdown() {
+  const ep = getActiveFeverEpisode();
+  if (!ep || ep.doses.length === 0) return null;
+  const lastDose = ep.doses[ep.doses.length - 1];
+  const lastTime = new Date(lastDose.time).getTime();
+  const elapsed = (Date.now() - lastTime) / 60000;
+  const minGap = 240; // 4 hours
+  const remaining = minGap - elapsed;
+  return { remaining: Math.round(remaining), available: remaining <= 0, elapsed: Math.round(elapsed) };
+}
+
+function _feverDurationStr(ep) {
+  const start = new Date(ep.startedAt).getTime();
+  const end = ep.resolvedAt ? new Date(ep.resolvedAt).getTime() : Date.now();
+  const mins = Math.round((end - start) / 60000);
+  if (mins < 60) return mins + 'm';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h < 24) return h + 'h ' + (m > 0 ? m + 'm' : '');
+  const d = Math.floor(h / 24);
+  const rh = h % 24;
+  return d + 'd ' + (rh > 0 ? rh + 'h' : '');
+}
+
+function _feverTimeAgo(isoStr) {
+  const mins = Math.round((Date.now() - new Date(isoStr).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const h = Math.floor(mins / 60);
+  if (h < 24) return h + 'h ' + (mins % 60 > 0 ? (mins % 60) + 'm' : '') + ' ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function _feverTimeShort(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function _feverSparklineSVG(readings) {
+  if (!readings || readings.length < 2) return '';
+  const w = 200, h = 40, pad = 4;
+  const temps = readings.map(r => r.temp);
+  const minT = Math.min(...temps) - 0.5;
+  const maxT = Math.max(...temps) + 0.5;
+  const range = maxT - minT || 1;
+  const points = readings.map((r, i) => {
+    const x = pad + (i / (readings.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((r.temp - minT) / range) * (h - pad * 2);
+    return x + ',' + y;
+  });
+  // Threshold lines
+  const y99 = h - pad - ((99 - minT) / range) * (h - pad * 2);
+  const y102 = h - pad - ((102 - minT) / range) * (h - pad * 2);
+  let svg = '<svg class="fe-sparkline" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">';
+  // Reference lines
+  if (y99 > pad && y99 < h - pad) {
+    svg += '<line x1="' + pad + '" y1="' + y99 + '" x2="' + (w - pad) + '" y2="' + y99 + '" stroke="rgba(240,180,80,0.3)" stroke-width="1" stroke-dasharray="4,3"/>';
+  }
+  if (y102 > pad && y102 < h - pad) {
+    svg += '<line x1="' + pad + '" y1="' + y102 + '" x2="' + (w - pad) + '" y2="' + y102 + '" stroke="rgba(224,112,112,0.3)" stroke-width="1" stroke-dasharray="4,3"/>';
+  }
+  // Line
+  svg += '<polyline points="' + points.join(' ') + '" fill="none" stroke="var(--tc-caution)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+  // Dots
+  readings.forEach((r, i) => {
+    const x = pad + (i / (readings.length - 1)) * (w - pad * 2);
+    const y = h - pad - ((r.temp - minT) / range) * (h - pad * 2);
+    const sev = getFeverSeverity(r.temp);
+    const dotColor = sev.color;
+    svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="' + dotColor + '"/>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function renderFeverEpisodeCard() {
+  const card = document.getElementById('feverEpisodeCard');
+  if (!card) return;
+  const ep = getActiveFeverEpisode();
+  if (!ep) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  const lastReading = ep.readings[ep.readings.length - 1];
+  const sev = getFeverSeverity(lastReading.temp);
+  const checkCD = getFeverCheckCountdown();
+  const doseCD = getFeverDoseCountdown();
+  const duration = _feverDurationStr(ep);
+
+  // Card border color
+  card.style.borderLeft = '4px solid ' + sev.color;
+
+  // Get weight for dose calc
+  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  const doseInfo = getParacetamolDose(latestWeight);
+
+  let html = '';
+
+  // Header
+  html += '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Fever Episode</div>';
+  html += '<span class="t-sm t-light">' + duration + '</span></div>';
+
+  // Temperature display
+  html += '<div class="fe-temp-display" style="color:' + sev.color + ';">' + lastReading.temp.toFixed(1) + '°F</div>';
+  html += '<div style="text-align:center;"><span class="fe-severity fe-severity-' + sev.tier + '">' + sev.label + '</span></div>';
+  html += '<div class="fe-last-reading">Last reading: ' + _feverTimeShort(lastReading.time) + ' (' + _feverTimeAgo(lastReading.time) + ')</div>';
+
+  // Sparkline
+  if (ep.readings.length >= 2) {
+    html += _feverSparklineSVG(ep.readings);
+  }
+
+  // Quick temp input
+  const nowTime = new Date().toTimeString().slice(0, 5);
+  html += '<div class="fe-input-row">';
+  html += '<span style="font-size:var(--fs-sm);">🌡️</span>';
+  html += '<input type="number" id="feverTempInput" step="0.1" min="95" max="108" placeholder="°F" inputmode="decimal">';
+  html += '<input type="time" id="feverTimeInput" value="' + nowTime + '">';
+  html += '<button class="btn btn-sage" onclick="feLogReadingFromInput()" style="padding:8px 14px;">Log</button>';
+  html += '</div>';
+
+  // Countdown
+  if (checkCD) {
+    const pct = Math.max(0, Math.min(100, ((checkCD.total - Math.max(0, checkCD.remaining)) / checkCD.total) * 100));
+    const isOverdue = checkCD.overdue;
+    let cdText = '';
+    if (isOverdue) {
+      cdText = '<span style="color:var(--tc-danger);font-weight:700;">Overdue — ' + Math.abs(checkCD.remaining) + 'm</span>';
+    } else if (checkCD.remaining <= 15) {
+      cdText = '<span style="color:var(--tc-amber);">' + checkCD.remaining + 'm</span>';
+    } else {
+      const h = Math.floor(checkCD.remaining / 60);
+      const m = checkCD.remaining % 60;
+      cdText = (h > 0 ? h + 'h ' : '') + m + 'm';
+    }
+    html += '<div class="fe-countdown" id="feverCheckCountdown">';
+    html += '<div class="fe-countdown-text">Next check: ' + cdText + '</div>';
+    html += '<div class="fe-countdown-bar"><div class="fe-countdown-fill' + (isOverdue ? ' fe-overdue' : '') + '" style="width:' + pct + '%;' + (isOverdue ? '' : 'background:' + sev.color + ';') + '"></div></div>';
+    html += '</div>';
+  }
+
+  // Readings timeline
+  html += '<div class="fe-section-title">Readings</div>';
+  const showReadings = ep.readings.slice().reverse();
+  const maxShow = 5;
+  html += '<div class="fe-timeline">';
+  showReadings.slice(0, maxShow).forEach((r, i) => {
+    const rs = getFeverSeverity(r.temp);
+    html += '<div class="fe-tl-entry">';
+    html += '<div class="fe-tl-dot" style="background:' + rs.color + ';"></div>';
+    if (i < Math.min(showReadings.length, maxShow) - 1) html += '<div class="fe-tl-line"></div>';
+    html += '<div class="fe-tl-time">' + _feverTimeShort(r.time) + '</div>';
+    html += '<div class="fe-tl-temp" style="color:' + rs.color + ';">' + r.temp.toFixed(1) + '°F</div>';
+    if (r.notes) html += '<div class="fe-tl-notes">' + escHtml(r.notes) + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  if (showReadings.length > maxShow) {
+    html += '<div class="fe-more-toggle" onclick="feToggleAllReadings()">Show ' + (showReadings.length - maxShow) + ' earlier ▾</div>';
+  }
+
+  // Medicine section
+  html += '<div class="fe-section-title">Medicine</div>';
+  if (ep.doses.length > 0) {
+    ep.doses.slice().reverse().forEach(d => {
+      html += '<div class="fe-dose-row">💊 ' + escHtml(d.medicine) + ' ' + escHtml(d.dose) + ' at ' + _feverTimeShort(d.time) + '</div>';
+    });
+    if (doseCD) {
+      if (doseCD.available) {
+        html += '<div class="fe-dose-next">Next dose available now (if needed, as advised by doctor)</div>';
+      } else {
+        const dh = Math.floor(doseCD.remaining / 60);
+        const dm = doseCD.remaining % 60;
+        html += '<div class="fe-dose-next" style="color:var(--light);">Next dose available in ' + (dh > 0 ? dh + 'h ' : '') + dm + 'm (min 4h gap)</div>';
+      }
+    }
+  } else {
+    html += '<div class="fe-dose-row" style="color:var(--light);font-size:var(--fs-xs);">No medicine logged yet</div>';
+  }
+  // Log dose button
+  const defaultDose = doseInfo ? doseInfo.display : '';
+  html += '<div style="padding:var(--sp-4) 0;"><span class="fe-action-chip" onclick="feLogDosePrompt()">+ Log Crocin dose' + (defaultDose ? ' (' + defaultDose + ')' : '') + '</span></div>';
+
+  // Actions section
+  html += '<div class="fe-section-title">Actions</div>';
+  const ACTION_CHIPS = ['Lukewarm sponging', 'Breastfed', 'Fluids given', 'Changed clothes', 'Doctor called'];
+  html += '<div class="fe-action-chips">';
+  ACTION_CHIPS.forEach(a => {
+    html += '<span class="fe-action-chip" onclick="logFeverAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+  });
+  html += '</div>';
+  if (ep.actions.length > 0) {
+    ep.actions.slice().reverse().slice(0, 5).forEach(a => {
+      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    });
+  }
+
+  // Guidance
+  html += '<div class="fe-section-title">Guidance</div>';
+  html += '<div class="fe-guidance"><ul style="margin:0;padding-left:18px;">';
+  html += '<li>Keep Ziva lightly dressed — do not over-bundle</li>';
+  html += '<li>Offer breast milk or fluids frequently</li>';
+  html += '<li>Sponge with lukewarm water (never cold)</li>';
+  if (sev.tier === 'high' || sev.tier === 'critical') {
+    html += '<li style="color:var(--tc-danger);font-weight:600;">🚨 Call doctor — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else {
+    html += '<li>Call doctor if fever exceeds 102°F or lasts > 48 hours</li>';
+  }
+  html += '</ul></div>';
+
+  // Escalation warnings
+  const escalations = _computeFeverEscalations(ep);
+  if (escalations.length > 0) {
+    escalations.forEach(e => {
+      html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:' + (e.severity === 'emergency' ? 'rgba(224,112,112,0.1)' : 'rgba(240,180,80,0.08)') + ';font-size:var(--fs-sm);font-weight:600;color:' + (e.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + e.icon + ' ' + escHtml(e.text) + '</div>';
+    });
+  }
+
+  // Breaking check: 2 consecutive readings < 99
+  const recentTwo = ep.readings.slice(-2);
+  if (recentTwo.length >= 2 && recentTwo.every(r => r.temp < 99)) {
+    html += '<div style="padding:10px 12px;border-radius:var(--r-md);margin:var(--sp-8) 0;background:rgba(58,112,96,0.08);font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;">✅ Temperature normalizing — continue monitoring for 6 hours before resolving</div>';
+  }
+
+  // Resolve button
+  html += '<div class="fe-resolve"><button class="btn btn-ghost" onclick="feResolvePrompt()" style="width:100%;">✅ Mark Resolved</button></div>';
+
+  // Disclaimer
+  html += '<div style="font-size:var(--fs-2xs);color:var(--light);text-align:center;padding-top:var(--sp-4);font-style:italic;">Guidance only — not medical advice. Trust your instincts and call your paediatrician when in doubt.</div>';
+
+  card.innerHTML = html;
+}
+
+function _computeFeverEscalations(ep) {
+  const warnings = [];
+  const lastReading = ep.readings[ep.readings.length - 1];
+
+  // Temp >= 104
+  if (lastReading.temp >= 104) {
+    warnings.push({ severity: 'emergency', icon: '🚨', text: 'Temperature is critically high — seek immediate medical attention' });
+  }
+
+  // Temp >= 102 for 2+ readings
+  const highReadings = ep.readings.filter(r => r.temp >= 102);
+  if (highReadings.length >= 2 && lastReading.temp < 104) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Multiple readings above 102°F — consider calling doctor' });
+  }
+
+  // Episode > 48 hours
+  const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
+  if (durationH > 48) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Fever persisting > 48 hours — call your paediatrician' });
+  }
+
+  // 3+ doses in 12 hours
+  const last12h = Date.now() - 12 * 3600000;
+  const recentDoses = ep.doses.filter(d => new Date(d.time).getTime() > last12h);
+  if (recentDoses.length >= 3) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Multiple doses in 12 hours — verify dosing frequency with doctor' });
+  }
+
+  // Temperature rising across 3 consecutive readings
+  if (ep.readings.length >= 3) {
+    const last3 = ep.readings.slice(-3);
+    if (last3[2].temp > last3[1].temp && last3[1].temp > last3[0].temp) {
+      warnings.push({ severity: 'warning', icon: '📈', text: 'Temperature trending upward across last 3 readings' });
+    }
+  }
+
+  return warnings;
+}
+
+function feLogReadingFromInput() {
+  const tempInput = document.getElementById('feverTempInput');
+  const timeInput = document.getElementById('feverTimeInput');
+  if (!tempInput) return;
+  const tempF = parseFloat(tempInput.value);
+  if (isNaN(tempF) || tempF < 95 || tempF > 108) {
+    tempInput.focus();
+    return;
+  }
+  // Build ISO time from time input
+  const timeVal = timeInput ? timeInput.value : '';
+  let isoTime = new Date().toISOString();
+  if (timeVal) {
+    const [hh, mm] = timeVal.split(':');
+    const d = new Date();
+    d.setHours(parseInt(hh), parseInt(mm), 0, 0);
+    isoTime = d.toISOString();
+  }
+
+  // If no active episode, start one
+  if (!getActiveFeverEpisode()) {
+    if (tempF >= 99) {
+      startFeverEpisode(tempF, 'manual');
+      renderFeverEpisodeCard();
+      renderHomeFeverBanner();
+      renderFeverHistory();
+      showQLToast('🌡️ Fever episode started — ' + tempF.toFixed(1) + '°F');
+    } else {
+      showQLToast('Temperature is normal (' + tempF.toFixed(1) + '°F)');
+    }
+  } else {
+    logFeverReading(tempF, isoTime, '');
+    showQLToast('🌡️ Reading logged — ' + tempF.toFixed(1) + '°F');
+  }
+  tempInput.value = '';
+}
+
+function feLogDosePrompt() {
+  const ep = getActiveFeverEpisode();
+  if (!ep) return;
+  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  const doseInfo = getParacetamolDose(latestWeight);
+  const defaultDose = doseInfo ? doseInfo.lowMl + ' ml' : '';
+  const dose = prompt('Crocin / Paracetamol dose given:', defaultDose);
+  if (dose === null) return;
+  logFeverDose('Crocin / Paracetamol', dose, null, '');
+  showQLToast('💊 Dose logged');
+}
+
+function feResolvePrompt() {
+  confirmAction('Has Ziva\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
+    resolveFeverEpisode('');
+    showQLToast('✅ Fever episode resolved');
+  }, 'Resolve');
+}
+
+function feToggleAllReadings() {
+  // Re-render with all readings shown — toggle via a flag
+  // Simple approach: just re-render the card (readings are already in the data)
+  renderFeverEpisodeCard();
+}
+
+function renderHomeFeverBanner() {
+  const banner = document.getElementById('homeFeverBanner');
+  if (!banner) return;
+  const ep = getActiveFeverEpisode();
+  if (!ep) {
+    banner.style.display = 'none';
+    return;
+  }
+  banner.style.display = '';
+  const lastReading = ep.readings[ep.readings.length - 1];
+  const sev = getFeverSeverity(lastReading.temp);
+  const checkCD = getFeverCheckCountdown();
+
+  let cdText = '';
+  if (checkCD) {
+    if (checkCD.overdue) {
+      cdText = 'Check overdue';
+    } else {
+      const h = Math.floor(checkCD.remaining / 60);
+      const m = checkCD.remaining % 60;
+      cdText = 'Next check: ' + (h > 0 ? h + 'h ' : '') + m + 'm';
+    }
+  }
+
+  banner.innerHTML = '<div class="fe-home-banner fe-home-banner-' + sev.tier + '" onclick="switchTab(\'track\');setTimeout(function(){switchTrackSub(\'medical\');setTimeout(function(){document.getElementById(\'feverEpisodeCard\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'});},100);},100);">' +
+    '<div class="fe-home-banner-info">' +
+    '<div class="fe-home-banner-temp" style="color:' + sev.color + ';">🌡️ ' + lastReading.temp.toFixed(1) + '°F · ' + sev.label + ' · ' + _feverTimeAgo(lastReading.time) + '</div>' +
+    '<div class="fe-home-banner-sub">' + cdText + '</div>' +
+    '</div>' +
+    '<button class="btn btn-sage" onclick="event.stopPropagation();feHomeBannerLog()" style="padding:6px 12px;font-size:var(--fs-xs);">📝 Log</button>' +
+    '</div>';
+}
+
+function feHomeBannerLog() {
+  // Open a mini prompt for temperature
+  const tempStr = prompt('Current temperature (°F):');
+  if (tempStr === null) return;
+  const tempF = parseFloat(tempStr);
+  if (isNaN(tempF) || tempF < 95 || tempF > 108) return;
+  if (!getActiveFeverEpisode()) {
+    if (tempF >= 99) startFeverEpisode(tempF, 'home-banner');
+    else { showQLToast('Temperature is normal'); return; }
+  } else {
+    logFeverReading(tempF, null, '');
+  }
+  showQLToast('🌡️ ' + tempF.toFixed(1) + '°F logged');
+  renderHome();
+}
+
+function renderFeverHistory() {
+  const card = document.getElementById('feverHistoryCard');
+  const summary = document.getElementById('feverHistorySummary');
+  const body = document.getElementById('feverHistoryBody');
+  if (!card || !summary || !body) return;
+
+  const resolved = _feverEpisodes.filter(e => e.status === 'resolved');
+  if (resolved.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  const last = resolved[resolved.length - 1];
+  const lastDate = last.resolvedAt ? formatDate(last.resolvedAt.split('T')[0]) : '';
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (lastDate ? ' · last: ' + lastDate : '') + '</div>';
+
+  let html = '';
+  resolved.slice().reverse().forEach(ep => {
+    const startD = formatDate(ep.startedAt.split('T')[0]);
+    const endD = ep.resolvedAt ? formatDate(ep.resolvedAt.split('T')[0]) : '';
+    const dur = _feverDurationStr(ep);
+    const doseCount = ep.doses.length;
+    const readingCount = ep.readings.length;
+
+    html += '<div class="fe-history-entry">';
+    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + ' · Peak: ' + ep.peakTemp.toFixed(1) + '°F</div>';
+    html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + readingCount + ' reading' + (readingCount !== 1 ? 's' : '');
+    if (doseCount > 0) html += ' · Crocin ×' + doseCount;
+    html += '</div>';
+    if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function computeFeverAlerts() {
+  const alerts = [];
+  const ep = getActiveFeverEpisode();
+  if (!ep) return alerts;
+
+  const state = loadAlertState();
+  function isDismissed(key) { return !!state.dismissed[key]; }
+  const todayStr = today();
+
+  // Check due
+  const checkCD = getFeverCheckCountdown();
+  if (checkCD && checkCD.overdue) {
+    const key = 'fever-check-due-' + todayStr + '-' + ep.readings.length;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'fever-check-due', key,
+        severity: 'watch', icon: '🌡️',
+        title: 'Temperature check due',
+        body: 'Last reading was ' + _feverTimeAgo(ep.readings[ep.readings.length - 1].time) + '. Time to check again.',
+        action: { label: 'Log Reading', fn: 'switchTab("track");setTimeout(function(){switchTrackSub("medical");},100);' },
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  // Dose available
+  const doseCD = getFeverDoseCountdown();
+  if (doseCD && doseCD.available && ep.readings[ep.readings.length - 1].temp >= 100) {
+    const key = 'fever-dose-avail-' + todayStr + '-' + ep.doses.length;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'fever-dose-available', key,
+        severity: 'info', icon: '💊',
+        title: 'Crocin dose available',
+        body: 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(ep.doses[ep.doses.length - 1].time) + '.',
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  // Escalation
+  const escalations = _computeFeverEscalations(ep);
+  escalations.forEach((e, i) => {
+    const key = 'fever-esc-' + todayStr + '-' + i;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'fever-escalation', key,
+        severity: e.severity === 'emergency' ? 'urgent' : 'watch', icon: e.icon,
+        title: e.text,
+        body: '',
+        tab: 'medical', dismissable: true
+      });
+    }
+  });
+
+  // Breaking
+  if (ep.readings.length >= 2) {
+    const last2 = ep.readings.slice(-2);
+    if (last2.every(r => r.temp < 99)) {
+      alerts.push({
+        id: 'fever-breaking', key: 'fever-breaking-' + todayStr,
+        severity: 'positive', icon: '✅',
+        title: 'Temperature normalizing',
+        body: 'Last 2 readings are below 99°F. Continue monitoring — consider resolving if stable for 6 hours.',
+        action: { label: 'Review', fn: 'switchTab("track");setTimeout(function(){switchTrackSub("medical");},100);' },
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  return alerts;
+}
+
+function renderDietFeverBanner() {
+  const el = document.getElementById('dietIntelBanner');
+  if (!el) return '';
+  const ep = getActiveFeverEpisode();
+  if (!ep) return '';
+
+  return '<div class="fe-diet-banner">' +
+    '<div class="fe-diet-title">🤒 Fever Active — Diet Guidance</div>' +
+    '<div class="fe-diet-body">' +
+    '<strong>Prioritize:</strong> Breast milk (most important), light foods (khichdi, dal water, curd rice, banana, rice porridge), hydrating foods (coconut water, ORS, soups).<br><br>' +
+    '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if Ziva refuses.<br><br>' +
+    '<em>Appetite loss during fever is normal. Offer small amounts frequently.</em>' +
+    '</div></div>';
+}
+
+function getFeverDietFoods() {
+  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  const feverFoods = ['khichdi', 'curd', 'banana', 'rice', 'rice porridge', 'dal', 'dal water',
+    'coconut water', 'buttermilk', 'pomegranate', 'apple', 'mashed potato', 'idli',
+    'sabudana', 'oats porridge', 'ragi porridge', 'curd rice'];
+  return feverFoods.filter(f => {
+    const base = _baseFoodName(f);
+    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+  });
+}
+
+function promptFeverTrack(tempGuess) {
+  const ep = getActiveFeverEpisode();
+  if (ep) {
+    showQLToast('Fever episode already active');
+    return;
+  }
+  const tempStr = prompt('Enter current temperature (°F) to start tracking:', tempGuess || '');
+  if (tempStr === null) return;
+  const tempF = parseFloat(tempStr);
+  if (isNaN(tempF) || tempF < 95 || tempF > 108) return;
+  startFeverEpisode(tempF, 'symptom-checker');
+  showQLToast('🌡️ Fever episode started — ' + tempF.toFixed(1) + '°F');
+  // Navigate to medical tab
+  switchTab('track');
+  setTimeout(function() { switchTrackSub('medical'); }, 100);
+  setTimeout(function() {
+    renderFeverEpisodeCard();
+    renderHomeFeverBanner();
+    renderFeverHistory();
+    document.getElementById('feverEpisodeCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+function _startFeverCountdown() {
+  if (_feverCountdownInterval) return;
+  _feverCountdownInterval = setInterval(function() {
+    if (!getActiveFeverEpisode()) { _stopFeverCountdown(); return; }
+    // Update only the countdown text elements
+    const checkEl = document.getElementById('feverCheckCountdown');
+    if (checkEl) {
+      const cd = getFeverCheckCountdown();
+      if (cd) {
+        const isOverdue = cd.overdue;
+        let text = '';
+        if (isOverdue) text = '<span style="color:var(--tc-danger);font-weight:700;">Overdue — ' + Math.abs(cd.remaining) + 'm</span>';
+        else {
+          const h = Math.floor(cd.remaining / 60);
+          const m = cd.remaining % 60;
+          text = (h > 0 ? h + 'h ' : '') + m + 'm';
+        }
+        const textEl = checkEl.querySelector('.fe-countdown-text');
+        if (textEl) textEl.innerHTML = 'Next check: ' + text;
+        const pct = Math.max(0, Math.min(100, ((cd.total - Math.max(0, cd.remaining)) / cd.total) * 100));
+        const fillEl = checkEl.querySelector('.fe-countdown-fill');
+        if (fillEl) {
+          fillEl.style.width = pct + '%';
+          fillEl.classList.toggle('fe-overdue', isOverdue);
+        }
+      }
+    }
+    // Update Home banner countdown
+    const bannerSub = document.querySelector('.fe-home-banner-sub');
+    if (bannerSub) {
+      const cd = getFeverCheckCountdown();
+      if (cd) {
+        if (cd.overdue) bannerSub.textContent = 'Check overdue';
+        else {
+          const h = Math.floor(cd.remaining / 60);
+          const m = cd.remaining % 60;
+          bannerSub.textContent = 'Next check: ' + (h > 0 ? h + 'h ' : '') + m + 'm';
+        }
+      }
+    }
+  }, 60000);
+}
+
+function _stopFeverCountdown() {
+  if (_feverCountdownInterval) {
+    clearInterval(_feverCountdownInterval);
+    _feverCountdownInterval = null;
+  }
+}
+
+// On load: start countdown if active episode exists
+if (getActiveFeverEpisode()) _startFeverCountdown();
 
 // Get top foods for a specific meal slot
 function getMealSlotTopFoods(mealKey, n) {
@@ -20226,7 +21096,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') renderMilestoneStats();
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -23391,6 +24261,14 @@ function computeAlerts() {
   }
 
   // ═══════════════════════════════════════
+  // FEVER EPISODE ALERTS
+  // ═══════════════════════════════════════
+  try {
+    const feverAlerts = computeFeverAlerts();
+    feverAlerts.forEach(a => alerts.push(a));
+  } catch(e) { /* fever alerts best effort */ }
+
+  // ═══════════════════════════════════════
   // SORT, SYNTHESIS, AUTO-CLEAR, LOG
   // ═══════════════════════════════════════
 
@@ -26537,6 +27415,15 @@ function runHomeSymptomCheck() {
   if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
     html += _scDoctorCardHTML(hasEmergency);
   }
+
+  // Track this fever CTA
+  var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
+  if (isFeverMatch && !getActiveFeverEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="closeHomeSymptomChecker();promptFeverTrack()" style="width:100%;">🌡️ Track this fever</button></div>';
+  } else if (isFeverMatch && getActiveFeverEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🌡️ Fever episode already being tracked</div>';
+  }
+
   html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician.</div>';
   resultEl.innerHTML = html;
 }
