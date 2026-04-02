@@ -2188,6 +2188,44 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .fe-severity-moderate { background:rgba(220,120,80,0.15); }
 [data-theme="dark"] .fe-severity-high { background:rgba(224,112,112,0.15); }
 [data-theme="dark"] .fe-severity-critical { background:rgba(224,112,112,0.2); }
+
+/* ── Diarrhoea Episode Tracking ── */
+.de-stool-count { font-size:var(--fs-2xl); font-weight:800; line-height:1.1; text-align:center; padding:var(--sp-8) 0 var(--sp-4); color:var(--tc-amber); }
+.de-severity { display:inline-block; font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); padding:2px 10px; border-radius:var(--r-full); text-align:center; }
+.de-severity-mild { background:rgba(240,180,80,0.12); color:var(--tc-amber); }
+.de-severity-moderate { background:rgba(220,120,80,0.12); color:var(--tc-caution); }
+.de-severity-severe { background:rgba(224,112,112,0.12); color:var(--tc-danger); }
+.de-hydra-bar { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; }
+.de-hydra-label { font-size:var(--fs-sm); font-weight:600; }
+.de-hydra-track { flex:1; height:8px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:hidden; }
+.de-hydra-fill { height:100%; border-radius:var(--r-full); background:var(--tc-sky); transition:width 0.3s ease; }
+.de-hydra-count { font-size:var(--fs-sm); font-weight:700; color:var(--tc-sky); }
+.de-diaper-row { display:flex; align-items:center; gap:var(--sp-8); padding:5px 0; font-size:var(--fs-sm); }
+.de-diaper-icon { font-size:var(--fs-base); }
+.de-stool-entry { display:flex; align-items:center; gap:var(--sp-8); padding:5px 0; font-size:var(--fs-sm); border-bottom:1px solid rgba(0,0,0,0.03); }
+.de-stool-entry:last-child { border-bottom:none; }
+.de-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:10px 14px; border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid var(--tc-amber); background:rgba(240,180,80,0.08); }
+.de-home-banner-severe { border-left-color:var(--tc-danger); background:rgba(224,112,112,0.08); }
+
+/* Dark mode — diarrhoea */
+[data-theme="dark"] .de-hydra-track { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .de-stool-entry { border-bottom-color:rgba(255,255,255,0.03); }
+[data-theme="dark"] .de-home-banner { background:rgba(240,180,80,0.06); }
+[data-theme="dark"] .de-home-banner-severe { background:rgba(224,112,112,0.06); }
+[data-theme="dark"] .de-severity-mild { background:rgba(240,180,80,0.15); }
+[data-theme="dark"] .de-severity-moderate { background:rgba(220,120,80,0.15); }
+[data-theme="dark"] .de-severity-severe { background:rgba(224,112,112,0.15); }
+
+/* ── Vomiting & Cold Episode Tracking ── */
+.ve-count-display { font-size:var(--fs-2xl); font-weight:800; line-height:1.1; text-align:center; padding:var(--sp-8) 0 var(--sp-4); color:var(--tc-caution); }
+.ve-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:10px 14px; border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid var(--tc-caution); background:rgba(220,120,80,0.06); }
+.ce-day-display { font-size:var(--fs-xl); font-weight:800; line-height:1.1; text-align:center; padding:var(--sp-8) 0 var(--sp-4); color:var(--tc-sky); }
+.ce-symptom-row { display:flex; align-items:center; gap:var(--sp-8); padding:5px 0; font-size:var(--fs-sm); border-bottom:1px solid rgba(0,0,0,0.03); }
+.ce-symptom-row:last-child { border-bottom:none; }
+.ce-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:10px 14px; border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid var(--tc-sky); background:rgba(100,160,210,0.06); }
+[data-theme="dark"] .ve-home-banner { background:rgba(220,120,80,0.05); }
+[data-theme="dark"] .ce-home-banner { background:rgba(100,160,210,0.05); }
+[data-theme="dark"] .ce-symptom-row { border-bottom-color:rgba(255,255,255,0.03); }
 .dqp-same {
   padding:5px 10px; border-radius:var(--r-2xl);
   font-size:var(--fs-xs); font-weight:500;
@@ -4534,6 +4572,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <!-- ─── FEVER BANNER (appears when active) ─── -->
       <div class="col-full" id="homeFeverBanner" style="display:none;"></div>
 
+      <!-- ─── DIARRHOEA BANNER (appears when active) ─── -->
+      <div class="col-full" id="homeDiarrhoeaBanner" style="display:none;"></div>
+
+      <!-- ─── VOMITING BANNER (appears when active) ─── -->
+      <div class="col-full" id="homeVomitingBanner" style="display:none;"></div>
+
+      <!-- ─── COLD BANNER (appears when active) ─── -->
+      <div class="col-full" id="homeColdBanner" style="display:none;"></div>
+
       <div class="home-section-label sec-t1 col-full">Today</div>
 
       <!-- TODAY'S MEALS PROGRESS -->
@@ -4733,6 +4780,45 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
         <div id="feverHistorySummary" class="mt-4"></div>
         <div id="feverHistoryBody" class="collapse-body" style="display:none;"></div>
+      </div>
+
+      <!-- ─── ACTIVE DIARRHOEA EPISODE ─── -->
+      <div class="card card-action col-full" id="diarrhoeaEpisodeCard" style="display:none;"></div>
+
+      <!-- ─── DIARRHOEA HISTORY ─── -->
+      <div class="card card-info col-full" id="diarrhoeaHistoryCard" style="display:none;">
+        <div class="card-header" onclick="toggleHistoryCard('diarrhoeaHistoryBody','diarrhoeaHistoryChevron')">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Diarrhoea History</div>
+          <span class="collapse-chevron" id="diarrhoeaHistoryChevron">▾</span>
+        </div>
+        <div id="diarrhoeaHistorySummary" class="mt-4"></div>
+        <div id="diarrhoeaHistoryBody" class="collapse-body" style="display:none;"></div>
+      </div>
+
+      <!-- ─── ACTIVE VOMITING EPISODE ─── -->
+      <div class="card card-action col-full" id="vomitingEpisodeCard" style="display:none;"></div>
+
+      <!-- ─── VOMITING HISTORY ─── -->
+      <div class="card card-info col-full" id="vomitingHistoryCard" style="display:none;">
+        <div class="card-header" onclick="toggleHistoryCard('vomitingHistoryBody','vomitingHistoryChevron')">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Vomiting History</div>
+          <span class="collapse-chevron" id="vomitingHistoryChevron">▾</span>
+        </div>
+        <div id="vomitingHistorySummary" class="mt-4"></div>
+        <div id="vomitingHistoryBody" class="collapse-body" style="display:none;"></div>
+      </div>
+
+      <!-- ─── ACTIVE COLD EPISODE ─── -->
+      <div class="card card-action col-full" id="coldEpisodeCard" style="display:none;"></div>
+
+      <!-- ─── COLD HISTORY ─── -->
+      <div class="card card-info col-full" id="coldHistoryCard" style="display:none;">
+        <div class="card-header" onclick="toggleHistoryCard('coldHistoryBody','coldHistoryChevron')">
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-medical"/></svg></div> Cold / Cough History</div>
+          <span class="collapse-chevron" id="coldHistoryChevron">▾</span>
+        </div>
+        <div id="coldHistorySummary" class="mt-4"></div>
+        <div id="coldHistoryBody" class="collapse-body" style="display:none;"></div>
       </div>
 
       <!-- ─── TIER 1: STATS ─── -->
@@ -6382,6 +6468,9 @@ const KEYS = {
   vaccBooked:    'ziva_vacc_booked',
   suggestions:   'ziva_suggestions',
   feverEpisodes: 'ziva_fever_episodes',
+  diarrhoeaEpisodes: 'ziva_diarrhoea_episodes',
+  vomitingEpisodes: 'ziva_vomiting_episodes',
+  coldEpisodes: 'ziva_cold_episodes',
 };
 
 function load(key, def) {
@@ -7370,6 +7459,9 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 function renderHome() {
   updateHeader();
   renderHomeFeverBanner();
+  renderHomeDiarrhoeaBanner();
+  renderHomeVomitingBanner();
+  renderHomeColdBanner();
   renderHeroScore();
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
@@ -10414,6 +10506,27 @@ function checkSymptoms() {
     html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="promptFeverTrack()" style="width:100%;">🌡️ Track this fever</button></div>';
   } else if (isFeverMatch && getActiveFeverEpisode()) {
     html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🌡️ Fever episode already being tracked</div>';
+  }
+
+  var isDiarrhoeaMatch = shown.some(function(m) { return m.entry.id === 'diarrhoea'; });
+  if (isDiarrhoeaMatch && !getActiveDiarrhoeaEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="promptDiarrhoeaTrack()" style="width:100%;">💩 Track this diarrhoea</button></div>';
+  } else if (isDiarrhoeaMatch && getActiveDiarrhoeaEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">💩 Diarrhoea episode already being tracked</div>';
+  }
+
+  var isVomitMatch = shown.some(function(m) { return m.entry.id === 'vomiting'; });
+  if (isVomitMatch && !getActiveVomitingEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="promptVomitingTrack()" style="width:100%;">🤮 Track this vomiting</button></div>';
+  } else if (isVomitMatch && getActiveVomitingEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🤮 Vomiting episode already being tracked</div>';
+  }
+
+  var isColdMatch = shown.some(function(m) { return m.entry.id === 'cough-cold'; });
+  if (isColdMatch && !getActiveColdEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="promptColdTrack()" style="width:100%;">🤧 Track this cold/cough</button></div>';
+  } else if (isColdMatch && getActiveColdEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🤧 Cold episode already being tracked</div>';
   }
 
   // Disclaimer
@@ -15595,6 +15708,25 @@ function renderDietIntelBanner() {
   // 0. Fever diet guidance (if active episode)
   html += renderDietFeverBanner();
 
+  // 0b. Diarrhoea diet guidance (if active episode)
+  html += renderDietDiarrhoeaBanner();
+
+  // 0c. Vomiting diet guidance
+  if (getActiveVomitingEpisode()) {
+    html += '<div class="fe-diet-banner"><div class="fe-diet-title">🤮 Vomiting Active — Diet Guidance</div><div class="fe-diet-body">' +
+      '<strong>Prioritize:</strong> Breast milk (most important), small frequent feeds, ORS in tiny sips after vomiting stops for 30 min.<br><br>' +
+      '<strong>Avoid:</strong> Large feeds, fruit juices, new foods, forcing feeds. Wait 20–30 min after vomiting before offering milk.<br><br>' +
+      '<em>Small amounts frequently — 1–2 tsp at a time — is better than a full feed.</em></div></div>';
+  }
+
+  // 0d. Cold diet guidance
+  if (getActiveColdEpisode()) {
+    html += '<div class="fe-diet-banner" style="border-left-color:var(--tc-sky);"><div class="fe-diet-title" style="color:var(--tc-sky);">🤧 Cold Active — Diet Guidance</div><div class="fe-diet-body">' +
+      '<strong>Prioritize:</strong> Warm breast milk, warm soups (dal water, clear veg soup), khichdi, warm ragi porridge. Fluids help thin mucus.<br><br>' +
+      '<strong>Avoid:</strong> Cold foods, ice, new introductions. Appetite may be reduced — this is normal.<br><br>' +
+      '<em>Feed in an upright position. Use saline drops before feeds to clear the nose.</em></div></div>';
+  }
+
   // 1. New food reaction window (3-day rule)
   const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const recentIntros = (foods || []).filter(f => {
@@ -15838,14 +15970,18 @@ function _sgNextEmptyMeal() {
 function generateDailySuggestions() {
   const todayStr = today();
   const activeFever = getActiveFeverEpisode();
+  const activeDiarrhoea = getActiveDiarrhoeaEpisode();
+  const activeVomiting = getActiveVomitingEpisode();
+  const activeCold = getActiveColdEpisode();
+  const isIllness = !!(activeFever || activeDiarrhoea || activeVomiting || activeCold);
 
-  // Already generated today? Reuse — unless fever state changed
+  // Already generated today? Reuse — unless illness state changed
   if (_suggestionsData[todayStr] && _suggestionsData[todayStr].generated) {
-    const wasFeverMode = !!_suggestionsData[todayStr]._feverMode;
-    if (!!activeFever === wasFeverMode) {
+    const wasIllnessMode = !!_suggestionsData[todayStr]._feverMode;
+    if (isIllness === wasIllnessMode) {
       return _suggestionsData[todayStr];
     }
-    // Fever state changed — regenerate
+    // Illness state changed — regenerate
     delete _suggestionsData[todayStr];
   }
 
@@ -15854,12 +15990,12 @@ function generateDailySuggestions() {
   const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   if (introducedSet.size < 3) return null; // too few foods to suggest
 
-  // ── ILLNESS MODE: override suggestions when fever is active ──
-  if (activeFever) {
-    const feverFoods = getFeverDietFoods();
+  // ── ILLNESS MODE: override suggestions when fever or diarrhoea is active ──
+  if (isIllness) {
+    const illnessFoods = activeFever ? getFeverDietFoods() : activeDiarrhoea ? getDiarrhoeaDietFoods() : getFeverDietFoods();
     const todayFoods = extractDayFoods(todayStr);
     const todayBases = new Set(todayFoods.map(f => _baseFoodName(f)));
-    const eligible = feverFoods.filter(f => !todayBases.has(_baseFoodName(f)));
+    const eligible = illnessFoods.filter(f => !todayBases.has(_baseFoodName(f)));
 
     const items = [];
     // Hydration suggestions
@@ -15868,7 +16004,7 @@ function generateDailySuggestions() {
       return nut && (nut.tags.includes('hydrating') || nut.tags.includes('cooling'));
     }).slice(0, 2);
     if (hydraFoods.length > 0) {
-      items.push({ id: 'sg-fever-hydra', type: 'hydration', foods: hydraFoods, reason: 'Hydration — essential during fever', emoji: '💧', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-hydra', type: 'hydration', foods: hydraFoods, reason: 'Hydration — essential during illness', emoji: '💧', adopted: false, matchedMeal: null, matchedAt: null });
     }
     // Easy-digest suggestions
     const easyFoods = eligible.filter(f => {
@@ -15877,12 +16013,12 @@ function generateDailySuggestions() {
       return nut && nut.tags.includes('easy-digest');
     }).slice(0, 2);
     if (easyFoods.length > 0) {
-      items.push({ id: 'sg-fever-easy', type: 'nutrient-gap', foods: easyFoods, reason: 'Light, easy-digest foods for recovery', emoji: '🤒', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-easy', type: 'nutrient-gap', foods: easyFoods, reason: 'Light, easy-digest foods for recovery', emoji: '🤒', adopted: false, matchedMeal: null, matchedAt: null });
     }
     // General gentle foods
     const remaining = eligible.filter(f => !hydraFoods.includes(f) && !easyFoods.includes(f)).slice(0, 2);
     if (remaining.length > 0) {
-      items.push({ id: 'sg-fever-gentle', type: 'template', foods: remaining, reason: 'Gentle foods — offer small amounts', emoji: '🍽️', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-gentle', type: 'template', foods: remaining, reason: 'Gentle foods — offer small amounts', emoji: '🍽️', adopted: false, matchedMeal: null, matchedAt: null });
     }
 
     const dayEntry = { generated: new Date().toISOString(), items: items.slice(0, 4), adoptionRate: 0, _feverMode: true, _illnessNote: 'Illness mode — focusing on gentle, hydrating foods' };
@@ -17080,6 +17216,941 @@ function _stopFeverCountdown() {
 
 // On load: start countdown if active episode exists
 if (getActiveFeverEpisode()) _startFeverCountdown();
+
+// ── DIARRHOEA EPISODE TRACKING (v2.9) ──
+
+let _diarrhoeaEpisodes = [];
+try { _diarrhoeaEpisodes = JSON.parse(localStorage.getItem(KEYS.diarrhoeaEpisodes)) || []; } catch { _diarrhoeaEpisodes = []; }
+if (!Array.isArray(_diarrhoeaEpisodes)) _diarrhoeaEpisodes = [];
+
+function getActiveDiarrhoeaEpisode() {
+  return _diarrhoeaEpisodes.find(e => e.status === 'active') || null;
+}
+
+function getDiarrhoeaSeverity(stoolCount24h, hasBlood, hasMucus) {
+  if (hasBlood || stoolCount24h >= 8) return { tier: 'severe', label: 'Severe — call doctor', color: 'var(--tc-danger)' };
+  if (hasMucus || stoolCount24h >= 5) return { tier: 'moderate', label: 'Moderate', color: 'var(--tc-caution)' };
+  return { tier: 'mild', label: 'Mild', color: 'var(--tc-amber)' };
+}
+
+function _deStoolsInLast24h(ep) {
+  const cutoff = Date.now() - 24 * 3600000;
+  return ep.stools.filter(s => new Date(s.time).getTime() > cutoff);
+}
+
+function _deHasFlag(ep, flag) {
+  return ep.stools.some(s => s[flag]);
+}
+
+function pruneDiarrhoeaEpisodes() {
+  if (_diarrhoeaEpisodes.length > 20) _diarrhoeaEpisodes = _diarrhoeaEpisodes.slice(-20);
+}
+
+function startDiarrhoeaEpisode(source) {
+  if (getActiveDiarrhoeaEpisode()) return getActiveDiarrhoeaEpisode();
+  pruneDiarrhoeaEpisodes();
+  const now = new Date().toISOString();
+  const episode = {
+    id: 'de-' + Date.now(),
+    status: 'active',
+    startedAt: now,
+    resolvedAt: null,
+    stools: [],       // { time, consistency, color, blood, mucus, notes }
+    fluids: [],       // { time, type, amount, notes }
+    wetDiapers: [],   // { time, notes }
+    actions: [],      // { time, action }
+    triggerSource: source || 'manual',
+    notes: '',
+    resolvedNotes: ''
+  };
+  _diarrhoeaEpisodes.push(episode);
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  return episode;
+}
+
+function logDiarrhoeaStool(consistency, color, blood, mucus, timeStr, notes) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return;
+  ep.stools.push({
+    time: timeStr || new Date().toISOString(),
+    consistency: consistency || 'watery',
+    color: color || '',
+    blood: !!blood,
+    mucus: !!mucus,
+    notes: notes || ''
+  });
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  renderDiarrhoeaEpisodeCard();
+  renderHomeDiarrhoeaBanner();
+}
+
+function logDiarrhoeaFluid(type, amount, timeStr) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return;
+  ep.fluids.push({
+    time: timeStr || new Date().toISOString(),
+    type: type || 'ORS',
+    amount: amount || '',
+    notes: ''
+  });
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  renderDiarrhoeaEpisodeCard();
+}
+
+function logDiarrhoeaWetDiaper(timeStr) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return;
+  ep.wetDiapers.push({ time: timeStr || new Date().toISOString(), notes: '' });
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  renderDiarrhoeaEpisodeCard();
+}
+
+function logDiarrhoeaAction(action, timeStr) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return;
+  ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  renderDiarrhoeaEpisodeCard();
+}
+
+function resolveDiarrhoeaEpisode(notes) {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return;
+  ep.status = 'resolved';
+  ep.resolvedAt = new Date().toISOString();
+  ep.resolvedNotes = notes || '';
+  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  renderDiarrhoeaEpisodeCard();
+  renderDiarrhoeaHistory();
+  renderHomeDiarrhoeaBanner();
+  renderHome();
+}
+
+function _deDurationStr(ep) {
+  const start = new Date(ep.startedAt).getTime();
+  const end = ep.resolvedAt ? new Date(ep.resolvedAt).getTime() : Date.now();
+  const mins = Math.round((end - start) / 60000);
+  if (mins < 60) return mins + 'm';
+  const h = Math.floor(mins / 60);
+  if (h < 24) return h + 'h';
+  return Math.floor(h / 24) + 'd ' + (h % 24 > 0 ? (h % 24) + 'h' : '');
+}
+
+function _deWetDiapersToday(ep) {
+  const todayStr = today();
+  return ep.wetDiapers.filter(w => w.time && w.time.startsWith(todayStr)).length;
+}
+
+function _computeDiarrhoeaEscalations(ep) {
+  const warnings = [];
+  const recent24 = _deStoolsInLast24h(ep);
+
+  if (ep.stools.some(s => s.blood)) {
+    warnings.push({ severity: 'emergency', icon: '🚨', text: 'Blood in stool detected — call doctor immediately' });
+  }
+  if (ep.stools.some(s => s.mucus) && recent24.length >= 4) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Mucus with frequent stools — consult paediatrician' });
+  }
+  const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
+  if (durationH > 48) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Diarrhoea persisting > 48 hours — call your paediatrician' });
+  }
+  const wetToday = _deWetDiapersToday(ep);
+  if (wetToday < 4 && new Date().getHours() >= 14) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: 'Only ' + wetToday + ' wet diapers today — watch for dehydration' });
+  }
+  if (recent24.length >= 8) {
+    warnings.push({ severity: 'warning', icon: '⚠️', text: recent24.length + ' stools in 24 hours — risk of dehydration, push fluids' });
+  }
+  // Improvement: if last 3 stools are soft/normal
+  if (ep.stools.length >= 3) {
+    const last3 = ep.stools.slice(-3);
+    if (last3.every(s => s.consistency === 'soft' || s.consistency === 'normal')) {
+      warnings.push({ severity: 'positive', icon: '✅', text: 'Last 3 stools are improving — consistency normalizing' });
+    }
+  }
+  return warnings;
+}
+
+function renderDiarrhoeaEpisodeCard() {
+  const card = document.getElementById('diarrhoeaEpisodeCard');
+  if (!card) return;
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const recent24 = _deStoolsInLast24h(ep);
+  const hasBlood = _deHasFlag(ep, 'blood');
+  const hasMucus = _deHasFlag(ep, 'mucus');
+  const sev = getDiarrhoeaSeverity(recent24.length, hasBlood, hasMucus);
+  const duration = _deDurationStr(ep);
+  const wetToday = _deWetDiapersToday(ep);
+  const totalFluids = ep.fluids.length;
+
+  card.style.borderLeft = '4px solid ' + sev.color;
+
+  let html = '';
+
+  // Header
+  html += '<div class="card-header"><div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Active Diarrhoea Episode</div>';
+  html += '<span class="t-sm t-light">' + duration + '</span></div>';
+
+  // Stool count display
+  html += '<div class="de-stool-count" style="color:' + sev.color + ';">' + recent24.length + ' stools <span style="font-size:var(--fs-sm);font-weight:500;">in 24h</span></div>';
+  html += '<div style="text-align:center;"><span class="de-severity de-severity-' + sev.tier + '">' + sev.label + '</span></div>';
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);text-align:center;margin-top:var(--sp-4);">Total: ' + ep.stools.length + ' stools · ' + totalFluids + ' fluid entries</div>';
+
+  // Hydration tracker
+  html += '<div class="fe-section-title">💧 Hydration</div>';
+  const hydraTarget = 6; // min wet diapers per day
+  const hydPct = Math.min(100, Math.round((wetToday / hydraTarget) * 100));
+  const hydColor = wetToday >= 6 ? 'var(--tc-sage)' : wetToday >= 4 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+  html += '<div class="de-hydra-bar">';
+  html += '<div class="de-hydra-label">Wet diapers today</div>';
+  html += '<div class="de-hydra-track"><div class="de-hydra-fill" style="width:' + hydPct + '%;background:' + hydColor + ';"></div></div>';
+  html += '<div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/' + hydraTarget + '</div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper()">🩲 Log wet diaper</span>';
+  html += '<span class="fe-action-chip" onclick="deLogFluidPrompt()">💧 Log fluid</span>';
+  html += '</div>';
+  if (ep.fluids.length > 0) {
+    ep.fluids.slice().reverse().slice(0, 3).forEach(f => {
+      html += '<div class="fe-action-entry">' + _feverTimeShort(f.time) + ' — ' + escHtml(f.type) + (f.amount ? ' (' + escHtml(f.amount) + ')' : '') + '</div>';
+    });
+  }
+
+  // Log stool
+  html += '<div class="fe-section-title">Stool Log</div>';
+  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'watery\')">💧 Watery</span>';
+  html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'runny\')">🟡 Runny</span>';
+  html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'soft\')">🟢 Soft</span>';
+  html += '<span class="fe-action-chip" onclick="deLogStoolPrompt(\'normal\')">✅ Normal</span>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:0 0 var(--sp-4);">';
+  html += '<label style="font-size:var(--fs-xs);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="deStoolBlood"> 🩸 Blood</label>';
+  html += '<label style="font-size:var(--fs-xs);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="deStoolMucus"> Mucus</label>';
+  html += '</div>';
+
+  // Recent stools
+  if (ep.stools.length > 0) {
+    const conEmoji = { watery: '💧', runny: '🟡', soft: '🟢', normal: '✅', hard: '🪨', loose: '🟡' };
+    const showStools = ep.stools.slice().reverse().slice(0, 6);
+    showStools.forEach(s => {
+      const emoji = conEmoji[s.consistency] || '🟡';
+      let flags = '';
+      if (s.blood) flags += ' 🩸';
+      if (s.mucus) flags += ' 🫧';
+      html += '<div class="de-stool-entry">';
+      html += '<span>' + emoji + '</span>';
+      html += '<span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(s.time) + '</span>';
+      html += '<span style="font-size:var(--fs-sm);font-weight:500;">' + (s.consistency || 'loose') + flags + '</span>';
+      if (s.notes) html += '<span style="font-size:var(--fs-xs);color:var(--light);margin-left:auto;">' + escHtml(s.notes) + '</span>';
+      html += '</div>';
+    });
+    if (ep.stools.length > 6) {
+      html += '<div class="fe-more-toggle">' + (ep.stools.length - 6) + ' earlier entries</div>';
+    }
+  }
+
+  // Actions
+  html += '<div class="fe-section-title">Actions</div>';
+  const DE_ACTIONS = ['Breastfed', 'ORS given', 'Applied diaper cream', 'Changed diaper', 'Doctor called', 'Washed hands'];
+  html += '<div class="fe-action-chips">';
+  DE_ACTIONS.forEach(a => {
+    html += '<span class="fe-action-chip" onclick="logDiarrhoeaAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+  });
+  html += '</div>';
+  if (ep.actions.length > 0) {
+    ep.actions.slice().reverse().slice(0, 5).forEach(a => {
+      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    });
+  }
+
+  // Guidance
+  html += '<div class="fe-section-title">Guidance</div>';
+  html += '<div class="fe-guidance"><ul style="margin:0;padding-left:18px;">';
+  html += '<li>Continue breastfeeding — most important</li>';
+  html += '<li>Offer ORS in small, frequent sips</li>';
+  html += '<li>Avoid fruit juices and sugary drinks</li>';
+  html += '<li>Keep diaper area clean and dry — use barrier cream</li>';
+  html += '<li>Count wet diapers — minimum 6/day indicates adequate hydration</li>';
+  if (sev.tier === 'severe') {
+    html += '<li style="color:var(--tc-danger);font-weight:600;">🚨 Seek medical attention — blood/mucus or severe frequency</li>';
+  } else {
+    html += '<li>Call doctor if: blood/mucus in stool, <4 wet diapers/day, sunken fontanelle, or persists >48 hours</li>';
+  }
+  html += '</ul></div>';
+
+  // Escalation warnings
+  const escalations = _computeDiarrhoeaEscalations(ep);
+  escalations.forEach(e => {
+    const bgColor = e.severity === 'emergency' ? 'rgba(224,112,112,0.1)' : e.severity === 'positive' ? 'rgba(58,112,96,0.08)' : 'rgba(240,180,80,0.08)';
+    const textColor = e.severity === 'emergency' ? 'var(--tc-danger)' : e.severity === 'positive' ? 'var(--tc-sage)' : 'var(--tc-caution)';
+    html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:' + bgColor + ';font-size:var(--fs-sm);font-weight:600;color:' + textColor + ';">' + e.icon + ' ' + escHtml(e.text) + '</div>';
+  });
+
+  // Resolve
+  html += '<div class="fe-resolve"><button class="btn btn-ghost" onclick="deResolvePrompt()" style="width:100%;">✅ Mark Resolved</button></div>';
+  html += '<div style="font-size:var(--fs-2xs);color:var(--light);text-align:center;padding-top:var(--sp-4);font-style:italic;">Guidance only — not medical advice. Trust your instincts and call your paediatrician when in doubt.</div>';
+
+  card.innerHTML = html;
+}
+
+function deLogStoolPrompt(consistency) {
+  const bloodEl = document.getElementById('deStoolBlood');
+  const mucusEl = document.getElementById('deStoolMucus');
+  const blood = bloodEl ? bloodEl.checked : false;
+  const mucus = mucusEl ? mucusEl.checked : false;
+
+  if (!getActiveDiarrhoeaEpisode()) {
+    startDiarrhoeaEpisode('manual');
+  }
+  logDiarrhoeaStool(consistency, '', blood, mucus, null, '');
+  // Reset checkboxes
+  if (bloodEl) bloodEl.checked = false;
+  if (mucusEl) mucusEl.checked = false;
+  showQLToast('💩 Stool logged — ' + consistency);
+}
+
+function deLogFluidPrompt() {
+  const FLUID_TYPES = ['ORS', 'Breast milk', 'Coconut water', 'Dal water', 'Water', 'Buttermilk'];
+  const type = prompt('Fluid type:\n' + FLUID_TYPES.map((f, i) => (i + 1) + '. ' + f).join('\n') + '\n\nEnter name or number:', 'ORS');
+  if (type === null) return;
+  const resolved = FLUID_TYPES[parseInt(type) - 1] || type;
+  logDiarrhoeaFluid(resolved, '', null);
+  showQLToast('💧 ' + resolved + ' logged');
+}
+
+function deResolvePrompt() {
+  confirmAction('Has Ziva\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
+    resolveDiarrhoeaEpisode('');
+    showQLToast('✅ Diarrhoea episode resolved');
+  }, 'Resolve');
+}
+
+function renderHomeDiarrhoeaBanner() {
+  const banner = document.getElementById('homeDiarrhoeaBanner');
+  if (!banner) return;
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) { banner.style.display = 'none'; return; }
+  banner.style.display = '';
+
+  const recent24 = _deStoolsInLast24h(ep);
+  const sev = getDiarrhoeaSeverity(recent24.length, _deHasFlag(ep, 'blood'), _deHasFlag(ep, 'mucus'));
+  const wetToday = _deWetDiapersToday(ep);
+  const duration = _deDurationStr(ep);
+
+  const bannerCls = sev.tier === 'severe' ? 'de-home-banner de-home-banner-severe' : 'de-home-banner';
+  banner.innerHTML = '<div class="' + bannerCls + '" onclick="switchTab(\'track\');setTimeout(function(){switchTrackSub(\'medical\');setTimeout(function(){document.getElementById(\'diarrhoeaEpisodeCard\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'});},100);},100);">' +
+    '<div class="fe-home-banner-info">' +
+    '<div class="fe-home-banner-temp" style="color:' + sev.color + ';">💩 ' + recent24.length + ' stools/24h · ' + sev.label + ' · ' + duration + '</div>' +
+    '<div class="fe-home-banner-sub">Wet diapers today: ' + wetToday + '/6' + (wetToday < 4 ? ' ⚠️' : '') + '</div>' +
+    '</div>' +
+    '<button class="btn btn-sage" onclick="event.stopPropagation();deLogStoolQuick()" style="padding:6px 12px;font-size:var(--fs-xs);">📝 Log</button>' +
+    '</div>';
+}
+
+function deLogStoolQuick() {
+  if (!getActiveDiarrhoeaEpisode()) return;
+  deLogStoolPrompt('watery');
+}
+
+function renderDiarrhoeaHistory() {
+  const card = document.getElementById('diarrhoeaHistoryCard');
+  const summary = document.getElementById('diarrhoeaHistorySummary');
+  const body = document.getElementById('diarrhoeaHistoryBody');
+  if (!card || !summary || !body) return;
+
+  const resolved = _diarrhoeaEpisodes.filter(e => e.status === 'resolved');
+  if (resolved.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const last = resolved[resolved.length - 1];
+  const lastDate = last.resolvedAt ? formatDate(last.resolvedAt.split('T')[0]) : '';
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (lastDate ? ' · last: ' + lastDate : '') + '</div>';
+
+  let html = '';
+  resolved.slice().reverse().forEach(ep => {
+    const startD = formatDate(ep.startedAt.split('T')[0]);
+    const endD = ep.resolvedAt ? formatDate(ep.resolvedAt.split('T')[0]) : '';
+    const dur = _deDurationStr(ep);
+    html += '<div class="fe-history-entry">';
+    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + '</div>';
+    html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + ep.stools.length + ' stools · ' + ep.fluids.length + ' fluid entries · ' + ep.wetDiapers.length + ' wet diapers logged</div>';
+    if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function computeDiarrhoeaAlerts() {
+  const alerts = [];
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return alerts;
+
+  const state = loadAlertState();
+  function isDismissed(key) { return !!state.dismissed[key]; }
+  const todayStr = today();
+  const recent24 = _deStoolsInLast24h(ep);
+
+  // Wet diaper warning
+  const wetToday = _deWetDiapersToday(ep);
+  if (wetToday < 4 && new Date().getHours() >= 14) {
+    const key = 'de-wet-low-' + todayStr;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'de-wet-low', key,
+        severity: 'watch', icon: '🩲',
+        title: 'Only ' + wetToday + ' wet diapers today',
+        body: 'During diarrhoea, minimum 6 wet diapers/day indicates adequate hydration. Push fluids — ORS, breast milk, coconut water.',
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  // Blood/mucus alert
+  if (_deHasFlag(ep, 'blood')) {
+    const key = 'de-blood-' + ep.id;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'de-blood', key,
+        severity: 'urgent', icon: '🚨',
+        title: 'Blood detected in stool',
+        body: 'Blood in stool during diarrhoea needs immediate medical attention. Call your paediatrician.',
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  // Duration > 48h
+  const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
+  if (durationH > 48) {
+    const key = 'de-persist-' + ep.id;
+    if (!isDismissed(key)) {
+      alerts.push({
+        id: 'de-persist', key,
+        severity: 'watch', icon: '⚠️',
+        title: 'Diarrhoea persisting > 48 hours',
+        body: 'Consult your paediatrician if loose stools continue beyond 48 hours.',
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  // Improving
+  if (ep.stools.length >= 3) {
+    const last3 = ep.stools.slice(-3);
+    if (last3.every(s => s.consistency === 'soft' || s.consistency === 'normal')) {
+      alerts.push({
+        id: 'de-improving', key: 'de-improving-' + todayStr,
+        severity: 'positive', icon: '✅',
+        title: 'Stool consistency improving',
+        body: 'Last 3 stools are soft/normal. Continue monitoring — consider resolving if stable for 12 hours.',
+        tab: 'medical', dismissable: true
+      });
+    }
+  }
+
+  return alerts;
+}
+
+function getDiarrhoeaDietFoods() {
+  const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  const deFoods = ['khichdi', 'curd', 'banana', 'rice', 'rice porridge', 'dal', 'dal water',
+    'coconut water', 'pomegranate', 'apple', 'mashed potato', 'idli', 'curd rice',
+    'sabudana', 'oats porridge', 'ragi porridge', 'buttermilk'];
+  return deFoods.filter(f => {
+    const base = _baseFoodName(f);
+    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+  });
+}
+
+function renderDietDiarrhoeaBanner() {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (!ep) return '';
+  return '<div class="fe-diet-banner">' +
+    '<div class="fe-diet-title">💩 Diarrhoea Active — Diet Guidance</div>' +
+    '<div class="fe-diet-body">' +
+    '<strong>Prioritize:</strong> Breast milk (most important), ORS in small sips, BRAT foods (banana, rice, apple, toast/idli), curd for probiotics, khichdi, dal water.<br><br>' +
+    '<strong>Avoid:</strong> Fruit juices, sugary drinks, high-fibre foods, new food introductions, dairy (except curd/buttermilk). Do not force meals.<br><br>' +
+    '<em>Small, frequent feeds are better than large meals. Continue breastfeeding throughout.</em>' +
+    '</div></div>';
+}
+
+function promptDiarrhoeaTrack() {
+  const ep = getActiveDiarrhoeaEpisode();
+  if (ep) { showQLToast('Diarrhoea episode already active'); return; }
+  startDiarrhoeaEpisode('symptom-checker');
+  showQLToast('💩 Diarrhoea episode started');
+  switchTab('track');
+  setTimeout(function() { switchTrackSub('medical'); }, 100);
+  setTimeout(function() {
+    renderDiarrhoeaEpisodeCard();
+    renderHomeDiarrhoeaBanner();
+    renderDiarrhoeaHistory();
+    document.getElementById('diarrhoeaEpisodeCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+// ── VOMITING EPISODE TRACKING (v2.9) ──
+
+let _vomitingEpisodes = [];
+try { _vomitingEpisodes = JSON.parse(localStorage.getItem(KEYS.vomitingEpisodes)) || []; } catch { _vomitingEpisodes = []; }
+if (!Array.isArray(_vomitingEpisodes)) _vomitingEpisodes = [];
+
+function getActiveVomitingEpisode() { return _vomitingEpisodes.find(e => e.status === 'active') || null; }
+
+function startVomitingEpisode(source) {
+  if (getActiveVomitingEpisode()) return getActiveVomitingEpisode();
+  if (_vomitingEpisodes.length > 20) _vomitingEpisodes = _vomitingEpisodes.slice(-20);
+  const now = new Date().toISOString();
+  const ep = { id: 'vo-' + Date.now(), status: 'active', startedAt: now, resolvedAt: null,
+    episodes: [], fluids: [], wetDiapers: [], actions: [], triggerSource: source || 'manual', notes: '', resolvedNotes: '' };
+  _vomitingEpisodes.push(ep);
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  return ep;
+}
+
+function logVomitingEpisodeEntry(type, timeStr, notes) {
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return;
+  ep.episodes.push({ time: timeStr || new Date().toISOString(), type: type || 'vomit', notes: notes || '' });
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  renderVomitingEpisodeCard(); renderHomeVomitingBanner();
+}
+
+function logVomitingFluid(type, timeStr) {
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return;
+  ep.fluids.push({ time: timeStr || new Date().toISOString(), type: type || 'Breast milk' });
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  renderVomitingEpisodeCard();
+}
+
+function logVomitingWetDiaper() {
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return;
+  ep.wetDiapers.push({ time: new Date().toISOString() });
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  renderVomitingEpisodeCard();
+}
+
+function logVomitingAction(action) {
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return;
+  ep.actions.push({ time: new Date().toISOString(), action: action });
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  renderVomitingEpisodeCard();
+}
+
+function resolveVomitingEpisode() {
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return;
+  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString();
+  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  renderVomitingEpisodeCard(); renderVomitingHistory(); renderHomeVomitingBanner(); renderHome();
+}
+
+function _voEpisodesIn12h(ep) {
+  const cutoff = Date.now() - 12 * 3600000;
+  return ep.episodes.filter(e => new Date(e.time).getTime() > cutoff);
+}
+
+function _voWetToday(ep) {
+  const t = today();
+  return ep.wetDiapers.filter(w => w.time && w.time.startsWith(t)).length;
+}
+
+function renderVomitingEpisodeCard() {
+  const card = document.getElementById('vomitingEpisodeCard');
+  if (!card) return;
+  const ep = getActiveVomitingEpisode();
+  if (!ep) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const recent12 = _voEpisodesIn12h(ep);
+  const dur = _feverDurationStr(ep);
+  const wetToday = _voWetToday(ep);
+  const isProjectile = ep.episodes.some(e => e.type === 'projectile');
+  const hasBile = ep.episodes.some(e => e.type === 'bile');
+  const sevColor = (isProjectile || hasBile || recent12.length >= 4) ? 'var(--tc-danger)' : recent12.length >= 2 ? 'var(--tc-caution)' : 'var(--tc-amber)';
+  const sevLabel = (isProjectile || hasBile) ? 'Seek care' : recent12.length >= 4 ? 'Frequent' : recent12.length >= 2 ? 'Monitor' : 'Mild';
+
+  card.style.borderLeft = '4px solid ' + sevColor;
+  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Vomiting Episode</div><span class="t-sm t-light">' + dur + '</span></div>';
+  html += '<div class="ve-count-display" style="color:' + sevColor + ';">' + recent12.length + ' episode' + (recent12.length !== 1 ? 's' : '') + ' <span style="font-size:var(--fs-sm);font-weight:500;">in 12h</span></div>';
+  html += '<div style="text-align:center;"><span class="fe-severity" style="background:rgba(220,120,80,0.12);color:' + sevColor + ';">' + sevLabel + '</span></div>';
+
+  // Hydration
+  html += '<div class="fe-section-title">💧 Hydration</div>';
+  const hydPct = Math.min(100, Math.round((wetToday / 6) * 100));
+  const hydColor = wetToday >= 6 ? 'var(--tc-sage)' : wetToday >= 4 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+  html += '<div class="de-hydra-bar"><div class="de-hydra-label">Wet diapers today</div><div class="de-hydra-track"><div class="de-hydra-fill" style="width:' + hydPct + '%;background:' + hydColor + ';"></div></div><div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/6</div></div>';
+  html += '<div class="fe-action-chips"><span class="fe-action-chip" onclick="logVomitingWetDiaper()">🩲 Wet diaper</span><span class="fe-action-chip" onclick="voLogFluidPrompt()">💧 Log fluid</span></div>';
+
+  // Log vomiting
+  html += '<div class="fe-section-title">Vomiting Log</div>';
+  html += '<div class="fe-action-chips">';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'spit-up\')">🤢 Spit-up</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'vomit\')">🤮 Vomit</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'projectile\')">🚨 Projectile</span>';
+  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'bile\')">🟢 Bile/green</span>';
+  html += '</div>';
+
+  if (ep.episodes.length > 0) {
+    ep.episodes.slice().reverse().slice(0, 6).forEach(e => {
+      const icon = e.type === 'projectile' ? '🚨' : e.type === 'bile' ? '🟢' : e.type === 'spit-up' ? '🤢' : '🤮';
+      html += '<div class="de-stool-entry"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span style="font-size:var(--fs-sm);font-weight:500;">' + (e.type || 'vomit') + '</span></div>';
+    });
+  }
+
+  // Actions
+  html += '<div class="fe-section-title">Actions</div>';
+  html += '<div class="fe-action-chips">';
+  ['Kept upright 30min', 'Small feed given', 'Breastfed', 'Doctor called'].forEach(a => {
+    html += '<span class="fe-action-chip" onclick="logVomitingAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+  });
+  html += '</div>';
+  if (ep.actions.length > 0) {
+    ep.actions.slice().reverse().slice(0, 4).forEach(a => {
+      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    });
+  }
+
+  // Guidance
+  html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul style="margin:0;padding-left:18px;">';
+  html += '<li>Keep Ziva upright for 20–30 minutes after feeds</li>';
+  html += '<li>Offer small, frequent feeds — not large volumes</li>';
+  html += '<li>Continue breastfeeding normally</li>';
+  html += '<li>Avoid new foods until vomiting stops</li>';
+  if (isProjectile || hasBile) html += '<li style="color:var(--tc-danger);font-weight:600;">🚨 Projectile/bile vomiting — seek immediate medical attention</li>';
+  else html += '<li>Call doctor if vomiting persists >12 hours or contains blood/bile</li>';
+  html += '</ul></div>';
+
+  // Escalations
+  if (isProjectile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(224,112,112,0.1);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Projectile vomiting detected — seek medical attention</div>';
+  if (hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(224,112,112,0.1);font-size:var(--fs-sm);font-weight:600;color:var(--tc-danger);">🚨 Green/bile vomiting — seek immediate care</div>';
+  const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
+  if (durationH > 12 && !isProjectile && !hasBile) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(240,180,80,0.08);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Vomiting persisting >12 hours — call your paediatrician</div>';
+
+  // Recovery check
+  if (ep.episodes.length >= 2) {
+    const lastEpTime = new Date(ep.episodes[ep.episodes.length - 1].time).getTime();
+    const hoursSinceLast = (Date.now() - lastEpTime) / 3600000;
+    if (hoursSinceLast >= 6) {
+      html += '<div style="padding:10px 12px;border-radius:var(--r-md);margin:var(--sp-8) 0;background:rgba(58,112,96,0.08);font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;">✅ No vomiting for ' + Math.round(hoursSinceLast) + ' hours — may be resolving</div>';
+    }
+  }
+
+  html += '<div class="fe-resolve"><button class="btn btn-ghost" onclick="voResolvePrompt()" style="width:100%;">✅ Mark Resolved</button></div>';
+  html += '<div style="font-size:var(--fs-2xs);color:var(--light);text-align:center;padding-top:var(--sp-4);font-style:italic;">Guidance only — not medical advice.</div>';
+  card.innerHTML = html;
+}
+
+function voLogFluidPrompt() {
+  const type = prompt('Fluid given:', 'Breast milk');
+  if (type === null) return;
+  logVomitingFluid(type, null);
+  showQLToast('💧 ' + type + ' logged');
+}
+
+function voResolvePrompt() {
+  confirmAction('Has vomiting stopped for at least 6 hours?', function() { resolveVomitingEpisode(); showQLToast('✅ Vomiting episode resolved'); }, 'Resolve');
+}
+
+function renderHomeVomitingBanner() {
+  const banner = document.getElementById('homeVomitingBanner');
+  if (!banner) return;
+  const ep = getActiveVomitingEpisode();
+  if (!ep) { banner.style.display = 'none'; return; }
+  banner.style.display = '';
+  const recent12 = _voEpisodesIn12h(ep);
+  const dur = _feverDurationStr(ep);
+  banner.innerHTML = '<div class="ve-home-banner" onclick="switchTab(\'track\');setTimeout(function(){switchTrackSub(\'medical\');setTimeout(function(){document.getElementById(\'vomitingEpisodeCard\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'});},100);},100);">' +
+    '<div class="fe-home-banner-info"><div class="fe-home-banner-temp" style="color:var(--tc-caution);">🤮 ' + recent12.length + ' vomiting episodes/12h · ' + dur + '</div>' +
+    '<div class="fe-home-banner-sub">Wet diapers: ' + _voWetToday(ep) + '/6</div></div>' +
+    '<button class="btn btn-sage" onclick="event.stopPropagation();logVomitingEpisodeEntry(\'vomit\')" style="padding:6px 12px;font-size:var(--fs-xs);">📝 Log</button></div>';
+}
+
+function renderVomitingHistory() {
+  const card = document.getElementById('vomitingHistoryCard');
+  const summary = document.getElementById('vomitingHistorySummary');
+  const body = document.getElementById('vomitingHistoryBody');
+  if (!card || !summary || !body) return;
+  const resolved = _vomitingEpisodes.filter(e => e.status === 'resolved');
+  if (resolved.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const last = resolved[resolved.length - 1];
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(last.resolvedAt.split('T')[0]) : '') + '</div>';
+  let html = '';
+  resolved.slice().reverse().forEach(ep => {
+    html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + _feverDurationStr(ep) + '</div>';
+    html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div></div>';
+  });
+  body.innerHTML = html;
+}
+
+function computeVomitingAlerts() {
+  const alerts = [];
+  const ep = getActiveVomitingEpisode();
+  if (!ep) return alerts;
+  const state = loadAlertState();
+  const todayStr = today();
+
+  if (ep.episodes.some(e => e.type === 'projectile' || e.type === 'bile')) {
+    const key = 'vo-emergency-' + ep.id;
+    if (!state.dismissed[key]) alerts.push({ id: 'vo-emergency', key, severity: 'urgent', icon: '🚨', title: 'Projectile/bile vomiting — seek care', body: '', tab: 'medical', dismissable: true });
+  }
+  const durationH = (Date.now() - new Date(ep.startedAt).getTime()) / 3600000;
+  if (durationH > 12) {
+    const key = 'vo-persist-' + ep.id;
+    if (!state.dismissed[key]) alerts.push({ id: 'vo-persist', key, severity: 'watch', icon: '⚠️', title: 'Vomiting persisting >12 hours', body: 'Call your paediatrician.', tab: 'medical', dismissable: true });
+  }
+  if (_voWetToday(ep) < 4 && new Date().getHours() >= 14) {
+    const key = 'vo-wet-' + todayStr;
+    if (!state.dismissed[key]) alerts.push({ id: 'vo-wet-low', key, severity: 'watch', icon: '🩲', title: 'Only ' + _voWetToday(ep) + ' wet diapers — watch hydration', body: '', tab: 'medical', dismissable: true });
+  }
+  return alerts;
+}
+
+function promptVomitingTrack() {
+  if (getActiveVomitingEpisode()) { showQLToast('Vomiting episode already active'); return; }
+  startVomitingEpisode('symptom-checker');
+  showQLToast('🤮 Vomiting episode started');
+  switchTab('track');
+  setTimeout(function() { switchTrackSub('medical'); }, 100);
+  setTimeout(function() { renderVomitingEpisodeCard(); renderHomeVomitingBanner(); renderVomitingHistory(); document.getElementById('vomitingEpisodeCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+}
+
+// ── COLD / COUGH EPISODE TRACKING (v2.9) ──
+
+let _coldEpisodes = [];
+try { _coldEpisodes = JSON.parse(localStorage.getItem(KEYS.coldEpisodes)) || []; } catch { _coldEpisodes = []; }
+if (!Array.isArray(_coldEpisodes)) _coldEpisodes = [];
+
+function getActiveColdEpisode() { return _coldEpisodes.find(e => e.status === 'active') || null; }
+
+function startColdEpisode(source) {
+  if (getActiveColdEpisode()) return getActiveColdEpisode();
+  if (_coldEpisodes.length > 20) _coldEpisodes = _coldEpisodes.slice(-20);
+  const now = new Date().toISOString();
+  const ep = { id: 'ce-' + Date.now(), status: 'active', startedAt: now, resolvedAt: null,
+    dailyLogs: [],    // { date, symptoms: [...], severity: 1-5, notes }
+    actions: [],
+    triggerSource: source || 'manual', notes: '', resolvedNotes: '' };
+  _coldEpisodes.push(ep);
+  save(KEYS.coldEpisodes, _coldEpisodes);
+  return ep;
+}
+
+function logColdDailySymptoms(symptoms, severity, notes) {
+  const ep = getActiveColdEpisode();
+  if (!ep) return;
+  const todayStr = today();
+  // Replace today's log if already exists
+  const existing = ep.dailyLogs.findIndex(l => l.date === todayStr);
+  const entry = { date: todayStr, time: new Date().toISOString(), symptoms: symptoms || [], severity: severity || 3, notes: notes || '' };
+  if (existing >= 0) ep.dailyLogs[existing] = entry;
+  else ep.dailyLogs.push(entry);
+  save(KEYS.coldEpisodes, _coldEpisodes);
+  renderColdEpisodeCard(); renderHomeColdBanner();
+}
+
+function logColdAction(action) {
+  const ep = getActiveColdEpisode();
+  if (!ep) return;
+  ep.actions.push({ time: new Date().toISOString(), action: action });
+  save(KEYS.coldEpisodes, _coldEpisodes);
+  renderColdEpisodeCard();
+}
+
+function resolveColdEpisode() {
+  const ep = getActiveColdEpisode();
+  if (!ep) return;
+  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString();
+  save(KEYS.coldEpisodes, _coldEpisodes);
+  renderColdEpisodeCard(); renderColdHistory(); renderHomeColdBanner(); renderHome();
+}
+
+function renderColdEpisodeCard() {
+  const card = document.getElementById('coldEpisodeCard');
+  if (!card) return;
+  const ep = getActiveColdEpisode();
+  if (!ep) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const dur = _feverDurationStr(ep);
+  const dayCount = ep.dailyLogs.length;
+  const todayLog = ep.dailyLogs.find(l => l.date === today());
+  const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
+  const latestSeverity = todayLog ? todayLog.severity : (ep.dailyLogs.length > 0 ? ep.dailyLogs[ep.dailyLogs.length - 1].severity : 3);
+  const sevColor = latestSeverity >= 4 ? 'var(--tc-caution)' : 'var(--tc-sky)';
+
+  card.style.borderLeft = '4px solid ' + sevColor;
+  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Cold / Cough</div><span class="t-sm t-light">' + dur + '</span></div>';
+  html += '<div class="ce-day-display">Day ' + durationDays + '</div>';
+  html += '<div style="text-align:center;font-size:var(--fs-xs);color:var(--light);">' + dayCount + ' daily log' + (dayCount !== 1 ? 's' : '') + ' recorded</div>';
+
+  // Today's symptom log
+  html += '<div class="fe-section-title">Today\'s Symptoms</div>';
+  const COLD_SYMPTOMS = ['Runny nose', 'Stuffy nose', 'Cough', 'Sneezing', 'Phlegm', 'Watery eyes', 'Mild fever', 'Poor appetite', 'Fussiness'];
+  const todaySymptoms = todayLog ? new Set(todayLog.symptoms) : new Set();
+  html += '<div class="fe-action-chips">';
+  COLD_SYMPTOMS.forEach(s => {
+    const active = todaySymptoms.has(s);
+    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" onclick="ceToggleSymptom(\'' + s.replace(/'/g, "\\'") + '\')">' + (active ? '✓ ' : '') + s + '</span>';
+  });
+  html += '</div>';
+
+  // Severity slider
+  html += '<div style="padding:var(--sp-8) 0;"><div style="font-size:var(--fs-xs);color:var(--light);margin-bottom:4px;">Severity today (1=mild, 5=severe):</div>';
+  html += '<div style="display:flex;gap:var(--sp-4);align-items:center;">';
+  for (let i = 1; i <= 5; i++) {
+    const isActive = latestSeverity === i;
+    const color = i <= 2 ? 'var(--tc-sage)' : i <= 3 ? 'var(--tc-amber)' : 'var(--tc-caution)';
+    html += '<span class="fe-action-chip" style="' + (isActive ? 'background:' + color + ';color:white;border-color:' + color + ';' : '') + 'min-width:32px;justify-content:center;" onclick="ceSetSeverity(' + i + ')">' + i + '</span>';
+  }
+  html += '</div></div>';
+
+  // Daily log history
+  if (ep.dailyLogs.length > 0) {
+    html += '<div class="fe-section-title">Daily Log</div>';
+    ep.dailyLogs.slice().reverse().slice(0, 7).forEach(l => {
+      const sevDots = '●'.repeat(l.severity) + '○'.repeat(5 - l.severity);
+      html += '<div class="ce-symptom-row"><span style="font-size:var(--fs-xs);color:var(--light);min-width:55px;">' + formatDate(l.date) + '</span>';
+      html += '<span style="font-size:var(--fs-xs);letter-spacing:2px;" title="Severity ' + l.severity + '/5">' + sevDots + '</span>';
+      html += '<span style="font-size:var(--fs-xs);color:var(--mid);flex:1;min-width:0;">' + (l.symptoms.length > 0 ? l.symptoms.slice(0, 3).join(', ') : 'no symptoms logged') + '</span></div>';
+    });
+  }
+
+  // Actions
+  html += '<div class="fe-section-title">Actions</div>';
+  html += '<div class="fe-action-chips">';
+  ['Saline drops', 'Steam inhalation', 'Humidifier on', 'Elevated mattress', 'Breastfed', 'Doctor called'].forEach(a => {
+    html += '<span class="fe-action-chip" onclick="logColdAction(\'' + a.replace(/'/g, "\\'") + '\')">' + a + '</span>';
+  });
+  html += '</div>';
+  if (ep.actions.length > 0) {
+    ep.actions.slice().reverse().slice(0, 4).forEach(a => {
+      html += '<div class="fe-action-entry">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+    });
+  }
+
+  // Guidance
+  html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul style="margin:0;padding-left:18px;">';
+  html += '<li>Use saline drops (Nasivion Mini) before feeds</li>';
+  html += '<li>Run humidifier or steam inhalation (steamy bathroom 5–10 min)</li>';
+  html += '<li>Elevate head end of mattress slightly</li>';
+  html += '<li>Do NOT give OTC cold/cough medicines</li>';
+  html += '<li>Do NOT use Vicks or menthol on babies</li>';
+  if (durationDays > 7) html += '<li style="color:var(--tc-caution);font-weight:600;">⚠️ Cold persisting >7 days — consult paediatrician</li>';
+  else html += '<li>Call doctor if: rapid breathing, wheezing, blue lips, or cough >7 days</li>';
+  html += '</ul></div>';
+
+  if (durationDays > 7) html += '<div style="padding:8px 12px;border-radius:var(--r-md);margin:var(--sp-4) 0;background:rgba(240,180,80,0.08);font-size:var(--fs-sm);font-weight:600;color:var(--tc-caution);">⚠️ Cold/cough for ' + durationDays + ' days — consider doctor visit</div>';
+
+  // Improvement
+  if (ep.dailyLogs.length >= 2) {
+    const last2 = ep.dailyLogs.slice(-2);
+    if (last2[1].severity <= 2 && last2[0].severity > last2[1].severity) {
+      html += '<div style="padding:10px 12px;border-radius:var(--r-md);margin:var(--sp-8) 0;background:rgba(58,112,96,0.08);font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;">✅ Severity improving — trending down</div>';
+    }
+  }
+
+  html += '<div class="fe-resolve"><button class="btn btn-ghost" onclick="ceResolvePrompt()" style="width:100%;">✅ Mark Resolved</button></div>';
+  html += '<div style="font-size:var(--fs-2xs);color:var(--light);text-align:center;padding-top:var(--sp-4);font-style:italic;">Guidance only — not medical advice.</div>';
+  card.innerHTML = html;
+}
+
+function ceToggleSymptom(symptom) {
+  const ep = getActiveColdEpisode();
+  if (!ep) return;
+  const todayLog = ep.dailyLogs.find(l => l.date === today());
+  const currentSymptoms = todayLog ? [...todayLog.symptoms] : [];
+  const currentSev = todayLog ? todayLog.severity : 3;
+  const idx = currentSymptoms.indexOf(symptom);
+  if (idx >= 0) currentSymptoms.splice(idx, 1);
+  else currentSymptoms.push(symptom);
+  logColdDailySymptoms(currentSymptoms, currentSev, '');
+}
+
+function ceSetSeverity(sev) {
+  const ep = getActiveColdEpisode();
+  if (!ep) return;
+  const todayLog = ep.dailyLogs.find(l => l.date === today());
+  const currentSymptoms = todayLog ? todayLog.symptoms : [];
+  logColdDailySymptoms(currentSymptoms, sev, '');
+}
+
+function ceResolvePrompt() {
+  confirmAction('Has the cold/cough resolved? (Symptoms mostly cleared for 24+ hours)', function() { resolveColdEpisode(); showQLToast('✅ Cold episode resolved'); }, 'Resolve');
+}
+
+function renderHomeColdBanner() {
+  const banner = document.getElementById('homeColdBanner');
+  if (!banner) return;
+  const ep = getActiveColdEpisode();
+  if (!ep) { banner.style.display = 'none'; return; }
+  banner.style.display = '';
+  const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
+  const todayLog = ep.dailyLogs.find(l => l.date === today());
+  const logged = todayLog ? '✓ Logged' : 'Not logged yet';
+  banner.innerHTML = '<div class="ce-home-banner" onclick="switchTab(\'track\');setTimeout(function(){switchTrackSub(\'medical\');setTimeout(function(){document.getElementById(\'coldEpisodeCard\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'});},100);},100);">' +
+    '<div class="fe-home-banner-info"><div class="fe-home-banner-temp" style="color:var(--tc-sky);">🤧 Cold/Cough · Day ' + durationDays + '</div>' +
+    '<div class="fe-home-banner-sub">Today: ' + logged + '</div></div>' +
+    '<button class="btn btn-sage" onclick="event.stopPropagation();switchTab(\'track\');setTimeout(function(){switchTrackSub(\'medical\');},100);" style="padding:6px 12px;font-size:var(--fs-xs);">📝 Log</button></div>';
+}
+
+function renderColdHistory() {
+  const card = document.getElementById('coldHistoryCard');
+  const summary = document.getElementById('coldHistorySummary');
+  const body = document.getElementById('coldHistoryBody');
+  if (!card || !summary || !body) return;
+  const resolved = _coldEpisodes.filter(e => e.status === 'resolved');
+  if (resolved.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const last = resolved[resolved.length - 1];
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(last.resolvedAt.split('T')[0]) : '') + '</div>';
+  let html = '';
+  resolved.slice().reverse().forEach(ep => {
+    const days = Math.ceil((new Date(ep.resolvedAt || Date.now()).getTime() - new Date(ep.startedAt).getTime()) / 86400000);
+    html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + days + ' day' + (days !== 1 ? 's' : '') + '</div>';
+    html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div></div>';
+  });
+  body.innerHTML = html;
+}
+
+function computeColdAlerts() {
+  const alerts = [];
+  const ep = getActiveColdEpisode();
+  if (!ep) return alerts;
+  const state = loadAlertState();
+  const todayStr = today();
+  const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
+
+  // Daily log reminder
+  const todayLog = ep.dailyLogs.find(l => l.date === todayStr);
+  if (!todayLog && new Date().getHours() >= 10) {
+    const key = 'ce-log-' + todayStr;
+    if (!state.dismissed[key]) alerts.push({ id: 'ce-log-reminder', key, severity: 'info', icon: '🤧', title: 'Cold/cough — log today\'s symptoms', body: 'Day ' + durationDays + '. Tap to update today\'s symptom check.', action: { label: 'Log', fn: 'switchTab("track");setTimeout(function(){switchTrackSub("medical");},100);' }, tab: 'medical', dismissable: true });
+  }
+  if (durationDays > 7) {
+    const key = 'ce-persist-' + ep.id;
+    if (!state.dismissed[key]) alerts.push({ id: 'ce-persist', key, severity: 'watch', icon: '⚠️', title: 'Cold/cough for ' + durationDays + ' days', body: 'Consider consulting your paediatrician.', tab: 'medical', dismissable: true });
+  }
+  return alerts;
+}
+
+function promptColdTrack() {
+  if (getActiveColdEpisode()) { showQLToast('Cold episode already active'); return; }
+  startColdEpisode('symptom-checker');
+  showQLToast('🤧 Cold/cough episode started');
+  switchTab('track');
+  setTimeout(function() { switchTrackSub('medical'); }, 100);
+  setTimeout(function() { renderColdEpisodeCard(); renderHomeColdBanner(); renderColdHistory(); document.getElementById('coldEpisodeCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+}
 
 // Get top foods for a specific meal slot
 function getMealSlotTopFoods(mealKey, n) {
@@ -21096,7 +22167,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') renderMilestoneStats();
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -24268,6 +25339,21 @@ function computeAlerts() {
     feverAlerts.forEach(a => alerts.push(a));
   } catch(e) { /* fever alerts best effort */ }
 
+  try {
+    const deAlerts = computeDiarrhoeaAlerts();
+    deAlerts.forEach(a => alerts.push(a));
+  } catch(e) { /* diarrhoea alerts best effort */ }
+
+  try {
+    const voAlerts = computeVomitingAlerts();
+    voAlerts.forEach(a => alerts.push(a));
+  } catch(e) { /* vomiting alerts best effort */ }
+
+  try {
+    const ceAlerts = computeColdAlerts();
+    ceAlerts.forEach(a => alerts.push(a));
+  } catch(e) { /* cold alerts best effort */ }
+
   // ═══════════════════════════════════════
   // SORT, SYNTHESIS, AUTO-CLEAR, LOG
   // ═══════════════════════════════════════
@@ -27422,6 +28508,28 @@ function runHomeSymptomCheck() {
     html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="closeHomeSymptomChecker();promptFeverTrack()" style="width:100%;">🌡️ Track this fever</button></div>';
   } else if (isFeverMatch && getActiveFeverEpisode()) {
     html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🌡️ Fever episode already being tracked</div>';
+  }
+
+  // Track this diarrhoea CTA
+  var isDiarrhoeaMatch = shown.some(function(m) { return m.entry.id === 'diarrhoea'; });
+  if (isDiarrhoeaMatch && !getActiveDiarrhoeaEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="closeHomeSymptomChecker();promptDiarrhoeaTrack()" style="width:100%;">💩 Track this diarrhoea</button></div>';
+  } else if (isDiarrhoeaMatch && getActiveDiarrhoeaEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">💩 Diarrhoea episode already being tracked</div>';
+  }
+
+  var isVomitMatch = shown.some(function(m) { return m.entry.id === 'vomiting'; });
+  if (isVomitMatch && !getActiveVomitingEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="closeHomeSymptomChecker();promptVomitingTrack()" style="width:100%;">🤮 Track this vomiting</button></div>';
+  } else if (isVomitMatch && getActiveVomitingEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🤮 Vomiting episode already being tracked</div>';
+  }
+
+  var isColdMatch = shown.some(function(m) { return m.entry.id === 'cough-cold'; });
+  if (isColdMatch && !getActiveColdEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;"><button class="btn btn-sage" onclick="closeHomeSymptomChecker();promptColdTrack()" style="width:100%;">🤧 Track this cold/cough</button></div>';
+  } else if (isColdMatch && getActiveColdEpisode()) {
+    html += '<div style="text-align:center;padding:10px 0;font-size:var(--fs-xs);color:var(--tc-sage);font-weight:600;">🤧 Cold episode already being tracked</div>';
   }
 
   html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician.</div>';
