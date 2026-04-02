@@ -2324,6 +2324,46 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .ce-home-banner { background:rgba(100,160,210,0.05); }
 [data-theme="dark"] .ce-symptom-row { border-bottom-color:rgba(255,255,255,0.03); }
 
+/* ── Sleep Intelligence (.si-*) ── */
+.si-nodata { font-size:var(--fs-xs); color:var(--light); text-align:center; padding:12px; font-style:italic; }
+.si-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-8); margin:var(--sp-8) 0; }
+.si-stat { text-align:center; padding:8px; border-radius:var(--r-md); background:var(--warm); }
+.si-stat-val { font-family:'Fraunces',serif; font-size:var(--fs-lg); font-weight:700; line-height:var(--lh-none); }
+.si-stat-label { font-size:var(--fs-2xs); color:var(--light); margin-top:2px; text-transform:uppercase; letter-spacing:var(--ls-wide); }
+.si-insight { padding:8px 12px; border-radius:var(--r-md); margin:var(--sp-4) 0; font-size:var(--fs-sm); font-weight:500; }
+.si-insight-good { background:rgba(58,112,96,0.08); color:var(--tc-sage); }
+.si-insight-warn { background:rgba(240,180,80,0.08); color:var(--tc-caution); }
+.si-insight-info { background:rgba(155,168,216,0.08); color:var(--tc-indigo); }
+.si-bar-row { display:flex; align-items:center; gap:var(--sp-8); padding:4px 0; }
+.si-bar-label { font-size:var(--fs-2xs); color:var(--light); min-width:42px; text-align:right; }
+.si-bar-track { flex:1; height:14px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.si-bar-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
+.si-bar-val { font-size:var(--fs-2xs); font-weight:600; min-width:32px; }
+.si-check-row { display:flex; align-items:center; gap:var(--sp-8); padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.03); }
+.si-check-row:last-child { border-bottom:none; }
+.si-check-icon { font-size:var(--fs-base); width:24px; text-align:center; flex-shrink:0; }
+.si-check-text { font-size:var(--fs-sm); flex:1; }
+.si-check-status { font-size:var(--fs-xs); font-weight:600; }
+.si-readiness-bar { height:8px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; margin:var(--sp-8) 0; }
+.si-readiness-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
+.si-ww-segment { display:flex; align-items:stretch; gap:2px; margin:var(--sp-8) 0; border-radius:var(--r-md); overflow:hidden; }
+.si-ww-block { flex:1; min-height:32px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:var(--fs-2xs); font-weight:600; }
+.si-ww-sleep { background:rgba(155,168,216,0.2); color:var(--tc-indigo); }
+.si-ww-wake { color:var(--text); }
+.si-report-hero { display:flex; align-items:center; gap:var(--sp-16); padding:8px 0; }
+.si-report-ring { width:90px; height:90px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 16px rgba(0,0,0,0.08); border:3px solid transparent; }
+.si-report-number { font-family:'Fraunces',serif; font-size:var(--fs-2xl); font-weight:700; line-height:var(--lh-none); }
+.si-report-label { font-size:var(--fs-2xs); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-normal); margin-top:2px; }
+.si-report-stats { flex:1; min-width:0; }
+.si-sparkline { display:flex; align-items:flex-end; gap:2px; height:32px; }
+.si-spark-bar { flex:1; border-radius:2px 2px 0 0; min-width:0; }
+[data-theme="dark"] .si-stat { background:var(--base); }
+[data-theme="dark"] .si-bar-track { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .si-check-row { border-bottom-color:rgba(255,255,255,0.03); }
+[data-theme="dark"] .si-readiness-bar { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .si-ww-sleep { background:rgba(155,168,216,0.1); }
+[data-theme="dark"] .si-report-ring { box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+
 /* ── Episode Entry Edit System ── */
 .ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:4px; padding-right:4px; margin:0 -4px; }
 .ep-entry-tap:active { background:rgba(0,0,0,0.04); }
@@ -5962,13 +6002,72 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
-      <!-- ─── SLEEP INTELLIGENCE (placeholder) ─── -->
+      <!-- ─── SLEEP INTELLIGENCE ─── -->
       <div class="home-section-label sec-t3 col-full">Sleep Intelligence</div>
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Coming Soon</div>
+
+      <!-- Bedtime Drift -->
+      <div class="card card-daily col-full" id="infoSleepBedtimeDriftCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepBedtimeDriftBody','infoSleepBedtimeDriftChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Bedtime Drift</div>
+          <span class="collapse-chevron" id="infoSleepBedtimeDriftChevron">▾</span>
         </div>
-        <div class="t-sm t-light mt-4">Bedtime drift, sleep efficiency, wake windows, weekly report card, nap transition readiness, and more.</div>
+        <div id="infoSleepBedtimeDriftSummary" class="mt-4"></div>
+        <div id="infoSleepBedtimeDriftBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepBedtimeDriftChart" class="mt-4"></div>
+          <div id="infoSleepBedtimeDriftInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Sleep Efficiency -->
+      <div class="card card-daily col-full" id="infoSleepEfficiencyCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepEfficiencyBody','infoSleepEfficiencyChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Sleep Efficiency</div>
+          <span class="collapse-chevron" id="infoSleepEfficiencyChevron">▾</span>
+        </div>
+        <div id="infoSleepEfficiencySummary" class="mt-4"></div>
+        <div id="infoSleepEfficiencyBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepEfficiencyBars" class="mt-4"></div>
+          <div id="infoSleepEfficiencyInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Wake Windows -->
+      <div class="card card-daily col-full" id="infoSleepWakeWindowsCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepWakeWindowsBody','infoSleepWakeWindowsChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-sun"/></svg></div> Wake Windows</div>
+          <span class="collapse-chevron" id="infoSleepWakeWindowsChevron">▾</span>
+        </div>
+        <div id="infoSleepWakeWindowsSummary" class="mt-4"></div>
+        <div id="infoSleepWakeWindowsBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepWakeWindowsTimeline" class="mt-4"></div>
+          <div id="infoSleepWakeWindowsInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Weekly Report Card -->
+      <div class="card card-daily col-full" id="infoSleepReportCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepReportBody','infoSleepReportChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-chart"/></svg></div> Weekly Report Card</div>
+          <span class="collapse-chevron" id="infoSleepReportChevron">▾</span>
+        </div>
+        <div id="infoSleepReportSummary" class="mt-4"></div>
+        <div id="infoSleepReportBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepReportDetails" class="mt-4"></div>
+          <div id="infoSleepReportInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Nap Transition Readiness -->
+      <div class="card card-daily col-full" id="infoSleepNapTransitionCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepNapTransitionBody','infoSleepNapTransitionChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-sprout"/></svg></div> Nap Transition Readiness</div>
+          <span class="collapse-chevron" id="infoSleepNapTransitionChevron">▾</span>
+        </div>
+        <div id="infoSleepNapTransitionSummary" class="mt-4"></div>
+        <div id="infoSleepNapTransitionBody" class="collapse-body" style="display:none;">
+          <div id="infoSleepNapTransitionChecklist" class="mt-4"></div>
+          <div id="infoSleepNapTransitionInsights" class="mt-8"></div>
+        </div>
       </div>
 
       <!-- ─── POOP INTELLIGENCE (placeholder) ─── -->
@@ -16753,7 +16852,7 @@ function _epNowTimeStr() { return new Date().toTimeString().slice(0, 5); }
  * Converts a HH:MM time string to a full ISO string for today (or yesterday if time > now suggesting it was yesterday)
  */
 function _epTimeToISO(timeStr) {
-  if (!timeStr) return new Date().toISOString();
+  if (!timeStr || !timeStr.includes(':')) return new Date().toISOString();
   const [h, m] = timeStr.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
@@ -17054,6 +17153,17 @@ function renderFeverEpisodeCard() {
   }
   card.style.display = '';
 
+  if (ep.readings.length === 0) {
+    // All readings deleted — show minimal card with just the log input
+    const nowTime = new Date().toTimeString().slice(0, 5);
+    card.style.borderLeft = '4px solid var(--tc-amber)';
+    card.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Fever Episode</div><span class="t-sm t-light">' + _feverDurationStr(ep) + '</span></div>' +
+      '<div style="text-align:center;padding:var(--sp-8);font-size:var(--fs-sm);color:var(--light);">No readings logged yet</div>' +
+      '<div class="fe-input-row"><span style="font-size:var(--fs-sm);">🌡️</span><input type="number" id="feverTempInput" step="0.1" min="95" max="108" placeholder="°F" inputmode="decimal"><input type="time" id="feverTimeInput" value="' + nowTime + '"><button class="btn btn-sage" onclick="feLogReadingFromInput()" style="padding:8px 14px;">Log</button></div>' +
+      '<div class="fe-resolve"><button class="btn btn-ghost" onclick="feResolvePrompt()" style="width:100%;">✅ Mark Resolved</button></div>';
+    return; // feverTempInput/feverTimeInput reused — mutually exclusive with full card below
+  }
+
   const lastReading = ep.readings[ep.readings.length - 1];
   const sev = getFeverSeverity(lastReading.temp);
   const checkCD = getFeverCheckCountdown();
@@ -17210,6 +17320,7 @@ function renderFeverEpisodeCard() {
 
 function _computeFeverEscalations(ep) {
   const warnings = [];
+  if (ep.readings.length === 0) return warnings;
   const lastReading = ep.readings[ep.readings.length - 1];
 
   // Temp >= 104
@@ -17399,7 +17510,7 @@ function renderHomeFeverBanner() {
   const banner = document.getElementById('homeFeverBanner');
   if (!banner) return;
   const ep = getActiveFeverEpisode();
-  if (!ep) {
+  if (!ep || ep.readings.length === 0) {
     banner.style.display = 'none';
     return;
   }
@@ -17483,7 +17594,7 @@ function renderFeverHistory() {
 function computeFeverAlerts() {
   const alerts = [];
   const ep = getActiveFeverEpisode();
-  if (!ep) return alerts;
+  if (!ep || ep.readings.length === 0) return alerts;
 
   const state = loadAlertState();
   function isDismissed(key) { return !!state.dismissed[key]; }
@@ -29642,6 +29753,646 @@ function getUntriedSuggestions(n) {
 
 let _infoRendered = false;
 
+// ── SLEEP INTELLIGENCE (Info tab) ──
+
+function _siGetNights(days) {
+  const nights = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = sleepData.find(s => s.date === ds && s.type === 'night' && s.bedtime && s.wakeTime);
+    if (entry) nights.push({ ...entry, dateStr: ds, dayIndex: i });
+  }
+  return nights;
+}
+
+function _siBedtimeToMin(bt) {
+  if (!bt) return null;
+  const [h, m] = bt.split(':').map(Number);
+  // Normalize: 6PM=0, 7PM=60, midnight=360, 2AM=480
+  let min = (h * 60 + m) - 1080; // 18:00 = 0
+  if (min < -360) min += 1440; // before 12PM wraps
+  return min;
+}
+
+function _siMinToBedtime(min) {
+  let totalMin = min + 1080; // reverse normalize
+  if (totalMin >= 1440) totalMin -= 1440;
+  const h = Math.floor(totalMin / 60);
+  const m = Math.round(totalMin % 60);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+function computeBedtimeDrift() {
+  const nights = _siGetNights(21);
+  if (nights.length < 5) return { insufficient: true, count: nights.length, needed: 5 };
+
+  const points = nights.map(n => ({
+    day: n.dayIndex,
+    min: _siBedtimeToMin(n.bedtime),
+    date: n.dateStr,
+    bedtime: n.bedtime
+  })).filter(p => p.min !== null).reverse(); // oldest first
+
+  if (points.length < 5) return { insufficient: true, count: points.length, needed: 5 };
+
+  // Linear regression
+  const n = points.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  points.forEach((p, i) => { sumX += i; sumY += p.min; sumXY += i * p.min; sumX2 += i * i; });
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  // slope is min/day. Convert to min/week
+  const driftPerWeek = Math.round(slope * 7);
+  const avgBedtime = sumY / n;
+  const direction = driftPerWeek > 3 ? 'later' : driftPerWeek < -3 ? 'earlier' : 'stable';
+
+  // Ideal range from targets
+  const st = getSleepTargets(ageAt().months);
+
+  return {
+    insufficient: false,
+    points,
+    slope,
+    intercept,
+    driftPerWeek,
+    avgBedtime,
+    avgBedtimeStr: _siMinToBedtime(avgBedtime),
+    direction,
+    idealStart: st.bedtimeStart,
+    idealEnd: st.bedtimeEnd,
+    count: points.length
+  };
+}
+
+function renderInfoSleepBedtimeDrift() {
+  const summaryEl = document.getElementById('infoSleepBedtimeDriftSummary');
+  const chartEl = document.getElementById('infoSleepBedtimeDriftChart');
+  const insightEl = document.getElementById('infoSleepBedtimeDriftInsights');
+  if (!summaryEl) return;
+
+  const data = computeBedtimeDrift();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
+    if (chartEl) chartEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const dirIcon = data.direction === 'later' ? '↗' : data.direction === 'earlier' ? '↙' : '→';
+  const dirColor = data.direction === 'stable' ? 'var(--tc-sage)' : 'var(--tc-amber)';
+  summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + dirColor + ';font-weight:700;">' + dirIcon + '</span> Avg bedtime: <strong>' + data.avgBedtimeStr + '</strong> · ' +
+    (data.direction === 'stable' ? 'Stable' : Math.abs(data.driftPerWeek) + 'min/' + (data.direction === 'later' ? 'week later' : 'week earlier')) + '</div>';
+
+  // SVG dot chart
+  if (chartEl) {
+    const w = 280, h = 100, pad = 30;
+    const pts = data.points;
+    const minY = Math.min(...pts.map(p => p.min)) - 15;
+    const maxY = Math.max(...pts.map(p => p.min)) + 15;
+    const scaleX = (i) => pad + (i / (pts.length - 1)) * (w - 2 * pad);
+    const yRange = Math.max(maxY - minY, 1);
+    const scaleY = (v) => h - pad - ((v - minY) / yRange) * (h - 2 * pad);
+
+    let svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;max-width:320px;display:block;margin:0 auto;">';
+
+    // Ideal bedtime band
+    const idealStartMin = (data.idealStart - 18) * 60;
+    const idealEndMin = (data.idealEnd - 18) * 60;
+    const bandLow = Math.max(idealStartMin, minY);
+    const bandHigh = Math.min(idealEndMin, maxY);
+    if (bandHigh > bandLow) {
+      svg += '<rect x="' + pad + '" y="' + scaleY(bandHigh) + '" width="' + (w - 2 * pad) + '" height="' + Math.abs(scaleY(bandLow) - scaleY(bandHigh)) + '" fill="rgba(155,168,216,0.1)" rx="3"/>';
+    }
+
+    // Trendline
+    const trendY0 = scaleY(data.intercept);
+    const trendY1 = scaleY(data.intercept + data.slope * (pts.length - 1));
+    svg += '<line x1="' + pad + '" y1="' + trendY0 + '" x2="' + (w - pad) + '" y2="' + trendY1 + '" stroke="rgba(155,168,216,0.5)" stroke-width="1.5" stroke-dasharray="4,3"/>';
+
+    // Dots
+    pts.forEach((p, i) => {
+      svg += '<circle cx="' + scaleX(i) + '" cy="' + scaleY(p.min) + '" r="3.5" fill="var(--tc-indigo)" opacity="0.8"/>';
+    });
+
+    // Y-axis labels
+    const labelMin = _siMinToBedtime(minY + 10);
+    const labelMax = _siMinToBedtime(maxY - 10);
+    svg += '<text x="2" y="' + (h - pad + 4) + '" font-size="8" fill="var(--light)">' + labelMin + '</text>';
+    svg += '<text x="2" y="' + (pad + 4) + '" font-size="8" fill="var(--light)">' + labelMax + '</text>';
+
+    svg += '</svg>';
+    chartEl.innerHTML = svg;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.direction === 'later' && Math.abs(data.driftPerWeek) >= 5) {
+      html += '<div class="si-insight si-insight-warn">Bedtime is creeping ' + Math.abs(data.driftPerWeek) + ' min later per week. Try starting the routine 15 minutes earlier.</div>';
+    } else if (data.direction === 'stable') {
+      html += '<div class="si-insight si-insight-good">Bedtime is consistent — great for sleep quality.</div>';
+    } else if (data.direction === 'earlier') {
+      html += '<div class="si-insight si-insight-info">Bedtime trending earlier by ~' + Math.abs(data.driftPerWeek) + ' min/week.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Sleep Efficiency ──
+
+function computeSleepEfficiency() {
+  const nights = _siGetNights(7);
+  if (nights.length < 3) return { insufficient: true, count: nights.length, needed: 3 };
+
+  const results = nights.map(n => {
+    const dur = calcSleepDuration(n.bedtime, n.wakeTime);
+    const wakes = n.wakeUps || 0;
+    const lostMin = wakes * 10;
+    const effectiveMin = Math.max(0, dur.total - lostMin);
+    const efficiency = dur.total > 0 ? Math.round((effectiveMin / dur.total) * 100) : 0;
+    return { dateStr: n.dateStr, totalMin: dur.total, effectiveMin, wakes, efficiency };
+  });
+
+  const avgEff = Math.round(results.reduce((s, r) => s + r.efficiency, 0) / results.length);
+  const best = results.reduce((a, b) => a.efficiency > b.efficiency ? a : b);
+  const worst = results.reduce((a, b) => a.efficiency < b.efficiency ? a : b);
+  const prevWeek = _siGetNights(14).slice(7);
+  let trend = 'stable';
+  if (prevWeek.length >= 3) {
+    const prevResults = prevWeek.map(n => {
+      const dur = calcSleepDuration(n.bedtime, n.wakeTime);
+      const lostMin = (n.wakeUps || 0) * 10;
+      return dur.total > 0 ? Math.round(((dur.total - lostMin) / dur.total) * 100) : 0;
+    });
+    const prevAvg = Math.round(prevResults.reduce((s, v) => s + v, 0) / prevResults.length);
+    if (avgEff > prevAvg + 3) trend = 'improving';
+    else if (avgEff < prevAvg - 3) trend = 'declining';
+  }
+
+  return { insufficient: false, results: results.reverse(), avgEff, best, worst, trend, count: results.length };
+}
+
+function renderInfoSleepEfficiency() {
+  const summaryEl = document.getElementById('infoSleepEfficiencySummary');
+  const barsEl = document.getElementById('infoSleepEfficiencyBars');
+  const insightEl = document.getElementById('infoSleepEfficiencyInsights');
+  if (!summaryEl) return;
+
+  const data = computeSleepEfficiency();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
+    if (barsEl) barsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const trendIcon = data.trend === 'improving' ? '↑' : data.trend === 'declining' ? '↓' : '→';
+  summaryEl.innerHTML = '<div class="t-sm">Avg efficiency: <strong>' + data.avgEff + '%</strong> (last ' + data.count + ' nights) <span style="color:' + (data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--tc-sage)') + ';font-weight:600;">' + trendIcon + '</span></div>';
+
+  if (barsEl) {
+    let html = '';
+    data.results.forEach(r => {
+      const color = r.efficiency >= 85 ? 'var(--tc-sage)' : r.efficiency >= 70 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+      const dayLabel = formatDate(r.dateStr).slice(0, 6);
+      html += '<div class="si-bar-row">';
+      html += '<div class="si-bar-label">' + dayLabel + '</div>';
+      html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + r.efficiency + '%;background:' + color + ';"></div></div>';
+      html += '<div class="si-bar-val" style="color:' + color + ';">' + r.efficiency + '%</div>';
+      html += '</div>';
+    });
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + data.best.efficiency + '%</div><div class="si-stat-label">Best night</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + data.worst.efficiency + '%</div><div class="si-stat-label">Worst night</div></div>';
+    html += '</div>';
+    barsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.avgEff < 80) {
+      html += '<div class="si-insight si-insight-warn">Frequent wake-ups are reducing sleep quality. Check for teething, hunger, or room temperature.</div>';
+    } else if (data.avgEff >= 90) {
+      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — Ziva is sleeping through most of the night.</div>';
+    } else {
+      html += '<div class="si-insight si-insight-info">Sleep efficiency is in the normal range. Fewer wake-ups would push it higher.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Wake Windows ──
+
+function computeWakeWindows() {
+  // Get days with both nap and night data
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const dayEntries = sleepData.filter(s => s.date === ds && s.bedtime && s.wakeTime);
+    if (dayEntries.length === 0) continue;
+    // Also check previous night (wakeTime carries into this day)
+    const prevD = new Date(d); prevD.setDate(prevD.getDate() - 1);
+    const prevDs = toDateStr(prevD);
+    const prevNight = sleepData.find(s => s.date === prevDs && s.type === 'night' && s.wakeTime);
+
+    const naps = dayEntries.filter(s => s.type === 'nap').sort((a, b) => a.bedtime.localeCompare(b.bedtime));
+    const tonight = dayEntries.find(s => s.type === 'night');
+
+    if (naps.length === 0 && !tonight) continue;
+
+    // Build wake windows: gaps between end of one sleep and start of next
+    const sleepBlocks = [];
+    if (prevNight) sleepBlocks.push({ type: 'night', wake: prevNight.wakeTime, bed: prevNight.bedtime });
+    naps.forEach(n => sleepBlocks.push({ type: 'nap', wake: n.wakeTime, bed: n.bedtime }));
+    if (tonight) sleepBlocks.push({ type: 'night', wake: tonight.wakeTime, bed: tonight.bedtime });
+
+    const windows = [];
+    for (let j = 0; j < sleepBlocks.length - 1; j++) {
+      const wakeTime = sleepBlocks[j].wake;
+      const nextBed = sleepBlocks[j + 1].bed;
+      if (!wakeTime || !nextBed) continue;
+      const [wh, wm] = wakeTime.split(':').map(Number);
+      const [bh, bm] = nextBed.split(':').map(Number);
+      let wakeMin = wh * 60 + wm;
+      let bedMin = bh * 60 + bm;
+      if (bedMin < wakeMin) bedMin += 1440; // overnight
+      const gapMin = bedMin - wakeMin;
+      if (gapMin > 0 && gapMin < 720) { // reasonable range
+        windows.push({ fromWake: wakeTime, toBed: nextBed, gapMin, isLast: j === sleepBlocks.length - 2 });
+      }
+    }
+
+    if (windows.length > 0) {
+      days.push({ dateStr: ds, windows, naps: naps.length, sleepBlocks });
+    }
+  }
+
+  if (days.length < 3) return { insufficient: true, count: days.length, needed: 3 };
+
+  const ageM = ageAt().months;
+  // Age-appropriate ideal wake windows (minutes)
+  let idealMin, idealMax;
+  if (ageM <= 6) { idealMin = 120; idealMax = 150; }
+  else if (ageM <= 9) { idealMin = 135; idealMax = 180; }
+  else if (ageM <= 12) { idealMin = 150; idealMax = 210; }
+  else { idealMin = 180; idealMax = 300; }
+
+  const allWindows = days.flatMap(d => d.windows);
+  const avgGap = Math.round(allWindows.reduce((s, w) => s + w.gapMin, 0) / allWindows.length);
+  const lastWindows = allWindows.filter(w => w.isLast);
+  const avgLastGap = lastWindows.length > 0 ? Math.round(lastWindows.reduce((s, w) => s + w.gapMin, 0) / lastWindows.length) : avgGap;
+
+  const overtiredCount = allWindows.filter(w => w.gapMin > idealMax + 30).length;
+  const undertiredCount = allWindows.filter(w => w.gapMin < idealMin - 30).length;
+
+  return {
+    insufficient: false, days, allWindows, avgGap, avgLastGap,
+    idealMin, idealMax, overtiredCount, undertiredCount,
+    today: days.find(d => d.dateStr === today()),
+    count: days.length
+  };
+}
+
+function renderInfoSleepWakeWindows() {
+  const summaryEl = document.getElementById('infoSleepWakeWindowsSummary');
+  const timelineEl = document.getElementById('infoSleepWakeWindowsTimeline');
+  const insightEl = document.getElementById('infoSleepWakeWindowsInsights');
+  if (!summaryEl) return;
+
+  const data = computeWakeWindows();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days with nap+night data (have ' + data.count + ')</div>';
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const idealStr = Math.floor(data.idealMin / 60) + 'h ' + (data.idealMin % 60) + 'm–' + Math.floor(data.idealMax / 60) + 'h ' + (data.idealMax % 60) + 'm';
+  const avgH = Math.floor(data.avgGap / 60);
+  const avgM = data.avgGap % 60;
+  const inRange = data.avgGap >= data.idealMin && data.avgGap <= data.idealMax;
+  summaryEl.innerHTML = '<div class="t-sm">Avg wake window: <strong>' + avgH + 'h ' + avgM + 'm</strong> ' +
+    '<span style="color:' + (inRange ? 'var(--tc-sage)' : 'var(--tc-amber)') + ';">(ideal: ' + idealStr + ')</span></div>';
+
+  if (timelineEl) {
+    let html = '';
+    // Show today's wake windows as a visual timeline
+    const showDay = data.today || data.days[0];
+    if (showDay) {
+      html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-bottom:var(--sp-4);">' + formatDate(showDay.dateStr) + '</div>';
+      html += '<div class="si-ww-segment">';
+      showDay.sleepBlocks.forEach((b, i) => {
+        // Sleep block
+        const dur = calcSleepDuration(b.bed, b.wake);
+        html += '<div class="si-ww-block si-ww-sleep" title="Sleep">' + (b.type === 'night' ? '🌙' : '💤') + '<span>' + dur.h + 'h' + (dur.m > 0 ? dur.m : '') + '</span></div>';
+        // Wake window after this block (if not last)
+        if (i < showDay.windows.length) {
+          const ww = showDay.windows[i];
+          const wwH = Math.floor(ww.gapMin / 60);
+          const wwM = ww.gapMin % 60;
+          const wwColor = ww.gapMin > data.idealMax ? 'rgba(240,180,80,0.15)' : ww.gapMin < data.idealMin ? 'rgba(155,168,216,0.15)' : 'rgba(58,112,96,0.1)';
+          const wwTextColor = ww.gapMin > data.idealMax ? 'var(--tc-amber)' : ww.gapMin < data.idealMin ? 'var(--tc-indigo)' : 'var(--tc-sage)';
+          html += '<div class="si-ww-block si-ww-wake" style="background:' + wwColor + ';color:' + wwTextColor + ';">☀️<span>' + wwH + 'h' + (wwM > 0 ? wwM : '') + '</span></div>';
+        }
+      });
+      html += '</div>';
+    }
+
+    // Stats
+    html += '<div class="si-stat-grid">';
+    const avgLastH = Math.floor(data.avgLastGap / 60);
+    const avgLastM = data.avgLastGap % 60;
+    html += '<div class="si-stat"><div class="si-stat-val">' + avgH + 'h ' + avgM + 'm</div><div class="si-stat-label">Avg window</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val">' + avgLastH + 'h ' + avgLastM + 'm</div><div class="si-stat-label">Avg last window</div></div>';
+    html += '</div>';
+    timelineEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.avgLastGap > data.idealMax + 30) {
+      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). Try fitting an extra nap or moving bedtime earlier.</div>';
+    }
+    if (data.overtiredCount >= 3) {
+      html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
+    }
+    if (data.overtiredCount === 0 && data.undertiredCount === 0 && inRange) {
+      html += '<div class="si-insight si-insight-good">Wake windows are well-timed for Ziva\'s age. Nice work.</div>';
+    }
+    if (data.undertiredCount >= 3) {
+      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — Ziva may not be tired enough, which can cause nap refusal.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// ── Weekly Report Card ──
+
+function computeSleepReport() {
+  const scores = [];
+  const details = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const sc = getDailySleepScore(ds);
+    if (sc) {
+      scores.push(sc.score);
+      details.push({ dateStr: ds, ...sc });
+    }
+  }
+  if (scores.length < 3) return { insufficient: true, count: scores.length, needed: 3 };
+
+  const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const best = details.reduce((a, b) => a.score > b.score ? a : b);
+  const worst = details.reduce((a, b) => a.score < b.score ? a : b);
+
+  // Previous week for comparison
+  const prevScores = [];
+  for (let i = 7; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const sc = getDailySleepScore(toDateStr(d));
+    if (sc) prevScores.push(sc.score);
+  }
+  const prevAvg = prevScores.length >= 3 ? Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length) : null;
+
+  // Avg total sleep, naps, wakes
+  const avgTotalMin = details.length > 0 ? Math.round(details.reduce((s, d) => s + (d.totalMin || 0), 0) / details.length) : 0;
+  const avgNaps = details.length > 0 ? (details.reduce((s, d) => s + (d.napCount || 0), 0) / details.length).toFixed(1) : '0';
+  const avgWakes = details.length > 0 ? (details.reduce((s, d) => s + (d.wakes || 0), 0) / details.length).toFixed(1) : '0';
+
+  // Bedtime consistency (std dev of bedtimes)
+  const nights = _siGetNights(7);
+  const bedtimeMins = nights.map(n => _siBedtimeToMin(n.bedtime)).filter(m => m !== null);
+  let bedtimeStdDev = 0;
+  if (bedtimeMins.length >= 3) {
+    const mean = bedtimeMins.reduce((a, b) => a + b, 0) / bedtimeMins.length;
+    bedtimeStdDev = Math.round(Math.sqrt(bedtimeMins.reduce((s, v) => s + (v - mean) * (v - mean), 0) / bedtimeMins.length));
+  }
+
+  // Weakest component
+  let weakest = '';
+  const avgWakeNum = parseFloat(avgWakes);
+  if (avgWakeNum >= 2.5) weakest = 'Wake-ups are the biggest drag on your score';
+  else if (avgTotalMin < 720) weakest = 'Total sleep duration is below target';
+  else if (bedtimeStdDev > 30) weakest = 'Inconsistent bedtime is affecting scores';
+
+  return {
+    insufficient: false, avgScore, best, worst, prevAvg, details,
+    avgTotalMin, avgNaps, avgWakes, bedtimeStdDev, weakest,
+    count: scores.length
+  };
+}
+
+function renderInfoSleepReport() {
+  const summaryEl = document.getElementById('infoSleepReportSummary');
+  const detailsEl = document.getElementById('infoSleepReportDetails');
+  const insightEl = document.getElementById('infoSleepReportInsights');
+  if (!summaryEl) return;
+
+  const data = computeSleepReport();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
+    if (detailsEl) detailsEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const lbl = getScoreLabel(data.avgScore);
+  const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
+  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
+  summaryEl.innerHTML = '<div class="t-sm">Sleep score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
+    (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
+
+  if (detailsEl) {
+    let html = '<div class="si-report-hero">';
+
+    // Score ring (Ziva Score style)
+    const ringClass = 'zs-score-' + lbl.label;
+    html += '<div class="si-report-ring ' + ringClass + '" style="background:' + _siRingBg(lbl.label) + ';border-color:' + _siRingBorder(lbl.label) + ';">';
+    html += '<div class="si-report-number" style="color:' + _siRingText(lbl.label) + ';">' + data.avgScore + '</div>';
+    html += '<div class="si-report-label" style="color:' + _siRingText(lbl.label) + ';">' + lbl.text + '</div>';
+    html += '</div>';
+
+    // Stats column
+    html += '<div class="si-report-stats">';
+    const totalH = Math.floor(data.avgTotalMin / 60);
+    const totalM = data.avgTotalMin % 60;
+    html += '<div style="font-size:var(--fs-xs);color:var(--mid);line-height:1.6;">';
+    html += '😴 Avg total: <strong>' + totalH + 'h ' + totalM + 'm</strong><br>';
+    html += '💤 Avg naps: <strong>' + data.avgNaps + '</strong>/day<br>';
+    html += '⏰ Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
+    html += '🕐 Bedtime ±' + data.bedtimeStdDev + 'min';
+    html += '</div>';
+
+    // Mini sparkline
+    html += '<div class="si-sparkline" style="margin-top:var(--sp-8);">';
+    const maxScore = Math.max(...data.details.map(d => d.score), 1);
+    data.details.slice().reverse().forEach(d => {
+      const pct = Math.round((d.score / 100) * 100);
+      const color = d.score >= 70 ? 'var(--tc-sage)' : d.score >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
+      html += '<div class="si-spark-bar" style="height:' + Math.max(4, pct) + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '"></div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+
+    // Best/worst
+    html += '<div class="si-stat-grid">';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-sage);">' + data.best.score + '</div><div class="si-stat-label">Best: ' + formatDate(data.best.dateStr).slice(0, 6) + '</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val" style="color:var(--tc-amber);">' + data.worst.score + '</div><div class="si-stat-label">Worst: ' + formatDate(data.worst.dateStr).slice(0, 6) + '</div></div>';
+    html += '</div>';
+    detailsEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '';
+    if (data.weakest) {
+      html += '<div class="si-insight si-insight-warn">' + data.weakest + ' this week.</div>';
+    }
+    if (data.avgScore >= 75) {
+      html += '<div class="si-insight si-insight-good">Strong sleep week — keep the routine consistent.</div>';
+    }
+    insightEl.innerHTML = html;
+  }
+}
+
+// Ring color helpers (match Ziva Score ring styling)
+function _siRingBg(label) {
+  const m = { excellent:'linear-gradient(135deg,#d4f5e0,#b8eacc)', great:'linear-gradient(135deg,#e0f0fa,#cce5f5)', good:'linear-gradient(135deg,#fef6e8,#fcecd0)', fair:'linear-gradient(135deg,#fef0e0,#fce0c0)', attention:'linear-gradient(135deg,#fde8ed,#f8d0d8)' };
+  return m[label] || m.good;
+}
+function _siRingBorder(label) {
+  const m = { excellent:'#6fcf97', great:'#7fb8d8', good:'#e8c86d', fair:'#e8a050', attention:'var(--tc-danger)' };
+  return m[label] || m.good;
+}
+function _siRingText(label) {
+  const m = { excellent:'#1a7a42', great:'#2a6a8a', good:'#8a6520', fair:'#8a5020', attention:'#a03030' };
+  return m[label] || m.good;
+}
+
+// ── Nap Transition Readiness ──
+
+function computeNapTransition() {
+  const ageM = ageAt().months;
+  const st = getSleepTargets(ageM);
+  const [napMin, napMax] = st.napIdeal;
+
+  // Gather 14 days of data
+  const dayData = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const naps = sleepData.filter(s => s.date === ds && s.type === 'nap');
+    const night = sleepData.find(s => s.date === ds && s.type === 'night');
+    dayData.push({ dateStr: ds, naps, night, napCount: naps.length });
+  }
+
+  const daysWithData = dayData.filter(d => d.naps.length > 0 || d.night);
+  if (daysWithData.length < 7) return { insufficient: true, count: daysWithData.length, needed: 7 };
+
+  const avgNaps = dayData.reduce((s, d) => s + d.napCount, 0) / 14;
+
+  // Signal 1: Nap count dropping below target
+  const lowNapDays = dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
+  const napCountDrop = lowNapDays >= 4;
+
+  // Signal 2: Short naps (<30min) increasing
+  const allNaps = dayData.flatMap(d => d.naps);
+  const shortNaps = allNaps.filter(n => {
+    const dur = calcSleepDuration(n.bedtime, n.wakeTime);
+    return dur.total < 30;
+  });
+  const shortNapRate = allNaps.length > 0 ? shortNaps.length / allNaps.length : 0;
+  const shortNapsRising = shortNapRate > 0.3;
+
+  // Signal 3: Bedtime pushing later
+  const drift = computeBedtimeDrift();
+  const bedtimeLater = !drift.insufficient && drift.direction === 'later' && Math.abs(drift.driftPerWeek) >= 5;
+
+  // Signal 4: Last nap ending later (>4:30PM avg)
+  const lastNapEnds = [];
+  dayData.forEach(d => {
+    if (d.naps.length > 0) {
+      const sorted = d.naps.slice().sort((a, b) => b.wakeTime.localeCompare(a.wakeTime));
+      const [h, m] = sorted[0].wakeTime.split(':').map(Number);
+      lastNapEnds.push(h * 60 + m);
+    }
+  });
+  const avgLastNapEnd = lastNapEnds.length > 0 ? lastNapEnds.reduce((a, b) => a + b, 0) / lastNapEnds.length : 0;
+  const lateLastNap = avgLastNapEnd > 16.5 * 60; // after 4:30 PM
+
+  // Signal 5: Fighting/refusing naps (days with 0 naps when > 6 months)
+  const napRefusalDays = dayData.filter(d => d.napCount === 0 && d.night).length;
+  const napRefusal = napRefusalDays >= 3 && ageM >= 8;
+
+  const signals = [
+    { label: 'Nap count below target', met: napCountDrop, detail: lowNapDays + '/14 days below ' + napMin + ' naps' },
+    { label: 'Short naps increasing', met: shortNapsRising, detail: Math.round(shortNapRate * 100) + '% of naps <30min' },
+    { label: 'Bedtime drifting later', met: bedtimeLater, detail: drift.insufficient ? 'Not enough data' : (drift.driftPerWeek > 0 ? '+' + drift.driftPerWeek + 'min/week' : 'Stable') },
+    { label: 'Last nap ending late', met: lateLastNap, detail: lastNapEnds.length > 0 ? 'Avg end: ' + Math.floor(avgLastNapEnd / 60) + ':' + String(Math.round(avgLastNapEnd % 60)).padStart(2, '0') : 'No data' },
+    { label: 'Nap refusal days', met: napRefusal, detail: napRefusalDays + ' days with 0 naps' }
+  ];
+
+  const metCount = signals.filter(s => s.met).length;
+  const readiness = Math.round((metCount / signals.length) * 100);
+
+  // Typical transition age
+  let transitionNote = '';
+  if (ageM < 12) transitionNote = 'Most babies transition from 2 to 1 nap between 12–18 months. At ' + ageM + ' months, Ziva is not expected to be ready yet.';
+  else if (ageM <= 18) transitionNote = 'Ziva is in the typical transition window (12–18 months). Watch these signals closely.';
+  else transitionNote = 'At ' + ageM + ' months, Ziva may be ready if signals align.';
+
+  return {
+    insufficient: false, signals, metCount, readiness,
+    avgNaps: avgNaps.toFixed(1), transitionNote, ageM,
+    count: daysWithData.length
+  };
+}
+
+function renderInfoSleepNapTransition() {
+  const summaryEl = document.getElementById('infoSleepNapTransitionSummary');
+  const checklistEl = document.getElementById('infoSleepNapTransitionChecklist');
+  const insightEl = document.getElementById('infoSleepNapTransitionInsights');
+  if (!summaryEl) return;
+
+  const data = computeNapTransition();
+  if (data.insufficient) {
+    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
+    if (checklistEl) checklistEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  const statusText = data.metCount <= 1 ? 'Not ready' : data.metCount <= 3 ? 'Some signals' : 'Approaching';
+  const statusColor = data.metCount <= 1 ? 'var(--tc-sage)' : data.metCount <= 3 ? 'var(--tc-amber)' : 'var(--tc-caution)';
+  summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + statusColor + ';font-weight:700;">' + statusText + '</span> — ' + data.metCount + '/5 transition signals · Avg ' + data.avgNaps + ' naps/day</div>';
+
+  if (checklistEl) {
+    let html = '';
+    data.signals.forEach(s => {
+      html += '<div class="si-check-row">';
+      html += '<div class="si-check-icon">' + (s.met ? '✅' : '❌') + '</div>';
+      html += '<div class="si-check-text">' + s.label + '</div>';
+      html += '<div class="si-check-status" style="color:' + (s.met ? 'var(--tc-amber)' : 'var(--light)') + ';">' + s.detail + '</div>';
+      html += '</div>';
+    });
+
+    // Readiness bar
+    const barColor = data.readiness <= 20 ? 'var(--tc-sage)' : data.readiness <= 60 ? 'var(--tc-amber)' : 'var(--tc-caution)';
+    html += '<div class="si-readiness-bar"><div class="si-readiness-fill" style="width:' + data.readiness + '%;background:' + barColor + ';"></div></div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--light);text-align:center;">Readiness: ' + data.readiness + '%</div>';
+    checklistEl.innerHTML = html;
+  }
+
+  if (insightEl) {
+    let html = '<div class="si-insight si-insight-info">' + data.transitionNote + '</div>';
+    insightEl.innerHTML = html;
+  }
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -29651,6 +30402,11 @@ function renderInfo() {
   renderInfoAdoption();
   renderInfoRepetition();
   renderInfoTexture();
+  renderInfoSleepBedtimeDrift();
+  renderInfoSleepEfficiency();
+  renderInfoSleepWakeWindows();
+  renderInfoSleepReport();
+  renderInfoSleepNapTransition();
   renderInfoIllnessFreq();
   renderInfoVaccFever();
   renderInfoIllnessFood();
