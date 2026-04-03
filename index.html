@@ -2202,7 +2202,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 /* ── Today's Suggestions (Home) ── */
 .sg-row { display:flex; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 .sg-row:last-child { border-bottom:none; }
-.sg-row-icon { font-size:var(--fs-sm); flex-shrink:0; width:20px; text-align:center; padding-top:2px; }
+.sg-row-icon { font-size:var(--fs-sm); flex-shrink:0; width:20px; text-align:center; padding-top:2px; color:var(--mid); }
+.sg-row-icon .zi { width:16px; height:16px; }
 .sg-row-body { flex:1; min-width:0; }
 .sg-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); margin-bottom:var(--sp-4); }
 .sg-chip { display:inline-flex; align-items:center; padding:3px 10px; border-radius:var(--r-full); font-size:var(--fs-xs); font-weight:500; background:rgba(181,213,197,0.15); border:1px solid rgba(58,112,96,0.12); color:var(--tc-sage); cursor:pointer; transition:transform 0.1s,background 0.15s; }
@@ -19484,7 +19485,7 @@ function generateDailySuggestions() {
       return nut && (nut.tags.includes('hydrating') || nut.tags.includes('cooling'));
     }).slice(0, 2);
     if (hydraFoods.length > 0) {
-      items.push({ id: 'sg-ill-hydra', type: 'hydration', foods: hydraFoods, reason: 'Hydration — essential during illness', emoji: '💧', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-hydra', type: 'hydration', foods: hydraFoods, reason: 'Hydration — essential during illness', emoji: 'drop', adopted: false, matchedMeal: null, matchedAt: null });
     }
     // Easy-digest suggestions
     const easyFoods = eligible.filter(f => {
@@ -19493,12 +19494,12 @@ function generateDailySuggestions() {
       return nut && nut.tags.includes('easy-digest');
     }).slice(0, 2);
     if (easyFoods.length > 0) {
-      items.push({ id: 'sg-ill-easy', type: 'nutrient-gap', foods: easyFoods, reason: 'Light, easy-digest foods for recovery', emoji: '🤒', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-easy', type: 'nutrient-gap', foods: easyFoods, reason: 'Light, easy-digest foods for recovery', emoji: 'medical', adopted: false, matchedMeal: null, matchedAt: null });
     }
     // General gentle foods
     const remaining = eligible.filter(f => !hydraFoods.includes(f) && !easyFoods.includes(f)).slice(0, 2);
     if (remaining.length > 0) {
-      items.push({ id: 'sg-ill-gentle', type: 'template', foods: remaining, reason: 'Gentle foods — offer small amounts', emoji: '🍽️', adopted: false, matchedMeal: null, matchedAt: null });
+      items.push({ id: 'sg-ill-gentle', type: 'template', foods: remaining, reason: 'Gentle foods — offer small amounts', emoji: 'bowl', adopted: false, matchedMeal: null, matchedAt: null });
     }
 
     const dayEntry = { generated: new Date().toISOString(), items: items.slice(0, 4), adoptionRate: 0, _feverMode: true, _illnessNote: 'Illness mode — focusing on gentle, hydrating foods' };
@@ -19546,8 +19547,8 @@ function generateDailySuggestions() {
       if (providers.length === 0) return;
       providers.forEach(f => usedFoods.add(_baseFoodName(f)));
       // Check for absorption booster
-      const nutrientEmoji = { iron: '🩸', calcium: '🦴', protein: '💪', 'vitamin c': '🍊', fibre: '🌾', 'vitamin a': '👁️', 'omega-3': '🧠', zinc: '🛡️' };
-      const emoji = nutrientEmoji[gap.toLowerCase()] || '🩸';
+      const nutrientEmoji = { iron: 'drop', calcium: 'shield', protein: 'run', 'vitamin c': 'sprout', fibre: 'sprout', 'vitamin a': 'sparkle', 'omega-3': 'brain', zinc: 'shield' };
+      const emoji = nutrientEmoji[gap.toLowerCase()] || 'drop';
       let reason = gap + ' gap — ' + providers.join(' + ');
       if (gap.toLowerCase() === 'iron') {
         const vitCFood = [...introducedSet].find(f =>
@@ -19599,7 +19600,7 @@ function generateDailySuggestions() {
         type: 'synergy',
         foods: si.foods,
         reason: si.reason,
-        emoji: '✨',
+        emoji: 'sparkle',
         adopted: false, matchedMeal: null, matchedAt: null
       });
     });
@@ -19619,7 +19620,7 @@ function generateDailySuggestions() {
         type: 'template',
         foods: tplFoods,
         reason: (tpl.label ? tpl.label.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, '') + ' — ' : '') + (tpl.reason || 'Familiar combo'),
-        emoji: '🍽️',
+        emoji: 'bowl',
         adopted: false, matchedMeal: null, matchedAt: null
       });
     });
@@ -19642,7 +19643,7 @@ function generateDailySuggestions() {
           type: 'hydration',
           foods: eligible,
           reason: 'Hydration — ' + (hydra.season === 'hot' ? 'hot' : 'warm') + ' day' + tempStr,
-          emoji: '💧',
+          emoji: 'drop',
           adopted: false, matchedMeal: null, matchedAt: null
         });
       }
@@ -19714,11 +19715,11 @@ function renderHomeSuggestions() {
 
   items.forEach((item, idx) => {
     const hidden = idx >= showCount ? ' style="display:none;" data-sg-extra' : '';
-    const statusIcon = item.adopted ? '✅' : '⬜';
+    const statusIcon = item.adopted ? zi('check') : '';
     const statusClass = item.adopted ? 'sg-status-used' : 'sg-status-pending';
 
     html += '<div class="sg-row"' + hidden + '>';
-    html += '<div class="sg-row-icon">' + (item.emoji || '💡') + '</div>';
+    html += '<div class="sg-row-icon">' + zi(item.emoji || 'bulb') + '</div>';
     html += '<div class="sg-row-body">';
     html += '<div class="sg-chips">';
     item.foods.forEach(f => {
@@ -42663,7 +42664,7 @@ function computeVisitPrep() {
   // 4. Diet summary
   var newFoodsSince = (foods || []).filter(function(f) { return f.date && f.date > sinceDate; });
   sections.diet = {
-    emoji: '🍽',
+    emoji: 'bowl',
     label: 'Diet',
     items: [],
     hasData: newFoodsSince.length > 0
