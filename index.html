@@ -4878,21 +4878,27 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .mi-inline-btn.mi-active { background:rgba(58,112,96,0.15); border-color:rgba(58,112,96,0.3); }
 
 /* ═══ SMART Q&A ═══ */
-.qa-bar { padding:var(--sp-12) var(--sp-16); }
+.qa-card {
+  background:linear-gradient(135deg, var(--white) 60%, var(--lav-light));
+  border-radius:var(--r-xl); padding:var(--sp-16);
+  box-shadow:0 2px 12px rgba(155,168,216,0.1);
+  border:1px solid rgba(155,168,216,0.12);
+}
 .qa-input-wrap {
-  display:flex; align-items:center; gap:var(--sp-8);
-  background:var(--card-bg); border:1.5px solid var(--card-border);
-  border-radius:var(--r-lg); padding:var(--sp-8) var(--sp-12);
+  display:flex; align-items:center; gap:var(--sp-10);
+  background:var(--glass-strong); border:1.5px solid rgba(155,168,216,0.2);
+  border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-16);
   transition:border-color 0.2s, box-shadow 0.2s;
 }
 .qa-input-wrap:focus-within {
   border-color:var(--tc-indigo);
   box-shadow:0 0 0 3px rgba(155,168,216,0.15);
 }
-.qa-input-icon { color:var(--light); font-size:var(--fs-md); flex-shrink:0; line-height:1; }
+.qa-input-icon { color:var(--tc-indigo); flex-shrink:0; opacity:0.6; }
+.qa-input-icon .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .qa-input {
   flex:1; border:none; background:none; outline:none;
-  font-size:var(--fs-sm); color:var(--text); font-family:inherit;
+  font-size:var(--fs-base); color:var(--text); font-family:inherit;
   min-width:0;
 }
 .qa-input::placeholder { color:var(--light); font-style:italic; }
@@ -4903,35 +4909,85 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .qa-clear:active { background:rgba(0,0,0,0.05); }
 .qa-chips {
-  display:flex; gap:var(--sp-6); overflow-x:auto; padding:var(--sp-8) var(--sp-16) var(--sp-4);
+  display:flex; gap:var(--sp-8); overflow-x:auto;
+  padding-top:var(--sp-12);
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .qa-chips::-webkit-scrollbar { display:none; }
 .qa-chip {
-  flex-shrink:0; padding:var(--sp-6) var(--sp-12);
-  border-radius:var(--r-lg); font-size:var(--fs-xs);
-  background:var(--card-bg); border:1px solid var(--card-border);
-  color:var(--mid); cursor:pointer; white-space:nowrap;
+  flex-shrink:0; padding:var(--sp-8) var(--sp-12);
+  border-radius:var(--r-full); font-size:var(--fs-xs);
+  cursor:pointer; white-space:nowrap;
   transition:background 0.15s, border-color 0.15s;
+  font-weight:500;
+  background:var(--glass-strong); border:1px solid rgba(155,168,216,0.15);
+  color:var(--mid);
 }
-.qa-chip:active { background:rgba(155,168,216,0.1); border-color:var(--tc-indigo); }
-.qa-chip-context {
-  border-color:rgba(155,168,216,0.35);
-  background:rgba(155,168,216,0.06);
-  color:var(--tc-indigo);
-}
+.qa-chip-rose   { background:var(--rose-light); border-color:rgba(242,168,184,0.3); color:var(--tc-rose); }
+.qa-chip-peach  { background:var(--peach-light); border-color:rgba(250,212,180,0.4); color:var(--tc-caution); }
+.qa-chip-sage   { background:var(--sage-light); border-color:rgba(181,213,197,0.4); color:var(--tc-sage); }
+.qa-chip-indigo { background:var(--indigo-light); border-color:rgba(155,168,216,0.3); color:var(--tc-indigo); }
+.qa-chip-amber  { background:var(--amber-light); border-color:rgba(240,200,120,0.4); color:var(--tc-amber); }
+.qa-chip-lav    { background:var(--lav-light); border-color:rgba(201,184,232,0.3); color:var(--tc-lav); }
+.qa-chip-sky    { background:var(--sky-light); border-color:rgba(168,207,224,0.3); color:var(--tc-sky); }
+.qa-chip:active { opacity:0.8; }
+.qa-chip-context { font-weight:700; }
 .qa-answer {
-  margin:var(--sp-8) var(--sp-16) var(--sp-16);
-  background:var(--card-bg); border:1px solid var(--card-border);
-  border-radius:var(--r-lg); overflow:hidden;
+  margin:var(--sp-12) var(--sp-16) var(--sp-16);
+  border-radius:var(--r-xl); overflow:hidden;
   animation:qaSlideIn 0.2s ease-out;
+  padding:var(--sp-4) 0;
+  /* Default: neutral white card */
+  background:linear-gradient(135deg, var(--white) 60%, var(--warm));
+  border:1px solid var(--card-border);
+  box-shadow:0 2px 12px rgba(180,120,120,0.08);
+}
+.qa-answer-indigo {
+  background:linear-gradient(135deg, var(--white) 50%, var(--indigo-light));
+  border-color:rgba(155,168,216,0.2);
+  box-shadow:0 2px 16px rgba(155,168,216,0.1);
+}
+.qa-answer-peach {
+  background:linear-gradient(135deg, var(--white) 50%, var(--peach-light));
+  border-color:rgba(250,212,180,0.3);
+  box-shadow:0 2px 16px rgba(250,212,180,0.1);
+}
+.qa-answer-rose {
+  background:linear-gradient(135deg, var(--white) 50%, var(--rose-light));
+  border-color:rgba(242,168,184,0.2);
+  box-shadow:0 2px 16px rgba(242,168,184,0.08);
+}
+.qa-answer-amber {
+  background:linear-gradient(135deg, var(--white) 50%, var(--amber-light));
+  border-color:rgba(240,200,120,0.3);
+  box-shadow:0 2px 16px rgba(240,200,120,0.08);
+}
+.qa-answer-sage {
+  background:linear-gradient(135deg, var(--white) 50%, var(--sage-light));
+  border-color:rgba(181,213,197,0.3);
+  box-shadow:0 2px 16px rgba(181,213,197,0.1);
+}
+.qa-answer-lav {
+  background:linear-gradient(135deg, var(--white) 50%, var(--lav-light));
+  border-color:rgba(201,184,232,0.2);
+  box-shadow:0 2px 16px rgba(201,184,232,0.08);
+}
+.qa-answer-sky {
+  background:linear-gradient(135deg, var(--white) 50%, var(--sky-light));
+  border-color:rgba(168,207,224,0.3);
+  box-shadow:0 2px 16px rgba(168,207,224,0.08);
 }
 @keyframes qaSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 .qa-answer-header {
-  display:flex; align-items:center; gap:var(--sp-8);
+  display:flex; align-items:center; gap:var(--sp-10);
   padding:var(--sp-12) var(--sp-16) var(--sp-8);
 }
-.qa-answer-icon { font-size:var(--fs-xl); line-height:1; }
+.qa-answer-header .icon {
+  width:32px; height:32px; border-radius:var(--r-md);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.qa-answer-header .icon svg.zi { width:18px; height:18px; }
 .qa-answer-title-group { flex:1; min-width:0; }
 .qa-answer-title {
   font-size:var(--fs-md); font-weight:700; color:var(--text);
@@ -4992,13 +5048,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 
 /* Dark mode */
-[data-theme="dark"] .qa-input-wrap { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .qa-card { background:linear-gradient(135deg, var(--surface) 60%, rgba(155,168,216,0.06)); border-color:rgba(155,168,216,0.08); box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+[data-theme="dark"] .qa-input-wrap { background:rgba(255,255,255,0.05); border-color:rgba(155,168,216,0.15); }
 [data-theme="dark"] .qa-input-wrap:focus-within { border-color:rgba(155,168,216,0.5); box-shadow:0 0 0 3px rgba(155,168,216,0.1); }
 [data-theme="dark"] .qa-clear:active { background:rgba(255,255,255,0.08); }
-[data-theme="dark"] .qa-chip { background:var(--surface); border-color:var(--card-border); }
-[data-theme="dark"] .qa-chip:active { background:rgba(155,168,216,0.12); }
-[data-theme="dark"] .qa-chip-context { background:rgba(155,168,216,0.08); border-color:rgba(155,168,216,0.25); }
-[data-theme="dark"] .qa-answer { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .qa-chip { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .qa-chip-rose   { background:rgba(242,168,184,0.08); border-color:rgba(242,168,184,0.15); color:var(--tc-rose); }
+[data-theme="dark"] .qa-chip-peach  { background:rgba(250,212,180,0.08); border-color:rgba(250,212,180,0.15); color:var(--tc-caution); }
+[data-theme="dark"] .qa-chip-sage   { background:rgba(181,213,197,0.08); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .qa-chip-indigo { background:rgba(155,168,216,0.08); border-color:rgba(155,168,216,0.15); color:var(--tc-indigo); }
+[data-theme="dark"] .qa-chip-amber  { background:rgba(240,200,120,0.08); border-color:rgba(240,200,120,0.15); color:var(--tc-amber); }
+[data-theme="dark"] .qa-chip-lav    { background:rgba(201,184,232,0.08); border-color:rgba(201,184,232,0.15); color:var(--tc-lav); }
+[data-theme="dark"] .qa-chip-sky    { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.15); color:var(--tc-sky); }
+[data-theme="dark"] .qa-chip:active { opacity:0.8; }
+[data-theme="dark"] .qa-chip-context { font-weight:700; }
+[data-theme="dark"] .qa-answer { background:linear-gradient(135deg, var(--surface) 60%, var(--surface-alt)); border-color:var(--card-border); box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+[data-theme="dark"] .qa-answer-indigo { background:linear-gradient(135deg, var(--surface) 50%, rgba(155,168,216,0.08)); border-color:rgba(155,168,216,0.12); }
+[data-theme="dark"] .qa-answer-peach  { background:linear-gradient(135deg, var(--surface) 50%, rgba(250,212,180,0.06)); border-color:rgba(250,212,180,0.1); }
+[data-theme="dark"] .qa-answer-rose   { background:linear-gradient(135deg, var(--surface) 50%, rgba(242,168,184,0.06)); border-color:rgba(242,168,184,0.1); }
+[data-theme="dark"] .qa-answer-amber  { background:linear-gradient(135deg, var(--surface) 50%, rgba(240,200,120,0.06)); border-color:rgba(240,200,120,0.1); }
+[data-theme="dark"] .qa-answer-sage   { background:linear-gradient(135deg, var(--surface) 50%, rgba(181,213,197,0.06)); border-color:rgba(181,213,197,0.1); }
+[data-theme="dark"] .qa-answer-lav    { background:linear-gradient(135deg, var(--surface) 50%, rgba(201,184,232,0.06)); border-color:rgba(201,184,232,0.1); }
+[data-theme="dark"] .qa-answer-sky    { background:linear-gradient(135deg, var(--surface) 50%, rgba(168,207,224,0.06)); border-color:rgba(168,207,224,0.1); }
 [data-theme="dark"] .qa-answer-close:active { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-confidence { border-top-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .qa-data-gap { background:rgba(168,207,224,0.05); border-top-color:rgba(168,207,224,0.08); }
@@ -5249,15 +5320,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       </div>
 
       <!-- ═══ SMART Q&A ═══ -->
-      <div class="col-full" id="smartQAContainer">
-        <div class="qa-bar">
+      <div class="col-full" id="smartQAContainer" style="padding:0 var(--sp-16);margin-top:var(--sp-12);">
+        <div class="qa-card">
           <div class="qa-input-wrap">
-            <span class="qa-input-icon">🔍</span>
+            <span class="qa-input-icon"><svg class="zi"><use href="#zi-scope"/></svg></span>
             <input type="text" class="qa-input" id="qaInput" placeholder="Ask about Ziva..." autocomplete="off" />
             <button class="qa-clear" id="qaClear" aria-label="Clear">✕</button>
           </div>
+          <div class="qa-chips" id="qaChips"></div>
         </div>
-        <div class="qa-chips" id="qaChips"></div>
         <div id="qaAnswerContainer"></div>
       </div>
 
@@ -20973,8 +21044,17 @@ function renderQABar() {
   // Render quick chips
   var chips = qaGetContextualQuickQuestions();
   var chipsHtml = '';
+  var _qaIntentColor = {
+    overall: 'rose', sleep_quality: 'indigo', sleep_early: 'indigo', sleep_wakeups: 'indigo', sleep_naps: 'indigo',
+    food_general: 'peach', food_nutrient: 'peach', food_variety: 'peach', food_safe: 'peach', food_texture: 'peach',
+    weight_gain: 'rose', weight_loss: 'rose', growth: 'rose',
+    poop_general: 'amber', poop_food: 'amber', poop_color: 'amber',
+    activity_general: 'sage', activity_sleep: 'sage', milestone_general: 'sage', milestone_specific: 'sage',
+    vaccine: 'lav', supplement: 'lav', illness: 'lav', tomorrow: 'sky'
+  };
   chips.forEach(function(c) {
-    var cls = 'qa-chip' + (c.context ? ' qa-chip-context' : '');
+    var colorCls = _qaIntentColor[c.intent] || 'rose';
+    var cls = 'qa-chip qa-chip-' + colorCls + (c.context ? ' qa-chip-context' : '');
     chipsHtml += '<button class="' + cls + '" data-qa-intent="' + escHtml(c.intent) + '" data-qa-text="' + escHtml(c.text) + '">' + escHtml(c.text) + '</button>';
   });
   chipsEl.innerHTML = chipsHtml;
@@ -21082,11 +21162,13 @@ function qaRenderAnswer(container, answer) {
   var signalIcons = { good: '✅', warn: '⚠️', action: '→', info: 'ℹ️', neutral: '·' };
   var signalClasses = { good: 'qa-item-good', warn: 'qa-item-warn', action: 'qa-item-action', info: 'qa-item-info', neutral: 'qa-item-neutral' };
 
-  var html = '<div class="qa-answer">';
+  var domainCls = answer.domain ? ' qa-answer-' + answer.domain : '';
+  var html = '<div class="qa-answer' + domainCls + '">';
 
-  // Header
+  // Header with zi icon
+  var iconHtml = answer.icon ? '<div class="icon icon-' + (answer.domain || 'rose') + '"><svg class="zi"><use href="#zi-' + answer.icon + '"/></svg></div>' : '';
   html += '<div class="qa-answer-header">';
-  html += '<span class="qa-answer-icon">' + answer.icon + '</span>';
+  html += iconHtml;
   html += '<div class="qa-answer-title-group">';
   html += '<div class="qa-answer-title">' + escHtml(answer.title) + '</div>';
   if (answer.headline) html += '<div class="qa-answer-headline">' + escHtml(answer.headline) + '</div>';
@@ -21137,19 +21219,19 @@ function qaRenderAnswer(container, answer) {
 
 function qaRenderNoMatch(container) {
   var cats = [
-    { text: 'Sleep', intent: 'sleep_quality' },
-    { text: 'Food', intent: 'food_general' },
-    { text: 'Growth', intent: 'weight_gain' },
-    { text: 'Poop', intent: 'poop_general' },
-    { text: 'Activities', intent: 'activity_general' },
-    { text: 'Overall', intent: 'overall' }
+    { text: 'Sleep', intent: 'sleep_quality', color: 'indigo' },
+    { text: 'Food', intent: 'food_general', color: 'peach' },
+    { text: 'Growth', intent: 'weight_gain', color: 'rose' },
+    { text: 'Poop', intent: 'poop_general', color: 'amber' },
+    { text: 'Activities', intent: 'activity_general', color: 'sage' },
+    { text: 'Overall', intent: 'overall', color: 'rose' }
   ];
 
   var html = '<div class="qa-answer"><div class="qa-no-match">';
   html += '<div class="qa-no-match-label">I couldn\'t find a specific answer for that. Here\'s what I can help with:</div>';
   html += '<div class="qa-cat-chips">';
   cats.forEach(function(c) {
-    html += '<button class="qa-chip" data-qa-fallback="' + c.intent + '">' + escHtml(c.text) + '</button>';
+    html += '<button class="qa-chip qa-chip-' + c.color + '" data-qa-fallback="' + c.intent + '">' + escHtml(c.text) + '</button>';
   });
   html += '</div></div></div>';
   container.innerHTML = html;
@@ -21239,7 +21321,7 @@ function qaAnswerSleepQuality(intentId) {
 
   if (scores.length < 3) {
     return {
-      icon: '😴', title: 'Sleep Quality', headline: 'Not enough data yet',
+      icon: 'moon', domain: 'indigo', title: 'Sleep Quality', headline: 'Not enough data yet',
       sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
         { text: 'Log ' + (5 - scores.length) + ' more nights of sleep to see patterns', signal: 'info' },
         { text: 'Track bedtime, wake time, and wake-ups each night', signal: 'action' }
@@ -21342,7 +21424,7 @@ function qaAnswerSleepQuality(intentId) {
   if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
 
   return {
-    icon: '😴', title: 'Sleep Quality', headline: headline,
+    icon: 'moon', domain: 'indigo', title: 'Sleep Quality', headline: headline,
     sections: sections,
     confidence: 'Based on ' + scores.length + ' nights' + (prevScores.length > 0 ? ' + ' + prevScores.length + ' prior' : ''),
     dataGap: null
@@ -21356,7 +21438,7 @@ function qaAnswerWeightGain(intentId) {
 
   if (gv.insufficient) {
     return {
-      icon: '📏', title: 'Growth & Weight', headline: 'Not enough data yet',
+      icon: 'ruler', domain: 'rose', title: 'Growth & Weight', headline: 'Not enough data yet',
       sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
         { text: 'Need at least 2 weight measurements to track growth', signal: 'info' },
         { text: 'Log weight in the Growth tab', signal: 'action' }
@@ -21446,7 +21528,7 @@ function qaAnswerWeightGain(intentId) {
   if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
 
   return {
-    icon: '📏', title: 'Growth & Weight', headline: headline || 'Growth data available',
+    icon: 'ruler', domain: 'rose', title: 'Growth & Weight', headline: headline || 'Growth data available',
     sections: sections,
     confidence: 'Based on ' + ((growthData || []).length) + ' measurements',
     dataGap: null
@@ -21552,7 +21634,7 @@ function qaAnswerFoodGeneral(intentId) {
   if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
 
   return {
-    icon: '🥣', title: 'Food & Nutrition', headline: headline,
+    icon: 'bowl', domain: 'peach', title: 'Food & Nutrition', headline: headline,
     sections: sections,
     confidence: 'Based on 7-day rolling data',
     dataGap: null
@@ -21566,7 +21648,7 @@ function qaAnswerPoopGeneral(intentId) {
 
   if (scores.length < 2) {
     return {
-      icon: '💩', title: 'Poop Patterns', headline: 'Not enough data yet',
+      icon: 'diaper', domain: 'amber', title: 'Poop Patterns', headline: 'Not enough data yet',
       sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
         { text: 'Log poop consistency, color, and any symptoms', signal: 'info' },
         { text: 'Need at least 3 days of data for patterns', signal: 'action' }
@@ -21658,7 +21740,7 @@ function qaAnswerPoopGeneral(intentId) {
   if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
 
   return {
-    icon: '💩', title: 'Poop Patterns', headline: headline,
+    icon: 'diaper', domain: 'amber', title: 'Poop Patterns', headline: headline,
     sections: sections,
     confidence: 'Based on ' + scores.length + ' days of data',
     dataGap: null
@@ -21674,7 +21756,7 @@ function qaAnswerActivityGeneral(intentId) {
 
   if (actData.days < 2) {
     return {
-      icon: '🏃', title: 'Activities & Milestones', headline: 'Not enough data yet',
+      icon: 'run', domain: 'sage', title: 'Activities & Milestones', headline: 'Not enough data yet',
       sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
         { text: 'Log activities (tummy time, play, reading) to see patterns', signal: 'info' },
         { text: 'Even 1-2 logged days will start showing insights', signal: 'action' }
@@ -21758,7 +21840,7 @@ function qaAnswerActivityGeneral(intentId) {
   if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
 
   return {
-    icon: '🏃', title: 'Activities & Milestones', headline: headline,
+    icon: 'run', domain: 'sage', title: 'Activities & Milestones', headline: headline,
     sections: sections,
     confidence: 'Based on 14-day activity log',
     dataGap: null
@@ -21775,7 +21857,7 @@ function qaAnswerOverall(intentId) {
     var zs = calcZivaScore();
     if (zs.score === null) {
       return {
-        icon: '🌟', title: 'Overall Status', headline: 'Not enough data yet',
+        icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Not enough data yet',
         sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
           { text: 'Log sleep, meals, and poop to see the Ziva Score', signal: 'info' },
           { text: 'Each domain needs at least a few days of data', signal: 'action' }
@@ -21863,14 +21945,14 @@ function qaAnswerOverall(intentId) {
     if (actionItems.length > 0) sections.push({ label: 'TOP PRIORITIES', icon: '💡', items: actionItems.slice(0, 4) });
 
     return {
-      icon: '🌟', title: 'Overall Status', headline: headline,
+      icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: headline,
       sections: sections,
       confidence: 'Based on ' + zs.dataCompleteness + ' of 5 domains with data',
       dataGap: zs.dataCompleteness < 5 ? 'Some domains need more data for a complete picture' : null
     };
   } catch(e) {
     return {
-      icon: '🌟', title: 'Overall Status', headline: 'Unable to compute score',
+      icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Unable to compute score',
       sections: [{ label: 'WHAT TO DO', icon: 'ℹ️', items: [
         { text: 'Log sleep, meals, and poop to build your Ziva Score', signal: 'action' }
       ]}],
@@ -28309,11 +28391,13 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
   let touchEndX = 0;
   let touchEndY = 0;
   let touchStartClientX = 0; // clientX for edge detection (viewport-relative)
+  let _swipeTouchTarget = null;
 
   document.addEventListener('touchstart', e => {
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
     touchStartClientX = e.changedTouches[0].clientX;
+    _swipeTouchTarget = e.target;
   }, { passive: true });
 
   document.addEventListener('touchend', e => {
@@ -28335,6 +28419,15 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     // Don't swipe if interacting with inputs, textareas, or scrollable containers
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+
+    // Don't swipe if touch started inside a horizontally scrollable element
+    if (_swipeTouchTarget) {
+      var el = _swipeTouchTarget;
+      while (el && el !== document.body) {
+        if (el.scrollWidth > el.clientWidth + 2 && getComputedStyle(el).overflowX !== 'hidden' && getComputedStyle(el).overflowX !== 'visible') return;
+        el = el.parentElement;
+      }
+    }
 
     // Don't swipe if any overlay, modal, lightbox, or popup is open
     if (document.querySelector('.modal-overlay.open, .crop-overlay.open, .avatar-lightbox.open, .confirm-overlay, .ql-sheet.open, .ql-modal-overlay.open, .score-popup.open, .insights-popup.open')) return;
