@@ -21843,7 +21843,7 @@ function qaRenderAnswer(container, answer) {
       if (sec.items) {
         sec.items.forEach(function(item) {
           var cls = signalClasses[item.signal] || 'qa-item-neutral';
-          var icon = signalIcons[item.signal] || '·';
+          var icon = item.icon || signalIcons[item.signal] || '·';
           html += '<div class="qa-item ' + cls + '">';
           html += '<span class="qa-item-signal">' + icon + '</span>';
           html += '<span class="qa-item-text">' + escHtml(item.text) + '</span>';
@@ -22546,7 +22546,7 @@ function qaAnswerOverall(intentId) {
       if (d.score !== null && d.score !== undefined) {
         var signal = d.score >= 70 ? 'good' : d.score >= 40 ? 'warn' : 'warn';
         var staleNote = d.isStale ? ' (stale)' : '';
-        dataItems.push({ text: domainIcons[key] + ' ' + domainNames[key] + ': ' + d.score + '/100' + staleNote, signal: signal });
+        dataItems.push({ text: domainNames[key] + ': ' + d.score + '/100' + staleNote, signal: signal, icon: domainIcons[key] });
         if (d.score < weakestScore) { weakestScore = d.score; weakest = key; }
         if (d.score > strongestScore) { strongestScore = d.score; strongest = key; }
       }
