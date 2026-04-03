@@ -4454,6 +4454,18 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
 }
 .ql-meal-pill.active { background:#966525; color:white; border-color:#966525; }
+.ql-intake-pill {
+  flex:1 1 0; min-width:0; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-lg); border:1.5px solid var(--border-subtle);
+  background:var(--warm); cursor:pointer; text-align:center;
+  font-size:var(--fs-xs); font-weight:600; color:var(--mid);
+  transition:all var(--ease-fast); min-height:40px;
+  display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
+  white-space:nowrap;
+}
+.ql-intake-pill .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.ql-intake-pill.active { background:var(--tc-sage); color:white; border-color:var(--tc-sage); }
+[data-theme="dark"] .ql-intake-pill { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .ql-intake-pill.active { background:var(--tc-sage); color:white; border-color:var(--tc-sage); }
 
 /* Quick log poop colour dots — compact row */
 .ql-color-row { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
@@ -4799,6 +4811,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .mi-btn:active { background:rgba(155,168,216,0.1); }
 .mi-btn-icon { font-size:var(--fs-md); line-height:1.2; }
+.mi-btn-icon .zi { width:var(--icon-md); height:var(--icon-md); }
 .mi-btn-label { font-size:var(--fs-2xs); color:var(--mid); margin-top:var(--sp-2); }
 .mi-btn.mi-selected {
   border-color:var(--tc-indigo); background:rgba(155,168,216,0.08);
@@ -4841,15 +4854,17 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .mi-prog-label { font-size:var(--fs-2xs); color:var(--mid); }
 .mi-inline-btn {
-  padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md);
-  font-size:var(--fs-2xs); border:1px solid var(--card-border);
-  background:var(--card-bg); color:var(--mid); cursor:pointer;
-  transition:all 0.15s; font-family:inherit;
+  padding:var(--sp-4) var(--sp-10); border-radius:var(--r-lg);
+  font-size:var(--fs-xs); border:1.5px solid var(--glass-strong);
+  background:var(--glass); color:var(--mid); cursor:pointer;
+  transition:all 0.15s; font-family:inherit; font-weight:500;
+  display:inline-flex; align-items:center; gap:var(--sp-4);
 }
-.mi-inline-btn:active { background:rgba(155,168,216,0.1); }
+.mi-inline-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mi-inline-btn:active { opacity:0.8; }
 .mi-inline-btn.mi-active {
-  border-color:var(--tc-indigo); background:rgba(155,168,216,0.08);
-  color:var(--tc-indigo); font-weight:700;
+  border-color:var(--tc-sage); background:rgba(58,112,96,0.1);
+  color:var(--tc-sage); font-weight:700;
 }
 
 /* Dark mode */
@@ -4857,9 +4872,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .mi-btn { background:var(--surface); border-color:var(--card-border); }
 [data-theme="dark"] .mi-btn:active { background:rgba(155,168,216,0.12); }
 [data-theme="dark"] .mi-btn.mi-selected { background:rgba(155,168,216,0.1); }
-[data-theme="dark"] .mi-inline-btn { background:var(--surface); border-color:var(--card-border); }
-[data-theme="dark"] .mi-inline-btn:active { background:rgba(155,168,216,0.12); }
-[data-theme="dark"] .mi-inline-btn.mi-active { background:rgba(155,168,216,0.1); }
+[data-theme="dark"] .mi-inline-btn { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1); }
+[data-theme="dark"] .mi-inline-btn:active { opacity:0.8; }
+[data-theme="dark"] .mi-inline-btn.mi-active { background:rgba(58,112,96,0.15); border-color:rgba(58,112,96,0.3); }
 
 /* ═══ SMART Q&A ═══ */
 .qa-bar { padding:var(--sp-12) var(--sp-16); }
@@ -7124,6 +7139,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div id="qlSameAsWrap" style="display:none;">
         <label class="micro-label">Quick repeat</label>
         <div class="d-flex gap-8 flex-wrap" id="qlSameAsPills"></div>
+      </div>
+      <div>
+        <label class="micro-label">How much?</label>
+        <div class="ql-meal-pills" id="qlIntakePills">
+          <div class="ql-intake-pill" data-mi-qlval="0.25"><svg class="zi"><use href="#zi-spoon"/></svg> Few bites</div>
+          <div class="ql-intake-pill" data-mi-qlval="0.5"><svg class="zi"><use href="#zi-halfcircle"/></svg> Half</div>
+          <div class="ql-intake-pill active" data-mi-qlval="0.75"><svg class="zi"><use href="#zi-bowl"/></svg> Most</div>
+          <div class="ql-intake-pill" data-mi-qlval="1.0"><svg class="zi"><use href="#zi-star"/></svg> All</div>
+        </div>
       </div>
       <button class="ql-save ql-save-feed" onclick="saveQLFeed()">Save Feed ✓</button>
     </div>
@@ -20450,10 +20474,10 @@ function _tpPlanMeal(meal, foodStr) {
 // ═══════════════════════════════════════════════════════════════
 
 var MI_LEVELS = [
-  { value: 0.25, icon: '🤏', label: 'Few bites', cls: '25' },
-  { value: 0.50, icon: '🥣', label: 'Half', cls: '50' },
-  { value: 0.75, icon: '😋', label: 'Most', cls: '75' },
-  { value: 1.0,  icon: '🎉', label: 'All', cls: '100' }
+  { value: 0.25, icon: 'spoon',      label: 'Few bites', cls: '25' },
+  { value: 0.50, icon: 'halfcircle', label: 'Half', cls: '50' },
+  { value: 0.75, icon: 'bowl',       label: 'Most', cls: '75' },
+  { value: 1.0,  icon: 'star',       label: 'All', cls: '100' }
 ];
 
 function _miGetIntake(dateStr, meal) {
@@ -20534,7 +20558,7 @@ function _miShowPostSavePrompt(dateStr) {
   html += '<div class="mi-buttons">';
   MI_LEVELS.forEach(function(lv) {
     html += '<button class="mi-btn" data-mi-val="' + lv.value + '">';
-    html += '<div class="mi-btn-icon">' + lv.icon + '</div>';
+    html += '<div class="mi-btn-icon">' + zi(lv.icon) + '</div>';
     html += '<div class="mi-btn-label">' + escHtml(lv.label) + '</div>';
     html += '</button>';
   });
@@ -20581,7 +20605,7 @@ function _miRenderInlineEditor(dateStr, meal) {
   var html = '<div class="mi-inline" data-mi-meal="' + meal + '" data-mi-date="' + dateStr + '">';
   MI_LEVELS.forEach(function(lv) {
     var active = lv.value === current ? ' mi-active' : '';
-    html += '<button class="mi-inline-btn' + active + '" data-mi-ival="' + lv.value + '">' + lv.icon + ' ' + escHtml(lv.label) + '</button>';
+    html += '<button class="mi-inline-btn' + active + '" data-mi-ival="' + lv.value + '">' + zi(lv.icon) + ' ' + escHtml(lv.label) + '</button>';
   });
   html += '</div>';
   return html;
@@ -20609,6 +20633,23 @@ function _miWireInlineEditors() {
 }
 
 // ── INTAKE DISPLAY HELPERS ──
+
+var _qlSelectedIntake = 0.75; // default for Quick Log
+
+function _miWireQLIntakePills() {
+  _qlSelectedIntake = 0.75;
+  var container = document.getElementById('qlIntakePills');
+  if (!container) return;
+  container.querySelectorAll('.ql-intake-pill').forEach(function(btn) {
+    btn.classList.toggle('active', parseFloat(btn.getAttribute('data-mi-qlval')) === 0.75);
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      _qlSelectedIntake = parseFloat(this.getAttribute('data-mi-qlval'));
+      container.querySelectorAll('.ql-intake-pill').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+}
 
 function _miEffectiveIntake(dateStr) {
   var entry = feedingData[dateStr];
@@ -29176,6 +29217,8 @@ function openQuickModal(type) {
     if (qlDD) qlDD.classList.remove('open');
     renderQLSameAsPills();
     renderQLFreqPills();
+    // Reset intake pills to default (Most)
+    _miWireQLIntakePills();
     // Hide backfill UI unless in backfill mode
     const bfWrap = document.getElementById('qlBackfillWrap');
     if (bfWrap) bfWrap.style.display = _qlBackfillDate ? '' : 'none';
@@ -29489,6 +29532,10 @@ function saveQLFeed() {
   // Save meal time if entered
   const qlTime = document.getElementById('qlFeedTime')?.value;
   if (qlTime) day[_qlMeal + '_time'] = qlTime;
+  // Save intake level from QL pills
+  if (_qlSelectedIntake && _qlMeal !== 'snack') {
+    day[_qlMeal + '_intake'] = _qlSelectedIntake;
+  }
   save(KEYS.feeding, feeding);
   feedingData = feeding;
 
