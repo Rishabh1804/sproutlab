@@ -1,0 +1,7 @@
+mkdir beta
+# Move the downloaded files into beta/
+mv ~/Downloads/index.html beta/
+mv ~/Downloads/manifest.json beta/
+git add beta/
+git commit -m "Add beta testing environment (v2.20)"
+git push
