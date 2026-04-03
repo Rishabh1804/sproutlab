@@ -4334,36 +4334,48 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .cd-episode { background:var(--base); }
 
 /* ── Tomorrow's Prep (tp-*) ── */
-.tp-meal-section { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-top:var(--sp-16); margin-bottom:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+.tp-meal-section { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-top:var(--sp-20); margin-bottom:var(--sp-8); display:flex; align-items:center; gap:var(--sp-6); }
 .tp-meal-section:first-child { margin-top:var(--sp-8); }
-.tp-meal-options { display:flex; flex-direction:column; gap:var(--sp-6); }
-.tp-option { background:var(--base); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); cursor:pointer; transition:background var(--ease-fast); border:1px solid var(--hairline); }
-.tp-option:active { background:var(--raised); }
-.tp-option.tp-starred { border-left:var(--accent-w) solid var(--tc-sage); }
-.tp-option-foods { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); display:flex; align-items:center; gap:var(--sp-4); }
+.tp-meal-section .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.tp-meal-options { display:flex; flex-direction:column; gap:var(--sp-8); }
+.tp-option { border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-16); cursor:pointer; transition:all var(--ease-fast); border:1.5px solid transparent; }
+.tp-option:active { opacity:0.9; }
+.tp-option.tp-starred { border-left:3px solid var(--tc-sage); }
+/* Meal-type tinted backgrounds */
+.tp-option[data-tp-meal="breakfast"] { background:var(--peach-light); border-color:rgba(250,212,180,0.3); }
+.tp-option[data-tp-meal="lunch"]     { background:var(--sage-light); border-color:rgba(181,213,197,0.3); }
+.tp-option[data-tp-meal="dinner"]    { background:var(--lav-light); border-color:rgba(201,184,232,0.3); }
+.tp-option[data-tp-meal="snack"]     { background:var(--amber-light); border-color:rgba(240,200,120,0.3); }
+.tp-option-foods { font-size:var(--fs-sm); font-weight:700; color:var(--text); display:flex; align-items:center; gap:var(--sp-4); }
 .tp-option-star { color:var(--tc-sage); font-size:var(--fs-sm); }
-.tp-option-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
-.tp-activity-row { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-8) 0; cursor:pointer; }
-.tp-activity-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-option-reason { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-4); line-height:1.5; }
+.tp-activity-row { display:flex; gap:var(--sp-10); align-items:flex-start; padding:var(--sp-10) 0; }
+.tp-activity-icon { flex-shrink:0; margin-top:var(--sp-2); }
+.tp-activity-icon .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .tp-activity-body { flex:1; }
-.tp-activity-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
-.tp-activity-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
-.tp-sleep-note { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-10) var(--sp-12); background:var(--base); border-radius:var(--r-lg); }
-.tp-sleep-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-activity-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.tp-activity-reason { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:1.4; }
+.tp-sleep-note { display:flex; gap:var(--sp-10); align-items:flex-start; padding:var(--sp-12) var(--sp-16); background:var(--indigo-light); border-radius:var(--r-xl); border:1px solid rgba(155,168,216,0.2); }
+.tp-sleep-icon { flex-shrink:0; margin-top:var(--sp-2); }
+.tp-sleep-icon .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--tc-indigo); }
 .tp-sleep-body { flex:1; }
-.tp-sleep-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
-.tp-sleep-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
-.tp-headsup-row { display:flex; gap:var(--sp-8); align-items:center; padding:var(--sp-6) 0; cursor:pointer; }
+.tp-sleep-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.tp-sleep-reason { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:1.4; }
+.tp-headsup-row { display:flex; gap:var(--sp-10); align-items:center; padding:var(--sp-8) 0; }
 .tp-headsup-icon { font-size:var(--fs-md); flex-shrink:0; }
-.tp-headsup-text { font-size:var(--fs-sm); color:var(--c-text); flex:1; }
-.tp-section-divider { border:none; border-top:1px solid var(--hairline); margin:var(--sp-12) 0; }
-.tp-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); text-align:center; margin-bottom:var(--sp-8); }
-.tp-option-planned { border-color:var(--tc-sage); background:rgba(140,190,160,0.08); }
+.tp-headsup-text { font-size:var(--fs-sm); color:var(--text); flex:1; }
+.tp-section-divider { border:none; border-top:1px solid var(--border-subtle); margin:var(--sp-16) 0; }
+.tp-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); text-align:center; margin-bottom:var(--sp-10); }
+.tp-option-planned { border-color:var(--tc-sage); background:rgba(140,190,160,0.12); }
 .tp-planned-check { font-size:var(--fs-xs); color:var(--tc-sage); margin-top:var(--sp-4); font-weight:600; }
-[data-theme="dark"] .tp-option { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .tp-option { border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .tp-option[data-tp-meal="breakfast"] { background:rgba(250,212,180,0.06); border-color:rgba(250,212,180,0.1); }
+[data-theme="dark"] .tp-option[data-tp-meal="lunch"]     { background:rgba(181,213,197,0.06); border-color:rgba(181,213,197,0.1); }
+[data-theme="dark"] .tp-option[data-tp-meal="dinner"]    { background:rgba(201,184,232,0.06); border-color:rgba(201,184,232,0.1); }
+[data-theme="dark"] .tp-option[data-tp-meal="snack"]     { background:rgba(240,200,120,0.06); border-color:rgba(240,200,120,0.1); }
 [data-theme="dark"] .tp-option.tp-starred { border-left-color:var(--tc-sage); }
-[data-theme="dark"] .tp-option-planned { background:rgba(140,190,160,0.06); }
-[data-theme="dark"] .tp-sleep-note { background:rgba(255,255,255,0.03); }
+[data-theme="dark"] .tp-option-planned { background:rgba(140,190,160,0.08); }
+[data-theme="dark"] .tp-sleep-note { background:rgba(155,168,216,0.06); border-color:rgba(155,168,216,0.1); }
 
 /* ── Quick Log Modal ── */
 .ql-modal-overlay {
@@ -20414,9 +20426,9 @@ function renderTomorrowPrep() {
 
   // ── Meal sections ──
   var mealSections = [
-    { key: 'breakfast', label: 'BREAKFAST', icon: '🌅', options: data.breakfast },
-    { key: 'lunch', label: 'LUNCH', icon: '☀️', options: data.lunch },
-    { key: 'dinner', label: 'DINNER', icon: '🌙', options: data.dinner }
+    { key: 'breakfast', label: 'BREAKFAST', icon: zi('sun'), options: data.breakfast },
+    { key: 'lunch', label: 'LUNCH', icon: zi('bolt'), options: data.lunch },
+    { key: 'dinner', label: 'DINNER', icon: zi('moon'), options: data.dinner }
   ];
 
   mealSections.forEach(function(section) {
@@ -20445,9 +20457,9 @@ function renderTomorrowPrep() {
 
   // ── Snack ──
   if (data.snack) {
-    html += '<div class="tp-meal-section">🍪 SNACK — 1 suggestion</div>';
+    html += '<div class="tp-meal-section">' + zi('spoon') + ' SNACK — 1 suggestion</div>';
     html += '<div class="tp-meal-options">';
-    html += '<div class="tp-option">';
+    html += '<div class="tp-option" data-tp-meal="snack">';
     html += '<div class="tp-option-foods">' + escHtml(data.snack.foods[0]) + '</div>';
     html += '<div class="tp-option-reason">' + escHtml(data.snack.reason) + '</div>';
     html += '</div></div>';
@@ -20473,7 +20485,7 @@ function renderTomorrowPrep() {
     html += '<div class="tp-section-label">Sleep Note</div>';
     data.sleepNotes.forEach(function(note) {
       html += '<div class="tp-sleep-note">';
-      html += '<div class="tp-sleep-icon">😴</div>';
+      html += '<div class="tp-sleep-icon">' + zi('moon') + '</div>';
       html += '<div class="tp-sleep-body">';
       html += '<div class="tp-sleep-title">' + escHtml(note.title) + '</div>';
       html += '<div class="tp-sleep-reason">' + escHtml(note.reason) + '</div>';
