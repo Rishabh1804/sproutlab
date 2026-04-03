@@ -2577,7 +2577,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .wg-dot.active { background:var(--rose); opacity:1; width:20px; border-radius:4px; }
 
-/* ── Simple Mode ── */
+/* ── Wife Mode (simple-mode class) ── */
 body.simple-mode .tab-btn[aria-label="Insights tab"],
 body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
 body.simple-mode .stat-pills-grid { display:none !important; }
@@ -4297,6 +4297,74 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ai-domain-track { background:rgba(255,255,255,0.06); }
 .al-undo-btn { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:inherit; padding:0 var(--sp-4); }
 
+/* ── Cross-Domain Intelligence Cards ── */
+.cd-bar-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; }
+.cd-bar-label { font-size:var(--fs-xs); color:var(--mid); min-width:70px; text-align:right; }
+.cd-bar-track { flex:1; height:var(--sp-12); background:var(--warm); border-radius:var(--r-md); overflow:hidden; position:relative; }
+.cd-bar-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
+.cd-bar-val { font-size:var(--fs-2xs); font-weight:600; min-width:36px; text-align:right; }
+.cd-pill { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md); font-size:var(--fs-xs); font-weight:600; }
+.cd-pill-pos { background:rgba(58,112,96,0.1); color:var(--tc-sage); }
+.cd-pill-neg { background:rgba(200,80,80,0.1); color:var(--tc-rose); }
+.cd-pill-neutral { background:var(--warm); color:var(--light); }
+.cd-food-item { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) 0; border-bottom:1px solid var(--border-subtle); }
+.cd-food-item:last-child { border-bottom:none; }
+.cd-food-name { flex:1; font-size:var(--fs-sm); font-weight:600; min-width:0; }
+.cd-food-meta { font-size:var(--fs-2xs); color:var(--light); }
+.cd-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6) 0; }
+.cd-section-label:first-child { margin-top:0; }
+.cd-episode { padding:var(--sp-8); border-radius:var(--r-md); background:var(--warm); margin-bottom:var(--sp-8); }
+.cd-episode-title { font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-4); }
+.cd-episode-row { display:flex; align-items:center; gap:var(--sp-6); padding:var(--sp-2) 0; font-size:var(--fs-xs); }
+.cd-episode-domain { min-width:50px; font-weight:600; color:var(--mid); }
+.cd-episode-vals { flex:1; display:flex; align-items:center; gap:var(--sp-4); }
+.cd-episode-delta { font-weight:700; font-size:var(--fs-2xs); }
+.cd-timeline-row { display:grid; grid-template-columns:40px 50px 50px 40px 40px; gap:var(--sp-4); padding:var(--sp-2) 0; font-size:var(--fs-2xs); align-items:center; text-align:center; }
+.cd-timeline-hdr { font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-wide); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-4); margin-bottom:var(--sp-2); }
+.cd-burst { color:var(--tc-amber); font-weight:700; }
+.cd-regr { color:var(--tc-rose); font-weight:700; }
+.cd-meta { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-4); }
+.cd-capitalize { text-transform:capitalize; }
+.cd-align-end { text-align:right; margin-top:var(--sp-4); }
+.cd-episode-date { font-weight:400; color:var(--light); }
+.cd-burst-note-pos { font-size:var(--fs-xs); color:var(--tc-sage); }
+.cd-burst-note-neg { font-size:var(--fs-xs); color:var(--tc-rose); }
+.cd-tl-week { font-weight:600; }
+[data-theme="dark"] .cd-bar-track { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .cd-episode { background:var(--base); }
+
+/* ── Tomorrow's Prep (tp-*) ── */
+.tp-meal-section { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-top:var(--sp-16); margin-bottom:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+.tp-meal-section:first-child { margin-top:var(--sp-8); }
+.tp-meal-options { display:flex; flex-direction:column; gap:var(--sp-6); }
+.tp-option { background:var(--base); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); cursor:pointer; transition:background var(--ease-fast); border:1px solid var(--hairline); }
+.tp-option:active { background:var(--raised); }
+.tp-option.tp-starred { border-left:var(--accent-w) solid var(--tc-sage); }
+.tp-option-foods { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); display:flex; align-items:center; gap:var(--sp-4); }
+.tp-option-star { color:var(--tc-sage); font-size:var(--fs-sm); }
+.tp-option-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-activity-row { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-8) 0; cursor:pointer; }
+.tp-activity-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-activity-body { flex:1; }
+.tp-activity-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
+.tp-activity-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-sleep-note { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-10) var(--sp-12); background:var(--base); border-radius:var(--r-lg); }
+.tp-sleep-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-sleep-body { flex:1; }
+.tp-sleep-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
+.tp-sleep-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-headsup-row { display:flex; gap:var(--sp-8); align-items:center; padding:var(--sp-6) 0; cursor:pointer; }
+.tp-headsup-icon { font-size:var(--fs-md); flex-shrink:0; }
+.tp-headsup-text { font-size:var(--fs-sm); color:var(--c-text); flex:1; }
+.tp-section-divider { border:none; border-top:1px solid var(--hairline); margin:var(--sp-12) 0; }
+.tp-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); text-align:center; margin-bottom:var(--sp-8); }
+.tp-option-planned { border-color:var(--tc-sage); background:rgba(140,190,160,0.08); }
+.tp-planned-check { font-size:var(--fs-xs); color:var(--tc-sage); margin-top:var(--sp-4); font-weight:600; }
+[data-theme="dark"] .tp-option { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .tp-option.tp-starred { border-left-color:var(--tc-sage); }
+[data-theme="dark"] .tp-option-planned { background:rgba(140,190,160,0.06); }
+[data-theme="dark"] .tp-sleep-note { background:rgba(255,255,255,0.03); }
+
 /* ── Quick Log Modal ── */
 .ql-modal-overlay {
   position:fixed; inset:0; z-index:1003;
@@ -4710,6 +4778,214 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ctx-alert-dismiss:hover { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .ca-view-all:hover { background:rgba(168,207,224,0.1); }
 [data-theme="dark"] .alert-hist-item { border-bottom-color:rgba(255,255,255,0.05); }
+
+/* ═══ MEAL INTAKE ═══ */
+.mi-prompt {
+  padding:var(--sp-12) var(--sp-16) var(--sp-8);
+  border-top:1px solid var(--card-border);
+}
+.mi-prompt-label {
+  font-size:var(--fs-xs); color:var(--mid); font-weight:600;
+  margin-bottom:var(--sp-8); text-align:center;
+}
+.mi-buttons {
+  display:flex; gap:var(--sp-8); justify-content:center;
+}
+.mi-btn {
+  flex:1; max-width:80px; padding:var(--sp-8) var(--sp-4);
+  border:1.5px solid var(--card-border); border-radius:var(--r-md);
+  background:var(--card-bg); cursor:pointer; text-align:center;
+  transition:border-color 0.15s, background 0.15s;
+}
+.mi-btn:active { background:rgba(155,168,216,0.1); }
+.mi-btn-icon { font-size:var(--fs-md); line-height:1.2; }
+.mi-btn-label { font-size:var(--fs-2xs); color:var(--mid); margin-top:var(--sp-2); }
+.mi-btn.mi-selected {
+  border-color:var(--tc-indigo); background:rgba(155,168,216,0.08);
+}
+.mi-btn.mi-selected .mi-btn-label { color:var(--tc-indigo); font-weight:700; }
+.mi-skip {
+  display:block; margin:var(--sp-8) auto 0; padding:var(--sp-4) var(--sp-12);
+  background:none; border:none; color:var(--light); font-size:var(--fs-xs);
+  cursor:pointer; font-family:inherit;
+}
+.mi-skip:active { color:var(--mid); }
+.mi-chip {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md);
+  font-size:var(--fs-2xs); font-weight:600; cursor:pointer;
+  border:1px solid transparent; transition:background 0.15s;
+}
+.mi-chip-100 { background:rgba(58,112,96,0.1); color:var(--tc-sage); border-color:rgba(58,112,96,0.2); }
+.mi-chip-75  { background:rgba(58,112,96,0.06); color:var(--tc-sage); border-color:rgba(58,112,96,0.12); }
+.mi-chip-50  { background:rgba(232,200,109,0.1); color:var(--tc-amber); border-color:rgba(232,200,109,0.2); }
+.mi-chip-25  { background:rgba(240,150,100,0.1); color:var(--tc-caution); border-color:rgba(240,150,100,0.2); }
+.mi-chip:active { filter:brightness(0.95); }
+.mi-bar {
+  display:flex; gap:1px; height:var(--sp-4); border-radius:var(--r-sm); overflow:hidden;
+  background:var(--card-border); min-width:var(--sp-32);
+}
+.mi-bar-seg {
+  flex:1; border-radius:var(--r-sm);
+}
+.mi-bar-seg.filled-100 { background:var(--tc-sage); }
+.mi-bar-seg.filled-75  { background:var(--tc-sage); }
+.mi-bar-seg.filled-50  { background:var(--tc-amber); }
+.mi-bar-seg.filled-25  { background:var(--tc-caution); }
+.mi-inline {
+  display:flex; gap:var(--sp-6); margin-top:var(--sp-6); flex-wrap:wrap;
+}
+.mi-prog-row {
+  display:flex; align-items:center; gap:var(--sp-4);
+  margin-top:var(--sp-2);
+}
+.mi-prog-label { font-size:var(--fs-2xs); color:var(--mid); }
+.mi-inline-btn {
+  padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md);
+  font-size:var(--fs-2xs); border:1px solid var(--card-border);
+  background:var(--card-bg); color:var(--mid); cursor:pointer;
+  transition:all 0.15s; font-family:inherit;
+}
+.mi-inline-btn:active { background:rgba(155,168,216,0.1); }
+.mi-inline-btn.mi-active {
+  border-color:var(--tc-indigo); background:rgba(155,168,216,0.08);
+  color:var(--tc-indigo); font-weight:700;
+}
+
+/* Dark mode */
+[data-theme="dark"] .mi-prompt { border-top-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .mi-btn { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .mi-btn:active { background:rgba(155,168,216,0.12); }
+[data-theme="dark"] .mi-btn.mi-selected { background:rgba(155,168,216,0.1); }
+[data-theme="dark"] .mi-inline-btn { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .mi-inline-btn:active { background:rgba(155,168,216,0.12); }
+[data-theme="dark"] .mi-inline-btn.mi-active { background:rgba(155,168,216,0.1); }
+
+/* ═══ SMART Q&A ═══ */
+.qa-bar { padding:var(--sp-12) var(--sp-16); }
+.qa-input-wrap {
+  display:flex; align-items:center; gap:var(--sp-8);
+  background:var(--card-bg); border:1.5px solid var(--card-border);
+  border-radius:var(--r-lg); padding:var(--sp-8) var(--sp-12);
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+.qa-input-wrap:focus-within {
+  border-color:var(--tc-indigo);
+  box-shadow:0 0 0 3px rgba(155,168,216,0.15);
+}
+.qa-input-icon { color:var(--light); font-size:var(--fs-md); flex-shrink:0; line-height:1; }
+.qa-input {
+  flex:1; border:none; background:none; outline:none;
+  font-size:var(--fs-sm); color:var(--text); font-family:inherit;
+  min-width:0;
+}
+.qa-input::placeholder { color:var(--light); font-style:italic; }
+.qa-clear {
+  background:none; border:none; cursor:pointer;
+  color:var(--light); font-size:var(--fs-md); padding:var(--sp-4);
+  border-radius:var(--r-full); display:none; line-height:1;
+}
+.qa-clear:active { background:rgba(0,0,0,0.05); }
+.qa-chips {
+  display:flex; gap:var(--sp-6); overflow-x:auto; padding:var(--sp-8) var(--sp-16) var(--sp-4);
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.qa-chips::-webkit-scrollbar { display:none; }
+.qa-chip {
+  flex-shrink:0; padding:var(--sp-6) var(--sp-12);
+  border-radius:var(--r-lg); font-size:var(--fs-xs);
+  background:var(--card-bg); border:1px solid var(--card-border);
+  color:var(--mid); cursor:pointer; white-space:nowrap;
+  transition:background 0.15s, border-color 0.15s;
+}
+.qa-chip:active { background:rgba(155,168,216,0.1); border-color:var(--tc-indigo); }
+.qa-chip-context {
+  border-color:rgba(155,168,216,0.35);
+  background:rgba(155,168,216,0.06);
+  color:var(--tc-indigo);
+}
+.qa-answer {
+  margin:var(--sp-8) var(--sp-16) var(--sp-16);
+  background:var(--card-bg); border:1px solid var(--card-border);
+  border-radius:var(--r-lg); overflow:hidden;
+  animation:qaSlideIn 0.2s ease-out;
+}
+@keyframes qaSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.qa-answer-header {
+  display:flex; align-items:center; gap:var(--sp-8);
+  padding:var(--sp-12) var(--sp-16) var(--sp-8);
+}
+.qa-answer-icon { font-size:var(--fs-xl); line-height:1; }
+.qa-answer-title-group { flex:1; min-width:0; }
+.qa-answer-title {
+  font-size:var(--fs-md); font-weight:700; color:var(--text);
+  line-height:1.3;
+}
+.qa-answer-headline {
+  font-size:var(--fs-sm); color:var(--mid);
+  margin-top:var(--sp-2); line-height:1.4;
+}
+.qa-answer-close {
+  background:none; border:none; cursor:pointer;
+  color:var(--light); font-size:var(--fs-lg);
+  padding:var(--sp-4); border-radius:var(--r-full);
+  line-height:1; flex-shrink:0;
+}
+.qa-answer-close:active { background:rgba(0,0,0,0.05); }
+.qa-section { padding:var(--sp-4) var(--sp-16) var(--sp-12); }
+.qa-section-label {
+  font-size:var(--fs-xs); font-weight:700; color:var(--mid);
+  text-transform:uppercase; letter-spacing:var(--ls-wide);
+  margin-bottom:var(--sp-8);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.qa-section-label-icon { font-size:var(--fs-sm); line-height:1; }
+.qa-item {
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+  padding:var(--sp-4) 0; font-size:var(--fs-sm); color:var(--text);
+  line-height:1.5;
+}
+.qa-item-signal { flex-shrink:0; font-size:var(--fs-sm); line-height:1.5; width:var(--sp-16); text-align:center; }
+.qa-item-text { flex:1; min-width:0; }
+.qa-item-good .qa-item-signal { color:var(--tc-sage); }
+.qa-item-warn .qa-item-signal { color:var(--tc-caution); }
+.qa-item-action .qa-item-signal { color:var(--tc-indigo); }
+.qa-item-info .qa-item-signal { color:var(--tc-sky); }
+.qa-item-neutral .qa-item-signal { color:var(--mid); }
+.qa-confidence {
+  padding:var(--sp-8) var(--sp-16) var(--sp-12);
+  font-size:var(--fs-2xs); color:var(--light);
+  border-top:1px solid var(--card-border);
+  text-align:center;
+}
+.qa-data-gap {
+  padding:var(--sp-8) var(--sp-16);
+  font-size:var(--fs-xs); color:var(--tc-sky);
+  background:rgba(168,207,224,0.06);
+  border-top:1px solid rgba(168,207,224,0.12);
+  text-align:center;
+}
+.qa-no-match {
+  padding:var(--sp-16);
+  text-align:center; font-size:var(--fs-sm); color:var(--mid);
+}
+.qa-no-match-label { margin-bottom:var(--sp-8); }
+.qa-cat-chips {
+  display:flex; flex-wrap:wrap; gap:var(--sp-6);
+  justify-content:center;
+}
+
+/* Dark mode */
+[data-theme="dark"] .qa-input-wrap { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .qa-input-wrap:focus-within { border-color:rgba(155,168,216,0.5); box-shadow:0 0 0 3px rgba(155,168,216,0.1); }
+[data-theme="dark"] .qa-clear:active { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .qa-chip { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .qa-chip:active { background:rgba(155,168,216,0.12); }
+[data-theme="dark"] .qa-chip-context { background:rgba(155,168,216,0.08); border-color:rgba(155,168,216,0.25); }
+[data-theme="dark"] .qa-answer { background:var(--surface); border-color:var(--card-border); }
+[data-theme="dark"] .qa-answer-close:active { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .qa-confidence { border-top-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .qa-data-gap { background:rgba(168,207,224,0.05); border-top-color:rgba(168,207,224,0.08); }
 </style>
 </head>
 <body>
@@ -4956,6 +5232,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- ═══ SMART Q&A ═══ -->
+      <div class="col-full" id="smartQAContainer">
+        <div class="qa-bar">
+          <div class="qa-input-wrap">
+            <span class="qa-input-icon">🔍</span>
+            <input type="text" class="qa-input" id="qaInput" placeholder="Ask about Ziva..." autocomplete="off" />
+            <button class="qa-clear" id="qaClear" aria-label="Clear">✕</button>
+          </div>
+        </div>
+        <div class="qa-chips" id="qaChips"></div>
+        <div id="qaAnswerContainer"></div>
+      </div>
+
       <!-- ─── TIER 2: TODAY'S ACTIONS ─── -->
       <!-- ─── FEVER BANNER (appears when active) ─── -->
       <div class="col-full" id="homeFeverBanner" style="display:none;"></div>
@@ -4987,6 +5276,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <span class="sg-counter" id="homeSuggestionsCount"></span>
         </div>
         <div id="homeSuggestionsContent" class="mt-4"></div>
+      </div>
+
+      <!-- TOMORROW'S PREP (shown after 6 PM) -->
+      <div class="card card-daily col-full" id="tomorrowPrepCard" style="display:none;">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Tomorrow's Prep</div>
+          <span class="t-sm t-light" id="tomorrowPrepDate"></span>
+        </div>
+        <div class="t-sm t-light mt-2" id="tomorrowPrepSubtitle">Based on this week's patterns</div>
+        <div id="tomorrowPrepContent" class="mt-8"></div>
       </div>
 
       <!-- ─── UNIFIED ALERTS (v2.3 — merged Reminders + Context Alerts + Wins) ─── -->
@@ -6587,6 +6886,94 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
 
+      <!-- ─── CROSS-DOMAIN INTELLIGENCE ─── -->
+      <div class="home-section-label sec-t3 col-full">Cross-Domain Intelligence</div>
+
+      <!-- Card 1: Food → Poop Pipeline -->
+      <div class="card card-daily col-full" id="infoFoodPoopPipelineCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoFoodPoopPipelineBody','infoFoodPoopPipelineChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-link"/></svg></div> Food → Poop Pipeline</div>
+          <span class="collapse-chevron" id="infoFoodPoopPipelineChevron">▾</span>
+        </div>
+        <div id="infoFoodPoopPipelineSummary" class="mt-4"></div>
+        <div id="infoFoodPoopPipelineBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoFoodPoopPipelineTriggers" class="mt-4"></div>
+          <div id="infoFoodPoopPipelineSafe" class="mt-8"></div>
+          <div id="infoFoodPoopPipelineInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Sleep ↔ Feeding Patterns -->
+      <div class="card card-daily col-full" id="infoSleepFeedingCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoSleepFeedingBody','infoSleepFeedingChevron')">
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-moon"/></svg></div> Sleep ↔ Feeding</div>
+          <span class="collapse-chevron" id="infoSleepFeedingChevron">▾</span>
+        </div>
+        <div id="infoSleepFeedingSummary" class="mt-4"></div>
+        <div id="infoSleepFeedingBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoSleepFeedingGap" class="mt-4"></div>
+          <div id="infoSleepFeedingMealComp" class="mt-8"></div>
+          <div id="infoSleepFeedingInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Activity → Sleep (Deep) -->
+      <div class="card card-daily col-full" id="infoActivitySleepDeepCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoActivitySleepDeepBody','infoActivitySleepDeepChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-run"/></svg></div> Activity → Sleep (Deep)</div>
+          <span class="collapse-chevron" id="infoActivitySleepDeepChevron">▾</span>
+        </div>
+        <div id="infoActivitySleepDeepSummary" class="mt-4"></div>
+        <div id="infoActivitySleepDeepBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoActivitySleepDeepTiming" class="mt-4"></div>
+          <div id="infoActivitySleepDeepIntensity" class="mt-8"></div>
+          <div id="infoActivitySleepDeepDomains" class="mt-8"></div>
+          <div id="infoActivitySleepDeepInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Card 4: Growth ↔ Diet Adequacy -->
+      <div class="card card-daily col-full" id="infoGrowthDietCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoGrowthDietBody','infoGrowthDietChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-scale"/></svg></div> Growth ↔ Diet</div>
+          <span class="collapse-chevron" id="infoGrowthDietChevron">▾</span>
+        </div>
+        <div id="infoGrowthDietSummary" class="mt-4"></div>
+        <div id="infoGrowthDietBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoGrowthDietPeriod" class="mt-4"></div>
+          <div id="infoGrowthDietNutrients" class="mt-8"></div>
+          <div id="infoGrowthDietInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Card 5: Illness Impact Radius -->
+      <div class="card card-daily col-full" id="infoIllnessImpactCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoIllnessImpactBody','infoIllnessImpactChevron')">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-siren"/></svg></div> Illness Impact Radius</div>
+          <span class="collapse-chevron" id="infoIllnessImpactChevron">▾</span>
+        </div>
+        <div id="infoIllnessImpactSummary" class="mt-4"></div>
+        <div id="infoIllnessImpactBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoIllnessImpactEpisodes" class="mt-4"></div>
+          <div id="infoIllnessImpactAggregate" class="mt-8"></div>
+          <div id="infoIllnessImpactInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Card 6: Milestone ↔ Sleep Regression -->
+      <div class="card card-daily col-full" id="infoMilestoneSleepCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoMilestoneSleepBody','infoMilestoneSleepChevron')">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-brain"/></svg></div> Milestones ↔ Sleep</div>
+          <span class="collapse-chevron" id="infoMilestoneSleepChevron">▾</span>
+        </div>
+        <div id="infoMilestoneSleepSummary" class="mt-4"></div>
+        <div id="infoMilestoneSleepBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoMilestoneSleepTimeline" class="mt-4"></div>
+          <div id="infoMilestoneSleepBursts" class="mt-8"></div>
+          <div id="infoMilestoneSleepInsights" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- Doctor Visit Prep -->
       <!-- ─── ACTIVITY INTELLIGENCE ─── -->
       <div class="home-section-label sec-t3 col-full">Activity Intelligence</div>
@@ -7020,11 +7407,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
               </label>
             </div>
 
-            <!-- Simple Mode (moved from General) -->
+            <!-- Wife Mode (clean essentials view) -->
             <div class="d-flex items-center justify-between">
               <div>
-                <div class="t-md">Simple mode</div>
-                <div class="t-sub">Clean view — essentials only</div>
+                <div class="t-md">Wife Mode</div>
+                <div class="t-sub">Clean, simple view — essentials only</div>
               </div>
               <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
                 <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" style="opacity:0;width:0;height:0;" checked>
@@ -7354,6 +7741,7 @@ const KEYS = {
   vomitingEpisodes: 'ziva_vomiting_episodes',
   coldEpisodes: 'ziva_cold_episodes',
   activityLog: 'ziva_activity_log',
+  tomorrowPlanned: 'ziva_tomorrow_planned',
 };
 
 function load(key, def) {
@@ -9649,6 +10037,9 @@ function init() {
   activityLog  = load(KEYS.activityLog, null) || {};
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
 
+  // Load tomorrow's planned meals
+  _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
+
   // Sanitize: ensure arrays and remove entries missing required fields
   try {
     if (!Array.isArray(sleepData)) sleepData = [];
@@ -10174,10 +10565,12 @@ function renderHome() {
   renderHomeVomitingBanner();
   renderHomeColdBanner();
   renderHeroScore();
+  renderQABar();
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
   renderHomeMealProgress();
   renderHomeSuggestions();
+  renderTomorrowPrep();
   renderHomeSleep();
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
@@ -15319,11 +15712,11 @@ function renderFeedingHistory() {
             <div class="hd-chevron">▾</div>
           </div>
           <div class="hd-content">
-            ${entry.breakfast ? `<div class="history-meal-row"><span class="history-meal-label">🌤 Break.${entry.breakfast_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.breakfast_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.breakfast)}</span></div>` : ''}
+            ${entry.breakfast ? `<div class="history-meal-row"><span class="history-meal-label">🌤 Break.${entry.breakfast_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.breakfast_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.breakfast)}</span> ${_miRenderChip(_miGetIntake(dateKey, 'breakfast'))}</div>` : ''}
             ${bInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${bInsight}</span></div>` : ''}
-            ${entry.lunch ? `<div class="history-meal-row"><span class="history-meal-label">☀️ Lunch${entry.lunch_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.lunch_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.lunch)}</span></div>` : ''}
+            ${entry.lunch ? `<div class="history-meal-row"><span class="history-meal-label">☀️ Lunch${entry.lunch_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.lunch_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.lunch)}</span> ${_miRenderChip(_miGetIntake(dateKey, 'lunch'))}</div>` : ''}
             ${lInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${lInsight}</span></div>` : ''}
-            ${entry.dinner ? `<div class="history-meal-row"><span class="history-meal-label">🌙 Dinner${entry.dinner_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.dinner_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.dinner)}</span></div>` : ''}
+            ${entry.dinner ? `<div class="history-meal-row"><span class="history-meal-label">🌙 Dinner${entry.dinner_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.dinner_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.dinner)}</span> ${_miRenderChip(_miGetIntake(dateKey, 'dinner'))}</div>` : ''}
             ${dInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${dInsight}</span></div>` : ''}
             ${entry.snack ? `<div class="history-meal-row"><span class="history-meal-label">🍪 Snack${entry.snack_time ? ' <span class="t-xs" style="font-weight:400;opacity:0.6;">' + formatTimeShort(entry.snack_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.snack)}</span></div>` : ''}
             ${sInsight ? `<div class="history-meal-insight"><span class="hmi-icon">✨</span><span>${sInsight}</span></div>` : ''}
@@ -17849,12 +18242,17 @@ function calcDietScore(dateStr) {
   dateStr = dateStr || today();
   const entry = feedingData[dateStr];
 
-  // A. Meal Completeness (30%)
-  let realMeals = 0;
+  // A. Meal Completeness (30%) — intake-weighted
+  let intakeSum = 0;
   if (entry) {
-    ['breakfast','lunch','dinner','snack'].forEach(m => { if (isRealMeal(entry[m])) realMeals++; });
+    ['breakfast','lunch','dinner'].forEach(m => {
+      if (isRealMeal(entry[m])) {
+        intakeSum += _miGetIntake(dateStr, m);
+      }
+    });
   }
-  const mealScore = Math.round((realMeals / 3) * 100);
+  // Intake-weighted: sum of intake fractions for 3 core meals / 3
+  const mealScore = Math.round((intakeSum / 3) * 100);
 
   // B. Food Variety (30%) — 7d rolling
   const vs = computeVarietyScore(7);
@@ -17870,14 +18268,17 @@ function calcDietScore(dateStr) {
   const nutrientScore = Math.round((covered / KEY_NUTRIENTS.length) * 100);
 
   const score = Math.round(mealScore * 0.30 + varietyScore * 0.30 + groupScore * 0.20 + nutrientScore * 0.20);
+  var coreMeals = 0;
+  if (entry) { ['breakfast','lunch','dinner'].forEach(function(m) { if (isRealMeal(entry[m])) coreMeals++; }); }
   return {
     score, ...getScoreLabel(score),
     components: { meals: mealScore, variety: varietyScore, groups: groupScore, nutrients: nutrientScore },
     detail: {
-      mealsLogged: realMeals, mealsTotal: 3,
+      mealsLogged: coreMeals, mealsTotal: 3,
       uniqueFoods: vs.uniqueFoods, varietyTarget: vs.target,
       groupsHit: vs.groupsHit, groupsTotal: vs.groupsTotal,
-      nutrientsCovered: covered, nutrientsTotal: KEY_NUTRIENTS.length
+      nutrientsCovered: covered, nutrientsTotal: KEY_NUTRIENTS.length,
+      effectiveIntake: coreMeals > 0 ? Math.round((intakeSum / coreMeals) * 100) : null
     }
   };
 }
@@ -17905,7 +18306,7 @@ function calcPoopScore(dateStr) {
 
   // B. Frequency vs baseline (30%)
   const baselines = computeBaselines();
-  const baselineFreq = baselines.poopFreq || 1.0;
+  const baselineFreq = baselines.poopPerDay || 1.0;
   const todayCount = dayPoops.length;
   let freqScore = 100;
   const deviation = Math.abs(todayCount - baselineFreq);
@@ -18584,6 +18985,7 @@ function loadFeedingDay() {
   updateMealSkipButtons();
   renderDietQuickPicker();
   renderDietIntelBanner();
+  _miRenderDietTabIntake();
 }
 
 // ── Diet Quick Picker: per-meal frequent + same-as zones ──
@@ -19232,6 +19634,2210 @@ function renderHomeSuggestions() {
 
   content.innerHTML = html;
 }
+
+// ════════════════════════════════════════
+// Tomorrow's Prep — Evening Planning Card
+// ════════════════════════════════════════
+
+// Planned meals carry-forward storage
+let _tomorrowPlanned = null;
+
+function shouldShowTomorrowPrep() {
+  var hour = new Date().getHours();
+  if (hour < 18) return false; // before 6 PM
+  // Hide if tomorrow already has meals logged
+  var tomorrow = _offsetDateStr(today(), 1);
+  var tomorrowEntry = feedingData[tomorrow];
+  if (tomorrowEntry && isRealMeal(tomorrowEntry.breakfast)) return false;
+  // Need minimum data to generate smart suggestions
+  if ((foods || []).length < 5) return false;
+  return true;
+}
+
+// ── Meal suggestion engine ──
+
+function _tpGetRecencyDays(foodBase) {
+  var todayStr = today();
+  var todayD = new Date(todayStr);
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var dayFoods = extractDayFoods(ds);
+    if (dayFoods.some(function(f) { return _baseFoodName(f) === foodBase; })) return i;
+  }
+  return 30;
+}
+
+function _tpGetFoodSleepCorrelation(foodBase) {
+  // Average sleep score on nights when this food was in dinner vs overall
+  var withFood = [], without = [];
+  var feedDates = Object.keys(feedingData).sort();
+  feedDates.forEach(function(ds) {
+    var sc = getDailySleepScore(ds);
+    if (!sc) return;
+    var dinnerFoods = [];
+    var entry = feedingData[ds];
+    if (entry && isRealMeal(entry.dinner)) {
+      entry.dinner.split(/[,+]/).forEach(function(f) {
+        var c = f.trim().toLowerCase();
+        if (c.length > 1) dinnerFoods.push(_baseFoodName(c));
+      });
+    }
+    if (dinnerFoods.includes(foodBase)) withFood.push(sc.score);
+    else without.push(sc.score);
+  });
+  if (withFood.length < 2 || without.length < 2) return { delta: 0, count: withFood.length, insufficient: true };
+  var avg = Math.round(withFood.reduce(function(a, b) { return a + b; }, 0) / withFood.length);
+  var avgAll = Math.round(without.reduce(function(a, b) { return a + b; }, 0) / without.length);
+  return { delta: avg - avgAll, count: withFood.length, insufficient: false };
+}
+
+function _tpGetFoodPoopCorrelation(foodBase) {
+  // Average poop score on days when this food was eaten vs overall
+  var withFood = [], without = [];
+  var feedDates = Object.keys(feedingData).sort();
+  feedDates.forEach(function(ds) {
+    var ps = calcPoopScore(ds);
+    if (!ps || ps.isCarryForward) return;
+    var dayFoods = extractDayFoods(ds).map(function(f) { return _baseFoodName(f); });
+    if (dayFoods.includes(foodBase)) withFood.push(ps.score);
+    else without.push(ps.score);
+  });
+  if (withFood.length < 2 || without.length < 2) return { delta: 0, count: withFood.length, insufficient: true };
+  var avg = Math.round(withFood.reduce(function(a, b) { return a + b; }, 0) / withFood.length);
+  var avgAll = Math.round(without.reduce(function(a, b) { return a + b; }, 0) / without.length);
+  return { delta: avg - avgAll, count: withFood.length, insufficient: false };
+}
+
+function _tpFoodFrequency30d(foodBase) {
+  var count = 0;
+  var todayD = new Date(today());
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var dayFoods = extractDayFoods(ds).map(function(f) { return _baseFoodName(f); });
+    if (dayFoods.includes(foodBase)) count++;
+  }
+  return count;
+}
+
+// Score cache — cleared per generateTomorrowPrep() call
+var _tpScoreCache = {};
+
+function _tpScoreFood(foodName, ctx) {
+  var base = _baseFoodName(foodName.toLowerCase().trim());
+  var cacheKey = base + '|' + (ctx.meal || '');
+  if (_tpScoreCache[cacheKey]) return _tpScoreCache[cacheKey];
+  var nut = getNutrition(foodName) || getNutrition(base);
+  var score = 0;
+  var reasons = [];
+
+  // 1. Nutrient gap fill (30%)
+  var gapFill = 0;
+  if (nut && nut.nutrients && ctx.gapSet) {
+    nut.nutrients.forEach(function(n) {
+      if (ctx.gapSet.has(n.toLowerCase())) gapFill++;
+    });
+    if (gapFill > 0) {
+      var gapNames = nut.nutrients.filter(function(n) { return ctx.gapSet.has(n.toLowerCase()); });
+      var gapDays = ctx.gapDaysMap && ctx.gapDaysMap[gapNames[0].toLowerCase()] ? ctx.gapDaysMap[gapNames[0].toLowerCase()] : 0;
+      score += gapFill * 30;
+      reasons.push(gapNames[0] + ' gap' + (gapDays > 0 ? ' ' + gapDays + ' days' : ''));
+    }
+  }
+
+  // 2. Recency gap (20%)
+  var recency = _tpGetRecencyDays(base);
+  if (recency >= 7) { score += 20; reasons.push("haven't tried in " + recency + 'd'); }
+  else if (recency >= 4) { score += 12; }
+  else { score += 4; }
+
+  // 3. Sleep correlation (15%) — only for dinner
+  if (ctx.meal === 'dinner') {
+    var sleepCorr = _tpGetFoodSleepCorrelation(base);
+    if (!sleepCorr.insufficient && sleepCorr.delta > 3) {
+      score += 15;
+      reasons.push('sleep +' + sleepCorr.delta + ' pts on ' + base + ' nights');
+    } else if (!sleepCorr.insufficient && sleepCorr.delta < -5) {
+      score -= 10; // penalize
+    }
+  }
+
+  // 4. Poop correlation (15%)
+  var poopCorr = _tpGetFoodPoopCorrelation(base);
+  if (!poopCorr.insufficient && poopCorr.delta > 5) {
+    score += 15;
+    reasons.push('on best-poop-days list');
+  } else if (!poopCorr.insufficient && poopCorr.delta < -10) {
+    score -= 10;
+  }
+
+  // 5. Familiarity (10%)
+  var freq = _tpFoodFrequency30d(base);
+  if (freq >= 3) {
+    score += 10;
+    reasons.push('her favourite (' + freq + '× this month)');
+  } else if (freq >= 1) {
+    score += 5;
+  }
+
+  // 6. Texture progression (10%)
+  if (ctx.textureData) {
+    var currentStage = ctx.textureData.currentStage || 'mashed';
+    var stageOrder = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+    var foodTexture = _classifyMealTexture(foodName) || 'mashed';
+    if (stageOrder[foodTexture] === (stageOrder[currentStage] || 0) + 1) {
+      score += 10;
+      reasons.push('texture step-up (' + currentStage + ' → ' + foodTexture + ')');
+    } else if (stageOrder[foodTexture] >= stageOrder[currentStage]) {
+      score += 5;
+    }
+  }
+
+  var result = { food: foodName, base: base, score: score, reasons: reasons, nutrients: nut ? nut.nutrients : [] };
+  _tpScoreCache[cacheKey] = result;
+  return result;
+}
+
+// Build meal combos (base + add-in, possibly + fat)
+function _tpBuildCombos(meal, ctx) {
+  var introduced = (foods || []).map(function(f) { return f.name.toLowerCase().trim(); });
+  var introducedSet = new Set(introduced);
+
+  // Reaction window exclusion: foods introduced in last 3 days
+  var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  var recentIntroNames = new Set(
+    (foods || []).filter(function(f) { return f.date && new Date(f.date) >= threeDaysAgo; })
+      .map(function(f) { return _baseFoodName(f.name.toLowerCase().trim()); })
+  );
+
+  // Reaction watch list
+  var reactionFoods = new Set();
+  if (typeof currentReaction !== 'undefined' && currentReaction && currentReaction.food) {
+    reactionFoods.add(_baseFoodName(currentReaction.food.toLowerCase()));
+  }
+
+  function isEligible(foodName) {
+    var base = _baseFoodName(foodName.toLowerCase().trim());
+    if (recentIntroNames.has(base)) return false;
+    if (reactionFoods.has(base)) return false;
+    if (ctx.usedAcrossMeals && ctx.usedAcrossMeals.has(base)) return false;
+    return true;
+  }
+
+  // Categorize introduced foods
+  var grainBases = ['ragi', 'rice', 'oats', 'dalia', 'suji', 'poha', 'bajra', 'jowar', 'sabudana', 'idli', 'dosa', 'khichdi'];
+  var dalBases = ['moong dal', 'masoor dal', 'toor dal', 'chana dal', 'urad dal', 'rajma'];
+  var vegBases = ['carrot', 'beetroot', 'beans', 'bottle gourd', 'lauki', 'spinach', 'sweet potato', 'pumpkin', 'broccoli', 'zucchini', 'potato', 'drumstick'];
+  var fruitBases = ['banana', 'apple', 'pear', 'avocado', 'blueberry', 'mango', 'papaya', 'orange', 'grape', 'watermelon', 'pomegranate', 'blackberry', 'date (fruit)'];
+  var fatBases = ['ghee', 'almonds', 'walnut', 'flaxseed', 'sesame', 'coconut'];
+  var dairyBases = ['curd', 'paneer', 'cheese'];
+
+  // Filter to only introduced + eligible foods
+  function filterAvailable(arr) {
+    return arr.filter(function(f) {
+      return isEligible(f) && (introducedSet.has(f) || [...introducedSet].some(function(i) { return _baseFoodName(i) === _baseFoodName(f); }));
+    });
+  }
+
+  var avGrains = filterAvailable(grainBases);
+  var avDals = filterAvailable(dalBases);
+  var avVegs = filterAvailable(vegBases);
+  var avFruits = filterAvailable(fruitBases);
+  var avFats = filterAvailable(fatBases);
+  var avDairy = filterAvailable(dairyBases);
+
+  var combos = [];
+
+  if (meal === 'breakfast') {
+    // Porridge/cereal base + fruit/nut add-in
+    avGrains.forEach(function(g) {
+      var gScore = _tpScoreFood(g, ctx);
+      // Pair with fruit
+      avFruits.forEach(function(fr) {
+        var frScore = _tpScoreFood(fr, ctx);
+        var comboScore = gScore.score + frScore.score;
+        // Breakfast iron bias: +20%
+        if (gScore.nutrients.some(function(n) { return n.toLowerCase() === 'iron'; })) comboScore += 15;
+        // Check synergy
+        var syn = getSynergy(_baseFoodName(g), _baseFoodName(fr));
+        var reasons = gScore.reasons.concat(frScore.reasons);
+        if (syn) reasons.push(syn.reason.replace(/^.*boosts/, 'boosts'));
+        combos.push({ foods: [g, fr], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(fr)] });
+      });
+      // Pair with fat/nut
+      avFats.forEach(function(fat) {
+        if (fat === 'ghee' && g === 'khichdi') return; // khichdi+ghee better for lunch
+        var fatScore = _tpScoreFood(fat, ctx);
+        var comboScore = gScore.score + fatScore.score;
+        if (gScore.nutrients.some(function(n) { return n.toLowerCase() === 'iron'; })) comboScore += 15;
+        var reasons = gScore.reasons.concat(fatScore.reasons);
+        combos.push({ foods: [g, fat], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(fat)] });
+      });
+    });
+    // Fruit + dairy/fat combos
+    avFruits.forEach(function(fr) {
+      avDairy.forEach(function(d) {
+        var frScore = _tpScoreFood(fr, ctx);
+        var dScore = _tpScoreFood(d, ctx);
+        combos.push({ foods: [fr, d], score: frScore.score + dScore.score, reasons: frScore.reasons.concat(dScore.reasons).slice(0, 3), bases: [_baseFoodName(fr), _baseFoodName(d)] });
+      });
+    });
+  } else if (meal === 'lunch') {
+    // Dal/khichdi + veg combos — protein + carb bias
+    var lunchBases = avDals.concat(avGrains.filter(function(g) { return ['khichdi', 'rice', 'idli', 'dosa'].includes(_baseFoodName(g)); }));
+    lunchBases.forEach(function(base) {
+      var bScore = _tpScoreFood(base, ctx);
+      avVegs.forEach(function(v) {
+        var vScore = _tpScoreFood(v, ctx);
+        var comboScore = bScore.score + vScore.score;
+        // Lunch protein bias +20%
+        if (bScore.nutrients.some(function(n) { return n.toLowerCase() === 'protein'; })) comboScore += 15;
+        var reasons = bScore.reasons.concat(vScore.reasons);
+        combos.push({ foods: [base, v], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(base), _baseFoodName(v)] });
+      });
+      // Dal + ghee
+      avFats.filter(function(f) { return f === 'ghee'; }).forEach(function(fat) {
+        var fatScore = _tpScoreFood(fat, ctx);
+        combos.push({ foods: [base, fat], score: bScore.score + fatScore.score, reasons: bScore.reasons.concat(fatScore.reasons).slice(0, 3), bases: [_baseFoodName(base), _baseFoodName(fat)] });
+      });
+    });
+    // Rice/grain + dal
+    avGrains.filter(function(g) { return _baseFoodName(g) === 'rice'; }).forEach(function(g) {
+      avDals.forEach(function(d) {
+        var gS = _tpScoreFood(g, ctx);
+        var dS = _tpScoreFood(d, ctx);
+        avVegs.slice(0, 3).forEach(function(v) {
+          var vS = _tpScoreFood(v, ctx);
+          combos.push({ foods: [d + ' + ' + g, v], score: gS.score + dS.score + vS.score, reasons: dS.reasons.concat(vS.reasons).slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(d), _baseFoodName(v)] });
+        });
+      });
+    });
+  } else if (meal === 'dinner') {
+    // Light, easy-digest foods — soups, mashes, lighter combos
+    var lightFoods = avVegs.concat(avFruits);
+    lightFoods.forEach(function(f) {
+      var fScore = _tpScoreFood(f, Object.assign({}, ctx, { meal: 'dinner' }));
+      // Light dinner bias
+      var nut = getNutrition(f) || getNutrition(_baseFoodName(f));
+      var isLight = nut && (nut.tags.includes('easy-digest') || nut.tags.includes('hydrating') || nut.tags.includes('cooling'));
+      var comboScore = fScore.score + (isLight ? 15 : 0);
+      var reasons = fScore.reasons.slice();
+      if (isLight) reasons.push('light dinner → better sleep');
+      // Pair with fat for absorption
+      avFats.slice(0, 2).forEach(function(fat) {
+        var fatScore = _tpScoreFood(fat, ctx);
+        var syn = getSynergy(_baseFoodName(f), _baseFoodName(fat));
+        var cReasons = reasons.concat(fatScore.reasons);
+        if (syn) cReasons.push(syn.reason.replace(/^.*helps/, 'helps'));
+        combos.push({ foods: [f, fat], score: comboScore + fatScore.score, reasons: cReasons.slice(0, 3), bases: [_baseFoodName(f), _baseFoodName(fat)] });
+      });
+      // Solo veg/fruit mash
+      combos.push({ foods: [f], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(f)] });
+    });
+    // Veg + veg combos (soup style)
+    for (var vi = 0; vi < avVegs.length; vi++) {
+      for (var vj = vi + 1; vj < avVegs.length && vj < vi + 3; vj++) {
+        var v1Score = _tpScoreFood(avVegs[vi], Object.assign({}, ctx, { meal: 'dinner' }));
+        var v2Score = _tpScoreFood(avVegs[vj], Object.assign({}, ctx, { meal: 'dinner' }));
+        combos.push({ foods: [avVegs[vi], avVegs[vj]], score: v1Score.score + v2Score.score + 10, reasons: v1Score.reasons.concat(v2Score.reasons).slice(0, 3), bases: [_baseFoodName(avVegs[vi]), _baseFoodName(avVegs[vj])] });
+      }
+    }
+  }
+
+  // Sort by score descending
+  combos.sort(function(a, b) { return b.score - a.score; });
+
+  // Deduplicate — no two combos with identical base sets
+  var seen = new Set();
+  var unique = [];
+  combos.forEach(function(c) {
+    var key = c.bases.slice().sort().join('|');
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push(c);
+  });
+
+  return unique;
+}
+
+function generateMealOptions(meal, count, ctx) {
+  var combos = _tpBuildCombos(meal, ctx);
+  // Take top N, mark first as starred
+  var result = combos.slice(0, count).map(function(c, i) {
+    return {
+      foods: c.foods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }),
+      reason: c.reasons.join(' · '),
+      starred: i === 0,
+      bases: c.bases
+    };
+  });
+  // Track used food bases to prevent cross-meal repetition
+  result.forEach(function(r) {
+    (r.bases || []).forEach(function(b) {
+      if (ctx.usedAcrossMeals) ctx.usedAcrossMeals.add(b);
+    });
+  });
+  return result;
+}
+
+function generateSnackOption(ctx) {
+  // Simple: "repeat lunch leftovers" or a fruit/curd option
+  var avFruits = (foods || []).filter(function(f) {
+    var base = _baseFoodName(f.name.toLowerCase().trim());
+    var nut = getNutrition(f.name) || getNutrition(base);
+    return nut && (nut.tags.includes('energy') || nut.tags.includes('digestive'));
+  }).map(function(f) { return f.name; });
+
+  if (avFruits.length > 0) {
+    // Deterministic pick based on today's date to avoid flicker on re-render
+    var dateHash = today().split('-').reduce(function(a, b) { return a + parseInt(b, 10); }, 0);
+    var pick = avFruits[dateHash % Math.min(avFruits.length, 3)];
+    return { foods: ['Repeat lunch leftovers or ' + pick], reason: 'Snack is optional — best between lunch and dinner if hungry' };
+  }
+  return { foods: ['Repeat lunch leftovers or banana mash'], reason: 'Snack is optional — best between lunch and dinner if hungry' };
+}
+
+// ── Activity suggestions ──
+
+function _tpGenerateActivitySuggestions() {
+  var suggestions = [];
+
+  // Domain balance from activity log
+  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  var totalEntries = 0;
+  var todayD = new Date(today());
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+    entries.forEach(function(e) {
+      if (e.domains && Array.isArray(e.domains)) {
+        e.domains.forEach(function(dom) {
+          if (domainCounts[dom] !== undefined) domainCounts[dom]++;
+        });
+      }
+      totalEntries++;
+    });
+  }
+
+  // Sort domains by count (weakest first)
+  var domainList = Object.entries(domainCounts).sort(function(a, b) { return a[1] - b[1]; });
+
+  // Activity name suggestions per domain
+  var domainActivities = {
+    motor: { name: 'Tummy time or crawling practice', icon: '🏃', duration: '10 min' },
+    language: { name: 'Board book + pointing game', icon: '📖', duration: '10 min' },
+    social: { name: 'Peekaboo or mirror play', icon: '👶', duration: '10 min' },
+    cognitive: { name: 'Shape sorter or stacking cups', icon: '🧩', duration: '10 min' },
+    sensory: { name: 'Textured toys or water play', icon: '🎨', duration: '10 min' }
+  };
+
+  // Stalled milestones — check for milestones in 'emerging' or 'practicing' that need evidence
+  var stalledMs = [];
+  (milestones || []).forEach(function(m) {
+    if (!m.status || m.status === 'not_started' || m.status === 'mastered' || m.status === 'consistent') return;
+    // Check if evidence has been added recently
+    var lastEvidence = m.lastEvidenceAt || m.emergingAt || m.practicingAt;
+    if (lastEvidence) {
+      var daysSince = Math.floor((new Date() - new Date(lastEvidence)) / 86400000);
+      if (daysSince >= 5) stalledMs.push({ name: m.name, domain: m.domain, daysSince: daysSince });
+    }
+  });
+
+  // Morning: weakest domain
+  if (domainList.length > 0) {
+    var weakest = domainList[0];
+    var act = domainActivities[weakest[0]] || domainActivities.motor;
+    var reason = weakest[0].charAt(0).toUpperCase() + weakest[0].slice(1) + ' domain weakest this week';
+    // Check for stalled milestone in this domain
+    var stalledInDomain = stalledMs.find(function(m) { return m.domain === weakest[0]; });
+    if (stalledInDomain) {
+      reason += ' · "' + stalledInDomain.name + '" milestone needs evidence';
+    }
+    suggestions.push({ time: 'Morning', name: act.name + ' (' + act.duration + ')', icon: act.icon, reason: reason, domain: weakest[0] });
+  }
+
+  // Afternoon: second-weakest domain (different from morning)
+  if (domainList.length > 1) {
+    var second = domainList[1];
+    var act2 = domainActivities[second[0]] || domainActivities.language;
+    var reason2 = second[0].charAt(0).toUpperCase() + second[0].slice(1) + ' domain could use more practice';
+    var stalledIn2 = stalledMs.find(function(m) { return m.domain === second[0]; });
+    if (stalledIn2) {
+      reason2 += ' · "' + stalledIn2.name + '" stalled ' + stalledIn2.daysSince + ' days';
+    }
+    suggestions.push({ time: 'Afternoon', name: act2.name + ' (' + act2.duration + ')', icon: act2.icon, reason: reason2, domain: second[0] });
+  }
+
+  // Fallback if no activity log data
+  if (totalEntries === 0 && suggestions.length === 0) {
+    suggestions.push({ time: 'Morning', name: 'Tummy time (10 min)', icon: '🏃', reason: 'Motor practice helps build strength', domain: 'motor' });
+    suggestions.push({ time: 'Afternoon', name: 'Board book + pointing (10 min)', icon: '📖', reason: 'Language development through reading together', domain: 'language' });
+  }
+
+  return suggestions;
+}
+
+// ── Sleep note ──
+
+function _tpGenerateSleepNote() {
+  var notes = [];
+
+  // 1. Bedtime drift
+  try {
+    var drift = computeBedtimeDrift();
+    if (!drift.insufficient) {
+      if (drift.direction === 'later') {
+        var idealTime = drift.idealStart ? (drift.idealStart > 12 ? (drift.idealStart - 12) : drift.idealStart) + ':00 PM' : '7:30 PM';
+        // Suggest the earlier ideal
+        notes.push({ title: 'Aim for ' + idealTime + ' bedtime', reason: 'Bedtime drifted ' + Math.abs(drift.driftPerWeek) + ' min later this week · avg now ' + drift.avgBedtimeStr });
+      } else if (drift.direction === 'earlier') {
+        notes.push({ title: 'Bedtime trending earlier', reason: 'Shifted ' + Math.abs(drift.driftPerWeek) + ' min earlier this week — monitor for over-tiredness' });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 2. Dinner gap insight (from cross-domain data)
+  try {
+    var feedDates = Object.keys(feedingData).sort();
+    var gapScores = { short: [], medium: [], long: [] };
+    feedDates.forEach(function(ds) {
+      var sc = getDailySleepScore(ds);
+      if (!sc) return;
+      var lastMeal = _cdGetLastMealTime(ds);
+      var bedtime = _cdGetBedtime(ds);
+      if (!lastMeal || !bedtime) return;
+      var lastMin = _cdTimeToMin(lastMeal);
+      var bedMin = _cdTimeToMin(bedtime);
+      if (lastMin === null || bedMin === null) return;
+      if (bedMin < 360) bedMin += 1440; // after midnight
+      var gap = bedMin - lastMin;
+      if (gap < 0) return;
+      if (gap < 60) gapScores.short.push(sc.score);
+      else if (gap < 120) gapScores.medium.push(sc.score);
+      else gapScores.long.push(sc.score);
+    });
+    // Find best gap bucket with enough data
+    var bestGap = null, bestAvg = 0;
+    [['short', '<60'], ['medium', '60-120'], ['long', '>120']].forEach(function(pair) {
+      var arr = gapScores[pair[0]];
+      if (arr.length >= 3) {
+        var avg = Math.round(arr.reduce(function(a, b) { return a + b; }, 0) / arr.length);
+        if (avg > bestAvg) { bestAvg = avg; bestGap = pair[1]; }
+      }
+    });
+    if (bestGap && notes.length < 2) {
+      notes.push({ title: bestGap + '-min dinner gap works best', reason: 'Based on ' + (gapScores.short.length + gapScores.medium.length + gapScores.long.length) + ' nights of data' });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 3. Sleep regression
+  try {
+    var regr = computeSleepRegression();
+    if (!regr.insufficient && regr.severity !== 'none') {
+      notes.push({ title: regr.severityLabel + ' detected', reason: 'Expect some disruption — extra comfort may help' });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 4. Nap transition
+  try {
+    var nap = computeNapTransition();
+    if (nap && !nap.insufficient && nap.metCount >= 3) {
+      notes.push({ title: 'Nap transition signals building', reason: nap.metCount + '/5 signals met — ' + (nap.transitionNote || 'consider adjusting nap schedule') });
+    }
+  } catch (e) { /* best effort */ }
+
+  // Fallback
+  if (notes.length === 0) {
+    notes.push({ title: 'Keep up the bedtime routine', reason: 'Consistent bedtime routine is working well' });
+  }
+
+  return notes.slice(0, 2);
+}
+
+// ── Heads-up items ──
+
+function _tpGatherHeadsUp() {
+  var items = [];
+
+  // 1. Vaccination upcoming
+  try {
+    var upcoming = (vaccData || []).find(function(v) { return v.upcoming; });
+    if (upcoming) {
+      var daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        var bookedData = load(KEYS.vaccBooked, null);
+        var isBooked = bookedData && bookedData.vaccName === upcoming.name;
+        items.push({
+          icon: '💉',
+          text: upcoming.name + ' in ' + daysTo + ' day' + (daysTo !== 1 ? 's' : '') + (isBooked ? ' — booked' : ' — confirm appointment'),
+          action: 'medical'
+        });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 2. Supplement adherence
+  try {
+    var suppData = computeSupplementAdherence(7);
+    if (suppData && suppData.length > 0) {
+      suppData.forEach(function(s) {
+        var missed = s.totalDays - s.doneCount;
+        if (missed >= 3) {
+          items.push({ icon: '💊', text: s.name + ' — missed ' + missed + ' of last 7 days, resume tomorrow', action: 'track' });
+        } else {
+          items.push({ icon: '💊', text: s.name + ' — ' + s.doneCount + '/' + s.totalDays + ' days this week' + (s.doneCount >= 5 ? ' (keep going!)' : ''), action: 'track' });
+        }
+      });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 3. Growth measurement recency
+  try {
+    if (growthData && growthData.length > 0) {
+      var lastMeas = growthData[growthData.length - 1];
+      if (lastMeas && lastMeas.date) {
+        var daysSince = Math.floor((new Date() - new Date(lastMeas.date)) / 86400000);
+        if (daysSince >= 14) {
+          items.push({ icon: '📏', text: 'Last measured ' + daysSince + ' days ago — time to weigh and measure', action: 'growth' });
+        }
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 4. Food reaction window
+  try {
+    (foods || []).forEach(function(f) {
+      if (!f.date) return;
+      var daysSinceIntro = Math.floor((new Date() - new Date(f.date)) / 86400000);
+      if (daysSinceIntro >= 0 && daysSinceIntro <= 3) {
+        items.push({ icon: '👁️', text: 'Day ' + (daysSinceIntro + 1) + ' of ' + f.name + ' introduction — watch for reactions', action: 'diet' });
+      }
+    });
+  } catch (e) { /* best effort */ }
+
+  return items.slice(0, 3);
+}
+
+// ── Main orchestrator ──
+
+function generateTomorrowPrep() {
+  _tpScoreCache = {}; // Clear per-run cache
+  var tomorrow = _offsetDateStr(today(), 1);
+  var tomorrowDate = new Date(tomorrow);
+  var tomorrowDow = tomorrowDate.toLocaleDateString('en-IN', { weekday: 'short' });
+  var tomorrowDay = tomorrowDate.getDate();
+
+  // 1. Compute context
+  var heatmap = null;
+  var gapSet = new Set();
+  var gapDaysMap = {};
+  try {
+    heatmap = computeNutrientHeatmap(7);
+    if (heatmap && heatmap.gaps) {
+      heatmap.gaps.forEach(function(g) { gapSet.add(g.toLowerCase()); });
+      // Compute days since nutrient last seen
+      if (heatmap.grid) {
+        Object.keys(heatmap.grid).forEach(function(nKey) {
+          var arr = heatmap.grid[nKey];
+          var lastSeen = -1;
+          for (var i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] > 0) { lastSeen = arr.length - 1 - i; break; }
+          }
+          gapDaysMap[nKey] = lastSeen >= 0 ? lastSeen : 7;
+        });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  var textureData = null;
+  try { textureData = computeTextureProgression(); } catch (e) { /* best effort */ }
+
+  var usedAcrossMeals = new Set();
+  var ctx = { gapSet: gapSet, gapDaysMap: gapDaysMap, textureData: textureData, usedAcrossMeals: usedAcrossMeals, meal: 'breakfast' };
+
+  // 2. Generate meal suggestions
+  var breakfast = generateMealOptions('breakfast', 3, Object.assign({}, ctx, { meal: 'breakfast' }));
+  var lunch = generateMealOptions('lunch', 3, Object.assign({}, ctx, { meal: 'lunch' }));
+  var dinner = generateMealOptions('dinner', 3, Object.assign({}, ctx, { meal: 'dinner' }));
+  var snack = generateSnackOption(ctx);
+
+  // 3. Activity suggestions
+  var activities = _tpGenerateActivitySuggestions();
+
+  // 4. Sleep note
+  var sleepNotes = _tpGenerateSleepNote();
+
+  // 5. Heads up
+  var headsUp = _tpGatherHeadsUp();
+
+  return {
+    tomorrow: tomorrow,
+    tomorrowDow: tomorrowDow,
+    tomorrowDay: tomorrowDay,
+    breakfast: breakfast,
+    lunch: lunch,
+    dinner: dinner,
+    snack: snack,
+    activities: activities,
+    sleepNotes: sleepNotes,
+    headsUp: headsUp,
+    gapCount: gapSet.size
+  };
+}
+
+// ── Renderer ──
+
+function renderTomorrowPrep() {
+  var card = document.getElementById('tomorrowPrepCard');
+  var dateEl = document.getElementById('tomorrowPrepDate');
+  var subtitleEl = document.getElementById('tomorrowPrepSubtitle');
+  var content = document.getElementById('tomorrowPrepContent');
+  if (!card || !content) return;
+
+  if (!shouldShowTomorrowPrep()) {
+    card.style.display = 'none';
+    return;
+  }
+
+  var data = generateTomorrowPrep();
+  if (!data) { card.style.display = 'none'; return; }
+
+  card.style.display = '';
+  if (dateEl) dateEl.textContent = data.tomorrowDow + ' ' + data.tomorrowDay;
+
+  var gapCount = data.gapCount || 0;
+  if (subtitleEl) {
+    subtitleEl.textContent = gapCount > 0
+      ? 'Based on this week\'s patterns · ' + gapCount + ' nutrient gap' + (gapCount > 1 ? 's' : '') + ' to fill'
+      : 'Based on this week\'s patterns';
+  }
+
+  var html = '';
+
+  // ── Meal sections ──
+  var mealSections = [
+    { key: 'breakfast', label: 'BREAKFAST', icon: '🌅', options: data.breakfast },
+    { key: 'lunch', label: 'LUNCH', icon: '☀️', options: data.lunch },
+    { key: 'dinner', label: 'DINNER', icon: '🌙', options: data.dinner }
+  ];
+
+  mealSections.forEach(function(section) {
+    var count = section.options.length;
+    if (count === 0) {
+      html += '<div class="tp-meal-section">' + section.icon + ' ' + section.label + '</div>';
+      html += '<div class="tp-option-reason">Not enough food data to suggest — try introducing more foods</div>';
+      return;
+    }
+    html += '<div class="tp-meal-section">' + section.icon + ' ' + section.label + ' — ' + count + ' option' + (count !== 1 ? 's' : '') + '</div>';
+    html += '<div class="tp-meal-options">';
+    section.options.forEach(function(opt, idx) {
+      var starredClass = opt.starred ? ' tp-starred' : '';
+      html += '<div class="tp-option' + starredClass + '" data-tp-meal="' + section.key + '" data-tp-idx="' + idx + '">';
+      html += '<div class="tp-option-foods">';
+      if (opt.starred) html += '<span class="tp-option-star">★</span> ';
+      html += escHtml(opt.foods.join(' + '));
+      html += '</div>';
+      if (opt.reason) {
+        html += '<div class="tp-option-reason">' + escHtml(opt.reason) + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  // ── Snack ──
+  if (data.snack) {
+    html += '<div class="tp-meal-section">🍪 SNACK — 1 suggestion</div>';
+    html += '<div class="tp-meal-options">';
+    html += '<div class="tp-option">';
+    html += '<div class="tp-option-foods">' + escHtml(data.snack.foods[0]) + '</div>';
+    html += '<div class="tp-option-reason">' + escHtml(data.snack.reason) + '</div>';
+    html += '</div></div>';
+  }
+
+  // ── Activities ──
+  if (data.activities.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Activities</div>';
+    data.activities.forEach(function(act) {
+      html += '<div class="tp-activity-row" data-tp-activity="' + escHtml(act.domain || '') + '">';
+      html += '<div class="tp-activity-icon">' + act.icon + '</div>';
+      html += '<div class="tp-activity-body">';
+      html += '<div class="tp-activity-title">' + escHtml(act.time) + ': ' + escHtml(act.name) + '</div>';
+      html += '<div class="tp-activity-reason">' + escHtml(act.reason) + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  // ── Sleep note ──
+  if (data.sleepNotes && data.sleepNotes.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Sleep Note</div>';
+    data.sleepNotes.forEach(function(note) {
+      html += '<div class="tp-sleep-note">';
+      html += '<div class="tp-sleep-icon">😴</div>';
+      html += '<div class="tp-sleep-body">';
+      html += '<div class="tp-sleep-title">' + escHtml(note.title) + '</div>';
+      html += '<div class="tp-sleep-reason">' + escHtml(note.reason) + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  // ── Heads up ──
+  if (data.headsUp.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Heads Up</div>';
+    data.headsUp.forEach(function(item) {
+      html += '<div class="tp-headsup-row" data-tp-action="' + escHtml(item.action || '') + '">';
+      html += '<div class="tp-headsup-icon">' + item.icon + '</div>';
+      html += '<div class="tp-headsup-text">' + escHtml(item.text) + '</div>';
+      html += '</div>';
+    });
+  }
+
+  content.innerHTML = html;
+
+  // ── Attach tap handlers ──
+  content.querySelectorAll('.tp-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var meal = el.getAttribute('data-tp-meal');
+      var foodsText = el.querySelector('.tp-option-foods');
+      if (!meal || !foodsText) return;
+      var foodStr = foodsText.textContent.replace('★ ', '').trim();
+      _tpPlanMeal(meal, foodStr);
+    });
+  });
+
+  content.querySelectorAll('.tp-headsup-row').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var action = el.getAttribute('data-tp-action');
+      if (action === 'medical') switchTab('medical');
+      else if (action === 'growth') switchTab('growth');
+      else if (action === 'diet') switchTab('diet');
+      else if (action === 'track') switchTab('track');
+    });
+  });
+}
+
+function _tpPlanMeal(meal, foodStr) {
+  // Store planned meal for tomorrow
+  if (!_tomorrowPlanned) _tomorrowPlanned = {};
+  _tomorrowPlanned[meal] = foodStr;
+  save(KEYS.tomorrowPlanned, _tomorrowPlanned);
+
+  // Visual feedback
+  var opts = document.querySelectorAll('.tp-option[data-tp-meal="' + meal + '"]');
+  opts.forEach(function(opt) {
+    var thisFood = opt.querySelector('.tp-option-foods').textContent.replace('★ ', '').trim();
+    if (thisFood === foodStr) {
+      opt.classList.add('tp-option-planned');
+      // Add checkmark
+      var existing = opt.querySelector('.tp-planned-check');
+      if (!existing) {
+        var check = document.createElement('div');
+        check.className = 'tp-planned-check';
+        check.textContent = '✓ Planned for tomorrow';
+        opt.appendChild(check);
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MEAL INTAKE TRACKING
+// ═══════════════════════════════════════════════════════════════
+
+var MI_LEVELS = [
+  { value: 0.25, icon: '🤏', label: 'Few bites', cls: '25' },
+  { value: 0.50, icon: '🥣', label: 'Half', cls: '50' },
+  { value: 0.75, icon: '😋', label: 'Most', cls: '75' },
+  { value: 1.0,  icon: '🎉', label: 'All', cls: '100' }
+];
+
+function _miGetIntake(dateStr, meal) {
+  var entry = feedingData[dateStr];
+  if (!entry) return 0.75;
+  var val = entry[meal + '_intake'];
+  if (val === 0.25 || val === 0.5 || val === 0.75 || val === 1.0) return val;
+  return 0.75; // default
+}
+
+function _miSetIntake(dateStr, meal, value) {
+  if (!feedingData[dateStr]) return;
+  feedingData[dateStr][meal + '_intake'] = value;
+  save(KEYS.feeding, feedingData);
+}
+
+function _miLevelFor(value) {
+  for (var i = 0; i < MI_LEVELS.length; i++) {
+    if (MI_LEVELS[i].value === value) return MI_LEVELS[i];
+  }
+  return MI_LEVELS[2]; // default "Most"
+}
+
+// Render intake bar (4-segment mini bar)
+function _miRenderBar(intake) {
+  var segs = Math.round(intake * 4);
+  var cls = intake >= 1.0 ? '100' : intake >= 0.75 ? '75' : intake >= 0.5 ? '50' : '25';
+  var html = '<span class="mi-bar">';
+  for (var i = 0; i < 4; i++) {
+    html += '<span class="mi-bar-seg' + (i < segs ? ' filled-' + cls : '') + '"></span>';
+  }
+  html += '</span>';
+  return html;
+}
+
+// Render intake chip (colored pill with label)
+function _miRenderChip(intake) {
+  var lv = _miLevelFor(intake);
+  return '<span class="mi-chip mi-chip-' + lv.cls + '">' + _miRenderBar(intake) + ' ' + escHtml(lv.label) + '</span>';
+}
+
+// ── POST-SAVE INTAKE PROMPT ──
+
+function _miShowPostSavePrompt(dateStr) {
+  var entry = feedingData[dateStr];
+  if (!entry) return;
+
+  // Find which meals need intake (have content but no explicit intake set)
+  var mealsToPrompt = [];
+  ['breakfast', 'lunch', 'dinner'].forEach(function(m) {
+    if (isRealMeal(entry[m]) && entry[m] !== '—skipped—') {
+      var existing = entry[m + '_intake'];
+      if (existing !== 0.25 && existing !== 0.5 && existing !== 0.75 && existing !== 1.0) {
+        mealsToPrompt.push(m);
+      }
+    }
+  });
+
+  if (mealsToPrompt.length === 0) return;
+
+  var overlay = document.getElementById('psfOverlay');
+  if (!overlay || !overlay.classList.contains('open')) return;
+
+  // Inject intake prompt into the existing PSF card
+  var card = overlay.querySelector('.psf-card');
+  if (!card) return;
+
+  // Don't add twice
+  if (card.querySelector('.mi-prompt')) return;
+
+  var promptDiv = document.createElement('div');
+  promptDiv.className = 'mi-prompt';
+
+  var label = mealsToPrompt.length === 1
+    ? 'How much ' + mealsToPrompt[0] + ' did she eat?'
+    : 'How much did she eat?';
+  var html = '<div class="mi-prompt-label">' + escHtml(label) + '</div>';
+  html += '<div class="mi-buttons">';
+  MI_LEVELS.forEach(function(lv) {
+    html += '<button class="mi-btn" data-mi-val="' + lv.value + '">';
+    html += '<div class="mi-btn-icon">' + lv.icon + '</div>';
+    html += '<div class="mi-btn-label">' + escHtml(lv.label) + '</div>';
+    html += '</button>';
+  });
+  html += '</div>';
+  html += '<button class="mi-skip" data-mi-skip="1">Skip</button>';
+
+  promptDiv.innerHTML = html;
+
+  // Insert before dismiss button
+  var dismissBtn = card.querySelector('.psf-dismiss');
+  if (dismissBtn) {
+    card.insertBefore(promptDiv, dismissBtn);
+  } else {
+    card.appendChild(promptDiv);
+  }
+
+  // Wire button handlers
+  promptDiv.querySelectorAll('.mi-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var val = parseFloat(this.getAttribute('data-mi-val'));
+      mealsToPrompt.forEach(function(m) {
+        _miSetIntake(dateStr, m, val);
+      });
+      // Visual feedback
+      promptDiv.querySelectorAll('.mi-btn').forEach(function(b) { b.classList.remove('mi-selected'); });
+      this.classList.add('mi-selected');
+      // Auto-dismiss after brief feedback
+      setTimeout(function() { dismissPostSaveFlash(); }, 600);
+    });
+  });
+
+  promptDiv.querySelector('.mi-skip').addEventListener('click', function() {
+    dismissPostSaveFlash();
+  });
+}
+
+// ── INLINE INTAKE EDITOR (Diet tab per-meal) ──
+
+function _miRenderInlineEditor(dateStr, meal) {
+  var entry = feedingData[dateStr];
+  if (!entry || !isRealMeal(entry[meal]) || entry[meal] === '—skipped—') return '';
+  var current = _miGetIntake(dateStr, meal);
+
+  var html = '<div class="mi-inline" data-mi-meal="' + meal + '" data-mi-date="' + dateStr + '">';
+  MI_LEVELS.forEach(function(lv) {
+    var active = lv.value === current ? ' mi-active' : '';
+    html += '<button class="mi-inline-btn' + active + '" data-mi-ival="' + lv.value + '">' + lv.icon + ' ' + escHtml(lv.label) + '</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function _miWireInlineEditors() {
+  document.querySelectorAll('.mi-inline').forEach(function(row) {
+    var meal = row.getAttribute('data-mi-meal');
+    var dateStr = row.getAttribute('data-mi-date');
+    row.querySelectorAll('.mi-inline-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var val = parseFloat(this.getAttribute('data-mi-ival'));
+        _miSetIntake(dateStr, meal, val);
+        // Update visual
+        row.querySelectorAll('.mi-inline-btn').forEach(function(b) { b.classList.remove('mi-active'); });
+        this.classList.add('mi-active');
+        // Refresh home if visible
+        if (document.getElementById('homeTab')?.style.display !== 'none') {
+          renderHomeMealProgress();
+        }
+      });
+    });
+  });
+}
+
+// ── INTAKE DISPLAY HELPERS ──
+
+function _miEffectiveIntake(dateStr) {
+  var entry = feedingData[dateStr];
+  if (!entry) return null;
+  var sum = 0;
+  var count = 0;
+  ['breakfast', 'lunch', 'dinner'].forEach(function(m) {
+    if (isRealMeal(entry[m]) && entry[m] !== '—skipped—') {
+      sum += _miGetIntake(dateStr, m);
+      count++;
+    }
+  });
+  return count > 0 ? Math.round((sum / count) * 100) : null;
+}
+
+// ── DIET TAB INTAKE DISPLAY ──
+
+function _miRenderDietTabIntake() {
+  var dateStr = document.getElementById('feedingDate')?.value || today();
+  var entry = feedingData[dateStr];
+
+  ['breakfast', 'lunch', 'dinner', 'snack'].forEach(function(m) {
+    // Find or create the intake container after the meal insight
+    var mealCard = document.querySelector('.meal-card.' + m);
+    if (!mealCard) return;
+
+    // Remove existing intake editor
+    var existing = mealCard.querySelector('.mi-inline');
+    if (existing) existing.remove();
+
+    // Only show if meal has real content
+    if (!entry || !isRealMeal(entry[m]) || entry[m] === '—skipped—') return;
+
+    var editorHtml = _miRenderInlineEditor(dateStr, m);
+    if (!editorHtml) return;
+
+    // Insert after the meal insight (or after the input wrap if no insight)
+    var insight = mealCard.querySelector('.meal-insight');
+    var inputWrap = mealCard.querySelector('.meal-input-wrap');
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = editorHtml;
+    var editorEl = tempDiv.firstElementChild;
+
+    if (insight) {
+      insight.parentNode.insertBefore(editorEl, insight.nextSibling);
+    } else if (inputWrap) {
+      inputWrap.parentNode.insertBefore(editorEl, inputWrap.nextSibling);
+    } else {
+      mealCard.appendChild(editorEl);
+    }
+  });
+
+  _miWireInlineEditors();
+}
+
+// ═══ MEAL INTAKE — END ═══
+
+// ═══════════════════════════════════════════════════════════════
+// SMART Q&A — Phase 1: Search bar + Intent matching + 6 handlers
+// ═══════════════════════════════════════════════════════════════
+
+var _qaCache = {};
+var _qaPlaceholderIdx = 0;
+var _qaPlaceholderTimer = null;
+
+var QA_PLACEHOLDERS = [
+  'How do I improve sleep?',
+  'What should I feed for iron?',
+  'Why is poop irregular?',
+  'Is she gaining enough weight?',
+  'What activities help sleep?',
+  'How is she doing overall?'
+];
+
+var QA_INTENTS = [
+  // ═══ SLEEP ═══
+  {
+    id: 'sleep_quality',
+    triggers: ['sleep', 'sleeping', 'nap', 'napping', 'night', 'bedtime', 'wake', 'waking', 'wakeup'],
+    boosts: ['improve', 'better', 'why', 'how', 'bad', 'poor', 'worse', 'problem'],
+    handler: 'answerSleepQuality'
+  },
+  {
+    id: 'sleep_early',
+    triggers: ['sleep early', 'earlier bedtime', 'bedtime earlier', 'sleep on time', 'bedtime routine'],
+    handler: 'answerSleepQuality'
+  },
+  {
+    id: 'sleep_wakeups',
+    triggers: ['wake up', 'waking up', 'night waking', 'wakeups', 'wakes at night', 'disturbed sleep'],
+    handler: 'answerSleepQuality'
+  },
+  {
+    id: 'sleep_naps',
+    triggers: ['nap', 'naps', 'napping', 'nap schedule', 'nap transition', 'daytime sleep'],
+    exclude: ['night'],
+    handler: 'answerSleepQuality'
+  },
+
+  // ═══ WEIGHT & GROWTH ═══
+  {
+    id: 'weight_gain',
+    triggers: ['weight', 'gain weight', 'increase weight', 'not gaining', 'underweight', 'thin', 'weight gain'],
+    handler: 'answerWeightGain'
+  },
+  {
+    id: 'weight_loss',
+    triggers: ['overweight', 'too heavy', 'reduce weight', 'losing weight', 'weight loss'],
+    handler: 'answerWeightGain'
+  },
+  {
+    id: 'growth',
+    triggers: ['growth', 'growing', 'height', 'tall', 'short', 'percentile', 'growth chart'],
+    handler: 'answerWeightGain'
+  },
+
+  // ═══ FOOD & NUTRITION ═══
+  {
+    id: 'food_general',
+    triggers: ['feed', 'food', 'eat', 'eating', 'meal', 'what to feed', 'what should i feed', 'diet'],
+    handler: 'answerFoodGeneral'
+  },
+  {
+    id: 'food_nutrient',
+    triggers: ['iron', 'calcium', 'protein', 'vitamin', 'nutrient', 'nutrition', 'deficiency', 'missing'],
+    handler: 'answerFoodGeneral'
+  },
+  {
+    id: 'food_variety',
+    triggers: ['variety', 'same food', 'repetitive', 'bored', 'new food', 'introduce', 'picky', 'refuses'],
+    handler: 'answerFoodGeneral'
+  },
+  {
+    id: 'food_safe',
+    triggers: ['safe', 'allergy', 'allergic', 'reaction', 'can i give', 'can she eat', 'intolerant'],
+    handler: 'answerFoodGeneral'
+  },
+  {
+    id: 'food_texture',
+    triggers: ['texture', 'puree', 'mash', 'solid', 'finger food', 'lumps', 'chew', 'chewing', 'gagging'],
+    handler: 'answerFoodGeneral'
+  },
+
+  // ═══ POOP ═══
+  {
+    id: 'poop_general',
+    triggers: ['poop', 'stool', 'bowel', 'constipat', 'diarrh', 'loose', 'hard stool'],
+    handler: 'answerPoopGeneral'
+  },
+  {
+    id: 'poop_food',
+    triggers: ['poop', 'stool', 'food', 'cause', 'trigger', 'after eating', 'food poop'],
+    boosts: ['which food', 'what food', 'cause', 'trigger', 'why'],
+    handler: 'answerPoopGeneral'
+  },
+  {
+    id: 'poop_color',
+    triggers: ['poop color', 'stool color', 'green poop', 'black poop', 'red poop', 'white poop', 'blood', 'mucus'],
+    handler: 'answerPoopGeneral'
+  },
+
+  // ═══ ACTIVITY & MILESTONES ═══
+  {
+    id: 'activity_general',
+    triggers: ['active', 'activity', 'play', 'exercise', 'tummy time', 'physical', 'motor', 'crawl', 'walk', 'stand'],
+    handler: 'answerActivityGeneral'
+  },
+  {
+    id: 'activity_sleep',
+    triggers: ['activity sleep', 'exercise sleep', 'play sleep', 'active sleep', 'tummy time sleep'],
+    handler: 'answerActivityGeneral'
+  },
+  {
+    id: 'milestone_general',
+    triggers: ['milestone', 'development', 'behind', 'delayed', 'advanced', 'ahead', 'on track'],
+    handler: 'answerActivityGeneral'
+  },
+  {
+    id: 'milestone_specific',
+    triggers: ['crawl', 'walk', 'talk', 'speak', 'sit', 'stand', 'roll', 'babbl', 'word', 'teeth', 'teething'],
+    exclude: ['food', 'feed', 'poop'],
+    handler: 'answerActivityGeneral'
+  },
+
+  // ═══ MEDICAL ═══
+  {
+    id: 'vaccine',
+    triggers: ['vaccine', 'vaccination', 'immuniz', 'shot', 'injection', 'next vaccine'],
+    handler: 'answerOverall'
+  },
+  {
+    id: 'supplement',
+    triggers: ['vitamin d', 'vit d', 'd3', 'supplement', 'drops'],
+    handler: 'answerOverall'
+  },
+  {
+    id: 'illness',
+    triggers: ['sick', 'ill', 'fever', 'cold', 'cough', 'vomit', 'unwell', 'doctor'],
+    handler: 'answerOverall'
+  },
+
+  // ═══ OVERALL ═══
+  {
+    id: 'overall',
+    triggers: ['overall', 'how is she', 'how is ziva', 'summary', 'doing', 'okay', 'score', 'report'],
+    handler: 'answerOverall'
+  },
+  {
+    id: 'tomorrow',
+    triggers: ['tomorrow', 'plan', 'prepare', 'what to do', 'next', 'what should i do'],
+    handler: 'answerOverall'
+  }
+];
+
+// ── INTENT MATCHING ──
+
+function qaMatchIntent(input) {
+  var text = input.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var tokens = text.split(/\s+/);
+
+  var bestIntent = null;
+  var bestScore = 0;
+
+  QA_INTENTS.forEach(function(intent) {
+    var score = 0;
+
+    intent.triggers.forEach(function(trigger) {
+      if (trigger.indexOf(' ') !== -1) {
+        if (text.indexOf(trigger) !== -1) score += 10;
+      } else {
+        if (tokens.some(function(t) { return t === trigger || t.indexOf(trigger) === 0; })) score += 3;
+      }
+    });
+
+    if (intent.boosts) {
+      intent.boosts.forEach(function(b) {
+        if (tokens.indexOf(b) !== -1 || text.indexOf(b) !== -1) score += 2;
+      });
+    }
+
+    if (intent.exclude) {
+      if (intent.exclude.some(function(ex) { return text.indexOf(ex) !== -1; })) score = 0;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIntent = intent;
+    }
+  });
+
+  return bestScore >= 3 ? bestIntent : null;
+}
+
+// ── CONTEXTUAL QUICK QUESTIONS ──
+
+var _qaChipsCache = null;
+var _qaChipsCacheAt = 0;
+
+function qaGetContextualQuickQuestions() {
+  // Cache for 60 seconds to avoid expensive compute calls on every renderHome
+  var now = Date.now();
+  if (_qaChipsCache && (now - _qaChipsCacheAt) < 60000) return _qaChipsCache;
+
+  var questions = [];
+
+  questions.push({ text: 'How is she doing?', intent: 'overall', context: false });
+
+  try {
+    var sleepScore = getSleepScore24h();
+    if (sleepScore && sleepScore.score < 65) {
+      questions.push({ text: 'Why is sleep bad?', intent: 'sleep_quality', context: true });
+    }
+  } catch(e) {}
+
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (hm && hm.gaps && hm.gaps.length > 0) {
+      questions.push({ text: 'What nutrients is she missing?', intent: 'food_nutrient', context: true });
+    }
+  } catch(e) {}
+
+  try {
+    var gv = computeGrowthVelocity();
+    if (gv && !gv.insufficient && gv.weight && gv.weight.status === 'slow') {
+      questions.push({ text: 'How to increase weight?', intent: 'weight_gain', context: true });
+    }
+  } catch(e) {}
+
+  var defaults = [
+    { text: 'What should I feed today?', intent: 'food_general' },
+    { text: 'Best activities for sleep?', intent: 'activity_sleep' },
+    { text: 'How to improve poop?', intent: 'poop_general' },
+    { text: 'Is she on track?', intent: 'milestone_general' }
+  ];
+
+  defaults.forEach(function(d) {
+    if (questions.length < 6 && !questions.some(function(q) { return q.intent === d.intent; })) {
+      questions.push({ text: d.text, intent: d.intent, context: false });
+    }
+  });
+
+  var result = questions.slice(0, 6);
+  _qaChipsCache = result;
+  _qaChipsCacheAt = Date.now();
+  return result;
+}
+
+// ── SEARCH BAR RENDERER ──
+
+function renderQABar() {
+  var container = document.getElementById('smartQAContainer');
+  if (!container) return;
+
+  var input = document.getElementById('qaInput');
+  var clearBtn = document.getElementById('qaClear');
+  var chipsEl = document.getElementById('qaChips');
+
+  if (!input || !chipsEl) return;
+
+  // Render quick chips
+  var chips = qaGetContextualQuickQuestions();
+  var chipsHtml = '';
+  chips.forEach(function(c) {
+    var cls = 'qa-chip' + (c.context ? ' qa-chip-context' : '');
+    chipsHtml += '<button class="' + cls + '" data-qa-intent="' + escHtml(c.intent) + '" data-qa-text="' + escHtml(c.text) + '">' + escHtml(c.text) + '</button>';
+  });
+  chipsEl.innerHTML = chipsHtml;
+
+  // Chip tap handlers
+  chipsEl.querySelectorAll('.qa-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      var text = this.getAttribute('data-qa-text');
+      input.value = text;
+      clearBtn.style.display = '';
+      qaExecuteQuery(text);
+    });
+  });
+
+  // Input handler
+  input.removeEventListener('keydown', _qaHandleKeydown);
+  input.addEventListener('keydown', _qaHandleKeydown);
+
+  // Input change for clear button
+  input.removeEventListener('input', _qaHandleInput);
+  input.addEventListener('input', _qaHandleInput);
+
+  // Clear button
+  clearBtn.removeEventListener('click', _qaHandleClear);
+  clearBtn.addEventListener('click', _qaHandleClear);
+
+  // Start placeholder rotation
+  _qaStartPlaceholderRotation(input);
+}
+
+function _qaHandleKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    var text = e.target.value.trim();
+    if (text) {
+      qaExecuteQuery(text);
+      e.target.blur();
+    }
+  }
+}
+
+function _qaHandleInput(e) {
+  var clearBtn = document.getElementById('qaClear');
+  if (clearBtn) clearBtn.style.display = e.target.value.length > 0 ? '' : 'none';
+}
+
+function _qaHandleClear() {
+  var input = document.getElementById('qaInput');
+  var clearBtn = document.getElementById('qaClear');
+  var answerEl = document.getElementById('qaAnswerContainer');
+  if (input) { input.value = ''; input.focus(); }
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (answerEl) answerEl.innerHTML = '';
+}
+
+function _qaStartPlaceholderRotation(input) {
+  if (_qaPlaceholderTimer) clearInterval(_qaPlaceholderTimer);
+  _qaPlaceholderIdx = 0;
+  input.placeholder = QA_PLACEHOLDERS[0];
+  _qaPlaceholderTimer = setInterval(function() {
+    if (document.activeElement === input) return;
+    if (input.value.length > 0) return;
+    _qaPlaceholderIdx = (_qaPlaceholderIdx + 1) % QA_PLACEHOLDERS.length;
+    input.placeholder = QA_PLACEHOLDERS[_qaPlaceholderIdx];
+  }, 5000);
+}
+
+// ── QUERY EXECUTION ──
+
+function qaExecuteQuery(text) {
+  _qaCache = {};
+  var intent = qaMatchIntent(text);
+  var answerEl = document.getElementById('qaAnswerContainer');
+  if (!answerEl) return;
+
+  if (!intent) {
+    qaRenderNoMatch(answerEl);
+    return;
+  }
+
+  var handler = intent.handler;
+  var answer = null;
+  try {
+    if (handler === 'answerSleepQuality') answer = qaAnswerSleepQuality(intent.id);
+    else if (handler === 'answerWeightGain') answer = qaAnswerWeightGain(intent.id);
+    else if (handler === 'answerFoodGeneral') answer = qaAnswerFoodGeneral(intent.id);
+    else if (handler === 'answerPoopGeneral') answer = qaAnswerPoopGeneral(intent.id);
+    else if (handler === 'answerActivityGeneral') answer = qaAnswerActivityGeneral(intent.id);
+    else if (handler === 'answerOverall') answer = qaAnswerOverall(intent.id);
+    else answer = null;
+  } catch(e) {
+    answer = null;
+  }
+
+  if (answer) {
+    qaRenderAnswer(answerEl, answer);
+  } else {
+    qaRenderNoMatch(answerEl);
+  }
+}
+
+// ── ANSWER CARD RENDERER ──
+
+function qaRenderAnswer(container, answer) {
+  var signalIcons = { good: '✅', warn: '⚠️', action: '→', info: 'ℹ️', neutral: '·' };
+  var signalClasses = { good: 'qa-item-good', warn: 'qa-item-warn', action: 'qa-item-action', info: 'qa-item-info', neutral: 'qa-item-neutral' };
+
+  var html = '<div class="qa-answer">';
+
+  // Header
+  html += '<div class="qa-answer-header">';
+  html += '<span class="qa-answer-icon">' + answer.icon + '</span>';
+  html += '<div class="qa-answer-title-group">';
+  html += '<div class="qa-answer-title">' + escHtml(answer.title) + '</div>';
+  if (answer.headline) html += '<div class="qa-answer-headline">' + escHtml(answer.headline) + '</div>';
+  html += '</div>';
+  html += '<button class="qa-answer-close" id="qaAnswerClose" aria-label="Close">✕</button>';
+  html += '</div>';
+
+  // Sections
+  if (answer.sections) {
+    answer.sections.forEach(function(sec) {
+      html += '<div class="qa-section">';
+      html += '<div class="qa-section-label"><span class="qa-section-label-icon">' + sec.icon + '</span> ' + escHtml(sec.label) + '</div>';
+      if (sec.items) {
+        sec.items.forEach(function(item) {
+          var cls = signalClasses[item.signal] || 'qa-item-neutral';
+          var icon = signalIcons[item.signal] || '·';
+          html += '<div class="qa-item ' + cls + '">';
+          html += '<span class="qa-item-signal">' + icon + '</span>';
+          html += '<span class="qa-item-text">' + escHtml(item.text) + '</span>';
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+    });
+  }
+
+  // Data gap
+  if (answer.dataGap) {
+    html += '<div class="qa-data-gap">' + escHtml(answer.dataGap) + '</div>';
+  }
+
+  // Confidence
+  if (answer.confidence) {
+    html += '<div class="qa-confidence">' + escHtml(answer.confidence) + '</div>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Close button
+  var closeBtn = document.getElementById('qaAnswerClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      container.innerHTML = '';
+    });
+  }
+}
+
+function qaRenderNoMatch(container) {
+  var cats = [
+    { text: 'Sleep', intent: 'sleep_quality' },
+    { text: 'Food', intent: 'food_general' },
+    { text: 'Growth', intent: 'weight_gain' },
+    { text: 'Poop', intent: 'poop_general' },
+    { text: 'Activities', intent: 'activity_general' },
+    { text: 'Overall', intent: 'overall' }
+  ];
+
+  var html = '<div class="qa-answer"><div class="qa-no-match">';
+  html += '<div class="qa-no-match-label">I couldn\'t find a specific answer for that. Here\'s what I can help with:</div>';
+  html += '<div class="qa-cat-chips">';
+  cats.forEach(function(c) {
+    html += '<button class="qa-chip" data-qa-fallback="' + c.intent + '">' + escHtml(c.text) + '</button>';
+  });
+  html += '</div></div></div>';
+  container.innerHTML = html;
+
+  container.querySelectorAll('[data-qa-fallback]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var intent = this.getAttribute('data-qa-fallback');
+      var input = document.getElementById('qaInput');
+      if (input) input.value = this.textContent;
+      qaExecuteQuery(this.textContent);
+    });
+  });
+}
+
+// ═══ HANDLER HELPERS ═══
+
+function _qaGetSleepScores7d() {
+  if (_qaCache._sleep7d) return _qaCache._sleep7d;
+  var scores = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var sc = getDailySleepScore(ds);
+    if (sc) scores.push({ dateStr: ds, score: sc.score, wakes: sc.wakes, totalMin: sc.totalMin, napCount: sc.napCount, dayIndex: i });
+  }
+  _qaCache._sleep7d = scores;
+  return scores;
+}
+
+function _qaGetSleepScores7dPrev() {
+  if (_qaCache._sleep7dPrev) return _qaCache._sleep7dPrev;
+  var scores = [];
+  for (var i = 7; i < 14; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var sc = getDailySleepScore(ds);
+    if (sc) scores.push({ dateStr: ds, score: sc.score, wakes: sc.wakes, totalMin: sc.totalMin, dayIndex: i });
+  }
+  _qaCache._sleep7dPrev = scores;
+  return scores;
+}
+
+function _qaAvg(arr) {
+  if (arr.length === 0) return 0;
+  return Math.round(arr.reduce(function(s, v) { return s + v; }, 0) / arr.length);
+}
+
+function _qaPoopScores7d() {
+  if (_qaCache._poop7d) return _qaCache._poop7d;
+  var scores = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var sc = calcPoopScore(ds);
+    if (sc && !sc.isCarryForward) scores.push(sc);
+  }
+  _qaCache._poop7d = scores;
+  return scores;
+}
+
+function _qaActivityDays14d() {
+  if (_qaCache._act14d) return _qaCache._act14d;
+  var days = 0;
+  var domainCounts = {};
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    if (Array.isArray(activityLog[ds]) && activityLog[ds].length > 0) {
+      days++;
+      activityLog[ds].forEach(function(e) {
+        (e.domains || []).forEach(function(dom) {
+          domainCounts[dom] = (domainCounts[dom] || 0) + 1;
+        });
+      });
+    }
+  }
+  var result = { days: days, domainCounts: domainCounts };
+  _qaCache._act14d = result;
+  return result;
+}
+
+// ═══ HANDLER: SLEEP QUALITY ═══
+
+function qaAnswerSleepQuality(intentId) {
+  var scores = _qaGetSleepScores7d();
+  var prevScores = _qaGetSleepScores7dPrev();
+
+  if (scores.length < 3) {
+    return {
+      icon: '😴', title: 'Sleep Quality', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+        { text: 'Log ' + (5 - scores.length) + ' more nights of sleep to see patterns', signal: 'info' },
+        { text: 'Track bedtime, wake time, and wake-ups each night', signal: 'action' }
+      ]}],
+      confidence: null,
+      dataGap: 'Need ' + (5 - scores.length) + ' more nights of sleep data'
+    };
+  }
+
+  var avgScore = _qaAvg(scores.map(function(s) { return s.score; }));
+  var prevAvg = prevScores.length >= 3 ? _qaAvg(prevScores.map(function(s) { return s.score; })) : null;
+  var trend = prevAvg !== null ? avgScore - prevAvg : null;
+  var trendStr = trend !== null ? (trend > 0 ? ' (↑' + trend + ' from last week)' : trend < 0 ? ' (↓' + Math.abs(trend) + ' from last week)' : ' (stable)') : '';
+
+  var headline = 'Score: ' + avgScore + '/100 this week' + trendStr;
+
+  var dataItems = [];
+  var actionItems = [];
+
+  // Bedtime drift
+  try {
+    var drift = computeBedtimeDrift();
+    if (!drift.insufficient) {
+      if (drift.direction === 'later') {
+        dataItems.push({ text: 'Bedtime drifted ' + Math.abs(drift.driftPerWeek) + ' min later this week', signal: 'warn' });
+        // Suggest pulling back 15 min from current avg
+        var targetStr = _siMinToBedtime(drift.avgBedtime - 15);
+        actionItems.push({ text: 'Aim for ' + targetStr + ' bedtime (pull back 15 min)', signal: 'action' });
+      } else if (drift.direction === 'earlier') {
+        dataItems.push({ text: 'Bedtime shifted ' + Math.abs(drift.driftPerWeek) + ' min earlier — great trend', signal: 'good' });
+      } else {
+        dataItems.push({ text: 'Bedtime is stable at ' + drift.avgBedtimeStr, signal: 'good' });
+      }
+    }
+  } catch(e) {}
+
+  // Wake-ups trend
+  var avgWakes = _qaAvg(scores.map(function(s) { return s.wakes; }));
+  if (avgWakes <= 1) {
+    dataItems.push({ text: 'Averaging ' + avgWakes + ' wake-up per night — excellent', signal: 'good' });
+  } else if (avgWakes >= 3) {
+    dataItems.push({ text: 'Averaging ' + avgWakes + ' wake-ups per night', signal: 'warn' });
+  } else {
+    dataItems.push({ text: 'Averaging ' + avgWakes + ' wake-ups per night', signal: 'info' });
+  }
+
+  // Sleep regression
+  try {
+    var reg = computeSleepRegression();
+    if (!reg.insufficient) {
+      if (reg.severity === 'none') {
+        dataItems.push({ text: 'No sleep regression detected', signal: 'good' });
+      } else {
+        dataItems.push({ text: reg.severityLabel + ' detected — ' + reg.maxConsecBad + ' consecutive bad nights', signal: 'warn' });
+        if (reg.causes && reg.causes.length > 0) {
+          dataItems.push({ text: 'Possible cause: ' + reg.causes[0].text, signal: 'info' });
+        }
+      }
+    }
+  } catch(e) {}
+
+  // Cross-domain: dinner gap
+  try {
+    if (typeof renderInfoSleepFeeding === 'function') {
+      // Compute dinner-to-bedtime gap effect
+      var fdData = feedingData || {};
+      var gapBuckets = { short: [], medium: [], long: [] };
+      scores.forEach(function(s) {
+        var dayEntry = fdData[s.dateStr];
+        if (!dayEntry || !dayEntry.dinner_time) return;
+        var bedEntry = (sleepData || []).find(function(sl) { return sl.date === s.dateStr && sl.type === 'night'; });
+        if (!bedEntry || !bedEntry.bedtime) return;
+        var dParts = dayEntry.dinner_time.split(':').map(Number);
+        var bParts = bedEntry.bedtime.split(':').map(Number);
+        var gapMin = (bParts[0] * 60 + bParts[1]) - (dParts[0] * 60 + dParts[1]);
+        if (gapMin < 0) gapMin += 1440;
+        if (gapMin < 60) gapBuckets.short.push(s.score);
+        else if (gapMin < 90) gapBuckets.medium.push(s.score);
+        else gapBuckets.long.push(s.score);
+      });
+      if (gapBuckets.short.length >= 2 && gapBuckets.long.length >= 1) {
+        var shortAvg = _qaAvg(gapBuckets.short);
+        var longAvg = _qaAvg(gapBuckets.long);
+        if (longAvg > shortAvg + 5) {
+          dataItems.push({ text: 'Dinner gap <60 min correlates with worse sleep (' + shortAvg + ' vs ' + longAvg + ')', signal: 'warn' });
+          actionItems.push({ text: 'Try dinner 90+ minutes before bedtime', signal: 'action' });
+        }
+      }
+    }
+  } catch(e) {}
+
+  // General actions
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Keep a consistent bedtime routine', signal: 'action' });
+  }
+  actionItems.push({ text: 'Morning tummy time or motor play helps nighttime sleep', signal: 'action' });
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: '📊', items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
+
+  return {
+    icon: '😴', title: 'Sleep Quality', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + scores.length + ' nights' + (prevScores.length > 0 ? ' + ' + prevScores.length + ' prior' : ''),
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: WEIGHT / GROWTH ═══
+
+function qaAnswerWeightGain(intentId) {
+  var gv = computeGrowthVelocity();
+
+  if (gv.insufficient) {
+    return {
+      icon: '📏', title: 'Growth & Weight', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+        { text: 'Need at least 2 weight measurements to track growth', signal: 'info' },
+        { text: 'Log weight in the Growth tab', signal: 'action' }
+      ]}],
+      confidence: null,
+      dataGap: 'Need ' + (2 - gv.count) + ' more measurement(s)'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var headline = '';
+
+  // Weight velocity
+  if (gv.weight) {
+    var w = gv.weight;
+    headline = w.latest.wt + ' kg — ';
+    if (w.status === 'on-track') {
+      headline += 'gaining well (' + w.gPerDay + ' g/day)';
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — on track for ' + w.expectedRange.label, signal: 'good' });
+    } else if (w.status === 'slow') {
+      headline += 'gaining slowly (' + w.gPerDay + ' g/day)';
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
+      actionItems.push({ text: 'Add calorie-dense foods: ghee, banana, avocado, nut butters', signal: 'action' });
+    } else if (w.status === 'plateau') {
+      headline += 'weight plateau detected';
+      dataItems.push({ text: 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
+      actionItems.push({ text: 'Consider adding an extra meal or calorie-dense toppings', signal: 'action' });
+    } else if (w.status === 'fast') {
+      headline += 'gaining quickly (' + w.gPerDay + ' g/day)';
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — above expected range', signal: 'info' });
+    }
+
+    if (w.totalGainG) {
+      dataItems.push({ text: 'Total gain since birth: ' + Math.round(w.totalGainG) + 'g (' + (w.totalGainG / 1000).toFixed(1) + ' kg)', signal: 'info' });
+    }
+
+    if (w.stale) {
+      dataItems.push({ text: 'Last weighed ' + w.daysSince + ' days ago — consider a new measurement', signal: 'warn' });
+      actionItems.push({ text: 'Weigh Ziva to update growth tracking', signal: 'action' });
+    }
+  }
+
+  // Height velocity
+  if (gv.height) {
+    var h = gv.height;
+    if (h.status === 'on-track') {
+      dataItems.push({ text: 'Height: ' + h.latest.ht + ' cm, growing ' + h.cmPerMonth + ' cm/month — on track', signal: 'good' });
+    } else if (h.status === 'slow') {
+      dataItems.push({ text: 'Height growth: ' + h.cmPerMonth + ' cm/month — below expected', signal: 'warn' });
+    } else {
+      dataItems.push({ text: 'Height: ' + h.latest.ht + ' cm, growing ' + h.cmPerMonth + ' cm/month', signal: 'info' });
+    }
+  }
+
+  // Percentile crossings
+  if (gv.crossings && gv.crossings.length > 0) {
+    var lastCross = gv.crossings[gv.crossings.length - 1];
+    if (lastCross.direction === 'dropping') {
+      dataItems.push({ text: 'Percentile dropped from ' + Math.round(lastCross.from) + 'th to ' + Math.round(lastCross.to) + 'th', signal: 'warn' });
+      actionItems.push({ text: 'Discuss percentile change with pediatrician at next visit', signal: 'action' });
+    } else {
+      dataItems.push({ text: 'Percentile climbed from ' + Math.round(lastCross.from) + 'th to ' + Math.round(lastCross.to) + 'th', signal: 'good' });
+    }
+  }
+
+  // Diet link
+  try {
+    var diet = calcDietScore();
+    if (diet.score < 60 && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
+      dataItems.push({ text: 'Diet score is ' + diet.score + '/100 — nutrition gaps may affect weight gain', signal: 'warn' });
+      actionItems.push({ text: 'Focus on nutrient-dense meals (see Food tab)', signal: 'action' });
+    }
+    // Low intake + slow gain is the key insight
+    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && gv.weight.status !== 'on-track') {
+      dataItems.push({ text: 'Low meal intake (' + diet.detail.effectiveIntake + '%) may explain slow weight gain', signal: 'warn' });
+      actionItems.push({ text: 'Try smaller, more frequent meals with calorie-dense foods', signal: 'action' });
+    }
+  } catch(e) {}
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Continue regular weigh-ins every 1-2 weeks', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: '📊', items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
+
+  return {
+    icon: '📏', title: 'Growth & Weight', headline: headline || 'Growth data available',
+    sections: sections,
+    confidence: 'Based on ' + ((growthData || []).length) + ' measurements',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: FOOD GENERAL ═══
+
+function qaAnswerFoodGeneral(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = '';
+
+  // Diet score
+  try {
+    var diet = calcDietScore();
+    headline = 'Diet score: ' + diet.score + '/100 today';
+    if (diet.score >= 70) {
+      dataItems.push({ text: 'Diet quality is good (' + diet.score + '/100)', signal: 'good' });
+    } else if (diet.score >= 40) {
+      dataItems.push({ text: 'Diet quality is fair (' + diet.score + '/100) — room to improve', signal: 'warn' });
+    } else {
+      dataItems.push({ text: 'Diet quality is low (' + diet.score + '/100)', signal: 'warn' });
+    }
+
+    dataItems.push({ text: diet.detail.mealsLogged + ' of 3 core meals logged today', signal: diet.detail.mealsLogged >= 3 ? 'good' : 'info' });
+
+    // Effective intake
+    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake !== undefined) {
+      if (diet.detail.effectiveIntake < 50) {
+        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — she\'s eating less than half of served portions', signal: 'warn' });
+      } else if (diet.detail.effectiveIntake < 75) {
+        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% of served portions', signal: 'info' });
+      }
+    }
+  } catch(e) {
+    headline = 'Food & Nutrition';
+  }
+
+  // Nutrient gaps
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (hm && hm.gaps && hm.gaps.length > 0) {
+      var gapNames = hm.gaps.slice(0, 3);
+      dataItems.push({ text: 'Nutrient gaps this week: ' + gapNames.join(', '), signal: 'warn' });
+
+      // Food suggestions for gaps
+      gapNames.forEach(function(n) {
+        try {
+          var suggestion = _suggestFoodForNutrient(n.toLowerCase());
+          if (suggestion && suggestion !== 'a variety of foods') {
+            actionItems.push({ text: 'For ' + n + ': try ' + suggestion, signal: 'action' });
+          }
+        } catch(e2) {}
+      });
+    } else {
+      dataItems.push({ text: 'All key nutrients covered this week', signal: 'good' });
+    }
+  } catch(e) {}
+
+  // Food variety
+  try {
+    var vs = computeVarietyScore(7);
+    if (vs.uniqueFoods < vs.target) {
+      dataItems.push({ text: 'Variety: ' + vs.uniqueFoods + ' unique foods this week (target: ' + vs.target + ')', signal: 'warn' });
+      actionItems.push({ text: 'Try introducing a new food this week', signal: 'action' });
+    } else {
+      dataItems.push({ text: 'Good variety: ' + vs.uniqueFoods + ' unique foods this week', signal: 'good' });
+    }
+  } catch(e) {}
+
+  // Food repetition
+  try {
+    var rep = computeFoodRepetition();
+    if (rep && rep.all && rep.all.length > 0) {
+      var topRep = rep.all[0];
+      dataItems.push({ text: 'Most repeated: ' + topRep.food + ' (' + topRep.days + ' of ' + topRep.totalDays + ' days)', signal: topRep.pct >= 60 ? 'warn' : 'info' });
+    }
+  } catch(e) {}
+
+  // Texture
+  try {
+    var tex = computeTextureProgression();
+    if (tex && tex.currentStage) {
+      // Compute expected stage from age
+      var texAgeM = ageAt().months;
+      var expectedTex = texAgeM < 7 ? 'puree' : texAgeM < 8 ? 'mashed' : texAgeM < 10 ? 'soft' : 'finger';
+      var texStageIdx = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+      if ((texStageIdx[tex.currentStage] || 0) < (texStageIdx[expectedTex] || 0)) {
+        var texLabels = { puree: 'puree', mashed: 'mashed/porridge', soft: 'soft chunks', finger: 'finger food' };
+        dataItems.push({ text: 'Texture: mostly ' + (texLabels[tex.currentStage] || tex.currentStage) + ' (expected: ' + (texLabels[expectedTex] || expectedTex) + ' by this age)', signal: 'info' });
+        actionItems.push({ text: 'Consider advancing to ' + (texLabels[expectedTex] || expectedTex) + ' textures', signal: 'action' });
+      }
+    }
+  } catch(e) {}
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Keep rotating food groups across meals', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: '📊', items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
+
+  return {
+    icon: '🥣', title: 'Food & Nutrition', headline: headline,
+    sections: sections,
+    confidence: 'Based on 7-day rolling data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: POOP GENERAL ═══
+
+function qaAnswerPoopGeneral(intentId) {
+  var scores = _qaPoopScores7d();
+
+  if (scores.length < 2) {
+    return {
+      icon: '💩', title: 'Poop Patterns', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+        { text: 'Log poop consistency, color, and any symptoms', signal: 'info' },
+        { text: 'Need at least 3 days of data for patterns', signal: 'action' }
+      ]}],
+      confidence: null,
+      dataGap: 'Need more poop data'
+    };
+  }
+
+  var avgScore = _qaAvg(scores.map(function(s) { return s.score; }));
+  var headline = 'Score: ' + avgScore + '/100 this week';
+
+  var dataItems = [];
+  var actionItems = [];
+
+  // Consistency trend
+  try {
+    var ct = computeConsistencyTrend(7);
+    if (ct && !ct.insufficient && ct.mostCommon) {
+      if (ct.mostCommon === 'soft' || ct.mostCommon === 'normal') {
+        dataItems.push({ text: 'Consistency: mostly ' + ct.mostCommon + ' — healthy pattern', signal: 'good' });
+      } else if (ct.mostCommon === 'hard' || ct.mostCommon === 'pellet' || ct.mostCommon === 'pellets') {
+        dataItems.push({ text: 'Consistency: mostly ' + ct.mostCommon + ' — possible constipation', signal: 'warn' });
+        actionItems.push({ text: 'Add fibre-rich foods: pear, prune, sweet potato, oats', signal: 'action' });
+        actionItems.push({ text: 'Ensure adequate water/liquid intake', signal: 'action' });
+      } else if (ct.mostCommon === 'loose' || ct.mostCommon === 'watery' || ct.mostCommon === 'runny') {
+        dataItems.push({ text: 'Consistency: mostly ' + ct.mostCommon + ' — monitor for diarrhoea', signal: 'warn' });
+        actionItems.push({ text: 'Try binding foods: rice, banana, apple, toast', signal: 'action' });
+      }
+    }
+  } catch(e) {}
+
+  // Frequency
+  try {
+    var bl = computeBaselines();
+    if (bl && bl.poopPerDay !== null && bl.poopPerDay !== undefined) {
+      var freq = bl.poopPerDay;
+      dataItems.push({ text: 'Average frequency: ' + freq + ' per day', signal: freq >= 0.5 && freq <= 4 ? 'good' : 'info' });
+    }
+  } catch(e) {}
+
+  // Colors
+  var allColors = [];
+  scores.forEach(function(s) {
+    if (s.detail && s.detail.colors) {
+      s.detail.colors.forEach(function(c) { if (allColors.indexOf(c) === -1) allColors.push(c); });
+    }
+  });
+  if (allColors.length > 0) {
+    var unsafe = allColors.filter(function(c) { return ['red', 'black', 'white'].indexOf(c) !== -1; });
+    if (unsafe.length > 0) {
+      dataItems.push({ text: 'Concerning colors detected: ' + unsafe.join(', ') + ' — consult pediatrician', signal: 'warn' });
+    } else {
+      dataItems.push({ text: 'Colors normal: ' + allColors.join(', '), signal: 'good' });
+    }
+  }
+
+  // Symptoms
+  var hasBlood = scores.some(function(s) { return s.detail && s.detail.hasBlood; });
+  var hasMucus = scores.some(function(s) { return s.detail && s.detail.hasMucus; });
+  if (hasBlood) {
+    dataItems.push({ text: 'Blood detected in stool — consult pediatrician', signal: 'warn' });
+  }
+  if (hasMucus) {
+    dataItems.push({ text: 'Mucus present in recent stool(s)', signal: 'info' });
+  }
+
+  // Food-poop correlations
+  try {
+    var fpc = computeFoodPoopCorrelations();
+    if (fpc && fpc.results && fpc.results.length > 0) {
+      var flagged = fpc.results.filter(function(r) { return r.status === 'likely' || r.status === 'suspected'; });
+      if (flagged.length > 0) {
+        var triggerNames = flagged.slice(0, 3).map(function(f) { return f.food; });
+        dataItems.push({ text: 'Possible trigger foods: ' + triggerNames.join(', '), signal: 'info' });
+      }
+    }
+    if (fpc && fpc.clearFoods > 0) {
+      dataItems.push({ text: fpc.clearFoods + ' of ' + fpc.totalTrackedFoods + ' tracked foods show no poop issues', signal: 'good' });
+    }
+  } catch(e) {}
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Continue logging consistency and color for better patterns', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: '📊', items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
+
+  return {
+    icon: '💩', title: 'Poop Patterns', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + scores.length + ' days of data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: ACTIVITY GENERAL ═══
+
+function qaAnswerActivityGeneral(intentId) {
+  var actData = _qaActivityDays14d();
+  var dataItems = [];
+  var actionItems = [];
+
+  if (actData.days < 2) {
+    return {
+      icon: '🏃', title: 'Activities & Milestones', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+        { text: 'Log activities (tummy time, play, reading) to see patterns', signal: 'info' },
+        { text: 'Even 1-2 logged days will start showing insights', signal: 'action' }
+      ]}],
+      confidence: null,
+      dataGap: 'Need more activity data'
+    };
+  }
+
+  var headline = actData.days + ' active days in last 2 weeks';
+
+  // Activity consistency
+  if (actData.days >= 10) {
+    dataItems.push({ text: actData.days + ' of 14 days had logged activities — great consistency', signal: 'good' });
+  } else if (actData.days >= 5) {
+    dataItems.push({ text: actData.days + ' of 14 days had logged activities — decent coverage', signal: 'info' });
+  } else {
+    dataItems.push({ text: 'Only ' + actData.days + ' of 14 days had activities — try to be more consistent', signal: 'warn' });
+    actionItems.push({ text: 'Aim for at least 1 activity per day', signal: 'action' });
+  }
+
+  // Domain balance
+  var domains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
+  var domainLabels = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive', sensory: 'Sensory' };
+  var dc = actData.domainCounts;
+  var coveredDomains = domains.filter(function(d) { return (dc[d] || 0) > 0; });
+  var missingDomains = domains.filter(function(d) { return (dc[d] || 0) === 0; });
+
+  if (missingDomains.length === 0) {
+    dataItems.push({ text: 'All 5 developmental domains covered — balanced stimulation', signal: 'good' });
+  } else if (missingDomains.length <= 2) {
+    var missingLabels = missingDomains.map(function(d) { return domainLabels[d]; });
+    dataItems.push({ text: 'Missing domains: ' + missingLabels.join(', '), signal: 'warn' });
+    // Suggest activities for weakest domain
+    var domainActivities = {
+      motor: 'tummy time, crawling practice, or reaching for toys',
+      language: 'reading books, singing songs, or naming objects',
+      social: 'peek-a-boo, mirror play, or social games',
+      cognitive: 'stacking blocks, cause-and-effect toys, or problem solving',
+      sensory: 'texture exploration, water play, or music'
+    };
+    actionItems.push({ text: 'Try ' + (domainActivities[missingDomains[0]] || 'new activities') + ' for ' + domainLabels[missingDomains[0]], signal: 'action' });
+  } else {
+    dataItems.push({ text: 'Only ' + coveredDomains.length + ' of 5 domains covered — expand activity variety', signal: 'warn' });
+  }
+
+  // Strongest domain
+  var strongest = null;
+  var strongestCount = 0;
+  domains.forEach(function(d) {
+    if ((dc[d] || 0) > strongestCount) { strongest = d; strongestCount = dc[d]; }
+  });
+  if (strongest) {
+    dataItems.push({ text: 'Strongest focus: ' + domainLabels[strongest] + ' (' + strongestCount + ' sessions)', signal: 'info' });
+  }
+
+  // Milestone score
+  try {
+    var ms = calcMilestoneScore();
+    if (ms.score !== null && ms.score !== undefined) {
+      if (ms.score >= 70) {
+        dataItems.push({ text: 'Milestone score: ' + ms.score + '/100 — on track', signal: 'good' });
+      } else if (ms.score >= 40) {
+        dataItems.push({ text: 'Milestone score: ' + ms.score + '/100 — some areas need attention', signal: 'warn' });
+      } else {
+        dataItems.push({ text: 'Milestone score: ' + ms.score + '/100 — focus on activity engagement', signal: 'warn' });
+      }
+      if (ms.detail && ms.detail.inProgress > 0) {
+        dataItems.push({ text: ms.detail.inProgress + ' milestones currently in progress', signal: 'info' });
+      }
+    }
+  } catch(e) {}
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Morning motor activity helps nighttime sleep quality', signal: 'action' });
+  }
+  actionItems.push({ text: 'Rotate between domains daily for balanced development', signal: 'action' });
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: '📊', items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: '💡', items: actionItems.slice(0, 4) });
+
+  return {
+    icon: '🏃', title: 'Activities & Milestones', headline: headline,
+    sections: sections,
+    confidence: 'Based on 14-day activity log',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: OVERALL ═══
+
+function qaAnswerOverall(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+
+  try {
+    var zs = calcZivaScore();
+    if (zs.score === null) {
+      return {
+        icon: '🌟', title: 'Overall Status', headline: 'Not enough data yet',
+        sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+          { text: 'Log sleep, meals, and poop to see the Ziva Score', signal: 'info' },
+          { text: 'Each domain needs at least a few days of data', signal: 'action' }
+        ]}],
+        confidence: null,
+        dataGap: 'Need more data across domains'
+      };
+    }
+
+    var headline = 'Ziva Score: ' + zs.score + '/100';
+    var trend = getZivaScoreTrend7d();
+    if (trend && trend.delta) {
+      if (trend.delta > 0) headline += ' (↑' + trend.delta + ')';
+      else if (trend.delta < 0) headline += ' (↓' + Math.abs(trend.delta) + ')';
+    }
+
+    // Domain breakdown
+    var domainNames = { sleep: 'Sleep', diet: 'Diet', poop: 'Poop', medical: 'Medical', milestones: 'Milestones' };
+    var domainIcons = { sleep: '😴', diet: '🥣', poop: '💩', medical: '🏥', milestones: '🎯' };
+    var weakest = null;
+    var weakestScore = 101;
+    var strongest = null;
+    var strongestScore = -1;
+
+    Object.keys(zs.domains).forEach(function(key) {
+      var d = zs.domains[key];
+      if (d.score !== null && d.score !== undefined) {
+        var signal = d.score >= 70 ? 'good' : d.score >= 40 ? 'warn' : 'warn';
+        var staleNote = d.isStale ? ' (stale)' : '';
+        dataItems.push({ text: domainIcons[key] + ' ' + domainNames[key] + ': ' + d.score + '/100' + staleNote, signal: signal });
+        if (d.score < weakestScore) { weakestScore = d.score; weakest = key; }
+        if (d.score > strongestScore) { strongestScore = d.score; strongest = key; }
+      }
+    });
+
+    // Strongest
+    if (strongest) {
+      dataItems.push({ text: 'Strongest: ' + domainNames[strongest] + ' — keep it up!', signal: 'good' });
+    }
+
+    // Action for weakest
+    if (weakest && weakestScore < 70) {
+      var domainActions = {
+        sleep: 'Focus on consistent bedtime and morning activity',
+        diet: 'Add variety and fill nutrient gaps',
+        poop: 'Monitor consistency and adjust fibre/hydration',
+        medical: 'Check vaccination and supplement schedule',
+        milestones: 'Increase daily activity engagement across domains'
+      };
+      actionItems.push({ text: domainActions[weakest] || 'Focus on ' + domainNames[weakest], signal: 'action' });
+    }
+
+    // Supplement check
+    try {
+      var suppAdh = computeSupplementAdherence(7);
+      if (suppAdh && suppAdh.length > 0) {
+        suppAdh.forEach(function(s) {
+          if (s.adherenceRate < 80) {
+            actionItems.push({ text: s.name + ' adherence: ' + s.adherenceRate + '% — try not to miss doses', signal: 'action' });
+          }
+        });
+      }
+    } catch(e) {}
+
+    // Vaccination
+    try {
+      var nextVacc = (vaccData || []).find(function(v) { return v.upcoming; });
+      if (nextVacc) {
+        var vaccDate = nextVacc.date || nextVacc.dueDate;
+        if (vaccDate) {
+          var daysUntil = Math.round((new Date(vaccDate) - new Date(today())) / 86400000);
+          if (daysUntil <= 7 && daysUntil >= 0) {
+            actionItems.push({ text: 'Vaccination due in ' + daysUntil + ' day(s): ' + (nextVacc.name || 'scheduled vaccine'), signal: 'action' });
+          }
+        }
+      }
+    } catch(e) {}
+
+    if (actionItems.length === 0) {
+      actionItems.push({ text: 'Everything looks good — keep up the great work!', signal: 'good' });
+    }
+
+    var sections = [];
+    if (dataItems.length > 0) sections.push({ label: 'DOMAIN BREAKDOWN', icon: '📊', items: dataItems.slice(0, 7) });
+    if (actionItems.length > 0) sections.push({ label: 'TOP PRIORITIES', icon: '💡', items: actionItems.slice(0, 4) });
+
+    return {
+      icon: '🌟', title: 'Overall Status', headline: headline,
+      sections: sections,
+      confidence: 'Based on ' + zs.dataCompleteness + ' of 5 domains with data',
+      dataGap: zs.dataCompleteness < 5 ? 'Some domains need more data for a complete picture' : null
+    };
+  } catch(e) {
+    return {
+      icon: '🌟', title: 'Overall Status', headline: 'Unable to compute score',
+      sections: [{ label: 'WHAT TO DO', icon: 'ℹ️', items: [
+        { text: 'Log sleep, meals, and poop to build your Ziva Score', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need more data'
+    };
+  }
+}
+
+// ═══ SMART Q&A — END ═══
 
 function sgToggleMore() {
   const extras = document.querySelectorAll('[data-sg-extra]');
@@ -21606,8 +24212,12 @@ function saveFeedingDay() {
     const timeVal = document.getElementById('mealtime-' + m)?.value || '';
     if (timeVal) {
       feedingData[d][m + '_time'] = timeVal;
-    } else if (feedingData[d][m + '_time']) {
-      // Keep existing time if not cleared
+    } else if (existing[m + '_time']) {
+      feedingData[d][m + '_time'] = existing[m + '_time'];
+    }
+    // Preserve existing intake values
+    if (existing[m + '_intake'] !== undefined) {
+      feedingData[d][m + '_intake'] = existing[m + '_intake'];
     }
   });
   save(KEYS.feeding, feedingData);
@@ -21620,6 +24230,7 @@ function saveFeedingDay() {
   renderDietIntelBanner();
   showPostSaveFlash(d);
   matchSuggestionsAfterSave(d);
+  _miRenderDietTabIntake();
 }
 
 // ── Post-Save Nutrition Flash ──
@@ -21782,9 +24393,13 @@ function showPostSaveFlash(dateStr) {
 
   overlay.classList.add('open');
 
-  // Auto-dismiss after 6s
+  // Show intake prompt after brief delay to let user see nutrition summary first
+  var intakeDateStr = dateStr;
+  setTimeout(function() { _miShowPostSavePrompt(intakeDateStr); }, 300);
+
+  // Auto-dismiss after 10s (extended from 6s to give time for intake selection)
   if (_psfTimer) clearTimeout(_psfTimer);
-  _psfTimer = setTimeout(dismissPostSaveFlash, 6000);
+  _psfTimer = setTimeout(dismissPostSaveFlash, 10000);
 }
 
 function dismissPostSaveFlash() {
@@ -27096,7 +29711,7 @@ function initWelcomeGuide() {
 }
 
 // ─────────────────────────────────────────
-// SIMPLE MODE
+// WIFE MODE (internally: simple-mode class, ziva_simple_mode localStorage key)
 // ─────────────────────────────────────────
 
 function isSimpleMode() {
@@ -27127,7 +29742,7 @@ function toggleSimpleMode() {
 
 function initSimpleMode() {
   const saved = localStorage.getItem('ziva_simple_mode');
-  // Default to simple mode ON (new users and existing users without preference)
+  // Default to Wife Mode ON (new users and existing users without preference)
   const isSimple = saved !== 'false';
   if (isSimple) {
     document.body.classList.add('simple-mode');
@@ -27157,7 +29772,7 @@ function initZoomLevel() {
   if (saved) {
     setZoomLevel(saved);
   } else {
-    // Infer from simple mode
+    // Infer from Wife Mode
     const isSimple = document.body.classList.contains('simple-mode');
     setZoomLevel(isSimple ? 'med' : 'low');
   }
@@ -27167,7 +29782,7 @@ function renderDisplaySettings() {
   // Sync dark mode toggle
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
-  // Sync simple mode toggle
+  // Sync Wife Mode toggle
   const simpleEl = document.getElementById('settingsSimpleMode');
   if (simpleEl) simpleEl.checked = document.body.classList.contains('simple-mode');
   // Sync zoom slider
@@ -29110,7 +31725,7 @@ function renderHomeContextAlerts() {
   const infoAlerts = alerts.filter(a => a.severity === 'info');
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
 
-  // Simple mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
+  // Wife Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
   const simple = isSimpleMode();
   const homeWarnings = simple
     ? actionAlerts
@@ -31901,10 +34516,13 @@ function renderHomeMealProgress() {
       </div>`;
     } else if (value) {
       const short = value.length > 20 ? value.substring(0, 18) + '…' : value;
+      const _miVal = _miGetIntake(today(), m.key);
+      const _miLv = _miLevelFor(_miVal);
       html += `<div class="meal-prog-slot mps-done" onclick="switchTab('diet')">
         <div class="meal-prog-icon">✅</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food">${escHtml(short)}</div>
+        <div class="mi-prog-row">${_miRenderBar(_miVal)} <span class="mi-prog-label">${escHtml(_miLv.label)}</span></div>
       </div>`;
     } else {
       html += `<div class="meal-prog-slot mps-empty" onclick="_qlMeal='${m.full}';openQuickModal('feed')">
@@ -31930,7 +34548,7 @@ function renderHomeMealProgress() {
     html += `<div style="text-align:center;font-size:var(--fs-xs);color:var(--tc-sage);margin-top:6px;font-weight:600;">✅ All accounted for (${realMeals} logged, ${skipped} skipped)</div>`;
   }
 
-  // ── Meal Diversity Index (visible in Simple Mode) ──
+  // ── Meal Diversity Index (visible in Wife Mode) ──
   if (realMeals >= 2) {
     const mdi = computeMealDiversity(today());
     const dayColor = getMdiColor(mdi.dayScore);
@@ -31971,7 +34589,7 @@ function renderHomeMealProgress() {
     html += `</div>`;
   }
 
-  // Food query + symptom checker shortcuts — accessible from Home, visible in Simple Mode
+  // Food query + symptom checker shortcuts — accessible from Home, visible in Wife Mode
   html += `<div style="margin-top:8px;text-align:center;display:flex;justify-content:center;gap:var(--sp-8);flex-wrap:wrap;">
     <span class="dqp-pill" style="font-size:var(--fs-xs);" onclick="openHomeFoodQuery()">🔍 Can I give this?</span>
     <span class="dqp-pill" style="font-size:var(--fs-xs);background:var(--rose-light);color:var(--tc-caution);border-color:rgba(220,120,80,0.15);" onclick="openHomeSymptomChecker()">🩺 Symptom checker</span>
@@ -35347,6 +37965,1025 @@ function renderInfoActivityCorrelation() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════
+// CROSS-DOMAIN INTELLIGENCE — 6 Cards
+// ════════════════════════════════════════════════════════════════
+
+// ── Helper: extract individual food names from a meal string ──
+function _cdParseMealFoods(mealStr) {
+  if (!mealStr || typeof mealStr !== 'string') return [];
+  return mealStr.split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+}
+
+// ── Helper: get all foods eaten on a specific date ──
+function _cdGetFoodsForDate(dateStr) {
+  const entry = feedingData[dateStr];
+  if (!entry) return [];
+  const all = [];
+  ['breakfast','lunch','dinner','snack'].forEach(m => {
+    _cdParseMealFoods(entry[m]).forEach(f => {
+      const norm = typeof normalizeFoodName === 'function' ? normalizeFoodName(f) : f;
+      if (norm) all.push(norm);
+    });
+  });
+  return [...new Set(all)];
+}
+
+// ── Helper: count meals logged on a date ──
+function _cdCountMeals(dateStr) {
+  const entry = feedingData[dateStr];
+  if (!entry) return 0;
+  let c = 0;
+  ['breakfast','lunch','dinner'].forEach(m => { if (entry[m] && entry[m].trim()) c++; });
+  return c;
+}
+
+// ── Helper: get last meal time on a date ──
+function _cdGetLastMealTime(dateStr) {
+  const entry = feedingData[dateStr];
+  if (!entry) return null;
+  // Check in reverse order: snack, dinner, lunch, breakfast
+  const meals = ['snack','dinner','lunch','breakfast'];
+  for (const m of meals) {
+    const timeKey = m + '_time';
+    if (entry[m] && entry[m].trim() && entry[timeKey]) return entry[timeKey];
+  }
+  return null;
+}
+
+// ── Helper: time string to minutes ──
+function _cdTimeToMin(timeStr) {
+  if (!timeStr) return null;
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+  return parts[0] * 60 + parts[1];
+}
+
+// ── Helper: bedtime for a date (night sleep entry) ──
+function _cdGetBedtime(dateStr) {
+  const entries = getSleepForDate(dateStr);
+  const night = entries.find(s => s.type === 'night');
+  if (!night || !night.bedtime) return null;
+  return night.bedtime;
+}
+
+// ── Helper: bar HTML ──
+function _cdBarHtml(label, value, maxVal, suffix, color) {
+  const pct = maxVal > 0 ? Math.min(100, Math.max(4, Math.round((value / maxVal) * 100))) : 4;
+  return '<div class="cd-bar-row">' +
+    '<div class="cd-bar-label">' + escHtml(label) + '</div>' +
+    '<div class="cd-bar-track"><div class="cd-bar-fill" style="width:' + pct + '%;background:' + (color || 'var(--tc-sage)') + ';"></div></div>' +
+    '<div class="cd-bar-val">' + value + (suffix || '') + '</div>' +
+    '</div>';
+}
+
+// ════════════════════════════════════════
+// Card 1: Food → Poop Pipeline
+// ════════════════════════════════════════
+
+function renderInfoFoodPoopPipeline() {
+  var sumEl = document.getElementById('infoFoodPoopPipelineSummary');
+  var trigEl = document.getElementById('infoFoodPoopPipelineTriggers');
+  var safeEl = document.getElementById('infoFoodPoopPipelineSafe');
+  var insEl = document.getElementById('infoFoodPoopPipelineInsights');
+  if (!sumEl) return;
+
+  // Collect poop-scored days
+  var poopDays = {};
+  (poopData || []).forEach(function(p) {
+    if (!p.date) return;
+    if (!poopDays[p.date]) poopDays[p.date] = [];
+    poopDays[p.date].push(p);
+  });
+
+  var poopDateList = Object.keys(poopDays).sort();
+  if (poopDateList.length < 5) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 5 days of poop data for pipeline analysis</div>';
+    if (trigEl) trigEl.innerHTML = '';
+    if (safeEl) safeEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  // Build food → poop score map with transit window (D+0, D+1, D+2)
+  var foodMap = {}; // food → [{score, dayOffset}]
+  var allScores = [];
+  var transitWeights = [1.0, 0.7, 0.3];
+
+  poopDateList.forEach(function(poopDate) {
+    var ps = calcPoopScore(poopDate);
+    if (!ps || ps.isCarryForward) return;
+    allScores.push(ps.score);
+
+    // Look back 0-2 days for foods eaten
+    for (var offset = 0; offset <= 2; offset++) {
+      var d = new Date(poopDate + 'T12:00:00');
+      d.setDate(d.getDate() - offset);
+      var foodDate = toDateStr(d);
+      var dayFoods = _cdGetFoodsForDate(foodDate);
+      dayFoods.forEach(function(food) {
+        if (!foodMap[food]) foodMap[food] = [];
+        foodMap[food].push({ score: ps.score, dayOffset: offset, weight: transitWeights[offset] });
+      });
+    }
+  });
+
+  if (allScores.length < 5) {
+    sumEl.innerHTML = '<div class="si-nodata">Need more poop-scored days for pipeline analysis</div>';
+    if (trigEl) trigEl.innerHTML = '';
+    if (safeEl) safeEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  var baseline = Math.round(allScores.reduce(function(a, b) { return a + b; }, 0) / allScores.length);
+
+  // Compute weighted average per food (min 3 occurrences)
+  var foodResults = [];
+  Object.keys(foodMap).forEach(function(food) {
+    var entries = foodMap[food];
+    if (entries.length < 3) return;
+    var wSum = 0, wCount = 0;
+    entries.forEach(function(e) { wSum += e.score * e.weight; wCount += e.weight; });
+    var avg = Math.round(wSum / wCount);
+    var diff = avg - baseline;
+    // Find best transit day
+    var offsetBuckets = [[], [], []];
+    entries.forEach(function(e) { offsetBuckets[e.dayOffset].push(e.score); });
+    var worstOffset = 0, worstAvg = avg;
+    offsetBuckets.forEach(function(bucket, idx) {
+      if (bucket.length >= 2) {
+        var bAvg = Math.round(bucket.reduce(function(a, b) { return a + b; }, 0) / bucket.length);
+        if (bAvg < worstAvg) { worstAvg = bAvg; worstOffset = idx; }
+      }
+    });
+    foodResults.push({ food: food, avg: avg, diff: diff, count: entries.length, worstOffset: worstOffset });
+  });
+
+  var triggers = foodResults.filter(function(f) { return f.diff <= -15; }).sort(function(a, b) { return a.diff - b.diff; });
+  var safeFoods = foodResults.filter(function(f) { return f.diff >= 10; }).sort(function(a, b) { return b.diff - a.diff; });
+  var totalTracked = foodResults.length;
+
+  sumEl.innerHTML = '<div class="t-sm"><strong>' + totalTracked + '</strong> foods tracked · <strong>' + triggers.length + '</strong> trigger' + (triggers.length !== 1 ? 's' : '') + ' · baseline ' + baseline + '</div>';
+
+  // Triggers
+  if (trigEl) {
+    var html = '';
+    if (triggers.length > 0) {
+      html += '<div class="cd-section-label">Trigger Foods</div>';
+      triggers.slice(0, 5).forEach(function(t) {
+        html += '<div class="cd-food-item">';
+        html += '<div class="cd-food-name">' + escHtml(t.food) + '</div>';
+        html += '<div class="cd-pill cd-pill-neg">' + t.diff + ' pts</div>';
+        html += '<div class="cd-food-meta">' + t.count + '× · worst D+' + t.worstOffset + '</div>';
+        html += '</div>';
+      });
+    } else {
+      html += '<div class="si-insight si-insight-good">No trigger foods detected — all foods within normal poop score range</div>';
+    }
+    trigEl.innerHTML = html;
+  }
+
+  // Safe foods
+  if (safeEl) {
+    var sHtml = '';
+    if (safeFoods.length > 0) {
+      sHtml += '<div class="cd-section-label">Safe Foods</div>';
+      safeFoods.slice(0, 5).forEach(function(s) {
+        sHtml += '<div class="cd-food-item">';
+        sHtml += '<div class="cd-food-name">' + escHtml(s.food) + '</div>';
+        sHtml += '<div class="cd-pill cd-pill-pos">+' + s.diff + ' pts</div>';
+        sHtml += '<div class="cd-food-meta">' + s.count + '×</div>';
+        sHtml += '</div>';
+      });
+    }
+    safeEl.innerHTML = sHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var iHtml = '';
+    if (triggers.length > 0) {
+      var top = triggers[0];
+      iHtml += '<div class="si-insight si-insight-warn">' + escHtml(top.food) + ' correlates with lower poop scores (' + top.diff + ' pts) ' + (top.worstOffset > 0 ? top.worstOffset + ' day' + (top.worstOffset > 1 ? 's' : '') + ' later' : 'same day') + ' across ' + top.count + ' meals</div>';
+    }
+    if (safeFoods.length > 0) {
+      iHtml += '<div class="si-insight si-insight-good">Best poop days follow: ' + safeFoods.slice(0, 3).map(function(s) { return escHtml(s.food); }).join(', ') + '</div>';
+    }
+    if (!iHtml) {
+      iHtml = '<div class="si-insight si-insight-info">Building food-poop correlations — more data will improve accuracy</div>';
+    }
+    insEl.innerHTML = iHtml;
+  }
+}
+
+// ════════════════════════════════════════
+// Card 2: Sleep ↔ Feeding Patterns
+// ════════════════════════════════════════
+
+function renderInfoSleepFeeding() {
+  var sumEl = document.getElementById('infoSleepFeedingSummary');
+  var gapEl = document.getElementById('infoSleepFeedingGap');
+  var compEl = document.getElementById('infoSleepFeedingMealComp');
+  var insEl = document.getElementById('infoSleepFeedingInsights');
+  if (!sumEl) return;
+
+  // Pair feeding day D with sleep night D
+  var pairs = [];
+  var feedDates = Object.keys(feedingData).sort();
+  feedDates.forEach(function(dateStr) {
+    var sleepScore = getDailySleepScore(dateStr);
+    if (!sleepScore) return;
+    var lastMealTime = _cdGetLastMealTime(dateStr);
+    var bedtime = _cdGetBedtime(dateStr);
+    var mealCount = _cdCountMeals(dateStr);
+    var foodCount = _cdGetFoodsForDate(dateStr).length;
+    pairs.push({
+      date: dateStr,
+      sleepScore: sleepScore.score,
+      wakes: sleepScore.wakes,
+      lastMealMin: _cdTimeToMin(lastMealTime),
+      bedtimeMin: _cdTimeToMin(bedtime),
+      mealCount: mealCount,
+      foodCount: foodCount
+    });
+  });
+
+  if (pairs.length < 5) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 5 days with both feeding and sleep data</div>';
+    if (gapEl) gapEl.innerHTML = '';
+    if (compEl) compEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  // 2a: Dinner-to-bedtime gap analysis
+  var gapBuckets = { '<60': [], '60-90': [], '90-120': [], '>120': [] };
+  pairs.forEach(function(p) {
+    if (p.lastMealMin === null || p.bedtimeMin === null) return;
+    var bedAdj = p.bedtimeMin;
+    if (bedAdj < 6 * 60) bedAdj += 24 * 60; // handle after-midnight bedtimes
+    var lastAdj = p.lastMealMin;
+    var gap = bedAdj - lastAdj;
+    if (gap < 0) return; // meal after bedtime — skip
+    if (gap < 60) gapBuckets['<60'].push(p.sleepScore);
+    else if (gap < 90) gapBuckets['60-90'].push(p.sleepScore);
+    else if (gap < 120) gapBuckets['90-120'].push(p.sleepScore);
+    else gapBuckets['>120'].push(p.sleepScore);
+  });
+
+  // 2b: Meal completeness
+  var complete = pairs.filter(function(p) { return p.mealCount >= 3; });
+  var incomplete = pairs.filter(function(p) { return p.mealCount < 3; });
+  var compAvg = complete.length >= 2 ? Math.round(complete.reduce(function(a, p) { return a + p.sleepScore; }, 0) / complete.length) : null;
+  var incAvg = incomplete.length >= 2 ? Math.round(incomplete.reduce(function(a, p) { return a + p.sleepScore; }, 0) / incomplete.length) : null;
+
+  // Find best gap bucket
+  var bestBucket = null, bestAvg = 0;
+  var gapSummaries = [];
+  Object.keys(gapBuckets).forEach(function(label) {
+    var arr = gapBuckets[label];
+    if (arr.length < 2) return;
+    var avg = Math.round(arr.reduce(function(a, b) { return a + b; }, 0) / arr.length);
+    gapSummaries.push({ label: label, avg: avg, count: arr.length });
+    if (avg > bestAvg) { bestAvg = avg; bestBucket = label; }
+  });
+
+  var summaryText = '';
+  if (bestBucket) {
+    var overallAvg = Math.round(pairs.reduce(function(a, p) { return a + p.sleepScore; }, 0) / pairs.length);
+    var diff = bestAvg - overallAvg;
+    summaryText = 'Dinner gap ' + bestBucket + ' min → ' + (diff >= 0 ? '+' : '') + diff + ' sleep';
+  } else {
+    summaryText = pairs.length + ' feeding-sleep pairs analyzed';
+  }
+  sumEl.innerHTML = '<div class="t-sm">' + summaryText + '</div>';
+
+  // Gap bars
+  if (gapEl) {
+    var html = '';
+    if (gapSummaries.length > 0) {
+      html += '<div class="cd-section-label">Dinner-to-Bedtime Gap</div>';
+      var maxAvg = Math.max.apply(null, gapSummaries.map(function(g) { return g.avg; }));
+      gapSummaries.forEach(function(g) {
+        var color = g.label === bestBucket ? 'var(--tc-sage)' : 'var(--tc-amber)';
+        html += _cdBarHtml(g.label + ' min', g.avg, maxAvg, '', color);
+      });
+    } else {
+      html += '<div class="si-nodata">Need meal times logged to analyze dinner-to-bedtime gap</div>';
+    }
+    gapEl.innerHTML = html;
+  }
+
+  // Meal completeness
+  if (compEl) {
+    var cHtml = '<div class="cd-section-label">Meal Completeness</div>';
+    if (compAvg !== null && incAvg !== null) {
+      var mDiff = compAvg - incAvg;
+      var maxS = Math.max(compAvg, incAvg);
+      cHtml += _cdBarHtml('All 3 meals', compAvg, maxS, '', 'var(--tc-sage)');
+      cHtml += _cdBarHtml('Incomplete', incAvg, maxS, '', 'var(--tc-amber)');
+      cHtml += '<div class="cd-align-end"><span class="cd-pill ' + (mDiff > 0 ? 'cd-pill-pos' : mDiff < -3 ? 'cd-pill-neg' : 'cd-pill-neutral') + '">' + (mDiff >= 0 ? '+' : '') + mDiff + ' pts difference</span></div>';
+    } else {
+      cHtml += '<div class="si-nodata">Need more complete vs incomplete meal days for comparison</div>';
+    }
+    compEl.innerHTML = cHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var iHtml = '';
+    if (bestBucket) {
+      iHtml += '<div class="si-insight si-insight-good">Best sleep follows a ' + bestBucket + ' min gap after the last meal (avg ' + bestAvg + ')</div>';
+    }
+    if (compAvg !== null && incAvg !== null && compAvg - incAvg >= 5) {
+      iHtml += '<div class="si-insight si-insight-info">Complete meal days show better sleep scores (+' + (compAvg - incAvg) + ' pts)</div>';
+    }
+    if (!iHtml) {
+      iHtml = '<div class="si-insight si-insight-info">Building sleep-feeding correlations — log meal times for deeper insights</div>';
+    }
+    insEl.innerHTML = iHtml;
+  }
+}
+
+// ════════════════════════════════════════
+// Card 3: Activity → Sleep Quality (Deep)
+// ════════════════════════════════════════
+
+function renderInfoActivitySleepDeep() {
+  var sumEl = document.getElementById('infoActivitySleepDeepSummary');
+  var timEl = document.getElementById('infoActivitySleepDeepTiming');
+  var intEl = document.getElementById('infoActivitySleepDeepIntensity');
+  var domEl = document.getElementById('infoActivitySleepDeepDomains');
+  var insEl = document.getElementById('infoActivitySleepDeepInsights');
+  if (!sumEl) return;
+
+  // Pair activity day D with sleep night D
+  var pairs = [];
+  var allDates = new Set();
+  // Collect dates from last 60 days
+  for (var i = 0; i < 60; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    allDates.add(toDateStr(d));
+  }
+
+  allDates.forEach(function(dateStr) {
+    var sleepScore = getDailySleepScore(dateStr);
+    if (!sleepScore) return;
+
+    var entries = Array.isArray(activityLog[dateStr]) ? activityLog[dateStr] : [];
+    var totalDur = 0;
+    var timingBuckets = { morning: false, afternoon: false, evening: false };
+    var domainSet = new Set();
+
+    entries.forEach(function(e) {
+      totalDur += (e.duration || 0);
+      (e.domains || []).forEach(function(dm) { domainSet.add(dm); });
+      if (e.ts) {
+        var h = new Date(e.ts).getHours();
+        if (h >= 5 && h < 12) timingBuckets.morning = true;
+        else if (h >= 12 && h < 17) timingBuckets.afternoon = true;
+        else timingBuckets.evening = true;
+      }
+    });
+
+    // Classify timing
+    var timingLabel = 'none';
+    var activeSlots = Object.keys(timingBuckets).filter(function(k) { return timingBuckets[k]; });
+    if (activeSlots.length > 1) timingLabel = 'mixed';
+    else if (activeSlots.length === 1) timingLabel = activeSlots[0];
+
+    pairs.push({
+      date: dateStr, sleepScore: sleepScore.score,
+      hasActivity: entries.length > 0, totalDur: totalDur,
+      timing: timingLabel, domains: [...domainSet], entryCount: entries.length
+    });
+  });
+
+  if (pairs.length < 10) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 10 days with sleep data for activity-sleep deep analysis</div>';
+    if (timEl) timEl.innerHTML = '';
+    if (intEl) intEl.innerHTML = '';
+    if (domEl) domEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  // 3a: Timing analysis
+  var timingGroups = {};
+  ['morning','afternoon','evening','mixed','none'].forEach(function(t) {
+    timingGroups[t] = pairs.filter(function(p) { return p.timing === t; });
+  });
+
+  var timingSummaries = [];
+  var timingLabels = { morning:'Morning', afternoon:'Afternoon', evening:'Evening', mixed:'Mixed', none:'No activity' };
+  Object.keys(timingGroups).forEach(function(t) {
+    var arr = timingGroups[t];
+    if (arr.length < 3) return;
+    var avg = Math.round(arr.reduce(function(a, p) { return a + p.sleepScore; }, 0) / arr.length);
+    timingSummaries.push({ key: t, label: timingLabels[t], avg: avg, count: arr.length });
+  });
+  timingSummaries.sort(function(a, b) { return b.avg - a.avg; });
+
+  // 3b: Intensity analysis
+  var intensityGroups = { '0 min': [], '1-15': [], '15-30': [], '30+': [] };
+  pairs.forEach(function(p) {
+    if (p.totalDur === 0) intensityGroups['0 min'].push(p.sleepScore);
+    else if (p.totalDur <= 15) intensityGroups['1-15'].push(p.sleepScore);
+    else if (p.totalDur <= 30) intensityGroups['15-30'].push(p.sleepScore);
+    else intensityGroups['30+'].push(p.sleepScore);
+  });
+
+  var intensitySummaries = [];
+  Object.keys(intensityGroups).forEach(function(k) {
+    var arr = intensityGroups[k];
+    if (arr.length < 3) return;
+    var avg = Math.round(arr.reduce(function(a, b) { return a + b; }, 0) / arr.length);
+    intensitySummaries.push({ label: k, avg: avg, count: arr.length });
+  });
+
+  // 3c: Domain effects
+  var domainNames = ['motor','language','social','cognitive','sensory'];
+  var domainEffects = [];
+  var overallAvg = Math.round(pairs.reduce(function(a, p) { return a + p.sleepScore; }, 0) / pairs.length);
+
+  domainNames.forEach(function(dom) {
+    var withDom = pairs.filter(function(p) { return p.domains.includes(dom); });
+    var withoutDom = pairs.filter(function(p) { return !p.domains.includes(dom) && p.hasActivity; });
+    if (withDom.length < 3) return;
+    var withAvg = Math.round(withDom.reduce(function(a, p) { return a + p.sleepScore; }, 0) / withDom.length);
+    var diff = withAvg - overallAvg;
+    domainEffects.push({ domain: dom, avg: withAvg, diff: diff, count: withDom.length });
+  });
+  domainEffects.sort(function(a, b) { return b.diff - a.diff; });
+
+  // Summary
+  var bestInsight = '';
+  if (timingSummaries.length > 0 && timingSummaries[0].key !== 'none') {
+    bestInsight = timingSummaries[0].label + ' → best sleep (+' + (timingSummaries[0].avg - overallAvg) + ')';
+  } else if (domainEffects.length > 0 && domainEffects[0].diff > 0) {
+    bestInsight = domainEffects[0].domain + ' days → +' + domainEffects[0].diff + ' sleep';
+  } else {
+    bestInsight = pairs.filter(function(p) { return p.hasActivity; }).length + ' active days analyzed';
+  }
+  sumEl.innerHTML = '<div class="t-sm">' + bestInsight + '</div>';
+
+  // Timing bars
+  if (timEl) {
+    var html = '';
+    if (timingSummaries.length > 0) {
+      html += '<div class="cd-section-label">Activity Timing</div>';
+      var tMax = Math.max.apply(null, timingSummaries.map(function(t) { return t.avg; }));
+      timingSummaries.forEach(function(t, idx) {
+        html += _cdBarHtml(t.label, t.avg, tMax, '', idx === 0 ? 'var(--tc-sage)' : 'var(--tc-amber)');
+      });
+    }
+    timEl.innerHTML = html;
+  }
+
+  // Intensity bars
+  if (intEl) {
+    var iHtml = '';
+    if (intensitySummaries.length > 0) {
+      iHtml += '<div class="cd-section-label">Activity Duration</div>';
+      var iMax = Math.max.apply(null, intensitySummaries.map(function(s) { return s.avg; }));
+      intensitySummaries.forEach(function(s) {
+        iHtml += _cdBarHtml(s.label + ' min', s.avg, iMax, '', 'var(--tc-sage)');
+      });
+    }
+    intEl.innerHTML = iHtml;
+  }
+
+  // Domain effects
+  if (domEl) {
+    var dHtml = '';
+    if (domainEffects.length > 0) {
+      dHtml += '<div class="cd-section-label">Domain Effect on Sleep</div>';
+      domainEffects.forEach(function(de) {
+        var cls = de.diff > 3 ? 'cd-pill-pos' : de.diff < -3 ? 'cd-pill-neg' : 'cd-pill-neutral';
+        dHtml += '<div class="cd-food-item">';
+        dHtml += '<div class="cd-food-name cd-capitalize">' + escHtml(de.domain) + '</div>';
+        dHtml += '<div class="cd-pill ' + cls + '">' + (de.diff >= 0 ? '+' : '') + de.diff + '</div>';
+        dHtml += '<div class="cd-food-meta">' + de.count + ' days</div>';
+        dHtml += '</div>';
+      });
+    }
+    domEl.innerHTML = dHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var isHtml = '';
+    if (timingSummaries.length > 0 && timingSummaries[0].key !== 'none') {
+      isHtml += '<div class="si-insight si-insight-good">' + timingSummaries[0].label + ' activities correlate with best sleep quality</div>';
+    }
+    if (domainEffects.length > 0 && domainEffects[0].diff >= 5) {
+      isHtml += '<div class="si-insight si-insight-info">' + escHtml(domainEffects[0].domain.charAt(0).toUpperCase() + domainEffects[0].domain.slice(1)) + ' activities show strongest positive sleep correlation (+' + domainEffects[0].diff + ' pts)</div>';
+    }
+    if (!isHtml) {
+      isHtml = '<div class="si-insight si-insight-info">More activity logging will reveal timing and domain patterns</div>';
+    }
+    insEl.innerHTML = isHtml;
+  }
+}
+
+// ════════════════════════════════════════
+// Card 4: Growth Velocity ↔ Diet Adequacy
+// ════════════════════════════════════════
+
+function renderInfoGrowthDiet() {
+  var sumEl = document.getElementById('infoGrowthDietSummary');
+  var perEl = document.getElementById('infoGrowthDietPeriod');
+  var nutEl = document.getElementById('infoGrowthDietNutrients');
+  var insEl = document.getElementById('infoGrowthDietInsights');
+  if (!sumEl) return;
+
+  if (!growthData || growthData.length < 2) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 2 weight measurements for growth-diet analysis</div>';
+    if (perEl) perEl.innerHTML = '';
+    if (nutEl) nutEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  var sorted = [...growthData].sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
+  var last = sorted[sorted.length - 1];
+  var prev = sorted[sorted.length - 2];
+
+  var daysBetweenMeasurements = Math.max(1, Math.round((new Date(last.date) - new Date(prev.date)) / 86400000));
+  var wtDiffG = Math.round((last.wt - prev.wt) * 1000);
+  var velocity = Math.round((wtDiffG / daysBetweenMeasurements) * 100) / 100;
+
+  // Velocity assessment (WHO guidance for 6-12 months: ~10-15 g/day is normal)
+  var velLabel = 'normal';
+  if (velocity < 5) velLabel = 'slow';
+  else if (velocity > 20) velLabel = 'rapid';
+
+  // Diet metrics during the growth period
+  var periodDates = [];
+  for (var i = 0; i < daysBetweenMeasurements && i < 60; i++) {
+    var d = new Date(prev.date + 'T12:00:00');
+    d.setDate(d.getDate() + i);
+    periodDates.push(toDateStr(d));
+  }
+
+  var feedingDays = periodDates.filter(function(ds) { return feedingData[ds]; });
+  if (feedingDays.length < 3) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 3 feeding days in the growth measurement window</div>';
+    if (perEl) perEl.innerHTML = '';
+    if (nutEl) nutEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  var totalMeals = 0, totalFoods = 0;
+  var nutrientDayCoverage = {};
+  KEY_NUTRIENTS.forEach(function(n) { nutrientDayCoverage[n] = 0; });
+
+  feedingDays.forEach(function(ds) {
+    totalMeals += _cdCountMeals(ds);
+    var dayFoods = _cdGetFoodsForDate(ds);
+    totalFoods += dayFoods.length;
+
+    // Check nutrients via getFoodTags
+    var tags = getFoodTags(dayFoods);
+    KEY_NUTRIENTS.forEach(function(n) {
+      var nLower = n.toLowerCase();
+      if (tags.nutrients.includes(nLower)) {
+        nutrientDayCoverage[n]++;
+      }
+    });
+  });
+
+  var avgMeals = Math.round((totalMeals / feedingDays.length) * 10) / 10;
+  var avgVariety = Math.round((totalFoods / feedingDays.length) * 10) / 10;
+
+  sumEl.innerHTML = '<div class="t-sm">Velocity <strong>' + velocity + ' g/day</strong> · <strong>' + avgMeals + '</strong> meals/day · diet ' + (velLabel === 'slow' ? '⚠️' : '✅') + '</div>';
+
+  // Period details
+  if (perEl) {
+    var pHtml = '<div class="cd-section-label">Current Growth Period</div>';
+    pHtml += '<div class="si-stat-grid">';
+    pHtml += '<div class="si-stat"><div class="si-stat-val">' + velocity + '</div><div class="si-stat-label">g/day velocity</div></div>';
+    pHtml += '<div class="si-stat"><div class="si-stat-val">' + (wtDiffG >= 0 ? '+' : '') + wtDiffG + 'g</div><div class="si-stat-label">' + daysBetweenMeasurements + ' days</div></div>';
+    pHtml += '</div>';
+    pHtml += '<div class="cd-meta">' + formatDate(prev.date) + ' → ' + formatDate(last.date) + ' · ' + prev.wt + ' → ' + last.wt + ' kg</div>';
+    perEl.innerHTML = pHtml;
+  }
+
+  // Nutrient coverage
+  if (nutEl) {
+    var nHtml = '<div class="cd-section-label">Diet During This Period</div>';
+    nHtml += '<div class="si-stat-grid">';
+    nHtml += '<div class="si-stat"><div class="si-stat-val">' + avgMeals + '</div><div class="si-stat-label">Avg meals/day</div></div>';
+    nHtml += '<div class="si-stat"><div class="si-stat-val">' + avgVariety + '</div><div class="si-stat-label">Avg foods/day</div></div>';
+    nHtml += '</div>';
+
+    var NUTRIENT_EMOJI = { iron:'🩸', calcium:'🦴', protein:'💪', 'vitamin C':'🍊', fibre:'🌾', 'vitamin A':'👁️', 'omega-3':'🧠', zinc:'🛡️' };
+    KEY_NUTRIENTS.forEach(function(n) {
+      var coveragePct = Math.round((nutrientDayCoverage[n] / feedingDays.length) * 100);
+      var color = coveragePct >= 70 ? 'var(--tc-sage)' : coveragePct >= 40 ? 'var(--tc-amber)' : 'var(--tc-rose)';
+      nHtml += _cdBarHtml((NUTRIENT_EMOJI[n] || '') + ' ' + n, coveragePct, 100, '%', color);
+    });
+    nutEl.innerHTML = nHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var iHtml = '';
+    if (velLabel === 'slow') {
+      var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
+        return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
+      });
+      if (lowNutrients.length > 0) {
+        iHtml += '<div class="si-insight si-insight-warn">Slow growth velocity coincides with low ' + lowNutrients.slice(0, 2).join(' and ') + ' coverage — consider adding rich sources</div>';
+      } else {
+        iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
+      }
+    } else {
+      iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
+    }
+    var covered = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) >= 0.5; });
+    if (covered.length < KEY_NUTRIENTS.length) {
+      var gaps = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
+      iHtml += '<div class="si-insight si-insight-info">Nutrient gaps during this period: ' + gaps.join(', ') + '</div>';
+    }
+    insEl.innerHTML = iHtml;
+  }
+}
+
+// ════════════════════════════════════════
+// Card 5: Illness Impact Radius
+// ════════════════════════════════════════
+
+function renderInfoIllnessImpact() {
+  var sumEl = document.getElementById('infoIllnessImpactSummary');
+  var epEl = document.getElementById('infoIllnessImpactEpisodes');
+  var aggEl = document.getElementById('infoIllnessImpactAggregate');
+  var insEl = document.getElementById('infoIllnessImpactInsights');
+  if (!sumEl) return;
+
+  var episodes = _getAllEpisodes().filter(function(e) {
+    if (!e.startedAt) return false;
+    var daysAgo = Math.floor((new Date() - new Date(e.startedAt)) / 86400000);
+    return daysAgo <= 90;
+  });
+
+  if (episodes.length === 0) {
+    sumEl.innerHTML = '<div class="si-nodata">No illness episodes in the last 90 days</div>';
+    if (epEl) epEl.innerHTML = '';
+    if (aggEl) aggEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  // Helper: avg score over a date range
+  function avgDomainScore(scoreFn, startDate, endDate) {
+    var scores = [];
+    var current = new Date(startDate + 'T12:00:00');
+    var end = new Date(endDate + 'T12:00:00');
+    while (current <= end) {
+      var ds = toDateStr(current);
+      var sc = scoreFn(ds);
+      if (sc !== null && typeof sc === 'object' && sc.score !== undefined) scores.push(sc.score);
+      else if (typeof sc === 'number') scores.push(sc);
+      current.setDate(current.getDate() + 1);
+    }
+    return scores.length > 0 ? Math.round(scores.reduce(function(a, b) { return a + b; }, 0) / scores.length) : null;
+  }
+
+  function avgFoodsPerDay(startDate, endDate) {
+    var counts = [];
+    var current = new Date(startDate + 'T12:00:00');
+    var end = new Date(endDate + 'T12:00:00');
+    while (current <= end) {
+      var ds = toDateStr(current);
+      var c = _cdGetFoodsForDate(ds).length;
+      counts.push(c);
+      current.setDate(current.getDate() + 1);
+    }
+    return counts.length > 0 ? Math.round((counts.reduce(function(a, b) { return a + b; }, 0) / counts.length) * 10) / 10 : null;
+  }
+
+  function avgActivitiesPerDay(startDate, endDate) {
+    var counts = [];
+    var current = new Date(startDate + 'T12:00:00');
+    var end = new Date(endDate + 'T12:00:00');
+    while (current <= end) {
+      var ds = toDateStr(current);
+      var entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+      counts.push(entries.length);
+      current.setDate(current.getDate() + 1);
+    }
+    return counts.length > 0 ? Math.round((counts.reduce(function(a, b) { return a + b; }, 0) / counts.length) * 10) / 10 : null;
+  }
+
+  var totalSickDays = 0;
+  var domainImpacts = { sleep: [], diet: [], poop: [], activity: [] };
+  var episodeResults = [];
+  var mostImpacted = null, worstDelta = 0;
+
+  episodes.forEach(function(ep) {
+    var startDate = ep.startedAt.slice(0, 10);
+    var endDate = ep.resolvedAt ? ep.resolvedAt.slice(0, 10) : today();
+    var duration = _episodeDurationDays(ep);
+    totalSickDays += duration;
+
+    // 7-day pre-illness baseline
+    var baseStart = new Date(startDate + 'T12:00:00');
+    baseStart.setDate(baseStart.getDate() - 7);
+    var baseStartStr = toDateStr(baseStart);
+    var baseEndD = new Date(startDate + 'T12:00:00');
+    baseEndD.setDate(baseEndD.getDate() - 1);
+    var baseEndStr = toDateStr(baseEndD);
+
+    var result = {
+      type: ep.illnessType, emoji: ep.emoji || '🤒',
+      startDate: startDate, endDate: endDate, duration: duration,
+      status: ep.status || 'resolved',
+      domains: {}
+    };
+
+    // Sleep
+    var baseSleep = avgDomainScore(getDailySleepScore, baseStartStr, baseEndStr);
+    var illSleep = avgDomainScore(getDailySleepScore, startDate, endDate);
+    if (baseSleep !== null && illSleep !== null) {
+      var delta = illSleep - baseSleep;
+      result.domains.sleep = { before: baseSleep, during: illSleep, delta: delta };
+      domainImpacts.sleep.push(delta);
+      if (Math.abs(delta) > worstDelta) { worstDelta = Math.abs(delta); mostImpacted = 'sleep'; }
+    }
+
+    // Diet
+    var baseDiet = avgFoodsPerDay(baseStartStr, baseEndStr);
+    var illDiet = avgFoodsPerDay(startDate, endDate);
+    if (baseDiet !== null && illDiet !== null && baseDiet > 0) {
+      var dietPct = Math.round(((illDiet - baseDiet) / baseDiet) * 100);
+      result.domains.diet = { before: baseDiet, during: illDiet, deltaPct: dietPct };
+      domainImpacts.diet.push(dietPct);
+      if (Math.abs(dietPct) > worstDelta) { worstDelta = Math.abs(dietPct); mostImpacted = 'diet'; }
+    }
+
+    // Poop
+    var basePoop = avgDomainScore(calcPoopScore, baseStartStr, baseEndStr);
+    var illPoop = avgDomainScore(calcPoopScore, startDate, endDate);
+    if (basePoop !== null && illPoop !== null) {
+      var pDelta = illPoop - basePoop;
+      result.domains.poop = { before: basePoop, during: illPoop, delta: pDelta };
+      domainImpacts.poop.push(pDelta);
+      if (Math.abs(pDelta) > worstDelta) { worstDelta = Math.abs(pDelta); mostImpacted = 'poop'; }
+    }
+
+    // Activity
+    var baseAct = avgActivitiesPerDay(baseStartStr, baseEndStr);
+    var illAct = avgActivitiesPerDay(startDate, endDate);
+    if (baseAct !== null && illAct !== null && baseAct > 0) {
+      var actPct = Math.round(((illAct - baseAct) / baseAct) * 100);
+      result.domains.activity = { before: baseAct, during: illAct, deltaPct: actPct };
+      domainImpacts.activity.push(actPct);
+      if (Math.abs(actPct) > worstDelta) { worstDelta = Math.abs(actPct); mostImpacted = 'activity'; }
+    }
+
+    episodeResults.push(result);
+  });
+
+  sumEl.innerHTML = '<div class="t-sm"><strong>' + episodes.length + '</strong> episode' + (episodes.length !== 1 ? 's' : '') + ' · ' + totalSickDays + ' sick days' + (mostImpacted ? ' · ' + mostImpacted + ' most hit' : '') + '</div>';
+
+  // Episode details
+  if (epEl) {
+    var html = '';
+    episodeResults.forEach(function(r) {
+      html += '<div class="cd-episode">';
+      html += '<div class="cd-episode-title">' + r.emoji + ' ' + escHtml(r.type.charAt(0).toUpperCase() + r.type.slice(1)) + ' <span class="cd-episode-date">(' + formatDate(r.startDate) + ' – ' + formatDate(r.endDate) + ' · ' + r.duration + 'd)</span></div>';
+
+      if (r.domains.sleep) {
+        var sc = r.domains.sleep;
+        var col = sc.delta < -5 ? 'var(--tc-rose)' : sc.delta > 5 ? 'var(--tc-sage)' : 'var(--light)';
+        html += '<div class="cd-episode-row"><div class="cd-episode-domain">Sleep</div><div class="cd-episode-vals">' + sc.before + ' → ' + sc.during + '</div><div class="cd-episode-delta" style="color:' + col + ';">' + (sc.delta >= 0 ? '+' : '') + sc.delta + '</div></div>';
+      }
+      if (r.domains.diet) {
+        var dc = r.domains.diet;
+        var dCol = dc.deltaPct < -20 ? 'var(--tc-rose)' : 'var(--light)';
+        html += '<div class="cd-episode-row"><div class="cd-episode-domain">Diet</div><div class="cd-episode-vals">' + dc.before + ' → ' + dc.during + ' foods/day</div><div class="cd-episode-delta" style="color:' + dCol + ';">' + (dc.deltaPct >= 0 ? '+' : '') + dc.deltaPct + '%</div></div>';
+      }
+      if (r.domains.poop) {
+        var pc = r.domains.poop;
+        var pCol = pc.delta < -5 ? 'var(--tc-rose)' : pc.delta > 5 ? 'var(--tc-sage)' : 'var(--light)';
+        html += '<div class="cd-episode-row"><div class="cd-episode-domain">Poop</div><div class="cd-episode-vals">' + pc.before + ' → ' + pc.during + '</div><div class="cd-episode-delta" style="color:' + pCol + ';">' + (pc.delta >= 0 ? '+' : '') + pc.delta + '</div></div>';
+      }
+      if (r.domains.activity) {
+        var ac = r.domains.activity;
+        var aCol = ac.deltaPct < -30 ? 'var(--tc-rose)' : 'var(--light)';
+        html += '<div class="cd-episode-row"><div class="cd-episode-domain">Activity</div><div class="cd-episode-vals">' + ac.before + ' → ' + ac.during + '/day</div><div class="cd-episode-delta" style="color:' + aCol + ';">' + (ac.deltaPct >= 0 ? '+' : '') + ac.deltaPct + '%</div></div>';
+      }
+      html += '</div>';
+    });
+    epEl.innerHTML = html;
+  }
+
+  // Aggregate
+  if (aggEl) {
+    var aHtml = '<div class="cd-section-label">Aggregate (90 days)</div>';
+    aHtml += '<div class="si-stat-grid">';
+    aHtml += '<div class="si-stat"><div class="si-stat-val">' + totalSickDays + '</div><div class="si-stat-label">Total sick days</div></div>';
+    aHtml += '<div class="si-stat"><div class="si-stat-val">' + episodes.length + '</div><div class="si-stat-label">Episodes</div></div>';
+    aHtml += '</div>';
+
+    if (domainImpacts.sleep.length > 0) {
+      var avgSleepImpact = Math.round(domainImpacts.sleep.reduce(function(a, b) { return a + b; }, 0) / domainImpacts.sleep.length);
+      aHtml += '<div class="cd-meta">Avg sleep impact: ' + (avgSleepImpact >= 0 ? '+' : '') + avgSleepImpact + ' pts during illness</div>';
+    }
+    aggEl.innerHTML = aHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var iHtml = '';
+    if (mostImpacted) {
+      iHtml += '<div class="si-insight si-insight-warn">' + escHtml(mostImpacted.charAt(0).toUpperCase() + mostImpacted.slice(1)) + ' is the most affected domain during illness</div>';
+    }
+    if (domainImpacts.sleep.length > 0) {
+      var avgSI = Math.round(domainImpacts.sleep.reduce(function(a, b) { return a + b; }, 0) / domainImpacts.sleep.length);
+      if (avgSI < -10) {
+        iHtml += '<div class="si-insight si-insight-info">Sleep takes the biggest hit during illness (' + avgSI + ' pts avg) — expect disrupted nights for a few days post-recovery</div>';
+      }
+    }
+    if (!iHtml) {
+      iHtml = '<div class="si-insight si-insight-info">Illness impact data is building — patterns will emerge with more episodes</div>';
+    }
+    insEl.innerHTML = iHtml;
+  }
+}
+
+// ════════════════════════════════════════
+// Card 6: Milestone Burst ↔ Sleep Regression
+// ════════════════════════════════════════
+
+function renderInfoMilestoneSleepCorrelation() {
+  var sumEl = document.getElementById('infoMilestoneSleepSummary');
+  var tlEl = document.getElementById('infoMilestoneSleepTimeline');
+  var burstEl = document.getElementById('infoMilestoneSleepBursts');
+  var insEl = document.getElementById('infoMilestoneSleepInsights');
+  if (!sumEl) return;
+
+  // Build weekly data for last 60 days (8-9 weeks)
+  var weeks = [];
+  var now = new Date();
+  var numWeeks = 8;
+
+  for (var w = numWeeks - 1; w >= 0; w--) {
+    var weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() - (w * 7));
+    var weekStart = new Date(weekEnd);
+    weekStart.setDate(weekStart.getDate() - 6);
+
+    var evidenceCount = 0;
+    var sleepScores = [];
+    var domainEvidence = {};
+
+    for (var d = 0; d < 7; d++) {
+      var day = new Date(weekStart);
+      day.setDate(day.getDate() + d);
+      var ds = toDateStr(day);
+
+      // Count milestone evidence from activity log
+      var entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+      entries.forEach(function(e) {
+        var evCount = Array.isArray(e.evidence) ? e.evidence.length : 0;
+        evidenceCount += evCount;
+        if (evCount > 0 && Array.isArray(e.domains)) {
+          e.domains.forEach(function(dom) {
+            domainEvidence[dom] = (domainEvidence[dom] || 0) + evCount;
+          });
+        }
+      });
+
+      // Sleep score
+      var sc = getDailySleepScore(ds);
+      if (sc) sleepScores.push(sc.score);
+    }
+
+    var avgSleep = sleepScores.length > 0 ? Math.round(sleepScores.reduce(function(a, b) { return a + b; }, 0) / sleepScores.length) : null;
+
+    weeks.push({
+      weekNum: numWeeks - w,
+      startDate: toDateStr(weekStart),
+      endDate: toDateStr(weekEnd),
+      evidence: evidenceCount,
+      avgSleep: avgSleep,
+      domains: domainEvidence
+    });
+  }
+
+  // Check minimum data
+  var weeksWithBothData = weeks.filter(function(w) { return w.evidence > 0 && w.avgSleep !== null; });
+  if (weeksWithBothData.length < 4) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 4 weeks of activity + sleep data for milestone-sleep analysis</div>';
+    if (tlEl) tlEl.innerHTML = '';
+    if (burstEl) burstEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    return;
+  }
+
+  // Compute moving averages (2-week window)
+  for (var i = 0; i < weeks.length; i++) {
+    var windowEvidence = [];
+    var windowSleep = [];
+    for (var j = Math.max(0, i - 1); j <= i; j++) {
+      windowEvidence.push(weeks[j].evidence);
+      if (weeks[j].avgSleep !== null) windowSleep.push(weeks[j].avgSleep);
+    }
+    weeks[i].maEvidence = Math.round(windowEvidence.reduce(function(a, b) { return a + b; }, 0) / windowEvidence.length);
+    weeks[i].maSleep = windowSleep.length > 0 ? Math.round(windowSleep.reduce(function(a, b) { return a + b; }, 0) / windowSleep.length) : null;
+  }
+
+  // Flag bursts (evidence ≥ 2× moving average) and regressions (sleep ≥ 10 below MA)
+  var bursts = [];
+  var regressions = [];
+  weeks.forEach(function(w) {
+    w.isBurst = w.maEvidence > 0 && w.evidence >= w.maEvidence * 2 && w.evidence >= 4;
+    w.isRegression = w.maSleep !== null && w.avgSleep !== null && (w.maSleep - w.avgSleep) >= 10;
+    if (w.isBurst) bursts.push(w);
+    if (w.isRegression) regressions.push(w);
+  });
+
+  // Check co-occurrence (burst within ±1 week of regression)
+  var coOccurrences = 0;
+  bursts.forEach(function(b) {
+    var bIdx = weeks.indexOf(b);
+    for (var k = Math.max(0, bIdx - 1); k <= Math.min(weeks.length - 1, bIdx + 1); k++) {
+      if (weeks[k].isRegression) { coOccurrences++; break; }
+    }
+  });
+
+  sumEl.innerHTML = '<div class="t-sm"><strong>' + bursts.length + '</strong> burst' + (bursts.length !== 1 ? 's' : '') + ' detected · <strong>' + coOccurrences + '</strong> overlap' + (coOccurrences !== 1 ? 's' : '') + ' with sleep dips</div>';
+
+  // Timeline
+  if (tlEl) {
+    var html = '<div class="cd-section-label">Weekly Timeline</div>';
+    html += '<div class="cd-timeline-row cd-timeline-hdr"><div>Week</div><div>Evidence</div><div>Sleep</div><div>Burst</div><div>Dip</div></div>';
+    weeks.forEach(function(w) {
+      html += '<div class="cd-timeline-row">';
+      html += '<div class="cd-tl-week">W' + w.weekNum + '</div>';
+      html += '<div' + (w.isBurst ? ' class="cd-burst"' : '') + '>' + w.evidence + '</div>';
+      html += '<div' + (w.isRegression ? ' class="cd-regr"' : '') + '>' + (w.avgSleep !== null ? w.avgSleep : '–') + '</div>';
+      html += '<div>' + (w.isBurst ? '★' : '·') + '</div>';
+      html += '<div>' + (w.isRegression ? '⚠️' : '·') + '</div>';
+      html += '</div>';
+    });
+    tlEl.innerHTML = html;
+  }
+
+  // Burst analysis
+  if (burstEl) {
+    var bHtml = '';
+    if (bursts.length > 0) {
+      bHtml += '<div class="cd-section-label">Burst Analysis</div>';
+      bursts.forEach(function(b) {
+        var topDomain = '';
+        var maxEv = 0;
+        Object.keys(b.domains).forEach(function(dom) {
+          if (b.domains[dom] > maxEv) { maxEv = b.domains[dom]; topDomain = dom; }
+        });
+        var bIdx = weeks.indexOf(b);
+        var hadRegression = false;
+        for (var k = Math.max(0, bIdx - 1); k <= Math.min(weeks.length - 1, bIdx + 1); k++) {
+          if (weeks[k].isRegression) hadRegression = true;
+        }
+        bHtml += '<div class="cd-episode">';
+        bHtml += '<div class="cd-episode-title">★ W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
+        if (hadRegression) {
+          bHtml += '<div class="cd-burst-note-neg">Sleep dip detected near this burst</div>';
+        } else {
+          bHtml += '<div class="cd-burst-note-pos">No sleep disruption around this burst</div>';
+        }
+        bHtml += '</div>';
+      });
+    } else {
+      bHtml += '<div class="si-nodata">No milestone bursts detected yet — keep logging activities</div>';
+    }
+    burstEl.innerHTML = bHtml;
+  }
+
+  // Insights
+  if (insEl) {
+    var iHtml = '';
+    if (bursts.length > 0 && coOccurrences > 0) {
+      var rate = Math.round((coOccurrences / bursts.length) * 100);
+      iHtml += '<div class="si-insight si-insight-warn">' + coOccurrences + ' of ' + bursts.length + ' milestone bursts coincided with sleep disruption (' + rate + '%) — consistent with developmental leap patterns</div>';
+    } else if (bursts.length > 0 && coOccurrences === 0) {
+      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — Ziva handles developmental leaps well</div>';
+    }
+    if (bursts.length === 0 && weeksWithBothData.length >= 4) {
+      iHtml += '<div class="si-insight si-insight-info">No milestone bursts detected in the last ' + numWeeks + ' weeks — steady development pace</div>';
+    }
+    if (!iHtml) {
+      iHtml = '<div class="si-insight si-insight-info">More weeks of data will improve burst detection accuracy</div>';
+    }
+    insEl.innerHTML = iHtml;
+  }
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -35382,6 +39019,12 @@ function renderInfo() {
   renderInfoSupplementAdherence();
   renderInfoVaccRecovery();
   renderInfoGrowthVelocity();
+  renderInfoFoodPoopPipeline();
+  renderInfoSleepFeeding();
+  renderInfoActivitySleepDeep();
+  renderInfoGrowthDiet();
+  renderInfoIllnessImpact();
+  renderInfoMilestoneSleepCorrelation();
   renderInfoActivityConsistency();
   renderInfoMilestoneVelocity();
   renderInfoActivityCorrelation();
@@ -39026,7 +42669,7 @@ if ('serviceWorker' in navigator) {
   `;
   const swBlob = new Blob([swCode], { type: 'application/javascript' });
   const swURL = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swURL, { scope: '/' }).catch(() => {
+  navigator.serviceWorker.register(swURL, { scope: '/sproutlab/beta/' }).catch(() => {
     // Blob SW may fail due to scope restrictions — that's fine,
     // PWA will still work with manifest for add-to-homescreen on most browsers
   });
