@@ -1,5 +1,0 @@
-mkdir beta
-cp beta/index.html beta/manifest.json beta/
-git add beta/
-git commit -m "Add beta testing environment (v2.20)"
-git push
