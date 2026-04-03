@@ -749,11 +749,15 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 
 /* Regression alert */
 .ms-regression-alert {
-  padding:var(--sp-12) 14px; border-radius:var(--r-xl); margin-bottom:8px;
+  padding:var(--sp-12) var(--sp-12); border-radius:var(--r-xl); margin-bottom:var(--sp-8);
   background:rgba(232,168,64,0.08); border:1px solid rgba(232,168,64,0.2);
   display:flex; align-items:center; gap:var(--sp-8); cursor:pointer;
 }
 .ms-regression-alert:active { opacity:0.8; }
+.ms-regr-icon { font-size:var(--icon-base); }
+.ms-regr-body { flex:1; min-width:0; }
+.ms-regr-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.ms-regr-meta { font-size:var(--fs-xs); color:var(--mid); }
 .milestone-text strong { display:block; font-weight:600; font-size:var(--fs-md); }
 .milestone-text span { font-size:var(--fs-base); font-weight:400; color:var(--mid); }
 .milestone-meta { display:flex; gap:var(--sp-4); flex-wrap:wrap; margin-top:3px; }
@@ -4142,7 +4146,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   font-weight:600; color:var(--text); text-align:center; margin-bottom:16px;
 }
 .ql-options {
-  display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-12);
+  display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-12);
 }
 @media(max-width:360px) { .ql-options { grid-template-columns:repeat(2,1fr); } }
 .ql-option {
@@ -4163,6 +4167,135 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ql-option.qo-nap:hover { background:var(--lav-light); }
 .ql-option.qo-poop   { border-color:rgba(232,184,109,0.4); }
 .ql-option.qo-poop:hover { background:var(--amber-light); }
+.ql-option.qo-activity { border-color:rgba(181,213,197,0.4); }
+.ql-option.qo-activity:hover { background:var(--sage-light); }
+
+/* ── Activity Log Modal ── */
+.al-detect-box {
+  background:var(--warm); border:1px solid var(--border-subtle); border-radius:var(--r-lg);
+  padding:var(--sp-12); margin-top:var(--sp-8);
+}
+.al-detect-title {
+  font-size:var(--fs-xs); font-weight:700; color:var(--mid); text-transform:uppercase;
+  letter-spacing:var(--ls-wide); margin-bottom:var(--sp-8);
+}
+.al-detect-empty { font-size:var(--fs-sm); color:var(--light); font-style:italic; }
+.al-chip-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.al-chip {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  font-size:var(--fs-xs); font-weight:600; padding:var(--sp-4) 10px; border-radius:var(--r-full);
+  transition:all var(--ease-fast); cursor:default;
+}
+.al-chip-motor    { background:var(--surface-sage); color:var(--tc-sage); }
+.al-chip-language { background:var(--surface-sky); color:var(--tc-sky); }
+.al-chip-social   { background:var(--surface-rose); color:var(--tc-rose); }
+.al-chip-cognitive { background:var(--surface-lav); color:var(--tc-lav); }
+.al-chip-sensory  { background:var(--surface-amber); color:var(--tc-amber); }
+.al-chip .al-chip-x {
+  background:none; border:none; font-size:var(--fs-xs); cursor:pointer;
+  opacity:0.5; padding:0 2px; color:inherit;
+}
+.al-chip .al-chip-x:hover { opacity:1; }
+.al-dur-row { display:flex; align-items:center; gap:var(--sp-8); }
+.al-dur-row input[type="number"] {
+  width:64px; padding:var(--sp-8); border-radius:var(--r-lg); border:1.5px solid var(--border-subtle);
+  background:var(--white); font-size:var(--fs-md); font-weight:700; text-align:center; color:var(--text);
+}
+.al-dur-row .al-dur-label { font-size:var(--fs-sm); color:var(--mid); }
+.al-dur-row .al-dur-skip {
+  font-size:var(--fs-xs); background:none; border:none; color:var(--tc-sky);
+  cursor:pointer; text-decoration:underline; padding:var(--sp-4) var(--sp-8);
+}
+.al-presets { display:flex; flex-wrap:wrap; gap:var(--sp-4); margin-top:var(--sp-8); }
+.al-preset {
+  font-size:var(--fs-xs); padding:6px var(--sp-12); border-radius:var(--r-full);
+  background:var(--sage-light); border:1px solid rgba(181,213,197,0.4);
+  color:var(--tc-sage); cursor:pointer; font-weight:600;
+  transition:all var(--ease-fast);
+}
+.al-preset:active { transform:scale(0.95); background:var(--tc-sage); color:white; }
+[data-theme="dark"] .al-detect-box { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .al-dur-row input[type="number"] { background:var(--card-bg); border-color:var(--card-border); }
+[data-theme="dark"] .ql-save-activity { background:linear-gradient(135deg, #5a8a6a, #4a7a5a); }
+.ql-save-activity { background:linear-gradient(135deg, #3d7a60, #357050); }
+
+/* ── Evidence Feed + Evidence Expansion ── */
+.al-feed-list { display:flex; flex-direction:column; gap:var(--sp-4); }
+.al-feed-entry { display:flex; gap:var(--sp-8); align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--border-subtle); }
+.al-feed-time { font-size:var(--fs-2xs); color:var(--light); min-width:50px; text-align:right; }
+.al-feed-body { flex:1; min-width:0; }
+.al-feed-text { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
+.al-feed-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:2px; }
+.al-feed-meta { font-size:var(--fs-2xs); color:var(--light); white-space:nowrap; }
+.al-feed-more { font-size:var(--fs-xs); color:var(--light); text-align:center; padding:var(--sp-4); }
+.al-evid-box { padding:var(--sp-8); background:var(--warm); border-radius:var(--r-lg); margin-top:var(--sp-4); }
+.al-evid-item { font-size:var(--fs-xs); padding:3px 0; color:var(--mid); }
+.al-evid-more { font-size:var(--fs-xs); color:var(--light); }
+.al-log-btn { width:100%; padding:var(--sp-12); font-size:var(--fs-md); border-radius:var(--r-xl); }
+[data-theme="dark"] .al-evid-box { background:rgba(255,255,255,0.04); }
+
+/* ── Active Milestones Section ── */
+.ms-active-list { display:flex; flex-direction:column; gap:var(--sp-8); }
+.ms-active-item { padding:var(--sp-12) var(--sp-12); border-radius:var(--r-xl); border-left:var(--accent-w) solid var(--sage); background:var(--glass); transition:background var(--ease-fast); }
+.ms-active-item.motor { border-color:var(--sage); }
+.ms-active-item.language { border-color:#6aafcc; }
+.ms-active-item.social { border-color:#d4a04a; }
+.ms-active-item.cognitive { border-color:var(--lavender); }
+.ms-active-top { display:flex; align-items:flex-start; gap:var(--sp-8); }
+.ms-active-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:var(--sp-2); }
+.ms-active-body { flex:1; min-width:0; }
+.ms-active-name { font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ms-active-stage { display:flex; align-items:center; gap:var(--sp-4); margin-top:var(--sp-2); font-size:var(--fs-sm); font-weight:600; }
+.ms-active-dates { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); }
+.ms-active-prog { display:flex; align-items:center; gap:var(--sp-8); margin-top:var(--sp-8); }
+.ms-active-bar { flex:1; height:var(--sp-8); background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.ms-active-fill { height:100%; border-radius:var(--r-md); transition:width 0.6s ease; }
+.ms-active-fill.stage-emerging { background:linear-gradient(90deg, #e8a840, #d4a04a); }
+.ms-active-fill.stage-practicing { background:linear-gradient(90deg, #d4a04a, #b8904a); }
+.ms-active-fill.stage-consistent { background:linear-gradient(90deg, #5a9a6a, #4a8a5a); }
+.ms-active-fill.stage-mastered { background:linear-gradient(90deg, #1a7a42, #0a6a32); }
+.ms-active-obs { font-size:var(--fs-xs); font-weight:600; color:var(--mid); white-space:nowrap; }
+.ms-active-override { font-size:var(--fs-2xs); color:var(--tc-lav); background:var(--lav-light); padding:var(--sp-2) var(--sp-4); border-radius:var(--r-sm); font-weight:600; margin-left:auto; white-space:nowrap; }
+.ms-active-actions { display:flex; gap:var(--sp-4); flex-shrink:0; }
+.ms-active-suggest { font-size:var(--fs-xs); color:var(--tc-sky); background:var(--sky-light); padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); margin-top:var(--sp-4); display:inline-block; }
+[data-theme="dark"] .ms-active-item { background:rgba(255,255,255,0.03); }
+[data-theme="dark"] .ms-active-bar { background:rgba(255,255,255,0.06); }
+
+/* ── Evidence Feed: Day Groups ── */
+.al-feed-day { margin-bottom:var(--sp-8); }
+.al-feed-day-header { font-size:var(--fs-2xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); padding:var(--sp-4) 0; border-bottom:1px solid var(--border-subtle); margin-bottom:var(--sp-4); }
+.al-feed-summary { display:flex; gap:var(--sp-8); flex-wrap:wrap; margin:var(--sp-4) 0; }
+.al-feed-summary-chip { font-size:var(--fs-2xs); padding:var(--sp-2) var(--sp-4); border-radius:var(--r-sm); font-weight:600; }
+
+/* ── Activity Intelligence Cards ── */
+.ai-dot-cal { display:grid; grid-template-columns:repeat(7, 1fr); gap:var(--sp-2); margin:var(--sp-8) 0; }
+.ai-dot { width:100%; aspect-ratio:1; border-radius:var(--r-sm); background:var(--warm); transition:background var(--ease-fast); }
+.ai-dot.active { background:var(--sage); }
+.ai-dot.active-2 { background:#4a8a5a; }
+.ai-dot.active-3 { background:#1a7a42; }
+.ai-dot-label { font-size:var(--fs-2xs); text-align:center; color:var(--light); }
+.ai-domain-bar { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-2) 0; }
+.ai-domain-label { font-size:var(--fs-2xs); color:var(--light); min-width:60px; text-align:right; text-transform:uppercase; letter-spacing:var(--ls-wide); }
+.ai-domain-track { flex:1; height:var(--sp-12); background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.ai-domain-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
+.ai-domain-val { font-size:var(--fs-2xs); font-weight:600; min-width:24px; }
+.ai-velocity-item { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; border-bottom:1px solid var(--border-subtle); }
+.ai-velocity-item:last-child { border-bottom:none; }
+.ai-velocity-name { flex:1; font-size:var(--fs-sm); font-weight:600; min-width:0; }
+.ai-velocity-rate { font-size:var(--fs-xs); color:var(--mid); white-space:nowrap; }
+.ai-velocity-stale { color:var(--tc-caution); }
+.ai-corr-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; border-bottom:1px solid var(--border-subtle); }
+.ai-corr-row:last-child { border-bottom:none; }
+.ai-corr-label { flex:1; font-size:var(--fs-sm); min-width:0; }
+.ai-corr-val { font-size:var(--fs-sm); font-weight:700; white-space:nowrap; }
+.ai-corr-diff { font-size:var(--fs-2xs); font-weight:600; padding:var(--sp-2) var(--sp-4); border-radius:var(--r-sm); }
+.ai-corr-pos { background:rgba(58,112,96,0.1); color:var(--tc-sage); }
+.ai-corr-neg { background:rgba(200,80,80,0.1); color:var(--tc-rose); }
+.ai-corr-neutral { background:var(--warm); color:var(--light); }
+.ms-cat-wheel-ev { font-size:var(--fs-2xs); color:var(--light); margin-top:1px; }
+[data-theme="dark"] .ai-dot { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .ai-domain-track { background:rgba(255,255,255,0.06); }
+.al-undo-btn { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:inherit; padding:0 var(--sp-4); }
 
 /* ── Quick Log Modal ── */
 .ql-modal-overlay {
@@ -5520,6 +5653,17 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <div class="track-sub-panel" id="tab-milestones">
     <div class="grid">
 
+      <!-- ─── LOG ACTIVITY BUTTON ─── -->
+      <div class="col-full" style="padding:0 0 4px;">
+        <button class="btn-primary bp-sage al-log-btn" onclick="openQuickModal('activity')"><svg class="zi"><use href="#zi-run"/></svg> Log Activity / Observation</button>
+      </div>
+
+      <!-- ─── RECENT EVIDENCE FEED ─── -->
+      <div class="card card-daily col-full" id="recentEvidenceFeed" style="display:none;"></div>
+
+      <!-- ─── ACTIVE MILESTONES (evidence-driven primary view) ─── -->
+      <div class="card card-daily col-full" id="msActiveMilestones" style="display:none;"></div>
+
       <!-- ─── DOMAIN SCORE HERO ─── -->
       <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
 
@@ -6444,6 +6588,49 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       </div>
 
       <!-- Doctor Visit Prep -->
+      <!-- ─── ACTIVITY INTELLIGENCE ─── -->
+      <div class="home-section-label sec-t3 col-full">Activity Intelligence</div>
+
+      <!-- Activity Consistency & Domain Balance -->
+      <div class="card card-daily col-full" id="infoActivityConsistencyCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoActivityConsistencyBody','infoActivityConsistencyChevron')">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chart"/></svg></div> Consistency & Balance</div>
+          <span class="collapse-chevron" id="infoActivityConsistencyChevron">▾</span>
+        </div>
+        <div id="infoActivityConsistencySummary" class="mt-4"></div>
+        <div id="infoActivityConsistencyBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoActivityConsistencyDots" class="mt-4"></div>
+          <div id="infoActivityConsistencyDomains" class="mt-8"></div>
+          <div id="infoActivityConsistencyInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Milestone Velocity Tracker -->
+      <div class="card card-daily col-full" id="infoMilestoneVelocityCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoMilestoneVelocityBody','infoMilestoneVelocityChevron')">
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-target"/></svg></div> Milestone Velocity</div>
+          <span class="collapse-chevron" id="infoMilestoneVelocityChevron">▾</span>
+        </div>
+        <div id="infoMilestoneVelocitySummary" class="mt-4"></div>
+        <div id="infoMilestoneVelocityBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoMilestoneVelocityList" class="mt-4"></div>
+          <div id="infoMilestoneVelocityInsights" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Activity ↔ Outcome Correlations -->
+      <div class="card card-daily col-full" id="infoActivityCorrelationCard">
+        <div class="card-header" onclick="toggleHistoryCard('infoActivityCorrelationBody','infoActivityCorrelationChevron')">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Activity ↔ Outcomes</div>
+          <span class="collapse-chevron" id="infoActivityCorrelationChevron">▾</span>
+        </div>
+        <div id="infoActivityCorrelationSummary" class="mt-4"></div>
+        <div id="infoActivityCorrelationBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoActivityCorrelationRows" class="mt-4"></div>
+          <div id="infoActivityCorrelationInsights" class="mt-8"></div>
+        </div>
+      </div>
+
       <div class="card card-daily col-full" id="infoVisitPrepCard">
         <div class="card-header" onclick="toggleHistoryCard('infoVisitPrepBody','infoVisitPrepChevron')">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-steth"/></svg></div> Doctor Visit Preparation</div>
@@ -6502,6 +6689,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
     <div class="ql-option qo-feed" onclick="openQLBackfill()">
       <span class="ql-option-icon"><svg class="zi"><use href="#zi-note"/></svg></span>
       <span class="ql-option-label">Backfill</span>
+    </div>
+    <div class="ql-option qo-activity" onclick="openQuickModal('activity')">
+      <span class="ql-option-icon"><svg class="zi"><use href="#zi-run"/></svg></span>
+      <span class="ql-option-label">Activity</span>
     </div>
   </div>
 </div>
@@ -6648,6 +6839,49 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
       </div>
       <button class="ql-save ql-save-poop" onclick="saveQLPoop()">Save Poop ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Log Modal: Activity / Observation -->
+<div class="ql-modal-overlay" id="qlModal-activity" onclick="if(event.target===this)closeQuickModal()">
+  <div class="ql-modal">
+    <div class="ql-modal-header">
+      <div class="ql-modal-title"><svg class="zi"><use href="#zi-run"/></svg> Log Activity</div>
+      <button class="ql-modal-close" onclick="closeQuickModal()">✕</button>
+    </div>
+    <div class="ql-form">
+      <div>
+        <label class="micro-label">What happened?</label>
+        <textarea id="alTextInput" class="form-input" rows="2" placeholder="Water play — sitting in bucket with mangoes" oninput="onActivityInputChange()" style="resize:none;font-size:var(--fs-md);"></textarea>
+      </div>
+      <div class="al-presets" id="alPresets">
+        <button class="al-preset" onclick="alPreset('Tummy time')">🤸 Tummy time</button>
+        <button class="al-preset" onclick="alPreset('Reading books')">📖 Reading</button>
+        <button class="al-preset" onclick="alPreset('Water play')">💧 Water play</button>
+        <button class="al-preset" onclick="alPreset('Music time')">🎵 Music</button>
+        <button class="al-preset" onclick="alPreset('Sensory play')">🧩 Sensory</button>
+        <button class="al-preset" onclick="alPreset('Peek-a-boo')">👋 Social game</button>
+      </div>
+      <div class="al-detect-box" id="alDetectBox">
+        <div class="al-detect-title">Detected</div>
+        <div id="alDetectChips" class="al-chip-row">
+          <div class="al-detect-empty">Type above to auto-detect milestones</div>
+        </div>
+      </div>
+      <div class="al-dur-row">
+        <label class="micro-label" style="margin:0;">Duration:</label>
+        <input type="number" id="alDuration" min="1" max="120" placeholder="min" style="width:64px;">
+        <span class="al-dur-label">minutes</span>
+        <button class="al-dur-skip" onclick="document.getElementById('alDuration').value=''">Skip (observation)</button>
+      </div>
+      <div class="ql-row">
+        <div>
+          <label class="micro-label">Time</label>
+          <input type="time" id="alTime" class="form-input input-ctx-sage">
+        </div>
+      </div>
+      <button class="ql-save ql-save-activity" id="alSaveBtn" onclick="saveActivity()">Log Activity ✓</button>
     </div>
   </div>
 </div>
@@ -7026,7 +7260,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
     <div class="fx-col g8">
       <input type="text" id="mText" class="modal-input" oninput="activateBtn('milestoneSaveBtn',this.value.trim())" placeholder="Milestone description">
       <div class="fx-wrap g8">
-        <button class="rtog active-ok" id="mcat-motor" onclick="setMilestoneCat('motor')" style="font-size:var(--fs-sm);">🏃 Motor</button>
+        <button class="rtog active-ok" id="mcat-motor" onclick="setMilestoneCat('motor')" style="font-size:var(--fs-sm);"><svg class="zi"><use href="#zi-run"/></svg> Motor</button>
         <button class="rtog" id="mcat-language" onclick="setMilestoneCat('language')" style="font-size:var(--fs-sm);">💬 Language</button>
         <button class="rtog" id="mcat-social" onclick="setMilestoneCat('social')" style="font-size:var(--fs-sm);">🤝 Social</button>
         <button class="rtog" id="mcat-cognitive" onclick="setMilestoneCat('cognitive')" style="font-size:var(--fs-sm);">🧠 Cognitive</button>
@@ -7119,6 +7353,7 @@ const KEYS = {
   diarrhoeaEpisodes: 'ziva_diarrhoea_episodes',
   vomitingEpisodes: 'ziva_vomiting_episodes',
   coldEpisodes: 'ziva_cold_episodes',
+  activityLog: 'ziva_activity_log',
 };
 
 function load(key, def) {
@@ -7182,6 +7417,1809 @@ const MS_STAGE_META = {
   consistent:  { label:'Consistent',  icon:zi('check'), pct:75, color:'var(--tc-sage)' },
   mastered:    { label:'Mastered',    icon:zi('star'), pct:100, color:'#1a7a42' },
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// EVIDENCE-BASED MILESTONES: Classification Engine + Evidence Accumulator
+// ══════════════════════════════════════════════════════════════════════
+
+const CONF_ORDER = { high: 3, medium: 2, low: 1 };
+
+const PROMOTION_RULES = {
+  emerging:    { minEvidence: 1,  minHighConfidence: 0, minDays: 1, minSpanDays: 0,  description: 'First observation of behavior' },
+  practicing:  { minEvidence: 3,  minHighConfidence: 1, minDays: 3, minSpanDays: 5,  description: 'Repeated behavior seen multiple times' },
+  consistent:  { minEvidence: 6,  minHighConfidence: 3, minDays: 5, minSpanDays: 10, description: 'Reliable, frequent behavior' },
+  mastered:    { minEvidence: 10, minHighConfidence: 5, minDays: 7, minSpanDays: 14, description: 'Well-established, sustained behavior' }
+};
+
+// ─── EVIDENCE PATTERNS (500+) ───
+// Each: { keywords[], milestone, domain, confidence, context, exclude?[], require?[], notes? }
+const EVIDENCE_PATTERNS = [
+  // ═══════════════════════════════════════
+  // MOTOR: GROSS MOTOR
+  // ═══════════════════════════════════════
+
+  // ── Sitting ──
+  { keywords: ['sit', 'sitting', 'sat'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'independent_unsupported',
+    exclude: ['high chair', 'car seat', 'bouncer', 'supported', 'held', 'propped', 'lap', 'bumbo', 'walker seat'] },
+  { keywords: ['sit', 'sitting', 'sat'],
+    milestone: 'sit', domain: 'motor', confidence: 'medium', context: 'supported',
+    require: ['high chair', 'support', 'propped', 'held', 'bouncer', 'help', 'lap', 'bumbo', 'pillow'] },
+  { keywords: ['tripod sit', 'tripod sitting'],
+    milestone: 'sit', domain: 'motor', confidence: 'medium', context: 'tripod' },
+  { keywords: ['baithna', 'baith', 'baithi', 'baithe'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'hindi_sit',
+    exclude: ['chair', 'gadi', 'kursi'] },
+
+  // ── Rolling ──
+  { keywords: ['roll', 'rolled', 'rolling'],
+    milestone: 'roll', domain: 'motor', confidence: 'high', context: 'independent',
+    exclude: ['ball', 'toy', 'wheel', 'roti', 'chapati', 'dough', 'rolling pin'] },
+  { keywords: ['tummy to back', 'back to tummy', 'front to back', 'back to front'],
+    milestone: 'roll', domain: 'motor', confidence: 'high', context: 'directional_roll' },
+  { keywords: ['lotna', 'lot gayi', 'lot gaya', 'palat gayi', 'palat gaya', 'palti'],
+    milestone: 'roll', domain: 'motor', confidence: 'high', context: 'hindi_roll' },
+
+  // ── Crawling ──
+  { keywords: ['crawl', 'crawled', 'crawling', 'commando', 'army crawl', 'scooting', 'scoot', 'belly crawl'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'locomotion' },
+  { keywords: ['on all fours', 'hands and knees', 'rocking on knees', 'rocking back and forth'],
+    milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'pre_crawl' },
+  { keywords: ['moving forward', 'moved across', 'got to the', 'reached the toy'],
+    milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'inferred_locomotion',
+    exclude: ['walk', 'step', 'cruise'] },
+  { keywords: ['ghutno pe', 'ghutne', 'ghisakte', 'ghisak', 'rangna', 'rengte'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'hindi_crawl' },
+
+  // ── Pull to stand ──
+  { keywords: ['pull up', 'pulled up', 'pulling up', 'pull to stand', 'pulled to stand', 'pulls to stand'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'independent' },
+  { keywords: ['standing', 'stood', 'stands'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'medium', context: 'holding_furniture',
+    require: ['holding', 'furniture', 'table', 'couch', 'sofa', 'chair', 'rail', 'crib', 'cot', 'bed', 'support'] },
+  { keywords: ['standing', 'stood', 'stands'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'independent_standing',
+    exclude: ['holding', 'furniture', 'table', 'couch', 'sofa', 'chair', 'rail', 'crib', 'cot', 'support', 'help', 'hand'] },
+  { keywords: ['khada', 'khadi', 'khade', 'uth gayi', 'uth gaya', 'uthna'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'hindi_stand' },
+
+  // ── Cruising ──
+  { keywords: ['cruising', 'cruise', 'cruised', 'walking along', 'walks along', 'stepping along'],
+    milestone: 'cruise', domain: 'motor', confidence: 'high', context: 'along_furniture' },
+  { keywords: ['sideway', 'sideways', 'side step', 'side-step'],
+    milestone: 'cruise', domain: 'motor', confidence: 'medium', context: 'lateral_step',
+    require: ['furniture', 'table', 'couch', 'sofa', 'along', 'holding', 'stand'] },
+
+  // ── Walking ──
+  { keywords: ['walk', 'walked', 'walking', 'steps', 'first steps', 'took steps'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'independent',
+    exclude: ['supported', 'holding', 'walker', 'hand', 'help', 'along', 'push'] },
+  { keywords: ['walk', 'walked', 'walking'],
+    milestone: 'walk', domain: 'motor', confidence: 'medium', context: 'supported',
+    require: ['holding hand', 'walker', 'push toy', 'supported', 'with help', 'holding on'] },
+  { keywords: ['chalna', 'chal', 'chali', 'chale', 'chalte', 'chal gayi', 'chal diye'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'hindi_walk',
+    exclude: ['sahara', 'pakad'] },
+
+  // ── Head control ──
+  { keywords: ['head up', 'head control', 'lifted head', 'head steady', 'holds head'],
+    milestone: 'head_control', domain: 'motor', confidence: 'high', context: 'prone_head_lift' },
+  { keywords: ['neck strong', 'neck steady', 'no head lag', 'head lag'],
+    milestone: 'head_control', domain: 'motor', confidence: 'medium', context: 'neck_control' },
+
+  // ── Climbing ──
+  { keywords: ['climb', 'climbed', 'climbing', 'climbs'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'gross_motor_climb',
+    exclude: ['tree'] },
+  { keywords: ['up the stairs', 'up stairs', 'climbing stairs', 'step up'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'stair_climb' },
+
+  // ── Kicking ──
+  { keywords: ['kick', 'kicked', 'kicking', 'kicks'],
+    milestone: 'kick', domain: 'motor', confidence: 'high', context: 'leg_motor',
+    exclude: ['ball kick'] },
+  { keywords: ['kick ball', 'kicked ball', 'kicked the ball', 'kicking ball'],
+    milestone: 'kick', domain: 'motor', confidence: 'high', context: 'ball_kick' },
+
+  // ── Bouncing / jumping ──
+  { keywords: ['bounce', 'bounced', 'bouncing', 'jump', 'jumped', 'jumping'],
+    milestone: 'bounce', domain: 'motor', confidence: 'high', context: 'leg_strength',
+    exclude: ['bouncer', 'ball'] },
+
+  // ═══════════════════════════════════════
+  // MOTOR: FINE MOTOR
+  // ═══════════════════════════════════════
+
+  // ── Grasp ──
+  { keywords: ['grab', 'grabbed', 'grabbing', 'grasp', 'grasped', 'gripping', 'grip', 'held object', 'holding toy', 'pick up', 'picked up', 'picks up'],
+    milestone: 'grasp', domain: 'motor', confidence: 'medium', context: 'palmar',
+    exclude: ['pincer', 'thumb and finger', 'tiny', 'small piece', 'cheerio', 'puff'] },
+  { keywords: ['raking', 'raking grasp', 'whole hand', 'fist grab', 'palmar grasp'],
+    milestone: 'grasp', domain: 'motor', confidence: 'high', context: 'palmar_confirmed' },
+  { keywords: ['pakadna', 'pakad', 'pakdi', 'pakda', 'pakadte'],
+    milestone: 'grasp', domain: 'motor', confidence: 'medium', context: 'hindi_grasp' },
+
+  // ── Pincer grasp ──
+  { keywords: ['pincer', 'thumb and finger', 'thumb finger', 'tiny piece', 'small piece'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'pincer_grasp' },
+  { keywords: ['cheerio', 'puff', 'pea', 'raisin', 'crumb', 'grain', 'small food'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'small_object_pickup' },
+  { keywords: ['two finger', 'fingertip', 'finger tip', 'picked up tiny'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'precision_grasp' },
+
+  // ── Transfer ──
+  { keywords: ['transfer', 'transferred', 'passed', 'swapped', 'hand to hand', 'one hand to other', 'both hands'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'bilateral' },
+  { keywords: ['switched hand', 'other hand', 'passed toy'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'object_transfer' },
+
+  // ── Stacking ──
+  { keywords: ['stack', 'stacked', 'stacking', 'tower', 'block on block', 'built tower', 'building blocks'],
+    milestone: 'stack', domain: 'motor', confidence: 'high', context: 'block_stacking' },
+  { keywords: ['put on top', 'placed on top', 'balanced'],
+    milestone: 'stack', domain: 'motor', confidence: 'medium', context: 'stacking_attempt' },
+
+  // ── Banging ──
+  { keywords: ['bang', 'banging', 'banged', 'hitting together', 'clinking', 'knocked', 'smashing'],
+    milestone: 'bang', domain: 'motor', confidence: 'high', context: 'object_banging',
+    exclude: ['head', 'wall'] },
+  { keywords: ['two objects', 'toy together', 'toys together', 'spoons together'],
+    milestone: 'bang', domain: 'motor', confidence: 'high', context: 'bilateral_bang' },
+
+  // ── Self-feeding ──
+  { keywords: ['finger food', 'finger feeding', 'self feeding', 'self-feeding', 'fed himself', 'fed herself', 'ate by herself', 'ate by himself', 'picking up food'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'high', context: 'self_feeding' },
+  { keywords: ['hand to mouth', 'mouth with hand', 'eating by self', 'eating on own'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'high', context: 'hand_mouth_coord' },
+  { keywords: ['khud se khaya', 'khud khaya', 'apne aap khaya', 'haath se khaya'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'high', context: 'hindi_self_feed' },
+
+  // ── Spoon use ──
+  { keywords: ['spoon', 'scooped', 'spooning', 'using spoon', 'with spoon', 'spoon to mouth'],
+    milestone: 'spoon', domain: 'motor', confidence: 'high', context: 'utensil_use' },
+  { keywords: ['fork', 'using fork', 'stabbed food'],
+    milestone: 'spoon', domain: 'motor', confidence: 'high', context: 'fork_use' },
+  { keywords: ['chamach', 'chamach se', 'chammach'],
+    milestone: 'spoon', domain: 'motor', confidence: 'high', context: 'hindi_spoon' },
+
+  // ── Cup drinking ──
+  { keywords: ['cup', 'drinking cup', 'sippy', 'sippy cup', 'straw', 'open cup', 'drank from cup'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'cup_drinking' },
+  { keywords: ['gilass', 'glass se', 'paani piya cup'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'hindi_cup' },
+
+  // ── Throwing ──
+  { keywords: ['throw', 'threw', 'throwing', 'tossed', 'toss', 'flung', 'launched'],
+    milestone: 'throw', domain: 'motor', confidence: 'high', context: 'throwing',
+    exclude: ['tantrum', 'angry'] },
+
+  // ── Dropping ──
+  { keywords: ['drop', 'dropped', 'dropping', 'lets go', 'release'],
+    milestone: 'release', domain: 'motor', confidence: 'medium', context: 'voluntary_release',
+    exclude: ['accidentally', 'oops'] },
+
+  // ── Clapping (motor) ──
+  { keywords: ['clap', 'clapped', 'clapping', 'claps hands'],
+    milestone: 'clap', domain: 'motor', confidence: 'high', context: 'bilateral_coordination' },
+
+  // ── Pointing (motor) ──
+  { keywords: ['point', 'pointed', 'pointing', 'index finger', 'finger point'],
+    milestone: 'point', domain: 'motor', confidence: 'high', context: 'fine_motor_point',
+    exclude: ['i pointed', 'we pointed', 'parent pointed'] },
+
+  // ── Drawing / scribbling ──
+  { keywords: ['scribbl', 'crayon', 'draw', 'drew', 'drawing', 'pencil', 'marker', 'chalk'],
+    milestone: 'scribble', domain: 'motor', confidence: 'high', context: 'pre_writing' },
+
+  // ── Page turning ──
+  { keywords: ['turned page', 'page turning', 'turn page', 'flipped page', 'board book page'],
+    milestone: 'page_turn', domain: 'motor', confidence: 'high', context: 'fine_motor_page' },
+
+  // ── Lid / container ──
+  { keywords: ['opened lid', 'open lid', 'close lid', 'opened box', 'opened container', 'put lid on', 'took lid off'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'container_manipulation' },
+
+  // ── Nesting / inserting ──
+  { keywords: ['nesting', 'nested', 'stacking cups', 'cup in cup', 'put inside', 'insert'],
+    milestone: 'nesting', domain: 'motor', confidence: 'high', context: 'spatial_motor' },
+
+  // ═══════════════════════════════════════
+  // LANGUAGE: EXPRESSIVE
+  // ═══════════════════════════════════════
+
+  // ── Cooing ──
+  { keywords: ['coo', 'cooing', 'cooed', 'ooh', 'aah', 'gurgle', 'gurgling'],
+    milestone: 'coo', domain: 'language', confidence: 'high', context: 'early_vocalization' },
+
+  // ── Babbling ──
+  { keywords: ['babbl', 'ba-ba', 'da-da', 'ma-ma', 'ga-ga', 'consonant', 'babababa', 'mamama', 'dadada', 'gagaga'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'canonical_babbling' },
+  { keywords: ['sound', 'vocal', 'making noise', 'loud sounds', 'squealing', 'squeal', 'shriek'],
+    milestone: 'babble', domain: 'language', confidence: 'medium', context: 'vocalization' },
+  { keywords: ['jabbering', 'jabber', 'chattering', 'chatter', 'talking away'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'variegated_babbling' },
+
+  // ── Mama/Dada (non-specific) ──
+  { keywords: ['mama', 'dada', 'papa', 'mamma', 'mumma'],
+    milestone: 'mama_dada', domain: 'language', confidence: 'medium', context: 'non_specific' },
+
+  // ── Mama/Dada (with meaning) ──
+  { keywords: ['mama', 'dada', 'papa', 'mamma', 'mumma'],
+    milestone: 'mama_dada_meaning', domain: 'language', confidence: 'high', context: 'directed_at_parent',
+    require: ['when i', 'when she saw', 'looking at', 'pointed at', 'reached for', 'called', 'saw me', 'entered', 'came in', 'looking at me'] },
+
+  // ── First words ──
+  { keywords: ['said', 'says', 'word', 'called me', 'first word', 'new word'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'meaningful_word',
+    require: ['mama', 'dada', 'papa', 'hi', 'bye', 'no', 'yes', 'haan', 'nahi', 'ball', 'dog', 'cat', 'milk', 'water', 'paani', 'more', 'done', 'up', 'down'] },
+  { keywords: ['word count', 'words now', 'vocabulary', 'knows words'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'word_count' },
+  { keywords: ['bola', 'boli', 'bol rahi', 'bol raha', 'pehla shabd', 'shabd'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'hindi_word' },
+
+  // ── Two-word phrases ──
+  { keywords: ['two word', '2 word', 'two-word', 'short sentence', 'phrase', 'put words together'],
+    milestone: 'two_word', domain: 'language', confidence: 'high', context: 'word_combination' },
+
+  // ── Responds to name ──
+  { keywords: ['turned when called', 'looked when called', 'responds to name', 'turned when i said', 'looked up when'],
+    milestone: 'respond_name', domain: 'language', confidence: 'high', context: 'name_recognition' },
+  { keywords: ['name', 'respond'],
+    milestone: 'respond_name', domain: 'language', confidence: 'medium', context: 'name_recognition_general',
+    require: ['name', 'called', 'hearing', 'turned'] },
+  { keywords: ['naam sun', 'naam pe', 'naam bulaya', 'mudh gayi', 'mud gayi'],
+    milestone: 'respond_name', domain: 'language', confidence: 'high', context: 'hindi_name_response' },
+
+  // ── Understands words ──
+  { keywords: ['understands', 'understood', 'knows what', 'looked at the', 'pointed to the', 'found the', 'where is'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'receptive_language' },
+  { keywords: ['follows command', 'follows instruction', 'did what i asked', 'listened', 'obeyed'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'comprehension' },
+  { keywords: ['samajhti', 'samajhta', 'samajh gayi', 'samajh gaya', 'pata hai'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'hindi_understand' },
+
+  // ── Pointing (language) ──
+  { keywords: ['point', 'pointed', 'pointing', 'index finger'],
+    milestone: 'point', domain: 'language', confidence: 'high', context: 'proto_declarative',
+    exclude: ['i pointed', 'we pointed', 'parent pointed'] },
+  { keywords: ['showed me', 'show me', 'look at that', 'pointed at'],
+    milestone: 'point', domain: 'language', confidence: 'high', context: 'joint_attention' },
+
+  // ── Gestures ──
+  { keywords: ['gesture', 'gesturing', 'sign', 'signed', 'sign language', 'baby sign'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'gestural_communication' },
+  { keywords: ['shakes head', 'shook head', 'nodded', 'nods'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'head_gesture' },
+
+  // ── Singing / rhyme ──
+  { keywords: ['sang', 'singing', 'hums', 'humming', 'rhyme', 'nursery rhyme'],
+    milestone: 'sing', domain: 'language', confidence: 'medium', context: 'musical_language' },
+
+  // ═══════════════════════════════════════
+  // SOCIAL
+  // ═══════════════════════════════════════
+
+  // ── Social smile ──
+  { keywords: ['social smile', 'smiled at me', 'smiled at', 'smiles at people', 'smiled when'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'social_response' },
+  { keywords: ['laugh', 'laughed', 'laughing', 'giggle', 'giggled', 'giggling', 'chuckle'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'social_laughter' },
+  { keywords: ['hasi', 'hans', 'hansi', 'muskurai', 'muskuraya'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'hindi_smile' },
+
+  // ── Waving ──
+  { keywords: ['wave', 'waved', 'waving', 'bye-bye', 'bye bye', 'buh-bye', 'ta-ta'],
+    milestone: 'wave', domain: 'social', confidence: 'high', context: 'social_gesture' },
+  { keywords: ['tata', 'ta ta', 'bye kiya', 'haath hilaya'],
+    milestone: 'wave', domain: 'social', confidence: 'high', context: 'hindi_wave' },
+
+  // ── Clapping (social) ──
+  { keywords: ['clap', 'clapped', 'clapping', 'patty cake', 'pattycake', 'pat-a-cake'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'imitation' },
+  { keywords: ['taali', 'tali', 'taali bajayi'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'hindi_clap' },
+
+  // ── Peek-a-boo ──
+  { keywords: ['peek', 'peekaboo', 'peek-a-boo', 'hiding face', 'hid face'],
+    milestone: 'object_permanence', domain: 'social', confidence: 'medium', context: 'social_game' },
+
+  // ── Stranger anxiety / attachment ──
+  { keywords: ['stranger', 'cried when', 'scared of', 'clingy', 'clung to', 'only wants me', 'separation', 'stranger anxiety'],
+    milestone: 'separation_anxiety', domain: 'social', confidence: 'high', context: 'attachment_behavior' },
+  { keywords: ['won\'t go to', 'cries when i leave', 'doesn\'t want', 'only mama', 'only papa'],
+    milestone: 'separation_anxiety', domain: 'social', confidence: 'high', context: 'separation_distress' },
+  { keywords: ['ajnabi', 'dar gayi', 'dar gaya', 'chipak gayi', 'chipak gaya', 'rone lagi'],
+    milestone: 'separation_anxiety', domain: 'social', confidence: 'high', context: 'hindi_stranger' },
+
+  // ── Imitation ──
+  { keywords: ['copied', 'imitat', 'did what i did', 'followed my', 'tried to copy', 'mimick', 'mimic'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'social_learning' },
+  { keywords: ['copied sound', 'repeated after', 'does same', 'tries to do what'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'deferred_imitation' },
+  { keywords: ['nakal', 'copy kiya', 'copy karti', 'wahi kiya', 'dekh ke kiya'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'hindi_imitation' },
+
+  // ── Sharing ──
+  { keywords: ['shared', 'sharing', 'gave me', 'offered', 'handed to', 'gives toy', 'gave toy'],
+    milestone: 'sharing', domain: 'social', confidence: 'high', context: 'prosocial',
+    exclude: ['food', 'meal'] },
+
+  // ── Joint attention ──
+  { keywords: ['showed me', 'look at this', 'brought to show', 'wanted me to see'],
+    milestone: 'joint_attention', domain: 'social', confidence: 'high', context: 'shared_attention' },
+  { keywords: ['follows my gaze', 'looked where i pointed', 'followed my finger'],
+    milestone: 'joint_attention', domain: 'social', confidence: 'high', context: 'gaze_following' },
+
+  // ── Sleeps independently (social) ──
+  { keywords: ['slept alone', 'sleeps independently', 'self soothe', 'self-soothe', 'fell asleep alone', 'put herself to sleep'],
+    milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'self_regulation' },
+  { keywords: ['khud so gayi', 'akele soyi', 'apne aap soyi'],
+    milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'hindi_independent_sleep' },
+
+  // ── Plays with others ──
+  { keywords: ['played with', 'playing together', 'with other kids', 'with other bab', 'playtime with'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'peer_interaction',
+    exclude: ['alone', 'by herself', 'by himself'] },
+
+  // ── Affection ──
+  { keywords: ['hug', 'hugged', 'hugging', 'cuddle', 'cuddled', 'kiss', 'kissed', 'nuzzle'],
+    milestone: 'affection', domain: 'social', confidence: 'high', context: 'expressing_affection' },
+  { keywords: ['pyaar', 'gale lagaya', 'pappi', 'chummi', 'lipti'],
+    milestone: 'affection', domain: 'social', confidence: 'high', context: 'hindi_affection' },
+
+  // ═══════════════════════════════════════
+  // COGNITIVE
+  // ═══════════════════════════════════════
+
+  // ── Object permanence ──
+  { keywords: ['found hidden', 'looked for', 'searched', 'where did', 'lifted cloth', 'uncovered', 'found under'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'object_search' },
+  { keywords: ['looked for toy', 'searched for', 'knew where', 'remembered where'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'object_memory' },
+
+  // ── Cause and effect ──
+  { keywords: ['pressed button', 'push button', 'figured out', 'learned that', 'realized', 'knew that', 'cause and effect'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'causal_reasoning' },
+  { keywords: ['if i do', 'when she does', 'makes it', 'to make', 'to get'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'medium', context: 'intentional_action' },
+  { keywords: ['light switch', 'switch on', 'switch off', 'turn on', 'turn off'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'switch_operation' },
+
+  // ── Problem solving ──
+  { keywords: ['figured out', 'problem solv', 'worked out', 'found a way', 'tried different'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'problem_solving' },
+  { keywords: ['moved obstacle', 'pushed aside', 'pulled blanket', 'used tool', 'used stick'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'tool_use' },
+
+  // ── Shape / colour recognition ──
+  { keywords: ['shape', 'circle', 'square', 'triangle', 'star shape', 'shape sorter'],
+    milestone: 'shape_sort', domain: 'cognitive', confidence: 'high', context: 'shape_recognition' },
+  { keywords: ['colour', 'color', 'red', 'blue', 'green', 'yellow'],
+    milestone: 'color_recog', domain: 'cognitive', confidence: 'medium', context: 'color_awareness',
+    require: ['knows', 'identified', 'pointed', 'said', 'named', 'picked'] },
+
+  // ── Memory / anticipation ──
+  { keywords: ['remembered', 'anticipat', 'expected', 'knew what was coming', 'excited before'],
+    milestone: 'memory', domain: 'cognitive', confidence: 'high', context: 'anticipatory_behavior' },
+  { keywords: ['looks for spoon', 'expects food', 'reaches when sees bottle', 'knows routine'],
+    milestone: 'memory', domain: 'cognitive', confidence: 'high', context: 'routine_memory' },
+
+  // ── Exploration / curiosity ──
+  { keywords: ['explored', 'exploring', 'investigated', 'curious', 'curiosity', 'examined', 'inspected'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'medium', context: 'exploratory_behavior' },
+  { keywords: ['took apart', 'opened', 'pulled apart', 'disassembled', 'emptied'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'high', context: 'deconstructive_play' },
+
+  // ── Pretend play ──
+  { keywords: ['pretend', 'pretended', 'pretending', 'make believe', 'imaginary', 'pretend play'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'symbolic_play' },
+  { keywords: ['fed doll', 'fed teddy', 'phone to ear', 'pretend cook', 'pretend eat', 'tea party'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'functional_play' },
+
+  // ── Sorting / grouping ──
+  { keywords: ['sorted', 'sorting', 'grouped', 'grouping', 'put together', 'matched'],
+    milestone: 'sorting', domain: 'cognitive', confidence: 'high', context: 'categorization' },
+
+  // ═══════════════════════════════════════
+  // SENSORY
+  // ═══════════════════════════════════════
+
+  // ── Texture / tactile exploration ──
+  { keywords: ['texture', 'squishy', 'slimy', 'gooey', 'sand', 'mud', 'clay', 'dough', 'paint', 'foam', 'rice play', 'sensory bin', 'sensory play', 'messy play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'tactile_exploration' },
+  { keywords: ['touch', 'touched', 'feeling', 'felt', 'rubbed', 'stroked', 'poked'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'tactile_general' },
+  { keywords: ['atta', 'aata play', 'rangoli', 'haldi', 'mehendi play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_tactile' },
+
+  // ── Water play ──
+  { keywords: ['water play', 'splash', 'splashing', 'bath play', 'pouring water', 'scooping water', 'water table'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'water_play' },
+  { keywords: ['paani khel', 'paani se kheli', 'nahate hue khela'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_water' },
+
+  // ── Sound / auditory exploration ──
+  { keywords: ['music', 'musical', 'rhythm', 'drum', 'rattle', 'shaker', 'bells', 'xylophone', 'singing', 'danced', 'dancing'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'auditory_exploration' },
+  { keywords: ['listened', 'heard', 'sound', 'turned to sound', 'startled by'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'auditory_response' },
+  { keywords: ['dhol', 'ghanti', 'jhankar', 'tabla', 'gaana', 'geet'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_auditory' },
+
+  // ── Visual exploration ──
+  { keywords: ['mirror', 'reflection', 'watched', 'stared at', 'tracking', 'followed with eyes', 'bright colors', 'light play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'visual_exploration' },
+  { keywords: ['high contrast', 'black and white', 'colorful', 'bright toy', 'light up'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'visual_stimulation' },
+
+  // ── Vestibular / proprioceptive ──
+  { keywords: ['swing', 'swinging', 'rocking', 'bouncing', 'spinning', 'upside down', 'held up high', 'airplane'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'vestibular' },
+
+  // ── Mouthing (oral sensory) ──
+  { keywords: ['mouthing', 'mouths', 'chew', 'chewing', 'gnawing', 'teether', 'bit', 'biting'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'oral_sensory',
+    exclude: ['food', 'meal', 'eat'] },
+
+  // ── Temperature awareness ──
+  { keywords: ['cold water', 'warm water', 'hot', 'cold', 'ice'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'temperature_awareness',
+    require: ['felt', 'reacted', 'touched', 'sensory', 'play', 'explore'] },
+
+  // ═══════════════════════════════════════
+  // CROSS-CUTTING: ACTIVITY TYPES
+  // ═══════════════════════════════════════
+
+  // ── Tummy time ──
+  { keywords: ['tummy time', 'tummy-time', 'on tummy', 'on belly', 'prone play', 'belly time', 'pet pe'],
+    milestone: 'tummy_time', domain: 'motor', confidence: 'high', context: 'prone_play' },
+
+  // ── Book / reading (language) ──
+  { keywords: ['book', 'read', 'reading', 'story', 'storytime', 'picture book', 'board book', 'library'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'high', context: 'literacy_exposure' },
+  { keywords: ['kitaab', 'kahani', 'kahani sunai'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'high', context: 'hindi_book' },
+
+  // ── Book / reading (cognitive) ──
+  { keywords: ['book', 'read', 'reading', 'story', 'pointed at picture', 'turned page', 'page turning'],
+    milestone: 'book_engagement', domain: 'cognitive', confidence: 'medium', context: 'page_interaction' },
+
+  // ── Outdoor play ──
+  { keywords: ['park', 'outside', 'outdoor', 'garden', 'playground', 'walk outside', 'nature walk', 'grass', 'leaves'],
+    milestone: 'outdoor_play', domain: 'motor', confidence: 'medium', context: 'outdoor_gross_motor' },
+  { keywords: ['bahar', 'bahar khela', 'park gaye', 'garden mein'],
+    milestone: 'outdoor_play', domain: 'motor', confidence: 'medium', context: 'hindi_outdoor' },
+
+  // ── Bath time (sensory + motor) ──
+  { keywords: ['bath', 'bathing', 'bath time', 'during bath', 'in the tub'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'bath_sensory' },
+  { keywords: ['naha', 'nahate', 'nahayi', 'nahaya', 'nahane'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'hindi_bath' },
+
+  // ── Indian cultural contexts ──
+  { keywords: ['rangoli', 'diya', 'aarti', 'puja', 'pooja'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'cultural_sensory' },
+  { keywords: ['roti', 'chapati', 'atta', 'dough play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'food_sensory',
+    exclude: ['ate', 'eating', 'fed', 'lunch', 'dinner', 'breakfast'] },
+  { keywords: ['mango play', 'fruit play', 'vegetable play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'food_exploration' },
+
+  // ── Social games ──
+  { keywords: ['peek-a-boo', 'peekaboo', 'this little piggy', 'round and round', 'patty cake', 'itsy bitsy'],
+    milestone: 'social_game', domain: 'social', confidence: 'high', context: 'structured_game' },
+
+  // ── Dance / movement ──
+  { keywords: ['dance', 'danced', 'dancing', 'moves to music', 'bounced to music', 'swayed'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'rhythmic_movement' },
+  { keywords: ['naachi', 'naacha', 'naachti', 'jhoom', 'jhoomti'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'hindi_dance' },
+
+  // ── Puzzle / shape sorter ──
+  { keywords: ['puzzle', 'jigsaw', 'shape sorter', 'peg board', 'ring stack', 'stacking rings'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'problem_solving_play' },
+
+  // ── Screen time (low confidence) ──
+  { keywords: ['screen', 'tv', 'tablet', 'phone', 'video', 'cartoon'],
+    milestone: 'screen_time', domain: 'cognitive', confidence: 'low', context: 'passive_screen',
+    exclude: ['video call', 'facetime', 'face time'] },
+  { keywords: ['video call', 'facetime', 'face time', 'skype'],
+    milestone: 'social_play', domain: 'social', confidence: 'medium', context: 'remote_social' },
+
+  // ── Feeding-related evidence ──
+  { keywords: ['chewing', 'chewed', 'biting food', 'munching', 'mashing with gums'],
+    milestone: 'chew', domain: 'motor', confidence: 'high', context: 'oral_motor' },
+  { keywords: ['swallow', 'swallowed', 'gulped'],
+    milestone: 'swallow', domain: 'motor', confidence: 'medium', context: 'swallowing' },
+
+  // ── Teething (motor) ──
+  { keywords: ['tooth', 'teeth', 'teething', 'first tooth', 'new tooth'],
+    milestone: 'teething', domain: 'motor', confidence: 'high', context: 'dental_milestone' },
+  { keywords: ['daant', 'daant aaya', 'daant nikla', 'dant'],
+    milestone: 'teething', domain: 'motor', confidence: 'high', context: 'hindi_teething' },
+
+  // ── Emotional regulation ──
+  { keywords: ['calmed down', 'self-sooth', 'self sooth', 'stopped crying', 'comforted self'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'high', context: 'emotional_regulation' },
+  { keywords: ['tantrum', 'meltdown', 'frustrated', 'frustration'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'low', context: 'emotional_challenge' },
+
+  // ── Following instructions ──
+  { keywords: ['follow instruction', 'follow command', 'did what i said', 'came when called', 'gave it to me'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'high', context: 'receptive_compliance' },
+  { keywords: ['give me', 'put it here', 'bring it', 'come here'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'medium', context: 'simple_command',
+    require: ['did', 'followed', 'listened', 'obeyed', 'gave', 'brought', 'came'] },
+
+  // ── Number / counting awareness ──
+  { keywords: ['count', 'counting', 'one two', '1 2 3', 'numbers'],
+    milestone: 'counting', domain: 'cognitive', confidence: 'medium', context: 'number_awareness',
+    require: ['said', 'knows', 'points', 'tried', 'counted'] },
+
+  // ── Animal awareness ──
+  { keywords: ['dog', 'cat', 'bird', 'fish', 'animal', 'cow', 'horse'],
+    milestone: 'animal_awareness', domain: 'cognitive', confidence: 'medium', context: 'animal_recognition',
+    require: ['pointed', 'said', 'saw', 'excited', 'noticed', 'recognized', 'knows'] },
+  { keywords: ['kutte', 'billi', 'gaay', 'chidiya', 'machhli', 'janwar'],
+    milestone: 'animal_awareness', domain: 'cognitive', confidence: 'medium', context: 'hindi_animal' },
+
+  // ═══════════════════════════════════════
+  // EXPANDED PATTERNS: Additional keyword variants + compound activities
+  // ═══════════════════════════════════════
+
+  // ── Motor: Sitting variants ──
+  { keywords: ['sat up', 'sits up', 'sitting up'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'sit_up_transition' },
+  { keywords: ['w-sit', 'w sitting', 'w-sitting'],
+    milestone: 'sit', domain: 'motor', confidence: 'medium', context: 'w_sitting' },
+  { keywords: ['ring sit', 'ring sitting', 'long sit'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'floor_sitting' },
+  { keywords: ['sat in bucket', 'sat in tub', 'sat in basin'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'contained_sit' },
+  { keywords: ['sat on floor', 'sat on mat', 'sitting on ground'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'independent_floor' },
+
+  // ── Motor: Rolling variants ──
+  { keywords: ['log roll', 'log rolling'],
+    milestone: 'roll', domain: 'motor', confidence: 'high', context: 'log_roll' },
+  { keywords: ['flip', 'flipped', 'flipping over'],
+    milestone: 'roll', domain: 'motor', confidence: 'high', context: 'flip',
+    exclude: ['page', 'book', 'pancake'] },
+  { keywords: ['pivot', 'pivoted', 'pivoting', 'spinning on tummy'],
+    milestone: 'roll', domain: 'motor', confidence: 'medium', context: 'pivot' },
+
+  // ── Motor: Crawling variants ──
+  { keywords: ['bear crawl', 'bear walking'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'bear_crawl' },
+  { keywords: ['bum shuffle', 'bottom shuffle', 'shuffling', 'scooting on bum'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'bottom_shuffle' },
+  { keywords: ['creeping', 'crept', 'creep'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'creeping' },
+  { keywords: ['moved to', 'got to', 'reached'],
+    milestone: 'crawl', domain: 'motor', confidence: 'low', context: 'inferred_movement',
+    require: ['crawl', 'floor', 'tummy', 'belly', 'mat'] },
+
+  // ── Motor: Standing variants ──
+  { keywords: ['stood up', 'stands up', 'standing up'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'stand_up' },
+  { keywords: ['let go', 'lets go', 'free standing', 'freestanding', 'no support'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'freestanding',
+    require: ['stand', 'stood', 'standing'] },
+  { keywords: ['balanced', 'balancing'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'medium', context: 'balance',
+    require: ['stand', 'stood', 'standing', 'feet', 'leg'] },
+  { keywords: ['squat', 'squatted', 'squatting', 'sits to stand', 'stand from sit'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'squat_to_stand' },
+
+  // ── Motor: Walking variants ──
+  { keywords: ['toddl', 'toddle', 'toddled', 'toddling'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'toddling' },
+  { keywords: ['run', 'running', 'ran'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'running',
+    exclude: ['nose run', 'runny'] },
+  { keywords: ['one step', 'two steps', 'three steps', 'few steps', 'couple steps'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'early_steps' },
+  { keywords: ['walks well', 'walking well', 'walking confidently', 'steady walk'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'confident_walking' },
+
+  // ── Motor: Fine motor expanded ──
+  { keywords: ['reached for', 'reaching', 'reaches for', 'stretched for'],
+    milestone: 'grasp', domain: 'motor', confidence: 'low', context: 'pre_grasp' },
+  { keywords: ['let go of', 'released', 'put down', 'dropped intentionally'],
+    milestone: 'release', domain: 'motor', confidence: 'high', context: 'intentional_release' },
+  { keywords: ['peel', 'peeled', 'peeling'],
+    milestone: 'pincer', domain: 'motor', confidence: 'medium', context: 'peeling' },
+  { keywords: ['tear', 'tore', 'tearing', 'ripped'],
+    milestone: 'pincer', domain: 'motor', confidence: 'medium', context: 'tearing',
+    exclude: ['cry', 'tears'] },
+  { keywords: ['squeeze', 'squeezed', 'squeezing'],
+    milestone: 'grasp', domain: 'motor', confidence: 'high', context: 'squeeze_grip' },
+  { keywords: ['poke', 'poked', 'poking'],
+    milestone: 'point', domain: 'motor', confidence: 'medium', context: 'index_isolation' },
+  { keywords: ['twist', 'twisted', 'twisting', 'turned knob', 'turned handle'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'rotation_grasp' },
+  { keywords: ['thread', 'threaded', 'lacing', 'beading'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'precision_task' },
+  { keywords: ['sticker', 'stickers', 'peeled sticker', 'stuck sticker'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'sticker_play' },
+  { keywords: ['pour', 'poured', 'pouring'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'medium', context: 'pouring' },
+
+  // ── Motor: Stacking expanded ──
+  { keywords: ['2 blocks', '3 blocks', '4 blocks', 'blocks high'],
+    milestone: 'stack', domain: 'motor', confidence: 'high', context: 'counted_stacking' },
+  { keywords: ['knocked over', 'knocked down', 'toppled'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'medium', context: 'knock_down' },
+  { keywords: ['nesting cups', 'cup stack', 'cups together'],
+    milestone: 'nesting', domain: 'motor', confidence: 'high', context: 'nesting_cups' },
+
+  // ── Motor: Self feeding expanded ──
+  { keywords: ['mashed', 'mashing', 'squished food'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'medium', context: 'food_exploration' },
+  { keywords: ['dipped', 'dipping', 'dunking'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'high', context: 'dipping_food' },
+  { keywords: ['bit off', 'bite', 'bitten', 'took a bite'],
+    milestone: 'chew', domain: 'motor', confidence: 'high', context: 'biting_food' },
+  { keywords: ['chapati', 'roti', 'paratha', 'naan'],
+    milestone: 'chew', domain: 'motor', confidence: 'medium', context: 'indian_bread',
+    require: ['chew', 'ate', 'bit', 'feed', 'eating', 'munching'] },
+  { keywords: ['straw cup', 'straw drink', 'drinking straw'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'straw_drinking' },
+
+  // ── Language: Babbling expanded ──
+  { keywords: ['pa-pa', 'na-na', 'ta-ta', 'la-la', 'di-di'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'diverse_babble' },
+  { keywords: ['conversation', 'talking back', 'replying', 'responding with sounds'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'turn_taking' },
+  { keywords: ['scream', 'screaming', 'yelling', 'shouting'],
+    milestone: 'babble', domain: 'language', confidence: 'low', context: 'vocal_experiment' },
+  { keywords: ['whisper', 'whispering', 'quiet voice', 'soft voice'],
+    milestone: 'babble', domain: 'language', confidence: 'medium', context: 'volume_control' },
+  { keywords: ['raspberry', 'blowing', 'spitting', 'lip vibration'],
+    milestone: 'babble', domain: 'language', confidence: 'medium', context: 'oral_motor_sound' },
+
+  // ── Language: Words expanded ──
+  { keywords: ['animal sound', 'moo', 'baa', 'woof', 'meow', 'quack', 'roar'],
+    milestone: 'first_word', domain: 'language', confidence: 'medium', context: 'animal_sound' },
+  { keywords: ['nahi', 'haan', 'aur', 'de do', 'kha', 'pee', 'lo'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'hindi_word_basic' },
+  { keywords: ['new word today', 'said a new', 'learned to say'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'word_acquisition' },
+  { keywords: ['sentence', 'full sentence', 'three word', '3 word'],
+    milestone: 'two_word', domain: 'language', confidence: 'high', context: 'sentence' },
+  { keywords: ['asks for', 'requesting', 'asked for', 'demands'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'functional_word' },
+
+  // ── Language: Receptive expanded ──
+  { keywords: ['no', 'stops when', 'stopped when'],
+    milestone: 'understand_words', domain: 'language', confidence: 'medium', context: 'understands_no',
+    require: ['said no', 'heard no', 'when i said', 'stopped'] },
+  { keywords: ['show me', 'give me', 'bring', 'get the'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'high', context: 'one_step_command',
+    require: ['did', 'followed', 'obeyed', 'brought', 'gave', 'showed'] },
+  { keywords: ['body part', 'nose', 'ear', 'eye', 'mouth', 'hand', 'feet', 'tummy', 'head'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'body_part_id',
+    require: ['pointed', 'touched', 'showed', 'knows', 'identified'] },
+  { keywords: ['naak', 'kaan', 'aankh', 'mooh', 'haath', 'pair', 'pet', 'sir'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'hindi_body_part',
+    require: ['dikhayi', 'dikhaya', 'chuyi', 'pata', 'jaanti'] },
+
+  // ── Language: Gestures expanded ──
+  { keywords: ['raised arms', 'arms up', 'reaches up'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'pick_me_up',
+    require: ['pick up', 'wants up', 'carry', 'lifted'] },
+  { keywords: ['blow kiss', 'blew kiss', 'flying kiss'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'flying_kiss' },
+  { keywords: ['thumbs up', 'high five', 'high-five', 'fist bump'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'social_gesture' },
+  { keywords: ['shakes head no', 'head shake'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'head_shake_no' },
+  { keywords: ['nods yes', 'nodding yes', 'head nod'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'head_nod_yes' },
+
+  // ── Social: Expanded ──
+  { keywords: ['shared food', 'feeds me', 'put food in my mouth', 'offered food'],
+    milestone: 'sharing', domain: 'social', confidence: 'high', context: 'food_sharing' },
+  { keywords: ['comfort', 'comforted', 'patted', 'patting', 'hugged when crying'],
+    milestone: 'affection', domain: 'social', confidence: 'high', context: 'empathy' },
+  { keywords: ['shows off', 'showing off', 'look what i can do', 'performs'],
+    milestone: 'joint_attention', domain: 'social', confidence: 'high', context: 'performance' },
+  { keywords: ['follows me', 'followed me', 'came after me', 'chased me'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'following_game' },
+  { keywords: ['hide and seek', 'hiding', 'hid', 'found me', 'i found'],
+    milestone: 'object_permanence', domain: 'social', confidence: 'high', context: 'hide_seek' },
+  { keywords: ['doll', 'teddy', 'stuffed animal', 'soft toy', 'plushie'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'medium', context: 'toy_attachment',
+    require: ['fed', 'rocked', 'hugged', 'put to sleep', 'talked to', 'played with'] },
+  { keywords: ['took turn', 'taking turns', 'my turn', 'your turn'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'turn_taking' },
+  { keywords: ['gentle', 'gentle touch', 'stroked gently', 'patted softly'],
+    milestone: 'affection', domain: 'social', confidence: 'high', context: 'gentle_touch' },
+  { keywords: ['jealous', 'possessive', 'mine', 'no share', 'snatched'],
+    milestone: 'social_play', domain: 'social', confidence: 'medium', context: 'ownership_awareness' },
+
+  // ── Cognitive: Expanded ──
+  { keywords: ['matching', 'matched', 'same', 'pairs', 'found match'],
+    milestone: 'sorting', domain: 'cognitive', confidence: 'high', context: 'matching_game' },
+  { keywords: ['in and out', 'in out', 'putting in', 'taking out', 'filling', 'emptying'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'high', context: 'containment_play' },
+  { keywords: ['opened drawer', 'opened cupboard', 'opened door', 'opened bag'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'high', context: 'exploration_opening' },
+  { keywords: ['phone', 'remote', 'keys', 'pretend phone', 'hello phone'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'functional_object_use',
+    require: ['pretend', 'played', 'used', 'held to ear', 'pressed'] },
+  { keywords: ['tried again', 'kept trying', 'persistent', 'didn\'t give up'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'persistence' },
+  { keywords: ['surprised', 'surprised by', 'unexpected', 'didn\'t expect'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'medium', context: 'expectation_violation' },
+  { keywords: ['knows routine', 'anticipates', 'expected', 'ready for'],
+    milestone: 'memory', domain: 'cognitive', confidence: 'high', context: 'routine_understanding' },
+  { keywords: ['copy me', 'do this', 'watch this', 'follow me'],
+    milestone: 'imitation', domain: 'social', confidence: 'medium', context: 'prompted_imitation',
+    require: ['did', 'copied', 'followed', 'tried'] },
+
+  // ── Sensory: Expanded ──
+  { keywords: ['play dough', 'playdough', 'play-doh', 'clay play', 'kinetic sand'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'malleable_material' },
+  { keywords: ['bubble', 'bubbles', 'popping bubbles', 'blowing bubbles'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'bubble_play' },
+  { keywords: ['ice', 'ice cube', 'frozen', 'cold play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'temperature_play' },
+  { keywords: ['grass', 'leaves', 'flower', 'petal', 'nature'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'nature_sensory' },
+  { keywords: ['wind', 'breeze', 'fan', 'blow on'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'low', context: 'air_sensory' },
+  { keywords: ['bare feet', 'barefoot', 'different surface', 'carpet', 'tile', 'wooden floor'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'tactile_feet' },
+  { keywords: ['taste', 'tasted', 'lick', 'licked', 'new flavour', 'new flavor'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'gustatory' },
+  { keywords: ['smell', 'smelled', 'sniffed', 'fragrance', 'aroma'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'olfactory' },
+  { keywords: ['massage', 'oil massage', 'malish', 'tel lagaya'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'tactile_massage' },
+  { keywords: ['finger paint', 'hand print', 'footprint', 'stamp'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'art_sensory' },
+
+  // ── Compound activity patterns (multi-domain) ──
+  { keywords: ['played with food', 'food play', 'messy eating'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'food_sensory_play' },
+  { keywords: ['played with food', 'food play', 'messy eating'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'medium', context: 'food_motor_play' },
+  { keywords: ['bucket play', 'container play', 'box play', 'basket play'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'high', context: 'container_schema' },
+  { keywords: ['stroller walk', 'pram walk', 'walk in park', 'morning walk'],
+    milestone: 'outdoor_play', domain: 'motor', confidence: 'low', context: 'passive_outdoor' },
+  { keywords: ['gym class', 'baby gym', 'swimming', 'swim class', 'baby swim'],
+    milestone: 'outdoor_play', domain: 'motor', confidence: 'high', context: 'structured_motor_class' },
+  { keywords: ['yoga', 'baby yoga', 'stretching'],
+    milestone: 'tummy_time', domain: 'motor', confidence: 'medium', context: 'yoga_motor' },
+  { keywords: ['obstacle course', 'tunnel', 'through tunnel', 'over pillow', 'climbing over'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'obstacle_play' },
+  { keywords: ['ball pit', 'ball pool'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'ball_pit_sensory' },
+  { keywords: ['ball pit', 'ball pool'],
+    milestone: 'grasp', domain: 'motor', confidence: 'medium', context: 'ball_pit_motor' },
+  { keywords: ['ball play', 'playing ball', 'rolling ball', 'catch ball', 'throw ball'],
+    milestone: 'throw', domain: 'motor', confidence: 'medium', context: 'ball_motor' },
+  { keywords: ['ball play', 'playing ball', 'rolling ball'],
+    milestone: 'social_play', domain: 'social', confidence: 'medium', context: 'ball_social' },
+
+  // ── Indian cultural expanded ──
+  { keywords: ['chai', 'chai time', 'chai play'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'medium', context: 'chai_pretend',
+    require: ['pretend', 'play', 'cup', 'pour'] },
+  { keywords: ['aarti', 'diya', 'lamp', 'oil lamp'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'visual_cultural' },
+  { keywords: ['garba', 'dandiya', 'bhangra'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'cultural_dance' },
+  { keywords: ['kolam', 'rangoli', 'mehndi', 'mehendi'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'indian_art_sensory' },
+  { keywords: ['dhol', 'dholak', 'mridangam', 'harmonium'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'indian_instrument' },
+  { keywords: ['ghar ghar', 'ghar ghar khel', 'rasoi', 'khana banana'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'hindi_pretend_play' },
+  { keywords: ['namaste', 'namaskar', 'pranam'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'hindi_greeting' },
+  { keywords: ['jhula', 'swing', 'jhulna'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_vestibular' },
+  { keywords: ['gend', 'ball khela', 'ball phenka', 'ball pakda'],
+    milestone: 'throw', domain: 'motor', confidence: 'high', context: 'hindi_ball_play' },
+
+  // ── Additional Hindi motor ──
+  { keywords: ['chadhi', 'chadha', 'chadhna', 'upar gayi'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'hindi_climb' },
+  { keywords: ['kudna', 'kud gayi', 'kuda', 'ulti gayi'],
+    milestone: 'bounce', domain: 'motor', confidence: 'high', context: 'hindi_jump' },
+  { keywords: ['daudi', 'dauda', 'daudna', 'bhaga', 'bhagi'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'hindi_run' },
+  { keywords: ['haath se pakad ke khaya', 'finger se khaya'],
+    milestone: 'finger_feed', domain: 'motor', confidence: 'high', context: 'hindi_finger_food' },
+  { keywords: ['glass se piya', 'cup se piya', 'sippy se piya'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'hindi_cup_drink' },
+
+  // ── Additional Hindi language ──
+  { keywords: ['bolti', 'bolta', 'bol raha', 'bol rahi', 'baat kar rahi'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'hindi_talking' },
+  { keywords: ['samajhti hai', 'samajhta hai', 'sun ke karti'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'hindi_comprehends' },
+  { keywords: ['naam pe response', 'naam sune pe'],
+    milestone: 'respond_name', domain: 'language', confidence: 'high', context: 'hindi_name_response_alt' },
+  { keywords: ['dikha rahi', 'dikha raha', 'dikhaya', 'ye dekho'],
+    milestone: 'point', domain: 'language', confidence: 'high', context: 'hindi_showing' },
+
+  // ── Additional Hindi social ──
+  { keywords: ['saath mein kheli', 'saath khela', 'dost ke saath'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'hindi_social_play' },
+  { keywords: ['ro rahi', 'rone lagi', 'dar gayi', 'akeli nahi rehti'],
+    milestone: 'separation_anxiety', domain: 'social', confidence: 'high', context: 'hindi_separation_alt' },
+  { keywords: ['chupan chupai', 'chupa', 'dhundh liya'],
+    milestone: 'object_permanence', domain: 'social', confidence: 'high', context: 'hindi_peekaboo' },
+
+  // ── Additional Hindi cognitive ──
+  { keywords: ['dhundh rahi', 'dhundha', 'kahan gaya', 'kahan hai'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'hindi_search' },
+  { keywords: ['samajh gayi kaise', 'seekh gayi', 'seekh liya'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'hindi_learned' },
+  { keywords: ['jod rahi', 'joda', 'mila rahi', 'milaya'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'hindi_joining' },
+
+  // ── Time-of-day activity patterns ──
+  { keywords: ['morning play', 'morning activity', 'morning routine'],
+    milestone: 'tummy_time', domain: 'motor', confidence: 'low', context: 'morning_motor' },
+  { keywords: ['bedtime routine', 'night routine', 'wind down'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'low', context: 'bedtime_routine' },
+  { keywords: ['bath play', 'during bath', 'in the bath', 'bath time play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'bath_time_play' },
+
+  // ── Feeding-as-milestone evidence ──
+  { keywords: ['tried new food', 'new food', 'first time eating', 'new taste'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'food_novelty' },
+  { keywords: ['chew well', 'chewing well', 'good chewing', 'chews properly'],
+    milestone: 'chew', domain: 'motor', confidence: 'high', context: 'mature_chewing' },
+  { keywords: ['lump', 'lumpy food', 'textured food', 'solid food'],
+    milestone: 'chew', domain: 'motor', confidence: 'medium', context: 'texture_advance' },
+  { keywords: ['sip', 'sipped', 'sipping'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'sipping' },
+
+  // ── Teeth milestones ──
+  { keywords: ['bottom teeth', 'top teeth', 'front teeth', 'molar', 'incisor'],
+    milestone: 'teething', domain: 'motor', confidence: 'high', context: 'specific_tooth' },
+  { keywords: ['cutting tooth', 'tooth coming', 'tooth through', 'tooth broke through'],
+    milestone: 'teething', domain: 'motor', confidence: 'high', context: 'eruption' },
+  { keywords: ['4 teeth', 'six teeth', '6 teeth', '8 teeth', 'teeth count'],
+    milestone: 'teething', domain: 'motor', confidence: 'high', context: 'tooth_count' },
+
+  // ── Emotional / self-regulation expanded ──
+  { keywords: ['happy', 'joyful', 'excited', 'delighted', 'thrilled'],
+    milestone: 'social_smile', domain: 'social', confidence: 'low', context: 'positive_emotion' },
+  { keywords: ['angry', 'frustrated', 'upset', 'mad'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'low', context: 'negative_emotion' },
+  { keywords: ['calmed with', 'soothed by', 'comforted by', 'settled with'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'medium', context: 'co_regulation' },
+  { keywords: ['blankie', 'comfort object', 'lovey', 'security blanket', 'favourite toy'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'medium', context: 'transitional_object' },
+
+  // ═══════════════════════════════════════
+  // BATCH 3: Additional variants to reach 500+
+  // ═══════════════════════════════════════
+
+  // ── Sitting: more context ──
+  { keywords: ['sat alone', 'sitting alone', 'sits alone'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'alone_unsupported' },
+  { keywords: ['sat for', 'sitting for', 'sat 5', 'sat 10', 'sat for minutes'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'sustained_sitting' },
+  { keywords: ['toppled over', 'fell over while sitting', 'lost balance sitting'],
+    milestone: 'sit', domain: 'motor', confidence: 'low', context: 'unstable_sitting' },
+  { keywords: ['cross leg', 'cross-legged', 'indian style'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'cross_leg_sit' },
+  { keywords: ['sat in stroller', 'sat in car seat', 'sat in swing'],
+    milestone: 'sit', domain: 'motor', confidence: 'low', context: 'device_sitting' },
+
+  // ── Crawling: more context ──
+  { keywords: ['fast crawl', 'crawled fast', 'speed crawl', 'zoomed'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'fast_crawl' },
+  { keywords: ['crawled to me', 'crawled over', 'crawled across room'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'directed_crawl' },
+  { keywords: ['backwards', 'crawled backward', 'reverse crawl'],
+    milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'reverse_crawl' },
+  { keywords: ['hands and feet', 'plantigrade'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'advanced_crawl' },
+
+  // ── Walking: more context ──
+  { keywords: ['walked to', 'walked over', 'walked across'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'directed_walk' },
+  { keywords: ['fell while walking', 'stumbled', 'unsteady walk', 'wobbly walk'],
+    milestone: 'walk', domain: 'motor', confidence: 'medium', context: 'early_walking' },
+  { keywords: ['backward walk', 'walked backward', 'walking backwards'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'backward_walking' },
+  { keywords: ['stooped to pick', 'bent down', 'squatted and stood', 'pick up while standing'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'advanced_balance' },
+
+  // ── Climbing: more context ──
+  { keywords: ['climbed on sofa', 'climbed on bed', 'climbed on chair', 'climbed couch'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'furniture_climb' },
+  { keywords: ['climbed down', 'got down', 'descended'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'descending' },
+  { keywords: ['slide', 'slid down', 'went down slide', 'climbing frame'],
+    milestone: 'climb', domain: 'motor', confidence: 'high', context: 'playground_climb' },
+
+  // ── Grasp: more specifics ──
+  { keywords: ['held with both', 'two hands', 'both hands', 'bimanual'],
+    milestone: 'grasp', domain: 'motor', confidence: 'high', context: 'bilateral_grasp' },
+  { keywords: ['strong grip', 'tight grip', 'won\'t let go', 'firm hold'],
+    milestone: 'grasp', domain: 'motor', confidence: 'high', context: 'grip_strength' },
+  { keywords: ['delicate', 'careful', 'gentle pick', 'carefully picked'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'refined_grasp' },
+
+  // ── Transfer: more ──
+  { keywords: ['moved from one hand', 'switched hands', 'passed from left to right', 'left to right'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'detailed_transfer' },
+  { keywords: ['holds in one, grabs with other', 'two toys', 'toy in each hand'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'dual_hold' },
+
+  // ── Banging: more ──
+  { keywords: ['drum on table', 'drumming', 'bangs table', 'hits tray'],
+    milestone: 'bang', domain: 'motor', confidence: 'high', context: 'surface_banging' },
+  { keywords: ['spoon on plate', 'spoon banging', 'cup banging'],
+    milestone: 'bang', domain: 'motor', confidence: 'high', context: 'mealtime_banging' },
+
+  // ── Cup: more ──
+  { keywords: ['open cup drink', 'drinks from open cup'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'open_cup' },
+  { keywords: ['sippy cup', 'training cup', '360 cup'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'high', context: 'training_cup' },
+  { keywords: ['bottle', 'holds bottle', 'holding bottle'],
+    milestone: 'cup_drink', domain: 'motor', confidence: 'low', context: 'bottle_hold' },
+
+  // ── Throwing: more ──
+  { keywords: ['threw across', 'threw on floor', 'throws food', 'throws everything'],
+    milestone: 'throw', domain: 'motor', confidence: 'high', context: 'intentional_throw' },
+  { keywords: ['overhand throw', 'underhand throw', 'tossed forward'],
+    milestone: 'throw', domain: 'motor', confidence: 'high', context: 'directional_throw' },
+
+  // ── Drawing: more ──
+  { keywords: ['scribbled', 'scribbles', 'mark on paper', 'marks on paper'],
+    milestone: 'scribble', domain: 'motor', confidence: 'high', context: 'mark_making' },
+  { keywords: ['color', 'colored', 'coloring', 'colouring'],
+    milestone: 'scribble', domain: 'motor', confidence: 'medium', context: 'coloring',
+    exclude: ['colour of poop', 'color of'] },
+
+  // ── Babbling: more context ──
+  { keywords: ['long babble', 'babble sentence', 'babble conversation', 'expressive babble'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'expressive_babble' },
+  { keywords: ['different sounds', 'new sounds', 'new consonant', 'variety of sounds'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'diverse_phonemes' },
+  { keywords: ['sing-song', 'melodic', 'intonation', 'question tone'],
+    milestone: 'babble', domain: 'language', confidence: 'high', context: 'prosodic_babble' },
+
+  // ── Words: more ──
+  { keywords: ['uh oh', 'uh-oh', 'oh no', 'oops'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'exclamation_word' },
+  { keywords: ['ta', 'taa', 'thank you', 'tank you'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'polite_word' },
+  { keywords: ['all gone', 'all done', 'no more', 'finished'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'relational_word' },
+  { keywords: ['mine', 'my', 'me', 'i want'],
+    milestone: 'first_word', domain: 'language', confidence: 'medium', context: 'pronoun_use' },
+  { keywords: ['hot', 'yucky', 'yummy', 'nice', 'dirty'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'descriptive_word' },
+  { keywords: ['cat', 'dog', 'birdie', 'duck', 'fish', 'bunny'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'animal_word',
+    require: ['said', 'says', 'word', 'called'] },
+  { keywords: ['car', 'bus', 'truck', 'train', 'airplane', 'plane'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'vehicle_word',
+    require: ['said', 'says', 'word', 'called', 'knows'] },
+
+  // ── Pointing: more ──
+  { keywords: ['points at everything', 'points at all', 'pointing constantly'],
+    milestone: 'point', domain: 'language', confidence: 'high', context: 'frequent_pointing' },
+  { keywords: ['pointed to ask', 'pointed to request', 'pointed wanting'],
+    milestone: 'point', domain: 'language', confidence: 'high', context: 'proto_imperative' },
+
+  // ── Understanding: more ──
+  { keywords: ['looks at right object', 'looks at correct', 'turns to right'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'word_object_link' },
+  { keywords: ['understands no', 'knows no', 'stops when i say no'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'no_comprehension' },
+  { keywords: ['where is daddy', 'where is mummy', 'where is dog'],
+    milestone: 'understand_words', domain: 'language', confidence: 'high', context: 'where_question' },
+
+  // ── Social smile: more ──
+  { keywords: ['belly laugh', 'laughed so hard', 'hysterical', 'cracking up'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'deep_laughter' },
+  { keywords: ['smiled at stranger', 'smiled at baby', 'smiled at mirror'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'directed_smile' },
+  { keywords: ['cheeky smile', 'mischievous', 'naughty smile', 'knows she is funny'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'intentional_humor' },
+
+  // ── Imitation: more ──
+  { keywords: ['pretend cough', 'fake cough', 'fake sneeze', 'pretend sneeze'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'sound_imitation' },
+  { keywords: ['copies facial', 'made same face', 'stuck tongue out', 'tongue out'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'facial_imitation' },
+  { keywords: ['does same action', 'repeats action', 'watches then does'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'action_imitation' },
+  { keywords: ['pretend sleep', 'fake sleep', 'closed eyes pretend'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'pretend_behavior' },
+
+  // ── Object permanence: more ──
+  { keywords: ['looked under', 'checked under', 'lifted up to find'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'active_search' },
+  { keywords: ['opened to find', 'looked inside', 'checked inside'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'container_search' },
+  { keywords: ['went to find', 'crawled to get', 'walked to get'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'distant_search' },
+
+  // ── Cause-effect: more ──
+  { keywords: ['drop and look', 'drops on purpose', 'drops to see'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'gravity_experiment' },
+  { keywords: ['presses to make', 'press and hear', 'push and light'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'button_cause_effect' },
+  { keywords: ['shake rattle', 'shook to make sound', 'bang to hear'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'sound_cause_effect' },
+  { keywords: ['pull string', 'pulled cord', 'pulled to make'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'pull_cause_effect' },
+
+  // ── Problem solving: more ──
+  { keywords: ['reached around', 'moved to get', 'used stool', 'climbed to reach'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'means_end' },
+  { keywords: ['figured out lock', 'opened latch', 'worked out how'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'mechanism_solving' },
+  { keywords: ['fit piece', 'found right hole', 'correct slot', 'matched shape'],
+    milestone: 'shape_sort', domain: 'cognitive', confidence: 'high', context: 'shape_matching' },
+
+  // ── Puzzle: more ──
+  { keywords: ['ring stacker', 'stacking ring', 'ring pyramid'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'ring_stacker' },
+  { keywords: ['wooden puzzle', 'knob puzzle', 'peg puzzle', 'inset puzzle'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'simple_puzzle' },
+  { keywords: ['completed puzzle', 'finished puzzle', 'did the puzzle'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'puzzle_completion' },
+
+  // ── Sensory: food textures ──
+  { keywords: ['crunchy', 'crispy', 'chewy food', 'sticky food'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'food_texture_sensory' },
+  { keywords: ['refused texture', 'gagged on', 'didn\'t like texture'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'texture_sensitivity' },
+  { keywords: ['loves texture', 'liked the feel', 'enjoyed touching'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'texture_preference' },
+
+  // ── Sensory: sound awareness ──
+  { keywords: ['startled by', 'scared of sound', 'covered ears', 'noise sensitive'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'auditory_sensitivity' },
+  { keywords: ['loved music', 'danced to', 'bobbed head', 'swayed to music'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'music_response' },
+  { keywords: ['clapped to music', 'clapped along', 'tapped feet'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'musical_clapping' },
+
+  // ── Sensory: visual ──
+  { keywords: ['shadow play', 'shadows', 'light and shadow'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'shadow_visual' },
+  { keywords: ['looked at hands', 'hand regard', 'watching hands'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'hand_regard' },
+  { keywords: ['colour sorting', 'color sorting', 'sorted by color'],
+    milestone: 'sorting', domain: 'cognitive', confidence: 'high', context: 'color_sorting' },
+
+  // ── Outdoor / nature expanded ──
+  { keywords: ['played in garden', 'garden play', 'backyard play'],
+    milestone: 'outdoor_play', domain: 'motor', confidence: 'high', context: 'garden_play' },
+  { keywords: ['sand play', 'sand pit', 'sandpit', 'beach play'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'sand_play' },
+  { keywords: ['puddle', 'rain play', 'playing in rain'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'rain_sensory' },
+  { keywords: ['picked flower', 'picked leaf', 'picked grass'],
+    milestone: 'pincer', domain: 'motor', confidence: 'medium', context: 'nature_pincer' },
+  { keywords: ['watched birds', 'watched animals', 'watched insects'],
+    milestone: 'animal_awareness', domain: 'cognitive', confidence: 'medium', context: 'animal_observation' },
+
+  // ── Book: expanded ──
+  { keywords: ['lifted flap', 'flap book', 'touch and feel book', 'texture book'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'high', context: 'interactive_book' },
+  { keywords: ['pointed at picture', 'named picture', 'said word for picture'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'high', context: 'picture_naming' },
+  { keywords: ['chose book', 'brought book', 'picked a book', 'asked for book'],
+    milestone: 'book_engagement', domain: 'language', confidence: 'high', context: 'book_preference' },
+  { keywords: ['turned pages', 'flipping pages', 'page by page'],
+    milestone: 'page_turn', domain: 'motor', confidence: 'high', context: 'sequential_pages' },
+
+  // ── Music / dance expanded ──
+  { keywords: ['instrument', 'piano', 'keyboard', 'guitar toy', 'maracas'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'instrument_play' },
+  { keywords: ['clap rhythm', 'clap along', 'rhythmic clap', 'beat'],
+    milestone: 'clap', domain: 'motor', confidence: 'high', context: 'rhythmic_clapping' },
+  { keywords: ['bobbing', 'head bob', 'body rock', 'rocking to'],
+    milestone: 'dance', domain: 'motor', confidence: 'medium', context: 'rhythmic_body' },
+  { keywords: ['stomping', 'stomped', 'foot stamp', 'marching'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'stomping' },
+
+  // ── Dressing / undressing ──
+  { keywords: ['took off sock', 'pulled sock', 'removed hat', 'took off shoe'],
+    milestone: 'container', domain: 'motor', confidence: 'medium', context: 'undressing' },
+  { keywords: ['put on hat', 'put on shoe', 'tried to dress', 'arm in sleeve'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'dressing_attempt' },
+
+  // ── Bath / hygiene ──
+  { keywords: ['brush teeth', 'toothbrush', 'brushing teeth'],
+    milestone: 'imitation', domain: 'social', confidence: 'medium', context: 'hygiene_imitation' },
+  { keywords: ['washed hands', 'hand wash', 'washing hands'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'medium', context: 'hygiene_routine' },
+  { keywords: ['wiped face', 'wiped mouth', 'wiped hands', 'used napkin'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'medium', context: 'self_care' },
+
+  // ── More Hindi compound patterns ──
+  { keywords: ['khel rahi', 'khel raha', 'khelti', 'khelta'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'low', context: 'hindi_playing_general' },
+  { keywords: ['puzzle kiya', 'puzzle lagaya', 'puzzle solve'],
+    milestone: 'puzzle', domain: 'cognitive', confidence: 'high', context: 'hindi_puzzle' },
+  { keywords: ['block se tower', 'block lagaya', 'tower banaya'],
+    milestone: 'stack', domain: 'motor', confidence: 'high', context: 'hindi_stacking' },
+  { keywords: ['crayon se', 'pencil se', 'likha', 'likhti'],
+    milestone: 'scribble', domain: 'motor', confidence: 'high', context: 'hindi_drawing' },
+  { keywords: ['page palti', 'page palat', 'kitab ka page'],
+    milestone: 'page_turn', domain: 'motor', confidence: 'high', context: 'hindi_page_turn' },
+  { keywords: ['haath dhoya', 'haath dhoye', 'saaf kiya'],
+    milestone: 'follow_instructions', domain: 'language', confidence: 'medium', context: 'hindi_hygiene' },
+  { keywords: ['kapde utare', 'joota utara', 'topi utari'],
+    milestone: 'container', domain: 'motor', confidence: 'medium', context: 'hindi_undressing' },
+  { keywords: ['pyaar kiya', 'gale mila', 'pappi di', 'chummi di'],
+    milestone: 'affection', domain: 'social', confidence: 'high', context: 'hindi_affection_alt' },
+  { keywords: ['dekhte hue kheli', 'sab dekh rahi', 'gaur se dekha'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'medium', context: 'hindi_observation' },
+  { keywords: ['apne aap', 'khud se', 'bina help'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'medium', context: 'hindi_independent',
+    require: ['kiya', 'ki', 'kar liya', 'seekha'] },
+  { keywords: ['haan bola', 'haan kaha', 'sir hilaya haan'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'hindi_yes_nod' },
+  { keywords: ['nahi bola', 'nahi kaha', 'sir hilaya nahi', 'mana kiya'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'hindi_no_shake' },
+  { keywords: ['rote hue ruki', 'chup ho gayi', 'khud shant hui'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'high', context: 'hindi_self_soothe' },
+  { keywords: ['khana phenka', 'cheez phenki', 'ball phenka'],
+    milestone: 'throw', domain: 'motor', confidence: 'high', context: 'hindi_throwing' },
+  { keywords: ['cheerio uthaya', 'chota piece uthaya', 'ungali se uthaya'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'hindi_pincer' },
+  { keywords: ['dono haath', 'ek haath se doosre'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'hindi_transfer' },
+
+  // ═══════════════════════════════════════
+  // BATCH 4: Verb/context variants to cross 500
+  // ═══════════════════════════════════════
+
+  // ── Motor catch-all verbs ──
+  { keywords: ['push', 'pushed', 'pushing'],
+    milestone: 'grasp', domain: 'motor', confidence: 'low', context: 'push_action',
+    require: ['toy', 'cart', 'ball', 'car', 'walker'] },
+  { keywords: ['pull', 'pulled', 'pulling'],
+    milestone: 'grasp', domain: 'motor', confidence: 'low', context: 'pull_action',
+    require: ['toy', 'string', 'cord', 'blanket', 'cloth'],
+    exclude: ['pull up', 'pull to stand', 'pulled to stand', 'pulling up'] },
+  { keywords: ['hang', 'hanging', 'hung from'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'medium', context: 'hanging' },
+  { keywords: ['spin', 'spun', 'spinning'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'medium', context: 'spinning_object',
+    require: ['toy', 'wheel', 'top', 'spinner'] },
+  { keywords: ['open', 'opened', 'opening'],
+    milestone: 'container', domain: 'motor', confidence: 'medium', context: 'opening_general',
+    require: ['box', 'lid', 'door', 'drawer', 'bag', 'zip', 'clasp', 'velcro'] },
+  { keywords: ['close', 'closed', 'closing', 'shut'],
+    milestone: 'container', domain: 'motor', confidence: 'medium', context: 'closing_general',
+    require: ['box', 'lid', 'door', 'drawer', 'bag'] },
+
+  // ── Cruising expanded ──
+  { keywords: ['walks holding', 'walking holding', 'walk with hand'],
+    milestone: 'cruise', domain: 'motor', confidence: 'high', context: 'hand_held_walking' },
+  { keywords: ['furniture walk', 'sofa walk', 'table edge walk'],
+    milestone: 'cruise', domain: 'motor', confidence: 'high', context: 'furniture_cruising' },
+  { keywords: ['couch surf', 'couch surfing'],
+    milestone: 'cruise', domain: 'motor', confidence: 'high', context: 'couch_cruising' },
+
+  // ── Head control expanded ──
+  { keywords: ['look around', 'looking around', 'scanned room'],
+    milestone: 'head_control', domain: 'motor', confidence: 'low', context: 'head_movement',
+    require: ['tummy', 'prone', 'belly'] },
+
+  // ── Kicking expanded ──
+  { keywords: ['leg kick', 'kicking legs', 'kicks legs', 'bicycle legs'],
+    milestone: 'kick', domain: 'motor', confidence: 'high', context: 'leg_kicking' },
+  { keywords: ['splashed with feet', 'kicked water', 'feet splash'],
+    milestone: 'kick', domain: 'motor', confidence: 'high', context: 'water_kick' },
+
+  // ── Language: song/rhyme ──
+  { keywords: ['twinkle', 'wheels on the bus', 'old macdonald', 'itsy bitsy', 'row row'],
+    milestone: 'sing', domain: 'language', confidence: 'high', context: 'known_song' },
+  { keywords: ['finished the line', 'completed the word', 'filled in word'],
+    milestone: 'sing', domain: 'language', confidence: 'high', context: 'song_completion' },
+  { keywords: ['action song', 'hand motion', 'motion song'],
+    milestone: 'sing', domain: 'language', confidence: 'high', context: 'action_song' },
+
+  // ── Social: play types ──
+  { keywords: ['parallel play', 'played beside', 'next to other'],
+    milestone: 'social_play', domain: 'social', confidence: 'medium', context: 'parallel_play' },
+  { keywords: ['chase', 'chased', 'chasing', 'ran after'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'chase_game' },
+  { keywords: ['tickle', 'tickled', 'tickling', 'ticklish'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'tickle_game' },
+  { keywords: ['rough play', 'rough and tumble', 'wrestling', 'roughhousing'],
+    milestone: 'social_play', domain: 'social', confidence: 'high', context: 'rough_play' },
+  { keywords: ['played alone', 'independent play', 'played by herself', 'played by himself'],
+    milestone: 'explore', domain: 'cognitive', confidence: 'medium', context: 'solo_play' },
+
+  // ── Cognitive: categorization ──
+  { keywords: ['big and small', 'bigger', 'smaller', 'size'],
+    milestone: 'sorting', domain: 'cognitive', confidence: 'medium', context: 'size_awareness',
+    require: ['sorted', 'knows', 'identified', 'compared', 'chose'] },
+  { keywords: ['same', 'different', 'not same', 'not like'],
+    milestone: 'sorting', domain: 'cognitive', confidence: 'medium', context: 'comparison',
+    require: ['said', 'knows', 'noticed', 'pointed'] },
+  { keywords: ['up', 'down', 'in', 'out', 'on', 'under'],
+    milestone: 'understand_words', domain: 'language', confidence: 'medium', context: 'spatial_word',
+    require: ['knows', 'understands', 'followed', 'said', 'used correctly'] },
+
+  // ── Feeding: more ──
+  { keywords: ['holds own bottle', 'grips bottle', 'bottle by self'],
+    milestone: 'grasp', domain: 'motor', confidence: 'high', context: 'bottle_grasp' },
+  { keywords: ['blows on food', 'blow food', 'cooling food'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'feeding_imitation' },
+  { keywords: ['feeds doll', 'feeds teddy', 'pretend feed', 'spoon to doll'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'pretend_feeding' },
+
+  // ── Sleep related ──
+  { keywords: ['fought sleep', 'wouldn\'t sleep', 'resisted sleep'],
+    milestone: 'self_regulate', domain: 'social', confidence: 'low', context: 'sleep_resistance' },
+  { keywords: ['put herself to sleep', 'fell asleep on own', 'self settled'],
+    milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'self_settling' },
+
+  // ── Exploration: containers/spatial ──
+  { keywords: ['stacked rings', 'ring on pole', 'ring stacker'],
+    milestone: 'nesting', domain: 'motor', confidence: 'high', context: 'ring_stacking_motor' },
+  { keywords: ['posting', 'posted', 'post box', 'coin slot', 'piggy bank'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'posting_play' },
+  { keywords: ['screw', 'screwed', 'unscrewed', 'twist off', 'twist on'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'screw_manipulation' },
+  { keywords: ['zipper', 'zip', 'zipped', 'unzipped', 'velcro', 'button', 'snap'],
+    milestone: 'container', domain: 'motor', confidence: 'high', context: 'fastener_manipulation',
+    exclude: ['belly button', 'push button'] },
+
+  // ── More verbs with activity context ──
+  { keywords: ['carried', 'carrying', 'carries'],
+    milestone: 'walk', domain: 'motor', confidence: 'medium', context: 'carrying_while_walking',
+    require: ['while walk', 'around', 'toy', 'book', 'object', 'ball'] },
+  { keywords: ['dug', 'digging', 'scooped sand', 'scooped dirt'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'digging_play' },
+  { keywords: ['watering', 'watered', 'watering can', 'water plants'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'medium', context: 'garden_pretend' },
+  { keywords: ['sweeping', 'swept', 'broom', 'mopping'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'household_imitation' },
+  { keywords: ['cooking pretend', 'stirring pretend', 'pretend kitchen'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'kitchen_pretend' },
+
+  // ── More Hindi daily activities ──
+  { keywords: ['khana banaya pretend', 'rasoi kheli', 'bartan se kheli'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'hindi_kitchen_pretend' },
+  { keywords: ['jhadu lagaya', 'pocha lagaya', 'saaf kiya pretend'],
+    milestone: 'imitation', domain: 'social', confidence: 'high', context: 'hindi_household' },
+  { keywords: ['phone pe baat ki', 'hello bola phone'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'hindi_phone_pretend' },
+  { keywords: ['gudiya ko khilaya', 'teddy ko sulaya', 'gudiya ki maalish'],
+    milestone: 'pretend_play', domain: 'cognitive', confidence: 'high', context: 'hindi_doll_play' },
+  { keywords: ['painting ki', 'rang lagaya', 'drawing ki'],
+    milestone: 'scribble', domain: 'motor', confidence: 'high', context: 'hindi_art' },
+  { keywords: ['gaana sunaya', 'gaana gaaya', 'rhyme sunaya'],
+    milestone: 'sing', domain: 'language', confidence: 'high', context: 'hindi_song' },
+  { keywords: ['taali maari', 'taaliyan bajayi', 'gaane pe taali'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'hindi_clapping_alt' },
+  { keywords: ['nachte hue', 'naach rahi', 'gaane pe naachi'],
+    milestone: 'dance', domain: 'motor', confidence: 'high', context: 'hindi_dance_alt' },
+  { keywords: ['paani mein kheli', 'paani dala', 'paani se splash'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_water_alt' },
+  { keywords: ['chhui mui', 'touch kiya', 'chhu ke dekha'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'hindi_touch' },
+  { keywords: ['sunghaya', 'sungha', 'smell ki'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'hindi_smell' },
+
+  // ── Safety/awareness patterns (not milestone but domain tagged) ──
+  { keywords: ['fell', 'bumped', 'hit head', 'tumble'],
+    milestone: 'explore', domain: 'motor', confidence: 'low', context: 'minor_fall',
+    exclude: ['asleep', 'in love'] },
+  { keywords: ['careful', 'cautious', 'looked before', 'checked edge'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'medium', context: 'safety_awareness' },
+
+  // ── Multi-step / complex ──
+  { keywords: ['stacked then knocked', 'built then crashed', 'tower then toppled'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'build_destroy_cycle' },
+  { keywords: ['found toy under blanket', 'removed cloth found', 'uncovered and took'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'multi_step_search' },
+  { keywords: ['crawled to toy then', 'walked to get then', 'went and brought'],
+    milestone: 'problem_solve', domain: 'cognitive', confidence: 'high', context: 'goal_directed' },
+  { keywords: ['waved then said', 'pointed and said', 'gestured and spoke'],
+    milestone: 'gesture', domain: 'language', confidence: 'high', context: 'gesture_word_combo' },
+
+  // ── Final batch: Variant spellings, informal, and parent shorthand ──
+  { keywords: ['sat unsupported', 'unsupported sit', 'no hands sitting'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'unsupported_explicit' },
+  { keywords: ['tummy to sit', 'got to sitting', 'pushed up to sit'],
+    milestone: 'sit', domain: 'motor', confidence: 'high', context: 'transition_to_sit' },
+  { keywords: ['on all 4', 'all 4s', 'on fours'],
+    milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'all_fours_informal' },
+  { keywords: ['belly scoot', 'belly scooting', 'dragged herself'],
+    milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'belly_scoot' },
+  { keywords: ['stood at', 'standing at', 'stands at'],
+    milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'standing_at_surface' },
+  { keywords: ['holding rail', 'holding edge', 'holding bar'],
+    milestone: 'cruise', domain: 'motor', confidence: 'medium', context: 'rail_hold' },
+  { keywords: ['tiny step', 'baby step', 'little step'],
+    milestone: 'walk', domain: 'motor', confidence: 'high', context: 'small_step' },
+  { keywords: ['ripped paper', 'tore paper', 'paper ripping'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'paper_tearing' },
+  { keywords: ['smooshed', 'squashed', 'flattened'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'squash_tactile' },
+  { keywords: ['shook', 'shaking', 'shakes'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'medium', context: 'shaking',
+    require: ['toy', 'rattle', 'bottle', 'maraca', 'shaker'] },
+  { keywords: ['wriggled', 'wriggling', 'squirming'],
+    milestone: 'roll', domain: 'motor', confidence: 'low', context: 'body_movement' },
+  { keywords: ['scooted forward', 'inched forward', 'moved inch'],
+    milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'inch_movement' },
+  { keywords: ['dada bola', 'papa bola', 'papa kaha'],
+    milestone: 'mama_dada_meaning', domain: 'language', confidence: 'medium', context: 'hindi_dada' },
+  { keywords: ['mama bola', 'mummy bola', 'mamma kaha'],
+    milestone: 'mama_dada_meaning', domain: 'language', confidence: 'medium', context: 'hindi_mama' },
+  { keywords: ['hi bola', 'hello bola', 'bye bola'],
+    milestone: 'first_word', domain: 'language', confidence: 'high', context: 'hindi_greeting_word' },
+  { keywords: ['hands together', 'puts hands together'],
+    milestone: 'clap', domain: 'motor', confidence: 'medium', context: 'hands_midline' },
+  { keywords: ['mouth open', 'opens mouth', 'anticipate spoon'],
+    milestone: 'memory', domain: 'cognitive', confidence: 'medium', context: 'feeding_anticipation' },
+  { keywords: ['recognizes', 'recognized', 'knows face'],
+    milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'face_recognition' },
+  { keywords: ['follow toy', 'followed toy', 'tracked toy', 'eyes followed'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'visual_tracking' },
+  { keywords: ['object in each', 'toy in each', 'holds two'],
+    milestone: 'transfer', domain: 'motor', confidence: 'high', context: 'bilateral_hold' },
+  { keywords: ['hand clap', 'hand clapping', 'patti cake'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'hand_game' },
+  { keywords: ['moved to music', 'responds to music', 'music response'],
+    milestone: 'dance', domain: 'motor', confidence: 'medium', context: 'music_motor_response' },
+  { keywords: ['touched face', 'grabbed glasses', 'pulled hair', 'grabbed nose'],
+    milestone: 'grasp', domain: 'motor', confidence: 'medium', context: 'face_exploration' },
+  { keywords: ['kicked off blanket', 'kicked off sock', 'kicked blanket'],
+    milestone: 'kick', domain: 'motor', confidence: 'high', context: 'kick_object_off' },
+  { keywords: ['crinkle', 'crinkled', 'crinkling paper', 'crinkle sound'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'crinkle_sensory' },
+  { keywords: ['pop up', 'popup', 'pop-up toy', 'jack in box', 'jack-in-the-box'],
+    milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'popup_toy' },
+  { keywords: ['activity gym', 'play gym', 'baby gym mat', 'play mat'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'medium', context: 'activity_gym' },
+  { keywords: ['belly button', 'found belly button', 'poked belly'],
+    milestone: 'understand_words', domain: 'language', confidence: 'medium', context: 'body_part_belly' },
+  { keywords: ['peek', 'peeked', 'peeking', 'peeping'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'medium', context: 'peeking',
+    exclude: ['peek-a-boo', 'peekaboo'] },
+  { keywords: ['woke up happy', 'woke smiling', 'smiled when woke'],
+    milestone: 'social_smile', domain: 'social', confidence: 'medium', context: 'morning_smile' },
+  { keywords: ['stranger smiled at', 'waved at stranger', 'friendly to new'],
+    milestone: 'wave', domain: 'social', confidence: 'high', context: 'stranger_friendly' },
+  { keywords: ['pulled cloth off', 'took cloth off face', 'removed cloth'],
+    milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'cloth_removal' },
+  { keywords: ['clapped when finished', 'clapped herself', 'self applause'],
+    milestone: 'clap', domain: 'social', confidence: 'high', context: 'self_celebration' },
+  { keywords: ['tore roti', 'roti piece', 'broke roti', 'roti toda'],
+    milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'hindi_roti_tear' },
+  { keywords: ['ghee mein haath', 'dal mein haath', 'khane se kheli'],
+    milestone: 'sensory_explore', domain: 'sensory', confidence: 'high', context: 'hindi_food_sensory' },
+];
+
+// ─── Keyword-to-Milestone mapping ───
+// Maps engine keywords to milestone text patterns in MILESTONE_STANDARDS
+const KEYWORD_TO_MILESTONE = {
+  // Motor - Gross
+  sit:              'sit',
+  roll:             'roll',
+  crawl:            'crawl',
+  pull_to_stand:    'pull',
+  cruise:           'cruis',
+  walk:             'walk',
+  head_control:     'head',
+  climb:            'climb',
+  kick:             null,
+  bounce:           null,
+  tummy_time:       null,
+  outdoor_play:     null,
+  dance:            null,
+  // Motor - Fine
+  grasp:            'grasp',
+  pincer:           'pincer',
+  transfer:         'transfer',
+  stack:            'stack',
+  bang:             'bang',
+  finger_feed:      'finger feed',
+  spoon:            'spoon',
+  cup_drink:        'cup',
+  throw:            null,
+  release:          null,
+  scribble:         null,
+  page_turn:        null,
+  container:        null,
+  nesting:          null,
+  chew:             null,
+  swallow:          null,
+  teething:         'teeth',
+  // Language
+  coo:              'coo',
+  babble:           'babbl',
+  first_word:       'word',
+  two_word:         'two word',
+  mama_dada:        'mama/dada',
+  mama_dada_meaning:'mama/dada with meaning',
+  respond_name:     'respond',
+  understand_words: 'understand',
+  point:            'point',
+  gesture:          'gesture',
+  sing:             null,
+  follow_instructions: 'follow',
+  book_engagement:  null,
+  // Social
+  social_smile:     'smile',
+  wave:             'wave',
+  clap:             'clap',
+  object_permanence:'object permanence',
+  separation_anxiety:'separation',
+  imitation:        null,
+  sharing:          null,
+  joint_attention:  null,
+  independent_sleep:'sleep',
+  social_play:      null,
+  affection:        null,
+  social_game:      null,
+  self_regulate:    null,
+  // Cognitive
+  cause_effect:     'cause',
+  problem_solve:    null,
+  shape_sort:       'shape',
+  color_recog:      null,
+  memory:           null,
+  explore:          null,
+  pretend_play:     'pretend',
+  sorting:          null,
+  puzzle:           null,
+  screen_time:      null,
+  counting:         null,
+  animal_awareness: null,
+  // Sensory
+  sensory_explore:  null,
+};
+
+function matchesMilestoneKeyword(milestoneText, keyword) {
+  const searchTerm = KEYWORD_TO_MILESTONE[keyword];
+  if (!searchTerm) return false;
+  return milestoneText.toLowerCase().includes(searchTerm.toLowerCase());
+}
+
+// Ranked match: returns how well a milestone text matches a keyword (higher = better)
+// Used by evidence expansion to pick the BEST keyword for a given milestone
+function milestoneKeywordScore(milestoneText, keyword) {
+  const searchTerm = KEYWORD_TO_MILESTONE[keyword];
+  if (!searchTerm) return 0;
+  const text = milestoneText.toLowerCase();
+  const term = searchTerm.toLowerCase();
+  if (!text.includes(term)) return 0;
+  // Start-of-text match is strongest (e.g. "sit" in "Sitting independently")
+  if (text.startsWith(term)) return 3;
+  // Start-of-word match (after space/paren) is medium
+  const idx = text.indexOf(term);
+  if (idx > 0 && /[\s(]/.test(text[idx - 1])) return 2;
+  // Substring match is weakest (e.g. "sit" in "from sitting")
+  return 1;
+}
+
+// ─── Classification Engine ───
+function classifyActivity(inputText) {
+  const text = inputText.toLowerCase().trim();
+  const tokens = text.split(/[\s,;.!?]+/).filter(Boolean);
+  const matches = [];
+
+  for (const pattern of EVIDENCE_PATTERNS) {
+    const hasKeyword = pattern.keywords.some(kw => {
+      if (kw.includes(' ')) return text.includes(kw);
+      return tokens.includes(kw) || tokens.some(t => t.startsWith(kw));
+    });
+    if (!hasKeyword) continue;
+    if (pattern.exclude && pattern.exclude.some(ex => text.includes(ex))) continue;
+    if (pattern.require && !pattern.require.some(req => text.includes(req))) continue;
+
+    matches.push({
+      milestone: pattern.milestone,
+      domain: pattern.domain,
+      confidence: pattern.confidence,
+      context: pattern.context
+    });
+  }
+
+  // Deduplicate: keep highest confidence per milestone
+  const best = {};
+  matches.forEach(m => {
+    const key = m.milestone;
+    if (!best[key] || CONF_ORDER[m.confidence] > CONF_ORDER[best[key].confidence]) {
+      best[key] = m;
+    }
+  });
+
+  const evidence = Object.values(best);
+  const domains = [...new Set(evidence.map(e => e.domain))];
+  return { domains, evidence };
+}
+
+// ─── Evidence Ledger (computed from activityLog) ───
+let activityLog = {};
+
+function getMilestoneEvidence(milestoneKeyword) {
+  const evidence = [];
+  Object.entries(activityLog).forEach(([date, entries]) => {
+    if (!Array.isArray(entries)) return;
+    entries.forEach(entry => {
+      (entry.evidence || []).forEach(ev => {
+        if (ev.milestone === milestoneKeyword) {
+          evidence.push({ date, entryId: entry.id, confidence: ev.confidence, context: ev.context, type: entry.type, text: entry.text });
+        }
+      });
+    });
+  });
+  return evidence.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// ─── Auto-Promotion Engine ───
+function computeAutoStatus(milestoneKeyword) {
+  const evidence = getMilestoneEvidence(milestoneKeyword);
+  if (evidence.length === 0) return 'not_started';
+
+  const uniqueDays = new Set(evidence.map(e => e.date));
+  const highConf = evidence.filter(e => e.confidence === 'high');
+  const dates = evidence.map(e => new Date(e.date)).sort((a, b) => a - b);
+  const spanDays = dates.length > 1
+    ? Math.ceil((dates[dates.length - 1] - dates[0]) / 86400000)
+    : 0;
+
+  const stats = {
+    count: evidence.length,
+    highCount: highConf.length,
+    dayCount: uniqueDays.size,
+    spanDays
+  };
+
+  for (const stage of ['mastered', 'consistent', 'practicing', 'emerging']) {
+    const rule = PROMOTION_RULES[stage];
+    if (stats.count >= rule.minEvidence &&
+        stats.highCount >= rule.minHighConfidence &&
+        stats.dayCount >= rule.minDays &&
+        stats.spanDays >= rule.minSpanDays) {
+      return stage;
+    }
+  }
+  return 'not_started';
+}
+
+// ─── Regression Detection ───
+function checkEvidenceRegression(milestoneKeyword, currentAutoStatus) {
+  if (!['consistent', 'mastered'].includes(currentAutoStatus)) return false;
+  const evidence = getMilestoneEvidence(milestoneKeyword);
+  if (evidence.length === 0) return false;
+  const lastDate = new Date(evidence[0].date);
+  const daysSince = Math.ceil((new Date() - lastDate) / 86400000);
+  return daysSince > 21;
+}
+
+// ─── Sync All Milestone Statuses (runs after every log entry) ───
+function syncMilestoneStatuses() {
+  const allKeywords = [...new Set(EVIDENCE_PATTERNS.map(p => p.milestone))];
+
+  allKeywords.forEach(keyword => {
+    const autoStatus = computeAutoStatus(keyword);
+    if (autoStatus === 'not_started') return;
+
+    // Find matching milestone in milestones array
+    let ms = milestones.find(m => matchesMilestoneKeyword(m.text, keyword));
+
+    if (!ms) {
+      // Evidence exists for a milestone not in the array — only create if keyword maps to a real milestone
+      if (!KEYWORD_TO_MILESTONE[keyword]) return;
+      ms = {
+        text: createMilestoneLabel(keyword),
+        cat: domainForKeyword(keyword),
+        status: 'not_started',
+        advanced: false,
+        manualStatus: null,
+        manualAt: null,
+        autoStatus: null,
+        evidenceCount: 0,
+        firstSeen: null,
+        lastSeen: null,
+        confidenceHigh: 0
+      };
+      milestones.push(ms);
+    }
+
+    // Update auto fields
+    ms.autoStatus = autoStatus;
+    const evidence = getMilestoneEvidence(keyword);
+    ms.evidenceCount = evidence.length;
+    ms.firstSeen = evidence[evidence.length - 1]?.date || null;
+    ms.lastSeen = evidence[0]?.date || null;
+    ms.confidenceHigh = evidence.filter(e => e.confidence === 'high').length;
+
+    // Auto-clear manual override when engine catches up (spec: "manual flag is cleared")
+    if (ms.manualStatus) {
+      const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+      if ((stageRank[ms.autoStatus] || 0) >= (stageRank[ms.manualStatus] || 0)) {
+        ms.manualStatus = null;
+        ms.manualAt = null;
+      }
+    }
+
+    // Update effective status (respect manual override)
+    const prevStatus = ms.status;
+    ms.status = ms.manualStatus || ms.autoStatus;
+
+    // Update date fields for backward compatibility
+    if (ms.status !== prevStatus) {
+      const now = today();
+      if (ms.status === 'emerging' && !ms.emergingAt) ms.emergingAt = ms.firstSeen || now;
+      if (ms.status === 'practicing' && !ms.practicingAt) ms.practicingAt = now;
+      if (ms.status === 'consistent' && !ms.consistentAt) ms.consistentAt = now;
+      if (ms.status === 'mastered' && !ms.masteredAt) ms.masteredAt = now;
+
+      // Log to milestone timeline if promoted
+      const stageOrder = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+      if ((stageOrder[ms.status] || 0) > (stageOrder[prevStatus] || 0)) {
+        logMilestoneEvent(ms.text, ms.status, now);
+      }
+    }
+  });
+
+  save(KEYS.milestones, milestones);
+}
+
+// Helper: generate a label from a keyword
+function createMilestoneLabel(keyword) {
+  const labels = {
+    sit: 'Sitting independently', roll: 'Rolling', crawl: 'Crawling',
+    pull_to_stand: 'Pulls to stand', cruise: 'Cruising along furniture', walk: 'Walking independently',
+    head_control: 'Head control', climb: 'Climbing',
+    grasp: 'Grasping objects', pincer: 'Pincer grasp', transfer: 'Transferring objects hand to hand',
+    stack: 'Stacking blocks', bang: 'Banging objects together',
+    finger_feed: 'Finger feeding', spoon: 'Using a spoon', cup_drink: 'Drinking from cup',
+    teething: 'Teething',
+    coo: 'Cooing', babble: 'Babbling', first_word: 'First words',
+    mama_dada: 'Says mama/dada', mama_dada_meaning: 'Says mama/dada with meaning',
+    respond_name: 'Responds to name', understand_words: 'Understands simple words',
+    point: 'Pointing', gesture: 'Using gestures', follow_instructions: 'Follows simple instructions',
+    social_smile: 'Social smiling', wave: 'Waving bye-bye', clap: 'Clapping',
+    object_permanence: 'Object permanence', separation_anxiety: 'Separation awareness',
+    independent_sleep: 'Sleeps independently',
+    cause_effect: 'Understands cause and effect', shape_sort: 'Shape sorting',
+    pretend_play: 'Pretend play', two_word: 'Two-word phrases',
+  };
+  return labels[keyword] || keyword.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Helper: get domain for a keyword from patterns
+function domainForKeyword(keyword) {
+  const p = EVIDENCE_PATTERNS.find(pat => pat.milestone === keyword);
+  return p ? p.domain : 'motor';
+}
+
+// ─── Undo support ───
+let _lastActivityUndo = null;
+
+function undoLastActivity() {
+  if (!_lastActivityUndo) return;
+  const { dateStr, entryId } = _lastActivityUndo;
+  if (activityLog[dateStr]) {
+    activityLog[dateStr] = activityLog[dateStr].filter(e => e.id !== entryId);
+    if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
+    save(KEYS.activityLog, activityLog);
+    syncMilestoneStatuses();
+    renderMilestones();
+    renderTodayPlan();
+  }
+  _lastActivityUndo = null;
+  const toast = document.getElementById('qlToast');
+  if (toast) { toast.classList.remove('show'); }
+}
+
+// ── Step 1: Active Milestones Section (evidence-driven primary view) ──
+function renderActiveMilestones() {
+  const el = document.getElementById('msActiveMilestones');
+  if (!el) return;
+
+  // Collect milestones with evidence (active = emerging/practicing/consistent)
+  const catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
+  const active = milestones.map((m, i) => ({ ...m, _i: i }))
+    .filter(m => m.evidenceCount > 0 && ['emerging', 'practicing', 'consistent', 'mastered'].includes(m.status))
+    .sort((a, b) => {
+      // Active first, then mastered; within same stage, most recent evidence first
+      const stageRank = { emerging: 2, practicing: 3, consistent: 4, mastered: 1 };
+      const ra = stageRank[a.status] || 0, rb = stageRank[b.status] || 0;
+      if (ra !== rb) return rb - ra;
+      return (b.lastSeen || '').localeCompare(a.lastSeen || '');
+    });
+
+  if (active.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = '';
+
+  const activeOnly = active.filter(m => m.status !== 'mastered');
+  const recentMastered = active.filter(m => m.status === 'mastered').slice(0, 3);
+  const shown = [...activeOnly, ...recentMastered];
+
+  let html = '<div class="micro-label text-center mb-4" style="font-weight:600;">Active Milestones</div>';
+  html += '<div class="ms-active-list">';
+
+  shown.forEach(m => {
+    const cat = m.cat || 'motor';
+    const stageMeta = MS_STAGE_META[m.status] || MS_STAGE_META.not_started;
+    const pct = stageMeta.pct;
+    const icon = catIcons[cat] || zi('star');
+
+    // Date range
+    let dateRange = '';
+    if (m.firstSeen && m.lastSeen) {
+      const span = daysBetween(m.firstSeen, m.lastSeen);
+      dateRange = 'First: ' + formatDate(m.firstSeen) + ' · Last: ' + formatDate(m.lastSeen) + ' · ' + span + 'd span';
+    } else if (m.firstSeen) {
+      dateRange = 'First seen: ' + formatDate(m.firstSeen);
+    }
+
+    // Override badge
+    let overrideHtml = '';
+    if (m.autoStatus && m.manualStatus && m.autoStatus !== m.manualStatus) {
+      overrideHtml = '<span class="ms-active-override">✏️ Override (engine: ' + m.autoStatus + ')</span>';
+    }
+
+    // Evidence expansion
+    let bestKw = null, bestScore = 0;
+    Object.entries(KEYWORD_TO_MILESTONE).forEach(([k, v]) => {
+      if (!v) return;
+      const score = milestoneKeywordScore(m.text, k);
+      if (score > bestScore) { bestScore = score; bestKw = k; }
+    });
+    let evidHtml = '';
+    const evidId = 'ms-active-evid-' + m._i;
+    if (bestKw && m.evidenceCount > 0) {
+      const evList = getMilestoneEvidence(bestKw).slice(0, 5);
+      let evItems = evList.map(ev => {
+        const confDot = ev.confidence === 'high' ? '🟢' : ev.confidence === 'medium' ? '🟡' : '🔵';
+        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
+      }).join('');
+      if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
+      evidHtml = '<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById(\'' + evidId + '\').style.display=document.getElementById(\'' + evidId + '\').style.display===\'none\'?\'block\':\'none\'">📊 View evidence ▾</button>' +
+        '<div id="' + evidId + '" class="al-evid-box" style="display:none;">' + evItems + '</div>';
+    }
+
+    // Confidence indicator
+    const confPct = m.evidenceCount > 0 ? Math.round((m.confidenceHigh / m.evidenceCount) * 100) : 0;
+
+    html += '<div class="ms-active-item ' + cat + '">' +
+      '<div class="ms-active-top">' +
+        '<div class="ms-active-icon">' + icon + '</div>' +
+        '<div class="ms-active-body">' +
+          '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
+          (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
+        '</div>' +
+        overrideHtml +
+      '</div>' +
+      '<div class="ms-active-prog">' +
+        '<div class="ms-active-bar"><div class="ms-active-fill stage-' + m.status + '" style="width:' + pct + '%;"></div></div>' +
+        '<div class="ms-active-obs">' + pct + '%</div>' +
+      '</div>' +
+      evidHtml +
+    '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── End of Evidence-Based Milestones Engine ──
 
 // Migration: old status → new status
 function migrateMilestoneStatus(m) {
@@ -7607,6 +9645,10 @@ function init() {
   sleepData    = load(KEYS.sleep, null)     || [];
   poopData     = load(KEYS.poop, null)      || [];
 
+  // Load activity log (evidence-based milestones)
+  activityLog  = load(KEYS.activityLog, null) || {};
+  if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
+
   // Sanitize: ensure arrays and remove entries missing required fields
   try {
     if (!Array.isArray(sleepData)) sleepData = [];
@@ -7642,6 +9684,27 @@ function init() {
     return m;
   });
   save(KEYS.milestones, milestones);
+
+  // Migrate milestones for evidence-based fields (backward compat)
+  milestones.forEach(m => {
+    if (m.manualStatus === undefined) {
+      if (m.status && m.status !== 'not_started') {
+        m.manualStatus = m.status;
+        m.manualAt = m.masteredAt || m.consistentAt || m.practicingAt || m.emergingAt || null;
+      } else {
+        m.manualStatus = null;
+      }
+      m.autoStatus = null;
+      m.evidenceCount = 0;
+      m.firstSeen = null;
+      m.lastSeen = null;
+      m.confidenceHigh = 0;
+    }
+  });
+  // Sync evidence-based statuses on boot (if any activity log entries exist)
+  if (Object.keys(activityLog).length > 0) {
+    syncMilestoneStatuses();
+  }
 
   // Migrate old grouped vaccination names → individual entries
   const VACC_MIGRATIONS = {
@@ -12214,16 +14277,47 @@ function renderMilestones() {
       if (m.emergingAt && m.masteredAt) {
         metaHtml += `<span class="milestone-meta-badge meta-time">${daysBetween(m.emergingAt, m.masteredAt)}d journey</span>`;
       }
+      // Evidence-based badge (if any evidence exists)
+      if (m.evidenceCount > 0) {
+        const confLabel = m.confidenceHigh > 0 ? m.confidenceHigh + ' high' : '';
+        metaHtml += `<span class="milestone-meta-badge" style="background:var(--surface-sky);color:var(--tc-sky);">📊 ${m.evidenceCount} evidence${confLabel ? ' · ' + confLabel : ''}</span>`;
+      }
+      if (m.autoStatus && m.manualStatus && m.autoStatus !== m.manualStatus) {
+        metaHtml += `<span class="milestone-meta-badge" style="background:var(--surface-lav);color:var(--tc-lav);">✏️ Override (engine: ${m.autoStatus})</span>`;
+      }
       metaHtml += '</div>';
 
       const tidbitData = (m.status !== 'not_started') ? getMilestoneTidbits(m.text) : null;
       const tidbitId = 'tidbit-' + m._i;
+      const evidId = 'evid-' + m._i;
 
-      // Next stage button
+      // Next stage button — hide behind override when evidence engine is active
       const nextStageIdx = stageIdx + 1;
       const nextStage = nextStageIdx < MS_STAGES.length ? MS_STAGES[nextStageIdx] : null;
       const nextMeta = nextStage ? MS_STAGE_META[nextStage] : null;
       const prevStage = stageIdx > 0 ? MS_STAGES[stageIdx - 1] : null;
+
+      // Build evidence expansion (if evidence exists for this milestone)
+      let evidHtml = '';
+      if (m.evidenceCount > 0) {
+        // Find the BEST keyword for this milestone (highest score wins)
+        let bestKw = null, bestScore = 0;
+        Object.entries(KEYWORD_TO_MILESTONE).forEach(([k, v]) => {
+          if (!v) return;
+          const score = milestoneKeywordScore(m.text, k);
+          if (score > bestScore) { bestScore = score; bestKw = k; }
+        });
+        if (bestKw) {
+          const evList = getMilestoneEvidence(bestKw).slice(0, 5);
+          let evItems = evList.map(ev => {
+            const confDot = ev.confidence === 'high' ? '🟢' : ev.confidence === 'medium' ? '🟡' : '🔵';
+            return `<div class="al-evid-item">${ev.date} — "${escHtml((ev.text||'').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
+          }).join('');
+          if (m.evidenceCount > 5) evItems += `<div class="al-evid-more">+${m.evidenceCount - 5} more</div>`;
+          evidHtml = `<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById('${evidId}').style.display=document.getElementById('${evidId}').style.display==='none'?'block':'none'">📊 View evidence ▾</button>
+            <div id="${evidId}" class="al-evid-box" style="display:none;">${evItems}</div>`;
+        }
+      }
 
       html += `
           <div class="milestone-item ${cls}" data-ms-idx="${m._i}">
@@ -12232,12 +14326,13 @@ function renderMilestones() {
               <div class="milestone-text">
                 <strong>${escHtml(m.text)}</strong>
                 ${metaHtml}
+                ${evidHtml}
                 ${tidbitData ? `<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById('${tidbitId}').style.display=document.getElementById('${tidbitId}').style.display==='none'?'flex':'none'"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ▾</button>` : ''}
               </div>
               ${m.advanced ? '<span class="badge-adv"><svg class="zi"><use href="#zi-star"/></svg> Advanced</span>' : ''}
               <div class="milestone-actions">
-                ${nextStage ? `<button class="ms-action-btn" onclick="event.stopPropagation();setMilestoneStatus(${m._i},'${nextStage}')" aria-label="Advance to ${nextMeta.label}">${nextMeta.icon} ${nextMeta.label}</button>` : ''}
-                ${prevStage ? `<button class="ms-action-btn" onclick="event.stopPropagation();setMilestoneStatus(${m._i},'${prevStage}')" aria-label="Move back">↩</button>` : ''}
+                ${nextStage ? `<button class="ms-action-btn" onclick="event.stopPropagation();overrideMilestoneStatus(${m._i},'${nextStage}')" aria-label="Override to ${nextMeta.label}" title="Override: ${nextMeta.label}">✏️ ${nextMeta.label}</button>` : ''}
+                ${prevStage ? `<button class="ms-action-btn" onclick="event.stopPropagation();overrideMilestoneStatus(${m._i},'${prevStage}')" aria-label="Move back">↩</button>` : ''}
                 <button class="ms-action-btn del-ms" onclick="event.stopPropagation();deleteMilestone(${m._i})" aria-label="Delete milestone">×</button>
               </div>
             </div>
@@ -12258,10 +14353,12 @@ function renderMilestones() {
   html += '</div>';
   list.innerHTML = html;
 
-  // Render category wheels + regression alerts + timeline
+  // Render category wheels + regression alerts + timeline + evidence feed + active milestones
   renderCategoryWheels();
   renderRegressionAlerts();
   renderMilestoneTimeline();
+  renderRecentEvidence();
+  renderActiveMilestones();
 }
 
 // Generic category card toggle — used by milestones, foods, tips, activities, upcoming
@@ -12415,6 +14512,21 @@ function expandActivityType(type) {
   setTimeout(() => (card || container).scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
+// Override milestone status (manual override — used when evidence engine is active)
+function overrideMilestoneStatus(i, newStatus) {
+  const m = milestones[i];
+  if (newStatus === 'not_started') {
+    // Reverting to not_started = clear override, let engine decide
+    m.manualStatus = null;
+    m.manualAt = null;
+  } else {
+    m.manualStatus = newStatus;
+    m.manualAt = today();
+  }
+  // Call existing setMilestoneStatus for date stamps and rendering
+  setMilestoneStatus(i, newStatus);
+}
+
 function setMilestoneStatus(i, newStatus) {
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
@@ -12547,21 +14659,40 @@ function renderCategoryWheels() {
 
   const R = 22, C = 2 * Math.PI * R;
 
+  // Compute evidence counts per domain from activityLog
+  const domainEvidence = { motor: 0, language: 0, social: 0, cognitive: 0 };
+  const domainDays = { motor: new Set(), language: new Set(), social: new Set(), cognitive: new Set() };
+  Object.entries(activityLog).forEach(([dateStr, entries]) => {
+    if (!Array.isArray(entries)) return;
+    entries.forEach(e => {
+      (e.domains || []).forEach(d => {
+        if (domainEvidence[d] !== undefined) {
+          domainEvidence[d] += (e.evidence || []).length;
+          domainDays[d].add(dateStr);
+        }
+      });
+    });
+  });
+
   let html = '';
   ['motor','language','social','cognitive'].forEach(cat => {
     const meta = catMeta[cat];
     const catMs = milestones.filter(m => (m.cat || 'motor') === cat);
     const avgPct = catMs.length > 0 ? Math.round(catMs.reduce((s, m) => s + (MS_STAGE_META[m.status]?.pct || 0), 0) / catMs.length) : 0;
     const fill = C - (avgPct / 100) * C;
+    const evCount = domainEvidence[cat];
+    const dayCount = domainDays[cat].size;
+    const evidLabel = evCount > 0 ? evCount + ' ev · ' + dayCount + 'd' : '';
 
-    html += `<div class="ms-cat-wheel" onclick="toggleMsCat('${cat}');document.getElementById('ms-cat-${cat}')?.scrollIntoView({behavior:'smooth',block:'center'})">
-      <svg viewBox="0 0 50 50">
-        <circle class="mcw-track" cx="25" cy="25" r="${R}"/>
-        <circle class="mcw-fill" cx="25" cy="25" r="${R}" stroke="${meta.color}" stroke-dasharray="${C}" stroke-dashoffset="${fill}"/>
-      </svg>
-      <div class="ms-cat-wheel-pct" style="color:${meta.color};">${avgPct}%</div>
-      <div class="ms-cat-wheel-label">${meta.label}</div>
-    </div>`;
+    html += '<div class="ms-cat-wheel" onclick="toggleMsCat(\'' + cat + '\');document.getElementById(\'ms-cat-' + cat + '\')?.scrollIntoView({behavior:\'smooth\',block:\'center\'})">' +
+      '<svg viewBox="0 0 50 50">' +
+        '<circle class="mcw-track" cx="25" cy="25" r="' + R + '"/>' +
+        '<circle class="mcw-fill" cx="25" cy="25" r="' + R + '" stroke="' + meta.color + '" stroke-dasharray="' + C + '" stroke-dashoffset="' + fill + '"/>' +
+      '</svg>' +
+      '<div class="ms-cat-wheel-pct" style="color:' + meta.color + ';">' + avgPct + '%</div>' +
+      '<div class="ms-cat-wheel-label">' + meta.label + '</div>' +
+      (evidLabel ? '<div class="ms-cat-wheel-ev">' + evidLabel + '</div>' : '') +
+    '</div>';
   });
   el.innerHTML = html;
 }
@@ -12577,28 +14708,50 @@ function renderRegressionAlerts() {
 
   milestones.forEach((m, i) => {
     if (m.status !== 'consistent' && m.status !== 'mastered') return;
-    // Find the date of the current stage
+
+    // Evidence-based regression: check if activity log has gone quiet for this milestone
+    let bestKw = null, bestScore = 0;
+    Object.entries(KEYWORD_TO_MILESTONE).forEach(([k, v]) => {
+      if (!v) return;
+      const score = milestoneKeywordScore(m.text, k);
+      if (score > bestScore) { bestScore = score; bestKw = k; }
+    });
+
+    if (bestKw && m.evidenceCount > 0) {
+      // Use evidence-based regression detection
+      const isRegressing = checkEvidenceRegression(bestKw, m.autoStatus || m.status);
+      if (isRegressing) {
+        const evidence = getMilestoneEvidence(bestKw);
+        const lastEvDate = evidence.length > 0 ? evidence[0].date : null;
+        const daysSince = lastEvDate ? Math.round((now - new Date(lastEvDate).getTime()) / 86400000) : 99;
+        regressions.push({ idx: i, text: m.text, status: m.status, daysSince, stageDate: lastEvDate, source: 'evidence' });
+        return; // Don't double-count
+      }
+    }
+
+    // Fallback: legacy regression check based on stage date
     const stageDate = m.status === 'mastered' ? m.masteredAt : m.consistentAt;
     if (!stageDate) return;
     const daysSince = Math.round((now - new Date(stageDate).getTime()) / 86400000);
     if (daysSince >= REGRESSION_DAYS) {
-      regressions.push({ idx: i, text: m.text, status: m.status, daysSince, stageDate });
+      regressions.push({ idx: i, text: m.text, status: m.status, daysSince, stageDate, source: 'date' });
     }
   });
 
   if (regressions.length === 0) { el.innerHTML = ''; return; }
 
   let html = '';
-  regressions.slice(0, 3).forEach(r => {
+  regressions.slice(0, 5).forEach(r => {
     const stageMeta = MS_STAGE_META[r.status];
-    html += `<div class="ms-regression-alert" onclick="confirmRegressionCheck(${r.idx})">
-      <span style="font-size:var(--icon-base);">🔄</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);">Still ${stageMeta.label.toLowerCase()}? "${escHtml(r.text)}"</div>
-        <div style="font-size:var(--fs-xs);color:var(--mid);">Last updated ${r.daysSince}d ago · Tap to confirm or adjust</div>
-      </div>
-      <span class="collapse-chevron">›</span>
-    </div>`;
+    const sourceLabel = r.source === 'evidence' ? 'No new evidence for ' + r.daysSince + 'd' : 'Last updated ' + r.daysSince + 'd ago';
+    html += '<div class="ms-regression-alert" onclick="confirmRegressionCheck(' + r.idx + ')">' +
+      '<span class="ms-regr-icon">🔄</span>' +
+      '<div class="ms-regr-body">' +
+        '<div class="ms-regr-title">Still ' + stageMeta.label.toLowerCase() + '? "' + escHtml(r.text) + '"</div>' +
+        '<div class="ms-regr-meta">' + sourceLabel + ' · Tap to confirm or adjust</div>' +
+      '</div>' +
+      '<span class="collapse-chevron">›</span>' +
+    '</div>';
   });
   el.innerHTML = html;
 }
@@ -12671,8 +14824,85 @@ function renderMilestoneTimeline() {
   el.innerHTML = html;
 }
 
-// ─────────────────────────────────────────
-// DOCTOR VISITS
+// ─── Recent Evidence Feed (last 7 days of logged activities — grouped by day) ───
+function renderRecentEvidence() {
+  const feedEl = document.getElementById('recentEvidenceFeed');
+  if (!feedEl) return;
+
+  // Gather last 7 days of activity entries
+  const now = new Date();
+  const dayGroups = {};
+  for (let d = 0; d < 7; d++) {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() - d);
+    const dateStr = toDateStr(dt);
+    const dayEntries = Array.isArray(activityLog[dateStr]) ? activityLog[dateStr] : [];
+    if (dayEntries.length > 0) {
+      dayGroups[dateStr] = dayEntries.map(e => ({ ...e, _date: dateStr }));
+    }
+  }
+
+  const dayKeys = Object.keys(dayGroups).sort((a, b) => b.localeCompare(a));
+  if (dayKeys.length === 0) {
+    feedEl.style.display = 'none';
+    return;
+  }
+
+  feedEl.style.display = '';
+  const domainIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain'), sensory: zi('sparkle') };
+  const todayStr = today();
+  const yesterdayStr = toDateStr(new Date(Date.now() - 86400000));
+
+  let html = '<div class="micro-label text-center mb-4" style="font-weight:600;">Recent Activity Evidence</div>';
+
+  dayKeys.forEach((dateStr, dayIdx) => {
+    const entries = dayGroups[dateStr].sort((a, b) => (b.ts || b._date).localeCompare(a.ts || a._date));
+    const dayLabel = dateStr === todayStr ? 'Today' : dateStr === yesterdayStr ? 'Yesterday' : formatDate(dateStr);
+
+    // Day summary: count by domain
+    const domainCounts = {};
+    let totalEvidence = 0;
+    entries.forEach(e => {
+      (e.domains || []).forEach(d => { domainCounts[d] = (domainCounts[d] || 0) + 1; });
+      totalEvidence += (e.evidence || []).length;
+    });
+    const summaryChips = Object.entries(domainCounts).map(([d, c]) =>
+      '<span class="al-feed-summary-chip al-chip al-chip-' + d + '">' + (domainIcons[d] || '') + ' ' + d + ' ×' + c + '</span>'
+    ).join('');
+
+    const dayBodyId = 'al-feed-day-' + dayIdx;
+    const isToday = dateStr === todayStr;
+
+    html += '<div class="al-feed-day">';
+    html += '<div class="al-feed-day-header" onclick="document.getElementById(\'' + dayBodyId + '\').style.display=document.getElementById(\'' + dayBodyId + '\').style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer;">' +
+      dayLabel + ' — ' + entries.length + ' activit' + (entries.length === 1 ? 'y' : 'ies') + ' · ' + totalEvidence + ' evidence' +
+      '<span style="float:right;">▾</span></div>';
+    html += '<div class="al-feed-summary">' + summaryChips + '</div>';
+
+    html += '<div id="' + dayBodyId + '" class="al-feed-list" style="display:' + (isToday ? 'block' : 'none') + ';">';
+    entries.forEach(e => {
+      const domainChips = (e.domains || []).map(d =>
+        '<span class="al-chip al-chip-' + d + '">' + (domainIcons[d] || '') + ' ' + d + '</span>'
+      ).join(' ');
+      const evidCount = (e.evidence || []).length;
+      const timeStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+      const durStr = e.duration ? e.duration + ' min' : 'obs';
+      html += '<div class="al-feed-entry">' +
+        '<div class="al-feed-time">' + timeStr + '</div>' +
+        '<div class="al-feed-body">' +
+          '<div class="al-feed-text">' + escHtml(e.text) + '</div>' +
+          '<div class="al-feed-chips">' + domainChips + '</div>' +
+        '</div>' +
+        '<div class="al-feed-meta">' + durStr + ' · ' + evidCount + ' ev</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+  });
+
+  feedEl.innerHTML = html;
+}
+
 // ─────────────────────────────────────────
 function renderVisits() {
   save(KEYS.visits, visits);
@@ -15826,7 +18056,7 @@ function calcMilestoneScore() {
   const ageM = ageAt().months;
   const ageMo = Math.floor(ageM);
 
-  // A. Age-appropriate completion (35%) — uses 5-stage weighted progress
+  // A. Evidence-based completion (35%) — auto-status of age-appropriate milestones
   const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
   let expectedItems = [];
   brackets.forEach(br => {
@@ -15851,61 +18081,103 @@ function calcMilestoneScore() {
   const completionRate = expectedItems.length > 0 ? expectedProgress / (expectedItems.length * 100) : 1;
   const completionScore = Math.round(Math.min(completionRate, 1) * 100);
 
-  // B. Category coverage (25%) — weighted by progress, not just presence
+  // B. Category coverage (20%) — all 4 domains have recent evidence
   const categories = ['motor', 'language', 'social', 'cognitive'];
+  const hasActivityLog = Object.keys(activityLog).length > 0;
+
   let catProgressSum = 0;
-  categories.forEach(cat => {
-    const catMs = milestones.filter(m => m.cat === cat);
-    if (catMs.length === 0) return;
-    const avgPct = catMs.reduce((s, m) => s + (MS_STAGE_META[m.status]?.pct || 0), 0) / catMs.length;
-    catProgressSum += avgPct > 0 ? 1 : 0;
-  });
+  if (hasActivityLog) {
+    // Evidence-driven: check for recent activity log evidence per domain
+    const now14 = new Date();
+    const domainRecent = {};
+    for (let d = 0; d < 14; d++) {
+      const dt = new Date(now14);
+      dt.setDate(dt.getDate() - d);
+      const ds = toDateStr(dt);
+      if (Array.isArray(activityLog[ds])) {
+        activityLog[ds].forEach(e => {
+          (e.domains || []).forEach(dom => { domainRecent[dom] = (domainRecent[dom] || 0) + 1; });
+        });
+      }
+    }
+    categories.forEach(cat => {
+      if (domainRecent[cat] > 0) catProgressSum += 1;
+    });
+  } else {
+    // Fallback: milestone presence
+    categories.forEach(cat => {
+      const catMs = milestones.filter(m => m.cat === cat);
+      if (catMs.length > 0 && catMs.some(m => (MS_STAGE_META[m.status]?.pct || 0) > 0)) catProgressSum += 1;
+    });
+  }
   const catScore = Math.round((catProgressSum / categories.length) * 100);
 
-  // C. Active tracking (20%) — are milestones being actively progressed?
-  const activeCount = milestones.filter(m => ['emerging','practicing','consistent'].includes(m.status)).length;
-  const recentMastered = milestones.filter(m => {
-    if (m.status !== 'mastered' || !m.masteredAt) return false;
-    return (new Date() - new Date(m.masteredAt)) / 86400000 <= 14;
-  }).length;
+  // C. Activity engagement (20%) — distinct activity days in last 14 days
+  let activityDays14d = 0;
+  const now14c = new Date();
+  for (let d = 0; d < 14; d++) {
+    const dt = new Date(now14c);
+    dt.setDate(dt.getDate() - d);
+    const ds = toDateStr(dt);
+    if (Array.isArray(activityLog[ds]) && activityLog[ds].length > 0) activityDays14d++;
+  }
+
   let trackingScore;
-  if (activeCount >= 2 && recentMastered >= 1) trackingScore = 100;
-  else if (activeCount >= 1 || recentMastered >= 1) trackingScore = 75;
-  else if (milestones.filter(m => m.status === 'mastered').length > 0) trackingScore = 50;
-  else trackingScore = 20;
+  if (hasActivityLog) {
+    // Pure activity engagement scoring
+    trackingScore = activityDays14d >= 7 ? 100 : activityDays14d >= 5 ? 85 : activityDays14d >= 3 ? 70 : activityDays14d >= 1 ? 50 : 20;
+  } else {
+    // Legacy: milestone status activity
+    const activeCount = milestones.filter(m => ['emerging','practicing','consistent'].includes(m.status)).length;
+    const recentMastered = milestones.filter(m => {
+      if (m.status !== 'mastered' || !m.masteredAt) return false;
+      return (new Date() - new Date(m.masteredAt)) / 86400000 <= 14;
+    }).length;
+    if (activeCount >= 2 && recentMastered >= 1) trackingScore = 100;
+    else if (activeCount >= 1 || recentMastered >= 1) trackingScore = 75;
+    else if (milestones.filter(m => m.status === 'mastered').length > 0) trackingScore = 50;
+    else trackingScore = 20;
+  }
 
-  // D. Advanced milestones bonus (10%)
-  const advancedDone = milestones.filter(m => m.advanced && (m.status === 'mastered' || m.status === 'consistent')).length;
-  const advancedScore = advancedDone >= 3 ? 100 : advancedDone >= 2 ? 80 : advancedDone >= 1 ? 60 : 30;
-
-  // E. Engagement recency (10%)
+  // D. Evidence recency (15%) — how recent is the latest evidence
   let lastActivity = null;
   milestones.forEach(m => {
     ['masteredAt','consistentAt','practicingAt','emergingAt'].forEach(field => {
       if (m[field] && (!lastActivity || new Date(m[field]) > lastActivity)) lastActivity = new Date(m[field]);
     });
   });
+  Object.entries(activityLog).forEach(([dateStr, entries]) => {
+    if (Array.isArray(entries) && entries.length > 0) {
+      const d = new Date(dateStr);
+      if (!lastActivity || d > lastActivity) lastActivity = d;
+    }
+  });
   let recencyScore = 30;
   if (lastActivity) {
     const daysSince = Math.floor((new Date() - lastActivity) / 86400000);
-    if (daysSince <= 3) recencyScore = 100;
-    else if (daysSince <= 7) recencyScore = 80;
-    else if (daysSince <= 14) recencyScore = 60;
-    else if (daysSince <= 30) recencyScore = 40;
+    if (daysSince <= 2) recencyScore = 100;
+    else if (daysSince <= 5) recencyScore = 85;
+    else if (daysSince <= 10) recencyScore = 65;
+    else if (daysSince <= 21) recencyScore = 45;
+    else if (daysSince <= 30) recencyScore = 35;
   }
+
+  // E. Advanced milestones bonus (10%)
+  const advancedDone = milestones.filter(m => m.advanced && (m.status === 'mastered' || m.status === 'consistent')).length;
+  const advancedScore = advancedDone >= 3 ? 100 : advancedDone >= 2 ? 80 : advancedDone >= 1 ? 60 : 30;
 
   const score = Math.round(
     completionScore * 0.35 +
-    catScore * 0.25 +
+    catScore * 0.20 +
     trackingScore * 0.20 +
-    advancedScore * 0.10 +
-    recencyScore * 0.10
+    recencyScore * 0.15 +
+    advancedScore * 0.10
   );
 
   const inProgress = milestones.filter(m => ['emerging','practicing','consistent'].includes(m.status)).length;
   return {
     score, ...getScoreLabel(score),
-    components: { completion: completionScore, categories: catScore, tracking: trackingScore, advanced: advancedScore, recency: recencyScore },
+    components: { completion: completionScore, categories: catScore, tracking: trackingScore, recency: recencyScore, advanced: advancedScore },
     detail: { expectedTotal: expectedItems.length, expectedDone: expectedMatchCount, catsActive: catProgressSum, inProgress, advancedDone }
   };
 }
@@ -16049,6 +18321,12 @@ function renderMilestoneStats() {
   const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   const randomAct = acts.length ? acts[(doy + 7) % acts.length] : null;
 
+  // Total evidence entries
+  let totalEvidence = 0;
+  Object.values(activityLog).forEach(entries => {
+    if (Array.isArray(entries)) totalEvidence += entries.length;
+  });
+
   // ── Card 1: Pills only ──
   el.innerHTML = `
       <div class="diet-stat ds-sage" onclick="expandMilestones('done')">
@@ -16071,11 +18349,15 @@ function renderMilestoneStats() {
         <div class="diet-stat-val">${advanced}</div>
         <div class="diet-stat-label">Adv.</div>
       </div>` : ''}
-      <div class="diet-stat ds-sky" onclick="expandActivities()">
+      ${totalEvidence > 0 ? `<div class="diet-stat ds-sky">
+        <div class="diet-stat-icon">📊</div>
+        <div class="diet-stat-val">${totalEvidence}</div>
+        <div class="diet-stat-label">Evidence</div>
+      </div>` : `<div class="diet-stat ds-sky" onclick="expandActivities()">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-target"/></svg></div>
         <div class="diet-stat-val">${acts.length}</div>
         <div class="diet-stat-label">Activities</div>
-      </div>
+      </div>`}
   `;
 
   // ── Card 2: Highlights ──
@@ -22952,7 +25234,7 @@ function renderHistoryPreviews() {
     const latestMs = latest[0] || done[done.length - 1];
 
     if (latestMs) {
-      const catMeta = { motor:'🏃', language:'💬', social:'🤝', cognitive:'🧠' };
+      const catMeta = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
       const catIcon = catMeta[latestMs.cat] || zi('star');
       msPrev.innerHTML = `<div class="info-strip is-sage">
         <span>${catIcon}</span>
@@ -24322,12 +26604,30 @@ function openQuickModal(type) {
     // Pre-fill time to now
     document.getElementById('qlPoopTime').value = new Date().toTimeString().slice(0, 5);
   }
+  if (type === 'activity') {
+    document.getElementById('alTextInput').value = _alPrefillText || '';
+    document.getElementById('alDuration').value = _alPrefillDuration || '';
+    document.getElementById('alTime').value = new Date().toTimeString().slice(0, 5);
+    _alPrefillSource = _alPrefillSource || 'manual';
+    if (_alPrefillText) {
+      // Pre-fill: classify immediately (skip debounce)
+      const result = classifyActivity(_alPrefillText);
+      _alDetectedEvidence = result.evidence;
+      renderActivityChips();
+    } else {
+      _alDetectedEvidence = [];
+      document.getElementById('alDetectChips').innerHTML = '<div class="al-detect-empty">Type above to auto-detect milestones</div>';
+    }
+    _alPrefillText = null;
+    _alPrefillDuration = null;
+  }
   document.getElementById('qlModal-' + type).classList.add('open');
 }
 
 function closeQuickModal() {
   document.querySelectorAll('.ql-modal-overlay').forEach(m => m.classList.remove('open'));
   _qlBackfillDate = null;
+  _alPrefillSource = 'manual'; // Reset activity source on cancel
   ['sleep', 'nap', 'poop'].forEach(t => {
     const el = document.getElementById('qlBf-' + t);
     if (el) el.remove();
@@ -24353,6 +26653,146 @@ function closeQuickLogAll() {
   });
   // Reset bottom sheet to default options
   resetQLSheet();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVITY LOG: Modal handlers
+// ═══════════════════════════════════════════════════════════════
+
+let _alDetectedEvidence = [];
+let _alPrefillText = null;
+let _alPrefillDuration = null;
+let _alPrefillSource = 'manual';
+let _alInputTimer = null;
+
+const AL_DOMAIN_META = {
+  motor:     { icon: zi('run'), label: 'Motor' },
+  language:  { icon: zi('chat'), label: 'Language' },
+  social:    { icon: zi('handshake'), label: 'Social' },
+  cognitive: { icon: zi('brain'), label: 'Cognitive' },
+  sensory:   { icon: zi('sparkle'), label: 'Sensory' }
+};
+
+function onActivityInputChange() {
+  clearTimeout(_alInputTimer);
+  _alInputTimer = setTimeout(() => {
+    const text = (document.getElementById('alTextInput').value || '').trim();
+    const chipsEl = document.getElementById('alDetectChips');
+    if (!text) {
+      _alDetectedEvidence = [];
+      chipsEl.innerHTML = '<div class="al-detect-empty">Type above to auto-detect milestones</div>';
+      return;
+    }
+    const result = classifyActivity(text);
+    _alDetectedEvidence = result.evidence;
+    renderActivityChips();
+  }, 300);
+}
+
+function renderActivityChips() {
+  const chipsEl = document.getElementById('alDetectChips');
+  if (_alDetectedEvidence.length === 0) {
+    chipsEl.innerHTML = '<div class="al-detect-empty">No milestones detected — add context for better matching</div>';
+    return;
+  }
+  // Group by domain
+  const byDomain = {};
+  _alDetectedEvidence.forEach(ev => {
+    if (!byDomain[ev.domain]) byDomain[ev.domain] = [];
+    byDomain[ev.domain].push(ev);
+  });
+  let html = '';
+  Object.entries(byDomain).forEach(([domain, evs]) => {
+    const meta = AL_DOMAIN_META[domain] || { icon: '?', label: domain };
+    const milestoneLabels = evs.map(e => e.milestone.replace(/_/g, ' ')).join(', ');
+    const confDot = evs.some(e => e.confidence === 'high') ? '🟢' : evs.some(e => e.confidence === 'medium') ? '🟡' : '🔵';
+    html += `<div class="al-chip al-chip-${domain}" data-domain="${domain}">
+      ${confDot} ${meta.icon} ${meta.label}: ${milestoneLabels}
+      <button class="al-chip-x" onclick="removeActivityChip('${domain}')" aria-label="Remove">✕</button>
+    </div>`;
+  });
+  chipsEl.innerHTML = html;
+}
+
+function removeActivityChip(domain) {
+  _alDetectedEvidence = _alDetectedEvidence.filter(ev => ev.domain !== domain);
+  renderActivityChips();
+}
+
+function alPreset(text) {
+  const input = document.getElementById('alTextInput');
+  const existing = input.value.trim();
+  input.value = existing ? existing + ', ' + text : text;
+  onActivityInputChange();
+}
+
+function openActivityLogPrefilled(text, duration, source) {
+  _alPrefillText = text || '';
+  _alPrefillDuration = duration || null;
+  _alPrefillSource = source || 'plan';
+  openQuickModal('activity');
+}
+
+function saveActivity() {
+  const text = (document.getElementById('alTextInput').value || '').trim();
+  if (!text) return;
+
+  const durVal = document.getElementById('alDuration').value;
+  const duration = durVal ? parseInt(durVal) : null;
+  const timeVal = document.getElementById('alTime').value;
+
+  // Build timestamp
+  const now = new Date();
+  let ts = now.toISOString();
+  if (timeVal) {
+    const [h, m] = timeVal.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    ts = d.toISOString();
+  }
+
+  // Create entry with detected evidence (user may have removed some chips)
+  const entry = {
+    id: 'act_' + Date.now(),
+    text: text,
+    type: duration ? 'activity' : 'observation',
+    duration: duration,
+    ts: ts,
+    source: _alPrefillSource || 'manual',
+    domains: [...new Set(_alDetectedEvidence.map(e => e.domain))],
+    evidence: _alDetectedEvidence.map(e => ({
+      milestone: e.milestone,
+      confidence: e.confidence,
+      context: e.context
+    }))
+  };
+
+  const dateStr = today();
+  if (!activityLog[dateStr]) activityLog[dateStr] = [];
+  activityLog[dateStr].push(entry);
+  save(KEYS.activityLog, activityLog);
+
+  // Set undo state
+  _lastActivityUndo = { dateStr, entryId: entry.id };
+
+  // Sync milestones
+  syncMilestoneStatuses();
+
+  // Close and show toast
+  closeQuickLogAll();
+  _alPrefillSource = 'manual';
+
+  // Show toast with undo
+  const domainStr = entry.domains.length > 0 ? ' · ' + entry.domains.map(d => (AL_DOMAIN_META[d]?.icon || '') + ' ' + (AL_DOMAIN_META[d]?.label || d)).join(', ') : '';
+  const toast = document.getElementById('qlToast');
+  toast.innerHTML = '✅ Activity logged' + domainStr + ' <button class="al-undo-btn" onclick="undoLastActivity()">Undo</button>';
+  toast.classList.add('show');
+  setTimeout(() => { toast.classList.remove('show'); _lastActivityUndo = null; }, 5000);
+
+  // Re-render relevant sections (renderMilestones calls renderCategoryWheels + renderRecentEvidence internally)
+  renderMilestones();
+  renderTodayPlan();
+  renderHomeActivity();
 }
 
 function detectMealType() {
@@ -26886,7 +29326,7 @@ function renderTodayPlan() {
     items.push({
       time: '9 AM', icon: '💊', title: d3Med.name,
       detail: d3Done ? '<svg class="zi"><use href="#zi-check"/></svg> Done today' : d3Med.dose + ' — give with or after a feed for best absorption',
-      tag: 'med', done: d3Done
+      tag: 'med', done: d3Done, htmlDetail: d3Done
     });
   }
 
@@ -26918,13 +29358,33 @@ function renderTodayPlan() {
     tag: 'sleep', done: hasMorningNap
   });
 
-  // Tummy time / motor activity
+  // Tummy time / motor activity — check if already logged today
   const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
+  const todayActivities = Array.isArray(activityLog[todayStr]) ? activityLog[todayStr] : [];
+
+  // Prioritize under-evidenced domains
+  const domainEvCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  Object.values(activityLog).forEach(dayEntries => {
+    if (!Array.isArray(dayEntries)) return;
+    dayEntries.forEach(e => { (e.domains || []).forEach(d => { domainEvCounts[d] = (domainEvCounts[d] || 0) + 1; }); });
+  });
+  const underEvidenced = Object.entries(domainEvCounts).sort((a, b) => a[1] - b[1]);
+  const weakestDomain = underEvidenced[0]?.[0] || 'motor';
+
+  // Pick a prioritized activity: prefer weakest domain if different from motor
+  let priorityAct = null;
+  if (weakestDomain !== 'motor') {
+    priorityAct = acts.find(a => a.type === weakestDomain);
+  }
+
   const motorAct = acts.find(a => a.type === 'motor');
+  const motorLogged = todayActivities.some(e => (e.domains || []).includes('motor'));
+  const motorTitle = motorAct ? motorAct.title : 'Tummy time & play';
   items.push({
-    time: '10:30', icon: '🤸', title: motorAct ? motorAct.title : 'Tummy time & play',
-    detail: motorAct ? motorAct.desc.substring(0, 80) + (motorAct.desc.length > 80 ? '…' : '') : '3-5 sessions daily, 5 min each. Builds core strength for crawling.',
-    tag: 'play'
+    time: '10:30', icon: '🤸', title: motorTitle,
+    detail: motorLogged ? '✅ Logged today' : (motorAct ? motorAct.desc.substring(0, 80) + (motorAct.desc.length > 80 ? '…' : '') : '3-5 sessions daily, 5 min each. Builds core strength for crawling.'),
+    tag: 'play', done: motorLogged,
+    action: motorLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(motorTitle.split(' — ')[0]) + '\', 5, \'plan\')'
   });
 
   // ═══ MIDDAY BLOCK ═══
@@ -26965,13 +29425,16 @@ function renderTodayPlan() {
     tag: 'sleep', done: hasAfternoonNap
   });
 
-  // Language/sensory activity
-  const langAct = acts.find(a => a.type === 'language' || a.type === 'sensory');
+  // Language/sensory activity — prefer under-evidenced domain
+  const langAct = priorityAct || acts.find(a => a.type === 'language' || a.type === 'sensory');
   if (langAct) {
+    const langDomain = langAct.type || 'language';
+    const langLogged = todayActivities.some(e => (e.domains || []).includes(langDomain));
     items.push({
       time: '3 PM', icon: langAct.icon || '💬', title: langAct.title,
-      detail: langAct.desc.substring(0, 80) + (langAct.desc.length > 80 ? '…' : ''),
-      tag: 'play'
+      detail: langLogged ? '✅ Logged today' : langAct.desc.substring(0, 80) + (langAct.desc.length > 80 ? '…' : ''),
+      tag: 'play', done: langLogged,
+      action: langLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(langAct.title.split(' — ')[0]) + '\', 5, \'plan\')'
     });
   }
 
@@ -27178,7 +29641,7 @@ function renderTodayPlan() {
         <div class="plan-icon">${item.icon}</div>
         <div class="plan-body">
           <div class="plan-title">${escHtml(item.title)}</div>
-          <div class="plan-detail"><span class="plan-tag pt-${item.tag || 'food'}">${item.tag || ''}</span>${escHtml(item.detail || '')}</div>
+          <div class="plan-detail"><span class="plan-tag pt-${item.tag || 'food'}">${item.tag || ''}</span>${item.htmlDetail ? (item.detail || '') : escHtml(item.detail || '')}</div>
         </div>
       </div>`;
     });
@@ -32530,6 +34993,360 @@ function renderInfoPoopReport() {
   }
 }
 
+// ── Activity Intelligence Card 1: Consistency & Domain Balance ──
+function renderInfoActivityConsistency() {
+  const summaryEl = document.getElementById('infoActivityConsistencySummary');
+  const dotsEl = document.getElementById('infoActivityConsistencyDots');
+  const domainsEl = document.getElementById('infoActivityConsistencyDomains');
+  const insightsEl = document.getElementById('infoActivityConsistencyInsights');
+  if (!summaryEl) return;
+
+  const totalDays = Object.keys(activityLog).length;
+  if (totalDays === 0) {
+    summaryEl.innerHTML = '<span class="si-nodata">Log activities to see consistency data</span>';
+    if (dotsEl) dotsEl.innerHTML = '';
+    if (domainsEl) domainsEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // 14-day dot calendar
+  const now = new Date();
+  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  let activeDays = 0, streak = 0, maxStreak = 0, currentStreak = 0;
+  const domainTotals = {};
+  const dowCounts = [0, 0, 0, 0, 0, 0, 0];
+  const dowDays = [0, 0, 0, 0, 0, 0, 0];
+  let dotHtml = '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">14-Day Activity Calendar</div>';
+  // Day-of-week header (separate grid, not inside dot grid)
+  dotHtml += '<div class="ai-dot-cal">';
+  dayLabels.forEach(l => { dotHtml += '<div class="ai-dot-label">' + l + '</div>'; });
+  dotHtml += '</div>';
+
+  // 14 dots — start from 13 days ago to today
+  const dots = [];
+  for (let d = 13; d >= 0; d--) {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() - d);
+    const ds = toDateStr(dt);
+    const entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+    const count = entries.length;
+    dots.push({ ds, count, dow: dt.getDay() });
+    if (count > 0) {
+      activeDays++;
+      currentStreak++;
+      if (currentStreak > maxStreak) maxStreak = currentStreak;
+      entries.forEach(e => {
+        (e.domains || []).forEach(dom => { domainTotals[dom] = (domainTotals[dom] || 0) + 1; });
+      });
+    } else {
+      currentStreak = 0;
+    }
+    dowDays[dt.getDay()]++;
+    if (count > 0) dowCounts[dt.getDay()]++;
+  }
+
+  // Check if current streak extends to today
+  streak = 0;
+  for (let d = 0; d >= -13; d--) {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() + d);
+    const ds = toDateStr(dt);
+    if (Array.isArray(activityLog[ds]) && activityLog[ds].length > 0) streak++;
+    else break;
+  }
+
+  // Pad dots to start on correct day of week
+  const firstDow = dots[0] ? new Date(dots[0].ds).getDay() : 0;
+  dotHtml += '<div class="ai-dot-cal">';
+  for (let i = 0; i < firstDow; i++) dotHtml += '<div></div>';
+  dots.forEach(d => {
+    const cls = d.count >= 3 ? 'active-3' : d.count >= 2 ? 'active-2' : d.count >= 1 ? 'active' : '';
+    dotHtml += '<div class="ai-dot ' + cls + '" title="' + d.ds + ': ' + d.count + ' activities"></div>';
+  });
+  dotHtml += '</div>';
+
+  // Summary
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">' + activeDays + '/14 active days · ' + streak + 'd streak · ' + maxStreak + 'd best</span>';
+
+  if (dotsEl) dotsEl.innerHTML = dotHtml;
+
+  // Domain balance bars
+  if (domainsEl) {
+    const domainColors = { motor: 'var(--sage)', language: '#6aafcc', social: '#d4a04a', cognitive: 'var(--lavender)', sensory: '#c87070' };
+    const allDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
+    const maxDom = Math.max(...allDomains.map(d => domainTotals[d] || 0), 1);
+    let dHtml = '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Domain Distribution</div>';
+    allDomains.forEach(d => {
+      const count = domainTotals[d] || 0;
+      const pct = Math.round((count / maxDom) * 100);
+      dHtml += '<div class="ai-domain-bar">' +
+        '<div class="ai-domain-label">' + d + '</div>' +
+        '<div class="ai-domain-track"><div class="ai-domain-fill" style="width:' + pct + '%;background:' + (domainColors[d] || 'var(--sage)') + ';"></div></div>' +
+        '<div class="ai-domain-val">' + count + '</div>' +
+      '</div>';
+    });
+    domainsEl.innerHTML = dHtml;
+  }
+
+  // Insights
+  if (insightsEl) {
+    let iHtml = '';
+    // Day-of-week pattern
+    const dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    let bestDow = 0, worstDow = 0;
+    dowCounts.forEach((c, i) => {
+      if (c > dowCounts[bestDow]) bestDow = i;
+      if (c < dowCounts[worstDow]) worstDow = i;
+    });
+    if (dowCounts[bestDow] > 0 && dowCounts[bestDow] !== dowCounts[worstDow]) {
+      iHtml += '<div class="si-insight si-insight-info">Most active on ' + dowNames[bestDow] + 's, least on ' + dowNames[worstDow] + 's</div>';
+    }
+
+    // Domain imbalance
+    const domArr = Object.entries(domainTotals).sort((a, b) => b[1] - a[1]);
+    if (domArr.length >= 2 && domArr[0][1] >= 3 * (domArr[domArr.length - 1][1] || 1)) {
+      iHtml += '<div class="si-insight si-insight-warn">' + domArr[0][0].charAt(0).toUpperCase() + domArr[0][0].slice(1) + ' activities are ' + Math.round(domArr[0][1] / Math.max(domArr[domArr.length - 1][1], 1)) + '× ' + domArr[domArr.length - 1][0] + ' — consider more ' + domArr[domArr.length - 1][0] + ' activities</div>';
+    }
+
+    if (streak >= 3) {
+      iHtml += '<div class="si-insight si-insight-good">' + streak + '-day activity streak — great consistency!</div>';
+    } else if (activeDays < 4) {
+      iHtml += '<div class="si-insight si-insight-warn">Only ' + activeDays + '/14 active days — try logging daily activities</div>';
+    }
+
+    insightsEl.innerHTML = iHtml;
+  }
+}
+
+// ── Activity Intelligence Card 2: Milestone Velocity Tracker ──
+function renderInfoMilestoneVelocity() {
+  const summaryEl = document.getElementById('infoMilestoneVelocitySummary');
+  const listEl = document.getElementById('infoMilestoneVelocityList');
+  const insightsEl = document.getElementById('infoMilestoneVelocityInsights');
+  if (!summaryEl) return;
+
+  // Find all milestones with evidence that aren't mastered yet
+  const inProgress = milestones.filter(m => m.evidenceCount > 0 && ['emerging', 'practicing', 'consistent'].includes(m.status));
+  const stalled = [];
+  const progressing = [];
+
+  if (inProgress.length === 0) {
+    summaryEl.innerHTML = '<span class="si-nodata">Log activities to track milestone velocity</span>';
+    if (listEl) listEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  const todayDate = new Date(today());
+  inProgress.forEach(m => {
+    if (!m.firstSeen || !m.lastSeen) return;
+    const firstDate = new Date(m.firstSeen);
+    const lastDate = new Date(m.lastSeen);
+    const daysSinceFirst = Math.max(1, Math.round((todayDate - firstDate) / 86400000));
+    const daysSinceLast = Math.round((todayDate - lastDate) / 86400000);
+    const rate = m.evidenceCount / daysSinceFirst; // evidence per day
+
+    // Project next promotion
+    const stageRank = { emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+    const currentRank = stageRank[m.status] || 0;
+    let nextStage = null, neededEvidence = 0;
+    for (const stage of ['practicing', 'consistent', 'mastered']) {
+      if ((stageRank[stage] || 0) > currentRank) {
+        nextStage = stage;
+        neededEvidence = Math.max(0, PROMOTION_RULES[stage].minEvidence - m.evidenceCount);
+        break;
+      }
+    }
+    const projectedDays = rate > 0 && neededEvidence > 0 ? Math.round(neededEvidence / rate) : null;
+
+    const item = { ...m, daysSinceFirst, daysSinceLast, rate, nextStage, neededEvidence, projectedDays };
+    if (daysSinceLast > 12) stalled.push(item);
+    else progressing.push(item);
+  });
+
+  // Sort progressing by rate descending
+  progressing.sort((a, b) => b.rate - a.rate);
+  stalled.sort((a, b) => b.daysSinceLast - a.daysSinceLast);
+
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">' + progressing.length + ' progressing · ' + stalled.length + ' stalled</span>';
+
+  if (listEl) {
+    let html = '';
+    if (progressing.length > 0) {
+      html += '<div class="si-sub-label" style="margin-bottom:var(--sp-4);">Progressing</div>';
+      progressing.forEach(m => {
+        const rateStr = m.rate >= 1 ? m.rate.toFixed(1) + '/day' : (m.rate * 7).toFixed(1) + '/week';
+        let projStr = '';
+        if (m.projectedDays && m.nextStage) {
+          projStr = ' · → ' + m.nextStage + ' in ~' + m.projectedDays + 'd';
+        }
+        html += '<div class="ai-velocity-item">' +
+          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-rate">' + rateStr + projStr + '</div>' +
+        '</div>';
+      });
+    }
+    if (stalled.length > 0) {
+      html += '<div class="si-sub-label" style="margin:var(--sp-12) 0 var(--sp-4);">Stalled</div>';
+      stalled.forEach(m => {
+        html += '<div class="ai-velocity-item">' +
+          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-rate ai-velocity-stale">No evidence for ' + m.daysSinceLast + 'd</div>' +
+        '</div>';
+      });
+    }
+    listEl.innerHTML = html;
+  }
+
+  if (insightsEl) {
+    let iHtml = '';
+    if (progressing.length > 0) {
+      const fastest = progressing[0];
+      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(fastest.text) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
+    }
+    if (stalled.length > 0) {
+      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(stalled[0].text) + '</div>';
+    }
+    insightsEl.innerHTML = iHtml;
+  }
+}
+
+// ── Activity Intelligence Card 3: Activity ↔ Outcome Correlations ──
+function renderInfoActivityCorrelation() {
+  const summaryEl = document.getElementById('infoActivityCorrelationSummary');
+  const rowsEl = document.getElementById('infoActivityCorrelationRows');
+  const insightsEl = document.getElementById('infoActivityCorrelationInsights');
+  if (!summaryEl) return;
+
+  const totalDays = Object.keys(activityLog).length;
+  if (totalDays < 3) {
+    summaryEl.innerHTML = '<span class="si-nodata">Need 3+ days of activity data for correlations</span>';
+    if (rowsEl) rowsEl.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = '';
+    return;
+  }
+
+  // Collect 30 days of data: activity count vs sleep score, poop score, feeding count
+  const now = new Date();
+  const activeDays = [], inactiveDays = [];
+
+  for (let d = 0; d < 30; d++) {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() - d);
+    const ds = toDateStr(dt);
+    const entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+    const actCount = entries.length;
+
+    // Sleep score for this day
+    const sleepObj = typeof getDailySleepScore === 'function' ? getDailySleepScore(ds) : null;
+    const sleepScore = sleepObj && typeof sleepObj.score === 'number' ? sleepObj.score : null;
+
+    // Poop score
+    const poopObj = typeof calcPoopScore === 'function' ? calcPoopScore(ds) : null;
+    const poopScore = poopObj && typeof poopObj.score === 'number' ? poopObj.score : null;
+
+    // Motor activity check
+    const hasMotor = entries.some(e => (e.domains || []).includes('motor'));
+
+    const day = { ds, actCount, sleepScore, poopScore, hasMotor };
+    if (actCount > 0) activeDays.push(day);
+    else inactiveDays.push(day);
+  }
+
+  const correlations = [];
+
+  // Sleep quality on active vs inactive days
+  const activeSleep = activeDays.filter(d => d.sleepScore !== null).map(d => d.sleepScore);
+  const inactiveSleep = inactiveDays.filter(d => d.sleepScore !== null).map(d => d.sleepScore);
+  if (activeSleep.length >= 2 && inactiveSleep.length >= 2) {
+    const avgActive = Math.round(activeSleep.reduce((s, v) => s + v, 0) / activeSleep.length);
+    const avgInactive = Math.round(inactiveSleep.reduce((s, v) => s + v, 0) / inactiveSleep.length);
+    const diff = avgActive - avgInactive;
+    correlations.push({
+      label: 'Sleep score on active vs inactive days',
+      valActive: avgActive, valInactive: avgInactive, diff,
+      unit: '/100'
+    });
+  }
+
+  // Poop regularity on active vs inactive days
+  const activePoop = activeDays.filter(d => d.poopScore !== null).map(d => d.poopScore);
+  const inactivePoop = inactiveDays.filter(d => d.poopScore !== null).map(d => d.poopScore);
+  if (activePoop.length >= 2 && inactivePoop.length >= 2) {
+    const avgActive = Math.round(activePoop.reduce((s, v) => s + v, 0) / activePoop.length);
+    const avgInactive = Math.round(inactivePoop.reduce((s, v) => s + v, 0) / inactivePoop.length);
+    const diff = avgActive - avgInactive;
+    correlations.push({
+      label: 'Poop score on active vs inactive days',
+      valActive: avgActive, valInactive: avgInactive, diff,
+      unit: '/100'
+    });
+  }
+
+  // Motor activity days vs sleep
+  const motorDays = activeDays.filter(d => d.hasMotor && d.sleepScore !== null);
+  const nonMotorDays = [...activeDays.filter(d => !d.hasMotor), ...inactiveDays].filter(d => d.sleepScore !== null);
+  if (motorDays.length >= 2 && nonMotorDays.length >= 2) {
+    const avgMotor = Math.round(motorDays.map(d => d.sleepScore).reduce((s, v) => s + v, 0) / motorDays.length);
+    const avgNonMotor = Math.round(nonMotorDays.map(d => d.sleepScore).reduce((s, v) => s + v, 0) / nonMotorDays.length);
+    const diff = avgMotor - avgNonMotor;
+    correlations.push({
+      label: 'Sleep after motor activities vs no motor',
+      valActive: avgMotor, valInactive: avgNonMotor, diff,
+      unit: '/100'
+    });
+  }
+
+  // Multi-activity days (2+) vs single activity days
+  const multiActive = activeDays.filter(d => d.actCount >= 2 && d.sleepScore !== null);
+  const singleActive = activeDays.filter(d => d.actCount === 1 && d.sleepScore !== null);
+  if (multiActive.length >= 2 && singleActive.length >= 2) {
+    const avgMulti = Math.round(multiActive.map(d => d.sleepScore).reduce((s, v) => s + v, 0) / multiActive.length);
+    const avgSingle = Math.round(singleActive.map(d => d.sleepScore).reduce((s, v) => s + v, 0) / singleActive.length);
+    const diff = avgMulti - avgSingle;
+    correlations.push({
+      label: 'Sleep on 2+ activity days vs 1 activity',
+      valActive: avgMulti, valInactive: avgSingle, diff,
+      unit: '/100'
+    });
+  }
+
+  summaryEl.innerHTML = '<span class="t-sm" style="color:var(--mid);">' + correlations.length + ' correlations found across ' + (activeDays.length + inactiveDays.length) + ' days</span>';
+
+  if (rowsEl) {
+    if (correlations.length === 0) {
+      rowsEl.innerHTML = '<div class="si-nodata">Not enough overlapping data yet</div>';
+    } else {
+      let html = '';
+      correlations.forEach(c => {
+        const diffCls = c.diff > 3 ? 'ai-corr-pos' : c.diff < -3 ? 'ai-corr-neg' : 'ai-corr-neutral';
+        const diffSign = c.diff > 0 ? '+' : '';
+        html += '<div class="ai-corr-row">' +
+          '<div class="ai-corr-label">' + c.label + '</div>' +
+          '<div class="ai-corr-val">' + c.valActive + ' vs ' + c.valInactive + '</div>' +
+          '<span class="ai-corr-diff ' + diffCls + '">' + diffSign + c.diff + '</span>' +
+        '</div>';
+      });
+      rowsEl.innerHTML = html;
+    }
+  }
+
+  if (insightsEl) {
+    let iHtml = '';
+    correlations.forEach(c => {
+      if (Math.abs(c.diff) >= 5) {
+        const better = c.diff > 0 ? 'active' : 'inactive';
+        iHtml += '<div class="si-insight ' + (c.diff > 0 ? 'si-insight-good' : 'si-insight-info') + '">' + c.label + ': ' + (c.diff > 0 ? '+' : '') + c.diff + ' points on ' + better + ' days</div>';
+      }
+    });
+    if (iHtml === '' && correlations.length > 0) {
+      iHtml = '<div class="si-insight si-insight-info">No strong correlations yet — more data will reveal patterns</div>';
+    }
+    insightsEl.innerHTML = iHtml;
+  }
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -32565,6 +35382,9 @@ function renderInfo() {
   renderInfoSupplementAdherence();
   renderInfoVaccRecovery();
   renderInfoGrowthVelocity();
+  renderInfoActivityConsistency();
+  renderInfoMilestoneVelocity();
+  renderInfoActivityCorrelation();
   renderInfoVisitPrep();
 }
 
@@ -35990,6 +38810,41 @@ function computeVisitPrep() {
     sections.milestones.items.push(inProgressMs.length + ' in progress');
   }
 
+  // 2b. Activity log summary since last visit
+  var actDaysSince = 0;
+  var actTotalEntries = 0;
+  var actDomainCounts = {};
+  var actAutoPromoted = 0;
+  Object.entries(activityLog || {}).forEach(function(pair) {
+    var dateStr = pair[0];
+    var entries = pair[1];
+    if (dateStr > sinceDate && Array.isArray(entries)) {
+      if (entries.length > 0) actDaysSince++;
+      actTotalEntries += entries.length;
+      entries.forEach(function(e) {
+        (e.domains || []).forEach(function(d) { actDomainCounts[d] = (actDomainCounts[d] || 0) + 1; });
+      });
+    }
+  });
+  // Count auto-promoted milestones (those with autoStatus and no manualStatus)
+  (milestones || []).forEach(function(m) {
+    if (m.autoStatus && m.autoStatus !== 'not_started' && !m.manualStatus) {
+      if (m.firstSeen && m.firstSeen > sinceDate) actAutoPromoted++;
+    }
+  });
+  sections.activities = {
+    emoji: '🏃',
+    label: 'Activities',
+    items: [],
+    hasData: actTotalEntries > 0
+  };
+  if (actTotalEntries > 0) {
+    sections.activities.items.push(actTotalEntries + ' activities logged across ' + actDaysSince + ' days');
+    var domList = Object.entries(actDomainCounts).sort(function(a, b) { return b[1] - a[1]; }).map(function(p) { return p[0] + ': ' + p[1]; }).join(', ');
+    if (domList) sections.activities.items.push(domList);
+    if (actAutoPromoted > 0) sections.activities.items.push(actAutoPromoted + ' milestones auto-promoted');
+  }
+
   // 3. Sleep summary (last 7 days)
   var sleepScores = [];
   for (var si = 0; si < 7; si++) {
@@ -36110,7 +38965,7 @@ function renderInfoVisitPrep() {
   // Sections
   if (sectionsEl) {
     var html = '';
-    var sectionOrder = ['growth', 'milestones', 'sleep', 'diet', 'poop', 'medical'];
+    var sectionOrder = ['growth', 'milestones', 'activities', 'sleep', 'diet', 'poop', 'medical'];
     sectionOrder.forEach(function(key) {
       var sec = data.sections[key];
       if (!sec) return;
