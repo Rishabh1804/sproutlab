@@ -4333,6 +4333,38 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .cd-bar-track { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .cd-episode { background:var(--base); }
 
+/* ── Tomorrow's Prep (tp-*) ── */
+.tp-meal-section { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-top:var(--sp-16); margin-bottom:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+.tp-meal-section:first-child { margin-top:var(--sp-8); }
+.tp-meal-options { display:flex; flex-direction:column; gap:var(--sp-6); }
+.tp-option { background:var(--base); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); cursor:pointer; transition:background var(--ease-fast); border:1px solid var(--hairline); }
+.tp-option:active { background:var(--raised); }
+.tp-option.tp-starred { border-left:var(--accent-w) solid var(--tc-sage); }
+.tp-option-foods { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); display:flex; align-items:center; gap:var(--sp-4); }
+.tp-option-star { color:var(--tc-sage); font-size:var(--fs-sm); }
+.tp-option-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-activity-row { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-8) 0; cursor:pointer; }
+.tp-activity-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-activity-body { flex:1; }
+.tp-activity-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
+.tp-activity-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-sleep-note { display:flex; gap:var(--sp-8); align-items:flex-start; padding:var(--sp-10) var(--sp-12); background:var(--base); border-radius:var(--r-lg); }
+.tp-sleep-icon { font-size:var(--fs-md); flex-shrink:0; margin-top:var(--sp-2); }
+.tp-sleep-body { flex:1; }
+.tp-sleep-title { font-size:var(--fs-sm); font-weight:600; color:var(--c-text); }
+.tp-sleep-reason { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); line-height:1.4; }
+.tp-headsup-row { display:flex; gap:var(--sp-8); align-items:center; padding:var(--sp-6) 0; cursor:pointer; }
+.tp-headsup-icon { font-size:var(--fs-md); flex-shrink:0; }
+.tp-headsup-text { font-size:var(--fs-sm); color:var(--c-text); flex:1; }
+.tp-section-divider { border:none; border-top:1px solid var(--hairline); margin:var(--sp-12) 0; }
+.tp-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); text-align:center; margin-bottom:var(--sp-8); }
+.tp-option-planned { border-color:var(--tc-sage); background:rgba(140,190,160,0.08); }
+.tp-planned-check { font-size:var(--fs-xs); color:var(--tc-sage); margin-top:var(--sp-4); font-weight:600; }
+[data-theme="dark"] .tp-option { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .tp-option.tp-starred { border-left-color:var(--tc-sage); }
+[data-theme="dark"] .tp-option-planned { background:rgba(140,190,160,0.06); }
+[data-theme="dark"] .tp-sleep-note { background:rgba(255,255,255,0.03); }
+
 /* ── Quick Log Modal ── */
 .ql-modal-overlay {
   position:fixed; inset:0; z-index:1003;
@@ -5026,6 +5058,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <span class="sg-counter" id="homeSuggestionsCount"></span>
         </div>
         <div id="homeSuggestionsContent" class="mt-4"></div>
+      </div>
+
+      <!-- TOMORROW'S PREP (shown after 6 PM) -->
+      <div class="card card-daily col-full" id="tomorrowPrepCard" style="display:none;">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Tomorrow's Prep</div>
+          <span class="t-sm t-light" id="tomorrowPrepDate"></span>
+        </div>
+        <div class="t-sm t-light mt-2" id="tomorrowPrepSubtitle">Based on this week's patterns</div>
+        <div id="tomorrowPrepContent" class="mt-8"></div>
       </div>
 
       <!-- ─── UNIFIED ALERTS (v2.3 — merged Reminders + Context Alerts + Wins) ─── -->
@@ -7481,6 +7523,7 @@ const KEYS = {
   vomitingEpisodes: 'ziva_vomiting_episodes',
   coldEpisodes: 'ziva_cold_episodes',
   activityLog: 'ziva_activity_log',
+  tomorrowPlanned: 'ziva_tomorrow_planned',
 };
 
 // ── BETA ISOLATION ──
@@ -9801,6 +9844,9 @@ function init() {
   activityLog  = load(KEYS.activityLog, null) || {};
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
 
+  // Load tomorrow's planned meals
+  _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
+
   // Sanitize: ensure arrays and remove entries missing required fields
   try {
     if (!Array.isArray(sleepData)) sleepData = [];
@@ -10330,6 +10376,7 @@ function renderHome() {
   renderHomeContextAlerts();
   renderHomeMealProgress();
   renderHomeSuggestions();
+  renderTomorrowPrep();
   renderHomeSleep();
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
@@ -19383,6 +19430,816 @@ function renderHomeSuggestions() {
   }
 
   content.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+// Tomorrow's Prep — Evening Planning Card
+// ════════════════════════════════════════
+
+// Planned meals carry-forward storage
+let _tomorrowPlanned = null;
+
+function shouldShowTomorrowPrep() {
+  var hour = new Date().getHours();
+  if (hour < 18) return false; // before 6 PM
+  // Hide if tomorrow already has meals logged
+  var tomorrow = _offsetDateStr(today(), 1);
+  var tomorrowEntry = feedingData[tomorrow];
+  if (tomorrowEntry && isRealMeal(tomorrowEntry.breakfast)) return false;
+  // Need minimum data to generate smart suggestions
+  if ((foods || []).length < 5) return false;
+  return true;
+}
+
+// ── Meal suggestion engine ──
+
+function _tpGetRecencyDays(foodBase) {
+  var todayStr = today();
+  var todayD = new Date(todayStr);
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var dayFoods = extractDayFoods(ds);
+    if (dayFoods.some(function(f) { return _baseFoodName(f) === foodBase; })) return i;
+  }
+  return 30;
+}
+
+function _tpGetFoodSleepCorrelation(foodBase) {
+  // Average sleep score on nights when this food was in dinner vs overall
+  var withFood = [], without = [];
+  var feedDates = Object.keys(feedingData).sort();
+  feedDates.forEach(function(ds) {
+    var sc = getDailySleepScore(ds);
+    if (!sc) return;
+    var dinnerFoods = [];
+    var entry = feedingData[ds];
+    if (entry && isRealMeal(entry.dinner)) {
+      entry.dinner.split(/[,+]/).forEach(function(f) {
+        var c = f.trim().toLowerCase();
+        if (c.length > 1) dinnerFoods.push(_baseFoodName(c));
+      });
+    }
+    if (dinnerFoods.includes(foodBase)) withFood.push(sc.score);
+    else without.push(sc.score);
+  });
+  if (withFood.length < 2 || without.length < 2) return { delta: 0, count: withFood.length, insufficient: true };
+  var avg = Math.round(withFood.reduce(function(a, b) { return a + b; }, 0) / withFood.length);
+  var avgAll = Math.round(without.reduce(function(a, b) { return a + b; }, 0) / without.length);
+  return { delta: avg - avgAll, count: withFood.length, insufficient: false };
+}
+
+function _tpGetFoodPoopCorrelation(foodBase) {
+  // Average poop score on days when this food was eaten vs overall
+  var withFood = [], without = [];
+  var feedDates = Object.keys(feedingData).sort();
+  feedDates.forEach(function(ds) {
+    var ps = calcPoopScore(ds);
+    if (!ps || ps.isCarryForward) return;
+    var dayFoods = extractDayFoods(ds).map(function(f) { return _baseFoodName(f); });
+    if (dayFoods.includes(foodBase)) withFood.push(ps.score);
+    else without.push(ps.score);
+  });
+  if (withFood.length < 2 || without.length < 2) return { delta: 0, count: withFood.length, insufficient: true };
+  var avg = Math.round(withFood.reduce(function(a, b) { return a + b; }, 0) / withFood.length);
+  var avgAll = Math.round(without.reduce(function(a, b) { return a + b; }, 0) / without.length);
+  return { delta: avg - avgAll, count: withFood.length, insufficient: false };
+}
+
+function _tpFoodFrequency30d(foodBase) {
+  var count = 0;
+  var todayD = new Date(today());
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var dayFoods = extractDayFoods(ds).map(function(f) { return _baseFoodName(f); });
+    if (dayFoods.includes(foodBase)) count++;
+  }
+  return count;
+}
+
+// Score cache — cleared per generateTomorrowPrep() call
+var _tpScoreCache = {};
+
+function _tpScoreFood(foodName, ctx) {
+  var base = _baseFoodName(foodName.toLowerCase().trim());
+  var cacheKey = base + '|' + (ctx.meal || '');
+  if (_tpScoreCache[cacheKey]) return _tpScoreCache[cacheKey];
+  var nut = getNutrition(foodName) || getNutrition(base);
+  var score = 0;
+  var reasons = [];
+
+  // 1. Nutrient gap fill (30%)
+  var gapFill = 0;
+  if (nut && nut.nutrients && ctx.gapSet) {
+    nut.nutrients.forEach(function(n) {
+      if (ctx.gapSet.has(n.toLowerCase())) gapFill++;
+    });
+    if (gapFill > 0) {
+      var gapNames = nut.nutrients.filter(function(n) { return ctx.gapSet.has(n.toLowerCase()); });
+      var gapDays = ctx.gapDaysMap && ctx.gapDaysMap[gapNames[0].toLowerCase()] ? ctx.gapDaysMap[gapNames[0].toLowerCase()] : 0;
+      score += gapFill * 30;
+      reasons.push(gapNames[0] + ' gap' + (gapDays > 0 ? ' ' + gapDays + ' days' : ''));
+    }
+  }
+
+  // 2. Recency gap (20%)
+  var recency = _tpGetRecencyDays(base);
+  if (recency >= 7) { score += 20; reasons.push("haven't tried in " + recency + 'd'); }
+  else if (recency >= 4) { score += 12; }
+  else { score += 4; }
+
+  // 3. Sleep correlation (15%) — only for dinner
+  if (ctx.meal === 'dinner') {
+    var sleepCorr = _tpGetFoodSleepCorrelation(base);
+    if (!sleepCorr.insufficient && sleepCorr.delta > 3) {
+      score += 15;
+      reasons.push('sleep +' + sleepCorr.delta + ' pts on ' + base + ' nights');
+    } else if (!sleepCorr.insufficient && sleepCorr.delta < -5) {
+      score -= 10; // penalize
+    }
+  }
+
+  // 4. Poop correlation (15%)
+  var poopCorr = _tpGetFoodPoopCorrelation(base);
+  if (!poopCorr.insufficient && poopCorr.delta > 5) {
+    score += 15;
+    reasons.push('on best-poop-days list');
+  } else if (!poopCorr.insufficient && poopCorr.delta < -10) {
+    score -= 10;
+  }
+
+  // 5. Familiarity (10%)
+  var freq = _tpFoodFrequency30d(base);
+  if (freq >= 3) {
+    score += 10;
+    reasons.push('her favourite (' + freq + '× this month)');
+  } else if (freq >= 1) {
+    score += 5;
+  }
+
+  // 6. Texture progression (10%)
+  if (ctx.textureData) {
+    var currentStage = ctx.textureData.currentStage || 'mashed';
+    var stageOrder = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+    var foodTexture = _classifyMealTexture(foodName) || 'mashed';
+    if (stageOrder[foodTexture] === (stageOrder[currentStage] || 0) + 1) {
+      score += 10;
+      reasons.push('texture step-up (' + currentStage + ' → ' + foodTexture + ')');
+    } else if (stageOrder[foodTexture] >= stageOrder[currentStage]) {
+      score += 5;
+    }
+  }
+
+  var result = { food: foodName, base: base, score: score, reasons: reasons, nutrients: nut ? nut.nutrients : [] };
+  _tpScoreCache[cacheKey] = result;
+  return result;
+}
+
+// Build meal combos (base + add-in, possibly + fat)
+function _tpBuildCombos(meal, ctx) {
+  var introduced = (foods || []).map(function(f) { return f.name.toLowerCase().trim(); });
+  var introducedSet = new Set(introduced);
+
+  // Reaction window exclusion: foods introduced in last 3 days
+  var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  var recentIntroNames = new Set(
+    (foods || []).filter(function(f) { return f.date && new Date(f.date) >= threeDaysAgo; })
+      .map(function(f) { return _baseFoodName(f.name.toLowerCase().trim()); })
+  );
+
+  // Reaction watch list
+  var reactionFoods = new Set();
+  if (typeof currentReaction !== 'undefined' && currentReaction && currentReaction.food) {
+    reactionFoods.add(_baseFoodName(currentReaction.food.toLowerCase()));
+  }
+
+  function isEligible(foodName) {
+    var base = _baseFoodName(foodName.toLowerCase().trim());
+    if (recentIntroNames.has(base)) return false;
+    if (reactionFoods.has(base)) return false;
+    if (ctx.usedAcrossMeals && ctx.usedAcrossMeals.has(base)) return false;
+    return true;
+  }
+
+  // Categorize introduced foods
+  var grainBases = ['ragi', 'rice', 'oats', 'dalia', 'suji', 'poha', 'bajra', 'jowar', 'sabudana', 'idli', 'dosa', 'khichdi'];
+  var dalBases = ['moong dal', 'masoor dal', 'toor dal', 'chana dal', 'urad dal', 'rajma'];
+  var vegBases = ['carrot', 'beetroot', 'beans', 'bottle gourd', 'lauki', 'spinach', 'sweet potato', 'pumpkin', 'broccoli', 'zucchini', 'potato', 'drumstick'];
+  var fruitBases = ['banana', 'apple', 'pear', 'avocado', 'blueberry', 'mango', 'papaya', 'orange', 'grape', 'watermelon', 'pomegranate', 'blackberry', 'date (fruit)'];
+  var fatBases = ['ghee', 'almonds', 'walnut', 'flaxseed', 'sesame', 'coconut'];
+  var dairyBases = ['curd', 'paneer', 'cheese'];
+
+  // Filter to only introduced + eligible foods
+  function filterAvailable(arr) {
+    return arr.filter(function(f) {
+      return isEligible(f) && (introducedSet.has(f) || [...introducedSet].some(function(i) { return _baseFoodName(i) === _baseFoodName(f); }));
+    });
+  }
+
+  var avGrains = filterAvailable(grainBases);
+  var avDals = filterAvailable(dalBases);
+  var avVegs = filterAvailable(vegBases);
+  var avFruits = filterAvailable(fruitBases);
+  var avFats = filterAvailable(fatBases);
+  var avDairy = filterAvailable(dairyBases);
+
+  var combos = [];
+
+  if (meal === 'breakfast') {
+    // Porridge/cereal base + fruit/nut add-in
+    avGrains.forEach(function(g) {
+      var gScore = _tpScoreFood(g, ctx);
+      // Pair with fruit
+      avFruits.forEach(function(fr) {
+        var frScore = _tpScoreFood(fr, ctx);
+        var comboScore = gScore.score + frScore.score;
+        // Breakfast iron bias: +20%
+        if (gScore.nutrients.some(function(n) { return n.toLowerCase() === 'iron'; })) comboScore += 15;
+        // Check synergy
+        var syn = getSynergy(_baseFoodName(g), _baseFoodName(fr));
+        var reasons = gScore.reasons.concat(frScore.reasons);
+        if (syn) reasons.push(syn.reason.replace(/^.*boosts/, 'boosts'));
+        combos.push({ foods: [g, fr], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(fr)] });
+      });
+      // Pair with fat/nut
+      avFats.forEach(function(fat) {
+        if (fat === 'ghee' && g === 'khichdi') return; // khichdi+ghee better for lunch
+        var fatScore = _tpScoreFood(fat, ctx);
+        var comboScore = gScore.score + fatScore.score;
+        if (gScore.nutrients.some(function(n) { return n.toLowerCase() === 'iron'; })) comboScore += 15;
+        var reasons = gScore.reasons.concat(fatScore.reasons);
+        combos.push({ foods: [g, fat], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(fat)] });
+      });
+    });
+    // Fruit + dairy/fat combos
+    avFruits.forEach(function(fr) {
+      avDairy.forEach(function(d) {
+        var frScore = _tpScoreFood(fr, ctx);
+        var dScore = _tpScoreFood(d, ctx);
+        combos.push({ foods: [fr, d], score: frScore.score + dScore.score, reasons: frScore.reasons.concat(dScore.reasons).slice(0, 3), bases: [_baseFoodName(fr), _baseFoodName(d)] });
+      });
+    });
+  } else if (meal === 'lunch') {
+    // Dal/khichdi + veg combos — protein + carb bias
+    var lunchBases = avDals.concat(avGrains.filter(function(g) { return ['khichdi', 'rice', 'idli', 'dosa'].includes(_baseFoodName(g)); }));
+    lunchBases.forEach(function(base) {
+      var bScore = _tpScoreFood(base, ctx);
+      avVegs.forEach(function(v) {
+        var vScore = _tpScoreFood(v, ctx);
+        var comboScore = bScore.score + vScore.score;
+        // Lunch protein bias +20%
+        if (bScore.nutrients.some(function(n) { return n.toLowerCase() === 'protein'; })) comboScore += 15;
+        var reasons = bScore.reasons.concat(vScore.reasons);
+        combos.push({ foods: [base, v], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(base), _baseFoodName(v)] });
+      });
+      // Dal + ghee
+      avFats.filter(function(f) { return f === 'ghee'; }).forEach(function(fat) {
+        var fatScore = _tpScoreFood(fat, ctx);
+        combos.push({ foods: [base, fat], score: bScore.score + fatScore.score, reasons: bScore.reasons.concat(fatScore.reasons).slice(0, 3), bases: [_baseFoodName(base), _baseFoodName(fat)] });
+      });
+    });
+    // Rice/grain + dal
+    avGrains.filter(function(g) { return _baseFoodName(g) === 'rice'; }).forEach(function(g) {
+      avDals.forEach(function(d) {
+        var gS = _tpScoreFood(g, ctx);
+        var dS = _tpScoreFood(d, ctx);
+        avVegs.slice(0, 3).forEach(function(v) {
+          var vS = _tpScoreFood(v, ctx);
+          combos.push({ foods: [d + ' + ' + g, v], score: gS.score + dS.score + vS.score, reasons: dS.reasons.concat(vS.reasons).slice(0, 3), bases: [_baseFoodName(g), _baseFoodName(d), _baseFoodName(v)] });
+        });
+      });
+    });
+  } else if (meal === 'dinner') {
+    // Light, easy-digest foods — soups, mashes, lighter combos
+    var lightFoods = avVegs.concat(avFruits);
+    lightFoods.forEach(function(f) {
+      var fScore = _tpScoreFood(f, Object.assign({}, ctx, { meal: 'dinner' }));
+      // Light dinner bias
+      var nut = getNutrition(f) || getNutrition(_baseFoodName(f));
+      var isLight = nut && (nut.tags.includes('easy-digest') || nut.tags.includes('hydrating') || nut.tags.includes('cooling'));
+      var comboScore = fScore.score + (isLight ? 15 : 0);
+      var reasons = fScore.reasons.slice();
+      if (isLight) reasons.push('light dinner → better sleep');
+      // Pair with fat for absorption
+      avFats.slice(0, 2).forEach(function(fat) {
+        var fatScore = _tpScoreFood(fat, ctx);
+        var syn = getSynergy(_baseFoodName(f), _baseFoodName(fat));
+        var cReasons = reasons.concat(fatScore.reasons);
+        if (syn) cReasons.push(syn.reason.replace(/^.*helps/, 'helps'));
+        combos.push({ foods: [f, fat], score: comboScore + fatScore.score, reasons: cReasons.slice(0, 3), bases: [_baseFoodName(f), _baseFoodName(fat)] });
+      });
+      // Solo veg/fruit mash
+      combos.push({ foods: [f], score: comboScore, reasons: reasons.slice(0, 3), bases: [_baseFoodName(f)] });
+    });
+    // Veg + veg combos (soup style)
+    for (var vi = 0; vi < avVegs.length; vi++) {
+      for (var vj = vi + 1; vj < avVegs.length && vj < vi + 3; vj++) {
+        var v1Score = _tpScoreFood(avVegs[vi], Object.assign({}, ctx, { meal: 'dinner' }));
+        var v2Score = _tpScoreFood(avVegs[vj], Object.assign({}, ctx, { meal: 'dinner' }));
+        combos.push({ foods: [avVegs[vi], avVegs[vj]], score: v1Score.score + v2Score.score + 10, reasons: v1Score.reasons.concat(v2Score.reasons).slice(0, 3), bases: [_baseFoodName(avVegs[vi]), _baseFoodName(avVegs[vj])] });
+      }
+    }
+  }
+
+  // Sort by score descending
+  combos.sort(function(a, b) { return b.score - a.score; });
+
+  // Deduplicate — no two combos with identical base sets
+  var seen = new Set();
+  var unique = [];
+  combos.forEach(function(c) {
+    var key = c.bases.slice().sort().join('|');
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push(c);
+  });
+
+  return unique;
+}
+
+function generateMealOptions(meal, count, ctx) {
+  var combos = _tpBuildCombos(meal, ctx);
+  // Take top N, mark first as starred
+  var result = combos.slice(0, count).map(function(c, i) {
+    return {
+      foods: c.foods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }),
+      reason: c.reasons.join(' · '),
+      starred: i === 0,
+      bases: c.bases
+    };
+  });
+  // Track used food bases to prevent cross-meal repetition
+  result.forEach(function(r) {
+    (r.bases || []).forEach(function(b) {
+      if (ctx.usedAcrossMeals) ctx.usedAcrossMeals.add(b);
+    });
+  });
+  return result;
+}
+
+function generateSnackOption(ctx) {
+  // Simple: "repeat lunch leftovers" or a fruit/curd option
+  var avFruits = (foods || []).filter(function(f) {
+    var base = _baseFoodName(f.name.toLowerCase().trim());
+    var nut = getNutrition(f.name) || getNutrition(base);
+    return nut && (nut.tags.includes('energy') || nut.tags.includes('digestive'));
+  }).map(function(f) { return f.name; });
+
+  if (avFruits.length > 0) {
+    // Deterministic pick based on today's date to avoid flicker on re-render
+    var dateHash = today().split('-').reduce(function(a, b) { return a + parseInt(b, 10); }, 0);
+    var pick = avFruits[dateHash % Math.min(avFruits.length, 3)];
+    return { foods: ['Repeat lunch leftovers or ' + pick], reason: 'Snack is optional — best between lunch and dinner if hungry' };
+  }
+  return { foods: ['Repeat lunch leftovers or banana mash'], reason: 'Snack is optional — best between lunch and dinner if hungry' };
+}
+
+// ── Activity suggestions ──
+
+function _tpGenerateActivitySuggestions() {
+  var suggestions = [];
+
+  // Domain balance from activity log
+  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  var totalEntries = 0;
+  var todayD = new Date(today());
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(todayD); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var entries = Array.isArray(activityLog[ds]) ? activityLog[ds] : [];
+    entries.forEach(function(e) {
+      if (e.domains && Array.isArray(e.domains)) {
+        e.domains.forEach(function(dom) {
+          if (domainCounts[dom] !== undefined) domainCounts[dom]++;
+        });
+      }
+      totalEntries++;
+    });
+  }
+
+  // Sort domains by count (weakest first)
+  var domainList = Object.entries(domainCounts).sort(function(a, b) { return a[1] - b[1]; });
+
+  // Activity name suggestions per domain
+  var domainActivities = {
+    motor: { name: 'Tummy time or crawling practice', icon: '🏃', duration: '10 min' },
+    language: { name: 'Board book + pointing game', icon: '📖', duration: '10 min' },
+    social: { name: 'Peekaboo or mirror play', icon: '👶', duration: '10 min' },
+    cognitive: { name: 'Shape sorter or stacking cups', icon: '🧩', duration: '10 min' },
+    sensory: { name: 'Textured toys or water play', icon: '🎨', duration: '10 min' }
+  };
+
+  // Stalled milestones — check for milestones in 'emerging' or 'practicing' that need evidence
+  var stalledMs = [];
+  (milestones || []).forEach(function(m) {
+    if (!m.status || m.status === 'not_started' || m.status === 'mastered' || m.status === 'consistent') return;
+    // Check if evidence has been added recently
+    var lastEvidence = m.lastEvidenceAt || m.emergingAt || m.practicingAt;
+    if (lastEvidence) {
+      var daysSince = Math.floor((new Date() - new Date(lastEvidence)) / 86400000);
+      if (daysSince >= 5) stalledMs.push({ name: m.name, domain: m.domain, daysSince: daysSince });
+    }
+  });
+
+  // Morning: weakest domain
+  if (domainList.length > 0) {
+    var weakest = domainList[0];
+    var act = domainActivities[weakest[0]] || domainActivities.motor;
+    var reason = weakest[0].charAt(0).toUpperCase() + weakest[0].slice(1) + ' domain weakest this week';
+    // Check for stalled milestone in this domain
+    var stalledInDomain = stalledMs.find(function(m) { return m.domain === weakest[0]; });
+    if (stalledInDomain) {
+      reason += ' · "' + stalledInDomain.name + '" milestone needs evidence';
+    }
+    suggestions.push({ time: 'Morning', name: act.name + ' (' + act.duration + ')', icon: act.icon, reason: reason, domain: weakest[0] });
+  }
+
+  // Afternoon: second-weakest domain (different from morning)
+  if (domainList.length > 1) {
+    var second = domainList[1];
+    var act2 = domainActivities[second[0]] || domainActivities.language;
+    var reason2 = second[0].charAt(0).toUpperCase() + second[0].slice(1) + ' domain could use more practice';
+    var stalledIn2 = stalledMs.find(function(m) { return m.domain === second[0]; });
+    if (stalledIn2) {
+      reason2 += ' · "' + stalledIn2.name + '" stalled ' + stalledIn2.daysSince + ' days';
+    }
+    suggestions.push({ time: 'Afternoon', name: act2.name + ' (' + act2.duration + ')', icon: act2.icon, reason: reason2, domain: second[0] });
+  }
+
+  // Fallback if no activity log data
+  if (totalEntries === 0 && suggestions.length === 0) {
+    suggestions.push({ time: 'Morning', name: 'Tummy time (10 min)', icon: '🏃', reason: 'Motor practice helps build strength', domain: 'motor' });
+    suggestions.push({ time: 'Afternoon', name: 'Board book + pointing (10 min)', icon: '📖', reason: 'Language development through reading together', domain: 'language' });
+  }
+
+  return suggestions;
+}
+
+// ── Sleep note ──
+
+function _tpGenerateSleepNote() {
+  var notes = [];
+
+  // 1. Bedtime drift
+  try {
+    var drift = computeBedtimeDrift();
+    if (!drift.insufficient) {
+      if (drift.direction === 'later') {
+        var idealTime = drift.idealStart ? (drift.idealStart > 12 ? (drift.idealStart - 12) : drift.idealStart) + ':00 PM' : '7:30 PM';
+        // Suggest the earlier ideal
+        notes.push({ title: 'Aim for ' + idealTime + ' bedtime', reason: 'Bedtime drifted ' + Math.abs(drift.driftPerWeek) + ' min later this week · avg now ' + drift.avgBedtimeStr });
+      } else if (drift.direction === 'earlier') {
+        notes.push({ title: 'Bedtime trending earlier', reason: 'Shifted ' + Math.abs(drift.driftPerWeek) + ' min earlier this week — monitor for over-tiredness' });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 2. Dinner gap insight (from cross-domain data)
+  try {
+    var feedDates = Object.keys(feedingData).sort();
+    var gapScores = { short: [], medium: [], long: [] };
+    feedDates.forEach(function(ds) {
+      var sc = getDailySleepScore(ds);
+      if (!sc) return;
+      var lastMeal = _cdGetLastMealTime(ds);
+      var bedtime = _cdGetBedtime(ds);
+      if (!lastMeal || !bedtime) return;
+      var lastMin = _cdTimeToMin(lastMeal);
+      var bedMin = _cdTimeToMin(bedtime);
+      if (lastMin === null || bedMin === null) return;
+      if (bedMin < 360) bedMin += 1440; // after midnight
+      var gap = bedMin - lastMin;
+      if (gap < 0) return;
+      if (gap < 60) gapScores.short.push(sc.score);
+      else if (gap < 120) gapScores.medium.push(sc.score);
+      else gapScores.long.push(sc.score);
+    });
+    // Find best gap bucket with enough data
+    var bestGap = null, bestAvg = 0;
+    [['short', '<60'], ['medium', '60-120'], ['long', '>120']].forEach(function(pair) {
+      var arr = gapScores[pair[0]];
+      if (arr.length >= 3) {
+        var avg = Math.round(arr.reduce(function(a, b) { return a + b; }, 0) / arr.length);
+        if (avg > bestAvg) { bestAvg = avg; bestGap = pair[1]; }
+      }
+    });
+    if (bestGap && notes.length < 2) {
+      notes.push({ title: bestGap + '-min dinner gap works best', reason: 'Based on ' + (gapScores.short.length + gapScores.medium.length + gapScores.long.length) + ' nights of data' });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 3. Sleep regression
+  try {
+    var regr = computeSleepRegression();
+    if (!regr.insufficient && regr.severity !== 'none') {
+      notes.push({ title: regr.severityLabel + ' detected', reason: 'Expect some disruption — extra comfort may help' });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 4. Nap transition
+  try {
+    var nap = computeNapTransition();
+    if (nap && !nap.insufficient && nap.metCount >= 3) {
+      notes.push({ title: 'Nap transition signals building', reason: nap.metCount + '/5 signals met — ' + (nap.transitionNote || 'consider adjusting nap schedule') });
+    }
+  } catch (e) { /* best effort */ }
+
+  // Fallback
+  if (notes.length === 0) {
+    notes.push({ title: 'Keep up the bedtime routine', reason: 'Consistent bedtime routine is working well' });
+  }
+
+  return notes.slice(0, 2);
+}
+
+// ── Heads-up items ──
+
+function _tpGatherHeadsUp() {
+  var items = [];
+
+  // 1. Vaccination upcoming
+  try {
+    var upcoming = (vaccData || []).find(function(v) { return v.upcoming; });
+    if (upcoming) {
+      var daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        var bookedData = load(KEYS.vaccBooked, null);
+        var isBooked = bookedData && bookedData.vaccName === upcoming.name;
+        items.push({
+          icon: '💉',
+          text: upcoming.name + ' in ' + daysTo + ' day' + (daysTo !== 1 ? 's' : '') + (isBooked ? ' — booked' : ' — confirm appointment'),
+          action: 'medical'
+        });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 2. Supplement adherence
+  try {
+    var suppData = computeSupplementAdherence(7);
+    if (suppData && suppData.length > 0) {
+      suppData.forEach(function(s) {
+        var missed = s.totalDays - s.doneCount;
+        if (missed >= 3) {
+          items.push({ icon: '💊', text: s.name + ' — missed ' + missed + ' of last 7 days, resume tomorrow', action: 'track' });
+        } else {
+          items.push({ icon: '💊', text: s.name + ' — ' + s.doneCount + '/' + s.totalDays + ' days this week' + (s.doneCount >= 5 ? ' (keep going!)' : ''), action: 'track' });
+        }
+      });
+    }
+  } catch (e) { /* best effort */ }
+
+  // 3. Growth measurement recency
+  try {
+    if (growthData && growthData.length > 0) {
+      var lastMeas = growthData[growthData.length - 1];
+      if (lastMeas && lastMeas.date) {
+        var daysSince = Math.floor((new Date() - new Date(lastMeas.date)) / 86400000);
+        if (daysSince >= 14) {
+          items.push({ icon: '📏', text: 'Last measured ' + daysSince + ' days ago — time to weigh and measure', action: 'growth' });
+        }
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  // 4. Food reaction window
+  try {
+    (foods || []).forEach(function(f) {
+      if (!f.date) return;
+      var daysSinceIntro = Math.floor((new Date() - new Date(f.date)) / 86400000);
+      if (daysSinceIntro >= 0 && daysSinceIntro <= 3) {
+        items.push({ icon: '👁️', text: 'Day ' + (daysSinceIntro + 1) + ' of ' + f.name + ' introduction — watch for reactions', action: 'diet' });
+      }
+    });
+  } catch (e) { /* best effort */ }
+
+  return items.slice(0, 3);
+}
+
+// ── Main orchestrator ──
+
+function generateTomorrowPrep() {
+  _tpScoreCache = {}; // Clear per-run cache
+  var tomorrow = _offsetDateStr(today(), 1);
+  var tomorrowDate = new Date(tomorrow);
+  var tomorrowDow = tomorrowDate.toLocaleDateString('en-IN', { weekday: 'short' });
+  var tomorrowDay = tomorrowDate.getDate();
+
+  // 1. Compute context
+  var heatmap = null;
+  var gapSet = new Set();
+  var gapDaysMap = {};
+  try {
+    heatmap = computeNutrientHeatmap(7);
+    if (heatmap && heatmap.gaps) {
+      heatmap.gaps.forEach(function(g) { gapSet.add(g.toLowerCase()); });
+      // Compute days since nutrient last seen
+      if (heatmap.grid) {
+        Object.keys(heatmap.grid).forEach(function(nKey) {
+          var arr = heatmap.grid[nKey];
+          var lastSeen = -1;
+          for (var i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] > 0) { lastSeen = arr.length - 1 - i; break; }
+          }
+          gapDaysMap[nKey] = lastSeen >= 0 ? lastSeen : 7;
+        });
+      }
+    }
+  } catch (e) { /* best effort */ }
+
+  var textureData = null;
+  try { textureData = computeTextureProgression(); } catch (e) { /* best effort */ }
+
+  var usedAcrossMeals = new Set();
+  var ctx = { gapSet: gapSet, gapDaysMap: gapDaysMap, textureData: textureData, usedAcrossMeals: usedAcrossMeals, meal: 'breakfast' };
+
+  // 2. Generate meal suggestions
+  var breakfast = generateMealOptions('breakfast', 3, Object.assign({}, ctx, { meal: 'breakfast' }));
+  var lunch = generateMealOptions('lunch', 3, Object.assign({}, ctx, { meal: 'lunch' }));
+  var dinner = generateMealOptions('dinner', 3, Object.assign({}, ctx, { meal: 'dinner' }));
+  var snack = generateSnackOption(ctx);
+
+  // 3. Activity suggestions
+  var activities = _tpGenerateActivitySuggestions();
+
+  // 4. Sleep note
+  var sleepNotes = _tpGenerateSleepNote();
+
+  // 5. Heads up
+  var headsUp = _tpGatherHeadsUp();
+
+  return {
+    tomorrow: tomorrow,
+    tomorrowDow: tomorrowDow,
+    tomorrowDay: tomorrowDay,
+    breakfast: breakfast,
+    lunch: lunch,
+    dinner: dinner,
+    snack: snack,
+    activities: activities,
+    sleepNotes: sleepNotes,
+    headsUp: headsUp,
+    gapCount: gapSet.size
+  };
+}
+
+// ── Renderer ──
+
+function renderTomorrowPrep() {
+  var card = document.getElementById('tomorrowPrepCard');
+  var dateEl = document.getElementById('tomorrowPrepDate');
+  var subtitleEl = document.getElementById('tomorrowPrepSubtitle');
+  var content = document.getElementById('tomorrowPrepContent');
+  if (!card || !content) return;
+
+  if (!shouldShowTomorrowPrep()) {
+    card.style.display = 'none';
+    return;
+  }
+
+  var data = generateTomorrowPrep();
+  if (!data) { card.style.display = 'none'; return; }
+
+  card.style.display = '';
+  if (dateEl) dateEl.textContent = data.tomorrowDow + ' ' + data.tomorrowDay;
+
+  var gapCount = data.gapCount || 0;
+  if (subtitleEl) {
+    subtitleEl.textContent = gapCount > 0
+      ? 'Based on this week\'s patterns · ' + gapCount + ' nutrient gap' + (gapCount > 1 ? 's' : '') + ' to fill'
+      : 'Based on this week\'s patterns';
+  }
+
+  var html = '';
+
+  // ── Meal sections ──
+  var mealSections = [
+    { key: 'breakfast', label: 'BREAKFAST', icon: '🌅', options: data.breakfast },
+    { key: 'lunch', label: 'LUNCH', icon: '☀️', options: data.lunch },
+    { key: 'dinner', label: 'DINNER', icon: '🌙', options: data.dinner }
+  ];
+
+  mealSections.forEach(function(section) {
+    var count = section.options.length;
+    if (count === 0) {
+      html += '<div class="tp-meal-section">' + section.icon + ' ' + section.label + '</div>';
+      html += '<div class="tp-option-reason">Not enough food data to suggest — try introducing more foods</div>';
+      return;
+    }
+    html += '<div class="tp-meal-section">' + section.icon + ' ' + section.label + ' — ' + count + ' option' + (count !== 1 ? 's' : '') + '</div>';
+    html += '<div class="tp-meal-options">';
+    section.options.forEach(function(opt, idx) {
+      var starredClass = opt.starred ? ' tp-starred' : '';
+      html += '<div class="tp-option' + starredClass + '" data-tp-meal="' + section.key + '" data-tp-idx="' + idx + '">';
+      html += '<div class="tp-option-foods">';
+      if (opt.starred) html += '<span class="tp-option-star">★</span> ';
+      html += escHtml(opt.foods.join(' + '));
+      html += '</div>';
+      if (opt.reason) {
+        html += '<div class="tp-option-reason">' + escHtml(opt.reason) + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  // ── Snack ──
+  if (data.snack) {
+    html += '<div class="tp-meal-section">🍪 SNACK — 1 suggestion</div>';
+    html += '<div class="tp-meal-options">';
+    html += '<div class="tp-option">';
+    html += '<div class="tp-option-foods">' + escHtml(data.snack.foods[0]) + '</div>';
+    html += '<div class="tp-option-reason">' + escHtml(data.snack.reason) + '</div>';
+    html += '</div></div>';
+  }
+
+  // ── Activities ──
+  if (data.activities.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Activities</div>';
+    data.activities.forEach(function(act) {
+      html += '<div class="tp-activity-row" data-tp-activity="' + escHtml(act.domain || '') + '">';
+      html += '<div class="tp-activity-icon">' + act.icon + '</div>';
+      html += '<div class="tp-activity-body">';
+      html += '<div class="tp-activity-title">' + escHtml(act.time) + ': ' + escHtml(act.name) + '</div>';
+      html += '<div class="tp-activity-reason">' + escHtml(act.reason) + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  // ── Sleep note ──
+  if (data.sleepNotes && data.sleepNotes.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Sleep Note</div>';
+    data.sleepNotes.forEach(function(note) {
+      html += '<div class="tp-sleep-note">';
+      html += '<div class="tp-sleep-icon">😴</div>';
+      html += '<div class="tp-sleep-body">';
+      html += '<div class="tp-sleep-title">' + escHtml(note.title) + '</div>';
+      html += '<div class="tp-sleep-reason">' + escHtml(note.reason) + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  // ── Heads up ──
+  if (data.headsUp.length > 0) {
+    html += '<hr class="tp-section-divider">';
+    html += '<div class="tp-section-label">Heads Up</div>';
+    data.headsUp.forEach(function(item) {
+      html += '<div class="tp-headsup-row" data-tp-action="' + escHtml(item.action || '') + '">';
+      html += '<div class="tp-headsup-icon">' + item.icon + '</div>';
+      html += '<div class="tp-headsup-text">' + escHtml(item.text) + '</div>';
+      html += '</div>';
+    });
+  }
+
+  content.innerHTML = html;
+
+  // ── Attach tap handlers ──
+  content.querySelectorAll('.tp-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var meal = el.getAttribute('data-tp-meal');
+      var foodsText = el.querySelector('.tp-option-foods');
+      if (!meal || !foodsText) return;
+      var foodStr = foodsText.textContent.replace('★ ', '').trim();
+      _tpPlanMeal(meal, foodStr);
+    });
+  });
+
+  content.querySelectorAll('.tp-headsup-row').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var action = el.getAttribute('data-tp-action');
+      if (action === 'medical') switchTab('medical');
+      else if (action === 'growth') switchTab('growth');
+      else if (action === 'diet') switchTab('diet');
+      else if (action === 'track') switchTab('track');
+    });
+  });
+}
+
+function _tpPlanMeal(meal, foodStr) {
+  // Store planned meal for tomorrow
+  if (!_tomorrowPlanned) _tomorrowPlanned = {};
+  _tomorrowPlanned[meal] = foodStr;
+  save(KEYS.tomorrowPlanned, _tomorrowPlanned);
+
+  // Visual feedback
+  var opts = document.querySelectorAll('.tp-option[data-tp-meal="' + meal + '"]');
+  opts.forEach(function(opt) {
+    var thisFood = opt.querySelector('.tp-option-foods').textContent.replace('★ ', '').trim();
+    if (thisFood === foodStr) {
+      opt.classList.add('tp-option-planned');
+      // Add checkmark
+      var existing = opt.querySelector('.tp-planned-check');
+      if (!existing) {
+        var check = document.createElement('div');
+        check.className = 'tp-planned-check';
+        check.textContent = '✓ Planned for tomorrow';
+        opt.appendChild(check);
+      }
+    }
+  });
 }
 
 function sgToggleMore() {
