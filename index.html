@@ -2062,10 +2062,11 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-frt-status-ok { background:rgba(140,190,160,0.2); color:var(--tc-sage); }
 .mi-frt-status-watch { background:rgba(240,180,100,0.2); color:var(--tc-amber); }
 .mi-frt-status-react { background:rgba(230,100,100,0.15); color:var(--tc-rose); }
-.mi-frt-timeline { display:flex; align-items:center; gap:4px; margin-top:var(--sp-4); padding:4px 0; }
+.mi-frt-timeline { display:flex; align-items:center; gap:0; margin-top:var(--sp-4); padding:4px 0; }
 .mi-frt-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; }
-.mi-frt-line { flex:1; height:2px; background:var(--border); }
+.mi-frt-line { flex:1; height:2px; background:var(--border); min-width:12px; }
 .mi-frt-event { font-size:10px; color:var(--light); white-space:nowrap; }
+.mi-frt-node { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; min-width:60px; text-align:center; }
 .mi-nodata { font-size:var(--fs-sm); color:var(--light); text-align:center; padding:var(--sp-16) 0; }
 
 /* MI dark mode */
@@ -5503,7 +5504,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <!-- Collapsed: key vitals in one row -->
         <div id="homeVitalsCollapsed">
           <div style="display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap;">
-            <div class="flex-1-min0">
+            <div style="flex:1;min-width:120px;">
               <div style="font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-normal);color:var(--light);margin-bottom:1px;">Age Today</div>
               <div id="homePreciseAge" class="hero-stat" style="font-size:var(--fs-lg);">—</div>
             </div>
@@ -21158,18 +21159,32 @@ function renderTomorrowPrep() {
 }
 
 function _tpPlanMeal(meal, foodStr) {
-  // Store planned meal for tomorrow
   if (!_tomorrowPlanned) _tomorrowPlanned = {};
+
+  // Toggle: if already planned with this food, unplan it
+  if (_tomorrowPlanned[meal] === foodStr) {
+    delete _tomorrowPlanned[meal];
+    save(KEYS.tomorrowPlanned, _tomorrowPlanned);
+    // Remove visual feedback from all options for this meal
+    var opts = document.querySelectorAll('.tp-option[data-tp-meal="' + meal + '"]');
+    opts.forEach(function(opt) {
+      opt.classList.remove('tp-option-planned');
+      var check = opt.querySelector('.tp-planned-check');
+      if (check) check.remove();
+    });
+    return;
+  }
+
+  // Plan this food for tomorrow
   _tomorrowPlanned[meal] = foodStr;
   save(KEYS.tomorrowPlanned, _tomorrowPlanned);
 
-  // Visual feedback
+  // Visual feedback — highlight selected, unhighlight others
   var opts = document.querySelectorAll('.tp-option[data-tp-meal="' + meal + '"]');
   opts.forEach(function(opt) {
     var thisFood = opt.querySelector('.tp-option-foods').textContent.trim();
     if (thisFood === foodStr) {
       opt.classList.add('tp-option-planned');
-      // Add checkmark
       var existing = opt.querySelector('.tp-planned-check');
       if (!existing) {
         var check = document.createElement('div');
@@ -21177,6 +21192,10 @@ function _tpPlanMeal(meal, foodStr) {
         check.innerHTML = zi('check') + ' Planned for tomorrow';
         opt.appendChild(check);
       }
+    } else {
+      opt.classList.remove('tp-option-planned');
+      var check = opt.querySelector('.tp-planned-check');
+      if (check) check.remove();
     }
   });
 }
@@ -41826,8 +41845,10 @@ function renderInfoFoodReaction() {
       t.events.forEach((ev, i) => {
         const dotColor = ev.type === 'introduced' ? 'var(--tc-sage)' : ev.type === 'symptom' ? 'var(--tc-rose)' : 'var(--tc-sage)';
         if (i > 0) html += '<div class="mi-frt-line"></div>';
+        html += '<div class="mi-frt-node">';
         html += '<div class="mi-frt-dot" style="background:' + dotColor + ';" title="' + ev.label + '"></div>';
         html += '<div class="mi-frt-event">' + ev.label + '<br>' + formatDate(ev.date).replace(/, \d{4}$/, '') + '</div>';
+        html += '</div>';
       });
       html += '</div>';
       html += '</div>';
