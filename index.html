@@ -10512,7 +10512,7 @@ function init() {
     btn.addEventListener('click', () => setPoopConsistency(btn.dataset.pcon));
   });
   // Poop color buttons (main form)
-  document.querySelectorAll('.pq-btn[data-pcolor]').forEach(btn => {
+  document.querySelectorAll('.poop-color-btn[data-pcolor]').forEach(btn => {
     btn.addEventListener('click', () => setPoopColor(btn.dataset.pcolor));
   });
   // Poop amount buttons
@@ -22284,7 +22284,7 @@ function qaHandleIngredient(classified) {
     var fits = _iqMealFit(bestCombo);
     if (fits.length > 0) {
       var fitItems = fits.map(function(f) {
-        return { text: f.meal.charAt(0).toUpperCase() + f.meal.slice(1) + ' \u2014 ' + f.reason, signal: 'action', icon: '<div class="icon icon-' + f.color + '">' + zi(f.icon) + '</div>' };
+        return { text: f.meal.charAt(0).toUpperCase() + f.meal.slice(1) + ' \u2014 ' + f.reason, signal: 'action', icon: zi(f.icon) };
       });
       sections.push({
         label: 'BEST FOR',
@@ -32822,7 +32822,7 @@ function showQLToast(msg, duration, undoFn) {
   const t = document.getElementById('qlToast');
   if (undoFn) {
     _lastQLUndo = undoFn;
-    t.innerHTML = escHtml(msg) + ' <span data-action="undoLastQL" data-stop="1" style="text-decoration:underline;font-weight:700;cursor:pointer;margin-left:8px;">Undo</span>';
+    t.innerHTML = msg + ' <span data-action="undoLastQL" data-stop="1" style="text-decoration:underline;font-weight:700;cursor:pointer;margin-left:8px;">Undo</span>';
   } else {
     _lastQLUndo = null;
     t.innerHTML = msg;
