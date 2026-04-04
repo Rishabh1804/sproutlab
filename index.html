@@ -3853,6 +3853,14 @@ body.simple-mode .ins-card-alert-intel,
 .stat-card-poop  { background:linear-gradient(135deg,var(--amber-light),#fef9f0); }
 .card-gradient-warm { background:linear-gradient(135deg,#fff5f7,#fff9f5); }
 [data-theme="dark"] .card-gradient-warm { background:linear-gradient(135deg,rgba(60,35,45,0.3),rgba(60,45,35,0.3)); }
+.growth-overview-card {
+  background:linear-gradient(135deg, #fef0f3, #fef6f0) !important;
+  border-left-color:var(--rose) !important;
+  box-shadow:0 4px 24px rgba(242,168,184,0.1);
+}
+[data-theme="dark"] .growth-overview-card {
+  background:linear-gradient(135deg, rgba(70,35,45,0.25), rgba(70,50,35,0.2)) !important;
+}
 .card-gradient-cool { background:linear-gradient(135deg,#f0ebfb,#e8f4fa); }
 [data-theme="dark"] .card-gradient-cool { background:linear-gradient(135deg,rgba(50,40,70,0.3),rgba(35,50,65,0.3)); }
 
@@ -5899,7 +5907,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       </div>
 
       <!-- ─── GROWTH OVERVIEW (merged tracker + velocity) ─── -->
-      <div class="card card-action col-full">
+      <div class="card card-action col-full growth-overview-card">
         <div class="card-header">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Growth Overview <button class="help-btn" aria-label="Help" data-help="help-growth"><span class="t-sm">ⓘ</span></button></div>
           <button class="btn-primary bp-rose" data-action="openGrowthModal">+ Measure</button>
@@ -10810,6 +10818,7 @@ function init() {
     else if (action === 'showHeatmapDetail') showHeatmapDetail(arg);
     else if (action === '_spSwitchTab') _spSwitchTab(arg);
     else if (action === 'editSleepEntry') editSleepEntry(parseInt(arg));
+    else if (action === 'goToSleepLog') { switchTab('track'); setTimeout(function() { toggleHistoryCard('sleepLogBody', 'sleepLogChevron'); var el = document.getElementById('sleepLogBody'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200); }
     else if (action === 'editPoopEntry') editPoopEntry(parseInt(arg));
     else if (action === 'endSleepNow') endSleepNow(arg);
     else if (action === 'deleteSleepEntry') deleteSleepEntry(parseInt(arg));
@@ -20782,9 +20791,15 @@ var _tomorrowOuting = null;
 
 function _outingInit() {
   _tomorrowOuting = load(KEYS.tomorrowOuting, null);
-  // Auto-clear past outings
+  // Auto-clear past or invalid outings
   if (_tomorrowOuting && _tomorrowOuting.date) {
     var outingDate = new Date(_tomorrowOuting.date);
+    if (isNaN(outingDate.getTime())) {
+      // Malformed date — clear
+      _tomorrowOuting = null;
+      localStorage.removeItem(KEYS.tomorrowOuting);
+      return;
+    }
     var now = new Date();
     // Clear if outing date has fully passed (it's now 2+ days ago)
     if (now - outingDate > 2 * 86400000) {
@@ -21191,8 +21206,9 @@ function _isHydrationActive() {
 }
 
 function _getTomorrowTemp() {
-  var tomorrow = _offsetDateStr(today(), 1);
-  var wx = getWeatherForDate(tomorrow);
+  // Use outing date if planned, otherwise tomorrow
+  var targetDate = _tomorrowOuting && _tomorrowOuting.date ? _tomorrowOuting.date : _offsetDateStr(today(), 1);
+  var wx = getWeatherForDate(targetDate);
   return wx ? wx.maxTemp : null;
 }
 
@@ -21548,7 +21564,9 @@ function _tpBuildCombos(meal, ctx) {
       // Seasonal boost for the combo
       var seasonalSum = 0;
       hc.foods.forEach(function(f) { seasonalSum += getSeasonalScore(f); });
-      totalScore += Math.round(seasonalSum / hc.foods.length / 2);
+      if (hc.foods.length > 0) {
+        totalScore += Math.round(seasonalSum / hc.foods.length / 2);
+      }
 
       // Historical frequency bonus — proven combos rank higher
       if (hc.count >= 4) totalScore += 10;
@@ -22137,7 +22155,7 @@ function renderTomorrowPrep() {
 
   // ── Hydration section (when active + prominent = above meals) ──
   if (data.hydrationCtx && data.hydrationCtx.active && data.hydrationCtx.level === 'prominent') {
-    html += _tpRenderHydrationSection(data.hydrationCtx, data.outing);
+    html += _tpRenderHydrationSection(data.hydrationCtx);
   }
 
   // ── Meal sections ──
@@ -22187,7 +22205,7 @@ function renderTomorrowPrep() {
 
   // ── Hydration section (when active but not prominent = between meals and activities) ──
   if (data.hydrationCtx && data.hydrationCtx.active && data.hydrationCtx.level !== 'prominent') {
-    html += _tpRenderHydrationSection(data.hydrationCtx, data.outing);
+    html += _tpRenderHydrationSection(data.hydrationCtx);
   }
 
   // ── Activities ──
@@ -22256,7 +22274,7 @@ function renderTomorrowPrep() {
   // (Outing toggle is on the standalone card — TP only shows read-only badge)
 }
 
-function _tpRenderHydrationSection(hydCtx, outing) {
+function _tpRenderHydrationSection(hydCtx) {
   var isProminent = hydCtx.level === 'prominent';
   var cls = 'tp-hydration-section' + (isProminent ? ' prominent' : '');
   var html = '<div class="' + cls + '">';
@@ -22772,6 +22790,7 @@ function _isLikelyFoodList(tokens) {
 // ── MULTI-MODE INPUT CLASSIFIER ──
 
 function qaClassifyInput(text) {
+  if (!text || typeof text !== 'string') return { mode: 'qa', raw: text || '' };
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var tokens = lower.split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
 
@@ -23949,7 +23968,8 @@ function qaExecuteQuery(text) {
     } else if (classified.mode === 'outing') {
       _uibShowModeIndicator('outing');
       _outingHideForm();
-      answer = qaHandleOuting(classified);
+      qaHandleOuting(classified);
+      return; // Form shown async — don't fall through to no-match
     } else if (classified.mode === 'symptom') {
       _uibShowModeIndicator('symptom');
       answer = qaHandleSymptom(classified);
@@ -30533,7 +30553,7 @@ function renderSleepLog() {
     }
     if (todayNaps.length > 0) {
       const napTotal = todayNaps.reduce((sum, n) => sum + calcSleepDuration(n.bedtime, n.wakeTime).total, 0);
-      previewHtml += `<div class="info-strip is-lav tappable" style="margin-top:6px;cursor:pointer;" data-collapse-target="sleepLogBody" data-collapse-chevron="sleepLogChevron"><span><svg class="zi"><use href="#zi-sleep"/></svg></span><div><strong class="tc-lav">${todayNaps.length} nap${todayNaps.length>1?'s':''} today · ${Math.floor(napTotal/60)}h ${napTotal%60}m</strong><div class="t-sub">Tap to view & edit logs</div></div><span class="collapse-chevron t-lav" >▾</span></div>`;
+      previewHtml += `<div class="info-strip is-lav tappable" style="margin-top:6px;cursor:pointer;" data-action="goToSleepLog"><span><svg class="zi"><use href="#zi-sleep"/></svg></span><div><strong class="tc-lav">${todayNaps.length} nap${todayNaps.length>1?'s':''} today · ${Math.floor(napTotal/60)}h ${napTotal%60}m</strong><div class="t-sub">Tap to view & edit logs</div></div><span class="t-lav" style="font-size:var(--fs-xs);">${zi('chart')}</span></div>`;
     }
     if (!lastNight && todayNaps.length === 0) {
       previewHtml = `<div class="info-strip is-neutral"><span><svg class="zi"><use href="#zi-moon"/></svg></span><div class="t-sub">No sleep entries yet</div></div>`;
