@@ -5471,6 +5471,25 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   cursor:pointer; text-decoration:underline; padding:0;
 }
 
+/* ═══ TP Outing Toggle ═══ */
+.tp-outing-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--sage-light); border:1.5px solid rgba(58,112,96,0.1);
+  margin-bottom:var(--sp-10);
+}
+.tp-outing-toggle-label {
+  display:flex; align-items:center; gap:var(--sp-6);
+  font-size:var(--fs-sm); font-weight:600; color:var(--tc-sage);
+}
+.tp-outing-toggle-label .icon { width:var(--sp-16); height:var(--sp-16); }
+.tp-outing-toggle-sub { font-size:var(--fs-xs); color:var(--light); margin-top:var(--sp-2); }
+.tp-outing-toggle.active { border-color:var(--tc-sage); }
+.tp-outing-config {
+  display:none; padding-top:var(--sp-8);
+}
+.tp-outing-config.open { display:flex; flex-direction:column; gap:var(--sp-8); }
+
 /* ═══ TP Hydration Section ═══ */
 .tp-hydration-section {
   padding:var(--sp-10); border-radius:var(--r-lg);
@@ -5504,6 +5523,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .outing-chip.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
 [data-theme="dark"] .outing-submit-btn { background:var(--tc-sage); }
 [data-theme="dark"] .outing-active-badge { background:rgba(181,213,197,0.1); }
+[data-theme="dark"] .tp-outing-toggle { background:rgba(58,112,96,0.08); border-color:rgba(58,112,96,0.15); }
+[data-theme="dark"] .tp-outing-toggle.active { border-color:var(--tc-sage); }
 [data-theme="dark"] .tp-hydration-section { background:rgba(51,101,128,0.08); border-color:rgba(51,101,128,0.15); }
 [data-theme="dark"] .tp-hydration-section.prominent { background:rgba(158,62,82,0.08); border-color:rgba(158,62,82,0.15); }
 </style>
@@ -5799,6 +5820,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <span class="sg-counter" id="homeSuggestionsCount"></span>
         </div>
         <div id="homeSuggestionsContent" class="mt-4"></div>
+      </div>
+
+      <!-- OUTING PLANNER (always visible on Home) -->
+      <div class="card card-daily col-full" id="outingPlannerCard" style="display:none;">
+        <div id="outingPlannerContent"></div>
       </div>
 
       <!-- TOMORROW'S PREP (shown after 6 PM) -->
@@ -11482,6 +11508,7 @@ function renderHome() {
   renderHomeContextAlerts();
   renderHomeMealProgress();
   renderHomeSuggestions();
+  renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
   renderHomePoop();
@@ -20839,7 +20866,7 @@ function _outingSave(el) {
     return;
   }
 
-  var tomorrow = _offsetDateStr(today(), 1);
+  var outingDate = _outingTargetDate();
   var duration = parseFloat(durSel.getAttribute('data-outing-val'));
   var timeSlot = timeSel.getAttribute('data-outing-val');
 
@@ -20852,7 +20879,7 @@ function _outingSave(el) {
   }
 
   _tomorrowOuting = {
-    date: tomorrow,
+    date: outingDate,
     duration: duration,
     timeSlot: timeSlot,
     portableMeal: portableMeal,
@@ -20868,6 +20895,17 @@ function _outingSave(el) {
   _qaExecuteOuting(classified);
 }
 
+function _outingTargetDate() {
+  // Before 6 PM → plan is for today; after 6 PM → plan is for tomorrow
+  var hour = new Date().getHours();
+  return hour < 18 ? today() : _offsetDateStr(today(), 1);
+}
+
+function _outingTargetLabel() {
+  var hour = new Date().getHours();
+  return hour < 18 ? 'today' : 'tomorrow';
+}
+
 function _outingHideForm() {
   var el = document.getElementById('outingForm');
   if (el) { el.classList.remove('active'); el.innerHTML = ''; }
@@ -20878,15 +20916,141 @@ function _outingClear() {
   localStorage.removeItem(KEYS.tomorrowOuting);
 }
 
+// ── Standalone Outing Planner Card (Home tab, always visible) ──
+
+function renderOutingPlannerCard() {
+  var card = document.getElementById('outingPlannerCard');
+  var content = document.getElementById('outingPlannerContent');
+  if (!card || !content) return;
+
+  card.style.display = '';
+  var label = _outingTargetLabel(); // 'today' or 'tomorrow'
+
+  if (_tomorrowOuting && _tomorrowOuting.date) {
+    // Check if outing is for today or tomorrow — match label
+    var isForToday = _tomorrowOuting.date === today();
+    var isForTomorrow = _tomorrowOuting.date === _offsetDateStr(today(), 1);
+    if (!isForToday && !isForTomorrow) {
+      // Stale outing from a past date — clear it
+      _outingClear();
+    }
+  }
+
+  if (_tomorrowOuting) {
+    // Outing is planned — show compact badge with details
+    var o = _tomorrowOuting;
+    var forLabel = o.date === today() ? 'Today' : 'Tomorrow';
+    var html = '<div class="tp-outing-toggle active">';
+    html += '<div>';
+    html += '<div class="tp-outing-toggle-label"><span class="icon icon-sage">' + zi('sun') + '</span> ' + forLabel + '\'s Outing</div>';
+    html += '<div class="tp-outing-toggle-sub">' + escHtml(o.timeSlot.charAt(0).toUpperCase() + o.timeSlot.slice(1)) + ' \u00B7 ~' + o.duration + ' hrs';
+    if (o.portableMeal) html += ' \u00B7 Portable ' + o.portableMeal;
+    html += '</div>';
+    html += '</div>';
+    html += '<button class="outing-clear-btn" id="outingCardClear">\u00D7 Clear</button>';
+    html += '</div>';
+    content.innerHTML = html;
+
+    var clr = content.querySelector('#outingCardClear');
+    if (clr) {
+      clr.addEventListener('click', function() {
+        _outingClear();
+        renderOutingPlannerCard();
+        // Re-render TP if visible
+        if (typeof renderTomorrowPrep === 'function') renderTomorrowPrep();
+      });
+    }
+  } else {
+    // No outing — show toggle with inline config
+    var html = '<div class="tp-outing-toggle" id="outingCardToggle">';
+    html += '<div>';
+    html += '<div class="tp-outing-toggle-label"><span class="icon icon-sage">' + zi('sun') + '</span> Going out ' + label + '?</div>';
+    html += '<div class="tp-outing-toggle-sub">Adjusts meals, hydration, and activities</div>';
+    html += '</div>';
+    html += '<label class="toggle-switch-wrap"><input type="checkbox" class="toggle-switch-input" id="outingCardSwitch"><span class="toggle-track"></span></label>';
+    html += '</div>';
+
+    html += '<div class="tp-outing-config" id="outingCardConfig">';
+    html += '<div class="outing-row-label">Duration</div>';
+    html += '<div class="outing-chips" data-outing-group="duration">';
+    html += '<button class="outing-chip" data-outing-val="1.5">1\u20132 hrs</button>';
+    html += '<button class="outing-chip" data-outing-val="3">2\u20134 hrs</button>';
+    html += '<button class="outing-chip" data-outing-val="5">4+ hrs</button>';
+    html += '</div>';
+    html += '<div class="outing-row-label" style="margin-top:var(--sp-6);">Time of day</div>';
+    html += '<div class="outing-chips" data-outing-group="timeSlot">';
+    html += '<button class="outing-chip" data-outing-val="morning">Morning</button>';
+    html += '<button class="outing-chip" data-outing-val="afternoon">Afternoon</button>';
+    html += '<button class="outing-chip" data-outing-val="evening">Evening</button>';
+    html += '</div>';
+    html += '<button class="outing-submit-btn" id="outingCardSaveBtn">Save outing plan</button>';
+    html += '</div>';
+
+    content.innerHTML = html;
+
+    // Toggle handler
+    var sw = content.querySelector('#outingCardSwitch');
+    if (sw) {
+      sw.addEventListener('change', function() {
+        var cfg = content.querySelector('#outingCardConfig');
+        var tog = content.querySelector('#outingCardToggle');
+        if (this.checked) {
+          if (cfg) cfg.classList.add('open');
+          if (tog) tog.classList.add('active');
+        } else {
+          if (cfg) cfg.classList.remove('open');
+          if (tog) tog.classList.remove('active');
+        }
+      });
+    }
+
+    // Chip handlers
+    content.querySelectorAll('#outingCardConfig .outing-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        this.parentElement.querySelectorAll('.outing-chip').forEach(function(c) { c.classList.remove('selected'); });
+        this.classList.add('selected');
+      });
+    });
+
+    // Save handler
+    var saveBtn = content.querySelector('#outingCardSaveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function() {
+        var cfg = content.querySelector('#outingCardConfig');
+        if (!cfg) return;
+        var durSel = cfg.querySelector('[data-outing-group="duration"] .outing-chip.selected');
+        var timeSel = cfg.querySelector('[data-outing-group="timeSlot"] .outing-chip.selected');
+        if (!durSel || !timeSel) {
+          if (!durSel) { var dg = cfg.querySelector('[data-outing-group="duration"]'); if (dg) { dg.style.outline = '2px solid var(--tc-caution)'; setTimeout(function() { dg.style.outline = ''; }, 1500); } }
+          if (!timeSel) { var tg = cfg.querySelector('[data-outing-group="timeSlot"]'); if (tg) { tg.style.outline = '2px solid var(--tc-caution)'; setTimeout(function() { tg.style.outline = ''; }, 1500); } }
+          return;
+        }
+        var targetDate = _outingTargetDate();
+        var duration = parseFloat(durSel.getAttribute('data-outing-val'));
+        var timeSlot = timeSel.getAttribute('data-outing-val');
+        var portableMeal = null;
+        if (duration >= 2) {
+          if (timeSlot === 'morning') portableMeal = 'breakfast';
+          else if (timeSlot === 'afternoon') portableMeal = 'lunch';
+          else if (timeSlot === 'evening') portableMeal = 'dinner';
+        }
+        _tomorrowOuting = { date: targetDate, duration: duration, timeSlot: timeSlot, portableMeal: portableMeal, skipActivitySlot: timeSlot };
+        save(KEYS.tomorrowOuting, _tomorrowOuting);
+        renderOutingPlannerCard();
+        if (typeof renderTomorrowPrep === 'function') renderTomorrowPrep();
+      });
+    }
+  }
+}
+
 // Fetch tomorrow's forecast for outing planning
 function _outingFetchForecast() {
-  var tomorrow = _offsetDateStr(today(), 1);
-  var wx = getWeatherForDate(tomorrow);
+  var targetDate = _tomorrowOuting ? _tomorrowOuting.date : _outingTargetDate();
+  var wx = getWeatherForDate(targetDate);
   if (wx) return Promise.resolve(wx);
 
-  // Need to fetch
   var lat = 22.8, lon = 86.18;
-  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=' + tomorrow + '&end_date=' + tomorrow)
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=' + targetDate + '&end_date=' + targetDate)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.daily && data.daily.time && data.daily.time.length > 0) {
@@ -20895,7 +21059,7 @@ function _outingFetchForecast() {
           humidity: Math.round(data.daily.relative_humidity_2m_max[0]),
           code: data.daily.weather_code[0]
         };
-        _weatherCache[tomorrow] = wxData;
+        _weatherCache[targetDate] = wxData;
         saveWeatherCache();
         return wxData;
       }
@@ -20929,7 +21093,8 @@ function _qaExecuteOuting(classified) {
       var portableIdeas = _outingGetPortableMeals(outing.portableMeal);
       sections.push({
         label: 'PORTABLE ' + outing.portableMeal.toUpperCase(),
-        items: portableIdeas.map(function(p) { return { text: p.name, signal: p.reason }; })
+        icon: zi('bowl'),
+        items: portableIdeas.map(function(p) { return { text: p.name + ' \u2014 ' + p.reason, signal: 'good' }; })
       });
     }
 
@@ -20937,25 +21102,27 @@ function _qaExecuteOuting(classified) {
     if (outing.timeSlot === 'afternoon' && outing.portableMeal === 'lunch') {
       sections.push({
         label: 'DINNER ADJUSTMENT',
-        items: [{ text: 'Plan a heavier dinner to compensate for lighter portable lunch', signal: 'Dal + rice + veg combo recommended' }]
+        icon: zi('moon'),
+        items: [{ text: 'Plan a heavier dinner to compensate for lighter portable lunch \u2014 dal + rice + veg combo recommended', signal: 'info' }]
       });
     }
 
     // Hydration (only relevant outdoors)
     if (temp !== null && temp >= 30) {
       var hydItems = [];
-      hydItems.push({ text: 'Pack coconut water or buttermilk', signal: 'Offer breast milk every 1.5 hrs instead of 2 hrs' });
+      hydItems.push({ text: 'Pack coconut water or buttermilk \u2014 offer breast milk every 1.5 hrs instead of 2 hrs', signal: 'info' });
       if (temp >= 35) {
-        hydItems.push({ text: 'Very hot day (' + temp + '\u00B0C) \u2014 consider early morning outing or shorter duration', signal: 'Dress in loose cotton, watch for flushed skin or fussiness' });
+        hydItems.push({ text: 'Very hot day (' + temp + '\u00B0C) \u2014 consider early morning outing or shorter duration', signal: 'warn' });
       }
-      hydItems.push({ text: 'Carry ORS sachet as backup', signal: '' });
-      sections.push({ label: 'HYDRATION PLAN', items: hydItems });
+      hydItems.push({ text: 'Carry ORS sachet as backup', signal: 'neutral' });
+      sections.push({ label: 'HYDRATION PLAN', icon: zi('drop'), items: hydItems });
     }
 
     // Activity adjustment
     sections.push({
       label: 'ACTIVITY NOTE',
-      items: [{ text: outing.timeSlot.charAt(0).toUpperCase() + outing.timeSlot.slice(1) + ' motor activity covered by the outing', signal: 'Focus on language or cognitive activities at home' }]
+      icon: zi('run'),
+      items: [{ text: outing.timeSlot.charAt(0).toUpperCase() + outing.timeSlot.slice(1) + ' motor activity covered by the outing \u2014 focus on language or cognitive at home', signal: 'good' }]
     });
 
     // Pack list
@@ -20964,7 +21131,8 @@ function _qaExecuteOuting(classified) {
     if (outing.duration >= 3) packItems.push('Extra change of clothes');
     sections.push({
       label: 'PACK LIST',
-      items: [{ text: packItems.join(', '), signal: '' }]
+      icon: zi('check'),
+      items: [{ text: packItems.join(', '), signal: 'neutral' }]
     });
 
     var answer = {
@@ -21959,11 +22127,11 @@ function renderTomorrowPrep() {
 
   var html = '';
 
-  // ── Outing badge ──
+  // ── Outing badge (read-only — toggle is on the standalone card above) ──
   if (data.outing) {
+    var forLabel = data.outing.date === today() ? 'Today' : 'Tomorrow';
     html += '<div class="outing-active-badge"><div class="icon icon-sage">' + zi('sun') + '</div> ';
-    html += escHtml(data.outing.timeSlot.charAt(0).toUpperCase() + data.outing.timeSlot.slice(1)) + ' outing \u00B7 ~' + data.outing.duration + ' hrs';
-    html += ' <button class="outing-clear-btn" id="tpOutingClear">\u00D7 Clear</button>';
+    html += escHtml(forLabel) + ': ' + escHtml(data.outing.timeSlot.charAt(0).toUpperCase() + data.outing.timeSlot.slice(1)) + ' outing \u00B7 ~' + data.outing.duration + ' hrs';
     html += '</div>';
   }
 
@@ -22085,15 +22253,7 @@ function renderTomorrowPrep() {
     });
   });
 
-  // Outing clear button
-  var clearBtn = content.querySelector('#tpOutingClear');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      _outingClear();
-      renderTomorrowPrep();
-    });
-  }
+  // (Outing toggle is on the standalone card — TP only shows read-only badge)
 }
 
 function _tpRenderHydrationSection(hydCtx, outing) {
@@ -23616,7 +23776,7 @@ function qaGetContextualQuickQuestions() {
   try {
     var wxToday = getWeatherForDate(today());
     if (wxToday && wxToday.maxTemp >= 32) {
-      questions.push({ text: 'Going out tomorrow', intent: '_uib_outing', context: true });
+      questions.push({ text: 'Going out ' + _outingTargetLabel(), intent: '_uib_outing', context: true });
     }
   } catch(e) {}
 
