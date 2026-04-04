@@ -5336,6 +5336,104 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .qa-answer-close:active { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-confidence { border-top-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .qa-data-gap { background:rgba(168,207,224,0.05); border-top-color:rgba(168,207,224,0.08); }
+
+/* ═══ UNIFIED INTELLIGENCE BAR (UIB) ═══ */
+.qa-mode-indicator {
+  display:flex; align-items:center; gap:var(--sp-8);
+  padding:var(--sp-6) var(--sp-12); margin-top:var(--sp-4);
+  font-size:var(--fs-xs); font-weight:600; letter-spacing:var(--ls-wide);
+  color:var(--tc-indigo); opacity:0; max-height:0; overflow:hidden;
+  transition:opacity 0.25s ease, max-height 0.25s ease;
+}
+.qa-mode-indicator.active { opacity:1; max-height:var(--sp-32); }
+.qa-mode-indicator .icon { width:var(--sp-16); height:var(--sp-16); flex-shrink:0; }
+.iq-picker {
+  background:var(--glass); border:1px solid rgba(155,168,216,0.12);
+  border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16);
+  margin-top:var(--sp-8); display:none;
+}
+.iq-picker.active { display:block; }
+.iq-picker-title {
+  font-size:var(--fs-xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--tc-indigo); margin-bottom:var(--sp-10);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.iq-picker-title .icon { width:var(--sp-16); height:var(--sp-16); }
+.iq-group { margin-bottom:var(--sp-10); }
+.iq-group-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--mid); margin-bottom:var(--sp-4);
+}
+.iq-group-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.iq-food-chip {
+  font-family:inherit; font-size:var(--fs-xs); font-weight:500;
+  padding:var(--sp-4) var(--sp-10); border-radius:var(--r-full);
+  border:1px solid rgba(155,168,216,0.15); background:var(--warm);
+  color:var(--text); cursor:pointer; transition:all 0.15s ease;
+  line-height:1.4;
+}
+.iq-food-chip:active { transform:scale(0.96); }
+.iq-food-chip.selected {
+  background:var(--sage-light); border-color:var(--tc-sage);
+  color:var(--tc-sage); font-weight:700;
+}
+.iq-submit-row { display:flex; justify-content:flex-end; margin-top:var(--sp-10); }
+.iq-submit-btn {
+  font-family:inherit; font-size:var(--fs-sm); font-weight:700;
+  padding:var(--sp-8) var(--sp-20); border-radius:var(--r-full);
+  border:none; background:var(--tc-sage); color:white;
+  cursor:pointer; transition:opacity 0.15s ease;
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.iq-submit-btn:disabled { opacity:0.35; cursor:default; }
+.iq-submit-btn:active:not(:disabled) { opacity:0.8; }
+.iq-combo-history-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--mid); margin:var(--sp-8) 0 var(--sp-4);
+}
+.iq-combo-card {
+  background:var(--warm); border-radius:var(--r-md);
+  padding:var(--sp-8) var(--sp-12); margin-bottom:var(--sp-6);
+  border:1px solid rgba(155,168,216,0.08);
+}
+.iq-combo-card.starred { border-left:3px solid var(--tc-sage); }
+.iq-combo-name { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
+.iq-combo-meta {
+  font-size:var(--fs-2xs); color:var(--mid); margin-top:var(--sp-2);
+  display:flex; flex-wrap:wrap; gap:var(--sp-6); align-items:center;
+}
+.iq-combo-reason {
+  font-size:var(--fs-xs); color:var(--tc-sage); margin-top:var(--sp-4);
+  font-style:italic; line-height:1.4;
+}
+.iq-meal-fit {
+  margin-top:var(--sp-8); padding-top:var(--sp-8);
+  border-top:1px solid rgba(155,168,216,0.08);
+}
+.iq-meal-fit-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--mid); margin-bottom:var(--sp-4);
+}
+.iq-meal-fit-item {
+  font-size:var(--fs-xs); color:var(--text); margin-bottom:var(--sp-2);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.iq-meal-fit-item .icon { width:var(--sp-16); height:var(--sp-16); }
+.iq-warning {
+  margin-top:var(--sp-8); padding:var(--sp-8) var(--sp-12);
+  background:var(--amber-light); border-radius:var(--r-md);
+  font-size:var(--fs-xs); color:var(--tc-amber);
+  display:flex; align-items:flex-start; gap:var(--sp-6);
+}
+.iq-warning .icon { width:var(--sp-16); height:var(--sp-16); flex-shrink:0; margin-top:1px; }
+/* Dark mode — UIB */
+[data-theme="dark"] .qa-mode-indicator { color:var(--tc-indigo); }
+[data-theme="dark"] .iq-picker { background:var(--surface); border-color:rgba(155,168,216,0.1); }
+[data-theme="dark"] .iq-food-chip { background:var(--surface-alt); border-color:rgba(255,255,255,0.08); color:var(--text); }
+[data-theme="dark"] .iq-food-chip.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
+[data-theme="dark"] .iq-combo-card { background:var(--surface-alt); border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .iq-combo-card.starred { border-left-color:var(--tc-sage); }
+[data-theme="dark"] .iq-warning { background:rgba(240,200,120,0.08); }
 </style>
 </head>
 <body>
@@ -5591,6 +5689,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <button class="qa-clear" id="qaClear" aria-label="Clear">&times;</button>
           </div>
           <div class="qa-chips" id="qaChips"></div>
+          <div class="qa-mode-indicator" id="qaModeIndicator"></div>
+          <div class="iq-picker" id="iqPicker"></div>
         </div>
         <div id="qaAnswerContainer"></div>
       </div>
@@ -21446,12 +21546,14 @@ var _qaPlaceholderIdx = 0;
 var _qaPlaceholderTimer = null;
 
 var QA_PLACEHOLDERS = [
-  'How do I improve sleep?',
-  'What should I feed for iron?',
-  'Why is poop irregular?',
-  'Is she gaining enough weight?',
-  'What activities help sleep?',
-  'How is she doing overall?'
+  'How is she doing?',
+  'ragi, banana \u2014 best combos?',
+  'Can I give honey?',
+  'She has a rash\u2026',
+  'What nutrients is she missing?',
+  'Which food helps sleep?',
+  'carrot, dal, ghee \u2014 what to make?',
+  'How do I improve sleep?'
 ];
 
 var QA_INTENTS = [
@@ -21594,6 +21696,888 @@ var QA_INTENTS = [
   }
 ];
 
+// ═══════════════════════════════════════════════════════════════
+// UNIFIED INTELLIGENCE BAR (UIB) — Session 1
+// Multi-mode router: ingredient, symptom, food_safety, QA
+// ═══════════════════════════════════════════════════════════════
+
+// ── FOOD NAME RECOGNITION ──
+
+function _isFoodName(token) {
+  var t = token.toLowerCase().trim();
+  if (t.length < 2) return false;
+  // Check NUTRITION keys
+  if (NUTRITION[t]) return true;
+  // Check normalized alias
+  var base = _baseFoodName(t);
+  if (NUTRITION[base]) return true;
+  // Check introduced foods
+  var introSet = (foods || []).map(function(f) { return _baseFoodName(f.name).toLowerCase(); });
+  if (introSet.indexOf(base) !== -1) return true;
+  return false;
+}
+
+function _isLikelyFoodList(tokens) {
+  var foodCount = 0;
+  tokens.forEach(function(t) { if (_isFoodName(t)) foodCount++; });
+  return foodCount >= 2;
+}
+
+// ── MULTI-MODE INPUT CLASSIFIER ──
+
+function qaClassifyInput(text) {
+  var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var tokens = lower.split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
+
+  // 1. FOOD SAFETY — "can I give", "is X safe", "safe for baby"
+  if (/^can (i|we) give|^is .+ safe|^safe to give|^can she (eat|have)|^can baby (eat|have)/.test(lower)) {
+    return { mode: 'food_safety', raw: text };
+  }
+
+  // 2. SYMPTOM — check before ingredient (symptom keywords are distinct)
+  var symptomScore = 0;
+  SYMPTOM_DB.forEach(function(entry) {
+    entry.keywords.forEach(function(kw) {
+      if (lower.indexOf(kw.toLowerCase()) !== -1) symptomScore++;
+    });
+  });
+  if (symptomScore >= 1 && !_isLikelyFoodList(tokens)) {
+    return { mode: 'symptom', raw: text };
+  }
+
+  // 3. INGREDIENT — 2+ recognized food names
+  var foodMatches = tokens.filter(function(t) { return _isFoodName(t); });
+  if (foodMatches.length >= 2) {
+    return { mode: 'ingredient', foods: foodMatches, raw: text };
+  }
+
+  // 4. Single food name without safety prefix → ingredient mode (show combos + safety)
+  if (foodMatches.length === 1 && tokens.length <= 3) {
+    return { mode: 'ingredient', foods: foodMatches, raw: text };
+  }
+
+  // 5. Default → QA (existing intent matching)
+  return { mode: 'qa', raw: text };
+}
+
+// ── MODE INDICATOR UI ──
+
+function _uibShowModeIndicator(mode) {
+  var el = document.getElementById('qaModeIndicator');
+  if (!el) return;
+  var labels = {
+    ingredient: { icon: 'bowl', color: 'peach', text: 'Ingredient mode \u2014 finding best combos\u2026' },
+    symptom: { icon: 'medical', color: 'rose', text: 'Symptom check \u2014 matching symptoms\u2026' },
+    food_safety: { icon: 'shield', color: 'peach', text: 'Food safety check\u2026' }
+  };
+  var cfg = labels[mode];
+  if (!cfg) { el.classList.remove('active'); el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="icon icon-' + cfg.color + '">' + zi(cfg.icon) + '</div><span>' + cfg.text + '</span>';
+  el.classList.add('active');
+}
+
+function _uibClearModeIndicator() {
+  var el = document.getElementById('qaModeIndicator');
+  if (el) { el.classList.remove('active'); el.innerHTML = ''; }
+}
+
+// ── INGREDIENT PICKER UI ──
+
+function _iqRenderPicker() {
+  var el = document.getElementById('iqPicker');
+  if (!el) return;
+
+  var introduced = (foods || []).map(function(f) { return { name: f.name, base: _baseFoodName(f.name) }; });
+  var introSet = new Set(introduced.map(function(f) { return f.base; }));
+
+  // Categorize introduced foods
+  var groups = {
+    'Grains': ['ragi','rice','oats','dalia','suji','poha','bajra','jowar','sabudana','idli','dosa','khichdi','wheat','barley','amaranth'],
+    'Lentils': ['moong dal','masoor dal','toor dal','chana dal','urad dal','rajma'],
+    'Vegetables': ['carrot','beetroot','beans','bottle gourd','lauki','spinach','sweet potato','pumpkin','broccoli','zucchini','potato','drumstick','moringa','cucumber','corn'],
+    'Fruits': ['banana','apple','pear','avocado','blueberry','mango','papaya','orange','watermelon','pomegranate','date (fruit)','chiku','strawberry','kiwi','litchi','guava','plum','muskmelon','blackberry'],
+    'Fats & Nuts': ['ghee','almonds','walnut','flaxseed','sesame','coconut','cashew','peanut','pumpkin seeds','coconut oil'],
+    'Dairy': ['curd','paneer','cheese','butter']
+  };
+
+  var html = '<div class="iq-picker-title"><div class="icon icon-peach">' + zi('bowl') + '</div> Pick ingredients you have</div>';
+
+  var hasAny = false;
+  Object.keys(groups).forEach(function(groupName) {
+    var available = groups[groupName].filter(function(f) { return introSet.has(f); });
+    if (available.length === 0) return;
+    hasAny = true;
+    html += '<div class="iq-group">';
+    html += '<div class="iq-group-label">' + escHtml(groupName) + '</div>';
+    html += '<div class="iq-group-chips">';
+    available.forEach(function(f) {
+      var display = f.charAt(0).toUpperCase() + f.slice(1);
+      html += '<button class="iq-food-chip" data-food="' + escHtml(f) + '">' + escHtml(display) + '</button>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<div class="iq-submit-row"><button class="iq-submit-btn" id="iqSubmitBtn" disabled>Show best combos</button></div>';
+
+  el.innerHTML = html;
+  el.classList.add('active');
+
+  // Chip toggle handlers
+  el.querySelectorAll('.iq-food-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      this.classList.toggle('selected');
+      var selected = el.querySelectorAll('.iq-food-chip.selected');
+      var btn = document.getElementById('iqSubmitBtn');
+      if (btn) btn.disabled = selected.length < 1;
+    });
+  });
+
+  // Submit handler
+  var submitBtn = document.getElementById('iqSubmitBtn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function() {
+      var selected = [];
+      el.querySelectorAll('.iq-food-chip.selected').forEach(function(chip) {
+        selected.push(chip.getAttribute('data-food'));
+      });
+      if (selected.length === 0) return;
+      el.classList.remove('active');
+      el.innerHTML = '';
+      var classified = { mode: 'ingredient', foods: selected, raw: selected.join(', ') };
+      var answer = qaHandleIngredient(classified);
+      var answerEl = document.getElementById('qaAnswerContainer');
+      if (answer && answerEl) qaRenderAnswer(answerEl, answer);
+    });
+  }
+}
+
+function _iqHidePicker() {
+  var el = document.getElementById('iqPicker');
+  if (el) { el.classList.remove('active'); el.innerHTML = ''; }
+}
+
+// ── MEAL HISTORY MINING ──
+
+function _iqMineMealCombos(selectedFoods) {
+  var selectedBases = selectedFoods.map(function(f) { return _baseFoodName(f); });
+  var selectedSet = new Set(selectedBases);
+  var results = [];
+
+  // Scan feedingData for meals containing any selected food
+  var dates = Object.keys(feedingData || {}).sort();
+  dates.forEach(function(date) {
+    var day = feedingData[date];
+    ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+      var mealStr = day[meal];
+      if (!mealStr || typeof mealStr !== 'string' || mealStr.trim().length === 0) return;
+
+      // Parse foods from meal string
+      var mealFoods = mealStr.split(/[,+]/).map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 1; });
+      var mealBases = mealFoods.map(function(f) { return _baseFoodName(f); });
+
+      // Check if any selected food appears in this meal
+      var matchCount = 0;
+      mealBases.forEach(function(b) { if (selectedSet.has(b)) matchCount++; });
+      if (matchCount === 0) return;
+
+      // Get intake data if available
+      var intakeKey = meal + '_intake';
+      var intake = day[intakeKey] || null;
+
+      // Create combo signature
+      var comboKey = mealBases.slice().sort().join('|');
+
+      // Find existing or create new
+      var existing = results.find(function(r) { return r.key === comboKey; });
+      if (existing) {
+        existing.count++;
+        existing.dates.push(date);
+        if (intake !== null) existing.intakes.push(intake);
+      } else {
+        results.push({
+          key: comboKey,
+          foods: mealFoods,
+          bases: mealBases,
+          meal: meal,
+          count: 1,
+          dates: [date],
+          intakes: intake !== null ? [intake] : [],
+          matchCount: matchCount
+        });
+      }
+    });
+  });
+
+  // Calculate average intake for each combo
+  results.forEach(function(r) {
+    if (r.intakes.length > 0) {
+      r.avgIntake = r.intakes.reduce(function(a, b) { return a + b; }, 0) / r.intakes.length;
+    } else {
+      r.avgIntake = null;
+    }
+    r.lastDate = r.dates[r.dates.length - 1];
+  });
+
+  // Sort by match count (how many selected foods it uses) then frequency
+  results.sort(function(a, b) {
+    return b.matchCount - a.matchCount || b.count - a.count;
+  });
+
+  return results;
+}
+
+// ── COMBO-LEVEL SCORING ──
+
+function _iqScoreCombo(combo, ctx) {
+  var score = 0;
+  var reasons = [];
+
+  // A. Nutrient coverage (30%) — how many gaps does this combo fill?
+  var gapsFilled = 0;
+  var gapNames = [];
+  if (ctx.gapSet && ctx.gapSet.size > 0) {
+    combo.bases.forEach(function(base) {
+      var nut = getNutrition(base);
+      if (nut && nut.nutrients) {
+        nut.nutrients.forEach(function(n) {
+          if (ctx.gapSet.has(n.toLowerCase()) && gapNames.indexOf(n) === -1) {
+            gapsFilled++;
+            gapNames.push(n);
+          }
+        });
+      }
+    });
+    if (gapsFilled > 0) {
+      score += Math.min(gapsFilled * 10, 30);
+      var gapDays = ctx.gapDaysMap && ctx.gapDaysMap[gapNames[0].toLowerCase()] ? ctx.gapDaysMap[gapNames[0].toLowerCase()] : 0;
+      reasons.push('Covers ' + gapNames.slice(0, 2).join(' + ') + ' gap' + (gapDays > 0 ? ' (' + gapDays + ' days)' : ''));
+    }
+  }
+
+  // B. Recency (15%) — when was this combo last served?
+  if (combo.lastDate) {
+    var daysSince = Math.round((new Date(today()) - new Date(combo.lastDate)) / 86400000);
+    if (daysSince >= 5) { score += 15; }
+    else if (daysSince >= 3) { score += 10; }
+    else if (daysSince >= 1) { score += 5; }
+    else { score -= 5; } // served today, penalize
+  } else {
+    score += 8; // no history, neutral
+  }
+
+  // C. Sleep correlation (10%, dinner meals only)
+  if (combo.meal === 'dinner') {
+    try {
+      var bestSleepBase = null;
+      var bestDelta = 0;
+      combo.bases.forEach(function(base) {
+        var corr = _tpGetFoodSleepCorrelation(base);
+        if (!corr.insufficient && corr.delta > bestDelta) {
+          bestDelta = corr.delta;
+          bestSleepBase = base;
+        }
+      });
+      if (bestDelta > 3) {
+        score += 10;
+        reasons.push('Sleep +' + bestDelta + ' on ' + bestSleepBase + ' nights');
+      }
+    } catch(e) {}
+  }
+
+  // D. Poop correlation (10%)
+  try {
+    var bestPoopDelta = 0;
+    combo.bases.forEach(function(base) {
+      var corr = _tpGetFoodPoopCorrelation(base);
+      if (!corr.insufficient && corr.delta > bestPoopDelta) {
+        bestPoopDelta = corr.delta;
+      }
+    });
+    if (bestPoopDelta > 5) {
+      score += 10;
+      reasons.push('Poop score +' + bestPoopDelta + ' on these days');
+    }
+  } catch(e) {}
+
+  // E. Acceptance rate (15%) — avg intake when this combo was served
+  if (combo.avgIntake !== null) {
+    if (combo.avgIntake >= 0.8) {
+      score += 15;
+      reasons.push('She finishes ' + Math.round(combo.avgIntake * 100) + '% \u2014 loves it');
+    } else if (combo.avgIntake >= 0.5) {
+      score += 8;
+    } else if (combo.avgIntake < 0.3 && combo.intakes.length >= 3) {
+      score -= 10; // she consistently rejects this
+    }
+  }
+
+  // F. Synergy bonus (10%) — pairings within the combo
+  var synergyFound = [];
+  for (var i = 0; i < combo.bases.length; i++) {
+    for (var j = i + 1; j < combo.bases.length; j++) {
+      var syn = getSynergy(combo.bases[i], combo.bases[j]);
+      if (syn && synergyFound.indexOf(syn.reason) === -1) {
+        synergyFound.push(syn.reason);
+        score += 5;
+      }
+    }
+  }
+  if (synergyFound.length > 0 && reasons.length < 3) {
+    reasons.push(synergyFound[0].replace(/^.*boosts/, 'Boosts').replace(/^.*helps/, 'Helps'));
+  }
+
+  // G. Frequency bonus — proven combos rank higher
+  if (combo.count >= 4) { score += 8; }
+  else if (combo.count >= 2) { score += 4; }
+
+  // Cap reasons at 3
+  reasons = reasons.slice(0, 3);
+
+  return { score: score, reasons: reasons };
+}
+
+// ── BUILD NEW COMBOS FROM SELECTED FOODS ──
+
+function _iqBuildNewCombos(selectedFoods, ctx) {
+  var selectedBases = selectedFoods.map(function(f) { return _baseFoodName(f); });
+  var combos = [];
+
+  // Categorize selected foods
+  var grains = []; var dals = []; var vegs = []; var fruits = []; var fats = []; var dairy = [];
+  var grainList = ['ragi','rice','oats','dalia','suji','poha','bajra','jowar','sabudana','idli','dosa','khichdi','wheat','barley','amaranth'];
+  var dalList = ['moong dal','masoor dal','toor dal','chana dal','urad dal','rajma'];
+  var vegList = ['carrot','beetroot','beans','bottle gourd','lauki','spinach','sweet potato','pumpkin','broccoli','zucchini','potato','drumstick','moringa','cucumber','corn'];
+  var fatList = ['ghee','almonds','walnut','flaxseed','sesame','coconut','cashew','peanut','coconut oil'];
+  var dairyList = ['curd','paneer','cheese','butter','yogurt','dahi'];
+
+  selectedBases.forEach(function(b) {
+    if (grainList.indexOf(b) !== -1) grains.push(b);
+    else if (dalList.indexOf(b) !== -1) dals.push(b);
+    else if (vegList.indexOf(b) !== -1) vegs.push(b);
+    else if (fatList.indexOf(b) !== -1) fats.push(b);
+    else if (dairyList.indexOf(b) !== -1) dairy.push(b);
+    else {
+      // Check NUTRITION tags to guess
+      var nut = getNutrition(b);
+      if (nut && nut.tags) {
+        if (nut.tags.indexOf('healthy-fats') !== -1 || nut.tags.indexOf('omega-3') !== -1) fats.push(b);
+        else if (nut.tags.indexOf('hydrating') !== -1 || nut.tags.indexOf('cooling') !== -1) vegs.push(b);
+        else fruits.push(b);
+      } else {
+        fruits.push(b);
+      }
+    }
+  });
+
+  // Generate combos based on Indian meal patterns
+  // Breakfast: grain + fruit, grain + nut
+  grains.forEach(function(g) {
+    fruits.forEach(function(fr) {
+      combos.push({ foods: [g, fr], bases: [g, fr], meal: 'breakfast', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: 2, key: [g, fr].sort().join('|'), isNew: true });
+    });
+    fats.forEach(function(fat) {
+      combos.push({ foods: [g, fat], bases: [g, fat], meal: 'breakfast', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: 2, key: [g, fat].sort().join('|'), isNew: true });
+    });
+  });
+
+  // Lunch: dal + grain + veg + ghee
+  dals.forEach(function(d) {
+    var lunchGrains = grains.length > 0 ? grains : ['rice'];
+    lunchGrains.forEach(function(g) {
+      if (vegs.length > 0) {
+        vegs.forEach(function(v) {
+          var parts = [d, g, v];
+          if (fats.indexOf('ghee') !== -1) parts.push('ghee');
+          combos.push({ foods: parts, bases: parts.map(function(p) { return _baseFoodName(p); }), meal: 'lunch', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: parts.length, key: parts.slice().sort().join('|'), isNew: true });
+        });
+      } else {
+        var parts = [d, g];
+        if (fats.indexOf('ghee') !== -1) parts.push('ghee');
+        combos.push({ foods: parts, bases: parts.map(function(p) { return _baseFoodName(p); }), meal: 'lunch', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: parts.length, key: parts.slice().sort().join('|'), isNew: true });
+      }
+    });
+  });
+
+  // Dinner: fruit combos, veg + fat
+  fruits.forEach(function(fr) {
+    fats.forEach(function(fat) {
+      combos.push({ foods: [fr, fat], bases: [fr, fat], meal: 'dinner', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: 2, key: [fr, fat].sort().join('|'), isNew: true });
+    });
+    dairy.forEach(function(d) {
+      combos.push({ foods: [fr, d], bases: [fr, d], meal: 'dinner', count: 0, dates: [], intakes: [], avgIntake: null, lastDate: null, matchCount: 2, key: [fr, d].sort().join('|'), isNew: true });
+    });
+  });
+
+  // Dedup
+  var seen = new Set();
+  var unique = [];
+  combos.forEach(function(c) {
+    if (!seen.has(c.key)) { seen.add(c.key); unique.push(c); }
+  });
+
+  return unique;
+}
+
+// ── ENHANCED REASON TEXT ──
+
+function _iqEnhanceReasons(reasons, combo) {
+  return reasons.map(function(r) {
+    // Enhance nutrient gap reasons
+    if (r.indexOf('gap') !== -1 && r.indexOf('Covers') === -1) {
+      return 'Covers the ' + r;
+    }
+    return r;
+  });
+}
+
+// ── DETERMINE BEST MEAL FIT ──
+
+function _iqMealFit(combo) {
+  var fits = [];
+  var hasIron = false;
+  var isLight = false;
+  var hasProtein = false;
+
+  combo.bases.forEach(function(b) {
+    var nut = getNutrition(b);
+    if (!nut) return;
+    if (nut.tags && nut.tags.indexOf('iron-rich') !== -1) hasIron = true;
+    if (nut.tags && nut.tags.indexOf('protein-rich') !== -1) hasProtein = true;
+    if (nut.tags && (nut.tags.indexOf('easy-digest') !== -1 || nut.tags.indexOf('hydrating') !== -1)) isLight = true;
+  });
+
+  if (hasIron) fits.push({ meal: 'breakfast', icon: 'sun', color: 'peach', reason: 'Iron-biased, energy start' });
+  if (hasProtein) fits.push({ meal: 'lunch', icon: 'bowl', color: 'sage', reason: 'Protein-rich, main meal' });
+  if (isLight) fits.push({ meal: 'dinner', icon: 'moon', color: 'lav', reason: 'Light, easy to digest' });
+
+  // If combo was historically used for a specific meal
+  if (combo.meal && combo.count > 0) {
+    var existingMeal = fits.find(function(f) { return f.meal === combo.meal; });
+    if (!existingMeal) {
+      var mealIcons = { breakfast: 'sun', lunch: 'bowl', dinner: 'moon' };
+      var mealColors = { breakfast: 'peach', lunch: 'sage', dinner: 'lav' };
+      fits.unshift({ meal: combo.meal, icon: mealIcons[combo.meal] || 'bowl', color: mealColors[combo.meal] || 'sage', reason: 'Served as ' + combo.meal + ' ' + combo.count + ' times' });
+    }
+  }
+
+  return fits.slice(0, 2);
+}
+
+// ── DETECT NUTRIENT CONFLICTS WITHIN A COMBO ──
+
+function _iqGetWarnings(bases) {
+  var warnings = [];
+  var tags = [];
+  var nutrients = [];
+  bases.forEach(function(b) {
+    var nut = getNutrition(b);
+    if (nut) {
+      (nut.tags || []).forEach(function(t) { if (tags.indexOf(t) === -1) tags.push(t); });
+      (nut.nutrients || []).forEach(function(n) { if (nutrients.indexOf(n.toLowerCase()) === -1) nutrients.push(n.toLowerCase()); });
+    }
+  });
+
+  // Iron + Calcium conflict
+  var hasIron = tags.indexOf('iron-rich') !== -1;
+  var hasCalcium = nutrients.indexOf('calcium') !== -1 && tags.indexOf('bone-health') !== -1;
+  if (hasIron && hasCalcium && bases.length > 1) {
+    warnings.push('Iron + calcium together may reduce iron absorption \u2014 consider spacing 2 hours apart');
+  }
+
+  return warnings;
+}
+
+// ── INGREDIENT MODE ANSWER HANDLER ──
+
+function qaHandleIngredient(classified) {
+  var selectedFoods = (classified.foods || []).map(function(f) { return _baseFoodName(f); });
+  if (selectedFoods.length === 0) return null;
+
+  // Build scoring context
+  var ctx = { gapSet: new Set(), gapDaysMap: {}, meal: null };
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (hm && hm.gaps) {
+      hm.gaps.forEach(function(g) {
+        ctx.gapSet.add(g.nutrient.toLowerCase());
+        ctx.gapDaysMap[g.nutrient.toLowerCase()] = g.gapDays || 0;
+      });
+    }
+  } catch(e) {}
+
+  // 1. Mine historical combos
+  var historicalCombos = _iqMineMealCombos(selectedFoods);
+
+  // 2. Score historical combos
+  historicalCombos.forEach(function(combo) {
+    var scored = _iqScoreCombo(combo, ctx);
+    combo.totalScore = scored.score;
+    combo.enhancedReasons = _iqEnhanceReasons(scored.reasons, combo);
+  });
+
+  // Sort by score
+  historicalCombos.sort(function(a, b) { return b.totalScore - a.totalScore; });
+
+  // 3. Build new combos
+  var newCombos = _iqBuildNewCombos(selectedFoods, ctx);
+  newCombos.forEach(function(combo) {
+    var scored = _iqScoreCombo(combo, ctx);
+    combo.totalScore = scored.score;
+    combo.enhancedReasons = _iqEnhanceReasons(scored.reasons, combo);
+  });
+  newCombos.sort(function(a, b) { return b.totalScore - a.totalScore; });
+
+  // Remove new combos that duplicate historical ones
+  var histKeys = new Set(historicalCombos.map(function(c) { return c.key; }));
+  newCombos = newCombos.filter(function(c) { return !histKeys.has(c.key); });
+
+  // Build answer card sections
+  var sections = [];
+  var displayFoods = selectedFoods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(', ');
+
+  // Historical combos section
+  var histItems = [];
+  var topHistory = historicalCombos.slice(0, 3);
+  topHistory.forEach(function(combo, idx) {
+    var comboDisplay = combo.foods.map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 0; }).join(' + ');
+    var meta = [];
+    if (combo.count > 0) meta.push('Served ' + combo.count + '\u00d7');
+    if (combo.avgIntake !== null) meta.push('intake ' + Math.round(combo.avgIntake * 100) + '%');
+    var text = (idx === 0 ? '\u2605 ' : '') + comboDisplay;
+    if (meta.length > 0) text += ' \u2014 ' + meta.join(' \u00b7 ');
+    histItems.push({ text: text, signal: 'good' });
+    if (combo.enhancedReasons.length > 0) {
+      histItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
+    }
+  });
+
+  if (histItems.length > 0) {
+    sections.push({
+      label: 'BASED ON YOUR HISTORY',
+      icon: zi('chart'),
+      items: histItems
+    });
+  }
+
+  // New combos section
+  var newItems = [];
+  var topNew = newCombos.slice(0, 2);
+  topNew.forEach(function(combo) {
+    var comboDisplay = combo.bases.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(' + ');
+    newItems.push({ text: comboDisplay, signal: 'action' });
+    if (combo.enhancedReasons.length > 0) {
+      newItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
+    }
+  });
+
+  if (newItems.length > 0) {
+    sections.push({
+      label: 'NEW COMBOS TO TRY',
+      icon: zi('sparkle'),
+      items: newItems
+    });
+  }
+
+  // Best meal fit
+  var bestCombo = topHistory[0] || topNew[0];
+  if (bestCombo) {
+    var fits = _iqMealFit(bestCombo);
+    if (fits.length > 0) {
+      var fitItems = fits.map(function(f) {
+        return { text: f.meal.charAt(0).toUpperCase() + f.meal.slice(1) + ' \u2014 ' + f.reason, signal: 'action', icon: '<div class="icon icon-' + f.color + '">' + zi(f.icon) + '</div>' };
+      });
+      sections.push({
+        label: 'BEST FOR',
+        icon: zi('target'),
+        items: fitItems
+      });
+    }
+  }
+
+  // Warnings
+  var warnings = _iqGetWarnings(selectedFoods);
+  if (warnings.length > 0) {
+    sections.push({
+      label: 'NOTE',
+      icon: zi('warn'),
+      items: warnings.map(function(w) { return { text: w, signal: 'warn' }; })
+    });
+  }
+
+  // Synergy highlights in sections
+  var synergies = [];
+  for (var si = 0; si < selectedFoods.length; si++) {
+    for (var sj = si + 1; sj < selectedFoods.length; sj++) {
+      var syn = getSynergy(selectedFoods[si], selectedFoods[sj]);
+      if (syn) synergies.push(syn);
+    }
+  }
+  if (synergies.length > 0 && warnings.length === 0) {
+    sections.push({
+      label: 'SYNERGY',
+      icon: zi('link'),
+      items: synergies.slice(0, 2).map(function(s) { return { text: s.reason, signal: 'good' }; })
+    });
+  }
+
+  // Confidence
+  var confidence = historicalCombos.length > 0
+    ? 'Based on ' + Object.keys(feedingData || {}).length + ' days of meal data'
+    : 'Limited meal history \u2014 suggestions will improve as you log more meals';
+
+  return {
+    icon: 'bowl',
+    domain: 'peach',
+    title: 'Best combos with ' + displayFoods,
+    headline: historicalCombos.length > 0
+      ? historicalCombos.length + ' proven combo' + (historicalCombos.length > 1 ? 's' : '') + ' found'
+      : 'New combo suggestions',
+    sections: sections,
+    confidence: confidence,
+    dataGap: null
+  };
+}
+
+// ── FOOD SAFETY MODE ANSWER HANDLER ──
+
+function qaHandleFoodSafety(classified) {
+  var raw = classified.raw;
+  // Extract food names from query
+  var cleaned = raw.toLowerCase().replace(/^can (i|we) give\s*|^is\s+|^safe to give\s*|^can she (eat|have)\s*|^can baby (eat|have)\s*/i, '').replace(/\s*safe\s*$|\?/g, '').trim();
+  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 1; });
+  if (rawFoods.length === 0) return null;
+
+  var mo = getAgeInMonths();
+  var introducedSet = new Set((foods || []).map(function(f) { return _baseFoodName(f.name).toLowerCase(); }));
+
+  var verdict = 'safe';
+  var warnings = [];
+  var benefits = [];
+  var allergenNotes = [];
+  var newFoods = [];
+
+  // 1. Age safety
+  rawFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    var rule = AGE_RULES[base] || AGE_RULES[food];
+    if (rule && mo < rule.minMonth) {
+      verdict = 'avoid';
+      warnings.push(food + ': ' + rule.reason);
+    }
+  });
+
+  // 2. Allergens
+  rawFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    var alert = ALLERGENS[base] || ALLERGENS[food];
+    if (alert) {
+      allergenNotes.push(food + ': ' + alert);
+      if (verdict === 'safe') verdict = 'caution';
+    }
+  });
+
+  // 3. Introduction status
+  rawFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    if (!introducedSet.has(base) && food.length > 2) {
+      newFoods.push(food);
+    }
+  });
+  if (newFoods.length > 1 && verdict !== 'avoid') {
+    verdict = 'caution';
+    warnings.push('Multiple new foods at once \u2014 introduce each alone for 3 days first');
+  }
+
+  // 4. Nutrition highlights
+  rawFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    var nut = getNutrition(base);
+    if (nut && nut.nutrients) {
+      benefits.push(food + ': ' + nut.nutrients.slice(0, 3).join(', '));
+    }
+  });
+
+  // 5. Synergy check
+  var synergies = [];
+  for (var i = 0; i < rawFoods.length; i++) {
+    for (var j = i + 1; j < rawFoods.length; j++) {
+      var syn = getSynergy(_baseFoodName(rawFoods[i]), _baseFoodName(rawFoods[j]));
+      if (syn) synergies.push(syn);
+    }
+  }
+
+  // 6. Ziva's history with this food
+  var historyItems = [];
+  rawFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    var count = 0;
+    var lastDate = null;
+    var intakeSum = 0;
+    var intakeCount = 0;
+    Object.keys(feedingData || {}).forEach(function(date) {
+      var day = feedingData[date];
+      ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+        var mealStr = day[meal];
+        if (mealStr && typeof mealStr === 'string') {
+          var mealBases = mealStr.split(/[,+]/).map(function(f) { return _baseFoodName(f.trim()); });
+          if (mealBases.indexOf(base) !== -1) {
+            count++;
+            lastDate = date;
+            var intakeKey = meal + '_intake';
+            if (day[intakeKey] !== undefined && day[intakeKey] !== null) {
+              intakeSum += day[intakeKey];
+              intakeCount++;
+            }
+          }
+        }
+      });
+    });
+
+    if (count > 0) {
+      var parts = ['Served ' + count + '\u00d7'];
+      if (intakeCount > 0) {
+        var avgIntake = Math.round((intakeSum / intakeCount) * 100);
+        var label = avgIntake >= 80 ? 'loves it' : avgIntake >= 50 ? 'eats well' : 'often leaves';
+        parts.push('avg intake ' + avgIntake + '% (' + label + ')');
+      }
+      if (lastDate) parts.push('last: ' + lastDate);
+      historyItems.push({ text: food + ' \u2014 ' + parts.join(' \u00b7 '), signal: 'info' });
+    }
+  });
+
+  // Build sections
+  var sections = [];
+  var verdictText = verdict === 'avoid' ? 'Avoid' : verdict === 'caution' ? 'Caution' : 'Safe';
+  var verdictSignal = verdict === 'avoid' ? 'warn' : verdict === 'caution' ? 'warn' : 'good';
+
+  // Safety section
+  var safetyItems = [];
+  safetyItems.push({ text: verdictText + ' for ' + mo + '-month-old', signal: verdictSignal });
+  warnings.forEach(function(w) { safetyItems.push({ text: w, signal: 'warn' }); });
+  allergenNotes.forEach(function(a) { safetyItems.push({ text: a, signal: 'warn' }); });
+  if (newFoods.length === 1) {
+    safetyItems.push({ text: newFoods[0] + ' is new \u2014 introduce alone and watch for 3 days', signal: 'info' });
+  }
+  sections.push({ label: 'SAFETY', icon: zi('shield'), items: safetyItems });
+
+  // Nutrition section
+  if (benefits.length > 0) {
+    sections.push({
+      label: 'NUTRITION',
+      icon: zi('chart'),
+      items: benefits.map(function(b) { return { text: b, signal: 'good' }; })
+    });
+  }
+
+  // Synergies
+  if (synergies.length > 0) {
+    sections.push({
+      label: 'BEST PAIRINGS',
+      icon: zi('link'),
+      items: synergies.slice(0, 2).map(function(s) { return { text: s.reason, signal: 'good' }; })
+    });
+  }
+
+  // Ziva's history
+  if (historyItems.length > 0) {
+    sections.push({
+      label: 'ZIVA\'S HISTORY',
+      icon: zi('baby'),
+      items: historyItems
+    });
+  }
+
+  return {
+    icon: 'shield',
+    domain: 'peach',
+    title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
+    headline: verdictText + (verdict === 'safe' ? ' \u2014 good to go' : ''),
+    sections: sections,
+    confidence: null,
+    dataGap: null
+  };
+}
+
+// ── SYMPTOM MODE ANSWER HANDLER ──
+
+function qaHandleSymptom(classified) {
+  var query = classified.raw.toLowerCase().trim();
+  var mo = getAgeInMonths();
+  var matches = [];
+
+  SYMPTOM_DB.forEach(function(entry) {
+    var score = 0;
+    entry.keywords.forEach(function(kw) {
+      if (query.indexOf(kw.toLowerCase()) !== -1) score += 2;
+      var words = kw.toLowerCase().split(' ');
+      words.forEach(function(w) {
+        if (w.length > 3 && query.indexOf(w) !== -1) score += 1;
+      });
+    });
+    if (score > 0) {
+      var finalSeverity = entry.severity;
+      if (entry.condition && entry.condition(query, mo)) {
+        finalSeverity = 'emergency';
+      }
+      matches.push({ entry: entry, score: score, severity: finalSeverity });
+    }
+  });
+
+  if (matches.length === 0) return null;
+
+  // Sort: emergency first, then by score
+  var SEV_RANK = { emergency: 0, warning: 1, mild: 2 };
+  matches.sort(function(a, b) {
+    return (SEV_RANK[a.severity] || 2) - (SEV_RANK[b.severity] || 2) || b.score - a.score;
+  });
+
+  var top = matches.slice(0, 2);
+  var sections = [];
+
+  top.forEach(function(m) {
+    var e = m.entry;
+    var sevLabel = m.severity === 'emergency' ? 'Emergency' : m.severity === 'warning' ? 'Monitor closely' : 'Usually manageable';
+
+    // What to do
+    sections.push({
+      label: 'WHAT TO DO \u2014 ' + escHtml(e.title),
+      icon: m.severity === 'emergency' ? zi('siren') : zi('medical'),
+      items: [
+        { text: sevLabel, signal: m.severity === 'emergency' ? 'warn' : m.severity === 'warning' ? 'warn' : 'good' },
+        { text: e.whatToDo, signal: 'action' }
+      ]
+    });
+
+    // Precautions
+    sections.push({
+      label: 'PRECAUTIONS',
+      icon: zi('shield'),
+      items: [{ text: e.precautions, signal: 'info' }]
+    });
+
+    // When to call doctor
+    if (e.emergency) {
+      sections.push({
+        label: 'WHEN TO SEEK CARE',
+        icon: zi('siren'),
+        items: [{ text: e.emergency, signal: 'warn' }]
+      });
+    }
+  });
+
+  var isEmergency = top.some(function(m) { return m.severity === 'emergency'; });
+
+  return {
+    icon: 'medical',
+    domain: isEmergency ? 'rose' : 'sky',
+    title: top[0].entry.title,
+    headline: top[0].severity === 'emergency' ? 'Seek immediate attention' : top[0].severity === 'warning' ? 'Monitor closely' : 'Usually manageable at home',
+    sections: sections,
+    confidence: null,
+    dataGap: 'This is general guidance, not medical advice. When in doubt, call your paediatrician.'
+  };
+}
+
 // ── INTENT MATCHING ──
 
 function qaMatchIntent(input) {
@@ -21687,13 +22671,17 @@ function qaGetContextualQuickQuestions() {
     }
   } catch(e) {}
 
-  // Active illness
+  // Active illness — add symptom chip
   try {
     var eps = _getAllEpisodes();
     if (eps && eps.some(function(e) { return e.status === 'active'; })) {
       questions.push({ text: 'How is she feeling?', intent: 'illness', context: true });
+      questions.push({ text: 'Symptom check', intent: '_uib_symptom', context: true });
     }
   } catch(e) {}
+
+  // UIB: Ingredient picker chip
+  questions.push({ text: 'What can I make?', intent: '_uib_picker', context: false });
 
   var defaults = [
     { text: 'What should I feed today?', intent: 'food_general' },
@@ -21737,7 +22725,8 @@ function renderQABar() {
     weight_gain: 'rose', weight_loss: 'rose', growth: 'rose',
     poop_general: 'amber', poop_food: 'amber', poop_color: 'amber',
     activity_general: 'sage', activity_sleep: 'sage', milestone_general: 'lav', milestone_specific: 'lav',
-    vaccine: 'sky', supplement: 'sky', illness: 'sky', tomorrow: 'peach'
+    vaccine: 'sky', supplement: 'sky', illness: 'sky', tomorrow: 'peach',
+    _uib_picker: 'peach', _uib_symptom: 'sky'
   };
   chips.forEach(function(c) {
     var colorCls = _qaIntentColor[c.intent] || 'rose';
@@ -21749,9 +22738,29 @@ function renderQABar() {
   // Chip tap handlers
   chipsEl.querySelectorAll('.qa-chip').forEach(function(chip) {
     chip.addEventListener('click', function() {
+      var intentId = this.getAttribute('data-qa-intent');
       var text = this.getAttribute('data-qa-text');
+      // UIB special chips
+      if (intentId === '_uib_picker') {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        _uibClearModeIndicator();
+        var answerEl = document.getElementById('qaAnswerContainer');
+        if (answerEl) answerEl.innerHTML = '';
+        _iqRenderPicker();
+        return;
+      }
+      if (intentId === '_uib_symptom') {
+        input.value = '';
+        input.focus();
+        input.placeholder = 'Describe symptoms: rash, fever, cough\u2026';
+        clearBtn.style.display = 'none';
+        _iqHidePicker();
+        return;
+      }
       input.value = text;
       clearBtn.style.display = '';
+      _iqHidePicker();
       qaExecuteQuery(text);
     });
   });
@@ -21795,6 +22804,8 @@ function _qaHandleClear() {
   if (input) { input.value = ''; input.focus(); }
   if (clearBtn) clearBtn.style.display = 'none';
   if (answerEl) answerEl.innerHTML = '';
+  _uibClearModeIndicator();
+  _iqHidePicker();
 }
 
 function _qaStartPlaceholderRotation(input) {
@@ -21814,43 +22825,60 @@ function _qaStartPlaceholderRotation(input) {
 function qaExecuteQuery(text) {
   _qaCache = {};
   _qaCache._queryText = text.toLowerCase().replace(/[?!.,]/g, '').trim();
-  var intent = qaMatchIntent(text);
   var answerEl = document.getElementById('qaAnswerContainer');
   if (!answerEl) return;
 
-  if (!intent) {
-    qaRenderNoMatch(answerEl);
-    return;
-  }
+  // UIB: classify input mode first
+  var classified = qaClassifyInput(text);
+  _iqHidePicker();
 
-  var handler = intent.handler;
+  // Route to appropriate handler
   var answer = null;
   try {
-    if (handler === 'answerSleepQuality') answer = qaAnswerSleepQuality(intent.id);
-    else if (handler === 'answerSleepEarly') answer = qaAnswerSleepEarly(intent.id);
-    else if (handler === 'answerSleepWakeups') answer = qaAnswerSleepWakeups(intent.id);
-    else if (handler === 'answerNaps') answer = qaAnswerNaps(intent.id);
-    else if (handler === 'answerWeightGain') answer = qaAnswerWeightGain(intent.id);
-    else if (handler === 'answerWeightConcern') answer = qaAnswerWeightConcern(intent.id);
-    else if (handler === 'answerGrowth') answer = qaAnswerGrowth(intent.id);
-    else if (handler === 'answerFoodGeneral') answer = qaAnswerFoodGeneral(intent.id);
-    else if (handler === 'answerNutrientGap') answer = qaAnswerNutrientGap(intent.id);
-    else if (handler === 'answerFoodVariety') answer = qaAnswerFoodVariety(intent.id);
-    else if (handler === 'answerFoodSafety') answer = qaAnswerFoodSafety(intent.id);
-    else if (handler === 'answerTexture') answer = qaAnswerTexture(intent.id);
-    else if (handler === 'answerPoopGeneral') answer = qaAnswerPoopGeneral(intent.id);
-    else if (handler === 'answerPoopFood') answer = qaAnswerPoopFood(intent.id);
-    else if (handler === 'answerPoopColor') answer = qaAnswerPoopColor(intent.id);
-    else if (handler === 'answerActivityGeneral') answer = qaAnswerActivityGeneral(intent.id);
-    else if (handler === 'answerActivitySleep') answer = qaAnswerActivitySleep(intent.id);
-    else if (handler === 'answerMilestoneGeneral') answer = qaAnswerMilestoneGeneral(intent.id);
-    else if (handler === 'answerMilestoneSpecific') answer = qaAnswerMilestoneSpecific(intent.id);
-    else if (handler === 'answerVaccine') answer = qaAnswerVaccine(intent.id);
-    else if (handler === 'answerSupplement') answer = qaAnswerSupplement(intent.id);
-    else if (handler === 'answerIllness') answer = qaAnswerIllness(intent.id);
-    else if (handler === 'answerOverall') answer = qaAnswerOverall(intent.id);
-    else if (handler === 'answerTomorrow') answer = qaAnswerTomorrow(intent.id);
-    else answer = null;
+    if (classified.mode === 'ingredient') {
+      _uibShowModeIndicator('ingredient');
+      answer = qaHandleIngredient(classified);
+    } else if (classified.mode === 'symptom') {
+      _uibShowModeIndicator('symptom');
+      answer = qaHandleSymptom(classified);
+    } else if (classified.mode === 'food_safety') {
+      _uibShowModeIndicator('food_safety');
+      answer = qaHandleFoodSafety(classified);
+    } else {
+      // QA mode — existing intent matching
+      _uibClearModeIndicator();
+      var intent = qaMatchIntent(text);
+      if (!intent) {
+        qaRenderNoMatch(answerEl);
+        return;
+      }
+      var handler = intent.handler;
+      if (handler === 'answerSleepQuality') answer = qaAnswerSleepQuality(intent.id);
+      else if (handler === 'answerSleepEarly') answer = qaAnswerSleepEarly(intent.id);
+      else if (handler === 'answerSleepWakeups') answer = qaAnswerSleepWakeups(intent.id);
+      else if (handler === 'answerNaps') answer = qaAnswerNaps(intent.id);
+      else if (handler === 'answerWeightGain') answer = qaAnswerWeightGain(intent.id);
+      else if (handler === 'answerWeightConcern') answer = qaAnswerWeightConcern(intent.id);
+      else if (handler === 'answerGrowth') answer = qaAnswerGrowth(intent.id);
+      else if (handler === 'answerFoodGeneral') answer = qaAnswerFoodGeneral(intent.id);
+      else if (handler === 'answerNutrientGap') answer = qaAnswerNutrientGap(intent.id);
+      else if (handler === 'answerFoodVariety') answer = qaAnswerFoodVariety(intent.id);
+      else if (handler === 'answerFoodSafety') answer = qaAnswerFoodSafety(intent.id);
+      else if (handler === 'answerTexture') answer = qaAnswerTexture(intent.id);
+      else if (handler === 'answerPoopGeneral') answer = qaAnswerPoopGeneral(intent.id);
+      else if (handler === 'answerPoopFood') answer = qaAnswerPoopFood(intent.id);
+      else if (handler === 'answerPoopColor') answer = qaAnswerPoopColor(intent.id);
+      else if (handler === 'answerActivityGeneral') answer = qaAnswerActivityGeneral(intent.id);
+      else if (handler === 'answerActivitySleep') answer = qaAnswerActivitySleep(intent.id);
+      else if (handler === 'answerMilestoneGeneral') answer = qaAnswerMilestoneGeneral(intent.id);
+      else if (handler === 'answerMilestoneSpecific') answer = qaAnswerMilestoneSpecific(intent.id);
+      else if (handler === 'answerVaccine') answer = qaAnswerVaccine(intent.id);
+      else if (handler === 'answerSupplement') answer = qaAnswerSupplement(intent.id);
+      else if (handler === 'answerIllness') answer = qaAnswerIllness(intent.id);
+      else if (handler === 'answerOverall') answer = qaAnswerOverall(intent.id);
+      else if (handler === 'answerTomorrow') answer = qaAnswerTomorrow(intent.id);
+      else answer = null;
+    }
   } catch(e) {
     answer = null;
   }
@@ -21858,6 +22886,7 @@ function qaExecuteQuery(text) {
   if (answer) {
     qaRenderAnswer(answerEl, answer);
   } else {
+    _uibClearModeIndicator();
     qaRenderNoMatch(answerEl);
   }
 }
