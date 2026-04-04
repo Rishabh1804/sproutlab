@@ -38828,7 +38828,14 @@ function resetQLSheet() {
     </div>
     <div class="ql-option qo-feed" data-action="openQLBackfill">
       <span class="ql-option-icon"><svg class="zi"><use href="#zi-note"/></svg></span><span class="ql-option-label">Backfill</span>
+    </div>
+    <div class="ql-option qo-activity" data-quick-modal="activity">
+      <span class="ql-option-icon"><svg class="zi"><use href="#zi-run"/></svg></span><span class="ql-option-label">Activity</span>
     </div>`;
+  // Re-bind click listeners on newly created elements
+  opts.querySelectorAll('[data-quick-modal]').forEach(function(btn) {
+    btn.addEventListener('click', function() { openQuickModal(btn.dataset.quickModal); });
+  });
 }
 
 function startBackfill(type) {
