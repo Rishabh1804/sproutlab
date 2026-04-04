@@ -5424,32 +5424,38 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 /* ═══ UIB Session 2: Outing Planner ═══ */
 .outing-form {
-  display:none; padding:var(--sp-12); border-radius:var(--r-lg);
+  display:none; padding:var(--sp-16); border-radius:var(--r-lg);
   background:var(--sage-light); border:1.5px solid rgba(58,112,96,0.12);
   margin-top:var(--sp-8);
 }
 .outing-form.active { display:block; }
 .outing-form-title {
   display:flex; align-items:center; gap:var(--sp-6);
-  font-size:var(--fs-sm); font-weight:700; color:var(--tc-sage);
-  margin-bottom:var(--sp-10);
+  font-size:var(--fs-base); font-weight:700; color:var(--tc-sage);
+  margin-bottom:var(--sp-12);
 }
 .outing-form-title .icon { width:var(--sp-16); height:var(--sp-16); }
-.outing-row { display:flex; flex-direction:column; gap:var(--sp-4); margin-bottom:var(--sp-10); }
-.outing-row-label { font-size:var(--fs-xs); font-weight:600; color:var(--light); text-transform:uppercase; letter-spacing:0.04em; }
-.outing-chips { display:flex; gap:var(--sp-6); flex-wrap:wrap; }
+.outing-row { display:flex; flex-direction:column; gap:var(--sp-6); margin-bottom:var(--sp-12); }
+.outing-row-label { font-size:var(--fs-xs); font-weight:600; color:var(--tc-sage); text-transform:uppercase; letter-spacing:0.04em; }
+.outing-chips { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
 .outing-chip {
-  padding:var(--sp-6) var(--sp-12); border-radius:var(--r-lg);
-  border:1.5px solid rgba(58,112,96,0.15); background:var(--glass);
-  font-size:var(--fs-sm); font-family:'Nunito',sans-serif; color:var(--text);
-  cursor:pointer; transition:all 0.15s ease;
+  padding:var(--sp-8) var(--sp-16); border-radius:var(--r-full);
+  border:1.5px solid rgba(58,112,96,0.18); background:rgba(232,245,239,0.6);
+  font-size:var(--fs-sm); font-family:'Nunito',sans-serif; color:var(--tc-sage);
+  font-weight:500; cursor:pointer; transition:all 0.15s ease;
+  line-height:1.4; white-space:nowrap;
 }
 .outing-chip:active { transform:scale(0.96); }
-.outing-chip.selected { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); font-weight:700; }
+.outing-chip.selected {
+  background:var(--sage-light); border-color:var(--tc-sage);
+  color:var(--tc-sage); font-weight:700;
+  box-shadow:0 0 0 1.5px rgba(58,112,96,0.1);
+}
 .outing-submit-btn {
   width:100%; padding:var(--sp-10); border:none; border-radius:var(--r-lg);
   background:var(--tc-sage); color:#fff; font-family:'Nunito',sans-serif;
   font-size:var(--fs-sm); font-weight:700; cursor:pointer; transition:opacity 0.15s;
+  margin-top:var(--sp-4);
 }
 .outing-submit-btn:active { opacity:0.85; }
 .outing-active-badge {
@@ -5478,19 +5484,12 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .tp-hydration-title .icon { width:var(--sp-16); height:var(--sp-16); }
 .tp-hydration-items { display:flex; flex-direction:column; gap:var(--sp-4); }
-.tp-hydration-item { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); }
+.tp-hydration-item { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); display:flex; align-items:flex-start; gap:var(--sp-6); }
+.tp-hydration-item .icon { width:var(--sp-16); height:var(--sp-16); flex-shrink:0; margin-top:var(--sp-2); }
 .tp-hydration-section.prominent {
   background:var(--rose-light); border-color:rgba(158,62,82,0.12);
 }
 .tp-hydration-section.prominent .tp-hydration-title { color:var(--tc-danger); }
-
-/* ═══ Seasonal badge in TP ═══ */
-.tp-seasonal-badge {
-  display:inline-flex; align-items:center; gap:var(--sp-4);
-  padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md);
-  background:var(--sage-light); font-size:var(--fs-xs);
-  font-weight:600; color:var(--tc-sage);
-}
 
 /* ═══ Power outage toggle (settings) ═══ */
 .power-outage-row {
@@ -5501,13 +5500,12 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 /* ═══ Dark mode: UIB Session 2 ═══ */
 [data-theme="dark"] .outing-form { background:rgba(58,112,96,0.08); border-color:rgba(58,112,96,0.15); }
-[data-theme="dark"] .outing-chip { background:var(--surface-alt); border-color:rgba(255,255,255,0.08); color:var(--text); }
+[data-theme="dark"] .outing-chip { background:rgba(181,213,197,0.08); border-color:rgba(58,112,96,0.2); color:var(--tc-sage); }
 [data-theme="dark"] .outing-chip.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
 [data-theme="dark"] .outing-submit-btn { background:var(--tc-sage); }
 [data-theme="dark"] .outing-active-badge { background:rgba(181,213,197,0.1); }
 [data-theme="dark"] .tp-hydration-section { background:rgba(51,101,128,0.08); border-color:rgba(51,101,128,0.15); }
 [data-theme="dark"] .tp-hydration-section.prominent { background:rgba(158,62,82,0.08); border-color:rgba(158,62,82,0.15); }
-[data-theme="dark"] .tp-seasonal-badge { background:rgba(181,213,197,0.1); }
 </style>
 </head>
 <body>
@@ -20686,14 +20684,14 @@ function computeFoodAcceptance(windowDays) {
   Object.keys(foodMap).forEach(function(base) {
     var data = foodMap[base];
     var avgIntake = data.timesServed > 0 ? data.totalIntake / data.timesServed : 0.75;
-    // Trend: compare last 3 vs first 3 intakes
+    // Trend: compare first 3 (most recent) vs last 3 (oldest)
     var trend = 'stable';
     if (data.intakes.length >= 6) {
-      var first3 = (data.intakes[0] + data.intakes[1] + data.intakes[2]) / 3;
+      var recent3 = (data.intakes[0] + data.intakes[1] + data.intakes[2]) / 3;
       var last3Idx = data.intakes.length;
-      var last3 = (data.intakes[last3Idx - 1] + data.intakes[last3Idx - 2] + data.intakes[last3Idx - 3]) / 3;
-      if (last3 - first3 > 0.15) trend = 'improving';
-      else if (first3 - last3 > 0.15) trend = 'declining';
+      var oldest3 = (data.intakes[last3Idx - 1] + data.intakes[last3Idx - 2] + data.intakes[last3Idx - 3]) / 3;
+      if (recent3 - oldest3 > 0.15) trend = 'improving';
+      else if (oldest3 - recent3 > 0.15) trend = 'declining';
     }
     result.push({
       food: base,
@@ -20708,8 +20706,18 @@ function computeFoodAcceptance(windowDays) {
   return result;
 }
 
+var _acceptanceRateCache = {};
+var _acceptanceRateCacheAt = 0;
+
 function getFoodAcceptanceRate(foodBase) {
-  // Quick lookup: avg intake for a single food in last 30 days
+  // Per-run cache (30s TTL) — this function is called per-food in scoring loops
+  var now = Date.now();
+  if (now - _acceptanceRateCacheAt > 30000) {
+    _acceptanceRateCache = {};
+    _acceptanceRateCacheAt = now;
+  }
+  if (_acceptanceRateCache.hasOwnProperty(foodBase)) return _acceptanceRateCache[foodBase];
+
   var todayD = new Date(today());
   var total = 0, count = 0;
   for (var i = 0; i < 30; i++) {
@@ -20728,7 +20736,9 @@ function getFoodAcceptanceRate(foodBase) {
       }
     });
   }
-  return count >= 1 ? Math.round((total / count) * 100) / 100 : null;
+  var result = count >= 1 ? Math.round((total / count) * 100) / 100 : null;
+  _acceptanceRateCache[foodBase] = result;
+  return result;
 }
 
 function getAcceptanceLabel(rate) {
@@ -20822,7 +20832,12 @@ function _outingPreselectChips(el) {
 function _outingSave(el) {
   var durSel = el.querySelector('[data-outing-group="duration"] .outing-chip.selected');
   var timeSel = el.querySelector('[data-outing-group="timeSlot"] .outing-chip.selected');
-  if (!durSel || !timeSel) return;
+  if (!durSel || !timeSel) {
+    // Highlight unselected groups briefly
+    if (!durSel) { var dg = el.querySelector('[data-outing-group="duration"]'); if (dg) { dg.style.outline = '2px solid var(--tc-caution)'; setTimeout(function() { dg.style.outline = ''; }, 1500); } }
+    if (!timeSel) { var tg = el.querySelector('[data-outing-group="timeSlot"]'); if (tg) { tg.style.outline = '2px solid var(--tc-caution)'; setTimeout(function() { tg.style.outline = ''; }, 1500); } }
+    return;
+  }
 
   var tomorrow = _offsetDateStr(today(), 1);
   var duration = parseFloat(durSel.getAttribute('data-outing-val'));
@@ -20980,7 +20995,7 @@ function _outingGetPortableMeals(meal) {
   var introduced = (foods || []).map(function(f) { return _baseFoodName(f.name.toLowerCase().trim()); });
   var introSet = new Set(introduced);
   var eligible = portableFoods.filter(function(p) {
-    return introSet.has(p.base) || p.base === 'date (fruit)';
+    return introSet.has(p.base);
   });
 
   if (eligible.length < 2) {
@@ -20992,12 +21007,19 @@ function _outingGetPortableMeals(meal) {
 
 // ── Hydration Context ──
 
+var _powerOutageCached = null;
+var _powerOutageCachedAt = 0;
+
 function _isHydrationActive() {
   // Hydration is only relevant when baby is outdoors (outing) or AC is down (power outage)
   if (_tomorrowOuting) return true;
-  var powerOutage = load(KEYS.powerOutage, false);
-  if (powerOutage) return true;
-  return false;
+  // Cache powerOutage for 30 seconds to avoid localStorage reads in hot loops
+  var now = Date.now();
+  if (_powerOutageCached === null || now - _powerOutageCachedAt > 30000) {
+    _powerOutageCached = !!load(KEYS.powerOutage, false);
+    _powerOutageCachedAt = now;
+  }
+  return _powerOutageCached;
 }
 
 function _getTomorrowTemp() {
@@ -21045,6 +21067,8 @@ function _initPowerOutageToggle() {
   toggle.checked = !!load(KEYS.powerOutage, false);
   toggle.addEventListener('change', function() {
     save(KEYS.powerOutage, this.checked);
+    _powerOutageCached = this.checked;
+    _powerOutageCachedAt = Date.now();
   });
 }
 
@@ -21312,7 +21336,7 @@ function _tpBuildCombos(meal, ctx) {
 
   // ═══ PHASE 1: Mine historical patterns ═══
   try {
-    var patterns = _tpMineMealPatterns();
+    var patterns = ctx.minedPatterns || _tpMineMealPatterns();
     var historicalCombos = patterns[meal] ? patterns[meal].combos : [];
 
     historicalCombos.forEach(function(hc) {
@@ -21344,11 +21368,12 @@ function _tpBuildCombos(meal, ctx) {
         allReasons.push('She eats ' + Math.round(hc.avgIntake * 100) + '% of this combo (' + hc.count + ' times)');
       }
 
-      // Synergy bonus within combo
-      for (var si = 0; si < hc.foods.length; si++) {
-        for (var sj = si + 1; sj < hc.foods.length; sj++) {
+      // Synergy bonus within combo (max +8)
+      var hasSynergy = false;
+      for (var si = 0; si < hc.foods.length && !hasSynergy; si++) {
+        for (var sj = si + 1; sj < hc.foods.length && !hasSynergy; sj++) {
           var syn = getSynergy(hc.foods[si], hc.foods[sj]);
-          if (syn) { totalScore += 8; break; }
+          if (syn) { totalScore += 8; hasSynergy = true; }
         }
       }
 
@@ -21801,8 +21826,12 @@ function generateTomorrowPrep() {
   // Hydration context — only active when outdoors or power outage
   var hydrationCtx = _getHydrationContext();
 
+  // Mine meal patterns once — shared across all 3 meal calls
+  var minedPatterns = null;
+  try { minedPatterns = _tpMineMealPatterns(); } catch (e) { /* best effort */ }
+
   var usedAcrossMeals = new Set();
-  var ctx = { gapSet: gapSet, gapDaysMap: gapDaysMap, textureData: textureData, usedAcrossMeals: usedAcrossMeals, meal: 'breakfast', hydrationCtx: hydrationCtx };
+  var ctx = { gapSet: gapSet, gapDaysMap: gapDaysMap, textureData: textureData, usedAcrossMeals: usedAcrossMeals, meal: 'breakfast', hydrationCtx: hydrationCtx, minedPatterns: minedPatterns };
 
   // 2. Generate meal suggestions (outing-aware)
   var outing = _tomorrowOuting;
@@ -21819,6 +21848,10 @@ function generateTomorrowPrep() {
         bases: [p.base],
         portable: true
       };
+    });
+    // Track portable food bases to prevent cross-meal duplication
+    portableResult.forEach(function(pr) {
+      (pr.bases || []).forEach(function(b) { usedAcrossMeals.add(b); });
     });
 
     // Non-affected meals generated normally
@@ -22074,19 +22107,21 @@ function _tpRenderHydrationSection(hydCtx, outing) {
 
   var temp = hydCtx.temp;
   var source = hydCtx.isOuting ? 'outdoor outing' : 'no AC (power outage mode)';
+  var ic = isProminent ? 'rose' : 'sky';
+  function hIcon(name) { return '<span class="icon icon-' + ic + '">' + zi(name) + '</span>'; }
 
   if (isProminent && temp >= 35) {
-    html += '<div class="tp-hydration-item">' + zi('flame') + ' Very hot day (' + temp + '\u00B0C) with ' + source + ' \u2014 prioritize hydration</div>';
-    html += '<div class="tp-hydration-item">' + zi('drop') + ' Offer breast milk every 1.5 hrs instead of 2 hrs</div>';
-    html += '<div class="tp-hydration-item">' + zi('bowl') + ' Include lauki, coconut water, or watermelon in meals</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('flame') + ' Very hot day (' + temp + '\u00B0C) with ' + source + ' \u2014 prioritize hydration</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('drop') + ' Offer breast milk every 1.5 hrs instead of 2 hrs</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('bowl') + ' Include lauki, coconut water, or watermelon in meals</div>';
     if (hydCtx.isOuting) {
-      html += '<div class="tp-hydration-item">' + zi('sun') + ' Consider early morning outing or shorter duration</div>';
+      html += '<div class="tp-hydration-item">' + hIcon('sun') + ' Consider early morning outing or shorter duration</div>';
     }
   } else if (hydCtx.level === 'full') {
-    html += '<div class="tp-hydration-item">' + zi('drop') + ' Warm day (' + temp + '\u00B0C) with ' + source + ' \u2014 include hydrating foods</div>';
-    html += '<div class="tp-hydration-item">' + zi('bowl') + ' Try lauki, coconut water, or buttermilk</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('drop') + ' Warm day (' + temp + '\u00B0C) with ' + source + ' \u2014 include hydrating foods</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('bowl') + ' Try lauki, coconut water, or buttermilk</div>';
   } else {
-    html += '<div class="tp-hydration-item">' + zi('drop') + ' ' + temp + '\u00B0C with ' + source + ' \u2014 keep hydrating foods handy</div>';
+    html += '<div class="tp-hydration-item">' + hIcon('drop') + ' ' + temp + '\u00B0C with ' + source + ' \u2014 keep hydrating foods handy</div>';
   }
 
   html += '</div></div>';
@@ -22581,7 +22616,9 @@ function qaClassifyInput(text) {
   var tokens = lower.split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
 
   // 0. OUTING — check first (specific phrases)
-  if (/going out|outing|outdoor|park visit|travel|picnic|going to (park|mall|market)/.test(lower)) {
+  if (/going out|outing|park visit|picnic|going to (park|mall|market)/.test(lower) ||
+      (/\btravel\b/.test(lower) && !/sick|sickness|nausea|vomit/.test(lower)) ||
+      (/\boutdoor\b/.test(lower) && !/safe|play safe/.test(lower))) {
     return { mode: 'outing', raw: text };
   }
 
