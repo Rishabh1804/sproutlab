@@ -36390,14 +36390,14 @@ function renderTodayPlan() {
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
           detail: zi('check') + ' Booked — ' + getVaccApptLabel(bookedData),
-          tag: 'med', done: true
+          tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
           detail: zi('warn') + ' Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule',
-          tag: 'med', done: false
+          tag: 'med', done: false, htmlDetail: true
         });
       }
       // Beyond 3 days — don't clutter the plan
@@ -36406,7 +36406,7 @@ function renderTodayPlan() {
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
         detail: '' + zi('check') + ' Booked — tap to add appointment date & time',
-        tag: 'med', done: false,
+        tag: 'med', done: false, htmlDetail: true,
         action: `openVaccApptModal('${escAttr(upcomingVacc.name)}')`
       });
     } else {
@@ -36473,8 +36473,8 @@ function renderTodayPlan() {
   }
   items.push({
     time: '8–9', icon: zi('sun'), title: 'Breakfast',
-    detail: bfDone ? zi('check') + ' ' + todayEntry.breakfast : bfSuggestion,
-    tag: 'food', done: bfDone,
+    detail: bfDone ? zi('check') + ' ' + escHtml(todayEntry.breakfast) : bfSuggestion,
+    tag: 'food', done: bfDone, htmlDetail: bfDone,
     action: bfDone ? null : '_qlMeal="breakfast";openQuickModal("feed")'
   });
 
@@ -36486,7 +36486,7 @@ function renderTodayPlan() {
   items.push({
     time: '9:30', icon: zi('zzz'), title: 'Morning nap',
     detail: hasMorningNap ? zi('check') + ' Logged' : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.',
-    tag: 'sleep', done: hasMorningNap
+    tag: 'sleep', done: hasMorningNap, htmlDetail: hasMorningNap
   });
 
   // Tummy time / motor activity — check if already logged today
@@ -36514,7 +36514,7 @@ function renderTodayPlan() {
   items.push({
     time: '10:30', icon: zi('run'), title: motorTitle,
     detail: motorLogged ? zi('check') + ' Logged today' : (motorAct ? motorAct.desc.substring(0, 80) + (motorAct.desc.length > 80 ? '…' : '') : '3-5 sessions daily, 5 min each. Builds core strength for crawling.'),
-    tag: 'play', done: motorLogged,
+    tag: 'play', done: motorLogged, htmlDetail: motorLogged,
     action: motorLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(motorTitle.split(' — ')[0]) + '\', 5, \'plan\')'
   });
 
@@ -36543,8 +36543,8 @@ function renderTodayPlan() {
   }
   items.push({
     time: '12–1', icon: zi('sun'), title: 'Lunch',
-    detail: lnDone ? zi('check') + ' ' + todayEntry.lunch : lnSuggestion,
-    tag: 'food', done: lnDone,
+    detail: lnDone ? zi('check') + ' ' + escHtml(todayEntry.lunch) : lnSuggestion,
+    tag: 'food', done: lnDone, htmlDetail: lnDone,
     action: lnDone ? null : '_qlMeal="lunch";openQuickModal("feed")'
   });
 
@@ -36553,7 +36553,7 @@ function renderTodayPlan() {
   items.push({
     time: '1:30', icon: zi('zzz'), title: 'Afternoon nap',
     detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : 'Usually the longest nap. Dim the room, white noise helps.',
-    tag: 'sleep', done: hasAfternoonNap
+    tag: 'sleep', done: hasAfternoonNap, htmlDetail: hasAfternoonNap
   });
 
   // Language/sensory activity — prefer under-evidenced domain
@@ -36564,7 +36564,7 @@ function renderTodayPlan() {
     items.push({
       time: '3 PM', icon: langAct.icon || zi('chat'), title: langAct.title,
       detail: langLogged ? zi('check') + ' Logged today' : langAct.desc.substring(0, 80) + (langAct.desc.length > 80 ? '…' : ''),
-      tag: 'play', done: langLogged,
+      tag: 'play', done: langLogged, htmlDetail: langLogged,
       action: langLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(langAct.title.split(' — ')[0]) + '\', 5, \'plan\')'
     });
   }
@@ -36602,7 +36602,7 @@ function renderTodayPlan() {
     items.push({
       time: bdayDays === 0 ? 'Today' : bdayDays === 1 ? 'Tmrw' : '2d',
       icon: zi('sprout'), title: upcomingBday.title,
-      detail: bdayDetail, tag: 'event', done: false
+      detail: bdayDetail, tag: 'event', done: false, htmlDetail: true
     });
   }
 
@@ -36617,8 +36617,8 @@ function renderTodayPlan() {
   }
   items.push({
     time: '6–7', icon: zi('moon'), title: 'Dinner',
-    detail: dnDone ? zi('check') + ' ' + todayEntry.dinner : dnSuggestion,
-    tag: 'food', done: dnDone,
+    detail: dnDone ? zi('check') + ' ' + escHtml(todayEntry.dinner) : dnSuggestion,
+    tag: 'food', done: dnDone, htmlDetail: dnDone,
     action: dnDone ? null : '_qlMeal="dinner";openQuickModal("feed")'
   });
 
@@ -36626,8 +36626,8 @@ function renderTodayPlan() {
   const skDone = isRealMeal(todayEntry.snack);
   items.push({
     time: '10–4', icon: zi('spoon'), title: 'Snack',
-    detail: skDone ? zi('check') + ' ' + todayEntry.snack : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
-    tag: 'food', done: skDone,
+    detail: skDone ? zi('check') + ' ' + escHtml(todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
+    tag: 'food', done: skDone, htmlDetail: skDone,
     action: skDone ? null : '_qlMeal="snack";openQuickModal("feed")'
   });
 
