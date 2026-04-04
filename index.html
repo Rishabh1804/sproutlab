@@ -5148,7 +5148,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   border:1px solid rgba(155,168,216,0.12);
 }
 .qa-input-wrap {
-  display:flex; align-items:center; gap:var(--sp-10);
+  display:flex; align-items:center; gap:var(--sp-12);
   background:var(--glass-strong); border:1.5px solid rgba(155,168,216,0.2);
   border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-16);
   transition:border-color 0.2s, box-shadow 0.2s;
@@ -5242,7 +5242,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 @keyframes qaSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 .qa-answer-header {
-  display:flex; align-items:center; gap:var(--sp-10);
+  display:flex; align-items:center; gap:var(--sp-12);
   padding:var(--sp-12) var(--sp-16) var(--sp-8);
 }
 .qa-answer-header .icon {
@@ -5304,9 +5304,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   padding:var(--sp-16);
   text-align:center; font-size:var(--fs-sm); color:var(--mid);
 }
-.qa-no-match-label { margin-bottom:var(--sp-8); }
+.qa-no-match-label { margin-bottom:var(--sp-12); }
 .qa-cat-chips {
-  display:flex; flex-wrap:wrap; gap:var(--sp-6);
+  display:flex; flex-wrap:wrap; gap:var(--sp-8);
   justify-content:center;
 }
 
@@ -5707,10 +5707,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
         <div class="help-tip" id="help-growth">Percentiles compare Ziva to other babies her age. The 54th percentile means she's heavier than 54% of girls. Anything between 3rd and 97th is normal — what matters most is that she stays on her own curve over time, not the exact number.</div>
         <div class="percentile-badges">
-          <div class="pbadge" id="pbadge-wtpct"><div class="pbadge-icon icon-rose"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg></div><div class="pbadge-val" id="wtPct">—</div><div class="pbadge-label">Weight %ile</div></div>
-          <div class="pbadge" id="pbadge-htpct"><div class="pbadge-icon icon-rose"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="htPct">—</div><div class="pbadge-label">Height %ile</div></div>
-          <div class="pbadge" id="pbadge-wt"><div class="pbadge-icon icon-rose"><svg class="zi" aria-hidden="true"><use href="#zi-scale"/></svg></div><div class="pbadge-val" id="latestWt">—</div><div class="pbadge-label">Latest weight</div></div>
-          <div class="pbadge" id="pbadge-ht"><div class="pbadge-icon icon-rose"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="latestHt">—</div><div class="pbadge-label">Latest height</div></div>
+          <div class="pbadge" id="pbadge-wtpct"><div class="pbadge-icon t-rose"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg></div><div class="pbadge-val" id="wtPct">—</div><div class="pbadge-label">Weight %ile</div></div>
+          <div class="pbadge" id="pbadge-htpct"><div class="pbadge-icon t-sky"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="htPct">—</div><div class="pbadge-label">Height %ile</div></div>
+          <div class="pbadge" id="pbadge-wt"><div class="pbadge-icon t-sage"><svg class="zi" aria-hidden="true"><use href="#zi-scale"/></svg></div><div class="pbadge-val" id="latestWt">—</div><div class="pbadge-label">Latest weight</div></div>
+          <div class="pbadge" id="pbadge-ht"><div class="pbadge-icon t-lav"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="latestHt">—</div><div class="pbadge-label">Latest height</div></div>
         </div>
         <div class="velocity-section">
           <div class="velocity-hdr">Growth Velocity</div>
@@ -6022,7 +6022,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-lunch-text"></span></div>
           </div>
           <div class="meal-card dinner">
-            <div class="meal-label">' + zi('moon') + ' Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
+            <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-dinner"></div>
             <div class="meal-input-wrap">
               <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('dinner')" onfocus="onMealFocus('dinner')" autocomplete="off">
@@ -6519,7 +6519,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <div id="sleepLogBody" class="collapse-body" style="display:none;">
           <div style="display:flex;gap:var(--sp-8);margin:8px 0;">
             <button class="sq-btn active-sq" id="sleepLogFilter-all" data-sleep-filter="all">All</button>
-            <button class="sq-btn" id="sleepLogFilter-night" data-sleep-filter="night">' + zi('moon') + ' Night</button>
+            <button class="sq-btn" id="sleepLogFilter-night" data-sleep-filter="night"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Night</button>
             <button class="sq-btn" id="sleepLogFilter-nap" data-sleep-filter="nap"><svg class="zi" aria-hidden="true"><use href="#zi-zzz"/></svg> Naps</button>
           </div>
           <div id="sleepLogList" class="fx-col g8 scroll-list"></div>
@@ -7937,7 +7937,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div style="display:flex;gap:var(--sp-8);">
         <button class="btn btn-ghost vacc-slot-btn active vacc-slot-flex" data-slot="morning" ><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Morning</button>
         <button class="btn btn-ghost vacc-slot-btn vacc-slot-flex" data-slot="afternoon" ><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Afternoon</button>
-        <button class="btn btn-ghost vacc-slot-btn flex-1" data-slot="evening" >' + zi('moon') + ' Evening</button>
+        <button class="btn btn-ghost vacc-slot-btn flex-1" data-slot="evening" ><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Evening</button>
       </div>
     </div>
     <div class="modal-btns">
@@ -10986,7 +10986,7 @@ function updateHeader() {
   const greetEl = document.getElementById('greetingText');
   const emojiEl = document.getElementById('greetingEmoji');
   if (greetEl) greetEl.textContent = greeting;
-  if (emojiEl) emojiEl.textContent = emoji;
+  if (emojiEl) emojiEl.innerHTML = emoji;
 
   // Date & time
   const dtEl = document.getElementById('headerDateTime');
@@ -11114,7 +11114,7 @@ setInterval(() => {
   const greetEl = document.getElementById('greetingText');
   const emojiEl = document.getElementById('greetingEmoji');
   if (greetEl) greetEl.textContent = greeting;
-  if (emojiEl) emojiEl.textContent = emoji;
+  if (emojiEl) emojiEl.innerHTML = emoji;
 }, 60000);
 
 function fetchWeather() {
@@ -11559,8 +11559,7 @@ function saveVaccAppt() {
 
 function getVaccApptLabel(bookedData) {
   if (!bookedData || !bookedData.apptDate) return null;
-  const slotEmoji = bookedData.apptSlot === 'morning' ? zi('sun') : bookedData.apptSlot === 'afternoon' ? zi('sun') : zi('moon');
-  return slotEmoji + ' ' + formatDate(bookedData.apptDate) + ', ' + bookedData.apptSlot;
+  return formatDate(bookedData.apptDate) + ', ' + bookedData.apptSlot;
 }
 
 function toggleHomeNotes() {
@@ -21466,18 +21465,18 @@ var QA_INTENTS = [
   {
     id: 'sleep_early',
     triggers: ['sleep early', 'earlier bedtime', 'bedtime earlier', 'sleep on time', 'bedtime routine'],
-    handler: 'answerSleepQuality'
+    handler: 'answerSleepEarly'
   },
   {
     id: 'sleep_wakeups',
     triggers: ['wake up', 'waking up', 'night waking', 'wakeups', 'wakes at night', 'disturbed sleep'],
-    handler: 'answerSleepQuality'
+    handler: 'answerSleepWakeups'
   },
   {
     id: 'sleep_naps',
     triggers: ['nap', 'naps', 'napping', 'nap schedule', 'nap transition', 'daytime sleep'],
     exclude: ['night'],
-    handler: 'answerSleepQuality'
+    handler: 'answerNaps'
   },
 
   // ═══ WEIGHT & GROWTH ═══
@@ -21489,12 +21488,12 @@ var QA_INTENTS = [
   {
     id: 'weight_loss',
     triggers: ['overweight', 'too heavy', 'reduce weight', 'losing weight', 'weight loss'],
-    handler: 'answerWeightGain'
+    handler: 'answerWeightConcern'
   },
   {
     id: 'growth',
     triggers: ['growth', 'growing', 'height', 'tall', 'short', 'percentile', 'growth chart'],
-    handler: 'answerWeightGain'
+    handler: 'answerGrowth'
   },
 
   // ═══ FOOD & NUTRITION ═══
@@ -21506,22 +21505,22 @@ var QA_INTENTS = [
   {
     id: 'food_nutrient',
     triggers: ['iron', 'calcium', 'protein', 'vitamin', 'nutrient', 'nutrition', 'deficiency', 'missing'],
-    handler: 'answerFoodGeneral'
+    handler: 'answerNutrientGap'
   },
   {
     id: 'food_variety',
     triggers: ['variety', 'same food', 'repetitive', 'bored', 'new food', 'introduce', 'picky', 'refuses'],
-    handler: 'answerFoodGeneral'
+    handler: 'answerFoodVariety'
   },
   {
     id: 'food_safe',
     triggers: ['safe', 'allergy', 'allergic', 'reaction', 'can i give', 'can she eat', 'intolerant'],
-    handler: 'answerFoodGeneral'
+    handler: 'answerFoodSafety'
   },
   {
     id: 'food_texture',
     triggers: ['texture', 'puree', 'mash', 'solid', 'finger food', 'lumps', 'chew', 'chewing', 'gagging'],
-    handler: 'answerFoodGeneral'
+    handler: 'answerTexture'
   },
 
   // ═══ POOP ═══
@@ -21534,12 +21533,12 @@ var QA_INTENTS = [
     id: 'poop_food',
     triggers: ['poop', 'stool', 'food', 'cause', 'trigger', 'after eating', 'food poop'],
     boosts: ['which food', 'what food', 'cause', 'trigger', 'why'],
-    handler: 'answerPoopGeneral'
+    handler: 'answerPoopFood'
   },
   {
     id: 'poop_color',
     triggers: ['poop color', 'stool color', 'green poop', 'black poop', 'red poop', 'white poop', 'blood', 'mucus'],
-    handler: 'answerPoopGeneral'
+    handler: 'answerPoopColor'
   },
 
   // ═══ ACTIVITY & MILESTONES ═══
@@ -21551,35 +21550,35 @@ var QA_INTENTS = [
   {
     id: 'activity_sleep',
     triggers: ['activity sleep', 'exercise sleep', 'play sleep', 'active sleep', 'tummy time sleep'],
-    handler: 'answerActivityGeneral'
+    handler: 'answerActivitySleep'
   },
   {
     id: 'milestone_general',
     triggers: ['milestone', 'development', 'behind', 'delayed', 'advanced', 'ahead', 'on track'],
-    handler: 'answerActivityGeneral'
+    handler: 'answerMilestoneGeneral'
   },
   {
     id: 'milestone_specific',
     triggers: ['crawl', 'walk', 'talk', 'speak', 'sit', 'stand', 'roll', 'babbl', 'word', 'teeth', 'teething'],
     exclude: ['food', 'feed', 'poop'],
-    handler: 'answerActivityGeneral'
+    handler: 'answerMilestoneSpecific'
   },
 
   // ═══ MEDICAL ═══
   {
     id: 'vaccine',
     triggers: ['vaccine', 'vaccination', 'immuniz', 'shot', 'injection', 'next vaccine'],
-    handler: 'answerOverall'
+    handler: 'answerVaccine'
   },
   {
     id: 'supplement',
     triggers: ['vitamin d', 'vit d', 'd3', 'supplement', 'drops'],
-    handler: 'answerOverall'
+    handler: 'answerSupplement'
   },
   {
     id: 'illness',
     triggers: ['sick', 'ill', 'fever', 'cold', 'cough', 'vomit', 'unwell', 'doctor'],
-    handler: 'answerOverall'
+    handler: 'answerIllness'
   },
 
   // ═══ OVERALL ═══
@@ -21591,7 +21590,7 @@ var QA_INTENTS = [
   {
     id: 'tomorrow',
     triggers: ['tomorrow', 'plan', 'prepare', 'what to do', 'next', 'what should i do'],
-    handler: 'answerOverall'
+    handler: 'answerTomorrow'
   }
 ];
 
@@ -21669,11 +21668,40 @@ function qaGetContextualQuickQuestions() {
     }
   } catch(e) {}
 
+  // Supplement adherence check
+  try {
+    var supp = computeSupplementAdherence(7);
+    if (supp && supp.length > 0 && supp[0].adherenceRate < 70) {
+      questions.push({ text: 'Vitamin D3 adherence?', intent: 'supplement', context: true });
+    }
+  } catch(e) {}
+
+  // Upcoming vaccination
+  try {
+    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    if (nextVacc) {
+      var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
+      if (daysUntil <= 7 && daysUntil >= 0) {
+        questions.push({ text: 'Next vaccination?', intent: 'vaccine', context: true });
+      }
+    }
+  } catch(e) {}
+
+  // Active illness
+  try {
+    var eps = _getAllEpisodes();
+    if (eps && eps.some(function(e) { return e.status === 'active'; })) {
+      questions.push({ text: 'How is she feeling?', intent: 'illness', context: true });
+    }
+  } catch(e) {}
+
   var defaults = [
     { text: 'What should I feed today?', intent: 'food_general' },
     { text: 'Best activities for sleep?', intent: 'activity_sleep' },
     { text: 'How to improve poop?', intent: 'poop_general' },
-    { text: 'Is she on track?', intent: 'milestone_general' }
+    { text: 'Is she on track?', intent: 'milestone_general' },
+    { text: 'Plan for tomorrow?', intent: 'tomorrow' },
+    { text: 'Food variety check', intent: 'food_variety' }
   ];
 
   defaults.forEach(function(d) {
@@ -21704,12 +21732,12 @@ function renderQABar() {
   var chips = qaGetContextualQuickQuestions();
   var chipsHtml = '';
   var _qaIntentColor = {
-    overall: 'rose', sleep_quality: 'indigo', sleep_early: 'indigo', sleep_wakeups: 'indigo', sleep_naps: 'indigo',
-    food_general: 'peach', food_nutrient: 'peach', food_variety: 'peach', food_safe: 'peach', food_texture: 'peach',
+    overall: 'rose', sleep_quality: 'indigo', sleep_early: 'indigo', sleep_wakeups: 'indigo', sleep_naps: 'lav',
+    food_general: 'peach', food_nutrient: 'peach', food_variety: 'peach', food_safe: 'amber', food_texture: 'peach',
     weight_gain: 'rose', weight_loss: 'rose', growth: 'rose',
     poop_general: 'amber', poop_food: 'amber', poop_color: 'amber',
-    activity_general: 'sage', activity_sleep: 'sage', milestone_general: 'sage', milestone_specific: 'sage',
-    vaccine: 'lav', supplement: 'lav', illness: 'lav', tomorrow: 'sky'
+    activity_general: 'sage', activity_sleep: 'sage', milestone_general: 'lav', milestone_specific: 'lav',
+    vaccine: 'sky', supplement: 'sky', illness: 'sky', tomorrow: 'peach'
   };
   chips.forEach(function(c) {
     var colorCls = _qaIntentColor[c.intent] || 'rose';
@@ -21785,6 +21813,7 @@ function _qaStartPlaceholderRotation(input) {
 
 function qaExecuteQuery(text) {
   _qaCache = {};
+  _qaCache._queryText = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var intent = qaMatchIntent(text);
   var answerEl = document.getElementById('qaAnswerContainer');
   if (!answerEl) return;
@@ -21798,11 +21827,29 @@ function qaExecuteQuery(text) {
   var answer = null;
   try {
     if (handler === 'answerSleepQuality') answer = qaAnswerSleepQuality(intent.id);
+    else if (handler === 'answerSleepEarly') answer = qaAnswerSleepEarly(intent.id);
+    else if (handler === 'answerSleepWakeups') answer = qaAnswerSleepWakeups(intent.id);
+    else if (handler === 'answerNaps') answer = qaAnswerNaps(intent.id);
     else if (handler === 'answerWeightGain') answer = qaAnswerWeightGain(intent.id);
+    else if (handler === 'answerWeightConcern') answer = qaAnswerWeightConcern(intent.id);
+    else if (handler === 'answerGrowth') answer = qaAnswerGrowth(intent.id);
     else if (handler === 'answerFoodGeneral') answer = qaAnswerFoodGeneral(intent.id);
+    else if (handler === 'answerNutrientGap') answer = qaAnswerNutrientGap(intent.id);
+    else if (handler === 'answerFoodVariety') answer = qaAnswerFoodVariety(intent.id);
+    else if (handler === 'answerFoodSafety') answer = qaAnswerFoodSafety(intent.id);
+    else if (handler === 'answerTexture') answer = qaAnswerTexture(intent.id);
     else if (handler === 'answerPoopGeneral') answer = qaAnswerPoopGeneral(intent.id);
+    else if (handler === 'answerPoopFood') answer = qaAnswerPoopFood(intent.id);
+    else if (handler === 'answerPoopColor') answer = qaAnswerPoopColor(intent.id);
     else if (handler === 'answerActivityGeneral') answer = qaAnswerActivityGeneral(intent.id);
+    else if (handler === 'answerActivitySleep') answer = qaAnswerActivitySleep(intent.id);
+    else if (handler === 'answerMilestoneGeneral') answer = qaAnswerMilestoneGeneral(intent.id);
+    else if (handler === 'answerMilestoneSpecific') answer = qaAnswerMilestoneSpecific(intent.id);
+    else if (handler === 'answerVaccine') answer = qaAnswerVaccine(intent.id);
+    else if (handler === 'answerSupplement') answer = qaAnswerSupplement(intent.id);
+    else if (handler === 'answerIllness') answer = qaAnswerIllness(intent.id);
     else if (handler === 'answerOverall') answer = qaAnswerOverall(intent.id);
+    else if (handler === 'answerTomorrow') answer = qaAnswerTomorrow(intent.id);
     else answer = null;
   } catch(e) {
     answer = null;
@@ -21818,7 +21865,7 @@ function qaExecuteQuery(text) {
 // ── ANSWER CARD RENDERER ──
 
 function qaRenderAnswer(container, answer) {
-  var signalIcons = { good: zi('check'), warn: zi('warn'), action: '→', info: 'ℹ️', neutral: '·' };
+  var signalIcons = { good: zi('check'), warn: zi('warn'), action: '→', info: zi('info'), neutral: '·' };
   var signalClasses = { good: 'qa-item-good', warn: 'qa-item-warn', action: 'qa-item-action', info: 'qa-item-info', neutral: 'qa-item-neutral' };
 
   var domainCls = answer.domain ? ' qa-answer-' + answer.domain : '';
@@ -21883,6 +21930,7 @@ function qaRenderNoMatch(container) {
     { text: 'Growth', intent: 'weight_gain', color: 'rose' },
     { text: 'Poop', intent: 'poop_general', color: 'amber' },
     { text: 'Activities', intent: 'activity_general', color: 'sage' },
+    { text: 'Milestones', intent: 'milestone_general', color: 'lav' },
     { text: 'Overall', intent: 'overall', color: 'rose' }
   ];
 
@@ -21981,7 +22029,7 @@ function qaAnswerSleepQuality(intentId) {
   if (scores.length < 3) {
     return {
       icon: 'moon', domain: 'indigo', title: 'Sleep Quality', headline: 'Not enough data yet',
-      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
         { text: 'Log ' + (5 - scores.length) + ' more nights of sleep to see patterns', signal: 'info' },
         { text: 'Track bedtime, wake time, and wake-ups each night', signal: 'action' }
       ]}],
@@ -22098,7 +22146,7 @@ function qaAnswerWeightGain(intentId) {
   if (gv.insufficient) {
     return {
       icon: 'ruler', domain: 'rose', title: 'Growth & Weight', headline: 'Not enough data yet',
-      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
         { text: 'Need at least 2 weight measurements to track growth', signal: 'info' },
         { text: 'Log weight in the Growth tab', signal: 'action' }
       ]}],
@@ -22308,7 +22356,7 @@ function qaAnswerPoopGeneral(intentId) {
   if (scores.length < 2) {
     return {
       icon: 'diaper', domain: 'amber', title: 'Poop Patterns', headline: 'Not enough data yet',
-      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
         { text: 'Log poop consistency, color, and any symptoms', signal: 'info' },
         { text: 'Need at least 3 days of data for patterns', signal: 'action' }
       ]}],
@@ -22416,7 +22464,7 @@ function qaAnswerActivityGeneral(intentId) {
   if (actData.days < 2) {
     return {
       icon: 'run', domain: 'sage', title: 'Activities & Milestones', headline: 'Not enough data yet',
-      sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
         { text: 'Log activities (tummy time, play, reading) to see patterns', signal: 'info' },
         { text: 'Even 1-2 logged days will start showing insights', signal: 'action' }
       ]}],
@@ -22517,7 +22565,7 @@ function qaAnswerOverall(intentId) {
     if (zs.score === null) {
       return {
         icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Not enough data yet',
-        sections: [{ label: 'WHAT WE NEED', icon: 'ℹ️', items: [
+        sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
           { text: 'Log sleep, meals, and poop to see the Ziva Score', signal: 'info' },
           { text: 'Each domain needs at least a few days of data', signal: 'action' }
         ]}],
@@ -22600,8 +22648,8 @@ function qaAnswerOverall(intentId) {
     }
 
     var sections = [];
-    if (dataItems.length > 0) sections.push({ label: 'DOMAIN BREAKDOWN', icon: zi('chart'), items: dataItems.slice(0, 7) });
-    if (actionItems.length > 0) sections.push({ label: 'TOP PRIORITIES', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+    if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 7) });
+    if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
 
     return {
       icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: headline,
@@ -22612,12 +22660,1517 @@ function qaAnswerOverall(intentId) {
   } catch(e) {
     return {
       icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Unable to compute score',
-      sections: [{ label: 'WHAT TO DO', icon: 'ℹ️', items: [
+      sections: [{ label: 'WHAT TO DO', icon: zi('info'), items: [
         { text: 'Log sleep, meals, and poop to build your Ziva Score', signal: 'action' }
       ]}],
       confidence: null, dataGap: 'Need more data'
     };
   }
+}
+
+// ═══ HANDLER: SLEEP EARLY (bedtime focus) ═══
+
+function qaAnswerSleepEarly(intentId) {
+  var scores = _qaGetSleepScores7d();
+  if (scores.length < 3) {
+    return {
+      icon: 'moon', domain: 'indigo', title: 'Earlier Bedtime', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log ' + (5 - scores.length) + ' more nights to analyse bedtime patterns', signal: 'info' },
+        { text: 'Record exact bedtime each night', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need more sleep data'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Earlier Bedtime';
+
+  try {
+    var drift = computeBedtimeDrift();
+    if (!drift.insufficient) {
+      headline = 'Average bedtime: ' + drift.avgBedtimeStr;
+      if (drift.direction === 'later') {
+        dataItems.push({ text: 'Bedtime is drifting ' + Math.abs(drift.driftPerWeek) + ' min later each week', signal: 'warn' });
+      } else if (drift.direction === 'earlier') {
+        dataItems.push({ text: 'Bedtime is trending earlier — good progress', signal: 'good' });
+      } else {
+        dataItems.push({ text: 'Bedtime is stable at ' + drift.avgBedtimeStr, signal: 'good' });
+      }
+
+      // Find earliest bedtime in the week
+      var bedtimes = [];
+      (sleepData || []).forEach(function(sl) {
+        if (sl.type !== 'night' || !sl.bedtime) return;
+        var idx = scores.findIndex(function(s) { return s.dateStr === sl.date; });
+        if (idx < 0) return;
+        var parts = sl.bedtime.split(':').map(Number);
+        bedtimes.push({ date: sl.date, min: parts[0] * 60 + parts[1], score: scores[idx].score });
+      });
+      if (bedtimes.length >= 3) {
+        bedtimes.sort(function(a, b) { return a.min - b.min; });
+        var earliest = bedtimes[0];
+        var latest = bedtimes[bedtimes.length - 1];
+        var range = latest.min - earliest.min;
+        if (range > 30) {
+          dataItems.push({ text: 'Bedtime range: ' + _siMinToBedtime(earliest.min) + ' to ' + _siMinToBedtime(latest.min) + ' (' + range + ' min spread)', signal: 'warn' });
+          actionItems.push({ text: 'Narrow the spread — consistency matters more than exact time', signal: 'action' });
+        }
+        // Correlate early bedtime with better sleep
+        var earlyHalf = bedtimes.slice(0, Math.floor(bedtimes.length / 2));
+        var lateHalf = bedtimes.slice(Math.ceil(bedtimes.length / 2));
+        var earlyAvgScore = _qaAvg(earlyHalf.map(function(b) { return b.score; }));
+        var lateAvgScore = _qaAvg(lateHalf.map(function(b) { return b.score; }));
+        if (earlyAvgScore > lateAvgScore + 5) {
+          dataItems.push({ text: 'Earlier bedtimes correlate with better sleep (' + earlyAvgScore + ' vs ' + lateAvgScore + ')', signal: 'good' });
+        }
+      }
+
+      // Ideal window from age targets
+      var ageM = ageAt().months;
+      var targets = getSleepTargets(Math.floor(ageM));
+      if (targets && targets.idealBedtime) {
+        actionItems.push({ text: 'Ideal bedtime for ' + Math.floor(ageM) + ' months: ' + targets.idealBedtime, signal: 'action' });
+      }
+
+      // Practical suggestions
+      if (drift.direction === 'later' || (drift.avgBedtime && drift.avgBedtime > 21 * 60)) {
+        var pullTarget = drift.avgBedtime ? _siMinToBedtime(drift.avgBedtime - 15) : '';
+        if (pullTarget) actionItems.push({ text: 'Pull back 15 min this week — target ' + pullTarget, signal: 'action' });
+      }
+    }
+  } catch(e) {}
+
+  actionItems.push({ text: 'Start wind-down routine 30 min before target bedtime', signal: 'action' });
+  actionItems.push({ text: 'Dim lights and reduce stimulation from 7 PM', signal: 'action' });
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'moon', domain: 'indigo', title: 'Earlier Bedtime', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + scores.length + ' nights of data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: SLEEP WAKEUPS ═══
+
+function qaAnswerSleepWakeups(intentId) {
+  var scores = _qaGetSleepScores7d();
+  var prevScores = _qaGetSleepScores7dPrev();
+
+  if (scores.length < 3) {
+    return {
+      icon: 'moon', domain: 'indigo', title: 'Night Wake-ups', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log ' + (5 - scores.length) + ' more nights with wake-up counts', signal: 'info' },
+        { text: 'Record number of wake-ups each night', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need more sleep data'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var avgWakes = _qaAvg(scores.map(function(s) { return s.wakes; }));
+  var prevAvgWakes = prevScores.length >= 3 ? _qaAvg(prevScores.map(function(s) { return s.wakes; })) : null;
+  var trendStr = '';
+  if (prevAvgWakes !== null) {
+    var diff = avgWakes - prevAvgWakes;
+    if (diff > 0.5) trendStr = ' (↑' + diff.toFixed(1) + ' from last week)';
+    else if (diff < -0.5) trendStr = ' (↓' + Math.abs(diff).toFixed(1) + ' — improving)';
+    else trendStr = ' (stable)';
+  }
+  var headline = 'Avg ' + avgWakes.toFixed(1) + ' wake-ups/night' + trendStr;
+
+  if (avgWakes <= 1) {
+    dataItems.push({ text: avgWakes.toFixed(1) + ' wake-ups/night — excellent for this age', signal: 'good' });
+  } else if (avgWakes <= 2) {
+    dataItems.push({ text: avgWakes.toFixed(1) + ' wake-ups/night — normal range', signal: 'info' });
+  } else {
+    dataItems.push({ text: avgWakes.toFixed(1) + ' wake-ups/night — higher than typical', signal: 'warn' });
+  }
+
+  // Find worst vs best nights
+  var sorted = scores.slice().sort(function(a, b) { return b.wakes - a.wakes; });
+  if (sorted.length >= 3 && sorted[0].wakes > sorted[sorted.length - 1].wakes + 1) {
+    var worstDate = new Date(sorted[0].dateStr).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    dataItems.push({ text: 'Worst night: ' + sorted[0].wakes + ' wakeups (' + worstDate + ')', signal: 'warn' });
+    var bestDate = new Date(sorted[sorted.length - 1].dateStr).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+    dataItems.push({ text: 'Best night: ' + sorted[sorted.length - 1].wakes + ' wakeups (' + bestDate + ')', signal: 'good' });
+  }
+
+  // Regression check
+  try {
+    var reg = computeSleepRegression();
+    if (!reg.insufficient && reg.severity !== 'none') {
+      dataItems.push({ text: reg.severityLabel + ' — ' + reg.maxConsecBad + ' consecutive disrupted nights', signal: 'warn' });
+      if (reg.causes && reg.causes.length > 0) {
+        dataItems.push({ text: 'Possible cause: ' + reg.causes[0].text, signal: 'info' });
+      }
+    }
+  } catch(e) {}
+
+  // Actions
+  var ageM = ageAt().months;
+  if (avgWakes > 2) {
+    actionItems.push({ text: 'Check if wake-ups follow a pattern (same time each night)', signal: 'action' });
+    actionItems.push({ text: 'Ensure last nap ends 3+ hours before bedtime', signal: 'action' });
+  }
+  if (ageM >= 6) {
+    actionItems.push({ text: 'At ' + Math.floor(ageM) + ' months, 0-2 wakeups is typical', signal: 'info' });
+  }
+  actionItems.push({ text: 'Keep room dark and cool (20-22°C) through the night', signal: 'action' });
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'moon', domain: 'indigo', title: 'Night Wake-ups', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + scores.length + ' nights' + (prevScores.length > 0 ? ' + ' + prevScores.length + ' prior' : ''),
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: NAPS ═══
+
+function qaAnswerNaps(intentId) {
+  var scores = _qaGetSleepScores7d();
+  if (scores.length < 2) {
+    return {
+      icon: 'zzz', domain: 'lav', title: 'Nap Patterns', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log naps to see patterns and recommendations', signal: 'info' },
+        { text: 'Track nap start time, duration, and quality', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need nap data'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var ageM = ageAt().months;
+  var ageMo = Math.floor(ageM);
+
+  // Nap counts from sleep scores
+  var napCounts = scores.filter(function(s) { return s.napCount !== undefined && s.napCount !== null; }).map(function(s) { return s.napCount; });
+  var avgNaps = napCounts.length > 0 ? _qaAvg(napCounts) : null;
+
+  // Expected naps by age
+  var expectedNaps = ageMo < 4 ? '3-4' : ageMo < 9 ? '2-3' : ageMo < 15 ? '2' : '1';
+  var headline = avgNaps !== null ? 'Avg ' + avgNaps.toFixed(1) + ' naps/day (expected: ' + expectedNaps + ')' : 'Nap Analysis';
+
+  if (avgNaps !== null) {
+    var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
+    var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
+    if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + ageMo + ' months', signal: 'good' });
+    } else if (avgNaps < expectedMin) {
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — fewer than expected ' + expectedNaps + ' for this age', signal: 'warn' });
+    } else {
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — more than typical ' + expectedNaps + ' for this age', signal: 'info' });
+    }
+  }
+
+  // Nap-to-nighttime correlation
+  var withNaps = scores.filter(function(s) { return s.napCount > 0; });
+  var withoutNaps = scores.filter(function(s) { return s.napCount === 0; });
+  if (withNaps.length >= 2 && withoutNaps.length >= 1) {
+    var napAvgScore = _qaAvg(withNaps.map(function(s) { return s.score; }));
+    var noNapAvgScore = _qaAvg(withoutNaps.map(function(s) { return s.score; }));
+    if (napAvgScore > noNapAvgScore + 5) {
+      dataItems.push({ text: 'Days with naps have better night sleep (' + napAvgScore + ' vs ' + noNapAvgScore + ')', signal: 'good' });
+    } else if (noNapAvgScore > napAvgScore + 5) {
+      dataItems.push({ text: 'Days without naps actually had better night sleep', signal: 'info' });
+    }
+  }
+
+  // Nap schedule targets
+  var targets = getSleepTargets(ageMo);
+  if (targets) {
+    if (targets.napHours) {
+      dataItems.push({ text: 'Target nap duration: ' + targets.napHours + ' hours total per day', signal: 'info' });
+    }
+    if (targets.wakeWindow) {
+      actionItems.push({ text: 'Wake window: ' + targets.wakeWindow + ' between naps', signal: 'action' });
+    }
+  }
+
+  // Transition guidance
+  if (ageMo >= 7 && ageMo <= 9) {
+    actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
+  } else if (ageMo >= 13 && ageMo <= 16) {
+    actionItems.push({ text: 'Approaching 2-to-1 nap transition — if resisting second nap, try one longer midday nap', signal: 'info' });
+  }
+
+  actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
+  if (ageMo < 12) {
+    actionItems.push({ text: 'Aim to end last nap 3+ hours before bedtime', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'zzz', domain: 'lav', title: 'Nap Patterns', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + scores.length + ' days of sleep data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: WEIGHT CONCERN (overweight) ═══
+
+function qaAnswerWeightConcern(intentId) {
+  var gv = computeGrowthVelocity();
+  if (gv.insufficient) {
+    return {
+      icon: 'scale', domain: 'rose', title: 'Weight Check', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Need at least 2 weight measurements to analyse', signal: 'info' },
+        { text: 'Log weight in the Growth tab', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need more weight data'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Weight Analysis';
+
+  if (gv.weight) {
+    var w = gv.weight;
+    headline = w.latest.wt + ' kg (gaining ' + w.gPerDay + ' g/day)';
+    if (w.status === 'fast') {
+      dataItems.push({ text: 'Weight gain is above typical range (' + w.gPerDay + ' g/day vs expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
+    } else if (w.status === 'on-track') {
+      dataItems.push({ text: 'Weight gain is within normal range (' + w.gPerDay + ' g/day)', signal: 'good' });
+    } else {
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
+    }
+  }
+
+  if (gv.latestPercentile !== null) {
+    if (gv.latestPercentile > 85) {
+      dataItems.push({ text: 'Weight at ' + gv.latestPercentile + 'th percentile — above average', signal: 'info' });
+    } else {
+      dataItems.push({ text: 'Weight at ' + gv.latestPercentile + 'th percentile — within normal range', signal: 'good' });
+    }
+  }
+
+  // Proportionality
+  if (gv.proportionFlag) {
+    dataItems.push({ text: 'Weight (' + gv.proportionFlag.weightPct + 'th pct) and height (' + gv.proportionFlag.heightPct + 'th pct) are on different curves', signal: 'info' });
+  }
+
+  // At this age, rapid weight gain is rarely a concern
+  var ageM = ageAt().months;
+  if (ageM < 12) {
+    actionItems.push({ text: 'At ' + Math.floor(ageM) + ' months, being on a higher percentile is usually fine', signal: 'good' });
+    actionItems.push({ text: 'Focus on nutrient-dense foods, not calorie restriction', signal: 'action' });
+  }
+  actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
+  actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'scale', domain: 'rose', title: 'Weight Check', headline: headline,
+    sections: sections,
+    confidence: gv.weight ? 'Based on ' + (gv.percentiles || []).length + ' measurements' : null,
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: GROWTH (height + overall) ═══
+
+function qaAnswerGrowth(intentId) {
+  var gv = computeGrowthVelocity();
+  if (gv.insufficient) {
+    return {
+      icon: 'ruler', domain: 'rose', title: 'Growth Analysis', headline: 'Not enough data yet',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Need at least 2 measurements to track growth velocity', signal: 'info' },
+        { text: 'Log weight and height in the Growth tab', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need 2+ growth measurements'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Growth Analysis';
+
+  // Weight
+  if (gv.weight) {
+    var w = gv.weight;
+    dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent'), signal: w.stale ? 'warn' : 'good' });
+    var wSignal = w.status === 'on-track' ? 'good' : w.status === 'slow' || w.status === 'plateau' ? 'warn' : 'info';
+    dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
+  }
+
+  // Height
+  if (gv.height) {
+    var h = gv.height;
+    dataItems.push({ text: 'Height: ' + h.latest.ht + ' cm (' + h.cmPerMonth + ' cm/month)', signal: h.status === 'on-track' ? 'good' : 'warn' });
+  }
+
+  // Percentile
+  if (gv.latestPercentile !== null) {
+    var pctSignal = gv.latestPercentile < 3 || gv.latestPercentile > 97 ? 'warn' : 'good';
+    dataItems.push({ text: 'Weight percentile: ' + gv.latestPercentile + 'th', signal: pctSignal });
+  }
+
+  // Crossings
+  if (gv.crossings && gv.crossings.length > 0) {
+    var lastCross = gv.crossings[gv.crossings.length - 1];
+    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + lastCross.from + 'th to ' + lastCross.to + 'th', signal: 'warn' });
+    actionItems.push({ text: 'Discuss percentile crossing with pediatrician', signal: 'action' });
+  }
+
+  // Proportionality
+  if (gv.proportionFlag) {
+    dataItems.push({ text: 'Weight and height on different curves — check proportionality', signal: 'info' });
+  }
+
+  // Staleness
+  if (gv.weight && gv.weight.stale) {
+    actionItems.push({ text: 'Weight data is ' + gv.weight.daysSince + ' days old — time for a new measurement', signal: 'action' });
+  }
+  if (gv.height && gv.height.stale) {
+    actionItems.push({ text: 'Height data is ' + gv.height.daysSince + ' days old — measure again', signal: 'action' });
+  }
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'ruler', domain: 'rose', title: 'Growth Analysis', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + (gv.percentiles || []).length + ' measurements',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: NUTRIENT GAP ═══
+
+function qaAnswerNutrientGap(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Nutrient Analysis';
+
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (!hm) {
+      return {
+        icon: 'bowl', domain: 'peach', title: 'Nutrient Gaps', headline: 'Not enough data',
+        sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+          { text: 'Log meals with specific foods to track nutrients', signal: 'info' },
+          { text: 'Include food names, not just "khichdi" — list ingredients', signal: 'action' }
+        ]}],
+        confidence: null, dataGap: 'Need detailed meal data'
+      };
+    }
+
+    if (hm.gaps && hm.gaps.length > 0) {
+      headline = hm.gaps.length + ' nutrient gap' + (hm.gaps.length > 1 ? 's' : '') + ' this week';
+      hm.gaps.forEach(function(gap) {
+        dataItems.push({ text: gap + ' — missing from recent meals', signal: 'warn' });
+        try {
+          var sug = _suggestFoodForNutrient(gap.toLowerCase());
+          if (sug && sug !== 'a variety of foods') {
+            actionItems.push({ text: 'For ' + gap + ': try ' + sug, signal: 'action' });
+          }
+        } catch(e2) {}
+      });
+    } else {
+      headline = 'All key nutrients covered';
+      dataItems.push({ text: 'No nutrient gaps detected this week', signal: 'good' });
+    }
+
+    // Coverage summary
+    if (hm.covered && hm.covered.length > 0) {
+      dataItems.push({ text: 'Well covered: ' + hm.covered.slice(0, 4).join(', '), signal: 'good' });
+    }
+  } catch(e) {
+    headline = 'Nutrient Analysis';
+  }
+
+  // Synergy tips
+  if (actionItems.length > 0) {
+    actionItems.push({ text: 'Pair iron-rich foods with vitamin C for better absorption', signal: 'info' });
+  }
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Keep rotating food groups to maintain nutrient coverage', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 5) });
+
+  return {
+    icon: 'bowl', domain: 'peach', title: 'Nutrient Gaps', headline: headline,
+    sections: sections,
+    confidence: 'Based on 7-day meal data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: FOOD VARIETY ═══
+
+function qaAnswerFoodVariety(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Food Variety';
+
+  try {
+    var vs = computeVarietyScore(7);
+    headline = vs.uniqueFoods + ' unique foods this week (target: ' + vs.target + ')';
+
+    if (vs.uniqueFoods >= vs.target) {
+      dataItems.push({ text: 'Good variety: ' + vs.uniqueFoods + ' unique foods this week', signal: 'good' });
+    } else {
+      dataItems.push({ text: 'Below target: ' + vs.uniqueFoods + '/' + vs.target + ' unique foods', signal: 'warn' });
+    }
+  } catch(e) {}
+
+  // Repetition analysis
+  try {
+    var rep = computeFoodRepetition();
+    if (rep && rep.all && rep.all.length > 0) {
+      var topRep = rep.all[0];
+      var repSignal = topRep.pct >= 60 ? 'warn' : topRep.pct >= 40 ? 'info' : 'good';
+      dataItems.push({ text: 'Most repeated: ' + topRep.food + ' (' + topRep.days + ' of ' + topRep.totalDays + ' days)', signal: repSignal });
+      if (rep.all.length > 1) {
+        dataItems.push({ text: 'Second most: ' + rep.all[1].food + ' (' + rep.all[1].days + ' days)', signal: 'info' });
+      }
+      if (topRep.pct >= 60) {
+        actionItems.push({ text: 'Rotate ' + topRep.food + ' with alternatives — try skipping it for 2 days', signal: 'action' });
+      }
+    }
+  } catch(e) {}
+
+  // Introduction rate
+  var introCount = 0;
+  var recentFoods = [];
+  try {
+    (foods || []).forEach(function(f) {
+      if (!f.date) return;
+      var daysSince = Math.round((new Date(today()) - new Date(f.date)) / 86400000);
+      if (daysSince <= 7) { introCount++; recentFoods.push(f.name); }
+    });
+    if (introCount > 0) {
+      dataItems.push({ text: introCount + ' new food' + (introCount > 1 ? 's' : '') + ' introduced this week: ' + recentFoods.join(', '), signal: 'good' });
+    } else {
+      dataItems.push({ text: 'No new foods introduced this week', signal: 'warn' });
+      actionItems.push({ text: 'Try one new food — single-ingredient, morning meal for safety', signal: 'action' });
+    }
+  } catch(e) {}
+
+  // Suggest untried foods
+  var safeUntriedDefaults = ['Sweet potato', 'Pumpkin', 'Spinach', 'Oats', 'Papaya', 'Pear', 'Curd', 'Paneer'];
+  var triedNames = (foods || []).map(function(f) { return f.name.toLowerCase(); });
+  var suggestions = safeUntriedDefaults.filter(function(s) { return triedNames.indexOf(s.toLowerCase()) < 0; });
+  if (suggestions.length > 0) {
+    actionItems.push({ text: 'Try next: ' + suggestions.slice(0, 3).join(', '), signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'bowl', domain: 'peach', title: 'Food Variety', headline: headline,
+    sections: sections,
+    confidence: 'Based on 7-day meal data + ' + (foods || []).length + ' introduced foods',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: FOOD SAFETY ═══
+
+function qaAnswerFoodSafety(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Food Safety & Reactions';
+
+  var reactionFoods = [];
+  var okFoods = [];
+  var watchFoods = [];
+
+  (foods || []).forEach(function(f) {
+    if (f.reaction === 'bad' || f.reaction === 'mild') {
+      reactionFoods.push(f);
+    } else if (f.reaction === 'watch') {
+      watchFoods.push(f);
+    } else {
+      okFoods.push(f);
+    }
+  });
+
+  headline = okFoods.length + ' safe, ' + reactionFoods.length + ' reactions, ' + watchFoods.length + ' watching';
+
+  if (reactionFoods.length > 0) {
+    reactionFoods.forEach(function(f) {
+      var severity = f.reaction === 'bad' ? 'warn' : 'info';
+      dataItems.push({ text: f.name + ' — ' + (f.reaction === 'bad' ? 'negative reaction' : 'mild reaction') + (f.date ? ' (introduced ' + f.date + ')' : ''), signal: severity });
+    });
+  } else {
+    dataItems.push({ text: 'No food reactions recorded — all introduced foods are safe', signal: 'good' });
+  }
+
+  if (watchFoods.length > 0) {
+    watchFoods.forEach(function(f) {
+      dataItems.push({ text: f.name + ' — still being monitored', signal: 'info' });
+    });
+  }
+
+  dataItems.push({ text: okFoods.length + ' foods confirmed safe', signal: 'good' });
+
+  // Reaction window foods (introduced in last 3 days)
+  var recentIntro = (foods || []).filter(function(f) {
+    if (!f.date) return false;
+    var d = Math.round((new Date(today()) - new Date(f.date)) / 86400000);
+    return d <= 3 && d >= 0;
+  });
+  if (recentIntro.length > 0) {
+    recentIntro.forEach(function(f) {
+      var daysAgo = Math.round((new Date(today()) - new Date(f.date)) / 86400000);
+      actionItems.push({ text: f.name + ' introduced ' + daysAgo + ' day(s) ago — still in reaction window', signal: 'warn' });
+    });
+    actionItems.push({ text: 'Wait 3 days before introducing another new food', signal: 'action' });
+  }
+
+  // General guidance
+  var ageM = ageAt().months;
+  if (ageM < 8) {
+    actionItems.push({ text: 'At ' + Math.floor(ageM) + ' months, avoid honey, whole nuts, cow\'s milk as main drink', signal: 'info' });
+  }
+  if (reactionFoods.length > 0) {
+    actionItems.push({ text: 'Reintroduce reaction foods after 2-4 weeks with pediatrician guidance', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'warn', domain: 'amber', title: 'Food Safety & Reactions', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + (foods || []).length + ' introduced foods',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: TEXTURE PROGRESSION ═══
+
+function qaAnswerTexture(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+
+  try {
+    var tex = computeTextureProgression();
+    if (!tex || !tex.currentStage) {
+      return {
+        icon: 'spoon', domain: 'peach', title: 'Texture Progression', headline: 'Not enough data',
+        sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+          { text: 'Log more detailed meal descriptions to track texture', signal: 'info' },
+          { text: 'Mention words like puree, mashed, soft, finger food in meals', signal: 'action' }
+        ]}],
+        confidence: null, dataGap: 'Need detailed meal data'
+      };
+    }
+
+    var texLabels = { puree: 'Puree', mashed: 'Mashed/Porridge', soft: 'Soft chunks', finger: 'Finger food' };
+    var stageIdx = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+    var ageM = ageAt().months;
+    var ageMo = Math.floor(ageM);
+    var expectedTex = ageMo < 7 ? 'puree' : ageMo < 8 ? 'mashed' : ageMo < 10 ? 'soft' : 'finger';
+    var headline = 'Current: ' + texLabels[tex.currentStage] + ' (expected: ' + texLabels[expectedTex] + ')';
+
+    var currentIdx = stageIdx[tex.currentStage] || 0;
+    var expectedIdx = stageIdx[expectedTex] || 0;
+
+    if (currentIdx >= expectedIdx) {
+      dataItems.push({ text: 'Texture is age-appropriate or ahead — great progress', signal: 'good' });
+    } else {
+      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + ageMo + ' months', signal: 'warn' });
+      actionItems.push({ text: 'Gradually advance to ' + texLabels[expectedTex] + ' textures', signal: 'action' });
+    }
+
+    // Stage percentages
+    if (tex.stageCounts) {
+      var total = Object.values(tex.stageCounts).reduce(function(s, v) { return s + v; }, 0);
+      if (total > 0) {
+        Object.keys(tex.stageCounts).forEach(function(stage) {
+          var pct = Math.round(tex.stageCounts[stage] / total * 100);
+          if (pct > 0) {
+            dataItems.push({ text: texLabels[stage] + ': ' + pct + '% of meals', signal: 'info' });
+          }
+        });
+      }
+    }
+
+    // First seen dates
+    if (tex.firstSeen) {
+      Object.keys(tex.firstSeen).forEach(function(stage) {
+        if (stageIdx[stage] >= 1) {
+          dataItems.push({ text: texLabels[stage] + ' first tried: ' + tex.firstSeen[stage], signal: 'info' });
+        }
+      });
+    }
+
+    // Guidance by stage
+    if (currentIdx < expectedIdx) {
+      var nextStage = Object.keys(stageIdx).find(function(k) { return stageIdx[k] === currentIdx + 1; });
+      if (nextStage) {
+        var stageExamples = {
+          mashed: 'mashed banana, avocado, sweet potato',
+          soft: 'soft-cooked carrot cubes, steamed broccoli florets',
+          finger: 'toast strips, ripe mango pieces, steamed veggie sticks'
+        };
+        if (stageExamples[nextStage]) {
+          actionItems.push({ text: 'Try ' + texLabels[nextStage] + ': ' + stageExamples[nextStage], signal: 'action' });
+        }
+      }
+    }
+
+    actionItems.push({ text: 'Gagging is normal and different from choking — it\'s a learning reflex', signal: 'info' });
+  } catch(e) {
+    return {
+      icon: 'spoon', domain: 'peach', title: 'Texture Progression', headline: 'Unable to compute',
+      sections: [{ label: 'WHAT TO DO', icon: zi('info'), items: [
+        { text: 'Log meals with texture descriptions to enable analysis', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need meal data with texture info'
+    };
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'spoon', domain: 'peach', title: 'Texture Progression', headline: headline,
+    sections: sections,
+    confidence: 'Based on meal texture analysis',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: POOP-FOOD CORRELATION ═══
+
+function qaAnswerPoopFood(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Food-Poop Connection';
+
+  try {
+    var corr = computeFoodPoopCorrelations();
+    if (!corr || (!corr.triggers && !corr.helpers)) {
+      var pScores = _qaPoopScores7d();
+      if (pScores.length < 3) {
+        return {
+          icon: 'diaper', domain: 'amber', title: 'Food-Poop Connection', headline: 'Not enough data',
+          sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+            { text: 'Log both meals and poops for at least 5 days', signal: 'info' },
+            { text: 'The more data, the better the correlations', signal: 'action' }
+          ]}],
+          confidence: null, dataGap: 'Need 5+ days of meal + poop data'
+        };
+      }
+    }
+
+    if (corr) {
+      // Trigger foods (foods that correlate with worse poop)
+      if (corr.triggers && corr.triggers.length > 0) {
+        headline = corr.triggers.length + ' trigger food' + (corr.triggers.length > 1 ? 's' : '') + ' identified';
+        corr.triggers.forEach(function(t) {
+          dataItems.push({ text: t.food + ' — linked to ' + (t.effect || 'digestive changes'), signal: 'warn' });
+        });
+        actionItems.push({ text: 'Reduce or eliminate trigger foods for 3-5 days to confirm', signal: 'action' });
+      }
+
+      // Helper foods (foods that correlate with better poop)
+      if (corr.helpers && corr.helpers.length > 0) {
+        corr.helpers.forEach(function(h) {
+          dataItems.push({ text: h.food + ' — associated with better digestion', signal: 'good' });
+        });
+        actionItems.push({ text: 'Include more of the helper foods in regular meals', signal: 'action' });
+      }
+
+      // Transit window
+      if (corr.transitWindow) {
+        dataItems.push({ text: 'Typical transit window: ' + corr.transitWindow + ' hours', signal: 'info' });
+      }
+    }
+  } catch(e) {}
+
+  if (dataItems.length === 0) {
+    dataItems.push({ text: 'No strong food-poop correlations found yet', signal: 'info' });
+    dataItems.push({ text: 'Need more data to detect patterns — keep logging both meals and poops', signal: 'info' });
+  }
+
+  // General fibre guidance
+  actionItems.push({ text: 'High-fibre foods (banana, pear, prunes) help regulate digestion', signal: 'action' });
+  if (actionItems.length < 3) {
+    actionItems.push({ text: 'Watch for changes 12-24 hours after introducing new foods', signal: 'info' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'diaper', domain: 'amber', title: 'Food-Poop Connection', headline: headline,
+    sections: sections,
+    confidence: 'Based on meal + poop correlation analysis',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: POOP COLOR ═══
+
+function qaAnswerPoopColor(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Poop Color Analysis';
+
+  // Gather recent poop colors
+  var colorCounts = {};
+  var recentPoops = [];
+  (poopData || []).forEach(function(p) {
+    if (!p.date || !p.color) return;
+    var daysSince = Math.round((new Date(today()) - new Date(p.date)) / 86400000);
+    if (daysSince <= 14) {
+      colorCounts[p.color] = (colorCounts[p.color] || 0) + 1;
+      recentPoops.push(p);
+    }
+  });
+
+  if (recentPoops.length < 2) {
+    return {
+      icon: 'diaper', domain: 'amber', title: 'Poop Color', headline: 'Not enough data',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log poop color for at least a few entries to see patterns', signal: 'info' },
+        { text: 'Use the color picker when logging poop', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need poop color data'
+    };
+  }
+
+  // Distribution
+  var totalPoops = recentPoops.length;
+  var safeColors = ['brown', 'yellow', 'green', 'tan', 'orange', 'mustard'];
+  var dominantColor = Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
+  headline = 'Most common: ' + dominantColor[0] + ' (' + dominantColor[1] + '/' + totalPoops + ')';
+
+  Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; }).forEach(function(entry) {
+    var color = entry[0];
+    var count = entry[1];
+    var pct = Math.round(count / totalPoops * 100);
+    var isSafe = safeColors.indexOf(color) >= 0;
+    dataItems.push({ text: color.charAt(0).toUpperCase() + color.slice(1) + ': ' + count + ' times (' + pct + '%)', signal: isSafe ? 'good' : 'warn' });
+  });
+
+  // Blood or mucus flags
+  var bloodCount = recentPoops.filter(function(p) { return p.blood; }).length;
+  var mucusCount = recentPoops.filter(function(p) { return p.mucus; }).length;
+  if (bloodCount > 0) {
+    dataItems.push({ text: 'Blood detected in ' + bloodCount + ' stool(s) — monitor closely', signal: 'warn' });
+    actionItems.push({ text: 'Blood in stool warrants a pediatrician visit if persistent', signal: 'action' });
+  }
+  if (mucusCount > 0) {
+    dataItems.push({ text: 'Mucus in ' + mucusCount + ' stool(s)', signal: 'info' });
+  }
+
+  // Color guidance
+  var colorGuide = {
+    green: 'Usually normal — can be from leafy greens, iron supplements, or fast transit',
+    black: 'May indicate iron supplements or upper GI bleeding — see doctor if not on iron',
+    red: 'Could be from beets/tomatoes or indicate lower GI issue — see doctor if no red food eaten',
+    white: 'Unusual — may indicate a bile duct issue — see doctor promptly'
+  };
+  Object.keys(colorCounts).forEach(function(c) {
+    if (colorGuide[c]) {
+      actionItems.push({ text: c.charAt(0).toUpperCase() + c.slice(1) + ': ' + colorGuide[c], signal: c === 'white' || c === 'black' || c === 'red' ? 'warn' : 'info' });
+    }
+  });
+
+  if (actionItems.length === 0) {
+    actionItems.push({ text: 'Normal range: brown, yellow, green, tan, orange, mustard', signal: 'good' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'diaper', domain: 'amber', title: 'Poop Color', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + totalPoops + ' entries over 14 days',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: ACTIVITY-SLEEP CORRELATION ═══
+
+function qaAnswerActivitySleep(intentId) {
+  var scores = _qaGetSleepScores7d();
+  var actData = _qaActivityDays14d();
+
+  if (scores.length < 3 || actData.days < 3) {
+    return {
+      icon: 'run', domain: 'sage', title: 'Activity-Sleep Link', headline: 'Not enough data',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log both activities and sleep for at least 5 days', signal: 'info' },
+        { text: 'The more data, the clearer the correlation', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need 5+ days of both activity and sleep data'
+    };
+  }
+
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'How Activities Affect Sleep';
+
+  // Correlate: days with activities vs without
+  var activeSleepScores = [];
+  var inactiveSleepScores = [];
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var sleepScore = scores.find(function(s) { return s.dateStr === ds; });
+    if (!sleepScore) continue;
+    var hasActivity = Array.isArray(activityLog[ds]) && activityLog[ds].length > 0;
+    if (hasActivity) activeSleepScores.push(sleepScore.score);
+    else inactiveSleepScores.push(sleepScore.score);
+  }
+
+  if (activeSleepScores.length >= 2 && inactiveSleepScores.length >= 1) {
+    var activeAvg = _qaAvg(activeSleepScores);
+    var inactiveAvg = _qaAvg(inactiveSleepScores);
+    if (activeAvg > inactiveAvg + 5) {
+      dataItems.push({ text: 'Active days → better sleep (avg ' + activeAvg + ' vs ' + inactiveAvg + ')', signal: 'good' });
+    } else if (inactiveAvg > activeAvg + 5) {
+      dataItems.push({ text: 'Interestingly, inactive days had better sleep (' + inactiveAvg + ' vs ' + activeAvg + ')', signal: 'info' });
+    } else {
+      dataItems.push({ text: 'Activity and sleep scores are similar on active vs rest days', signal: 'info' });
+    }
+  }
+
+  // Domain effects
+  var domainNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+  if (actData.domainCounts) {
+    var topDomain = Object.entries(actData.domainCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
+    if (topDomain) {
+      dataItems.push({ text: 'Most logged domain: ' + domainNames[topDomain[0]] + ' (' + topDomain[1] + ' activities in 14 days)', signal: 'info' });
+    }
+  }
+
+  dataItems.push({ text: actData.days + ' active days in the last 14 days', signal: actData.days >= 7 ? 'good' : actData.days >= 3 ? 'info' : 'warn' });
+
+  // Actions
+  actionItems.push({ text: 'Morning motor activities (tummy time, crawling) have the strongest sleep benefit', signal: 'action' });
+  actionItems.push({ text: 'Avoid stimulating play within 1 hour of bedtime', signal: 'action' });
+  if (actData.days < 7) {
+    actionItems.push({ text: 'Aim for daily activity — even 15 min of floor play helps', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'run', domain: 'sage', title: 'Activity-Sleep Link', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + actData.days + ' active days + ' + scores.length + ' sleep nights',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: MILESTONE GENERAL ═══
+
+function qaAnswerMilestoneGeneral(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+
+  try {
+    var ms = calcMilestoneScore();
+    var headline = 'Milestone Score: ' + ms.score + '/100';
+
+    // Category breakdown
+    var categories = ['motor', 'language', 'social', 'cognitive'];
+    var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+    categories.forEach(function(cat) {
+      var catMs = (milestones || []).filter(function(m) { return m.cat === cat; });
+      var mastered = catMs.filter(function(m) { return m.status === 'mastered'; }).length;
+      var inProgress = catMs.filter(function(m) { return ['emerging','practicing','consistent'].includes(m.status); }).length;
+      if (catMs.length > 0) {
+        var signal = mastered > 0 ? 'good' : inProgress > 0 ? 'info' : 'warn';
+        dataItems.push({ text: catNames[cat] + ': ' + mastered + ' mastered, ' + inProgress + ' in progress', signal: signal, icon: catIcons[cat] });
+      }
+    });
+
+    // In-progress milestones
+    var inProgressMs = (milestones || []).filter(function(m) { return ['emerging','practicing','consistent'].includes(m.status); });
+    if (inProgressMs.length > 0) {
+      dataItems.push({ text: inProgressMs.length + ' milestone' + (inProgressMs.length > 1 ? 's' : '') + ' currently being worked on', signal: 'good' });
+    }
+
+    // Stalled milestones (in progress but no recent evidence)
+    var stalled = (milestones || []).filter(function(m) {
+      if (!['emerging','practicing'].includes(m.status)) return false;
+      var lastDate = m.lastSeen || m.emergingAt || m.practicingAt;
+      if (!lastDate) return true;
+      var daysSince = Math.round((new Date() - new Date(lastDate)) / 86400000);
+      return daysSince > 12;
+    });
+    if (stalled.length > 0) {
+      stalled.forEach(function(m) {
+        actionItems.push({ text: m.text + ' appears stalled — try targeted activities', signal: 'warn' });
+      });
+    }
+
+    // Score components
+    if (ms.components) {
+      if (ms.components.recency < 50) {
+        actionItems.push({ text: 'Log recent activities to keep milestone tracking current', signal: 'action' });
+      }
+      if (ms.components.categories < 50) {
+        var missing = categories.filter(function(cat) {
+          return !(milestones || []).some(function(m) { return m.cat === cat && m.status !== 'not-started'; });
+        });
+        if (missing.length > 0) {
+          actionItems.push({ text: 'Missing activity in: ' + missing.map(function(c) { return catNames[c]; }).join(', '), signal: 'action' });
+        }
+      }
+    }
+
+    if (actionItems.length === 0) {
+      actionItems.push({ text: 'Milestones look great — keep engaging across all domains', signal: 'good' });
+    }
+
+    var sections = [];
+    if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+    if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+    return {
+      icon: 'target', domain: 'lav', title: 'Milestones & Development', headline: headline,
+      sections: sections,
+      confidence: 'Based on ' + (milestones || []).length + ' tracked milestones',
+      dataGap: null
+    };
+  } catch(e) {
+    return {
+      icon: 'target', domain: 'lav', title: 'Milestones', headline: 'Unable to compute',
+      sections: [{ label: 'WHAT TO DO', icon: zi('info'), items: [
+        { text: 'Log milestones and activities to enable tracking', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Need milestone data'
+    };
+  }
+}
+
+// ═══ HANDLER: MILESTONE SPECIFIC ═══
+
+function qaAnswerMilestoneSpecific(intentId) {
+  // Extract specific milestone from the query text
+  var queryText = _qaCache._queryText || '';
+  var milestoneKeywords = {
+    'crawl': ['crawl', 'crawling'],
+    'walk': ['walk', 'walking', 'step'],
+    'talk': ['talk', 'talking', 'speak', 'speaking', 'word'],
+    'sit': ['sit', 'sitting'],
+    'stand': ['stand', 'standing'],
+    'roll': ['roll', 'rolling'],
+    'babbl': ['babble', 'babbling', 'babbl'],
+    'teeth': ['teeth', 'teething', 'tooth']
+  };
+
+  var targetKeyword = null;
+  Object.entries(milestoneKeywords).forEach(function(entry) {
+    entry[1].forEach(function(kw) {
+      if (queryText.includes(kw) && !targetKeyword) targetKeyword = entry[0];
+    });
+  });
+
+  var dataItems = [];
+  var actionItems = [];
+
+  // Find matching milestones
+  var matched = (milestones || []).filter(function(m) {
+    if (!targetKeyword) return false;
+    return m.text.toLowerCase().includes(targetKeyword);
+  });
+
+  if (matched.length === 0 && targetKeyword) {
+    // No tracked milestone for this keyword
+    var headline = (targetKeyword.charAt(0).toUpperCase() + targetKeyword.slice(1)) + ' — Not Tracked Yet';
+    dataItems.push({ text: 'No milestone logged for "' + targetKeyword + '" yet', signal: 'info' });
+    actionItems.push({ text: 'Add this milestone in the Milestones section to start tracking', signal: 'action' });
+
+    // Age-appropriate guidance
+    var ageM = ageAt().months;
+    var ageGuide = {
+      'crawl': { typical: '7-10', text: 'Most babies crawl between 7-10 months' },
+      'walk': { typical: '9-18', text: 'Independent walking typically happens 9-18 months' },
+      'talk': { typical: '12-18', text: 'First words usually appear 12-18 months' },
+      'sit': { typical: '5-7', text: 'Independent sitting typically develops 5-7 months' },
+      'stand': { typical: '8-12', text: 'Pulling to stand usually happens 8-12 months' },
+      'roll': { typical: '4-6', text: 'Rolling both ways typically happens 4-6 months' },
+      'babbl': { typical: '6-9', text: 'Babbling with consonants typically starts 6-9 months' },
+      'teeth': { typical: '6-12', text: 'First teeth usually appear 6-12 months' }
+    };
+    if (ageGuide[targetKeyword]) {
+      dataItems.push({ text: ageGuide[targetKeyword].text, signal: 'info' });
+    }
+
+    var sections = [];
+    if (dataItems.length > 0) sections.push({ label: 'STATUS', icon: zi('chart'), items: dataItems });
+    if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems });
+    return {
+      icon: 'target', domain: 'lav', title: headline, headline: headline,
+      sections: sections, confidence: null, dataGap: null
+    };
+  }
+
+  if (matched.length > 0) {
+    var m = matched[0];
+    var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
+    var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
+
+    var signal = m.status === 'mastered' ? 'good' : m.status === 'consistent' || m.status === 'practicing' ? 'info' : 'warn';
+    dataItems.push({ text: 'Status: ' + (statusLabels[m.status] || m.status), signal: signal });
+
+    if (m.evidenceCount > 0) {
+      dataItems.push({ text: 'Evidence count: ' + m.evidenceCount + ' observations', signal: 'good' });
+    }
+    if (m.firstSeen) {
+      dataItems.push({ text: 'First observed: ' + m.firstSeen, signal: 'info' });
+    }
+    if (m.lastSeen) {
+      var daysSince = Math.round((new Date() - new Date(m.lastSeen)) / 86400000);
+      if (daysSince > 7) {
+        dataItems.push({ text: 'Last seen ' + daysSince + ' days ago — may need more practice', signal: 'warn' });
+        actionItems.push({ text: 'Create opportunities for ' + m.text.toLowerCase() + ' in daily play', signal: 'action' });
+      } else {
+        dataItems.push({ text: 'Last observed ' + daysSince + ' day(s) ago', signal: 'good' });
+      }
+    }
+    if (m.masteredAt) {
+      dataItems.push({ text: 'Mastered on: ' + m.masteredAt, signal: 'good' });
+    }
+
+    // Activity suggestions
+    var activitySuggestions = {
+      motor: 'Floor play, tummy time, obstacle courses, reaching games',
+      language: 'Read together, narrate activities, sing songs, respond to babbling',
+      social: 'Peek-a-boo, mirror play, social interactions with other babies',
+      cognitive: 'Object permanence games, stacking toys, cause-and-effect toys'
+    };
+    if (m.cat && activitySuggestions[m.cat] && m.status !== 'mastered') {
+      actionItems.push({ text: 'Try: ' + activitySuggestions[m.cat], signal: 'action' });
+    }
+
+    var sections = [];
+    if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
+    if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 3) });
+
+    return {
+      icon: 'target', domain: 'lav', title: m.text, headline: headline,
+      sections: sections,
+      confidence: m.evidenceCount > 0 ? 'Based on ' + m.evidenceCount + ' observations' : null,
+      dataGap: null
+    };
+  }
+
+  // Fallback: no keyword matched
+  return qaAnswerMilestoneGeneral(intentId);
+}
+
+// ═══ HANDLER: VACCINE ═══
+
+function qaAnswerVaccine(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Vaccination Status';
+
+  var allVacc = vaccData || [];
+  var completed = allVacc.filter(function(v) { return !v.upcoming && v.date; });
+  var upcoming = allVacc.filter(function(v) { return v.upcoming; });
+
+  headline = completed.length + ' completed, ' + upcoming.length + ' upcoming';
+
+  // Recent vaccinations
+  var recent = completed.filter(function(v) {
+    var daysSince = Math.round((new Date(today()) - new Date(v.date)) / 86400000);
+    return daysSince <= 30 && daysSince >= 0;
+  });
+  if (recent.length > 0) {
+    recent.forEach(function(v) {
+      var daysSince = Math.round((new Date(today()) - new Date(v.date)) / 86400000);
+      dataItems.push({ text: v.name + ' — given ' + daysSince + ' day(s) ago', signal: 'good' });
+    });
+  }
+
+  dataItems.push({ text: completed.length + ' vaccinations completed to date', signal: 'good' });
+
+  // Next upcoming
+  if (upcoming.length > 0) {
+    var sortedUp = upcoming.slice().sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+    var next = sortedUp[0];
+    if (next.date) {
+      var daysUntil = Math.round((new Date(next.date) - new Date(today())) / 86400000);
+      var urgency = daysUntil <= 0 ? 'warn' : daysUntil <= 7 ? 'action' : 'info';
+      if (daysUntil <= 0) {
+        dataItems.push({ text: next.name + ' is due today or overdue', signal: 'warn' });
+        actionItems.push({ text: 'Schedule ' + next.name + ' as soon as possible', signal: 'action' });
+      } else {
+        dataItems.push({ text: 'Next: ' + next.name + ' due in ' + daysUntil + ' day(s) (' + next.date + ')', signal: urgency });
+      }
+    } else {
+      dataItems.push({ text: 'Next: ' + next.name + ' — date not set', signal: 'warn' });
+      actionItems.push({ text: 'Schedule ' + next.name + ' with your pediatrician', signal: 'action' });
+    }
+
+    // Booked appointment check
+    try {
+      var booked = JSON.parse(localStorage.getItem('ziva_vacc_booked') || 'null');
+      if (booked && booked.apptDate) {
+        var apptDays = Math.round((new Date(booked.apptDate) - new Date(today())) / 86400000);
+        if (apptDays >= 0) {
+          dataItems.push({ text: 'Appointment booked for ' + booked.apptDate + ' (' + apptDays + ' day(s) away)', signal: 'good' });
+        }
+      }
+    } catch(e) {}
+
+    // Show other upcoming
+    if (sortedUp.length > 1) {
+      var others = sortedUp.slice(1, 3).map(function(v) { return v.name + (v.date ? ' (' + v.date + ')' : ''); }).join(', ');
+      dataItems.push({ text: 'Also upcoming: ' + others, signal: 'info' });
+    }
+  } else {
+    dataItems.push({ text: 'No upcoming vaccinations scheduled', signal: 'good' });
+  }
+
+  if (actionItems.length === 0 && upcoming.length > 0) {
+    actionItems.push({ text: 'Keep vaccination records updated after each visit', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 3) });
+
+  return {
+    icon: 'syringe', domain: 'sky', title: 'Vaccinations', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + allVacc.length + ' vaccination records',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: SUPPLEMENT ═══
+
+function qaAnswerSupplement(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Supplement Tracking';
+
+  try {
+    var supp = computeSupplementAdherence(30);
+    if (!supp || supp.length === 0) {
+      return {
+        icon: 'pill', domain: 'sky', title: 'Supplements', headline: 'No supplements tracked',
+        sections: [{ label: 'STATUS', icon: zi('info'), items: [
+          { text: 'No active supplements found — add them in the Medical tab', signal: 'info' },
+          { text: 'Vitamin D3 is recommended for breastfed babies', signal: 'action' }
+        ]}],
+        confidence: null, dataGap: null
+      };
+    }
+
+    supp.forEach(function(s) {
+      headline = s.name + ': ' + s.adherenceRate + '% adherence';
+
+      // Adherence rate
+      var adhSignal = s.adherenceRate >= 90 ? 'good' : s.adherenceRate >= 70 ? 'info' : 'warn';
+      dataItems.push({ text: 'Adherence: ' + s.adherenceRate + '% (' + s.doneCount + '/' + s.totalDays + ' days)', signal: adhSignal });
+
+      // Streak
+      if (s.currentStreak > 0) {
+        dataItems.push({ text: 'Current streak: ' + s.currentStreak + ' consecutive days', signal: s.currentStreak >= 7 ? 'good' : 'info' });
+      } else {
+        dataItems.push({ text: 'Streak broken — missed recently', signal: 'warn' });
+      }
+
+      // Longest streak
+      if (s.longestStreak > s.currentStreak) {
+        dataItems.push({ text: 'Best streak: ' + s.longestStreak + ' days', signal: 'info' });
+      }
+
+      // Timing analysis
+      if (s.timing) {
+        var timeStr = _siMinToBedtime(s.timing.avgMin);
+        dataItems.push({ text: 'Usual time: ' + s.timing.bestWindow + ' (' + s.timing.consistency.toLowerCase() + ')', signal: s.timing.consistency === 'Consistent' ? 'good' : 'info' });
+      }
+
+      // Trend
+      if (s.trend === 'improving') {
+        dataItems.push({ text: 'Trend: improving — adherence is getting better', signal: 'good' });
+      } else if (s.trend === 'declining') {
+        dataItems.push({ text: 'Trend: declining — adherence dropped recently', signal: 'warn' });
+        actionItems.push({ text: 'Set a daily reminder to get back on track', signal: 'action' });
+      }
+
+      // Flagged days
+      if (s.flaggedDays && s.flaggedDays.length > 0) {
+        dataItems.push({ text: 'Most likely to miss on: ' + s.flaggedDays.join(', '), signal: 'warn' });
+        actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
+      }
+
+      // Today's status
+      var todayEntry = (medChecks || {})[today()];
+      var todayStatus = todayEntry ? todayEntry[s.name] : undefined;
+      if (!todayStatus) {
+        actionItems.push({ text: 'Not given today yet — don\'t forget!', signal: 'action' });
+      } else if (todayStatus.indexOf('done') === 0) {
+        var timeGiven = todayStatus.replace('done:', '');
+        actionItems.push({ text: 'Given today at ' + timeGiven, signal: 'good' });
+      }
+    });
+  } catch(e) {
+    return {
+      icon: 'pill', domain: 'sky', title: 'Supplements', headline: 'Unable to compute',
+      sections: [{ label: 'STATUS', icon: zi('info'), items: [
+        { text: 'Check supplement setup in the Medical tab', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: null
+    };
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'pill', domain: 'sky', title: 'Supplement Tracking', headline: headline,
+    sections: sections,
+    confidence: 'Based on 30-day adherence data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: ILLNESS ═══
+
+function qaAnswerIllness(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Health Status';
+
+  try {
+    var episodes = _getAllEpisodes();
+    var active = episodes.filter(function(e) { return e.status === 'active'; });
+    var resolved = episodes.filter(function(e) { return e.status === 'resolved'; });
+
+    if (episodes.length === 0) {
+      return {
+        icon: 'medical', domain: 'sky', title: 'Health Status', headline: 'No illness episodes recorded',
+        sections: [{ label: 'STATUS', icon: zi('check'), items: [
+          { text: 'No illness episodes on record — great!', signal: 'good' },
+          { text: 'Use the Illness Tracker when symptoms appear', signal: 'info' }
+        ]}],
+        confidence: null, dataGap: null
+      };
+    }
+
+    // Active illnesses
+    if (active.length > 0) {
+      headline = active.length + ' active illness episode' + (active.length > 1 ? 's' : '');
+      active.forEach(function(ep) {
+        var dur = Math.max(1, Math.ceil((new Date() - new Date(ep.startedAt)) / 86400000));
+        var typeLabel = ep.illnessType.charAt(0).toUpperCase() + ep.illnessType.slice(1);
+        dataItems.push({ text: typeLabel + ' — active for ' + dur + ' day(s)', signal: 'warn' });
+      });
+
+      // Illness-appropriate food
+      actionItems.push({ text: 'Offer light, easy-to-digest foods (rice porridge, dal water, banana)', signal: 'action' });
+      actionItems.push({ text: 'Keep up breast/formula feeds — hydration is key', signal: 'action' });
+
+      // When to see doctor
+      if (active.some(function(e) { return e.illnessType === 'fever'; })) {
+        actionItems.push({ text: 'See doctor if fever persists >3 days or exceeds 102°F/39°C', signal: 'warn' });
+      }
+      if (active.some(function(e) { return e.illnessType === 'diarrhoea'; })) {
+        actionItems.push({ text: 'Watch for dehydration signs (dry lips, fewer wet diapers, listlessness)', signal: 'warn' });
+      }
+    } else {
+      headline = 'No active illness — ' + resolved.length + ' past episode(s)';
+      dataItems.push({ text: 'No active illness right now', signal: 'good' });
+    }
+
+    // Recent resolved
+    var recentResolved = resolved.filter(function(e) {
+      var daysSince = Math.round((new Date() - new Date(e.resolvedAt || e.startedAt)) / 86400000);
+      return daysSince <= 14;
+    });
+    if (recentResolved.length > 0) {
+      recentResolved.forEach(function(ep) {
+        var dur = _episodeDurationDays(ep);
+        var typeLabel = ep.illnessType.charAt(0).toUpperCase() + ep.illnessType.slice(1);
+        var endDate = ep.resolvedAt ? new Date(ep.resolvedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+        dataItems.push({ text: typeLabel + ' — resolved after ' + dur + ' day(s)' + (endDate ? ' (' + endDate + ')' : ''), signal: 'good' });
+      });
+      if (active.length === 0) {
+        actionItems.push({ text: 'Recovery period — continue nutrient-rich meals to rebuild', signal: 'action' });
+      }
+    }
+
+    // History summary
+    if (episodes.length > 3) {
+      var typeCounts = {};
+      episodes.forEach(function(e) { typeCounts[e.illnessType] = (typeCounts[e.illnessType] || 0) + 1; });
+      var summary = Object.entries(typeCounts).map(function(e) { return e[1] + ' ' + e[0]; }).join(', ');
+      dataItems.push({ text: 'Total episodes: ' + summary, signal: 'info' });
+    }
+  } catch(e) {
+    return {
+      icon: 'medical', domain: 'sky', title: 'Health Status', headline: 'Unable to load illness data',
+      sections: [{ label: 'STATUS', icon: zi('info'), items: [
+        { text: 'Use the Illness Tracker to log symptoms', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: null
+    };
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'medical', domain: 'sky', title: 'Health Status', headline: headline,
+    sections: sections,
+    confidence: 'Based on illness tracker data',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: TOMORROW ═══
+
+function qaAnswerTomorrow(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var headline = 'Tomorrow\'s Plan';
+
+  // Check if Tomorrow's Prep data exists
+  var tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  var tomorrowStr = toDateStr(tomorrowDate);
+  var tomorrowDay = tomorrowDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+  headline = 'Plan for ' + tomorrowDay;
+
+  // Meal suggestions based on gaps
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (hm && hm.gaps && hm.gaps.length > 0) {
+      dataItems.push({ text: 'Nutrient gaps to fill: ' + hm.gaps.slice(0, 3).join(', '), signal: 'warn' });
+      hm.gaps.slice(0, 2).forEach(function(gap) {
+        try {
+          var sug = _suggestFoodForNutrient(gap.toLowerCase());
+          if (sug && sug !== 'a variety of foods') {
+            actionItems.push({ text: 'Include ' + sug + ' for ' + gap, signal: 'action' });
+          }
+        } catch(e2) {}
+      });
+    } else {
+      dataItems.push({ text: 'Nutrients are well covered — keep up the variety', signal: 'good' });
+    }
+  } catch(e) {}
+
+  // Sleep target
+  try {
+    var drift = computeBedtimeDrift();
+    if (!drift.insufficient && drift.direction === 'later') {
+      var target = _siMinToBedtime(drift.avgBedtime - 15);
+      actionItems.push({ text: 'Bedtime target: ' + target + ' (pulling back 15 min)', signal: 'action' });
+    }
+  } catch(e) {}
+
+  // Activity suggestion
+  var actData = _qaActivityDays14d();
+  if (actData.domainCounts) {
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+    var weakestDomain = null;
+    var weakestCount = Infinity;
+    ['motor', 'language', 'social', 'cognitive'].forEach(function(dom) {
+      var count = actData.domainCounts[dom] || 0;
+      if (count < weakestCount) { weakestCount = count; weakestDomain = dom; }
+    });
+    if (weakestDomain) {
+      var domainActivities = {
+        motor: 'tummy time, crawling practice, or standing exercises',
+        language: 'reading, singing, or narrating activities',
+        social: 'peek-a-boo, mirror play, or social interaction',
+        cognitive: 'stacking toys, object permanence games, or puzzle play'
+      };
+      actionItems.push({ text: 'Focus on ' + catNames[weakestDomain] + ': ' + (domainActivities[weakestDomain] || 'age-appropriate activities'), signal: 'action' });
+    }
+  }
+
+  // Vaccination reminder
+  try {
+    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    if (nextVacc) {
+      var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
+      if (daysUntil <= 3 && daysUntil >= 0) {
+        dataItems.push({ text: 'Vaccination ' + nextVacc.name + ' due in ' + daysUntil + ' day(s)', signal: 'warn' });
+      }
+    }
+  } catch(e) {}
+
+  // Supplement reminder
+  try {
+    var supp = computeSupplementAdherence(7);
+    if (supp && supp.length > 0) {
+      supp.forEach(function(s) {
+        if (s.adherenceRate < 80) {
+          actionItems.push({ text: 'Don\'t forget ' + s.name + ' tomorrow (adherence: ' + s.adherenceRate + '%)', signal: 'action' });
+        }
+      });
+    }
+  } catch(e) {}
+
+  if (dataItems.length === 0 && actionItems.length === 0) {
+    dataItems.push({ text: 'Log more data to get personalised tomorrow plans', signal: 'info' });
+    actionItems.push({ text: 'Track meals, sleep, and activities for better recommendations', signal: 'action' });
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 4) });
+  if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 5) });
+
+  return {
+    icon: 'sun', domain: 'peach', title: 'Tomorrow\'s Plan', headline: headline,
+    sections: sections,
+    confidence: 'Based on recent trends and gaps',
+    dataGap: null
+  };
 }
 
 // ═══ SMART Q&A — END ═══
