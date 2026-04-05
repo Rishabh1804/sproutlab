@@ -42068,7 +42068,7 @@ function computeSleepRegression() {
   const recent = dayScores.filter(d => d.dayIndex < 14);
   const baseline = dayScores.filter(d => d.dayIndex >= 14);
 
-  if (baseline.length < 3 || recent.length < 3) return { insufficient: true, count: dayScores.length, needed: 10 };
+  if (baseline.length < 3 || recent.length < 3) return { insufficient: true, count: dayScores.length, needed: 14, reason: 'baseline' };
 
   const baselineAvg = Math.round(baseline.reduce((s, d) => s + d.score, 0) / baseline.length);
   const recentAvg = Math.round(recent.reduce((s, d) => s + d.score, 0) / recent.length);
@@ -42172,7 +42172,10 @@ function renderInfoSleepRegression() {
 
   const data = computeSleepRegression();
   if (data.insufficient) {
-    summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
+    const msg = data.reason === 'baseline'
+      ? 'Need at least 2 weeks of sleep data to establish a baseline for regression detection (' + data.count + ' days logged so far)'
+      : 'Need ' + data.needed + ' days of data (have ' + data.count + ')';
+    summaryEl.innerHTML = '<div class="si-nodata">' + msg + '</div>';
     if (timelineEl) timelineEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
     return;
