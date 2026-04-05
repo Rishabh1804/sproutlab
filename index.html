@@ -5733,6 +5733,204 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ob-section.ob-hydration-prominent { background:rgba(158,62,82,0.1); }
 [data-theme="dark"] .ob-section.ob-hydration-full { background:rgba(51,101,128,0.1); }
 [data-theme="dark"] .ob-clear-btn { background:rgba(138,101,32,0.1); border-color:var(--tc-amber); }
+
+/* ═══════════════════════════════════════════
+   Bug Capture System — bug-* class family
+   Domain color: amber (caution/attention)
+   ═══════════════════════════════════════════ */
+
+/* ── Bug Reporter Overlay (bottom sheet) ── */
+.bug-overlay {
+  position:fixed; inset:0; z-index:1050;
+  background:var(--overlay-bg);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity var(--ease-med);
+}
+.bug-overlay.open { opacity:1; pointer-events:auto; }
+.bug-overlay.open .bug-card { transform:translateY(0); }
+.bug-card {
+  width:100%; max-width:440px;
+  background:var(--warm);
+  border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.15);
+  max-height:90vh; overflow-y:auto;
+  transform:translateY(40px);
+  transition:transform var(--ease-slow);
+  padding-bottom:max(var(--sp-24), env(safe-area-inset-bottom, var(--sp-24)));
+}
+.bug-header {
+  position:sticky; top:0; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp-16) var(--sp-20) var(--sp-10);
+  background:var(--amber-light);
+  border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+}
+.bug-header-left { display:flex; flex-direction:column; gap:var(--sp-2); }
+.bug-title {
+  display:flex; align-items:center; gap:var(--sp-8);
+  font-family:'Fraunces',serif; font-size:var(--fs-xl);
+  font-weight:600; color:var(--tc-amber);
+}
+.bug-title .icon { width:var(--sp-20); height:var(--sp-20); }
+.bug-subtitle { font-size:var(--fs-xs); color:var(--tc-amber); opacity:0.8; }
+.bug-close {
+  width:var(--sp-32); height:var(--sp-32); border-radius:50%; border:none;
+  background:rgba(255,255,255,0.6); color:var(--tc-amber); cursor:pointer;
+  font-size:var(--fs-lg); display:flex; align-items:center; justify-content:center;
+  transition:all var(--ease-fast); flex-shrink:0;
+}
+.bug-close:hover { background:rgba(255,255,255,0.9); }
+.bug-body { padding:var(--sp-12) var(--sp-16); display:flex; flex-direction:column; gap:var(--sp-12); }
+
+/* ── Description textarea ── */
+.bug-textarea {
+  width:100%; min-height:80px; resize:vertical;
+  border:1.5px solid rgba(138,101,32,0.25); border-radius:var(--r-lg);
+  padding:var(--sp-10) var(--sp-12);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-base);
+  color:var(--text); background:var(--glass);
+  outline:none; transition:border-color var(--ease-fast);
+}
+.bug-textarea:focus { border-color:var(--tc-amber); }
+.bug-desc-label {
+  font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber);
+  margin-bottom:var(--sp-4);
+}
+
+/* ── Context section ── */
+.bug-context {
+  padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--glass); display:flex; flex-direction:column; gap:var(--sp-6);
+}
+.bug-context-title {
+  font-size:var(--fs-xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--mid);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.bug-context-row {
+  font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed);
+}
+.bug-context-row .bug-context-label { font-weight:600; color:var(--mid); }
+
+.bug-context-action { padding-left:var(--sp-12); }
+
+/* ── Error section ── */
+.bug-error {
+  padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--rose-light); display:flex; flex-direction:column; gap:var(--sp-4);
+}
+.bug-error-title {
+  font-size:var(--fs-xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--tc-rose);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.bug-error-msg {
+  font-size:var(--fs-sm); color:var(--tc-rose); font-weight:600;
+  word-break:break-word;
+}
+.bug-error-meta { font-size:var(--fs-xs); color:var(--tc-rose); opacity:0.7; }
+
+/* ── Action buttons ── */
+.bug-actions { display:flex; flex-direction:column; gap:var(--sp-8); }
+.bug-btn {
+  display:flex; align-items:center; justify-content:center; gap:var(--sp-8);
+  padding:var(--sp-12) var(--sp-16); border-radius:var(--r-lg);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-base); font-weight:700;
+  border:none; cursor:pointer; transition:all var(--ease-fast);
+}
+.bug-btn-whatsapp {
+  background:linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color:#fff;
+}
+.bug-btn-whatsapp:active { transform:scale(0.97); }
+.bug-btn-clipboard {
+  background:var(--glass-strong); color:var(--tc-amber);
+  border:1.5px solid rgba(138,101,32,0.2);
+}
+.bug-btn-clipboard:active { transform:scale(0.97); }
+
+/* ── Auto-prompt banner (Path C) ── */
+.bug-auto-prompt {
+  position:fixed; top:0; left:0; right:0; z-index:1060;
+  padding:var(--sp-12) var(--sp-16);
+  background:var(--amber-light);
+  border-bottom:1.5px solid rgba(138,101,32,0.2);
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-10);
+  transform:translateY(-100%);
+  transition:transform var(--ease-med);
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+.bug-auto-prompt.open { transform:translateY(0); }
+.bug-auto-prompt-text {
+  display:flex; align-items:center; gap:var(--sp-6);
+  font-size:var(--fs-sm); font-weight:600; color:var(--tc-amber); flex:1;
+}
+.bug-auto-prompt-actions { display:flex; gap:var(--sp-8); flex-shrink:0; }
+.bug-auto-prompt-btn {
+  padding:var(--sp-6) var(--sp-12); border-radius:var(--r-md);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:700;
+  border:none; cursor:pointer; transition:all var(--ease-fast);
+}
+.bug-auto-prompt-report { background:var(--tc-amber); color:#fff; }
+.bug-auto-prompt-dismiss { background:var(--glass-strong); color:var(--tc-amber); }
+
+/* ── FAB tooltip ── */
+.bug-tooltip {
+  position:fixed; z-index:1005;
+  bottom:calc(68px + var(--sp-12));
+  left:50%; transform:translateX(-50%);
+  background:var(--sage-light); color:var(--tc-sage);
+  padding:var(--sp-8) var(--sp-12);
+  border-radius:var(--r-lg);
+  font-size:var(--fs-xs); font-weight:600;
+  display:flex; align-items:center; gap:var(--sp-8);
+  box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  opacity:0; pointer-events:none;
+  transition:opacity var(--ease-med);
+}
+.bug-tooltip.open { opacity:1; pointer-events:auto; }
+.bug-tooltip-close {
+  background:none; border:none; color:var(--tc-sage); cursor:pointer;
+  font-size:var(--fs-sm); font-weight:700; padding:0; line-height:1;
+}
+.bug-tooltip-arrow {
+  position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+  width:0; height:0;
+  border-left:6px solid transparent; border-right:6px solid transparent;
+  border-top:6px solid var(--sage-light);
+}
+
+/* ── Settings row ── */
+.bug-settings-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--amber-light); cursor:pointer;
+  transition:all var(--ease-fast);
+  border:1.5px solid rgba(138,101,32,0.15);
+}
+.bug-settings-row:active { transform:scale(0.98); }
+.bug-settings-left { display:flex; flex-direction:column; gap:var(--sp-2); }
+.bug-settings-title {
+  font-size:var(--fs-base); font-weight:700; color:var(--tc-amber);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.bug-settings-sub { font-size:var(--fs-xs); color:var(--tc-amber); opacity:0.7; }
+.bug-settings-arrow { font-size:var(--fs-lg); color:var(--tc-amber); opacity:0.5; }
+
+/* ═══ Dark mode: Bug Capture ═══ */
+[data-theme="dark"] .bug-card { background:var(--warm); box-shadow:0 -8px 40px rgba(0,0,0,0.5); }
+[data-theme="dark"] .bug-header { background:rgba(138,101,32,0.15); }
+[data-theme="dark"] .bug-close { background:rgba(255,255,255,0.08); color:var(--tc-amber); }
+[data-theme="dark"] .bug-textarea { background:rgba(255,255,255,0.05); border-color:rgba(138,101,32,0.25); }
+[data-theme="dark"] .bug-context { background:var(--glass); }
+[data-theme="dark"] .bug-error { background:rgba(158,62,82,0.12); }
+[data-theme="dark"] .bug-btn-clipboard { background:rgba(255,255,255,0.06); border-color:rgba(138,101,32,0.2); }
+[data-theme="dark"] .bug-auto-prompt { background:rgba(138,101,32,0.15); border-bottom-color:rgba(138,101,32,0.25); box-shadow:0 4px 20px rgba(0,0,0,0.3); }
+[data-theme="dark"] .bug-auto-prompt-dismiss { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .bug-tooltip { background:rgba(58,112,96,0.2); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+[data-theme="dark"] .bug-tooltip-arrow { border-top-color:rgba(58,112,96,0.2); }
+[data-theme="dark"] .bug-settings-row { background:rgba(138,101,32,0.1); border-color:rgba(138,101,32,0.2); }
 </style>
 </head>
 <body>
@@ -8039,6 +8237,47 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 <!-- Quick Log Toast -->
 <div class="ql-toast" id="qlToast"></div>
+
+<!-- Bug Reporter Overlay -->
+<div class="bug-overlay" id="bugOverlay" data-action="closeBugReporterSelf">
+  <div class="bug-card">
+    <div class="bug-header">
+      <div class="bug-header-left">
+        <div class="bug-title"><span class="icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-warn"/></svg></span> Report a Bug</div>
+        <div class="bug-subtitle" id="bugSubtitle"></div>
+      </div>
+      <button class="bug-close" data-action="closeBugReporter" aria-label="Close">&times;</button>
+    </div>
+    <div class="bug-body">
+      <div>
+        <div class="bug-desc-label">What went wrong?</div>
+        <textarea class="bug-textarea" id="bugDescription" rows="3"></textarea>
+      </div>
+      <div class="bug-context" id="bugContextSection"></div>
+      <div class="bug-error" id="bugErrorSection" style="display:none;"></div>
+      <div class="bug-actions">
+        <button class="bug-btn bug-btn-whatsapp" data-action="bugSendWhatsApp"><svg class="zi" aria-hidden="true"><use href="#zi-link"/></svg> Send via WhatsApp</button>
+        <button class="bug-btn bug-btn-clipboard" data-action="bugCopyClipboard"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bug Auto-Prompt Banner -->
+<div class="bug-auto-prompt" id="bugAutoPrompt">
+  <div class="bug-auto-prompt-text"><span class="icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-warn"/></svg></span> Something went wrong</div>
+  <div class="bug-auto-prompt-actions">
+    <button class="bug-auto-prompt-btn bug-auto-prompt-report" data-action="bugAutoReport">Report</button>
+    <button class="bug-auto-prompt-btn bug-auto-prompt-dismiss" data-action="bugAutoDismiss">Dismiss</button>
+  </div>
+</div>
+
+<!-- Bug Tooltip (FAB long-press discovery) -->
+<div class="bug-tooltip" id="bugTooltip">
+  Long-press <strong>+</strong> to report a bug
+  <button class="bug-tooltip-close" data-action="bugDismissTooltip">&times;</button>
+  <div class="bug-tooltip-arrow"></div>
+</div>
 <div class="psf-overlay" id="psfOverlay" data-action="dismissFlashSelf"></div>
 
 <!-- v2.4: FAB + Popup removed — Insights tab is one tap away -->
@@ -8146,6 +8385,14 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
         <button class="btn btn-rose btn-full-base" data-action="showWelcomeGuide" ><svg class="zi" aria-hidden="true"><use href="#zi-book"/></svg> Show Getting Started Guide</button>
         <button class="btn btn-lav btn-full-base" data-action="printDashboard" ><svg class="zi" aria-hidden="true"><use href="#zi-list"/></svg> Print Dashboard</button>
+
+        <div class="bug-settings-row" data-action="openBugReporter">
+          <div class="bug-settings-left">
+            <div class="bug-settings-title"><span class="icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-warn"/></svg></span> Report a Bug</div>
+            <div class="bug-settings-sub">Help us improve the dashboard</div>
+          </div>
+          <div class="bug-settings-arrow">&rsaquo;</div>
+        </div>
 
         <button class="btn btn-rose btn-full-pwa" id="pwaInstallBtn" data-action="promptPWAInstall" ><svg class="zi" aria-hidden="true"><use href="#zi-bolt"/></svg> Add to Home Screen</button>
 
@@ -8518,6 +8765,8 @@ const KEYS = {
   tomorrowPlanned: 'ziva_tomorrow_planned',
   tomorrowOuting: 'ziva_tomorrow_outing',
   powerOutage: 'ziva_power_outage',
+  bugReportPhone: 'ziva_bug_report_phone',
+  bugTooltipSeen: 'ziva_bug_tooltip_seen',
 };
 
 function load(key, def) {
@@ -10914,6 +11163,7 @@ function init() {
     const arg2 = btn.dataset.arg2;
     const arg3 = btn.dataset.arg3;
     if (btn.dataset.stop) e.stopPropagation();
+    _bugLogAction(action, arg);
     // ── Static HTML actions ──
     if (action === 'addQuickNote') addQuickNote();
     else if (action === 'checkFoodCombo') checkFoodCombo();
@@ -11120,6 +11370,15 @@ function init() {
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }
     else if (action === 'resetQLSheet') resetQLSheet();
+    // ── Bug Capture actions ──
+    else if (action === 'openBugReporter') { openBugReporter(); closeSettingsSidebar(); }
+    else if (action === 'closeBugReporter') closeBugReporter();
+    else if (action === 'closeBugReporterSelf') { if (e.target === btn) closeBugReporter(); }
+    else if (action === 'bugSendWhatsApp') _bugSendWhatsApp();
+    else if (action === 'bugCopyClipboard') _bugCopyClipboard();
+    else if (action === 'bugAutoReport') { _bugDismissAutoPrompt(); openBugReporter(true); }
+    else if (action === 'bugAutoDismiss') _bugDismissAutoPrompt();
+    else if (action === 'bugDismissTooltip') _bugDismissTooltip();
   });
 
   
@@ -48489,6 +48748,434 @@ function isPWA() {
          window.navigator.standalone === true;
 }
 
+// ═══════════════════════════════════════════════════
+// ██ BUG CAPTURE SYSTEM
+// ═══════════════════════════════════════════════════
+
+// ── Action log (rolling buffer of last 10 actions) ──
+let _bugActionLog = [];
+const BUG_ACTION_LOG_MAX = 10;
+
+function _bugLogAction(action, arg) {
+  _bugActionLog.push({
+    action: action,
+    arg: arg || null,
+    time: new Date().toLocaleTimeString('en-IN', { hour12: false })
+  });
+  if (_bugActionLog.length > BUG_ACTION_LOG_MAX) _bugActionLog.shift();
+}
+
+// ── Error capture ──
+let _bugLastError = null;
+let _bugLastErrorTime = 0;
+let _bugLastAutoPrompt = 0;
+
+window.onerror = function(msg, source, line, col, error) {
+  _bugLastError = {
+    message: String(msg).substring(0, 200),
+    source: (source || '').split('/').pop(),
+    line: line,
+    col: col,
+    stack: error && error.stack ? error.stack.substring(0, 500) : ''
+  };
+  _bugLastErrorTime = Date.now();
+
+  // Auto-prompt (Path C) — throttled, not in Simple Mode
+  var simple = false;
+  try { simple = isSimpleMode(); } catch(e2) {}
+  if (!simple && Date.now() - _bugLastAutoPrompt > 300000) {
+    _bugLastAutoPrompt = Date.now();
+    _bugShowAutoPrompt();
+  }
+};
+
+window.onunhandledrejection = function(event) {
+  var reason = event.reason;
+  _bugLastError = {
+    message: String(reason && reason.message ? reason.message : reason).substring(0, 200),
+    source: 'promise',
+    line: 0,
+    col: 0,
+    stack: reason && reason.stack ? reason.stack.substring(0, 500) : ''
+  };
+  _bugLastErrorTime = Date.now();
+};
+
+// ── State snapshot ──
+function _bugCaptureState() {
+  var currentTab = 'home';
+  try {
+    var tabs = ['home','growth','track','insights','info'];
+    for (var i = 0; i < tabs.length; i++) {
+      var p = document.getElementById('tab-' + tabs[i]);
+      if (p && p.classList.contains('active')) { currentTab = tabs[i]; break; }
+    }
+  } catch(e) {}
+
+  var subTab = null;
+  try { if (currentTab === 'track') subTab = _activeTrackSub || null; } catch(e) {}
+
+  var zivaScore = null;
+  var domainScores = {};
+  try {
+    // Use last-known scores to avoid expensive recalculation during crash context
+    // _lastKnownScores is already maintained by calcZivaScore on every render cycle
+    if (typeof _lastKnownScores !== 'undefined') {
+      Object.keys(_lastKnownScores).forEach(function(k) {
+        if (_lastKnownScores[k] !== null) domainScores[k] = _lastKnownScores[k];
+      });
+    }
+    // Grab the displayed Ziva Score from the DOM if available
+    var scoreEl = document.getElementById('zsNumber');
+    if (scoreEl && scoreEl.textContent) {
+      var parsed = parseInt(scoreEl.textContent, 10);
+      if (!isNaN(parsed)) zivaScore = parsed;
+    }
+  } catch(e) {}
+
+  var activeAlertCount = 0;
+  try {
+    var alertEls = document.querySelectorAll('.al-card');
+    activeAlertCount = alertEls ? alertEls.length : 0;
+  } catch(e) {}
+
+  var activeIllness = null;
+  try { activeIllness = _obGetActiveIllness(); } catch(e) {}
+
+  var outingPlanned = false;
+  try { outingPlanned = !!_tomorrowOuting; } catch(e) {}
+
+  var dataDays = 0;
+  try { dataDays = countDataDays(); } catch(e) {}
+
+  var modWeight = 0;
+  try { modWeight = getModifierWeight(); } catch(e) {}
+
+  return {
+    build: 'v2.31',
+    timestamp: new Date().toISOString(),
+    tab: currentTab,
+    subTab: subTab,
+    simpleMode: isSimpleMode(),
+    darkMode: document.documentElement.getAttribute('data-theme') === 'dark',
+    screen: window.innerWidth + 'x' + window.innerHeight,
+    dpr: window.devicePixelRatio || 1,
+    userAgent: navigator.userAgent,
+    zivaScore: zivaScore,
+    domainScores: domainScores,
+    dataDays: dataDays,
+    modifierWeight: modWeight,
+    activeAlerts: activeAlertCount,
+    activeIllness: activeIllness,
+    outingPlanned: outingPlanned,
+    recentActions: _bugActionLog.slice()
+  };
+}
+
+// ── Format for WhatsApp / clipboard ──
+function _bugFormatMessage(state, description, errorObj) {
+  var d = new Date();
+  var dateStr = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  var timeStr = d.toLocaleTimeString('en-IN', { hour:'numeric', minute:'2-digit', hour12:true });
+
+  var lines = [];
+  lines.push('*SproutLab Bug Report*');
+  lines.push('Build: ' + state.build + ' \u00B7 ' + dateStr + ', ' + timeStr);
+  lines.push('');
+
+  if (description) {
+    lines.push('*What happened:*');
+    lines.push(description);
+    lines.push('');
+  }
+
+  lines.push('*Context:*');
+  lines.push('Tab: ' + state.tab + (state.subTab ? ' > ' + state.subTab : '') +
+    ' \u00B7 ' + (state.darkMode ? 'Dark' : 'Light') + ' mode' +
+    ' \u00B7 Wife Mode ' + (state.simpleMode ? 'ON' : 'OFF'));
+  lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
+
+  if (state.zivaScore !== null) {
+    lines.push('Ziva Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
+  }
+  if (state.modifierWeight > 0) {
+    lines.push('Modifier: ' + Math.round(state.modifierWeight * 100) + '% active');
+  }
+  if (state.activeAlerts > 0) lines.push('Active alerts: ' + state.activeAlerts);
+  if (state.activeIllness) lines.push('Active illness: ' + state.activeIllness);
+  if (state.outingPlanned) lines.push('Outing planned');
+  lines.push('');
+
+  if (state.recentActions.length > 0) {
+    lines.push('*Last actions:*');
+    state.recentActions.forEach(function(a) {
+      lines.push(a.time + ' ' + a.action + (a.arg ? '(' + a.arg + ')' : ''));
+    });
+    lines.push('');
+  }
+
+  if (errorObj) {
+    lines.push('*Error:*');
+    lines.push(errorObj.message);
+    if (errorObj.line) lines.push('Line ' + errorObj.line + ' \u00B7 ' + (errorObj.source || ''));
+    if (errorObj.stack) lines.push('Stack: ' + errorObj.stack.substring(0, 300));
+  }
+
+  return lines.join('\n');
+}
+
+// ── Render context section inside modal ──
+function _bugRenderContext(state) {
+  var el = document.getElementById('bugContextSection');
+  if (!el) return;
+
+  var html = '<div class="bug-context-title"><span class="icon icon-amber">' + zi('scope') + '</span> CAPTURED CONTEXT</div>';
+
+  html += '<div class="bug-context-row">';
+  html += '<span class="bug-context-label">Tab:</span> ' + escHtml(state.tab);
+  if (state.subTab) html += ' &rsaquo; ' + escHtml(state.subTab);
+  html += ' &middot; ' + (state.darkMode ? 'Dark' : 'Light') + ' mode';
+  html += ' &middot; Wife Mode ' + (state.simpleMode ? 'ON' : 'OFF');
+  html += '</div>';
+
+  html += '<div class="bug-context-row"><span class="bug-context-label">Build:</span> ' + escHtml(state.build) +
+    ' &middot; Screen: ' + escHtml(state.screen) + '</div>';
+
+  if (state.zivaScore !== null) {
+    html += '<div class="bug-context-row"><span class="bug-context-label">Ziva Score:</span> ' + state.zivaScore +
+      ' &middot; Data days: ' + state.dataDays + '</div>';
+  }
+
+  if (state.recentActions.length > 0) {
+    var showCount = Math.min(state.recentActions.length, 3);
+    var recent = state.recentActions.slice(-showCount);
+    html += '<div class="bug-context-row"><span class="bug-context-label">Last ' + showCount + ' actions:</span></div>';
+    recent.forEach(function(a) {
+      html += '<div class="bug-context-row bug-context-action">' +
+        escHtml(a.time) + ' ' + escHtml(a.action) + (a.arg ? '(' + escHtml(a.arg) + ')' : '') + '</div>';
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+// ── Render error section inside modal ──
+function _bugRenderError(errorObj) {
+  var el = document.getElementById('bugErrorSection');
+  if (!el) return;
+
+  if (!errorObj) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = '';
+
+  var agoSec = Math.round((Date.now() - _bugLastErrorTime) / 1000);
+  var agoStr = agoSec < 60 ? agoSec + ' seconds ago' : Math.round(agoSec / 60) + ' minutes ago';
+
+  var html = '<div class="bug-error-title"><span class="icon icon-rose">' + zi('siren') + '</span> ERROR DETECTED</div>';
+  html += '<div class="bug-error-msg">' + escHtml(errorObj.message) + '</div>';
+  html += '<div class="bug-error-meta">';
+  if (errorObj.line) html += 'Line ' + errorObj.line;
+  if (errorObj.source) html += ' &middot; ' + escHtml(errorObj.source);
+  html += ' &middot; ' + agoStr;
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+// ── Open / Close bug reporter ──
+let _bugCapturedState = null;
+
+function openBugReporter(fromAutoPrompt) {
+  _bugCapturedState = _bugCaptureState();
+
+  var subtitleEl = document.getElementById('bugSubtitle');
+  if (subtitleEl) {
+    var d = new Date();
+    subtitleEl.textContent = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) +
+      ', ' + d.toLocaleTimeString('en-IN', { hour:'numeric', minute:'2-digit', hour12:true });
+  }
+
+  var textarea = document.getElementById('bugDescription');
+  if (textarea) {
+    textarea.value = '';
+    if (fromAutoPrompt && _bugLastError) {
+      textarea.placeholder = 'The app encountered an error. What were you trying to do?';
+    } else {
+      textarea.placeholder = 'Describe what you saw or what is not working.';
+    }
+  }
+
+  // Decide error to show: only if recent (< 5 min)
+  var errorToShow = null;
+  if (_bugLastError && (Date.now() - _bugLastErrorTime) < 300000) {
+    errorToShow = _bugLastError;
+  }
+
+  _bugRenderContext(_bugCapturedState);
+  _bugRenderError(errorToShow);
+
+  var overlay = document.getElementById('bugOverlay');
+  if (overlay) overlay.classList.add('open');
+}
+
+function closeBugReporter() {
+  var overlay = document.getElementById('bugOverlay');
+  if (overlay) overlay.classList.remove('open');
+  _bugCapturedState = null;
+}
+
+// ── Send via WhatsApp ──
+function _bugSendWhatsApp() {
+  if (!_bugCapturedState) return;
+  var desc = (document.getElementById('bugDescription') || {}).value || '';
+  var errorObj = (_bugLastError && (Date.now() - _bugLastErrorTime) < 300000) ? _bugLastError : null;
+  var text = _bugFormatMessage(_bugCapturedState, desc, errorObj);
+
+  if (navigator.share) {
+    navigator.share({ title: 'SproutLab Bug Report', text: text }).catch(function() {
+      _bugOpenWhatsApp(text);
+    });
+  } else {
+    _bugOpenWhatsApp(text);
+  }
+  closeBugReporter();
+}
+
+function _bugOpenWhatsApp(text) {
+  var phone = _bugGetPhone();
+  var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
+}
+
+function _bugGetPhone() {
+  return localStorage.getItem(KEYS.bugReportPhone) || '918709688336';
+}
+
+// ── Copy to clipboard ──
+function _bugCopyClipboard() {
+  if (!_bugCapturedState) return;
+  var desc = (document.getElementById('bugDescription') || {}).value || '';
+  var errorObj = (_bugLastError && (Date.now() - _bugLastErrorTime) < 300000) ? _bugLastError : null;
+  var text = _bugFormatMessage(_bugCapturedState, desc, errorObj);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showQLToast(zi('check') + ' Bug report copied');
+    }).catch(function() {
+      _bugFallbackCopy(text);
+    });
+  } else {
+    _bugFallbackCopy(text);
+  }
+  closeBugReporter();
+}
+
+function _bugFallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showQLToast(zi('check') + ' Bug report copied'); }
+  catch(e) { showQLToast(zi('warn') + ' Copy failed'); }
+  document.body.removeChild(ta);
+}
+
+// ── Auto-prompt (Path C) ──
+function _bugShowAutoPrompt() {
+  var el = document.getElementById('bugAutoPrompt');
+  if (!el) return;
+  el.classList.add('open');
+  _bugAutoPromptTimer = setTimeout(function() {
+    _bugDismissAutoPrompt();
+  }, 8000);
+}
+let _bugAutoPromptTimer = null;
+
+function _bugDismissAutoPrompt() {
+  var el = document.getElementById('bugAutoPrompt');
+  if (el) el.classList.remove('open');
+  if (_bugAutoPromptTimer) { clearTimeout(_bugAutoPromptTimer); _bugAutoPromptTimer = null; }
+}
+
+// ── FAB long-press (Path B) ──
+let _bugFabPressTimer = null;
+let _bugFabStartX = 0;
+let _bugFabStartY = 0;
+let _bugFabDidLongPress = false;
+
+function _bugInitFabLongPress() {
+  var fab = document.getElementById('qlFab');
+  if (!fab) return;
+
+  fab.addEventListener('pointerdown', function(e) {
+    _bugFabStartX = e.clientX;
+    _bugFabStartY = e.clientY;
+    _bugFabDidLongPress = false;
+    _bugFabPressTimer = setTimeout(function() {
+      _bugFabPressTimer = null;
+      _bugFabDidLongPress = true;
+      openBugReporter();
+    }, 500);
+  });
+
+  fab.addEventListener('pointerup', function() {
+    if (_bugFabPressTimer) { clearTimeout(_bugFabPressTimer); _bugFabPressTimer = null; }
+  });
+  fab.addEventListener('pointercancel', function() {
+    if (_bugFabPressTimer) { clearTimeout(_bugFabPressTimer); _bugFabPressTimer = null; }
+  });
+  fab.addEventListener('pointermove', function(e) {
+    // Cancel if finger moves too far (accidental drag)
+    if (_bugFabPressTimer) {
+      var dx = Math.abs(e.clientX - _bugFabStartX);
+      var dy = Math.abs(e.clientY - _bugFabStartY);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(_bugFabPressTimer);
+        _bugFabPressTimer = null;
+      }
+    }
+  });
+
+  // Intercept click after long-press to prevent toggleQuickLog from firing
+  fab.addEventListener('click', function(e) {
+    if (_bugFabDidLongPress) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      _bugFabDidLongPress = false;
+    }
+  }, true); // capture phase — runs before delegation handler
+}
+
+// ── First-time tooltip ──
+function _bugShowTooltipIfNew() {
+  if (localStorage.getItem(KEYS.bugTooltipSeen)) return;
+  var el = document.getElementById('bugTooltip');
+  if (!el) return;
+
+  setTimeout(function() {
+    el.classList.add('open');
+    setTimeout(function() {
+      _bugDismissTooltip();
+    }, 10000);
+  }, 2000); // slight delay after app load
+}
+
+function _bugDismissTooltip() {
+  var el = document.getElementById('bugTooltip');
+  if (el) el.classList.remove('open');
+  localStorage.setItem(KEYS.bugTooltipSeen, '1');
+}
+
+// ── Init ──
+function _bugInit() {
+  _bugInitFabLongPress();
+  _bugShowTooltipIfNew();
+}
+
 // ─────────────────────────────────────────
 // START
 // ─────────────────────────────────────────
@@ -48497,6 +49184,7 @@ initSimpleMode();
 initZoomLevel();
 init();
 initWelcomeGuide();
+_bugInit();
 </script>
 </body>
 </html>
