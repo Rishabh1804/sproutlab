@@ -3011,6 +3011,7 @@ body.simple-mode .ins-card-alert-intel,
   width:18px; height:18px; border-radius:50%; display:inline-block;
   border:1.5px solid rgba(0,0,0,0.12); vertical-align:middle;
 }
+.poop-color-circle.pcc-sm { width:14px; height:14px; }
 .pq-btn {
   padding:8px 16px; border-radius:var(--r-lg); border:1.5px solid var(--amber-light);
   background:var(--amber-light); color:var(--tc-amber); font-family:'Nunito',sans-serif;
@@ -4266,6 +4267,22 @@ body.simple-mode .ins-card-alert-intel,
   cursor:pointer; margin-top:4px;
 }
 .sp-comp-action:active { opacity:0.6; }
+.sp-trend-line {
+  display:flex; align-items:center; gap:var(--sp-6);
+  padding:var(--sp-8) var(--sp-12);
+  margin-top:var(--sp-4);
+  background:var(--sky-light);
+  border-radius:var(--r-md);
+  font-size:var(--fs-xs);
+}
+.sp-trend-icon { display:flex; align-items:center; }
+.sp-trend-icon .zi { width:var(--fs-sm); height:var(--fs-sm); }
+.sp-trend-label { font-weight:600; color:var(--mid); }
+.sp-trend-delta { font-family:'Fraunces',serif; font-weight:700; font-size:var(--fs-sm); }
+.sp-trend-up { color:var(--tc-sage); }
+.sp-trend-down { color:var(--tc-amber); }
+.sp-trend-flat { color:var(--mid); }
+.sp-trend-detail { color:var(--mid); font-style:italic; }
 
 /* Overall summary tab */
 .sp-overview-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-8); margin-bottom:14px; }
@@ -5038,6 +5055,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sp-tab.active { background:rgba(242,168,184,0.1); border-color:rgba(242,168,184,0.2); }
 [data-theme="dark"] .sp-comp { border-bottom-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .sp-comp-bar { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .sp-trend-line { background:rgba(51,101,128,0.12); }
 [data-theme="dark"] .sp-overview-item { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .sp-tip { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.15); }
 [data-theme="dark"] .domain-score-hero { border-bottom-color:rgba(255,255,255,0.06); }
@@ -11685,6 +11703,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // HOME TAB RENDER
 // ─────────────────────────────────────────
 function renderHome() {
+  _clearModifierCache();
   updateHeader();
   renderHomeFeverBanner();
   renderHomeDiarrhoeaBanner();
@@ -19375,6 +19394,426 @@ function getScoreLabel(score) {
   return SCORE_LABELS[SCORE_LABELS.length - 1];
 }
 
+// ════════════════════════════════════════
+// INTELLIGENCE-AWARE SCORING
+// ════════════════════════════════════════
+
+let _modifierCache = {};
+let _lastPoopModifier = { score: 70, delta: 0, label: null, confidence: 0, factors: [] };
+const NEUTRAL_MODIFIER = Object.freeze({ score: 70, delta: 0, label: null, confidence: 0, factors: Object.freeze([]) });
+
+function _neutralModifier() { return { score: 70, delta: 0, label: null, confidence: 0, factors: [] }; }
+
+function _clearModifierCache() { _modifierCache = {}; _computingSleepMod = false; }
+
+function countDataDays() {
+  const allDates = new Set();
+  Object.keys(feedingData || {}).forEach(d => allDates.add(d));
+  (sleepData || []).forEach(s => { if (s.date) allDates.add(s.date); });
+  (poopData || []).forEach(p => { if (p.date) allDates.add(p.date); });
+  Object.keys(activityLog || {}).forEach(d => {
+    if (Array.isArray(activityLog[d]) && activityLog[d].length > 0) allDates.add(d);
+  });
+  Object.keys(medChecks || {}).forEach(d => {
+    if (d !== '_trackingSince' && medChecks[d]) allDates.add(d);
+  });
+  return allDates.size;
+}
+
+function getModifierWeight() {
+  const dd = countDataDays();
+  if (dd < 7) return 0;
+  if (dd < 14) return 0.10;
+  if (dd < 21) return 0.15;
+  return 0.20;
+}
+
+function applyIntelligenceModifier(baseScore, modifier) {
+  const weight = getModifierWeight();
+  if (weight === 0) return baseScore;
+  const raw = Math.round(baseScore * (1 - weight) + modifier.score * weight);
+  return Math.max(baseScore - 10, Math.min(baseScore + 10, raw));
+}
+
+function _getModifierLabel(factors) {
+  if (!factors || factors.length === 0) return null;
+  let maxDev = 0, dominant = null;
+  factors.forEach(f => {
+    const dev = Math.abs(f.value - 70);
+    if (dev > maxDev) { maxDev = dev; dominant = f; }
+  });
+  if (!dominant || maxDev < 5) return null;
+  return dominant.name.toLowerCase() + (dominant.value > 70 ? ' strong' : ' needs work');
+}
+
+function _buildModifier(factors) {
+  if (!factors || factors.length === 0) return _neutralModifier();
+  let wSum = 0, wTotal = 0;
+  factors.forEach(f => { wSum += f.value * f.weight; wTotal += f.weight; });
+  const score = wTotal > 0 ? Math.round(wSum / wTotal) : 70;
+  const label = _getModifierLabel(factors);
+  const confidence = Math.min(1, factors.filter(f => f.value !== 70).length / factors.length);
+  return { score, delta: 0, label, confidence, factors };
+}
+
+function _withDelta(modifier, baseScore, finalScore) {
+  return { score: modifier.score, delta: finalScore - baseScore, label: modifier.label, confidence: modifier.confidence, factors: modifier.factors };
+}
+
+// ── Expected texture stage by age ──
+function _expectedTextureStage(ageMonths) {
+  if (ageMonths < 7) return 0;   // puree
+  if (ageMonths < 8) return 1;   // mashed
+  if (ageMonths < 10) return 2;  // soft
+  return 3;                       // finger
+}
+
+// ════════════════════════════════════════
+// DOMAIN MODIFIERS
+// ════════════════════════════════════════
+
+// ── Diet Modifier ──
+function computeDietModifier() {
+  if (_modifierCache.diet) return _modifierCache.diet;
+  const feedDays = Object.keys(feedingData || {}).length;
+  if (feedDays < 7) { _modifierCache.diet = _neutralModifier(); return _modifierCache.diet; }
+
+  const factors = [];
+
+  // 1. Variety trend (25%)
+  const intro = computeIntroductionRate();
+  let varietyVal = 70;
+  if (intro && intro.trend) {
+    if (intro.trend === 'accelerating') varietyVal = 100;
+    else if (intro.trend === 'steady') varietyVal = 70;
+    else if (intro.trend === 'slowing') varietyVal = 40;
+  }
+  factors.push({ name: 'Variety trend', value: varietyVal, weight: 0.25 });
+
+  // 2. Nutrient consistency (25%)
+  const bl = computeBaselines();
+  let nutrientVal = 70;
+  if (bl && bl.nutrientDays) {
+    const covered = KEY_NUTRIENTS.filter(n => (bl.nutrientDays[n] || 0) >= 1).length;
+    const pct = KEY_NUTRIENTS.length > 0 ? covered / KEY_NUTRIENTS.length : 0;
+    nutrientVal = pct >= 0.8 ? 100 : pct >= 0.5 ? 70 : 40;
+  }
+  factors.push({ name: 'Nutrient consistency', value: nutrientVal, weight: 0.25 });
+
+  // 3. Repetition fatigue (25%)
+  const rep = computeFoodRepetition();
+  let repVal = 100;
+  if (rep) {
+    if (rep.fatigued && rep.fatigued.length > 0) repVal = 30;
+    else if (rep.warned && rep.warned.length > 0) repVal = 55;
+  }
+  factors.push({ name: 'Repetition', value: repVal, weight: 0.25 });
+
+  // 4. Texture progression (25%)
+  const tex = computeTextureProgression();
+  let texVal = 70;
+  if (tex && tex.currentStage) {
+    const stageIdx = { puree: 0, mashed: 1, soft: 2, finger: 3 };
+    const current = stageIdx[tex.currentStage] ?? 1;
+    const expected = _expectedTextureStage(ageAt().months);
+    const gap = expected - current;
+    if (gap <= 0) texVal = 100;
+    else if (gap === 1) texVal = 60;
+    else texVal = 30;
+  }
+  factors.push({ name: 'Texture progression', value: texVal, weight: 0.25 });
+
+  _modifierCache.diet = _buildModifier(factors);
+  return _modifierCache.diet;
+}
+
+// ── Sleep Modifier ──
+let _computingSleepMod = false;
+function computeSleepModifier() {
+  if (_modifierCache.sleep) return _modifierCache.sleep;
+  // Recursion guard: computeSleepRegression() calls getDailySleepScore() which calls us
+  if (_computingSleepMod) return _neutralModifier();
+  const nightCount = sleepData ? sleepData.filter(s => s.type === 'night').length : 0;
+  if (nightCount < 5) { _modifierCache.sleep = _neutralModifier(); return _modifierCache.sleep; }
+
+  _computingSleepMod = true;
+  try {
+
+  const factors = [];
+
+  // 1. Bedtime consistency (30%) — use driftPerWeek and direction
+  const drift = computeBedtimeDrift();
+  let bedtimeVal = 70;
+  if (drift && !drift.insufficient) {
+    const absDrift = Math.abs(drift.driftPerWeek);
+    if (drift.direction === 'stable') bedtimeVal = 100;
+    else if (absDrift <= 5) bedtimeVal = 85;
+    else if (absDrift <= 10) bedtimeVal = 65;
+    else if (absDrift <= 20) bedtimeVal = 45;
+    else bedtimeVal = 25;
+  }
+  factors.push({ name: 'Bedtime consistency', value: bedtimeVal, weight: 0.30 });
+
+  // 2. Sleep efficiency trend (25%)
+  const eff = computeSleepEfficiency();
+  let effVal = 70;
+  if (eff && !eff.insufficient) {
+    if (eff.trend === 'improving') effVal = 90;
+    else if (eff.trend === 'stable') effVal = 70;
+    else if (eff.trend === 'declining') effVal = 40;
+  }
+  factors.push({ name: 'Sleep efficiency', value: effVal, weight: 0.25 });
+
+  // 3. Regression status (25%) — severity field: none/mild/moderate/severe
+  const reg = computeSleepRegression();
+  let regVal = 80;
+  if (reg && !reg.insufficient) {
+    if (reg.severity === 'none') regVal = 80;
+    else if (reg.severity === 'mild') regVal = 55;
+    else if (reg.severity === 'moderate') regVal = 35;
+    else if (reg.severity === 'severe') regVal = 25;
+  }
+  factors.push({ name: 'Regression status', value: regVal, weight: 0.25 });
+
+  // 4. Wake window adherence (20%) — derive from overtired/undertired counts
+  const ww = computeWakeWindows();
+  let wwVal = 70;
+  if (ww && !ww.insufficient && ww.allWindows && ww.allWindows.length > 0) {
+    const total = ww.allWindows.length;
+    const inRange = total - (ww.overtiredCount || 0) - (ww.undertiredCount || 0);
+    const adherence = Math.round((inRange / total) * 100);
+    wwVal = adherence >= 80 ? 100 : adherence >= 50 ? 70 : 40;
+  }
+  factors.push({ name: 'Wake windows', value: wwVal, weight: 0.20 });
+
+  _modifierCache.sleep = _buildModifier(factors);
+  return _modifierCache.sleep;
+
+  } finally { _computingSleepMod = false; }
+}
+
+// ── Poop Modifier ──
+function computePoopModifier() {
+  if (_modifierCache.poop) return _modifierCache.poop;
+  const poopDays = new Set((poopData || []).map(p => p.date).filter(Boolean)).size;
+  if (poopDays < 7) { _modifierCache.poop = _neutralModifier(); return _modifierCache.poop; }
+
+  const factors = [];
+
+  // 1. Consistency trend (35%) — trend: stable/firming/loosening/mixed
+  const ct = computeConsistencyTrend(14);
+  let ctVal = 70;
+  if (ct && !ct.insufficient) {
+    if (ct.trend === 'stable') ctVal = 100;
+    else if (ct.trend === 'firming') ctVal = 80;
+    else if (ct.trend === 'mixed') ctVal = 60;
+    else if (ct.trend === 'loosening') ctVal = 40;
+  }
+  factors.push({ name: 'Consistency trend', value: ctVal, weight: 0.35 });
+
+  // 2. Frequency regularity (25%) — std dev from computeConsistencyTrend data
+  let freqVal = 70;
+  if (ct && !ct.insufficient && ct.dailyScores && ct.dailyScores.length >= 5) {
+    const counts = {};
+    (poopData || []).forEach(p => { if (p.date) counts[p.date] = (counts[p.date] || 0) + 1; });
+    const last14 = ct.dailyScores.map(d => counts[d.dateStr] || 0);
+    const mean = last14.reduce((s, v) => s + v, 0) / last14.length;
+    const stdDev = Math.sqrt(last14.reduce((s, v) => s + (v - mean) * (v - mean), 0) / last14.length);
+    if (stdDev < 0.5) freqVal = 100;
+    else if (stdDev < 1.0) freqVal = 80;
+    else if (stdDev < 1.5) freqVal = 60;
+    else freqVal = 40;
+  }
+  factors.push({ name: 'Frequency regularity', value: freqVal, weight: 0.25 });
+
+  // 3. Symptom-free streak (20%)
+  let symVal = 100;
+  const sortedPoops = (poopData || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let daysSinceSymptom = 999;
+  for (const p of sortedPoops) {
+    if (p.blood || p.mucus) {
+      daysSinceSymptom = Math.max(0, Math.floor((new Date() - new Date(p.date)) / 86400000));
+      break;
+    }
+  }
+  if (daysSinceSymptom >= 14) symVal = 100;
+  else if (daysSinceSymptom >= 7) symVal = 80;
+  else if (daysSinceSymptom >= 3) symVal = 55;
+  else symVal = 30;
+  factors.push({ name: 'Symptom-free', value: symVal, weight: 0.20 });
+
+  // 4. Food-poop correlation triggers (20%)
+  let trigVal = 80;
+  const corr = computeFoodPoopCorrelations();
+  if (corr && corr.results && corr.results.length > 0) {
+    // Only consider moderate+ confidence with 5+ occurrences
+    const triggers = corr.results.filter(r =>
+      (r.confidence === 'moderate' || r.confidence === 'high') && r.totalOccurrences >= 5
+    );
+    if (triggers.length > 0) {
+      // Check if any trigger food was eaten today
+      const todayFoods = extractDayFoods(today());
+      const triggerNames = new Set(triggers.map(t => t.food));
+      const eatenTrigger = todayFoods.some(f => triggerNames.has(f));
+      trigVal = eatenTrigger ? 40 : 80;
+    }
+  }
+  factors.push({ name: 'Trigger foods', value: trigVal, weight: 0.20 });
+
+  _modifierCache.poop = _buildModifier(factors);
+  return _modifierCache.poop;
+}
+
+// ── Medical Modifier ──
+function computeMedicalModifier() {
+  if (_modifierCache.medical) return _modifierCache.medical;
+  // Need 14 days of any medical data
+  const medDays = Object.keys(medChecks || {}).filter(d => d !== '_trackingSince').length;
+  const growthDays = (growthData || []).length;
+  const vaccDays = (vaccData || []).length;
+  if (medDays + growthDays + vaccDays < 3) { _modifierCache.medical = _neutralModifier(); return _modifierCache.medical; }
+
+  const factors = [];
+
+  // 1. Supplement consistency (30%)
+  const supp = computeSupplementAdherence(30);
+  let suppVal = 70;
+  if (supp && supp.length > 0) {
+    const primary = supp[0];
+    const rate = primary.adherenceRate;
+    if (rate >= 90) suppVal = 100;
+    else if (rate >= 70) suppVal = 80;
+    else if (rate >= 50) suppVal = 55;
+    else suppVal = 30;
+  }
+  factors.push({ name: 'Supplement consistency', value: suppVal, weight: 0.30 });
+
+  // 2. Growth velocity (30%)
+  const gv = computeGrowthVelocity();
+  let gvVal = 70;
+  if (gv && !gv.insufficient) {
+    const wStatus = gv.weight ? gv.weight.status : null;
+    const hStatus = gv.height ? gv.height.status : null;
+    const status = wStatus || hStatus;
+    if (status === 'on-track') gvVal = 90;
+    else if (status === 'fast') gvVal = 70;
+    else if (status === 'slow') gvVal = 50;
+    else if (status === 'plateau') gvVal = 25;
+  }
+  factors.push({ name: 'Growth velocity', value: gvVal, weight: 0.30 });
+
+  // 3. Illness recovery (20%)
+  const episodes = _getAllEpisodes();
+  let illVal = 85;
+  if (episodes.length > 0) {
+    const active = episodes.filter(e => e.status === 'active');
+    if (active.length > 0) {
+      illVal = 40;
+    } else {
+      // Check for recently resolved (within 5 days)
+      const recent = episodes.filter(e => {
+        if (e.status !== 'resolved' || !e.resolvedAt) return false;
+        return Math.floor((new Date() - new Date(e.resolvedAt)) / 86400000) < 5;
+      });
+      if (recent.length > 0) illVal = 65;
+    }
+  }
+  factors.push({ name: 'Illness recovery', value: illVal, weight: 0.20 });
+
+  // 4. Vaccination timeliness (20%)
+  let vaccVal = 70;
+  if (vaccData && vaccData.length > 0) {
+    const due = vaccData.filter(v => v.upcoming);
+    const given = vaccData.filter(v => !v.upcoming && v.date);
+    if (due.length === 0 && given.length > 0) vaccVal = 100;
+    else if (due.length > 0) {
+      // Check if any are overdue
+      const overdue = due.filter(v => {
+        if (!v.dueDate) return false;
+        return Math.floor((new Date() - new Date(v.dueDate)) / 86400000) > 28;
+      });
+      if (overdue.length > 0) vaccVal = 40;
+      else {
+        const slightlyLate = due.filter(v => {
+          if (!v.dueDate) return false;
+          return Math.floor((new Date() - new Date(v.dueDate)) / 86400000) > 14;
+        });
+        vaccVal = slightlyLate.length > 0 ? 80 : 100;
+      }
+    }
+  }
+  factors.push({ name: 'Vaccination timeliness', value: vaccVal, weight: 0.20 });
+
+  _modifierCache.medical = _buildModifier(factors);
+  return _modifierCache.medical;
+}
+
+// ── Milestone Modifier ──
+function computeMilestoneModifier() {
+  if (_modifierCache.milestones) return _modifierCache.milestones;
+  // Need 7 days of activity log
+  let actDays = 0;
+  const now14 = new Date();
+  for (let d = 0; d < 14; d++) {
+    const dt = new Date(now14); dt.setDate(dt.getDate() - d);
+    const ds = toDateStr(dt);
+    if (Array.isArray(activityLog[ds]) && activityLog[ds].length > 0) actDays++;
+  }
+  if (Object.keys(activityLog || {}).length < 7 && actDays < 3) {
+    _modifierCache.milestones = _neutralModifier();
+    return _modifierCache.milestones;
+  }
+
+  const factors = [];
+
+  // 1. Domain balance (30%) — how many of 4 domains have evidence in last 14d
+  const domainRecent = {};
+  for (let d = 0; d < 14; d++) {
+    const dt = new Date(); dt.setDate(dt.getDate() - d);
+    const ds = toDateStr(dt);
+    if (Array.isArray(activityLog[ds])) {
+      activityLog[ds].forEach(e => {
+        (e.domains || []).forEach(dom => { domainRecent[dom] = true; });
+      });
+    }
+  }
+  const domainsActive = ['motor', 'language', 'social', 'cognitive'].filter(c => domainRecent[c]).length;
+  let domVal = domainsActive === 4 ? 100 : domainsActive === 3 ? 80 : domainsActive === 2 ? 55 : domainsActive === 1 ? 35 : 20;
+  factors.push({ name: 'Domain balance', value: domVal, weight: 0.30 });
+
+  // 2. Milestone velocity (25%) — milestones with recent status progression
+  let progressing = 0;
+  const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  (milestones || []).forEach(m => {
+    const dates = ['emergingAt', 'practicingAt', 'consistentAt', 'masteredAt']
+      .map(f => m[f] ? new Date(m[f]) : null)
+      .filter(Boolean);
+    if (dates.some(d => d >= twoWeeksAgo)) progressing++;
+  });
+  let velVal = progressing >= 2 ? 100 : progressing >= 1 ? 75 : 30;
+  factors.push({ name: 'Milestone velocity', value: velVal, weight: 0.25 });
+
+  // 3. Activity consistency (25%)
+  let actConsVal = actDays >= 5 ? 100 : actDays >= 3 ? 75 : actDays >= 1 ? 50 : 20;
+  factors.push({ name: 'Activity consistency', value: actConsVal, weight: 0.25 });
+
+  // 4. Regression-free (20%) — check for milestones that reached consistent/mastered but have stale evidence
+  let regressionCount = 0;
+  (milestones || []).forEach(m => {
+    if (!['consistent', 'mastered'].includes(m.status)) return;
+    // Check if last evidence is stale (>21 days ago)
+    const lastEvDate = m.lastSeen || m.consistentAt || m.masteredAt;
+    if (!lastEvDate) return;
+    const daysSince = Math.ceil((new Date() - new Date(lastEvDate)) / 86400000);
+    if (daysSince > 21) regressionCount++;
+  });
+  let regFreeVal = regressionCount === 0 ? 85 : regressionCount === 1 ? 55 : 30;
+  factors.push({ name: 'Regression-free', value: regFreeVal, weight: 0.20 });
+
+  _modifierCache.milestones = _buildModifier(factors);
+  return _modifierCache.milestones;
+}
+
 // ── DIET SCORE ──
 
 function calcDietScore(dateStr) {
@@ -19406,11 +19845,14 @@ function calcDietScore(dateStr) {
   const covered = KEY_NUTRIENTS.filter(n => (nutrients[n] || 0) >= 1).length;
   const nutrientScore = Math.round((covered / KEY_NUTRIENTS.length) * 100);
 
-  const score = Math.round(mealScore * 0.30 + varietyScore * 0.30 + groupScore * 0.20 + nutrientScore * 0.20);
+  const baseScore = Math.round(mealScore * 0.30 + varietyScore * 0.30 + groupScore * 0.20 + nutrientScore * 0.20);
   var coreMeals = 0;
   if (entry) { ['breakfast','lunch','dinner'].forEach(function(m) { if (isRealMeal(entry[m])) coreMeals++; }); }
+  const modRaw = computeDietModifier();
+  const score = applyIntelligenceModifier(baseScore, modRaw);
+  const modifier = _withDelta(modRaw, baseScore, score);
   return {
-    score, ...getScoreLabel(score),
+    score, baseScore, modifier, ...getScoreLabel(score),
     components: { meals: mealScore, variety: varietyScore, groups: groupScore, nutrients: nutrientScore },
     detail: {
       mealsLogged: coreMeals, mealsTotal: 3,
@@ -19471,9 +19913,13 @@ function calcPoopScore(dateStr) {
     return cs < (CONSISTENCY_SCORES[w] ?? 80) ? (p.consistency || w) : w;
   }, 'soft');
 
-  const score = Math.round(worstConScore * 0.40 + freqScore * 0.30 + colorScore * 0.20 + symptomScore * 0.10);
+  const baseScore = Math.round(worstConScore * 0.40 + freqScore * 0.30 + colorScore * 0.20 + symptomScore * 0.10);
+  const modRaw = computePoopModifier();
+  _lastPoopModifier = modRaw;
+  const score = applyIntelligenceModifier(baseScore, modRaw);
+  const modifier = _withDelta(modRaw, baseScore, score);
   return {
-    score, ...getScoreLabel(score), isCarryForward: false,
+    score, baseScore, modifier, ...getScoreLabel(score), isCarryForward: false,
     components: { consistency: worstConScore, frequency: freqScore, color: colorScore, symptoms: symptomScore },
     detail: {
       poopCount: todayCount, baselineFreq: +baselineFreq.toFixed(1),
@@ -19488,17 +19934,17 @@ function _carryForwardPoopScore(dateStr) {
   // Find last poop entry
   const last = getLastPoop();
   if (!last || !last.date) {
-    return { score: 50, ...getScoreLabel(50), isCarryForward: true, components: { consistency: 50, frequency: 50, color: 100, symptoms: 100 } };
+    return { score: 50, baseScore: 50, modifier: _lastPoopModifier, ...getScoreLabel(50), isCarryForward: true, components: { consistency: 50, frequency: 50, color: 100, symptoms: 100 } };
   }
   const lastScore = calcPoopScore(last.date);
   if (lastScore.isCarryForward) {
     // Don't recurse infinitely — use the base score
-    return { ...lastScore, isCarryForward: true };
+    return { ...lastScore, isCarryForward: true, modifier: _lastPoopModifier };
   }
   const daysSince = Math.floor((new Date(dateStr) - new Date(last.date)) / 86400000);
   const decay = Math.min(daysSince * 2, 60); // max 60 pts decay
   const decayed = Math.max(40, lastScore.score - decay);
-  return { score: decayed, ...getScoreLabel(decayed), isCarryForward: true, staleDays: daysSince, components: lastScore.components };
+  return { score: decayed, baseScore: lastScore.baseScore || lastScore.score, modifier: _lastPoopModifier, ...getScoreLabel(decayed), isCarryForward: true, staleDays: daysSince, components: lastScore.components };
 }
 
 // ── MEDICAL SCORE ──
@@ -19577,9 +20023,12 @@ function calcMedicalScore() {
 
   const daysSinceGrowth = growthData.length > 0 ? Math.floor((new Date() - new Date(growthData[growthData.length-1].date)) / 86400000) : null;
 
-  const score = Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
+  const baseScore = Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
+  const modRaw = computeMedicalModifier();
+  const score = applyIntelligenceModifier(baseScore, modRaw);
+  const modifier = _withDelta(modRaw, baseScore, score);
   return {
-    score, ...getScoreLabel(score),
+    score, baseScore, modifier, ...getScoreLabel(score),
     components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
@@ -19706,7 +20155,7 @@ function calcMilestoneScore() {
   const advancedDone = milestones.filter(m => m.advanced && (m.status === 'mastered' || m.status === 'consistent')).length;
   const advancedScore = advancedDone >= 3 ? 100 : advancedDone >= 2 ? 80 : advancedDone >= 1 ? 60 : 30;
 
-  const score = Math.round(
+  const baseScore = Math.round(
     completionScore * 0.35 +
     catScore * 0.20 +
     trackingScore * 0.20 +
@@ -19715,8 +20164,11 @@ function calcMilestoneScore() {
   );
 
   const inProgress = milestones.filter(m => ['emerging','practicing','consistent'].includes(m.status)).length;
+  const modRaw = computeMilestoneModifier();
+  const score = applyIntelligenceModifier(baseScore, modRaw);
+  const modifier = _withDelta(modRaw, baseScore, score);
   return {
-    score, ...getScoreLabel(score),
+    score, baseScore, modifier, ...getScoreLabel(score),
     components: { completion: completionScore, categories: catScore, tracking: trackingScore, recency: recencyScore, advanced: advancedScore },
     detail: { expectedTotal: expectedItems.length, expectedDone: expectedMatchCount, catsActive: catProgressSum, inProgress, advancedDone }
   };
@@ -28472,20 +28924,20 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'normal\'">' + zi('check') + ' Normal</span>';
   html += '</div>';
   html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:0 0 var(--sp-4);">';
-  html += '<label style="font-size:var(--fs-xs);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="deStoolBlood"> 🩸 Blood</label>';
+  html += '<label style="font-size:var(--fs-xs);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="deStoolBlood"> ' + zi('drop') + ' Blood</label>';
   html += '<label style="font-size:var(--fs-xs);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="deStoolMucus"> Mucus</label>';
   html += '</div>';
 
   // Recent stools
   if (ep.stools.length > 0) {
-    const conEmoji = { watery: zi('drop'), runny: '●', soft: '●', normal: zi('check'), hard: '🪨', loose: '●' };
+    const conEmoji = { watery: zi('drop'), runny: zi('drop'), soft: zi('diaper'), normal: zi('check'), hard: zi('warn'), loose: zi('drop') };
     const showStools = ep.stools.slice().reverse().slice(0, 6);
     showStools.forEach((s, i) => {
       const origIdx = ep.stools.length - 1 - i;
-      const emoji = conEmoji[s.consistency] || '●';
+      const emoji = conEmoji[s.consistency] || zi('diaper');
       let flags = '';
-      if (s.blood) flags += ' 🩸';
-      if (s.mucus) flags += ' 🫧';
+      if (s.blood) flags += ' ' + zi('drop');
+      if (s.mucus) flags += ' ' + zi('drop');
       html += '<div class="de-stool-entry ep-entry-tap" data-action="deEditStool" data-arg="' + origIdx + '">';
       html += '<span>' + emoji + '</span>';
       html += '<span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(s.time) + '</span>';
@@ -30732,10 +31184,20 @@ function getDailySleepScore(dateStr) {
   else if (napCount === 0) napScore = 0;
   else napScore = 40;
 
-  const score = Math.round(totalScore * 0.4 + wakeScore * 0.3 + bedScore * 0.15 + napScore * 0.15);
-  const label = score >= 70 ? 'good' : score >= 40 ? 'fair' : 'poor';
-  const emoji = score >= 70 ? zi('moon') : score >= 40 ? zi('moon') : zi('warn');
-  return { score, label, emoji, totalMin, napCount, wakes };
+  const baseScore = Math.round(totalScore * 0.4 + wakeScore * 0.3 + bedScore * 0.15 + napScore * 0.15);
+  const modRaw = computeSleepModifier();
+  const score = applyIntelligenceModifier(baseScore, modRaw);
+  const modifier = _withDelta(modRaw, baseScore, score);
+  return {
+    score, baseScore, modifier,
+    ...getScoreLabel(score),
+    components: { duration: totalScore, wakeups: wakeScore, bedtime: bedScore, naps: napScore },
+    detail: { totalMin, napCount, wakes, bedtimeActual: nightEntry ? nightEntry.bedtime : null, napCountIdeal: st.napIdeal },
+    // Backward compat
+    totalMin, napCount, wakes,
+    label: score >= 70 ? 'good' : score >= 40 ? 'fair' : 'poor',
+    emoji: score >= 70 ? zi('moon') : score >= 40 ? zi('moon') : zi('warn')
+  };
 }
 
 function getAvgDailySleepScore7d() {
@@ -31751,22 +32213,31 @@ let _poopAmount = 'medium';
 let _poopEditIdx = null;
 
 const POOP_COLORS = {
-  yellow:  { hex:'#e8c840', emoji:'●', label:'Yellow' },
-  green:   { hex:'#6b9e4a', emoji:'●', label:'Green' },
-  brown:   { hex:'#8b6914', emoji:zi('dot-red'), label:'Brown' },
-  dark:    { hex:'#3d2b1f', emoji:'⬛', label:'Dark Brown' },
-  orange:  { hex:'#e0882a', emoji:zi('dot-red'), label:'Orange' },
-  red:     { hex:'#c0392b', emoji:'●', label:'Red' },
-  white:   { hex:'#f0ede6', emoji:zi('dot-red'), label:'White/Pale' },
-  black:   { hex:'#1a1a1a', emoji:zi('dot-red'), label:'Black' },
+  yellow:  { hex:'#e8c840', label:'Yellow' },
+  green:   { hex:'#6b9e4a', label:'Green' },
+  brown:   { hex:'#8b6914', label:'Brown' },
+  dark:    { hex:'#3d2b1f', label:'Dark Brown' },
+  orange:  { hex:'#e0882a', label:'Orange' },
+  red:     { hex:'#c0392b', label:'Red' },
+  white:   { hex:'#f0ede6', label:'White/Pale' },
+  black:   { hex:'#1a1a1a', label:'Black' },
+  tan:     { hex:'#d2b48c', label:'Tan' },
+  mustard: { hex:'#c8a030', label:'Mustard' },
 };
 
+function _poopColorDot(colorKey) {
+  const col = POOP_COLORS[colorKey] || POOP_COLORS.yellow;
+  return '<span class="poop-color-circle pcc-sm" style="background:' + col.hex + ';"></span>';
+}
+
 const POOP_CONSISTENCY = {
-  runny:   { emoji:zi('drop'), label:'Runny' },
-  soft:    { emoji:'●', label:'Soft' },
-  normal:  { emoji:zi('check'), label:'Normal' },
-  hard:    { emoji:'🪨', label:'Hard' },
-  pellets: { emoji:zi('dot-red'), label:'Pellets' },
+  runny:   { label:'Runny' },
+  soft:    { label:'Soft' },
+  normal:  { label:'Normal' },
+  hard:    { label:'Hard' },
+  pellets: { label:'Pellets' },
+  loose:   { label:'Loose' },
+  watery:  { label:'Watery' },
 };
 
 const POOP_ALERT_COLORS = ['red','white','black'];
@@ -32005,7 +32476,7 @@ function renderPoopLog() {
     const last = getLastPoop();
     let html = '';
     if (todayPoops.length > 0) {
-      const colors = todayPoops.map(p => POOP_COLORS[p.color]?.emoji || zi('diaper')).join(' ');
+      const colors = todayPoops.map(p => _poopColorDot(p.color)).join(' ');
       html += `<div class="info-strip is-amber"><span><svg class="zi"><use href="#zi-diaper"/></svg></span><div><strong class="tc-amber">${todayPoops.length} poop${todayPoops.length>1?'s':''} today</strong> ${colors}<div class="t-sub">${todayPoops.map(p => formatTimeShort(p.time)).filter(t => t !== '—').join(', ') || 'Times not logged'}</div></div></div>`;
     } else if (last) {
       html += `<div class="info-strip is-amber"><span><svg class="zi"><use href="#zi-diaper"/></svg></span><div><strong class="tc-amber">Last: ${formatDate(last.date)}</strong><div class="t-sub">${getTimeSinceLastPoop()} · ${POOP_COLORS[last.color]?.label || last.color} · ${POOP_CONSISTENCY[last.consistency]?.label || last.consistency}</div></div></div>`;
@@ -32036,8 +32507,8 @@ function renderPoopLog() {
     const con = POOP_CONSISTENCY[p.consistency] || POOP_CONSISTENCY.normal;
     const amtLabel = { small:'S', medium:'M', large:'L' }[p.amount] || 'M';
     const flagBadges = [];
-    if (p.blood) flagBadges.push(`<span class="poop-badge" style="background:var(--rose-light);color:var(--tc-rose);">🩸 Blood</span>`);
-    if (p.mucus) flagBadges.push(`<span class="poop-badge" style="background:var(--sky-light);color:var(--tc-sky);">🫧 Mucus</span>`);
+    if (p.blood) flagBadges.push(`<span class="poop-badge" style="background:var(--rose-light);color:var(--tc-rose);">${zi('drop')} Blood</span>`);
+    if (p.mucus) flagBadges.push(`<span class="poop-badge" style="background:var(--sky-light);color:var(--tc-sky);">${zi('drop')} Mucus</span>`);
     if (POOP_ALERT_COLORS.includes(p.color)) flagBadges.push(`<span class="poop-badge" style="background:var(--rose-light);color:var(--tc-rose);">${zi('warn')}</span>`);
     const notesHtml = p.notes ? `<div class="t-sub">${escHtml(p.notes)}</div>` : '';
     return `
@@ -32048,7 +32519,7 @@ function renderPoopLog() {
             <div class="poop-entry-meta">
               <span class="t-sub">${formatDate(p.date)}</span>
               <span class="poop-badge badge-amber" >${col.label}</span>
-              <span class="poop-badge badge-amber" >${con.emoji} ${con.label}</span>
+              <span class="poop-badge badge-amber" >${con.label}</span>
               <span class="poop-badge badge-amber" >${amtLabel}</span>
               ${flagBadges.join('')}
             </div>
@@ -32260,7 +32731,7 @@ function renderHomePoop() {
   let html = '';
 
   if (todayPoops.length > 0) {
-    const colors = todayPoops.map(p => `<span class="poop-color-circle" style="background:${(POOP_COLORS[p.color]||POOP_COLORS.yellow).hex};width:14px;height:14px;"></span>`).join(' ');
+    const colors = todayPoops.map(p => _poopColorDot(p.color)).join(' ');
     html += `<div class="info-strip is-amber">
       <span><svg class="zi"><use href="#zi-diaper"/></svg></span>
       <div><strong class="tc-amber">${todayPoops.length} poop${todayPoops.length>1?'s':''} today</strong> ${colors}
@@ -32332,7 +32803,7 @@ function renderPoopHistoryPreview() {
       const con = POOP_CONSISTENCY[p.consistency] || POOP_CONSISTENCY.normal;
       const flags = [];
       if (p.blood) flags.push(zi('drop'));
-      if (p.mucus) flags.push('🫧');
+      if (p.mucus) flags.push(zi('drop'));
       const note = p.notes ? ` · ${escHtml(p.notes)}` : '';
       return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;">
         <span class="poop-color-circle" style="background:${col.hex};"></span>
@@ -33371,6 +33842,7 @@ function getAlertNavAction(alertKey, alertTitle) {
 }
 
 function switchTab(name) {
+  _clearModifierCache();
   // Redirect domain tabs to Track tab
   if (TRACK_SUB_ORDER.includes(name)) {
     const sub = name;
@@ -36265,7 +36737,7 @@ function computeAlerts() {
       if (!isDismissed(key)) {
         alerts.push({
           id: 'hard-stool-streak', key,
-          severity: 'watch', icon: '🪨',
+          severity: 'watch', icon: zi('warn'),
           title: hardStreak + ' hard stools in a row',
           body: 'Consecutive hard or pellet-like stools may indicate constipation. Increase water and fibre-rich foods.',
           tip: getEscalatedTip('hard-stool-streak'),
@@ -37415,7 +37887,7 @@ function renderTodayPlan() {
       lookouts.push({ icon: zi('diaper'), text: daysSinceLastPoop + ' days since last poop — watch for straining or discomfort. Offer extra water and fibre-rich foods.', tag: 'poop' });
     }
     if (bl.poopDominantConsistency === 'hard') {
-      lookouts.push({ icon: '🪨', text: 'Recent stools have been hard. Prioritise pear, papaya, extra water today. Reduce banana and rice.', tag: 'poop' });
+      lookouts.push({ icon: zi('warn'), text: 'Recent stools have been hard. Prioritise pear, papaya, extra water today. Reduce banana and rice.', tag: 'poop' });
     }
   }
 
@@ -38130,7 +38602,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     pills += `<span class="ins-preview-pill ${normal ? 'ipp-good' : 'ipp-warn'}">${zi('diaper')} ${trend.freq.current}/day</span>`;
     if (trend.topColor) {
       const col = POOP_COLORS[trend.topColor] || {};
-      pills += `<span class="ins-preview-pill ipp-neutral">${col.emoji||''} ${col.label||trend.topColor}</span>`;
+      pills += `<span class="ins-preview-pill ipp-neutral">${_poopColorDot(trend.topColor)} ${col.label||trend.topColor}</span>`;
     }
     prevEl.innerHTML = `<div class="ins-preview">${pills}</div>`;
   }
@@ -38175,9 +38647,9 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
 
   // Most common colour + consistency
   if (trend.topColor) {
-    const col = POOP_COLORS[trend.topColor] || { emoji:zi('info'), label:trend.topColor };
+    const col = POOP_COLORS[trend.topColor] || { hex:'#e8c840', label:trend.topColor };
     html += `<div class="insight-row">
-      <div class="ir-icon">${col.emoji}</div>
+      <div class="ir-icon">${_poopColorDot(trend.topColor)}</div>
       <div class="ir-body">
         <div class="ir-label">Most common colour</div>
         <div class="ir-value">${escHtml(col.label)} <span class="fs-xs-mid">(${trend.topColorCount}×)</span></div>
@@ -38185,9 +38657,9 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     </div>`;
   }
   if (trend.topCons) {
-    const con = POOP_CONSISTENCY[trend.topCons] || { emoji:zi('info'), label:trend.topCons };
+    const con = POOP_CONSISTENCY[trend.topCons] || { label:trend.topCons };
     html += `<div class="insight-row">
-      <div class="ir-icon">${con.emoji}</div>
+      <div class="ir-icon">${zi('diaper')}</div>
       <div class="ir-body">
         <div class="ir-label">Most common consistency</div>
         <div class="ir-value">${escHtml(con.label)} <span class="fs-xs-mid">(${trend.topConsCount}×)</span></div>
@@ -38235,7 +38707,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     const hardCount = (consCounts.hard || 0) + (consCounts.pellets || 0);
     const runnyCount = consCounts.runny || 0;
     if (hardCount >= 3) {
-      html += `<div class="insight-narrative in-rose">🪨 <strong>${hardCount} hard/pellet stools</strong> this week. Consider increasing water, prune puree, or high-fibre foods.</div>`;
+      html += `<div class="insight-narrative in-rose">${zi('warn')} <strong>${hardCount} hard/pellet stools</strong> this week. Consider increasing water, prune puree, or high-fibre foods.</div>`;
     } else if (runnyCount >= 3) {
       html += `<div class="insight-narrative in-amber">${zi('drop')} <strong>${runnyCount} runny stools</strong> this week. Could be teething, a new food, or a mild bug. Watch for dehydration.</div>`;
     } else if (consCounts.normal && consCounts.normal >= Math.floor(trend.totalThisWeek * 0.6)) {
@@ -38475,6 +38947,7 @@ function renderDomainHero(domainKey) {
     <div class="dsh-components">`;
 
   comps.forEach(c => {
+    if (c.isTrend) return; // Trends line not shown in overview pills
     const barClass = c.score >= 70 ? 'dcb-high' : c.score >= 40 ? 'dcb-mid' : 'dcb-low';
     const pillClass = c.score >= 70 ? 'dcp-high' : c.score >= 40 ? 'dcp-mid' : 'dcp-low';
     const shortDetail = c.detail && c.detail.length > 28 ? c.detail.substring(0, 26) + '…' : (c.detail || '');
@@ -38592,20 +39065,26 @@ function _spGetDomainDefs(zs) {
         const ageM2 = ageAt().months;
         const st = getSleepTargets(ageM2);
         const durTarget = st.totalTarget / 60;
-        const durScore = r.totalMin ? Math.round(Math.min(r.totalMin / st.totalTarget, 1) * 100) : 0;
-        const durDetail = r.totalMin ? (r.totalMin / 60).toFixed(1) + 'h total (target: ' + durTarget.toFixed(0) + 'h, ' + st.label + ')' : 'No data';
-        const wakeVal = r.wakes || 0;
-        const wakeScoreVal = [100,85,70,50,30,15,0][Math.min(wakeVal, 6)];
-        const napVal = r.napCount || 0;
+        const totalMin = r.totalMin || (r.detail ? r.detail.totalMin : 0) || 0;
+        const wakeVal = r.wakes !== undefined ? r.wakes : (r.detail ? r.detail.wakes : 0) || 0;
+        const napVal = r.napCount !== undefined ? r.napCount : (r.detail ? r.detail.napCount : 0) || 0;
         const [napMin, napMax] = st.napIdeal;
-        const napScoreVal = (napVal >= napMin && napVal <= napMax) ? 100 : napVal === napMax + 1 ? 70 : (napVal === napMin - 1 && napMin > 0) ? 60 : napVal === 0 ? 0 : 40;
-        const bedScoreVal = Math.max(0, Math.min(100, Math.round(((r.score || 50) - durScore * 0.4 - wakeScoreVal * 0.3 - napScoreVal * 0.15) / 0.15)));
-        return [
+        const durDetail = totalMin ? (totalMin / 60).toFixed(1) + 'h total (target: ' + durTarget.toFixed(0) + 'h, ' + st.label + ')' : 'No data';
+        const comps = r.components || {};
+        const durScore = comps.duration !== undefined ? comps.duration : (totalMin ? Math.round(Math.min(totalMin / st.totalTarget, 1) * 100) : 0);
+        const wakeScoreVal = comps.wakeups !== undefined ? comps.wakeups : [100,85,70,50,30,15,0][Math.min(wakeVal, 6)];
+        const bedScoreVal = comps.bedtime !== undefined ? comps.bedtime : 50;
+        const napScoreVal = comps.naps !== undefined ? comps.naps : ((napVal >= napMin && napVal <= napMax) ? 100 : napVal === napMax + 1 ? 70 : (napVal === napMin - 1 && napMin > 0) ? 60 : napVal === 0 ? 0 : 40);
+        const items = [
           { name: 'Duration', weight: '40%', score: durScore, detail: durDetail, tab: 'sleep' },
           { name: 'Wake-ups', weight: '30%', score: wakeScoreVal, detail: wakeVal + ' wake-up' + (wakeVal !== 1 ? 's' : ''), tab: 'sleep' },
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
           { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
         ];
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+          items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
+        }
+        return items;
       }
     },
     {
@@ -38615,7 +39094,7 @@ function _spGetDomainDefs(zs) {
         const r = zs.domains.diet.result;
         if (!r) return [];
         const d = r.detail || {};
-        return [
+        const items = [
           { name: 'Meals', weight: '30%', score: r.components.meals,
             detail: (d.mealsLogged || 0) + '/' + (d.mealsTotal || 3) + ' meals logged today', tab: 'diet' },
           { name: 'Variety', weight: '30%', score: r.components.variety,
@@ -38625,6 +39104,10 @@ function _spGetDomainDefs(zs) {
           { name: 'Nutrients', weight: '20%', score: r.components.nutrients,
             detail: (d.nutrientsCovered || 0) + '/' + (d.nutrientsTotal || 8) + ' key nutrients this week', tab: 'insights' },
         ];
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+          items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
+        }
+        return items;
       }
     },
     {
@@ -38638,7 +39121,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Carry-forward', weight: '', score: r.score,
             detail: 'No poop today — using last score' + (r.staleDays ? ' (' + r.staleDays + 'd ago, −' + (r.staleDays * 2) + ' decay)' : ''), tab: 'poop' }
         ];
-        return [
+        const items = [
           { name: 'Consistency', weight: '40%', score: r.components.consistency,
             detail: 'Worst today: ' + capitalize(d.worstConsistency || 'normal'), tab: 'poop' },
           { name: 'Frequency', weight: '30%', score: r.components.frequency,
@@ -38648,6 +39131,10 @@ function _spGetDomainDefs(zs) {
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
             detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
         ];
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+          items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
+        }
+        return items;
       }
     },
     {
@@ -38657,7 +39144,7 @@ function _spGetDomainDefs(zs) {
         const r = zs.domains.medical.result;
         if (!r) return [];
         const d = r.detail || {};
-        return [
+        const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
             detail: (d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' age-due vaccines given', tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
@@ -38667,6 +39154,10 @@ function _spGetDomainDefs(zs) {
           { name: 'Checkup', weight: '15%', score: r.components.visits,
             detail: r.components.visits >= 90 ? 'Checkup on track' : r.components.visits >= 85 ? 'Appointment booked' : 'Developmental checkup may be due', tab: 'medical' },
         ];
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+          items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
+        }
+        return items;
       }
     },
     {
@@ -38676,7 +39167,7 @@ function _spGetDomainDefs(zs) {
         const r = zs.domains.milestones.result;
         if (!r) return [];
         const d = r.detail || {};
-        return [
+        const items = [
           { name: 'Completion', weight: '35%', score: r.components.completion,
             detail: (d.expectedDone || 0) + '/' + (d.expectedTotal || 0) + ' age-expected milestones done', tab: 'milestones' },
           { name: 'Categories', weight: '25%', score: r.components.categories,
@@ -38688,6 +39179,10 @@ function _spGetDomainDefs(zs) {
           { name: 'Recency', weight: '10%', score: r.components.recency,
             detail: r.components.recency >= 80 ? 'Active in last week' : 'Last activity over a week ago', tab: 'milestones' },
         ];
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+          items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
+        }
+        return items;
       }
     },
   ];
@@ -38731,6 +39226,18 @@ function _spRenderBody() {
     </div>`;
 
   comps.forEach(c => {
+    if (c.isTrend) {
+      // Intelligence modifier trend line
+      const sign = c.delta > 0 ? '+' : '';
+      const trendClass = c.delta > 0 ? 'sp-trend-up' : c.delta < 0 ? 'sp-trend-down' : 'sp-trend-flat';
+      html += '<div class="sp-trend-line">';
+      html += '<span class="sp-trend-icon icon-sky">' + zi('chart') + '</span>';
+      html += '<span class="sp-trend-label">Trends</span>';
+      html += '<span class="sp-trend-delta ' + trendClass + '">' + sign + c.delta + '</span>';
+      if (c.label) html += '<span class="sp-trend-detail">' + escHtml(c.label) + '</span>';
+      html += '</div>';
+      return;
+    }
     const barClass = c.score >= 70 ? 'spb-high' : c.score >= 40 ? 'spb-mid' : 'spb-low';
     const scoreColor = c.score >= 70 ? 'color:#1a7a42;' : c.score >= 40 ? 'color:#8a6520;' : 'color:#a03030;';
     html += `<div class="sp-comp">
