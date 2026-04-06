@@ -32634,6 +32634,10 @@ function renderSleepTips() {
   });
   html += '</div>';
   el.innerHTML = html;
+  // Re-bind collapse listeners on dynamically created elements
+  el.querySelectorAll('[data-collapse-target]').forEach(function(hdr) {
+    hdr.addEventListener('click', function() { toggleHistoryCard(hdr.dataset.collapseTarget, hdr.dataset.collapseChevron); });
+  });
 }
 
 function renderHomeSleep() {
