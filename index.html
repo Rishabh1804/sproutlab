@@ -5170,22 +5170,21 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 /* ═══ SMART Q&A ═══ */
 .qa-card {
-  background:linear-gradient(135deg, var(--white) 60%, var(--lav-light));
-  border-radius:var(--r-xl); padding:var(--sp-16);
-  box-shadow:0 2px 12px rgba(155,168,216,0.1);
-  border:1px solid rgba(155,168,216,0.12);
+  /* Invisible container — the input-wrap IS the visual element */
+  padding:0; background:none; border:none; box-shadow:none;
 }
 .qa-input-wrap {
   display:flex; align-items:center; gap:var(--sp-12);
-  background:var(--glass-strong); border:1.5px solid rgba(155,168,216,0.2);
-  border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-16);
-  transition:border-color 0.2s, box-shadow 0.2s;
+  background:var(--white); border:1px solid rgba(155,168,216,0.15);
+  border-radius:var(--r-full); padding:10px var(--sp-16);
+  box-shadow:0 1px 8px rgba(155,168,216,0.08);
+  transition:border-color var(--ease-fast), box-shadow var(--ease-fast);
 }
 .qa-input-wrap:focus-within {
-  border-color:var(--tc-indigo);
-  box-shadow:0 0 0 3px rgba(155,168,216,0.15);
+  border-color:rgba(155,168,216,0.4);
+  box-shadow:0 2px 12px rgba(155,168,216,0.12);
 }
-.qa-input-icon { color:var(--tc-indigo); flex-shrink:0; opacity:0.6; }
+.qa-input-icon { color:var(--tc-indigo); flex-shrink:0; opacity:0.45; }
 .qa-input-icon .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .qa-input {
   flex:1; border:none; background:none; outline:none;
@@ -5199,10 +5198,15 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   border-radius:var(--r-full); display:none; line-height:1;
 }
 .qa-clear:active { background:rgba(0,0,0,0.05); }
+/* Chips: hidden by default, revealed on qa-active */
 .qa-chips {
   display:flex; gap:var(--sp-8); overflow-x:auto;
-  padding-top:var(--sp-12);
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  max-height:0; opacity:0; padding-top:0; overflow:hidden;
+  transition:max-height var(--ease-med), opacity var(--ease-med), padding-top var(--ease-med);
+}
+.qa-card.qa-active .qa-chips {
+  max-height:50px; opacity:1; padding-top:var(--sp-12); overflow-x:auto;
 }
 .qa-chips::-webkit-scrollbar { display:none; }
 .qa-chip {
@@ -5224,7 +5228,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .qa-chip:active { opacity:0.8; }
 .qa-chip-context { font-weight:700; }
 .qa-answer {
-  margin:var(--sp-12) var(--sp-16) var(--sp-16);
+  margin:var(--sp-12) 0 0;
   border-radius:var(--r-xl); overflow:hidden;
   animation:qaSlideIn 0.2s ease-out;
   padding:var(--sp-4) 0;
@@ -5339,9 +5343,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 
 /* Dark mode */
-[data-theme="dark"] .qa-card { background:linear-gradient(135deg, var(--surface) 60%, rgba(155,168,216,0.06)); border-color:rgba(155,168,216,0.08); box-shadow:0 2px 12px rgba(0,0,0,0.2); }
-[data-theme="dark"] .qa-input-wrap { background:rgba(255,255,255,0.05); border-color:rgba(155,168,216,0.15); }
-[data-theme="dark"] .qa-input-wrap:focus-within { border-color:rgba(155,168,216,0.5); box-shadow:0 0 0 3px rgba(155,168,216,0.1); }
+[data-theme="dark"] .qa-card { background:none; border:none; box-shadow:none; }
+[data-theme="dark"] .qa-input-wrap { background:rgba(255,255,255,0.06); border-color:rgba(155,168,216,0.12); box-shadow:0 1px 8px rgba(0,0,0,0.15); }
+[data-theme="dark"] .qa-input-wrap:focus-within { border-color:rgba(155,168,216,0.4); box-shadow:0 2px 12px rgba(155,168,216,0.1); }
 [data-theme="dark"] .qa-clear:active { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-chip { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-chip-rose   { background:rgba(242,168,184,0.08); border-color:rgba(242,168,184,0.15); color:var(--tc-rose); }
@@ -24176,6 +24180,14 @@ function _miRenderDietTabIntake() {
 var _qaCache = {};
 var _qaPlaceholderIdx = 0;
 var _qaPlaceholderTimer = null;
+var _qaCardRef = null;
+
+function _qaHandleFocus() {
+  if (_qaCardRef) _qaCardRef.classList.add('qa-active');
+}
+function _qaHandleBlur() {
+  setTimeout(function() { _qaCheckDeactivate(_qaCardRef); }, 200);
+}
 
 var QA_PLACEHOLDERS = [
   'How is she doing?',
@@ -25488,6 +25500,40 @@ function renderQABar() {
 
   // Start placeholder rotation
   _qaStartPlaceholderRotation(input);
+
+  // ── QA bar active state (search-bar feel: chips hidden until focused) ──
+  var qaCard = container.querySelector('.qa-card');
+  if (qaCard) {
+    // Remove previous listeners to avoid stacking on re-render
+    input.removeEventListener('focus', _qaHandleFocus);
+    input.removeEventListener('blur', _qaHandleBlur);
+    // Store qaCard reference for the handlers
+    _qaCardRef = qaCard;
+    input.addEventListener('focus', _qaHandleFocus);
+    input.addEventListener('blur', _qaHandleBlur);
+    // If input already has content or answer is showing, activate immediately
+    if (input.value.length > 0) qaCard.classList.add('qa-active');
+    var answerEl = document.getElementById('qaAnswerContainer');
+    if (answerEl && answerEl.innerHTML.trim().length > 0) qaCard.classList.add('qa-active');
+  }
+}
+
+function _qaCheckDeactivate(qaCard) {
+  if (!qaCard) { qaCard = document.querySelector('.qa-card'); }
+  if (!qaCard) return;
+  var input = document.getElementById('qaInput');
+  var answerEl = document.getElementById('qaAnswerContainer');
+  var picker = document.getElementById('iqPicker');
+  var outing = document.getElementById('outingForm');
+  // Stay active if: input focused, input has value, answer showing, picker showing, or outing form showing
+  var inputFocused = input && document.activeElement === input;
+  var hasValue = input && input.value.length > 0;
+  var hasAnswer = answerEl && answerEl.innerHTML.trim().length > 0;
+  var hasPicker = picker && picker.style.display !== 'none' && picker.innerHTML.trim().length > 0;
+  var hasOuting = outing && outing.style.display !== 'none' && outing.innerHTML.trim().length > 0;
+  if (!inputFocused && !hasValue && !hasAnswer && !hasPicker && !hasOuting) {
+    qaCard.classList.remove('qa-active');
+  }
 }
 
 function _qaHandleKeydown(e) {
@@ -25663,6 +25709,7 @@ function qaRenderAnswer(container, answer) {
   if (closeBtn) {
     closeBtn.addEventListener('click', function() {
       container.innerHTML = '';
+      setTimeout(function() { _qaCheckDeactivate(); }, 50);
     });
   }
 }
