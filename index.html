@@ -39889,26 +39889,17 @@ function _spRenderOverview(el, zs) {
     const sv = d && d.score !== null && d.score !== undefined ? Math.round(d.score) : '—';
     const lbl = typeof sv === 'number' ? getScoreLabel(sv) : null;
     const staleTag = d && d.isStale ? ' opacity:0.55;' : '';
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const bgColors = isDark ? {
-      excellent:'background:linear-gradient(135deg, #1e3028, #1a2e24); border-color:rgba(111,207,151,0.2);',
-      great:'background:linear-gradient(135deg, #1e2838, #1a2634); border-color:rgba(127,184,216,0.2);',
-      good:'background:linear-gradient(135deg, #302818, #2e2614); border-color:rgba(232,200,109,0.2);',
-      fair:'background:linear-gradient(135deg, #302018, #2e1e14); border-color:rgba(232,160,80,0.2);',
-      attention:'background:linear-gradient(135deg, #302020, #2e1a1a); border-color:rgba(224,112,112,0.2);'
-    } : {
+    const bgColors = {
       excellent:'background:linear-gradient(135deg, #e8f5ef, #d8efdf); border-color:rgba(111,207,151,0.35);',
       great:'background:linear-gradient(135deg, #e5f0f8, #d5e8f4); border-color:rgba(127,184,216,0.35);',
       good:'background:linear-gradient(135deg, #fef8ee, #fdf0d8); border-color:rgba(232,200,109,0.35);',
       fair:'background:linear-gradient(135deg, #fef3e5, #fce5c8); border-color:rgba(232,160,80,0.35);',
       attention:'background:linear-gradient(135deg, #fef0f0, #fcdcdc); border-color:rgba(224,112,112,0.35);'
     };
-    const scoreColor = lbl ? (isDark ? {
-      excellent:'color:#7ac0a0;', great:'color:#80b8d8;', good:'color:#d4b040;', fair:'color:#e8a050;', attention:'color:#f09090;'
-    } : {
+    const bg = lbl ? bgColors[lbl.label] || '' : '';
+    const scoreColor = lbl ? ({
       excellent:'color:#1a7a42;', great:'color:#2a6a8a;', good:'color:#8a6520;', fair:'color:#8a5020;', attention:'color:#a03030;'
     })[lbl.label] || '' : '';
-    const bg = lbl ? bgColors[lbl.label] || '' : '';
     html += `<div class="sp-overview-item" style="${bg}${staleTag}" data-action="_spSwitchTab" data-arg="${dom.key}">
       <div class="sp-overview-icon">${dom.icon}</div>
       <div class="sp-overview-score" style="${scoreColor}">${d && d.isStale ? '~' : ''}${sv}</div>
