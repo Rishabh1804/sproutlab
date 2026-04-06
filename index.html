@@ -2589,7 +2589,108 @@ body.simple-mode .ca-view-all { display:none; }
 body.simple-mode #insightsTrendsCard { display:none; }
 body.simple-mode .ins-card-corr,
 body.simple-mode .ins-card-cross,
-body.simple-mode .ins-card-alert-intel,
+body.simple-mode .ins-card-alert-intel { display:none !important; }
+
+/* ── Essential Mode: Vitals card — hide expand affordance ── */
+body.simple-mode #homeVitalsChevron { display:none; }
+body.simple-mode #homeVitalsCard { cursor:default; }
+/* ── Essential Mode: Trim Home cards — hide analytics-adjacent cards ── */
+body.simple-mode #homeSuggestionsCard { display:none !important; }
+body.simple-mode #outingPlannerCard { display:none !important; }
+body.simple-mode #tomorrowPrepCard { display:none !important; }
+
+/* ── Essential Mode: Warm Hero Card ("Home Screen" feel) ── */
+.hero-avatar-bg {
+  display:none; position:absolute; inset:0;
+  background-size:cover; background-position:center;
+  opacity:0; filter:blur(30px) saturate(1.4);
+  z-index:0; pointer-events:none;
+  border-radius:var(--r-2xl);
+}
+body.simple-mode .hero-avatar-bg {
+  display:block; opacity:0.1;
+}
+body.simple-mode #homeVitalsCard {
+  position:relative;
+}
+body.simple-mode #homeVitalsCard > * {
+  position:relative; z-index:1;
+}
+body.simple-mode .hero-avatar-bg { z-index:0; }
+
+/* Greeting row — visible only in Essential Mode */
+.hero-greet-row {
+  display:none;
+}
+body.simple-mode .hero-greet-row {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:var(--sp-12); margin-bottom:var(--sp-12);
+}
+.hero-greet-left { flex:1; min-width:0; }
+.hero-greet-text {
+  font-family:'Fraunces', serif;
+  font-size:var(--fs-xl); font-weight:400; font-style:italic;
+  color:var(--tc-rose); line-height:var(--lh-tight);
+}
+.hero-age-text {
+  font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-2);
+}
+.hero-weather-pill {
+  flex-shrink:0; font-size:var(--fs-sm); color:var(--mid);
+  display:flex; align-items:center; gap:var(--sp-4);
+  padding:var(--sp-4) var(--sp-8);
+  background:var(--glass); border-radius:var(--r-full);
+  line-height:var(--lh-tight); white-space:nowrap;
+}
+.hero-weather-pill:empty { display:none; }
+
+/* In Essential Mode, hide the old "Age Today" label + age stat (greeting replaces them) */
+body.simple-mode .hero-age-block { display:none; }
+
+/* Vitals row layout (replaces inline styles) */
+.hero-vitals-row {
+  display:flex; align-items:center; gap:var(--sp-12); flex-wrap:wrap;
+}
+.hero-age-block { flex:1; min-width:120px; }
+.hero-age-label {
+  font-size:var(--fs-2xs); font-weight:600; text-transform:uppercase;
+  letter-spacing:var(--ls-normal); color:var(--light); margin-bottom:1px;
+}
+.hero-stat { font-size:var(--fs-lg); }
+.hero-quick-pills { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
+.collapse-chevron { font-size:var(--fs-sm); color:var(--light); }
+
+/* Time-of-day gradient tint (set via JS data attribute) */
+body.simple-mode .hero-home[data-tod="morning"] {
+  background:linear-gradient(135deg, #fff5ee, #fff9f0, #f0faf5) !important;
+}
+body.simple-mode .hero-home[data-tod="afternoon"] {
+  background:linear-gradient(135deg, #f0faf5, #f5f8ff, #fff9f0) !important;
+}
+body.simple-mode .hero-home[data-tod="evening"] {
+  background:linear-gradient(135deg, #f0eafa, #f5f0ff, #fff5f7) !important;
+}
+body.simple-mode .hero-home[data-tod="night"] {
+  background:linear-gradient(135deg, #edf0fa, #f0eafa, #f5f0ff) !important;
+}
+
+/* Dark mode variants */
+[data-theme="dark"] .hero-greet-text { color:var(--rose); }
+[data-theme="dark"] .hero-weather-pill { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] body.simple-mode .hero-avatar-bg,
+body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
+[data-theme="dark"] .hero-home[data-tod="morning"] {
+  background:linear-gradient(135deg, rgba(60,45,35,0.4), rgba(50,55,40,0.3)) !important;
+}
+[data-theme="dark"] .hero-home[data-tod="afternoon"] {
+  background:linear-gradient(135deg, rgba(40,55,50,0.4), rgba(45,50,60,0.3)) !important;
+}
+[data-theme="dark"] .hero-home[data-tod="evening"] {
+  background:linear-gradient(135deg, rgba(50,40,60,0.4), rgba(55,45,55,0.3)) !important;
+}
+[data-theme="dark"] .hero-home[data-tod="night"] {
+  background:linear-gradient(135deg, rgba(40,42,60,0.5), rgba(50,40,60,0.4)) !important;
+}
 
 /* ── Doctor visits ── */
 .visit-list { display:flex; flex-direction:column; gap:var(--sp-8); }
@@ -6179,22 +6280,32 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
       <!-- ─── TIER 1: COMPACT VITALS (expandable) ─── -->
       <div class="card col-full card-hero hero-home ptr" id="homeVitalsCard" data-action="toggleHomeVitals" >
+        <!-- Avatar blurred background (Essential Mode only, set via JS) -->
+        <div id="heroAvatarBg" class="hero-avatar-bg" aria-hidden="true"></div>
         <!-- Collapsed: key vitals in one row -->
         <div id="homeVitalsCollapsed">
-          <div style="display:flex;align-items:center;gap:var(--sp-12);flex-wrap:wrap;">
-            <div style="flex:1;min-width:120px;">
-              <div style="font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-normal);color:var(--light);margin-bottom:1px;">Age Today</div>
-              <div id="homePreciseAge" class="hero-stat" style="font-size:var(--fs-lg);">—</div>
+          <!-- Greeting row (Essential Mode only) -->
+          <div class="hero-greet-row" id="heroGreetRow">
+            <div class="hero-greet-left">
+              <div class="hero-greet-text" id="heroGreetText"></div>
+              <div class="hero-age-text" id="heroAgeText"></div>
+            </div>
+            <div class="hero-weather-pill" id="heroWeatherPill"></div>
+          </div>
+          <div class="hero-vitals-row">
+            <div class="hero-age-block">
+              <div class="hero-age-label">Age Today</div>
+              <div id="homePreciseAge" class="hero-stat">—</div>
             </div>
             <div class="zs-ring-mini" id="zsRingMini" style="display:none;" data-action="openScorePopupStop">
               <span class="zs-number-mini" id="zsNumberMini">—</span>
             </div>
-            <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;" id="homeVitalsQuick">
+            <div class="hero-quick-pills" id="homeVitalsQuick">
               <div class="hvq-pill" data-tab="growth" data-stop="1"><span id="homeWeightQuick">—</span> <span class="hvq-label">wt</span></div>
               <div class="hvq-pill" data-tab="sleep" data-stop="1"><span id="homeLastSleepQuick">—</span> <span class="hvq-label">sleep</span></div>
               <div class="hvq-pill" data-tab="medical" data-stop="1"><span id="homeVaccQuick">—</span> <span class="hvq-label">vacc</span></div>
             </div>
-            <span class="collapse-chevron" id="homeVitalsChevron" style="font-size:var(--fs-sm);color:var(--light);">▾</span>
+            <span class="collapse-chevron" id="homeVitalsChevron">▾</span>
           </div>
         </div>
         <!-- Expanded: full details -->
@@ -11884,12 +11995,58 @@ function updateHeader() {
     if (dv) dv.textContent = Math.max(0, daysTo);
   }
 
+  // Update hero card warm elements (Essential Mode home screen feel)
+  _updateHeroWarm(hour, months, days);
+
   // Fetch weather (once per session)
   if (!window._weatherFetched) {
     window._weatherFetched = true;
     fetchWeather();
     // Fetch vaccination day weather advisory (shows 0–2 days before appointment)
     setTimeout(fetchVaccWeatherAdvisory, 1500);
+  }
+}
+
+// ── Hero Card Warm Treatment (Essential Mode) ──
+function _updateHeroWarm(hour, months, days) {
+  // Greeting text
+  var greetEl = document.getElementById('heroGreetText');
+  if (greetEl) {
+    var g;
+    if (hour < 6) g = 'Good night';
+    else if (hour < 12) g = 'Good morning';
+    else if (hour < 17) g = 'Good afternoon';
+    else if (hour < 19) g = 'Good evening';
+    else g = 'Good night';
+    greetEl.textContent = g;
+  }
+
+  // Age text (warm phrasing)
+  var ageEl = document.getElementById('heroAgeText');
+  if (ageEl) {
+    ageEl.textContent = months + ' months, ' + days + ' days old';
+  }
+
+  // Time-of-day gradient
+  var card = document.getElementById('homeVitalsCard');
+  if (card) {
+    var tod;
+    if (hour >= 6 && hour < 12) tod = 'morning';
+    else if (hour >= 12 && hour < 17) tod = 'afternoon';
+    else if (hour >= 17 && hour < 20) tod = 'evening';
+    else tod = 'night';
+    card.setAttribute('data-tod', tod);
+  }
+
+  // Avatar blurred background
+  var bgEl = document.getElementById('heroAvatarBg');
+  if (bgEl && !bgEl.style.backgroundImage) {
+    try {
+      var avatarSrc = localStorage.getItem('ziva_avatar_full');
+      if (avatarSrc) {
+        bgEl.style.backgroundImage = 'url(' + avatarSrc + ')';
+      }
+    } catch (e) { /* avatar load is best-effort */ }
   }
 }
 
@@ -11916,27 +12073,35 @@ setInterval(() => {
   const emojiEl = document.getElementById('greetingEmoji');
   if (greetEl) greetEl.textContent = greeting;
   if (emojiEl) emojiEl.innerHTML = emoji;
+  // Refresh hero card warm elements
+  var age = preciseAge();
+  _updateHeroWarm(hour, age.months, age.days);
 }, 60000);
 
 function fetchWeather() {
-  const weatherEl = document.getElementById('headerWeather');
+  var weatherEl = document.getElementById('headerWeather');
   if (!weatherEl) return;
   // Jamshedpur coordinates
-  const lat = 22.8;
-  const lon = 86.18;
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia/Kolkata`)
-    .then(r => r.json())
-    .then(data => {
+  var lat = 22.8;
+  var lon = 86.18;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia/Kolkata')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       if (data.current) {
-        const temp = Math.round(data.current.temperature_2m);
-        const humidity = data.current.relative_humidity_2m;
-        const code = data.current.weather_code;
-        const desc = weatherCodeToText(code);
-        const icon = weatherCodeToIcon(code);
-        weatherEl.innerHTML = `${icon} ${temp}°C · ${escHtml(desc)} · ${zi('drop')} ${humidity}%`;
+        var temp = Math.round(data.current.temperature_2m);
+        var humidity = data.current.relative_humidity_2m;
+        var code = data.current.weather_code;
+        var desc = weatherCodeToText(code);
+        var icon = weatherCodeToIcon(code);
+        weatherEl.innerHTML = icon + ' ' + temp + '\u00B0C \u00B7 ' + escHtml(desc) + ' \u00B7 ' + zi('drop') + ' ' + humidity + '%';
+        // Also update hero weather pill (Essential Mode)
+        var heroPill = document.getElementById('heroWeatherPill');
+        if (heroPill) {
+          heroPill.innerHTML = icon + ' ' + temp + '\u00B0C';
+        }
       }
     })
-    .catch(() => {
+    .catch(function() {
       weatherEl.textContent = '';
     });
 }
@@ -12110,6 +12275,7 @@ function renderHome() {
 
 // Show "all clear" when no action cards are visible
 function toggleHomeVitals() {
+  if (isSimpleMode()) return; // Essential Mode — vitals stay collapsed
   const collapsed = document.getElementById('homeVitalsCollapsed');
   const expanded = document.getElementById('homeVitalsExpanded');
   const chevron = document.getElementById('homeVitalsChevron');
@@ -35900,6 +36066,13 @@ function toggleSimpleMode() {
   if (on) {
     document.body.classList.add('simple-mode');
     localStorage.setItem('ziva_simple_mode', 'true');
+    // Collapse vitals card if expanded
+    var expanded = document.getElementById('homeVitalsExpanded');
+    var chevron = document.getElementById('homeVitalsChevron');
+    var quick = document.getElementById('homeVitalsQuick');
+    if (expanded) expanded.style.display = 'none';
+    if (chevron) chevron.textContent = '▾';
+    if (quick) quick.style.display = '';
   } else {
     document.body.classList.remove('simple-mode');
     localStorage.setItem('ziva_simple_mode', 'false');
