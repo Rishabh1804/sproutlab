@@ -2580,7 +2580,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .wg-dot.active { background:var(--rose); opacity:1; width:20px; border-radius:4px; }
 
-/* ── Wife Mode (simple-mode class) ── */
+/* ── Essential Mode (simple-mode class) ── */
 body.simple-mode .tab-btn[aria-label="Insights tab"],
 body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
 body.simple-mode .stat-pills-grid { display:none !important; }
@@ -5942,6 +5942,71 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .bug-tooltip { background:rgba(58,112,96,0.2); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
 [data-theme="dark"] .bug-tooltip-arrow { border-top-color:rgba(58,112,96,0.2); }
 [data-theme="dark"] .bug-settings-row { background:rgba(138,101,32,0.1); border-color:rgba(138,101,32,0.2); }
+
+/* ── Today So Far (tsf-*) ── */
+.tsf-header-count { font-size:var(--fs-xs); color:var(--mid); font-weight:400; }
+.tsf-caught-up { font-size:var(--fs-xs); color:var(--tc-sage); font-weight:600; display:inline-flex; align-items:center; gap:var(--sp-4); }
+.tsf-caught-up .icon { width:var(--sp-12); height:var(--sp-12); }
+.tsf-warmth-bar { width:100%; height:var(--sp-6); border-radius:var(--r-full); background:var(--glass); overflow:hidden; margin-top:var(--sp-8); margin-bottom:var(--sp-12); }
+.tsf-warmth-fill { height:100%; border-radius:var(--r-full); transition:width 0.4s ease, background 0.4s ease; min-width:var(--sp-4); }
+.tsf-warmth-fill[data-level="1"] { background:var(--glass-strong); }
+.tsf-warmth-fill[data-level="2"] { background:var(--peach-light); }
+.tsf-warmth-fill[data-level="3"] { background:var(--sage-light); }
+.tsf-warmth-fill[data-level="4"] { background:var(--tc-sage); opacity:0.5; }
+.tsf-warmth-fill[data-level="5"] { background:var(--tc-sage); opacity:0.7; }
+.tsf-event-list { display:flex; flex-direction:column; gap:var(--sp-2); }
+.tsf-event-wrap { border-radius:var(--r-md); }
+.tsf-event-wrap.tsf-event-expanded { background:var(--glass); }
+.tsf-event { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) var(--sp-4); border-radius:var(--r-md); cursor:pointer; transition:background 0.15s ease; }
+.tsf-event:active { background:var(--glass); }
+.tsf-event-time { font-size:var(--fs-xs); color:var(--mid); min-width:var(--sp-32); text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
+.tsf-event-icon { flex-shrink:0; }
+.tsf-event-icon .icon { width:var(--sp-16); height:var(--sp-16); }
+.tsf-event-body { flex:1; min-width:0; }
+.tsf-event-label { font-size:var(--fs-sm); color:var(--text); line-height:1.3; }
+.tsf-event-detail { font-size:var(--fs-xs); color:var(--light); }
+.tsf-event-inferred .tsf-event-time { font-style:italic; opacity:0.7; }
+.tsf-event-live .tsf-event-detail { animation:tsfPulse 2s ease-in-out infinite; }
+.tsf-event-live[data-calm="true"] .tsf-event-detail { animation:none; }
+@keyframes tsfPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+.tsf-event-expanded-detail { padding:var(--sp-4) var(--sp-4) var(--sp-8) calc(var(--sp-32) + var(--sp-8) + var(--sp-16) + var(--sp-8) + var(--sp-4)); font-size:var(--fs-xs); color:var(--mid); line-height:1.5; border-top:1px solid var(--glass-strong); margin-top:0; }
+.tsf-show-earlier { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-6) 0; cursor:pointer; font-weight:600; }
+.tsf-show-earlier:active { opacity:0.6; }
+.tsf-now { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) 0; font-size:var(--fs-xs); color:var(--tc-indigo); font-weight:600; }
+.tsf-now::before, .tsf-now::after { content:''; flex:1; height:1px; background:var(--tc-indigo); opacity:0.25; }
+.tsf-nudges { display:flex; flex-direction:column; gap:var(--sp-6); margin-top:var(--sp-4); }
+.tsf-nudge { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-10) var(--sp-10); background:var(--glass); border-radius:var(--r-lg); cursor:pointer; border-left:3px solid transparent; transition:background 0.15s ease; }
+.tsf-nudge:active { background:var(--glass-strong); }
+.tsf-nudge-lav { border-left-color:var(--tc-lav); }
+.tsf-nudge-sky { border-left-color:var(--tc-sky); }
+.tsf-nudge-peach { border-left-color:var(--tc-caution); }
+.tsf-nudge-sage { border-left-color:var(--tc-sage); }
+.tsf-nudge-amber { border-left-color:var(--tc-amber); }
+.tsf-nudge-indigo { border-left-color:var(--tc-indigo); }
+.tsf-nudge-icon { flex-shrink:0; }
+.tsf-nudge-icon .icon { width:var(--sp-16); height:var(--sp-16); }
+.tsf-nudge-body { flex:1; min-width:0; }
+.tsf-nudge-text { font-size:var(--fs-sm); color:var(--text); }
+.tsf-nudge-action { font-size:var(--fs-xs); color:var(--tc-indigo); font-weight:600; margin-top:var(--sp-2); }
+.tsf-no-time { margin-top:var(--sp-8); }
+.tsf-no-time-label { font-size:var(--fs-xs); color:var(--light); margin-bottom:var(--sp-4); }
+.tsf-complete { font-size:var(--fs-xs); color:var(--tc-sage); text-align:center; padding:var(--sp-8) 0; }
+.tsf-empty { font-size:var(--fs-sm); color:var(--light); text-align:center; padding:var(--sp-16) 0; }
+.tsf-empty-action { color:var(--tc-indigo); font-weight:600; cursor:pointer; margin-top:var(--sp-4); display:inline-block; }
+
+/* TSF dark mode */
+[data-theme="dark"] .tsf-warmth-bar { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .tsf-warmth-fill[data-level="1"] { background:rgba(58,112,96,0.08); }
+[data-theme="dark"] .tsf-warmth-fill[data-level="2"] { background:rgba(58,112,96,0.15); }
+[data-theme="dark"] .tsf-warmth-fill[data-level="3"] { background:rgba(58,112,96,0.25); }
+[data-theme="dark"] .tsf-warmth-fill[data-level="4"] { background:rgba(58,112,96,0.35); }
+[data-theme="dark"] .tsf-warmth-fill[data-level="5"] { background:rgba(58,112,96,0.45); }
+[data-theme="dark"] .tsf-event:active { background:rgba(255,255,255,0.05); }
+[data-theme="dark"] .tsf-event-wrap.tsf-event-expanded { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .tsf-event-expanded-detail { border-top-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .tsf-nudge { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .tsf-nudge:active { background:rgba(255,255,255,0.08); }
+[data-theme="dark"] .tsf-now::before, [data-theme="dark"] .tsf-now::after { background:var(--tc-indigo); opacity:0.35; }
 </style>
 </head>
 <body>
@@ -6218,6 +6283,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div class="col-full" id="homeColdBanner" style="display:none;"></div>
 
       <div class="home-section-label sec-t1 col-full">Today</div>
+
+      <!-- TODAY SO FAR -->
+      <div class="card card-daily col-full" id="tsfCard">
+        <div id="tsfContent"></div>
+      </div>
 
       <!-- TODAY'S MEALS PROGRESS -->
       <div class="card card-daily col-full" id="homeMealProgressCard">
@@ -8439,16 +8509,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
               </label>
             </div>
 
-            <!-- Wife Mode (clean essentials view) -->
+            <!-- Essential Mode (clean essentials view) -->
             <div class="d-flex items-center justify-between">
               <div>
-                <div class="t-md">Wife Mode</div>
-                <div class="t-sub">Clean, simple view — essentials only</div>
+                <div class="t-md">Essential Mode</div>
+                <div class="t-sub">Simplified view with only what matters</div>
               </div>
               <label class="toggle-switch-wrap">
                 <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" class="toggle-switch-input" checked>
                 <span class="toggle-track"></span>
               </label>
+            </div>
+            <div class="t-sub" style="line-height:var(--lh-relaxed);margin-top:calc(-1 * var(--sp-6));opacity:0.7;">
+              Essential Mode hides advanced analytics (Insights &amp; Info tabs, trend lines, poop card, correlation intelligence) and shows only action-level alerts. Turn it off to see the full dashboard.
             </div>
 
             <!-- Text Zoom (new) -->
@@ -11390,6 +11463,36 @@ function init() {
     else if (action === 'bugAutoReport') { _bugDismissAutoPrompt(); openBugReporter(true); }
     else if (action === 'bugAutoDismiss') _bugDismissAutoPrompt();
     else if (action === 'bugDismissTooltip') _bugDismissTooltip();
+    // ── Today So Far actions ──
+    else if (action === 'tsfToggleEvent') {
+      _tsfExpandedId = _tsfExpandedId === arg ? null : arg;
+      renderTodaySoFar();
+    }
+    else if (action === 'tsfShowEarlier') {
+      _tsfShowAll = true;
+      renderTodaySoFar();
+    }
+    else if (action === 'tsfNudgeTap') {
+      // arg = pattern key, arg2 = meal type, arg3 = med name
+      if (arg && arg.startsWith('med-') && arg3) {
+        // Direct mark done for supplements
+        markMedDone(arg3, 0);
+        renderTodaySoFar();
+      } else if (arg === 'morning-nap' || arg === 'afternoon-nap') {
+        openQuickModal('nap');
+      } else if (arg === 'afternoon-poop') {
+        openQuickModal('poop');
+      } else if (arg2) {
+        // Feed nudge — pre-select meal type
+        _qlMeal = arg2;
+        openQuickModal('feed');
+        setTimeout(function() {
+          document.querySelectorAll('.ql-meal-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.meal === arg2); });
+        }, 50);
+      } else {
+        openQuickModal('feed');
+      }
+    }
   });
 
   
@@ -11982,6 +12085,7 @@ function renderHome() {
   renderHomeColdBanner();
   renderHeroScore();
   renderQABar();
+  renderTodaySoFar();
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
   renderHomeMealProgress();
@@ -12343,6 +12447,7 @@ function markMedDone(name, idx) {
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
   medChecks[todayStr][name] = 'done:' + timeStr;
   save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
 
   const el = document.getElementById('supp-alert-' + idx);
   if (el) {
@@ -30193,6 +30298,7 @@ function saveFeedingDay() {
     }
   });
   save(KEYS.feeding, feedingData);
+  _tsfMarkDirty();
   // Auto-introduce any new foods from all meal slots
   autoIntroduceFoodsFromDay(d);
   renderFeedingHistory();
@@ -31576,6 +31682,7 @@ function addSleepEntry() {
 
   sleepData.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.ts || '').localeCompare(a.ts || ''));
   save(KEYS.sleep, sleepData);
+  _tsfMarkDirty();
   resetSleepForm('night');
   renderSleep();
   renderHomeSleep();
@@ -31613,6 +31720,7 @@ function addNapEntry() {
 
   sleepData.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.ts || '').localeCompare(a.ts || ''));
   save(KEYS.sleep, sleepData);
+  _tsfMarkDirty();
   resetSleepForm('nap');
   renderSleep();
   renderHomeSleep();
@@ -31723,6 +31831,7 @@ function endSleepNow() {
   sleepData.push(entry);
   sleepData.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.ts || '').localeCompare(a.ts || ''));
   save(KEYS.sleep, sleepData);
+  _tsfMarkDirty();
 
   localStorage.removeItem(SLEEP_INPROGRESS_KEY);
 
@@ -32631,6 +32740,7 @@ function addPoopEntry() {
     return (b.time || '').localeCompare(a.time || '');
   });
   save(KEYS.poop, poopData);
+  _tsfMarkDirty();
   resetPoopForm();
   renderPoop();
   renderHomePoop();
@@ -34114,6 +34224,8 @@ function getAlertNavAction(alertKey, alertTitle) {
 
 function switchTab(name) {
   _clearModifierCache();
+  _tsfExpandedId = null;
+  _tsfShowAll = false;
   // Redirect domain tabs to Track tab
   if (TRACK_SUB_ORDER.includes(name)) {
     const sub = name;
@@ -35392,6 +35504,7 @@ function saveActivity() {
   if (!activityLog[dateStr]) activityLog[dateStr] = [];
   activityLog[dateStr].push(entry);
   save(KEYS.activityLog, activityLog);
+  _tsfMarkDirty();
 
   // Set undo state
   _lastActivityUndo = { dateStr, entryId: entry.id };
@@ -35501,6 +35614,7 @@ function saveQLFeed() {
   }
   save(KEYS.feeding, feeding);
   feedingData = feeding;
+  _tsfMarkDirty();
 
   // Auto-introduce new foods
   autoIntroduceFoodsFromDay(dateStr);
@@ -35566,6 +35680,7 @@ function saveQLSleep() {
   };
   sleepData.push(entry);
   save(KEYS.sleep, sleepData);
+  _tsfMarkDirty();
 
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -35597,6 +35712,7 @@ function saveQLNap() {
   };
   sleepData.push(entry);
   save(KEYS.sleep, sleepData);
+  _tsfMarkDirty();
 
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -35628,6 +35744,7 @@ function saveQLPoop() {
   };
   poopData.push(entry);
   save(KEYS.poop, poopData);
+  _tsfMarkDirty();
 
   const undoFn = () => {
     const idx = poopData.indexOf(entry);
@@ -35721,7 +35838,7 @@ function initWelcomeGuide() {
 }
 
 // ─────────────────────────────────────────
-// WIFE MODE (internally: simple-mode class, ziva_simple_mode localStorage key)
+// ESSENTIAL MODE (internally: simple-mode class, ziva_simple_mode localStorage key)
 // ─────────────────────────────────────────
 
 function isSimpleMode() {
@@ -35752,7 +35869,7 @@ function toggleSimpleMode() {
 
 function initSimpleMode() {
   const saved = localStorage.getItem('ziva_simple_mode');
-  // Default to Wife Mode ON (new users and existing users without preference)
+  // Default to Essential Mode ON (new users and existing users without preference)
   const isSimple = saved !== 'false';
   if (isSimple) {
     document.body.classList.add('simple-mode');
@@ -35782,7 +35899,7 @@ function initZoomLevel() {
   if (saved) {
     setZoomLevel(saved);
   } else {
-    // Infer from Wife Mode
+    // Infer from Essential Mode
     const isSimple = document.body.classList.contains('simple-mode');
     setZoomLevel(isSimple ? 'med' : 'low');
   }
@@ -35792,7 +35909,7 @@ function renderDisplaySettings() {
   // Sync dark mode toggle
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
-  // Sync Wife Mode toggle
+  // Sync Essential Mode toggle
   const simpleEl = document.getElementById('settingsSimpleMode');
   if (simpleEl) simpleEl.checked = document.body.classList.contains('simple-mode');
   // Sync zoom slider
@@ -37735,7 +37852,7 @@ function renderHomeContextAlerts() {
   const infoAlerts = alerts.filter(a => a.severity === 'info');
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
 
-  // Wife Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
+  // Essential Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
   const simple = isSimpleMode();
   const homeWarnings = simple
     ? actionAlerts
@@ -40542,6 +40659,740 @@ function getMdiTextColor(score) {
   return score >= 60 ? 'var(--tc-sage)' : score >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)';
 }
 
+// ═══════════════════════════════════════════════════════
+// TODAY SO FAR — Smart Card (tsf-*)
+// ═══════════════════════════════════════════════════════
+
+let _tsfExpandedId = null;
+let _tsfShowAll = false;
+let _tsfPatternCache = null;
+let _tsfAnchorCache = null;
+let _tsfCacheDirty = true;
+let _tsfCacheTime = 0;
+
+function _tsfMarkDirty() { _tsfCacheDirty = true; }
+
+function _tsfTimeToMinutes(timeStr) {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return null;
+  const h = parseInt(parts[0]), m = parseInt(parts[1]);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+function _tsfMinutesToDisplay(min) {
+  if (min === null || min === undefined) return '';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? h12 + ' ' + ampm : h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+function _tsfFormatTime(timeStr) {
+  const min = _tsfTimeToMinutes(timeStr);
+  if (min === null) return '';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? String(h12) : h12 + ':' + String(m).padStart(2, '0');
+}
+
+function _tsfInferMealTime(meal, todayEntry) {
+  const defaults = { breakfast: 480, lunch: 720, snack: 930, dinner: 1140 };
+  const order = ['breakfast', 'lunch', 'snack', 'dinner'];
+  let inferred = defaults[meal] || 720;
+
+  // If adjacent meals have times, infer relative to them
+  if (todayEntry) {
+    const idx = order.indexOf(meal);
+    // Check next meal for upper bound
+    for (let i = idx + 1; i < order.length; i++) {
+      const nextTime = _tsfTimeToMinutes(todayEntry[order[i] + '_time']);
+      if (nextTime !== null) {
+        inferred = Math.min(inferred, nextTime - 180);
+        break;
+      }
+    }
+    // Check prev meal for lower bound
+    for (let i = idx - 1; i >= 0; i--) {
+      const prevTime = _tsfTimeToMinutes(todayEntry[order[i] + '_time']);
+      if (prevTime !== null) {
+        inferred = Math.max(inferred, prevTime + 120);
+        break;
+      }
+    }
+  }
+  return { timeMin: Math.max(360, Math.min(inferred, 1380)), inferred: true };
+}
+
+function _tsfIsMealLogged(todayEntry, meal) {
+  if (!todayEntry) return false;
+  const foods = todayEntry[meal] || '';
+  const time = todayEntry[meal + '_time'] || '';
+  return (typeof foods === 'string' && foods.trim().length > 0) || (typeof time === 'string' && time.trim().length > 0);
+}
+
+function _tsfCollectEvents() {
+  const t = today();
+  const todayEntry = feedingData[t] || {};
+  const events = [];
+  const noTimeEvents = [];
+  const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+  const mealIcons = { breakfast: 'sun', lunch: 'sun', dinner: 'moon', snack: 'spoon' };
+  const mealColors = { breakfast: 'peach', lunch: 'sage', dinner: 'lav', snack: 'amber' };
+
+  // ── Meals ──
+  meals.forEach(meal => {
+    if (!_tsfIsMealLogged(todayEntry, meal)) return;
+    const timeStr = todayEntry[meal + '_time'] || '';
+    const timeMin = _tsfTimeToMinutes(timeStr);
+    const intake = todayEntry[meal + '_intake'] || '';
+    const foods = todayEntry[meal] || '';
+    let inferred = false;
+
+    let finalTimeMin = timeMin;
+    let displayTime = _tsfFormatTime(timeStr);
+
+    if (finalTimeMin === null) {
+      const inf = _tsfInferMealTime(meal, todayEntry);
+      finalTimeMin = inf.timeMin;
+      inferred = true;
+      displayTime = '~' + _tsfMinutesToDisplay(finalTimeMin);
+    }
+
+    events.push({
+      id: 'feed-' + meal,
+      type: 'feed',
+      time: timeStr || null,
+      timeMin: finalTimeMin,
+      label: meal.charAt(0).toUpperCase() + meal.slice(1),
+      detail: intake,
+      icon: zi(mealIcons[meal]),
+      color: mealColors[meal],
+      inferred: inferred,
+      displayTime: displayTime,
+      meal: meal,
+      foods: foods
+    });
+  });
+
+  // ── Night sleep (yesterday's latest wakeTime) ──
+  const yesterday = _offsetDateStr(t, -1);
+  const lastNightEntries = sleepData.filter(function(s) { return s.date === yesterday && s.type === 'night' && s.wakeTime; });
+  if (lastNightEntries.length > 0) {
+    const lastNight = lastNightEntries.sort(function(a, b) { return (b.wakeTime || '').localeCompare(a.wakeTime || ''); })[0];
+    const wakeMin = _tsfTimeToMinutes(lastNight.wakeTime);
+    if (wakeMin !== null && wakeMin < 720) {
+      const dur = calcSleepDuration(lastNight.bedtime, lastNight.wakeTime);
+      events.push({
+        id: 'sleep-' + lastNight.wakeTime,
+        type: 'sleep',
+        time: lastNight.wakeTime,
+        timeMin: wakeMin,
+        label: 'Night sleep',
+        detail: dur.h + 'h ' + dur.m + 'm',
+        icon: zi('moon'),
+        color: 'indigo',
+        inferred: false,
+        displayTime: _tsfFormatTime(lastNight.wakeTime),
+        bedtime: lastNight.bedtime,
+        wakeTime: lastNight.wakeTime,
+        wakeUps: lastNight.wakeUps || 0
+      });
+    }
+  }
+
+  // ── Naps today ──
+  sleepData.filter(function(s) { return s.date === t && s.type === 'nap' && s.bedtime && s.wakeTime; }).forEach(function(nap) {
+    const bedMin = _tsfTimeToMinutes(nap.bedtime);
+    if (bedMin === null) return;
+    const dur = calcSleepDuration(nap.bedtime, nap.wakeTime);
+    events.push({
+      id: 'nap-' + nap.bedtime,
+      type: 'nap',
+      time: nap.bedtime,
+      timeMin: bedMin,
+      label: 'Nap',
+      detail: dur.h + 'h ' + dur.m + 'm',
+      icon: zi('zzz'),
+      color: 'lav',
+      inferred: false,
+      displayTime: _tsfFormatTime(nap.bedtime),
+      bedtime: nap.bedtime,
+      wakeTime: nap.wakeTime,
+      wakeUps: nap.wakeUps || 0
+    });
+  });
+
+  // ── Active sleep in progress ──
+  try {
+    const ipRaw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+    if (ipRaw) {
+      const ip = JSON.parse(ipRaw);
+      if (ip && ip.startTime) {
+        const startMin = _tsfTimeToMinutes(ip.startTime);
+        if (startMin !== null) {
+          const now = new Date();
+          const nowMin = now.getHours() * 60 + now.getMinutes();
+          let elapsedMin = nowMin - startMin;
+          if (elapsedMin < 0) elapsedMin += 1440;
+          const isNight = ip.type === 'night';
+          const isCalm = isNight && elapsedMin >= 120;
+          events.push({
+            id: 'sleep-inprogress',
+            type: isNight ? 'sleep' : 'nap',
+            time: ip.startTime,
+            timeMin: startMin,
+            label: isNight ? 'Night sleep' : 'Nap',
+            detail: (elapsedMin >= 60 ? Math.floor(elapsedMin / 60) + 'h ' : '') + (elapsedMin % 60) + 'm so far',
+            icon: zi(isNight ? 'moon' : 'zzz'),
+            color: isNight ? 'indigo' : 'lav',
+            inferred: false,
+            displayTime: _tsfFormatTime(ip.startTime),
+            isLive: true,
+            isCalm: isCalm
+          });
+        }
+      }
+    }
+  } catch(e) { /* ignore corrupt in-progress */ }
+
+  // ── Poop today ──
+  poopData.filter(function(p) { return p.date === t; }).forEach(function(p, idx) {
+    const timeMin = _tsfTimeToMinutes(p.time);
+    if (timeMin === null) {
+      noTimeEvents.push({
+        id: 'poop-notime-' + idx,
+        type: 'poop',
+        time: null,
+        timeMin: null,
+        label: 'Poop' + (p.consistency ? ' \u00b7 ' + p.consistency : '') + (p.color ? ' \u00b7 ' + p.color : ''),
+        detail: '',
+        icon: zi('diaper'),
+        color: 'amber',
+        inferred: false,
+        displayTime: '',
+        poopEntry: p
+      });
+      return;
+    }
+    const labelParts = ['Poop'];
+    if (p.consistency) labelParts.push(p.consistency);
+    if (p.color) labelParts.push(p.color);
+    events.push({
+      id: 'poop-' + (p.time || '') + '-' + idx,
+      type: 'poop',
+      time: p.time,
+      timeMin: timeMin,
+      label: labelParts.join(' \u00b7 '),
+      detail: '',
+      icon: zi('diaper'),
+      color: 'amber',
+      inferred: false,
+      displayTime: _tsfFormatTime(p.time),
+      poopEntry: p
+    });
+  });
+
+  // ── Activities today ──
+  const todayActivities = activityLog[t] || [];
+  todayActivities.forEach(function(act) {
+    let timeMin = null;
+    let displayTime = '';
+    let timeStr = null;
+    if (act.ts) {
+      try {
+        const d = new Date(act.ts);
+        if (!isNaN(d.getTime())) {
+          timeMin = d.getHours() * 60 + d.getMinutes();
+          timeStr = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+          displayTime = _tsfFormatTime(timeStr);
+        }
+      } catch(e) {}
+    }
+    // Truncate label at last whole word before 30 chars
+    let label = act.text || 'Activity';
+    if (label.length > 30) {
+      label = label.substring(0, 30).replace(/\s+\S*$/, '');
+    }
+    const ev = {
+      id: 'activity-' + (act.ts || act.id || ''),
+      type: 'activity',
+      time: timeStr,
+      timeMin: timeMin,
+      label: label,
+      detail: act.duration ? act.duration + ' min' : '',
+      icon: zi('run'),
+      color: 'sage',
+      inferred: false,
+      displayTime: displayTime,
+      fullText: act.text || '',
+      domains: act.domains || [],
+      duration: act.duration
+    };
+    if (timeMin !== null) {
+      events.push(ev);
+    } else {
+      noTimeEvents.push(ev);
+    }
+  });
+
+  // ── Supplements (medChecks) today ──
+  const todayMedChecks = medChecks[t] || {};
+  Object.keys(todayMedChecks).forEach(function(medName) {
+    const val = todayMedChecks[medName];
+    if (typeof val !== 'string') return;
+    let timeStr = null;
+    let timeMin = null;
+    let displayTime = '';
+    if (val.startsWith('done:')) {
+      const timePart = val.replace('done:', '').trim();
+      if (timePart !== 'late') {
+        timeMin = _tsfTimeToMinutes(timePart);
+        timeStr = timePart;
+        displayTime = _tsfFormatTime(timePart);
+      }
+    }
+    const ev = {
+      id: 'med-' + medName,
+      type: 'med',
+      time: timeStr,
+      timeMin: timeMin,
+      label: medName,
+      detail: val.startsWith('done:') ? 'Done' : val === 'skipped' ? 'Skipped' : '',
+      icon: zi('pill'),
+      color: 'sky',
+      inferred: false,
+      displayTime: displayTime,
+      status: val
+    };
+    if (timeMin !== null) {
+      events.push(ev);
+    } else if (val !== 'skipped') {
+      noTimeEvents.push(ev);
+    }
+  });
+
+  // Sort by timeMin ascending
+  events.sort(function(a, b) { return (a.timeMin || 0) - (b.timeMin || 0); });
+
+  return { events: events, noTimeEvents: noTimeEvents };
+}
+
+function _tsfGetAnchor() {
+  if (!_tsfCacheDirty && _tsfAnchorCache !== null && Date.now() - _tsfCacheTime < 1800000) return _tsfAnchorCache;
+  const t = today();
+  let totalEvents = 0;
+  let daysWithData = 0;
+  for (let i = 1; i <= 7; i++) {
+    const d = _offsetDateStr(t, -i);
+    let dayCount = 0;
+    // Meals
+    const fe = feedingData[d] || {};
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(function(m) {
+      if ((fe[m] && fe[m].trim()) || (fe[m + '_time'] && fe[m + '_time'].trim())) dayCount++;
+    });
+    // Sleep
+    sleepData.filter(function(s) { return s.date === d; }).forEach(function() { dayCount++; });
+    // Poop
+    poopData.filter(function(p) { return p.date === d; }).forEach(function() { dayCount++; });
+    // Activities
+    (activityLog[d] || []).forEach(function() { dayCount++; });
+    // Meds
+    const mc = medChecks[d] || {};
+    Object.keys(mc).forEach(function(k) { if (mc[k] && mc[k].toString().startsWith('done')) dayCount++; });
+    if (dayCount > 0) {
+      totalEvents += dayCount;
+      daysWithData++;
+    }
+  }
+  let anchor = daysWithData >= 7 ? Math.round(totalEvents / daysWithData) : 6;
+  if (anchor < 6) anchor = 6;
+  _tsfAnchorCache = anchor;
+  return anchor;
+}
+
+function _tsfDetectPatterns() {
+  if (!_tsfCacheDirty && _tsfPatternCache !== null && Date.now() - _tsfCacheTime < 1800000) return _tsfPatternCache;
+  const t = today();
+  const patternDefs = [
+    { key: 'breakfast', type: 'feed', meal: 'breakfast', minDays: 5, wStart: 360, wEnd: 600, label: 'Breakfast usually around {time}', icon: zi('sun'), color: 'peach', nudgeAction: 'feed', nudgeMeal: 'breakfast' },
+    { key: 'morning-nap', type: 'nap', minDays: 4, wStart: 480, wEnd: 690, label: 'Morning nap usually ~{time}', icon: zi('zzz'), color: 'lav', nudgeAction: 'nap' },
+    { key: 'lunch', type: 'feed', meal: 'lunch', minDays: 5, wStart: 630, wEnd: 840, label: 'Lunch usually around {time}', icon: zi('sun'), color: 'sage', nudgeAction: 'feed', nudgeMeal: 'lunch' },
+    { key: 'afternoon-nap', type: 'nap', minDays: 4, wStart: 750, wEnd: 990, label: 'Afternoon nap usually ~{time}', icon: zi('zzz'), color: 'lav', nudgeAction: 'nap' },
+    { key: 'snack', type: 'feed', meal: 'snack', minDays: 4, wStart: 840, wEnd: 1020, label: 'Snack usually around {time}', icon: zi('spoon'), color: 'amber', nudgeAction: 'feed', nudgeMeal: 'snack' },
+    { key: 'dinner', type: 'feed', meal: 'dinner', minDays: 5, wStart: 1020, wEnd: 1230, label: 'Dinner usually around {time}', icon: zi('moon'), color: 'lav', nudgeAction: 'feed', nudgeMeal: 'dinner' },
+    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' },
+    { key: 'med-Vitamin D3 Drops', type: 'med', medName: 'Vitamin D3 Drops', minDays: 5, wStart: 0, wEnd: 1440, label: 'Vit D3 usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' }
+  ];
+
+  const patterns = [];
+
+  patternDefs.forEach(function(def) {
+    let matchDays = 0;
+    let totalMin = 0;
+    let timedDayCount = 0;
+
+    for (let i = 1; i <= 7; i++) {
+      const d = _offsetDateStr(t, -i);
+      let found = false;
+      let foundMin = null;
+
+      if (def.type === 'feed' && def.meal) {
+        const fe = feedingData[d] || {};
+        if (_tsfIsMealLogged(fe, def.meal)) {
+          const mt = _tsfTimeToMinutes(fe[def.meal + '_time']);
+          if (mt !== null && mt >= def.wStart && mt <= def.wEnd) {
+            found = true;
+            foundMin = mt;
+          } else if (mt === null) {
+            // Meal logged without time — counts as a match but doesn't contribute to avg time
+            found = true;
+          }
+        }
+      } else if (def.type === 'nap') {
+        sleepData.filter(function(s) { return s.date === d && s.type === 'nap' && s.bedtime; }).forEach(function(s) {
+          const sm = _tsfTimeToMinutes(s.bedtime);
+          if (sm !== null && sm >= def.wStart && sm <= def.wEnd) {
+            if (!found) { found = true; foundMin = sm; }
+          }
+        });
+      } else if (def.type === 'poop') {
+        poopData.filter(function(p) { return p.date === d && p.time; }).forEach(function(p) {
+          const pm = _tsfTimeToMinutes(p.time);
+          if (pm !== null && pm >= def.wStart && pm <= def.wEnd) {
+            if (!found) { found = true; foundMin = pm; }
+          }
+        });
+      } else if (def.type === 'med' && def.medName) {
+        const mc = medChecks[d] || {};
+        const val = mc[def.medName];
+        if (val && typeof val === 'string' && val.startsWith('done:')) {
+          const timePart = val.replace('done:', '').trim();
+          const mm = _tsfTimeToMinutes(timePart);
+          found = true;
+          if (mm !== null) foundMin = mm;
+        }
+      }
+
+      if (found) {
+        matchDays++;
+        if (foundMin !== null) { totalMin += foundMin; timedDayCount++; }
+      }
+    }
+
+    if (matchDays >= def.minDays) {
+      const avgMin = timedDayCount > 0 ? Math.round(totalMin / timedDayCount) : null;
+      patterns.push({
+        key: def.key,
+        type: def.type,
+        meal: def.meal || null,
+        medName: def.medName || null,
+        avgTimeMin: avgMin,
+        avgTimeStr: avgMin !== null ? _tsfMinutesToDisplay(avgMin) : null,
+        dayCount: matchDays,
+        icon: def.icon,
+        color: def.color,
+        label: def.label,
+        windowStart: def.wStart,
+        windowEnd: def.wEnd,
+        nudgeAction: def.nudgeAction,
+        nudgeMeal: def.nudgeMeal || null
+      });
+    }
+  });
+
+  _tsfPatternCache = patterns;
+  return patterns;
+}
+
+function _tsfGetNudges() {
+  const patterns = _tsfDetectPatterns();
+  const t = today();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const todayEntry = feedingData[t] || {};
+  const todayMC = medChecks[t] || {};
+  const nudges = [];
+
+  // Priority order: Nap > Supplement > Feed > Poop
+  const priorityOrder = ['nap', 'med', 'feed', 'poop'];
+
+  // Sort patterns by priority
+  const sortedPatterns = patterns.slice().sort(function(a, b) {
+    return priorityOrder.indexOf(a.type) - priorityOrder.indexOf(b.type);
+  });
+
+  sortedPatterns.forEach(function(pat) {
+    if (nudges.length >= 3) return;
+    if (pat.avgTimeMin === null) return;
+
+    // Don't nudge if not past expected time + 30 min
+    if (nowMin < pat.avgTimeMin + 30) return;
+
+    // Expire: don't nudge if 4+ hours past pattern time
+    if (nowMin > pat.avgTimeMin + 240) return;
+
+    // Check if already logged today
+    let alreadyLogged = false;
+
+    if (pat.type === 'feed' && pat.meal) {
+      alreadyLogged = _tsfIsMealLogged(todayEntry, pat.meal);
+    } else if (pat.type === 'nap') {
+      // Check for nap in this pattern's window
+      alreadyLogged = sleepData.some(function(s) {
+        if (s.date !== t || s.type !== 'nap' || !s.bedtime) return false;
+        const sm = _tsfTimeToMinutes(s.bedtime);
+        return sm !== null && sm >= pat.windowStart && sm <= pat.windowEnd;
+      });
+      // Also check active sleep in progress
+      try {
+        const ipRaw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+        if (ipRaw) {
+          const ip = JSON.parse(ipRaw);
+          if (ip && ip.type === 'nap') alreadyLogged = true;
+        }
+      } catch(e) {}
+    } else if (pat.type === 'poop') {
+      // Check for poop in this pattern's window
+      alreadyLogged = poopData.some(function(p) {
+        if (p.date !== t) return false;
+        const pm = _tsfTimeToMinutes(p.time);
+        return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
+      });
+    } else if (pat.type === 'med' && pat.medName) {
+      const mc = todayMC[pat.medName];
+      alreadyLogged = mc && typeof mc === 'string' && (mc.startsWith('done') || mc === 'skipped');
+    }
+
+    if (alreadyLogged) return;
+
+    const labelStr = pat.label.replace('{time}', pat.avgTimeStr || '');
+    let actionStr = 'Not logged yet';
+    if (pat.type === 'nap') actionStr += ' \u00b7 Log nap \u2192';
+    else if (pat.type === 'feed') actionStr += ' \u00b7 Log ' + (pat.meal || 'meal') + ' \u2192';
+    else if (pat.type === 'poop') actionStr += ' \u00b7 Log poop \u2192';
+    else if (pat.type === 'med') actionStr += ' \u00b7 Mark done \u2192';
+
+    nudges.push({
+      key: pat.key,
+      type: pat.type,
+      meal: pat.meal,
+      medName: pat.medName,
+      icon: pat.icon,
+      color: pat.color,
+      label: labelStr,
+      action: actionStr,
+      nudgeAction: pat.nudgeAction,
+      nudgeMeal: pat.nudgeMeal
+    });
+  });
+
+  return nudges;
+}
+
+function _tsfRenderEventExpanded(ev) {
+  let html = '';
+  if (ev.type === 'feed') {
+    if (ev.foods) html += '<div>' + escHtml(ev.foods) + '</div>';
+    if (ev.detail) html += '<div>Intake: ' + escHtml(ev.detail) + '</div>';
+  } else if (ev.type === 'sleep' || ev.type === 'nap') {
+    if (ev.bedtime) html += '<div>Bedtime: ' + escHtml(ev.bedtime) + '</div>';
+    if (ev.wakeTime) html += '<div>Wake: ' + escHtml(ev.wakeTime) + '</div>';
+    if (ev.detail) html += '<div>Duration: ' + escHtml(ev.detail) + '</div>';
+    if (ev.wakeUps) html += '<div>Wake-ups: ' + ev.wakeUps + '</div>';
+  } else if (ev.type === 'poop' && ev.poopEntry) {
+    const p = ev.poopEntry;
+    if (p.consistency) html += '<div>Consistency: ' + escHtml(p.consistency) + '</div>';
+    if (p.color) html += '<div>Color: ' + escHtml(p.color) + '</div>';
+    if (p.amount) html += '<div>Amount: ' + escHtml(p.amount) + '</div>';
+    if (p.blood) html += '<div>Blood: Yes</div>';
+    if (p.mucus) html += '<div>Mucus: Yes</div>';
+    if (p.notes) html += '<div>Notes: ' + escHtml(p.notes) + '</div>';
+  } else if (ev.type === 'activity') {
+    if (ev.fullText) html += '<div>' + escHtml(ev.fullText) + '</div>';
+    if (ev.duration) html += '<div>Duration: ' + ev.duration + ' min</div>';
+    if (ev.domains && ev.domains.length > 0) html += '<div>Domains: ' + escHtml(ev.domains.join(', ')) + '</div>';
+  } else if (ev.type === 'med') {
+    if (ev.status) html += '<div>Status: ' + escHtml(ev.status.replace('done:', 'Done at ')) + '</div>';
+  }
+  return html || '<div>No additional details</div>';
+}
+
+function renderTodaySoFar() {
+  const card = document.getElementById('tsfCard');
+  const el = document.getElementById('tsfContent');
+  if (!card || !el) return;
+
+  // Always show (including Essential Mode)
+  card.style.display = '';
+
+  // Collect events fresh (today's data changes frequently)
+  const collected = _tsfCollectEvents();
+  const allEvents = collected.events;
+  const noTimeEvents = collected.noTimeEvents;
+  const totalCount = allEvents.length + noTimeEvents.length;
+
+  // Cache management for patterns/anchor
+  if (_tsfCacheDirty || Date.now() - _tsfCacheTime > 1800000) {
+    _tsfPatternCache = null;
+    _tsfAnchorCache = null;
+  }
+
+  const anchor = _tsfGetAnchor();
+  const nudges = _tsfGetNudges();
+  const patterns = _tsfPatternCache || [];
+  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0;
+
+  // Mark cache as clean
+  _tsfCacheDirty = false;
+  _tsfCacheTime = Date.now();
+
+  // ── Header (uses standard card-header pattern) ──
+  let html = '<div class="card-header">';
+  html += '<div class="card-title"><div class="icon icon-indigo">' + zi('clock') + '</div> Today So Far</div>';
+  html += '<span class="tsf-header-count">' + totalCount + ' event' + (totalCount !== 1 ? 's' : '') + ' logged';
+  if (allNudgesResolved) {
+    html += ' <span class="tsf-caught-up"><span class="icon icon-sage">' + zi('check') + '</span> All caught up</span>';
+  }
+  html += '</span>';
+  html += '</div>';
+
+  // ── Warmth bar ──
+  const fillPct = Math.min(totalCount / (anchor || 6), 1.0) * 100;
+  let warmthLevel = 1;
+  if (fillPct >= 90) warmthLevel = 5;
+  else if (fillPct >= 67) warmthLevel = 4;
+  else if (fillPct >= 44) warmthLevel = 3;
+  else if (fillPct >= 20) warmthLevel = 2;
+  html += '<div class="tsf-warmth-bar"><div class="tsf-warmth-fill" data-level="' + warmthLevel + '" style="width:' + Math.max(fillPct, 3) + '%"></div></div>';
+
+  // ── Empty state ──
+  if (totalCount === 0) {
+    html += '<div class="tsf-empty">No events logged yet';
+    html += '<div class="tsf-empty-action" data-action="toggleQuickLog">Start with breakfast?</div>';
+    html += '</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  // ── Event list with soft cap ──
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const SOFT_CAP = 8;
+  let visibleEvents = allEvents;
+  let hiddenCount = 0;
+
+  if (allEvents.length > SOFT_CAP && !_tsfShowAll) {
+    // Show first event + most recent 7
+    const firstEvent = allEvents.slice(0, 1);
+    const recentEvents = allEvents.slice(-(SOFT_CAP - 1));
+    hiddenCount = allEvents.length - SOFT_CAP;
+    visibleEvents = firstEvent;
+    // Add "show earlier" placeholder
+    visibleEvents = visibleEvents.concat([{ _showEarlier: true, count: hiddenCount }]).concat(recentEvents);
+  }
+
+  html += '<div class="tsf-event-list">';
+
+  let nowMarkerPlaced = false;
+
+  visibleEvents.forEach(function(ev) {
+    // "Show earlier" row
+    if (ev._showEarlier) {
+      html += '<div class="tsf-show-earlier" data-action="tsfShowEarlier">Show earlier \u00b7 +' + ev.count + ' more</div>';
+      return;
+    }
+
+    // Insert Now marker before first event after current time
+    if (!nowMarkerPlaced && ev.timeMin !== null && ev.timeMin > nowMin && !ev.isLive) {
+      html += '<div class="tsf-now">Now \u00b7 ' + _tsfMinutesToDisplay(nowMin) + '</div>';
+      nowMarkerPlaced = true;
+    }
+
+    const isExpanded = _tsfExpandedId === ev.id;
+    const inferredClass = ev.inferred ? ' tsf-event-inferred' : '';
+    const liveClass = ev.isLive ? ' tsf-event-live' : '';
+    const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
+    const calmAttr = ev.isCalm ? ' data-calm="true"' : '';
+
+    html += '<div class="tsf-event-wrap' + expandedClass + '">';
+    html += '<div class="tsf-event' + inferredClass + liveClass + '" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
+    html += '<div class="tsf-event-time">' + escHtml(ev.displayTime || '') + '</div>';
+
+    // Icon with domain color
+    const iconColorClass = ev.color === 'peach' ? 'icon-peach' : ev.color === 'sage' ? 'icon-sage' : ev.color === 'lav' ? 'icon-lav' : ev.color === 'amber' ? 'icon-amber' : ev.color === 'indigo' ? 'icon-indigo' : ev.color === 'sky' ? 'icon-sky' : 'icon-indigo';
+    html += '<div class="tsf-event-icon"><div class="icon ' + iconColorClass + '">' + ev.icon + '</div></div>';
+
+    html += '<div class="tsf-event-body">';
+    html += '<div class="tsf-event-label">' + escHtml(ev.label) + '</div>';
+    if (ev.detail) {
+      html += '<div class="tsf-event-detail">' + escHtml(ev.detail) + '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Expanded detail
+    if (isExpanded) {
+      html += '<div class="tsf-event-expanded-detail">' + _tsfRenderEventExpanded(ev) + '</div>';
+    }
+    html += '</div>'; // close tsf-event-wrap
+  });
+
+  // Now marker after all events if not yet placed
+  if (!nowMarkerPlaced) {
+    html += '<div class="tsf-now">Now \u00b7 ' + _tsfMinutesToDisplay(nowMin) + '</div>';
+  }
+
+  html += '</div>'; // end tsf-event-list
+
+  // ── No-time events (above nudges, below Now) ──
+  if (noTimeEvents.length > 0) {
+    html += '<div class="tsf-no-time">';
+    html += '<div class="tsf-no-time-label">Time not logged</div>';
+    noTimeEvents.forEach(function(ev) {
+      const isExpanded = _tsfExpandedId === ev.id;
+      const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
+      const iconColorClass = ev.color === 'amber' ? 'icon-amber' : ev.color === 'sage' ? 'icon-sage' : ev.color === 'sky' ? 'icon-sky' : 'icon-indigo';
+      html += '<div class="tsf-event-wrap' + expandedClass + '">';
+      html += '<div class="tsf-event" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
+      html += '<div class="tsf-event-time"></div>';
+      html += '<div class="tsf-event-icon"><div class="icon ' + iconColorClass + '">' + ev.icon + '</div></div>';
+      html += '<div class="tsf-event-body">';
+      html += '<div class="tsf-event-label">' + escHtml(ev.label) + '</div>';
+      if (ev.detail) html += '<div class="tsf-event-detail">' + escHtml(ev.detail) + '</div>';
+      html += '</div></div>';
+      if (isExpanded) {
+        html += '<div class="tsf-event-expanded-detail">' + _tsfRenderEventExpanded(ev) + '</div>';
+      }
+      html += '</div>'; // close tsf-event-wrap
+    });
+    html += '</div>';
+  }
+
+  // ── Nudges ──
+  if (nudges.length > 0) {
+    html += '<div class="tsf-nudges">';
+    nudges.forEach(function(n) {
+      html += '<div class="tsf-nudge tsf-nudge-' + n.color + '" data-action="tsfNudgeTap" data-arg="' + escHtml(n.key) + '"';
+      if (n.nudgeMeal) html += ' data-arg2="' + escHtml(n.nudgeMeal) + '"';
+      if (n.medName) html += ' data-arg3="' + escHtml(n.medName) + '"';
+      html += '>';
+      const nudgeIconColor = n.color === 'lav' ? 'icon-lav' : n.color === 'sky' ? 'icon-sky' : n.color === 'peach' ? 'icon-peach' : n.color === 'sage' ? 'icon-sage' : n.color === 'amber' ? 'icon-amber' : 'icon-indigo';
+      html += '<div class="tsf-nudge-icon"><div class="icon ' + nudgeIconColor + '">' + n.icon + '</div></div>';
+      html += '<div class="tsf-nudge-body">';
+      html += '<div class="tsf-nudge-text">' + escHtml(n.label) + '</div>';
+      html += '<div class="tsf-nudge-action">' + escHtml(n.action) + '</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
 function renderHomeMealProgress() {
   const card = document.getElementById('homeMealProgressCard');
   const el = document.getElementById('homeMealProgressContent');
@@ -40600,7 +41451,7 @@ function renderHomeMealProgress() {
     html += `<div style="text-align:center;font-size:var(--fs-xs);color:var(--tc-sage);margin-top:6px;font-weight:600;">${zi('check')} All accounted for (${realMeals} logged, ${skipped} skipped)</div>`;
   }
 
-  // ── Meal Diversity Index (visible in Wife Mode) ──
+  // ── Meal Diversity Index (visible in Essential Mode) ──
   if (realMeals >= 2) {
     const mdi = computeMealDiversity(today());
     const dayColor = getMdiColor(mdi.dayScore);
@@ -40641,7 +41492,7 @@ function renderHomeMealProgress() {
     html += `</div>`;
   }
 
-  // Food query + symptom checker shortcuts — accessible from Home, visible in Wife Mode
+  // Food query + symptom checker shortcuts — accessible from Home, visible in Essential Mode
   html += `<div style="margin-top:8px;text-align:center;display:flex;justify-content:center;gap:var(--sp-8);flex-wrap:wrap;">
     <span class="dqp-pill" style="font-size:var(--fs-xs);" data-action="openHomeFoodQuery">${zi('scope')} Can I give this?</span>
     <span class="dqp-pill" style="font-size:var(--fs-xs);background:var(--rose-light);color:var(--tc-caution);border-color:rgba(220,120,80,0.15);" data-action="openHomeSymptomChecker">🩺 Symptom checker</span>
@@ -48903,7 +49754,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('*Context:*');
   lines.push('Tab: ' + state.tab + (state.subTab ? ' > ' + state.subTab : '') +
     ' \u00B7 ' + (state.darkMode ? 'Dark' : 'Light') + ' mode' +
-    ' \u00B7 Wife Mode ' + (state.simpleMode ? 'ON' : 'OFF'));
+    ' \u00B7 Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF'));
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
@@ -48946,7 +49797,7 @@ function _bugRenderContext(state) {
   html += '<span class="bug-context-label">Tab:</span> ' + escHtml(state.tab);
   if (state.subTab) html += ' &rsaquo; ' + escHtml(state.subTab);
   html += ' &middot; ' + (state.darkMode ? 'Dark' : 'Light') + ' mode';
-  html += ' &middot; Wife Mode ' + (state.simpleMode ? 'ON' : 'OFF');
+  html += ' &middot; Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF');
   html += '</div>';
 
   html += '<div class="bug-context-row"><span class="bug-context-label">Build:</span> ' + escHtml(state.build) +
