@@ -2594,6 +2594,7 @@ body.simple-mode .ins-card-alert-intel { display:none !important; }
 /* ── Essential Mode: Vitals card — hide expand affordance ── */
 body.simple-mode #homeVitalsChevron { display:none; }
 body.simple-mode #homeVitalsCard { cursor:default; }
+body.simple-mode #headerFull { display:none !important; }
 /* ── Essential Mode: Trim Home cards — hide analytics-adjacent cards ── */
 body.simple-mode #homeSuggestionsCard { display:none !important; }
 body.simple-mode #outingPlannerCard { display:none !important; }
@@ -2675,21 +2676,22 @@ body.simple-mode .hero-home[data-tod="night"] {
 }
 
 /* Dark mode variants */
-[data-theme="dark"] .hero-greet-text { color:var(--rose); }
-[data-theme="dark"] .hero-weather-pill { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .hero-greet-text { color:#f0b8c8; }
+[data-theme="dark"] .hero-age-text { color:var(--text); }
+[data-theme="dark"] .hero-weather-pill { background:rgba(255,255,255,0.08); color:var(--text); }
 [data-theme="dark"] body.simple-mode .hero-avatar-bg,
 body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .hero-home[data-tod="morning"] {
-  background:linear-gradient(135deg, rgba(60,45,35,0.4), rgba(50,55,40,0.3)) !important;
+  background:linear-gradient(135deg, #302820, #282e22) !important;
 }
 [data-theme="dark"] .hero-home[data-tod="afternoon"] {
-  background:linear-gradient(135deg, rgba(40,55,50,0.4), rgba(45,50,60,0.3)) !important;
+  background:linear-gradient(135deg, #222e28, #252830) !important;
 }
 [data-theme="dark"] .hero-home[data-tod="evening"] {
-  background:linear-gradient(135deg, rgba(50,40,60,0.4), rgba(55,45,55,0.3)) !important;
+  background:linear-gradient(135deg, #2e2238, #302530) !important;
 }
 [data-theme="dark"] .hero-home[data-tod="night"] {
-  background:linear-gradient(135deg, rgba(40,42,60,0.5), rgba(50,40,60,0.4)) !important;
+  background:linear-gradient(135deg, #222438, #2a2238) !important;
 }
 
 /* ── Doctor visits ── */
@@ -12021,10 +12023,12 @@ function _updateHeroWarm(hour, months, days) {
     greetEl.textContent = g;
   }
 
-  // Age text (warm phrasing)
+  // Age text (warm phrasing) + current time
   var ageEl = document.getElementById('heroAgeText');
   if (ageEl) {
-    ageEl.textContent = months + ' months, ' + days + ' days old';
+    var now = new Date();
+    var timeStr = now.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+    ageEl.textContent = months + ' months, ' + days + ' days old \u00B7 ' + timeStr;
   }
 
   // Time-of-day gradient
