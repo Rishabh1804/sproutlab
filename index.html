@@ -25679,6 +25679,10 @@ function qaClassifyInput(text) {
   }
 
   // 5. TEMPORAL — check for time references
+  // Guard: comparison queries ("this week vs last week") must not be caught here
+  if (/\bvs\b|\bversus\b|\bcompare|\bcompared\b/.test(lower)) {
+    return { mode: 'pattern', subtype: 'compare', raw: text };
+  }
   var timeRef = resolveTimeQuery(lower);
   if (timeRef) {
     var isFuture = timeRef.start > today();
@@ -25707,11 +25711,8 @@ function qaClassifyInput(text) {
     return { mode: 'lookback', subtype: 'food', foodQuery: foodTokens.join(' '), raw: text };
   }
 
-  // 7. PATTERN/TREND/COMPARISON
+  // 7. PATTERN/TREND
   if (/vaccin.*schedule|schedule.*vaccin/.test(lower)) { /* fall through to step 9 */ }
-  else if (/\bvs\b|\bversus\b|\bcompare|\bcompared\b/.test(lower)) {
-    return { mode: 'pattern', subtype: 'compare', raw: text };
-  }
   else if (/routine|schedule|pattern|favorite|likes|dislikes|rejects|improving|progress|concern|worr|getting better/.test(lower)) {
     return { mode: 'pattern', raw: text };
   }
@@ -27164,20 +27165,38 @@ function _qaHandleShareAction(actionId, container) {
     window.open(waUrl, '_blank');
   } else {
     // Copy to clipboard (share-summary and share-copy)
+    var onCopied = function() {
+      var btn = container.querySelector('[data-qa-action="' + actionId + '"]');
+      if (btn) {
+        btn.innerHTML = zi('check') + ' Copied';
+        btn.classList.add('qa-action-done');
+        setTimeout(function() {
+          btn.innerHTML = (actionId === 'share-copy' ? zi('note') : zi('link')) + ' Share';
+          btn.classList.remove('qa-action-done');
+        }, 2000);
+      }
+    };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(summaryText).then(function() {
-        var btn = container.querySelector('[data-qa-action="' + actionId + '"]');
-        if (btn) {
-          btn.innerHTML = zi('check') + ' Copied';
-          btn.classList.add('qa-action-done');
-          setTimeout(function() {
-            btn.innerHTML = (actionId === 'share-copy' ? zi('note') : zi('link')) + ' Share';
-            btn.classList.remove('qa-action-done');
-          }, 2000);
-        }
+      navigator.clipboard.writeText(summaryText).then(onCopied).catch(function() {
+        _qaClipboardFallback(summaryText);
+        onCopied();
       });
+    } else {
+      _qaClipboardFallback(summaryText);
+      onCopied();
     }
   }
+}
+
+function _qaClipboardFallback(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 function qaRenderNoMatch(container) {
@@ -27622,7 +27641,7 @@ function _qaFoodLookback(foodQuery) {
   }
 
   if (!bestMatch) {
-    return { title: 'Food Lookback', headline: 'No record of "' + escHtml(query) + '" in the last 90 days', icon: 'scope', domain: 'peach', sections: [], dataGap: 'This food hasn\'t been logged recently.' };
+    return { title: 'Food Lookback', headline: 'No record of "' + query + '" in the last 90 days', icon: 'scope', domain: 'peach', sections: [], dataGap: 'This food hasn\'t been logged recently.' };
   }
 
   var daysAgo = Math.round((todayD - new Date(bestDate)) / 86400000);
@@ -27664,22 +27683,19 @@ function _qaFoodLookback(foodQuery) {
 }
 
 function _qaLastPoop() {
-  var latest = null;
-  for (var i = 0; i < 30; i++) {
-    var d = new Date(); d.setDate(d.getDate() - i);
-    var ds = toDateStr(d);
-    var pp = getDomainData('poop', ds, ds);
-    if (pp.entries && pp.entries.length > 0) {
-      latest = { date: ds, entry: pp.entries[0], daysAgo: i };
-      break;
-    }
-  }
-  if (!latest) return { title: 'Last Poop', headline: 'No poops logged in last 30 days', icon: 'scope', domain: 'amber', sections: [] };
+  // Scan poopData directly for latest entry (sorted by date desc, then time desc)
+  var sorted = (poopData || []).filter(function(p) { return p.date; }).sort(function(a, b) {
+    var dc = b.date.localeCompare(a.date);
+    if (dc !== 0) return dc;
+    return (b.time || '').localeCompare(a.time || '');
+  });
+  if (sorted.length === 0) return { title: 'Last Poop', headline: 'No poops logged', icon: 'scope', domain: 'amber', sections: [] };
 
-  var e = latest.entry;
-  var daysText = latest.daysAgo === 0 ? 'Today' : (latest.daysAgo === 1 ? 'Yesterday' : latest.daysAgo + ' days ago');
+  var e = sorted[0];
+  var daysAgo = Math.round((new Date(today() + 'T12:00:00') - new Date(e.date + 'T12:00:00')) / 86400000);
+  var daysText = daysAgo === 0 ? 'Today' : (daysAgo === 1 ? 'Yesterday' : daysAgo + ' days ago');
   var items = [
-    { text: formatDate(latest.date) + (e.time ? ' at ' + formatTimeShort(e.time) : ''), signal: 'neutral' },
+    { text: formatDate(e.date) + (e.time ? ' at ' + formatTimeShort(e.time) : ''), signal: 'neutral' },
     { text: 'Consistency: ' + (e.consistency || 'Not recorded'), signal: ['normal', 'soft'].indexOf(e.consistency) !== -1 ? 'good' : 'warn' }
   ];
   if (e.color) items.push({ text: 'Color: ' + e.color, signal: 'neutral' });
@@ -28187,10 +28203,14 @@ function _qaShareToday() {
     icon: 'link',
     domain: 'indigo',
     sections: [{ label: 'Preview', icon: zi('note'), items: [
-      { text: summary.scores.overall !== null ? 'Score: ' + summary.scores.overall : 'Events: ' + summary.events, signal: 'neutral' },
-      { text: summary.sleepSummary, signal: 'neutral' },
-      { text: summary.poopSummary, signal: 'neutral' }
-    ]}],
+      { text: summary.scores.overall !== null ? 'Score: ' + summary.scores.overall : 'Events: ' + summary.events, signal: 'neutral' }
+    ].concat(
+      summary.sleepSummary && summary.sleepSummary !== 'No sleep data' ? [{ text: summary.sleepSummary, signal: 'neutral' }] : []
+    ).concat(
+      summary.poopSummary && summary.poopSummary !== 'No poop data' ? [{ text: summary.poopSummary, signal: 'neutral' }] : []
+    ).concat(
+      summary.activitySummary && summary.activitySummary !== 'No activities' ? [{ text: summary.activitySummary, signal: 'neutral' }] : []
+    )}],
     actions: [
       { id: 'share-copy', label: 'Copy Text', icon: 'note', color: 'indigo' },
       { id: 'share-whatsapp', label: 'WhatsApp', icon: 'link', color: 'sage' }
@@ -28261,20 +28281,21 @@ function qaAnswerAge() {
 function qaAnswerStreak() {
   var todayD = new Date(today());
   var streak = 0;
-  // Count consecutive days with at least 1 event logged (meals or sleep or poop)
+
+  // Pre-build date sets for O(1) lookup
+  var sleepDates = {};
+  (sleepData || []).forEach(function(s) { if (s.date) sleepDates[s.date] = true; });
+  var poopDates = {};
+  (poopData || []).forEach(function(p) { if (p.date) poopDates[p.date] = true; });
+
+  // Count consecutive days with at least 1 event logged
   for (var i = 0; i < 365; i++) {
     var d = new Date(todayD); d.setDate(d.getDate() - i);
     var ds = toDateStr(d);
     var hasData = false;
     if (feedingData[ds] && (feedingData[ds].breakfast || feedingData[ds].lunch || feedingData[ds].dinner)) hasData = true;
-    if (!hasData) {
-      var dayEntries = (sleepData || []).filter(function(s) { return s.date === ds; });
-      if (dayEntries.length > 0) hasData = true;
-    }
-    if (!hasData) {
-      var pp = (poopData || []).filter(function(p) { return p.date === ds; });
-      if (pp.length > 0) hasData = true;
-    }
+    if (!hasData && sleepDates[ds]) hasData = true;
+    if (!hasData && poopDates[ds]) hasData = true;
     if (hasData) streak++;
     else break;
   }
