@@ -26270,7 +26270,7 @@ function qaMatchIntent(input) {
       }
     });
 
-    if (intent.boosts) {
+    if (intent.boosts && score > 0) {
       intent.boosts.forEach(function(b) {
         if (tokens.indexOf(b) !== -1 || text.indexOf(b) !== -1) score += 2;
       });
