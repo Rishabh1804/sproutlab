@@ -10793,6 +10793,8 @@ function undoLastActivity() {
     activityLog[dateStr] = activityLog[dateStr].filter(e => e.id !== entryId);
     if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
     save(KEYS.activityLog, activityLog);
+    _islMarkDirty('activities');
+    _islMarkDirty('milestones');
     syncMilestoneStatuses();
     renderMilestones();
     renderTodayPlan();
@@ -24422,7 +24424,13 @@ function _qaHandleFocus() {
   if (_qaCardRef) _qaCardRef.classList.add('qa-active');
 }
 function _qaHandleBlur() {
-  setTimeout(function() { _qaCheckDeactivate(_qaCardRef); }, 200);
+  setTimeout(function() {
+    var suggestEl = document.getElementById('qaSuggest');
+    var chipsEl = document.getElementById('qaChips');
+    if (suggestEl) { suggestEl.innerHTML = ''; suggestEl.classList.remove('active'); }
+    if (chipsEl) chipsEl.style.display = '';
+    _qaCheckDeactivate(_qaCardRef);
+  }, 200);
 }
 
 var QA_PLACEHOLDERS = [
@@ -24503,21 +24511,34 @@ var QA_SUGGEST_POOL = [
 
 function _qaUpdateSuggestions(text) {
   var el = document.getElementById('qaSuggest');
+  var chipsEl = document.getElementById('qaChips');
   if (!el) return;
 
   if (!text || text.length < 2) {
     el.innerHTML = '';
     el.classList.remove('active');
+    if (chipsEl) chipsEl.style.display = '';
     return;
   }
 
   var lower = text.toLowerCase();
-  var matches = QA_SUGGEST_POOL.filter(function(s) {
-    return s.text.toLowerCase().indexOf(lower) !== -1;
-  });
+  var matches = [];
 
-  // Also match individual words for fuzzy matching
-  if (matches.length < 3) {
+  // For short inputs (2-3 chars), match word boundaries only to avoid noise
+  // For longer inputs (4+), allow full substring matching
+  if (lower.length <= 3) {
+    var wordStartRx = new RegExp('\\b' + lower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    matches = QA_SUGGEST_POOL.filter(function(s) {
+      return wordStartRx.test(s.text.toLowerCase());
+    });
+  } else {
+    matches = QA_SUGGEST_POOL.filter(function(s) {
+      return s.text.toLowerCase().indexOf(lower) !== -1;
+    });
+  }
+
+  // Multi-token fallback for longer inputs
+  if (matches.length < 3 && lower.length >= 3) {
     var tokens = lower.split(/\s+/);
     QA_SUGGEST_POOL.forEach(function(s) {
       if (matches.indexOf(s) !== -1) return;
@@ -24538,8 +24559,12 @@ function _qaUpdateSuggestions(text) {
   if (matches.length === 0) {
     el.innerHTML = '';
     el.classList.remove('active');
+    if (chipsEl) chipsEl.style.display = '';
     return;
   }
+
+  // Hide chips when suggestions are active (Bug C fix)
+  if (chipsEl) chipsEl.style.display = 'none';
 
   var html = '';
   matches.forEach(function(m) {
@@ -24558,6 +24583,7 @@ function _qaUpdateSuggestions(text) {
       if (input) input.value = val;
       el.innerHTML = '';
       el.classList.remove('active');
+      if (chipsEl) chipsEl.style.display = '';
       qaExecuteQuery(val);
     });
   });
@@ -37252,7 +37278,7 @@ function saveQLFeed() {
   const undoDateStr = dateStr;
   const undoFn = () => {
     const f = load(KEYS.feeding, {}) || {};
-    if (f[undoDateStr]) { f[undoDateStr][undoMealKey] = prevMealValue; save(KEYS.feeding, f); feedingData = f; }
+    if (f[undoDateStr]) { f[undoDateStr][undoMealKey] = prevMealValue; save(KEYS.feeding, f); feedingData = f; _islMarkDirty('diet'); }
   };
 
   closeQuickLogAll();
@@ -37286,7 +37312,7 @@ function saveQLSleep() {
   _islMarkDirty('sleep');
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
-    if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); }
+    if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); _islMarkDirty('sleep'); }
   };
 
   _qlBackfillDate = null;
@@ -37319,7 +37345,7 @@ function saveQLNap() {
   _islMarkDirty('sleep');
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
-    if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); }
+    if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); _islMarkDirty('sleep'); }
   };
 
   _qlBackfillDate = null;
@@ -37352,7 +37378,7 @@ function saveQLPoop() {
   _islMarkDirty('poop');
   const undoFn = () => {
     const idx = poopData.indexOf(entry);
-    if (idx >= 0) { poopData.splice(idx, 1); save(KEYS.poop, poopData); }
+    if (idx >= 0) { poopData.splice(idx, 1); save(KEYS.poop, poopData); _islMarkDirty('poop'); }
   };
 
   _qlBackfillDate = null;
