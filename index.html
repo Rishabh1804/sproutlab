@@ -5512,6 +5512,19 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   background:var(--sage-light); border-color:var(--tc-sage);
   color:var(--tc-sage); font-weight:700;
 }
+/* Per-group colored chips */
+.iq-chip-peach  { background:var(--peach-light); border-color:rgba(250,212,180,0.4); color:var(--tc-caution); }
+.iq-chip-amber  { background:var(--amber-light); border-color:rgba(240,200,120,0.4); color:var(--tc-amber); }
+.iq-chip-sage   { background:var(--sage-light); border-color:rgba(181,213,197,0.4); color:var(--tc-sage); }
+.iq-chip-rose   { background:var(--rose-light); border-color:rgba(242,168,184,0.3); color:var(--tc-rose); }
+.iq-chip-lav    { background:var(--lav-light); border-color:rgba(201,184,232,0.3); color:var(--tc-lav); }
+.iq-chip-sky    { background:var(--sky-light); border-color:rgba(168,207,224,0.3); color:var(--tc-sky); }
+.iq-label-peach { color:var(--tc-caution); }
+.iq-label-amber { color:var(--tc-amber); }
+.iq-label-sage  { color:var(--tc-sage); }
+.iq-label-rose  { color:var(--tc-rose); }
+.iq-label-lav   { color:var(--tc-lav); }
+.iq-label-sky   { color:var(--tc-sky); }
 .iq-submit-row { display:flex; justify-content:flex-end; margin-top:var(--sp-10); }
 .iq-submit-btn {
   font-family:inherit; font-size:var(--fs-sm); font-weight:700;
@@ -5553,6 +5566,12 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .iq-picker { background:var(--surface); border-color:rgba(155,168,216,0.1); }
 [data-theme="dark"] .iq-food-chip { background:var(--surface-alt); border-color:rgba(255,255,255,0.08); color:var(--text); }
 [data-theme="dark"] .iq-food-chip.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
+[data-theme="dark"] .iq-chip-peach  { background:rgba(250,212,180,0.08); border-color:rgba(250,212,180,0.15); color:var(--tc-caution); }
+[data-theme="dark"] .iq-chip-amber  { background:rgba(240,200,120,0.08); border-color:rgba(240,200,120,0.15); color:var(--tc-amber); }
+[data-theme="dark"] .iq-chip-sage   { background:rgba(181,213,197,0.08); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .iq-chip-rose   { background:rgba(242,168,184,0.08); border-color:rgba(242,168,184,0.12); color:var(--tc-rose); }
+[data-theme="dark"] .iq-chip-lav    { background:rgba(201,184,232,0.08); border-color:rgba(201,184,232,0.12); color:var(--tc-lav); }
+[data-theme="dark"] .iq-chip-sky    { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.12); color:var(--tc-sky); }
 [data-theme="dark"] .iq-combo-card { background:var(--surface-alt); border-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .iq-combo-card.starred { border-left-color:var(--tc-sage); }
 [data-theme="dark"] .iq-warning { background:rgba(240,200,120,0.08); }
@@ -25415,17 +25434,27 @@ function _iqRenderPicker() {
 
   var html = '<div class="iq-picker-title"><div class="icon icon-peach">' + zi('bowl') + '</div> Pick ingredients you have</div>';
 
+  var IQ_GROUP_COLOR = {
+    'Grains': 'peach',
+    'Lentils': 'amber',
+    'Vegetables': 'sage',
+    'Fruits': 'rose',
+    'Fats & Nuts': 'lav',
+    'Dairy': 'sky'
+  };
+
   var hasAny = false;
   Object.keys(groups).forEach(function(groupName) {
     var available = groups[groupName].filter(function(f) { return introSet.has(f); });
     if (available.length === 0) return;
     hasAny = true;
+    var gc = IQ_GROUP_COLOR[groupName] || 'indigo';
     html += '<div class="iq-group">';
-    html += '<div class="iq-group-label">' + escHtml(groupName) + '</div>';
+    html += '<div class="iq-group-label iq-label-' + gc + '">' + escHtml(groupName) + '</div>';
     html += '<div class="iq-group-chips">';
     available.forEach(function(f) {
       var display = f.charAt(0).toUpperCase() + f.slice(1);
-      html += '<button class="iq-food-chip" data-food="' + escHtml(f) + '">' + escHtml(display) + '</button>';
+      html += '<button class="iq-food-chip iq-chip-' + gc + '" data-food="' + escHtml(f) + '">' + escHtml(display) + '</button>';
     });
     html += '</div></div>';
   });
