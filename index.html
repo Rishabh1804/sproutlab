@@ -639,11 +639,11 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   width: 100%;
 }
 #vaccCompletionOverlay { width: 100%; }
+.vc-hidden { display: none; }
 .vc-complete-card {
-  background: var(--lav-light);
+  background: transparent;
   border-radius: var(--r-xl);
-  padding: var(--sp-16);
-  border: 1.5px solid rgba(110,94,154,0.18);
+  padding: var(--sp-4) 0;
 }
 .vc-complete-multi { padding: var(--sp-16) var(--sp-12); }
 .vc-complete-title {
@@ -689,9 +689,9 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 
 /* Delay card */
 .vc-delay-card {
-  background: var(--lav-light);
+  background: transparent;
   border-radius: var(--r-xl);
-  padding: var(--sp-16);
+  padding: var(--sp-4) 0;
 }
 .vc-delay-q {
   font-size: var(--fs-base);
@@ -938,10 +938,10 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
 
 /* ── Dark mode: Vaccination Upgrade ── */
-[data-theme="dark"] .vc-complete-card { background: rgba(110,94,154,0.12); border-color: rgba(110,94,154,0.25); }
+[data-theme="dark"] .vc-complete-card { background: transparent; }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
-[data-theme="dark"] .vc-delay-card { background: rgba(110,94,154,0.12); }
+[data-theme="dark"] .vc-delay-card { background: transparent; }
 [data-theme="dark"] .vc-delay-chip { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.3); }
 [data-theme="dark"] .vc-delay-chip.active { background: rgba(110,94,154,0.2); }
 [data-theme="dark"] .vc-assess-safe { background: rgba(58,112,96,0.12); border-color: var(--tc-sage); }
@@ -9274,7 +9274,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 
 <div class="modal-overlay" id="vaccReactionModal">
   <div class="modal vc-reaction-modal">
-    <button class="modal-close-x" data-close-modal="vaccReactionModal">&times;</button>
+    <button class="ql-modal-close" data-close-modal="vaccReactionModal">&times;</button>
     <div id="vaccReactionContent"></div>
   </div>
 </div>
@@ -12004,8 +12004,25 @@ function init() {
       _vaccMarkDone(names, arg2);
     }
     else if (action === 'vaccOverdueDelay') {
+      const delayDate = arg;
       switchTab('track');
-      setTimeout(() => { switchTrackSub('medical'); }, 100);
+      setTimeout(() => {
+        switchTrackSub('medical');
+        setTimeout(() => {
+          const origC = document.getElementById('vaccOriginalContent');
+          const ovrl = document.getElementById('vaccCompletionOverlay');
+          if (origC) origC.style.display = 'none';
+          if (ovrl) {
+            ovrl.innerHTML = _vaccRenderDelayCard(delayDate);
+            ovrl.style.display = '';
+          }
+          _vaccUpdateDelayAssessment(delayDate);
+          const dInput = document.getElementById('vaccDelayDateInput');
+          if (dInput) dInput.addEventListener('input', () => _vaccUpdateDelayAssessment(delayDate));
+          const vaccCard = document.getElementById('vaccCardInner');
+          if (vaccCard) vaccCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }, 100);
     }
     else if (action === 'logVomitingEpisodeEntry') logVomitingEpisodeEntry();
     else if (action === 'deLogStoolPrompt') deLogStoolPrompt(arg);
@@ -12897,7 +12914,7 @@ function renderRemindersAndAlerts() {
         <div class="t-sub">Was due ${formatDate(dateKey)} (${agoLabel})</div></div>
         <div class="vc-overdue-btns">
           <button class="btn btn-sage vc-sm-btn" data-action="vaccOverdueDone" data-arg='${namesJson}' data-arg2="${escAttr(dateKey)}">Mark done</button>
-          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay">Reschedule</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay" data-arg="${escAttr(dateKey)}">Reschedule</button>
         </div>
       </div>`;
     } else {
@@ -12907,7 +12924,7 @@ function renderRemindersAndAlerts() {
         <div class="t-sub">${names.map(n => escHtml(n)).join(', ')} &middot; was due ${formatDate(dateKey)} (${agoLabel})</div></div>
         <div class="vc-overdue-btns">
           <button class="btn btn-sage vc-sm-btn" data-action="vaccOverdueDone" data-arg='${namesJson}' data-arg2="${escAttr(dateKey)}">Mark all done</button>
-          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay">Reschedule</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay" data-arg="${escAttr(dateKey)}">Reschedule</button>
         </div>
       </div>`;
     }
@@ -12979,10 +12996,15 @@ function renderRemindersAndAlerts() {
   );
   if (loggedRecent.length > 0) {
     const rNames = [...new Set(loggedRecent.map(v => v.name))];
-    const symptoms = [...new Set(loggedRecent.flatMap(v => v.symptoms || []))];
+    const symptomIds = [...new Set(loggedRecent.flatMap(v => v.symptoms || []))];
+    const symptomLabels = symptomIds.map(id => {
+      const s = VACC_REACTION_SYMPTOMS.find(x => x.id === id);
+      return s ? s.label : id.replace(/_/g, ' ');
+    });
+    const sevLabel = loggedRecent[0].reaction.charAt(0).toUpperCase() + loggedRecent[0].reaction.slice(1);
     html += `<div class="vc-monitor-card vc-monitor-logged">
-      <div class="vc-monitor-header">${zi('syringe')} <strong>${loggedRecent[0].reaction} reaction logged</strong></div>
-      <div class="t-sub">${rNames.map(n => escHtml(n)).join(', ')} &middot; ${symptoms.join(', ')}</div>
+      <div class="vc-monitor-header">${zi('syringe')} <strong>${escHtml(sevLabel)} reaction logged</strong></div>
+      <div class="t-sub">${rNames.map(n => escHtml(n)).join(', ')} &middot; ${symptomLabels.map(l => escHtml(l)).join(', ')}</div>
       <div class="t-sub">Monitoring until ${formatDate(_offsetDateStr(loggedRecent[0].date, 2))}</div>
     </div>`;
   }
@@ -16397,7 +16419,7 @@ function _vaccRenderCompletionCard(dueVaccines) {
     const v = dueVaccines[0];
     return `<div class="vc-complete-card">
       <div class="vc-complete-prompt">
-        <div class="vc-complete-title">${escHtml(v.name)} ${zi('syringe')}</div>
+        <div class="vc-complete-title">${zi('syringe')} ${escHtml(v.name)}</div>
         <div class="t-sub">${dueLabel} &middot; ${formatDate(dueDate)}</div>
         <div class="vc-complete-q">Was the vaccination given?</div>
       </div>
@@ -16418,7 +16440,7 @@ function _vaccRenderCompletionCard(dueVaccines) {
   });
   return `<div class="vc-complete-card vc-complete-multi">
     <div class="vc-complete-prompt">
-      <div class="vc-complete-title">${dueVaccines.length} vaccinations ${dueLabel.toLowerCase()}</div>
+      <div class="vc-complete-title">${zi('syringe')} ${dueVaccines.length} vaccinations ${dueLabel.toLowerCase()}</div>
       <div class="t-sub">${formatDate(dueDate)}</div>
       <div class="vc-complete-q">Which were given?</div>
       <div class="vc-complete-checks">${checks}</div>
@@ -16490,7 +16512,7 @@ function _vaccRenderDelayCard(dueDate) {
   ).join('');
 
   return `<div class="vc-delay-card" id="vaccDelayCard">
-    <div class="vc-complete-title">${dueVaccines.length > 1 ? dueVaccines.length + ' vaccinations' : escHtml(dueVaccines[0].name)}</div>
+    <div class="vc-complete-title">${zi('syringe')} ${dueVaccines.length > 1 ? dueVaccines.length + ' vaccinations' : escHtml(dueVaccines[0].name)}</div>
     <div class="t-sub mb-8">${formatDate(dueDate)}</div>
     <div class="vc-delay-q">Why ${dueVaccines.length > 1 ? "weren't these" : "wasn't it"} given?</div>
     <div class="vc-delay-reasons">${chipHtml}</div>
@@ -16613,10 +16635,10 @@ function _vaccOpenReactionModal(vaccNames) {
       <button class="vc-severity-chip" data-action="vaccSelectSeverity" data-arg="severe">Severe</button>
     </div>
 
-    <div id="vaccReactionDetails" class="vc-reaction-details" style="display:none;">
+    <div id="vaccReactionDetails" class="vc-reaction-details vc-hidden">
       <div class="micro-label mt-10">What are you seeing?</div>
       <div class="vc-symptom-chips">${symptomChips}</div>
-      <div id="vaccSevereAlert" class="vc-severe-alert" style="display:none;">
+      <div id="vaccSevereAlert" class="vc-severe-alert vc-hidden">
         <div class="vc-severe-msg">${zi('siren')} If baby is inconsolable, has high fever (102\u00b0F+), seizures, or difficulty breathing, seek emergency care immediately.</div>
       </div>
       <div class="micro-label mt-10">Temperature</div>
@@ -16627,7 +16649,7 @@ function _vaccOpenReactionModal(vaccNames) {
       <textarea id="vaccReactionNotes" class="modal-input vc-reaction-notes" rows="2" placeholder="Any additional observations..."></textarea>
     </div>
 
-    <div id="vaccReactionSaveWrap" style="display:none;" class="mt-10">
+    <div id="vaccReactionSaveWrap" class="vc-hidden mt-10">>
       <button class="btn btn-lav" data-action="vaccSaveReaction" id="vaccReactionSaveBtn">Save Reaction Log</button>
     </div>
   </div>`;
@@ -16642,18 +16664,21 @@ function _vaccHandleSeverity(severity) {
   chips.forEach(c => c.classList.toggle('active', c.dataset.arg === severity));
 
   if (severity === 'none') {
-    if (detailsEl) detailsEl.style.display = 'none';
-    if (saveWrap) saveWrap.style.display = '';
-    if (severeAlert) severeAlert.style.display = 'none';
+    if (detailsEl) detailsEl.classList.add('vc-hidden');
+    if (saveWrap) saveWrap.classList.remove('vc-hidden');
+    if (severeAlert) severeAlert.classList.add('vc-hidden');
   } else {
-    if (detailsEl) detailsEl.style.display = '';
-    if (saveWrap) saveWrap.style.display = '';
-    if (severeAlert) severeAlert.style.display = severity === 'severe' ? '' : 'none';
+    if (detailsEl) detailsEl.classList.remove('vc-hidden');
+    if (saveWrap) saveWrap.classList.remove('vc-hidden');
+    if (severeAlert) severeAlert.classList.toggle('vc-hidden', severity !== 'severe');
   }
 }
 
 function _vaccToggleSymptom(btn) {
   btn.classList.toggle('active');
+  // Clear validation outline if any symptom is now selected
+  const section = btn.closest('.vc-symptom-chips');
+  if (section) section.style.outline = '';
 }
 
 function _vaccSelectChip(btn, groupClass) {
@@ -17170,7 +17195,7 @@ function renderVaccHistory() {
       ? (apptLabel
         ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);"><span class="status-good-xs">${zi('check')} Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
         : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}"><span class="status-good-xs">${zi('check')} Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Add date & time</span></div>`)
-      : (daysTo <= 14 ? `<div style="margin-top:6px;"><button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button></div>` : '');
+      : (daysTo <= 14 ? `<div class="mt-6"><button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button></div>` : '');
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:var(--lav-light);border-left:var(--accent-w) solid ${urgency};margin-bottom:14px;">
         <div style="font-size:var(--icon-lg);">⏳</div>
