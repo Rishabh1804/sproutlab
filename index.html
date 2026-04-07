@@ -5582,6 +5582,37 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .iq-submit-btn:disabled { opacity:0.35; cursor:default; }
 .iq-submit-btn:active:not(:disabled) { opacity:0.8; }
+.iq-search-wrap {
+  margin-bottom:var(--sp-10); position:relative;
+}
+.iq-search-input {
+  width:100%; box-sizing:border-box;
+  font-family:inherit; font-size:var(--fs-sm); font-weight:500;
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  border:1px solid rgba(155,168,216,0.2); background:var(--warm);
+  color:var(--text); outline:none; transition:border-color 0.15s ease;
+}
+.iq-search-input:focus { border-color:rgba(155,168,216,0.5); }
+.iq-search-input::placeholder { color:var(--light); }
+.iq-new-section { margin-top:var(--sp-8); }
+.iq-new-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:var(--ls-wide);
+  text-transform:uppercase; color:var(--tc-indigo); margin-bottom:var(--sp-4);
+  display:flex; align-items:center; gap:var(--sp-4);
+}
+.iq-new-label .icon { width:var(--sp-12); height:var(--sp-12); }
+.iq-chip-new {
+  font-family:inherit; font-size:var(--fs-xs); font-weight:500;
+  padding:var(--sp-4) var(--sp-10); border-radius:var(--r-full);
+  border:1px dashed rgba(155,168,216,0.3); background:var(--indigo-light);
+  color:var(--tc-indigo); cursor:pointer; transition:all 0.15s ease;
+  line-height:1.4;
+}
+.iq-chip-new:active { transform:scale(0.96); }
+.iq-chip-new.selected {
+  background:var(--sage-light); border-color:var(--tc-sage);
+  border-style:solid; color:var(--tc-sage); font-weight:700;
+}
 .iq-combo-history-label {
   font-size:var(--fs-2xs); font-weight:700; letter-spacing:var(--ls-wide);
   text-transform:uppercase; color:var(--mid); margin:var(--sp-8) 0 var(--sp-4);
@@ -5620,6 +5651,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .iq-chip-lav    { background:rgba(201,184,232,0.08); border-color:rgba(201,184,232,0.12); color:var(--tc-lav); }
 [data-theme="dark"] .iq-chip-sky    { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.12); color:var(--tc-sky); }
 [data-theme="dark"] .iq-combo-card { background:var(--surface-alt); border-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .iq-search-input { background:var(--surface-alt); border-color:rgba(155,168,216,0.12); color:var(--text); }
+[data-theme="dark"] .iq-search-input:focus { border-color:rgba(155,168,216,0.35); }
+[data-theme="dark"] .iq-chip-new { background:rgba(155,168,216,0.08); border-color:rgba(155,168,216,0.2); color:var(--tc-indigo); }
+[data-theme="dark"] .iq-chip-new.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
 [data-theme="dark"] .iq-combo-card.starred { border-left-color:var(--tc-sage); }
 [data-theme="dark"] .iq-warning { background:rgba(240,200,120,0.08); }
 
@@ -25779,6 +25814,10 @@ function _iqRenderPicker() {
 
   var html = '<div class="iq-picker-title"><div class="icon icon-peach">' + zi('bowl') + '</div> Pick ingredients you have</div>';
 
+  // Search input for new foods
+  html += '<div class="iq-search-wrap"><input type="text" class="iq-search-input" id="iqFoodSearch" placeholder="Search for a new ingredient to try\u2026" autocomplete="off"></div>';
+  html += '<div id="iqNewResults"></div>';
+
   var IQ_GROUP_COLOR = {
     'Grains': 'peach',
     'Lentils': 'amber',
@@ -25809,22 +25848,75 @@ function _iqRenderPicker() {
   el.innerHTML = html;
   el.classList.add('active');
 
-  // Chip toggle handlers
+  // Chip toggle handlers (event delegation on container)
+  function _iqUpdateSubmitState() {
+    var selected = el.querySelectorAll('.iq-food-chip.selected, .iq-chip-new.selected');
+    var btn = document.getElementById('iqSubmitBtn');
+    if (btn) btn.disabled = selected.length < 1;
+  }
+
   el.querySelectorAll('.iq-food-chip').forEach(function(chip) {
     chip.addEventListener('click', function() {
       this.classList.toggle('selected');
-      var selected = el.querySelectorAll('.iq-food-chip.selected');
-      var btn = document.getElementById('iqSubmitBtn');
-      if (btn) btn.disabled = selected.length < 1;
+      _iqUpdateSubmitState();
     });
   });
+
+  // Search input handler — search NUTRITION database for new foods
+  var searchInput = document.getElementById('iqFoodSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      var query = this.value.trim().toLowerCase();
+      var resultsEl = document.getElementById('iqNewResults');
+      if (!resultsEl) return;
+
+      if (query.length < 2) {
+        resultsEl.innerHTML = '';
+        return;
+      }
+
+      // Search NUTRITION keys for matches not in introSet
+      var matches = [];
+      Object.keys(NUTRITION).forEach(function(food) {
+        if (introSet.has(food)) return; // Already introduced
+        if (food.indexOf(query) !== -1) {
+          matches.push(food);
+        }
+      });
+
+      if (matches.length === 0) {
+        resultsEl.innerHTML = '<div class="iq-new-section"><div class="iq-new-label" >' +
+          '<div class="icon icon-indigo">' + zi('info') + '</div> No new matches for "' + escHtml(query) + '"</div></div>';
+        return;
+      }
+
+      var rHtml = '<div class="iq-new-section">';
+      rHtml += '<div class="iq-new-label"><div class="icon icon-indigo">' + zi('sparkle') + '</div> New to try</div>';
+      rHtml += '<div class="iq-group-chips">';
+      matches.slice(0, 12).forEach(function(food) {
+        var display = food.charAt(0).toUpperCase() + food.slice(1);
+        var nutrients = (NUTRITION[food].nutrients || []).slice(0, 3).join(', ');
+        rHtml += '<button class="iq-chip-new" data-food="' + escHtml(food) + '" title="' + escHtml(nutrients) + '">' + escHtml(display) + '</button>';
+      });
+      rHtml += '</div></div>';
+      resultsEl.innerHTML = rHtml;
+
+      // Attach click handlers to new chips
+      resultsEl.querySelectorAll('.iq-chip-new').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          this.classList.toggle('selected');
+          _iqUpdateSubmitState();
+        });
+      });
+    });
+  }
 
   // Submit handler
   var submitBtn = document.getElementById('iqSubmitBtn');
   if (submitBtn) {
     submitBtn.addEventListener('click', function() {
       var selected = [];
-      el.querySelectorAll('.iq-food-chip.selected').forEach(function(chip) {
+      el.querySelectorAll('.iq-food-chip.selected, .iq-chip-new.selected').forEach(function(chip) {
         selected.push(chip.getAttribute('data-food'));
       });
       if (selected.length === 0) return;
@@ -29429,6 +29521,195 @@ function qaAnswerGrowth(intentId) {
 // ═══ HANDLER: NUTRIENT GAP ═══
 
 function qaAnswerNutrientGap(intentId) {
+  var query = (_qaCache._queryText || '').toLowerCase();
+
+  // Detect specific nutrient from query
+  var targetNutrient = null;
+  var nutrientKeys = ['iron', 'calcium', 'protein', 'vitamin c', 'vitamin a', 'fibre', 'omega-3', 'zinc', 'folate', 'potassium', 'magnesium'];
+  for (var ni = 0; ni < nutrientKeys.length; ni++) {
+    if (query.indexOf(nutrientKeys[ni]) !== -1) { targetNutrient = nutrientKeys[ni]; break; }
+  }
+  // Also check tag-based aliases
+  if (!targetNutrient && /\bvitamin\b/.test(query)) targetNutrient = /\bc\b/.test(query) ? 'vitamin c' : (/\ba\b/.test(query) ? 'vitamin a' : null);
+
+  // If specific nutrient detected → deep nutrient-specific card
+  if (targetNutrient) return _qaDeepNutrientCard(targetNutrient);
+
+  // Generic: enhanced gap overview
+  return _qaGenericNutrientGaps();
+}
+
+function _qaDeepNutrientCard(nutrient) {
+  var sections = [];
+  var nutrientLabel = nutrient.charAt(0).toUpperCase() + nutrient.slice(1);
+
+  // 1. COVERAGE: How many days this week had this nutrient? (from heatmap)
+  var coverageItems = [];
+  try {
+    var hm = computeNutrientHeatmap(7);
+    if (hm && hm.grid && hm.grid[nutrient]) {
+      var daysCovered = 0;
+      var totalLogged = 0;
+      var recentSources = [];
+      hm.grid[nutrient].forEach(function(count, dayIdx) {
+        if (hm.hasData[dayIdx]) totalLogged++;
+        if (count > 0 && hm.hasData[dayIdx]) {
+          daysCovered++;
+          var sources = hm.foodSources[nutrient + ':' + dayIdx] || [];
+          sources.forEach(function(f) { if (recentSources.indexOf(f) === -1) recentSources.push(f); });
+        }
+      });
+      if (totalLogged > 0) {
+        var pct = Math.round((daysCovered / totalLogged) * 100);
+        var signal = daysCovered >= Math.ceil(totalLogged * 0.7) ? 'good' : (daysCovered >= 2 ? 'warn' : 'action');
+        coverageItems.push({ text: nutrientLabel + ' covered ' + daysCovered + '/' + totalLogged + ' logged days this week (' + pct + '%)', signal: signal });
+        if (recentSources.length > 0) {
+          coverageItems.push({ text: 'Recent sources: ' + recentSources.slice(0, 5).join(', '), signal: 'neutral' });
+        }
+        // Days since last covered
+        var lastCoveredIdx = -1;
+        for (var li = hm.grid[nutrient].length - 1; li >= 0; li--) {
+          if (hm.grid[nutrient][li] > 0) { lastCoveredIdx = li; break; }
+        }
+        if (lastCoveredIdx >= 0) {
+          var daysAgo = hm.grid[nutrient].length - 1 - lastCoveredIdx;
+          if (daysAgo > 0) coverageItems.push({ text: 'Last covered: ' + daysAgo + ' day' + (daysAgo !== 1 ? 's' : '') + ' ago', signal: daysAgo >= 3 ? 'warn' : 'info' });
+        }
+      } else {
+        coverageItems.push({ text: 'No meal data this week to check ' + nutrientLabel + ' coverage', signal: 'info' });
+      }
+    }
+  } catch(e) {}
+  if (coverageItems.length > 0) sections.push({ label: 'THIS WEEK\'S COVERAGE', icon: zi('chart'), items: coverageItems });
+
+  // 2. RICH FOODS: All foods from NUTRITION that contain this nutrient, with acceptance
+  var richFoodItems = [];
+  var acceptance = [];
+  try { acceptance = computeFoodAcceptance(30); } catch(e) {}
+  var acceptMap = {};
+  acceptance.forEach(function(f) { acceptMap[f.food] = f; });
+
+  var allRichFoods = [];
+  Object.keys(NUTRITION).forEach(function(food) {
+    var entry = NUTRITION[food];
+    var hasNutrient = (entry.nutrients || []).some(function(n) { return n.toLowerCase() === nutrient; });
+    var hasTag = (entry.tags || []).some(function(t) { return t.toLowerCase().indexOf(nutrient.replace(/\s+/g, '-')) !== -1; });
+    if (hasNutrient || hasTag) {
+      allRichFoods.push(food);
+    }
+  });
+
+  // Split into served (with acceptance data) vs. untried
+  var served = [];
+  var untried = [];
+  allRichFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    if (acceptMap[base]) {
+      served.push({ food: food, acc: acceptMap[base] });
+    } else {
+      untried.push(food);
+    }
+  });
+
+  // Sort served by acceptance (most liked first)
+  served.sort(function(a, b) { return b.acc.avgIntake - a.acc.avgIntake; });
+
+  if (served.length > 0) {
+    served.slice(0, 5).forEach(function(s) {
+      var intakePct = Math.round(s.acc.avgIntake * 100);
+      var accLabel = intakePct >= 85 ? 'loves it' : (intakePct >= 60 ? 'likes it' : (intakePct >= 40 ? 'sometimes' : 'low'));
+      var signal = intakePct >= 60 ? 'good' : (intakePct >= 40 ? 'neutral' : 'warn');
+      richFoodItems.push({ text: s.food + ' \u2014 ' + intakePct + '% intake (' + accLabel + ', served ' + s.acc.timesServed + 'x)', signal: signal });
+    });
+  }
+  if (richFoodItems.length > 0) sections.push({ label: 'HER ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
+
+  // 3. TRY NEXT: Foods she hasn't had or hasn't had recently
+  var tryItems = [];
+  if (untried.length > 0) {
+    // Prioritize age-appropriate, common Indian foods
+    tryItems.push({ text: 'Not yet tried: ' + untried.slice(0, 6).join(', '), signal: 'action' });
+  }
+  // Low-acceptance iron foods to retry
+  var lowAcc = served.filter(function(s) { return s.acc.avgIntake < 0.4; });
+  if (lowAcc.length > 0) {
+    tryItems.push({ text: 'Retry (low acceptance): ' + lowAcc.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'warn' });
+  }
+  // Foods she likes that are iron-rich — serve more often
+  var liked = served.filter(function(s) { return s.acc.avgIntake >= 0.7 && s.acc.timesServed < 5; });
+  if (liked.length > 0) {
+    tryItems.push({ text: 'Serve more often (she likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
+  }
+
+  // 4. TIPS: Nutrient-specific absorption and pairing advice
+  var tips = _qaNutrientTips(nutrient);
+  if (tips.length > 0) {
+    tryItems = tryItems.concat(tips);
+  }
+
+  if (tryItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: tryItems });
+
+  // No data at all
+  if (sections.length === 0) {
+    return {
+      icon: 'bowl', domain: 'peach', title: nutrientLabel + '-Rich Foods',
+      headline: 'Not enough data',
+      sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
+        { text: 'Log meals with specific food names to track ' + nutrientLabel, signal: 'info' }
+      ]}],
+      dataGap: 'Need detailed meal data'
+    };
+  }
+
+  var headline = allRichFoods.length + ' ' + nutrientLabel + '-rich foods available';
+  if (served.length > 0) headline += ' \u00b7 ' + served.length + ' served recently';
+
+  return {
+    icon: 'bowl', domain: 'peach',
+    title: nutrientLabel + '-Rich Foods',
+    headline: headline,
+    sections: sections,
+    confidence: 'Based on 7-day heatmap + 30-day food data'
+  };
+}
+
+function _qaNutrientTips(nutrient) {
+  var tips = {
+    'iron': [
+      { text: 'Pair iron foods with vitamin C (tomato, amla, orange) for 2-3x better absorption', signal: 'info' },
+      { text: 'Avoid giving milk/curd alongside iron-rich meals \u2014 calcium blocks iron absorption', signal: 'info' },
+      { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
+    ],
+    'calcium': [
+      { text: 'Vitamin D3 helps calcium absorption \u2014 ensure daily D3 drops', signal: 'info' },
+      { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
+    ],
+    'protein': [
+      { text: 'Combine grains + lentils (khichdi, dal-rice) for complete protein', signal: 'info' },
+      { text: 'Paneer, curd, and egg are high-quality protein sources', signal: 'info' }
+    ],
+    'vitamin c': [
+      { text: 'Vitamin C degrades with heat \u2014 add citrus/tomato as garnish rather than cooking', signal: 'info' },
+      { text: 'Pair with iron-rich meals to boost iron absorption', signal: 'info' }
+    ],
+    'fibre': [
+      { text: 'Increase fibre gradually to avoid gas or bloating', signal: 'info' },
+      { text: 'Pair with adequate fluids to prevent constipation', signal: 'info' }
+    ],
+    'vitamin a': [
+      { text: 'Fat-soluble: add a little ghee or oil to improve absorption', signal: 'info' }
+    ],
+    'omega-3': [
+      { text: 'Ground flaxseed or walnut powder can be added to porridge', signal: 'info' }
+    ],
+    'zinc': [
+      { text: 'Soaking and sprouting lentils/grains increases zinc bioavailability', signal: 'info' }
+    ]
+  };
+  return tips[nutrient] || [];
+}
+
+function _qaGenericNutrientGaps() {
   var dataItems = [];
   var actionItems = [];
   var headline = 'Nutrient Analysis';
@@ -29440,7 +29721,7 @@ function qaAnswerNutrientGap(intentId) {
         icon: 'bowl', domain: 'peach', title: 'Nutrient Gaps', headline: 'Not enough data',
         sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
           { text: 'Log meals with specific foods to track nutrients', signal: 'info' },
-          { text: 'Include food names, not just "khichdi" — list ingredients', signal: 'action' }
+          { text: 'Include food names, not just "khichdi" \u2014 list ingredients', signal: 'action' }
         ]}],
         confidence: null, dataGap: 'Need detailed meal data'
       };
@@ -29449,35 +29730,43 @@ function qaAnswerNutrientGap(intentId) {
     if (hm.gaps && hm.gaps.length > 0) {
       headline = hm.gaps.length + ' nutrient gap' + (hm.gaps.length > 1 ? 's' : '') + ' this week';
       hm.gaps.forEach(function(gap) {
-        dataItems.push({ text: gap + ' — missing from recent meals', signal: 'warn' });
-        try {
-          var sug = _suggestFoodForNutrient(gap.toLowerCase());
-          if (sug && sug !== 'a variety of foods') {
-            actionItems.push({ text: 'For ' + gap + ': try ' + sug, signal: 'action' });
+        // Show which foods could fill the gap
+        var richFoods = [];
+        Object.keys(NUTRITION).forEach(function(food) {
+          if ((NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
+            richFoods.push(food);
           }
-        } catch(e2) {}
+        });
+        var foodSuggestion = richFoods.length > 0 ? richFoods.slice(0, 4).join(', ') : _suggestFoodForNutrient(gap.toLowerCase());
+        dataItems.push({ text: gap + ' \u2014 missing this week. Try: ' + foodSuggestion, signal: 'warn' });
       });
     } else {
       headline = 'All key nutrients covered';
       dataItems.push({ text: 'No nutrient gaps detected this week', signal: 'good' });
     }
 
-    // Coverage summary
-    if (hm.covered && hm.covered.length > 0) {
-      dataItems.push({ text: 'Well covered: ' + hm.covered.slice(0, 4).join(', '), signal: 'good' });
+    // Strong coverage
+    if (hm.strong && hm.strong.length > 0) {
+      dataItems.push({ text: 'Strong coverage: ' + hm.strong.slice(0, 4).join(', '), signal: 'good' });
     }
+
+    // Per-nutrient coverage summary
+    HEATMAP_NUTRIENTS.forEach(function(n) {
+      if (hm.grid[n.key]) {
+        var hits = hm.grid[n.key].filter(function(v, i) { return v > 0 && hm.hasData[i]; }).length;
+        var total = hm.hasData.filter(Boolean).length;
+        if (total > 0 && hits < total) {
+          // Show coverage gaps with specific food suggestions inline
+        }
+      }
+    });
   } catch(e) {
     headline = 'Nutrient Analysis';
   }
 
-  // Synergy tips
-  if (actionItems.length > 0) {
-    actionItems.push({ text: 'Pair iron-rich foods with vitamin C for better absorption', signal: 'info' });
-  }
-
-  if (actionItems.length === 0) {
-    actionItems.push({ text: 'Keep rotating food groups to maintain nutrient coverage', signal: 'action' });
-  }
+  // Actionable tips
+  actionItems.push({ text: 'Pair iron-rich foods with vitamin C for better absorption', signal: 'info' });
+  actionItems.push({ text: 'Rotate food groups across meals for complete coverage', signal: 'action' });
 
   var sections = [];
   if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 6) });
