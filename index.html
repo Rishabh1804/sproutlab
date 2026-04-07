@@ -5435,6 +5435,27 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   border-top:1px solid rgba(168,207,224,0.12);
   text-align:center;
 }
+.qa-actions {
+  display:flex; flex-wrap:wrap; gap:var(--sp-8);
+  padding:var(--sp-8) var(--sp-16) var(--sp-12);
+  border-top:1px solid var(--card-border);
+}
+.qa-action-btn {
+  flex:1; min-width:0;
+  font-family:inherit; font-size:var(--fs-sm); font-weight:700;
+  padding:var(--sp-10) var(--sp-16); border-radius:var(--r-lg);
+  border:1px solid rgba(242,168,184,0.3); background:var(--rose-light);
+  color:var(--tc-rose); cursor:pointer; transition:all 0.15s ease;
+  display:flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  line-height:1.3;
+}
+.qa-action-btn:active { opacity:0.8; transform:scale(0.98); }
+.qa-action-btn:disabled { opacity:0.5; cursor:default; }
+.qa-action-btn .qa-action-icon { flex-shrink:0; }
+.qa-action-btn .qa-action-icon .zi { width:var(--sp-16); height:var(--sp-16); }
+.qa-action-sage { background:var(--sage-light); border-color:rgba(181,213,197,0.4); color:var(--tc-sage); }
+.qa-action-rose { background:var(--rose-light); border-color:rgba(242,168,184,0.3); color:var(--tc-rose); }
+.qa-action-done { background:var(--sage-light); border-color:rgba(181,213,197,0.4); color:var(--tc-sage); }
 .qa-no-match {
   padding:var(--sp-16);
   text-align:center; font-size:var(--fs-sm); color:var(--mid);
@@ -5471,6 +5492,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .qa-answer-close:active { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-confidence { border-top-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .qa-data-gap { background:rgba(168,207,224,0.05); border-top-color:rgba(168,207,224,0.08); }
+[data-theme="dark"] .qa-actions { border-top-color:rgba(255,255,255,0.06); }
+[data-theme="dark"] .qa-action-btn { background:rgba(242,168,184,0.1); border-color:rgba(242,168,184,0.15); }
+[data-theme="dark"] .qa-action-sage { background:rgba(181,213,197,0.1); border-color:rgba(181,213,197,0.15); }
+[data-theme="dark"] .qa-action-rose { background:rgba(242,168,184,0.1); border-color:rgba(242,168,184,0.15); }
+[data-theme="dark"] .qa-action-done { background:rgba(181,213,197,0.1); border-color:rgba(181,213,197,0.15); }
 
 /* ═══ UNIFIED INTELLIGENCE BAR (UIB) ═══ */
 .qa-mode-indicator {
@@ -24525,26 +24551,7 @@ function resolveTimeQuery(text) {
     }
   }
 
-  // Month names: "march", "february" etc. → that month in current or previous year
-  var monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-  for (var mi = 0; mi < monthNames.length; mi++) {
-    var mRx = new RegExp('\\b' + monthNames[mi] + '\\b');
-    if (mRx.test(lower)) {
-      var yr = mi <= todayD.getMonth() ? todayD.getFullYear() : todayD.getFullYear() - 1;
-      var msD = new Date(yr, mi, 1);
-      var meD = new Date(yr, mi + 1, 0);
-      // If future month in current year, use previous year
-      if (toDateStr(msD) > todayStr) {
-        msD = new Date(yr - 1, mi, 1);
-        meD = new Date(yr - 1, mi + 1, 0);
-      }
-      var endCap = toDateStr(meD) > todayStr ? todayStr : toDateStr(meD);
-      var mLabel = monthNames[mi].charAt(0).toUpperCase() + monthNames[mi].slice(1);
-      return { start: toDateStr(msD), end: endCap, label: mLabel };
-    }
-  }
-
-  // Specific date: "march 20", "april 5", "mar 15"
+  // Specific date: "march 20", "april 5", "mar 15" — check BEFORE bare month names
   var monthShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
   var dateMatch = lower.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{1,2})\b/);
   if (dateMatch) {
@@ -24560,6 +24567,33 @@ function resolveTimeQuery(text) {
       var sdStr = toDateStr(sd);
       var sdLabel = sd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
       return { start: sdStr, end: sdStr, label: sdLabel };
+    }
+  }
+
+  // Month names: "march", "february" etc. → that month in current or previous year
+  // Guard: "may" and "march" are ambiguous (modal verb / action verb).
+  // Require temporal context for these: preceded by "in/last/this/during/since/how was" or query ≤3 words.
+  var monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  var ambiguousMonths = { 'may': true, 'march': true };
+  for (var mi = 0; mi < monthNames.length; mi++) {
+    var mRx = new RegExp('\\b' + monthNames[mi] + '\\b');
+    if (mRx.test(lower)) {
+      if (ambiguousMonths[monthNames[mi]]) {
+        var hasCtx = /\b(in|last|this|during|since|before|after|how was|what happened|how about)\b/.test(lower);
+        var isShort = lower.split(/\s+/).length <= 3;
+        if (!hasCtx && !isShort) continue; // skip — likely verb/modal usage
+      }
+      var yr = mi <= todayD.getMonth() ? todayD.getFullYear() : todayD.getFullYear() - 1;
+      var msD = new Date(yr, mi, 1);
+      var meD = new Date(yr, mi + 1, 0);
+      // If future month in current year, use previous year
+      if (toDateStr(msD) > todayStr) {
+        msD = new Date(yr - 1, mi, 1);
+        meD = new Date(yr - 1, mi + 1, 0);
+      }
+      var endCap = toDateStr(meD) > todayStr ? todayStr : toDateStr(meD);
+      var mLabel = monthNames[mi].charAt(0).toUpperCase() + monthNames[mi].slice(1);
+      return { start: toDateStr(msD), end: endCap, label: mLabel };
     }
   }
 
@@ -26239,12 +26273,35 @@ function qaHandleSymptom(classified) {
 
   var isEmergency = top.some(function(m) { return m.severity === 'emergency'; });
 
+  // Map symptom to trackable episode
+  var symptomTrackMap = {
+    'fever-high': 'track-fever-high',
+    'fever-mild': 'track-fever',
+    'vomiting': 'track-vomiting',
+    'diarrhoea': 'track-diarrhoea',
+    'cough-cold': 'track-cold'
+  };
+  var actions = [];
+  var trackId = symptomTrackMap[top[0].entry.id];
+  if (trackId) {
+    var trackMapping = _qaSymptomTrackMap[trackId];
+    if (trackMapping) {
+      var alreadyActive = trackMapping.getActive();
+      if (alreadyActive) {
+        actions.push({ id: trackId, label: trackMapping.label + ' tracking active — view', icon: 'chart', color: 'sage' });
+      } else {
+        actions.push({ id: trackId, label: 'Start ' + trackMapping.label + ' tracking', icon: 'medical', color: 'rose' });
+      }
+    }
+  }
+
   return {
     icon: 'medical',
     domain: isEmergency ? 'rose' : 'sky',
     title: top[0].entry.title,
     headline: top[0].severity === 'emergency' ? 'Seek immediate attention' : top[0].severity === 'warning' ? 'Monitor closely' : 'Usually manageable at home',
     sections: sections,
+    actions: actions,
     confidence: null,
     dataGap: 'This is general guidance, not medical advice. When in doubt, call your paediatrician.'
   };
@@ -26675,6 +26732,19 @@ function qaRenderAnswer(container, answer) {
     });
   }
 
+  // Actions (CTA buttons)
+  if (answer.actions && answer.actions.length > 0) {
+    html += '<div class="qa-actions">';
+    answer.actions.forEach(function(act) {
+      var colorCls = act.color ? ' qa-action-' + act.color : '';
+      html += '<button class="qa-action-btn' + colorCls + '" data-qa-action="' + escHtml(act.id) + '">';
+      if (act.icon) html += '<span class="qa-action-icon">' + zi(act.icon) + '</span>';
+      html += escHtml(act.label);
+      html += '</button>';
+    });
+    html += '</div>';
+  }
+
   // Data gap
   if (answer.dataGap) {
     html += '<div class="qa-data-gap">' + escHtml(answer.dataGap) + '</div>';
@@ -26696,6 +26766,51 @@ function qaRenderAnswer(container, answer) {
       setTimeout(function() { _qaCheckDeactivate(); }, 50);
     });
   }
+
+  // Action buttons
+  container.querySelectorAll('[data-qa-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var actionId = this.getAttribute('data-qa-action');
+      _qaHandleAction(actionId, container);
+    });
+  });
+}
+
+// ── SYMPTOM TRACK ACTION HANDLER ──
+
+var _qaSymptomTrackMap = {
+  'track-fever': { getActive: getActiveFeverEpisode, start: function() { return startFeverEpisode(100, 'search'); }, tab: 'medical', label: 'Fever' },
+  'track-fever-high': { getActive: getActiveFeverEpisode, start: function() { return startFeverEpisode(103, 'search'); }, tab: 'medical', label: 'Fever' },
+  'track-diarrhoea': { getActive: getActiveDiarrhoeaEpisode, start: function() { return startDiarrhoeaEpisode('search'); }, tab: 'medical', label: 'Diarrhoea' },
+  'track-vomiting': { getActive: getActiveVomitingEpisode, start: function() { return startVomitingEpisode('search'); }, tab: 'medical', label: 'Vomiting' },
+  'track-cold': { getActive: getActiveColdEpisode, start: function() { return startColdEpisode('search'); }, tab: 'medical', label: 'Cold' }
+};
+
+function _qaHandleAction(actionId, container) {
+  var mapping = _qaSymptomTrackMap[actionId];
+  if (!mapping) return;
+
+  var active = mapping.getActive();
+  if (active) {
+    // Already tracking — navigate to medical tab
+    switchTab('medical');
+    return;
+  }
+
+  // Start episode
+  mapping.start();
+  _islMarkDirty('medical');
+
+  // Update button to show confirmation
+  var btn = container.querySelector('[data-qa-action="' + actionId + '"]');
+  if (btn) {
+    btn.innerHTML = zi('check') + ' ' + escHtml(mapping.label) + ' tracking started';
+    btn.classList.add('qa-action-done');
+    btn.disabled = true;
+  }
+
+  // Navigate to medical tab after brief delay
+  setTimeout(function() { switchTab('medical'); }, 1200);
 }
 
 function qaRenderNoMatch(container) {
