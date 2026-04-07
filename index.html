@@ -12625,6 +12625,7 @@ function markMedDone(name, idx) {
   medChecks[todayStr][name] = 'done:' + timeStr;
   save(KEYS.medChecks, medChecks);
   _tsfMarkDirty();
+  _islMarkDirty('medical');
 
   const el = document.getElementById('supp-alert-' + idx);
   if (el) {
@@ -12640,6 +12641,7 @@ function markMedSkipped(name, idx) {
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
   medChecks[todayStr][name] = 'skipped';
   save(KEYS.medChecks, medChecks);
+  _islMarkDirty('medical');
 
   const el = document.getElementById('supp-alert-' + idx);
   if (el) {
@@ -12658,6 +12660,7 @@ function resolveMissedMed(name, dateStr, action) {
     medChecks[dateStr][name] = 'skipped';
   }
   save(KEYS.medChecks, medChecks);
+  _islMarkDirty('medical');
   renderRemindersAndAlerts(); renderHomeContextAlerts();
 }
 
@@ -14716,6 +14719,7 @@ function addGrowthEntry() {
     ht: hasHeight ? Math.round(htCm * 10) / 10 : null,
   });
   closeModal('growthModal');
+  _islMarkDirty('medical');
   renderGrowth();
   updateHeader();
 }
@@ -15732,6 +15736,7 @@ function addVacc() {
   if (!name || !date) return;
   if (upcoming) vaccData.forEach(v => v.upcoming = false);
   vaccData.push({ name, date, upcoming });
+  _islMarkDirty('medical');
   closeModal('vaccModal');
   renderVacc();
   renderVaccCoverage();
@@ -17222,6 +17227,7 @@ function saveMed() {
     active: true,
   });
   closeModal('medModal');
+  _islMarkDirty('medical');
   renderMeds();
 }
 
@@ -24128,6 +24134,7 @@ function _miSetIntake(dateStr, meal, value) {
   if (!feedingData[dateStr]) return;
   feedingData[dateStr][meal + '_intake'] = value;
   save(KEYS.feeding, feedingData);
+  _islMarkDirty('diet');
 }
 
 function _miLevelFor(value) {
@@ -24371,6 +24378,719 @@ var QA_PLACEHOLDERS = [
   'How do I improve sleep?'
 ];
 
+// ═══════════════════════════════════════════════════════════════
+// INTELLIGENCE SERVICE LAYER (ISL) — Session A
+// Cache, domain data accessors, temporal parsing, day summary
+// ═══════════════════════════════════════════════════════════════
+
+const _islCache = {};
+const _islDirtyDomains = new Set();
+const _islCacheTime = {};
+
+function _islGetCached(cacheKey, domain, computeFn) {
+  var ttl = 30000;
+  if (!_islDirtyDomains.has(domain) &&
+      _islCacheTime[cacheKey] &&
+      Date.now() - _islCacheTime[cacheKey] < ttl &&
+      _islCache[cacheKey]) {
+    return _islCache[cacheKey];
+  }
+  _islCache[cacheKey] = computeFn();
+  _islCacheTime[cacheKey] = Date.now();
+  _islDirtyDomains.delete(domain);
+  return _islCache[cacheKey];
+}
+
+function _islMarkDirty(domain) {
+  _islDirtyDomains.add(domain);
+  Object.keys(_islCache).forEach(function(k) {
+    if (k.startsWith('summary:') || k.startsWith(domain + ':')) delete _islCache[k];
+  });
+  Object.keys(_islCacheTime).forEach(function(k) {
+    if (k.startsWith('summary:') || k.startsWith(domain + ':')) delete _islCacheTime[k];
+  });
+}
+
+function _islClearAll() {
+  Object.keys(_islCache).forEach(function(k) { delete _islCache[k]; });
+  Object.keys(_islCacheTime).forEach(function(k) { delete _islCacheTime[k]; });
+  _islDirtyDomains.clear();
+}
+
+// ── Step 1: resolveTimeQuery() ──
+
+function resolveTimeQuery(text) {
+  var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var todayStr = today();
+  var todayD = new Date(todayStr + 'T12:00:00');
+
+  // "yesterday"
+  if (/\byesterday\b/.test(lower)) {
+    var yd = new Date(todayD); yd.setDate(yd.getDate() - 1);
+    return { start: toDateStr(yd), end: toDateStr(yd), label: 'Yesterday' };
+  }
+
+  // "today" / "today so far"
+  if (/\btoday\b/.test(lower)) {
+    return { start: todayStr, end: todayStr, label: 'Today' };
+  }
+
+  // "tomorrow"
+  if (/\btomorrow\b/.test(lower)) {
+    var tm = new Date(todayD); tm.setDate(tm.getDate() + 1);
+    return { start: toDateStr(tm), end: toDateStr(tm), label: 'Tomorrow' };
+  }
+
+  // "this week"
+  if (/\bthis\s+week\b/.test(lower)) {
+    var dow = todayD.getDay(); // 0=Sun
+    var monOff = dow === 0 ? -6 : 1 - dow;
+    var wkStart = new Date(todayD); wkStart.setDate(wkStart.getDate() + monOff);
+    return { start: toDateStr(wkStart), end: todayStr, label: 'This Week' };
+  }
+
+  // "last week" / "previous week"
+  if (/\b(last|previous)\s+week\b/.test(lower)) {
+    var dow2 = todayD.getDay();
+    var monOff2 = dow2 === 0 ? -6 : 1 - dow2;
+    var thisMonday = new Date(todayD); thisMonday.setDate(thisMonday.getDate() + monOff2);
+    var lwEnd = new Date(thisMonday); lwEnd.setDate(lwEnd.getDate() - 1);
+    var lwStart = new Date(lwEnd); lwStart.setDate(lwStart.getDate() - 6);
+    return { start: toDateStr(lwStart), end: toDateStr(lwEnd), label: 'Last Week' };
+  }
+
+  // "this month"
+  if (/\bthis\s+month\b/.test(lower)) {
+    var mStart = todayStr.substring(0, 8) + '01';
+    return { start: mStart, end: todayStr, label: 'This Month' };
+  }
+
+  // "last month" / "previous month"
+  if (/\b(last|previous)\s+month\b/.test(lower)) {
+    var lmd = new Date(todayD.getFullYear(), todayD.getMonth() - 1, 1);
+    var lme = new Date(todayD.getFullYear(), todayD.getMonth(), 0);
+    return { start: toDateStr(lmd), end: toDateStr(lme), label: 'Last Month' };
+  }
+
+  // "last N days" / "past N days"
+  var lastN = lower.match(/\b(?:last|past)\s+(\d+)\s+days?\b/);
+  if (lastN) {
+    var n = parseInt(lastN[1], 10);
+    if (n > 0 && n <= 90) {
+      var ns = new Date(todayD); ns.setDate(ns.getDate() - n + 1);
+      return { start: toDateStr(ns), end: todayStr, label: 'Last ' + n + ' days' };
+    }
+  }
+
+  // "N days ago"
+  var daysAgo = lower.match(/\b(\d+)\s+days?\s+ago\b/);
+  if (daysAgo) {
+    var ago = parseInt(daysAgo[1], 10);
+    if (ago > 0 && ago <= 90) {
+      var ad = new Date(todayD); ad.setDate(ad.getDate() - ago);
+      return { start: toDateStr(ad), end: toDateStr(ad), label: ago + ' days ago' };
+    }
+  }
+
+  // Day names: "monday", "tuesday" etc. → most recent past occurrence
+  var dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  for (var di = 0; di < dayNames.length; di++) {
+    var dayRx = new RegExp('\\b' + dayNames[di] + '\\b');
+    if (dayRx.test(lower)) {
+      var targetDay = di;
+      var diff = (todayD.getDay() - targetDay + 7) % 7;
+      if (diff === 0) diff = 7; // "monday" on Monday = last Monday
+      var dd = new Date(todayD); dd.setDate(dd.getDate() - diff);
+      var lbl = dayNames[di].charAt(0).toUpperCase() + dayNames[di].slice(1);
+      return { start: toDateStr(dd), end: toDateStr(dd), label: lbl };
+    }
+  }
+
+  // Month names: "march", "february" etc. → that month in current or previous year
+  var monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  for (var mi = 0; mi < monthNames.length; mi++) {
+    var mRx = new RegExp('\\b' + monthNames[mi] + '\\b');
+    if (mRx.test(lower)) {
+      var yr = mi <= todayD.getMonth() ? todayD.getFullYear() : todayD.getFullYear() - 1;
+      var msD = new Date(yr, mi, 1);
+      var meD = new Date(yr, mi + 1, 0);
+      // If future month in current year, use previous year
+      if (toDateStr(msD) > todayStr) {
+        msD = new Date(yr - 1, mi, 1);
+        meD = new Date(yr - 1, mi + 1, 0);
+      }
+      var endCap = toDateStr(meD) > todayStr ? todayStr : toDateStr(meD);
+      var mLabel = monthNames[mi].charAt(0).toUpperCase() + monthNames[mi].slice(1);
+      return { start: toDateStr(msD), end: endCap, label: mLabel };
+    }
+  }
+
+  // Specific date: "march 20", "april 5", "mar 15"
+  var monthShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  var dateMatch = lower.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{1,2})\b/);
+  if (dateMatch) {
+    var mIdx = -1;
+    for (var si = 0; si < monthShort.length; si++) {
+      if (dateMatch[1].startsWith(monthShort[si])) { mIdx = si; break; }
+    }
+    if (mIdx >= 0) {
+      var dayNum = parseInt(dateMatch[2], 10);
+      var sdYear = todayD.getFullYear();
+      var sd = new Date(sdYear, mIdx, dayNum);
+      if (toDateStr(sd) > todayStr) sd = new Date(sdYear - 1, mIdx, dayNum);
+      var sdStr = toDateStr(sd);
+      var sdLabel = sd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      return { start: sdStr, end: sdStr, label: sdLabel };
+    }
+  }
+
+  return null;
+}
+
+// ── Step 2: getDomainData('sleep') ──
+
+function getDomainData(domain, startDate, endDate) {
+  var cacheKey = domain + ':' + startDate + ':' + endDate;
+  return _islGetCached(cacheKey, domain, function() {
+    if (domain === 'sleep') return _islSleepData(startDate, endDate);
+    if (domain === 'diet') return _islDietData(startDate, endDate);
+    if (domain === 'poop') return _islPoopData(startDate, endDate);
+    if (domain === 'medical') return _islMedicalData(startDate, endDate);
+    if (domain === 'milestones') return _islMilestoneData(startDate, endDate);
+    if (domain === 'activities') return _islActivityData(startDate, endDate);
+    return {};
+  });
+}
+
+function _islDateRange(startDate, endDate) {
+  var dates = [];
+  var cur = new Date(startDate + 'T12:00:00');
+  var end = new Date(endDate + 'T12:00:00');
+  while (cur <= end) {
+    dates.push(toDateStr(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+function _islSleepData(startDate, endDate) {
+  var dates = _islDateRange(startDate, endDate);
+  var nights = [];
+  var naps = [];
+  var totalNightMin = 0;
+  var totalNapMin = 0;
+  var nightScores = [];
+
+  dates.forEach(function(ds) {
+    var dayEntries = sleepData.filter(function(s) { return s.date === ds; });
+    dayEntries.forEach(function(s) {
+      var dur = calcSleepDuration(s.bedtime, s.wakeTime);
+      if (s.type === 'night') {
+        nights.push({ date: ds, bedtime: s.bedtime, wakeTime: s.wakeTime, duration: dur.total, wakeUps: getWakeCount(s) });
+        totalNightMin += dur.total;
+      } else {
+        naps.push({ date: ds, start: s.bedtime, end: s.wakeTime, duration: dur.total, napType: s.napType || classifyNapType(s.bedtime) });
+        totalNapMin += dur.total;
+      }
+    });
+    var sc = getDailySleepScore(ds);
+    if (sc) nightScores.push(sc.score);
+  });
+
+  var avgNightMin = nights.length > 0 ? Math.round(totalNightMin / nights.length) : 0;
+  var avgNapMin = naps.length > 0 ? Math.round(totalNapMin / Math.max(1, dates.filter(function(ds) { return naps.some(function(n) { return n.date === ds; }); }).length)) : 0;
+
+  return {
+    nights: nights,
+    naps: naps,
+    totalNightMin: totalNightMin,
+    totalNapMin: totalNapMin,
+    avgNightMin: avgNightMin,
+    avgNapMin: avgNapMin,
+    avgNightScore: nightScores.length > 0 ? Math.round(nightScores.reduce(function(a, b) { return a + b; }, 0) / nightScores.length) : null,
+    dayCount: dates.length,
+    daysWithData: nights.length
+  };
+}
+
+// ── Step 3: getDomainData('diet') ──
+
+function _islDietData(startDate, endDate) {
+  var dates = _islDateRange(startDate, endDate);
+  var days = [];
+  var totalMeals = 0;
+  var totalIntake = 0;
+  var intakeCount = 0;
+  var dietScores = [];
+  var allFoods = new Set();
+
+  dates.forEach(function(ds) {
+    var entry = feedingData[ds];
+    var meals = { breakfast: null, lunch: null, dinner: null, snack: null };
+    var mealTimes = {};
+    var mealCount = 0;
+    if (entry) {
+      ['breakfast', 'lunch', 'dinner', 'snack'].forEach(function(m) {
+        if (isRealMeal(entry[m])) {
+          meals[m] = entry[m];
+          mealCount++;
+          if (m !== 'snack') {
+            var intk = _miGetIntake(ds, m);
+            totalIntake += intk;
+            intakeCount++;
+          }
+          // Extract food names
+          (entry[m] || '').split(',').forEach(function(f) {
+            var t = f.trim().toLowerCase();
+            if (t && t !== SKIPPED_MEAL) allFoods.add(t);
+          });
+        }
+        if (entry[m + '_time']) mealTimes[m] = entry[m + '_time'];
+      });
+    }
+    totalMeals += mealCount;
+    days.push({ date: ds, meals: meals, mealTimes: mealTimes, mealCount: mealCount });
+    var sc = calcDietScore(ds);
+    if (sc && mealCount > 0) dietScores.push(sc.score);
+  });
+
+  var daysFullyLogged = days.filter(function(d) { return d.mealCount >= 3; }).length;
+
+  return {
+    days: days,
+    totalMeals: totalMeals,
+    avgMealsPerDay: dates.length > 0 ? +(totalMeals / dates.length).toFixed(1) : 0,
+    avgIntake: intakeCount > 0 ? Math.round((totalIntake / intakeCount) * 100) : null,
+    avgDietScore: dietScores.length > 0 ? Math.round(dietScores.reduce(function(a, b) { return a + b; }, 0) / dietScores.length) : null,
+    daysFullyLogged: daysFullyLogged,
+    uniqueFoods: allFoods.size,
+    allFoods: Array.from(allFoods),
+    dayCount: dates.length,
+    daysWithData: days.filter(function(d) { return d.mealCount > 0; }).length
+  };
+}
+
+// ── Step 4: getDomainData('poop') ──
+
+function _islPoopData(startDate, endDate) {
+  var dates = _islDateRange(startDate, endDate);
+  var entries = [];
+  var poopScores = [];
+
+  dates.forEach(function(ds) {
+    var dayPoops = getPoopsForDate(ds);
+    dayPoops.forEach(function(p) {
+      entries.push({ date: ds, time: p.time, consistency: p.consistency, color: p.color, blood: p.blood, mucus: p.mucus, notes: p.notes });
+    });
+    var sc = calcPoopScore(ds);
+    if (sc && !sc.isCarryForward) poopScores.push(sc.score);
+  });
+
+  var totalCount = entries.length;
+  var daysWithPoop = new Set(entries.map(function(e) { return e.date; })).size;
+  var consistencies = {};
+  entries.forEach(function(e) {
+    if (e.consistency) consistencies[e.consistency] = (consistencies[e.consistency] || 0) + 1;
+  });
+  var mostCommon = Object.keys(consistencies).sort(function(a, b) { return consistencies[b] - consistencies[a]; })[0] || null;
+
+  return {
+    entries: entries,
+    totalCount: totalCount,
+    avgPerDay: dates.length > 0 ? +(totalCount / dates.length).toFixed(1) : 0,
+    daysWithPoop: daysWithPoop,
+    mostCommonConsistency: mostCommon,
+    consistencyBreakdown: consistencies,
+    avgPoopScore: poopScores.length > 0 ? Math.round(poopScores.reduce(function(a, b) { return a + b; }, 0) / poopScores.length) : null,
+    hasBlood: entries.some(function(e) { return e.blood; }),
+    hasMucus: entries.some(function(e) { return e.mucus; }),
+    dayCount: dates.length,
+    daysWithData: daysWithPoop
+  };
+}
+
+// ── Step 5: getDomainData('medical') ──
+
+function _islMedicalData(startDate, endDate) {
+  var dates = _islDateRange(startDate, endDate);
+  var activeMeds = (meds || []).filter(function(m) { return m.active !== false; });
+  var suppDays = 0;
+  var suppTotal = 0;
+  var d3Times = [];
+
+  dates.forEach(function(ds) {
+    var dayChecks = medChecks[ds];
+    if (dayChecks) {
+      var anyDone = false;
+      Object.keys(dayChecks).forEach(function(name) {
+        var val = dayChecks[name];
+        if (typeof val === 'string' && val.startsWith('done')) {
+          anyDone = true;
+          // Extract D3 time
+          if (/d3|vitamin d/i.test(name)) {
+            var timePart = val.replace('done:', '').replace('done', '');
+            if (timePart) d3Times.push(timePart);
+          }
+        }
+      });
+      if (anyDone) suppDays++;
+    }
+    suppTotal++;
+  });
+
+  // Vaccination status
+  var completed = vaccData.filter(function(v) { return !v.upcoming; });
+  var upcoming = vaccData.filter(function(v) { return v.upcoming; }).sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+  // Growth — latest in range
+  var rangeGrowth = growthData.filter(function(g) { return g.date >= startDate && g.date <= endDate; });
+
+  // Illness episodes in range
+  var illnessEps = [];
+  ['feverEpisodes', 'diarrhoeaEpisodes', 'vomitingEpisodes', 'coldEpisodes'].forEach(function(key) {
+    var eps = load(KEYS[key], []);
+    if (Array.isArray(eps)) {
+      eps.forEach(function(ep) {
+        if (ep.startedAt && ep.startedAt.substring(0, 10) >= startDate && ep.startedAt.substring(0, 10) <= endDate) {
+          illnessEps.push({ type: key.replace('Episodes', ''), started: ep.startedAt, resolved: ep.resolvedAt || null });
+        }
+      });
+    }
+  });
+
+  var medScore = calcMedicalScore();
+
+  return {
+    suppAdherence: suppTotal > 0 ? Math.round((suppDays / suppTotal) * 100) : null,
+    suppDays: suppDays,
+    suppTotal: suppTotal,
+    d3Times: d3Times,
+    vaccCompleted: completed.length,
+    vaccUpcoming: upcoming.length > 0 ? upcoming[0] : null,
+    growthInRange: rangeGrowth,
+    illnessEpisodes: illnessEps,
+    avgMedicalScore: medScore ? medScore.score : null,
+    dayCount: dates.length,
+    daysWithData: suppDays
+  };
+}
+
+// ── Step 6: getDomainData('milestones') ──
+
+function _islMilestoneData(startDate, endDate) {
+  var progressed = [];
+  var regressed = [];
+  var active = [];
+
+  (milestones || []).forEach(function(m) {
+    // Check for progression in range
+    ['masteredAt', 'consistentAt', 'practicingAt', 'emergingAt'].forEach(function(field) {
+      if (m[field]) {
+        var d = m[field].substring(0, 10);
+        if (d >= startDate && d <= endDate) {
+          progressed.push({ text: m.text, status: m.status, date: d, cat: m.cat });
+        }
+      }
+    });
+    // Active milestones
+    if (['emerging', 'practicing', 'consistent'].includes(m.status)) {
+      active.push({ text: m.text, status: m.status, cat: m.cat });
+    }
+  });
+
+  // Activity evidence in range
+  var activityEvidence = 0;
+  var dates = _islDateRange(startDate, endDate);
+  dates.forEach(function(ds) {
+    if (Array.isArray(activityLog[ds])) {
+      activityLog[ds].forEach(function(e) {
+        if (e.evidence && e.evidence.length > 0) activityEvidence++;
+      });
+    }
+  });
+
+  var msScore = calcMilestoneScore();
+
+  return {
+    progressed: progressed,
+    regressed: regressed,
+    active: active,
+    activityEvidence: activityEvidence,
+    avgMilestoneScore: msScore ? msScore.score : null,
+    dayCount: dates.length,
+    daysWithData: progressed.length > 0 ? 1 : 0
+  };
+}
+
+// ── Step 7: getDomainData('activities') ──
+
+function _islActivityData(startDate, endDate) {
+  var dates = _islDateRange(startDate, endDate);
+  var entries = [];
+  var totalDuration = 0;
+
+  dates.forEach(function(ds) {
+    if (Array.isArray(activityLog[ds])) {
+      activityLog[ds].forEach(function(e) {
+        entries.push({ date: ds, text: e.text, ts: e.ts, duration: e.duration || 0, type: e.type, domains: e.domains || [] });
+        totalDuration += (e.duration || 0);
+      });
+    }
+  });
+
+  var daysWithActivity = new Set(entries.map(function(e) { return e.date; })).size;
+
+  return {
+    entries: entries,
+    totalCount: entries.length,
+    totalDuration: totalDuration,
+    avgPerDay: dates.length > 0 ? +(entries.length / dates.length).toFixed(1) : 0,
+    daysWithActivity: daysWithActivity,
+    dayCount: dates.length,
+    daysWithData: daysWithActivity
+  };
+}
+
+// ── Step 9: generateDaySummary() + ISL_THRESHOLDS ──
+
+var ISL_THRESHOLDS = {
+  GOOD_NIGHT_DURATION_MIN: 600,
+  BEDTIME_DRIFT_WARN_MIN: 45,
+  FULL_DAY_MEALS: 3,
+  FULL_WEEK_PCT: 0.7,
+  NUTRIENT_GAP_WARN: 2,
+  D3_ADHERENCE_GOOD_PCT: 90
+};
+
+function generateDaySummary(dateStr) {
+  dateStr = dateStr || today();
+  var cacheKey = 'summary:day:' + dateStr;
+  return _islGetCached(cacheKey, 'summary', function() {
+    return _islBuildDaySummary(dateStr);
+  });
+}
+
+function _islBuildDaySummary(dateStr) {
+  var sl = getDomainData('sleep', dateStr, dateStr);
+  var dt = getDomainData('diet', dateStr, dateStr);
+  var pp = getDomainData('poop', dateStr, dateStr);
+  var md = getDomainData('medical', dateStr, dateStr);
+  var ms = getDomainData('milestones', dateStr, dateStr);
+  var ac = getDomainData('activities', dateStr, dateStr);
+
+  // Count events
+  var events = sl.nights.length + sl.naps.length + dt.totalMeals + pp.totalCount + ac.totalCount;
+
+  // Scores
+  var sleepScore = sl.avgNightScore;
+  var dietScore = dt.avgDietScore;
+  var poopScore = pp.avgPoopScore;
+  var medicalScore = md.avgMedicalScore;
+  var milestoneScore = ms.avgMilestoneScore;
+  var scores = { sleep: sleepScore, diet: dietScore, poop: poopScore, medical: medicalScore, milestones: milestoneScore, overall: null };
+  var validScores = [sleepScore, dietScore, poopScore, medicalScore, milestoneScore].filter(function(s) { return s !== null; });
+  scores.overall = validScores.length > 0 ? Math.round(validScores.reduce(function(a, b) { return a + b; }, 0) / validScores.length) : null;
+
+  // Generate highlights and concerns
+  var result = _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr);
+
+  // Meal summary
+  var dayEntry = feedingData[dateStr] || {};
+  var meals = {
+    breakfast: isRealMeal(dayEntry.breakfast) ? dayEntry.breakfast : null,
+    lunch: isRealMeal(dayEntry.lunch) ? dayEntry.lunch : null,
+    dinner: isRealMeal(dayEntry.dinner) ? dayEntry.dinner : null,
+    snack: isRealMeal(dayEntry.snack) ? dayEntry.snack : null
+  };
+
+  // Sleep summary string
+  var sleepSummary = 'No sleep data';
+  if (sl.nights.length > 0 || sl.naps.length > 0) {
+    var parts = [];
+    if (sl.nights.length > 0) {
+      var nh = Math.floor(sl.avgNightMin / 60);
+      var nm = sl.avgNightMin % 60;
+      parts.push(nh + 'h ' + nm + 'm night');
+    }
+    if (sl.naps.length > 0) {
+      parts.push(sl.naps.length + ' nap' + (sl.naps.length !== 1 ? 's' : ''));
+    }
+    sleepSummary = parts.join(' + ');
+  }
+
+  // Poop summary string
+  var poopSummary = 'No poop data';
+  if (pp.totalCount > 0) {
+    poopSummary = pp.totalCount + ' poop' + (pp.totalCount !== 1 ? 's' : '');
+    if (pp.mostCommonConsistency) poopSummary += ' · ' + pp.mostCommonConsistency;
+  }
+
+  // Activity summary string
+  var activitySummary = 'No activities';
+  if (ac.totalCount > 0) {
+    var actTexts = ac.entries.slice(0, 3).map(function(e) { return e.text; });
+    activitySummary = actTexts.join(', ');
+    if (ac.totalCount > 3) activitySummary += ' +' + (ac.totalCount - 3) + ' more';
+  }
+
+  // Label
+  var dateD = new Date(dateStr + 'T12:00:00');
+  var dayLabel = dateD.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+  var tStr = today();
+  var label = dateStr === tStr ? 'Today (' + dayLabel + ')' : dayLabel;
+  if (dateStr === _islYesterday()) label = 'Yesterday (' + dayLabel + ')';
+
+  return {
+    date: dateStr,
+    label: label,
+    events: events,
+    scores: scores,
+    highlights: result.highlights,
+    concerns: result.concerns,
+    meals: meals,
+    sleepSummary: sleepSummary,
+    poopSummary: poopSummary,
+    activitySummary: activitySummary
+  };
+}
+
+function _islYesterday() {
+  var d = new Date(); d.setDate(d.getDate() - 1);
+  return toDateStr(d);
+}
+
+function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
+  var highlights = [];
+  var concerns = [];
+
+  // Sleep highlights
+  if (sl.nights.length > 0) {
+    if (sl.avgNightMin >= ISL_THRESHOLDS.GOOD_NIGHT_DURATION_MIN) {
+      var sh = Math.floor(sl.avgNightMin / 60);
+      var sm = sl.avgNightMin % 60;
+      highlights.push({ domain: 'sleep', text: sh + 'h ' + sm + 'm night sleep — above target', signal: 'good' });
+    } else if (sl.avgNightMin > 0) {
+      var sh2 = Math.floor(sl.avgNightMin / 60);
+      var sm2 = sl.avgNightMin % 60;
+      concerns.push({ domain: 'sleep', text: sh2 + 'h ' + sm2 + 'm night sleep — below 10h target', signal: 'warn' });
+    }
+    // Bedtime drift check (vs 7d avg)
+    if (sl.nights[0] && sl.nights[0].bedtime) {
+      var avg7 = getAvgSleep7d();
+      var avgBedtime7 = _islAvgBedtime7d();
+      if (avgBedtime7 !== null) {
+        var bedParts = sl.nights[0].bedtime.split(':').map(Number);
+        var bedMin = bedParts[0] * 60 + bedParts[1];
+        if (bedParts[0] < 6) bedMin += 24 * 60;
+        var drift = bedMin - avgBedtime7;
+        if (Math.abs(drift) >= ISL_THRESHOLDS.BEDTIME_DRIFT_WARN_MIN) {
+          concerns.push({ domain: 'sleep', text: 'Bedtime ' + sl.nights[0].bedtime + ' — ' + Math.abs(drift) + ' min ' + (drift > 0 ? 'later' : 'earlier') + ' than avg', signal: 'warn' });
+        }
+      }
+    }
+  }
+
+  // Diet highlights
+  var coreMeals = [dt.days[0]].filter(function(d) { return d; }).reduce(function(count, d) { return d.mealCount >= 3 ? 3 : d.mealCount; }, 0);
+  if (dt.days.length > 0 && dt.days[0]) coreMeals = dt.days[0].mealCount;
+  if (coreMeals >= ISL_THRESHOLDS.FULL_DAY_MEALS) {
+    var mealTexts = [];
+    var dayMeals = dt.days[0] ? dt.days[0].meals : {};
+    if (dayMeals.breakfast) mealTexts.push(dayMeals.breakfast);
+    if (dayMeals.lunch) mealTexts.push(dayMeals.lunch);
+    if (dayMeals.dinner) mealTexts.push(dayMeals.dinner);
+    highlights.push({ domain: 'diet', text: 'All 3 meals logged' + (mealTexts.length > 0 ? ' — ' + mealTexts.join(', ') : ''), signal: 'good' });
+  } else if (coreMeals > 0) {
+    concerns.push({ domain: 'diet', text: coreMeals + '/3 meals logged', signal: 'warn' });
+  }
+
+  // Poop highlights
+  if (pp.totalCount > 0) {
+    if (!pp.hasBlood && !pp.hasMucus && pp.mostCommonConsistency && ['normal', 'soft'].includes(pp.mostCommonConsistency)) {
+      highlights.push({ domain: 'poop', text: pp.totalCount + ' poop' + (pp.totalCount !== 1 ? 's' : '') + ' · ' + pp.mostCommonConsistency, signal: 'good' });
+    } else if (pp.hasBlood) {
+      concerns.push({ domain: 'poop', text: 'Blood in stool detected — consult pediatrician', signal: 'action' });
+    } else if (pp.hasMucus) {
+      concerns.push({ domain: 'poop', text: 'Mucus in stool — monitor', signal: 'warn' });
+    }
+  }
+
+  // Medical highlights — D3 adherence
+  if (md.suppTotal > 0) {
+    if (md.suppDays > 0) {
+      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + md.d3Times[0] : ''), signal: 'good' });
+    } else {
+      concerns.push({ domain: 'medical', text: 'Vit D3 missed', signal: 'warn' });
+    }
+  }
+
+  // Milestone highlights
+  if (ms.progressed.length > 0) {
+    ms.progressed.forEach(function(p) {
+      highlights.push({ domain: 'milestones', text: p.text + ' — ' + p.status, signal: 'good' });
+    });
+  }
+
+  // Activity highlights
+  if (ac.totalCount > 0) {
+    highlights.push({ domain: 'activities', text: ac.totalCount + ' activit' + (ac.totalCount !== 1 ? 'ies' : 'y') + ' logged' + (ac.totalDuration > 0 ? ' (' + ac.totalDuration + ' min)' : ''), signal: 'good' });
+  }
+
+  return { highlights: highlights, concerns: concerns };
+}
+
+function _islAvgBedtime7d() {
+  var totalMin = 0;
+  var count = 0;
+  for (var i = 1; i <= 7; i++) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = toDateStr(d);
+    var dayNights = sleepData.filter(function(s) { return s.date === ds && s.type === 'night' && s.bedtime; });
+    if (dayNights.length > 0) {
+      var parts = dayNights[0].bedtime.split(':').map(Number);
+      var min = parts[0] * 60 + parts[1];
+      if (parts[0] < 6) min += 24 * 60;
+      totalMin += min;
+      count++;
+    }
+  }
+  return count > 0 ? Math.round(totalMin / count) : null;
+}
+
+// ── Step 10: Domain detection helper ──
+
+function _qaDetectDomain(text) {
+  if (/sleep|nap|night|bedtime|wake/.test(text)) return 'sleep';
+  if (/eat|ate|meal|food|breakfast|lunch|dinner|snack|feed|fed/.test(text)) return 'diet';
+  if (/poop|diaper|stool|potty/.test(text)) return 'poop';
+  if (/activity|play|tummy|exercise/.test(text)) return 'activities';
+  if (/vaccine|vacc|shot|d3|vitamin|supplement|medicine/.test(text)) return 'medical';
+  if (/milestone|crawl|stand|walk|talk|babbl/.test(text)) return 'milestones';
+  return null;
+}
+
+// Domain → color mapping for answer cards
+var ISL_DOMAIN_COLOR = {
+  sleep: 'indigo',
+  diet: 'peach',
+  poop: 'amber',
+  medical: 'sky',
+  milestones: 'lav',
+  activities: 'sage'
+};
+
+// Domain → icon mapping
+var ISL_DOMAIN_ICON = {
+  sleep: 'moon',
+  diet: 'bowl',
+  poop: 'diaper',
+  medical: 'pill',
+  milestones: 'star',
+  activities: 'run'
+};
+
+// ═══ END ISL ═══
+
 var QA_INTENTS = [
   // ═══ SLEEP ═══
   {
@@ -24598,7 +25318,53 @@ function qaClassifyInput(text) {
     }
   }
 
-  // 5. Default → QA (existing intent matching)
+  // 5. TEMPORAL — check for time references
+  var timeRef = resolveTimeQuery(lower);
+  if (timeRef) {
+    var isFuture = timeRef.start > today();
+    var domain = _qaDetectDomain(lower);
+    if (isFuture && !domain) {
+      return { mode: 'planning', subtype: 'tomorrow', timeRange: timeRef, raw: text };
+    }
+    if (domain) {
+      return { mode: 'temporal', domain: domain, timeRange: timeRef, raw: text };
+    }
+    return { mode: 'temporal', domain: null, timeRange: timeRef, raw: text };
+  }
+
+  // 6. LOOKBACK — "last poop", "last nap", "when did she last sleep"
+  if (/\blast\s+(poop|diaper|nap|sleep|vaccine|vacc|shot|sick|fever|ill)\b/.test(lower) ||
+      /when did she last|last time she/.test(lower)) {
+    return { mode: 'lookback', raw: text };
+  }
+
+  // 6b. FOOD LOOKBACK — "when did she last eat ragi"
+  if (/when.*last.*(?:eat|ate|had|gave)\b/.test(lower) ||
+      /last\s+time.*(?:eat|ate|had)\b/.test(lower) ||
+      /\blast\s+(?:eat|ate|had)\b/.test(lower)) {
+    var stripped = lower.replace(/when|did|she|last|eat|ate|had|gave|time|the|some|any/g, '').trim();
+    var foodTokens = stripped.split(/\s+/).filter(function(t) { return t.length > 1; });
+    return { mode: 'lookback', subtype: 'food', foodQuery: foodTokens.join(' '), raw: text };
+  }
+
+  // 7. PATTERN/TREND
+  if (/vaccin.*schedule|schedule.*vaccin/.test(lower)) { /* fall through to step 9 */ }
+  else if (/routine|schedule|pattern|favorite|likes|dislikes|rejects|improving|progress|concern|worr|getting better/.test(lower)) {
+    return { mode: 'pattern', raw: text };
+  }
+
+  // 8. PLANNING
+  if (/\bdoctor\b.*\b(visit|prep|appointment)\b|\bpediatrician\b/.test(lower)) {
+    return { mode: 'planning', subtype: 'doctor', raw: text };
+  }
+  if (/\bshare\b|\bsend.*summary\b/.test(lower)) {
+    return { mode: 'planning', subtype: 'share', raw: text };
+  }
+  if (/\btomorrow\b.*\bplan\b|\bwhat.*tomorrow\b/.test(lower)) {
+    return { mode: 'planning', subtype: 'tomorrow', raw: text };
+  }
+
+  // 9. Default → QA (existing intent matching)
   return { mode: 'qa', raw: text };
 }
 
@@ -24611,7 +25377,11 @@ function _uibShowModeIndicator(mode) {
     ingredient: { icon: 'bowl', color: 'peach', text: 'Ingredient mode \u2014 finding best combos\u2026' },
     symptom: { icon: 'medical', color: 'rose', text: 'Symptom check \u2014 matching symptoms\u2026' },
     food_safety: { icon: 'shield', color: 'peach', text: 'Food safety check\u2026' },
-    outing: { icon: 'sun', color: 'sage', text: 'Outing planner \u2014 adjusting suggestions\u2026' }
+    outing: { icon: 'sun', color: 'sage', text: 'Outing planner \u2014 adjusting suggestions\u2026' },
+    temporal: { icon: 'clock', color: 'indigo', text: 'Looking back\u2026' },
+    lookback: { icon: 'scope', color: 'amber', text: 'Searching history\u2026' },
+    pattern: { icon: 'chart', color: 'sage', text: 'Analyzing patterns\u2026' },
+    planning: { icon: 'bulb', color: 'lav', text: 'Preparing\u2026' }
   };
   var cfg = labels[mode];
   if (!cfg) { el.classList.remove('active'); el.innerHTML = ''; return; }
@@ -25761,7 +26531,22 @@ function qaExecuteQuery(text) {
   // Route to appropriate handler
   var answer = null;
   try {
-    if (classified.mode === 'ingredient') {
+    if (classified.mode === 'temporal') {
+      _uibShowModeIndicator('temporal');
+      answer = _qaHandleTemporal(classified);
+    } else if (classified.mode === 'lookback') {
+      _uibShowModeIndicator('lookback');
+      // Session B handler — for now show no-match
+      answer = null;
+    } else if (classified.mode === 'pattern') {
+      _uibShowModeIndicator('pattern');
+      // Session B handler — for now show no-match
+      answer = null;
+    } else if (classified.mode === 'planning') {
+      _uibShowModeIndicator('planning');
+      // Session B handler — for now show no-match
+      answer = null;
+    } else if (classified.mode === 'ingredient') {
       _uibShowModeIndicator('ingredient');
       answer = qaHandleIngredient(classified);
     } else if (classified.mode === 'outing') {
@@ -25911,6 +26696,299 @@ function qaRenderNoMatch(container) {
       if (input) input.value = this.textContent;
       qaExecuteQuery(this.textContent);
     });
+  });
+}
+
+// ═══ TEMPORAL QUERY HANDLER + DAY SUMMARY CARD ═══
+
+function _qaHandleTemporal(classified) {
+  var tr = classified.timeRange;
+  if (!tr) return null;
+
+  var isSingleDay = tr.start === tr.end;
+  var domain = classified.domain || null;
+
+  if (domain) {
+    // Domain-scoped temporal card
+    return _qaRenderDomainTemporal(domain, tr);
+  }
+
+  if (isSingleDay) {
+    // Full day summary card
+    var summary = generateDaySummary(tr.start);
+    if (summary.events === 0) {
+      return {
+        title: tr.label,
+        headline: 'No data logged for this day',
+        icon: 'clock',
+        domain: 'indigo',
+        sections: [],
+        dataGap: 'Start logging meals, sleep, and activities to see insights here.'
+      };
+    }
+    return _qaFormatDaySummaryCard(summary, tr.label);
+  }
+
+  // Multi-day → Session B will handle generateRangeSummary
+  // For now, build a lightweight multi-day summary from day summaries
+  return _qaRenderMultiDayBasic(tr);
+}
+
+function _qaFormatDaySummaryCard(summary, timeLabel) {
+  var sections = [];
+
+  // HIGHLIGHTS section
+  if (summary.highlights.length > 0) {
+    sections.push({
+      label: 'Highlights',
+      icon: zi('check'),
+      items: summary.highlights.map(function(h) {
+        return { text: h.text, signal: h.signal };
+      })
+    });
+  }
+
+  // HEADS UP section
+  if (summary.concerns.length > 0) {
+    sections.push({
+      label: 'Heads Up',
+      icon: zi('warn'),
+      items: summary.concerns.map(function(c) {
+        return { text: c.text, signal: c.signal };
+      })
+    });
+  }
+
+  // SUMMARY section
+  var summaryItems = [];
+  if (summary.meals) {
+    var mealParts = [];
+    if (summary.meals.breakfast) mealParts.push('B: ' + summary.meals.breakfast);
+    if (summary.meals.lunch) mealParts.push('L: ' + summary.meals.lunch);
+    if (summary.meals.dinner) mealParts.push('D: ' + summary.meals.dinner);
+    if (mealParts.length > 0) {
+      summaryItems.push({ text: mealParts.join(' · '), signal: 'neutral', icon: zi('bowl') });
+    }
+  }
+  if (summary.sleepSummary !== 'No sleep data') {
+    summaryItems.push({ text: summary.sleepSummary, signal: 'neutral', icon: zi('moon') });
+  }
+  if (summary.poopSummary !== 'No poop data') {
+    summaryItems.push({ text: summary.poopSummary, signal: 'neutral', icon: zi('diaper') });
+  }
+  if (summary.activitySummary !== 'No activities') {
+    summaryItems.push({ text: summary.activitySummary, signal: 'neutral', icon: zi('run') });
+  }
+
+  if (summaryItems.length > 0) {
+    sections.push({
+      label: 'Summary',
+      icon: zi('list'),
+      items: summaryItems
+    });
+  }
+
+  var scoreText = summary.scores.overall !== null ? ('Score: ' + summary.scores.overall + ' · ' + summary.events + ' events logged') : (summary.events + ' events logged');
+
+  return {
+    title: timeLabel || summary.label,
+    headline: scoreText,
+    icon: 'clock',
+    domain: 'indigo',
+    sections: sections,
+    confidence: summary.scores.overall !== null ? _islScoreWord(summary.scores.overall) + ' day overall' : null
+  };
+}
+
+function _islScoreWord(score) {
+  if (score >= 80) return 'Great';
+  if (score >= 65) return 'Good';
+  if (score >= 50) return 'Fair';
+  return 'Needs attention';
+}
+
+function _qaRenderDomainTemporal(domain, tr) {
+  var data = getDomainData(domain, tr.start, tr.end);
+  var color = ISL_DOMAIN_COLOR[domain] || 'indigo';
+  var icon = ISL_DOMAIN_ICON[domain] || 'chart';
+  var isSingleDay = tr.start === tr.end;
+  var title = (domain.charAt(0).toUpperCase() + domain.slice(1)) + ' — ' + tr.label;
+  var items = [];
+
+  if (domain === 'sleep') {
+    if (data.nights.length === 0 && data.naps.length === 0) {
+      return { title: title, headline: 'No sleep data for this period', icon: icon, domain: color, sections: [], dataGap: 'Log sleep entries to see insights.' };
+    }
+    if (data.nights.length > 0) {
+      var nh = Math.floor(data.avgNightMin / 60);
+      var nm = data.avgNightMin % 60;
+      items.push({ text: (isSingleDay ? '' : 'Avg ') + 'night sleep: ' + nh + 'h ' + nm + 'm', signal: data.avgNightMin >= ISL_THRESHOLDS.GOOD_NIGHT_DURATION_MIN ? 'good' : 'warn' });
+      if (isSingleDay && data.nights[0]) {
+        items.push({ text: 'Bedtime: ' + data.nights[0].bedtime + ' · Wake: ' + data.nights[0].wakeTime, signal: 'neutral' });
+        if (data.nights[0].wakeUps > 0) items.push({ text: data.nights[0].wakeUps + ' wake-up' + (data.nights[0].wakeUps !== 1 ? 's' : ''), signal: 'info' });
+      } else {
+        items.push({ text: data.daysWithData + '/' + data.dayCount + ' nights logged', signal: 'neutral' });
+      }
+    }
+    if (data.naps.length > 0) {
+      var totalNapH = Math.floor(data.avgNapMin / 60);
+      var totalNapM = data.avgNapMin % 60;
+      items.push({ text: data.naps.length + ' nap' + (data.naps.length !== 1 ? 's' : '') + (data.avgNapMin > 0 ? ' · avg ' + totalNapH + 'h ' + totalNapM + 'm total' : ''), signal: 'neutral' });
+    }
+    if (data.avgNightScore !== null) items.push({ text: 'Sleep score: ' + data.avgNightScore, signal: data.avgNightScore >= 70 ? 'good' : 'warn' });
+  }
+
+  else if (domain === 'diet') {
+    if (data.daysWithData === 0) {
+      return { title: title, headline: 'No meals logged for this period', icon: icon, domain: color, sections: [], dataGap: 'Log meals to see diet insights.' };
+    }
+    items.push({ text: data.totalMeals + ' meals logged across ' + data.daysWithData + ' day' + (data.daysWithData !== 1 ? 's' : ''), signal: 'neutral' });
+    items.push({ text: data.daysFullyLogged + '/' + data.dayCount + ' days fully logged (3+ meals)', signal: data.daysFullyLogged >= Math.ceil(data.dayCount * ISL_THRESHOLDS.FULL_WEEK_PCT) ? 'good' : 'warn' });
+    if (data.avgIntake !== null) items.push({ text: 'Avg intake: ' + data.avgIntake + '%', signal: data.avgIntake >= 70 ? 'good' : 'warn' });
+    if (data.uniqueFoods > 0) items.push({ text: data.uniqueFoods + ' unique foods', signal: 'info' });
+    // Show meals if single day
+    if (isSingleDay && data.days[0]) {
+      var dm = data.days[0].meals;
+      var mealList = [];
+      if (dm.breakfast) mealList.push('B: ' + dm.breakfast);
+      if (dm.lunch) mealList.push('L: ' + dm.lunch);
+      if (dm.dinner) mealList.push('D: ' + dm.dinner);
+      if (dm.snack) mealList.push('S: ' + dm.snack);
+      if (mealList.length > 0) items.push({ text: mealList.join(' · '), signal: 'neutral' });
+    }
+    if (data.avgDietScore !== null) items.push({ text: 'Diet score: ' + data.avgDietScore, signal: data.avgDietScore >= 70 ? 'good' : 'warn' });
+  }
+
+  else if (domain === 'poop') {
+    if (data.totalCount === 0) {
+      return { title: title, headline: 'No poops logged for this period', icon: icon, domain: color, sections: [], dataGap: 'Log poop entries to see insights.' };
+    }
+    items.push({ text: data.totalCount + ' poop' + (data.totalCount !== 1 ? 's' : '') + ' across ' + data.daysWithPoop + ' day' + (data.daysWithPoop !== 1 ? 's' : ''), signal: 'neutral' });
+    items.push({ text: 'Avg ' + data.avgPerDay + '/day', signal: 'neutral' });
+    if (data.mostCommonConsistency) items.push({ text: 'Most common: ' + data.mostCommonConsistency, signal: ['normal', 'soft'].includes(data.mostCommonConsistency) ? 'good' : 'warn' });
+    if (data.hasBlood) items.push({ text: 'Blood detected — consult pediatrician', signal: 'action' });
+    if (data.hasMucus) items.push({ text: 'Mucus detected — monitor', signal: 'warn' });
+    if (data.avgPoopScore !== null) items.push({ text: 'Poop score: ' + data.avgPoopScore, signal: data.avgPoopScore >= 70 ? 'good' : 'warn' });
+  }
+
+  else if (domain === 'medical') {
+    if (data.suppAdherence !== null) {
+      items.push({ text: 'D3 adherence: ' + data.suppAdherence + '% (' + data.suppDays + '/' + data.suppTotal + ' days)', signal: data.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn' });
+    }
+    if (data.vaccUpcoming) {
+      var vDays = Math.ceil((new Date(data.vaccUpcoming.date) - new Date()) / 86400000);
+      items.push({ text: 'Next vaccine: ' + data.vaccUpcoming.name + (vDays > 0 ? ' in ' + vDays + ' days' : ' — due'), signal: vDays <= 7 ? 'action' : 'info' });
+    }
+    if (data.growthInRange.length > 0) {
+      var lg = data.growthInRange[data.growthInRange.length - 1];
+      var parts = [];
+      if (lg.wt) parts.push(lg.wt + ' kg');
+      if (lg.ht) parts.push(lg.ht + ' cm');
+      items.push({ text: 'Growth: ' + parts.join(', ') + ' (' + formatDate(lg.date) + ')', signal: 'info' });
+    }
+    if (data.illnessEpisodes.length > 0) {
+      items.push({ text: data.illnessEpisodes.length + ' illness episode' + (data.illnessEpisodes.length !== 1 ? 's' : '') + ' in period', signal: 'warn' });
+    }
+    if (data.avgMedicalScore !== null) items.push({ text: 'Medical score: ' + data.avgMedicalScore, signal: data.avgMedicalScore >= 70 ? 'good' : 'warn' });
+  }
+
+  else if (domain === 'milestones') {
+    if (data.progressed.length === 0 && data.active.length === 0) {
+      return { title: title, headline: 'No milestone activity for this period', icon: icon, domain: color, sections: [], dataGap: 'Log activities to track milestone progress.' };
+    }
+    if (data.progressed.length > 0) {
+      data.progressed.forEach(function(p) {
+        items.push({ text: p.text + ' — ' + p.status, signal: 'good' });
+      });
+    }
+    if (data.active.length > 0) {
+      items.push({ text: data.active.length + ' milestone' + (data.active.length !== 1 ? 's' : '') + ' in progress', signal: 'info' });
+    }
+    if (data.activityEvidence > 0) items.push({ text: data.activityEvidence + ' evidence observations', signal: 'neutral' });
+    if (data.avgMilestoneScore !== null) items.push({ text: 'Milestone score: ' + data.avgMilestoneScore, signal: data.avgMilestoneScore >= 70 ? 'good' : 'warn' });
+  }
+
+  else if (domain === 'activities') {
+    if (data.totalCount === 0) {
+      return { title: title, headline: 'No activities logged for this period', icon: icon, domain: color, sections: [], dataGap: 'Log activities to see insights.' };
+    }
+    items.push({ text: data.totalCount + ' activit' + (data.totalCount !== 1 ? 'ies' : 'y') + ' across ' + data.daysWithActivity + ' day' + (data.daysWithActivity !== 1 ? 's' : ''), signal: 'neutral' });
+    if (data.totalDuration > 0) items.push({ text: 'Total duration: ' + data.totalDuration + ' min', signal: 'info' });
+    // Show recent activities
+    var recent = data.entries.slice(0, 4);
+    recent.forEach(function(e) {
+      items.push({ text: e.text + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
+    });
+    if (data.totalCount > 4) items.push({ text: '+' + (data.totalCount - 4) + ' more activities', signal: 'neutral' });
+  }
+
+  return {
+    title: title,
+    headline: data.dayCount + ' day' + (data.dayCount !== 1 ? 's' : '') + ' · ' + (data.daysWithData || 0) + ' with data',
+    icon: icon,
+    domain: color,
+    sections: items.length > 0 ? [{ label: 'Details', icon: zi(icon), items: items }] : [],
+    confidence: null
+  };
+}
+
+function _qaRenderMultiDayBasic(tr) {
+  // Build lightweight multi-day from individual day summaries
+  var dates = _islDateRange(tr.start, tr.end);
+  var totalEvents = 0;
+  var allHighlights = [];
+  var allConcerns = [];
+  var scoreArr = [];
+
+  dates.forEach(function(ds) {
+    var sum = generateDaySummary(ds);
+    totalEvents += sum.events;
+    if (sum.scores.overall !== null) scoreArr.push(sum.scores.overall);
+    sum.highlights.forEach(function(h) { allHighlights.push(h); });
+    sum.concerns.forEach(function(c) { allConcerns.push(c); });
+  });
+
+  var avgScore = scoreArr.length > 0 ? Math.round(scoreArr.reduce(function(a, b) { return a + b; }, 0) / scoreArr.length) : null;
+
+  // Deduplicate and pick top highlights/concerns
+  var topHighlights = _islDedupeItems(allHighlights).slice(0, 5);
+  var topConcerns = _islDedupeItems(allConcerns).slice(0, 4);
+
+  var sections = [];
+  if (topHighlights.length > 0) {
+    sections.push({ label: 'Highlights', icon: zi('check'), items: topHighlights.map(function(h) { return { text: h.text, signal: h.signal }; }) });
+  }
+  if (topConcerns.length > 0) {
+    sections.push({ label: 'Heads Up', icon: zi('warn'), items: topConcerns.map(function(c) { return { text: c.text, signal: c.signal }; }) });
+  }
+
+  var headline = '';
+  if (avgScore !== null) headline += 'Avg Score: ' + avgScore + ' · ';
+  headline += dates.length + ' days · ' + totalEvents + ' events';
+
+  return {
+    title: tr.label + ' (' + _islShortDate(tr.start) + ' \u2013 ' + _islShortDate(tr.end) + ')',
+    headline: headline,
+    icon: 'chart',
+    domain: 'indigo',
+    sections: sections,
+    confidence: avgScore !== null ? _islScoreWord(avgScore) + ' period overall' : null
+  };
+}
+
+function _islShortDate(dateStr) {
+  var d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+function _islDedupeItems(items) {
+  var seen = {};
+  return items.filter(function(item) {
+    // Dedupe by domain + first 30 chars
+    var key = (item.domain || '') + ':' + item.text.substring(0, 30);
+    if (seen[key]) return false;
+    seen[key] = true;
+    return true;
   });
 }
 
@@ -30519,6 +31597,7 @@ function saveFeedingDay() {
   });
   save(KEYS.feeding, feedingData);
   _tsfMarkDirty();
+  _islMarkDirty('diet');
   // Auto-introduce any new foods from all meal slots
   autoIntroduceFoodsFromDay(d);
   renderFeedingHistory();
@@ -31904,6 +32983,7 @@ function addSleepEntry() {
   save(KEYS.sleep, sleepData);
   _tsfMarkDirty();
   resetSleepForm('night');
+  _islMarkDirty('sleep');
   renderSleep();
   renderHomeSleep();
   setTimeout(drawSleepChart, 60);
@@ -31942,6 +33022,7 @@ function addNapEntry() {
   save(KEYS.sleep, sleepData);
   _tsfMarkDirty();
   resetSleepForm('nap');
+  _islMarkDirty('sleep');
   renderSleep();
   renderHomeSleep();
   setTimeout(drawSleepChart, 60);
@@ -32053,6 +33134,7 @@ function endSleepNow() {
   save(KEYS.sleep, sleepData);
   _tsfMarkDirty();
 
+  _islMarkDirty('sleep');
   localStorage.removeItem(SLEEP_INPROGRESS_KEY);
 
   const dur = calcSleepDuration(ip.startTime, endTime);
@@ -32966,6 +34048,7 @@ function addPoopEntry() {
   save(KEYS.poop, poopData);
   _tsfMarkDirty();
   resetPoopForm();
+  _islMarkDirty('poop');
   renderPoop();
   renderHomePoop();
   setTimeout(drawPoopChart, 60);
@@ -34448,6 +35531,7 @@ function getAlertNavAction(alertKey, alertTitle) {
 }
 
 function switchTab(name) {
+  _islClearAll();
   _clearModifierCache();
   _tsfExpandedId = null;
   _tsfShowAll = false;
@@ -35731,6 +36815,8 @@ function saveActivity() {
   save(KEYS.activityLog, activityLog);
   _tsfMarkDirty();
 
+  _islMarkDirty('activities');
+  _islMarkDirty('milestones');
   // Set undo state
   _lastActivityUndo = { dateStr, entryId: entry.id };
 
@@ -35841,6 +36927,7 @@ function saveQLFeed() {
   feedingData = feeding;
   _tsfMarkDirty();
 
+  _islMarkDirty('diet');
   // Auto-introduce new foods
   autoIntroduceFoodsFromDay(dateStr);
 
@@ -35907,6 +36994,7 @@ function saveQLSleep() {
   save(KEYS.sleep, sleepData);
   _tsfMarkDirty();
 
+  _islMarkDirty('sleep');
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
     if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); }
@@ -35939,6 +37027,7 @@ function saveQLNap() {
   save(KEYS.sleep, sleepData);
   _tsfMarkDirty();
 
+  _islMarkDirty('sleep');
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
     if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); }
@@ -35971,6 +37060,7 @@ function saveQLPoop() {
   save(KEYS.poop, poopData);
   _tsfMarkDirty();
 
+  _islMarkDirty('poop');
   const undoFn = () => {
     const idx = poopData.indexOf(entry);
     if (idx >= 0) { poopData.splice(idx, 1); save(KEYS.poop, poopData); }
