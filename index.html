@@ -963,6 +963,282 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 [data-theme="dark"] .vc-monitor-logged { background: rgba(58,112,96,0.1); border-color: rgba(58,112,96,0.2); }
 [data-theme="dark"] .vc-booked-pill { background: rgba(58,112,96,0.15); }
 
+/* ── Vaccination Timeline ── */
+.vc-timeline {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--sp-8) 0;
+}
+.vc-timeline-scroll {
+  display: flex;
+  gap: var(--sp-4);
+  min-width: max-content;
+}
+.vc-timeline-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+  gap: var(--sp-4);
+}
+.vc-timeline-label {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--tc-lav);
+  text-align: center;
+  white-space: nowrap;
+  padding-bottom: var(--sp-4);
+  border-bottom: 1.5px solid rgba(110,94,154,0.15);
+  width: 100%;
+}
+.vc-timeline-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+}
+.vc-timeline-dot {
+  width: var(--sp-20);
+  height: var(--sp-20);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--ease-fast);
+  border: 1.5px solid transparent;
+}
+.vc-timeline-dot:active { transform: scale(1.15); }
+.vc-timeline-dot.vc-dot-none {
+  background: var(--sage-light);
+  border-color: var(--tc-sage);
+}
+.vc-timeline-dot.vc-dot-mild {
+  background: var(--amber-light);
+  border-color: var(--tc-amber);
+}
+.vc-timeline-dot.vc-dot-moderate {
+  background: var(--peach-light);
+  border-color: var(--tc-caution);
+}
+.vc-timeline-dot.vc-dot-severe {
+  background: var(--rose-light);
+  border-color: var(--tc-danger);
+}
+.vc-timeline-dot.vc-dot-upcoming {
+  background: var(--glass);
+  border-color: rgba(110,94,154,0.3);
+  border-style: dashed;
+}
+.vc-timeline-dot.vc-dot-nodata {
+  background: var(--glass);
+  border-color: rgba(150,150,150,0.3);
+}
+.vc-timeline-delay {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--tc-amber);
+  font-size: 6px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+.vc-legend-dot {
+  width: 10px;
+  height: 10px;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.ml-6 { margin-left: var(--sp-6); }
+.vc-timeline-detail {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--warm);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: var(--sp-16) var(--sp-20);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+.vc-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-8);
+}
+.vc-detail-name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--tc-lav);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+.vc-detail-date {
+  font-size: var(--fs-sm);
+  color: var(--mid);
+  margin-top: var(--sp-4);
+}
+.vc-detail-reaction {
+  margin-top: var(--sp-8);
+  padding: var(--sp-10);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+}
+.vc-detail-actions {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: var(--sp-12);
+}
+
+/* Reaction badge on past list */
+.vc-past-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-6) var(--sp-8);
+  border-radius: var(--r-lg);
+  background: var(--surface-lav);
+  border-left: var(--accent-w) solid var(--lavender);
+}
+.vc-past-icon {
+  width: var(--sp-24);
+  height: var(--sp-24);
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vc-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-8);
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.vc-reaction-badge svg.zi { width: 12px; height: 12px; }
+.vc-badge-none {
+  background: var(--sage-light);
+  color: var(--tc-sage);
+}
+.vc-badge-mild {
+  background: var(--amber-light);
+  color: var(--tc-amber);
+}
+.vc-badge-moderate {
+  background: var(--peach-light);
+  color: var(--tc-caution);
+}
+.vc-badge-severe {
+  background: var(--rose-light);
+  color: var(--tc-danger);
+}
+.vc-badge-nolog {
+  background: var(--glass);
+  color: var(--light);
+}
+
+/* Pattern / prep cards */
+.vc-pattern-card {
+  background: var(--lav-light);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-16);
+  margin-top: var(--sp-8);
+  border: 1.5px solid rgba(110,94,154,0.12);
+}
+.vc-pattern-title {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--tc-lav);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-8);
+}
+.vc-pattern-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-4) 0;
+  font-size: var(--fs-xs);
+  color: var(--text);
+}
+.vc-pattern-trend {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  margin-top: var(--sp-6);
+  padding: var(--sp-6) var(--sp-10);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+}
+.vc-prep-expect {
+  margin-top: var(--sp-8);
+  padding: var(--sp-10);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  font-size: var(--fs-xs);
+  color: var(--text);
+  line-height: var(--lh-relaxed);
+}
+.vc-prep-consider {
+  margin-top: var(--sp-6);
+  padding: var(--sp-8) var(--sp-10);
+  border-radius: var(--r-lg);
+  background: var(--amber-light);
+  font-size: var(--fs-xs);
+  color: var(--tc-amber);
+}
+.vc-impact-row {
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+}
+.vc-impact-row svg.zi { width: 14px; height: 14px; }
+.vc-pattern-row svg.zi { width: 14px; height: 14px; }
+.vc-pattern-title svg.zi { width: 14px; height: 14px; }
+.vc-pattern-trend svg.zi { width: 14px; height: 14px; }
+.vc-prep-consider svg.zi { width: 14px; height: 14px; }
+
+/* ── Dark mode: Vaccination Session B ── */
+[data-theme="dark"] .vc-timeline-label { border-color: rgba(110,94,154,0.25); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-none { background: rgba(58,112,96,0.18); border-color: var(--tc-sage); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-mild { background: rgba(138,101,32,0.18); border-color: var(--tc-amber); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-moderate { background: rgba(135,90,32,0.18); border-color: var(--tc-caution); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-severe { background: rgba(158,62,82,0.18); border-color: var(--tc-danger); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-upcoming { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.35); }
+[data-theme="dark"] .vc-timeline-dot.vc-dot-nodata { background: rgba(255,255,255,0.06); border-color: rgba(150,150,150,0.25); }
+[data-theme="dark"] .vc-timeline-delay { background: var(--tc-amber); }
+[data-theme="dark"] .vc-timeline-detail { background: var(--warm); box-shadow: 0 -4px 24px rgba(0,0,0,0.4); }
+[data-theme="dark"] .vc-detail-reaction { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .vc-reaction-badge { border: none; }
+[data-theme="dark"] .vc-badge-none { background: rgba(58,112,96,0.15); }
+[data-theme="dark"] .vc-badge-mild { background: rgba(138,101,32,0.15); }
+[data-theme="dark"] .vc-badge-moderate { background: rgba(135,90,32,0.15); }
+[data-theme="dark"] .vc-badge-severe { background: rgba(158,62,82,0.15); }
+[data-theme="dark"] .vc-badge-nolog { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .vc-past-item { background: rgba(110,94,154,0.1); border-color: rgba(110,94,154,0.4); }
+[data-theme="dark"] .vc-pattern-card { background: rgba(110,94,154,0.1); border-color: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-pattern-trend { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .vc-prep-expect { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .vc-prep-consider { background: rgba(138,101,32,0.12); }
+
 /* ── Medications ── */
 .icon-mint { background:var(--sage-light); }
 .med-list { display:flex; flex-direction:column; gap:var(--sp-8); }
@@ -3650,6 +3926,9 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .tc-danger { color:var(--tc-danger); }
 .tc-amber  { color:var(--tc-amber); }
 .tc-indigo { color:var(--tc-indigo); }
+.tc-light  { color:var(--light); }
+.tc-mid    { color:var(--mid); }
+.fs-2xs    { font-size:var(--fs-2xs); }
 
 /* ── Utility: Disabled State ── */
 .disabled-state { opacity:0.4; pointer-events:none; }
@@ -3890,6 +4169,8 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .fw-600     { font-weight:600; }
 .fw-400     { font-weight:400; }
 .ptr        { cursor:pointer; }
+.fs-xs      { font-size:var(--fs-xs); }
+.fs-sm      { font-size:var(--fs-sm); }
 .fs-xs-mid  { font-size:var(--fs-xs); color:var(--mid); }
 .fs-xs-light{ font-size:var(--fs-xs); color:var(--light); }
 .fs-sm-600  { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
@@ -7131,6 +7412,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <div id="vaccCompletionOverlay" style="display:none;"></div>
         </div>
         <div id="vaccInfoPanel" style="display:none;"></div>
+        <div id="vaccPrepCard"></div>
 
         <!-- Past vaccinations (inline, collapsible) -->
         <div class="mt-10">
@@ -7142,6 +7424,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             </div>
           </div>
           <div id="vaccPastListBody" class="collapse-body" style="display:none;">
+            <div id="vaccTimeline"></div>
             <div id="vaccPastList" class="fx-col g4" style="max-height:300px;overflow-y:auto;"></div>
           </div>
         </div>
@@ -7822,7 +8105,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
               <button class="pq-btn" id="pcon-runny" data-pcon="runny"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> Runny</button>
               <button class="pq-btn" id="pcon-soft" data-pcon="soft">Soft</button>
               <button class="pq-btn active-pq" id="pcon-normal" data-pcon="normal"><span class="zi-check-placeholder"></span> Normal</button>
-              <button class="pq-btn" id="pcon-hard" data-pcon="hard">🪨 Hard</button>
+              <button class="pq-btn" id="pcon-hard" data-pcon="hard"><svg class="zi" aria-hidden="true"><use href="#zi-dot-red"/></svg> Hard</button>
               <button class="pq-btn" id="pcon-pellets" data-pcon="pellets">Pellets</button>
             </div>
           </div>
@@ -8821,7 +9104,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
           <div class="ql-con-pill" data-con="runny"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> Runny</div>
           <div class="ql-con-pill" data-con="soft">Soft</div>
           <div class="ql-con-pill active" data-con="normal"><span class="zi-check-placeholder"></span> Normal</div>
-          <div class="ql-con-pill" data-con="hard">🪨 Hard</div>
+          <div class="ql-con-pill" data-con="hard"><svg class="zi" aria-hidden="true"><use href="#zi-dot-red"/></svg> Hard</div>
           <div class="ql-con-pill" data-con="pellets">Pellets</div>
         </div>
       </div>
@@ -12024,6 +12307,9 @@ function init() {
         }, 150);
       }, 100);
     }
+    else if (action === 'vaccTimelineTap') _vaccShowTimelineDetail(parseInt(arg));
+    else if (action === 'vaccCloseTimelineDetail') _vaccCloseTimelineDetail();
+    else if (action === 'vaccOpenReactionEdit') _vaccOpenReactionEdit(parseInt(arg));
     else if (action === 'logVomitingEpisodeEntry') logVomitingEpisodeEntry();
     else if (action === 'deLogStoolPrompt') deLogStoolPrompt(arg);
     else if (action === 'feLogReadingFromInput') feLogReadingFromInput(arg);
@@ -16131,6 +16417,8 @@ function renderVacc() {
           overlay.style.display = '';
         }
         document.getElementById('vaccInfoPanel').style.display = 'none';
+        var _prepEl = document.getElementById('vaccPrepCard');
+        if (_prepEl) _prepEl.innerHTML = '';
         renderHomeVacc();
         return;
       }
@@ -16142,6 +16430,7 @@ function renderVacc() {
         document.getElementById('vaccCountdown').textContent = sd2;
         document.getElementById('vaccNextDate').textContent = 'Due: ' + formatDate(nextAfter.date);
         document.getElementById('vaccNextName').textContent = nextAfter.name;
+        _vaccRenderPrepCard();
         renderHomeVacc();
         return;
       }
@@ -16156,6 +16445,7 @@ function renderVacc() {
     // Render the info panel content (hidden until tapped)
     renderVaccInfoPanel(upcoming.name);
     renderHomeVacc();
+    _vaccRenderPrepCard();
     const hvd = document.getElementById('homeVaccDays');
     if (hvd) hvd.textContent = safeD;
 
@@ -16195,6 +16485,8 @@ function renderVacc() {
     document.getElementById('vaccInfoPanel').style.display = 'none';
     const editBtn = document.getElementById('vaccUpcomingEditBtn');
     if (editBtn) editBtn.style.display = 'none';
+    var prepEl = document.getElementById('vaccPrepCard');
+    if (prepEl) prepEl.innerHTML = '';
   }
 }
 
@@ -16306,6 +16598,67 @@ function _vaccFamilyKey(vaccName) {
     if (cleaned.toLowerCase().includes(family.toLowerCase())) return family;
   }
   return cleaned;
+}
+
+// ── Step 11: Series history lookup ──
+function _getVaccSeriesHistory(vaccName) {
+  const family = _vaccFamilyKey(vaccName);
+  const seriesNames = VACC_SERIES[family];
+  if (!seriesNames) return [];
+  const normSet = new Set(seriesNames.map(function(n) { return n.toLowerCase(); }));
+  return vaccData
+    .filter(function(v) { return !v.upcoming && normSet.has(v.name.toLowerCase()); })
+    .sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+}
+
+// ── Step 12: Reaction pattern trend ──
+const _VACC_SEV_SCORE = { none: 0, mild: 1, moderate: 2, severe: 3 };
+
+function _vaccReactionTrend(history) {
+  var withReaction = history.filter(function(v) { return v.reaction; });
+  if (withReaction.length < 2) return { trend: 'insufficient', label: 'Not enough data' };
+  var scores = withReaction.map(function(v) { return _VACC_SEV_SCORE[v.reaction] || 0; });
+  // Simple linear slope
+  var n = scores.length;
+  var sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (var i = 0; i < n; i++) {
+    sumX += i; sumY += scores[i]; sumXY += i * scores[i]; sumXX += i * i;
+  }
+  var slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  if (slope < -0.15) return { trend: 'decreasing', label: 'Reactions decreasing over doses' };
+  if (slope > 0.15) return { trend: 'increasing', label: 'Reactions increasing over doses' };
+  return { trend: 'stable', label: 'Reactions consistent across doses' };
+}
+
+function _vaccPatternSummary(vaccName) {
+  var history = _getVaccSeriesHistory(vaccName);
+  if (history.length === 0) return null;
+  var withReaction = history.filter(function(v) { return v.reaction; });
+  if (withReaction.length === 0) return null;
+  var trend = _vaccReactionTrend(history);
+  var family = _vaccFamilyKey(vaccName);
+  // Check if any entries were from multi-vaccine visits
+  var hasMultiVisit = withReaction.some(function(v) {
+    return vaccData.filter(function(o) { return o.visitGroup && o.visitGroup === v.visitGroup && o.name !== v.name; }).length > 0;
+  });
+  return { history: withReaction, trend: trend, family: family, hasMultiVisit: hasMultiVisit };
+}
+
+// ── Step 15: Post-vaccination correlation via ISL ──
+function _vaccPostCorrelation(vaccDate) {
+  try {
+    var nextDay = _offsetDateStr(vaccDate, 1);
+    var postSleep = getDomainData('sleep', vaccDate, nextDay);
+    var postDiet = getDomainData('diet', vaccDate, nextDay);
+    var preStart = _offsetDateStr(vaccDate, -7);
+    var preEnd = _offsetDateStr(vaccDate, -1);
+    var preSleep = getDomainData('sleep', preStart, preEnd);
+    var preDiet = getDomainData('diet', preStart, preEnd);
+    var sleepDelta = (postSleep.avgNightMin || 0) - (preSleep.avgNightMin || 0);
+    var feedDelta = (postDiet.avgIntake !== null ? postDiet.avgIntake : 0) - (preDiet.avgIntake !== null ? preDiet.avgIntake : 0);
+    var hasData = (postSleep.daysWithData > 0 || postDiet.daysWithData > 0) && (preSleep.daysWithData > 0 || preDiet.daysWithData > 0);
+    return { sleepDelta: sleepDelta, feedDelta: feedDelta, hasData: hasData };
+  } catch(e) { return { sleepDelta: 0, feedDelta: 0, hasData: false }; }
 }
 
 const VACC_DELAY_SAFETY = {
@@ -16713,21 +17066,35 @@ function _vaccSaveReaction() {
     if (notesEl) notes = notesEl.value.trim();
   }
 
-  // Save on all entries matching these names (today or yesterday — 48h window)
+  // Save on matching entries
   const todayStr = today();
   const yesterdayStr = _offsetDateStr(todayStr, -1);
-  vaccNames.forEach(name => {
-    const v = vaccData.find(e => e.name === name && !e.upcoming &&
-      (e.date === todayStr || e.date === yesterdayStr || e.visitGroup === todayStr || e.visitGroup === yesterdayStr));
-    if (v) {
-      v.reaction = severity;
-      v.symptoms = symptoms;
-      if (temperature) v.temperature = temperature;
-      if (cryDuration) v.cryDuration = cryDuration;
-      if (notes) v.reactionNotes = notes;
-      v.reactionLoggedAt = new Date().toISOString();
-    }
-  });
+  const editIdx = form.dataset.editIdx ? parseInt(form.dataset.editIdx) : null;
+
+  if (editIdx !== null && vaccData[editIdx]) {
+    // Direct edit of a specific entry (from past list / timeline tap)
+    const v = vaccData[editIdx];
+    v.reaction = severity;
+    v.symptoms = symptoms;
+    if (temperature) v.temperature = temperature;
+    if (cryDuration) v.cryDuration = cryDuration;
+    if (notes) v.reactionNotes = notes;
+    v.reactionLoggedAt = new Date().toISOString();
+  } else {
+    // Standard save: today/yesterday entries (post-completion flow)
+    vaccNames.forEach(name => {
+      const v = vaccData.find(e => e.name === name && !e.upcoming &&
+        (e.date === todayStr || e.date === yesterdayStr || e.visitGroup === todayStr || e.visitGroup === yesterdayStr));
+      if (v) {
+        v.reaction = severity;
+        v.symptoms = symptoms;
+        if (temperature) v.temperature = temperature;
+        if (cryDuration) v.cryDuration = cryDuration;
+        if (notes) v.reactionNotes = notes;
+        v.reactionLoggedAt = new Date().toISOString();
+      }
+    });
+  }
   save(KEYS.vacc, vaccData);
   _islMarkDirty('medical');
 
@@ -16992,24 +17359,301 @@ function renderVaccPastList() {
   if (countEl) countEl.textContent = past.length + ' doses';
 
   if (past.length === 0) {
-    el.innerHTML = '<div class="t-sub fe-center-action" >No vaccinations recorded yet.</div>';
+    el.innerHTML = '<div class="t-sub fe-center-action">No vaccinations recorded yet.</div>';
+    var tlEl = document.getElementById('vaccTimeline');
+    if (tlEl) tlEl.innerHTML = '';
     return;
   }
 
   el.innerHTML = past.map(v => {
     const realIdx = vaccData.indexOf(v);
-    const reasonNote = v.dateChangeReason ? `<div style="font-size:var(--fs-xs);color:var(--tc-warn);">${zi('note')} ${escHtml(v.dateChangeReason)}</div>` : '';
-    return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:6px 8px;border-radius:var(--r-lg);background:var(--surface-lav);border-left:var(--accent-w) solid var(--lavender);">
-      <span style="font-size:var(--icon-xs);"><span class="zi-check-placeholder"></span></span>
+    const reasonNote = v.dateChangeReason ? `<div class="fs-xs tc-warn">${zi('note')} ${escHtml(v.dateChangeReason)}</div>` : '';
+    // Reaction badge
+    let badge = '';
+    if (v.reaction === 'none') {
+      badge = `<span class="vc-reaction-badge vc-badge-none" data-action="vaccOpenReactionEdit" data-arg="${realIdx}">${zi('check')} None</span>`;
+    } else if (v.reaction === 'mild') {
+      const symLabels = _vaccSymptomLabels(v.symptoms);
+      badge = `<span class="vc-reaction-badge vc-badge-mild" data-action="vaccOpenReactionEdit" data-arg="${realIdx}">${zi('warn')} Mild${symLabels ? ' \u00b7 ' + escHtml(symLabels) : ''}</span>`;
+    } else if (v.reaction === 'moderate') {
+      const symLabels = _vaccSymptomLabels(v.symptoms);
+      badge = `<span class="vc-reaction-badge vc-badge-moderate" data-action="vaccOpenReactionEdit" data-arg="${realIdx}">${zi('warn')} Moderate${symLabels ? ' \u00b7 ' + escHtml(symLabels) : ''}</span>`;
+    } else if (v.reaction === 'severe') {
+      badge = `<span class="vc-reaction-badge vc-badge-severe" data-action="vaccOpenReactionEdit" data-arg="${realIdx}">${zi('siren')} Severe</span>`;
+    } else {
+      badge = `<span class="vc-reaction-badge vc-badge-nolog" data-action="vaccOpenReactionEdit" data-arg="${realIdx}">${zi('note')} Log reaction</span>`;
+    }
+    return `<div class="vc-past-item">
+      <span class="icon-lav vc-past-icon">${zi('syringe')}</span>
       <div class="flex-1-min">
         <div class="fs-sm-600">${escHtml(v.name)}</div>
-        <div style="font-size:var(--fs-xs);color:var(--tc-lav);">${formatDate(v.date)} · ${ageAtDate(v.date)}</div>
+        <div class="fs-xs tc-lav">${formatDate(v.date)} \u00b7 ${ageAtDate(v.date)}</div>
         ${reasonNote}
+        <div class="mt-4">${badge}</div>
       </div>
       <button data-action="openVaccEditModal" data-arg="${realIdx}" class="btn-icon-edit" aria-label="Edit date">Edit</button>
     </div>`;
   }).join('');
+  // Also render timeline
+  renderVaccTimeline();
 }
+
+function _vaccSymptomLabels(symptoms) {
+  if (!symptoms || !Array.isArray(symptoms) || symptoms.length === 0) return '';
+  return symptoms.slice(0, 3).map(function(id) {
+    var s = VACC_REACTION_SYMPTOMS.find(function(x) { return x.id === id; });
+    return s ? s.label : id;
+  }).join(', ');
+}
+
+// ── Step 13: Next vaccination prep card ──
+function _vaccRenderPrepCard() {
+  var el = document.getElementById('vaccPrepCard');
+  if (!el) return;
+  var upcoming = vaccData.filter(function(v) { return v.upcoming; }).sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+  if (upcoming.length === 0) { el.innerHTML = ''; return; }
+  var next = upcoming[0];
+  var summary = _vaccPatternSummary(next.name);
+  if (!summary || summary.history.length === 0) { el.innerHTML = ''; return; }
+
+  var family = summary.family;
+  var rows = summary.history.map(function(v) {
+    var sev = v.reaction ? v.reaction.charAt(0).toUpperCase() + v.reaction.slice(1) : 'No data';
+    var syms = _vaccSymptomLabels(v.symptoms);
+    return '<div class="vc-pattern-row">' + zi('syringe') + ' <span class="fw-600">' + escHtml(v.name) + ':</span> ' + escHtml(sev) + (syms ? ' \u2014 ' + escHtml(syms) : '') + '</div>';
+  }).join('');
+
+  var trendHtml = summary.trend.trend !== 'insufficient'
+    ? '<div class="vc-pattern-trend">' + zi('chart') + ' ' + escHtml(summary.trend.label) + '</div>'
+    : '';
+
+  // Prediction with hedging (Assumption 5)
+  var lastSev = summary.history[summary.history.length - 1].reaction || 'none';
+  var expectText = '';
+  if (summary.trend.trend === 'decreasing') {
+    expectText = 'Based on previous reactions, expect milder effects. Keep comfort measures ready.';
+  } else if (summary.trend.trend === 'increasing') {
+    expectText = 'Recent reactions have been increasing. Monitor closely and consult your pediatrician if concerned.';
+  } else if (lastSev !== 'none') {
+    expectText = 'Previous reactions were ' + lastSev + '. Expect a similar level. Keep comfort measures ready.';
+  } else {
+    expectText = 'Previous doses were well-tolerated. Expect minimal side effects.';
+  }
+  var hedgeNote = summary.hasMultiVisit
+    ? '<div class="fs-2xs tc-light mt-4">Based on visits that included ' + escHtml(family) + ', not ' + escHtml(family) + ' specifically.</div>'
+    : '';
+
+  // DTwP-specific: DTaP consideration
+  var considerHtml = '';
+  if (family === 'DTwP' && (lastSev === 'moderate' || lastSev === 'severe')) {
+    considerHtml = '<div class="vc-prep-consider">' + zi('bulb') + ' DTaP (acellular) has fewer side effects than DTwP (whole cell). Discuss with your doctor.</div>';
+  }
+
+  // Correlation from most recent dose
+  var lastEntry = summary.history[summary.history.length - 1];
+  var corr = _vaccPostCorrelation(lastEntry.date);
+  var corrHtml = '';
+  if (corr.hasData) {
+    var parts = [];
+    if (corr.sleepDelta !== 0) parts.push('<div class="vc-impact-row">' + zi('moon') + ' Sleep: ' + (corr.sleepDelta > 0 ? '+' : '') + corr.sleepDelta + ' min vs usual</div>');
+    if (corr.feedDelta !== 0) parts.push('<div class="vc-impact-row">' + zi('spoon') + ' Intake: ' + (corr.feedDelta > 0 ? '+' : '') + corr.feedDelta + '% vs usual</div>');
+    if (parts.length > 0) corrHtml = '<div class="mt-6"><div class="fs-2xs fw-600 tc-lav">LAST TIME IMPACT</div>' + parts.join('') + '</div>';
+  }
+
+  el.innerHTML = '<div class="vc-pattern-card">' +
+    '<div class="vc-pattern-title">' + zi('shield') + ' Preparing for ' + escHtml(next.name) + '</div>' +
+    '<div class="fs-2xs fw-600 tc-lav">BASED ON PREVIOUS REACTIONS</div>' +
+    rows + trendHtml +
+    '<div class="vc-prep-expect">' + escHtml(expectText) + hedgeNote + '</div>' +
+    considerHtml + corrHtml +
+    '</div>';
+}
+
+// ── Step 16: Vaccination timeline view ──
+function renderVaccTimeline() {
+  var el = document.getElementById('vaccTimeline');
+  if (!el) return;
+
+  // Build IAP age groups from VACC_SCHEDULE
+  var ageOrder = ['Birth', '6 weeks', '10 weeks', '14 weeks', '6 months', '7 months', '9 months',
+    '12 months', '13 months', '15 months', '16-18 months', '18-19 months', '2 years', '4-6 years'];
+  var ageGroups = {};
+  ageOrder.forEach(function(age) { ageGroups[age] = []; });
+  VACC_SCHEDULE.forEach(function(s) {
+    if (!ageGroups[s.age]) ageGroups[s.age] = [];
+    ageGroups[s.age].push(s.name);
+  });
+
+  // Match vaccData entries to schedule names
+  var vaccByName = {};
+  vaccData.forEach(function(v) {
+    vaccByName[v.name.toLowerCase()] = v;
+  });
+
+  var hasAnyPast = vaccData.some(function(v) { return !v.upcoming; });
+  if (!hasAnyPast) { el.innerHTML = ''; return; }
+
+  var cols = '';
+  ageOrder.forEach(function(age) {
+    var names = ageGroups[age];
+    if (!names || names.length === 0) return;
+    // Check if any vaccine in this group has data
+    var hasSomeData = names.some(function(n) { return vaccByName[n.toLowerCase()]; });
+    var hasSomeUpcoming = names.some(function(n) {
+      var v = vaccByName[n.toLowerCase()];
+      return v && v.upcoming;
+    });
+    // Only show columns up to current age + 1 group ahead
+    if (!hasSomeData && !hasSomeUpcoming) return;
+
+    var dots = names.map(function(name) {
+      var v = vaccByName[name.toLowerCase()];
+      if (!v) return '';
+      var dotClass = 'vc-dot-nodata';
+      if (v.upcoming) {
+        dotClass = 'vc-dot-upcoming';
+      } else if (v.reaction === 'none') {
+        dotClass = 'vc-dot-none';
+      } else if (v.reaction === 'mild') {
+        dotClass = 'vc-dot-mild';
+      } else if (v.reaction === 'moderate') {
+        dotClass = 'vc-dot-moderate';
+      } else if (v.reaction === 'severe') {
+        dotClass = 'vc-dot-severe';
+      }
+      // Delay badge: >7 days late from scheduledDate
+      var delayBadge = '';
+      if (!v.upcoming && v.scheduledDate && v.date) {
+        var delayDays = Math.floor((new Date(v.date) - new Date(v.scheduledDate)) / 86400000);
+        if (delayDays > 7) delayBadge = '<span class="vc-timeline-delay">D</span>';
+      }
+      var idx = vaccData.indexOf(v);
+      return '<div class="vc-timeline-dot ' + dotClass + '" data-action="vaccTimelineTap" data-arg="' + idx + '" title="' + escAttr(name) + '">' +
+        delayBadge +
+        '</div>';
+    }).filter(Boolean).join('');
+
+    if (dots) {
+      var shortAge = age.replace(' months', 'm').replace(' weeks', 'w').replace(' years', 'y');
+      cols += '<div class="vc-timeline-col">' +
+        '<div class="vc-timeline-label">' + escHtml(shortAge) + '</div>' +
+        '<div class="vc-timeline-dots">' + dots + '</div>' +
+        '</div>';
+    }
+  });
+
+  if (!cols) { el.innerHTML = ''; return; }
+
+  el.innerHTML = '<div class="vc-timeline mt-8 mb-8">' +
+    '<div class="fs-2xs fw-600 tc-lav mb-4">VACCINATION TIMELINE</div>' +
+    '<div class="vc-timeline-scroll">' + cols + '</div>' +
+    '<div class="fs-2xs tc-light mt-4">' +
+    '<span class="vc-timeline-dot vc-dot-none vc-legend-dot"></span> No reaction ' +
+    '<span class="vc-timeline-dot vc-dot-mild vc-legend-dot ml-6"></span> Mild ' +
+    '<span class="vc-timeline-dot vc-dot-moderate vc-legend-dot ml-6"></span> Moderate ' +
+    '<span class="vc-timeline-dot vc-dot-severe vc-legend-dot ml-6"></span> Severe ' +
+    '<span class="vc-timeline-dot vc-dot-nodata vc-legend-dot ml-6"></span> No data ' +
+    '<span class="vc-timeline-dot vc-dot-upcoming vc-legend-dot ml-6"></span> Upcoming' +
+    '</div></div>';
+}
+
+// Timeline dot tap → detail bottom sheet
+var _vaccTimelineDetailEl = null;
+function _vaccShowTimelineDetail(idx) {
+  var v = vaccData[idx];
+  if (!v) return;
+  // Remove existing detail sheet
+  if (_vaccTimelineDetailEl) { _vaccTimelineDetailEl.remove(); _vaccTimelineDetailEl = null; }
+
+  var sev = v.reaction ? v.reaction.charAt(0).toUpperCase() + v.reaction.slice(1) : null;
+  var syms = _vaccSymptomLabels(v.symptoms);
+  var reactionHtml = '';
+  if (sev) {
+    reactionHtml = '<div class="vc-detail-reaction">' +
+      '<div class="fs-sm fw-600">Reaction: ' + escHtml(sev) + '</div>' +
+      (syms ? '<div class="fs-xs tc-mid mt-2">Symptoms: ' + escHtml(syms) + '</div>' : '') +
+      (v.temperature ? '<div class="fs-xs tc-mid mt-2">Temperature: ' + escHtml(v.temperature) + '</div>' : '') +
+      (v.cryDuration ? '<div class="fs-xs tc-mid mt-2">Crying: ' + escHtml(v.cryDuration) + '</div>' : '') +
+      (v.reactionNotes ? '<div class="fs-xs tc-mid mt-2">Notes: ' + escHtml(v.reactionNotes) + '</div>' : '') +
+      '</div>';
+  } else if (!v.upcoming) {
+    reactionHtml = '<div class="vc-detail-reaction"><div class="fs-sm tc-light">No reaction logged</div></div>';
+  }
+
+  var delayInfo = '';
+  if (v.scheduledDate && v.date && v.scheduledDate !== v.date) {
+    var dd = Math.floor((new Date(v.date) - new Date(v.scheduledDate)) / 86400000);
+    if (dd > 0) delayInfo = '<div class="fs-xs tc-amber mt-4">' + zi('clock') + ' Given ' + dd + ' days after scheduled date</div>';
+  }
+
+  var detail = document.createElement('div');
+  detail.className = 'vc-timeline-detail';
+  detail.innerHTML = '<div class="vc-detail-header">' +
+    '<div class="vc-detail-name">' + zi('syringe') + ' ' + escHtml(v.name) + '</div>' +
+    '<button class="ql-modal-close" data-action="vaccCloseTimelineDetail">&times;</button>' +
+    '</div>' +
+    '<div class="vc-detail-date">' + (v.upcoming ? 'Due: ' : 'Given: ') + formatDate(v.date) + ' \u00b7 ' + ageAtDate(v.date) + '</div>' +
+    delayInfo +
+    reactionHtml +
+    '<div class="vc-detail-actions">' +
+    '<button class="btn btn-lav vc-sm-btn" data-action="openVaccEditModal" data-arg="' + idx + '">Edit Date</button>' +
+    (!v.upcoming ? '<button class="btn btn-sky vc-sm-btn" data-action="vaccOpenReactionEdit" data-arg="' + idx + '">' + (v.reaction ? 'Edit Reaction' : 'Log Reaction') + '</button>' : '') +
+    '</div>';
+
+  document.body.appendChild(detail);
+  _vaccTimelineDetailEl = detail;
+  // Close on outside tap
+  setTimeout(function() {
+    document.addEventListener('click', _vaccTimelineDetailOutside);
+  }, 50);
+}
+
+function _vaccCloseTimelineDetail() {
+  if (_vaccTimelineDetailEl) { _vaccTimelineDetailEl.remove(); _vaccTimelineDetailEl = null; }
+  document.removeEventListener('click', _vaccTimelineDetailOutside);
+}
+
+function _vaccTimelineDetailOutside(e) {
+  if (_vaccTimelineDetailEl && !_vaccTimelineDetailEl.contains(e.target) && !e.target.closest('.vc-timeline-dot')) {
+    _vaccCloseTimelineDetail();
+  }
+}
+
+// Open reaction modal for editing existing entry
+function _vaccOpenReactionEdit(idx) {
+  var v = vaccData[idx];
+  if (!v) return;
+  _vaccCloseTimelineDetail();
+  _vaccOpenReactionModal([v.name]);
+  // Store the target entry index for save targeting (older entries outside 48h window)
+  var form = document.querySelector('.vc-reaction-form');
+  if (form) form.dataset.editIdx = idx;
+  // Pre-fill with existing data after modal renders
+  setTimeout(function() {
+    if (v.reaction) {
+      _vaccHandleSeverity(v.reaction);
+    }
+    if (v.symptoms && Array.isArray(v.symptoms)) {
+      v.symptoms.forEach(function(id) {
+        var chip = document.querySelector('.vc-symptom-chip[data-symptom="' + id + '"]');
+        if (chip) chip.classList.add('active');
+      });
+    }
+    if (v.temperature) {
+      var tc = document.querySelector('.vc-temp-chip[data-arg="' + v.temperature + '"]');
+      if (tc) tc.classList.add('active');
+    }
+    if (v.cryDuration) {
+      var cc = document.querySelector('.vc-cry-chip[data-arg="' + v.cryDuration + '"]');
+      if (cc) cc.classList.add('active');
+    }
+    if (v.reactionNotes) {
+      var notes = document.getElementById('vaccReactionNotes');
+      if (notes) notes.value = v.reactionNotes;
+    }
+  }, 100);
+}
+
 // ── VACCINATION COVERAGE CROSS-CHECK ──
 function renderVaccCoverage() {
   const previewEl = document.getElementById('vaccCoveragePreview');
@@ -26621,6 +27265,11 @@ var QA_INTENTS = [
 
   // ═══ MEDICAL ═══
   {
+    id: 'vacc_reaction',
+    triggers: ['vaccination reaction', 'vaccine reaction', 'after vaccination', 'after vaccine', 'after shot', 'side effect', 'vacc reaction'],
+    handler: 'answerVaccReaction'
+  },
+  {
     id: 'vaccine',
     triggers: ['vaccine', 'vaccination', 'immuniz', 'shot', 'injection', 'next vaccine'],
     handler: 'answerVaccine'
@@ -28130,6 +28779,7 @@ function qaExecuteQuery(text) {
       else if (handler === 'answerActivitySleep') answer = qaAnswerActivitySleep(intent.id);
       else if (handler === 'answerMilestoneGeneral') answer = qaAnswerMilestoneGeneral(intent.id);
       else if (handler === 'answerMilestoneSpecific') answer = qaAnswerMilestoneSpecific(intent.id);
+      else if (handler === 'answerVaccReaction') answer = qaAnswerVaccReaction(intent.id);
       else if (handler === 'answerVaccine') answer = qaAnswerVaccine(intent.id);
       else if (handler === 'answerSupplement') answer = qaAnswerSupplement(intent.id);
       else if (handler === 'answerIllness') answer = qaAnswerIllness(intent.id);
@@ -29276,12 +29926,42 @@ function _qaDoctorPrep() {
     });
   }
 
+  // ── Vaccination reaction history (Session B) ──
+  var vaccReactionItems = [];
+  var withReaction = vaccData.filter(function(v) { return !v.upcoming && v.reaction; })
+    .sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+  if (withReaction.length > 0) {
+    withReaction.slice(0, 5).forEach(function(v) {
+      var sev = v.reaction.charAt(0).toUpperCase() + v.reaction.slice(1);
+      var syms = _vaccSymptomLabels(v.symptoms);
+      var signal = v.reaction === 'none' ? 'good' : v.reaction === 'mild' ? 'info' : 'warn';
+      vaccReactionItems.push({ text: v.name + ': ' + sev + (syms ? ' \u2014 ' + syms : ''), signal: signal });
+    });
+    // Add trend analysis for families with 2+ reactions
+    var familiesSeen = new Set();
+    withReaction.forEach(function(v) { familiesSeen.add(_vaccFamilyKey(v.name)); });
+    familiesSeen.forEach(function(fam) {
+      var seriesData = withReaction.filter(function(v) { return _vaccFamilyKey(v.name) === fam; });
+      if (seriesData.length >= 2) {
+        var trend = _vaccReactionTrend(seriesData);
+        if (trend.trend !== 'insufficient') {
+          vaccReactionItems.push({ text: fam + ': ' + trend.label, signal: trend.trend === 'decreasing' ? 'good' : trend.trend === 'increasing' ? 'warn' : 'info' });
+        }
+      }
+    });
+  }
+
+  var sections = [{ label: 'Key Info for Pediatrician', icon: zi('medical'), items: items }];
+  if (vaccReactionItems.length > 0) {
+    sections.push({ label: 'Vaccination Reactions', icon: zi('syringe'), items: vaccReactionItems });
+  }
+
   return {
     title: 'Doctor Visit Prep',
     headline: 'Ziva \u00b7 ' + age.months + ' months',
     icon: 'steth',
     domain: 'sky',
-    sections: [{ label: 'Key Info for Pediatrician', icon: zi('medical'), items: items }],
+    sections: sections,
     actions: [{ id: 'share-summary', label: 'Share', icon: 'link', color: 'indigo' }],
     _summaryData: { label: 'Doctor Visit Prep', highlights: items.filter(function(i) { return i.signal === 'good'; }), concerns: items.filter(function(i) { return i.signal === 'warn' || i.signal === 'action'; }), scores: {} }
   };
@@ -31576,6 +32256,79 @@ function qaAnswerVaccine(intentId) {
     icon: 'syringe', domain: 'sky', title: 'Vaccinations', headline: headline,
     sections: sections,
     confidence: 'Based on ' + allVacc.length + ' vaccination records',
+    dataGap: null
+  };
+}
+
+// ═══ HANDLER: VACCINATION REACTION ═══
+
+function qaAnswerVaccReaction(intentId) {
+  var dataItems = [];
+  var actionItems = [];
+  var completed = vaccData.filter(function(v) { return !v.upcoming && v.date; });
+  var withReaction = completed.filter(function(v) { return v.reaction; });
+
+  if (withReaction.length === 0) {
+    return {
+      icon: 'syringe', domain: 'lav', title: 'Vaccination Reactions',
+      headline: 'No reaction data yet',
+      sections: [{ label: 'STATUS', icon: zi('info'), items: [
+        { text: completed.length + ' vaccinations completed but no reactions logged', signal: 'info' },
+        { text: 'Log reactions from the Medical tab \u2192 Past Vaccinations list', signal: 'action' }
+      ]}],
+      confidence: null, dataGap: 'Log reactions after each vaccination for pattern analysis'
+    };
+  }
+
+  var headline = withReaction.length + ' reactions logged across ' + completed.length + ' doses';
+
+  // Recent reactions (last 5)
+  var recent = withReaction.slice().sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); }).slice(0, 5);
+  recent.forEach(function(v) {
+    var sev = v.reaction.charAt(0).toUpperCase() + v.reaction.slice(1);
+    var syms = _vaccSymptomLabels(v.symptoms);
+    var signal = v.reaction === 'none' ? 'good' : v.reaction === 'mild' ? 'info' : v.reaction === 'moderate' ? 'warn' : 'action';
+    dataItems.push({ text: v.name + ': ' + sev + (syms ? ' \u2014 ' + syms : ''), signal: signal });
+  });
+
+  // Pattern analysis by family
+  var familiesSeen = new Set();
+  withReaction.forEach(function(v) { familiesSeen.add(_vaccFamilyKey(v.name)); });
+  familiesSeen.forEach(function(fam) {
+    var seriesNames = VACC_SERIES[fam];
+    if (!seriesNames || seriesNames.length < 2) return;
+    var seriesData = withReaction.filter(function(v) { return _vaccFamilyKey(v.name) === fam; });
+    if (seriesData.length >= 2) {
+      var trend = _vaccReactionTrend(seriesData);
+      if (trend.trend !== 'insufficient') {
+        dataItems.push({ text: fam + ': ' + trend.label, signal: trend.trend === 'decreasing' ? 'good' : trend.trend === 'increasing' ? 'warn' : 'info' });
+      }
+    }
+  });
+
+  // Most recent correlation
+  var lastReacted = withReaction.filter(function(v) { return v.reaction !== 'none'; })
+    .sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); })[0];
+  if (lastReacted) {
+    var corr = _vaccPostCorrelation(lastReacted.date);
+    if (corr.hasData) {
+      if (corr.sleepDelta !== 0) {
+        actionItems.push({ text: 'After ' + lastReacted.name + ': sleep ' + (corr.sleepDelta > 0 ? '+' : '') + corr.sleepDelta + ' min vs usual', signal: corr.sleepDelta < -30 ? 'warn' : 'info' });
+      }
+      if (corr.feedDelta !== 0) {
+        actionItems.push({ text: 'After ' + lastReacted.name + ': intake ' + (corr.feedDelta > 0 ? '+' : '') + corr.feedDelta + '% vs usual', signal: corr.feedDelta < -15 ? 'warn' : 'info' });
+      }
+    }
+  }
+
+  var sections = [];
+  if (dataItems.length > 0) sections.push({ label: 'REACTION HISTORY', icon: zi('chart'), items: dataItems.slice(0, 8) });
+  if (actionItems.length > 0) sections.push({ label: 'IMPACT ON ROUTINE', icon: zi('link'), items: actionItems.slice(0, 4) });
+
+  return {
+    icon: 'syringe', domain: 'lav', title: 'Vaccination Reactions', headline: headline,
+    sections: sections,
+    confidence: 'Based on ' + withReaction.length + ' reaction logs',
     dataGap: null
   };
 }
