@@ -17252,7 +17252,7 @@ function openVaccEditModal(idx) {
   const entry = vaccData[idx];
   if (!entry) return;
   _vaccEditIdx = idx;
-  document.getElementById('vaccEditName').textContent = zi('syringe') + ' ' + entry.name;
+  document.getElementById('vaccEditName').innerHTML = zi('syringe') + ' ' + escHtml(entry.name);
   document.getElementById('vaccEditDate').value = entry.date;
   document.getElementById('vaccEditReason').value = entry.dateChangeReason || '';
   // Reset flag and reason display
@@ -36637,7 +36637,7 @@ function editSleepEntry(idx) {
     adjustWakeCount(0); // update label
     updateSleepDayLabel('sleepDate', 'sleepDayLabel');
     const btn = document.getElementById('sleepSaveBtn');
-    btn.textContent = zi('check').textContent + ' Update Sleep Log';
+    btn.innerHTML = zi('check') + ' Update Sleep Log';
     document.getElementById('sleepCancelBtn').style.display = '';
     document.getElementById('sleepNightCard').scrollIntoView({ behavior:'smooth', block:'start' });
   } else {
@@ -38531,7 +38531,7 @@ function closeAvatarLightbox() {
   if (lb.classList.contains('open')) {
     lb.classList.remove('open');
     // Reset lightbox name back to default
-    lb.querySelector('.lb-name').textContent = 'Ziva ' + zi('sprout');
+    lb.querySelector('.lb-name').innerHTML = 'Ziva ' + zi('sprout');
     if (history.state?.overlay === 'lightbox') history.back();
   }
 }
