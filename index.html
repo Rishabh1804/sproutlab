@@ -702,12 +702,12 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-delay-reasons {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-6);
+  gap: var(--sp-10);
 }
 .vc-delay-chip {
-  padding: var(--sp-6) var(--sp-12);
+  padding: var(--sp-10) var(--sp-20);
   border-radius: var(--r-full);
-  border: 1.5px solid rgba(110,94,154,0.25);
+  border: 2px solid rgba(110,94,154,0.3);
   background: var(--glass);
   font-size: var(--fs-sm);
   color: var(--text);
@@ -740,17 +740,24 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-assess-danger .vc-assess-header { color: var(--tc-danger); }
 
 /* Reaction modal */
-.vc-reaction-modal { max-width: 420px; }
+.vc-reaction-modal { max-width: 420px; position: relative; }
+.vc-reaction-modal > .ql-modal-close {
+  position: absolute;
+  top: var(--sp-12);
+  right: var(--sp-12);
+  z-index: 1;
+}
 .vc-reaction-severity {
   display: flex;
-  gap: var(--sp-6);
-  flex-wrap: wrap;
-  margin-top: var(--sp-6);
+  gap: var(--sp-8);
+  margin-top: var(--sp-8);
 }
 .vc-severity-chip {
-  padding: var(--sp-6) var(--sp-12);
-  border-radius: var(--r-full);
-  border: 1.5px solid rgba(110,94,154,0.2);
+  flex: 1;
+  text-align: center;
+  padding: var(--sp-10) var(--sp-4);
+  border-radius: var(--r-xl);
+  border: 2px solid rgba(110,94,154,0.2);
   background: var(--glass);
   font-size: var(--fs-sm);
   color: var(--text);
@@ -758,6 +765,10 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   font-weight: 500;
   transition: all var(--ease-fast);
 }
+.vc-severity-chip[data-arg="none"] { border-color: rgba(58,112,96,0.25); background: rgba(58,112,96,0.06); color: var(--tc-sage); }
+.vc-severity-chip[data-arg="mild"] { border-color: rgba(138,101,32,0.25); background: rgba(138,101,32,0.06); color: var(--tc-amber); }
+.vc-severity-chip[data-arg="moderate"] { border-color: rgba(135,90,32,0.25); background: rgba(135,90,32,0.06); color: var(--tc-caution); }
+.vc-severity-chip[data-arg="severe"] { border-color: rgba(158,62,82,0.25); background: rgba(158,62,82,0.06); color: var(--tc-danger); }
 .vc-severity-chip.active {
   font-weight: 700;
 }
@@ -784,13 +795,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-symptom-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-6);
-  margin-top: var(--sp-6);
+  gap: var(--sp-10);
+  margin-top: var(--sp-8);
 }
 .vc-symptom-chip {
-  padding: var(--sp-4) var(--sp-10);
+  padding: var(--sp-8) var(--sp-12);
   border-radius: var(--r-full);
-  border: 1.5px solid rgba(110,94,154,0.15);
+  border: 1.5px solid rgba(110,94,154,0.3);
   background: var(--glass);
   font-size: var(--fs-xs);
   color: var(--mid);
@@ -808,14 +819,14 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 }
 .vc-temp-row, .vc-cry-row {
   display: flex;
-  gap: var(--sp-4);
+  gap: var(--sp-10);
   flex-wrap: wrap;
-  margin-top: var(--sp-6);
+  margin-top: var(--sp-8);
 }
 .vc-temp-chip, .vc-cry-chip {
-  padding: var(--sp-4) var(--sp-10);
+  padding: var(--sp-8) var(--sp-12);
   border-radius: var(--r-full);
-  border: 1.5px solid rgba(110,94,154,0.15);
+  border: 1.5px solid rgba(110,94,154,0.3);
   background: var(--glass);
   font-size: var(--fs-xs);
   color: var(--mid);
@@ -942,20 +953,23 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
 [data-theme="dark"] .vc-delay-card { background: transparent; }
-[data-theme="dark"] .vc-delay-chip { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.3); }
-[data-theme="dark"] .vc-delay-chip.active { background: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-delay-chip { background: rgba(255,255,255,0.1); border-color: rgba(110,94,154,0.55); }
+[data-theme="dark"] .vc-delay-chip.active { background: rgba(110,94,154,0.25); border-color: var(--tc-lav); }
 [data-theme="dark"] .vc-assess-safe { background: rgba(58,112,96,0.12); border-color: var(--tc-sage); }
 [data-theme="dark"] .vc-assess-warn { background: rgba(138,101,32,0.12); border-color: var(--tc-amber); }
 [data-theme="dark"] .vc-assess-danger { background: rgba(158,62,82,0.12); border-color: var(--tc-danger); }
-[data-theme="dark"] .vc-severity-chip { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.25); }
-[data-theme="dark"] .vc-severity-chip[data-arg="none"].active { background: rgba(58,112,96,0.18); }
-[data-theme="dark"] .vc-severity-chip[data-arg="mild"].active { background: rgba(138,101,32,0.18); }
-[data-theme="dark"] .vc-severity-chip[data-arg="moderate"].active { background: rgba(135,90,32,0.18); }
-[data-theme="dark"] .vc-severity-chip[data-arg="severe"].active { background: rgba(158,62,82,0.18); }
-[data-theme="dark"] .vc-symptom-chip { background: rgba(255,255,255,0.05); border-color: rgba(110,94,154,0.2); }
-[data-theme="dark"] .vc-symptom-chip.active { background: rgba(110,94,154,0.18); }
-[data-theme="dark"] .vc-temp-chip, [data-theme="dark"] .vc-cry-chip { background: rgba(255,255,255,0.05); border-color: rgba(110,94,154,0.2); }
-[data-theme="dark"] .vc-temp-chip.active, [data-theme="dark"] .vc-cry-chip.active { background: rgba(110,94,154,0.18); }
+[data-theme="dark"] .vc-severity-chip[data-arg="none"] { background: rgba(58,112,96,0.12); border-color: rgba(58,112,96,0.4); }
+[data-theme="dark"] .vc-severity-chip[data-arg="mild"] { background: rgba(138,101,32,0.12); border-color: rgba(138,101,32,0.4); }
+[data-theme="dark"] .vc-severity-chip[data-arg="moderate"] { background: rgba(135,90,32,0.12); border-color: rgba(135,90,32,0.4); }
+[data-theme="dark"] .vc-severity-chip[data-arg="severe"] { background: rgba(158,62,82,0.12); border-color: rgba(158,62,82,0.4); }
+[data-theme="dark"] .vc-severity-chip[data-arg="none"].active { background: rgba(58,112,96,0.3); border-color: var(--tc-sage); }
+[data-theme="dark"] .vc-severity-chip[data-arg="mild"].active { background: rgba(138,101,32,0.3); border-color: var(--tc-amber); }
+[data-theme="dark"] .vc-severity-chip[data-arg="moderate"].active { background: rgba(135,90,32,0.3); border-color: var(--tc-caution); }
+[data-theme="dark"] .vc-severity-chip[data-arg="severe"].active { background: rgba(158,62,82,0.3); border-color: var(--tc-danger); }
+[data-theme="dark"] .vc-symptom-chip { background: rgba(255,255,255,0.08); border-color: rgba(110,94,154,0.4); }
+[data-theme="dark"] .vc-symptom-chip.active { background: rgba(110,94,154,0.25); border-color: var(--tc-lav); }
+[data-theme="dark"] .vc-temp-chip, [data-theme="dark"] .vc-cry-chip { background: rgba(255,255,255,0.08); border-color: rgba(110,94,154,0.4); }
+[data-theme="dark"] .vc-temp-chip.active, [data-theme="dark"] .vc-cry-chip.active { background: rgba(110,94,154,0.25); border-color: var(--tc-lav); }
 [data-theme="dark"] .vc-severe-alert { background: rgba(158,62,82,0.15); }
 [data-theme="dark"] .vc-guidance-section { background: rgba(110,94,154,0.12); }
 [data-theme="dark"] .vc-guidance-warn { background: rgba(138,101,32,0.12); }
@@ -6270,6 +6284,100 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .iq-chip-new.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
 [data-theme="dark"] .iq-combo-card.starred { border-left-color:var(--tc-sage); }
 [data-theme="dark"] .iq-warning { background:rgba(240,200,120,0.08); }
+
+/* ═══ Tappable QA items ═══ */
+.qa-item-tap {
+  cursor:pointer; border-radius:var(--r-md);
+  padding:var(--sp-4) var(--sp-6); margin:0 calc(-1 * var(--sp-6));
+  transition:background 0.15s ease;
+}
+.qa-item-tap:active { background:rgba(155,168,216,0.08); }
+.qa-item-chevron {
+  flex-shrink:0; font-size:var(--fs-md); color:var(--mid);
+  margin-left:var(--sp-6); font-weight:700;
+}
+[data-theme="dark"] .qa-item-tap:active { background:rgba(155,168,216,0.12); }
+
+/* ═══ Combo Detail Popup ═══ */
+.iq-popup-overlay {
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.45);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; transition:opacity 0.3s ease;
+}
+.iq-popup-overlay.open { opacity:1; }
+.iq-popup-card {
+  background:var(--warm); border-radius:var(--r-xl) var(--r-xl) 0 0;
+  width:100%; max-width:480px; max-height:85vh; overflow-y:auto;
+  padding:var(--sp-20) var(--sp-16) var(--sp-24);
+  transform:translateY(100%); transition:transform 0.3s ease;
+}
+.iq-popup-overlay.open .iq-popup-card { transform:translateY(0); }
+.iq-popup-header {
+  display:flex; align-items:center; gap:var(--sp-10);
+  margin-bottom:var(--sp-12);
+}
+.iq-popup-header .icon { flex-shrink:0; }
+.iq-popup-title {
+  flex:1; font-family:Fraunces,serif; font-size:var(--fs-md);
+  font-weight:700; color:var(--text); line-height:1.3;
+}
+.iq-popup-close {
+  background:none; border:none; font-size:var(--fs-xl);
+  color:var(--mid); cursor:pointer; padding:var(--sp-4);
+  line-height:1;
+}
+.iq-popup-meta {
+  font-size:var(--fs-xs); color:var(--mid);
+  margin-bottom:var(--sp-16); padding-left:var(--sp-4);
+}
+.iq-popup-section {
+  margin-bottom:var(--sp-16);
+  padding:var(--sp-12); border-radius:var(--r-lg);
+  background:var(--glass);
+}
+.iq-popup-section-label {
+  font-size:var(--fs-2xs); font-weight:700;
+  letter-spacing:var(--ls-wide); text-transform:uppercase;
+  color:var(--mid); margin-bottom:var(--sp-8);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.iq-popup-section-label .icon { width:var(--sp-16); height:var(--sp-16); }
+.iq-popup-section-title {
+  font-size:var(--fs-sm); font-weight:700; color:var(--text);
+  margin-bottom:var(--sp-6);
+}
+.iq-popup-section-body {
+  font-size:var(--fs-sm); color:var(--text); line-height:1.5;
+}
+.iq-popup-detail-row {
+  font-size:var(--fs-xs); color:var(--mid);
+  margin-top:var(--sp-8); display:flex; align-items:center; gap:var(--sp-4);
+}
+.iq-popup-detail-row .icon { width:var(--sp-12); height:var(--sp-12); }
+.iq-popup-tip {
+  font-size:var(--fs-sm); line-height:1.4;
+  padding:var(--sp-6) 0;
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+}
+.iq-popup-tip .icon { width:var(--sp-16); height:var(--sp-16); flex-shrink:0; margin-top:1px; }
+.iq-popup-do { color:var(--tc-sage); }
+.iq-popup-dont { color:var(--tc-amber); }
+.iq-popup-nutrient-row {
+  display:flex; flex-wrap:wrap; gap:var(--sp-6);
+}
+.iq-popup-nutrient-chip {
+  font-size:var(--fs-2xs); padding:var(--sp-4) var(--sp-10);
+  border-radius:var(--r-full); background:var(--sky-light);
+  color:var(--tc-sky); font-weight:600; text-transform:capitalize;
+}
+/* Dark mode — combo popup */
+[data-theme="dark"] .iq-popup-overlay { background:rgba(0,0,0,0.65); }
+[data-theme="dark"] .iq-popup-card { background:var(--surface); }
+[data-theme="dark"] .iq-popup-section { background:var(--surface-alt); }
+[data-theme="dark"] .iq-popup-nutrient-chip {
+  background:rgba(168,207,224,0.1); color:var(--tc-sky);
+}
 
 /* ═══ UIB Session 2: Outing Planner ═══ */
 .outing-form {
@@ -12310,6 +12418,7 @@ function init() {
     else if (action === 'vaccTimelineTap') _vaccShowTimelineDetail(parseInt(arg));
     else if (action === 'vaccCloseTimelineDetail') _vaccCloseTimelineDetail();
     else if (action === 'vaccOpenReactionEdit') _vaccOpenReactionEdit(parseInt(arg));
+    else if (action === 'vaccCloseGuidance') closeModal('vaccReactionModal');
     else if (action === 'logVomitingEpisodeEntry') logVomitingEpisodeEntry();
     else if (action === 'deLogStoolPrompt') deLogStoolPrompt(arg);
     else if (action === 'feLogReadingFromInput') feLogReadingFromInput(arg);
@@ -12378,6 +12487,10 @@ function init() {
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }
     else if (action === 'resetQLSheet') resetQLSheet();
+    // ── Ingredient Combo Detail actions ──
+    else if (action === 'iqComboDetail') _iqShowComboPopup(arg);
+    else if (action === 'iqCloseCombo') _iqCloseComboPopup();
+    else if (action === 'iqCloseComboSelf') { if (e.target === btn) _iqCloseComboPopup(); }
     // ── Bug Capture actions ──
     else if (action === 'openBugReporter') { openBugReporter(); closeSettingsSidebar(); }
     else if (action === 'closeBugReporter') closeBugReporter();
@@ -17002,7 +17115,7 @@ function _vaccOpenReactionModal(vaccNames) {
       <textarea id="vaccReactionNotes" class="modal-input vc-reaction-notes" rows="2" placeholder="Any additional observations..."></textarea>
     </div>
 
-    <div id="vaccReactionSaveWrap" class="vc-hidden mt-10">>
+    <div id="vaccReactionSaveWrap" class="vc-hidden mt-10">
       <button class="btn btn-lav" data-action="vaccSaveReaction" id="vaccReactionSaveBtn">Save Reaction Log</button>
     </div>
   </div>`;
@@ -17129,7 +17242,7 @@ function _vaccShowGuidance(vaccNames, severity) {
       <div class="vc-guidance-text">${escHtml(callDoc)}</div>
     </div>` : ''}
     ${noteText ? `<div class="vc-guidance-section"><div class="t-sub">${escHtml(noteText)}</div></div>` : ''}
-    <button class="btn btn-ghost mt-10" data-close-modal="vaccReactionModal">Close</button>
+    <button class="btn btn-ghost mt-10" data-action="vaccCloseGuidance">Close</button>
   </div>`;
 
   // Re-render everything
@@ -27624,6 +27737,24 @@ function _iqHidePicker() {
   if (el) { el.classList.remove('active'); el.innerHTML = ''; }
 }
 
+// ── PREP GUIDE DATABASE ──
+
+var _IQ_PREP_GUIDE = {
+  'khichdi': { title: 'Khichdi', method: 'Pressure cook dal + rice (1:2) with vegs for 3-4 whistles. Mash well. Add ghee on top. Consistency: semi-liquid for 6-7 months, thicker for 8+ months.', time: '20 min', texture: 'Mashed / semi-solid' },
+  'dal_rice': { title: 'Dal Rice', method: 'Cook dal separately (soft, 3-4 whistles). Cook rice soft. Mix together and mash. Add ghee and a pinch of turmeric.', time: '25 min', texture: 'Mashed / semi-solid' },
+  'dal_veg': { title: 'Dal + Vegetable', method: 'Pressure cook dal with chopped vegs for 3-4 whistles. Mash with back of spoon. Add ghee while serving.', time: '20 min', texture: 'Thick puree / mashed' },
+  'porridge': { title: 'Porridge', method: 'Dry roast grain flour lightly. Add water (1:4 ratio), stir continuously on low flame until thick. Add mashed fruit or nut powder for flavour.', time: '10 min', texture: 'Smooth / semi-liquid' },
+  'fruit_mash': { title: 'Fruit Mash', method: 'Peel and deseed fruit. Mash with fork (ripe fruits) or steam and mash (firm fruits like apple, pear). Mix fruits together. Add nut powder if desired.', time: '5 min', texture: 'Smooth mash' },
+  'fruit_nut': { title: 'Fruit + Nut Butter', method: 'Mash ripe fruit with fork. Mix in ground nut powder or homemade nut butter (1 tsp). Serve immediately.', time: '5 min', texture: 'Chunky mash' },
+  'veg_mash': { title: 'Steamed Vegetables', method: 'Steam or boil vegetables until very soft. Mash with fork or blend. Add a drop of ghee. Season with mild spices (jeera, turmeric) if 8+ months.', time: '15 min', texture: 'Soft mash / puree' },
+  'grain_fruit': { title: 'Grain + Fruit', method: 'Cook grain as porridge (roast flour, add water, stir). Cool slightly, then fold in mashed fruit. Do not cook fruit — add fresh for nutrients.', time: '12 min', texture: 'Porridge with chunks' },
+  'grain_fat': { title: 'Grain + Healthy Fat', method: 'Cook grain as porridge or soft-cook cereal. Stir in ghee or ground nut powder while warm. Serve at comfortable temperature.', time: '10 min', texture: 'Smooth porridge' },
+  'curd_fruit': { title: 'Curd + Fruit', method: 'Use fresh homemade curd (room temperature, not cold). Mash fruit and fold into curd. Add ground nuts if desired. Do not heat.', time: '5 min', texture: 'Creamy mash' }
+};
+
+// Module-level storage for combo detail popup
+var _iqComboDetailData = [];
+
 // ── MEAL HISTORY MINING ──
 
 function _iqMineMealCombos(selectedFoods) {
@@ -27676,7 +27807,7 @@ function _iqMineMealCombos(selectedFoods) {
     });
   });
 
-  // Calculate average intake for each combo
+  // Calculate average intake and match relevance ratio for each combo
   results.forEach(function(r) {
     if (r.intakes.length > 0) {
       r.avgIntake = r.intakes.reduce(function(a, b) { return a + b; }, 0) / r.intakes.length;
@@ -27684,11 +27815,16 @@ function _iqMineMealCombos(selectedFoods) {
       r.avgIntake = null;
     }
     r.lastDate = r.dates[r.dates.length - 1];
+    // Relevance: what fraction of the combo's ingredients are from the selected set
+    r.matchRatio = r.bases.length > 0 ? r.matchCount / r.bases.length : 0;
   });
 
-  // Sort by match count (how many selected foods it uses) then frequency
+  // Filter: keep only combos where at least 40% of ingredients are from the selection
+  results = results.filter(function(r) { return r.matchRatio >= 0.4; });
+
+  // Sort by match ratio (relevance) first, then match count, then frequency
   results.sort(function(a, b) {
-    return b.matchCount - a.matchCount || b.count - a.count;
+    return b.matchRatio - a.matchRatio || b.matchCount - a.matchCount || b.count - a.count;
   });
 
   return results;
@@ -27973,6 +28109,219 @@ function _iqGetWarnings(bases) {
   return warnings;
 }
 
+// ── DETECT PREP GUIDE FOR A COMBO ──
+
+function _iqDetectPrepGuide(combo) {
+  var bases = combo.bases || combo.foods || [];
+  var grainList = ['ragi','rice','oats','dalia','suji','poha','bajra','jowar','sabudana','idli','dosa','wheat','barley','amaranth'];
+  var dalList = ['moong dal','masoor dal','toor dal','chana dal','urad dal','rajma','khichdi'];
+  var fruitList = ['banana','apple','pear','mango','avocado','blueberry','blackberry','strawberry','papaya','chikoo','orange','watermelon','muskmelon','date (fruit)','fig','pomegranate','kiwi','grapes'];
+  var fatList = ['ghee','almonds','walnut','flaxseed','sesame','coconut','cashew','peanut'];
+  var dairyList = ['curd','paneer','cheese','butter','yogurt','dahi'];
+
+  var hasGrain = false, hasDal = false, hasFruit = false, hasVeg = false, hasFat = false, hasDairy = false;
+  bases.forEach(function(b) {
+    if (b === 'khichdi') { hasGrain = true; hasDal = true; }
+    else if (grainList.indexOf(b) !== -1) hasGrain = true;
+    else if (dalList.indexOf(b) !== -1) hasDal = true;
+    else if (fruitList.indexOf(b) !== -1) hasFruit = true;
+    else if (fatList.indexOf(b) !== -1) hasFat = true;
+    else if (dairyList.indexOf(b) !== -1) hasDairy = true;
+    else hasVeg = true;
+  });
+
+  // Match to best prep guide pattern
+  if (hasGrain && hasDal && hasVeg) return _IQ_PREP_GUIDE['khichdi'];
+  if (hasGrain && hasDal) return _IQ_PREP_GUIDE['dal_rice'];
+  if (hasDal && hasVeg) return _IQ_PREP_GUIDE['dal_veg'];
+  if (hasDairy && hasFruit) return _IQ_PREP_GUIDE['curd_fruit'];
+  if (hasGrain && hasFruit) return _IQ_PREP_GUIDE['grain_fruit'];
+  if (hasGrain && hasFat) return _IQ_PREP_GUIDE['grain_fat'];
+  if (hasFruit && hasFat) return _IQ_PREP_GUIDE['fruit_nut'];
+  if (hasFruit) return _IQ_PREP_GUIDE['fruit_mash'];
+  if (hasGrain) return _IQ_PREP_GUIDE['porridge'];
+  if (hasVeg) return _IQ_PREP_GUIDE['veg_mash'];
+  return null;
+}
+
+// ── GENERATE DOS AND DON'TS FOR SELECTED FOODS ──
+
+function _iqGetDosAndDonts(selectedFoods) {
+  var dos = [];
+  var donts = [];
+  var mo = getAgeInMonths();
+
+  selectedFoods.forEach(function(food) {
+    var base = _baseFoodName(food);
+    var nut = getNutrition(base);
+
+    // Age warnings
+    var rule = AGE_RULES[base] || AGE_RULES[food];
+    if (rule && mo < rule.minMonth) {
+      donts.push('Avoid ' + food + ' until ' + rule.minMonth + ' months');
+    }
+
+    // Allergen caution
+    var alert = ALLERGENS[base] || ALLERGENS[food];
+    if (alert) {
+      donts.push(food + ': watch for allergic reactions (rash, swelling, vomiting)');
+    }
+
+    // Nut form warning
+    if (['walnut','almonds','cashew','peanut'].indexOf(base) !== -1) {
+      donts.push('Never give ' + food + ' whole \u2014 always grind to fine powder or paste');
+    }
+
+    // Positive tips based on nutrition
+    if (nut && nut.tags) {
+      if (nut.tags.indexOf('iron-rich') !== -1) {
+        dos.push('Pair ' + food + ' with vitamin C (tomato, lemon) to boost iron absorption');
+      }
+      if (nut.tags.indexOf('easy-digest') !== -1) {
+        dos.push(food + ' is easy to digest \u2014 great for evenings or recovery meals');
+      }
+    }
+  });
+
+  // Cross-food rules
+  var tags = [];
+  selectedFoods.forEach(function(f) {
+    var nut = getNutrition(_baseFoodName(f));
+    if (nut && nut.tags) nut.tags.forEach(function(t) { if (tags.indexOf(t) === -1) tags.push(t); });
+  });
+  if (tags.indexOf('iron-rich') !== -1 && tags.indexOf('bone-health') !== -1) {
+    donts.push('Iron + calcium together reduces absorption \u2014 space 2 hours apart');
+  }
+
+  // General best practices
+  if (dos.length === 0) {
+    dos.push('Cook soft and mash well for easy swallowing');
+    dos.push('Introduce one new ingredient at a time, wait 3 days between new foods');
+  }
+
+  // Dedup
+  var seenDo = new Set(); var seenDont = new Set();
+  dos = dos.filter(function(d) { if (seenDo.has(d)) return false; seenDo.add(d); return true; });
+  donts = donts.filter(function(d) { if (seenDont.has(d)) return false; seenDont.add(d); return true; });
+
+  return { dos: dos.slice(0, 3), donts: donts.slice(0, 3) };
+}
+
+// ── COMBO DETAIL POPUP ──
+
+function _iqShowComboPopup(idx) {
+  idx = parseInt(idx);
+  var combo = _iqComboDetailData[idx];
+  if (!combo) return;
+
+  // Remove any existing popup
+  var existing = document.getElementById('iqComboPopup');
+  if (existing) existing.remove();
+
+  var bases = combo.bases || combo.foods || [];
+  var displayName = bases.map(function(b) { return b.charAt(0).toUpperCase() + b.slice(1); }).join(' + ');
+
+  // Prep guide
+  var prep = _iqDetectPrepGuide(combo);
+
+  // Dos and don'ts
+  var dd = _iqGetDosAndDonts(bases);
+
+  // Nutrients from all ingredients
+  var allNutrients = [];
+  bases.forEach(function(b) {
+    var nut = getNutrition(_baseFoodName(b));
+    if (nut && nut.nutrients) {
+      nut.nutrients.forEach(function(n) {
+        if (allNutrients.indexOf(n) === -1) allNutrients.push(n);
+      });
+    }
+  });
+
+  // Meal history info
+  var meta = [];
+  if (combo.count > 0) meta.push('Served ' + combo.count + ' time' + (combo.count > 1 ? 's' : ''));
+  if (combo.avgIntake !== null) meta.push('Avg intake: ' + Math.round(combo.avgIntake * 100) + '%');
+  if (combo.lastDate) meta.push('Last served: ' + combo.lastDate);
+
+  // Build popup HTML
+  var html = '<div class="iq-popup-overlay" id="iqComboPopup" data-action="iqCloseComboSelf">';
+  html += '<div class="iq-popup-card">';
+
+  // Header
+  html += '<div class="iq-popup-header">';
+  html += '<div class="icon icon-peach">' + zi('bowl') + '</div>';
+  html += '<div class="iq-popup-title">' + escHtml(displayName) + '</div>';
+  html += '<button class="iq-popup-close" data-action="iqCloseCombo">&times;</button>';
+  html += '</div>';
+
+  // History meta
+  if (meta.length > 0) {
+    html += '<div class="iq-popup-meta">' + escHtml(meta.join(' \u00b7 ')) + '</div>';
+  }
+
+  // Prep guide section
+  if (prep) {
+    html += '<div class="iq-popup-section">';
+    html += '<div class="iq-popup-section-label"><span class="icon icon-peach">' + zi('chef') + '</span> HOW TO PREPARE</div>';
+    html += '<div class="iq-popup-section-title">' + escHtml(prep.title) + '</div>';
+    html += '<div class="iq-popup-section-body">' + escHtml(prep.method) + '</div>';
+    html += '<div class="iq-popup-detail-row">';
+    html += '<span class="icon icon-sage">' + zi('clock') + '</span> ' + escHtml(prep.time);
+    html += ' &nbsp;\u00b7&nbsp; ';
+    html += '<span class="icon icon-lav">' + zi('spoon') + '</span> ' + escHtml(prep.texture);
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // Dos & Don'ts section
+  if (dd.dos.length > 0 || dd.donts.length > 0) {
+    html += '<div class="iq-popup-section">';
+    html += '<div class="iq-popup-section-label"><span class="icon icon-sage">' + zi('shield') + '</span> DOS & DON\'TS</div>';
+    dd.dos.forEach(function(d) {
+      html += '<div class="iq-popup-tip iq-popup-do"><span class="icon icon-sage">' + zi('check') + '</span> ' + escHtml(d) + '</div>';
+    });
+    dd.donts.forEach(function(d) {
+      html += '<div class="iq-popup-tip iq-popup-dont"><span class="icon icon-amber">' + zi('warn') + '</span> ' + escHtml(d) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Nutrients section
+  if (allNutrients.length > 0) {
+    html += '<div class="iq-popup-section">';
+    html += '<div class="iq-popup-section-label"><span class="icon icon-sky">' + zi('sparkle') + '</span> NUTRIENTS</div>';
+    html += '<div class="iq-popup-nutrient-row">';
+    allNutrients.slice(0, 8).forEach(function(n) {
+      html += '<span class="iq-popup-nutrient-chip">' + escHtml(n) + '</span>';
+    });
+    html += '</div>';
+    html += '</div>';
+  }
+
+  html += '</div></div>';
+
+  // Insert into DOM
+  var popupEl = document.createElement('div');
+  popupEl.innerHTML = html;
+  document.body.appendChild(popupEl.firstChild);
+
+  // Animate open
+  requestAnimationFrame(function() {
+    var overlay = document.getElementById('iqComboPopup');
+    if (overlay) overlay.classList.add('open');
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function _iqCloseComboPopup() {
+  var overlay = document.getElementById('iqComboPopup');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
+}
+
 // ── INGREDIENT MODE ANSWER HANDLER ──
 
 function qaHandleIngredient(classified) {
@@ -28021,7 +28370,10 @@ function qaHandleIngredient(classified) {
   var sections = [];
   var displayFoods = selectedFoods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(', ');
 
-  // Historical combos section
+  // Store all combos for detail popup access
+  var allCombos = [];
+
+  // Historical combos section — now with relevance display
   var histItems = [];
   var topHistory = historicalCombos.slice(0, 3);
   topHistory.forEach(function(combo, idx) {
@@ -28029,9 +28381,12 @@ function qaHandleIngredient(classified) {
     var meta = [];
     if (combo.count > 0) meta.push('Served ' + combo.count + '\u00d7');
     if (combo.avgIntake !== null) meta.push('intake ' + Math.round(combo.avgIntake * 100) + '%');
+    if (combo.matchRatio < 1) meta.push(Math.round(combo.matchRatio * 100) + '% match');
     var text = (idx === 0 ? '\u2605 ' : '') + comboDisplay;
     if (meta.length > 0) text += ' \u2014 ' + meta.join(' \u00b7 ');
-    histItems.push({ text: text, signal: 'good' });
+    var comboIdx = allCombos.length;
+    allCombos.push(combo);
+    histItems.push({ text: text, signal: 'good', action: 'iqComboDetail', actionArg: String(comboIdx) });
     if (combo.enhancedReasons.length > 0) {
       histItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
     }
@@ -28045,12 +28400,14 @@ function qaHandleIngredient(classified) {
     });
   }
 
-  // New combos section
+  // New combos section — tappable for detail popup
   var newItems = [];
-  var topNew = newCombos.slice(0, 2);
+  var topNew = newCombos.slice(0, 3);
   topNew.forEach(function(combo) {
     var comboDisplay = combo.bases.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(' + ');
-    newItems.push({ text: comboDisplay, signal: 'action' });
+    var comboIdx = allCombos.length;
+    allCombos.push(combo);
+    newItems.push({ text: comboDisplay, signal: 'action', action: 'iqComboDetail', actionArg: String(comboIdx) });
     if (combo.enhancedReasons.length > 0) {
       newItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
     }
@@ -28064,8 +28421,36 @@ function qaHandleIngredient(classified) {
     });
   }
 
-  // Best meal fit
+  // HOW TO PREPARE section — based on the best combo
   var bestCombo = topHistory[0] || topNew[0];
+  if (bestCombo) {
+    var prepGuide = _iqDetectPrepGuide(bestCombo);
+    if (prepGuide) {
+      var prepItems = [];
+      prepItems.push({ text: prepGuide.method, signal: 'info' });
+      prepItems.push({ text: 'Time: ' + prepGuide.time + ' \u00b7 Texture: ' + prepGuide.texture, signal: 'neutral' });
+      sections.push({
+        label: 'HOW TO PREPARE',
+        icon: zi('chef'),
+        items: prepItems
+      });
+    }
+  }
+
+  // DOS & DON'TS section
+  var dd = _iqGetDosAndDonts(selectedFoods);
+  if (dd.dos.length > 0 || dd.donts.length > 0) {
+    var ddItems = [];
+    dd.dos.forEach(function(d) { ddItems.push({ text: d, signal: 'good' }); });
+    dd.donts.forEach(function(d) { ddItems.push({ text: d, signal: 'warn' }); });
+    sections.push({
+      label: 'DOS & DON\'TS',
+      icon: zi('shield'),
+      items: ddItems
+    });
+  }
+
+  // Best meal fit
   if (bestCombo) {
     var fits = _iqMealFit(bestCombo);
     if (fits.length > 0) {
@@ -28078,16 +28463,6 @@ function qaHandleIngredient(classified) {
         items: fitItems
       });
     }
-  }
-
-  // Warnings
-  var warnings = _iqGetWarnings(selectedFoods);
-  if (warnings.length > 0) {
-    sections.push({
-      label: 'NOTE',
-      icon: zi('warn'),
-      items: warnings.map(function(w) { return { text: w, signal: 'warn' }; })
-    });
   }
 
   // Synergy highlights in sections
@@ -28117,6 +28492,9 @@ function qaHandleIngredient(classified) {
       ]
     });
   }
+
+  // Store combo detail data for popup access
+  _iqComboDetailData = allCombos;
 
   // Confidence
   var confidence = historicalCombos.length > 0
@@ -28830,9 +29208,17 @@ function qaRenderAnswer(container, answer) {
         sec.items.forEach(function(item) {
           var cls = signalClasses[item.signal] || 'qa-item-neutral';
           var icon = item.icon || signalIcons[item.signal] || '·';
-          html += '<div class="qa-item ' + cls + '">';
+          var actionAttr = '';
+          var tapCls = '';
+          if (item.action) {
+            actionAttr = ' data-action="' + escHtml(item.action) + '"';
+            if (item.actionArg) actionAttr += ' data-arg="' + escHtml(item.actionArg) + '"';
+            tapCls = ' qa-item-tap';
+          }
+          html += '<div class="qa-item ' + cls + tapCls + '"' + actionAttr + '>';
           html += '<span class="qa-item-signal">' + icon + '</span>';
           html += '<span class="qa-item-text">' + escHtml(item.text) + '</span>';
+          if (item.action) html += '<span class="qa-item-chevron">\u203a</span>';
           html += '</div>';
         });
       }
