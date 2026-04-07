@@ -24562,7 +24562,11 @@ var QA_SUGGEST_POOL = [
   { text: 'This week vs last week', color: 'indigo' },
   { text: 'How old is she?', color: 'rose' },
   { text: 'Logging streak', color: 'amber' },
-  { text: 'Tomorrow plan', color: 'lav' }
+  { text: 'Tomorrow plan', color: 'lav' },
+  // Ingredient picker
+  { text: 'What can I make?', color: 'peach' },
+  { text: 'Ingredient picker', color: 'peach' },
+  { text: 'Meal combo ideas', color: 'peach' }
 ];
 
 function _qaUpdateSuggestions(text) {
@@ -25524,7 +25528,8 @@ var QA_INTENTS = [
   },
   {
     id: 'food_nutrient',
-    triggers: ['iron', 'calcium', 'protein', 'vitamin', 'nutrient', 'nutrition', 'deficiency', 'missing'],
+    triggers: ['iron', 'calcium', 'protein', 'vitamin', 'nutrient', 'nutrition', 'deficiency', 'missing',
+               'iron rich', 'calcium rich', 'protein rich', 'zinc rich', 'fibre rich', 'vitamin rich', 'nutrient gap'],
     handler: 'answerNutrientGap'
   },
   {
@@ -25761,6 +25766,11 @@ function qaClassifyInput(text) {
   }
   if (/\btomorrow\b.*\bplan\b|\bwhat.*tomorrow\b/.test(lower)) {
     return { mode: 'planning', subtype: 'tomorrow', raw: text };
+  }
+
+  // 8b. INGREDIENT PICKER — "what can I make", "ingredient picker", "food combo"
+  if (/\bpicker\b|\bingredient\b|\bwhat can (i|we) make\b|\bfood combo\b|\bmeal idea\b|\bcombination\b|\brecipe idea\b|\bcombo\b/.test(lower)) {
+    return { mode: 'picker', raw: text };
   }
 
   // 9. Default → QA (existing intent matching)
@@ -26713,7 +26723,7 @@ function qaHandleSymptom(classified) {
 // ── INTENT MATCHING ──
 
 function qaMatchIntent(input) {
-  var text = input.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var text = input.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var tokens = text.split(/\s+/);
 
   var bestIntent = null;
@@ -26819,6 +26829,7 @@ function qaGetContextualQuickQuestions() {
 
   // Fill defaults if under 5
   var defaults = [
+    { text: 'What can I make?', intent: '_uib_picker' },
     { text: 'Her routine', intent: '_isl_routine' },
     { text: 'What does she like?', intent: '_isl_likes' },
     { text: 'Is she on track?', intent: 'milestone_general' }
@@ -27043,6 +27054,10 @@ function qaExecuteQuery(text) {
     } else if (classified.mode === 'planning') {
       _uibShowModeIndicator('planning');
       answer = _qaHandlePlanning(classified);
+    } else if (classified.mode === 'picker') {
+      _uibShowModeIndicator('ingredient');
+      _iqRenderPicker();
+      return;
     } else if (classified.mode === 'ingredient') {
       _uibShowModeIndicator('ingredient');
       answer = qaHandleIngredient(classified);
