@@ -631,6 +631,338 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 
 .vacc-log-item:last-child { border:none; }
 
+/* ── Vaccination Intelligence Upgrade CSS ── */
+#vaccOriginalContent {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-16);
+  width: 100%;
+}
+#vaccCompletionOverlay { width: 100%; }
+.vc-complete-card {
+  background: var(--lav-light);
+  border-radius: var(--r-xl);
+  padding: var(--sp-16);
+  border: 1.5px solid rgba(110,94,154,0.18);
+}
+.vc-complete-multi { padding: var(--sp-16) var(--sp-12); }
+.vc-complete-title {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--tc-lav);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+.vc-complete-q {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+  margin-top: var(--sp-10);
+}
+.vc-complete-actions {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: var(--sp-12);
+  flex-wrap: wrap;
+}
+.vc-complete-checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  margin-top: var(--sp-8);
+}
+.vc-complete-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  font-size: var(--fs-base);
+  color: var(--text);
+  padding: var(--sp-6) var(--sp-10);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  cursor: pointer;
+  user-select: none;
+}
+.vc-complete-check.checked { background: rgba(110,94,154,0.1); }
+.vc-check-input { accent-color: var(--tc-lav); width: var(--sp-16); height: var(--sp-16); }
+
+/* Delay card */
+.vc-delay-card {
+  background: var(--lav-light);
+  border-radius: var(--r-xl);
+  padding: var(--sp-16);
+}
+.vc-delay-q {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-8);
+}
+.vc-delay-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-6);
+}
+.vc-delay-chip {
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  border: 1.5px solid rgba(110,94,154,0.25);
+  background: var(--glass);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--ease-fast), border-color var(--ease-fast);
+}
+.vc-delay-chip:hover, .vc-delay-chip.active {
+  background: rgba(110,94,154,0.15);
+  border-color: var(--tc-lav);
+  color: var(--tc-lav);
+  font-weight: 600;
+}
+.vc-delay-assessment {
+  border-radius: var(--r-lg);
+  padding: var(--sp-12);
+  margin-top: var(--sp-8);
+}
+.vc-assess-safe { background: var(--sage-light); border-left: 3px solid var(--tc-sage); }
+.vc-assess-warn { background: var(--amber-light); border-left: 3px solid var(--tc-amber); }
+.vc-assess-danger { background: var(--rose-light); border-left: 3px solid var(--tc-danger); }
+.vc-assess-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.vc-assess-safe .vc-assess-header { color: var(--tc-sage); }
+.vc-assess-warn .vc-assess-header { color: var(--tc-amber); }
+.vc-assess-danger .vc-assess-header { color: var(--tc-danger); }
+
+/* Reaction modal */
+.vc-reaction-modal { max-width: 420px; }
+.vc-reaction-severity {
+  display: flex;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+  margin-top: var(--sp-6);
+}
+.vc-severity-chip {
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  border: 1.5px solid rgba(110,94,154,0.2);
+  background: var(--glass);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all var(--ease-fast);
+}
+.vc-severity-chip.active {
+  font-weight: 700;
+}
+.vc-severity-chip[data-arg="none"].active {
+  background: var(--sage-light);
+  border-color: var(--tc-sage);
+  color: var(--tc-sage);
+}
+.vc-severity-chip[data-arg="mild"].active {
+  background: var(--amber-light);
+  border-color: var(--tc-amber);
+  color: var(--tc-amber);
+}
+.vc-severity-chip[data-arg="moderate"].active {
+  background: var(--peach-light);
+  border-color: var(--tc-caution);
+  color: var(--tc-caution);
+}
+.vc-severity-chip[data-arg="severe"].active {
+  background: var(--rose-light);
+  border-color: var(--tc-danger);
+  color: var(--tc-danger);
+}
+.vc-symptom-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-6);
+  margin-top: var(--sp-6);
+}
+.vc-symptom-chip {
+  padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full);
+  border: 1.5px solid rgba(110,94,154,0.15);
+  background: var(--glass);
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  transition: all var(--ease-fast);
+}
+.vc-symptom-chip.active {
+  background: var(--lav-light);
+  border-color: var(--tc-lav);
+  color: var(--tc-lav);
+  font-weight: 600;
+}
+.vc-temp-row, .vc-cry-row {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-top: var(--sp-6);
+}
+.vc-temp-chip, .vc-cry-chip {
+  padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full);
+  border: 1.5px solid rgba(110,94,154,0.15);
+  background: var(--glass);
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  cursor: pointer;
+  transition: all var(--ease-fast);
+}
+.vc-temp-chip.active, .vc-cry-chip.active {
+  background: var(--lav-light);
+  border-color: var(--tc-lav);
+  color: var(--tc-lav);
+  font-weight: 600;
+}
+.vc-severe-alert {
+  margin-top: var(--sp-10);
+  padding: var(--sp-12);
+  background: var(--rose-light);
+  border-radius: var(--r-lg);
+  border-left: 3px solid var(--tc-danger);
+}
+.vc-severe-msg {
+  font-size: var(--fs-sm);
+  color: var(--tc-danger);
+  font-weight: 600;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-6);
+}
+.vc-reaction-notes {
+  resize: vertical;
+  min-height: 48px;
+}
+.vc-reaction-details { animation: fadeIn 0.2s ease; }
+
+/* Post-save guidance */
+.vc-guidance-card { padding: var(--sp-4) 0; }
+.vc-guidance-section {
+  margin-top: var(--sp-10);
+  padding: var(--sp-12);
+  border-radius: var(--r-lg);
+  background: var(--lav-light);
+}
+.vc-guidance-warn {
+  background: var(--amber-light);
+}
+.vc-guidance-text {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  margin-top: var(--sp-4);
+  line-height: var(--lh-relaxed);
+}
+
+/* Monitoring card */
+.vc-monitor-card {
+  background: var(--lav-light);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-16);
+  border: 1.5px solid rgba(110,94,154,0.15);
+  margin-bottom: var(--sp-8);
+}
+.vc-monitor-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-size: var(--fs-base);
+  color: var(--tc-lav);
+}
+.vc-monitor-status { margin-top: var(--sp-8); }
+.vc-monitor-guide { margin-top: var(--sp-6); }
+.vc-monitor-ok {
+  font-size: var(--fs-xs);
+  color: var(--tc-sage);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.vc-monitor-watch {
+  font-size: var(--fs-xs);
+  color: var(--tc-caution);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+.vc-monitor-actions {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: var(--sp-10);
+  flex-wrap: wrap;
+}
+.vc-monitor-logged {
+  background: var(--sage-light);
+  border-color: rgba(58,112,96,0.15);
+}
+.vc-monitor-logged .vc-monitor-header { color: var(--tc-sage); }
+
+/* Overdue buttons */
+.vc-overdue-btns {
+  display: flex;
+  gap: var(--sp-6);
+  margin-top: var(--sp-6);
+  flex-shrink: 0;
+}
+.vc-sm-btn {
+  padding: var(--sp-6) var(--sp-12);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+/* Booked pill (replaces inline styles) */
+.vc-booked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full);
+  background: var(--surface-sage);
+  cursor: pointer;
+}
+.vc-booked-detail { font-size: var(--fs-xs); font-weight: 400; color: var(--mid); }
+.vc-booked-detail-light { font-size: var(--fs-xs); font-weight: 400; color: var(--light); }
+.vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
+
+/* ── Dark mode: Vaccination Upgrade ── */
+[data-theme="dark"] .vc-complete-card { background: rgba(110,94,154,0.12); border-color: rgba(110,94,154,0.25); }
+[data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
+[data-theme="dark"] .vc-delay-card { background: rgba(110,94,154,0.12); }
+[data-theme="dark"] .vc-delay-chip { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.3); }
+[data-theme="dark"] .vc-delay-chip.active { background: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-assess-safe { background: rgba(58,112,96,0.12); border-color: var(--tc-sage); }
+[data-theme="dark"] .vc-assess-warn { background: rgba(138,101,32,0.12); border-color: var(--tc-amber); }
+[data-theme="dark"] .vc-assess-danger { background: rgba(158,62,82,0.12); border-color: var(--tc-danger); }
+[data-theme="dark"] .vc-severity-chip { background: rgba(255,255,255,0.06); border-color: rgba(110,94,154,0.25); }
+[data-theme="dark"] .vc-severity-chip[data-arg="none"].active { background: rgba(58,112,96,0.18); }
+[data-theme="dark"] .vc-severity-chip[data-arg="mild"].active { background: rgba(138,101,32,0.18); }
+[data-theme="dark"] .vc-severity-chip[data-arg="moderate"].active { background: rgba(135,90,32,0.18); }
+[data-theme="dark"] .vc-severity-chip[data-arg="severe"].active { background: rgba(158,62,82,0.18); }
+[data-theme="dark"] .vc-symptom-chip { background: rgba(255,255,255,0.05); border-color: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-symptom-chip.active { background: rgba(110,94,154,0.18); }
+[data-theme="dark"] .vc-temp-chip, [data-theme="dark"] .vc-cry-chip { background: rgba(255,255,255,0.05); border-color: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-temp-chip.active, [data-theme="dark"] .vc-cry-chip.active { background: rgba(110,94,154,0.18); }
+[data-theme="dark"] .vc-severe-alert { background: rgba(158,62,82,0.15); }
+[data-theme="dark"] .vc-guidance-section { background: rgba(110,94,154,0.12); }
+[data-theme="dark"] .vc-guidance-warn { background: rgba(138,101,32,0.12); }
+[data-theme="dark"] .vc-monitor-card { background: rgba(110,94,154,0.1); border-color: rgba(110,94,154,0.2); }
+[data-theme="dark"] .vc-monitor-logged { background: rgba(58,112,96,0.1); border-color: rgba(58,112,96,0.2); }
+[data-theme="dark"] .vc-booked-pill { background: rgba(58,112,96,0.15); }
+
 /* ── Medications ── */
 .icon-mint { background:var(--sage-light); }
 .med-list { display:flex; flex-direction:column; gap:var(--sp-8); }
@@ -6782,18 +7114,21 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         </div>
         <div class="help-tip" id="help-vacc">Follows the Indian Academy of Pediatrics (IAP) schedule. Mild fever, fussiness, and swelling at the injection site are normal for 1-2 days after vaccination. Give paracetamol only if the doctor advises. Contact your paediatrician if fever exceeds 102°F or lasts more than 48 hours.</div>
         <div class="vacc-card" id="vaccCardInner">
-          <div class="countdown-circle" id="vaccCountdownCircle">
-            <div class="countdown-num" id="vaccCountdown">—</div>
-            <div class="countdown-unit">days</div>
+          <div id="vaccOriginalContent">
+            <div class="countdown-circle" id="vaccCountdownCircle">
+              <div class="countdown-num" id="vaccCountdown">—</div>
+              <div class="countdown-unit">days</div>
+            </div>
+            <div class="vacc-info">
+              <h3>Next Vaccination</h3>
+              <p id="vaccNextDate">Loading...</p>
+              <p id="vaccNextName" style="margin-top:4px;font-size:var(--fs-sm);color:var(--tc-lav);font-weight:600;cursor:pointer;" data-action="toggleVaccInfo"></p>
+              <span id="vaccNameTapHint" style="font-size:var(--fs-xs);color:var(--light);display:none;">Tap for details ▾</span>
+              <div id="vaccBookingStatus" style="display:none;margin-top:6px;"></div>
+            </div>
+            <button id="vaccUpcomingEditBtn" data-action="editUpcomingVaccDate" style="background:none;border:none;font-size:var(--icon-base);color:var(--tc-lav);padding:6px;cursor:pointer;align-self:flex-start;" aria-label="Edit date" title="Edit date">Edit</button>
           </div>
-          <div class="vacc-info">
-            <h3>Next Vaccination</h3>
-            <p id="vaccNextDate">Loading...</p>
-            <p id="vaccNextName" style="margin-top:4px;font-size:var(--fs-sm);color:var(--tc-lav);font-weight:600;cursor:pointer;" data-action="toggleVaccInfo"></p>
-            <span id="vaccNameTapHint" style="font-size:var(--fs-xs);color:var(--light);display:none;">Tap for details ▾</span>
-            <div id="vaccBookingStatus" style="display:none;margin-top:6px;"></div>
-          </div>
-          <button id="vaccUpcomingEditBtn" data-action="editUpcomingVaccDate" style="background:none;border:none;font-size:var(--icon-base);color:var(--tc-lav);padding:6px;cursor:pointer;align-self:flex-start;" aria-label="Edit date" title="Edit date">Edit</button>
+          <div id="vaccCompletionOverlay" style="display:none;"></div>
         </div>
         <div id="vaccInfoPanel" style="display:none;"></div>
 
@@ -8922,18 +9257,25 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div style="font-size:var(--fs-base);font-weight:600;color:var(--tc-lav);" id="vaccEditName"></div>
       <div>
         <label class="micro-label">Date given</label>
-        <input type="date" id="vaccEditDate" class="modal-input" oninput="checkVaccDateShift()">
+        <input type="date" id="vaccEditDate" class="modal-input" data-action="checkVaccDateShift">
       </div>
       <div id="vaccEditDateFlag" style="display:none;"></div>
       <div id="vaccEditReasonWrap" style="display:none;">
         <label class="micro-label">Reason for date change</label>
-        <input type="text" id="vaccEditReason" class="modal-input" placeholder="e.g. baby was unwell, doctor rescheduled..." oninput="checkVaccDateShift()">
+        <input type="text" id="vaccEditReason" class="modal-input" placeholder="e.g. baby was unwell, doctor rescheduled..." data-action="checkVaccDateShift">
       </div>
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" data-close-modal="vaccEditModal">Cancel</button>
       <button class="btn btn-lav" id="vaccEditSaveBtn" data-action="saveVaccEdit">Save</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="vaccReactionModal">
+  <div class="modal vc-reaction-modal">
+    <button class="modal-close-x" data-close-modal="vaccReactionModal">&times;</button>
+    <div id="vaccReactionContent"></div>
   </div>
 </div>
 
@@ -11610,6 +11952,61 @@ function init() {
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
     else if (action === 'markVaccBooked') markVaccBooked(arg);
+    else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
+    else if (action === 'vaccMarkDoneMulti') {
+      const checks = document.querySelectorAll('.vc-complete-checks .vc-check-input:checked');
+      const names = [];
+      checks.forEach(cb => { const lbl = cb.closest('.vc-complete-check'); if (lbl) { const idx = parseInt(lbl.dataset.vaccIdx); if (vaccData[idx]) names.push(vaccData[idx].name); } });
+      if (names.length) _vaccMarkDone(names, arg);
+    }
+    else if (action === 'vaccShowDelay') {
+      const origC = document.getElementById('vaccOriginalContent');
+      const ovrl = document.getElementById('vaccCompletionOverlay');
+      if (origC) origC.style.display = 'none';
+      if (ovrl) {
+        ovrl.innerHTML = _vaccRenderDelayCard(arg);
+        ovrl.style.display = '';
+      }
+      _vaccUpdateDelayAssessment(arg);
+      const dInput = document.getElementById('vaccDelayDateInput');
+      if (dInput) dInput.addEventListener('input', () => _vaccUpdateDelayAssessment(arg));
+    }
+    else if (action === 'vaccDelayReason') {
+      document.querySelectorAll('.vc-delay-chip').forEach(c => c.classList.toggle('active', c.dataset.arg === arg));
+      _vaccDelayReason = arg;
+    }
+    else if (action === 'vaccSaveDelay') _vaccSaveDelay(arg);
+    else if (action === 'vaccCancelDelay') { renderVacc(); }
+    else if (action === 'vaccSelectSeverity') _vaccHandleSeverity(arg);
+    else if (action === 'vaccToggleSymptom') _vaccToggleSymptom(btn);
+    else if (action === 'vaccSelectTemp') _vaccSelectChip(btn, 'vc-temp-chip');
+    else if (action === 'vaccSelectCry') _vaccSelectChip(btn, 'vc-cry-chip');
+    else if (action === 'vaccSaveReaction') _vaccSaveReaction();
+    else if (action === 'vaccLogReaction') {
+      const names = arg ? JSON.parse(arg) : [];
+      _vaccOpenReactionModal(names);
+    }
+    else if (action === 'vaccAllGood') {
+      const names = arg ? JSON.parse(arg) : [];
+      const todayStr = today();
+      const yesterdayStr = _offsetDateStr(todayStr, -1);
+      names.forEach(name => {
+        const v = vaccData.find(e => e.name === name && !e.upcoming && !e.reaction && (e.date === todayStr || e.date === yesterdayStr));
+        if (v) { v.reaction = 'none'; v.reactionLoggedAt = new Date().toISOString(); }
+      });
+      save(KEYS.vacc, vaccData);
+      _islMarkDirty('medical');
+      renderRemindersAndAlerts();
+      renderHomeContextAlerts();
+    }
+    else if (action === 'vaccOverdueDone') {
+      const names = arg ? JSON.parse(arg) : [];
+      _vaccMarkDone(names, arg2);
+    }
+    else if (action === 'vaccOverdueDelay') {
+      switchTab('track');
+      setTimeout(() => { switchTrackSub('medical'); }, 100);
+    }
     else if (action === 'logVomitingEpisodeEntry') logVomitingEpisodeEntry();
     else if (action === 'deLogStoolPrompt') deLogStoolPrompt(arg);
     else if (action === 'feLogReadingFromInput') feLogReadingFromInput(arg);
@@ -11716,6 +12113,22 @@ function init() {
       } else {
         openQuickModal('feed');
       }
+    }
+  });
+
+  // ── Input event delegation (for data-action on input fields) ──
+  document.addEventListener('input', (e) => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'checkVaccDateShift') checkVaccDateShift();
+  });
+
+  // ── Checkbox delegation (vacc completion multi-check) ──
+  document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('vc-check-input')) {
+      const label = e.target.closest('.vc-complete-check');
+      if (label) label.classList.toggle('checked', e.target.checked);
     }
   });
 
@@ -12358,6 +12771,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 function renderHome() {
   _clearModifierCache();
+  _postVaccCached = null;
   updateHeader();
   renderHomeFeverBanner();
   renderHomeDiarrhoeaBanner();
@@ -12455,8 +12869,52 @@ function renderRemindersAndAlerts() {
   const yd = new Date(); yd.setDate(yd.getDate() - 1);
   const ydKey = toDateStr(yd);
 
-  // ── 1. VACCINATION OVERDUE / URGENT ──
-  const upcoming = vaccData.find(v => v.upcoming);
+  // ── 1. VACCINATION OVERDUE / URGENT + POST-VACC MONITORING ──
+  const todayStr2 = today();
+  const yesterdayStr2 = _offsetDateStr(todayStr2, -1);
+  const upcomingAll = vaccData.filter(v => v.upcoming);
+
+  // Group overdue vaccinations by date
+  const overdueGroups = {};
+  upcomingAll.forEach(v => {
+    const daysTo = Math.ceil((new Date(v.date) - new Date()) / 86400000);
+    if (daysTo < 0) { // Only past-due (not same day — same day is Medical tab only)
+      const key = v.date;
+      if (!overdueGroups[key]) overdueGroups[key] = [];
+      overdueGroups[key].push(v);
+    }
+  });
+
+  for (const [dateKey, group] of Object.entries(overdueGroups)) {
+    const daysAgo = Math.floor((new Date(todayStr2) - new Date(dateKey)) / 86400000);
+    const agoLabel = daysAgo === 1 ? '1 day ago' : daysAgo + ' days ago';
+    const names = group.map(v => v.name);
+    const namesJson = escAttr(JSON.stringify(names));
+    if (group.length === 1) {
+      html += `<div class="info-strip is-danger">
+        <span class="info-strip-icon"><svg class="zi"><use href="#zi-siren"/></svg></span>
+        <div class="flex-1"><strong class="tc-danger">${escHtml(group[0].name)} overdue</strong>
+        <div class="t-sub">Was due ${formatDate(dateKey)} (${agoLabel})</div></div>
+        <div class="vc-overdue-btns">
+          <button class="btn btn-sage vc-sm-btn" data-action="vaccOverdueDone" data-arg='${namesJson}' data-arg2="${escAttr(dateKey)}">Mark done</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay">Reschedule</button>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="info-strip is-danger">
+        <span class="info-strip-icon"><svg class="zi"><use href="#zi-siren"/></svg></span>
+        <div class="flex-1"><strong class="tc-danger">${group.length} vaccinations overdue</strong>
+        <div class="t-sub">${names.map(n => escHtml(n)).join(', ')} &middot; was due ${formatDate(dateKey)} (${agoLabel})</div></div>
+        <div class="vc-overdue-btns">
+          <button class="btn btn-sage vc-sm-btn" data-action="vaccOverdueDone" data-arg='${namesJson}' data-arg2="${escAttr(dateKey)}">Mark all done</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccOverdueDelay">Reschedule</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Upcoming but not overdue — booked/urgent alerts
+  const upcoming = upcomingAll.sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
   if (upcoming) {
     const daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
     const bookedData = load(KEYS.vaccBooked, null);
@@ -12465,40 +12923,68 @@ function renderRemindersAndAlerts() {
     const hasApptDetails = isBooked && bookedData.apptDate;
     const apptDaysTo = hasApptDetails ? Math.ceil((new Date(bookedData.apptDate) - new Date()) / 86400000) : null;
 
-    if (isBooked && hasApptDetails) {
-      // Booked with details — only show on appointment day or if overdue
-      if (apptDaysTo <= 0) {
-        html += `<div class="info-strip is-success">
-          <span class="info-strip-icon"><svg class="zi"><use href="#zi-syringe"/></svg></span>
-          <div><strong class="tc-sage">${apptDaysTo === 0 ? 'Today' : 'Overdue'} — ${escHtml(upcoming.name)}</strong>
-          <div class="t-sub">${apptLabel}</div></div>
+    if (daysTo >= 0) {
+      if (isBooked && hasApptDetails) {
+        if (apptDaysTo <= 0) {
+          html += `<div class="info-strip is-success">
+            <span class="info-strip-icon"><svg class="zi"><use href="#zi-syringe"/></svg></span>
+            <div><strong class="tc-sage">${apptDaysTo === 0 ? 'Today' : 'Overdue'} \u2014 ${escHtml(upcoming.name)}</strong>
+            <div class="t-sub">${apptLabel}</div></div>
+          </div>`;
+        }
+      } else if (isBooked && !hasApptDetails) {
+        html += `<div class="info-strip is-success ptr" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
+          <span class="info-strip-icon"><svg class="zi"><use href="#zi-check"/></svg></span>
+          <div class="flex-1"><strong class="tc-sage">Booked \u2014 ${escHtml(upcoming.name)}</strong>
+          <div class="t-sub">Tap to add appointment date & time</div></div>
+        </div>`;
+      } else if (daysTo <= 7) {
+        html += `<div class="info-strip is-danger">
+          <span class="info-strip-icon"><svg class="zi"><use href="#zi-dot-red"/></svg></span>
+          <div class="flex-1"><strong class="tc-danger">${daysTo} day${daysTo > 1 ? 's' : ''} to ${escHtml(upcoming.name)}</strong>
+          <div class="t-sub">Due ${formatDate(upcoming.date)}</div></div>
+          <button class="btn btn-sage vc-sm-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">Book</button>
         </div>`;
       }
-      // Otherwise don't show — appointment is set, no action needed until the day
-    } else if (isBooked && !hasApptDetails) {
-      // Booked but no details — nudge to add details
-      html += `<div class="info-strip is-success ptr"  data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
-        <span class="info-strip-icon"><svg class="zi"><use href="#zi-check"/></svg></span>
-        <div class="flex-1"><strong class="tc-sage">Booked — ${escHtml(upcoming.name)}</strong>
-        <div class="t-sub">Tap to add appointment date & time</div></div>
-      </div>`;
-    } else if (daysTo <= 0) {
-      // Overdue, not booked
-      html += `<div class="info-strip is-danger">
-        <span class="info-strip-icon"><svg class="zi"><use href="#zi-siren"/></svg></span>
-        <div class="flex-1"><strong class="tc-danger">Vaccination overdue!</strong>
-        <div class="t-sub">${escHtml(upcoming.name)} · was due ${formatDate(upcoming.date)}</div></div>
-        <button class="btn btn-sage" style="padding:6px 14px;font-size:var(--fs-xs);white-space:nowrap;" onclick="event.stopPropagation();markVaccBooked('${escAttr(upcoming.name)}')">Book</button>
-      </div>`;
-    } else if (daysTo <= 7) {
-      // Due soon, not booked
-      html += `<div class="info-strip is-danger">
-        <span class="info-strip-icon"><svg class="zi"><use href="#zi-dot-red"/></svg></span>
-        <div class="flex-1"><strong class="tc-danger">${daysTo} day${daysTo > 1 ? 's' : ''} to ${escHtml(upcoming.name)}</strong>
-        <div class="t-sub">Due ${formatDate(upcoming.date)}</div></div>
-        <button class="btn btn-sage" style="padding:6px 14px;font-size:var(--fs-xs);white-space:nowrap;" onclick="event.stopPropagation();markVaccBooked('${escAttr(upcoming.name)}')">Book</button>
-      </div>`;
     }
+  }
+
+  // ── 1b. POST-VACCINATION MONITORING (48h window) ──
+  const recentVacc = vaccData.filter(v =>
+    !v.upcoming && !v.reaction && (v.date === todayStr2 || v.date === yesterdayStr2)
+  );
+  if (recentVacc.length > 0) {
+    const names = recentVacc.map(v => v.name);
+    const namesJson = escAttr(JSON.stringify(names));
+    const givenLabel = recentVacc[0].date === todayStr2 ? 'given today' : 'given yesterday';
+    const namesLabel = names.length === 1 ? escHtml(names[0]) : names.length + ' vaccinations';
+    html += `<div class="vc-monitor-card">
+      <div class="vc-monitor-header">${zi('syringe')} <strong>${namesLabel} ${givenLabel}</strong></div>
+      <div class="vc-monitor-status">
+        <div class="t-sub">Monitor for the next 48 hours</div>
+        <div class="vc-monitor-guide">
+          <div class="vc-monitor-ok">${zi('check')} Normal: mild fever, fussiness, sleepiness</div>
+          <div class="vc-monitor-watch">${zi('warn')} Watch for: fever &gt;102\u00b0F, rash, inconsolable crying, refusal to feed</div>
+        </div>
+      </div>
+      <div class="vc-monitor-actions">
+        <button class="btn btn-lav vc-sm-btn" data-action="vaccLogReaction" data-arg='${namesJson}'>Log Reaction</button>
+        <button class="btn btn-ghost vc-sm-btn" data-action="vaccAllGood" data-arg='${namesJson}'>All Good \u2014 No Reaction</button>
+      </div>
+    </div>`;
+  }
+  // Show summary if reaction already logged
+  const loggedRecent = vaccData.filter(v =>
+    !v.upcoming && v.reaction && v.reaction !== 'none' && (v.date === todayStr2 || v.date === yesterdayStr2)
+  );
+  if (loggedRecent.length > 0) {
+    const rNames = [...new Set(loggedRecent.map(v => v.name))];
+    const symptoms = [...new Set(loggedRecent.flatMap(v => v.symptoms || []))];
+    html += `<div class="vc-monitor-card vc-monitor-logged">
+      <div class="vc-monitor-header">${zi('syringe')} <strong>${loggedRecent[0].reaction} reaction logged</strong></div>
+      <div class="t-sub">${rNames.map(n => escHtml(n)).join(', ')} &middot; ${symptoms.join(', ')}</div>
+      <div class="t-sub">Monitoring until ${formatDate(_offsetDateStr(loggedRecent[0].date, 2))}</div>
+    </div>`;
   }
 
   // ── 2. MISSED MED DAYS (past, up to 14 days) ──
@@ -15598,11 +16084,47 @@ function renderVacc() {
   save(KEYS.vacc, vaccData);
   const today_d = new Date();
 
+  // Restore original DOM structure (hide overlay, show original)
+  const origContent = document.getElementById('vaccOriginalContent');
+  const overlay = document.getElementById('vaccCompletionOverlay');
+  if (origContent) origContent.style.display = '';
+  if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
+
   // Find upcoming
-  const upcoming = vaccData.filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+  const upcomingAll = vaccData.filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const upcoming = upcomingAll[0];
   if (upcoming) {
     const days = Math.ceil((new Date(upcoming.date) - today_d) / 86400000);
     const safeD = Math.max(0, days);
+
+    // ── Completion prompt when daysTo <= 0 ──
+    if (days <= 0) {
+      // Group all due on same date
+      const dueOnDate = upcomingAll.filter(v => v.date === upcoming.date);
+      const allDismissed = dueOnDate.every(v => _vaccCompletionDismissed.has(v.name));
+      if (!allDismissed) {
+        if (origContent) origContent.style.display = 'none';
+        if (overlay) {
+          overlay.innerHTML = _vaccRenderCompletionCard(dueOnDate);
+          overlay.style.display = '';
+        }
+        document.getElementById('vaccInfoPanel').style.display = 'none';
+        renderHomeVacc();
+        return;
+      }
+      // All dismissed — fall through to show next non-dismissed upcoming
+      const nextAfter = upcomingAll.find(v => v.date !== upcoming.date);
+      if (nextAfter) {
+        const d2 = Math.ceil((new Date(nextAfter.date) - today_d) / 86400000);
+        const sd2 = Math.max(0, d2);
+        document.getElementById('vaccCountdown').textContent = sd2;
+        document.getElementById('vaccNextDate').textContent = 'Due: ' + formatDate(nextAfter.date);
+        document.getElementById('vaccNextName').textContent = nextAfter.name;
+        renderHomeVacc();
+        return;
+      }
+    }
+
     document.getElementById('vaccCountdown').textContent = safeD;
     document.getElementById('vaccNextDate').textContent = 'Due: ' + formatDate(upcoming.date);
     document.getElementById('vaccNextName').textContent = upcoming.name;
@@ -15623,21 +16145,20 @@ function renderVacc() {
       if (isBooked) {
         const apptLabel = getVaccApptLabel(bookedData);
         if (apptLabel) {
-          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
+          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
             <span class="status-good-xs"><span class="zi-check-placeholder"></span> Booked</span>
-            <span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span>
+            <span class="vc-booked-detail">${apptLabel}</span>
           </div>`;
         } else {
-          bsEl.innerHTML = `<div style="display:inline-flex;align-items:center;gap:var(--sp-8);padding:4px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
+          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
             <span class="status-good-xs"><span class="zi-check-placeholder"></span> Booked</span>
-            <span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Tap to add date & time</span>
+            <span class="vc-booked-detail-light">Tap to add date & time</span>
           </div>`;
         }
         bsEl.style.display = '';
       } else {
-        // Not booked — show book button if due within 14 days
         if (safeD <= 14) {
-          bsEl.innerHTML = `<button class="btn btn-sage" style="padding:6px 14px;font-size:var(--fs-xs);" onclick="markVaccBooked('${escAttr(upcoming.name)}')">${zi('clock')} Book appointment</button>`;
+          bsEl.innerHTML = `<button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button>`;
           bsEl.style.display = '';
         } else {
           bsEl.style.display = 'none';
@@ -15645,7 +16166,7 @@ function renderVacc() {
       }
     }
   } else {
-    document.getElementById('vaccCountdown').textContent = '—';
+    document.getElementById('vaccCountdown').textContent = '\u2014';
     document.getElementById('vaccNextDate').textContent = 'No upcoming vaccination set';
     document.getElementById('vaccNextName').textContent = '';
     document.getElementById('vaccNameTapHint').style.display = 'none';
@@ -15742,6 +16263,491 @@ function getVaccGuidance(vaccName) {
     if (lower.includes(key)) return { ...VACC_GUIDANCE._default, ...guidance };
   }
   return VACC_GUIDANCE._default;
+}
+
+// ── Vaccination Intelligence Upgrade — Constants ──
+
+const VACC_SERIES = {
+  'DTwP': ['DTwP/DTaP-1', 'DTwP/DTaP-2', 'DTwP/DTaP-3'],
+  'Hep B': ['Hep B-1', 'Hep B-2', 'Hep B-3', 'Hep B-4'],
+  'Hib': ['Hib-1', 'Hib-2', 'Hib-3'],
+  'IPV': ['IPV-1', 'IPV-2', 'IPV-3'],
+  'PCV': ['PCV-1', 'PCV-2', 'PCV-3'],
+  'Rotavirus': ['Rotavirus-1', 'Rotavirus-2', 'Rotavirus-3'],
+  'Influenza': ['Influenza-1', 'Influenza-2'],
+  'MMR': ['MMR-1'],
+};
+
+function _vaccFamilyKey(vaccName) {
+  const cleaned = vaccName.replace(/[-\u2013]\d+$/,'').trim();
+  for (const family of Object.keys(VACC_SERIES)) {
+    if (cleaned.toLowerCase().includes(family.toLowerCase())) return family;
+  }
+  return cleaned;
+}
+
+const VACC_DELAY_SAFETY = {
+  _default: { safe: 14, concern: 30, note: 'Most vaccines can safely be delayed by 1-2 weeks without affecting efficacy. Beyond 4 weeks, consult your pediatrician about catch-up scheduling.' },
+  'BCG': { safe: 14, concern: 42, note: 'BCG can be delayed up to 6 weeks from birth. Beyond that, a tuberculin test may be needed before administering.' },
+  'Hep B': { safe: 7, concern: 14, note: 'Birth dose of Hep B is time-sensitive. Subsequent doses can be delayed by 1-2 weeks safely.' },
+  'Rotavirus': { safe: 7, concern: 14, note: 'Rotavirus has strict age windows. First dose must be before 15 weeks. Delay beyond the age window means the dose may be skipped entirely.' },
+  'MMR': { safe: 14, concern: 30, note: 'MMR at 9 months is critical in India due to measles prevalence. A 2-week delay is usually fine, but avoid delaying beyond 4 weeks.' },
+  'DTwP': { safe: 14, concern: 28, note: 'DTP vaccines can be delayed 2-4 weeks without restarting the series. The full primary series is important for complete protection.' },
+  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before peak flu season (Oct-Feb in India).' },
+  'PCV': { safe: 14, concern: 28, note: 'PCV can be safely delayed by 2-4 weeks. The series does not need to be restarted if delayed.' },
+};
+
+const VACC_REACTION_SYMPTOMS = [
+  { id: 'fever', label: 'Fever', icon: 'medical' },
+  { id: 'crying', label: 'Crying', icon: 'drop' },
+  { id: 'fussiness', label: 'Fussiness', icon: 'warn' },
+  { id: 'swelling', label: 'Injection swelling', icon: 'info' },
+  { id: 'rash', label: 'Rash', icon: 'warn' },
+  { id: 'refused_feed', label: 'Refused feed', icon: 'spoon' },
+  { id: 'sleepy', label: 'Extra sleepy', icon: 'moon' },
+  { id: 'vomiting', label: 'Vomiting', icon: 'warn' },
+];
+
+const VACC_REACTION_GUIDANCE = {
+  _default: {
+    none: 'No reaction is great! Most babies handle vaccinations well.',
+    mild: 'Mild reactions (low fever, fussiness) are normal and show the immune system is responding. Usually resolves within 24 hours. Offer extra fluids and comfort.',
+    moderate: 'Moderate reactions may last 24-48 hours. Keep baby comfortable, lightly dressed. Offer frequent breastfeeds. Monitor temperature every 2-4 hours.',
+    severe: 'Seek medical attention. Call your pediatrician immediately if fever exceeds 102\u00b0F, baby is inconsolable, has seizures, difficulty breathing, or refuses to feed for 6+ hours.',
+    callDoctor: 'Fever >102\u00b0F or lasting >48 hours, inconsolable crying >3 hours, significant swelling, rash spreading, lethargy, refusal to feed.',
+  },
+  'DTwP': {
+    mild: 'Mild fever and fussiness after DTwP are very common \u2014 this is the most reactive routine vaccine. Usually resolves within 24 hours. A small hard lump at the injection site may last 1-2 weeks and is harmless.',
+    moderate: 'DTwP can cause moderate fever for 24-48 hours. This is normal. Give paracetamol ONLY if prescribed by your doctor. DTaP (acellular version) causes fewer reactions \u2014 discuss with your pediatrician for future doses.',
+    note: 'DTwP (whole cell) causes more reactions than DTaP (acellular). Both are equally effective. If reactions are consistently moderate+, ask about switching to DTaP for remaining doses.',
+  },
+  'Rotavirus': {
+    none: 'Rotavirus is an oral vaccine \u2014 no injection site soreness expected.',
+    mild: 'Mild fussiness or loose stools for 1-2 days are normal after rotavirus vaccine.',
+    callDoctor: 'Severe vomiting, blood in stool, or intense crying (drawing knees up) in the week after \u2014 these could indicate intussusception (very rare). Seek immediate care.',
+  },
+  'MMR': {
+    mild: 'Mild fever or fussiness now is normal. Note: MMR can also cause a mild rash 7-10 days after vaccination \u2014 this is expected and harmless.',
+    moderate: 'Fever after MMR can appear immediately or 7-12 days later. Both are normal immune responses. The delayed fever is not a new illness.',
+    callDoctor: 'High fever >103\u00b0F, seizures, severe rash, or swollen glands lasting >2 weeks.',
+  },
+  'BCG': {
+    none: 'A blister or scar at the injection site will develop over 2-6 months. This is expected and desired \u2014 it means the vaccine worked.',
+    mild: 'The injection site may be slightly red or swollen. Do NOT apply any cream or bandage.',
+    callDoctor: 'Large abscess at injection site, pus draining, or swollen lymph nodes in the armpit that are getting bigger.',
+  },
+  'PCV': {
+    mild: 'Slight fussiness or mild fever is normal. PCV is generally well-tolerated.',
+  },
+  'Influenza': {
+    mild: 'Mild soreness at the injection site and low fever for 1-2 days are common. This is the body building flu immunity.',
+    note: 'First-year influenza requires two doses 4 weeks apart. Annual booster thereafter.',
+  },
+  'Hep B': {
+    mild: 'Mild soreness at the injection site. Hepatitis B vaccine is one of the gentlest vaccines with very few reactions.',
+  },
+};
+
+const POST_VACC_SLEEP_BUFFER = 5;
+const POST_VACC_DIET_BUFFER = 3;
+
+// ── Session dismissal tracking ──
+let _vaccCompletionDismissed = new Set();
+
+// ── Post-vacc window cache (reset per render cycle) ──
+let _postVaccCached = null;
+
+function _isPostVaccWindow() {
+  if (_postVaccCached !== null) return _postVaccCached;
+  const todayStr = today();
+  const yesterdayStr = _offsetDateStr(todayStr, -1);
+  _postVaccCached = vaccData.some(v =>
+    !v.upcoming && (v.date === todayStr || v.date === yesterdayStr)
+  );
+  return _postVaccCached;
+}
+
+// ── Smart Completion Flow ──
+
+function _vaccGetDueGroups() {
+  const todayD = new Date();
+  const upcomingAll = vaccData.filter(v => v.upcoming);
+  const groups = {};
+  upcomingAll.forEach(v => {
+    const days = Math.ceil((new Date(v.date) - todayD) / 86400000);
+    if (days <= 0) {
+      const key = v.date;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(v);
+    }
+  });
+  return groups;
+}
+
+function _vaccRenderCompletionCard(dueVaccines) {
+  const todayStr = today();
+  const dueDate = dueVaccines[0].date;
+  // Use string comparison for same-day check, floor for past days
+  const dueLabel = dueDate >= todayStr ? 'Due today' : (function() {
+    const d = Math.floor((new Date(todayStr) - new Date(dueDate)) / 86400000);
+    return d === 1 ? 'Due yesterday' : d + ' days overdue';
+  })();
+
+  if (dueVaccines.length === 1) {
+    const v = dueVaccines[0];
+    return `<div class="vc-complete-card">
+      <div class="vc-complete-prompt">
+        <div class="vc-complete-title">${escHtml(v.name)} ${zi('syringe')}</div>
+        <div class="t-sub">${dueLabel} &middot; ${formatDate(dueDate)}</div>
+        <div class="vc-complete-q">Was the vaccination given?</div>
+      </div>
+      <div class="vc-complete-actions">
+        <button class="btn btn-sage" data-action="vaccMarkDone" data-arg="${escAttr(v.name)}" data-arg2="${escAttr(dueDate)}">Yes, done today</button>
+        <button class="btn btn-ghost" data-action="vaccShowDelay" data-arg="${escAttr(dueDate)}">Not yet</button>
+      </div>
+    </div>`;
+  }
+
+  // Multi-vaccine day — checkbox card
+  let checks = '';
+  dueVaccines.forEach(v => {
+    const idx = vaccData.indexOf(v);
+    checks += `<label class="vc-complete-check checked" data-vacc-idx="${idx}">
+      <input type="checkbox" checked class="vc-check-input"> ${escHtml(v.name)}
+    </label>`;
+  });
+  return `<div class="vc-complete-card vc-complete-multi">
+    <div class="vc-complete-prompt">
+      <div class="vc-complete-title">${dueVaccines.length} vaccinations ${dueLabel.toLowerCase()}</div>
+      <div class="t-sub">${formatDate(dueDate)}</div>
+      <div class="vc-complete-q">Which were given?</div>
+      <div class="vc-complete-checks">${checks}</div>
+    </div>
+    <div class="vc-complete-actions">
+      <button class="btn btn-sage" data-action="vaccMarkDoneMulti" data-arg="${escAttr(dueDate)}">Mark selected as done</button>
+      <button class="btn btn-ghost" data-action="vaccShowDelay" data-arg="${escAttr(dueDate)}">None given yet</button>
+    </div>
+  </div>`;
+}
+
+function _vaccMarkDone(vaccNames, dueDate) {
+  const todayStr = today();
+  const doneNames = [];
+  vaccNames.forEach(name => {
+    const v = vaccData.find(e => e.upcoming && e.name === name);
+    if (!v) return;
+    v.scheduledDate = v.scheduledDate || v.date;
+    v.date = todayStr;
+    v.upcoming = false;
+    v.visitGroup = todayStr;
+    doneNames.push(name);
+  });
+  // Clear booked appointment if matches any
+  const bookedData = load(KEYS.vaccBooked, null);
+  if (bookedData && doneNames.includes(bookedData.vaccName)) {
+    save(KEYS.vaccBooked, null);
+  }
+  save(KEYS.vacc, vaccData);
+  _islMarkDirty('medical');
+  _postVaccCached = null;
+  // Re-render to update Medical tab under the modal
+  renderVacc();
+  renderVaccCoverage();
+  renderVaccPastList();
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+  updateHeader();
+  // Open reaction modal
+  _vaccOpenReactionModal(doneNames);
+}
+
+function _vaccRenderDelayCard(dueDate) {
+  const dueVaccines = vaccData.filter(v => v.upcoming && v.date === dueDate);
+  if (!dueVaccines.length) return '';
+  const names = dueVaccines.map(v => escHtml(v.name)).join(', ');
+  const defaultNew = _offsetDateStr(dueDate, 7);
+
+  // Find most restrictive safety window
+  let minSafe = 999;
+  let mostRestrictiveFamily = '_default';
+  dueVaccines.forEach(v => {
+    const fam = _vaccFamilyKey(v.name);
+    const safety = VACC_DELAY_SAFETY[fam] || VACC_DELAY_SAFETY._default;
+    if (safety.safe < minSafe) {
+      minSafe = safety.safe;
+      mostRestrictiveFamily = fam;
+    }
+  });
+
+  const chips = [
+    { id: 'baby_unwell', label: 'Baby was unwell' },
+    { id: 'rescheduled', label: 'Rescheduled' },
+    { id: 'doctor_advised', label: 'Doctor advised delay' },
+    { id: 'other', label: 'Other' },
+  ];
+  let chipHtml = chips.map(c =>
+    `<button class="vc-delay-chip" data-action="vaccDelayReason" data-arg="${c.id}">${c.label}</button>`
+  ).join('');
+
+  return `<div class="vc-delay-card" id="vaccDelayCard">
+    <div class="vc-complete-title">${dueVaccines.length > 1 ? dueVaccines.length + ' vaccinations' : escHtml(dueVaccines[0].name)}</div>
+    <div class="t-sub mb-8">${formatDate(dueDate)}</div>
+    <div class="vc-delay-q">Why ${dueVaccines.length > 1 ? "weren't these" : "wasn't it"} given?</div>
+    <div class="vc-delay-reasons">${chipHtml}</div>
+    <label class="micro-label mt-10">New date</label>
+    <input type="date" class="modal-input" id="vaccDelayDateInput" value="${defaultNew}">
+    <div id="vaccDelayAssessment" class="mt-8"></div>
+    <div class="vc-complete-actions mt-10">
+      <button class="btn btn-lav" data-action="vaccSaveDelay" data-arg="${escAttr(dueDate)}">Save${dueVaccines.length > 1 ? ' for all ' + dueVaccines.length : ''}</button>
+      <button class="btn btn-ghost" data-action="vaccCancelDelay">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function _vaccUpdateDelayAssessment(dueDate) {
+  const el = document.getElementById('vaccDelayAssessment');
+  const dateInput = document.getElementById('vaccDelayDateInput');
+  if (!el || !dateInput) return;
+  const newDate = dateInput.value;
+  if (!newDate) { el.innerHTML = ''; return; }
+
+  const dueVaccines = vaccData.filter(v => v.upcoming && v.date === dueDate);
+  // Use scheduled date (first scheduled) for delay calculation
+  const scheduledDate = dueVaccines[0]?.scheduledDate || dueDate;
+  const delayDays = Math.round((new Date(newDate).getTime() - new Date(scheduledDate).getTime()) / 86400000);
+
+  if (delayDays <= 0) { el.innerHTML = ''; return; }
+
+  // Most restrictive safety window
+  let minSafe = 999, minConcern = 999, bestNote = '';
+  dueVaccines.forEach(v => {
+    const fam = _vaccFamilyKey(v.name);
+    const safety = VACC_DELAY_SAFETY[fam] || VACC_DELAY_SAFETY._default;
+    if (safety.safe < minSafe) {
+      minSafe = safety.safe;
+      minConcern = safety.concern;
+      bestNote = safety.note;
+    }
+  });
+
+  let statusClass, statusIcon, statusMsg;
+  if (delayDays <= minSafe) {
+    statusClass = 'vc-assess-safe';
+    statusIcon = zi('check');
+    statusMsg = 'Within safe delay window (up to ' + minSafe + ' days)';
+  } else if (delayDays <= minConcern) {
+    statusClass = 'vc-assess-warn';
+    statusIcon = zi('warn');
+    statusMsg = 'Approaching recommended limit \u2014 schedule soon';
+  } else {
+    statusClass = 'vc-assess-danger';
+    statusIcon = zi('warn');
+    statusMsg = 'Beyond recommended delay \u2014 consult pediatrician';
+  }
+
+  el.innerHTML = `<div class="vc-delay-assessment ${statusClass}">
+    <div class="vc-assess-header">${statusIcon} <span>${statusMsg}</span></div>
+    <div class="t-sub">Scheduled: ${formatDate(scheduledDate)} &middot; New: ${formatDate(newDate)} &middot; Delay: ${delayDays} days</div>
+    <div class="t-sub mt-4">${escHtml(bestNote)}</div>
+  </div>`;
+}
+
+let _vaccDelayReason = '';
+
+function _vaccSaveDelay(dueDate) {
+  const dateInput = document.getElementById('vaccDelayDateInput');
+  if (!dateInput || !dateInput.value) return;
+  const newDate = dateInput.value;
+  const dueVaccines = vaccData.filter(v => v.upcoming && v.date === dueDate);
+  dueVaccines.forEach(v => {
+    v.scheduledDate = v.scheduledDate || v.date;
+    v.date = newDate;
+    if (_vaccDelayReason) v.delayReason = _vaccDelayReason;
+  });
+  _vaccDelayReason = '';
+  save(KEYS.vacc, vaccData);
+  _islMarkDirty('medical');
+  renderVacc();
+  renderVaccCoverage();
+  renderVaccPastList();
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+  updateHeader();
+}
+
+// ── Reaction Logging Modal ──
+
+function _vaccOpenReactionModal(vaccNames) {
+  if (!vaccNames || !vaccNames.length) return;
+  const modal = document.getElementById('vaccReactionModal');
+  if (!modal) return;
+  const content = document.getElementById('vaccReactionContent');
+  if (!content) return;
+
+  const namesLabel = vaccNames.length === 1 ? escHtml(vaccNames[0]) : vaccNames.length + ' vaccinations';
+  const namesList = vaccNames.length > 1 ? '<div class="t-sub mt-4">' + vaccNames.map(n => escHtml(n)).join(', ') + '</div>' : '';
+  const todayStr = today();
+
+  let symptomChips = VACC_REACTION_SYMPTOMS.map(s =>
+    `<button class="vc-symptom-chip" data-symptom="${s.id}" data-action="vaccToggleSymptom">${zi(s.icon)} ${s.label}</button>`
+  ).join('');
+
+  const tempChips = ['Normal','99-100\u00b0F','100-101\u00b0F','101+\u00b0F'].map(t =>
+    `<button class="vc-temp-chip" data-action="vaccSelectTemp" data-arg="${t}">${t}</button>`
+  ).join('');
+
+  const cryChips = ['< 30 min','30 min-1 hr','1-2 hrs','2+ hrs'].map(c =>
+    `<button class="vc-cry-chip" data-action="vaccSelectCry" data-arg="${c}">${c}</button>`
+  ).join('');
+
+  content.innerHTML = `<div class="vc-reaction-form" data-vacc-names="${escAttr(JSON.stringify(vaccNames))}">
+    <h3 class="modal-title">How is Ziva after ${namesLabel}?</h3>
+    ${namesList}
+    <div class="t-sub mb-10">Given today &middot; ${formatDate(todayStr)}</div>
+
+    <div class="micro-label">Reaction</div>
+    <div class="vc-reaction-severity">
+      <button class="vc-severity-chip" data-action="vaccSelectSeverity" data-arg="none">None</button>
+      <button class="vc-severity-chip" data-action="vaccSelectSeverity" data-arg="mild">Mild</button>
+      <button class="vc-severity-chip" data-action="vaccSelectSeverity" data-arg="moderate">Moderate</button>
+      <button class="vc-severity-chip" data-action="vaccSelectSeverity" data-arg="severe">Severe</button>
+    </div>
+
+    <div id="vaccReactionDetails" class="vc-reaction-details" style="display:none;">
+      <div class="micro-label mt-10">What are you seeing?</div>
+      <div class="vc-symptom-chips">${symptomChips}</div>
+      <div id="vaccSevereAlert" class="vc-severe-alert" style="display:none;">
+        <div class="vc-severe-msg">${zi('siren')} If baby is inconsolable, has high fever (102\u00b0F+), seizures, or difficulty breathing, seek emergency care immediately.</div>
+      </div>
+      <div class="micro-label mt-10">Temperature</div>
+      <div class="vc-temp-row">${tempChips}</div>
+      <div class="micro-label mt-10">How long did crying last?</div>
+      <div class="vc-cry-row">${cryChips}</div>
+      <div class="micro-label mt-10">Notes</div>
+      <textarea id="vaccReactionNotes" class="modal-input vc-reaction-notes" rows="2" placeholder="Any additional observations..."></textarea>
+    </div>
+
+    <div id="vaccReactionSaveWrap" style="display:none;" class="mt-10">
+      <button class="btn btn-lav" data-action="vaccSaveReaction" id="vaccReactionSaveBtn">Save Reaction Log</button>
+    </div>
+  </div>`;
+  openModal('vaccReactionModal');
+}
+
+function _vaccHandleSeverity(severity) {
+  const detailsEl = document.getElementById('vaccReactionDetails');
+  const saveWrap = document.getElementById('vaccReactionSaveWrap');
+  const severeAlert = document.getElementById('vaccSevereAlert');
+  const chips = document.querySelectorAll('.vc-severity-chip');
+  chips.forEach(c => c.classList.toggle('active', c.dataset.arg === severity));
+
+  if (severity === 'none') {
+    if (detailsEl) detailsEl.style.display = 'none';
+    if (saveWrap) saveWrap.style.display = '';
+    if (severeAlert) severeAlert.style.display = 'none';
+  } else {
+    if (detailsEl) detailsEl.style.display = '';
+    if (saveWrap) saveWrap.style.display = '';
+    if (severeAlert) severeAlert.style.display = severity === 'severe' ? '' : 'none';
+  }
+}
+
+function _vaccToggleSymptom(btn) {
+  btn.classList.toggle('active');
+}
+
+function _vaccSelectChip(btn, groupClass) {
+  const row = btn.closest('.' + groupClass.replace('-chip','') + '-row') || btn.parentElement;
+  row.querySelectorAll('.' + groupClass).forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function _vaccSaveReaction() {
+  const form = document.querySelector('.vc-reaction-form');
+  if (!form) return;
+  const vaccNames = JSON.parse(form.dataset.vaccNames || '[]');
+  const activeSev = form.querySelector('.vc-severity-chip.active');
+  if (!activeSev) return;
+  const severity = activeSev.dataset.arg;
+
+  let symptoms = [], temperature = null, cryDuration = null, notes = '';
+  if (severity !== 'none') {
+    const activeSymptoms = form.querySelectorAll('.vc-symptom-chip.active');
+    if (activeSymptoms.length === 0) {
+      // Require at least 1 symptom for non-none
+      const symptomSection = form.querySelector('.vc-symptom-chips');
+      if (symptomSection) symptomSection.style.outline = '2px solid var(--tc-danger)';
+      return;
+    }
+    activeSymptoms.forEach(s => symptoms.push(s.dataset.symptom));
+    const activeTemp = form.querySelector('.vc-temp-chip.active');
+    if (activeTemp) temperature = activeTemp.dataset.arg;
+    const activeCry = form.querySelector('.vc-cry-chip.active');
+    if (activeCry) cryDuration = activeCry.dataset.arg;
+    const notesEl = document.getElementById('vaccReactionNotes');
+    if (notesEl) notes = notesEl.value.trim();
+  }
+
+  // Save on all entries matching these names (today or yesterday — 48h window)
+  const todayStr = today();
+  const yesterdayStr = _offsetDateStr(todayStr, -1);
+  vaccNames.forEach(name => {
+    const v = vaccData.find(e => e.name === name && !e.upcoming &&
+      (e.date === todayStr || e.date === yesterdayStr || e.visitGroup === todayStr || e.visitGroup === yesterdayStr));
+    if (v) {
+      v.reaction = severity;
+      v.symptoms = symptoms;
+      if (temperature) v.temperature = temperature;
+      if (cryDuration) v.cryDuration = cryDuration;
+      if (notes) v.reactionNotes = notes;
+      v.reactionLoggedAt = new Date().toISOString();
+    }
+  });
+  save(KEYS.vacc, vaccData);
+  _islMarkDirty('medical');
+
+  // Show post-save guidance
+  _vaccShowGuidance(vaccNames, severity);
+}
+
+function _vaccShowGuidance(vaccNames, severity) {
+  const content = document.getElementById('vaccReactionContent');
+  if (!content) return;
+
+  // Get family-specific guidance (use first vaccine for family)
+  const family = _vaccFamilyKey(vaccNames[0]);
+  const familyG = VACC_REACTION_GUIDANCE[family] || {};
+  const defaultG = VACC_REACTION_GUIDANCE._default;
+  const merged = { ...defaultG, ...familyG };
+
+  const mainText = merged[severity] || merged.mild || '';
+  const callDoc = merged.callDoctor || defaultG.callDoctor || '';
+  const noteText = merged.note || '';
+  const namesLabel = vaccNames.length === 1 ? escHtml(vaccNames[0]) : vaccNames.map(n => escHtml(n)).join(', ');
+
+  content.innerHTML = `<div class="vc-guidance-card">
+    <h3 class="modal-title">${zi('check')} Reaction logged</h3>
+    <div class="t-sub mb-10">${namesLabel}</div>
+    <div class="vc-guidance-section">
+      <div class="micro-label">What to expect</div>
+      <div class="vc-guidance-text">${escHtml(mainText)}</div>
+    </div>
+    ${severity !== 'none' ? `<div class="vc-guidance-section vc-guidance-warn">
+      <div class="micro-label">${zi('warn')} Call doctor if</div>
+      <div class="vc-guidance-text">${escHtml(callDoc)}</div>
+    </div>` : ''}
+    ${noteText ? `<div class="vc-guidance-section"><div class="t-sub">${escHtml(noteText)}</div></div>` : ''}
+    <button class="btn btn-ghost mt-10" data-close-modal="vaccReactionModal">Close</button>
+  </div>`;
+
+  // Re-render everything
+  renderVacc();
+  renderVaccCoverage();
+  renderVaccPastList();
+  renderMedicalStats();
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+  updateHeader();
 }
 
 function renderVaccInfoPanel(vaccName) {
@@ -15861,7 +16867,7 @@ function openVaccEditModal(idx) {
   document.getElementById('vaccEditDateFlag').style.display = 'none';
   document.getElementById('vaccEditReasonWrap').style.display = 'none';
   // Store original date for comparison
-  document.getElementById('vaccEditDate').dataset.originalDate = entry.originalDate || entry.date;
+  document.getElementById('vaccEditDate').dataset.scheduledDate = entry.scheduledDate || entry.date;
   checkVaccDateShift();
   openModal('vaccEditModal');
 }
@@ -15875,7 +16881,7 @@ function checkVaccDateShift() {
 
   const newDate = dateEl.value;
   const entry = vaccData[_vaccEditIdx];
-  const origDate = dateEl.dataset.originalDate || entry.date;
+  const origDate = dateEl.dataset.scheduledDate || entry.date;
 
   if (!newDate) {
     flagEl.style.display = 'none';
@@ -15917,7 +16923,7 @@ function saveVaccEdit() {
   const newDate = dateEl.value;
   if (!newDate) return;
 
-  const origDate = dateEl.dataset.originalDate || entry.date;
+  const origDate = dateEl.dataset.scheduledDate || entry.date;
   const diffDays = Math.abs(Math.round((new Date(newDate).getTime() - new Date(origDate).getTime()) / 86400000));
 
   // If beyond ±3 days, require reason
@@ -15927,14 +16933,11 @@ function saveVaccEdit() {
       alert('Please provide a reason for the date change.');
       return;
     }
-    entry.originalDate = origDate;
+    entry.scheduledDate = entry.scheduledDate || origDate;
     entry.dateChangeReason = reason;
   } else {
-    // Within tolerance — clear any previous reason if date is close to original
-    if (entry.originalDate && Math.abs(Math.round((new Date(newDate).getTime() - new Date(entry.originalDate).getTime()) / 86400000)) <= 3) {
-      delete entry.dateChangeReason;
-      delete entry.originalDate;
-    }
+    // Within tolerance — clear reason but keep scheduledDate (never cleared)
+    delete entry.dateChangeReason;
   }
 
   entry.date = newDate;
@@ -16167,7 +17170,7 @@ function renderVaccHistory() {
       ? (apptLabel
         ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);"><span class="status-good-xs">${zi('check')} Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
         : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-8);padding:3px 10px;border-radius:var(--r-full);background:var(--surface-sage);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}"><span class="status-good-xs">${zi('check')} Booked</span><span style="font-size:var(--fs-xs);font-weight:400;color:var(--light);">Add date & time</span></div>`)
-      : (daysTo <= 14 ? `<div style="margin-top:6px;"><button class="btn btn-sage" style="padding:6px 14px;font-size:var(--fs-xs);" onclick="markVaccBooked('${escAttr(upcoming.name)}')">${zi('clock')} Book appointment</button></div>` : '');
+      : (daysTo <= 14 ? `<div style="margin-top:6px;"><button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button></div>` : '');
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:var(--lav-light);border-left:var(--accent-w) solid ${urgency};margin-bottom:14px;">
         <div style="font-size:var(--icon-lg);">⏳</div>
@@ -20512,7 +21515,9 @@ function calcDietScore(dateStr) {
   var coreMeals = 0;
   if (entry) { ['breakfast','lunch','dinner'].forEach(function(m) { if (isRealMeal(entry[m])) coreMeals++; }); }
   const modRaw = computeDietModifier();
-  const score = applyIntelligenceModifier(baseScore, modRaw);
+  let score = applyIntelligenceModifier(baseScore, modRaw);
+  // Post-vaccination buffer: don't penalize reduced appetite
+  if (_isPostVaccWindow()) score = Math.min(100, score + POST_VACC_DIET_BUFFER);
   const modifier = _withDelta(modRaw, baseScore, score);
   return {
     score, baseScore, modifier, ...getScoreLabel(score),
@@ -34487,7 +35492,9 @@ function getDailySleepScore(dateStr) {
 
   const baseScore = Math.round(totalScore * 0.4 + wakeScore * 0.3 + bedScore * 0.15 + napScore * 0.15);
   const modRaw = computeSleepModifier();
-  const score = applyIntelligenceModifier(baseScore, modRaw);
+  let score = applyIntelligenceModifier(baseScore, modRaw);
+  // Post-vaccination buffer: don't penalize disrupted sleep
+  if (_isPostVaccWindow()) score = Math.min(100, score + POST_VACC_SLEEP_BUFFER);
   const modifier = _withDelta(modRaw, baseScore, score);
   return {
     score, baseScore, modifier,
@@ -36931,7 +37938,7 @@ function renderHistoryPreviews() {
         vaccPrev.innerHTML = `<div class="info-strip is-danger">
           <span><svg class="zi"><use href="#zi-dot-red"/></svg></span>
           <div><strong class="tc-danger">${daysTo} day${daysTo > 1 ? 's' : ''} to vaccination</strong>
-          <div class="t-sub">${escHtml(upcoming.name)} · ${formatDate(upcoming.date)} · <span style="cursor:pointer;text-decoration:underline;" onclick="markVaccBooked('${escAttr(upcoming.name)}')">Book now</span></div></div>
+          <div class="t-sub">${escHtml(upcoming.name)} · ${formatDate(upcoming.date)} · <span class="ptr" style="text-decoration:underline;" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">Book now</span></div></div>
         </div>`;
       } else if (daysTo <= 14) {
         vaccPrev.innerHTML = `<div class="info-strip is-warn">
