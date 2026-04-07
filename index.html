@@ -5330,6 +5330,18 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .qa-chip-sky    { background:var(--sky-light); border-color:rgba(168,207,224,0.3); color:var(--tc-sky); }
 .qa-chip:active { opacity:0.8; }
 .qa-chip-context { font-weight:700; }
+.qa-suggest {
+  display:none; padding:var(--sp-4) var(--sp-8) var(--sp-8);
+}
+.qa-suggest.active { display:flex; flex-direction:column; gap:var(--sp-4); }
+.qa-suggest-item {
+  font-family:inherit; font-size:var(--fs-sm); font-weight:500;
+  padding:var(--sp-6) var(--sp-12); border-radius:var(--r-lg);
+  border:1px solid var(--card-border); background:var(--glass);
+  color:var(--text); cursor:pointer; text-align:left;
+  transition:all 0.12s ease; line-height:1.4;
+}
+.qa-suggest-item:active { opacity:0.8; transform:scale(0.98); }
 .qa-answer {
   margin:var(--sp-12) 0 0;
   border-radius:var(--r-xl); overflow:hidden;
@@ -5481,6 +5493,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .qa-chip-sky    { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.15); color:var(--tc-sky); }
 [data-theme="dark"] .qa-chip:active { opacity:0.8; }
 [data-theme="dark"] .qa-chip-context { font-weight:700; }
+[data-theme="dark"] .qa-suggest-item { background:var(--surface-alt); border-color:rgba(255,255,255,0.08); }
 [data-theme="dark"] .qa-answer { background:linear-gradient(135deg, var(--surface) 60%, var(--surface-alt)); border-color:var(--card-border); box-shadow:0 2px 12px rgba(0,0,0,0.2); }
 [data-theme="dark"] .qa-answer-indigo { background:linear-gradient(135deg, var(--surface) 50%, rgba(155,168,216,0.08)); border-color:rgba(155,168,216,0.12); }
 [data-theme="dark"] .qa-answer-peach  { background:linear-gradient(135deg, var(--surface) 50%, rgba(250,212,180,0.06)); border-color:rgba(250,212,180,0.1); }
@@ -6427,6 +6440,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
             <button class="qa-clear" id="qaClear" aria-label="Clear">&times;</button>
           </div>
           <div class="qa-chips" id="qaChips"></div>
+          <div class="qa-suggest" id="qaSuggest"></div>
           <div class="qa-mode-indicator" id="qaModeIndicator"></div>
           <div class="iq-picker" id="iqPicker"></div>
           <div class="outing-form" id="outingForm"></div>
@@ -24423,6 +24437,132 @@ var QA_PLACEHOLDERS = [
   'How do I improve sleep?'
 ];
 
+// ── TYPEAHEAD SUGGESTION POOL ──
+
+var QA_SUGGEST_POOL = [
+  // Sleep
+  { text: 'How is her sleep?', color: 'indigo' },
+  { text: 'Why is sleep bad?', color: 'indigo' },
+  { text: 'How to improve sleep?', color: 'indigo' },
+  { text: 'Sleep yesterday', color: 'indigo' },
+  { text: 'Best activities for sleep?', color: 'indigo' },
+  { text: 'Nap schedule', color: 'indigo' },
+  { text: 'How many wake-ups?', color: 'indigo' },
+  { text: 'Earlier bedtime tips', color: 'indigo' },
+  // Diet
+  { text: 'What should I feed today?', color: 'peach' },
+  { text: 'What did she eat yesterday?', color: 'peach' },
+  { text: 'What nutrients is she missing?', color: 'peach' },
+  { text: 'Food variety tips', color: 'peach' },
+  { text: 'Texture progression', color: 'peach' },
+  { text: 'Can I give honey?', color: 'peach' },
+  { text: 'Can she eat egg?', color: 'peach' },
+  { text: 'Iron-rich foods', color: 'peach' },
+  // Poop
+  { text: 'Poop update', color: 'amber' },
+  { text: 'How to improve poop?', color: 'amber' },
+  { text: 'Poop yesterday', color: 'amber' },
+  { text: 'Poop color meaning', color: 'amber' },
+  { text: 'Which foods affect poop?', color: 'amber' },
+  { text: 'Constipation help', color: 'amber' },
+  // Medical
+  { text: 'Vitamin D3 adherence', color: 'sky' },
+  { text: 'Vitamin D supplement', color: 'sky' },
+  { text: 'Next vaccine', color: 'sky' },
+  { text: 'Vaccination schedule', color: 'sky' },
+  { text: 'Fever', color: 'sky' },
+  { text: 'Cold and cough', color: 'sky' },
+  { text: 'Vomiting', color: 'sky' },
+  { text: 'Diarrhoea', color: 'sky' },
+  { text: 'Rash', color: 'sky' },
+  { text: 'Teething', color: 'sky' },
+  // Growth
+  { text: 'How is her growth?', color: 'rose' },
+  { text: 'Weight gain tips', color: 'rose' },
+  { text: 'Growth percentile', color: 'rose' },
+  // Milestones
+  { text: 'Milestone progress', color: 'lav' },
+  { text: 'Is she on track?', color: 'lav' },
+  { text: 'Crawling progress', color: 'lav' },
+  // Activities
+  { text: 'Best activities for her age?', color: 'sage' },
+  { text: 'Activities for motor skills', color: 'sage' },
+  { text: 'Tummy time tips', color: 'sage' },
+  // Temporal
+  { text: 'Yesterday', color: 'indigo' },
+  { text: 'This week', color: 'indigo' },
+  { text: 'Last week', color: 'indigo' },
+  { text: 'This month', color: 'indigo' },
+  // Overall
+  { text: 'How is she doing?', color: 'rose' },
+  { text: 'Overall score', color: 'rose' },
+  { text: 'Going out tomorrow', color: 'sage' },
+  { text: 'Doctor visit prep', color: 'sky' },
+  { text: 'Share today', color: 'indigo' }
+];
+
+function _qaUpdateSuggestions(text) {
+  var el = document.getElementById('qaSuggest');
+  if (!el) return;
+
+  if (!text || text.length < 2) {
+    el.innerHTML = '';
+    el.classList.remove('active');
+    return;
+  }
+
+  var lower = text.toLowerCase();
+  var matches = QA_SUGGEST_POOL.filter(function(s) {
+    return s.text.toLowerCase().indexOf(lower) !== -1;
+  });
+
+  // Also match individual words for fuzzy matching
+  if (matches.length < 3) {
+    var tokens = lower.split(/\s+/);
+    QA_SUGGEST_POOL.forEach(function(s) {
+      if (matches.indexOf(s) !== -1) return;
+      var sLower = s.text.toLowerCase();
+      var allMatch = tokens.every(function(t) { return t.length >= 2 && sLower.indexOf(t) !== -1; });
+      if (allMatch) matches.push(s);
+    });
+  }
+
+  // Dedupe and limit
+  var seen = {};
+  matches = matches.filter(function(m) {
+    if (seen[m.text]) return false;
+    seen[m.text] = true;
+    return true;
+  }).slice(0, 5);
+
+  if (matches.length === 0) {
+    el.innerHTML = '';
+    el.classList.remove('active');
+    return;
+  }
+
+  var html = '';
+  matches.forEach(function(m) {
+    html += '<button class="qa-suggest-item qa-chip-' + m.color + '" data-qa-suggest="' + escHtml(m.text) + '">' + escHtml(m.text) + '</button>';
+  });
+  el.innerHTML = html;
+  el.classList.add('active');
+
+  // Event delegation for suggestion taps
+  el.querySelectorAll('[data-qa-suggest]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var val = this.getAttribute('data-qa-suggest');
+      var input = document.getElementById('qaInput');
+      if (input) input.value = val;
+      el.innerHTML = '';
+      el.classList.remove('active');
+      qaExecuteQuery(val);
+    });
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INTELLIGENCE SERVICE LAYER (ISL) — Session A
 // Cache, domain data accessors, temporal parsing, day summary
@@ -26567,6 +26707,8 @@ function _qaHandleKeydown(e) {
     e.preventDefault();
     var text = e.target.value.trim();
     if (text) {
+      var suggestEl = document.getElementById('qaSuggest');
+      if (suggestEl) { suggestEl.innerHTML = ''; suggestEl.classList.remove('active'); }
       qaExecuteQuery(text);
       e.target.blur();
     }
@@ -26576,15 +26718,18 @@ function _qaHandleKeydown(e) {
 function _qaHandleInput(e) {
   var clearBtn = document.getElementById('qaClear');
   if (clearBtn) clearBtn.style.display = e.target.value.length > 0 ? '' : 'none';
+  _qaUpdateSuggestions(e.target.value.trim());
 }
 
 function _qaHandleClear() {
   var input = document.getElementById('qaInput');
   var clearBtn = document.getElementById('qaClear');
   var answerEl = document.getElementById('qaAnswerContainer');
+  var suggestEl = document.getElementById('qaSuggest');
   if (input) { input.value = ''; input.focus(); }
   if (clearBtn) clearBtn.style.display = 'none';
   if (answerEl) answerEl.innerHTML = '';
+  if (suggestEl) { suggestEl.innerHTML = ''; suggestEl.classList.remove('active'); }
   _uibClearModeIndicator();
   _iqHidePicker();
   _outingHideForm();
