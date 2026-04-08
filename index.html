@@ -5695,6 +5695,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 /* Dark mode QL pill active states */
 [data-theme="dark"] .ql-meal-pill.active { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .ql-con-pill.active { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
+/* ── Quick Log: Suggest Card ── */
+.ql-suggest-wrap { margin:var(--sp-4) var(--sp-12) var(--sp-8); }
+.ql-suggest-hidden { display:none; }
+.ql-suggest { border-radius:var(--r-lg); padding:var(--sp-12); background:var(--glass-strong); border:1px solid rgba(0,0,0,0.06); }
+.ql-suggest .card-header { display:flex; align-items:center; gap:var(--sp-8); margin-bottom:var(--sp-10); }
+.ql-suggest .card-title { font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:600; flex:1; min-width:0; }
+.ql-suggest .card-icon { width:22px; height:22px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ql-suggest .card-icon svg.zi { width:14px; height:14px; }
+.ql-suggest .card-body { display:flex; flex-direction:column; gap:var(--sp-8); }
+.ql-suggest-foods { font-size:var(--fs-xs); color:var(--mid); }
+.ql-suggest-actions { display:flex; gap:var(--sp-8); margin-top:var(--sp-4); }
+.ql-suggest-actions .btn-primary { font-size:var(--fs-xs); padding:var(--sp-6) var(--sp-12); border-radius:var(--r-lg); min-height:var(--chip-min-h-compact); }
+.ql-suggest-actions .btn-ghost { font-size:var(--fs-xs); padding:var(--sp-6) var(--sp-12); border-radius:var(--r-lg); min-height:var(--chip-min-h-compact); }
+.ql-suggest .chip-row-scroll { margin-bottom:var(--sp-8); }
+[data-theme="dark"] .ql-suggest { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.06); }
+/* ── Food Favorites Star ── */
+.food-fav-star { background:none; border:none; cursor:pointer; padding:var(--sp-4); min-width:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; color:var(--light); transition:color var(--anim-fast) ease; }
+.food-fav-star svg.zi { width:16px; height:16px; }
+.food-fav-star.active { color:var(--tc-amber); }
+.food-fav-star:active { transform:scale(0.9); }
+[data-theme="dark"] .food-fav-star { color:var(--light); }
+[data-theme="dark"] .food-fav-star.active { color:var(--tc-amber); }
 /* ── Dark mode: Ziva Score + Cards ── */
 [data-theme="dark"] .zs-score-excellent .zs-ring { background:linear-gradient(135deg, rgba(111,207,151,0.15), rgba(45,134,89,0.15)); border-color:rgba(111,207,151,0.4); }
 [data-theme="dark"] .zs-score-excellent .zs-number { color:#6fcf97; }
@@ -6284,100 +6306,6 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .iq-chip-new.selected { background:rgba(181,213,197,0.15); border-color:var(--tc-sage); color:var(--tc-sage); }
 [data-theme="dark"] .iq-combo-card.starred { border-left-color:var(--tc-sage); }
 [data-theme="dark"] .iq-warning { background:rgba(240,200,120,0.08); }
-
-/* ═══ Tappable QA items ═══ */
-.qa-item-tap {
-  cursor:pointer; border-radius:var(--r-md);
-  padding:var(--sp-4) var(--sp-6); margin:0 calc(-1 * var(--sp-6));
-  transition:background 0.15s ease;
-}
-.qa-item-tap:active { background:rgba(155,168,216,0.08); }
-.qa-item-chevron {
-  flex-shrink:0; font-size:var(--fs-md); color:var(--mid);
-  margin-left:var(--sp-6); font-weight:700;
-}
-[data-theme="dark"] .qa-item-tap:active { background:rgba(155,168,216,0.12); }
-
-/* ═══ Combo Detail Popup ═══ */
-.iq-popup-overlay {
-  position:fixed; inset:0; z-index:9999;
-  background:rgba(0,0,0,0.45);
-  display:flex; align-items:flex-end; justify-content:center;
-  opacity:0; transition:opacity 0.3s ease;
-}
-.iq-popup-overlay.open { opacity:1; }
-.iq-popup-card {
-  background:var(--warm); border-radius:var(--r-xl) var(--r-xl) 0 0;
-  width:100%; max-width:480px; max-height:85vh; overflow-y:auto;
-  padding:var(--sp-20) var(--sp-16) var(--sp-24);
-  transform:translateY(100%); transition:transform 0.3s ease;
-}
-.iq-popup-overlay.open .iq-popup-card { transform:translateY(0); }
-.iq-popup-header {
-  display:flex; align-items:center; gap:var(--sp-10);
-  margin-bottom:var(--sp-12);
-}
-.iq-popup-header .icon { flex-shrink:0; }
-.iq-popup-title {
-  flex:1; font-family:Fraunces,serif; font-size:var(--fs-md);
-  font-weight:700; color:var(--text); line-height:1.3;
-}
-.iq-popup-close {
-  background:none; border:none; font-size:var(--fs-xl);
-  color:var(--mid); cursor:pointer; padding:var(--sp-4);
-  line-height:1;
-}
-.iq-popup-meta {
-  font-size:var(--fs-xs); color:var(--mid);
-  margin-bottom:var(--sp-16); padding-left:var(--sp-4);
-}
-.iq-popup-section {
-  margin-bottom:var(--sp-16);
-  padding:var(--sp-12); border-radius:var(--r-lg);
-  background:var(--glass);
-}
-.iq-popup-section-label {
-  font-size:var(--fs-2xs); font-weight:700;
-  letter-spacing:var(--ls-wide); text-transform:uppercase;
-  color:var(--mid); margin-bottom:var(--sp-8);
-  display:flex; align-items:center; gap:var(--sp-6);
-}
-.iq-popup-section-label .icon { width:var(--sp-16); height:var(--sp-16); }
-.iq-popup-section-title {
-  font-size:var(--fs-sm); font-weight:700; color:var(--text);
-  margin-bottom:var(--sp-6);
-}
-.iq-popup-section-body {
-  font-size:var(--fs-sm); color:var(--text); line-height:1.5;
-}
-.iq-popup-detail-row {
-  font-size:var(--fs-xs); color:var(--mid);
-  margin-top:var(--sp-8); display:flex; align-items:center; gap:var(--sp-4);
-}
-.iq-popup-detail-row .icon { width:var(--sp-12); height:var(--sp-12); }
-.iq-popup-tip {
-  font-size:var(--fs-sm); line-height:1.4;
-  padding:var(--sp-6) 0;
-  display:flex; align-items:flex-start; gap:var(--sp-8);
-}
-.iq-popup-tip .icon { width:var(--sp-16); height:var(--sp-16); flex-shrink:0; margin-top:1px; }
-.iq-popup-do { color:var(--tc-sage); }
-.iq-popup-dont { color:var(--tc-amber); }
-.iq-popup-nutrient-row {
-  display:flex; flex-wrap:wrap; gap:var(--sp-6);
-}
-.iq-popup-nutrient-chip {
-  font-size:var(--fs-2xs); padding:var(--sp-4) var(--sp-10);
-  border-radius:var(--r-full); background:var(--sky-light);
-  color:var(--tc-sky); font-weight:600; text-transform:capitalize;
-}
-/* Dark mode — combo popup */
-[data-theme="dark"] .iq-popup-overlay { background:rgba(0,0,0,0.65); }
-[data-theme="dark"] .iq-popup-card { background:var(--surface); }
-[data-theme="dark"] .iq-popup-section { background:var(--surface-alt); }
-[data-theme="dark"] .iq-popup-nutrient-chip {
-  background:rgba(168,207,224,0.1); color:var(--tc-sky);
-}
 
 /* ═══ UIB Session 2: Outing Planner ═══ */
 .outing-form {
@@ -9038,6 +8966,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 <div class="ql-sheet" id="qlSheet">
   <div class="ql-sheet-handle"></div>
   <div class="ql-sheet-title">Quick Log</div>
+  <div class="ql-suggest-wrap ql-suggest-hidden" id="qlSuggestWrap"></div>
   <div class="ql-options">
     <div class="ql-option qo-feed" data-quick-modal="feed">
       <span class="ql-option-icon"><svg class="zi"><use href="#zi-bowl"/></svg></span>
@@ -9806,6 +9735,7 @@ const KEYS = {
   powerOutage: 'ziva_power_outage',
   bugReportPhone: 'ziva_bug_report_phone',
   bugTooltipSeen: 'ziva_bug_tooltip_seen',
+  qlPredictions: 'ziva_ql_predictions',
 };
 
 function load(key, def) {
@@ -12096,7 +12026,7 @@ function init() {
   });
   // Quick modal open
   document.querySelectorAll('[data-quick-modal]').forEach(btn => {
-    btn.addEventListener('click', () => openQuickModal(btn.dataset.quickModal));
+    btn.addEventListener('click', () => { _qlSuggestUsed = false; openQuickModal(btn.dataset.quickModal); });
   });
   // Quick modal close (X buttons)
   document.querySelectorAll('[data-close-quick]').forEach(btn => {
@@ -12197,6 +12127,21 @@ function init() {
   });
   // Document-level delegated action handler (works for static + dynamic elements)
   document.addEventListener('click', (e) => {
+    // ── Chip toggle handler (unified) ──
+    var chip = e.target.closest('[data-chip]');
+    if (chip) {
+      var innerAction = e.target.closest('[data-action]');
+      if (innerAction && innerAction !== chip && chip.contains(innerAction)) { /* let action handle */ }
+      else {
+        var mode = chip.dataset.chip;
+        if (mode === 'single') {
+          chip.parentElement.querySelectorAll('[data-chip="single"]').forEach(function(s) { s.classList.remove('active'); });
+          chip.classList.add('active');
+        } else if (mode === 'multi') {
+          chip.classList.toggle('active');
+        }
+      }
+    }
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const action = btn.dataset.action;
@@ -12487,10 +12432,22 @@ function init() {
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }
     else if (action === 'resetQLSheet') resetQLSheet();
-    // ── Ingredient Combo Detail actions ──
-    else if (action === 'iqComboDetail') _iqShowComboPopup(arg);
-    else if (action === 'iqCloseCombo') _iqCloseComboPopup();
-    else if (action === 'iqCloseComboSelf') { if (e.target === btn) _iqCloseComboPopup(); }
+    // ── Smart Quick Log actions ──
+    else if (action === 'qlOpenFeedPrefill') _qlConfirmSuggest();
+    else if (action === 'qlOpenFeed') _qlEditSuggest();
+    else if (action === 'qlStartSleep') { _qlSuggestUsed = true; openQuickModal('sleep'); }
+    else if (action === 'qlStartNap') { _qlSuggestUsed = true; openQuickModal('nap'); }
+    else if (action === 'qlOpenPoop') { _qlSuggestUsed = true; openQuickModal('poop'); }
+    else if (action === 'qlOpenActivity') { _qlSuggestUsed = true; openQuickModal('activity'); }
+    else if (action === 'qlSwitchSuggest') _qlSwitchSuggest(arg);
+    // ── Food Favorites ──
+    else if (action === 'foodToggleFavorite') {
+      toggleFoodFavorite(arg);
+      // Re-render current food category view
+      if (_activeFoodCatParent && _activeFoodCatSub) {
+        renderFoodCatSubContent(_activeFoodCatParent, _activeFoodCatSub);
+      }
+    }
     // ── Bug Capture actions ──
     else if (action === 'openBugReporter') { openBugReporter(); closeSettingsSidebar(); }
     else if (action === 'closeBugReporter') closeBugReporter();
@@ -19712,6 +19669,7 @@ function renderFoodCatSubContent(pid, sid) {
         return `<div class="food-tag ${f.reaction}">
           <div class="food-tag-top">
             <span class="food-tag-name">${escHtml(f.name)}</span>
+            <button class="food-fav-star${isFoodFavorite(f.name) ? ' active' : ''}" data-action="foodToggleFavorite" data-stop="1" data-arg="${escHtml(f.name)}" title="Favorite">${zi('star')}</button>
             <button class="food-del" data-action="deleteFoodAndRender" data-stop="1" data-arg="${f._i}" data-arg2="'${pid}','${sid}'" title="Remove">×</button>
           </div>
           <span class="food-tag-date">${f.date ? formatDate(f.date) : 'No date'}</span>
@@ -24835,6 +24793,13 @@ function _outingGetPortableMeals(meal) {
     eligible.push({ name: 'Banana mash', reason: 'Always portable, always available', base: 'banana' });
   }
 
+  // Favorites boost: sort favorite foods first
+  eligible.sort(function(a, b) {
+    var af = isFoodFavorite(a.base) ? 1 : 0;
+    var bf = isFoodFavorite(b.base) ? 1 : 0;
+    return bf - af;
+  });
+
   return eligible.slice(0, 3);
 }
 
@@ -25368,12 +25333,13 @@ function _tpBuildCombosLegacy(meal, ctx, introducedSet, isEligible) {
 
 function generateMealOptions(meal, count, ctx) {
   var combos = _tpBuildCombos(meal, ctx);
-  // Take top N, mark first as starred
+  // Take top N, mark starred if contains favorite foods
   var result = combos.slice(0, count).map(function(c, i) {
+    var hasFav = c.bases.some(function(b) { return isFoodFavorite(b); });
     return {
       foods: c.foods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }),
       reason: c.reasons.join(' · '),
-      starred: i === 0,
+      starred: hasFav || i === 0,
       bases: c.bases
     };
   });
@@ -25680,7 +25646,7 @@ function generateTomorrowPrep() {
       return {
         foods: [p.name],
         reason: p.reason,
-        starred: i === 0,
+        starred: isFoodFavorite(p.base) || i === 0,
         bases: [p.base],
         portable: true
       };
@@ -26461,6 +26427,7 @@ function _islGetCached(cacheKey, domain, computeFn) {
 
 function _islMarkDirty(domain) {
   _islDirtyDomains.add(domain);
+  if (domain === 'diet') _qlMealWindowCache = null;
   Object.keys(_islCache).forEach(function(k) {
     if (k.startsWith('summary:') || k.startsWith(domain + ':')) delete _islCache[k];
   });
@@ -27420,6 +27387,16 @@ var QA_INTENTS = [
     id: 'streak',
     triggers: ['streak', 'consistent', 'consistency', 'logging streak'],
     handler: 'answerStreak'
+  },
+  {
+    id: 'prediction_accuracy',
+    triggers: ['prediction accuracy', 'how accurate', 'ql accuracy', 'quick log accuracy', 'prediction'],
+    handler: 'answerPredictionAccuracy'
+  },
+  {
+    id: 'favorite_foods',
+    triggers: ['favorite food', 'favourite food', 'favorites', 'favourites', 'starred food', 'loved food'],
+    handler: 'answerFavoriteFoods'
   }
 ];
 
@@ -27737,24 +27714,6 @@ function _iqHidePicker() {
   if (el) { el.classList.remove('active'); el.innerHTML = ''; }
 }
 
-// ── PREP GUIDE DATABASE ──
-
-var _IQ_PREP_GUIDE = {
-  'khichdi': { title: 'Khichdi', method: 'Pressure cook dal + rice (1:2) with vegs for 3-4 whistles. Mash well. Add ghee on top. Consistency: semi-liquid for 6-7 months, thicker for 8+ months.', time: '20 min', texture: 'Mashed / semi-solid' },
-  'dal_rice': { title: 'Dal Rice', method: 'Cook dal separately (soft, 3-4 whistles). Cook rice soft. Mix together and mash. Add ghee and a pinch of turmeric.', time: '25 min', texture: 'Mashed / semi-solid' },
-  'dal_veg': { title: 'Dal + Vegetable', method: 'Pressure cook dal with chopped vegs for 3-4 whistles. Mash with back of spoon. Add ghee while serving.', time: '20 min', texture: 'Thick puree / mashed' },
-  'porridge': { title: 'Porridge', method: 'Dry roast grain flour lightly. Add water (1:4 ratio), stir continuously on low flame until thick. Add mashed fruit or nut powder for flavour.', time: '10 min', texture: 'Smooth / semi-liquid' },
-  'fruit_mash': { title: 'Fruit Mash', method: 'Peel and deseed fruit. Mash with fork (ripe fruits) or steam and mash (firm fruits like apple, pear). Mix fruits together. Add nut powder if desired.', time: '5 min', texture: 'Smooth mash' },
-  'fruit_nut': { title: 'Fruit + Nut Butter', method: 'Mash ripe fruit with fork. Mix in ground nut powder or homemade nut butter (1 tsp). Serve immediately.', time: '5 min', texture: 'Chunky mash' },
-  'veg_mash': { title: 'Steamed Vegetables', method: 'Steam or boil vegetables until very soft. Mash with fork or blend. Add a drop of ghee. Season with mild spices (jeera, turmeric) if 8+ months.', time: '15 min', texture: 'Soft mash / puree' },
-  'grain_fruit': { title: 'Grain + Fruit', method: 'Cook grain as porridge (roast flour, add water, stir). Cool slightly, then fold in mashed fruit. Do not cook fruit — add fresh for nutrients.', time: '12 min', texture: 'Porridge with chunks' },
-  'grain_fat': { title: 'Grain + Healthy Fat', method: 'Cook grain as porridge or soft-cook cereal. Stir in ghee or ground nut powder while warm. Serve at comfortable temperature.', time: '10 min', texture: 'Smooth porridge' },
-  'curd_fruit': { title: 'Curd + Fruit', method: 'Use fresh homemade curd (room temperature, not cold). Mash fruit and fold into curd. Add ground nuts if desired. Do not heat.', time: '5 min', texture: 'Creamy mash' }
-};
-
-// Module-level storage for combo detail popup
-var _iqComboDetailData = [];
-
 // ── MEAL HISTORY MINING ──
 
 function _iqMineMealCombos(selectedFoods) {
@@ -27807,7 +27766,7 @@ function _iqMineMealCombos(selectedFoods) {
     });
   });
 
-  // Calculate average intake and match relevance ratio for each combo
+  // Calculate average intake for each combo
   results.forEach(function(r) {
     if (r.intakes.length > 0) {
       r.avgIntake = r.intakes.reduce(function(a, b) { return a + b; }, 0) / r.intakes.length;
@@ -27815,16 +27774,11 @@ function _iqMineMealCombos(selectedFoods) {
       r.avgIntake = null;
     }
     r.lastDate = r.dates[r.dates.length - 1];
-    // Relevance: what fraction of the combo's ingredients are from the selected set
-    r.matchRatio = r.bases.length > 0 ? r.matchCount / r.bases.length : 0;
   });
 
-  // Filter: keep only combos where at least 40% of ingredients are from the selection
-  results = results.filter(function(r) { return r.matchRatio >= 0.4; });
-
-  // Sort by match ratio (relevance) first, then match count, then frequency
+  // Sort by match count (how many selected foods it uses) then frequency
   results.sort(function(a, b) {
-    return b.matchRatio - a.matchRatio || b.matchCount - a.matchCount || b.count - a.count;
+    return b.matchCount - a.matchCount || b.count - a.count;
   });
 
   return results;
@@ -27933,6 +27887,10 @@ function _iqScoreCombo(combo, ctx) {
   // G. Frequency bonus — proven combos rank higher
   if (combo.count >= 4) { score += 8; }
   else if (combo.count >= 2) { score += 4; }
+
+  // G2. Favorites bonus — combos with favorite ingredients
+  var hasFav = combo.bases.some(function(base) { return isFoodFavorite(base); });
+  if (hasFav) { score += 5; }
 
   // H. Seasonal fit (part of scoring)
   var seasonalSum = 0;
@@ -28109,219 +28067,6 @@ function _iqGetWarnings(bases) {
   return warnings;
 }
 
-// ── DETECT PREP GUIDE FOR A COMBO ──
-
-function _iqDetectPrepGuide(combo) {
-  var bases = combo.bases || combo.foods || [];
-  var grainList = ['ragi','rice','oats','dalia','suji','poha','bajra','jowar','sabudana','idli','dosa','wheat','barley','amaranth'];
-  var dalList = ['moong dal','masoor dal','toor dal','chana dal','urad dal','rajma','khichdi'];
-  var fruitList = ['banana','apple','pear','mango','avocado','blueberry','blackberry','strawberry','papaya','chikoo','orange','watermelon','muskmelon','date (fruit)','fig','pomegranate','kiwi','grapes'];
-  var fatList = ['ghee','almonds','walnut','flaxseed','sesame','coconut','cashew','peanut'];
-  var dairyList = ['curd','paneer','cheese','butter','yogurt','dahi'];
-
-  var hasGrain = false, hasDal = false, hasFruit = false, hasVeg = false, hasFat = false, hasDairy = false;
-  bases.forEach(function(b) {
-    if (b === 'khichdi') { hasGrain = true; hasDal = true; }
-    else if (grainList.indexOf(b) !== -1) hasGrain = true;
-    else if (dalList.indexOf(b) !== -1) hasDal = true;
-    else if (fruitList.indexOf(b) !== -1) hasFruit = true;
-    else if (fatList.indexOf(b) !== -1) hasFat = true;
-    else if (dairyList.indexOf(b) !== -1) hasDairy = true;
-    else hasVeg = true;
-  });
-
-  // Match to best prep guide pattern
-  if (hasGrain && hasDal && hasVeg) return _IQ_PREP_GUIDE['khichdi'];
-  if (hasGrain && hasDal) return _IQ_PREP_GUIDE['dal_rice'];
-  if (hasDal && hasVeg) return _IQ_PREP_GUIDE['dal_veg'];
-  if (hasDairy && hasFruit) return _IQ_PREP_GUIDE['curd_fruit'];
-  if (hasGrain && hasFruit) return _IQ_PREP_GUIDE['grain_fruit'];
-  if (hasGrain && hasFat) return _IQ_PREP_GUIDE['grain_fat'];
-  if (hasFruit && hasFat) return _IQ_PREP_GUIDE['fruit_nut'];
-  if (hasFruit) return _IQ_PREP_GUIDE['fruit_mash'];
-  if (hasGrain) return _IQ_PREP_GUIDE['porridge'];
-  if (hasVeg) return _IQ_PREP_GUIDE['veg_mash'];
-  return null;
-}
-
-// ── GENERATE DOS AND DON'TS FOR SELECTED FOODS ──
-
-function _iqGetDosAndDonts(selectedFoods) {
-  var dos = [];
-  var donts = [];
-  var mo = getAgeInMonths();
-
-  selectedFoods.forEach(function(food) {
-    var base = _baseFoodName(food);
-    var nut = getNutrition(base);
-
-    // Age warnings
-    var rule = AGE_RULES[base] || AGE_RULES[food];
-    if (rule && mo < rule.minMonth) {
-      donts.push('Avoid ' + food + ' until ' + rule.minMonth + ' months');
-    }
-
-    // Allergen caution
-    var alert = ALLERGENS[base] || ALLERGENS[food];
-    if (alert) {
-      donts.push(food + ': watch for allergic reactions (rash, swelling, vomiting)');
-    }
-
-    // Nut form warning
-    if (['walnut','almonds','cashew','peanut'].indexOf(base) !== -1) {
-      donts.push('Never give ' + food + ' whole \u2014 always grind to fine powder or paste');
-    }
-
-    // Positive tips based on nutrition
-    if (nut && nut.tags) {
-      if (nut.tags.indexOf('iron-rich') !== -1) {
-        dos.push('Pair ' + food + ' with vitamin C (tomato, lemon) to boost iron absorption');
-      }
-      if (nut.tags.indexOf('easy-digest') !== -1) {
-        dos.push(food + ' is easy to digest \u2014 great for evenings or recovery meals');
-      }
-    }
-  });
-
-  // Cross-food rules
-  var tags = [];
-  selectedFoods.forEach(function(f) {
-    var nut = getNutrition(_baseFoodName(f));
-    if (nut && nut.tags) nut.tags.forEach(function(t) { if (tags.indexOf(t) === -1) tags.push(t); });
-  });
-  if (tags.indexOf('iron-rich') !== -1 && tags.indexOf('bone-health') !== -1) {
-    donts.push('Iron + calcium together reduces absorption \u2014 space 2 hours apart');
-  }
-
-  // General best practices
-  if (dos.length === 0) {
-    dos.push('Cook soft and mash well for easy swallowing');
-    dos.push('Introduce one new ingredient at a time, wait 3 days between new foods');
-  }
-
-  // Dedup
-  var seenDo = new Set(); var seenDont = new Set();
-  dos = dos.filter(function(d) { if (seenDo.has(d)) return false; seenDo.add(d); return true; });
-  donts = donts.filter(function(d) { if (seenDont.has(d)) return false; seenDont.add(d); return true; });
-
-  return { dos: dos.slice(0, 3), donts: donts.slice(0, 3) };
-}
-
-// ── COMBO DETAIL POPUP ──
-
-function _iqShowComboPopup(idx) {
-  idx = parseInt(idx);
-  var combo = _iqComboDetailData[idx];
-  if (!combo) return;
-
-  // Remove any existing popup
-  var existing = document.getElementById('iqComboPopup');
-  if (existing) existing.remove();
-
-  var bases = combo.bases || combo.foods || [];
-  var displayName = bases.map(function(b) { return b.charAt(0).toUpperCase() + b.slice(1); }).join(' + ');
-
-  // Prep guide
-  var prep = _iqDetectPrepGuide(combo);
-
-  // Dos and don'ts
-  var dd = _iqGetDosAndDonts(bases);
-
-  // Nutrients from all ingredients
-  var allNutrients = [];
-  bases.forEach(function(b) {
-    var nut = getNutrition(_baseFoodName(b));
-    if (nut && nut.nutrients) {
-      nut.nutrients.forEach(function(n) {
-        if (allNutrients.indexOf(n) === -1) allNutrients.push(n);
-      });
-    }
-  });
-
-  // Meal history info
-  var meta = [];
-  if (combo.count > 0) meta.push('Served ' + combo.count + ' time' + (combo.count > 1 ? 's' : ''));
-  if (combo.avgIntake !== null) meta.push('Avg intake: ' + Math.round(combo.avgIntake * 100) + '%');
-  if (combo.lastDate) meta.push('Last served: ' + combo.lastDate);
-
-  // Build popup HTML
-  var html = '<div class="iq-popup-overlay" id="iqComboPopup" data-action="iqCloseComboSelf">';
-  html += '<div class="iq-popup-card">';
-
-  // Header
-  html += '<div class="iq-popup-header">';
-  html += '<div class="icon icon-peach">' + zi('bowl') + '</div>';
-  html += '<div class="iq-popup-title">' + escHtml(displayName) + '</div>';
-  html += '<button class="iq-popup-close" data-action="iqCloseCombo">&times;</button>';
-  html += '</div>';
-
-  // History meta
-  if (meta.length > 0) {
-    html += '<div class="iq-popup-meta">' + escHtml(meta.join(' \u00b7 ')) + '</div>';
-  }
-
-  // Prep guide section
-  if (prep) {
-    html += '<div class="iq-popup-section">';
-    html += '<div class="iq-popup-section-label"><span class="icon icon-peach">' + zi('chef') + '</span> HOW TO PREPARE</div>';
-    html += '<div class="iq-popup-section-title">' + escHtml(prep.title) + '</div>';
-    html += '<div class="iq-popup-section-body">' + escHtml(prep.method) + '</div>';
-    html += '<div class="iq-popup-detail-row">';
-    html += '<span class="icon icon-sage">' + zi('clock') + '</span> ' + escHtml(prep.time);
-    html += ' &nbsp;\u00b7&nbsp; ';
-    html += '<span class="icon icon-lav">' + zi('spoon') + '</span> ' + escHtml(prep.texture);
-    html += '</div>';
-    html += '</div>';
-  }
-
-  // Dos & Don'ts section
-  if (dd.dos.length > 0 || dd.donts.length > 0) {
-    html += '<div class="iq-popup-section">';
-    html += '<div class="iq-popup-section-label"><span class="icon icon-sage">' + zi('shield') + '</span> DOS & DON\'TS</div>';
-    dd.dos.forEach(function(d) {
-      html += '<div class="iq-popup-tip iq-popup-do"><span class="icon icon-sage">' + zi('check') + '</span> ' + escHtml(d) + '</div>';
-    });
-    dd.donts.forEach(function(d) {
-      html += '<div class="iq-popup-tip iq-popup-dont"><span class="icon icon-amber">' + zi('warn') + '</span> ' + escHtml(d) + '</div>';
-    });
-    html += '</div>';
-  }
-
-  // Nutrients section
-  if (allNutrients.length > 0) {
-    html += '<div class="iq-popup-section">';
-    html += '<div class="iq-popup-section-label"><span class="icon icon-sky">' + zi('sparkle') + '</span> NUTRIENTS</div>';
-    html += '<div class="iq-popup-nutrient-row">';
-    allNutrients.slice(0, 8).forEach(function(n) {
-      html += '<span class="iq-popup-nutrient-chip">' + escHtml(n) + '</span>';
-    });
-    html += '</div>';
-    html += '</div>';
-  }
-
-  html += '</div></div>';
-
-  // Insert into DOM
-  var popupEl = document.createElement('div');
-  popupEl.innerHTML = html;
-  document.body.appendChild(popupEl.firstChild);
-
-  // Animate open
-  requestAnimationFrame(function() {
-    var overlay = document.getElementById('iqComboPopup');
-    if (overlay) overlay.classList.add('open');
-  });
-  document.body.style.overflow = 'hidden';
-}
-
-function _iqCloseComboPopup() {
-  var overlay = document.getElementById('iqComboPopup');
-  if (!overlay) return;
-  overlay.classList.remove('open');
-  document.body.style.overflow = '';
-  setTimeout(function() { overlay.remove(); }, 300);
-}
-
 // ── INGREDIENT MODE ANSWER HANDLER ──
 
 function qaHandleIngredient(classified) {
@@ -28370,10 +28115,7 @@ function qaHandleIngredient(classified) {
   var sections = [];
   var displayFoods = selectedFoods.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(', ');
 
-  // Store all combos for detail popup access
-  var allCombos = [];
-
-  // Historical combos section — now with relevance display
+  // Historical combos section
   var histItems = [];
   var topHistory = historicalCombos.slice(0, 3);
   topHistory.forEach(function(combo, idx) {
@@ -28381,12 +28123,9 @@ function qaHandleIngredient(classified) {
     var meta = [];
     if (combo.count > 0) meta.push('Served ' + combo.count + '\u00d7');
     if (combo.avgIntake !== null) meta.push('intake ' + Math.round(combo.avgIntake * 100) + '%');
-    if (combo.matchRatio < 1) meta.push(Math.round(combo.matchRatio * 100) + '% match');
     var text = (idx === 0 ? '\u2605 ' : '') + comboDisplay;
     if (meta.length > 0) text += ' \u2014 ' + meta.join(' \u00b7 ');
-    var comboIdx = allCombos.length;
-    allCombos.push(combo);
-    histItems.push({ text: text, signal: 'good', action: 'iqComboDetail', actionArg: String(comboIdx) });
+    histItems.push({ text: text, signal: 'good' });
     if (combo.enhancedReasons.length > 0) {
       histItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
     }
@@ -28400,14 +28139,12 @@ function qaHandleIngredient(classified) {
     });
   }
 
-  // New combos section — tappable for detail popup
+  // New combos section
   var newItems = [];
-  var topNew = newCombos.slice(0, 3);
+  var topNew = newCombos.slice(0, 2);
   topNew.forEach(function(combo) {
     var comboDisplay = combo.bases.map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); }).join(' + ');
-    var comboIdx = allCombos.length;
-    allCombos.push(combo);
-    newItems.push({ text: comboDisplay, signal: 'action', action: 'iqComboDetail', actionArg: String(comboIdx) });
+    newItems.push({ text: comboDisplay, signal: 'action' });
     if (combo.enhancedReasons.length > 0) {
       newItems.push({ text: combo.enhancedReasons.join(' \u00b7 '), signal: 'info' });
     }
@@ -28421,36 +28158,8 @@ function qaHandleIngredient(classified) {
     });
   }
 
-  // HOW TO PREPARE section — based on the best combo
-  var bestCombo = topHistory[0] || topNew[0];
-  if (bestCombo) {
-    var prepGuide = _iqDetectPrepGuide(bestCombo);
-    if (prepGuide) {
-      var prepItems = [];
-      prepItems.push({ text: prepGuide.method, signal: 'info' });
-      prepItems.push({ text: 'Time: ' + prepGuide.time + ' \u00b7 Texture: ' + prepGuide.texture, signal: 'neutral' });
-      sections.push({
-        label: 'HOW TO PREPARE',
-        icon: zi('chef'),
-        items: prepItems
-      });
-    }
-  }
-
-  // DOS & DON'TS section
-  var dd = _iqGetDosAndDonts(selectedFoods);
-  if (dd.dos.length > 0 || dd.donts.length > 0) {
-    var ddItems = [];
-    dd.dos.forEach(function(d) { ddItems.push({ text: d, signal: 'good' }); });
-    dd.donts.forEach(function(d) { ddItems.push({ text: d, signal: 'warn' }); });
-    sections.push({
-      label: 'DOS & DON\'TS',
-      icon: zi('shield'),
-      items: ddItems
-    });
-  }
-
   // Best meal fit
+  var bestCombo = topHistory[0] || topNew[0];
   if (bestCombo) {
     var fits = _iqMealFit(bestCombo);
     if (fits.length > 0) {
@@ -28463,6 +28172,16 @@ function qaHandleIngredient(classified) {
         items: fitItems
       });
     }
+  }
+
+  // Warnings
+  var warnings = _iqGetWarnings(selectedFoods);
+  if (warnings.length > 0) {
+    sections.push({
+      label: 'NOTE',
+      icon: zi('warn'),
+      items: warnings.map(function(w) { return { text: w, signal: 'warn' }; })
+    });
   }
 
   // Synergy highlights in sections
@@ -28492,9 +28211,6 @@ function qaHandleIngredient(classified) {
       ]
     });
   }
-
-  // Store combo detail data for popup access
-  _iqComboDetailData = allCombos;
 
   // Confidence
   var confidence = historicalCombos.length > 0
@@ -29165,6 +28881,8 @@ function qaExecuteQuery(text) {
       else if (handler === 'answerTomorrow') answer = qaAnswerTomorrow(intent.id);
       else if (handler === 'answerAge') answer = qaAnswerAge(intent.id);
       else if (handler === 'answerStreak') answer = qaAnswerStreak(intent.id);
+      else if (handler === 'answerPredictionAccuracy') answer = qaAnswerPredictionAccuracy();
+      else if (handler === 'answerFavoriteFoods') answer = qaAnswerFavoriteFoods();
       else answer = null;
     }
   } catch(e) {
@@ -29208,17 +28926,9 @@ function qaRenderAnswer(container, answer) {
         sec.items.forEach(function(item) {
           var cls = signalClasses[item.signal] || 'qa-item-neutral';
           var icon = item.icon || signalIcons[item.signal] || '·';
-          var actionAttr = '';
-          var tapCls = '';
-          if (item.action) {
-            actionAttr = ' data-action="' + escHtml(item.action) + '"';
-            if (item.actionArg) actionAttr += ' data-arg="' + escHtml(item.actionArg) + '"';
-            tapCls = ' qa-item-tap';
-          }
-          html += '<div class="qa-item ' + cls + tapCls + '"' + actionAttr + '>';
+          html += '<div class="qa-item ' + cls + '">';
           html += '<span class="qa-item-signal">' + icon + '</span>';
           html += '<span class="qa-item-text">' + escHtml(item.text) + '</span>';
-          if (item.action) html += '<span class="qa-item-chevron">\u203a</span>';
           html += '</div>';
         });
       }
@@ -40365,14 +40075,23 @@ function openQuickLog() {
   document.getElementById('qlFab').classList.add('ql-fab-open');
   document.getElementById('qlSheetOverlay').classList.add('open');
   document.getElementById('qlSheet').classList.add('open');
+  // Smart Quick Log: render predictions if not in backfill mode
+  if (!_qlBackfillDate) {
+    _qlActivePredictions = _qlPredict();
+    _qlRenderSuggest(_qlActivePredictions);
+  }
 }
 
 function closeQuickLog() {
   _qlOpen = false;
+  _qlSuggestUsed = false;
+  _qlActivePredictions = [];
   qlUnlockBody();
   document.getElementById('qlFab').classList.remove('ql-fab-open');
   document.getElementById('qlSheetOverlay').classList.remove('open');
   document.getElementById('qlSheet').classList.remove('open');
+  var sw = document.getElementById('qlSuggestWrap');
+  if (sw) { sw.classList.add('ql-suggest-hidden'); sw.innerHTML = ''; }
 }
 
 function openQuickModal(type) {
@@ -40483,6 +40202,8 @@ function closeQuickLogAll() {
   document.getElementById('qlFab').classList.remove('ql-fab-open');
   qlUnlockBody();
   _qlOpen = false;
+  _qlSuggestUsed = false;
+  _qlActivePredictions = [];
   _qlBackfillDate = null;
   // Clean up injected backfill date pickers from non-feed modals
   ['sleep', 'nap', 'poop'].forEach(t => {
@@ -40620,6 +40341,7 @@ function saveActivity() {
   syncMilestoneStatuses();
 
   // Close and show toast
+  _qlLogAction('activity', _qlSuggestUsed);
   closeQuickLogAll();
   _alPrefillSource = 'manual';
 
@@ -40636,12 +40358,452 @@ function saveActivity() {
   renderHomeActivity();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FOOD FAVORITES
+// ═══════════════════════════════════════════════════════════════
+
+function isFoodFavorite(foodName) {
+  var base = _baseFoodName(foodName);
+  var entry = foods.find(function(f) { return _baseFoodName(f.name) === base; });
+  return entry && entry.favorite === true;
+}
+
+function toggleFoodFavorite(foodName) {
+  var base = _baseFoodName(foodName);
+  var idx = foods.findIndex(function(f) { return _baseFoodName(f.name) === base; });
+  if (idx === -1) return;
+  foods[idx].favorite = !foods[idx].favorite;
+  save(KEYS.foods, foods);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMART QUICK LOG — Adaptive Meal Windows
+// ═══════════════════════════════════════════════════════════════
+
+var _qlMealWindowCache = null;
+
+function _qlComputeMealWindow() {
+  if (_qlMealWindowCache) return _qlMealWindowCache;
+  var defaults = {
+    breakfast: { start: 420, end: 690 },
+    lunch:     { start: 690, end: 1020 },
+    dinner:    { start: 1020, end: 1380 }
+  };
+  var result = { breakfast: null, lunch: null, dinner: null };
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+  var cutoffStr = toDateStr(cutoff);
+  var mealTimes = { breakfast: [], lunch: [], dinner: [] };
+
+  Object.keys(feedingData).forEach(function(dateStr) {
+    if (dateStr < cutoffStr) return;
+    var day = feedingData[dateStr];
+    ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+      if (!day[meal] || !day[meal].trim()) return;
+      var tKey = meal + '_time';
+      if (day[tKey]) {
+        var parts = day[tKey].split(':');
+        var mins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        if (!isNaN(mins)) mealTimes[meal].push(mins);
+      }
+    });
+  });
+
+  ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+    var times = mealTimes[meal].slice().sort(function(a, b) { return a - b; });
+    var n = times.length;
+    if (n >= 7) {
+      var q1 = times[Math.floor(n * 0.25)];
+      var q3 = times[Math.floor(n * 0.75)];
+      result[meal] = { start: Math.max(0, q1 - 60), end: Math.min(1440, q3 + 60) };
+    } else if (n >= 3) {
+      result[meal] = { start: Math.max(0, times[0] - 60), end: Math.min(1440, times[n - 1] + 60) };
+    } else {
+      result[meal] = defaults[meal];
+    }
+  });
+
+  _qlMealWindowCache = result;
+  return result;
+}
+
 function detectMealType() {
-  const h = new Date().getHours();
-  if (h < 10) return 'breakfast';
-  if (h >= 12 && h < 15) return 'lunch';
-  if (h >= 17 && h < 21) return 'dinner';
+  var windows = _qlComputeMealWindow();
+  var now = new Date();
+  var nowMin = now.getHours() * 60 + now.getMinutes();
+  if (nowMin >= windows.breakfast.start && nowMin < windows.breakfast.end) return 'breakfast';
+  if (nowMin >= windows.lunch.start && nowMin < windows.lunch.end) return 'lunch';
+  if (nowMin >= windows.dinner.start && nowMin < windows.dinner.end) return 'dinner';
   return 'snack';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMART QUICK LOG — Prediction Engine
+// ═══════════════════════════════════════════════════════════════
+
+var _qlActivePredictions = [];
+var _qlSuggestUsed = false;
+
+function _qlPredictFood(meal) {
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+  var cutoffStr = toDateStr(cutoff);
+  var todayStr = today();
+  var counts = {};
+  var dayCount = 0;
+
+  Object.keys(feedingData).forEach(function(dateStr) {
+    if (dateStr < cutoffStr || dateStr > todayStr) return;
+    var day = feedingData[dateStr];
+    if (!day[meal] || !day[meal].trim()) return;
+    dayCount++;
+    day[meal].split(',').forEach(function(item) {
+      var name = item.trim();
+      if (name.length < 2) return;
+      var base = _baseFoodName(name);
+      if (!counts[base]) counts[base] = { name: name, freq: 0 };
+      counts[base].freq++;
+    });
+  });
+
+  if (dayCount < 3) return null;
+
+  // Exclude foods already served today for this meal
+  var todayDay = feedingData[todayStr];
+  var todayFoods = new Set();
+  if (todayDay && todayDay[meal]) {
+    todayDay[meal].split(',').forEach(function(item) {
+      todayFoods.add(_baseFoodName(item.trim()));
+    });
+  }
+
+  var scored = Object.keys(counts).filter(function(base) {
+    return !todayFoods.has(base);
+  }).map(function(base) {
+    var c = counts[base];
+    var score = c.freq * 1.0 + (isFoodFavorite(c.name) ? 0.5 : 0);
+    return { name: c.name, score: score };
+  }).sort(function(a, b) { return b.score - a.score; });
+
+  if (scored.length === 0) return null;
+  var top = scored.slice(0, 2).map(function(s) { return s.name; });
+  return top.join(' + ');
+}
+
+function _qlPredictionKey(prediction) {
+  return prediction.type === 'feed' ? 'feed:' + prediction.meal : prediction.type;
+}
+
+function _qlPredict() {
+  var predictions = [];
+  var todayStr = today();
+  var now = new Date();
+  var nowMin = now.getHours() * 60 + now.getMinutes();
+  var ipRaw = localStorage.getItem(SLEEP_INPROGRESS_KEY);
+
+  // 1. SLEEP — bedtime window (19:00-22:00), no night sleep today, no active session
+  if (!ipRaw && nowMin >= 1140 && nowMin <= 1320) {
+    var hasNightToday = sleepData.some(function(e) { return e.date === todayStr && e.type === 'night'; });
+    if (!hasNightToday) {
+      predictions.push({ type: 'sleep', action: 'Start', label: 'Bedtime', icon: 'moon', color: 'indigo' });
+    }
+  }
+
+  // 2. NAP — count-based with 8:30-17:00 time guard
+  if (!ipRaw && nowMin >= 510 && nowMin < 1020) {
+    var last7 = [];
+    for (var d = 1; d <= 7; d++) {
+      var dd = new Date(); dd.setDate(dd.getDate() - d);
+      var ds = toDateStr(dd);
+      var dayNaps = sleepData.filter(function(e) { return e.date === ds && e.type === 'nap'; }).length;
+      last7.push(dayNaps);
+    }
+    var avgNaps = last7.length > 0 ? Math.round(last7.reduce(function(a, b) { return a + b; }, 0) / last7.length) : 2;
+    var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; }).length;
+    if (todayNaps < Math.max(avgNaps, 1)) {
+      predictions.push({ type: 'nap', action: 'Start', label: 'Nap time', icon: 'zzz', color: 'lav' });
+    }
+  }
+
+  // 3. FEED — adaptive meal window, only if meal not yet logged
+  var mealType = detectMealType();
+  if (mealType !== 'snack') {
+    var todayDay = feedingData[todayStr];
+    var mealLogged = todayDay && todayDay[mealType] && todayDay[mealType].trim();
+    if (!mealLogged) {
+      var foodPred = _qlPredictFood(mealType);
+      var mealColors = { breakfast: 'peach', lunch: 'sage', dinner: 'lav' };
+      predictions.push({
+        type: 'feed', meal: mealType, foods: foodPred,
+        label: capitalize(mealType) + ' time' + (foodPred ? ' \u00b7 ' + foodPred + '?' : ''),
+        icon: 'bowl', color: mealColors[mealType] || 'peach'
+      });
+    }
+  }
+
+  // 4. POOP — no poop today, past noon
+  if (nowMin >= 720) {
+    var todayPoops = poopData.filter(function(e) { return e.date === todayStr; }).length;
+    if (todayPoops === 0) {
+      predictions.push({ type: 'poop', label: 'Log poop', icon: 'diaper', color: 'amber' });
+    }
+  }
+
+  // 5. ACTIVITY — no activity today, afternoon
+  if (nowMin >= 720) {
+    var todayActs = activityLog[todayStr];
+    if (!todayActs || todayActs.length === 0) {
+      predictions.push({ type: 'activity', label: 'Log activity', icon: 'run', color: 'sage' });
+    }
+  }
+
+  return predictions;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMART QUICK LOG — Suggest Card Rendering
+// ═══════════════════════════════════════════════════════════════
+
+function _qlRenderSuggest(predictions) {
+  var wrap = document.getElementById('qlSuggestWrap');
+  if (!wrap) return;
+  if (!predictions || predictions.length === 0) {
+    wrap.classList.add('ql-suggest-hidden');
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.classList.remove('ql-suggest-hidden');
+
+  var chipHtml = '';
+  if (predictions.length > 1) {
+    chipHtml = '<div class="chip-row-scroll">';
+    predictions.forEach(function(p, i) {
+      var label = p.type === 'feed' ? capitalize(p.meal || 'Feed') : capitalize(p.type);
+      chipHtml += '<span class="chip-base chip-compact chip-' + p.color + (i === 0 ? ' active' : '') + '" data-chip="single" data-action="qlSwitchSuggest" data-arg="' + i + '">' + label + '</span>';
+    });
+    chipHtml += '</div>';
+  }
+
+  var bodyHtml = _qlRenderSuggestBody(predictions[0]);
+
+  wrap.innerHTML = '<div class="ql-suggest card card-compact">' + chipHtml + '<div id="qlSuggestBody">' + bodyHtml + '</div></div>';
+}
+
+function _qlRenderSuggestBody(p) {
+  var html = '<div class="card-header"><div class="card-icon icon icon-' + p.color + '">' + zi(p.icon) + '</div><div class="card-title">' + escHtml(p.label) + '</div></div>';
+  html += '<div class="card-body">';
+
+  if (p.type === 'feed' && p.foods) {
+    html += '<div class="ql-suggest-foods">' + escHtml(p.foods) + '</div>';
+  }
+
+  html += '<div class="ql-suggest-actions">';
+  if (p.type === 'feed') {
+    if (p.foods) {
+      html += '<button class="btn-primary bp-' + p.color + '" data-action="qlOpenFeedPrefill">Log this</button>';
+    }
+    html += '<button class="btn-ghost" data-action="qlOpenFeed">Edit first</button>';
+  } else if (p.type === 'sleep') {
+    html += '<button class="btn-primary bp-' + p.color + '" data-action="qlStartSleep">Start sleep</button>';
+  } else if (p.type === 'nap') {
+    html += '<button class="btn-primary bp-' + p.color + '" data-action="qlStartNap">Start nap</button>';
+  } else if (p.type === 'poop') {
+    html += '<button class="btn-primary bp-' + p.color + '" data-action="qlOpenPoop">Log poop</button>';
+  } else if (p.type === 'activity') {
+    html += '<button class="btn-primary bp-' + p.color + '" data-action="qlOpenActivity">Log activity</button>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function _qlSwitchSuggest(idx) {
+  idx = parseInt(idx);
+  if (!_qlActivePredictions || idx < 0 || idx >= _qlActivePredictions.length) return;
+  var body = document.getElementById('qlSuggestBody');
+  if (body) body.innerHTML = _qlRenderSuggestBody(_qlActivePredictions[idx]);
+}
+
+function _qlConfirmSuggest() {
+  _qlSuggestUsed = true;
+  var pred = _qlActivePredictions.find(function(p) { return p.type === 'feed'; });
+  if (!pred) return;
+  _qlMeal = pred.meal;
+  openQuickModal('feed');
+  setTimeout(function() {
+    document.querySelectorAll('.ql-meal-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.meal === pred.meal); });
+    if (pred.foods) {
+      var inp = document.getElementById('qlFeedInput');
+      if (inp) inp.value = pred.foods;
+    }
+  }, 50);
+}
+
+function _qlEditSuggest() {
+  _qlSuggestUsed = true;
+  var pred = _qlActivePredictions.find(function(p) { return p.type === 'feed'; });
+  var meal = pred ? pred.meal : detectMealType();
+  _qlMeal = meal;
+  openQuickModal('feed');
+  setTimeout(function() {
+    document.querySelectorAll('.ql-meal-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.meal === meal); });
+  }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMART QUICK LOG — Post-Save Micro-Insights
+// ═══════════════════════════════════════════════════════════════
+
+function _qlFeedInsight() {
+  try {
+    var todayStr = today();
+    var day = feedingData[todayStr];
+    if (!day) return null;
+    var mealCount = ['breakfast', 'lunch', 'dinner'].filter(function(m) { return day[m] && day[m].trim(); }).length;
+    if (mealCount >= 3) return '3rd meal today \u2014 great variety!';
+
+    var food = document.getElementById('qlFeedInput')?.value?.trim() || '';
+    if (food) {
+      var base = _baseFoodName(food);
+      var isNew = !foods.some(function(f) { return _baseFoodName(f.name) === base; });
+      if (isNew) return 'New food! Watch for reactions over 3 days.';
+
+      var yestStr = toDateStr(new Date(new Date().setDate(new Date().getDate() - 1)));
+      var yest = feedingData[yestStr];
+      if (yest && yest[_qlMeal]) {
+        var yestBases = yest[_qlMeal].split(',').map(function(f) { return _baseFoodName(f.trim()); });
+        if (yestBases.indexOf(base) >= 0) return 'Same as yesterday \u2014 must be a favorite!';
+      }
+    }
+
+    if (mealCount === 1) return 'Day started! 2 more meals to go.';
+  } catch(e) {}
+  return null;
+}
+
+function _qlSleepInsight() {
+  try {
+    var todayStr = today();
+    var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
+    if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
+
+    var lastNap = todayNaps[todayNaps.length - 1];
+    if (lastNap && lastNap.bedtime && lastNap.wakeTime) {
+      var sP = lastNap.bedtime.split(':'), eP = lastNap.wakeTime.split(':');
+      var durMin = (parseInt(eP[0]) * 60 + parseInt(eP[1])) - (parseInt(sP[0]) * 60 + parseInt(sP[1]));
+      if (durMin > 120) return 'Long nap! Monitor bedtime \u2014 may shift later.';
+    }
+
+    var nightEntries = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'night'; });
+    if (nightEntries.length > 0) {
+      var ne = nightEntries[nightEntries.length - 1];
+      if (ne.bedtime && ne.wakeTime) {
+        var bP = ne.bedtime.split(':'), wP = ne.wakeTime.split(':');
+        var bedMin = parseInt(bP[0]) * 60 + parseInt(bP[1]);
+        var wakeMin = parseInt(wP[0]) * 60 + parseInt(wP[1]);
+        var dur = wakeMin > bedMin ? wakeMin - bedMin : (1440 - bedMin) + wakeMin;
+        var durH = Math.round(dur / 60 * 10) / 10;
+        if (dur >= 600) return 'Great night! ' + durH + 'h of sleep.';
+        if (dur < 480) return 'Short night \u2014 might need an early nap.';
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function _qlPoopInsight() {
+  try {
+    var todayStr = today();
+    var todayPoops = poopData.filter(function(e) { return e.date === todayStr; });
+    var count = todayPoops.length;
+
+    if (count >= 3) return count + ' poops today \u2014 above average.';
+
+    if (_qlCon === 'normal' || _qlCon === 'formed') return 'Healthy poop \u2014 digestion looks good.';
+
+    if (_qlColor === 'green') return 'Green is normal \u2014 often from leafy foods.';
+
+    if (count === 1) {
+      var weekPoops = poopData.filter(function(e) {
+        var d = new Date(e.date);
+        var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+        return d >= cutoff;
+      }).length;
+      var avg = weekPoops > 0 ? Math.round(weekPoops / 7 * 10) / 10 : 0;
+      return 'First today \u2014 ' + avg + ' per day this week.';
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SMART QUICK LOG — Accuracy Tracking
+// ═══════════════════════════════════════════════════════════════
+
+function _qlLogAction(actionType, fromSuggest) {
+  var history = load(KEYS.qlPredictions, []);
+  var entry = {
+    ts: new Date().toISOString(),
+    predicted: _qlActivePredictions.map(function(p) { return _qlPredictionKey(p); }),
+    actual: actionType,
+    fromSuggest: !!fromSuggest
+  };
+  history.push(entry);
+  // Prune entries older than 30 days
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  var cutoffStr = cutoff.toISOString();
+  history = history.filter(function(e) { return e.ts >= cutoffStr; });
+  save(KEYS.qlPredictions, history);
+}
+
+function qaAnswerPredictionAccuracy() {
+  var history = load(KEYS.qlPredictions, []);
+  // Exclude entries with empty predicted array
+  var valid = history.filter(function(e) { return e.predicted && e.predicted.length > 0; });
+  var total = valid.length;
+  if (total < 5) {
+    return {
+      icon: 'target', domain: 'indigo', title: 'Prediction Accuracy',
+      sections: [{ label: 'Not enough data', items: [{ text: 'Need at least 5 saves with active predictions. Current: ' + total, signal: 'info' }] }],
+      confidence: 'Need more data to calculate accuracy'
+    };
+  }
+  var top1 = 0, topN = 0;
+  valid.forEach(function(e) {
+    if (e.predicted[0] === e.actual) top1++;
+    if (e.predicted.indexOf(e.actual) >= 0) topN++;
+  });
+  var fromSuggest = valid.filter(function(e) { return e.fromSuggest; }).length;
+  return {
+    icon: 'target', domain: 'indigo', title: 'Prediction Accuracy',
+    sections: [{
+      label: 'Metrics (' + total + ' saves)',
+      items: [
+        { text: 'Top-1 accuracy: ' + Math.round(top1 / total * 100) + '%', signal: top1 / total >= 0.5 ? 'good' : 'warn' },
+        { text: 'Top-N accuracy: ' + Math.round(topN / total * 100) + '%', signal: topN / total >= 0.7 ? 'good' : 'warn' },
+        { text: fromSuggest + ' of ' + total + ' saves used the suggestion card', signal: 'info' }
+      ]
+    }],
+    confidence: 'Based on last 30 days of Quick Log saves'
+  };
+}
+
+function qaAnswerFavoriteFoods() {
+  var favs = foods.filter(function(f) { return f.favorite === true; });
+  if (favs.length === 0) {
+    return {
+      icon: 'star', domain: 'amber', title: 'Favorite Foods',
+      sections: [{ label: 'None yet', items: [{ text: 'Star foods in the food browser to mark favorites', signal: 'info' }] }],
+      confidence: 'No favorites marked yet'
+    };
+  }
+  var items = favs.map(function(f) {
+    var freq = getFoodFrequency(f.name);
+    var fl = freqLabel(freq);
+    return { text: f.name + ' \u2014 ' + fl.label + ' (' + freq + '\u00d7/wk)', signal: 'good' };
+  });
+  return {
+    icon: 'star', domain: 'amber', title: 'Favorite Foods',
+    sections: [{ label: favs.length + ' favorite' + (favs.length !== 1 ? 's' : ''), items: items }],
+    confidence: 'Favorites are used to boost meal predictions and suggestions'
+  };
 }
 
 function setQLMeal(meal) {
@@ -40755,6 +40917,11 @@ function saveQLFeed() {
 
   _qlBackfillDate = null; // reset backfill
 
+  // Smart QL: compute insight BEFORE closing modal
+  var qlInsight = _qlFeedInsight();
+  // Accuracy tracking
+  _qlLogAction('feed:' + _qlMeal, _qlSuggestUsed);
+
   // Build undo function
   const undoDateStr = dateStr;
   const undoFn = () => {
@@ -40763,6 +40930,7 @@ function saveQLFeed() {
   };
 
   closeQuickLogAll();
+  if (!hasNutrientFlash && qlInsight) toastMsg += ' \u00b7 ' + qlInsight;
   showQLToast(toastMsg, hasNutrientFlash ? 4000 : 3000, undoFn);
   matchSuggestionsAfterSave(dateStr);
 
@@ -40791,6 +40959,9 @@ function saveQLSleep() {
   _tsfMarkDirty();
 
   _islMarkDirty('sleep');
+  // Smart QL: compute insight BEFORE close
+  var qlInsight = _qlSleepInsight();
+  _qlLogAction('sleep', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
     if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); _islMarkDirty('sleep'); }
@@ -40798,7 +40969,8 @@ function saveQLSleep() {
 
   _qlBackfillDate = null;
   closeQuickLogAll();
-  showQLToast(zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : ''), 3000, undoFn);
+  var sleepToastMsg = zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlInsight ? ' \u00b7 ' + qlInsight : '');
+  showQLToast(sleepToastMsg, 3000, undoFn);
 
   const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -40824,6 +40996,9 @@ function saveQLNap() {
   _tsfMarkDirty();
 
   _islMarkDirty('sleep');
+  // Smart QL: compute insight BEFORE close
+  var qlNapInsight = _qlSleepInsight();
+  _qlLogAction('nap', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
     if (idx >= 0) { sleepData.splice(idx, 1); save(KEYS.sleep, sleepData); _islMarkDirty('sleep'); }
@@ -40831,7 +41006,8 @@ function saveQLNap() {
 
   _qlBackfillDate = null;
   closeQuickLogAll();
-  showQLToast(zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : ''), 3000, undoFn);
+  var napToastMsg = zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlNapInsight ? ' \u00b7 ' + qlNapInsight : '');
+  showQLToast(napToastMsg, 3000, undoFn);
 
   const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -40857,6 +41033,9 @@ function saveQLPoop() {
   _tsfMarkDirty();
 
   _islMarkDirty('poop');
+  // Smart QL: compute insight BEFORE close
+  var qlPoopIns = _qlPoopInsight();
+  _qlLogAction('poop', _qlSuggestUsed);
   const undoFn = () => {
     const idx = poopData.indexOf(entry);
     if (idx >= 0) { poopData.splice(idx, 1); save(KEYS.poop, poopData); _islMarkDirty('poop'); }
@@ -40864,7 +41043,8 @@ function saveQLPoop() {
 
   _qlBackfillDate = null;
   closeQuickLogAll();
-  showQLToast(zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : ''), 3000, undoFn);
+  var poopToastMsg = zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlPoopIns ? ' \u00b7 ' + qlPoopIns : '');
+  showQLToast(poopToastMsg, 3000, undoFn);
 
   const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
@@ -45560,6 +45740,9 @@ function pickQLFood(food) {
 let _qlBackfillDate = null;
 
 function openQLBackfill() {
+  // Hide suggest card — predictions are for today, not backfill dates
+  var sw = document.getElementById('qlSuggestWrap');
+  if (sw) { sw.classList.add('ql-suggest-hidden'); sw.innerHTML = ''; }
   // Show a type selector within the bottom sheet, then date selector in the modal
   const sheet = document.getElementById('qlSheet');
   const opts = sheet.querySelector('.ql-options');
@@ -45584,6 +45767,8 @@ function openQLBackfill() {
 }
 
 function resetQLSheet() {
+  var sw = document.getElementById('qlSuggestWrap');
+  if (sw) { sw.classList.add('ql-suggest-hidden'); sw.innerHTML = ''; }
   const opts = document.getElementById('qlSheet')?.querySelector('.ql-options');
   if (!opts) return;
   opts.innerHTML = `
@@ -45607,7 +45792,7 @@ function resetQLSheet() {
     </div>`;
   // Re-bind click listeners on newly created elements
   opts.querySelectorAll('[data-quick-modal]').forEach(function(btn) {
-    btn.addEventListener('click', function() { openQuickModal(btn.dataset.quickModal); });
+    btn.addEventListener('click', function() { _qlSuggestUsed = false; openQuickModal(btn.dataset.quickModal); });
   });
 }
 
