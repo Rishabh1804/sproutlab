@@ -9442,16 +9442,14 @@ function _alSelectSlot(slot) {
 function _alRenderDurationChips() {
   var container = document.getElementById('alDurRow');
   if (!container) return;
-  var html = '<div class="al-dur-label">' + zi('hourglass') + ' Duration</div><div class="al-dur-chips">';
+  var html = '<div class="al-dur-label">' + zi('clock') + ' Duration</div><div class="al-dur-chips">';
   AL_DURATION_CHIPS.forEach(function(d) {
     var cls = (_alSelectedDuration === d && !_alOtherDurVisible) ? ' active' : '';
     html += '<button class="al-dur-chip' + cls + '" data-action="alSelectDuration" data-arg="' + d + '">' + d + ' min</button>';
   });
-  // Other chip — show custom value if set
-  var hasCustomDur = (typeof _alSelectedDuration === 'number' && AL_DURATION_CHIPS.indexOf(_alSelectedDuration) === -1);
-  var otherCls = (_alOtherDurVisible || hasCustomDur) ? ' active' : '';
-  var otherLabel = hasCustomDur ? _alSelectedDuration + ' min' : 'Other';
-  html += '<button class="al-dur-chip al-dur-chip-other' + otherCls + '" data-action="alToggleOtherDur">' + escHtml(otherLabel) + '</button>';
+  // Other chip
+  var otherCls = _alOtherDurVisible ? ' active' : '';
+  html += '<button class="al-dur-chip al-dur-chip-other' + otherCls + '" data-action="alToggleOtherDur">Other</button>';
   // Skip chip
   var skipCls = (_alSelectedDuration === null && !_alOtherDurVisible) ? ' active' : '';
   html += '<button class="al-dur-chip al-dur-chip-skip' + skipCls + '" data-action="alSelectDuration" data-arg="skip">Skip</button>';
@@ -9499,9 +9497,7 @@ function _alSetCustomDur() {
   } else {
     _alSelectedDuration = val;
   }
-  // Close "Other" input and show confirmed state
-  _alOtherDurVisible = false;
-  _alRenderDurationChips();
+  // Keep other visible so user can adjust
 }
 
 function _alInjectSlotDurContainers() {
