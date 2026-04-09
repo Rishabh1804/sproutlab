@@ -7457,6 +7457,326 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .al-upgrade-dismiss:active {
   color: var(--text);
 }
+/* ═══════════════════════════════════════════════════════════════
+   ACTIVITY LOG: Session B — Suggestions, Yesterday, Nudge, Upgrade
+   Domain-color-coded · Chip system compliant · Design token-only
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Domain Color Cascade ──
+   Parent elements set data-domain="motor|language|cognitive|social|sensory"
+   These custom properties cascade to all children automatically.
+   Motor=sage, Language=lavender, Cognitive=sky, Social=peach, Sensory=amber */
+
+[data-domain="motor"]     { --al-tint: var(--sage-light);  --al-tc: var(--tc-sage);    --al-border: rgba(58,112,96,0.25);  --al-active: rgba(58,112,96,0.15);  --al-active-dk: rgba(58,112,96,0.25);  }
+[data-domain="language"]  { --al-tint: var(--lav-light);   --al-tc: var(--tc-lav);     --al-border: rgba(110,94,154,0.25); --al-active: rgba(110,94,154,0.15); --al-active-dk: rgba(110,94,154,0.25); }
+[data-domain="cognitive"] { --al-tint: var(--sky-light);   --al-tc: var(--tc-sky);     --al-border: rgba(51,101,128,0.25); --al-active: rgba(51,101,128,0.15); --al-active-dk: rgba(51,101,128,0.25); }
+[data-domain="social"]    { --al-tint: var(--peach-light); --al-tc: var(--tc-caution);  --al-border: rgba(135,90,32,0.25);  --al-active: rgba(135,90,32,0.15);  --al-active-dk: rgba(135,90,32,0.25);  }
+[data-domain="sensory"]   { --al-tint: var(--amber-light); --al-tc: var(--tc-amber);   --al-border: rgba(138,101,32,0.25); --al-active: rgba(138,101,32,0.15); --al-active-dk: rgba(138,101,32,0.25); }
+
+/* ── Separator ── */
+.al-separator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  padding: var(--sp-6) 0;
+  letter-spacing: var(--ls-normal);
+}
+.al-separator svg { width: 14px; height: 14px; opacity: 0.5; }
+
+/* ── Yesterday Section ── */
+.al-yesterday-section { margin-bottom: var(--sp-12); }
+.al-yesterday-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: var(--sp-8);
+}
+.al-yesterday-label svg { width: 14px; height: 14px; color: var(--tc-sage); }
+
+.al-yesterday-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-8);
+}
+/* Yesterday items pick up domain color from data-domain attr */
+.al-yesterday-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-8);
+  background: var(--al-tint, var(--sage-light));
+  border: 1.5px solid var(--al-border, rgba(58,112,96,0.25));
+  border-radius: var(--r-lg);
+  padding: var(--sp-10) var(--sp-12);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--al-tc, var(--tc-sage));
+  cursor: pointer;
+  transition: transform 0.1s ease, background var(--anim-fast) ease;
+}
+.al-yesterday-item:active {
+  transform: scale(0.97);
+  background: var(--al-active, rgba(58,112,96,0.15));
+}
+.al-yesterday-icon svg { width: 16px; height: 16px; color: var(--al-tc, var(--tc-sage)); flex-shrink: 0; margin-top: 2px; }
+.al-yesterday-text { line-height: 1.3; }
+
+.al-yesterday-repeat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-6);
+  background: rgba(58,112,96, 0.12);
+  border: 1.5px solid rgba(58,112,96, 0.35);
+  border-radius: var(--r-full);
+  padding: var(--sp-8) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--tc-sage);
+  cursor: pointer;
+  letter-spacing: var(--ls-tight);
+  transition: transform 0.1s ease, background var(--anim-fast) ease;
+}
+.al-yesterday-repeat:active {
+  transform: scale(0.96);
+  background: rgba(58,112,96, 0.22);
+}
+.al-yesterday-repeat svg { width: 14px; height: 14px; }
+
+/* ── Suggestion Groups (domain-colored via parent data-domain) ── */
+.al-suggest-section { margin-bottom: var(--sp-8); }
+.al-suggest-group { margin-bottom: var(--sp-16); }
+.al-suggest-group-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-4) var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--al-tc, var(--tc-sage));
+  letter-spacing: var(--ls-normal);
+  margin-bottom: var(--sp-8);
+}
+.al-suggest-group-label svg { width: 14px; height: 14px; color: var(--al-tc, var(--tc-sage)); }
+.al-suggest-stage {
+  font-weight: 400;
+  color: var(--mid);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--ls-tight);
+  margin-left: var(--sp-4);
+}
+.al-suggest-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+}
+
+/* Suggestion cards inherit domain color from parent [data-domain] */
+.al-suggest-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-6);
+  background: var(--al-tint, var(--sage-light));
+  border: 1.5px solid var(--al-border, rgba(58,112,96,0.2));
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-12);
+  max-width: calc(50% - var(--sp-4));
+  flex: 1 1 calc(50% - var(--sp-4));
+  cursor: pointer;
+  transition: transform 0.1s ease, background var(--anim-fast) ease, border-color var(--anim-fast) ease;
+  text-align: left;
+}
+.al-suggest-card:active {
+  transform: scale(0.96);
+  background: var(--al-active, rgba(58,112,96,0.15));
+  border-color: var(--al-tc, var(--tc-sage));
+}
+
+/* Fallback preset chips — no domain, defaults to sage */
+.al-suggest-card-fallback {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-6);
+  max-width: none;
+  flex: 0 0 auto;
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  min-height: var(--chip-min-h);
+  background: var(--sage-light);
+  border-color: rgba(58,112,96,0.25);
+  color: var(--tc-sage);
+}
+
+.al-suggest-icon svg { width: 18px; height: 18px; color: var(--al-tc, var(--tc-sage)); }
+.al-suggest-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--al-tc, var(--tc-sage));
+  line-height: 1.3;
+}
+.al-suggest-dur {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-2xs);
+  color: var(--mid);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+}
+
+/* ── Tip Line ── */
+.al-suggest-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-8);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--tc-sage);
+  background: var(--sage-light);
+  border-left: 3px solid var(--tc-sage);
+  border-radius: var(--r-md);
+  padding: var(--sp-8) var(--sp-12);
+  margin-top: var(--sp-8);
+  line-height: 1.4;
+}
+.al-suggest-tip svg { width: 14px; height: 14px; color: var(--tc-sage); flex-shrink: 0; margin-top: 2px; }
+
+/* ── Domain Nudge (domain-colored via data-domain) ── */
+.al-domain-nudge-section { margin-bottom: var(--sp-8); }
+.al-domain-nudge {
+  background: var(--glass);
+  border: 1.5px solid var(--al-border, rgba(58,112,96,0.15));
+  border-radius: var(--r-lg);
+  padding: var(--sp-10) var(--sp-12);
+}
+.al-domain-nudge-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--al-tc, var(--text));
+  margin-bottom: var(--sp-4);
+}
+.al-domain-nudge-text svg { width: 16px; height: 16px; color: var(--al-tc, var(--text)); }
+.al-domain-nudge-links {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--mid);
+}
+.al-nudge-link {
+  background: none;
+  border: none;
+  color: var(--al-tc, var(--tc-sage));
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--al-border, rgba(58,112,96,0.3));
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  padding: var(--sp-2) 0;
+  min-height: var(--chip-min-h);
+}
+.al-nudge-link:active { text-decoration-color: var(--al-tc, var(--tc-sage)); }
+
+/* ── Upgrade Toast ── */
+.al-upgrade-toast {
+  position: fixed;
+  bottom: var(--sp-24);
+  left: var(--sp-16);
+  right: var(--sp-16);
+  background: var(--warm);
+  border: 1.5px solid rgba(58,112,96, 0.2);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-16);
+  z-index: 2000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform var(--anim-normal) ease, opacity var(--anim-normal) ease;
+  pointer-events: none;
+}
+.al-upgrade-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.al-upgrade-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-4);
+}
+.al-upgrade-text svg { width: 16px; height: 16px; color: var(--tc-sage); }
+.al-upgrade-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  margin-bottom: var(--sp-10);
+}
+.al-upgrade-actions {
+  display: flex;
+  gap: var(--sp-8);
+}
+.al-upgrade-yes {
+  background: var(--tc-sage);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-full);
+  padding: var(--sp-8) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity var(--anim-fast) ease;
+}
+.al-upgrade-yes:active { transform: scale(0.96); opacity: 0.85; }
+.al-upgrade-dismiss {
+  background: var(--glass);
+  color: var(--mid);
+  border: 1.5px solid rgba(58,112,96, 0.25);
+  border-radius: var(--r-full);
+  padding: var(--sp-8) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.al-upgrade-dismiss:active { transform: scale(0.96); color: var(--text); }
+
+/* ── Dark Mode ──
+   Theme-aware tokens auto-switch. Only override rgba active opacities
+   (0.15 → 0.25 per chip system dark-mode spec). */
+
+[data-theme="dark"] .al-yesterday-item:active { background: var(--al-active-dk, rgba(58,112,96,0.25)); }
+[data-theme="dark"] .al-yesterday-repeat { background: rgba(58,112,96, 0.18); border-color: rgba(58,112,96, 0.4); }
+[data-theme="dark"] .al-yesterday-repeat:active { background: rgba(58,112,96, 0.3); }
+[data-theme="dark"] .al-suggest-card:active { background: var(--al-active-dk, rgba(58,112,96,0.25)); }
+[data-theme="dark"] .al-suggest-tip { border-left-color: rgba(58,112,96, 0.5); }
+[data-theme="dark"] .al-upgrade-toast { border-color: rgba(58,112,96, 0.3); box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+[data-theme="dark"] .al-upgrade-dismiss:active { color: var(--text); }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -50732,6 +51052,11 @@ let _alUpgradePrompted = {};
 let _alSuggestInjected = false;
 var _alUpgradeTimerId = null;
 
+// escHtml doesn't escape " — this helper does, for safe JSON in data-arg attributes
+function _alAttrSafe(s) {
+  return escHtml(s).replace(/"/g, '&quot;');
+}
+
 // ── Step 4: Active milestone → suggestion matching ──
 
 function _alGetSuggestionMilestones() {
@@ -50826,13 +51151,15 @@ function _alRenderSuggestions() {
   var html = '';
   deduped.forEach(function(g) {
     var statusLabel = g.milestone.status.charAt(0).toUpperCase() + g.milestone.status.slice(1);
-    html += '<div class="al-suggest-group">';
+    var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === g.keyword; });
+    var domain = pat ? pat.domain : 'motor';
+    html += '<div class="al-suggest-group" data-domain="' + domain + '">';
     html += '<div class="al-suggest-group-label">' + zi('target') + ' For: ' +
       escHtml(g.milestone.text) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
     html += '<div class="al-suggest-cards">';
     g.activities.forEach(function(act) {
       var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
-      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' +
+      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' +
         '<span class="al-suggest-icon">' + zi(act.icon || 'run') + '</span>' +
         '<span class="al-suggest-text">' + escHtml(act.text) + '</span>' +
         '<span class="al-suggest-dur">' + act.duration + ' min</span>' +
@@ -50876,7 +51203,7 @@ function _alTapSuggestion(argStr) {
   // Show tip line
   var tipEl = document.getElementById('alSuggestTip');
   if (tipEl && data.tip) {
-    tipEl.innerHTML = zi('lightbulb') + ' ' + escHtml(data.tip);
+    tipEl.innerHTML = zi('bulb') + ' ' + escHtml(data.tip);
     tipEl.style.display = '';
   } else if (tipEl) {
     tipEl.innerHTML = '';
@@ -50956,19 +51283,19 @@ function _alRenderYesterday() {
     return;
   }
 
-  var html = '<div class="al-yesterday-label">' + zi('history') + ' Yesterday</div>';
+  var html = '<div class="al-yesterday-label">' + zi('clock') + ' Yesterday</div>';
   html += '<div class="al-yesterday-items">';
   items.forEach(function(item) {
     var dom = (item.domains && item.domains[0]) ? item.domains[0] : '';
     var meta = AL_DOMAIN_META[dom] || { icon: zi('run'), label: '' };
     var durStr = item.duration ? ' · ' + item.duration + 'm' : '';
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
-    html += '<button class="al-yesterday-item" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
+    html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + _alAttrSafe(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
       '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
   });
   html += '</div>';
-  html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('repeat') + ' Repeat all</button>';
+  html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('hourglass') + ' Repeat all</button>';
   container.innerHTML = html;
 }
 
@@ -51157,14 +51484,14 @@ function _alRenderDomainNudge() {
   }
   container.style.display = '';
   var meta = AL_DOMAIN_META[nudge.domain] || { icon: zi('sparkle'), label: nudge.domain };
-  var html = '<div class="al-domain-nudge">';
+  var html = '<div class="al-domain-nudge" data-domain="' + nudge.domain + '">';
   html += '<div class="al-domain-nudge-text">' + meta.icon + ' ' + escHtml(meta.label) + ' could use attention this week</div>';
   if (nudge.suggestions.length > 0) {
     html += '<div class="al-domain-nudge-links">Try: ';
     nudge.suggestions.forEach(function(s, i) {
       if (i > 0) html += ' · ';
       var payload = JSON.stringify({ keyword: s.keyword, text: s.text, duration: s.duration, tip: s.tip, icon: s.icon });
-      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' + escHtml(s.text) + '</button>';
+      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' + escHtml(s.text) + '</button>';
     });
     html += '</div>';
   }
@@ -51288,7 +51615,7 @@ function _alInjectSuggestContainers() {
     '<div id="alYesterdaySection" class="al-yesterday-section"></div>' +
     '<div id="alSuggestSection" class="al-suggest-section"></div>' +
     '<div id="alDomainNudge" class="al-domain-nudge-section"></div>' +
-    '<div id="alSeparator" class="al-separator">' + zi('edit') + ' or type your own</div>';
+    '<div id="alSeparator" class="al-separator">' + zi('note') + ' or type your own</div>';
   textareaRow.parentElement.insertBefore(wrapper, textareaRow);
 
   // Inject tip line AFTER textarea row

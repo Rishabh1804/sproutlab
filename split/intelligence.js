@@ -9684,6 +9684,11 @@ let _alUpgradePrompted = {};
 let _alSuggestInjected = false;
 var _alUpgradeTimerId = null;
 
+// escHtml doesn't escape " — this helper does, for safe JSON in data-arg attributes
+function _alAttrSafe(s) {
+  return escHtml(s).replace(/"/g, '&quot;');
+}
+
 // ── Step 4: Active milestone → suggestion matching ──
 
 function _alGetSuggestionMilestones() {
@@ -9778,13 +9783,15 @@ function _alRenderSuggestions() {
   var html = '';
   deduped.forEach(function(g) {
     var statusLabel = g.milestone.status.charAt(0).toUpperCase() + g.milestone.status.slice(1);
-    html += '<div class="al-suggest-group">';
+    var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === g.keyword; });
+    var domain = pat ? pat.domain : 'motor';
+    html += '<div class="al-suggest-group" data-domain="' + domain + '">';
     html += '<div class="al-suggest-group-label">' + zi('target') + ' For: ' +
       escHtml(g.milestone.text) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
     html += '<div class="al-suggest-cards">';
     g.activities.forEach(function(act) {
       var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
-      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' +
+      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' +
         '<span class="al-suggest-icon">' + zi(act.icon || 'run') + '</span>' +
         '<span class="al-suggest-text">' + escHtml(act.text) + '</span>' +
         '<span class="al-suggest-dur">' + act.duration + ' min</span>' +
@@ -9828,7 +9835,7 @@ function _alTapSuggestion(argStr) {
   // Show tip line
   var tipEl = document.getElementById('alSuggestTip');
   if (tipEl && data.tip) {
-    tipEl.innerHTML = zi('lightbulb') + ' ' + escHtml(data.tip);
+    tipEl.innerHTML = zi('bulb') + ' ' + escHtml(data.tip);
     tipEl.style.display = '';
   } else if (tipEl) {
     tipEl.innerHTML = '';
@@ -9908,19 +9915,19 @@ function _alRenderYesterday() {
     return;
   }
 
-  var html = '<div class="al-yesterday-label">' + zi('history') + ' Yesterday</div>';
+  var html = '<div class="al-yesterday-label">' + zi('clock') + ' Yesterday</div>';
   html += '<div class="al-yesterday-items">';
   items.forEach(function(item) {
     var dom = (item.domains && item.domains[0]) ? item.domains[0] : '';
     var meta = AL_DOMAIN_META[dom] || { icon: zi('run'), label: '' };
     var durStr = item.duration ? ' · ' + item.duration + 'm' : '';
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
-    html += '<button class="al-yesterday-item" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
+    html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + _alAttrSafe(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
       '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
   });
   html += '</div>';
-  html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('repeat') + ' Repeat all</button>';
+  html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('hourglass') + ' Repeat all</button>';
   container.innerHTML = html;
 }
 
@@ -10109,14 +10116,14 @@ function _alRenderDomainNudge() {
   }
   container.style.display = '';
   var meta = AL_DOMAIN_META[nudge.domain] || { icon: zi('sparkle'), label: nudge.domain };
-  var html = '<div class="al-domain-nudge">';
+  var html = '<div class="al-domain-nudge" data-domain="' + nudge.domain + '">';
   html += '<div class="al-domain-nudge-text">' + meta.icon + ' ' + escHtml(meta.label) + ' could use attention this week</div>';
   if (nudge.suggestions.length > 0) {
     html += '<div class="al-domain-nudge-links">Try: ';
     nudge.suggestions.forEach(function(s, i) {
       if (i > 0) html += ' · ';
       var payload = JSON.stringify({ keyword: s.keyword, text: s.text, duration: s.duration, tip: s.tip, icon: s.icon });
-      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' + escHtml(s.text) + '</button>';
+      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' + escHtml(s.text) + '</button>';
     });
     html += '</div>';
   }
@@ -10240,7 +10247,7 @@ function _alInjectSuggestContainers() {
     '<div id="alYesterdaySection" class="al-yesterday-section"></div>' +
     '<div id="alSuggestSection" class="al-suggest-section"></div>' +
     '<div id="alDomainNudge" class="al-domain-nudge-section"></div>' +
-    '<div id="alSeparator" class="al-separator">' + zi('edit') + ' or type your own</div>';
+    '<div id="alSeparator" class="al-separator">' + zi('note') + ' or type your own</div>';
   textareaRow.parentElement.insertBefore(wrapper, textareaRow);
 
   // Inject tip line AFTER textarea row
