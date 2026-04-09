@@ -7113,3 +7113,340 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .al-dur-custom-go {
   background: var(--sage);
 }
+/* ═══════════════════════════════════════════════════════════════
+   ACTIVITY LOG: Session B — Suggestions, Yesterday, Nudge, Upgrade
+   Domain color: sage · Chip system compliant · Design token-only
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Separator ── */
+.al-separator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  padding: var(--sp-6) 0;
+  letter-spacing: var(--ls-normal);
+}
+.al-separator svg { width: 14px; height: 14px; opacity: 0.5; }
+
+/* ── Yesterday Section ── */
+.al-yesterday-section { margin-bottom: var(--sp-12); }
+.al-yesterday-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: var(--sp-8);
+}
+.al-yesterday-label svg { width: 14px; height: 14px; color: var(--tc-sage); }
+
+.al-yesterday-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-8);
+}
+.al-yesterday-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  background: var(--sage-light);
+  border: 1.5px solid rgba(58,112,96, 0.25);
+  border-radius: var(--r-lg);
+  padding: var(--sp-8) var(--sp-12);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--tc-sage);
+  cursor: pointer;
+  transition: transform 0.1s ease, background var(--anim-fast) ease;
+}
+.al-yesterday-item:active {
+  transform: scale(0.97);
+  background: rgba(58,112,96, 0.15);
+}
+.al-yesterday-icon svg { width: 16px; height: 16px; color: var(--tc-sage); flex-shrink: 0; }
+.al-yesterday-text { line-height: 1.3; }
+
+.al-yesterday-repeat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-6);
+  background: rgba(58,112,96, 0.12);
+  border: 1.5px solid rgba(58,112,96, 0.35);
+  border-radius: var(--r-full);
+  padding: var(--sp-6) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--tc-sage);
+  cursor: pointer;
+  letter-spacing: var(--ls-tight);
+  transition: transform 0.1s ease, background var(--anim-fast) ease;
+}
+.al-yesterday-repeat:active {
+  transform: scale(0.96);
+  background: rgba(58,112,96, 0.22);
+}
+.al-yesterday-repeat svg { width: 14px; height: 14px; }
+
+/* ── Suggestion Groups ── */
+.al-suggest-section { margin-bottom: var(--sp-8); }
+.al-suggest-group { margin-bottom: var(--sp-12); }
+.al-suggest-group-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--tc-sage);
+  letter-spacing: var(--ls-normal);
+  margin-bottom: var(--sp-6);
+}
+.al-suggest-group-label svg { width: 14px; height: 14px; color: var(--tc-sage); }
+.al-suggest-stage {
+  font-weight: 400;
+  color: var(--mid);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--ls-tight);
+}
+.al-suggest-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+}
+
+/* Milestone suggestion cards — warm tappable cards with sage domain */
+.al-suggest-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  background: var(--sage-light);
+  border: 1.5px solid rgba(58,112,96, 0.2);
+  border-radius: var(--r-xl);
+  padding: var(--sp-10) var(--sp-12);
+  max-width: calc(50% - var(--sp-4));
+  flex: 1 1 calc(50% - var(--sp-4));
+  cursor: pointer;
+  transition: transform 0.1s ease, background var(--anim-fast) ease, border-color var(--anim-fast) ease;
+  text-align: left;
+}
+.al-suggest-card:active {
+  transform: scale(0.96);
+  background: rgba(58,112,96, 0.15);
+  border-color: var(--tc-sage);
+}
+
+/* Fallback preset chips — horizontal pill row */
+.al-suggest-card-fallback {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-6);
+  max-width: none;
+  flex: 0 0 auto;
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  min-height: var(--chip-min-h);
+}
+
+.al-suggest-icon svg { width: 18px; height: 18px; color: var(--tc-sage); }
+.al-suggest-text {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--tc-sage);
+  line-height: 1.3;
+}
+.al-suggest-dur {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-2xs);
+  color: var(--mid);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+}
+
+/* ── Tip Line ── */
+.al-suggest-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-8);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--tc-sage);
+  background: var(--sage-light);
+  border-left: 3px solid var(--tc-sage);
+  border-radius: var(--r-md);
+  padding: var(--sp-8) var(--sp-12);
+  margin-top: var(--sp-8);
+  line-height: 1.4;
+}
+.al-suggest-tip svg { width: 14px; height: 14px; color: var(--tc-sage); flex-shrink: 0; margin-top: 2px; }
+
+/* ── Domain Nudge ── */
+.al-domain-nudge-section { margin-bottom: var(--sp-8); }
+.al-domain-nudge {
+  background: var(--glass);
+  border: 1.5px solid rgba(58,112,96, 0.15);
+  border-radius: var(--r-lg);
+  padding: var(--sp-10) var(--sp-12);
+}
+.al-domain-nudge-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-4);
+}
+.al-domain-nudge-text svg { width: 16px; height: 16px; }
+.al-domain-nudge-links {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  color: var(--mid);
+}
+.al-nudge-link {
+  background: none;
+  border: none;
+  color: var(--tc-sage);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(58,112,96, 0.3);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  padding: var(--sp-2) 0;
+  min-height: var(--chip-min-h);
+}
+.al-nudge-link:active { color: var(--tc-sage); text-decoration-color: var(--tc-sage); }
+
+/* ── Upgrade Toast (fixed, outside modal, on document.body) ── */
+.al-upgrade-toast {
+  position: fixed;
+  bottom: var(--sp-24);
+  left: var(--sp-16);
+  right: var(--sp-16);
+  background: var(--warm);
+  border: 1.5px solid rgba(58,112,96, 0.2);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-16);
+  z-index: 2000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform var(--anim-normal) ease, opacity var(--anim-normal) ease;
+  pointer-events: none;
+}
+.al-upgrade-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.al-upgrade-text {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-4);
+}
+.al-upgrade-text svg { width: 16px; height: 16px; color: var(--tc-sage); }
+.al-upgrade-sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  margin-bottom: var(--sp-10);
+}
+.al-upgrade-actions {
+  display: flex;
+  gap: var(--sp-8);
+}
+.al-upgrade-yes {
+  background: var(--tc-sage);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-full);
+  padding: var(--sp-8) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity var(--anim-fast) ease;
+}
+.al-upgrade-yes:active { transform: scale(0.96); opacity: 0.85; }
+.al-upgrade-dismiss {
+  background: var(--glass);
+  color: var(--mid);
+  border: 1.5px solid rgba(58,112,96, 0.25);
+  border-radius: var(--r-full);
+  padding: var(--sp-8) var(--sp-16);
+  min-height: var(--chip-min-h);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.al-upgrade-dismiss:active { transform: scale(0.96); color: var(--text); }
+
+/* ── Dark Mode ──
+   Most tokens (--sage-light, --tc-sage, --warm, --glass, --text, --mid)
+   are theme-aware and switch automatically. Only override where the
+   automatic switch isn't sufficient (active states, border alphas). */
+
+[data-theme="dark"] .al-yesterday-item {
+  border-color: rgba(58,112,96, 0.35);
+}
+[data-theme="dark"] .al-yesterday-item:active {
+  background: rgba(58,112,96, 0.25);
+}
+[data-theme="dark"] .al-yesterday-repeat {
+  background: rgba(58,112,96, 0.18);
+  border-color: rgba(58,112,96, 0.4);
+}
+[data-theme="dark"] .al-yesterday-repeat:active {
+  background: rgba(58,112,96, 0.3);
+}
+
+[data-theme="dark"] .al-suggest-card {
+  border-color: rgba(58,112,96, 0.3);
+}
+[data-theme="dark"] .al-suggest-card:active {
+  background: rgba(58,112,96, 0.25);
+  border-color: var(--tc-sage);
+}
+
+[data-theme="dark"] .al-suggest-tip {
+  border-left-color: rgba(58,112,96, 0.5);
+}
+
+[data-theme="dark"] .al-domain-nudge {
+  border-color: rgba(58,112,96, 0.25);
+}
+
+[data-theme="dark"] .al-upgrade-toast {
+  border-color: rgba(58,112,96, 0.3);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .al-upgrade-dismiss {
+  border-color: rgba(58,112,96, 0.3);
+}
+[data-theme="dark"] .al-upgrade-dismiss:active {
+  color: var(--text);
+}
