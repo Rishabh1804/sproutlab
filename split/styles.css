@@ -49,7 +49,7 @@
   --card-border: rgba(200,180,190,0.2);
 
   /* ── Design Tokens: Spacing Scale ── */
-  --sp-4:  4px;   --sp-8:  8px;   --sp-12: 12px;
+  --sp-2: 2px; --sp-4: 4px; --sp-6: 6px; --sp-8: 8px; --sp-10: 10px; --sp-12: 12px;
   --sp-16: 16px;  --sp-20: 20px;  --sp-24: 24px;  --sp-32: 32px;
   /* Section spacing */
   --section-gap-hero: var(--sp-24);
