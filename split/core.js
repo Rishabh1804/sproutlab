@@ -2171,6 +2171,78 @@ function escHtml(s) {
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 // ─────────────────────────────────────────
+// SHARED UTILITIES (migrated from feature modules → core)
+// ─────────────────────────────────────────
+function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function ageAt(date) {
+  const d = date ? new Date(date) : new Date();
+  if (isNaN(d)) return { months: 0, days: 0 };
+  let months = d.getMonth() - DOB.getMonth() + (d.getFullYear() - DOB.getFullYear()) * 12;
+  let days = d.getDate() - DOB.getDate();
+  if (days < 0) {
+    months--;
+    const prev = new Date(d.getFullYear(), d.getMonth(), 0);
+    days += prev.getDate();
+  }
+  if (months < 0) { months = 0; days = 0; }
+  return { months, days };
+}
+function preciseAge() { return ageAt(); }
+function getAgeInMonths() { return ageAt().months; }
+function ageAtDate(dateStr) {
+  const { months, days } = ageAt(dateStr);
+  return `${months}m ${days}d`;
+}
+function daysBetween(d1, d2) {
+  return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
+}
+
+function _offsetDateStr(baseDate, offsetDays) {
+  var d = new Date(baseDate);
+  d.setDate(d.getDate() + offsetDays);
+  return toDateStr(d);
+}
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return toDateStr(d);
+}
+function formatTimeShort(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  const suffix = h >= 12 ? 'pm' : 'am';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')}${suffix}`;
+}
+
+function _baseFoodName(name) {
+  let base = name.toLowerCase().trim();
+  // Strip leading quantity fractions and measurements
+  base = base.replace(/^[½¼¾⅓⅔]\s*/, '');
+  base = base.replace(/^[\d.]+\s*(g|ml|tsp|tbsp|cup|piece|pcs?|slice|nos?\.?)\s*/i, '');
+  // Direct alias match first (before any stripping)
+  if (_FOOD_ALIASES[base]) return _FOOD_ALIASES[base];
+  // Strip parenthetical qualifiers: "(cow)", "(moringa)", "(lauki)", "(fruit)", etc.
+  const withoutParen = base.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  if (_FOOD_ALIASES[withoutParen]) return _FOOD_ALIASES[withoutParen];
+  // Strip form words
+  let stripped = withoutParen;
+  _FORM_WORDS.forEach(w => { stripped = stripped.replace(new RegExp('\\b' + w + '\\b', 'g'), ''); });
+  stripped = stripped.replace(/\s+/g, ' ').trim();
+  if (_FOOD_ALIASES[stripped]) return _FOOD_ALIASES[stripped];
+  // Depluralize simple trailing 's'
+  const singular = stripped.endsWith('s') && stripped.length > 3 ? stripped.slice(0, -1) : stripped;
+  if (_FOOD_ALIASES[singular]) return _FOOD_ALIASES[singular];
+  return stripped || withoutParen || base;
+}
+function normalizeFoodName(raw) { return _baseFoodName(raw || ''); }
+
+const SKIPPED_MEAL = '—skipped—';
+function isRealMeal(val) { return val && val !== SKIPPED_MEAL; }
+
+// ─────────────────────────────────────────
 // AVATAR
 // ─────────────────────────────────────────
 // ── Avatar: Crop + Lightbox ──

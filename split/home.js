@@ -1,21 +1,6 @@
 // HEADER / QUICK STATS
 // ─────────────────────────────────────────
-// Core age calculation — single source of truth
-function ageAt(date) {
-  const d = date ? new Date(date) : new Date();
-  if (isNaN(d)) return { months: 0, days: 0 };
-  let months = d.getMonth() - DOB.getMonth() + (d.getFullYear() - DOB.getFullYear()) * 12;
-  let days = d.getDate() - DOB.getDate();
-  if (days < 0) {
-    months--;
-    const prev = new Date(d.getFullYear(), d.getMonth(), 0);
-    days += prev.getDate();
-  }
-  if (months < 0) { months = 0; days = 0; }
-  return { months, days };
-}
-
-function preciseAge() { return ageAt(); }
+// ageAt, preciseAge → migrated to core.js
 
 function updateHeader() {
   const todayD = new Date();
@@ -822,7 +807,7 @@ function renderPlanPreview() {
   `;
 }
 
-function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+// escAttr → migrated to core.js
 
 function fmtTips(s) {
   if (!s) return '';
@@ -1429,158 +1414,7 @@ function renderVaccHistory() {
 
   container.innerHTML = html;
 }
-const MILESTONE_TIDBITS = [
-  {
-    match: ['rolling'],
-    unlocks: 'Ready for more tummy time challenges, reaching across midline, and early pre-crawling moves.',
-    doctor: 'Standard 4–6 month screening item. Your paediatrician will be glad to hear this is done.',
-    funFact: 'Rolling requires coordination between 8 different muscle groups firing in sequence — it\'s baby\'s first complex motor plan.',
-  },
-  {
-    match: ['sitting independently', 'sits independently', 'sits without support'],
-    unlocks: 'Now ready for: high chair meals, floor play without support, two-handed toy play, and early self-feeding.',
-    doctor: 'This is a key 6-month checkup item. Sitting frees up both hands — a major cognitive unlock.',
-    funFact: 'Independent sitting requires the vestibular system (inner ear balance) to work with 30+ core muscles simultaneously.',
-  },
-  {
-    match: ['teething'],
-    unlocks: 'Can start exploring harder textures — teething rings, slightly firmer finger foods, and chilled fruit.',
-    doctor: 'Mention any teething discomfort patterns at the next visit. Teeth typically emerge in pairs.',
-    funFact: 'Baby teeth actually start forming in the womb at 6 weeks of pregnancy — they\'ve been waiting months to emerge!',
-  },
-  {
-    match: ['sleeps independently'],
-    unlocks: 'Self-soothing skill is building. This supports better nap transitions and more predictable sleep patterns.',
-    doctor: 'Independent sleep is one of the most asked-about topics at checkups — you\'re ahead of the curve.',
-    funFact: 'Babies who self-settle tend to sleep 40–60 minutes longer per night. Sleep consolidation accelerates brain development.',
-  },
-  {
-    match: ['babbling', 'babbl'],
-    unlocks: 'Start naming everything she looks at. Respond to her babbles as if they\'re words — this builds conversational turn-taking.',
-    doctor: 'Babbling is a key 6-month language marker. Consonant sounds (ba, da, ma) are more significant than vowel-only sounds.',
-    funFact: 'Babbling uses 70+ muscles in the face, tongue, and throat. Babies babble in the rhythm patterns of their native language.',
-  },
-  {
-    match: ['responds to name', 'respond'],
-    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s Ziva?" peek-a-boo variations.',
-    doctor: 'Consistent name response is screened at 9 months. Achieving this early is a strong language comprehension signal.',
-    funFact: 'Babies can recognise their own name from as early as 4.5 months, but consistent head-turning takes another 1–2 months of practice.',
-  },
-  {
-    match: ['pulls to stand', 'pull to stand'],
-    unlocks: 'Ready for: standing play at a sturdy table, cruising prep along furniture, and supported stepping games.',
-    doctor: 'Pulling to stand is typically expected at 8–9 months. Doing this at 6 months is in the top 5–10% — mention it at the next visit.',
-    funFact: 'This milestone means her legs can support her full body weight — roughly 4× the load per leg compared to sitting.',
-  },
-  {
-    match: ['crawl', 'commando'],
-    unlocks: 'Time for baby-proofing! Crawling opens up: exploration, spatial learning, and bilateral brain coordination.',
-    doctor: 'Some babies skip crawling entirely and go straight to cruising — both paths are normal and healthy.',
-    funFact: 'Crawling strengthens the corpus callosum — the bridge between left and right brain hemispheres — more than any other infant activity.',
-  },
-  {
-    match: ['transfer', 'hand to hand'],
-    unlocks: 'Can now do two-handed play, banging toys together, and early stacking games.',
-    doctor: 'Bilateral hand use is a key 6–7 month neurological marker showing both brain hemispheres are communicating well.',
-    funFact: 'Hand-to-hand transfer is the foundation for every future fine motor skill — from writing to tying shoelaces.',
-  },
-  {
-    match: ['raking grasp', 'grasp'],
-    unlocks: 'Ready for soft finger foods, picking up larger objects, and scooping games during play.',
-    doctor: 'Raking grasp is the precursor to the pincer grasp (thumb + forefinger) which typically develops at 8–9 months.',
-    funFact: 'The progression from raking to pincer grasp is one of the most studied motor sequences in developmental science.',
-  },
-  {
-    match: ['stranger', 'familiar faces'],
-    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let Ziva warm up at her own pace.',
-    doctor: 'Stranger awareness is actually a positive cognitive milestone — it means she can distinguish familiar from unfamiliar.',
-    funFact: 'Babies can distinguish their mother\'s face from others within hours of birth, but active stranger wariness peaks around 8 months.',
-  },
-  {
-    match: ['consonant babbling', 'ba-ba', 'da-da'],
-    unlocks: 'Start exaggerating sounds back to her. "Ba-ba" games build phoneme recognition — the building blocks of words.',
-    doctor: 'Consonant-vowel babbling is more developmentally significant than vowel-only cooing. Report the specific sounds you hear.',
-    funFact: 'Deaf babies babble with their hands at the same age hearing babies babble vocally — it\'s a universal brain pattern.',
-  },
-  {
-    match: ['finger feed'],
-    unlocks: 'Can progress to varied textures, self-feeding practice, and baby-led weaning finger foods.',
-    doctor: 'Self-feeding is both a motor and cognitive milestone — it shows hand-eye coordination, cause-effect, and intentionality.',
-    funFact: 'Babies who finger-feed early tend to be less picky eaters at age 2 — the tactile experience builds food acceptance.',
-  },
-  {
-    match: ['wave', 'bye-bye'],
-    unlocks: 'Ready for more social gestures — clapping, high-fives, and blowing kisses. These build communication before words.',
-    doctor: 'Waving is a social milestone that shows imitation and intentional communication — typically expected by 9 months.',
-    funFact: 'Waving bye-bye requires understanding that a gesture carries meaning — this is the same cognitive leap that later enables pointing and eventually words.',
-  },
-  {
-    match: ['pincer'],
-    unlocks: 'Ready for: small finger foods (peas, puffs), picking up small toys, early crayon/chalk holding.',
-    doctor: 'The pincer grasp is a hallmark 9-month milestone. Your paediatrician will specifically test for this.',
-    funFact: 'The pincer grasp is unique to primates. It requires precise coordination between the brain\'s motor cortex and just two fingers.',
-  },
-  {
-    match: ['cruising', 'walks holding furniture'],
-    unlocks: 'Time for push toys, walking while holding hands, and furniture arranged as a "cruising track."',
-    doctor: 'Cruising is the bridge between standing and walking. Average cruising age is 8–10 months.',
-    funFact: 'While cruising, babies make 2,000+ micro-balance adjustments per minute — more than most adults make in an hour.',
-  },
-  {
-    match: ['separation anxiety'],
-    unlocks: 'Practice short separations with a calm goodbye routine. A transitional object (soft toy) can help.',
-    doctor: 'Separation anxiety peaks at 8–10 months and is a sign of healthy attachment, not a regression.',
-    funFact: 'Object permanence drives separation anxiety — she now knows you exist even when she can\'t see you, and wants you back!',
-  },
-  {
-    match: ['object permanence'],
-    unlocks: 'Ready for hiding games, peek-a-boo variations, and finding toys under blankets.',
-    doctor: 'Object permanence is a Piagetian milestone that marks the transition from sensorimotor to early symbolic thinking.',
-    funFact: 'Before object permanence develops, babies literally believe things cease to exist when hidden — "out of sight, out of mind" is real.',
-  },
-  {
-    match: ['clap'],
-    unlocks: 'Can now learn pat-a-cake, rhythm games, and action songs. Clapping builds motor planning and social timing.',
-    doctor: 'Clapping is both a motor and social milestone — it shows she can imitate a complex two-handed action on cue.',
-    funFact: 'Clapping in rhythm activates the same brain regions as language processing — music and speech share neural real estate.',
-  },
-  {
-    match: ['point'],
-    unlocks: 'Pointing unlocks joint attention — follow her point and name what she\'s looking at. This accelerates vocabulary.',
-    doctor: 'Pointing is one of the strongest predictors of language development. Paediatricians specifically screen for this at 12 months.',
-    funFact: 'Pointing is uniquely human among primates in its communicative intent — even chimps rarely point to share interest.',
-  },
-  {
-    match: ['mama', 'dada', 'first word'],
-    unlocks: 'Respond enthusiastically when she uses words correctly. Expand her phrases — if she says "da", say "yes, dada!"',
-    doctor: 'Specific mama/dada (directed at the right parent) is expected by 10–12 months. Non-specific use is normal at 7–9 months.',
-    funFact: 'Babies say "dada" before "mama" in most languages — not because of preference, but because "d" is an easier consonant to produce.',
-  },
-  {
-    match: ['walk', 'first step', 'steps'],
-    unlocks: 'Time for first shoes (soft-soled only), outdoor exploration on grass, and push-pull toys.',
-    doctor: 'Walking range is 9–16 months with average at 12 months. Late walkers often have stronger crawling skills.',
-    funFact: 'A new walker falls an average of 17 times per hour and covers the length of 7 football fields per day!',
-  },
-  {
-    match: ['stack', 'block'],
-    unlocks: 'Can progress to nesting cups, simple puzzles, and shape sorters. Spatial reasoning is developing.',
-    doctor: 'Stacking 2 blocks is a 12-month cognitive marker. Each additional block stacked maps to months of fine motor progress.',
-    funFact: 'Block stacking requires the brain to calculate gravity, balance, and spatial alignment — it\'s baby engineering.',
-  },
-  {
-    match: ['follow', 'instruction', 'one-step'],
-    unlocks: 'Can now help with simple tasks — "bring the shoe," "put it in the box." Builds independence and language.',
-    doctor: 'Following one-step commands is a 12-month language comprehension milestone, distinct from speaking words.',
-    funFact: 'By 12 months, babies understand 50+ words even if they can only say 2–3 — receptive language far outpaces expressive.',
-  },
-  {
-    match: ['spoon', 'self-feed'],
-    unlocks: 'Progress to thicker foods, loaded spoons, and eventually fork practice. Messy meals = learning.',
-    doctor: 'Self-feeding with a spoon shows motor planning, hand-eye coordination, and cognitive sequencing.',
-    funFact: 'It takes about 1,000 attempts for a toddler to master spoon-to-mouth without spilling. Every mess is practice.',
-  },
-];
+// MILESTONE_TIDBITS → migrated to data.js
 
 function guessMilestoneCat(text) {
   const t = text.toLowerCase();
@@ -2011,14 +1845,7 @@ function logMilestoneEvent(text, stage, date) {
   save('ziva_milestone_log', log);
 }
 
-function ageAtDate(dateStr) {
-  const { months, days } = ageAt(dateStr);
-  return `${months}m ${days}d`;
-}
-
-function daysBetween(d1, d2) {
-  return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
-}
+// ageAtDate, daysBetween → migrated to core.js
 function deleteMilestone(i) {
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
@@ -2790,29 +2617,7 @@ function _categorizeFoods() {
   return grouped;
 }
 // @@INSERT_DATA_BLOCK_10@@
-function _baseFoodName(name) {
-  let base = name.toLowerCase().trim();
-  // Strip leading quantity fractions and measurements
-  base = base.replace(/^[½¼¾⅓⅔]\s*/, '');
-  base = base.replace(/^[\d.]+\s*(g|ml|tsp|tbsp|cup|piece|pcs?|slice|nos?\.?)\s*/i, '');
-  // Direct alias match first (before any stripping)
-  if (_FOOD_ALIASES[base]) return _FOOD_ALIASES[base];
-  // Strip parenthetical qualifiers: "(cow)", "(moringa)", "(lauki)", "(fruit)", etc.
-  const withoutParen = base.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
-  if (_FOOD_ALIASES[withoutParen]) return _FOOD_ALIASES[withoutParen];
-  // Strip form words
-  let stripped = withoutParen;
-  _FORM_WORDS.forEach(w => { stripped = stripped.replace(new RegExp('\\b' + w + '\\b', 'g'), ''); });
-  stripped = stripped.replace(/\s+/g, ' ').trim();
-  if (_FOOD_ALIASES[stripped]) return _FOOD_ALIASES[stripped];
-  // Depluralize simple trailing 's'
-  const singular = stripped.endsWith('s') && stripped.length > 3 ? stripped.slice(0, -1) : stripped;
-  if (_FOOD_ALIASES[singular]) return _FOOD_ALIASES[singular];
-  return stripped || withoutParen || base;
-}
-
-// Convenience alias — normalizeFoodName delegates to _baseFoodName
-function normalizeFoodName(raw) { return _baseFoodName(raw || ''); }
+// _baseFoodName, normalizeFoodName → migrated to core.js
 
 // Guess food group from nutrition tags
 function _guessGroupFromNutrition(name) {
@@ -6591,8 +6396,7 @@ function sanitizeAlertKey(s) { return s.replace(/[^a-zA-Z0-9-]/g, '_'); }
 // ██ PERSONALIZED BASELINES ENGINE
 // ══════════════════════════════════════════════════════════
 const KEY_NUTRIENTS = ['iron', 'calcium', 'protein', 'vitamin C', 'fibre', 'vitamin A', 'omega-3', 'zinc'];
-const SKIPPED_MEAL = '—skipped—';
-function isRealMeal(val) { return val && val !== SKIPPED_MEAL; }
+// SKIPPED_MEAL, isRealMeal → migrated to core.js
 let _cachedBaselines = null;
 let _baselinesComputedAt = 0;
 
@@ -6836,89 +6640,8 @@ function computeBaselines() {
 }
 
 // ══════════════════════════════════════════════════════════
-// ██ ESCALATING TIPS
-// ══════════════════════════════════════════════════════════
-const ESCALATING_TIPS = {
-  'no-feed-today': [
-    'Even partial meals matter — log what she\'s had so far to track her intake pattern.',
-    'If appetite is low, try smaller, more frequent offerings. Teething or illness can suppress hunger temporarily.',
-    'Repeated low intake days this month. If Ziva is consistently refusing meals, discuss with your paediatrician at the next visit.',
-  ],
-  'poop-gap': [
-    'Tummy massage (clockwise circles), warm bath, high-fibre foods (pear, prune, papaya), and tummy time can help stimulate bowel movement.',
-    'Try increasing water between meals and adding more fibre-rich foods like pear, papaya, and oats. Reduce binding foods like banana and rice.',
-    'Poop gaps keep recurring. If accompanied by discomfort, hard belly, or straining, this warrants a paediatrician conversation about dietary adjustments.',
-  ],
-  'hard-stool-streak': [
-    'Offer pear, papaya, prune purée, and extra water between meals. Reduce banana and rice if constipation persists. Tummy massage and bicycle legs can also help.',
-    'Persistent hard stools despite dietary changes. Try adding ghee to meals (lubricates digestion), increase dal water, and ensure adequate hydration.',
-    'Hard stools keep coming back. This pattern has occurred multiple times — consider asking your paediatrician about stool softeners or a dietary review.',
-  ],
-  'sleep-score-drop': [
-    'Stick to consistent bedtime routine, keep the room dark, and avoid new sleep associations. Most regressions pass in 2-4 weeks.',
-    'Check if bedtime has shifted later, if naps are too long or too close to bedtime, or if teething/illness might be the cause. Consider an earlier bedtime by 15-30 min.',
-    'Sleep quality has dropped repeatedly. If this persists beyond 3-4 weeks, it may not be a typical regression — discuss sleep patterns with your paediatrician.',
-  ],
-  'food-reaction': [
-    'Don\'t panic — many babies have digestive adjustment to new foods. Watch for rash, vomiting, or persistent diarrhoea. If symptoms worsen, pause the new food and try again in a week.',
-    'This is the second time a new food has coincided with unusual poop. Consider introducing foods more slowly (one every 4-5 days) and keeping a closer food-reaction diary.',
-    'Multiple food reactions flagged. Discuss with your paediatrician — they may recommend an elimination approach or allergy testing if reactions are consistent.',
-  ],
-  'poop-gap-nodata': [
-    'Aim to log at least once a day. Note colour and consistency for the most useful patterns.',
-  ],
-  'dev-checkup-due': [
-    'Prepare questions about feeding, sleep, and any concerns. Bring vaccination records. The doctor will check weight, height, head circumference, and developmental milestones.',
-  ],
-  'food-variety-stale': [
-    'Introduce one new food at a time with a 3-day gap. Try different textures and colours to build acceptance.',
-    'Variety exposure in the first year shapes long-term food preferences. Even if she rejects a food, offer it again in a week — it can take 10-15 exposures.',
-    'Ziva has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
-  ],
-  'food-correlation': [
-    'This food has been linked to unusual poop a few times. It may just be coincidence — keep feeding it and see if the pattern holds. Note the consistency each time.',
-    'The pattern is becoming consistent. Try pausing this food for a week, then reintroduce in a small quantity. If the poop changes again, it may be a sensitivity.',
-    'Multiple occurrences of digestive upset after this food. Discuss with your paediatrician — they may recommend an elimination diet or further testing.',
-  ],
-  'food-group-gap': [
-    'Try adding one food from this group to a meal this week. Variety builds both nutrition and acceptance.',
-    'This food group has been missing for a while. Each group provides different micronutrients that are hard to replace. Even small amounts count.',
-    'Extended gaps in this food group may lead to nutrient deficiencies. If Ziva consistently refuses foods from this group, discuss alternatives with your paediatrician.',
-  ],
-  'vacc-reminder': [
-    'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
-  ],
-  'supp-streak-broken': [
-    'Missed a day — just continue normally tomorrow. Don\'t double up the dose.',
-    'Supplements work best with consistency. Try linking it to a daily routine — right after the morning feed works well.',
-    'Frequent missed doses this month. Vitamin D is critical for bone development at this age. Consider setting a daily alarm or keeping drops next to the feeding chair.',
-  ],
-  'low-iron': [
-    'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
-    'Iron stores from birth deplete around 6 months. At this age, dietary iron becomes critical. Try adding iron-rich foods to at least one meal daily — ragi at breakfast is an easy win.',
-    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If Ziva seems unusually tired or pale, discuss iron levels with your paediatrician.',
-  ],
-  'low-calcium': [
-    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since Ziva takes D3 drops, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
-    'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
-  ],
-  'low-protein': [
-    'Easy protein additions: moong/masoor/toor dal in khichdi, paneer cubes, thick curd, almond paste in porridge, sattu drink. Aim for protein in at least one meal daily.',
-    'Protein is essential for muscle growth, immune function, and brain development. Dal-based khichdi is the easiest way to add protein — try different dals for variety.',
-    'Protein has been consistently low. At this age, rapid growth demands adequate protein. Consider adding paneer, dal, or nut pastes to every lunch and dinner.',
-  ],
-  'iron-no-vitc': [
-    'Add a squeeze of lemon on dal/khichdi, serve amla after meals, or pair iron meals with orange segments, tomato, or mango. Even a small amount of Vitamin C makes a big difference.',
-    'Non-heme iron (from plant foods) has low absorption on its own — only 2-5%. Adding Vitamin C can boost this to 10-20%. A simple lemon squeeze transforms iron absorption.',
-    'You\'re consistently providing iron but missing the Vitamin C pairing. Make it a habit: keep a lemon near the kitchen and squeeze a few drops on every dal/ragi meal.',
-  ],
-  'meal-monotony': [
-    'Try swapping one meal — if breakfast is always ragi, try oats or dalia. If lunch is always dal rice, try a vegetable khichdi. Small changes count.',
-    'Repeated meals can lead to nutrient gaps and reduce Ziva\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
-    'Same meals for an extended period. Variety in the first year builds the foundation for lifelong eating habits. Even rotating between 3-4 different breakfasts makes a difference.',
-  ],
-};
+// ESCALATING_TIPS → migrated to data.js
+
 
 // Vitamin D3 dos and don'ts (rotated through tips for D3 alerts)
 const D3_KNOWLEDGE = {

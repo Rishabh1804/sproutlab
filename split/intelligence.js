@@ -10956,7 +10956,7 @@ function saveQLPoop() {
   if (curTab === 'home') renderHome();
 }
 
-function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+// capitalize → migrated to core.js
 
 // ─────────────────────────────────────────
 

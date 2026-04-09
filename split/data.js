@@ -3063,3 +3063,499 @@ const MILESTONE_ACTIVITIES = {
 };
 // @@DATA_BLOCK_22_END@@
 
+// ─────────────────────────────────────────
+// CONSTANTS MIGRATED FROM FEATURE MODULES
+// Append this to the end of data.js
+// ─────────────────────────────────────────
+
+// From home.js
+const MILESTONE_TIDBITS = [
+  {
+    match: ['rolling'],
+    unlocks: 'Ready for more tummy time challenges, reaching across midline, and early pre-crawling moves.',
+    doctor: 'Standard 4–6 month screening item. Your paediatrician will be glad to hear this is done.',
+    funFact: 'Rolling requires coordination between 8 different muscle groups firing in sequence — it\'s baby\'s first complex motor plan.',
+  },
+  {
+    match: ['sitting independently', 'sits independently', 'sits without support'],
+    unlocks: 'Now ready for: high chair meals, floor play without support, two-handed toy play, and early self-feeding.',
+    doctor: 'This is a key 6-month checkup item. Sitting frees up both hands — a major cognitive unlock.',
+    funFact: 'Independent sitting requires the vestibular system (inner ear balance) to work with 30+ core muscles simultaneously.',
+  },
+  {
+    match: ['teething'],
+    unlocks: 'Can start exploring harder textures — teething rings, slightly firmer finger foods, and chilled fruit.',
+    doctor: 'Mention any teething discomfort patterns at the next visit. Teeth typically emerge in pairs.',
+    funFact: 'Baby teeth actually start forming in the womb at 6 weeks of pregnancy — they\'ve been waiting months to emerge!',
+  },
+  {
+    match: ['sleeps independently'],
+    unlocks: 'Self-soothing skill is building. This supports better nap transitions and more predictable sleep patterns.',
+    doctor: 'Independent sleep is one of the most asked-about topics at checkups — you\'re ahead of the curve.',
+    funFact: 'Babies who self-settle tend to sleep 40–60 minutes longer per night. Sleep consolidation accelerates brain development.',
+  },
+  {
+    match: ['babbling', 'babbl'],
+    unlocks: 'Start naming everything she looks at. Respond to her babbles as if they\'re words — this builds conversational turn-taking.',
+    doctor: 'Babbling is a key 6-month language marker. Consonant sounds (ba, da, ma) are more significant than vowel-only sounds.',
+    funFact: 'Babbling uses 70+ muscles in the face, tongue, and throat. Babies babble in the rhythm patterns of their native language.',
+  },
+  {
+    match: ['responds to name', 'respond'],
+    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s Ziva?" peek-a-boo variations.',
+    doctor: 'Consistent name response is screened at 9 months. Achieving this early is a strong language comprehension signal.',
+    funFact: 'Babies can recognise their own name from as early as 4.5 months, but consistent head-turning takes another 1–2 months of practice.',
+  },
+  {
+    match: ['pulls to stand', 'pull to stand'],
+    unlocks: 'Ready for: standing play at a sturdy table, cruising prep along furniture, and supported stepping games.',
+    doctor: 'Pulling to stand is typically expected at 8–9 months. Doing this at 6 months is in the top 5–10% — mention it at the next visit.',
+    funFact: 'This milestone means her legs can support her full body weight — roughly 4× the load per leg compared to sitting.',
+  },
+  {
+    match: ['crawl', 'commando'],
+    unlocks: 'Time for baby-proofing! Crawling opens up: exploration, spatial learning, and bilateral brain coordination.',
+    doctor: 'Some babies skip crawling entirely and go straight to cruising — both paths are normal and healthy.',
+    funFact: 'Crawling strengthens the corpus callosum — the bridge between left and right brain hemispheres — more than any other infant activity.',
+  },
+  {
+    match: ['transfer', 'hand to hand'],
+    unlocks: 'Can now do two-handed play, banging toys together, and early stacking games.',
+    doctor: 'Bilateral hand use is a key 6–7 month neurological marker showing both brain hemispheres are communicating well.',
+    funFact: 'Hand-to-hand transfer is the foundation for every future fine motor skill — from writing to tying shoelaces.',
+  },
+  {
+    match: ['raking grasp', 'grasp'],
+    unlocks: 'Ready for soft finger foods, picking up larger objects, and scooping games during play.',
+    doctor: 'Raking grasp is the precursor to the pincer grasp (thumb + forefinger) which typically develops at 8–9 months.',
+    funFact: 'The progression from raking to pincer grasp is one of the most studied motor sequences in developmental science.',
+  },
+  {
+    match: ['stranger', 'familiar faces'],
+    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let Ziva warm up at her own pace.',
+    doctor: 'Stranger awareness is actually a positive cognitive milestone — it means she can distinguish familiar from unfamiliar.',
+    funFact: 'Babies can distinguish their mother\'s face from others within hours of birth, but active stranger wariness peaks around 8 months.',
+  },
+  {
+    match: ['consonant babbling', 'ba-ba', 'da-da'],
+    unlocks: 'Start exaggerating sounds back to her. "Ba-ba" games build phoneme recognition — the building blocks of words.',
+    doctor: 'Consonant-vowel babbling is more developmentally significant than vowel-only cooing. Report the specific sounds you hear.',
+    funFact: 'Deaf babies babble with their hands at the same age hearing babies babble vocally — it\'s a universal brain pattern.',
+  },
+  {
+    match: ['finger feed'],
+    unlocks: 'Can progress to varied textures, self-feeding practice, and baby-led weaning finger foods.',
+    doctor: 'Self-feeding is both a motor and cognitive milestone — it shows hand-eye coordination, cause-effect, and intentionality.',
+    funFact: 'Babies who finger-feed early tend to be less picky eaters at age 2 — the tactile experience builds food acceptance.',
+  },
+  {
+    match: ['wave', 'bye-bye'],
+    unlocks: 'Ready for more social gestures — clapping, high-fives, and blowing kisses. These build communication before words.',
+    doctor: 'Waving is a social milestone that shows imitation and intentional communication — typically expected by 9 months.',
+    funFact: 'Waving bye-bye requires understanding that a gesture carries meaning — this is the same cognitive leap that later enables pointing and eventually words.',
+  },
+  {
+    match: ['pincer'],
+    unlocks: 'Ready for: small finger foods (peas, puffs), picking up small toys, early crayon/chalk holding.',
+    doctor: 'The pincer grasp is a hallmark 9-month milestone. Your paediatrician will specifically test for this.',
+    funFact: 'The pincer grasp is unique to primates. It requires precise coordination between the brain\'s motor cortex and just two fingers.',
+  },
+  {
+    match: ['cruising', 'walks holding furniture'],
+    unlocks: 'Time for push toys, walking while holding hands, and furniture arranged as a "cruising track."',
+    doctor: 'Cruising is the bridge between standing and walking. Average cruising age is 8–10 months.',
+    funFact: 'While cruising, babies make 2,000+ micro-balance adjustments per minute — more than most adults make in an hour.',
+  },
+  {
+    match: ['separation anxiety'],
+    unlocks: 'Practice short separations with a calm goodbye routine. A transitional object (soft toy) can help.',
+    doctor: 'Separation anxiety peaks at 8–10 months and is a sign of healthy attachment, not a regression.',
+    funFact: 'Object permanence drives separation anxiety — she now knows you exist even when she can\'t see you, and wants you back!',
+  },
+  {
+    match: ['object permanence'],
+    unlocks: 'Ready for hiding games, peek-a-boo variations, and finding toys under blankets.',
+    doctor: 'Object permanence is a Piagetian milestone that marks the transition from sensorimotor to early symbolic thinking.',
+    funFact: 'Before object permanence develops, babies literally believe things cease to exist when hidden — "out of sight, out of mind" is real.',
+  },
+  {
+    match: ['clap'],
+    unlocks: 'Can now learn pat-a-cake, rhythm games, and action songs. Clapping builds motor planning and social timing.',
+    doctor: 'Clapping is both a motor and social milestone — it shows she can imitate a complex two-handed action on cue.',
+    funFact: 'Clapping in rhythm activates the same brain regions as language processing — music and speech share neural real estate.',
+  },
+  {
+    match: ['point'],
+    unlocks: 'Pointing unlocks joint attention — follow her point and name what she\'s looking at. This accelerates vocabulary.',
+    doctor: 'Pointing is one of the strongest predictors of language development. Paediatricians specifically screen for this at 12 months.',
+    funFact: 'Pointing is uniquely human among primates in its communicative intent — even chimps rarely point to share interest.',
+  },
+  {
+    match: ['mama', 'dada', 'first word'],
+    unlocks: 'Respond enthusiastically when she uses words correctly. Expand her phrases — if she says "da", say "yes, dada!"',
+    doctor: 'Specific mama/dada (directed at the right parent) is expected by 10–12 months. Non-specific use is normal at 7–9 months.',
+    funFact: 'Babies say "dada" before "mama" in most languages — not because of preference, but because "d" is an easier consonant to produce.',
+  },
+  {
+    match: ['walk', 'first step', 'steps'],
+    unlocks: 'Time for first shoes (soft-soled only), outdoor exploration on grass, and push-pull toys.',
+    doctor: 'Walking range is 9–16 months with average at 12 months. Late walkers often have stronger crawling skills.',
+    funFact: 'A new walker falls an average of 17 times per hour and covers the length of 7 football fields per day!',
+  },
+  {
+    match: ['stack', 'block'],
+    unlocks: 'Can progress to nesting cups, simple puzzles, and shape sorters. Spatial reasoning is developing.',
+    doctor: 'Stacking 2 blocks is a 12-month cognitive marker. Each additional block stacked maps to months of fine motor progress.',
+    funFact: 'Block stacking requires the brain to calculate gravity, balance, and spatial alignment — it\'s baby engineering.',
+  },
+  {
+    match: ['follow', 'instruction', 'one-step'],
+    unlocks: 'Can now help with simple tasks — "bring the shoe," "put it in the box." Builds independence and language.',
+    doctor: 'Following one-step commands is a 12-month language comprehension milestone, distinct from speaking words.',
+    funFact: 'By 12 months, babies understand 50+ words even if they can only say 2–3 — receptive language far outpaces expressive.',
+  },
+  {
+    match: ['spoon', 'self-feed'],
+    unlocks: 'Progress to thicker foods, loaded spoons, and eventually fork practice. Messy meals = learning.',
+    doctor: 'Self-feeding with a spoon shows motor planning, hand-eye coordination, and cognitive sequencing.',
+    funFact: 'It takes about 1,000 attempts for a toddler to master spoon-to-mouth without spilling. Every mess is practice.',
+  },
+];
+
+// From medical.js
+const VACC_GUIDANCE = {
+  _default: {
+    dos: [
+      'Keep the vaccination card updated and safe',
+      'Give extra breastfeed/fluids after vaccination',
+      'Dress baby in loose clothing on vaccination day',
+      'Monitor for 15–20 min at the clinic after the injection',
+    ],
+    donts: [
+      'Don\'t give paracetamol unless the doctor specifically advises it',
+      'Don\'t apply ice or any cream on the injection site',
+      'Don\'t skip or delay vaccinations without medical advice',
+      'Don\'t panic over mild fever (up to 101°F) — it\'s the immune system responding',
+    ],
+    whenToCall: 'Contact your paediatrician if: fever exceeds 102°F, lasts >48 hours, the injection site swells significantly, or baby is inconsolable.',
+  },
+  'dtw': {
+    dos: ['Mild fever and fussiness are common for 1–2 days — this is normal', 'A small lump at the injection site may form and is harmless'],
+    donts: ['Don\'t massage the injection site', 'Don\'t give aspirin — only paracetamol if advised'],
+    note: 'DTwP (whole cell) may cause more fever than DTaP (acellular). DTaP is gentler but costs more. Both are equally effective.',
+  },
+  'rotavirus': {
+    dos: ['This is an oral vaccine — no injection', 'Baby can eat/breastfeed normally after'],
+    donts: ['Don\'t worry if baby spits up a small amount — the dose still counts', 'Don\'t re-administer if baby vomits — inform the doctor'],
+    note: 'Given as drops, not injection. Very rarely causes intussusception — watch for severe crying, blood in stool, or vomiting in the week after.',
+  },
+  'bcg': {
+    dos: ['A small blister/scar at the injection site is expected and desired — it means the vaccine worked', 'The scar may take 2–6 months to fully form'],
+    donts: ['Don\'t cover the injection site with bandage', 'Don\'t apply anything on the blister/scar'],
+    note: 'Protects against severe forms of TB (meningitis, miliary TB). The scar is a lifelong marker of vaccination.',
+  },
+  'mmr': {
+    dos: ['Mild rash 7–10 days after is common and harmless', 'Slight fever around day 7–12 is expected'],
+    donts: ['Don\'t delay this vaccine over unfounded concerns — MMR is extensively studied and safe', 'Don\'t give MMR if baby has a severe egg allergy (discuss with doctor)'],
+    note: 'First dose at 9 months, booster at 15 months. Protects against measles (the most contagious disease), mumps, and rubella.',
+  },
+  'pcv': {
+    dos: ['May cause slight fussiness — normal', 'Can be given alongside other vaccines safely'],
+    donts: ['Don\'t skip — pneumonia is a leading cause of infant mortality in India'],
+    note: 'Protects against pneumococcal bacteria that cause pneumonia, meningitis, and ear infections.',
+  },
+  'ipv': {
+    dos: ['Can be given alongside OPV safely', 'Part of the global polio eradication effort'],
+    donts: ['Don\'t confuse with OPV (oral drops) — both are needed'],
+    note: 'IPV is the injectable polio vaccine. Along with OPV (oral), provides complete protection against all three poliovirus types.',
+  },
+  'influenza': {
+    dos: ['First time: two doses 4 weeks apart, then annual booster', 'Best given before flu season (Sep–Nov in India)'],
+    donts: ['Don\'t skip the second dose if this is the first year', 'Don\'t assume flu is harmless for babies — complications can be serious'],
+    note: 'IAP recommended (not mandatory). Protects against seasonal influenza which can be severe in babies under 2.',
+  },
+  'hep': {
+    dos: ['Birth dose is critical — should be given within 24 hours', 'No special precautions needed after this vaccine'],
+    donts: ['Don\'t delay the birth dose — early protection against hepatitis B is essential'],
+    note: 'Hepatitis B can cause chronic liver disease. The birth dose prevents mother-to-child transmission.',
+  },
+  'hib': {
+    dos: ['Usually given as part of a combination vaccine — no extra injection needed', 'Mild soreness at site is normal'],
+    donts: ['Don\'t skip — Hib meningitis has a high mortality rate in unvaccinated infants'],
+    note: 'Protects against Haemophilus influenzae type b which causes meningitis, pneumonia, and epiglottitis.',
+  },
+  'tcv': {
+    dos: ['Single dose at 6 months provides long-lasting protection', 'Can be given with other vaccines'],
+    donts: ['Don\'t skip if living in an area with poor sanitation — typhoid risk is real'],
+    note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
+  },
+  'mcv': {
+    dos: ['Critical for preventing meningococcal meningitis', 'Can be given at 9 months with MMR'],
+    donts: ['Don\'t skip — meningococcal disease progresses very rapidly'],
+    note: 'Protects against Neisseria meningitidis which causes bacterial meningitis and septicaemia.',
+  },
+  'opv': {
+    dos: ['Oral drops — easy and painless', 'Continue giving OPV even during pulse polio campaigns'],
+    donts: ['Don\'t breastfeed for 30 minutes before/after OPV (some guidelines)', 'Don\'t skip government pulse polio rounds'],
+    note: 'Oral polio vaccine provides intestinal immunity. Works alongside IPV for complete protection.',
+  },
+};
+
+// From medical.js
+const SYMPTOM_DB = [
+  {
+    id: 'fever-high',
+    keywords: ['fever','temperature','hot','burning up','102','103','104','105','high fever'],
+    severity: 'emergency',
+    title: 'High Fever',
+    condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
+    whatToDo: 'Give paracetamol (Calpol) only if prescribed by your doctor. Sponge with lukewarm water (never cold). Keep Ziva lightly dressed. Breastfeed frequently to prevent dehydration.',
+    precautions: 'Do NOT give aspirin. Do NOT use ice or cold water for sponging. Do NOT over-bundle. Monitor every 30 minutes.',
+    emergency: 'Seek immediate medical attention if: fever exceeds 102\u00B0F (under 6 months) or 104\u00B0F (over 6 months), lasts more than 24 hours, is accompanied by rash, stiff neck, difficulty breathing, or Ziva is unusually limp or unresponsive.',
+    callDoctor: true
+  },
+  {
+    id: 'fever-mild',
+    keywords: ['fever','temperature','warm','low grade','99','100','101','mild fever'],
+    severity: 'warning',
+    title: 'Mild Fever (99\u2013101\u00B0F)',
+    whatToDo: 'Monitor temperature every 2 hours. Keep Ziva comfortable and lightly dressed. Offer breast milk or fluids frequently. A mild fever after vaccination is normal for 1\u20132 days.',
+    precautions: 'Watch for escalation above 102\u00B0F. Note if fever came within 48 hours of vaccination (usually normal). Track other symptoms like rash, vomiting, or fussiness.',
+    emergency: 'Call doctor if fever persists beyond 48 hours, rises above 102\u00B0F, or is accompanied by lethargy, refusal to feed, or rash.',
+    callDoctor: false
+  },
+  {
+    id: 'vomiting',
+    keywords: ['vomiting','vomit','throwing up','projectile','spitting up','spit up'],
+    severity: 'warning',
+    title: 'Vomiting',
+    whatToDo: 'Keep Ziva upright for 20\u201330 minutes after feeding. Offer small, frequent feeds instead of large ones. If breastfeeding, continue normally. Avoid introducing new foods until vomiting stops.',
+    precautions: 'Track frequency \u2014 occasional spit-up is normal, repeated forceful vomiting is not. Watch for signs of dehydration: fewer wet diapers, dry mouth, no tears, sunken fontanelle.',
+    emergency: 'Seek immediate care if: vomiting is projectile or contains blood/bile (green), Ziva shows signs of dehydration, vomiting persists more than 12 hours, or is accompanied by high fever or lethargy.',
+    callDoctor: true
+  },
+  {
+    id: 'diarrhoea',
+    keywords: ['diarrhoea','diarrhea','loose stool','watery stool','loose motion','runny poop','frequent poop'],
+    severity: 'warning',
+    title: 'Diarrhoea / Loose Stools',
+    whatToDo: 'Continue breastfeeding \u2014 it helps fight infection. Offer ORS (Oral Rehydration Solution) in small sips if prescribed. Avoid fruit juices. Keep the diaper area clean and dry to prevent rash.',
+    precautions: 'Count wet diapers to monitor hydration (minimum 6/day is normal). Check for blood or mucus in stool. Avoid anti-diarrhoeal medicines unless prescribed. Wash hands thoroughly before handling food.',
+    emergency: 'Call doctor immediately if: blood or mucus in stool, fewer than 4 wet diapers in 24 hours, sunken eyes or fontanelle, Ziva is unusually lethargic, or diarrhoea lasts more than 48 hours.',
+    callDoctor: true
+  },
+  {
+    id: 'rash',
+    keywords: ['rash','spots','bumps','red skin','hives','eczema','patches','blotchy','itchy','redness'],
+    severity: 'warning',
+    title: 'Skin Rash',
+    whatToDo: 'Note when the rash appeared and what Ziva ate or was exposed to in the previous 24\u201348 hours. Keep the area clean and dry. Avoid scratching \u2014 use mittens if needed. Apply a mild, fragrance-free moisturizer for dry patches.',
+    precautions: 'If a new food was introduced recently, this could be a food allergy \u2014 stop that food and note it. Avoid harsh soaps or new detergents. Do NOT apply any cream without doctor\u2019s advice.',
+    emergency: 'Seek immediate care if: rash spreads rapidly, is accompanied by swelling of face/lips/tongue, difficulty breathing, or Ziva seems very unwell. Hives with breathing difficulty = possible anaphylaxis \u2014 call emergency immediately.',
+    callDoctor: true
+  },
+  {
+    id: 'cough-cold',
+    keywords: ['cough','cold','runny nose','stuffy nose','congestion','sneeze','sneezing','blocked nose','mucus','phlegm','nasal'],
+    severity: 'mild',
+    title: 'Cold / Cough / Congestion',
+    whatToDo: 'Use saline nasal drops (Nasivion Mini) before feeds to clear the nose. Run a humidifier in the room. Elevate the head end of the mattress slightly. Offer warm breast milk frequently. Gentle steam inhalation (hold Ziva in a steamy bathroom for 5\u201310 minutes).',
+    precautions: 'Do NOT give OTC cough or cold medicines to babies. Do NOT use Vicks or menthol products. Avoid exposure to cigarette smoke. Keep room well-ventilated but not too cold.',
+    emergency: 'Call doctor if: breathing becomes rapid or laboured (look for chest retractions), wheezing, blue tint around lips or nails, cough persists more than 7 days, or Ziva refuses to feed.',
+    callDoctor: false
+  },
+  {
+    id: 'breathing',
+    keywords: ['breathing','breathless','wheeze','wheezing','chest','gasping','noisy breathing','rapid breathing','laboured'],
+    severity: 'emergency',
+    title: 'Breathing Difficulty',
+    whatToDo: 'Keep Ziva upright. Clear the nose with saline drops and a nasal aspirator. Stay calm. Count breaths per minute (normal: 30\u201350 for 6\u201312 months).',
+    precautions: 'Look for: chest retracting with each breath, flaring nostrils, grunting sounds, blue tint around lips. These are signs of serious respiratory distress.',
+    emergency: 'THIS IS AN EMERGENCY if you see chest retractions, blue lips, or more than 60 breaths per minute. Call your doctor immediately or go to the nearest emergency room.',
+    callDoctor: true
+  },
+  {
+    id: 'not-eating',
+    keywords: ['not eating','refusing food','won\'t eat','lost appetite','no appetite','refusing feed','rejecting','fussy eating','food refusal','not hungry'],
+    severity: 'mild',
+    title: 'Refusing Food / Poor Appetite',
+    whatToDo: 'Don\u2019t force-feed. Offer small portions of favourite foods. Continue breastfeeding. Check for teething (swollen gums, drooling) which commonly reduces appetite. Try again in 30\u201360 minutes.',
+    precautions: 'Track how long the refusal lasts. 1\u20132 meals is normal during teething or minor illness. Check for mouth sores or thrush (white patches inside mouth). Monitor wet diapers for hydration.',
+    emergency: 'Call doctor if: refusal lasts more than 24 hours, combined with fever or lethargy, fewer wet diapers, or Ziva seems in pain while swallowing.',
+    callDoctor: false
+  },
+  {
+    id: 'teething',
+    keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
+    severity: 'mild',
+    title: 'Teething Discomfort',
+    whatToDo: 'Offer a clean, chilled teething ring. Gently massage gums with a clean finger. Cold fruit puree (chilled banana or apple) can soothe gums. Wipe drool frequently to prevent chin rash.',
+    precautions: 'Do NOT use teething gels containing benzocaine or lidocaine. Do NOT give homeopathic teething tablets. Mild fever (up to 100.4\u00B0F) can accompany teething but high fever is NOT caused by teething \u2014 investigate other causes.',
+    emergency: 'Call doctor if: fever exceeds 101\u00B0F (teething alone doesn\u2019t cause high fever), gums bleed or look infected, or Ziva is inconsolable for hours.',
+    callDoctor: false
+  },
+  {
+    id: 'constipation',
+    keywords: ['constipation','constipated','hard stool','no poop','straining','pellet','not pooping','painful poop','hasn\'t pooped'],
+    severity: 'mild',
+    title: 'Constipation',
+    whatToDo: 'Increase water intake between meals. Offer high-fibre foods: prune puree, pear, papaya, sweet potato. Gentle tummy massage in clockwise circles. Bicycle leg movements can help.',
+    precautions: 'Do NOT use suppositories or laxatives without doctor\u2019s advice. A breastfed baby may go 3\u20135 days without pooping \u2014 this is normal if stools are soft when they come. Hard, pellet-like stools are the real concern.',
+    emergency: 'Call doctor if: no stool for 5+ days with visible discomfort, blood in stool, abdomen is hard/distended, or Ziva is in obvious pain.',
+    callDoctor: false
+  },
+  {
+    id: 'crying-fussy',
+    keywords: ['crying','fussy','irritable','cranky','inconsolable','screaming','colic','unsettled','won\'t stop crying','fussiness'],
+    severity: 'mild',
+    title: 'Excessive Crying / Fussiness',
+    whatToDo: 'Check for common causes: hunger, wet diaper, tiredness, temperature (too hot/cold), teething. Try: swaddling, gentle rocking, white noise, skin-to-skin contact. Feed if due. Check for hair tourniquet (strand of hair wrapped around fingers/toes).',
+    precautions: 'Note when crying is worst \u2014 evening fussiness (5\u20138 PM) is common at this age. Track if it\u2019s associated with feeding (could be reflux or food sensitivity).',
+    emergency: 'Seek care if: crying is high-pitched and unlike normal crying, accompanied by fever or vomiting, Ziva draws legs up to abdomen (possible intussusception), or nothing calms her for more than 3 hours.',
+    callDoctor: false
+  },
+  {
+    id: 'eye-issue',
+    keywords: ['eye','eyes','watery eye','sticky eye','discharge','red eye','swollen eye','pink eye','conjunctivitis','crusty'],
+    severity: 'warning',
+    title: 'Eye Discharge / Redness',
+    whatToDo: 'Clean gently with a cotton ball soaked in cooled boiled water, wiping from inner to outer corner. Use a fresh cotton ball for each wipe and each eye. Breastmilk drops in the eye can help mild cases (2 drops, 3\u20134 times a day).',
+    precautions: 'Wash hands before and after cleaning. Do NOT share towels. A blocked tear duct (common in babies) causes watery/sticky discharge without redness and usually resolves by 12 months.',
+    emergency: 'Call doctor if: redness with thick yellow/green discharge (possible bacterial infection), swelling around the eye, Ziva rubs eyes constantly, or vision seems affected.',
+    callDoctor: true
+  },
+  {
+    id: 'ear-issue',
+    keywords: ['ear','ears','ear pain','pulling ear','tugging ear','ear infection','ear discharge','ear wax'],
+    severity: 'warning',
+    title: 'Ear Pain / Pulling',
+    whatToDo: 'Ear-pulling alone is often just exploration at this age. But if combined with fever, fussiness, or difficulty sleeping, it may indicate an ear infection. Keep Ziva\u2019s head elevated during sleep.',
+    precautions: 'Do NOT insert anything into the ear canal. Do NOT use ear drops without prescription. Note if ear-pulling started after a cold (ear infections often follow upper respiratory infections).',
+    emergency: 'Call doctor if: fluid or pus draining from the ear, ear-pulling with fever above 101\u00B0F, Ziva is inconsolable especially when lying down, or hearing seems affected.',
+    callDoctor: true
+  },
+  {
+    id: 'fall-injury',
+    keywords: ['fall','fell','hit head','bump','bruise','injury','dropped','tumble','rolled off','fell off'],
+    severity: 'emergency',
+    title: 'Fall / Head Injury',
+    whatToDo: 'Stay calm. Apply a cold compress (wrapped in cloth) to any bump for 10\u201315 minutes. Observe Ziva closely for the next 24 hours. Let her rest but check on her every 2 hours if sleeping.',
+    precautions: 'Minor bumps from rolling or crawling height are usually not serious. Watch for: unusual drowsiness, repeated vomiting, unequal pupils, difficulty waking, clear fluid from nose/ears.',
+    emergency: 'SEEK IMMEDIATE CARE if: loss of consciousness (even brief), vomiting more than once, seizure, clear fluid from nose/ears, unequal pupil size, Ziva is unusually sleepy and hard to wake, or the fall was from more than 3 feet.',
+    callDoctor: true
+  },
+  {
+    id: 'allergy',
+    keywords: ['allergy','allergic','swelling','swollen','hives','anaphylaxis','reaction','food allergy','lip swelling','tongue swelling'],
+    severity: 'emergency',
+    title: 'Allergic Reaction',
+    whatToDo: 'Stop the suspected food immediately. Note what was eaten and when symptoms started. For mild hives: cool compress can help. Do NOT give antihistamines without doctor\u2019s advice for babies.',
+    precautions: 'If a new food was introduced, mark it as \u201Cwatch\u201D in the app. Do NOT re-introduce the suspected food without medical guidance. Take a photo of any rash for the doctor.',
+    emergency: 'CALL EMERGENCY (or go to ER) IMMEDIATELY if: swelling of lips, tongue, or throat; difficulty breathing or swallowing; Ziva becomes limp or unresponsive. This could be anaphylaxis and requires immediate medical intervention.',
+    callDoctor: true
+  },
+  {
+    id: 'dehydration',
+    keywords: ['dehydration','dehydrated','dry mouth','no tears','sunken','fontanelle','fewer diapers','dark urine','dry lips','not peeing'],
+    severity: 'emergency',
+    title: 'Signs of Dehydration',
+    whatToDo: 'Offer breast milk or ORS frequently in small amounts. If breastfed, nurse more often. Keep track of wet diapers \u2014 aim for at least 6 in 24 hours.',
+    precautions: 'Signs to watch: dry mouth/lips, sunken fontanelle (soft spot on head), no tears when crying, dark concentrated urine, fewer than 4 wet diapers in 24 hours.',
+    emergency: 'Seek immediate medical attention if: sunken fontanelle, no wet diaper for 6+ hours, Ziva is lethargic or unusually sleepy, dry mouth with no tears, or skin doesn\u2019t spring back when gently pinched.',
+    callDoctor: true
+  },
+  {
+    id: 'sleep-issue',
+    keywords: ['not sleeping','sleep','insomnia','waking up','restless','won\'t sleep','night waking','sleep regression'],
+    severity: 'mild',
+    title: 'Sleep Disturbance',
+    whatToDo: 'Check for obvious causes: teething, hunger, wet diaper, temperature, overtiredness. Maintain a consistent bedtime routine. Ensure the room is dark, cool (24\u201326\u00B0C), and quiet.',
+    precautions: 'Sleep regressions are common at 6, 8\u201310, and 12 months and typically last 2\u20134 weeks. Developmental leaps (learning to crawl, stand) can disrupt sleep temporarily. Avoid screens 1 hour before bed.',
+    emergency: 'Call doctor if: sleep disruption is accompanied by fever, breathing issues, or inconsolable crying. Snoring or gasping during sleep should be evaluated.',
+    callDoctor: false
+  }
+];
+
+// From home.js
+const ESCALATING_TIPS = {
+  'no-feed-today': [
+    'Even partial meals matter — log what she\'s had so far to track her intake pattern.',
+    'If appetite is low, try smaller, more frequent offerings. Teething or illness can suppress hunger temporarily.',
+    'Repeated low intake days this month. If Ziva is consistently refusing meals, discuss with your paediatrician at the next visit.',
+  ],
+  'poop-gap': [
+    'Tummy massage (clockwise circles), warm bath, high-fibre foods (pear, prune, papaya), and tummy time can help stimulate bowel movement.',
+    'Try increasing water between meals and adding more fibre-rich foods like pear, papaya, and oats. Reduce binding foods like banana and rice.',
+    'Poop gaps keep recurring. If accompanied by discomfort, hard belly, or straining, this warrants a paediatrician conversation about dietary adjustments.',
+  ],
+  'hard-stool-streak': [
+    'Offer pear, papaya, prune purée, and extra water between meals. Reduce banana and rice if constipation persists. Tummy massage and bicycle legs can also help.',
+    'Persistent hard stools despite dietary changes. Try adding ghee to meals (lubricates digestion), increase dal water, and ensure adequate hydration.',
+    'Hard stools keep coming back. This pattern has occurred multiple times — consider asking your paediatrician about stool softeners or a dietary review.',
+  ],
+  'sleep-score-drop': [
+    'Stick to consistent bedtime routine, keep the room dark, and avoid new sleep associations. Most regressions pass in 2-4 weeks.',
+    'Check if bedtime has shifted later, if naps are too long or too close to bedtime, or if teething/illness might be the cause. Consider an earlier bedtime by 15-30 min.',
+    'Sleep quality has dropped repeatedly. If this persists beyond 3-4 weeks, it may not be a typical regression — discuss sleep patterns with your paediatrician.',
+  ],
+  'food-reaction': [
+    'Don\'t panic — many babies have digestive adjustment to new foods. Watch for rash, vomiting, or persistent diarrhoea. If symptoms worsen, pause the new food and try again in a week.',
+    'This is the second time a new food has coincided with unusual poop. Consider introducing foods more slowly (one every 4-5 days) and keeping a closer food-reaction diary.',
+    'Multiple food reactions flagged. Discuss with your paediatrician — they may recommend an elimination approach or allergy testing if reactions are consistent.',
+  ],
+  'poop-gap-nodata': [
+    'Aim to log at least once a day. Note colour and consistency for the most useful patterns.',
+  ],
+  'dev-checkup-due': [
+    'Prepare questions about feeding, sleep, and any concerns. Bring vaccination records. The doctor will check weight, height, head circumference, and developmental milestones.',
+  ],
+  'food-variety-stale': [
+    'Introduce one new food at a time with a 3-day gap. Try different textures and colours to build acceptance.',
+    'Variety exposure in the first year shapes long-term food preferences. Even if she rejects a food, offer it again in a week — it can take 10-15 exposures.',
+    'Ziva has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
+  ],
+  'food-correlation': [
+    'This food has been linked to unusual poop a few times. It may just be coincidence — keep feeding it and see if the pattern holds. Note the consistency each time.',
+    'The pattern is becoming consistent. Try pausing this food for a week, then reintroduce in a small quantity. If the poop changes again, it may be a sensitivity.',
+    'Multiple occurrences of digestive upset after this food. Discuss with your paediatrician — they may recommend an elimination diet or further testing.',
+  ],
+  'food-group-gap': [
+    'Try adding one food from this group to a meal this week. Variety builds both nutrition and acceptance.',
+    'This food group has been missing for a while. Each group provides different micronutrients that are hard to replace. Even small amounts count.',
+    'Extended gaps in this food group may lead to nutrient deficiencies. If Ziva consistently refuses foods from this group, discuss alternatives with your paediatrician.',
+  ],
+  'vacc-reminder': [
+    'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
+  ],
+  'supp-streak-broken': [
+    'Missed a day — just continue normally tomorrow. Don\'t double up the dose.',
+    'Supplements work best with consistency. Try linking it to a daily routine — right after the morning feed works well.',
+    'Frequent missed doses this month. Vitamin D is critical for bone development at this age. Consider setting a daily alarm or keeping drops next to the feeding chair.',
+  ],
+  'low-iron': [
+    'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
+    'Iron stores from birth deplete around 6 months. At this age, dietary iron becomes critical. Try adding iron-rich foods to at least one meal daily — ragi at breakfast is an easy win.',
+    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If Ziva seems unusually tired or pale, discuss iron levels with your paediatrician.',
+  ],
+  'low-calcium': [
+    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
+    'Calcium and Vitamin D work together for bone health. Since Ziva takes D3 drops, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
+  ],
+  'low-protein': [
+    'Easy protein additions: moong/masoor/toor dal in khichdi, paneer cubes, thick curd, almond paste in porridge, sattu drink. Aim for protein in at least one meal daily.',
+    'Protein is essential for muscle growth, immune function, and brain development. Dal-based khichdi is the easiest way to add protein — try different dals for variety.',
+    'Protein has been consistently low. At this age, rapid growth demands adequate protein. Consider adding paneer, dal, or nut pastes to every lunch and dinner.',
+  ],
+  'iron-no-vitc': [
+    'Add a squeeze of lemon on dal/khichdi, serve amla after meals, or pair iron meals with orange segments, tomato, or mango. Even a small amount of Vitamin C makes a big difference.',
+    'Non-heme iron (from plant foods) has low absorption on its own — only 2-5%. Adding Vitamin C can boost this to 10-20%. A simple lemon squeeze transforms iron absorption.',
+    'You\'re consistently providing iron but missing the Vitamin C pairing. Make it a habit: keep a lemon near the kitchen and squeeze a few drops on every dal/ragi meal.',
+  ],
+  'meal-monotony': [
+    'Try swapping one meal — if breakfast is always ragi, try oats or dalia. If lunch is always dal rice, try a vegetable khichdi. Small changes count.',
+    'Repeated meals can lead to nutrient gaps and reduce Ziva\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
+    'Same meals for an extended period. Variety in the first year builds the foundation for lifelong eating habits. Even rotating between 3-4 different breakfasts makes a difference.',
+  ],
+};
+
