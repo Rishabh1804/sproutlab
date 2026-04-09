@@ -390,6 +390,12 @@ function init() {
     else if (action === 'alSelectDuration') _alSelectDuration(arg);
     else if (action === 'alToggleOtherDur') _alToggleOtherDur();
     else if (action === 'alSetCustomDur') _alSetCustomDur();
+    else if (action === 'alTapSuggestion') _alTapSuggestion(arg);
+    else if (action === 'alPresetTap') _alPresetTap(arg);
+    else if (action === 'alTapYesterday') _alTapYesterday(arg);
+    else if (action === 'alRepeatAll') _alRepeatAll();
+    else if (action === 'alUpgradeYes') _alUpgradeYes(arg);
+    else if (action === 'alUpgradeDismiss') _alUpgradeDismiss(arg);
     else if (action === 'deleteEvent') deleteEvent(parseInt(arg));
     else if (action === 'deleteFeedingEntry') deleteFeedingEntry(arg);
     else if (action === 'selectQLBackfillDate') selectQLBackfillDate(arg);

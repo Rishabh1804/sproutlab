@@ -9330,6 +9330,8 @@ function openQuickModal(type) {
     }
     _alPrefillText = null;
     _alPrefillDuration = null;
+    // Session B: render suggestions, yesterday, domain nudge
+    _alRenderSessionB();
   }
   document.getElementById('qlModal-' + type).classList.add('open');
 }
@@ -9442,16 +9444,14 @@ function _alSelectSlot(slot) {
 function _alRenderDurationChips() {
   var container = document.getElementById('alDurRow');
   if (!container) return;
-  var html = '<div class="al-dur-label">' + zi('hourglass') + ' Duration</div><div class="al-dur-chips">';
+  var html = '<div class="al-dur-label">' + zi('clock') + ' Duration</div><div class="al-dur-chips">';
   AL_DURATION_CHIPS.forEach(function(d) {
     var cls = (_alSelectedDuration === d && !_alOtherDurVisible) ? ' active' : '';
     html += '<button class="al-dur-chip' + cls + '" data-action="alSelectDuration" data-arg="' + d + '">' + d + ' min</button>';
   });
-  // Other chip — show custom value if set
-  var hasCustomDur = (typeof _alSelectedDuration === 'number' && AL_DURATION_CHIPS.indexOf(_alSelectedDuration) === -1);
-  var otherCls = (_alOtherDurVisible || hasCustomDur) ? ' active' : '';
-  var otherLabel = hasCustomDur ? _alSelectedDuration + ' min' : 'Other';
-  html += '<button class="al-dur-chip al-dur-chip-other' + otherCls + '" data-action="alToggleOtherDur">' + escHtml(otherLabel) + '</button>';
+  // Other chip
+  var otherCls = _alOtherDurVisible ? ' active' : '';
+  html += '<button class="al-dur-chip al-dur-chip-other' + otherCls + '" data-action="alToggleOtherDur">Other</button>';
   // Skip chip
   var skipCls = (_alSelectedDuration === null && !_alOtherDurVisible) ? ' active' : '';
   html += '<button class="al-dur-chip al-dur-chip-skip' + skipCls + '" data-action="alSelectDuration" data-arg="skip">Skip</button>';
@@ -9499,9 +9499,7 @@ function _alSetCustomDur() {
   } else {
     _alSelectedDuration = val;
   }
-  // Close "Other" input and show confirmed state
-  _alOtherDurVisible = false;
-  _alRenderDurationChips();
+  // Keep other visible so user can adjust
 }
 
 function _alInjectSlotDurContainers() {
@@ -9673,6 +9671,606 @@ function saveActivity() {
   renderMilestones();
   renderTodayPlan();
   renderHomeActivity();
+  // Session B: check for milestone auto-upgrade prompt
+  _alCheckAutoUpgrade(entry);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVITY LOG: Session B — Intelligence Layer (Steps 4–9)
+// Milestone suggestions, yesterday repeat, domain nudge, auto-upgrade
+// ═══════════════════════════════════════════════════════════════
+
+let _alUpgradePrompted = {};
+let _alSuggestInjected = false;
+var _alUpgradeTimerId = null;
+
+// ── Step 4: Active milestone → suggestion matching ──
+
+function _alGetSuggestionMilestones() {
+  var active = (milestones || []).filter(function(m) {
+    return ['emerging','practicing','consistent'].indexOf(m.status) !== -1;
+  });
+  var matched = [];
+  for (var i = 0; i < active.length; i++) {
+    var m = active[i];
+    var keys = Object.keys(MILESTONE_ACTIVITIES);
+    for (var j = 0; j < keys.length; j++) {
+      if (typeof matchesMilestoneKeyword === 'function' && matchesMilestoneKeyword(m.text, keys[j])) {
+        matched.push({ milestone: m, keyword: keys[j], activities: MILESTONE_ACTIVITIES[keys[j]] });
+        break;
+      }
+    }
+  }
+  var stagePri = { practicing: 0, emerging: 1, consistent: 2 };
+  matched.sort(function(a, b) {
+    var sa = stagePri[a.milestone.status] !== undefined ? stagePri[a.milestone.status] : 3;
+    var sb = stagePri[b.milestone.status] !== undefined ? stagePri[b.milestone.status] : 3;
+    if (sa !== sb) return sa - sb;
+    var ea = typeof getMilestoneEvidence === 'function' ? getMilestoneEvidence(a.keyword).length : 0;
+    var eb = typeof getMilestoneEvidence === 'function' ? getMilestoneEvidence(b.keyword).length : 0;
+    return eb - ea;
+  });
+  return matched.slice(0, 3);
+}
+
+// ── Step 5: Dedup + render suggestions ──
+
+function _alWordOverlap(textA, textB) {
+  // BN-5: filter words < 3 chars
+  var wordsA = textA.toLowerCase().split(/\s+/).filter(function(w) { return w.length >= 3; });
+  var wordsB = textB.toLowerCase().split(/\s+/).filter(function(w) { return w.length >= 3; });
+  if (wordsA.length === 0 || wordsB.length === 0) return 0;
+  var setA = {};
+  wordsA.forEach(function(w) { setA[w] = true; });
+  var setB = {};
+  wordsB.forEach(function(w) { setB[w] = true; });
+  var intersection = 0;
+  Object.keys(setA).forEach(function(w) { if (setB[w]) intersection++; });
+  var union = {};
+  wordsA.concat(wordsB).forEach(function(w) { union[w] = true; });
+  var unionSize = Object.keys(union).length;
+  return unionSize > 0 ? intersection / unionSize : 0;
+}
+
+function _alDeduplicateSuggestions(groups) {
+  var seen = [];
+  return groups.map(function(g) {
+    var filtered = g.activities.filter(function(act) {
+      for (var i = 0; i < seen.length; i++) {
+        if (_alWordOverlap(act.text, seen[i].text) > 0.7) return false;
+      }
+      return true;
+    });
+    filtered.forEach(function(a) { seen.push(a); });
+    return { milestone: g.milestone, keyword: g.keyword, activities: filtered };
+  }).filter(function(g) { return g.activities.length > 0; });
+}
+
+function _alRenderSuggestions() {
+  var container = document.getElementById('alSuggestSection');
+  if (!container) return;
+  if (_alPrefillSource === 'plan') {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+
+  var groups = _alGetSuggestionMilestones();
+  if (groups.length === 0) {
+    // Fallback: static presets
+    var presets = ['Tummy time', 'Reading', 'Water play', 'Music', 'Sensory play', 'Peek-a-boo'];
+    var html = '<div class="al-suggest-group"><div class="al-suggest-group-label">' +
+      zi('sparkle') + ' Quick picks</div><div class="al-suggest-cards">';
+    presets.forEach(function(p) {
+      html += '<button class="al-suggest-card al-suggest-card-fallback" data-action="alPresetTap" data-arg="' + escHtml(p) + '">' +
+        '<span class="al-suggest-text">' + escHtml(p) + '</span></button>';
+    });
+    html += '</div></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  var deduped = _alDeduplicateSuggestions(groups.map(function(g) {
+    return { milestone: g.milestone, keyword: g.keyword, activities: g.activities.slice(0, 2) };
+  }));
+
+  var html = '';
+  deduped.forEach(function(g) {
+    var statusLabel = g.milestone.status.charAt(0).toUpperCase() + g.milestone.status.slice(1);
+    html += '<div class="al-suggest-group">';
+    html += '<div class="al-suggest-group-label">' + zi('target') + ' For: ' +
+      escHtml(g.milestone.text) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
+    html += '<div class="al-suggest-cards">';
+    g.activities.forEach(function(act) {
+      var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
+      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' +
+        '<span class="al-suggest-icon">' + zi(act.icon || 'run') + '</span>' +
+        '<span class="al-suggest-text">' + escHtml(act.text) + '</span>' +
+        '<span class="al-suggest-dur">' + act.duration + ' min</span>' +
+        '</button>';
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+// ── Step 6: Suggestion tap handler ──
+
+function _alTapSuggestion(argStr) {
+  var data;
+  try { data = JSON.parse(argStr); } catch(e) { return; }
+  var textarea = document.getElementById('alTextInput');
+  if (!textarea) return;
+  textarea.value = data.text;
+  _alLastSuggestionText = data.text;
+
+  // Set duration chip
+  if (data.duration) {
+    _alOtherDurVisible = false;
+    _alSelectedDuration = data.duration;
+    if (AL_DURATION_CHIPS.indexOf(data.duration) === -1) {
+      _alOtherDurVisible = true;
+    }
+    _alRenderDurationChips();
+  }
+
+  // Set evidence directly — bypass classifier (per spec)
+  var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === data.keyword; });
+  _alDetectedEvidence = [{
+    milestone: data.keyword,
+    confidence: 'high',
+    context: 'suggestion_tap',
+    domain: pat ? pat.domain : 'motor'
+  }];
+  renderActivityChips();
+
+  // Show tip line
+  var tipEl = document.getElementById('alSuggestTip');
+  if (tipEl && data.tip) {
+    tipEl.innerHTML = zi('lightbulb') + ' ' + escHtml(data.tip);
+    tipEl.style.display = '';
+  } else if (tipEl) {
+    tipEl.innerHTML = '';
+    tipEl.style.display = 'none';
+  }
+}
+
+function _alPresetTap(text) {
+  // Fallback preset tap — same as existing alPreset but clears first
+  var textarea = document.getElementById('alTextInput');
+  if (!textarea) return;
+  textarea.value = text;
+  onActivityInputChange();
+}
+
+// Tip line clearing on textarea input
+function _alCheckTipClear() {
+  if (!_alLastSuggestionText) return;
+  var textarea = document.getElementById('alTextInput');
+  if (!textarea) return;
+  if (textarea.value !== _alLastSuggestionText) {
+    _alLastSuggestionText = null;
+    var tipEl = document.getElementById('alSuggestTip');
+    if (tipEl) { tipEl.innerHTML = ''; tipEl.style.display = 'none'; }
+    // Classifier re-engages via existing oninput → onActivityInputChange
+  }
+}
+
+// ── Step 7: Yesterday Activities ──
+
+function _alGetYesterdayActivities() {
+  var todayStr = today();
+  var d = new Date(); d.setDate(d.getDate() - 1);
+  var yesterday = toDateStr(d);
+  var entries = activityLog[yesterday] || [];
+  if (entries.length === 0) return [];
+
+  // Suppress if today already has 3+ activities
+  var todayEntries = activityLog[todayStr] || [];
+  if (todayEntries.length >= 3) return [];
+
+  // Diversify by domain — one per domain first, then fill
+  var byDomain = {};
+  entries.forEach(function(e) {
+    var dom = (e.domains && e.domains.length > 0) ? e.domains[0] : '_none';
+    if (!byDomain[dom]) byDomain[dom] = [];
+    byDomain[dom].push(e);
+  });
+  var result = [];
+  var usedIds = {};
+  Object.keys(byDomain).forEach(function(dom) {
+    if (result.length < 3) {
+      result.push(byDomain[dom][0]);
+      usedIds[byDomain[dom][0].id] = true;
+    }
+  });
+  for (var i = 0; i < entries.length && result.length < 3; i++) {
+    if (!usedIds[entries[i].id]) result.push(entries[i]);
+  }
+  return result.slice(0, 3);
+}
+
+function _alRenderYesterday() {
+  var container = document.getElementById('alYesterdaySection');
+  if (!container) return;
+  if (_alPrefillSource === 'plan') {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+
+  var items = _alGetYesterdayActivities();
+  if (items.length === 0) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  var html = '<div class="al-yesterday-label">' + zi('history') + ' Yesterday</div>';
+  html += '<div class="al-yesterday-items">';
+  items.forEach(function(item) {
+    var dom = (item.domains && item.domains[0]) ? item.domains[0] : '';
+    var meta = AL_DOMAIN_META[dom] || { icon: zi('run'), label: '' };
+    var durStr = item.duration ? ' · ' + item.duration + 'm' : '';
+    var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
+    html += '<button class="al-yesterday-item" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
+      '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
+      '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
+  });
+  html += '</div>';
+  html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('repeat') + ' Repeat all</button>';
+  container.innerHTML = html;
+}
+
+function _alTapYesterday(argStr) {
+  var data;
+  try { data = JSON.parse(argStr); } catch(e) { return; }
+  var textarea = document.getElementById('alTextInput');
+  if (!textarea) return;
+  textarea.value = data.text || '';
+  if (data.duration) {
+    _alOtherDurVisible = false;
+    _alSelectedDuration = data.duration;
+    if (AL_DURATION_CHIPS.indexOf(data.duration) === -1) _alOtherDurVisible = true;
+    _alRenderDurationChips();
+  }
+  onActivityInputChange();
+}
+
+function _alRepeatAll() {
+  var items = _alGetYesterdayActivities();
+  if (items.length === 0) return;
+  var dateStr = _qlBackfillDate || today();
+  var entryIds = [];
+  var baseNow = Date.now();
+
+  items.forEach(function(item, i) {
+    // BN-1: +1s offset per entry to avoid duplicate TSF event IDs
+    var ts = new Date(baseNow + i * 1000).toISOString();
+    var entry = {
+      id: 'act_' + (baseNow + i),
+      text: item.text,
+      type: item.duration ? 'activity' : 'observation',
+      duration: item.duration || null,
+      ts: ts,
+      source: 'repeat_yesterday',
+      domains: item.domains || [],
+      evidence: item.evidence || []
+    };
+    if (!activityLog[dateStr]) activityLog[dateStr] = [];
+    activityLog[dateStr].push(entry);
+    entryIds.push(entry.id);
+  });
+
+  save(KEYS.activityLog, activityLog);
+  _tsfMarkDirty();
+  _islMarkDirty('activities');
+  _islMarkDirty('milestones');
+  syncMilestoneStatuses();
+
+  _lastActivityUndo = { dateStr: dateStr, entryIds: entryIds };
+  closeQuickLogAll();
+
+  var toast = document.getElementById('qlToast');
+  toast.innerHTML = zi('check') + ' ' + items.length + ' activities logged · <button class="al-undo-btn" data-action="undoLastActivity">Undo</button>';
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); _lastActivityUndo = null; }, 5000);
+
+  renderMilestones();
+  renderTodayPlan();
+  renderHomeActivity();
+}
+
+// Override undoLastActivity to handle both single (entryId) and batch (entryIds)
+function undoLastActivity() {
+  if (!_lastActivityUndo) return;
+  var dateStr = _lastActivityUndo.dateStr;
+  var entryId = _lastActivityUndo.entryId;
+  var entryIds = _lastActivityUndo.entryIds;
+  if (!activityLog[dateStr]) { _lastActivityUndo = null; return; }
+
+  if (entryIds && entryIds.length > 0) {
+    var idSet = {};
+    entryIds.forEach(function(id) { idSet[id] = true; });
+    activityLog[dateStr] = activityLog[dateStr].filter(function(e) { return !idSet[e.id]; });
+  } else if (entryId) {
+    activityLog[dateStr] = activityLog[dateStr].filter(function(e) { return e.id !== entryId; });
+  }
+
+  if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
+  save(KEYS.activityLog, activityLog);
+  _tsfMarkDirty();
+  _islMarkDirty('activities');
+  _islMarkDirty('milestones');
+  _lastActivityUndo = null;
+
+  var toast = document.getElementById('qlToast');
+  if (toast) {
+    toast.innerHTML = zi('check') + ' Undone';
+    setTimeout(function() { toast.classList.remove('show'); }, 2000);
+  }
+  syncMilestoneStatuses();
+  renderMilestones();
+  renderTodayPlan();
+  renderHomeActivity();
+}
+
+// ── Step 8: Domain Balance Nudge ──
+
+function _alGetDomainNudge() {
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+  var cutoffStr = toDateStr(cutoff);
+  var domainCounts = {};
+
+  Object.keys(activityLog).forEach(function(dateStr) {
+    if (dateStr < cutoffStr) return;
+    (activityLog[dateStr] || []).forEach(function(entry) {
+      if (!entry.evidence) return;
+      entry.evidence.forEach(function(ev) {
+        // BN-6: Map domain via EVIDENCE_PATTERNS, not KEYWORD_TO_MILESTONE
+        var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === ev.milestone; });
+        var domain = pat ? pat.domain : (ev.domain || null);
+        if (domain) domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      });
+    });
+  });
+
+  var totalEntries = 0;
+  Object.keys(domainCounts).forEach(function(k) { totalEntries += domainCounts[k]; });
+  if (totalEntries < 3) return null;
+
+  // Suppress if suggestion groups already cover 3+ distinct domains
+  var groups = _alGetSuggestionMilestones();
+  var suggestDomains = {};
+  groups.forEach(function(g) {
+    var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === g.keyword; });
+    if (pat) suggestDomains[pat.domain] = true;
+  });
+  if (Object.keys(suggestDomains).length >= 3) return null;
+
+  var standardDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
+  var domainCount = 0;
+  standardDomains.forEach(function(d) { if (domainCounts[d]) domainCount++; });
+  var avg = totalEntries / Math.max(domainCount, 1);
+
+  var lowest = null;
+  var lowestCount = Infinity;
+  standardDomains.forEach(function(d) {
+    var count = domainCounts[d] || 0;
+    // Only nudge if domain has at least one active milestone
+    var hasActive = (milestones || []).some(function(m) {
+      if (['emerging','practicing','consistent'].indexOf(m.status) === -1) return false;
+      return EVIDENCE_PATTERNS.some(function(p) {
+        return p.domain === d && typeof matchesMilestoneKeyword === 'function' && matchesMilestoneKeyword(m.text, p.milestone);
+      });
+    });
+    if (!hasActive) return;
+    if (count < lowestCount) { lowestCount = count; lowest = d; }
+  });
+
+  if (!lowest) return null;
+  if (lowestCount >= avg * 0.5) return null;
+
+  // Suppress if today already has activity in this domain
+  var todayEntries = activityLog[today()] || [];
+  var hasDomain = todayEntries.some(function(e) { return e.domains && e.domains.indexOf(lowest) !== -1; });
+  if (hasDomain) return null;
+
+  // Get 2 suggestions for nudge domain via EVIDENCE_PATTERNS → MILESTONE_ACTIVITIES (BN-6)
+  var suggestions = [];
+  Object.keys(MILESTONE_ACTIVITIES).forEach(function(key) {
+    var pat = EVIDENCE_PATTERNS.find(function(p) { return p.milestone === key; });
+    if (pat && pat.domain === lowest) {
+      MILESTONE_ACTIVITIES[key].forEach(function(a) {
+        if (suggestions.length < 2) suggestions.push({ text: a.text, duration: a.duration, tip: a.tip || '', icon: a.icon || 'run', keyword: key });
+      });
+    }
+  });
+
+  return { domain: lowest, count: lowestCount, avgCount: avg, suggestions: suggestions };
+}
+
+function _alRenderDomainNudge() {
+  var container = document.getElementById('alDomainNudge');
+  if (!container) return;
+  if (_alPrefillSource === 'plan') {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  var nudge = _alGetDomainNudge();
+  if (!nudge) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+  var meta = AL_DOMAIN_META[nudge.domain] || { icon: zi('sparkle'), label: nudge.domain };
+  var html = '<div class="al-domain-nudge">';
+  html += '<div class="al-domain-nudge-text">' + meta.icon + ' ' + escHtml(meta.label) + ' could use attention this week</div>';
+  if (nudge.suggestions.length > 0) {
+    html += '<div class="al-domain-nudge-links">Try: ';
+    nudge.suggestions.forEach(function(s, i) {
+      if (i > 0) html += ' · ';
+      var payload = JSON.stringify({ keyword: s.keyword, text: s.text, duration: s.duration, tip: s.tip, icon: s.icon });
+      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' + escHtml(s.text) + '</button>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ── Step 9: Confidence Auto-Upgrade Prompt ──
+
+function _alCheckAutoUpgrade(entry) {
+  if (!entry || !entry.evidence || entry.evidence.length === 0) return;
+  if (typeof computeAutoStatus !== 'function') return;
+
+  var stagePri = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+  var bestCandidate = null;
+  var bestEvCount = 0;
+
+  entry.evidence.forEach(function(ev) {
+    var keyword = ev.milestone;
+    var m = (milestones || []).find(function(mi) {
+      return typeof matchesMilestoneKeyword === 'function' && matchesMilestoneKeyword(mi.text, keyword);
+    });
+    if (!m) return;
+    if (m.manualOverride) return;
+
+    var currentStage = stagePri[m.status] || 0;
+    var autoStatus = computeAutoStatus(keyword);
+    var autoStage = stagePri[autoStatus] || 0;
+    if (autoStage <= currentStage) return;
+
+    var evCount = typeof getMilestoneEvidence === 'function' ? getMilestoneEvidence(keyword).length : 0;
+    if (_alUpgradePrompted[keyword] !== undefined && evCount < _alUpgradePrompted[keyword] + 2) return;
+
+    if (evCount > bestEvCount) {
+      bestEvCount = evCount;
+      bestCandidate = { keyword: keyword, milestone: m, currentStatus: m.status, newStatus: autoStatus, evidenceCount: evCount };
+    }
+  });
+
+  if (!bestCandidate) return;
+  // Small delay so undo toast settles visually
+  var cand = bestCandidate;
+  setTimeout(function() { _alShowUpgradeToast(cand); }, 600);
+}
+
+function _alShowUpgradeToast(candidate) {
+  var toast = document.getElementById('alUpgradeToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'alUpgradeToast';
+    toast.className = 'al-upgrade-toast';
+    document.body.appendChild(toast);
+  }
+  var newLabel = candidate.newStatus.charAt(0).toUpperCase() + candidate.newStatus.slice(1);
+  var curLabel = candidate.currentStatus.charAt(0).toUpperCase() + candidate.currentStatus.slice(1);
+
+  toast.innerHTML = '<div class="al-upgrade-text">' + zi('target') + ' "' + escHtml(candidate.milestone.text) +
+    '" has ' + candidate.evidenceCount + ' observations</div>' +
+    '<div class="al-upgrade-sub">Move from ' + escHtml(curLabel) + ' → ' + escHtml(newLabel) + '?</div>' +
+    '<div class="al-upgrade-actions">' +
+      '<button class="al-upgrade-yes" data-action="alUpgradeYes" data-arg="' + escHtml(candidate.keyword) + ',' + escHtml(candidate.newStatus) + '">Yes, upgrade</button>' +
+      '<button class="al-upgrade-dismiss" data-action="alUpgradeDismiss" data-arg="' + escHtml(candidate.keyword) + ',' + candidate.evidenceCount + '">Not yet</button>' +
+    '</div>';
+  toast.classList.add('show');
+  if (_alUpgradeTimerId) clearTimeout(_alUpgradeTimerId);
+  _alUpgradeTimerId = setTimeout(function() { toast.classList.remove('show'); _alUpgradeTimerId = null; }, 8000);
+}
+
+function _alUpgradeYes(argStr) {
+  if (_alUpgradeTimerId) { clearTimeout(_alUpgradeTimerId); _alUpgradeTimerId = null; }
+  var parts = argStr.split(',');
+  var keyword = parts[0];
+  var newStatus = parts[1];
+  if (typeof overrideMilestoneStatus === 'function') {
+    overrideMilestoneStatus(keyword, newStatus);
+  }
+  if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
+  if (typeof renderMilestones === 'function') renderMilestones();
+
+  var toast = document.getElementById('alUpgradeToast');
+  if (toast) {
+    toast.innerHTML = '<div class="al-upgrade-text">' + zi('check') + ' ' +
+      escHtml(keyword.replace(/_/g, ' ')) + ' → ' + escHtml(newStatus) + '</div>';
+    setTimeout(function() { toast.classList.remove('show'); }, 2500);
+  }
+}
+
+function _alUpgradeDismiss(argStr) {
+  if (_alUpgradeTimerId) { clearTimeout(_alUpgradeTimerId); _alUpgradeTimerId = null; }
+  var parts = argStr.split(',');
+  var keyword = parts[0];
+  var evCount = parseInt(parts[1]);
+  _alUpgradePrompted[keyword] = evCount;
+  var toast = document.getElementById('alUpgradeToast');
+  if (toast) toast.classList.remove('show');
+}
+
+// ── DOM injection + master render ──
+
+function _alInjectSuggestContainers() {
+  if (_alSuggestInjected) return;
+  var modal = document.getElementById('qlModal-activity');
+  if (!modal) return;
+  var textarea = document.getElementById('alTextInput');
+  if (!textarea) return;
+  var textareaRow = textarea.closest('.ql-field') || textarea.parentElement;
+  if (!textareaRow) return;
+
+  // Hide existing preset buttons
+  modal.querySelectorAll('.ql-presets, .al-presets').forEach(function(el) { el.style.display = 'none'; });
+  // Also hide any individual preset buttons that might not be in a wrapper
+  modal.querySelectorAll('[data-action="alPreset"]').forEach(function(el) {
+    var row = el.closest('.ql-field, .ql-presets, .al-presets') || el.parentElement;
+    if (row) row.style.display = 'none';
+  });
+
+  // Inject Session B containers BEFORE textarea row
+  var wrapper = document.createElement('div');
+  wrapper.id = 'alSessionBContainer';
+  wrapper.innerHTML =
+    '<div id="alYesterdaySection" class="al-yesterday-section"></div>' +
+    '<div id="alSuggestSection" class="al-suggest-section"></div>' +
+    '<div id="alDomainNudge" class="al-domain-nudge-section"></div>' +
+    '<div id="alSeparator" class="al-separator">' + zi('edit') + ' or type your own</div>';
+  textareaRow.parentElement.insertBefore(wrapper, textareaRow);
+
+  // Inject tip line AFTER textarea row
+  var tipLine = document.createElement('div');
+  tipLine.id = 'alSuggestTip';
+  tipLine.className = 'al-suggest-tip';
+  tipLine.style.display = 'none';
+  textareaRow.parentElement.insertBefore(tipLine, textareaRow.nextSibling);
+
+  // Wire tip-clearing listener (supplements existing oninput for classifier)
+  textarea.addEventListener('input', _alCheckTipClear);
+
+  _alSuggestInjected = true;
+}
+
+function _alRenderSessionB() {
+  _alInjectSuggestContainers();
+  _alRenderYesterday();
+  _alRenderSuggestions();
+  _alRenderDomainNudge();
+  // Clear tip line on fresh open
+  var tipEl = document.getElementById('alSuggestTip');
+  if (tipEl) { tipEl.innerHTML = ''; tipEl.style.display = 'none'; }
+  // Show/hide separator based on whether suggestions are visible
+  var sep = document.getElementById('alSeparator');
+  var suggestEl = document.getElementById('alSuggestSection');
+  var yesterdayEl = document.getElementById('alYesterdaySection');
+  var hasSuggestions = suggestEl && suggestEl.style.display !== 'none' && suggestEl.innerHTML !== '';
+  var hasYesterday = yesterdayEl && yesterdayEl.style.display !== 'none' && yesterdayEl.innerHTML !== '';
+  if (sep) sep.style.display = (hasSuggestions || hasYesterday) ? '' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
