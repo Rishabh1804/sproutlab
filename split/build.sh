@@ -11,6 +11,7 @@ HEAD
 cat styles.css
 cat <<'MID'
   </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 MID
