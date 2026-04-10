@@ -297,8 +297,8 @@ function init() {
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
-    else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(); }
-    else if (action === 'openScorePopup') openScorePopup();
+    else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
+    else if (action === 'openScorePopup') openScorePopup(arg);
     else if (action === 'openVaccModal') openVaccModal();
     else if (action === 'toggleVaccInfo') toggleVaccInfo();
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();

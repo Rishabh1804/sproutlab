@@ -134,7 +134,7 @@ body::before {
   position:fixed; inset:0; z-index:0; pointer-events:none;
   background:
     radial-gradient(ellipse 600px 400px at 10% 20%, rgba(242,168,184,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 500px 350px at 85% 70%, rgba(181,213,197,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 85% 70%, rgba(181,213,197,0.14) 0%, transparent 70%),
     radial-gradient(ellipse 400px 300px at 50% 50%, rgba(201,184,232,0.10) 0%, transparent 70%);
 }
 
@@ -4433,7 +4433,7 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .pq-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq .pcb-dot { border-color:var(--tc-amber); }
-[data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.18); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
+[data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }
 [data-theme="dark"] .ncf-btn.active { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
@@ -5076,6 +5076,27 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .dsh-comp-pill .dcp-weight { font-size:var(--fs-2xs); color:var(--light); }
 .dsh-stale { opacity:0.55; }
 .dsh-stale .dsh-number::before { content:'~'; font-size:0.7em; }
+
+/* ── Domain hero ring — score-level colors (replaces inline styles) ── */
+.dsh-ring-excellent { background:linear-gradient(135deg, #d4f5e0, #b8eacc); border-color:#6fcf97; color:#1a7a42; }
+.dsh-ring-great { background:linear-gradient(135deg, #e0f0fa, #cce5f5); border-color:#7fb8d8; color:#2a6a8a; }
+.dsh-ring-good { background:linear-gradient(135deg, #fef6e8, #fcecd0); border-color:#e8c86d; color:#8a6520; }
+.dsh-ring-fair { background:linear-gradient(135deg, #fef0e0, #fce0c0); border-color:#e8a050; color:#8a5020; }
+.dsh-ring-attention { background:linear-gradient(135deg, #fde8ed, #f8d0d8); border-color:var(--tc-danger); color:#a03030; }
+
+/* ── Domain-colored comp pills — warm white with domain tint ── */
+.dsh-diet .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(181,213,197,0.12)); border-color:rgba(181,213,197,0.3); }
+.dsh-sleep .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(155,168,216,0.12)); border-color:rgba(155,168,216,0.3); }
+.dsh-poop .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(232,184,109,0.10)); border-color:rgba(232,184,109,0.3); }
+.dsh-medical .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(242,168,184,0.10)); border-color:rgba(242,168,184,0.3); }
+.dsh-milestones .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(201,184,232,0.10)); border-color:rgba(201,184,232,0.3); }
+
+/* ── Domain-tinted card backgrounds per track tab ── */
+#tab-diet .card { background:linear-gradient(135deg, var(--warm), rgba(181,213,197,0.10)); }
+#tab-sleep .card { background:linear-gradient(135deg, var(--warm), rgba(155,168,216,0.10)); }
+#tab-poop .card { background:linear-gradient(135deg, var(--warm), rgba(232,184,109,0.08)); }
+#tab-medical .card { background:linear-gradient(135deg, var(--warm), rgba(242,168,184,0.08)); }
+#tab-milestones .card { background:linear-gradient(135deg, var(--warm), rgba(201,184,232,0.08)); }
 
 /* ── Quick Log: Body lock when sheet/modal open ── */
 html.ql-locked, body.ql-locked { overflow:hidden !important; }
@@ -5799,6 +5820,23 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sp-tip { background:rgba(168,207,224,0.08); border-color:rgba(168,207,224,0.15); }
 [data-theme="dark"] .domain-score-hero { border-bottom-color:rgba(255,255,255,0.06); }
 [data-theme="dark"] .dsh-comp-pill { background:var(--card-bg); border-color:var(--card-border); }
+[data-theme="dark"] .dsh-diet .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(58,112,96,0.12)); border-color:rgba(181,213,197,0.15); }
+[data-theme="dark"] .dsh-sleep .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(74,80,128,0.12)); border-color:rgba(155,168,216,0.15); }
+[data-theme="dark"] .dsh-poop .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(138,101,32,0.12)); border-color:rgba(232,184,109,0.15); }
+[data-theme="dark"] .dsh-medical .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(158,62,82,0.12)); border-color:rgba(242,168,184,0.15); }
+[data-theme="dark"] .dsh-milestones .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(110,94,154,0.12)); border-color:rgba(201,184,232,0.15); }
+
+/* ── Dark mode: domain-tinted card backgrounds ── */
+[data-theme="dark"] #tab-diet .card { background:linear-gradient(135deg, var(--warm), rgba(58,112,96,0.08)); }
+[data-theme="dark"] #tab-sleep .card { background:linear-gradient(135deg, var(--warm), rgba(74,80,128,0.08)); }
+[data-theme="dark"] #tab-poop .card { background:linear-gradient(135deg, var(--warm), rgba(138,101,32,0.08)); }
+[data-theme="dark"] #tab-medical .card { background:linear-gradient(135deg, var(--warm), rgba(158,62,82,0.08)); }
+[data-theme="dark"] #tab-milestones .card { background:linear-gradient(135deg, var(--warm), rgba(110,94,154,0.08)); }
+[data-theme="dark"] .dsh-ring-excellent { background:linear-gradient(135deg, rgba(58,112,96,0.25), rgba(58,112,96,0.15)); border-color:rgba(111,207,151,0.4); color:#7ac0a0; }
+[data-theme="dark"] .dsh-ring-great { background:linear-gradient(135deg, rgba(42,106,138,0.25), rgba(42,106,138,0.15)); border-color:rgba(127,184,216,0.4); color:#80b8d8; }
+[data-theme="dark"] .dsh-ring-good { background:linear-gradient(135deg, rgba(138,101,32,0.25), rgba(138,101,32,0.15)); border-color:rgba(232,200,109,0.4); color:#d4a848; }
+[data-theme="dark"] .dsh-ring-fair { background:linear-gradient(135deg, rgba(138,80,32,0.25), rgba(138,80,32,0.15)); border-color:rgba(232,160,80,0.4); color:#e0a060; }
+[data-theme="dark"] .dsh-ring-attention { background:linear-gradient(135deg, rgba(160,48,48,0.25), rgba(160,48,48,0.15)); border-color:rgba(224,112,112,0.4); color:#e090a8; }
 [data-theme="dark"] .dsh-comp-pill .dcp-bar.dcb-high { background:rgba(111,207,151,0.1); color:#6fcf97; }
 [data-theme="dark"] .dsh-comp-pill .dcp-bar.dcb-mid  { background:rgba(232,200,109,0.1); color:#e8b86d; }
 [data-theme="dark"] .dsh-comp-pill .dcp-bar.dcb-low  { background:rgba(224,112,112,0.1); color:var(--tc-danger); }

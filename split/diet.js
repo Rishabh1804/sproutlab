@@ -2720,14 +2720,7 @@ function renderDomainHero(domainKey) {
   const staleClass = d.isStale ? ' dsh-stale' : '';
   const weight = d ? Math.round(d.weight * 100) + '%' : '';
 
-  const ringColors = {
-    excellent: 'background:linear-gradient(135deg, #d4f5e0, #b8eacc); border-color:#6fcf97; color:#1a7a42;',
-    great: 'background:linear-gradient(135deg, #e0f0fa, #cce5f5); border-color:#7fb8d8; color:#2a6a8a;',
-    good: 'background:linear-gradient(135deg, #fef6e8, #fcecd0); border-color:#e8c86d; color:#8a6520;',
-    fair: 'background:linear-gradient(135deg, #fef0e0, #fce0c0); border-color:#e8a050; color:#8a5020;',
-    attention: 'background:linear-gradient(135deg, #fde8ed, #f8d0d8); border-color:var(--tc-danger); color:#a03030;'
-  };
-  const ringStyle = ringColors[lbl.label] || ringColors.good;
+  const ringClass = 'dsh-ring-' + (lbl.label || 'good');
 
   const domNames = { sleep:'Sleep Score', diet:'Diet Score', poop:'Poop Score', medical:'Medical Score', milestones:'Milestone Score' };
   const domSubs = {
@@ -2738,9 +2731,9 @@ function renderDomainHero(domainKey) {
     milestones: 'Based on completion, categories, tracking & recency'
   };
 
-  let html = `<div class="domain-score-hero${staleClass}">
+  let html = `<div class="domain-score-hero dsh-${domainKey}${staleClass}">
     <div class="dsh-top">
-      <div class="dsh-ring" style="${ringStyle}" onclick="openScorePopup('${domainKey}')">
+      <div class="dsh-ring ${ringClass}" data-action="openScorePopup" data-arg="${domainKey}">
         <div class="dsh-number">${score}</div>
         <div class="dsh-label">${domNames[domainKey].split(' ')[0]}</div>
         <div class="dsh-emoji">${lbl.emoji}</div>
@@ -2757,7 +2750,7 @@ function renderDomainHero(domainKey) {
     const barClass = c.score >= 70 ? 'dcb-high' : c.score >= 40 ? 'dcb-mid' : 'dcb-low';
     const pillClass = c.score >= 70 ? 'dcp-high' : c.score >= 40 ? 'dcp-mid' : 'dcp-low';
     const shortDetail = c.detail && c.detail.length > 28 ? c.detail.substring(0, 26) + '…' : (c.detail || '');
-    html += `<div class="dsh-comp-pill ${pillClass}" onclick="openScorePopup('${domainKey}')">
+    html += `<div class="dsh-comp-pill ${pillClass}" data-action="openScorePopup" data-arg="${domainKey}">
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
