@@ -380,6 +380,11 @@ function renderHome() {
   renderHomeDiarrhoeaBanner();
   renderHomeVomitingBanner();
   renderHomeColdBanner();
+  // ── CareTickets Zone (Phase B) ──
+  try { ctRenderEntryPoint(); } catch(e) { console.error('CT entry:', e); }
+  try { ctProcessAllOverdue(); } catch(e) { console.error('CT overdue:', e); }
+  try { ctRenderFollowUpBanner(); } catch(e) { console.error('CT banner:', e); }
+  try { ctRenderZone(); } catch(e) { console.error('CT zone:', e); }
   renderHeroScore();
   renderQABar();
   renderTodaySoFar();
@@ -8980,3 +8985,196 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
 
 
 // ─────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════
+// CARETICKETS — Phase B Home Zone Rendering
+// ═══════════════════════════════════════════════════════════════
+
+function ctRenderEntryPoint() {
+  var el = document.getElementById('ctEntryPoint');
+  if (!el) return;
+  var everUsed = localStorage.getItem('ctEverUsed');
+  if (everUsed) {
+    el.innerHTML = '';
+    return;
+  }
+  // Pre-first-use: show standalone chip
+  var activeCount = _careTickets.filter(function(t) {
+    return t.status === 'active' || t.status === 'escalated';
+  }).length;
+  var dimmed = activeCount >= CT_MAX_ACTIVE ? ' ct-dimmed' : '';
+  el.innerHTML =
+    '<div class="col-full ct-zone-wrap">' +
+      '<div class="chip ct-entry-chip' + dimmed + '" data-action="ctRaiseTicket">' +
+        zi('clipboard') + ' Track a concern' +
+      '</div>' +
+    '</div>';
+}
+
+function ctRenderFollowUpBanner() {
+  var el = document.getElementById('ctFollowUpBanner');
+  if (!el) return;
+  var now = Date.now();
+  var overdue = _careTickets.filter(function(t) {
+    if (t.status !== 'active' && t.status !== 'escalated') return false;
+    var due = ctNextDueTime(t);
+    return due !== Infinity && due < now;
+  });
+  // Filter out already-notified tickets
+  overdue = overdue.filter(function(t) {
+    return !_ctNotifiedTickets[t.id];
+  });
+  if (overdue.length === 0) {
+    el.innerHTML = '';
+    _ctBannerTicketId = null;
+    return;
+  }
+  var html = '';
+  if (overdue.length === 1) {
+    var t = overdue[0];
+    var isEsc = t.status === 'escalated';
+    _ctBannerTicketId = t.id;
+    html =
+      '<div class="col-full ct-zone-wrap">' +
+        '<div class="ct-banner">' +
+          '<div class="ct-banner-text">' +
+            zi('follow-up') + ' ' + escHtml(t.title) + ' needs a check-in' +
+          '</div>' +
+          '<div class="chip ct-banner-btn" data-action="ctOpenCheckIn" data-id="' + escAttr(t.id) + '">' +
+            'Quick check' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  } else {
+    _ctBannerTicketId = null;
+    html =
+      '<div class="col-full ct-zone-wrap">' +
+        '<div class="ct-banner">' +
+          '<div class="ct-banner-text">' +
+            zi('follow-up') + ' ' + overdue.length + ' trackings need check-ins' +
+          '</div>' +
+          '<div class="chip ct-banner-btn" data-action="ctViewOverdue">' +
+            'Review' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+
+  // Auto-dismiss banner after 30 seconds
+  if (html) {
+    setTimeout(function() {
+      var bannerEl = document.getElementById('ctFollowUpBanner');
+      if (bannerEl && bannerEl.innerHTML) {
+        bannerEl.innerHTML = '';
+        _ctBannerTicketId = null;
+      }
+    }, 30000);
+  }
+}
+
+function ctRenderZone() {
+  var el = document.getElementById('ctZone');
+  if (!el) return;
+  var everUsed = localStorage.getItem('ctEverUsed');
+  if (!everUsed) {
+    el.innerHTML = '';
+    return;
+  }
+  var active = _careTickets.filter(function(t) {
+    return t.status === 'active' || t.status === 'escalated';
+  });
+  var sorted = ctSortTickets(active);
+  var visible = sorted.slice(0, 3);
+  var totalActive = sorted.length;
+
+  // Zone header with "+" button
+  var html =
+    '<div class="col-full ct-zone-wrap">' +
+      '<div class="ct-zone-header">' +
+        '<span>Trackings</span>' +
+        '<div class="ct-zone-add" data-action="ctRaiseTicket" role="button" aria-label="Add tracking">+</div>' +
+      '</div>';
+
+  if (visible.length === 0) {
+    html += '</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  var now = Date.now();
+  visible.forEach(function(t) {
+    var tpl = CT_TEMPLATES[t.category] || {};
+    var color = ctDomainColor(t);
+    var typeClass = t.type === 'incident' ? ' ct-incident' : ' ct-goal';
+
+    // Status modifiers
+    var statusClass = '';
+    var isOverdue = false;
+    var isApproaching = false;
+    var isExhausted = false;
+    var dueTime = ctNextDueTime(t);
+
+    if (t.status === 'escalated') {
+      statusClass = ' ct-escalated';
+    } else if (dueTime === Infinity) {
+      isExhausted = true;
+    } else if (dueTime < now) {
+      statusClass = ' ct-overdue';
+      isOverdue = true;
+    }
+
+    // Approaching resolution: consecutive clears > 0 but not yet resolved
+    if (!statusClass && !isExhausted && t.status === 'active') {
+      var clears = ctConsecutiveClears(t);
+      if (clears > 0) {
+        statusClass = ' ct-approaching';
+        isApproaching = true;
+      }
+    }
+
+    // Build card
+    var iconName = tpl.icon || 'clipboard';
+    if (t.status === 'escalated') iconName = 'siren';
+    if (isApproaching) iconName = 'check';
+
+    html += '<div class="card ct-card' + typeClass + statusClass + '" data-action="ctOpenDetail" data-id="' + escAttr(t.id) + '">';
+    html += '<div class="card-title">';
+    html += '<div class="icon icon-' + escAttr(color) + '">' + zi(iconName) + '</div>';
+    html += escHtml(t.title);
+    html += '</div>';
+
+    // Status info line
+    html += '<div class="ct-card-meta">';
+    if (isOverdue) {
+      html += '<span class="ct-overdue-dot"></span>';
+      html += 'Check-in overdue ' + ctTimeAgo(new Date(dueTime).toISOString());
+    } else if (isExhausted) {
+      html += 'Check in anytime or stop tracking';
+    } else if (t.status === 'escalated') {
+      html += 'Escalated ' + ctTimeAgo(t.escalatedAt);
+    } else if (dueTime !== Infinity) {
+      html += 'Next check ' + ctTimeUntil(new Date(dueTime).toISOString());
+    }
+    html += '</div>';
+
+    // Quick check button
+    html += '<div class="ct-card-actions">';
+    html += '<div class="chip ct-banner-btn" data-action="ctOpenCheckIn" data-id="' + escAttr(t.id) + '" data-stop="1">';
+    html += zi('follow-up') + ' Quick check';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+  });
+
+  // View all link
+  if (totalActive > 3) {
+    html += '<div class="ct-view-all" data-action="ctViewAll">View all (' + totalActive + ')</div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── CareTickets action stubs removed — all actions handled by ctHandleOverlayAction in intelligence.js ──

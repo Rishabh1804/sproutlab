@@ -55,6 +55,14 @@
 <symbol id="zi-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.15"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
 <symbol id="zi-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v5.5L5.5 18a1.5 1.5 0 001.3 2.2h10.4a1.5 1.5 0 001.3-2.2L14 8.5V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M7.5 15h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
 <symbol id="zi-drop" viewBox="0 0 24 24"><path d="M12 2.5C12 2.5 5 10.5 5 15a7 7 0 0014 0c0-4.5-7-12.5-7-12.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/></symbol>
+<symbol id="zi-fall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M9 8l3 3 3-3"/><path d="M12 11v4"/><path d="M8 21l4-6 4 6"/><path d="M12 17v-2"/><path d="M14 14l2 1"/><path d="M10 14l-2 1"/></symbol>
+<symbol id="zi-bump" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="6"/><path d="M8 8l-2-2"/><path d="M16 8l2-2"/><path d="M6 6l-1.5-1.5"/><path d="M18 6l1.5-1.5"/><path d="M10 20h4"/><path d="M12 16v4"/></symbol>
+<symbol id="zi-alert-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.5" fill="currentColor" stroke="none"/></symbol>
+<symbol id="zi-trending-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+<symbol id="zi-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5"/><path d="M5 5l12 4-12 4"/></symbol>
+<symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
+<symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
+<symbol id="zi-resolve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></symbol>
 </defs>
 </svg>
 <div class="app">
@@ -190,7 +198,7 @@
         </div>
         <!-- Expanded: full details -->
         <div id="homeVitalsExpanded" style="display:none;" data-noop="1">
-          <div style="border-top:1px solid var(--border-subtle);margin-top:12px;padding-top:12px;">
+          <div class="vitals-expanded-inner">
             <!-- ZIVA SCORE HERO -->
             <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
               <div class="zs-ring" id="zsRing" data-open-score="1">
@@ -202,19 +210,19 @@
             </div>
             <div class="zs-breakdown" id="zsBreakdown"></div>
             <div class="stat-pills-grid">
-              <div class="home-stat-pill hsp-rose" id="homeWeightPill" data-tab-scroll="growth" data-scroll-to="pbadge-wt" data-scroll-block="center"">
+              <div class="home-stat-pill hsp-rose" id="homeWeightPill" data-tab-scroll="growth" data-scroll-to="pbadge-wt" data-scroll-block="center">
                 <div class="hsp-icon"><svg class="zi"><use href="#zi-scale"/></svg></div>
                 <div class="hsp-val" id="homeWeight">—</div>
                 <div class="hsp-label">Weight</div>
                 <div class="hsp-trend" id="homeTrendWeight"></div>
               </div>
-              <div class="home-stat-pill hsp-sky" id="homeHeightPill" data-tab-scroll="growth" data-scroll-to="pbadge-ht" data-scroll-block="center"">
+              <div class="home-stat-pill hsp-sky" id="homeHeightPill" data-tab-scroll="growth" data-scroll-to="pbadge-ht" data-scroll-block="center">
                 <div class="hsp-icon"><svg class="zi"><use href="#zi-ruler"/></svg></div>
                 <div class="hsp-val" id="homeHeight">—</div>
                 <div class="hsp-label">Height</div>
                 <div class="hsp-trend" id="homeTrendHeight"></div>
               </div>
-              <div class="home-stat-pill hsp-lav" id="homeVaccPill" data-tab-scroll="medical" data-scroll-to="medVaccCard"">
+              <div class="home-stat-pill hsp-lav" id="homeVaccPill" data-tab-scroll="medical" data-scroll-to="medVaccCard">
                 <div class="hsp-icon"><svg class="zi"><use href="#zi-syringe"/></svg></div>
                 <div class="hsp-val" id="homeVaccDays">—</div>
                 <div class="hsp-label">Days to vacc</div>
@@ -224,12 +232,12 @@
                 <div class="hsp-val" id="homeSolidDays">—</div>
                 <div class="hsp-label">Days on solids</div>
               </div>
-              <div class="home-stat-pill hsp-indigo" data-tab-scroll="sleep" data-scroll-to="sleepLogCard"">
+              <div class="home-stat-pill hsp-indigo" data-tab-scroll="sleep" data-scroll-to="sleepLogCard">
                 <div class="hsp-icon"><svg class="zi"><use href="#zi-moon"/></svg></div>
                 <div class="hsp-val" id="homeLastSleep">—</div>
                 <div class="hsp-label">Last night</div>
               </div>
-              <div class="home-stat-pill hsp-indigo" id="homeAvgSleepScorePill" data-tab-scroll="sleep" data-scroll-to="sleepChartCard"">
+              <div class="home-stat-pill hsp-indigo" id="homeAvgSleepScorePill" data-tab-scroll="sleep" data-scroll-to="sleepChartCard">
                 <div class="hsp-icon"><svg class="zi"><use href="#zi-bars"/></svg></div>
                 <div class="hsp-val" id="homeAvgSleepScore">—</div>
                 <div class="hsp-label">Sleep score (7d)</div>
@@ -280,6 +288,12 @@
 
       <!-- ─── COLD BANNER (appears when active) ─── -->
       <div class="col-full" id="homeColdBanner" style="display:none;"></div>
+
+      <!-- ─── CARETICKETS ZONE ─── -->
+      <div id="ctEntryPoint"></div>
+      <div id="ctFollowUpBanner"></div>
+      <div id="ctZone"></div>
+      <div id="ctStorageWarn"></div>
 
       <div class="home-section-label sec-t1 col-full">Today</div>
 
@@ -2075,7 +2089,7 @@
   <!-- FOOTER -->
 
   <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Ziva's Dashboard v2.10 · Made with <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
+    <div class="footer-text footer-text-style" >Built for Ziva ❤️</div>
   </div>
 
 </div><!-- /app -->

@@ -37,6 +37,9 @@ const KEYS = {
   bugReportPhone: 'ziva_bug_report_phone',
   bugTooltipSeen: 'ziva_bug_tooltip_seen',
   qlPredictions: 'ziva_ql_predictions',
+  careTickets:   'ziva_care_tickets',
+  notifPermission: 'ziva_notif_permission',
+  ctEverUsed:    'ziva_ct_ever_used',
 };
 
 function load(key, def) {
@@ -106,7 +109,7 @@ const MS_STAGE_META = {
 // ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
-let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, medChecks, customEvents, scrapbook, doctors, sleepData, poopData, currentReaction;
+let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, medChecks, customEvents, scrapbook, doctors, sleepData, poopData, currentReaction, _careTickets;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -264,6 +267,8 @@ function init() {
     const arg3 = btn.dataset.arg3;
     if (btn.dataset.stop) e.stopPropagation();
     _bugLogAction(action, arg);
+    // ── CareTickets overlay actions (checked first — overrides home.js stubs) ──
+    if (typeof ctHandleOverlayAction === 'function' && ctHandleOverlayAction(action, btn)) return;
     // ── Static HTML actions ──
     if (action === 'addQuickNote') addQuickNote();
     else if (action === 'checkFoodCombo') checkFoodCombo();
@@ -619,6 +624,7 @@ function init() {
     if (!el) return;
     const action = el.dataset.action;
     if (action === 'checkVaccDateShift') checkVaccDateShift();
+    else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──
@@ -681,6 +687,10 @@ function init() {
   doctors      = load(KEYS.doctors, null)   || DEFAULT_DOCTORS;
   sleepData    = load(KEYS.sleep, null)     || [];
   poopData     = load(KEYS.poop, null)      || [];
+
+  // Load CareTickets
+  var _ctLoaded = load(KEYS.careTickets, null);
+  _careTickets = Array.isArray(_ctLoaded) ? _ctLoaded : [];
 
   // Load activity log (evidence-based milestones)
   activityLog  = load(KEYS.activityLog, null) || {};
@@ -837,6 +847,10 @@ function init() {
     el.innerHTML = `<img src="${av}" alt="Ziva">`;
   }
 
+  // CareTickets: validate + prune before first render
+  try { ctValidateTickets(); } catch(e) { console.error('CT validate:', e); }
+  try { ctPruneResolved(); } catch(e) { console.error('CT prune:', e); }
+
   updateHeader();
   renderHome();
   renderGrowth();
@@ -874,6 +888,11 @@ function init() {
 
   // Check if data was lost and autosave is available
   setTimeout(checkAutosaveRecovery, 500);
+
+  // CareTickets Phase D: schedule timers, deep link, storage listener
+  try { ctScheduleAllActive(); } catch(e) { console.error('CT schedule:', e); }
+  try { _ctCheckDeepLink(); } catch(e) { console.error('CT deeplink:', e); }
+  try { _ctInitStorageListener(); } catch(e) { console.error('CT storage listener:', e); }
 }
 
 // ─────────────────────────────────────────
@@ -3518,6 +3537,13 @@ function resetAllData() {
   exportData();
   // Short delay to let the download trigger before clearing
   setTimeout(() => {
+    // Clear CareTickets timers
+    try {
+      Object.keys(_ctTimers).forEach(function(id) { clearTimeout(_ctTimers[id]); });
+      _ctTimers = {};
+      _ctNotifiedTickets = {};
+      _careTickets = [];
+    } catch(e) {}
     Object.values(KEYS).forEach(k => localStorage.removeItem(k));
     Object.keys(KEY_VERSIONS).forEach(k => localStorage.removeItem('ziva_kv_' + k));
     localStorage.removeItem('ziva_avatar_full');
@@ -4443,6 +4469,15 @@ function _bugCaptureState() {
   var outingPlanned = false;
   try { outingPlanned = !!_tomorrowOuting; } catch(e) {}
 
+  var ctActiveCount = 0;
+  var ctEscalatedCount = 0;
+  try {
+    (_careTickets || []).forEach(function(t) {
+      if (t.status === 'active') ctActiveCount++;
+      if (t.status === 'escalated') ctEscalatedCount++;
+    });
+  } catch(e) {}
+
   var dataDays = 0;
   try { dataDays = countDataDays(); } catch(e) {}
 
@@ -4466,6 +4501,8 @@ function _bugCaptureState() {
     activeAlerts: activeAlertCount,
     activeIllness: activeIllness,
     outingPlanned: outingPlanned,
+    ctActive: ctActiveCount,
+    ctEscalated: ctEscalatedCount,
     recentActions: _bugActionLog.slice()
   };
 }
@@ -4502,6 +4539,9 @@ function _bugFormatMessage(state, description, errorObj) {
   if (state.activeAlerts > 0) lines.push('Active alerts: ' + state.activeAlerts);
   if (state.activeIllness) lines.push('Active illness: ' + state.activeIllness);
   if (state.outingPlanned) lines.push('Outing planned');
+  if (state.ctActive > 0 || state.ctEscalated > 0) {
+    lines.push('CareTickets: ' + state.ctActive + ' active' + (state.ctEscalated > 0 ? ', ' + state.ctEscalated + ' escalated' : ''));
+  }
   lines.push('');
 
   if (state.recentActions.length > 0) {
