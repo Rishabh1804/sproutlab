@@ -453,11 +453,13 @@ function _syncCloseHouseholdModal() {
 function _syncConfirmCreate() {
   var nameEl = document.getElementById('syncBabyName');
   var dobEl = document.getElementById('syncBabyDob');
+  var modal = document.getElementById('syncHouseholdModal');
+  showQLToast('DEBUG: modal=' + !!modal + ' nameEl=' + !!nameEl + ' dobEl=' + !!dobEl + ' nameVal=[' + (nameEl ? nameEl.value : 'NULL') + '] dobVal=[' + (dobEl ? dobEl.value : 'NULL') + ']');
   var name = nameEl ? nameEl.value : '';
   var dob = dobEl ? dobEl.value : '';
-  if (!name.trim()) { showQLToast('Enter baby\'s name'); return; }
-  if (!dob) { showQLToast('Enter date of birth'); return; }
-  if (!_syncUser) { showQLToast('Not signed in — please sign in first'); return; }
+  if (!name.trim()) return;
+  if (!dob) return;
+  if (!_syncUser) { showQLToast('Not signed in'); return; }
   showQLToast('Creating household...');
   syncCreateHousehold(name.trim(), dob);
 }
