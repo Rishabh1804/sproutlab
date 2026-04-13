@@ -7,3 +7,4 @@ initZoomLevel();
 init();
 initWelcomeGuide();
 _bugInit();
+initFirebase();

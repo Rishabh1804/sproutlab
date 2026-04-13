@@ -19,12 +19,14 @@ cat template.html
 cat <<'SCRIPT'
 <script>
 SCRIPT
+cat config.js
 cat data.js
 cat core.js
 cat home.js
 cat diet.js
 cat medical.js
 cat intelligence.js
+cat sync.js
 cat start.js
 cat <<'FOOT'
 </script>

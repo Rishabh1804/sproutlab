@@ -47,8 +47,10 @@ function load(key, def) {
   catch { return def; }
 }
 function save(key, val) {
+  var old = load(key, null);
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-  triggerAutosave();
+  if (typeof _remoteWriteDepth === 'undefined' || _remoteWriteDepth === 0) triggerAutosave();
+  if (typeof syncWrite === 'function') syncWrite(key, val, old);
 }
 
 // ─────────────────────────────────────────
@@ -577,6 +579,15 @@ function init() {
         renderFoodCatSubContent(_activeFoodCatParent, _activeFoodCatSub);
       }
     }
+    // ── Device Sync actions ──
+    else if (action === 'syncSignIn') syncSignIn();
+    else if (action === 'syncSignOut') { confirmAction('Sign out? Synced data will be cleared from this device.', syncSignOut, 'Sign Out'); }
+    else if (action === 'syncOpenHouseholdModal') syncOpenHouseholdModal(arg);
+    else if (action === 'syncCloseHouseholdModal') _syncCloseHouseholdModal();
+    else if (action === 'syncConfirmCreate') _syncConfirmCreate();
+    else if (action === 'syncConfirmJoin') _syncConfirmJoin();
+    else if (action === 'syncLeaveHousehold') syncLeaveHousehold();
+    else if (action === 'syncRegenerateCode') syncRegenerateCode();
     // ── Bug Capture actions ──
     else if (action === 'openBugReporter') { openBugReporter(); closeSettingsSidebar(); }
     else if (action === 'closeBugReporter') closeBugReporter();

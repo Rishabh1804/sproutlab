@@ -2412,6 +2412,24 @@
 
   <!-- Settings body (scrollable) -->
   <div class="sidebar-body">
+
+    <!-- Sync & Account (always visible, above sub-tabs) -->
+    <div id="syncSettingsSection" class="sync-settings-section">
+      <div class="sync-card sync-card-signin">
+        <div class="sync-card-hdr">
+          <span class="icon icon-sky"><svg class="zi" aria-hidden="true"><use href="#zi-link"/></svg></span>
+          <span class="sync-card-title">Device Sync</span>
+        </div>
+        <div class="sync-card-body">
+          Sign in with Google to sync data across devices.
+          Your data stays local until you sign in.
+        </div>
+        <button class="btn btn-sky btn-full-base" data-action="syncSignIn">
+          <svg class="zi" aria-hidden="true"><use href="#zi-bolt"/></svg> Sign in with Google
+        </button>
+      </div>
+    </div>
+
     <div class="settings-pane-wrap">
 
     <!-- GENERAL TAB -->
@@ -2827,4 +2845,9 @@
     </div>
   </div>
 </div>
+
+<!-- Firebase SDK (self-hosted compat v10.x) — loaded before inline JS -->
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
 
