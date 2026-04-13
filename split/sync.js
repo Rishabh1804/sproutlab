@@ -451,10 +451,14 @@ function _syncCloseHouseholdModal() {
 }
 
 function _syncConfirmCreate() {
-  var name = (document.getElementById('syncBabyName') || {}).value || '';
-  var dob = (document.getElementById('syncBabyDob') || {}).value || '';
+  var nameEl = document.getElementById('syncBabyName');
+  var dobEl = document.getElementById('syncBabyDob');
+  var name = nameEl ? nameEl.value : '';
+  var dob = dobEl ? dobEl.value : '';
   if (!name.trim()) { showQLToast('Enter baby\'s name'); return; }
   if (!dob) { showQLToast('Enter date of birth'); return; }
+  if (!_syncUser) { showQLToast('Not signed in — please sign in first'); return; }
+  showQLToast('Creating household...');
   syncCreateHousehold(name.trim(), dob);
 }
 
