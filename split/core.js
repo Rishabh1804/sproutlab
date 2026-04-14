@@ -3320,13 +3320,37 @@ function exportData() {
   });
   data._exportDate = new Date().toISOString();
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const jsonStr = JSON.stringify(data, null, 2);
+
+  // On mobile PWA, try Web Share API first (most reliable)
+  if (navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+    try {
+      const file = new File([jsonStr], `ziva-backup-${today()}.json`, { type: 'application/json' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          title: "Ziva's Dashboard Backup",
+          text: 'Backup from ' + new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }),
+          files: [file]
+        }).catch(function() { /* user cancelled — ignore */ });
+        return;
+      }
+    } catch(e) { /* share not supported, fall through to download */ }
+  }
+
+  // Fallback: anchor download — must attach to DOM for PWA/mobile
+  const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `ziva-backup-${today()}.json`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  // Delay cleanup so download can start
+  setTimeout(function() {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 500);
 }
 
 function shareBackup() {
