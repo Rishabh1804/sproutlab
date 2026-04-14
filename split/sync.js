@@ -159,20 +159,30 @@ function _syncFindHousehold(uid) {
         _syncHousehold = doc.data();
         _syncRenderSettingsUI();
         // Check if seed has run; if not, seed first, then attach listeners
-        // v2: force re-seed if seeded with old model (tracking data was missed)
+        // v4: re-seed to push persist-defaults data (foods, etc.) to Firestore
         try {
-          if (!localStorage.getItem('sl_sync_seeded') || localStorage.getItem('sl_sync_seeded') !== '3') {
-            _syncSeedFirestore(_syncHouseholdId).then(function() {
-              localStorage.setItem('sl_sync_seeded', '3');
-              try { _syncAttachListeners(_syncHouseholdId); }
-              catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
-            }).catch(function(e) {
-              _syncRecordCrash('seed', e);
-              if (!_syncDisabled) {
+          var _seedVer = localStorage.getItem('sl_sync_seeded');
+          if (!_seedVer || _seedVer !== '4') {
+            // Only admin seeds — members receive data via listeners
+            var _myRole = (_syncHousehold.members && _syncHousehold.members[user.uid])
+              ? _syncHousehold.members[user.uid].role : 'member';
+            if (_myRole === 'admin') {
+              _syncSeedFirestore(_syncHouseholdId).then(function() {
+                localStorage.setItem('sl_sync_seeded', '4');
                 try { _syncAttachListeners(_syncHouseholdId); }
-                catch(e2) { _syncRecordCrash('attachListeners-after-seed-fail', e2); }
-              }
-            });
+                catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
+              }).catch(function(e) {
+                _syncRecordCrash('seed', e);
+                if (!_syncDisabled) {
+                  try { _syncAttachListeners(_syncHouseholdId); }
+                  catch(e2) { _syncRecordCrash('attachListeners-after-seed-fail', e2); }
+                }
+              });
+            } else {
+              // Member: skip seed, just bump version and attach listeners
+              localStorage.setItem('sl_sync_seeded', '4');
+              _syncAttachListeners(_syncHouseholdId);
+            }
           } else {
             _syncAttachListeners(_syncHouseholdId);
           }
@@ -217,7 +227,7 @@ function syncCreateHousehold(babyName, dob) {
     _syncCloseHouseholdModal();
     showQLToast('Household created — share the invite code');
     _syncSeedFirestore(_syncHouseholdId).then(function() {
-      localStorage.setItem('sl_sync_seeded', '3');
+      localStorage.setItem('sl_sync_seeded', '4');
       _syncAttachListeners(_syncHouseholdId);
     });
   }).catch(function(err) {
@@ -260,7 +270,7 @@ function syncJoinByCode(code) {
         _syncCloseHouseholdModal();
         showQLToast('Joined household!');
         // Joining device does NOT seed — data comes from admin's seed via listeners
-        localStorage.setItem('sl_sync_seeded', '3');
+        localStorage.setItem('sl_sync_seeded', '4');
         _syncAttachListeners(_syncHouseholdId);
       });
     })
