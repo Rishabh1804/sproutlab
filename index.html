@@ -60708,11 +60708,11 @@ function _syncRecordCrash(source, err) {
 
 // ─── Sync Key Map ───
 const SYNC_KEYS = {
-  [KEYS.feeding]:            { collection: 'feeds',       model: 'per-entry' },
-  [KEYS.sleep]:              { collection: 'sleep',       model: 'per-entry' },
-  [KEYS.poop]:               { collection: 'poop',        model: 'per-entry' },
+  [KEYS.feeding]:            { collection: 'tracking',    model: 'single-doc' },
+  [KEYS.sleep]:              { collection: 'tracking',    model: 'single-doc' },
+  [KEYS.poop]:               { collection: 'tracking',    model: 'single-doc' },
   [KEYS.careTickets]:        { collection: 'caretickets',  model: 'per-entry' },
-  [KEYS.notes]:              { collection: 'notes',       model: 'per-entry' },
+  [KEYS.notes]:              { collection: 'tracking',    model: 'single-doc' },
   [KEYS.activityLog]:        { collection: 'activities',  model: 'single-doc' },
   [KEYS.milestones]:         { collection: 'milestones',  model: 'single-doc' },
   [KEYS.growth]:             { collection: 'growth',      model: 'single-doc' },
@@ -60821,10 +60821,11 @@ function _syncFindHousehold(uid) {
         _syncHousehold = doc.data();
         _syncRenderSettingsUI();
         // Check if seed has run; if not, seed first, then attach listeners
+        // v2: force re-seed if seeded with old model (tracking data was missed)
         try {
-          if (!localStorage.getItem('sl_sync_seeded')) {
+          if (!localStorage.getItem('sl_sync_seeded') || localStorage.getItem('sl_sync_seeded') !== '2') {
             _syncSeedFirestore(_syncHouseholdId).then(function() {
-              localStorage.setItem('sl_sync_seeded', '1');
+              localStorage.setItem('sl_sync_seeded', '2');
               try { _syncAttachListeners(_syncHouseholdId); }
               catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
             }).catch(function(e) {
@@ -60878,7 +60879,7 @@ function syncCreateHousehold(babyName, dob) {
     _syncCloseHouseholdModal();
     showQLToast('Household created — share the invite code');
     _syncSeedFirestore(_syncHouseholdId).then(function() {
-      localStorage.setItem('sl_sync_seeded', '1');
+      localStorage.setItem('sl_sync_seeded', '2');
       _syncAttachListeners(_syncHouseholdId);
     });
   }).catch(function(err) {
@@ -61267,8 +61268,19 @@ function _syncAttachListeners(hId) {
     _syncShadow[allKeys[i]] = _syncCloneDeep(load(allKeys[i], null));
   }
 
+  // Derive per-entry and single-doc collection lists from SYNC_KEYS (no hardcoding)
+  var _peSet = {};
+  var _sdSet = {};
+  var _allSyncKeys = Object.keys(SYNC_KEYS);
+  for (var ki = 0; ki < _allSyncKeys.length; ki++) {
+    var _cfg = SYNC_KEYS[_allSyncKeys[ki]];
+    if (_cfg.model === 'per-entry') _peSet[_cfg.collection] = true;
+    else _sdSet[_cfg.collection] = true;
+  }
+  var perEntryCollections = Object.keys(_peSet);
+  var singleDocNames = Object.keys(_sdSet);
+
   // Per-entry collections — each handler wrapped in try/catch for isolation
-  var perEntryCollections = ['feeds', 'sleep', 'poop', 'caretickets', 'notes'];
   perEntryCollections.forEach(function(col) {
     var unsub = hRef.collection(col).onSnapshot(function(snapshot) {
       try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
@@ -61280,7 +61292,6 @@ function _syncAttachListeners(hId) {
   });
 
   // Single-doc collections (in /singles/{docName})
-  var singleDocNames = ['activities', 'milestones', 'growth', 'vaccinations', 'medical', 'episodes', 'foods'];
   singleDocNames.forEach(function(docName) {
     var unsub = hRef.collection('singles').doc(docName).onSnapshot(function(doc) {
       try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
