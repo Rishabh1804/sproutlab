@@ -1,17 +1,38 @@
 // ─────────────────────────────────────────
-// SYNC — Phase 1: Auth + Household CRUD
-// Phase 2 adds: syncWrite, listeners, diffing
+// SYNC — Phase 1 + Phase 2: Auth, Household, Sync Engine
 // ─────────────────────────────────────────
 
 // ─── State ───
 let _syncUser = null;           // current firebase.auth().currentUser snapshot
 let _syncHouseholdId = null;    // active household doc ID
 let _syncHousehold = null;      // cached household doc data
-let _syncListenerUnsubs = [];   // future: onSnapshot unsubscribe fns
+let _syncListenerUnsubs = [];   // onSnapshot unsubscribe fns
 let _remoteWriteDepth = 0;      // counter for remote write detection (used by save())
 let _syncUIRendered = false;    // guard for Settings section injection
 
-// ─── Sync Key Map (Phase 2 uses this for routing) ───
+// ─── Phase 2 State ───
+var _syncShadow = {};           // shadow copies for diff (keyed by KEYS.x)
+var _syncDebounceTimers = {};   // debounce timers for single-doc writes
+var _syncWriteCount = 0;        // circuit breaker counter
+var _syncWriteCountReset = null;// hourly reset timer
+var _syncToastQueue = [];       // queued sync toasts
+var _syncIsMigrating = false;   // suppresses toasts during seedFirestore
+var _syncIsReconciling = false; // suppresses toasts during reconcile
+const CIRCUIT_BREAKER_LIMIT = 500;
+const DEBOUNCE_MS = 2000;
+
+// Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
+var _syncCollectionToKeys = {};
+(function() {
+  var keys = Object.keys(SYNC_KEYS);
+  for (var i = 0; i < keys.length; i++) {
+    var col = SYNC_KEYS[keys[i]].collection;
+    if (!_syncCollectionToKeys[col]) _syncCollectionToKeys[col] = [];
+    _syncCollectionToKeys[col].push(keys[i]);
+  }
+})();
+
+// ─── Sync Key Map ───
 const SYNC_KEYS = {
   [KEYS.feeding]:            { collection: 'feeds',       model: 'per-entry' },
   [KEYS.sleep]:              { collection: 'sleep',       model: 'per-entry' },
@@ -115,7 +136,7 @@ function _syncFindHousehold(uid) {
         _syncHouseholdId = doc.id;
         _syncHousehold = doc.data();
         _syncRenderSettingsUI();
-        // Phase 2: attachListeners here
+        _syncAttachListeners(_syncHouseholdId);
       } else {
         // No household — prompt Create/Join
         _syncHouseholdId = null;
@@ -155,7 +176,9 @@ function syncCreateHousehold(babyName, dob) {
     _syncRenderSettingsUI();
     _syncCloseHouseholdModal();
     showQLToast('Household created — share the invite code');
-    // Phase 2: seedFirestore + attachListeners here
+    _syncSeedFirestore(_syncHouseholdId).then(function() {
+      _syncAttachListeners(_syncHouseholdId);
+    });
   }).catch(function(err) {
     console.error('[sync] Create household error:', err);
     showQLToast('Failed to create household');
@@ -195,7 +218,7 @@ function syncJoinByCode(code) {
         _syncRenderSettingsUI();
         _syncCloseHouseholdModal();
         showQLToast('Joined household!');
-        // Phase 2: attachListeners — initial snapshot populates localStorage
+        _syncAttachListeners(_syncHouseholdId);
       });
     })
     .catch(function(err) {
@@ -272,16 +295,491 @@ function _syncDeleteCollection(ref) {
   });
 }
 
-// ─── Listener Stubs (Phase 2) ───
+// ─── Detach Listeners ───
 function _syncDetachListeners() {
   _syncListenerUnsubs.forEach(function(unsub) { unsub(); });
   _syncListenerUnsubs = [];
 }
 
-// ─── syncWrite Stub (Phase 2) ───
-// save() in core.js calls this if it exists. Phase 1: no-op.
+// ═══════════════════════════════════════════
+// PHASE 2: SYNC ENGINE
+// ═══════════════════════════════════════════
+
+// ─── cloneDeep ───
+function _syncCloneDeep(val) {
+  if (val === null || val === undefined) return val;
+  try { return structuredClone(val); }
+  catch(e) { return JSON.parse(JSON.stringify(val)); }
+}
+
+// ─── Deep Diff (§8.1) ───
+// Returns { updates: { "dot.path": value }, deletes: { "dot.path": deleteField() } }
+function _syncDeepDiff(oldObj, newObj, path) {
+  if (!path) path = '';
+  var updates = {};
+  var deletes = {};
+  var db = firebase.firestore();
+
+  if (!oldObj) oldObj = {};
+  if (!newObj) newObj = {};
+
+  // Keys in new
+  var newKeys = Object.keys(newObj);
+  for (var i = 0; i < newKeys.length; i++) {
+    var key = newKeys[i];
+    var fullPath = path ? path + '.' + key : key;
+    if (!(key in oldObj)) {
+      // New key — set entire subtree
+      updates[fullPath] = newObj[key];
+      continue;
+    }
+    var oldVal = oldObj[key];
+    var newVal = newObj[key];
+    if (Array.isArray(newVal)) {
+      // Arrays are ATOMIC — overwrite if different
+      if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+        updates[fullPath] = newVal;
+      }
+    } else if (typeof newVal === 'object' && newVal !== null) {
+      // Objects → RECURSE
+      var sub = _syncDeepDiff(oldVal || {}, newVal, fullPath);
+      var sk;
+      for (sk in sub.updates) updates[sk] = sub.updates[sk];
+      for (sk in sub.deletes) deletes[sk] = sub.deletes[sk];
+    } else {
+      // Leaf value
+      if (oldVal !== newVal) {
+        updates[fullPath] = newVal;
+      }
+    }
+  }
+
+  // Keys in old but not new → DELETE
+  var oldKeys = Object.keys(oldObj);
+  for (var j = 0; j < oldKeys.length; j++) {
+    var okey = oldKeys[j];
+    if (!(okey in newObj)) {
+      var oFullPath = path ? path + '.' + okey : okey;
+      deletes[oFullPath] = firebase.firestore.FieldValue.delete();
+    }
+  }
+
+  return { updates: updates, deletes: deletes };
+}
+
+// ─── Per-Entry Array Diff (§8.2) ───
+// Returns { added: [entry], edited: [{ id, updates }], deleted: [id] }
+function _syncDiffArray(oldArr, newArr) {
+  if (!Array.isArray(oldArr)) oldArr = [];
+  if (!Array.isArray(newArr)) newArr = [];
+
+  var oldMap = {};
+  for (var i = 0; i < oldArr.length; i++) {
+    if (oldArr[i] && oldArr[i].id) oldMap[oldArr[i].id] = oldArr[i];
+  }
+  var newMap = {};
+  for (var j = 0; j < newArr.length; j++) {
+    if (newArr[j] && newArr[j].id) newMap[newArr[j].id] = newArr[j];
+  }
+
+  var added = [];
+  var edited = [];
+  var deleted = [];
+
+  // Check new entries
+  var newIds = Object.keys(newMap);
+  for (var k = 0; k < newIds.length; k++) {
+    var id = newIds[k];
+    if (!oldMap[id]) {
+      added.push(newMap[id]);
+    } else if (JSON.stringify(oldMap[id]) !== JSON.stringify(newMap[id])) {
+      var diff = _syncDeepDiff(oldMap[id], newMap[id], '');
+      if (Object.keys(diff.updates).length > 0 || Object.keys(diff.deletes).length > 0) {
+        edited.push({ id: id, updates: diff.updates, deletes: diff.deletes });
+      }
+    }
+  }
+
+  // Deleted entries
+  var oldIds = Object.keys(oldMap);
+  for (var l = 0; l < oldIds.length; l++) {
+    if (!newMap[oldIds[l]]) {
+      deleted.push(oldIds[l]);
+    }
+  }
+
+  return { added: added, edited: edited, deleted: deleted };
+}
+
+// ─── syncWrite Router (§7.1) ───
 function syncWrite(key, val, old) {
-  // Phase 2 will implement: SYNC_KEYS check → circuit breaker → per-entry/single-doc routing
+  // Always update shadow
+  _syncShadow[key] = _syncCloneDeep(val);
+
+  // Guards
+  if (_remoteWriteDepth > 0) return;          // don't echo back remote writes
+  if (!SYNC_KEYS[key]) return;                // local-only key
+  if (!_syncHouseholdId) return;              // no household
+  if (!_syncUser) return;                     // not signed in
+
+  // Circuit breaker (§4.7 #48)
+  if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
+    console.warn('[sync] Circuit breaker tripped — ' + _syncWriteCount + ' writes this hour');
+    return;
+  }
+  _syncWriteCount++;
+  if (!_syncWriteCountReset) {
+    _syncWriteCountReset = setTimeout(function() {
+      _syncWriteCount = 0;
+      _syncWriteCountReset = null;
+    }, 3600000); // 1 hour
+  }
+
+  var config = SYNC_KEYS[key];
+  var db = firebase.firestore();
+  var hRef = db.collection('households').doc(_syncHouseholdId);
+
+  if (config.model === 'per-entry') {
+    // Immediate write — diff old vs new array
+    _syncWritePerEntry(hRef, config.collection, key, old, val);
+  } else {
+    // Single-doc — debounce 2s (§4.3 #18)
+    _syncDebounceSingleDoc(hRef, config.collection, key, old, val);
+  }
+}
+
+// ─── Per-Entry Write (immediate) ───
+function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
+  var diff = _syncDiffArray(oldVal, newVal);
+  var colRef = hRef.collection(collection);
+  var syncMeta = {
+    __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
+    __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Added entries
+  diff.added.forEach(function(entry) {
+    var data = Object.assign({}, entry, syncMeta, {
+      __sync_createdBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' }
+    });
+    colRef.doc(entry.id).set(data).catch(function(e) {
+      console.error('[sync] Add ' + collection + '/' + entry.id + ' failed:', e);
+    });
+  });
+
+  // Edited entries — field-level updates
+  diff.edited.forEach(function(change) {
+    var payload = Object.assign({}, change.updates, change.deletes, syncMeta);
+    colRef.doc(change.id).update(payload).catch(function(e) {
+      console.error('[sync] Update ' + collection + '/' + change.id + ' failed:', e);
+    });
+  });
+
+  // Deleted entries
+  diff.deleted.forEach(function(id) {
+    colRef.doc(id).delete().catch(function(e) {
+      console.error('[sync] Delete ' + collection + '/' + id + ' failed:', e);
+    });
+  });
+}
+
+// ─── Single-Doc Write (debounced) ───
+function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
+  var timerKey = collection; // debounce per collection, not per key
+  if (_syncDebounceTimers[timerKey]) clearTimeout(_syncDebounceTimers[timerKey]);
+
+  _syncDebounceTimers[timerKey] = setTimeout(function() {
+    _syncDebounceTimers[timerKey] = null;
+    _syncFlushSingleDoc(hRef, collection);
+  }, DEBOUNCE_MS);
+}
+
+function _syncFlushSingleDoc(hRef, collection) {
+  // Gather all localStorage KEYS that map to this collection
+  var keysForCol = _syncCollectionToKeys[collection];
+  if (!keysForCol || keysForCol.length === 0) return;
+
+  // Build a combined object from current localStorage
+  var current = {};
+  for (var i = 0; i < keysForCol.length; i++) {
+    current[keysForCol[i]] = load(keysForCol[i], null);
+  }
+
+  // Build combined shadow (what Firestore last knew)
+  var shadow = {};
+  for (var j = 0; j < keysForCol.length; j++) {
+    shadow[keysForCol[j]] = _syncShadow[keysForCol[j]] !== undefined ? _syncShadow[keysForCol[j]] : null;
+  }
+
+  // Diff
+  var diff = _syncDeepDiff(shadow, current, '');
+  var hasUpdates = Object.keys(diff.updates).length > 0;
+  var hasDeletes = Object.keys(diff.deletes).length > 0;
+  if (!hasUpdates && !hasDeletes) return;
+
+  var docRef = hRef.collection('singles').doc(collection);
+  var syncMeta = {
+    __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
+    __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Apply updates via setDoc(merge) and deletes via updateDoc
+  var promises = [];
+  if (hasUpdates) {
+    var updatePayload = Object.assign({}, diff.updates, syncMeta);
+    promises.push(docRef.set(updatePayload, { merge: true }));
+  }
+  if (hasDeletes) {
+    var deletePayload = Object.assign({}, diff.deletes, syncMeta);
+    promises.push(docRef.update(deletePayload));
+  }
+
+  Promise.all(promises).catch(function(e) {
+    console.error('[sync] Single-doc write ' + collection + ' failed:', e);
+  });
+
+  // Update shadow to current
+  for (var k = 0; k < keysForCol.length; k++) {
+    _syncShadow[keysForCol[k]] = _syncCloneDeep(current[keysForCol[k]]);
+  }
+}
+
+// ─── Attach Listeners (§7.3) ───
+function _syncAttachListeners(hId) {
+  _syncDetachListeners();
+  var db = firebase.firestore();
+  var hRef = db.collection('households').doc(hId);
+
+  // Init shadow from current localStorage
+  var allKeys = Object.keys(SYNC_KEYS);
+  for (var i = 0; i < allKeys.length; i++) {
+    _syncShadow[allKeys[i]] = _syncCloneDeep(load(allKeys[i], null));
+  }
+
+  // Per-entry collections
+  var perEntryCollections = ['feeds', 'sleep', 'poop', 'caretickets', 'notes'];
+  perEntryCollections.forEach(function(col) {
+    var unsub = hRef.collection(col).onSnapshot(function(snapshot) {
+      _syncHandlePerEntrySnapshot(col, snapshot);
+    }, function(err) {
+      console.error('[sync] Listener error on ' + col + ':', err);
+    });
+    _syncListenerUnsubs.push(unsub);
+  });
+
+  // Single-doc collections (in /singles/{docName})
+  var singleDocNames = ['activities', 'milestones', 'growth', 'vaccinations', 'medical', 'episodes', 'foods'];
+  singleDocNames.forEach(function(docName) {
+    var unsub = hRef.collection('singles').doc(docName).onSnapshot(function(doc) {
+      _syncHandleSingleDocSnapshot(docName, doc);
+    }, function(err) {
+      console.error('[sync] Listener error on singles/' + docName + ':', err);
+    });
+    _syncListenerUnsubs.push(unsub);
+  });
+
+  // Household doc listener (member changes, invite code)
+  var hUnsub = hRef.onSnapshot(function(doc) {
+    if (doc.exists) {
+      _syncHousehold = doc.data();
+      _syncRenderSettingsUI();
+    }
+  });
+  _syncListenerUnsubs.push(hUnsub);
+}
+
+// ─── Handle Per-Entry Snapshot ───
+function _syncHandlePerEntrySnapshot(collection, snapshot) {
+  // Find which localStorage key maps to this collection
+  var lsKey = null;
+  var allKeys = Object.keys(SYNC_KEYS);
+  for (var i = 0; i < allKeys.length; i++) {
+    if (SYNC_KEYS[allKeys[i]].collection === collection && SYNC_KEYS[allKeys[i]].model === 'per-entry') {
+      lsKey = allKeys[i];
+      break;
+    }
+  }
+  if (!lsKey) return;
+
+  // Build full array from Firestore snapshot
+  var entries = [];
+  snapshot.forEach(function(doc) {
+    var data = doc.data();
+    // Strip __sync_* metadata before storing locally
+    var clean = {};
+    var keys = Object.keys(data);
+    for (var j = 0; j < keys.length; j++) {
+      if (keys[j].indexOf('__sync_') !== 0) {
+        clean[keys[j]] = data[keys[j]];
+      }
+    }
+    // Ensure id field matches doc ID
+    clean.id = doc.id;
+    entries.push(clean);
+  });
+
+  // Compare to current localStorage
+  var current = load(lsKey, []);
+  if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
+
+  // Count changes for toast
+  var changeCount = 0;
+  snapshot.docChanges().forEach(function(change) {
+    if (change.type !== 'added' || !snapshot.metadata.hasPendingWrites) {
+      changeCount++;
+    }
+  });
+
+  // Write to localStorage via save() with _remoteWriteDepth guard
+  _remoteWriteDepth++;
+  try { save(lsKey, entries); }
+  finally { _remoteWriteDepth--; }
+
+  // Update shadow
+  _syncShadow[lsKey] = _syncCloneDeep(entries);
+
+  // Toast (skip during migration/reconcile, skip self-echo)
+  if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
+    _syncQueueToast(collection, changeCount);
+  }
+}
+
+// ─── Handle Single-Doc Snapshot ───
+function _syncHandleSingleDocSnapshot(docName, doc) {
+  if (!doc.exists) return;
+  var data = doc.data();
+
+  // Strip __sync_* metadata
+  var clean = {};
+  var dataKeys = Object.keys(data);
+  for (var i = 0; i < dataKeys.length; i++) {
+    if (dataKeys[i].indexOf('__sync_') !== 0) {
+      clean[dataKeys[i]] = data[dataKeys[i]];
+    }
+  }
+
+  // Find which localStorage KEYS map to this collection
+  var lsKeys = _syncCollectionToKeys[docName];
+  if (!lsKeys || lsKeys.length === 0) return;
+
+  var anyChanged = false;
+
+  for (var j = 0; j < lsKeys.length; j++) {
+    var key = lsKeys[j];
+    var remoteVal = clean[key] !== undefined ? clean[key] : null;
+    var current = load(key, null);
+    if (JSON.stringify(current) === JSON.stringify(remoteVal)) continue;
+    if (remoteVal === null) continue; // don't overwrite local with missing remote
+
+    anyChanged = true;
+    _remoteWriteDepth++;
+    try { save(key, remoteVal); }
+    finally { _remoteWriteDepth--; }
+    _syncShadow[key] = _syncCloneDeep(remoteVal);
+  }
+
+  if (anyChanged && !_syncIsMigrating && !_syncIsReconciling) {
+    _syncQueueToast(docName, 1);
+  }
+}
+
+// ─── Sync Toast ───
+function _syncQueueToast(source, count) {
+  // Self-echo suppression: if the write was ours, skip (§4.7 #45)
+  // The _remoteWriteDepth check in syncWrite already handles outbound suppression;
+  // here we batch rapid toasts into one.
+  if (_syncToastDebounce) clearTimeout(_syncToastDebounce);
+  _syncToastPending = (_syncToastPending || 0) + count;
+
+  _syncToastDebounce = setTimeout(function() {
+    var n = _syncToastPending;
+    _syncToastPending = 0;
+    if (n <= 0) return;
+    var msg = n === 1 ? 'New data synced — tap to refresh' : n + ' updates synced — tap to refresh';
+    _syncShowSyncToast(msg);
+  }, 1500);
+}
+var _syncToastDebounce = null;
+var _syncToastPending = 0;
+
+function _syncShowSyncToast(msg) {
+  // Create a distinct sync toast (different from QLToast per §4.6 #38)
+  var existing = document.getElementById('syncToast');
+  if (existing) existing.remove();
+
+  var toast = document.createElement('div');
+  toast.id = 'syncToast';
+  toast.className = 'sync-toast';
+  toast.textContent = msg;
+  toast.addEventListener('click', function() {
+    toast.remove();
+    window.location.reload(); // §4.6 #40
+  });
+  document.body.appendChild(toast);
+
+  // Auto-dismiss after 8s
+  setTimeout(function() {
+    if (toast.parentNode) toast.remove();
+  }, 8000);
+}
+
+// ─── Seed Firestore (one-time migration §12.2) ───
+function _syncSeedFirestore(hId) {
+  _syncIsMigrating = true;
+  var db = firebase.firestore();
+  var hRef = db.collection('households').doc(hId);
+  var allKeys = Object.keys(SYNC_KEYS);
+  var promises = [];
+
+  // Per-entry collections: batch write
+  allKeys.forEach(function(key) {
+    var config = SYNC_KEYS[key];
+    if (config.model !== 'per-entry') return;
+    var data = load(key, []);
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    // Batch in chunks of 450 (Firestore limit is 500)
+    for (var i = 0; i < data.length; i += 450) {
+      var chunk = data.slice(i, i + 450);
+      var batch = db.batch();
+      chunk.forEach(function(entry) {
+        if (!entry || !entry.id) return;
+        var docData = Object.assign({}, entry, {
+          __sync_createdBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
+          __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
+          __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        batch.set(hRef.collection(config.collection).doc(entry.id), docData);
+      });
+      promises.push(batch.commit());
+    }
+  });
+
+  // Single-doc collections: one set per collection
+  var singleDocCollections = {};
+  allKeys.forEach(function(key) {
+    var config = SYNC_KEYS[key];
+    if (config.model !== 'single-doc') return;
+    var col = config.collection;
+    if (!singleDocCollections[col]) singleDocCollections[col] = {};
+    singleDocCollections[col][key] = load(key, null);
+  });
+
+  Object.keys(singleDocCollections).forEach(function(col) {
+    var payload = Object.assign({}, singleDocCollections[col], {
+      __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
+      __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    promises.push(hRef.collection('singles').doc(col).set(payload, { merge: true }));
+  });
+
+  return Promise.all(promises).then(function() {
+    _syncIsMigrating = false;
+    console.log('[sync] Seed complete');
+  }).catch(function(e) {
+    _syncIsMigrating = false;
+    console.error('[sync] Seed error:', e);
+  });
 }
 
 // ─── Utilities ───

@@ -8607,6 +8607,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .sync-modal-input:focus { border-color:var(--sky); }
 
+.sync-toast {
+  position:fixed;
+  bottom:calc(var(--nav-h) + var(--sp-12));
+  left:50%; transform:translateX(-50%);
+  background:var(--tc-sky);
+  color:#fff;
+  padding:var(--sp-10) var(--sp-16);
+  border-radius:var(--r-full);
+  font-size:var(--fs-sm);
+  font-weight:600;
+  font-family:'Nunito',sans-serif;
+  z-index:9998;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+  animation:syncToastIn 0.3s ease-out;
+  white-space:nowrap;
+}
+@keyframes syncToastIn {
+  from { opacity:0; transform:translateX(-50%) translateY(10px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
 /* ═══ Dark mode: Device Sync ═══ */
 [data-theme="dark"] .sync-card { background:rgba(51,101,128,0.1); border-color:rgba(51,101,128,0.2); }
 [data-theme="dark"] .sync-card-title { color:var(--tc-sky); }
