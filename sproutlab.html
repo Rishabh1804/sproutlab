@@ -60776,6 +60776,7 @@ function syncSignOut() {
     Object.keys(SYNC_KEYS).forEach(function(key) {
       localStorage.removeItem(key);
     });
+    localStorage.removeItem('sl_sync_seeded');
     _syncUser = null;
     _syncHouseholdId = null;
     _syncHousehold = null;
@@ -60798,7 +60799,15 @@ function _syncFindHousehold(uid) {
         _syncHouseholdId = doc.id;
         _syncHousehold = doc.data();
         _syncRenderSettingsUI();
-        _syncAttachListeners(_syncHouseholdId);
+        // Check if seed has run; if not, seed first, then attach listeners
+        if (!localStorage.getItem('sl_sync_seeded')) {
+          _syncSeedFirestore(_syncHouseholdId).then(function() {
+            localStorage.setItem('sl_sync_seeded', '1');
+            _syncAttachListeners(_syncHouseholdId);
+          });
+        } else {
+          _syncAttachListeners(_syncHouseholdId);
+        }
       } else {
         // No household — prompt Create/Join
         _syncHouseholdId = null;
@@ -60839,6 +60848,7 @@ function syncCreateHousehold(babyName, dob) {
     _syncCloseHouseholdModal();
     showQLToast('Household created — share the invite code');
     _syncSeedFirestore(_syncHouseholdId).then(function() {
+      localStorage.setItem('sl_sync_seeded', '1');
       _syncAttachListeners(_syncHouseholdId);
     });
   }).catch(function(err) {
@@ -61283,6 +61293,12 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
   // Compare to current localStorage
   var current = load(lsKey, []);
   if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
+
+  // SAFETY: never overwrite non-empty local data with empty Firestore (prevents data wipe)
+  if (entries.length === 0 && Array.isArray(current) && current.length > 0) {
+    console.warn('[sync] Skipping empty snapshot for ' + collection + ' — local has ' + current.length + ' entries');
+    return;
+  }
 
   // Count changes for toast
   var changeCount = 0;
