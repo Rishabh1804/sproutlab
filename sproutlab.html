@@ -60683,17 +60683,6 @@ var _syncIsReconciling = false; // suppresses toasts during reconcile
 const CIRCUIT_BREAKER_LIMIT = 500;
 const DEBOUNCE_MS = 2000;
 
-// Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
-var _syncCollectionToKeys = {};
-(function() {
-  var keys = Object.keys(SYNC_KEYS);
-  for (var i = 0; i < keys.length; i++) {
-    var col = SYNC_KEYS[keys[i]].collection;
-    if (!_syncCollectionToKeys[col]) _syncCollectionToKeys[col] = [];
-    _syncCollectionToKeys[col].push(keys[i]);
-  }
-})();
-
 // ─── Sync Key Map ───
 const SYNC_KEYS = {
   [KEYS.feeding]:            { collection: 'feeds',       model: 'per-entry' },
@@ -60716,6 +60705,17 @@ const SYNC_KEYS = {
   [KEYS.coldEpisodes]:       { collection: 'episodes',    model: 'single-doc' },
   [KEYS.foods]:              { collection: 'foods',       model: 'single-doc' },
 };
+
+// Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
+var _syncCollectionToKeys = {};
+(function() {
+  var keys = Object.keys(SYNC_KEYS);
+  for (var i = 0; i < keys.length; i++) {
+    var col = SYNC_KEYS[keys[i]].collection;
+    if (!_syncCollectionToKeys[col]) _syncCollectionToKeys[col] = [];
+    _syncCollectionToKeys[col].push(keys[i]);
+  }
+})();
 
 // ─── Firebase Init ───
 function initFirebase() {
