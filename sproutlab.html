@@ -60683,6 +60683,29 @@ var _syncIsReconciling = false; // suppresses toasts during reconcile
 const CIRCUIT_BREAKER_LIMIT = 500;
 const DEBOUNCE_MS = 2000;
 
+// ─── Layer 4: Crash Circuit Breaker ───
+// If sync errors hit SYNC_CRASH_LIMIT in one session, auto-disable sync entirely.
+// App continues in local-only mode. User can re-enable via Settings or reload.
+var _syncCrashCount = 0;
+var _syncDisabled = false;
+const SYNC_CRASH_LIMIT = 3;
+
+function _syncRecordCrash(source, err) {
+  _syncCrashCount++;
+  console.error('[sync] Crash #' + _syncCrashCount + ' in ' + source + ':', err);
+  if (_syncCrashCount >= SYNC_CRASH_LIMIT) {
+    _syncDisabled = true;
+    _syncDetachListeners();
+    // Clear any pending debounce timers
+    Object.keys(_syncDebounceTimers).forEach(function(k) {
+      if (_syncDebounceTimers[k]) clearTimeout(_syncDebounceTimers[k]);
+      _syncDebounceTimers[k] = null;
+    });
+    console.error('[sync] Auto-disabled after ' + _syncCrashCount + ' crashes. App is local-only.');
+    showQLToast('Sync paused — too many errors. Reload to retry.');
+  }
+}
+
 // ─── Sync Key Map ───
 const SYNC_KEYS = {
   [KEYS.feeding]:            { collection: 'feeds',       model: 'per-entry' },
@@ -60803,16 +60826,18 @@ function _syncFindHousehold(uid) {
             _syncSeedFirestore(_syncHouseholdId).then(function() {
               localStorage.setItem('sl_sync_seeded', '1');
               try { _syncAttachListeners(_syncHouseholdId); }
-              catch(e) { console.error('[sync] attachListeners post-seed crash:', e); }
+              catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
             }).catch(function(e) {
-              console.error('[sync] Seed failed, attaching listeners anyway:', e);
-              try { _syncAttachListeners(_syncHouseholdId); }
-              catch(e2) { console.error('[sync] attachListeners crash:', e2); }
+              _syncRecordCrash('seed', e);
+              if (!_syncDisabled) {
+                try { _syncAttachListeners(_syncHouseholdId); }
+                catch(e2) { _syncRecordCrash('attachListeners-after-seed-fail', e2); }
+              }
             });
           } else {
             _syncAttachListeners(_syncHouseholdId);
           }
-        } catch(e) { console.error('[sync] attachListeners crash:', e); }
+        } catch(e) { _syncRecordCrash('attachListeners', e); }
       } else {
         // No household — prompt Create/Join
         _syncHouseholdId = null;
@@ -61095,6 +61120,7 @@ function syncWrite(key, val, old) {
     _syncShadow[key] = _syncCloneDeep(val);
 
     // Guards
+    if (_syncDisabled) return;                  // Layer 4: auto-disabled after crashes
     if (_remoteWriteDepth > 0) return;          // don't echo back remote writes
     if (!SYNC_KEYS[key]) return;                // local-only key
     if (!_syncHouseholdId) return;              // no household
@@ -61123,7 +61149,7 @@ function syncWrite(key, val, old) {
       _syncDebounceSingleDoc(hRef, config.collection, key, old, val);
     }
   } catch(e) {
-    console.error('[sync] syncWrite crash for key ' + key + ':', e);
+    _syncRecordCrash('syncWrite/' + key, e);
   }
 }
 
@@ -61170,12 +61196,12 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   _syncDebounceTimers[timerKey] = setTimeout(function() {
     _syncDebounceTimers[timerKey] = null;
     // Re-check state at flush time (guards against stale hRef from debounce delay)
-    if (!_syncHouseholdId || !_syncUser) return;
+    if (_syncDisabled || !_syncHouseholdId || !_syncUser) return;
     try {
       var freshDb = firebase.firestore();
       var freshRef = freshDb.collection('households').doc(_syncHouseholdId);
       _syncFlushSingleDoc(freshRef, collection);
-    } catch(e) { console.error('[sync] Debounce flush crash:', e); }
+    } catch(e) { _syncRecordCrash('debounce-flush/' + collection, e); }
   }, DEBOUNCE_MS);
 }
 
@@ -61245,8 +61271,8 @@ function _syncAttachListeners(hId) {
   var perEntryCollections = ['feeds', 'sleep', 'poop', 'caretickets', 'notes'];
   perEntryCollections.forEach(function(col) {
     var unsub = hRef.collection(col).onSnapshot(function(snapshot) {
-      try { _syncHandlePerEntrySnapshot(col, snapshot); }
-      catch(e) { console.error('[sync] Per-entry handler crash on ' + col + ':', e); }
+      try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
+      catch(e) { _syncRecordCrash('per-entry/' + col, e); }
     }, function(err) {
       console.error('[sync] Listener error on ' + col + ':', err);
     });
@@ -61257,8 +61283,8 @@ function _syncAttachListeners(hId) {
   var singleDocNames = ['activities', 'milestones', 'growth', 'vaccinations', 'medical', 'episodes', 'foods'];
   singleDocNames.forEach(function(docName) {
     var unsub = hRef.collection('singles').doc(docName).onSnapshot(function(doc) {
-      try { _syncHandleSingleDocSnapshot(docName, doc); }
-      catch(e) { console.error('[sync] Single-doc handler crash on ' + docName + ':', e); }
+      try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
+      catch(e) { _syncRecordCrash('single-doc/' + docName, e); }
     }, function(err) {
       console.error('[sync] Listener error on singles/' + docName + ':', err);
     });
@@ -61272,7 +61298,7 @@ function _syncAttachListeners(hId) {
         _syncHousehold = doc.data();
         _syncRenderSettingsUI();
       }
-    } catch(e) { console.error('[sync] Household listener crash:', e); }
+    } catch(e) { _syncRecordCrash('household-listener', e); }
   });
   _syncListenerUnsubs.push(hUnsub);
 }
