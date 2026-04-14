@@ -7,4 +7,7 @@ initZoomLevel();
 init();
 initWelcomeGuide();
 _bugInit();
-initFirebase();
+// Safe sync init — ?nosync bypasses Firebase entirely for recovery
+if (window.location.search.indexOf('nosync') === -1) {
+  try { initFirebase(); } catch(e) { console.error('[sync] initFirebase crashed:', e); }
+}
