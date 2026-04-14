@@ -18404,33 +18404,44 @@ function exportData() {
     const jsonStr = JSON.stringify(data, null, 2);
     const fileName = 'ziva-backup-' + today() + '.json';
 
-    // Try Web Share API first — works reliably on mobile + PWA
-    try {
-      const file = new File([jsonStr], fileName, { type: 'application/json' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    // Strategy 1: Web Share API with file (best for mobile/PWA)
+    if (navigator.share) {
+      try {
+        var file = new File([jsonStr], fileName, { type: 'application/json' });
         navigator.share({ title: "Ziva's Dashboard Backup", files: [file] })
-          .catch(function() { /* user cancelled */ });
+          .catch(function(shareErr) {
+            // Share cancelled or failed — try anchor download
+            if (shareErr.name !== 'AbortError') _exportViaAnchor(jsonStr, fileName);
+          });
         return;
-      }
-    } catch(e) { console.warn('[export] share failed:', e); }
+      } catch(e) { /* files not supported, fall through */ }
+    }
 
-    // Fallback: anchor download (attach to DOM for compatibility)
-    var blob = new Blob([jsonStr], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function() {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 1000);
+    // Strategy 2: anchor download
+    _exportViaAnchor(jsonStr, fileName);
   } catch(err) {
     console.error('[export] exportData crashed:', err);
     showQLToast('Export failed: ' + err.message);
   }
+}
+
+function _exportViaAnchor(jsonStr, fileName) {
+  var blob = new Blob([jsonStr], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  // Also try window.open as last resort for PWA
+  setTimeout(function() {
+    document.body.removeChild(a);
+    // Don't revoke immediately — give browser time to start download
+  }, 200);
+  setTimeout(function() {
+    URL.revokeObjectURL(url);
+  }, 5000);
 }
 
 function shareBackup() {
