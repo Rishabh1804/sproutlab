@@ -15815,6 +15815,20 @@ function init() {
   }
   currentReaction = 'ok';
 
+  // Persist defaults to localStorage so sync/seed can find them
+  // (many keys fall back to DEFAULT_* in memory but never save to localStorage)
+  var _syncPersistKeys = [
+    [KEYS.foods, foods], [KEYS.feeding, feedingData], [KEYS.growth, growthData],
+    [KEYS.milestones, milestones], [KEYS.vacc, vaccData], [KEYS.meds, meds],
+    [KEYS.doctors, doctors], [KEYS.sleep, sleepData], [KEYS.poop, poopData],
+    [KEYS.notes, notes], [KEYS.visits, visits], [KEYS.activityLog, activityLog]
+  ];
+  _syncPersistKeys.forEach(function(pair) {
+    if (localStorage.getItem(pair[0]) === null && pair[1] != null) {
+      try { localStorage.setItem(pair[0], JSON.stringify(pair[1])); } catch(e) {}
+    }
+  });
+
   // Migrate old milestone format (done:boolean) → new (status string)
   milestones = milestones.map(m => {
     if ('done' in m && !('status' in m)) {
