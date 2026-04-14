@@ -161,9 +161,9 @@ function _syncFindHousehold(uid) {
         // Check if seed has run; if not, seed first, then attach listeners
         // v2: force re-seed if seeded with old model (tracking data was missed)
         try {
-          if (!localStorage.getItem('sl_sync_seeded') || localStorage.getItem('sl_sync_seeded') !== '2') {
+          if (!localStorage.getItem('sl_sync_seeded') || localStorage.getItem('sl_sync_seeded') !== '3') {
             _syncSeedFirestore(_syncHouseholdId).then(function() {
-              localStorage.setItem('sl_sync_seeded', '2');
+              localStorage.setItem('sl_sync_seeded', '3');
               try { _syncAttachListeners(_syncHouseholdId); }
               catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
             }).catch(function(e) {
@@ -217,7 +217,7 @@ function syncCreateHousehold(babyName, dob) {
     _syncCloseHouseholdModal();
     showQLToast('Household created — share the invite code');
     _syncSeedFirestore(_syncHouseholdId).then(function() {
-      localStorage.setItem('sl_sync_seeded', '2');
+      localStorage.setItem('sl_sync_seeded', '3');
       _syncAttachListeners(_syncHouseholdId);
     });
   }).catch(function(err) {
@@ -259,6 +259,8 @@ function syncJoinByCode(code) {
         _syncRenderSettingsUI();
         _syncCloseHouseholdModal();
         showQLToast('Joined household!');
+        // Joining device does NOT seed — data comes from admin's seed via listeners
+        localStorage.setItem('sl_sync_seeded', '3');
         _syncAttachListeners(_syncHouseholdId);
       });
     })
@@ -825,14 +827,18 @@ function _syncSeedFirestore(hId) {
     }
   });
 
-  // Single-doc collections: one set per collection
+  // Single-doc collections: one set per collection (skip null/empty — never overwrite good data)
   var singleDocCollections = {};
   allKeys.forEach(function(key) {
     var config = SYNC_KEYS[key];
     if (config.model !== 'single-doc') return;
+    var val = load(key, null);
+    if (val === null || val === undefined) return; // skip empty
+    if (Array.isArray(val) && val.length === 0) return; // skip empty arrays
+    if (typeof val === 'object' && !Array.isArray(val) && Object.keys(val).length === 0) return; // skip empty objects
     var col = config.collection;
     if (!singleDocCollections[col]) singleDocCollections[col] = {};
-    singleDocCollections[col][key] = load(key, null);
+    singleDocCollections[col][key] = val;
   });
 
   Object.keys(singleDocCollections).forEach(function(col) {
