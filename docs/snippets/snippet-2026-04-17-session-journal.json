@@ -1,0 +1,79 @@
+{
+  "_snippet_version": 1,
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra",
+  "_import_target": "Codex journal.json",
+  "_notes": "Comprehensive session journal for s-2026-04-17-01. Supersedes the interim snippet-2026-04-17-sproutlab-c0-emergency.json filed earlier (that one covered only C0 v3; this one covers the full session arc including C0 v3.1 and the multi-governor review chain in full). Aurelius: import this as the authoritative session entry and supersede the interim one if desired.",
+  "snippet_type": "journal",
+  "operations": [
+    {
+      "op": "new_session",
+      "data": {
+        "date": "2026-04-17",
+        "id": "s-2026-04-17-01",
+        "summary": "SproutLab Device Sync emergency — four distinct bugs surfaced and fixed across two patches (C0 v3 and C0 v3.1). B3 (shadow contaminated by local-intent at sync.js:471, collapsing the flush diff) was the dominant cause of the reported 'data disappearing every refresh' symptom and was discovered during Kael's Governor audit after Lyra had flagged it as a speculative footnote. B4 (dotted-path keys in set+merge create literal-dotted top-level fields instead of nested updates) surfaced after C0 v3 canary passed, revealed by multi-device state that Architect's wife's phone rejoin exposed. Both patches verified in production. First full Edict V exercise under PERSONA_REGISTRY v1.1 — four signatures (Lyra Builder, Maren Care Governor, Kael Intelligence Governor, Cipher Censor) plus Consul summons.",
+        "volumes_touched": ["sproutlab", "codex"],
+        "chapters_touched": ["device-sync"],
+        "decisions": [
+          "candidate-canon-sync-001-shadow-is-observation-not-intent (drafted, 48h → 72h defer per Co5)",
+          "candidate-canon-sync-002-firestore-merge-nests-not-dots (drafted, 72h joint defer with canon-sync-001)",
+          "Option Y (household delete + reseed) chosen over Fix 6 (reconcile-lite in C0) to keep C0 scope narrow",
+          "Maren-before-Kael review order recorded as candidate amendment to v1 handoff §9 — review order follows presenting concern, not static sequence",
+          "HR-14 Reconcile Sync Invariant promotion deferred to post-Session-1 conventions pass (Consul judgment)",
+          "HR-13 candidate (nulls-never-undefineds in SYNC_KEYS) staged as convention, awaits C1 _syncNormalizeOut implementation",
+          "Session 1 reconcile (spec C1–C6) unchanged and unblocked by C0 v3/v3.1 — listener-ready infrastructure already in place",
+          "KL-1 (concurrent-writes-during-debounce) documented as known limitation, resolved by C5 union merge",
+          "KL-2 (orphan dotted-literal fields from pre-B4-fix pushes) documented, static, optional cleanup via Firebase Console",
+          "Canary scope amendment candidate — emergency canaries should include multi-device state if fix targets multi-device function"
+        ],
+        "bugs_found": 4,
+        "bugs_fixed": 4,
+        "duration_minutes": null,
+        "open_todos": [
+          "72h canary monitoring window (17 Apr 23:30 → 20 Apr 23:30 IST) — no action unless symptoms recur",
+          "Wife rejoin confirmation + continuous observation through window",
+          "Post-72h: promote canon-sync-001 AND canon-sync-002 via Codex snippet import if window is quiet",
+          "Session 1 reconcile implementation: C1 primitives, C2 autosave gate, C3 wrapper rewire, C4 ingress discrimination (P4R5-7), C5 reconcile greenfield, C6 HR-14 staging — unchanged from spec §12, scheduled AFTER Consul Co4 portfolio rotation completes",
+          "Consul Co4 portfolio rotation: next 3 days favor Codex backfill + SEP check-in over SproutLab",
+          "Aurelius: import session journal snippet, chapter updates, schism entries, lore entries, apocrypha entries at next Codex session",
+          "Aurelius: verify Codex WAL-vs-SHA separation is structurally enforced (10-minute check; Codex is the affirmative pattern for canon-sync-001)",
+          "Conventions documentation: validation rules lock, reconcile push guard scope comment, storage-full mixed-success note, schema nulls-never-undefineds convention (HR-13 candidate), parent spec local-only keys honored pending Maren review",
+          "P4R5-7 vaccBooked cancellation propagation (C4 scope in Session 1)",
+          "Offline-write loss fix (C5 scope via _localPending capture)",
+          "Per-entry partial-shrink wipe protection (C5 scope — only careTickets affected today)"
+        ],
+        "handoff": "Two patches shipped and canary-verified. Session 1 reconcile spec unchanged; Aurelius's handoff v2 still the authoritative contract for that work. Next session (after Co4 rotation): Session 1 C1 primitives, then C2–C6 per spec §12. SproutLab docs/ filed with: spec + v1 handoff + v2 handoff + R3 snippet (Canon 0027 mv) + C0 deploy runbook + final chronicle + this session-journal snippet + chapter/schism/lore/apocrypha snippets + two candidate canon drafts. Firestore state: fresh household doc, seeded from Architect's post-14 local, verified working for both tracking keys (poop/sleep/feeding/notes) and the previously-broken single-key docs (foods/activities). Orphan dotted-literal fields manually cleaned by Architect in Firebase Console; fix prevents regrowth.",
+        "screenshots": [],
+        "meta": {
+          "session_type": "emergency-fix-plus-full-governance-exercise",
+          "edict_v_exercise": "first-full",
+          "governors_consulted": ["maren-care-governor", "kael-intelligence-governor"],
+          "censor_consulted": "cipher",
+          "consul_summoned": true,
+          "consul_conditions": {
+            "Co1_filing": "completed",
+            "Co2_chronicle": "completed-via-this-and-companion-snippets",
+            "Co3_canon-sync-001_promotion": "deferred-72h-per-Co5-extension",
+            "Co4_portfolio_rotation": "noted-next-3-days",
+            "Co5_72h_joint_canon_monitoring": "active-until-2026-04-20-23:30-IST"
+          },
+          "review_rounds": {
+            "C0_v3": "full-formal-Maren-then-Kael-then-Cipher-then-Consul",
+            "C0_v3.1": "full-formal-Maren-then-Kael-then-Cipher-then-Consul-abbreviated"
+          },
+          "patches_shipped": [
+            {"commit": "5427899", "label": "C0 v3", "loc_net": "~90 LOC sync.js", "bugs_fixed": ["B1", "B2", "B3"]},
+            {"commit": "5ab16cf", "label": "C0 v3.1", "loc_net": "~15 LOC sync.js + KL-2 doc", "bugs_fixed": ["B4"]}
+          ],
+          "archive_commits": [
+            {"commit": "d584a47", "label": "Archive pre-pull docs"},
+            {"commit": "802274a", "label": "Codex chronicle (interim, superseded by this snippet at import)"}
+          ],
+          "canary_status": "passed (food + activity + tracking all verified)",
+          "deploy_variant": "option-Y-household-reseed",
+          "deferred_fix_path": "spec-c1-through-c6-reconcile-session-1"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "_snippet_version": 1,
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra + Consul",
+  "_import_target": "Codex canons.json — apocrypha (via op new_apocryphon)",
+  "_notes": "Apocrypha — foretold works. Entries with status 'foretold' describe work that is planned, specced, or implied but not yet complete. Entries with status 'fulfilled' describe foretold work that has now been delivered. These feed the prophecy layer of the Codex — the sense that the Republic's work is arc'd, not just accumulated.",
+  "snippet_type": "canons",
+  "operations": [
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-001-the-reconcile-session",
+        "title": "The Reconcile Session",
+        "category": "Foretold Works",
+        "body": "Aurelius's spec (spec-2026-04-17-aurelius-device-sync-reconcile.md) describes the reconcile greenfield in full. Six commits, ~211 LOC net. Resolves KL-1 (concurrent-writes-during-debounce), offline-write loss (writes that never reach Firestore because network was down at debounce time), per-entry partial shrink (remaining after C0 for careTickets), and P4R5-7 vaccBooked cancellation propagation. The listener-ready infrastructure is already in place from C0 v3; the _localPending capture and per-collection reconcile helpers are what's missing.\n\nFulfillment criterion: spec §12 commits C1 through C6 land in sync.js. Canary verification both single-device and multi-device. HR-14 promotion from candidate to committed after reconcile has lived under the invariant in production.\n\nProphecy: at the end of Session 1, KL-1 is closed, three pre-existing bug classes are fixed, and the Device Sync chapter moves from 'in-progress' to 'complete' pending post-verification cleanup.",
+        "volumes": ["sproutlab"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-002-the-two-canons-promoted-together",
+        "title": "The Two Canons Promoted Together",
+        "category": "Foretold Works",
+        "body": "canon-sync-001 (shadow-is-observation-not-intent) and canon-sync-002 (firestore-merge-nests-not-dots) are staged as drafts, both gated by Consul Co5's 72h joint verification window (17 Apr 23:30 IST → 20 Apr 23:30 IST). If the window closes quietly — no [sync] guard-fire warnings, no data-loss reports, no regressions — both canons promote together via Codex snippet import.\n\nFulfillment criterion: both canons' status transitions from 'candidate' to 'active' via a single Codex snippet imported after 20 April 23:30 IST. Both reference each other in their rationale and arc from the same incident.\n\nProphecy: when promoted, these two canons are the Republic's first canons originating from an in-production incident rather than from architectural foresight. They encode what the system learned by breaking.",
+        "volumes": ["sproutlab", "codex"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-003-the-month-partition-horizon",
+        "title": "The Month Partition Horizon",
+        "category": "Foretold Works",
+        "body": "Firestore imposes a 1 MiB document size limit. SproutLab's single-doc collections (tracking, activities, foods) accumulate all entries in one document, growing unbounded. High-frequency keys — feeding (multiple entries per day), activity_log (similar cadence), notes (ad-hoc but cumulative) — approach the limit over years of use.\n\nSpec §13 defers month partitioning explicitly. When growth curve data reveals the approach vector, a migration (M-series) partitions single-doc collections into per-month sub-documents. Month-rollover race guard (P7R2-2, drafted but not built) becomes load-bearing at that point.\n\nFulfillment criterion: at least one single-doc collection crosses 500 KB (half the limit) in production use, OR one calendar year of continuous use has elapsed — whichever comes first. At that threshold, month partitioning becomes priority-1 architectural work.\n\nProphecy: the Republic will eventually hit the 1 MiB wall. When it does, the partition architecture lives here as scaffolding.",
+        "volumes": ["sproutlab"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-004-the-crdt-conversion",
+        "title": "The CRDT Conversion",
+        "category": "Foretold Works",
+        "body": "S7 (spec §10 #1) — concurrent remote writes during reconcile push phase — converges via Firestore last-writer-wins at the server. If Parent A reconciles with a pending vaccBooked at the same moment Parent B cancels vaccBooked, the outcome depends on server arrival order. A cancellation can be lost.\n\nResolution requires either versioned writes (each update carries a logical clock, conflicts detected and merged explicitly) or CRDTs (Conflict-free Replicated Data Types that merge deterministically without requiring clocks). Both are substantial architectural additions, out of Session 1 scope.\n\nFulfillment criterion: S7-class incident reported in production (a confirmed case of a care-data write being lost due to concurrent-write last-writer-wins), OR SproutLab adds a third regular user (beyond the two-parent household, e.g., grandparent or caregiver access) increasing the probability curve to material levels. Either triggers the design session.\n\nProphecy: the Republic will one day converge on CRDTs for care-critical data. SproutLab will be the first adopter; Codex's journal may follow if collaborative editing is ever needed; SEP's billing spine will likely need versioned writes for invoice amendments regardless.",
+        "volumes": ["sproutlab", "codex", "sep-invoicing"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-005-the-observability-layer",
+        "title": "The Observability Layer",
+        "category": "Foretold Works",
+        "body": "C0 v3 and v3.1 sprinkle console.warn statements across guard-fire sites. Maren's CAUTION-2 acknowledged this as the observability ceiling for C0. But at session close, the Architect has no single dashboard to verify 'is sync healthy right now?' — only scattered DevTools console output.\n\nSpec §13 defers a proper observability layer: metrics on reconcile duration, pending-flush count, fallback-timer firings, deferred-save counts, listener-ready settle times, circuit-breaker trips. A Settings → Sync Diagnostics surface exposes this to the Architect. Optionally, a small status badge in the header indicates sync health at a glance.\n\nFulfillment criterion: Session 1 reconcile ships (establishing the measurement points), then a separate observability session implements the aggregation + UI. Approximately v1.2 territory.\n\nProphecy: the Sovereign will one day open SproutLab and know, at a glance, whether sync is healthy, degraded, or disabled. Until then, console.warn is the oracle.",
+        "volumes": ["sproutlab"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_apocryphon",
+      "data": {
+        "id": "apo-sync-006-the-hr-promotion-pair",
+        "title": "The HR Promotion Pair — HR-13 and HR-14",
+        "category": "Foretold Works",
+        "body": "Two Hard Rule candidates are staged from this session. HR-13 (schema invariant: SYNC_KEYS values use null never undefined) emerges from Aurelius v1 handoff §7's conventions list and is fulfilled by C1's _syncNormalizeOut implementation. HR-14 (Reconcile Sync Invariant: between _syncReconcileWriting = true and its clearing, reconcile executes in a single synchronous stack-frame sequence) is drafted in spec §3 and fulfilled when Session 1 C5 reconcile is implemented and has survived production use.\n\nPromotion criterion for HR-13: C1 primitives ship and _syncNormalizeOut is empirically shown to reject undefined values at write time. Promotion criterion for HR-14: Session 1 C5 reconcile ships, the synchronous-region invariant is enforceable by code review (and optionally by pre-commit grep), and 30 days of production use without any await/.then/setTimeout re-introduction in the locked region.\n\nFulfillment: both HR-13 and HR-14 promote from 'candidate' to 'committed' as part of the post-Session-1 conventions pass. This pass also documents validation-rules-lock (ctValidateTickets), reconcile push guard scope, and storage-full mixed-success semantics.\n\nProphecy: SproutLab's Hard Rules grow from 12 to 14 by the end of Session 1's conventions cleanup. The Republic's code-of-law lengthens by exactly what it learned.",
+        "volumes": ["sproutlab"],
+        "status": "foretold",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    }
+  ]
+}

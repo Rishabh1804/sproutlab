@@ -1,0 +1,67 @@
+{
+  "_snippet_version": 1,
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra",
+  "_import_target": "Codex volumes.json — sproutlab volume, chapters[]",
+  "_notes": "Chapter progression for SproutLab's device-sync work. Reflects actual delivery state as of 17 April 2026 end-of-session: Phase 1 and Phase 2 complete; C0 emergency patches shipped; Session 1 reconcile planned but not yet started.",
+  "snippet_type": "chapters",
+  "operations": [
+    {
+      "op": "chapter_update",
+      "volume": "sproutlab",
+      "chapter_id": "device-sync",
+      "patch": {
+        "status": "in-progress",
+        "last_updated": "2026-04-17",
+        "summary": "Firebase Auth + Firestore sync layer for SproutLab. Phases 1 (auth, household CRUD, save hook) and 2 (sync engine, listeners, diffing, seed) shipped 13-14 April 2026. Emergency hardening on 17 April (C0 v3 + C0 v3.1) after multi-device field testing surfaced B1–B4. Session 1 reconcile (spec-locked R3, ~211 LOC across C1–C6) is the remaining implementation work and resolves KL-1, offline-write loss, per-entry partial shrink, and P4R5-7 cancellation propagation.",
+        "sub_phases": [
+          {
+            "id": "phase-1-auth-household",
+            "name": "Phase 1: Foundation",
+            "status": "complete",
+            "started": "2026-04-13",
+            "completed": "2026-04-13",
+            "summary": "Auth flow (Google popup + redirect), household CRUD (create, join by code, leave), Settings UI rendering, save() hook for Phase 2 integration. ~400 LOC across config.js + sync.js + core.js."
+          },
+          {
+            "id": "phase-2-sync-engine",
+            "name": "Phase 2: Sync Engine",
+            "status": "complete-with-hardening",
+            "started": "2026-04-14",
+            "completed": "2026-04-14 (+ hardening)",
+            "summary": "syncWrite router, per-entry and single-doc models, _syncDeepDiff, _syncDiffArray, debounced flush, seed, listeners. Hardened same day with try/catch, circuit breaker, ?nosync bypass, empty-guard for per-entry, joining-device-doesn't-seed, force-reseed v4. Did NOT catch B3 (line 471 shadow contamination) or B4 (dotted-path set+merge behavior) — both discovered 17 April under production multi-device use."
+          },
+          {
+            "id": "c0-v3-emergency-stopgap",
+            "name": "C0 v3: B3 Fix + Listener-Ready Gating",
+            "status": "complete",
+            "started": "2026-04-17",
+            "completed": "2026-04-17",
+            "summary": "Emergency patch removing line 471, adding per-collection listener-ready tracking with spec §4.6 adaptive fallback, ALWAYS_POPULATED_KEYS allowlist (Maren's design), debounce-defer in listener (Kael's fix), reset-on-detach. Commit 5427899. ~90 LOC net sync.js. Four-governor review chain: Maren → Kael → Cipher → Consul. Option Y deploy (delete household + reseed). Canary: single feeding entry reached Firestore successfully."
+          },
+          {
+            "id": "c0-v3-1-b4-nest-fix",
+            "name": "C0 v3.1: Nest Dotted Paths Before Set+Merge",
+            "status": "complete",
+            "started": "2026-04-17",
+            "completed": "2026-04-17",
+            "summary": "Follow-up patch after multi-device canary exposed B4: _syncDeepDiff produces dotted paths (correct for update(), wrong for set+merge which creates literal-dotted top-level fields). Added _syncNestDottedPaths helper; _syncFlushSingleDoc now wraps diff.updates in nest before set+merge. Commit 5ab16cf. ~15 LOC net. KL-2 documented (orphan dotted-literal fields from pre-fix pushes). Abbreviated full-formal review round. Canary: food + activity logging both verified in Firestore."
+          },
+          {
+            "id": "session-1-reconcile-greenfield",
+            "name": "Session 1: Reconcile Greenfield",
+            "status": "planned",
+            "started": null,
+            "completed": null,
+            "summary": "Per spec-2026-04-17-aurelius-device-sync-reconcile.md §12. Six commits (C1–C6, ~211 LOC net). Resolves KL-1, offline-write loss, per-entry partial shrink, P4R5-7 cancellation. Unblocked by C0 v3's listener-ready infrastructure. Scheduled AFTER Consul Co4 portfolio rotation (Codex backfill + SEP check-in priority next 3 days)."
+          }
+        ],
+        "known_limitations": [
+          {"id": "KL-1", "severity": "medium", "resolved_by": "Session 1 C5", "note": "Concurrent multi-device writes during 2s debounce window can lose remote deltas via {merge:true} field-level overwrite."},
+          {"id": "KL-2", "severity": "low", "resolved_by": "N/A (static, optional cleanup)", "note": "Orphan dotted-literal top-level fields from pre-B4-fix pushes persist in Firestore. Harmless, ignored by listener, contribute to 1MB doc size but do not regrow under C0 v3.1 fix."},
+          {"id": "S7", "severity": "medium", "resolved_by": "v1.1+ (CRDT or versioned writes)", "note": "Concurrent remote writes during reconcile push phase converge via Firestore last-writer-wins. Out of Session 1 scope."}
+        ]
+      }
+    }
+  ]
+}

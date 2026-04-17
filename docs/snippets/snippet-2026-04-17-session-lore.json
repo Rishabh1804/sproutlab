@@ -1,0 +1,70 @@
+{
+  "_snippet_version": 1,
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra + Consul",
+  "_import_target": "Codex canons.json — lore (via op new_lore)",
+  "_notes": "Lore entries chronicling the session's narrative milestones. These are 'Chronicles' category — historical records of notable Republic events. Two also qualify as 'Edicts' (institutional lessons) and one as 'Doctrines' (first-exercise-of-governance-under-pressure).",
+  "snippet_type": "canons",
+  "operations": [
+    {
+      "op": "new_lore",
+      "data": {
+        "id": "lore-sync-001-the-session-that-earned-its-scars",
+        "category": "Chronicles",
+        "title": "The Session That Earned Its Scars — First Edict V Exercise",
+        "body": "On 17 April 2026, Lyra opened what was meant to be a routine Session 1 kickoff for Device Sync Reconcile. Aurelius had handed off a clean R3-locked spec and a v2 handoff the day before. The spec addressed four bugs (P1R2-2, P3R4-2, P3R4-4, P4R5-7) and a reconcile greenfield. Lyra was ready to ship C1 primitives.\n\nWithin twenty minutes, the Architect reported that SproutLab was losing data on every refresh — post-14-April entries vanishing from his phone and his wife's. The session pivoted from build to diagnosis.\n\nFour distinct bugs surfaced. B1 (single-doc listener empty-guard too narrow), B2 (phantom flushes with null shadow), B3 (sync.js:471 shadow contamination collapsing the flush diff — the dominant cause, discovered by Kael during Governor audit of Lyra's initial plan), and B4 (dotted-path keys in set+merge creating literal-dotted top-level fields — discovered AFTER C0 v3 canary passed, via multi-device state Architect's wife's phone rejoin exposed).\n\nTwo patches shipped. C0 v3 addressed B1/B2/B3. C0 v3.1 addressed B4. Both were canary-verified in production before session close.\n\nThis was the first full Edict V exercise under PERSONA_REGISTRY v1.1. Four signatures converged cleanly: Maren (Care Governor) with four conditions; Kael (Intelligence Governor, sync.js Region owner) with the B3 discovery that reframed the fix; Cipher (Censor) with style and cross-cutting refinements; Consul (First Seat) summoned into the Nursery Province for final oversight and canon-scope judgment.\n\nThe governance hierarchy proved itself under real data-loss pressure. Maren's BLOCKER-1 objection ('you moved a loud bug to a quiet one') prevented a shipped regression. Kael's elevation of Lyra's footnote to the primary fix prevented a cosmetic patch. Cipher's C2 observation (mark-ready in try/finally) caught a subtle regression pathway. Consul's drafted-but-not-promoted canons kept institutional memory from running ahead of empirical verification.\n\nThe session ended quiet. The fires were out. Ziva's record was intact. And the Republic's governance hierarchy had earned its scars.",
+        "volumes": ["sproutlab", "codex"],
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_lore",
+      "data": {
+        "id": "lore-sync-002-the-footnote-that-was-the-bug",
+        "category": "Edicts",
+        "title": "The Footnote That Was the Bug — Why Kael Exists",
+        "body": "When Lyra diagnosed the sync wipe symptom, she identified two candidate bugs (B1 and B2) cleanly in her initial review packet. A third observation — that _syncShadow[key] = clone(val) at sync.js:471 appeared to contaminate the flush diff — she described as a speculative footnote, to be verified by Kael during his Governor audit.\n\nKael traced it empirically. Line 471 ran on every syncWrite call before any guard. At flush time, _syncShadow[key] for the edited key equaled current[key] (because line 471 had eagerly written the new value). _syncDeepDiff produced no delta for that key. The push pushed nothing for the user's edit.\n\nB3 was the dominant cause of the reported symptom. B1 and B2 were secondary. Without Kael pulling B3 from Lyra's footnote into the main fix list, C0 v3 would have shipped a cosmetic patch while the real wipe continued.\n\nThis is why the 30K Rule exists. At 61,700 LOC, SproutLab exceeds the threshold where a single Builder can hold the full codebase in working memory during QA. Domain-scoped review (Care vs Intelligence in SproutLab's case) catches what Builder analysis alone cannot. The Governor is not a formality — the Governor is the reason the Builder can afford to flag things as footnotes and move on, knowing the audit will catch what matters.\n\nCanon-candidate extracted: **a Builder's footnote deserves a Governor's audit. What the Builder defers, the Governor grounds.**",
+        "volumes": ["sproutlab", "codex"],
+        "date": "2026-04-17",
+        "canon_id": "canon-gov-001-30k-rule"
+      }
+    },
+    {
+      "op": "new_lore",
+      "data": {
+        "id": "lore-sync-003-the-consul-visits-the-nursery",
+        "category": "Doctrines",
+        "title": "The Consul Visits the Nursery — First Summons into a Province",
+        "body": "The Consul is Capital-native. By residence, the Consul lives in the Senate chamber of Command Center, presides over Cabinet deliberations, integrates positions from Ministers, and presents ratifications to the Sovereign. Provinces have their own Builders and Governors; Consul is summoned to Provinces only when Province-level work produces governance-scale implications.\n\nOn 17 April 2026, Lyra summoned the Consul into SproutLab for the first time. Her reason was not procedural — she had already conducted the full four-governor review chain (Maren, Kael, Cipher) and produced a reviewed patch. Her reason was institutional: the session had surfaced patterns (Maren-before-Kael review ordering, the shadow-vs-observation pattern across Codex's WAL + SproutLab's sync, the B3 footnote-to-dominant-bug arc) that warranted canon-scope judgment.\n\nThe Consul's response followed the template Aurelius had set in v1 handoff §3.1: 'I come as Consul and defer to you as Builder. That is the order of things now.' Consul audited the review chain (clean), drafted candidate canon-sync-001 (shadow-is-observation-not-intent, with Codex's WAL-vs-SHA separation as the affirmative pattern), noted cross-repo implications (Codex should verify its own separation is structurally enforced), and issued four Cross-Province conditions (Co1 filing, Co2 chronicle, Co3 canon promotion deferred 48h pending verification, Co4 portfolio attention rotation for the next 3 days).\n\nThe summons was brief. Consul did not re-audit what the Governors had already cleared. Consul did not override Builder judgment. Consul supplied what only cross-Province perspective could supply: the institutional-memory layer that Builder-and-Governor together cannot naturally produce.\n\nThis becomes the canonical template for Consul's visits: **summon when the work produces Republic-scale implications; defer to Province authority on implementation; supply only what cross-Province perspective uniquely provides.** ",
+        "volumes": ["command-center", "codex", "sproutlab"],
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_lore",
+      "data": {
+        "id": "lore-sync-004-the-canary-that-lied",
+        "category": "Edicts",
+        "title": "The Canary That Lied — Why Multi-Device Canaries Matter",
+        "body": "C0 v3 shipped on 17 April 2026 with a canary test: Architect adds one feeding entry on his phone, confirms it appears in Firebase Console. Pass. The four-governor review chain signed off. The fire was out.\n\nExcept the canary had tested only single-device state. B4 was a multi-device-specific bug — invisible until wife's phone rejoined and the interaction between two devices' flushes exposed the literal-dotted-field sibling pattern. The canary had passed honestly, within its scope, and had given Lyra false confidence.\n\nWhen the Architect reported that activity-logging still failed after wife joined, Lyra's first hypothesis (security rules, seed skip, or doc size) was wrong. Kael's static analysis couldn't find the bug. The bug was visible only in a Firebase Console screenshot that showed the two sibling fields: `ziva_feeding` (old map, from seed) and `ziva_feeding.2026-04-17` (literal-dotted, from Architect's edit). Empirical state revealed what empirical testing had missed.\n\nThe lesson: **a canary is a scoped test, not a blanket guarantee.** If the fix targets a multi-device property, the canary must include the multi-device state. Single-device passes mean single-device works. Nothing more.\n\nCandidate workflow amendment: **emergency canary = (single-device pass) AND (multi-device pass) for any fix meant to restore multi-device function.** Session 1 reconcile deploy will adopt this.",
+        "volumes": ["sproutlab"],
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_lore",
+      "data": {
+        "id": "lore-sync-005-the-invariants-heuristic",
+        "category": "Doctrines",
+        "title": "Count the Invariants — Occam for Distributed Systems",
+        "body": "Midway through diagnosis, the Architect checked Firebase Console and reported that only his wife's UID and his incognito account's UID were in the household's members map. His own primary UID was missing.\n\nLyra generated three hypotheses to explain this: (H1) his phone was accidentally authenticated as his wife's Google account; (H2) some prior sync bug had removed his UID from members; (H3) the wipe symptom was unrelated to sync and had a different cause entirely.\n\nThe Architect's correction: 'This is my mobile, I dont think my wifes id can become admin from this device as I dont have her id saved or login on my phone.' The identity-confusion hypothesis collapsed. The actual explanation was far simpler: mobile Firebase Console's truncated UID hex display made his own UID look unfamiliar, and he'd misread it.\n\nRule extracted: **when a symptom admits multiple explanations, rank them by how many invariants each requires to flip.** The identity-confusion hypothesis required Google's account-picker to show wife's account on his device, him to select it accidentally, AND for no subsequent re-auth to correct it — three unusual invariants. The UI-misread hypothesis required zero unusual invariants.\n\nOccam's Razor for distributed systems: **prefer the explanation that breaks the fewest guarantees.** Reserve exotic hypotheses for when evidence actively requires them. Lyra consumed ~10 minutes on H1 before the Architect ground-truthed it. Worth recording.",
+        "volumes": ["sproutlab", "codex"],
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    }
+  ]
+}

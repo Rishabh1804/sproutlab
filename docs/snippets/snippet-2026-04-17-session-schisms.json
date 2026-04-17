@@ -1,0 +1,88 @@
+{
+  "_snippet_version": 1,
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra + four-Governor review chain",
+  "_import_target": "Codex canons.json — rejected_alternatives[]",
+  "_notes": "Schisms (rejected alternatives) considered during the session. Each entry records the chosen path, the rejected path, and why. Preserves the decision trace for future similar incidents.",
+  "snippet_type": "canons",
+  "operations": [
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0001-delete-household-over-abandon",
+        "context": "C0 v3 deploy procedure — how to clear Firestore state before reseeding",
+        "volumes": ["sproutlab"],
+        "rejected": "Option A: Delete household doc + all subcollections (feeds, sleep, poop, caretickets, notes, singles, invites, backups, tracking) via Firebase Console. Each subcollection requires manual clearing since Firestore doesn't cascade-delete.",
+        "chosen": "Option B (refined, then executed): Architect deleted household via Firebase Console (he'd done it before reading the abandon-alternative). Net effect identical to Option A.",
+        "reason": "Mobile Firebase Console makes ten+ delete operations tedious and misclick-prone. Initially proposed abandoning the household via single members-map edit, but Architect had already completed the full delete. Outcome: clean Firestore state achieved either way. Recorded for future reference: abandon-via-member-removal is a valid alternative when full delete is procedurally expensive.",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0002-fix-6-reconcile-lite-in-c0",
+        "context": "Post-B3 analysis — how to prevent first-listener-fire wipe after C0 deploy",
+        "volumes": ["sproutlab"],
+        "rejected": "Fix 6: Add a reconcile-lite mechanism to C0 that detects 'remote shrunk relative to local-at-attach' on first listener fire and defers the save + triggers a flush. ~20 LOC but scope-creep on C0.",
+        "chosen": "Option Y deploy procedure: delete household doc + let Architect's phone recreate fresh. Phone's local seeds to new Firestore. No listener-wipe because remote starts == local. Wife rejoins via new invite code; her listener pulls Architect's authoritative state.",
+        "reason": "Fix 6 duplicates logic that belongs in Session 1 reconcile (spec §6 _localPending + union merge). Adding it to C0 would bloat the emergency patch and potentially conflict with the real reconcile when that ships. Cleaner: sidestep via deploy procedure. Spec §6 owns the real reconciliation semantics.",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0003-blanket-empty-guard-over-allowlist",
+        "context": "Maren BLOCKER-2 on C0 v3 initial design — Fix 1 empty-remote-overwrite guard",
+        "volumes": ["sproutlab"],
+        "rejected": "Blanket empty-guard: for ANY single-doc key, if remoteVal is empty array or empty object and local has data, skip the overwrite. Initial Lyra proposal.",
+        "chosen": "ALWAYS_POPULATED_KEYS allowlist: guard fires only for keys where empty-state is never a valid user intent (doctors, foods, vacc, meds). Keys outside the allowlist (notes, activityLog, feeding, sleep, poop, visits, episodes) propagate user-initiated clear-all as legitimate sync events.",
+        "reason": "Maren: 'If a parent clears all poop entries on Device A intending to reset, blanket-guard blocks the propagation. Parent A sees clean state, Parent B still sees old entries. Divergent household, parent cannot trust app to reflect their intent.' Per-key semantic policy preserves legitimate deletions while protecting keys that should never legitimately be empty.",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0004-syncing-as-wife-hypothesis",
+        "context": "Diagnosis of 'data disappearing every refresh' symptom — why Architect's UID seemed missing from household members",
+        "volumes": ["sproutlab"],
+        "rejected": "Hypothesis: Architect's primary phone was accidentally authenticated as his wife's Google account (via account-picker confusion), leading to wife's UID being used for sync queries and household-membership.",
+        "chosen": "Simpler explanation: Architect misread the Firebase Console members map (mobile UI truncation made the UID hex display ambiguous). His phone had never been auth'd as his wife; his own UID was in the map all along.",
+        "reason": "Architect: 'This is my mobile, I dont think my wifes id can become admin from this device as I dont have her id saved or login on my phone.' Correct. The identity-confusion hypothesis required multiple unusual invariants to flip (Google account-picker showing wife's account on his device, him accidentally selecting it, no subsequent re-auth correction). Simpler explanation (UI display artifact) required zero unusual invariants. Rule of thumb adopted: **when a symptom admits multiple explanations, rank them by how many invariants each requires to flip.**",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0005-immediate-hr-14-promotion",
+        "context": "Consul canon-scope judgment during C0 v3 review",
+        "volumes": ["sproutlab"],
+        "rejected": "Promote HR-14 (Reconcile Sync Invariant) from candidate to committed now, as part of C0 v3 ship.",
+        "chosen": "Defer HR-14 promotion to post-Session-1 conventions pass.",
+        "reason": "Consul: 'HR-14 is about the synchronous-region invariant inside reconcile. C0 v3 does not implement reconcile. Promoting HR-14 now would canonize a rule no code is yet subject to — premature. Keep it candidate. Lyra promotes in the post-Session-1 conventions pass when she has lived under the rule and can speak to whether it held in practice.' A canon that codifies behavior that doesn't exist in code is scaffolding, not doctrine.",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    },
+    {
+      "op": "new_rejection",
+      "data": {
+        "id": "rej-sync-0006-skip-hierarchy-to-save-time",
+        "context": "Initial framing of C0 v3 — Lyra proposed shipping directly after self-analysis",
+        "volumes": ["sproutlab"],
+        "rejected": "Lyra ships C0 v3 directly after her own analysis, without formal Governor review, because 'the user is losing data in real-time and speed matters.'",
+        "chosen": "Full four-governor review chain per Edict V: Maren → Kael → Cipher → Consul. Architect's correction: 'Why would we skip hierarchy? I have a backup, we want to get it right.'",
+        "reason": "Data loss creates urgency, but urgency does not override governance. The Architect had a downloaded backup — the ground wasn't burning. Shipping without review risks a 'fix' that moves a loud bug to a quiet one (Maren's BLOCKER-1 warning, which was exactly right). Kael's subsequent B3 discovery confirmed the hierarchy earned its keep — without formal review, C0 v3 would have been cosmetic, missing the dominant bug. **Canon-candidate: do not trade governance for speed when a safety net exists.**",
+        "date": "2026-04-17",
+        "canon_id": null
+      }
+    }
+  ]
+}
