@@ -1,0 +1,34 @@
+{
+  "_snippet_version": 1,
+  "_status": "DRAFT — DO NOT IMPORT UNTIL 72H POST-C0-V3.1-DEPLOY VERIFICATION (Consul Co5)",
+  "_consul_condition": "Co5 — Promote alongside canon-sync-001 after joint 72h verification. Shared monitoring window with canon-sync-001 because both canons address related sync structural concerns and share an incident timeline.",
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra (Builder) + four-Governor review chain + Consul",
+  "snippet_type": "canons",
+  "operations": [
+    {
+      "op": "new_canon",
+      "data": {
+        "id": "canon-sync-002-firestore-merge-nests-not-dots",
+        "scope": "global",
+        "category": "architecture",
+        "title": "Firestore set+merge Treats Dotted Keys as Literal Field Names",
+        "rationale": "Firestore's `set(data, {merge: true})` interprets keys in `data` LITERALLY. A key like `'ziva_feeding.2026-04-17'` becomes a top-level field with a literal dot in its name — NOT a nested field path. Dotted-path semantics apply only to `update()`. Diffing algorithms that produce dotted keys (designed for `update()` efficiency) must be converted to nested object structure before being passed to `set+merge`.\n\nSproutLab B4 (April 2026) is the canonical failure: `_syncDeepDiff` recursed into nested object values and produced dotted keys like `'ziva_feeding.2026-04-17'`. `_syncFlushSingleDoc` then passed these directly to `docRef.set(payload, {merge: true})`. Firestore created TWO top-level fields — the original `ziva_feeding` map (from seed) and a literal-dotted `ziva_feeding.2026-04-17` field (from the bad push) — as siblings at document root. The listener, which reads `clean['ziva_feeding']`, could only see the stale original map; the new data was stranded in the dotted-name literal field, invisible to the read path. On every subsequent listener fire, local was overwritten with stale remote.\n\nShort form: **Update dots, set nests.** `update()` consumes dotted paths; `set+merge` consumes nested objects. Pick the right consumer or convert the diff output.\n\nThe affirmative pattern: a `_syncNestDottedPaths` (or equivalent) helper that converts `{'a.b.c': v}` into `{a: {b: {c: v}}}` before passing to `set+merge`. Document keys without dots in their names pass through unchanged.",
+        "created": "2026-04-17",
+        "status": "candidate",
+        "superseded_by": null,
+        "references": [
+          "sproutlab-spec-2026-04-17-aurelius-device-sync-reconcile",
+          "sproutlab-session-2026-04-17-lyra-c0-deploy",
+          "canon-sync-001-shadow-is-observation-not-intent (companion canon from same incident)"
+        ],
+        "_deleted": false,
+        "_deleted_date": null
+      }
+    }
+  ],
+  "journal_addendum": {
+    "parent_session_id": "s-2026-04-17-01",
+    "note": "Within hours of C0 v3 canary passing, multi-device testing (wife joining household) surfaced B4 — a distinct bug from B1/B2/B3 in the same sync layer. Four-Governor review chain reconvened in abbreviated form. C0 v3.1 shipped ~15 LOC net on top of C0 v3. This demonstrates that single-device canary is necessary but not sufficient; multi-device state with nested-object SYNC_KEYS required its own verification. Add to Governance Milestones: staged monitoring windows (canary → multi-device → 72h quiet) are a candidate workflow pattern."
+  }
+}

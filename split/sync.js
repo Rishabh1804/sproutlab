@@ -513,6 +513,31 @@ function _syncDeepDiff(oldObj, newObj, path) {
   return { updates: updates, deletes: deletes };
 }
 
+// ─── C0 v3.1 Fix B4: nest dotted paths before set+merge ───
+// _syncDeepDiff produces dotted keys like 'ziva_feeding.2026-04-17' for
+// nested object updates. Those are correct for Firestore's update() method
+// (dotted paths → nested field updates). But _syncFlushSingleDoc uses
+// set(payload, {merge:true}), which interprets keys LITERALLY — dotted keys
+// become top-level fields with dots in their names, not nested paths.
+// This helper converts `{'a.b.c': v}` to `{a: {b: {c: v}}}` so set+merge
+// correctly nests. Called on diff.updates only; diff.deletes goes through
+// update() and can keep dotted paths.
+function _syncNestDottedPaths(flatObj) {
+  var result = {};
+  Object.keys(flatObj).forEach(function(key) {
+    var parts = key.split('.');
+    var cursor = result;
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (!cursor[parts[i]] || typeof cursor[parts[i]] !== 'object') {
+        cursor[parts[i]] = {};
+      }
+      cursor = cursor[parts[i]];
+    }
+    cursor[parts[parts.length - 1]] = flatObj[key];
+  });
+  return result;
+}
+
 // ─── Per-Entry Array Diff (§8.2) ───
 // Returns { added: [entry], edited: [{ id, updates }], deleted: [id] }
 function _syncDiffArray(oldArr, newArr) {
@@ -693,13 +718,21 @@ function _syncFlushSingleDoc(hRef, collection) {
     __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  // Apply updates via setDoc(merge) and deletes via updateDoc
+  // Apply updates via setDoc(merge) and deletes via updateDoc.
+  // C0 v3.1 Fix B4: diff.updates may contain dotted keys (from nested-object
+  // recursion in _syncDeepDiff). set+merge interprets dotted keys LITERALLY,
+  // creating top-level fields with dots in their names rather than nested
+  // field updates. Nest dotted paths back to an object tree before set+merge
+  // so Firestore merges them into the right nested positions.
   var promises = [];
   if (hasUpdates) {
-    var updatePayload = Object.assign({}, diff.updates, syncMeta);
+    var nested = _syncNestDottedPaths(diff.updates);
+    var updatePayload = Object.assign({}, nested, syncMeta);
     promises.push(docRef.set(updatePayload, { merge: true }));
   }
   if (hasDeletes) {
+    // Deletes go through update() which DOES support dotted paths correctly,
+    // so leave diff.deletes flat.
     var deletePayload = Object.assign({}, diff.deletes, syncMeta);
     promises.push(docRef.update(deletePayload));
   }
