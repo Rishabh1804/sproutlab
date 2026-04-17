@@ -1,0 +1,60 @@
+{
+  "_snippet_version": 1,
+  "_status": "DRAFT — DO NOT IMPORT UNTIL 48H POST-DEPLOY VERIFICATION",
+  "_consul_condition": "Co3 — Promote after C0 v3 holds in production for 48h with no regression. Architect makes final call on promotion.",
+  "_authored": "2026-04-17",
+  "_authored_by": "Lyra (Builder, SproutLab) + Consul",
+  "snippet_type": "canons",
+  "operations": [
+    {
+      "op": "new_canon",
+      "data": {
+        "id": "canon-sync-001-shadow-is-observation-not-intent",
+        "scope": "global",
+        "category": "architecture",
+        "title": "Sync Shadow Represents Observed Remote State, Never Intended Local State",
+        "rationale": "In a write-through-cache sync architecture, the in-memory shadow used to compute diffs against local must be populated only from observation of the remote (listener fires, successful-push acknowledgments) — never from the local write itself. Shadow = observation. Local = intent. If shadow mirrors intent, the diff collapses and writes silently fail to propagate.\n\nSproutLab B3 (April 2026) is the canonical failure case: `_syncShadow[key] = _syncCloneDeep(val)` at `sync.js:471` inside `syncWrite` contaminated the flush diff baseline. For every single-doc edit, the flush computed `shadow === current` and produced no delta — the push never happened. Edits stayed local-only for ~3 days. On refresh, listeners treated stale Firestore state as authoritative and overwrote local with pre-sync-bug values, producing the 'data disappearing on every refresh' symptom.\n\nCodex's WAL-vs-SHA separation is the affirmative pattern: the WAL entry records intent (pending/syncing/synced/failed states); the GitHub SHA field records confirmed remote state. They are structurally distinct, and no code path writes the SHA until a push round-trip succeeds.\n\nThe canon codifies the distinction: any sync layer in the Republic must keep observation and intent in separate fields. Conflating them is a structural bug even when it appears to work in single-device testing.",
+        "created": "2026-04-17",
+        "status": "candidate",
+        "superseded_by": null,
+        "references": [
+          "sproutlab-spec-2026-04-17-aurelius-device-sync-reconcile",
+          "sproutlab-session-2026-04-17-lyra-c0-deploy",
+          "codex-WAL-schema-CODEX_QUICK_REFERENCE-section-1"
+        ],
+        "_deleted": false,
+        "_deleted_date": null
+      }
+    }
+  ],
+  "journal": [
+    {
+      "date": "2026-04-17",
+      "sessions": [
+        {
+          "id": "s-2026-04-17-01",
+          "summary": "SproutLab sync emergency C0 v3 — B3 discovered (shadow contaminated by local intent), four-governor review (Maren/Kael/Cipher/Consul), Option Y deploy chosen (delete household + reseed). Spec §6 reconcile unchanged; remains Session 1 work.",
+          "volumes_touched": ["sproutlab", "codex"],
+          "chapters_touched": ["device-sync"],
+          "decisions": [
+            "candidate-canon-sync-001-shadow-is-observation-not-intent",
+            "HR-14 promotion deferred to post-Session-1",
+            "deploy procedure: Option Y (household reseed) over Fix 6 (reconcile-lite in C0)"
+          ],
+          "bugs_found": 3,
+          "bugs_fixed": 3,
+          "duration_minutes": null,
+          "open_todos": [
+            "ship C0 v3 (pending Architect canary)",
+            "verify B3 fix in production over 48h",
+            "promote canon-sync-001 post-verification",
+            "Codex snippet backfill (Consul Co4)",
+            "SEP check-in (Consul Co4)"
+          ],
+          "handoff": "Next session: Session 1 reconcile (spec C1-C5) if C0 v3 holds. Not before 48h post-deploy.",
+          "screenshots": []
+        }
+      ]
+    }
+  ]
+}

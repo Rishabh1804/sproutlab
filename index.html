@@ -60706,6 +60706,65 @@ var _syncCrashCount = 0;
 var _syncDisabled = false;
 const SYNC_CRASH_LIMIT = 3;
 
+// ─── C0 Fix 2/5: Listener-ready tracking (per-collection) ───
+// A collection's flush is deferred until its listener has first-fired (so the
+// shadow is populated with real remote state, not null). A fallback timer
+// marks ready after an adaptive wait to prevent silent stranding if the
+// listener never fires (network failure, Firestore permission issue, etc.).
+var _syncReady = {};          // collection name → true when listener has first-fired
+var _syncReadyTimers = {};    // collection name → fallback timer handle
+var _syncPendingFlush = {};   // collection name → true if a flush was deferred
+
+// Adaptive fallback (spec §4.6) — scales with connection quality.
+function _syncReconcileFallbackMs() {
+  var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!c || !c.effectiveType) return 15000;
+  switch (c.effectiveType) {
+    case 'slow-2g': return 30000;
+    case '2g':     return 20000;
+    case '3g':     return 12000;
+    case '4g':     return 6000;
+    default:       return 15000;
+  }
+}
+
+function _syncArmReadyFallback(collection) {
+  if (_syncReadyTimers[collection]) return;  // already armed
+  var ms = _syncReconcileFallbackMs();
+  _syncReadyTimers[collection] = setTimeout(function() {
+    if (!_syncReady[collection]) {
+      console.warn('[sync] Listener-ready fallback for ' + collection +
+        ' after ' + ms + 'ms — marking ready; flush may proceed with stale shadow.');
+      _syncMarkReady(collection);
+    }
+  }, ms);
+}
+
+function _syncMarkReady(collection) {
+  if (_syncReady[collection]) return;
+  _syncReady[collection] = true;
+  if (_syncReadyTimers[collection]) {
+    clearTimeout(_syncReadyTimers[collection]);
+    _syncReadyTimers[collection] = null;
+  }
+  // Fire any pending flush that was deferred waiting for this listener.
+  if (_syncPendingFlush[collection]) {
+    _syncPendingFlush[collection] = false;
+    // Cipher C3: breaker interaction
+    if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
+      console.warn('[sync] Skipping ready-pending-flush for ' + collection +
+        ' — circuit breaker tripped.');
+      return;
+    }
+    try {
+      if (!_syncHouseholdId || !_syncUser) return;
+      var freshDb = firebase.firestore();
+      var freshRef = freshDb.collection('households').doc(_syncHouseholdId);
+      _syncFlushSingleDoc(freshRef, collection);
+    } catch(e) { _syncRecordCrash('ready-pending-flush/' + collection, e); }
+  }
+}
+
 function _syncRecordCrash(source, err) {
   _syncCrashCount++;
   console.error('[sync] Crash #' + _syncCrashCount + ' in ' + source + ':', err);
@@ -60744,6 +60803,32 @@ const SYNC_KEYS = {
   [KEYS.coldEpisodes]:       { collection: 'episodes',    model: 'single-doc' },
   [KEYS.foods]:              { collection: 'foods',       model: 'single-doc' },
 };
+
+// ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
+// Keys where an empty state is never a valid user intent — only a bug signal.
+// For these keys, a listener snapshot delivering [] or {} with local non-empty
+// is skipped with a warning. For any key NOT in this set, legitimate user
+// deletions (clear-all) propagate normally via listener overwrite.
+//
+// Per-key justification:
+//   doctors — seeded with default pediatrician; "clear all doctors" is not a
+//             user intent, it's a bug (would drop the default too)
+//   foods   — persist-defaults populates; clearing foods breaks diet logging
+//             and is never a deliberate user action
+//   vacc    — the vaccination schedule; parent edits entries, never deletes
+//             the whole schedule
+//   meds    — Ziva's active medications (Vit D3 at minimum); clear-all is a
+//             medical-safety concern, never a user intent
+//
+// vaccBooked is MEANINGFUL_NULL territory (spec §8), not ALWAYS_POPULATED.
+// Episode keys, notes, activityLog, feeding/sleep/poop/visits: user may
+// legitimately clear these — do NOT add to this set without Maren review.
+const ALWAYS_POPULATED_KEYS = new Set([
+  KEYS.doctors,
+  KEYS.foods,
+  KEYS.vacc,
+  KEYS.meds
+]);
 
 // Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
 var _syncCollectionToKeys = {};
@@ -61030,6 +61115,15 @@ function _syncDeleteCollection(ref) {
 function _syncDetachListeners() {
   _syncListenerUnsubs.forEach(function(unsub) { unsub(); });
   _syncListenerUnsubs = [];
+  // C0 Fix 5 (Kael): reset listener-ready state so next attach re-earns
+  // confirmation. Without this, a re-attach cycle would flush immediately
+  // with the previous session's stale shadow.
+  _syncReady = {};
+  Object.keys(_syncReadyTimers).forEach(function(c) {
+    if (_syncReadyTimers[c]) clearTimeout(_syncReadyTimers[c]);
+  });
+  _syncReadyTimers = {};
+  _syncPendingFlush = {};
 }
 
 // ═══════════════════════════════════════════
@@ -61145,8 +61239,11 @@ function _syncDiffArray(oldArr, newArr) {
 // SAFETY: entire function is try/catch — sync must never break save()
 function syncWrite(key, val, old) {
   try {
-    // Always update shadow
-    _syncShadow[key] = _syncCloneDeep(val);
+    // NOTE (C0 Fix 3 — B3): shadow is NOT written here. Shadow represents
+    // last-observed remote state (from listener) or last-confirmed-pushed
+    // state (post-flush). Writing shadow from local-intent contaminated the
+    // flush diff baseline and made single-doc edits silently no-op.
+    // See docs/handoffs/session-2026-04-17-lyra-c0-deploy.md for the trace.
 
     // Guards
     if (_syncDisabled) return;                  // Layer 4: auto-disabled after crashes
@@ -61239,6 +61336,17 @@ function _syncFlushSingleDoc(hRef, collection) {
   var keysForCol = _syncCollectionToKeys[collection];
   if (!keysForCol || keysForCol.length === 0) return;
 
+  // C0 Fix 2: gate on listener-ready — don't push with a blind shadow.
+  // If the listener hasn't first-fired for this collection, _syncShadow
+  // may not reflect Firestore's real state. Defer and let _syncMarkReady
+  // retry once the listener (or fallback timer) confirms remote state.
+  if (!_syncReady[collection]) {
+    _syncPendingFlush[collection] = true;
+    console.warn('[sync] Flush deferred for ' + collection +
+      ' — listener not ready. Will retry on listener-ready.');
+    return;
+  }
+
   // Build a combined object from current localStorage
   var current = {};
   for (var i = 0; i < keysForCol.length; i++) {
@@ -61317,6 +61425,9 @@ function _syncAttachListeners(hId) {
       console.error('[sync] Listener error on ' + col + ':', err);
     });
     _syncListenerUnsubs.push(unsub);
+    // C0 Fix 2/5: arm adaptive fallback so flush gate doesn't strand writes
+    // if this listener never fires (permission issue, network, etc.).
+    _syncArmReadyFallback(col);
   });
 
   // Single-doc collections (in /singles/{docName})
@@ -61328,6 +61439,7 @@ function _syncAttachListeners(hId) {
       console.error('[sync] Listener error on singles/' + docName + ':', err);
     });
     _syncListenerUnsubs.push(unsub);
+    _syncArmReadyFallback(docName);
   });
 
   // Household doc listener (member changes, invite code)
@@ -61344,102 +61456,159 @@ function _syncAttachListeners(hId) {
 
 // ─── Handle Per-Entry Snapshot ───
 function _syncHandlePerEntrySnapshot(collection, snapshot) {
-  // Find which localStorage key maps to this collection
-  var lsKey = null;
-  var allKeys = Object.keys(SYNC_KEYS);
-  for (var i = 0; i < allKeys.length; i++) {
-    if (SYNC_KEYS[allKeys[i]].collection === collection && SYNC_KEYS[allKeys[i]].model === 'per-entry') {
-      lsKey = allKeys[i];
-      break;
-    }
-  }
-  if (!lsKey) return;
-
-  // Build full array from Firestore snapshot
-  var entries = [];
-  snapshot.forEach(function(doc) {
-    var data = doc.data();
-    // Strip __sync_* metadata before storing locally
-    var clean = {};
-    var keys = Object.keys(data);
-    for (var j = 0; j < keys.length; j++) {
-      if (keys[j].indexOf('__sync_') !== 0) {
-        clean[keys[j]] = data[keys[j]];
+  // C0 Cipher C2: mark-ready in finally so defer paths don't suppress it.
+  try {
+    // Find which localStorage key maps to this collection
+    var lsKey = null;
+    var allKeys = Object.keys(SYNC_KEYS);
+    for (var i = 0; i < allKeys.length; i++) {
+      if (SYNC_KEYS[allKeys[i]].collection === collection && SYNC_KEYS[allKeys[i]].model === 'per-entry') {
+        lsKey = allKeys[i];
+        break;
       }
     }
-    // Ensure id field matches doc ID
-    clean.id = doc.id;
-    entries.push(clean);
-  });
+    if (!lsKey) return;
 
-  // Compare to current localStorage
-  var current = load(lsKey, []);
-  if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
+    // Build full array from Firestore snapshot
+    var entries = [];
+    snapshot.forEach(function(doc) {
+      var data = doc.data();
+      // Strip __sync_* metadata before storing locally
+      var clean = {};
+      var keys = Object.keys(data);
+      for (var j = 0; j < keys.length; j++) {
+        if (keys[j].indexOf('__sync_') !== 0) {
+          clean[keys[j]] = data[keys[j]];
+        }
+      }
+      // Ensure id field matches doc ID
+      clean.id = doc.id;
+      entries.push(clean);
+    });
 
-  // SAFETY: never overwrite non-empty local data with empty Firestore (prevents data wipe)
-  if (entries.length === 0 && Array.isArray(current) && current.length > 0) {
-    console.warn('[sync] Skipping empty snapshot for ' + collection + ' — local has ' + current.length + ' entries');
-    return;
-  }
+    // Compare to current localStorage
+    var current = load(lsKey, []);
+    if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
 
-  // Count changes for toast
-  var changeCount = 0;
-  snapshot.docChanges().forEach(function(change) {
-    if (change.type !== 'added' || !snapshot.metadata.hasPendingWrites) {
-      changeCount++;
+    // C0 Fix 4 (Kael): defer if our local write is pending.
+    // Per-entry writes fire immediately (not debounced), so the window is
+    // narrow; check _syncDebounceTimers defensively in case the collection
+    // is shared with a single-doc path in the future.
+    if (_syncDebounceTimers[collection]) {
+      console.warn('[sync] Per-entry listener deferring for ' + collection +
+        ' — pending local debounce in same collection.');
+      return;
     }
-  });
 
-  // Write to localStorage via save() with _remoteWriteDepth guard
-  _remoteWriteDepth++;
-  try { save(lsKey, entries); }
-  finally { _remoteWriteDepth--; }
+    // SAFETY (c13a7de): never overwrite non-empty local with empty Firestore
+    if (entries.length === 0 && Array.isArray(current) && current.length > 0) {
+      console.warn('[sync] Skipping empty snapshot for ' + collection + ' — local has ' + current.length + ' entries');
+      return;
+    }
 
-  // Update shadow
-  _syncShadow[lsKey] = _syncCloneDeep(entries);
+    // Count changes for toast
+    var changeCount = 0;
+    snapshot.docChanges().forEach(function(change) {
+      if (change.type !== 'added' || !snapshot.metadata.hasPendingWrites) {
+        changeCount++;
+      }
+    });
 
-  // Toast (skip during migration/reconcile, skip self-echo)
-  if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
-    _syncQueueToast(collection, changeCount);
+    // Write to localStorage via save() with _remoteWriteDepth guard
+    _remoteWriteDepth++;
+    try { save(lsKey, entries); }
+    finally { _remoteWriteDepth--; }
+
+    // Update shadow
+    _syncShadow[lsKey] = _syncCloneDeep(entries);
+
+    // Toast (skip during migration/reconcile, skip self-echo)
+    if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
+      _syncQueueToast(collection, changeCount);
+    }
+  } finally {
+    _syncMarkReady(collection);
   }
 }
 
 // ─── Handle Single-Doc Snapshot ───
 function _syncHandleSingleDocSnapshot(docName, doc) {
-  if (!doc.exists) return;
-  var data = doc.data();
+  // C0 Cipher C2: _syncMarkReady MUST run on every exit path, including
+  // early returns and defer paths, so the collection's ready-state is
+  // confirmed even when no save happens. Wrap in try/finally.
+  try {
+    // !doc.exists is still a confirmed "nothing here yet" state from Firestore.
+    if (!doc.exists) return;
+    var data = doc.data();
 
-  // Strip __sync_* metadata
-  var clean = {};
-  var dataKeys = Object.keys(data);
-  for (var i = 0; i < dataKeys.length; i++) {
-    if (dataKeys[i].indexOf('__sync_') !== 0) {
-      clean[dataKeys[i]] = data[dataKeys[i]];
+    // Strip __sync_* metadata
+    var clean = {};
+    var dataKeys = Object.keys(data);
+    for (var i = 0; i < dataKeys.length; i++) {
+      if (dataKeys[i].indexOf('__sync_') !== 0) {
+        clean[dataKeys[i]] = data[dataKeys[i]];
+      }
     }
-  }
 
-  // Find which localStorage KEYS map to this collection
-  var lsKeys = _syncCollectionToKeys[docName];
-  if (!lsKeys || lsKeys.length === 0) return;
+    // Find which localStorage KEYS map to this collection
+    var lsKeys = _syncCollectionToKeys[docName];
+    if (!lsKeys || lsKeys.length === 0) return;
 
-  var anyChanged = false;
+    var anyChanged = false;
 
-  for (var j = 0; j < lsKeys.length; j++) {
-    var key = lsKeys[j];
-    var remoteVal = clean[key] !== undefined ? clean[key] : null;
-    var current = load(key, null);
-    if (JSON.stringify(current) === JSON.stringify(remoteVal)) continue;
-    if (remoteVal === null) continue; // don't overwrite local with missing remote
+    // C0 guard ordering at loop site (Cipher C1):
+    //   [E]  existing JSON equality — cheapest no-op skip
+    //   [K4] Kael's defer-on-pending-debounce — if our local write is about
+    //        to flush, don't let this snapshot clobber it
+    //   [N]  existing null-remote guard — absent field preserves local
+    //   [M1] Maren's ALWAYS_POPULATED_KEYS empty-guard — only for the
+    //        curated allowlist; user-clearable keys propagate normally
+    for (var j = 0; j < lsKeys.length; j++) {
+      var key = lsKeys[j];
+      var remoteVal = clean[key] !== undefined ? clean[key] : null;
+      var current = load(key, null);
 
-    anyChanged = true;
-    _remoteWriteDepth++;
-    try { save(key, remoteVal); }
-    finally { _remoteWriteDepth--; }
-    _syncShadow[key] = _syncCloneDeep(remoteVal);
-  }
+      // [E] equality skip
+      if (JSON.stringify(current) === JSON.stringify(remoteVal)) continue;
 
-  if (anyChanged && !_syncIsMigrating && !_syncIsReconciling) {
-    _syncQueueToast(docName, 1);
+      // [K4] defer if our local write is pending flush in this collection
+      var _cfg = SYNC_KEYS[key];
+      if (_cfg && _cfg.collection && _syncDebounceTimers[_cfg.collection]) {
+        console.warn('[sync] Listener deferring save for ' + key +
+          ' — pending local write in debounce queue for ' + _cfg.collection);
+        continue;
+      }
+
+      // [N] null-remote — preserve local
+      if (remoteVal === null) continue;
+
+      // [M1] ALWAYS_POPULATED_KEYS empty-remote guard
+      if (ALWAYS_POPULATED_KEYS.has(key)) {
+        var remoteEmptyArr = Array.isArray(remoteVal) && remoteVal.length === 0;
+        var remoteEmptyObj = remoteVal && typeof remoteVal === 'object' &&
+          !Array.isArray(remoteVal) && Object.keys(remoteVal).length === 0;
+        var localHasArr = Array.isArray(current) && current.length > 0;
+        var localHasObj = current && typeof current === 'object' &&
+          !Array.isArray(current) && Object.keys(current).length > 0;
+        if ((remoteEmptyArr && localHasArr) || (remoteEmptyObj && localHasObj)) {
+          console.warn('[sync] ALWAYS_POPULATED guard fired for ' + key +
+            '; remote=empty, local has data. Skipping overwrite.');
+          continue;
+        }
+      }
+
+      anyChanged = true;
+      _remoteWriteDepth++;
+      try { save(key, remoteVal); }
+      finally { _remoteWriteDepth--; }
+      _syncShadow[key] = _syncCloneDeep(remoteVal);
+    }
+
+    if (anyChanged && !_syncIsMigrating && !_syncIsReconciling) {
+      _syncQueueToast(docName, 1);
+    }
+  } finally {
+    _syncMarkReady(docName);
   }
 }
 
