@@ -11,3 +11,6 @@ _bugInit();
 if (window.location.search.indexOf('nosync') === -1) {
   try { initFirebase(); } catch(e) { console.error('[sync] initFirebase crashed:', e); }
 }
+// Sync visibility indicator (Phase 1 — sl-1-2). Runs even under ?nosync so
+// the header still reflects true network state from navigator.onLine alone.
+try { initSyncVisibility(); } catch(e) { console.error('[sync-vis] init crashed:', e); }

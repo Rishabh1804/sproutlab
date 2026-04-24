@@ -65,6 +65,13 @@ function _syncArmReadyFallback(collection) {
 function _syncMarkReady(collection) {
   if (_syncReady[collection]) return;
   _syncReady[collection] = true;
+  // Visibility store r2: first listener-ready is proof of Firestore activity
+  // — collapses the 'connecting' state even if onSnapshotsInSync is not yet
+  // available or has not yet landed.
+  if (typeof _syncHasEverFired !== 'undefined' && !_syncHasEverFired) {
+    _syncHasEverFired = true;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+  }
   if (_syncReadyTimers[collection]) {
     clearTimeout(_syncReadyTimers[collection]);
     _syncReadyTimers[collection] = null;
@@ -72,6 +79,7 @@ function _syncMarkReady(collection) {
   // Fire any pending flush that was deferred waiting for this listener.
   if (_syncPendingFlush[collection]) {
     _syncPendingFlush[collection] = false;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Cipher C3: breaker interaction
     if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
       console.warn('[sync] Skipping ready-pending-flush for ' + collection +
@@ -99,7 +107,12 @@ function _syncRecordCrash(source, err) {
       _syncDebounceTimers[k] = null;
     });
     console.error('[sync] Auto-disabled after ' + _syncCrashCount + ' crashes. App is local-only.');
-    showQLToast('Sync paused — too many errors. Reload to retry.');
+    // Cipher blocker #5 (r2): the 'Sync paused' toast is retired. The halted
+    // state is now surfaced persistently in the header indicator + offline
+    // badge, with a reload affordance. Transient toast on top would be the
+    // three-surfaces-for-one-state redundancy the derived store is meant
+    // to eliminate.
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
   }
 }
 
@@ -446,6 +459,12 @@ function _syncDetachListeners() {
   });
   _syncReadyTimers = {};
   _syncPendingFlush = {};
+  // Visibility store r2: re-attach is a fresh session — wipe per-key pending
+  // state and the has-ever-fired gate so the indicator honestly returns to
+  // 'connecting' until the new listeners confirm activity.
+  if (typeof _syncPendingByKey !== 'undefined') _syncPendingByKey = {};
+  if (typeof _syncHasEverFired !== 'undefined') _syncHasEverFired = false;
+  if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
 // ═══════════════════════════════════════════
@@ -664,10 +683,12 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
 // ─── Single-Doc Write (debounced) ───
 function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   var timerKey = collection; // debounce per collection, not per key
-  if (_syncDebounceTimers[timerKey]) clearTimeout(_syncDebounceTimers[timerKey]);
+  var wasQueued = !!_syncDebounceTimers[timerKey];
+  if (wasQueued) clearTimeout(_syncDebounceTimers[timerKey]);
 
   _syncDebounceTimers[timerKey] = setTimeout(function() {
     _syncDebounceTimers[timerKey] = null;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Re-check state at flush time (guards against stale hRef from debounce delay)
     if (_syncDisabled || !_syncHouseholdId || !_syncUser) return;
     try {
@@ -676,6 +697,7 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
       _syncFlushSingleDoc(freshRef, collection);
     } catch(e) { _syncRecordCrash('debounce-flush/' + collection, e); }
   }, DEBOUNCE_MS);
+  if (!wasQueued && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
 function _syncFlushSingleDoc(hRef, collection) {
@@ -689,6 +711,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // retry once the listener (or fallback timer) confirms remote state.
   if (!_syncReady[collection]) {
     _syncPendingFlush[collection] = true;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     console.warn('[sync] Flush deferred for ' + collection +
       ' — listener not ready. Will retry on listener-ready.');
     return;
@@ -771,9 +794,12 @@ function _syncAttachListeners(hId) {
   var perEntryCollections = Object.keys(_peSet);
   var singleDocNames = Object.keys(_sdSet);
 
-  // Per-entry collections — each handler wrapped in try/catch for isolation
+  // Per-entry collections — each handler wrapped in try/catch for isolation.
+  // {includeMetadataChanges:true} so pending→ACK transitions fire the handler
+  // and the visibility store can read snapshot.metadata.hasPendingWrites.
+  // Data-equality checks inside the handler short-circuit metadata-only fires.
   perEntryCollections.forEach(function(col) {
-    var unsub = hRef.collection(col).onSnapshot(function(snapshot) {
+    var unsub = hRef.collection(col).onSnapshot({ includeMetadataChanges: true }, function(snapshot) {
       try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
       catch(e) { _syncRecordCrash('per-entry/' + col, e); }
     }, function(err) {
@@ -787,7 +813,7 @@ function _syncAttachListeners(hId) {
 
   // Single-doc collections (in /singles/{docName})
   singleDocNames.forEach(function(docName) {
-    var unsub = hRef.collection('singles').doc(docName).onSnapshot(function(doc) {
+    var unsub = hRef.collection('singles').doc(docName).onSnapshot({ includeMetadataChanges: true }, function(doc) {
       try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
       catch(e) { _syncRecordCrash('single-doc/' + docName, e); }
     }, function(err) {
@@ -811,6 +837,11 @@ function _syncAttachListeners(hId) {
 
 // ─── Handle Per-Entry Snapshot ───
 function _syncHandlePerEntrySnapshot(collection, snapshot) {
+  // Cipher r2: record post-submit pending-write state for this collection
+  // before any early return. Listener fires with {includeMetadataChanges:true}
+  // so this catches pending→ACK transitions even when no data changed.
+  _syncRecordPending(collection, !!(snapshot.metadata && snapshot.metadata.hasPendingWrites));
+
   // C0 Cipher C2: mark-ready in finally so defer paths don't suppress it.
   try {
     // Find which localStorage key maps to this collection
@@ -888,6 +919,10 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
 
 // ─── Handle Single-Doc Snapshot ───
 function _syncHandleSingleDocSnapshot(docName, doc) {
+  // Cipher r2: record post-submit pending-write state for this doc before
+  // any early return. Listener fires with {includeMetadataChanges:true}.
+  _syncRecordPending(docName, !!(doc && doc.metadata && doc.metadata.hasPendingWrites));
+
   // C0 Cipher C2: _syncMarkReady MUST run on every exit path, including
   // early returns and defer paths, so the collection's ready-state is
   // confirmed even when no save happens. Wrap in try/finally.
@@ -1252,3 +1287,210 @@ function _syncConfirmJoin() {
   if (!code.trim()) { showQLToast('Enter invite code'); return; }
   syncJoinByCode(code.trim());
 }
+
+// ─── Sync Visibility (Phase 1 — sl-1-2, r2) ───
+// Derived store fusing four signals:
+//   (a) navigator.onLine + window online/offline events
+//   (b) Firestore drain via db.onSnapshotsInSync — definitive ACK that local
+//       cache + IDB persistence queue + server are all in sync
+//   (c) Post-submit pending-writes from snapshot.metadata.hasPendingWrites
+//       (recorded per collection/doc by the existing listener handlers, which
+//       now subscribe with {includeMetadataChanges:true})
+//   (d) Pre-submit queue: _syncDebounceTimers (active count) + _syncPendingFlush
+//
+// Five logical states, three visual colors (color mapping lives in CSS):
+//   connecting — cold boot: no listener has fired, no drain event yet, pending===0
+//   online     — network up, fully drained
+//   syncing    — network up, pending > 0
+//   offline    — !navigator.onLine
+//   halted     — _syncDisabled === true (circuit breaker tripped; reload-required)
+//
+// Disjointness contract:
+//   pre-submit (our maps) and post-submit (hasPendingWrites map) are phases
+//   of a write's life. A write is in _syncDebounceTimers until the timer
+//   fires; the fire callback nulls the entry and calls .set(), whose
+//   snapshot.metadata.hasPendingWrites then reflects the submission.
+//   Mutually exclusive at any instant — counts are additive by construction.
+
+// _syncPendingByKey — key = collection name for per-entry listeners (caretickets,
+//   etc.), key = docName for single-doc listeners (tracking, medical, etc.).
+// Value is the last-seen QuerySnapshot/DocumentSnapshot metadata.hasPendingWrites.
+//
+// SEMANTIC NOTE (Cipher PR #4 nit 2, r3 option b): Firestore's
+// QuerySnapshot.metadata.hasPendingWrites is a SINGLE boolean per collection
+// — true iff ANY doc in the collection has a pending write. Counting entries
+// in this map therefore yields the number of COLLECTIONS with one or more
+// pending writes, not the number of individual writes. Five queued meals in
+// `tracking` → badge reads "(1 pending)", not "(5 pending)". The direction
+// is honest (`pending > 0` correctly reports "something is queued") and the
+// copy "(N pending)" reads naturally at the user level. True per-write
+// precision would require iterating snapshot.docChanges() and keying by
+// `${collection}/${doc.id}` in _syncRecordPending — deferred to a phase-2
+// refinement if the count's user-visible granularity becomes a concern.
+var _syncPendingByKey = {};
+var _syncVisibilityListeners = [];       // subscriber callbacks
+var _syncLastVisibility = null;          // last emitted snapshot (for change-detect)
+var _syncVisibilityNotifyTimer = null;   // coalesces burst notifies
+var _syncSnapshotsInSyncUnsub = null;    // Firestore drain listener unsub
+var _syncVisibilityInitDone = false;
+var _syncHasEverFired = false;           // any listener (per-entry/single-doc) first-fired OR onSnapshotsInSync landed
+// (r3) Indicator click is routed through the data-action dispatcher (HR-3);
+// no bespoke document click handler is bound here.
+
+function _syncRecordPending(key, isPending) {
+  var prev = !!_syncPendingByKey[key];
+  if (prev === !!isPending) return;
+  if (isPending) _syncPendingByKey[key] = true;
+  else delete _syncPendingByKey[key];
+  _syncNotifyVisibility();
+}
+
+function _syncCountPreSubmit() {
+  var n = 0;
+  for (var k in _syncDebounceTimers) {
+    if (Object.prototype.hasOwnProperty.call(_syncDebounceTimers, k) && _syncDebounceTimers[k]) n++;
+  }
+  for (var c in _syncPendingFlush) {
+    if (Object.prototype.hasOwnProperty.call(_syncPendingFlush, c) && _syncPendingFlush[c]) n++;
+  }
+  return n;
+}
+
+function _syncCountPostSubmit() {
+  var n = 0;
+  for (var k in _syncPendingByKey) {
+    if (Object.prototype.hasOwnProperty.call(_syncPendingByKey, k) && _syncPendingByKey[k]) n++;
+  }
+  return n;
+}
+
+function syncVisibilityState() {
+  var online = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine !== false : true;
+  var preSubmit  = _syncCountPreSubmit();
+  var postSubmit = _syncCountPostSubmit();
+  var pending = preSubmit + postSubmit;  // disjoint by construction (see header comment)
+  var state, reason;
+
+  // Evaluation order matters: halted is a local fault independent of network,
+  // so it wins over offline. connecting is only valid before any proof of
+  // Firestore activity; it collapses to syncing the moment pending > 0.
+  if (_syncDisabled) {
+    state = 'halted';     reason = 'sync-disabled';
+  } else if (!online) {
+    state = 'offline';    reason = 'no-network';
+  } else if (!_syncHasEverFired && pending === 0) {
+    state = 'connecting'; reason = 'no-listener-yet';
+  } else if (pending > 0) {
+    state = 'syncing';    reason = 'writes-pending';
+  } else {
+    state = 'online';     reason = 'synced';
+  }
+  return { state: state, pending: pending, reason: reason };
+}
+
+function onSyncVisibilityChange(listener) {
+  if (typeof listener !== 'function') return function(){};
+  _syncVisibilityListeners.push(listener);
+  try { listener(syncVisibilityState()); } catch(e) { console.error('[sync-vis] listener threw on subscribe', e); }
+  return function unsubscribe() {
+    var i = _syncVisibilityListeners.indexOf(listener);
+    if (i >= 0) _syncVisibilityListeners.splice(i, 1);
+  };
+}
+
+function _syncNotifyVisibility() {
+  if (_syncVisibilityNotifyTimer) return;
+  _syncVisibilityNotifyTimer = setTimeout(function() {
+    _syncVisibilityNotifyTimer = null;
+    var snap = syncVisibilityState();
+    var prev = _syncLastVisibility;
+    if (prev && prev.state === snap.state && prev.pending === snap.pending && prev.reason === snap.reason) return;
+    _syncLastVisibility = snap;
+    for (var i = 0; i < _syncVisibilityListeners.length; i++) {
+      try { _syncVisibilityListeners[i](snap); } catch(e) { console.error('[sync-vis] listener threw', e); }
+    }
+  }, 120);
+}
+
+function _syncUpdateStatusIndicator(snap) {
+  var btn = document.getElementById('syncStatus');
+  if (!btn) return;
+  if (btn.hasAttribute('hidden')) btn.removeAttribute('hidden');
+  btn.setAttribute('data-state', snap.state);
+
+  // Copy table — one source of truth per logical state; CSS handles color.
+  // aria-label is the long form so screen readers distinguish the two red
+  // states (offline vs halted) that share --tc-danger.
+  var label, title;
+  switch (snap.state) {
+    case 'connecting':
+      label = 'Connecting…';
+      title = 'Connecting to sync…';
+      break;
+    case 'online':
+      label = 'Synced';
+      title = 'All changes synced.';
+      break;
+    case 'syncing':
+      label = 'Syncing' + (snap.pending > 0 ? ' (' + snap.pending + ')' : '…');
+      title = snap.pending + ' change' + (snap.pending === 1 ? '' : 's') + ' pending sync.';
+      break;
+    case 'offline':
+      label = 'Offline';
+      title = 'Offline — changes will sync when back online.' + (snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '');
+      break;
+    case 'halted':
+      label = 'Sync paused';
+      title = 'Sync paused after errors — tap to reload.' + (snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '');
+      break;
+    default:
+      label = ''; title = '';
+  }
+
+  var labEl = btn.querySelector('.sync-indicator__label');
+  if (labEl) labEl.textContent = label;
+  btn.setAttribute('title', title);
+  btn.setAttribute('aria-label', title);
+
+  // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
+  // dispatcher. Only halted is tappable; other states are read-only pills.
+  // Toggle the attribute's presence — the dispatcher gates on its presence,
+  // so other states are non-interactive without any extra guard here.
+  if (snap.state === 'halted') btn.setAttribute('data-action', 'syncReload');
+  else btn.removeAttribute('data-action');
+}
+
+// Dispatcher target for data-action="syncReload". Called from the indicator
+// pill when halted. Reloading re-bootstraps sync and clears the circuit
+// breaker's in-memory crash count.
+function syncReload() {
+  if (typeof window !== 'undefined' && window.location && window.location.reload) {
+    window.location.reload();
+  }
+}
+
+function initSyncVisibility() {
+  if (_syncVisibilityInitDone) return;
+  _syncVisibilityInitDone = true;
+  if (typeof window !== 'undefined') {
+    var bump = function() { _syncNotifyVisibility(); };
+    window.addEventListener('online',  bump);
+    window.addEventListener('offline', bump);
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        var db = firebase.firestore();
+        if (typeof db.onSnapshotsInSync === 'function') {
+          _syncSnapshotsInSyncUnsub = db.onSnapshotsInSync(function() {
+            // First drain event = definitive proof of Firestore activity.
+            // Collapses 'connecting' to 'online' (or 'syncing' if writes are
+            // queued — ordering in syncVisibilityState handles that).
+            _syncHasEverFired = true;
+            _syncNotifyVisibility();
+          });
+        }
+      }
+    } catch(e) { /* non-fatal — derived store still works from counters */ }
+  }
+  onSyncVisibilityChange(_syncUpdateStatusIndicator);
+}
+
