@@ -75,13 +75,15 @@ pending = pre-submit + post-submit   // disjoint by construction
 
 ### Equation
 
+Listed in shipped evaluation order (matches `syncVisibilityState()` in `split/sync.js`). A reader transcribing the piecewise equation gets the correct branch precedence.
+
 ```
-state = connecting  if  no listener has first-fired
+state = halted      if  _syncDisabled === true
+      = offline     if  !navigator.onLine
+      = connecting  if  no listener has first-fired
                         && no onSnapshotsInSync event has landed
                         && pending === 0
-      = halted      if  _syncDisabled === true
-      = offline     if  !navigator.onLine
-      = syncing     if  online && pending > 0
+      = syncing     if  pending > 0
       = online      otherwise
 ```
 
