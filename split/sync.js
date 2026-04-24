@@ -1319,7 +1319,8 @@ var _syncVisibilityNotifyTimer = null;   // coalesces burst notifies
 var _syncSnapshotsInSyncUnsub = null;    // Firestore drain listener unsub
 var _syncVisibilityInitDone = false;
 var _syncHasEverFired = false;           // any listener (per-entry/single-doc) first-fired OR onSnapshotsInSync landed
-var _syncVisibilityClickBound = false;   // guard for #syncStatus click binding
+// (r3) Indicator click is routed through the data-action dispatcher (HR-3);
+// no bespoke document click handler is bound here.
 
 function _syncRecordPending(key, isPending) {
   var prev = !!_syncPendingByKey[key];
@@ -1435,14 +1436,22 @@ function _syncUpdateStatusIndicator(snap) {
   if (labEl) labEl.textContent = label;
   btn.setAttribute('title', title);
   btn.setAttribute('aria-label', title);
+
+  // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
+  // dispatcher. Only halted is tappable; other states are read-only pills.
+  // Toggle the attribute's presence — the dispatcher gates on its presence,
+  // so other states are non-interactive without any extra guard here.
+  if (snap.state === 'halted') btn.setAttribute('data-action', 'syncReload');
+  else btn.removeAttribute('data-action');
 }
 
-function _syncOnIndicatorClick(e) {
-  var btn = e && e.target && e.target.closest ? e.target.closest('#syncStatus') : null;
-  if (!btn) return;
-  if (btn.getAttribute('data-state') !== 'halted') return;
-  // Halted is the only state where a tap has an affordance — reload retries sync.
-  window.location.reload();
+// Dispatcher target for data-action="syncReload". Called from the indicator
+// pill when halted. Reloading re-bootstraps sync and clears the circuit
+// breaker's in-memory crash count.
+function syncReload() {
+  if (typeof window !== 'undefined' && window.location && window.location.reload) {
+    window.location.reload();
+  }
 }
 
 function initSyncVisibility() {
@@ -1466,12 +1475,6 @@ function initSyncVisibility() {
         }
       }
     } catch(e) { /* non-fatal — derived store still works from counters */ }
-  }
-  // Bind click-to-reload once. Uses event delegation on document so it
-  // survives template re-renders.
-  if (!_syncVisibilityClickBound && typeof document !== 'undefined') {
-    document.addEventListener('click', _syncOnIndicatorClick);
-    _syncVisibilityClickBound = true;
   }
   onSyncVisibilityChange(_syncUpdateStatusIndicator);
 }

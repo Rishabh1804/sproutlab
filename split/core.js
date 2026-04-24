@@ -297,6 +297,7 @@ function init() {
     else if (action === 'resetData') confirmAction('Reset ALL data to defaults? A backup will be downloaded automatically before resetting.', resetAllData, 'Reset');
     else if (action === 'toggleVisitFormShow') toggleVisitForm(true);
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
+    else if (action === 'syncReload' && typeof syncReload === 'function') syncReload();
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
     else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
