@@ -8637,9 +8637,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sync-modal { background:var(--surface); }
 [data-theme="dark"] .sync-modal-input { background:rgba(255,255,255,0.05); border-color:rgba(51,101,128,0.25); }
 
-/* ═══ Sync Visibility Indicator (Phase 1 — sl-1-2) ═══
-   Three-state header pill. Color is derived from [data-state] and driven
-   entirely by CSS custom properties so nothing in the UI is hardcoded. */
+/* ═══ Sync Visibility Indicator (Phase 1 — sl-1-2, r2) ═══
+   Five logical states mapped to three visual colors per the gap audit.
+   Copy + aria-label disambiguate the two reds (offline vs halted) for AT. */
 .sync-indicator {
   display: inline-flex;
   align-items: center;
@@ -8665,10 +8665,13 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   flex-shrink: 0;
 }
 .sync-indicator__label { white-space: nowrap; font-weight: 600; }
-.sync-indicator[data-state="online"]  { color: var(--tc-sage); }
-.sync-indicator[data-state="pending"] { color: var(--tc-amber); }
-.sync-indicator[data-state="offline"] { color: var(--tc-danger); }
-.sync-indicator[data-state="pending"] .sync-indicator__dot {
+.sync-indicator[data-state="connecting"] { color: var(--tc-amber); }
+.sync-indicator[data-state="online"]     { color: var(--tc-sage); }
+.sync-indicator[data-state="syncing"]    { color: var(--tc-amber); }
+.sync-indicator[data-state="offline"]    { color: var(--tc-danger); }
+.sync-indicator[data-state="halted"]     { color: var(--tc-danger); cursor: pointer; }
+.sync-indicator[data-state="connecting"] .sync-indicator__dot,
+.sync-indicator[data-state="syncing"]    .sync-indicator__dot {
   animation: sync-indicator-pulse 1.4s ease-in-out infinite;
 }
 @keyframes sync-indicator-pulse {
@@ -8676,5 +8679,6 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   50%      { opacity: 0.35; transform: scale(0.85); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sync-indicator[data-state="pending"] .sync-indicator__dot { animation: none; }
+  .sync-indicator[data-state="connecting"] .sync-indicator__dot,
+  .sync-indicator[data-state="syncing"]    .sync-indicator__dot { animation: none; }
 }
