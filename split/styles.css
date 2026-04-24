@@ -8682,3 +8682,63 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   .sync-indicator[data-state="connecting"] .sync-indicator__dot,
   .sync-indicator[data-state="syncing"]    .sync-indicator__dot { animation: none; }
 }
+
+/* ═══ Offline / Halted Persistent Badge (Phase 1 — sl-1-3) ═══
+   Matches the existing home-banner pattern (fe-home-banner etc.) — left
+   border accent via --tc-danger, tinted background, rounded corners,
+   single row on wide viewports, wraps on narrow. Tokens only (HR-5), no
+   inline styles (HR-2); reload routed through data-action (HR-3/HR-6). */
+.offline-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-10);
+  padding: var(--sp-10) var(--sp-12);
+  margin: var(--sp-8) 0;
+  border-left: 4px solid var(--tc-danger);
+  border-radius: var(--r-lg);
+  background: rgba(224, 112, 112, 0.10);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  flex-wrap: wrap;
+}
+.offline-badge[hidden] { display: none !important; }
+.offline-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--tc-danger);
+  flex-shrink: 0;
+}
+.offline-badge__icon .zi { width: 18px; height: 18px; }
+.offline-badge__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+}
+.offline-badge__action {
+  flex-shrink: 0;
+  padding: var(--sp-4) var(--sp-10);
+  border: 1px solid var(--tc-danger);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--tc-danger);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.offline-badge__action[hidden] { display: none !important; }
+.offline-badge__action:hover,
+.offline-badge__action:focus-visible {
+  background: var(--tc-danger);
+  color: var(--white);
+}
+.offline-badge__action:focus-visible {
+  outline: 2px solid var(--tc-sky);
+  outline-offset: 2px;
+}
+[data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
