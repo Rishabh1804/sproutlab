@@ -72,6 +72,7 @@ function _syncMarkReady(collection) {
   // Fire any pending flush that was deferred waiting for this listener.
   if (_syncPendingFlush[collection]) {
     _syncPendingFlush[collection] = false;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Cipher C3: breaker interaction
     if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
       console.warn('[sync] Skipping ready-pending-flush for ' + collection +
@@ -99,6 +100,7 @@ function _syncRecordCrash(source, err) {
       _syncDebounceTimers[k] = null;
     });
     console.error('[sync] Auto-disabled after ' + _syncCrashCount + ' crashes. App is local-only.');
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     showQLToast('Sync paused — too many errors. Reload to retry.');
   }
 }
@@ -640,7 +642,7 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
     var data = Object.assign({}, entry, syncMeta, {
       __sync_createdBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' }
     });
-    colRef.doc(entry.id).set(data).catch(function(e) {
+    _syncTrackWrite(colRef.doc(entry.id).set(data)).catch(function(e) {
       console.error('[sync] Add ' + collection + '/' + entry.id + ' failed:', e);
     });
   });
@@ -648,14 +650,14 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
   // Edited entries — field-level updates
   diff.edited.forEach(function(change) {
     var payload = Object.assign({}, change.updates, change.deletes, syncMeta);
-    colRef.doc(change.id).update(payload).catch(function(e) {
+    _syncTrackWrite(colRef.doc(change.id).update(payload)).catch(function(e) {
       console.error('[sync] Update ' + collection + '/' + change.id + ' failed:', e);
     });
   });
 
   // Deleted entries
   diff.deleted.forEach(function(id) {
-    colRef.doc(id).delete().catch(function(e) {
+    _syncTrackWrite(colRef.doc(id).delete()).catch(function(e) {
       console.error('[sync] Delete ' + collection + '/' + id + ' failed:', e);
     });
   });
@@ -664,10 +666,12 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
 // ─── Single-Doc Write (debounced) ───
 function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   var timerKey = collection; // debounce per collection, not per key
-  if (_syncDebounceTimers[timerKey]) clearTimeout(_syncDebounceTimers[timerKey]);
+  var wasQueued = !!_syncDebounceTimers[timerKey];
+  if (wasQueued) clearTimeout(_syncDebounceTimers[timerKey]);
 
   _syncDebounceTimers[timerKey] = setTimeout(function() {
     _syncDebounceTimers[timerKey] = null;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Re-check state at flush time (guards against stale hRef from debounce delay)
     if (_syncDisabled || !_syncHouseholdId || !_syncUser) return;
     try {
@@ -676,6 +680,7 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
       _syncFlushSingleDoc(freshRef, collection);
     } catch(e) { _syncRecordCrash('debounce-flush/' + collection, e); }
   }, DEBOUNCE_MS);
+  if (!wasQueued && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
 function _syncFlushSingleDoc(hRef, collection) {
@@ -689,6 +694,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // retry once the listener (or fallback timer) confirms remote state.
   if (!_syncReady[collection]) {
     _syncPendingFlush[collection] = true;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     console.warn('[sync] Flush deferred for ' + collection +
       ' — listener not ready. Will retry on listener-ready.');
     return;
@@ -728,13 +734,13 @@ function _syncFlushSingleDoc(hRef, collection) {
   if (hasUpdates) {
     var nested = _syncNestDottedPaths(diff.updates);
     var updatePayload = Object.assign({}, nested, syncMeta);
-    promises.push(docRef.set(updatePayload, { merge: true }));
+    promises.push(_syncTrackWrite(docRef.set(updatePayload, { merge: true })));
   }
   if (hasDeletes) {
     // Deletes go through update() which DOES support dotted paths correctly,
     // so leave diff.deletes flat.
     var deletePayload = Object.assign({}, diff.deletes, syncMeta);
-    promises.push(docRef.update(deletePayload));
+    promises.push(_syncTrackWrite(docRef.update(deletePayload)));
   }
 
   Promise.all(promises).catch(function(e) {
@@ -1252,3 +1258,125 @@ function _syncConfirmJoin() {
   if (!code.trim()) { showQLToast('Enter invite code'); return; }
   syncJoinByCode(code.trim());
 }
+
+// ─── Sync Visibility (Phase 1 — sl-1-2) ───
+// Derived store fusing navigator.onLine, the Firestore drain signal
+// (onSnapshotsInSync when available), and local WAL depth
+// (in-flight writes + debounce timers + deferred flushes).
+// Nothing is hardcoded: the header indicator reads only from syncVisibilityState().
+var _syncPendingWriteCount = 0;          // in-flight Firestore promises
+var _syncVisibilityListeners = [];       // subscriber callbacks
+var _syncLastVisibility = null;          // last emitted snapshot (for change-detect)
+var _syncVisibilityNotifyTimer = null;   // coalesces burst notifies
+var _syncSnapshotsInSyncUnsub = null;    // Firestore drain listener unsub
+var _syncVisibilityInitDone = false;
+
+function _syncTrackWrite(promise) {
+  if (!promise || typeof promise.then !== 'function') return promise;
+  _syncPendingWriteCount++;
+  _syncNotifyVisibility();
+  var settle = function() {
+    if (_syncPendingWriteCount > 0) _syncPendingWriteCount--;
+    _syncNotifyVisibility();
+  };
+  promise.then(settle, settle);
+  return promise;
+}
+
+function _syncCountActiveDebounces() {
+  var n = 0;
+  for (var k in _syncDebounceTimers) {
+    if (Object.prototype.hasOwnProperty.call(_syncDebounceTimers, k) && _syncDebounceTimers[k]) n++;
+  }
+  return n;
+}
+
+function _syncCountDeferredFlushes() {
+  var n = 0;
+  for (var c in _syncPendingFlush) {
+    if (Object.prototype.hasOwnProperty.call(_syncPendingFlush, c) && _syncPendingFlush[c]) n++;
+  }
+  return n;
+}
+
+function syncVisibilityState() {
+  var online = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine !== false : true;
+  var pending = _syncPendingWriteCount + _syncCountActiveDebounces() + _syncCountDeferredFlushes();
+  var state, reason;
+  if (!online) {
+    state = 'offline'; reason = 'no-network';
+  } else if (_syncDisabled) {
+    // Crash-killed sync: local-only until reload. Honest to show as offline;
+    // reason distinguishes it from a true network drop for diagnostics/UI copy.
+    state = 'offline'; reason = 'sync-disabled';
+  } else if (pending > 0) {
+    state = 'pending'; reason = 'writes-pending';
+  } else {
+    state = 'online'; reason = 'synced';
+  }
+  return { state: state, pending: pending, reason: reason };
+}
+
+function onSyncVisibilityChange(listener) {
+  if (typeof listener !== 'function') return function(){};
+  _syncVisibilityListeners.push(listener);
+  try { listener(syncVisibilityState()); } catch(e) { console.error('[sync-vis] listener threw on subscribe', e); }
+  return function unsubscribe() {
+    var i = _syncVisibilityListeners.indexOf(listener);
+    if (i >= 0) _syncVisibilityListeners.splice(i, 1);
+  };
+}
+
+function _syncNotifyVisibility() {
+  if (_syncVisibilityNotifyTimer) return;
+  _syncVisibilityNotifyTimer = setTimeout(function() {
+    _syncVisibilityNotifyTimer = null;
+    var snap = syncVisibilityState();
+    var prev = _syncLastVisibility;
+    if (prev && prev.state === snap.state && prev.pending === snap.pending && prev.reason === snap.reason) return;
+    _syncLastVisibility = snap;
+    for (var i = 0; i < _syncVisibilityListeners.length; i++) {
+      try { _syncVisibilityListeners[i](snap); } catch(e) { console.error('[sync-vis] listener threw', e); }
+    }
+  }, 120);
+}
+
+function _syncUpdateStatusIndicator(snap) {
+  var btn = document.getElementById('syncStatus');
+  if (!btn) return;
+  if (btn.hasAttribute('hidden')) btn.removeAttribute('hidden');
+  btn.setAttribute('data-state', snap.state);
+  var label = snap.state === 'online'  ? 'Synced'
+            : snap.state === 'pending' ? 'Syncing' + (snap.pending > 0 ? ' (' + snap.pending + ')' : '…')
+            :                            'Offline';
+  var nPending = snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '';
+  var title = snap.state === 'online'  ? 'All changes synced.'
+            : snap.state === 'pending' ? (snap.pending + ' change' + (snap.pending === 1 ? '' : 's') + ' pending sync.')
+            : snap.reason === 'sync-disabled'
+              ? 'Sync paused after errors — changes will sync on reload.' + nPending
+              : 'Offline — changes will sync when back online.' + nPending;
+  var labEl = btn.querySelector('.sync-indicator__label');
+  if (labEl) labEl.textContent = label;
+  btn.setAttribute('title', title);
+  btn.setAttribute('aria-label', title);
+}
+
+function initSyncVisibility() {
+  if (_syncVisibilityInitDone) return;
+  _syncVisibilityInitDone = true;
+  if (typeof window !== 'undefined') {
+    var bump = function() { _syncNotifyVisibility(); };
+    window.addEventListener('online',  bump);
+    window.addEventListener('offline', bump);
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        var db = firebase.firestore();
+        if (typeof db.onSnapshotsInSync === 'function') {
+          _syncSnapshotsInSyncUnsub = db.onSnapshotsInSync(bump);
+        }
+      }
+    } catch(e) { /* non-fatal — derived store still works via counter */ }
+  }
+  onSyncVisibilityChange(_syncUpdateStatusIndicator);
+}
+

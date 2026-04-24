@@ -8636,3 +8636,45 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sync-code-row { border-top-color:rgba(51,101,128,0.15); }
 [data-theme="dark"] .sync-modal { background:var(--surface); }
 [data-theme="dark"] .sync-modal-input { background:rgba(255,255,255,0.05); border-color:rgba(51,101,128,0.25); }
+
+/* ═══ Sync Visibility Indicator (Phase 1 — sl-1-2) ═══
+   Three-state header pill. Color is derived from [data-state] and driven
+   entirely by CSS custom properties so nothing in the UI is hardcoded. */
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-2) var(--sp-8);
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--light);
+  font: inherit;
+  font-size: var(--fs-xs);
+  line-height: 1.1;
+  cursor: default;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.sync-indicator[hidden] { display: none !important; }
+.sync-indicator:focus-visible { outline: 2px solid var(--tc-sky); outline-offset: 2px; }
+.sync-indicator__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  flex-shrink: 0;
+}
+.sync-indicator__label { white-space: nowrap; font-weight: 600; }
+.sync-indicator[data-state="online"]  { color: var(--tc-sage); }
+.sync-indicator[data-state="pending"] { color: var(--tc-amber); }
+.sync-indicator[data-state="offline"] { color: var(--tc-danger); }
+.sync-indicator[data-state="pending"] .sync-indicator__dot {
+  animation: sync-indicator-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sync-indicator-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-indicator[data-state="pending"] .sync-indicator__dot { animation: none; }
+}
