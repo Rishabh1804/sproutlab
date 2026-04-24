@@ -1312,7 +1312,22 @@ function _syncConfirmJoin() {
 //   snapshot.metadata.hasPendingWrites then reflects the submission.
 //   Mutually exclusive at any instant — counts are additive by construction.
 
-var _syncPendingByKey = {};              // collection/docName → bool (last-seen hasPendingWrites)
+// _syncPendingByKey — key = collection name for per-entry listeners (caretickets,
+//   etc.), key = docName for single-doc listeners (tracking, medical, etc.).
+// Value is the last-seen QuerySnapshot/DocumentSnapshot metadata.hasPendingWrites.
+//
+// SEMANTIC NOTE (Cipher PR #4 nit 2, r3 option b): Firestore's
+// QuerySnapshot.metadata.hasPendingWrites is a SINGLE boolean per collection
+// — true iff ANY doc in the collection has a pending write. Counting entries
+// in this map therefore yields the number of COLLECTIONS with one or more
+// pending writes, not the number of individual writes. Five queued meals in
+// `tracking` → badge reads "(1 pending)", not "(5 pending)". The direction
+// is honest (`pending > 0` correctly reports "something is queued") and the
+// copy "(N pending)" reads naturally at the user level. True per-write
+// precision would require iterating snapshot.docChanges() and keying by
+// `${collection}/${doc.id}` in _syncRecordPending — deferred to a phase-2
+// refinement if the count's user-visible granularity becomes a concern.
+var _syncPendingByKey = {};
 var _syncVisibilityListeners = [];       // subscriber callbacks
 var _syncLastVisibility = null;          // last emitted snapshot (for change-detect)
 var _syncVisibilityNotifyTimer = null;   // coalesces burst notifies
