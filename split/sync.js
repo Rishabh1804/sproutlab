@@ -1461,11 +1461,44 @@ function _syncUpdateStatusIndicator(snap) {
 }
 
 // Dispatcher target for data-action="syncReload". Called from the indicator
-// pill when halted. Reloading re-bootstraps sync and clears the circuit
-// breaker's in-memory crash count.
+// pill when halted (sl-1-2 r3) and the offline badge's reload button
+// (sl-1-3). Reloading re-bootstraps sync and clears the circuit breaker's
+// in-memory crash count.
 function syncReload() {
   if (typeof window !== 'undefined' && window.location && window.location.reload) {
     window.location.reload();
+  }
+}
+
+// ─── Offline Badge Renderer (Phase 1 — sl-1-3) ───
+// Subscribed to the sync-visibility store; shows the persistent badge
+// below the header in offline or halted state only. Copy and pending-count
+// come from the same snapshot the indicator consumes — no separate counter.
+function _syncUpdateOfflineBadge(snap) {
+  var badge = document.getElementById('offlineBadge');
+  if (!badge) return;
+  var visible = snap.state === 'offline' || snap.state === 'halted';
+  if (!visible) {
+    if (!badge.hasAttribute('hidden')) badge.setAttribute('hidden', '');
+    return;
+  }
+  if (badge.hasAttribute('hidden')) badge.removeAttribute('hidden');
+  badge.setAttribute('data-state', snap.state);
+
+  var nPending = snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '';
+  var copy = snap.state === 'halted'
+    ? 'Sync paused after errors — reload to retry.' + nPending
+    : 'Offline — changes will sync when back online.' + nPending;
+
+  var copyEl = badge.querySelector('.offline-badge__copy');
+  if (copyEl) copyEl.textContent = copy;
+
+  // Reload surfaces only in halted (local fault); offline auto-resumes
+  // on network restore, no user action needed.
+  var reloadBtn = badge.querySelector('.offline-badge__action');
+  if (reloadBtn) {
+    if (snap.state === 'halted') reloadBtn.removeAttribute('hidden');
+    else reloadBtn.setAttribute('hidden', '');
   }
 }
 
@@ -1492,5 +1525,6 @@ function initSyncVisibility() {
     } catch(e) { /* non-fatal — derived store still works from counters */ }
   }
   onSyncVisibilityChange(_syncUpdateStatusIndicator);
+  onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }
 

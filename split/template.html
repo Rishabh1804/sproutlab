@@ -113,6 +113,18 @@
     </div>
   </div>
 
+  <!-- Offline / halted persistent badge (Phase 1 — sl-1-3). Driven by the
+       sync-visibility store from sl-1-2; hidden in connecting/online/syncing
+       states. aria-live=polite so copy changes (including pending-count
+       updates) are announced by AT without interrupting. Reload button is
+       surfaced only in the halted state and routed through the data-action
+       dispatcher wired in sl-1-2 r3 (HR-3/HR-6). -->
+  <div id="offlineBadge" class="offline-badge" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="offline-badge__icon" aria-hidden="true"><svg class="zi"><use href="#zi-alert-circle"/></svg></span>
+    <span class="offline-badge__copy"></span>
+    <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
+  </div>
+
   <!-- ══════════════ TAB 1: HOME ══════════════ -->
   <div class="tab-panel active" id="tab-home">
     <div class="grid">
