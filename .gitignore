@@ -1,2 +1,15 @@
-
 .claude/
+
+# Node / Playwright dev dependencies (excluded from production build artifact;
+# build.sh emits index.html from split/* only and does not sweep these paths).
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# OS-trash patterns (file-manager rename-on-trash; CT-prefix `.trashed-{ms}-{name}`).
+.trashed-*
+.Trash-*
+.DS_Store
+Thumbs.db
