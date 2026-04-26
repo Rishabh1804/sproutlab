@@ -10,12 +10,36 @@ const PRIMARY_TABS = ['home', 'growth', 'track', 'insights', 'history', 'info'] 
 
 // Console errors we treat as benign on cold boot. CDN flakes for Chart.js or
 // Firebase background warm-up shouldn't fail the smoke run; province-specific
-// renderer errors must.
+// renderer errors must. Network/cert errors from the sandbox environment are
+// also filtered (CT-10 lesson extended to console layer — bundled chromium may
+// not trust sandbox MITM CAs, producing console errors with no URL substring;
+// Cipher r1 review on PR #9 surfaced this empirically).
 const BENIGN_CONSOLE = [
   /chart\.js/i,
   /firebase/i,
   /favicon/i,
+  /Failed to load resource: net::/i,
+  /ERR_CERT_/i,
 ];
+
+// Hermetic stub for the Chart.js CDN. The smoke spec doesn't exercise chart
+// rendering; stubbing the CDN at the route layer means cert / egress posture
+// in any sandbox cannot produce false-positive console errors. Cipher Path B
+// from the PR #9 r1 review.
+async function stubChartJs(page: Page): Promise<void> {
+  await page.route('https://cdn.jsdelivr.net/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript; charset=utf-8',
+      body:
+        'window.Chart = class { constructor(){ this.data={datasets:[]}; this.options={}; }' +
+        ' update(){} destroy(){} resize(){} };' +
+        'window.Chart.register = function(){};' +
+        'window.Chart.defaults = { plugins:{} };' +
+        'window.Chart.helpers = {};',
+    }),
+  );
+}
 
 function attachConsoleCollector(page: Page): { errors: string[] } {
   const errors: string[] = [];
@@ -31,6 +55,7 @@ function attachConsoleCollector(page: Page): { errors: string[] } {
 
 test.describe('SproutLab smoke (Phase 2 arming)', () => {
   test('1 — index loads with no fatal console.error or pageerror', async ({ page }) => {
+    await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
@@ -39,13 +64,24 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
   });
 
   test('2 — all six primary tabs transition without throwing', async ({ page }) => {
+    await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
 
+    // Pre-condition: simple-mode hides Insights + Info tabs. The smoke spec
+    // exercises full mode; assert simple-mode is not active before iterating.
+    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
-      await expect(btn, `tab button for "${tab}"`).toBeVisible();
+      await expect(btn, `tab button for "${tab}" present`).toHaveCount(1);
+      // The .tab-bar is overflow-x:auto; tabs to the right of the viewport
+      // report hidden to toBeVisible() at default Desktop Chrome 1280×720
+      // even though they're rendered. Scroll into view first (matches actual
+      // user behaviour on the responsive surface).
+      await btn.scrollIntoViewIfNeeded();
+      await expect(btn, `tab button for "${tab}" visible`).toBeVisible();
       await btn.click();
       // Active tab gets .active on both the button and the corresponding panel.
       await expect(btn).toHaveClass(/\bactive\b/);
@@ -67,6 +103,7 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
   });
 
   test('4 — Phase 1 surfaces intact under offline simulation', async ({ page, context }) => {
+    await stubChartJs(page);
     await page.goto('/index.html?nosync');
 
     // syncStatus indicator exists in DOM (sl-1-2). It starts hidden until the
