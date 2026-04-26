@@ -63,32 +63,91 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('2 — all six primary tabs transition without throwing', async ({ page }) => {
+  // Test 2 ships as a triad (R-7) covering both modes of the simple-mode contract.
+  // Cipher r2 surfaced that simple-mode is opt-OUT (split/core.js:3711–3717:
+  // saved !== 'false' → simple-mode added on init), so a fresh browserContext
+  // with empty localStorage gets simple-mode ON, which CSS-hides Insights + Info.
+  // The triad documents the two-mode contract on-record:
+  //   2a — simple-mode default renders four tabs (positive, default state)
+  //   2b — full mode (opt-out) renders all six (positive, opt-out state)
+  //   2c — simple-mode hides exactly Insights + Info, nothing more (regression-guard)
+
+  const SIMPLE_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
+  const SIMPLE_HIDDEN = ['insights', 'info'] as const;
+
+  test('2a — simple-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
     await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
 
-    // Pre-condition: simple-mode hides Insights + Info tabs. The smoke spec
-    // exercises full mode; assert simple-mode is not active before iterating.
+    // Default: no localStorage entry → simple-mode ON.
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+
+    for (const tab of SIMPLE_VISIBLE) {
+      const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
+      await expect(btn, `tab "${tab}" present`).toHaveCount(1);
+      await btn.scrollIntoViewIfNeeded();
+      await expect(btn, `tab "${tab}" visible`).toBeVisible();
+      await btn.click();
+      await expect(btn).toHaveClass(/\bactive\b/);
+      await expect(page.locator(`#tab-${tab}`)).toHaveClass(/\bactive\b/);
+    }
+
+    for (const tab of SIMPLE_HIDDEN) {
+      const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
+      await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
+      await expect(btn, `tab "${tab}" hidden under simple-mode`).toBeHidden();
+    }
+
+    expect(errors, errors.join('\n')).toEqual([]);
+  });
+
+  test('2b — full mode (simple-mode opted out) renders all six tabs', async ({ page }) => {
+    await stubChartJs(page);
+    const { errors } = attachConsoleCollector(page);
+
+    // Opt out of simple-mode before init runs (split/core.js:3711 reads localStorage
+    // synchronously during initSimpleMode). addInitScript fires before page scripts.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('.tab-bar')).toBeVisible();
     await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
 
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
-      await expect(btn, `tab button for "${tab}" present`).toHaveCount(1);
-      // The .tab-bar is overflow-x:auto; tabs to the right of the viewport
-      // report hidden to toBeVisible() at default Desktop Chrome 1280×720
-      // even though they're rendered. Scroll into view first (matches actual
-      // user behaviour on the responsive surface).
+      await expect(btn, `tab "${tab}" present`).toHaveCount(1);
       await btn.scrollIntoViewIfNeeded();
-      await expect(btn, `tab button for "${tab}" visible`).toBeVisible();
+      await expect(btn, `tab "${tab}" visible`).toBeVisible();
       await btn.click();
-      // Active tab gets .active on both the button and the corresponding panel.
       await expect(btn).toHaveClass(/\bactive\b/);
       await expect(page.locator(`#tab-${tab}`)).toHaveClass(/\bactive\b/);
     }
 
     expect(errors, errors.join('\n')).toEqual([]);
+  });
+
+  test('2c — simple-mode hides exactly Insights + Info, nothing else', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+
+    // Regression-guard for the simple-mode contract: if styles.css ever drops
+    // a tab from the .simple-mode hide rule (or adds another), this fails.
+    for (const tab of PRIMARY_TABS) {
+      const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
+      await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
+      const shouldBeHidden = (SIMPLE_HIDDEN as readonly string[]).includes(tab);
+      if (shouldBeHidden) {
+        await expect(btn, `simple-mode hides "${tab}"`).toBeHidden();
+      } else {
+        await btn.scrollIntoViewIfNeeded();
+        await expect(btn, `simple-mode keeps "${tab}" visible`).toBeVisible();
+      }
+    }
   });
 
   test('3 — manifest.json parses with required PWA keys', async ({ request }) => {
