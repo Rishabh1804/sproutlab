@@ -8643,6 +8643,112 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sync-code-row { border-top-color:rgba(51,101,128,0.15); }
 [data-theme="dark"] .sync-modal { background:var(--surface); }
 [data-theme="dark"] .sync-modal-input { background:rgba(255,255,255,0.05); border-color:rgba(51,101,128,0.25); }
+
+/* ═══ Sync Visibility Indicator (Phase 1 — sl-1-2, r2) ═══
+   Five logical states mapped to three visual colors per the gap audit.
+   Copy + aria-label disambiguate the two reds (offline vs halted) for AT. */
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-2) var(--sp-8);
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--light);
+  font: inherit;
+  font-size: var(--fs-xs);
+  line-height: 1.1;
+  cursor: default;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.sync-indicator[hidden] { display: none !important; }
+.sync-indicator:focus-visible { outline: 2px solid var(--tc-sky); outline-offset: 2px; }
+.sync-indicator__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  flex-shrink: 0;
+}
+.sync-indicator__label { white-space: nowrap; font-weight: 600; }
+.sync-indicator[data-state="connecting"] { color: var(--tc-amber); }
+.sync-indicator[data-state="online"]     { color: var(--tc-sage); }
+.sync-indicator[data-state="syncing"]    { color: var(--tc-amber); }
+.sync-indicator[data-state="offline"]    { color: var(--tc-danger); }
+.sync-indicator[data-state="halted"]     { color: var(--tc-danger); cursor: pointer; }
+.sync-indicator[data-state="connecting"] .sync-indicator__dot,
+.sync-indicator[data-state="syncing"]    .sync-indicator__dot {
+  animation: sync-indicator-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sync-indicator-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-indicator[data-state="connecting"] .sync-indicator__dot,
+  .sync-indicator[data-state="syncing"]    .sync-indicator__dot { animation: none; }
+}
+
+/* ═══ Offline / Halted Persistent Badge (Phase 1 — sl-1-3) ═══
+   Matches the existing home-banner pattern (fe-home-banner etc.) — left
+   border accent via --tc-danger, tinted background, rounded corners,
+   single row on wide viewports, wraps on narrow. Tokens only (HR-5), no
+   inline styles (HR-2); reload routed through data-action (HR-3/HR-6). */
+.offline-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-10);
+  padding: var(--sp-10) var(--sp-12);
+  margin: var(--sp-8) 0;
+  border-left: 4px solid var(--tc-danger);
+  border-radius: var(--r-lg);
+  background: rgba(224, 112, 112, 0.10);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  flex-wrap: wrap;
+}
+.offline-badge[hidden] { display: none !important; }
+.offline-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--tc-danger);
+  flex-shrink: 0;
+}
+.offline-badge__icon .zi { width: 18px; height: 18px; }
+.offline-badge__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+}
+.offline-badge__action {
+  flex-shrink: 0;
+  padding: var(--sp-4) var(--sp-10);
+  border: 1px solid var(--tc-danger);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--tc-danger);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.offline-badge__action[hidden] { display: none !important; }
+.offline-badge__action:hover,
+.offline-badge__action:focus-visible {
+  background: var(--tc-danger);
+  color: var(--white);
+}
+.offline-badge__action:focus-visible {
+  outline: 2px solid var(--tc-sky);
+  outline-offset: 2px;
+}
+[data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -8754,8 +8860,24 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div class="d-flex items-center gap-12 flex-wrap mt-6">
         <span class="t-md t-mid" id="headerDateTime">—</span>
         <span class="t-md t-mid" id="headerWeather">—</span>
+        <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
+          <span class="sync-indicator__dot" aria-hidden="true"></span>
+          <span class="sync-indicator__label"></span>
+        </button>
       </div>
     </div>
+  </div>
+
+  <!-- Offline / halted persistent badge (Phase 1 — sl-1-3). Driven by the
+       sync-visibility store from sl-1-2; hidden in connecting/online/syncing
+       states. aria-live=polite so copy changes (including pending-count
+       updates) are announced by AT without interrupting. Reload button is
+       surfaced only in the halted state and routed through the data-action
+       dispatcher wired in sl-1-2 r3 (HR-3/HR-6). -->
+  <div id="offlineBadge" class="offline-badge" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="offline-badge__icon" aria-hidden="true"><svg class="zi"><use href="#zi-alert-circle"/></svg></span>
+    <span class="offline-badge__copy"></span>
+    <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
   <!-- ══════════════ TAB 1: HOME ══════════════ -->
@@ -15374,6 +15496,7 @@ function init() {
     else if (action === 'resetData') confirmAction('Reset ALL data to defaults? A backup will be downloaded automatically before resetting.', resetAllData, 'Reset');
     else if (action === 'toggleVisitFormShow') toggleVisitForm(true);
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
+    else if (action === 'syncReload' && typeof syncReload === 'function') syncReload();
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
     else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
@@ -60743,6 +60866,13 @@ function _syncArmReadyFallback(collection) {
 function _syncMarkReady(collection) {
   if (_syncReady[collection]) return;
   _syncReady[collection] = true;
+  // Visibility store r2: first listener-ready is proof of Firestore activity
+  // — collapses the 'connecting' state even if onSnapshotsInSync is not yet
+  // available or has not yet landed.
+  if (typeof _syncHasEverFired !== 'undefined' && !_syncHasEverFired) {
+    _syncHasEverFired = true;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+  }
   if (_syncReadyTimers[collection]) {
     clearTimeout(_syncReadyTimers[collection]);
     _syncReadyTimers[collection] = null;
@@ -60750,6 +60880,7 @@ function _syncMarkReady(collection) {
   // Fire any pending flush that was deferred waiting for this listener.
   if (_syncPendingFlush[collection]) {
     _syncPendingFlush[collection] = false;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Cipher C3: breaker interaction
     if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
       console.warn('[sync] Skipping ready-pending-flush for ' + collection +
@@ -60777,7 +60908,12 @@ function _syncRecordCrash(source, err) {
       _syncDebounceTimers[k] = null;
     });
     console.error('[sync] Auto-disabled after ' + _syncCrashCount + ' crashes. App is local-only.');
-    showQLToast('Sync paused — too many errors. Reload to retry.');
+    // Cipher blocker #5 (r2): the 'Sync paused' toast is retired. The halted
+    // state is now surfaced persistently in the header indicator + offline
+    // badge, with a reload affordance. Transient toast on top would be the
+    // three-surfaces-for-one-state redundancy the derived store is meant
+    // to eliminate.
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
   }
 }
 
@@ -61124,6 +61260,12 @@ function _syncDetachListeners() {
   });
   _syncReadyTimers = {};
   _syncPendingFlush = {};
+  // Visibility store r2: re-attach is a fresh session — wipe per-key pending
+  // state and the has-ever-fired gate so the indicator honestly returns to
+  // 'connecting' until the new listeners confirm activity.
+  if (typeof _syncPendingByKey !== 'undefined') _syncPendingByKey = {};
+  if (typeof _syncHasEverFired !== 'undefined') _syncHasEverFired = false;
+  if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
 // ═══════════════════════════════════════════
@@ -61342,10 +61484,12 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
 // ─── Single-Doc Write (debounced) ───
 function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   var timerKey = collection; // debounce per collection, not per key
-  if (_syncDebounceTimers[timerKey]) clearTimeout(_syncDebounceTimers[timerKey]);
+  var wasQueued = !!_syncDebounceTimers[timerKey];
+  if (wasQueued) clearTimeout(_syncDebounceTimers[timerKey]);
 
   _syncDebounceTimers[timerKey] = setTimeout(function() {
     _syncDebounceTimers[timerKey] = null;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     // Re-check state at flush time (guards against stale hRef from debounce delay)
     if (_syncDisabled || !_syncHouseholdId || !_syncUser) return;
     try {
@@ -61354,6 +61498,7 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
       _syncFlushSingleDoc(freshRef, collection);
     } catch(e) { _syncRecordCrash('debounce-flush/' + collection, e); }
   }, DEBOUNCE_MS);
+  if (!wasQueued && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
 function _syncFlushSingleDoc(hRef, collection) {
@@ -61367,6 +61512,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // retry once the listener (or fallback timer) confirms remote state.
   if (!_syncReady[collection]) {
     _syncPendingFlush[collection] = true;
+    if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
     console.warn('[sync] Flush deferred for ' + collection +
       ' — listener not ready. Will retry on listener-ready.');
     return;
@@ -61449,9 +61595,12 @@ function _syncAttachListeners(hId) {
   var perEntryCollections = Object.keys(_peSet);
   var singleDocNames = Object.keys(_sdSet);
 
-  // Per-entry collections — each handler wrapped in try/catch for isolation
+  // Per-entry collections — each handler wrapped in try/catch for isolation.
+  // {includeMetadataChanges:true} so pending→ACK transitions fire the handler
+  // and the visibility store can read snapshot.metadata.hasPendingWrites.
+  // Data-equality checks inside the handler short-circuit metadata-only fires.
   perEntryCollections.forEach(function(col) {
-    var unsub = hRef.collection(col).onSnapshot(function(snapshot) {
+    var unsub = hRef.collection(col).onSnapshot({ includeMetadataChanges: true }, function(snapshot) {
       try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
       catch(e) { _syncRecordCrash('per-entry/' + col, e); }
     }, function(err) {
@@ -61465,7 +61614,7 @@ function _syncAttachListeners(hId) {
 
   // Single-doc collections (in /singles/{docName})
   singleDocNames.forEach(function(docName) {
-    var unsub = hRef.collection('singles').doc(docName).onSnapshot(function(doc) {
+    var unsub = hRef.collection('singles').doc(docName).onSnapshot({ includeMetadataChanges: true }, function(doc) {
       try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
       catch(e) { _syncRecordCrash('single-doc/' + docName, e); }
     }, function(err) {
@@ -61489,6 +61638,11 @@ function _syncAttachListeners(hId) {
 
 // ─── Handle Per-Entry Snapshot ───
 function _syncHandlePerEntrySnapshot(collection, snapshot) {
+  // Cipher r2: record post-submit pending-write state for this collection
+  // before any early return. Listener fires with {includeMetadataChanges:true}
+  // so this catches pending→ACK transitions even when no data changed.
+  _syncRecordPending(collection, !!(snapshot.metadata && snapshot.metadata.hasPendingWrites));
+
   // C0 Cipher C2: mark-ready in finally so defer paths don't suppress it.
   try {
     // Find which localStorage key maps to this collection
@@ -61566,6 +61720,10 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
 
 // ─── Handle Single-Doc Snapshot ───
 function _syncHandleSingleDocSnapshot(docName, doc) {
+  // Cipher r2: record post-submit pending-write state for this doc before
+  // any early return. Listener fires with {includeMetadataChanges:true}.
+  _syncRecordPending(docName, !!(doc && doc.metadata && doc.metadata.hasPendingWrites));
+
   // C0 Cipher C2: _syncMarkReady MUST run on every exit path, including
   // early returns and defer paths, so the collection's ready-state is
   // confirmed even when no save happens. Wrap in try/finally.
@@ -61930,6 +62088,247 @@ function _syncConfirmJoin() {
   if (!code.trim()) { showQLToast('Enter invite code'); return; }
   syncJoinByCode(code.trim());
 }
+
+// ─── Sync Visibility (Phase 1 — sl-1-2, r2) ───
+// Derived store fusing four signals:
+//   (a) navigator.onLine + window online/offline events
+//   (b) Firestore drain via db.onSnapshotsInSync — definitive ACK that local
+//       cache + IDB persistence queue + server are all in sync
+//   (c) Post-submit pending-writes from snapshot.metadata.hasPendingWrites
+//       (recorded per collection/doc by the existing listener handlers, which
+//       now subscribe with {includeMetadataChanges:true})
+//   (d) Pre-submit queue: _syncDebounceTimers (active count) + _syncPendingFlush
+//
+// Five logical states, three visual colors (color mapping lives in CSS):
+//   connecting — cold boot: no listener has fired, no drain event yet, pending===0
+//   online     — network up, fully drained
+//   syncing    — network up, pending > 0
+//   offline    — !navigator.onLine
+//   halted     — _syncDisabled === true (circuit breaker tripped; reload-required)
+//
+// Disjointness contract:
+//   pre-submit (our maps) and post-submit (hasPendingWrites map) are phases
+//   of a write's life. A write is in _syncDebounceTimers until the timer
+//   fires; the fire callback nulls the entry and calls .set(), whose
+//   snapshot.metadata.hasPendingWrites then reflects the submission.
+//   Mutually exclusive at any instant — counts are additive by construction.
+
+// _syncPendingByKey — key = collection name for per-entry listeners (caretickets,
+//   etc.), key = docName for single-doc listeners (tracking, medical, etc.).
+// Value is the last-seen QuerySnapshot/DocumentSnapshot metadata.hasPendingWrites.
+//
+// SEMANTIC NOTE (Cipher PR #4 nit 2, r3 option b): Firestore's
+// QuerySnapshot.metadata.hasPendingWrites is a SINGLE boolean per collection
+// — true iff ANY doc in the collection has a pending write. Counting entries
+// in this map therefore yields the number of COLLECTIONS with one or more
+// pending writes, not the number of individual writes. Five queued meals in
+// `tracking` → badge reads "(1 pending)", not "(5 pending)". The direction
+// is honest (`pending > 0` correctly reports "something is queued") and the
+// copy "(N pending)" reads naturally at the user level. True per-write
+// precision would require iterating snapshot.docChanges() and keying by
+// `${collection}/${doc.id}` in _syncRecordPending — deferred to a phase-2
+// refinement if the count's user-visible granularity becomes a concern.
+var _syncPendingByKey = {};
+var _syncVisibilityListeners = [];       // subscriber callbacks
+var _syncLastVisibility = null;          // last emitted snapshot (for change-detect)
+var _syncVisibilityNotifyTimer = null;   // coalesces burst notifies
+var _syncSnapshotsInSyncUnsub = null;    // Firestore drain listener unsub
+var _syncVisibilityInitDone = false;
+var _syncHasEverFired = false;           // any listener (per-entry/single-doc) first-fired OR onSnapshotsInSync landed
+// (r3) Indicator click is routed through the data-action dispatcher (HR-3);
+// no bespoke document click handler is bound here.
+
+function _syncRecordPending(key, isPending) {
+  var prev = !!_syncPendingByKey[key];
+  if (prev === !!isPending) return;
+  if (isPending) _syncPendingByKey[key] = true;
+  else delete _syncPendingByKey[key];
+  _syncNotifyVisibility();
+}
+
+function _syncCountPreSubmit() {
+  var n = 0;
+  for (var k in _syncDebounceTimers) {
+    if (Object.prototype.hasOwnProperty.call(_syncDebounceTimers, k) && _syncDebounceTimers[k]) n++;
+  }
+  for (var c in _syncPendingFlush) {
+    if (Object.prototype.hasOwnProperty.call(_syncPendingFlush, c) && _syncPendingFlush[c]) n++;
+  }
+  return n;
+}
+
+function _syncCountPostSubmit() {
+  var n = 0;
+  for (var k in _syncPendingByKey) {
+    if (Object.prototype.hasOwnProperty.call(_syncPendingByKey, k) && _syncPendingByKey[k]) n++;
+  }
+  return n;
+}
+
+function syncVisibilityState() {
+  var online = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine !== false : true;
+  var preSubmit  = _syncCountPreSubmit();
+  var postSubmit = _syncCountPostSubmit();
+  var pending = preSubmit + postSubmit;  // disjoint by construction (see header comment)
+  var state, reason;
+
+  // Evaluation order matters: halted is a local fault independent of network,
+  // so it wins over offline. connecting is only valid before any proof of
+  // Firestore activity; it collapses to syncing the moment pending > 0.
+  if (_syncDisabled) {
+    state = 'halted';     reason = 'sync-disabled';
+  } else if (!online) {
+    state = 'offline';    reason = 'no-network';
+  } else if (!_syncHasEverFired && pending === 0) {
+    state = 'connecting'; reason = 'no-listener-yet';
+  } else if (pending > 0) {
+    state = 'syncing';    reason = 'writes-pending';
+  } else {
+    state = 'online';     reason = 'synced';
+  }
+  return { state: state, pending: pending, reason: reason };
+}
+
+function onSyncVisibilityChange(listener) {
+  if (typeof listener !== 'function') return function(){};
+  _syncVisibilityListeners.push(listener);
+  try { listener(syncVisibilityState()); } catch(e) { console.error('[sync-vis] listener threw on subscribe', e); }
+  return function unsubscribe() {
+    var i = _syncVisibilityListeners.indexOf(listener);
+    if (i >= 0) _syncVisibilityListeners.splice(i, 1);
+  };
+}
+
+function _syncNotifyVisibility() {
+  if (_syncVisibilityNotifyTimer) return;
+  _syncVisibilityNotifyTimer = setTimeout(function() {
+    _syncVisibilityNotifyTimer = null;
+    var snap = syncVisibilityState();
+    var prev = _syncLastVisibility;
+    if (prev && prev.state === snap.state && prev.pending === snap.pending && prev.reason === snap.reason) return;
+    _syncLastVisibility = snap;
+    for (var i = 0; i < _syncVisibilityListeners.length; i++) {
+      try { _syncVisibilityListeners[i](snap); } catch(e) { console.error('[sync-vis] listener threw', e); }
+    }
+  }, 120);
+}
+
+function _syncUpdateStatusIndicator(snap) {
+  var btn = document.getElementById('syncStatus');
+  if (!btn) return;
+  if (btn.hasAttribute('hidden')) btn.removeAttribute('hidden');
+  btn.setAttribute('data-state', snap.state);
+
+  // Copy table — one source of truth per logical state; CSS handles color.
+  // aria-label is the long form so screen readers distinguish the two red
+  // states (offline vs halted) that share --tc-danger.
+  var label, title;
+  switch (snap.state) {
+    case 'connecting':
+      label = 'Connecting…';
+      title = 'Connecting to sync…';
+      break;
+    case 'online':
+      label = 'Synced';
+      title = 'All changes synced.';
+      break;
+    case 'syncing':
+      label = 'Syncing' + (snap.pending > 0 ? ' (' + snap.pending + ')' : '…');
+      title = snap.pending + ' change' + (snap.pending === 1 ? '' : 's') + ' pending sync.';
+      break;
+    case 'offline':
+      label = 'Offline';
+      title = 'Offline — changes will sync when back online.' + (snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '');
+      break;
+    case 'halted':
+      label = 'Sync paused';
+      title = 'Sync paused after errors — tap to reload.' + (snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '');
+      break;
+    default:
+      label = ''; title = '';
+  }
+
+  var labEl = btn.querySelector('.sync-indicator__label');
+  if (labEl) labEl.textContent = label;
+  btn.setAttribute('title', title);
+  btn.setAttribute('aria-label', title);
+
+  // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
+  // dispatcher. Only halted is tappable; other states are read-only pills.
+  // Toggle the attribute's presence — the dispatcher gates on its presence,
+  // so other states are non-interactive without any extra guard here.
+  if (snap.state === 'halted') btn.setAttribute('data-action', 'syncReload');
+  else btn.removeAttribute('data-action');
+}
+
+// Dispatcher target for data-action="syncReload". Called from the indicator
+// pill when halted (sl-1-2 r3) and the offline badge's reload button
+// (sl-1-3). Reloading re-bootstraps sync and clears the circuit breaker's
+// in-memory crash count.
+function syncReload() {
+  if (typeof window !== 'undefined' && window.location && window.location.reload) {
+    window.location.reload();
+  }
+}
+
+// ─── Offline Badge Renderer (Phase 1 — sl-1-3) ───
+// Subscribed to the sync-visibility store; shows the persistent badge
+// below the header in offline or halted state only. Copy and pending-count
+// come from the same snapshot the indicator consumes — no separate counter.
+function _syncUpdateOfflineBadge(snap) {
+  var badge = document.getElementById('offlineBadge');
+  if (!badge) return;
+  var visible = snap.state === 'offline' || snap.state === 'halted';
+  if (!visible) {
+    if (!badge.hasAttribute('hidden')) badge.setAttribute('hidden', '');
+    return;
+  }
+  if (badge.hasAttribute('hidden')) badge.removeAttribute('hidden');
+  badge.setAttribute('data-state', snap.state);
+
+  var nPending = snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '';
+  var copy = snap.state === 'halted'
+    ? 'Sync paused after errors — reload to retry.' + nPending
+    : 'Offline — changes will sync when back online.' + nPending;
+
+  var copyEl = badge.querySelector('.offline-badge__copy');
+  if (copyEl) copyEl.textContent = copy;
+
+  // Reload surfaces only in halted (local fault); offline auto-resumes
+  // on network restore, no user action needed.
+  var reloadBtn = badge.querySelector('.offline-badge__action');
+  if (reloadBtn) {
+    if (snap.state === 'halted') reloadBtn.removeAttribute('hidden');
+    else reloadBtn.setAttribute('hidden', '');
+  }
+}
+
+function initSyncVisibility() {
+  if (_syncVisibilityInitDone) return;
+  _syncVisibilityInitDone = true;
+  if (typeof window !== 'undefined') {
+    var bump = function() { _syncNotifyVisibility(); };
+    window.addEventListener('online',  bump);
+    window.addEventListener('offline', bump);
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        var db = firebase.firestore();
+        if (typeof db.onSnapshotsInSync === 'function') {
+          _syncSnapshotsInSyncUnsub = db.onSnapshotsInSync(function() {
+            // First drain event = definitive proof of Firestore activity.
+            // Collapses 'connecting' to 'online' (or 'syncing' if writes are
+            // queued — ordering in syncVisibilityState handles that).
+            _syncHasEverFired = true;
+            _syncNotifyVisibility();
+          });
+        }
+      }
+    } catch(e) { /* non-fatal — derived store still works from counters */ }
+  }
+  onSyncVisibilityChange(_syncUpdateStatusIndicator);
+  onSyncVisibilityChange(_syncUpdateOfflineBadge);
+}
+
 // ─────────────────────────────────────────
 // START — must be last in concat order
 // ─────────────────────────────────────────
@@ -61943,6 +62342,9 @@ _bugInit();
 if (window.location.search.indexOf('nosync') === -1) {
   try { initFirebase(); } catch(e) { console.error('[sync] initFirebase crashed:', e); }
 }
+// Sync visibility indicator (Phase 1 — sl-1-2). Runs even under ?nosync so
+// the header still reflects true network state from navigator.onLine alone.
+try { initSyncVisibility(); } catch(e) { console.error('[sync-vis] init crashed:', e); }
 </script>
 </body>
 </html>
