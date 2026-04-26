@@ -186,3 +186,78 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     await expect(badge).toBeHidden({ timeout: 5_000 });
   });
 });
+
+// Phase 2 PR-2.5 — status strip placement contract (R-7 triad).
+//
+// Sovereign-issued PR-2.5: the sl-1-2 #syncStatus pill was inside #headerFull,
+// which is `display:none` under body.simple-mode (the default for new users).
+// Result: simple-mode users saw zero sync feedback. PR-2.5 relocates
+// #syncStatus into a new #statusStrip sibling above the tab-bar so the
+// indicator is visible in BOTH modes.
+//
+// Triad shape:
+//   default-positive  — simple-mode (default) renders strip + indicator-host
+//   opt-out-positive  — full-mode (localStorage opt-out) renders same
+//   mode-contract     — strip and #syncStatus are present in BOTH modes; the
+//                       simple-mode #headerFull display:none rule does NOT
+//                       cascade to the strip (regression-guard)
+
+test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () => {
+  test('default-positive — simple-mode user sees the status strip + sync indicator', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+
+    // Strip is the always-visible container.
+    const strip = page.locator('#statusStrip');
+    await expect(strip).toHaveCount(1);
+    await expect(strip).toBeVisible();
+
+    // Indicator lives inside the strip (parent-child selector confirms placement).
+    await expect(page.locator('#statusStrip #syncStatus')).toHaveCount(1);
+  });
+
+  test('opt-out-positive — full-mode user sees the status strip + sync indicator', async ({ page }) => {
+    await stubChartJs(page);
+
+    // Opt out of simple-mode before init runs.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+
+    const strip = page.locator('#statusStrip');
+    await expect(strip).toHaveCount(1);
+    await expect(strip).toBeVisible();
+
+    await expect(page.locator('#statusStrip #syncStatus')).toHaveCount(1);
+  });
+
+  test('mode-contract-regression — strip is visible in BOTH modes (no display:none cascade)', async ({ page }) => {
+    await stubChartJs(page);
+
+    // Pass 1: default mode (simple-mode ON).
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    const stripDefault = page.locator('#statusStrip');
+    await expect(stripDefault, 'strip visible in simple-mode default').toBeVisible();
+    // The simple-mode rule that hides #headerFull MUST NOT cascade — the
+    // strip is a sibling of #headerFull, not a descendant.
+    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull (existing contract)').toBeHidden();
+    await expect(page.locator('#statusStrip'), 'strip survives the #headerFull hide').toBeVisible();
+    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip').toHaveCount(1);
+
+    // Pass 2: full mode (simple-mode OPT-OUT).
+    await page.evaluate(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.reload();
+    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
+    await expect(page.locator('#statusStrip'), 'strip stays visible in full-mode too').toBeVisible();
+    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
+  });
+});
