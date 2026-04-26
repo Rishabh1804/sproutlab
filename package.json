@@ -1,0 +1,16 @@
+{
+  "name": "sproutlab-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Dev-only test harness for SproutLab (Playwright + zero-dep static server). Not part of the production build artifact.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:stress": "playwright test --repeat-each=5",
+    "test:e2e:ci": "CI=1 playwright test --repeat-each=5",
+    "serve": "node tests/e2e/server.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.48.2"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
