@@ -4234,6 +4234,23 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chart-container { position:relative; height:220px; margin-top:var(--sp-8); }
 .chart-insight   { margin-top:var(--sp-8); text-align:center; font-size:var(--fs-md); color:var(--mid); }
 
+/* ── Status strip (Phase 2 PR-2.5) ──
+   Always-visible thin band above the tab-bar; hosts the sl-1-2 sync indicator
+   relocated from #headerFull (which is hidden in body.simple-mode). Designed
+   as a future host for PR-5's "update available" reload affordance.
+   Container is always present (so its visibility is mode-independent); the
+   #syncStatus child manages its own [hidden] state on cold boot per sl-1-2 r2. */
+.status-strip {
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:var(--sp-8);
+  min-height:28px;
+  padding:var(--sp-4) var(--sp-12);
+  margin-bottom:var(--sp-8);
+  background:var(--surface);
+  border-radius:var(--r-lg);
+  box-shadow:0 2px 10px var(--card-shadow);
+}
+
 /* ── Scrollable Tab Bar ── */
 .tab-bar {
   display:flex; gap:0;
@@ -8822,6 +8839,20 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 </svg>
 <div class="app">
 
+  <!-- STATUS STRIP (Phase 2 PR-2.5).
+       Always-visible thin band hosting the sync-visibility indicator from
+       sl-1-2 (relocated from #headerFull, which is display:none in
+       body.simple-mode — leaving default-mode users with no sync feedback).
+       Strip is a sibling of tab-bar, NOT inside #headerFull, so the
+       simple-mode rule does not cascade. Future host for PR-5's "update
+       available" reload affordance. HR-2: no inline styles, all via tokens. -->
+  <div class="status-strip" id="statusStrip">
+    <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
+      <span class="sync-indicator__dot" aria-hidden="true"></span>
+      <span class="sync-indicator__label"></span>
+    </button>
+  </div>
+
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="home" aria-label="Home tab">
@@ -8860,10 +8891,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
       <div class="d-flex items-center gap-12 flex-wrap mt-6">
         <span class="t-md t-mid" id="headerDateTime">—</span>
         <span class="t-md t-mid" id="headerWeather">—</span>
-        <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
-          <span class="sync-indicator__dot" aria-hidden="true"></span>
-          <span class="sync-indicator__label"></span>
-        </button>
+        <!-- #syncStatus relocated to #statusStrip above tab-bar (Phase 2 PR-2.5)
+             so simple-mode users (default) see sync state. -->
       </div>
     </div>
   </div>
