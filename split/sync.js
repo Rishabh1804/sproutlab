@@ -165,6 +165,169 @@ const ALWAYS_POPULATED_KEYS = new Set([
   KEYS.meds
 ]);
 
+// ─── SYNC_RENDER_DEPS (Phase 3 PR-9) ───
+// Per-key declaration of (a) the module-global name to rehydrate on listener
+// fire and (b) the active-tab-keyed renderer functions to call after
+// rehydration. Sibling to SYNC_KEYS; consumed by _syncDispatchRender.
+//
+// Two shapes per Cipher's surfacing #2:
+//   { global: '<name>', renderers: { … } }  — globaled keys; writer-shim mutates
+//                                              the named module global before
+//                                              renderers run.
+//   { global: null,     renderers: { … } }  — non-globaled keys (vaccBooked,
+//                                              episode keys); renderers read
+//                                              from localStorage directly so
+//                                              no rehydration step needed.
+//
+// Renderer keys are 'tab' or 'tab:sub' strings matching _syncReadActiveTab's
+// return shape; renderers are name-string arrays (rationale below).
+//
+// Renderer scope discipline: each entry lists the SMALLEST renderer set that
+// reflects the changed key on the active tab. renderHome is a composite
+// renderer (calls many sub-renderers internally) and is the right call when
+// home is active; for sub-tab surfaces, we call only the subtree-owning
+// renderer (e.g. renderDietStats for diet, renderGrowth for medical-growth)
+// to keep blast radius small.
+//
+// Renderers are NAME STRINGS (resolved via window[name] at dispatch time)
+// rather than direct function references so that:
+//   1. Spy/stub-based testing works (tests can monkey-patch window.renderX
+//      and observe dispatch calls).
+//   2. Renderer renames surface as runtime no-ops in dispatch logs rather
+//      than parse-time errors — the dispatch path is best-effort by design
+//      (Phase 3 §3 Option B (3): graceful fallback on renderer crash).
+//   3. The map remains readable as a declarative list without requiring
+//      forward references to functions defined in later concat'd modules.
+const SYNC_RENDER_DEPS = {
+  [KEYS.feeding]:           { global: 'feedingData', renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
+  [KEYS.sleep]:             { global: 'sleepData',   renderers: { home: ['renderHome'], 'track:sleep': ['renderSleep'] } },
+  [KEYS.poop]:              { global: 'poopData',    renderers: { home: ['renderHome'], 'track:poop':  ['renderPoop'] } },
+  [KEYS.notes]:             { global: 'notes',       renderers: { history: ['renderNotes'] } },
+  [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats'] } },
+  [KEYS.milestones]:        { global: 'milestones',  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats'] } },
+  [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
+  [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
+  [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
+  [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
+  [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
+  [KEYS.doctors]:           { global: 'doctors',     renderers: { 'track:medical': ['renderDoctorPrep'] } },
+  [KEYS.medChecks]:         { global: 'medChecks',   renderers: { 'track:medical': ['renderMedicalStats'] } },
+  [KEYS.feverEpisodes]:     { global: null, renderers: { home: ['renderHomeFeverBanner'],     'track:medical': ['renderFeverEpisodeCard'] } },
+  [KEYS.diarrhoeaEpisodes]: { global: null, renderers: { home: ['renderHomeDiarrhoeaBanner'], 'track:medical': ['renderDiarrhoeaEpisodeCard'] } },
+  [KEYS.vomitingEpisodes]:  { global: null, renderers: { home: ['renderHomeVomitingBanner'],  'track:medical': ['renderVomitingEpisodeCard'] } },
+  [KEYS.coldEpisodes]:      { global: null, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard'] } },
+  [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
+  [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
+};
+
+// _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
+// globals from the _syncDispatchRender path. Keeps the per-key map
+// declarative without `window[name] = …` indirection (HR-3 spirit; `let`
+// bindings don't attach to window so the indirection wouldn't work anyway).
+// Returns true on hit, false for unknown names — callers treat false as a
+// defensive guard. Per Cipher surfacing #2, dep.global may be null for
+// non-globaled keys (vaccBooked, episodes); _syncDispatchRender skips this
+// call entirely in that case, so this function only ever sees declared
+// globals. _syncGetGlobal is the symmetric reader used by Phase 3 tests
+// (and any future production caller that needs read-introspection).
+function _syncSetGlobal(name, value) {
+  switch (name) {
+    case 'growthData':   growthData   = value; return true;
+    case 'feedingData':  feedingData  = value; return true;
+    case 'milestones':   milestones   = value; return true;
+    case 'foods':        foods        = value; return true;
+    case 'vaccData':     vaccData     = value; return true;
+    case 'notes':        notes        = value; return true;
+    case 'meds':         meds         = value; return true;
+    case 'visits':       visits       = value; return true;
+    case 'medChecks':    medChecks    = value; return true;
+    case 'doctors':      doctors      = value; return true;
+    case 'sleepData':    sleepData    = value; return true;
+    case 'poopData':     poopData     = value; return true;
+    case '_careTickets': _careTickets = value; return true;
+    case 'activityLog':  activityLog  = value; return true;
+    default: return false;
+  }
+}
+function _syncGetGlobal(name) {
+  switch (name) {
+    case 'growthData':   return growthData;
+    case 'feedingData':  return feedingData;
+    case 'milestones':   return milestones;
+    case 'foods':        return foods;
+    case 'vaccData':     return vaccData;
+    case 'notes':        return notes;
+    case 'meds':         return meds;
+    case 'visits':       return visits;
+    case 'medChecks':    return medChecks;
+    case 'doctors':      return doctors;
+    case 'sleepData':    return sleepData;
+    case 'poopData':     return poopData;
+    case '_careTickets': return _careTickets;
+    case 'activityLog':  return activityLog;
+    default: return undefined;
+  }
+}
+
+// _syncReadActiveTab — single point of truth for the active-tab key shape
+// consumed by SYNC_RENDER_DEPS.renderers. Returns 'home' | 'growth' |
+// 'track:<sub>' | 'history' | 'insights' | 'info' | null. Mirrors the
+// idiom at intelligence.js:10773 + core.js:2620 (track sub-tab dispatch).
+function _syncReadActiveTab() {
+  if (typeof TAB_ORDER === 'undefined' || typeof document === 'undefined') return null;
+  var top = null;
+  for (var i = 0; i < TAB_ORDER.length; i++) {
+    var el = document.getElementById('tab-' + TAB_ORDER[i]);
+    if (el && el.classList.contains('active')) { top = TAB_ORDER[i]; break; }
+  }
+  if (!top) return null;
+  if (top !== 'track') return top;
+  var sub = (typeof _activeTrackSub !== 'undefined') ? _activeTrackSub : null;
+  return sub ? ('track:' + sub) : 'track';
+}
+
+// _syncDispatchRender — Phase 3 core dispatch. Called from listener handlers
+// after the localStorage write (save(lsKey, value) with _remoteWriteDepth
+// guard). Steps:
+//   1. Look up SYNC_RENDER_DEPS[lsKey]. No-op if missing (legitimate for
+//      keys that don't need any UI surface; reserved for future additions).
+//   2. Rehydrate module global via _syncSetGlobal (skipped when dep.global
+//      is null per Cipher #2). Closes the cross-device clobber loop
+//      (Finding E) — subsequent local writes read from rehydrated state
+//      instead of stale init state.
+//   3. Read active tab via _syncReadActiveTab (Finding C idiom).
+//   4. Call the active-tab's declared renderers, each crash-isolated via
+//      try/catch. Renderer crash falls through to the toast-with-reload
+//      fallback in the listener handler (graceful degradation).
+//
+// Returns a non-null attribution payload when one was provided, so the
+// caller (listener handler) can compose the toast text. Captured before
+// the existing __sync_* strip in both handlers (Cipher #4 cross-reference).
+function _syncDispatchRender(lsKey, value, attribution) {
+  var dep = SYNC_RENDER_DEPS[lsKey];
+  if (!dep) return attribution || null; // no UI dependency mapped — silent OK
+  // (1) Rehydrate module global (Finding B + E fix)
+  if (dep.global) {
+    try { _syncSetGlobal(dep.global, value); }
+    catch(e) { _syncRecordCrash('dispatch-set-global/' + lsKey, e); }
+  }
+  // (2) Active-tab renderer dispatch (Finding C idiom). Renderers are name
+  //     strings resolved via window[name] so spy-based tests work and a
+  //     renamed renderer surfaces as a runtime no-op (graceful) rather than
+  //     a parse-time error.
+  var activeTab = _syncReadActiveTab();
+  var names = (activeTab && dep.renderers) ? dep.renderers[activeTab] : null;
+  if (names && names.length) {
+    for (var i = 0; i < names.length; i++) {
+      try {
+        var fn = (typeof window !== 'undefined') ? window[names[i]] : undefined;
+        if (typeof fn === 'function') fn();
+      } catch(e) { _syncRecordCrash('dispatch-render/' + lsKey + '/' + names[i], e); }
+    }
+  }
+  return attribution || null;
+}
+
 // Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
 var _syncCollectionToKeys = {};
 (function() {
@@ -859,7 +1022,8 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     var entries = [];
     snapshot.forEach(function(doc) {
       var data = doc.data();
-      // Strip __sync_* metadata before storing locally
+      // Strip __sync_* metadata before storing locally (parallel to single-doc
+      // strip at the snapshot handler below; Cipher #4 cross-reference)
       var clean = {};
       var keys = Object.keys(data);
       for (var j = 0; j < keys.length; j++) {
@@ -871,6 +1035,35 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
       clean.id = doc.id;
       entries.push(clean);
     });
+
+    // Phase 3 PR-9 + Cipher #3 — attribution composition for per-entry snapshots.
+    // Per-entry collections (caretickets only today) carry __sync_updatedBy on
+    // each doc; aggregate across the change-set this snapshot covers:
+    //   - one writer across all changes → name them
+    //   - multiple writers → 'multiple parents'
+    //   - missing metadata on any change → fall back to count-only (null)
+    var attribution = null;
+    try {
+      var changes = snapshot.docChanges();
+      if (changes && changes.length > 0) {
+        var seenUid = null;
+        var seenName = null;
+        var allHaveMeta = true;
+        var multipleWriters = false;
+        for (var ci = 0; ci < changes.length; ci++) {
+          var cdata = changes[ci].doc && changes[ci].doc.data && changes[ci].doc.data();
+          var ub = cdata && cdata.__sync_updatedBy;
+          if (!ub || !ub.uid) { allHaveMeta = false; break; }
+          if (seenUid === null) { seenUid = ub.uid; seenName = ub.name || null; }
+          else if (seenUid !== ub.uid) { multipleWriters = true; }
+        }
+        if (allHaveMeta) {
+          attribution = multipleWriters
+            ? { uid: null, name: null, group: 'multiple', at: null }
+            : { uid: seenUid, name: seenName, at: null };
+        }
+      }
+    } catch(e) { /* attribution is best-effort; toast falls back to count-only */ }
 
     // Compare to current localStorage
     var current = load(lsKey, []);
@@ -908,9 +1101,16 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     // Update shadow
     _syncShadow[lsKey] = _syncCloneDeep(entries);
 
-    // Toast (skip during migration/reconcile, skip self-echo)
+    // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
+    // (Findings B, E). Per-entry collection — single rehydration of the
+    // module global to the full entries array (same shape as single-doc
+    // path; the entries array IS the canonical local representation).
+    try { _syncDispatchRender(lsKey, entries, attribution); }
+    catch(e) { _syncRecordCrash('dispatch/' + lsKey, e); }
+
+    // Toast (skip during migration/reconcile, skip self-echo at toast layer)
     if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
-      _syncQueueToast(collection, changeCount);
+      _syncQueueToast(collection, changeCount, attribution);
     }
   } finally {
     _syncMarkReady(collection);
@@ -931,6 +1131,15 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
     if (!doc.exists) return;
     var data = doc.data();
 
+    // Phase 3 Finding F: capture attribution BEFORE the __sync_* strip.
+    // Threaded through _syncDispatchRender to the toast for "X updated Y"
+    // text composition. Self-echo suppression still happens at toast time.
+    var attribution = data && data.__sync_updatedBy ? {
+      uid:  data.__sync_updatedBy.uid || null,
+      name: data.__sync_updatedBy.name || null,
+      at:   data.__sync_syncedAt || null,
+    } : null;
+
     // Strip __sync_* metadata
     var clean = {};
     var dataKeys = Object.keys(data);
@@ -945,6 +1154,8 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
     if (!lsKeys || lsKeys.length === 0) return;
 
     var anyChanged = false;
+    var lastChangedAttribution = null; // last successful change's attribution
+    var changedKeys = [];               // for dispatch / toast composition
 
     // C0 guard ordering at loop site (Cipher C1):
     //   [E]  existing JSON equality — cheapest no-op skip
@@ -992,10 +1203,18 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       try { save(key, remoteVal); }
       finally { _remoteWriteDepth--; }
       _syncShadow[key] = _syncCloneDeep(remoteVal);
+
+      // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
+      // (Findings B, E). Crash-isolated; failure falls through to the
+      // toast-with-reload fallback in _syncQueueToast (graceful degradation).
+      try { _syncDispatchRender(key, remoteVal, attribution); }
+      catch(e) { _syncRecordCrash('dispatch/' + key, e); }
+      changedKeys.push(key);
+      lastChangedAttribution = attribution;
     }
 
     if (anyChanged && !_syncIsMigrating && !_syncIsReconciling) {
-      _syncQueueToast(docName, 1);
+      _syncQueueToast(docName, 1, lastChangedAttribution);
     }
   } finally {
     _syncMarkReady(docName);
@@ -1003,25 +1222,65 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
 }
 
 // ─── Sync Toast ───
-function _syncQueueToast(source, count) {
-  // Self-echo suppression: if the write was ours, skip (§4.7 #45)
-  // The _remoteWriteDepth check in syncWrite already handles outbound suppression;
-  // here we batch rapid toasts into one.
+// Phase 3 PR-9 — toast becomes a non-blocking ack of "data refreshed in
+// place" (auto-dismiss only) rather than a tap-to-reload trigger. Reload
+// affordance moves to (a) the offline badge and halted-state indicator
+// (sl-1-2/sl-1-3, untouched) for state the auto-render path cannot recover
+// from, and (b) the explicit fallback when _syncDispatchRender throws and
+// the listener handler queues a fallback toast with the prior reload click
+// behavior.
+function _syncQueueToast(source, count, attribution) {
   if (_syncToastDebounce) clearTimeout(_syncToastDebounce);
   _syncToastPending = (_syncToastPending || 0) + count;
+  // Carry attribution to the latest fire (most recent listener delivery wins
+  // for the burst). When attribution differs across the burst, the Cipher #3
+  // multiple-writers shape collapses to a generic group label below.
+  if (attribution) {
+    if (!_syncToastAttribution) {
+      _syncToastAttribution = attribution;
+    } else if (_syncToastAttribution.uid && attribution.uid && _syncToastAttribution.uid !== attribution.uid) {
+      _syncToastAttribution = { uid: null, name: null, group: 'multiple', at: null };
+    } else if (!_syncToastAttribution.uid && !_syncToastAttribution.group) {
+      _syncToastAttribution = attribution;
+    }
+  }
+  _syncToastSourceLast = source;
 
   _syncToastDebounce = setTimeout(function() {
     var n = _syncToastPending;
+    var attr = _syncToastAttribution;
     _syncToastPending = 0;
+    _syncToastAttribution = null;
     if (n <= 0) return;
-    var msg = n === 1 ? 'New data synced — tap to refresh' : n + ' updates synced — tap to refresh';
+    var msg = _syncComposeToastText(n, attr);
     _syncShowSyncToast(msg);
   }, 1500);
 }
 var _syncToastDebounce = null;
 var _syncToastPending = 0;
+var _syncToastAttribution = null;
+var _syncToastSourceLast = null;
 
-function _syncShowSyncToast(msg) {
+// Compose toast text — attribution-aware (Finding F).
+//   attr.name set         → "{name} synced N updates" / "{name} synced an update"
+//   attr.group=='multiple'→ "Multiple parents synced N updates"
+//   attr null/empty       → "N updates synced" / "An update synced"
+// Self-echo (local user is the writer) is suppressed at the listener layer
+// in a future iteration; today's _remoteWriteDepth check upstream prevents
+// the local write from re-firing the toast in most cases. When the toast
+// names the local user it's still a truthful surface — the data did sync.
+function _syncComposeToastText(n, attr) {
+  var noun = (n === 1) ? 'an update' : (n + ' updates');
+  if (attr && attr.group === 'multiple') {
+    return 'Multiple parents synced ' + noun;
+  }
+  if (attr && attr.name) {
+    return attr.name + ' synced ' + noun;
+  }
+  return (n === 1 ? 'An update synced' : (n + ' updates synced'));
+}
+
+function _syncShowSyncToast(msg, opts) {
   // Create a distinct sync toast (different from QLToast per §4.6 #38)
   var existing = document.getElementById('syncToast');
   if (existing) existing.remove();
@@ -1030,10 +1289,18 @@ function _syncShowSyncToast(msg) {
   toast.id = 'syncToast';
   toast.className = 'sync-toast';
   toast.textContent = msg;
-  toast.addEventListener('click', function() {
-    toast.remove();
-    window.location.reload(); // §4.6 #40
-  });
+  // Phase 3 PR-9: success-path toast is auto-dismiss only (the auto-render
+  // already updated the active tab in place; nothing for the user to tap).
+  // The fallback path passes opts.tapToReload=true to restore the prior
+  // click-to-reload behavior when _syncDispatchRender's success cannot be
+  // assumed — e.g. when a future caller threads through dispatch failure.
+  if (opts && opts.tapToReload) {
+    toast.classList.add('is-tappable'); // CSS gates the cursor (HR-2)
+    toast.addEventListener('click', function() {
+      toast.remove();
+      window.location.reload(); // §4.6 #40 fallback path
+    });
+  }
   document.body.appendChild(toast);
 
   // Auto-dismiss after 8s

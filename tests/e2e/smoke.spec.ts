@@ -717,3 +717,344 @@ test.describe('Build script contract (Phase 3 PR-8)', () => {
     expect(pkg.scripts.build, 'build script copies to index.html').toContain('index.html');
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Phase 3 PR-9 — Auto-Refresh on Listener Fire + clobber-loop fix + attribution
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Three deliverables under one architectural change (charter §3 Option B,
+// post-R1 fold). Tested as three R-7 triads:
+//
+//   - Auto-refresh dispatch (the surface): listener fire → module global
+//     rehydrate → active-tab renderer call → no page reload.
+//   - Cross-device clobber regression (Finding E): listener-applied state
+//     survives a subsequent local push (rehydration is the closer of the
+//     clobber loop).
+//   - Attribution surfacing (Finding F): toast text names the updater when
+//     __sync_updatedBy is on the snapshot; falls back to count-only when
+//     absent. Toast on auto-render success path is NOT tappable.
+//
+// All tests use ?nosync to skip Firebase init in start.js (so the dispatch
+// path can be exercised without real Firestore). The tested primitives
+// (_syncDispatchRender, _syncSetGlobal, _syncReadActiveTab, _syncQueueToast,
+// _syncShowSyncToast, _syncComposeToastText) and the listener handlers
+// themselves are top-level function declarations and attach to window.
+
+// All tests below construct fake snapshot payloads inline inside page.evaluate
+// (Firestore SDK SnapshotShape is exists/data()/metadata; ducktype is enough
+// for _syncHandleSingleDocSnapshot's reads).
+
+test.describe('Auto-refresh on listener fire (Phase 3 PR-9)', () => {
+  test('positive — dispatch on growth listener fire rehydrates module global + reflects in active tab', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    // Wait for sync.js helpers (top-level fn declarations attach to window).
+    await page.waitForFunction(() => typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function');
+
+    // Synthetic listener fire — fake a remote growth doc with [a, b, c]
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const get = w['_syncGetGlobal'] as (name: string) => unknown;
+      const fakeGrowth = [
+        { date: '2025-09-04', wt: 3.45, ht: 50 },
+        { date: '2026-04-20', wt: 7.80, ht: 67 },
+        { date: '2026-04-27', wt: 8.05, ht: 68 },
+      ];
+      const fakeDoc = {
+        exists: true,
+        data: () => ({
+          ziva_growth: fakeGrowth,
+          __sync_updatedBy: { uid: 'remote-uid', name: 'Bhavna' },
+          __sync_syncedAt: null,
+        }),
+        metadata: { hasPendingWrites: false },
+      };
+      // Mark listener-ready so any guards do not early-return on first-fire
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', fakeDoc);
+      const after = get('growthData') as Array<{ wt: number }>;
+      return {
+        moduleGlobalLength: after.length,
+        moduleGlobalLastWt: after.slice(-1)[0].wt,
+        localStorageMatches: window.localStorage.getItem('ziva_growth') !== null,
+      };
+    });
+
+    expect(result.moduleGlobalLength, 'growthData rehydrated to 3 entries').toBe(3);
+    expect(result.moduleGlobalLastWt, 'last entry weight matches synthetic').toBe(8.05);
+    expect(result.localStorageMatches, 'localStorage[ziva_growth] populated').toBeTruthy();
+  });
+
+  test('regression-guard — dispatch while inactive tab does not call inactive renderer (still rehydrates)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function');
+
+    // Activate Home tab; fire dispatch for tracking (feeding) — feeding's
+    // active-tab renderers include both home and 'track:diet'. From home,
+    // renderHome should run (and not throw); diet-only renderers are skipped.
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const get = w['_syncGetGlobal'] as (name: string) => Record<string, unknown> | undefined;
+      // Spy on renderDietStats — it's a 'track:diet' renderer; should NOT
+      // be called when home tab is active. Dispatch resolves renderers via
+      // window[name] lookup so this monkey-patch is observable.
+      let dietStatsCalls = 0;
+      const origDietStats = w['renderDietStats'] as () => void;
+      w['renderDietStats'] = function() { dietStatsCalls++; if (origDietStats) return origDietStats(); };
+
+      const dispatch = w['_syncDispatchRender'] as (k: string, v: unknown, a: unknown) => unknown;
+      const fakeFeeding = { '2026-04-27': { breakfast: 'oats', lunch: '', dinner: '', snack: '' } };
+      // Confirm home tab is active (default landing tab)
+      const homeActive = !!document.getElementById('tab-home')?.classList.contains('active');
+      dispatch('ziva_feeding', fakeFeeding, null);
+
+      // Restore
+      w['renderDietStats'] = origDietStats;
+      return {
+        homeActive,
+        dietStatsCalls,
+        feedingDataKeys: Object.keys(get('feedingData') || {}),
+      };
+    });
+
+    expect(result.homeActive, 'home tab active by default landing').toBeTruthy();
+    expect(result.dietStatsCalls, 'renderDietStats NOT called when home active').toBe(0);
+    expect(result.feedingDataKeys, 'feedingData rehydrated despite no diet render').toContain('2026-04-27');
+  });
+
+  test('positive-regression — auto-render path does not trigger window.location.reload', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    const initialUrl = page.url();
+    // Spy on navigation events
+    let navigationCount = 0;
+    page.on('framenavigated', () => { navigationCount++; });
+
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({ ziva_growth: [{ date: '2026-04-27', wt: 8.05, ht: 68 }] }),
+        metadata: { hasPendingWrites: false },
+      });
+    });
+
+    // Wait briefly to allow any async navigation to settle
+    await page.waitForTimeout(200);
+    expect(page.url(), 'URL unchanged across listener fire').toBe(initialUrl);
+    expect(navigationCount, 'no navigation events fired').toBe(0);
+  });
+});
+
+test.describe('Cross-device clobber regression (Phase 3 PR-9, Finding E)', () => {
+  test('positive — synthetic listener fire delivering remote state rehydrates module global to remote shape', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function');
+
+    const remoteState = [
+      { date: '2025-09-04', wt: 3.45, ht: 50 },
+      { date: '2026-04-25', wt: 8.00, ht: 67 },
+      { date: '2026-04-27', wt: 8.10, ht: 68 },
+    ];
+
+    const after = await page.evaluate((remote) => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const get = w['_syncGetGlobal'] as (name: string) => Array<{ date: string }>;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({ ziva_growth: remote }),
+        metadata: { hasPendingWrites: false },
+      });
+      const arr = get('growthData');
+      return {
+        moduleGlobalCount: arr.length,
+        moduleGlobalLastDate: arr.slice(-1)[0].date,
+      };
+    }, remoteState);
+
+    expect(after.moduleGlobalCount, 'growthData has 3 entries (rehydrated)').toBe(3);
+    expect(after.moduleGlobalLastDate, 'last entry matches remote shape').toBe('2026-04-27');
+  });
+
+  test('regression-guard — subsequent local addGrowthEntry pushes onto rehydrated state, not init state', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function');
+
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const get = w['_syncGetGlobal'] as (name: string) => Array<{ date: string }>;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      // Step 1: capture init growthData length
+      const initLen = get('growthData').length;
+      // Step 2: synthetic listener fire delivers a 3-entry remote state
+      handler('growth', {
+        exists: true,
+        data: () => ({ ziva_growth: [
+          { date: '2025-09-04', wt: 3.45, ht: 50 },
+          { date: '2026-04-25', wt: 8.00, ht: 67 },
+          { date: '2026-04-27', wt: 8.10, ht: 68 },
+        ] }),
+        metadata: { hasPendingWrites: false },
+      });
+      const postSyncLen = get('growthData').length;
+      // Step 3: simulate the local-add path's push (the addGrowthEntry idiom
+      // at medical.js:1820–1841 — push onto the module global, then save).
+      // get('growthData') returns the SAME array the let binding holds, so
+      // .push() mutates the live data through the binding.
+      get('growthData').push({ date: '2026-04-28', wt: 8.15, ht: 68 });
+      const finalLen = get('growthData').length;
+      const finalLast = get('growthData').slice(-1)[0].date;
+      return { initLen, postSyncLen, finalLen, finalLast };
+    });
+
+    // Crucial: the local push lands on top of the 3-entry rehydrated state,
+    // producing 4 entries total — not (initLen + 1) which would indicate a
+    // push onto stale init state (the clobber-loop signature).
+    expect(result.postSyncLen, 'rehydration replaced init state with 3 entries').toBe(3);
+    expect(result.finalLen, 'local-add pushed onto rehydrated state').toBe(4);
+    expect(result.finalLen, 'final length is NOT initLen + 1 (stale push)').not.toBe(result.initLen + 1);
+    expect(result.finalLast, 'last entry is the local-added one').toBe('2026-04-28');
+  });
+
+  test('positive-regression — full A→B→A clobber sequence converges (no stale-write loop)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function');
+
+    const trace = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const get = w['_syncGetGlobal'] as (name: string) => Array<{ date: string }>;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      const fire = (arr: Array<{ date: string; wt: number; ht: number | null }>) => handler('growth', {
+        exists: true,
+        data: () => ({ ziva_growth: arr }),
+        metadata: { hasPendingWrites: false },
+      });
+      // Device A wrote [a,b]; Device A's local growthData is [a,b]. Listener
+      // delivers Device A's own write back (echo).
+      fire([
+        { date: '2025-09-04', wt: 3.45, ht: 50 },
+        { date: '2026-04-25', wt: 8.00, ht: 67 },
+      ]);
+      const t1 = get('growthData').length;
+      // Now Device A receives Device B's append: A's listener fires with
+      // [a,b,c]. Without the rehydrate fix, Device A's growthData would
+      // remain [a,b] and the next local push would clobber back. With
+      // rehydrate, growthData becomes [a,b,c].
+      fire([
+        { date: '2025-09-04', wt: 3.45, ht: 50 },
+        { date: '2026-04-25', wt: 8.00, ht: 67 },
+        { date: '2026-04-27', wt: 8.10, ht: 68 },
+      ]);
+      const t2 = get('growthData').length;
+      // Device A user adds 'd'. Pushes onto growthData (now [a,b,c]).
+      get('growthData').push({ date: '2026-04-28', wt: 8.15, ht: 68 });
+      const t3 = get('growthData').length;
+      const t3Last = get('growthData').slice(-1)[0].date;
+      return { t1, t2, t3, t3Last };
+    });
+
+    expect(trace.t1, 'after first listener fire: 2 entries').toBe(2);
+    expect(trace.t2, 'after Device B echo arrives: 3 entries (no clobber)').toBe(3);
+    expect(trace.t3, 'after Device A local-add: 4 entries').toBe(4);
+    expect(trace.t3Last, 'last entry is the local-added 2026-04-28').toBe('2026-04-28');
+  });
+});
+
+test.describe('Attribution surfacing (Phase 3 PR-9, Finding F)', () => {
+  test('positive — toast text names the updater when __sync_updatedBy.name is present', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._syncComposeToastText === 'function');
+
+    const composed = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const compose = w['_syncComposeToastText'] as (n: number, attr: unknown) => string;
+      return {
+        single: compose(1, { uid: 'remote-uid', name: 'Bhavna', at: null }),
+        multiple: compose(3, { uid: 'remote-uid', name: 'Bhavna', at: null }),
+        groupMultiple: compose(2, { uid: null, name: null, group: 'multiple', at: null }),
+      };
+    });
+
+    expect(composed.single, 'singular form names the updater').toContain('Bhavna');
+    expect(composed.multiple, 'plural form names the updater').toContain('Bhavna');
+    expect(composed.multiple, 'plural form has count').toContain('3');
+    expect(composed.groupMultiple, 'multiple-writers shape uses group label').toContain('Multiple parents');
+  });
+
+  test('regression-guard — toast falls back to count-only when attribution is null/missing', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._syncComposeToastText === 'function');
+
+    const composed = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const compose = w['_syncComposeToastText'] as (n: number, attr: unknown) => string;
+      return {
+        nullAttr: compose(1, null),
+        emptyAttr: compose(2, {}),
+        nameOnly: compose(1, { uid: null, name: null }),
+      };
+    });
+
+    expect(composed.nullAttr, 'null attribution → count-only').not.toContain('synced an');
+    // The message shape is "An update synced" or "N updates synced"
+    expect(composed.nullAttr).toMatch(/^An update synced$/);
+    expect(composed.emptyAttr).toMatch(/^2 updates synced$/);
+    expect(composed.nameOnly).toMatch(/^An update synced$/);
+  });
+
+  test('positive-regression — auto-render success toast is NOT tappable (no .is-tappable; no click-to-reload)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._syncShowSyncToast === 'function');
+
+    // Show a toast on the success path (no opts → no tapToReload)
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const show = w['_syncShowSyncToast'] as (msg: string, opts?: { tapToReload?: boolean }) => void;
+      show('Bhavna synced an update');
+    });
+
+    const toast = page.locator('#syncToast');
+    await expect(toast, 'toast appears').toBeVisible();
+    await expect(toast, 'success-path toast lacks .is-tappable').not.toHaveClass(/\bis-tappable\b/);
+    await expect(toast, 'message is the success-path attribution text').toHaveText('Bhavna synced an update');
+
+    // And the fallback path (tapToReload=true) DOES add the class
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const show = w['_syncShowSyncToast'] as (msg: string, opts?: { tapToReload?: boolean }) => void;
+      show('Tap to refresh', { tapToReload: true });
+    });
+    await expect(toast, 'fallback-path toast has .is-tappable').toHaveClass(/\bis-tappable\b/);
+  });
+});
