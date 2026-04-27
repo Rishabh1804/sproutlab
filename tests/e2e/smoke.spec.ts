@@ -373,8 +373,34 @@ test.describe('Service Worker registration (Phase 2 PR-4a)', () => {
     // the inter-call window that race-conditioned earlier sep-dashboard
     // PR #6 attempts (D1 is the *technique*; the assertion below is the
     // *thing being asserted* — registration activates on scope-root).
+    //
+    // PR-13 r1 surfaced (Cipher CT-8-shape catch under parallel stress):
+    // `serviceWorker.ready` resolves when `reg.active` is non-null, but
+    // `reg.active.state` can be 'activating' for a brief window before
+    // settling to 'activated'. PR-4b's heavier install (manifest fetch +
+    // 8-asset precache including 343 KB Firestore compat) widens that
+    // window under parallel contention. Refinement: await the statechange
+    // event explicitly, still inside one page.evaluate so D1 atomicity is
+    // preserved (no inter-call window). 5s cap prevents indefinite hangs.
     const swState = await page.evaluate(async () => {
       const reg = await navigator.serviceWorker.ready;
+      const active = reg.active;
+      if (active && active.state !== 'activated') {
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error('SW activate timeout (5s)')),
+            5000,
+          );
+          const onChange = () => {
+            if (active.state === 'activated') {
+              clearTimeout(timer);
+              active.removeEventListener('statechange', onChange);
+              resolve();
+            }
+          };
+          active.addEventListener('statechange', onChange);
+        });
+      }
       return {
         scope: reg.scope,
         active: !!reg.active,
