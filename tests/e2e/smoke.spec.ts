@@ -405,3 +405,152 @@ test.describe('Service Worker registration (Phase 2 PR-4a)', () => {
     expect(html, 'no /sproutlab/beta/ scope hardcode').not.toMatch(/scope\s*:\s*['"]\/sproutlab\/beta\//);
   });
 });
+
+// Phase 2 PR-4b — Versioned cache + precache + stale-while-revalidate.
+//
+// Five tests exercise the cache lifecycle end-to-end:
+//   positive — cache name matches manifest.version (CACHE_NAME = 'sproutlab-' + version)
+//   positive — all 8 first-party precache assets land in the cache after install
+//   regression-guard — manifest.json is NOT precached (bypass keeps displayAppVersion fresh)
+//   regression-guard — stale prior-version caches are deleted on activate
+//   positive — cached asset served when network unavailable (offline behavior)
+//
+// Hermetic note: tests rely on the SW activating in a fresh BrowserContext.
+// Playwright defaults to one context per test, so each test sees a clean SW
+// install + activate cycle. The CACHE_PREFIX is 'sproutlab-'.
+
+test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
+  test('positive — cache name derived from manifest.version', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+
+    const result = await page.evaluate(async () => {
+      const manifest = await fetch('manifest.json', { cache: 'no-store' }).then(r => r.json());
+      const cacheKeys = await caches.keys();
+      return { version: manifest.version, cacheKeys };
+    });
+
+    expect(result.version, 'manifest version present').toMatch(/^\d{4}\.\d{2}\.\d{2}-\d+$/);
+    expect(result.cacheKeys, 'cache name = sproutlab-<version>').toContain(`sproutlab-${result.version}`);
+  });
+
+  test('positive — all 8 first-party assets precached on install', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForTimeout(500); // let precache promises settle
+
+    const PRECACHE_EXPECTED = [
+      './',
+      'index.html',
+      'icon-192.png',
+      'icon-512.png',
+      'apple-touch-icon.png',
+      'lib/firebase-app-compat.js',
+      'lib/firebase-auth-compat.js',
+      'lib/firebase-firestore-compat.js',
+    ];
+
+    const cachedMap = await page.evaluate(async (assets) => {
+      const keys = await caches.keys();
+      const cacheName = keys.find(k => k.startsWith('sproutlab-'));
+      if (!cacheName) return { cacheName: null, results: {} };
+      const cache = await caches.open(cacheName);
+      const results = {};
+      for (const asset of assets) {
+        const match = await cache.match(asset);
+        results[asset] = !!match;
+      }
+      return { cacheName, results };
+    }, PRECACHE_EXPECTED);
+
+    expect(cachedMap.cacheName, 'versioned cache exists').toBeTruthy();
+    for (const asset of PRECACHE_EXPECTED) {
+      expect(cachedMap.results[asset], `precached: ${asset}`).toBe(true);
+    }
+  });
+
+  test('regression-guard — manifest.json NOT precached (bypass preserved)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForTimeout(500);
+
+    // Cipher PR-11 catch: manifest.json must always reach network so
+    // displayAppVersion() reads the current build's version, not a stale
+    // precached copy. This guards both that manifest.json is excluded from
+    // the precache list AND that the fetch handler skips respondWith for it.
+    const manifestCached = await page.evaluate(async () => {
+      const keys = await caches.keys();
+      const cacheName = keys.find(k => k.startsWith('sproutlab-'));
+      if (!cacheName) return null;
+      const cache = await caches.open(cacheName);
+      const match = await cache.match('manifest.json');
+      return !!match;
+    });
+
+    expect(manifestCached, 'manifest.json must NOT be in versioned cache').toBe(false);
+  });
+
+  test('regression-guard — stale prior-version caches deleted on activate', async ({ page }) => {
+    await stubChartJs(page);
+
+    // Pre-seed an old cache before the SW activates. addInitScript runs
+    // before page scripts but after browser context creation; the cache
+    // is created from the page context, then the SW's activate handler
+    // (which fires on first navigation) cleans it up.
+    await page.addInitScript(() => {
+      // Pre-seed in init-time so it exists before SW install completes
+      caches.open('sproutlab-1900.01.01-1').then(cache =>
+        cache.put('/old', new Response('stale prior version'))
+      );
+    });
+
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForTimeout(500); // let activate cleanup run
+
+    const finalKeys = await page.evaluate(() => caches.keys());
+
+    expect(finalKeys, 'old prefixed cache must be deleted').not.toContain('sproutlab-1900.01.01-1');
+    expect(
+      finalKeys.some(k => k.startsWith('sproutlab-')),
+      'current versioned cache must remain'
+    ).toBe(true);
+  });
+
+  test('positive — cached asset served when network unavailable', async ({ page, context }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForTimeout(500); // precache settle
+
+    // Verify icon is precached BEFORE going offline (sanity check).
+    const precached = await page.evaluate(async () => {
+      const keys = await caches.keys();
+      const cacheName = keys.find(k => k.startsWith('sproutlab-'));
+      if (!cacheName) return false;
+      const cache = await caches.open(cacheName);
+      return !!(await cache.match('icon-192.png'));
+    });
+    expect(precached, 'icon-192.png pre-cached as sanity').toBe(true);
+
+    // Now go offline at the BrowserContext level. Subsequent fetches
+    // would fail without the SW — the cache hit is what makes the offline
+    // story work.
+    await context.setOffline(true);
+
+    const offlineResult = await page.evaluate(async () => {
+      try {
+        const res = await fetch('icon-192.png');
+        return { ok: res.ok, status: res.status };
+      } catch (err) {
+        return { error: String(err) };
+      }
+    });
+
+    expect(offlineResult.ok, 'cached icon served offline').toBe(true);
+    expect(offlineResult.status, 'response status 200 (cache hit)').toBe(200);
+  });
+});
