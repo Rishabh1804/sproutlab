@@ -1057,4 +1057,207 @@ test.describe('Attribution surfacing (Phase 3 PR-9, Finding F)', () => {
     });
     await expect(toast, 'fallback-path toast has .is-tappable').toHaveClass(/\bis-tappable\b/);
   });
+
+  // PR-9 hotfix — end-to-end toast assertion (Cipher CT-class observation
+  // post-merge: hermetic-floor-doesnt-substitute-for-production-floor; PR-9 r1
+  // Triad 3 verified _syncComposeToastText return values but never asserted
+  // the full listener-fire → DOM toast chain rendered. Issue 1 surfaced because
+  // dispatch render-crashes incremented _syncCrashCount toward SYNC_CRASH_LIMIT,
+  // tripping _syncDisabled and detaching all listeners. Once disabled, no
+  // listener fires and no toasts queue. Hermetic ?nosync tests bypass the
+  // listener-attach path entirely, so the bug never manifested in the prior
+  // hermetic floor.
+  test('end-to-end — cross-device different-uid listener fire produces visible toast with attribution text', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    // Fire the single-doc listener handler with a synthetic cross-device write
+    // (Bhavna writes growth on Device B; Lyra's session is Device A).
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [
+            { date: '2025-09-04', wt: 3.45, ht: 50 },
+            { date: '2026-04-25', wt: 8.00, ht: 67 },
+            { date: '2026-04-27', wt: 8.10, ht: 68 },
+          ],
+          __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' },
+          __sync_syncedAt: null,
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+    });
+
+    // Toast queues with 1500ms debounce — wait for it to materialize.
+    const toast = page.locator('#syncToast');
+    await expect(toast, 'toast appears in DOM after listener fire').toBeVisible({ timeout: 3000 });
+    await expect(toast, 'toast text names the cross-device updater').toContainText('Bhavna');
+    await expect(toast, 'success-path toast lacks .is-tappable (auto-dismiss only)').not.toHaveClass(/\bis-tappable\b/);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// PR-9 hotfix — Issue 1 + Issue 2 root-cause regression coverage
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Issue 1 (post-PR-9 prod regression): cross-device updates produced no toast.
+// Root cause: _syncDispatchRender called _syncRecordCrash on renderer
+// failures; that increments _syncCrashCount which trips _syncDisabled at
+// SYNC_CRASH_LIMIT=3, detaching all listeners. UI render jurisdiction was
+// conflating with sync I/O jurisdiction. Fix: dispatch-side failures log
+// via console.warn only.
+//
+// Issue 2 (pre-existing latent bug surfaced post-PR-9 merge): orderMedicalCards
+// called document.getElementById('medStatsCard') for a card removed from
+// template.html in commit 16c644e (April 10 2026). appendChild(null) threw
+// TypeError on every swipe-to-medical. Fix: null-guard each appendChild and
+// filter null .el out of the cards array before classList queries.
+
+test.describe('PR-9 hotfix — dispatch crashes do not trip sync circuit (Issue 1 root cause)', () => {
+  test('positive — a renderer that throws does NOT increment _syncCrashCount or set _syncDisabled', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncDispatchRender?: unknown })._syncDispatchRender === 'function');
+
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      // Capture pre-state
+      const preCrashCount = (w['_syncCrashCount'] as number) || 0;
+      const preDisabled = w['_syncDisabled'] as boolean;
+
+      // Replace renderHome with a thrower for the duration of the test.
+      const origRenderHome = w['renderHome'] as () => void;
+      w['renderHome'] = function() { throw new Error('synthetic renderer crash'); };
+
+      // Fire dispatch 5 times — would have tripped SYNC_CRASH_LIMIT=3 under
+      // the pre-hotfix _syncRecordCrash path. After hotfix, console.warn only.
+      const dispatch = w['_syncDispatchRender'] as (k: string, v: unknown, a: unknown) => unknown;
+      for (let i = 0; i < 5; i++) {
+        dispatch('ziva_feeding', { '2026-04-27': { breakfast: 'oats', lunch: '', dinner: '', snack: '' } }, null);
+      }
+
+      // Restore
+      w['renderHome'] = origRenderHome;
+
+      return {
+        preCrashCount,
+        preDisabled,
+        postCrashCount: (w['_syncCrashCount'] as number) || 0,
+        postDisabled: w['_syncDisabled'] as boolean,
+      };
+    });
+
+    expect(result.preCrashCount, 'pre-test crash count is 0').toBe(0);
+    expect(result.preDisabled, 'pre-test sync not disabled').toBeFalsy();
+    expect(result.postCrashCount, '5 renderer crashes did NOT increment _syncCrashCount').toBe(0);
+    expect(result.postDisabled, 'sync NOT auto-disabled by renderer crashes').toBeFalsy();
+  });
+
+  test('regression-guard — a real sync I/O failure (e.g., _syncRecordCrash direct call) DOES still trip the circuit', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncRecordCrash?: unknown })._syncRecordCrash === 'function');
+
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const recordCrash = w['_syncRecordCrash'] as (source: string, err: Error) => void;
+      // Directly fire _syncRecordCrash 3 times (simulating actual sync I/O
+      // failures, not dispatch failures). The production circuit breaker
+      // remains intact for its proper jurisdiction.
+      for (let i = 0; i < 3; i++) {
+        recordCrash('test/io-failure', new Error('synthetic I/O crash'));
+      }
+      return {
+        crashCount: w['_syncCrashCount'] as number,
+        disabled: w['_syncDisabled'] as boolean,
+      };
+    });
+
+    expect(result.crashCount, '3 direct _syncRecordCrash calls register').toBeGreaterThanOrEqual(3);
+    expect(result.disabled, 'sync correctly auto-disables on real I/O crashes').toBeTruthy();
+  });
+
+  test('positive-regression — listener handler with renderer crash STILL queues toast (no early-disable cascade)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      // Make renderHome throw — would have tripped circuit under pre-hotfix code
+      w['renderHome'] = function() { throw new Error('synthetic'); };
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [{ date: '2026-04-27', wt: 8.10, ht: 68 }],
+          __sync_updatedBy: { uid: 'remote-uid', name: 'Bhavna' },
+          __sync_syncedAt: null,
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+    });
+
+    // Toast still queues even with renderer crashing — circuit not tripped.
+    const toast = page.locator('#syncToast');
+    await expect(toast, 'toast still appears despite renderer crash').toBeVisible({ timeout: 3000 });
+    await expect(toast, 'attribution text preserved').toContainText('Bhavna');
+  });
+});
+
+test.describe('PR-9 hotfix — orderMedicalCards null-guard (Issue 2 root cause)', () => {
+  test('positive — orderMedicalCards completes without throwing when medStatsCard element is absent', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { orderMedicalCards?: unknown }).orderMedicalCards === 'function');
+
+    // Confirm the pre-existing template state: no #medStatsCard in DOM.
+    await expect(page.locator('#medStatsCard'), 'medStatsCard absent in template (commit 16c644e)').toHaveCount(0);
+
+    // orderMedicalCards must complete without throwing. Pre-hotfix, this
+    // would throw TypeError at appendChild(statsCard) where statsCard=null.
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const order = w['orderMedicalCards'] as () => void;
+      try { order(); return { threw: false, message: null as string | null }; }
+      catch(e) { return { threw: true, message: (e as Error).message }; }
+    });
+
+    expect(result.threw, 'orderMedicalCards must not throw on missing medStatsCard').toBeFalsy();
+  });
+
+  test('regression-guard — switchTab(\'medical\') → orderMedicalCards chain completes without throwing', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { switchTab?: unknown }).switchTab === 'function');
+    await page.waitForSelector('#tab-medical', { state: 'attached' });
+
+    // switchTab('medical') redirects internally: name → 'track', _activeTrackSub
+    // → 'medical' (core.js:2591). Then dispatches to switchTrackSub('medical')
+    // which calls renderMedicalStats + orderMedicalCards inline — same chain
+    // the production swipe trace exercises (handleSwipe → switchTrackSub).
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const switchTab = w['switchTab'] as (n: string) => void;
+      try {
+        switchTab('medical');
+        return { threw: false, message: null as string | null };
+      } catch(e) { return { threw: true, message: (e as Error).message }; }
+    });
+
+    expect(result.threw, 'switchTab(\'medical\') → orderMedicalCards must not throw').toBeFalsy();
+    expect(result.message, 'no error message captured').toBeNull();
+  });
 });

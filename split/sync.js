@@ -303,13 +303,22 @@ function _syncReadActiveTab() {
 // Returns a non-null attribution payload when one was provided, so the
 // caller (listener handler) can compose the toast text. Captured before
 // the existing __sync_* strip in both handlers (Cipher #4 cross-reference).
+//
+// Hotfix (post-PR-9) — Issue 1 root cause: dispatch crashes formerly used
+// _syncRecordCrash, which increments _syncCrashCount toward SYNC_CRASH_LIMIT
+// and trips _syncDisabled = true at 3 crashes. That conflates UI render
+// jurisdiction with sync (Firestore I/O) jurisdiction — a renderer bug is
+// not a reason to halt sync and lose all listener fires (which manifested
+// in production as "no toast on cross-device update"). Now: dispatch
+// failures log via console.warn only, leaving the production circuit
+// breaker reserved for actual sync I/O failures.
 function _syncDispatchRender(lsKey, value, attribution) {
   var dep = SYNC_RENDER_DEPS[lsKey];
   if (!dep) return attribution || null; // no UI dependency mapped — silent OK
   // (1) Rehydrate module global (Finding B + E fix)
   if (dep.global) {
     try { _syncSetGlobal(dep.global, value); }
-    catch(e) { _syncRecordCrash('dispatch-set-global/' + lsKey, e); }
+    catch(e) { console.warn('[sync-dispatch] set-global ' + lsKey + ':', e); }
   }
   // (2) Active-tab renderer dispatch (Finding C idiom). Renderers are name
   //     strings resolved via window[name] so spy-based tests work and a
@@ -322,7 +331,7 @@ function _syncDispatchRender(lsKey, value, attribution) {
       try {
         var fn = (typeof window !== 'undefined') ? window[names[i]] : undefined;
         if (typeof fn === 'function') fn();
-      } catch(e) { _syncRecordCrash('dispatch-render/' + lsKey + '/' + names[i], e); }
+      } catch(e) { console.warn('[sync-dispatch] render ' + lsKey + '/' + names[i] + ':', e); }
     }
   }
   return attribution || null;
@@ -1105,8 +1114,10 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     // (Findings B, E). Per-entry collection — single rehydration of the
     // module global to the full entries array (same shape as single-doc
     // path; the entries array IS the canonical local representation).
+    // Hotfix: dispatch failures log via console.warn (not _syncRecordCrash);
+    // see _syncDispatchRender comment for jurisdictional rationale.
     try { _syncDispatchRender(lsKey, entries, attribution); }
-    catch(e) { _syncRecordCrash('dispatch/' + lsKey, e); }
+    catch(e) { console.warn('[sync-dispatch] outer/' + lsKey + ':', e); }
 
     // Toast (skip during migration/reconcile, skip self-echo at toast layer)
     if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
@@ -1207,8 +1218,10 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the
       // toast-with-reload fallback in _syncQueueToast (graceful degradation).
+      // Hotfix: dispatch failures log via console.warn (not _syncRecordCrash);
+      // see _syncDispatchRender comment for jurisdictional rationale.
       try { _syncDispatchRender(key, remoteVal, attribution); }
-      catch(e) { _syncRecordCrash('dispatch/' + key, e); }
+      catch(e) { console.warn('[sync-dispatch] outer/' + key + ':', e); }
       changedKeys.push(key);
       lastChangedAttribution = attribution;
     }
