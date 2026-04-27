@@ -1,4 +1,8 @@
 #!/bin/bash
+# PR-8 (sl-3-pnpm-build): cd to script dir so the build can be invoked from any
+# cwd (e.g. `pnpm build` from repo root). Internal cat/node calls remain
+# relative to split/ as before; this just makes the cwd discipline implicit.
+cd "$(dirname "$0")"
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

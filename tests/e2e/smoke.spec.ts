@@ -689,3 +689,31 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
     await expect(page.locator('#updateToast'), 'toast reveals under full-mode').toBeVisible();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Build script contract (Phase 3 PR-8)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// PR-8 mechanizes the rebuild step the Phase 1 ship-gap surfaced (manifest
+// `version` advanced but the compiled artifact wasn't regenerated). The
+// `pnpm build` entry runs `bash split/build.sh` (which now self-locates via
+// `cd "$(dirname "$0")"` so it works from any cwd) and copies the result to
+// both sproutlab.html and index.html. This describe block regression-guards
+// the `package.json` "scripts.build" entry against accidental drop. The
+// existing PR-3 manifest-version triad (above, lines ~290–365) covers the
+// build-output side; this just guards the entry point.
+
+test.describe('Build script contract (Phase 3 PR-8)', () => {
+  test('positive — package.json declares a `build` script that invokes split/build.sh', async ({ request }) => {
+    const res = await request.get('/package.json');
+    expect(res.ok(), 'package.json fetchable').toBeTruthy();
+    const pkg = await res.json();
+    expect(pkg.scripts, 'package.json has scripts block').toBeTruthy();
+    expect(pkg.scripts.build, 'scripts.build entry present').toBeTruthy();
+    // Substring match — exact wording can iterate (e.g. future prepush hook),
+    // but the entry must drive split/build.sh, not bypass it.
+    expect(pkg.scripts.build, 'build script invokes split/build.sh').toContain('split/build.sh');
+    expect(pkg.scripts.build, 'build script writes sproutlab.html').toContain('sproutlab.html');
+    expect(pkg.scripts.build, 'build script copies to index.html').toContain('index.html');
+  });
+});
