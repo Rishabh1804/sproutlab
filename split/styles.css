@@ -8662,11 +8662,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   font-weight:600;
   font-family:'Nunito',sans-serif;
   z-index:9998;
-  cursor:pointer;
+  cursor:default;
   box-shadow:0 4px 16px rgba(0,0,0,0.2);
   animation:syncToastIn 0.3s ease-out;
   white-space:nowrap;
 }
+/* Phase 3 PR-9: success-path toast is auto-dismiss-only (no click handler;
+   `cursor:default`). Fallback path adds `.is-tappable` to restore the prior
+   tap-to-reload affordance — the click handler is wired in JS at toast
+   creation time, gated on the same flag. */
+.sync-toast.is-tappable { cursor:pointer; }
 @keyframes syncToastIn {
   from { opacity:0; transform:translateX(-50%) translateY(10px); }
   to   { opacity:1; transform:translateX(-50%) translateY(0); }
