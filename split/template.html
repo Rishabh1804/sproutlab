@@ -79,6 +79,16 @@
       <span class="sync-indicator__dot" aria-hidden="true"></span>
       <span class="sync-indicator__label"></span>
     </button>
+    <!-- Update toast (Phase 2 PR-5). Surfaced when the SW emits 'updatefound'
+         AND the new worker reaches 'installed' state with an existing
+         controller (= update, not first install). HR-3/HR-6: tap routes
+         through data-action="syncReload" — the dispatcher wired in sl-1-2 r3.
+         Lives inside #statusStrip so it survives body.simple-mode (the
+         #headerFull hide rule does not cascade to the strip's siblings). -->
+    <button id="updateToast" type="button" class="update-toast" hidden role="status" aria-live="polite" aria-atomic="true" data-action="syncReload">
+      <span class="update-toast__icon" aria-hidden="true"><svg class="zi"><use href="#zi-sparkle"/></svg></span>
+      <span class="update-toast__copy">New version available — Tap to reload</span>
+    </button>
   </div>
 
   <!-- TAB BAR (above header) -->

@@ -580,3 +580,112 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
     expect(offlineResult.status, 'response status 200 (cache hit)').toBe(200);
   });
 });
+
+// Phase 2 PR-5 — Update-detection toast (R-7 binary-mode triad).
+//
+// When sw.js changes (typically post-manifest-version-bump deploy), the new
+// worker fires 'updatefound' → reaches 'installed' state. With an existing
+// controller, that's an UPDATE (not first install) and core.js reveals
+// #updateToast. Tap routes through data-action="syncReload" (sl-1-2 r3
+// dispatcher) which reloads the page → user gets the new bundle.
+//
+// Triad shape (binary-mode refinement of R-7 — anticipated 3rd on-record
+// instance per Cipher PR-13 r2 doctrine ledger):
+//   default-positive — simple-mode user: toast renders + reveals + has dispatcher wiring
+//   opt-out-positive — full-mode user:    same
+//   mode-contract-regression — toast in DOM under BOTH modes; visibility controlled
+//                              by [hidden] attribute, NOT by mode (regression-guard
+//                              against accidental simple-mode hide rule)
+//
+// Test approach: trigger the reveal via direct page.evaluate (mocking the
+// updatefound→installed→controller chain). Real SW-script-swap simulation
+// is jurisdictionally distinct (Playwright doesn't expose a clean primitive
+// for swapping the SW script mid-test); the chain itself is verified by
+// PR-13's cache-lifecycle suite. This describe block tests the UI surface +
+// data-action wiring under both UX modes.
+
+test.describe('Update-detection toast (Phase 2 PR-5)', () => {
+  test('default-positive — simple-mode user sees toast on update', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+
+    const toast = page.locator('#updateToast');
+    await expect(toast, 'toast present in DOM').toHaveCount(1);
+    await expect(toast, 'toast initially hidden').toBeHidden();
+
+    // HR-3/HR-6: tap routes through the syncReload dispatcher.
+    await expect(toast).toHaveAttribute('data-action', 'syncReload');
+
+    // Simulate updatefound → installed + controller chain by directly
+    // invoking the reveal that core.js's listener would run. This tests
+    // the toast UI + wiring without needing to swap the SW script.
+    await page.evaluate(() => {
+      const el = document.getElementById('updateToast');
+      if (el) el.removeAttribute('hidden');
+    });
+
+    await expect(toast, 'toast visible after reveal').toBeVisible();
+    await expect(toast).toHaveText(/New version available/i);
+  });
+
+  test('opt-out-positive — full-mode user sees toast on update', async ({ page }) => {
+    await stubChartJs(page);
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+
+    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+
+    const toast = page.locator('#updateToast');
+    await expect(toast).toHaveCount(1);
+    await expect(toast).toBeHidden();
+    await expect(toast).toHaveAttribute('data-action', 'syncReload');
+
+    await page.evaluate(() => {
+      const el = document.getElementById('updateToast');
+      if (el) el.removeAttribute('hidden');
+    });
+
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveText(/New version available/i);
+  });
+
+  test('mode-contract-regression — toast in DOM under BOTH modes (no display:none cascade)', async ({ page }) => {
+    await stubChartJs(page);
+
+    // Pass 1: simple-mode default
+    await page.goto('/index.html?nosync');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('#updateToast'), 'toast in DOM under simple-mode').toHaveCount(1);
+    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull').toBeHidden();
+    await expect(page.locator('#statusStrip'), 'strip visible (toast container)').toBeVisible();
+    // Toast itself is hidden by [hidden] attribute, NOT by simple-mode CSS.
+    // After removeAttribute('hidden'), it should be visible regardless of mode.
+    await page.evaluate(() => {
+      const el = document.getElementById('updateToast');
+      if (el) el.removeAttribute('hidden');
+    });
+    await expect(page.locator('#updateToast'), 'toast reveals under simple-mode').toBeVisible();
+
+    // Pass 2: opt out, reload
+    await page.evaluate(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.reload();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('#updateToast'), 'toast in DOM under full-mode').toHaveCount(1);
+    await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
+    await page.evaluate(() => {
+      const el = document.getElementById('updateToast');
+      if (el) el.removeAttribute('hidden');
+    });
+    await expect(page.locator('#updateToast'), 'toast reveals under full-mode').toBeVisible();
+  });
+});

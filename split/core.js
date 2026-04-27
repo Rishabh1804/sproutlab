@@ -4358,10 +4358,27 @@ function updateStatPillTrends() {
 // Blob-URL pattern). The script lives at /sw.js (repo root); default scope
 // is parent directory of the script, which matches the deployed root
 // automatically across environments (local: '/'; GitHub Pages: '/sproutlab/').
-// PR-4b will add CACHE_NAME + precache list + version invalidation here;
-// for now /sw.js is install/activate/fetch-passthrough only.
+// PR-4b added CACHE_NAME + precache list + version invalidation in sw.js.
+// PR-5 (this) adds update-detection: when sw.js changes (next deploy after
+// a manifest.version bump), the new worker fires 'updatefound' → installs
+// → reaches 'installed' state. With an existing controller in place that
+// means an UPDATE (not first install) — we surface #updateToast. Tap
+// routes through the syncReload() dispatcher already wired in sl-1-2 r3
+// via data-action="syncReload" on the toast button (HR-3/HR-6).
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch((err) => {
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        // 'installed' + existing controller = update available (not first install).
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          const toast = document.getElementById('updateToast');
+          if (toast) toast.removeAttribute('hidden');
+        }
+      });
+    });
+  }).catch((err) => {
     console.warn('[sw] registration failed:', err);
   });
 }
