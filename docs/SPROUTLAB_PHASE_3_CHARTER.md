@@ -27,6 +27,12 @@
 >
 > **Acceptance:** Remote changes visible on UI within 2-3 seconds of listener fire; no manual reload
 
+### R1 scope expansion (Sovereign-issued post-charter-open)
+
+> *"We also need to include who's updated what in the scope. Also, the growth tab is not updating in firebase no matter who's updating it, so we are stuck with old weight and height, look into it. These all should be the same scope fix and upgrade."*
+
+Folded as Findings E and F below. R1 expands the scope from a single deliverable (auto-render) to three (auto-render + clobber-loop fix + attribution surfacing) — but, per the empirical trace, all three sit on the same architectural change (`_syncDispatchRender` rehydrates the module global, which closes the clobber loop and threads attribution through to the toast). Net LOC stays inside R-9's single-PR threshold; sequencing in §4 unchanged.
+
 ---
 
 ## 2. Scout findings — empirical probe of SproutLab's listener surface
@@ -123,6 +129,46 @@ Two different DOM nodes, two different lifecycles, two different concerns. PR-5'
 
 Phase 3 inverts the data-toast surface: re-render runs eagerly on listener fire; the toast becomes either (a) silent on success, or (b) an opt-out fallback for "auto-render failed, tap to reload." It does not affect `#updateToast` at all.
 
+### Finding E — The growth-tab "stuck on old weight/height" bug is Finding B realized as a live production conflict
+
+Sovereign-reported (charter R1 expansion): "the growth tab is not updating in Firebase no matter who's updating it; we are stuck with old weight and height." Empirical trace closes the loop.
+
+**Single growth writer surface.** `medical.js:1820–1841` (`addGrowthEntry`) and `:1729–1735` (`deleteGrowth`) both mutate the module global `growthData[]` directly, then call `renderGrowth()`. `renderGrowth` (medical.js:1005–1007) sorts in place and persists via `save(KEYS.growth, growthData)`. Save → `syncWrite` → `_syncDebounceSingleDoc('growth', …)` → `_syncFlushSingleDoc` → `docRef.set({ ziva_growth: […], __sync_*: … }, { merge: true })`. The write path is intact.
+
+**The clobber loop.** Two-device household (admin + member, e.g., the Sovereign + Bhavna):
+
+1. Device A's `growthData = [a, b]` → user adds `c` → `growthData = [a, b, c]` → save → flush writes `singles/growth.ziva_growth = [a, b, c]`.
+2. Device B receives the listener fire. `_syncHandleSingleDocSnapshot('growth', doc)` writes `localStorage[KEYS.growth] = [a, b, c]` and updates `_syncShadow[KEYS.growth]`. **Module global `growthData` on Device B is unchanged from its init state at `core.js:689`.**
+3. Device B's user adds `d`. `addGrowthEntry` pushes onto Device B's *stale* `growthData` (which still reflects pre-listener state, e.g. `DEFAULT_GROWTH`). New `growthData = [DEFAULT_GROWTH…, d]`. `renderGrowth` saves this to localStorage, overwriting the listener-applied `[a, b, c]`.
+4. Save → flush → diff between `current = [DEFAULT_GROWTH…, d]` (what `load(KEYS.growth)` now returns) and `shadow = [a, b, c]` (remote-aligned from Device B's last listener fire) → updates field → `docRef.set({ ziva_growth: [DEFAULT_GROWTH…, d] })` clobbers Firestore back to a stale state plus `d`.
+5. Device A receives this clobber via listener. Local `growthData` on Device A is `[a, b, c]` (stale module global from when Device A wrote it). Device A's localStorage now becomes `[DEFAULT_GROWTH…, d]`, but rendering still reads stale module global `[a, b, c]`.
+6. From here both devices ping-pong stale-clobbers. The visible *latest weight / latest height* values stick on whichever module-global state was warmest at the moment each device clobbered — which, for a low-frequency surface like growth (weekly/monthly entries), accumulates visibly stale UI.
+
+**Why growth specifically.** The same architectural defect (Finding B) applies to every key in `SYNC_KEYS`. Growth surfaces *visibly* because:
+
+- **Low write frequency.** Growth is logged weekly to monthly. Days or weeks elapse between local writes, during which listener fires accumulate without rehydrating the module global. By the time the next user-write happens, the module-global / localStorage divergence is large.
+- **Cross-device write distribution.** Both household members log growth — divergence accumulates on both devices, and each new write clobbers the other's progress.
+- **No mid-day idempotent recompute.** Surfaces like feeding re-render on every meal-log within the same session, masking divergence (because the same device that's writing is also the one whose module global is fresh). Growth's renderer reads `getLatestWeight()` which is purely module-global-bound.
+
+**Same fix.** The Phase 3 Option B `_syncDispatchRender(lsKey)` writer-shim — rehydrating the module global from listener-supplied `value` before the active-tab dispatch — closes the clobber loop. After Phase 3, Device B's `growthData` rehydrates on listener fire; the next local add pushes onto current state; the resulting save reflects true intent and converges. The auto-render dispatch and the stale-clobber fix are *the same architectural change* — separating them would mean either fixing auto-render and leaving the clobber loop active (regression risk), or fixing the clobber and not surfacing the data to the user (defeats the briefing intent).
+
+### Finding F — Attribution metadata is already on the wire; surfacing it is a UI change, not a data layer change
+
+Sovereign-reported (charter R1 expansion): "we need to include who's updated what in the scope."
+
+Empirical trace: every Firestore write already carries attribution metadata.
+
+- **Seed (`_syncSeedFirestore`):** `__sync_createdBy: { uid, name }` + `__sync_updatedBy: { uid, name }` + `__sync_syncedAt: serverTimestamp()` (sync.js:1067–1070 for per-entry; :1093–1095 for single-doc).
+- **Per-entry write (`_syncWritePerEntry`):** `__sync_updatedBy` + `__sync_syncedAt` on each `set` payload.
+- **Single-doc flush (`_syncFlushSingleDoc`, line 739–742):** same `__sync_updatedBy` + `__sync_syncedAt` attached to both update and delete payloads.
+
+The listener handler currently strips all `__sync_*` fields before persisting locally (`_syncHandleSingleDocSnapshot` line 938: `if (dataKeys[i].indexOf('__sync_') !== 0) clean[…] = data[…]`). Phase 3 captures `data.__sync_updatedBy` (and `data.__sync_syncedAt`) before the strip and threads them through `_syncDispatchRender(lsKey, value, attribution)` so the active-tab render and the success-toast can name the updater. No schema change; no new write surface; pure UI plumbing on top of existing on-wire metadata.
+
+**Two attribution surfaces, both small:**
+
+1. **Toast text upgrade.** `_syncShowSyncToast` currently shows `"3 updates synced — tap to refresh"`. With attribution available, becomes `"Bhavna updated growth · 3 entries"` (singular collection) or `"3 updates from Bhavna"` (cross-collection batched). Falls back to the current count-only text when `__sync_updatedBy` is absent (legacy data) or when the local user is the writer (self-echo path).
+2. **In-card "last updated by" line.** Optional, gated by feature scope: a single text line on the growth card and the household-settings card showing `"Last updated by {name} · {relative-time}"`. Re-renders on listener fire via the same `_syncDispatchRender` path. Gracefully omitted on cards where the design system doesn't have a slot for it (e.g., dense list cards).
+
 ---
 
 ## 3. Charter divergence (R-8 option framing)
@@ -138,16 +184,22 @@ Per R-8 / Edict V, surface in-flight when the briefing's literal description res
 
 ### Option B — Refit briefing intent to province reality (recommended)
 
-Intent: *"remote data deltas reach the open tab without user action, without losing UI state."*
+Intent: *"remote data deltas reach the open tab without user action, without losing UI state, and without subsequent local writes clobbering them."*
 
-1. **Rehydrate-on-fire dispatch.** Add a per-key dispatch table (`SYNC_RENDER_DEPS`) sibling to `SYNC_KEYS`, declaring rehydration and renderer dependencies. The two listener handlers, after `save(lsKey, entries)`, call a new `_syncDispatchRender(lsKey)` that (a) reseeds the module global from `entries` and (b) re-runs the active-tab subset of declared renderers.
-2. **Eager re-render replaces tap-to-reload on `#syncToast`.** The toast becomes a non-blocking acknowledgement ("synced n updates") that auto-dismisses; the click handler is removed entirely on the auto-render path. Halted-state and offline-state toasts (sl-1-2 / sl-1-3) keep their existing `data-action="syncReload"` since those represent state the auto-render path cannot recover from.
-3. **Graceful fallback.** If `_syncDispatchRender` throws (renderer crash, missing global), catch + log via `_syncRecordCrash` and fall back to the current toast-with-reload shape. Auto-render is a *progressive enhancement* over the current reload path; never a regression.
-4. **Acceptance test (R-4 + R-7).** Hermetic Playwright spec: stub a remote snapshot delivery via `page.evaluate` invoking the listener callback with synthetic data; assert the affected DOM subtree updates in-place under 100ms (well under the 2-3s SLO) without page navigation; assert scroll position and any expanded card state survive.
+The expanded intent (post-R1 from Sovereign) folds three deliverables under one architectural change. Findings E and F establish that the growth-stuck-stale bug and the attribution surface are the same underlying fix, not separate work.
+
+1. **Rehydrate-on-fire dispatch.** Add a per-key dispatch table (`SYNC_RENDER_DEPS`) sibling to `SYNC_KEYS`, declaring rehydration target + renderer list. The two listener handlers, after `save(lsKey, entries)`, call a new `_syncDispatchRender(lsKey, value, attribution)` that (a) reseeds the module global from `value` via a writer-shim defined in `core.js`, (b) re-runs the active-tab subset of declared renderers, (c) closes the cross-device clobber loop (Finding E) by ensuring subsequent local pushes read from rehydrated state.
+2. **Attribution surfacing.** Capture `data.__sync_updatedBy` (and `__sync_syncedAt`) in the listener handler before the `__sync_*` strip; thread it through `_syncDispatchRender` to the toast text + (optionally) a "last updated by {name}" line on the growth card and the household-settings card (Finding F).
+3. **Eager re-render replaces tap-to-reload on `#syncToast`.** Toast becomes a non-blocking ack with attribution text (`"Bhavna updated growth · 3 entries"`) that auto-dismisses; the click handler is removed on the auto-render success path. Halted-state and offline-state toasts (sl-1-2 / sl-1-3) keep their existing `data-action="syncReload"` since those represent state the auto-render path cannot recover from. Self-echo (local user is the writer) suppresses the toast as it does today.
+4. **Graceful fallback.** If `_syncDispatchRender` throws (renderer crash, missing writer-shim case, attribution-text formatter exception), catch via `_syncRecordCrash` and fall back to the current toast-with-reload shape (count-only text). Auto-render is a *progressive enhancement* over the current reload path; never a regression.
+5. **Acceptance tests (R-4 + R-7).**
+   - Auto-render hermetic spec: stub a remote snapshot delivery via `page.evaluate` invoking the listener callback with synthetic data; assert the affected DOM subtree updates in-place under 100ms without page navigation; assert scroll position + expanded card state survive.
+   - **Cross-device clobber regression (Finding E):** synthetic listener fire delivers `[a, b, c]`; verify module global rehydrates; subsequent in-page local-add pushes onto rehydrated state, not onto stale init state; resulting flush diff sends `[a, b, c, d]` to Firestore (verified by inspecting the writer-shim's last-call payload).
+   - **Attribution presence (Finding F):** synthetic listener fire with `__sync_updatedBy: { name: 'Bhavna' }`; assert the toast text contains `"Bhavna"`; assert the in-card line (where rendered) contains `"Last updated by Bhavna"`.
 
 **Per-feature R-7 shape:** original triad (positive / regression-guard / positive-regression) is the default. Phase 3 features do not currently expose a UX *mode contract* (auto-render is universally beneficial; there is no opt-out surface). If a feature surfaces such a contract during build (e.g., a "preserve current view" preference), the binary-mode triad gets layered in per the Phase 2 PR-14 precedent.
 
-**Verdict:** delivers the user-facing intent, scoped against the actual renderer architecture. Smaller LOC than Option A's stale-render workaround would require to mask correctly. Recommended.
+**Verdict:** delivers the user-facing intent, closes a live production bug (Finding E), and surfaces existing on-wire attribution metadata (Finding F) — all under one architectural change. Smaller cumulative LOC than three separate fixes; smaller blast radius than Option A's stale-render workaround. Recommended.
 
 ### Option C — Minimum-honest
 
@@ -183,31 +235,39 @@ Folds Phase 2 hygiene-queue item 2 (carry-forward). Cipher's Phase 2 close note:
 
 **Disposition:** *Optional* — fold in if the merge gate prefers belt-and-braces against ship-gap recurrence; drop if we'd rather keep Phase 3 strictly feature-scoped and tackle hygiene-sweep separately. Either ratification path leaves Phase 3 deliverable.
 
-### PR-9 — Listener-fire dispatch (the feature)
+### PR-9 — Listener-fire dispatch + clobber-loop fix + attribution surfacing (the feature)
 
-The single Phase 3 feature PR under Option B. Likely 120–180 LOC source + 60–90 LOC tests; sits within R-9 single-PR threshold.
+The single Phase 3 feature PR under Option B. Three deliverables, one architectural change. Likely 180–260 LOC source + 100–140 LOC tests; sits at the high end of the R-9 single-PR threshold but does not split because the deliverables are mechanically coupled (rehydration is the same write that closes the clobber loop and is the same call site that captures attribution).
 
 **Files (target):**
 - `split/sync.js`:
-  - Add `SYNC_RENDER_DEPS` map sibling to `SYNC_KEYS` declaring per-key rehydration target + renderer list (e.g., `[KEYS.feeding]: { global: 'feedingData', renderers: { home: 'renderHome', diet: 'renderDietStats' } }`).
-  - Add `_syncDispatchRender(lsKey, value)` that (a) writes the rehydrated value to the named module global via a small writer-shim defined in core.js (HR boundary preserved); (b) reads active-tab via the existing `localStorage.getItem('ziva_active_tab')` / `TAB_ORDER` idiom; (c) calls the relevant renderers under try/catch.
-  - Wire `_syncDispatchRender(lsKey, entries|cleanData)` into both `_syncHandlePerEntrySnapshot` (after the `save()`) and `_syncHandleSingleDocSnapshot` (after each per-key `save()` in the lsKeys loop).
-  - Mute the data-toast tap-to-reload: replace `_syncShowSyncToast`'s click-to-reload with auto-dismiss-only on the auto-render success path. Halted-state and offline-state reload affordances are untouched.
+  - Add `SYNC_RENDER_DEPS` map sibling to `SYNC_KEYS` declaring per-key rehydration target + renderer list (e.g., `[KEYS.growth]: { global: 'growthData', renderers: { 'medical': ['renderGrowth', 'renderGrowthStats'], 'home': ['renderHome'] } }`; `[KEYS.feeding]: { global: 'feedingData', renderers: { 'diet': ['renderDietStats'], 'home': ['renderHome'] } }`; etc. for all 19 keys in `SYNC_KEYS`).
+  - Add `_syncDispatchRender(lsKey, value, attribution)` that (a) writes `value` to the named module global via the writer-shim in core.js (HR boundary preserved); (b) reads active-tab via the existing `localStorage.getItem('ziva_active_tab')` / `TAB_ORDER` idiom; (c) calls the relevant renderers under try/catch; (d) returns the attribution payload for downstream toast-text composition.
+  - Capture `data.__sync_updatedBy` (and `__sync_syncedAt`) in `_syncHandleSingleDocSnapshot` and `_syncHandlePerEntrySnapshot` *before* the existing `__sync_*` strip; pass it through to `_syncDispatchRender`.
+  - Wire `_syncDispatchRender(lsKey, value, attribution)` into both `_syncHandlePerEntrySnapshot` (after the `save()` near line 905) and `_syncHandleSingleDocSnapshot` (after each per-key `save()` in the lsKeys loop near line 991).
+  - Mute the data-toast tap-to-reload on the auto-render success path: replace `_syncShowSyncToast`'s click-to-reload with auto-dismiss-only and attribution-aware text composition (`"Bhavna updated growth · 3 entries"` shape; falls back to count-only on missing attribution). Halted-state and offline-state reload affordances are untouched.
 - `split/core.js`:
-  - Add `_syncSetGlobal(name, value)` writer shim — the controlled write surface to module globals from sync.js, gated through a single `case` table. Avoids `window[name] = …` indirection (HR-3 spirit) and keeps the per-key map declarative.
+  - Add `_syncSetGlobal(name, value)` writer shim — the controlled write surface to module globals from sync.js, gated through a single `case`/lookup table covering the 16 module globals declared in `SYNC_RENDER_DEPS`. Avoids `window[name] = …` indirection (HR-3 spirit) and keeps the per-key map declarative.
+- `split/medical.js`:
+  - Optional: thread an attribution string into the growth card's footer (one line, design-system token) showing `"Last updated by {name} · {relative-time}"` when attribution is available. Re-renders on listener fire via the `renderGrowth` already declared in `SYNC_RENDER_DEPS`. Skip if it overshoots the LOC ceiling and surface as a hygiene-queue carry-forward.
+- `split/sync.js` (settings card):
+  - Same one-line attribution surface in `_syncRenderSettingsUI` for member-change events on the household card.
 - `tests/e2e/smoke.spec.ts`:
-  - New `test.describe('Auto-refresh on listener fire (Phase 3)')` block with R-7 triad:
-    - **Positive:** stub a synthetic snapshot delivery; assert affected DOM subtree updates without `page.reload()` and within 100ms; assert active-tab dispatch (e.g., diet-key fire while diet tab is active updates `#dietStats` value).
-    - **Regression-guard:** synthetic fire while a *different* tab is active does not re-render the inactive tab's DOM (no wasted work / no spurious DOM mutation visible to the user).
-    - **Positive-regression:** with auto-render enabled, no `window.location.reload()` is called on the data-toast path (assert via navigation-event spy or by inspecting that `page.url()` is stable across the fire).
+  - New `test.describe('Auto-refresh on listener fire (Phase 3)')` block with R-7 triad covering all three deliverables:
+    - **Positive:** stub a synthetic snapshot delivery for `KEYS.growth` while the medical/growth tab is active; assert affected DOM subtree updates without `page.reload()` and within 100ms; assert module global is rehydrated by inspecting a probe that returns `growthData.length` post-fire.
+    - **Regression-guard (active-tab dispatch):** synthetic fire for `KEYS.growth` while a *different* tab is active does not re-render the inactive medical-growth subtree; module global still rehydrates so the next switchTab reads fresh.
+    - **Positive-regression (no spurious reload):** with auto-render enabled, no `window.location.reload()` is called on the data-toast success path (assert via navigation-event spy or `page.url()` stability across the fire).
+  - **Cross-device clobber regression spec (Finding E — separate `test.describe`):** simulate the two-device scenario in a single hermetic page: (1) seed module global with `DEFAULT_GROWTH`; (2) inject a synthetic listener fire delivering `[a, b, c]`; (3) assert `growthData` rehydrated to `[a, b, c]`; (4) trigger `addGrowthEntry` for `d`; (5) assert the resulting `save(KEYS.growth, …)` payload is `[a, b, c, d]`, NOT `[…DEFAULT_GROWTH, d]`. Spies on `_syncSetGlobal` and on `localStorage.setItem` confirm the path.
+  - **Attribution surfacing spec (Finding F — separate `test.describe`):** synthetic listener fire with `__sync_updatedBy: { name: 'Bhavna' }`; assert the data-toast text contains `"Bhavna"`; with attribution missing, falls back to count-only text; with self-echo (local UID matches `__sync_updatedBy.uid`), toast suppresses entirely (existing self-echo discipline preserved).
   - Cipher CT-8 floor: stress matrix `--repeat-each=5` parallel + `CI=1 --repeat-each=5` sequential, both expected to hold at `retries: 0`.
 
-**Per-feature R-7 shape:** original triad (no UX mode contract surfaced; binary-mode unnecessary). If during build a mode contract emerges (e.g., a "freeze-on-listener-fire" pref), the triad upgrades to binary-mode per the PR-14 precedent.
+**Per-feature R-7 shape:** original triad covering each of the three deliverables. No UX mode contract currently surfaced; binary-mode unnecessary. If during build a mode contract emerges (e.g., a "freeze-on-listener-fire" preference), the triad upgrades to binary-mode per the PR-14 precedent.
 
 **Files explicitly NOT touched in PR-9:**
 - `#updateToast` and PR-5 logic — different surface (Finding D).
 - Module globals' init seeding in `core.js:680–712` — left untouched; the writer-shim wraps assignment without changing the seed path.
-- The household-listener `_syncRenderSettingsUI()` precedent — already in place; no rewiring needed.
+- The household-listener `_syncRenderSettingsUI()` precedent — already in place; no rewiring needed beyond the optional attribution line.
+- `__sync_*` write metadata — already shaped correctly (sync.js:739–742, :1067–1070, :1093–1095); Phase 3 only reads it.
 
 ### PR-10 (optional) — Hygiene sweep at threshold (R-10)
 
@@ -224,10 +284,12 @@ Aurelius post-merge close artifact + chronicle hand-off. No code in PR-11; it is
 1. A remote Firestore listener fire (per-entry or single-doc) updates the corresponding module global *and* the active tab's affected DOM subtree without `window.location.reload()`.
 2. The DOM update is visible under 100ms in hermetic tests (well inside the briefing's 2-3s SLO with margin for real-network round-trip).
 3. UI state survives the auto-render: scroll position, expanded-card state, modal state, and quick-log inputs are not destroyed by the listener fire.
-4. PR-5's `#updateToast` (SW update path) is regression-guarded — it still routes through `data-action="syncReload"` and still reloads on tap, since SW-shell swap requires a reload.
-5. The household-listener `_syncRenderSettingsUI()` precedent is regression-guarded — Settings tab in-place rendering on member changes still works.
-6. Auto-render failure path is regression-guarded — if `_syncDispatchRender` throws, the existing toast-with-reload fallback engages (graceful degradation per briefing).
-7. Playwright at `retries: 0` passes 100/100 across the three stress configs (`02-habits.md`). Cipher independent re-run matches at the R-4 floor.
+4. **Cross-device growth convergence (Finding E).** A synthetic listener fire that delivers `[a, b, c]` causes the local module global `growthData` to rehydrate; a subsequent local `addGrowthEntry(d)` produces a save payload of `[a, b, c, d]`, NOT `[…DEFAULT_GROWTH, d]`. The clobber loop is closed.
+5. **Attribution surfacing (Finding F).** When `__sync_updatedBy.name` is present on the snapshot, the data-toast text names the updater (e.g., `"Bhavna updated growth · 3 entries"`). When absent, falls back to count-only. When the local user is the writer (self-echo), the toast suppresses as it does today.
+6. PR-5's `#updateToast` (SW update path) is regression-guarded — it still routes through `data-action="syncReload"` and still reloads on tap, since SW-shell swap requires a reload.
+7. The household-listener `_syncRenderSettingsUI()` precedent is regression-guarded — Settings tab in-place rendering on member changes still works (and gains the optional attribution line).
+8. Auto-render failure path is regression-guarded — if `_syncDispatchRender` throws, the existing toast-with-reload fallback engages (graceful degradation per briefing).
+9. Playwright at `retries: 0` passes 100/100 across the three stress configs (`02-habits.md`). Cipher independent re-run matches at the R-4 floor.
 
 ---
 
@@ -275,7 +337,7 @@ Per the Phase 3 opening directive, this campaign runs **relay-only** — distinc
 - **Aurelius + Sovereign:** ratify A / B / C and the optional PR-8 disposition. R-14: charter is comm-log → Aurelius solo by default, but option choice is structural enough that Sovereign's nod is requested. Squash-merge on ratification.
 
 → **Cipher:** advisory review requested (relay-only).
-→ **Aurelius / Sovereign:** ratify Option A / B / C; rule on PR-8 (fold-in vs drop). Without ruling, no feature code lands.
-→ **Sovereign:** ratify Hour-64 as the C-fallback trigger; ratify relay-only operating mode for Phase 3.
+→ **Aurelius / Sovereign:** ratify Option A / B / C; rule on PR-8 (fold-in vs drop); ratify the R1 scope expansion (Findings E + F folded into PR-9 vs split off as PR-9.5). Without ruling, no feature code lands.
+→ **Sovereign:** ratify Hour-64 as the C-fallback trigger; ratify relay-only operating mode for Phase 3 (note: PR #15 was subscribed to PR activity post-open via your webhook directive — relay-only stands as the human-loop posture; webhook events are passive).
 
 — Lyra (The Weaver)
