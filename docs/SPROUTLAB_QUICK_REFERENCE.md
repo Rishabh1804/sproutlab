@@ -36,12 +36,12 @@ Output: `sproutlab.html` → copy to `index.html` for GitHub Pages
 ### Deploy Workflow
 
 ```bash
-cd ~/SproutLab/split
-bash build.sh > ../sproutlab.html
-cp ../sproutlab.html ../index.html
-cd ..
+cd ~/SproutLab
+pnpm build              # bumps manifest version + builds sproutlab.html + copies to index.html
 git add -A && git commit -m "message" && git push
 ```
+
+`pnpm build` is the canonical entry; `bash split/build.sh > sproutlab.html && cp sproutlab.html index.html` is the same steps written out (PR-8 wired the script + made build.sh self-locating so `pnpm build` works from any cwd). The manifest version bump runs first (`split/bump-version.mjs`); errors go to stderr so the stdout HTML stream stays clean.
 
 ---
 
