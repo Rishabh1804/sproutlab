@@ -4354,22 +4354,15 @@ function updateStatPillTrends() {
 // PWA — SERVICE WORKER & INSTALL
 // ─────────────────────────────────────────
 
-// Register a minimal service worker for PWA installability
+// Register the service worker (Phase 2 PR-4a — externalized from inline
+// Blob-URL pattern). The script lives at /sw.js (repo root); default scope
+// is parent directory of the script, which matches the deployed root
+// automatically across environments (local: '/'; GitHub Pages: '/sproutlab/').
+// PR-4b will add CACHE_NAME + precache list + version invalidation here;
+// for now /sw.js is install/activate/fetch-passthrough only.
 if ('serviceWorker' in navigator) {
-  // Create an inline service worker via blob URL
-  const swCode = `
-    self.addEventListener('install', e => self.skipWaiting());
-    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-    self.addEventListener('fetch', e => {
-      // Network-first strategy — offline fallback not needed for this app
-      e.respondWith(fetch(e.request).catch(() => new Response('Offline', { status:503 })));
-    });
-  `;
-  const swBlob = new Blob([swCode], { type: 'application/javascript' });
-  const swURL = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swURL, { scope: '/sproutlab/beta/' }).catch(() => {
-    // Blob SW may fail due to scope restrictions — that's fine,
-    // PWA will still work with manifest for add-to-homescreen on most browsers
+  navigator.serviceWorker.register('sw.js').catch((err) => {
+    console.warn('[sw] registration failed:', err);
   });
 }
 
