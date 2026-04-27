@@ -61084,10 +61084,7 @@ const ALWAYS_POPULATED_KEYS = new Set([
 //                                              no rehydration step needed.
 //
 // Renderer keys are 'tab' or 'tab:sub' strings matching _syncReadActiveTab's
-// return shape. Function references (not name strings) so renaming is
-// caught at parse time. Function declarations (`function renderHome() {}`)
-// hoist across the concat'd script body, so all referenced renderers are
-// in scope when this const initializes.
+// return shape; renderers are name-string arrays (rationale below).
 //
 // Renderer scope discipline: each entry lists the SMALLEST renderer set that
 // reflects the changed key on the active tab. renderHome is a composite
