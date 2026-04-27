@@ -2646,6 +2646,12 @@
     </div>
 
     </div><!-- /settings-pane-wrap -->
+
+    <!-- App version (Phase 2 PR-3): populated at runtime by displayAppVersion()
+         which fetches manifest.json and reads .version. Hidden via :empty when
+         the fetch fails or returns no version field. role=status + polite live
+         region so screen readers announce on populate without interruption. -->
+    <div class="app-version-line" id="appVersion" role="status" aria-live="polite" aria-atomic="true"></div>
   </div><!-- /sidebar-body -->
 </div><!-- /sidebar -->
 <div class="avatar-lightbox" id="avatarLightbox" data-action="closeAvatarSelf">

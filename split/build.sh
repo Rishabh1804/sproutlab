@@ -1,4 +1,7 @@
 #!/bin/bash
+# Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
+# before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
+node bump-version.mjs ../manifest.json
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">

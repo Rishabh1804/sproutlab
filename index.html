@@ -1910,6 +1910,15 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   flex:1; overflow-y:auto; padding:var(--sp-16) var(--sp-20) var(--sp-24);
   -webkit-overflow-scrolling:touch;
 }
+/* App version line (Phase 2 PR-3): populated by displayAppVersion() reading
+   manifest.json. :empty hide keeps the row collapsed before fetch settles. */
+.app-version-line {
+  margin-top:var(--sp-16); padding:var(--sp-12) var(--sp-16);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs);
+  color:var(--mid); text-align:center;
+  border-top:1px solid var(--border-subtle);
+}
+.app-version-line:empty { display:none; }
 /* Quick save button at top of sidebar */
 .sidebar-save-btn {
   display:flex; align-items:center; gap:var(--sp-12); width:100%;
@@ -11418,6 +11427,12 @@ body.ql-locked .dark-toggle { pointer-events:none; }
     </div>
 
     </div><!-- /settings-pane-wrap -->
+
+    <!-- App version (Phase 2 PR-3): populated at runtime by displayAppVersion()
+         which fetches manifest.json and reads .version. Hidden via :empty when
+         the fetch fails or returns no version field. role=status + polite live
+         region so screen readers announce on populate without interruption. -->
+    <div class="app-version-line" id="appVersion" role="status" aria-live="polite" aria-atomic="true"></div>
   </div><!-- /sidebar-body -->
 </div><!-- /sidebar -->
 <div class="avatar-lightbox" id="avatarLightbox" data-action="closeAvatarSelf">
@@ -19626,6 +19641,23 @@ function promptPWAInstall() {
 function isPWA() {
   return window.matchMedia('(display-mode: standalone)').matches ||
          window.navigator.standalone === true;
+}
+
+// PWA — APP VERSION DISPLAY (Phase 2 PR-3)
+// Read manifest.json's version field at runtime and surface it in the settings
+// sidebar's #appVersion line. Silent on any failure (network, parse, or
+// missing field) — the :empty CSS rule keeps the row collapsed in that case.
+async function displayAppVersion() {
+  try {
+    const res = await fetch('manifest.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    const m = await res.json();
+    if (!m || typeof m.version !== 'string' || !m.version) return;
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = `App version ${m.version}`;
+  } catch (e) {
+    // Silent; the version line stays empty (:empty hides via CSS).
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -62374,6 +62406,9 @@ if (window.location.search.indexOf('nosync') === -1) {
 // Sync visibility indicator (Phase 1 — sl-1-2). Runs even under ?nosync so
 // the header still reflects true network state from navigator.onLine alone.
 try { initSyncVisibility(); } catch(e) { console.error('[sync-vis] init crashed:', e); }
+// App version display (Phase 2 PR-3). Fetches manifest.json and populates
+// the settings #appVersion line. Silent on failure; :empty CSS hides the row.
+try { displayAppVersion(); } catch(e) { console.error('[app-version] display crashed:', e); }
 </script>
 </body>
 </html>

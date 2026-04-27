@@ -4400,6 +4400,23 @@ function isPWA() {
          window.navigator.standalone === true;
 }
 
+// PWA — APP VERSION DISPLAY (Phase 2 PR-3)
+// Read manifest.json's version field at runtime and surface it in the settings
+// sidebar's #appVersion line. Silent on any failure (network, parse, or
+// missing field) — the :empty CSS rule keeps the row collapsed in that case.
+async function displayAppVersion() {
+  try {
+    const res = await fetch('manifest.json', { cache: 'no-store' });
+    if (!res.ok) return;
+    const m = await res.json();
+    if (!m || typeof m.version !== 'string' || !m.version) return;
+    const el = document.getElementById('appVersion');
+    if (el) el.textContent = `App version ${m.version}`;
+  } catch (e) {
+    // Silent; the version line stays empty (:empty hides via CSS).
+  }
+}
+
 // ═══════════════════════════════════════════════════
 // ██ BUG CAPTURE SYSTEM
 // ═══════════════════════════════════════════════════
