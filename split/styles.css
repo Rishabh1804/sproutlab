@@ -1903,6 +1903,15 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   flex:1; overflow-y:auto; padding:var(--sp-16) var(--sp-20) var(--sp-24);
   -webkit-overflow-scrolling:touch;
 }
+/* App version line (Phase 2 PR-3): populated by displayAppVersion() reading
+   manifest.json. :empty hide keeps the row collapsed before fetch settles. */
+.app-version-line {
+  margin-top:var(--sp-16); padding:var(--sp-12) var(--sp-16);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs);
+  color:var(--mid); text-align:center;
+  border-top:1px solid var(--border-subtle);
+}
+.app-version-line:empty { display:none; }
 /* Quick save button at top of sidebar */
 .sidebar-save-btn {
   display:flex; align-items:center; gap:var(--sp-12); width:100%;

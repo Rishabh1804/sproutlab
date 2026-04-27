@@ -261,3 +261,82 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
     await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
   });
 });
+
+// Phase 2 PR-3 — manifest version contract (R-7 triad).
+// build.sh bumps manifest.json's `version` field on each invocation;
+// displayAppVersion() in core.js fetches it at runtime and populates
+// #appVersion in the settings sidebar. Three tests cover both ends of
+// the contract:
+//   positive — version is present + advance-shaped (YYYY.MM.DD-N) AND
+//              #appVersion reflects it after page load.
+//   regression-guard — no stale "1.0" / "0.0" / pending-build placeholder
+//                      leaked into the served HTML at #appVersion.
+//   positive-regression — when manifest.json fetch fails, the
+//                         #appVersion line stays empty (CSS :empty hides
+//                         the row).
+const VERSION_RX = /^\d{4}\.\d{2}\.\d{2}-\d+$/;
+
+test.describe('Manifest version contract (Phase 2 PR-3)', () => {
+  test('positive — manifest exposes a build-stamp version + #appVersion populates from it', async ({ page, request }) => {
+    // 1. Manifest carries a version field in the advance-shaped format.
+    const manifestRes = await request.get('/manifest.json');
+    expect(manifestRes.ok()).toBe(true);
+    const manifest = await manifestRes.json();
+    expect(manifest).toHaveProperty('version');
+    expect(typeof manifest.version).toBe('string');
+    expect(manifest.version, 'version matches YYYY.MM.DD-N shape').toMatch(VERSION_RX);
+
+    // 2. Runtime read populates #appVersion with the same value.
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    const appVersion = page.locator('#appVersion');
+    await expect(appVersion).toHaveCount(1);
+    await expect(appVersion).toHaveText(`App version ${manifest.version}`, { timeout: 5_000 });
+  });
+
+  test('regression-guard — no stale version placeholder in served HTML at #appVersion', async ({ request }) => {
+    const res = await request.get('/index.html');
+    expect(res.ok()).toBe(true);
+    const html = await res.text();
+
+    // The version is set by displayAppVersion() at runtime; the served HTML
+    // must not carry a literal placeholder inside #appVersion that would
+    // mask the dynamic value (a build-step regression where a hardcoded
+    // string leaked through).
+    const stalePatterns = [
+      /id="appVersion"[^>]*>App version 0\.0/,
+      /id="appVersion"[^>]*>App version 1\.0/,
+      /id="appVersion"[^>]*>v0(\.\d+)?</,
+      /id="appVersion"[^>]*>v1\.0/,
+    ];
+    for (const rx of stalePatterns) {
+      expect(html, `no stale version literal: ${rx}`).not.toMatch(rx);
+    }
+
+    // The pending-build placeholder ("0.0.0-pending-build") should never
+    // reach a deployed artifact — it's overwritten by build.sh on every
+    // build. If it shows up, the build pipeline didn't run.
+    expect(html, 'no pending-build placeholder leaked through').not.toMatch(/0\.0\.0-pending-build/);
+  });
+
+  test('positive-regression — #appVersion stays empty when manifest fetch fails', async ({ page }) => {
+    await stubChartJs(page);
+    // Stub manifest.json to 404 BEFORE goto so displayAppVersion() sees the
+    // failure on first call.
+    await page.route('**/manifest.json', (route) =>
+      route.fulfill({ status: 404, body: 'not found' }),
+    );
+
+    await page.goto('/index.html?nosync');
+    // Settle: the page-load init chain (initSyncVisibility, displayAppVersion)
+    // resolves within a tick or two. 1s is generous.
+    await page.waitForTimeout(1_000);
+
+    const appVersion = page.locator('#appVersion');
+    await expect(appVersion).toHaveCount(1);
+    // Empty textContent. The :empty CSS rule hides the row visually; the
+    // assertion here is on textContent, not visibility, since :empty also
+    // makes the element non-visible to Playwright.
+    await expect(appVersion).toHaveText('');
+  });
+});
