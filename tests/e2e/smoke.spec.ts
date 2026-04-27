@@ -14,12 +14,23 @@ const PRIMARY_TABS = ['home', 'growth', 'track', 'insights', 'history', 'info'] 
 // also filtered (CT-10 lesson extended to console layer — bundled chromium may
 // not trust sandbox MITM CAs, producing console errors with no URL substring;
 // Cipher r1 review on PR #9 surfaced this empirically).
+//
+// PR-12 r2 — extended for SW 503-fallback noise: when sw.js's fetch handler
+// catches an aborted/cancelled fetch (which happens during SW claim mid-load
+// for in-flight resource requests), it returns `new Response('Offline',
+// {status:503})`, which the browser logs as `Failed to load resource: the
+// server responded with a status of 503 ()`. This is the SW doing its job,
+// not a renderer-side defect — symmetric to the cert/egress noise from PR-9
+// r2. The pattern below catches any `Failed to load resource: the server
+// responded with a status of NNN ()` shape regardless of code, since smoke
+// isn't the place to validate specific HTTP-status correctness.
 const BENIGN_CONSOLE = [
   /chart\.js/i,
   /firebase/i,
   /favicon/i,
   /Failed to load resource: net::/i,
   /ERR_CERT_/i,
+  /Failed to load resource: the server responded with a status of \d+/i,
 ];
 
 // Hermetic stub for the Chart.js CDN. The smoke spec doesn't exercise chart
