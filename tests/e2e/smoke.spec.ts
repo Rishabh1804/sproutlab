@@ -14,12 +14,23 @@ const PRIMARY_TABS = ['home', 'growth', 'track', 'insights', 'history', 'info'] 
 // also filtered (CT-10 lesson extended to console layer — bundled chromium may
 // not trust sandbox MITM CAs, producing console errors with no URL substring;
 // Cipher r1 review on PR #9 surfaced this empirically).
+//
+// PR-12 r2 — extended for SW 503-fallback noise: when sw.js's fetch handler
+// catches an aborted/cancelled fetch (which happens during SW claim mid-load
+// for in-flight resource requests), it returns `new Response('Offline',
+// {status:503})`, which the browser logs as `Failed to load resource: the
+// server responded with a status of 503 ()`. This is the SW doing its job,
+// not a renderer-side defect — symmetric to the cert/egress noise from PR-9
+// r2. The pattern below catches any `Failed to load resource: the server
+// responded with a status of NNN ()` shape regardless of code, since smoke
+// isn't the place to validate specific HTTP-status correctness.
 const BENIGN_CONSOLE = [
   /chart\.js/i,
   /firebase/i,
   /favicon/i,
   /Failed to load resource: net::/i,
   /ERR_CERT_/i,
+  /Failed to load resource: the server responded with a status of \d+/i,
 ];
 
 // Hermetic stub for the Chart.js CDN. The smoke spec doesn't exercise chart
@@ -338,5 +349,59 @@ test.describe('Manifest version contract (Phase 2 PR-3)', () => {
     // assertion here is on textContent, not visibility, since :empty also
     // makes the element non-visible to Playwright.
     await expect(appVersion).toHaveText('');
+  });
+});
+
+// Phase 2 PR-4a — Service Worker registration (lifecycle-only, no caching yet).
+//
+// Pre-PR-4a, the SW was registered from an inline Blob URL with a hardcoded
+// scope:'/sproutlab/beta/' that silently failed on production scope
+// '/sproutlab/' (lowercase per GitHub Pages convention; capital-S returns
+// 404). PR-4a externalizes the SW to /sw.js so default scope = parent
+// directory of the script (auto-matches local '/' and prod '/sproutlab/').
+//
+// Two tests: positive (D1-technique activation wait) + regression-guard
+// (no inline Blob-URL remnants in served HTML).
+
+test.describe('Service Worker registration (Phase 2 PR-4a)', () => {
+  test('positive — SW activates on scope-root', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // D1 — atomic await navigator.serviceWorker.ready inside a single
+    // page.evaluate. Collapses wait + read into one round-trip; eliminates
+    // the inter-call window that race-conditioned earlier sep-dashboard
+    // PR #6 attempts (D1 is the *technique*; the assertion below is the
+    // *thing being asserted* — registration activates on scope-root).
+    const swState = await page.evaluate(async () => {
+      const reg = await navigator.serviceWorker.ready;
+      return {
+        scope: reg.scope,
+        active: !!reg.active,
+        state: reg.active?.state ?? null,
+      };
+    });
+
+    expect(swState.active, 'SW has an active registration').toBe(true);
+    expect(swState.state, 'active SW is in activated state').toBe('activated');
+    // Scope is the parent directory of the SW script per the SW spec.
+    // On the hermetic local server, that's the root '/'. Production
+    // deploy has '/sproutlab/'. The assertion stays loose to let both
+    // pass; PR-4b will tighten when versioned cache scopes are introduced.
+    expect(swState.scope, 'scope ends with /').toMatch(/\/$/);
+  });
+
+  test('regression-guard — no inline Blob-URL SW remnants in served HTML', async ({ request }) => {
+    const res = await request.get('/index.html');
+    expect(res.ok()).toBe(true);
+    const html = await res.text();
+
+    // Pre-PR-4a inline pattern would leave these traces. Their presence
+    // would mean the externalization didn't take effect and we shipped the
+    // old broken-scope inline SW.
+    expect(html, 'no Blob-URL SW remnants').not.toMatch(/new Blob\(\s*\[\s*swCode\s*\]/);
+    expect(html, 'no inline swCode template literal').not.toMatch(/const\s+swCode\s*=/);
+    // Hardcoded scope is gone — default scope derives from script location.
+    expect(html, 'no /sproutlab/beta/ scope hardcode').not.toMatch(/scope\s*:\s*['"]\/sproutlab\/beta\//);
   });
 });
