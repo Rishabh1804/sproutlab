@@ -2038,6 +2038,16 @@ function orderMedicalCards() {
   const medsCard = document.getElementById('medMedsCard');
   const visitsCard = document.getElementById('medVisitsCard');
   const coverageCard = document.getElementById('medVaccCoverage');
+  // Hotfix (post-PR-9 surfacing) — `medStatsCard` was removed from
+  // template.html in commit 16c644e (April 10 2026, "Phase 2: Bulk token
+  // migration + remove empty stat card wrappers") and replaced with a
+  // bare `#medicalStats` div. orderMedicalCards' getElementById was not
+  // updated alongside, leaving statsCard always null. The unguarded
+  // appendChild(null) at the bottom of this function threw TypeError on
+  // every call. This bug has been latent for ~2 weeks; it surfaced in
+  // production via the trace handleSwipe → switchTrackSub → orderMedicalCards.
+  // Fix: null-guard each appendChild so removed/renamed cards become
+  // ordering no-ops rather than fatal exceptions.
   const statsCard = document.getElementById('medStatsCard');
 
   // Calculate urgency scores
@@ -2083,10 +2093,14 @@ function orderMedicalCards() {
   }
 
   // Reorder DOM: stats first, then action label + action cards, then records label + info cards
-  const actionCards = cards.filter(c => c.el.classList.contains('card-action'));
-  const infoCards = cards.filter(c => c.el.classList.contains('card-info'));
+  // Hotfix: filter out cards with null .el (removed/renamed elements; see
+  // medStatsCard comment above) before classList queries so a missing card
+  // doesn't propagate as TypeError.
+  const livingCards = cards.filter(c => c.el && c.el.classList);
+  const actionCards = livingCards.filter(c => c.el.classList.contains('card-action'));
+  const infoCards = livingCards.filter(c => c.el.classList.contains('card-info'));
 
-  grid.appendChild(statsCard);
+  if (statsCard) grid.appendChild(statsCard);
 
   if (actionCards.length > 0) {
     grid.appendChild(makeSectionLabel('Action Items', 1));
