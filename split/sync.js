@@ -304,6 +304,16 @@ function _syncReadActiveTab() {
 // caller (listener handler) can compose the toast text. Captured before
 // the existing __sync_* strip in both handlers (Cipher #4 cross-reference).
 //
+// PR-19 (Phase 3 R2 amendment) — toast pipeline repurposed as status-strip
+// activity-mode driver per Surface C ratification. The transient-toast
+// surface was insufficient (cross-device collaborators miss fires they
+// don't witness); the permanent surfaces are (1) lastWriters sidecar
+// persisted via _syncRecordLastWriter, and (2) status-strip activity-mode
+// pill via _syncSetActivity. Toast pipeline (_syncQueueToast → 1500ms
+// debounce → _syncComposeToastText) drives the activity-mode update; the
+// dynamically-created toast div is no longer used on the success path
+// (kept dormant in _syncShowSyncToast for the renderer-crash fallback).
+//
 // Hotfix (post-PR-9) — Issue 1 root cause: dispatch crashes formerly used
 // _syncRecordCrash, which increments _syncCrashCount toward SYNC_CRASH_LIMIT
 // and trips _syncDisabled = true at 3 crashes. That conflates UI render
@@ -335,6 +345,64 @@ function _syncDispatchRender(lsKey, value, attribution) {
     }
   }
   return attribution || null;
+}
+
+// _syncRecordLastWriter — PR-19 (Phase 3 R2 amendment) — persistent
+// attribution sidecar. Called from listener handlers AFTER a successful
+// per-key save. Writes to KEYS.lastWriters localStorage map; key is the
+// affected lsKey, value carries { uid, name, at } where `at` is local
+// receive-time (Date.now() ms). Sidecar is local-only metadata — never
+// roundtripped to Firestore (KEYS.lastWriters is NOT in SYNC_KEYS, so
+// syncWrite returns early in its `if (!SYNC_KEYS[key]) return` guard).
+// Wrapped in _remoteWriteDepth++ so triggerAutosave is suppressed (the
+// sidecar update should not itself drive autosave noise).
+function _syncRecordLastWriter(lsKey, attribution) {
+  if (!attribution) return;
+  if (typeof KEYS === 'undefined' || !KEYS.lastWriters) return;
+  _remoteWriteDepth++;
+  try {
+    var lw = load(KEYS.lastWriters, {}) || {};
+    if (typeof lw !== 'object' || Array.isArray(lw)) lw = {};
+    lw[lsKey] = {
+      uid:  attribution.uid || null,
+      name: attribution.name || null,
+      at:   Date.now(),  // local receive-time; Firestore Timestamp doesn't roundtrip cleanly
+    };
+    save(KEYS.lastWriters, lw);
+  } catch(e) { console.warn('[sync-attribution] record ' + lsKey + ':', e); }
+  finally { _remoteWriteDepth--; }
+}
+
+// _syncSetActivity — PR-19 (Phase 3 R2 amendment) — Surface C activity-mode
+// driver. Called from the toast-pipeline debounce body after a remote fire
+// burst. Writes the message text into the #syncActivity pill, removes its
+// [hidden] attribute (transitioning the strip from state-mode to
+// activity-mode), and starts a 45s timer that re-hides the pill on expiry.
+// The strip's #syncStatus indicator is unaffected — both can be visible
+// simultaneously during activity mode (mode contract: BOTH-visible during
+// activity; ONLY #syncStatus during state).
+//
+// Self-replacing timer: if a new fire burst arrives during the 45s window,
+// the previous timer is cleared and the new text + 45s window replaces it.
+// This keeps the activity readable during sustained cross-device co-editing.
+var _syncActivityHideTimer = null;
+var _syncActivityWindowMs = 45000; // 45s — between Aurelius's 30s/60s suggested band
+function _syncSetActivity(text, attribution) {
+  if (typeof document === 'undefined') return;
+  var el = document.getElementById('syncActivity');
+  if (!el) return; // graceful no-op if template hasn't loaded the strip
+  el.textContent = text || '';
+  if (attribution && attribution.uid) {
+    el.setAttribute('data-attribution-uid', attribution.uid);
+  } else {
+    el.removeAttribute('data-attribution-uid');
+  }
+  el.removeAttribute('hidden');
+  if (_syncActivityHideTimer) clearTimeout(_syncActivityHideTimer);
+  _syncActivityHideTimer = setTimeout(function() {
+    if (el.parentNode) el.setAttribute('hidden', '');
+    _syncActivityHideTimer = null;
+  }, _syncActivityWindowMs);
 }
 
 // Map collection → array of localStorage KEYS that share it (for single-doc combined collections)
@@ -1119,7 +1187,17 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     try { _syncDispatchRender(lsKey, entries, attribution); }
     catch(e) { console.warn('[sync-dispatch] outer/' + lsKey + ':', e); }
 
-    // Toast (skip during migration/reconcile, skip self-echo at toast layer)
+    // PR-19 (Phase 3 R2 amendment): persistent attribution sidecar. Records
+    // the last-remote-writer for this lsKey to KEYS.lastWriters. Read-side
+    // consumers (status-strip activity-mode + future in-card surfaces) get
+    // a persistent record rather than a transient toast moment.
+    _syncRecordLastWriter(lsKey, attribution);
+
+    // Activity pipeline (skip during migration/reconcile, skip self-echo).
+    // Repurposed from the prior toast pipeline per Surface C ratification:
+    // _syncQueueToast still debounces and composes attribution-aware text,
+    // but the publish step now drives the status-strip activity-mode pill
+    // (#syncActivity) instead of creating a transient toast div.
     if (!_syncIsMigrating && !_syncIsReconciling && changeCount > 0) {
       _syncQueueToast(collection, changeCount, attribution);
     }
@@ -1222,6 +1300,11 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       // see _syncDispatchRender comment for jurisdictional rationale.
       try { _syncDispatchRender(key, remoteVal, attribution); }
       catch(e) { console.warn('[sync-dispatch] outer/' + key + ':', e); }
+
+      // PR-19 (Phase 3 R2 amendment): persistent attribution sidecar.
+      // Records the last-remote-writer for this lsKey to KEYS.lastWriters.
+      _syncRecordLastWriter(key, attribution);
+
       changedKeys.push(key);
       lastChangedAttribution = attribution;
     }
@@ -1266,7 +1349,12 @@ function _syncQueueToast(source, count, attribution) {
     _syncToastAttribution = null;
     if (n <= 0) return;
     var msg = _syncComposeToastText(n, attr);
-    _syncShowSyncToast(msg);
+    // PR-19 (Phase 3 R2 amendment) — Surface C ratification: drive the
+    // status-strip activity-mode pill instead of creating a transient
+    // toast div. _syncShowSyncToast remains for the renderer-crash
+    // fallback path (opts.tapToReload === true) but is no longer the
+    // success-path publish target.
+    _syncSetActivity(msg, attr);
   }, 1500);
 }
 var _syncToastDebounce = null;

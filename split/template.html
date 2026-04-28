@@ -79,6 +79,16 @@
       <span class="sync-indicator__dot" aria-hidden="true"></span>
       <span class="sync-indicator__label"></span>
     </button>
+    <!-- Activity pill (Phase 3 PR-19 — permanent-attribution Surface C).
+         Surfaced for ~45s after a remote listener fire delivers cross-device
+         changes. Text: "Bhavna synced 2 updates" / "An update synced". The
+         strip's mode contract is binary: state-mode (default; only
+         #syncStatus visible) vs activity-mode (#syncStatus + #syncActivity
+         both visible). Self-dismisses to state mode on timer expiry.
+         HR-2: no inline styles; CSS in styles.css gates display via the
+         [hidden] attribute. aria-live="polite" so screen readers announce
+         the activity without interrupting current focus. -->
+    <span id="syncActivity" class="sync-activity" hidden role="status" aria-live="polite" aria-atomic="true"></span>
     <!-- Update toast (Phase 2 PR-5). Surfaced when the SW emits 'updatefound'
          AND the new worker reaches 'installed' state with an existing
          controller (= update, not first install). HR-3/HR-6: tap routes
