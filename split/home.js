@@ -1395,6 +1395,7 @@ function renderVaccHistory() {
               <div class="t-title fw-600">${escHtml(v.name)}</div>
               <div style="font-size:var(--fs-sm);color:var(--tc-lav);">${formatDate(v.date)} · ${ageAtVacc}</div>
               ${dateFlag}
+              ${_renderAttribution(v)}
             </div>
             <button data-action="openVaccEditModal" data-stop="1" data-arg="${realIdx}" class="btn-icon-edit" aria-label="Edit date">Edit</button>
             ${info ? '<span style="font-size:var(--icon-xs);color:var(--light);">ⓘ</span>' : ''}
@@ -5364,6 +5365,7 @@ function renderMilestoneHistory() {
         <div class="flex-1-min">
           <div class="t-title fw-600">${escHtml(m.text)}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};">${statusText}</div>
+          ${_renderAttribution(m)}
         </div>
       </div>`;
   });
@@ -5992,13 +5994,14 @@ function renderPoopHistoryPreview() {
       if (p.blood) flags.push(zi('drop'));
       if (p.mucus) flags.push(zi('drop'));
       const note = p.notes ? ` · ${escHtml(p.notes)}` : '';
-      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;">
+      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;flex-wrap:wrap;">
         <span class="poop-color-circle" style="background:${col.hex};"></span>
         <span style="font-size:var(--fs-base);">${formatTimeShort(p.time)}</span>
         <span class="poop-badge badge-amber" >${col.label}</span>
         <span class="poop-badge badge-amber" >${con.label}</span>
         ${flags.map(f => `<span class="t-sm">${f}</span>`).join('')}
         <span class="t-sub">${note}</span>
+        ${_renderAttribution(p)}
       </div>`;
     }).join('');
     return `<div style="padding:8px 0;border-bottom:1px solid var(--amber-light);">
@@ -6285,6 +6288,7 @@ function renderNotesHistory() {
               <span class="badge-sm" style="background:var(--glass-strong);margin-left:4px;">${cat}</span>
               ${n.done ? ' · Completed' : ''}
             </div>
+            ${_renderAttribution(n)}
           </div>
         </div>
       </div>`;
