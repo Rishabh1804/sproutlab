@@ -7507,6 +7507,7 @@ function renderFeverHistory() {
     if (doseCount > 0) html += ' · Crocin ×' + doseCount;
     html += '</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += _renderAttribution(ep);
     html += '</div>';
   });
   body.innerHTML = html;
@@ -8173,6 +8174,7 @@ function renderDiarrhoeaHistory() {
     html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + '</div>';
     html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + ep.stools.length + ' stools · ' + ep.fluids.length + ' fluid entries · ' + ep.wetDiapers.length + ' wet diapers logged</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += _renderAttribution(ep);
     html += '</div>';
   });
   body.innerHTML = html;
@@ -8543,7 +8545,9 @@ function renderVomitingHistory() {
   let html = '';
   resolved.slice().reverse().forEach(ep => {
     html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + _feverDurationStr(ep) + '</div>';
-    html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div></div>';
+    html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div>';
+    html += _renderAttribution(ep);
+    html += '</div>';
   });
   body.innerHTML = html;
 }
@@ -8803,7 +8807,9 @@ function renderColdHistory() {
   resolved.slice().reverse().forEach(ep => {
     const days = Math.ceil((new Date(ep.resolvedAt || Date.now()).getTime() - new Date(ep.startedAt).getTime()) / 86400000);
     html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + days + ' day' + (days !== 1 ? 's' : '') + '</div>';
-    html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div></div>';
+    html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div>';
+    html += _renderAttribution(ep);
+    html += '</div>';
   });
   body.innerHTML = html;
 }

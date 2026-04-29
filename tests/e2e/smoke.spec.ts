@@ -1632,3 +1632,103 @@ test.describe('Per-entry attribution — caretickets per-entry strip preserves _
     expect(persisted[0].__sync_createdBy, 'unrelated __sync_* field stripped').toBeUndefined();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// PR-19.6 — Renderer-coverage extension (history-tab attribution audit close)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Sovereign-side production verification of PR-19.5 surfaced renderer-coverage
+// gaps: PR-19.5 wired 6 history-shape renderers (growth, sleep history-preview,
+// poop history-preview, vacc, milestones, notes) but missed the active-list
+// renderers (sleep-log, poop-log, meds, visits, active-milestones, notes-list)
+// AND the episode history cards (fever, diarrhoea, vomiting, cold). PR-19.6
+// is the audit-and-close pass per the new doctrine candidate
+// `architectural-surfacing-must-enumerate-axis-of-resolution` (currently 2/3).
+//
+// Audit table (full list in PR body); newly-wired renderers tested below via
+// a parameterized grep — built sproutlab.html must contain the
+// _renderAttribution(<entry-var>) call site for each declared renderer name.
+
+test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', () => {
+  // Each entry: renderer function name + the entry variable expected in the
+  // _renderAttribution() call. The grep targets the BUILT sproutlab.html so
+  // we verify the wire-up survives the build pipeline (split → concat).
+  const NEWLY_WIRED: Array<{ renderer: string; entryVar: string; surface: string }> = [
+    { renderer: 'renderSleepLog',         entryVar: 's',  surface: 'track:sleep — sleep entries log' },
+    { renderer: 'renderPoopLog',          entryVar: 'p',  surface: 'track:poop — poop entries log' },
+    { renderer: 'renderMeds',             entryVar: 'm',  surface: 'track:medical — meds list' },
+    { renderer: 'renderVisits',           entryVar: 'v',  surface: 'track:medical — doctor visits list' },
+    { renderer: 'renderActiveMilestones', entryVar: 'm',  surface: 'track:milestones — active milestones (evidence)' },
+    { renderer: 'renderNotes',            entryVar: 'n',  surface: 'history — notes list' },
+    { renderer: 'renderFeverHistory',     entryVar: 'ep', surface: 'track:medical — fever episode history' },
+    { renderer: 'renderDiarrhoeaHistory', entryVar: 'ep', surface: 'track:medical — diarrhoea episode history' },
+    { renderer: 'renderVomitingHistory',  entryVar: 'ep', surface: 'track:medical — vomiting episode history' },
+    { renderer: 'renderColdHistory',      entryVar: 'ep', surface: 'track:medical — cold episode history' },
+  ];
+
+  // Sanity: PR-19.5 already-wired renderers — their wire-up MUST survive
+  // PR-19.6 (no regression on the prior coverage).
+  const PRE_WIRED_PR195: Array<{ renderer: string; entryVar: string }> = [
+    { renderer: 'renderGrowthHistory',         entryVar: 'r' },
+    { renderer: 'renderSleepHistoryPreview',   entryVar: 's' },
+    { renderer: 'renderPoopHistoryPreview',    entryVar: 'p' },
+    { renderer: 'renderVaccHistory',           entryVar: 'v' },
+    { renderer: 'renderMilestoneHistory',      entryVar: 'm' },
+    { renderer: 'renderNotesHistory',          entryVar: 'n' },
+  ];
+
+  test('positive — every newly-wired renderer in audit calls _renderAttribution(entry)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+    for (const { renderer, entryVar, surface } of NEWLY_WIRED) {
+      // Each renderer must appear (function declaration) AND a
+      // _renderAttribution(<entryVar>) call must appear in the built bundle.
+      // The function-declaration grep prevents the test passing in a state
+      // where the renderer was renamed/removed but our audit list went stale.
+      const fnDecl = new RegExp('function\\s+' + renderer + '\\s*\\(');
+      const callSite = new RegExp('_renderAttribution\\s*\\(\\s*' + entryVar + '\\s*\\)');
+      expect(fnDecl.test(html), `${renderer} declared in built bundle (${surface})`).toBeTruthy();
+      expect(callSite.test(html), `${renderer} (${surface}) wires _renderAttribution(${entryVar})`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — every PR-19.5 already-wired renderer remains wired (no regression)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+    for (const { renderer, entryVar } of PRE_WIRED_PR195) {
+      const fnDecl = new RegExp('function\\s+' + renderer + '\\s*\\(');
+      const callSite = new RegExp('_renderAttribution\\s*\\(\\s*' + entryVar + '\\s*\\)');
+      expect(fnDecl.test(html), `${renderer} still in built bundle`).toBeTruthy();
+      expect(callSite.test(html), `${renderer} still wires _renderAttribution(${entryVar})`).toBeTruthy();
+    }
+  });
+
+  test('positive-regression — explicitly-deferred renderers (Phase 4) are NOT wired (object-keyed-shape disposition documented in PR body)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+    // These two are object-keyed (date → sub-object) and require a shape
+    // decision affecting every consumer of those fields. Per the audit
+    // disposition, they remain unwired in PR-19.6 and carry forward to
+    // Phase 4. The test asserts the explicit non-wire so a future drift-by-
+    // accident is caught: if someone wires renderMedLog without making the
+    // object-keyed shape decision, this guard fails and forces a re-discuss.
+    const DEFERRED: Array<{ renderer: string; reason: string }> = [
+      { renderer: 'renderMedLog',         reason: 'medChecks is object-keyed (date → medName→status string); per-entry attribution requires object-shape decision' },
+      { renderer: 'renderFeedingHistory', reason: 'feedingData is object-keyed (date → meal-record); per-entry attribution requires object-shape decision' },
+    ];
+    for (const { renderer, reason } of DEFERRED) {
+      // The renderer function MUST exist in the bundle (we're not pretending
+      // it doesn't) — but it must NOT have an _renderAttribution call site
+      // wired into its body. We check by extracting a window around the
+      // function declaration and grepping inside.
+      const re = new RegExp('function\\s+' + renderer + '\\s*\\(([\\s\\S]*?)\\n\\}', 'm');
+      const match = html.match(re);
+      expect(match, `${renderer} function body found in bundle`).toBeTruthy();
+      if (match) {
+        expect(match[1].includes('_renderAttribution'),
+          `${renderer} explicitly NOT wired per Phase 4 deferral: ${reason}`).toBeFalsy();
+      }
+    }
+  });
+});

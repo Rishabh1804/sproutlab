@@ -2168,6 +2168,7 @@ function renderVisits() {
           <div class="visit-date">${formatDate(v.date)}</div>
           ${v.doctor ? `<div class="visit-doctor">${zi('steth')} ${escHtml(v.doctor)}</div>` : ''}
           ${v.reason ? `<div class="visit-doctor">${zi('list')} ${escHtml(v.reason)}</div>` : ''}
+          ${_renderAttribution(v)}
         </div>
         <div class="visit-actions">
           <button class="note-btn del-note-btn" data-action="deleteVisit" data-arg="${v._i}">&times;</button>
@@ -5712,6 +5713,7 @@ function renderPoopLog() {
               <span class="poop-badge badge-amber" >${amtLabel}</span>
               ${flagBadges.join('')}
             </div>
+            ${_renderAttribution(p)}
           </div>
           <div class="d-flex items-center gap-4">
             <button data-action="editPoopEntry" data-arg="${realIdx}" class="btn-icon-amber" aria-label="Edit entry">Edit</button>

@@ -312,6 +312,7 @@ function renderActiveMilestones() {
           '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
           '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
           (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
+          _renderAttribution(m) +
         '</div>' +
         overrideHtml +
       '</div>' +
@@ -3748,6 +3749,7 @@ function renderMeds() {
         </div>
         ${m.brand ? `<div class="med-brand">${zi('target')} ${escHtml(m.brand)}</div>` : ''}
         ${m.notes ? `<div class="med-detail" style="margin-top:4px;font-style:italic;">${escHtml(m.notes)}</div>` : ''}
+        ${_renderAttribution(m)}
       </div>
       <div class="med-actions">
         <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? '⏸ Stop' : '▶ Resume'}</button>
@@ -4997,6 +4999,7 @@ function renderSleepLog() {
               ${qualBadge}
               ${wakeBadge}
             </div>
+            ${_renderAttribution(s)}
           </div>
           <div class="d-flex items-center gap-4">
             <div class="sleep-entry-duration" style="background:${durBg};color:${durColor};">${dur.h}h ${dur.m}m</div>
