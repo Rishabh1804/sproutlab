@@ -17528,6 +17528,19 @@ function escHtml(s) {
 }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
+// _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
+// fragment for the "by Bhavna" tagline shown on history-tab rows. Reads
+// __sync_updatedBy from the entry (preserved through the listener strip
+// per PR-19.5's modified per-entry strip + the stamp-on-flush in
+// _syncFlushSingleDoc). Returns empty string for legacy entries lacking
+// the stamp — graceful degradation. HR-4 escHtml at the boundary.
+function _renderAttribution(entry) {
+  if (!entry || typeof entry !== 'object') return '';
+  var ub = entry.__sync_updatedBy;
+  if (!ub || !ub.name) return '';
+  return '<div class="entry-attribution t-sub-light fs-xs">by ' + escHtml(ub.name) + '</div>';
+}
+
 // ─────────────────────────────────────────
 // SHARED UTILITIES (migrated from feature modules → core)
 // ─────────────────────────────────────────
@@ -21578,6 +21591,7 @@ function renderVaccHistory() {
               <div class="t-title fw-600">${escHtml(v.name)}</div>
               <div style="font-size:var(--fs-sm);color:var(--tc-lav);">${formatDate(v.date)} · ${ageAtVacc}</div>
               ${dateFlag}
+              ${_renderAttribution(v)}
             </div>
             <button data-action="openVaccEditModal" data-stop="1" data-arg="${realIdx}" class="btn-icon-edit" aria-label="Edit date">Edit</button>
             ${info ? '<span style="font-size:var(--icon-xs);color:var(--light);">ⓘ</span>' : ''}
@@ -25547,6 +25561,7 @@ function renderMilestoneHistory() {
         <div class="flex-1-min">
           <div class="t-title fw-600">${escHtml(m.text)}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};">${statusText}</div>
+          ${_renderAttribution(m)}
         </div>
       </div>`;
   });
@@ -26175,13 +26190,14 @@ function renderPoopHistoryPreview() {
       if (p.blood) flags.push(zi('drop'));
       if (p.mucus) flags.push(zi('drop'));
       const note = p.notes ? ` · ${escHtml(p.notes)}` : '';
-      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;">
+      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;flex-wrap:wrap;">
         <span class="poop-color-circle" style="background:${col.hex};"></span>
         <span style="font-size:var(--fs-base);">${formatTimeShort(p.time)}</span>
         <span class="poop-badge badge-amber" >${col.label}</span>
         <span class="poop-badge badge-amber" >${con.label}</span>
         ${flags.map(f => `<span class="t-sm">${f}</span>`).join('')}
         <span class="t-sub">${note}</span>
+        ${_renderAttribution(p)}
       </div>`;
     }).join('');
     return `<div style="padding:8px 0;border-bottom:1px solid var(--amber-light);">
@@ -26468,6 +26484,7 @@ function renderNotesHistory() {
               <span class="badge-sm" style="background:var(--glass-strong);margin-left:4px;">${cat}</span>
               ${n.done ? ' · Completed' : ''}
             </div>
+            ${_renderAttribution(n)}
           </div>
         </div>
       </div>`;
@@ -34443,6 +34460,7 @@ function renderGrowthHistory() {
         <div class="flex-1-min">
           <div class="t-title fw-600">${formatDate(r.date)} · ${ageAtDate(r.date)}</div>
           <div class="t-sub">${parts.join(' · ')}</div>
+          ${_renderAttribution(r)}
         </div>
         <button class="del-btn" data-action="deleteGrowth" data-arg="${origIdx}" aria-label="Delete entry">×</button>
       </div>`;
@@ -38826,11 +38844,12 @@ function renderSleepHistoryPreview() {
       const icon = s.type === 'night' ? zi('moon') : zi('zzz');
       const qual = s.type === 'night' ? getSleepScoreBadge(s) : '';
       const note = s.notes ? `<span class="t-sub"> · ${escHtml(s.notes)}</span>` : '';
-      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;">
+      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;flex-wrap:wrap;">
         <span>${icon}</span>
         <span style="font-size:var(--fs-base);">${formatTimeShort(s.bedtime)} → ${formatTimeShort(s.wakeTime)}</span>
         <span class="sleep-entry-duration">${dur.h}h ${dur.m}m</span>
         ${qual}${note}
+        ${_renderAttribution(s)}
       </div>`;
     }).join('');
     return `<div style="padding:8px 0;border-bottom:1px solid var(--indigo-light);">
@@ -61896,6 +61915,36 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   if (!wasQueued && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
+// _syncStampUnattributed — PR-19.5 (per-entry attribution). At flush time,
+// walk each array-shape value and stamp entries lacking __sync_updatedBy
+// with the current writer's attribution. The stamp travels to Firestore
+// and echoes back via the listener to all devices (including the writer's
+// own device, where it lands in localStorage on echo and is picked up by
+// _syncDispatchRender's rehydrate). Per-entry attribution is the data-shape
+// change (vs. PR-19's per-key sidecar) the Sovereign-side production
+// verification surfaced as missing on the history-tab surface.
+//
+// Scope (PR-19.5): array-shape values only (growth, sleep, poop, vacc,
+// meds, visits, milestones, notes, doctors, episodes, careTickets). Object-
+// keyed shapes (feeding, activityLog, medChecks) are Phase 4 carry-forward;
+// stamping a date-keyed sub-object requires a wrapper-shape decision that
+// affects every renderer reading those fields.
+function _syncStampUnattributed(value, writer) {
+  if (!Array.isArray(value)) return value;
+  if (!writer || (!writer.uid && !writer.name)) return value;
+  var changed = false;
+  var stamped = value.map(function(entry) {
+    if (entry && typeof entry === 'object' && !Array.isArray(entry) && !entry.__sync_updatedBy) {
+      changed = true;
+      return Object.assign({}, entry, {
+        __sync_updatedBy: { uid: writer.uid || null, name: writer.name || null },
+      });
+    }
+    return entry;
+  });
+  return changed ? stamped : value;
+}
+
 function _syncFlushSingleDoc(hRef, collection) {
   // Gather all localStorage KEYS that map to this collection
   var keysForCol = _syncCollectionToKeys[collection];
@@ -61917,6 +61966,26 @@ function _syncFlushSingleDoc(hRef, collection) {
   var current = {};
   for (var i = 0; i < keysForCol.length; i++) {
     current[keysForCol[i]] = load(keysForCol[i], null);
+  }
+
+  // PR-19.5 (per-entry attribution) — stamp un-attributed array entries
+  // with the current writer's identity before computing the diff. New
+  // local entries (lacking the stamp) thereby travel to Firestore with
+  // attribution; existing stamped entries (from prior remote writes or
+  // prior local stamps) are preserved. The stamp echoes back via the
+  // listener and lands in localStorage during the standard receive path,
+  // closing the loop without writing-back into localStorage from this
+  // function (which would be a layer-violation; flush operates on the
+  // outbound side, the listener handles the inbound side).
+  var writer = _syncUser ? {
+    uid:  _syncUser.uid || null,
+    name: _syncUser.displayName || 'Parent',
+  } : null;
+  if (writer) {
+    for (var si = 0; si < keysForCol.length; si++) {
+      var sk = keysForCol[si];
+      current[sk] = _syncStampUnattributed(current[sk], writer);
+    }
   }
 
   // Build combined shadow (what Firestore last knew)
@@ -62055,13 +62124,20 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     var entries = [];
     snapshot.forEach(function(doc) {
       var data = doc.data();
-      // Strip __sync_* metadata before storing locally (parallel to single-doc
-      // strip at the snapshot handler below; Cipher #4 cross-reference)
+      // PR-19.5 (per-entry attribution) — preserve __sync_updatedBy and
+      // __sync_syncedAt on each entry so the history-tab renderer can show
+      // "by Bhavna" per row. Strip the rest of __sync_* (e.g. __sync_createdBy
+      // is duplicative for our needs at this scope; can be added later).
+      // Parallel to single-doc handler at the snapshot strip below; Cipher #4
+      // cross-reference. The non-stripped attribution survives roundtrips
+      // (next flush's set+merge writes a fresh __sync_updatedBy at doc/entry
+      // level; Firestore overwrites cleanly).
       var clean = {};
       var keys = Object.keys(data);
       for (var j = 0; j < keys.length; j++) {
-        if (keys[j].indexOf('__sync_') !== 0) {
-          clean[keys[j]] = data[keys[j]];
+        var k = keys[j];
+        if (k.indexOf('__sync_') !== 0 || k === '__sync_updatedBy' || k === '__sync_syncedAt') {
+          clean[k] = data[k];
         }
       }
       // Ensure id field matches doc ID

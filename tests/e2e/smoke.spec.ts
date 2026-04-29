@@ -1474,3 +1474,161 @@ test.describe('Persistent attribution sidecar (Phase 3 PR-19)', () => {
     expect(final['ziva_feeding'].uid, 'feeding uid is rishabh').toBe('rishabh-uid');
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// PR-19.5 — Per-entry attribution (history-tab surface)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Sovereign-side production verification of PR-19 surfaced that the per-key
+// KEYS.lastWriters sidecar was insufficient for the history-tab surface:
+// each entry in a history list needs its own attribution. PR-19.5 fixes:
+//   (a) per-entry strip in _syncHandlePerEntrySnapshot preserves
+//       __sync_updatedBy / __sync_syncedAt on each entry (caretickets)
+//   (b) _syncStampUnattributed in _syncFlushSingleDoc stamps un-attributed
+//       array entries with the current writer at flush time (so locally-
+//       added entries get the writer's identity before going to Firestore;
+//       echoes back via listener with stamp intact)
+//   (c) _renderAttribution(entry) helper in core.js + wired into history-
+//       tab renderers (growth, sleep, poop, vacc, milestones, notes; meds
+//       and feeding are object-keyed → Phase 4)
+//
+// Doctrine ledger: hermetic-floor-doesnt-substitute-for-production-floor
+// RATIFIED at 3/3 with this PR's predecessor (PR-19) being the third
+// instance. Hermetic R-4 floor remains necessary-not-sufficient; production
+// verification on a real second device is the closer.
+
+test.describe('Per-entry attribution — strip preserves + flush stamps (Phase 3 PR-19.5)', () => {
+  test('positive — _syncStampUnattributed stamps un-attributed array entries with writer identity', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncStampUnattributed?: unknown })._syncStampUnattributed === 'function');
+
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const stamp = w['_syncStampUnattributed'] as (
+        value: Array<Record<string, unknown>>, writer: { uid: string; name: string }
+      ) => Array<Record<string, unknown>>;
+      const writer = { uid: 'lyra-uid', name: 'Lyra' };
+      // Mixed array — some entries have stamps, some don't.
+      const input = [
+        { date: '2025-09-04', wt: 3.45 },                                                          // unstamped
+        { date: '2026-04-25', wt: 8.00, __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' } }, // stamped (Bhavna)
+        { date: '2026-04-27', wt: 8.10 },                                                          // unstamped
+      ];
+      const stamped = stamp(input, writer);
+      return {
+        len: stamped.length,
+        firstStamp: stamped[0].__sync_updatedBy as { name: string } | undefined,
+        secondStamp: stamped[1].__sync_updatedBy as { name: string } | undefined,
+        thirdStamp: stamped[2].__sync_updatedBy as { name: string } | undefined,
+      };
+    });
+
+    expect(result.len, 'stamped array length unchanged').toBe(3);
+    expect(result.firstStamp?.name, 'first (unstamped) gets writer identity').toBe('Lyra');
+    expect(result.secondStamp?.name, 'second (already-stamped) preserved').toBe('Bhavna');
+    expect(result.thirdStamp?.name, 'third (unstamped) gets writer identity').toBe('Lyra');
+  });
+
+  test('regression-guard — listener handler preserves __sync_updatedBy on entries through localStorage', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    const persisted = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [
+            { date: '2025-09-04', wt: 3.45, ht: 50, __sync_updatedBy: { uid: 'kajal-uid', name: 'Kajal Parakh' } },
+            { date: '2026-04-27', wt: 8.10, ht: 68, __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' } },
+          ],
+          __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' },
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+      // localStorage now has the array; verify each entry retained __sync_updatedBy
+      const raw = window.localStorage.getItem('ziva_growth');
+      return raw ? JSON.parse(raw) : null;
+    });
+
+    expect(persisted, 'localStorage[ziva_growth] populated').not.toBeNull();
+    expect(Array.isArray(persisted), 'is array').toBeTruthy();
+    expect(persisted[0].__sync_updatedBy?.name, 'first entry attribution preserved (Kajal)').toBe('Kajal Parakh');
+    expect(persisted[1].__sync_updatedBy?.name, 'second entry attribution preserved (Bhavna)').toBe('Bhavna');
+  });
+
+  test('positive-regression — _renderAttribution returns empty string for legacy un-stamped entries (graceful degradation)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _renderAttribution?: unknown })._renderAttribution === 'function');
+
+    const variants = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const render = w['_renderAttribution'] as (entry: unknown) => string;
+      return {
+        stamped: render({ date: '2026-04-27', wt: 8.10, __sync_updatedBy: { uid: 'b', name: 'Bhavna' } }),
+        unstamped: render({ date: '2026-04-27', wt: 8.10 }),                                  // legacy entry
+        emptyName: render({ date: '2026-04-27', wt: 8.10, __sync_updatedBy: { uid: 'b' } }),  // missing name
+        nullEntry: render(null),
+        undef: render(undefined),
+        notObject: render(42),
+      };
+    });
+
+    expect(variants.stamped, 'stamped entry renders attribution').toContain('Bhavna');
+    expect(variants.unstamped, 'unstamped legacy entry renders empty').toBe('');
+    expect(variants.emptyName, 'missing name renders empty').toBe('');
+    expect(variants.nullEntry, 'null entry renders empty').toBe('');
+    expect(variants.undef, 'undefined entry renders empty').toBe('');
+    expect(variants.notObject, 'non-object entry renders empty').toBe('');
+  });
+});
+
+test.describe('Per-entry attribution — caretickets per-entry strip preserves __sync_updatedBy (Phase 3 PR-19.5)', () => {
+  test('positive — per-entry snapshot persists each entry\'s __sync_updatedBy through the strip', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandlePerEntrySnapshot?: unknown })._syncHandlePerEntrySnapshot === 'function');
+
+    const persisted = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandlePerEntrySnapshot'] as (
+        collection: string, snapshot: {
+          forEach: (cb: (doc: { id: string; data: () => Record<string, unknown> }) => void) => void;
+          docChanges: () => Array<{ doc: { data: () => Record<string, unknown> }; type: string }>;
+          metadata: { hasPendingWrites: boolean };
+        }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['caretickets'] = true;
+      // Synthetic per-entry snapshot with two tickets, each with its own __sync_updatedBy
+      const docs = [
+        { id: 't1', data: () => ({ id: 't1', title: 'Cough check', __sync_updatedBy: { uid: 'kajal-uid', name: 'Kajal Parakh' }, __sync_syncedAt: null }) },
+        { id: 't2', data: () => ({ id: 't2', title: 'Vit D follow-up', __sync_updatedBy: { uid: 'rishabh-uid', name: 'Rishabh' }, __sync_syncedAt: null }) },
+      ];
+      const snapshot = {
+        forEach: function(cb: (d: { id: string; data: () => Record<string, unknown> }) => void) { docs.forEach(cb); },
+        docChanges: function() { return docs.map(d => ({ doc: d, type: 'modified' })); },
+        metadata: { hasPendingWrites: false },
+      };
+      handler('caretickets', snapshot);
+      const raw = window.localStorage.getItem('ziva_care_tickets');
+      return raw ? JSON.parse(raw) : null;
+    });
+
+    expect(persisted, 'localStorage[ziva_care_tickets] populated').not.toBeNull();
+    expect(persisted.length, 'two tickets').toBe(2);
+    expect(persisted[0].__sync_updatedBy?.name, 'ticket 1 attribution preserved').toBe('Kajal Parakh');
+    expect(persisted[1].__sync_updatedBy?.name, 'ticket 2 attribution preserved').toBe('Rishabh');
+    // The strip must NOT preserve OTHER __sync_* fields (e.g. __sync_createdBy)
+    // — only __sync_updatedBy and __sync_syncedAt are the explicit allowlist.
+    expect(persisted[0].__sync_createdBy, 'unrelated __sync_* field stripped').toBeUndefined();
+  });
+});

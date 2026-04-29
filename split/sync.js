@@ -940,6 +940,36 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
   if (!wasQueued && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 
+// _syncStampUnattributed — PR-19.5 (per-entry attribution). At flush time,
+// walk each array-shape value and stamp entries lacking __sync_updatedBy
+// with the current writer's attribution. The stamp travels to Firestore
+// and echoes back via the listener to all devices (including the writer's
+// own device, where it lands in localStorage on echo and is picked up by
+// _syncDispatchRender's rehydrate). Per-entry attribution is the data-shape
+// change (vs. PR-19's per-key sidecar) the Sovereign-side production
+// verification surfaced as missing on the history-tab surface.
+//
+// Scope (PR-19.5): array-shape values only (growth, sleep, poop, vacc,
+// meds, visits, milestones, notes, doctors, episodes, careTickets). Object-
+// keyed shapes (feeding, activityLog, medChecks) are Phase 4 carry-forward;
+// stamping a date-keyed sub-object requires a wrapper-shape decision that
+// affects every renderer reading those fields.
+function _syncStampUnattributed(value, writer) {
+  if (!Array.isArray(value)) return value;
+  if (!writer || (!writer.uid && !writer.name)) return value;
+  var changed = false;
+  var stamped = value.map(function(entry) {
+    if (entry && typeof entry === 'object' && !Array.isArray(entry) && !entry.__sync_updatedBy) {
+      changed = true;
+      return Object.assign({}, entry, {
+        __sync_updatedBy: { uid: writer.uid || null, name: writer.name || null },
+      });
+    }
+    return entry;
+  });
+  return changed ? stamped : value;
+}
+
 function _syncFlushSingleDoc(hRef, collection) {
   // Gather all localStorage KEYS that map to this collection
   var keysForCol = _syncCollectionToKeys[collection];
@@ -961,6 +991,26 @@ function _syncFlushSingleDoc(hRef, collection) {
   var current = {};
   for (var i = 0; i < keysForCol.length; i++) {
     current[keysForCol[i]] = load(keysForCol[i], null);
+  }
+
+  // PR-19.5 (per-entry attribution) — stamp un-attributed array entries
+  // with the current writer's identity before computing the diff. New
+  // local entries (lacking the stamp) thereby travel to Firestore with
+  // attribution; existing stamped entries (from prior remote writes or
+  // prior local stamps) are preserved. The stamp echoes back via the
+  // listener and lands in localStorage during the standard receive path,
+  // closing the loop without writing-back into localStorage from this
+  // function (which would be a layer-violation; flush operates on the
+  // outbound side, the listener handles the inbound side).
+  var writer = _syncUser ? {
+    uid:  _syncUser.uid || null,
+    name: _syncUser.displayName || 'Parent',
+  } : null;
+  if (writer) {
+    for (var si = 0; si < keysForCol.length; si++) {
+      var sk = keysForCol[si];
+      current[sk] = _syncStampUnattributed(current[sk], writer);
+    }
   }
 
   // Build combined shadow (what Firestore last knew)
@@ -1099,13 +1149,20 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     var entries = [];
     snapshot.forEach(function(doc) {
       var data = doc.data();
-      // Strip __sync_* metadata before storing locally (parallel to single-doc
-      // strip at the snapshot handler below; Cipher #4 cross-reference)
+      // PR-19.5 (per-entry attribution) — preserve __sync_updatedBy and
+      // __sync_syncedAt on each entry so the history-tab renderer can show
+      // "by Bhavna" per row. Strip the rest of __sync_* (e.g. __sync_createdBy
+      // is duplicative for our needs at this scope; can be added later).
+      // Parallel to single-doc handler at the snapshot strip below; Cipher #4
+      // cross-reference. The non-stripped attribution survives roundtrips
+      // (next flush's set+merge writes a fresh __sync_updatedBy at doc/entry
+      // level; Firestore overwrites cleanly).
       var clean = {};
       var keys = Object.keys(data);
       for (var j = 0; j < keys.length; j++) {
-        if (keys[j].indexOf('__sync_') !== 0) {
-          clean[keys[j]] = data[keys[j]];
+        var k = keys[j];
+        if (k.indexOf('__sync_') !== 0 || k === '__sync_updatedBy' || k === '__sync_syncedAt') {
+          clean[k] = data[k];
         }
       }
       // Ensure id field matches doc ID

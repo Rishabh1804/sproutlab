@@ -993,6 +993,7 @@ function renderGrowthHistory() {
         <div class="flex-1-min">
           <div class="t-title fw-600">${formatDate(r.date)} · ${ageAtDate(r.date)}</div>
           <div class="t-sub">${parts.join(' · ')}</div>
+          ${_renderAttribution(r)}
         </div>
         <button class="del-btn" data-action="deleteGrowth" data-arg="${origIdx}" aria-label="Delete entry">×</button>
       </div>`;
@@ -5376,11 +5377,12 @@ function renderSleepHistoryPreview() {
       const icon = s.type === 'night' ? zi('moon') : zi('zzz');
       const qual = s.type === 'night' ? getSleepScoreBadge(s) : '';
       const note = s.notes ? `<span class="t-sub"> · ${escHtml(s.notes)}</span>` : '';
-      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;">
+      return `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:4px 0;flex-wrap:wrap;">
         <span>${icon}</span>
         <span style="font-size:var(--fs-base);">${formatTimeShort(s.bedtime)} → ${formatTimeShort(s.wakeTime)}</span>
         <span class="sleep-entry-duration">${dur.h}h ${dur.m}m</span>
         ${qual}${note}
+        ${_renderAttribution(s)}
       </div>`;
     }).join('');
     return `<div style="padding:8px 0;border-bottom:1px solid var(--indigo-light);">

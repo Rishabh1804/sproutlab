@@ -2226,6 +2226,19 @@ function escHtml(s) {
 }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
+// _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
+// fragment for the "by Bhavna" tagline shown on history-tab rows. Reads
+// __sync_updatedBy from the entry (preserved through the listener strip
+// per PR-19.5's modified per-entry strip + the stamp-on-flush in
+// _syncFlushSingleDoc). Returns empty string for legacy entries lacking
+// the stamp — graceful degradation. HR-4 escHtml at the boundary.
+function _renderAttribution(entry) {
+  if (!entry || typeof entry !== 'object') return '';
+  var ub = entry.__sync_updatedBy;
+  if (!ub || !ub.name) return '';
+  return '<div class="entry-attribution t-sub-light fs-xs">by ' + escHtml(ub.name) + '</div>';
+}
+
 // ─────────────────────────────────────────
 // SHARED UTILITIES (migrated from feature modules → core)
 // ─────────────────────────────────────────
