@@ -40,6 +40,17 @@ const KEYS = {
   careTickets:   'ziva_care_tickets',
   notifPermission: 'ziva_notif_permission',
   ctEverUsed:    'ziva_ct_ever_used',
+  // PR-19 (Phase 3 R2 amendment): persistent attribution sidecar.
+  // Local-only metadata recording the last remote-write attribution per key.
+  // NOT in SYNC_KEYS — never roundtripped to Firestore. Updated by listener
+  // handlers after a successful per-key save. Shape:
+  //   { [lsKey]: { uid: string|null, name: string|null, at: number(ms-epoch) } }
+  // Read by status-strip activity-mode renderer and (optionally) by future
+  // in-card "last updated by" surfaces. Sidecar shape (vs co-located on
+  // each entry) chosen because (a) per-key uniformity across single-doc and
+  // per-entry models, (b) zero risk of echo-loop via diff (sync-internal
+  // metadata never enters the SYNC_KEYS write path).
+  lastWriters: 'ziva_last_writers',
 };
 
 function load(key, def) {

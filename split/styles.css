@@ -4267,6 +4267,23 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 .update-toast[hidden] { display:none !important; }
 .update-toast:focus-visible { outline:2px solid var(--tc-sky); outline-offset:2px; }
+
+/* Activity pill (Phase 3 PR-19 — permanent-attribution Surface C). Surfaced
+   for ~45s after a remote listener fire. Lives inside #statusStrip alongside
+   #syncStatus and #updateToast; the strip's binary mode contract is gated by
+   the [hidden] attribute on this element (state mode = hidden, activity mode
+   = visible). HR-2/HR-5 token-driven. Color tokens borrow the lavender pair
+   (--tc-lav / --lav-light) to read distinctly from the sync-indicator's
+   state colors and the update-toast's sage. */
+.sync-activity {
+  display:inline-flex; align-items:center; gap:var(--sp-6);
+  padding:var(--sp-4) var(--sp-12);
+  border:1.5px solid var(--tc-lav); background:var(--lav-light); color:var(--tc-lav);
+  border-radius:var(--r-full);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:600;
+  white-space:nowrap;
+}
+.sync-activity[hidden] { display:none !important; }
 .update-toast__icon { display:inline-flex; }
 .update-toast__icon .zi { width:14px; height:14px; }
 

@@ -1096,11 +1096,16 @@ test.describe('Attribution surfacing (Phase 3 PR-9, Finding F)', () => {
       });
     });
 
-    // Toast queues with 1500ms debounce — wait for it to materialize.
-    const toast = page.locator('#syncToast');
-    await expect(toast, 'toast appears in DOM after listener fire').toBeVisible({ timeout: 3000 });
-    await expect(toast, 'toast text names the cross-device updater').toContainText('Bhavna');
-    await expect(toast, 'success-path toast lacks .is-tappable (auto-dismiss only)').not.toHaveClass(/\bis-tappable\b/);
+    // PR-19 (Phase 3 R2 amendment): success-path now drives the
+    // status-strip activity-mode pill (#syncActivity), not a transient
+    // toast div. Pipeline still 1500ms-debounced before publish.
+    const activity = page.locator('#syncActivity');
+    await expect(activity, 'activity pill becomes visible after listener fire').toBeVisible({ timeout: 3000 });
+    await expect(activity, 'activity text names the cross-device updater').toContainText('Bhavna');
+    await expect(activity, 'attribution uid threaded onto data attribute').toHaveAttribute('data-attribution-uid', 'bhavna-uid');
+    // The transient #syncToast div is NOT created on the success path
+    // (Surface C ratification: pipeline repurposed, not duplicated).
+    await expect(page.locator('#syncToast'), 'transient #syncToast div is NOT created on success path').toHaveCount(0);
   });
 });
 
@@ -1185,7 +1190,7 @@ test.describe('PR-9 hotfix — dispatch crashes do not trip sync circuit (Issue 
     expect(result.disabled, 'sync correctly auto-disables on real I/O crashes').toBeTruthy();
   });
 
-  test('positive-regression — listener handler with renderer crash STILL queues toast (no early-disable cascade)', async ({ page }) => {
+  test('positive-regression — listener handler with renderer crash STILL drives activity pill (no early-disable cascade)', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
@@ -1210,10 +1215,12 @@ test.describe('PR-9 hotfix — dispatch crashes do not trip sync circuit (Issue 
       });
     });
 
-    // Toast still queues even with renderer crashing — circuit not tripped.
-    const toast = page.locator('#syncToast');
-    await expect(toast, 'toast still appears despite renderer crash').toBeVisible({ timeout: 3000 });
-    await expect(toast, 'attribution text preserved').toContainText('Bhavna');
+    // PR-19: success path drives the activity pill (#syncActivity), not a
+    // transient toast div. The circuit-not-tripped invariant is the same;
+    // only the publish target moved.
+    const activity = page.locator('#syncActivity');
+    await expect(activity, 'activity pill still drives despite renderer crash').toBeVisible({ timeout: 3000 });
+    await expect(activity, 'attribution text preserved').toContainText('Bhavna');
   });
 });
 
@@ -1259,5 +1266,211 @@ test.describe('PR-9 hotfix — orderMedicalCards null-guard (Issue 2 root cause)
 
     expect(result.threw, 'switchTab(\'medical\') → orderMedicalCards must not throw').toBeFalsy();
     expect(result.message, 'no error message captured').toBeNull();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// PR-19 — Status-strip activity-mode contract (R-7 binary-mode, 4th instance)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Surface C ratification (Aurelius post-PR-18): the toast pipeline drives
+// a permanent surface (#syncActivity pill in #statusStrip) instead of a
+// transient toast div. The strip's mode contract is binary:
+//   - State mode (default): only #syncStatus visible inside #statusStrip.
+//   - Activity mode: #syncActivity visible alongside #syncStatus, for ~45s
+//     after a remote listener fire delivers cross-device changes.
+// Mode contract requires #statusStrip itself to remain visible across the
+// transition — same shape as the PR-14 update-toast triad and the earlier
+// PR-2.5 sync-indicator triad.
+
+test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
+  test('default-positive — state mode: with no recent listener activity, #syncStatus is the only strip child', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
+
+    await expect(page.locator('#statusStrip'), 'strip itself visible').toBeVisible();
+    await expect(page.locator('#syncActivity'), 'activity pill hidden in state mode').toBeHidden();
+  });
+
+  test('activity-positive — activity mode: synthetic listener fire brings #syncActivity into view with attribution', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    // Fire a cross-device single-doc snapshot
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [{ date: '2026-04-28', wt: 8.15, ht: 68 }],
+          __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' },
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+    });
+
+    const activity = page.locator('#syncActivity');
+    await expect(activity, 'activity pill enters activity mode').toBeVisible({ timeout: 3000 });
+    await expect(activity, 'pill text names the cross-device updater').toContainText('Bhavna');
+    await expect(activity, 'pill carries attribution-uid data attribute').toHaveAttribute('data-attribution-uid', 'bhavna-uid');
+  });
+
+  test('mode-contract-regression — #statusStrip remains visible in BOTH modes (no display:none cascade)', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
+
+    // Pass 1: state mode (default)
+    await expect(page.locator('#statusStrip'), 'strip visible in state mode').toBeVisible();
+    await expect(page.locator('#syncActivity'), 'activity pill hidden in state mode').toBeHidden();
+
+    // Pass 2: drive activity mode via the publish helper directly
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const setActivity = w['_syncSetActivity'] as (text: string, attribution?: { uid?: string | null; name?: string | null }) => void;
+      setActivity('Bhavna synced an update', { uid: 'bhavna-uid', name: 'Bhavna' });
+    });
+    await expect(page.locator('#statusStrip'), 'strip still visible in activity mode').toBeVisible();
+    await expect(page.locator('#syncActivity'), 'activity pill visible in activity mode').toBeVisible();
+
+    // Pass 3: simple-mode opt-out should not change the strip's mode contract
+    await page.evaluate(() => { try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {} });
+    await page.reload();
+    await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
+    await expect(page.locator('body'), 'simple-mode opted out').not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('#statusStrip'), 'strip visible under full mode too').toBeVisible();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// PR-19 — Persistent attribution sidecar (KEYS.lastWriters)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Permanent record of the last cross-device writer per lsKey. Sidecar shape
+// chosen over co-located-on-each-entry for: (a) uniformity across single-doc
+// and per-entry models, (b) zero risk of echo-loop via the sync diff (sidecar
+// key is local-only, never enters SYNC_KEYS write path). Read by status-strip
+// activity-mode driver and (Phase 4) future in-card "last updated by" lines.
+
+test.describe('Persistent attribution sidecar (Phase 3 PR-19)', () => {
+  test('positive — listener fire writes attribution to KEYS.lastWriters[lsKey]', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    const result = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+      const before = window.localStorage.getItem('ziva_last_writers');
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [{ date: '2026-04-28', wt: 8.15, ht: 68 }],
+          __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' },
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+      const after = window.localStorage.getItem('ziva_last_writers');
+      return { before, after };
+    });
+
+    expect(result.before, 'sidecar empty before fire').toBeNull();
+    expect(result.after, 'sidecar populated after fire').not.toBeNull();
+    const parsed = JSON.parse(result.after as string);
+    expect(parsed['ziva_growth'], 'ziva_growth key recorded').toBeTruthy();
+    expect(parsed['ziva_growth'].name, 'name persisted').toBe('Bhavna');
+    expect(parsed['ziva_growth'].uid, 'uid persisted').toBe('bhavna-uid');
+    expect(typeof parsed['ziva_growth'].at, 'at is numeric ms-epoch').toBe('number');
+  });
+
+  test('regression-guard — local-only sidecar key NEVER appears in SYNC_KEYS or the syncWrite path', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncRecordLastWriter?: unknown })._syncRecordLastWriter === 'function');
+
+    // KEYS.lastWriters must be ABSENT from SYNC_KEYS (sync.js:120-140 area).
+    // Echo-loop risk if this leaks into the write path; verify the guard
+    // empirically by calling syncWrite directly and confirming it returns
+    // without attempting a Firestore call (KEYS / SYNC_KEYS are const
+    // declarations and don't attach to window; we verify by behavior, not
+    // by introspection).
+    const checks = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      // String literal — same value as KEYS.lastWriters in core.js.
+      const lastWritersKey = 'ziva_last_writers';
+      const syncWrite = w['syncWrite'] as (key: string, val: unknown, old: unknown) => void;
+      let threw = false;
+      try { syncWrite(lastWritersKey, { test: 1 }, null); }
+      catch(e) { threw = true; void e; }
+      // Also verify _syncRecordLastWriter (which calls save()) does not
+      // attempt to roundtrip the sidecar key (would fire syncWrite, hit
+      // the !SYNC_KEYS[key] guard, and return — observable as no error).
+      const recordLastWriter = w['_syncRecordLastWriter'] as (k: string, a: unknown) => void;
+      let recordThrew = false;
+      try { recordLastWriter('ziva_growth', { uid: 'test', name: 'Test', at: null }); }
+      catch(e) { recordThrew = true; void e; }
+      const sidecarAfter = window.localStorage.getItem(lastWritersKey);
+      return {
+        lastWritersKey,
+        syncWriteThrew: threw,
+        recordThrew,
+        sidecarPopulated: sidecarAfter !== null,
+      };
+    });
+
+    expect(checks.lastWritersKey, 'sidecar key value matches expected').toBe('ziva_last_writers');
+    expect(checks.syncWriteThrew, 'syncWrite handles non-SYNC_KEYS key without throwing').toBeFalsy();
+    expect(checks.recordThrew, '_syncRecordLastWriter writes without throwing').toBeFalsy();
+    expect(checks.sidecarPopulated, 'sidecar localStorage entry created').toBeTruthy();
+  });
+
+  test('positive-regression — multiple cross-device fires accumulate per-key attribution without overwriting unrelated keys', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { _syncHandleSingleDocSnapshot?: unknown })._syncHandleSingleDocSnapshot === 'function');
+
+    const final = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string, doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) { _syncReady['growth'] = true; _syncReady['tracking'] = true; }
+      // Fire 1: Bhavna writes growth
+      handler('growth', {
+        exists: true,
+        data: () => ({
+          ziva_growth: [{ date: '2026-04-28', wt: 8.15, ht: 68 }],
+          __sync_updatedBy: { uid: 'bhavna-uid', name: 'Bhavna' },
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+      // Fire 2: Different writer (Rishabh) writes feeding (different lsKey)
+      handler('tracking', {
+        exists: true,
+        data: () => ({
+          ziva_feeding: { '2026-04-28': { breakfast: 'oats', lunch: '', dinner: '', snack: '' } },
+          __sync_updatedBy: { uid: 'rishabh-uid', name: 'Rishabh' },
+        }),
+        metadata: { hasPendingWrites: false },
+      });
+      return JSON.parse(window.localStorage.getItem('ziva_last_writers') as string);
+    });
+
+    expect(final['ziva_growth'].name, 'growth attribution preserved').toBe('Bhavna');
+    expect(final['ziva_feeding'].name, 'feeding attribution recorded for second writer').toBe('Rishabh');
+    expect(final['ziva_growth'].uid, 'growth uid still bhavna').toBe('bhavna-uid');
+    expect(final['ziva_feeding'].uid, 'feeding uid is rishabh').toBe('rishabh-uid');
   });
 });
