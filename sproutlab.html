@@ -17285,6 +17285,7 @@ function renderNotes(filterCat) {
             ${n.photo ? zi('camera') + ' ' : ''}${n.voice ? zi('camera') + ' ' : ''}
             <span class="note-cat-badge ${noteCategory}">${catIcon} ${noteCategory}</span>
           </div>
+          ${_renderAttribution(n)}
         </div>
         <div class="note-actions">
           <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? '↩' : zi('check')}</button>
@@ -22364,6 +22365,7 @@ function renderVisits() {
           <div class="visit-date">${formatDate(v.date)}</div>
           ${v.doctor ? `<div class="visit-doctor">${zi('steth')} ${escHtml(v.doctor)}</div>` : ''}
           ${v.reason ? `<div class="visit-doctor">${zi('list')} ${escHtml(v.reason)}</div>` : ''}
+          ${_renderAttribution(v)}
         </div>
         <div class="visit-actions">
           <button class="note-btn del-note-btn" data-action="deleteVisit" data-arg="${v._i}">&times;</button>
@@ -25908,6 +25910,7 @@ function renderPoopLog() {
               <span class="poop-badge badge-amber" >${amtLabel}</span>
               ${flagBadges.join('')}
             </div>
+            ${_renderAttribution(p)}
           </div>
           <div class="d-flex items-center gap-4">
             <button data-action="editPoopEntry" data-arg="${realIdx}" class="btn-icon-amber" aria-label="Edit entry">Edit</button>
@@ -33779,6 +33782,7 @@ function renderActiveMilestones() {
           '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
           '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
           (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
+          _renderAttribution(m) +
         '</div>' +
         overrideHtml +
       '</div>' +
@@ -37215,6 +37219,7 @@ function renderMeds() {
         </div>
         ${m.brand ? `<div class="med-brand">${zi('target')} ${escHtml(m.brand)}</div>` : ''}
         ${m.notes ? `<div class="med-detail" style="margin-top:4px;font-style:italic;">${escHtml(m.notes)}</div>` : ''}
+        ${_renderAttribution(m)}
       </div>
       <div class="med-actions">
         <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? '⏸ Stop' : '▶ Resume'}</button>
@@ -38464,6 +38469,7 @@ function renderSleepLog() {
               ${qualBadge}
               ${wakeBadge}
             </div>
+            ${_renderAttribution(s)}
           </div>
           <div class="d-flex items-center gap-4">
             <div class="sleep-entry-duration" style="background:${durBg};color:${durColor};">${dur.h}h ${dur.m}m</div>
@@ -50349,6 +50355,7 @@ function renderFeverHistory() {
     if (doseCount > 0) html += ' · Crocin ×' + doseCount;
     html += '</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += _renderAttribution(ep);
     html += '</div>';
   });
   body.innerHTML = html;
@@ -51015,6 +51022,7 @@ function renderDiarrhoeaHistory() {
     html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + '</div>';
     html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + ep.stools.length + ' stools · ' + ep.fluids.length + ' fluid entries · ' + ep.wetDiapers.length + ' wet diapers logged</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
+    html += _renderAttribution(ep);
     html += '</div>';
   });
   body.innerHTML = html;
@@ -51385,7 +51393,9 @@ function renderVomitingHistory() {
   let html = '';
   resolved.slice().reverse().forEach(ep => {
     html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + _feverDurationStr(ep) + '</div>';
-    html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div></div>';
+    html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div>';
+    html += _renderAttribution(ep);
+    html += '</div>';
   });
   body.innerHTML = html;
 }
@@ -51645,7 +51655,9 @@ function renderColdHistory() {
   resolved.slice().reverse().forEach(ep => {
     const days = Math.ceil((new Date(ep.resolvedAt || Date.now()).getTime() - new Date(ep.startedAt).getTime()) / 86400000);
     html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + days + ' day' + (days !== 1 ? 's' : '') + '</div>';
-    html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div></div>';
+    html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div>';
+    html += _renderAttribution(ep);
+    html += '</div>';
   });
   body.innerHTML = html;
 }

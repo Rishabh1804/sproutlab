@@ -1983,6 +1983,7 @@ function renderNotes(filterCat) {
             ${n.photo ? zi('camera') + ' ' : ''}${n.voice ? zi('camera') + ' ' : ''}
             <span class="note-cat-badge ${noteCategory}">${catIcon} ${noteCategory}</span>
           </div>
+          ${_renderAttribution(n)}
         </div>
         <div class="note-actions">
           <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? '↩' : zi('check')}</button>
