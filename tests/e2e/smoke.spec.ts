@@ -1974,3 +1974,156 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
     }
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-1 — medical.js Insights-tier defense-in-depth gates (Phase 4 sub-phase 1)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Rationale-amendment on-record (PR-23 r1→r2 transparency precedent applies):
+//
+// Maren's Phase 4 Polish charter scout framed the medical.js zero-isSimpleMode-
+// calls finding as "user-visible mode-contract drift" — the claim being that
+// simple-mode users see full medical Insights surface while seeing simplified
+// diet ZS. Lyra's Polish-1 build-deep empirical re-grep refuted that framing:
+// the Info tab BUTTON is CSS-hidden in simple-mode (styles.css:3198: `body.
+// simple-mode .tab-btn[aria-label="Info tab"] { display:none; }`), so simple-
+// mode users have no path to navigate to the Info renderers' output. The
+// "user-visible" framing is empirically wrong.
+//
+// What IS true: the Info renderer JS still RUNS in simple-mode (rendering into
+// CSS-hidden DOM), wasting CPU cycles. Path-1 ratification (Sovereign via
+// Aurelius post-PR-23-merge): ship the JS-layer gates Maren named, but reframe
+// the rationale on-record — defense-in-depth + perf, NOT user-visible parity.
+// The 19 remaining medical.js renderInfo* renderers carrying the same
+// structural defect route to Phase 4 R-10 carry-forward P-5 (charter §6) as
+// a Stability sub-phase candidate.
+//
+// Polish-1 lands the discipline at 2 named medical.js sites (the actually-
+// medical.js subset of Maren's three named surfaces; the third — diet.js
+// "Correlations appear" — was a jurisdictional-drift D8 catch closed at
+// charter ratification). Triad below covers the two gates.
+
+test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', () => {
+  // The two gated renderers. Both write into Info-tab DOM (#infoPoopFoodDelay*
+  // / #infoPoopFoodWatch*) which is CSS-hidden in simple-mode at the parent-
+  // tab-button level. JS-layer early-return saves CPU + backs the CSS gate.
+  const GATED = [
+    {
+      fn: 'renderInfoPoopFoodDelay',
+      summaryEl: 'infoPoopFoodDelaySummary',
+      listEl: 'infoPoopFoodDelayList',
+      insightEl: 'infoPoopFoodDelayInsights',
+    },
+    {
+      fn: 'renderInfoPoopFoodWatch',
+      summaryEl: 'infoPoopFoodWatchSummary',
+      listEl: 'infoPoopFoodWatchList',
+      insightEl: 'infoPoopFoodWatchInsights',
+    },
+  ];
+
+  test('positive — in full mode (simple-mode opted out), gated renderers DO write into their target DOM', async ({ page }) => {
+    await stubChartJs(page);
+    // Opt out of simple-mode before init runs; same idiom as smoke 2b.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    const results = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      return cases.map((c) => {
+        const fn = w[c.fn] as () => void;
+        const summary = document.getElementById(c.summaryEl);
+        if (summary) summary.innerHTML = ''; // baseline empty
+        try { fn(); } catch (e) { /* runtime errors surface in returned shape */ }
+        return {
+          fn: c.fn,
+          summaryHasContent: !!(summary && summary.innerHTML.trim().length > 0),
+          bodyClass: document.body.className,
+        };
+      });
+    }, GATED);
+
+    for (const r of results) {
+      expect(r.bodyClass, `${r.fn}: body NOT in simple-mode for full-mode test`).not.toMatch(/\bsimple-mode\b/);
+      expect(r.summaryHasContent, `${r.fn}: full-mode call writes into target DOM (no early-return)`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — in simple-mode, gated renderers early-return WITHOUT touching target DOM', async ({ page }) => {
+    await stubChartJs(page);
+    // Default fresh context → simple-mode ON (split/core.js:3711-3717 default-on logic).
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    const results = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      return cases.map((c) => {
+        const fn = w[c.fn] as () => void;
+        const summary = document.getElementById(c.summaryEl);
+        // Pre-seed the summary with a sentinel so we can detect any innerHTML write.
+        const SENTINEL = '__POLISH1_SENTINEL__';
+        if (summary) summary.innerHTML = SENTINEL;
+        try { fn(); } catch (e) { /* surface */ }
+        return {
+          fn: c.fn,
+          sentinelPreserved: !!(summary && summary.innerHTML === SENTINEL),
+          bodyClass: document.body.className,
+        };
+      });
+    }, GATED);
+
+    for (const r of results) {
+      expect(r.bodyClass, `${r.fn}: body IS in simple-mode for simple-mode test`).toMatch(/\bsimple-mode\b/);
+      expect(r.sentinelPreserved, `${r.fn}: simple-mode early-return preserves pre-existing summary content (no innerHTML write)`).toBeTruthy();
+    }
+  });
+
+  test('positive-regression — gate behavior tracks current body class on direct invocation', async ({ page }) => {
+    await stubChartJs(page);
+    // Start in full mode.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    // Call once in full mode (writes), then flip body class directly to simulate
+    // a mode toggle, then call again (gate should engage), then restore class
+    // and call once more (writes again). Verifies the gate dispatch is dynamic
+    // per-call, not init-bound.
+    const sequence = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      const c = cases[0]; // one renderer is sufficient for the dispatch-shape check
+      const fn = w[c.fn] as () => void;
+      const summary = document.getElementById(c.summaryEl);
+      if (!summary) return { phase1: false, phase2: false, phase3: false };
+
+      // Phase 1: full mode → expect content
+      summary.innerHTML = '';
+      try { fn(); } catch {}
+      const phase1 = summary.innerHTML.trim().length > 0;
+
+      // Phase 2: flip to simple-mode, set sentinel, call → expect sentinel preserved
+      document.body.classList.add('simple-mode');
+      const SENTINEL = '__POLISH1_PHASE2_SENTINEL__';
+      summary.innerHTML = SENTINEL;
+      try { fn(); } catch {}
+      const phase2 = summary.innerHTML === SENTINEL;
+
+      // Phase 3: flip back to full mode → call → expect content (sentinel cleared)
+      document.body.classList.remove('simple-mode');
+      summary.innerHTML = '';
+      try { fn(); } catch {}
+      const phase3 = summary.innerHTML.trim().length > 0;
+
+      return { phase1, phase2, phase3 };
+    }, GATED);
+
+    expect(sequence.phase1, 'phase 1 (full mode): gate disengaged; renderer wrote content').toBeTruthy();
+    expect(sequence.phase2, 'phase 2 (toggled to simple): gate engaged; sentinel preserved').toBeTruthy();
+    expect(sequence.phase3, 'phase 3 (toggled back to full): gate disengaged; renderer wrote content').toBeTruthy();
+  });
+});

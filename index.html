@@ -39266,6 +39266,13 @@ function computeFoodPoopDelay(windowDays) {
 }
 
 function renderInfoPoopFoodDelay() {
+  // Polish-1: defense-in-depth + perf gate — Info tab is CSS-hidden in
+  // simple-mode (styles.css: body.simple-mode .tab-btn[aria-label="Info tab"]
+  // { display:none; }) so the rendered output is unreachable to the user.
+  // JS-layer early-return saves the wasted CPU and backs the CSS gate.
+  // Defense-in-depth, not user-visible parity (see charter §6 P-5 for the
+  // broader 19-renderer audit deferred to Stability sub-phase candidate).
+  if (typeof isSimpleMode === 'function' && isSimpleMode()) return;
   const summaryEl = document.getElementById('infoPoopFoodDelaySummary');
   const listEl = document.getElementById('infoPoopFoodDelayList');
   const insightEl = document.getElementById('infoPoopFoodDelayInsights');
@@ -39377,6 +39384,11 @@ function computeNewFoodWatch() {
 }
 
 function renderInfoPoopFoodWatch() {
+  // Polish-1: defense-in-depth + perf gate — see renderInfoPoopFoodDelay
+  // header for full rationale (Info tab CSS-hidden in simple-mode; JS gate
+  // saves CPU + backs the CSS gate; broader 19-renderer audit deferred to
+  // charter §6 P-5).
+  if (typeof isSimpleMode === 'function' && isSimpleMode()) return;
   const summaryEl = document.getElementById('infoPoopFoodWatchSummary');
   const listEl = document.getElementById('infoPoopFoodWatchList');
   const insightEl = document.getElementById('infoPoopFoodWatchInsights');
