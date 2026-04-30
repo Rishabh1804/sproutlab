@@ -1339,7 +1339,7 @@ test.describe('PR-18 hotfix — dispatch crashes do not trip sync circuit (Issue
 //
 // R-7 duo-not-triad departure on-record (PR-18 Ruling 4):
 //   "R-7 duo-not-triad departure for Issue 2 accepted (bug IS the absent
-//   state; positive state asserted as precondition)."
+//   state; positive asserted as precondition)."
 //
 // Rationale: Issue 2 is a TypeError thrown by orderMedicalCards when
 // #medStatsCard is absent from the DOM template (a pre-existing latent

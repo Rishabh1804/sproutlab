@@ -1464,9 +1464,12 @@ function _syncComposeToastText(n, attr) {
 // callers anywhere in split/*.js.
 //
 // Why preserved (not removed):
-//   PR-19 Ruling 4 named the disposition "framing comment", not "removal".
+//   PR-19 Ruling 4 named the action shape as comment-class (Aurelius used
+//   "comment" and "framing" as adjacent words, then kicked the preserve-vs-
+//   delete decision to PR-20 hygiene-sweep; "framing comment" as a compound
+//   noun is Lyra's synthesis of that signal, not Aurelius's verbatim phrase).
 //   Cipher (PR-20 pre-cut advisory) endorsed preserve as the correct
-//   sustainment of that prior ratification — flipping to deletion would be
+//   sustainment of that prior signal — flipping to deletion would be
 //   doctrine-adjacent (would need an "explicit-prior-ratification-defers-
 //   grandfathering" pattern through its own 3/3 cycle). The reserved hook
 //   (opts.tapToReload=true → reload on tap) is the documented re-engagement
