@@ -3201,25 +3201,25 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .wg-dot.active { background:var(--rose); opacity:1; width:20px; border-radius:4px; }
 
-/* ── Essential Mode (simple-mode class) ── */
-body.simple-mode .tab-btn[aria-label="Insights tab"],
-body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
-body.simple-mode .stat-pills-grid { display:none !important; }
-body.simple-mode #homePoopCard { display:none !important; }
-body.simple-mode .ca-view-all { display:none; }
-body.simple-mode #insightsTrendsCard { display:none; }
-body.simple-mode .ins-card-corr,
-body.simple-mode .ins-card-cross,
-body.simple-mode .ins-card-alert-intel { display:none !important; }
+/* ── Essential Mode (essential-mode class) ── */
+body.essential-mode .tab-btn[aria-label="Insights tab"],
+body.essential-mode .tab-btn[aria-label="Info tab"] { display:none; }
+body.essential-mode .stat-pills-grid { display:none !important; }
+body.essential-mode #homePoopCard { display:none !important; }
+body.essential-mode .ca-view-all { display:none; }
+body.essential-mode #insightsTrendsCard { display:none; }
+body.essential-mode .ins-card-corr,
+body.essential-mode .ins-card-cross,
+body.essential-mode .ins-card-alert-intel { display:none !important; }
 
 /* ── Essential Mode: Vitals card — hide expand affordance ── */
-body.simple-mode #homeVitalsChevron { display:none; }
-body.simple-mode #homeVitalsCard { cursor:default; }
-body.simple-mode #headerFull { display:none !important; }
+body.essential-mode #homeVitalsChevron { display:none; }
+body.essential-mode #homeVitalsCard { cursor:default; }
+body.essential-mode #headerFull { display:none !important; }
 /* ── Essential Mode: Trim Home cards — hide analytics-adjacent cards ── */
-body.simple-mode #homeSuggestionsCard { display:none !important; }
-body.simple-mode #outingPlannerCard { display:none !important; }
-body.simple-mode #tomorrowPrepCard { display:none !important; }
+body.essential-mode #homeSuggestionsCard { display:none !important; }
+body.essential-mode #outingPlannerCard { display:none !important; }
+body.essential-mode #tomorrowPrepCard { display:none !important; }
 
 /* ── Essential Mode: Warm Hero Card ("Home Screen" feel) ── */
 .hero-avatar-bg {
@@ -3229,22 +3229,22 @@ body.simple-mode #tomorrowPrepCard { display:none !important; }
   z-index:0; pointer-events:none;
   border-radius:var(--r-2xl);
 }
-body.simple-mode .hero-avatar-bg {
+body.essential-mode .hero-avatar-bg {
   display:block; opacity:0.1;
 }
-body.simple-mode #homeVitalsCard {
+body.essential-mode #homeVitalsCard {
   position:relative;
 }
-body.simple-mode #homeVitalsCard > * {
+body.essential-mode #homeVitalsCard > * {
   position:relative; z-index:1;
 }
-body.simple-mode .hero-avatar-bg { z-index:0; }
+body.essential-mode .hero-avatar-bg { z-index:0; }
 
 /* Greeting row — visible only in Essential Mode */
 .hero-greet-row {
   display:none;
 }
-body.simple-mode .hero-greet-row {
+body.essential-mode .hero-greet-row {
   display:flex; align-items:flex-start; justify-content:space-between;
   gap:var(--sp-12); margin-bottom:var(--sp-12);
 }
@@ -3267,7 +3267,7 @@ body.simple-mode .hero-greet-row {
 .hero-weather-pill:empty { display:none; }
 
 /* In Essential Mode, hide the old "Age Today" label + age stat (greeting replaces them) */
-body.simple-mode .hero-age-block { display:none; }
+body.essential-mode .hero-age-block { display:none; }
 
 /* Vitals row layout (replaces inline styles) */
 .hero-vitals-row {
@@ -3283,16 +3283,16 @@ body.simple-mode .hero-age-block { display:none; }
 .collapse-chevron { font-size:var(--fs-sm); color:var(--light); }
 
 /* Time-of-day gradient tint (set via JS data attribute) */
-body.simple-mode .hero-home[data-tod="morning"] {
+body.essential-mode .hero-home[data-tod="morning"] {
   background:linear-gradient(135deg, #fff5ee, #fff9f0, #f0faf5) !important;
 }
-body.simple-mode .hero-home[data-tod="afternoon"] {
+body.essential-mode .hero-home[data-tod="afternoon"] {
   background:linear-gradient(135deg, #f0faf5, #f5f8ff, #fff9f0) !important;
 }
-body.simple-mode .hero-home[data-tod="evening"] {
+body.essential-mode .hero-home[data-tod="evening"] {
   background:linear-gradient(135deg, #f0eafa, #f5f0ff, #fff5f7) !important;
 }
-body.simple-mode .hero-home[data-tod="night"] {
+body.essential-mode .hero-home[data-tod="night"] {
   background:linear-gradient(135deg, #edf0fa, #f0eafa, #f5f0ff) !important;
 }
 
@@ -3300,18 +3300,18 @@ body.simple-mode .hero-home[data-tod="night"] {
 [data-theme="dark"] .hero-greet-text { color:#f0b8c8; }
 [data-theme="dark"] .hero-age-text { color:var(--text); }
 [data-theme="dark"] .hero-weather-pill { background:rgba(255,255,255,0.08); color:var(--text); }
-[data-theme="dark"] body.simple-mode .hero-avatar-bg,
-body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="morning"] {
+[data-theme="dark"] body.essential-mode .hero-avatar-bg,
+body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="morning"] {
   background:linear-gradient(135deg, #302820, #282e22) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="afternoon"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="afternoon"] {
   background:linear-gradient(135deg, #222e28, #252830) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="evening"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="evening"] {
   background:linear-gradient(135deg, #2e2238, #302530) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="night"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="night"] {
   background:linear-gradient(135deg, #222438, #2a2238) !important;
 }
 
@@ -4245,7 +4245,7 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 
 /* ── Status strip (Phase 2 PR-2.5) ──
    Always-visible thin band above the tab-bar; hosts the sl-1-2 sync indicator
-   relocated from #headerFull (which is hidden in body.simple-mode). Designed
+   relocated from #headerFull (which is hidden in body.essential-mode). Designed
    as a future host for PR-5's "update available" reload affordance.
    Container is always present (so its visibility is mode-independent); the
    #syncStatus child manages its own [hidden] state on cold boot per sl-1-2 r2. */
@@ -8890,9 +8890,9 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   <!-- STATUS STRIP (Phase 2 PR-2.5).
        Always-visible thin band hosting the sync-visibility indicator from
        sl-1-2 (relocated from #headerFull, which is display:none in
-       body.simple-mode — leaving default-mode users with no sync feedback).
+       body.essential-mode — leaving default-mode users with no sync feedback).
        Strip is a sibling of tab-bar, NOT inside #headerFull, so the
-       simple-mode rule does not cascade. Future host for PR-5's "update
+       essential-mode rule does not cascade. Future host for PR-5's "update
        available" reload affordance. HR-2: no inline styles, all via tokens. -->
   <div class="status-strip" id="statusStrip">
     <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
@@ -8913,7 +8913,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
          AND the new worker reaches 'installed' state with an existing
          controller (= update, not first install). HR-3/HR-6: tap routes
          through data-action="syncReload" — the dispatcher wired in sl-1-2 r3.
-         Lives inside #statusStrip so it survives body.simple-mode (the
+         Lives inside #statusStrip so it survives body.essential-mode (the
          #headerFull hide rule does not cascade to the strip's siblings). -->
     <button id="updateToast" type="button" class="update-toast" hidden role="status" aria-live="polite" aria-atomic="true" data-action="syncReload">
       <span class="update-toast__icon" aria-hidden="true"><svg class="zi"><use href="#zi-sparkle"/></svg></span>
@@ -8960,7 +8960,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
         <span class="t-md t-mid" id="headerDateTime">—</span>
         <span class="t-md t-mid" id="headerWeather">—</span>
         <!-- #syncStatus relocated to #statusStrip above tab-bar (Phase 2 PR-2.5)
-             so simple-mode users (default) see sync state. -->
+             so essential-mode users (default) see sync state. -->
       </div>
     </div>
   </div>
@@ -11411,7 +11411,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
                 <div class="t-sub">Your everyday dashboard — clean and focused</div>
               </div>
               <label class="toggle-switch-wrap">
-                <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" class="toggle-switch-input" checked>
+                <input type="checkbox" id="settingsEssentialMode" onchange="toggleEssentialMode()" class="toggle-switch-input" checked>
                 <span class="toggle-track"></span>
               </label>
             </div>
@@ -18999,18 +18999,18 @@ function initWelcomeGuide() {
 }
 
 // ─────────────────────────────────────────
-// ESSENTIAL MODE (internally: simple-mode class, ziva_simple_mode localStorage key)
+// ESSENTIAL MODE
 // ─────────────────────────────────────────
 
-function isSimpleMode() {
-  return document.body.classList.contains('simple-mode');
+function isEssentialMode() {
+  return document.body.classList.contains('essential-mode');
 }
 
-function toggleSimpleMode() {
-  const on = document.getElementById('settingsSimpleMode')?.checked ?? true;
+function toggleEssentialMode() {
+  const on = document.getElementById('settingsEssentialMode')?.checked ?? true;
   if (on) {
-    document.body.classList.add('simple-mode');
-    localStorage.setItem('ziva_simple_mode', 'true');
+    document.body.classList.add('essential-mode');
+    localStorage.setItem('ziva_essential_mode', 'true');
     // Collapse vitals card if expanded
     var expanded = document.getElementById('homeVitalsExpanded');
     var chevron = document.getElementById('homeVitalsChevron');
@@ -19019,8 +19019,8 @@ function toggleSimpleMode() {
     if (chevron) chevron.textContent = '▾';
     if (quick) quick.style.display = '';
   } else {
-    document.body.classList.remove('simple-mode');
-    localStorage.setItem('ziva_simple_mode', 'false');
+    document.body.classList.remove('essential-mode');
+    localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
   const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -19035,15 +19035,31 @@ function toggleSimpleMode() {
   setZoomLevel(on ? 'med' : 'low');
 }
 
-function initSimpleMode() {
-  const saved = localStorage.getItem('ziva_simple_mode');
+function initEssentialMode() {
+  // Polish-9 boot migration: rename ziva_simple_mode → ziva_essential_mode.
+  // Idempotent: read old → write new (only if new not already set) → delete
+  // old. Re-run is no-op (old=null after first migration). Race-safe under
+  // multi-tab boot (atomic per-key localStorage writes; B's inner null-check
+  // skips clobber if A already wrote). Storage-cleared mid-migration falls
+  // through to default-on logic.
+  try {
+    const oldVal = localStorage.getItem('ziva_simple_mode');
+    if (oldVal !== null) {
+      if (localStorage.getItem('ziva_essential_mode') === null) {
+        localStorage.setItem('ziva_essential_mode', oldVal);
+      }
+      localStorage.removeItem('ziva_simple_mode');
+    }
+  } catch (e) { /* localStorage unavailable; falls through to default-on */ }
+
+  const saved = localStorage.getItem('ziva_essential_mode');
   // Default to Essential Mode ON (new users and existing users without preference)
-  const isSimple = saved !== 'false';
-  if (isSimple) {
-    document.body.classList.add('simple-mode');
+  const isEssential = saved !== 'false';
+  if (isEssential) {
+    document.body.classList.add('essential-mode');
   }
-  const toggle = document.getElementById('settingsSimpleMode');
-  if (toggle) toggle.checked = isSimple;
+  const toggle = document.getElementById('settingsEssentialMode');
+  if (toggle) toggle.checked = isEssential;
 }
 
 // ── Text Zoom ──
@@ -19068,8 +19084,8 @@ function initZoomLevel() {
     setZoomLevel(saved);
   } else {
     // Infer from Essential Mode
-    const isSimple = document.body.classList.contains('simple-mode');
-    setZoomLevel(isSimple ? 'med' : 'low');
+    const isEssential = document.body.classList.contains('essential-mode');
+    setZoomLevel(isEssential ? 'med' : 'low');
   }
 }
 
@@ -19078,8 +19094,8 @@ function renderDisplaySettings() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
   // Sync Essential Mode toggle
-  const simpleEl = document.getElementById('settingsSimpleMode');
-  if (simpleEl) simpleEl.checked = document.body.classList.contains('simple-mode');
+  const essentialEl = document.getElementById('settingsEssentialMode');
+  if (essentialEl) essentialEl.checked = document.body.classList.contains('essential-mode');
   // Sync zoom slider
   const slider = document.getElementById('settingsZoomSlider');
   if (slider) {
@@ -19786,10 +19802,10 @@ window.onerror = function(msg, source, line, col, error) {
   };
   _bugLastErrorTime = Date.now();
 
-  // Auto-prompt (Path C) — throttled, not in Simple Mode
-  var simple = false;
-  try { simple = isSimpleMode(); } catch(e2) {}
-  if (!simple && Date.now() - _bugLastAutoPrompt > 300000) {
+  // Auto-prompt (Path C) — throttled, not in Essential Mode
+  var essential = false;
+  try { essential = isEssentialMode(); } catch(e2) {}
+  if (!essential && Date.now() - _bugLastAutoPrompt > 300000) {
     _bugLastAutoPrompt = Date.now();
     _bugShowAutoPrompt();
   }
@@ -19871,7 +19887,7 @@ function _bugCaptureState() {
     timestamp: new Date().toISOString(),
     tab: currentTab,
     subTab: subTab,
-    simpleMode: isSimpleMode(),
+    essentialMode: isEssentialMode(),
     darkMode: document.documentElement.getAttribute('data-theme') === 'dark',
     screen: window.innerWidth + 'x' + window.innerHeight,
     dpr: window.devicePixelRatio || 1,
@@ -19909,7 +19925,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('*Context:*');
   lines.push('Tab: ' + state.tab + (state.subTab ? ' > ' + state.subTab : '') +
     ' \u00B7 ' + (state.darkMode ? 'Dark' : 'Light') + ' mode' +
-    ' \u00B7 Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF'));
+    ' \u00B7 Essential Mode ' + (state.essentialMode ? 'ON' : 'OFF'));
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
@@ -19955,7 +19971,7 @@ function _bugRenderContext(state) {
   html += '<span class="bug-context-label">Tab:</span> ' + escHtml(state.tab);
   if (state.subTab) html += ' &rsaquo; ' + escHtml(state.subTab);
   html += ' &middot; ' + (state.darkMode ? 'Dark' : 'Light') + ' mode';
-  html += ' &middot; Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF');
+  html += ' &middot; Essential Mode ' + (state.essentialMode ? 'ON' : 'OFF');
   html += '</div>';
 
   html += '<div class="bug-context-row"><span class="bug-context-label">Build:</span> ' + escHtml(state.build) +
@@ -20602,7 +20618,7 @@ function renderHome() {
 
 // Show "all clear" when no action cards are visible
 function toggleHomeVitals() {
-  if (isSimpleMode()) return; // Essential Mode — vitals stay collapsed
+  if (isEssentialMode()) return; // Essential Mode — vitals stay collapsed
   const collapsed = document.getElementById('homeVitalsCollapsed');
   const expanded = document.getElementById('homeVitalsExpanded');
   const chevron = document.getElementById('homeVitalsChevron');
@@ -27810,11 +27826,11 @@ function renderHomeContextAlerts() {
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
 
   // Essential Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
-  const simple = isSimpleMode();
-  const homeWarnings = simple
+  const essential = isEssentialMode();
+  const homeWarnings = essential
     ? actionAlerts
     : [...actionAlerts, ...watchAlerts.slice(0, 3)];
-  const homePositives = simple ? [] : positiveAlerts.slice(0, 2);
+  const homePositives = essential ? [] : positiveAlerts.slice(0, 2);
   const remainingWarnings = actionAlerts.length + watchAlerts.length + infoAlerts.length - homeWarnings.length;
   const remainingPositives = positiveAlerts.length - homePositives.length;
 
@@ -32263,7 +32279,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
           { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -32286,7 +32302,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Nutrients', weight: '20%', score: r.components.nutrients,
             detail: (d.nutrientsCovered || 0) + '/' + (d.nutrientsTotal || 8) + ' key nutrients this week', tab: 'insights' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -32313,7 +32329,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
             detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -32336,7 +32352,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Checkup', weight: '15%', score: r.components.visits,
             detail: r.components.visits >= 90 ? 'Checkup on track' : r.components.visits >= 85 ? 'Appointment booked' : 'Developmental checkup may be due', tab: 'medical' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -32361,7 +32377,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Recency', weight: '10%', score: r.components.recency,
             detail: r.components.recency >= 80 ? 'Active in last week' : 'Last activity over a week ago', tab: 'milestones' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -39267,12 +39283,12 @@ function computeFoodPoopDelay(windowDays) {
 
 function renderInfoPoopFoodDelay() {
   // Polish-1: defense-in-depth + perf gate — Info tab is CSS-hidden in
-  // simple-mode (styles.css: body.simple-mode .tab-btn[aria-label="Info tab"]
+  // essential-mode (styles.css: body.essential-mode .tab-btn[aria-label="Info tab"]
   // { display:none; }) so the rendered output is unreachable to the user.
   // JS-layer early-return saves the wasted CPU and backs the CSS gate.
   // Defense-in-depth, not user-visible parity (see charter §6 P-5 for the
   // broader 19-renderer audit deferred to Stability sub-phase candidate).
-  if (typeof isSimpleMode === 'function' && isSimpleMode()) return;
+  if (typeof isEssentialMode === 'function' && isEssentialMode()) return;
   const summaryEl = document.getElementById('infoPoopFoodDelaySummary');
   const listEl = document.getElementById('infoPoopFoodDelayList');
   const insightEl = document.getElementById('infoPoopFoodDelayInsights');
@@ -39385,10 +39401,10 @@ function computeNewFoodWatch() {
 
 function renderInfoPoopFoodWatch() {
   // Polish-1: defense-in-depth + perf gate — see renderInfoPoopFoodDelay
-  // header for full rationale (Info tab CSS-hidden in simple-mode; JS gate
+  // header for full rationale (Info tab CSS-hidden in essential-mode; JS gate
   // saves CPU + backs the CSS gate; broader 19-renderer audit deferred to
   // charter §6 P-5).
-  if (typeof isSimpleMode === 'function' && isSimpleMode()) return;
+  if (typeof isEssentialMode === 'function' && isEssentialMode()) return;
   const summaryEl = document.getElementById('infoPoopFoodWatchSummary');
   const listEl = document.getElementById('infoPoopFoodWatchList');
   const insightEl = document.getElementById('infoPoopFoodWatchInsights');
@@ -62994,7 +63010,7 @@ function initSyncVisibility() {
 // START — must be last in concat order
 // ─────────────────────────────────────────
 initDarkMode();
-initSimpleMode();
+initEssentialMode();
 initZoomLevel();
 init();
 initWelcomeGuide();

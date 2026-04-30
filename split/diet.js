@@ -2880,7 +2880,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
           { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2903,7 +2903,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Nutrients', weight: '20%', score: r.components.nutrients,
             detail: (d.nutrientsCovered || 0) + '/' + (d.nutrientsTotal || 8) + ' key nutrients this week', tab: 'insights' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2930,7 +2930,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
             detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2953,7 +2953,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Checkup', weight: '15%', score: r.components.visits,
             detail: r.components.visits >= 90 ? 'Checkup on track' : r.components.visits >= 85 ? 'Appointment booked' : 'Developmental checkup may be due', tab: 'medical' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2978,7 +2978,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Recency', weight: '10%', score: r.components.recency,
             detail: r.components.recency >= 80 ? 'Active in last week' : 'Last activity over a week ago', tab: 'milestones' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;

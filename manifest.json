@@ -2,7 +2,7 @@
   "name": "Ziva's Dashboard",
   "short_name": "Ziva's Dashboard",
   "description": "Baby tracker and nutrition dashboard for Ziva",
-  "version": "2026.04.30-2",
+  "version": "2026.04.30-4",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdf0f3",

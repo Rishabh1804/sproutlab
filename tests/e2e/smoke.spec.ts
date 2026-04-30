@@ -74,28 +74,28 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  // Test 2 ships as a triad (R-7) covering both modes of the simple-mode contract.
-  // Cipher r2 surfaced that simple-mode is opt-OUT (split/core.js:3711–3717:
-  // saved !== 'false' → simple-mode added on init), so a fresh browserContext
-  // with empty localStorage gets simple-mode ON, which CSS-hides Insights + Info.
+  // Test 2 ships as a triad (R-7) covering both modes of the essential-mode contract.
+  // Cipher r2 surfaced that essential-mode is opt-OUT (split/core.js:3711–3717:
+  // saved !== 'false' → essential-mode added on init), so a fresh browserContext
+  // with empty localStorage gets essential-mode ON, which CSS-hides Insights + Info.
   // The triad documents the two-mode contract on-record:
-  //   2a — simple-mode default renders four tabs (positive, default state)
+  //   2a — essential-mode default renders four tabs (positive, default state)
   //   2b — full mode (opt-out) renders all six (positive, opt-out state)
-  //   2c — simple-mode hides exactly Insights + Info, nothing more (regression-guard)
+  //   2c — essential-mode hides exactly Insights + Info, nothing more (regression-guard)
 
-  const SIMPLE_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
-  const SIMPLE_HIDDEN = ['insights', 'info'] as const;
+  const ESSENTIAL_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
+  const ESSENTIAL_HIDDEN = ['insights', 'info'] as const;
 
-  test('2a — simple-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
+  test('2a — essential-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
     await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
 
-    // Default: no localStorage entry → simple-mode ON.
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    // Default: no localStorage entry → essential-mode ON.
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
-    for (const tab of SIMPLE_VISIBLE) {
+    for (const tab of ESSENTIAL_VISIBLE) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present`).toHaveCount(1);
       await btn.scrollIntoViewIfNeeded();
@@ -105,28 +105,28 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
       await expect(page.locator(`#tab-${tab}`)).toHaveClass(/\bactive\b/);
     }
 
-    for (const tab of SIMPLE_HIDDEN) {
+    for (const tab of ESSENTIAL_HIDDEN) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
-      await expect(btn, `tab "${tab}" hidden under simple-mode`).toBeHidden();
+      await expect(btn, `tab "${tab}" hidden under essential-mode`).toBeHidden();
     }
 
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('2b — full mode (simple-mode opted out) renders all six tabs', async ({ page }) => {
+  test('2b — full mode (essential-mode opted out) renders all six tabs', async ({ page }) => {
     await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
 
-    // Opt out of simple-mode before init runs (split/core.js:3711 reads localStorage
-    // synchronously during initSimpleMode). addInitScript fires before page scripts.
+    // Opt out of essential-mode before init runs (split/core.js:3711 reads localStorage
+    // synchronously during initEssentialMode). addInitScript fires before page scripts.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
 
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
@@ -141,22 +141,22 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('2c — simple-mode hides exactly Insights + Info, nothing else', async ({ page }) => {
+  test('2c — essential-mode hides exactly Insights + Info, nothing else', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
-    // Regression-guard for the simple-mode contract: if styles.css ever drops
-    // a tab from the .simple-mode hide rule (or adds another), this fails.
+    // Regression-guard for the essential-mode contract: if styles.css ever drops
+    // a tab from the .essential-mode hide rule (or adds another), this fails.
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
-      const shouldBeHidden = (SIMPLE_HIDDEN as readonly string[]).includes(tab);
+      const shouldBeHidden = (ESSENTIAL_HIDDEN as readonly string[]).includes(tab);
       if (shouldBeHidden) {
-        await expect(btn, `simple-mode hides "${tab}"`).toBeHidden();
+        await expect(btn, `essential-mode hides "${tab}"`).toBeHidden();
       } else {
         await btn.scrollIntoViewIfNeeded();
-        await expect(btn, `simple-mode keeps "${tab}" visible`).toBeVisible();
+        await expect(btn, `essential-mode keeps "${tab}" visible`).toBeVisible();
       }
     }
   });
@@ -201,24 +201,24 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
 // Phase 2 PR-2.5 — status strip placement contract (R-7 triad).
 //
 // Sovereign-issued PR-2.5: the sl-1-2 #syncStatus pill was inside #headerFull,
-// which is `display:none` under body.simple-mode (the default for new users).
-// Result: simple-mode users saw zero sync feedback. PR-2.5 relocates
+// which is `display:none` under body.essential-mode (the default for new users).
+// Result: essential-mode users saw zero sync feedback. PR-2.5 relocates
 // #syncStatus into a new #statusStrip sibling above the tab-bar so the
 // indicator is visible in BOTH modes.
 //
 // Triad shape:
-//   default-positive  — simple-mode (default) renders strip + indicator-host
+//   default-positive  — essential-mode (default) renders strip + indicator-host
 //   opt-out-positive  — full-mode (localStorage opt-out) renders same
 //   mode-contract     — strip and #syncStatus are present in BOTH modes; the
-//                       simple-mode #headerFull display:none rule does NOT
+//                       essential-mode #headerFull display:none rule does NOT
 //                       cascade to the strip (regression-guard)
 
 test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () => {
-  test('default-positive — simple-mode user sees the status strip + sync indicator', async ({ page }) => {
+  test('default-positive — essential-mode user sees the status strip + sync indicator', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
 
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
     // Strip is the always-visible container.
     const strip = page.locator('#statusStrip');
@@ -232,13 +232,13 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
   test('opt-out-positive — full-mode user sees the status strip + sync indicator', async ({ page }) => {
     await stubChartJs(page);
 
-    // Opt out of simple-mode before init runs.
+    // Opt out of essential-mode before init runs.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
 
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     const strip = page.locator('#statusStrip');
     await expect(strip).toHaveCount(1);
@@ -250,23 +250,23 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
   test('mode-contract-regression — strip is visible in BOTH modes (no display:none cascade)', async ({ page }) => {
     await stubChartJs(page);
 
-    // Pass 1: default mode (simple-mode ON).
+    // Pass 1: default mode (essential-mode ON).
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
     const stripDefault = page.locator('#statusStrip');
-    await expect(stripDefault, 'strip visible in simple-mode default').toBeVisible();
-    // The simple-mode rule that hides #headerFull MUST NOT cascade — the
+    await expect(stripDefault, 'strip visible in essential-mode default').toBeVisible();
+    // The essential-mode rule that hides #headerFull MUST NOT cascade — the
     // strip is a sibling of #headerFull, not a descendant.
-    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull (existing contract)').toBeHidden();
+    await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull (existing contract)').toBeHidden();
     await expect(page.locator('#statusStrip'), 'strip survives the #headerFull hide').toBeVisible();
     await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip').toHaveCount(1);
 
-    // Pass 2: full mode (simple-mode OPT-OUT).
+    // Pass 2: full mode (essential-mode OPT-OUT).
     await page.evaluate(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.reload();
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
     await expect(page.locator('#statusStrip'), 'strip stays visible in full-mode too').toBeVisible();
     await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
@@ -591,11 +591,11 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
 //
 // Triad shape (binary-mode refinement of R-7 — anticipated 3rd on-record
 // instance per Cipher PR-13 r2 doctrine ledger):
-//   default-positive — simple-mode user: toast renders + reveals + has dispatcher wiring
+//   default-positive — essential-mode user: toast renders + reveals + has dispatcher wiring
 //   opt-out-positive — full-mode user:    same
 //   mode-contract-regression — toast in DOM under BOTH modes; visibility controlled
 //                              by [hidden] attribute, NOT by mode (regression-guard
-//                              against accidental simple-mode hide rule)
+//                              against accidental essential-mode hide rule)
 //
 // Test approach: trigger the reveal via direct page.evaluate (mocking the
 // updatefound→installed→controller chain). Real SW-script-swap simulation
@@ -605,12 +605,12 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
 // data-action wiring under both UX modes.
 
 test.describe('Update-detection toast (Phase 2 PR-5)', () => {
-  test('default-positive — simple-mode user sees toast on update', async ({ page }) => {
+  test('default-positive — essential-mode user sees toast on update', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
 
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
     const toast = page.locator('#updateToast');
     await expect(toast, 'toast present in DOM').toHaveCount(1);
@@ -634,12 +634,12 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
   test('opt-out-positive — full-mode user sees toast on update', async ({ page }) => {
     await stubChartJs(page);
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
 
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     const toast = page.locator('#updateToast');
     await expect(toast).toHaveCount(1);
@@ -658,28 +658,28 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
   test('mode-contract-regression — toast in DOM under BOTH modes (no display:none cascade)', async ({ page }) => {
     await stubChartJs(page);
 
-    // Pass 1: simple-mode default
+    // Pass 1: essential-mode default
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
-    await expect(page.locator('#updateToast'), 'toast in DOM under simple-mode').toHaveCount(1);
-    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull').toBeHidden();
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
+    await expect(page.locator('#updateToast'), 'toast in DOM under essential-mode').toHaveCount(1);
+    await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull').toBeHidden();
     await expect(page.locator('#statusStrip'), 'strip visible (toast container)').toBeVisible();
-    // Toast itself is hidden by [hidden] attribute, NOT by simple-mode CSS.
+    // Toast itself is hidden by [hidden] attribute, NOT by essential-mode CSS.
     // After removeAttribute('hidden'), it should be visible regardless of mode.
     await page.evaluate(() => {
       const el = document.getElementById('updateToast');
       if (el) el.removeAttribute('hidden');
     });
-    await expect(page.locator('#updateToast'), 'toast reveals under simple-mode').toBeVisible();
+    await expect(page.locator('#updateToast'), 'toast reveals under essential-mode').toBeVisible();
 
     // Pass 2: opt out, reload
     await page.evaluate(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.reload();
     await page.evaluate(() => navigator.serviceWorker.ready);
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#updateToast'), 'toast in DOM under full-mode').toHaveCount(1);
     await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
     await page.evaluate(() => {
@@ -1475,11 +1475,11 @@ test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
     await expect(page.locator('#statusStrip'), 'strip still visible in activity mode').toBeVisible();
     await expect(page.locator('#syncActivity'), 'activity pill visible in activity mode').toBeVisible();
 
-    // Pass 3: simple-mode opt-out should not change the strip's mode contract
-    await page.evaluate(() => { try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {} });
+    // Pass 3: essential-mode opt-out should not change the strip's mode contract
+    await page.evaluate(() => { try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {} });
     await page.reload();
     await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
-    await expect(page.locator('body'), 'simple-mode opted out').not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body'), 'essential-mode opted out').not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#statusStrip'), 'strip visible under full mode too').toBeVisible();
   });
 });
@@ -1981,16 +1981,16 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
 //
 // Rationale-amendment on-record (PR-23 r1→r2 transparency precedent applies):
 //
-// Maren's Phase 4 Polish charter scout framed the medical.js zero-isSimpleMode-
+// Maren's Phase 4 Polish charter scout framed the medical.js zero-isEssentialMode-
 // calls finding as "user-visible mode-contract drift" — the claim being that
-// simple-mode users see full medical Insights surface while seeing simplified
+// essential-mode users see full medical Insights surface while seeing simplified
 // diet ZS. Lyra's Polish-1 build-deep empirical re-grep refuted that framing:
-// the Info tab BUTTON is CSS-hidden in simple-mode (styles.css:3198: `body.
-// simple-mode .tab-btn[aria-label="Info tab"] { display:none; }`), so simple-
-// mode users have no path to navigate to the Info renderers' output. The
-// "user-visible" framing is empirically wrong.
+// the Info tab BUTTON is CSS-hidden in essential-mode (styles.css:3198: `body.
+// essential-mode .tab-btn[aria-label="Info tab"] { display:none; }`), so
+// essential-mode users have no path to navigate to the Info renderers' output.
+// The "user-visible" framing is empirically wrong.
 //
-// What IS true: the Info renderer JS still RUNS in simple-mode (rendering into
+// What IS true: the Info renderer JS still RUNS in essential-mode (rendering into
 // CSS-hidden DOM), wasting CPU cycles. Path-1 ratification (Sovereign via
 // Aurelius post-PR-23-merge): ship the JS-layer gates Maren named, but reframe
 // the rationale on-record — defense-in-depth + perf, NOT user-visible parity.
@@ -2005,7 +2005,7 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
 
 test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', () => {
   // The two gated renderers. Both write into Info-tab DOM (#infoPoopFoodDelay*
-  // / #infoPoopFoodWatch*) which is CSS-hidden in simple-mode at the parent-
+  // / #infoPoopFoodWatch*) which is CSS-hidden in essential-mode at the parent-
   // tab-button level. JS-layer early-return saves CPU + backs the CSS gate.
   const GATED = [
     {
@@ -2022,11 +2022,11 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
     },
   ];
 
-  test('positive — in full mode (simple-mode opted out), gated renderers DO write into their target DOM', async ({ page }) => {
+  test('positive — in full mode (essential-mode opted out), gated renderers DO write into their target DOM', async ({ page }) => {
     await stubChartJs(page);
-    // Opt out of simple-mode before init runs; same idiom as smoke 2b.
+    // Opt out of essential-mode before init runs; same idiom as smoke 2b.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
@@ -2047,14 +2047,14 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
     }, GATED);
 
     for (const r of results) {
-      expect(r.bodyClass, `${r.fn}: body NOT in simple-mode for full-mode test`).not.toMatch(/\bsimple-mode\b/);
+      expect(r.bodyClass, `${r.fn}: body NOT in essential-mode for full-mode test`).not.toMatch(/\bessential-mode\b/);
       expect(r.summaryHasContent, `${r.fn}: full-mode call writes into target DOM (no early-return)`).toBeTruthy();
     }
   });
 
-  test('regression-guard — in simple-mode, gated renderers early-return WITHOUT touching target DOM', async ({ page }) => {
+  test('regression-guard — in essential-mode, gated renderers early-return WITHOUT touching target DOM', async ({ page }) => {
     await stubChartJs(page);
-    // Default fresh context → simple-mode ON (split/core.js:3711-3717 default-on logic).
+    // Default fresh context → essential-mode ON (split/core.js:3711-3717 default-on logic).
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
 
@@ -2076,8 +2076,8 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
     }, GATED);
 
     for (const r of results) {
-      expect(r.bodyClass, `${r.fn}: body IS in simple-mode for simple-mode test`).toMatch(/\bsimple-mode\b/);
-      expect(r.sentinelPreserved, `${r.fn}: simple-mode early-return preserves pre-existing summary content (no innerHTML write)`).toBeTruthy();
+      expect(r.bodyClass, `${r.fn}: body IS in essential-mode for essential-mode test`).toMatch(/\bessential-mode\b/);
+      expect(r.sentinelPreserved, `${r.fn}: essential-mode early-return preserves pre-existing summary content (no innerHTML write)`).toBeTruthy();
     }
   });
 
@@ -2085,7 +2085,7 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
     await stubChartJs(page);
     // Start in full mode.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
@@ -2106,15 +2106,15 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
       try { fn(); } catch {}
       const phase1 = summary.innerHTML.trim().length > 0;
 
-      // Phase 2: flip to simple-mode, set sentinel, call → expect sentinel preserved
-      document.body.classList.add('simple-mode');
+      // Phase 2: flip to essential-mode, set sentinel, call → expect sentinel preserved
+      document.body.classList.add('essential-mode');
       const SENTINEL = '__POLISH1_PHASE2_SENTINEL__';
       summary.innerHTML = SENTINEL;
       try { fn(); } catch {}
       const phase2 = summary.innerHTML === SENTINEL;
 
       // Phase 3: flip back to full mode → call → expect content (sentinel cleared)
-      document.body.classList.remove('simple-mode');
+      document.body.classList.remove('essential-mode');
       summary.innerHTML = '';
       try { fn(); } catch {}
       const phase3 = summary.innerHTML.trim().length > 0;
@@ -2123,7 +2123,139 @@ test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', ()
     }, GATED);
 
     expect(sequence.phase1, 'phase 1 (full mode): gate disengaged; renderer wrote content').toBeTruthy();
-    expect(sequence.phase2, 'phase 2 (toggled to simple): gate engaged; sentinel preserved').toBeTruthy();
+    expect(sequence.phase2, 'phase 2 (toggled to essential): gate engaged; sentinel preserved').toBeTruthy();
     expect(sequence.phase3, 'phase 3 (toggled back to full): gate disengaged; renderer wrote content').toBeTruthy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-9 — essential-mode rename + boot migration (Phase 4 sub-phase 1)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Atomic-canon vocabulary rename: simple-mode → essential-mode (ratified by
+// Sovereign-via-Aurelius). Internals previously drifted from the user-facing
+// "Essential Mode" display strings (already at core.js:4626 + :4672 pre-rename);
+// Polish-9 aligns internals → externals. Surfaces touched: KEYS string
+// (ziva_simple_mode → ziva_essential_mode), function names (isSimpleMode →
+// isEssentialMode + toggleSimpleMode → toggleEssentialMode + initSimpleMode →
+// initEssentialMode), CSS class (body.simple-mode → body.essential-mode), state-
+// snapshot prop (.simpleMode → .essentialMode), template settings-toggle id +
+// onchange function name. Total: ~80-100 LOC source + ~75 LOC tests.
+//
+// Mitigation posture: LOCAL-ONLY (Q1 + Q2 conclusive at scout: simpleMode is
+// NOT in SYNC_KEYS or SYNC_RENDER_DEPS; no Firestore involvement; no listener-
+// fire path). Boot migration runs once at initEssentialMode (start.js:5):
+// read-old → write-new (only if new not already set) → delete-old. Idempotent;
+// race-safe under multi-tab boot; storage-cleared falls through to default-on.
+//
+// R-7 triad covers the migration contract:
+//   - positive: fresh user (no localStorage state) defaults to essential-mode ON
+//   - regression-guard: existing simpleMode-keyed state preserved through migration
+//   - positive-regression: idempotency + multi-tab race + storage-cleared scenarios
+//
+// Note: existing simple-mode-equivalent assertions (2a/2b/2c above) verify the
+// EXTERNAL contract (4 tabs vs 6 tabs) on the renamed body class; this triad
+// verifies the INTERNAL migration contract (old→new key transition).
+
+test.describe('Polish-9 — essential-mode rename + boot migration', () => {
+  test('positive — fresh user (no prior localStorage) defaults to essential-mode ON', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
+
+    // Fresh context: no migration triggered (old key wasn't set).
+    const state = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(state.old, 'old key not present (fresh context, nothing to migrate)').toBeNull();
+    // New key may also be null on fresh init (default-on logic doesn't write
+    // until first user toggle); body class engagement confirms default-on path.
+  });
+
+  test('regression-guard — boot migration preserves existing user state through ziva_simple_mode → ziva_essential_mode', async ({ page }) => {
+    await stubChartJs(page);
+    // Seed old key BEFORE init runs (addInitScript fires before page scripts).
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+
+    // After init, body should NOT have essential-mode class (old key value was 'false').
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
+
+    // Migration ran: new key carries the migrated value; old key is deleted.
+    const state = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(state.old, 'old key deleted post-migration').toBeNull();
+    expect(state.newKey, 'new key carries migrated value').toBe('false');
+  });
+
+  test('positive-regression — migration idempotency: re-run is no-op + multi-tab race clobber-guard + storage-cleared default-on', async ({ page }) => {
+    await stubChartJs(page);
+    // Seed old key with 'true' (essential-mode ON via legacy storage).
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'true'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { initEssentialMode?: unknown }).initEssentialMode === 'function');
+
+    // First-run state: migration ran, old deleted, new = 'true'.
+    const after1 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after1.old, 'old key deleted after run 1').toBeNull();
+    expect(after1.newKey, 'new key has migrated value after run 1').toBe('true');
+
+    // Re-run init explicitly — should be no-op (old=null, no migration to do).
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const fn = w['initEssentialMode'] as () => void;
+      fn();
+    });
+    const after2 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after2.old, 'old key still null after re-run (no resurrection)').toBeNull();
+    expect(after2.newKey, 'new key unchanged after re-run').toBe('true');
+
+    // Multi-tab race scenario: simulate B sees old re-set somehow (e.g., legacy
+    // build wrote it again before being uninstalled); B's init must NOT clobber
+    // A's already-migrated new value. Per migration's `if (new === null)` guard.
+    await page.evaluate(() => {
+      try {
+        localStorage.setItem('ziva_simple_mode', 'false'); // simulate stale old re-set
+        // new key is still 'true' from earlier migration
+        const w = window as unknown as Record<string, unknown>;
+        const fn = w['initEssentialMode'] as () => void;
+        fn(); // re-invoke; clobber-guard should preserve new='true'
+      } catch {}
+    });
+    const after3 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after3.old, 'race: old key deleted again post-init').toBeNull();
+    expect(after3.newKey, 'race: new key preserved at \'true\' (clobber-guard prevents stale-old overwrite)').toBe('true');
+
+    // Storage-cleared scenario: clear all + re-init → falls through to default-on.
+    await page.evaluate(() => {
+      localStorage.clear();
+      const w = window as unknown as Record<string, unknown>;
+      const fn = w['initEssentialMode'] as () => void;
+      fn();
+    });
+    const after4 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+      bodyHasEssentialMode: document.body.classList.contains('essential-mode'),
+    }));
+    expect(after4.old, 'cleared storage: old key null').toBeNull();
+    expect(after4.newKey, 'cleared storage: new key null (default-on does not write)').toBeNull();
+    expect(after4.bodyHasEssentialMode, 'cleared storage: default-on logic engages essential-mode').toBeTruthy();
   });
 });
