@@ -90,18 +90,29 @@ Diet.js gates trends-modifier visibility uniformly across 5 domain blocks (`diet
 
 **11 unreferenced sprite symbols** (Kael) — sprite carrying dead weight: `alert-circle, balloon, bump, chef, crystal, fall, goal, halfcircle, lotus, sleep, trending-up`. **Polish disposition: defer prune.** `goal` and `trending-up` smell load-bearing for Tally sub-phase (gamification points / streaks); `crystal` smells Spark-adjacent. Pruning before downstream sub-phases declare needs would be premature.
 
-**HR-1 escapes (cross-Governor catch):** Two emoji literals in JS, both in Maren's jurisdiction:
-- `medical.js:2268` — 🚨 in the *"When to seek emergency care"* callout (Maren-flagged).
-- `home.js:11828` — 🩺 (Kael-flagged from his sprite-audit grep, cross-handed to Maren).
+**HR-1 escapes — initial cross-Governor catch + Cipher r1 deeper-audit reframe (PR-23 r2):**
 
-These are HR-1 violations in active code paths. Replace with `zi('siren')` / `zi('stethoscope')` (verify symbol-name availability) — single-line fixes each; safety-tier surface, must preserve visual prominence.
+The original cross-Governor catch surfaced two named sites:
+- `medical.js:2268` — 🚨 in the *"When to seek emergency care"* callout (Maren-flagged).
+- `home.js:1595` — 🩺 in `ms-tidbit-icon` div (Kael-flagged from his sprite-audit grep, cross-handed to Maren). *(r2 line-number correction: r1 cited `:11828` which doesn't exist — home.js is 9186 lines; transcription error in scout→charter relay caught by Cipher PR-23 r1 Catch 2.)*
+
+**Cipher PR-23 r1 Catch 3 deeper audit** (Unicode narrow-emoji ranges U+1F300-1F9FF + U+1FA00-1FAFF; excludes dingbats like ✓ ⚠ ★) revealed **≥18 emoji-bearing rendered-UI sites** across home.js + medical.js — the original "two emoji literals" framing was a material undercount:
+
+| File | Sites | Categories |
+|---|---|---|
+| `home.js` | ≥11 | weather-code emoji map (`:253-257`, 5 sites: 🌫️ 🌦️ 🌧️ ❄️ ⛈️); precautions strings (`:299, :307, :309, :315, :319, :323`, 6 sites); weather advisory template (`:336, :339`, 2 sites); food icon props (`:1115, :1190`, 2 sites); ms-tidbit-icon (`:1595`, 1 site — named cross-Governor-catch site) |
+| `medical.js` | ≥7 | emergency callout (`:2268` — named cross-Governor-catch site); doctor avatar (`:2355`); doctor modal titles (`:2385, :2401`); activity icon props (`:3914, :3930`); symptoms-render text (`:6521`) |
+
+**Polish disposition split (route (a) per Cipher r1 recommendation):**
+- The two named cross-Governor-catch sites (`medical.js:2268` + `home.js:1595`) close in **Polish-2** as cited (single-line `zi('siren')` / `zi('stethoscope')` swaps; safety-tier surface, must preserve visual prominence).
+- The broader **~16 remaining HR-1 sites** route to **Phase 4 R-10 hygiene-queue carry-forward** (see §6) and defer to Stability sub-phase or a dedicated R-8 charter. Fix-shape varies materially: simple `zi()` swap for some (doctor modal text), structural refactor for others (weather-code emoji map is a data-structure of code→emoji pairs that needs different shape — likely code→sprite-name with `zi()` resolution at render time). Different fix-shapes belong in different PRs per R-3 atomic-canon.
 
 ### Finding E — Responsive breakpoints fragmented globally; Care-domain coherent
 
-`grep -nE "@media" split/styles.css` returns **25 media queries** total. Decomposition:
+`grep -cE "@media" split/styles.css` returns **24 media queries** total (Cipher-bench verified at `1bc64d3`; Lyra r1 cited 25, off-by-one D8 catch corrected at r2). Decomposition:
 
 - **Care-domain layout queries** (Maren): 11 queries gating `.food-cats`, `.ms-cats`, `.activity-cats`, `.upcoming-cats`, `.tip-cats`, `.milestone-actions`. **Discipline assessment: COHERENT.** All five "cat" grid-collapse pairs use identical 700/400 breakpoints. No fragmentation. **No Polish work needed in Care-domain breakpoints.**
-- **Global / Intelligence-domain queries** (Kael deferred to global): 14 queries scattered at 360px, 400px, 480px, 500px, 700px + print. Mixed values, no tokenized breakpoint variables. **Fragmentation surface.**
+- **Global / Intelligence-domain queries** (Kael deferred to global): 13 queries scattered at 360px, 400px, 480px, 500px, 700px + print at `:208, :2072, :3842, :3847, :3863, :4622, :4625, :4658, :4809, :5066, :5109, :5226, :8746`. Mixed values, no tokenized breakpoint variables. **Fragmentation surface.**
 
 **Polish disposition:** introduce `--bp-xs: 360px`, `--bp-sm: 400px`, `--bp-md: 500px`, `--bp-lg: 700px` token set (CSS custom properties don't work directly in `@media` queries — see `media-query-with-CSS-custom-properties` constraint; use Sass-style numeric constants in comments + inline values, or wait for `@custom-media` browser support). **Practical resolution:** add a header comment block at the top of styles.css enumerating the canonical breakpoint values + which selectors use which, and migrate the scattered `@media` declarations to use the canonical 4 values uniformly. Drops effective fragmentation without overcommitting on a token-mechanism that browsers don't yet support natively.
 
@@ -151,7 +162,7 @@ Locked exclusions (defer to feature-grade R-8 charter, NOT Polish):
 
 ### Option C — Minimum-honest fallback (ship only the trivial fixes)
 
-Single PR closing only the unambiguously-safe items: HR-2 escape at `medical.js:3208`, HR-3 violation at `home.js:1391`, 2 HR-1 emoji escapes (medical.js:2268 + home.js:11828), and the ~17 direct-token-duplicate hex swaps that have zero ambiguity (e.g. `#b5d5c5` → `var(--sage)` exact match).
+Single PR closing only the unambiguously-safe items: HR-2 escape at `medical.js:3208`, HR-3 violation at `home.js:1391`, 2 HR-1 emoji escapes (`medical.js:2268` + `home.js:1595`), and the ~17 direct-token-duplicate hex swaps that have zero ambiguity (e.g. `#b5d5c5` → `var(--sage)` exact match).
 
 - **LOC envelope:** ~50–100 source LOC; well under R-9.
 - **Coverage:** Closes 4 governance-rule violations (1 HR-2, 1 HR-3, 2 HR-1) + ~6% of hex leakage. Leaves the rest of Polish for Stability or Phase 5.
@@ -184,7 +195,9 @@ Eight atomic-canon Polish PRs + 1–2 Aurelius activities-tab fold-in slots. Eac
 
 ### Polish-2 — HR-1 / HR-2 / HR-3 governance-rule cleanup (4 sites)
 
-**Files:** `split/medical.js` (HR-2 hex-in-inline-style at :3208; HR-1 emoji at :2268), `split/home.js` (HR-1 emoji at :11828; HR-3 inline `onclick` at :1391). ~10–20 LOC source. Cross-jurisdiction (Maren).
+**Files:** `split/medical.js` (HR-2 hex-in-inline-style at `:3208`; HR-1 emoji at `:2268`), `split/home.js` (HR-1 emoji at `:1595`; HR-3 inline `onclick` at `:1391`). ~10–20 LOC source. Cross-jurisdiction (Maren).
+
+**Scope discipline (route (a) per Cipher PR-23 r1 Catch 3):** Polish-2 closes the **named cross-Governor-catch sites only** — the explicit 4 violations enumerated above. The broader ~16-site HR-1 audit (Cipher r1 deeper-grep finding: weather-code emoji map, precautions strings, food icon props, doctor avatar/modal text, activity icon props, symptoms-render text) routes to **Phase 4 R-10 hygiene-queue carry-forward** (see §6) since the fix-shape varies materially across those sites and demands different PR atomicity per R-3.
 
 **Tests:** R-7 binary-mode duos (per PR-18 precedent — bug-IS-the-absent-state shape) where appropriate; positive renders (rule compliant) + regression-guard (rule never re-violates). +20–40 test LOC.
 
@@ -218,7 +231,7 @@ Eight atomic-canon Polish PRs + 1–2 Aurelius activities-tab fold-in slots. Eac
 
 ### Polish-7 — Responsive breakpoint normalization (header comment + uniform values)
 
-**Files:** `split/styles.css`. Add canonical breakpoint header comment (xs=360, sm=400, md=500, lg=700) at top of file; migrate the 14 scattered `@media` declarations to use the canonical 4 values uniformly. **Care-domain queries already coherent (Maren) — left untouched verbatim.** Global / Intelligence-domain queries normalized. ~30–50 LOC source. Shared module.
+**Files:** `split/styles.css`. Add canonical breakpoint header comment (xs=360, sm=400, md=500, lg=700) at top of file; migrate the **13 scattered global** `@media` declarations to use the canonical 4 values uniformly. **Care-domain queries already coherent (Maren) — left untouched verbatim.** Global / Intelligence-domain queries normalized. ~30–50 LOC source. Shared module.
 
 **Tests:** R-7 triad — positive (breakpoint header comment present), regression-guard (no `@media` declaration uses a non-canonical pixel value), positive-regression (Care-domain breakpoints preserved at 700/400 verbatim — pre-Polish-7 Care queries match post-Polish-7 byte-for-byte). +30 test LOC.
 
@@ -236,7 +249,7 @@ Aurelius's PR-22 handoff: *"3 PRs across Stability + Polish."* Polish reserves 1
 
 ## 5. Acceptance — Polish sub-phase closes when
 
-1. **All 4 governance-rule violations closed.** `medical.js:3208` HR-2 hex-in-inline-style fixed; `medical.js:2268` + `home.js:11828` HR-1 emoji fixed; `home.js:1391` HR-3 inline `onclick` migrated to `data-action` delegation. Verified via grep-against-bundle in tests.
+1. **The 4 named cross-Governor-catch governance-rule violations closed.** `medical.js:3208` HR-2 hex-in-inline-style fixed; `medical.js:2268` + `home.js:1595` HR-1 emoji fixed (line-numbers corrected at PR-23 r2 per Cipher Catch 2); `home.js:1391` HR-3 inline `onclick` migrated to `data-action` delegation. Verified via grep-against-bundle in tests. **The broader ~16-site HR-1 audit deferred to Phase 4 R-10 carry-forward** (criterion 13) per Cipher PR-23 r1 Catch 3 + route (a) reframe.
 2. **`medical.js` mode-contract parity with `diet.js`.** All Insights-tier renders in medical.js gate on `isSimpleMode()`. Verified via synthetic-mode-toggle test asserting Insights cards hide in simple-mode.
 3. **Direct-token-duplicate hex sweep complete.** Zero hex literals in `styles.css` matching exact `--sage / --rose / --amber / --lavender / --sky / --indigo / --peach` token values. Verified via grep-against-bundle parameterized test.
 4. **New-token spec amendment landed in DESIGN_PRINCIPLES.md.** `--sage-deep`, `--amber-deep`, `--accent-warn`, `--gauge-wt`, `--gauge-ht`, `--font-display`, `--font-body` documented with use cases. Ad-hoc tonal hex variants migrated to new tokens. Spec ships in same PR as substitution sweep.
@@ -248,6 +261,7 @@ Aurelius's PR-22 handoff: *"3 PRs across Stability + Polish."* Polish reserves 1
 10. **All deferred safety-tier carve-outs documented on-record** (CareTicket banner / growth-gauge / vaccination urgency / sleep dynamic-color SVG / illness-episode severity / Smart-QA class names / display-preferences reconciler / sync-banner / sprite prune). Each carry-forward names the receiving sub-phase or feature-grade R-8 charter.
 11. **Cumulative R-4 floor preserved.** Each Polish PR adds to the cumulative floor (target: 4,081 + ~3,000 across the 8 PRs = ~7,000). Zero silent flakes.
 12. **Activities-tab fold-in PR(s) closed.** Aurelius's reserved slots filled and acked.
+13. **Phase 4 R-10 carry-forward documented and routed.** The full HR-1 emoji audit (Cipher PR-23 r1 Catch 3 surfaced ≥18 emoji-bearing rendered-UI sites; Polish-2 closes the 2 named cross-Governor-catch sites; ~16 remaining: home.js weather-code emoji map at `:253-257` + precautions strings at `:299-323` + weather advisory at `:336/:339` + food icon props at `:1115/:1190`; medical.js doctor avatar/modals at `:2355/:2385/:2401` + activity icon props at `:3914/:3930` + symptoms-render text at `:6521`) routed to Stability sub-phase or dedicated R-8 charter on-record per `architectural-surfacing-must-enumerate-axis-of-resolution`.
 
 ---
 
@@ -261,12 +275,16 @@ Aurelius's PR-22 handoff: *"3 PRs across Stability + Polish."* Polish reserves 1
 | 5 | `beta/` frozen | Locked, no Phase 2/3 work touched | **Keep frozen** — Phase 4 Polish is province-only |
 | 8 | Telemetry-shaped AbortError-vs-CORS-vs-network discrimination | Deferred (structurally collapsed) | **Defer further** — telemetry surface not warranted by Polish |
 
-**Polish-sub-phase R-10 queue (track here through Polish-1 through Polish-8 build):**
+**Polish-sub-phase R-10 queue (active at charter ratification):**
 
-- *Reserved* — items added during build per the standard hygiene-queue discipline. Anticipated additions:
-  - Sprite-prune deferral resolution if Tally/Spark/Reward declare needs (close at sub-phase boundary).
-  - DESIGN_PRINCIPLES.md format consistency check post-Polish-4 + Polish-6 amendments.
-  - Class-extraction-residue audit post-Polish-5 (any `.section-caption` cousin missed in the sweep).
+| # | Item | Source | Disposition |
+|---|---|---|---|
+| P-1 | **Full HR-1 emoji audit (~16 remaining sites)** in home.js weather-code emoji map (`:253-257`, 5 sites), precautions strings (`:299-323`, 6 sites), weather advisory templates (`:336/:339`, 2 sites), food icon props (`:1115/:1190`, 2 sites); medical.js doctor avatar/modal text (`:2355/:2385/:2401`), activity icon props (`:3914/:3930`), symptoms-render text (`:6521`). Fix-shape varies materially: simple `zi()` swap for some (doctor modal text, symptoms-render); structural refactor of icon-props/data-structures for others (weather-code emoji map needs code→sprite-name table with `zi()` resolution at render time; food icon props ditto). | Cipher PR-23 r1 Catch 3 deeper audit | **Defer to Stability sub-phase or dedicated R-8 charter.** Multi-shape fix-set; needs atomic-canon split per R-3. |
+| P-2 | Sprite-prune deferral resolution (11 unreferenced symbols: `alert-circle, balloon, bump, chef, crystal, fall, goal, halfcircle, lotus, sleep, trending-up`) | Kael scout | **Hold until Tally/Spark/Reward declare needs.** Close at sub-phase boundary. |
+| P-3 | DESIGN_PRINCIPLES.md format consistency check post-Polish-4 + Polish-6 spec amendments | Polish-build anticipated | Close before Polish-8. |
+| P-4 | Class-extraction residue audit post-Polish-5 (any `.section-caption` cousin missed in the sweep) | Polish-build anticipated | Close before Polish-8. |
+
+R-10 threshold (3–5 items) **already MET at 4 items at charter ratification time.** Disposition: items P-1 + P-2 explicitly route off the Polish sub-phase per their listed dispositions; items P-3 + P-4 close in-Polish-build. **No Polish-N+1 hygiene-sweep PR needed at charter cut** since two items route off-sub-phase and two are anticipated-but-not-yet-active. Re-evaluate at Polish-build if new items add on-charter.
 
 R-10 threshold remains 3–5 items. Below threshold items wait for Stability sub-phase or a dedicated sweep PR; at threshold a Polish-N+1 hygiene-sweep PR flushes (parallels PR-20 within Phase 3's R-10 cycle).
 
