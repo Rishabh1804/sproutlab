@@ -986,6 +986,115 @@ test.describe('Cross-device clobber regression (Phase 3 PR-9, Finding E)', () =>
     expect(trace.t3, 'after Device A local-add: 4 entries').toBe(4);
     expect(trace.t3Last, 'last entry is the local-added 2026-04-28').toBe('2026-04-28');
   });
+
+  // ── PR-20 Item 1: byte-precision extension — save-payload spy ──
+  //
+  // Why: the existing triad above asserts module-global rehydration + the
+  // shape of `growthData` after a local push. That's correct as far as it
+  // goes — but the actual production clobber-loop signature is what flows
+  // OUT to Firestore via _syncFlushSingleDoc, and that flush reads the
+  // localStorage payload save() wrote. The spy depth previously stopped at
+  // module-global mutation. PR-18 chronicle named this gap as Obs A:
+  // "Phase 4+ Obs A save-payload spy compounds." PR-20 lands the first
+  // instance — a spy at the canonical persistence boundary
+  // (localStorage.setItem) that captures the post-rehydrate local-add's
+  // outbound payload shape, not just the in-memory state.
+  //
+  // Discipline (Cipher PR-20 advisory):
+  //   - Spy intercepts the post-rehydrate path SPECIFICALLY (baseline-
+  //     after-rehydrate filter, not any save).
+  //   - Payload-shape assertion is positive ("equals [a,b,c,d]"), not
+  //     negative-leading ("not equals init+d").
+  //   - Existing R-7 triad above is unmodified.
+  test('byte-precision extension — save-payload spy verifies post-rehydrate local-add yields [a,b,c,d] outbound, not […init,d]', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() =>
+      typeof (window as { _syncGetGlobal?: unknown })._syncGetGlobal === 'function' &&
+      typeof (window as { save?: unknown }).save === 'function');
+
+    const probe = await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const handler = w['_syncHandleSingleDocSnapshot'] as (
+        docName: string,
+        doc: { exists: boolean; data: () => Record<string, unknown>; metadata: { hasPendingWrites: boolean } }
+      ) => void;
+      const get = w['_syncGetGlobal'] as (name: string) => Array<{ date: string; wt: number | null; ht: number | null }>;
+      const save = w['save'] as (key: string, val: unknown) => void;
+      const _syncReady = w['_syncReady'] as Record<string, boolean>;
+      if (_syncReady) _syncReady['growth'] = true;
+
+      const GROWTH_KEY = 'ziva_growth';
+
+      // Wrap localStorage.setItem to capture all write-key + payload pairs
+      // crossing the persistence boundary. Wrapper preserves original
+      // behavior (delegates to the genuine setItem) — this is observation,
+      // not interception.
+      const captured: Array<{ key: string; value: string }> = [];
+      const realSetItem = localStorage.setItem.bind(localStorage);
+      localStorage.setItem = function(key: string, value: string) {
+        captured.push({ key, value });
+        return realSetItem(key, value);
+      };
+
+      // Rehydrate: synthetic listener fire delivering [a, b, c]. The handler
+      // performs its own setItem write internally (this is fine — the
+      // baseline filter below excludes it).
+      const remote = [
+        { date: '2025-09-04', wt: 3.45, ht: 50 },
+        { date: '2026-04-25', wt: 8.00, ht: 67 },
+        { date: '2026-04-27', wt: 8.10, ht: 68 },
+      ];
+      handler('growth', {
+        exists: true,
+        data: () => ({ ziva_growth: remote }),
+        metadata: { hasPendingWrites: false },
+      });
+
+      // Baseline mark: index AFTER the rehydrate's setItem activity. Any
+      // capture from this index onward is post-rehydrate by construction.
+      const postRehydrateMarker = captured.length;
+
+      // Local-add path (mirrors addGrowthEntry's effect at medical.js:1822 →
+      // renderGrowth's save at medical.js:1009): push onto the rehydrated
+      // module global, then save through the public save() boundary.
+      const liveGrowth = get('growthData');
+      liveGrowth.push({ date: '2026-04-28', wt: 8.15, ht: 68 });
+      save(GROWTH_KEY, liveGrowth);
+
+      // Restore so we don't leak the spy into other tests in the same page.
+      localStorage.setItem = realSetItem;
+
+      // Filter to growth-key writes from the post-rehydrate marker onward.
+      // The result captures the outbound payload(s) the local-add path
+      // produced — which is what would flow to Firestore via syncWrite.
+      const postRehydrateGrowthWrites = captured
+        .slice(postRehydrateMarker)
+        .filter((c) => c.key === GROWTH_KEY);
+
+      const lastWrite = postRehydrateGrowthWrites[postRehydrateGrowthWrites.length - 1] || null;
+      const lastPayload = lastWrite ? JSON.parse(lastWrite.value) : null;
+
+      return {
+        postRehydrateGrowthWriteCount: postRehydrateGrowthWrites.length,
+        lastPayload,
+      };
+    });
+
+    // Positive payload-shape assertion: the outbound save carries the
+    // 4-entry [a, b, c, d] shape — the exact post-rehydrate-plus-local-add
+    // intent. Confirms the clobber loop is closed at the persistence
+    // boundary, not just at the module global.
+    expect(probe.postRehydrateGrowthWriteCount,
+      'at least one post-rehydrate growth save crossed the persistence boundary').toBeGreaterThanOrEqual(1);
+    expect(probe.lastPayload,
+      'outbound save payload reflects rehydrate-then-local-add intent: [a, b, c, d]').toEqual([
+      { date: '2025-09-04', wt: 3.45, ht: 50 },
+      { date: '2026-04-25', wt: 8.00, ht: 67 },
+      { date: '2026-04-27', wt: 8.10, ht: 68 },
+      { date: '2026-04-28', wt: 8.15, ht: 68 },
+    ]);
+  });
 });
 
 test.describe('Attribution surfacing (Phase 3 PR-9, Finding F)', () => {
@@ -1126,7 +1235,7 @@ test.describe('Attribution surfacing (Phase 3 PR-9, Finding F)', () => {
 // TypeError on every swipe-to-medical. Fix: null-guard each appendChild and
 // filter null .el out of the cards array before classList queries.
 
-test.describe('PR-9 hotfix — dispatch crashes do not trip sync circuit (Issue 1 root cause)', () => {
+test.describe('PR-18 hotfix — dispatch crashes do not trip sync circuit (Issue 1 root cause)', () => {
   test('positive — a renderer that throws does NOT increment _syncCrashCount or set _syncDisabled', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
@@ -1224,7 +1333,33 @@ test.describe('PR-9 hotfix — dispatch crashes do not trip sync circuit (Issue 
   });
 });
 
-test.describe('PR-9 hotfix — orderMedicalCards null-guard (Issue 2 root cause)', () => {
+// ───────────────────────────────────────────────────────────────────────────
+// PR-18 hotfix — orderMedicalCards null-guard (Issue 2 root cause)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// R-7 duo-not-triad departure on-record (PR-18 Ruling 4):
+//   "R-7 duo-not-triad departure for Issue 2 accepted (bug IS the absent
+//   state; positive asserted as precondition)."
+//
+// Rationale: Issue 2 is a TypeError thrown by orderMedicalCards when
+// #medStatsCard is absent from the DOM template (a pre-existing latent
+// state since commit 16c644e on April 10 2026). The bug's state-space is
+// binary in a degenerate way — the "positive" state (no #medStatsCard,
+// orderMedicalCards completes cleanly) IS the post-fix invariant; the
+// "absent / regression-guard" state (no #medStatsCard, orderMedicalCards
+// throws) IS the bug. There is no third independent state for a triad's
+// positive-regression slot — the production swipe-handler trace
+// (handleSwipe → switchTrackSub → orderMedicalCards) collapses to the
+// same call chain. Cipher endorsed the duo on these grounds; Aurelius
+// + Sovereign ruled accept on-record.
+//
+// Sub-finding (PR-20 Item 3, D8-class citation-integrity catch): the
+// describe-string previously read "PR-9 hotfix — …" — misattributing the
+// hotfix to its remediation target (PR-9 introduced the auto-render path;
+// PR-18 was the hotfix that closed Issues 1 + 2). Builder's mental model
+// drifted from substance during PR-18 authorship; PR-20 corrects to
+// "PR-18 hotfix — …" so the on-record citation matches the merged commit.
+test.describe('PR-18 hotfix — orderMedicalCards null-guard (Issue 2 root cause)', () => {
   test('positive — orderMedicalCards completes without throwing when medStatsCard element is absent', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
@@ -1704,6 +1839,114 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
     }
   });
 
+  // ── PR-20 Item 5: brace-balance extractor (replaces non-greedy regex) ──
+  //
+  // Why: the prior extractor used `function NAME\\s*\\(([\\s\\S]*?)\\n\\}` —
+  // non-greedy, terminating at the FIRST `\n}` after the declaration. In a
+  // JS bundle, that almost always lands at the end of the FIRST nested
+  // closure (an `if (cond) { … \n}` block, an inner anonymous function, an
+  // object literal), NOT the function's own closing brace. A `_renderAttribution`
+  // call inserted past that nested closure (mid-body or late-body) would
+  // false-negative — the regex captures only the early-body slice and reports
+  // "no _renderAttribution" even when one is present further down. Cipher's
+  // PR-19.6 observation; landed here as PR-20 Item 5.
+  //
+  // Residual gap (Cipher disclosure, PR-20 advisory): brace counters are
+  // defeasible by braces inside string literals ('}', "{"), template literal
+  // ${} interpolations, block comments (/* { */), and regex literals (/\{/).
+  // SproutLab's pnpm-build single-file bundle carries no such pathological
+  // cases inside the renderer function bodies covered here — the practical
+  // drift mode for `_renderAttribution` insertions is early-body / mid-body /
+  // late-body across nested closures, which naive brace-balance handles
+  // fully. A string-and-comment-aware tokenizer pass would be principled-er
+  // but is over-LOC for a test guard. Future test failure traceable to the
+  // gap → escalate to tokenizer-aware extractor; until then, this fix
+  // dominates the regex.
+  function extractFunctionBody(source: string, fnName: string): string | null {
+    const decl = new RegExp('function\\s+' + fnName + '\\s*\\([^)]*\\)\\s*\\{', 'g');
+    const m = decl.exec(source);
+    if (!m) return null;
+    const bodyStart = m.index + m[0].length; // position just after the opening `{`
+    let depth = 1;
+    for (let i = bodyStart; i < source.length; i++) {
+      const ch = source[i];
+      if (ch === '{') depth++;
+      else if (ch === '}') {
+        depth--;
+        if (depth === 0) return source.slice(bodyStart, i);
+      }
+    }
+    return null; // unbalanced — should not happen in a built bundle
+  }
+
+  test('self-test — brace-balance extractor catches early-body, mid-body, AND late-body marker insertions across nested closures', () => {
+    // Synthetic bodies prove false-negative gap closure empirically. The
+    // markers (__MARK_EARLY / __MARK_MID / __MARK_LATE) stand in for any
+    // call-site we'd want to detect (e.g. _renderAttribution(<var>)).
+    // Each fixture is a complete function declaration with the marker at a
+    // specific depth relative to the FIRST nested closure — which is exactly
+    // what the prior non-greedy regex would have terminated at.
+
+    const earlyBody = [
+      'function fixtureEarly() {',
+      '  var x = __MARK_EARLY;',
+      '  if (cond) { foo(); }',
+      '  bar();',
+      '}',
+    ].join('\n');
+
+    const midBody = [
+      'function fixtureMid() {',
+      '  if (cond) { ',
+      '    foo();',
+      '    return;',
+      '  }',
+      '  __MARK_MID;', // past the first nested closure — prior regex would miss this
+      '  bar();',
+      '}',
+    ].join('\n');
+
+    const lateBody = [
+      'function fixtureLate() {',
+      '  if (a) {',
+      '    foo();',
+      '    if (b) {',
+      '      baz();',
+      '    }',
+      '  }',
+      '  for (var i = 0; i < n; i++) {',
+      '    qux(i);',
+      '  }',
+      '  __MARK_LATE;', // past TWO nested closure boundaries
+      '}',
+    ].join('\n');
+
+    const earlySrc = extractFunctionBody(earlyBody, 'fixtureEarly');
+    const midSrc   = extractFunctionBody(midBody,   'fixtureMid');
+    const lateSrc  = extractFunctionBody(lateBody,  'fixtureLate');
+
+    expect(earlySrc, 'extractor returns body for fixtureEarly').not.toBeNull();
+    expect(midSrc,   'extractor returns body for fixtureMid').not.toBeNull();
+    expect(lateSrc,  'extractor returns body for fixtureLate').not.toBeNull();
+
+    // The crux: ALL THREE markers must be visible to the extractor. Under
+    // the prior non-greedy regex, fixtureMid (mid-body past one nested
+    // closure) and fixtureLate (late-body past two nested closures) would
+    // have false-negatived. This assertion is the empirical false-negative-
+    // gap-closed proof Cipher requested.
+    expect(earlySrc!.includes('__MARK_EARLY'), 'early-body marker visible (sanity)').toBeTruthy();
+    expect(midSrc!.includes('__MARK_MID'),     'mid-body marker visible past nested closure (gap closure)').toBeTruthy();
+    expect(lateSrc!.includes('__MARK_LATE'),   'late-body marker visible past two nested closures (gap closure)').toBeTruthy();
+
+    // Counter-assertion (regression-guard): a body without the marker must
+    // NOT contain it. Confirms the extractor isn't pulling content from
+    // siblings outside the function.
+    const noMarker = 'function fixtureNone() { var x = 1; if (a) { y(); } z(); }';
+    const noneSrc = extractFunctionBody(noMarker, 'fixtureNone');
+    expect(noneSrc, 'extractor returns body for fixtureNone').not.toBeNull();
+    expect(noneSrc!.includes('__MARK_EARLY'), 'no false positive on absent marker').toBeFalsy();
+  });
+
   test('positive-regression — explicitly-deferred renderers (Phase 4) are NOT wired (object-keyed-shape disposition documented in PR body)', async ({ request }) => {
     const res = await request.get('/sproutlab.html');
     const html = await res.text();
@@ -1718,15 +1961,14 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
       { renderer: 'renderFeedingHistory', reason: 'feedingData is object-keyed (date → meal-record); per-entry attribution requires object-shape decision' },
     ];
     for (const { renderer, reason } of DEFERRED) {
-      // The renderer function MUST exist in the bundle (we're not pretending
-      // it doesn't) — but it must NOT have an _renderAttribution call site
-      // wired into its body. We check by extracting a window around the
-      // function declaration and grepping inside.
-      const re = new RegExp('function\\s+' + renderer + '\\s*\\(([\\s\\S]*?)\\n\\}', 'm');
-      const match = html.match(re);
-      expect(match, `${renderer} function body found in bundle`).toBeTruthy();
-      if (match) {
-        expect(match[1].includes('_renderAttribution'),
+      // PR-20 Item 5: brace-balance extractor (replaces prior non-greedy
+      // `[\\s\\S]*?\\n\\}` regex, which false-negatived past nested
+      // closures). See extractFunctionBody above for the walker + the
+      // residual-gap disclosure for the threat model.
+      const body = extractFunctionBody(html, renderer);
+      expect(body, `${renderer} function body found in bundle`).not.toBeNull();
+      if (body !== null) {
+        expect(body.includes('_renderAttribution'),
           `${renderer} explicitly NOT wired per Phase 4 deferral: ${reason}`).toBeFalsy();
       }
     }

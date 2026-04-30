@@ -310,9 +310,8 @@ function _syncReadActiveTab() {
 // don't witness); the permanent surfaces are (1) lastWriters sidecar
 // persisted via _syncRecordLastWriter, and (2) status-strip activity-mode
 // pill via _syncSetActivity. Toast pipeline (_syncQueueToast → 1500ms
-// debounce → _syncComposeToastText) drives the activity-mode update; the
-// dynamically-created toast div is no longer used on the success path
-// (kept dormant in _syncShowSyncToast for the renderer-crash fallback).
+// debounce → _syncComposeToastText) drives the activity-mode update.
+// _syncShowSyncToast is dormant — see its function header for full framing.
 //
 // Hotfix (post-PR-9) — Issue 1 root cause: dispatch crashes formerly used
 // _syncRecordCrash, which increments _syncCrashCount toward SYNC_CRASH_LIMIT
@@ -1408,9 +1407,7 @@ function _syncQueueToast(source, count, attribution) {
     var msg = _syncComposeToastText(n, attr);
     // PR-19 (Phase 3 R2 amendment) — Surface C ratification: drive the
     // status-strip activity-mode pill instead of creating a transient
-    // toast div. _syncShowSyncToast remains for the renderer-crash
-    // fallback path (opts.tapToReload === true) but is no longer the
-    // success-path publish target.
+    // toast div. (_syncShowSyncToast is dormant — see its function header.)
     _syncSetActivity(msg, attr);
   }, 1500);
 }
@@ -1423,10 +1420,27 @@ var _syncToastSourceLast = null;
 //   attr.name set         → "{name} synced N updates" / "{name} synced an update"
 //   attr.group=='multiple'→ "Multiple parents synced N updates"
 //   attr null/empty       → "N updates synced" / "An update synced"
-// Self-echo (local user is the writer) is suppressed at the listener layer
-// in a future iteration; today's _remoteWriteDepth check upstream prevents
-// the local write from re-firing the toast in most cases. When the toast
-// names the local user it's still a truthful surface — the data did sync.
+//
+// Self-echo discrimination — current state + scope (PR-20 Obs B refresh):
+//
+// Today's guard is _remoteWriteDepth at the listener layer — a per-device
+// counter incremented around the sync handler so a fire that arrives during
+// a local-write-in-flight is treated as the local write echoing back. This
+// closes the same-device case cleanly: device A writes, A's listener fires
+// with A's own write, the depth check suppresses the rebroadcast.
+//
+// What _remoteWriteDepth does NOT cover is the cross-device same-uid case:
+// the same user signed in on phone + tablet. UID is identical on both, so
+// suppressing on uid-match alone would silence a genuinely useful "your
+// other device just synced X" surface. Suppressing only on same-deviceId
+// would correctly cover this — but device-id is not currently in the
+// __sync_updatedBy payload (UID + name only). Adding device-id is feature-
+// grade reshaping and lives in Phase 4+ R-8 territory, not hygiene-sweep.
+//
+// Until then: when the toast names the local user it's still a truthful
+// surface — the data did sync (cross-device, same uid, the "other-device"
+// fire produces a valid attribution-named pill). Surfaced for any future
+// reader so the "in most cases" hedge previously here is unpacked.
 function _syncComposeToastText(n, attr) {
   var noun = (n === 1) ? 'an update' : (n + ' updates');
   if (attr && attr.group === 'multiple') {
@@ -1438,6 +1452,35 @@ function _syncComposeToastText(n, attr) {
   return (n === 1 ? 'An update synced' : (n + ' updates synced'));
 }
 
+// _syncShowSyncToast — DORMANT (PR-19 R2 amendment, retained per PR-20 hygiene
+// sweep item 4 disposition).
+//
+// Lineage: introduced at PR-9 (Phase 3 Finding D) as the data-fire success-path
+// toast surface, with opts.tapToReload=true reserved as the renderer-crash
+// fallback. Repurposed at PR-19 (Surface C ratification) — the success-path
+// publish target moved off the transient toast div and onto the permanent
+// status-strip activity-mode pill (#syncActivity), driven by _syncSetActivity
+// inside the _syncQueueToast debounce. Post-PR-19, this function has zero
+// callers anywhere in split/*.js.
+//
+// Why preserved (not removed):
+//   PR-19 Ruling 4 named the action shape as comment-class (Aurelius used
+//   "comment" and "framing" as adjacent words, then kicked the preserve-vs-
+//   delete decision to PR-20 hygiene-sweep; "framing comment" as a compound
+//   noun is Lyra's synthesis of that signal, not Aurelius's verbatim phrase).
+//   Cipher (PR-20 pre-cut advisory) endorsed preserve as the correct
+//   sustainment of that prior signal — flipping to deletion would be
+//   doctrine-adjacent (would need an "explicit-prior-ratification-defers-
+//   grandfathering" pattern through its own 3/3 cycle). The reserved hook
+//   (opts.tapToReload=true → reload on tap) is the documented re-engagement
+//   surface if a future dispatch-failure path needs a tap-to-reload fallback.
+//
+// Re-engagement contract for a future caller:
+//   _syncShowSyncToast(msg, { tapToReload: true })
+//     → renders a distinct #syncToast div (separate DOM from #updateToast and
+//       from #syncActivity), tap reloads the page, otherwise auto-dismisses
+//       after 8s. CSS hooks: .sync-toast (always) + .is-tappable (when
+//       tapToReload set, gates the cursor per HR-2).
 function _syncShowSyncToast(msg, opts) {
   // Create a distinct sync toast (different from QLToast per §4.6 #38)
   var existing = document.getElementById('syncToast');
@@ -1447,11 +1490,6 @@ function _syncShowSyncToast(msg, opts) {
   toast.id = 'syncToast';
   toast.className = 'sync-toast';
   toast.textContent = msg;
-  // Phase 3 PR-9: success-path toast is auto-dismiss only (the auto-render
-  // already updated the active tab in place; nothing for the user to tap).
-  // The fallback path passes opts.tapToReload=true to restore the prior
-  // click-to-reload behavior when _syncDispatchRender's success cannot be
-  // assumed — e.g. when a future caller threads through dispatch failure.
   if (opts && opts.tapToReload) {
     toast.classList.add('is-tappable'); // CSS gates the cursor (HR-2)
     toast.addEventListener('click', function() {
