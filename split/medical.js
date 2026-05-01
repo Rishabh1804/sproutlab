@@ -2265,7 +2265,7 @@ function checkSymptoms() {
     html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
 
     if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + zi('siren') + ' When to seek emergency care</div>';
       html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
     }
     html += '</div>';
@@ -3205,7 +3205,7 @@ function checkVaccDateShift() {
     // Beyond tolerance — flag and require reason
     const direction = diffDays > 0 ? 'later' : 'earlier';
     flagEl.style.display = '';
-    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid #ffc107;">
+    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--tc-warn);">${zi('warn')} ${absDiff} days ${direction} than scheduled</div>
       <div class="t-sub mt-2">Original date: ${formatDate(origDate)} · New date: ${formatDate(newDate)}</div>
       <div class="t-sub mt-2">Changes beyond ±3 days need a reason for your records.</div>

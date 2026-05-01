@@ -15617,6 +15617,12 @@ function init() {
     else if (action === 'openScorePopup') openScorePopup(arg);
     else if (action === 'openVaccModal') openVaccModal();
     else if (action === 'toggleVaccInfo') toggleVaccInfo();
+    else if (action === 'toggleVaccHistoryInfo') {
+      // Polish-2: HR-3 cleanup — replaces inline onclick at home.js:1391 vacc-history rows.
+      // arg = dynamic infoId (e.g., 'vacc-info-3'); toggles display:block/none.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
@@ -21601,7 +21607,7 @@ function renderVaccHistory() {
       const dateFlag = v.dateChangeReason ? `<div style="font-size:var(--fs-xs);color:var(--tc-warn);margin-top:1px;">${zi('note')} ${escHtml(v.dateChangeReason)}</div>` : '';
       html += `
         <div style="border-radius:var(--r-lg);background:var(--glass);border-left:var(--accent-w) solid var(--lavender);overflow:hidden;">
-          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" onclick="const el=document.getElementById('${infoId}');el.style.display=el.style.display==='none'?'block':'none';">
+          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" data-action="toggleVaccHistoryInfo" data-arg="${infoId}">
             <span class="t-sm"><span class="zi-check-placeholder"></span></span>
             <span class="t-sm">${zi('syringe')}</span>
             <div class="flex-1-min">
@@ -21805,7 +21811,7 @@ function renderMilestones() {
             ${progressHtml}
             ${tidbitData ? `<div class="ms-tidbits" id="${tidbitId}" style="display:none;">
               <div class="ms-tidbit tidbit-unlocks"><div class="ms-tidbit-icon">${zi('star')}</div><div class="ms-tidbit-text"><strong>What this unlocks:</strong> ${tidbitData.unlocks}</div></div>
-              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">🩺</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
+              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">${zi('steth')}</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
               <div class="ms-tidbit tidbit-fun"><div class="ms-tidbit-icon">${zi('sparkle')}</div><div class="ms-tidbit-text"><strong>Fun fact:</strong> ${tidbitData.funFact}</div></div>
             </div>` : ''}
           </div>`;
@@ -35751,7 +35757,7 @@ function checkSymptoms() {
     html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
 
     if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + zi('siren') + ' When to seek emergency care</div>';
       html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
     }
     html += '</div>';
@@ -36691,7 +36697,7 @@ function checkVaccDateShift() {
     // Beyond tolerance — flag and require reason
     const direction = diffDays > 0 ? 'later' : 'earlier';
     flagEl.style.display = '';
-    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid #ffc107;">
+    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--tc-warn);">${zi('warn')} ${absDiff} days ${direction} than scheduled</div>
       <div class="t-sub mt-2">Original date: ${formatDate(origDate)} · New date: ${formatDate(newDate)}</div>
       <div class="t-sub mt-2">Changes beyond ±3 days need a reason for your records.</div>

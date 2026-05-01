@@ -2259,3 +2259,97 @@ test.describe('Polish-9 — essential-mode rename + boot migration', () => {
     expect(after4.bodyHasEssentialMode, 'cleared storage: default-on logic engages essential-mode').toBeTruthy();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-2 — 4 named cross-Governor-catch governance-rule violations
+// ───────────────────────────────────────────────────────────────────────────
+//
+// R-7 binary-mode duos per PR-18 precedent: governance-rule violations have
+// binary state-space (compliant vs violating); the bug IS the absent state.
+// Two slots per rule: positive (rule-compliant in the built bundle) +
+// regression-guard (the specific violating-pattern is byte-precise absent).
+// Path A scope per Sovereign-via-Aurelius ratification: the 4 named cross-
+// Governor-catch sites only. Broader audit (P-1 + P-6 in charter §6 R-10
+// queue) defers to Stability sub-phase or dedicated Polish-N hygiene-sweep.
+//
+// Sites:
+//   1. HR-2 escape — medical.js:3208 #ffc107 hex-in-inline-style → var(--amber)
+//   2. HR-1 emoji  — medical.js:2268 🚨 ('When to seek emergency care') → zi('siren')
+//   3. HR-1 emoji  — home.js:1595    🩺 (ms-tidbit-icon doctor context) → zi('steth')
+//   4. HR-3 inline — home.js:1391    onclick="..." (vacc-history toggle) → data-action="toggleVaccHistoryInfo"
+
+test.describe('Polish-2 — governance-rule violations closed at 4 named cross-Governor-catch sites', () => {
+  test('positive — built bundle ships the compliant patterns at all 4 sites', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+
+    // Site 1: medical.js:3208 — peach-light flagEl now uses var(--amber) for the
+    // border-left. Match the canonical pattern surrounding the substitution.
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);'),
+      'Site 1: medical.js:3208 carries var(--amber) substitution').toBeTruthy();
+
+    // Site 2: medical.js:2268 — the emergency-care-callout title now uses zi('siren').
+    // The bundle text contains: ` + zi('siren') + ' When to seek emergency care`.
+    expect(html.includes("zi('siren') + ' When to seek emergency care"),
+      'Site 2: medical.js:2268 emergency-care title uses zi(siren)').toBeTruthy();
+
+    // Site 3: home.js:1595 — ms-tidbit-icon doctor context wraps zi('steth') in a
+    // template literal expression.
+    expect(html.includes("ms-tidbit tidbit-doctor") &&
+           html.includes("${zi('steth')}"),
+      "Site 3: home.js:1595 ms-tidbit-icon uses zi('steth') template-literal interpolation").toBeTruthy();
+
+    // Site 4: home.js:1391 — vacc-history row carries the delegated data-action
+    // pattern with the dynamic infoId argument.
+    expect(html.includes('data-action="toggleVaccHistoryInfo"') &&
+           html.includes('data-arg="${infoId}"'),
+      'Site 4: home.js:1391 vacc-history row uses data-action="toggleVaccHistoryInfo" data-arg="${infoId}"').toBeTruthy();
+  });
+
+  test('regression-guard — the specific violating patterns at all 4 sites are byte-precise ABSENT from bundle', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Site 1: HR-2 — medical.js:3208 specific violation pattern (canonical
+    // string match). Note: #ffc107 still appears in styles.css ad-hoc-tonal
+    // hex variants (Polish-4 territory); this guard targets the medical.js:3208
+    // INLINE-STYLE escape specifically, not the broader hex-in-CSS surface.
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid #ffc107;'),
+      'Site 1 violation absent: medical.js:3208 no longer carries `#ffc107` inside the inline-style attribute').toBeFalsy();
+
+    // Site 2: HR-1 — medical.js:2268 specific violation pattern. The original
+    // line emitted `\u{1F6A8} When to seek emergency care`. The same string
+    // template was BYTE-IDENTICALLY duplicated at intelligence.js:11965 — a
+    // Polish-2 build-deep finding (running-beats-reading 6th instance; cross-
+    // Governor-catch coverage gap because Cipher's PR-23 r1 audit was scoped
+    // to Maren's Care territory and missed Kael's Intelligence territory).
+    // intelligence.js:11965 is OUT of Polish-2 scope (routed to charter §6 P-1
+    // R-10 carry-forward); it still emits the pattern post-Polish-2.
+    //
+    // Once both source files were concatenated into the bundle pre-Polish-2,
+    // this pattern appeared 2× (once per source file). Polish-2 closes
+    // medical.js:2268 only, so post-Polish-2 the pattern appears 1× (from
+    // intelligence.js:11965). The binary-mode-duo regression-guard for Site
+    // 2 is therefore count-based: assert exactly 1 remaining occurrence,
+    // confirming medical.js's contribution is absent without false-positive
+    // failure on intelligence.js's still-present out-of-scope contribution.
+    const emergencyPattern = "\\u{1F6A8} When to seek emergency care";
+    const remainingOccurrences = html.split(emergencyPattern).length - 1;
+    expect(remainingOccurrences,
+      'Site 2 medical.js:2268 contribution absent: bundle has exactly 1 remaining occurrence (intelligence.js:11965, out-of-scope per R-10 P-1)').toBe(1);
+
+    // Site 3: HR-1 — home.js:1595 specific violation pattern. The original
+    // line emitted `<div class="ms-tidbit-icon">🩺</div>`. The string-literal-
+    // 🩺-inside-ms-tidbit-icon-div is the binary signature.
+    expect(html.includes('<div class="ms-tidbit-icon">🩺</div>'),
+      'Site 3 violation absent: home.js:1595 ms-tidbit-icon no longer carries the literal 🩺 emoji').toBeFalsy();
+
+    // Site 4: HR-3 — home.js:1391 specific violation pattern. The original
+    // inline-onclick handler. The signature is the literal getElementById +
+    // ternary-toggle pattern inside an onclick attribute.
+    expect(html.includes('onclick="const el=document.getElementById(') &&
+           html.includes("style.display=el.style.display==='none'?'block':'none'"),
+      'Site 4 violation absent: home.js:1391 no longer carries the inline onclick handler').toBeFalsy();
+  });
+});
