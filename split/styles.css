@@ -4061,6 +4061,23 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   height: 18px;
   border-radius: var(--r-sm);
 }
+
+/* ── Polish-6: CSS-custom-property pivot for dynamic-required surfaces ──
+   First-instance candidate for `CSS-custom-property-pivot-for-dynamic-
+   required-surfaces` doctrine (Aurelius PR-23 Ruling 5; sister to Polish-4's
+   `spec-amendment-in-substitution-PR`). Convention: dynamic-required values
+   move from `style="width:${pct}%"` to `style="--dyn-pct:${pct}%"` consumed
+   via class-side `var()`. See DESIGN_PRINCIPLES.md "CSS-Custom-Property
+   Pivot Convention" section for full rationale + locked-exclusion list.
+   Path C narrow-scope: --dyn-pct width-pivot only at Polish-6; --dyn-bg /
+   --dyn-fg / --dyn-border deferred to Polish-7+ first-instance evaluations
+   per Maren+Kael Mode 2 dual-endorsement. */
+.dyn-fill {
+  width: var(--dyn-pct);
+}
+.dyn-fill-h {
+  height: var(--dyn-pct);
+}
 .badge-amber        { background:var(--amber-light); color:var(--tc-amber); }
 .fx-row-wrap        { align-items:center; flex-wrap:wrap; }
 .btn-sm-inline      { padding:var(--sp-6) var(--sp-12); font-size:var(--fs-xs); }

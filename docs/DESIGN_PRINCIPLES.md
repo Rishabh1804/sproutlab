@@ -87,8 +87,44 @@ Token-name prefixes carry semantic role. **Mixing prefixes for the same value at
 | `--sp-*` | Spacing | `--sp-2`, `--sp-8`, `--sp-16` |
 | `--r-*` | Border-radius | `--r-sm`, `--r-lg`, `--r-2xl` |
 | `--ease-*` | Animation timing | `--ease-fast`, `--ease-med`, `--ease-slow` |
+| `--dyn-*` | **Dynamic-required values** (computed at render-time from runtime data, NOT from the sanctioned palette). Pairs with utility classes that consume them via `var()`. See "CSS-Custom-Property Pivot Convention" section below. | `--dyn-pct` (introduced Polish-6) — width/height percentage values for progress-bars / fill indicators |
 
-**Why this rule:** prevents collision between conceptually-distinct values that share a semantic axis (e.g., `--accent-w` is a border-width, `--accent-warn` would be a border-color — code-review glance-readability is fragile when the prefix carries dual meaning). Polish-4 codifies this rule alongside introducing 9 new tokens that follow it; future tonal-variant additions inherit the discipline.
+**Why this rule:** prevents collision between conceptually-distinct values that share a semantic axis (e.g., `--accent-w` is a border-width, `--accent-warn` would be a border-color — code-review glance-readability is fragile when the prefix carries dual meaning). Polish-4 codified this rule alongside introducing 9 new tokens that follow it; Polish-6 extends the rule with `--dyn-*` family prefix to declare "value computed at render-time, not from the design-token palette" — load-bearing for future Governors auditing whether a value originated in a sanctioned palette or from runtime data.
+
+#### CSS-Custom-Property Pivot Convention (introduced Polish-6)
+
+**The pivot:** dynamic-required inline-styles (where the value is computed at render-time from runtime data — e.g., `style="width: ${pct}%"`, `style="background: ${dynColor}"`, etc.) become CSS-custom-property assignments consumed by classes via `var()`. This isolates dynamic data from the sanctioned-palette token system + reduces HR-2 inline-style surface count without losing dynamic behavior.
+
+**Pattern:**
+```html
+<!-- Before (HR-2 surface; value mixes static + dynamic) -->
+<div style="width: ${pct}%; background: var(--surface-warn);">
+
+<!-- After (HR-2 surface eliminated; static props in class; dynamic in --dyn-* var) -->
+<div class="dyn-fill" style="--dyn-pct: ${pct}%; background: var(--surface-warn);">
+```
+
+```css
+.dyn-fill {
+  width: var(--dyn-pct);
+  /* other static props move out of inline */
+}
+```
+
+**Compound-style partial-pivot clause (Kael's Polish-6 Mode 2 surfacing):** sites that mix multiple dynamic-required properties (e.g., `style="width: ${pct}%; background: ${dynColor}"`) require **partial pivot** — pivot the property whose convention is introduced (e.g., width via `--dyn-pct`) while leaving other dynamic properties as inline-style residue (e.g., the `background: ${dynColor}` stays inline until `--dyn-bg` introduction in a future Polish-N). Multi-property compound styles ARE NOT a single-PR scope; each `--dyn-{property}` introduction lands as its own first-instance over time, parallel to the Polish-3 → Polish-4 token-introduction cadence.
+
+**Locked exclusions** (NOT pivot-eligible — these surfaces have semantic-color contracts that mass-pivoting would silently flip; per Maren+Kael Polish-6 Mode 2 + charter §3 locked exclusions; entire `--dyn-*` doctrine lifetime, not just Polish-6):
+- CareTicket banner state-color (`medical.js:5323-5368`)
+- Growth-gauge ring percentile-tint (`medical.js:1912-1932`, `:1455`, `:1485`, `:1499`, `:1925`, `:1927`)
+- Vaccination urgency Fraunces countdown (`home.js:896-910`, `:1361-1372`; mirror `medical.js:413`)
+- Symptom emergency callout (`medical.js:2268`; Polish-2 already swapped to `zi('siren')`)
+- Doctor "Call Now" tap-target (`medical.js:2364-2365`; Polish-5 extracted to `.doctor-cta-call/.doctor-cta-map`)
+- Vaccine card per-state encoding (`medical.js:3713-3717`)
+- Growth delta sign-color (`medical.js:1218`, `:1227`)
+- Illness-episode severity colors (Fever/Diarrhoea/Vomit/Cold; `intelligence.js:7108-7158`, `:7456`, `:7649-8142`, `:8378-8385`, `:8710`; cross-Governor cascade with `--tc-danger`/`--tc-caution`)
+- Sleep Intelligence ring/SVG dynamic-color math (`intelligence.js:12920-12922`, `:13637`, `:13661-13662`)
+- Smart Q&A `sa-type-pct` 3-band semantic threshold color (`intelligence.js:6745`)
+- CD episode delta-sign colors (`intelligence.js:14489`, `:14494`, `:14499`, `:14504`)
 
 #### Tonal Variants & Border-Accent Tokens (introduced Polish-4)
 

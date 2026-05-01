@@ -3045,7 +3045,7 @@ function _spRenderBody() {
         <div class="sp-comp-weight">${c.weight}</div>
         <div class="sp-comp-score" style="${scoreColor}">${c.score}</div>
       </div>
-      <div class="sp-comp-bar"><div class="sp-comp-bar-fill ${barClass}" style="width:${c.score}%"></div></div>`;
+      <div class="sp-comp-bar"><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${c.score}%"></div></div>`;
     if (c.detail) {
       html += `<div class="sp-comp-detail">${c.detail}</div>`;
       if (c.tab) {
@@ -3114,7 +3114,7 @@ function _spRenderOverview(el, zs) {
       <span style="font-size:var(--icon-xs);">${dom.icon}</span>
       <span style="font-size:var(--fs-xs);color:var(--mid);width:70px;">${dom.name}</span>
       <span style="font-size:var(--fs-xs);color:var(--light);width:28px;text-align:center;">${w}%</span>
-      <div class="sp-comp-bar flex-1" ><div class="sp-comp-bar-fill ${barClass}" style="width:${sv}%"></div></div>
+      <div class="sp-comp-bar flex-1" ><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${sv}%"></div></div>
       <span style="font-size:var(--fs-xs);font-weight:600;width:28px;text-align:right;">${sv}</span>
     </div>`;
   });
@@ -3455,7 +3455,7 @@ function renderVarietyCard() { /* v2.4: DORMANT — insights cards replaced by t
   let html = '';
   // Variety bar
   html += `<div class="fs-sm-600">${vs.uniqueFoods} / ${vs.target} unique foods this week</div>`;
-  html += `<div class="variety-bar"><div class="variety-bar-fill" style="width:${pct}%"></div></div>`;
+  html += `<div class="variety-bar"><div class="variety-bar-fill dyn-fill" style="--dyn-pct:${pct}%"></div></div>`;
 
   // Food group icons
   html += '<div class="variety-groups">';
@@ -3510,7 +3510,7 @@ function renderNutrientRadar() { /* v2.4: DORMANT — insights cards replaced by
     html += `<div class="nutrient-row">
       <div class="nutrient-emoji">${EMOJI_MAP[n] || '•'}</div>
       <div class="nutrient-name">${capitalize(n)}</div>
-      <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill ${barClass}" style="width:${pct}%"></div></div>
+      <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${pct}%"></div></div>
       <div class="nutrient-count">${days}/7d</div>
     </div>`;
   });

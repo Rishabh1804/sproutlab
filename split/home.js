@@ -2703,7 +2703,7 @@ function renderFoods() {
           <div class="fc-name">${parent.label}</div>
           <div class="fc-count">${parentCount} of ${parentTotal}</div>
           <div style="width:100%;height:4px;border-radius:2px;background:rgba(0,0,0,0.06);margin-top:6px;">
-            <div style="width:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"></div>
+            <div class="dyn-fill" style="--dyn-pct:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"></div>
           </div>
         </div>
       </div>`;
