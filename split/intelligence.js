@@ -11791,7 +11791,7 @@ function renderHomeMealProgress() {
 
     html += `<div class="mdi-home-wrap ptr" data-action="openDiversityDetail" >`;
     html += `<div class="mdi-home-row"><span style="font-weight:600;color:var(--mid);font-size:var(--fs-xs);">Today's diversity</span><span style="margin-left:auto;font-weight:700;font-size:var(--fs-xs);color:${dayTextColor};">${dayLabel} · ${mdi.totalGroups} group${mdi.totalGroups !== 1 ? 's' : ''}</span></div>`;
-    html += `<div class="mdi-bar"><div class="mdi-bar-fill ${dayColor}" style="width:${pct}%;"></div></div>`;
+    html += `<div class="mdi-bar"><div class="mdi-bar-fill dyn-fill ${dayColor}" style="--dyn-pct:${pct}%;"></div></div>`;
 
     // Per-meal mini bars
     html += `<div style="display:flex;gap:var(--sp-4);margin-top:6px;">`;
@@ -11800,7 +11800,7 @@ function renderHomeMealProgress() {
       if (md.foods === 0) return;
       const c = getMdiColor(md.score);
       const barPct = Math.min(md.score, 100);
-      html += `<div class="flex-1-min0"><div class="t-xs" style="color:var(--light);text-align:center;">${md.label}</div><div class="mdi-bar"><div class="mdi-bar-fill ${c}" style="width:${barPct}%;"></div></div></div>`;
+      html += `<div class="flex-1-min0"><div class="t-xs" style="color:var(--light);text-align:center;">${md.label}</div><div class="mdi-bar"><div class="mdi-bar-fill dyn-fill ${c}" style="--dyn-pct:${barPct}%;"></div></div></div>`;
     });
     html += `</div>`;
 
@@ -14800,7 +14800,7 @@ function renderInfoFoodIntro() {
       <div class="info-intro-bar-col" title="${foodNames}">
         <div class="t-xs" style="color:var(--mid);font-weight:600;">${w.count}</div>
         <div class="info-intro-bar-track">
-          <div class="info-intro-bar" style="height:${pct}%"></div>
+          <div class="info-intro-bar dyn-fill-h" style="--dyn-pct:${pct}%"></div>
         </div>
         <div class="t-xs t-light" >${label}</div>
       </div>`;
@@ -15481,7 +15481,7 @@ function renderInfoMealBreakdown() {
       <div class="mb-meal-label">${m.emoji} ${m.label}</div>
       <div class="mb-meal-score" style="color:${density >= 3 ? 'var(--tc-sage)' : density >= 1.5 ? 'var(--tc-amber)' : 'var(--light)'};">${density}</div>
       <div class="mb-meal-nutrients">${topNutrients.length > 0 ? topNutrients.join(', ') : 'no data'}</div>
-      <div class="mb-meal-bar" style="width:${Math.max(pct, 4)}%;background:${m.color};"></div>
+      <div class="mb-meal-bar dyn-fill" style="--dyn-pct:${Math.max(pct, 4)}%;background:${m.color};"></div>
     </div>`;
   });
   gridHtml += '</div>';

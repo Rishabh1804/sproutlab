@@ -2717,3 +2717,101 @@ test.describe('Polish-5 — Cross-jurisdiction class-extraction sweep (Path C na
     }
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-6 — CSS-custom-property pivot for dynamic-required surfaces (Path C)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// First-instance candidate for `CSS-custom-property-pivot-for-dynamic-
+// required-surfaces` doctrine (Aurelius PR-23 Ruling 5; sister-doctrine to
+// Polish-4's `spec-amendment-in-substitution-PR` first-instance which Cipher
+// §B-framed observational). Path C narrow-scope: spec amendment + --dyn-pct
+// width/height-pct pivot only at Polish-6; --dyn-bg / --dyn-fg / --dyn-border
+// deferred to Polish-7+ first-instance evaluations per Maren+Kael Mode 2
+// dual-endorsement.
+//
+// 1 new token (--dyn-pct) + 2 new classes (.dyn-fill width-pivot;
+// .dyn-fill-h height-pivot) + DESIGN_PRINCIPLES.md `--dyn-*` family rule +
+// compound-style partial-pivot clause (Kael Mode 2 surfacing).
+//
+// 9 site sweep (width 8 + height 1):
+//   - diet.js:3048/:3117/:3458/:3513 (4 pure-width pivot)
+//   - intelligence.js:11794/:11803 (2 pure-width pivot)
+//   - intelligence.js:14803 (1 pure-height pivot via .dyn-fill-h)
+//   - intelligence.js:15484 (1 compound-partial: width via --dyn-pct;
+//     background:${m.color} stays inline per partial-pivot clause)
+//   - home.js:2706 (1 compound-partial: width via --dyn-pct; height +
+//     border-radius + background + transition stay inline)
+
+test.describe('Polish-6 — CSS-custom-property pivot (Path C; --dyn-pct width/height-pivot)', () => {
+  test('positive — --dyn-pct token resolves runtime values + .dyn-fill consumes via getComputedStyle', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // Probe: create a div with class="dyn-fill" + style="--dyn-pct:67%".
+    // Computed width must resolve to 67% (or browser-canonical equivalent).
+    const result = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.className = 'dyn-fill';
+      probe.style.setProperty('--dyn-pct', '67%');
+      // Parent with explicit width so % resolves predictably.
+      const parent = document.createElement('div');
+      parent.style.width = '300px';
+      parent.appendChild(probe);
+      document.body.appendChild(parent);
+      const computed = getComputedStyle(probe).width;
+      const tokenResolved = getComputedStyle(probe).getPropertyValue('--dyn-pct').trim();
+      parent.remove();
+      return { computed, tokenResolved };
+    });
+
+    expect(result.tokenResolved, '--dyn-pct token resolves to assigned runtime value').toBe('67%');
+    // 67% of 300px = 201px.
+    expect(result.computed, '.dyn-fill consumes --dyn-pct via var() — width resolves to 67% of parent (201px)').toBe('201px');
+  });
+
+  test('regression-guard — pure width:${...}% / height:${...}% inline-style patterns absent from production source (post-Polish-6 sweep)', async ({ request }) => {
+    // Fetch each production source file directly + verify no residual pure
+    // dynamic-pct inline-style patterns. This scopes the assertion to
+    // production source contributions (out-of-scope sites in JS-side hex
+    // const lookups + Chart.js dataset configs — Stability sub-phase
+    // territory — would NOT match this width/height-pct template-literal
+    // signature anyway).
+    const FILES_TO_SCAN = [
+      '/split/home.js',
+      '/split/diet.js',
+      '/split/medical.js',
+      '/split/intelligence.js',
+    ];
+    // Pattern: `style="width:${...}%"` or `style='width:${...}%'`.
+    // Compound-partial sites pivoted to --dyn-pct don't match this pattern
+    // (they use `--dyn-pct:${...}%` not `width:${...}%`).
+    const purePctPattern = /style=["']width:\$\{[^}]+\}%/;
+    const pureHeightPattern = /style=["']height:\$\{[^}]+\}%/;
+
+    for (const file of FILES_TO_SCAN) {
+      const res = await request.get(file);
+      expect(res.ok(), `${file} fetchable`).toBeTruthy();
+      const src = await res.text();
+
+      expect(purePctPattern.test(src),
+        `${file}: pure width:\${pct}% inline-style pattern absent (pivoted to --dyn-pct + .dyn-fill)`).toBeFalsy();
+      expect(pureHeightPattern.test(src),
+        `${file}: pure height:\${pct}% inline-style pattern absent (pivoted to --dyn-pct + .dyn-fill-h)`).toBeFalsy();
+    }
+  });
+
+  test('positive-regression — compound-partial-pivot sites preserve non-pivoted dynamic properties as inline-style residue (Kael partial-pivot clause)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // home.js:2706 compound-partial: width pivoted to --dyn-pct; height +
+    // border-radius + background + transition stay inline.
+    expect(html.includes('class="dyn-fill" style="--dyn-pct:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"'),
+      'home.js:2706 compound-partial: width pivoted via --dyn-pct; height/border-radius/background/transition residue intact').toBeTruthy();
+
+    // intelligence.js:15484 compound-partial: width pivoted; background:${m.color} stays inline.
+    expect(html.includes('class="mb-meal-bar dyn-fill" style="--dyn-pct:${Math.max(pct, 4)}%;background:${m.color};"'),
+      'intelligence.js:15484 compound-partial: width pivoted via --dyn-pct; background:${m.color} residue intact (--dyn-bg deferred to Polish-7+)').toBeTruthy();
+  });
+});
