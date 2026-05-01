@@ -2353,3 +2353,121 @@ test.describe('Polish-2 — governance-rule violations closed at 4 named cross-G
       'Site 4 violation absent: home.js:1391 no longer carries the inline onclick handler').toBeFalsy();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-3 — Direct-token-duplication hex sweep (styles.css; 32 substitutions)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Atomic-canon hex sweep: 32 hex literals byte-identical to canonical light-
+// theme :root token values replaced with var(--token) references. Tokens
+// covered: --rose, --rose-light, --peach, --peach-light, --sage, --sage-light,
+// --lavender, --sky, --sky-light, --indigo, --indigo-light, --amber,
+// --amber-light. :root definitions preserved (single source of truth).
+//
+// Pure substitution: zero new tokens, zero ad-hoc tonal variations (those
+// route to Polish-4 spec-amendment). Charter §4 scout estimated ~87 sites;
+// empirical Polish-3 build-deep count is 32 (running-beats-reading 7th
+// instance count drift — Polish-bench operational consistency).
+//
+// R-7 triad shape:
+//   - positive: a representative consumer (.icon-rose) resolves
+//     getComputedStyle().backgroundColor to the canonical rose-light RGB
+//     post-substitution (visual fidelity preserved through the var(--*)
+//     dispatch).
+//   - regression-guard: zero canonical-hex literals (#f2a8b8 / #fde8ed /
+//     etc.) outside the :root definition lines (1-89) — substitution sweep
+//     is total within scope.
+//   - positive-regression: token system itself unchanged —
+//     getComputedStyle(root).getPropertyValue('--rose-light') returns the
+//     canonical hex value byte-precise.
+
+test.describe('Polish-3 — Direct-token-duplication hex sweep (styles.css; 32 substitutions)', () => {
+  // Known canonical light-theme token → hex value pairs. Source of truth:
+  // split/styles.css :root block (lines 1-89). Test asserts the token system
+  // resolves correctly post-substitution (no accidental cycle / no clobber).
+  const CANONICAL_TOKENS = [
+    { token: '--rose',          hex: '#f2a8b8' },
+    { token: '--rose-light',    hex: '#fde8ed' },
+    { token: '--peach',         hex: '#fad4b4' },
+    { token: '--peach-light',   hex: '#fef3ea' },
+    { token: '--sage',          hex: '#b5d5c5' },
+    { token: '--sage-light',    hex: '#e8f5ef' },
+    { token: '--lavender',      hex: '#c9b8e8' },
+    { token: '--sky',           hex: '#a8cfe0' },
+    { token: '--sky-light',     hex: '#e8f4fa' },
+    { token: '--indigo',        hex: '#9ba8d8' },
+    { token: '--indigo-light',  hex: '#edf0fa' },
+    { token: '--amber',         hex: '#e8b86d' },
+    { token: '--amber-light',   hex: '#fef6e8' },
+  ];
+
+  test('positive — known consumer (.icon-rose) resolves getComputedStyle to the canonical rose-light RGB post-substitution', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // .icon-rose is a known consumer — pre-Polish-3 it had `background: #fde8ed`;
+    // post-Polish-3 it has `background: var(--rose-light)`. Computed background
+    // must still resolve to the canonical rose-light RGB (245, 232, 237).
+    // (Hex #fde8ed = RGB 253,232,237 — modern browsers normalize hex → rgb in computed style.)
+    const bg = await page.evaluate(() => {
+      // Create a probe div with the .icon-rose class so we don't depend on
+      // a specific page state having an .icon-rose element rendered.
+      const probe = document.createElement('div');
+      probe.className = 'icon-rose';
+      document.body.appendChild(probe);
+      const computed = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return computed;
+    });
+    // rose-light hex #fde8ed → rgb(253, 232, 237). Browser may render as
+    // 'rgb(253, 232, 237)' or normalized variant.
+    expect(bg.match(/rgb\(\s*253\s*,\s*232\s*,\s*237\s*\)/),
+      `.icon-rose computed background-color resolves to rose-light canonical RGB; got: ${bg}`).toBeTruthy();
+  });
+
+  test('regression-guard — zero canonical-hex literals outside :root in styles.css (Polish-3 scope: CSS substitution sweep total within scope)', async ({ request }) => {
+    // Polish-3 scope is styles.css ONLY. JS-side hex literals (e.g.,
+    // medical.js:1452-1453 growth-gauge JS consts; Chart.js dataset config
+    // borderColor/backgroundColor strings) live in different jurisdiction
+    // and are out-of-scope for Polish-3 (Stability sub-phase candidates
+    // since they need runtime token-resolution rather than CSS var()).
+    // Test fetches styles.css source directly (server serves repo root).
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // For each canonical hex value, count occurrences in styles.css source.
+    // Each canonical hex must appear exactly ONCE (its :root definition line);
+    // zero direct-duplicate consumer literals remain inside styles.css.
+    for (const { token, hex } of CANONICAL_TOKENS) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `${token} hex literal ${hex} appears exactly once in styles.css (only the :root definition; zero CSS consumer duplicates)`).toBe(1);
+    }
+  });
+
+  test('positive-regression — token system itself unchanged: getComputedStyle(root).getPropertyValue resolves canonical RGB byte-precise', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // Read each canonical token's resolved value from the runtime CSS engine.
+    // Asserts the :root preservation worked (no circular `var(--rose): var(--rose)`
+    // accident from the sed substitution sweep).
+    const tokenValues = await page.evaluate((tokens) => {
+      const root = document.documentElement;
+      const computed = getComputedStyle(root);
+      return tokens.map(({ token, hex }) => ({
+        token,
+        expectedHex: hex,
+        resolvedRaw: computed.getPropertyValue(token).trim(),
+      }));
+    }, CANONICAL_TOKENS);
+
+    for (const { token, expectedHex, resolvedRaw } of tokenValues) {
+      // The resolved value should be the canonical hex byte-precise (browsers
+      // preserve hex form in getPropertyValue for custom properties; no
+      // RGB conversion at the property-read layer).
+      expect(resolvedRaw.toLowerCase(), `token ${token} resolves to canonical hex ${expectedHex}; got '${resolvedRaw}'`).toBe(expectedHex);
+    }
+  });
+});
