@@ -2601,3 +2601,119 @@ test.describe('Polish-4 — Design-token-system spec amendment + ad-hoc-tonal sw
       'Polish-2 substitute pattern absent at medical.js:3208 site post-Polish-4 retroactive swap').toBeFalsy();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-5 — Cross-jurisdiction class-extraction sweep (Path C narrow-scope)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// 8 new utility classes extracted to styles.css; 11 inline-style HR-2 sites
+// replaced with class references across medical.js + intelligence.js. Path C
+// narrow-scope per RATIFIED 3/3 narrow-scope-and-defer-broader-audit-to-R-10
+// doctrine: charter framing was 50+ sites across 5 modules; empirical re-grep
+// surfaced 44 cousin-pattern sites with substantial variation (running-beats-
+// reading 9th instance count drift). Class-taxonomy decision deferred to
+// charter §6 R-10 P-7.
+//
+// 8 new classes (no DESIGN_PRINCIPLES.md amendment — class taxonomy is
+// implicit; class names approved at Polish-charter time by Maren+Kael):
+//   .guidance-section-title-do      — medical.js:3094 Do/Don't bullet section title (sage tone)
+//   .guidance-section-title-dont    — medical.js:3102 Don't section title (rose tone)
+//   .guidance-bullet                — medical.js bullet rendering inside Do/Don't lists
+//   .guidance-bullet-marker         — absolute-positioned · marker inside .guidance-bullet
+//   .doctor-cta-call                — medical.js:2364 Call CTA (background:--tc-sage)
+//   .doctor-cta-map                 — medical.js:2365 Map CTA (background:--tc-sky)
+//   .kc-row-flex-wrap               — intelligence.js episode-tracker chip row pattern
+//   .nh-legend-swatch               — intelligence.js nutrient-heatmap legend swatch
+//
+// 11 site replacements:
+//   - 4 medical.js guidance sites (Do title + Don't title + 2 bullet templates)
+//   - 2 medical.js doctor-cta sites (Call + Map anchor tags)
+//   - 2 intelligence.js kc-row-flex-wrap sites (:7885 + :7905 exact pattern matches)
+//   - 3 intelligence.js nh-legend-swatch sites (:14974/:14975/:14976 Some/Good/Rich
+//     legend cells; dynamic background:rgba(...) stays inline since alpha varies
+//     per swatch — partial extraction is valid per Path C; Polish-6's CSS-custom-
+//     property pivot may consolidate the dynamic-rgba pattern across all swatches
+//     as part of its first-instance candidate scope).
+
+test.describe('Polish-5 — Cross-jurisdiction class-extraction sweep (Path C narrow-scope)', () => {
+  const POLISH_5_NEW_CLASSES = [
+    '.guidance-section-title-do',
+    '.guidance-section-title-dont',
+    '.guidance-bullet',
+    '.guidance-bullet > .guidance-bullet-marker',
+    '.doctor-cta-call',
+    '.doctor-cta-map',
+    '.kc-row-flex-wrap',
+    '.nh-legend-swatch',
+  ];
+
+  test('positive — all 8 new utility classes are reachable in styles.css source', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    for (const className of POLISH_5_NEW_CLASSES) {
+      // Each class must appear at least once as a selector in styles.css.
+      // Selectors may have descendant combinators or grouping; use simple
+      // substring check — if the literal selector text is present, the
+      // class is reachable.
+      expect(css.includes(className),
+        `Polish-5 class ${className} reachable in styles.css source`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — extracted-site inline-style residue absent from bundle (verbatim original-pattern bytes)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Guidance section titles: original pattern was the full 7-prop inline-style.
+    // Each canonical pattern present pre-Polish-5 must be ABSENT post-Polish-5.
+    const guidanceDoSig = "font-weight:600;font-size:var(--fs-sm);color:var(--tc-sage);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;\"><span class=\"zi-check-placeholder";
+    const guidanceDontSig = "font-weight:600;font-size:var(--fs-sm);color:var(--tc-rose);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;\"><span class=\"zi-warn-placeholder";
+    const guidanceBulletSig = "font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);";
+
+    expect(html.includes(guidanceDoSig),
+      'guidance Do title 7-prop inline-style absent (replaced with .guidance-section-title-do class)').toBeFalsy();
+    expect(html.includes(guidanceDontSig),
+      'guidance Don\'t title 7-prop inline-style absent (replaced with .guidance-section-title-dont class)').toBeFalsy();
+    expect(html.includes(guidanceBulletSig),
+      'guidance bullet 5-prop inline-style absent (replaced with .guidance-bullet class)').toBeFalsy();
+
+    // Doctor CTA: original was 12-prop inline-style.
+    const doctorCtaSig = "min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sage);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;";
+    expect(html.includes(doctorCtaSig),
+      'doctor-cta Call 12-prop inline-style absent (replaced with .doctor-cta-call class)').toBeFalsy();
+
+    // kc-row-flex-wrap: 4-prop inline-style at intelligence.js:7885 + :7905.
+    const kcRowSig = "display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;";
+    expect(html.includes(kcRowSig),
+      'kc-row-flex-wrap 4-prop inline-style absent (replaced with .kc-row-flex-wrap class)').toBeFalsy();
+  });
+
+  test('positive-regression — class consumers ship in bundle (medical.js + intelligence.js)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Each new class must have at least one consumer-site reference in the
+    // bundle (the class is actually USED, not just defined).
+    const consumerExpectations = [
+      { className: 'guidance-section-title-do',   minCount: 1 },
+      { className: 'guidance-section-title-dont', minCount: 1 },
+      { className: 'guidance-bullet',             minCount: 1 },
+      { className: 'doctor-cta-call',             minCount: 1 },
+      { className: 'doctor-cta-map',              minCount: 1 },
+      { className: 'kc-row-flex-wrap',            minCount: 2 },  // 2 intelligence.js consumers
+      { className: 'nh-legend-swatch',            minCount: 3 },  // 3 intelligence.js consumers
+    ];
+
+    for (const { className, minCount } of consumerExpectations) {
+      // Count occurrences of class="<className>" or class="... <className> ..."
+      // patterns. Simple regex matches `${className}"` (closing quote) or
+      // `${className} ` (space) since class lists separate by spaces.
+      const re = new RegExp('class="[^"]*\\b' + className + '\\b', 'g');
+      const occurrences = (html.match(re) || []).length;
+      expect(occurrences,
+        `class .${className} has ≥${minCount} consumer-site reference(s) in bundle (got ${occurrences})`).toBeGreaterThanOrEqual(minCount);
+    }
+  });
+});

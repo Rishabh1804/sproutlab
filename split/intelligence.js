@@ -7882,7 +7882,7 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/' + hydraTarget + '</div>';
   html += '</div>';
   html += _epTimePickerHTML('deHydra');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">🩲 Log wet diaper</span>';
   html += '<span class="fe-action-chip" data-action="deLogFluidPrompt">'+zi('drop')+' Log fluid</span>';
   html += '</div>';
@@ -7902,7 +7902,7 @@ function renderDiarrhoeaEpisodeCard() {
   // Log stool
   html += '<div class="fe-section-title">Stool Log</div>';
   html += _epTimePickerHTML('deStool');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'watery\'">'+zi('drop')+' Watery</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'runny\'">'+zi('warn')+' Runny</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'soft\'">'+zi('check')+' Soft</span>';
@@ -14969,9 +14969,9 @@ function renderInfoNutrientHeatmap() {
   gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">
     <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
     <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
   </div>`;
 
   gridEl.innerHTML = gridHtml;
