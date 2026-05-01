@@ -3194,25 +3194,25 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .wg-dot.active { background:var(--rose); opacity:1; width:20px; border-radius:4px; }
 
-/* ── Essential Mode (simple-mode class) ── */
-body.simple-mode .tab-btn[aria-label="Insights tab"],
-body.simple-mode .tab-btn[aria-label="Info tab"] { display:none; }
-body.simple-mode .stat-pills-grid { display:none !important; }
-body.simple-mode #homePoopCard { display:none !important; }
-body.simple-mode .ca-view-all { display:none; }
-body.simple-mode #insightsTrendsCard { display:none; }
-body.simple-mode .ins-card-corr,
-body.simple-mode .ins-card-cross,
-body.simple-mode .ins-card-alert-intel { display:none !important; }
+/* ── Essential Mode (essential-mode class) ── */
+body.essential-mode .tab-btn[aria-label="Insights tab"],
+body.essential-mode .tab-btn[aria-label="Info tab"] { display:none; }
+body.essential-mode .stat-pills-grid { display:none !important; }
+body.essential-mode #homePoopCard { display:none !important; }
+body.essential-mode .ca-view-all { display:none; }
+body.essential-mode #insightsTrendsCard { display:none; }
+body.essential-mode .ins-card-corr,
+body.essential-mode .ins-card-cross,
+body.essential-mode .ins-card-alert-intel { display:none !important; }
 
 /* ── Essential Mode: Vitals card — hide expand affordance ── */
-body.simple-mode #homeVitalsChevron { display:none; }
-body.simple-mode #homeVitalsCard { cursor:default; }
-body.simple-mode #headerFull { display:none !important; }
+body.essential-mode #homeVitalsChevron { display:none; }
+body.essential-mode #homeVitalsCard { cursor:default; }
+body.essential-mode #headerFull { display:none !important; }
 /* ── Essential Mode: Trim Home cards — hide analytics-adjacent cards ── */
-body.simple-mode #homeSuggestionsCard { display:none !important; }
-body.simple-mode #outingPlannerCard { display:none !important; }
-body.simple-mode #tomorrowPrepCard { display:none !important; }
+body.essential-mode #homeSuggestionsCard { display:none !important; }
+body.essential-mode #outingPlannerCard { display:none !important; }
+body.essential-mode #tomorrowPrepCard { display:none !important; }
 
 /* ── Essential Mode: Warm Hero Card ("Home Screen" feel) ── */
 .hero-avatar-bg {
@@ -3222,22 +3222,22 @@ body.simple-mode #tomorrowPrepCard { display:none !important; }
   z-index:0; pointer-events:none;
   border-radius:var(--r-2xl);
 }
-body.simple-mode .hero-avatar-bg {
+body.essential-mode .hero-avatar-bg {
   display:block; opacity:0.1;
 }
-body.simple-mode #homeVitalsCard {
+body.essential-mode #homeVitalsCard {
   position:relative;
 }
-body.simple-mode #homeVitalsCard > * {
+body.essential-mode #homeVitalsCard > * {
   position:relative; z-index:1;
 }
-body.simple-mode .hero-avatar-bg { z-index:0; }
+body.essential-mode .hero-avatar-bg { z-index:0; }
 
 /* Greeting row — visible only in Essential Mode */
 .hero-greet-row {
   display:none;
 }
-body.simple-mode .hero-greet-row {
+body.essential-mode .hero-greet-row {
   display:flex; align-items:flex-start; justify-content:space-between;
   gap:var(--sp-12); margin-bottom:var(--sp-12);
 }
@@ -3260,7 +3260,7 @@ body.simple-mode .hero-greet-row {
 .hero-weather-pill:empty { display:none; }
 
 /* In Essential Mode, hide the old "Age Today" label + age stat (greeting replaces them) */
-body.simple-mode .hero-age-block { display:none; }
+body.essential-mode .hero-age-block { display:none; }
 
 /* Vitals row layout (replaces inline styles) */
 .hero-vitals-row {
@@ -3276,16 +3276,16 @@ body.simple-mode .hero-age-block { display:none; }
 .collapse-chevron { font-size:var(--fs-sm); color:var(--light); }
 
 /* Time-of-day gradient tint (set via JS data attribute) */
-body.simple-mode .hero-home[data-tod="morning"] {
+body.essential-mode .hero-home[data-tod="morning"] {
   background:linear-gradient(135deg, #fff5ee, #fff9f0, #f0faf5) !important;
 }
-body.simple-mode .hero-home[data-tod="afternoon"] {
+body.essential-mode .hero-home[data-tod="afternoon"] {
   background:linear-gradient(135deg, #f0faf5, #f5f8ff, #fff9f0) !important;
 }
-body.simple-mode .hero-home[data-tod="evening"] {
+body.essential-mode .hero-home[data-tod="evening"] {
   background:linear-gradient(135deg, #f0eafa, #f5f0ff, #fff5f7) !important;
 }
-body.simple-mode .hero-home[data-tod="night"] {
+body.essential-mode .hero-home[data-tod="night"] {
   background:linear-gradient(135deg, #edf0fa, #f0eafa, #f5f0ff) !important;
 }
 
@@ -3293,18 +3293,18 @@ body.simple-mode .hero-home[data-tod="night"] {
 [data-theme="dark"] .hero-greet-text { color:#f0b8c8; }
 [data-theme="dark"] .hero-age-text { color:var(--text); }
 [data-theme="dark"] .hero-weather-pill { background:rgba(255,255,255,0.08); color:var(--text); }
-[data-theme="dark"] body.simple-mode .hero-avatar-bg,
-body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="morning"] {
+[data-theme="dark"] body.essential-mode .hero-avatar-bg,
+body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="morning"] {
   background:linear-gradient(135deg, #302820, #282e22) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="afternoon"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="afternoon"] {
   background:linear-gradient(135deg, #222e28, #252830) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="evening"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="evening"] {
   background:linear-gradient(135deg, #2e2238, #302530) !important;
 }
-[data-theme="dark"] body.simple-mode .hero-home[data-tod="night"] {
+[data-theme="dark"] body.essential-mode .hero-home[data-tod="night"] {
   background:linear-gradient(135deg, #222438, #2a2238) !important;
 }
 
@@ -4238,7 +4238,7 @@ body.simple-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 
 /* ── Status strip (Phase 2 PR-2.5) ──
    Always-visible thin band above the tab-bar; hosts the sl-1-2 sync indicator
-   relocated from #headerFull (which is hidden in body.simple-mode). Designed
+   relocated from #headerFull (which is hidden in body.essential-mode). Designed
    as a future host for PR-5's "update available" reload affordance.
    Container is always present (so its visibility is mode-independent); the
    #syncStatus child manages its own [hidden] state on cold boot per sl-1-2 r2. */

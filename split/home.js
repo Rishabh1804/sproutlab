@@ -405,7 +405,7 @@ function renderHome() {
 
 // Show "all clear" when no action cards are visible
 function toggleHomeVitals() {
-  if (isSimpleMode()) return; // Essential Mode — vitals stay collapsed
+  if (isEssentialMode()) return; // Essential Mode — vitals stay collapsed
   const collapsed = document.getElementById('homeVitalsCollapsed');
   const expanded = document.getElementById('homeVitalsExpanded');
   const chevron = document.getElementById('homeVitalsChevron');
@@ -7613,11 +7613,11 @@ function renderHomeContextAlerts() {
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
 
   // Essential Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
-  const simple = isSimpleMode();
-  const homeWarnings = simple
+  const essential = isEssentialMode();
+  const homeWarnings = essential
     ? actionAlerts
     : [...actionAlerts, ...watchAlerts.slice(0, 3)];
-  const homePositives = simple ? [] : positiveAlerts.slice(0, 2);
+  const homePositives = essential ? [] : positiveAlerts.slice(0, 2);
   const remainingWarnings = actionAlerts.length + watchAlerts.length + infoAlerts.length - homeWarnings.length;
   const remainingPositives = positiveAlerts.length - homePositives.length;
 

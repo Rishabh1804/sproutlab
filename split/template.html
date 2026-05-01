@@ -70,9 +70,9 @@
   <!-- STATUS STRIP (Phase 2 PR-2.5).
        Always-visible thin band hosting the sync-visibility indicator from
        sl-1-2 (relocated from #headerFull, which is display:none in
-       body.simple-mode — leaving default-mode users with no sync feedback).
+       body.essential-mode — leaving default-mode users with no sync feedback).
        Strip is a sibling of tab-bar, NOT inside #headerFull, so the
-       simple-mode rule does not cascade. Future host for PR-5's "update
+       essential-mode rule does not cascade. Future host for PR-5's "update
        available" reload affordance. HR-2: no inline styles, all via tokens. -->
   <div class="status-strip" id="statusStrip">
     <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
@@ -93,7 +93,7 @@
          AND the new worker reaches 'installed' state with an existing
          controller (= update, not first install). HR-3/HR-6: tap routes
          through data-action="syncReload" — the dispatcher wired in sl-1-2 r3.
-         Lives inside #statusStrip so it survives body.simple-mode (the
+         Lives inside #statusStrip so it survives body.essential-mode (the
          #headerFull hide rule does not cascade to the strip's siblings). -->
     <button id="updateToast" type="button" class="update-toast" hidden role="status" aria-live="polite" aria-atomic="true" data-action="syncReload">
       <span class="update-toast__icon" aria-hidden="true"><svg class="zi"><use href="#zi-sparkle"/></svg></span>
@@ -140,7 +140,7 @@
         <span class="t-md t-mid" id="headerDateTime">—</span>
         <span class="t-md t-mid" id="headerWeather">—</span>
         <!-- #syncStatus relocated to #statusStrip above tab-bar (Phase 2 PR-2.5)
-             so simple-mode users (default) see sync state. -->
+             so essential-mode users (default) see sync state. -->
       </div>
     </div>
   </div>
@@ -2591,7 +2591,7 @@
                 <div class="t-sub">Your everyday dashboard — clean and focused</div>
               </div>
               <label class="toggle-switch-wrap">
-                <input type="checkbox" id="settingsSimpleMode" onchange="toggleSimpleMode()" class="toggle-switch-input" checked>
+                <input type="checkbox" id="settingsEssentialMode" onchange="toggleEssentialMode()" class="toggle-switch-input" checked>
                 <span class="toggle-track"></span>
               </label>
             </div>
