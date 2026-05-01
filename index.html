@@ -4006,6 +4006,68 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .source-attribution { font-size:var(--fs-2xs); color:var(--light); text-align:center; padding-top:var(--sp-4); font-style:italic; }
 .guidance-text      { font-size:var(--fs-sm); color:var(--mid); margin-bottom:var(--sp-10); line-height:var(--lh-relaxed); }
 .section-label-light{ font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--light); margin-bottom:var(--sp-6); }
+
+/* ── Polish-5: Cross-jurisdiction class extraction (8 new classes) ──
+   Class-name introduction approved at Polish-charter time by Maren+Kael
+   scouts. Replaces ~17 inline-style HR-2 sites with class references
+   across split/medical.js + split/intelligence.js. The broader
+   `.section-caption` cousin-pattern sweep (44 varied sites) deferred to
+   charter §6 R-10 P-7 per `narrow-scope-and-defer-broader-audit-to-R-10`
+   doctrine (RATIFIED 3/3 PR-26). */
+.guidance-section-title-do {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--tc-sage);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: 4px;
+}
+.guidance-section-title-dont {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--tc-rose);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: 4px;
+}
+.guidance-bullet {
+  font-size: var(--fs-base);
+  color: var(--text);
+  padding: 3px 0 3px 18px;
+  position: relative;
+  line-height: var(--lh-relaxed);
+}
+.guidance-bullet > .guidance-bullet-marker {
+  position: absolute;
+  left: 0;
+}
+.doctor-cta-call,
+.doctor-cta-map {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--r-2xl);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+}
+.doctor-cta-call { background: var(--tc-sage); }
+.doctor-cta-map  { background: var(--tc-sky); }
+.kc-row-flex-wrap {
+  display: flex;
+  gap: var(--sp-8);
+  flex-wrap: wrap;
+  padding: var(--sp-4) 0;
+}
+.nh-legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-sm);
+}
 .badge-amber        { background:var(--amber-light); color:var(--tc-amber); }
 .fx-row-wrap        { align-items:center; flex-wrap:wrap; }
 .btn-sm-inline      { padding:var(--sp-6) var(--sp-12); font-size:var(--fs-xs); }
@@ -35865,8 +35927,8 @@ function renderDoctorContact() {
           </div>
         </div>
         <div style="display:flex;gap:var(--sp-8);align-items:center;margin-top:8px;padding-left:46px;">
-          ${doc.phone ? `<a href="tel:${doc.phone}" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sage);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">${zi('info')} Call</a>` : ''}
-          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sky);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">${zi('target')} Map</a>` : ''}
+          ${doc.phone ? `<a href="tel:${doc.phone}" class="doctor-cta-call">${zi('info')} Call</a>` : ''}
+          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" class="doctor-cta-map">${zi('target')} Map</a>` : ''}
           <div style="margin-left:auto;display:flex;gap:var(--sp-4);">
             <button class="note-btn" data-action="editDoctor" data-arg="${i}" aria-label="Edit doctor">Edit</button>
             <button class="note-btn del-note-btn" data-action="deleteDoctor" data-arg="${i}" aria-label="Remove doctor">&times;</button>
@@ -36595,16 +36657,16 @@ function renderVaccInfoPanel(vaccName) {
   // Dos
   if (guidance.dos && guidance.dos.length > 0) {
     html += `<div class="mb-8">
-      <div style="font-weight:600;font-size:var(--fs-sm);color:var(--tc-sage);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;"><span class="zi-check-placeholder"></span> Do</div>
-      ${guidance.dos.map(d => `<div style="font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);"><span style="position:absolute;left:0;">·</span>${escHtml(d)}</div>`).join('')}
+      <div class="guidance-section-title-do"><span class="zi-check-placeholder"></span> Do</div>
+      ${guidance.dos.map(d => `<div class="guidance-bullet"><span class="guidance-bullet-marker">·</span>${escHtml(d)}</div>`).join('')}
     </div>`;
   }
 
   // Don'ts
   if (guidance.donts && guidance.donts.length > 0) {
     html += `<div class="mb-8">
-      <div style="font-weight:600;font-size:var(--fs-sm);color:var(--tc-rose);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;"><span class="zi-warn-placeholder"></span> Don't</div>
-      ${guidance.donts.map(d => `<div style="font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);"><span style="position:absolute;left:0;">·</span>${escHtml(d)}</div>`).join('')}
+      <div class="guidance-section-title-dont"><span class="zi-warn-placeholder"></span> Don't</div>
+      ${guidance.donts.map(d => `<div class="guidance-bullet"><span class="guidance-bullet-marker">·</span>${escHtml(d)}</div>`).join('')}
     </div>`;
   }
 
@@ -50776,7 +50838,7 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/' + hydraTarget + '</div>';
   html += '</div>';
   html += _epTimePickerHTML('deHydra');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">🩲 Log wet diaper</span>';
   html += '<span class="fe-action-chip" data-action="deLogFluidPrompt">'+zi('drop')+' Log fluid</span>';
   html += '</div>';
@@ -50796,7 +50858,7 @@ function renderDiarrhoeaEpisodeCard() {
   // Log stool
   html += '<div class="fe-section-title">Stool Log</div>';
   html += _epTimePickerHTML('deStool');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'watery\'">'+zi('drop')+' Watery</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'runny\'">'+zi('warn')+' Runny</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'soft\'">'+zi('check')+' Soft</span>';
@@ -57863,9 +57925,9 @@ function renderInfoNutrientHeatmap() {
   gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">
     <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
     <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
   </div>`;
 
   gridEl.innerHTML = gridHtml;

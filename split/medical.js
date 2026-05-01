@@ -2361,8 +2361,8 @@ function renderDoctorContact() {
           </div>
         </div>
         <div style="display:flex;gap:var(--sp-8);align-items:center;margin-top:8px;padding-left:46px;">
-          ${doc.phone ? `<a href="tel:${doc.phone}" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sage);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">${zi('info')} Call</a>` : ''}
-          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" style="min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sky);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;">${zi('target')} Map</a>` : ''}
+          ${doc.phone ? `<a href="tel:${doc.phone}" class="doctor-cta-call">${zi('info')} Call</a>` : ''}
+          ${doc.location ? `<a href="${doc.location}" target="_blank" rel="noopener" class="doctor-cta-map">${zi('target')} Map</a>` : ''}
           <div style="margin-left:auto;display:flex;gap:var(--sp-4);">
             <button class="note-btn" data-action="editDoctor" data-arg="${i}" aria-label="Edit doctor">Edit</button>
             <button class="note-btn del-note-btn" data-action="deleteDoctor" data-arg="${i}" aria-label="Remove doctor">&times;</button>
@@ -3091,16 +3091,16 @@ function renderVaccInfoPanel(vaccName) {
   // Dos
   if (guidance.dos && guidance.dos.length > 0) {
     html += `<div class="mb-8">
-      <div style="font-weight:600;font-size:var(--fs-sm);color:var(--tc-sage);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;"><span class="zi-check-placeholder"></span> Do</div>
-      ${guidance.dos.map(d => `<div style="font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);"><span style="position:absolute;left:0;">·</span>${escHtml(d)}</div>`).join('')}
+      <div class="guidance-section-title-do"><span class="zi-check-placeholder"></span> Do</div>
+      ${guidance.dos.map(d => `<div class="guidance-bullet"><span class="guidance-bullet-marker">·</span>${escHtml(d)}</div>`).join('')}
     </div>`;
   }
 
   // Don'ts
   if (guidance.donts && guidance.donts.length > 0) {
     html += `<div class="mb-8">
-      <div style="font-weight:600;font-size:var(--fs-sm);color:var(--tc-rose);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;"><span class="zi-warn-placeholder"></span> Don't</div>
-      ${guidance.donts.map(d => `<div style="font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);"><span style="position:absolute;left:0;">·</span>${escHtml(d)}</div>`).join('')}
+      <div class="guidance-section-title-dont"><span class="zi-warn-placeholder"></span> Don't</div>
+      ${guidance.donts.map(d => `<div class="guidance-bullet"><span class="guidance-bullet-marker">·</span>${escHtml(d)}</div>`).join('')}
     </div>`;
   }
 

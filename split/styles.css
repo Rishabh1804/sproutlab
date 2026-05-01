@@ -3999,6 +3999,68 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .source-attribution { font-size:var(--fs-2xs); color:var(--light); text-align:center; padding-top:var(--sp-4); font-style:italic; }
 .guidance-text      { font-size:var(--fs-sm); color:var(--mid); margin-bottom:var(--sp-10); line-height:var(--lh-relaxed); }
 .section-label-light{ font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--light); margin-bottom:var(--sp-6); }
+
+/* ── Polish-5: Cross-jurisdiction class extraction (8 new classes) ──
+   Class-name introduction approved at Polish-charter time by Maren+Kael
+   scouts. Replaces ~17 inline-style HR-2 sites with class references
+   across split/medical.js + split/intelligence.js. The broader
+   `.section-caption` cousin-pattern sweep (44 varied sites) deferred to
+   charter §6 R-10 P-7 per `narrow-scope-and-defer-broader-audit-to-R-10`
+   doctrine (RATIFIED 3/3 PR-26). */
+.guidance-section-title-do {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--tc-sage);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: 4px;
+}
+.guidance-section-title-dont {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--tc-rose);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  margin-bottom: 4px;
+}
+.guidance-bullet {
+  font-size: var(--fs-base);
+  color: var(--text);
+  padding: 3px 0 3px 18px;
+  position: relative;
+  line-height: var(--lh-relaxed);
+}
+.guidance-bullet > .guidance-bullet-marker {
+  position: absolute;
+  left: 0;
+}
+.doctor-cta-call,
+.doctor-cta-map {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--r-2xl);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+}
+.doctor-cta-call { background: var(--tc-sage); }
+.doctor-cta-map  { background: var(--tc-sky); }
+.kc-row-flex-wrap {
+  display: flex;
+  gap: var(--sp-8);
+  flex-wrap: wrap;
+  padding: var(--sp-4) 0;
+}
+.nh-legend-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-sm);
+}
 .badge-amber        { background:var(--amber-light); color:var(--tc-amber); }
 .fx-row-wrap        { align-items:center; flex-wrap:wrap; }
 .btn-sm-inline      { padding:var(--sp-6) var(--sp-12); font-size:var(--fs-xs); }
