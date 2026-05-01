@@ -72,6 +72,44 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 | Watch / caution | `--surface-warn` / `--surface-caution` | `--tc-caution` / `--tc-warn` | Declining trends, mild warnings |
 | Action / urgent | `--surface-danger` | `--tc-danger` | Fever alerts, overdue vaccinations |
 
+#### Token Family Naming Rule (Polish-4 doctrine codification)
+
+Token-name prefixes carry semantic role. **Mixing prefixes for the same value at different roles is forbidden** — every token belongs to exactly one role family.
+
+| Prefix | Role | Examples |
+|---|---|---|
+| `--surface-*` | **Backgrounds** (card / pill / banner fills) | `--surface-warn` `#fffdf5`, `--surface-sage`, `--surface-danger` |
+| `--tc-*` | **Text colors** (text-on-light, text-on-color, text-on-dark) | `--tc-warn` `#856404`, `--tc-sage`, `--tc-danger` |
+| `--border-*` | **Border-accents** (left-rule colors, separator strokes) | `--border-warn` `#ffc107`, `--border-warn-soft` `#ffd166` |
+| `--accent-*` | **Structural fills + state-active backgrounds** (button fills, pill `:active`, gradient endpoints carrying perceptual hierarchy) | `--accent-w` `3px` (border-width), `--accent-sage-deep` `#3d7a60` |
+| `--ff-*` | Font-families (planned; `--font-display` / `--font-body` deferred to dedicated PR) | not yet tokenized |
+| `--fs-*` | Font-sizes (text scale tier-aware) | `--fs-base`, `--fs-xl`, `--fs-2xs` |
+| `--sp-*` | Spacing | `--sp-2`, `--sp-8`, `--sp-16` |
+| `--r-*` | Border-radius | `--r-sm`, `--r-lg`, `--r-2xl` |
+| `--ease-*` | Animation timing | `--ease-fast`, `--ease-med`, `--ease-slow` |
+
+**Why this rule:** prevents collision between conceptually-distinct values that share a semantic axis (e.g., `--accent-w` is a border-width, `--accent-warn` would be a border-color — code-review glance-readability is fragile when the prefix carries dual meaning). Polish-4 codifies this rule alongside introducing 9 new tokens that follow it; future tonal-variant additions inherit the discipline.
+
+#### Tonal Variants & Border-Accent Tokens (introduced Polish-4)
+
+These tokens replace ad-hoc hex literals that were duplicated across multiple consumers. Polish-4 introduced them in the same PR as the substitution sweep (per the `spec-amendment-in-substitution-PR` doctrine candidate, first-instance pending ratification).
+
+| Token | Hex | Family | Replaces | Consumer pattern |
+|---|---|---|---|---|
+| `--border-warn` | `#ffc107` | border-accent | 9 styles.css sites + `medical.js:3208` retroactive (Polish-2 substitute) | Caution-amber border-left rules on `.diet-stat.alert`, `.weighin-alert.due`, `.combo-result.caution`, `.is-warn`, `.upcoming-item.in-progress`, growth-narrative borders |
+| `--border-warn-soft` | `#ffd166` | border-accent | Subset of caution-amber sites (light variant) | `.tip-item.watch`, `.badge-adv`, `.rtog.active-watch` |
+| `--sage-deepest` | `#1a7a42` (+ `#0a6a32` collapse) | tonal | filled-4 gradient endpoints + `.zs-score-excellent` | Milestone-state "consistent" deepest tone |
+| `--sage-mid` | `#5a9a6a` (+ `#4a8a5a` collapse) | tonal | `.milestone-item.consistent` border + filled-3 endpoints | Milestone-state mid-tone |
+| `--accent-sage-deep` | `#3d7a60` | structural fill | `.dqp-pill:active`, `.sg-chip:active`, `.fe-action-chip:active`, milestone-check active states | Smart Q&A / illness-episode press-feedback active states |
+| `--amber-deepest` | `#b8904a` | tonal | filled-2 gradient endpoint | Milestone-state "emerging" deepest tone (distinct from `--amber-deep`; preserves perceptual hierarchy per Maren's Polish-4 Mode 2 catch) |
+| `--amber-deep` | `#d4a04a` | tonal | `.milestone-item.in-progress` border + filled-1/2 gradient | Milestone-state "in-progress" signal |
+| `--amber-mid` | `#e8a840` | tonal | `.milestone-item.emerging` border + filled-1 start | Milestone-state "emerging" signal |
+| `--amber-text-deep` | `#886520` (+ `#8a6418` collapse) | text-on-color | `.milestone-item.in-progress .milestone-check`, `.milestone-item.emerging .milestone-check` background | Text-on-color readable-contrast tone |
+
+**Locked exclusions** (do NOT substitute mid-Polish): CareTicket banner state-color contract (`medical.js:5323-5368`), Growth-gauge ring percentile-tint (`medical.js:1912-1932`), Vaccination urgency Fraunces countdown (`home.js:896-910/:1361-1404`). These need explicit feature-grade R-8 charters before mass tokenization touches them.
+
+**Polish-3 coverage-gap corrective** (Polish-4 fold-in): `#f0ebfb` duplicates → `var(--lav-light)` at 5 styles.css sites. Polish-3's canonical-13 sweep missed `--lav-light` because the naming inconsistency (`--lav-light` ≠ `--lavender-light`) tripped scout pattern-matching. 8th `running-beats-reading` instance.
+
 ### Icon System
 
 **zi() — Ziva Sketch icon set.** 54 custom SVG symbols defined as a `<symbol>` sprite in `template.html`. Rendered via the `zi(name)` helper function which returns `<svg class="zi"><use href="#zi-{name}"/></svg>`.

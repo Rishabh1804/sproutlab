@@ -3205,7 +3205,7 @@ function checkVaccDateShift() {
     // Beyond tolerance — flag and require reason
     const direction = diffDays > 0 ? 'later' : 'earlier';
     flagEl.style.display = '';
-    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);">
+    flagEl.innerHTML = `<div style="padding:8px 12px;border-radius:var(--r-lg);background:var(--peach-light);border-left:var(--accent-w) solid var(--border-warn);">
       <div style="font-size:var(--fs-sm);font-weight:700;color:var(--tc-warn);">${zi('warn')} ${absDiff} days ${direction} than scheduled</div>
       <div class="t-sub mt-2">Original date: ${formatDate(origDate)} · New date: ${formatDate(newDate)}</div>
       <div class="t-sub mt-2">Changes beyond ±3 days need a reason for your records.</div>
