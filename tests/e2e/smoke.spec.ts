@@ -2284,10 +2284,14 @@ test.describe('Polish-2 — governance-rule violations closed at 4 named cross-G
     expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
     const html = await res.text();
 
-    // Site 1: medical.js:3208 — peach-light flagEl now uses var(--amber) for the
-    // border-left. Match the canonical pattern surrounding the substitution.
-    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);'),
-      'Site 1: medical.js:3208 carries var(--amber) substitution').toBeTruthy();
+    // Site 1: medical.js:3208 — peach-light flagEl uses canonical --border-warn
+    // post-Polish-4 retroactive swap. Polish-2 originally used var(--amber) as
+    // a substitute (Polish-4's --border-warn token didn't exist yet); Polish-4
+    // introduced --border-warn and swapped this site to the canonical token.
+    // Future-fragility per Maren's Polish-2 audit: this guard updates with
+    // intentional downstream substitution.
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--border-warn);'),
+      'Site 1: medical.js:3208 carries var(--border-warn) (Polish-4 retroactive swap from Polish-2 var(--amber) substitute)').toBeTruthy();
 
     // Site 2: medical.js:2268 — the emergency-care-callout title now uses zi('siren').
     // The bundle text contains: ` + zi('siren') + ' When to seek emergency care`.
@@ -2469,5 +2473,131 @@ test.describe('Polish-3 — Direct-token-duplication hex sweep (styles.css; 32 s
       // RGB conversion at the property-read layer).
       expect(resolvedRaw.toLowerCase(), `token ${token} resolves to canonical hex ${expectedHex}; got '${resolvedRaw}'`).toBe(expectedHex);
     }
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-4 — Design-token-system spec amendment + ad-hoc-tonal sweep (38 sites)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// First-instance candidate for `spec-amendment-in-substitution-PR` doctrine
+// (Aurelius PR-23 Ruling 5; RATIFIED 0/3, first-instance pending). Spec
+// amendment lands in DESIGN_PRINCIPLES.md (token-family naming rule + 9 new
+// canonical tokens) IN THE SAME PR DIFF as the substitution sweep that
+// consumes them. Parallels PR-19.5's strip-allowlist + flush-stamper
+// architectural-commit precedent.
+//
+// 9 new tokens introduced (Path B″ — Maren+Kael Mode 2 synthesis):
+//   --border-warn (#ffc107)         — caution-amber border-accent
+//   --border-warn-soft (#ffd166)    — light variant
+//   --sage-deepest (#1a7a42)        — milestone consistent deepest tone
+//   --sage-mid (#5a9a6a)            — milestone mid-tone
+//   --accent-sage-deep (#3d7a60)    — Smart Q&A active state fill
+//   --amber-deepest (#b8904a)       — milestone emerging deepest tone
+//   --amber-deep (#d4a04a)          — milestone in-progress signal
+//   --amber-mid (#e8a840)           — milestone emerging signal
+//   --amber-text-deep (#886520)     — text-on-amber-bg readable contrast
+//
+// Plus Polish-3 coverage-gap corrective: #f0ebfb → var(--lav-light), 5 sites
+// (Polish-3 missed --lav-light because naming inconsistency tripped scout
+// pattern-matching; running-beats-reading 8th instance).
+//
+// Plus Polish-2 retroactive: medical.js:3208 var(--amber) → var(--border-warn)
+// (Polish-2 used var(--amber) as substitute; Polish-4 swaps to canonical
+// --border-warn now that the token is introduced).
+//
+// Test discipline: scope to styles.css source contribution (server fetches
+// /split/styles.css directly) + getComputedStyle resolves tokens correctly +
+// DESIGN_PRINCIPLES.md token-family naming-rule consumers honored.
+
+test.describe('Polish-4 — Design-token-system spec amendment + ad-hoc-tonal sweep', () => {
+  const POLISH_4_NEW_TOKENS = [
+    { token: '--border-warn',       hex: '#ffc107' },
+    { token: '--border-warn-soft',  hex: '#ffd166' },
+    { token: '--sage-deepest',      hex: '#1a7a42' },
+    { token: '--sage-mid',          hex: '#5a9a6a' },
+    { token: '--accent-sage-deep',  hex: '#3d7a60' },
+    { token: '--amber-deepest',     hex: '#b8904a' },
+    { token: '--amber-deep',        hex: '#d4a04a' },
+    { token: '--amber-mid',         hex: '#e8a840' },
+    { token: '--amber-text-deep',   hex: '#886520' },
+  ];
+
+  // Hex values that were COLLAPSED into existing canonical tokens (no new
+  // canonical token introduced; the Maren-classification mapped them to a
+  // previously-introduced token).
+  const POLISH_4_COLLAPSED_HEX = [
+    { hex: '#0a6a32', mappedTo: '--sage-deepest' },
+    { hex: '#4a8a5a', mappedTo: '--sage-mid' },
+    { hex: '#8a6418', mappedTo: '--amber-text-deep' },
+  ];
+
+  test('positive — all 9 new tokens resolve to their canonical hex byte-precise via getComputedStyle', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    const tokenValues = await page.evaluate((tokens) => {
+      const root = document.documentElement;
+      const computed = getComputedStyle(root);
+      return tokens.map(({ token, hex }) => ({
+        token,
+        expectedHex: hex,
+        resolvedRaw: computed.getPropertyValue(token).trim(),
+      }));
+    }, POLISH_4_NEW_TOKENS);
+
+    for (const { token, expectedHex, resolvedRaw } of tokenValues) {
+      expect(resolvedRaw.toLowerCase(),
+        `Polish-4 token ${token} resolves to canonical hex ${expectedHex}; got '${resolvedRaw}'`).toBe(expectedHex);
+    }
+  });
+
+  test('regression-guard — zero direct-duplicate hex literals outside :root for the 9 new + 3 collapsed values + Polish-3 corrective #f0ebfb', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // 9 new-token hex values must each appear EXACTLY ONCE (their :root def).
+    for (const { token, hex } of POLISH_4_NEW_TOKENS) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `${token} hex literal ${hex} appears exactly once in styles.css (only :root def; zero CSS consumer duplicates)`).toBe(1);
+    }
+
+    // 3 collapsed hex values (mapped to a sibling new token) must appear
+    // ZERO times — they were sweep-target hex with no canonical :root home;
+    // every occurrence got swapped to the mapped token.
+    for (const { hex, mappedTo } of POLISH_4_COLLAPSED_HEX) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `collapsed hex ${hex} (mapped to ${mappedTo}) appears zero times in styles.css (every consumer swept)`).toBe(0);
+    }
+
+    // Polish-3 coverage-gap corrective: #f0ebfb (--lav-light) must appear
+    // EXACTLY ONCE (its :root def). Pre-Polish-4 had 6 occurrences (1 def
+    // + 5 consumer duplicates Polish-3's canonical-13 sweep missed because
+    // --lav-light naming inconsistency tripped scout pattern-matching).
+    const lavLightOccurrences = (css.match(/#f0ebfb/gi) || []).length;
+    expect(lavLightOccurrences,
+      'Polish-3 coverage-gap corrective: #f0ebfb (--lav-light) appears exactly once in styles.css (only :root def; 5 consumer duplicates swept in Polish-4)').toBe(1);
+  });
+
+  test('positive-regression — DESIGN_PRINCIPLES.md token-family naming-rule consumers honored: Polish-2 retroactive medical.js:3208 swap to var(--border-warn)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+
+    // Polish-2 used var(--amber) as a substitute at medical.js:3208's HR-2
+    // escape because Polish-4's canonical --border-warn token didn't exist
+    // yet. Polish-4 swaps it to the canonical token now. Verify the
+    // retroactive swap landed (presence of --border-warn in the medical.js
+    // post-substitution shape).
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--border-warn);'),
+      'Polish-2 retroactive: medical.js:3208 swapped var(--amber) → var(--border-warn) (canonical token from Polish-4 spec amendment)').toBeTruthy();
+
+    // Verify the prior Polish-2 substitute is GONE from medical.js:3208 site.
+    // (var(--amber) still appears elsewhere as a domain accent — out of scope.)
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);'),
+      'Polish-2 substitute pattern absent at medical.js:3208 site post-Polish-4 retroactive swap').toBeFalsy();
   });
 });
