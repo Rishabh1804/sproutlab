@@ -1388,7 +1388,7 @@ function renderVaccHistory() {
       const dateFlag = v.dateChangeReason ? `<div style="font-size:var(--fs-xs);color:var(--tc-warn);margin-top:1px;">${zi('note')} ${escHtml(v.dateChangeReason)}</div>` : '';
       html += `
         <div style="border-radius:var(--r-lg);background:var(--glass);border-left:var(--accent-w) solid var(--lavender);overflow:hidden;">
-          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" onclick="const el=document.getElementById('${infoId}');el.style.display=el.style.display==='none'?'block':'none';">
+          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" data-action="toggleVaccHistoryInfo" data-arg="${infoId}">
             <span class="t-sm"><span class="zi-check-placeholder"></span></span>
             <span class="t-sm">${zi('syringe')}</span>
             <div class="flex-1-min">
@@ -1592,7 +1592,7 @@ function renderMilestones() {
             ${progressHtml}
             ${tidbitData ? `<div class="ms-tidbits" id="${tidbitId}" style="display:none;">
               <div class="ms-tidbit tidbit-unlocks"><div class="ms-tidbit-icon">${zi('star')}</div><div class="ms-tidbit-text"><strong>What this unlocks:</strong> ${tidbitData.unlocks}</div></div>
-              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">🩺</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
+              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">${zi('steth')}</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
               <div class="ms-tidbit tidbit-fun"><div class="ms-tidbit-icon">${zi('sparkle')}</div><div class="ms-tidbit-text"><strong>Fun fact:</strong> ${tidbitData.funFact}</div></div>
             </div>` : ''}
           </div>`;

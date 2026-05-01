@@ -315,6 +315,12 @@ function init() {
     else if (action === 'openScorePopup') openScorePopup(arg);
     else if (action === 'openVaccModal') openVaccModal();
     else if (action === 'toggleVaccInfo') toggleVaccInfo();
+    else if (action === 'toggleVaccHistoryInfo') {
+      // Polish-2: HR-3 cleanup — replaces inline onclick at home.js:1391 vacc-history rows.
+      // arg = dynamic infoId (e.g., 'vacc-info-3'); toggles display:block/none.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
