@@ -1,5 +1,10 @@
 .claude/
 
+# Build intermediate (build.sh runs from split/ and writes stdout to ./sproutlab.html
+# inside the split/ dir; canonical served copies live at repo root /index.html
+# and /sproutlab.html via cp post-build).
+split/sproutlab.html
+
 # Node / Playwright dev dependencies (excluded from production build artifact;
 # build.sh emits index.html from split/* only and does not sweep these paths).
 node_modules/
