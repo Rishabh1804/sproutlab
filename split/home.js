@@ -619,8 +619,8 @@ function renderRemindersAndAlerts() {
               <div class="supp-alert-icon">${zi('dot-red')}</div>
               <div class="supp-alert-title">Missed — ${escHtml(m.name)}</div>
               <div class="supp-alert-action">
-                <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escAttr(m.name)}" data-arg2="${ds}">Was given</button>
-                <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escAttr(m.name)}" data-arg2="${ds}">Not given</button>
+                <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Was given</button>
+                <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Not given</button>
               </div>
             </div>
             <div class="supp-alert-detail">${escHtml(m.dose || '')} · ${formatDate(ds)}</div>
@@ -659,8 +659,8 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-icon">${zi('warn')}</div>
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escAttr(m.name)}" data-arg2="${idx}">Done</button>
-            <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escAttr(m.name)}" data-arg2="${idx}">Skip</button>
+            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done</button>
+            <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${escHtml(m.freq || 'As prescribed')}</div>
@@ -3227,7 +3227,7 @@ function renderMilestoneStats() {
 
   if (nextMilestone) {
     hlHtml += `
-      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);cursor:pointer;" data-action="expandUpcomingItem" data-arg="${escAttr(nextMilestone.text)}">
+      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);cursor:pointer;" data-action="expandUpcomingItem" data-arg="${escHtml(nextMilestone.text)}">
         <span class="info-strip-icon">${nextMilestone.icon}</span>
         <div class="flex-1-min">
           <div class="micro-label">Coming up next</div>
@@ -3475,7 +3475,7 @@ function renderDietQuickPicker() {
       if (!val || val === '—skipped—') return;
       const short = val.length > 22 ? val.substring(0, 20) + '…' : val;
       const label = DAY_LABELS[pd.offset] || pd.offset + 'd';
-      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escAttr(val)}" title="${escAttr(val)}">${label} <span class="op-60">${escHtml(short)}</span></div>`);
+      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${label} <span class="op-60">${escHtml(short)}</span></div>`);
     });
 
     // 2. Same-as: today's OTHER meal slots that already have content
@@ -3486,19 +3486,19 @@ function renderDietQuickPicker() {
       const val = document.getElementById('meal-' + otherMeal)?.value || todayEntry[otherMeal] || '';
       if (!val || val === '—skipped—') return;
       const short = val.length > 20 ? val.substring(0, 18) + '…' : val;
-      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escAttr(val)}" title="${escAttr(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span class="op-60">${escHtml(short)}</span></div>`);
+      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span class="op-60">${escHtml(short)}</span></div>`);
     });
 
     // 2. Top frequent foods for this meal slot (from meal-specific history)
     const mealFreq = getMealSlotTopFoods(meal, 4);
     mealFreq.forEach(f => {
-      pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escAttr(f.name)}" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
+      pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
     });
 
     // 3. If no meal-specific foods, show general top foods
     if (mealFreq.length === 0 && topFoods.length > 0) {
       topFoods.slice(0, 3).forEach(f => {
-        pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escAttr(f.name)}" title="${f.count}× logged">${escHtml(f.name)}</div>`);
+        pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× logged">${escHtml(f.name)}</div>`);
       });
     }
 
@@ -3595,7 +3595,7 @@ function renderDietIntelBanner() {
         html += '<div style="font-weight:600;margin-bottom:6px;">\u{1F4A1} ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
         best.forEach(function(t, idx) {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
-          html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escAttr(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
+          html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
           html += '<div class="flex-1-min0">';
           html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + escHtml(t.label) + '</span>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">';
@@ -3638,7 +3638,7 @@ function renderDietIntelBanner() {
         html += '<div class="dib-card dib-synergy">\u{1F517} For ' + MEAL_LABELS_FULL[nextMeal] + ', try pairing with today\'s meals: ';
         top.forEach(function(s) {
           var emoji = s.type === 'absorption' ? '\u{1F517}' : s.type === 'complete' ? '\u2728' : '\u{1F33F}';
-          html += '<span class="dib-synergy-pill" data-action="insertDietFood" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escAttr(s.partner) + '" title="' + escAttr(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
+          html += '<span class="dib-synergy-pill" data-action="insertDietFood" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(s.partner) + '" title="' + escAttr(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
         });
         html += '</div>';
       }

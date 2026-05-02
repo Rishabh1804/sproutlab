@@ -3102,4 +3102,29 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
       `home.js: at most 1 residual display-toggle inline (R-10 carry-forward at :637 chained-compound). Found: ${homeBlockMatches + homeFlexMatches}`)
       .toBeLessThanOrEqual(1);
   });
+
+  test('regression-guard r2 (Maren F-35-1) — escAttr-in-data-arg corrupts user-content via backslash-leak; user-content data-arg/data-arg2 positions must use escHtml not escAttr', async ({ request }) => {
+    // Maren's Polish-10b audit found that escAttr (core.js:2252) is
+    // `s.replace(/'/g, "\\'").replace(/"/g, '&quot;')` — designed for
+    // embedding inside a JS string literal within an attribute. When
+    // applied to data-arg="..." the HTML attribute parser does not decode
+    // \' as escape; backslash leaks through dataset.arg into the
+    // dispatcher's function call. Parent-facing failure: a food name like
+    // John's pasta saves to localStorage as John\'s pasta and syncs
+    // corrupted to Firestore. r2 fix: swap escAttr → escHtml at all
+    // user-content data-arg / data-arg2 positions; apostrophe in double-
+    // quoted HTML attribute is parser-safe; escHtml leaves apostrophe
+    // literal; dataset.arg returns clean string.
+    const homeRes = await request.get('/split/home.js');
+    const home = await homeRes.text();
+
+    // Affected fields: m.name (medication), nextMilestone.text (milestone),
+    // val (food meal value), f.name (food name), comboStr (combo string),
+    // s.partner (synergy partner food name).
+    const buggyPattern = /data-arg2?="\$\{escAttr\((m\.name|nextMilestone\.text|comboStr|s\.partner|f\.name|val)\b/g;
+    const violations = home.match(buggyPattern) || [];
+    expect(violations,
+      `Polish-10b r2: zero escAttr in user-content data-arg positions (Maren F-35-1 fix). Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+  });
 });
