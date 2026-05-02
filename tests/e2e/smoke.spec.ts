@@ -2906,3 +2906,106 @@ test.describe('Polish-7 — Responsive breakpoint normalization (canonical 4-val
     }
   });
 });
+
+test.describe('Polish-10a — SVG-in-data architectural shift + HR-1/HR-4 sweep', () => {
+  // Visible-bug root cause: zi() output (`<svg class="zi">`) stored as data
+  // on illness-episode `emoji` fields and concatenated into HTML title="..."
+  // attributes. The embedded `class="zi"` quote prematurely terminates the
+  // attribute and leaks the trailing markup as rendered DOM text. Fix shape:
+  // strip SVG from data structures (store icon-key string only); render
+  // `zi(key)` at display boundary; title="..." carries plain-text only,
+  // escHtml-applied for defense-in-depth.
+
+  test('positive — zero <svg substring inside any title="..." attribute in built bundle', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), '/sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+
+    // Match every title="..." attribute. The non-greedy [^"]* stops at the
+    // first closing quote, so any leaked `<svg` BEFORE that quote means the
+    // attribute genuinely contains SVG markup (not a SVG sibling rendered
+    // adjacent to the title-bearing element).
+    const titleAttrRegex = /title="[^"]*<svg[^"]*"/g;
+    const matches = html.match(titleAttrRegex) || [];
+    expect(matches,
+      `Polish-10a: no title="..." attribute may contain <svg markup. Found: ${matches.slice(0, 3).join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('regression-guard — zero illness-episode emoji-as-data leaks at constructor sites', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Polish-10a fix shape: illness-episode constructors at _getAllEpisodes
+    // and computeIllnessFoodCorrelation must store icon-key strings, not
+    // rendered SVG. Match the original buggy pattern.
+    const buggyPattern = /emoji:\s*zi\('(?:flame|diaper|siren)'\)/g;
+    const violations = js.match(buggyPattern) || [];
+    expect(violations,
+      `Polish-10a: illness-episode constructors must store iconKey string, not zi() output. Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('positive-regression — .mi-legend-item carries white-space:nowrap; legend wrapper preserved', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    const css = await res.text();
+
+    // Polish-10a side-fix: prevent legend-label wrapping that contributed to
+    // visual stacking artifact in Illness Frequency Timeline.
+    const legendItemDecl = /\.mi-legend-item\s*\{[^}]*white-space\s*:\s*nowrap\s*[;}]/;
+    expect(legendItemDecl.test(css),
+      'Polish-10a: .mi-legend-item must include white-space:nowrap').toBeTruthy();
+
+    // Care-domain wrapper class preserved.
+    expect(css.includes('.mi-legend {'),
+      'Polish-10a: .mi-legend wrapper class preserved').toBeTruthy();
+  });
+
+  test('regression-guard — title="..." attrs in HR-4-fixed sites use escAttr (no raw user-data interpolation)', async ({ request }) => {
+    const medRes = await request.get('/split/medical.js');
+    const med = await medRes.text();
+    const intelRes = await request.get('/split/intelligence.js');
+    const intel = await intelRes.text();
+    const homeRes = await request.get('/split/home.js');
+    const home = await homeRes.text();
+
+    // Sites where Polish-10a applied escAttr() — verify the wrapped form
+    // remains in source (regression guard against accidental revert).
+    expect(med.includes("escAttr(d.hydraFoods.join(', ') || 'none')"),
+      'Polish-10a: medical.js hydraFoods title uses escAttr').toBeTruthy();
+    expect(intel.includes("escAttr(foods.join(', '))"),
+      'Polish-10a: intelligence.js heatmap-cell title uses escAttr').toBeTruthy();
+    expect(intel.includes('escAttr(n)'),
+      'Polish-10a: intelligence.js nutrient badge title uses escAttr').toBeTruthy();
+    expect(home.includes('escAttr(nextMeta.label)'),
+      'Polish-10a: home.js milestone-override title uses escAttr').toBeTruthy();
+    expect(home.includes('escAttr((POOP_COLORS[c]||{}).label||c)'),
+      'Polish-10a: home.js poop-color-strip title uses escAttr').toBeTruthy();
+  });
+
+  test('positive — HR-1 emoji removed at 11 named cross-Governor-catch sites (Polish-10a absorption of P-1 subset)', async ({ request }) => {
+    const medRes = await request.get('/split/medical.js');
+    const med = await medRes.text();
+    const intelRes = await request.get('/split/intelligence.js');
+    const intel = await intelRes.text();
+
+    // medical.js: 4 HR-1 sites previously deferred to R-10 P-1, absorbed
+    // into Polish-10a (route a — single zi() swap fix-shape).
+    expect(med.includes("'\u{1F6BB}'") || med.includes('\u{1F6BB}'),
+      'medical.js: zero residual stethoscope literals').toBeFalsy();
+    // Use the actual emoji glyph in source-search; if grep against bundle
+    // returned 1 (template.html shared-module deferred), source is clean.
+    const stethEmojiInMed = (med.match(/\u{1FA7A}/gu) || []).length;
+    expect(stethEmojiInMed,
+      `medical.js: zero stethoscope-emoji glyphs in source. Found: ${stethEmojiInMed}`).toBe(0);
+
+    // intelligence.js: 7 HR-1 sites (5 diaper + 2 stethoscope) absorbed.
+    const diaperEmojiInIntel = (intel.match(/\u{1FA72}/gu) || []).length;
+    expect(diaperEmojiInIntel,
+      `intelligence.js: zero diaper-emoji glyphs in source. Found: ${diaperEmojiInIntel}`).toBe(0);
+    const stethEmojiInIntel = (intel.match(/\u{1FA7A}/gu) || []).length;
+    expect(stethEmojiInIntel,
+      `intelligence.js: zero stethoscope-emoji glyphs in source. Found: ${stethEmojiInIntel}`).toBe(0);
+  });
+});

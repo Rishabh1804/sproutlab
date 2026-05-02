@@ -7883,7 +7883,7 @@ function renderDiarrhoeaEpisodeCard() {
   html += '</div>';
   html += _epTimePickerHTML('deHydra');
   html += '<div class="kc-row-flex-wrap">';
-  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">🩲 Log wet diaper</span>';
+  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">' + zi('diaper') + ' Log wet diaper</span>';
   html += '<span class="fe-action-chip" data-action="deLogFluidPrompt">'+zi('drop')+' Log fluid</span>';
   html += '</div>';
   if (ep.fluids.length > 0) {
@@ -7895,7 +7895,7 @@ function renderDiarrhoeaEpisodeCard() {
   if (ep.wetDiapers.length > 0) {
     ep.wetDiapers.slice().reverse().slice(0, 3).forEach((w, i) => {
       const origIdx = ep.wetDiapers.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditWetDiaper" data-arg="' + origIdx + '">' + _feverTimeShort(w.time) + ' — 🩲 Wet diaper</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditWetDiaper" data-arg="' + origIdx + '">' + _feverTimeShort(w.time) + ' — ' + zi('diaper') + ' Wet diaper</div>';
     });
   }
 
@@ -8080,7 +8080,7 @@ function deEditWetDiaper(idx) {
       ep.wetDiapers[idx].time = _epTimeToISO(v.time);
       save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
-      showQLToast('🩲 Wet diaper updated');
+      showQLToast(zi('diaper') + ' Wet diaper updated');
     },
     onDelete: function() {
       ep.wetDiapers.splice(idx, 1);
@@ -8197,7 +8197,7 @@ function computeDiarrhoeaAlerts() {
     if (!isDismissed(key)) {
       alerts.push({
         id: 'de-wet-low', key,
-        severity: 'watch', icon: '🩲',
+        severity: 'watch', icon: zi('diaper'),
         title: 'Only ' + wetToday + ' wet diapers today',
         body: 'During diarrhoea, minimum 6 wet diapers/day indicates adequate hydration. Push fluids — ORS, breast milk, coconut water.',
         tab: 'medical', dismissable: true
@@ -8570,7 +8570,7 @@ function computeVomitingAlerts() {
   }
   if (_voWetToday(ep) < 4 && new Date().getHours() >= 14) {
     const key = 'vo-wet-' + todayStr;
-    if (!state.dismissed[key]) alerts.push({ id: 'vo-wet-low', key, severity: 'watch', icon: '🩲', title: 'Only ' + _voWetToday(ep) + ' wet diapers — watch hydration', body: '', tab: 'medical', dismissable: true });
+    if (!state.dismissed[key]) alerts.push({ id: 'vo-wet-low', key, severity: 'watch', icon: zi('diaper'), title: 'Only ' + _voWetToday(ep) + ' wet diapers — watch hydration', body: '', tab: 'medical', dismissable: true });
   }
   return alerts;
 }
@@ -11825,7 +11825,7 @@ function renderHomeMealProgress() {
   // Food query + symptom checker shortcuts — accessible from Home, visible in Essential Mode
   html += `<div style="margin-top:8px;text-align:center;display:flex;justify-content:center;gap:var(--sp-8);flex-wrap:wrap;">
     <span class="dqp-pill" style="font-size:var(--fs-xs);" data-action="openHomeFoodQuery">${zi('scope')} Can I give this?</span>
-    <span class="dqp-pill" style="font-size:var(--fs-xs);background:var(--rose-light);color:var(--tc-caution);border-color:rgba(220,120,80,0.15);" data-action="openHomeSymptomChecker">🩺 Symptom checker</span>
+    <span class="dqp-pill" style="font-size:var(--fs-xs);background:var(--rose-light);color:var(--tc-caution);border-color:rgba(220,120,80,0.15);" data-action="openHomeSymptomChecker">${zi('steth')} Symptom checker</span>
   </div>`;
 
   el.innerHTML = html;
@@ -11886,7 +11886,7 @@ function openHomeSymptomChecker() {
   overlay.innerHTML = `
     <div class="modal" style="max-width:420px;max-height:85vh;overflow-y:auto;padding:20px;">
       <div class="ql-modal-header">
-        <div class="ql-modal-title">🩺 Symptom Checker</div>
+        <div class="ql-modal-title">${zi('steth')} Symptom Checker</div>
         <button class="ql-modal-close" data-action="closeHomeSymptomChecker">&times;</button>
       </div>
       <div>
@@ -14959,7 +14959,7 @@ function renderInfoNutrientHeatmap() {
       } else {
         // Nutrient present — colored fill, tap to see sources
         const level = count <= 2 ? 1 : count <= 4 ? 2 : 3;
-        gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${foods.join(', ')}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')"></div>`;
+        gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${escAttr(foods.join(', '))}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')"></div>`;
       }
     });
   });
@@ -15216,7 +15216,7 @@ function renderInfoComboFreq() {
       let nutBadges = '';
       if (p.keyNutsHit.length > 0) {
         const NUT_EMOJI = { iron:zi('drop'), calcium:zi('ruler'), protein:zi('run'), 'vitamin C':zi('bowl'), fibre:zi('bowl'), 'vitamin A':zi('bowl'), 'omega-3':zi('bowl'), zinc:zi('bowl') };
-        nutBadges = p.keyNutsHit.slice(0, 4).map(n => `<span title="${n}">${NUT_EMOJI[n] || '•'}</span>`).join('');
+        nutBadges = p.keyNutsHit.slice(0, 4).map(n => `<span title="${escAttr(n)}">${NUT_EMOJI[n] || '•'}</span>`).join('');
       }
 
       // Synergy badge
