@@ -9267,7 +9267,7 @@ function computeVisitPrep() {
   }
   var avgPoop = poopScores.length > 0 ? Math.round(poopScores.reduce(function(s,v){return s+v;},0) / poopScores.length) : null;
   sections.poop = {
-    emoji: zi('diaper'),
+    iconKey: 'diaper',
     label: 'Poop',
     items: [],
     hasData: poopScores.length > 0
@@ -9351,7 +9351,7 @@ function renderInfoVisitPrep() {
       var itemStr = sec.items.length > 0 ? sec.items.join(' · ') : 'No changes';
       var itemColor = sec.hasData ? 'var(--mid)' : 'var(--light)';
       html += '<div class="si-check-row">';
-      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + sec.emoji + '</span>';
+      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + (sec.iconKey ? zi(sec.iconKey) : sec.emoji) + '</span>';
       html += '<div class="flex-1"><div class="fs-sm-600">' + sec.label + '</div>';
       html += '<div style="font-size:var(--fs-xs);color:' + itemColor + ';">' + escHtml(itemStr) + '</div></div>';
       html += '</div>';
