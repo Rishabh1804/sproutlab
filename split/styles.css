@@ -1,3 +1,30 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ * Responsive Breakpoint Conventions (Polish-7; canonical 4-value system)
+ * ──────────────────────────────────────────────────────────────────────────
+ * @media queries in this file use 4 canonical pixel breakpoints uniformly:
+ *
+ *   --bp-xs : 360px  — narrowest phones (rare; specific quad-grid affordances)
+ *   --bp-sm : 400px  — standard small phone (collapse-to-1col threshold)
+ *   --bp-md : 500px  — large phone / portrait tablet (intermediate layouts)
+ *   --bp-lg : 700px  — landscape tablet / small desktop (multi-col / sidebar)
+ *
+ * NOTE: CSS custom properties cannot be consumed inside @media query
+ * conditions in current browsers (no @custom-media support yet); these
+ * values are therefore inlined at each @media declaration. The convention
+ * is enforced by Polish-7 R-7 regression-guard (no @media uses a non-
+ * canonical pixel value). Future browser support for @custom-media would
+ * allow promoting these to actual CSS variables.
+ *
+ * Care-domain queries (`.food-cats`, `.ms-cats`, `.activity-cats`,
+ * `.upcoming-cats`, `.tip-cats`) at 700/400 are left untouched verbatim
+ * per Maren-charter coherence finding (5 cat-grids × 2 queries = 10
+ * queries; uniform 700px collapse + 400px sub-collapse pattern).
+ *
+ * Special-feature queries (`@media print`, `@media (prefers-reduced-motion:
+ * reduce)`) are not pixel-based and are excluded from the canonical-value
+ * convention.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 :root {
   /* ── Colour Palette ── */
   --rose:     #f2a8b8;
@@ -1388,7 +1415,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .meta-time { background:var(--sky-light); color:var(--tc-sky); }
 .badge-adv { font-size:var(--fs-sm); background:var(--border-warn-soft); color:#6b4e00; padding:var(--sp-2) var(--sp-8); border-radius:var(--r-2xl); font-weight:700; flex-shrink:0; }
 .milestone-actions { display:flex; gap:var(--sp-4); flex-shrink:0; margin-left:auto; flex-wrap:wrap; }
-@media(max-width:480px) { .milestone-actions { width:100%; margin-left:0; margin-top:var(--sp-4); } }
+@media(max-width:500px) { .milestone-actions { width:100%; margin-left:0; margin-top:var(--sp-4); } }
 .ms-action-btn {
   background:none; border:1.5px solid var(--light); border-radius:var(--r-md);
   cursor:pointer; font-size:var(--icon-xs); padding:var(--sp-8) var(--sp-10); color:var(--mid);

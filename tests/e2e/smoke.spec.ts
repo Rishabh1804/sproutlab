@@ -2815,3 +2815,94 @@ test.describe('Polish-6 — CSS-custom-property pivot (Path C; --dyn-pct width/h
       'intelligence.js:15484 compound-partial: width pivoted via --dyn-pct; background:${m.color} residue intact (--dyn-bg deferred to Polish-7+)').toBeTruthy();
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-7 — Responsive breakpoint normalization (canonical 4-value system)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Header comment + pixel-value normalization in styles.css. Path: charter
+// said "13 scattered global @media; migrate to canonical 4 values uniformly."
+// Empirical Polish-7 build-deep grep (running-beats-reading 11th instance):
+// 24 total @media queries — 10 Care-coherent (700/400 cat-pattern, Maren-
+// preserved verbatim) + 1 Care-non-coherent (`.milestone-actions:1391`
+// max-width:480 — non-canonical) + 10 non-Care pixel-based (ALL ALREADY
+// canonical 360/400/500/700) + 3 special-feature queries (print +
+// prefers-reduced-motion).
+//
+// Effective normalization: header comment at top of styles.css + 1 site
+// swap (.milestone-actions 480→500 closest canonical). All other pixel
+// values were already canonical; the 13-scattered framing was about
+// queries being SPREAD across the file rather than centralized, not about
+// non-canonical values.
+//
+// 4 canonical values: --bp-xs:360 / --bp-sm:400 / --bp-md:500 / --bp-lg:700.
+// CSS custom properties cannot be consumed inside @media query conditions
+// in current browsers (no @custom-media support yet); convention is enforced
+// by R-7 regression-guard rather than by var() resolution.
+
+test.describe('Polish-7 — Responsive breakpoint normalization (canonical 4-value system)', () => {
+  test('positive — canonical breakpoint header comment present at top of styles.css', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // Header comment must appear at top of file (before :root). Verify the
+    // canonical 4 breakpoint values are documented.
+    const headerSlice = css.slice(0, 2000);
+    expect(headerSlice.includes('Responsive Breakpoint Conventions (Polish-7'),
+      'Polish-7 header comment present at top of styles.css').toBeTruthy();
+    expect(headerSlice.includes('--bp-xs : 360px'),
+      'header documents --bp-xs:360px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-sm : 400px'),
+      'header documents --bp-sm:400px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-md : 500px'),
+      'header documents --bp-md:500px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-lg : 700px'),
+      'header documents --bp-lg:700px canonical').toBeTruthy();
+  });
+
+  test('regression-guard — zero non-canonical pixel values in @media declarations', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    const css = await res.text();
+
+    // Extract all pixel values from @media query parens. Canonical-4: 360,
+    // 400, 500, 700. Any other value is a non-canonical violation.
+    const CANONICAL_BPS = new Set(['360', '400', '500', '700']);
+
+    // Match @media declarations + extract pixel values from inside parens.
+    // Pattern: @media(max-width:NNNpx) or @media(min-width:NNNpx) or
+    // @media(...condition...) (other forms — feature queries — don't have
+    // pixel values).
+    const mediaRegex = /@media[^{]*?\((?:min|max)-width:\s*(\d+)px\)/g;
+    const violations: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = mediaRegex.exec(css)) !== null) {
+      const px = match[1];
+      if (!CANONICAL_BPS.has(px)) {
+        violations.push(`${px}px (in: ${match[0]})`);
+      }
+    }
+
+    expect(violations,
+      `non-canonical @media pixel values present: ${violations.join('; ')}`).toEqual([]);
+  });
+
+  test('positive-regression — Care-coherent 10 cat-grid queries preserved verbatim at canonical 700/400', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    const css = await res.text();
+
+    // Care-coherent pattern (Maren-preserved): 5 cat-grid pairs × 2 queries
+    // each = 10 queries. Each pair has max-width:700px AND max-width:400px,
+    // both targeting the same cat-grid selector with `grid-template-columns:1fr`.
+    // Verify each cat-grid has BOTH 700 and 400 queries present.
+    const CAT_GRIDS = ['food-cats', 'ms-cats', 'activity-cats', 'upcoming-cats', 'tip-cats'];
+    for (const grid of CAT_GRIDS) {
+      const re700 = new RegExp(`@media\\(max-width:700px\\)\\s*\\{\\s*\\.${grid}\\b`);
+      const re400 = new RegExp(`@media\\(max-width:400px\\)\\s*\\{\\s*\\.${grid}\\b`);
+      expect(re700.test(css),
+        `Care-coherent: .${grid} has @media(max-width:700px) preserved verbatim`).toBeTruthy();
+      expect(re400.test(css),
+        `Care-coherent: .${grid} has @media(max-width:400px) preserved verbatim`).toBeTruthy();
+    }
+  });
+});
