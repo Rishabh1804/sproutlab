@@ -298,7 +298,7 @@ function renderActiveMilestones() {
         return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
-      evidHtml = '<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById(\'' + evidId + '\').style.display=document.getElementById(\'' + evidId + '\').style.display===\'none\'?\'block\':\'none\'">' + zi('chart') + ' View evidence ▾</button>' +
+      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ▾</button>' +
         '<div id="' + evidId + '" class="al-evid-box" style="display:none;">' + evItems + '</div>';
     }
 
@@ -791,7 +791,7 @@ function renderUpcomingEvents() {
           ${ev.source === 'custom' ? `<button class="del-btn" data-action="deleteEvent" data-stop="1" data-arg="${ev._i}" title="Delete">×</button>` : ''}
         </div>
         ${activities ? `
-          <button class="ms-tidbit-toggle mt-6" onclick="const e=document.getElementById('${actId}');e.style.display=e.style.display==='none'?'flex':'none';">
+          <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
             ${zi('star')} Ziva activity ideas ▾
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
@@ -4116,7 +4116,7 @@ function renderUpcomingMilestones() {
 
       html += `
           <div class="upc-subcat" id="${subcatId}">
-            <div class="upc-subcat-header ${cat}" onclick="event.stopPropagation();toggleUpcomingSubcat('${subcatId}')">
+            <div class="upc-subcat-header ${cat}" data-action="toggleUpcomingSubcat" data-arg="${subcatId}" data-stop="1">
               <div class="upc-subcat-icon">${cm.icon}</div>
               <div class="upc-subcat-label">${cm.label}</div>
               <div class="upc-subcat-count">${catItems.length}</div>

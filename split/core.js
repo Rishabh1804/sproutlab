@@ -321,6 +321,32 @@ function init() {
       const el = document.getElementById(arg);
       if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
+    else if (action === 'toggleDisplayBlock') {
+      // Polish-10b: HR-3 cleanup — generic toggle between display:block and display:none.
+      // arg = elementId. Pair with data-stop="1" for stopPropagation behavior.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+    else if (action === 'toggleDisplayFlex') {
+      // Polish-10b: HR-3 cleanup — generic toggle between display:flex and display:none.
+      // arg = elementId. Pair with data-stop="1" for stopPropagation behavior.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+    }
+    else if (action === 'resolveMissedMedDone' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'done');
+    else if (action === 'resolveMissedMedSkipped' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'skipped');
+    else if (action === 'markMedDone' && typeof markMedDone === 'function') markMedDone(arg, Number(arg2));
+    else if (action === 'markMedSkipped' && typeof markMedSkipped === 'function') markMedSkipped(arg, Number(arg2));
+    else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
+    else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
+    else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
+    else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);
+    else if (action === 'insertDietFood' && typeof insertDietFood === 'function') insertDietFood(arg, arg2);
+    else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
+    else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
+    else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
