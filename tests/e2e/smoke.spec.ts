@@ -74,28 +74,28 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  // Test 2 ships as a triad (R-7) covering both modes of the simple-mode contract.
-  // Cipher r2 surfaced that simple-mode is opt-OUT (split/core.js:3711–3717:
-  // saved !== 'false' → simple-mode added on init), so a fresh browserContext
-  // with empty localStorage gets simple-mode ON, which CSS-hides Insights + Info.
+  // Test 2 ships as a triad (R-7) covering both modes of the essential-mode contract.
+  // Cipher r2 surfaced that essential-mode is opt-OUT (split/core.js:3711–3717:
+  // saved !== 'false' → essential-mode added on init), so a fresh browserContext
+  // with empty localStorage gets essential-mode ON, which CSS-hides Insights + Info.
   // The triad documents the two-mode contract on-record:
-  //   2a — simple-mode default renders four tabs (positive, default state)
+  //   2a — essential-mode default renders four tabs (positive, default state)
   //   2b — full mode (opt-out) renders all six (positive, opt-out state)
-  //   2c — simple-mode hides exactly Insights + Info, nothing more (regression-guard)
+  //   2c — essential-mode hides exactly Insights + Info, nothing more (regression-guard)
 
-  const SIMPLE_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
-  const SIMPLE_HIDDEN = ['insights', 'info'] as const;
+  const ESSENTIAL_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
+  const ESSENTIAL_HIDDEN = ['insights', 'info'] as const;
 
-  test('2a — simple-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
+  test('2a — essential-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
     await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
 
-    // Default: no localStorage entry → simple-mode ON.
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    // Default: no localStorage entry → essential-mode ON.
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
-    for (const tab of SIMPLE_VISIBLE) {
+    for (const tab of ESSENTIAL_VISIBLE) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present`).toHaveCount(1);
       await btn.scrollIntoViewIfNeeded();
@@ -105,28 +105,28 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
       await expect(page.locator(`#tab-${tab}`)).toHaveClass(/\bactive\b/);
     }
 
-    for (const tab of SIMPLE_HIDDEN) {
+    for (const tab of ESSENTIAL_HIDDEN) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
-      await expect(btn, `tab "${tab}" hidden under simple-mode`).toBeHidden();
+      await expect(btn, `tab "${tab}" hidden under essential-mode`).toBeHidden();
     }
 
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('2b — full mode (simple-mode opted out) renders all six tabs', async ({ page }) => {
+  test('2b — full mode (essential-mode opted out) renders all six tabs', async ({ page }) => {
     await stubChartJs(page);
     const { errors } = attachConsoleCollector(page);
 
-    // Opt out of simple-mode before init runs (split/core.js:3711 reads localStorage
-    // synchronously during initSimpleMode). addInitScript fires before page scripts.
+    // Opt out of essential-mode before init runs (split/core.js:3711 reads localStorage
+    // synchronously during initEssentialMode). addInitScript fires before page scripts.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
 
     await page.goto('/index.html?nosync');
     await expect(page.locator('.tab-bar')).toBeVisible();
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
@@ -141,22 +141,22 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
     expect(errors, errors.join('\n')).toEqual([]);
   });
 
-  test('2c — simple-mode hides exactly Insights + Info, nothing else', async ({ page }) => {
+  test('2c — essential-mode hides exactly Insights + Info, nothing else', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
-    // Regression-guard for the simple-mode contract: if styles.css ever drops
-    // a tab from the .simple-mode hide rule (or adds another), this fails.
+    // Regression-guard for the essential-mode contract: if styles.css ever drops
+    // a tab from the .essential-mode hide rule (or adds another), this fails.
     for (const tab of PRIMARY_TABS) {
       const btn = page.locator(`.tab-bar .tab-btn[data-tab="${tab}"]`);
       await expect(btn, `tab "${tab}" present in DOM`).toHaveCount(1);
-      const shouldBeHidden = (SIMPLE_HIDDEN as readonly string[]).includes(tab);
+      const shouldBeHidden = (ESSENTIAL_HIDDEN as readonly string[]).includes(tab);
       if (shouldBeHidden) {
-        await expect(btn, `simple-mode hides "${tab}"`).toBeHidden();
+        await expect(btn, `essential-mode hides "${tab}"`).toBeHidden();
       } else {
         await btn.scrollIntoViewIfNeeded();
-        await expect(btn, `simple-mode keeps "${tab}" visible`).toBeVisible();
+        await expect(btn, `essential-mode keeps "${tab}" visible`).toBeVisible();
       }
     }
   });
@@ -201,24 +201,24 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
 // Phase 2 PR-2.5 — status strip placement contract (R-7 triad).
 //
 // Sovereign-issued PR-2.5: the sl-1-2 #syncStatus pill was inside #headerFull,
-// which is `display:none` under body.simple-mode (the default for new users).
-// Result: simple-mode users saw zero sync feedback. PR-2.5 relocates
+// which is `display:none` under body.essential-mode (the default for new users).
+// Result: essential-mode users saw zero sync feedback. PR-2.5 relocates
 // #syncStatus into a new #statusStrip sibling above the tab-bar so the
 // indicator is visible in BOTH modes.
 //
 // Triad shape:
-//   default-positive  — simple-mode (default) renders strip + indicator-host
+//   default-positive  — essential-mode (default) renders strip + indicator-host
 //   opt-out-positive  — full-mode (localStorage opt-out) renders same
 //   mode-contract     — strip and #syncStatus are present in BOTH modes; the
-//                       simple-mode #headerFull display:none rule does NOT
+//                       essential-mode #headerFull display:none rule does NOT
 //                       cascade to the strip (regression-guard)
 
 test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () => {
-  test('default-positive — simple-mode user sees the status strip + sync indicator', async ({ page }) => {
+  test('default-positive — essential-mode user sees the status strip + sync indicator', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
 
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
     // Strip is the always-visible container.
     const strip = page.locator('#statusStrip');
@@ -232,13 +232,13 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
   test('opt-out-positive — full-mode user sees the status strip + sync indicator', async ({ page }) => {
     await stubChartJs(page);
 
-    // Opt out of simple-mode before init runs.
+    // Opt out of essential-mode before init runs.
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
 
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     const strip = page.locator('#statusStrip');
     await expect(strip).toHaveCount(1);
@@ -250,23 +250,23 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
   test('mode-contract-regression — strip is visible in BOTH modes (no display:none cascade)', async ({ page }) => {
     await stubChartJs(page);
 
-    // Pass 1: default mode (simple-mode ON).
+    // Pass 1: default mode (essential-mode ON).
     await page.goto('/index.html?nosync');
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
     const stripDefault = page.locator('#statusStrip');
-    await expect(stripDefault, 'strip visible in simple-mode default').toBeVisible();
-    // The simple-mode rule that hides #headerFull MUST NOT cascade — the
+    await expect(stripDefault, 'strip visible in essential-mode default').toBeVisible();
+    // The essential-mode rule that hides #headerFull MUST NOT cascade — the
     // strip is a sibling of #headerFull, not a descendant.
-    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull (existing contract)').toBeHidden();
+    await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull (existing contract)').toBeHidden();
     await expect(page.locator('#statusStrip'), 'strip survives the #headerFull hide').toBeVisible();
     await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip').toHaveCount(1);
 
-    // Pass 2: full mode (simple-mode OPT-OUT).
+    // Pass 2: full mode (essential-mode OPT-OUT).
     await page.evaluate(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.reload();
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
     await expect(page.locator('#statusStrip'), 'strip stays visible in full-mode too').toBeVisible();
     await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
@@ -591,11 +591,11 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
 //
 // Triad shape (binary-mode refinement of R-7 — anticipated 3rd on-record
 // instance per Cipher PR-13 r2 doctrine ledger):
-//   default-positive — simple-mode user: toast renders + reveals + has dispatcher wiring
+//   default-positive — essential-mode user: toast renders + reveals + has dispatcher wiring
 //   opt-out-positive — full-mode user:    same
 //   mode-contract-regression — toast in DOM under BOTH modes; visibility controlled
 //                              by [hidden] attribute, NOT by mode (regression-guard
-//                              against accidental simple-mode hide rule)
+//                              against accidental essential-mode hide rule)
 //
 // Test approach: trigger the reveal via direct page.evaluate (mocking the
 // updatefound→installed→controller chain). Real SW-script-swap simulation
@@ -605,12 +605,12 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
 // data-action wiring under both UX modes.
 
 test.describe('Update-detection toast (Phase 2 PR-5)', () => {
-  test('default-positive — simple-mode user sees toast on update', async ({ page }) => {
+  test('default-positive — essential-mode user sees toast on update', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
 
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
     const toast = page.locator('#updateToast');
     await expect(toast, 'toast present in DOM').toHaveCount(1);
@@ -634,12 +634,12 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
   test('opt-out-positive — full-mode user sees toast on update', async ({ page }) => {
     await stubChartJs(page);
     await page.addInitScript(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
 
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
 
     const toast = page.locator('#updateToast');
     await expect(toast).toHaveCount(1);
@@ -658,28 +658,28 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
   test('mode-contract-regression — toast in DOM under BOTH modes (no display:none cascade)', async ({ page }) => {
     await stubChartJs(page);
 
-    // Pass 1: simple-mode default
+    // Pass 1: essential-mode default
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
-    await expect(page.locator('body')).toHaveClass(/\bsimple-mode\b/);
-    await expect(page.locator('#updateToast'), 'toast in DOM under simple-mode').toHaveCount(1);
-    await expect(page.locator('#headerFull'), 'simple-mode hides #headerFull').toBeHidden();
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
+    await expect(page.locator('#updateToast'), 'toast in DOM under essential-mode').toHaveCount(1);
+    await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull').toBeHidden();
     await expect(page.locator('#statusStrip'), 'strip visible (toast container)').toBeVisible();
-    // Toast itself is hidden by [hidden] attribute, NOT by simple-mode CSS.
+    // Toast itself is hidden by [hidden] attribute, NOT by essential-mode CSS.
     // After removeAttribute('hidden'), it should be visible regardless of mode.
     await page.evaluate(() => {
       const el = document.getElementById('updateToast');
       if (el) el.removeAttribute('hidden');
     });
-    await expect(page.locator('#updateToast'), 'toast reveals under simple-mode').toBeVisible();
+    await expect(page.locator('#updateToast'), 'toast reveals under essential-mode').toBeVisible();
 
     // Pass 2: opt out, reload
     await page.evaluate(() => {
-      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
     });
     await page.reload();
     await page.evaluate(() => navigator.serviceWorker.ready);
-    await expect(page.locator('body')).not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#updateToast'), 'toast in DOM under full-mode').toHaveCount(1);
     await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
     await page.evaluate(() => {
@@ -1475,11 +1475,11 @@ test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
     await expect(page.locator('#statusStrip'), 'strip still visible in activity mode').toBeVisible();
     await expect(page.locator('#syncActivity'), 'activity pill visible in activity mode').toBeVisible();
 
-    // Pass 3: simple-mode opt-out should not change the strip's mode contract
-    await page.evaluate(() => { try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {} });
+    // Pass 3: essential-mode opt-out should not change the strip's mode contract
+    await page.evaluate(() => { try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {} });
     await page.reload();
     await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
-    await expect(page.locator('body'), 'simple-mode opted out').not.toHaveClass(/\bsimple-mode\b/);
+    await expect(page.locator('body'), 'essential-mode opted out').not.toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#statusStrip'), 'strip visible under full mode too').toBeVisible();
   });
 });
@@ -1971,6 +1971,938 @@ test.describe('PR-19.6 — renderer-coverage audit close (parameterized grep)', 
         expect(body.includes('_renderAttribution'),
           `${renderer} explicitly NOT wired per Phase 4 deferral: ${reason}`).toBeFalsy();
       }
+    }
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-1 — medical.js Insights-tier defense-in-depth gates (Phase 4 sub-phase 1)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Rationale-amendment on-record (PR-23 r1→r2 transparency precedent applies):
+//
+// Maren's Phase 4 Polish charter scout framed the medical.js zero-isEssentialMode-
+// calls finding as "user-visible mode-contract drift" — the claim being that
+// essential-mode users see full medical Insights surface while seeing simplified
+// diet ZS. Lyra's Polish-1 build-deep empirical re-grep refuted that framing:
+// the Info tab BUTTON is CSS-hidden in essential-mode (styles.css:3198: `body.
+// essential-mode .tab-btn[aria-label="Info tab"] { display:none; }`), so
+// essential-mode users have no path to navigate to the Info renderers' output.
+// The "user-visible" framing is empirically wrong.
+//
+// What IS true: the Info renderer JS still RUNS in essential-mode (rendering into
+// CSS-hidden DOM), wasting CPU cycles. Path-1 ratification (Sovereign via
+// Aurelius post-PR-23-merge): ship the JS-layer gates Maren named, but reframe
+// the rationale on-record — defense-in-depth + perf, NOT user-visible parity.
+// The 19 remaining medical.js renderInfo* renderers carrying the same
+// structural defect route to Phase 4 R-10 carry-forward P-5 (charter §6) as
+// a Stability sub-phase candidate.
+//
+// Polish-1 lands the discipline at 2 named medical.js sites (the actually-
+// medical.js subset of Maren's three named surfaces; the third — diet.js
+// "Correlations appear" — was a jurisdictional-drift D8 catch closed at
+// charter ratification). Triad below covers the two gates.
+
+test.describe('Polish-1 — medical.js Insights-tier defense-in-depth gates', () => {
+  // The two gated renderers. Both write into Info-tab DOM (#infoPoopFoodDelay*
+  // / #infoPoopFoodWatch*) which is CSS-hidden in essential-mode at the parent-
+  // tab-button level. JS-layer early-return saves CPU + backs the CSS gate.
+  const GATED = [
+    {
+      fn: 'renderInfoPoopFoodDelay',
+      summaryEl: 'infoPoopFoodDelaySummary',
+      listEl: 'infoPoopFoodDelayList',
+      insightEl: 'infoPoopFoodDelayInsights',
+    },
+    {
+      fn: 'renderInfoPoopFoodWatch',
+      summaryEl: 'infoPoopFoodWatchSummary',
+      listEl: 'infoPoopFoodWatchList',
+      insightEl: 'infoPoopFoodWatchInsights',
+    },
+  ];
+
+  test('positive — in full mode (essential-mode opted out), gated renderers DO write into their target DOM', async ({ page }) => {
+    await stubChartJs(page);
+    // Opt out of essential-mode before init runs; same idiom as smoke 2b.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    const results = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      return cases.map((c) => {
+        const fn = w[c.fn] as () => void;
+        const summary = document.getElementById(c.summaryEl);
+        if (summary) summary.innerHTML = ''; // baseline empty
+        try { fn(); } catch (e) { /* runtime errors surface in returned shape */ }
+        return {
+          fn: c.fn,
+          summaryHasContent: !!(summary && summary.innerHTML.trim().length > 0),
+          bodyClass: document.body.className,
+        };
+      });
+    }, GATED);
+
+    for (const r of results) {
+      expect(r.bodyClass, `${r.fn}: body NOT in essential-mode for full-mode test`).not.toMatch(/\bessential-mode\b/);
+      expect(r.summaryHasContent, `${r.fn}: full-mode call writes into target DOM (no early-return)`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — in essential-mode, gated renderers early-return WITHOUT touching target DOM', async ({ page }) => {
+    await stubChartJs(page);
+    // Default fresh context → essential-mode ON (split/core.js:3711-3717 default-on logic).
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    const results = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      return cases.map((c) => {
+        const fn = w[c.fn] as () => void;
+        const summary = document.getElementById(c.summaryEl);
+        // Pre-seed the summary with a sentinel so we can detect any innerHTML write.
+        const SENTINEL = '__POLISH1_SENTINEL__';
+        if (summary) summary.innerHTML = SENTINEL;
+        try { fn(); } catch (e) { /* surface */ }
+        return {
+          fn: c.fn,
+          sentinelPreserved: !!(summary && summary.innerHTML === SENTINEL),
+          bodyClass: document.body.className,
+        };
+      });
+    }, GATED);
+
+    for (const r of results) {
+      expect(r.bodyClass, `${r.fn}: body IS in essential-mode for essential-mode test`).toMatch(/\bessential-mode\b/);
+      expect(r.sentinelPreserved, `${r.fn}: essential-mode early-return preserves pre-existing summary content (no innerHTML write)`).toBeTruthy();
+    }
+  });
+
+  test('positive-regression — gate behavior tracks current body class on direct invocation', async ({ page }) => {
+    await stubChartJs(page);
+    // Start in full mode.
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_essential_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { renderInfoPoopFoodDelay?: unknown }).renderInfoPoopFoodDelay === 'function');
+
+    // Call once in full mode (writes), then flip body class directly to simulate
+    // a mode toggle, then call again (gate should engage), then restore class
+    // and call once more (writes again). Verifies the gate dispatch is dynamic
+    // per-call, not init-bound.
+    const sequence = await page.evaluate((cases) => {
+      const w = window as unknown as Record<string, unknown>;
+      const c = cases[0]; // one renderer is sufficient for the dispatch-shape check
+      const fn = w[c.fn] as () => void;
+      const summary = document.getElementById(c.summaryEl);
+      if (!summary) return { phase1: false, phase2: false, phase3: false };
+
+      // Phase 1: full mode → expect content
+      summary.innerHTML = '';
+      try { fn(); } catch {}
+      const phase1 = summary.innerHTML.trim().length > 0;
+
+      // Phase 2: flip to essential-mode, set sentinel, call → expect sentinel preserved
+      document.body.classList.add('essential-mode');
+      const SENTINEL = '__POLISH1_PHASE2_SENTINEL__';
+      summary.innerHTML = SENTINEL;
+      try { fn(); } catch {}
+      const phase2 = summary.innerHTML === SENTINEL;
+
+      // Phase 3: flip back to full mode → call → expect content (sentinel cleared)
+      document.body.classList.remove('essential-mode');
+      summary.innerHTML = '';
+      try { fn(); } catch {}
+      const phase3 = summary.innerHTML.trim().length > 0;
+
+      return { phase1, phase2, phase3 };
+    }, GATED);
+
+    expect(sequence.phase1, 'phase 1 (full mode): gate disengaged; renderer wrote content').toBeTruthy();
+    expect(sequence.phase2, 'phase 2 (toggled to essential): gate engaged; sentinel preserved').toBeTruthy();
+    expect(sequence.phase3, 'phase 3 (toggled back to full): gate disengaged; renderer wrote content').toBeTruthy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-9 — essential-mode rename + boot migration (Phase 4 sub-phase 1)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Atomic-canon vocabulary rename: simple-mode → essential-mode (ratified by
+// Sovereign-via-Aurelius). Internals previously drifted from the user-facing
+// "Essential Mode" display strings (already at core.js:4626 + :4672 pre-rename);
+// Polish-9 aligns internals → externals. Surfaces touched: KEYS string
+// (ziva_simple_mode → ziva_essential_mode), function names (isSimpleMode →
+// isEssentialMode + toggleSimpleMode → toggleEssentialMode + initSimpleMode →
+// initEssentialMode), CSS class (body.simple-mode → body.essential-mode), state-
+// snapshot prop (.simpleMode → .essentialMode), template settings-toggle id +
+// onchange function name. Total: ~80-100 LOC source + ~75 LOC tests.
+//
+// Mitigation posture: LOCAL-ONLY (Q1 + Q2 conclusive at scout: simpleMode is
+// NOT in SYNC_KEYS or SYNC_RENDER_DEPS; no Firestore involvement; no listener-
+// fire path). Boot migration runs once at initEssentialMode (start.js:5):
+// read-old → write-new (only if new not already set) → delete-old. Idempotent;
+// race-safe under multi-tab boot; storage-cleared falls through to default-on.
+//
+// R-7 triad covers the migration contract:
+//   - positive: fresh user (no localStorage state) defaults to essential-mode ON
+//   - regression-guard: existing simpleMode-keyed state preserved through migration
+//   - positive-regression: idempotency + multi-tab race + storage-cleared scenarios
+//
+// Note: existing simple-mode-equivalent assertions (2a/2b/2c above) verify the
+// EXTERNAL contract (4 tabs vs 6 tabs) on the renamed body class; this triad
+// verifies the INTERNAL migration contract (old→new key transition).
+
+test.describe('Polish-9 — essential-mode rename + boot migration', () => {
+  test('positive — fresh user (no prior localStorage) defaults to essential-mode ON', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
+
+    // Fresh context: no migration triggered (old key wasn't set).
+    const state = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(state.old, 'old key not present (fresh context, nothing to migrate)').toBeNull();
+    // New key may also be null on fresh init (default-on logic doesn't write
+    // until first user toggle); body class engagement confirms default-on path.
+  });
+
+  test('regression-guard — boot migration preserves existing user state through ziva_simple_mode → ziva_essential_mode', async ({ page }) => {
+    await stubChartJs(page);
+    // Seed old key BEFORE init runs (addInitScript fires before page scripts).
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'false'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+
+    // After init, body should NOT have essential-mode class (old key value was 'false').
+    await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
+
+    // Migration ran: new key carries the migrated value; old key is deleted.
+    const state = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(state.old, 'old key deleted post-migration').toBeNull();
+    expect(state.newKey, 'new key carries migrated value').toBe('false');
+  });
+
+  test('positive-regression — migration idempotency: re-run is no-op + multi-tab race clobber-guard + storage-cleared default-on', async ({ page }) => {
+    await stubChartJs(page);
+    // Seed old key with 'true' (essential-mode ON via legacy storage).
+    await page.addInitScript(() => {
+      try { window.localStorage.setItem('ziva_simple_mode', 'true'); } catch {}
+    });
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as { initEssentialMode?: unknown }).initEssentialMode === 'function');
+
+    // First-run state: migration ran, old deleted, new = 'true'.
+    const after1 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after1.old, 'old key deleted after run 1').toBeNull();
+    expect(after1.newKey, 'new key has migrated value after run 1').toBe('true');
+
+    // Re-run init explicitly — should be no-op (old=null, no migration to do).
+    await page.evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      const fn = w['initEssentialMode'] as () => void;
+      fn();
+    });
+    const after2 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after2.old, 'old key still null after re-run (no resurrection)').toBeNull();
+    expect(after2.newKey, 'new key unchanged after re-run').toBe('true');
+
+    // Multi-tab race scenario: simulate B sees old re-set somehow (e.g., legacy
+    // build wrote it again before being uninstalled); B's init must NOT clobber
+    // A's already-migrated new value. Per migration's `if (new === null)` guard.
+    await page.evaluate(() => {
+      try {
+        localStorage.setItem('ziva_simple_mode', 'false'); // simulate stale old re-set
+        // new key is still 'true' from earlier migration
+        const w = window as unknown as Record<string, unknown>;
+        const fn = w['initEssentialMode'] as () => void;
+        fn(); // re-invoke; clobber-guard should preserve new='true'
+      } catch {}
+    });
+    const after3 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+    }));
+    expect(after3.old, 'race: old key deleted again post-init').toBeNull();
+    expect(after3.newKey, 'race: new key preserved at \'true\' (clobber-guard prevents stale-old overwrite)').toBe('true');
+
+    // Storage-cleared scenario: clear all + re-init → falls through to default-on.
+    await page.evaluate(() => {
+      localStorage.clear();
+      const w = window as unknown as Record<string, unknown>;
+      const fn = w['initEssentialMode'] as () => void;
+      fn();
+    });
+    const after4 = await page.evaluate(() => ({
+      old: localStorage.getItem('ziva_simple_mode'),
+      newKey: localStorage.getItem('ziva_essential_mode'),
+      bodyHasEssentialMode: document.body.classList.contains('essential-mode'),
+    }));
+    expect(after4.old, 'cleared storage: old key null').toBeNull();
+    expect(after4.newKey, 'cleared storage: new key null (default-on does not write)').toBeNull();
+    expect(after4.bodyHasEssentialMode, 'cleared storage: default-on logic engages essential-mode').toBeTruthy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-2 — 4 named cross-Governor-catch governance-rule violations
+// ───────────────────────────────────────────────────────────────────────────
+//
+// R-7 binary-mode duos per PR-18 precedent: governance-rule violations have
+// binary state-space (compliant vs violating); the bug IS the absent state.
+// Two slots per rule: positive (rule-compliant in the built bundle) +
+// regression-guard (the specific violating-pattern is byte-precise absent).
+// Path A scope per Sovereign-via-Aurelius ratification: the 4 named cross-
+// Governor-catch sites only. Broader audit (P-1 + P-6 in charter §6 R-10
+// queue) defers to Stability sub-phase or dedicated Polish-N hygiene-sweep.
+//
+// Sites:
+//   1. HR-2 escape — medical.js:3208 #ffc107 hex-in-inline-style → var(--amber)
+//   2. HR-1 emoji  — medical.js:2268 🚨 ('When to seek emergency care') → zi('siren')
+//   3. HR-1 emoji  — home.js:1595    🩺 (ms-tidbit-icon doctor context) → zi('steth')
+//   4. HR-3 inline — home.js:1391    onclick="..." (vacc-history toggle) → data-action="toggleVaccHistoryInfo"
+
+test.describe('Polish-2 — governance-rule violations closed at 4 named cross-Governor-catch sites', () => {
+  test('positive — built bundle ships the compliant patterns at all 4 sites', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+
+    // Site 1: medical.js:3208 — peach-light flagEl uses canonical --border-warn
+    // post-Polish-4 retroactive swap. Polish-2 originally used var(--amber) as
+    // a substitute (Polish-4's --border-warn token didn't exist yet); Polish-4
+    // introduced --border-warn and swapped this site to the canonical token.
+    // Future-fragility per Maren's Polish-2 audit: this guard updates with
+    // intentional downstream substitution.
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--border-warn);'),
+      'Site 1: medical.js:3208 carries var(--border-warn) (Polish-4 retroactive swap from Polish-2 var(--amber) substitute)').toBeTruthy();
+
+    // Site 2: medical.js:2268 — the emergency-care-callout title now uses zi('siren').
+    // The bundle text contains: ` + zi('siren') + ' When to seek emergency care`.
+    expect(html.includes("zi('siren') + ' When to seek emergency care"),
+      'Site 2: medical.js:2268 emergency-care title uses zi(siren)').toBeTruthy();
+
+    // Site 3: home.js:1595 — ms-tidbit-icon doctor context wraps zi('steth') in a
+    // template literal expression.
+    expect(html.includes("ms-tidbit tidbit-doctor") &&
+           html.includes("${zi('steth')}"),
+      "Site 3: home.js:1595 ms-tidbit-icon uses zi('steth') template-literal interpolation").toBeTruthy();
+
+    // Site 4: home.js:1391 — vacc-history row carries the delegated data-action
+    // pattern with the dynamic infoId argument.
+    expect(html.includes('data-action="toggleVaccHistoryInfo"') &&
+           html.includes('data-arg="${infoId}"'),
+      'Site 4: home.js:1391 vacc-history row uses data-action="toggleVaccHistoryInfo" data-arg="${infoId}"').toBeTruthy();
+  });
+
+  test('regression-guard — the specific violating patterns at all 4 sites are byte-precise ABSENT from bundle', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Site 1: HR-2 — medical.js:3208 specific violation pattern (canonical
+    // string match). Note: #ffc107 still appears in styles.css ad-hoc-tonal
+    // hex variants (Polish-4 territory); this guard targets the medical.js:3208
+    // INLINE-STYLE escape specifically, not the broader hex-in-CSS surface.
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid #ffc107;'),
+      'Site 1 violation absent: medical.js:3208 no longer carries `#ffc107` inside the inline-style attribute').toBeFalsy();
+
+    // Site 2: HR-1 — medical.js:2268 specific violation pattern. The original
+    // line emitted `\u{1F6A8} When to seek emergency care`. The same string
+    // template was BYTE-IDENTICALLY duplicated at intelligence.js:11965 — a
+    // Polish-2 build-deep finding (running-beats-reading 6th instance; cross-
+    // Governor-catch coverage gap because Cipher's PR-23 r1 audit was scoped
+    // to Maren's Care territory and missed Kael's Intelligence territory).
+    // intelligence.js:11965 is OUT of Polish-2 scope (routed to charter §6 P-1
+    // R-10 carry-forward); it still emits the pattern post-Polish-2.
+    //
+    // Once both source files were concatenated into the bundle pre-Polish-2,
+    // this pattern appeared 2× (once per source file). Polish-2 closes
+    // medical.js:2268 only, so post-Polish-2 the pattern appears 1× (from
+    // intelligence.js:11965). The binary-mode-duo regression-guard for Site
+    // 2 is therefore count-based: assert exactly 1 remaining occurrence,
+    // confirming medical.js's contribution is absent without false-positive
+    // failure on intelligence.js's still-present out-of-scope contribution.
+    const emergencyPattern = "\\u{1F6A8} When to seek emergency care";
+    const remainingOccurrences = html.split(emergencyPattern).length - 1;
+    expect(remainingOccurrences,
+      'Site 2 medical.js:2268 contribution absent: bundle has exactly 1 remaining occurrence (intelligence.js:11965, out-of-scope per R-10 P-1)').toBe(1);
+
+    // Site 3: HR-1 — home.js:1595 specific violation pattern. The original
+    // line emitted `<div class="ms-tidbit-icon">🩺</div>`. The string-literal-
+    // 🩺-inside-ms-tidbit-icon-div is the binary signature.
+    expect(html.includes('<div class="ms-tidbit-icon">🩺</div>'),
+      'Site 3 violation absent: home.js:1595 ms-tidbit-icon no longer carries the literal 🩺 emoji').toBeFalsy();
+
+    // Site 4: HR-3 — home.js:1391 specific violation pattern. The original
+    // inline-onclick handler. The signature is the literal getElementById +
+    // ternary-toggle pattern inside an onclick attribute.
+    expect(html.includes('onclick="const el=document.getElementById(') &&
+           html.includes("style.display=el.style.display==='none'?'block':'none'"),
+      'Site 4 violation absent: home.js:1391 no longer carries the inline onclick handler').toBeFalsy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-3 — Direct-token-duplication hex sweep (styles.css; 32 substitutions)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Atomic-canon hex sweep: 32 hex literals byte-identical to canonical light-
+// theme :root token values replaced with var(--token) references. Tokens
+// covered: --rose, --rose-light, --peach, --peach-light, --sage, --sage-light,
+// --lavender, --sky, --sky-light, --indigo, --indigo-light, --amber,
+// --amber-light. :root definitions preserved (single source of truth).
+//
+// Pure substitution: zero new tokens, zero ad-hoc tonal variations (those
+// route to Polish-4 spec-amendment). Charter §4 scout estimated ~87 sites;
+// empirical Polish-3 build-deep count is 32 (running-beats-reading 7th
+// instance count drift — Polish-bench operational consistency).
+//
+// R-7 triad shape:
+//   - positive: a representative consumer (.icon-rose) resolves
+//     getComputedStyle().backgroundColor to the canonical rose-light RGB
+//     post-substitution (visual fidelity preserved through the var(--*)
+//     dispatch).
+//   - regression-guard: zero canonical-hex literals (#f2a8b8 / #fde8ed /
+//     etc.) outside the :root definition lines (1-89) — substitution sweep
+//     is total within scope.
+//   - positive-regression: token system itself unchanged —
+//     getComputedStyle(root).getPropertyValue('--rose-light') returns the
+//     canonical hex value byte-precise.
+
+test.describe('Polish-3 — Direct-token-duplication hex sweep (styles.css; 32 substitutions)', () => {
+  // Known canonical light-theme token → hex value pairs. Source of truth:
+  // split/styles.css :root block (lines 1-89). Test asserts the token system
+  // resolves correctly post-substitution (no accidental cycle / no clobber).
+  const CANONICAL_TOKENS = [
+    { token: '--rose',          hex: '#f2a8b8' },
+    { token: '--rose-light',    hex: '#fde8ed' },
+    { token: '--peach',         hex: '#fad4b4' },
+    { token: '--peach-light',   hex: '#fef3ea' },
+    { token: '--sage',          hex: '#b5d5c5' },
+    { token: '--sage-light',    hex: '#e8f5ef' },
+    { token: '--lavender',      hex: '#c9b8e8' },
+    { token: '--sky',           hex: '#a8cfe0' },
+    { token: '--sky-light',     hex: '#e8f4fa' },
+    { token: '--indigo',        hex: '#9ba8d8' },
+    { token: '--indigo-light',  hex: '#edf0fa' },
+    { token: '--amber',         hex: '#e8b86d' },
+    { token: '--amber-light',   hex: '#fef6e8' },
+  ];
+
+  test('positive — known consumer (.icon-rose) resolves getComputedStyle to the canonical rose-light RGB post-substitution', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // .icon-rose is a known consumer — pre-Polish-3 it had `background: #fde8ed`;
+    // post-Polish-3 it has `background: var(--rose-light)`. Computed background
+    // must still resolve to the canonical rose-light RGB (245, 232, 237).
+    // (Hex #fde8ed = RGB 253,232,237 — modern browsers normalize hex → rgb in computed style.)
+    const bg = await page.evaluate(() => {
+      // Create a probe div with the .icon-rose class so we don't depend on
+      // a specific page state having an .icon-rose element rendered.
+      const probe = document.createElement('div');
+      probe.className = 'icon-rose';
+      document.body.appendChild(probe);
+      const computed = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return computed;
+    });
+    // rose-light hex #fde8ed → rgb(253, 232, 237). Browser may render as
+    // 'rgb(253, 232, 237)' or normalized variant.
+    expect(bg.match(/rgb\(\s*253\s*,\s*232\s*,\s*237\s*\)/),
+      `.icon-rose computed background-color resolves to rose-light canonical RGB; got: ${bg}`).toBeTruthy();
+  });
+
+  test('regression-guard — zero canonical-hex literals outside :root in styles.css (Polish-3 scope: CSS substitution sweep total within scope)', async ({ request }) => {
+    // Polish-3 scope is styles.css ONLY. JS-side hex literals (e.g.,
+    // medical.js:1452-1453 growth-gauge JS consts; Chart.js dataset config
+    // borderColor/backgroundColor strings) live in different jurisdiction
+    // and are out-of-scope for Polish-3 (Stability sub-phase candidates
+    // since they need runtime token-resolution rather than CSS var()).
+    // Test fetches styles.css source directly (server serves repo root).
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // For each canonical hex value, count occurrences in styles.css source.
+    // Each canonical hex must appear exactly ONCE (its :root definition line);
+    // zero direct-duplicate consumer literals remain inside styles.css.
+    for (const { token, hex } of CANONICAL_TOKENS) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `${token} hex literal ${hex} appears exactly once in styles.css (only the :root definition; zero CSS consumer duplicates)`).toBe(1);
+    }
+  });
+
+  test('positive-regression — token system itself unchanged: getComputedStyle(root).getPropertyValue resolves canonical RGB byte-precise', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // Read each canonical token's resolved value from the runtime CSS engine.
+    // Asserts the :root preservation worked (no circular `var(--rose): var(--rose)`
+    // accident from the sed substitution sweep).
+    const tokenValues = await page.evaluate((tokens) => {
+      const root = document.documentElement;
+      const computed = getComputedStyle(root);
+      return tokens.map(({ token, hex }) => ({
+        token,
+        expectedHex: hex,
+        resolvedRaw: computed.getPropertyValue(token).trim(),
+      }));
+    }, CANONICAL_TOKENS);
+
+    for (const { token, expectedHex, resolvedRaw } of tokenValues) {
+      // The resolved value should be the canonical hex byte-precise (browsers
+      // preserve hex form in getPropertyValue for custom properties; no
+      // RGB conversion at the property-read layer).
+      expect(resolvedRaw.toLowerCase(), `token ${token} resolves to canonical hex ${expectedHex}; got '${resolvedRaw}'`).toBe(expectedHex);
+    }
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-4 — Design-token-system spec amendment + ad-hoc-tonal sweep (38 sites)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// First-instance candidate for `spec-amendment-in-substitution-PR` doctrine
+// (Aurelius PR-23 Ruling 5; RATIFIED 0/3, first-instance pending). Spec
+// amendment lands in DESIGN_PRINCIPLES.md (token-family naming rule + 9 new
+// canonical tokens) IN THE SAME PR DIFF as the substitution sweep that
+// consumes them. Parallels PR-19.5's strip-allowlist + flush-stamper
+// architectural-commit precedent.
+//
+// 9 new tokens introduced (Path B″ — Maren+Kael Mode 2 synthesis):
+//   --border-warn (#ffc107)         — caution-amber border-accent
+//   --border-warn-soft (#ffd166)    — light variant
+//   --sage-deepest (#1a7a42)        — milestone consistent deepest tone
+//   --sage-mid (#5a9a6a)            — milestone mid-tone
+//   --accent-sage-deep (#3d7a60)    — Smart Q&A active state fill
+//   --amber-deepest (#b8904a)       — milestone emerging deepest tone
+//   --amber-deep (#d4a04a)          — milestone in-progress signal
+//   --amber-mid (#e8a840)           — milestone emerging signal
+//   --amber-text-deep (#886520)     — text-on-amber-bg readable contrast
+//
+// Plus Polish-3 coverage-gap corrective: #f0ebfb → var(--lav-light), 5 sites
+// (Polish-3 missed --lav-light because naming inconsistency tripped scout
+// pattern-matching; running-beats-reading 8th instance).
+//
+// Plus Polish-2 retroactive: medical.js:3208 var(--amber) → var(--border-warn)
+// (Polish-2 used var(--amber) as substitute; Polish-4 swaps to canonical
+// --border-warn now that the token is introduced).
+//
+// Test discipline: scope to styles.css source contribution (server fetches
+// /split/styles.css directly) + getComputedStyle resolves tokens correctly +
+// DESIGN_PRINCIPLES.md token-family naming-rule consumers honored.
+
+test.describe('Polish-4 — Design-token-system spec amendment + ad-hoc-tonal sweep', () => {
+  const POLISH_4_NEW_TOKENS = [
+    { token: '--border-warn',       hex: '#ffc107' },
+    { token: '--border-warn-soft',  hex: '#ffd166' },
+    { token: '--sage-deepest',      hex: '#1a7a42' },
+    { token: '--sage-mid',          hex: '#5a9a6a' },
+    { token: '--accent-sage-deep',  hex: '#3d7a60' },
+    { token: '--amber-deepest',     hex: '#b8904a' },
+    { token: '--amber-deep',        hex: '#d4a04a' },
+    { token: '--amber-mid',         hex: '#e8a840' },
+    { token: '--amber-text-deep',   hex: '#886520' },
+  ];
+
+  // Hex values that were COLLAPSED into existing canonical tokens (no new
+  // canonical token introduced; the Maren-classification mapped them to a
+  // previously-introduced token).
+  const POLISH_4_COLLAPSED_HEX = [
+    { hex: '#0a6a32', mappedTo: '--sage-deepest' },
+    { hex: '#4a8a5a', mappedTo: '--sage-mid' },
+    { hex: '#8a6418', mappedTo: '--amber-text-deep' },
+  ];
+
+  test('positive — all 9 new tokens resolve to their canonical hex byte-precise via getComputedStyle', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    const tokenValues = await page.evaluate((tokens) => {
+      const root = document.documentElement;
+      const computed = getComputedStyle(root);
+      return tokens.map(({ token, hex }) => ({
+        token,
+        expectedHex: hex,
+        resolvedRaw: computed.getPropertyValue(token).trim(),
+      }));
+    }, POLISH_4_NEW_TOKENS);
+
+    for (const { token, expectedHex, resolvedRaw } of tokenValues) {
+      expect(resolvedRaw.toLowerCase(),
+        `Polish-4 token ${token} resolves to canonical hex ${expectedHex}; got '${resolvedRaw}'`).toBe(expectedHex);
+    }
+  });
+
+  test('regression-guard — zero direct-duplicate hex literals outside :root for the 9 new + 3 collapsed values + Polish-3 corrective #f0ebfb', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // 9 new-token hex values must each appear EXACTLY ONCE (their :root def).
+    for (const { token, hex } of POLISH_4_NEW_TOKENS) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `${token} hex literal ${hex} appears exactly once in styles.css (only :root def; zero CSS consumer duplicates)`).toBe(1);
+    }
+
+    // 3 collapsed hex values (mapped to a sibling new token) must appear
+    // ZERO times — they were sweep-target hex with no canonical :root home;
+    // every occurrence got swapped to the mapped token.
+    for (const { hex, mappedTo } of POLISH_4_COLLAPSED_HEX) {
+      const occurrences = (css.match(new RegExp(hex, 'gi')) || []).length;
+      expect(occurrences,
+        `collapsed hex ${hex} (mapped to ${mappedTo}) appears zero times in styles.css (every consumer swept)`).toBe(0);
+    }
+
+    // Polish-3 coverage-gap corrective: #f0ebfb (--lav-light) must appear
+    // EXACTLY ONCE (its :root def). Pre-Polish-4 had 6 occurrences (1 def
+    // + 5 consumer duplicates Polish-3's canonical-13 sweep missed because
+    // --lav-light naming inconsistency tripped scout pattern-matching).
+    const lavLightOccurrences = (css.match(/#f0ebfb/gi) || []).length;
+    expect(lavLightOccurrences,
+      'Polish-3 coverage-gap corrective: #f0ebfb (--lav-light) appears exactly once in styles.css (only :root def; 5 consumer duplicates swept in Polish-4)').toBe(1);
+  });
+
+  test('positive-regression — DESIGN_PRINCIPLES.md token-family naming-rule consumers honored: Polish-2 retroactive medical.js:3208 swap to var(--border-warn)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    expect(res.ok(), 'sproutlab.html fetchable').toBeTruthy();
+    const html = await res.text();
+
+    // Polish-2 used var(--amber) as a substitute at medical.js:3208's HR-2
+    // escape because Polish-4's canonical --border-warn token didn't exist
+    // yet. Polish-4 swaps it to the canonical token now. Verify the
+    // retroactive swap landed (presence of --border-warn in the medical.js
+    // post-substitution shape).
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--border-warn);'),
+      'Polish-2 retroactive: medical.js:3208 swapped var(--amber) → var(--border-warn) (canonical token from Polish-4 spec amendment)').toBeTruthy();
+
+    // Verify the prior Polish-2 substitute is GONE from medical.js:3208 site.
+    // (var(--amber) still appears elsewhere as a domain accent — out of scope.)
+    expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid var(--amber);'),
+      'Polish-2 substitute pattern absent at medical.js:3208 site post-Polish-4 retroactive swap').toBeFalsy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-5 — Cross-jurisdiction class-extraction sweep (Path C narrow-scope)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// 8 new utility classes extracted to styles.css; 11 inline-style HR-2 sites
+// replaced with class references across medical.js + intelligence.js. Path C
+// narrow-scope per RATIFIED 3/3 narrow-scope-and-defer-broader-audit-to-R-10
+// doctrine: charter framing was 50+ sites across 5 modules; empirical re-grep
+// surfaced 44 cousin-pattern sites with substantial variation (running-beats-
+// reading 9th instance count drift). Class-taxonomy decision deferred to
+// charter §6 R-10 P-7.
+//
+// 8 new classes (no DESIGN_PRINCIPLES.md amendment — class taxonomy is
+// implicit; class names approved at Polish-charter time by Maren+Kael):
+//   .guidance-section-title-do      — medical.js:3094 Do/Don't bullet section title (sage tone)
+//   .guidance-section-title-dont    — medical.js:3102 Don't section title (rose tone)
+//   .guidance-bullet                — medical.js bullet rendering inside Do/Don't lists
+//   .guidance-bullet-marker         — absolute-positioned · marker inside .guidance-bullet
+//   .doctor-cta-call                — medical.js:2364 Call CTA (background:--tc-sage)
+//   .doctor-cta-map                 — medical.js:2365 Map CTA (background:--tc-sky)
+//   .kc-row-flex-wrap               — intelligence.js episode-tracker chip row pattern
+//   .nh-legend-swatch               — intelligence.js nutrient-heatmap legend swatch
+//
+// 11 site replacements:
+//   - 4 medical.js guidance sites (Do title + Don't title + 2 bullet templates)
+//   - 2 medical.js doctor-cta sites (Call + Map anchor tags)
+//   - 2 intelligence.js kc-row-flex-wrap sites (:7885 + :7905 exact pattern matches)
+//   - 3 intelligence.js nh-legend-swatch sites (:14974/:14975/:14976 Some/Good/Rich
+//     legend cells; dynamic background:rgba(...) stays inline since alpha varies
+//     per swatch — partial extraction is valid per Path C; Polish-6's CSS-custom-
+//     property pivot may consolidate the dynamic-rgba pattern across all swatches
+//     as part of its first-instance candidate scope).
+
+test.describe('Polish-5 — Cross-jurisdiction class-extraction sweep (Path C narrow-scope)', () => {
+  const POLISH_5_NEW_CLASSES = [
+    '.guidance-section-title-do',
+    '.guidance-section-title-dont',
+    '.guidance-bullet',
+    '.guidance-bullet > .guidance-bullet-marker',
+    '.doctor-cta-call',
+    '.doctor-cta-map',
+    '.kc-row-flex-wrap',
+    '.nh-legend-swatch',
+  ];
+
+  test('positive — all 8 new utility classes are reachable in styles.css source', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    for (const className of POLISH_5_NEW_CLASSES) {
+      // Each class must appear at least once as a selector in styles.css.
+      // Selectors may have descendant combinators or grouping; use simple
+      // substring check — if the literal selector text is present, the
+      // class is reachable.
+      expect(css.includes(className),
+        `Polish-5 class ${className} reachable in styles.css source`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — extracted-site inline-style residue absent from bundle (verbatim original-pattern bytes)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Guidance section titles: original pattern was the full 7-prop inline-style.
+    // Each canonical pattern present pre-Polish-5 must be ABSENT post-Polish-5.
+    const guidanceDoSig = "font-weight:600;font-size:var(--fs-sm);color:var(--tc-sage);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;\"><span class=\"zi-check-placeholder";
+    const guidanceDontSig = "font-weight:600;font-size:var(--fs-sm);color:var(--tc-rose);text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:4px;\"><span class=\"zi-warn-placeholder";
+    const guidanceBulletSig = "font-size:var(--fs-base);color:var(--text);padding:3px 0 3px 18px;position:relative;line-height:var(--lh-relaxed);";
+
+    expect(html.includes(guidanceDoSig),
+      'guidance Do title 7-prop inline-style absent (replaced with .guidance-section-title-do class)').toBeFalsy();
+    expect(html.includes(guidanceDontSig),
+      'guidance Don\'t title 7-prop inline-style absent (replaced with .guidance-section-title-dont class)').toBeFalsy();
+    expect(html.includes(guidanceBulletSig),
+      'guidance bullet 5-prop inline-style absent (replaced with .guidance-bullet class)').toBeFalsy();
+
+    // Doctor CTA: original was 12-prop inline-style.
+    const doctorCtaSig = "min-height:44px;padding:8px 14px;border-radius:var(--r-2xl);background:var(--tc-sage);display:inline-flex;align-items:center;gap:var(--sp-8);text-decoration:none;font-size:var(--fs-sm);font-weight:700;color:white;font-family:'Nunito',sans-serif;";
+    expect(html.includes(doctorCtaSig),
+      'doctor-cta Call 12-prop inline-style absent (replaced with .doctor-cta-call class)').toBeFalsy();
+
+    // kc-row-flex-wrap: 4-prop inline-style at intelligence.js:7885 + :7905.
+    const kcRowSig = "display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;";
+    expect(html.includes(kcRowSig),
+      'kc-row-flex-wrap 4-prop inline-style absent (replaced with .kc-row-flex-wrap class)').toBeFalsy();
+  });
+
+  test('positive-regression — class consumers ship in bundle (medical.js + intelligence.js)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // Each new class must have at least one consumer-site reference in the
+    // bundle (the class is actually USED, not just defined).
+    const consumerExpectations = [
+      { className: 'guidance-section-title-do',   minCount: 1 },
+      { className: 'guidance-section-title-dont', minCount: 1 },
+      { className: 'guidance-bullet',             minCount: 1 },
+      { className: 'doctor-cta-call',             minCount: 1 },
+      { className: 'doctor-cta-map',              minCount: 1 },
+      { className: 'kc-row-flex-wrap',            minCount: 2 },  // 2 intelligence.js consumers
+      { className: 'nh-legend-swatch',            minCount: 3 },  // 3 intelligence.js consumers
+    ];
+
+    for (const { className, minCount } of consumerExpectations) {
+      // Count occurrences of class="<className>" or class="... <className> ..."
+      // patterns. Simple regex matches `${className}"` (closing quote) or
+      // `${className} ` (space) since class lists separate by spaces.
+      const re = new RegExp('class="[^"]*\\b' + className + '\\b', 'g');
+      const occurrences = (html.match(re) || []).length;
+      expect(occurrences,
+        `class .${className} has ≥${minCount} consumer-site reference(s) in bundle (got ${occurrences})`).toBeGreaterThanOrEqual(minCount);
+    }
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-6 — CSS-custom-property pivot for dynamic-required surfaces (Path C)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// First-instance candidate for `CSS-custom-property-pivot-for-dynamic-
+// required-surfaces` doctrine (Aurelius PR-23 Ruling 5; sister-doctrine to
+// Polish-4's `spec-amendment-in-substitution-PR` first-instance which Cipher
+// §B-framed observational). Path C narrow-scope: spec amendment + --dyn-pct
+// width/height-pct pivot only at Polish-6; --dyn-bg / --dyn-fg / --dyn-border
+// deferred to Polish-7+ first-instance evaluations per Maren+Kael Mode 2
+// dual-endorsement.
+//
+// 1 new token (--dyn-pct) + 2 new classes (.dyn-fill width-pivot;
+// .dyn-fill-h height-pivot) + DESIGN_PRINCIPLES.md `--dyn-*` family rule +
+// compound-style partial-pivot clause (Kael Mode 2 surfacing).
+//
+// 9 site sweep (width 8 + height 1):
+//   - diet.js:3048/:3117/:3458/:3513 (4 pure-width pivot)
+//   - intelligence.js:11794/:11803 (2 pure-width pivot)
+//   - intelligence.js:14803 (1 pure-height pivot via .dyn-fill-h)
+//   - intelligence.js:15484 (1 compound-partial: width via --dyn-pct;
+//     background:${m.color} stays inline per partial-pivot clause)
+//   - home.js:2706 (1 compound-partial: width via --dyn-pct; height +
+//     border-radius + background + transition stay inline)
+
+test.describe('Polish-6 — CSS-custom-property pivot (Path C; --dyn-pct width/height-pivot)', () => {
+  test('positive — --dyn-pct token resolves runtime values + .dyn-fill consumes via getComputedStyle', async ({ page }) => {
+    await stubChartJs(page);
+    await page.goto('/index.html?nosync');
+
+    // Probe: create a div with class="dyn-fill" + style="--dyn-pct:67%".
+    // Computed width must resolve to 67% (or browser-canonical equivalent).
+    const result = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.className = 'dyn-fill';
+      probe.style.setProperty('--dyn-pct', '67%');
+      // Parent with explicit width so % resolves predictably.
+      const parent = document.createElement('div');
+      parent.style.width = '300px';
+      parent.appendChild(probe);
+      document.body.appendChild(parent);
+      const computed = getComputedStyle(probe).width;
+      const tokenResolved = getComputedStyle(probe).getPropertyValue('--dyn-pct').trim();
+      parent.remove();
+      return { computed, tokenResolved };
+    });
+
+    expect(result.tokenResolved, '--dyn-pct token resolves to assigned runtime value').toBe('67%');
+    // 67% of 300px = 201px.
+    expect(result.computed, '.dyn-fill consumes --dyn-pct via var() — width resolves to 67% of parent (201px)').toBe('201px');
+  });
+
+  test('regression-guard — pure width:${...}% / height:${...}% inline-style patterns absent from production source (post-Polish-6 sweep)', async ({ request }) => {
+    // Fetch each production source file directly + verify no residual pure
+    // dynamic-pct inline-style patterns. This scopes the assertion to
+    // production source contributions (out-of-scope sites in JS-side hex
+    // const lookups + Chart.js dataset configs — Stability sub-phase
+    // territory — would NOT match this width/height-pct template-literal
+    // signature anyway).
+    const FILES_TO_SCAN = [
+      '/split/home.js',
+      '/split/diet.js',
+      '/split/medical.js',
+      '/split/intelligence.js',
+    ];
+    // Pattern: `style="width:${...}%"` or `style='width:${...}%'`.
+    // Compound-partial sites pivoted to --dyn-pct don't match this pattern
+    // (they use `--dyn-pct:${...}%` not `width:${...}%`).
+    const purePctPattern = /style=["']width:\$\{[^}]+\}%/;
+    const pureHeightPattern = /style=["']height:\$\{[^}]+\}%/;
+
+    for (const file of FILES_TO_SCAN) {
+      const res = await request.get(file);
+      expect(res.ok(), `${file} fetchable`).toBeTruthy();
+      const src = await res.text();
+
+      expect(purePctPattern.test(src),
+        `${file}: pure width:\${pct}% inline-style pattern absent (pivoted to --dyn-pct + .dyn-fill)`).toBeFalsy();
+      expect(pureHeightPattern.test(src),
+        `${file}: pure height:\${pct}% inline-style pattern absent (pivoted to --dyn-pct + .dyn-fill-h)`).toBeFalsy();
+    }
+  });
+
+  test('positive-regression — compound-partial-pivot sites preserve non-pivoted dynamic properties as inline-style residue (Kael partial-pivot clause)', async ({ request }) => {
+    const res = await request.get('/sproutlab.html');
+    const html = await res.text();
+
+    // home.js:2706 compound-partial: width pivoted to --dyn-pct; height +
+    // border-radius + background + transition stay inline.
+    expect(html.includes('class="dyn-fill" style="--dyn-pct:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"'),
+      'home.js:2706 compound-partial: width pivoted via --dyn-pct; height/border-radius/background/transition residue intact').toBeTruthy();
+
+    // intelligence.js:15484 compound-partial: width pivoted; background:${m.color} stays inline.
+    expect(html.includes('class="mb-meal-bar dyn-fill" style="--dyn-pct:${Math.max(pct, 4)}%;background:${m.color};"'),
+      'intelligence.js:15484 compound-partial: width pivoted via --dyn-pct; background:${m.color} residue intact (--dyn-bg deferred to Polish-7+)').toBeTruthy();
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Polish-7 — Responsive breakpoint normalization (canonical 4-value system)
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Header comment + pixel-value normalization in styles.css. Path: charter
+// said "13 scattered global @media; migrate to canonical 4 values uniformly."
+// Empirical Polish-7 build-deep grep (running-beats-reading 11th instance):
+// 24 total @media queries — 10 Care-coherent (700/400 cat-pattern, Maren-
+// preserved verbatim) + 1 Care-non-coherent (`.milestone-actions:1391`
+// max-width:480 — non-canonical) + 10 non-Care pixel-based (ALL ALREADY
+// canonical 360/400/500/700) + 3 special-feature queries (print +
+// prefers-reduced-motion).
+//
+// Effective normalization: header comment at top of styles.css + 1 site
+// swap (.milestone-actions 480→500 closest canonical). All other pixel
+// values were already canonical; the 13-scattered framing was about
+// queries being SPREAD across the file rather than centralized, not about
+// non-canonical values.
+//
+// 4 canonical values: --bp-xs:360 / --bp-sm:400 / --bp-md:500 / --bp-lg:700.
+// CSS custom properties cannot be consumed inside @media query conditions
+// in current browsers (no @custom-media support yet); convention is enforced
+// by R-7 regression-guard rather than by var() resolution.
+
+test.describe('Polish-7 — Responsive breakpoint normalization (canonical 4-value system)', () => {
+  test('positive — canonical breakpoint header comment present at top of styles.css', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // Header comment must appear at top of file (before :root). Verify the
+    // canonical 4 breakpoint values are documented.
+    const headerSlice = css.slice(0, 2000);
+    expect(headerSlice.includes('Responsive Breakpoint Conventions (Polish-7'),
+      'Polish-7 header comment present at top of styles.css').toBeTruthy();
+    expect(headerSlice.includes('--bp-xs : 360px'),
+      'header documents --bp-xs:360px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-sm : 400px'),
+      'header documents --bp-sm:400px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-md : 500px'),
+      'header documents --bp-md:500px canonical').toBeTruthy();
+    expect(headerSlice.includes('--bp-lg : 700px'),
+      'header documents --bp-lg:700px canonical').toBeTruthy();
+  });
+
+  test('regression-guard — zero non-canonical pixel values in @media declarations', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    const css = await res.text();
+
+    // Extract all pixel values from @media query parens. Canonical-4: 360,
+    // 400, 500, 700. Any other value is a non-canonical violation.
+    const CANONICAL_BPS = new Set(['360', '400', '500', '700']);
+
+    // Match @media declarations + extract pixel values from inside parens.
+    // Pattern: @media(max-width:NNNpx) or @media(min-width:NNNpx) or
+    // @media(...condition...) (other forms — feature queries — don't have
+    // pixel values).
+    const mediaRegex = /@media[^{]*?\((?:min|max)-width:\s*(\d+)px\)/g;
+    const violations: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = mediaRegex.exec(css)) !== null) {
+      const px = match[1];
+      if (!CANONICAL_BPS.has(px)) {
+        violations.push(`${px}px (in: ${match[0]})`);
+      }
+    }
+
+    expect(violations,
+      `non-canonical @media pixel values present: ${violations.join('; ')}`).toEqual([]);
+  });
+
+  test('positive-regression — Care-coherent 10 cat-grid queries preserved verbatim at canonical 700/400', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    const css = await res.text();
+
+    // Care-coherent pattern (Maren-preserved): 5 cat-grid pairs × 2 queries
+    // each = 10 queries. Each pair has max-width:700px AND max-width:400px,
+    // both targeting the same cat-grid selector with `grid-template-columns:1fr`.
+    // Verify each cat-grid has BOTH 700 and 400 queries present.
+    const CAT_GRIDS = ['food-cats', 'ms-cats', 'activity-cats', 'upcoming-cats', 'tip-cats'];
+    for (const grid of CAT_GRIDS) {
+      const re700 = new RegExp(`@media\\(max-width:700px\\)\\s*\\{\\s*\\.${grid}\\b`);
+      const re400 = new RegExp(`@media\\(max-width:400px\\)\\s*\\{\\s*\\.${grid}\\b`);
+      expect(re700.test(css),
+        `Care-coherent: .${grid} has @media(max-width:700px) preserved verbatim`).toBeTruthy();
+      expect(re400.test(css),
+        `Care-coherent: .${grid} has @media(max-width:400px) preserved verbatim`).toBeTruthy();
     }
   });
 });

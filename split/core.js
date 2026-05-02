@@ -315,6 +315,12 @@ function init() {
     else if (action === 'openScorePopup') openScorePopup(arg);
     else if (action === 'openVaccModal') openVaccModal();
     else if (action === 'toggleVaccInfo') toggleVaccInfo();
+    else if (action === 'toggleVaccHistoryInfo') {
+      // Polish-2: HR-3 cleanup — replaces inline onclick at home.js:1391 vacc-history rows.
+      // arg = dynamic infoId (e.g., 'vacc-info-3'); toggles display:block/none.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
@@ -3697,18 +3703,18 @@ function initWelcomeGuide() {
 }
 
 // ─────────────────────────────────────────
-// ESSENTIAL MODE (internally: simple-mode class, ziva_simple_mode localStorage key)
+// ESSENTIAL MODE
 // ─────────────────────────────────────────
 
-function isSimpleMode() {
-  return document.body.classList.contains('simple-mode');
+function isEssentialMode() {
+  return document.body.classList.contains('essential-mode');
 }
 
-function toggleSimpleMode() {
-  const on = document.getElementById('settingsSimpleMode')?.checked ?? true;
+function toggleEssentialMode() {
+  const on = document.getElementById('settingsEssentialMode')?.checked ?? true;
   if (on) {
-    document.body.classList.add('simple-mode');
-    localStorage.setItem('ziva_simple_mode', 'true');
+    document.body.classList.add('essential-mode');
+    localStorage.setItem('ziva_essential_mode', 'true');
     // Collapse vitals card if expanded
     var expanded = document.getElementById('homeVitalsExpanded');
     var chevron = document.getElementById('homeVitalsChevron');
@@ -3717,8 +3723,8 @@ function toggleSimpleMode() {
     if (chevron) chevron.textContent = '▾';
     if (quick) quick.style.display = '';
   } else {
-    document.body.classList.remove('simple-mode');
-    localStorage.setItem('ziva_simple_mode', 'false');
+    document.body.classList.remove('essential-mode');
+    localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
   const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -3733,15 +3739,31 @@ function toggleSimpleMode() {
   setZoomLevel(on ? 'med' : 'low');
 }
 
-function initSimpleMode() {
-  const saved = localStorage.getItem('ziva_simple_mode');
+function initEssentialMode() {
+  // Polish-9 boot migration: rename ziva_simple_mode → ziva_essential_mode.
+  // Idempotent: read old → write new (only if new not already set) → delete
+  // old. Re-run is no-op (old=null after first migration). Race-safe under
+  // multi-tab boot (atomic per-key localStorage writes; B's inner null-check
+  // skips clobber if A already wrote). Storage-cleared mid-migration falls
+  // through to default-on logic.
+  try {
+    const oldVal = localStorage.getItem('ziva_simple_mode');
+    if (oldVal !== null) {
+      if (localStorage.getItem('ziva_essential_mode') === null) {
+        localStorage.setItem('ziva_essential_mode', oldVal);
+      }
+      localStorage.removeItem('ziva_simple_mode');
+    }
+  } catch (e) { /* localStorage unavailable; falls through to default-on */ }
+
+  const saved = localStorage.getItem('ziva_essential_mode');
   // Default to Essential Mode ON (new users and existing users without preference)
-  const isSimple = saved !== 'false';
-  if (isSimple) {
-    document.body.classList.add('simple-mode');
+  const isEssential = saved !== 'false';
+  if (isEssential) {
+    document.body.classList.add('essential-mode');
   }
-  const toggle = document.getElementById('settingsSimpleMode');
-  if (toggle) toggle.checked = isSimple;
+  const toggle = document.getElementById('settingsEssentialMode');
+  if (toggle) toggle.checked = isEssential;
 }
 
 // ── Text Zoom ──
@@ -3766,8 +3788,8 @@ function initZoomLevel() {
     setZoomLevel(saved);
   } else {
     // Infer from Essential Mode
-    const isSimple = document.body.classList.contains('simple-mode');
-    setZoomLevel(isSimple ? 'med' : 'low');
+    const isEssential = document.body.classList.contains('essential-mode');
+    setZoomLevel(isEssential ? 'med' : 'low');
   }
 }
 
@@ -3776,8 +3798,8 @@ function renderDisplaySettings() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = document.documentElement.getAttribute('data-theme') === 'dark';
   // Sync Essential Mode toggle
-  const simpleEl = document.getElementById('settingsSimpleMode');
-  if (simpleEl) simpleEl.checked = document.body.classList.contains('simple-mode');
+  const essentialEl = document.getElementById('settingsEssentialMode');
+  if (essentialEl) essentialEl.checked = document.body.classList.contains('essential-mode');
   // Sync zoom slider
   const slider = document.getElementById('settingsZoomSlider');
   if (slider) {
@@ -4484,10 +4506,10 @@ window.onerror = function(msg, source, line, col, error) {
   };
   _bugLastErrorTime = Date.now();
 
-  // Auto-prompt (Path C) — throttled, not in Simple Mode
-  var simple = false;
-  try { simple = isSimpleMode(); } catch(e2) {}
-  if (!simple && Date.now() - _bugLastAutoPrompt > 300000) {
+  // Auto-prompt (Path C) — throttled, not in Essential Mode
+  var essential = false;
+  try { essential = isEssentialMode(); } catch(e2) {}
+  if (!essential && Date.now() - _bugLastAutoPrompt > 300000) {
     _bugLastAutoPrompt = Date.now();
     _bugShowAutoPrompt();
   }
@@ -4569,7 +4591,7 @@ function _bugCaptureState() {
     timestamp: new Date().toISOString(),
     tab: currentTab,
     subTab: subTab,
-    simpleMode: isSimpleMode(),
+    essentialMode: isEssentialMode(),
     darkMode: document.documentElement.getAttribute('data-theme') === 'dark',
     screen: window.innerWidth + 'x' + window.innerHeight,
     dpr: window.devicePixelRatio || 1,
@@ -4607,7 +4629,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('*Context:*');
   lines.push('Tab: ' + state.tab + (state.subTab ? ' > ' + state.subTab : '') +
     ' \u00B7 ' + (state.darkMode ? 'Dark' : 'Light') + ' mode' +
-    ' \u00B7 Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF'));
+    ' \u00B7 Essential Mode ' + (state.essentialMode ? 'ON' : 'OFF'));
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
@@ -4653,7 +4675,7 @@ function _bugRenderContext(state) {
   html += '<span class="bug-context-label">Tab:</span> ' + escHtml(state.tab);
   if (state.subTab) html += ' &rsaquo; ' + escHtml(state.subTab);
   html += ' &middot; ' + (state.darkMode ? 'Dark' : 'Light') + ' mode';
-  html += ' &middot; Essential Mode ' + (state.simpleMode ? 'ON' : 'OFF');
+  html += ' &middot; Essential Mode ' + (state.essentialMode ? 'ON' : 'OFF');
   html += '</div>';
 
   html += '<div class="bug-context-row"><span class="bug-context-label">Build:</span> ' + escHtml(state.build) +

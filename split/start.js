@@ -2,7 +2,7 @@
 // START — must be last in concat order
 // ─────────────────────────────────────────
 initDarkMode();
-initSimpleMode();
+initEssentialMode();
 initZoomLevel();
 init();
 initWelcomeGuide();

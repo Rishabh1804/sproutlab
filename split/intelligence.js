@@ -7882,7 +7882,7 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/' + hydraTarget + '</div>';
   html += '</div>';
   html += _epTimePickerHTML('deHydra');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">🩲 Log wet diaper</span>';
   html += '<span class="fe-action-chip" data-action="deLogFluidPrompt">'+zi('drop')+' Log fluid</span>';
   html += '</div>';
@@ -7902,7 +7902,7 @@ function renderDiarrhoeaEpisodeCard() {
   // Log stool
   html += '<div class="fe-section-title">Stool Log</div>';
   html += _epTimePickerHTML('deStool');
-  html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;padding:var(--sp-4) 0;">';
+  html += '<div class="kc-row-flex-wrap">';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'watery\'">'+zi('drop')+' Watery</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'runny\'">'+zi('warn')+' Runny</span>';
   html += '<span class="fe-action-chip" data-action="deLogStoolPrompt" data-arg="\'soft\'">'+zi('check')+' Soft</span>';
@@ -11791,7 +11791,7 @@ function renderHomeMealProgress() {
 
     html += `<div class="mdi-home-wrap ptr" data-action="openDiversityDetail" >`;
     html += `<div class="mdi-home-row"><span style="font-weight:600;color:var(--mid);font-size:var(--fs-xs);">Today's diversity</span><span style="margin-left:auto;font-weight:700;font-size:var(--fs-xs);color:${dayTextColor};">${dayLabel} · ${mdi.totalGroups} group${mdi.totalGroups !== 1 ? 's' : ''}</span></div>`;
-    html += `<div class="mdi-bar"><div class="mdi-bar-fill ${dayColor}" style="width:${pct}%;"></div></div>`;
+    html += `<div class="mdi-bar"><div class="mdi-bar-fill dyn-fill ${dayColor}" style="--dyn-pct:${pct}%;"></div></div>`;
 
     // Per-meal mini bars
     html += `<div style="display:flex;gap:var(--sp-4);margin-top:6px;">`;
@@ -11800,7 +11800,7 @@ function renderHomeMealProgress() {
       if (md.foods === 0) return;
       const c = getMdiColor(md.score);
       const barPct = Math.min(md.score, 100);
-      html += `<div class="flex-1-min0"><div class="t-xs" style="color:var(--light);text-align:center;">${md.label}</div><div class="mdi-bar"><div class="mdi-bar-fill ${c}" style="width:${barPct}%;"></div></div></div>`;
+      html += `<div class="flex-1-min0"><div class="t-xs" style="color:var(--light);text-align:center;">${md.label}</div><div class="mdi-bar"><div class="mdi-bar-fill dyn-fill ${c}" style="--dyn-pct:${barPct}%;"></div></div></div>`;
     });
     html += `</div>`;
 
@@ -14800,7 +14800,7 @@ function renderInfoFoodIntro() {
       <div class="info-intro-bar-col" title="${foodNames}">
         <div class="t-xs" style="color:var(--mid);font-weight:600;">${w.count}</div>
         <div class="info-intro-bar-track">
-          <div class="info-intro-bar" style="height:${pct}%"></div>
+          <div class="info-intro-bar dyn-fill-h" style="--dyn-pct:${pct}%"></div>
         </div>
         <div class="t-xs t-light" >${label}</div>
       </div>`;
@@ -14969,9 +14969,9 @@ function renderInfoNutrientHeatmap() {
   gridHtml += `<div class="fx-row g8 mt-8" style="align-items:center;justify-content:center;flex-wrap:wrap;">
     <div class="nh-cell nh-nodata" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">–</div><span class="t-xs t-light">No data</span>
     <div class="nh-cell nh-0" style="width:18px;height:18px;min-height:auto;font-size:var(--fs-2xs);aspect-ratio:auto;">·</div><span class="t-xs t-light">Gap</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
-    <div style="width:18px;height:18px;border-radius:var(--r-sm);background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.25);"></div><span class="t-xs t-light">Some</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.55);"></div><span class="t-xs t-light">Good</span>
+    <div class="nh-legend-swatch" style="background:rgba(140,190,160,0.85);"></div><span class="t-xs t-light">Rich</span>
   </div>`;
 
   gridEl.innerHTML = gridHtml;
@@ -15481,7 +15481,7 @@ function renderInfoMealBreakdown() {
       <div class="mb-meal-label">${m.emoji} ${m.label}</div>
       <div class="mb-meal-score" style="color:${density >= 3 ? 'var(--tc-sage)' : density >= 1.5 ? 'var(--tc-amber)' : 'var(--light)'};">${density}</div>
       <div class="mb-meal-nutrients">${topNutrients.length > 0 ? topNutrients.join(', ') : 'no data'}</div>
-      <div class="mb-meal-bar" style="width:${Math.max(pct, 4)}%;background:${m.color};"></div>
+      <div class="mb-meal-bar dyn-fill" style="--dyn-pct:${Math.max(pct, 4)}%;background:${m.color};"></div>
     </div>`;
   });
   gridHtml += '</div>';

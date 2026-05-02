@@ -2880,7 +2880,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
           { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2903,7 +2903,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Nutrients', weight: '20%', score: r.components.nutrients,
             detail: (d.nutrientsCovered || 0) + '/' + (d.nutrientsTotal || 8) + ' key nutrients this week', tab: 'insights' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2930,7 +2930,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
             detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2953,7 +2953,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Checkup', weight: '15%', score: r.components.visits,
             detail: r.components.visits >= 90 ? 'Checkup on track' : r.components.visits >= 85 ? 'Appointment booked' : 'Developmental checkup may be due', tab: 'medical' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -2978,7 +2978,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Recency', weight: '10%', score: r.components.recency,
             detail: r.components.recency >= 80 ? 'Active in last week' : 'Last activity over a week ago', tab: 'milestones' },
         ];
-        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isSimpleMode()) {
+        if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
         }
         return items;
@@ -3045,7 +3045,7 @@ function _spRenderBody() {
         <div class="sp-comp-weight">${c.weight}</div>
         <div class="sp-comp-score" style="${scoreColor}">${c.score}</div>
       </div>
-      <div class="sp-comp-bar"><div class="sp-comp-bar-fill ${barClass}" style="width:${c.score}%"></div></div>`;
+      <div class="sp-comp-bar"><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${c.score}%"></div></div>`;
     if (c.detail) {
       html += `<div class="sp-comp-detail">${c.detail}</div>`;
       if (c.tab) {
@@ -3114,7 +3114,7 @@ function _spRenderOverview(el, zs) {
       <span style="font-size:var(--icon-xs);">${dom.icon}</span>
       <span style="font-size:var(--fs-xs);color:var(--mid);width:70px;">${dom.name}</span>
       <span style="font-size:var(--fs-xs);color:var(--light);width:28px;text-align:center;">${w}%</span>
-      <div class="sp-comp-bar flex-1" ><div class="sp-comp-bar-fill ${barClass}" style="width:${sv}%"></div></div>
+      <div class="sp-comp-bar flex-1" ><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${sv}%"></div></div>
       <span style="font-size:var(--fs-xs);font-weight:600;width:28px;text-align:right;">${sv}</span>
     </div>`;
   });
@@ -3455,7 +3455,7 @@ function renderVarietyCard() { /* v2.4: DORMANT — insights cards replaced by t
   let html = '';
   // Variety bar
   html += `<div class="fs-sm-600">${vs.uniqueFoods} / ${vs.target} unique foods this week</div>`;
-  html += `<div class="variety-bar"><div class="variety-bar-fill" style="width:${pct}%"></div></div>`;
+  html += `<div class="variety-bar"><div class="variety-bar-fill dyn-fill" style="--dyn-pct:${pct}%"></div></div>`;
 
   // Food group icons
   html += '<div class="variety-groups">';
@@ -3510,7 +3510,7 @@ function renderNutrientRadar() { /* v2.4: DORMANT — insights cards replaced by
     html += `<div class="nutrient-row">
       <div class="nutrient-emoji">${EMOJI_MAP[n] || '•'}</div>
       <div class="nutrient-name">${capitalize(n)}</div>
-      <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill ${barClass}" style="width:${pct}%"></div></div>
+      <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${pct}%"></div></div>
       <div class="nutrient-count">${days}/7d</div>
     </div>`;
   });

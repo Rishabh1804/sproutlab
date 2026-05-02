@@ -405,7 +405,7 @@ function renderHome() {
 
 // Show "all clear" when no action cards are visible
 function toggleHomeVitals() {
-  if (isSimpleMode()) return; // Essential Mode — vitals stay collapsed
+  if (isEssentialMode()) return; // Essential Mode — vitals stay collapsed
   const collapsed = document.getElementById('homeVitalsCollapsed');
   const expanded = document.getElementById('homeVitalsExpanded');
   const chevron = document.getElementById('homeVitalsChevron');
@@ -1388,7 +1388,7 @@ function renderVaccHistory() {
       const dateFlag = v.dateChangeReason ? `<div style="font-size:var(--fs-xs);color:var(--tc-warn);margin-top:1px;">${zi('note')} ${escHtml(v.dateChangeReason)}</div>` : '';
       html += `
         <div style="border-radius:var(--r-lg);background:var(--glass);border-left:var(--accent-w) solid var(--lavender);overflow:hidden;">
-          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" onclick="const el=document.getElementById('${infoId}');el.style.display=el.style.display==='none'?'block':'none';">
+          <div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 10px;cursor:pointer;" data-action="toggleVaccHistoryInfo" data-arg="${infoId}">
             <span class="t-sm"><span class="zi-check-placeholder"></span></span>
             <span class="t-sm">${zi('syringe')}</span>
             <div class="flex-1-min">
@@ -1592,7 +1592,7 @@ function renderMilestones() {
             ${progressHtml}
             ${tidbitData ? `<div class="ms-tidbits" id="${tidbitId}" style="display:none;">
               <div class="ms-tidbit tidbit-unlocks"><div class="ms-tidbit-icon">${zi('star')}</div><div class="ms-tidbit-text"><strong>What this unlocks:</strong> ${tidbitData.unlocks}</div></div>
-              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">🩺</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
+              <div class="ms-tidbit tidbit-doctor"><div class="ms-tidbit-icon">${zi('steth')}</div><div class="ms-tidbit-text"><strong>Doctor context:</strong> ${tidbitData.doctor}</div></div>
               <div class="ms-tidbit tidbit-fun"><div class="ms-tidbit-icon">${zi('sparkle')}</div><div class="ms-tidbit-text"><strong>Fun fact:</strong> ${tidbitData.funFact}</div></div>
             </div>` : ''}
           </div>`;
@@ -2703,7 +2703,7 @@ function renderFoods() {
           <div class="fc-name">${parent.label}</div>
           <div class="fc-count">${parentCount} of ${parentTotal}</div>
           <div style="width:100%;height:4px;border-radius:2px;background:rgba(0,0,0,0.06);margin-top:6px;">
-            <div style="width:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"></div>
+            <div class="dyn-fill" style="--dyn-pct:${pct}%;height:100%;border-radius:2px;background:${barColor};transition:width var(--ease-slow);"></div>
           </div>
         </div>
       </div>`;
@@ -7613,11 +7613,11 @@ function renderHomeContextAlerts() {
   const positiveAlerts = alerts.filter(a => a.severity === 'positive');
 
   // Essential Mode: only show action-level alerts (vaccine due, no-feed), hide watch/info
-  const simple = isSimpleMode();
-  const homeWarnings = simple
+  const essential = isEssentialMode();
+  const homeWarnings = essential
     ? actionAlerts
     : [...actionAlerts, ...watchAlerts.slice(0, 3)];
-  const homePositives = simple ? [] : positiveAlerts.slice(0, 2);
+  const homePositives = essential ? [] : positiveAlerts.slice(0, 2);
   const remainingWarnings = actionAlerts.length + watchAlerts.length + infoAlerts.length - homeWarnings.length;
   const remainingPositives = positiveAlerts.length - homePositives.length;
 
