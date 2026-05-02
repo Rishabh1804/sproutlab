@@ -3416,7 +3416,7 @@ function renderCorrelationCard() {
         <span class="corr-rate ${rateClass}">${rpct}% (${r.abnormalAfter}/${r.totalOccurrences})</span>
       </div>
       <div class="corr-detail">${conList || 'Abnormal poop pattern'} · Confidence: ${r.confidence}</div>
-      <div class="corr-evidence" onclick="toggleCorrEvidence(${idx})"><span class="collapse-chevron" id="corrChev-${idx}">▾</span> View evidence (last ${r.dates.length})</div>
+      <div class="corr-evidence" data-action="toggleCorrEvidence" data-arg="${idx}"><span class="collapse-chevron" id="corrChev-${idx}">▾</span> View evidence (last ${r.dates.length})</div>
       <div class="corr-evidence-trail" id="corrEvidence-${idx}">
         ${r.dates.map(d => `<div class="corr-ev-row">${zi('bowl')} ${formatDate(d.ate)} → ${zi('diaper')} ${formatDate(d.poopDate)} · ${d.consistency}${d.abnormal ? ' ' + zi('warn') : ' ' + zi('check')}</div>`).join('')}
       </div>

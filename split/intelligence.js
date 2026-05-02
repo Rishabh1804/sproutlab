@@ -7193,7 +7193,7 @@ function renderFeverEpisodeCard() {
   const ACTION_CHIPS = ['Lukewarm sponging', 'Breastfed', 'Fluids given', 'Changed clothes', 'Doctor called'];
   html += '<div class="fe-action-chips">';
   ACTION_CHIPS.forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logFeverAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'feAction\'))">' + a + '</span>';
+    html += '<span class="fe-action-chip" data-action="logFeverAction" data-arg="feAction" data-arg2="' + escAttr(a) + '">' + escHtml(a) + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
@@ -7883,7 +7883,7 @@ function renderDiarrhoeaEpisodeCard() {
   html += '</div>';
   html += _epTimePickerHTML('deHydra');
   html += '<div class="kc-row-flex-wrap">';
-  html += '<span class="fe-action-chip" onclick="logDiarrhoeaWetDiaper(_epGetSelectedTime(\'deHydra\'))">' + zi('diaper') + ' Log wet diaper</span>';
+  html += '<span class="fe-action-chip" data-action="logDiarrhoeaWetDiaper" data-arg="deHydra">' + zi('diaper') + ' Log wet diaper</span>';
   html += '<span class="fe-action-chip" data-action="deLogFluidPrompt">'+zi('drop')+' Log fluid</span>';
   html += '</div>';
   if (ep.fluids.length > 0) {
@@ -7941,7 +7941,7 @@ function renderDiarrhoeaEpisodeCard() {
   const DE_ACTIONS = ['Breastfed', 'ORS given', 'Applied diaper cream', 'Changed diaper', 'Doctor called', 'Washed hands'];
   html += '<div class="fe-action-chips">';
   DE_ACTIONS.forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logDiarrhoeaAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'deAction\'))">' + a + '</span>';
+    html += '<span class="fe-action-chip" data-action="logDiarrhoeaAction" data-arg="deAction" data-arg2="' + escAttr(a) + '">' + escHtml(a) + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
@@ -8384,16 +8384,16 @@ function renderVomitingEpisodeCard() {
   const hydColor = wetToday >= 6 ? 'var(--tc-sage)' : wetToday >= 4 ? 'var(--tc-amber)' : 'var(--tc-danger)';
   html += '<div class="de-hydra-bar"><div class="de-hydra-label">Wet diapers today</div><div class="de-hydra-track"><div class="de-hydra-fill" style="width:' + hydPct + '%;background:' + hydColor + ';"></div></div><div class="de-hydra-count" style="color:' + hydColor + ';">' + wetToday + '/6</div></div>';
   html += _epTimePickerHTML('voHydra');
-  html += '<div class="fe-action-chips"><span class="fe-action-chip" onclick="logVomitingWetDiaper(_epGetSelectedTime(\'voHydra\'))">'+zi('drop')+' Wet diaper</span><span class="fe-action-chip" data-action="voLogFluidPrompt">'+zi('drop')+' Log fluid</span></div>';
+  html += '<div class="fe-action-chips"><span class="fe-action-chip" data-action="logVomitingWetDiaper" data-arg="voHydra">'+zi('drop')+' Wet diaper</span><span class="fe-action-chip" data-action="voLogFluidPrompt">'+zi('drop')+' Log fluid</span></div>';
 
   // Log vomiting
   html += '<div class="fe-section-title">Vomiting Log</div>';
   html += _epTimePickerHTML('voLog');
   html += '<div class="fe-action-chips">';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'spit-up\', _epGetSelectedTime(\'voLog\'))">'+zi('warn')+' Spit-up</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'vomit\', _epGetSelectedTime(\'voLog\'))">'+zi('siren')+' Vomit</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'projectile\', _epGetSelectedTime(\'voLog\'))">'+zi('siren')+' Projectile</span>';
-  html += '<span class="fe-action-chip" onclick="logVomitingEpisodeEntry(\'bile\', _epGetSelectedTime(\'voLog\'))">'+zi('warn')+' Bile/green</span>';
+  html += '<span class="fe-action-chip" data-action="logVomitingEpisodeEntry" data-arg="voLog" data-arg2="spit-up">'+zi('warn')+' Spit-up</span>';
+  html += '<span class="fe-action-chip" data-action="logVomitingEpisodeEntry" data-arg="voLog" data-arg2="vomit">'+zi('siren')+' Vomit</span>';
+  html += '<span class="fe-action-chip" data-action="logVomitingEpisodeEntry" data-arg="voLog" data-arg2="projectile">'+zi('siren')+' Projectile</span>';
+  html += '<span class="fe-action-chip" data-action="logVomitingEpisodeEntry" data-arg="voLog" data-arg2="bile">'+zi('warn')+' Bile/green</span>';
   html += '</div>';
 
   if (ep.episodes.length > 0) {
@@ -8409,7 +8409,7 @@ function renderVomitingEpisodeCard() {
   html += _epTimePickerHTML('voAction');
   html += '<div class="fe-action-chips">';
   ['Kept upright 30min', 'Small feed given', 'Breastfed', 'Doctor called'].forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logVomitingAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'voAction\'))">' + a + '</span>';
+    html += '<span class="fe-action-chip" data-action="logVomitingAction" data-arg="voAction" data-arg2="' + escAttr(a) + '">' + escHtml(a) + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
@@ -8660,7 +8660,7 @@ function renderColdEpisodeCard() {
   html += '<div class="fe-action-chips">';
   COLD_SYMPTOMS.forEach(s => {
     const active = todaySymptoms.has(s);
-    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" onclick="ceToggleSymptom(\'' + s.replace(/'/g, "\\'") + '\')">' + (active ? '✓ ' : '') + s + '</span>';
+    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? '✓ ' : '') + escHtml(s) + '</span>';
   });
   html += '</div>';
 
@@ -8670,7 +8670,7 @@ function renderColdEpisodeCard() {
   for (let i = 1; i <= 5; i++) {
     const isActive = latestSeverity === i;
     const color = i <= 2 ? 'var(--tc-sage)' : i <= 3 ? 'var(--tc-amber)' : 'var(--tc-caution)';
-    html += '<span class="fe-action-chip" style="' + (isActive ? 'background:' + color + ';color:white;border-color:' + color + ';' : '') + 'min-width:32px;justify-content:center;" onclick="ceSetSeverity(' + i + ')">' + i + '</span>';
+    html += '<span class="fe-action-chip" style="' + (isActive ? 'background:' + color + ';color:white;border-color:' + color + ';' : '') + 'min-width:32px;justify-content:center;" data-action="ceSetSeverity" data-arg="' + i + '">' + i + '</span>';
   }
   html += '</div></div>';
 
@@ -8690,7 +8690,7 @@ function renderColdEpisodeCard() {
   html += _epTimePickerHTML('ceAction');
   html += '<div class="fe-action-chips">';
   ['Saline drops', 'Steam inhalation', 'Humidifier on', 'Elevated mattress', 'Breastfed', 'Doctor called'].forEach(a => {
-    html += '<span class="fe-action-chip" onclick="logColdAction(\'' + a.replace(/'/g, "\\'") + '\', _epGetSelectedTime(\'ceAction\'))">' + a + '</span>';
+    html += '<span class="fe-action-chip" data-action="logColdAction" data-arg="ceAction" data-arg2="' + escAttr(a) + '">' + escHtml(a) + '</span>';
   });
   html += '</div>';
   if (ep.actions.length > 0) {
@@ -14955,11 +14955,11 @@ function renderInfoNutrientHeatmap() {
         gridHtml += `<div class="nh-cell nh-nodata" title="No meals logged">–</div>`;
       } else if (count === 0) {
         // Meals logged but nutrient absent — real gap
-        gridHtml += `<div class="nh-cell nh-0 ${n.cssClass}" title="Gap" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')">·</div>`;
+        gridHtml += `<div class="nh-cell nh-0 ${n.cssClass}" title="Gap" data-action="showHeatmapDetail" data-arg="${escAttr(n.key)}" data-arg2="${dayIdx}" data-arg3="${escAttr(data.days[dayIdx])}">·</div>`;
       } else {
         // Nutrient present — colored fill, tap to see sources
         const level = count <= 2 ? 1 : count <= 4 ? 2 : 3;
-        gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${escAttr(foods.join(', '))}" onclick="showHeatmapDetail('${n.key}',${dayIdx},'${data.days[dayIdx]}')"></div>`;
+        gridHtml += `<div class="nh-cell nh-${level} ${n.cssClass}" title="${escAttr(foods.join(', '))}" data-action="showHeatmapDetail" data-arg="${escAttr(n.key)}" data-arg2="${dayIdx}" data-arg3="${escAttr(data.days[dayIdx])}"></div>`;
       }
     });
   });

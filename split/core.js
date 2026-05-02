@@ -347,6 +347,20 @@ function init() {
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
+    // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
+    // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
+    //   'voLog' | 'voAction' | 'ceAction'); arg2 = action label string.
+    else if (action === 'logFeverAction' && typeof logFeverAction === 'function') logFeverAction(arg2, _epGetSelectedTime(arg));
+    else if (action === 'logDiarrhoeaWetDiaper' && typeof logDiarrhoeaWetDiaper === 'function') logDiarrhoeaWetDiaper(_epGetSelectedTime(arg));
+    else if (action === 'logDiarrhoeaAction' && typeof logDiarrhoeaAction === 'function') logDiarrhoeaAction(arg2, _epGetSelectedTime(arg));
+    else if (action === 'logVomitingWetDiaper' && typeof logVomitingWetDiaper === 'function') logVomitingWetDiaper(_epGetSelectedTime(arg));
+    else if (action === 'logVomitingEpisodeEntry' && typeof logVomitingEpisodeEntry === 'function') logVomitingEpisodeEntry(arg2, _epGetSelectedTime(arg));
+    else if (action === 'logVomitingAction' && typeof logVomitingAction === 'function') logVomitingAction(arg2, _epGetSelectedTime(arg));
+    else if (action === 'ceToggleSymptom' && typeof ceToggleSymptom === 'function') ceToggleSymptom(arg);
+    else if (action === 'ceSetSeverity' && typeof ceSetSeverity === 'function') ceSetSeverity(Number(arg));
+    else if (action === 'logColdAction' && typeof logColdAction === 'function') logColdAction(arg2, _epGetSelectedTime(arg));
+    else if (action === 'showHeatmapDetail' && typeof showHeatmapDetail === 'function') showHeatmapDetail(arg, Number(arg2), arg3);
+    else if (action === 'toggleCorrEvidence' && typeof toggleCorrEvidence === 'function') toggleCorrEvidence(Number(arg));
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();

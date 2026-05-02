@@ -3128,3 +3128,68 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
       .toEqual([]);
   });
 });
+
+test.describe('Polish-10c — HR-3 onclick batch (Intelligence + Diet; ~15 sites)', () => {
+  // Polish-10c absorbs the inline-onclick HR-3 violations across the
+  // Intelligence jurisdiction (intelligence.js fever/diarrhoea/vomiting/
+  // cold episode action chips, severity selectors, nutrient-heatmap cells)
+  // plus 1 diet.js site (toggleCorrEvidence). Single fix-shape per atomic-
+  // canon discipline: function-call delegation via data-action + data-arg.
+  //
+  // Compound onclicks (set-value + call, this.closest, template-string
+  // injection) deferred to R-10 carry-forward — different fix-shape needs
+  // separate atomic-canon treatment.
+
+  test('positive — 11 named function dispatchers wired in core.js for Intelligence + Diet domains', async ({ request }) => {
+    const res = await request.get('/split/core.js');
+    expect(res.ok(), '/split/core.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    const NAMED_HANDLERS = [
+      'logFeverAction',
+      'logDiarrhoeaWetDiaper', 'logDiarrhoeaAction',
+      'logVomitingWetDiaper', 'logVomitingEpisodeEntry', 'logVomitingAction',
+      'ceToggleSymptom', 'ceSetSeverity',
+      'logColdAction',
+      'showHeatmapDetail',
+      'toggleCorrEvidence',
+    ];
+    for (const handler of NAMED_HANDLERS) {
+      expect(js.includes(`action === '${handler}'`),
+        `core.js dispatcher includes ${handler}`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — zero onclick=" attrs at converted Polish-10c ranges (intelligence.js + diet.js)', async ({ request }) => {
+    const intelRes = await request.get('/split/intelligence.js');
+    const intel = await intelRes.text();
+    const dietRes = await request.get('/split/diet.js');
+    const diet = await dietRes.text();
+
+    const buggyIntelPatterns = [
+      `onclick="logFeverAction(`,
+      `onclick="logDiarrhoeaWetDiaper(`,
+      `onclick="logDiarrhoeaAction(`,
+      `onclick="logVomitingWetDiaper(`,
+      `onclick="logVomitingEpisodeEntry(`,
+      `onclick="logVomitingAction(`,
+      `onclick="ceToggleSymptom(`,
+      `onclick="ceSetSeverity(`,
+      `onclick="logColdAction(`,
+      `onclick="showHeatmapDetail(`,
+    ];
+    for (const pattern of buggyIntelPatterns) {
+      expect(intel.includes(pattern),
+        `intelligence.js: zero residual inlined onclick of pattern: ${pattern}`).toBeFalsy();
+    }
+
+    expect(diet.includes(`onclick="toggleCorrEvidence(`),
+      'diet.js: zero residual inlined onclick of toggleCorrEvidence').toBeFalsy();
+
+    // Verify the new data-action attribute presence as positive complement.
+    expect(intel.includes(`data-action="logFeverAction"`),
+      'intelligence.js: logFeverAction converted to data-action').toBeTruthy();
+    expect(diet.includes(`data-action="toggleCorrEvidence"`),
+      'diet.js: toggleCorrEvidence converted to data-action').toBeTruthy();
+  });
+});
