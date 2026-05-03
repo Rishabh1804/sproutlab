@@ -3193,3 +3193,61 @@ test.describe('Polish-10c — HR-3 onclick batch (Intelligence + Diet; ~15 sites
       'diet.js: toggleCorrEvidence converted to data-action').toBeTruthy();
   });
 });
+
+test.describe('Polish-10d hotfix — sections.* iconKey architectural sweep (Sovereign-caught visible bug at sections.diet)', () => {
+  // Sovereign-caught visible bug: Doctor Visit Prep > Diet row rendered
+  // literal text "bowl" instead of an SVG icon. Root cause: medical.js:9248
+  // sections.diet was constructed with `emoji: 'bowl'` (a string literal,
+  // not the rendered SVG `zi('bowl')`). The Polish-10a r3 consumer fallback
+  // `(sec.iconKey ? zi(sec.iconKey) : sec.emoji)` faithfully preserved the
+  // bug because sections.diet had .emoji='bowl' (string) with no .iconKey,
+  // so it fell through to render the literal string. Maren flagged as
+  // F-34-1 NIT in Polish-10a audit; Lyra deferred per narrow-scope to
+  // Stability sub-phase as P-9 — wrong call, since visible-bug-is-visible
+  // doesn't defer per hermetic-floor doctrine. Hotfix discharges P-9 +
+  // absorbs P-8 sibling architectural sweep (4 sections.* sites total)
+  // simultaneously since fix shape is uniform; consumer ternary
+  // simplifies to direct zi(sec.iconKey) call.
+
+  test('positive — all 5 sections.* constructors use iconKey shape (no emoji-as-data residual)', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Match any sections.<name> = { ... emoji: ... } pattern. Polish-10d
+    // converts all 5 (growth, milestones, activities, diet, poop) to
+    // iconKey shape; the architectural shift completes for this code path.
+    const sectionsEmojiPattern = /sections\.\w+\s*=\s*\{[^}]*emoji:/g;
+    const violations = js.match(sectionsEmojiPattern) || [];
+    expect(violations,
+      `Polish-10d: zero sections.* constructors may use emoji: shape (architectural sweep). Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+
+    // All 5 known sections present with iconKey: 'name' shape.
+    const REQUIRED_ICON_KEYS = ['scale', 'brain', 'run', 'bowl', 'diaper'];
+    for (const key of REQUIRED_ICON_KEYS) {
+      expect(js.includes(`iconKey: '${key}'`),
+        `Polish-10d: sections.* must include iconKey:'${key}' (visible bug at 'bowl' fixes)`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — Visit Prep section consumer renders via zi(sec.iconKey) directly (no ternary fallback)', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    const js = await res.text();
+
+    // Polish-10d simplifies the Polish-10a r3 fallback ternary
+    // `(sec.iconKey ? zi(sec.iconKey) : sec.emoji)` to direct zi(sec.iconKey)
+    // since all sections.* now use iconKey shape uniformly.
+    expect(js.includes('zi(sec.iconKey)'),
+      'Polish-10d: consumer renders via zi(sec.iconKey) direct call').toBeTruthy();
+
+    // Old fallback ternary must be absent (would indicate incomplete absorption).
+    expect(js.includes('sec.iconKey ? zi(sec.iconKey) : sec.emoji'),
+      'Polish-10d: consumer fallback ternary removed (architectural sweep complete)').toBeFalsy();
+
+    // The 'bowl' literal-string anti-pattern that caused the visible
+    // Sovereign-surfaced bug must be absent.
+    expect(js.match(/emoji:\s*'bowl'/g) || [],
+      `Polish-10d: zero 'emoji: bowl' string-literal residue (visible-bug source)`).toEqual([]);
+  });
+});

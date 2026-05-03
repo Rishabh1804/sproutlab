@@ -9159,7 +9159,7 @@ function computeVisitPrep() {
   }
   var latestPct = (gvData && !gvData.insufficient) ? gvData.latestPercentile : null;
   sections.growth = {
-    emoji: zi('scale'),
+    iconKey: 'scale',
     label: 'Growth',
     items: [],
     hasData: weightGrowth.length > 0 || heightGrowth.length > 0
@@ -9175,7 +9175,7 @@ function computeVisitPrep() {
   });
   var inProgressMs = (milestones || []).filter(function(m) { return isMsActive(m); });
   sections.milestones = {
-    emoji: zi('brain'),
+    iconKey: 'brain',
     label: 'Milestones',
     items: [],
     hasData: newMilestones.length > 0 || inProgressMs.length > 0
@@ -9212,7 +9212,7 @@ function computeVisitPrep() {
     }
   });
   sections.activities = {
-    emoji: zi('run'),
+    iconKey: 'run',
     label: 'Activities',
     items: [],
     hasData: actTotalEntries > 0
@@ -9246,7 +9246,7 @@ function computeVisitPrep() {
   // 4. Diet summary
   var newFoodsSince = (foods || []).filter(function(f) { return f.date && f.date > sinceDate; });
   sections.diet = {
-    emoji: 'bowl',
+    iconKey: 'bowl',
     label: 'Diet',
     items: [],
     hasData: newFoodsSince.length > 0
@@ -9351,7 +9351,7 @@ function renderInfoVisitPrep() {
       var itemStr = sec.items.length > 0 ? sec.items.join(' · ') : 'No changes';
       var itemColor = sec.hasData ? 'var(--mid)' : 'var(--light)';
       html += '<div class="si-check-row">';
-      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + (sec.iconKey ? zi(sec.iconKey) : sec.emoji) + '</span>';
+      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + zi(sec.iconKey) + '</span>';
       html += '<div class="flex-1"><div class="fs-sm-600">' + sec.label + '</div>';
       html += '<div style="font-size:var(--fs-xs);color:' + itemColor + ';">' + escHtml(itemStr) + '</div></div>';
       html += '</div>';
