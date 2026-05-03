@@ -3209,26 +3209,40 @@ test.describe('Polish-10d hotfix — sections.* iconKey architectural sweep (Sov
   // simultaneously since fix shape is uniform; consumer ternary
   // simplifies to direct zi(sec.iconKey) call.
 
-  test('positive — all 5 sections.* constructors use iconKey shape (no emoji-as-data residual)', async ({ request }) => {
+  test('positive — all 7 sections.* constructors use iconKey shape (no emoji-as-data residual; architectural-sweep-PR-misses-sibling-sites guard)', async ({ request }) => {
     const res = await request.get('/split/medical.js');
     expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
     const js = await res.text();
 
     // Match any sections.<name> = { ... emoji: ... } pattern. Polish-10d
-    // converts all 5 (growth, milestones, activities, diet, poop) to
-    // iconKey shape; the architectural shift completes for this code path.
+    // r1 converted only 4 of 7 sections (growth/milestones/activities/diet)
+    // assuming sections.poop already done in PR-34 r3 = 5 — but missed
+    // sections.sleep (:9237) and sections.medical (:9283). Cipher caught
+    // via architectural-sweep-PR-misses-sibling-sites pattern (sister to
+    // PR-34 r1 → r3). r2 absorbs all 7. Test asserts zero residual via
+    // grep (not hardcoded count) so future sections.* additions either
+    // adopt iconKey shape or fail this guard.
     const sectionsEmojiPattern = /sections\.\w+\s*=\s*\{[^}]*emoji:/g;
     const violations = js.match(sectionsEmojiPattern) || [];
     expect(violations,
-      `Polish-10d: zero sections.* constructors may use emoji: shape (architectural sweep). Found: ${violations.join(' | ')}`)
+      `Polish-10d: zero sections.* constructors may use emoji: shape (architectural sweep complete). Found: ${violations.join(' | ')}`)
       .toEqual([]);
 
-    // All 5 known sections present with iconKey: 'name' shape.
-    const REQUIRED_ICON_KEYS = ['scale', 'brain', 'run', 'bowl', 'diaper'];
+    // All 7 known sections present with iconKey: 'name' shape (Cipher r1
+    // critical catch — was 5 in r1; expanded to 7 in r2).
+    const REQUIRED_ICON_KEYS = ['scale', 'brain', 'run', 'moon', 'bowl', 'diaper', 'pill'];
     for (const key of REQUIRED_ICON_KEYS) {
       expect(js.includes(`iconKey: '${key}'`),
-        `Polish-10d: sections.* must include iconKey:'${key}' (visible bug at 'bowl' fixes)`).toBeTruthy();
+        `Polish-10d: sections.* must include iconKey:'${key}' (architectural-sweep-PR-misses-sibling-sites guard)`).toBeTruthy();
     }
+
+    // Independent enumeration check: count of sections.* = { constructors
+    // must equal count of iconKey:'...' attributions (modulo episode
+    // constructors at :7268/:7429 which also use iconKey but for a
+    // different data path).
+    const sectionsCtorCount = (js.match(/sections\.\w+\s*=\s*\{/g) || []).length;
+    expect(sectionsCtorCount,
+      `Polish-10d: 7 sections.* constructors expected (growth, milestones, activities, sleep, diet, poop, medical). Found: ${sectionsCtorCount}`).toBe(7);
   });
 
   test('regression-guard — Visit Prep section consumer renders via zi(sec.iconKey) directly (no ternary fallback)', async ({ request }) => {
