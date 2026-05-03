@@ -15746,6 +15746,32 @@ function init() {
       const el = document.getElementById(arg);
       if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
+    else if (action === 'toggleDisplayBlock') {
+      // Polish-10b: HR-3 cleanup — generic toggle between display:block and display:none.
+      // arg = elementId. Pair with data-stop="1" for stopPropagation behavior.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+    else if (action === 'toggleDisplayFlex') {
+      // Polish-10b: HR-3 cleanup — generic toggle between display:flex and display:none.
+      // arg = elementId. Pair with data-stop="1" for stopPropagation behavior.
+      const el = document.getElementById(arg);
+      if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+    }
+    else if (action === 'resolveMissedMedDone' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'done');
+    else if (action === 'resolveMissedMedSkipped' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'skipped');
+    else if (action === 'markMedDone' && typeof markMedDone === 'function') markMedDone(arg, Number(arg2));
+    else if (action === 'markMedSkipped' && typeof markMedSkipped === 'function') markMedSkipped(arg, Number(arg2));
+    else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
+    else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
+    else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
+    else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);
+    else if (action === 'insertDietFood' && typeof insertDietFood === 'function') insertDietFood(arg, arg2);
+    else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
+    else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
+    else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
@@ -20961,8 +20987,8 @@ function renderRemindersAndAlerts() {
               <div class="supp-alert-icon">${zi('dot-red')}</div>
               <div class="supp-alert-title">Missed — ${escHtml(m.name)}</div>
               <div class="supp-alert-action">
-                <button class="supp-check-btn" onclick="resolveMissedMed('${escAttr(m.name)}', '${ds}', 'done')">Was given</button>
-                <button class="supp-skip-btn" onclick="resolveMissedMed('${escAttr(m.name)}', '${ds}', 'skipped')">Not given</button>
+                <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Was given</button>
+                <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Not given</button>
               </div>
             </div>
             <div class="supp-alert-detail">${escHtml(m.dose || '')} · ${formatDate(ds)}</div>
@@ -21001,8 +21027,8 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-icon">${zi('warn')}</div>
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-check-btn" onclick="markMedDone('${escAttr(m.name)}', ${idx})">Done</button>
-            <button class="supp-skip-btn" onclick="markMedSkipped('${escAttr(m.name)}', ${idx})">Skip</button>
+            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done</button>
+            <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${escHtml(m.freq || 'As prescribed')}</div>
@@ -21909,7 +21935,7 @@ function renderMilestones() {
             return `<div class="al-evid-item">${ev.date} — "${escHtml((ev.text||'').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
           }).join('');
           if (m.evidenceCount > 5) evItems += `<div class="al-evid-more">+${m.evidenceCount - 5} more</div>`;
-          evidHtml = `<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById('${evidId}').style.display=document.getElementById('${evidId}').style.display==='none'?'block':'none'">${zi('chart')} View evidence ▾</button>
+          evidHtml = `<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="${evidId}" data-stop="1">${zi('chart')} View evidence ▾</button>
             <div id="${evidId}" class="al-evid-box" style="display:none;">${evItems}</div>`;
         }
       }
@@ -21922,7 +21948,7 @@ function renderMilestones() {
                 <strong>${escHtml(m.text)}</strong>
                 ${metaHtml}
                 ${evidHtml}
-                ${tidbitData ? `<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById('${tidbitId}').style.display=document.getElementById('${tidbitId}').style.display==='none'?'flex':'none'"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ▾</button>` : ''}
+                ${tidbitData ? `<button class="ms-tidbit-toggle" data-action="toggleDisplayFlex" data-arg="${tidbitId}" data-stop="1"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ▾</button>` : ''}
               </div>
               ${m.advanced ? '<span class="badge-adv"><svg class="zi"><use href="#zi-star"/></svg> Advanced</span>' : ''}
               <div class="milestone-actions">
@@ -22462,7 +22488,7 @@ function renderRecentEvidence() {
     const isToday = dateStr === todayStr;
 
     html += '<div class="al-feed-day">';
-    html += '<div class="al-feed-day-header ptr" onclick="document.getElementById(\'' + dayBodyId + '\').style.display=document.getElementById(\'' + dayBodyId + '\').style.display===\'none\'?\'block\':\'none\'" >' +
+    html += '<div class="al-feed-day-header ptr" data-action="toggleDisplayBlock" data-arg="' + dayBodyId + '">' +
       dayLabel + ' — ' + entries.length + ' activit' + (entries.length === 1 ? 'y' : 'ies') + ' · ' + totalEvidence + ' evidence' +
       '<span style="float:right;">▾</span></div>';
     html += '<div class="al-feed-summary">' + summaryChips + '</div>';
@@ -22842,7 +22868,7 @@ function renderFeedingHistory() {
             ${sInsight ? `<div class="history-meal-insight"><span class="hmi-icon">${zi('sparkle')}</span><span>${sInsight}</span></div>` : ''}
             <div class="fx g8 fx-end mt-8">
               <button class="ms-action-btn" data-action="navFeedDay" data-stop="1" data-arg="${dateKey}">Edit</button>
-              <button class="ms-action-btn del-ms" onclick="event.stopPropagation();deleteFeedingEntry('${dateKey}')">&times; Delete</button>
+              <button class="ms-action-btn del-ms" data-action="deleteFeedingEntry" data-arg="${dateKey}" data-stop="1">&times; Delete</button>
             </div>
           </div>
         </div>`;
@@ -23074,7 +23100,7 @@ function openFoodCatModal(pid) {
     const sub = parent.subs[sid];
     const count = grouped[pid][sid].length;
     const total = sub.keys.length;
-    return `<button class="settings-tab${i===0?' active-st':''}" id="fct-${sid}" onclick="switchFoodCatSub('${pid}','${sid}')" style="font-size:var(--fs-xs);padding:6px 8px;gap:var(--sp-4);">
+    return `<button class="settings-tab${i===0?' active-st':''}" id="fct-${sid}" data-action="switchFoodCatSub" data-arg="${pid}" data-arg2="${sid}" style="font-size:var(--fs-xs);padding:6px 8px;gap:var(--sp-4);">
       ${sub.icon} ${sub.label} <span style="opacity:0.6;font-size:var(--fs-xs);">${count}/${total}</span>
     </button>`;
   }).join('');
@@ -23557,7 +23583,7 @@ function renderMilestoneStats() {
     const dateInfo = latestMs.doneAt ? formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : '';
     const latestIdx = milestones.indexOf(latestMs);
     hlHtml += `
-      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--sage-light);cursor:pointer;" onclick="expandMilestoneByIdx(${latestIdx})">
+      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--sage-light);cursor:pointer;" data-action="expandMilestoneByIdx" data-arg="${latestIdx}">
         <span class="info-strip-icon">${ci}</span>
         <div class="flex-1-min">
           <div class="micro-label">Latest achieved</div>
@@ -23569,7 +23595,7 @@ function renderMilestoneStats() {
 
   if (nextMilestone) {
     hlHtml += `
-      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);cursor:pointer;" onclick="expandUpcomingItem('${escAttr(nextMilestone.text)}')">
+      <div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);cursor:pointer;" data-action="expandUpcomingItem" data-arg="${escHtml(nextMilestone.text)}">
         <span class="info-strip-icon">${nextMilestone.icon}</span>
         <div class="flex-1-min">
           <div class="micro-label">Coming up next</div>
@@ -23817,7 +23843,7 @@ function renderDietQuickPicker() {
       if (!val || val === '—skipped—') return;
       const short = val.length > 22 ? val.substring(0, 20) + '…' : val;
       const label = DAY_LABELS[pd.offset] || pd.offset + 'd';
-      pills.push(`<div class="dqp-same" onclick="fillDietMeal('${meal}','${escHtml(val).replace(/'/g, "\\\\'")}')" title="${escHtml(val)}">${label} <span class="op-60">${escHtml(short)}</span></div>`);
+      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${label} <span class="op-60">${escHtml(short)}</span></div>`);
     });
 
     // 2. Same-as: today's OTHER meal slots that already have content
@@ -23828,19 +23854,19 @@ function renderDietQuickPicker() {
       const val = document.getElementById('meal-' + otherMeal)?.value || todayEntry[otherMeal] || '';
       if (!val || val === '—skipped—') return;
       const short = val.length > 20 ? val.substring(0, 18) + '…' : val;
-      pills.push(`<div class="dqp-same" onclick="fillDietMeal('${meal}','${escHtml(val).replace(/'/g, "\\\\'")}')" title="${escHtml(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span class="op-60">${escHtml(short)}</span></div>`);
+      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span class="op-60">${escHtml(short)}</span></div>`);
     });
 
     // 2. Top frequent foods for this meal slot (from meal-specific history)
     const mealFreq = getMealSlotTopFoods(meal, 4);
     mealFreq.forEach(f => {
-      pills.push(`<div class="dqp-pill" onclick="insertDietFood('${meal}','${escHtml(f.name).replace(/'/g, "\\\\'")}')" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
+      pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
     });
 
     // 3. If no meal-specific foods, show general top foods
     if (mealFreq.length === 0 && topFoods.length > 0) {
       topFoods.slice(0, 3).forEach(f => {
-        pills.push(`<div class="dqp-pill" onclick="insertDietFood('${meal}','${escHtml(f.name).replace(/'/g, "\\\\'")}')" title="${f.count}× logged">${escHtml(f.name)}</div>`);
+        pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× logged">${escHtml(f.name)}</div>`);
       });
     }
 
@@ -23937,8 +23963,7 @@ function renderDietIntelBanner() {
         html += '<div style="font-weight:600;margin-bottom:6px;">\u{1F4A1} ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
         best.forEach(function(t, idx) {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
-          var escapedCombo = escHtml(comboStr).replace(/'/g, "\\'");
-          html += '<div class="dib-combo-row" onclick="fillDietMeal(\'' + nextMeal + '\',\'' + escapedCombo + '\')" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
+          html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
           html += '<div class="flex-1-min0">';
           html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + escHtml(t.label) + '</span>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">';
@@ -23981,7 +24006,7 @@ function renderDietIntelBanner() {
         html += '<div class="dib-card dib-synergy">\u{1F517} For ' + MEAL_LABELS_FULL[nextMeal] + ', try pairing with today\'s meals: ';
         top.forEach(function(s) {
           var emoji = s.type === 'absorption' ? '\u{1F517}' : s.type === 'complete' ? '\u2728' : '\u{1F33F}';
-          html += '<span class="dib-synergy-pill" onclick="insertDietFood(\'' + nextMeal + '\',\'' + escHtml(s.partner).replace(/'/g, "\\'") + '\')" title="' + escHtml(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
+          html += '<span class="dib-synergy-pill" data-action="insertDietFood" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(s.partner) + '" title="' + escAttr(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
         });
         html += '</div>';
       }
@@ -27885,11 +27910,11 @@ function renderAlertCardHTML(a, scope) {
       <div class="ctx-alert-body">
         <div class="ctx-alert-title">${escHtml(a.title)} <span class="ctx-alert-sev ${sevBadge}">${sevLabel}</span></div>
         <div class="ctx-alert-msg">${escHtml(a.body)}</div>
-        ${a.tip ? `<div class="ctx-alert-tip-toggle" onclick="event.stopPropagation();toggleAlertTip('${safeKey}')">${zi('bulb')} Tips & advice ▾</div>
+        ${a.tip ? `<div class="ctx-alert-tip-toggle" data-action="toggleAlertTip" data-arg="${safeKey}" data-stop="1">${zi('bulb')} Tips & advice ▾</div>
         <div class="ctx-alert-tip" id="ca-tip-${safeKey}">${escHtml(a.tip)}</div>` : ''}
         <div class="ctx-alert-actions">
-          ${a.action ? `<button class="ctx-alert-btn cab-primary" onclick="event.stopPropagation();execAlertAction('${safeKey}')">${escHtml(a.action.label)}</button>` : ''}
-          ${a.tab ? `<button class="ctx-alert-btn cab-secondary" onclick="event.stopPropagation();switchTab('${escAttr(a.tab)}')">View details</button>` : ''}
+          ${a.action ? `<button class="ctx-alert-btn cab-primary" data-action="execAlertAction" data-arg="${safeKey}" data-stop="1">${escHtml(a.action.label)}</button>` : ''}
+          ${a.tab ? `<button class="ctx-alert-btn cab-secondary" data-action="switchTab" data-arg="${escAttr(a.tab)}" data-stop="1">View details</button>` : ''}
         </div>
       </div>
     </div>
@@ -28586,7 +28611,7 @@ function renderTrendChips() {
 
   let html = '';
   chips.forEach((c, i) => {
-    html += `<div class="trend-chip" onclick="event.stopPropagation();switchTab('${c.tab}')">
+    html += `<div class="trend-chip" data-action="switchTab" data-arg="${escAttr(c.tab)}" data-stop="1">
       <span class="trend-chip-icon">${c.icon}</span>
       <div class="trend-chip-body">
         <div class="trend-chip-label">${c.label}</div>
@@ -33913,7 +33938,7 @@ function renderActiveMilestones() {
         return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
-      evidHtml = '<button class="ms-tidbit-toggle" onclick="event.stopPropagation();document.getElementById(\'' + evidId + '\').style.display=document.getElementById(\'' + evidId + '\').style.display===\'none\'?\'block\':\'none\'">' + zi('chart') + ' View evidence ▾</button>' +
+      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ▾</button>' +
         '<div id="' + evidId + '" class="al-evid-box" style="display:none;">' + evItems + '</div>';
     }
 
@@ -34406,7 +34431,7 @@ function renderUpcomingEvents() {
           ${ev.source === 'custom' ? `<button class="del-btn" data-action="deleteEvent" data-stop="1" data-arg="${ev._i}" title="Delete">×</button>` : ''}
         </div>
         ${activities ? `
-          <button class="ms-tidbit-toggle mt-6" onclick="const e=document.getElementById('${actId}');e.style.display=e.style.display==='none'?'flex':'none';">
+          <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
             ${zi('star')} Ziva activity ideas ▾
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
@@ -37731,7 +37756,7 @@ function renderUpcomingMilestones() {
 
       html += `
           <div class="upc-subcat" id="${subcatId}">
-            <div class="upc-subcat-header ${cat}" onclick="event.stopPropagation();toggleUpcomingSubcat('${subcatId}')">
+            <div class="upc-subcat-header ${cat}" data-action="toggleUpcomingSubcat" data-arg="${subcatId}" data-stop="1">
               <div class="upc-subcat-icon">${cm.icon}</div>
               <div class="upc-subcat-label">${cm.label}</div>
               <div class="upc-subcat-count">${catItems.length}</div>

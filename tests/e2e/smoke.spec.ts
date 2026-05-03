@@ -3009,3 +3009,122 @@ test.describe('Polish-10a — SVG-in-data architectural shift + HR-1/HR-4 sweep'
       `intelligence.js: zero stethoscope-emoji glyphs in source. Found: ${stethEmojiInIntel}`).toBe(0);
   });
 });
+
+test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () => {
+  // Polish-10b absorbs the inline-onclick HR-3 violations across the Care
+  // jurisdiction (medical.js doctor cards, vacc UI; home.js missed-med
+  // alerts, feeding day toggles, milestone expanders, diet pill fillers,
+  // contextual-alert tip toggles + actions). Two new generic dispatcher
+  // handlers introduced (toggleDisplayBlock, toggleDisplayFlex) for the
+  // common display-toggle pattern that previously inlined a 6-step DOM
+  // mutation chain.
+
+  test('positive — new dispatcher handlers wired in core.js (toggleDisplayBlock, toggleDisplayFlex, plus ~14 named function dispatchers)', async ({ request }) => {
+    const res = await request.get('/split/core.js');
+    expect(res.ok(), '/split/core.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Generic toggle handlers (Polish-10b new).
+    expect(js.includes("action === 'toggleDisplayBlock'"),
+      'core.js dispatcher includes toggleDisplayBlock').toBeTruthy();
+    expect(js.includes("action === 'toggleDisplayFlex'"),
+      'core.js dispatcher includes toggleDisplayFlex').toBeTruthy();
+
+    // Named function dispatchers.
+    const NAMED_HANDLERS = [
+      'resolveMissedMedDone', 'resolveMissedMedSkipped',
+      'markMedDone', 'markMedSkipped',
+      'deleteFeedingEntry', 'switchFoodCatSub',
+      'expandMilestoneByIdx', 'expandUpcomingItem',
+      'fillDietMeal', 'insertDietFood',
+      'toggleAlertTip', 'execAlertAction',
+      'switchTab', 'toggleUpcomingSubcat',
+    ];
+    for (const handler of NAMED_HANDLERS) {
+      expect(js.includes(`action === '${handler}'`),
+        `core.js dispatcher includes ${handler}`).toBeTruthy();
+    }
+  });
+
+  test('regression-guard — zero onclick=" attrs at converted Polish-10b ranges (medical.js + home.js)', async ({ request }) => {
+    const medRes = await request.get('/split/medical.js');
+    const med = await medRes.text();
+    const homeRes = await request.get('/split/home.js');
+    const home = await homeRes.text();
+
+    // Polish-10b: 3 medical.js conversions (lines were :301, :794, :4119).
+    // Verify the previously-inlined patterns are absent.
+    const buggyMedPatterns = [
+      // toggleDisplay*-style inlines that Polish-10b absorbed.
+      `onclick="event.stopPropagation();document.getElementById(\\'`,
+      `onclick="const e=document.getElementById('`,
+      `onclick="event.stopPropagation();toggleUpcomingSubcat('`,
+    ];
+    for (const pattern of buggyMedPatterns) {
+      expect(med.includes(pattern),
+        `medical.js: zero residual inlined onclick of pattern: ${pattern}`).toBeFalsy();
+    }
+
+    // Polish-10b: 21 home.js conversions across multiple pattern families.
+    const buggyHomePatterns = [
+      `onclick="resolveMissedMed(`,
+      `onclick="markMedDone(`,
+      `onclick="markMedSkipped(`,
+      `onclick="event.stopPropagation();deleteFeedingEntry(`,
+      `onclick="switchFoodCatSub(`,
+      `onclick="expandMilestoneByIdx(`,
+      `onclick="expandUpcomingItem(`,
+      `onclick="fillDietMeal(`,
+      `onclick="insertDietFood(`,
+      `onclick="event.stopPropagation();toggleAlertTip(`,
+      `onclick="event.stopPropagation();execAlertAction(`,
+      `onclick="event.stopPropagation();switchTab(`,
+    ];
+    for (const pattern of buggyHomePatterns) {
+      expect(home.includes(pattern),
+        `home.js: zero residual inlined onclick of pattern: ${pattern}`).toBeFalsy();
+    }
+
+    // Display-toggle inlines (the 6-step DOM mutation chain) — verify both
+    // medical.js and home.js no longer carry the literal pattern fragment.
+    const TOGGLE_FRAGMENT_BLOCK = `style.display==='none'?'block':'none'`;
+    const TOGGLE_FRAGMENT_FLEX = `style.display==='none'?'flex':'none'`;
+    expect(med.includes(TOGGLE_FRAGMENT_BLOCK) || med.includes(TOGGLE_FRAGMENT_FLEX),
+      'medical.js: zero residual display-toggle inlines (Polish-10b absorbs all)').toBeFalsy();
+
+    // home.js: only the SKIP-list site at home.js:637 may carry a display
+    // toggle fragment (compound chained-call inline; deferred to R-10).
+    // Other sites must be free of the pattern.
+    // For tractability we just check that the count is small.
+    const homeBlockMatches = (home.match(/style\.display=='none'\?'block':'none'/g) || []).length;
+    const homeFlexMatches = (home.match(/style\.display=='none'\?'flex':'none'/g) || []).length;
+    expect(homeBlockMatches + homeFlexMatches,
+      `home.js: at most 1 residual display-toggle inline (R-10 carry-forward at :637 chained-compound). Found: ${homeBlockMatches + homeFlexMatches}`)
+      .toBeLessThanOrEqual(1);
+  });
+
+  test('regression-guard r2 (Maren F-35-1) — escAttr-in-data-arg corrupts user-content via backslash-leak; user-content data-arg/data-arg2 positions must use escHtml not escAttr', async ({ request }) => {
+    // Maren's Polish-10b audit found that escAttr (core.js:2252) is
+    // `s.replace(/'/g, "\\'").replace(/"/g, '&quot;')` — designed for
+    // embedding inside a JS string literal within an attribute. When
+    // applied to data-arg="..." the HTML attribute parser does not decode
+    // \' as escape; backslash leaks through dataset.arg into the
+    // dispatcher's function call. Parent-facing failure: a food name like
+    // John's pasta saves to localStorage as John\'s pasta and syncs
+    // corrupted to Firestore. r2 fix: swap escAttr → escHtml at all
+    // user-content data-arg / data-arg2 positions; apostrophe in double-
+    // quoted HTML attribute is parser-safe; escHtml leaves apostrophe
+    // literal; dataset.arg returns clean string.
+    const homeRes = await request.get('/split/home.js');
+    const home = await homeRes.text();
+
+    // Affected fields: m.name (medication), nextMilestone.text (milestone),
+    // val (food meal value), f.name (food name), comboStr (combo string),
+    // s.partner (synergy partner food name).
+    const buggyPattern = /data-arg2?="\$\{escAttr\((m\.name|nextMilestone\.text|comboStr|s\.partner|f\.name|val)\b/g;
+    const violations = home.match(buggyPattern) || [];
+    expect(violations,
+      `Polish-10b r2: zero escAttr in user-content data-arg positions (Maren F-35-1 fix). Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+  });
+});
