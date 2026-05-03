@@ -1584,7 +1584,7 @@ function renderMilestones() {
               </div>
               ${m.advanced ? '<span class="badge-adv"><svg class="zi"><use href="#zi-star"/></svg> Advanced</span>' : ''}
               <div class="milestone-actions">
-                ${nextStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${nextStage}'" aria-label="Override to ${nextMeta.label}" title="Override: ${nextMeta.label}">Edit ${nextMeta.label}</button>` : ''}
+                ${nextStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${nextStage}'" aria-label="Override to ${escAttr(nextMeta.label)}" title="Override: ${escAttr(nextMeta.label)}">Edit ${escHtml(nextMeta.label)}</button>` : ''}
                 ${prevStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${prevStage}'" aria-label="Move back">↩</button>` : ''}
                 <button class="ms-action-btn del-ms" data-action="deleteMilestone" data-stop="1" data-arg="${m._i})" aria-label="Delete milestone">×</button>
               </div>
@@ -8871,7 +8871,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
       .map(([c, count]) => {
         const col = POOP_COLORS[c] || { hex:'#ccc' };
         const pct = Math.round((count / total) * 100);
-        return `<div style="flex:${count};height:8px;background:${col.hex};border-radius:var(--r-sm);" title="${(POOP_COLORS[c]||{}).label||c}: ${count} (${pct}%)"></div>`;
+        return `<div style="flex:${count};height:8px;background:${col.hex};border-radius:var(--r-sm);" title="${escAttr((POOP_COLORS[c]||{}).label||c)}: ${count} (${pct}%)"></div>`;
       }).join('');
     html += `<div style="margin-top:4px;">
       <div class="ir-label" style="margin-bottom:4px;">Colour distribution (7d)</div>

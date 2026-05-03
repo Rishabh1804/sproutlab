@@ -2352,7 +2352,7 @@ function renderDoctorContact() {
     html += `
       <div style="${i > 0 ? 'margin-top:10px;padding-top:10px;border-top:1px solid rgba(181,213,197,0.2);' : ''}">
         <div class="fx-start g8">
-          <div style="width:36px;height:36px;border-radius:50%;background:${doc.primary ? 'var(--sage-light)' : 'var(--warm)'};display:flex;align-items:center;justify-content:center;font-size:var(--icon-base);flex-shrink:0;margin-top:2px;">🩺</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:${doc.primary ? 'var(--sage-light)' : 'var(--warm)'};display:flex;align-items:center;justify-content:center;font-size:var(--icon-base);flex-shrink:0;margin-top:2px;">${zi('steth')}</div>
           <div class="flex-1-min">
             <div class="t-title">${escHtml(doc.name)} ${doc.primary ? '<span class="badge-sm" style="background:var(--sage-light);color:var(--tc-sage);">Primary</span>' : ''}</div>
             <div class="t-sub mt-2">${escHtml(doc.title || '')}</div>
@@ -2382,7 +2382,7 @@ let _doctorEditIdx = null;
 
 function openDoctorModal() {
   _doctorEditIdx = null;
-  document.getElementById('doctorModalTitle').textContent = '🩺 Add Doctor';
+  document.getElementById('doctorModalTitle').innerHTML = zi('steth') + ' Add Doctor';
   document.getElementById('docName').value = '';
   document.getElementById('docTitle').value = '';
   document.getElementById('docPhone').value = '';
@@ -2398,7 +2398,7 @@ function editDoctor(i) {
   const doc = doctors[i];
   if (!doc) return;
   _doctorEditIdx = i;
-  document.getElementById('doctorModalTitle').textContent = '🩺 Edit Doctor';
+  document.getElementById('doctorModalTitle').innerHTML = zi('steth') + ' Edit Doctor';
   document.getElementById('docName').value = doc.name || '';
   document.getElementById('docTitle').value = doc.title || '';
   document.getElementById('docPhone').value = doc.phone || '';
@@ -6530,7 +6530,7 @@ function renderInfoPoopReport() {
     html += '' + zi('diaper') + ' Consistency: <strong>' + data.avgConsistency + '</strong>/100<br>';
     html += '' + zi('chart') + ' Frequency: <strong>' + data.avgFrequency + '</strong>/100<br>';
     html += '' + zi('palette') + ' Color: <strong>' + data.avgColor + '</strong>/100<br>';
-    html += '🩺 Symptoms: <strong>' + data.avgSymptoms + '</strong>/100';
+    html += zi('steth') + ' Symptoms: <strong>' + data.avgSymptoms + '</strong>/100';
     html += '</div>';
 
     // Mini sparkline
@@ -6929,10 +6929,10 @@ function renderInfoActivityCorrelation() {
 // ── Helper: collect ALL resolved + active episodes across 4 types ──
 function _getAllEpisodes() {
   const episodes = [];
-  (_feverEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'fever', emoji: zi('flame') }));
-  (_diarrhoeaEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'diarrhoea', emoji: zi('diaper') }));
-  (_vomitingEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'vomiting', emoji: zi('siren') }));
-  (_coldEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'cold', emoji: zi('siren') }));
+  (_feverEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'fever', iconKey: 'flame' }));
+  (_diarrhoeaEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'diarrhoea', iconKey: 'diaper' }));
+  (_vomitingEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'vomiting', iconKey: 'siren' }));
+  (_coldEpisodes || []).forEach(e => episodes.push({ ...e, illnessType: 'cold', iconKey: 'siren' }));
   return episodes.sort((a, b) => (a.startedAt || '').localeCompare(b.startedAt || ''));
 }
 
@@ -7019,7 +7019,7 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: recent[i].emoji + ' ' + recent[i].illnessType + ' and ' + recent[j].emoji + ' ' + recent[j].illnessType + ' overlapped around ' +
+          text: zi(recent[i].iconKey) + ' ' + escHtml(recent[i].illnessType) + ' and ' + zi(recent[j].iconKey) + ' ' + escHtml(recent[j].illnessType) + ' overlapped around ' +
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights
@@ -7065,7 +7065,7 @@ function renderInfoIllnessFreq() {
         const w = Math.max(12, Math.min(dur * 18, 120));
         const color = typeColors[ep.illnessType] || 'var(--light)';
         tlHtml += '<div class="mi-tl-block mi-' + ep.illnessType + '" style="width:' + w + 'px;background:' + color + ';" title="' +
-          ep.emoji + ' ' + ep.illnessType + ' · ' + dur + 'd · ' + formatDate(ep.startedAt).replace(/, \d{4}$/, '') + '"></div>';
+          escHtml(ep.illnessType) + ' · ' + dur + 'd · ' + formatDate(ep.startedAt).replace(/, \d{4}$/, '') + '"></div>';
       });
     }
     tlHtml += '</div></div>';
@@ -7235,8 +7235,8 @@ function renderInfoVaccFever() {
 function computeIllnessFoodCorrelation() {
   // Cross-reference diarrhoea and vomiting episode start dates with foods logged 24-48h prior
   const targetEpisodes = [
-    ...(_diarrhoeaEpisodes || []).map(e => ({ ...e, illnessType: 'diarrhoea', emoji: zi('diaper') })),
-    ...(_vomitingEpisodes || []).map(e => ({ ...e, illnessType: 'vomiting', emoji: zi('siren') }))
+    ...(_diarrhoeaEpisodes || []).map(e => ({ ...e, illnessType: 'diarrhoea', iconKey: 'diaper' })),
+    ...(_vomitingEpisodes || []).map(e => ({ ...e, illnessType: 'vomiting', iconKey: 'siren' }))
   ].filter(e => e.startedAt);
 
   if (targetEpisodes.length === 0) return null;
@@ -7265,7 +7265,7 @@ function computeIllnessFoodCorrelation() {
       foodOccurrences[food].count++;
       foodOccurrences[food].episodes.push({
         type: ep.illnessType,
-        emoji: ep.emoji,
+        iconKey: ep.iconKey,
         date: ep.startedAt
       });
     });
@@ -7350,7 +7350,7 @@ function renderInfoIllnessFood() {
     data.correlations.forEach(c => {
       const pct = Math.round((c.suspicion / maxSusp) * 100);
       const barColor = c.suspicion > 2 ? 'var(--tc-rose)' : c.suspicion > 1 ? 'var(--tc-amber)' : 'var(--tc-sage)';
-      const emojiList = c.episodes.map(e => e.emoji).join('');
+      const emojiList = c.episodes.map(e => zi(e.iconKey)).join('');
       html += '<div class="mi-food-row">';
       html += '<div class="mi-food-name">' + c.food + '</div>';
       html += '<div class="mi-food-bar"><div class="mi-food-fill" style="width:' + pct + '%;background:' + barColor + ';"></div></div>';
@@ -7426,7 +7426,7 @@ function computePostIllnessRecovery() {
 
     recoveries.push({
       illnessType: ep.illnessType,
-      emoji: ep.emoji,
+      iconKey: ep.iconKey,
       startDate,
       resolveDate,
       duration: dur,
@@ -7485,7 +7485,7 @@ function renderInfoRecovery() {
   data.recoveries.forEach(r => {
     html += '<div class="mi-recovery-entry">';
     html += '<div class="mi-recovery-header">';
-    html += '<div class="mi-recovery-type" style="color:' + (r.illnessType === 'fever' ? 'var(--tc-rose)' : r.illnessType === 'diarrhoea' ? 'var(--tc-amber)' : r.illnessType === 'cold' ? 'var(--tc-sky)' : 'var(--tc-caution)') + ';">' + r.emoji + ' ' + r.illnessType + '</div>';
+    html += '<div class="mi-recovery-type" style="color:' + (r.illnessType === 'fever' ? 'var(--tc-rose)' : r.illnessType === 'diarrhoea' ? 'var(--tc-amber)' : r.illnessType === 'cold' ? 'var(--tc-sky)' : 'var(--tc-caution)') + ';">' + zi(r.iconKey) + ' ' + escHtml(r.illnessType) + '</div>';
     html += '<div class="mi-recovery-dates">' + formatDate(r.startDate).replace(/, \d{4}$/, '') + ' → ' + formatDate(r.resolveDate).replace(/, \d{4}$/, '') + ' (' + r.duration + 'd)</div>';
     html += '</div>';
 
@@ -7703,7 +7703,8 @@ function computeFoodReactionTimeline() {
       events.push({
         type: 'symptom',
         date: ep.startedAt,
-        label: ep.emoji + ' ' + ep.illnessType,
+        label: ep.illnessType,
+        iconKey: ep.iconKey,
         illnessType: ep.illnessType,
         resolved: ep.status === 'resolved'
       });
@@ -7783,8 +7784,8 @@ function renderInfoFoodReaction() {
         const dotColor = ev.type === 'introduced' ? 'var(--tc-sage)' : ev.type === 'symptom' ? 'var(--tc-rose)' : 'var(--tc-sage)';
         if (i > 0) html += '<div class="mi-frt-line"></div>';
         html += '<div class="mi-frt-node">';
-        html += '<div class="mi-frt-dot" style="background:' + dotColor + ';" title="' + ev.label + '"></div>';
-        html += '<div class="mi-frt-event">' + ev.label + '<br>' + formatDate(ev.date).replace(/, \d{4}$/, '') + '</div>';
+        html += '<div class="mi-frt-dot" style="background:' + dotColor + ';" title="' + escHtml(ev.label) + '"></div>';
+        html += '<div class="mi-frt-event">' + (ev.iconKey ? zi(ev.iconKey) + ' ' : '') + escHtml(ev.label) + '<br>' + formatDate(ev.date).replace(/, \d{4}$/, '') + '</div>';
         html += '</div>';
       });
       html += '</div>';
@@ -8297,7 +8298,7 @@ function _renderHydrationContent() {
     } else {
       const lvl = d.hydraCount === 0 ? 'hy-hydra-0' : d.hydraCount <= 1 ? 'hy-hydra-1' : d.hydraCount <= 2 ? 'hy-hydra-2' : 'hy-hydra-3';
       const label = d.hydraCount === 0 ? '·' : d.hydraCount;
-      gridHtml += `<div class="hy-cell ${lvl}" title="${d.hydraFoods.join(', ') || 'none'}">${label}</div>`;
+      gridHtml += `<div class="hy-cell ${lvl}" title="${escAttr(d.hydraFoods.join(', ') || 'none')}">${label}</div>`;
     }
   });
 
@@ -9266,7 +9267,7 @@ function computeVisitPrep() {
   }
   var avgPoop = poopScores.length > 0 ? Math.round(poopScores.reduce(function(s,v){return s+v;},0) / poopScores.length) : null;
   sections.poop = {
-    emoji: zi('diaper'),
+    iconKey: 'diaper',
     label: 'Poop',
     items: [],
     hasData: poopScores.length > 0
@@ -9350,7 +9351,7 @@ function renderInfoVisitPrep() {
       var itemStr = sec.items.length > 0 ? sec.items.join(' · ') : 'No changes';
       var itemColor = sec.hasData ? 'var(--mid)' : 'var(--light)';
       html += '<div class="si-check-row">';
-      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + sec.emoji + '</span>';
+      html += '<span style="font-size:var(--fs-md);width:24px;text-align:center;">' + (sec.iconKey ? zi(sec.iconKey) : sec.emoji) + '</span>';
       html += '<div class="flex-1"><div class="fs-sm-600">' + sec.label + '</div>';
       html += '<div style="font-size:var(--fs-xs);color:' + itemColor + ';">' + escHtml(itemStr) + '</div></div>';
       html += '</div>';

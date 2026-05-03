@@ -3311,7 +3311,7 @@ function updateStorageUsage() {
   const makeChip = ([label, bytes]) => {
     const kb = (bytes / 1024).toFixed(1);
     const catPct = totalBytes > 0 ? ((bytes / totalBytes) * 100).toFixed(0) : 0;
-    return `<span style="font-size:var(--fs-xs);padding:3px 8px;border-radius:var(--r-md);background:var(--card-bg);color:var(--mid);border:1px solid rgba(168,207,224,0.3);">${label} ${kb}KB <span style="opacity:0.5;">${catPct}%</span></span>`;
+    return `<span class="storage-chip">${escHtml(label)} ${kb}KB <span class="storage-chip-pct">${catPct}%</span></span>`;
   };
 
   const top3 = sorted.slice(0, 3).map(makeChip).join('');
@@ -3322,9 +3322,9 @@ function updateStorageUsage() {
   } else {
     const restChips = rest.map(makeChip).join('');
     breakdown.innerHTML = top3 +
-      `<span id="storageMoreBtn" style="font-size:var(--fs-xs);padding:3px 8px;border-radius:var(--r-md);background:var(--warm);color:var(--light);border:1px solid rgba(168,207,224,0.2);cursor:pointer;" onclick="document.getElementById('storageRestChips').style.display='flex';this.style.display='none';">+ ${rest.length} more</span>` +
-      `<div id="storageRestChips" style="display:none;flex-wrap:wrap;gap:var(--sp-8);width:100%;">${restChips}` +
-      `<span style="font-size:var(--fs-xs);padding:3px 8px;border-radius:var(--r-md);background:var(--warm);color:var(--light);border:1px solid rgba(168,207,224,0.2);cursor:pointer;" onclick="document.getElementById('storageRestChips').style.display='none';document.getElementById('storageMoreBtn').style.display='';">▴ less</span></div>`;
+      `<span id="storageMoreBtn" class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.add('is-open');this.style.display='none';">+ ${rest.length} more</span>` +
+      `<div id="storageRestChips" class="storage-rest-chips">${restChips}` +
+      `<span class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.remove('is-open');document.getElementById('storageMoreBtn').style.display='';">▴ less</span></div>`;
   }
 }
 
