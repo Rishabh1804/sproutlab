@@ -442,6 +442,10 @@ function init() {
     else if (action === 'editDoctor') editDoctor(parseInt(arg));
     else if (action === 'openVaccEditModal') openVaccEditModal(arg);
     else if (action === 'deleteMilestone') deleteMilestone(arg);
+    else if (action === 'deleteActivityEntry') { const args = arg.split(',').map(s => s.trim()); deleteActivityEntry(args[0], args[1]); }
+    else if (action === 'editActivityEntry') { const args = arg.split(',').map(s => s.trim()); editActivityEntry(args[0], args[1]); }
+    else if (action === 'closeActivityEdit') closeActivityEdit();
+    else if (action === 'saveActivityEdit') { const args = arg.split(',').map(s => s.trim()); saveActivityEdit(args[0], args[1]); }
     else if (action === 'deleteNote') deleteNote(parseInt(arg));
     else if (action === 'toggleNote') toggleNote(parseInt(arg));
     else if (action === 'clearNotePhoto') clearNotePhoto(parseInt(arg));
