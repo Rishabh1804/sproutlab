@@ -1872,21 +1872,24 @@ function renderGrowthHero() {
   const ageStr = `${months}m ${days}d`;
 
   // Compute percentiles
-  let wtPct = null, htPct = null, wtVal = '—', htVal = '—';
+  let wtPct = null, htPct = null, wtVal = '—', htVal = '—', wtUnit = 'kg', htUnit = '';
   let wtPctNum = 50, htPctNum = 50;
   if (lastWtE) {
     const who = getGrowthRef(ageMonthsAt(lastWtE.date));
     const p = calcPercentile(lastWtE.wt, who.w3, who.w50, who.w97, who.w15, who.w85);
     wtPct = p;
     wtPctNum = parseInt(p.text) || 50;
-    wtVal = lastWtE.wt + ' kg';
+    wtVal = String(lastWtE.wt);
   }
   if (lastHtE) {
     const who = getGrowthRef(ageMonthsAt(lastHtE.date));
     const p = calcPercentile(lastHtE.ht, who.h3, who.h50, who.h97, who.h15, who.h85);
     htPct = p;
     htPctNum = parseInt(p.text) || 50;
-    htVal = formatHeight(lastHtE.ht);
+    const htUnitPref = localStorage.getItem('ziva_height_unit') || 'ft';
+    if (htUnitPref === 'cm') { htVal = String(lastHtE.ht); htUnit = 'cm'; }
+    else if (htUnitPref === 'in') { htVal = (lastHtE.ht / 2.54).toFixed(1); htUnit = 'in'; }
+    else { const _ft = Math.floor(lastHtE.ht / 2.54 / 12); const _in = (lastHtE.ht / 2.54 % 12).toFixed(1); htVal = `${_ft}′${_in}″`; }
   }
 
   // Gain rate
@@ -1924,7 +1927,7 @@ function renderGrowthHero() {
         <div class="gh-gauge-inner">
           <div class="gh-gauge-val" style="color:${color};">${val}</div>
           <div class="gh-gauge-unit">${unit}</div>
-          ${pctText ? `<div class="gh-gauge-pct" style="background:${pctBg};color:${pctColor};">${pctText}</div>` : ''}
+          ${pctText ? `<div class="gh-gauge-pct" style="background:${pctBg};color:${pctColor};">${escHtml(pctText)}</div>` : ''}
         </div>
       </div>
       <div class="gh-gauge-label">${label}</div>
@@ -1943,8 +1946,8 @@ function renderGrowthHero() {
 
   // Gauge rings
   html += '<div class="gh-gauges">';
-  html += gaugeRing(wtPctNum, wtVal, 'weight', wtPct ? wtPct.text : null, 'Weight', wtColor);
-  html += gaugeRing(htPctNum, htVal, 'height', htPct ? htPct.text : null, 'Height', htColor);
+  html += gaugeRing(wtPctNum, wtVal, wtUnit, wtPct ? wtPct.text : null, 'Weight', wtColor);
+  html += gaugeRing(htPctNum, htVal, htUnit, htPct ? htPct.text : null, 'Height', htColor);
   html += '</div>';
 
   // Meta pills row
