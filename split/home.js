@@ -2090,10 +2090,19 @@ function renderRecentEvidence() {
   const feedEl = document.getElementById('recentEvidenceFeed');
   if (!feedEl) return;
 
+  // PR-β rollup config — across the 7-day window, observations whose
+  // primary milestone keyword recurs ≥ ROLLUP_THRESHOLD times collapse
+  // into a "Frequent observations" rollup section above the per-day groups.
+  // Activities (durational; type='activity' or has duration) always stay
+  // flat. Render-time client-side aggregation only — no data-shape change
+  // to activityLog (preserves PR-α per-entry attribution stamps).
+  const ROLLUP_THRESHOLD = 3;
+  const ROLLUP_WINDOW_DAYS = 7;
+
   // Gather last 7 days of activity entries
   const now = new Date();
   const dayGroups = {};
-  for (let d = 0; d < 7; d++) {
+  for (let d = 0; d < ROLLUP_WINDOW_DAYS; d++) {
     const dt = new Date(now);
     dt.setDate(dt.getDate() - d);
     const dateStr = toDateStr(dt);
@@ -2114,13 +2123,103 @@ function renderRecentEvidence() {
   const todayStr = today();
   const yesterdayStr = toDateStr(new Date(Date.now() - 86400000));
 
-  let html = '<div class="micro-label text-center mb-4 fw-600" >Recent Activity Evidence</div>';
+  // ── PR-β rollup pre-pass ──
+  // Pick the primary milestone keyword for an observation entry: highest-
+  // confidence wins, ties resolved by first occurrence (stable for cross-
+  // device determinism). Activities (type='activity' OR has duration) and
+  // entries with no milestone-bearing evidence don't roll up.
+  const confRank = { high: 3, medium: 2, low: 1 };
+  function _primaryMilestone(e) {
+    if (e.type === 'activity' || e.duration) return null;
+    const evid = (e.evidence || []).filter(ev => ev && ev.milestone);
+    if (evid.length === 0) return null;
+    let best = evid[0], bestRank = confRank[best.confidence] || 0;
+    for (let i = 1; i < evid.length; i++) {
+      const r = confRank[evid[i].confidence] || 0;
+      if (r > bestRank) { best = evid[i]; bestRank = r; }
+    }
+    return best.milestone;
+  }
 
+  // Group observations by primary milestone across the full 7d window.
+  const obsByMilestone = {};
+  Object.entries(dayGroups).forEach(([dateStr, entries]) => {
+    entries.forEach(e => {
+      const ms = _primaryMilestone(e);
+      if (!ms) return;
+      if (!obsByMilestone[ms]) obsByMilestone[ms] = [];
+      obsByMilestone[ms].push({ entry: e, dateStr });
+    });
+  });
+
+  // Promote milestones at or above threshold into rollups; track rolled-up
+  // entry IDs so per-day sections can subtract them from counts + display.
+  const rolledIds = new Set();
+  const rollups = [];
+  Object.entries(obsByMilestone).forEach(([ms, occs]) => {
+    if (occs.length < ROLLUP_THRESHOLD) return;
+    const sorted = occs.slice().sort((a, b) => {
+      const aTs = a.entry.ts || a.dateStr;
+      const bTs = b.entry.ts || b.dateStr;
+      return bTs.localeCompare(aTs);
+    });
+    rollups.push({
+      milestone: ms,
+      count: occs.length,
+      latest: sorted[0],
+      entries: sorted,
+    });
+    sorted.forEach(o => { if (o.entry.id) rolledIds.add(o.entry.id); });
+  });
+
+  rollups.sort((a, b) => b.count - a.count || a.milestone.localeCompare(b.milestone));
+
+  let html = '<div class="micro-label text-center mb-4 fw-600">Recent Activity Evidence</div>';
+
+  // ── Render rollups section (if any) ──
+  if (rollups.length > 0) {
+    html += '<div class="al-feed-rollups-label">Frequent observations · last ' + ROLLUP_WINDOW_DAYS + ' days</div>';
+    rollups.forEach((r, ri) => {
+      const label = (typeof createMilestoneLabel === 'function') ? createMilestoneLabel(r.milestone) : r.milestone.replace(/_/g, ' ');
+      const latestEntry = r.latest.entry;
+      const latestDate = r.latest.dateStr;
+      const latestLabel = latestDate === todayStr ? 'today' : latestDate === yesterdayStr ? 'yesterday' : formatDate(latestDate);
+      const latestTimeStr = latestEntry.ts ? new Date(latestEntry.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+      const rollupBodyId = 'al-feed-rollup-' + ri;
+      const primaryDomain = (latestEntry.domains && latestEntry.domains[0]) || 'cognitive';
+
+      html += '<div class="al-feed-rollup">';
+      html += '<div class="al-feed-rollup-pill al-chip-' + primaryDomain + ' ptr" data-action="toggleDisplayBlock" data-arg="' + rollupBodyId + '">' +
+        '<span class="al-feed-rollup-icon">' + (domainIcons[primaryDomain] || '') + '</span>' +
+        '<span class="al-feed-rollup-label-text"><strong>' + escHtml(label) + '</strong> × ' + r.count + '</span>' +
+        '<span class="al-feed-rollup-meta">last ' + latestLabel + (latestTimeStr ? ' ' + latestTimeStr : '') + '</span>' +
+        '<span class="al-feed-rollup-chevron">▾</span>' +
+        '</div>';
+      html += '<div id="' + rollupBodyId + '" class="al-feed-rollup-body" style="display:none;">';
+      r.entries.forEach(o => {
+        const e = o.entry;
+        const dStr = o.dateStr;
+        const dLabel = dStr === todayStr ? 'Today' : dStr === yesterdayStr ? 'Yesterday' : formatDate(dStr);
+        const tStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+        html += '<div class="al-feed-rollup-entry">' +
+          '<div class="al-feed-rollup-when">' + dLabel + (tStr ? ' · ' + tStr : '') + '</div>' +
+          '<div class="al-feed-rollup-text">' + escHtml(e.text) + '</div>' +
+          _renderAttribution(e) +
+          '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+    });
+  }
+
+  // ── Render per-day groups (excluding rolled-up entries) ──
   dayKeys.forEach((dateStr, dayIdx) => {
-    const entries = dayGroups[dateStr].sort((a, b) => (b.ts || b._date).localeCompare(a.ts || a._date));
+    const allEntries = dayGroups[dateStr].slice().sort((a, b) => (b.ts || b._date).localeCompare(a.ts || a._date));
+    const entries = allEntries.filter(e => !(e.id && rolledIds.has(e.id)));
+    if (entries.length === 0) return;
+
     const dayLabel = dateStr === todayStr ? 'Today' : dateStr === yesterdayStr ? 'Yesterday' : formatDate(dateStr);
 
-    // Day summary: count by domain
     const domainCounts = {};
     let totalEvidence = 0;
     entries.forEach(e => {
