@@ -130,6 +130,32 @@ function checkEvidenceRegression(milestoneKeyword, currentAutoStatus) {
   return daysSince > 21;
 }
 
+// _postReceiveMilestones — PR-β r2 (cross-device receive hook). Called from
+// _syncDispatchRender after the listener has set milestones = remoteValue,
+// before renderer dispatch fires. Runs both:
+//   1. migrateMilestoneStatus per entry — repairs pre-Phase-3 enum values
+//      (status='done'/'in_progress'/'pending' → mastered/practicing/not_started)
+//      that arrive from devices running older code or stuck in legacy state.
+//   2. dedupeMilestonesByText — collapses duplicate text entries that arrive
+//      from cross-device sync races (one device pushes a fresh entry while
+//      another device's canonical entry is mid-flight).
+// Both functions save() locally if they made changes, which triggers autosave
+// to Firestore so the cleaned state propagates back. Convergent: once both
+// devices run this code, Firestore lands at deduped+migrated state.
+function _postReceiveMilestones() {
+  if (!Array.isArray(milestones)) return;
+  try {
+    if (typeof migrateMilestoneStatus === 'function') {
+      milestones.forEach(m => migrateMilestoneStatus(m));
+    }
+  } catch(e) { console.warn('[post-receive milestones] migrate:', e); }
+  try {
+    if (typeof dedupeMilestonesByText === 'function') {
+      dedupeMilestonesByText();
+    }
+  } catch(e) { console.warn('[post-receive milestones] dedupe:', e); }
+}
+
 // dedupeMilestonesByText — PR-β r1 hotfix (Sovereign-floor catch on PR-α/β):
 // the milestones array can accumulate duplicates with same text but different
 // status/evidence-count snapshots (legacy data + cross-device sync rounds
