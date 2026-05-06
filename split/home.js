@@ -1608,7 +1608,7 @@ function renderMilestoneList() {
               <div class="milestone-actions">
                 ${nextStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${nextStage}'" aria-label="Override to ${escAttr(nextMeta.label)}" title="Override: ${escAttr(nextMeta.label)}">Edit ${escHtml(nextMeta.label)}</button>` : ''}
                 ${prevStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${prevStage}'" aria-label="Move back">↩</button>` : ''}
-                <button class="ms-action-btn del-ms" data-action="deleteMilestone" data-stop="1" data-arg="${m._i})" aria-label="Delete milestone">×</button>
+                <button class="ms-action-btn del-ms" data-action="deleteMilestone" data-stop="1" data-arg="${m._i}" aria-label="Delete milestone">×</button>
               </div>
             </div>
             ${progressHtml}
@@ -1868,9 +1868,16 @@ function logMilestoneEvent(text, stage, date) {
 
 // ageAtDate, daysBetween → migrated to core.js
 function deleteMilestone(i) {
+  // PR-γ: data-action dispatcher passes arg as string; coerce to integer.
+  // Pre-fix data-arg had a stray trailing ')' that made parseInt yield NaN
+  // → splice(NaN, 1) treated start=0 → ALWAYS deleted milestones[0] regardless
+  // of which × button was clicked. Now data-arg is the bare index string.
+  const idx = typeof i === 'number' ? i : parseInt(i, 10);
+  if (!Number.isInteger(idx) || idx < 0 || idx >= milestones.length) return;
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
-  milestones.splice(i,1);
+  milestones.splice(idx, 1);
+  save(KEYS.milestones, milestones);
   renderMilestones();
   renderUpcomingMilestones();
   expandedMsCats.forEach(id => {
@@ -2201,10 +2208,15 @@ function renderRecentEvidence() {
         const dStr = o.dateStr;
         const dLabel = dStr === todayStr ? 'Today' : dStr === yesterdayStr ? 'Yesterday' : formatDate(dStr);
         const tStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+        const actBtns = e.id ? '<div class="al-feed-actions">' +
+          '<button class="al-feed-action-btn" data-action="editActivityEntry" data-arg="' + dStr + ',' + e.id + '" data-stop="1" aria-label="Edit entry">Edit</button>' +
+          '<button class="al-feed-action-btn al-feed-del" data-action="deleteActivityEntry" data-arg="' + dStr + ',' + e.id + '" data-stop="1" aria-label="Delete entry">×</button>' +
+          '</div>' : '';
         html += '<div class="al-feed-rollup-entry">' +
           '<div class="al-feed-rollup-when">' + dLabel + (tStr ? ' · ' + tStr : '') + '</div>' +
           '<div class="al-feed-rollup-text">' + escHtml(e.text) + '</div>' +
           _renderAttribution(e) +
+          actBtns +
           '</div>';
       });
       html += '</div>';
@@ -2247,12 +2259,17 @@ function renderRecentEvidence() {
       const evidCount = (e.evidence || []).length;
       const timeStr = e.ts ? new Date(e.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
       const durStr = e.duration ? e.duration + ' min' : 'obs';
+      const actBtns = e.id ? '<div class="al-feed-actions">' +
+        '<button class="al-feed-action-btn" data-action="editActivityEntry" data-arg="' + dateStr + ',' + e.id + '" data-stop="1" aria-label="Edit entry">Edit</button>' +
+        '<button class="al-feed-action-btn al-feed-del" data-action="deleteActivityEntry" data-arg="' + dateStr + ',' + e.id + '" data-stop="1" aria-label="Delete entry">×</button>' +
+        '</div>' : '';
       html += '<div class="al-feed-entry">' +
         '<div class="al-feed-time">' + timeStr + '</div>' +
         '<div class="al-feed-body">' +
           '<div class="al-feed-text">' + escHtml(e.text) + '</div>' +
           '<div class="al-feed-chips">' + domainChips + '</div>' +
           _renderAttribution(e) +
+          actBtns +
         '</div>' +
         '<div class="al-feed-meta">' + durStr + ' · ' + evidCount + ' ev</div>' +
       '</div>';
@@ -2262,6 +2279,97 @@ function renderRecentEvidence() {
   });
 
   feedEl.innerHTML = html;
+}
+
+// ── PR-γ: Edit / Delete affordances on activity-log entries ──
+// User can fix typos / wrong durations on logged activities + observations,
+// or remove erroneous entries. Re-runs classifyActivity on edited text so
+// detected domains / evidence keywords stay aligned with the current text.
+
+function deleteActivityEntry(dateStr, entryId) {
+  if (!dateStr || !entryId) return;
+  if (!activityLog[dateStr]) return;
+  confirmAction('Delete this entry? Milestone evidence will be recomputed.', () => {
+    const idx = activityLog[dateStr].findIndex(e => e && e.id === entryId);
+    if (idx < 0) return;
+    activityLog[dateStr].splice(idx, 1);
+    if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
+    save(KEYS.activityLog, activityLog);
+    if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
+    if (typeof renderMilestones === 'function') renderMilestones();
+    if (typeof renderHomeActivity === 'function') renderHomeActivity();
+  });
+}
+
+function editActivityEntry(dateStr, entryId) {
+  if (!dateStr || !entryId) return;
+  if (!activityLog[dateStr]) return;
+  const entry = activityLog[dateStr].find(e => e && e.id === entryId);
+  if (!entry) return;
+
+  const isActivity = entry.type === 'activity' || !!entry.duration;
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.id = 'activityEditOverlay';
+  overlay.innerHTML =
+    '<div class="modal" style="max-width:420px;">' +
+      '<h3>Edit ' + (isActivity ? 'Activity' : 'Observation') + '</h3>' +
+      '<label class="micro-label">Description</label>' +
+      '<textarea id="actEditText" class="form-input" rows="3" style="width:100%;margin-bottom:var(--sp-8);">' + escHtml(entry.text || '') + '</textarea>' +
+      (isActivity
+        ? '<label class="micro-label">Duration (minutes)</label>' +
+          '<input id="actEditDuration" type="number" class="form-input" min="0" value="' + (entry.duration || '') + '" style="width:100%;margin-bottom:var(--sp-8);">'
+        : '') +
+      '<div class="modal-btns" style="display:flex;gap:var(--sp-8);justify-content:flex-end;">' +
+        '<button class="btn btn-ghost" data-action="closeActivityEdit">Cancel</button>' +
+        '<button class="btn btn-primary" data-action="saveActivityEdit" data-arg="' + dateStr + ',' + entryId + '">Save</button>' +
+      '</div>' +
+    '</div>';
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(() => { const ta = document.getElementById('actEditText'); if (ta) ta.focus(); }, 50);
+}
+
+function closeActivityEdit() {
+  const overlay = document.getElementById('activityEditOverlay');
+  if (overlay) overlay.remove();
+}
+
+function saveActivityEdit(dateStr, entryId) {
+  if (!dateStr || !entryId) { closeActivityEdit(); return; }
+  if (!activityLog[dateStr]) { closeActivityEdit(); return; }
+  const entry = activityLog[dateStr].find(e => e && e.id === entryId);
+  if (!entry) { closeActivityEdit(); return; }
+
+  const ta = document.getElementById('actEditText');
+  const newText = ta ? (ta.value || '').trim() : '';
+  if (!newText) { closeActivityEdit(); return; }
+  entry.text = newText;
+
+  const durEl = document.getElementById('actEditDuration');
+  if (durEl) {
+    const dur = parseInt(durEl.value, 10);
+    entry.duration = (Number.isFinite(dur) && dur > 0) ? dur : null;
+    entry.type = entry.duration ? 'activity' : 'observation';
+  }
+
+  // Re-run evidence classifier on the new text so detected domains/evidence
+  // keywords stay aligned. Falls back gracefully if classifier missing.
+  if (typeof classifyActivity === 'function') {
+    try {
+      const c = classifyActivity(entry.text);
+      if (c) {
+        entry.domains = c.domains || [];
+        entry.evidence = c.evidence || [];
+      }
+    } catch(e) { console.warn('[edit-activity] classify:', e); }
+  }
+
+  save(KEYS.activityLog, activityLog);
+  if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
+  closeActivityEdit();
+  if (typeof renderMilestones === 'function') renderMilestones();
+  if (typeof renderHomeActivity === 'function') renderHomeActivity();
 }
 
 // ─────────────────────────────────────────

@@ -5480,6 +5480,13 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .al-feed-rollup-when { font-size:var(--fs-2xs); color:var(--light); font-weight:600; }
 .al-feed-rollup-text { font-size:var(--fs-sm); color:var(--text); margin-top:var(--sp-2); }
 
+/* PR-γ: Edit / Delete affordances on activity-log entries */
+.al-feed-actions { display:flex; gap:var(--sp-4); margin-top:var(--sp-4); align-items:center; }
+.al-feed-action-btn { font-size:var(--fs-2xs); padding:var(--sp-2) var(--sp-6); border-radius:var(--r-sm); background:transparent; color:var(--light); border:1px solid var(--border-subtle); cursor:pointer; line-height:1; }
+.al-feed-action-btn:hover { background:var(--warm); color:var(--text); }
+.al-feed-action-btn.al-feed-del { color:var(--tc-rose); }
+.al-feed-action-btn.al-feed-del:hover { background:var(--surface-rose); }
+
 /* ── Activity Intelligence Cards ── */
 .ai-dot-cal { display:grid; grid-template-columns:repeat(7, 1fr); gap:var(--sp-2); margin:var(--sp-8) 0; }
 .ai-dot { width:100%; aspect-ratio:1; border-radius:var(--r-sm); background:var(--warm); transition:background var(--ease-fast); }
