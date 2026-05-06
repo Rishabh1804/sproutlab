@@ -62164,25 +62164,66 @@ function _syncDebounceSingleDoc(hRef, collection, key, oldVal, newVal) {
 // change (vs. PR-19's per-key sidecar) the Sovereign-side production
 // verification surfaced as missing on the history-tab surface.
 //
-// Scope (PR-19.5): array-shape values only (growth, sleep, poop, vacc,
-// meds, visits, milestones, notes, doctors, episodes, careTickets). Object-
-// keyed shapes (feeding, activityLog, medChecks) are Phase 4 carry-forward;
-// stamping a date-keyed sub-object requires a wrapper-shape decision that
-// affects every renderer reading those fields.
+// Scope (PR-19.5 baseline): array-shape values (growth, sleep, poop, vacc,
+// meds, visits, milestones, notes, doctors, episodes, careTickets).
+//
+// PR-α r1 hotfix (Stability sub-phase 2 post-merge Sovereign-floor catch):
+// extended to also walk object-keyed shapes whose VALUES are entry-arrays —
+// activityLog (`{ dateStr: [entry, entry, ...] }`). This closes the gap
+// where PR-α wired _renderAttribution(e) into renderRecentEvidence but
+// entries never carried the __sync_updatedBy stamp. feeding (`{ dateStr:
+// { meal: '...' } }`) and medChecks (`{ dateStr: { medname: 'status' } }`)
+// have non-array values and remain Phase 4 carry-forward — the wrapper-
+// shape decision for those affects every renderer reading those fields.
 function _syncStampUnattributed(value, writer) {
-  if (!Array.isArray(value)) return value;
   if (!writer || (!writer.uid && !writer.name)) return value;
-  var changed = false;
-  var stamped = value.map(function(entry) {
-    if (entry && typeof entry === 'object' && !Array.isArray(entry) && !entry.__sync_updatedBy) {
-      changed = true;
-      return Object.assign({}, entry, {
-        __sync_updatedBy: { uid: writer.uid || null, name: writer.name || null },
-      });
-    }
-    return entry;
-  });
-  return changed ? stamped : value;
+
+  // Array-shape: stamp each entry directly (PR-19.5 baseline)
+  if (Array.isArray(value)) {
+    var changed = false;
+    var stamped = value.map(function(entry) {
+      if (entry && typeof entry === 'object' && !Array.isArray(entry) && !entry.__sync_updatedBy) {
+        changed = true;
+        return Object.assign({}, entry, {
+          __sync_updatedBy: { uid: writer.uid || null, name: writer.name || null },
+        });
+      }
+      return entry;
+    });
+    return changed ? stamped : value;
+  }
+
+  // Object-keyed shape with entry-array values (PR-α r1 hotfix; activityLog).
+  // Walks each top-level key whose value is an array; stamps each entry
+  // lacking __sync_updatedBy. Non-array values (feeding/medChecks shape)
+  // are passed through untouched — those shapes need a wrapper-level
+  // attribution decision and remain deferred.
+  if (value && typeof value === 'object') {
+    var anyChanged = false;
+    var out = {};
+    Object.keys(value).forEach(function(k) {
+      var v = value[k];
+      if (Array.isArray(v)) {
+        var subChanged = false;
+        var subStamped = v.map(function(entry) {
+          if (entry && typeof entry === 'object' && !Array.isArray(entry) && !entry.__sync_updatedBy) {
+            subChanged = true;
+            return Object.assign({}, entry, {
+              __sync_updatedBy: { uid: writer.uid || null, name: writer.name || null },
+            });
+          }
+          return entry;
+        });
+        if (subChanged) anyChanged = true;
+        out[k] = subChanged ? subStamped : v;
+      } else {
+        out[k] = v;
+      }
+    });
+    return anyChanged ? out : value;
+  }
+
+  return value;
 }
 
 function _syncFlushSingleDoc(hRef, collection) {
