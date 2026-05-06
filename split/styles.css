@@ -393,7 +393,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 }
 .gh-gauge-val { font-family:'Fraunces',serif; font-size:var(--fs-xl); font-weight:600; line-height:var(--lh-none); }
 .gh-gauge-unit { font-size:var(--fs-2xs); font-weight:600; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-tight); margin-top:1px; }
-.gh-gauge-pct { font-size:var(--fs-xs); font-weight:600; margin-top:var(--sp-2); padding:1px var(--sp-6); border-radius:var(--r-full); }
+.gh-gauge-pct { font-size:var(--fs-sm); font-weight:600; margin-top:var(--sp-2); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-full); }
 .gh-gauge-label { font-size:var(--fs-xs); font-weight:600; color:var(--text); text-transform:uppercase; letter-spacing:var(--ls-tight); margin-top:var(--sp-6); }
 .gh-gauge-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
 .gh-meta-row { display:flex; gap:var(--sp-8); min-width:0; flex-wrap:wrap;}

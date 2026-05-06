@@ -94,9 +94,10 @@ function updateHeader() {
     const avg = getAvgDailySleepScore7d();
     const pill = document.getElementById('homeAvgSleepScorePill');
     if (avg > 0) {
-      const emoji = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn');
-      sleepScorePill.textContent = `${emoji} ${avg}`;
+      sleepScorePill.textContent = String(avg);
       if (pill) {
+        const iconEl = pill.querySelector('.hsp-icon');
+        if (iconEl) iconEl.innerHTML = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn');
         pill.classList.remove('hsp-sage','hsp-peach','hsp-rose','hsp-indigo');
         pill.classList.add(avg >= 70 ? 'hsp-sage' : avg >= 40 ? 'hsp-peach' : 'hsp-rose');
       }

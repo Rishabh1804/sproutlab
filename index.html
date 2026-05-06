@@ -1,3 +1,4 @@
+[bump-version] 2026.05.06-1 → 2026.05.06-2
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -400,7 +401,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 }
 .gh-gauge-val { font-family:'Fraunces',serif; font-size:var(--fs-xl); font-weight:600; line-height:var(--lh-none); }
 .gh-gauge-unit { font-size:var(--fs-2xs); font-weight:600; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-tight); margin-top:1px; }
-.gh-gauge-pct { font-size:var(--fs-xs); font-weight:600; margin-top:var(--sp-2); padding:1px var(--sp-6); border-radius:var(--r-full); }
+.gh-gauge-pct { font-size:var(--fs-sm); font-weight:600; margin-top:var(--sp-2); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-full); }
 .gh-gauge-label { font-size:var(--fs-xs); font-weight:600; color:var(--text); text-transform:uppercase; letter-spacing:var(--ls-tight); margin-top:var(--sp-6); }
 .gh-gauge-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
 .gh-meta-row { display:flex; gap:var(--sp-8); min-width:0; flex-wrap:wrap;}
@@ -20476,9 +20477,10 @@ function updateHeader() {
     const avg = getAvgDailySleepScore7d();
     const pill = document.getElementById('homeAvgSleepScorePill');
     if (avg > 0) {
-      const emoji = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn');
-      sleepScorePill.textContent = `${emoji} ${avg}`;
+      sleepScorePill.textContent = String(avg);
       if (pill) {
+        const iconEl = pill.querySelector('.hsp-icon');
+        if (iconEl) iconEl.innerHTML = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn');
         pill.classList.remove('hsp-sage','hsp-peach','hsp-rose','hsp-indigo');
         pill.classList.add(avg >= 70 ? 'hsp-sage' : avg >= 40 ? 'hsp-peach' : 'hsp-rose');
       }
@@ -35526,21 +35528,24 @@ function renderGrowthHero() {
   const ageStr = `${months}m ${days}d`;
 
   // Compute percentiles
-  let wtPct = null, htPct = null, wtVal = '—', htVal = '—';
+  let wtPct = null, htPct = null, wtVal = '—', htVal = '—', wtUnit = 'kg', htUnit = '';
   let wtPctNum = 50, htPctNum = 50;
   if (lastWtE) {
     const who = getGrowthRef(ageMonthsAt(lastWtE.date));
     const p = calcPercentile(lastWtE.wt, who.w3, who.w50, who.w97, who.w15, who.w85);
     wtPct = p;
     wtPctNum = parseInt(p.text) || 50;
-    wtVal = lastWtE.wt + ' kg';
+    wtVal = String(lastWtE.wt);
   }
   if (lastHtE) {
     const who = getGrowthRef(ageMonthsAt(lastHtE.date));
     const p = calcPercentile(lastHtE.ht, who.h3, who.h50, who.h97, who.h15, who.h85);
     htPct = p;
     htPctNum = parseInt(p.text) || 50;
-    htVal = formatHeight(lastHtE.ht);
+    const htUnitPref = localStorage.getItem('ziva_height_unit') || 'ft';
+    if (htUnitPref === 'cm') { htVal = String(lastHtE.ht); htUnit = 'cm'; }
+    else if (htUnitPref === 'in') { htVal = (lastHtE.ht / 2.54).toFixed(1); htUnit = 'in'; }
+    else { const _ft = Math.floor(lastHtE.ht / 2.54 / 12); const _in = (lastHtE.ht / 2.54 % 12).toFixed(1); htVal = `${_ft}′${_in}″`; }
   }
 
   // Gain rate
@@ -35578,7 +35583,7 @@ function renderGrowthHero() {
         <div class="gh-gauge-inner">
           <div class="gh-gauge-val" style="color:${color};">${val}</div>
           <div class="gh-gauge-unit">${unit}</div>
-          ${pctText ? `<div class="gh-gauge-pct" style="background:${pctBg};color:${pctColor};">${pctText}</div>` : ''}
+          ${pctText ? `<div class="gh-gauge-pct" style="background:${pctBg};color:${pctColor};">${escHtml(pctText)}</div>` : ''}
         </div>
       </div>
       <div class="gh-gauge-label">${label}</div>
@@ -35597,8 +35602,8 @@ function renderGrowthHero() {
 
   // Gauge rings
   html += '<div class="gh-gauges">';
-  html += gaugeRing(wtPctNum, wtVal, 'weight', wtPct ? wtPct.text : null, 'Weight', wtColor);
-  html += gaugeRing(htPctNum, htVal, 'height', htPct ? htPct.text : null, 'Height', htColor);
+  html += gaugeRing(wtPctNum, wtVal, wtUnit, wtPct ? wtPct.text : null, 'Weight', wtColor);
+  html += gaugeRing(htPctNum, htVal, htUnit, htPct ? htPct.text : null, 'Height', htColor);
   html += '</div>';
 
   // Meta pills row

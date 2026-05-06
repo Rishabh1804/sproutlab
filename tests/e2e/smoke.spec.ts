@@ -3265,3 +3265,107 @@ test.describe('Polish-10d hotfix — sections.* iconKey architectural sweep (Sov
       `Polish-10d: zero 'emoji: bowl' string-literal residue (visible-bug source)`).toEqual([]);
   });
 });
+
+test.describe('Polish-11a — Sleep Score pill HR-7 fix (SVG-via-textContent)', () => {
+  // Visible-bug root cause: home.js renderHomeSleep assigned zi() SVG output
+  // via sleepScorePill.textContent — the SVG markup rendered as literal text in
+  // the pill value slot. Fix: set numeric score via textContent; set icon via
+  // pill.querySelector('.hsp-icon').innerHTML (HR-7 compliant).
+  // Doctrine: architectural-sweep-PR-misses-sibling-sites 3/3 RATIFIED (this
+  // catch is the 3rd independent instance after Polish-10a + Polish-10d r1).
+
+  test('regression-guard — sleepScorePill never assigned via textContent with zi() output', async ({ request }) => {
+    const res = await request.get('/split/home.js');
+    expect(res.ok(), '/split/home.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Negative-absence assertion: the buggy pattern concatenates zi() SVG HTML
+    // into a template literal assigned to .textContent. Match any variation.
+    const buggyPattern = /sleepScorePill\.textContent\s*=\s*`[^`]*zi\s*\(/g;
+    const violations = js.match(buggyPattern) || [];
+    expect(violations,
+      `Polish-11a: sleepScorePill.textContent must not receive zi() SVG output. Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('regression-guard — sleep icon set via .hsp-icon innerHTML (HR-7 compliant)', async ({ request }) => {
+    const res = await request.get('/split/home.js');
+    expect(res.ok(), '/split/home.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Positive assertion: icon update must go through innerHTML on .hsp-icon.
+    expect(js.includes("iconEl.innerHTML = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn')"),
+      "Polish-11a: sleep score icon update uses iconEl.innerHTML = zi(...) (HR-7)").toBeTruthy();
+  });
+});
+
+test.describe('Polish-11b — Growth gauge overflow + percentile pill legibility + HR-4', () => {
+  // Bug 2: gauge val "70 cm" / "7.5 kg" combined strings overflow the 78px inner
+  // ring clear diameter at --fs-xl on large zoom. Fix: split number from unit;
+  // val = number-only, unit param = measurement abbreviation.
+  // Bug 3a (CSS): --fs-xs ≈ 9px sub-legibility for Nunito digit rendering on
+  // mobile. Fix: --fs-sm (≈10.5px) + increased padding.
+  // Bug 3b (HR-4): pctText from calcPercentile can return "<3rd" / ">97th";
+  // must escape before innerHTML injection.
+
+  test('regression-guard — gauge wtVal is number-only, no combined "X kg" string', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Negative: combined weight+unit string must not be assigned to wtVal.
+    const buggyWt = /wtVal\s*=\s*lastWtE\.wt\s*\+\s*' kg'/g;
+    expect(js.match(buggyWt) || [],
+      "Polish-11b: wtVal must not concatenate ' kg' (combined string overflows gauge ring)").toEqual([]);
+
+    // Positive: wtVal receives String(lastWtE.wt) — number-only.
+    expect(js.includes('wtVal = String(lastWtE.wt)'),
+      'Polish-11b: wtVal = String(lastWtE.wt) (number-only in gauge val)').toBeTruthy();
+  });
+
+  test('regression-guard — gauge htVal splits number from unit (no formatHeight combined string)', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Negative: htVal must not be directly assigned from formatHeight() (returns "70 cm" etc.).
+    const buggyHt = /htVal\s*=\s*formatHeight\s*\(/g;
+    expect(js.match(buggyHt) || [],
+      'Polish-11b: htVal must not be assigned directly from formatHeight() (combined string)').toEqual([]);
+
+    // Positive: separate unit tracking variables present.
+    expect(js.includes('wtUnit') && js.includes('htUnit'),
+      'Polish-11b: wtUnit + htUnit variables track measurement units separately').toBeTruthy();
+  });
+
+  test('regression-guard — pctText escaped via escHtml before innerHTML injection (HR-4)', async ({ request }) => {
+    const res = await request.get('/split/medical.js');
+    expect(res.ok(), '/split/medical.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Negative: bare ${pctText} inside gh-gauge-pct template literal is the HR-4 violation.
+    const buggyPct = /gh-gauge-pct[^`]*>\$\{pctText\}</g;
+    expect(js.match(buggyPct) || [],
+      'Polish-11b: pctText must be wrapped in escHtml() in gh-gauge-pct template (HR-4)').toEqual([]);
+
+    // Positive: escHtml(pctText) in the template.
+    expect(js.includes('>${escHtml(pctText)}</div>'),
+      'Polish-11b: gh-gauge-pct renders escHtml(pctText) (HR-4 compliant)').toBeTruthy();
+  });
+
+  test('regression-guard — .gh-gauge-pct uses --fs-sm (not --fs-xs) for legible pill rendering', async ({ request }) => {
+    const res = await request.get('/split/styles.css');
+    expect(res.ok(), '/split/styles.css fetchable').toBeTruthy();
+    const css = await res.text();
+
+    // Negative: --fs-xs at 9px is sub-legible for Nunito digits on mobile.
+    const buggyFontSize = /\.gh-gauge-pct\s*\{[^}]*font-size\s*:\s*var\(--fs-xs\)/;
+    expect(buggyFontSize.test(css),
+      'Polish-11b: .gh-gauge-pct must not use --fs-xs (sub-legible at mobile scale)').toBeFalsy();
+
+    // Positive: --fs-sm (≈10.5px base) provides legible digit rendering.
+    const fixedFontSize = /\.gh-gauge-pct\s*\{[^}]*font-size\s*:\s*var\(--fs-sm\)/;
+    expect(fixedFontSize.test(css),
+      'Polish-11b: .gh-gauge-pct uses --fs-sm for legible percentile pill').toBeTruthy();
+  });
+});
