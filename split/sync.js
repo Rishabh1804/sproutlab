@@ -203,8 +203,13 @@ const SYNC_RENDER_DEPS = {
   [KEYS.sleep]:             { global: 'sleepData',   renderers: { home: ['renderHome'], 'track:sleep': ['renderSleep'] } },
   [KEYS.poop]:              { global: 'poopData',    renderers: { home: ['renderHome'], 'track:poop':  ['renderPoop'] } },
   [KEYS.notes]:             { global: 'notes',       renderers: { history: ['renderNotes'] } },
-  [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats'] } },
-  [KEYS.milestones]:        { global: 'milestones',  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats'] } },
+  // PR-α (Stability sub-phase 2 first feature): renderMilestones split into
+  // 8 per-surface renderers so cross-device sync re-renders every milestones-
+  // tab surface (previously only renderMilestoneStats fired — list / wheels /
+  // regression / timeline / recentEvidence / active / highlights stayed
+  // stale on sync receive).
+  [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
+  [KEYS.milestones]:        { global: 'milestones',  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
   [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },

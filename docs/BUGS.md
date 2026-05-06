@@ -33,19 +33,17 @@
 - **Symptom:** Activities tab shows "Social Smiling" (a milestone display name) repeatedly, making the tab feel haphazard. Root cause: UI conflates "what to do" (Recommended Activities) with "what was done" (Recent Evidence Feed); Recent Evidence Feed lacks rollup aggregation so high-frequency milestone observations flood the view.
 - **Fix shape:** Rollup aggregation (PR-β scope) — e.g. "Social Smiling — 12 observations this week, last: 3pm today"; tappable expand reveals individual entries.
 - **Sequencing:** Blocked on PR-α merge (Stability sub-phase). PR-β opens post-PR-α + Sovereign real-device verification.
-- **File:** `split/medical.js` — `renderRecentEvidence()` (~line 22271)
+- **File:** `split/home.js` — `renderRecentEvidence()` (PR-α scout-deep correction; was incorrectly logged as `medical.js`)
 
-#### P1 — `_renderAttribution` not wired into Recent Evidence Feed (Phase 3 deferred PR-19.6)
+#### P1 — `_renderAttribution` not wired into Recent Evidence Feed (Phase 3 deferred PR-19.6) — **FIXED in PR-α**
 - **Symptom:** Attribution chips (who logged the entry) don't appear on Recent Evidence Feed entries, only on Visit entries.
-- **Fix shape:** Wire `_renderAttribution(entry)` per entry in `renderRecentEvidence()`, modeled on `renderVisits()` (~line 22353).
-- **Sequencing:** PR-α scope (Stability sub-phase first feature PR).
-- **File:** `split/medical.js`
+- **Fix:** Wired `_renderAttribution(e)` per entry inside `renderRecentEvidence()`, modeled on `renderVisits()` and `renderActiveMilestones()` precedents.
+- **File:** `split/home.js` — `renderRecentEvidence()` (PR-α correction; was logged as `medical.js`)
 
-#### P1 — `renderMilestones()` is a monolith (~300 LOC)
-- **Symptom:** Single function bundles stats, wheels, feed, highlights, and regression alerts. Prevents independent re-renders and makes per-renderer SYNC_RENDER_DEPS wiring impossible.
-- **Fix shape:** Split into `renderMilestoneStats()`, `renderCategoryWheels()`, `renderRecentEvidence()`, `renderMilestoneHighlights()`, `renderRegressionAlerts()`; update `SYNC_RENDER_DEPS` at ~line 61194.
-- **Sequencing:** PR-α scope (Stability sub-phase).
-- **File:** `split/medical.js` — `renderMilestones()` (~line 21640+)
+#### P1 — `renderMilestones()` is a monolith (~165 LOC body + 5 tail-calls) — **FIXED in PR-α**
+- **Symptom:** Single function bundled milestoneList HTML build with implicit tail-calls to 5 sibling renderers. Prevented independent per-surface re-renders and per-renderer `SYNC_RENDER_DEPS` wiring.
+- **Fix:** Split into `renderMilestoneList()` (extracted from body), kept `renderMilestones()` as facade calling all 6 sub-renderers; also extracted `renderMilestoneHighlights()` from `renderMilestoneStats()` (was double-duty rendering both pills + cards). `SYNC_RENDER_DEPS[KEYS.activityLog]` and `SYNC_RENDER_DEPS[KEYS.milestones]` `'track:milestones'` extended to dispatch all 8 milestone-tab renderers.
+- **File:** `split/home.js` — `renderMilestones()` (PR-α correction; was logged as `medical.js`)
 
 ---
 
