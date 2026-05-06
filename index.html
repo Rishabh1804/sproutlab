@@ -16277,6 +16277,14 @@ function init() {
       m.confidenceHigh = 0;
     }
   });
+  // PR-β r1 hotfix: dedupe duplicate milestones array entries (case-insensitive
+  // trimmed-text grouping; conservative merge). Runs unconditionally on boot —
+  // legacy data may have duplicates from prior cross-device sync races that
+  // syncMilestoneStatuses' find()-and-update loop never repaired.
+  if (typeof dedupeMilestonesByText === 'function') {
+    dedupeMilestonesByText();
+  }
+
   // Sync evidence-based statuses on boot (if any activity log entries exist)
   if (Object.keys(activityLog).length > 0) {
     syncMilestoneStatuses();
@@ -33921,8 +33929,80 @@ function checkEvidenceRegression(milestoneKeyword, currentAutoStatus) {
   return daysSince > 21;
 }
 
+// dedupeMilestonesByText — PR-β r1 hotfix (Sovereign-floor catch on PR-α/β):
+// the milestones array can accumulate duplicates with same text but different
+// status/evidence-count snapshots (legacy data + cross-device sync rounds
+// where syncMilestoneStatuses' find() saw an empty array mid-flight and
+// pushed a fresh entry). syncMilestoneStatuses' find() always returns the
+// FIRST match thereafter — so duplicates persist as ghosts that all render.
+// This function consolidates by case-insensitive trimmed text, merging
+// stage/evidence/dates conservatively (max stage, max evidence, earliest
+// firstSeen, latest lastSeen, latest manualAt, any-advanced-true wins).
+// Mutates milestones in-place via reassignment + saves. Returns true if
+// any merge happened.
+function dedupeMilestonesByText() {
+  if (!Array.isArray(milestones) || milestones.length === 0) return false;
+  const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+  const groups = {};
+  const order = [];
+
+  milestones.forEach(m => {
+    if (!m || typeof m !== 'object') return;
+    const k = (m.text || '').toLowerCase().trim();
+    if (!k) return;
+    if (!groups[k]) { groups[k] = []; order.push(k); }
+    groups[k].push(m);
+  });
+
+  const hasDups = Object.values(groups).some(arr => arr.length > 1);
+  if (!hasDups) return false;
+
+  const deduped = order.map(k => {
+    const grp = groups[k];
+    if (grp.length === 1) return grp[0];
+
+    const merged = Object.assign({}, grp[0]);
+
+    grp.slice(1).forEach(m => {
+      if ((stageRank[m.status] || 0) > (stageRank[merged.status] || 0)) merged.status = m.status;
+      if ((stageRank[m.autoStatus] || 0) > (stageRank[merged.autoStatus] || 0)) merged.autoStatus = m.autoStatus;
+      if ((m.evidenceCount || 0) > (merged.evidenceCount || 0)) merged.evidenceCount = m.evidenceCount;
+      if ((m.confidenceHigh || 0) > (merged.confidenceHigh || 0)) merged.confidenceHigh = m.confidenceHigh;
+      if (m.firstSeen && (!merged.firstSeen || m.firstSeen < merged.firstSeen)) merged.firstSeen = m.firstSeen;
+      if (m.lastSeen && (!merged.lastSeen || m.lastSeen > merged.lastSeen)) merged.lastSeen = m.lastSeen;
+      ['emergingAt','practicingAt','consistentAt','masteredAt','doneAt','inProgressAt'].forEach(f => {
+        if (m[f] && (!merged[f] || m[f] < merged[f])) merged[f] = m[f];
+      });
+      if (m.manualStatus && m.manualAt) {
+        if (!merged.manualStatus || !merged.manualAt || m.manualAt > merged.manualAt) {
+          merged.manualStatus = m.manualStatus;
+          merged.manualAt = m.manualAt;
+        }
+      }
+      if (m.advanced) merged.advanced = true;
+      if (!merged.cat && m.cat) merged.cat = m.cat;
+      if (m.__sync_updatedBy) {
+        const mAt = m.__sync_updatedBy.at || 0;
+        const curAt = (merged.__sync_updatedBy && merged.__sync_updatedBy.at) || 0;
+        if (!merged.__sync_updatedBy || mAt > curAt) merged.__sync_updatedBy = m.__sync_updatedBy;
+      }
+    });
+
+    return merged;
+  });
+
+  milestones = deduped;
+  save(KEYS.milestones, milestones);
+  return true;
+}
+
 // ─── Sync All Milestone Statuses (runs after every log entry) ───
 function syncMilestoneStatuses() {
+  // PR-β r1 hotfix: clean up duplicate text entries before find()-and-update
+  // loop. Without this, a stale 2nd "Social smiling" entry never gets touched
+  // and renders as a ghost in renderMilestoneList + renderActiveMilestones.
+  dedupeMilestonesByText();
+
   const allKeywords = [...new Set(EVIDENCE_PATTERNS.map(p => p.milestone))];
 
   allKeywords.forEach(keyword => {
