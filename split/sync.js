@@ -1928,8 +1928,9 @@ function _syncUpdateStatusIndicator(snap) {
 // (sl-1-3). Reloading re-bootstraps sync and clears the circuit breaker's
 // in-memory crash count.
 function syncReload() {
-  if (typeof window !== 'undefined' && window.location && window.location.reload) {
-    window.location.reload();
+  if (typeof window !== 'undefined' && window.location) {
+    // Cache-bust: append timestamp so browser HTTP cache can't serve stale HTML.
+    window.location.replace(window.location.pathname + '?_cb=' + Date.now());
   }
 }
 
