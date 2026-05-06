@@ -209,7 +209,7 @@ const SYNC_RENDER_DEPS = {
   // regression / timeline / recentEvidence / active / highlights stayed
   // stale on sync receive).
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
-  [KEYS.milestones]:        { global: 'milestones',  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
+  [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
   [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
@@ -333,6 +333,20 @@ function _syncDispatchRender(lsKey, value, attribution) {
   if (dep.global) {
     try { _syncSetGlobal(dep.global, value); }
     catch(e) { console.warn('[sync-dispatch] set-global ' + lsKey + ':', e); }
+  }
+  // (1.5) Post-receive hook (PR-β r2). Optional name-string in dep.postReceive
+  //       resolved via window[name] (same pattern as renderers — spy/stub
+  //       friendly, graceful runtime fallback). Use case: data migrations
+  //       (legacy enum repair) + integrity passes (dedupe by text) that need
+  //       to run AFTER the listener saved the raw remote value but BEFORE
+  //       renderers see it. The hook may save() the cleaned value, which
+  //       triggers autosave back to Firestore so cross-device sync converges
+  //       on the cleaned state.
+  if (dep.postReceive) {
+    try {
+      var hook = (typeof window !== 'undefined') ? window[dep.postReceive] : undefined;
+      if (typeof hook === 'function') hook();
+    } catch(e) { console.warn('[sync-dispatch] post-receive ' + lsKey + '/' + dep.postReceive + ':', e); }
   }
   // (2) Active-tab renderer dispatch (Finding C idiom). Renderers are name
   //     strings resolved via window[name] so spy-based tests work and a

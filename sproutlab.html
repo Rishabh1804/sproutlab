@@ -33929,6 +33929,32 @@ function checkEvidenceRegression(milestoneKeyword, currentAutoStatus) {
   return daysSince > 21;
 }
 
+// _postReceiveMilestones — PR-β r2 (cross-device receive hook). Called from
+// _syncDispatchRender after the listener has set milestones = remoteValue,
+// before renderer dispatch fires. Runs both:
+//   1. migrateMilestoneStatus per entry — repairs pre-Phase-3 enum values
+//      (status='done'/'in_progress'/'pending' → mastered/practicing/not_started)
+//      that arrive from devices running older code or stuck in legacy state.
+//   2. dedupeMilestonesByText — collapses duplicate text entries that arrive
+//      from cross-device sync races (one device pushes a fresh entry while
+//      another device's canonical entry is mid-flight).
+// Both functions save() locally if they made changes, which triggers autosave
+// to Firestore so the cleaned state propagates back. Convergent: once both
+// devices run this code, Firestore lands at deduped+migrated state.
+function _postReceiveMilestones() {
+  if (!Array.isArray(milestones)) return;
+  try {
+    if (typeof migrateMilestoneStatus === 'function') {
+      milestones.forEach(m => migrateMilestoneStatus(m));
+    }
+  } catch(e) { console.warn('[post-receive milestones] migrate:', e); }
+  try {
+    if (typeof dedupeMilestonesByText === 'function') {
+      dedupeMilestonesByText();
+    }
+  } catch(e) { console.warn('[post-receive milestones] dedupe:', e); }
+}
+
 // dedupeMilestonesByText — PR-β r1 hotfix (Sovereign-floor catch on PR-α/β):
 // the milestones array can accumulate duplicates with same text but different
 // status/evidence-count snapshots (legacy data + cross-device sync rounds
@@ -61614,7 +61640,7 @@ const SYNC_RENDER_DEPS = {
   // regression / timeline / recentEvidence / active / highlights stayed
   // stale on sync receive).
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
-  [KEYS.milestones]:        { global: 'milestones',  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
+  [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
   [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
@@ -61738,6 +61764,20 @@ function _syncDispatchRender(lsKey, value, attribution) {
   if (dep.global) {
     try { _syncSetGlobal(dep.global, value); }
     catch(e) { console.warn('[sync-dispatch] set-global ' + lsKey + ':', e); }
+  }
+  // (1.5) Post-receive hook (PR-β r2). Optional name-string in dep.postReceive
+  //       resolved via window[name] (same pattern as renderers — spy/stub
+  //       friendly, graceful runtime fallback). Use case: data migrations
+  //       (legacy enum repair) + integrity passes (dedupe by text) that need
+  //       to run AFTER the listener saved the raw remote value but BEFORE
+  //       renderers see it. The hook may save() the cleaned value, which
+  //       triggers autosave back to Firestore so cross-device sync converges
+  //       on the cleaned state.
+  if (dep.postReceive) {
+    try {
+      var hook = (typeof window !== 'undefined') ? window[dep.postReceive] : undefined;
+      if (typeof hook === 'function') hook();
+    } catch(e) { console.warn('[sync-dispatch] post-receive ' + lsKey + '/' + dep.postReceive + ':', e); }
   }
   // (2) Active-tab renderer dispatch (Finding C idiom). Renderers are name
   //     strings resolved via window[name] so spy-based tests work and a
