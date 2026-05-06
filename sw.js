@@ -24,8 +24,6 @@ const CACHE_PREFIX = 'sproutlab-';
 // they belong in the precache to keep Firebase auth/sync paths offline-
 // available.
 const PRECACHE_ASSETS = [
-  './',                              // navigate-to-scope-root (index.html alias)
-  'index.html',                      // explicit
   'icon-192.png',
   'icon-512.png',
   'apple-touch-icon.png',
@@ -87,6 +85,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // Navigation requests (HTML documents) bypass the SW entirely — Canon 0034.
+  // HTML must always be fetched fresh from the network so version bumps land
+  // immediately without requiring a SW reinstall or manual cache clear.
+  if (event.request.mode === 'navigate') return;
 
   // Manifest bypass — Cipher PR-11 catch. displayAppVersion() in core.js
   // uses fetch(..., { cache: 'no-store' }) to read current manifest.version.
