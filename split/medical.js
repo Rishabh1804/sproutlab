@@ -1113,6 +1113,7 @@ function setReferenceStandard(std) {
   renderSizeComparison();
   renderGrowthHero();
   renderMilestoneStats();
+  renderMilestoneHighlights();
   renderUpcomingMilestones();
   renderActivities();
   // Re-render sleep stats if on sleep tab

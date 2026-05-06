@@ -2715,7 +2715,7 @@ function switchTrackSub(sub) {
   // Trigger sub-tab renders
   if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); }
   if (sub === 'diet') renderDietStats();
-  if (sub === 'milestones') renderMilestoneStats();
+  if (sub === 'milestones') { renderMilestoneStats(); renderMilestoneHighlights(); }
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 

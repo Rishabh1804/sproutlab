@@ -1441,9 +1441,30 @@ function getMilestoneTidbits(milestoneText) {
   return MILESTONE_TIDBITS.find(t => t.match.some(m => lower.includes(m))) || null;
 }
 
+// renderMilestones — facade for the milestones-tab data-mutation-hook entry
+// point (8 external callsites in home / core / intel / medical). PR-α split
+// (Stability sub-phase 2): orchestrator-only — body extracted to per-surface
+// renderers so SYNC_RENDER_DEPS can dispatch each independently. Persistence
+// write-through retained at facade level: setMilestoneStatus / deleteMilestone
+// / addMilestone (this file) all rely on this save() as the de-facto save
+// floor and don't independently persist before invoking renderMilestones.
+// (Care/Maren E1' carve-out at PR-α charter; render-functions-must-be-pure
+// candidate landing deferred until those 3 callsites save explicitly.)
 function renderMilestones() {
   save(KEYS.milestones, milestones);
+  renderMilestoneList();
+  renderCategoryWheels();
+  renderRegressionAlerts();
+  renderMilestoneTimeline();
+  renderRecentEvidence();
+  renderActiveMilestones();
+}
+
+// renderMilestoneList — extracted from renderMilestones (PR-α). Owns the
+// #milestoneList element only: category-grouped 5-stage milestone display.
+function renderMilestoneList() {
   const list = document.getElementById('milestoneList');
+  if (!list) return;
   list.innerHTML = '';
 
   if (milestones.length === 0) {
@@ -1606,13 +1627,6 @@ function renderMilestones() {
 
   html += '</div>';
   list.innerHTML = html;
-
-  // Render category wheels + regression alerts + timeline + evidence feed + active milestones
-  renderCategoryWheels();
-  renderRegressionAlerts();
-  renderMilestoneTimeline();
-  renderRecentEvidence();
-  renderActiveMilestones();
 }
 
 // Generic category card toggle — used by milestones, foods, tips, activities, upcoming
@@ -2139,6 +2153,7 @@ function renderRecentEvidence() {
         '<div class="al-feed-body">' +
           '<div class="al-feed-text">' + escHtml(e.text) + '</div>' +
           '<div class="al-feed-chips">' + domainChips + '</div>' +
+          _renderAttribution(e) +
         '</div>' +
         '<div class="al-feed-meta">' + durStr + ' · ' + evidCount + ' ev</div>' +
       '</div>';
@@ -3131,9 +3146,12 @@ function updateMealInsight(meal) {
 
 // MILESTONES TAB QUICK STATS
 // ─────────────────────────────────────────
+// renderMilestoneStats — owns #milestoneStats pill grid + the milestones
+// domain-hero card. PR-α split: #milestoneHighlights extracted to its own
+// renderer (renderMilestoneHighlights) so SYNC_RENDER_DEPS dispatches each
+// surface independently and the function becomes single-target.
 function renderMilestoneStats() {
   const el = document.getElementById('milestoneStats');
-  const hlEl = document.getElementById('milestoneHighlights');
   if (!el) return;
 
   const doneMs = milestones.filter(m => isMsDone(m));
@@ -3142,39 +3160,11 @@ function renderMilestoneStats() {
   const advanced = milestones.filter(m => m.advanced && isMsDone(m)).length;
   const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
 
-  // Latest achievement
-  const latestDone = doneMs.filter(m => m.doneAt).sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
-  const latestMs = latestDone[0] || doneMs[doneMs.length - 1];
-  const catIcons = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
-
-  // Next expected milestone from getUpcomingMilestones()
-  const mo = getAgeInMonths();
-  const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
-  let nextMilestone = null;
-  let nextMonth = null;
-  const doneTexts = milestones.filter(m => isMsDone(m)).map(m => m.text.toLowerCase().trim());
-  for (const br of brackets) {
-    if (br < mo) continue;
-    const items = getUpcomingMilestones()[br] || [];
-    const notDone = items.filter(item => {
-      return !doneTexts.includes(item.text.toLowerCase().trim());
-    });
-    const nonAdvanced = notDone.filter(i => !i.advanced);
-    if (nonAdvanced.length) { nextMilestone = nonAdvanced[0]; nextMonth = br; break; }
-    if (notDone.length) { nextMilestone = notDone[0]; nextMonth = br; break; }
-  }
-
-  // Random activity
-  const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const randomAct = acts.length ? acts[(doy + 7) % acts.length] : null;
-
-  // Total evidence entries
   let totalEvidence = 0;
   Object.values(activityLog).forEach(entries => {
     if (Array.isArray(entries)) totalEvidence += entries.length;
   });
 
-  // ── Card 1: Pills only ──
   el.innerHTML = `
       <div class="diet-stat ds-sage" data-action="expandMilestones" data-arg="done">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-check"/></svg></div>
@@ -3207,8 +3197,41 @@ function renderMilestoneStats() {
       </div>`}
   `;
 
-  // ── Card 2: Highlights ──
+  renderDomainHero('milestones');
+}
+
+// renderMilestoneHighlights — extracted from renderMilestoneStats (PR-α).
+// Owns the #milestoneHighlights card: Latest-achieved + Coming-up-next +
+// Try-this-activity strips.
+function renderMilestoneHighlights() {
+  const hlEl = document.getElementById('milestoneHighlights');
   if (!hlEl) return;
+
+  const doneMs = milestones.filter(m => isMsDone(m));
+  const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
+  const latestDone = doneMs.filter(m => m.doneAt).sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
+  const latestMs = latestDone[0] || doneMs[doneMs.length - 1];
+  const catIcons = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
+
+  const mo = getAgeInMonths();
+  const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
+  let nextMilestone = null;
+  let nextMonth = null;
+  const doneTexts = milestones.filter(m => isMsDone(m)).map(m => m.text.toLowerCase().trim());
+  for (const br of brackets) {
+    if (br < mo) continue;
+    const items = getUpcomingMilestones()[br] || [];
+    const notDone = items.filter(item => {
+      return !doneTexts.includes(item.text.toLowerCase().trim());
+    });
+    const nonAdvanced = notDone.filter(i => !i.advanced);
+    if (nonAdvanced.length) { nextMilestone = nonAdvanced[0]; nextMonth = br; break; }
+    if (notDone.length) { nextMilestone = notDone[0]; nextMonth = br; break; }
+  }
+
+  const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const randomAct = acts.length ? acts[(doy + 7) % acts.length] : null;
+
   let hlHtml = '';
 
   if (latestMs) {
@@ -3252,7 +3275,6 @@ function renderMilestoneStats() {
 
   hlEl.innerHTML = hlHtml || '<div class="t-sub-light">No highlights yet.</div>';
   hlEl.style.display = hlHtml ? '' : 'none';
-  renderDomainHero('milestones');
 }
 
 function renderFoodChips() {
