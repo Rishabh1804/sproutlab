@@ -3265,3 +3265,36 @@ test.describe('Polish-10d hotfix — sections.* iconKey architectural sweep (Sov
       `Polish-10d: zero 'emoji: bowl' string-literal residue (visible-bug source)`).toEqual([]);
   });
 });
+
+test.describe('Polish-11a — Sleep Score pill HR-7 fix (SVG-via-textContent)', () => {
+  // Visible-bug root cause: home.js renderHomeSleep assigned zi() SVG output
+  // via sleepScorePill.textContent — the SVG markup rendered as literal text in
+  // the pill value slot. Fix: set numeric score via textContent; set icon via
+  // pill.querySelector('.hsp-icon').innerHTML (HR-7 compliant).
+  // Doctrine: architectural-sweep-PR-misses-sibling-sites 3/3 RATIFIED (this
+  // catch is the 3rd independent instance after Polish-10a + Polish-10d r1).
+
+  test('regression-guard — sleepScorePill never assigned via textContent with zi() output', async ({ request }) => {
+    const res = await request.get('/split/home.js');
+    expect(res.ok(), '/split/home.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Negative-absence assertion: the buggy pattern concatenates zi() SVG HTML
+    // into a template literal assigned to .textContent. Match any variation.
+    const buggyPattern = /sleepScorePill\.textContent\s*=\s*`[^`]*zi\s*\(/g;
+    const violations = js.match(buggyPattern) || [];
+    expect(violations,
+      `Polish-11a: sleepScorePill.textContent must not receive zi() SVG output. Found: ${violations.join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('regression-guard — sleep icon set via .hsp-icon innerHTML (HR-7 compliant)', async ({ request }) => {
+    const res = await request.get('/split/home.js');
+    expect(res.ok(), '/split/home.js fetchable').toBeTruthy();
+    const js = await res.text();
+
+    // Positive assertion: icon update must go through innerHTML on .hsp-icon.
+    expect(js.includes("iconEl.innerHTML = avg >= 70 ? zi('moon') : avg >= 40 ? zi('target') : zi('warn')"),
+      "Polish-11a: sleep score icon update uses iconEl.innerHTML = zi(...) (HR-7)").toBeTruthy();
+  });
+});
