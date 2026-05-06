@@ -837,6 +837,14 @@ function init() {
       m.confidenceHigh = 0;
     }
   });
+  // PR-β r1 hotfix: dedupe duplicate milestones array entries (case-insensitive
+  // trimmed-text grouping; conservative merge). Runs unconditionally on boot —
+  // legacy data may have duplicates from prior cross-device sync races that
+  // syncMilestoneStatuses' find()-and-update loop never repaired.
+  if (typeof dedupeMilestonesByText === 'function') {
+    dedupeMilestonesByText();
+  }
+
   // Sync evidence-based statuses on boot (if any activity log entries exist)
   if (Object.keys(activityLog).length > 0) {
     syncMilestoneStatuses();
