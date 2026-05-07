@@ -101,6 +101,8 @@ Family A — the canonical `.modal-overlay > .modal` instances (PR-ε.0 v6.2 wil
 | `eventModal` | 2879 | `openModal` | save calendar event | live |
 | **`scrapMilestonePickerModal`** | n/a (PR-ε.0 v6.2 §4) | `openScrapMilestonePicker` | `confirmScrapMilestonePicker` / `cancelScrapMilestonePicker` | **forthcoming** — PR-ε.0 v6.2 §4 / pseudocode `§4.B` |
 
+> **Phase-2 deferral note (re: Cipher cross-cut finding 5):** The table above gives the Family-A modal census + the universal modal-a11y gap (issue #54 raw data). Per-modal divergences *beyond* the universal a11y gap — e.g. `vaccReactionModal` ships with no Save button (informational-only); `foodCatModal` (`template.html:2807`) carries inline `style="max-width:460px;padding:20px 22px 24px;"` on the `.modal` shell (HR-2 leak); `vaccReactionModal` extends sizing via `.vc-reaction-modal`, parallel to PR-ε.0 v6.2's `.scrap-picker-modal` size-extension idiom — are surfaced where they appear in S-08, but **not exhaustively per-modal**. Phase 1 is descriptive; Phase 2 catalog work has the normative authority to revisit each pattern with per-modal divergence detail folded into the issue #54 modal-a11y uplift. Capturing per-modal exhaustively in Phase 1 would be busy-work that Phase 2 redoes anyway.
+
 ---
 
 ## Per-surface entries
@@ -323,7 +325,7 @@ I only repeat the full ten fields where the surface introduces meaningful diverg
 This is the form that PR-ε.0 v6.2 §4 augments with `<div class="scrap-form-row">` for the milestone chip picker.
 
 1. **Purpose** — Add a scrapbook entry (photo + title + date + description); on PR-ε.0 v6.2 also linked milestones.
-2. **Source anchor** — `template.html:1010–1037` (inside History tab's Scrapbook card). PR-ε.0 v6.2 §4 inserts the new `.scrap-form-row` block between `#scrapTitle` (`:1030`) and `#scrapDate` (`:1031`). `addScrapEntry` at `core.js:2192`; `editScrapEntry` (PR-ε.0 v6.2 §4 wiring).
+2. **Source anchor** — `template.html:1010–1037` (inside History tab's Scrapbook card). PR-ε.0 v6.2 §4 inserts the new `.scrap-form-row` block between `#scrapTitle` (`:1030`) and `#scrapDate` (`:1031`). `addScrapEntry` at `core.js:2192`; `editScrapEntry` at `core.js:2220` (PR-ε.0 v6.2 §4 wiring extends the seed-and-filter logic here — Maren v4 audit MAJOR + v6 confirm-time toast).
 3. **Interaction patterns** — Disclosure pattern: photo input is the visible affordance; the form (`#scrapPreviewArea`) reveals after photo pick (`style="display:none;"` `:1023`). Save button → `addScrapEntry`. Edit cancel → `cancelScrapEdit` (hidden until edit).
 4. **Tokens** — Almost entirely **inline-styled**: every input carries its own `style="width:100%;margin-top:8px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;"` (HR-2 — six inputs, six near-identical inline blocks, `:1030–1034`). The remove-photo button is also inline-styled with literal `×` glyph (`:1029`).
 5. **Edge states** — No empty state for "no scrapbook entries yet" (the empty-list copy lives in the rendered list at `core.js:2122`, not the add form). No loading state during save. No save-failure surface (errors silently `try/catch` somewhere — verify Phase 2).
@@ -404,7 +406,7 @@ Captured above (Tier 4 table). **Six distinct idioms.** Phase 2 catalog work nee
 | `.note-cat-filter > .ncf-btn` | `template.html:983–989` | History/Notes | whole button | filter-pill peer to `.chip` but bespoke class |
 | `.ql-meal-pill` / `.ql-intake-pill` / `.ql-bf-row` pills | `template.html:2188+` | QL-modal feed | whole pill | divs not buttons; HR-3 risk |
 
-**Frequency snapshot:** `class="chip` appears in **20 distinct call sites** across home.js / diet.js / intelligence.js (mixed `<div>` and `<span>` containers — pattern divergence in element choice alone). One inline `onclick=` at `diet.js:428` (HR-3 violation in the food-combo chip example).
+**Frequency snapshot:** `class="chip` appears in **26 first-class call-sites** across home.js / diet.js / intelligence.js + per-instance `ct-*` extensions (mixed `<div>` and `<span>` containers — pattern divergence in element choice alone). One inline `onclick=` at `diet.js:428` (HR-3 violation in the food-combo chip example).
 
 ### P-3 · Form-input idioms (four parallel)
 
@@ -471,7 +473,7 @@ The dispatcher at `core.js:259+` (multiple `if/else if` ladders, three locations
 
 **Inconsistencies:**
 - 36 `oninput=` / `onchange=` / `onclick=` inline handlers (HR-3 violations) coexist with the dispatcher pattern.
-- Three locations of the dispatcher's switch ladder (handler bodies pasted across tab-handler functions in `core.js`) — Phase 2 should consider whether this is intentional (per-tab specialization) or carry-over.
+- Four locations of the dispatcher's switch ladder (`core.js:259+`, `:348+`, `:474+`, `:614+` — handler bodies pasted across tab-handler functions in `core.js`) — Phase 2 should consider whether this is intentional (per-tab specialization) or carry-over.
 - `data-tab` is overloaded: top-level tab keys + Track sub-keys.
 - `data-quick-modal` (S-06 sheet → `.ql-modal-overlay` open) is a distinct attribute, not an action — parallel routing.
 
@@ -495,7 +497,7 @@ PR-ε.0 v6.2 §7.7 calls for `Done` button on the picker to be `btn-lav` (lavend
 
 ### P-9 · Collapsible card pattern
 
-`data-collapse-target="<id>" data-collapse-chevron="<id>"` on a `.card-header` toggles `.collapse-body`. Used heavily in History tab (every history sub-card), Insights deep-dive cards, Info tab, Settings preference groups (implicit). Chevron glyph is literal `▾` text character (HR-1 by the same logic as `×` / `+`). Verify Phase 2 against `zi-chevron` if such a sprite exists.
+`data-collapse-target="<id>" data-collapse-chevron="<id>"` on a `.card-header` toggles `.collapse-body`. Used heavily in History tab (every history sub-card), Insights deep-dive cards, Info tab, Settings preference groups (implicit). 72 `data-collapse-target` instances in `template.html`. Chevron glyph is literal `▾` text character (**75 occurrences in `template.html`** — Cipher cross-cut count) — HR-1 by the same logic as `×` / `+`, and dwarfs the close-glyph proliferation captured in P-1 / S-09 / S-10 / S-12 / S-14 / S-15. Verify Phase 2 against `zi-chevron` if such a sprite exists; the magnitude here suggests `zi-chevron` adoption ranks at least as high as `zi-close` migration in Phase 3 contract work.
 
 ---
 
