@@ -31,9 +31,9 @@ This doc translates the v6.2 foundation spec's 26-step Implementation Order into
 - **Phase D — Sync layer integration**
   - [§6.1 `_syncSetGlobal` scrapbook arm](#61-syncsetglobal-scrapbook-arm) (Kael)
   - [§6.2(a) `_reconcileDone` state declaration](#62a-reconciledone-state-declaration) (Kael)
-  - [§6.2(c) Reconcile pipeline ★](#62c-reconcile-pipeline-pseudocode) (Lyra, pseudocode, ≥50 LOC)
+  - [§6.2(c) Reconcile pipeline](#62c-reconcile-pipeline-pseudocode) (Lyra, pseudocode, ≥50 LOC)
   - [§6.2(d) Reconnect-clear](#62d-reconnect-clear-in-syncattachlisteners) (Kael)
-  - [§6.3 `dedupeMilestonesByText` ★](#63-dedupemilestonesbytext-pseudocode) (Lyra, pseudocode, ≥50 LOC)
+  - [§6.3 `dedupeMilestonesByText`](#63-dedupemilestonesbytext-pseudocode) (Lyra, pseudocode, ≥50 LOC)
   - [§6.3 `_postReceiveMilestones`](#63-postreceivemilestones) (Kael)
   - [§6.3 `rewriteScrapbookMilestoneIds`](#63-rewritescrapbookmilestoneids) (Kael)
   - [§3 SYNC_KEYS + SYNC_RENDER_DEPS](#3-synckeys--syncrenderdeps-registration-atomic) (Kael, atomic)
@@ -445,6 +445,8 @@ var _reconcileDone = new Set();
 **Touches:** `split/sync.js` `_syncHandlePerEntrySnapshot` body (~lines 1188–1320 per spec). The reconcile block sits **AFTER** the empty-snapshot guard at ~`sync.js:1275–1279` and **BEFORE** the wholesale `save(lsKey, entries)` at ~`sync.js:1291`. Cross-reference: `_syncWritePerEntry` at ~`sync.js:907+` for the canonical stamp-trio + counter idiom.
 **MAJORs folded (Kael v5):** circuit-breaker bail must not silently drop local data (orphans concat into `entries` regardless of push outcome); reconcile push must stamp full sync metadata trio (`__sync_createdBy/updatedBy/syncedAt`); `_reconcileDone.add` only on success path (bail leaves gate open for retry on next attach). **MAJORs folded (v6.1 Aurelius polish):** inner try/catch around each `forEach` body (sync throw inside `.set()` no longer skips subsequent orphans); counter-comment one-liner above `_syncWriteCount++` (overcount-fail-safe rationale, prevents future "fix" that would invert safety direction).
 
+> **Line-ref discipline (Kael v6.2 audit MINOR + Cipher v6.2 cross-cut):** all `sync.js:NNN` line references in this section (`917–918` for stamp parity, `884` for `_syncWritePerEntry` increment idiom, `1238–1259` for attribution composition) are audit-base SHA `a64b80d4…` values. With the documented `sync.js` +1,002-line drift (see [Line-drift verification footer](#line-drift-verification-footer)), the literal line numbers will NOT resolve at HEAD — **resolve by function name** (`_syncWritePerEntry`, the existing `_syncWriteCount` increment site, the per-entry attribution composition block) before edit.
+
 **Pseudocode (the orchestration; embeds real-JS sub-blocks where they're already concrete in the spec):**
 
 ```text
@@ -640,6 +642,8 @@ function dedupeMilestonesByText() {
 }
 ```
 
+**Parent-visible effect (DEFAULT-wins) — Maren v6.2 audit:** when a custom milestone collides on text with a DEFAULT (e.g. parent typed "Babbling" before DEFAULT slug `babbling` arrived via cross-device sync), the user sees no data loss. Fields merge via `_mergeMilestoneFieldsInline` (latest `*At` dates, most-advanced status, custom field carry-over); the surviving id flips silently to the DEFAULT slug; any scrapbook entry tagged with the discarded id is rewritten in-place by `rewriteScrapbookMilestoneIds`. **No toast fires; no parent-facing UX change.** This is the desired cross-device determinism behavior — text + dates + status + scrapbook tags all migrate; only the underlying id changes silently.
+
 **Concretization checklist:**
 - [ ] **In-place mutation:** `milestones.length = 0; milestones.push.apply(milestones, survivors)` — NOT `milestones = survivors` reassignment. The v6 BLOCKER reverts the existing `medical.js:221` reassignment idiom; verify the diff drops that line.
 - [ ] **DEFAULT-wins short-circuit precedes lex compare:** the two `if mIsDefault ...` branches must run before the `winner = (m.id||...) < (prev.id||...) ? m : prev` fallback. Order matters.
@@ -744,6 +748,8 @@ Called from inside `dedupeMilestonesByText` when `idRewrite.size > 0`. Side-effe
 **Touches:** `split/core.js` — new sibling function above `addScrapEntry` (~`core.js:2192`); insertion point near the existing scrapbook render block at ~`core.js:2130–2150` (verify-then-edit per Phase E).
 **MAJORs folded:** Maren v5 §4 entity-reference escape (escAttr+escHtml double-wrap on `aria-label`); Maren v5 §4 empty-text legacy guard (`labelText` fallback); HR-4 escape contracts at every interpolation boundary.
 
+> **Markup (foundation §4 / Implementation Order steps 17–18) — Cipher v6.2 cross-cut:** the picker's HTML markup additions land directly from foundation §4: (a) the chips region `<div class="scrap-form-row">…</div>` between `#scrapTitle` and `#scrapDate` in `template.html:1030–1031`, (b) the `<div class="modal-overlay" id="scrapMilestonePickerModal">…</div>` block at end of the existing modal section. Copy-forward from foundation verbatim — no pseudocode expansion needed; the markup is already real and the renderers below consume the IDs (`#scrapMilestonePicker`, `#scrapMilestonePickerList`) those nodes provide.
+
 ```js
 function renderScrapMilestoneChips() {
   const host = document.getElementById('scrapMilestonePicker');
@@ -834,7 +840,7 @@ else if (action === 'removeScrapMilestone')        removeScrapMilestone(arg);
 **Touches:** `split/core.js:2192` (`addScrapEntry`), `~core.js:2220+` (`editScrapEntry`), `~core.js:2249+` (`deleteScrapEntry`), plus `clearScrapPhoto` / `cancelScrapEdit` for state-reset symmetry.
 **MAJORs folded:** Cipher BLOCKER #2 (render-side `save()` removed; mutators call `save` explicitly — also matches Maren v5 `// DOES NOT SAVE` header on `renderScrapbook`); Maren v5 §4 silent-orphan edit-load toast.
 
-This section is the cross-cut between Maren's UI surface and Kael's data-layer plumbing. The full real-JS lives in v6.2 spec §4 lines ~664–727; copy-forward verbatim — no behavioral changes since v6.2 spec landed.
+This section is the cross-cut between Maren's UI surface and Kael's data-layer plumbing. The full real-JS lives in v6.2 spec §4 lines ~683–729 (Action handlers table starts ~683; wiring block ends ~729); copy-forward verbatim — no behavioral changes since v6.2 spec landed.
 
 **Key invariants (concretization checklist):**
 - [ ] **`addScrapEntry` new-entry branch:** `id: genId()`, `milestoneIds: [..._scrapMilestoneIdsPending]` (always present, never omitted).
@@ -928,6 +934,12 @@ The audit chain surfaced a handful of cross-section invariants that no single se
 
 7. **§6.3 in-place mutation ↔ rehydrate path** (Kael+Maren v5).
    The v6 BLOCKER fix mandates `milestones.length = 0; milestones.push.apply(milestones, survivors)` instead of `milestones = deduped` reassignment. The reassignment would orphan any closure that captured the pre-dedup array reference — including the §6.1 `_syncSetGlobal('milestones', ...)` rehydrate path. Verify no Object-pinning reader exists across both Governor jurisdictions when implementing (Maren v5 confirmed home.js readers all use transient `forEach`/`filter`; Kael v5 confirmed core/sync/intelligence have no closure pins).
+
+8. **§4 edit-load toast ↔ §4.B confirm-time toast** (Maren v4 + v6).
+   Two orphan-surfacing toasts cover disjoint windows and together provide complete coverage of the orphan-link parent-safety contract:
+   - **Edit-load toast** fires once when `editScrapEntry(id)` filters `entry.milestoneIds` against current `milestones` and finds drops — covers the case where a milestone was deleted between the parent's last memory edit and the current edit.
+   - **Confirm-time toast** fires once when `confirmScrapMilestonePicker` filters the picker's working-set against current `milestones` and finds drops — covers the case where a remote sync deleted a milestone WHILE the picker was open mid-session.
+   Same copy on both surfaces (`"${n} ${noun} removed — milestone no longer exists"`). **Mutually exclusive at fire-time** (different fire conditions: form load vs Done-click) **and jointly exhaustive** across the orphan-surfacing surface (every orphan path produces exactly one toast). **Removing either re-opens silent-disappearance regression.**
 
 ---
 
