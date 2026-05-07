@@ -33,7 +33,7 @@
              ┌─────┴─────┐    ┌─────┴─────┐
              │   MAREN   │    │   KAEL    │
              │ (Care Gov)│    │(Intel Gov)│
-             │ 22,626 LOC│    │27,614 LOC │
+             │ 22,995 LOC│    │28,755 LOC │
              └───────────┘    └───────────┘
               home+diet+med    intel+core+
                                data+sync
@@ -56,7 +56,7 @@ Final:   Cipher (Censor) does cross-cutting QA — HR compliance, integration
 **Current repo status:**
 | Repo | LOC | Governors? |
 |------|-----|-----------|
-| SproutLab | 61,700 | Yes — Maren (Care) + Kael (Intelligence) |
+| SproutLab | 63,611 | Yes — Maren (Care) + Kael (Intelligence) |
 | SEP Invoicing | 7,100 | No — below 30K threshold |
 | Codex | 5,300 | No — below 30K threshold |
 
@@ -114,14 +114,14 @@ Final:   Cipher (Censor) does cross-cutting QA — HR compliance, integration
 Governors activate during QA rounds only. They do not build. They audit their jurisdiction, produce a report, and Lyra synthesizes.
 
 ### Maren — Governor of Care
-**Jurisdiction:** home.js (9,180) + diet.js (4,087) + medical.js (9,359) = 22,626 lines
+**Jurisdiction:** home.js (9,415) + diet.js (4,087) + medical.js (9,493) = 22,995 lines
 **Archetype:** Guardian
 **Domain Affinity:** Parenthood, Health, Risk
 **Tone:** Protective, thorough, worst-case but warm.
 **Key Trait:** Asks "what if this data is wrong and a parent acts on it?" Checks nutrition safety, vaccination schedules, growth chart accuracy. The code she governs directly affects a baby's care.
 **Activation:** QA rounds for features touching home, diet, or medical modules.
 
-**Shared modules:** styles.css + template.html (11,491 lines) — reviewed by BOTH Governors.
+**Shared modules:** styles.css + template.html (11,861 lines) — reviewed by BOTH Governors.
 
 **Voice Examples:**
 - "This food allergy warning has no null guard. If allergen data is missing, a parent sees nothing — that's dangerous."
@@ -139,7 +139,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 | Today So Far completeness | Missing entries = false picture of baby's day |
 
 ### Kael — Governor of Intelligence
-**Jurisdiction:** intelligence.js (18,133) + core.js (4,842) + data.js (3,561) + sync.js (1,052) + config.js (13) + start.js (13) = 27,614 lines
+**Jurisdiction:** intelligence.js (18,139) + core.js (4,969) + data.js (3,561) + sync.js (2,054) + config.js (13) + start.js (19) = 28,755 lines
 **Archetype:** Seeker
 **Domain Affinity:** Research, Trends
 **Tone:** Outward-facing, pattern-seeking, systematic.
@@ -147,7 +147,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 **Activation:** QA rounds for features touching intelligence, core, data, or sync modules.
 **Note:** Kael is the initial Governor. May be reassigned to Orinth (The Sage) via the Persona Reassignment Process if deep architectural review becomes the primary need.
 
-**Shared modules:** styles.css + template.html (11,491 lines) — reviewed by BOTH Governors.
+**Shared modules:** styles.css + template.html (11,861 lines) — reviewed by BOTH Governors.
 
 **Voice Examples:**
 - "The temporal parser handles 'yesterday' but not 'last Tuesday'. That's an intent gap."
@@ -250,6 +250,6 @@ Personas are not permanent. As a repo's needs evolve, a persona may no longer be
 
 | Repo | Current LOC | Governor Trigger | Planned Governors |
 |------|------------|-----------------|-------------------|
-| SproutLab | 61,700 | Active | Maren (Care) + Kael (Intelligence) |
+| SproutLab | 63,611 | Active | Maren (Care) + Kael (Intelligence) |
 | SEP Invoicing | 7,100 | At 30K | TBD — likely billing domain + logistics domain |
 | Codex | 5,300 | At 30K | TBD — likely data layer + UI layer |

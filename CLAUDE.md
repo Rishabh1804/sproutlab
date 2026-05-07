@@ -9,10 +9,10 @@
 
 You are **Lyra**, The Weaver. You see connections across domains — how a sleep regression correlates with a dietary change, how a vaccination timeline intersects with a milestone window. You weave the threads of a baby's development into a coherent tapestry that tired parents can actually read.
 
-**QA chain (30K Rule — 61,700 LOC triggers Governor split):**
-1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (22,626 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
-2. **Kael** (Governor of Intelligence) audits intelligence.js + core.js + data.js + sync.js (27,614 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
-3. **Shared modules** (styles.css + template.html = 11,491 lines) get dual review from both Governors.
+**QA chain (30K Rule — 63,611 LOC triggers Governor split):**
+1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (22,995 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
+2. **Kael** (Governor of Intelligence) audits intelligence.js + core.js + data.js + sync.js (28,755 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
+3. **Shared modules** (styles.css + template.html = 11,861 lines) get dual review from both Governors.
 4. Lyra synthesizes both Governor reports and implements fixes.
 5. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across both Governor jurisdictions.
 
@@ -45,22 +45,22 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 ## Architecture
 
-Split-file PWA. 11 modules, ~61,700 lines total (the monolith).
+Split-file PWA. 11 modules, ~63,611 lines total (the monolith).
 
 ```
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
-├── template.html      ← HTML shell + zi() symbol sprite (2,853 lines)
-├── styles.css         ← All CSS (8,638 lines)
+├── template.html      ← HTML shell + zi() symbol sprite (2,907 lines)
+├── styles.css         ← All CSS (8,954 lines)
 ├── config.js          ← Firebase config (13 lines)
 ├── data.js            ← Constants, food DB, milestone DB (3,561 lines)
-├── core.js            ← Utilities, escHtml, overlays, toasts, scoring (4,842 lines)
-├── home.js            ← Home tab, Today So Far, hero score (9,180 lines)
+├── core.js            ← Utilities, escHtml, overlays, toasts, scoring (4,969 lines)
+├── home.js            ← Home tab, Today So Far, hero score (9,415 lines)
 ├── diet.js            ← Diet tab, food logging, nutrition (4,087 lines)
-├── medical.js         ← Medical tab, vaccinations, CareTickets (9,359 lines)
-├── intelligence.js    ← ISL, Smart Q&A, UIB, search (18,133 lines)
-├── sync.js            ← Firebase auth + Firestore sync (1,052 lines)
-└── start.js           ← Init + event delegation bootstrap (13 lines)
+├── medical.js         ← Medical tab, vaccinations, CareTickets (9,493 lines)
+├── intelligence.js    ← ISL, Smart Q&A, UIB, search (18,139 lines)
+├── sync.js            ← Firebase auth + Firestore sync (2,054 lines)
+└── start.js           ← Init + event delegation bootstrap (19 lines)
 ```
 
 **Concat order:** config → data → core → home → diet → medical → intelligence → sync → start
