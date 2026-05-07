@@ -1,6 +1,18 @@
-# PR-ε.0 v6.1 — Foundation: stable IDs + scrapbook sync + milestone linkage
+# PR-ε.0 v6.2 — Foundation: stable IDs + scrapbook sync + milestone linkage
 
-> **v6 changelog (this revision):** addresses Kael + Maren v5 dual-Governor
+> **v6.2 changelog (this revision):** atomic spec package — pseudocode doc
+> folded in.
+> - **Paper-cut (Aurelius v6.1 review):** v6 header label was "(this
+>   revision)"; now "(prior revision)" — the v6.1 sub-block is current.
+> - **New artifact:** `docs/specs/lyra-pr-epsilon-0-pseudocode.md` —
+>   implementation pseudocode + reference JS for the 26-step order.
+>   Sub-50 LOC sections drafted by Maren + Kael in build-mode flex
+>   (Sovereign-authorized scope expansion); Lyra drafts ≥50 LOC
+>   sections (§6.2(c) reconcile pipeline, §6.3 dedupeMilestonesByText)
+>   + assembly + cross-section synthesis. Same audit chain as v6.1
+>   to follow on the assembled doc.
+
+> **v6 changelog (prior revision):** addresses Kael + Maren v5 dual-Governor
 > audit + Cipher Edict V cross-cutting pass.
 > 1 BLOCKER + 7 MAJORs folded + 1 MINOR; 2 MAJORs deferred with
 > forward-pointer (filed as issues #53 + #54). 9 total MAJORs touched.
