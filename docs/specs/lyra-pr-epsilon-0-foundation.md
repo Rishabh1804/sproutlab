@@ -1,8 +1,9 @@
-# PR-ε.0 v6 — Foundation: stable IDs + scrapbook sync + milestone linkage
+# PR-ε.0 v6.1 — Foundation: stable IDs + scrapbook sync + milestone linkage
 
 > **v6 changelog (this revision):** addresses Kael + Maren v5 dual-Governor
 > audit + Cipher Edict V cross-cutting pass.
-> 1 BLOCKER, 9 MAJORs, 1 MINOR folded; 2 MAJORs deferred with forward-pointer.
+> 1 BLOCKER + 7 MAJORs folded + 1 MINOR; 2 MAJORs deferred with
+> forward-pointer (filed as issues #53 + #54). 9 total MAJORs touched.
 > - **BLOCKER (Cipher cross-cutting):** v5 §0a relocated `slugify` to
 >   `config.js` but three index-level artifacts still said it lived in
 >   `core.js` — line 183 (Build-system prose), line 191 (Critical-files
@@ -68,18 +69,40 @@
 >   || '(unnamed milestone)'` fallback before escHtml. Doc-only:
 >   `removeScrapMilestone` wait-for-save semantics noted (chip × drops
 >   from pending; persists on form save; `cancelScrapEdit` discards).
-> - **Deferred MAJORs (2, with forward-pointer):**
+> - **Deferred MAJORs (2, with forward-pointer + tracked issues):**
 >   §4 picker modal lacks `role="dialog"` / `aria-modal="true"` /
 >   `aria-labelledby` — pre-existing pattern gap across all SproutLab
 >   modals; PR-ε.0 adopting it unilaterally would create per-modal
->   inconsistency. Filed to "Out of scope" register; separate repo-wide
->   a11y uplift ticket.
+>   inconsistency. Filed to "Out of scope" register; **tracked as
+>   issue #54** (repo-wide modal a11y uplift).
 >   §6.2(d) in-flight Firestore snapshot stragglers can run
 >   `save(lsKey, entries)` after detach, overwriting local with stale
 >   remote. Reconcile-gate placement protects reconcile re-fire but
 >   not the underlying snapshot-apply. Pre-existing pipeline limitation
 >   outside §6.2's scope; forward-pointer note added in §6.2(d); defer
->   generation-counter / `_syncDisabled`-flip to a separate hardening PR.
+>   generation-counter / `_syncDisabled`-flip to a separate hardening
+>   PR. **Tracked as issue #53.**
+>
+> **v6.1 (this push):** addresses Aurelius polish-pass review on PR #52.
+> - **Item 1** (§6.3 `defaultSlugIds` invariant comment): skipped —
+>   Kael + Cipher confirmed `const` declaration on `DEFAULT_MILESTONES`
+>   IS the invariant; Set is rebuilt fresh per call inside the function.
+> - **Item 2** (§6.2(c) write-counter one-liner): landed verbatim above
+>   the new `_syncWriteCount++` in the orphan forEach. Documents
+>   "overcount is fail-safe" so a future reader doesn't invert the
+>   safety direction.
+> - **Item 3** (§7.7 entity-reference positive verification): landed —
+>   fixture string is `&mama;` (not `Tom & Jerry`); Maren caught that
+>   bare `&` is HTML5-tolerated and would pass on v5 too. The canonical
+>   hazard is entity-reference parsing.
+> - **Item 4** (forward-pointer durability): filed issues #53 (snapshot
+>   stragglers) + #54 (modal a11y) and cross-linked both into the
+>   deferred bullets above + their respective spec sections.
+> - **Cipher additional finding** (changelog arithmetic): clarified
+>   header from "9 MAJORs" → "1 BLOCKER + 7 MAJORs folded + 1 MINOR;
+>   2 MAJORs deferred (issues #53 + #54). 9 total MAJORs touched."
+> - **Cipher additional finding** (CLAUDE.md line-count drift): tracked
+>   as issue #55 (non-blocking; doc hygiene only).
 
 > **v5 changelog (previous revision):** addressed Kael + Maren v4 dual-audit.
 > 1 BLOCKER, 5 MAJORs, 4 MINORs folded.
@@ -840,6 +863,11 @@ if (!_reconcileDone.has(collection)) {
           // worth logging so the operator sees a breadcrumb. Convert sync
           // throws to the same logged-and-continue path as async rejections.
           try {
+            // PR-ε.0 v6.1 — Aurelius polish item 2.
+            // Increment before .set() — overcount is fail-safe (breaker bails earlier);
+            // do NOT move post-resolve, async settlement would let bursts under-count
+            // and overshoot the limit. Matches existing _syncWritePerEntry pattern at
+            // sync.js:884.
             _syncWriteCount++;  // count toward circuit breaker
             colRef.doc(e.id).set(Object.assign({}, e, stampBase), { merge: false })
               .catch(err => {
@@ -946,6 +974,8 @@ proper fix needs either (a) a generation counter on the listener so
 stragglers detect they're stale, or (b) `_syncDisabled` flip during
 detach windows. Defer to a separate sync-pipeline hardening PR; not
 introduced by PR-ε.0 and not made worse by it.
+**Tracked as issue #53** (filed v6.1 per Aurelius polish item 4 —
+forward-pointer durability).
 
 ##### Verification (manual)
 
@@ -1445,6 +1475,7 @@ The pre-build visual checklist Lyra runs before opening the PR:
 - [ ] **iOS VoiceOver real-device test:** the `role="checkbox"` on `<button>` pattern is the codebase's first use; iOS sometimes appends "double-tap to activate" mid-announcement. Test on a real iPhone before ship — not just simulator. (Maren v4 audit MAJOR.)
 - [ ] **Orphan-tag toast surfaces on edit-load:** create a memory tagged with a custom milestone, delete the milestone on the same device, edit the memory → toast reads "1 milestone tag removed — milestone no longer exists". Toast text is informational, not alarming. (Maren v4 audit MAJOR §4 wiring.)
 - [ ] **Attribute escape audit:** every interpolation in an attribute context (`aria-label`, `data-arg` with arbitrary text) uses `escAttr`, not `escHtml`. Test: rename a custom milestone to `Said "mama"`, tag a memory, inspect chip × `aria-label` attribute — must read `Remove Said &quot;mama&quot; tag` (not `Remove Said "mama" tag`).
+- [ ] **Entity-reference escape (v6 MAJOR positive verification, Aurelius polish item 3):** rename a custom milestone to `&mama;`, tag a memory, inspect the chip. Visible `.chip-label` body must render the literal string `&mama;` (DOM text node, not an entity). Chip × `aria-label` attribute must read `Remove &amp;mama; tag` in the inspector and announce as "Remove and mama semicolon tag" (or equivalent literal) in VoiceOver — never as "Remove mama tag". Confirms `escHtml` runs before `escAttr` on both surfaces; positively verifies the v6 §4 double-wrap fix (not just the regression boundary).
 - [ ] **No keyboard trap when picker has 0 milestones:** picker-empty state still allows Tab to reach Cancel/Done.
 - [ ] **Disabled state (Tag-a-milestone with no milestones existing):** button stays active so the user can still open the picker and see the empty-state guidance — no premature disable.
 - [ ] **Reduced motion (v6 Maren MAJOR):** confirmed `styles.css:3902` `@media (prefers-reduced-motion: reduce)` global block zeroes all `--ease-fast` transitions on the new `.chip-x`, `.picker-row-check`, and `.picker-row` rules. Test: Settings → Accessibility → Reduce Motion ON → no transition flash on chip × hover, picker-row hover, or check toggle.
@@ -1469,11 +1500,11 @@ The pre-build visual checklist Lyra runs before opening the PR:
   (`growthModal`, `vaccModal`, `milestoneModal` in `template.html`
   lines 2704–2857 — none use `role="dialog"`). PR-ε.0 inherits the
   pattern intentionally to avoid creating a per-modal a11y
-  inconsistency. **Followup register entry:** open a separate ticket
-  for a repo-wide modal a11y uplift that adds `role="dialog"`,
-  `aria-modal="true"`, and `aria-labelledby` to every existing modal
-  in one pass. Until then, screen-reader users get focus context but
-  no explicit dialog announcement on open — degraded but not broken.
+  inconsistency. **Tracked as issue #54** (filed v6.1 per Aurelius
+  polish item 4 — forward-pointer durability) — repo-wide modal a11y
+  uplift in one pass. Until then, screen-reader users get focus
+  context but no explicit dialog announcement on open — degraded but
+  not broken.
 - **`addMilestone()` missing-save bug** at `home.js:1905–1914` — the
   function pushes to global `milestones` but does NOT call
   `save(KEYS.milestones, milestones)`. Relies on subsequent render
