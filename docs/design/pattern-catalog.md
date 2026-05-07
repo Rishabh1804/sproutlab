@@ -268,7 +268,7 @@ Container element is `<span role="listitem">`; container is non-interactive; onl
 | `<span>` as Subclass B chip container | `intelligence.js:16822, 16833, 17064, …` (CT chips) | Same reason. The dispatcher fires regardless because of bubble-up, but keyboard users can't reach the chip without `tabindex` (which would be a second HR-3-adjacent hack). |
 | Bare ASCII glyphs in chip body (`✓ Fine`, `Save Feed ✓`, `⭐ Milestone`) | `template.html:821, 979, 992, 2228, 2261, 2287, 2308–2311` | HR-1 violation. Use `<svg class="zi"><use href="#zi-check"/></svg>` (or `zi-star`). |
 | Chip-as-status with no `role="status"` when state-bearing | (food-safety chips today) | AT users miss the state. Allowed-variant `role="status"` is required for state-bearing decorative chips. |
-| Tag chip Subclass C without `role="list"` ancestor | (no current sites; PR-ε.0 v6.2 introduces the first; container has `role="list"` per spec) | `role="listitem"` orphaned without `role="list"` parent is invalid ARIA. |
+| Tag chip Subclass C without `role="list"` ancestor + canonical `role="listitem"` on chip | `intelligence.js:9605–9612` — the existing `al-chip` + `al-chip-x` pair (activity-log domain detection chips with inner remove buttons) is shape-precedent for Subclass C today, but lacks `role="listitem"` on the chip, lacks a `role="list"` parent, and uses a literal `&times;` close glyph. PR-ε.0 v6.2 §4 introduces the first canonical Subclass C instance. | `role="listitem"` orphaned without `role="list"` parent is invalid ARIA. The `al-chip` shape predates the PR-ε.0 chip × pattern by feature lifecycle, but its a11y posture is non-canonical; Phase 3 contract sequences the `al-chip` migration as a Subclass C conformance follow-up. (Cipher Phase 2 cross-cut MINOR — flags shape-precedent that Phase 1 P-2 captured under the chip-variants table without surfacing the inner-remove-control pattern explicitly; surfaces here for Phase 3 derivation precision.) |
 
 ### 2.4 Rationale
 
@@ -1033,6 +1033,7 @@ Issue #54's acceptance criteria are integrated into PC-1 above. Mapping table:
 | TalkBack announces dialog role on Android | PC-1.7 line 12 |
 | No focus escapes modal while open | PC-1.7 lines 4, 5, 6 |
 | Escape closes every modal | PC-1.7 line 6 |
+| Backdrop click closes overlay (consistent across modal families) | PC-1.7 line 7 |
 | `prefers-reduced-motion` interaction unchanged | PC-1.7 line 10 |
 
 **When Phase 3 contract lands** with rules derived from PC-1, **issue #54 closes** with a forward-link to the catalog entry + the contract enforcement clause. Phase 4 PR-ε.0 conformance check verifies the picker modal lands canonical.
@@ -1080,18 +1081,30 @@ Per #57: "Do not land this fix before Phase 2 completes" — Phase 2 produces th
 
 **Class C — relies on the JS-string-literal escape behavior** (the `\\'` arm is load-bearing):
 
-| Anchor sample | Why Class C |
-|---|---|
-| (none identified in current grep) | The `'` arm produces `\\'` which is HTML-attribute-incorrect; no call site appears to consume `\\'` as a JS-literal escape. **Verification target for #57's "any site relying on the JS-literal `\'` behavior is migrated explicitly" acceptance criterion.** |
+| Anchor | Code shape | Why Class C |
+|---|---|---|
+| `home.js:8010` | `action: \`openVaccApptModal('${escAttr(upcomingVacc.name)}')\`` | `escAttr(name)` output sits inside a JS single-quoted string literal inside `onclick="${item.action}"` (`home.js:8369`). The browser parses the `onclick` attribute value as JS source; `\\'` IS the JS-string-literal escape for an apostrophe in a single-quoted JS string. The `'` arm is required for valid JS if `name` contains `'` (e.g. `"Tom's vacc"`). |
+| `home.js:8118` | `action: motorLogged ? null : 'openActivityLogPrefilled(\\'' + escAttr(motorTitle.split(' — ')[0]) + '\\', 5, \\'plan\\')'` | Same shape; motor-activity titles can contain `'` (e.g. `"baby's tummy time"`). |
+| `home.js:8168` | `action: langLogged ? null : 'openActivityLogPrefilled(\\'' + escAttr(langAct.title.split(' — ')[0]) + '\\', 5, \\'plan\\')'` | Same shape; language-activity titles. |
+
+All three Class C sites are **also HR-3 violations** (their consumer at `home.js:8369` is an inline `onclick="..."` interpolation). The natural sequencing for #57 is therefore: kill the inline-`onclick=` consumer first (migrate to `data-action` per PC-7), then path (a)'s rewrite of `escAttr`'s `'` arm becomes irrelevant for these sites and is sound globally.
+
+(Cipher Phase 2 cross-cut MAJOR catch — Maren's original "Class C empirically empty" claim falsified by independent re-grep at audit-base. Class C has 3 sites, all in `home.js`, all sourced from `item.action` plan-items consumed by `home.js:8369`'s `onclick=` interpolation.)
 
 ### Census conclusions for #57
 
 1. **Class A predominates.** ~50 of 77 active sites are Class A (controlled-vocabulary inputs).
 2. **Class B is the at-risk surface.** ~20-25 sites carry user-text or extensible vocabulary; the `&`-not-escaped gap is the dominant hazard, not the `'`-mis-escape.
-3. **Class C is empirically empty in the current census.** No call site appears to consume the `\\'` JS-literal escape behavior. Path (a) of #57 (direct rewrite) is sound for all observed sites.
+3. **Class C has 3 sites in `home.js`** (`:8010`, `:8118`, `:8168`), all sourced from `item.action` plan-item builders consumed by `home.js:8369`'s `onclick="${item.action}"` interpolation. All three are also HR-3 violations on the consumer side. (Cipher Phase 2 cross-cut MAJOR catch; Maren's original "empirically empty" claim falsified by independent re-grep.)
 4. **PR-ε.0 v6.2 chip × `aria-label` double-wrap** (`escAttr(escHtml(labelText))`) — Class B; double-wrap is correct under both pre-#57 and post-#57 semantics. Post-#57 simplification to single-wrap (`escAttr(labelText)`) is a Phase-4-or-later cleanup decision.
 
-**Recommendation forwarded to #57:** path (a) (direct rewrite) is preferred; the call-site audit acceptance criterion can be satisfied with a Class A / Class B / Class C tagged spreadsheet derived from this census. Phase 2 catalog entry stops at the census; the fix lands downstream.
+**Recommendation forwarded to #57:**
+
+- Path (a) (direct rewrite) is sound for **Class A + Class B (~74 sites)** without sequencing dependencies.
+- The **3 Class C sites** at `home.js:8010 / 8118 / 8168` require sequencing: kill the inline-`onclick=` consumer at `home.js:8369` first (migrate to `data-action` per PC-7 dispatcher consolidation), then the `\\'` arm becomes irrelevant for these sites and path (a) rewrite is sound globally.
+- The call-site audit acceptance criterion can be satisfied with a Class A / Class B / Class C tagged spreadsheet derived from this census, with the Class C migration sequenced after PC-7's dispatcher pass.
+
+Phase 2 catalog entry stops at the census + sequencing recommendation; the fix lands downstream.
 
 ---
 
@@ -1108,7 +1121,7 @@ The intelligence-engine impact axis is carried forward from Phase 1 gap-report r
 | 5 | PC-5 · Empty-state idiom consolidation (3 → 1; 4th ships with PR-ε.0 v6.2) | **medium** | 5 | 13 sites; rule consolidation + per-site markup change. |
 | 6 | PC-6 · Tab-bar a11y posture (3 implementations × `role="tablist"` + arrow-keys) | **medium** | 6 | Renderer change (Track sub-tab) + static markup change (top-level + Settings); global keydown handler. |
 | 7 | PC-4 · Undo `<span>` → `<button>` | **cheap** | 7 | Already counted under rank 1. |
-| 8 | PC-2 / Issue #57 · `escAttr` `&` gap + Phase-2 census + downstream fix | **medium** (fix); **cheap** (census) | 8 | Census deliverable lives in this catalog; fix is downstream of Phase 2 per #57. |
+| 8 | PC-2 / Issue #57 · `escAttr` `&` gap + Phase-2 census + downstream fix | **medium** (fix); **cheap** (census) | 8 | Census deliverable lives in this catalog; fix is downstream of Phase 2 per #57. The 3 Class C sites (`home.js:8010/8118/8168`) carry a sequencing dependency on PC-7 dispatcher consolidation — kill the inline-`onclick=` at `home.js:8369` first, then path (a) rewrite is globally sound. |
 | 9 | PC-1 · Six overlay DOM families → three canonical | **medium** (per surface) × 4 surfaces (bug, crop, lightbox, sidebar element) | 9 | Each surface's migration is medium; aggregate is the long tail of overlay normalization. |
 | 10 | PC-1 / PC-9 / PC-2 / PC-8 · Literal `&times;` × 14 + `×` × 1 + `+` × 1 + `▾` × 75 + `✓`/`⭐` glyphs in JS body (HR-1 sweep) | **medium** | 10 | The chevron migration (75 sites) dominates; close-glyph migration (14 + 1 + 1 = 16 sites) is the second-largest. Sprite addition is `cheap`; rolling-out is `medium`. |
 | 11 | PC-3 / PC-7 · Inline `style=""` (228) + inline handlers (36) | **medium** (rolling) | 11 | Continues Phase 4 Polish-10's HR-3/HR-2 sweeps; migration cost spread across surface migrations. |
