@@ -12,7 +12,7 @@ Three PWA projects sharing a common architectural pattern: split-file HTML conca
 | Project | Lines | Modules | Persona | Domain |
 |---------|-------|---------|---------|--------|
 | Codex | 5,300 | 8 | Aurelius | Project tracking / RPG |
-| SproutLab | 61,700 | 11 | Lyra | Baby development tracker |
+| SproutLab | 63,611 | 11 | Lyra | Baby development tracker |
 | SEP Invoicing | 7,100 | 22 | Solara | Industrial invoicing |
 
 ## Non-Negotiable Rules
