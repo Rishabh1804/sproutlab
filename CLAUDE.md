@@ -20,13 +20,16 @@ Governors activate during QA rounds only. Lyra builds alone.
 
 ## Companion-Set Invocation Surface
 
-The Province's three seated Companions — Lyra (Builder), Maren (Governor of Care), Kael (Governor of Intelligence) — deploy per canon-cc-026 §Per-Province-Layout as paired subagent + skill specs. Canonical spec bodies live in Codex under `docs/specs/subagents/` and `docs/specs/skills/`; Province mirrors sit at:
+The Province's seated Companions — Lyra (Builder), Maren (Governor of Care), Kael (Governor of Intelligence), Cipher (Censor of Cluster A; cross-cluster, mirrored into Province for Edict V final-pass invocation) — deploy per canon-cc-026 §Per-Province-Layout as paired subagent + skill specs. Canonical spec bodies live in Codex under `docs/specs/subagents/` and `docs/specs/skills/`; Province mirrors sit at:
 
 | Companion | Subagent | Skill |
 |-----------|----------|-------|
 | Lyra | `.claude/agents/lyra.md` | `.claude/skills/lyra.md` |
 | Maren | `.claude/agents/maren.md` | `.claude/skills/maren.md` |
 | Kael | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
+| Cipher | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
+
+Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/docs/specs/subagents/cipher.md` + `…/skills/cipher.md`) per canon-cc-026 §Per-Province-Layout. Cipher remains Censor of Cluster A (Codex + SproutLab), not a Province seat; the mirror is for in-Province invocation of the Edict V final-pass and skill-mode hat-switch without leaving the Province context.
 
 **Subagent vs skill split (canon-cc-022 artifact test):** subagent output is a separable, attributable interaction-artifact entering the cc-018 lifecycle (Lyra's Mode 1 spec authoring, Maren and Kael's Mode 1 jurisdictional audits, any Mode 2 committee-delegate positions). Skill output is an in-transcript register-flip — pattern-read, smell-check, Governor scout — with no signature, no gate, no Edict V chain entry. If the caller wants a signed audit or a spec-bearing record, summon the subagent. If the caller wants the voice mid-build without breaking flow, fire the skill.
 
