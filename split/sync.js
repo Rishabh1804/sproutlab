@@ -1291,6 +1291,13 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
 
     // Compare to current localStorage
     var current = load(lsKey, []);
+    // PR-ε.0 §6.2(c) Kael synthesis MINOR: byte-identical-snapshot
+    // short-circuit deliberately precedes the reconcile gate below.
+    // When current === entries by string equality, the orphan diff would
+    // be empty by definition (same id-set); skipping reconcile loses
+    // nothing. Side effect: _reconcileDone.add fires only on a non-
+    // identical snapshot — the gate stays open until then. Acceptable
+    // because the next non-identical snapshot redoes a no-cost diff scan.
     if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
 
     // C0 Fix 4 (Kael): defer if our local write is pending.
@@ -1313,6 +1320,14 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     // Folds Cipher BLOCKER #4 (per-entry listener wiped local entries that
     // pre-existed before the household joined) + Kael v5 MAJORs (concat-
     // before-branching, gate-add-on-success-only, stamp-trio parity).
+    //
+    // Placement (Kael synthesis MINOR): this block sits AFTER the empty-
+    // snapshot guard above. Spec §6.2(c) accepts the trade-off — an
+    // empty-remote / non-empty-local first fire does NOT push orphans via
+    // reconcile; the next local-mutation diff push handles them. Reordering
+    // to put reconcile BEFORE the empty-snapshot guard would push orphans
+    // on every empty-remote snapshot, which is the wrong default for the
+    // SAFETY (c13a7de) skip the guard implements.
     if (!_reconcileDone.has(collection)) {
       var remoteIds = new Set();
       entries.forEach(function(re) { if (re && re.id) remoteIds.add(re.id); });

@@ -34632,11 +34632,23 @@ function dedupeMilestonesByText() {
   return true;
 }
 
-// PR-ε.0 §6.3(b) — Cipher BLOCKER #3 fold. Called from inside
-// dedupeMilestonesByText when idRewrite.size > 0. Rewrites scrapbook
-// entries' milestoneIds in place so cross-device dedup merges don't
-// orphan tag references. Side-effects on the scrapbook global; saves
-// when dirty; returns void.
+// PR-ε.0 §6.3(b) — Cipher BLOCKER #3 fold + Maren synthesis MINOR fold.
+// Called from inside dedupeMilestonesByText when idRewrite.size > 0.
+// Rewrites scrapbook entries' milestoneIds in place so cross-device dedup
+// merges don't orphan tag references. Side-effects on the scrapbook
+// global; saves when dirty; returns void.
+//
+// Maren synthesis MINOR (post-Governor-audit fold): also remap the
+// in-memory picker pending state if a parent has the picker open mid-
+// session when remote sync triggers dedup. Without this remap, the
+// picker's _scrapMilestoneIdsPending / _scrapPickerWorkingSet still
+// hold the loser id; confirmScrapMilestonePicker's
+// `milestones.some(m => m.id === id)` filter then drops the id and
+// fires "tag removed — milestone no longer exists" — but the tag
+// actually survived under the survivor id and is intact in scrapbook
+// localStorage. Toast lies; parent sees deletion that didn't happen.
+// Remapping the in-memory picker state here keeps the user-facing UX
+// consistent with the persisted state on the same trigger.
 function rewriteScrapbookMilestoneIds(idRewrite) {
   if (!Array.isArray(scrapbook) || !idRewrite.size) return;
   let dirty = false;
@@ -34653,6 +34665,26 @@ function rewriteScrapbookMilestoneIds(idRewrite) {
     }
   });
   if (dirty) save(KEYS.scrapbook, scrapbook);
+
+  // Remap in-memory picker state (Maren synthesis MINOR). Both globals
+  // are declared in core.js (§4 picker state) and in scope here at
+  // runtime since the bundled <script> hoists all top-level lets into
+  // one scope and core.js parses before medical.js.
+  if (Array.isArray(_scrapMilestoneIdsPending) && _scrapMilestoneIdsPending.length > 0) {
+    const before = _scrapMilestoneIdsPending;
+    _scrapMilestoneIdsPending = Array.from(
+      new Set(before.map(id => idRewrite.get(id) || id))
+    );
+    // Re-render the chip strip if the host element exists (null-host-safe).
+    if (typeof renderScrapMilestoneChips === 'function') renderScrapMilestoneChips();
+  }
+  if (_scrapPickerWorkingSet instanceof Set && _scrapPickerWorkingSet.size > 0) {
+    const remapped = new Set();
+    _scrapPickerWorkingSet.forEach(id => remapped.add(idRewrite.get(id) || id));
+    _scrapPickerWorkingSet = remapped;
+    // Re-render the picker list if open (null-host-safe).
+    if (typeof renderScrapMilestonePickerList === 'function') renderScrapMilestonePickerList();
+  }
 }
 
 // ─── Sync All Milestone Statuses (runs after every log entry) ───
@@ -63355,6 +63387,13 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
 
     // Compare to current localStorage
     var current = load(lsKey, []);
+    // PR-ε.0 §6.2(c) Kael synthesis MINOR: byte-identical-snapshot
+    // short-circuit deliberately precedes the reconcile gate below.
+    // When current === entries by string equality, the orphan diff would
+    // be empty by definition (same id-set); skipping reconcile loses
+    // nothing. Side effect: _reconcileDone.add fires only on a non-
+    // identical snapshot — the gate stays open until then. Acceptable
+    // because the next non-identical snapshot redoes a no-cost diff scan.
     if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
 
     // C0 Fix 4 (Kael): defer if our local write is pending.
@@ -63377,6 +63416,14 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     // Folds Cipher BLOCKER #4 (per-entry listener wiped local entries that
     // pre-existed before the household joined) + Kael v5 MAJORs (concat-
     // before-branching, gate-add-on-success-only, stamp-trio parity).
+    //
+    // Placement (Kael synthesis MINOR): this block sits AFTER the empty-
+    // snapshot guard above. Spec §6.2(c) accepts the trade-off — an
+    // empty-remote / non-empty-local first fire does NOT push orphans via
+    // reconcile; the next local-mutation diff push handles them. Reordering
+    // to put reconcile BEFORE the empty-snapshot guard would push orphans
+    // on every empty-remote snapshot, which is the wrong default for the
+    // SAFETY (c13a7de) skip the guard implements.
     if (!_reconcileDone.has(collection)) {
       var remoteIds = new Set();
       entries.forEach(function(re) { if (re && re.id) remoteIds.add(re.id); });
