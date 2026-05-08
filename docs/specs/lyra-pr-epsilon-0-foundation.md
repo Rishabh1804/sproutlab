@@ -1,6 +1,122 @@
-# PR-ε.0 v5 — Foundation: stable IDs + scrapbook sync + milestone linkage
+# PR-ε.0 v6.2 — Foundation: stable IDs + scrapbook sync + milestone linkage
 
-> **v5 changelog (this revision):** addresses Kael + Maren v4 dual-audit.
+> **v6.2 changelog (this revision):** atomic spec package — pseudocode doc
+> folded in.
+> - **Paper-cut (Aurelius v6.1 review):** v6 header label was "(this
+>   revision)"; now "(prior revision)" — the v6.1 sub-block is current.
+> - **New artifact:** `docs/specs/lyra-pr-epsilon-0-pseudocode.md` —
+>   implementation pseudocode + reference JS for the 26-step order.
+>   Sub-50 LOC sections drafted by Maren + Kael in build-mode flex
+>   (Sovereign-authorized scope expansion); Lyra drafts ≥50 LOC
+>   sections (§6.2(c) reconcile pipeline, §6.3 dedupeMilestonesByText)
+>   + assembly + cross-section synthesis. Same audit chain as v6.1
+>   to follow on the assembled doc.
+
+> **v6 changelog (prior revision):** addresses Kael + Maren v5 dual-Governor
+> audit + Cipher Edict V cross-cutting pass.
+> 1 BLOCKER + 7 MAJORs folded + 1 MINOR; 2 MAJORs deferred with
+> forward-pointer (filed as issues #53 + #54). 9 total MAJORs touched.
+> - **BLOCKER (Cipher cross-cutting):** v5 §0a relocated `slugify` to
+>   `config.js` but three index-level artifacts still said it lived in
+>   `core.js` — line 183 (Build-system prose), line 191 (Critical-files
+>   table: `Add genId(), slugify()` in core.js), and Phase A step 1
+>   ("`genId()` and `slugify()` in `core.js`"). An implementer following
+>   the Implementation Order verbatim would have re-introduced the v4
+>   BLOCKER. **Fix:** updated all three sites; split Phase A step 1
+>   into 1a (`slugify` in config.js per §0a) + 1b (`genId` in core.js
+>   per §0b).
+> - **MAJOR (Kael):** §1 — slug-uniqueness assert in `migrateMilestoneIds`
+>   checks Set-size only; two empty-text DEFAULTs would produce distinct
+>   `ms-fallback-*` ids and pass. **Fix:** added a parallel assert that
+>   no DEFAULT id matches `/^ms-fallback-/`.
+> - **MAJOR (Kael):** §6.3 — lex-smaller-id survivor selection could
+>   favor UUIDs over DEFAULT slugs (UUID leading-digit < kebab-letter).
+>   Custom-text-collision with a DEFAULT would have orphaned the
+>   deterministic slug. **Fix:** prefer `defaultSlugIds.has(m.id)` short-
+>   circuit before lex compare so DEFAULT slugs always win same-text
+>   collisions.
+> - **MAJOR (Kael):** §6.3 — `typeof migrateMilestoneIds === 'function'`
+>   guard masked future renames. **Fix:** converted to `console.assert`
+>   matching the §1 assertion idiom.
+> - **MAJOR (Kael):** §6.1 — `_syncSetGlobal('scrapbook', value)`
+>   reassigns; §6.3 mandates in-place mutation for `milestones` for the
+>   same closure-pin hazard. Asymmetry is benign today (Maren+Kael both
+>   confirm no closure-pinning reader) but undocumented. **Fix:** added
+>   a comment stating the asymmetry is acceptable absent in-place mutator
+>   + closure-pinning reader; flag for re-verification.
+> - **MAJOR (Kael):** §6.2(c) — synchronous throw inside the orphan
+>   `forEach` (e.g. firebase uninitialized) would skip subsequent orphans
+>   this fire. Data still survives via concat + reattach retry, but the
+>   partial-attempt path was undocumented. **Fix:** wrapped each forEach
+>   body in inner `try/catch` that logs and continues, matching the
+>   `.catch()` handling for async rejections.
+> - **MAJOR (Maren):** §4 — `escAttr` (`core.js:2304`) only escapes `'`
+>   and `"`, not `&`. Milestone text containing `&` (e.g. `Tom & Jerry`)
+>   produced malformed-but-tolerated attribute markup; `&mama;` could
+>   parse as a numeric/named entity reference → SR mis-announcement.
+>   **Fix:** double-wrap aria-label as `${escAttr(escHtml(m.text))}`
+>   for the chip × only. (Extending escAttr globally has wider blast
+>   radius — deferred to a separate PR.)
+> - **MAJOR (Maren):** §4 — orphan-toast fired only on `editScrapEntry`
+>   open. If a remote sync dropped a milestone WHILE the form was open,
+>   `confirmScrapMilestonePicker` (line ~550) silently filtered orphans
+>   at confirm with no feedback — two-stage misleading UX. **Fix:** added
+>   a parallel toast in `confirmScrapMilestonePicker` when the orphan-
+>   filter drops anything.
+> - **MAJOR (Maren):** §7.3 — `.picker-row { align-items: center; }`
+>   paired with `word-break: break-word` and a 22×22 sibling check
+>   vertically centers the check against multi-line wrapped labels;
+>   appears mis-aligned with the first line on phone. **Fix:** changed
+>   `.picker-row` to `align-items: flex-start` and added small
+>   `margin-top` to `.picker-row-check` for first-line cap-height
+>   alignment.
+> - **MAJOR (Maren):** §7.7 — visual checklist omitted a
+>   `prefers-reduced-motion` verification. `styles.css:3902` global
+>   block already zeros transitions, but the spec didn't claim it.
+>   **Fix:** added one §7.7 checklist line.
+> - **MINOR (Maren):** §4 — chip render of a milestone with empty/
+>   whitespace `text` produced an empty `.chip-label` and aria-label
+>   `"Remove  tag"` (double space). `addMilestone` guards new entries
+>   but legacy data could contain them. **Fix:** `(m.text || '').trim()
+>   || '(unnamed milestone)'` fallback before escHtml. Doc-only:
+>   `removeScrapMilestone` wait-for-save semantics noted (chip × drops
+>   from pending; persists on form save; `cancelScrapEdit` discards).
+> - **Deferred MAJORs (2, with forward-pointer + tracked issues):**
+>   §4 picker modal lacks `role="dialog"` / `aria-modal="true"` /
+>   `aria-labelledby` — pre-existing pattern gap across all SproutLab
+>   modals; PR-ε.0 adopting it unilaterally would create per-modal
+>   inconsistency. Filed to "Out of scope" register; **tracked as
+>   issue #54** (repo-wide modal a11y uplift).
+>   §6.2(d) in-flight Firestore snapshot stragglers can run
+>   `save(lsKey, entries)` after detach, overwriting local with stale
+>   remote. Reconcile-gate placement protects reconcile re-fire but
+>   not the underlying snapshot-apply. Pre-existing pipeline limitation
+>   outside §6.2's scope; forward-pointer note added in §6.2(d); defer
+>   generation-counter / `_syncDisabled`-flip to a separate hardening
+>   PR. **Tracked as issue #53.**
+>
+> **v6.1 (this push):** addresses Aurelius polish-pass review on PR #52.
+> - **Item 1** (§6.3 `defaultSlugIds` invariant comment): skipped —
+>   Kael + Cipher confirmed `const` declaration on `DEFAULT_MILESTONES`
+>   IS the invariant; Set is rebuilt fresh per call inside the function.
+> - **Item 2** (§6.2(c) write-counter one-liner): landed verbatim above
+>   the new `_syncWriteCount++` in the orphan forEach. Documents
+>   "overcount is fail-safe" so a future reader doesn't invert the
+>   safety direction.
+> - **Item 3** (§7.7 entity-reference positive verification): landed —
+>   fixture string is `&mama;` (not `Tom & Jerry`); Maren caught that
+>   bare `&` is HTML5-tolerated and would pass on v5 too. The canonical
+>   hazard is entity-reference parsing.
+> - **Item 4** (forward-pointer durability): filed issues #53 (snapshot
+>   stragglers) + #54 (modal a11y) and cross-linked both into the
+>   deferred bullets above + their respective spec sections.
+> - **Cipher additional finding** (changelog arithmetic): clarified
+>   header from "9 MAJORs" → "1 BLOCKER + 7 MAJORs folded + 1 MINOR;
+>   2 MAJORs deferred (issues #53 + #54). 9 total MAJORs touched."
+> - **Cipher additional finding** (CLAUDE.md line-count drift): tracked
+>   as issue #55 (non-blocking; doc hygiene only).
+
+> **v5 changelog (previous revision):** addressed Kael + Maren v4 dual-audit.
 > 1 BLOCKER, 5 MAJORs, 4 MINORs folded.
 > - **BLOCKER (Kael):** `slugify()` cannot run at `data.js` parse time
 >   (concat order: `data → core`). **Fix:** relocate `slugify` to
@@ -178,9 +294,13 @@ PR-ε.1.**
 - **Build system:** `bash build.sh` concatenates split files in order
   (`config → data → core → home → diet → medical → intelligence →
   sync → start`). Never edit the concatenated `sproutlab.html`
-  directly; always edit `split/*` and rebuild. New helpers added to
-  `core.js` are visible to all later files in concat order — fine for
-  `genId`/`slugify` (called from `home.js`, `data.js`, `sync.js`).
+  directly; always edit `split/*` and rebuild. **Helper placement
+  follows concat-order constraint:** `slugify` lives in `config.js`
+  (first concatenated, in scope when `data.js` parses
+  `DEFAULT_MILESTONES` slug-baking — see §0a); `genId` lives in
+  `core.js` (only ever called at runtime, after `data.js` has parsed
+  — see §0b). Both are visible to all later files in concat order
+  (`home.js`, `medical.js`, `sync.js`).
 
 ## Critical files (v2 — added sync.js + medical.js + styles.css)
 
@@ -188,7 +308,8 @@ PR-ε.1.**
 |---|---|
 | `split/data.js:1468–1476` | Bake `id` slug into each DEFAULT_MILESTONES entry |
 | `split/core.js:9–54` (KEYS) | Confirm `KEYS.scrapbook` exists; no edit |
-| `split/core.js` near utilities | Add `genId()`, `slugify()` |
+| `split/config.js` (top, after constants) | Add `slugify()` (see §0a — must parse before `data.js` for DEFAULT_MILESTONES slug bake) |
+| `split/core.js` near utilities (next to `escHtml`/`escAttr`) | Add `genId()` (see §0b — runtime-only, safe in core.js) |
 | `split/core.js:752–800` (init) | Insert `migrateMilestoneIds()` after sanitize, before first render |
 | `split/core.js` (scrapbook init) | Insert `migrateScrapbookIds()` between scrapbook sanitize and first render |
 | `split/core.js:2113` (`renderScrapbook`) | **Remove the `save()` call** AND add a 1-line header comment to the function: `// DOES NOT SAVE — mutators must call save(KEYS.scrapbook, scrapbook) explicitly. (PR-ε.0 §6.1 + Maren v4 audit.)` Documents the contract for future maintainers. |
@@ -298,6 +419,17 @@ function migrateMilestoneIds() {
   console.assert(
     new Set(DEFAULT_MILESTONES.map(m => m.id)).size === DEFAULT_MILESTONES.length,
     'PR-ε.0: duplicate milestone slug in DEFAULT_MILESTONES'
+  );
+  // PR-ε.0 v6 — Kael v5 audit MAJOR §0a fallback assert.
+  // The §0a `slugify` empty-text fallback yields `ms-fallback-<random>`,
+  // which is non-deterministic across page loads. Two empty-text DEFAULTs
+  // would each get a unique fallback id, pass the Set-uniqueness assert
+  // above, but break cross-device sync (every device's `milestoneIds`
+  // references would point at a different fallback). This second assert
+  // catches the developer error at init.
+  console.assert(
+    DEFAULT_MILESTONES.every(m => !/^ms-fallback-/.test(m.id || '')),
+    'PR-ε.0: DEFAULT_MILESTONES contains an empty-text entry — fallback id is non-deterministic across loads'
   );
   let dirty = false;
   const slugByText = Object.fromEntries(
@@ -449,19 +581,27 @@ text):
 `renderScrapMilestoneChips()` reads `_scrapMilestoneIdsPending`,
 resolves each id via `milestones.find(...)` (silent skip on orphan),
 renders into `#scrapMilestonePicker`:
+```js
+// PR-ε.0 v6 — Maren v5 audit MINOR: empty-text legacy guard.
+// addMilestone (home.js:1907) trims+rejects empty text for new entries,
+// but legacy data could contain whitespace-only text. Fall back to
+// '(unnamed milestone)' so the chip and aria-label stay readable
+// instead of rendering as `Remove  tag` (double space).
+const labelText = (m.text || '').trim() || '(unnamed milestone)';
+```
 ```html
 <span class="chip chip-milestone" role="listitem">
-  <span class="chip-label">${escHtml(m.text)}</span>
+  <span class="chip-label">${escHtml(labelText)}</span>
   <button type="button" class="chip-x"
           data-action="removeScrapMilestone" data-arg="${m.id}"
-          aria-label="Remove ${escAttr(m.text)} tag">
+          aria-label="Remove ${escAttr(escHtml(labelText))} tag">
     <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
   </button>
 </span>
 ```
 **Escape contracts:**
-- `${escHtml(m.text)}` for the visible text node (`.chip-label` body) — HTML context.
-- `${escAttr(m.text)}` for the `aria-label` — attribute context. `escHtml` does NOT escape `"`; using it here would break attribute parsing on milestone text containing quotes (e.g. `Said "mama"`). `escAttr` (`core.js:2304`) is the codebase's attribute-safe helper. (Audit v2 finding §7.3.)
+- `${escHtml(labelText)}` for the visible text node (`.chip-label` body) — HTML context.
+- `${escAttr(escHtml(labelText))}` for the `aria-label` — attribute context, **double-wrapped**. `escAttr` (`core.js:2304`) only escapes `'` and `"`, NOT `&` or `<`. Milestone text containing `&` (e.g. `Tom & Jerry`) would otherwise produce malformed-but-tolerated attribute markup; `&mama;` could parse as a numeric/named entity reference, causing screen-reader mis-announcement. `escHtml` (`core.js:2282`) escapes `&`, `<`, `>` first; `escAttr` then handles quotes. The result is safe in both HTML5 attribute parsing and SR pronunciation. (Maren v5 audit MAJOR; v6 fix.) Extending `escAttr` to also escape `&` globally has wider blast radius (call sites in home.js et al.) — deferred to a separate PR.
 - `${m.id}` in `data-arg` is safe without escape: ids are either deterministic slugs (`[a-z0-9-]+`) or UUIDs / `'id-' + base36` — all attribute-safe by construction.
 **Composition rationale:** the chip body is a label (informational,
 `cursor: default` via CSS), not a click target — only the inner ×
@@ -547,9 +687,9 @@ HR-4: every `m.text` interpolation in this renderer goes through
 |---|---|
 | `openScrapMilestonePicker` | **Always reseed:** `_scrapPickerWorkingSet = new Set(_scrapMilestoneIdsPending)`. Render list. `openModal('scrapMilestonePickerModal')`. (Audit major #8 — back-button leak mitigated by always-reseed.) |
 | `toggleScrapPickerMilestone` | Toggle id in working set; re-render list |
-| `confirmScrapMilestonePicker` | **Filter against current ids:** `_scrapMilestoneIdsPending = [..._scrapPickerWorkingSet].filter(id => milestones.some(m => m.id === id))`. (Audit major #13 — drops orphans before persist.) Close modal. Render chips. |
+| `confirmScrapMilestonePicker` | **Filter against current ids:** `const pre = [..._scrapPickerWorkingSet]; _scrapMilestoneIdsPending = pre.filter(id => milestones.some(m => m.id === id)); const droppedAtConfirm = pre.length - _scrapMilestoneIdsPending.length;` Then if `droppedAtConfirm > 0`, fire `showQLToast` with the same copy used at edit-load (`"${droppedAtConfirm} ${noun} removed — milestone no longer exists"`). (Audit major #13 — drops orphans before persist; **v6 Maren MAJOR fix:** now also surfaces a toast when a remote sync deletes a milestone WHILE the picker is open — closes the two-stage misleading-UX gap.) Close modal. Render chips. |
 | `cancelScrapMilestonePicker` | Discard working set. Close modal. |
-| `removeScrapMilestone` | Drop id from `_scrapMilestoneIdsPending`. Re-render chips. |
+| `removeScrapMilestone` | Drop id from `_scrapMilestoneIdsPending`. Re-render chips. **Note (v6 Maren MINOR):** does NOT persist until the parent saves the form (chip × is a pending-state edit, parallel to typing in the title field). `cancelScrapEdit` discards pending changes. Do NOT "fix" this to immediate-persist — it would change form-edit semantics. |
 
 **Wiring into create/edit lifecycle:**
 - `addScrapEntry()` (`core.js:2192`):
@@ -626,6 +766,24 @@ case 'scrapbook': return scrapbook;
 ```
 Pattern matches existing entries (`feeding`, `sleep`, etc.). Read the
 existing cases for exact form before editing.
+
+**v6 — reassignment vs in-place mutation asymmetry (Kael v5 audit MAJOR):**
+the `_syncSetGlobal('scrapbook', value) → scrapbook = value` line above
+is a **reassignment** of the global. §6.3 explicitly forbids
+reassignment for `milestones` (mandates
+`milestones.length = 0; milestones.push.apply(milestones, survivors)`)
+because `dedupeMilestonesByText` runs in-place and any closure that
+captured `milestones` pre-dedup would point at the orphaned old array.
+The `scrapbook` reassignment here is **acceptable today** because:
+(i) no in-place mutator exists for the `scrapbook` global (no
+`dedupeScrapbookByText` analog); (ii) Maren v5 audit confirmed no
+closure-pinning reader in `home.js`/`renderScrapbook`/
+`renderScrapbookHistory`; (iii) Kael v5 audit confirmed no
+closure-pinning reader in core/sync/intelligence. **If a future PR
+adds either an in-place scrapbook mutator OR a closure that captures
+the `scrapbook` global by reference, this case must be re-verified
+and likely converted to in-place mutation** matching §6.3's pattern.
+Document carried at the case-statement source comment.
 
 #### 6.2 Per-entry listener reconcile (audit blocker #4)
 
@@ -708,16 +866,34 @@ if (!_reconcileDone.has(collection)) {
       _syncIsReconciling = true;
       try {
         orphanLocals.forEach(e => {
-          _syncWriteCount++;  // count toward circuit breaker
-          colRef.doc(e.id).set(Object.assign({}, e, stampBase), { merge: false })
-            .catch(err => {
-              console.error('[sync] reconcile push failed', collection, e.id, err);
-              // Local entry is already merged into `entries` above (it survives
-              // this session's snapshot-apply). Retry happens on next sync
-              // re-attach (offline→online, auth state change, or page reload),
-              // NOT on the next snapshot fire in this same session — because
-              // _reconcileDone gates within the session.
-            });
+          // PR-ε.0 v6 — Kael v5 audit MAJOR §6.2(c) inner try/catch.
+          // A synchronous throw inside .set() (e.g. firebase not yet
+          // initialized, malformed entry) would otherwise propagate out of
+          // forEach and skip every subsequent orphan this fire. Data still
+          // survives via `entries.concat(orphanLocals)` above + reattach retry
+          // (gate stays open per §6.2(c) bail rule), but partial-attempt is
+          // worth logging so the operator sees a breadcrumb. Convert sync
+          // throws to the same logged-and-continue path as async rejections.
+          try {
+            // PR-ε.0 v6.1 — Aurelius polish item 2.
+            // Increment before .set() — overcount is fail-safe (breaker bails earlier);
+            // do NOT move post-resolve, async settlement would let bursts under-count
+            // and overshoot the limit. Matches existing _syncWritePerEntry pattern at
+            // sync.js:884.
+            _syncWriteCount++;  // count toward circuit breaker
+            colRef.doc(e.id).set(Object.assign({}, e, stampBase), { merge: false })
+              .catch(err => {
+                console.error('[sync] reconcile push failed', collection, e.id, err);
+                // Local entry is already merged into `entries` above (it survives
+                // this session's snapshot-apply). Retry happens on next sync
+                // re-attach (offline→online, auth state change, or page reload),
+                // NOT on the next snapshot fire in this same session — because
+                // _reconcileDone gates within the session.
+              });
+          } catch (syncErr) {
+            console.error('[sync] reconcile push threw synchronously', collection, e.id, syncErr);
+            // Local entry already in `entries` above; survives. Continue forEach.
+          }
         });
       } finally {
         _syncIsReconciling = wasReconciling;
@@ -795,6 +971,24 @@ offline → online or auth state change. Locals created during the
 offline window — and orphans deferred during a prior circuit-breaker
 bail — get pushed up on the first fire after re-attach.
 
+**v6 — in-flight straggler limitation (Kael v5 audit MAJOR, deferred).**
+Firestore `onSnapshot` callbacks that were already on the microtask
+queue when `_syncDetachListeners()` ran will still fire after detach
+returns. The reconcile gate placement above protects **reconcile re-fire**
+(straggler runs against the OLD gate, finds it consumed, no-ops the
+reconcile push), but the straggler's wholesale `save(lsKey, entries)`
+at sync.js:1291 still runs and could overwrite local with stale remote
+state captured at the prior listener's last snapshot. The existing
+`_syncDisabled` guard at sync.js:1152 is the only flag protecting the
+snapshot-apply path; it is not flipped during detach. **This is a
+pre-existing snapshot-pipeline limitation outside §6.2's scope.** A
+proper fix needs either (a) a generation counter on the listener so
+stragglers detect they're stale, or (b) `_syncDisabled` flip during
+detach windows. Defer to a separate sync-pipeline hardening PR; not
+introduced by PR-ε.0 and not made worse by it.
+**Tracked as issue #53** (filed v6.1 per Aurelius polish item 4 —
+forward-pointer durability).
+
 ##### Verification (manual)
 
 - Member device with 3 local entries + admin with 5 different. Both
@@ -859,15 +1053,37 @@ function dedupeMilestonesByText() {
   const byKey = new Map();          // normalized text -> survivor entry
   const idRewrite = new Map();      // discarded id -> survivor id
   const dropped = [];               // entries to remove from milestones
+  // PR-ε.0 v6 — Kael v5 audit MAJOR: DEFAULT-slug ids win same-text
+  // collisions over UUIDs/genId fallbacks. Lex-only compare can put a
+  // UUID ('0abc...' or 'id-...') BEFORE a kebab slug ('babbling') in
+  // ASCII order, which would orphan the deterministic DEFAULT slug
+  // when a parent creates a custom milestone with the same text.
+  // Build the set once before the loop.
+  const defaultSlugIds = new Set(
+    (typeof DEFAULT_MILESTONES !== 'undefined' ? DEFAULT_MILESTONES : [])
+      .map(d => d.id).filter(Boolean)
+  );
 
   for (let i = 0; i < milestones.length; i++) {
     const m = milestones[i];
     const key = (m.text || '').trim().toLowerCase();
     const prev = byKey.get(key);
     if (!prev) { byKey.set(key, m); continue; }
-    // Pick lexicographically smaller id as survivor (deterministic across devices).
-    const winner = (m.id || '￿') < (prev.id || '￿') ? m : prev;
-    const loser  = winner === m ? prev : m;
+    // PR-ε.0 v6 — Kael v5 audit MAJOR survivor selection.
+    // Priority: (1) DEFAULT-slug id wins over non-DEFAULT — preserves the
+    // deterministic id every device computes from DEFAULT_MILESTONES at
+    // boot. (2) If both or neither are DEFAULT slugs, fall back to
+    // lex-smaller-id (deterministic across devices for UUID/UUID and
+    // slug/slug ties).
+    const mIsDefault    = defaultSlugIds.has(m.id);
+    const prevIsDefault = defaultSlugIds.has(prev.id);
+    let winner, loser;
+    if (mIsDefault && !prevIsDefault)        { winner = m;    loser = prev; }
+    else if (prevIsDefault && !mIsDefault)   { winner = prev; loser = m;    }
+    else {
+      winner = (m.id || '￿') < (prev.id || '￿') ? m : prev;
+      loser  = winner === m ? prev : m;
+    }
     if (loser.id && winner.id && loser.id !== winner.id) {
       idRewrite.set(loser.id, winner.id);
     }
@@ -939,17 +1155,27 @@ forEach AND BEFORE the existing dedup call:
 function _postReceiveMilestones() {
   // existing: per-entry status migration forEach (unchanged)
   // existing: any other pre-dedup logic (unchanged)
-  if (typeof migrateMilestoneIds === 'function') migrateMilestoneIds();  // PR-ε.0 §6.3
+  // PR-ε.0 v6 — Kael v5 audit MAJOR: convert silent-skip guard to assert.
+  // Concat order (config → data → core → home → diet → medical) GUARANTEES
+  // migrateMilestoneIds is in scope by medical.js parse time. The original
+  // v5 `typeof === 'function'` guard would silently skip migration if a
+  // future PR renamed the function — assert instead so the failure is loud
+  // at dev time, matching the §1 assertion idiom.
+  console.assert(
+    typeof migrateMilestoneIds === 'function',
+    'PR-ε.0 §6.3: _postReceiveMilestones expects migrateMilestoneIds in scope (concat order: core.js loads before medical.js)'
+  );
+  migrateMilestoneIds();  // PR-ε.0 §6.3
   dedupeMilestonesByText();  // existing call, unchanged
   // existing: any post-dedup logic (unchanged)
 }
 ```
 
-The `typeof === 'function'` guard handles the case where `medical.js`
-loads before `core.js` migration helpers are defined (concat order
-per CLAUDE.md is config → data → core → home → diet → **medical** →
-... so `migrateMilestoneIds` IS in scope by `medical.js` parse time;
-the guard is belt-and-suspenders).
+Concat order per CLAUDE.md is config → data → core → home → diet →
+**medical** → ... so `migrateMilestoneIds` IS in scope by `medical.js`
+parse time. The `console.assert` is dev-time-only — production runs
+won't pay any cost — and surfaces a loud failure at init if a rename
+ever breaks the contract.
 
 `migrateMilestoneIds` is idempotent: if all entries already have ids,
 it short-circuits without calling `save`. **No write loop:** when a
@@ -1116,7 +1342,15 @@ All values use existing tokens (HR-2, HR-5). Append to the existing
   padding: 0 var(--sp-4);
 }
 .picker-row {
-  display: flex; align-items: center; gap: var(--sp-10);
+  display: flex;
+  /* PR-ε.0 v6 — Maren v5 audit MAJOR: flex-start (was: center).
+     With center + word-break: break-word on the label, the 22×22 check
+     vertically centers against multi-line wrapped text, appearing
+     mis-aligned with the first line on phone-narrow widths. flex-start
+     keeps the check optically aligned with the first line; the
+     margin-top below nudges it to first-line cap-height. */
+  align-items: flex-start;
+  gap: var(--sp-10);
   padding: var(--sp-8) var(--sp-10);
   border-radius: var(--r-lg);
   cursor: pointer;
@@ -1132,6 +1366,11 @@ All values use existing tokens (HR-2, HR-5). Append to the existing
   flex-shrink: 0;
   background: var(--card-bg);
   transition: background var(--ease-fast);
+  /* PR-ε.0 v6 — Maren v5 audit MAJOR: optical-align with first-line
+     cap height of the picker-row-label (--fs-base, --lh-snug). 2px
+     covers the typical baseline offset between a small filled square
+     and the cap height of body text in Nunito at 16px. */
+  margin-top: 2px;
 }
 .picker-row-check[data-checked="1"] { background: var(--lavender); }
 .picker-row-check[data-checked="0"] .zi { display: none; }
@@ -1248,8 +1487,11 @@ The pre-build visual checklist Lyra runs before opening the PR:
 - [ ] **iOS VoiceOver real-device test:** the `role="checkbox"` on `<button>` pattern is the codebase's first use; iOS sometimes appends "double-tap to activate" mid-announcement. Test on a real iPhone before ship — not just simulator. (Maren v4 audit MAJOR.)
 - [ ] **Orphan-tag toast surfaces on edit-load:** create a memory tagged with a custom milestone, delete the milestone on the same device, edit the memory → toast reads "1 milestone tag removed — milestone no longer exists". Toast text is informational, not alarming. (Maren v4 audit MAJOR §4 wiring.)
 - [ ] **Attribute escape audit:** every interpolation in an attribute context (`aria-label`, `data-arg` with arbitrary text) uses `escAttr`, not `escHtml`. Test: rename a custom milestone to `Said "mama"`, tag a memory, inspect chip × `aria-label` attribute — must read `Remove Said &quot;mama&quot; tag` (not `Remove Said "mama" tag`).
+- [ ] **Entity-reference escape (v6 MAJOR positive verification, Aurelius polish item 3):** rename a custom milestone to `&mama;`, tag a memory, inspect the chip. Visible `.chip-label` body must render the literal string `&mama;` (DOM text node, not an entity). Chip × `aria-label` attribute must read `Remove &amp;mama; tag` in the inspector and announce as "Remove and mama semicolon tag" (or equivalent literal) in VoiceOver — never as "Remove mama tag". Confirms `escHtml` runs before `escAttr` on both surfaces; positively verifies the v6 §4 double-wrap fix (not just the regression boundary).
 - [ ] **No keyboard trap when picker has 0 milestones:** picker-empty state still allows Tab to reach Cancel/Done.
 - [ ] **Disabled state (Tag-a-milestone with no milestones existing):** button stays active so the user can still open the picker and see the empty-state guidance — no premature disable.
+- [ ] **Reduced motion (v6 Maren MAJOR):** confirmed `styles.css:3902` `@media (prefers-reduced-motion: reduce)` global block zeroes all `--ease-fast` transitions on the new `.chip-x`, `.picker-row-check`, and `.picker-row` rules. Test: Settings → Accessibility → Reduce Motion ON → no transition flash on chip × hover, picker-row hover, or check toggle.
+- [ ] **Confirm-time orphan toast (v6 Maren MAJOR):** open the picker, while the picker is open delete the milestone via another window/device, hit Done — a toast fires reading "1 milestone tag removed — milestone no longer exists". Closes the two-stage misleading-UX gap where v5 only fired on edit-load.
 
 ## Out of scope (explicitly)
 
@@ -1263,6 +1505,18 @@ The pre-build visual checklist Lyra runs before opening the PR:
   at `core.js:752`.
 - Pre-existing inline-style debt in `template.html` scrapbook form
   (HR-2 violation predates this PR; not ours to repay).
+- **Modal a11y uplift (v6 Maren v5 audit MAJOR — deferred):** the picker
+  modal lacks `role="dialog"` / `aria-modal="true"` /
+  `aria-labelledby` pointing at the `<h3>Tag milestones</h3>` title.
+  This is a **pre-existing pattern gap** across all SproutLab modals
+  (`growthModal`, `vaccModal`, `milestoneModal` in `template.html`
+  lines 2704–2857 — none use `role="dialog"`). PR-ε.0 inherits the
+  pattern intentionally to avoid creating a per-modal a11y
+  inconsistency. **Tracked as issue #54** (filed v6.1 per Aurelius
+  polish item 4 — forward-pointer durability) — repo-wide modal a11y
+  uplift in one pass. Until then, screen-reader users get focus
+  context but no explicit dialog announcement on open — degraded but
+  not broken.
 - **`addMilestone()` missing-save bug** at `home.js:1905–1914` — the
   function pushes to global `milestones` but does NOT call
   `save(KEYS.milestones, milestones)`. Relies on subsequent render
@@ -1355,7 +1609,7 @@ The pre-build visual checklist Lyra runs before opening the PR:
     a clean concat with no errors; `index.html` and `sproutlab.html`
     sync; smoke test the built artifact.
 
-## Implementation order (v5 — 25 steps in 6 phases)
+## Implementation order (v6 — 26 steps in 6 phases)
 
 > **Line-number drift reminder (Kael v4 audit MINOR):** every phase
 > below cites specific line numbers from the codebase as it stood
@@ -1377,7 +1631,16 @@ The pre-build visual checklist Lyra runs before opening the PR:
 
 ### Phase A — Primitives & helpers (no behavior change)
 
-1. **§0 helpers:** `genId()` and `slugify()` in `core.js`.
+1a. **§0a slugify in `config.js`** (Cipher v6 BLOCKER fix; was
+    incorrectly listed under core.js in v5). `config.js` is the FIRST
+    concatenated file, so `slugify` is in scope when `data.js` parses
+    `DEFAULT_MILESTONES` and bakes slug ids inline. Use the empty-text
+    `Math.random` fallback per §0a — `genId` does NOT exist at
+    `config.js` scope.
+1b. **§0b genId in `core.js`** next to `escHtml`/`escAttr`. Runtime-only
+    (called from `home.js:addMilestone` and `core.js:addScrapEntry`),
+    safe in core.js. Do NOT call `genId` from `data.js` parse-time
+    contexts.
 2. **§7.1 sprite:** add `<symbol id="zi-close">` to `template.html`
    sprite block (X path, currentColor, 2px stroke, matches existing
    icon weight).
