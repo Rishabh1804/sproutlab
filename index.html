@@ -3419,6 +3419,131 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chip-avoid  { background:var(--rose-light); color:var(--tc-danger); border-color:rgba(242,168,184,0.6); }
 .chip-avoid:hover { background:var(--tc-danger); color:white; }
 
+/* ── Milestone tag chips (PR-ε.0 §7.3 / Subclass C) ──
+   Lavender domain: tag chips on memory entries. Container role="list"
+   + chip role="listitem"; chip-x is the tag-remove button. PC-10.6:
+   all tokens via var(); no raw hex. PC-2.4 escape contract enforced
+   in renderScrapMilestoneChips. */
+.chip-milestone {
+  background: var(--lav-light);
+  color: var(--text);
+  border-color: rgba(201, 184, 232, 0.6);
+  cursor: default;
+  padding-right: var(--sp-4);
+  gap: var(--sp-6);
+}
+.chip-milestone:hover { filter: none; transform: none; }
+.chip-label {
+  font-size: var(--fs-sm);
+  white-space: normal;
+  word-break: break-word;
+  max-width: 200px;
+  line-height: var(--lh-snug);
+}
+.chip-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  min-width: 44px; min-height: 44px;
+  padding: var(--sp-8);
+  margin-left: calc(-1 * var(--sp-4));
+  margin-right: calc(-1 * var(--sp-4));
+  border: none; background: transparent;
+  color: var(--mid);
+  cursor: pointer;
+  border-radius: var(--r-full);
+  transition: background var(--ease-fast), color var(--ease-fast);
+}
+.chip-x:hover { background: var(--surface-lav); color: var(--text); }
+.chip-x .zi { width: var(--icon-xs); height: var(--icon-xs); }
+
+/* ── Scrapbook form: milestone link row (PR-ε.0 §7.3) ── */
+.scrap-form-row {
+  display: flex; flex-direction: column;
+  gap: var(--sp-6);
+  margin-top: var(--sp-8);
+}
+.scrap-form-label {
+  font-size: var(--fs-sm); color: var(--mid);
+  font-family: 'Nunito', sans-serif;
+}
+.milestone-chips {
+  display: flex; flex-wrap: wrap;
+  gap: var(--sp-6);
+  min-height: 32px;
+}
+.milestone-chips[data-empty="true"] { min-height: 0; }
+.scrap-tag-btn {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: var(--sp-6);
+}
+.scrap-tag-btn .zi { width: var(--icon-sm); height: var(--icon-sm); }
+
+/* ── Picker modal (PR-ε.0 §7.3 / S-17) ── */
+.scrap-picker-modal {
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex; flex-direction: column;
+  padding: var(--sp-20) var(--sp-24);
+}
+.scrap-picker-modal h3 { margin-bottom: var(--sp-12); }
+.picker-list {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--sp-16);
+  padding: var(--sp-4) 0;
+  margin-bottom: var(--sp-16);
+}
+.picker-cat-group { display: flex; flex-direction: column; gap: var(--sp-4); }
+.picker-cat-header {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs); font-weight: 700;
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+  color: var(--mid);
+  padding: 0 var(--sp-4);
+}
+.picker-row {
+  display: flex;
+  align-items: flex-start; /* v6 fix: was center; broke multi-line wrap alignment */
+  gap: var(--sp-10);
+  padding: var(--sp-8) var(--sp-10);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: background var(--ease-fast);
+  min-height: 44px;
+  border: none; background: transparent;
+  text-align: left; width: 100%;
+  font-family: inherit; color: var(--text);
+}
+.picker-row:hover { background: var(--surface-lav); }
+.picker-row-check {
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--lavender);
+  border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  transition: background var(--ease-fast);
+  margin-top: 2px; /* v6 fix: optical-align with first-line cap height */
+}
+.picker-row-check[data-checked="1"] { background: var(--lavender); }
+.picker-row-check[data-checked="0"] .zi { display: none; }
+.picker-row-check .zi { width: 14px; height: 14px; color: white; }
+.picker-row-label {
+  font-size: var(--fs-base);
+  color: var(--text);
+  word-break: break-word;
+  line-height: var(--lh-snug);
+}
+.picker-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-32) var(--sp-16);
+  color: var(--mid);
+  text-align: center;
+}
+.picker-empty .zi { width: var(--icon-lg); height: var(--icon-lg); color: var(--lavender); }
+.picker-empty p { margin: 0; font-size: var(--fs-base); }
+.picker-empty-sub { color: var(--light); font-size: var(--fs-sm); }
+
 /* ── Help tooltips ── */
 .help-btn {
   display:inline-flex; align-items:center; justify-content:center;
@@ -9006,6 +9131,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 <symbol id="zi-scale" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 7l8 3 8-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 7c0 3 2.5 5 4 5s-1-5-4-5z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.1"/><path d="M20 7c0 3-2.5 5-4 5s1-5 4-5z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.1"/></symbol>
 <symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
 <symbol id="zi-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-close" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
 <symbol id="zi-rainbow" viewBox="0 0 24 24"><path d="M4 18c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 18c0-2.8 2.2-5 5-5s5 2.2 5 18" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/><path d="M10 18c0-1.1.9-2 2-2s2 .9 2 2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3"/></symbol>
 <symbol id="zi-trophy" viewBox="0 0 24 24"><path d="M8 3h8v5c0 2.2-1.8 4-4 4s-4-1.8-4-4V3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M8 5H5c0 2.5 1.5 4 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M16 5h3c0 2.5-1.5 4-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="12" y1="12" x2="12" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 16h8v2a1 1 0 01-1 1H9a1 1 0 01-1-1v-2z" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
 <symbol id="zi-baby" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M7.5 7c-.8-1-1-3 .5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M16.5 7c.8-1 1-3-.5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="10" cy="9" r="0.8" fill="currentColor"/><circle cx="14" cy="9" r="0.8" fill="currentColor"/><path d="M10.5 11c.7.5 2.3.5 3 0" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/><path d="M8 15c1 3 3 5 4 5s3-2 4-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
@@ -9993,6 +10119,18 @@ body.ql-locked .dark-toggle { pointer-events:none; }
                 <button data-action="clearScrapPhoto" aria-label="Remove photo" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.5);color:white;border:none;font-size:var(--icon-xs);cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
               </div>
               <input type="text" id="scrapTitle" placeholder="Give this memory a title..." style="width:100%;margin-top:8px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;">
+              <!-- PR-ε.0 §4 — Memory ↔ milestone link chips region.
+                   Container is role="list" + role="listitem" per chip
+                   (PC-2.1 / PC-2.3) — set in renderScrapMilestoneChips. -->
+              <div class="scrap-form-row">
+                <label class="scrap-form-label">Linked milestones</label>
+                <div id="scrapMilestonePicker" class="milestone-chips"></div>
+                <button type="button" class="btn btn-ghost btn-sm scrap-tag-btn"
+                        data-action="openScrapMilestonePicker">
+                  <svg class="zi" aria-hidden="true"><use href="#zi-link"/></svg>
+                  <span>Tag a milestone</span>
+                </button>
+              </div>
               <input type="date" id="scrapDate" style="width:100%;margin-top:6px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;">
               <textarea id="scrapDesc" placeholder="What happened? (optional)" style="width:100%;margin-top:6px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;resize:none;min-height:48px;"></textarea>
               <div style="display:flex;justify-content:flex-end;gap:var(--sp-8);margin-top:6px;">
@@ -11821,6 +11959,24 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   </div>
 </div>
 
+<!-- PR-ε.0 §4 — Memory ↔ milestone link picker modal. Subclass C chip
+     Done = btn-lav (lavender = milestones domain), Cancel = btn-ghost
+     per PC-8.2 modal-btn domain-color pairing. Backdrop click closes
+     via the existing _handleModalOverlayClick handler (PC-1.3). The
+     a11y trio (role="dialog" + aria-modal + aria-labelledby) inherits
+     the deferred gap on issue #54 / PC-1.1 — to migrate alongside the
+     repo-wide modal a11y uplift. -->
+<div class="modal-overlay" id="scrapMilestonePickerModal">
+  <div class="modal scrap-picker-modal">
+    <h3>Tag milestones</h3>
+    <div id="scrapMilestonePickerList" class="picker-list"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" data-action="cancelScrapMilestonePicker">Cancel</button>
+      <button class="btn btn-lav" data-action="confirmScrapMilestonePicker">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="doctorModal">
   <div class="modal">
     <h3 id="doctorModalTitle">🩺 Add Doctor</h3>
@@ -11884,6 +12040,17 @@ const firebaseConfig = {
   messagingSenderId: '494337592066',
   appId:             '1:494337592066:web:82fcd794422c096915d01b'
 };
+
+// Stable-id slug for default milestones. Pure / deterministic.
+// Lives in config.js (not core.js) because data.js calls it at parse
+// time when baking DEFAULT_MILESTONES — and concat order puts data.js
+// BEFORE core.js. (PR-ε.0 §0a — Kael v4 audit.)
+function slugify(text) {
+  const out = String(text || '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return out || ('ms-fallback-' + Math.random().toString(36).slice(2, 10));
+}
 // SproutLab v2.38 — Pure Data Constants
 // Auto-extracted by architecture split. Do not edit line order.
 // Rebuild: bash build.sh > index.html
@@ -13351,14 +13518,17 @@ const KEYWORD_TO_MILESTONE = {
 
 // @@DATA_BLOCK_2_START@@ DEFAULT_MILESTONES + DEFAULT_FOODS + DEFAULT_VACC + VACC_SCHEDULE + DEFAULT_MEDS + FOOD_SUGGESTIONS
 
+// PR-ε.0 §1 — id: slugify(text) baked at parse time. config.js defines
+// slugify (concat order config → data → core → ...), in scope here.
+// Slug uniqueness asserted in migrateMilestoneIds (core.js, runtime).
 const DEFAULT_MILESTONES = [
-  { text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', cat:'motor' },
-  { text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', cat:'motor' },
-  { text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', cat:'motor' },
-  { text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', cat:'social' },
-  { text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', cat:'language' },
-  { text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', cat:'language' },
-  { text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', cat:'motor' },
+  { id: slugify('Rolling'), text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', cat:'motor' },
+  { id: slugify('Sitting independently'), text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', cat:'motor' },
+  { id: slugify('Early teething signs'), text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', cat:'motor' },
+  { id: slugify('Sleeps independently'), text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', cat:'social' },
+  { id: slugify('Babbling'), text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', cat:'language' },
+  { id: slugify('Responds to name'), text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', cat:'language' },
+  { id: slugify('Pulls to stand using support (from sitting)'), text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', cat:'motor' },
 ];
 
 const DEFAULT_FOODS = [
@@ -15898,9 +16068,18 @@ function init() {
     else if (action === 'clearNotePhoto') clearNotePhoto(parseInt(arg));
     else if (action === 'clearNoteVoice') clearNoteVoice(parseInt(arg));
     else if (action === 'openNotePhoto') openNotePhoto(parseInt(arg));
-    else if (action === 'editScrapEntry') editScrapEntry(parseInt(arg));
-    else if (action === 'deleteScrapEntry') deleteScrapEntry(parseInt(arg));
-    else if (action === 'openScrapPhoto') openScrapPhoto(parseInt(arg));
+    // PR-ε.0 §2 — id-based dispatch (no parseInt). args are slug/UUID
+    // strings flowing into scrapbook.find(e => e.id === id) lookups.
+    else if (action === 'editScrapEntry') editScrapEntry(arg);
+    else if (action === 'deleteScrapEntry') deleteScrapEntry(arg);
+    else if (action === 'openScrapPhoto') openScrapPhoto(arg);
+    // PR-ε.0 §4 — picker action handlers (5 keys; bodies in core.js
+    // near the scrapbook lifecycle).
+    else if (action === 'openScrapMilestonePicker')    openScrapMilestonePicker();
+    else if (action === 'toggleScrapPickerMilestone')  toggleScrapPickerMilestone(arg);
+    else if (action === 'confirmScrapMilestonePicker') confirmScrapMilestonePicker();
+    else if (action === 'cancelScrapMilestonePicker')  cancelScrapMilestonePicker();
+    else if (action === 'removeScrapMilestone')        removeScrapMilestone(arg);
     else if (action === 'removeActivityChip') removeActivityChip(arg);
     else if (action === 'alSelectSlot') _alSelectSlot(arg);
     else if (action === 'alSelectDuration') _alSelectDuration(arg);
@@ -16270,6 +16449,10 @@ function init() {
     if (!m.cat) m.cat = guessMilestoneCat(m.text);
     return m;
   });
+  // PR-ε.0 §1 — assign stable ids before save (idempotent; runs once
+  // for legacy data, no-op afterward). Must precede dedupeMilestonesByText
+  // (line ~848) so dedupe sees post-migration ids.
+  migrateMilestoneIds();
   save(KEYS.milestones, milestones);
 
   // Migrate milestones for evidence-based fields (backward compat)
@@ -16404,6 +16587,9 @@ function init() {
   renderVaccCoverage();
   renderDoctorContact();
   renderNotes();
+  // PR-ε.0 §1 — assign stable ids before first scrapbook render
+  // (idempotent; no-op when entries already have ids).
+  migrateScrapbookIds();
   renderScrapbook();
   renderMeds();
   renderVisits();
@@ -17555,9 +17741,19 @@ function openNotePhoto(i) {
 // SCRAPBOOK
 // ─────────────────────────────────────────
 let _scrapPhotoPending = null;
+// PR-ε.0 §4 — picker state globals (parallel to _scrapPhotoPending).
+// _scrapMilestoneIdsPending: selection persisted with the entry on save.
+// _scrapPickerWorkingSet: checkbox state inside the open picker modal.
+let _scrapMilestoneIdsPending = [];
+let _scrapPickerWorkingSet = new Set();
 
+// renderScrapbook — DOES NOT SAVE.
+// PR-ε.0 §2 (Cipher BLOCKER #2 + Maren v5 audit major #10): mutators
+// (addScrapEntry / deleteScrapEntry) call save(KEYS.scrapbook, scrapbook)
+// explicitly. Render-side save coupled persistence to redraw and would
+// silently re-persist stale state if a future caller re-rendered without
+// having mutated.
 function renderScrapbook() {
-  save(KEYS.scrapbook, scrapbook);
   const list = document.getElementById('scrapbookList');
   const count = document.getElementById('scrapbookCount');
   if (!list) return;
@@ -17572,14 +17768,15 @@ function renderScrapbook() {
 
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — data-arg uses entry.id (string slug/UUID), not array
+    // index. Safe-by-construction (PC-7.5); no escape needed.
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entry.date || entry.ts);
     const div = document.createElement('div');
     div.className = 'scrap-entry';
     div.innerHTML = `
-      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
         <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
       </div>
       <div class="scrap-body">
@@ -17588,8 +17785,8 @@ function renderScrapbook() {
         <div class="scrap-meta">${dateStr} · ${months}m ${days}d old</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:var(--sp-4);align-self:flex-start;flex-shrink:0;">
-        <button class="note-btn" data-action="editScrapEntry" data-arg="${origIdx}" aria-label="Edit memory">Edit</button>
-        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${origIdx}" aria-label="Delete memory">&times;</button>
+        <button class="note-btn" data-action="editScrapEntry" data-arg="${entry.id}" aria-label="Edit memory">Edit</button>
+        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${entry.id}" aria-label="Delete memory">&times;</button>
       </div>
     `;
     list.appendChild(div);
@@ -17626,48 +17823,206 @@ function previewScrapPhoto(e) {
 
 function clearScrapPhoto() {
   _scrapPhotoPending = null;
+  // PR-ε.0 §4 — reset picker state on form clear (parallels photo reset).
+  _scrapMilestoneIdsPending = [];
+  _scrapPickerWorkingSet = new Set();
   document.getElementById('scrapPreviewArea').style.display = 'none';
   document.getElementById('scrapPhotoInput').value = '';
   document.getElementById('scrapTitle').value = '';
   document.getElementById('scrapDesc').value = '';
   document.getElementById('scrapDate').value = today();
   activateBtn('scrapSaveBtn', false);
+  // Re-render any pre-existing chips region after state reset.
+  if (typeof renderScrapMilestoneChips === 'function') renderScrapMilestoneChips();
 }
 
-let _scrapEditIdx = null; // null = adding new, number = editing existing
+// ── PR-ε.0 §4 — Memory ↔ milestone link: chip + picker render + handlers ──
+
+// renderScrapMilestoneChips — renders Subclass C tag-with-remove chips
+// (PC-2.1 / PC-2.3) into #scrapMilestonePicker. Reads _scrapMilestoneIdsPending,
+// resolves each id via milestones.find, silent-skips orphans (confirm-time
+// toast covers UX surfacing). Container carries role="list"; each chip
+// carries role="listitem". Chip × aria-label uses escAttr(escHtml(...))
+// double-wrap (PC-2.4) until issue #57 lands the global escAttr fix.
+function renderScrapMilestoneChips() {
+  const host = document.getElementById('scrapMilestonePicker');
+  if (!host) return;
+  const ids = _scrapMilestoneIdsPending || [];
+  host.setAttribute('role', 'list');
+  host.setAttribute('data-empty', ids.length === 0 ? 'true' : 'false');
+  host.innerHTML = ids.map(id => {
+    const m = milestones.find(x => x.id === id);
+    if (!m) return ''; // silent skip on orphan; confirm-time toast covers UX
+    // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
+    // empty text for new entries, but legacy data could contain whitespace-only
+    // text. Fall back so the chip and aria-label stay readable.
+    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    return `<span class="chip chip-milestone" role="listitem">
+      <span class="chip-label">${escHtml(labelText)}</span>
+      <button type="button" class="chip-x"
+              data-action="removeScrapMilestone" data-arg="${m.id}"
+              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+        <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
+      </button>
+    </span>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 — picker rows are `<button role="checkbox">`, the WAI-ARIA
+// pattern for native-focusable selection items.
+// See https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/
+// Do NOT "simplify" to <input type="checkbox"> or <label>; it would force
+// inline-style overrides for cross-browser consistency (HR-2 violation)
+// and break tab order (Maren v4 audit MAJOR).
+function renderScrapMilestonePickerList() {
+  const host = document.getElementById('scrapMilestonePickerList');
+  if (!host) return;
+  if (!Array.isArray(milestones) || milestones.length === 0) {
+    host.innerHTML = `<div class="picker-empty">
+      <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg>
+      <p>No milestones yet</p>
+      <p class="picker-empty-sub">Add one in the Track tab first.</p>
+    </div>`;
+    return;
+  }
+  // Group by category, render section per category that has any entries.
+  const byCat = {};
+  const catOrder = [];
+  milestones.forEach(m => {
+    const cat = m.cat || 'other';
+    if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
+    byCat[cat].push(m);
+  });
+  const catLabel = c => (c.charAt(0).toUpperCase() + c.slice(1));
+  host.innerHTML = catOrder.map(cat => {
+    const rows = byCat[cat].map(m => {
+      const checked = _scrapPickerWorkingSet.has(m.id);
+      return `<button type="button" class="picker-row"
+              role="checkbox" aria-checked="${checked ? 'true' : 'false'}"
+              data-action="toggleScrapPickerMilestone" data-arg="${m.id}">
+        <span class="picker-row-check" data-checked="${checked ? '1' : '0'}"
+              aria-hidden="true">
+          <svg class="zi"><use href="#zi-check"/></svg>
+        </span>
+        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+      </button>`;
+    }).join('');
+    return `<div class="picker-cat-group">
+      <div class="picker-cat-header">${escHtml(catLabel(cat))}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 picker action handlers (5 small handlers).
+// Always reseed working set from pending — back-button-leak safe
+// (audit major #8). Modal markup lives in template.html (Phase E).
+function openScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(_scrapMilestoneIdsPending || []);
+  renderScrapMilestonePickerList();
+  openModal('scrapMilestonePickerModal');
+}
+
+function toggleScrapPickerMilestone(id) {
+  if (_scrapPickerWorkingSet.has(id)) _scrapPickerWorkingSet.delete(id);
+  else _scrapPickerWorkingSet.add(id);
+  renderScrapMilestonePickerList();
+}
+
+// confirmScrapMilestonePicker — v6 Maren MAJOR: filter against current ids
+// before persist (audit major #13) AND surface confirm-time orphan toast
+// (closes the two-stage misleading-UX gap where remote sync deletes a
+// milestone WHILE the picker is open).
+function confirmScrapMilestonePicker() {
+  const pre = [..._scrapPickerWorkingSet];
+  _scrapMilestoneIdsPending = pre.filter(id =>
+    milestones.some(m => m.id === id)
+  );
+  const dropped = pre.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
+  closeModal('scrapMilestonePickerModal');
+  renderScrapMilestoneChips();
+}
+
+function cancelScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(); // discard
+  closeModal('scrapMilestonePickerModal');
+}
+
+// removeScrapMilestone — v6.1 Maren MINOR: pending-state edit; persists only
+// on parent form save (parallels the title-field input semantic). cancelScrapEdit
+// discards pending changes. Do NOT "fix" to immediate-persist.
+function removeScrapMilestone(id) {
+  _scrapMilestoneIdsPending = (_scrapMilestoneIdsPending || []).filter(x => x !== id);
+  renderScrapMilestoneChips();
+}
+
+// PR-ε.0 §2 — id-based identity (was `_scrapEditIdx`, an array index).
+// null = adding new; string id = editing existing.
+let _scrapEditId = null;
 
 function addScrapEntry() {
   const title = document.getElementById('scrapTitle').value.trim();
   const desc = document.getElementById('scrapDesc').value.trim();
   const date = document.getElementById('scrapDate').value;
 
-  if (_scrapEditIdx !== null) {
-    // Editing existing entry
-    const entry = scrapbook[_scrapEditIdx];
+  if (_scrapEditId !== null) {
+    // Editing existing entry — id-based lookup (§2).
+    const entry = scrapbook.find(e => e.id === _scrapEditId);
+    if (!entry) { cancelScrapEdit(); return; }
     entry.title = title || 'Untitled';
     entry.desc = desc;
     entry.date = date || entry.date || today();
     if (_scrapPhotoPending) entry.photo = _scrapPhotoPending;
+    // PR-ε.0 §4 — overwrite milestoneIds (always present, possibly empty).
+    entry.milestoneIds = [..._scrapMilestoneIdsPending];
     cancelScrapEdit();
   } else {
     // Adding new
     if (!_scrapPhotoPending) return;
     scrapbook.push({
+      // PR-ε.0 §1 — stable id at create time.
+      id: genId(),
       photo: _scrapPhotoPending,
       title: title || 'Untitled',
       desc: desc,
       date: date || today(),
       ts: new Date().toISOString(),
+      // PR-ε.0 §4 — milestoneIds always present, never omitted (audit major #6).
+      milestoneIds: [..._scrapMilestoneIdsPending],
     });
     clearScrapPhoto();
   }
+  // PR-ε.0 §2 — explicit save. Cipher BLOCKER #2 — render-side save was
+  // removed (renderScrapbook no longer persists; mutators must save).
+  save(KEYS.scrapbook, scrapbook);
   renderScrapbook();
 }
 
-function editScrapEntry(i) {
-  const entry = scrapbook[i];
+function editScrapEntry(id) {
+  // PR-ε.0 §2 — id-based lookup; defensive find.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry) return;
-  _scrapEditIdx = i;
+  _scrapEditId = id;
+
+  // PR-ε.0 §4 — seed picker pending state from entry, filter against
+  // current milestones, and surface a one-time toast if any orphans were
+  // dropped (Maren v4 audit MAJOR — silent disappearance violates
+  // parent-safety). Edit-load toast complements the confirm-time toast
+  // for full orphan-window coverage.
+  const saved = (entry.milestoneIds || []).slice();
+  _scrapMilestoneIdsPending = saved.filter(
+    mid => milestones.some(m => m.id === mid)
+  );
+  _scrapPickerWorkingSet = new Set();
+  const dropped = saved.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
 
   // Show the form with existing data
   document.getElementById('scrapPreviewArea').style.display = 'block';
@@ -17676,6 +18031,8 @@ function editScrapEntry(i) {
   document.getElementById('scrapDesc').value = entry.desc || '';
   document.getElementById('scrapDate').value = entry.date || entry.ts.split('T')[0];
   _scrapPhotoPending = null; // only set if user picks a new photo
+  // Render chips with the (possibly-filtered) seed.
+  renderScrapMilestoneChips();
 
   // Update button text and show cancel
   document.getElementById('scrapSaveBtn').textContent = 'Update Memory';
@@ -17687,23 +18044,33 @@ function editScrapEntry(i) {
 }
 
 function cancelScrapEdit() {
-  _scrapEditIdx = null;
+  // PR-ε.0 §2 — id-based identity. clearScrapPhoto resets the picker
+  // pending state too (Phase D).
+  _scrapEditId = null;
   clearScrapPhoto();
   document.getElementById('scrapSaveBtn').textContent = 'Save Memory';
   document.getElementById('scrapCancelEditBtn').style.display = 'none';
 }
 
-function deleteScrapEntry(i) {
+function deleteScrapEntry(id) {
   confirmAction('Delete this memory?', () => {
+    // PR-ε.0 §2 — splice via findIndex (NOT array index). With id-based
+    // identity, deleting one entry never invalidates another id, so the
+    // pre-PR-ε.0 `_scrapEditIdx > i` index-fixup branch is deleted entirely
+    // (audit major #7).
+    const i = scrapbook.findIndex(e => e.id === id);
+    if (i < 0) return;
     scrapbook.splice(i, 1);
-    if (_scrapEditIdx === i) cancelScrapEdit();
-    else if (_scrapEditIdx !== null && _scrapEditIdx > i) _scrapEditIdx--;
+    if (_scrapEditId === id) cancelScrapEdit();
+    // PR-ε.0 §2 — explicit save (render-side save removed; Cipher BLOCKER #2).
+    save(KEYS.scrapbook, scrapbook);
     renderScrapbook();
   });
 }
 
-function openScrapPhoto(i) {
-  const entry = scrapbook[i];
+function openScrapPhoto(id) {
+  // PR-ε.0 §2 — id-based lookup.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry || !entry.photo) return;
   const lb = document.getElementById('avatarLightbox');
   document.getElementById('lbImage').src = entry.photo;
@@ -17724,6 +18091,63 @@ function activateBtn(btnId, hasContent) {
   } else {
     btn.classList.add('disabled-state');
   }
+}
+
+// PR-ε.0 §0b — Stable-id generator. Runtime-only (custom milestones via
+// addMilestone, scrapbook entries via addScrapEntry); never at parse time.
+// `id-` prefix keeps fallback IDs visually distinct from DEFAULT kebab
+// slugs and from crypto UUIDs.
+function genId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'id-' + Date.now().toString(36) + '-'
+    + Math.random().toString(36).slice(2, 10);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for milestones. Custom entries
+// without an id receive genId(); DEFAULT-text matches inherit the
+// deterministic slug so cross-device sync converges. Two asserts catch
+// developer error in DEFAULT_MILESTONES at init time (dev-only loud
+// failure; production is a no-op when both invariants hold).
+function migrateMilestoneIds() {
+  if (!Array.isArray(milestones)) return;
+  // Slug-uniqueness: two DEFAULTs with the same slug would collide in slugByText.
+  console.assert(
+    new Set(DEFAULT_MILESTONES.map(m => m.id)).size === DEFAULT_MILESTONES.length,
+    'PR-ε.0: duplicate milestone slug in DEFAULT_MILESTONES'
+  );
+  // Fallback-id determinism (Kael v5 MAJOR): the §0a slugify empty-text
+  // fallback yields ms-fallback-<random>, non-deterministic across loads.
+  // A DEFAULT entry hitting that path would pass the Set-uniqueness check
+  // above but break cross-device sync. Catches the developer error loud.
+  console.assert(
+    DEFAULT_MILESTONES.every(m => !/^ms-fallback-/.test(m.id || '')),
+    'PR-ε.0: DEFAULT_MILESTONES contains an empty-text entry — fallback id is non-deterministic across loads'
+  );
+  let dirty = false;
+  const slugByText = Object.fromEntries(
+    DEFAULT_MILESTONES.map(m => [m.text, m.id])
+  );
+  milestones.forEach(m => {
+    if (m.id) return;
+    m.id = slugByText[m.text] || genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.milestones, milestones);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for scrapbook. No deterministic
+// id source (no DEFAULT_SCRAPBOOK), so always genId() on missing id.
+function migrateScrapbookIds() {
+  if (!Array.isArray(scrapbook)) return;
+  let dirty = false;
+  scrapbook.forEach(e => {
+    if (e.id) return;
+    e.id = genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.scrapbook, scrapbook);
 }
 
 function escHtml(s) {
@@ -22321,7 +22745,8 @@ function openMilestoneModal() {
 function addMilestone() {
   const t = document.getElementById('mText').value.trim();
   if (!t) return;
-  milestones.push({ text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
+  // PR-ε.0 §1 — custom milestones use genId (DEFAULTs use slugify(text)).
+  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
   logMilestoneEvent(t, 'mastered', today());
   closeModal('milestoneModal');
   renderMilestones();
@@ -26974,13 +27399,14 @@ function renderScrapbookHistory() {
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   let html = '<div class="fx-col g8">';
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — id-based dispatch (was scrapbook.indexOf(entry); the
+    // pre-PR-ε.0 origIdx pattern is removed across the scrapbook surface).
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entryDate);
     html += `
       <div class="scrap-entry">
-        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
           <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
         </div>
         <div class="scrap-body">
@@ -34067,6 +34493,18 @@ function _postReceiveMilestones() {
       milestones.forEach(m => migrateMilestoneStatus(m));
     }
   } catch(e) { console.warn('[post-receive milestones] migrate:', e); }
+  // PR-ε.0 §6.3 — Kael v5 MAJOR: assert (don't typeof-guard)
+  // migrateMilestoneIds. Concat order config → data → core → home →
+  // diet → medical guarantees migrateMilestoneIds is in scope at
+  // medical.js parse time, so the typeof guard hides nothing today
+  // — but masks future renames. Assert fires loud at dev time on
+  // breakage. Matches the §1 assertion idiom.
+  console.assert(
+    typeof migrateMilestoneIds === 'function',
+    'PR-ε.0 §6.3: _postReceiveMilestones expects migrateMilestoneIds in scope'
+  );
+  // Runs BEFORE dedupe so all post-receive entries have ids.
+  migrateMilestoneIds();
   try {
     if (typeof dedupeMilestonesByText === 'function') {
       dedupeMilestonesByText();
@@ -34074,71 +34512,147 @@ function _postReceiveMilestones() {
   } catch(e) { console.warn('[post-receive milestones] dedupe:', e); }
 }
 
-// dedupeMilestonesByText — PR-β r1 hotfix (Sovereign-floor catch on PR-α/β):
-// the milestones array can accumulate duplicates with same text but different
-// status/evidence-count snapshots (legacy data + cross-device sync rounds
-// where syncMilestoneStatuses' find() saw an empty array mid-flight and
-// pushed a fresh entry). syncMilestoneStatuses' find() always returns the
-// FIRST match thereafter — so duplicates persist as ghosts that all render.
-// This function consolidates by case-insensitive trimmed text, merging
-// stage/evidence/dates conservatively (max stage, max evidence, earliest
-// firstSeen, latest lastSeen, latest manualAt, any-advanced-true wins).
-// Mutates milestones in-place via reassignment + saves. Returns true if
-// any merge happened.
+// PR-ε.0 §6.3 — survivor-mutation behavioral delta (Kael v4 audit MAJOR).
+// _mergeMilestoneFieldsInline mutates `winner` IN PLACE per the v6 BLOCKER
+// fix on dedupeMilestonesByText. Differs from the pre-PR-ε.0
+// `Object.assign({}, grp[0])` clone idiom — required so a closure pinning
+// the milestone's object reference (e.g. §6.1 _syncSetGlobal rehydrate path
+// reading the same array slot) sees the merged fields. Benign today (no
+// closure pinning confirmed across Maren+Kael+Cipher v5 jurisdiction
+// audits); flagged for re-verification if any later PR pins a milestone
+// object reference.
+function _mergeMilestoneFieldsInline(winner, loser) {
+  const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+  if ((stageRank[loser.status] || 0) > (stageRank[winner.status] || 0)) winner.status = loser.status;
+  if ((stageRank[loser.autoStatus] || 0) > (stageRank[winner.autoStatus] || 0)) winner.autoStatus = loser.autoStatus;
+  if ((loser.evidenceCount || 0) > (winner.evidenceCount || 0)) winner.evidenceCount = loser.evidenceCount;
+  if ((loser.confidenceHigh || 0) > (winner.confidenceHigh || 0)) winner.confidenceHigh = loser.confidenceHigh;
+  if (loser.firstSeen && (!winner.firstSeen || loser.firstSeen < winner.firstSeen)) winner.firstSeen = loser.firstSeen;
+  if (loser.lastSeen && (!winner.lastSeen || loser.lastSeen > winner.lastSeen)) winner.lastSeen = loser.lastSeen;
+  ['emergingAt','practicingAt','consistentAt','masteredAt','doneAt','inProgressAt'].forEach(f => {
+    if (loser[f] && (!winner[f] || loser[f] < winner[f])) winner[f] = loser[f];
+  });
+  if (loser.manualStatus && loser.manualAt) {
+    if (!winner.manualStatus || !winner.manualAt || loser.manualAt > winner.manualAt) {
+      winner.manualStatus = loser.manualStatus;
+      winner.manualAt = loser.manualAt;
+    }
+  }
+  if (loser.advanced) winner.advanced = true;
+  if (!winner.cat && loser.cat) winner.cat = loser.cat;
+  if (loser.__sync_updatedBy) {
+    const mAt = loser.__sync_updatedBy.at || 0;
+    const curAt = (winner.__sync_updatedBy && winner.__sync_updatedBy.at) || 0;
+    if (!winner.__sync_updatedBy || mAt > curAt) winner.__sync_updatedBy = loser.__sync_updatedBy;
+  }
+}
+
+// dedupeMilestonesByText — PR-ε.0 §6.3 rewrite (folds v6 BLOCKER + Kael
+// v6 MAJOR + Cipher BLOCKER #3 + Kael v4 survivor-mutation MAJOR).
+//
+// Consolidates duplicate text entries (case-insensitive trimmed). For
+// each collision picks a winner via DEFAULT-slug-wins (Kael v6 MAJOR —
+// deterministic across devices for slug-vs-UUID collisions); falls back
+// to lex-smaller-id when both or neither side is a DEFAULT slug.
+//
+// Mutates the milestones array IN PLACE via length=0; push.apply (v6
+// BLOCKER — reassignment would orphan any closure pinning the pre-dedup
+// reference, including §6.1 _syncSetGlobal('milestones', ...) rehydrate
+// path readers). Side-effects rewriteScrapbookMilestoneIds when any id
+// was rewritten so scrapbook entries' milestoneIds stay coherent across
+// cross-device dedup merges (Cipher BLOCKER #3 fold).
+//
+// Returns true if any merge happened (existing contract preserved for
+// the three call sites: core.js init flow, _postReceiveMilestones,
+// syncMilestoneStatuses).
 function dedupeMilestonesByText() {
   if (!Array.isArray(milestones) || milestones.length === 0) return false;
-  const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
-  const groups = {};
-  const order = [];
+
+  // §1 fallback-assert protects this Set's determinism — any
+  // ms-fallback-* id is a DEFAULT_MILESTONES developer error caught
+  // loudly at init. See cross-section invariant #1 in pseudocode.
+  const defaultSlugIds = new Set(
+    (typeof DEFAULT_MILESTONES !== 'undefined' ? DEFAULT_MILESTONES : [])
+      .map(d => d.id).filter(Boolean)
+  );
+
+  const byKey = new Map();      // normalized text -> survivor entry
+  const idRewrite = new Map();  // discarded id -> survivor id
+  const dropped = [];           // entries to remove from milestones
 
   milestones.forEach(m => {
     if (!m || typeof m !== 'object') return;
-    const k = (m.text || '').toLowerCase().trim();
-    if (!k) return;
-    if (!groups[k]) { groups[k] = []; order.push(k); }
-    groups[k].push(m);
+    const key = (m.text || '').trim().toLowerCase();
+    if (!key) return;
+    const prev = byKey.get(key);
+    if (!prev) { byKey.set(key, m); return; }
+
+    // DEFAULT-slug-wins: priority over lex compare (Kael v6 MAJOR).
+    // Without this, a UUID lex-smaller than the kebab slug would
+    // orphan the deterministic id on same-text custom-vs-DEFAULT
+    // collisions across devices.
+    const mIsDefault = defaultSlugIds.has(m.id);
+    const prevIsDefault = defaultSlugIds.has(prev.id);
+    let winner, loser;
+    if (mIsDefault && !prevIsDefault) {
+      winner = m; loser = prev;
+    } else if (prevIsDefault && !mIsDefault) {
+      winner = prev; loser = m;
+    } else {
+      // Both DEFAULT or both custom — lex-smaller-id wins (deterministic
+      // across devices for UUID/UUID and slug/slug ties).
+      winner = (m.id || '￿') < (prev.id || '￿') ? m : prev;
+      loser = winner === m ? prev : m;
+    }
+
+    if (loser.id && winner.id && loser.id !== winner.id) {
+      idRewrite.set(loser.id, winner.id);
+    }
+    _mergeMilestoneFieldsInline(winner, loser);
+    byKey.set(key, winner);
+    dropped.push(loser);
   });
 
-  const hasDups = Object.values(groups).some(arr => arr.length > 1);
-  if (!hasDups) return false;
+  if (dropped.length === 0) return false;
 
-  const deduped = order.map(k => {
-    const grp = groups[k];
-    if (grp.length === 1) return grp[0];
+  // In-place mutation (v6 BLOCKER fix): length=0 + push.apply preserves
+  // the array reference. Reassignment would orphan any reader closure
+  // capturing the pre-dedup array.
+  const survivors = Array.from(byKey.values());
+  milestones.length = 0;
+  milestones.push.apply(milestones, survivors);
 
-    const merged = Object.assign({}, grp[0]);
+  // Side-effect: rewrite scrapbook tag refs so entries pointing at
+  // discarded ids migrate to the survivor's id (Cipher BLOCKER #3).
+  if (idRewrite.size > 0 && typeof rewriteScrapbookMilestoneIds === 'function') {
+    rewriteScrapbookMilestoneIds(idRewrite);
+  }
 
-    grp.slice(1).forEach(m => {
-      if ((stageRank[m.status] || 0) > (stageRank[merged.status] || 0)) merged.status = m.status;
-      if ((stageRank[m.autoStatus] || 0) > (stageRank[merged.autoStatus] || 0)) merged.autoStatus = m.autoStatus;
-      if ((m.evidenceCount || 0) > (merged.evidenceCount || 0)) merged.evidenceCount = m.evidenceCount;
-      if ((m.confidenceHigh || 0) > (merged.confidenceHigh || 0)) merged.confidenceHigh = m.confidenceHigh;
-      if (m.firstSeen && (!merged.firstSeen || m.firstSeen < merged.firstSeen)) merged.firstSeen = m.firstSeen;
-      if (m.lastSeen && (!merged.lastSeen || m.lastSeen > merged.lastSeen)) merged.lastSeen = m.lastSeen;
-      ['emergingAt','practicingAt','consistentAt','masteredAt','doneAt','inProgressAt'].forEach(f => {
-        if (m[f] && (!merged[f] || m[f] < merged[f])) merged[f] = m[f];
-      });
-      if (m.manualStatus && m.manualAt) {
-        if (!merged.manualStatus || !merged.manualAt || m.manualAt > merged.manualAt) {
-          merged.manualStatus = m.manualStatus;
-          merged.manualAt = m.manualAt;
-        }
-      }
-      if (m.advanced) merged.advanced = true;
-      if (!merged.cat && m.cat) merged.cat = m.cat;
-      if (m.__sync_updatedBy) {
-        const mAt = m.__sync_updatedBy.at || 0;
-        const curAt = (merged.__sync_updatedBy && merged.__sync_updatedBy.at) || 0;
-        if (!merged.__sync_updatedBy || mAt > curAt) merged.__sync_updatedBy = m.__sync_updatedBy;
-      }
-    });
-
-    return merged;
-  });
-
-  milestones = deduped;
   save(KEYS.milestones, milestones);
   return true;
+}
+
+// PR-ε.0 §6.3(b) — Cipher BLOCKER #3 fold. Called from inside
+// dedupeMilestonesByText when idRewrite.size > 0. Rewrites scrapbook
+// entries' milestoneIds in place so cross-device dedup merges don't
+// orphan tag references. Side-effects on the scrapbook global; saves
+// when dirty; returns void.
+function rewriteScrapbookMilestoneIds(idRewrite) {
+  if (!Array.isArray(scrapbook) || !idRewrite.size) return;
+  let dirty = false;
+  scrapbook.forEach(e => {
+    if (!Array.isArray(e.milestoneIds)) return;
+    const remapped = e.milestoneIds.map(id => idRewrite.get(id) || id);
+    // Dedup after remap (covers the case where both survivor + discarded
+    // ids were tagged on the same entry).
+    const unique = Array.from(new Set(remapped));
+    if (unique.length !== e.milestoneIds.length ||
+        unique.some((id, i) => id !== e.milestoneIds[i])) {
+      e.milestoneIds = unique;
+      dirty = true;
+    }
+  });
+  if (dirty) save(KEYS.scrapbook, scrapbook);
 }
 
 // ─── Sync All Milestone Statuses (runs after every log entry) ───
@@ -61568,6 +62082,12 @@ var _syncWriteCountReset = null;// hourly reset timer
 var _syncToastQueue = [];       // queued sync toasts
 var _syncIsMigrating = false;   // suppresses toasts during seedFirestore
 var _syncIsReconciling = false; // suppresses toasts during reconcile
+// PR-ε.0 §6.2(a) — per-entry reconcile gate. Keyed by collection name;
+// entry exists once the first successful snapshot apply has happened
+// for that collection in this session. Cleared on reconnect /
+// household-rejoin (§6.2(d)). `var` matches the surrounding idiom;
+// `const` would not work since §6.2(d) reassigns to a fresh Set.
+var _reconcileDone = new Set();
 const CIRCUIT_BREAKER_LIMIT = 500;
 const DEBOUNCE_MS = 2000;
 
@@ -61687,6 +62207,10 @@ const SYNC_KEYS = {
   [KEYS.vomitingEpisodes]:   { collection: 'episodes',    model: 'single-doc' },
   [KEYS.coldEpisodes]:       { collection: 'episodes',    model: 'single-doc' },
   [KEYS.foods]:              { collection: 'foods',       model: 'single-doc' },
+  // PR-ε.0 §3 — scrapbook per-entry sync. Atomic with the SYNC_RENDER_DEPS
+  // arm below: SYNC_KEYS alone arms a listener that dispatches against an
+  // undefined dep (silent render miss); SYNC_RENDER_DEPS alone is dead config.
+  [KEYS.scrapbook]:          { collection: 'scrapbook',   model: 'per-entry' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -61773,6 +62297,12 @@ const SYNC_RENDER_DEPS = {
   [KEYS.coldEpisodes]:      { global: null, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard'] } },
   [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
   [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
+  // PR-ε.0 §3 — scrapbook lives in the history tab (Cipher v2 BLOCKER #9
+  // — confirmed: scrapbook UI surface is in the history tab post-v2.3
+  // relocation, not home). Two renderers fire on receive: renderScrapbook
+  // (the home-tab scrapbook card body) + renderScrapbookHistory (the
+  // history-tab section). Both are safe-no-op if their tab isn't active.
+  [KEYS.scrapbook]:         { global: 'scrapbook',    renderers: { 'history': ['renderScrapbook', 'renderScrapbookHistory'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -61801,6 +62331,14 @@ function _syncSetGlobal(name, value) {
     case 'poopData':     poopData     = value; return true;
     case '_careTickets': _careTickets = value; return true;
     case 'activityLog':  activityLog  = value; return true;
+    // PR-ε.0 §6.1 — scrapbook reassignment is acceptable here ONLY because
+    // no in-place mutator (no dedupeScrapbookByText analog) and no
+    // closure-pinning reader exists today (Maren+Kael v5 audit). §6.3
+    // mandates in-place mutation for `milestones` for the symmetric
+    // closure-pin hazard. Re-verify if either constraint changes
+    // (closure-pinning reader added, OR in-place scrapbook mutator like
+    // a future dedupeScrapbookByText).
+    case 'scrapbook':    scrapbook    = value; return true;
     default: return false;
   }
 }
@@ -61820,6 +62358,7 @@ function _syncGetGlobal(name) {
     case 'poopData':     return poopData;
     case '_careTickets': return _careTickets;
     case 'activityLog':  return activityLog;
+    case 'scrapbook':    return scrapbook;
     default: return undefined;
   }
 }
@@ -62672,6 +63211,12 @@ function _syncFlushSingleDoc(hRef, collection) {
 // ─── Attach Listeners (§7.3) ───
 function _syncAttachListeners(hId) {
   _syncDetachListeners();
+  // PR-ε.0 §6.2(d) — reset reconcile gate AFTER detach (Kael v4 MAJOR).
+  // Pre-detach reset would let in-flight microtask-queued snapshot
+  // callbacks re-attempt reconcile against stale state. Issue #53
+  // tracks the broader straggler limitation; this reset only protects
+  // reconcile re-fire, not snapshot-apply.
+  _reconcileDone = new Set();
   var db = firebase.firestore();
   var hRef = db.collection('households').doc(hId);
 
@@ -62826,6 +63371,100 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     if (entries.length === 0 && Array.isArray(current) && current.length > 0) {
       console.warn('[sync] Skipping empty snapshot for ' + collection + ' — local has ' + current.length + ' entries');
       return;
+    }
+
+    // ── PR-ε.0 §6.2(c) reconcile gate (fires once per collection per session) ──
+    // Folds Cipher BLOCKER #4 (per-entry listener wiped local entries that
+    // pre-existed before the household joined) + Kael v5 MAJORs (concat-
+    // before-branching, gate-add-on-success-only, stamp-trio parity).
+    if (!_reconcileDone.has(collection)) {
+      var remoteIds = new Set();
+      entries.forEach(function(re) { if (re && re.id) remoteIds.add(re.id); });
+      var orphanLocals = (current || []).filter(function(le) {
+        return le && le.id && !remoteIds.has(le.id);
+      });
+
+      if (orphanLocals.length > 0) {
+        // INVARIANT 1 (Kael v5 §6.2 MAJOR): orphans concat into `entries`
+        // IMMEDIATELY, BEFORE any breaker/push branching. Survives the
+        // wholesale save(lsKey, entries) below regardless of push outcome.
+        entries = entries.concat(orphanLocals);
+
+        if ((_syncWriteCount + orphanLocals.length) > CIRCUIT_BREAKER_LIMIT) {
+          // INVARIANT 2 (Kael v5 §6.2(c) MAJOR): bail path.
+          //   - Skip remote set() calls.
+          //   - Local entries already concat'd above (survive).
+          //   - Do NOT add to _reconcileDone — gate stays OPEN for retry
+          //     on next sync re-attach (§6.2(d) clears the gate).
+          console.warn('[sync] reconcile would exceed circuit breaker; deferring push',
+                       collection, orphanLocals.length);
+          // fall through to existing save(lsKey, entries) below
+        } else {
+          // Push path — write each orphan to Firestore with full stamp trio.
+          var _hRef = firebase.firestore().collection('households').doc(_syncHouseholdId);
+          var colRef = _hRef.collection(collection);
+          var writerIdent = {
+            uid: _syncUser && _syncUser.uid,
+            name: (_syncUser && _syncUser.displayName) || 'Parent'
+          };
+          // Stamp trio matches _syncWritePerEntry at sync.js (resolve by
+          // function name on line drift): __sync_createdBy + updatedBy +
+          // syncedAt. Without __sync_createdBy, the per-entry attribution
+          // composition above silently loses creation provenance for
+          // reconciled entries.
+          var stampBase = {
+            __sync_createdBy: writerIdent,
+            __sync_updatedBy: writerIdent,
+            __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+
+          // INVARIANT 3 (v6.1 Aurelius polish):
+          //   - Suppress "X added N memories" toasts during reconcile.
+          //   - try/finally restores _syncIsReconciling on any throw.
+          var wasReconciling = _syncIsReconciling;
+          _syncIsReconciling = true;
+          try {
+            orphanLocals.forEach(function(e) {
+              // INVARIANT 4 (v6.1 Aurelius polish):
+              //   - INNER try/catch wraps EACH forEach body (not the
+              //     forEach itself). Sync throw on .set() (e.g. firebase
+              //     uninit) doesn't skip subsequent orphans this fire.
+              try {
+                // INVARIANT 5 (v6.1 Aurelius polish counter comment):
+                //   - Increment BEFORE .set() — overcount is fail-safe
+                //     (breaker bails earlier); do NOT move post-resolve,
+                //     async settlement would let bursts under-count and
+                //     overshoot the limit. Matches existing pattern in
+                //     _syncWritePerEntry (sync.js, resolve by function
+                //     name on drift).
+                _syncWriteCount++;
+                colRef.doc(e.id).set(Object.assign({}, e, stampBase), { merge: false })
+                  .catch(function(err) {
+                    console.error('[sync] reconcile push failed',
+                                  collection, e.id, err);
+                    // Local entry already in `entries`; survives this
+                    // session. Retry on next sync re-attach.
+                  });
+              } catch (syncErr) {
+                console.error('[sync] reconcile push threw synchronously',
+                              collection, e.id, syncErr);
+                // Local entry already in `entries` above; survives.
+                // Continue forEach to subsequent orphans.
+              }
+            });
+          } finally {
+            _syncIsReconciling = wasReconciling;
+          }
+          // INVARIANT 6 (Kael v5 §6.2 MAJOR):
+          //   - _reconcileDone.add ONLY on success path. Bail (above)
+          //     leaves it open for retry.
+          _reconcileDone.add(collection);
+        }
+      } else {
+        // No orphans this fire — close gate immediately. Future fires
+        // this session skip the diff.
+        _reconcileDone.add(collection);
+      }
     }
 
     // Count changes for toast
