@@ -1,6 +1,8 @@
-# PR-ε.0 v6.2 — Implementation pseudocode + reference JS
+# PR-ε.0 v6.3 — Implementation pseudocode + reference JS
 
-> **Companion to:** [`lyra-pr-epsilon-0-foundation.md`](./lyra-pr-epsilon-0-foundation.md) (v6.2)
+> **v6.3 (PR-ε.0.1):** §4.A chip × markup simplified from double-wrap `escAttr(escHtml(labelText))` to single-wrap `escAttr(labelText)` on the aria-label, per the foundation v6.3 changelog. §7.7 entity-reference fixture re-anchored to single-wrap output. No structural change to other sections.
+
+> **Companion to:** [`lyra-pr-epsilon-0-foundation.md`](./lyra-pr-epsilon-0-foundation.md) (v6.3)
 > **PR:** [#52](https://github.com/Rishabh1804/sproutlab/pull/52) (draft, atomic spec package; un-drafts after this doc passes the audit chain)
 > **Audit base SHA:** `a64b80d41f900e70cc36bde7b60169802a1f5c0c` (v5 spec line refs; some drift since — see footer)
 > **Drafters:** Maren (Care/UX sections, build-mode flex), Kael (Intelligence/data-layer sections, build-mode flex), Lyra (≥50 LOC sections + assembly + cross-section synthesis).
@@ -765,7 +767,7 @@ function renderScrapMilestoneChips() {
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
               data-action="removeScrapMilestone" data-arg="${m.id}"
-              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+              aria-label="Remove ${escAttr(labelText)} tag">
         <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
       </button>
     </span>`;
@@ -881,7 +883,7 @@ This section is the cross-cut between Maren's UI surface and Kael's data-layer p
 - [ ] iOS VoiceOver real-device test (not simulator) — first codebase use of `role="checkbox"` on `<button>`
 - [ ] Orphan-tag toast surfaces on edit-load: delete tagged milestone → edit memory → toast "1 milestone tag removed — milestone no longer exists"
 - [ ] Attribute escape audit: rename milestone to `Said "mama"` → chip × `aria-label` reads `Remove Said &quot;mama&quot; tag`
-- [ ] **Entity-reference escape (v6.1):** rename milestone to `&mama;`, tag a memory. Visible `.chip-label` renders literal `&mama;` (text node, not entity). Chip × `aria-label` reads `Remove &amp;mama; tag` in inspector and announces as "Remove and mama semicolon tag" in VoiceOver — never as "Remove mama tag". Positively verifies `escHtml`-then-`escAttr` double-wrap.
+- [ ] **Entity-reference escape (v6.1; v6.3 single-wrap re-anchor):** rename milestone to `&mama;`, tag a memory. Visible `.chip-label` renders literal `&mama;` (text node, not entity). Chip × `aria-label` reads `Remove &amp;mama; tag` in inspector and announces as "Remove and mama semicolon tag" in VoiceOver — never as "Remove mama tag". Post-PR-ε.0.1 (v6.3): single-wrap `escAttr(labelText)` produces this directly. Pre-PR-ε.0.1 (v6.x): the same string was produced via `escAttr(escHtml(labelText))` double-wrap. Both render identically; v6.3 form is canonical.
 - [ ] No keyboard trap when picker has 0 milestones — Tab still reaches Cancel/Done
 - [ ] Tag-a-milestone button stays active when no milestones exist (so user reaches empty-state guidance) — no premature disable
 - [ ] **Reduced motion (v6):** `styles.css:3902` `@media (prefers-reduced-motion: reduce)` global block zeroes all `--ease-fast` transitions on `.chip-x`, `.picker-row-check`, `.picker-row`. Settings → Accessibility → Reduce Motion ON → no transition flash on hover or check toggle.

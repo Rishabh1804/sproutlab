@@ -1,6 +1,40 @@
-# PR-ε.0 v6.2 — Foundation: stable IDs + scrapbook sync + milestone linkage
+# PR-ε.0 v6.3 — Foundation: stable IDs + scrapbook sync + milestone linkage
 
-> **v6.2 changelog (this revision):** atomic spec package — pseudocode doc
+> **v6.3 changelog (this revision):** PR-ε.0.1 escAttr global-fix landed
+> (closes #57 path A direct). Spec § 4 chip × markup simplifies from
+> double-wrap `escAttr(escHtml(labelText))` to single-wrap `escAttr(labelText)`
+> — escAttr is now correct globally for HTML-attribute contexts (`&` / `"` /
+> `'` all emit proper entities), so the inner `escHtml` is no longer load-
+> bearing for entity-safety on the aria-label.
+> - **§4 chip × `aria-label` markup:** `escAttr(escHtml(labelText))` →
+>   `escAttr(labelText)`. Single-wrap canonical per the Phase 4 contract
+>   amendment (uniformity-contract.md PC-2.4 drops the "until #57 lands"
+>   time-binding).
+> - **§4 prose:** "Extending `escAttr` to also escape `&` globally has wider
+>   blast radius … deferred to a separate PR" forward-pointer **closes**.
+>   Replaced with the post-#57 rationale: escAttr's body is now the standards-
+>   compliant HTML-attribute escape; double-wrap was a v6.2 mitigation, no
+>   longer needed.
+> - **§7.6 HR-by-HR audit (HR-4 row):** evidence text updated — chip ×
+>   `aria-label` cites single-wrap; the v3 fix reference becomes a v6.3
+>   simplification reference.
+> - **§7.7 visual-checklist:** entity-reference fixture re-anchored to
+>   single-wrap output. Plus +1 line per Maren-3 finding on PR #63 —
+>   tap-and-verify regression-fixture for the `openActivityLogPrefilledFromPlan`
+>   + `upcomingToMilestone{InProgress,Done}` dispatcher keys.
+> - **PC-7.3 close (Class C → 0):** the 6 Class C sites that depended on
+>   pre-PR-ε.0.1 escAttr's `\'` JS-literal arm migrated to data-action in
+>   PR-ε.0.1 §1 (3 home.js + 3 medical.js per the corrected census;
+>   Cipher self-correction on #57 closed the methodology defect from the
+>   Phase 2 cross-cut anchor-narrowness).
+> - **Audit chain:** Lyra (Builder) → Maren + Kael Governor re-audit on
+>   PR #63 c3e21bf returned amendments-required (Maren-Finding-2 4-arg
+>   dispatcher + Kael-Finding-1 typeof-guard hardening) → Lyra synthesis
+>   fold + Sovereign decisions → Phase 1b expansion → Phases 2–4 land
+>   atomically → Cipher Edict V cross-cut runs against this v6.3 spec ↔
+>   impl ↔ contract atomicity bundle.
+
+> **v6.2 changelog (prior revision):** atomic spec package — pseudocode doc
 > folded in.
 > - **Paper-cut (Aurelius v6.1 review):** v6 header label was "(this
 >   revision)"; now "(prior revision)" — the v6.1 sub-block is current.
@@ -594,14 +628,14 @@ const labelText = (m.text || '').trim() || '(unnamed milestone)';
   <span class="chip-label">${escHtml(labelText)}</span>
   <button type="button" class="chip-x"
           data-action="removeScrapMilestone" data-arg="${m.id}"
-          aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+          aria-label="Remove ${escAttr(labelText)} tag">
     <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
   </button>
 </span>
 ```
 **Escape contracts:**
 - `${escHtml(labelText)}` for the visible text node (`.chip-label` body) — HTML context.
-- `${escAttr(escHtml(labelText))}` for the `aria-label` — attribute context, **double-wrapped**. `escAttr` (`core.js:2304`) only escapes `'` and `"`, NOT `&` or `<`. Milestone text containing `&` (e.g. `Tom & Jerry`) would otherwise produce malformed-but-tolerated attribute markup; `&mama;` could parse as a numeric/named entity reference, causing screen-reader mis-announcement. `escHtml` (`core.js:2282`) escapes `&`, `<`, `>` first; `escAttr` then handles quotes. The result is safe in both HTML5 attribute parsing and SR pronunciation. (Maren v5 audit MAJOR; v6 fix.) Extending `escAttr` to also escape `&` globally has wider blast radius (call sites in home.js et al.) — deferred to a separate PR.
+- `${escAttr(labelText)}` for the `aria-label` — attribute context, **single-wrap canonical** post-PR-ε.0.1. `escAttr` (`core.js:2565`) is now a standards-compliant HTML-attribute escape: emits `&amp;` for `&`, `&quot;` for `"`, `&#39;` for `'`. Milestone text containing `&` (e.g. `Tom & Jerry`) renders as `Remove Tom &amp; Jerry tag`; `&mama;` renders as `Remove &amp;mama; tag` (announces "Remove and mama semicolon tag" — never as "Remove mama tag"). The result is safe in both HTML5 attribute parsing and SR pronunciation. (Maren v5 audit MAJOR; v6 mitigation via `escAttr(escHtml(labelText))` double-wrap; PR-ε.0.1 v6.3 simplification to single-wrap once escAttr globally correct.) Pre-PR-ε.0.1 escAttr was doubly off-spec — `'` arm was a JS-string-literal escape (mis-layered for HTML-attribute context) and `&` was unescaped — closed by #57 path A direct rewrite.
 - `${m.id}` in `data-arg` is safe without escape: ids are either deterministic slugs (`[a-z0-9-]+`) or UUIDs / `'id-' + base36` — all attribute-safe by construction.
 **Composition rationale:** the chip body is a label (informational,
 `cursor: default` via CSS), not a click target — only the inner ×
@@ -1454,7 +1488,7 @@ in `.chip-safe` (`rgba(181,213,197,0.6)`) and `.modal-input`
 | HR-1 No emojis, all icons via zi() | ✓ | `zi-link`, `zi-close` (added §7.1), `zi-check`, `zi-sprout` only |
 | HR-2 No inline styles, tokens only | ✓ | All new CSS in `styles.css`; every value uses `var(--*)` (audited above) |
 | HR-3 No inline handlers | ✓ | Every interactive element uses `data-action` |
-| HR-4 escHtml/escAttr at all render boundaries | ✓ | Every text-context `m.text` interpolation uses `escHtml` (`.chip-label`, `.picker-row-label`); every attribute-context `m.text` interpolation uses `escAttr` (`aria-label` on chip ×). `m.id` is attribute-safe by construction (slug or UUID — both ASCII). v3 fix per audit v2 finding §7.3. |
+| HR-4 escHtml/escAttr at all render boundaries | ✓ | Every text-context `m.text` interpolation uses `escHtml` (`.chip-label`, `.picker-row-label`); every attribute-context `m.text` interpolation uses `escAttr` (`aria-label` on chip ×). `m.id` is attribute-safe by construction (slug or UUID — both ASCII). v3 fix per audit v2 finding §7.3; v6 mitigation via `escAttr(escHtml(labelText))` double-wrap pre-#57; v6.3 simplification to single-wrap `escAttr(labelText)` post-PR-ε.0.1 (escAttr globally correct for `&` / `"` / `'`). |
 | HR-5 Spacing/font/radius via tokens | ✓ | All `--sp-*`, `--fs-*`, `--r-*`, `--lh-*` tokens; no raw px except hit-area sizing (44px is WCAG-mandated) |
 | HR-6 data-action delegation | ✓ | Five new actions registered in central dispatcher (§4); zero inline `onclick` |
 | HR-7 zi() returns SVG via innerHTML | ✓ | All icons use `<svg class="zi"><use href="#zi-..."/></svg>` |
@@ -1487,7 +1521,9 @@ The pre-build visual checklist Lyra runs before opening the PR:
 - [ ] **iOS VoiceOver real-device test:** the `role="checkbox"` on `<button>` pattern is the codebase's first use; iOS sometimes appends "double-tap to activate" mid-announcement. Test on a real iPhone before ship — not just simulator. (Maren v4 audit MAJOR.)
 - [ ] **Orphan-tag toast surfaces on edit-load:** create a memory tagged with a custom milestone, delete the milestone on the same device, edit the memory → toast reads "1 milestone tag removed — milestone no longer exists". Toast text is informational, not alarming. (Maren v4 audit MAJOR §4 wiring.)
 - [ ] **Attribute escape audit:** every interpolation in an attribute context (`aria-label`, `data-arg` with arbitrary text) uses `escAttr`, not `escHtml`. Test: rename a custom milestone to `Said "mama"`, tag a memory, inspect chip × `aria-label` attribute — must read `Remove Said &quot;mama&quot; tag` (not `Remove Said "mama" tag`).
-- [ ] **Entity-reference escape (v6 MAJOR positive verification, Aurelius polish item 3):** rename a custom milestone to `&mama;`, tag a memory, inspect the chip. Visible `.chip-label` body must render the literal string `&mama;` (DOM text node, not an entity). Chip × `aria-label` attribute must read `Remove &amp;mama; tag` in the inspector and announce as "Remove and mama semicolon tag" (or equivalent literal) in VoiceOver — never as "Remove mama tag". Confirms `escHtml` runs before `escAttr` on both surfaces; positively verifies the v6 §4 double-wrap fix (not just the regression boundary).
+- [ ] **Entity-reference escape (v6 MAJOR positive verification, Aurelius polish item 3; v6.3 single-wrap re-anchor):** rename a custom milestone to `&mama;`, tag a memory, inspect the chip. Visible `.chip-label` body must render the literal string `&mama;` (DOM text node, not an entity — `escHtml` produces `&amp;mama;` which the HTML text-node parser decodes back to literal `&mama;`). Chip × `aria-label` attribute must read `Remove &amp;mama; tag` in the inspector and announce as "Remove and mama semicolon tag" (or equivalent literal) in VoiceOver — never as "Remove mama tag". Post-PR-ε.0.1 (v6.3): `escAttr(labelText)` single-wrap produces this directly (escAttr now emits `&amp;` for `&`); pre-PR-ε.0.1 (v6.x): the same string was produced via `escAttr(escHtml(labelText))` double-wrap. Both render identically; v6.3 form is canonical.
+- [ ] **Apostrophe attribute escape (PR-ε.0.1 path-A regression):** rename a custom milestone to `shepherd's pie`, tag a memory, inspect the chip × `aria-label` — must read `Remove shepherd&#39;s pie tag` in the inspector (NOT `Remove shepherd\'s pie tag` — that was the pre-PR-ε.0.1 mis-implemented JS-literal arm). Confirms #57 path A direct rewrite landed correctly. Same fixture ALSO covers `data-arg` round-trip on plan-item taps (Maren-1 / Kael-2 finding closure on PR #63): a vaccine named `Tom's booster` should open `openVaccApptModal` with the literal `Tom's booster` argument, not `Tom\'s booster`.
+- [ ] **Plan-item dispatcher regression-fixture (Maren-3 finding on PR #63 — PC-7 dispatcher coverage gate):** tap each of the 3 home.js Class C plan items (vaccination "Booked — tap to add appointment date & time" if a vacc is in the booked-no-details state; motor-activity plan-item; language-activity plan-item) — verify the corresponding modal opens with prefill values matching the pre-migration JS-source-string form (vacc-name on appt modal; activity title + duration=5 + source='plan' on activity-log modal). Then tap each of the 3 medical.js Class C "Started" / "Done" buttons on an upcoming-milestone card — verify the milestone status transitions correctly (in_progress / done) with the right `text` + `advanced` + `cat` payload. Closes the corrected-census Class C trio coverage on both surfaces.
 - [ ] **No keyboard trap when picker has 0 milestones:** picker-empty state still allows Tab to reach Cancel/Done.
 - [ ] **Disabled state (Tag-a-milestone with no milestones existing):** button stays active so the user can still open the picker and see the empty-state guidance — no premature disable.
 - [ ] **Reduced motion (v6 Maren MAJOR):** confirmed `styles.css:3902` `@media (prefers-reduced-motion: reduce)` global block zeroes all `--ease-fast` transitions on the new `.chip-x`, `.picker-row-check`, and `.picker-row` rules. Test: Settings → Accessibility → Reduce Motion ON → no transition flash on chip × hover, picker-row hover, or check toggle.
