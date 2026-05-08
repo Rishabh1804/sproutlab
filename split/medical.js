@@ -149,6 +149,18 @@ function _postReceiveMilestones() {
       milestones.forEach(m => migrateMilestoneStatus(m));
     }
   } catch(e) { console.warn('[post-receive milestones] migrate:', e); }
+  // PR-ε.0 §6.3 — Kael v5 MAJOR: assert (don't typeof-guard)
+  // migrateMilestoneIds. Concat order config → data → core → home →
+  // diet → medical guarantees migrateMilestoneIds is in scope at
+  // medical.js parse time, so the typeof guard hides nothing today
+  // — but masks future renames. Assert fires loud at dev time on
+  // breakage. Matches the §1 assertion idiom.
+  console.assert(
+    typeof migrateMilestoneIds === 'function',
+    'PR-ε.0 §6.3: _postReceiveMilestones expects migrateMilestoneIds in scope'
+  );
+  // Runs BEFORE dedupe so all post-receive entries have ids.
+  migrateMilestoneIds();
   try {
     if (typeof dedupeMilestonesByText === 'function') {
       dedupeMilestonesByText();
