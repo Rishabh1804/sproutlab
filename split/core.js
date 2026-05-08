@@ -2576,7 +2576,23 @@ function _renderAttribution(entry) {
 // ─────────────────────────────────────────
 // SHARED UTILITIES (migrated from feature modules → core)
 // ─────────────────────────────────────────
-function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+// PR-ε.0.1 §2 — escAttr global-fix per #57 path A. Pre-PR-ε.0.1 form was
+// `s.replace(/'/g, "\\'").replace(/"/g, '&quot;')` — the `'` arm was a
+// JS-string-literal escape (mis-layered for HTML-attribute context) and `&`
+// was unescaped (Tom & Jerry rendered malformed; &mama; could parse as a
+// numeric/named entity reference → SR mis-announcement). Path A direct:
+// proper HTML-attribute-context escapes for `&` / `"` / `'`. The 6 Class C
+// sites that depended on the `\\'` arm migrated to data-action in §1
+// (PR-ε.0.1 Phase 1a + 1b) before this body change ships.
+// Order matters: `&` first, else later replacements introduce `&` chars
+// that get double-escaped on a re-run (the function is idempotent under
+// this ordering only).
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 function ageAt(date) {
