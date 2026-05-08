@@ -143,6 +143,10 @@ const SYNC_KEYS = {
   [KEYS.vomitingEpisodes]:   { collection: 'episodes',    model: 'single-doc' },
   [KEYS.coldEpisodes]:       { collection: 'episodes',    model: 'single-doc' },
   [KEYS.foods]:              { collection: 'foods',       model: 'single-doc' },
+  // PR-ε.0 §3 — scrapbook per-entry sync. Atomic with the SYNC_RENDER_DEPS
+  // arm below: SYNC_KEYS alone arms a listener that dispatches against an
+  // undefined dep (silent render miss); SYNC_RENDER_DEPS alone is dead config.
+  [KEYS.scrapbook]:          { collection: 'scrapbook',   model: 'per-entry' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -229,6 +233,12 @@ const SYNC_RENDER_DEPS = {
   [KEYS.coldEpisodes]:      { global: null, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard'] } },
   [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
   [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
+  // PR-ε.0 §3 — scrapbook lives in the history tab (Cipher v2 BLOCKER #9
+  // — confirmed: scrapbook UI surface is in the history tab post-v2.3
+  // relocation, not home). Two renderers fire on receive: renderScrapbook
+  // (the home-tab scrapbook card body) + renderScrapbookHistory (the
+  // history-tab section). Both are safe-no-op if their tab isn't active.
+  [KEYS.scrapbook]:         { global: 'scrapbook',    renderers: { 'history': ['renderScrapbook', 'renderScrapbookHistory'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module

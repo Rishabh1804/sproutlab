@@ -451,9 +451,18 @@ function init() {
     else if (action === 'clearNotePhoto') clearNotePhoto(parseInt(arg));
     else if (action === 'clearNoteVoice') clearNoteVoice(parseInt(arg));
     else if (action === 'openNotePhoto') openNotePhoto(parseInt(arg));
-    else if (action === 'editScrapEntry') editScrapEntry(parseInt(arg));
-    else if (action === 'deleteScrapEntry') deleteScrapEntry(parseInt(arg));
-    else if (action === 'openScrapPhoto') openScrapPhoto(parseInt(arg));
+    // PR-ε.0 §2 — id-based dispatch (no parseInt). args are slug/UUID
+    // strings flowing into scrapbook.find(e => e.id === id) lookups.
+    else if (action === 'editScrapEntry') editScrapEntry(arg);
+    else if (action === 'deleteScrapEntry') deleteScrapEntry(arg);
+    else if (action === 'openScrapPhoto') openScrapPhoto(arg);
+    // PR-ε.0 §4 — picker action handlers (5 keys; bodies in core.js
+    // near the scrapbook lifecycle).
+    else if (action === 'openScrapMilestonePicker')    openScrapMilestonePicker();
+    else if (action === 'toggleScrapPickerMilestone')  toggleScrapPickerMilestone(arg);
+    else if (action === 'confirmScrapMilestonePicker') confirmScrapMilestonePicker();
+    else if (action === 'cancelScrapMilestonePicker')  cancelScrapMilestonePicker();
+    else if (action === 'removeScrapMilestone')        removeScrapMilestone(arg);
     else if (action === 'removeActivityChip') removeActivityChip(arg);
     else if (action === 'alSelectSlot') _alSelectSlot(arg);
     else if (action === 'alSelectDuration') _alSelectDuration(arg);
@@ -2121,8 +2130,13 @@ let _scrapPhotoPending = null;
 let _scrapMilestoneIdsPending = [];
 let _scrapPickerWorkingSet = new Set();
 
+// renderScrapbook — DOES NOT SAVE.
+// PR-ε.0 §2 (Cipher BLOCKER #2 + Maren v5 audit major #10): mutators
+// (addScrapEntry / deleteScrapEntry) call save(KEYS.scrapbook, scrapbook)
+// explicitly. Render-side save coupled persistence to redraw and would
+// silently re-persist stale state if a future caller re-rendered without
+// having mutated.
 function renderScrapbook() {
-  save(KEYS.scrapbook, scrapbook);
   const list = document.getElementById('scrapbookList');
   const count = document.getElementById('scrapbookCount');
   if (!list) return;
@@ -2137,14 +2151,15 @@ function renderScrapbook() {
 
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — data-arg uses entry.id (string slug/UUID), not array
+    // index. Safe-by-construction (PC-7.5); no escape needed.
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entry.date || entry.ts);
     const div = document.createElement('div');
     div.className = 'scrap-entry';
     div.innerHTML = `
-      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
         <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
       </div>
       <div class="scrap-body">
@@ -2153,8 +2168,8 @@ function renderScrapbook() {
         <div class="scrap-meta">${dateStr} · ${months}m ${days}d old</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:var(--sp-4);align-self:flex-start;flex-shrink:0;">
-        <button class="note-btn" data-action="editScrapEntry" data-arg="${origIdx}" aria-label="Edit memory">Edit</button>
-        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${origIdx}" aria-label="Delete memory">&times;</button>
+        <button class="note-btn" data-action="editScrapEntry" data-arg="${entry.id}" aria-label="Edit memory">Edit</button>
+        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${entry.id}" aria-label="Delete memory">&times;</button>
       </div>
     `;
     list.appendChild(div);
@@ -2328,40 +2343,69 @@ function removeScrapMilestone(id) {
   renderScrapMilestoneChips();
 }
 
-let _scrapEditIdx = null; // null = adding new, number = editing existing
+// PR-ε.0 §2 — id-based identity (was `_scrapEditIdx`, an array index).
+// null = adding new; string id = editing existing.
+let _scrapEditId = null;
 
 function addScrapEntry() {
   const title = document.getElementById('scrapTitle').value.trim();
   const desc = document.getElementById('scrapDesc').value.trim();
   const date = document.getElementById('scrapDate').value;
 
-  if (_scrapEditIdx !== null) {
-    // Editing existing entry
-    const entry = scrapbook[_scrapEditIdx];
+  if (_scrapEditId !== null) {
+    // Editing existing entry — id-based lookup (§2).
+    const entry = scrapbook.find(e => e.id === _scrapEditId);
+    if (!entry) { cancelScrapEdit(); return; }
     entry.title = title || 'Untitled';
     entry.desc = desc;
     entry.date = date || entry.date || today();
     if (_scrapPhotoPending) entry.photo = _scrapPhotoPending;
+    // PR-ε.0 §4 — overwrite milestoneIds (always present, possibly empty).
+    entry.milestoneIds = [..._scrapMilestoneIdsPending];
     cancelScrapEdit();
   } else {
     // Adding new
     if (!_scrapPhotoPending) return;
     scrapbook.push({
+      // PR-ε.0 §1 — stable id at create time.
+      id: genId(),
       photo: _scrapPhotoPending,
       title: title || 'Untitled',
       desc: desc,
       date: date || today(),
       ts: new Date().toISOString(),
+      // PR-ε.0 §4 — milestoneIds always present, never omitted (audit major #6).
+      milestoneIds: [..._scrapMilestoneIdsPending],
     });
     clearScrapPhoto();
   }
+  // PR-ε.0 §2 — explicit save. Cipher BLOCKER #2 — render-side save was
+  // removed (renderScrapbook no longer persists; mutators must save).
+  save(KEYS.scrapbook, scrapbook);
   renderScrapbook();
 }
 
-function editScrapEntry(i) {
-  const entry = scrapbook[i];
+function editScrapEntry(id) {
+  // PR-ε.0 §2 — id-based lookup; defensive find.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry) return;
-  _scrapEditIdx = i;
+  _scrapEditId = id;
+
+  // PR-ε.0 §4 — seed picker pending state from entry, filter against
+  // current milestones, and surface a one-time toast if any orphans were
+  // dropped (Maren v4 audit MAJOR — silent disappearance violates
+  // parent-safety). Edit-load toast complements the confirm-time toast
+  // for full orphan-window coverage.
+  const saved = (entry.milestoneIds || []).slice();
+  _scrapMilestoneIdsPending = saved.filter(
+    mid => milestones.some(m => m.id === mid)
+  );
+  _scrapPickerWorkingSet = new Set();
+  const dropped = saved.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
 
   // Show the form with existing data
   document.getElementById('scrapPreviewArea').style.display = 'block';
@@ -2370,6 +2414,8 @@ function editScrapEntry(i) {
   document.getElementById('scrapDesc').value = entry.desc || '';
   document.getElementById('scrapDate').value = entry.date || entry.ts.split('T')[0];
   _scrapPhotoPending = null; // only set if user picks a new photo
+  // Render chips with the (possibly-filtered) seed.
+  renderScrapMilestoneChips();
 
   // Update button text and show cancel
   document.getElementById('scrapSaveBtn').textContent = 'Update Memory';
@@ -2381,23 +2427,33 @@ function editScrapEntry(i) {
 }
 
 function cancelScrapEdit() {
-  _scrapEditIdx = null;
+  // PR-ε.0 §2 — id-based identity. clearScrapPhoto resets the picker
+  // pending state too (Phase D).
+  _scrapEditId = null;
   clearScrapPhoto();
   document.getElementById('scrapSaveBtn').textContent = 'Save Memory';
   document.getElementById('scrapCancelEditBtn').style.display = 'none';
 }
 
-function deleteScrapEntry(i) {
+function deleteScrapEntry(id) {
   confirmAction('Delete this memory?', () => {
+    // PR-ε.0 §2 — splice via findIndex (NOT array index). With id-based
+    // identity, deleting one entry never invalidates another id, so the
+    // pre-PR-ε.0 `_scrapEditIdx > i` index-fixup branch is deleted entirely
+    // (audit major #7).
+    const i = scrapbook.findIndex(e => e.id === id);
+    if (i < 0) return;
     scrapbook.splice(i, 1);
-    if (_scrapEditIdx === i) cancelScrapEdit();
-    else if (_scrapEditIdx !== null && _scrapEditIdx > i) _scrapEditIdx--;
+    if (_scrapEditId === id) cancelScrapEdit();
+    // PR-ε.0 §2 — explicit save (render-side save removed; Cipher BLOCKER #2).
+    save(KEYS.scrapbook, scrapbook);
     renderScrapbook();
   });
 }
 
-function openScrapPhoto(i) {
-  const entry = scrapbook[i];
+function openScrapPhoto(id) {
+  // PR-ε.0 §2 — id-based lookup.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry || !entry.photo) return;
   const lb = document.getElementById('avatarLightbox');
   document.getElementById('lbImage').src = entry.photo;

@@ -3412,6 +3412,131 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chip-avoid  { background:var(--rose-light); color:var(--tc-danger); border-color:rgba(242,168,184,0.6); }
 .chip-avoid:hover { background:var(--tc-danger); color:white; }
 
+/* ── Milestone tag chips (PR-ε.0 §7.3 / Subclass C) ──
+   Lavender domain: tag chips on memory entries. Container role="list"
+   + chip role="listitem"; chip-x is the tag-remove button. PC-10.6:
+   all tokens via var(); no raw hex. PC-2.4 escape contract enforced
+   in renderScrapMilestoneChips. */
+.chip-milestone {
+  background: var(--lav-light);
+  color: var(--text);
+  border-color: rgba(201, 184, 232, 0.6);
+  cursor: default;
+  padding-right: var(--sp-4);
+  gap: var(--sp-6);
+}
+.chip-milestone:hover { filter: none; transform: none; }
+.chip-label {
+  font-size: var(--fs-sm);
+  white-space: normal;
+  word-break: break-word;
+  max-width: 200px;
+  line-height: var(--lh-snug);
+}
+.chip-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  min-width: 44px; min-height: 44px;
+  padding: var(--sp-8);
+  margin-left: calc(-1 * var(--sp-4));
+  margin-right: calc(-1 * var(--sp-4));
+  border: none; background: transparent;
+  color: var(--mid);
+  cursor: pointer;
+  border-radius: var(--r-full);
+  transition: background var(--ease-fast), color var(--ease-fast);
+}
+.chip-x:hover { background: var(--surface-lav); color: var(--text); }
+.chip-x .zi { width: var(--icon-xs); height: var(--icon-xs); }
+
+/* ── Scrapbook form: milestone link row (PR-ε.0 §7.3) ── */
+.scrap-form-row {
+  display: flex; flex-direction: column;
+  gap: var(--sp-6);
+  margin-top: var(--sp-8);
+}
+.scrap-form-label {
+  font-size: var(--fs-sm); color: var(--mid);
+  font-family: 'Nunito', sans-serif;
+}
+.milestone-chips {
+  display: flex; flex-wrap: wrap;
+  gap: var(--sp-6);
+  min-height: 32px;
+}
+.milestone-chips[data-empty="true"] { min-height: 0; }
+.scrap-tag-btn {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: var(--sp-6);
+}
+.scrap-tag-btn .zi { width: var(--icon-sm); height: var(--icon-sm); }
+
+/* ── Picker modal (PR-ε.0 §7.3 / S-17) ── */
+.scrap-picker-modal {
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex; flex-direction: column;
+  padding: var(--sp-20) var(--sp-24);
+}
+.scrap-picker-modal h3 { margin-bottom: var(--sp-12); }
+.picker-list {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--sp-16);
+  padding: var(--sp-4) 0;
+  margin-bottom: var(--sp-16);
+}
+.picker-cat-group { display: flex; flex-direction: column; gap: var(--sp-4); }
+.picker-cat-header {
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-xs); font-weight: 700;
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+  color: var(--mid);
+  padding: 0 var(--sp-4);
+}
+.picker-row {
+  display: flex;
+  align-items: flex-start; /* v6 fix: was center; broke multi-line wrap alignment */
+  gap: var(--sp-10);
+  padding: var(--sp-8) var(--sp-10);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: background var(--ease-fast);
+  min-height: 44px;
+  border: none; background: transparent;
+  text-align: left; width: 100%;
+  font-family: inherit; color: var(--text);
+}
+.picker-row:hover { background: var(--surface-lav); }
+.picker-row-check {
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--lavender);
+  border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  transition: background var(--ease-fast);
+  margin-top: 2px; /* v6 fix: optical-align with first-line cap height */
+}
+.picker-row-check[data-checked="1"] { background: var(--lavender); }
+.picker-row-check[data-checked="0"] .zi { display: none; }
+.picker-row-check .zi { width: 14px; height: 14px; color: white; }
+.picker-row-label {
+  font-size: var(--fs-base);
+  color: var(--text);
+  word-break: break-word;
+  line-height: var(--lh-snug);
+}
+.picker-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-32) var(--sp-16);
+  color: var(--mid);
+  text-align: center;
+}
+.picker-empty .zi { width: var(--icon-lg); height: var(--icon-lg); color: var(--lavender); }
+.picker-empty p { margin: 0; font-size: var(--fs-base); }
+.picker-empty-sub { color: var(--light); font-size: var(--fs-sm); }
+
 /* ── Help tooltips ── */
 .help-btn {
   display:inline-flex; align-items:center; justify-content:center;

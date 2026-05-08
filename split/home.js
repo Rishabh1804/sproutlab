@@ -6559,13 +6559,14 @@ function renderScrapbookHistory() {
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   let html = '<div class="fx-col g8">';
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — id-based dispatch (was scrapbook.indexOf(entry); the
+    // pre-PR-ε.0 origIdx pattern is removed across the scrapbook surface).
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entryDate);
     html += `
       <div class="scrap-entry">
-        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
           <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
         </div>
         <div class="scrap-body">
