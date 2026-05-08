@@ -2115,6 +2115,11 @@ function openNotePhoto(i) {
 // SCRAPBOOK
 // ─────────────────────────────────────────
 let _scrapPhotoPending = null;
+// PR-ε.0 §4 — picker state globals (parallel to _scrapPhotoPending).
+// _scrapMilestoneIdsPending: selection persisted with the entry on save.
+// _scrapPickerWorkingSet: checkbox state inside the open picker modal.
+let _scrapMilestoneIdsPending = [];
+let _scrapPickerWorkingSet = new Set();
 
 function renderScrapbook() {
   save(KEYS.scrapbook, scrapbook);
@@ -2186,12 +2191,141 @@ function previewScrapPhoto(e) {
 
 function clearScrapPhoto() {
   _scrapPhotoPending = null;
+  // PR-ε.0 §4 — reset picker state on form clear (parallels photo reset).
+  _scrapMilestoneIdsPending = [];
+  _scrapPickerWorkingSet = new Set();
   document.getElementById('scrapPreviewArea').style.display = 'none';
   document.getElementById('scrapPhotoInput').value = '';
   document.getElementById('scrapTitle').value = '';
   document.getElementById('scrapDesc').value = '';
   document.getElementById('scrapDate').value = today();
   activateBtn('scrapSaveBtn', false);
+  // Re-render any pre-existing chips region after state reset.
+  if (typeof renderScrapMilestoneChips === 'function') renderScrapMilestoneChips();
+}
+
+// ── PR-ε.0 §4 — Memory ↔ milestone link: chip + picker render + handlers ──
+
+// renderScrapMilestoneChips — renders Subclass C tag-with-remove chips
+// (PC-2.1 / PC-2.3) into #scrapMilestonePicker. Reads _scrapMilestoneIdsPending,
+// resolves each id via milestones.find, silent-skips orphans (confirm-time
+// toast covers UX surfacing). Container carries role="list"; each chip
+// carries role="listitem". Chip × aria-label uses escAttr(escHtml(...))
+// double-wrap (PC-2.4) until issue #57 lands the global escAttr fix.
+function renderScrapMilestoneChips() {
+  const host = document.getElementById('scrapMilestonePicker');
+  if (!host) return;
+  const ids = _scrapMilestoneIdsPending || [];
+  host.setAttribute('role', 'list');
+  host.setAttribute('data-empty', ids.length === 0 ? 'true' : 'false');
+  host.innerHTML = ids.map(id => {
+    const m = milestones.find(x => x.id === id);
+    if (!m) return ''; // silent skip on orphan; confirm-time toast covers UX
+    // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
+    // empty text for new entries, but legacy data could contain whitespace-only
+    // text. Fall back so the chip and aria-label stay readable.
+    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    return `<span class="chip chip-milestone" role="listitem">
+      <span class="chip-label">${escHtml(labelText)}</span>
+      <button type="button" class="chip-x"
+              data-action="removeScrapMilestone" data-arg="${m.id}"
+              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+        <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
+      </button>
+    </span>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 — picker rows are `<button role="checkbox">`, the WAI-ARIA
+// pattern for native-focusable selection items.
+// See https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/
+// Do NOT "simplify" to <input type="checkbox"> or <label>; it would force
+// inline-style overrides for cross-browser consistency (HR-2 violation)
+// and break tab order (Maren v4 audit MAJOR).
+function renderScrapMilestonePickerList() {
+  const host = document.getElementById('scrapMilestonePickerList');
+  if (!host) return;
+  if (!Array.isArray(milestones) || milestones.length === 0) {
+    host.innerHTML = `<div class="picker-empty">
+      <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg>
+      <p>No milestones yet</p>
+      <p class="picker-empty-sub">Add one in the Track tab first.</p>
+    </div>`;
+    return;
+  }
+  // Group by category, render section per category that has any entries.
+  const byCat = {};
+  const catOrder = [];
+  milestones.forEach(m => {
+    const cat = m.cat || 'other';
+    if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
+    byCat[cat].push(m);
+  });
+  const catLabel = c => (c.charAt(0).toUpperCase() + c.slice(1));
+  host.innerHTML = catOrder.map(cat => {
+    const rows = byCat[cat].map(m => {
+      const checked = _scrapPickerWorkingSet.has(m.id);
+      return `<button type="button" class="picker-row"
+              role="checkbox" aria-checked="${checked ? 'true' : 'false'}"
+              data-action="toggleScrapPickerMilestone" data-arg="${m.id}">
+        <span class="picker-row-check" data-checked="${checked ? '1' : '0'}"
+              aria-hidden="true">
+          <svg class="zi"><use href="#zi-check"/></svg>
+        </span>
+        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+      </button>`;
+    }).join('');
+    return `<div class="picker-cat-group">
+      <div class="picker-cat-header">${escHtml(catLabel(cat))}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 picker action handlers (5 small handlers).
+// Always reseed working set from pending — back-button-leak safe
+// (audit major #8). Modal markup lives in template.html (Phase E).
+function openScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(_scrapMilestoneIdsPending || []);
+  renderScrapMilestonePickerList();
+  openModal('scrapMilestonePickerModal');
+}
+
+function toggleScrapPickerMilestone(id) {
+  if (_scrapPickerWorkingSet.has(id)) _scrapPickerWorkingSet.delete(id);
+  else _scrapPickerWorkingSet.add(id);
+  renderScrapMilestonePickerList();
+}
+
+// confirmScrapMilestonePicker — v6 Maren MAJOR: filter against current ids
+// before persist (audit major #13) AND surface confirm-time orphan toast
+// (closes the two-stage misleading-UX gap where remote sync deletes a
+// milestone WHILE the picker is open).
+function confirmScrapMilestonePicker() {
+  const pre = [..._scrapPickerWorkingSet];
+  _scrapMilestoneIdsPending = pre.filter(id =>
+    milestones.some(m => m.id === id)
+  );
+  const dropped = pre.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
+  closeModal('scrapMilestonePickerModal');
+  renderScrapMilestoneChips();
+}
+
+function cancelScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(); // discard
+  closeModal('scrapMilestonePickerModal');
+}
+
+// removeScrapMilestone — v6.1 Maren MINOR: pending-state edit; persists only
+// on parent form save (parallels the title-field input semantic). cancelScrapEdit
+// discards pending changes. Do NOT "fix" to immediate-persist.
+function removeScrapMilestone(id) {
+  _scrapMilestoneIdsPending = (_scrapMilestoneIdsPending || []).filter(x => x !== id);
+  renderScrapMilestoneChips();
 }
 
 let _scrapEditIdx = null; // null = adding new, number = editing existing
