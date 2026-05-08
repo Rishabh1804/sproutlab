@@ -17863,8 +17863,13 @@ function clearScrapPhoto() {
 // (PC-2.1 / PC-2.3) into #scrapMilestonePicker. Reads _scrapMilestoneIdsPending,
 // resolves each id via milestones.find, silent-skips orphans (confirm-time
 // toast covers UX surfacing). Container carries role="list"; each chip
-// carries role="listitem". Chip × aria-label uses escAttr(escHtml(...))
-// double-wrap (PC-2.4) until issue #57 lands the global escAttr fix.
+// carries role="listitem". Chip × aria-label uses single-wrap escAttr(...)
+// (PC-2.4 post-PR-ε.0.1) — escAttr at core.js:2565 is now standards-
+// compliant for & / " / ' (#57 path A direct rewrite closed the deferred
+// fix). Pre-PR-ε.0.1 used double-wrap escAttr(escHtml(...)); double-wrap
+// is now actively HARMFUL on the new escAttr body (re-escapes the &amp;
+// from escHtml's first pass into &amp;amp;, mis-pronouncing &mama; as
+// "and amp semicolon mama" instead of "and mama semicolon").
 function renderScrapMilestoneChips() {
   const host = document.getElementById('scrapMilestonePicker');
   if (!host) return;
@@ -17882,7 +17887,7 @@ function renderScrapMilestoneChips() {
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
               data-action="removeScrapMilestone" data-arg="${m.id}"
-              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+              aria-label="Remove ${escAttr(labelText)} tag">
         <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
       </button>
     </span>`;
