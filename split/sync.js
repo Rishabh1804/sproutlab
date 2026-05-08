@@ -18,6 +18,12 @@ var _syncWriteCountReset = null;// hourly reset timer
 var _syncToastQueue = [];       // queued sync toasts
 var _syncIsMigrating = false;   // suppresses toasts during seedFirestore
 var _syncIsReconciling = false; // suppresses toasts during reconcile
+// PR-ε.0 §6.2(a) — per-entry reconcile gate. Keyed by collection name;
+// entry exists once the first successful snapshot apply has happened
+// for that collection in this session. Cleared on reconnect /
+// household-rejoin (§6.2(d)). `var` matches the surrounding idiom;
+// `const` would not work since §6.2(d) reassigns to a fresh Set.
+var _reconcileDone = new Set();
 const CIRCUIT_BREAKER_LIMIT = 500;
 const DEBOUNCE_MS = 2000;
 
@@ -137,6 +143,10 @@ const SYNC_KEYS = {
   [KEYS.vomitingEpisodes]:   { collection: 'episodes',    model: 'single-doc' },
   [KEYS.coldEpisodes]:       { collection: 'episodes',    model: 'single-doc' },
   [KEYS.foods]:              { collection: 'foods',       model: 'single-doc' },
+  // PR-ε.0 §3 — scrapbook per-entry sync. Atomic with the SYNC_RENDER_DEPS
+  // arm below: SYNC_KEYS alone arms a listener that dispatches against an
+  // undefined dep (silent render miss); SYNC_RENDER_DEPS alone is dead config.
+  [KEYS.scrapbook]:          { collection: 'scrapbook',   model: 'per-entry' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -223,6 +233,12 @@ const SYNC_RENDER_DEPS = {
   [KEYS.coldEpisodes]:      { global: null, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard'] } },
   [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
   [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
+  // PR-ε.0 §3 — scrapbook lives in the history tab (Cipher v2 BLOCKER #9
+  // — confirmed: scrapbook UI surface is in the history tab post-v2.3
+  // relocation, not home). Two renderers fire on receive: renderScrapbook
+  // (the home-tab scrapbook card body) + renderScrapbookHistory (the
+  // history-tab section). Both are safe-no-op if their tab isn't active.
+  [KEYS.scrapbook]:         { global: 'scrapbook',    renderers: { 'history': ['renderScrapbook', 'renderScrapbookHistory'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -251,6 +267,14 @@ function _syncSetGlobal(name, value) {
     case 'poopData':     poopData     = value; return true;
     case '_careTickets': _careTickets = value; return true;
     case 'activityLog':  activityLog  = value; return true;
+    // PR-ε.0 §6.1 — scrapbook reassignment is acceptable here ONLY because
+    // no in-place mutator (no dedupeScrapbookByText analog) and no
+    // closure-pinning reader exists today (Maren+Kael v5 audit). §6.3
+    // mandates in-place mutation for `milestones` for the symmetric
+    // closure-pin hazard. Re-verify if either constraint changes
+    // (closure-pinning reader added, OR in-place scrapbook mutator like
+    // a future dedupeScrapbookByText).
+    case 'scrapbook':    scrapbook    = value; return true;
     default: return false;
   }
 }
@@ -270,6 +294,7 @@ function _syncGetGlobal(name) {
     case 'poopData':     return poopData;
     case '_careTickets': return _careTickets;
     case 'activityLog':  return activityLog;
+    case 'scrapbook':    return scrapbook;
     default: return undefined;
   }
 }
@@ -1122,6 +1147,12 @@ function _syncFlushSingleDoc(hRef, collection) {
 // ─── Attach Listeners (§7.3) ───
 function _syncAttachListeners(hId) {
   _syncDetachListeners();
+  // PR-ε.0 §6.2(d) — reset reconcile gate AFTER detach (Kael v4 MAJOR).
+  // Pre-detach reset would let in-flight microtask-queued snapshot
+  // callbacks re-attempt reconcile against stale state. Issue #53
+  // tracks the broader straggler limitation; this reset only protects
+  // reconcile re-fire, not snapshot-apply.
+  _reconcileDone = new Set();
   var db = firebase.firestore();
   var hRef = db.collection('households').doc(hId);
 
@@ -1260,6 +1291,13 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
 
     // Compare to current localStorage
     var current = load(lsKey, []);
+    // PR-ε.0 §6.2(c) Kael synthesis MINOR: byte-identical-snapshot
+    // short-circuit deliberately precedes the reconcile gate below.
+    // When current === entries by string equality, the orphan diff would
+    // be empty by definition (same id-set); skipping reconcile loses
+    // nothing. Side effect: _reconcileDone.add fires only on a non-
+    // identical snapshot — the gate stays open until then. Acceptable
+    // because the next non-identical snapshot redoes a no-cost diff scan.
     if (JSON.stringify(current) === JSON.stringify(entries)) return; // no change
 
     // C0 Fix 4 (Kael): defer if our local write is pending.
@@ -1276,6 +1314,108 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
     if (entries.length === 0 && Array.isArray(current) && current.length > 0) {
       console.warn('[sync] Skipping empty snapshot for ' + collection + ' — local has ' + current.length + ' entries');
       return;
+    }
+
+    // ── PR-ε.0 §6.2(c) reconcile gate (fires once per collection per session) ──
+    // Folds Cipher BLOCKER #4 (per-entry listener wiped local entries that
+    // pre-existed before the household joined) + Kael v5 MAJORs (concat-
+    // before-branching, gate-add-on-success-only, stamp-trio parity).
+    //
+    // Placement (Kael synthesis MINOR): this block sits AFTER the empty-
+    // snapshot guard above. Spec §6.2(c) accepts the trade-off — an
+    // empty-remote / non-empty-local first fire does NOT push orphans via
+    // reconcile; the next local-mutation diff push handles them. Reordering
+    // to put reconcile BEFORE the empty-snapshot guard would push orphans
+    // on every empty-remote snapshot, which is the wrong default for the
+    // SAFETY (c13a7de) skip the guard implements.
+    if (!_reconcileDone.has(collection)) {
+      var remoteIds = new Set();
+      entries.forEach(function(re) { if (re && re.id) remoteIds.add(re.id); });
+      var orphanLocals = (current || []).filter(function(le) {
+        return le && le.id && !remoteIds.has(le.id);
+      });
+
+      if (orphanLocals.length > 0) {
+        // INVARIANT 1 (Kael v5 §6.2 MAJOR): orphans concat into `entries`
+        // IMMEDIATELY, BEFORE any breaker/push branching. Survives the
+        // wholesale save(lsKey, entries) below regardless of push outcome.
+        entries = entries.concat(orphanLocals);
+
+        if ((_syncWriteCount + orphanLocals.length) > CIRCUIT_BREAKER_LIMIT) {
+          // INVARIANT 2 (Kael v5 §6.2(c) MAJOR): bail path.
+          //   - Skip remote set() calls.
+          //   - Local entries already concat'd above (survive).
+          //   - Do NOT add to _reconcileDone — gate stays OPEN for retry
+          //     on next sync re-attach (§6.2(d) clears the gate).
+          console.warn('[sync] reconcile would exceed circuit breaker; deferring push',
+                       collection, orphanLocals.length);
+          // fall through to existing save(lsKey, entries) below
+        } else {
+          // Push path — write each orphan to Firestore with full stamp trio.
+          var _hRef = firebase.firestore().collection('households').doc(_syncHouseholdId);
+          var colRef = _hRef.collection(collection);
+          var writerIdent = {
+            uid: _syncUser && _syncUser.uid,
+            name: (_syncUser && _syncUser.displayName) || 'Parent'
+          };
+          // Stamp trio matches _syncWritePerEntry at sync.js (resolve by
+          // function name on line drift): __sync_createdBy + updatedBy +
+          // syncedAt. Without __sync_createdBy, the per-entry attribution
+          // composition above silently loses creation provenance for
+          // reconciled entries.
+          var stampBase = {
+            __sync_createdBy: writerIdent,
+            __sync_updatedBy: writerIdent,
+            __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+
+          // INVARIANT 3 (v6.1 Aurelius polish):
+          //   - Suppress "X added N memories" toasts during reconcile.
+          //   - try/finally restores _syncIsReconciling on any throw.
+          var wasReconciling = _syncIsReconciling;
+          _syncIsReconciling = true;
+          try {
+            orphanLocals.forEach(function(e) {
+              // INVARIANT 4 (v6.1 Aurelius polish):
+              //   - INNER try/catch wraps EACH forEach body (not the
+              //     forEach itself). Sync throw on .set() (e.g. firebase
+              //     uninit) doesn't skip subsequent orphans this fire.
+              try {
+                // INVARIANT 5 (v6.1 Aurelius polish counter comment):
+                //   - Increment BEFORE .set() — overcount is fail-safe
+                //     (breaker bails earlier); do NOT move post-resolve,
+                //     async settlement would let bursts under-count and
+                //     overshoot the limit. Matches existing pattern in
+                //     _syncWritePerEntry (sync.js, resolve by function
+                //     name on drift).
+                _syncWriteCount++;
+                colRef.doc(e.id).set(Object.assign({}, e, stampBase), { merge: false })
+                  .catch(function(err) {
+                    console.error('[sync] reconcile push failed',
+                                  collection, e.id, err);
+                    // Local entry already in `entries`; survives this
+                    // session. Retry on next sync re-attach.
+                  });
+              } catch (syncErr) {
+                console.error('[sync] reconcile push threw synchronously',
+                              collection, e.id, syncErr);
+                // Local entry already in `entries` above; survives.
+                // Continue forEach to subsequent orphans.
+              }
+            });
+          } finally {
+            _syncIsReconciling = wasReconciling;
+          }
+          // INVARIANT 6 (Kael v5 §6.2 MAJOR):
+          //   - _reconcileDone.add ONLY on success path. Bail (above)
+          //     leaves it open for retry.
+          _reconcileDone.add(collection);
+        }
+      } else {
+        // No orphans this fire — close gate immediately. Future fires
+        // this session skip the diff.
+        _reconcileDone.add(collection);
+      }
     }
 
     // Count changes for toast

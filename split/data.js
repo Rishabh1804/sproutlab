@@ -1465,14 +1465,17 @@ const KEYWORD_TO_MILESTONE = {
 
 // @@DATA_BLOCK_2_START@@ DEFAULT_MILESTONES + DEFAULT_FOODS + DEFAULT_VACC + VACC_SCHEDULE + DEFAULT_MEDS + FOOD_SUGGESTIONS
 
+// PR-ε.0 §1 — id: slugify(text) baked at parse time. config.js defines
+// slugify (concat order config → data → core → ...), in scope here.
+// Slug uniqueness asserted in migrateMilestoneIds (core.js, runtime).
 const DEFAULT_MILESTONES = [
-  { text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', cat:'motor' },
-  { text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', cat:'motor' },
-  { text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', cat:'motor' },
-  { text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', cat:'social' },
-  { text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', cat:'language' },
-  { text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', cat:'language' },
-  { text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', cat:'motor' },
+  { id: slugify('Rolling'), text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', cat:'motor' },
+  { id: slugify('Sitting independently'), text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', cat:'motor' },
+  { id: slugify('Early teething signs'), text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', cat:'motor' },
+  { id: slugify('Sleeps independently'), text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', cat:'social' },
+  { id: slugify('Babbling'), text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', cat:'language' },
+  { id: slugify('Responds to name'), text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', cat:'language' },
+  { id: slugify('Pulls to stand using support (from sitting)'), text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', cat:'motor' },
 ];
 
 const DEFAULT_FOODS = [

@@ -149,6 +149,18 @@ function _postReceiveMilestones() {
       milestones.forEach(m => migrateMilestoneStatus(m));
     }
   } catch(e) { console.warn('[post-receive milestones] migrate:', e); }
+  // PR-ε.0 §6.3 — Kael v5 MAJOR: assert (don't typeof-guard)
+  // migrateMilestoneIds. Concat order config → data → core → home →
+  // diet → medical guarantees migrateMilestoneIds is in scope at
+  // medical.js parse time, so the typeof guard hides nothing today
+  // — but masks future renames. Assert fires loud at dev time on
+  // breakage. Matches the §1 assertion idiom.
+  console.assert(
+    typeof migrateMilestoneIds === 'function',
+    'PR-ε.0 §6.3: _postReceiveMilestones expects migrateMilestoneIds in scope'
+  );
+  // Runs BEFORE dedupe so all post-receive entries have ids.
+  migrateMilestoneIds();
   try {
     if (typeof dedupeMilestonesByText === 'function') {
       dedupeMilestonesByText();
@@ -156,71 +168,179 @@ function _postReceiveMilestones() {
   } catch(e) { console.warn('[post-receive milestones] dedupe:', e); }
 }
 
-// dedupeMilestonesByText — PR-β r1 hotfix (Sovereign-floor catch on PR-α/β):
-// the milestones array can accumulate duplicates with same text but different
-// status/evidence-count snapshots (legacy data + cross-device sync rounds
-// where syncMilestoneStatuses' find() saw an empty array mid-flight and
-// pushed a fresh entry). syncMilestoneStatuses' find() always returns the
-// FIRST match thereafter — so duplicates persist as ghosts that all render.
-// This function consolidates by case-insensitive trimmed text, merging
-// stage/evidence/dates conservatively (max stage, max evidence, earliest
-// firstSeen, latest lastSeen, latest manualAt, any-advanced-true wins).
-// Mutates milestones in-place via reassignment + saves. Returns true if
-// any merge happened.
+// PR-ε.0 §6.3 — survivor-mutation behavioral delta (Kael v4 audit MAJOR).
+// _mergeMilestoneFieldsInline mutates `winner` IN PLACE per the v6 BLOCKER
+// fix on dedupeMilestonesByText. Differs from the pre-PR-ε.0
+// `Object.assign({}, grp[0])` clone idiom — required so a closure pinning
+// the milestone's object reference (e.g. §6.1 _syncSetGlobal rehydrate path
+// reading the same array slot) sees the merged fields. Benign today (no
+// closure pinning confirmed across Maren+Kael+Cipher v5 jurisdiction
+// audits); flagged for re-verification if any later PR pins a milestone
+// object reference.
+function _mergeMilestoneFieldsInline(winner, loser) {
+  const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
+  if ((stageRank[loser.status] || 0) > (stageRank[winner.status] || 0)) winner.status = loser.status;
+  if ((stageRank[loser.autoStatus] || 0) > (stageRank[winner.autoStatus] || 0)) winner.autoStatus = loser.autoStatus;
+  if ((loser.evidenceCount || 0) > (winner.evidenceCount || 0)) winner.evidenceCount = loser.evidenceCount;
+  if ((loser.confidenceHigh || 0) > (winner.confidenceHigh || 0)) winner.confidenceHigh = loser.confidenceHigh;
+  if (loser.firstSeen && (!winner.firstSeen || loser.firstSeen < winner.firstSeen)) winner.firstSeen = loser.firstSeen;
+  if (loser.lastSeen && (!winner.lastSeen || loser.lastSeen > winner.lastSeen)) winner.lastSeen = loser.lastSeen;
+  ['emergingAt','practicingAt','consistentAt','masteredAt','doneAt','inProgressAt'].forEach(f => {
+    if (loser[f] && (!winner[f] || loser[f] < winner[f])) winner[f] = loser[f];
+  });
+  if (loser.manualStatus && loser.manualAt) {
+    if (!winner.manualStatus || !winner.manualAt || loser.manualAt > winner.manualAt) {
+      winner.manualStatus = loser.manualStatus;
+      winner.manualAt = loser.manualAt;
+    }
+  }
+  if (loser.advanced) winner.advanced = true;
+  if (!winner.cat && loser.cat) winner.cat = loser.cat;
+  if (loser.__sync_updatedBy) {
+    const mAt = loser.__sync_updatedBy.at || 0;
+    const curAt = (winner.__sync_updatedBy && winner.__sync_updatedBy.at) || 0;
+    if (!winner.__sync_updatedBy || mAt > curAt) winner.__sync_updatedBy = loser.__sync_updatedBy;
+  }
+}
+
+// dedupeMilestonesByText — PR-ε.0 §6.3 rewrite (folds v6 BLOCKER + Kael
+// v6 MAJOR + Cipher BLOCKER #3 + Kael v4 survivor-mutation MAJOR).
+//
+// Consolidates duplicate text entries (case-insensitive trimmed). For
+// each collision picks a winner via DEFAULT-slug-wins (Kael v6 MAJOR —
+// deterministic across devices for slug-vs-UUID collisions); falls back
+// to lex-smaller-id when both or neither side is a DEFAULT slug.
+//
+// Mutates the milestones array IN PLACE via length=0; push.apply (v6
+// BLOCKER — reassignment would orphan any closure pinning the pre-dedup
+// reference, including §6.1 _syncSetGlobal('milestones', ...) rehydrate
+// path readers). Side-effects rewriteScrapbookMilestoneIds when any id
+// was rewritten so scrapbook entries' milestoneIds stay coherent across
+// cross-device dedup merges (Cipher BLOCKER #3 fold).
+//
+// Returns true if any merge happened (existing contract preserved for
+// the three call sites: core.js init flow, _postReceiveMilestones,
+// syncMilestoneStatuses).
 function dedupeMilestonesByText() {
   if (!Array.isArray(milestones) || milestones.length === 0) return false;
-  const stageRank = { not_started: 0, emerging: 1, practicing: 2, consistent: 3, mastered: 4 };
-  const groups = {};
-  const order = [];
+
+  // §1 fallback-assert protects this Set's determinism — any
+  // ms-fallback-* id is a DEFAULT_MILESTONES developer error caught
+  // loudly at init. See cross-section invariant #1 in pseudocode.
+  const defaultSlugIds = new Set(
+    (typeof DEFAULT_MILESTONES !== 'undefined' ? DEFAULT_MILESTONES : [])
+      .map(d => d.id).filter(Boolean)
+  );
+
+  const byKey = new Map();      // normalized text -> survivor entry
+  const idRewrite = new Map();  // discarded id -> survivor id
+  const dropped = [];           // entries to remove from milestones
 
   milestones.forEach(m => {
     if (!m || typeof m !== 'object') return;
-    const k = (m.text || '').toLowerCase().trim();
-    if (!k) return;
-    if (!groups[k]) { groups[k] = []; order.push(k); }
-    groups[k].push(m);
+    const key = (m.text || '').trim().toLowerCase();
+    if (!key) return;
+    const prev = byKey.get(key);
+    if (!prev) { byKey.set(key, m); return; }
+
+    // DEFAULT-slug-wins: priority over lex compare (Kael v6 MAJOR).
+    // Without this, a UUID lex-smaller than the kebab slug would
+    // orphan the deterministic id on same-text custom-vs-DEFAULT
+    // collisions across devices.
+    const mIsDefault = defaultSlugIds.has(m.id);
+    const prevIsDefault = defaultSlugIds.has(prev.id);
+    let winner, loser;
+    if (mIsDefault && !prevIsDefault) {
+      winner = m; loser = prev;
+    } else if (prevIsDefault && !mIsDefault) {
+      winner = prev; loser = m;
+    } else {
+      // Both DEFAULT or both custom — lex-smaller-id wins (deterministic
+      // across devices for UUID/UUID and slug/slug ties).
+      winner = (m.id || '￿') < (prev.id || '￿') ? m : prev;
+      loser = winner === m ? prev : m;
+    }
+
+    if (loser.id && winner.id && loser.id !== winner.id) {
+      idRewrite.set(loser.id, winner.id);
+    }
+    _mergeMilestoneFieldsInline(winner, loser);
+    byKey.set(key, winner);
+    dropped.push(loser);
   });
 
-  const hasDups = Object.values(groups).some(arr => arr.length > 1);
-  if (!hasDups) return false;
+  if (dropped.length === 0) return false;
 
-  const deduped = order.map(k => {
-    const grp = groups[k];
-    if (grp.length === 1) return grp[0];
+  // In-place mutation (v6 BLOCKER fix): length=0 + push.apply preserves
+  // the array reference. Reassignment would orphan any reader closure
+  // capturing the pre-dedup array.
+  const survivors = Array.from(byKey.values());
+  milestones.length = 0;
+  milestones.push.apply(milestones, survivors);
 
-    const merged = Object.assign({}, grp[0]);
+  // Side-effect: rewrite scrapbook tag refs so entries pointing at
+  // discarded ids migrate to the survivor's id (Cipher BLOCKER #3).
+  if (idRewrite.size > 0 && typeof rewriteScrapbookMilestoneIds === 'function') {
+    rewriteScrapbookMilestoneIds(idRewrite);
+  }
 
-    grp.slice(1).forEach(m => {
-      if ((stageRank[m.status] || 0) > (stageRank[merged.status] || 0)) merged.status = m.status;
-      if ((stageRank[m.autoStatus] || 0) > (stageRank[merged.autoStatus] || 0)) merged.autoStatus = m.autoStatus;
-      if ((m.evidenceCount || 0) > (merged.evidenceCount || 0)) merged.evidenceCount = m.evidenceCount;
-      if ((m.confidenceHigh || 0) > (merged.confidenceHigh || 0)) merged.confidenceHigh = m.confidenceHigh;
-      if (m.firstSeen && (!merged.firstSeen || m.firstSeen < merged.firstSeen)) merged.firstSeen = m.firstSeen;
-      if (m.lastSeen && (!merged.lastSeen || m.lastSeen > merged.lastSeen)) merged.lastSeen = m.lastSeen;
-      ['emergingAt','practicingAt','consistentAt','masteredAt','doneAt','inProgressAt'].forEach(f => {
-        if (m[f] && (!merged[f] || m[f] < merged[f])) merged[f] = m[f];
-      });
-      if (m.manualStatus && m.manualAt) {
-        if (!merged.manualStatus || !merged.manualAt || m.manualAt > merged.manualAt) {
-          merged.manualStatus = m.manualStatus;
-          merged.manualAt = m.manualAt;
-        }
-      }
-      if (m.advanced) merged.advanced = true;
-      if (!merged.cat && m.cat) merged.cat = m.cat;
-      if (m.__sync_updatedBy) {
-        const mAt = m.__sync_updatedBy.at || 0;
-        const curAt = (merged.__sync_updatedBy && merged.__sync_updatedBy.at) || 0;
-        if (!merged.__sync_updatedBy || mAt > curAt) merged.__sync_updatedBy = m.__sync_updatedBy;
-      }
-    });
-
-    return merged;
-  });
-
-  milestones = deduped;
   save(KEYS.milestones, milestones);
   return true;
+}
+
+// PR-ε.0 §6.3(b) — Cipher BLOCKER #3 fold + Maren synthesis MINOR fold.
+// Called from inside dedupeMilestonesByText when idRewrite.size > 0.
+// Rewrites scrapbook entries' milestoneIds in place so cross-device dedup
+// merges don't orphan tag references. Side-effects on the scrapbook
+// global; saves when dirty; returns void.
+//
+// Maren synthesis MINOR (post-Governor-audit fold): also remap the
+// in-memory picker pending state if a parent has the picker open mid-
+// session when remote sync triggers dedup. Without this remap, the
+// picker's _scrapMilestoneIdsPending / _scrapPickerWorkingSet still
+// hold the loser id; confirmScrapMilestonePicker's
+// `milestones.some(m => m.id === id)` filter then drops the id and
+// fires "tag removed — milestone no longer exists" — but the tag
+// actually survived under the survivor id and is intact in scrapbook
+// localStorage. Toast lies; parent sees deletion that didn't happen.
+// Remapping the in-memory picker state here keeps the user-facing UX
+// consistent with the persisted state on the same trigger.
+function rewriteScrapbookMilestoneIds(idRewrite) {
+  if (!Array.isArray(scrapbook) || !idRewrite.size) return;
+  let dirty = false;
+  scrapbook.forEach(e => {
+    if (!Array.isArray(e.milestoneIds)) return;
+    const remapped = e.milestoneIds.map(id => idRewrite.get(id) || id);
+    // Dedup after remap (covers the case where both survivor + discarded
+    // ids were tagged on the same entry).
+    const unique = Array.from(new Set(remapped));
+    if (unique.length !== e.milestoneIds.length ||
+        unique.some((id, i) => id !== e.milestoneIds[i])) {
+      e.milestoneIds = unique;
+      dirty = true;
+    }
+  });
+  if (dirty) save(KEYS.scrapbook, scrapbook);
+
+  // Remap in-memory picker state (Maren synthesis MINOR). Both globals
+  // are declared in core.js (§4 picker state) and in scope here at
+  // runtime since the bundled <script> hoists all top-level lets into
+  // one scope and core.js parses before medical.js.
+  if (Array.isArray(_scrapMilestoneIdsPending) && _scrapMilestoneIdsPending.length > 0) {
+    const before = _scrapMilestoneIdsPending;
+    _scrapMilestoneIdsPending = Array.from(
+      new Set(before.map(id => idRewrite.get(id) || id))
+    );
+    // Re-render the chip strip if the host element exists (null-host-safe).
+    if (typeof renderScrapMilestoneChips === 'function') renderScrapMilestoneChips();
+  }
+  if (_scrapPickerWorkingSet instanceof Set && _scrapPickerWorkingSet.size > 0) {
+    const remapped = new Set();
+    _scrapPickerWorkingSet.forEach(id => remapped.add(idRewrite.get(id) || id));
+    _scrapPickerWorkingSet = remapped;
+    // Re-render the picker list if open (null-host-safe).
+    if (typeof renderScrapMilestonePickerList === 'function') renderScrapMilestonePickerList();
+  }
 }
 
 // ─── Sync All Milestone Statuses (runs after every log entry) ───

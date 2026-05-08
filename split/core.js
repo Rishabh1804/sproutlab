@@ -451,9 +451,18 @@ function init() {
     else if (action === 'clearNotePhoto') clearNotePhoto(parseInt(arg));
     else if (action === 'clearNoteVoice') clearNoteVoice(parseInt(arg));
     else if (action === 'openNotePhoto') openNotePhoto(parseInt(arg));
-    else if (action === 'editScrapEntry') editScrapEntry(parseInt(arg));
-    else if (action === 'deleteScrapEntry') deleteScrapEntry(parseInt(arg));
-    else if (action === 'openScrapPhoto') openScrapPhoto(parseInt(arg));
+    // PR-ε.0 §2 — id-based dispatch (no parseInt). args are slug/UUID
+    // strings flowing into scrapbook.find(e => e.id === id) lookups.
+    else if (action === 'editScrapEntry') editScrapEntry(arg);
+    else if (action === 'deleteScrapEntry') deleteScrapEntry(arg);
+    else if (action === 'openScrapPhoto') openScrapPhoto(arg);
+    // PR-ε.0 §4 — picker action handlers (5 keys; bodies in core.js
+    // near the scrapbook lifecycle).
+    else if (action === 'openScrapMilestonePicker')    openScrapMilestonePicker();
+    else if (action === 'toggleScrapPickerMilestone')  toggleScrapPickerMilestone(arg);
+    else if (action === 'confirmScrapMilestonePicker') confirmScrapMilestonePicker();
+    else if (action === 'cancelScrapMilestonePicker')  cancelScrapMilestonePicker();
+    else if (action === 'removeScrapMilestone')        removeScrapMilestone(arg);
     else if (action === 'removeActivityChip') removeActivityChip(arg);
     else if (action === 'alSelectSlot') _alSelectSlot(arg);
     else if (action === 'alSelectDuration') _alSelectDuration(arg);
@@ -823,6 +832,10 @@ function init() {
     if (!m.cat) m.cat = guessMilestoneCat(m.text);
     return m;
   });
+  // PR-ε.0 §1 — assign stable ids before save (idempotent; runs once
+  // for legacy data, no-op afterward). Must precede dedupeMilestonesByText
+  // (line ~848) so dedupe sees post-migration ids.
+  migrateMilestoneIds();
   save(KEYS.milestones, milestones);
 
   // Migrate milestones for evidence-based fields (backward compat)
@@ -957,6 +970,9 @@ function init() {
   renderVaccCoverage();
   renderDoctorContact();
   renderNotes();
+  // PR-ε.0 §1 — assign stable ids before first scrapbook render
+  // (idempotent; no-op when entries already have ids).
+  migrateScrapbookIds();
   renderScrapbook();
   renderMeds();
   renderVisits();
@@ -2108,9 +2124,19 @@ function openNotePhoto(i) {
 // SCRAPBOOK
 // ─────────────────────────────────────────
 let _scrapPhotoPending = null;
+// PR-ε.0 §4 — picker state globals (parallel to _scrapPhotoPending).
+// _scrapMilestoneIdsPending: selection persisted with the entry on save.
+// _scrapPickerWorkingSet: checkbox state inside the open picker modal.
+let _scrapMilestoneIdsPending = [];
+let _scrapPickerWorkingSet = new Set();
 
+// renderScrapbook — DOES NOT SAVE.
+// PR-ε.0 §2 (Cipher BLOCKER #2 + Maren v5 audit major #10): mutators
+// (addScrapEntry / deleteScrapEntry) call save(KEYS.scrapbook, scrapbook)
+// explicitly. Render-side save coupled persistence to redraw and would
+// silently re-persist stale state if a future caller re-rendered without
+// having mutated.
 function renderScrapbook() {
-  save(KEYS.scrapbook, scrapbook);
   const list = document.getElementById('scrapbookList');
   const count = document.getElementById('scrapbookCount');
   if (!list) return;
@@ -2125,14 +2151,15 @@ function renderScrapbook() {
 
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — data-arg uses entry.id (string slug/UUID), not array
+    // index. Safe-by-construction (PC-7.5); no escape needed.
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entry.date || entry.ts);
     const div = document.createElement('div');
     div.className = 'scrap-entry';
     div.innerHTML = `
-      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+      <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
         <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
       </div>
       <div class="scrap-body">
@@ -2141,8 +2168,8 @@ function renderScrapbook() {
         <div class="scrap-meta">${dateStr} · ${months}m ${days}d old</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:var(--sp-4);align-self:flex-start;flex-shrink:0;">
-        <button class="note-btn" data-action="editScrapEntry" data-arg="${origIdx}" aria-label="Edit memory">Edit</button>
-        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${origIdx}" aria-label="Delete memory">&times;</button>
+        <button class="note-btn" data-action="editScrapEntry" data-arg="${entry.id}" aria-label="Edit memory">Edit</button>
+        <button class="note-btn del-note-btn" data-action="deleteScrapEntry" data-arg="${entry.id}" aria-label="Delete memory">&times;</button>
       </div>
     `;
     list.appendChild(div);
@@ -2179,48 +2206,206 @@ function previewScrapPhoto(e) {
 
 function clearScrapPhoto() {
   _scrapPhotoPending = null;
+  // PR-ε.0 §4 — reset picker state on form clear (parallels photo reset).
+  _scrapMilestoneIdsPending = [];
+  _scrapPickerWorkingSet = new Set();
   document.getElementById('scrapPreviewArea').style.display = 'none';
   document.getElementById('scrapPhotoInput').value = '';
   document.getElementById('scrapTitle').value = '';
   document.getElementById('scrapDesc').value = '';
   document.getElementById('scrapDate').value = today();
   activateBtn('scrapSaveBtn', false);
+  // Re-render any pre-existing chips region after state reset.
+  if (typeof renderScrapMilestoneChips === 'function') renderScrapMilestoneChips();
 }
 
-let _scrapEditIdx = null; // null = adding new, number = editing existing
+// ── PR-ε.0 §4 — Memory ↔ milestone link: chip + picker render + handlers ──
+
+// renderScrapMilestoneChips — renders Subclass C tag-with-remove chips
+// (PC-2.1 / PC-2.3) into #scrapMilestonePicker. Reads _scrapMilestoneIdsPending,
+// resolves each id via milestones.find, silent-skips orphans (confirm-time
+// toast covers UX surfacing). Container carries role="list"; each chip
+// carries role="listitem". Chip × aria-label uses escAttr(escHtml(...))
+// double-wrap (PC-2.4) until issue #57 lands the global escAttr fix.
+function renderScrapMilestoneChips() {
+  const host = document.getElementById('scrapMilestonePicker');
+  if (!host) return;
+  const ids = _scrapMilestoneIdsPending || [];
+  host.setAttribute('role', 'list');
+  host.setAttribute('data-empty', ids.length === 0 ? 'true' : 'false');
+  host.innerHTML = ids.map(id => {
+    const m = milestones.find(x => x.id === id);
+    if (!m) return ''; // silent skip on orphan; confirm-time toast covers UX
+    // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
+    // empty text for new entries, but legacy data could contain whitespace-only
+    // text. Fall back so the chip and aria-label stay readable.
+    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    return `<span class="chip chip-milestone" role="listitem">
+      <span class="chip-label">${escHtml(labelText)}</span>
+      <button type="button" class="chip-x"
+              data-action="removeScrapMilestone" data-arg="${m.id}"
+              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+        <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
+      </button>
+    </span>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 — picker rows are `<button role="checkbox">`, the WAI-ARIA
+// pattern for native-focusable selection items.
+// See https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/
+// Do NOT "simplify" to <input type="checkbox"> or <label>; it would force
+// inline-style overrides for cross-browser consistency (HR-2 violation)
+// and break tab order (Maren v4 audit MAJOR).
+function renderScrapMilestonePickerList() {
+  const host = document.getElementById('scrapMilestonePickerList');
+  if (!host) return;
+  if (!Array.isArray(milestones) || milestones.length === 0) {
+    host.innerHTML = `<div class="picker-empty">
+      <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg>
+      <p>No milestones yet</p>
+      <p class="picker-empty-sub">Add one in the Track tab first.</p>
+    </div>`;
+    return;
+  }
+  // Group by category, render section per category that has any entries.
+  const byCat = {};
+  const catOrder = [];
+  milestones.forEach(m => {
+    const cat = m.cat || 'other';
+    if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
+    byCat[cat].push(m);
+  });
+  const catLabel = c => (c.charAt(0).toUpperCase() + c.slice(1));
+  host.innerHTML = catOrder.map(cat => {
+    const rows = byCat[cat].map(m => {
+      const checked = _scrapPickerWorkingSet.has(m.id);
+      return `<button type="button" class="picker-row"
+              role="checkbox" aria-checked="${checked ? 'true' : 'false'}"
+              data-action="toggleScrapPickerMilestone" data-arg="${m.id}">
+        <span class="picker-row-check" data-checked="${checked ? '1' : '0'}"
+              aria-hidden="true">
+          <svg class="zi"><use href="#zi-check"/></svg>
+        </span>
+        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+      </button>`;
+    }).join('');
+    return `<div class="picker-cat-group">
+      <div class="picker-cat-header">${escHtml(catLabel(cat))}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+// PR-ε.0 §4 picker action handlers (5 small handlers).
+// Always reseed working set from pending — back-button-leak safe
+// (audit major #8). Modal markup lives in template.html (Phase E).
+function openScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(_scrapMilestoneIdsPending || []);
+  renderScrapMilestonePickerList();
+  openModal('scrapMilestonePickerModal');
+}
+
+function toggleScrapPickerMilestone(id) {
+  if (_scrapPickerWorkingSet.has(id)) _scrapPickerWorkingSet.delete(id);
+  else _scrapPickerWorkingSet.add(id);
+  renderScrapMilestonePickerList();
+}
+
+// confirmScrapMilestonePicker — v6 Maren MAJOR: filter against current ids
+// before persist (audit major #13) AND surface confirm-time orphan toast
+// (closes the two-stage misleading-UX gap where remote sync deletes a
+// milestone WHILE the picker is open).
+function confirmScrapMilestonePicker() {
+  const pre = [..._scrapPickerWorkingSet];
+  _scrapMilestoneIdsPending = pre.filter(id =>
+    milestones.some(m => m.id === id)
+  );
+  const dropped = pre.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
+  closeModal('scrapMilestonePickerModal');
+  renderScrapMilestoneChips();
+}
+
+function cancelScrapMilestonePicker() {
+  _scrapPickerWorkingSet = new Set(); // discard
+  closeModal('scrapMilestonePickerModal');
+}
+
+// removeScrapMilestone — v6.1 Maren MINOR: pending-state edit; persists only
+// on parent form save (parallels the title-field input semantic). cancelScrapEdit
+// discards pending changes. Do NOT "fix" to immediate-persist.
+function removeScrapMilestone(id) {
+  _scrapMilestoneIdsPending = (_scrapMilestoneIdsPending || []).filter(x => x !== id);
+  renderScrapMilestoneChips();
+}
+
+// PR-ε.0 §2 — id-based identity (was `_scrapEditIdx`, an array index).
+// null = adding new; string id = editing existing.
+let _scrapEditId = null;
 
 function addScrapEntry() {
   const title = document.getElementById('scrapTitle').value.trim();
   const desc = document.getElementById('scrapDesc').value.trim();
   const date = document.getElementById('scrapDate').value;
 
-  if (_scrapEditIdx !== null) {
-    // Editing existing entry
-    const entry = scrapbook[_scrapEditIdx];
+  if (_scrapEditId !== null) {
+    // Editing existing entry — id-based lookup (§2).
+    const entry = scrapbook.find(e => e.id === _scrapEditId);
+    if (!entry) { cancelScrapEdit(); return; }
     entry.title = title || 'Untitled';
     entry.desc = desc;
     entry.date = date || entry.date || today();
     if (_scrapPhotoPending) entry.photo = _scrapPhotoPending;
+    // PR-ε.0 §4 — overwrite milestoneIds (always present, possibly empty).
+    entry.milestoneIds = [..._scrapMilestoneIdsPending];
     cancelScrapEdit();
   } else {
     // Adding new
     if (!_scrapPhotoPending) return;
     scrapbook.push({
+      // PR-ε.0 §1 — stable id at create time.
+      id: genId(),
       photo: _scrapPhotoPending,
       title: title || 'Untitled',
       desc: desc,
       date: date || today(),
       ts: new Date().toISOString(),
+      // PR-ε.0 §4 — milestoneIds always present, never omitted (audit major #6).
+      milestoneIds: [..._scrapMilestoneIdsPending],
     });
     clearScrapPhoto();
   }
+  // PR-ε.0 §2 — explicit save. Cipher BLOCKER #2 — render-side save was
+  // removed (renderScrapbook no longer persists; mutators must save).
+  save(KEYS.scrapbook, scrapbook);
   renderScrapbook();
 }
 
-function editScrapEntry(i) {
-  const entry = scrapbook[i];
+function editScrapEntry(id) {
+  // PR-ε.0 §2 — id-based lookup; defensive find.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry) return;
-  _scrapEditIdx = i;
+  _scrapEditId = id;
+
+  // PR-ε.0 §4 — seed picker pending state from entry, filter against
+  // current milestones, and surface a one-time toast if any orphans were
+  // dropped (Maren v4 audit MAJOR — silent disappearance violates
+  // parent-safety). Edit-load toast complements the confirm-time toast
+  // for full orphan-window coverage.
+  const saved = (entry.milestoneIds || []).slice();
+  _scrapMilestoneIdsPending = saved.filter(
+    mid => milestones.some(m => m.id === mid)
+  );
+  _scrapPickerWorkingSet = new Set();
+  const dropped = saved.length - _scrapMilestoneIdsPending.length;
+  if (dropped > 0) {
+    const noun = dropped === 1 ? 'milestone tag' : 'milestone tags';
+    showQLToast(`${dropped} ${noun} removed — milestone no longer exists`);
+  }
 
   // Show the form with existing data
   document.getElementById('scrapPreviewArea').style.display = 'block';
@@ -2229,6 +2414,8 @@ function editScrapEntry(i) {
   document.getElementById('scrapDesc').value = entry.desc || '';
   document.getElementById('scrapDate').value = entry.date || entry.ts.split('T')[0];
   _scrapPhotoPending = null; // only set if user picks a new photo
+  // Render chips with the (possibly-filtered) seed.
+  renderScrapMilestoneChips();
 
   // Update button text and show cancel
   document.getElementById('scrapSaveBtn').textContent = 'Update Memory';
@@ -2240,23 +2427,33 @@ function editScrapEntry(i) {
 }
 
 function cancelScrapEdit() {
-  _scrapEditIdx = null;
+  // PR-ε.0 §2 — id-based identity. clearScrapPhoto resets the picker
+  // pending state too (Phase D).
+  _scrapEditId = null;
   clearScrapPhoto();
   document.getElementById('scrapSaveBtn').textContent = 'Save Memory';
   document.getElementById('scrapCancelEditBtn').style.display = 'none';
 }
 
-function deleteScrapEntry(i) {
+function deleteScrapEntry(id) {
   confirmAction('Delete this memory?', () => {
+    // PR-ε.0 §2 — splice via findIndex (NOT array index). With id-based
+    // identity, deleting one entry never invalidates another id, so the
+    // pre-PR-ε.0 `_scrapEditIdx > i` index-fixup branch is deleted entirely
+    // (audit major #7).
+    const i = scrapbook.findIndex(e => e.id === id);
+    if (i < 0) return;
     scrapbook.splice(i, 1);
-    if (_scrapEditIdx === i) cancelScrapEdit();
-    else if (_scrapEditIdx !== null && _scrapEditIdx > i) _scrapEditIdx--;
+    if (_scrapEditId === id) cancelScrapEdit();
+    // PR-ε.0 §2 — explicit save (render-side save removed; Cipher BLOCKER #2).
+    save(KEYS.scrapbook, scrapbook);
     renderScrapbook();
   });
 }
 
-function openScrapPhoto(i) {
-  const entry = scrapbook[i];
+function openScrapPhoto(id) {
+  // PR-ε.0 §2 — id-based lookup.
+  const entry = scrapbook.find(e => e.id === id);
   if (!entry || !entry.photo) return;
   const lb = document.getElementById('avatarLightbox');
   document.getElementById('lbImage').src = entry.photo;
@@ -2277,6 +2474,63 @@ function activateBtn(btnId, hasContent) {
   } else {
     btn.classList.add('disabled-state');
   }
+}
+
+// PR-ε.0 §0b — Stable-id generator. Runtime-only (custom milestones via
+// addMilestone, scrapbook entries via addScrapEntry); never at parse time.
+// `id-` prefix keeps fallback IDs visually distinct from DEFAULT kebab
+// slugs and from crypto UUIDs.
+function genId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'id-' + Date.now().toString(36) + '-'
+    + Math.random().toString(36).slice(2, 10);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for milestones. Custom entries
+// without an id receive genId(); DEFAULT-text matches inherit the
+// deterministic slug so cross-device sync converges. Two asserts catch
+// developer error in DEFAULT_MILESTONES at init time (dev-only loud
+// failure; production is a no-op when both invariants hold).
+function migrateMilestoneIds() {
+  if (!Array.isArray(milestones)) return;
+  // Slug-uniqueness: two DEFAULTs with the same slug would collide in slugByText.
+  console.assert(
+    new Set(DEFAULT_MILESTONES.map(m => m.id)).size === DEFAULT_MILESTONES.length,
+    'PR-ε.0: duplicate milestone slug in DEFAULT_MILESTONES'
+  );
+  // Fallback-id determinism (Kael v5 MAJOR): the §0a slugify empty-text
+  // fallback yields ms-fallback-<random>, non-deterministic across loads.
+  // A DEFAULT entry hitting that path would pass the Set-uniqueness check
+  // above but break cross-device sync. Catches the developer error loud.
+  console.assert(
+    DEFAULT_MILESTONES.every(m => !/^ms-fallback-/.test(m.id || '')),
+    'PR-ε.0: DEFAULT_MILESTONES contains an empty-text entry — fallback id is non-deterministic across loads'
+  );
+  let dirty = false;
+  const slugByText = Object.fromEntries(
+    DEFAULT_MILESTONES.map(m => [m.text, m.id])
+  );
+  milestones.forEach(m => {
+    if (m.id) return;
+    m.id = slugByText[m.text] || genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.milestones, milestones);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for scrapbook. No deterministic
+// id source (no DEFAULT_SCRAPBOOK), so always genId() on missing id.
+function migrateScrapbookIds() {
+  if (!Array.isArray(scrapbook)) return;
+  let dirty = false;
+  scrapbook.forEach(e => {
+    if (e.id) return;
+    e.id = genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.scrapbook, scrapbook);
 }
 
 function escHtml(s) {

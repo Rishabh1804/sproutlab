@@ -41,6 +41,7 @@
 <symbol id="zi-scale" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 7l8 3 8-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 7c0 3 2.5 5 4 5s-1-5-4-5z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.1"/><path d="M20 7c0 3-2.5 5-4 5s1-5 4-5z" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.1"/></symbol>
 <symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
 <symbol id="zi-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-close" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
 <symbol id="zi-rainbow" viewBox="0 0 24 24"><path d="M4 18c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M7 18c0-2.8 2.2-5 5-5s5 2.2 5 18" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/><path d="M10 18c0-1.1.9-2 2-2s2 .9 2 2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3"/></symbol>
 <symbol id="zi-trophy" viewBox="0 0 24 24"><path d="M8 3h8v5c0 2.2-1.8 4-4 4s-4-1.8-4-4V3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M8 5H5c0 2.5 1.5 4 3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M16 5h3c0 2.5-1.5 4-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="12" y1="12" x2="12" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 16h8v2a1 1 0 01-1 1H9a1 1 0 01-1-1v-2z" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
 <symbol id="zi-baby" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M7.5 7c-.8-1-1-3 .5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><path d="M16.5 7c.8-1 1-3-.5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="10" cy="9" r="0.8" fill="currentColor"/><circle cx="14" cy="9" r="0.8" fill="currentColor"/><path d="M10.5 11c.7.5 2.3.5 3 0" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/><path d="M8 15c1 3 3 5 4 5s3-2 4-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
@@ -1028,6 +1029,18 @@
                 <button data-action="clearScrapPhoto" aria-label="Remove photo" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.5);color:white;border:none;font-size:var(--icon-xs);cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
               </div>
               <input type="text" id="scrapTitle" placeholder="Give this memory a title..." style="width:100%;margin-top:8px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;">
+              <!-- PR-ε.0 §4 — Memory ↔ milestone link chips region.
+                   Container is role="list" + role="listitem" per chip
+                   (PC-2.1 / PC-2.3) — set in renderScrapMilestoneChips. -->
+              <div class="scrap-form-row">
+                <label class="scrap-form-label">Linked milestones</label>
+                <div id="scrapMilestonePicker" class="milestone-chips"></div>
+                <button type="button" class="btn btn-ghost btn-sm scrap-tag-btn"
+                        data-action="openScrapMilestonePicker">
+                  <svg class="zi" aria-hidden="true"><use href="#zi-link"/></svg>
+                  <span>Tag a milestone</span>
+                </button>
+              </div>
               <input type="date" id="scrapDate" style="width:100%;margin-top:6px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;">
               <textarea id="scrapDesc" placeholder="What happened? (optional)" style="width:100%;margin-top:6px;padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--rose-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--blush);color:var(--text);outline:none;resize:none;min-height:48px;"></textarea>
               <div style="display:flex;justify-content:flex-end;gap:var(--sp-8);margin-top:6px;">
@@ -2852,6 +2865,24 @@
     <div class="modal-btns">
       <button class="btn btn-ghost" data-close-modal="milestoneModal">Cancel</button>
       <button class="btn btn-sage" id="milestoneSaveBtn" data-action="addMilestone">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PR-ε.0 §4 — Memory ↔ milestone link picker modal. Subclass C chip
+     Done = btn-lav (lavender = milestones domain), Cancel = btn-ghost
+     per PC-8.2 modal-btn domain-color pairing. Backdrop click closes
+     via the existing _handleModalOverlayClick handler (PC-1.3). The
+     a11y trio (role="dialog" + aria-modal + aria-labelledby) inherits
+     the deferred gap on issue #54 / PC-1.1 — to migrate alongside the
+     repo-wide modal a11y uplift. -->
+<div class="modal-overlay" id="scrapMilestonePickerModal">
+  <div class="modal scrap-picker-modal">
+    <h3>Tag milestones</h3>
+    <div id="scrapMilestonePickerList" class="picker-list"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" data-action="cancelScrapMilestonePicker">Cancel</button>
+      <button class="btn btn-lav" data-action="confirmScrapMilestonePicker">Done</button>
     </div>
   </div>
 </div>

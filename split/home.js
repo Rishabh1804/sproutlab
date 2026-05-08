@@ -1905,7 +1905,8 @@ function openMilestoneModal() {
 function addMilestone() {
   const t = document.getElementById('mText').value.trim();
   if (!t) return;
-  milestones.push({ text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
+  // PR-ε.0 §1 — custom milestones use genId (DEFAULTs use slugify(text)).
+  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
   logMilestoneEvent(t, 'mastered', today());
   closeModal('milestoneModal');
   renderMilestones();
@@ -6558,13 +6559,14 @@ function renderScrapbookHistory() {
   const sorted = [...scrapbook].sort((a, b) => new Date(b.date || b.ts) - new Date(a.date || a.ts));
   let html = '<div class="fx-col g8">';
   sorted.forEach((entry) => {
-    const origIdx = scrapbook.indexOf(entry);
+    // PR-ε.0 §2 — id-based dispatch (was scrapbook.indexOf(entry); the
+    // pre-PR-ε.0 origIdx pattern is removed across the scrapbook surface).
     const entryDate = entry.date || entry.ts.split('T')[0];
     const dateStr = formatDate(entryDate);
     const { months, days } = ageAtScrapDate(entryDate);
     html += `
       <div class="scrap-entry">
-        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${origIdx}">
+        <div class="scrap-photo" data-action="openScrapPhoto" data-arg="${entry.id}">
           <img src="${entry.photo}" alt="${escHtml(entry.title || 'Memory')}">
         </div>
         <div class="scrap-body">
