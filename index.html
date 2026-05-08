@@ -16106,6 +16106,27 @@ function init() {
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
+    // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
+    // motor/language builders (home.js:8120 / :8170). Hardcoded
+    // duration=5, source='plan' are constants from the pre-migration
+    // JS-source-string form (`openActivityLogPrefilled('${name}', 5, 'plan')`).
+    // Closes #57 acceptance criterion Phase A — kills the JS-literal
+    // dependency on escAttr's `'` arm at the 3 home.js Class C call sites.
+    // §7.7 regression-fixture (Maren-3): tap motor/language plan items;
+    // verify activity-log modal opens with duration=5 + source='plan' prefill.
+    else if (action === 'openActivityLogPrefilledFromPlan' && typeof openActivityLogPrefilled === 'function') openActivityLogPrefilled(arg, 5, 'plan');
+    else if (action === 'openActivityLogPrefilledFromPlan') console.warn('[dispatcher] openActivityLogPrefilled handler missing — intent dead (plan-item motor/lang activity tap)');
+    // PR-ε.0.1 §1 (PC-7.3 close) — milestone-uplift activation for the 3
+    // medical.js Class C builders (medical.js:4374 / :4377 / :4378). Status
+    // baked into key per Lyra synthesis fold on PR #63 (Sovereign-decided
+    // 2-key form): `arg` = item.text (user-text, milestone DB), `arg2` =
+    // bool-as-string for advanced (`'true'|'false'`), `arg3` = item.cat
+    // controlled-vocab. Closes Maren-Finding-2 (safety-tier; missed by
+    // Phase 2 census + Cipher Phase 2 cross-cut anchor-narrowness).
+    else if (action === 'upcomingToMilestoneInProgress' && typeof upcomingToMilestone === 'function') upcomingToMilestone(arg, arg2 === 'true', 'in_progress', arg3);
+    else if (action === 'upcomingToMilestoneInProgress') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Started tap)');
+    else if (action === 'upcomingToMilestoneDone' && typeof upcomingToMilestone === 'function') upcomingToMilestone(arg, arg2 === 'true', 'done', arg3);
+    else if (action === 'upcomingToMilestoneDone') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Done tap)');
     else if (action === 'markVaccBooked') markVaccBooked(arg);
     else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
     else if (action === 'vaccMarkDoneMulti') {
@@ -18172,7 +18193,23 @@ function _renderAttribution(entry) {
 // ─────────────────────────────────────────
 // SHARED UTILITIES (migrated from feature modules → core)
 // ─────────────────────────────────────────
-function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+// PR-ε.0.1 §2 — escAttr global-fix per #57 path A. Pre-PR-ε.0.1 form was
+// `s.replace(/'/g, "\\'").replace(/"/g, '&quot;')` — the `'` arm was a
+// JS-string-literal escape (mis-layered for HTML-attribute context) and `&`
+// was unescaped (Tom & Jerry rendered malformed; &mama; could parse as a
+// numeric/named entity reference → SR mis-announcement). Path A direct:
+// proper HTML-attribute-context escapes for `&` / `"` / `'`. The 6 Class C
+// sites that depended on the `\\'` arm migrated to data-action in §1
+// (PR-ε.0.1 Phase 1a + 1b) before this body change ships.
+// Order matters: `&` first, else later replacements introduce `&` chars
+// that get double-escaped on a re-run (the function is idempotent under
+// this ordering only).
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 function ageAt(date) {
@@ -28849,7 +28886,7 @@ function renderTodayPlan() {
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
         detail: '' + zi('check') + ' Booked — tap to add appointment date & time',
         tag: 'med', done: false, htmlDetail: true,
-        action: `openVaccApptModal('${escAttr(upcomingVacc.name)}')`
+        action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
     } else {
       // Not booked — show as urgent item at top
@@ -28957,7 +28994,7 @@ function renderTodayPlan() {
     time: '10:30', icon: zi('run'), title: motorTitle,
     detail: motorLogged ? zi('check') + ' Logged today' : (motorAct ? motorAct.desc.substring(0, 80) + (motorAct.desc.length > 80 ? '…' : '') : '3-5 sessions daily, 5 min each. Builds core strength for crawling.'),
     tag: 'play', done: motorLogged, htmlDetail: motorLogged,
-    action: motorLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(motorTitle.split(' — ')[0]) + '\', 5, \'plan\')'
+    action: motorLogged ? null : { name: 'openActivityLogPrefilledFromPlan', arg: motorTitle.split(' — ')[0] }
   });
 
   // ═══ MIDDAY BLOCK ═══
@@ -29007,7 +29044,7 @@ function renderTodayPlan() {
       time: '3 PM', icon: langAct.icon || zi('chat'), title: langAct.title,
       detail: langLogged ? zi('check') + ' Logged today' : langAct.desc.substring(0, 80) + (langAct.desc.length > 80 ? '…' : ''),
       tag: 'play', done: langLogged, htmlDetail: langLogged,
-      action: langLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(langAct.title.split(' — ')[0]) + '\', 5, \'plan\')'
+      action: langLogged ? null : { name: 'openActivityLogPrefilledFromPlan', arg: langAct.title.split(' — ')[0] }
     });
   }
 
@@ -29208,7 +29245,20 @@ function renderTodayPlan() {
         html += `<div class="plan-section-label">${item.section}</div>`;
         return;
       }
-      const actionAttr = item.action ? ` onclick="${item.action}" class="ptr"` : '';
+      // PR-ε.0.1 §1 (PC-7.3 close) — dual-mode consumer. Object form
+      // {name, arg} routes through data-action dispatcher (HR-3 clean);
+      // string form remains as legacy onclick= fallback for the 4
+      // meal-quick-log builders (:8080/:8150/:8224/:8233) which are
+      // not in #57 scope (Class A — no escAttr dependency, hardcoded
+      // literals only). Migrating those is a separate hygiene PR.
+      let actionAttr = '';
+      if (item.action) {
+        if (typeof item.action === 'object') {
+          actionAttr = ` data-action="${escAttr(item.action.name)}" data-arg="${escAttr(item.action.arg || '')}" class="ptr"`;
+        } else {
+          actionAttr = ` onclick="${item.action}" class="ptr"`;
+        }
+      }
       html += `<div class="plan-item"${actionAttr}>
         <div class="plan-time">${item.time}</div>
         <div class="plan-icon">${item.icon}</div>
@@ -38711,15 +38761,23 @@ function renderUpcomingItem(item) {
   const itemClass = isDone ? 'done' : isIP ? 'in-progress' : (item.advanced ? 'advanced' : 'normal');
 
   let actionsHtml = '';
-  const catArg = `'${item.cat || 'motor'}'`;
+  // PR-ε.0.1 §1 (PC-7.3 close, Phase 1 expansion) — Maren-Finding-2 catch.
+  // Was 3 inline onclick="…upcomingToMilestone('${escAttr(item.text)}',…)" —
+  // Class C (in-string-interpolation form, missed by Phase 2 census per
+  // Cipher self-correction on #57). Migrated to data-action per the 2-key
+  // bake-status pattern from Lyra synthesis fold on PR #63: status absorbed
+  // into key; data-arg = item.text (user-text), data-arg2 = bool-as-string
+  // for advanced, data-arg3 = item.cat. data-stop="1" preserves the
+  // event.stopPropagation() from the pre-migration form.
+  const catVal = item.cat || 'motor';
   if (isDone) {
     actionsHtml = '<span class="upcoming-badge achieved-badge">' + zi('check') + ' Achieved</span>';
   } else if (isIP) {
-    actionsHtml = `<button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'done', ${catArg})">${zi('check')} Done</button>`;
+    actionsHtml = `<button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>`;
   } else {
     actionsHtml = `
-      <button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'in_progress', ${catArg})">${zi('target')} Started</button>
-      <button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'done', ${catArg})">${zi('check')} Done</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneInProgress" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('target')} Started</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>
     `;
   }
 
