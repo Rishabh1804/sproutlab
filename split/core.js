@@ -823,6 +823,10 @@ function init() {
     if (!m.cat) m.cat = guessMilestoneCat(m.text);
     return m;
   });
+  // PR-ε.0 §1 — assign stable ids before save (idempotent; runs once
+  // for legacy data, no-op afterward). Must precede dedupeMilestonesByText
+  // (line ~848) so dedupe sees post-migration ids.
+  migrateMilestoneIds();
   save(KEYS.milestones, milestones);
 
   // Migrate milestones for evidence-based fields (backward compat)
@@ -957,6 +961,9 @@ function init() {
   renderVaccCoverage();
   renderDoctorContact();
   renderNotes();
+  // PR-ε.0 §1 — assign stable ids before first scrapbook render
+  // (idempotent; no-op when entries already have ids).
+  migrateScrapbookIds();
   renderScrapbook();
   renderMeds();
   renderVisits();
@@ -2289,6 +2296,51 @@ function genId() {
   }
   return 'id-' + Date.now().toString(36) + '-'
     + Math.random().toString(36).slice(2, 10);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for milestones. Custom entries
+// without an id receive genId(); DEFAULT-text matches inherit the
+// deterministic slug so cross-device sync converges. Two asserts catch
+// developer error in DEFAULT_MILESTONES at init time (dev-only loud
+// failure; production is a no-op when both invariants hold).
+function migrateMilestoneIds() {
+  if (!Array.isArray(milestones)) return;
+  // Slug-uniqueness: two DEFAULTs with the same slug would collide in slugByText.
+  console.assert(
+    new Set(DEFAULT_MILESTONES.map(m => m.id)).size === DEFAULT_MILESTONES.length,
+    'PR-ε.0: duplicate milestone slug in DEFAULT_MILESTONES'
+  );
+  // Fallback-id determinism (Kael v5 MAJOR): the §0a slugify empty-text
+  // fallback yields ms-fallback-<random>, non-deterministic across loads.
+  // A DEFAULT entry hitting that path would pass the Set-uniqueness check
+  // above but break cross-device sync. Catches the developer error loud.
+  console.assert(
+    DEFAULT_MILESTONES.every(m => !/^ms-fallback-/.test(m.id || '')),
+    'PR-ε.0: DEFAULT_MILESTONES contains an empty-text entry — fallback id is non-deterministic across loads'
+  );
+  let dirty = false;
+  const slugByText = Object.fromEntries(
+    DEFAULT_MILESTONES.map(m => [m.text, m.id])
+  );
+  milestones.forEach(m => {
+    if (m.id) return;
+    m.id = slugByText[m.text] || genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.milestones, milestones);
+}
+
+// PR-ε.0 §1 — Idempotent ID migration for scrapbook. No deterministic
+// id source (no DEFAULT_SCRAPBOOK), so always genId() on missing id.
+function migrateScrapbookIds() {
+  if (!Array.isArray(scrapbook)) return;
+  let dirty = false;
+  scrapbook.forEach(e => {
+    if (e.id) return;
+    e.id = genId();
+    dirty = true;
+  });
+  if (dirty) save(KEYS.scrapbook, scrapbook);
 }
 
 function escHtml(s) {

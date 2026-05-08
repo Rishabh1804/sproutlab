@@ -1905,7 +1905,8 @@ function openMilestoneModal() {
 function addMilestone() {
   const t = document.getElementById('mText').value.trim();
   if (!t) return;
-  milestones.push({ text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
+  // PR-ε.0 §1 — custom milestones use genId (DEFAULTs use slugify(text)).
+  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
   logMilestoneEvent(t, 'mastered', today());
   closeModal('milestoneModal');
   renderMilestones();
