@@ -8009,7 +8009,7 @@ function renderTodayPlan() {
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
         detail: '' + zi('check') + ' Booked — tap to add appointment date & time',
         tag: 'med', done: false, htmlDetail: true,
-        action: `openVaccApptModal('${escAttr(upcomingVacc.name)}')`
+        action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
     } else {
       // Not booked — show as urgent item at top
@@ -8117,7 +8117,7 @@ function renderTodayPlan() {
     time: '10:30', icon: zi('run'), title: motorTitle,
     detail: motorLogged ? zi('check') + ' Logged today' : (motorAct ? motorAct.desc.substring(0, 80) + (motorAct.desc.length > 80 ? '…' : '') : '3-5 sessions daily, 5 min each. Builds core strength for crawling.'),
     tag: 'play', done: motorLogged, htmlDetail: motorLogged,
-    action: motorLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(motorTitle.split(' — ')[0]) + '\', 5, \'plan\')'
+    action: motorLogged ? null : { name: 'openActivityLogPrefilledFromPlan', arg: motorTitle.split(' — ')[0] }
   });
 
   // ═══ MIDDAY BLOCK ═══
@@ -8167,7 +8167,7 @@ function renderTodayPlan() {
       time: '3 PM', icon: langAct.icon || zi('chat'), title: langAct.title,
       detail: langLogged ? zi('check') + ' Logged today' : langAct.desc.substring(0, 80) + (langAct.desc.length > 80 ? '…' : ''),
       tag: 'play', done: langLogged, htmlDetail: langLogged,
-      action: langLogged ? null : 'openActivityLogPrefilled(\'' + escAttr(langAct.title.split(' — ')[0]) + '\', 5, \'plan\')'
+      action: langLogged ? null : { name: 'openActivityLogPrefilledFromPlan', arg: langAct.title.split(' — ')[0] }
     });
   }
 
@@ -8368,7 +8368,20 @@ function renderTodayPlan() {
         html += `<div class="plan-section-label">${item.section}</div>`;
         return;
       }
-      const actionAttr = item.action ? ` onclick="${item.action}" class="ptr"` : '';
+      // PR-ε.0.1 §1 (PC-7.3 close) — dual-mode consumer. Object form
+      // {name, arg} routes through data-action dispatcher (HR-3 clean);
+      // string form remains as legacy onclick= fallback for the 4
+      // meal-quick-log builders (:8080/:8150/:8224/:8233) which are
+      // not in #57 scope (Class A — no escAttr dependency, hardcoded
+      // literals only). Migrating those is a separate hygiene PR.
+      let actionAttr = '';
+      if (item.action) {
+        if (typeof item.action === 'object') {
+          actionAttr = ` data-action="${escAttr(item.action.name)}" data-arg="${escAttr(item.action.arg || '')}" class="ptr"`;
+        } else {
+          actionAttr = ` onclick="${item.action}" class="ptr"`;
+        }
+      }
       html += `<div class="plan-item"${actionAttr}>
         <div class="plan-time">${item.time}</div>
         <div class="plan-icon">${item.icon}</div>

@@ -489,6 +489,13 @@ function init() {
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
+    // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
+    // motor/language builders (home.js:8120 / :8170). Hardcoded
+    // duration=5, source='plan' are constants from the pre-migration
+    // JS-source-string form (`openActivityLogPrefilled('${name}', 5, 'plan')`).
+    // Closes #57 acceptance criterion Phase A — kills the JS-literal
+    // dependency on escAttr's `'` arm at the 3 Class C call sites.
+    else if (action === 'openActivityLogPrefilledFromPlan' && typeof openActivityLogPrefilled === 'function') openActivityLogPrefilled(arg, 5, 'plan');
     else if (action === 'markVaccBooked') markVaccBooked(arg);
     else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
     else if (action === 'vaccMarkDoneMulti') {
