@@ -2279,6 +2279,18 @@ function activateBtn(btnId, hasContent) {
   }
 }
 
+// PR-ε.0 §0b — Stable-id generator. Runtime-only (custom milestones via
+// addMilestone, scrapbook entries via addScrapEntry); never at parse time.
+// `id-` prefix keeps fallback IDs visually distinct from DEFAULT kebab
+// slugs and from crypto UUIDs.
+function genId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'id-' + Date.now().toString(36) + '-'
+    + Math.random().toString(36).slice(2, 10);
+}
+
 function escHtml(s) {
   if (typeof s !== 'string') s = s == null ? '' : String(s);
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
