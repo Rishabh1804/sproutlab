@@ -4367,15 +4367,23 @@ function renderUpcomingItem(item) {
   const itemClass = isDone ? 'done' : isIP ? 'in-progress' : (item.advanced ? 'advanced' : 'normal');
 
   let actionsHtml = '';
-  const catArg = `'${item.cat || 'motor'}'`;
+  // PR-ε.0.1 §1 (PC-7.3 close, Phase 1 expansion) — Maren-Finding-2 catch.
+  // Was 3 inline onclick="…upcomingToMilestone('${escAttr(item.text)}',…)" —
+  // Class C (in-string-interpolation form, missed by Phase 2 census per
+  // Cipher self-correction on #57). Migrated to data-action per the 2-key
+  // bake-status pattern from Lyra synthesis fold on PR #63: status absorbed
+  // into key; data-arg = item.text (user-text), data-arg2 = bool-as-string
+  // for advanced, data-arg3 = item.cat. data-stop="1" preserves the
+  // event.stopPropagation() from the pre-migration form.
+  const catVal = item.cat || 'motor';
   if (isDone) {
     actionsHtml = '<span class="upcoming-badge achieved-badge">' + zi('check') + ' Achieved</span>';
   } else if (isIP) {
-    actionsHtml = `<button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'done', ${catArg})">${zi('check')} Done</button>`;
+    actionsHtml = `<button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>`;
   } else {
     actionsHtml = `
-      <button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'in_progress', ${catArg})">${zi('target')} Started</button>
-      <button class="ms-action-btn" onclick="event.stopPropagation();upcomingToMilestone('${escAttr(item.text)}', ${item.advanced}, 'done', ${catArg})">${zi('check')} Done</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneInProgress" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('target')} Started</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>
     `;
   }
 
