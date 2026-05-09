@@ -489,6 +489,27 @@ function init() {
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
+    // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
+    // motor/language builders (home.js:8120 / :8170). Hardcoded
+    // duration=5, source='plan' are constants from the pre-migration
+    // JS-source-string form (`openActivityLogPrefilled('${name}', 5, 'plan')`).
+    // Closes #57 acceptance criterion Phase A — kills the JS-literal
+    // dependency on escAttr's `'` arm at the 3 home.js Class C call sites.
+    // §7.7 regression-fixture (Maren-3): tap motor/language plan items;
+    // verify activity-log modal opens with duration=5 + source='plan' prefill.
+    else if (action === 'openActivityLogPrefilledFromPlan' && typeof openActivityLogPrefilled === 'function') openActivityLogPrefilled(arg, 5, 'plan');
+    else if (action === 'openActivityLogPrefilledFromPlan') console.warn('[dispatcher] openActivityLogPrefilled handler missing — intent dead (plan-item motor/lang activity tap)');
+    // PR-ε.0.1 §1 (PC-7.3 close) — milestone-uplift activation for the 3
+    // medical.js Class C builders (medical.js:4374 / :4377 / :4378). Status
+    // baked into key per Lyra synthesis fold on PR #63 (Sovereign-decided
+    // 2-key form): `arg` = item.text (user-text, milestone DB), `arg2` =
+    // bool-as-string for advanced (`'true'|'false'`), `arg3` = item.cat
+    // controlled-vocab. Closes Maren-Finding-2 (safety-tier; missed by
+    // Phase 2 census + Cipher Phase 2 cross-cut anchor-narrowness).
+    else if (action === 'upcomingToMilestoneInProgress' && typeof upcomingToMilestone === 'function') upcomingToMilestone(arg, arg2 === 'true', 'in_progress', arg3);
+    else if (action === 'upcomingToMilestoneInProgress') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Started tap)');
+    else if (action === 'upcomingToMilestoneDone' && typeof upcomingToMilestone === 'function') upcomingToMilestone(arg, arg2 === 'true', 'done', arg3);
+    else if (action === 'upcomingToMilestoneDone') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Done tap)');
     else if (action === 'markVaccBooked') markVaccBooked(arg);
     else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
     else if (action === 'vaccMarkDoneMulti') {
@@ -2225,8 +2246,13 @@ function clearScrapPhoto() {
 // (PC-2.1 / PC-2.3) into #scrapMilestonePicker. Reads _scrapMilestoneIdsPending,
 // resolves each id via milestones.find, silent-skips orphans (confirm-time
 // toast covers UX surfacing). Container carries role="list"; each chip
-// carries role="listitem". Chip × aria-label uses escAttr(escHtml(...))
-// double-wrap (PC-2.4) until issue #57 lands the global escAttr fix.
+// carries role="listitem". Chip × aria-label uses single-wrap escAttr(...)
+// (PC-2.4 post-PR-ε.0.1) — escAttr at core.js:2565 is now standards-
+// compliant for & / " / ' (#57 path A direct rewrite closed the deferred
+// fix). Pre-PR-ε.0.1 used double-wrap escAttr(escHtml(...)); double-wrap
+// is now actively HARMFUL on the new escAttr body (re-escapes the &amp;
+// from escHtml's first pass into &amp;amp;, mis-pronouncing &mama; as
+// "and amp semicolon mama" instead of "and mama semicolon").
 function renderScrapMilestoneChips() {
   const host = document.getElementById('scrapMilestonePicker');
   if (!host) return;
@@ -2244,7 +2270,7 @@ function renderScrapMilestoneChips() {
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
               data-action="removeScrapMilestone" data-arg="${m.id}"
-              aria-label="Remove ${escAttr(escHtml(labelText))} tag">
+              aria-label="Remove ${escAttr(labelText)} tag">
         <svg class="zi" aria-hidden="true"><use href="#zi-close"/></svg>
       </button>
     </span>`;
@@ -2555,7 +2581,23 @@ function _renderAttribution(entry) {
 // ─────────────────────────────────────────
 // SHARED UTILITIES (migrated from feature modules → core)
 // ─────────────────────────────────────────
-function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+// PR-ε.0.1 §2 — escAttr global-fix per #57 path A. Pre-PR-ε.0.1 form was
+// `s.replace(/'/g, "\\'").replace(/"/g, '&quot;')` — the `'` arm was a
+// JS-string-literal escape (mis-layered for HTML-attribute context) and `&`
+// was unescaped (Tom & Jerry rendered malformed; &mama; could parse as a
+// numeric/named entity reference → SR mis-announcement). Path A direct:
+// proper HTML-attribute-context escapes for `&` / `"` / `'`. The 6 Class C
+// sites that depended on the `\\'` arm migrated to data-action in §1
+// (PR-ε.0.1 Phase 1a + 1b) before this body change ships.
+// Order matters: `&` first, else later replacements introduce `&` chars
+// that get double-escaped on a re-run (the function is idempotent under
+// this ordering only).
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 function ageAt(date) {
