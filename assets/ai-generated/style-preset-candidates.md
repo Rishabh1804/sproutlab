@@ -43,7 +43,12 @@ negative_prompt: |
   photorealistic, photograph, hyperrealistic, 3D render,
   digital painting, harsh edges, neon, saturated, vivid,
   face, portrait, person, child, baby, human figure (full body),
+  infant, toddler, kid, mother, father, parent, mom, dad, caregiver, family,
+  eyes, mouth, smile, facial features, family portrait,
   clinical, medical, hospital, sterile, white background,
+  syringe, thermometer, stethoscope, medication bottle, pill, blister pack,
+  bandage, gauze, bandaid, hospital cot, crib with rails,
+  IV drip, IV tubing, medical chart, clipboard, cross symbol, red cross,
   text, logo, watermark, signature,
   cluttered, busy, complex composition
 
@@ -86,7 +91,12 @@ negative_prompt: |
   photorealistic, photograph, 3D render,
   watercolor, painterly, soft edges, blurry,
   face, portrait, person, child, baby, human figure (full body),
+  infant, toddler, kid, mother, father, parent, mom, dad, caregiver, family,
+  eyes, mouth, smile, facial features, family portrait,
   clinical, medical, hospital, sterile,
+  syringe, thermometer, stethoscope, medication bottle, pill, blister pack,
+  bandage, gauze, bandaid, hospital cot, crib with rails,
+  IV drip, IV tubing, medical chart, clipboard, cross symbol, red cross,
   text, logo, watermark, signature,
   neon, saturated, vivid, harsh contrast,
   cluttered, busy
@@ -130,7 +140,12 @@ negative_prompt: |
   photorealistic, photograph, 3D render, digital painting,
   flat vector, geometric, harsh edges,
   face, portrait, person, child, baby, human figure (full body),
+  infant, toddler, kid, mother, father, parent, mom, dad, caregiver, family,
+  eyes, mouth, smile, facial features, family portrait,
   clinical, medical, hospital, sterile,
+  syringe, thermometer, stethoscope, medication bottle, pill, blister pack,
+  bandage, gauze, bandaid, hospital cot, crib with rails,
+  IV drip, IV tubing, medical chart, clipboard, cross symbol, red cross,
   text, logo, watermark, signature,
   neon, saturated, vivid,
   cluttered, busy, complex composition
@@ -160,11 +175,13 @@ parameters:
 |---|---|:-:|
 | 1 | Generate ~3 candidates per preset for screen 2 (Tend) — total 9 images | ~9 cr |
 | 2 | Maren reviews; selects best preset OR requests one round of refinement (e.g., "Candidate A is closest but increase grain") | 0 cr (review) |
+| **2a** | **Hand-anatomy QA (hard rejection gate):** any candidate depicting hands (Screen 2 Tend) is rejected if SD produces non-five-fingered hands, distorted finger joints, or anatomically-wrong palm/wrist transitions. This is a **hard rejection**, not a refinement-round trigger; rejected candidates do NOT progress to step 3 even if their aesthetic is otherwise leading. Hand anatomy is the uncanny-valley vector the DC-2 carve-out (`ai-imagery-initiative.md` §5) leaves silently uncovered. | 0 cr (review) |
 | 3 | (Optional) refinement round: regenerate the leading preset with adjusted parameters | ~3 cr |
+| **3a** | **Screen-4 cross-check (cohesion verification):** generate 1-2 candidates of the leading preset for screen 4 (Watch over) BEFORE preset lock-in. Screen 4 is rose-soft on cream — a near-monochrome low-saturation domain with different aesthetic demand than screen 2's sage+amber composition. Verify the leading preset reads as cohesive, not flat or tonally-flat, on screen 4's palette. | ~2-3 cr |
 | 4 | Maren locks final preset; Builder writes `assets/ai-generated/style-preset.json` (the locked parameters) | 0 cr |
 | 5 | Sovereign go-ahead to Phase A bulk generation (5 hero PNGs) | 0 cr |
 
-**Total pilot cost:** 9-12 cr. Within the 20% iteration headroom budget.
+**Total pilot cost:** 11-15 cr (extended from 9-12 cr by step 3a screen-4 cross-check). Within the 20% iteration headroom budget.
 
 **Pilot pass condition:** ALL of (a) selected preset honors all 4 design constraints; (b) Maren approves the aesthetic; (c) Sovereign signs off on the locked preset. Without all three, pilot extends with another refinement round.
 

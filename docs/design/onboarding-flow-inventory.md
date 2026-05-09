@@ -63,7 +63,7 @@ The intake step interrupts between Welcome and Tend (screen 1.5) — see §5.
 |---|---|
 | **Intent** | Capture baby identity (name + DOB; optional photo) before personalized voice unlocks. |
 | **Copy (display)** | *"Tell us about your little one."* (Fraunces) |
-| **Copy (sub)** | *"You can change any of this later."* (Nunito, `--mid` color, smaller) |
+| **Copy (sub)** | *"You can change any of this later in Settings."* (Nunito, `--mid` color, smaller) |
 | **Form fields** | (1) Name (text input, required); (2) Birth date (date picker, required); (3) Photo (optional, file picker — local-only, never uploaded) |
 | **CTA** | "Continue" (disabled until name + DOB filled) |
 | **Domain color** | neutral cream + soft sage corner accent (no full-screen domain wash; this is a form, not a hero) |
@@ -111,11 +111,12 @@ The intake step interrupts between Welcome and Tend (screen 1.5) — see §5.
 | **Copy (sub)** | *"When something feels off — a fever, an unusual pattern — we'll help you act, not just notice."* |
 | **CTA** | "Got it" |
 | **Domain color** | rose (care) — `--rose` `#f2a8b8`, `--rose-light` `#fde8ed` — used as soft accent, not dominant; cream base preserved |
-| **Visual brief** | A sprout under a soft lantern (or umbrella, or canopy of leaves — pilot will choose). Suggests protection without alarm. The lantern/canopy color picks up rose-soft. NO clinical iconography — no syringe, no thermometer, no stethoscope. The protection metaphor carries the message. |
+| **Visual brief** | A sprout under a soft lantern (or umbrella, or canopy of leaves — pilot will choose). Suggests protection without alarm. The lantern/canopy color picks up rose-soft. NO clinical iconography — no syringe, no thermometer, no stethoscope, no medication bottle/pill/blister-pack, no bandage/gauze/bandaid, no hospital cot/crib-with-rails, no IV drip/tubing, no medical chart/clipboard, no cross/red-cross symbol. The protection metaphor (lantern/canopy/leaves) carries the message; any clinical-coded object dilutes the metaphor and risks decorative-as-referential misread. |
 | **Asset deliverable** | `assets/ai-generated/onboarding-4-watch-over.png` |
 | **Feature it teaches** | CareTickets + medical escalation (the second patent-claim-worthy cluster per `SPROUTLAB_PATENT_CLAIMS_SUMMARY.md` Cluster A). |
 | **Phase A budget** | ~3-5 cr (this screen has the highest pilot variability — multiple metaphor candidates) |
 | **Medical HARD-block reminder** | This screen depicts the *concept* of care, not medical content. Per §6 of the initiative charter, decorative imagery adjacent to a medical concept is permitted; medical-information surfaces themselves are blocked. This onboarding screen does NOT depict vaccination cards, dosing UI, etc. |
+| **Clinical-condition naming note** | Screen 4's sub-copy is the only onboarding line naming a specific clinical condition (*"a fever, an unusual pattern"*). The medical HARD-block §6 boundary applies particularly tightly to this screen's imagery; the expanded clinical-iconography negative list above is a direct consequence of this naming. |
 
 ### Screen 5 — Bloom
 
@@ -174,7 +175,9 @@ Phase A may begin once ALL of:
 4. ✓ `assets/ai-generated/style-preset-candidates.md` merged (the 3 candidate stubs ready for pilot).
 5. **Sovereign go-ahead** for Phase A entry (after Phase 0 merge).
 
-Phase A first action: style-lock pilot on screen 2 (Tend) — chosen because it has the most visual elements (hands + sprout + woven iconography) so preset variability surfaces strongly. ~9-12 cr expected.
+Phase A first action: style-lock pilot on screen 2 (Tend) — chosen because it has the most visual elements (hands + sprout + woven iconography) so preset variability surfaces strongly. ~11-15 cr expected (extended from 9-12 cr by the screen-4 cross-check per `style-preset-candidates.md` §6).
+
+**Mid-Phase-A binding checkpoint (G-1 satisfaction):** Within Phase A, bulk generation (the 5 hero PNGs) MAY NOT begin until G-1 satisfaction is recorded — `style-preset.json` checked in AND Sovereign sign-off on the locked preset recorded in the Phase A PR. See `ai-imagery-initiative.md` §7 G-1 for full clause + single-reviewer fallback path.
 
 ## Changelog
 

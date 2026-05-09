@@ -51,7 +51,7 @@ Any imagery in clinical/medical-information surfaces — see §6 medical-domain 
 
 **Per-Phase cap:** No single Phase consumes >40% of the production allocation without explicit Sovereign re-authorization. Phase A cap: 1120 cr (40% of 2800) — well above the 75-120 cr estimate.
 
-**Burn-rate gate:** if any Phase exceeds 1.5× its credit estimate, Phase auto-pauses for Sovereign re-scope before continuation.
+**Burn-rate gate:** If a Phase consumes `>=1.5×` (inclusive) the **upper bound** of its credit estimate, the Phase auto-pauses for Sovereign re-scope before continuation. (Upper-bound chosen as the most conservative posture: trips at the earliest unambiguous overrun. For Phase A — estimate 75-120 cr — the gate trips at 180 cr.) Re-scope semantics: a Sovereign re-scope **resets** the multiplier baseline to the new estimate; the gate is per-Phase, not compounding against the original estimate.
 
 ## 5. Design constraints (load-bearing rules)
 
@@ -94,14 +94,16 @@ These are NON-NEGOTIABLE for the initiative lifetime. Derived from Maren's desig
 - Doctor management / visit logs / consultation surfaces
 - CareTickets banner / state UI
 - Growth percentile / gauge surfaces
-- Medication tracking / dosing displays
+- Medication tracking / dosing displays — including the home-tab supplement-summary surfaces (`home.js` Vit-D3 tracker), not only `medical.js`-rendered medication cards
 - Any UI that presents medically-actionable information
 
 **Why:** SD models hallucinate anatomy, dosing visuals, instrument detail, and procedural correctness. Even decoratively-intended imagery in a medical-information context invites confusion about whether the imagery is *illustrative* or *referential*. This is a parent-safety surface — Maren's *"what if this data is wrong and a parent acts on it?"* lens applies AT MAXIMUM intensity to imagery in these surfaces.
 
 **Boundary clarification:** Decorative imagery for *non-medical* surfaces that happens to coexist on a screen with medical information is permitted (e.g., the Today So Far timeline can show a decorative sprout next to a feed entry). The hard-block applies to the medical-information surface itself — vaccination card backgrounds, illness-episode chips, etc.
 
-**Override:** This clause has NO override path. If a future surface needs imagery that touches a medical context, the surface design must change to remove the medical context first; the imagery cannot override the block.
+**Spatial-separation rule:** Decorative imagery and medical-information chips MUST NOT render in the same row, card, or contiguous flex/grid cell. Decorative imagery in a coexisting-on-screen surface (Today So Far, home zones) requires ≥1 layout boundary (separate card, separate section, distinct background token) between the imagery and any medically-actionable chip. The boundary clarification above forbids medical-information surfaces themselves from carrying imagery; this rule additionally prevents decorative imagery from being misread as referential by visual proximity to medical chips. Maren's *"tired parent at midnight scrolls fast"* parent-action failure mode is the binding intent.
+
+**Override:** Override requires explicit Maren+Sovereign sign-off PER ASSET and amendment of §6 surface list before generation (mirroring the DC-2 §5 carve-out shape). In practice, Maren+Sovereign per-asset is rarely going to clear — but the explicit-and-onerous override route preserves the rule's load-bearing posture by making any future override procedurally legible rather than soft-violated through framing changes. If a future surface genuinely benefits from imagery, the surface design may also be changed to remove the medical context first; the imagery may NOT override the block silently.
 
 ## 7. Governance gates
 
@@ -110,9 +112,13 @@ Two gates control progression to bulk asset generation. Both apply to every Phas
 ### G-1: Style-lock pilot before bulk generation
 **Rule:** Before any bulk asset generation, generate ≥3 candidates for ONE reference asset across 2-3 style presets. Maren picks the winner. The winning preset's parameters (style modifiers + negatives + sampler/cfg/steps + seed range) are frozen into a checked-in `style-preset.json` companion file in the same directory.
 
-**Why:** SD without a frozen style preset produces stylistic drift across batches — week-1 assets won't match week-4 assets. Pilot-first establishes the preset is reproducible BEFORE we commit credits to bulk.
+**Mid-Phase-A binding checkpoint:** Within Phase A, bulk generation (the 5 hero PNGs) MAY NOT begin until G-1 satisfaction is recorded — meaning `style-preset.json` is checked in AND Sovereign sign-off on the locked preset is recorded in the Phase A PR. This converts G-1 from "first action" pointer to enforceable trigger; a Builder cannot batch-generate all 5 heroes in parallel with the pilot.
 
-**Estimated cost:** ~9-12 credits per pilot.
+**Single-reviewer fallback path:** If Maren is unavailable for >5 business days when the pilot lands, Sovereign may name a delegate reviewer for the pilot pick (Lyra default; Cipher cross-cut secondary). Maren retains right of post-pick veto upon return — if she vetoes, Phase A re-pilots with another candidate set or refinement round, and credits already spent are absorbed into the 20% iteration headroom budget. Divergent-Maren handling (round-1 winner ≠ round-2 winner with no clear delta in candidates) escalates to Lyra+Sovereign joint pick.
+
+**Why:** SD without a frozen style preset produces stylistic drift across batches — week-1 assets won't match week-4 assets. Pilot-first establishes the preset is reproducible BEFORE we commit credits to bulk. The mid-Phase-A checkpoint closes the coverage-surface failure mode where the gate becomes exhortation rather than enforcement; the fallback path closes the single-reviewer-failure mode.
+
+**Estimated cost:** ~11-15 credits per pilot (extends from the original 9-12 cr estimate by the screen-4 cross-check per `style-preset-candidates.md` §6).
 
 ### G-2: Provenance convention codified first
 **Rule:** Before the FIRST asset lands, the provenance convention (sidecar JSON shape, naming, regen procedure) MUST be codified as a load-bearing rule (`assets/ai-generated/README.md`).
