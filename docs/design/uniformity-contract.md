@@ -134,7 +134,7 @@ The severity assignment per rule derives from this ladder. Phase 1's gap-report 
 
 **Catalog input:** [PC-2](./pattern-catalog.md#pc-2--chip-variants) (Phase 2 canonical form 2.1 — three subclasses)
 **Inventory anchors:** P-2 (chip variants — 26 first-class call sites + per-instance `ct-*` extensions); S-17 (PR-ε.0 v6.2 milestone chip — first canonical Subclass C instance)
-**Spec:** `docs/specs/lyra-pr-epsilon-0-foundation.md` v6.2 §4 (chip × `aria-label` double-wrap; chip-with-inner-x markup)
+**Spec:** `docs/specs/lyra-pr-epsilon-0-foundation.md` v6.3 §4 (chip × `aria-label` single-wrap canonical post-PR-ε.0.1; chip-with-inner-x markup)
 
 ### Rules
 
@@ -352,7 +352,7 @@ PC-2.8 + PC-3.3 + PC-7.3 + PC-7.4 collectively enforce HR-3. The 36 surviving in
 
 ### HR-4 · Escape user text at HTML/attribute context
 
-PC-2.4 + PC-4.4 + PC-7.5 collectively enforce HR-4. The escape contract is uniform: `escHtml` for HTML body context, `escAttr(escHtml(text))` double-wrap for attribute context until #57 lands path (a), then single-wrap thereafter.
+PC-2.4 + PC-4.4 + PC-7.5 collectively enforce HR-4. The escape contract is uniform post-PR-ε.0.1: `escHtml` for HTML body context, single-wrap `escAttr(text)` for attribute context. Double-wrap (`escAttr(escHtml(text))`) is FORBIDDEN per PC-2.4 + PC-7.5 — under the post-#57 escAttr body, the inner `escHtml` produces `&amp;` for `&` / `<` / `>`, which the outer `escAttr` then re-escapes into `&amp;amp;` etc., breaking entity-reference correctness in DOM inspector + VoiceOver pronunciation.
 
 ### HR-5 / HR-7 · Tokens + sprite-via-`zi()`
 
@@ -403,7 +403,7 @@ Phase 4 (Aurelius) reads this contract as the conformance checklist for PR-ε.0 
 | PC-1.8 (`prefers-reduced-motion`) | **Lands canonical** — v6.2 §7 inherits the global block. |
 | PC-1.9 (real-device announce) | **Named verification pre-merge** — v6.2 spec already requires iOS VoiceOver test on the picker. |
 | PC-2.1 / PC-2.3 (Subclass C canonical) | **Lands canonical** — v6.2 §4 introduces the first canonical Subclass C instance. |
-| PC-2.4 (escape contract) | **Lands canonical** — v6.2 chip × `aria-label` uses `escAttr(escHtml(labelText))` double-wrap. |
+| PC-2.4 (escape contract) | **Lands canonical** — v6.3 chip × `aria-label` uses single-wrap `escAttr(labelText)` post-PR-ε.0.1; pre-PR-ε.0.1 v6.2 used `escAttr(escHtml(labelText))` double-wrap (now FORBIDDEN per Cipher Edict V trace — see PC-2.4 row + Notes). |
 | PC-4.1 / PC-4.2 (toast `aria-live` + Undo button) | **Inherits gap** — v6.2 introduces 2 new toast fire-sites without closing the gap. Phase 4 surfaces this as the dominant BLOCKER finding; v6.3 spec amendment likely (or implementation-PR-time fix). |
 | PC-7.1 (dispatcher consolidation) | **Out of scope for v6.2** — v6.2 does not consolidate the dispatcher. Phase 4 captures as forward-pointer to the implementation PR. |
 | PC-10.6 (new tokens in canonical families) | **Lands canonical** — v6.2 §7.3 tokens (`--lav-light`, `--surface-lav`, `--scrap-*`) all resolve to canonical families. |
