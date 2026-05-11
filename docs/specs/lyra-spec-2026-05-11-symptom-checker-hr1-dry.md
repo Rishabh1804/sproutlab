@@ -2,9 +2,15 @@
 
 **Author:** Lyra (Builder)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** DRAFT — awaiting Maren + Kael parallel audit, then Cipher Edict V
+**Status:** v2 DRAFT — Sovereign decisions folded; awaiting Maren + Kael parallel audit, then Cipher Edict V
 **Branch:** `claude/review-markdown-screenshots-uOIgQ`
 **Trigger:** Sovereign screenshot review (3 captures: Constipation / Crying / Fall) revealed legacy emoji escapes that survived Polish-10/11. Spec-first per Sovereign direction.
+
+> **v2 changelog (2026-05-11, this revision):** Sovereign answered §9 open questions.
+> - **Q1 RESOLVED → Option A (medical.js host).** §4 recommendation accepted. Build phase [6] no longer blocked on consolidation-host decision.
+> - **Q2 RESOLVED → follow-on, not separate spec.** Doctor-card gating folds into the next-PR after this one (post-Mode-2 build merge). No new spec doc; Lyra carries the question forward in build-PR description.
+> - **Q3 RESOLVED → escalation acknowledged; Crying-state badge investigation pulled INTO scope.** Sovereign read: screenshot evidence is sufficient escalation; do not defer to post-merge verification. Filed as P1 in `docs/BUGS.md` (new entry). Maren Care-jurisdiction audit owns root-cause investigation in audit phase [2]; spec §11 (new) captures candidate hypotheses + investigation handoff.
+> - **§0.1 + §0.2 + §7 + §9 amended** to reflect the three resolutions. §11 added.
 
 ---
 
@@ -13,14 +19,14 @@
 ### 0.1 In-scope
 
 1. Replace **all** literal/escape-coded emoji in the Symptom Checker render path with `zi()` sprite refs (HR-1).
-2. Consolidate the duplicated render function between `medical.js` and `intelligence.js` (BUGS.md P2, `docs/BUGS.md:73` — DRY refactor candidate flagged by Cipher during Polish-2).
+2. Consolidate the duplicated render function between `medical.js` and `intelligence.js` (BUGS.md P2, `docs/BUGS.md:73` — DRY refactor candidate flagged by Cipher during Polish-2). **Host: medical.js (Option A, Sovereign-decided v2 Q1).**
 3. Add a new `zi-phone` symbol to `template.html` sprite (no existing telephone glyph in the 62-symbol sprite).
+4. **Crying-state severity-badge investigation + fix** (v2 Q3 escalation). Root cause investigation owned by Maren in audit phase [2]; fix lands in Mode-2 build phase [6] alongside the HR-1 ports. See §11.
 
 ### 0.2 Explicitly out-of-scope (deferred per Sovereign direction 2026-05-11)
 
-- **Doctor-card gating** (Emergency-only vs. always-available). Current behavior preserved: card renders iff `hasEmergency || some entry.callDoctor === true`.
+- **Doctor-card gating** (Emergency-only vs. always-available). Current behavior preserved in this PR: card renders iff `hasEmergency || some entry.callDoctor === true`. **Folded into the follow-on PR after this one merges (v2 Q2 — no separate spec).** Lyra carries the question forward in the Mode-2 build-PR description.
 - **Wider HR-1 amnesty** (≈95 sites per `docs/design/uniformity-contract.md` §"HR-1 · Sprite-only icons", plus the broader `split/*.js` literal-emoji population — moon phases, weather glyphs, holiday icons, "🆕" markers). Tracked in R-10 queue; this spec does not touch them.
-- **Crying-state severity-badge dark-mode verification** (Sovereign capture suggests the `Crying a lot` result may be visually compressing or hiding the `<span class="sc-sev-badge">`). Open question; deferred to a real-device pass after this spec lands.
 - HR-2 inline styles in `_scDoctorCardHTML` (`style="font-weight:700;..."`, `style="font-size:var(--fs-md);..."`). Forward-pointer only.
 - HR-3 inline handler in `_scDoctorCardHTML` no-doctor branch (`onclick="event.preventDefault();openDoctorModal()"` at `medical.js:2538`). Forward-pointer only.
 
@@ -131,7 +137,7 @@ Home overlay is the primary user-facing call site; ISL is the parent system.
 
 ### Recommendation: **Option A** (medical.js host).
 
-Sovereign decision requested in §9.
+**v2 update: Sovereign accepted Option A (Q1 resolved).** Build phase [6] no longer blocked on this decision.
 
 ### 4.1 Helper signature (Option A)
 
@@ -204,6 +210,8 @@ The fever/diarrhoea/vomiting/cold "track this" CTAs (`intelligence.js:11976–12
                 · _renderSymptomCheckerResults Care-side parental-safety surface
                 · "what if a parent acts on this" lens on the badge/section-header glyphs
                 · null-guards: confirm getPrimaryDoctor() no-doctor branch is unaffected
+                · §11 Crying-state badge investigation — root-cause + proposed fix
+                  (mild-severity badge invisible despite render code; see §11 hypotheses)
 [3] Kael      → audits Intelligence jurisdiction in parallel with Maren:
                 · intelligence.js call-site collapse correctness
                 · ISL Home-overlay path (no behavior delta intended; verify identical HTML output)
@@ -252,14 +260,83 @@ Inspect `#homeSymptomResult` and `#symptomResult` (whichever names exist post-re
 
 ## 9. Open questions for Sovereign
 
-| ID | Question | Default if no answer | Blocks |
+| ID | Question | v2 Resolution | Notes |
 |---|---|---|---|
-| Q1 | §4 consolidation host: Option A (medical.js), B (core.js), or C (intelligence.js — blocked by concat order)? | A | Build phase [6] |
-| Q2 | Doctor-card gating (deferred per 2026-05-11 Sovereign answer). File as separate spec post-merge, or fold into a follow-on? | Separate spec | None for this PR |
-| Q3 | Crying-state severity-badge dark-mode investigation — open as bug or close as "not reproducible after rebuild"? | Open as P1 bug if reproducible post-merge | None for this PR |
+| Q1 | §4 consolidation host: Option A (medical.js), B (core.js), or C (intelligence.js — blocked by concat order)? | **Option A (medical.js host)** | Sovereign accepted Lyra recommendation 2026-05-11. Build phase [6] unblocked. |
+| Q2 | Doctor-card gating (deferred per 2026-05-11 Sovereign answer). File as separate spec post-merge, or fold into a follow-on? | **Follow-on PR**, no separate spec | Lyra carries the question forward in the Mode-2 build-PR description. The follow-on PR opens after this branch's spec → impl chain merges. |
+| Q3 | Crying-state severity-badge dark-mode investigation — open as bug or close as "not reproducible after rebuild"? | **Escalation acknowledged; pulled INTO scope** | Sovereign read: screenshot evidence is sufficient escalation; no post-merge verification deferral. Filed as P1 in `docs/BUGS.md`. Investigation owned by Maren in audit phase [2]; see §11. |
 
 ---
 
 ## 10. Changelog
 
 - **v1 (2026-05-11):** initial draft. Awaiting Maren + Kael parallel audit.
+- **v2 (2026-05-11):** Sovereign decisions on Q1/Q2/Q3 folded. Crying-state badge pulled into scope (§0.1 #4, §11). Doctor-card gating confirmed as follow-on PR. Consolidation host confirmed as medical.js. P1 BUGS.md entry filed.
+- **v2.1 (2026-05-11):** §12 forward-pointer added — Sovereign opened the long-arc Symptom Checker UX vision (D3-first vision spec; phased D1→D2→D3 implementation rollout). Bridge PR scope unchanged; vision spec is a companion artifact.
+
+---
+
+## 12. Forward-pointer — Symptom Checker UX vision (D3-first)
+
+Sovereign mid-spec call 2026-05-11: *"As we are working on this surface now, let's make this beautiful and follow some golden design principles."*
+
+Vision spec opened as a companion to this bridge spec:
+**`docs/specs/lyra-spec-2026-05-11-symptom-checker-ux-vision.md`**
+
+The vision captures G1–G10 golden design principles + phased D1→D2→D3 implementation rollout. **It does not change the scope of this bridge PR.** The bridge ships HR-1 + DRY + Crying-badge contrast fix; the vision specs the layout/triage/weave work that follows.
+
+**Sequencing relative to this bridge:**
+
+```
+[NOW]   This bridge PR (sproutlab#65)
+          ↓ merges
+[NEXT]  D1 — Polish PR (severity restructure, persistent rail, sticky CTA, doctor-card flip)
+          ↓ merges
+[THEN]  D2 — Severity-driven layout PR + Aurelius content rewrite snippet PR
+          ↓ merges
+[FUTURE]D3 — Triage + Lyra-weave + voice + share + promote (3 PRs)
+```
+
+Doctor-card gating revisit (§9 Q2 of this spec) folds naturally into D1 or D2, where the layout restructure makes the gating decision design-driven rather than a standalone question.
+
+Maren's mode for downstream specs: **deferred** (Sovereign 2026-05-11). Standard audit chain per phase unless co-author is invoked at phase-spec opening.
+
+---
+
+## 11. Crying-state badge investigation (v2 add)
+
+### 11.1 Sovereign evidence
+
+Screenshot 2 of 3 (Sovereign capture, dark mode, "Crying a lot" chip-tap result) shows the result body starting directly with the title "Excessive Crying / Fussiness" and the WHAT TO DO section — **no visible `<span class="sc-sev-badge">…</span>`** between the chip row and the title. Screenshots 1 (Constipation, also `severity: 'mild'`) and 3 (Fall, `severity: 'emergency'`) both render their badges cleanly. Identical render code path; different visual outcome.
+
+### 11.2 Source mapping
+
+- SYMPTOM_DB entry: `data.js:3411–3419` (`id: 'crying-fussy'`, `severity: 'mild'`, `title: 'Excessive Crying / Fussiness'`).
+- Render path: `intelligence.js:11955–11969` (Home overlay, the path the screenshot was taken from). Badge emit is unconditional: `html += '<span class="sc-sev-badge">' + sevLabel + '</span>';`.
+- Severity → class mapping: `severity: 'mild'` → `sevClass = 'sc-mild'` → CSS `.sc-mild .sc-sev-badge { background:rgba(58,112,96,0.1); color:var(--tc-sage); }` (`styles.css:5999`).
+- Dark-mode override on `.sc-mild` (container): `[data-theme="dark"] .sc-mild { background:rgba(58,112,96,0.05); border-color:rgba(58,112,96,0.15); }` (`styles.css:6021`). **No dark-mode override exists for `.sc-mild .sc-sev-badge` itself.**
+
+### 11.3 Candidate root causes (Maren's audit territory)
+
+| # | Hypothesis | Likelihood | Investigation |
+|---|---|---|---|
+| H1 | The Constipation result rendered first (chip selected first); Crying chip tap REPLACED the result-el HTML, but the badge is rendering with `--tc-sage` text colour against a near-identical sage background tint and is **visually indistinguishable** in the dark-mode capture quality. | High | Maren: capture a fresh dark-mode screenshot at higher contrast and inspect the DOM at `#homeSymptomResult > .sc-result.sc-mild > .sc-sev-badge`. If the badge is in the DOM but the contrast ratio is sub-WCAG-AA against `--bg-canvas` in dark mode, it's a contrast-token bug, not a render bug. |
+| H2 | Multiple SYMPTOM_DB entries match "crying a lot" (e.g. the keyword `'crying'` may also match other entries' keywords). The `slice(0, 2)` shows two badges; the layout might be stacking them outside the screenshot crop. | Medium | Maren: enumerate keyword overlaps for "crying a lot" against all SYMPTOM_DB entries. Confirm only `crying-fussy` matches. |
+| H3 | A CSS rule elsewhere (un-grepped sub-selector or specificity collision) is hiding `.sc-mild .sc-sev-badge` in dark mode specifically. | Low | Maren: full grep `sc-sev-badge|sc-mild` in styles.css; check for `display:none`, `visibility:hidden`, `opacity:0`, or aggressive `[data-theme="dark"]` overrides. |
+| H4 | The render function's `forEach` body silently fails on the Crying entry (e.g. some non-string interpolation throws) — but BOTH the title AND the WHAT TO DO section are visible in the screenshot, which would not be possible if a throw aborted the loop. | Very low | Eliminated by visible-content evidence. |
+
+**Lyra prior:** H1 (contrast) most likely. The dark-mode rose accent of the modal frame visually competes with sage; at low device brightness in real lighting the sage badge against the dark `.sc-mild` container could read as background. If H1 confirms, fix is a `[data-theme="dark"] .sc-mild .sc-sev-badge` override token-bumping the contrast — small CSS change, lands in Mode-2 build alongside the HR-1 ports.
+
+### 11.4 Maren's audit asks (specific)
+
+1. Confirm the badge is in the DOM (not missing from render output) on a real-device dark-mode capture of the Crying result.
+2. If in DOM: report contrast ratio `color: var(--tc-sage)` vs `background: rgba(58,112,96,0.1)` over `[data-theme="dark"] .sc-mild` background of `rgba(58,112,96,0.05)` over the modal `--bg-canvas` in dark mode. Compare to WCAG-AA 4.5:1 minimum for small text.
+3. If H1 confirmed: propose a `[data-theme="dark"] .sc-mild .sc-sev-badge` rule (bump background opacity to ~0.18 and/or shift colour to a higher-contrast sage-deep token) to land in Mode-2 build.
+4. If H2/H3 confirmed instead: report root cause; Lyra writes the fix into spec v3.
+5. **Care-jurisdiction lens:** the badge carries the parent's severity read. A missing or unreadable severity badge on a 'mild' entry could (a) over-alarm a parent who reads only the section-header siren and assumes Emergency, or (b) under-classify if the parent skims and sees no badge. Both are parental-safety failures. Maren confirms which failure mode the visible bug constitutes.
+
+### 11.5 Sequencing impact
+
+Investigation runs IN PARALLEL with the HR-1 emoji audit during phase [2]. Does not block; expands Maren's audit ask by ~30 minutes of investigation. Lyra synthesis [4] folds Maren's H1/H2/H3/H4 finding into either:
+- **(a) v3 spec amendment** with the CSS fix specced out, then Mode-2 build [6] lands HR-1 + DRY + CSS fix atomically; or
+- **(b) v2 deemed sufficient** if H4 confirms (no real bug — Sovereign capture artifact only) and Crying-badge investigation closes without code change.
