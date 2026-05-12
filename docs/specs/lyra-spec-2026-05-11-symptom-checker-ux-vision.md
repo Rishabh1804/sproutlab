@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (vision-spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v2 DRAFT — Maren ‖ Kael audit returns folded; Sovereign-gate proposed defaults pending ratification; Cipher Edict V structural pass after ratification
+**Status:** v2.1 — SG-1 amended by Sovereign 2026-05-12 (108 ambulance primary for Jamshedpur locale; 112 unified emergency fallback); Cipher Edict V structural pass after vision ratification
 **Branch:** `claude/review-markdown-screenshots-uOIgQ`
 **Sibling spec:** `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` v3 (the bridge — HR-1/DRY/Crying-badge — that precedes any UX work)
 **Trigger:** Sovereign mid-spec design call 2026-05-11 — *"As we are working on this surface now, let's make this beautiful and follow some golden design principles which makes readability a breeze, imp info highlighted. Our UX still feels dated with the current 5 second attention span that we are seeing."*
@@ -11,7 +11,7 @@
 >
 > - **G11 NEW** (§2) — voice-register-by-severity (Maren V-M4).
 > - **G7 refined** (§2 + §3.3) — weave omits on emergency tier (Maren V-M1 #1).
-> - **§3.1.1 emergency layout** — history micro-card removed; primary emergency-services CTA added with `lifeThreat: true` gate; footer triad → Save-only (Maren V-M1 #1/#2/#4). Emergency-services number convention SG-1 (default: 112 India unified).
+> - **§3.1.1 emergency layout** — history micro-card removed; primary emergency-services CTA added with `lifeThreat: true` gate; footer triad → Save-only (Maren V-M1 #1/#2/#4). Emergency-services number convention SG-1 **amended 2026-05-12 by Sovereign**: **108 (National Ambulance Service) primary** for Jamshedpur target user; **112 (unified emergency) fallback**. Per-region override capability preserved. Operational locale data → Appendix A NEW.
 > - **§3.2 triage** — fever-family added to initial set (SG-2 default Yes); chip-order rule codified (escalating-first); false-negative back-channel; 3-question cap (Maren V-M2).
 > - **§3.6 NEW** — Component decomposition strategy: Option A (D1) → Option C (D2+) transition (Kael V-K4).
 > - **§4.1** — sage 0.20 → 0.22; Maren contrast-verification step for all 6 severity × theme combos (Maren V-M6 #4).
@@ -118,8 +118,8 @@ The same result data renders in three different card structures based on `severi
 │ ▍ EMERGENCY · [Title]                   │  ← persistent rose rail (G6)
 │                                          │
 │  ┌────────────────────────────────────┐ │
-│  │ ⛑ CALL EMERGENCY SERVICES NOW       │ │  ← primary CTA on lifeThreat:true (G2, v2 V-M1)
-│  │   112                               │ │     locale-appropriate emergency number (SG-1)
+│  │ ⛑ CALL AMBULANCE · 108              │ │  ← primary CTA on lifeThreat:true (G2, V-M1)
+│  │   Or 112 (unified emergency)        │ │     SG-1 amended 2026-05-12 (Jamshedpur locale)
 │  └────────────────────────────────────┘ │
 │  ☎ Or call Dr. RK Agarwal (pediatrician)│  ← secondary, smaller (V-M1)
 │    +91 98351 67975                       │
@@ -146,7 +146,7 @@ The same result data renders in three different card structures based on `severi
 
 - **No Lyra-weave** — G7 v2: weave omits entirely on emergency tier from first paint (per V-M1 #1; anchor-to-prior-outcome failure mode).
 - **No Share, no Track** — G10 v2: footer triad reduces to Save-only (Share/Track are after-action concerns, irrelevant during the active moment per V-M1 #4).
-- **Primary CTA on `lifeThreat: true` is emergency services** — locale-appropriate number per SG-1 (default: 112 unified, India). Pediatrician CTA is secondary, smaller. Both buttons distinct tap targets ≥60×60 CSS px (V-M6 #5).
+- **Primary CTA on `lifeThreat: true` is the ambulance number** — locale-appropriate per SG-1 (default for Jamshedpur target user, per Sovereign 2026-05-12 amendment: **108 (National Ambulance Service) primary**; **112 (unified emergency) fallback**, exposed as a smaller "Or call 112" link beneath the primary 108 button). Pediatrician CTA is secondary, smaller, beneath the emergency-services block. All three buttons distinct tap targets ≥60×60 CSS px (V-M6 #5). Future per-region override consumes Appendix A's `emergencyContacts.{region}` config table (D2 build scope per §7.5).
 - **Sticky CTA padding rule** — modal scroll container must have `padding-bottom ≥ sticky-CTA height` to prevent CTA from covering DO-NOT or emergency-criteria content. D1 phase-spec verification fixture (V-M1 #5).
 
 **3.1.2 Warning layout** (`severity === 'warning'`)
@@ -675,7 +675,7 @@ No new modules in D1/D2. **D3 may introduce `weave.js`** per weave-ISL mini-spec
 
 ### 7.5 Internationalisation (out of scope, but noted)
 
-All copy currently English. SproutLab is single-locale today. Any future i18n work would treat SYMPTOM_DB strings as translation keys; this spec does not pre-empt that work. **Locale-appropriate emergency number (SG-1)** is the single i18n-adjacent decision in this spec — default 112 unified per India gov standard since 2019; per-region override capability via SproutLab settings.
+All copy currently English. SproutLab is single-locale today. Any future i18n work would treat SYMPTOM_DB strings as translation keys; this spec does not pre-empt that work. **Locale-appropriate ambulance / emergency number (SG-1)** is the single i18n-adjacent decision in this spec. Default for Jamshedpur target user (Sovereign 2026-05-12 amendment): **108 (National Ambulance Service) primary, 112 (unified emergency) fallback** (112 unified India gov standard since 2019; 108 is the direct-to-ambulance route per Sovereign's locale evidence). Operational locale data captured in **Appendix A**. D2 phase-spec implementation surface: `emergencyContacts.{region}` config table holding `{ambulancePrimary, emergencyFallback, hospitals, altAmbulanceServices, label}` per region; default lookup keys to Jamshedpur. Per-region override mechanism: SproutLab settings panel exposing user-region selector (D3 scope).
 
 ---
 
@@ -761,7 +761,7 @@ All copy currently English. SproutLab is single-locale today. Any future i18n wo
 
 | SG | Source | Question | Proposed default (applied to v2 body) | Effect if amended |
 |---|---|---|---|---|
-| **SG-1** | V-M1 #3 | Emergency-services number convention | **112 unified** (Indian gov standard since 2019); per-region override capability via SproutLab settings | §3.1.1 ASCII + §5.1 `lifeThreat` rendering text; small edit |
+| **SG-1** | V-M1 #3 | Emergency-services number convention | **AMENDED 2026-05-12 by Sovereign** — primary: **108 (National Ambulance Service)** direct ambulance for Jamshedpur target user; fallback: **112 (unified emergency)**; per-region override via SproutLab settings (D3 scope); operational locale data → **Appendix A NEW** | Folded into §3.1.1 ASCII + §3.1.1 emergency-only layout rules + §7.5 i18n note + Appendix A NEW. v2 → v2.1. |
 | **SG-2** | V-M2 #5 | Add fever-family to D3 triage initial set (~+1 entry) | **Yes** | §3.2 initial-set list + §6.D3 deliverable count |
 | **SG-3** | V-M4 #4 | G11 voice-register codification blocks D2 phase-spec opening | **Yes** | §2 G11 + §6.D2 audit chain (Aurelius rewrite gates on G11) |
 | **SG-4** | V-M5 | Maren-veto authority on D2 content — Care-jurisdictional, blocking on Cipher pipeline | **Yes; default Maren content-veto on D2/D3; co-author optional** | §6.D2 audit chain step [6] Maren content-review gate |
@@ -790,3 +790,89 @@ All copy currently English. SproutLab is single-locale today. Any future i18n wo
 
 - **v1 (2026-05-11):** initial vision draft, written immediately after Sovereign mid-spec design call to capture context while fresh. Awaiting Maren + Kael parallel audit, then Cipher Edict V structural pass, then Sovereign ratification.
 - **v2 (2026-05-12):** Audit-chain [4] Lyra synthesis after Maren V-M1..V-M7 + Kael V-K1..V-K6 parallel returns. Substantive folds: G11 voice register codified (V-M4); G7 emergency-tier omit refined (V-M1 #1); §3.1.1 emergency layout revised (history micro-card removed, lifeThreat emergency-services primary CTA added, footer triad Save-only); §3.2 triage expanded (fever-family added, chip-order rule, false-negative back-channel, 3-question cap); §3.6 NEW component decomposition strategy (Option A→C at D2 boundary, V-K4); §4.1 contrast bump 0.20→0.22 + verification fixture (V-M6 #4 + bridge B-M1); §4.4 motion budget definition refined with `prefers-reduced-motion` clause (V-K5 + V-M6 #3); §5.1 SYMPTOM_DB adds `lifeThreat` + `doNot` per-item shape (V-M3 #3 + V-M1 #2); §5.2 build-rules codified for shim discipline (V-K2 + V-M7); §5.3 per-field safety-impact tags (V-M7); §6.5 NEW phase contracts per phase (V-K3); §6.D2 audit chain inserts Maren content-veto gate (V-M5); §7.1 a11y augmented with touch-targets + reduced-motion + no-aria-live-on-sticky (V-M6 #2/#3/#5); §8 HR rows operational sentences per-row (V-K6 #2); §10 SG-1..SG-6 Sovereign-gates with proposed defaults pre-applied; §11 weave-ISL mini-spec forward-pointer added (V-K1, pending SG-6). Cipher Edict V structural-pass readiness: single-round expected.
+
+- **v2.1 (2026-05-12):** SG-1 amendment per Sovereign — Jamshedpur locale data folded. Primary emergency-services CTA = **108 (National Ambulance Service)** direct (was: 112 unified). 112 retained as documented fallback ("Or call 112" smaller link beneath primary 108 button). Per-region override capability via SproutLab settings panel preserved (D3 scope). Locale-config surface for `emergencyContacts.{region}` table specced into §7.5 + §5.3. **Appendix A NEW** captures operational Jamshedpur contacts table (ambulance services, hospitals) for D2 build-PR consumption. No other SG amendments; SG-2..SG-6 proposed defaults stand. Affects §3.1.1, §7.5, §10 SG-1 row, header status, top changelog block. Audit chain unchanged: still PENDING Cipher Edict V structural pass `[5]` + Sovereign ratification `[6]`.
+
+---
+
+## Appendix A — Jamshedpur emergency contacts (v2.1 NEW, per Sovereign 2026-05-12)
+
+Operational locale data for the `emergencyContacts.jamshedpur` config table consumed by D2 build-PR implementation of the `lifeThreat: true` CTA. **Spec captures the data; D2 build PR implements the lookup.**
+
+### A.1 Primary CTA targets (lifeThreat rendering)
+
+| Tier | Number | Service | Use case |
+|---|---|---|---|
+| **Primary** | **108** | National Ambulance Service | Direct-to-ambulance, fastest route to immediate critical care (Sovereign-stated bottom line 2026-05-12) |
+| **Fallback** | **112** | Comprehensive Emergency (unified, Indian gov standard since 2019) | Routes via PCR (Police Control Room) to ambulance; use when 108 unreachable or for non-medical emergency overlap |
+
+The `lifeThreat: true` emergency-services CTA renders both: primary 108 button (≥60×60 CSS px tap target, top-of-card prominence per §3.1.1 ASCII); secondary smaller "Or call 112" link beneath.
+
+### A.2 Out-of-scope for Symptom Checker emergency CTA (logged for completeness, not rendered)
+
+These numbers are operationally relevant in a broader parental-emergency context but **do not belong in the Symptom Checker `lifeThreat` CTA** — the surface is medical-emergency-specific and G2 ("one primary action per state") forbids menu-stacking. They land in the broader SproutLab `emergencyContacts` config table for use by other surfaces (e.g. a future general "Emergency" tab) but not by the Symptom Checker CTA renderer:
+
+| Number | Service | Why excluded from SC CTA |
+|---|---|---|
+| 100 | Police | Non-medical; included for SproutLab-wide config completeness |
+| 101 | Fire | Non-medical; same rationale |
+
+### A.3 Alternate ambulance services (Jamshedpur, secondary tier)
+
+For D2 config table reference. **Not rendered in the lifeThreat CTA itself** — these are post-108 fallbacks, surfaced only if the 108 connection fails (D3 scope: failover UI is out of D1/D2). Currently logged for D2 to load into the locale config.
+
+| Service | Number | Notes |
+|---|---|---|
+| Gouri Shankar Ambulance (Mango) | 9931114901 | Mango-area-specific |
+| Medulance (24/7) | +91 88829 78888 | 24/7 private |
+
+### A.4 Hospital reference data (Jamshedpur)
+
+For D2 config table reference. **Not rendered in the lifeThreat CTA** — hospital triage is a downstream decision after ambulance dispatch (the ambulance crew chooses the receiving hospital based on bed availability and case acuity). Logged for use in:
+- Doctor card "Or visit a hospital" secondary surface (post-emergency-call context — D3 scope)
+- Future "Find a hospital" feature outside the Symptom Checker (out of vision spec scope)
+
+| Hospital | Type | Number | Notes |
+|---|---|---|---|
+| Tata Main Hospital (TMH) | Emergency / Appointment | 0657 6644444 | Primary tertiary care; appointment/query line |
+| MGM Medical College & Hospital | Tertiary / Government | 0657 2360859 | Tertiary care, government-run |
+| Elite Hospital (Mango) | General / Multispecialty | 0657 6510307 / 9204622496 | Mango-area-specific; two lines (landline + mobile) |
+
+### A.5 Pediatrician (existing data, unchanged — for reference vs SC doctor-card)
+
+Already rendered by the existing `_scDoctorCardHTML` doctor card, sourced from user's `getPrimaryDoctor()` data. Currently **Dr. RK Agarwal · +91 98351 67975**. Independent of Appendix A's emergency-contacts table; doctor card data flows through `getPrimaryDoctor()` → SproutLab user data, not through `emergencyContacts.{region}`. Listed here only to disambiguate from emergency-services CTA.
+
+### A.6 D2 build-PR config table shape (proposed)
+
+```js
+// split/data.js (or split/config.js if Kael prefers separation in D2 phase-spec):
+const EMERGENCY_CONTACTS = {
+  jamshedpur: {
+    label: 'Jamshedpur',
+    ambulancePrimary:  { number: '108', service: 'National Ambulance Service' },
+    emergencyFallback: { number: '112', service: 'Comprehensive Emergency' },
+    altAmbulanceServices: [
+      { number: '9931114901',     service: 'Gouri Shankar Ambulance (Mango)' },
+      { number: '+91 88829 78888', service: 'Medulance (24/7)' }
+    ],
+    hospitals: [
+      { name: 'Tata Main Hospital (TMH)', number: '0657 6644444' },
+      { name: 'MGM Medical College & Hospital', number: '0657 2360859' },
+      { name: 'Elite Hospital (Mango)', number: '0657 6510307' }
+    ]
+  }
+  // Future regions added by user-selectable override (D3 scope settings panel).
+};
+
+const DEFAULT_REGION = 'jamshedpur';
+```
+
+### A.7 Maintenance discipline (v2.1 codified)
+
+This appendix carries operational locale data; emergency numbers change rarely but do change. **Source-of-truth ownership:**
+- Numbers in §A.1 / §A.3 / §A.4 update only on Sovereign-confirmed change-of-record evidence (e.g. government gazette, hospital website official update, Sovereign-direct statement).
+- Each entry footnotes the **as-of date** of the data point (here: all entries are as-of Sovereign 2026-05-12 statement, except 112 which is Indian-gov standard since 2019).
+- Maren-jurisdiction review on any future appendix amendment (parental-safety surface).
+- BUGS.md-style entry if any number is reported nonfunctional by a user.
+
+**As-of dates (initial v2.1 set):** all entries 2026-05-12 per Sovereign-direct statement; 112 unified standard 2019.
