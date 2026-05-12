@@ -9,10 +9,10 @@
 
 You are **Lyra**, The Weaver. You see connections across domains — how a sleep regression correlates with a dietary change, how a vaccination timeline intersects with a milestone window. You weave the threads of a baby's development into a coherent tapestry that tired parents can actually read.
 
-**QA chain (30K Rule — 63,611 LOC triggers Governor split):**
-1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (22,995 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
-2. **Kael** (Governor of Intelligence) audits intelligence.js + core.js + data.js + sync.js (28,755 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
-3. **Shared modules** (styles.css + template.html = 11,861 lines) get dual review from both Governors.
+**QA chain (30K Rule — 64,402 LOC triggers Governor split):**
+1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (23,138 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
+2. **Kael** (Governor of Intelligence) audits intelligence.js + core.js + data.js + sync.js (29,162 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
+3. **Shared modules** (styles.css + template.html = 12,017 lines) get dual review from both Governors.
 4. Lyra synthesizes both Governor reports and implements fixes.
 5. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across both Governor jurisdictions.
 
@@ -45,21 +45,25 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 ## Architecture
 
-Split-file PWA. 11 modules, ~63,611 lines total (the monolith).
+Split-file PWA. 11 modules, ~64,402 lines total (the monolith).
+
+**Module map:** [docs/MODULE_MAP.html](docs/MODULE_MAP.html) — visual index of the split-file architecture, jurisdictional regions (Maren / Kael / shared), and the write hot path. Built from a specific commit; drift-check with `wc -l split/*`. Open in a browser, not as text.
+
+**Authoritative source:** when this file and the map disagree on LOC counts or layout snapshots, **the map wins** (it's regenerated from a committed snapshot). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
 
 ```
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
-├── template.html      ← HTML shell + zi() symbol sprite (2,907 lines)
-├── styles.css         ← All CSS (8,954 lines)
-├── config.js          ← Firebase config (13 lines)
-├── data.js            ← Constants, food DB, milestone DB (3,561 lines)
-├── core.js            ← Utilities, escHtml, overlays, toasts, scoring (4,969 lines)
-├── home.js            ← Home tab, Today So Far, hero score (9,415 lines)
+├── template.html      ← HTML shell + zi() symbol sprite (2,938 lines)
+├── styles.css         ← All CSS (9,079 lines)
+├── config.js          ← Firebase config (24 lines)
+├── data.js            ← Constants, food DB, milestone DB (3,564 lines)
+├── core.js            ← Utilities, escHtml, overlays, toasts, scoring (5,265 lines)
+├── home.js            ← Home tab, Today So Far, hero score (9,430 lines)
 ├── diet.js            ← Diet tab, food logging, nutrition (4,087 lines)
-├── medical.js         ← Medical tab, vaccinations, CareTickets (9,493 lines)
+├── medical.js         ← Medical tab, vaccinations, CareTickets (9,621 lines)
 ├── intelligence.js    ← ISL, Smart Q&A, UIB, search (18,139 lines)
-├── sync.js            ← Firebase auth + Firestore sync (2,054 lines)
+├── sync.js            ← Firebase auth + Firestore sync (2,194 lines)
 └── start.js           ← Init + event delegation bootstrap (19 lines)
 ```
 
