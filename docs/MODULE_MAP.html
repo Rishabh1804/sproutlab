@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SproutLab Module Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* SproutLab domain palette */
+  --sage:     #b5d5c5;
+  --rose:     #f2a8b8;
+  --amber:    #e8b86d;
+  --lavender: #c9b8e8;
+  --sky:      #a8cfe0;
+  --indigo:   #9ba8d8;
+  --peach:    #fad4b4;
+
+  /* Tints for backgrounds */
+  --maren-tint:  #fbf3f4;   /* soft rose wash */
+  --kael-tint:   #f5f3fb;   /* soft lavender wash */
+  --shared-tint: #f7f5f1;   /* parchment */
+
+  /* Neutrals */
+  --ink:        #2b2a28;
+  --ink-soft:   #5a5651;
+  --ink-faint:  #8c867f;
+  --paper:      #fdfaf4;
+  --line:       #e6dfd1;
+  --line-strong:#d4c9b3;
+
+  --gold:       #c9962d;
+  --gold-soft:  #f3e7c4;
+
+  --serif: 'Fraunces', 'Iowan Old Style', 'Charter', Georgia, serif;
+  --sans:  'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(232,184,109,0.04), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(201,184,232,0.04), transparent 40%);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ HEADER ============ */
+header.map-header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+header.map-header h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+header.map-header h1 .sub {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: 22px;
+}
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+.meta-strip .item { display: inline-flex; align-items: center; gap: 6px; }
+.meta-strip .item code { font-family: var(--mono); font-size: 12px; background: var(--gold-soft); padding: 2px 6px; border-radius: 3px; color: var(--ink); }
+.meta-strip .num { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.ctl {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.ctl:hover { border-color: var(--gold); background: #fffdf6; }
+.ctl.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(201,150,45,0.3);
+}
+.ctl .badge {
+  display: inline-block;
+  background: rgba(0,0,0,0.08);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  margin-left: 6px;
+}
+.ctl.active .badge { background: rgba(255,255,255,0.25); }
+
+/* ============ CANVAS ============ */
+.canvas {
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+}
+.canvas .shared-strip,
+.canvas .bootstrap-strip { grid-column: 1 / -1; }
+
+.region {
+  border-radius: 10px;
+  padding: 18px 18px 22px;
+  position: relative;
+  border: 1px solid var(--line);
+}
+.region.maren  { background: var(--maren-tint); }
+.region.kael   { background: var(--kael-tint); }
+.region.shared { background: var(--shared-tint); }
+.region.bootstrap {
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  padding: 12px 18px;
+}
+
+.region-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px dotted var(--line-strong);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.region-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink);
+}
+.region-name .role {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+.region-loc {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
+
+.modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.region.shared .modules,
+.region.bootstrap .modules {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* ============ MODULE CARDS ============ */
+.mod {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent, var(--ink-faint));
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mod:hover {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(43,42,40,0.06);
+}
+.mod[data-size="lg"] { min-height: 140px; }
+.mod[data-size="md"] { min-height: 110px; }
+.mod[data-size="sm"] { min-height: 88px; padding: 10px 12px; }
+.mod[data-size="xs"] {
+  min-height: 0;
+  padding: 8px 12px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.mod .name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.mod[data-size="xs"] .name { font-size: 13.5px; font-weight: 500; font-family: var(--mono); }
+
+.mod .stats {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  display: flex;
+  gap: 10px;
+}
+.mod .stats .loc { color: var(--ink-soft); }
+.mod .role {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.42;
+}
+.mod .entries {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px dotted var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: -0.005em;
+}
+.mod .entries code {
+  color: var(--accent-dark, var(--ink-soft));
+  background: transparent;
+}
+
+/* ============ ACCENT COLORS PER MODULE ============ */
+.mod[data-id="home"]     { --accent: var(--amber);    --accent-dark: #b8862e; }
+.mod[data-id="diet"]     { --accent: var(--sage);     --accent-dark: #4f8a6f; }
+.mod[data-id="medical"]  { --accent: var(--rose);     --accent-dark: #b3596d; }
+.mod[data-id="intel"]    { --accent: var(--lavender); --accent-dark: #7e62b5; }
+.mod[data-id="core"]     { --accent: var(--indigo);   --accent-dark: #5b6aa8; }
+.mod[data-id="data"]     { --accent: var(--sky);      --accent-dark: #4d829a; }
+.mod[data-id="sync"]     { --accent: var(--peach);    --accent-dark: #c98648; }
+.mod[data-id="styles"]   { --accent: #c4b896;         --accent-dark: #7d7048; }
+.mod[data-id="template"] { --accent: #c4b896;         --accent-dark: #7d7048; }
+.mod[data-id="config"]   { --accent: var(--ink-faint); }
+.mod[data-id="start"]    { --accent: var(--ink-faint); }
+
+/* ============ HOT PATH OVERLAY ============ */
+body.hotpath .mod { opacity: 0.32; filter: saturate(0.5); }
+body.hotpath .mod.on-path {
+  opacity: 1;
+  filter: none;
+  box-shadow: 0 0 0 2px var(--gold), 0 6px 18px rgba(201,150,45,0.18);
+  border-color: var(--gold);
+}
+body.hotpath .region { opacity: 0.95; }
+
+.path-step {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 14px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(201,150,45,0.4);
+  z-index: 2;
+}
+body.hotpath .mod.on-path .path-step { display: flex; }
+
+.hotpath-caption {
+  display: none;
+  margin: 0 auto 16px;
+  max-width: 1280px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, rgba(243,231,196,0.5), rgba(243,231,196,0.15));
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+body.hotpath .hotpath-caption { display: block; }
+.hotpath-caption strong { font-family: var(--serif); font-weight: 600; }
+.hotpath-caption .seq { font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; display: block; }
+
+/* External Firestore node */
+.firestore-node {
+  display: none;
+  margin: 16px auto 0;
+  max-width: 1280px;
+  padding: 14px 18px;
+  text-align: center;
+  background: #fff;
+  border: 1px dashed var(--gold);
+  border-radius: 6px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+body.hotpath .firestore-node { display: block; }
+.firestore-node strong { font-family: var(--serif); color: var(--ink); }
+.firestore-node code { font-family: var(--mono); font-size: 12px; }
+
+/* ============ DETAIL PANE ============ */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43,42,40,0.35);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 50;
+}
+.detail-overlay.open { opacity: 1; pointer-events: auto; }
+
+.detail-pane {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(440px, 100vw);
+  background: var(--paper);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: -8px 0 24px rgba(43,42,40,0.08);
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 51;
+  overflow-y: auto;
+  padding: 24px 26px 32px;
+}
+.detail-pane.open { transform: translateX(0); }
+.detail-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--ink-soft);
+  line-height: 1;
+}
+.detail-close:hover { border-color: var(--gold); color: var(--ink); }
+
+.detail-pane .filename {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
+.detail-pane h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 24px;
+  margin: 4px 0 16px;
+  color: var(--ink);
+}
+.detail-pane h2::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent, var(--ink-faint));
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.detail-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.detail-meta dt { color: var(--ink-faint); font-weight: 500; }
+.detail-meta dd { margin: 0; color: var(--ink); font-family: var(--mono); font-size: 12.5px; }
+.detail-meta dd.serif { font-family: var(--sans); }
+
+.detail-section { margin-bottom: 20px; }
+.detail-section h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+}
+.detail-section p { margin: 0 0 8px; font-size: 14px; color: var(--ink); }
+.detail-section ul { margin: 0; padding-left: 18px; }
+.detail-section li { font-size: 13.5px; color: var(--ink); margin-bottom: 4px; }
+.detail-section li code { font-family: var(--mono); font-size: 12.5px; color: var(--accent-dark); background: transparent; }
+
+.detail-section .doc-links a {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--accent-dark, var(--gold));
+  text-decoration: none;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  background: #fff;
+}
+.detail-section .doc-links a:hover { border-color: var(--accent, var(--gold)); background: #fffdf6; }
+
+.detail-section .hr-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.detail-section .hr-tags span {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 3px 8px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  border-radius: 3px;
+}
+
+/* ============ FOOTER ============ */
+footer.map-footer {
+  margin: 40px auto 0;
+  max-width: 1280px;
+  padding: 24px 32px 40px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-bottom: 14px;
+}
+.legend .item { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.08); }
+.legend .item span { color: var(--ink-soft); font-size: 12.5px; }
+.build-info {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.build-info code { background: var(--shared-tint); padding: 1px 6px; border-radius: 3px; color: var(--ink-soft); }
+
+/* ============ MOBILE ============ */
+@media (max-width: 820px) {
+  header.map-header { padding: 20px 18px 14px; }
+  header.map-header h1 { font-size: 22px; }
+  header.map-header h1 .sub { font-size: 18px; display: block; margin-top: 2px; }
+  .canvas { grid-template-columns: 1fr; padding: 18px; gap: 14px; }
+  .region { padding: 14px 14px 18px; }
+  .modules { grid-template-columns: 1fr; gap: 10px; }
+  .detail-pane { width: 100vw; padding: 20px 18px 28px; }
+  footer.map-footer { padding: 20px 18px 32px; }
+}
+</style>
+</head>
+<body>
+
+<header class="map-header">
+  <h1>SproutLab Module Map <span class="sub">— how the system fits together</span></h1>
+  <div class="meta-strip">
+    <span class="item"><span class="num">11</span> modules</span>
+    <span class="item"><span class="num">64,402</span> lines</span>
+    <span class="item">jurisdictions: <span class="num">Maren</span> · <span class="num">Kael</span> · <span class="num">shared</span></span>
+    <span class="item">built from <code>fd30a14</code></span>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="ctl-hotpath" type="button">Hot path<span class="badge">write</span></button>
+    <button class="ctl" id="ctl-reset" type="button">Reset</button>
+  </div>
+</header>
+
+<div class="hotpath-caption" id="hotpath-caption">
+  <strong>Hot path · the write loop.</strong> Any user action in a feature tab persists through the same chain.
+  <span class="seq">①  feature tab handler  →  ②  <code>core.save()</code> &amp; <code>triggerAutosave</code>  →  ③  <code>sync.syncWrite()</code>  →  ④  Firestore</span>
+</div>
+
+<main class="canvas">
+
+  <!-- =========== MAREN'S PROVINCE — CARE =========== -->
+  <section class="region maren">
+    <div class="region-head">
+      <div class="region-name">Maren · <span class="role">Province of Care</span></div>
+      <div class="region-loc">22,995 LOC · 3 modules</div>
+    </div>
+    <div class="modules">
+
+      <article class="mod" data-id="home" data-size="lg" data-onpath="1">
+        <div class="path-step">1</div>
+        <div class="name">home.js</div>
+        <div class="stats"><span class="loc">9,430 LOC</span><span>211 fns</span></div>
+        <div class="role">Home tab · Today So Far · hero score · header weather · reminders &amp; alerts.</div>
+        <div class="entries">
+          <code>renderHome</code> · <code>updateHeader</code> · <code>renderRemindersAndAlerts</code> · <code>markVaccBooked</code>
+        </div>
+      </article>
+
+      <article class="mod" data-id="diet" data-size="lg" data-onpath="1">
+        <div class="path-step">1</div>
+        <div class="name">diet.js</div>
+        <div class="stats"><span class="loc">4,087 LOC</span><span>80 fns</span></div>
+        <div class="role">Diet tab · food logging · combo checker · variety targets · UIB-facing tags.</div>
+        <div class="entries">
+          <code>checkFoodCombo</code> · <code>classifyFood</code> · <code>renderComboResult</code> · <code>renderTips</code>
+        </div>
+      </article>
+
+      <article class="mod" data-id="medical" data-size="lg" data-onpath="1">
+        <div class="path-step">1</div>
+        <div class="name">medical.js</div>
+        <div class="stats"><span class="loc">9,621 LOC</span><span>215 fns</span></div>
+        <div class="role">Medical tab · vaccinations · CareTickets state machine · milestones surface.</div>
+        <div class="entries">
+          <code>renderActiveMilestones</code> · <code>computeAutoStatus</code> · <code>classifyActivity</code> · <code>syncMilestoneStatuses</code>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- =========== KAEL'S PROVINCE — INTELLIGENCE =========== -->
+  <section class="region kael">
+    <div class="region-head">
+      <div class="region-name">Kael · <span class="role">Province of Intelligence</span></div>
+      <div class="region-loc">28,755 LOC · 4 modules</div>
+    </div>
+    <div class="modules">
+
+      <article class="mod" data-id="intel" data-size="lg">
+        <div class="name">intelligence.js</div>
+        <div class="stats"><span class="loc">18,139 LOC</span><span>458 fns</span></div>
+        <div class="role">ISL · Smart Q&amp;A (22 intents) · UIB · search · day &amp; range summaries.</div>
+        <div class="entries">
+          <code>resolveTimeQuery</code> · <code>qaClassifyInput</code> · <code>generateDaySummary</code> · <code>renderQABar</code>
+        </div>
+      </article>
+
+      <article class="mod" data-id="core" data-size="lg" data-onpath="2">
+        <div class="path-step">2</div>
+        <div class="name">core.js</div>
+        <div class="stats"><span class="loc">5,265 LOC</span><span>183 fns</span></div>
+        <div class="role">Persistence (<code>save</code>/<code>load</code>) · autosave · escHtml · zi() icons · scoring · overlays/toasts.</div>
+        <div class="entries">
+          <code>save</code> · <code>load</code> · <code>zi</code> · <code>calcDietScore</code> · <code>applyIntelligenceModifier</code>
+        </div>
+      </article>
+
+      <article class="mod" data-id="data" data-size="md">
+        <div class="name">data.js</div>
+        <div class="stats"><span class="loc">3,564 LOC</span><span>pure data</span></div>
+        <div class="role">Constants · food DB · milestone DB · vaccination schedule · weather codes.</div>
+        <div class="entries">
+          static · no exported functions · imported by all feature modules
+        </div>
+      </article>
+
+      <article class="mod" data-id="sync" data-size="md" data-onpath="3">
+        <div class="path-step">3</div>
+        <div class="name">sync.js</div>
+        <div class="stats"><span class="loc">2,194 LOC</span><span>54 fns</span></div>
+        <div class="role">Firebase auth · Firestore listeners · write debouncer · reconcile · crash circuit breaker.</div>
+        <div class="entries">
+          <code>initFirebase</code> · <code>syncWrite</code> · <code>_syncDispatchRender</code> · <code>syncJoinByCode</code>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- =========== SHARED — DUAL REVIEWED =========== -->
+  <section class="region shared shared-strip">
+    <div class="region-head">
+      <div class="region-name">Shared <span class="role">· dual-reviewed by Maren &amp; Kael</span></div>
+      <div class="region-loc">12,017 LOC · 2 modules</div>
+    </div>
+    <div class="modules">
+
+      <article class="mod" data-id="styles" data-size="md">
+        <div class="name">styles.css</div>
+        <div class="stats"><span class="loc">9,079 LOC</span><span>CSS</span></div>
+        <div class="role">All visual tokens · seven-domain palette · typography scale · zoom tiers · all component styles.</div>
+        <div class="entries">
+          owns HR-2, HR-5 (no inline styles, tokens only)
+        </div>
+      </article>
+
+      <article class="mod" data-id="template" data-size="md">
+        <div class="name">template.html</div>
+        <div class="stats"><span class="loc">2,938 LOC</span><span>HTML + SVG</span></div>
+        <div class="role">HTML shell · all 62 <code>zi()</code> symbol definitions · root scaffold all tabs render into.</div>
+        <div class="entries">
+          owns HR-1, HR-7 (no emojis, zi() icon system)
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- =========== BOOTSTRAP =========== -->
+  <section class="region bootstrap bootstrap-strip">
+    <div class="region-head">
+      <div class="region-name">Bootstrap <span class="role">· small utility files at concat boundaries</span></div>
+      <div class="region-loc">43 LOC · 2 modules</div>
+    </div>
+    <div class="modules">
+
+      <article class="mod" data-id="config" data-size="xs">
+        <div class="name">config.js</div>
+        <div class="stats"><span class="loc">24 LOC</span></div>
+      </article>
+
+      <article class="mod" data-id="start" data-size="xs">
+        <div class="name">start.js</div>
+        <div class="stats"><span class="loc">19 LOC</span></div>
+      </article>
+
+    </div>
+  </section>
+
+</main>
+
+<div class="firestore-node" id="firestore-node">
+  ④ <strong>Firestore</strong>  ·  <code>households/{hId}/{collection}/{docId}</code>  ·  remote authoritative, listeners loop back through <code>_syncDispatchRender</code> for the read path.
+</div>
+
+<footer class="map-footer">
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background:var(--amber)"></span><span>home (amber)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--sage)"></span><span>diet (sage)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--rose)"></span><span>medical (rose)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--lavender)"></span><span>intelligence (lavender)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--indigo)"></span><span>core (indigo)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--sky)"></span><span>data (sky)</span></span>
+    <span class="item"><span class="swatch" style="background:var(--peach)"></span><span>sync (peach)</span></span>
+    <span class="item"><span class="swatch" style="background:#c4b896"></span><span>shared (linen)</span></span>
+  </div>
+  <div class="build-info">
+    <span>Built from commit <code>fd30a14</code></span>
+    <span>Authored by Aurelius · drift-check via <code>wc -l split/*</code></span>
+    <span>Click any module for details · toggle Hot path for the write loop</span>
+  </div>
+</footer>
+
+<div class="detail-overlay" id="detail-overlay"></div>
+<aside class="detail-pane" id="detail-pane" aria-hidden="true">
+  <button class="detail-close" id="detail-close" aria-label="Close">×</button>
+  <div id="detail-content"></div>
+</aside>
+
+<script>
+// ============================================================
+// SproutLab Module Map — runtime
+// Single-file, no external deps. Click cards for detail pane.
+// ============================================================
+
+const MODULES = {
+  home: {
+    filename: 'split/home.js',
+    name: 'home.js',
+    owner: 'Maren · Province of Care',
+    accent: 'amber',
+    accentDark: '#b8862e',
+    loc: 9430,
+    fns: 211,
+    role: 'Home tab — the daily landing surface. Renders the hero Zen score, Today So Far timeline, header (weather, name, age), reminders, alerts, vaccination booking quick-actions, and quick-note entry.',
+    entries: ['renderHome', 'updateHeader', 'renderRemindersAndAlerts', 'markVaccBooked', 'openVaccApptModal', 'addQuickNote', 'fetchWeather'],
+    upstream: ['core.js (save, scoring, escHtml, zi)', 'data.js (constants)', 'intelligence.js (Today So Far summaries)'],
+    downstream: ['Reads through core.save() → sync.syncWrite() on user input'],
+    docs: [
+      ['DESIGN_PRINCIPLES.md', 'docs/DESIGN_PRINCIPLES.md'],
+      ['SPROUTLAB_QUICK_REFERENCE.md', 'docs/SPROUTLAB_QUICK_REFERENCE.md']
+    ],
+    hrs: ['HR-3 (data-action)', 'HR-4 (escHtml)', 'HR-12 (timezone-safe dates)'],
+    note: 'Largest Care module. Lyra has refactored Home several times — keep an eye on the temptation to expand hero-card responsibilities.'
+  },
+  diet: {
+    filename: 'split/diet.js',
+    name: 'diet.js',
+    owner: 'Maren · Province of Care',
+    accent: 'sage',
+    accentDark: '#4f8a6f',
+    loc: 4087,
+    fns: 80,
+    role: 'Diet tab — food logging, ingredient combo checker, variety targets, recipe and do/don\'t generation, food classification by group and tag. Provides the tag fabric the UIB consumes.',
+    entries: ['checkFoodCombo', 'classifyFood', 'renderComboResult', 'renderTips', 'classifyFoodToGroup', 'getVarietyTarget', 'generateBasicRecipe'],
+    upstream: ['data.js (food DB)', 'core.js (escHtml, toasts)'],
+    downstream: ['intelligence.js consumes food tags for the Unified Intelligence Bar'],
+    docs: [
+      ['SHARED_API.md', 'docs/SHARED_API.md']
+    ],
+    hrs: ['HR-4 (escHtml)', 'HR-8 (stub-feature toast)']
+  },
+  medical: {
+    filename: 'split/medical.js',
+    name: 'medical.js',
+    owner: 'Maren · Province of Care',
+    accent: 'rose',
+    accentDark: '#b3596d',
+    loc: 9621,
+    fns: 215,
+    role: 'Medical tab — vaccinations, CareTickets concern-tracking with notification-driven follow-ups, milestone tracking with auto-status inference. The CareTickets state machine has 21 fields and 6 transitions.',
+    entries: ['renderActiveMilestones', 'computeAutoStatus', 'classifyActivity', 'syncMilestoneStatuses', 'checkEvidenceRegression', 'getMilestoneEvidence'],
+    upstream: ['core.js (save, scoring)', 'data.js (vaccination schedule, milestones)'],
+    downstream: ['intelligence.js reads milestone state for cross-domain cards'],
+    docs: [
+      ['CARETICKETS_SPEC_v5.md', 'docs/CARETICKETS_SPEC_v5.md']
+    ],
+    hrs: ['HR-4 (escHtml)', 'HR-12 (timezone-safe dates)']
+  },
+  intel: {
+    filename: 'split/intelligence.js',
+    name: 'intelligence.js',
+    owner: 'Kael · Province of Intelligence',
+    accent: 'lavender',
+    accentDark: '#7e62b5',
+    loc: 18139,
+    fns: 458,
+    role: 'The largest module. Owns the Intelligence Service Layer (ISL — temporal query parser, domain data accessor, day-summary generator), the Smart Q&A system with 22 intents and dedicated handlers, the Unified Intelligence Bar (UIB), and global search.',
+    entries: ['resolveTimeQuery', 'getDomainData', 'generateDaySummary', 'generateRangeSummary', 'qaClassifyInput', 'qaMatchIntent', 'renderQABar', 'qaExecuteQuery'],
+    upstream: ['core.js (utilities, scoring)', 'data.js (full constant surface)', 'all feature modules (reads state via getDomainData)'],
+    downstream: ['Rendered into home.js (Today So Far) and global Q&A bar'],
+    docs: [],
+    hrs: ['HR-4 (escHtml)', 'HR-3 (data-action)'],
+    note: 'Single biggest LOC concentration in the repo. Splitting this is on the long-term roadmap.'
+  },
+  core: {
+    filename: 'split/core.js',
+    name: 'core.js',
+    owner: 'Kael · Province of Intelligence',
+    accent: 'indigo',
+    accentDark: '#5b6aa8',
+    loc: 5265,
+    fns: 183,
+    role: 'The system\'s utility floor. save() and load() are the persistence primitives every feature calls. Also: escHtml, zi() icon renderer, toast and overlay primitives, autosave trigger, all scoring functions (diet, sleep, poop, medical, milestone), and intelligence modifier weighting.',
+    entries: ['save', 'load', 'zi', 'escHtml', 'showQLToast', 'calcDietScore', 'applyIntelligenceModifier', 'init'],
+    upstream: ['data.js (constants only)'],
+    downstream: ['Every feature module. save() is the entry point of the write hot path.'],
+    docs: [
+      ['SHARED_API.md', 'docs/SHARED_API.md']
+    ],
+    hrs: ['HR-4 (escHtml lives here)', 'HR-7 (zi lives here)', 'HR-11 (Math.floor for currency)'],
+    note: 'Owns escHtml and zi — the HR-4 and HR-7 enforcement points. Touch with care.'
+  },
+  data: {
+    filename: 'split/data.js',
+    name: 'data.js',
+    owner: 'Kael · Province of Intelligence',
+    accent: 'sky',
+    accentDark: '#4d829a',
+    loc: 3564,
+    fns: 0,
+    role: 'Pure data layer. No functions, no logic. Houses the food database, milestone database, vaccination schedule, weather code map, and all other constant tables consumed by every feature module.',
+    entries: ['no exported functions — module is pure data'],
+    upstream: ['none'],
+    downstream: ['Imported by every feature module via concat order'],
+    docs: [],
+    hrs: []
+  },
+  sync: {
+    filename: 'split/sync.js',
+    name: 'sync.js',
+    owner: 'Kael · Province of Intelligence',
+    accent: 'peach',
+    accentDark: '#c98648',
+    loc: 2194,
+    fns: 54,
+    role: 'The external-boundary module. Firebase auth, Firestore listeners, write debouncing, the reconcile path (R3-locked), and the crash circuit breaker that auto-disables sync after 3 errors. Joining devices must not seed; force re-seed for persist-defaults data.',
+    entries: ['initFirebase', 'syncSignIn', 'syncWrite', '_syncDispatchRender', 'syncCreateHousehold', 'syncJoinByCode', '_syncRecordCrash'],
+    upstream: ['core.js (save dispatches changes here via triggerAutosave)', 'config.js (Firebase config)'],
+    downstream: ['Firestore (external) · listener callbacks dispatch render events back to feature modules'],
+    docs: [
+      ['DEVICE_SYNC_SPEC.md', 'docs/DEVICE_SYNC_SPEC.md'],
+      ['spec-2026-04-17-aurelius-device-sync-reconcile.md (R3)', 'docs/spec-2026-04-17-aurelius-device-sync-reconcile.md'],
+      ['SYNC_VISIBILITY_GAP_AUDIT.md', 'docs/SYNC_VISIBILITY_GAP_AUDIT.md']
+    ],
+    hrs: ['candidate for HR-14 (event-loop-as-lock pattern, via _syncSetDocMerge wrapper)'],
+    note: 'The reconcile path uses the event-loop-as-lock pattern through _syncSetDocMerge. HR-14 candidate per the R3 reconcile spec.'
+  },
+  styles: {
+    filename: 'split/styles.css',
+    name: 'styles.css',
+    owner: 'Shared · Maren + Kael dual review',
+    accent: '#c4b896',
+    accentDark: '#7d7048',
+    loc: 9079,
+    fns: 0,
+    role: 'The complete CSS surface. All design tokens, the seven-domain palette, typography scale (Fraunces + Nunito), three text-zoom tiers, and every component\'s styles. The enforcement point for HR-2 (no inline styles) and HR-5 (tokens only).',
+    entries: ['design tokens · seven-domain palette · component styles · zoom tiers'],
+    upstream: ['none'],
+    downstream: ['Consumed by every rendered surface'],
+    docs: [
+      ['DESIGN_PRINCIPLES.md', 'docs/DESIGN_PRINCIPLES.md'],
+      ['VISUAL_AUDIT.md', 'docs/VISUAL_AUDIT.md'],
+      ['design/pattern-catalog.md', 'docs/design/pattern-catalog.md']
+    ],
+    hrs: ['HR-2 (no inline styles)', 'HR-5 (tokens only)', 'HR-10 (no text-overflow ellipsis)']
+  },
+  template: {
+    filename: 'split/template.html',
+    name: 'template.html',
+    owner: 'Shared · Maren + Kael dual review',
+    accent: '#c4b896',
+    accentDark: '#7d7048',
+    loc: 2938,
+    fns: 0,
+    role: 'The HTML shell every tab renders into, plus the complete zi() icon system — 62 custom SVG symbols defined as a <symbol> sprite. The enforcement point for HR-1 (no emojis) and HR-7 (zi for icons).',
+    entries: ['HTML scaffold · 62 <symbol> definitions for zi()'],
+    upstream: ['none'],
+    downstream: ['Consumed by every feature module via document.querySelector targets'],
+    docs: [],
+    hrs: ['HR-1 (no emojis)', 'HR-7 (zi returns SVG HTML)']
+  },
+  config: {
+    filename: 'split/config.js',
+    name: 'config.js',
+    owner: 'Bootstrap',
+    accent: 'var(--ink-faint)',
+    accentDark: '#5a5651',
+    loc: 24,
+    fns: 1,
+    role: 'Firebase project credentials. Concatenated first so sync.js can use the config when initFirebase fires.',
+    entries: ['firebaseConfig (object literal)'],
+    upstream: ['none'],
+    downstream: ['sync.js'],
+    docs: [],
+    hrs: []
+  },
+  start: {
+    filename: 'split/start.js',
+    name: 'start.js',
+    owner: 'Bootstrap',
+    accent: 'var(--ink-faint)',
+    accentDark: '#5a5651',
+    loc: 19,
+    fns: 0,
+    role: 'The single bootstrap line at the bottom of the concat. Wires the global event-delegation handler (data-action discipline) and triggers init() from core.js.',
+    entries: ['document-level event delegation · init() call'],
+    upstream: ['core.js (init)'],
+    downstream: ['none — last file in concat order'],
+    docs: [],
+    hrs: ['HR-3 (data-action delegation universal — enforced here)', 'HR-6 (delegation universal)']
+  }
+};
+
+// ============ Detail pane ============
+const pane = document.getElementById('detail-pane');
+const overlay = document.getElementById('detail-overlay');
+const detailContent = document.getElementById('detail-content');
+
+function openDetail(id) {
+  const m = MODULES[id];
+  if (!m) return;
+
+  const docsBlock = m.docs && m.docs.length
+    ? `<div class="detail-section">
+         <h3>Specs &amp; docs</h3>
+         <div class="doc-links">
+           ${m.docs.map(([label, path]) => `<a href="../${path}" target="_blank" rel="noopener">${label}</a>`).join('')}
+         </div>
+       </div>`
+    : '';
+
+  const hrBlock = m.hrs && m.hrs.length
+    ? `<div class="detail-section">
+         <h3>Hard rules touched</h3>
+         <div class="hr-tags">${m.hrs.map(h => `<span>${h}</span>`).join('')}</div>
+       </div>`
+    : '';
+
+  const noteBlock = m.note
+    ? `<div class="detail-section">
+         <h3>Aurelius note</h3>
+         <p>${m.note}</p>
+       </div>`
+    : '';
+
+  detailContent.innerHTML = `
+    <div class="filename">${m.filename}</div>
+    <h2 style="--accent: var(--${m.accent.startsWith('#') ? '' : m.accent}); ${m.accent.startsWith('#') ? `--accent: ${m.accent};` : ''} --accent-dark: ${m.accentDark}">${m.name}</h2>
+
+    <dl class="detail-meta">
+      <dt>Owner</dt><dd class="serif">${m.owner}</dd>
+      <dt>Size</dt><dd>${m.loc.toLocaleString()} LOC · ${m.fns} functions</dd>
+    </dl>
+
+    <div class="detail-section">
+      <h3>What it owns</h3>
+      <p>${m.role}</p>
+    </div>
+
+    <div class="detail-section">
+      <h3>Entry points</h3>
+      <ul>${m.entries.map(e => `<li><code>${e}</code></li>`).join('')}</ul>
+    </div>
+
+    <div class="detail-section">
+      <h3>Upstream dependencies</h3>
+      <ul>${m.upstream.map(u => `<li>${u}</li>`).join('')}</ul>
+    </div>
+
+    <div class="detail-section">
+      <h3>Downstream consumers</h3>
+      <ul>${m.downstream.map(d => `<li>${d}</li>`).join('')}</ul>
+    </div>
+
+    ${docsBlock}
+    ${hrBlock}
+    ${noteBlock}
+  `;
+
+  // Set accent on the h2 dot using inline style override
+  const h2 = detailContent.querySelector('h2');
+  if (h2) h2.style.setProperty('--accent', m.accent.startsWith('#') ? m.accent : `var(--${m.accent})`);
+
+  pane.classList.add('open');
+  pane.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('open');
+}
+
+function closeDetail() {
+  pane.classList.remove('open');
+  pane.setAttribute('aria-hidden', 'true');
+  overlay.classList.remove('open');
+}
+
+document.querySelectorAll('.mod').forEach(card => {
+  card.addEventListener('click', (e) => {
+    const id = card.dataset.id;
+    openDetail(id);
+  });
+});
+
+document.getElementById('detail-close').addEventListener('click', closeDetail);
+overlay.addEventListener('click', closeDetail);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && pane.classList.contains('open')) closeDetail();
+});
+
+// ============ Hot path overlay ============
+const hotBtn = document.getElementById('ctl-hotpath');
+const resetBtn = document.getElementById('ctl-reset');
+
+function applyHotPath() {
+  const on = document.body.classList.contains('hotpath');
+  document.querySelectorAll('.mod').forEach(card => {
+    if (card.dataset.onpath) card.classList.add('on-path');
+    else card.classList.remove('on-path');
+  });
+  hotBtn.classList.toggle('active', on);
+}
+
+hotBtn.addEventListener('click', () => {
+  document.body.classList.toggle('hotpath');
+  applyHotPath();
+});
+
+resetBtn.addEventListener('click', () => {
+  document.body.classList.remove('hotpath');
+  applyHotPath();
+  closeDetail();
+});
+</script>
+
+</body>
+</html>
