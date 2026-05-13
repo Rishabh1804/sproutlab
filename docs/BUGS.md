@@ -1,6 +1,6 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence)
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-11
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
@@ -8,6 +8,14 @@
 ## Open Bugs
 
 ### Home Tab
+
+#### P1 — Symptom Checker: severity badge invisible on `crying-fussy` (mild) entry — Sovereign-escalated 2026-05-11
+- **Symptom:** Sovereign dark-mode screenshot of Symptom Checker → "Crying a lot" chip-tap result renders the title and body but the `<span class="sc-sev-badge">✅ Usually manageable</span>` is not visually present. Adjacent screenshot of "Constipation" (also `severity: 'mild'`, identical render code path) renders the badge cleanly.
+- **Why P1 (not cosmetic):** the badge carries the parent's severity read. A missing/unreadable severity badge on a 'mild' entry can (a) over-alarm a parent who reads only the section-header siren and assumes Emergency, or (b) under-classify if the parent skims and sees no badge. Both are parental-safety failures (Maren-jurisdiction).
+- **Source:** SYMPTOM_DB entry at `data.js:3411`; render path at `intelligence.js:11955` (Home overlay). Badge emit is unconditional. CSS at `styles.css:5999` (`.sc-mild .sc-sev-badge`); dark-mode container override at `:6021` but **no dark-mode override for `.sc-mild .sc-sev-badge` itself**.
+- **Lyra prior:** contrast collapse — sage-on-sage badge against `[data-theme="dark"] .sc-mild` background reads as transparent at low device brightness.
+- **Investigation owner:** Maren (Care jurisdiction) in audit phase [2] of `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` §11.
+- **Fix (probable):** new `[data-theme="dark"] .sc-mild .sc-sev-badge` rule; lands in Mode-2 build alongside HR-1 ports.
 
 #### P2 — HR-1: `getMoonPhaseEmoji` returns Unicode emoji (core.js:2973)
 - **Symptom:** Moon phase display on home greeting uses raw Unicode emoji characters (🌑🌒🌓…) instead of the `zi()` SVG system.
