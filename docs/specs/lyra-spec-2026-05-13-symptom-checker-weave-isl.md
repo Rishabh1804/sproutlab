@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (mini-spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v2 — Kael W-K1..W-K10 + Maren W-M1..W-M6 folded (audit-chain step [3] DONE 2026-05-13); awaiting Cipher Edict V structural pass + Sovereign ratification
+**Status:** v3 — Cipher Edict V STRICT pass folded (C-WI-1 + C-WI-2 P0 amendments; audit-chain step [4] cleared); awaiting Cipher re-audit then Sovereign ratification
 **Branch:** `claude/d1-and-weave-isl-specs`
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 §11 forward-pointer (per Kael V-K1, gated by SG-6 default Yes)
 **Sibling spec:** `lyra-spec-2026-05-13-symptom-checker-d1-polish.md` v1 (parallel-drafted; D1 is on the implementation-track; this mini-spec is on the data-contract track)
@@ -522,17 +522,24 @@ D3 implementation MUST ship a test fixture file (`split/weave.fixtures.js` or eq
 
 ## 10. Open questions for Sovereign
 
-| ID | Question | Default |
-|---|---|---|
-| **SG-WI-MODULE** | New `split/weave.js` module (Kael recommendation) vs fold into `split/intelligence.js`? | **New `weave.js`** — single-responsibility; eases test surface; concat order between data.js and core.js |
-| **SG-WI-SLEEP-THRESHOLD** | Sleep-delta significance threshold for null-vs-render: ±10 mins (default), ±20 mins, ±5%? | **±10 mins** — empirical: 5 mins is below noise floor; 20 mins suppresses real signals; 10 is the floor for "actionable" |
-| **SG-WI-PEAK-TEMP** | Fever weave shows "peak {peakF}°F" — keep (default) or drop? Maren has secondary-audit say. | **Keep** — actionable for a parent re-evaluating fever; if peak data isn't recorded, the resolver omits the segment cleanly via the existing `(peakF ? ... : '')` check |
+| ID | Question | Default | Audit stances | Status in v3 |
+|---|---|---|---|---|
+| **SG-WI-MODULE** | New `split/weave.js` module (Kael recommendation) vs fold into `split/intelligence.js`? | **New `weave.js`** — single-responsibility; eases test surface; concat order between `medical.js` and `intelligence.js` per §1.4 W-K1 P0 fold (corrected from v1's "between data.js and core.js" which would break escHtml/formatDate access; verified against `build.sh` sha 7342d5d) | Kael: Concur with default — folding into intelligence.js (already 747KB) deepens monolith. W-K1 corrected the placement; otherwise sound. Maren: out-of-jurisdiction (architectural; no Care signal). | **HELD** (default + W-K1 placement fix applied; Cipher C-WI-2 P0 fold corrected the default-cell stale concat-order text in v3) |
+| **SG-WI-SLEEP-THRESHOLD** | Sleep-delta significance threshold for null-vs-render: ±10 mins (default), ±20 mins, ±5%? | **±10 mins** — empirical: 5 mins is below noise floor; 20 mins suppresses real signals; 10 is the floor for "actionable" | Kael: Concur with default, contingent on W-K8 concrete pseudocode (folded; resolver now has explicit compute path). Maren: out-of-jurisdiction at safety level (lifestyle signal); W-M5 P2 added a "review-after-D3" note. | **HELD** (default + W-K8 concrete pseudocode applied in v2; W-M5 review-after-D3 note in §5) |
+| **SG-WI-PEAK-TEMP** | Fever weave shows "peak {peakF}°F" — keep (default) or drop? Maren has secondary-audit say. | **Keep** — actionable for a parent re-evaluating fever; if peak data isn't recorded, the resolver omits the segment cleanly via the `(peakF && peakF >= 95)` floor check (W-M2 fold) | Maren: Concur with Keep + W-M2 floor fold (tightened from `(peakF ? ...)` to `(peakF && peakF >= 95 ? ...)` to defend against degenerate data). Kael: out-of-jurisdiction (content; no architectural signal). | **HELD** (default + W-M2 floor fix applied in v2; defends against peak=0/null/NaN) |
 
 ---
 
 ## 11. Changelog
 
 - **v1 (2026-05-13):** initial mini-spec draft per SG-6 (vision v2.1 ratified). Defines `resolveSymptomWeave(symptomEntry, childContext) → {html, source} | null` ISL contract + source-table extensibility + ranking + null-discipline + cache policy + 14-fixture matrix. Two skill register-flips during drafting (Kael at §3 no-fall-through rationale; Maren at §4 silent-omit parental-safety read). Three Sovereign-gates surfaced (SG-WI-MODULE, SG-WI-SLEEP-THRESHOLD, SG-WI-PEAK-TEMP). Awaiting Kael primary audit + Maren secondary audit.
+- **v3 (2026-05-13):** Cipher Edict V STRICT pass folded (2 P0 + 0 P1 + 0 P2). Surgical amendments:
+  - **C-WI-1 P0:** §10 sub-Sovereign-gate table expanded from 3 columns to 5 columns (ID / Question / Default / Audit stances / Status in v3). All three SG-WI-* rows now surface the per-gate Governor stances + post-fold status, matching the D1 §10 5-column canonical shape.
+  - **C-WI-2 P0:** §10 SG-WI-MODULE default cell text corrected. v2 cell still carried the v1 stale assertion "concat order between data.js and core.js" despite §1.4 W-K1 P0 fold correcting it to "between medical.js and intelligence.js." Single-source-of-truth alignment: §10 default now references §1.4 explicitly.
+  - **Cross-cutting:** Cipher's V-K6 GAP retrospective flagged C-WI-2 as a sweep gap (W-K1 fold landed at §1.4 but didn't sweep §10's default cell). Forward-pointer: "post-fold consistency sweep" Kael discipline codified as canon-promotion candidate.
+  - **Contract verification:** all weave-ISL contract claims PASS against main sha 7342d5d (Cipher-verified: build.sh concat order; bridge `_renderSymptomCheckerResults` helper as caller-jurisdiction anchor).
+  - Cipher Edict V STRICT re-audit NEXT.
+
 - **v2 (2026-05-13):** Audit-chain step [3] Lyra synthesis. Folds Kael W-K1..W-K10 (2 P0 + 5 P1 + 3 P2) + Maren W-M1..W-M6 (1 P0 + 3 P1 + 2 P2) returns. Substantive amendments:
   - **W-K1 P0:** §1.4 module location CORRECTED. v1 had wrong concat order assertion. Correct insertion: `... → medical → weave → intelligence → sync → start`. Caller-jurisdiction lock: D3 caller for `resolveSymptomWeave` lives in `intelligence.js` (NOT inside `_renderSymptomCheckerResults` which is medical.js Care-jurisdiction).
   - **W-K2 P0:** §3 step 1 unknown-source branch defined. Returns null + dedup `console.warn` per session per identifier. Diagnostic-without-blocking. Fixture #15 added.

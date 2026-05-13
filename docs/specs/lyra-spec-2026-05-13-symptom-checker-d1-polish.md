@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v2 — Maren V-M1..V-M9 + Kael V-K7..V-K14 folded (audit-chain step [4] DONE 2026-05-13); awaiting Cipher Edict V structural pass + Sovereign ratification
+**Status:** v3 — Cipher Edict V STRICT pass folded (C-D1-1..C-D1-5 amendments; audit-chain step [5] cleared); awaiting Cipher re-audit then Sovereign ratification
 **Branch:** `claude/d1-and-weave-isl-specs` (or successor)
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 — this implements §6.D1 + ships §6.5.D1 phase contracts
 **Predecessor spec:** `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` v3 — bridge build (Mode-2 merged 2026-05-13 as PR #67 → 7342d5d artifact regen). SG-5 tight-sequencing fires now.
@@ -76,6 +76,8 @@ This spec ships these contracts. Cipher Edict V at impl verifies presence. Downs
 | 6 | Touch-target floor: 44×44 (interactive); 60×60 (emergency primary CTA) | iOS HIG + WCAG 2.2 SC 2.5.8 + thumb-reach-under-stress |
 | 7 | `prefers-reduced-motion: reduce` override exists for every animated rule introduced in D1 | Vestibular-sensitive parents on dark mode at 2am are real and disproportionately the ones up at 2am |
 | 8 | `.sc-result { position: relative }` — descendant absolute-positioned elements anchor here | Required for `.sc-rail`; permanent constraint downstream. D2/D3 additions that introduce new absolute children must verify intentional anchoring (V-K13 fold) |
+| 9 | Single-render doctor-card discipline — one card per result-list, not per-match (Kael V-K skill-flip at v1 drafting; codified in §2.4.1) | Eliminates duplicate-render bug class; emergency hoist-top + sticky-footer mirror express "one action, two surfaces" without violating single-render |
+| 10 | No-doctor emergency fallback — text-only fallback note in the no-doctor render on emergency tier (V-M2 fold); `lifeThreat` number rendering deferred to D2 | Care P0 worst-case: parent in active emergency, no doctor saved, needs a next motor action; static text bridges the gap until D2 ships `emergencyContacts.{region}` config |
 
 > **🎩 Cipher (skill register-flip):** the contract list above duplicates §6.5.D1 of vision v2.1. That's intentional per canon-cc-022 — phase-specs are self-contained for downstream review (Cipher Edict V on D1's impl reads only this spec, not vision v2.1, when confirming contract surface).
 
@@ -290,12 +292,12 @@ if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
 }
 ```
 
-### 2.3.2 D1 doctor-card render-decision matrix (V-M8 fold — Cipher Edict V verification reference)
+### 2.3.1 D1 doctor-card render-decision matrix (V-M8 fold — Cipher Edict V verification reference)
 
 | Severity | callDoctor | Has doctor saved | D1 render |
 |---|---|---|---|
 | emergency | (any) | yes | hoist-top + sticky footer (Home overlay only) — see §2.4.1 |
-| emergency | (any) | no | §2.3.1 no-doctor + emergency 112 fallback (V-M2 fold) |
+| emergency | (any) | no | §2.3.2 no-doctor + emergency 112 fallback (V-M2 fold) |
 | warning | true | yes | mid-card softer call CTA |
 | warning | true | no | bare `+ Add Doctor` + V-M1 contextual nudge ("Add a doctor so you can call if symptoms worsen") |
 | warning | false | (any) | no doctor card (matches `needsDoctor` logic in §2.4.1) |
@@ -303,9 +305,9 @@ if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
 | mild | true | no | bare `+ Add Doctor` (no nudge — mild doesn't warrant call-urgency framing) |
 | mild | false | (any) | no doctor card |
 
-> **🎩 Maren (skill register-flip):** the no-doctor branch needs to honor severity too. Currently it has only one shape ("No doctor saved yet — + Add Doctor"). On emergency, this is a P0 surface failure: parent in active emergency, no doctor, no fallback. **D1 must add an emergency-tier no-doctor variant that includes a fallback to "If this is a true emergency, call your local emergency services" (text only — `lifeThreat` rendering with the actual number is D2/D3).** Spec edit needed: `_scDoctorCardHTML('emergency', ...)` no-doctor branch shows `+ Add Doctor` PLUS a one-line emergency-services fallback note. Adding to §2.3 below.
+### 2.3.2 No-doctor severity-aware fallback (Maren V-M1 + V-M2 fold)
 
-### 2.3.1 No-doctor severity-aware fallback (Maren V-M1 + V-M2 fold)
+> **🎩 Maren (skill register-flip — provenance marker):** the no-doctor branch needs to honor severity. Original 1-shape ("No doctor saved yet — + Add Doctor") is a P0 surface failure on emergency: parent in active emergency, no doctor, no fallback. D1 adds severity-aware variants with an emergency text-fallback (`lifeThreat` number rendering deferred to D2 per SG-D1-LT). v2 fold added 112-hardcode (V-M2) + warning-tier nudge (V-M1).
 
 When `getPrimaryDoctor()` returns null, the no-doctor render is severity-aware:
 
@@ -362,7 +364,9 @@ D2 replaces the static "112" string in the emergency fallback with the proper `l
 
 ### 2.4 Emergency-tier layout reflow
 
-For `severity === 'emergency'`, the helper renders the doctor card (hoisted) BEFORE WHEN-TO-SEEK-CARE / WHAT-TO-DO sections. New helper logic inside `shown.forEach`:
+> **Note (C-D1-2 fold):** This subsection retains the pre-Kael-discipline rendering sketch for narrative context. The **canonical helper logic lives in §2.4.1** (single-render discipline). The 2-arg `_scDoctorCardHTML(severity, isEmergency)` calls below are **superseded** — actual signature per §2.3 + V-K9 fold is single-arg `_scDoctorCardHTML(severity)`. Read §2.4.1 for the implementation contract.
+
+For `severity === 'emergency'`, the helper renders the doctor card (hoisted) BEFORE WHEN-TO-SEEK-CARE / WHAT-TO-DO sections. New helper logic inside `shown.forEach` (superseded sketch — see §2.4.1 for canonical):
 
 ```js
 shown.forEach(function(m) {
@@ -376,34 +380,20 @@ shown.forEach(function(m) {
   html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
   html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
 
-  // D1 NEW: emergency layout — hoist doctor card to top (per-match severity)
-  if (m.severity === 'emergency' && (m.entry.callDoctor || hasEmergency)) {
-    html += _scDoctorCardHTML('emergency', true);
-  }
+  // SUPERSEDED — see §2.4.1 single-render discipline. Doctor card is NOT
+  // emitted per-match; it's emitted once per result-list outside the forEach.
+  // The pre-fold sketch placed _scDoctorCardHTML calls here, which would
+  // duplicate the card on emergency entries. Kael V-K skill-flip refactored
+  // to single-render.
 
   // ...sections (what to do, precautions, when to seek care)...
 
   html += '</div>';
 });
 
-// AFTER forEach: render the AGGREGATE doctor card for warning/mild entries
-// (hoisted per-emergency-match render above is per-card; this is the
-//  card-list-level fallback for warning+mild OR no-emergency-but-callDoctor entries)
-if (!hasEmergency && shown.some(function(m) { return m.entry.callDoctor; })) {
-  var hasWarning = shown.some(function(m) { return m.severity === 'warning'; });
-  html += _scDoctorCardHTML(hasWarning ? 'warning' : 'mild', false);
-}
-
-// AFTER doctor card: emergency sticky footer (only if emergency present)
-if (hasEmergency) {
-  var doc = getPrimaryDoctor();
-  if (doc) {
-    html += '<div class="sc-sticky-footer">';
-    html += '<a class="sc-call-primary" href="tel:' + doc.phone + '">' +
-            zi('phone') + ' Call Now: ' + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
-    html += '</div>';
-  }
-}
+// SUPERSEDED — see §2.4.1.
+// Aggregate doctor card now uses single-arg signature
+// _scDoctorCardHTML(severity) per V-K9 fold; see §2.4.1 canonical render.
 ```
 
 > **🎩 Kael (skill register-flip):** the per-match doctor-card hoist (inside forEach) plus the aggregate doctor-card render (outside forEach) duplicates the doctor card on emergency entries. **Need a discipline: render doctor card ONCE per result-list, not per-match.** Refactor: collect emergency matches' need-for-hoist boolean during the forEach, then render exactly one doctor card outside the forEach with the right severity + position. Spec edit needed in §2.4 — let me amend.
@@ -502,7 +492,7 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
 
 | File | Bridge state (post-PR #67) | D1 changes |
 |---|---|---|
-| `split/template.html` | + `zi-phone` sprite | (no change in D1 if SG-D1-LT defaults Slip; +1 sprite if SG-D1-LT amended to D1-include — see §0.1 #9 + §10 SG-D1-LT effect column) (V-K12 fold) |
+| `split/template.html` | + `zi-phone` sprite | (no change in D1 if SG-D1-LT defaults Slip; +1 sprite if SG-D1-LT amended to D1-include — see §0.1 #9 + §10 SG-D1-LT row "Status in v2" column) (V-K12 fold) |
 | `split/styles.css` | + `--tc-sage-light` token (light + dark); + `[data-theme="dark"] .sc-mild .sc-sev-badge` rule | + `.sc-rail` rule + 3 severity variants + dark variants + emergency pulse-glow + reduced-motion override; + `.sc-sticky-footer` rule + pinned variant + reduced-motion override; + `.sc-doctor-card-{emergency,warning,mild}` variants + `.sc-call-primary/secondary/tertiary` size variants; + `.sc-emergency-fallback` rule (+ dark variant); + modal scroll-area `padding-bottom` rule; + `position: relative` on `.sc-result` |
 | `split/medical.js` | + `_renderSymptomCheckerResults` shared helper + `_scDoctorCardHTML` HR-1 ports | refactor `_renderSymptomCheckerResults` per §2.4.1 (doctor-card discipline + rail + sticky footer + per-card layout); refactor `_scDoctorCardHTML` per §2.3 (severity-aware variants); add `_scInitStickyShadow` per §2.2 |
 | `split/intelligence.js` | call site collapsed to one-liner with `opts.actions` | (no change required — helper signature stays compatible; sticky-shadow init call added at the `runHomeSymptomCheck` exit point) |
@@ -595,19 +585,23 @@ Atomic Mode-2 PR per vision §5.2 build-rule 3.
 (Mirror of §1 above; keeps phase-contract assertion local to this spec for D2/D3 reference.)
 
 ```
-6.5.D1 — Contracts shipped:
+6.5.D1 — Contracts shipped (10 rows; mirrors §1 exactly per Cipher C-D1-1 fold):
   · Class .sc-rail with role: severity strip, decorative.
   · .sc-rail DOM position: first child of .sc-result.sc-{severity}.
   · Sticky-CTA scroll container: the modal scroll container, not document.
   · Doctor-card hierarchy: severity-aware (emergency=top hoist + sticky footer;
     warning=mid-card softer; mild=de-emphasised below body).
-  · Single-render doctor-card discipline (one per result-list, not per-match).
   · Rail scope: result-card only (D3 may extend to triage card via additive rule).
   · Touch-target floor: 44×44 (interactive); 60×60 (emergency primary CTA).
   · prefers-reduced-motion: reduce override exists for every animated rule
     introduced in D1.
-  · No-doctor emergency fallback: text-only fallback note added to no-doctor
-    render on emergency tier (lifeThreat number rendering deferred to D2).
+  · .sc-result { position: relative } — descendant absolute-positioned
+    elements anchor here. Permanent constraint downstream (V-K13).
+  · Single-render doctor-card discipline — one card per result-list, not
+    per-match (Kael discipline; codified in §2.4.1).
+  · No-doctor emergency fallback — text-only fallback note added to no-doctor
+    render on emergency tier (V-M2 fold; lifeThreat number rendering deferred
+    to D2).
 ```
 
 ---
@@ -740,6 +734,17 @@ D1 ships the foundation. Downstream:
 ## 12. Changelog
 
 - **v1 (2026-05-13):** initial draft. Ships §6.5.D1 phase contracts. Inherits from vision v2.1 §6.D1 + bridge v3 (post-merge). Incorporates two Maren-skill register-flips during drafting (§2.1 aria-hidden discipline, §2.3.1 no-doctor emergency fallback) and one Kael-skill register-flip (§2.4.1 single-render doctor-card discipline) and one Cipher-skill register-flip (§1 contract-mirror rationale). Three Sovereign-gates surfaced (SG-D1-LT, SG-D1-PULSE, SG-D1-DOCTOR-EMPTY-WARNING) with conservative defaults. Awaiting Maren + Kael parallel audit.
+- **v3 (2026-05-13):** Cipher Edict V STRICT pass folded (5 findings: 0 P0 + 2 P1 + 3 P2). Surgical amendments:
+  - **C-D1-1 P1:** §1 ↔ §6 contract-list reconciled. §1 expanded from 8 rows to 10 (added row 9 single-render discipline + row 10 no-doctor emergency fallback). §6 re-stated as exact 10-row mirror.
+  - **C-D1-2 P1:** §2.4 explicit supersession marker added at top + inline "SUPERSEDED — see §2.4.1" comments inside the code block. Pre-Kael-discipline 2-arg `_scDoctorCardHTML` calls noted as historical-narrative; canonical helper logic lives in §2.4.1 single-arg signature.
+  - **C-D1-3 P2:** §2.3.1 / §2.3.2 renumbered to align numerical order with document order. Matrix is now §2.3.1; no-doctor fallback is now §2.3.2.
+  - **C-D1-4 P2:** §3 cross-ref to "§10 SG-D1-LT effect column" corrected to "§10 SG-D1-LT row 'Status in v2' column" (matches actual §10 column header).
+  - **C-D1-5 P2:** Maren register-flip provenance marker relocated to live INSIDE §2.3.2 (no-doctor section it motivates). Changelog v2 entry text below updated to cite §2.3.1 (matrix) ↔ §2.3.2 (no-doctor) per new numbering.
+  - **Cross-cutting:** Cipher flagged P1 audit-chain quality regression (5 V-K6 GAPs). Forward-pointer: codify "post-fold consistency sweep" as Kael completion criterion before declaring V-K* round closed. Tracked as canon-promotion candidate; no spec body change in v3.
+  - **Canon-promotion candidates** surfaced by Cipher (3): "Sub-Sovereign-gate amendment-effect column" pattern (D1 §10 5-col shape), "Post-fold consistency sweep" Governor discipline, "Pre-fold draft superseded by post-fold subsection" Lyra drafting marker. Filed for Sovereign / Cipher canon-promotion review.
+  - **Contract verification:** all D1 contract claims PASS against main sha 7342d5d (Cipher-verified: `_renderSymptomCheckerResults` signature; `_scDoctorCardHTML` evolution; `#homeSymptomOverlay > .modal` selector; `#symptomResult` inline; `.sc-result` position-relative introduction by D1, bridge didn't ship it).
+  - Cipher Edict V STRICT re-audit NEXT.
+
 - **v2 (2026-05-13):** Audit-chain step [4] Lyra synthesis. Folds Maren V-M1..V-M9 (2 P0 + 4 P1 + 3 P2) + Kael V-K7..V-K14 (1 P0 + 4 P1 + 3 P2) returns. Substantive amendments:
   - **V-M1 P0:** Warning-tier no-doctor contextual nudge ("Add a doctor so you can call if symptoms worsen"). §2.3.1 expanded. SG-D1-DOCTOR-EMPTY-WARNING AMENDED (both Governors concur).
   - **V-M2 P0:** Emergency no-doctor fallback hardcodes 112 (India unified emergency, live since 2019). §2.3.1 + §11 D2 forward-pointer for `emergencyContacts.{region}` lookup.
@@ -747,7 +752,7 @@ D1 ships the foundation. Downstream:
   - **V-M3 P1:** Sticky footer renders CTA + phone number ONLY (no doctor name/address/title duplication). §2.2 + §2.4.1 amended.
   - **V-M4 P1:** `.sc-call-tertiary` `min-height: 44px` MANDATORY regardless of font-size. §9 expanded.
   - **V-M6 P1:** Contrast fixture expanded from 12 to 14 captures: composited no-doctor-fallback (real-device, not stylesheet math) + pulse-glow mid-animation frame ~750ms.
-  - **V-M8 P1:** §2.3.2 NEW — D1 doctor-card render-decision matrix (8 rows) for Cipher Edict V verification reference.
+  - **V-M8 P1:** §2.3.1 NEW — D1 doctor-card render-decision matrix (8 rows) for Cipher Edict V verification reference (v3 fold renumbered §2.3.2 → §2.3.1 + §2.3.1 → §2.3.2 per Cipher C-D1-3 to align numerical order with document order).
   - **V-K7 P1:** Empty-state branch (matches.length === 0) explicit; defensive guard in helper.
   - **V-K9 P1:** Drop legacy `isEmergency` parameter NOW (code-search confirms zero external callers as of bridge merge sha 7342d5d). Helper signature is `_scDoctorCardHTML(severity)` only.
   - **V-K10 P1:** `opts.actions` documented as preserved for D3 Track-CTA wiring (not D1 scope) — prevents Cipher dead-locals flag.
