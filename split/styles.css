@@ -47,6 +47,7 @@
   --shadow:   rgba(180,120,120,0.10);
   /* Semantic text colors */
   --tc-sage:    #3a7060;
+  --tc-sage-light: #5a9080;
   --tc-rose:    #9e3e52;
   --tc-lav:     #6e5e9a;
   --tc-sky:     #336580;
@@ -4678,6 +4679,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   --amber-light: #352e1e;
 
   --tc-sage:   #7ac0a0;
+  --tc-sage-light: #a0d8b8;
   --tc-rose:   #e090a8;
   --tc-lav:    #b8a8e0;
   --tc-sky:    #80b8d8;
@@ -6019,6 +6021,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sc-emergency { background:rgba(220,60,60,0.06); border-color:rgba(220,60,60,0.2); }
 [data-theme="dark"] .sc-warning { background:rgba(240,180,80,0.06); border-color:rgba(240,180,80,0.15); }
 [data-theme="dark"] .sc-mild { background:rgba(58,112,96,0.05); border-color:rgba(58,112,96,0.15); }
+[data-theme="dark"] .sc-mild .sc-sev-badge { background:rgba(58,112,96,0.22); color:var(--tc-sage-light); border:1px solid rgba(58,112,96,0.35); }
 [data-theme="dark"] .sc-doctor-card { background:rgba(220,60,60,0.04); border-color:rgba(220,60,60,0.12); }
 [data-theme="dark"] .sc-doctor-card a { color:#e74c3c; }
 [data-theme="dark"] .sc-quick-chip { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.08); }
@@ -9077,3 +9080,4 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   outline-offset: 2px;
 }
 [data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
+

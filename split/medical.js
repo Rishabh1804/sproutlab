@@ -2425,6 +2425,92 @@ function initSymptomChips() {
   ).join('');
 }
 
+// ──────────────────────────────────────────
+// _renderSymptomCheckerResults — shared renderer
+// Pure: takes matches + ageMo + opts, returns HTML string.
+// Caller writes the result to its own #symptomResult / #homeSymptomResult.
+// Per lyra-spec-2026-05-11-symptom-checker-hr1-dry.md §4.1 (Kael B-K1 boundary
+// contract: no document.* reads/writes, no event-handler binding, no innerHTML=,
+// no global mutation). Both medical.js#checkSymptoms and
+// intelligence.js#runHomeSymptomCheck consume.
+//
+// opts.actions parameterizes the episode-tracking CTA data-action names so the
+// home overlay variant ("closeAndPrompt*") and the medical-tab variant
+// ("prompt*") can share the same renderer — discovered via §1.2 pre-merge
+// diff gate as the only behavioral drift between the two surfaces.
+// ──────────────────────────────────────────
+function _renderSymptomCheckerResults(matches, ageMo, opts) {
+  opts = opts || {};
+  var actions = opts.actions || {
+    fever:     'promptFeverTrack',
+    diarrhoea: 'promptDiarrhoeaTrack',
+    vomiting:  'promptVomitingTrack',
+    cold:      'promptColdTrack'
+  };
+
+  var html = '';
+  var shown = matches.slice(0, 2);
+  var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
+
+  shown.forEach(function(m) {
+    var e = m.entry;
+    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
+    var sevLabel = m.severity === 'emergency' ? zi('siren') + ' Emergency' : m.severity === 'warning' ? zi('warn') + ' Monitor closely' : zi('check') + ' Usually manageable';
+
+    html += '<div class="sc-result ' + sevClass + '">';
+    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
+    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
+
+    html += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
+    html += '<div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
+
+    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
+    html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
+
+    if (e.emergency) {
+      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + zi('siren') + ' When to seek emergency care</div>';
+      html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
+    }
+    html += '</div>';
+  });
+
+  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
+    html += _scDoctorCardHTML(hasEmergency);
+  }
+
+  var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
+  if (isFeverMatch && !getActiveFeverEpisode()) {
+    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="' + actions.fever + '" >'+zi('flame')+' Track this fever</button></div>';
+  } else if (isFeverMatch && getActiveFeverEpisode()) {
+    html += '<div class="fe-center-status">'+zi('flame')+' Fever episode already being tracked</div>';
+  }
+
+  var isDiarrhoeaMatch = shown.some(function(m) { return m.entry.id === 'diarrhoea'; });
+  if (isDiarrhoeaMatch && !getActiveDiarrhoeaEpisode()) {
+    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="' + actions.diarrhoea + '" >'+zi('diaper')+' Track this diarrhoea</button></div>';
+  } else if (isDiarrhoeaMatch && getActiveDiarrhoeaEpisode()) {
+    html += '<div class="fe-center-status">'+zi('diaper')+' Diarrhoea episode already being tracked</div>';
+  }
+
+  var isVomitMatch = shown.some(function(m) { return m.entry.id === 'vomiting'; });
+  if (isVomitMatch && !getActiveVomitingEpisode()) {
+    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="' + actions.vomiting + '" >'+zi('siren')+' Track this vomiting</button></div>';
+  } else if (isVomitMatch && getActiveVomitingEpisode()) {
+    html += '<div class="fe-center-status">'+zi('siren')+' Vomiting episode already being tracked</div>';
+  }
+
+  var isColdMatch = shown.some(function(m) { return m.entry.id === 'cough-cold'; });
+  if (isColdMatch && !getActiveColdEpisode()) {
+    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="' + actions.cold + '" >'+zi('siren')+' Track this cold/cough</button></div>';
+  } else if (isColdMatch && getActiveColdEpisode()) {
+    html += '<div class="fe-center-status">'+zi('siren')+' Cold episode already being tracked</div>';
+  }
+
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know Ziva best.</div>';
+
+  return html;
+}
+
 function checkSymptoms() {
   const input = document.getElementById('symptomInput');
   const query = (input?.value || '').trim().toLowerCase();
@@ -2466,71 +2552,8 @@ function checkSymptoms() {
     return (SEV_RANK[a.severity] || 2) - (SEV_RANK[b.severity] || 2) || b.score - a.score;
   });
 
-  // Show top 2 matches max
-  var html = '';
-  var shown = matches.slice(0, 2);
-  var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
-
-  shown.forEach(function(m) {
-    var e = m.entry;
-    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
-    var sevLabel = m.severity === 'emergency' ? '\u{1F6A8} Emergency' : m.severity === 'warning' ? '\u26A0\uFE0F Monitor closely' : '\u2705 Usually manageable';
-
-    html += '<div class="sc-result ' + sevClass + '">';
-    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
-    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
-
-    html += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
-    html += '<div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
-
-    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
-    html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
-
-    if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + zi('siren') + ' When to seek emergency care</div>';
-      html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
-    }
-    html += '</div>';
-  });
-
-  // Show doctor contact if any match calls for it or is emergency
-  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
-    html += _scDoctorCardHTML(hasEmergency);
-  }
-
-  // Track this fever CTA
-  var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
-  if (isFeverMatch && !getActiveFeverEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="promptFeverTrack" >'+zi('flame')+' Track this fever</button></div>';
-  } else if (isFeverMatch && getActiveFeverEpisode()) {
-    html += '<div class="fe-center-status">'+zi('flame')+' Fever episode already being tracked</div>';
-  }
-
-  var isDiarrhoeaMatch = shown.some(function(m) { return m.entry.id === 'diarrhoea'; });
-  if (isDiarrhoeaMatch && !getActiveDiarrhoeaEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="promptDiarrhoeaTrack" >'+zi('diaper')+' Track this diarrhoea</button></div>';
-  } else if (isDiarrhoeaMatch && getActiveDiarrhoeaEpisode()) {
-    html += '<div class="fe-center-status">'+zi('diaper')+' Diarrhoea episode already being tracked</div>';
-  }
-
-  var isVomitMatch = shown.some(function(m) { return m.entry.id === 'vomiting'; });
-  if (isVomitMatch && !getActiveVomitingEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="promptVomitingTrack" >'+zi('siren')+' Track this vomiting</button></div>';
-  } else if (isVomitMatch && getActiveVomitingEpisode()) {
-    html += '<div class="fe-center-status">'+zi('siren')+' Vomiting episode already being tracked</div>';
-  }
-
-  var isColdMatch = shown.some(function(m) { return m.entry.id === 'cough-cold'; });
-  if (isColdMatch && !getActiveColdEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="promptColdTrack" >'+zi('siren')+' Track this cold/cough</button></div>';
-  } else if (isColdMatch && getActiveColdEpisode()) {
-    html += '<div class="fe-center-status">'+zi('siren')+' Cold episode already being tracked</div>';
-  }
-
-  // Disclaimer
-  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts \u2014 you know Ziva best.</div>';
-
-  resultEl.innerHTML = html;
+  // Delegate to shared renderer (defined above; intelligence.js calls same helper with closeAndPrompt* actions)
+  resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo);
 }
 
 function _scDoctorCardHTML(isEmergency) {
@@ -2540,9 +2563,9 @@ function _scDoctorCardHTML(isEmergency) {
   }
   var html = '<div class="sc-doctor-card">';
   html += '<div class="flex-1-min0">';
-  html += '<div style="font-weight:700;color:var(--text);font-size:var(--fs-sm);">' + (isEmergency ? '\u{1F4DE} ' : '') + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
+  html += '<div style="font-weight:700;color:var(--text);font-size:var(--fs-sm);">' + (isEmergency ? zi('phone') + ' ' : '') + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
   if (doc.phone) {
-    html += '<a href="tel:' + doc.phone + '" style="font-size:var(--fs-md);display:inline-block;margin-top:4px;">' + (isEmergency ? '\u260E\uFE0F Call Now: ' : '\u260E\uFE0F ') + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+    html += '<a href="tel:' + doc.phone + '" style="font-size:var(--fs-md);display:inline-block;margin-top:4px;">' + zi('phone') + (isEmergency ? ' Call Now: ' : ' ') + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
   }
   if (doc.address) {
     html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:2px;">' + escHtml(doc.address) + '</div>';
@@ -9619,3 +9642,4 @@ function renderInfoVisitPrep() {
 }
 
 // ─────────────────────────────────────────
+

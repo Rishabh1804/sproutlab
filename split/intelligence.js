@@ -11948,62 +11948,17 @@ function runHomeSymptomCheck() {
   var SEV_RANK = { emergency: 0, warning: 1, mild: 2 };
   matches.sort(function(a, b) { return (SEV_RANK[a.severity] || 2) - (SEV_RANK[b.severity] || 2) || b.score - a.score; });
 
-  var html = '';
-  var shown = matches.slice(0, 2);
-  var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
-
-  shown.forEach(function(m) {
-    var e = m.entry;
-    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
-    var sevLabel = m.severity === 'emergency' ? '\u{1F6A8} Emergency' : m.severity === 'warning' ? '\u26A0\uFE0F Monitor closely' : '\u2705 Usually manageable';
-    html += '<div class="sc-result ' + sevClass + '">';
-    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
-    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
-    html += '<div class="sc-section"><div class="sc-section-title">What to do</div><div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
-    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div><div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
-    if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">\u{1F6A8} When to seek emergency care</div>';
-      html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
+  // Delegate to shared renderer (defined in medical.js; loaded earlier per concat order).
+  // Home-overlay variant uses closeAndPrompt* actions so the modal closes before the
+  // episode-tracking prompt opens \u2014 per \u00A71.2 pre-merge diff gate behavioral drift.
+  resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo, {
+    actions: {
+      fever:     'closeAndPromptFever',
+      diarrhoea: 'closeAndPromptDiarrhoea',
+      vomiting:  'closeAndPromptVomiting',
+      cold:      'closeAndPromptCold'
     }
-    html += '</div>';
   });
-
-  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
-    html += _scDoctorCardHTML(hasEmergency);
-  }
-
-  // Track this fever CTA
-  var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
-  if (isFeverMatch && !getActiveFeverEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="closeAndPromptFever" >'+zi('flame')+' Track this fever</button></div>';
-  } else if (isFeverMatch && getActiveFeverEpisode()) {
-    html += '<div class="fe-center-status">'+zi('flame')+' Fever episode already being tracked</div>';
-  }
-
-  // Track this diarrhoea CTA
-  var isDiarrhoeaMatch = shown.some(function(m) { return m.entry.id === 'diarrhoea'; });
-  if (isDiarrhoeaMatch && !getActiveDiarrhoeaEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="closeAndPromptDiarrhoea" >'+zi('diaper')+' Track this diarrhoea</button></div>';
-  } else if (isDiarrhoeaMatch && getActiveDiarrhoeaEpisode()) {
-    html += '<div class="fe-center-status">'+zi('diaper')+' Diarrhoea episode already being tracked</div>';
-  }
-
-  var isVomitMatch = shown.some(function(m) { return m.entry.id === 'vomiting'; });
-  if (isVomitMatch && !getActiveVomitingEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="closeAndPromptVomiting" >'+zi('siren')+' Track this vomiting</button></div>';
-  } else if (isVomitMatch && getActiveVomitingEpisode()) {
-    html += '<div class="fe-center-status">'+zi('siren')+' Vomiting episode already being tracked</div>';
-  }
-
-  var isColdMatch = shown.some(function(m) { return m.entry.id === 'cough-cold'; });
-  if (isColdMatch && !getActiveColdEpisode()) {
-    html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="closeAndPromptCold" >'+zi('siren')+' Track this cold/cough</button></div>';
-  } else if (isColdMatch && getActiveColdEpisode()) {
-    html += '<div class="fe-center-status">'+zi('siren')+' Cold episode already being tracked</div>';
-  }
-
-  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician.</div>';
-  resultEl.innerHTML = html;
 }
 
 function runHomeFoodQuery() {
@@ -18137,3 +18092,4 @@ window.addEventListener('popstate', function() {
   if (document.querySelector('.ct-picker-scrim')) { ctCloseOverlay('picker'); return; }
   if (document.querySelector('.ct-detail-scrim')) { ctCloseOverlay('detail'); return; }
 });
+
