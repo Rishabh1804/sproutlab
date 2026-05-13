@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v1 DRAFT — awaiting Maren + Kael parallel audit, then Lyra synthesis, then Cipher Edict V structural pass, then Sovereign ratification
+**Status:** v2 — Maren V-M1..V-M9 + Kael V-K7..V-K14 folded (audit-chain step [4] DONE 2026-05-13); awaiting Cipher Edict V structural pass + Sovereign ratification
 **Branch:** `claude/d1-and-weave-isl-specs` (or successor)
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 — this implements §6.D1 + ships §6.5.D1 phase contracts
 **Predecessor spec:** `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` v3 — bridge build (Mode-2 merged 2026-05-13 as PR #67 → 7342d5d artifact regen). SG-5 tight-sequencing fires now.
@@ -17,7 +17,7 @@
 D1 is the **Polish** phase. It restructures the Symptom Checker result card without rewriting content. Per vision v2.1 §6.D1 deliverables list, expanded with v2 phase-contracts §6.5.D1 commitments:
 
 1. **`.sc-rail` left-edge severity strip** on every result card — rose / amber / sage rail token; renders as a 4px wide left-edge accent bar inside the result card padding, visible through the entire scroll length of the card body. **Rose pulse-glow runs once on emergency entrance only** (1.5s, then steady — see §8 motion budget).
-2. **Sticky doctor-CTA footer on emergency cards** — `position: sticky; bottom: 0;` within the modal scroll container (NOT document); transitions in shadow-grow on scroll past 100px. Sticky-CTA padding rule for modal scroll container: `padding-bottom ≥ sticky-CTA height` to prevent CTA from covering DO-NOT or emergency-criteria content (V-M1 #5; verification fixture per §7).
+2. **Sticky doctor-CTA footer on emergency cards** (Home overlay path ONLY — see asymmetry note below) — `position: sticky; bottom: 0;` within the modal scroll container; transitions in shadow-grow on scroll past 100px. Sticky-CTA padding rule for modal scroll container: `padding-bottom ≥ sticky-CTA height` to prevent CTA from covering DO-NOT or emergency-criteria content (V-M1 #5 + V-M3 fold; verification fixture per §7). **Sticky footer renders the call CTA + phone number ONLY — does NOT mirror doctor name, title, or address (V-M3 fold).** Hoisted-top doctor card is the full-detail surface; sticky footer is the duplicate-action thumb-reach insurance, not duplicate information.
 3. **Severity-aware doctor-card hierarchy** (V-K3 #2 + bridge B-M3) — **flip ships from day one, no unconditional render then re-differentiation.** Three variants:
    - **Emergency** (`severity === 'emergency'`): doctor card hoists to top of result card; phone number primary (`fs-md` Nunito-700, ≥60×60 tap), name as caption beneath (`fs-xs` Nunito-500); secondary "View doctor info" link below.
    - **Warning** (`severity === 'warning'`): doctor card mid-card (post-WHEN-TO-ESCALATE section); softer "📞 Dr. RK Agarwal — call if needed" pattern; phone is `fs-base` Nunito-600.
@@ -75,6 +75,7 @@ This spec ships these contracts. Cipher Edict V at impl verifies presence. Downs
 | 5 | Rail scope: result-card only (D3 may extend to triage card via additive rule) | Bounded surface; D3 doesn't refactor D1's selector |
 | 6 | Touch-target floor: 44×44 (interactive); 60×60 (emergency primary CTA) | iOS HIG + WCAG 2.2 SC 2.5.8 + thumb-reach-under-stress |
 | 7 | `prefers-reduced-motion: reduce` override exists for every animated rule introduced in D1 | Vestibular-sensitive parents on dark mode at 2am are real and disproportionately the ones up at 2am |
+| 8 | `.sc-result { position: relative }` — descendant absolute-positioned elements anchor here | Required for `.sc-rail`; permanent constraint downstream. D2/D3 additions that introduce new absolute children must verify intentional anchoring (V-K13 fold) |
 
 > **🎩 Cipher (skill register-flip):** the contract list above duplicates §6.5.D1 of vision v2.1. That's intentional per canon-cc-022 — phase-specs are self-contained for downstream review (Cipher Edict V on D1's impl reads only this spec, not vision v2.1, when confirming contract surface).
 
@@ -149,9 +150,18 @@ html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
 
 > **🎩 Maren (skill register-flip):** `aria-hidden="true"` is deliberate — the rail is decorative; severity is communicated to AT users by the badge text + section structure. Don't add the rail to the SR reading order.
 
-### 2.2 Sticky doctor-CTA footer on emergency cards
+### 2.2 Sticky doctor-CTA footer on emergency cards — Home-overlay-only
 
-**Target structure:**
+**Surface asymmetry (V-K8 fold, P0 resolution):** the SC has TWO render entry points with DIFFERENT container topology:
+
+| Path | Container | Scroll behavior | Sticky-footer applicability |
+|---|---|---|---|
+| **Home overlay** | `#homeSymptomOverlay > .modal` (created dynamically by `openHomeSymptomChecker()` in `intelligence.js:11873`; inline-styled `max-height:85vh; overflow-y:auto`) | True modal scroll container | **Sticky-footer SHIPS** |
+| **Medical tab** | `#symptomResult` (inline div in `template.html:711`, page-level scroll) | NO modal scroll container; result renders inline within the Medical-tab page; page-level `<body>` scroll | **Sticky-footer DOES NOT SHIP on this path** — `position: sticky` against page-scroll would either anchor to viewport-bottom always (intrusive) or no-op (depending on ancestor `overflow` chain). Hoisted-top doctor card is the only emergency-CTA surface on Medical tab in D1. |
+
+This asymmetry is **intentional and documented**, not a defect. D2 may revisit (e.g., refactor Medical tab SC into its own modal for parity); D1 ships the asymmetry as-is.
+
+**Target structure (Home overlay path only):**
 
 ```html
 <div class="sc-result sc-emergency">
@@ -163,9 +173,9 @@ html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
     <div class="sc-doctor-name">Dr. RK Agarwal · Pediatrician</div>
   </div>
   <!-- ...sections... -->
-  <div class="sc-sticky-footer">
-    <a class="sc-call-primary" href="tel:..." style="...">
-      {zi('phone')} Call Now
+  <div class="sc-sticky-footer">     <!-- ONLY on Home overlay path; ONLY on emergency tier -->
+    <a class="sc-call-primary" href="tel:...">
+      {zi('phone')} Call Now: +91 98351 67975
     </a>
   </div>
 </div>
@@ -193,22 +203,20 @@ html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
 }
 ```
 
-**Modal scroll container padding-bottom rule** (V-M1 #5):
-
-The Symptom Checker overlay container needs `padding-bottom: 60px` (matching sticky-CTA height) added to its scroll-area so the sticky CTA never covers DO-NOT or emergency-criteria content during scroll.
+**Modal scroll container padding-bottom rule** (V-M1 #5 — Home overlay only):
 
 ```css
-#homeSymptomOverlay .modal-scroll-area,
-#symptomResult-container { padding-bottom: 60px; }
+#homeSymptomOverlay > .modal { padding-bottom: 60px; }
 ```
 
-(Selectors verify-on-impl per Cipher Edict V — exact selector depends on existing modal class names.)
+(Single selector — confirmed via spec-time read of `intelligence.js:11873`. NO Medical-tab parallel because Medical-tab path has no modal container.)
 
-**JS — pin shadow on scroll past 100px:**
+**JS — pin shadow on scroll past 100px (Home overlay only):**
 
 ```js
 function _scInitStickyShadow(container) {
-  if (!container) return;
+  if (!container || container.dataset.scStickyInit === '1') return;  // V-K11 + V-M9 idempotency guard
+  container.dataset.scStickyInit = '1';
   var footer = container.querySelector('.sc-sticky-footer');
   if (!footer) return;
   container.addEventListener('scroll', function() {
@@ -217,22 +225,23 @@ function _scInitStickyShadow(container) {
 }
 ```
 
-Called from the SC overlay open + Medical-tab render entry points after `resultEl.innerHTML = ...`.
+Called from `openHomeSymptomChecker()` after the overlay is appended to body, with `_scInitStickyShadow(document.querySelector('#homeSymptomOverlay > .modal'))`. **Single call site (V-K11 fold)** — no Medical-tab parallel call. The `dataset.scStickyInit` guard makes the function idempotent against re-open: if user opens Symptom Checker, closes, re-opens, the new modal element is a fresh DOM node (the existing one is `.remove()`'d in `closeHomeSymptomChecker`), so the dataset flag will not be set. If a future refactor reuses the modal element, the guard prevents listener stacking.
 
-> **🎩 Kael (skill register-flip):** sticky-on-modal-scroll discipline (NOT document-scroll) per §6.5.D1 #3. The risk if you sloppy this: on a tall result the footer "sticks" relative to the page, not the modal, and ends up overlapping the modal close X. Verify selector against the actual modal scroll-container at impl. If the modal isn't a `overflow: auto` container, sticky won't fire — **need to verify the Home overlay vs Medical tab scroll containers behave identically.** Document the exact selectors in the build PR description.
+> **🎩 Maren (skill register-flip on v2):** the asymmetry between Home overlay (sticky lands) and Medical tab (sticky doesn't) means a parent who happens to be in the Medical tab during an emergency loses one surface of the duplicate-action thumb-reach insurance. **The hoisted-top doctor card on Medical tab still works** — the parent can call from there. So the gap is "good ↔ better" not "broken ↔ working." Acceptable for D1; document as a known-and-accepted feature gap.
+
+> **🎩 Kael (skill register-flip on v2):** §V-K8 P0 closed. Selectors named verbatim, modal-vs-inline asymmetry is now load-bearing in the spec rather than implicit. D2 has a clear refactor candidate if surface parity becomes important (likely when D3 footer-triad makes the Medical tab feel disjoint from Home overlay).
 
 ### 2.3 Severity-aware doctor-card hierarchy
 
-**Renderer change** — add `severity` parameter to `_scDoctorCardHTML`:
+**Renderer change** — drop the legacy `isEmergency` parameter (V-K9 P1 fold; code-search confirms zero external callers as of bridge merge sha 7342d5d):
 
 ```js
-function _scDoctorCardHTML(severity, isEmergency) {
-  // severity: 'emergency' | 'warning' | 'mild'  (NEW; D1)
-  // isEmergency: boolean (legacy; preserved for back-compat through D1 only)
+function _scDoctorCardHTML(severity) {
+  // severity: 'emergency' | 'warning' | 'mild'
   var doc = getPrimaryDoctor();
   if (!doc) {
-    return '<div class="sc-doctor-card sc-doctor-card-' + severity + '"><span class="sc-doctor-empty">' +
-           'No doctor saved yet — </span><a href="#" data-action="openDoctorModal" class="sc-doctor-add-link">+ Add Doctor</a></div>';
+    // V-M1 + V-M2 fold per §2.3.1
+    return /* see §2.3.1 */;
   }
   var cardClass = 'sc-doctor-card sc-doctor-card-' + severity;
   var html = '<div class="' + cardClass + '">';
@@ -251,7 +260,8 @@ function _scDoctorCardHTML(severity, isEmergency) {
               zi('phone') + ' Call if needed: ' + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
     }
   } else {
-    // Mild: de-emphasised
+    // Mild: de-emphasised. For D1 + D2 (no Track CTA shipped yet), this
+    // renders below body; D3 Track CTA insertion adjusts position. (V-M4 fold)
     html += '<div class="sc-doctor-name sc-doctor-name-mild">' + escHtml(doc.name) +
             (doc.title ? ' · ' + escHtml(doc.title) : '') + '</div>';
     if (doc.phone) {
@@ -269,24 +279,35 @@ function _scDoctorCardHTML(severity, isEmergency) {
 
 **Caller change** — `_renderSymptomCheckerResults` passes severity through:
 
-The current bridge code calls `_scDoctorCardHTML(hasEmergency)`. D1 changes this to pass per-match severity for the doctor card placement. Need to think about which severity to use when there are multiple matches: highest-severity-shown-on-card (i.e., `hasEmergency ? 'emergency' : (hasWarning ? 'warning' : 'mild')`).
+The current bridge code calls `_scDoctorCardHTML(hasEmergency)`. D1 changes this to pass severity (legacy `isEmergency` param dropped per V-K9 — `_scDoctorCardHTML(severity)` only):
 
 ```js
 // inside _renderSymptomCheckerResults, after shown.forEach(...)
 if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
   var hasWarning = shown.some(function(m) { return m.severity === 'warning'; });
   var docSev = hasEmergency ? 'emergency' : (hasWarning ? 'warning' : 'mild');
-  html += _scDoctorCardHTML(docSev, hasEmergency);
+  html += _scDoctorCardHTML(docSev);
 }
 ```
 
-**Note on legacy `isEmergency` parameter:** preserved through D1 for back-compat with any existing callers (none in current code, but defensive). D2 cleanup PR can drop it after Cipher confirms no external callers.
+### 2.3.2 D1 doctor-card render-decision matrix (V-M8 fold — Cipher Edict V verification reference)
+
+| Severity | callDoctor | Has doctor saved | D1 render |
+|---|---|---|---|
+| emergency | (any) | yes | hoist-top + sticky footer (Home overlay only) — see §2.4.1 |
+| emergency | (any) | no | §2.3.1 no-doctor + emergency 112 fallback (V-M2 fold) |
+| warning | true | yes | mid-card softer call CTA |
+| warning | true | no | bare `+ Add Doctor` + V-M1 contextual nudge ("Add a doctor so you can call if symptoms worsen") |
+| warning | false | (any) | no doctor card (matches `needsDoctor` logic in §2.4.1) |
+| mild | true | yes | de-emphasised below body |
+| mild | true | no | bare `+ Add Doctor` (no nudge — mild doesn't warrant call-urgency framing) |
+| mild | false | (any) | no doctor card |
 
 > **🎩 Maren (skill register-flip):** the no-doctor branch needs to honor severity too. Currently it has only one shape ("No doctor saved yet — + Add Doctor"). On emergency, this is a P0 surface failure: parent in active emergency, no doctor, no fallback. **D1 must add an emergency-tier no-doctor variant that includes a fallback to "If this is a true emergency, call your local emergency services" (text only — `lifeThreat` rendering with the actual number is D2/D3).** Spec edit needed: `_scDoctorCardHTML('emergency', ...)` no-doctor branch shows `+ Add Doctor` PLUS a one-line emergency-services fallback note. Adding to §2.3 below.
 
-### 2.3.1 No-doctor emergency fallback (Maren-amended)
+### 2.3.1 No-doctor severity-aware fallback (Maren V-M1 + V-M2 fold)
 
-When `getPrimaryDoctor()` returns null AND severity is emergency, the no-doctor render gains a fallback note:
+When `getPrimaryDoctor()` returns null, the no-doctor render is severity-aware:
 
 ```js
 if (!doc) {
@@ -294,8 +315,21 @@ if (!doc) {
   emptyHtml += '<span class="sc-doctor-empty">No doctor saved yet — </span>';
   emptyHtml += '<a href="#" data-action="openDoctorModal" class="sc-doctor-add-link">+ Add Doctor</a>';
   if (severity === 'emergency') {
-    emptyHtml += '<div class="sc-emergency-fallback">If this is a true emergency, call your local emergency services immediately.</div>';
+    // V-M2 P0 fold: hardcoded 112 (India unified emergency, live since 2019).
+    // Aurelius confirms the value as known constant for the locale this app
+    // ships to. D2 replaces with emergencyContacts.{region} lookup once
+    // SG-WI-MODULE landing + locale-config table land.
+    emptyHtml += '<div class="sc-emergency-fallback">If this is a true emergency, call your local emergency number now (in India: <strong>112</strong>).</div>';
+  } else if (severity === 'warning') {
+    // V-M1 P0 fold: warning-tier no-doctor needs contextual nudge so the parent
+    // mentally connects "the symptom card said call if needed" with "this
+    // generic +Add Doctor link is the call surface." NOT the emergency-services
+    // fallback (would over-alarm); just a softer one-liner naming WHY the
+    // +Add Doctor matters here.
+    emptyHtml += '<div class="sc-doctor-empty-nudge">Add a doctor so you can call if symptoms worsen.</div>';
   }
+  // Mild tier: bare + Add Doctor (no nudge — mild doesn't warrant the
+  // call-urgency framing).
   emptyHtml += '</div>';
   return emptyHtml;
 }
@@ -316,9 +350,15 @@ CSS:
   background: rgba(220,60,60,0.2);
   color: var(--tc-danger);
 }
+.sc-doctor-empty-nudge {
+  margin-top: var(--sp-6);
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  font-style: italic;
+}
 ```
 
-D2 will replace the static text with the proper `lifeThreat` rendering once `emergencyContacts.{region}` lands.
+D2 replaces the static "112" string in the emergency fallback with the proper `lifeThreat` rendering once `emergencyContacts.{region}` lands (per SG-D1-LT default Slip).
 
 ### 2.4 Emergency-tier layout reflow
 
@@ -368,14 +408,31 @@ if (hasEmergency) {
 
 > **🎩 Kael (skill register-flip):** the per-match doctor-card hoist (inside forEach) plus the aggregate doctor-card render (outside forEach) duplicates the doctor card on emergency entries. **Need a discipline: render doctor card ONCE per result-list, not per-match.** Refactor: collect emergency matches' need-for-hoist boolean during the forEach, then render exactly one doctor card outside the forEach with the right severity + position. Spec edit needed in §2.4 — let me amend.
 
-### 2.4.1 Single-render doctor card discipline (Kael-amended)
+### 2.4.1 Single-render doctor card discipline (Kael-amended) + empty-state explicit (V-K7 fold) + cross-jurisdiction provenance (V-K14 note)
+
+> *Provenance note (V-K14 fold):* this subsection's helper structure is a Kael-skill-flip amendment during drafting (single-render discipline). Maren's Mode-1 audit on §2.4.1 reviewed Kael-authored architecture inside Care-jurisdiction code (`medical.js`). cc-022 lifecycle hygiene preserves the cross-jurisdiction provenance.
 
 **Refactored helper logic:**
 
 ```js
 function _renderSymptomCheckerResults(matches, ageMo, opts) {
   opts = opts || {};
-  var actions = opts.actions || { /* unchanged defaults */ };
+  // V-K10 fold: opts.actions is preserved from the bridge-shipped signature
+  // for back-compat with intelligence.js#runHomeSymptomCheck which passes
+  // closeAndPrompt* variants. D1 does NOT introduce new actions consumers;
+  // D3 will add Track-CTA action wiring through opts.actions. Documenting
+  // here so Cipher Edict V doesn't flag the unused-locally variable as dead.
+  var actions = opts.actions || { /* unchanged defaults from bridge */ };
+
+  // V-K7 fold: empty-state branch — when matches.length === 0, the helper
+  // is NOT called by the caller (medical.js#checkSymptoms and
+  // intelligence.js#runHomeSymptomCheck both return early with their
+  // existing bridge-shipped no-match message). D1 does not touch
+  // empty-state. This guard is defensive in case a future caller routes
+  // empty matches through the helper:
+  if (!matches || matches.length === 0) {
+    return '';  // Caller renders no-match UI before calling helper
+  }
 
   var html = '';
   var shown = matches.slice(0, 2);
@@ -385,7 +442,7 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
 
   // For emergency: hoist doctor card to TOP of the result-list (before any cards)
   if (hasEmergency && needsDoctor) {
-    html += _scDoctorCardHTML('emergency', true);
+    html += _scDoctorCardHTML('emergency');
   }
 
   shown.forEach(function(m) {
@@ -404,13 +461,16 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
   // For non-emergency: doctor card AFTER the result cards
   if (!hasEmergency && needsDoctor) {
     var docSev = hasWarning ? 'warning' : 'mild';
-    html += _scDoctorCardHTML(docSev, false);
+    html += _scDoctorCardHTML(docSev);
   }
 
-  // Episode tracking CTAs (unchanged from bridge)
+  // Episode tracking CTAs (unchanged from bridge — uses opts.actions)
   // ...
 
-  // Sticky CTA mirror (only on emergency, only if doctor present)
+  // Sticky CTA mirror (Home overlay path only — see §2.2 surface asymmetry;
+  // emit the markup unconditionally on emergency tier; CSS position:sticky
+  // no-ops on Medical tab path since #symptomResult has no scroll container.
+  // V-M3 fold: CTA + number ONLY, no doctor name/address/title.)
   if (hasEmergency) {
     var doc = getPrimaryDoctor();
     if (doc) {
@@ -429,10 +489,12 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
 ```
 
 **Properties:**
-- Doctor card rendered exactly once per result-list
-- Emergency: hoisted to top + sticky footer at bottom (two surfaces of the same number; intentional per G2 — primary always one tap away)
+- Doctor card rendered exactly once per result-list (Kael discipline preserved)
+- Emergency: hoisted to top + sticky footer at bottom (two surfaces of the same number; V-M3 fold = CTA+number only in footer, no name duplication)
 - Warning/Mild: single card after the result body, severity-tinted
 - No duplication; no stale code paths
+- Empty state explicit (V-K7); upstream callers handle their own no-match UI
+- `opts.actions` preserved for D3 Track-CTA wiring (V-K10 documented; not D1 scope)
 
 ---
 
@@ -440,7 +502,7 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
 
 | File | Bridge state (post-PR #67) | D1 changes |
 |---|---|---|
-| `split/template.html` | + `zi-phone` sprite | (no change in D1) |
+| `split/template.html` | + `zi-phone` sprite | (no change in D1 if SG-D1-LT defaults Slip; +1 sprite if SG-D1-LT amended to D1-include — see §0.1 #9 + §10 SG-D1-LT effect column) (V-K12 fold) |
 | `split/styles.css` | + `--tc-sage-light` token (light + dark); + `[data-theme="dark"] .sc-mild .sc-sev-badge` rule | + `.sc-rail` rule + 3 severity variants + dark variants + emergency pulse-glow + reduced-motion override; + `.sc-sticky-footer` rule + pinned variant + reduced-motion override; + `.sc-doctor-card-{emergency,warning,mild}` variants + `.sc-call-primary/secondary/tertiary` size variants; + `.sc-emergency-fallback` rule (+ dark variant); + modal scroll-area `padding-bottom` rule; + `position: relative` on `.sc-result` |
 | `split/medical.js` | + `_renderSymptomCheckerResults` shared helper + `_scDoctorCardHTML` HR-1 ports | refactor `_renderSymptomCheckerResults` per §2.4.1 (doctor-card discipline + rail + sticky footer + per-card layout); refactor `_scDoctorCardHTML` per §2.3 (severity-aware variants); add `_scInitStickyShadow` per §2.2 |
 | `split/intelligence.js` | call site collapsed to one-liner with `opts.actions` | (no change required — helper signature stays compatible; sticky-shadow init call added at the `runHomeSymptomCheck` exit point) |
@@ -562,13 +624,15 @@ Before D1 ships (real-device verification by Maren post-Mode-2 build merge OR pr
 - mild × light (post-bridge — Maren retired conditional bump)
 - mild × dark (post-bridge — passing 8.86:1 per real-device + math)
 
-**+ 6 D1-NEW combos:**
-- `.sc-rail` × {rose, amber, sage} × {light, dark} — verify rail visible against card background; verify pulse-glow on emergency does NOT compromise contrast in steady state
+**+ 8 D1-NEW combos** (V-M6 fold expanded from 6 to 8):
+- `.sc-rail` × {rose, amber, sage} × {light, dark} — verify rail visible against card background; verify pulse-glow steady-state does NOT compromise contrast
 - `.sc-doctor-card-emergency` background + `.sc-call-primary` text — verify ≥4.5:1 in both themes
 - `.sc-doctor-card-warning` background + `.sc-call-secondary` text
 - `.sc-doctor-card-mild` background + `.sc-call-tertiary` text
-- `.sc-emergency-fallback` background + text in both themes (the no-doctor tier)
+- `.sc-emergency-fallback` background + text in both themes (the no-doctor tier; **composited capture from real-device, NOT stylesheet RGBA math** — V-M6 fold a)
+- `.sc-doctor-empty-nudge` text on `.sc-doctor-card-warning` background in both themes (the new V-M1 nudge surface)
 - `.sc-sticky-footer` background + `.sc-call-primary` text on emergency (with shadow)
+- **Pulse-glow mid-animation frame** — capture at ~750ms post-entrance for emergency × {light, dark}; verify the 50%-keyframe `box-shadow: 0 0 8px 2px rgba(220,60,60,0.5)` glow does NOT bleed onto adjacent text and reduce title/badge contrast during the 1.5s window (V-M6 fold b)
 
 **Mathematical pre-check** (Lyra recommends running before real-device): use the same Python contrast-ratio script from bridge §8.2 against each combo. Commit results to D1 build PR.
 
@@ -594,6 +658,7 @@ Motion-budget audit (Cipher Edict V on impl):
 - Sum max(duration) per selector path: confirm `≤200ms` for non-emergency entrance motion
 - Confirm 1.5s pulse-glow exists ONLY on `.sc-result.sc-emergency .sc-rail`
 - Confirm `prefers-reduced-motion: reduce` override exists for every animated rule
+- **V-M5 fold: confirm pulse-glow `.sc-rail-pulse` runs ONCE per first-paint, NEVER on focus / tab visibility-change / scroll-into-view re-trigger.** CSS `animation: ... 1` with `animation-iteration-count: 1` enforces no-loop, but does NOT prevent re-trigger on element re-mount. Cipher verifies via DOM-state inspection: under multi-card render (rare; multiple emergency matches), both rails pulse in parallel — that's fine. Re-focus/visibility-change must NOT re-trigger.
 
 ---
 
@@ -619,17 +684,43 @@ CSS pattern:
   padding: var(--sp-10) var(--sp-12);
   /* ...existing styling... */
 }
+.sc-call-tertiary {
+  /* V-M4 fold: min-height 44px MANDATORY regardless of font-size.
+     Visual de-emphasis via font-weight + color, NOT shrinking the tap target. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--sp-6) var(--sp-8);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--mid);
+}
+.sc-doctor-add-link {
+  /* V-M7 fold: 44×44 hit-area centered on text; preserve text-link affordance
+     via underline + Nunito-600 + tc-link color. Cipher Edict V on impl
+     confirms visual reads as "tappable text link" not "weirdly large". */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--sp-4) var(--sp-8);
+  text-decoration: underline;
+  font-weight: 600;
+  color: var(--tc-sage);  /* tokenized link color */
+}
 ```
 
 ---
 
-## 10. Open questions for Sovereign
+## 10. Open questions for Sovereign — v2 stances locked
 
-| ID | Question | Default | Effect if amended |
-|---|---|---|---|
-| **SG-D1-LT** | Include `lifeThreat` rendering in D1 (per §0.1 #9), or slip to D2? | **Slip to D2** — depends on `data.js` SYMPTOM_DB shape, Aurelius content review, and `emergencyContacts` config table; all D2 work | If Yes: §0.1 #9 expands; §3 per-file map adds `data.js` + `template.html` (`zi-emergency` or repurpose `zi-siren`); §2.3.1 no-doctor fallback shifts to render the actual number |
-| **SG-D1-PULSE** | Emergency rail pulse-glow runs once (default) vs. repeatedly (every 5s) vs. never? | **Once** — V-K5 motion budget allows 1.5s entrance attention-draw; repeated would exceed budget; never sacrifices the attention call | If "repeatedly": §2.1 + §8 amend; possibly violates V-K5 attention-draw budget; would need Sovereign override |
-| **SG-D1-DOCTOR-EMPTY-WARNING** | Warning-tier no-doctor: include emergency-services fallback like §2.3.1 emergency tier, or just `+ Add Doctor`? | **Just + Add Doctor** — warning is "monitor closely", not "act immediately"; emergency-services fallback would over-alarm | If "include fallback": §2.3.1 extends to warning tier; minor |
+| ID | Question | Default | Audit stances | Status in v2 |
+|---|---|---|---|---|
+| **SG-D1-LT** | Include `lifeThreat` rendering in D1 (per §0.1 #9), or slip to D2? | Slip to D2 | Maren: Concur (slip) — V-M2 fills gap with hardcoded 112 fallback. Kael: Concur (slip) — collapses three phase boundaries. | **HOLDING DEFAULT (Slip).** Sovereign can still amend at ratification. |
+| **SG-D1-PULSE** | Emergency rail pulse-glow runs once (default) vs. repeatedly vs. never? | Once | Maren: Concur (once) + V-M5 verification (no re-trigger). Kael: Concur (once). | **HOLDING DEFAULT (Once).** V-M5 verification gate added to §8. |
+| **SG-D1-DOCTOR-EMPTY-WARNING** | Warning-tier no-doctor: emergency-services fallback or bare `+ Add Doctor`? | Just + Add Doctor | Maren: AMEND → bare + V-M1 contextual nudge ("Add a doctor so you can call if symptoms worsen"). NOT emergency-services fallback. Kael: Concur (no escalation to emergency-services on warning tier). | **AMENDED via Maren V-M1.** Now: bare `+ Add Doctor` PLUS contextual nudge. NOT emergency-services fallback. Both Governors converge on this stance. |
 
 **Amendment protocol:** same as bridge v3 + vision v2.1 — Sovereign overrides any default by stating the override; Lyra revises v2 in-place (single round, no re-audit unless override changes audit-chain shape).
 
@@ -649,3 +740,24 @@ D1 ships the foundation. Downstream:
 ## 12. Changelog
 
 - **v1 (2026-05-13):** initial draft. Ships §6.5.D1 phase contracts. Inherits from vision v2.1 §6.D1 + bridge v3 (post-merge). Incorporates two Maren-skill register-flips during drafting (§2.1 aria-hidden discipline, §2.3.1 no-doctor emergency fallback) and one Kael-skill register-flip (§2.4.1 single-render doctor-card discipline) and one Cipher-skill register-flip (§1 contract-mirror rationale). Three Sovereign-gates surfaced (SG-D1-LT, SG-D1-PULSE, SG-D1-DOCTOR-EMPTY-WARNING) with conservative defaults. Awaiting Maren + Kael parallel audit.
+- **v2 (2026-05-13):** Audit-chain step [4] Lyra synthesis. Folds Maren V-M1..V-M9 (2 P0 + 4 P1 + 3 P2) + Kael V-K7..V-K14 (1 P0 + 4 P1 + 3 P2) returns. Substantive amendments:
+  - **V-M1 P0:** Warning-tier no-doctor contextual nudge ("Add a doctor so you can call if symptoms worsen"). §2.3.1 expanded. SG-D1-DOCTOR-EMPTY-WARNING AMENDED (both Governors concur).
+  - **V-M2 P0:** Emergency no-doctor fallback hardcodes 112 (India unified emergency, live since 2019). §2.3.1 + §11 D2 forward-pointer for `emergencyContacts.{region}` lookup.
+  - **V-K8 P0:** §2.2 sticky-on-modal-scroll selectors named verbatim. **Critical surface asymmetry surfaced and documented:** Home overlay path = true modal (`#homeSymptomOverlay > .modal` with `max-height:85vh; overflow-y:auto`); Medical tab path = inline (`#symptomResult` with no scroll container). **Sticky footer SHIPS on Home overlay only; Medical tab gets hoisted-top doctor card only (no sticky).** Spec acknowledges asymmetry as known-and-accepted feature gap; D2 candidate refactor.
+  - **V-M3 P1:** Sticky footer renders CTA + phone number ONLY (no doctor name/address/title duplication). §2.2 + §2.4.1 amended.
+  - **V-M4 P1:** `.sc-call-tertiary` `min-height: 44px` MANDATORY regardless of font-size. §9 expanded.
+  - **V-M6 P1:** Contrast fixture expanded from 12 to 14 captures: composited no-doctor-fallback (real-device, not stylesheet math) + pulse-glow mid-animation frame ~750ms.
+  - **V-M8 P1:** §2.3.2 NEW — D1 doctor-card render-decision matrix (8 rows) for Cipher Edict V verification reference.
+  - **V-K7 P1:** Empty-state branch (matches.length === 0) explicit; defensive guard in helper.
+  - **V-K9 P1:** Drop legacy `isEmergency` parameter NOW (code-search confirms zero external callers as of bridge merge sha 7342d5d). Helper signature is `_scDoctorCardHTML(severity)` only.
+  - **V-K10 P1:** `opts.actions` documented as preserved for D3 Track-CTA wiring (not D1 scope) — prevents Cipher dead-locals flag.
+  - **V-K11 P1:** `_scInitStickyShadow` idempotency via `dataset.scStickyInit` guard. Single call site (Home overlay only — Medical tab no-modal asymmetry per V-K8).
+  - **V-M5 P2:** Pulse-glow no-re-trigger constraint added to §8 motion-budget audit.
+  - **V-M7 P2:** `.sc-doctor-add-link` 44×44 hit-area + text-link affordance preservation in §9.
+  - **V-M9 P2:** _scInitStickyShadow idempotency (covered by V-K11 fold).
+  - **V-K12 P2:** `template.html` row in §3 gates on SG-D1-LT amendment.
+  - **V-K13 P2:** Row 8 added to §1 / §6 contracts: `.sc-result { position: relative }` as permanent constraint.
+  - **V-K14 P2:** §2.4.1 cross-jurisdiction provenance note (Kael-architected logic in Care-jurisdiction code).
+  - **Sub-Sovereign-gates:** SG-D1-LT held (Slip per both Governors), SG-D1-PULSE held (Once + V-M5 verification), SG-D1-DOCTOR-EMPTY-WARNING amended (Maren V-M1 nudge; Kael concur).
+  - **Edict V readiness:** Kael's V-K6 form-pass estimate at v1 = 60%; v2 fold lifts to ~85% (V-K8 selector resolution + V-K11 listener-leak commit + V-M6 fixture expansion are the largest gap-closers).
+  - Cipher Edict V structural pass NEXT.
