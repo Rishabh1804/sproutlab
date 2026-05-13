@@ -1,6 +1,6 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence)
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-13
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
@@ -9,13 +9,7 @@
 
 ### Home Tab
 
-#### P1 — Symptom Checker: severity badge invisible on `crying-fussy` (mild) entry — Sovereign-escalated 2026-05-11
-- **Symptom:** Sovereign dark-mode screenshot of Symptom Checker → "Crying a lot" chip-tap result renders the title and body but the `<span class="sc-sev-badge">✅ Usually manageable</span>` is not visually present. Adjacent screenshot of "Constipation" (also `severity: 'mild'`, identical render code path) renders the badge cleanly.
-- **Why P1 (not cosmetic):** the badge carries the parent's severity read. A missing/unreadable severity badge on a 'mild' entry can (a) over-alarm a parent who reads only the section-header siren and assumes Emergency, or (b) under-classify if the parent skims and sees no badge. Both are parental-safety failures (Maren-jurisdiction).
-- **Source:** SYMPTOM_DB entry at `data.js:3411`; render path at `intelligence.js:11955` (Home overlay). Badge emit is unconditional. CSS at `styles.css:5999` (`.sc-mild .sc-sev-badge`); dark-mode container override at `:6021` but **no dark-mode override for `.sc-mild .sc-sev-badge` itself**.
-- **Lyra prior:** contrast collapse — sage-on-sage badge against `[data-theme="dark"] .sc-mild` background reads as transparent at low device brightness.
-- **Investigation owner:** Maren (Care jurisdiction) in audit phase [2] of `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` §11.
-- **Fix (probable):** new `[data-theme="dark"] .sc-mild .sc-sev-badge` rule; lands in Mode-2 build alongside HR-1 ports.
+(Symptom Checker P1 — severity badge invisible on `crying-fussy` (mild) entry — RESOLVED bridge build 2026-05-13; see Fixed Bugs § Bridge Build.)
 
 #### P2 — HR-1: `getMoonPhaseEmoji` returns Unicode emoji (core.js:2973)
 - **Symptom:** Moon phase display on home greeting uses raw Unicode emoji characters (🌑🌒🌓…) instead of the `zi()` SVG system.
@@ -77,9 +71,7 @@
 - **Notes:** Broad sweep; R-10 queue. Largest gap in token adoption across the design system.
 - **File:** `split/styles.css`
 
-#### P2 — DRY refactor candidate: duplicate function at medical.js:2255 vs intelligence.js:11958
-- **Symptom:** Same logic exists in two files without shared abstraction. Identified by Cipher during Polish-2 build-deep.
-- **File:** `split/medical.js` ~2255, `split/intelligence.js` ~11958
+(P2 — DRY refactor candidate: duplicate function at medical.js:2255 vs intelligence.js:11958 — RESOLVED bridge build 2026-05-13; see Fixed Bugs § Bridge Build.)
 
 ---
 
@@ -93,6 +85,17 @@
 ---
 
 ## Fixed Bugs (Polish Sub-phase, Phase 4)
+
+### Bridge Build — Symptom Checker (2026-05-13) — PR-bridge
+
+Per `docs/specs/lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` v3 (Sovereign-ratified 2026-05-12). Maren B-M1..B-M3 + Kael B-K1..B-K4 audit returns folded.
+
+| # | Description | File | Resolution |
+|---|-------------|------|------------|
+| HR-1 sweep | 6 in-screenshot emoji escapes (`\u{1F6A8}` Emergency, `⚠️` Monitor closely, `✅` Usually manageable, `\u{1F4DE}` doctor name, `☎️` call link x2) + 1 drift `\u{1F6A8}` literal in `intelligence.js:11965` (where `medical.js:2490` already used `zi('siren')`) → all ports to `zi('siren'/'warn'/'check'/'phone')`. Verified by §8.1 Gate 1 grep over SC render path: 0 emoji escapes. | `split/medical.js`, `split/intelligence.js`, `split/template.html` | PR-bridge |
+| New sprite | `zi-phone` (telephone-receiver, stroke-1.5 / fill-0.1 family) added to `template.html` between `zi-pill` (line 21) and `zi-shield` (line 23). Sprite count 63 → 64. | `split/template.html` | PR-bridge |
+| DRY consolidation (P2 retired) | Duplicate render block (~64 lines) between `medical.js:2474–2533` (checkSymptoms) and `intelligence.js:11951–12006` (runHomeSymptomCheck) extracted to shared helper `_renderSymptomCheckerResults(matches, ageMo, opts)`. Helper lives in `medical.js` (Sovereign Q1 → Option A; Kael B-K1 boundary contract: pure renderer, no `document.*` reads/writes, no event binding, no `innerHTML=`, no global mutation; cycle-free per concat order). `_sc*` canonicalization pattern established. Behavioral drift in episode-tracking CTA data-actions (`promptFeverTrack` vs `closeAndPromptFever` — close-then-prompt for home overlay) parameterized via `opts.actions` map. Disclaimer drift (medical.js carried "Trust your instincts — you know Ziva best"; intelligence.js omitted) resolved to canonical medical.js text. | `split/medical.js`, `split/intelligence.js` | PR-bridge |
+| P1 Crying-badge — RESOLVED (Maren B-M1 H1 confirmed) | New rule `[data-theme="dark"] .sc-mild .sc-sev-badge { background:rgba(58,112,96,0.22); color:var(--tc-sage-light); border:1px solid rgba(58,112,96,0.35); }` per spec §0.1 #4. Closes the sage-on-sage contrast collapse in dark mode that made the mild-severity badge near-invisible on the `crying-fussy` result. New design token `--tc-sage-light` commissioned in both light (`#5a9080`) and dark (`#a0d8b8`) token blocks. Maren WCAG-AA verification commitment carried forward per spec §8.2 (real-device, both themes, ≥4.5:1). Light-mode parallel bump (spec §5 edit #9) DEFERRED — conditional on §8.2 light-mode verification result. | `split/styles.css` | PR-bridge |
 
 ### Polish-11 (2026-05-06) — PR-40 + PR-41
 
@@ -129,7 +132,7 @@
 
 ## R-10 Queue (Deferred Hygiene — Stability Sub-phase)
 
-Items inventoried but not yet scheduled. 16-item queue as of Polish sub-phase close.
+Items inventoried but not yet scheduled. 15-item queue as of bridge build 2026-05-13 (was 16; the medical.js:2255 / intelligence.js:11958 DRY duplicate retired in bridge build).
 
 | Priority | Area | Description |
 |----------|------|-------------|
@@ -137,7 +140,6 @@ Items inventoried but not yet scheduled. 16-item queue as of Polish sub-phase cl
 | P2 | HR-2 | JS-side hex color constants (~15 sites — Kael Stability baseline) |
 | P2 | CSS | Raw px padding debt (~259 declarations) |
 | P2 | CSS | Chip wrapping + container `flex-wrap` fixes |
-| P2 | DRY | Duplicate function medical.js:2255 / intelligence.js:11958 |
 | P1 | Sync | medChecks / feedingData object-keyed migration |
 | P1 | Render | `render-functions-must-be-pure` audit (candidate at 0/3; `renderMilestones()` split is next opportunity) |
 
@@ -152,3 +154,4 @@ Items inventoried but not yet scheduled. 16-item queue as of Polish sub-phase cl
 | `syncReload()` must cache-bust via `location.replace(pathname + '?_cb=N')` — `location.reload()` serves from browser HTTP cache | PR-43 |
 | `zi()` output must be assigned via `.innerHTML`, never `.textContent` (HR-7) | Polish-11a (Bug 1) |
 | `calcPercentile` returns `"<3rd"` / `">97th"` — must `escHtml()` before any `innerHTML` use (HR-4) | Polish-11b (Bug 3b) |
+| Care/Intel cross-surface DRY consolidation: helper hosts in Care domain (`medical.js`); Intel callers consume by named export (`_sc*` prefix). Pure renderer; behavioral drift parameterized via opts. | Bridge build 2026-05-13 (Kael B-K1) |
