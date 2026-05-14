@@ -5987,7 +5987,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .dib-synergy-pill { background:rgba(181,213,197,0.1); }
 
 /* ── Symptom Checker ── */
-.sc-result { border-radius:var(--r-lg); padding:var(--sp-12); margin-bottom:var(--sp-10); }
+.sc-result { border-radius:var(--r-lg); padding:var(--sp-12); margin-bottom:var(--sp-10); position:relative; }
 .sc-emergency { background:rgba(220,60,60,0.08); border:1.5px solid rgba(220,60,60,0.3); }
 .sc-warning { background:rgba(240,180,80,0.08); border:1.5px solid rgba(240,180,80,0.25); }
 .sc-mild { background:rgba(58,112,96,0.06); border:1.5px solid rgba(58,112,96,0.2); }
@@ -6025,6 +6025,82 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .sc-doctor-card { background:rgba(220,60,60,0.04); border-color:rgba(220,60,60,0.12); }
 [data-theme="dark"] .sc-doctor-card a { color:#e74c3c; }
 [data-theme="dark"] .sc-quick-chip { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.08); }
+
+/* ── Symptom Checker — D1 Polish (lyra-spec-2026-05-13-symptom-checker-d1-polish.md v3.1) ── */
+/* D1 §2.1 — severity rail. .sc-result gets position:relative above (line ~5990) to anchor. */
+.sc-rail {
+  position:absolute; top:var(--sp-8); bottom:var(--sp-8); left:var(--sp-4);
+  width:4px; border-radius:2px; pointer-events:none;
+}
+.sc-emergency .sc-rail { background:var(--tc-rose); }
+.sc-warning   .sc-rail { background:var(--amber-deep); }
+.sc-mild      .sc-rail { background:var(--accent-sage-deep); }
+.sc-emergency .sc-rail { animation:sc-rail-pulse 1.5s ease-out 1; }
+@keyframes sc-rail-pulse {
+  0%   { box-shadow:0 0 0 0 rgba(220,60,60,0); }
+  50%  { box-shadow:0 0 8px 2px rgba(220,60,60,0.5); }
+  100% { box-shadow:0 0 0 0 rgba(220,60,60,0); }
+}
+[data-theme="dark"] .sc-warning .sc-rail { background:var(--tc-warn); }
+[data-theme="dark"] .sc-mild    .sc-rail { background:var(--tc-sage-light); }
+
+/* D1 §2.2 — sticky doctor-CTA footer (Home overlay path only; #symptomResult Medical-tab
+   path has no scroll container so position:sticky no-ops there — surface asymmetry per V-K8). */
+.sc-sticky-footer {
+  position:sticky; bottom:0; z-index:2;
+  margin:var(--sp-8) calc(-1 * var(--sp-12)) calc(-1 * var(--sp-12));
+  padding:var(--sp-10) var(--sp-12);
+  background:var(--surface-danger);
+  border-top:1px solid rgba(220,60,60,0.2);
+  box-shadow:0 -2px 8px rgba(0,0,0,0);
+  transition:box-shadow 200ms ease-out;
+}
+.sc-sticky-footer.is-pinned { box-shadow:0 -2px 8px rgba(0,0,0,0.12); }
+#homeSymptomOverlay > .modal { padding-bottom:60px; } /* V-M1 #5 — sticky-CTA never covers content */
+
+/* D1 §2.3 — severity-aware doctor-card variants + call-CTA tiers */
+.sc-doctor-card-emergency { display:flex; flex-direction:column; gap:var(--sp-4); }
+.sc-doctor-card-warning   { display:flex; flex-direction:column; gap:var(--sp-4); }
+.sc-doctor-card-mild      { display:flex; flex-direction:column; gap:var(--sp-4); }
+.sc-call-primary {
+  display:flex; align-items:center; justify-content:center;
+  min-height:60px; min-width:60px; padding:var(--sp-10) var(--sp-12);
+  font-weight:700; font-size:var(--fs-md); border-radius:var(--r-lg);
+  background:rgba(220,60,60,0.12); color:var(--tc-danger); text-decoration:none;
+}
+.sc-call-secondary {
+  display:inline-flex; align-items:center; min-height:44px;
+  padding:var(--sp-6) var(--sp-10); font-weight:600; font-size:var(--fs-base);
+  color:var(--tc-rose); text-decoration:none;
+}
+.sc-call-tertiary {
+  display:inline-flex; align-items:center; min-height:44px; min-width:44px;
+  padding:var(--sp-6) var(--sp-8); font-size:var(--fs-sm); font-weight:500;
+  color:var(--mid); text-decoration:none;
+}
+.sc-doctor-name { font-weight:700; color:var(--text); font-size:var(--fs-sm); }
+.sc-doctor-name-mild { font-weight:500; }
+.sc-doctor-address { font-size:var(--fs-xs); color:var(--light); }
+/* D1 §2.3.2 — no-doctor severity-aware fallback */
+.sc-doctor-empty { font-size:var(--fs-sm); color:var(--mid); }
+.sc-doctor-add-link {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; min-width:44px; padding:var(--sp-4) var(--sp-8);
+  text-decoration:underline; font-weight:600; color:var(--tc-sage);
+}
+.sc-doctor-empty-nudge { margin-top:var(--sp-6); font-size:var(--fs-xs); color:var(--mid); font-style:italic; }
+.sc-emergency-fallback {
+  margin-top:var(--sp-6); padding:var(--sp-6) var(--sp-8);
+  background:rgba(220,60,60,0.12); border-radius:var(--r-md);
+  font-size:var(--fs-xs); font-weight:600; color:var(--tc-danger);
+}
+[data-theme="dark"] .sc-emergency-fallback { background:rgba(220,60,60,0.2); color:var(--tc-danger); }
+
+/* D1 §8 — prefers-reduced-motion override for every D1-introduced animation */
+@media (prefers-reduced-motion: reduce) {
+  .sc-emergency .sc-rail { animation:none; }
+  .sc-sticky-footer { transition:none; }
+}
 [data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
 [data-theme="dark"] .ql-freq-pill:active { background:var(--accent-sage-deep); color:var(--body-bg); }
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }

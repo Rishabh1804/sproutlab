@@ -11903,6 +11903,9 @@ function openHomeSymptomChecker() {
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
   overlay.onclick = e => { if (e.target === overlay) closeHomeSymptomChecker(); };
+  // D1 §2.2 — bind the sticky-CTA shadow-grow listener to the modal scroll container.
+  // Home-overlay path only; #symptomResult Medical-tab path has no modal scroll container.
+  _scInitStickyShadow(overlay.querySelector('.modal'));
   setTimeout(() => document.getElementById('homeSymptomInput')?.focus(), 200);
 }
 
@@ -11941,7 +11944,7 @@ function runHomeSymptomCheck() {
   });
 
   if (matches.length === 0) {
-    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing differently, or tap the chips above. If you\'re concerned, always call your paediatrician.</div>' + _scDoctorCardHTML(false) + '</div>';
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing differently, or tap the chips above. If you\'re concerned, always call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
     return;
   }
 
@@ -11952,6 +11955,8 @@ function runHomeSymptomCheck() {
   // Home-overlay variant uses closeAndPrompt* actions so the modal closes before the
   // episode-tracking prompt opens \u2014 per \u00A71.2 pre-merge diff gate behavioral drift.
   resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo, {
+    // D1 §2.2 — Home overlay is a true modal scroll container; ship the sticky CTA here.
+    stickyFooter: true,
     actions: {
       fever:     'closeAndPromptFever',
       diarrhoea: 'closeAndPromptDiarrhoea',
