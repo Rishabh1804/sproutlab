@@ -2448,9 +2448,19 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
     cold:      'promptColdTrack'
   };
 
+  // D1 §2.4.1 V-K7 — empty-state guard; callers render their own no-match UI before invoking
+  if (!matches || matches.length === 0) { return ''; }
+
   var html = '';
   var shown = matches.slice(0, 2);
   var hasEmergency = shown.some(function(m) { return m.severity === 'emergency'; });
+  var hasWarning   = shown.some(function(m) { return m.severity === 'warning'; });
+  var needsDoctor  = hasEmergency || shown.some(function(m) { return m.entry.callDoctor; });
+
+  // D1 §2.4.1 — emergency: hoist doctor card to TOP of result-list (single-render discipline)
+  if (hasEmergency && needsDoctor) {
+    html += _scDoctorCardHTML('emergency');
+  }
 
   shown.forEach(function(m) {
     var e = m.entry;
@@ -2458,6 +2468,7 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
     var sevLabel = m.severity === 'emergency' ? zi('siren') + ' Emergency' : m.severity === 'warning' ? zi('warn') + ' Monitor closely' : zi('check') + ' Usually manageable';
 
     html += '<div class="sc-result ' + sevClass + '">';
+    html += '<div class="sc-rail" aria-hidden="true"></div>';
     html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
     html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
 
@@ -2474,8 +2485,9 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
     html += '</div>';
   });
 
-  if (hasEmergency || shown.some(function(m) { return m.entry.callDoctor; })) {
-    html += _scDoctorCardHTML(hasEmergency);
+  // D1 §2.4.1 — non-emergency: doctor card AFTER the result cards (single-render discipline)
+  if (!hasEmergency && needsDoctor) {
+    html += _scDoctorCardHTML(hasWarning ? 'warning' : 'mild');
   }
 
   var isFeverMatch = shown.some(function(m) { return m.entry.id === 'fever-high' || m.entry.id === 'fever-mild'; });
@@ -2504,6 +2516,20 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
     html += '<div class="fe-center-action"><button class="btn btn-sage w-full" data-action="' + actions.cold + '" >'+zi('siren')+' Track this cold/cough</button></div>';
   } else if (isColdMatch && getActiveColdEpisode()) {
     html += '<div class="fe-center-status">'+zi('siren')+' Cold episode already being tracked</div>';
+  }
+
+  // D1 §2.4.1 — sticky CTA mirror (emergency tier only; opts.stickyFooter gates it to the
+  //   Home-overlay path per §2.2 surface asymmetry — Medical-tab #symptomResult has no scroll
+  //   container so a sticky footer there would just duplicate the hoisted-top card inline).
+  //   Build-time resolution of the §2.2 ↔ §2.4.1 spec contradiction: §2.2 (V-K8 fold) says
+  //   "sticky-footer does NOT ship on Medical tab"; §2.4.1's prose said "emit unconditionally".
+  //   Honor §2.2's reasoned intent via opts.stickyFooter (Home overlay caller passes true).
+  if (hasEmergency && opts.stickyFooter) {
+    var stickyDoc = getPrimaryDoctor();
+    if (stickyDoc && stickyDoc.phone) {
+      html += '<div class="sc-sticky-footer"><a class="sc-call-primary" href="tel:' + stickyDoc.phone + '">' +
+              zi('phone') + ' Call Now: ' + escHtml(stickyDoc.phoneDisplay || stickyDoc.phone) + '</a></div>';
+    }
   }
 
   html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know Ziva best.</div>';
@@ -2542,7 +2568,7 @@ function checkSymptoms() {
   });
 
   if (matches.length === 0) {
-    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about Ziva, always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML(false) + '</div>';
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about Ziva, always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
     return;
   }
 
@@ -2556,26 +2582,68 @@ function checkSymptoms() {
   resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo);
 }
 
-function _scDoctorCardHTML(isEmergency) {
+function _scDoctorCardHTML(severity) {
+  // D1 \u00A72.3 \u2014 severity-aware doctor-card variants. severity: 'emergency' | 'warning' | 'mild'.
+  // (Legacy isEmergency boolean param dropped per Kael V-K9 \u2014 code-search confirmed zero
+  //  external callers as of bridge merge sha 7342d5d; signature is single-arg severity.)
   var doc = getPrimaryDoctor();
   if (!doc) {
-    return '<div class="sc-doctor-card"><span style="font-size:var(--fs-sm);color:var(--mid);">No doctor saved yet \u2014 </span><a href="#" onclick="event.preventDefault();openDoctorModal()" style="color:var(--tc-sage) !important;font-weight:600;">+ Add Doctor</a></div>';
+    // D1 \u00A72.3.2 \u2014 no-doctor severity-aware fallback. HR-3 retired: onclick \u2192 data-action.
+    var emptyHtml = '<div class="sc-doctor-card sc-doctor-card-' + severity + ' sc-doctor-card-empty">';
+    emptyHtml += '<span class="sc-doctor-empty">No doctor saved yet \u2014 </span>';
+    emptyHtml += '<a href="#" data-action="openDoctorModal" class="sc-doctor-add-link">+ Add Doctor</a>';
+    if (severity === 'emergency') {
+      // V-M2 P0 fold \u2014 hardcoded 112 (India unified emergency, live since 2019). D2 swaps to
+      // emergencyContacts.{region} lookup once that config table lands.
+      emptyHtml += '<div class="sc-emergency-fallback">If this is a true emergency, call your local emergency number now (in India: <strong>112</strong>).</div>';
+    } else if (severity === 'warning') {
+      // V-M1 P0 fold \u2014 warning-tier contextual nudge (not the emergency-services fallback).
+      emptyHtml += '<div class="sc-doctor-empty-nudge">Add a doctor so you can call if symptoms worsen.</div>';
+    }
+    emptyHtml += '</div>';
+    return emptyHtml;
   }
-  var html = '<div class="sc-doctor-card">';
-  html += '<div class="flex-1-min0">';
-  html += '<div style="font-weight:700;color:var(--text);font-size:var(--fs-sm);">' + (isEmergency ? zi('phone') + ' ' : '') + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
-  if (doc.phone) {
-    html += '<a href="tel:' + doc.phone + '" style="font-size:var(--fs-md);display:inline-block;margin-top:4px;">' + zi('phone') + (isEmergency ? ' Call Now: ' : ' ') + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+  var html = '<div class="sc-doctor-card sc-doctor-card-' + severity + '">';
+  if (severity === 'emergency') {
+    if (doc.phone) {
+      html += '<a class="sc-call-primary" href="tel:' + doc.phone + '">' + zi('phone') + ' Call Now: ' + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+    }
+    html += '<div class="sc-doctor-name">' + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
+  } else if (severity === 'warning') {
+    html += '<div class="sc-doctor-name">' + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
+    if (doc.phone) {
+      html += '<a class="sc-call-secondary" href="tel:' + doc.phone + '">' + zi('phone') + ' Call if needed: ' + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+    }
+  } else {
+    html += '<div class="sc-doctor-name sc-doctor-name-mild">' + escHtml(doc.name) + (doc.title ? ' \u00B7 ' + escHtml(doc.title) : '') + '</div>';
+    if (doc.phone) {
+      html += '<a class="sc-call-tertiary" href="tel:' + doc.phone + '">' + zi('phone') + ' ' + escHtml(doc.phoneDisplay || doc.phone) + '</a>';
+    }
   }
   if (doc.address) {
-    html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:2px;">' + escHtml(doc.address) + '</div>';
+    html += '<div class="sc-doctor-address">' + escHtml(doc.address) + '</div>';
   }
-  html += '</div>';
   if (doc.location) {
-    html += '<a href="' + doc.location + '" target="_blank" rel="noopener" style="font-size:var(--fs-xl);text-decoration:none;">'+zi('target')+'</a>';
+    // Build-time fidelity: preserve the directions link (D1 spec \u00A72.3 rewrite omitted it \u2014
+    // drafting oversight, not intent). Icon-only original got a text label too \u2014 icon-only
+    // links are an a11y miss, and D1 \u00A77.1 is an a11y phase.
+    html += '<a class="sc-call-tertiary" href="' + doc.location + '" target="_blank" rel="noopener">' + zi('target') + ' Directions</a>';
   }
   html += '</div>';
   return html;
+}
+
+function _scInitStickyShadow(container) {
+  // D1 \u00A72.2 \u2014 pin shadow-grow on the sticky CTA when the modal scrolls past 100px.
+  // Idempotent via dataset guard (Kael V-K11). Build-time fix of the spec sketch's
+  // early-return bug: bind the scroll listener once at modal-open, look the footer up
+  // lazily per scroll event so it works for results rendered AFTER this binds.
+  if (!container || container.dataset.scStickyInit === '1') return;
+  container.dataset.scStickyInit = '1';
+  container.addEventListener('scroll', function() {
+    var footer = container.querySelector('.sc-sticky-footer');
+    if (footer) footer.classList.toggle('is-pinned', container.scrollTop > 100);
+  }, { passive: true });
 }
 
 function renderDoctorContact() {
