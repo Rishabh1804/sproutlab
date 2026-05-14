@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (mini-spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v3 — Cipher Edict V STRICT pass folded (C-WI-1 + C-WI-2 P0 amendments; audit-chain step [4] cleared); awaiting Cipher re-audit then Sovereign ratification
+**Status:** v3 — Cipher Edict V STRICT RE-AUDIT verdict PASS (zero findings; clean v3 fold); Sovereign-ratified 2026-05-13
 **Branch:** `claude/d1-and-weave-isl-specs`
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 §11 forward-pointer (per Kael V-K1, gated by SG-6 default Yes)
 **Sibling spec:** `lyra-spec-2026-05-13-symptom-checker-d1-polish.md` v1 (parallel-drafted; D1 is on the implementation-track; this mini-spec is on the data-contract track)
@@ -538,7 +538,7 @@ D3 implementation MUST ship a test fixture file (`split/weave.fixtures.js` or eq
   - **C-WI-2 P0:** §10 SG-WI-MODULE default cell text corrected. v2 cell still carried the v1 stale assertion "concat order between data.js and core.js" despite §1.4 W-K1 P0 fold correcting it to "between medical.js and intelligence.js." Single-source-of-truth alignment: §10 default now references §1.4 explicitly.
   - **Cross-cutting:** Cipher's V-K6 GAP retrospective flagged C-WI-2 as a sweep gap (W-K1 fold landed at §1.4 but didn't sweep §10's default cell). Forward-pointer: "post-fold consistency sweep" Kael discipline codified as canon-promotion candidate.
   - **Contract verification:** all weave-ISL contract claims PASS against main sha 7342d5d (Cipher-verified: build.sh concat order; bridge `_renderSymptomCheckerResults` helper as caller-jurisdiction anchor).
-  - Cipher Edict V STRICT re-audit NEXT.
+  - **Cipher Edict V STRICT RE-AUDIT verdict (2026-05-13): PASS** — zero findings, clean v3 fold; all v2 findings (C-WI-1 + C-WI-2) confirmed CLOSED. **Sovereign-ratified 2026-05-13.** Audit chain complete: [1] Lyra → [2] Kael primary ‖ [2'] Maren secondary → [3] Lyra synthesis → [4] Cipher Edict V (RE-ROUND → RE-AUDIT PASS) → [5] Sovereign ratification. This mini-spec is now canon; D3 phase-spec consumes `resolveSymptomWeave` by reference.
 
 - **v2 (2026-05-13):** Audit-chain step [3] Lyra synthesis. Folds Kael W-K1..W-K10 (2 P0 + 5 P1 + 3 P2) + Maren W-M1..W-M6 (1 P0 + 3 P1 + 2 P2) returns. Substantive amendments:
   - **W-K1 P0:** §1.4 module location CORRECTED. v1 had wrong concat order assertion. Correct insertion: `... → medical → weave → intelligence → sync → start`. Caller-jurisdiction lock: D3 caller for `resolveSymptomWeave` lives in `intelligence.js` (NOT inside `_renderSymptomCheckerResults` which is medical.js Care-jurisdiction).

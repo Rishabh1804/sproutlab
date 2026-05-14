@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v3 — Cipher Edict V STRICT pass folded (C-D1-1..C-D1-5 amendments; audit-chain step [5] cleared); awaiting Cipher re-audit then Sovereign ratification
+**Status:** v3.1 — Cipher Edict V STRICT RE-AUDIT verdict PASS; NEW-C-D1-6 P2 swept; Sovereign-ratified 2026-05-13
 **Branch:** `claude/d1-and-weave-isl-specs` (or successor)
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 — this implements §6.D1 + ships §6.5.D1 phase contracts
 **Predecessor spec:** `lyra-spec-2026-05-11-symptom-checker-hr1-dry.md` v3 — bridge build (Mode-2 merged 2026-05-13 as PR #67 → 7342d5d artifact regen). SG-5 tight-sequencing fires now.
@@ -734,6 +734,7 @@ D1 ships the foundation. Downstream:
 ## 12. Changelog
 
 - **v1 (2026-05-13):** initial draft. Ships §6.5.D1 phase contracts. Inherits from vision v2.1 §6.D1 + bridge v3 (post-merge). Incorporates two Maren-skill register-flips during drafting (§2.1 aria-hidden discipline, §2.3.1 no-doctor emergency fallback) and one Kael-skill register-flip (§2.4.1 single-render doctor-card discipline) and one Cipher-skill register-flip (§1 contract-mirror rationale). Three Sovereign-gates surfaced (SG-D1-LT, SG-D1-PULSE, SG-D1-DOCTOR-EMPTY-WARNING) with conservative defaults. Awaiting Maren + Kael parallel audit.
+- **v3.1 (2026-05-13):** Cipher Edict V STRICT RE-AUDIT verdict — **PASS**. NEW-C-D1-6 P2 swept: v2-changelog block V-M1 + V-M2 cross-refs updated from old `§2.3.1` to `§2.3.2` (the no-doctor fallback section, post-C-D1-3 renumbering). Only V-M8 had been swept in v3; v3.1 completes the post-fold consistency sweep — itself a live instance of the "post-fold consistency sweep" canon-promotion candidate. **Sovereign-ratified 2026-05-13.** Audit chain complete: [1] Lyra → [2] Maren ‖ [3] Kael → [4] Lyra synthesis → [5] Cipher Edict V (RE-ROUND → RE-AUDIT PASS) → [6] Sovereign ratification. D1 Mode-2 build PR opens next (separate branch off main).
 - **v3 (2026-05-13):** Cipher Edict V STRICT pass folded (5 findings: 0 P0 + 2 P1 + 3 P2). Surgical amendments:
   - **C-D1-1 P1:** §1 ↔ §6 contract-list reconciled. §1 expanded from 8 rows to 10 (added row 9 single-render discipline + row 10 no-doctor emergency fallback). §6 re-stated as exact 10-row mirror.
   - **C-D1-2 P1:** §2.4 explicit supersession marker added at top + inline "SUPERSEDED — see §2.4.1" comments inside the code block. Pre-Kael-discipline 2-arg `_scDoctorCardHTML` calls noted as historical-narrative; canonical helper logic lives in §2.4.1 single-arg signature.
@@ -746,8 +747,8 @@ D1 ships the foundation. Downstream:
   - Cipher Edict V STRICT re-audit NEXT.
 
 - **v2 (2026-05-13):** Audit-chain step [4] Lyra synthesis. Folds Maren V-M1..V-M9 (2 P0 + 4 P1 + 3 P2) + Kael V-K7..V-K14 (1 P0 + 4 P1 + 3 P2) returns. Substantive amendments:
-  - **V-M1 P0:** Warning-tier no-doctor contextual nudge ("Add a doctor so you can call if symptoms worsen"). §2.3.1 expanded. SG-D1-DOCTOR-EMPTY-WARNING AMENDED (both Governors concur).
-  - **V-M2 P0:** Emergency no-doctor fallback hardcodes 112 (India unified emergency, live since 2019). §2.3.1 + §11 D2 forward-pointer for `emergencyContacts.{region}` lookup.
+  - **V-M1 P0:** Warning-tier no-doctor contextual nudge ("Add a doctor so you can call if symptoms worsen"). §2.3.2 (no-doctor fallback) expanded. SG-D1-DOCTOR-EMPTY-WARNING AMENDED (both Governors concur).
+  - **V-M2 P0:** Emergency no-doctor fallback hardcodes 112 (India unified emergency, live since 2019). §2.3.2 (no-doctor fallback) + §11 D2 forward-pointer for `emergencyContacts.{region}` lookup.
   - **V-K8 P0:** §2.2 sticky-on-modal-scroll selectors named verbatim. **Critical surface asymmetry surfaced and documented:** Home overlay path = true modal (`#homeSymptomOverlay > .modal` with `max-height:85vh; overflow-y:auto`); Medical tab path = inline (`#symptomResult` with no scroll container). **Sticky footer SHIPS on Home overlay only; Medical tab gets hoisted-top doctor card only (no sticky).** Spec acknowledges asymmetry as known-and-accepted feature gap; D2 candidate refactor.
   - **V-M3 P1:** Sticky footer renders CTA + phone number ONLY (no doctor name/address/title duplication). §2.2 + §2.4.1 amended.
   - **V-M4 P1:** `.sc-call-tertiary` `min-height: 44px` MANDATORY regardless of font-size. §9 expanded.
