@@ -85,7 +85,8 @@ This mini-spec is the protective gate.
  *                                Other fields: informational; resolvers may
  *                                  consume in future (e.g. age-bucketed framing).
  *
- * @returns {{ html: string, source: string } | null}
+ * @returns {object|null} — on hit: a `{ html, source }` object (shape below);
+ *                          on miss: null.
  *                                html: trusted HTML fragment ready to insert
  *                                      into a .sc-weave-microcard container.
  *                                      Caller writes via .innerHTML; helper
