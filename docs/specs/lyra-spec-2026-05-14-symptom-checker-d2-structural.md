@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v2 — Maren ‖ Kael Governor audits folded (PASS WITH CAVEATS × 2); Sovereign decisions applied on variant collapse / Save wiring / DO-NOT border. Awaiting Cipher Edict V STRICT → Sovereign ratification.
+**Status:** v2.1 — Maren ‖ Kael Governor audits folded (PASS WITH CAVEATS × 2) + Cipher Edict V STRICT folded (PASS WITH NOTES; 2 P1 + 5 P2 absorbed); Sovereign decisions applied on variant collapse / Save wiring / DO-NOT border. Awaiting Sovereign ratification.
 **Branch:** `claude/d2-phase-spec`
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 — this implements §6.D2 + ships §6.5.D2 phase contracts; absorbs `lifeThreat` slipped from D1 per SG-D1-LT default ratified
 **Predecessor spec:** `lyra-spec-2026-05-13-symptom-checker-d1-polish.md` v3.1 — Mode-2 build merged 2026-05-14 (PR #69 → main `7dee90d`) + Maren §7 sign-off post hotfix `13140074` (sticky-footer `--blush`). D2 contracts EXTEND D1's §6.5.D1.
@@ -106,6 +106,9 @@ D2 ships these contracts. Cipher Edict V at impl verifies presence. Downstream (
 | 8 | Progressive disclosure — `<details>`/`<summary>` collapsed default on warning/mild; **force-expanded on emergency** | G3 + SG-D2-PROGRESSIVE-DISCLOSURE-EMERGENCY-OVERRIDE; emergency-tier safety content cannot live behind a tap |
 | 9 | Render-policy constants in `config.js` — `EMERGENCY_CONTACTS.{region}`, `DEFAULT_REGION`, `SEQUENCE_CRITICAL_IDS`, `currentRegion()` | SG-D2-CONFIG-MODULE ratified + Kael A-D2-K-5 fold: render-policy lives co-located, NOT in renderer; eliminates id-drift hazard |
 | 10 | Back-channel callout — tiered copy per severity (mild: gentle escalation suggestion; warning: sharper "call today, trust your gut"); unconditionally rendered on warning/mild in D2 | V-M2 #3 backstop; D3 refines to triage-derived-only |
+| 11 | Renderer applies render-policy from config.js: numbered `<ol>` for ids in `SEQUENCE_CRITICAL_IDS`; bulleted `<ul>` elsewhere | G5 sequence-safety semantics; renderer reads policy, never hard-codes id list. Cipher E-D2-1 fold — separable contract from row 9. |
+| 12 | `_renderSymptomCheckerResults(matches, opts)` signature — `ageMo` dropped (V-K9; grep of main confirmed dead param) | V-K9 signature-simplification when legacy params unused. G-D2-11 verifies. Cipher E-D2-1 fold. |
+| 13 | Triage data shape — `triage: boolean` + `triageQuestions: [{q, yesSeverity, noSeverity}]` optional fields on SYMPTOM_DB entries; D2 ships **data only**, D3 renders | Vision §6.D2 sub-question split: content authoring (D2-B) decouples from render-flow authoring (D3). Cipher E-D2-1 fold. |
 
 Plus inherited from D1 (§6.5.D1, still in force):
 - `.sc-rail`, `.sc-result { position:relative }`, sticky-CTA discipline, severity-aware doctor-card hierarchy, single-render discipline, touch-target floors, `prefers-reduced-motion` parity, no-doctor severity-aware fallback (with D2 swapping the static "112" text for `EMERGENCY_CONTACTS` lookup).
@@ -559,6 +562,12 @@ function renderBackChannel(severity) {
   /* sharper visual weight matches sharper copy */
   font-weight: 700;
 }
+.sc-back-channel-mild {
+  /* Cipher E-D2-6 fold: explicit rule for symmetry / future-edit
+     safety. Currently equivalent to base .sc-back-channel; future
+     refinements (e.g. softer color) land here without altering the
+     class-emit contract in renderBackChannel(). */
+}
 [data-theme="dark"] .sc-back-channel { background: rgba(220,60,60,0.16); }
 ```
 
@@ -917,6 +926,8 @@ Single file: `split/data.js` — the SYMPTOM_DB entries flipped from `string` �
                   prefers-reduced-motion parity
                 · §2.8 Save action — does addJournalEntry route through
                   existing sync pipeline without new surface?
+                  (resolved at v2 fold: A-D2-K-7 → STUB; addJournalEntry
+                  grep-confirmed absent on main; journal infra deferred)
                 · §7 migration build-rules — shim discipline enforceable
                   at PR time
                 · §8 per-field safety-impact accuracy
@@ -1017,10 +1028,12 @@ Single file: `split/data.js` — the SYMPTOM_DB entries flipped from `string` �
 | G-D2-6 | `EMERGENCY_CONTACTS.{region}` lookup defaults safely + confidence gate on hospitals | `grep -nE 'EMERGENCY_CONTACTS\\[' split/*.js` — every lookup has `\|\| EMERGENCY_CONTACTS[DEFAULT_REGION]` fallback. AND `renderHospitalList` body checks `ctx.confidence === 'known'` before emitting the `<ul>`. |
 | G-D2-7 | Shim removal NOT in D2 PR scope | Cipher Edict V on the D2-A PR confirms the shim `_scAsArray` is INTRODUCED, not removed. (Build-rule 2: removal in a future cleanup PR — grep-fixture gated.) |
 | G-D2-8 | Save action is STUB | `grep -nE 'addJournalEntry\|firestore\|localStorage\\.setItem' split/medical.js` on the D2-A diff returns 0 hits in the SC save path. The `scSaveResult` body is a `showQLToast` no-op. Kael V-K2 sync-surface-delta rule trivially satisfied (no new sync surface). |
-| **G-D2-9 (NEW v2)** | `SEQUENCE_CRITICAL_IDS` ids resolve to SYMPTOM_DB entries | Cipher executes a smoke check at impl: for each id in `SEQUENCE_CRITICAL_IDS`, `SYMPTOM_DB.find(e => e.id === id)` MUST return truthy. The `_scAssertSequenceIds` setTimeout(0) IIFE in `config.js` provides the dev-mode runtime warn; Cipher additionally confirms the static set at PR review time. Kael A-D2-K-5 drift-hazard mitigation. |
+| **G-D2-9 (NEW v2)** | `SEQUENCE_CRITICAL_IDS` ids resolve to SYMPTOM_DB entries | **Manual cross-file check (Cipher E-D2-7 acknowledged):** Cipher executes a smoke check at impl: for each id in `SEQUENCE_CRITICAL_IDS` (config.js), `SYMPTOM_DB.find(e => e.id === id)` (data.js) MUST return truthy. The `_scAssertSequenceIds` setTimeout(0) IIFE in `config.js` provides the dev-mode runtime warn as a defensive backstop. Borderline-grep-checkable; documented manual layer is the canonical enforcement surface. Kael A-D2-K-5 drift-hazard mitigation. |
 | **G-D2-10 (NEW v2)** | build.sh concat order with config.js | `head -50 split/build.sh \| grep -nE 'cat split/(config\|data)\\.js'` — `config.js` line MUST precede `data.js` line. Static verifiable. Kael A-D2-K-6 fold. |
 | **G-D2-11 (NEW v2)** | V-K9 dead param drop | `grep -nE '_renderSymptomCheckerResults\\(' split/*.js` — signature MUST be `(matches, opts)`, NOT `(matches, ageMo, opts)`. Kael A-D2-K-11 / V-K9 fold (grep confirmed dead on main). |
 | **G-D2-12 (NEW v2)** | Variant count = 2 | `grep -nE 'function renderResultCard' split/medical.js` — exactly 2 hits (`renderResultCardEmergency`, `renderResultCardNonEmergency`). No `renderResultCardWarning` / `renderResultCardMild` (Sovereign D1 collapse). |
+| **G-D2-13 (NEW v2.1)** | `--rose-deep` token declaration in styles.css | `grep -nE '\\-\\-rose-deep:' split/styles.css` MUST return **≥2 hits** (one per `:root` light block + one per `[data-theme="dark"]` block). If the token isn't declared but is used as `var(--rose-deep)`, the border-color falls back to `currentColor` silently. Cipher E-D2-3 V-K6-GAP fold. |
+| **G-D2-14 (NEW v2.1)** | new sprites declared in template.html | `grep -nE 'id="(zi-no-entry\|zi-emergency\|zi-chevron-down\|zi-save\|zi-share\|zi-track)"' split/template.html` MUST return **≥6 hits**. HR-1 covers raw-emoji absence; this gate covers sprite-presence (a sprite referenced via `zi('emergency')` but missing in template.html renders an invisible SVG `<use>`). Cipher E-D2-4 fold. |
 
 ---
 
@@ -1076,12 +1089,28 @@ Build-rule 1 — Shim ordering (vision §5.2, D2 application):
    Maren V-M7 P0.
 
 Build-rule 2 — Shim removal (vision §5.2, D2 application; v2 fold per
-                 Kael A-D2-K-2 — falsifiable trigger):
+                 Kael A-D2-K-2 — falsifiable trigger; v2.1 Cipher E-D2-5
+                 QA-procedure spec):
    Shim removal NEVER lands in D2 or D3. Defer to a future cleanup PR
-   whose precondition is a verifiable grep fixture (below) AND zero
-   dev-mode console.warn outputs during QA. NO "telemetry-confirmed"
-   handwave — the trigger is grep-checkable. Cipher Edict V re-pass
-   required before shim removal.
+   whose precondition is BOTH of:
+     (a) the verifiable grep fixture below returns 0 on all 3 patterns
+         (no string-shape entries remain in data.js);
+     (b) zero dev-mode console.warn outputs from `_scAsArray`
+         (the [sc-shim] line) during a QA pass.
+
+   Cipher E-D2-5 QA-procedure specification for (b):
+     - Load the built artifact with window.SPROUTLAB_DEV_MODE = true
+       (set via DevTools console pre-render OR via a build flag in the
+       future cleanup PR's QA build).
+     - Exercise the Symptom Checker by entering every entry id's
+       primary keyword OR by triggering each match path; observe
+       browser console.
+     - Console MUST be free of `[sc-shim]` warn lines for the full
+       SC exercise. Any non-zero count blocks shim removal — the
+       offending entry has not yet flipped to array-shape.
+
+   NO "telemetry-confirmed" handwave — both legs are operationally
+   checkable. Cipher Edict V re-pass required before shim removal.
 
 Build-rule 3 — Atomic-PR-per-phase (vision §5.2, D2 application):
    D2-A and D2-B together form the "D2 atomic" — but they're TWO PRs by
@@ -1219,3 +1248,27 @@ D2 ships the structural foundation + content. Downstream:
   **Sub-SG status:** 3 Sovereign-ratified (D1/D2/D3), 2 amended via fold (CONFIG-MODULE scope, SEQUENCE-CRITICAL-IDS set), 1 new (PROGRESSIVE-DISCLOSURE-EMERGENCY-OVERRIDE), 4 pending default. Total: 9 SGs.
 
   Awaits Cipher Edict V STRICT on v2 → Sovereign ratification → Aurelius D2-B brief → audit chain proceeds.
+
+- **v2.1 (2026-05-15):** Cipher Edict V STRICT folded — **PASS WITH NOTES** verdict (2 P1 + 5 P2 findings absorbed; no RE-ROUND required). v2 cleared the higher-bar post-RE-ROUND threshold; v2.1 sweep absorbs all 7 findings for a clean Sovereign-ratification artifact.
+
+  **Cipher P1 folds:**
+  - **E-D2-1 (§1 ↔ §6 mirror divergence):** added 3 rows to §1 inherited-contract table — row 11 (renderer applies numbered/bulleted render-policy from config.js), row 12 (`_renderSymptomCheckerResults(matches, opts)` ageMo dropped per V-K9), row 13 (triage data shape — D2 ships data, D3 renders). §1 now has 13 rows matching §6.5.D2's 13 bullets; mirror discipline restored to row-for-row per Cipher register-flip at §1.
+  - **E-D2-3 (missing `--rose-deep` token-declaration gate):** added **G-D2-13** (`grep -nE '\-\-rose-deep:' split/styles.css` MUST return ≥2 hits — light + dark theme blocks). V-K6-GAP closed; the §7 contrast fixture remains the visual backstop.
+
+  **Cipher P2 folds:**
+  - **E-D2-2 (audit-chain step [3] Kael brief stale phrasing):** added parenthetical "(resolved at v2 fold: A-D2-K-7 → STUB; addJournalEntry grep-confirmed absent on main; journal infra deferred)" to disambiguate the historical audit-time question from current state.
+  - **E-D2-4 (missing `zi-emergency` sprite-presence gate):** added **G-D2-14** covering all 6 new sprites in template.html. HR-1 covers raw-emoji absence; G-D2-14 covers sprite-defined-in-template invariant (a `zi('emergency')` call referencing a missing template definition renders an invisible `<use>`).
+  - **E-D2-5 (Build-rule 2 QA-procedure under-specified):** expanded Build-rule 2 with explicit QA procedure for the "zero `[sc-shim]` console.warn during QA" precondition — load with `window.SPROUTLAB_DEV_MODE = true`, exercise every SC entry, console must be free of `[sc-shim]` lines.
+  - **E-D2-6 (`.sc-back-channel-mild` class emitted with no CSS rule):** added explicit empty rule for symmetry / future-edit safety; renderer class-emit contract preserved.
+  - **E-D2-7 (G-D2-9 borderline grep-checkability):** explicit "Manual cross-file check (Cipher E-D2-7 acknowledged)" note added to the gate description; the deferred `_scAssertSequenceIds` setTimeout(0) IIFE remains as dev-mode runtime backstop.
+
+  **New gates:** G-D2-13 (--rose-deep token declaration), G-D2-14 (new sprites in template.html). Now 14 D2-specific gates total.
+
+  **Canon-promotion candidates surfaced by Cipher (queued for separate Cipher pass; not blocking):**
+  1. `confidence: 'known' | 'default'` region-aware rendering pattern (§2.11)
+  2. Dual-read shim with dev-mode warn-on-old-shape (§2.2 + Build-rule 2 grep-fixture trigger)
+  3. Audit-chain step [11a] PRE-Edict V contrast / opacity fixture (D1-hotfix discipline)
+  4. Variant-count = 2 collapse policy / V-K4 codification (§2.10 + G-D2-12)
+  5. Render-policy module co-location (`config.js` for EMERGENCY_CONTACTS + SEQUENCE_CRITICAL_IDS)
+
+  Awaits Sovereign ratification on v2.1.
