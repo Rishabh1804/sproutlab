@@ -2,7 +2,7 @@
 
 **Author:** Lyra (Builder, The Weaver)
 **Mode:** 1 (spec authoring; signed audit-bearing artifact per canon-cc-022)
-**Status:** v2.1 — Maren ‖ Kael Governor audits folded (PASS WITH CAVEATS × 2) + Cipher Edict V STRICT folded (PASS WITH NOTES; 2 P1 + 5 P2 absorbed); Sovereign decisions applied on variant collapse / Save wiring / DO-NOT border. Awaiting Sovereign ratification.
+**Status:** **RATIFIED 2026-05-15** by Sovereign on v2.1 (single-shot: ratify + flip + merge). Audit chain steps [1]–[6] complete; downstream [7] Aurelius D2-B brief opens next.
 **Branch:** `claude/d2-phase-spec`
 **Parent spec:** `lyra-spec-2026-05-11-symptom-checker-ux-vision.md` v2.1 — this implements §6.D2 + ships §6.5.D2 phase contracts; absorbs `lifeThreat` slipped from D1 per SG-D1-LT default ratified
 **Predecessor spec:** `lyra-spec-2026-05-13-symptom-checker-d1-polish.md` v3.1 — Mode-2 build merged 2026-05-14 (PR #69 → main `7dee90d`) + Maren §7 sign-off post hotfix `13140074` (sticky-footer `--blush`). D2 contracts EXTEND D1's §6.5.D1.
@@ -1272,3 +1272,5 @@ D2 ships the structural foundation + content. Downstream:
   5. Render-policy module co-location (`config.js` for EMERGENCY_CONTACTS + SEQUENCE_CRITICAL_IDS)
 
   Awaits Sovereign ratification on v2.1.
+
+- **RATIFIED 2026-05-15 (Sovereign, single-shot):** v2.1 ratified as the canonical D2 phase-spec contract. Sovereign instruction: "ratify + flip + merge". No further folds; spec proceeds to step [7] Aurelius D2-B content snippet brief. The D2-A Mode-2 structural PR (step [10]) opens at Lyra's discretion in parallel with D2-B authoring — Build-rule 1 governs the merge sequencing (D2-A first, D2-B after). All 14 verification gates + audit-chain steps [11a]/[11] enforce the contracts at impl-PR time.
