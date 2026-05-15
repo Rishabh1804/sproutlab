@@ -625,6 +625,11 @@ function init() {
     else if (action === 'promptDiarrhoeaTrack') promptDiarrhoeaTrack();
     else if (action === 'promptVomitingTrack') promptVomitingTrack();
     else if (action === 'promptColdTrack') promptColdTrack();
+    // D2 §2.8 — footer-triad stub handlers (SG-D2-FOOTER-SAVE-WIRING STUB).
+    // All three fire "Coming soon" toast per HR-8 pattern; live wiring deferred.
+    else if (action === 'scSaveResult')  scSaveResult(btn);
+    else if (action === 'scShareResult') scShareResult(btn);
+    else if (action === 'scTrackResult') scTrackResult(btn);
     else if (action === 'toggleMed') toggleMed(parseInt(arg));
     else if (action === 'deleteMed') deleteMed(parseInt(arg));
     else if (action === 'cancelSleepInProgress') cancelSleepInProgress(arg);

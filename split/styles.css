@@ -49,6 +49,7 @@
   --tc-sage:    #3a7060;
   --tc-sage-light: #5a9080;
   --tc-rose:    #9e3e52;
+  --rose-deep:  #7a2c3e;   /* D2 phase-spec §2.3 — DO-NOT callout border. Deeper than --tc-rose for visual amplification of contraindications (SG-D2-DONOT-BORDER ratified). */
   --tc-lav:     #6e5e9a;
   --tc-sky:     #336580;
   --tc-warn:    #856404;
@@ -4681,6 +4682,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   --tc-sage:   #7ac0a0;
   --tc-sage-light: #a0d8b8;
   --tc-rose:   #e090a8;
+  --rose-deep: #f0a6bd;   /* D2 phase-spec §2.3 — DO-NOT callout border, dark theme. Brighter than --tc-rose dark for amplification on dark surfaces. */
   --tc-lav:    #b8a8e0;
   --tc-sky:    #80b8d8;
   --tc-warn:   #d4b040;
@@ -6100,6 +6102,159 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 @media (prefers-reduced-motion: reduce) {
   .sc-emergency .sc-rail { animation:none; }
   .sc-sticky-footer { transition:none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   D2 STRUCTURAL — DO-NOT callout, numbered/bulleted, progressive disclosure,
+   footer-triad, back-channel, lifeThreat CTA. Phase-spec §2.3-§2.11.
+   ───────────────────────────────────────────────────────────────── */
+
+/* §2.10 — HR-2 sweep: replace inline style="color:..." on .sc-section-title
+   with modifier classes (carried-forward violation from D1 — Cipher pre-empt). */
+.sc-section-title-danger  { color:var(--tc-danger); }
+.sc-section-title-caution { color:var(--tc-caution); }
+
+/* §2.3 / §2.4 — DO-NOT callout. 2px solid --rose-deep border (SG-D2-DONOT-BORDER
+   ratified). Per-item zi-no-entry prefix on EVERY line per V-M3 #2. */
+.sc-donot-callout {
+  margin-top:var(--sp-12);
+  padding:var(--sp-10) var(--sp-12);
+  border-left:2px solid var(--rose-deep);
+  background:rgba(220,60,60,0.06);
+  border-radius:0 var(--r-md) var(--r-md) 0;
+}
+.sc-donot-callout-title {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  font-size:var(--fs-xs); font-weight:800;
+  text-transform:uppercase; letter-spacing:var(--ls-wide);
+  color:var(--tc-danger);
+  margin-bottom:var(--sp-6);
+}
+.sc-donot-list { list-style:none; padding:0; margin:0; }
+.sc-donot-item {
+  display:flex; align-items:flex-start; gap:var(--sp-6);
+  padding:var(--sp-4) 0;
+  font-size:var(--fs-sm); font-weight:500;
+  color:var(--tc-danger);
+  line-height:var(--lh-relaxed);
+}
+.sc-donot-item.sc-donot-critical {
+  /* §2.4 — critical DO-NOT typography per V-M3 #3. */
+  font-size:var(--fs-base); font-weight:800;
+  text-decoration:underline;
+  padding:var(--sp-6) 0;
+}
+[data-theme="dark"] .sc-donot-callout { background:rgba(220,60,60,0.12); }
+
+/* §2.5 — numbered/bulleted lists for whatToDo / precautions / emergency arrays */
+.sc-numbered-steps { padding-left:var(--sp-20); margin:var(--sp-6) 0; }
+.sc-step {
+  margin-bottom:var(--sp-6);
+  font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed);
+}
+.sc-step::marker { font-weight:800; color:var(--text); }
+.sc-bullet-list { padding-left:var(--sp-16); margin:var(--sp-6) 0; }
+.sc-bullet {
+  margin-bottom:var(--sp-4);
+  font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed);
+}
+
+/* §2.6 — progressive disclosure. Emergency tier force-expands per
+   SG-D2-PROGRESSIVE-DISCLOSURE-EMERGENCY-OVERRIDE. */
+.sc-disclosure { margin-top:var(--sp-8); }
+.sc-disclosure-summary {
+  list-style:none;
+  display:flex; align-items:flex-start; gap:var(--sp-8);
+  cursor:pointer;
+  padding:var(--sp-6) 0;
+  font-size:var(--fs-sm); color:var(--mid);
+  line-height:var(--lh-relaxed);
+}
+.sc-disclosure-summary::-webkit-details-marker { display:none; }
+.sc-summary-text { flex:1; }
+.sc-disclosure-toggle {
+  flex:0 0 24px;
+  transition:transform 200ms ease;
+}
+details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
+.sc-disclosure-body { margin-top:var(--sp-8); }
+
+/* §2.8 — footer-triad. Save-only slot on emergency; full triad on warning/mild.
+   All three actions are STUBS in D2 (SG-D2-FOOTER-SAVE-WIRING ratified). */
+.sc-footer-triad {
+  display:flex; gap:var(--sp-8);
+  margin-top:var(--sp-12); padding-top:var(--sp-10);
+  border-top:1px solid rgba(0,0,0,0.06);
+}
+.sc-footer-triad.sc-footer-emergency { justify-content:flex-start; }
+.sc-footer-action {
+  flex:1;
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:var(--sp-6);
+  min-height:44px; padding:var(--sp-8) var(--sp-10);
+  border-radius:var(--r-md);
+  border:1px solid rgba(0,0,0,0.08);
+  background:transparent;
+  font-size:var(--fs-sm); font-weight:600;
+  color:var(--mid);
+  cursor:pointer;
+}
+.sc-footer-action:active { background:rgba(0,0,0,0.04); }
+.sc-footer-emergency .sc-footer-action { flex:0 0 auto; min-width:120px; }
+[data-theme="dark"] .sc-footer-triad { border-top-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .sc-footer-action { border-color:rgba(255,255,255,0.12); }
+
+/* §2.9 — back-channel callout. Tiered copy per severity (Maren C-D2-M-7). */
+.sc-back-channel {
+  margin-top:var(--sp-10);
+  padding:var(--sp-6) var(--sp-10);
+  border-radius:var(--r-md);
+  background:rgba(220,60,60,0.08);
+  font-size:var(--fs-sm); font-weight:600;
+  color:var(--tc-rose);
+  display:flex; align-items:center; gap:var(--sp-6);
+}
+.sc-back-channel-warning {
+  /* sharper visual weight matches sharper copy */
+  font-weight:700;
+}
+.sc-back-channel-mild {
+  /* Cipher E-D2-6 fold: explicit rule for symmetry / future-edit safety.
+     Currently equivalent to base; future refinements (softer color, etc.)
+     land here without altering the class-emit contract. */
+}
+[data-theme="dark"] .sc-back-channel { background:rgba(220,60,60,0.16); }
+
+/* §2.11 — lifeThreat CTA + hospital list. Touch targets ≥60×60 per D1 §9. */
+.sc-lifethreat-cta {
+  display:flex; flex-direction:column; gap:var(--sp-6);
+  margin:var(--sp-10) 0;
+}
+.sc-call-emergency {
+  display:flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  min-height:60px; min-width:60px;
+  padding:var(--sp-10) var(--sp-12);
+  font-weight:800; font-size:var(--fs-md);
+  border-radius:var(--r-lg);
+  background:var(--tc-danger); color:#fff;
+  text-decoration:none;
+}
+.sc-call-fallback {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; padding:var(--sp-6) var(--sp-10);
+  font-size:var(--fs-xs); color:var(--tc-danger);
+  text-decoration:none; font-weight:600;
+}
+.sc-hospital-list {
+  list-style:none; padding:0; margin:var(--sp-8) 0 0;
+  display:flex; flex-direction:column; gap:var(--sp-4);
+}
+.sc-hospital-list li { font-size:var(--fs-xs); }
+.sc-hospital-list a { color:var(--mid); text-decoration:none; }
+
+/* D2 §2.6 / §2.8 — prefers-reduced-motion parity for new transitions */
+@media (prefers-reduced-motion: reduce) {
+  .sc-disclosure-toggle { transition:none; }
 }
 [data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
 [data-theme="dark"] .ql-freq-pill:active { background:var(--accent-sage-deep); color:var(--body-bg); }
