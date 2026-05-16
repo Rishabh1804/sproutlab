@@ -3345,8 +3345,8 @@ const SYMPTOM_DB = [
     id: 'fever-mild',
     keywords: ['fever','temperature','warm','low grade','99','100','101','mild fever'],
     severity: 'warning',
-    title: 'Mild Fever (99–101°F)',
-    summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F',
+    title: 'Mild Fever (99–101°F / 37.2–38.3°C)',
+    summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F (38.9°C)',
     whatToDo: [
       'Monitor Ziva’s temperature every 2 hours.',
       'Keep her comfortable and lightly dressed.',
@@ -3446,7 +3446,7 @@ const SYMPTOM_DB = [
     keywords: ['rash','spots','bumps','red skin','hives','eczema','patches','blotchy','itchy','redness'],
     severity: 'warning',
     title: 'Skin Rash',
-    summary: 'Note recent foods and exposures, keep area clean, watch for breathing trouble',
+    summary: 'Note recent foods, keep area clean, glass-test for non-blanching, watch breathing',
     whatToDo: [
       'Note what Ziva ate or was exposed to in the previous 24–48 hours.',
       'Keep the area clean and dry.',
@@ -3464,6 +3464,7 @@ const SYMPTOM_DB = [
       { text: 'Re-introduce a suspected food without medical guidance', critical: false }
     ],
     emergency: [
+      'Rash does not fade when pressed firmly with the side of a clear glass (non-blanching / petechial) — possible meningococcal disease',
       'Rash spreads rapidly across the body',
       'Swelling of face, lips, or tongue',
       'Difficulty breathing or swallowing',
@@ -3575,9 +3576,9 @@ const SYMPTOM_DB = [
     lifeThreat: false,
     triage: true,
     triageQuestions: [
+      { q: 'Does she seem unusually lethargic or hard to rouse?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Is she also refusing fluids (including breast milk)?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Has she been refusing food for more than 24 hours?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Does she seem unusually lethargic or hard to rouse?', yesSeverity: 'emergency', noSeverity: null }
+      { q: 'Has she been refusing food for more than 24 hours?', yesSeverity: 'warning', noSeverity: null }
     ],
     callDoctor: false
   },
@@ -3788,9 +3789,9 @@ const SYMPTOM_DB = [
     summary: 'Stop suspected food, watch breathing and swelling, call 108 if airway involved',
     whatToDo: [
       'Stop the suspected food immediately.',
-      'Note exactly what she ate and when symptoms started.',
-      'Watch her breathing and the swelling closely.',
-      'Take a photo of any rash for the doctor.'
+      'Watch her breathing and any swelling closely — this can escalate within minutes.',
+      'Call your pediatrician (or emergency services if breathing is affected).',
+      'Take a photo of any rash and note what she ate and when symptoms started, for the doctor.'
     ],
     precautions: [
       'Mark any new food as "watch" in the app until reviewed with the doctor.',
@@ -3988,7 +3989,7 @@ const SYMPTOM_DB = [
       'Shout her name and gently tap the bottom of her foot to see if she responds.',
       'Check whether she is breathing — look at her chest, listen, feel for air on your cheek.',
       'If she is breathing, place her on her side (recovery position) and call emergency services.',
-      'If she is not breathing, start infant CPR if you are trained and call emergency services.',
+      'If she is not breathing, call emergency services immediately — the dispatcher will guide you through chest compressions while help is on the way.',
       'Stay with her until help arrives.'
     ],
     precautions: [
