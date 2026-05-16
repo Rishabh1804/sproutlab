@@ -88,6 +88,12 @@ def in_emoji_ranges(cp: int, strict: bool) -> bool:
 def is_filtered(line: str) -> bool:
     return '[\\u' in line  # defensive sanitizer regex char class
 
+# VS16 (U+FE0F) — emoji-presentation variation selector. Forces preceding
+# base character to render as colored emoji even if the base is in an
+# allowed range (e.g., arrows U+2190-21FF). Per Maren V-M-10 (round 3):
+# flag ALL U+FE0F occurrences; SproutLab has no legitimate use of VS16.
+vs16_re = re.compile(r'️|\\uFE0F|\\u\{?FE0F\}?', re.IGNORECASE)
+
 scopes = ['split']
 for root_artifact in ['index.html', 'sproutlab.html']:
     if os.path.exists(root_artifact):
@@ -123,6 +129,12 @@ for scope in scopes:
             line = lines[ln_idx]
             if is_filtered(line): continue
             hits.append((ln_idx + 1, m.group(), cp, line.strip()[:90]))
+        # VS16 (emoji-presentation selector) — flag all occurrences
+        for m in vs16_re.finditer(src):
+            ln_idx = src[:m.start()].count('\n')
+            line = lines[ln_idx]
+            if is_filtered(line): continue
+            hits.append((ln_idx + 1, m.group(), 0xFE0F, line.strip()[:90]))
         if hits:
             per_file[path] = hits
             total_hits += len(hits)

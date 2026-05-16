@@ -9438,8 +9438,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-skip-forward" viewBox="0 0 24 24"><path d="M5 5l10 7-10 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="5" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
 <symbol id="zi-chevron-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.2"/></symbol>
-<symbol id="zi-dot-empty" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/></symbol>
-<!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). -->
+<symbol id="zi-dot-empty" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.2"/></symbol>
+<symbol id="zi-ios-share" viewBox="0 0 24 24"><path d="M7 10v9a1.5 1.5 0 001.5 1.5h7A1.5 1.5 0 0017 19v-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 14V3M8.5 6.5L12 3l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-undo" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 9h10a6 6 0 016 6v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn, zi-undo. zi-flag-eu/zi-flag-cn authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). zi-undo authored alongside V-M-11 fix (round-3 audit on PR #74) but not currently wired — the V-M-11 emoji-prefix removal in intelligence.js:10776/:12168 chose text-only "Undone"/"unskipped" labels for the textContent/showQLToast paths since neither carries HTML; zi-undo is reserved for any future HTML-context undo button. Per user mandate "industrial scale for future usage" (2026-05-16). -->
 </defs>
 </svg>
 <div class="app">
@@ -11944,7 +11946,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);border:1.5px solid rgba(180,160,220,0.2);">
           <div class="settings-section-hdr settings-section-hdr-sm settings-section-hdr-lav"><svg class="zi" aria-hidden="true"><use href="#zi-bolt"/></svg> Install as App</div>
           <div class="t-sub" style="line-height:var(--lh-relaxed);">
-            <strong>iPhone:</strong> Tap the Share button (<svg class="zi"><use href="#zi-share"/></svg>) → "Add to Home Screen"<br>
+            <strong>iPhone:</strong> Tap the Share button (<svg class="zi"><use href="#zi-ios-share"/></svg>) → "Add to Home Screen"<br>
             <strong>Android:</strong> Tap ⋮ menu → "Add to Home Screen" or "Install app"<br>
             <strong>To sync data:</strong> Use Settings → Data → Share Backup. Send the file via WhatsApp or any app, then import on the other phone.
           </div>
@@ -56045,7 +56047,7 @@ function undoLastQL() {
     try { _lastQLUndo(); } catch(e) { console.warn('Undo error:', e); }
     _lastQLUndo = null;
     const t = document.getElementById('qlToast');
-    t.textContent = '↩️ Undone';
+    t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
     const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -57437,7 +57439,7 @@ function unskipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('↩️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
 }
 
 function updateMealSkipButtons() {

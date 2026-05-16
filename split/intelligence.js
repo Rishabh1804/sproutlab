@@ -10773,7 +10773,7 @@ function undoLastQL() {
     try { _lastQLUndo(); } catch(e) { console.warn('Undo error:', e); }
     _lastQLUndo = null;
     const t = document.getElementById('qlToast');
-    t.textContent = '↩️ Undone';
+    t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
     const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -12165,7 +12165,7 @@ function unskipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('↩️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
 }
 
 function updateMealSkipButtons() {
