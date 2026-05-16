@@ -63,17 +63,17 @@ function currentRegion() {
 
 // SEQUENCE_CRITICAL_IDS: entries whose whatToDo order carries safety
 // meaning under stress. Renderer emits <ol> for these ids; <ul> for
-// others. Initial 7-id set per Maren C-D2-M-1 P0 fold; content-veto
-// candidates for D2-B inclusion: allergic-reaction, burn, dehydration
-// (Maren confirms per entry whether whatToDo is actually a sequence).
+// others. Initial set was 7 ids per Maren C-D2-M-1 P0 fold. Post-D2-B
+// Aurelius proposal + Maren V-M5 CONFIRM (PR #73 R1 sign-off): removed
+// `vomiting` and `fever-high` (cosmetic-order on inspection); added
+// `allergic-reaction` (stop-food → assess-airway → call → record).
 const SEQUENCE_CRITICAL_IDS = [
   'fall-injury',
-  'vomiting',
-  'fever-high',
   'choking',
   'seizure',
   'breathing-difficulty',
-  'head-injury'
+  'head-injury',
+  'allergic-reaction'
 ];
 
 // G-D2-9 boot-time assertion: every id in SEQUENCE_CRITICAL_IDS must

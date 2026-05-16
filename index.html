@@ -6122,7 +6122,13 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .sc-section-title-caution { color:var(--tc-caution); }
 
 /* §2.3 / §2.4 — DO-NOT callout. 2px solid --rose-deep border (SG-D2-DONOT-BORDER
-   ratified). Per-item zi-no-entry prefix on EVERY line per V-M3 #2. */
+   ratified). Per-item zi-no-entry prefix on EVERY line per V-M3 #2.
+
+   MAREN-LOCKED ALPHA: rgba(220,60,60,0.06) composes to 4.51:1 against
+   --tc-danger on light --body-bg (Maren [11a] fixture R2; only 0.01
+   above WCAG AA-normal 4.5:1). Any change to this alpha — or to
+   --body-bg / --tc-danger — requires re-running the Maren contrast
+   fixture. Dark theme uses rgba(220,60,60,0.12) at L6147 with comfortable headroom. */
 .sc-donot-callout {
   margin-top:var(--sp-12);
   padding:var(--sp-10) var(--sp-12);
@@ -12339,17 +12345,17 @@ function currentRegion() {
 
 // SEQUENCE_CRITICAL_IDS: entries whose whatToDo order carries safety
 // meaning under stress. Renderer emits <ol> for these ids; <ul> for
-// others. Initial 7-id set per Maren C-D2-M-1 P0 fold; content-veto
-// candidates for D2-B inclusion: allergic-reaction, burn, dehydration
-// (Maren confirms per entry whether whatToDo is actually a sequence).
+// others. Initial set was 7 ids per Maren C-D2-M-1 P0 fold. Post-D2-B
+// Aurelius proposal + Maren V-M5 CONFIRM (PR #73 R1 sign-off): removed
+// `vomiting` and `fever-high` (cosmetic-order on inspection); added
+// `allergic-reaction` (stop-food → assess-airway → call → record).
 const SEQUENCE_CRITICAL_IDS = [
   'fall-injury',
-  'vomiting',
-  'fever-high',
   'choking',
   'seizure',
   'breathing-difficulty',
-  'head-injury'
+  'head-injury',
+  'allergic-reaction'
 ];
 
 // G-D2-9 boot-time assertion: every id in SEQUENCE_CRITICAL_IDS must
