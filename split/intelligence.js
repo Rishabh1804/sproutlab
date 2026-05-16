@@ -1921,7 +1921,7 @@ function qaHandleIngredient(classified) {
     var meta = [];
     if (combo.count > 0) meta.push('Served ' + combo.count + '\u00d7');
     if (combo.avgIntake !== null) meta.push('intake ' + Math.round(combo.avgIntake * 100) + '%');
-    var text = (idx === 0 ? '\u2605 ' : '') + comboDisplay;
+    var text = (idx === 0 ? zi('star') + ' ' : '') + comboDisplay;
     if (meta.length > 0) text += ' \u2014 ' + meta.join(' \u00b7 ');
     histItems.push({ text: text, signal: 'good' });
     if (combo.enhancedReasons.length > 0) {
@@ -3950,13 +3950,13 @@ function formatSummaryAsText(summary) {
 
   if (summary.highlights && summary.highlights.length > 0) {
     lines.push('*Highlights*');
-    summary.highlights.forEach(function(h) { lines.push('\u2713 ' + h.text); });
+    summary.highlights.forEach(function(h) { lines.push(h.text); });
     lines.push('');
   }
 
   if (summary.concerns && summary.concerns.length > 0) {
     lines.push('*Heads Up*');
-    summary.concerns.forEach(function(c) { lines.push('\u26a0 ' + c.text); });
+    summary.concerns.forEach(function(c) { lines.push(c.text); });
     lines.push('');
   }
 

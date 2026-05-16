@@ -3283,7 +3283,7 @@ function getTithiIndex(date) {
   return Math.floor(phase / (SYNODIC / 30)) % 30; // 0-29
 }
 
-function getMoonPhaseEmoji(date) {
+function getMoonPhaseIcon(date) {
   const tithi = getTithiIndex(date);
   // Map 30 tithis to 8 moon emojis
   if (tithi === 0)                    return zi('moon-new'); // Amavasya

@@ -802,7 +802,7 @@ function showFullDoctorSummary() {
       else if (line.startsWith('  OK ')) html += `<div class="item check">${zi('check')} ${line.trim().slice(3)}</div>`;
       else if (line.startsWith('  WATCH ')) html += `<div class="item warn">${zi('warn')} ${line.trim().slice(6)}</div>`;
       else if (line.startsWith('  PENDING ')) html += `<div class="item warn">${zi('clock')} ${line.trim().slice(8)}</div>`;
-      else if (line.startsWith('  IP ')) html += `<div class="item tc-lav">${zi('target')} ${line.trim().slice(3)}</div>`;
+      else if (line.startsWith('  IP ')) html += `<div class="item tc-lav">${zi('progress')} ${line.trim().slice(3)}</div>`;
       else if (line.includes('[Advanced]')) html += `<div class="item adv">${line.trim().replace('[Advanced]', zi('star') + ' Advanced')}</div>`;
       else if (line.startsWith('BABY ')) html += `<div style="font-weight:600;font-size:var(--icon-sm);">${zi('baby')} ${line.slice(5)}</div>`;
       else if (line.startsWith('BORN ')) html += `<div class="meta">${zi('clock')} ${line.slice(5)}</div>`;

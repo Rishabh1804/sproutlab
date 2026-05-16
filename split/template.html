@@ -93,6 +93,12 @@
 <symbol id="zi-shy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M5 10c2 1 5 2 7 2s5-1 7-2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M10 15.5c0.6 0.6 1.3 1 2 1s1.4-0.4 2-1" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="9" cy="10.5" r="0.5" fill="currentColor" opacity="0.5"/><circle cx="15" cy="10.5" r="0.5" fill="currentColor" opacity="0.5"/></symbol>
 <symbol id="zi-legume" viewBox="0 0 24 24"><path d="M4 12c0-4 3-7 8-7s8 3 8 7c0 4-3 7-8 7s-8-3-8-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><circle cx="8.5" cy="12" r="1.4" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.25"/><circle cx="12" cy="12" r="1.4" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.25"/><circle cx="15.5" cy="12" r="1.4" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.25"/></symbol>
 <symbol id="zi-pepper" viewBox="0 0 24 24"><path d="M7 12c0-3 2-5 5-5s5 2 5 5v4c0 2.5-2.2 4.5-5 4.5s-5-2-5-4.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/><path d="M10 7c0-1.5 0.5-3 2-3s2 1.5 2 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M12 4v-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-blood-drop" viewBox="0 0 24 24"><path d="M12 2.5C12 2.5 5 10.5 5 15a7 7 0 0014 0c0-4.5-7-12.5-7-12.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.22"/><path d="M10 14.5h4M12 12.5v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.6"/></symbol>
+<symbol id="zi-rice" viewBox="0 0 24 24"><path d="M4 14c0-2 3-4 8-4s8 2 8 4v2c0 2.5-2 4.5-4 4.5H8c-2 0-4-2-4-4.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.1"/><ellipse cx="9" cy="11" rx="1" ry="2" fill="currentColor" fill-opacity="0.5"/><ellipse cx="12" cy="10" rx="1" ry="2" fill="currentColor" fill-opacity="0.5"/><ellipse cx="15" cy="11" rx="1" ry="2" fill="currentColor" fill-opacity="0.5"/></symbol>
+<symbol id="zi-grain" viewBox="0 0 24 24"><path d="M12 3v18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 6c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 7 13.5 6 12 6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 11c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 12 13.5 11 12 11z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 16c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 17 13.5 16 12 16z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/></symbol>
+<symbol id="zi-fruit" viewBox="0 0 24 24"><path d="M12 7c-4 0-7 3-7 7c0 4 3 7 7 7s7-3 7-7c0-4-3-7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/><path d="M12 7c0-1.5 1-3 2.5-3M12 7c-0.5-1.5-2-2.5-3.5-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-carrot" viewBox="0 0 24 24"><path d="M9 9l3 12 3-12c0-1-1.5-1.5-3-1.5S9 8 9 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><path d="M10 8c-1-2-2-3-3-4M12 8c0-2 0-3 0-4.5M14 8c1-2 2-3 3-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). -->
 </defs>
 </svg>
 <div class="app">
@@ -1378,7 +1384,7 @@
           <div>
             <label class="micro-label">Flags</label>
             <div class="poop-check-row">
-              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> <svg class="zi"><use href="#zi-drop"/></svg> Blood</label>
+              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> <svg class="zi"><use href="#zi-blood-drop"/></svg> Blood</label>
               <label class="poop-check-label"><input type="checkbox" id="poopMucus"> <svg class="zi"><use href="#zi-bubble"/></svg> Mucus</label>
             </div>
           </div>
@@ -2563,7 +2569,7 @@
               </div>
               <select id="settingsRefStd" onchange="setReferenceStandard(this.value)" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
                 <option value="iap">India (IAP)</option>
-                <option value="who"><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</option>
+                <option value="who">WHO</option>
                 <option value="eu">EU</option>
                 <option value="cn">China (CIP)</option>
               </select>

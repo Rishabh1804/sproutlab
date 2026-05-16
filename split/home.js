@@ -11,11 +11,11 @@ function updateHeader() {
   // Time-based greeting with moon phase
   const hour = todayD.getHours();
   let greeting, emoji;
-  if (hour < 6)       { greeting = 'Good night'; emoji = getMoonPhaseEmoji(todayD); }
+  if (hour < 6)       { greeting = 'Good night'; emoji = getMoonPhaseIcon(todayD); }
   else if (hour < 12) { greeting = 'Good morning'; emoji = zi('sun'); }
   else if (hour < 17) { greeting = 'Good afternoon'; emoji = zi('sun'); }
   else if (hour < 19) { greeting = 'Good evening'; emoji = zi('sun'); }
-  else                { greeting = 'Good night'; emoji = getMoonPhaseEmoji(todayD); }
+  else                { greeting = 'Good night'; emoji = getMoonPhaseIcon(todayD); }
 
   const greetEl = document.getElementById('greetingText');
   const emojiEl = document.getElementById('greetingEmoji');
@@ -28,7 +28,7 @@ function updateHeader() {
     const dayName = todayD.toLocaleDateString('en-IN', { weekday:'long' });
     const dateStr = todayD.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
     const timeStr = todayD.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-    const moonSuffix = (hour >= 19 || hour < 6) ? ` · ${getMoonPhaseEmoji(todayD)} ${getMoonPhaseName(todayD)}` : '';
+    const moonSuffix = (hour >= 19 || hour < 6) ? ` · ${getMoonPhaseIcon(todayD)} ${getMoonPhaseName(todayD)}` : '';
     dtEl.innerHTML = `${zi('clock')} ${escHtml(dayName)}, ${escHtml(dateStr)} · ${escHtml(timeStr)}${moonSuffix}`;
   }
 
@@ -184,16 +184,16 @@ setInterval(() => {
     const dayName = now.toLocaleDateString('en-IN', { weekday:'long' });
     const dateStr = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
     const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-    const moonSuffix = (hour >= 19 || hour < 6) ? ` · ${getMoonPhaseEmoji(now)} ${getMoonPhaseName(now)}` : '';
+    const moonSuffix = (hour >= 19 || hour < 6) ? ` · ${getMoonPhaseIcon(now)} ${getMoonPhaseName(now)}` : '';
     dtEl.innerHTML = `${zi('clock')} ${escHtml(dayName)}, ${escHtml(dateStr)} · ${escHtml(timeStr)}${moonSuffix}`;
   }
   // Update greeting if hour changes
   let greeting, emoji;
-  if (hour < 6)       { greeting = 'Good night'; emoji = getMoonPhaseEmoji(now); }
+  if (hour < 6)       { greeting = 'Good night'; emoji = getMoonPhaseIcon(now); }
   else if (hour < 12) { greeting = 'Good morning'; emoji = zi('sun'); }
   else if (hour < 17) { greeting = 'Good afternoon'; emoji = zi('sun'); }
   else if (hour < 19) { greeting = 'Good evening'; emoji = zi('sun'); }
-  else                { greeting = 'Good night'; emoji = getMoonPhaseEmoji(now); }
+  else                { greeting = 'Good night'; emoji = getMoonPhaseIcon(now); }
   const greetEl = document.getElementById('greetingText');
   const emojiEl = document.getElementById('greetingEmoji');
   if (greetEl) greetEl.textContent = greeting;
@@ -337,7 +337,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
         ${zi('sun')} Weather advisory — vaccination ${dayLabel} (${formatDate(apptDate)})
       </div>
       <div style="font-size:var(--fs-base);font-weight:600;color:var(--text);margin-bottom:6px;">
-        ${weatherSummary}${wx.rainChance > 0 ? ' · ${zi("rain")} ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
+        ${weatherSummary}${wx.rainChance > 0 ? ' · ' + zi('rain') + ' ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
       </div>
       <div style="font-size:var(--fs-sm);font-weight:400;color:var(--mid);line-height:1.6;">
         ${precautions.map(p => '<div style="margin-bottom:3px;">' + p + '</div>').join('')}
@@ -3823,7 +3823,7 @@ function renderDietIntelBanner() {
 
       if (best.length > 0) {
         html += '<div class="dib-card dib-synergy">';
-        html += '<div style="font-weight:600;margin-bottom:6px;">\u{1F4A1} ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
+        html += '<div style="font-weight:600;margin-bottom:6px;">' + zi('bulb') + ' ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
         best.forEach(function(t, idx) {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
           html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
@@ -3866,9 +3866,9 @@ function renderDietIntelBanner() {
 
       if (suggestions.length > 0) {
         var top = suggestions.slice(0, 3);
-        html += '<div class="dib-card dib-synergy">\u{1F517} For ' + MEAL_LABELS_FULL[nextMeal] + ', try pairing with today\'s meals: ';
+        html += '<div class="dib-card dib-synergy">' + zi('link') + ' For ' + MEAL_LABELS_FULL[nextMeal] + ', try pairing with today\'s meals: ';
         top.forEach(function(s) {
-          var emoji = s.type === 'absorption' ? '\u{1F517}' : s.type === 'complete' ? '\u2728' : '\u{1F33F}';
+          var emoji = s.type === 'absorption' ? zi('link') : s.type === 'complete' ? zi('sparkle') : zi('sprout');
           html += '<span class="dib-synergy-pill" data-action="insertDietFood" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(s.partner) + '" title="' + escAttr(s.reason) + '">' + emoji + ' ' + escHtml(s.partner) + '</span> ';
         });
         html += '</div>';
@@ -3935,28 +3935,28 @@ function getMealTemplates(mealKey) {
     var hasFat = combo.foods.some(function(f){ return ['ghee','coconut oil','butter'].some(function(g){ return f.includes(g); }); });
 
     if (hasGrain && hasDal && hasVeg) {
-      label = '\u{1F35A} Khichdi + veggies';
+      label = zi('rice') + ' Khichdi + veggies';
       reason = 'Complete protein + iron + vitamins';
     } else if (hasGrain && hasDal) {
-      label = '\u{1F35A} Grain + dal combo';
+      label = zi('rice') + ' Grain + dal combo';
       reason = 'Complete protein \u2014 amino acid balance';
     } else if (hasGrain && hasNut && hasFruit) {
-      label = '\u{1F33E} Porridge + fruit + nuts';
+      label = zi('grain') + ' Porridge + fruit + nuts';
       reason = 'Energy + healthy fats + brain development';
     } else if (hasGrain && hasFruit) {
-      label = '\u{1F33E} Porridge + fruit';
+      label = zi('grain') + ' Porridge + fruit';
       reason = 'Energy + vitamins + gentle on tummy';
     } else if (hasFruit && combo.foods.length >= 3) {
-      label = '\u{1F353} Fruit bowl';
+      label = zi('fruit') + ' Fruit bowl';
       reason = 'Vitamins + hydration + antioxidants';
     } else if (hasFruit && combo.foods.length >= 2) {
-      label = '\u{1F34E} Fruit mix';
+      label = zi('fruit') + ' Fruit mix';
       reason = 'Variety of vitamins + easy digestion';
     } else if (hasVeg && combo.foods.length >= 2) {
-      label = '\u{1F955} Veggie medley';
+      label = zi('carrot') + ' Veggie medley';
       reason = 'Iron + fibre + micronutrients';
     } else {
-      label = '\u{1F37D}\uFE0F ' + combo.count + '\u00D7 combo';
+      label = zi('spoon') + ' ' + combo.count + '\u00D7 combo';
       reason = groups.size + ' food group' + (groups.size !== 1 ? 's' : '');
     }
 
