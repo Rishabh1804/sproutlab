@@ -11954,7 +11954,8 @@ function runHomeSymptomCheck() {
   // Delegate to shared renderer (defined in medical.js; loaded earlier per concat order).
   // Home-overlay variant uses closeAndPrompt* actions so the modal closes before the
   // episode-tracking prompt opens \u2014 per \u00A71.2 pre-merge diff gate behavioral drift.
-  resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo, {
+  // D2 V-K9 fold (A-D2-K-11): ageMo dropped from signature.
+  resultEl.innerHTML = _renderSymptomCheckerResults(matches, {
     // D1 §2.2 — Home overlay is a true modal scroll container; ship the sticky CTA here.
     stickyFooter: true,
     actions: {
