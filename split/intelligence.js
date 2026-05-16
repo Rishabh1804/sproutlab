@@ -12179,7 +12179,7 @@ function updateMealSkipButtons() {
     const val = entry[m] || '';
     if (val === '—skipped—') {
       btn.style.display = '';
-      btn.textContent = 'skipped ↩';
+      btn.innerHTML = 'skipped ' + zi('undo');
       btn.classList.add('skipped');
       btn.title = 'Tap to unskip';
       if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }

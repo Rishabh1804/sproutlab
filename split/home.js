@@ -1607,7 +1607,7 @@ function renderMilestoneList() {
               ${m.advanced ? '<span class="badge-adv"><svg class="zi"><use href="#zi-star"/></svg> Advanced</span>' : ''}
               <div class="milestone-actions">
                 ${nextStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${nextStage}'" aria-label="Override to ${escAttr(nextMeta.label)}" title="Override: ${escAttr(nextMeta.label)}">Edit ${escHtml(nextMeta.label)}</button>` : ''}
-                ${prevStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${prevStage}'" aria-label="Move back">↩</button>` : ''}
+                ${prevStage ? `<button class="ms-action-btn" data-action="overrideMilestoneStatus" data-stop="1" data-arg="${m._i},'${prevStage}'" aria-label="Move back">${zi('undo')}</button>` : ''}
                 <button class="ms-action-btn del-ms" data-action="deleteMilestone" data-stop="1" data-arg="${m._i}" aria-label="Delete milestone">×</button>
               </div>
             </div>

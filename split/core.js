@@ -2086,7 +2086,7 @@ function renderNotes(filterCat) {
           ${_renderAttribution(n)}
         </div>
         <div class="note-actions">
-          <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? '↩' : zi('check')}</button>
+          <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? zi('undo') : zi('check')}</button>
           <button class="note-btn del-note-btn" data-action="deleteNote" data-arg="${n._i}">&times;</button>
         </div>
       </div>
