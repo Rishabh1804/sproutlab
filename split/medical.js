@@ -4452,7 +4452,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
-  { type:'social', icon:zi('handshake'), title:'Mirror play',
+  { type:'social', icon:zi('mirror'), title:'Mirror play',
     desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
@@ -4468,7 +4468,7 @@ const DYNAMIC_ACTIVITIES = [
     desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 },
 
-  { type:'social', icon:zi('baby'), title:'Manage stranger anxiety gently',
+  { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
     desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 

@@ -3286,15 +3286,15 @@ function getTithiIndex(date) {
 function getMoonPhaseEmoji(date) {
   const tithi = getTithiIndex(date);
   // Map 30 tithis to 8 moon emojis
-  if (tithi === 0)                    return zi('moon'); // Amavasya
-  if (tithi >= 1  && tithi <= 3)      return zi('moon'); // Shukla early
-  if (tithi >= 4  && tithi <= 7)      return zi('moon'); // Shukla Ashtami
-  if (tithi >= 8  && tithi <= 11)     return zi('moon'); // Shukla late
-  if (tithi >= 12 && tithi <= 15)     return zi('moon'); // Purnima
-  if (tithi >= 16 && tithi <= 18)     return zi('moon'); // Krishna early
-  if (tithi >= 19 && tithi <= 22)     return zi('moon'); // Krishna Ashtami
-  if (tithi >= 23 && tithi <= 26)     return zi('moon'); // Krishna late
-  return zi('moon'); // approaching Amavasya
+  if (tithi === 0)                    return zi('moon-new'); // Amavasya
+  if (tithi >= 1  && tithi <= 3)      return zi('moon-waxing-crescent'); // Shukla early
+  if (tithi >= 4  && tithi <= 7)      return zi('moon-first-quarter'); // Shukla Ashtami
+  if (tithi >= 8  && tithi <= 11)     return zi('moon-waxing-gibbous'); // Shukla late
+  if (tithi >= 12 && tithi <= 15)     return zi('moon-full'); // Purnima
+  if (tithi >= 16 && tithi <= 18)     return zi('moon-waning-gibbous'); // Krishna early
+  if (tithi >= 19 && tithi <= 22)     return zi('moon-third-quarter'); // Krishna Ashtami
+  if (tithi >= 23 && tithi <= 26)     return zi('moon-waning-crescent'); // Krishna late
+  return zi('moon-new'); // approaching Amavasya
 }
 
 function getMoonPhaseName(date) {

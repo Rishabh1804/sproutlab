@@ -1113,7 +1113,7 @@ function renderRecoFood() {
     { icon:zi('bowl'), name:'Rajma mash', reason:'Protein + iron + fibre — hearty legume', newFood:'rajma',
       recipe:'1. Soak ¼ cup rajma overnight (12 hrs minimum).\n2. Pressure cook with 2 cups water — 6–7 whistles until very soft.\n3. Mash smooth — no whole beans.\n4. Add ghee + pinch turmeric.',
       tips:'{{OK}} High protein + iron — great for vegetarian babies.\n{{OK}} Overnight soaking is essential for digestibility.\n{{NO}} Undercooked rajma is toxic — cook until mushy.\n{{NO}} Can cause gas — start with 1–2 tbsp.' },
-    { icon:zi('bowl'), name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
+    { icon:zi('legume'), name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
       recipe:'1. Boil ¼ cup fresh/frozen peas 5 min.\n2. Blend smooth with 2 tbsp cooking water.\n3. Strain through sieve to remove skins.\n4. Add ghee, serve warm.',
       tips:'{{OK}} Naturally sweet — babies usually love it.\n{{OK}} Fresh or frozen equally nutritious.\n{{NO}} Strain to remove tough skins for young babies.\n{{NO}} Don\'t use canned peas — too salty.' },
     { icon:zi('spoon'), name:'Sweet corn puree', reason:'Energy + natural sweetness + Vit B', newFood:'corn',
@@ -1188,7 +1188,7 @@ function renderRecoFood() {
     { icon:zi('spoon'), name:'Pumpkin seed ragi porridge', reason:'Zinc + iron + protein — immunity builder', newFood:'pumpkin seeds',
       recipe:'1. Dry roast 1 tsp pumpkin seeds, grind to powder.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix in seed powder + ghee.',
       tips:'{{OK}} Highest zinc of any seed — key for immunity.\n{{OK}} Good iron source too.\n{{NO}} Always grind to powder — whole seeds are choking risk.\n{{NO}} Don\'t use salted/flavoured seeds.' },
-    { icon:zi('bowl'), name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
+    { icon:zi('pepper'), name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
       recipe:'1. Deseed ¼ red/yellow capsicum, chop fine.\n2. Sauté lightly in ½ tsp ghee 3 min.\n3. Mix into cooked, mashed rice.\n4. Mash everything smooth.',
       tips:'{{OK}} Red/yellow are sweeter than green.\n{{OK}} Very high Vitamin C content.\n{{NO}} Remove seeds and white membrane.\n{{NO}} Cook well — raw capsicum is too tough.' },
   ];
