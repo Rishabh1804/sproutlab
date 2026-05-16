@@ -413,7 +413,7 @@ function toggleHomeVitals() {
   if (!collapsed || !expanded) return;
   const isExpanded = expanded.style.display !== 'none';
   expanded.style.display = isExpanded ? 'none' : '';
-  if (chevron) chevron.textContent = isExpanded ? '▾' : '▴';
+  if (chevron) chevron.innerHTML = isExpanded ? zi('chevron-down') : zi('chevron-up');
   // Hide quick pills when expanded (full pills visible)
   const quick = document.getElementById('homeVitalsQuick');
   if (quick) quick.style.display = isExpanded ? '' : 'none';
@@ -1515,7 +1515,7 @@ function renderMilestoneList() {
               <div class="ms-cat-name">${meta.label}</div>
               <div class="ms-cat-count">${masteredCount} mastered${activeCount ? ', ' + activeCount + ' active' : ''} · ${avgPct}% avg</div>
             </div>
-            <div class="ms-cat-chevron">▾</div>
+            <div class="ms-cat-chevron">${zi('chevron-down')}</div>
           </div>
         </div>
         <div class="ms-cat-items ${cat}" id="ms-cat-items-${cat}">`;
@@ -1585,11 +1585,11 @@ function renderMilestoneList() {
         if (bestKw) {
           const evList = getMilestoneEvidence(bestKw).slice(0, 5);
           let evItems = evList.map(ev => {
-            const confDot = ev.confidence === 'high' ? '●' : ev.confidence === 'medium' ? '●' : '●';
+            const confDot = zi('dot-red');
             return `<div class="al-evid-item">${ev.date} — "${escHtml((ev.text||'').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
           }).join('');
           if (m.evidenceCount > 5) evItems += `<div class="al-evid-more">+${m.evidenceCount - 5} more</div>`;
-          evidHtml = `<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="${evidId}" data-stop="1">${zi('chart')} View evidence ▾</button>
+          evidHtml = `<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="${evidId}" data-stop="1">${zi('chart')} View evidence ${zi('chevron-down')}</button>
             <div id="${evidId}" class="al-evid-box" style="display:none;">${evItems}</div>`;
         }
       }
@@ -1602,7 +1602,7 @@ function renderMilestoneList() {
                 <strong>${escHtml(m.text)}</strong>
                 ${metaHtml}
                 ${evidHtml}
-                ${tidbitData ? `<button class="ms-tidbit-toggle" data-action="toggleDisplayFlex" data-arg="${tidbitId}" data-stop="1"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ▾</button>` : ''}
+                ${tidbitData ? `<button class="ms-tidbit-toggle" data-action="toggleDisplayFlex" data-arg="${tidbitId}" data-stop="1"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ${zi('chevron-down')}</button>` : ''}
               </div>
               ${m.advanced ? '<span class="badge-adv"><svg class="zi"><use href="#zi-star"/></svg> Advanced</span>' : ''}
               <div class="milestone-actions">
@@ -2201,7 +2201,7 @@ function renderRecentEvidence() {
         '<span class="al-feed-rollup-icon">' + (domainIcons[primaryDomain] || '') + '</span>' +
         '<span class="al-feed-rollup-label-text"><strong>' + escHtml(label) + '</strong> × ' + r.count + '</span>' +
         '<span class="al-feed-rollup-meta">last ' + latestLabel + (latestTimeStr ? ' ' + latestTimeStr : '') + '</span>' +
-        '<span class="al-feed-rollup-chevron">▾</span>' +
+        '<span class="al-feed-rollup-chevron">' + zi('chevron-down') + '</span>' +
         '</div>';
       html += '<div id="' + rollupBodyId + '" class="al-feed-rollup-body" style="display:none;">';
       r.entries.forEach(o => {
@@ -2249,7 +2249,7 @@ function renderRecentEvidence() {
     html += '<div class="al-feed-day">';
     html += '<div class="al-feed-day-header ptr" data-action="toggleDisplayBlock" data-arg="' + dayBodyId + '">' +
       dayLabel + ' — ' + entries.length + ' activit' + (entries.length === 1 ? 'y' : 'ies') + ' · ' + totalEvidence + ' evidence' +
-      '<span style="float:right;">▾</span></div>';
+      '<span style="float:right;">' + zi('chevron-down') + '</span></div>';
     html += '<div class="al-feed-summary">' + summaryChips + '</div>';
 
     html += '<div id="' + dayBodyId + '" class="al-feed-list" style="display:' + (isToday ? 'block' : 'none') + ';">';
@@ -2487,7 +2487,7 @@ function renderMedLog() {
           <div class="hm-name">${monthLabel}</div>
           <div class="hm-count">${givenCount} given · ${skippedCount} skipped · ${items.length} total</div>
         </div>
-        <div class="hm-chevron">▾</div>
+        <div class="hm-chevron">${zi('chevron-down')}</div>
       </div>
       <div class="hm-days" style="border-color:rgba(168,207,224,0.4);background:rgba(232,244,250,0.2);">`;
 
@@ -2686,7 +2686,7 @@ function renderFeedingHistory() {
             return s + (e.breakfast?1:0) + (e.lunch?1:0) + (e.dinner?1:0) + (e.snack?1:0);
           }, 0)} meals</div>
         </div>
-        <div class="hm-chevron">▾</div>
+        <div class="hm-chevron">${zi('chevron-down')}</div>
       </div>
       <div class="hm-days">`;
 
@@ -2711,7 +2711,7 @@ function renderFeedingHistory() {
           <div class="history-day-header" data-action="toggleHistoryDay" data-arg="${dayId}">
             <div class="hd-date">${dayName}, ${dayNum}</div>
             <div class="hd-summary">${mealCount} meal${mealCount > 1 ? 's' : ''} — ${summary}</div>
-            <div class="hd-chevron">▾</div>
+            <div class="hd-chevron">${zi('chevron-down')}</div>
           </div>
           <div class="hd-content">
             ${entry.breakfast ? `<div class="history-meal-row"><span class="history-meal-label">${zi('sun')} Break.${entry.breakfast_time ? ' <span class="t-xs fw-400-op" >' + formatTimeShort(entry.breakfast_time) + '</span>' : ''}</span><span class="history-meal-val">${escHtml(entry.breakfast)}</span> ${_miRenderChip(_miGetIntake(dateKey, 'breakfast'))}</div>` : ''}
@@ -4304,7 +4304,7 @@ function renderHomeSuggestions() {
   });
 
   if (items.length > showCount) {
-    html += '<div class="sg-more-toggle" id="sgMoreToggle" data-action="sgToggleMore">Show 1 more ▾</div>';
+    html += '<div class="sg-more-toggle" id="sgMoreToggle" data-action="sgToggleMore">Show 1 more ' + zi('chevron-down') + '</div>';
   }
 
   content.innerHTML = html;
@@ -6096,7 +6096,7 @@ function renderPoopGuide() {
             <span style="font-size:var(--fs-base);font-weight:600;color:${tcMap[cat.color]||'var(--tc-amber)'};">${cat.label}</span>
             <span class="t-sub">${cat.tips.length} tips</span>
           </div>
-          <span class="collapse-chevron" style="color:${tcMap[cat.color]||'var(--tc-amber)'};">▾</span>
+          <span class="collapse-chevron" style="color:${tcMap[cat.color]||'var(--tc-amber)'};">${zi('chevron-down')}</span>
         </div>
         <div style="display:none;padding:10px 14px;" class="tc-body">
           ${cat.tips.map(t => `
@@ -7774,7 +7774,7 @@ function renderAlertCardHTML(a, scope) {
       <div class="ctx-alert-body">
         <div class="ctx-alert-title">${escHtml(a.title)} <span class="ctx-alert-sev ${sevBadge}">${sevLabel}</span></div>
         <div class="ctx-alert-msg">${escHtml(a.body)}</div>
-        ${a.tip ? `<div class="ctx-alert-tip-toggle" data-action="toggleAlertTip" data-arg="${safeKey}" data-stop="1">${zi('bulb')} Tips & advice ▾</div>
+        ${a.tip ? `<div class="ctx-alert-tip-toggle" data-action="toggleAlertTip" data-arg="${safeKey}" data-stop="1">${zi('bulb')} Tips & advice ${zi('chevron-down')}</div>
         <div class="ctx-alert-tip" id="ca-tip-${safeKey}">${escHtml(a.tip)}</div>` : ''}
         <div class="ctx-alert-actions">
           ${a.action ? `<button class="ctx-alert-btn cab-primary" data-action="execAlertAction" data-arg="${safeKey}" data-stop="1">${escHtml(a.action.label)}</button>` : ''}
@@ -8495,7 +8495,7 @@ function renderTrendChips() {
         <div class="trend-chip-value">${c.value}</div>
       </div>
       <span class="trend-chip-delta ${c.cls}">${c.delta}</span>
-      <span class="trend-chip-chevron">▾</span>
+      <span class="trend-chip-chevron">${zi('chevron-down')}</span>
     </div>`;
   });
 

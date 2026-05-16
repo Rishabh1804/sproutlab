@@ -101,6 +101,9 @@
 <symbol id="zi-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/></symbol>
 <symbol id="zi-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/><rect x="14" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
 <symbol id="zi-skip-forward" viewBox="0 0 24 24"><path d="M5 5l10 7-10 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="5" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
+<symbol id="zi-chevron-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.2"/></symbol>
+<symbol id="zi-dot-empty" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/></symbol>
 <!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). -->
 </defs>
 </svg>
@@ -280,7 +283,7 @@
               <div class="hvq-pill" data-tab="sleep" data-stop="1"><span id="homeLastSleepQuick">—</span> <span class="hvq-label">sleep</span></div>
               <div class="hvq-pill" data-tab="medical" data-stop="1"><span id="homeVaccQuick">—</span> <span class="hvq-label">vacc</span></div>
             </div>
-            <span class="collapse-chevron" id="homeVitalsChevron">▾</span>
+            <span class="collapse-chevron" id="homeVitalsChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
           </div>
         </div>
         <!-- Expanded: full details -->
@@ -509,7 +512,7 @@
       <div class="card card-info col-full">
         <div class="card-header" data-collapse-target="weightChartBody" data-collapse-chevron="weightChartChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Weight Chart <button class="help-btn" aria-label="Help" data-help="help-chart-filter"><span class="t-sm">ⓘ</span></button></div>
-          <span class="collapse-chevron" id="weightChartChevron" style="transform:rotate(180deg);">▾</span>
+          <span class="collapse-chevron" id="weightChartChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div class="help-tip" id="help-chart-filter"><strong><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</strong> — the global gold standard, based on healthy breastfed babies from 6 countries. IAP recommends this for under-5 children.<br><strong><svg class="zi" aria-hidden="true"><use href="#zi-star"/></svg> India</strong> — based on Indian national survey data (Khadilkar 2019). Indian babies typically track slightly lower than WHO, so Ziva's Indian percentile will be higher. Both are valid — WHO for global context, India for local context.</div>
         <div id="weightChartBody" class="collapse-body open">
@@ -530,7 +533,7 @@
       <div class="card card-info col-full">
         <div class="card-header" data-collapse-target="heightChartBody" data-collapse-chevron="heightChartChevron">
           <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-ruler"/></svg></div> Height Chart</div>
-          <span class="collapse-chevron" id="heightChartChevron" style="transform:rotate(180deg);">▾</span>
+          <span class="collapse-chevron" id="heightChartChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="heightChartBody" class="collapse-body open">
           <div class="chart-zoom-row" id="htChartZoom">
@@ -561,7 +564,7 @@
       <div class="card card-info col-half">
         <div class="card-header" data-collapse-target="growthInsightsBody" data-collapse-chevron="growthInsightsChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Growth Insights</div>
-          <span class="collapse-chevron" id="growthInsightsChevron">▾</span>
+          <span class="collapse-chevron" id="growthInsightsChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="growthInsightsPreview" class="mt-8"></div>
         <div id="growthInsightsBody" class="collapse-body" style="display:none;">
@@ -597,7 +600,7 @@
       <div class="card card-info col-full" id="feverHistoryCard" style="display:none;">
         <div class="card-header" data-collapse-target="feverHistoryBody" data-collapse-chevron="feverHistoryChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Fever History</div>
-          <span class="collapse-chevron" id="feverHistoryChevron">▾</span>
+          <span class="collapse-chevron" id="feverHistoryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="feverHistorySummary" class="mt-4"></div>
         <div id="feverHistoryBody" class="collapse-body" style="display:none;"></div>
@@ -610,7 +613,7 @@
       <div class="card card-info col-full" id="diarrhoeaHistoryCard" style="display:none;">
         <div class="card-header" data-collapse-target="diarrhoeaHistoryBody" data-collapse-chevron="diarrhoeaHistoryChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Diarrhoea History</div>
-          <span class="collapse-chevron" id="diarrhoeaHistoryChevron">▾</span>
+          <span class="collapse-chevron" id="diarrhoeaHistoryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="diarrhoeaHistorySummary" class="mt-4"></div>
         <div id="diarrhoeaHistoryBody" class="collapse-body" style="display:none;"></div>
@@ -623,7 +626,7 @@
       <div class="card card-info col-full" id="vomitingHistoryCard" style="display:none;">
         <div class="card-header" data-collapse-target="vomitingHistoryBody" data-collapse-chevron="vomitingHistoryChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Vomiting History</div>
-          <span class="collapse-chevron" id="vomitingHistoryChevron">▾</span>
+          <span class="collapse-chevron" id="vomitingHistoryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="vomitingHistorySummary" class="mt-4"></div>
         <div id="vomitingHistoryBody" class="collapse-body" style="display:none;"></div>
@@ -636,7 +639,7 @@
       <div class="card card-info col-full" id="coldHistoryCard" style="display:none;">
         <div class="card-header" data-collapse-target="coldHistoryBody" data-collapse-chevron="coldHistoryChevron">
           <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-medical"/></svg></div> Cold / Cough History</div>
-          <span class="collapse-chevron" id="coldHistoryChevron">▾</span>
+          <span class="collapse-chevron" id="coldHistoryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="coldHistorySummary" class="mt-4"></div>
         <div id="coldHistoryBody" class="collapse-body" style="display:none;"></div>
@@ -667,7 +670,7 @@
               <h3>Next Vaccination</h3>
               <p id="vaccNextDate">Loading...</p>
               <p id="vaccNextName" style="margin-top:4px;font-size:var(--fs-sm);color:var(--tc-lav);font-weight:600;cursor:pointer;" data-action="toggleVaccInfo"></p>
-              <span id="vaccNameTapHint" style="font-size:var(--fs-xs);color:var(--light);display:none;">Tap for details ▾</span>
+              <span id="vaccNameTapHint" style="font-size:var(--fs-xs);color:var(--light);display:none;">Tap for details <svg class="zi"><use href="#zi-chevron-down"/></svg></span>
               <div id="vaccBookingStatus" style="display:none;margin-top:6px;"></div>
             </div>
             <button id="vaccUpcomingEditBtn" data-action="editUpcomingVaccDate" style="background:none;border:none;font-size:var(--icon-base);color:var(--tc-lav);padding:6px;cursor:pointer;align-self:flex-start;" aria-label="Edit date" title="Edit date">Edit</button>
@@ -683,7 +686,7 @@
             <span style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);">Past Vaccinations</span>
             <div style="display:flex;align-items:center;gap:var(--sp-8);">
               <span class="t-sub" id="vaccPastCount"></span>
-              <span class="collapse-chevron" id="vaccPastChevron">▾</span>
+              <span class="collapse-chevron" id="vaccPastChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
             </div>
           </div>
           <div id="vaccPastListBody" class="collapse-body" style="display:none;">
@@ -706,7 +709,7 @@
       <div class="card card-info col-full" id="medVaccCoverage">
         <div class="card-header" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-shield"/></svg></div> Vaccination Coverage <button class="help-btn" aria-label="Help" data-help="help-coverage"><span class="t-sm">ⓘ</span></button></div>
-          <span class="collapse-chevron" id="vaccCoverageChevron">▾</span>
+          <span class="collapse-chevron" id="vaccCoverageChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="vaccCoveragePreview" class="mt-8"></div>
         <div class="help-tip" id="help-coverage">Cross-checks Ziva's vaccination record against the complete IAP schedule. <strong>IAP</strong> = mandatory per Indian Academy of Pediatrics. <strong>IAP-Rec</strong> = strongly recommended by IAP. <strong>Private</strong> = optional, available at private clinics. Missing vaccines shown in red — discuss with your paediatrician.</div>
@@ -887,7 +890,7 @@
       <div class="card card-info col-full" id="growthHistoryCard">
         <div class="card-header" data-collapse-target="growthHistBody" data-collapse-chevron="growthHistChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Growth History</div>
-          <span class="collapse-chevron" id="growthHistChevron">▾</span>
+          <span class="collapse-chevron" id="growthHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="growthHistPreview" class="mt-8"></div>
         <div id="growthHistBody" class="collapse-body" style="display:none;">
@@ -899,7 +902,7 @@
       <div class="card card-info col-full" id="vaccHistory">
         <div class="card-header" data-collapse-target="vaccHistBody" data-collapse-chevron="vaccHistChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-syringe"/></svg></div> Vaccination History</div>
-          <span class="collapse-chevron" id="vaccHistChevron">▾</span>
+          <span class="collapse-chevron" id="vaccHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="vaccHistPreview" class="mt-8"></div>
         <div id="vaccHistBody" class="collapse-body" style="display:none;">
@@ -911,7 +914,7 @@
       <div class="card card-info col-full" id="medLogCard">
         <div class="card-header" data-collapse-target="medLogBody" data-collapse-chevron="medLogChevron">
           <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-pill"/></svg></div> Medication Log</div>
-          <span class="collapse-chevron" id="medLogChevron">▾</span>
+          <span class="collapse-chevron" id="medLogChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="medLogPreview" class="mt-8"></div>
         <div id="medLogBody" class="collapse-body" style="display:none;">
@@ -923,7 +926,7 @@
       <div class="card card-info col-full" id="feedingHistoryCard">
         <div class="card-header" data-collapse-target="feedHistBody" data-collapse-chevron="feedHistChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-list"/></svg></div> Feeding History</div>
-          <span class="collapse-chevron" id="feedHistChevron">▾</span>
+          <span class="collapse-chevron" id="feedHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="feedHistPreview" class="mt-8"></div>
         <div id="feedHistBody" class="collapse-body" style="display:none;">
@@ -935,7 +938,7 @@
       <div class="card card-info col-full" id="milestoneHistory">
         <div class="card-header" data-collapse-target="msHistBody" data-collapse-chevron="msHistChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-star"/></svg></div> Milestone History</div>
-          <span class="collapse-chevron" id="msHistChevron">▾</span>
+          <span class="collapse-chevron" id="msHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="msHistPreview" class="mt-8"></div>
         <div id="msHistBody" style="display:none;">
@@ -947,7 +950,7 @@
       <div class="card card-info col-full" id="sleepHistoryCard">
         <div class="card-header" data-collapse-target="sleepHistBody" data-collapse-chevron="sleepHistChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Sleep History</div>
-          <span class="collapse-chevron" id="sleepHistChevron">▾</span>
+          <span class="collapse-chevron" id="sleepHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="sleepHistPreview" class="mt-8"></div>
         <div id="sleepHistBody" class="collapse-body" style="display:none;">
@@ -959,7 +962,7 @@
       <div class="card card-info col-full" id="poopHistoryCard">
         <div class="card-header" data-collapse-target="poopHistBody" data-collapse-chevron="poopHistChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Poop History</div>
-          <span class="collapse-chevron" id="poopHistChevron">▾</span>
+          <span class="collapse-chevron" id="poopHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="poopHistPreview" class="mt-8"></div>
         <div id="poopHistBody" class="collapse-body" style="display:none;">
@@ -971,7 +974,7 @@
       <div class="card card-info col-full" id="notesHistoryCard">
         <div class="card-header" data-collapse-target="notesHistBody" data-collapse-chevron="notesHistChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-note"/></svg></div> Notes</div>
-          <span class="collapse-chevron" id="notesHistChevron">▾</span>
+          <span class="collapse-chevron" id="notesHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="notesHistPreview" class="mt-8"></div>
         <div id="notesHistBody" class="collapse-body" style="display:none;">
@@ -983,7 +986,7 @@
       <div class="card card-info col-full" id="scrapbookHistoryCard">
         <div class="card-header" data-collapse-target="scrapHistBody" data-collapse-chevron="scrapHistChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-camera"/></svg></div> Scrapbook</div>
-          <span class="collapse-chevron" id="scrapHistChevron">▾</span>
+          <span class="collapse-chevron" id="scrapHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="scrapHistPreview" class="mt-8"></div>
         <div id="scrapHistBody" class="collapse-body" style="display:none;">
@@ -995,7 +998,7 @@
       <div class="card card-info col-full" id="alertHistoryCard">
         <div class="card-header" data-collapse-target="alertHistBody" data-collapse-chevron="alertHistChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bolt"/></svg></div> Alert History</div>
-          <span class="collapse-chevron" id="alertHistChevron">▾</span>
+          <span class="collapse-chevron" id="alertHistChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="alertHistPreview" class="mt-8"></div>
         <div id="alertHistBody" class="collapse-body" style="display:none;">
@@ -1007,7 +1010,7 @@
       <div class="card card-info col-full">
         <div class="card-header" data-action="toggleHomeNotes">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-note"/></svg></div> Notes <span class="settings-desc" id="notesCount"></span></div>
-          <span class="collapse-chevron" id="notesChevron">▾</span>
+          <span class="collapse-chevron" id="notesChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="notesBody" class="collapse-body" style="display:none;">
           <div class="note-cat-filter" id="noteCatFilter">
@@ -1050,7 +1053,7 @@
       <div class="card card-info col-full">
         <div class="card-header" data-collapse-target="scrapbookBody" data-collapse-chevron="scrapbookChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-camera"/></svg></div> Scrapbook <span class="settings-desc" id="scrapbookCount"></span></div>
-          <span class="collapse-chevron" id="scrapbookChevron">▾</span>
+          <span class="collapse-chevron" id="scrapbookChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="scrapbookBody" class="collapse-body" style="display:none;">
           <div id="scrapbookList" style="display:flex;flex-direction:column;gap:var(--sp-8);margin-bottom:12px;max-height:400px;overflow-y:auto;"></div>
@@ -1145,7 +1148,7 @@
       <div class="card card-info col-full">
         <div class="card-header" data-collapse-target="msTimelineBody" data-collapse-chevron="msTimelineChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-book"/></svg></div> Milestone Timeline</div>
-          <span class="collapse-chevron" id="msTimelineChevron" style="transform:rotate(180deg);">▾</span>
+          <span class="collapse-chevron" id="msTimelineChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="msTimelineBody" class="collapse-body">
           <div id="msTimelineContent" class="mt-8"></div>
@@ -1232,7 +1235,7 @@
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="sleepCancelBtn" data-action="cancelSleepNight">Cancel</button>
-            <button class="btn btn-ghost" data-action="startSleepNight" id="sleepStartBtn" title="Uses entered time, or current time if empty">▶ Start</button>
+            <button class="btn btn-ghost" data-action="startSleepNight" id="sleepStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
             <button class="btn-primary bp-indigo" data-action="addSleepEntry" id="sleepSaveBtn">Save Sleep Log</button>
           </div>
         </div>
@@ -1267,7 +1270,7 @@
           </div>
           <div class="d-flex gap-8 justify-end">
             <button class="btn btn-ghost d-none" id="napCancelBtn" data-action="cancelSleepNap">Cancel</button>
-            <button class="btn btn-ghost" data-action="startSleepNap" id="napStartBtn" title="Uses entered time, or current time if empty">▶ Start</button>
+            <button class="btn btn-ghost" data-action="startSleepNap" id="napStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
             <button class="btn-primary bp-indigo" data-action="addNapEntry" id="napSaveBtn">Save Nap</button>
           </div>
         </div>
@@ -1291,7 +1294,7 @@
       <div class="card card-info col-full" id="sleepGuideCard">
         <div class="card-header" data-collapse-target="sleepTipsBody" data-collapse-chevron="sleepTipsChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-bulb"/></svg></div> Sleep Guide</div>
-          <span class="collapse-chevron" id="sleepTipsChevron">▾</span>
+          <span class="collapse-chevron" id="sleepTipsChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="sleepTipsBody" class="collapse-body" style="display:none;">
           <div id="sleepTips" class="fx-col g8 mt-8"></div>
@@ -1304,7 +1307,7 @@
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-list"/></svg></div> Sleep Logs</div>
           <div class="d-flex items-center gap-8">
             <span class="t-sub" id="sleepLogCount"></span>
-            <span class="collapse-chevron" id="sleepLogChevron">▾</span>
+            <span class="collapse-chevron" id="sleepLogChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
           </div>
         </div>
         <div id="sleepLogPreview" class="mt-8"></div>
@@ -1420,7 +1423,7 @@
       <div class="card card-info col-full" id="poopGuideCard">
         <div class="card-header" data-collapse-target="poopGuideBody" data-collapse-chevron="poopGuideChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-book"/></svg></div> Poop Guide</div>
-          <span class="collapse-chevron" id="poopGuideChevron">▾</span>
+          <span class="collapse-chevron" id="poopGuideChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="poopGuideBody" class="collapse-body" style="display:none;">
           <div id="poopGuide" class="fx-col g8 mt-8"></div>
@@ -1436,7 +1439,7 @@
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-list"/></svg></div> Poop Logs</div>
           <div class="d-flex items-center gap-8">
             <span class="t-sub" id="poopLogCount"></span>
-            <span class="collapse-chevron" id="poopLogChevron">▾</span>
+            <span class="collapse-chevron" id="poopLogChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
           </div>
         </div>
         <div id="poopLogPreview" class="mt-8"></div>
@@ -1510,7 +1513,7 @@
       <div class="card card-info col-half ins-card-corr" id="insightsCorrelationCard">
         <div class="card-header" data-collapse-target="insightsCorrBody" data-collapse-chevron="insightsCorrChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-scope"/></svg></div> Food-Poop Connections</div>
-          <span class="collapse-chevron" id="insightsCorrChevron">▾</span>
+          <span class="collapse-chevron" id="insightsCorrChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="insightsCorrPreview" class="mt-4"></div>
         <div id="insightsCorrBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1522,7 +1525,7 @@
       <div class="card card-info col-half ins-card-cross" id="insightsCrossCard">
         <div class="card-header" data-collapse-target="insightsCrossBody" data-collapse-chevron="insightsCrossChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Connected Insights</div>
-          <span class="collapse-chevron" id="insightsCrossChevron">▾</span>
+          <span class="collapse-chevron" id="insightsCrossChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="insightsCrossPreview" class="mt-4"></div>
         <div id="insightsCrossBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1534,7 +1537,7 @@
       <div class="card card-info col-full ins-card-alert-intel" id="insightsAlertIntelCard" style="display:none;">
         <div class="card-header" data-collapse-target="insightsAlertIntelBody" data-collapse-chevron="insightsAlertIntelChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-brain"/></svg></div> Alert Patterns</div>
-          <span class="collapse-chevron" id="insightsAlertIntelChevron">▾</span>
+          <span class="collapse-chevron" id="insightsAlertIntelChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="insightsAlertIntelPreview" class="mt-4"></div>
         <div id="insightsAlertIntelBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1566,7 +1569,7 @@
       <div class="card card-daily col-full" id="infoFoodIntroCard">
         <div class="card-header" data-collapse-target="infoFoodIntroBody" data-collapse-chevron="infoFoodIntroChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-spoon"/></svg></div> New Food Introduction</div>
-          <span class="collapse-chevron" id="infoFoodIntroChevron">▾</span>
+          <span class="collapse-chevron" id="infoFoodIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoFoodIntroSummary" class="mt-4"></div>
         <div id="infoFoodIntroBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1579,7 +1582,7 @@
       <div class="card card-daily col-full" id="infoNutrientHeatmapCard">
         <div class="card-header" data-collapse-target="infoHeatmapBody" data-collapse-chevron="infoHeatmapChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-chart"/></svg></div> Weekly Nutrient Heatmap</div>
-          <span class="collapse-chevron" id="infoHeatmapChevron">▾</span>
+          <span class="collapse-chevron" id="infoHeatmapChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoHeatmapSummary" class="mt-4"></div>
         <div id="infoHeatmapBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1592,7 +1595,7 @@
       <div class="card card-daily col-full" id="infoComboFreqCard">
         <div class="card-header" data-collapse-target="infoComboBody" data-collapse-chevron="infoComboChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-link"/></svg></div> Food Combos</div>
-          <span class="collapse-chevron" id="infoComboChevron">▾</span>
+          <span class="collapse-chevron" id="infoComboChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoComboSummary" class="mt-4"></div>
         <div id="infoComboBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1605,7 +1608,7 @@
       <div class="card card-daily col-full" id="infoMealBreakdownCard">
         <div class="card-header" data-collapse-target="infoMealBreakdownBody" data-collapse-chevron="infoMealBreakdownChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-spoon"/></svg></div> Meal Breakdown</div>
-          <span class="collapse-chevron" id="infoMealBreakdownChevron">▾</span>
+          <span class="collapse-chevron" id="infoMealBreakdownChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoMealBreakdownSummary" class="mt-4"></div>
         <div id="infoMealBreakdownBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1619,7 +1622,7 @@
       <div class="card card-daily col-full" id="infoSmartPairingCard">
         <div class="card-header" data-collapse-target="infoSmartPairingBody" data-collapse-chevron="infoSmartPairingChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Smart Pairings</div>
-          <span class="collapse-chevron" id="infoSmartPairingChevron">▾</span>
+          <span class="collapse-chevron" id="infoSmartPairingChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSmartPairingSummary" class="mt-4"></div>
         <div id="infoSmartPairingBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1633,7 +1636,7 @@
       <div class="card card-info col-full" id="infoAdoptionCard" style="display:none;">
         <div class="card-header" data-collapse-target="infoAdoptionBody" data-collapse-chevron="infoAdoptionChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chart"/></svg></div> Suggestion Adoption</div>
-          <span class="collapse-chevron" id="infoAdoptionChevron">▾</span>
+          <span class="collapse-chevron" id="infoAdoptionChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoAdoptionSummary" class="mt-4"></div>
         <div id="infoAdoptionBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1647,7 +1650,7 @@
       <div class="card card-daily col-full" id="infoRepetitionCard">
         <div class="card-header" data-collapse-target="infoRepetitionBody" data-collapse-chevron="infoRepetitionChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-hourglass"/></svg></div> Food Repetition</div>
-          <span class="collapse-chevron" id="infoRepetitionChevron">▾</span>
+          <span class="collapse-chevron" id="infoRepetitionChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoRepetitionSummary" class="mt-4"></div>
         <div id="infoRepetitionBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1660,7 +1663,7 @@
       <div class="card card-daily col-full" id="infoTextureCard">
         <div class="card-header" data-collapse-target="infoTextureBody" data-collapse-chevron="infoTextureChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-sprout"/></svg></div> Texture Progression</div>
-          <span class="collapse-chevron" id="infoTextureChevron">▾</span>
+          <span class="collapse-chevron" id="infoTextureChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoTextureSummary" class="mt-4"></div>
         <div id="infoTextureBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1676,7 +1679,7 @@
       <div class="card card-daily col-full" id="infoSleepBedtimeDriftCard">
         <div class="card-header" data-collapse-target="infoSleepBedtimeDriftBody" data-collapse-chevron="infoSleepBedtimeDriftChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Bedtime Drift</div>
-          <span class="collapse-chevron" id="infoSleepBedtimeDriftChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepBedtimeDriftChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepBedtimeDriftSummary" class="mt-4"></div>
         <div id="infoSleepBedtimeDriftBody" class="collapse-body" style="display:none;">
@@ -1689,7 +1692,7 @@
       <div class="card card-daily col-full" id="infoSleepEfficiencyCard">
         <div class="card-header" data-collapse-target="infoSleepEfficiencyBody" data-collapse-chevron="infoSleepEfficiencyChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Sleep Efficiency</div>
-          <span class="collapse-chevron" id="infoSleepEfficiencyChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepEfficiencyChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepEfficiencySummary" class="mt-4"></div>
         <div id="infoSleepEfficiencyBody" class="collapse-body" style="display:none;">
@@ -1702,7 +1705,7 @@
       <div class="card card-daily col-full" id="infoSleepWakeWindowsCard">
         <div class="card-header" data-collapse-target="infoSleepWakeWindowsBody" data-collapse-chevron="infoSleepWakeWindowsChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-sun"/></svg></div> Wake Windows</div>
-          <span class="collapse-chevron" id="infoSleepWakeWindowsChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepWakeWindowsChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepWakeWindowsSummary" class="mt-4"></div>
         <div id="infoSleepWakeWindowsBody" class="collapse-body" style="display:none;">
@@ -1715,7 +1718,7 @@
       <div class="card card-daily col-full" id="infoSleepReportCard">
         <div class="card-header" data-collapse-target="infoSleepReportBody" data-collapse-chevron="infoSleepReportChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-chart"/></svg></div> Weekly Report Card</div>
-          <span class="collapse-chevron" id="infoSleepReportChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepReportChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepReportSummary" class="mt-4"></div>
         <div id="infoSleepReportBody" class="collapse-body" style="display:none;">
@@ -1728,7 +1731,7 @@
       <div class="card card-daily col-full" id="infoSleepNapTransitionCard">
         <div class="card-header" data-collapse-target="infoSleepNapTransitionBody" data-collapse-chevron="infoSleepNapTransitionChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-sprout"/></svg></div> Nap Transition Readiness</div>
-          <span class="collapse-chevron" id="infoSleepNapTransitionChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepNapTransitionChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepNapTransitionSummary" class="mt-4"></div>
         <div id="infoSleepNapTransitionBody" class="collapse-body" style="display:none;">
@@ -1741,7 +1744,7 @@
       <div class="card card-daily col-full" id="infoSleepDayNightCard">
         <div class="card-header" data-collapse-target="infoSleepDayNightBody" data-collapse-chevron="infoSleepDayNightChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-halfcircle"/></svg></div> Day-Night Correlation</div>
-          <span class="collapse-chevron" id="infoSleepDayNightChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepDayNightChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepDayNightSummary" class="mt-4"></div>
         <div id="infoSleepDayNightBody" class="collapse-body" style="display:none;">
@@ -1754,7 +1757,7 @@
       <div class="card card-daily col-full" id="infoSleepBestNightCard">
         <div class="card-header" data-collapse-target="infoSleepBestNightBody" data-collapse-chevron="infoSleepBestNightChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-crystal"/></svg></div> Best Night Predictor</div>
-          <span class="collapse-chevron" id="infoSleepBestNightChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepBestNightChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepBestNightSummary" class="mt-4"></div>
         <div id="infoSleepBestNightBody" class="collapse-body" style="display:none;">
@@ -1767,7 +1770,7 @@
       <div class="card card-daily col-full" id="infoSleepRegressionCard">
         <div class="card-header" data-collapse-target="infoSleepRegressionBody" data-collapse-chevron="infoSleepRegressionChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-warn"/></svg></div> Sleep Regression</div>
-          <span class="collapse-chevron" id="infoSleepRegressionChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepRegressionChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepRegressionSummary" class="mt-4"></div>
         <div id="infoSleepRegressionBody" class="collapse-body" style="display:none;">
@@ -1783,7 +1786,7 @@
       <div class="card card-daily col-full" id="infoPoopConsistencyCard">
         <div class="card-header" data-collapse-target="infoPoopConsistencyBody" data-collapse-chevron="infoPoopConsistencyChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-chart"/></svg></div> Consistency Trend</div>
-          <span class="collapse-chevron" id="infoPoopConsistencyChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopConsistencyChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopConsistencySummary" class="mt-4"></div>
         <div id="infoPoopConsistencyBody" class="collapse-body" style="display:none;">
@@ -1796,7 +1799,7 @@
       <div class="card card-daily col-full" id="infoPoopFrequencyCard">
         <div class="card-header" data-collapse-target="infoPoopFrequencyBody" data-collapse-chevron="infoPoopFrequencyChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-clock"/></svg></div> Frequency Pattern</div>
-          <span class="collapse-chevron" id="infoPoopFrequencyChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopFrequencyChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopFrequencySummary" class="mt-4"></div>
         <div id="infoPoopFrequencyBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1809,7 +1812,7 @@
       <div class="card card-daily col-full" id="infoPoopFoodDelayCard">
         <div class="card-header" data-collapse-target="infoPoopFoodDelayBody" data-collapse-chevron="infoPoopFoodDelayChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-timer"/></svg></div> Food-Poop Delay</div>
-          <span class="collapse-chevron" id="infoPoopFoodDelayChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopFoodDelayChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopFoodDelaySummary" class="mt-4"></div>
         <div id="infoPoopFoodDelayBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1822,7 +1825,7 @@
       <div class="card card-daily col-full" id="infoPoopFoodWatchCard">
         <div class="card-header" data-collapse-target="infoPoopFoodWatchBody" data-collapse-chevron="infoPoopFoodWatchChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-scope"/></svg></div> New Food Watch</div>
-          <span class="collapse-chevron" id="infoPoopFoodWatchChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopFoodWatchChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopFoodWatchSummary" class="mt-4"></div>
         <div id="infoPoopFoodWatchBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1835,7 +1838,7 @@
       <div class="card card-daily col-full" id="infoPoopColorCard">
         <div class="card-header" data-collapse-target="infoPoopColorBody" data-collapse-chevron="infoPoopColorChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-palette"/></svg></div> Color Anomaly</div>
-          <span class="collapse-chevron" id="infoPoopColorChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopColorChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopColorSummary" class="mt-4"></div>
         <div id="infoPoopColorBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1848,7 +1851,7 @@
       <div class="card card-daily col-full" id="infoPoopAmountCard">
         <div class="card-header" data-collapse-target="infoPoopAmountBody" data-collapse-chevron="infoPoopAmountChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bars"/></svg></div> Amount Trend</div>
-          <span class="collapse-chevron" id="infoPoopAmountChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopAmountChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopAmountSummary" class="mt-4"></div>
         <div id="infoPoopAmountBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1861,7 +1864,7 @@
       <div class="card card-daily col-full" id="infoPoopSymptomsCard">
         <div class="card-header" data-collapse-target="infoPoopSymptomsBody" data-collapse-chevron="infoPoopSymptomsChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-warn"/></svg></div> Symptom Tracker</div>
-          <span class="collapse-chevron" id="infoPoopSymptomsChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopSymptomsChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopSymptomsSummary" class="mt-4"></div>
         <div id="infoPoopSymptomsBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1874,7 +1877,7 @@
       <div class="card card-daily col-full" id="infoPoopReportCard">
         <div class="card-header" data-collapse-target="infoPoopReportBody" data-collapse-chevron="infoPoopReportChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Poop Score Report</div>
-          <span class="collapse-chevron" id="infoPoopReportChevron">▾</span>
+          <span class="collapse-chevron" id="infoPoopReportChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopReportSummary" class="mt-4"></div>
         <div id="infoPoopReportBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1890,7 +1893,7 @@
       <div class="card card-daily col-full" id="infoIllnessFreqCard">
         <div class="card-header" data-collapse-target="infoIllnessFreqBody" data-collapse-chevron="infoIllnessFreqChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Illness Frequency</div>
-          <span class="collapse-chevron" id="infoIllnessFreqChevron">▾</span>
+          <span class="collapse-chevron" id="infoIllnessFreqChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoIllnessFreqSummary" class="mt-4"></div>
         <div id="infoIllnessFreqBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1904,7 +1907,7 @@
       <div class="card card-daily col-full" id="infoVaccFeverCard">
         <div class="card-header" data-collapse-target="infoVaccFeverBody" data-collapse-chevron="infoVaccFeverChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-shield"/></svg></div> Vaccination & Fever</div>
-          <span class="collapse-chevron" id="infoVaccFeverChevron">▾</span>
+          <span class="collapse-chevron" id="infoVaccFeverChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoVaccFeverSummary" class="mt-4"></div>
         <div id="infoVaccFeverBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1917,7 +1920,7 @@
       <div class="card card-daily col-full" id="infoIllnessFoodCard">
         <div class="card-header" data-collapse-target="infoIllnessFoodBody" data-collapse-chevron="infoIllnessFoodChevron">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-scope"/></svg></div> Illness & Food Link</div>
-          <span class="collapse-chevron" id="infoIllnessFoodChevron">▾</span>
+          <span class="collapse-chevron" id="infoIllnessFoodChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoIllnessFoodSummary" class="mt-4"></div>
         <div id="infoIllnessFoodBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1930,7 +1933,7 @@
       <div class="card card-daily col-full" id="infoRecoveryCard">
         <div class="card-header" data-collapse-target="infoRecoveryBody" data-collapse-chevron="infoRecoveryChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Post-Illness Recovery</div>
-          <span class="collapse-chevron" id="infoRecoveryChevron">▾</span>
+          <span class="collapse-chevron" id="infoRecoveryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoRecoverySummary" class="mt-4"></div>
         <div id="infoRecoveryBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1944,7 +1947,7 @@
       <div class="card card-daily col-full" id="infoIllnessSleepCard">
         <div class="card-header" data-collapse-target="infoIllnessSleepBody" data-collapse-chevron="infoIllnessSleepChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-moon"/></svg></div> Illness & Sleep</div>
-          <span class="collapse-chevron" id="infoIllnessSleepChevron">▾</span>
+          <span class="collapse-chevron" id="infoIllnessSleepChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoIllnessSleepSummary" class="mt-4"></div>
         <div id="infoIllnessSleepBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1957,7 +1960,7 @@
       <div class="card card-daily col-full" id="infoFoodReactionCard">
         <div class="card-header" data-collapse-target="infoFoodReactionBody" data-collapse-chevron="infoFoodReactionChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-warn"/></svg></div> Food Reaction Timeline</div>
-          <span class="collapse-chevron" id="infoFoodReactionChevron">▾</span>
+          <span class="collapse-chevron" id="infoFoodReactionChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoFoodReactionSummary" class="mt-4"></div>
         <div id="infoFoodReactionBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1973,7 +1976,7 @@
       <div class="card card-daily col-full" id="infoHydrationCard">
         <div class="card-header" data-collapse-target="infoHydrationBody" data-collapse-chevron="infoHydrationChevron">
           <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-drop"/></svg></div> Hydration Intelligence</div>
-          <span class="collapse-chevron" id="infoHydrationChevron">▾</span>
+          <span class="collapse-chevron" id="infoHydrationChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoHydrationSummary" class="mt-4"></div>
         <div id="infoHydrationBody" class="collapse-body fx-col g8" style="display:none;">
@@ -1987,7 +1990,7 @@
       <div class="card card-daily col-full" id="infoSupplementCard">
         <div class="card-header" data-collapse-target="infoSupplementBody" data-collapse-chevron="infoSupplementChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-pill"/></svg></div> Supplement Adherence</div>
-          <span class="collapse-chevron" id="infoSupplementChevron">▾</span>
+          <span class="collapse-chevron" id="infoSupplementChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSupplementSummary" class="t-sm mt-4"></div>
         <div id="infoSupplementBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2002,7 +2005,7 @@
       <div class="card card-daily col-full" id="infoVaccRecoveryCard">
         <div class="card-header" data-collapse-target="infoVaccRecoveryBody" data-collapse-chevron="infoVaccRecoveryChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-shield"/></svg></div> Vaccination Recovery</div>
-          <span class="collapse-chevron" id="infoVaccRecoveryChevron">▾</span>
+          <span class="collapse-chevron" id="infoVaccRecoveryChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoVaccRecoverySummary" class="t-sm mt-4"></div>
         <div id="infoVaccRecoveryBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2016,7 +2019,7 @@
       <div class="card card-daily col-full" id="infoGrowthVelocityCard">
         <div class="card-header" data-collapse-target="infoGrowthVelocityBody" data-collapse-chevron="infoGrowthVelocityChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-ruler"/></svg></div> Growth Velocity Alerts</div>
-          <span class="collapse-chevron" id="infoGrowthVelocityChevron">▾</span>
+          <span class="collapse-chevron" id="infoGrowthVelocityChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoGrowthVelocitySummary" class="t-sm mt-4"></div>
         <div id="infoGrowthVelocityBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2034,7 +2037,7 @@
       <div class="card card-daily col-full" id="infoFoodPoopPipelineCard">
         <div class="card-header" data-collapse-target="infoFoodPoopPipelineBody" data-collapse-chevron="infoFoodPoopPipelineChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-link"/></svg></div> Food → Poop Pipeline</div>
-          <span class="collapse-chevron" id="infoFoodPoopPipelineChevron">▾</span>
+          <span class="collapse-chevron" id="infoFoodPoopPipelineChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoFoodPoopPipelineSummary" class="mt-4"></div>
         <div id="infoFoodPoopPipelineBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2048,7 +2051,7 @@
       <div class="card card-daily col-full" id="infoSleepFeedingCard">
         <div class="card-header" data-collapse-target="infoSleepFeedingBody" data-collapse-chevron="infoSleepFeedingChevron">
           <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-moon"/></svg></div> Sleep ↔ Feeding</div>
-          <span class="collapse-chevron" id="infoSleepFeedingChevron">▾</span>
+          <span class="collapse-chevron" id="infoSleepFeedingChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoSleepFeedingSummary" class="mt-4"></div>
         <div id="infoSleepFeedingBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2062,7 +2065,7 @@
       <div class="card card-daily col-full" id="infoActivitySleepDeepCard">
         <div class="card-header" data-collapse-target="infoActivitySleepDeepBody" data-collapse-chevron="infoActivitySleepDeepChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-run"/></svg></div> Activity → Sleep (Deep)</div>
-          <span class="collapse-chevron" id="infoActivitySleepDeepChevron">▾</span>
+          <span class="collapse-chevron" id="infoActivitySleepDeepChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoActivitySleepDeepSummary" class="mt-4"></div>
         <div id="infoActivitySleepDeepBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2077,7 +2080,7 @@
       <div class="card card-daily col-full" id="infoGrowthDietCard">
         <div class="card-header" data-collapse-target="infoGrowthDietBody" data-collapse-chevron="infoGrowthDietChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-scale"/></svg></div> Growth ↔ Diet</div>
-          <span class="collapse-chevron" id="infoGrowthDietChevron">▾</span>
+          <span class="collapse-chevron" id="infoGrowthDietChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoGrowthDietSummary" class="mt-4"></div>
         <div id="infoGrowthDietBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2091,7 +2094,7 @@
       <div class="card card-daily col-full" id="infoIllnessImpactCard">
         <div class="card-header" data-collapse-target="infoIllnessImpactBody" data-collapse-chevron="infoIllnessImpactChevron">
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-siren"/></svg></div> Illness Impact Radius</div>
-          <span class="collapse-chevron" id="infoIllnessImpactChevron">▾</span>
+          <span class="collapse-chevron" id="infoIllnessImpactChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoIllnessImpactSummary" class="mt-4"></div>
         <div id="infoIllnessImpactBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2105,7 +2108,7 @@
       <div class="card card-daily col-full" id="infoMilestoneSleepCard">
         <div class="card-header" data-collapse-target="infoMilestoneSleepBody" data-collapse-chevron="infoMilestoneSleepChevron">
           <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-brain"/></svg></div> Milestones ↔ Sleep</div>
-          <span class="collapse-chevron" id="infoMilestoneSleepChevron">▾</span>
+          <span class="collapse-chevron" id="infoMilestoneSleepChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoMilestoneSleepSummary" class="mt-4"></div>
         <div id="infoMilestoneSleepBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2123,7 +2126,7 @@
       <div class="card card-daily col-full" id="infoActivityConsistencyCard">
         <div class="card-header" data-collapse-target="infoActivityConsistencyBody" data-collapse-chevron="infoActivityConsistencyChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chart"/></svg></div> Consistency & Balance</div>
-          <span class="collapse-chevron" id="infoActivityConsistencyChevron">▾</span>
+          <span class="collapse-chevron" id="infoActivityConsistencyChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoActivityConsistencySummary" class="mt-4"></div>
         <div id="infoActivityConsistencyBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2137,7 +2140,7 @@
       <div class="card card-daily col-full" id="infoMilestoneVelocityCard">
         <div class="card-header" data-collapse-target="infoMilestoneVelocityBody" data-collapse-chevron="infoMilestoneVelocityChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-target"/></svg></div> Milestone Velocity</div>
-          <span class="collapse-chevron" id="infoMilestoneVelocityChevron">▾</span>
+          <span class="collapse-chevron" id="infoMilestoneVelocityChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoMilestoneVelocitySummary" class="mt-4"></div>
         <div id="infoMilestoneVelocityBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2150,7 +2153,7 @@
       <div class="card card-daily col-full" id="infoActivityCorrelationCard">
         <div class="card-header" data-collapse-target="infoActivityCorrelationBody" data-collapse-chevron="infoActivityCorrelationChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-link"/></svg></div> Activity ↔ Outcomes</div>
-          <span class="collapse-chevron" id="infoActivityCorrelationChevron">▾</span>
+          <span class="collapse-chevron" id="infoActivityCorrelationChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoActivityCorrelationSummary" class="mt-4"></div>
         <div id="infoActivityCorrelationBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2162,7 +2165,7 @@
       <div class="card card-daily col-full" id="infoVisitPrepCard">
         <div class="card-header" data-collapse-target="infoVisitPrepBody" data-collapse-chevron="infoVisitPrepChevron">
           <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-steth"/></svg></div> Doctor Visit Preparation</div>
-          <span class="collapse-chevron" id="infoVisitPrepChevron">▾</span>
+          <span class="collapse-chevron" id="infoVisitPrepChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoVisitPrepSummary" class="t-sm mt-4"></div>
         <div id="infoVisitPrepBody" class="collapse-body fx-col g8" style="display:none;">
@@ -2308,7 +2311,7 @@
         </div>
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
-        <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNight">▶ Start Now</button>
+        <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNight"><svg class="zi"><use href="#zi-play"/></svg> Start Now</button>
         <button class="ql-save ql-save-sleep flex-1-min100" >Save Sleep <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
@@ -2334,7 +2337,7 @@
         </div>
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
-        <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNap">▶ Start Now</button>
+        <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNap"><svg class="zi"><use href="#zi-play"/></svg> Start Now</button>
         <button class="ql-save ql-save-nap flex-1-min100" >Save Nap <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>

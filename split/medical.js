@@ -512,11 +512,11 @@ function renderActiveMilestones() {
     if (bestKw && m.evidenceCount > 0) {
       const evList = getMilestoneEvidence(bestKw).slice(0, 5);
       let evItems = evList.map(ev => {
-        const confDot = ev.confidence === 'high' ? '●' : ev.confidence === 'medium' ? '●' : '●';
+        const confDot = zi('dot-red');
         return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
-      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ▾</button>' +
+      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ' + zi('chevron-down') + '</button>' +
         '<div id="' + evidId + '" class="al-evid-box" style="display:none;">' + evItems + '</div>';
     }
 
@@ -1010,7 +1010,7 @@ function renderUpcomingEvents() {
         </div>
         ${activities ? `
           <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
-            ${zi('star')} Ziva activity ideas ▾
+            ${zi('star')} Ziva activity ideas ${zi('chevron-down')}
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
             ${activities.map(a => `
@@ -3668,10 +3668,10 @@ function toggleVaccInfo() {
   const hint = document.getElementById('vaccNameTapHint');
   if (panel.style.display === 'none') {
     panel.style.display = 'block';
-    hint.textContent = 'Tap to hide ▴';
+    hint.innerHTML = 'Tap to hide ' + zi('chevron-up');
   } else {
     panel.style.display = 'none';
-    hint.textContent = 'Tap for details ▾';
+    hint.innerHTML = 'Tap for details ' + zi('chevron-down');
   }
 }
 
@@ -4527,7 +4527,7 @@ function renderActivities() {
               <div class="act-cat-name">${meta.label}</div>
               <div class="act-cat-count">${items.length} ${items.length === 1 ? 'activity' : 'activities'}</div>
             </div>
-            <div class="act-cat-chevron">▾</div>
+            <div class="act-cat-chevron">${zi('chevron-down')}</div>
           </div>
         </div>
         <div class="act-cat-items ${type}" id="act-items-${type}">
@@ -4644,7 +4644,7 @@ function renderUpcomingMilestones() {
               <div class="upc-name">${meta.label}</div>
               <div class="upc-count">${totalCount} ${meta.desc}</div>
             </div>
-            <div class="upc-chevron">▾</div>
+            <div class="upc-chevron">${zi('chevron-down')}</div>
           </div>
         </div>
         <div class="upc-items ${status}" id="upc-items-${status}">`;
@@ -4661,7 +4661,7 @@ function renderUpcomingMilestones() {
               <div class="upc-subcat-icon">${cm.icon}</div>
               <div class="upc-subcat-label">${cm.label}</div>
               <div class="upc-subcat-count">${catItems.length}</div>
-              <div class="upc-subcat-chevron">▾</div>
+              <div class="upc-subcat-chevron">${zi('chevron-down')}</div>
             </div>
             <div class="upc-subcat-items ${cat}">
               <div class="upcoming-list">
@@ -5261,7 +5261,7 @@ function renderSleepInProgressBanner() {
         <div class="t-xs t-light">Started ${formatTimeShort(ip.startTime)}</div>
       </div>
       <div class="sip-elapsed">${elapsed}</div>
-      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">■ End Now</button>
+      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">${zi('stop')} End Now</button>
       <button class="btn btn-ghost" style="font-size:var(--fs-xs);padding:4px 8px;" data-action="cancelSleepInProgress">&times;</button>
     </div>`;
   }
@@ -5755,7 +5755,7 @@ function renderSleepTips() {
               <div class="t-sub">${cat.tips.length} tips</div>
             </div>
           </div>
-          <span class="collapse-chevron" id="${catId}-chev">▾</span>
+          <span class="collapse-chevron" id="${catId}-chev">${zi('chevron-down')}</span>
         </div>
         <div id="${catId}-items" style="display:none;padding:8px 0;">
           ${cat.tips.map(t => `
@@ -5819,7 +5819,7 @@ function renderHomeSleep() {
         <div class="t-sm" style="font-weight:600;color:var(--tc-indigo);">${label} in progress · ${elapsed}</div>
         <div class="t-xs t-light">Since ${formatTimeShort(ip.startTime)}</div>
       </div>
-      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">■ End</button>
+      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">${zi('stop')} End</button>
     </div>`;
   }
 
@@ -6372,7 +6372,7 @@ function renderInfoPoopFoodDelay() {
   if (listEl) {
     let html = '';
     data.foodDelays.forEach(fd => {
-      const statusIcon = fd.status === 'likely' ? '●' : fd.status === 'suspected' ? zi('warn') : '●';
+      const statusIcon = fd.status === 'likely' ? zi('dot-red') : fd.status === 'suspected' ? zi('warn') : zi('dot-red');
       const conLabel = fd.usualConsistency.charAt(0).toUpperCase() + fd.usualConsistency.slice(1);
       html += '<div class="si-factor-row">';
       html += '<div class="si-factor-icon">' + statusIcon + '</div>';
@@ -6489,7 +6489,7 @@ function renderInfoPoopFoodWatch() {
     if (data.active.length > 0) {
       html += '<div class="si-sub-label mb-4" >Active</div>';
       data.active.forEach(w => {
-        const icon = w.status === 'flagged' ? zi('warn') : '●';
+        const icon = w.status === 'flagged' ? zi('warn') : zi('dot-red');
         html += '<div class="si-check-row">';
         html += '<div class="si-check-icon">' + icon + '</div>';
         html += '<div class="si-check-text"><strong>' + escHtml(w.name) + '</strong> — ' + w.hoursElapsed + 'h ago, watching for ' + w.hoursRemaining + ' more hours';
@@ -6684,7 +6684,7 @@ function renderInfoPoopColorAnomaly() {
         const key = a.date + a.color;
         if (seen.has(key)) return;
         seen.add(key);
-        const emoji = a.color === 'red' ? '●' : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : '●';
+        const emoji = a.color === 'red' ? zi('dot-red') : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : zi('dot-red');
         html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + emoji + '</div><div class="si-reg-cause-text">' + a.color.charAt(0).toUpperCase() + a.color.slice(1) + ' stool on ' + formatDate(a.date) + ' — ' + a.context + '</div></div>';
       });
     }
@@ -7761,7 +7761,7 @@ function renderInfoVaccFever() {
 
   let tlHtml = '';
   if (!showAll) {
-    tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier ▾\':\'Hide earlier ▴\';">Show ' + hiddenCount + ' earlier ▾</div>';
+    tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier \u2193\':\'Hide earlier \u2191\';">Show ' + hiddenCount + ' earlier ' + zi('chevron-down') + '</div>';
     tlHtml += '<div style="display:none;">';
     data.results.slice(0, hiddenCount).forEach(r => { tlHtml += _vaccRow(r); });
     tlHtml += '</div>';
@@ -8648,7 +8648,7 @@ function renderInfoTexture() {
       html += '<div class="mi-tex-stage">';
       html += '<div class="mi-tex-icon" style="background:' + (count > 0 ? stage.color : 'var(--surface-alt)') + ';' + (isCurrent ? 'box-shadow:0 0 0 2px ' + stage.color + ';' : '') + '">' + stage.icon + '</div>';
       html += '<div class="mi-tex-info">';
-      html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">● current</span>' : '') + '</div>';
+      html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">' + zi('dot-red') + ' current</span>' : '') + '</div>';
       if (count > 0) {
         html += '<div class="mi-tex-detail">' + count + ' day' + (count !== 1 ? 's' : '') + ' (' + pct + '%)' + (firstDate ? ' · first: ' + formatDate(firstDate).replace(/, \d{4}$/, '') : '') + '</div>';
         html += '<div class="mi-tex-bar"><div class="mi-tex-fill" style="width:' + pct + '%;background:' + stage.color + ';"></div></div>';

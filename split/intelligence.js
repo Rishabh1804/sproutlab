@@ -6530,7 +6530,7 @@ function sgToggleMore() {
   if (!toggle || extras.length === 0) return;
   const isHidden = extras[0].style.display === 'none';
   extras.forEach(el => el.style.display = isHidden ? '' : 'none');
-  toggle.textContent = isHidden ? 'Show less ▴' : ('Show ' + extras.length + ' more ▾');
+  toggle.innerHTML = isHidden ? 'Show less ' + zi('chevron-up') : 'Show ' + extras.length + ' more ' + zi('chevron-down');
 }
 
 function sgTapChip(food) {
@@ -7161,7 +7161,7 @@ function renderFeverEpisodeCard() {
   });
   html += '</div>';
   if (showReadings.length > maxShow) {
-    html += '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - maxShow) + ' earlier ▾</div>';
+    html += '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - maxShow) + ' earlier ' + zi('chevron-down') + '</div>';
   }
 
   // Medicine section
@@ -8399,7 +8399,7 @@ function renderVomitingEpisodeCard() {
   if (ep.episodes.length > 0) {
     ep.episodes.slice().reverse().slice(0, 6).forEach((e, i) => {
       const origIdx = ep.episodes.length - 1 - i;
-      const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? '●' : e.type === 'spit-up' ? zi('warn') : zi('siren');
+      const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? zi('dot-red') : e.type === 'spit-up' ? zi('warn') : zi('siren');
       html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + origIdx + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + (e.type || 'vomit') + '</span></div>';
     });
   }
@@ -8678,7 +8678,7 @@ function renderColdEpisodeCard() {
   if (ep.dailyLogs.length > 0) {
     html += '<div class="fe-section-title">Daily Log</div>';
     ep.dailyLogs.slice().reverse().slice(0, 7).forEach(l => {
-      const sevDots = '●'.repeat(l.severity) + '○'.repeat(5 - l.severity);
+      const sevDots = zi('dot-red').repeat(l.severity) + zi('dot-empty').repeat(5 - l.severity);
       html += '<div class="ce-symptom-row"><span style="font-size:var(--fs-xs);color:var(--light);min-width:55px;">' + formatDate(l.date) + '</span>';
       html += '<span style="font-size:var(--fs-xs);letter-spacing:2px;" title="Severity ' + l.severity + '/5">' + sevDots + '</span>';
       html += '<span style="font-size:var(--fs-xs);color:var(--mid);flex:1;min-width:0;">' + (l.symptoms.length > 0 ? l.symptoms.slice(0, 3).join(', ') : 'no symptoms logged') + '</span></div>';
@@ -9111,7 +9111,7 @@ function openDiversityDetail() {
     const chevron = document.getElementById('infoMealBreakdownChevron');
     if (body && body.style.display === 'none') {
       body.style.display = '';
-      if (chevron) chevron.textContent = '▴';
+      if (chevron) chevron.innerHTML = zi('chevron-up');
     }
     const card = document.getElementById('infoMealBreakdownCard');
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -9601,7 +9601,7 @@ function renderActivityChips() {
   Object.entries(byDomain).forEach(([domain, evs]) => {
     const meta = AL_DOMAIN_META[domain] || { icon: '?', label: domain };
     const milestoneLabels = evs.map(e => e.milestone.replace(/_/g, ' ')).join(', ');
-    const confDot = evs.some(e => e.confidence === 'high') ? '●' : evs.some(e => e.confidence === 'medium') ? '●' : '●';
+    const confDot = zi('dot-red');
     html += `<div class="al-chip al-chip-${domain}" data-domain="${domain}">
       ${confDot} ${meta.icon} ${meta.label}: ${milestoneLabels}
       <button class="al-chip-x" data-action="removeActivityChip" data-arg="${domain}" aria-label="Remove">&times;</button>

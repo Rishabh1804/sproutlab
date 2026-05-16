@@ -3677,7 +3677,7 @@ function updateStorageUsage() {
     breakdown.innerHTML = top3 +
       `<span id="storageMoreBtn" class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.add('is-open');this.style.display='none';">+ ${rest.length} more</span>` +
       `<div id="storageRestChips" class="storage-rest-chips">${restChips}` +
-      `<span class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.remove('is-open');document.getElementById('storageMoreBtn').style.display='';">▴ less</span></div>`;
+      `<span class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.remove('is-open');document.getElementById('storageMoreBtn').style.display='';">${zi('chevron-up')} less</span></div>`;
   }
 }
 
@@ -4073,7 +4073,7 @@ function toggleEssentialMode() {
     var chevron = document.getElementById('homeVitalsChevron');
     var quick = document.getElementById('homeVitalsQuick');
     if (expanded) expanded.style.display = 'none';
-    if (chevron) chevron.textContent = '▾';
+    if (chevron) chevron.innerHTML = zi('chevron-down');
     if (quick) quick.style.display = '';
   } else {
     document.body.classList.remove('essential-mode');
