@@ -9406,6 +9406,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
 <symbol id="zi-resolve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="zi-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 110-8 6 6 0 0111-1 4 4 0 011 9H7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/></symbol>
+<symbol id="zi-rain" viewBox="0 0 24 24"><path d="M7 14a4 4 0 110-8 6 6 0 0111-1 4 4 0 011 9H7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-snow" viewBox="0 0 24 24"><path d="M12 3v18M5 7l14 10M5 17l14-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 4.5l3 2.5 3-2.5M9 19.5l3-2.5 3 2.5M3.5 10l2.5 2-2.5 2M20.5 10l-2.5 2 2.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 </defs>
 </svg>
 <div class="app">
@@ -10161,7 +10164,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <input type="text" id="foodInput" oninput="activateBtn('foodAddBtn',this.value.trim())" placeholder="Add a food..." onkeydown="if(event.key==='Enter')addFood()">
           <input type="date" id="foodDate" style="padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);color:var(--text);outline:none;">
           <div class="reaction-toggle">
-            <button class="rtog active-ok" id="rtog-ok" data-reaction="ok">✓ Fine</button>
+            <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
             <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
           </div>
           <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
@@ -10691,8 +10694,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div>
             <label class="micro-label">Flags</label>
             <div class="poop-check-row">
-              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> 🩸 Blood</label>
-              <label class="poop-check-label"><input type="checkbox" id="poopMucus"> 🫧 Mucus</label>
+              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> <svg class="zi"><use href="#zi-drop"/></svg> Blood</label>
+              <label class="poop-check-label"><input type="checkbox" id="poopMucus"> Mucus</label>
             </div>
           </div>
           <div>
@@ -11482,7 +11485,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   <!-- FOOTER -->
 
   <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva ❤️</div>
+    <div class="footer-text footer-text-style" >Built for Ziva</div>
   </div>
 
 </div><!-- /app -->
@@ -11580,7 +11583,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="ql-intake-pill" data-mi-qlval="1.0"><svg class="zi"><use href="#zi-star"/></svg> All</div>
         </div>
       </div>
-      <button class="ql-save ql-save-feed">Save Feed ✓</button>
+      <button class="ql-save ql-save-feed">Save Feed <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -11613,7 +11616,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
         <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNight">▶ Start Now</button>
-        <button class="ql-save ql-save-sleep flex-1-min100" >Save Sleep ✓</button>
+        <button class="ql-save ql-save-sleep flex-1-min100" >Save Sleep <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
   </div>
@@ -11639,7 +11642,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
         <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNap">▶ Start Now</button>
-        <button class="ql-save ql-save-nap flex-1-min100" >Save Nap ✓</button>
+        <button class="ql-save ql-save-nap flex-1-min100" >Save Nap <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
   </div>
@@ -11660,14 +11663,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <div>
         <label class="micro-label">Colour</label>
         <div class="ql-color-row" id="qlPoopColors">
-          <div class="ql-color-dot active pcolor-yellow" data-color="yellow" >✓</div>
-          <div class="ql-color-dot pcolor-green" data-color="green" >✓</div>
-          <div class="ql-color-dot pcolor-brown" data-color="brown" >✓</div>
-          <div class="ql-color-dot pcolor-dark" data-color="dark" >✓</div>
-          <div class="ql-color-dot pcolor-orange" data-color="orange" >✓</div>
-          <div class="ql-color-dot pcolor-red" data-color="red" >✓</div>
-          <div class="ql-color-dot pcolor-white" data-color="white" >✓</div>
-          <div class="ql-color-dot pcolor-black" data-color="black" >✓</div>
+          <div class="ql-color-dot active pcolor-yellow" data-color="yellow" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-green" data-color="green" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-brown" data-color="brown" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-dark" data-color="dark" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-orange" data-color="orange" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-red" data-color="red" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-white" data-color="white" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-black" data-color="black" ><svg class="zi"><use href="#zi-check"/></svg></div>
         </div>
       </div>
       <div>
@@ -11680,7 +11683,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="ql-con-pill" data-con="pellets">Pellets</div>
         </div>
       </div>
-      <button class="ql-save ql-save-poop">Save Poop ✓</button>
+      <button class="ql-save ql-save-poop">Save Poop <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -11723,7 +11726,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <input type="time" id="alTime" class="form-input input-ctx-sage">
         </div>
       </div>
-      <button class="ql-save ql-save-activity" id="alSaveBtn">Log Activity ✓</button>
+      <button class="ql-save ql-save-activity" id="alSaveBtn">Log Activity <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -11875,10 +11878,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
                 <div class="t-sub">Growth, milestones & sleep norms</div>
               </div>
               <select id="settingsRefStd" onchange="setReferenceStandard(this.value)" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
-                <option value="iap">🇮🇳 India (IAP)</option>
+                <option value="iap">India (IAP)</option>
                 <option value="who"><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</option>
-                <option value="eu">🇪🇺 EU</option>
-                <option value="cn">🇨🇳 China (CIP)</option>
+                <option value="eu">EU</option>
+                <option value="cn">China (CIP)</option>
               </select>
             </div>
             <div class="power-outage-row">
@@ -12231,7 +12234,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 <div class="modal-overlay" id="doctorModal">
   <div class="modal">
-    <h3 id="doctorModalTitle">🩺 Add Doctor</h3>
+    <h3 id="doctorModalTitle"><svg class="zi"><use href="#zi-steth"/></svg> Add Doctor</h3>
     <div class="fx-col g8">
       <input type="text" id="docName" class="modal-input">
       <input type="text" id="docTitle" class="modal-input">
@@ -12257,7 +12260,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <input type="date" id="evDate" class="modal-input">
       <select id="evType" style="padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);outline:none;background:var(--peach-light);color:var(--text);">
         <option value="birthday"><svg class="zi" aria-hidden="true"><use href="#zi-party"/></svg> Birthday</option>
-        <option value="holiday">🪔 Holiday / Festival</option>
+        <option value="holiday">Holiday / Festival</option>
         <option value="vacation"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Vacation / Travel</option>
         <option value="family"><svg class="zi" aria-hidden="true"><use href="#zi-baby"/></svg> Family Gathering</option>
         <option value="other"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> Other</option>
@@ -14219,33 +14222,33 @@ const FOOD_SUGGESTIONS = {
 // ── Indian Holidays 2026–2027 (major national + Jharkhand-relevant) ──
 const INDIAN_HOLIDAYS = [
   { date:'2026-01-14', title:'Makar Sankranti',       type:'holiday', icon:zi('star') },
-  { date:'2026-01-26', title:'Republic Day',           type:'holiday', icon:'🇮🇳' },
+  { date:'2026-01-26', title:'Republic Day',           type:'holiday', icon:zi('star') },
   { date:'2026-03-04', title:'Holi',                   type:'holiday', icon:zi('palette') },
-  { date:'2026-03-26', title:'Rama Navami',            type:'holiday', icon:'🪔' },
-  { date:'2026-03-31', title:'Mahavir Jayanti',        type:'holiday', icon:'🪔' },
+  { date:'2026-03-26', title:'Rama Navami',            type:'holiday', icon:zi('flame') },
+  { date:'2026-03-31', title:'Mahavir Jayanti',        type:'holiday', icon:zi('flame') },
   { date:'2026-04-03', title:'Good Friday',            type:'holiday', icon:zi('star') },
-  { date:'2026-04-14', title:'Ambedkar Jayanti',       type:'holiday', icon:'🇮🇳' },
+  { date:'2026-04-14', title:'Ambedkar Jayanti',       type:'holiday', icon:zi('star') },
   { date:'2026-05-01', title:'May Day',                type:'holiday', icon:zi('run') },
-  { date:'2026-05-24', title:'Buddha Purnima',         type:'holiday', icon:'🪷' },
+  { date:'2026-05-24', title:'Buddha Purnima',         type:'holiday', icon:zi('lotus') },
   { date:'2026-06-27', title:'Eid ul-Adha',            type:'holiday', icon:zi('moon') },
   { date:'2026-07-17', title:'Muharram',               type:'holiday', icon:zi('moon') },
-  { date:'2026-08-15', title:'Independence Day',       type:'holiday', icon:'🇮🇳' },
+  { date:'2026-08-15', title:'Independence Day',       type:'holiday', icon:zi('star') },
   { date:'2026-08-28', title:'Raksha Bandhan',         type:'holiday', icon:zi('baby') },
   { date:'2026-09-04', title:'Ziva\'s 1st Birthday ', type:'birthday', icon:zi('party') },
   { date:'2026-09-04', title:'Krishna Janmashtami',    type:'holiday', icon:zi('star') },
   { date:'2026-09-14', title:'Ganesh Chaturthi',       type:'holiday', icon:zi('baby') },
   { date:'2026-09-16', title:'Milad un-Nabi',          type:'holiday', icon:zi('moon') },
-  { date:'2026-10-02', title:'Gandhi Jayanti',         type:'holiday', icon:'🇮🇳' },
+  { date:'2026-10-02', title:'Gandhi Jayanti',         type:'holiday', icon:zi('star') },
   { date:'2026-10-20', title:'Dussehra',               type:'holiday', icon:zi('run') },
-  { date:'2026-11-08', title:'Diwali',                 type:'holiday', icon:'🪔' },
+  { date:'2026-11-08', title:'Diwali',                 type:'holiday', icon:zi('flame') },
   { date:'2026-11-11', title:'Bhai Dooj',              type:'holiday', icon:zi('baby') },
   { date:'2026-11-15', title:'Chhath Puja',            type:'holiday', icon:zi('sun') },
   { date:'2026-11-15', title:'Jharkhand Foundation Day',type:'holiday', icon:zi('star') },
-  { date:'2026-11-24', title:'Guru Nanak Jayanti',     type:'holiday', icon:'🪔' },
+  { date:'2026-11-24', title:'Guru Nanak Jayanti',     type:'holiday', icon:zi('flame') },
   { date:'2026-12-25', title:'Christmas',              type:'holiday', icon:zi('star') },
   // 2027
   { date:'2027-01-14', title:'Makar Sankranti',        type:'holiday', icon:zi('star') },
-  { date:'2027-01-26', title:'Republic Day',           type:'holiday', icon:'🇮🇳' },
+  { date:'2027-01-26', title:'Republic Day',           type:'holiday', icon:zi('star') },
   { date:'2027-03-22', title:'Holi',                   type:'holiday', icon:zi('palette') },
 ];
 // @@DATA_BLOCK_3_END@@
@@ -14262,22 +14265,22 @@ const EVENT_ACTIVITIES = {
   ],
   holiday: {
     'Holi':              [{ icon:zi('palette'), text:'Safe colour play with food-grade haldi on paper — sensory delight, zero chemicals' }, { icon:zi('drop'), text:'Warm water play in a basin with flower petals — festive and calming' }],
-    'Diwali':            [{ icon:'🪔', text:'Show her a diya glow from safe distance — tracking the flicker builds visual focus' }, { icon:zi('sparkle'), text:'Explore fairy lights up close (supervised) — new light patterns stimulate curiosity' }],
+    'Diwali':            [{ icon:zi('flame'), text:'Show her a diya glow from safe distance — tracking the flicker builds visual focus' }, { icon:zi('sparkle'), text:'Explore fairy lights up close (supervised) — new light patterns stimulate curiosity' }],
     'Dussehra':          [{ icon:zi('star'), text:'Show her bright Ravana effigy pictures — bold colours and contrast build visual discrimination' }, { icon:zi('bell'), text:'Clap and cheer together — teaches emotional expression and turn-taking' }],
     'Raksha Bandhan':    [{ icon:zi('baby'), text:'Let her feel different thread and ribbon textures (supervised) — rich tactile sensory play' }, { icon:zi('baby'), text:'Encourage older cousins to play peek-a-boo — social bonding across ages' }],
     'Ganesh Chaturthi':  [{ icon:zi('star'), text:'Safe play-dough or atta dough — squeezing and pinching builds fine motor strength' }, { icon:zi('baby'), text:'Show elephant pictures and make trunk sounds — animal play builds sound association' }],
     'Krishna Janmashtami': [{ icon:zi('star'), text:'Show her peacock feathers (supervised) — vibrant colours and soft texture for sensory play' }, { icon:zi('spoon'), text:'Let her taste a tiny bit of makkhan — new taste and creamy texture exploration' }],
     'Makar Sankranti':   [{ icon:zi('star'), text:'Go outside and watch kites — tracking movement across the sky builds visual focus' }, { icon:zi('sun'), text:'Morning sunshine time — the festival of the sun aligns with her Vitamin D routine' }],
-    'Independence Day':  [{ icon:'🇮🇳', text:'Dress her in orange, white, green — colour recognition and a memorable photo op' }, { icon:zi('star'), text:'March around the room while humming a tune — motor movement and rhythm play' }],
-    'Republic Day':      [{ icon:'🇮🇳', text:'Watch parade clips on TV — marching bands are amazing for rhythm and visual tracking' }, { icon:zi('star'), text:'Let her wave a small soft cloth flag — grasping and waving builds arm coordination' }],
+    'Independence Day':  [{ icon:zi('star'), text:'Dress her in orange, white, green — colour recognition and a memorable photo op' }, { icon:zi('star'), text:'March around the room while humming a tune — motor movement and rhythm play' }],
+    'Republic Day':      [{ icon:zi('star'), text:'Watch parade clips on TV — marching bands are amazing for rhythm and visual tracking' }, { icon:zi('star'), text:'Let her wave a small soft cloth flag — grasping and waving builds arm coordination' }],
     'Christmas':         [{ icon:zi('star'), text:'Let her explore unbreakable ornaments — shiny surfaces and new shapes for sensory play' }, { icon:zi('star'), text:'Play gentle Christmas carols — new melodies expand her auditory palette' }],
     'Chhath Puja':       [{ icon:zi('sun'), text:'Watch the sunrise together — natural light exposure supports circadian rhythm' }, { icon:zi('spoon'), text:'Let her explore the fruit offerings (supervised) — naming fruits builds vocabulary' }],
-    'Rama Navami':       [{ icon:'🪔', text:'Show her a small diya flame from safe distance — tracking the flicker builds attention' }, { icon:zi('book'), text:'Read a simple picture book about the story — early narrative exposure and bonding' }],
+    'Rama Navami':       [{ icon:zi('flame'), text:'Show her a small diya flame from safe distance — tracking the flicker builds attention' }, { icon:zi('book'), text:'Read a simple picture book about the story — early narrative exposure and bonding' }],
     'Mahavir Jayanti':   [{ icon:zi('sprout'), text:'Nature walk to a park — Jain philosophy celebrates all life, name the birds and plants she sees' }, { icon:zi('star'), text:'Practice a quiet moment together — gentle breathing, soft music, early calm-down routine' }],
     'Good Friday':       [{ icon:zi('star'), text:'Show her a candle flame from safe distance — visual focus on a still point builds attention span' }, { icon:zi('baby'), text:'Quiet bonding time — hold her close, read softly, match the reflective mood of the day' }],
     'Ambedkar Jayanti':  [{ icon:zi('book'), text:'Read a board book together — celebrate knowledge and learning, even at 6 months' }, { icon:zi('rainbow'), text:'Show her pictures of diverse faces — babies are building facial recognition skills' }],
     'May Day':           [{ icon:zi('sprout'), text:'Go outside and let her touch leaves and flowers — nature sensory exploration' }, { icon:zi('baby'), text:'Play with toy tools or blocks — early "building" play for spatial awareness' }],
-    'Buddha Purnima':    [{ icon:'🪷', text:'Show her a lotus flower or pictures — name the parts (petals, stem) for vocabulary' }, { icon:zi('lotus'), text:'Gentle baby yoga stretches together — calming and builds flexibility' }],
+    'Buddha Purnima':    [{ icon:zi('lotus'), text:'Show her a lotus flower or pictures — name the parts (petals, stem) for vocabulary' }, { icon:zi('lotus'), text:'Gentle baby yoga stretches together — calming and builds flexibility' }],
     'Muharram':          [{ icon:zi('moon'), text:'Show her the moon at night — pointing and naming builds joint attention, a key social skill' }, { icon:zi('star'), text:'Let her hold and explore safe beaded items — grasping builds pincer grip development' }],
     'Milad un-Nabi':     [{ icon:zi('moon'), text:'Nighttime stargazing from a window — pointing at lights builds visual tracking' }, { icon:zi('star'), text:'Play soft nasheeds — new musical patterns expand auditory processing' }],
     'Eid ul-Fitr':       [{ icon:zi('sprout'), text:'Let her touch and smell flowers used for decoration — multi-sensory exploration' }, { icon:zi('baby'), text:'Practice "salaam" hand gesture — early social mimicry and motor coordination' }],
@@ -14418,7 +14421,7 @@ const FOOD_TAX = {
       rice_wheat: { icon:zi('bowl'), label:'Rice & Wheat', keys:['rice','wheat','suji','rava','poha','maida','vermicelli','bread'] },
       millets:    { icon:zi('sprout'), label:'Millets', keys:['ragi','jowar','bajra','dalia','amaranth','rajgira','barley'] },
       dals:       { icon:zi('bowl'), label:'Dals & Lentils', keys:['moong dal','masoor dal','toor dal','chana dal','urad dal','mixed dal','moong sprouts','dal tadka','dal fry','dal palak'] },
-      legumes:    { icon:'🫛', label:'Legumes', keys:['rajma','chole','chickpea','lobia','soybean','peas','matar'] },
+      legumes:    { icon:zi('bowl'), label:'Legumes', keys:['rajma','chole','chickpea','lobia','soybean','peas','matar'] },
       prepared:   { icon:zi('bowl'), label:'Prepared', keys:['khichdi','idli','dosa','uttapam','pongal','upma','roti','chapati','paratha','thepla','pulao','sambar','rasam','sheera','payasam','sattu','sabudana','makki','corn'] },
     }
   },
@@ -14437,7 +14440,7 @@ const FOOD_TAX = {
     subs: {
       roots:      { icon:zi('spoon'), label:'Root & Tubers', keys:['carrot','potato','sweet potato','beetroot','yam','suran','turnip','shalgam','radish','mooli','colocasia','arbi','raw banana','kachha kela','lotus root','kamal kakdi'] },
       leafy:      { icon:zi('sprout'), label:'Leafy Greens', keys:['spinach','palak','methi','fenugreek','amaranth leaves','mustard greens','sarson','bathua','drumstick leaves','moringa','banana stem'] },
-      gourds:     { icon:'🫛', label:'Gourds', keys:['bottle gourd','lauki','ridge gourd','tori','bitter gourd','karela','snake gourd','pointed gourd','parwal','ivy gourd','tindora','ash gourd','pumpkin','zucchini'] },
+      gourds:     { icon:zi('bowl'), label:'Gourds', keys:['bottle gourd','lauki','ridge gourd','tori','bitter gourd','karela','snake gourd','pointed gourd','parwal','ivy gourd','tindora','ash gourd','pumpkin','zucchini'] },
       flowering:  { icon:zi('spoon'), label:'Flowering', keys:['broccoli','cauliflower','cabbage','capsicum','bell pepper','drumstick','cluster beans','cucumber'] },
       beans_pods: { icon:zi('spoon'), label:'Beans & Pods', keys:['beans','corn','tomato'] },
       aromatics:  { icon:zi('bowl'), label:'Aromatics', keys:['onion','garlic','ginger'] },
@@ -15102,7 +15105,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking while holding just one of your hands.', advanced:false, cat:'motor' },
     { text:'Drinks from a cup (with help)', icon:zi('drop'), desc:'Takes sips from an open cup when held — oral motor coordination developing.', advanced:false, cat:'motor' },
     { text:'Puts objects into containers', icon:zi('note'), desc:'Drops toys into a box deliberately — understanding of "in" and "out".', advanced:false, cat:'cognitive' },
-    { text:'Imitates actions', icon:'🪞', desc:'Copies clapping, stirring, phone-to-ear — social learning through observation.', advanced:false, cat:'social' },
+    { text:'Imitates actions', icon:zi('handshake'), desc:'Copies clapping, stirring, phone-to-ear — social learning through observation.', advanced:false, cat:'social' },
     { text:'Walks independently', icon:zi('run'), desc:'Many babies walk between 11–13 months — wide range is completely normal.', advanced:false, cat:'motor' },
     { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, cat:'language' },
   ],
@@ -15160,7 +15163,7 @@ const MILESTONE_STANDARDS = {
     { text:'Stands with support confidently', icon:zi('run'), desc:'Stands holding furniture with good balance and one hand free.', advanced:false, cat:'motor' },
     { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats small pieces of food independently.', advanced:false, cat:'motor' },
     { text:'Waves bye-bye', icon:zi('baby'), desc:'IAP expects social waving by 10 months.', advanced:false, cat:'social' },
-    { text:'Imitates gestures', icon:'🪞', desc:'Copies actions like clapping, stirring, phone to ear.', advanced:false, cat:'social' },
+    { text:'Imitates gestures', icon:zi('handshake'), desc:'Copies actions like clapping, stirring, phone to ear.', advanced:false, cat:'social' },
     { text:'Understands simple commands', icon:zi('list'), desc:'"Give it to me", "come here" — acts on one-step requests.', advanced:false, cat:'cognitive' },
     { text:'Stands momentarily alone', icon:zi('run'), desc:'Lets go and balances for a few seconds independently.', advanced:true, cat:'motor' },
     { text:'Says 1–2 words with meaning', icon:zi('chat'), desc:'Consistent use of a word for the right thing — true language begins.', advanced:true, cat:'language' },
@@ -15234,7 +15237,7 @@ const MILESTONE_STANDARDS = {
   11: [
     { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking with one-hand support.', advanced:false, cat:'motor' },
     { text:'Picks up small objects neatly', icon:zi('baby'), desc:'Precise pincer grasp for tiny items — well refined.', advanced:false, cat:'motor' },
-    { text:'Imitates adult actions', icon:'🪞', desc:'Copies phone-to-ear, stirring, sweeping — deferred imitation developing.', advanced:false, cat:'cognitive' },
+    { text:'Imitates adult actions', icon:zi('handshake'), desc:'Copies phone-to-ear, stirring, sweeping — deferred imitation developing.', advanced:false, cat:'cognitive' },
     { text:'Says mama/dada specifically', icon:zi('chat'), desc:'Uses "mama" and "dada" for the correct parent.', advanced:false, cat:'language' },
     { text:'Plays social games independently', icon:zi('brain'), desc:'Initiates peekaboo, pat-a-cake without prompting.', advanced:false, cat:'social' },
     { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, cat:'motor' },
@@ -15265,7 +15268,7 @@ const MILESTONE_STANDARDS = {
     { text:'Sits independently and stably', icon:zi('lotus'), desc:'Chinese standards expect independent sitting by 7 months.', advanced:false, cat:'motor' },
     { text:'Transfers objects between hands', icon:zi('hourglass'), desc:'Passes toys from one hand to the other deliberately.', advanced:false, cat:'motor' },
     { text:'Babbles syllable chains', icon:zi('chat'), desc:'Produces "ba-ba-ba" or "ma-ma-ma" repetitive syllables.', advanced:false, cat:'language' },
-    { text:'Recognises mirror reflection', icon:'🪞', desc:'Shows interest in own reflection — early self-awareness.', advanced:false, cat:'cognitive' },
+    { text:'Recognises mirror reflection', icon:zi('handshake'), desc:'Shows interest in own reflection — early self-awareness.', advanced:false, cat:'cognitive' },
     { text:'Reaches for familiar people', icon:zi('baby'), desc:'Extends arms to be picked up by caregivers.', advanced:false, cat:'social' },
     { text:'Bears weight on legs', icon:zi('run'), desc:'Bounces and pushes down when held in standing.', advanced:false, cat:'motor' },
     { text:'Crawls on belly', icon:zi('baby'), desc:'Commando crawling — early mobility ahead of 8m standard.', advanced:true, cat:'motor' },
@@ -15292,7 +15295,7 @@ const MILESTONE_STANDARDS = {
     { text:'Cruises along furniture', icon:zi('run'), desc:'Chinese standard expects cruising by 10 months.', advanced:false, cat:'motor' },
     { text:'Stands alone momentarily', icon:zi('run'), desc:'Lets go of support and balances briefly.', advanced:false, cat:'motor' },
     { text:'Points to desired objects', icon:zi('baby'), desc:'Uses index finger pointing to communicate wants.', advanced:false, cat:'language' },
-    { text:'Imitates simple actions', icon:'🪞', desc:'Copies adult gestures like clapping, waving, phone-to-ear.', advanced:false, cat:'cognitive' },
+    { text:'Imitates simple actions', icon:zi('handshake'), desc:'Copies adult gestures like clapping, waving, phone-to-ear.', advanced:false, cat:'cognitive' },
     { text:'Shows objects to caregiver', icon:zi('baby'), desc:'Holds up toys to show — joint attention and sharing.', advanced:false, cat:'social' },
     { text:'Walks with both hands held', icon:zi('run'), desc:'Takes steps while holding both of your hands.', advanced:false, cat:'motor' },
     { text:'Says first meaningful word', icon:zi('chat'), desc:'One clear word used with intent — early for Chinese 12m standard.', advanced:true, cat:'language' },
@@ -18556,7 +18559,7 @@ function renderNotes(filterCat) {
   });
 
   const active = notes.filter(n => !n.done).length;
-  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done ✓' : '';
+  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done' : '';
   list.innerHTML = '';
 
   const filtered = cat === 'all' ? notes : notes.filter(n => (n.category || 'general') === cat);
@@ -19796,15 +19799,15 @@ function getTithiIndex(date) {
 function getMoonPhaseEmoji(date) {
   const tithi = getTithiIndex(date);
   // Map 30 tithis to 8 moon emojis
-  if (tithi === 0)                    return '🌑'; // Amavasya
-  if (tithi >= 1  && tithi <= 3)      return '🌒'; // Shukla early
-  if (tithi >= 4  && tithi <= 7)      return '🌓'; // Shukla Ashtami
-  if (tithi >= 8  && tithi <= 11)     return '🌔'; // Shukla late
-  if (tithi >= 12 && tithi <= 15)     return '🌕'; // Purnima
-  if (tithi >= 16 && tithi <= 18)     return '🌖'; // Krishna early
-  if (tithi >= 19 && tithi <= 22)     return '🌗'; // Krishna Ashtami
-  if (tithi >= 23 && tithi <= 26)     return '🌘'; // Krishna late
-  return '🌑'; // approaching Amavasya
+  if (tithi === 0)                    return zi('moon'); // Amavasya
+  if (tithi >= 1  && tithi <= 3)      return zi('moon'); // Shukla early
+  if (tithi >= 4  && tithi <= 7)      return zi('moon'); // Shukla Ashtami
+  if (tithi >= 8  && tithi <= 11)     return zi('moon'); // Shukla late
+  if (tithi >= 12 && tithi <= 15)     return zi('moon'); // Purnima
+  if (tithi >= 16 && tithi <= 18)     return zi('moon'); // Krishna early
+  if (tithi >= 19 && tithi <= 22)     return zi('moon'); // Krishna Ashtami
+  if (tithi >= 23 && tithi <= 26)     return zi('moon'); // Krishna late
+  return zi('moon'); // approaching Amavasya
 }
 
 function getMoonPhaseName(date) {
@@ -20544,7 +20547,7 @@ function wgRender() {
   if (prevBtn) prevBtn.style.display = _wgStep === 0 ? 'none' : '';
   if (nextBtn) {
     if (_wgStep === _wgTotalSteps - 1) {
-      nextBtn.textContent = 'Got it ✓';
+      nextBtn.textContent = 'Got it';
       nextBtn.onclick = dismissWelcomeGuide;
     } else {
       nextBtn.textContent = 'Next →';
@@ -22028,14 +22031,14 @@ function weatherCodeToText(code) {
 }
 
 function weatherCodeToIcon(code) {
-  if (code === 0) return '☀️';
+  if (code === 0) return zi('sun');
   if (code <= 2) return zi('sun');
-  if (code === 3) return '☁️';
-  if ([45,48].includes(code)) return '🌫️';
-  if ([51,53,55].includes(code)) return '🌦️';
-  if ([61,63,65,80,81,82].includes(code)) return '🌧️';
-  if ([71,73,75,77,85,86].includes(code)) return '❄️';
-  if ([95,96,99].includes(code)) return '⛈️';
+  if (code === 3) return zi('cloud');
+  if ([45,48].includes(code)) return zi('cloud');
+  if ([51,53,55].includes(code)) return zi('rain');
+  if ([61,63,65,80,81,82].includes(code)) return zi('rain');
+  if ([71,73,75,77,85,86].includes(code)) return zi('snow');
+  if ([95,96,99].includes(code)) return zi('bolt');
   return zi('flame');
 }
 
@@ -22077,7 +22080,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   if (wx.maxTemp >= 38) {
     precautions.push(zi('flame') + ' Very hot day — keep baby hydrated, carry ORS if needed, avoid peak sun hours');
   } else if (wx.maxTemp >= 34) {
-    precautions.push('☀️ Hot day — dress baby in light cotton, carry water, keep baby in shade');
+    precautions.push(zi('sun') + ' Hot day — dress baby in light cotton, carry water, keep baby in shade');
   }
 
   if (wx.minTemp <= 15) {
@@ -22085,23 +22088,23 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   }
 
   if (wx.rainChance >= 70) {
-    precautions.push('🌧️ High chance of rain (' + wx.rainChance + '%) — carry rain cover for baby, plan extra travel time');
+    precautions.push(zi('rain') + ' High chance of rain (' + wx.rainChance + '%) — carry rain cover for baby, plan extra travel time');
   } else if (wx.rainChance >= 40) {
-    precautions.push('🌦️ Possible rain (' + wx.rainChance + '%) — carry an umbrella just in case');
+    precautions.push(zi('rain') + ' Possible rain (' + wx.rainChance + '%) — carry an umbrella just in case');
   }
 
   if (wx.uvIndex >= 8) {
     precautions.push(zi('sun') + ' Very high UV (' + wx.uvIndex + ') — avoid direct sun on baby\'s skin, use shade');
   } else if (wx.uvIndex >= 6) {
-    precautions.push('☀️ High UV (' + wx.uvIndex + ') — keep baby covered during travel to/from clinic');
+    precautions.push(zi('sun') + ' High UV (' + wx.uvIndex + ') — keep baby covered during travel to/from clinic');
   }
 
   if ([95, 96, 99].includes(wx.code)) {
-    precautions.push('⛈️ Thunderstorm expected — consider rescheduling if travel is unsafe');
+    precautions.push(zi('bolt') + ' Thunderstorm expected — consider rescheduling if travel is unsafe');
   }
 
   if ([45, 48].includes(wx.code)) {
-    precautions.push('🌫️ Foggy conditions — drive carefully, allow extra travel time');
+    precautions.push(zi('cloud') + ' Foggy conditions — drive carefully, allow extra travel time');
   }
 
   // Always add general vaccination day tips
@@ -22114,10 +22117,10 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   const advisoryHtml = `
     <div style="margin-top:8px;padding:10px 14px;border-radius:var(--r-lg);background:var(--sky-light);border-left:var(--accent-w) solid var(--sky);">
       <div style="font-size:var(--fs-sm);font-weight:600;color:var(--tc-sky);margin-bottom:6px;">
-        🌤️ Weather advisory — vaccination ${dayLabel} (${formatDate(apptDate)})
+        ${zi('sun')} Weather advisory — vaccination ${dayLabel} (${formatDate(apptDate)})
       </div>
       <div style="font-size:var(--fs-base);font-weight:600;color:var(--text);margin-bottom:6px;">
-        ${weatherSummary}${wx.rainChance > 0 ? ' · 🌧️ ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
+        ${weatherSummary}${wx.rainChance > 0 ? ' · ${zi("rain")} ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
       </div>
       <div style="font-size:var(--fs-sm);font-weight:400;color:var(--mid);line-height:1.6;">
         ${precautions.map(p => '<div style="margin-bottom:3px;">' + p + '</div>').join('')}
@@ -22544,7 +22547,7 @@ function renderPlanPreview() {
       const pick = items[Math.floor(Math.random() * items.length)];
       const strong = pick.querySelector('strong');
       const icon = pick.querySelector('.reco-icon');
-      if (strong) foodName = strong.textContent.replace('🆕 Try new — ', '');
+      if (strong) foodName = strong.textContent.replace(/^\s*Try new — /, '');
       if (icon) foodIcon = icon.textContent.trim();
       // Colour based on food type
       const nameLower = foodName.toLowerCase();
@@ -22893,7 +22896,7 @@ function renderRecoFood() {
     { icon:zi('bowl'), name:'Rajma mash', reason:'Protein + iron + fibre — hearty legume', newFood:'rajma',
       recipe:'1. Soak ¼ cup rajma overnight (12 hrs minimum).\n2. Pressure cook with 2 cups water — 6–7 whistles until very soft.\n3. Mash smooth — no whole beans.\n4. Add ghee + pinch turmeric.',
       tips:'{{OK}} High protein + iron — great for vegetarian babies.\n{{OK}} Overnight soaking is essential for digestibility.\n{{NO}} Undercooked rajma is toxic — cook until mushy.\n{{NO}} Can cause gas — start with 1–2 tbsp.' },
-    { icon:'🫛', name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
+    { icon:zi('bowl'), name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
       recipe:'1. Boil ¼ cup fresh/frozen peas 5 min.\n2. Blend smooth with 2 tbsp cooking water.\n3. Strain through sieve to remove skins.\n4. Add ghee, serve warm.',
       tips:'{{OK}} Naturally sweet — babies usually love it.\n{{OK}} Fresh or frozen equally nutritious.\n{{NO}} Strain to remove tough skins for young babies.\n{{NO}} Don\'t use canned peas — too salty.' },
     { icon:zi('spoon'), name:'Sweet corn puree', reason:'Energy + natural sweetness + Vit B', newFood:'corn',
@@ -22968,7 +22971,7 @@ function renderRecoFood() {
     { icon:zi('spoon'), name:'Pumpkin seed ragi porridge', reason:'Zinc + iron + protein — immunity builder', newFood:'pumpkin seeds',
       recipe:'1. Dry roast 1 tsp pumpkin seeds, grind to powder.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix in seed powder + ghee.',
       tips:'{{OK}} Highest zinc of any seed — key for immunity.\n{{OK}} Good iron source too.\n{{NO}} Always grind to powder — whole seeds are choking risk.\n{{NO}} Don\'t use salted/flavoured seeds.' },
-    { icon:'🫑', name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
+    { icon:zi('bowl'), name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
       recipe:'1. Deseed ¼ red/yellow capsicum, chop fine.\n2. Sauté lightly in ½ tsp ghee 3 min.\n3. Mix into cooked, mashed rice.\n4. Mash everything smooth.',
       tips:'{{OK}} Red/yellow are sweeter than green.\n{{OK}} Very high Vitamin C content.\n{{NO}} Remove seeds and white membrane.\n{{NO}} Cook well — raw capsicum is too tough.' },
   ];
@@ -23038,7 +23041,7 @@ function renderRecoFood() {
         <div class="fx-start g8">
           <div class="reco-icon">${newPick.icon}</div>
           <div class="reco-body flex-1">
-            <strong>🆕 Try new — ${newPick.name}</strong>
+            <strong>${zi('sparkle')} Try new — ${newPick.name}</strong>
             <span>${newPick.reason}</span>
           </div>
           <button class="btn btn-ghost" style="font-size:var(--fs-sm);flex-shrink:0;padding:5px 10px;" data-action="toggleRecoRecipe" data-arg="${id}">View recipe</button>
@@ -25569,7 +25572,7 @@ function renderDietIntelBanner() {
     const clearDate = new Date(introDate); clearDate.setDate(clearDate.getDate() + 3);
     const daysLeft = Math.ceil((clearDate - new Date()) / 86400000);
     if (daysLeft > 0) {
-      html += `<div class="dib-card dib-reaction">🆕 <strong>${escHtml(newest.name)}</strong> introduced ${formatDate(newest.date)} — watch window: <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</strong>. Avoid new foods until ${formatDate(toDateStr(clearDate))}.</div>`;
+      html += `<div class="dib-card dib-reaction">${zi('sparkle')} <strong>${escHtml(newest.name)}</strong> introduced ${formatDate(newest.date)} — watch window: <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</strong>. Avoid new foods until ${formatDate(toDateStr(clearDate))}.</div>`;
     }
   }
 
@@ -27579,7 +27582,7 @@ function editPoopEntry(idx) {
   setPoopConsistency(entry.consistency || 'normal');
   setPoopAmount(entry.amount || 'medium');
   updatePoopDayLabel();
-  document.getElementById('poopSaveBtn').textContent = '✓ Update Poop Log';
+  document.getElementById('poopSaveBtn').textContent = 'Update Poop Log';
   document.getElementById('poopCancelBtn').style.display = '';
   document.getElementById('poopFormCard').scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -29280,7 +29283,7 @@ function computeAlerts() {
           const clearDateStr = toDateStr(clearDate);
           alerts.push({
             id: 'reaction-window', key,
-            severity: 'info', icon: '🆕',
+            severity: 'info', icon: zi('sparkle'),
             title: newest.name + ' — watch window (' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' left)',
             body: newest.name + ' was introduced on ' + formatDate(newest.date) + '. Wait until ' + formatDate(clearDateStr) + ' before introducing another new food, so any reactions can be clearly attributed.',
             tip: 'Watch for: rashes, unusual fussiness, vomiting, diarrhoea, or changes in poop within 48–72 hours of a new food.',
@@ -29293,7 +29296,7 @@ function computeAlerts() {
   }
 
   // ═══════════════════════════════════════
-  // POSITIVE ALERTS (🎉)
+  // POSITIVE ALERTS
   // ═══════════════════════════════════════
 
   // ─── P1. FIRST SLEEP-THROUGH ───
@@ -30610,7 +30613,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">⏱️</div>
       <div class="ir-body">
         <div class="ir-label">Avg total sleep / day (night + naps)</div>
-        <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? '✓ within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
+        <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? zi('check') + ' within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
       </div>
     </div>`;
   }
@@ -30973,7 +30976,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
 
     const paceOk = pacePerWeek >= 1;
     html += `<div class="insight-row">
-      <div class="ir-icon">🆕</div>
+      <div class="ir-icon">${zi('sparkle')}</div>
       <div class="ir-body">
         <div class="ir-label">New food introduction pace</div>
         <div class="ir-value">${newThisWeek} this week · ${newThisMonth} this month <span class="ir-delta ${paceOk ? 'trend-up' : 'trend-down'}">${paceOk ? zi('check') + ' on track' : '↓ try 1–2/week'}</span></div>
@@ -32033,7 +32036,7 @@ function renderComboResult(r) {
   }
 
   if (r.new_foods && r.new_foods.length > 0) {
-    html += `<div class="combo-section"><div class="combo-section-title">🆕 New foods to introduce first</div><div class="combo-body">${r.new_foods.join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('sparkle')} New foods to introduce first</div><div class="combo-body">${r.new_foods.join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
   }
 
   if (r.allergen_notes && r.allergen_notes.length > 0) {
@@ -36061,7 +36064,7 @@ function showFullDoctorSummary() {
 
   const text = lines.join('\n');
   // Clean text for copy/share — strip internal markers
-  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '').replace(/^  OK /gm, '  ✓ ').replace(/^  WATCH /gm, '  ⚠ ').replace(/^  PENDING /gm, '  ... ').replace(/^  IP /gm, '  ◔ ').replace(/\[Advanced\]/g, '★ Advanced');
+  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '');
 
   // Open a clean printable summary
   const printWin = window.open('', '_blank');
@@ -39749,7 +39752,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
-  { type:'social', icon:'🪞', title:'Mirror play',
+  { type:'social', icon:zi('handshake'), title:'Mirror play',
     desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
@@ -39765,7 +39768,7 @@ const DYNAMIC_ACTIVITIES = [
     desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 },
 
-  { type:'social', icon:'🫣', title:'Manage stranger anxiety gently',
+  { type:'social', icon:zi('baby'), title:'Manage stranger anxiety gently',
     desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
@@ -40594,7 +40597,7 @@ function editSleepEntry(idx) {
     document.getElementById('napEnd').value = entry.wakeTime;
     document.getElementById('napNotes').value = entry.notes || '';
     const btn = document.getElementById('napSaveBtn');
-    btn.textContent = '✓ Update Nap';
+    btn.textContent = 'Update Nap';
     document.getElementById('napCancelBtn').style.display = '';
     document.getElementById('sleepNapCard').scrollIntoView({ behavior:'smooth', block:'start' });
   }
@@ -53898,7 +53901,7 @@ function renderColdEpisodeCard() {
   html += '<div class="fe-action-chips">';
   COLD_SYMPTOMS.forEach(s => {
     const active = todaySymptoms.has(s);
-    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? '✓ ' : '') + escHtml(s) + '</span>';
+    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? zi('check') + ' ' : '') + escHtml(s) + '</span>';
   });
   html += '</div>';
 
@@ -54024,7 +54027,7 @@ function renderHomeColdBanner() {
   banner.style.display = '';
   const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
   const todayLog = ep.dailyLogs.find(l => l.date === today());
-  const logged = todayLog ? '✓ Logged' : 'Not logged yet';
+  const logged = todayLog ? 'Logged' : 'Not logged yet';
   banner.innerHTML = '<div class="ce-home-banner" data-nav-track-medical="coldEpisodeCard">' +
     '<div class="fe-home-banner-info"><div class="fe-home-banner-temp t-sky" >' + zi('siren') + ' Cold/Cough · Day ' + durationDays + '</div>' +
     '<div class="fe-home-banner-sub">Today: ' + logged + '</div></div>' +
@@ -56056,7 +56059,7 @@ function saveQLFeed() {
 
   // Build nutrient flash for toast
   const NUTRIENT_EMOJI = { iron:zi('drop'), calcium:zi('ruler'), protein:zi('run'), 'vitamin C':zi('bowl'), fibre:zi('bowl'), 'vitamin A':zi('scope'), 'omega-3':zi('brain'), zinc:zi('shield') };
-  let toastMsg = '✓ ' + capitalize(_qlMeal) + ' logged';
+  let toastMsg = capitalize(_qlMeal) + ' logged';
   if (_qlBackfillDate && _qlBackfillDate !== today()) {
     toastMsg += ' for ' + formatDate(_qlBackfillDate);
   }
@@ -57275,7 +57278,7 @@ function getFoodHistory(foodName) {
     const rxLabel = introduced.reaction === 'watch' ? '<span class="t-amber">' + zi('warn') + ' Watch</span>' : '<span class="t-sage">' + zi('check') + ' Fine</span>';
     html += `<div>Introduced: ${formatDate(introduced.date)} · Reaction: ${rxLabel}</div>`;
   } else {
-    html += `<div class="t-amber">🆕 Not yet in Foods Introduced list</div>`;
+    html += `<div class="t-amber">${zi('sparkle')} Not yet in Foods Introduced list</div>`;
   }
 
   if (lastDate) {
@@ -59853,7 +59856,7 @@ function renderInfoMilestoneSleepCorrelation() {
       html += '<div class="cd-tl-week">W' + w.weekNum + '</div>';
       html += '<div' + (w.isBurst ? ' class="cd-burst"' : '') + '>' + w.evidence + '</div>';
       html += '<div' + (w.isRegression ? ' class="cd-regr"' : '') + '>' + (w.avgSleep !== null ? w.avgSleep : '–') + '</div>';
-      html += '<div>' + (w.isBurst ? '★' : '·') + '</div>';
+      html += '<div>' + (w.isBurst ? zi('star') : '·') + '</div>';
       html += '<div>' + (w.isRegression ? zi('warn') : '·') + '</div>';
       html += '</div>';
     });
@@ -59877,7 +59880,7 @@ function renderInfoMilestoneSleepCorrelation() {
           if (weeks[k].isRegression) hadRegression = true;
         }
         bHtml += '<div class="cd-episode">';
-        bHtml += '<div class="cd-episode-title">★ W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
+        bHtml += '<div class="cd-episode-title">' + zi('star') + ' W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
         if (hadRegression) {
           bHtml += '<div class="cd-burst-note-neg">Sleep dip detected near this burst</div>';
         } else {

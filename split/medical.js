@@ -764,7 +764,7 @@ function showFullDoctorSummary() {
 
   const text = lines.join('\n');
   // Clean text for copy/share — strip internal markers
-  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '').replace(/^  OK /gm, '  ✓ ').replace(/^  WATCH /gm, '  ⚠ ').replace(/^  PENDING /gm, '  ... ').replace(/^  IP /gm, '  ◔ ').replace(/\[Advanced\]/g, '★ Advanced');
+  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '');
 
   // Open a clean printable summary
   const printWin = window.open('', '_blank');
@@ -4452,7 +4452,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
-  { type:'social', icon:'🪞', title:'Mirror play',
+  { type:'social', icon:zi('handshake'), title:'Mirror play',
     desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
@@ -4468,7 +4468,7 @@ const DYNAMIC_ACTIVITIES = [
     desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 },
 
-  { type:'social', icon:'🫣', title:'Manage stranger anxiety gently',
+  { type:'social', icon:zi('baby'), title:'Manage stranger anxiety gently',
     desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
@@ -5297,7 +5297,7 @@ function editSleepEntry(idx) {
     document.getElementById('napEnd').value = entry.wakeTime;
     document.getElementById('napNotes').value = entry.notes || '';
     const btn = document.getElementById('napSaveBtn');
-    btn.textContent = '✓ Update Nap';
+    btn.textContent = 'Update Nap';
     document.getElementById('napCancelBtn').style.display = '';
     document.getElementById('sleepNapCard').scrollIntoView({ behavior:'smooth', block:'start' });
   }

@@ -248,14 +248,14 @@ function weatherCodeToText(code) {
 }
 
 function weatherCodeToIcon(code) {
-  if (code === 0) return '☀️';
+  if (code === 0) return zi('sun');
   if (code <= 2) return zi('sun');
-  if (code === 3) return '☁️';
-  if ([45,48].includes(code)) return '🌫️';
-  if ([51,53,55].includes(code)) return '🌦️';
-  if ([61,63,65,80,81,82].includes(code)) return '🌧️';
-  if ([71,73,75,77,85,86].includes(code)) return '❄️';
-  if ([95,96,99].includes(code)) return '⛈️';
+  if (code === 3) return zi('cloud');
+  if ([45,48].includes(code)) return zi('cloud');
+  if ([51,53,55].includes(code)) return zi('rain');
+  if ([61,63,65,80,81,82].includes(code)) return zi('rain');
+  if ([71,73,75,77,85,86].includes(code)) return zi('snow');
+  if ([95,96,99].includes(code)) return zi('bolt');
   return zi('flame');
 }
 
@@ -297,7 +297,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   if (wx.maxTemp >= 38) {
     precautions.push(zi('flame') + ' Very hot day — keep baby hydrated, carry ORS if needed, avoid peak sun hours');
   } else if (wx.maxTemp >= 34) {
-    precautions.push('☀️ Hot day — dress baby in light cotton, carry water, keep baby in shade');
+    precautions.push(zi('sun') + ' Hot day — dress baby in light cotton, carry water, keep baby in shade');
   }
 
   if (wx.minTemp <= 15) {
@@ -305,23 +305,23 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   }
 
   if (wx.rainChance >= 70) {
-    precautions.push('🌧️ High chance of rain (' + wx.rainChance + '%) — carry rain cover for baby, plan extra travel time');
+    precautions.push(zi('rain') + ' High chance of rain (' + wx.rainChance + '%) — carry rain cover for baby, plan extra travel time');
   } else if (wx.rainChance >= 40) {
-    precautions.push('🌦️ Possible rain (' + wx.rainChance + '%) — carry an umbrella just in case');
+    precautions.push(zi('rain') + ' Possible rain (' + wx.rainChance + '%) — carry an umbrella just in case');
   }
 
   if (wx.uvIndex >= 8) {
     precautions.push(zi('sun') + ' Very high UV (' + wx.uvIndex + ') — avoid direct sun on baby\'s skin, use shade');
   } else if (wx.uvIndex >= 6) {
-    precautions.push('☀️ High UV (' + wx.uvIndex + ') — keep baby covered during travel to/from clinic');
+    precautions.push(zi('sun') + ' High UV (' + wx.uvIndex + ') — keep baby covered during travel to/from clinic');
   }
 
   if ([95, 96, 99].includes(wx.code)) {
-    precautions.push('⛈️ Thunderstorm expected — consider rescheduling if travel is unsafe');
+    precautions.push(zi('bolt') + ' Thunderstorm expected — consider rescheduling if travel is unsafe');
   }
 
   if ([45, 48].includes(wx.code)) {
-    precautions.push('🌫️ Foggy conditions — drive carefully, allow extra travel time');
+    precautions.push(zi('cloud') + ' Foggy conditions — drive carefully, allow extra travel time');
   }
 
   // Always add general vaccination day tips
@@ -334,10 +334,10 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
   const advisoryHtml = `
     <div style="margin-top:8px;padding:10px 14px;border-radius:var(--r-lg);background:var(--sky-light);border-left:var(--accent-w) solid var(--sky);">
       <div style="font-size:var(--fs-sm);font-weight:600;color:var(--tc-sky);margin-bottom:6px;">
-        🌤️ Weather advisory — vaccination ${dayLabel} (${formatDate(apptDate)})
+        ${zi('sun')} Weather advisory — vaccination ${dayLabel} (${formatDate(apptDate)})
       </div>
       <div style="font-size:var(--fs-base);font-weight:600;color:var(--text);margin-bottom:6px;">
-        ${weatherSummary}${wx.rainChance > 0 ? ' · 🌧️ ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
+        ${weatherSummary}${wx.rainChance > 0 ? ' · ${zi("rain")} ' + wx.rainChance + '% rain' : ''}${wx.uvIndex >= 6 ? ' · UV ' + wx.uvIndex : ''}
       </div>
       <div style="font-size:var(--fs-sm);font-weight:400;color:var(--mid);line-height:1.6;">
         ${precautions.map(p => '<div style="margin-bottom:3px;">' + p + '</div>').join('')}
@@ -764,7 +764,7 @@ function renderPlanPreview() {
       const pick = items[Math.floor(Math.random() * items.length)];
       const strong = pick.querySelector('strong');
       const icon = pick.querySelector('.reco-icon');
-      if (strong) foodName = strong.textContent.replace('🆕 Try new — ', '');
+      if (strong) foodName = strong.textContent.replace(/^\s*Try new — /, '');
       if (icon) foodIcon = icon.textContent.trim();
       // Colour based on food type
       const nameLower = foodName.toLowerCase();
@@ -1113,7 +1113,7 @@ function renderRecoFood() {
     { icon:zi('bowl'), name:'Rajma mash', reason:'Protein + iron + fibre — hearty legume', newFood:'rajma',
       recipe:'1. Soak ¼ cup rajma overnight (12 hrs minimum).\n2. Pressure cook with 2 cups water — 6–7 whistles until very soft.\n3. Mash smooth — no whole beans.\n4. Add ghee + pinch turmeric.',
       tips:'{{OK}} High protein + iron — great for vegetarian babies.\n{{OK}} Overnight soaking is essential for digestibility.\n{{NO}} Undercooked rajma is toxic — cook until mushy.\n{{NO}} Can cause gas — start with 1–2 tbsp.' },
-    { icon:'🫛', name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
+    { icon:zi('bowl'), name:'Peas puree', reason:'Protein + Vit C + natural sweetness', newFood:'peas',
       recipe:'1. Boil ¼ cup fresh/frozen peas 5 min.\n2. Blend smooth with 2 tbsp cooking water.\n3. Strain through sieve to remove skins.\n4. Add ghee, serve warm.',
       tips:'{{OK}} Naturally sweet — babies usually love it.\n{{OK}} Fresh or frozen equally nutritious.\n{{NO}} Strain to remove tough skins for young babies.\n{{NO}} Don\'t use canned peas — too salty.' },
     { icon:zi('spoon'), name:'Sweet corn puree', reason:'Energy + natural sweetness + Vit B', newFood:'corn',
@@ -1188,7 +1188,7 @@ function renderRecoFood() {
     { icon:zi('spoon'), name:'Pumpkin seed ragi porridge', reason:'Zinc + iron + protein — immunity builder', newFood:'pumpkin seeds',
       recipe:'1. Dry roast 1 tsp pumpkin seeds, grind to powder.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix in seed powder + ghee.',
       tips:'{{OK}} Highest zinc of any seed — key for immunity.\n{{OK}} Good iron source too.\n{{NO}} Always grind to powder — whole seeds are choking risk.\n{{NO}} Don\'t use salted/flavoured seeds.' },
-    { icon:'🫑', name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
+    { icon:zi('bowl'), name:'Capsicum rice', reason:'Vitamin C + colour variety — mild bell pepper', newFood:'capsicum',
       recipe:'1. Deseed ¼ red/yellow capsicum, chop fine.\n2. Sauté lightly in ½ tsp ghee 3 min.\n3. Mix into cooked, mashed rice.\n4. Mash everything smooth.',
       tips:'{{OK}} Red/yellow are sweeter than green.\n{{OK}} Very high Vitamin C content.\n{{NO}} Remove seeds and white membrane.\n{{NO}} Cook well — raw capsicum is too tough.' },
   ];
@@ -1258,7 +1258,7 @@ function renderRecoFood() {
         <div class="fx-start g8">
           <div class="reco-icon">${newPick.icon}</div>
           <div class="reco-body flex-1">
-            <strong>🆕 Try new — ${newPick.name}</strong>
+            <strong>${zi('sparkle')} Try new — ${newPick.name}</strong>
             <span>${newPick.reason}</span>
           </div>
           <button class="btn btn-ghost" style="font-size:var(--fs-sm);flex-shrink:0;padding:5px 10px;" data-action="toggleRecoRecipe" data-arg="${id}">View recipe</button>
@@ -3789,7 +3789,7 @@ function renderDietIntelBanner() {
     const clearDate = new Date(introDate); clearDate.setDate(clearDate.getDate() + 3);
     const daysLeft = Math.ceil((clearDate - new Date()) / 86400000);
     if (daysLeft > 0) {
-      html += `<div class="dib-card dib-reaction">🆕 <strong>${escHtml(newest.name)}</strong> introduced ${formatDate(newest.date)} — watch window: <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</strong>. Avoid new foods until ${formatDate(toDateStr(clearDate))}.</div>`;
+      html += `<div class="dib-card dib-reaction">${zi('sparkle')} <strong>${escHtml(newest.name)}</strong> introduced ${formatDate(newest.date)} — watch window: <strong>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</strong>. Avoid new foods until ${formatDate(toDateStr(clearDate))}.</div>`;
     }
   }
 
@@ -5799,7 +5799,7 @@ function editPoopEntry(idx) {
   setPoopConsistency(entry.consistency || 'normal');
   setPoopAmount(entry.amount || 'medium');
   updatePoopDayLabel();
-  document.getElementById('poopSaveBtn').textContent = '✓ Update Poop Log';
+  document.getElementById('poopSaveBtn').textContent = 'Update Poop Log';
   document.getElementById('poopCancelBtn').style.display = '';
   document.getElementById('poopFormCard').scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -7500,7 +7500,7 @@ function computeAlerts() {
           const clearDateStr = toDateStr(clearDate);
           alerts.push({
             id: 'reaction-window', key,
-            severity: 'info', icon: '🆕',
+            severity: 'info', icon: zi('sparkle'),
             title: newest.name + ' — watch window (' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '') + ' left)',
             body: newest.name + ' was introduced on ' + formatDate(newest.date) + '. Wait until ' + formatDate(clearDateStr) + ' before introducing another new food, so any reactions can be clearly attributed.',
             tip: 'Watch for: rashes, unusual fussiness, vomiting, diarrhoea, or changes in poop within 48–72 hours of a new food.',
@@ -7513,7 +7513,7 @@ function computeAlerts() {
   }
 
   // ═══════════════════════════════════════
-  // POSITIVE ALERTS (🎉)
+  // POSITIVE ALERTS
   // ═══════════════════════════════════════
 
   // ─── P1. FIRST SLEEP-THROUGH ───
@@ -8830,7 +8830,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">⏱️</div>
       <div class="ir-body">
         <div class="ir-label">Avg total sleep / day (night + naps)</div>
-        <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? '✓ within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
+        <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? zi('check') + ' within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
       </div>
     </div>`;
   }
@@ -9193,7 +9193,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
 
     const paceOk = pacePerWeek >= 1;
     html += `<div class="insight-row">
-      <div class="ir-icon">🆕</div>
+      <div class="ir-icon">${zi('sparkle')}</div>
       <div class="ir-body">
         <div class="ir-label">New food introduction pace</div>
         <div class="ir-value">${newThisWeek} this week · ${newThisMonth} this month <span class="ir-delta ${paceOk ? 'trend-up' : 'trend-down'}">${paceOk ? zi('check') + ' on track' : '↓ try 1–2/week'}</span></div>

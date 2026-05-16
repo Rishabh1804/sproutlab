@@ -71,6 +71,9 @@
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
 <symbol id="zi-resolve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="zi-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 110-8 6 6 0 0111-1 4 4 0 011 9H7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/></symbol>
+<symbol id="zi-rain" viewBox="0 0 24 24"><path d="M7 14a4 4 0 110-8 6 6 0 0111-1 4 4 0 011 9H7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-snow" viewBox="0 0 24 24"><path d="M12 3v18M5 7l14 10M5 17l14-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 4.5l3 2.5 3-2.5M9 19.5l3-2.5 3 2.5M3.5 10l2.5 2-2.5 2M20.5 10l-2.5 2 2.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 </defs>
 </svg>
 <div class="app">
@@ -826,7 +829,7 @@
           <input type="text" id="foodInput" oninput="activateBtn('foodAddBtn',this.value.trim())" placeholder="Add a food..." onkeydown="if(event.key==='Enter')addFood()">
           <input type="date" id="foodDate" style="padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);color:var(--text);outline:none;">
           <div class="reaction-toggle">
-            <button class="rtog active-ok" id="rtog-ok" data-reaction="ok">✓ Fine</button>
+            <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
             <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
           </div>
           <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
@@ -1356,8 +1359,8 @@
           <div>
             <label class="micro-label">Flags</label>
             <div class="poop-check-row">
-              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> 🩸 Blood</label>
-              <label class="poop-check-label"><input type="checkbox" id="poopMucus"> 🫧 Mucus</label>
+              <label class="poop-check-label"><input type="checkbox" id="poopBlood"> <svg class="zi"><use href="#zi-drop"/></svg> Blood</label>
+              <label class="poop-check-label"><input type="checkbox" id="poopMucus"> Mucus</label>
             </div>
           </div>
           <div>
@@ -2147,7 +2150,7 @@
   <!-- FOOTER -->
 
   <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva ❤️</div>
+    <div class="footer-text footer-text-style" >Built for Ziva</div>
   </div>
 
 </div><!-- /app -->
@@ -2245,7 +2248,7 @@
           <div class="ql-intake-pill" data-mi-qlval="1.0"><svg class="zi"><use href="#zi-star"/></svg> All</div>
         </div>
       </div>
-      <button class="ql-save ql-save-feed">Save Feed ✓</button>
+      <button class="ql-save ql-save-feed">Save Feed <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -2278,7 +2281,7 @@
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
         <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNight">▶ Start Now</button>
-        <button class="ql-save ql-save-sleep flex-1-min100" >Save Sleep ✓</button>
+        <button class="ql-save ql-save-sleep flex-1-min100" >Save Sleep <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
   </div>
@@ -2304,7 +2307,7 @@
       </div>
       <div class="d-flex gap-8" style="flex-wrap:wrap;">
         <button class="btn btn-ghost" style="flex:1;min-width:100px;" data-action="startSleepCloseNap">▶ Start Now</button>
-        <button class="ql-save ql-save-nap flex-1-min100" >Save Nap ✓</button>
+        <button class="ql-save ql-save-nap flex-1-min100" >Save Nap <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
   </div>
@@ -2325,14 +2328,14 @@
       <div>
         <label class="micro-label">Colour</label>
         <div class="ql-color-row" id="qlPoopColors">
-          <div class="ql-color-dot active pcolor-yellow" data-color="yellow" >✓</div>
-          <div class="ql-color-dot pcolor-green" data-color="green" >✓</div>
-          <div class="ql-color-dot pcolor-brown" data-color="brown" >✓</div>
-          <div class="ql-color-dot pcolor-dark" data-color="dark" >✓</div>
-          <div class="ql-color-dot pcolor-orange" data-color="orange" >✓</div>
-          <div class="ql-color-dot pcolor-red" data-color="red" >✓</div>
-          <div class="ql-color-dot pcolor-white" data-color="white" >✓</div>
-          <div class="ql-color-dot pcolor-black" data-color="black" >✓</div>
+          <div class="ql-color-dot active pcolor-yellow" data-color="yellow" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-green" data-color="green" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-brown" data-color="brown" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-dark" data-color="dark" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-orange" data-color="orange" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-red" data-color="red" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-white" data-color="white" ><svg class="zi"><use href="#zi-check"/></svg></div>
+          <div class="ql-color-dot pcolor-black" data-color="black" ><svg class="zi"><use href="#zi-check"/></svg></div>
         </div>
       </div>
       <div>
@@ -2345,7 +2348,7 @@
           <div class="ql-con-pill" data-con="pellets">Pellets</div>
         </div>
       </div>
-      <button class="ql-save ql-save-poop">Save Poop ✓</button>
+      <button class="ql-save ql-save-poop">Save Poop <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -2388,7 +2391,7 @@
           <input type="time" id="alTime" class="form-input input-ctx-sage">
         </div>
       </div>
-      <button class="ql-save ql-save-activity" id="alSaveBtn">Log Activity ✓</button>
+      <button class="ql-save ql-save-activity" id="alSaveBtn">Log Activity <svg class="zi"><use href="#zi-check"/></svg></button>
     </div>
   </div>
 </div>
@@ -2540,10 +2543,10 @@
                 <div class="t-sub">Growth, milestones & sleep norms</div>
               </div>
               <select id="settingsRefStd" onchange="setReferenceStandard(this.value)" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
-                <option value="iap">🇮🇳 India (IAP)</option>
+                <option value="iap">India (IAP)</option>
                 <option value="who"><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</option>
-                <option value="eu">🇪🇺 EU</option>
-                <option value="cn">🇨🇳 China (CIP)</option>
+                <option value="eu">EU</option>
+                <option value="cn">China (CIP)</option>
               </select>
             </div>
             <div class="power-outage-row">
@@ -2896,7 +2899,7 @@
 
 <div class="modal-overlay" id="doctorModal">
   <div class="modal">
-    <h3 id="doctorModalTitle">🩺 Add Doctor</h3>
+    <h3 id="doctorModalTitle"><svg class="zi"><use href="#zi-steth"/></svg> Add Doctor</h3>
     <div class="fx-col g8">
       <input type="text" id="docName" class="modal-input">
       <input type="text" id="docTitle" class="modal-input">
@@ -2922,7 +2925,7 @@
       <input type="date" id="evDate" class="modal-input">
       <select id="evType" style="padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);outline:none;background:var(--peach-light);color:var(--text);">
         <option value="birthday"><svg class="zi" aria-hidden="true"><use href="#zi-party"/></svg> Birthday</option>
-        <option value="holiday">🪔 Holiday / Festival</option>
+        <option value="holiday">Holiday / Festival</option>
         <option value="vacation"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Vacation / Travel</option>
         <option value="family"><svg class="zi" aria-hidden="true"><use href="#zi-baby"/></svg> Family Gathering</option>
         <option value="other"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> Other</option>

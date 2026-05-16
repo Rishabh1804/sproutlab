@@ -823,7 +823,7 @@ function renderComboResult(r) {
   }
 
   if (r.new_foods && r.new_foods.length > 0) {
-    html += `<div class="combo-section"><div class="combo-section-title">🆕 New foods to introduce first</div><div class="combo-body">${r.new_foods.join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('sparkle')} New foods to introduce first</div><div class="combo-body">${r.new_foods.join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
   }
 
   if (r.allergen_notes && r.allergen_notes.length > 0) {

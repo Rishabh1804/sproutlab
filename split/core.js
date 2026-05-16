@@ -2046,7 +2046,7 @@ function renderNotes(filterCat) {
   });
 
   const active = notes.filter(n => !n.done).length;
-  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done ✓' : '';
+  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done' : '';
   list.innerHTML = '';
 
   const filtered = cat === 'all' ? notes : notes.filter(n => (n.category || 'general') === cat);
@@ -3286,15 +3286,15 @@ function getTithiIndex(date) {
 function getMoonPhaseEmoji(date) {
   const tithi = getTithiIndex(date);
   // Map 30 tithis to 8 moon emojis
-  if (tithi === 0)                    return '🌑'; // Amavasya
-  if (tithi >= 1  && tithi <= 3)      return '🌒'; // Shukla early
-  if (tithi >= 4  && tithi <= 7)      return '🌓'; // Shukla Ashtami
-  if (tithi >= 8  && tithi <= 11)     return '🌔'; // Shukla late
-  if (tithi >= 12 && tithi <= 15)     return '🌕'; // Purnima
-  if (tithi >= 16 && tithi <= 18)     return '🌖'; // Krishna early
-  if (tithi >= 19 && tithi <= 22)     return '🌗'; // Krishna Ashtami
-  if (tithi >= 23 && tithi <= 26)     return '🌘'; // Krishna late
-  return '🌑'; // approaching Amavasya
+  if (tithi === 0)                    return zi('moon'); // Amavasya
+  if (tithi >= 1  && tithi <= 3)      return zi('moon'); // Shukla early
+  if (tithi >= 4  && tithi <= 7)      return zi('moon'); // Shukla Ashtami
+  if (tithi >= 8  && tithi <= 11)     return zi('moon'); // Shukla late
+  if (tithi >= 12 && tithi <= 15)     return zi('moon'); // Purnima
+  if (tithi >= 16 && tithi <= 18)     return zi('moon'); // Krishna early
+  if (tithi >= 19 && tithi <= 22)     return zi('moon'); // Krishna Ashtami
+  if (tithi >= 23 && tithi <= 26)     return zi('moon'); // Krishna late
+  return zi('moon'); // approaching Amavasya
 }
 
 function getMoonPhaseName(date) {
@@ -4034,7 +4034,7 @@ function wgRender() {
   if (prevBtn) prevBtn.style.display = _wgStep === 0 ? 'none' : '';
   if (nextBtn) {
     if (_wgStep === _wgTotalSteps - 1) {
-      nextBtn.textContent = 'Got it ✓';
+      nextBtn.textContent = 'Got it';
       nextBtn.onclick = dismissWelcomeGuide;
     } else {
       nextBtn.textContent = 'Next →';

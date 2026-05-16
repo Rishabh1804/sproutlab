@@ -8660,7 +8660,7 @@ function renderColdEpisodeCard() {
   html += '<div class="fe-action-chips">';
   COLD_SYMPTOMS.forEach(s => {
     const active = todaySymptoms.has(s);
-    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? '✓ ' : '') + escHtml(s) + '</span>';
+    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? zi('check') + ' ' : '') + escHtml(s) + '</span>';
   });
   html += '</div>';
 
@@ -8786,7 +8786,7 @@ function renderHomeColdBanner() {
   banner.style.display = '';
   const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
   const todayLog = ep.dailyLogs.find(l => l.date === today());
-  const logged = todayLog ? '✓ Logged' : 'Not logged yet';
+  const logged = todayLog ? 'Logged' : 'Not logged yet';
   banner.innerHTML = '<div class="ce-home-banner" data-nav-track-medical="coldEpisodeCard">' +
     '<div class="fe-home-banner-info"><div class="fe-home-banner-temp t-sky" >' + zi('siren') + ' Cold/Cough · Day ' + durationDays + '</div>' +
     '<div class="fe-home-banner-sub">Today: ' + logged + '</div></div>' +
@@ -10818,7 +10818,7 @@ function saveQLFeed() {
 
   // Build nutrient flash for toast
   const NUTRIENT_EMOJI = { iron:zi('drop'), calcium:zi('ruler'), protein:zi('run'), 'vitamin C':zi('bowl'), fibre:zi('bowl'), 'vitamin A':zi('scope'), 'omega-3':zi('brain'), zinc:zi('shield') };
-  let toastMsg = '✓ ' + capitalize(_qlMeal) + ' logged';
+  let toastMsg = capitalize(_qlMeal) + ' logged';
   if (_qlBackfillDate && _qlBackfillDate !== today()) {
     toastMsg += ' for ' + formatDate(_qlBackfillDate);
   }
@@ -12037,7 +12037,7 @@ function getFoodHistory(foodName) {
     const rxLabel = introduced.reaction === 'watch' ? '<span class="t-amber">' + zi('warn') + ' Watch</span>' : '<span class="t-sage">' + zi('check') + ' Fine</span>';
     html += `<div>Introduced: ${formatDate(introduced.date)} · Reaction: ${rxLabel}</div>`;
   } else {
-    html += `<div class="t-amber">🆕 Not yet in Foods Introduced list</div>`;
+    html += `<div class="t-amber">${zi('sparkle')} Not yet in Foods Introduced list</div>`;
   }
 
   if (lastDate) {
@@ -14615,7 +14615,7 @@ function renderInfoMilestoneSleepCorrelation() {
       html += '<div class="cd-tl-week">W' + w.weekNum + '</div>';
       html += '<div' + (w.isBurst ? ' class="cd-burst"' : '') + '>' + w.evidence + '</div>';
       html += '<div' + (w.isRegression ? ' class="cd-regr"' : '') + '>' + (w.avgSleep !== null ? w.avgSleep : '–') + '</div>';
-      html += '<div>' + (w.isBurst ? '★' : '·') + '</div>';
+      html += '<div>' + (w.isBurst ? zi('star') : '·') + '</div>';
       html += '<div>' + (w.isRegression ? zi('warn') : '·') + '</div>';
       html += '</div>';
     });
@@ -14639,7 +14639,7 @@ function renderInfoMilestoneSleepCorrelation() {
           if (weeks[k].isRegression) hadRegression = true;
         }
         bHtml += '<div class="cd-episode">';
-        bHtml += '<div class="cd-episode-title">★ W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
+        bHtml += '<div class="cd-episode-title">' + zi('star') + ' W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
         if (hadRegression) {
           bHtml += '<div class="cd-burst-note-neg">Sleep dip detected near this burst</div>';
         } else {
