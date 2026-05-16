@@ -15447,19 +15447,69 @@ const SYMPTOM_DB = [
     severity: 'emergency',
     title: 'High Fever',
     condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
-    whatToDo: 'Give paracetamol (Calpol) only if prescribed by your doctor. Sponge with lukewarm water (never cold). Keep Ziva lightly dressed. Breastfeed frequently to prevent dehydration.',
-    precautions: 'Do NOT give aspirin. Do NOT use ice or cold water for sponging. Do NOT over-bundle. Monitor every 30 minutes.',
-    emergency: 'Seek immediate medical attention if: fever exceeds 102\u00B0F (under 6 months) or 104\u00B0F (over 6 months), lasts more than 24 hours, is accompanied by rash, stiff neck, difficulty breathing, or Ziva is unusually limp or unresponsive.',
+    summary: 'Sponge with lukewarm water, light clothing, breastfeed often, call doctor for medication',
+    whatToDo: [
+      'Sponge Ziva with lukewarm water (never cold). Keep her lightly dressed.',
+      'Breastfeed frequently to prevent dehydration.',
+      'Call your pediatrician for medication advice before giving anything.',
+      'Monitor her temperature every 30 minutes.'
+    ],
+    precautions: [
+      'Watch for stiff neck, rash, or difficulty breathing alongside the fever.',
+      'Note if Ziva becomes unusually limp, drowsy, or hard to wake.',
+      'Track when the fever started and the highest reading you have observed.'
+    ],
+    doNot: [
+      { text: 'Give aspirin to Ziva', critical: true },
+      { text: 'Give any fever medication without doctor advice', critical: true },
+      { text: 'Use ice or cold water for sponging', critical: false },
+      { text: 'Over-bundle her in blankets or clothing', critical: false }
+    ],
+    emergency: [
+      'Fever exceeds 102°F (38.9°C) under 6 months',
+      'Fever exceeds 104°F (40°C) over 6 months',
+      'Fever lasts more than 24 hours without improvement',
+      'Fever with stiff neck or non-blanching rash',
+      'Fever with difficulty breathing',
+      'Ziva is unusually limp, unresponsive, or hard to wake'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
     id: 'fever-mild',
     keywords: ['fever','temperature','warm','low grade','99','100','101','mild fever'],
     severity: 'warning',
-    title: 'Mild Fever (99\u2013101\u00B0F)',
-    whatToDo: 'Monitor temperature every 2 hours. Keep Ziva comfortable and lightly dressed. Offer breast milk or fluids frequently. A mild fever after vaccination is normal for 1\u20132 days.',
-    precautions: 'Watch for escalation above 102\u00B0F. Note if fever came within 48 hours of vaccination (usually normal). Track other symptoms like rash, vomiting, or fussiness.',
-    emergency: 'Call doctor if fever persists beyond 48 hours, rises above 102\u00B0F, or is accompanied by lethargy, refusal to feed, or rash.',
+    title: 'Mild Fever (99–101°F)',
+    summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F',
+    whatToDo: [
+      'Monitor Ziva’s temperature every 2 hours.',
+      'Keep her comfortable and lightly dressed.',
+      'Offer breast milk or fluids frequently.',
+      'A mild fever within 48 hours of vaccination is usually normal.'
+    ],
+    precautions: [
+      'Watch for the temperature climbing above 102°F (38.9°C).',
+      'Note if Ziva becomes lethargic, refuses to feed, or develops a rash.',
+      'Track whether the fever followed a recent vaccination.'
+    ],
+    doNot: [
+      { text: 'Give fever medication without doctor advice', critical: true },
+      { text: 'Bundle her in heavy blankets to "sweat it out"', critical: false }
+    ],
+    emergency: [
+      'Fever rises above 102°F (38.9°C)',
+      'Fever persists beyond 48 hours',
+      'Ziva becomes lethargic or refuses to feed',
+      'Rash develops alongside the fever'
+    ],
+    lifeThreat: false,
+    triage: true,
+    triageQuestions: [
+      { q: 'Is Ziva under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Has the fever lasted more than 48 hours?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Is she unusually lethargic or refusing fluids?', yesSeverity: 'emergency', noSeverity: null }
+    ],
     callDoctor: false
   },
   {
@@ -15467,9 +15517,31 @@ const SYMPTOM_DB = [
     keywords: ['vomiting','vomit','throwing up','projectile','spitting up','spit up'],
     severity: 'warning',
     title: 'Vomiting',
-    whatToDo: 'Keep Ziva upright for 20\u201330 minutes after feeding. Offer small, frequent feeds instead of large ones. If breastfeeding, continue normally. Avoid introducing new foods until vomiting stops.',
-    precautions: 'Track frequency \u2014 occasional spit-up is normal, repeated forceful vomiting is not. Watch for signs of dehydration: fewer wet diapers, dry mouth, no tears, sunken fontanelle.',
-    emergency: 'Seek immediate care if: vomiting is projectile or contains blood/bile (green), Ziva shows signs of dehydration, vomiting persists more than 12 hours, or is accompanied by high fever or lethargy.',
+    summary: 'Small frequent feeds, keep upright after feeds, watch for dehydration signs',
+    whatToDo: [
+      'Keep Ziva upright for 20–30 minutes after feeding.',
+      'Offer small, frequent feeds instead of large ones.',
+      'If breastfeeding, continue normally — do not stop.',
+      'Avoid introducing new foods until vomiting stops.'
+    ],
+    precautions: [
+      'Track frequency — occasional spit-up is normal, repeated forceful vomiting is not.',
+      'Watch for fewer wet diapers, dry mouth, no tears, or sunken fontanelle.',
+      'Note the colour and content of vomit (blood or green/bile is serious).'
+    ],
+    doNot: [
+      { text: 'Give anti-emetic medication without doctor advice', critical: true },
+      { text: 'Force-feed her if she keeps vomiting', critical: false },
+      { text: 'Introduce new foods or formula until she recovers', critical: false }
+    ],
+    emergency: [
+      'Vomit is projectile or contains blood',
+      'Vomit is green or bile-coloured',
+      'Signs of dehydration (sunken fontanelle, fewer than 4 wet diapers in 24h)',
+      'Vomiting persists more than 12 hours',
+      'Vomiting with high fever or unusual lethargy'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
@@ -15477,9 +15549,31 @@ const SYMPTOM_DB = [
     keywords: ['diarrhoea','diarrhea','loose stool','watery stool','loose motion','runny poop','frequent poop'],
     severity: 'warning',
     title: 'Diarrhoea / Loose Stools',
-    whatToDo: 'Continue breastfeeding \u2014 it helps fight infection. Offer ORS (Oral Rehydration Solution) in small sips if prescribed. Avoid fruit juices. Keep the diaper area clean and dry to prevent rash.',
-    precautions: 'Count wet diapers to monitor hydration (minimum 6/day is normal). Check for blood or mucus in stool. Avoid anti-diarrhoeal medicines unless prescribed. Wash hands thoroughly before handling food.',
-    emergency: 'Call doctor immediately if: blood or mucus in stool, fewer than 4 wet diapers in 24 hours, sunken eyes or fontanelle, Ziva is unusually lethargic, or diarrhoea lasts more than 48 hours.',
+    summary: 'Continue breastfeeding, ORS in small sips if prescribed, watch wet diapers',
+    whatToDo: [
+      'Continue breastfeeding — it helps fight infection.',
+      'Offer ORS (Oral Rehydration Solution) in small sips if your doctor has prescribed it.',
+      'Keep the diaper area clean and dry to prevent rash.',
+      'Wash hands thoroughly before handling food.'
+    ],
+    precautions: [
+      'Count wet diapers — minimum 6 in 24 hours is normal.',
+      'Check stool for blood or mucus.',
+      'Watch for sunken eyes or fontanelle, unusual lethargy.'
+    ],
+    doNot: [
+      { text: 'Give anti-diarrhoeal medicines without doctor advice', critical: true },
+      { text: 'Offer fruit juices — they worsen diarrhoea', critical: false },
+      { text: 'Stop breastfeeding', critical: false }
+    ],
+    emergency: [
+      'Blood or mucus in the stool',
+      'Fewer than 4 wet diapers in 24 hours',
+      'Sunken eyes or fontanelle',
+      'Ziva is unusually lethargic',
+      'Diarrhoea lasts more than 48 hours'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
@@ -15487,9 +15581,31 @@ const SYMPTOM_DB = [
     keywords: ['rash','spots','bumps','red skin','hives','eczema','patches','blotchy','itchy','redness'],
     severity: 'warning',
     title: 'Skin Rash',
-    whatToDo: 'Note when the rash appeared and what Ziva ate or was exposed to in the previous 24\u201348 hours. Keep the area clean and dry. Avoid scratching \u2014 use mittens if needed. Apply a mild, fragrance-free moisturizer for dry patches.',
-    precautions: 'If a new food was introduced recently, this could be a food allergy \u2014 stop that food and note it. Avoid harsh soaps or new detergents. Do NOT apply any cream without doctor\u2019s advice.',
-    emergency: 'Seek immediate care if: rash spreads rapidly, is accompanied by swelling of face/lips/tongue, difficulty breathing, or Ziva seems very unwell. Hives with breathing difficulty = possible anaphylaxis \u2014 call emergency immediately.',
+    summary: 'Note recent foods and exposures, keep area clean, watch for breathing trouble',
+    whatToDo: [
+      'Note what Ziva ate or was exposed to in the previous 24–48 hours.',
+      'Keep the area clean and dry.',
+      'Use mittens if needed to prevent scratching.',
+      'Apply a mild, fragrance-free moisturizer for dry patches.'
+    ],
+    precautions: [
+      'If a new food was introduced recently, stop that food and note it.',
+      'Avoid harsh soaps or new detergents.',
+      'Watch closely for swelling of face, lips, or tongue.'
+    ],
+    doNot: [
+      { text: 'Apply any cream or steroid without doctor advice', critical: true },
+      { text: 'Give antihistamines without doctor advice', critical: true },
+      { text: 'Re-introduce a suspected food without medical guidance', critical: false }
+    ],
+    emergency: [
+      'Rash spreads rapidly across the body',
+      'Swelling of face, lips, or tongue',
+      'Difficulty breathing or swallowing',
+      'Hives plus breathing trouble (possible anaphylaxis)',
+      'Ziva seems very unwell, limp, or drowsy'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
@@ -15497,19 +15613,70 @@ const SYMPTOM_DB = [
     keywords: ['cough','cold','runny nose','stuffy nose','congestion','sneeze','sneezing','blocked nose','mucus','phlegm','nasal'],
     severity: 'mild',
     title: 'Cold / Cough / Congestion',
-    whatToDo: 'Use saline nasal drops (Nasivion Mini) before feeds to clear the nose. Run a humidifier in the room. Elevate the head end of the mattress slightly. Offer warm breast milk frequently. Gentle steam inhalation (hold Ziva in a steamy bathroom for 5\u201310 minutes).',
-    precautions: 'Do NOT give OTC cough or cold medicines to babies. Do NOT use Vicks or menthol products. Avoid exposure to cigarette smoke. Keep room well-ventilated but not too cold.',
-    emergency: 'Call doctor if: breathing becomes rapid or laboured (look for chest retractions), wheezing, blue tint around lips or nails, cough persists more than 7 days, or Ziva refuses to feed.',
+    summary: 'Saline nose drops before feeds, humidifier, elevate head, watch breathing',
+    whatToDo: [
+      'Use saline nasal drops before feeds to clear the nose.',
+      'Run a humidifier in the room.',
+      'Elevate the head end of the mattress slightly.',
+      'Offer warm breast milk frequently.'
+    ],
+    precautions: [
+      'Watch for rapid or laboured breathing, chest retractions, or wheezing.',
+      'Note any blue tint around lips or nails.',
+      'Track whether Ziva is still feeding willingly.'
+    ],
+    doNot: [
+      { text: 'Give OTC cough or cold medicines to a baby', critical: true },
+      { text: 'Use Vicks, menthol, or camphor products on a baby', critical: true },
+      { text: 'Expose Ziva to cigarette smoke', critical: false }
+    ],
+    emergency: [
+      'Breathing becomes rapid or laboured (chest retractions visible)',
+      'Wheezing or gasping for breath',
+      'Blue tint around lips or nails',
+      'Cough persists more than 7 days',
+      'Ziva refuses to feed'
+    ],
+    lifeThreat: false,
+    triage: true,
+    triageQuestions: [
+      { q: 'Are her ribs sucking in with each breath, or are her nostrils flaring?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Does she have a fever above 100.4°F (38°C)?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Is she refusing fluids or her usual feeds?', yesSeverity: 'warning', noSeverity: null }
+    ],
     callDoctor: false
   },
   {
-    id: 'breathing',
-    keywords: ['breathing','breathless','wheeze','wheezing','chest','gasping','noisy breathing','rapid breathing','laboured'],
+    id: 'breathing-difficulty',
+    keywords: ['breathing','breathless','wheeze','wheezing','chest','gasping','noisy breathing','rapid breathing','laboured','difficulty breathing'],
     severity: 'emergency',
     title: 'Breathing Difficulty',
-    whatToDo: 'Keep Ziva upright. Clear the nose with saline drops and a nasal aspirator. Stay calm. Count breaths per minute (normal: 30\u201350 for 6\u201312 months).',
-    precautions: 'Look for: chest retracting with each breath, flaring nostrils, grunting sounds, blue tint around lips. These are signs of serious respiratory distress.',
-    emergency: 'THIS IS AN EMERGENCY if you see chest retractions, blue lips, or more than 60 breaths per minute. Call your doctor immediately or go to the nearest emergency room.',
+    summary: 'Keep upright, clear nose with saline, count breaths, call 108 if severe',
+    whatToDo: [
+      'Keep Ziva upright.',
+      'Clear her nose with saline drops and a nasal aspirator.',
+      'Stay calm so she stays calm.',
+      'Count her breaths per minute (normal: 30–50 for 6–12 months).'
+    ],
+    precautions: [
+      'Watch for the chest retracting (sucking in) with each breath.',
+      'Note nostril flaring or grunting sounds.',
+      'Look for a blue tint around the lips, fingernails, or mouth.'
+    ],
+    doNot: [
+      { text: 'Give cough medication or sedative drugs', critical: true },
+      { text: 'Lay her flat on her back if she is struggling to breathe', critical: false },
+      { text: 'Wait to see if it gets better on its own', critical: false }
+    ],
+    emergency: [
+      'Chest retractions visible with each breath',
+      'Blue tint around lips, fingernails, or mouth (cyanosis)',
+      'More than 60 breaths per minute',
+      'Grunting or stridor (high-pitched whistle on inhale)',
+      'Ziva is too breathless to feed or cry',
+      'Sudden onset after a possible choking episode'
+    ],
+    lifeThreat: true,
     callDoctor: true
   },
   {
@@ -15517,9 +15684,36 @@ const SYMPTOM_DB = [
     keywords: ['not eating','refusing food','won\'t eat','lost appetite','no appetite','refusing feed','rejecting','fussy eating','food refusal','not hungry'],
     severity: 'mild',
     title: 'Refusing Food / Poor Appetite',
-    whatToDo: 'Don\u2019t force-feed. Offer small portions of favourite foods. Continue breastfeeding. Check for teething (swollen gums, drooling) which commonly reduces appetite. Try again in 30\u201360 minutes.',
-    precautions: 'Track how long the refusal lasts. 1\u20132 meals is normal during teething or minor illness. Check for mouth sores or thrush (white patches inside mouth). Monitor wet diapers for hydration.',
-    emergency: 'Call doctor if: refusal lasts more than 24 hours, combined with fever or lethargy, fewer wet diapers, or Ziva seems in pain while swallowing.',
+    summary: 'Don’t force-feed, check for teething, continue breastfeeding, try again later',
+    whatToDo: [
+      'Continue breastfeeding on demand.',
+      'Offer small portions of favourite foods.',
+      'Check for teething (swollen gums, drooling).',
+      'Try again in 30–60 minutes rather than forcing.'
+    ],
+    precautions: [
+      'Track how long the refusal lasts — 1–2 meals is normal during teething or minor illness.',
+      'Check for mouth sores or white patches inside the mouth (thrush).',
+      'Monitor wet diapers to confirm hydration is adequate.'
+    ],
+    doNot: [
+      { text: 'Force-feed her by holding her mouth open', critical: false },
+      { text: 'Bribe with sweets or substitute juices for meals', critical: false },
+      { text: 'Give appetite stimulants without doctor advice', critical: true }
+    ],
+    emergency: [
+      'Refusal lasts more than 24 hours',
+      'Refusal combined with fever or lethargy',
+      'Fewer wet diapers than usual',
+      'Ziva seems in pain while swallowing'
+    ],
+    lifeThreat: false,
+    triage: true,
+    triageQuestions: [
+      { q: 'Is she also refusing fluids (including breast milk)?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Has she been refusing food for more than 24 hours?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Does she seem unusually lethargic or hard to rouse?', yesSeverity: 'emergency', noSeverity: null }
+    ],
     callDoctor: false
   },
   {
@@ -15527,9 +15721,29 @@ const SYMPTOM_DB = [
     keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
     severity: 'mild',
     title: 'Teething Discomfort',
-    whatToDo: 'Offer a clean, chilled teething ring. Gently massage gums with a clean finger. Cold fruit puree (chilled banana or apple) can soothe gums. Wipe drool frequently to prevent chin rash.',
-    precautions: 'Do NOT use teething gels containing benzocaine or lidocaine. Do NOT give homeopathic teething tablets. Mild fever (up to 100.4\u00B0F) can accompany teething but high fever is NOT caused by teething \u2014 investigate other causes.',
-    emergency: 'Call doctor if: fever exceeds 101\u00B0F (teething alone doesn\u2019t cause high fever), gums bleed or look infected, or Ziva is inconsolable for hours.',
+    summary: 'Chilled teether, gum massage, wipe drool, high fever is NOT teething',
+    whatToDo: [
+      'Offer a clean, chilled (not frozen) teething ring.',
+      'Gently massage gums with a clean finger.',
+      'Offer chilled fruit puree (banana or apple) to soothe gums.',
+      'Wipe drool frequently to prevent chin rash.'
+    ],
+    precautions: [
+      'Mild warmth (up to 100.4°F / 38°C) can accompany teething; anything higher is NOT teething.',
+      'Watch for inconsolable crying lasting more than a couple of hours.',
+      'Track which teeth are coming through for the pediatrician visit.'
+    ],
+    doNot: [
+      { text: 'Use teething gels containing benzocaine or lidocaine', critical: true },
+      { text: 'Give homeopathic teething tablets', critical: true },
+      { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false }
+    ],
+    emergency: [
+      'Fever exceeds 101°F (38.3°C) — teething alone does not cause high fever',
+      'Gums bleed heavily or look infected',
+      'Ziva is inconsolable for hours'
+    ],
+    lifeThreat: false,
     callDoctor: false
   },
   {
@@ -15537,9 +15751,30 @@ const SYMPTOM_DB = [
     keywords: ['constipation','constipated','hard stool','no poop','straining','pellet','not pooping','painful poop','hasn\'t pooped'],
     severity: 'mild',
     title: 'Constipation',
-    whatToDo: 'Increase water intake between meals. Offer high-fibre foods: prune puree, pear, papaya, sweet potato. Gentle tummy massage in clockwise circles. Bicycle leg movements can help.',
-    precautions: 'Do NOT use suppositories or laxatives without doctor\u2019s advice. A breastfed baby may go 3\u20135 days without pooping \u2014 this is normal if stools are soft when they come. Hard, pellet-like stools are the real concern.',
-    emergency: 'Call doctor if: no stool for 5+ days with visible discomfort, blood in stool, abdomen is hard/distended, or Ziva is in obvious pain.',
+    summary: 'Increase water and fibre, gentle tummy massage, bicycle legs',
+    whatToDo: [
+      'Increase water intake between meals.',
+      'Offer high-fibre foods: prune puree, pear, papaya, sweet potato.',
+      'Massage her tummy gently in clockwise circles.',
+      'Try bicycle leg movements while she lies on her back.'
+    ],
+    precautions: [
+      'A breastfed baby may go 3–5 days without pooping — this is normal if the stool is soft when it comes.',
+      'Hard, pellet-like stools are the real concern.',
+      'Watch for blood in stool or visible discomfort.'
+    ],
+    doNot: [
+      { text: 'Use suppositories or laxatives without doctor advice', critical: true },
+      { text: 'Give mineral oil or castor oil', critical: true },
+      { text: 'Add corn syrup or sugar to her bottle', critical: false }
+    ],
+    emergency: [
+      'No stool for 5+ days alongside visible discomfort',
+      'Blood in the stool',
+      'Abdomen is hard, swollen, or distended',
+      'Ziva is in obvious pain or refusing to feed'
+    ],
+    lifeThreat: false,
     callDoctor: false
   },
   {
@@ -15547,9 +15782,36 @@ const SYMPTOM_DB = [
     keywords: ['crying','fussy','irritable','cranky','inconsolable','screaming','colic','unsettled','won\'t stop crying','fussiness'],
     severity: 'mild',
     title: 'Excessive Crying / Fussiness',
-    whatToDo: 'Check for common causes: hunger, wet diaper, tiredness, temperature (too hot/cold), teething. Try: swaddling, gentle rocking, white noise, skin-to-skin contact. Feed if due. Check for hair tourniquet (strand of hair wrapped around fingers/toes).',
-    precautions: 'Note when crying is worst \u2014 evening fussiness (5\u20138 PM) is common at this age. Track if it\u2019s associated with feeding (could be reflux or food sensitivity).',
-    emergency: 'Seek care if: crying is high-pitched and unlike normal crying, accompanied by fever or vomiting, Ziva draws legs up to abdomen (possible intussusception), or nothing calms her for more than 3 hours.',
+    summary: 'Check basics (hunger, diaper, tired, temperature), check fingers/toes for hair',
+    whatToDo: [
+      'Check the basics: hunger, wet diaper, tiredness, room temperature.',
+      'Try swaddling, gentle rocking, white noise, or skin-to-skin contact.',
+      'Feed if a feed is due.',
+      'Check fingers and toes for a stray hair wrapped tightly (hair tourniquet).'
+    ],
+    precautions: [
+      'Evening fussiness around 5–8 PM is common at this age.',
+      'Track whether crying is linked to feeding (could be reflux or food sensitivity).',
+      'Note if the cry sounds high-pitched or different from her usual cry.'
+    ],
+    doNot: [
+      { text: 'Give gripe water or colic syrups without doctor advice', critical: true },
+      { text: 'Shake her, even gently — it can cause serious head injury', critical: true },
+      { text: 'Leave her alone for long stretches when you feel overwhelmed (ask for help)', critical: false }
+    ],
+    emergency: [
+      'Cry is high-pitched and unlike her normal crying',
+      'Crying accompanied by fever or vomiting',
+      'Ziva draws her legs up to her abdomen repeatedly (possible intussusception)',
+      'Nothing calms her for more than 3 hours'
+    ],
+    lifeThreat: false,
+    triage: true,
+    triageQuestions: [
+      { q: 'Is the cry high-pitched, weak, or unlike her normal cry?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is there a fever, vomiting, or refusal to feed alongside the crying?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Has nothing calmed her for more than 3 hours straight?', yesSeverity: 'warning', noSeverity: null }
+    ],
     callDoctor: false
   },
   {
@@ -15557,9 +15819,30 @@ const SYMPTOM_DB = [
     keywords: ['eye','eyes','watery eye','sticky eye','discharge','red eye','swollen eye','pink eye','conjunctivitis','crusty'],
     severity: 'warning',
     title: 'Eye Discharge / Redness',
-    whatToDo: 'Clean gently with a cotton ball soaked in cooled boiled water, wiping from inner to outer corner. Use a fresh cotton ball for each wipe and each eye. Breastmilk drops in the eye can help mild cases (2 drops, 3\u20134 times a day).',
-    precautions: 'Wash hands before and after cleaning. Do NOT share towels. A blocked tear duct (common in babies) causes watery/sticky discharge without redness and usually resolves by 12 months.',
-    emergency: 'Call doctor if: redness with thick yellow/green discharge (possible bacterial infection), swelling around the eye, Ziva rubs eyes constantly, or vision seems affected.',
+    summary: 'Clean inner-to-outer with cooled boiled water, fresh cotton per eye, watch for swelling',
+    whatToDo: [
+      'Clean gently with a cotton ball soaked in cooled boiled water.',
+      'Wipe from the inner to the outer corner of the eye.',
+      'Use a fresh cotton ball for each wipe and each eye.',
+      'Wash your hands before and after cleaning.'
+    ],
+    precautions: [
+      'A blocked tear duct (common in babies) causes watery or sticky discharge without redness.',
+      'Watch for thick yellow or green discharge — that suggests infection.',
+      'Note any swelling around the eye or eyelid.'
+    ],
+    doNot: [
+      { text: 'Put any eye drops in without doctor advice', critical: true },
+      { text: 'Share towels or washcloths between family members', critical: false },
+      { text: 'Use breast milk drops if redness or pus is present (see doctor first)', critical: false }
+    ],
+    emergency: [
+      'Redness with thick yellow or green discharge',
+      'Swelling around the eye or eyelid',
+      'Ziva rubs her eyes constantly or seems in pain',
+      'Vision seems affected (not tracking or focusing)'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
@@ -15567,39 +15850,133 @@ const SYMPTOM_DB = [
     keywords: ['ear','ears','ear pain','pulling ear','tugging ear','ear infection','ear discharge','ear wax'],
     severity: 'warning',
     title: 'Ear Pain / Pulling',
-    whatToDo: 'Ear-pulling alone is often just exploration at this age. But if combined with fever, fussiness, or difficulty sleeping, it may indicate an ear infection. Keep Ziva\u2019s head elevated during sleep.',
-    precautions: 'Do NOT insert anything into the ear canal. Do NOT use ear drops without prescription. Note if ear-pulling started after a cold (ear infections often follow upper respiratory infections).',
-    emergency: 'Call doctor if: fluid or pus draining from the ear, ear-pulling with fever above 101\u00B0F, Ziva is inconsolable especially when lying down, or hearing seems affected.',
+    summary: 'Keep head elevated during sleep, watch for fever or fluid, never insert anything',
+    whatToDo: [
+      'Keep Ziva’s head slightly elevated during sleep.',
+      'Note whether ear-pulling started after a recent cold.',
+      'Track whether the pulling is combined with fever or fussiness.'
+    ],
+    precautions: [
+      'Ear-pulling alone is often just exploration at this age.',
+      'Ear infections often follow upper respiratory infections.',
+      'Note any change in how Ziva responds to your voice (hearing concerns).'
+    ],
+    doNot: [
+      { text: 'Insert cotton buds, fingers, or any object into the ear canal', critical: true },
+      { text: 'Use ear drops without a prescription', critical: true },
+      { text: 'Pour oil or warm liquids into the ear', critical: true }
+    ],
+    emergency: [
+      'Fluid or pus draining from the ear',
+      'Ear-pulling with fever above 101°F (38.3°C)',
+      'Ziva is inconsolable, especially when lying down',
+      'Hearing seems noticeably affected'
+    ],
+    lifeThreat: false,
     callDoctor: true
   },
   {
     id: 'fall-injury',
-    keywords: ['fall','fell','hit head','bump','bruise','injury','dropped','tumble','rolled off','fell off'],
+    keywords: ['fall','fell','hit head','bump','bruise','injury','dropped','tumble','rolled off','fell off','head injury','head-injury'],
     severity: 'emergency',
     title: 'Fall / Head Injury',
-    whatToDo: 'Stay calm. Apply a cold compress (wrapped in cloth) to any bump for 10\u201315 minutes. Observe Ziva closely for the next 24 hours. Let her rest but check on her every 2 hours if sleeping.',
-    precautions: 'Minor bumps from rolling or crawling height are usually not serious. Watch for: unusual drowsiness, repeated vomiting, unequal pupils, difficulty waking, clear fluid from nose/ears.',
-    emergency: 'SEEK IMMEDIATE CARE if: loss of consciousness (even brief), vomiting more than once, seizure, clear fluid from nose/ears, unequal pupil size, Ziva is unusually sleepy and hard to wake, or the fall was from more than 3 feet.',
+    summary: 'Stay calm, cold compress, observe 24h, wake every 2h while sleeping',
+    whatToDo: [
+      'Stay calm. Apply a cold compress wrapped in cloth to any bump for 10–15 minutes.',
+      'Observe Ziva closely for the next 24 hours.',
+      'Let her rest but check on her every 2 hours while sleeping.',
+      'Note the height of the fall and what she landed on.'
+    ],
+    precautions: [
+      'Minor bumps from rolling or low crawling height are usually not serious.',
+      'Watch for unusual drowsiness, repeated vomiting, or difficulty waking.',
+      'Look for clear fluid from the nose or ears, or unequal pupil sizes.'
+    ],
+    doNot: [
+      { text: 'Give pain medication without doctor advice', critical: true },
+      { text: 'Let her sleep without 2-hour checks for the first 24 hours', critical: false },
+      { text: 'Move her if you suspect a neck or spine injury (wait for help)', critical: false }
+    ],
+    emergency: [
+      'Loss of consciousness, even briefly',
+      'Vomiting more than once after the fall',
+      'Seizure',
+      'Clear fluid from the nose or ears',
+      'Unequal pupil size',
+      'Unusual sleepiness or difficulty waking her',
+      'Fall from more than 3 feet or onto a hard surface'
+    ],
+    lifeThreat: true,
+    triage: true,
+    triageQuestions: [
+      { q: 'Did Ziva lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Has she vomited more than once since the fall?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is she unusually sleepy or hard to wake?', yesSeverity: 'emergency', noSeverity: null }
+    ],
     callDoctor: true
   },
   {
-    id: 'allergy',
-    keywords: ['allergy','allergic','swelling','swollen','hives','anaphylaxis','reaction','food allergy','lip swelling','tongue swelling'],
+    id: 'allergic-reaction',
+    keywords: ['allergy','allergic','swelling','swollen','hives','anaphylaxis','reaction','food allergy','lip swelling','tongue swelling','allergic reaction'],
     severity: 'emergency',
     title: 'Allergic Reaction',
-    whatToDo: 'Stop the suspected food immediately. Note what was eaten and when symptoms started. For mild hives: cool compress can help. Do NOT give antihistamines without doctor\u2019s advice for babies.',
-    precautions: 'If a new food was introduced, mark it as \u201Cwatch\u201D in the app. Do NOT re-introduce the suspected food without medical guidance. Take a photo of any rash for the doctor.',
-    emergency: 'CALL EMERGENCY (or go to ER) IMMEDIATELY if: swelling of lips, tongue, or throat; difficulty breathing or swallowing; Ziva becomes limp or unresponsive. This could be anaphylaxis and requires immediate medical intervention.',
+    summary: 'Stop suspected food, watch breathing and swelling, call 108 if airway involved',
+    whatToDo: [
+      'Stop the suspected food immediately.',
+      'Note exactly what she ate and when symptoms started.',
+      'Watch her breathing and the swelling closely.',
+      'Take a photo of any rash for the doctor.'
+    ],
+    precautions: [
+      'Mark any new food as "watch" in the app until reviewed with the doctor.',
+      'Symptoms can escalate quickly within minutes — stay near her.',
+      'Re-exposure can be worse than first exposure.'
+    ],
+    doNot: [
+      { text: 'Give antihistamines without doctor advice', critical: true },
+      { text: 'Apply steroid creams without doctor advice', critical: true },
+      { text: 'Re-introduce the suspected food without medical guidance', critical: false }
+    ],
+    emergency: [
+      'Swelling of lips, tongue, or throat',
+      'Difficulty breathing or swallowing',
+      'Wheezing or noisy breathing',
+      'Ziva becomes limp, pale, or unresponsive',
+      'Sudden widespread hives plus breathing trouble (anaphylaxis)'
+    ],
+    lifeThreat: true,
     callDoctor: true
   },
   {
-    id: 'dehydration',
-    keywords: ['dehydration','dehydrated','dry mouth','no tears','sunken','fontanelle','fewer diapers','dark urine','dry lips','not peeing'],
+    id: 'severe-dehydration',
+    keywords: ['dehydration','dehydrated','dry mouth','no tears','sunken','fontanelle','fewer diapers','dark urine','dry lips','not peeing','severe dehydration'],
     severity: 'emergency',
     title: 'Signs of Dehydration',
-    whatToDo: 'Offer breast milk or ORS frequently in small amounts. If breastfed, nurse more often. Keep track of wet diapers \u2014 aim for at least 6 in 24 hours.',
-    precautions: 'Signs to watch: dry mouth/lips, sunken fontanelle (soft spot on head), no tears when crying, dark concentrated urine, fewer than 4 wet diapers in 24 hours.',
-    emergency: 'Seek immediate medical attention if: sunken fontanelle, no wet diaper for 6+ hours, Ziva is lethargic or unusually sleepy, dry mouth with no tears, or skin doesn\u2019t spring back when gently pinched.',
+    summary: 'Offer breast milk or ORS small and often, count wet diapers, watch fontanelle',
+    whatToDo: [
+      'Offer breast milk or ORS frequently in small amounts.',
+      'If breastfeeding, nurse more often than usual.',
+      'Keep track of wet diapers — aim for at least 6 in 24 hours.',
+      'Watch her fontanelle (soft spot on top of head) for sinking.'
+    ],
+    precautions: [
+      'Dry mouth or lips, sunken fontanelle, and no tears when crying are warning signs.',
+      'Dark concentrated urine indicates fluid loss.',
+      'A gentle pinch of skin should spring back quickly; slow return suggests dehydration.'
+    ],
+    doNot: [
+      { text: 'Give plain water alone to babies under 6 months', critical: true },
+      { text: 'Give fruit juices or sugary drinks instead of ORS', critical: false },
+      { text: 'Wait to see if she perks up on her own', critical: false }
+    ],
+    emergency: [
+      'Sunken fontanelle (soft spot)',
+      'No wet diaper for 6 or more hours',
+      'Ziva is lethargic, limp, or unusually sleepy',
+      'Dry mouth with no tears when crying',
+      'Skin does not spring back when gently pinched'
+    ],
+    lifeThreat: true,
     callDoctor: true
   },
   {
@@ -15607,10 +15984,202 @@ const SYMPTOM_DB = [
     keywords: ['not sleeping','sleep','insomnia','waking up','restless','won\'t sleep','night waking','sleep regression'],
     severity: 'mild',
     title: 'Sleep Disturbance',
-    whatToDo: 'Check for obvious causes: teething, hunger, wet diaper, temperature, overtiredness. Maintain a consistent bedtime routine. Ensure the room is dark, cool (24\u201326\u00B0C), and quiet.',
-    precautions: 'Sleep regressions are common at 6, 8\u201310, and 12 months and typically last 2\u20134 weeks. Developmental leaps (learning to crawl, stand) can disrupt sleep temporarily. Avoid screens 1 hour before bed.',
-    emergency: 'Call doctor if: sleep disruption is accompanied by fever, breathing issues, or inconsolable crying. Snoring or gasping during sleep should be evaluated.',
+    summary: 'Check basics, consistent routine, dark cool quiet room, no screens before bed',
+    whatToDo: [
+      'Check for obvious causes: teething, hunger, wet diaper, room temperature.',
+      'Maintain a consistent bedtime routine.',
+      'Keep the room dark, cool (24–26°C / 75–79°F), and quiet.',
+      'Avoid screens for at least an hour before bedtime.'
+    ],
+    precautions: [
+      'Sleep regressions are common at 6, 8–10, and 12 months and typically last 2–4 weeks.',
+      'Developmental leaps (learning to crawl, stand) can disrupt sleep temporarily.',
+      'Note snoring or pauses in breathing during sleep.'
+    ],
+    doNot: [
+      { text: 'Give melatonin or sleep aids without doctor advice', critical: true },
+      { text: 'Put soft pillows, bumpers, or stuffed toys in her crib', critical: true },
+      { text: 'Add cereal to her bottle to "help her sleep"', critical: false }
+    ],
+    emergency: [
+      'Sleep disruption combined with fever, breathing issues, or inconsolable crying',
+      'Snoring with pauses in breathing or gasping during sleep',
+      'Sudden change from previously good sleep with no obvious cause'
+    ],
+    lifeThreat: false,
     callDoctor: false
+  },
+  {
+    id: 'seizure',
+    keywords: ['seizure','convulsion','fit','jerking','twitching','febrile seizure','fits','shaking','stiffening'],
+    severity: 'emergency',
+    title: 'Seizure / Convulsion',
+    summary: 'Lay her on her side, clear the area, time the seizure, do not restrain',
+    whatToDo: [
+      'Lay Ziva on her side on a flat surface (recovery position).',
+      'Clear the area around her of hard or sharp objects.',
+      'Loosen any tight clothing around her neck.',
+      'Time the seizure from start to finish.',
+      'Call your pediatrician or emergency services immediately.'
+    ],
+    precautions: [
+      'Most seizures stop on their own within a few minutes.',
+      'After the seizure, Ziva will likely be sleepy and confused — this is normal.',
+      'Note what happened just before the seizure (fever, head bump, missed feed).'
+    ],
+    doNot: [
+      { text: 'Put anything in her mouth (she will not swallow her tongue)', critical: true },
+      { text: 'Restrain her arms or legs during the seizure', critical: true },
+      { text: 'Give water, milk, or medication during the seizure', critical: true },
+      { text: 'Move her unless she is in immediate danger', critical: false }
+    ],
+    emergency: [
+      'Seizure lasts longer than 5 minutes',
+      'A second seizure follows the first',
+      'She does not wake up afterwards or remains floppy and unresponsive',
+      'Breathing trouble, blue lips, or noisy gasping',
+      'Seizure follows a head injury'
+    ],
+    lifeThreat: true,
+    callDoctor: true
+  },
+  {
+    id: 'choking',
+    keywords: ['choking','choke','airway','blocked airway','food stuck','swallowed','object in mouth','can\'t breathe','gagging','coughing food'],
+    severity: 'emergency',
+    title: 'Choking',
+    summary: 'If she can cough, let her. If silent and not breathing, back blows then chest thrusts',
+    whatToDo: [
+      'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
+      'If she cannot cry, cough, or breathe, place her face-down along your forearm with her head lower than her chest.',
+      'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
+      'Turn her face-up; give 5 chest thrusts using 2 fingers on the breastbone.',
+      'Repeat back blows and chest thrusts until the object comes out or she starts breathing.',
+      'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
+    ],
+    precautions: [
+      'Stay calm — your composure helps the rescue work.',
+      'Look in her mouth only if you can clearly see the object and remove it with one finger sweep.',
+      'After the object comes out, she still needs to be checked by a doctor.'
+    ],
+    doNot: [
+      { text: 'Do a blind finger sweep inside her mouth (it can push the object deeper)', critical: true },
+      { text: 'Give water, food, or medication during a choking episode', critical: true },
+      { text: 'Perform abdominal thrusts (Heimlich) on babies under 1 year', critical: true },
+      { text: 'Hold her upside down by the ankles', critical: false }
+    ],
+    emergency: [
+      'Cannot cry, cough, or breathe',
+      'Lips or face turning blue',
+      'Becomes limp or loses consciousness',
+      'Object remains stuck after 5 cycles of back blows and chest thrusts',
+      'Severe coughing or gagging lasts more than a minute'
+    ],
+    lifeThreat: true,
+    callDoctor: true
+  },
+  {
+    id: 'head-injury',
+    keywords: ['head injury','head-injury','skull','head trauma','head hit','bumped head','head bleed','head bump'],
+    severity: 'emergency',
+    title: 'Head Injury',
+    summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',
+    whatToDo: [
+      'Stay calm. Keep Ziva still while you assess her.',
+      'Apply a cold compress wrapped in cloth to any visible bump for 10–15 minutes.',
+      'Observe her closely for the next 24 hours.',
+      'Wake her every 2 hours while she sleeps to check responsiveness.',
+      'Note the height of the fall and what surface she hit.'
+    ],
+    precautions: [
+      'Watch for repeated vomiting, unusual drowsiness, or behaviour changes.',
+      'Look for clear fluid from the nose or ears.',
+      'Check for unequal pupil sizes.'
+    ],
+    doNot: [
+      { text: 'Give pain medication without doctor advice', critical: true },
+      { text: 'Move her if you suspect a neck or spine injury', critical: false },
+      { text: 'Skip the 2-hour wake checks in the first 24 hours', critical: false }
+    ],
+    emergency: [
+      'Loss of consciousness, even briefly',
+      'Vomiting more than once',
+      'Seizure',
+      'Clear fluid from the nose or ears',
+      'Unequal pupil size',
+      'Unusual drowsiness or difficulty waking',
+      'A bulging or sunken soft spot (fontanelle) under 18 months'
+    ],
+    lifeThreat: true,
+    callDoctor: true
+  },
+  {
+    id: 'unconsciousness',
+    keywords: ['unconscious','unresponsive','passed out','fainted','won\'t wake up','limp','not responding','no response','collapsed'],
+    severity: 'emergency',
+    title: 'Unresponsive / Unconscious',
+    summary: 'Check breathing, place on side if breathing, start infant CPR if not, call 108',
+    whatToDo: [
+      'Shout her name and gently tap the bottom of her foot to see if she responds.',
+      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek.',
+      'If she is breathing, place her on her side (recovery position) and call emergency services.',
+      'If she is not breathing, start infant CPR if you are trained and call emergency services.',
+      'Stay with her until help arrives.'
+    ],
+    precautions: [
+      'Note when she became unresponsive and what happened just before.',
+      'Check for any obvious injury, especially to the head.',
+      'Note her colour — pale, blue, or grey is a serious sign.'
+    ],
+    doNot: [
+      { text: 'Give water, milk, or medication to an unresponsive baby', critical: true },
+      { text: 'Shake her to try to wake her', critical: true },
+      { text: 'Leave her alone to find help (call from where she is)', critical: false }
+    ],
+    emergency: [
+      'Not breathing or breathing in slow gasps',
+      'Blue or grey lips, face, or fingernails',
+      'No response to touch, sound, or pain',
+      'Limp and floppy with no muscle tone',
+      'Following a fall, head injury, or possible poisoning'
+    ],
+    lifeThreat: true,
+    callDoctor: true
+  },
+  {
+    id: 'poisoning',
+    keywords: ['poison','poisoning','swallowed','ingested','ate','medication','chemical','cleaning product','plant','toxic','overdose','accidentally swallowed'],
+    severity: 'emergency',
+    title: 'Suspected Poisoning',
+    summary: 'Call poison control, save the container, do NOT induce vomiting',
+    whatToDo: [
+      'Call your poison control centre or emergency services immediately.',
+      'Save the container, label, or plant sample to show medical staff.',
+      'Note what was swallowed, how much, and when.',
+      'Wipe out her mouth gently with a damp cloth if anything is visible.',
+      'Stay calm and keep her with you while help is on the way.'
+    ],
+    precautions: [
+      'Common household risks: cleaning products, medications, button batteries, magnets, alcohol, certain plants.',
+      'Symptoms can be delayed by hours — do not wait to "see if she\'s okay".',
+      'Bring the container with you to the hospital.'
+    ],
+    doNot: [
+      { text: 'Induce vomiting (it can cause more harm)', critical: true },
+      { text: 'Give milk, water, or "antidote" home remedies without poison control advice', critical: true },
+      { text: 'Give activated charcoal without medical guidance', critical: true },
+      { text: 'Wait to see if symptoms develop', critical: false }
+    ],
+    emergency: [
+      'Difficulty breathing or noisy breathing',
+      'Drowsiness, confusion, or unresponsiveness',
+      'Seizure',
+      'Burns or stains around the mouth (corrosive substance)',
+      'Vomiting blood or unusual material',
+      'Any swallowed button battery, magnet, or medication — regardless of symptoms'
+    ],
+    lifeThreat: true,
+    callDoctor: true
   }
 ];
 
