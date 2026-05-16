@@ -2426,8 +2426,235 @@ function initSymptomChips() {
 }
 
 // ──────────────────────────────────────────
+// D2 dual-read shim (phase-spec §2.2). Renders legacy string-shape SYMPTOM_DB
+// fields as single-item arrays. Array-shape new fields (D2-B) pass through.
+// Shim removal NEVER in D2/D3 — cleanup PR gated on grep fixture + zero
+// dev-mode [sc-shim] warns (Build-rule 2; Kael A-D2-K-2 fold).
+// ──────────────────────────────────────────
+function _scAsArray(field) {
+  if (field == null) return [];
+  if (typeof field === 'string') {
+    if (typeof window !== 'undefined' && window.SPROUTLAB_DEV_MODE) {
+      console.warn('[sc-shim] string-shape field rendered; entry needs D2-B migration');
+    }
+    return [field];
+  }
+  if (Array.isArray(field)) return field;
+  return [String(field)];
+}
+
+// Maren C-D2-M-8 / Kael A-D2-K-1 fold: filter empty-text items so the
+// renderer never emits an empty critical-DO-NOT bullet (silent corruption).
+function _scAsDoNotItems(field) {
+  if (field == null) return [];
+  if (typeof field === 'string') {
+    var s = field.trim();
+    return s ? [{ text: s, critical: false }] : [];
+  }
+  if (Array.isArray(field)) {
+    return field
+      .map(function(it) {
+        if (typeof it === 'string') {
+          var s = it.trim();
+          return s ? { text: s, critical: false } : null;
+        }
+        if (!it) return null;
+        var text = String(it.text || '').trim();
+        if (!text) return null;
+        return { text: text, critical: !!it.critical };
+      })
+      .filter(Boolean);
+  }
+  return [];
+}
+
+// ──────────────────────────────────────────
+// D2 primitives (phase-spec §2.10) — 11 shared building blocks
+// ──────────────────────────────────────────
+function renderSeverityRail() {
+  return '<div class="sc-rail" aria-hidden="true"></div>';
+}
+function renderSeverityBadge(severity) {
+  var label = severity === 'emergency' ? zi('siren') + ' Emergency'
+            : severity === 'warning'   ? zi('warn')  + ' Monitor closely'
+            :                            zi('check') + ' Usually manageable';
+  return '<span class="sc-sev-badge">' + label + '</span>';
+}
+function renderFooterTriad(mask) {
+  // mask: { save: bool, share: bool, track: bool }
+  // All three handlers are STUBS in D2 per SG-D2-FOOTER-SAVE-WIRING ratified.
+  mask = mask || {};
+  var html = '<div class="sc-footer-triad' + (mask.share || mask.track ? '' : ' sc-footer-emergency') + '">';
+  if (mask.save)  html += '<button type="button" class="sc-footer-action sc-footer-save"  data-action="scSaveResult">'  + zi('save')  + ' Save</button>';
+  if (mask.share) html += '<button type="button" class="sc-footer-action sc-footer-share" data-action="scShareResult">' + zi('share') + ' Share</button>';
+  if (mask.track) html += '<button type="button" class="sc-footer-action sc-footer-track" data-action="scTrackResult">' + zi('track') + ' Track</button>';
+  html += '</div>';
+  return html;
+}
+function renderDoNotCallout(items) {
+  if (!items || !items.length) return '';
+  var html = '<div class="sc-donot-callout">';
+  html += '<div class="sc-donot-callout-title">' + zi('no-entry') + ' DO NOT</div>';
+  html += '<ul class="sc-donot-list">';
+  items.forEach(function(it) {
+    var cls = it.critical ? 'sc-donot-item sc-donot-critical' : 'sc-donot-item';
+    html += '<li class="' + cls + '">' + zi('no-entry') + ' ' + escHtml(it.text) + '</li>';
+  });
+  html += '</ul></div>';
+  return html;
+}
+function renderNumberedSteps(steps) {
+  if (!steps || !steps.length) return '';
+  var html = '<ol class="sc-numbered-steps">';
+  steps.forEach(function(step) { html += '<li class="sc-step">' + escHtml(step) + '</li>'; });
+  html += '</ol>';
+  return html;
+}
+function renderBulletedItems(items) {
+  if (!items || !items.length) return '';
+  var html = '<ul class="sc-bullet-list">';
+  items.forEach(function(it) { html += '<li class="sc-bullet">' + escHtml(it) + '</li>'; });
+  html += '</ul>';
+  return html;
+}
+function renderProgressiveDisclosure(severity, summary, bodyHtml) {
+  // SG-D2-PROGRESSIVE-DISCLOSURE-EMERGENCY-OVERRIDE: emergency force-expands.
+  var openAttr = (severity === 'emergency') ? ' open' : '';
+  var html = '<details' + openAttr + ' class="sc-disclosure">';
+  html += '<summary class="sc-disclosure-summary">';
+  html += '<span class="sc-summary-text">' + escHtml(summary || '') + '</span>';
+  html += '<span class="sc-disclosure-toggle" aria-hidden="true">' + zi('chevron-down') + '</span>';
+  html += '</summary>';
+  html += '<div class="sc-disclosure-body">' + bodyHtml + '</div>';
+  html += '</details>';
+  return html;
+}
+function renderBackChannel(severity) {
+  // V-M2 #3 backstop pattern. Tiered copy per Maren C-D2-M-7.
+  var copy = (severity === 'warning')
+    ? "Symptoms suggest you should call your doctor today. Trust your gut."
+    : "If symptoms worsen or you're unsure, call your doctor.";
+  return '<div class="sc-back-channel sc-back-channel-' + severity + '">' +
+         zi('phone') + ' ' + escHtml(copy) +
+         '</div>';
+}
+function renderLifeThreatCTA(regionCtx) {
+  // regionCtx: { region, confidence } from currentRegion(); accept bare string for D3 compat.
+  var ctx = (typeof regionCtx === 'string')
+    ? { region: regionCtx, confidence: 'known' }
+    : (regionCtx || currentRegion());
+  var contacts = EMERGENCY_CONTACTS[ctx.region] || EMERGENCY_CONTACTS[DEFAULT_REGION];
+  var primary  = contacts.ambulancePrimary;
+  var fallback = contacts.emergencyFallback;
+  var html = '<div class="sc-lifethreat-cta">';
+  html += '<a class="sc-call-emergency" href="tel:' + primary.number + '">';
+  html += zi('emergency') + ' CALL AMBULANCE · ' + escHtml(primary.number);
+  html += '</a>';
+  // Maren C-D2-M-9 fold: fallback copy as escalation read, not downgrade.
+  html += '<a class="sc-call-fallback" href="tel:' + fallback.number + '">';
+  html += 'If ' + escHtml(primary.number) + ' unavailable, call ' + escHtml(fallback.number);
+  html += '</a>';
+  html += '</div>';
+  return html;
+}
+function renderHospitalList(regionCtx) {
+  // Maren C-D2-M-6 fold: only render when confidence === 'known'. D2 default
+  // is 'default' (no settings panel yet) — suppress to avoid presenting
+  // Jamshedpur hospital phone numbers to a non-Jamshedpur parent.
+  var ctx = (typeof regionCtx === 'string')
+    ? { region: regionCtx, confidence: 'known' }
+    : (regionCtx || currentRegion());
+  if (ctx.confidence !== 'known') return '';
+  var contacts = EMERGENCY_CONTACTS[ctx.region];
+  if (!contacts || !contacts.hospitals) return '';
+  var html = '<ul class="sc-hospital-list">';
+  contacts.hospitals.forEach(function(h) {
+    html += '<li><a href="tel:' + h.number + '">' + escHtml(h.name) + ' · ' + escHtml(h.number) + '</a></li>';
+  });
+  html += '</ul>';
+  return html;
+}
+
+// ──────────────────────────────────────────
+// D2 variant components (phase-spec §2.10) — 2 variants (Sovereign D1 collapse).
+// Warning + Mild merge under V-K4 "split where it earns its keep" — they
+// differed by 2 booleans only. Final: emergency + non-emergency.
+// ──────────────────────────────────────────
+function renderResultCardEmergency(m) {
+  var e = m.entry;
+  var html = '<div class="sc-result sc-emergency">';
+  html += renderSeverityRail();
+  html += renderSeverityBadge('emergency');
+  html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
+  if (e.lifeThreat) html += renderLifeThreatCTA(currentRegion());
+
+  var body = '';
+  if (e.emergency) {
+    body += '<div class="sc-section"><div class="sc-section-title sc-section-title-danger">' + zi('siren') + ' When to seek emergency care</div>';
+    body += renderBulletedItems(_scAsArray(e.emergency)) + '</div>';
+  }
+  body += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
+  body += (SEQUENCE_CRITICAL_IDS.indexOf(e.id) !== -1
+    ? renderNumberedSteps(_scAsArray(e.whatToDo))
+    : renderBulletedItems(_scAsArray(e.whatToDo))) + '</div>';
+  if (e.precautions && _scAsArray(e.precautions).length) {
+    body += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
+    body += renderBulletedItems(_scAsArray(e.precautions)) + '</div>';
+  }
+  if (e.doNot) body += renderDoNotCallout(_scAsDoNotItems(e.doNot));
+
+  var summary = e.summary || _scAsArray(e.whatToDo)[0] || '';
+  html += renderProgressiveDisclosure('emergency', summary, body);
+  html += renderFooterTriad({ save: true, share: false, track: false });
+  html += '</div>';
+  return html;
+}
+
+function renderResultCardNonEmergency(m, opts) {
+  opts = opts || {};
+  var e = m.entry;
+  var sev = m.severity;  // 'warning' | 'mild'
+  var html = '<div class="sc-result sc-' + sev + '">';
+  html += renderSeverityRail();
+  html += renderSeverityBadge(sev);
+  html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
+
+  var body = '';
+  body += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
+  body += (SEQUENCE_CRITICAL_IDS.indexOf(e.id) !== -1
+    ? renderNumberedSteps(_scAsArray(e.whatToDo))
+    : renderBulletedItems(_scAsArray(e.whatToDo))) + '</div>';
+  if (e.precautions && _scAsArray(e.precautions).length) {
+    body += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
+    body += renderBulletedItems(_scAsArray(e.precautions)) + '</div>';
+  }
+  if (e.doNot) body += renderDoNotCallout(_scAsDoNotItems(e.doNot));
+  if (e.emergency) {
+    body += '<div class="sc-section"><div class="sc-section-title sc-section-title-caution">' + zi('siren') + ' When to seek emergency care</div>';
+    body += renderBulletedItems(_scAsArray(e.emergency)) + '</div>';
+  }
+
+  var summary = e.summary || _scAsArray(e.whatToDo)[0] || '';
+  html += renderProgressiveDisclosure(sev, summary, body);
+  if (opts.backChannel) html += renderBackChannel(sev);
+  html += renderFooterTriad(opts.footerMask || { save: true, share: true, track: true });
+  html += '</div>';
+  return html;
+}
+
+// ──────────────────────────────────────────
+// D2 footer-triad stub handlers (phase-spec §2.8).
+// SG-D2-FOOTER-SAVE-WIRING ratified STUB: addJournalEntry absent on main;
+// journal infrastructure deferred to a focused phase. HR-8 "Coming soon"
+// pattern. All three are no-ops with toast.
+// ──────────────────────────────────────────
+function scSaveResult(/* btn */)  { showQLToast('Save — coming soon'); }
+function scShareResult(/* btn */) { showQLToast('Share — coming soon'); }
+function scTrackResult(/* btn */) { showQLToast('Track — coming soon'); }
+
+// ──────────────────────────────────────────
 // _renderSymptomCheckerResults — shared renderer
-// Pure: takes matches + ageMo + opts, returns HTML string.
+// Pure: takes matches + opts, returns HTML string.
 // Caller writes the result to its own #symptomResult / #homeSymptomResult.
 // Per lyra-spec-2026-05-11-symptom-checker-hr1-dry.md §4.1 (Kael B-K1 boundary
 // contract: no document.* reads/writes, no event-handler binding, no innerHTML=,
@@ -2436,10 +2663,14 @@ function initSymptomChips() {
 //
 // opts.actions parameterizes the episode-tracking CTA data-action names so the
 // home overlay variant ("closeAndPrompt*") and the medical-tab variant
-// ("prompt*") can share the same renderer — discovered via §1.2 pre-merge
-// diff gate as the only behavioral drift between the two surfaces.
+// ("prompt*") can share the same renderer.
+//
+// D2 §2.10 — refactored Option A → Option C: delegates to 2 variant
+// components (Emergency / NonEmergency per Sovereign D1 collapse) which
+// consume the 11 primitives above. Legacy ageMo dead param dropped per
+// V-K9 (A-D2-K-11; grep of main confirmed unused).
 // ──────────────────────────────────────────
-function _renderSymptomCheckerResults(matches, ageMo, opts) {
+function _renderSymptomCheckerResults(matches, opts) {
   opts = opts || {};
   var actions = opts.actions || {
     fever:     'promptFeverTrack',
@@ -2463,26 +2694,17 @@ function _renderSymptomCheckerResults(matches, ageMo, opts) {
   }
 
   shown.forEach(function(m) {
-    var e = m.entry;
-    var sevClass = m.severity === 'emergency' ? 'sc-emergency' : m.severity === 'warning' ? 'sc-warning' : 'sc-mild';
-    var sevLabel = m.severity === 'emergency' ? zi('siren') + ' Emergency' : m.severity === 'warning' ? zi('warn') + ' Monitor closely' : zi('check') + ' Usually manageable';
-
-    html += '<div class="sc-result ' + sevClass + '">';
-    html += '<div class="sc-rail" aria-hidden="true"></div>';
-    html += '<span class="sc-sev-badge">' + sevLabel + '</span>';
-    html += '<div class="sc-title">' + escHtml(e.title) + '</div>';
-
-    html += '<div class="sc-section"><div class="sc-section-title">What to do</div>';
-    html += '<div class="sc-section-body">' + escHtml(e.whatToDo) + '</div></div>';
-
-    html += '<div class="sc-section"><div class="sc-section-title">Precautions</div>';
-    html += '<div class="sc-section-body">' + escHtml(e.precautions) + '</div></div>';
-
-    if (e.emergency) {
-      html += '<div class="sc-section"><div class="sc-section-title" style="color:' + (m.severity === 'emergency' ? 'var(--tc-danger)' : 'var(--tc-caution)') + ';">' + zi('siren') + ' When to seek emergency care</div>';
-      html += '<div class="sc-section-body fw-600" >' + escHtml(e.emergency) + '</div></div>';
+    if (m.severity === 'emergency') {
+      html += renderResultCardEmergency(m);
+    } else {
+      // SG-D2-BACK-CHANNEL-GATING ratified: unconditional on warning/mild in D2.
+      // D3 will refine to triage-derived-only when triage flow renders.
+      // Footer-triad mask: full triad (all stubs per SG-D2-FOOTER-SAVE-WIRING STUB).
+      html += renderResultCardNonEmergency(m, {
+        backChannel: true,
+        footerMask: { save: true, share: true, track: true }
+      });
     }
-    html += '</div>';
   });
 
   // D1 §2.4.1 — non-emergency: doctor card AFTER the result cards (single-render discipline)
@@ -2579,7 +2801,8 @@ function checkSymptoms() {
   });
 
   // Delegate to shared renderer (defined above; intelligence.js calls same helper with closeAndPrompt* actions)
-  resultEl.innerHTML = _renderSymptomCheckerResults(matches, mo);
+  // D2 V-K9 fold (A-D2-K-11): ageMo dropped — body uses getAgeInMonths() locally.
+  resultEl.innerHTML = _renderSymptomCheckerResults(matches);
 }
 
 function _scDoctorCardHTML(severity) {
@@ -2593,9 +2816,14 @@ function _scDoctorCardHTML(severity) {
     emptyHtml += '<span class="sc-doctor-empty">No doctor saved yet \u2014 </span>';
     emptyHtml += '<a href="#" data-action="openDoctorModal" class="sc-doctor-add-link">+ Add Doctor</a>';
     if (severity === 'emergency') {
-      // V-M2 P0 fold \u2014 hardcoded 112 (India unified emergency, live since 2019). D2 swaps to
-      // emergencyContacts.{region} lookup once that config table lands.
-      emptyHtml += '<div class="sc-emergency-fallback">If this is a true emergency, call your local emergency number now (in India: <strong>112</strong>).</div>';
+      // D2 \u00a72.11 \u2014 dynamic EMERGENCY_CONTACTS lookup. Functionally equivalent
+      // for Jamshedpur default (108 primary, 112 fallback); cleanly extends
+      // when D3 adds per-user region selection.
+      var _scRegionCtx = currentRegion();
+      var _scContacts = EMERGENCY_CONTACTS[_scRegionCtx.region] || EMERGENCY_CONTACTS[DEFAULT_REGION];
+      var _scPrimary = _scContacts.ambulancePrimary;
+      var _scFallback = _scContacts.emergencyFallback;
+      emptyHtml += '<div class="sc-emergency-fallback">If this is a true emergency, call ambulance <strong>' + escHtml(_scPrimary.number) + '</strong>. If ' + escHtml(_scPrimary.number) + ' unavailable, call <strong>' + escHtml(_scFallback.number) + '</strong>.</div>';
     } else if (severity === 'warning') {
       // V-M1 P0 fold \u2014 warning-tier contextual nudge (not the emergency-services fallback).
       emptyHtml += '<div class="sc-doctor-empty-nudge">Add a doctor so you can call if symptoms worsen.</div>';
