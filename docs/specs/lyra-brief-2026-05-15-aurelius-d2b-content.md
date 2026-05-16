@@ -186,7 +186,7 @@
 **Examples:**
 - `'Apply cold compress, observe 24h, wake every 2h sleeping'` ✓ (Fall)
 - `'Small frequent sips of ORS; watch for lethargy'` ✓ (Vomiting / Diarrhoea)
-- `'Cool with damp cloth, monitor temperature, call doctor if >102°F'` ✓ (Fever-high)
+- `'Cool with damp cloth, monitor temperature, call doctor if >102°F (38.9°C)'` ✓ (Fever-high)
 - `'It's complicated, depends on age and symptoms'` ✗ (fails 5-sec test; no action)
 - `'Call your pediatrician immediately or dial 108.'` ✗ (lifeThreat tier already exposes the CTA; summary should still carry action distinct from the CTA)
 
@@ -409,6 +409,7 @@ The D2-B snippet PR ships:
 
 ## 10. Changelog
 
+- **v1.1 (2026-05-16):** harmonize §2.6 example with §3.4 universal-rule (imperial-then-metric on body-temperature). Pre-v1.1 §2.6 fever-high summary example showed single-unit `°F`, which Maren V-M5.6 round 1 on PR #73 flagged as conflicting with §3.4's "single-unit is a content-veto blocker". Maren ruled toward §3.4 strict; this revision aligns the example. No other §-text changes.
 - **v1 (2026-05-15):** initial brief. Authored post-D2 phase-spec ratification (merge commit `67355d6`). Codifies §1–§9 of the ratified spec as Aurelius-consumable rules. Awaits Aurelius pickup at audit-chain step [7].
 
 — Lyra, Builder, The Weaver
