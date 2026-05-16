@@ -9433,6 +9433,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-grain" viewBox="0 0 24 24"><path d="M12 3v18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 6c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 7 13.5 6 12 6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 11c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 12 13.5 11 12 11z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 16c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 17 13.5 16 12 16z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/></symbol>
 <symbol id="zi-fruit" viewBox="0 0 24 24"><path d="M12 7c-4 0-7 3-7 7c0 4 3 7 7 7s7-3 7-7c0-4-3-7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/><path d="M12 7c0-1.5 1-3 2.5-3M12 7c-0.5-1.5-2-2.5-3.5-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
 <symbol id="zi-carrot" viewBox="0 0 24 24"><path d="M9 9l3 12 3-12c0-1-1.5-1.5-3-1.5S9 8 9 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><path d="M10 8c-1-2-2-3-3-4M12 8c0-2 0-3 0-4.5M14 8c1-2 2-3 3-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/></symbol>
+<symbol id="zi-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/><rect x="14" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
+<symbol id="zi-skip-forward" viewBox="0 0 24 24"><path d="M5 5l10 7-10 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="5" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
 <!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). -->
 </defs>
 </svg>
@@ -10347,7 +10350,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <button class="ncf-btn" data-filter="general">General</button>
             <button class="ncf-btn" data-filter="diet"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Diet</button>
             <button class="ncf-btn" data-filter="medical"><svg class="zi" aria-hidden="true"><use href="#zi-medical"/></svg> Medical</button>
-            <button class="ncf-btn" data-filter="milestone">⭐ Milestone</button>
+            <button class="ncf-btn" data-filter="milestone"><svg class="zi"><use href="#zi-star"/></svg> Milestone</button>
             <button class="ncf-btn" data-filter="growth"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Growth</button>
           </div>
           <div class="notes-list" id="notesList" style="max-height:300px;"></div>
@@ -10357,11 +10360,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="d-flex items-center gap-8 flex-wrap">
               <div class="note-cat-picker">
                 <select id="noteCatSelect" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--peach-light);color:var(--text);outline:none;">
-                  <option value="general"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> General</option>
-                  <option value="diet"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Diet</option>
-                  <option value="medical"><svg class="zi" aria-hidden="true"><use href="#zi-medical"/></svg> Medical</option>
-                  <option value="milestone">⭐ Milestone</option>
-                  <option value="growth"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Growth</option>
+                  <option value="general">General</option>
+                  <option value="diet">Diet</option>
+                  <option value="medical">Medical</option>
+                  <option value="milestone">Milestone</option>
+                  <option value="growth">Growth</option>
                 </select>
               </div>
               <label class="note-attach-btn" aria-label="Attach photo">
@@ -11893,8 +11896,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
                 <div class="t-sub">Controls food suggestions</div>
               </div>
               <select id="settingsDietPref" onchange="saveDietPref()" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
-                <option value="veg"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg> Vegetarian</option>
-                <option value="nonveg"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Non-Vegetarian</option>
+                <option value="veg">Vegetarian</option>
+                <option value="nonveg">Non-Vegetarian</option>
               </select>
             </div>
             <div class="d-flex items-center justify-between">
@@ -11938,7 +11941,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);border:1.5px solid rgba(180,160,220,0.2);">
           <div class="settings-section-hdr settings-section-hdr-sm settings-section-hdr-lav"><svg class="zi" aria-hidden="true"><use href="#zi-bolt"/></svg> Install as App</div>
           <div class="t-sub" style="line-height:var(--lh-relaxed);">
-            <strong>iPhone:</strong> Tap the Share button (⬆) → "Add to Home Screen"<br>
+            <strong>iPhone:</strong> Tap the Share button (<svg class="zi"><use href="#zi-share"/></svg>) → "Add to Home Screen"<br>
             <strong>Android:</strong> Tap ⋮ menu → "Add to Home Screen" or "Install app"<br>
             <strong>To sync data:</strong> Use Settings → Data → Share Backup. Send the file via WhatsApp or any app, then import on the other phone.
           </div>
@@ -12219,7 +12222,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 </div>
 <div class="modal-overlay" id="milestoneModal">
   <div class="modal">
-    <h3>⭐ Add Milestone</h3>
+    <h3><svg class="zi"><use href="#zi-star"/></svg> Add Milestone</h3>
     <div class="fx-col g8">
       <input type="text" id="mText" class="modal-input" oninput="activateBtn('milestoneSaveBtn',this.value.trim())" placeholder="Milestone description">
       <div class="fx-wrap g8">
@@ -12284,11 +12287,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <input type="text" id="evTitle" class="modal-input" oninput="activateBtn('eventSaveBtn',this.value.trim())" placeholder="Event name (e.g. Grandma's birthday)">
       <input type="date" id="evDate" class="modal-input">
       <select id="evType" style="padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);outline:none;background:var(--peach-light);color:var(--text);">
-        <option value="birthday"><svg class="zi" aria-hidden="true"><use href="#zi-party"/></svg> Birthday</option>
+        <option value="birthday">Birthday</option>
         <option value="holiday">Holiday / Festival</option>
-        <option value="vacation"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Vacation / Travel</option>
-        <option value="family"><svg class="zi" aria-hidden="true"><use href="#zi-baby"/></svg> Family Gathering</option>
-        <option value="other"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> Other</option>
+        <option value="vacation">Vacation / Travel</option>
+        <option value="family">Family Gathering</option>
+        <option value="other">Other</option>
       </select>
       <label class="collapse-hdr-flex">
         <input type="checkbox" id="evYearly"> Repeats every year
@@ -21038,7 +21041,7 @@ function getSleepPatterns() {
     const avgH = Math.floor(avgDur / 60);
     const avgM = Math.round(avgDur % 60);
     patterns.push({
-      icon: '⏰',
+      icon: zi('clock'),
       text: `Average night sleep is ${avgH}h ${avgM}m (last 7 entries) — below the 9–11h target for this age. Overtiredness may be a factor.`,
     });
   }
@@ -23172,7 +23175,7 @@ function renderVaccHistory() {
       : (daysTo <= 14 ? `<div class="mt-6"><button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button></div>` : '');
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:var(--lav-light);border-left:var(--accent-w) solid ${urgency};margin-bottom:14px;">
-        <div style="font-size:var(--icon-lg);">⏳</div>
+        <div class="ir-icon">${zi('hourglass')}</div>
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Next due</div>
           <div class="t-title" style="font-size:var(--fs-md);">${escHtml(upcoming.name)}</div>
@@ -24316,7 +24319,7 @@ function renderMedLog() {
       dayItems.forEach(e => {
         const isDone = e.status.startsWith('done');
         const timeStr = isDone ? e.status.replace('done:', '') : '';
-        const icon = isDone ? zi('check') : '⏭️';
+        const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
         const timePart = timeStr && timeStr !== 'late' ? ` at ${timeStr}` : timeStr === 'late' ? ' (logged late)' : '';
@@ -27850,7 +27853,7 @@ function renderPoopGuide() {
         { icon:zi('dot-red'), title:'Brown / Tan', text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
         { icon:zi('check'), title:'Green', text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
         { icon:zi('warn'), title:'Orange', text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
-        { icon:'⬛', title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
+        { icon:zi('dot-red'), title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
         { icon:zi('dot-red'), title:'Red ' + zi('warn'), text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
         { icon:zi('warn'), title:'White / Pale ' + zi('warn'), text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
         { icon:zi('warn'), title:'Black ' + zi('warn'), text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
@@ -30580,7 +30583,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     }
     if (trend.wakes.current != null) {
       const cls = trend.wakes.current <= 1 ? 'ipp-good' : trend.wakes.current <= 2 ? 'ipp-warn' : 'ipp-bad';
-      pills += `<span class="ins-preview-pill ${cls}">⏰ ${trend.wakes.current} wakes</span>`;
+      pills += `<span class="ins-preview-pill ${cls}">${zi('clock')} ${trend.wakes.current} wakes</span>`;
     }
     prevEl.innerHTML = `<div class="ins-preview">${pills}</div>`;
   }
@@ -30635,7 +30638,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     const inRange = avgTotalMin >= targetMin && avgTotalMin <= targetMax;
     const cls = inRange ? 'trend-up' : avgTotalMin < targetMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
-      <div class="ir-icon">⏱️</div>
+      <div class="ir-icon">${zi('timer')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg total sleep / day (night + naps)</div>
         <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? zi('check') + ' within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
@@ -30647,7 +30650,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
   if (trend.wakes.current != null) {
     const wakeCls = trend.wakes.trend.direction === 'down' ? 'trend-up' : trend.wakes.trend.direction === 'up' ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
-      <div class="ir-icon">⏰</div>
+      <div class="ir-icon">${zi('clock')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg wake-ups / night</div>
         <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.text || ''}</span></div>
@@ -30872,7 +30875,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     const gapLabel = trend.longestGapH >= 24 ? `${Math.floor(trend.longestGapH / 24)}d ${trend.longestGapH % 24}h` : `${trend.longestGapH}h`;
     const concerning = trend.longestGapH >= 96;
     html += `<div class="insight-row">
-      <div class="ir-icon">⏱️</div>
+      <div class="ir-icon">${zi('timer')}</div>
       <div class="ir-body">
         <div class="ir-label">Longest gap this week</div>
         <div class="ir-value">${gapLabel} ${concerning ? '<span class="ir-delta trend-down">' + zi('warn') + ' watch</span>' : ''}</div>
@@ -36063,7 +36066,7 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MED MEDICATIONS');
   meds.forEach(m => {
-    lines.push('  ' + (m.active ? '●' : '⏸') + ' ' + m.name + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
+    lines.push('  ' + m.name + (m.active ? '' : ' (paused)') + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
   });
 
   // Diet
@@ -39618,7 +39621,7 @@ function renderMeds() {
         ${_renderAttribution(m)}
       </div>
       <div class="med-actions">
-        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? '⏸ Stop' : '▶ Resume'}</button>
+        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? zi('pause') + ' Stop' : zi('play') + ' Resume'}</button>
         <button class="med-btn del-med-btn" data-action="deleteMed" data-arg="${m._i}">&times;</button>
       </div>
     `;
@@ -40475,7 +40478,7 @@ function startSleepNow(type) {
   localStorage.setItem(SLEEP_INPROGRESS_KEY, JSON.stringify(entry));
 
   const label = type === 'night' ? 'Bedtime' : 'Nap';
-  showQLToast(`▶ ${label} started at ${formatTimeShort(timeStr)}`, 3000);
+  showQLToast(`${label} started at ${formatTimeShort(timeStr)}`, 3000);
 
   renderSleepInProgressBanner();
   updateSleepTabIndicator();
@@ -41015,12 +41018,12 @@ function renderSleepTips() {
       tips: ageM <= 8 ? [
         { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
         { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
         { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
@@ -41028,7 +41031,7 @@ function renderSleepTips() {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
         { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
-        { icon:'⏳', title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
+        { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
         { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
       ] : [
@@ -52054,7 +52057,7 @@ function _epTimeToISO(timeStr) {
  */
 function _epTimePickerHTML(id) {
   return '<div class="ep-time-row">' +
-    '<label>⏱ Time:</label>' +
+    '<label>' + zi('timer') + ' Time:</label>' +
     '<input type="time" id="' + id + 'TimeInput" value="' + _epNowTimeStr() + '">' +
     '<span class="ep-now-btn" onclick="document.getElementById(\'' + id + 'TimeInput\').value=_epNowTimeStr()">Now</span>' +
     '</div>';
@@ -57009,7 +57012,7 @@ function renderHomeMealProgress() {
     const value = todayEntry[m.key];
     if (value === '—skipped—') {
       html += `<div class="meal-prog-slot mps-done" style="opacity:0.5;" data-tab="diet">
-        <div class="meal-prog-icon">⏭️</div>
+        <div class="meal-prog-icon">${zi('skip-forward')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >skipped</div>
       </div>`;
@@ -57025,7 +57028,7 @@ function renderHomeMealProgress() {
       </div>`;
     } else {
       html += `<div class="meal-prog-slot mps-empty" onclick="_qlMeal='${m.full}';openQuickModal('feed')">
-        <div class="meal-prog-icon">⬜</div>
+        <div class="meal-prog-icon">${zi('target')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >tap to log</div>
       </div>`;
@@ -57393,7 +57396,7 @@ function skipMeals(mealKeys) {
   save(KEYS.feeding, feedingData);
   renderHomeMealProgress();
   updateMealSkipButtons();
-  showQLToast('⏭️ ' + mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
+  showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
 }
 
 function skipSingleMeal(mealKey) {
@@ -57416,7 +57419,7 @@ function skipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('⏭️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
 }
 
 function unskipSingleMeal(mealKey) {
@@ -58156,7 +58159,7 @@ function renderInfoSleepReport() {
     html += '<div style="font-size:var(--fs-xs);color:var(--mid);line-height:1.6;">';
     html += '' + zi('zzz') + ' Avg total: <strong>' + totalH + 'h ' + totalM + 'm</strong><br>';
     html += '' + zi('zzz') + ' Avg naps: <strong>' + data.avgNaps + '</strong>/day<br>';
-    html += '⏰ Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
+    html += zi('clock') + ' Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
     html += '' + zi('clock') + ' Bedtime ±' + data.bedtimeStdDev + 'min';
     html += '</div>';
 
@@ -58593,7 +58596,7 @@ function computeBestNightPredictor() {
     const delta = goodAvg - badAvg;
     if (Math.abs(delta) >= 15) {
       factors.push({
-        icon: '⏱', label: 'Nap duration',
+        icon: zi('timer'), label: 'Nap duration',
         detail: 'Good nights: ' + Math.floor(goodAvg / 60) + 'h ' + (goodAvg % 60) + 'm · Bad: ' + Math.floor(badAvg / 60) + 'h ' + (badAvg % 60) + 'm',
         impact: (delta > 0 ? '+' : '') + delta + ' min',
         impactVal: Math.abs(delta),

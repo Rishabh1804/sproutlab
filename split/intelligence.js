@@ -6788,7 +6788,7 @@ function _epTimeToISO(timeStr) {
  */
 function _epTimePickerHTML(id) {
   return '<div class="ep-time-row">' +
-    '<label>⏱ Time:</label>' +
+    '<label>' + zi('timer') + ' Time:</label>' +
     '<input type="time" id="' + id + 'TimeInput" value="' + _epNowTimeStr() + '">' +
     '<span class="ep-now-btn" onclick="document.getElementById(\'' + id + 'TimeInput\').value=_epNowTimeStr()">Now</span>' +
     '</div>';
@@ -11743,7 +11743,7 @@ function renderHomeMealProgress() {
     const value = todayEntry[m.key];
     if (value === '—skipped—') {
       html += `<div class="meal-prog-slot mps-done" style="opacity:0.5;" data-tab="diet">
-        <div class="meal-prog-icon">⏭️</div>
+        <div class="meal-prog-icon">${zi('skip-forward')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >skipped</div>
       </div>`;
@@ -11759,7 +11759,7 @@ function renderHomeMealProgress() {
       </div>`;
     } else {
       html += `<div class="meal-prog-slot mps-empty" onclick="_qlMeal='${m.full}';openQuickModal('feed')">
-        <div class="meal-prog-icon">⬜</div>
+        <div class="meal-prog-icon">${zi('target')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >tap to log</div>
       </div>`;
@@ -12127,7 +12127,7 @@ function skipMeals(mealKeys) {
   save(KEYS.feeding, feedingData);
   renderHomeMealProgress();
   updateMealSkipButtons();
-  showQLToast('⏭️ ' + mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
+  showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
 }
 
 function skipSingleMeal(mealKey) {
@@ -12150,7 +12150,7 @@ function skipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('⏭️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
 }
 
 function unskipSingleMeal(mealKey) {
@@ -12890,7 +12890,7 @@ function renderInfoSleepReport() {
     html += '<div style="font-size:var(--fs-xs);color:var(--mid);line-height:1.6;">';
     html += '' + zi('zzz') + ' Avg total: <strong>' + totalH + 'h ' + totalM + 'm</strong><br>';
     html += '' + zi('zzz') + ' Avg naps: <strong>' + data.avgNaps + '</strong>/day<br>';
-    html += '⏰ Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
+    html += zi('clock') + ' Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
     html += '' + zi('clock') + ' Bedtime ±' + data.bedtimeStdDev + 'min';
     html += '</div>';
 
@@ -13327,7 +13327,7 @@ function computeBestNightPredictor() {
     const delta = goodAvg - badAvg;
     if (Math.abs(delta) >= 15) {
       factors.push({
-        icon: '⏱', label: 'Nap duration',
+        icon: zi('timer'), label: 'Nap duration',
         detail: 'Good nights: ' + Math.floor(goodAvg / 60) + 'h ' + (goodAvg % 60) + 'm · Bad: ' + Math.floor(badAvg / 60) + 'h ' + (badAvg % 60) + 'm',
         impact: (delta > 0 ? '+' : '') + delta + ' min',
         impactVal: Math.abs(delta),

@@ -98,6 +98,9 @@
 <symbol id="zi-grain" viewBox="0 0 24 24"><path d="M12 3v18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 6c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 7 13.5 6 12 6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 11c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 12 13.5 11 12 11z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/><path d="M12 16c-1.5 0-3 1-3 2.5c0 1 1 2 3 2.5c2-0.5 3-1.5 3-2.5C15 17 13.5 16 12 16z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="currentColor" fill-opacity="0.15"/></symbol>
 <symbol id="zi-fruit" viewBox="0 0 24 24"><path d="M12 7c-4 0-7 3-7 7c0 4 3 7 7 7s7-3 7-7c0-4-3-7-7-7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/><path d="M12 7c0-1.5 1-3 2.5-3M12 7c-0.5-1.5-2-2.5-3.5-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
 <symbol id="zi-carrot" viewBox="0 0 24 24"><path d="M9 9l3 12 3-12c0-1-1.5-1.5-3-1.5S9 8 9 9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><path d="M10 8c-1-2-2-3-3-4M12 8c0-2 0-3 0-4.5M14 8c1-2 2-3 3-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-play" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/></symbol>
+<symbol id="zi-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/><rect x="14" y="5" width="4" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
+<symbol id="zi-skip-forward" viewBox="0 0 24 24"><path d="M5 5l10 7-10 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="5" width="3" height="14" rx="1" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.18"/></symbol>
 <!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). -->
 </defs>
 </svg>
@@ -1012,7 +1015,7 @@
             <button class="ncf-btn" data-filter="general">General</button>
             <button class="ncf-btn" data-filter="diet"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Diet</button>
             <button class="ncf-btn" data-filter="medical"><svg class="zi" aria-hidden="true"><use href="#zi-medical"/></svg> Medical</button>
-            <button class="ncf-btn" data-filter="milestone">⭐ Milestone</button>
+            <button class="ncf-btn" data-filter="milestone"><svg class="zi"><use href="#zi-star"/></svg> Milestone</button>
             <button class="ncf-btn" data-filter="growth"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Growth</button>
           </div>
           <div class="notes-list" id="notesList" style="max-height:300px;"></div>
@@ -1022,11 +1025,11 @@
             <div class="d-flex items-center gap-8 flex-wrap">
               <div class="note-cat-picker">
                 <select id="noteCatSelect" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--peach-light);color:var(--text);outline:none;">
-                  <option value="general"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> General</option>
-                  <option value="diet"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Diet</option>
-                  <option value="medical"><svg class="zi" aria-hidden="true"><use href="#zi-medical"/></svg> Medical</option>
-                  <option value="milestone">⭐ Milestone</option>
-                  <option value="growth"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Growth</option>
+                  <option value="general">General</option>
+                  <option value="diet">Diet</option>
+                  <option value="medical">Medical</option>
+                  <option value="milestone">Milestone</option>
+                  <option value="growth">Growth</option>
                 </select>
               </div>
               <label class="note-attach-btn" aria-label="Attach photo">
@@ -2558,8 +2561,8 @@
                 <div class="t-sub">Controls food suggestions</div>
               </div>
               <select id="settingsDietPref" onchange="saveDietPref()" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
-                <option value="veg"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg> Vegetarian</option>
-                <option value="nonveg"><svg class="zi" aria-hidden="true"><use href="#zi-bowl"/></svg> Non-Vegetarian</option>
+                <option value="veg">Vegetarian</option>
+                <option value="nonveg">Non-Vegetarian</option>
               </select>
             </div>
             <div class="d-flex items-center justify-between">
@@ -2603,7 +2606,7 @@
         <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--lav-light);border:1.5px solid rgba(180,160,220,0.2);">
           <div class="settings-section-hdr settings-section-hdr-sm settings-section-hdr-lav"><svg class="zi" aria-hidden="true"><use href="#zi-bolt"/></svg> Install as App</div>
           <div class="t-sub" style="line-height:var(--lh-relaxed);">
-            <strong>iPhone:</strong> Tap the Share button (⬆) → "Add to Home Screen"<br>
+            <strong>iPhone:</strong> Tap the Share button (<svg class="zi"><use href="#zi-share"/></svg>) → "Add to Home Screen"<br>
             <strong>Android:</strong> Tap ⋮ menu → "Add to Home Screen" or "Install app"<br>
             <strong>To sync data:</strong> Use Settings → Data → Share Backup. Send the file via WhatsApp or any app, then import on the other phone.
           </div>
@@ -2884,7 +2887,7 @@
 </div>
 <div class="modal-overlay" id="milestoneModal">
   <div class="modal">
-    <h3>⭐ Add Milestone</h3>
+    <h3><svg class="zi"><use href="#zi-star"/></svg> Add Milestone</h3>
     <div class="fx-col g8">
       <input type="text" id="mText" class="modal-input" oninput="activateBtn('milestoneSaveBtn',this.value.trim())" placeholder="Milestone description">
       <div class="fx-wrap g8">
@@ -2949,11 +2952,11 @@
       <input type="text" id="evTitle" class="modal-input" oninput="activateBtn('eventSaveBtn',this.value.trim())" placeholder="Event name (e.g. Grandma's birthday)">
       <input type="date" id="evDate" class="modal-input">
       <select id="evType" style="padding:8px 12px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);outline:none;background:var(--peach-light);color:var(--text);">
-        <option value="birthday"><svg class="zi" aria-hidden="true"><use href="#zi-party"/></svg> Birthday</option>
+        <option value="birthday">Birthday</option>
         <option value="holiday">Holiday / Festival</option>
-        <option value="vacation"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Vacation / Travel</option>
-        <option value="family"><svg class="zi" aria-hidden="true"><use href="#zi-baby"/></svg> Family Gathering</option>
-        <option value="other"><svg class="zi" aria-hidden="true"><use href="#zi-note"/></svg> Other</option>
+        <option value="vacation">Vacation / Travel</option>
+        <option value="family">Family Gathering</option>
+        <option value="other">Other</option>
       </select>
       <label class="collapse-hdr-flex">
         <input type="checkbox" id="evYearly"> Repeats every year

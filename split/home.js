@@ -1364,7 +1364,7 @@ function renderVaccHistory() {
       : (daysTo <= 14 ? `<div class="mt-6"><button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button></div>` : '');
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:var(--lav-light);border-left:var(--accent-w) solid ${urgency};margin-bottom:14px;">
-        <div style="font-size:var(--icon-lg);">⏳</div>
+        <div class="ir-icon">${zi('hourglass')}</div>
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Next due</div>
           <div class="t-title" style="font-size:var(--fs-md);">${escHtml(upcoming.name)}</div>
@@ -2508,7 +2508,7 @@ function renderMedLog() {
       dayItems.forEach(e => {
         const isDone = e.status.startsWith('done');
         const timeStr = isDone ? e.status.replace('done:', '') : '';
-        const icon = isDone ? zi('check') : '⏭️';
+        const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
         const timePart = timeStr && timeStr !== 'late' ? ` at ${timeStr}` : timeStr === 'late' ? ' (logged late)' : '';
@@ -6042,7 +6042,7 @@ function renderPoopGuide() {
         { icon:zi('dot-red'), title:'Brown / Tan', text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
         { icon:zi('check'), title:'Green', text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
         { icon:zi('warn'), title:'Orange', text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
-        { icon:'⬛', title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
+        { icon:zi('dot-red'), title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
         { icon:zi('dot-red'), title:'Red ' + zi('warn'), text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
         { icon:zi('warn'), title:'White / Pale ' + zi('warn'), text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
         { icon:zi('warn'), title:'Black ' + zi('warn'), text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
@@ -8772,7 +8772,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     }
     if (trend.wakes.current != null) {
       const cls = trend.wakes.current <= 1 ? 'ipp-good' : trend.wakes.current <= 2 ? 'ipp-warn' : 'ipp-bad';
-      pills += `<span class="ins-preview-pill ${cls}">⏰ ${trend.wakes.current} wakes</span>`;
+      pills += `<span class="ins-preview-pill ${cls}">${zi('clock')} ${trend.wakes.current} wakes</span>`;
     }
     prevEl.innerHTML = `<div class="ins-preview">${pills}</div>`;
   }
@@ -8827,7 +8827,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     const inRange = avgTotalMin >= targetMin && avgTotalMin <= targetMax;
     const cls = inRange ? 'trend-up' : avgTotalMin < targetMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
-      <div class="ir-icon">⏱️</div>
+      <div class="ir-icon">${zi('timer')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg total sleep / day (night + naps)</div>
         <div class="ir-value">${avgH}h ${avgM}m <span class="ir-delta ${cls}">${inRange ? zi('check') + ' within WHO ' + targetLabel : avgTotalMin < targetMin ? '↓ below WHO ' + targetLabel : '↑ above WHO ' + targetLabel}</span></div>
@@ -8839,7 +8839,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
   if (trend.wakes.current != null) {
     const wakeCls = trend.wakes.trend.direction === 'down' ? 'trend-up' : trend.wakes.trend.direction === 'up' ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
-      <div class="ir-icon">⏰</div>
+      <div class="ir-icon">${zi('clock')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg wake-ups / night</div>
         <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.text || ''}</span></div>
@@ -9064,7 +9064,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     const gapLabel = trend.longestGapH >= 24 ? `${Math.floor(trend.longestGapH / 24)}d ${trend.longestGapH % 24}h` : `${trend.longestGapH}h`;
     const concerning = trend.longestGapH >= 96;
     html += `<div class="insight-row">
-      <div class="ir-icon">⏱️</div>
+      <div class="ir-icon">${zi('timer')}</div>
       <div class="ir-body">
         <div class="ir-label">Longest gap this week</div>
         <div class="ir-value">${gapLabel} ${concerning ? '<span class="ir-delta trend-down">' + zi('warn') + ' watch</span>' : ''}</div>

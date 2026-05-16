@@ -738,7 +738,7 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MED MEDICATIONS');
   meds.forEach(m => {
-    lines.push('  ' + (m.active ? '●' : '⏸') + ' ' + m.name + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
+    lines.push('  ' + m.name + (m.active ? '' : ' (paused)') + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
   });
 
   // Diet
@@ -4293,7 +4293,7 @@ function renderMeds() {
         ${_renderAttribution(m)}
       </div>
       <div class="med-actions">
-        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? '⏸ Stop' : '▶ Resume'}</button>
+        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? zi('pause') + ' Stop' : zi('play') + ' Resume'}</button>
         <button class="med-btn del-med-btn" data-action="deleteMed" data-arg="${m._i}">&times;</button>
       </div>
     `;
@@ -5150,7 +5150,7 @@ function startSleepNow(type) {
   localStorage.setItem(SLEEP_INPROGRESS_KEY, JSON.stringify(entry));
 
   const label = type === 'night' ? 'Bedtime' : 'Nap';
-  showQLToast(`▶ ${label} started at ${formatTimeShort(timeStr)}`, 3000);
+  showQLToast(`${label} started at ${formatTimeShort(timeStr)}`, 3000);
 
   renderSleepInProgressBanner();
   updateSleepTabIndicator();
@@ -5690,12 +5690,12 @@ function renderSleepTips() {
       tips: ageM <= 8 ? [
         { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
         { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
         { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
@@ -5703,7 +5703,7 @@ function renderSleepTips() {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
         { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
-        { icon:'⏳', title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
+        { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
         { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
       ] : [

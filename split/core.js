@@ -4500,7 +4500,7 @@ function getSleepPatterns() {
     const avgH = Math.floor(avgDur / 60);
     const avgM = Math.round(avgDur % 60);
     patterns.push({
-      icon: '⏰',
+      icon: zi('clock'),
       text: `Average night sleep is ${avgH}h ${avgM}m (last 7 entries) — below the 9–11h target for this age. Overtiredness may be a factor.`,
     });
   }
