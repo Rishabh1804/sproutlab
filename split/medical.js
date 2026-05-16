@@ -512,11 +512,11 @@ function renderActiveMilestones() {
     if (bestKw && m.evidenceCount > 0) {
       const evList = getMilestoneEvidence(bestKw).slice(0, 5);
       let evItems = evList.map(ev => {
-        const confDot = ev.confidence === 'high' ? '●' : ev.confidence === 'medium' ? '●' : '●';
+        const confDot = zi('dot-red');
         return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
-      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ▾</button>' +
+      evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ' + zi('chevron-down') + '</button>' +
         '<div id="' + evidId + '" class="al-evid-box" style="display:none;">' + evItems + '</div>';
     }
 
@@ -738,7 +738,7 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MED MEDICATIONS');
   meds.forEach(m => {
-    lines.push('  ' + (m.active ? '●' : '⏸') + ' ' + m.name + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
+    lines.push('  ' + m.name + (m.active ? '' : ' (paused)') + (m.dose ? ' · ' + m.dose : '') + (m.freq ? ' · ' + m.freq : ''));
   });
 
   // Diet
@@ -764,7 +764,7 @@ function showFullDoctorSummary() {
 
   const text = lines.join('\n');
   // Clean text for copy/share — strip internal markers
-  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '').replace(/^  OK /gm, '  ✓ ').replace(/^  WATCH /gm, '  ⚠ ').replace(/^  PENDING /gm, '  ... ').replace(/^  IP /gm, '  ◔ ').replace(/\[Advanced\]/g, '★ Advanced');
+  const cleanText = text.replace(/^SECTION_\w+ /gm, '').replace(/^BABY /gm, '').replace(/^BORN /gm, '');
 
   // Open a clean printable summary
   const printWin = window.open('', '_blank');
@@ -802,7 +802,7 @@ function showFullDoctorSummary() {
       else if (line.startsWith('  OK ')) html += `<div class="item check">${zi('check')} ${line.trim().slice(3)}</div>`;
       else if (line.startsWith('  WATCH ')) html += `<div class="item warn">${zi('warn')} ${line.trim().slice(6)}</div>`;
       else if (line.startsWith('  PENDING ')) html += `<div class="item warn">${zi('clock')} ${line.trim().slice(8)}</div>`;
-      else if (line.startsWith('  IP ')) html += `<div class="item tc-lav">${zi('target')} ${line.trim().slice(3)}</div>`;
+      else if (line.startsWith('  IP ')) html += `<div class="item tc-lav">${zi('progress')} ${line.trim().slice(3)}</div>`;
       else if (line.includes('[Advanced]')) html += `<div class="item adv">${line.trim().replace('[Advanced]', zi('star') + ' Advanced')}</div>`;
       else if (line.startsWith('BABY ')) html += `<div style="font-weight:600;font-size:var(--icon-sm);">${zi('baby')} ${line.slice(5)}</div>`;
       else if (line.startsWith('BORN ')) html += `<div class="meta">${zi('clock')} ${line.slice(5)}</div>`;
@@ -1010,7 +1010,7 @@ function renderUpcomingEvents() {
         </div>
         ${activities ? `
           <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
-            ${zi('star')} Ziva activity ideas ▾
+            ${zi('star')} Ziva activity ideas ${zi('chevron-down')}
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
             ${activities.map(a => `
@@ -3668,10 +3668,10 @@ function toggleVaccInfo() {
   const hint = document.getElementById('vaccNameTapHint');
   if (panel.style.display === 'none') {
     panel.style.display = 'block';
-    hint.textContent = 'Tap to hide ▴';
+    hint.innerHTML = 'Tap to hide ' + zi('chevron-up');
   } else {
     panel.style.display = 'none';
-    hint.textContent = 'Tap for details ▾';
+    hint.innerHTML = 'Tap for details ' + zi('chevron-down');
   }
 }
 
@@ -4293,7 +4293,7 @@ function renderMeds() {
         ${_renderAttribution(m)}
       </div>
       <div class="med-actions">
-        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? '⏸ Stop' : '▶ Resume'}</button>
+        <button class="med-btn toggle-btn" data-action="toggleMed" data-arg="${m._i}">${m.active ? zi('pause') + ' Stop' : zi('play') + ' Resume'}</button>
         <button class="med-btn del-med-btn" data-action="deleteMed" data-arg="${m._i}">&times;</button>
       </div>
     `;
@@ -4452,7 +4452,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
-  { type:'social', icon:'🪞', title:'Mirror play',
+  { type:'social', icon:zi('mirror'), title:'Mirror play',
     desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
@@ -4468,7 +4468,7 @@ const DYNAMIC_ACTIVITIES = [
     desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 },
 
-  { type:'social', icon:'🫣', title:'Manage stranger anxiety gently',
+  { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
     desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
@@ -4527,7 +4527,7 @@ function renderActivities() {
               <div class="act-cat-name">${meta.label}</div>
               <div class="act-cat-count">${items.length} ${items.length === 1 ? 'activity' : 'activities'}</div>
             </div>
-            <div class="act-cat-chevron">▾</div>
+            <div class="act-cat-chevron">${zi('chevron-down')}</div>
           </div>
         </div>
         <div class="act-cat-items ${type}" id="act-items-${type}">
@@ -4644,7 +4644,7 @@ function renderUpcomingMilestones() {
               <div class="upc-name">${meta.label}</div>
               <div class="upc-count">${totalCount} ${meta.desc}</div>
             </div>
-            <div class="upc-chevron">▾</div>
+            <div class="upc-chevron">${zi('chevron-down')}</div>
           </div>
         </div>
         <div class="upc-items ${status}" id="upc-items-${status}">`;
@@ -4661,7 +4661,7 @@ function renderUpcomingMilestones() {
               <div class="upc-subcat-icon">${cm.icon}</div>
               <div class="upc-subcat-label">${cm.label}</div>
               <div class="upc-subcat-count">${catItems.length}</div>
-              <div class="upc-subcat-chevron">▾</div>
+              <div class="upc-subcat-chevron">${zi('chevron-down')}</div>
             </div>
             <div class="upc-subcat-items ${cat}">
               <div class="upcoming-list">
@@ -5150,7 +5150,7 @@ function startSleepNow(type) {
   localStorage.setItem(SLEEP_INPROGRESS_KEY, JSON.stringify(entry));
 
   const label = type === 'night' ? 'Bedtime' : 'Nap';
-  showQLToast(`▶ ${label} started at ${formatTimeShort(timeStr)}`, 3000);
+  showQLToast(`${label} started at ${formatTimeShort(timeStr)}`, 3000);
 
   renderSleepInProgressBanner();
   updateSleepTabIndicator();
@@ -5261,7 +5261,7 @@ function renderSleepInProgressBanner() {
         <div class="t-xs t-light">Started ${formatTimeShort(ip.startTime)}</div>
       </div>
       <div class="sip-elapsed">${elapsed}</div>
-      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">■ End Now</button>
+      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">${zi('stop')} End Now</button>
       <button class="btn btn-ghost" style="font-size:var(--fs-xs);padding:4px 8px;" data-action="cancelSleepInProgress">&times;</button>
     </div>`;
   }
@@ -5297,7 +5297,7 @@ function editSleepEntry(idx) {
     document.getElementById('napEnd').value = entry.wakeTime;
     document.getElementById('napNotes').value = entry.notes || '';
     const btn = document.getElementById('napSaveBtn');
-    btn.textContent = '✓ Update Nap';
+    btn.textContent = 'Update Nap';
     document.getElementById('napCancelBtn').style.display = '';
     document.getElementById('sleepNapCard').scrollIntoView({ behavior:'smooth', block:'start' });
   }
@@ -5690,12 +5690,12 @@ function renderSleepTips() {
       tips: ageM <= 8 ? [
         { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
         { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
         { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
-        { icon:'⏱️', title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
+        { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
@@ -5703,7 +5703,7 @@ function renderSleepTips() {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
         { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
-        { icon:'⏳', title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
+        { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
         { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
       ] : [
@@ -5755,7 +5755,7 @@ function renderSleepTips() {
               <div class="t-sub">${cat.tips.length} tips</div>
             </div>
           </div>
-          <span class="collapse-chevron" id="${catId}-chev">▾</span>
+          <span class="collapse-chevron" id="${catId}-chev">${zi('chevron-down')}</span>
         </div>
         <div id="${catId}-items" style="display:none;padding:8px 0;">
           ${cat.tips.map(t => `
@@ -5819,7 +5819,7 @@ function renderHomeSleep() {
         <div class="t-sm" style="font-weight:600;color:var(--tc-indigo);">${label} in progress · ${elapsed}</div>
         <div class="t-xs t-light">Since ${formatTimeShort(ip.startTime)}</div>
       </div>
-      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">■ End</button>
+      <button class="sip-end-btn" data-action="endSleepNow" data-arg="">${zi('stop')} End</button>
     </div>`;
   }
 
@@ -6372,7 +6372,7 @@ function renderInfoPoopFoodDelay() {
   if (listEl) {
     let html = '';
     data.foodDelays.forEach(fd => {
-      const statusIcon = fd.status === 'likely' ? '●' : fd.status === 'suspected' ? zi('warn') : '●';
+      const statusIcon = fd.status === 'likely' ? zi('dot-red') : fd.status === 'suspected' ? zi('warn') : zi('dot-red');
       const conLabel = fd.usualConsistency.charAt(0).toUpperCase() + fd.usualConsistency.slice(1);
       html += '<div class="si-factor-row">';
       html += '<div class="si-factor-icon">' + statusIcon + '</div>';
@@ -6489,7 +6489,7 @@ function renderInfoPoopFoodWatch() {
     if (data.active.length > 0) {
       html += '<div class="si-sub-label mb-4" >Active</div>';
       data.active.forEach(w => {
-        const icon = w.status === 'flagged' ? zi('warn') : '●';
+        const icon = w.status === 'flagged' ? zi('warn') : zi('dot-red');
         html += '<div class="si-check-row">';
         html += '<div class="si-check-icon">' + icon + '</div>';
         html += '<div class="si-check-text"><strong>' + escHtml(w.name) + '</strong> — ' + w.hoursElapsed + 'h ago, watching for ' + w.hoursRemaining + ' more hours';
@@ -6684,7 +6684,7 @@ function renderInfoPoopColorAnomaly() {
         const key = a.date + a.color;
         if (seen.has(key)) return;
         seen.add(key);
-        const emoji = a.color === 'red' ? '●' : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : '●';
+        const emoji = a.color === 'red' ? zi('dot-red') : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : zi('dot-red');
         html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + emoji + '</div><div class="si-reg-cause-text">' + a.color.charAt(0).toUpperCase() + a.color.slice(1) + ' stool on ' + formatDate(a.date) + ' — ' + a.context + '</div></div>';
       });
     }
@@ -7761,7 +7761,7 @@ function renderInfoVaccFever() {
 
   let tlHtml = '';
   if (!showAll) {
-    tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier ▾\':\'Hide earlier ▴\';">Show ' + hiddenCount + ' earlier ▾</div>';
+    tlHtml += '<div class="t-xs t-light" style="margin-bottom:var(--sp-4);cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\';this.textContent=this.nextElementSibling.style.display===\'none\'?\'Show ' + hiddenCount + ' earlier \u2193\':\'Hide earlier \u2191\';">Show ' + hiddenCount + ' earlier ' + zi('chevron-down') + '</div>';
     tlHtml += '<div style="display:none;">';
     data.results.slice(0, hiddenCount).forEach(r => { tlHtml += _vaccRow(r); });
     tlHtml += '</div>';
@@ -8648,7 +8648,7 @@ function renderInfoTexture() {
       html += '<div class="mi-tex-stage">';
       html += '<div class="mi-tex-icon" style="background:' + (count > 0 ? stage.color : 'var(--surface-alt)') + ';' + (isCurrent ? 'box-shadow:0 0 0 2px ' + stage.color + ';' : '') + '">' + stage.icon + '</div>';
       html += '<div class="mi-tex-info">';
-      html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">● current</span>' : '') + '</div>';
+      html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">' + zi('dot-red') + ' current</span>' : '') + '</div>';
       if (count > 0) {
         html += '<div class="mi-tex-detail">' + count + ' day' + (count !== 1 ? 's' : '') + ' (' + pct + '%)' + (firstDate ? ' · first: ' + formatDate(firstDate).replace(/, \d{4}$/, '') : '') + '</div>';
         html += '<div class="mi-tex-bar"><div class="mi-tex-fill" style="width:' + pct + '%;background:' + stage.color + ';"></div></div>';

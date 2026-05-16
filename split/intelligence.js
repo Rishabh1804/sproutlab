@@ -1921,7 +1921,7 @@ function qaHandleIngredient(classified) {
     var meta = [];
     if (combo.count > 0) meta.push('Served ' + combo.count + '\u00d7');
     if (combo.avgIntake !== null) meta.push('intake ' + Math.round(combo.avgIntake * 100) + '%');
-    var text = (idx === 0 ? '\u2605 ' : '') + comboDisplay;
+    var text = (idx === 0 ? zi('star') + ' ' : '') + comboDisplay;
     if (meta.length > 0) text += ' \u2014 ' + meta.join(' \u00b7 ');
     histItems.push({ text: text, signal: 'good' });
     if (combo.enhancedReasons.length > 0) {
@@ -3950,13 +3950,13 @@ function formatSummaryAsText(summary) {
 
   if (summary.highlights && summary.highlights.length > 0) {
     lines.push('*Highlights*');
-    summary.highlights.forEach(function(h) { lines.push('\u2713 ' + h.text); });
+    summary.highlights.forEach(function(h) { lines.push(h.text); });
     lines.push('');
   }
 
   if (summary.concerns && summary.concerns.length > 0) {
     lines.push('*Heads Up*');
-    summary.concerns.forEach(function(c) { lines.push('\u26a0 ' + c.text); });
+    summary.concerns.forEach(function(c) { lines.push(c.text); });
     lines.push('');
   }
 
@@ -6530,7 +6530,7 @@ function sgToggleMore() {
   if (!toggle || extras.length === 0) return;
   const isHidden = extras[0].style.display === 'none';
   extras.forEach(el => el.style.display = isHidden ? '' : 'none');
-  toggle.textContent = isHidden ? 'Show less ▴' : ('Show ' + extras.length + ' more ▾');
+  toggle.innerHTML = isHidden ? 'Show less ' + zi('chevron-up') : 'Show ' + extras.length + ' more ' + zi('chevron-down');
 }
 
 function sgTapChip(food) {
@@ -6788,7 +6788,7 @@ function _epTimeToISO(timeStr) {
  */
 function _epTimePickerHTML(id) {
   return '<div class="ep-time-row">' +
-    '<label>⏱ Time:</label>' +
+    '<label>' + zi('timer') + ' Time:</label>' +
     '<input type="time" id="' + id + 'TimeInput" value="' + _epNowTimeStr() + '">' +
     '<span class="ep-now-btn" onclick="document.getElementById(\'' + id + 'TimeInput\').value=_epNowTimeStr()">Now</span>' +
     '</div>';
@@ -7161,7 +7161,7 @@ function renderFeverEpisodeCard() {
   });
   html += '</div>';
   if (showReadings.length > maxShow) {
-    html += '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - maxShow) + ' earlier ▾</div>';
+    html += '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - maxShow) + ' earlier ' + zi('chevron-down') + '</div>';
   }
 
   // Medicine section
@@ -8399,7 +8399,7 @@ function renderVomitingEpisodeCard() {
   if (ep.episodes.length > 0) {
     ep.episodes.slice().reverse().slice(0, 6).forEach((e, i) => {
       const origIdx = ep.episodes.length - 1 - i;
-      const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? '●' : e.type === 'spit-up' ? zi('warn') : zi('siren');
+      const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? zi('dot-red') : e.type === 'spit-up' ? zi('warn') : zi('siren');
       html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + origIdx + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + (e.type || 'vomit') + '</span></div>';
     });
   }
@@ -8660,7 +8660,7 @@ function renderColdEpisodeCard() {
   html += '<div class="fe-action-chips">';
   COLD_SYMPTOMS.forEach(s => {
     const active = todaySymptoms.has(s);
-    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? '✓ ' : '') + escHtml(s) + '</span>';
+    html += '<span class="fe-action-chip" style="' + (active ? 'background:var(--sage);color:white;' : '') + '" data-action="ceToggleSymptom" data-arg="' + escAttr(s) + '">' + (active ? zi('check') + ' ' : '') + escHtml(s) + '</span>';
   });
   html += '</div>';
 
@@ -8678,7 +8678,7 @@ function renderColdEpisodeCard() {
   if (ep.dailyLogs.length > 0) {
     html += '<div class="fe-section-title">Daily Log</div>';
     ep.dailyLogs.slice().reverse().slice(0, 7).forEach(l => {
-      const sevDots = '●'.repeat(l.severity) + '○'.repeat(5 - l.severity);
+      const sevDots = zi('dot-red').repeat(l.severity) + zi('dot-empty').repeat(5 - l.severity);
       html += '<div class="ce-symptom-row"><span style="font-size:var(--fs-xs);color:var(--light);min-width:55px;">' + formatDate(l.date) + '</span>';
       html += '<span style="font-size:var(--fs-xs);letter-spacing:2px;" title="Severity ' + l.severity + '/5">' + sevDots + '</span>';
       html += '<span style="font-size:var(--fs-xs);color:var(--mid);flex:1;min-width:0;">' + (l.symptoms.length > 0 ? l.symptoms.slice(0, 3).join(', ') : 'no symptoms logged') + '</span></div>';
@@ -8786,7 +8786,7 @@ function renderHomeColdBanner() {
   banner.style.display = '';
   const durationDays = Math.ceil((Date.now() - new Date(ep.startedAt).getTime()) / 86400000);
   const todayLog = ep.dailyLogs.find(l => l.date === today());
-  const logged = todayLog ? '✓ Logged' : 'Not logged yet';
+  const logged = todayLog ? 'Logged' : 'Not logged yet';
   banner.innerHTML = '<div class="ce-home-banner" data-nav-track-medical="coldEpisodeCard">' +
     '<div class="fe-home-banner-info"><div class="fe-home-banner-temp t-sky" >' + zi('siren') + ' Cold/Cough · Day ' + durationDays + '</div>' +
     '<div class="fe-home-banner-sub">Today: ' + logged + '</div></div>' +
@@ -9111,7 +9111,7 @@ function openDiversityDetail() {
     const chevron = document.getElementById('infoMealBreakdownChevron');
     if (body && body.style.display === 'none') {
       body.style.display = '';
-      if (chevron) chevron.textContent = '▴';
+      if (chevron) chevron.innerHTML = zi('chevron-up');
     }
     const card = document.getElementById('infoMealBreakdownCard');
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -9601,7 +9601,7 @@ function renderActivityChips() {
   Object.entries(byDomain).forEach(([domain, evs]) => {
     const meta = AL_DOMAIN_META[domain] || { icon: '?', label: domain };
     const milestoneLabels = evs.map(e => e.milestone.replace(/_/g, ' ')).join(', ');
-    const confDot = evs.some(e => e.confidence === 'high') ? '●' : evs.some(e => e.confidence === 'medium') ? '●' : '●';
+    const confDot = zi('dot-red');
     html += `<div class="al-chip al-chip-${domain}" data-domain="${domain}">
       ${confDot} ${meta.icon} ${meta.label}: ${milestoneLabels}
       <button class="al-chip-x" data-action="removeActivityChip" data-arg="${domain}" aria-label="Remove">&times;</button>
@@ -10773,7 +10773,7 @@ function undoLastQL() {
     try { _lastQLUndo(); } catch(e) { console.warn('Undo error:', e); }
     _lastQLUndo = null;
     const t = document.getElementById('qlToast');
-    t.textContent = '↩️ Undone';
+    t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
     const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
@@ -10818,7 +10818,7 @@ function saveQLFeed() {
 
   // Build nutrient flash for toast
   const NUTRIENT_EMOJI = { iron:zi('drop'), calcium:zi('ruler'), protein:zi('run'), 'vitamin C':zi('bowl'), fibre:zi('bowl'), 'vitamin A':zi('scope'), 'omega-3':zi('brain'), zinc:zi('shield') };
-  let toastMsg = '✓ ' + capitalize(_qlMeal) + ' logged';
+  let toastMsg = capitalize(_qlMeal) + ' logged';
   if (_qlBackfillDate && _qlBackfillDate !== today()) {
     toastMsg += ' for ' + formatDate(_qlBackfillDate);
   }
@@ -11743,7 +11743,7 @@ function renderHomeMealProgress() {
     const value = todayEntry[m.key];
     if (value === '—skipped—') {
       html += `<div class="meal-prog-slot mps-done" style="opacity:0.5;" data-tab="diet">
-        <div class="meal-prog-icon">⏭️</div>
+        <div class="meal-prog-icon">${zi('skip-forward')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >skipped</div>
       </div>`;
@@ -11759,7 +11759,7 @@ function renderHomeMealProgress() {
       </div>`;
     } else {
       html += `<div class="meal-prog-slot mps-empty" onclick="_qlMeal='${m.full}';openQuickModal('feed')">
-        <div class="meal-prog-icon">⬜</div>
+        <div class="meal-prog-icon">${zi('target')}</div>
         <div class="meal-prog-label">${m.label}</div>
         <div class="meal-prog-food t-light" >tap to log</div>
       </div>`;
@@ -12037,7 +12037,7 @@ function getFoodHistory(foodName) {
     const rxLabel = introduced.reaction === 'watch' ? '<span class="t-amber">' + zi('warn') + ' Watch</span>' : '<span class="t-sage">' + zi('check') + ' Fine</span>';
     html += `<div>Introduced: ${formatDate(introduced.date)} · Reaction: ${rxLabel}</div>`;
   } else {
-    html += `<div class="t-amber">🆕 Not yet in Foods Introduced list</div>`;
+    html += `<div class="t-amber">${zi('sparkle')} Not yet in Foods Introduced list</div>`;
   }
 
   if (lastDate) {
@@ -12127,7 +12127,7 @@ function skipMeals(mealKeys) {
   save(KEYS.feeding, feedingData);
   renderHomeMealProgress();
   updateMealSkipButtons();
-  showQLToast('⏭️ ' + mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
+  showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
 }
 
 function skipSingleMeal(mealKey) {
@@ -12150,7 +12150,7 @@ function skipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('⏭️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
 }
 
 function unskipSingleMeal(mealKey) {
@@ -12165,7 +12165,7 @@ function unskipSingleMeal(mealKey) {
   updateMealSkipButtons();
   renderHomeMealProgress();
   renderDietQuickPicker();
-  showQLToast('↩️ ' + mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
+  showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
 }
 
 function updateMealSkipButtons() {
@@ -12179,7 +12179,7 @@ function updateMealSkipButtons() {
     const val = entry[m] || '';
     if (val === '—skipped—') {
       btn.style.display = '';
-      btn.textContent = 'skipped ↩';
+      btn.innerHTML = 'skipped ' + zi('undo');
       btn.classList.add('skipped');
       btn.title = 'Tap to unskip';
       if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
@@ -12890,7 +12890,7 @@ function renderInfoSleepReport() {
     html += '<div style="font-size:var(--fs-xs);color:var(--mid);line-height:1.6;">';
     html += '' + zi('zzz') + ' Avg total: <strong>' + totalH + 'h ' + totalM + 'm</strong><br>';
     html += '' + zi('zzz') + ' Avg naps: <strong>' + data.avgNaps + '</strong>/day<br>';
-    html += '⏰ Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
+    html += zi('clock') + ' Wake-ups: <strong>' + data.avgWakes + '</strong>/night<br>';
     html += '' + zi('clock') + ' Bedtime ±' + data.bedtimeStdDev + 'min';
     html += '</div>';
 
@@ -13327,7 +13327,7 @@ function computeBestNightPredictor() {
     const delta = goodAvg - badAvg;
     if (Math.abs(delta) >= 15) {
       factors.push({
-        icon: '⏱', label: 'Nap duration',
+        icon: zi('timer'), label: 'Nap duration',
         detail: 'Good nights: ' + Math.floor(goodAvg / 60) + 'h ' + (goodAvg % 60) + 'm · Bad: ' + Math.floor(badAvg / 60) + 'h ' + (badAvg % 60) + 'm',
         impact: (delta > 0 ? '+' : '') + delta + ' min',
         impactVal: Math.abs(delta),
@@ -14615,7 +14615,7 @@ function renderInfoMilestoneSleepCorrelation() {
       html += '<div class="cd-tl-week">W' + w.weekNum + '</div>';
       html += '<div' + (w.isBurst ? ' class="cd-burst"' : '') + '>' + w.evidence + '</div>';
       html += '<div' + (w.isRegression ? ' class="cd-regr"' : '') + '>' + (w.avgSleep !== null ? w.avgSleep : '–') + '</div>';
-      html += '<div>' + (w.isBurst ? '★' : '·') + '</div>';
+      html += '<div>' + (w.isBurst ? zi('star') : '·') + '</div>';
       html += '<div>' + (w.isRegression ? zi('warn') : '·') + '</div>';
       html += '</div>';
     });
@@ -14639,7 +14639,7 @@ function renderInfoMilestoneSleepCorrelation() {
           if (weeks[k].isRegression) hadRegression = true;
         }
         bHtml += '<div class="cd-episode">';
-        bHtml += '<div class="cd-episode-title">★ W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
+        bHtml += '<div class="cd-episode-title">' + zi('star') + ' W' + b.weekNum + (topDomain ? ' — ' + topDomain + ' burst' : '') + ' (' + b.evidence + ' evidence)</div>';
         if (hadRegression) {
           bHtml += '<div class="cd-burst-note-neg">Sleep dip detected near this burst</div>';
         } else {

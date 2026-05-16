@@ -2046,7 +2046,7 @@ function renderNotes(filterCat) {
   });
 
   const active = notes.filter(n => !n.done).length;
-  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done ✓' : '';
+  count.textContent = active > 0 ? `${active} active` : notes.length ? 'All done' : '';
   list.innerHTML = '';
 
   const filtered = cat === 'all' ? notes : notes.filter(n => (n.category || 'general') === cat);
@@ -2086,7 +2086,7 @@ function renderNotes(filterCat) {
           ${_renderAttribution(n)}
         </div>
         <div class="note-actions">
-          <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? '↩' : zi('check')}</button>
+          <button class="note-btn complete-btn" data-action="toggleNote" data-arg="${n._i}">${n.done ? zi('undo') : zi('check')}</button>
           <button class="note-btn del-note-btn" data-action="deleteNote" data-arg="${n._i}">&times;</button>
         </div>
       </div>
@@ -3283,18 +3283,18 @@ function getTithiIndex(date) {
   return Math.floor(phase / (SYNODIC / 30)) % 30; // 0-29
 }
 
-function getMoonPhaseEmoji(date) {
+function getMoonPhaseIcon(date) {
   const tithi = getTithiIndex(date);
   // Map 30 tithis to 8 moon emojis
-  if (tithi === 0)                    return '🌑'; // Amavasya
-  if (tithi >= 1  && tithi <= 3)      return '🌒'; // Shukla early
-  if (tithi >= 4  && tithi <= 7)      return '🌓'; // Shukla Ashtami
-  if (tithi >= 8  && tithi <= 11)     return '🌔'; // Shukla late
-  if (tithi >= 12 && tithi <= 15)     return '🌕'; // Purnima
-  if (tithi >= 16 && tithi <= 18)     return '🌖'; // Krishna early
-  if (tithi >= 19 && tithi <= 22)     return '🌗'; // Krishna Ashtami
-  if (tithi >= 23 && tithi <= 26)     return '🌘'; // Krishna late
-  return '🌑'; // approaching Amavasya
+  if (tithi === 0)                    return zi('moon-new'); // Amavasya
+  if (tithi >= 1  && tithi <= 3)      return zi('moon-waxing-crescent'); // Shukla early
+  if (tithi >= 4  && tithi <= 7)      return zi('moon-first-quarter'); // Shukla Ashtami
+  if (tithi >= 8  && tithi <= 11)     return zi('moon-waxing-gibbous'); // Shukla late
+  if (tithi >= 12 && tithi <= 15)     return zi('moon-full'); // Purnima
+  if (tithi >= 16 && tithi <= 18)     return zi('moon-waning-gibbous'); // Krishna early
+  if (tithi >= 19 && tithi <= 22)     return zi('moon-third-quarter'); // Krishna Ashtami
+  if (tithi >= 23 && tithi <= 26)     return zi('moon-waning-crescent'); // Krishna late
+  return zi('moon-new'); // approaching Amavasya
 }
 
 function getMoonPhaseName(date) {
@@ -3677,7 +3677,7 @@ function updateStorageUsage() {
     breakdown.innerHTML = top3 +
       `<span id="storageMoreBtn" class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.add('is-open');this.style.display='none';">+ ${rest.length} more</span>` +
       `<div id="storageRestChips" class="storage-rest-chips">${restChips}` +
-      `<span class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.remove('is-open');document.getElementById('storageMoreBtn').style.display='';">▴ less</span></div>`;
+      `<span class="storage-chip-toggle" onclick="document.getElementById('storageRestChips').classList.remove('is-open');document.getElementById('storageMoreBtn').style.display='';">${zi('chevron-up')} less</span></div>`;
   }
 }
 
@@ -4034,7 +4034,7 @@ function wgRender() {
   if (prevBtn) prevBtn.style.display = _wgStep === 0 ? 'none' : '';
   if (nextBtn) {
     if (_wgStep === _wgTotalSteps - 1) {
-      nextBtn.textContent = 'Got it ✓';
+      nextBtn.textContent = 'Got it';
       nextBtn.onclick = dismissWelcomeGuide;
     } else {
       nextBtn.textContent = 'Next →';
@@ -4073,7 +4073,7 @@ function toggleEssentialMode() {
     var chevron = document.getElementById('homeVitalsChevron');
     var quick = document.getElementById('homeVitalsQuick');
     if (expanded) expanded.style.display = 'none';
-    if (chevron) chevron.textContent = '▾';
+    if (chevron) chevron.innerHTML = zi('chevron-down');
     if (quick) quick.style.display = '';
   } else {
     document.body.classList.remove('essential-mode');
@@ -4500,7 +4500,7 @@ function getSleepPatterns() {
     const avgH = Math.floor(avgDur / 60);
     const avgM = Math.round(avgDur % 60);
     patterns.push({
-      icon: '⏰',
+      icon: zi('clock'),
       text: `Average night sleep is ${avgH}h ${avgM}m (last 7 entries) — below the 9–11h target for this age. Overtiredness may be a factor.`,
     });
   }
