@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# pre-commit — HR-1 emoji audit gate
+# Per Cipher Edict V round 2 §10 + Maren V-M-10 (PR #74 carry-forward).
+#
+# One-time activation (per clone):
+#   git config core.hooksPath .githooks
+#
+# Runs split/audit-emoji.sh on the working tree before each commit and blocks
+# commits that introduce HR-1 violations. Catches the issue at the developer
+# feedback loop, before push.
+#
+# Emergency bypass: git commit --no-verify  (do NOT push HR-1 violations).
+
+set -e
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+AUDIT="$REPO_ROOT/split/audit-emoji.sh"
+
+if [ ! -x "$AUDIT" ]; then
+  echo "pre-commit: split/audit-emoji.sh not found or not executable; skipping HR-1 audit" >&2
+  exit 0
+fi
+
+if ! bash "$AUDIT"; then
+  echo "" >&2
+  echo "pre-commit BLOCKED: HR-1 audit failed. Fix the violations listed above before committing." >&2
+  echo "Emergency bypass: git commit --no-verify  (do NOT push HR-1 violations)." >&2
+  exit 1
+fi
