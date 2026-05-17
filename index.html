@@ -134,6 +134,18 @@
   --card-shadow:   var(--shadow);
   --border-subtle: rgba(200,180,180,0.2);
   --overlay-bg:    rgba(60,40,40,0.5);
+
+  /* Poop-color reference palette (anatomical, NOT domain).
+     Single source of truth for the picker, legend, timeline, anomaly cards,
+     and Color Guide. The medical.js POOP_COLOR_HEX mirror must stay in sync. */
+  --poop-c-yellow: #e8c84a;
+  --poop-c-green:  #6aa84f;
+  --poop-c-brown:  #8B6914;
+  --poop-c-dark:   #5a4a2a;
+  --poop-c-orange: #e8913a;
+  --poop-c-red:    #d04040;
+  --poop-c-white:  #e0ddd4;
+  --poop-c-black:  #2a2a2a;
 }
 
 /* ── Text Zoom ── */
@@ -1846,6 +1858,81 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .tc-items.tc-items.tc-items.tc-watch { background:rgba(255,248,225,0.5); border-color:rgba(255,193,7,0.3); }
 .tc-items.tc-items.tc-items.tc-add   { background:rgba(232,245,239,0.5); border-color:rgba(181,213,197,0.4); }
 .tc-items.tc-items.open { display:block; }
+
+/* ── Poop swatch (anatomical color reference) ──
+   Class-based replacement for inline-style colored dots across the
+   picker, legend, timeline, anomaly cards, and Color Guide. */
+.poop-swatch {
+  display:inline-block; flex-shrink:0;
+  width:14px; height:14px; border-radius:50%;
+  border:1px solid rgba(0,0,0,0.08);
+  vertical-align:middle;
+  background:var(--mid); /* fallback for unknown colors */
+}
+.poop-swatch--sm { width:10px; height:10px; }
+.poop-swatch--md { width:14px; height:14px; }
+.poop-swatch--lg { width:20px; height:20px; }
+.poop-swatch[data-pcolor="yellow"] { background:var(--poop-c-yellow); }
+.poop-swatch[data-pcolor="green"]  { background:var(--poop-c-green); }
+.poop-swatch[data-pcolor="brown"]  { background:var(--poop-c-brown); }
+.poop-swatch[data-pcolor="dark"]   { background:var(--poop-c-dark); }
+.poop-swatch[data-pcolor="orange"] { background:var(--poop-c-orange); }
+.poop-swatch[data-pcolor="red"]    { background:var(--poop-c-red); }
+.poop-swatch[data-pcolor="white"]  { background:var(--poop-c-white); border-color:rgba(0,0,0,0.18); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); }
+.poop-swatch[data-pcolor="black"]  { background:var(--poop-c-black); }
+
+/* Bar-chart segment uses the same color tokens; width stays inline-dynamic.
+   var(--mid) fallback ensures unknown/orphan colors (e.g. legacy 'tan' /
+   'mustard' from SAFE_POOP_COLORS) render as a recognizable "other" segment
+   instead of an invisible gap that breaks the visual 100% sum. */
+.poop-bar-seg { height:100%; background:var(--mid); }
+.poop-bar-seg[data-pcolor="yellow"] { background:var(--poop-c-yellow); }
+.poop-bar-seg[data-pcolor="green"]  { background:var(--poop-c-green); }
+.poop-bar-seg[data-pcolor="brown"]  { background:var(--poop-c-brown); }
+.poop-bar-seg[data-pcolor="dark"]   { background:var(--poop-c-dark); }
+.poop-bar-seg[data-pcolor="orange"] { background:var(--poop-c-orange); }
+.poop-bar-seg[data-pcolor="red"]    { background:var(--poop-c-red); }
+.poop-bar-seg[data-pcolor="white"]  { background:var(--poop-c-white); }
+.poop-bar-seg[data-pcolor="black"]  { background:var(--poop-c-black); }
+
+/* ── Poop Guide collapsible category cards ──
+   Class-based replacement for the inline-style chrome inside renderPoopGuide. */
+.pg-cat-card { border-radius:var(--r-xl); overflow:hidden; border:1.5px solid var(--amber-light); margin-bottom:var(--sp-8); }
+.pg-cat-card.is-amber    { border-color:var(--amber-light); }
+.pg-cat-card.is-sky      { border-color:var(--sky-light); }
+.pg-cat-card.is-sage     { border-color:var(--sage-light); }
+.pg-cat-card.is-rose     { border-color:var(--rose-light); }
+.pg-cat-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp-10) var(--sp-12); cursor:pointer;
+  background:var(--amber-light);
+}
+.pg-cat-card.is-amber .pg-cat-top { background:var(--amber-light); }
+.pg-cat-card.is-sky   .pg-cat-top { background:var(--sky-light); }
+.pg-cat-card.is-sage  .pg-cat-top { background:var(--sage-light); }
+.pg-cat-card.is-rose  .pg-cat-top { background:var(--rose-light); }
+.pg-cat-head { display:flex; align-items:center; gap:var(--sp-8); }
+.pg-cat-icon { font-size:var(--icon-base); display:inline-flex; align-items:center; }
+.pg-cat-label { font-size:var(--fs-base); font-weight:600; color:var(--tc-amber); }
+.pg-cat-card.is-amber .pg-cat-label { color:var(--tc-amber); }
+.pg-cat-card.is-sky   .pg-cat-label { color:#3a7090; }
+.pg-cat-card.is-sage  .pg-cat-label { color:#3a7060; }
+.pg-cat-card.is-rose  .pg-cat-label { color:#b0485e; }
+.pg-cat-chev { color:var(--tc-amber); display:inline-flex; align-items:center; }
+.pg-cat-card.is-sky   .pg-cat-chev { color:#3a7090; }
+.pg-cat-card.is-sage  .pg-cat-chev { color:#3a7060; }
+.pg-cat-card.is-rose  .pg-cat-chev { color:#b0485e; }
+.pg-cat-body { display:none; padding:var(--sp-10) var(--sp-12); }
+.pg-cat-body.open { display:block; }
+.pg-cat-row { display:flex; gap:var(--sp-12); align-items:flex-start; margin-bottom:var(--sp-10); }
+.pg-cat-row:last-child { margin-bottom:0; }
+.pg-cat-row-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:2px; display:inline-flex; align-items:center; gap:var(--sp-4); }
+.pg-cat-row-icon .poop-swatch { margin-top:2px; }
+.pg-cat-row-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-bottom:2px; display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; }
+.pg-cat-row-text { line-height:var(--lh-normal); }
+.pg-cat-warn { display:inline-flex; align-items:center; font-size:var(--icon-xs); color:#b0485e; }
+.pg-cat-card.expanded .pg-cat-chev { transform:rotate(180deg); }
+
 .history-meal-row { display:flex; gap:var(--sp-8); margin-bottom:var(--sp-2); align-items:flex-start; }
 .history-meal-label { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; color:var(--light); min-width:62px; padding-top:1px; }
 .history-meal-val { color:var(--text); line-height:var(--lh-normal); }
@@ -3054,6 +3141,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .si-bar-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; }
 .si-bar-label { font-size:var(--fs-2xs); color:var(--light); min-width:42px; text-align:right; }
 .si-bar-track { flex:1; height:14px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.si-bar-track.is-stacked { display:flex; height:20px; }
 .si-bar-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
 .si-bar-val { font-size:var(--fs-2xs); font-weight:600; min-width:32px; }
 .si-check-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) 0; border-bottom:1px solid rgba(0,0,0,0.03); }
@@ -3095,7 +3183,10 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .si-sub-label { font-size:var(--fs-2xs); color:var(--light); text-transform:uppercase; letter-spacing:var(--ls-wide); }
 /* ── Poop Intelligence (.pi-*) ── */
 .pi-color-timeline { display:flex; gap:var(--sp-4); flex-wrap:wrap; margin:var(--sp-8) 0; }
-.pi-color-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,0.08); flex-shrink:0; }
+.pi-color-legend { display:flex; gap:var(--sp-8); flex-wrap:wrap; margin-top:var(--sp-4); }
+.pi-color-legend-row { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-2xs); color:var(--light); }
+.pi-color-tl-row { display:flex; align-items:center; gap:var(--sp-4); margin-bottom:2px; }
+.pi-color-tl-label { font-size:var(--fs-2xs); color:var(--light); min-width:42px; text-align:right; }
 .pi-watch-progress { height:8px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; margin:var(--sp-4) 0; }
 .pi-watch-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
 .pi-amount-bar { display:flex; align-items:center; gap:var(--sp-4); }
@@ -3103,7 +3194,6 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .pi-amount-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; background:var(--tc-amber); }
 .pi-symptom-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; display:inline-block; }
 .pi-symptom-row { display:flex; align-items:center; gap:var(--sp-6); flex-wrap:wrap; }
-[data-theme="dark"] .pi-color-dot { border-color:rgba(255,255,255,0.1); }
 [data-theme="dark"] .pi-watch-progress { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .pi-amount-track { background:rgba(255,255,255,0.06); }
 
@@ -3915,12 +4005,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   background:var(--amber-light); color:var(--tc-amber); font-family:'Nunito',sans-serif;
   font-size:var(--fs-sm); font-weight:600; cursor:pointer; transition:all var(--ease-fast);
 }
-.poop-color-btn .pcb-dot {
-  width:16px; height:16px; border-radius:50%; flex-shrink:0;
+.poop-color-btn .poop-swatch {
+  width:16px; height:16px;
   border:1.5px solid rgba(0,0,0,0.1);
 }
 .poop-color-btn.active-pq { background:#8a6520; color:white; border-color:#8a6520; }
-.poop-color-btn.active-pq .pcb-dot { border-color:rgba(255,255,255,0.5); }
+.poop-color-btn.active-pq .poop-swatch { border-color:rgba(255,255,255,0.5); }
 .poop-check-row {
   display:flex; gap:var(--sp-16); align-items:center; margin-top:var(--sp-4);
 }
@@ -4751,7 +4841,16 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 /* Dark mode active toggle overrides — tinted surface + colored text instead of deep solid bg */
 [data-theme="dark"] .pq-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
-[data-theme="dark"] .poop-color-btn.active-pq .pcb-dot { border-color:var(--tc-amber); }
+[data-theme="dark"] .poop-color-btn.active-pq .poop-swatch { border-color:var(--tc-amber); }
+/* V-M-10: --poop-c-black (#2a2a2a) and --poop-c-dark (#5a4a2a) dissolve into
+   the dark-theme surface (#2a2230) — a parent reading a "Black stool" anomaly
+   in dark theme would see an effectively-empty swatch and read the card as
+   benign. Lighten just the swatch/segment renders in dark mode; the
+   anatomical token stays accurate for chart-fill contexts that need raw hex. */
+[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#4a4a4a; border-color:rgba(255,255,255,0.25); }
+[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#7a6440; border-color:rgba(255,255,255,0.20); }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#4a4a4a; }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#7a6440; }
 [data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }
@@ -10696,14 +10795,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div>
             <label class="micro-label">Colour</label>
             <div class="d-flex gap-6 mt-4 flex-wrap" id="poopColorBtns">
-              <button class="poop-color-btn active-pq" id="pc-yellow" data-pcolor="yellow"><span class="pcb-dot" style="background:#e8c840;"></span> Yellow</button>
-              <button class="poop-color-btn" id="pc-green" data-pcolor="green"><span class="pcb-dot" style="background:#6b9e4a;"></span> Green</button>
-              <button class="poop-color-btn" id="pc-brown" data-pcolor="brown"><span class="pcb-dot" style="background:#8b6914;"></span> Brown</button>
-              <button class="poop-color-btn" id="pc-dark" data-pcolor="dark"><span class="pcb-dot" style="background:#3d2b1f;"></span> Dark</button>
-              <button class="poop-color-btn" id="pc-orange" data-pcolor="orange"><span class="pcb-dot" style="background:#e0882a;"></span> Orange</button>
-              <button class="poop-color-btn" id="pc-red" data-pcolor="red"><span class="pcb-dot" style="background:#c0392b;"></span> Red</button>
-              <button class="poop-color-btn" id="pc-white" data-pcolor="white"><span class="pcb-dot" style="background:#f0ede6;"></span> White</button>
-              <button class="poop-color-btn" id="pc-black" data-pcolor="black"><span class="pcb-dot" style="background:#1a1a1a;"></span> Black</button>
+              <button class="poop-color-btn active-pq" id="pc-yellow" data-pcolor="yellow"><span class="poop-swatch" data-pcolor="yellow"></span> Yellow</button>
+              <button class="poop-color-btn" id="pc-green" data-pcolor="green"><span class="poop-swatch" data-pcolor="green"></span> Green</button>
+              <button class="poop-color-btn" id="pc-brown" data-pcolor="brown"><span class="poop-swatch" data-pcolor="brown"></span> Brown</button>
+              <button class="poop-color-btn" id="pc-dark" data-pcolor="dark"><span class="poop-swatch" data-pcolor="dark"></span> Dark</button>
+              <button class="poop-color-btn" id="pc-orange" data-pcolor="orange"><span class="poop-swatch" data-pcolor="orange"></span> Orange</button>
+              <button class="poop-color-btn" id="pc-red" data-pcolor="red"><span class="poop-swatch" data-pcolor="red"></span> Red</button>
+              <button class="poop-color-btn" id="pc-white" data-pcolor="white"><span class="poop-swatch" data-pcolor="white"></span> White</button>
+              <button class="poop-color-btn" id="pc-black" data-pcolor="black"><span class="poop-swatch" data-pcolor="black"></span> Black</button>
             </div>
           </div>
           <div>
@@ -16967,6 +17066,7 @@ function init() {
     else if (action === 'toggleHistoryMonth') toggleHistoryMonth(arg);
     else if (action === 'toggleHistoryDay') toggleHistoryDay(arg);
     else if (action === 'toggleTipCat') toggleTipCat(arg);
+    else if (action === 'togglePoopGuideCat') togglePoopGuideCat(arg);
     else if (action === 'expandUpcoming') expandUpcoming(arg);
     else if (action === 'expandActivities') expandActivities(arg);
     else if (action === 'expandMilestoneByIdx') expandMilestoneByIdx(arg);
@@ -18072,7 +18172,17 @@ function calcDietScore(dateStr) {
 // ── POOP SCORE ──
 
 const CONSISTENCY_SCORES = { soft: 100, normal: 100, loose: 70, hard: 50, watery: 40, pellet: 30 };
-const SAFE_POOP_COLORS = ['brown', 'yellow', 'green', 'tan', 'orange', 'mustard'];
+// V-K-1 / V-K-3: Safe-color whitelist for poop colorScore. Canonical set is
+// the 8 picker keys (yellow/green/brown/dark/orange/red/white/black) minus
+// the 3 alert colors (red/white/black) which are handled by the prior branch
+// at colorScore=0 below. Previously `['brown','yellow','green','tan','orange',
+// 'mustard']` — `tan` and `mustard` were dead branches unreachable from any
+// write path; `dark` was missing despite being a picker option the Color
+// Guide marks normal-for-older-babies, causing a live silent-fail where
+// normal Dark Brown logs dampened the day score by ~4 points (20% weight
+// × (100−80)). Drift-guard: this list must stay a subset of POOP_COLOR_KEYS
+// in medical.js. Mirror at intelligence.js (qaAnswerPoopColor) must match.
+const SAFE_POOP_COLORS = ['yellow', 'green', 'brown', 'dark', 'orange'];
 
 function calcPoopScore(dateStr) {
   dateStr = dateStr || today();
@@ -23462,6 +23572,8 @@ function toggleCatCard(cardId, itemsId) {
 
 function toggleMsCat(cat) { toggleCatCard('ms-cat-' + cat, 'ms-cat-items-' + cat); }
 
+function togglePoopGuideCat(id) { toggleCatCard('pg-' + id, 'pg-body-' + id); }
+
 // Expand only specific categories and highlight matching items
 function expandAndHighlight(containerId, filter) {
   const container = document.getElementById(containerId);
@@ -25644,7 +25756,7 @@ function renderDietIntelBanner() {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
           html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
           html += '<div class="flex-1-min0">';
-          html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + escHtml(t.label) + '</span>';
+          html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + (t.icon || '') + ' ' + escHtml(t.label) + '</span>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">';
           t.foods.forEach(function(f) {
             html += '<span class="dib-synergy-pill" style="pointer-events:none;">' + escHtml(capitalize(f)) + '</span>';
@@ -25742,6 +25854,7 @@ function getMealTemplates(mealKey) {
     });
 
     var label = '';
+    var icon = '';
     var reason = '';
     var hasGrain = combo.foods.some(function(f){ return ['ragi','rice','oats','bajra','wheat'].some(function(g){ return f.includes(g); }); });
     var hasDal = combo.foods.some(function(f){ return ['dal','moong','masoor','toor','khichdi'].some(function(g){ return f.includes(g); }); });
@@ -25750,34 +25863,40 @@ function getMealTemplates(mealKey) {
     var hasNut = combo.foods.some(function(f){ return ['almond','walnut','cashew','peanut'].some(function(g){ return f.includes(g); }); });
     var hasFat = combo.foods.some(function(f){ return ['ghee','coconut oil','butter'].some(function(g){ return f.includes(g); }); });
 
+    // Split icon (raw SVG) from label (plain text) so consumers can render
+    // icon as innerHTML and escHtml the label. Previously emitted as a single
+    // `zi('X') + ' Text'` string into the label field \u2014 escHtml-bearing
+    // consumers at home.js:3833 (track-tab food chips) and home.js:4190\u21924302
+    // (suggestion card) rendered the SVG markup as literal text.
     if (hasGrain && hasDal && hasVeg) {
-      label = zi('rice') + ' Khichdi + veggies';
+      icon = zi('rice'); label = 'Khichdi + veggies';
       reason = 'Complete protein + iron + vitamins';
     } else if (hasGrain && hasDal) {
-      label = zi('rice') + ' Grain + dal combo';
+      icon = zi('rice'); label = 'Grain + dal combo';
       reason = 'Complete protein \u2014 amino acid balance';
     } else if (hasGrain && hasNut && hasFruit) {
-      label = zi('grain') + ' Porridge + fruit + nuts';
+      icon = zi('grain'); label = 'Porridge + fruit + nuts';
       reason = 'Energy + healthy fats + brain development';
     } else if (hasGrain && hasFruit) {
-      label = zi('grain') + ' Porridge + fruit';
+      icon = zi('grain'); label = 'Porridge + fruit';
       reason = 'Energy + vitamins + gentle on tummy';
     } else if (hasFruit && combo.foods.length >= 3) {
-      label = zi('fruit') + ' Fruit bowl';
+      icon = zi('fruit'); label = 'Fruit bowl';
       reason = 'Vitamins + hydration + antioxidants';
     } else if (hasFruit && combo.foods.length >= 2) {
-      label = zi('fruit') + ' Fruit mix';
+      icon = zi('fruit'); label = 'Fruit mix';
       reason = 'Variety of vitamins + easy digestion';
     } else if (hasVeg && combo.foods.length >= 2) {
-      label = zi('carrot') + ' Veggie medley';
+      icon = zi('carrot'); label = 'Veggie medley';
       reason = 'Iron + fibre + micronutrients';
     } else {
-      label = zi('spoon') + ' ' + combo.count + '\u00D7 combo';
+      icon = zi('spoon'); label = combo.count + '\u00D7 combo';
       reason = groups.size + ' food group' + (groups.size !== 1 ? 's' : '');
     }
 
     templates.push({
       foods: combo.display,
+      icon: icon,
       label: label,
       reason: reason,
       count: combo.count,
@@ -26001,7 +26120,7 @@ function generateDailySuggestions() {
         id: 'sg-tpl-' + tplFoods.slice(0, 2).map(f => _baseFoodName(f)).join('-'),
         type: 'template',
         foods: tplFoods,
-        reason: (tpl.label ? tpl.label.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, '') + ' — ' : '') + (tpl.reason || 'Familiar combo'),
+        reason: (tpl.label ? tpl.label + ' — ' : '') + (tpl.reason || 'Familiar combo'),
         emoji: 'bowl',
         adopted: false, matchedMeal: null, matchedAt: null
       });
@@ -27850,18 +27969,27 @@ function renderPoopGuide() {
 
   const ageM = ageAt().months;
 
+  // V-M-15 invariant: cat.id values below are source-controlled literals
+  // ('colors', 'consistency', 'frequency', 'warning') flowing unescaped into
+  // innerHTML attribute interpolations (id="${catId}", data-arg="${cat.id}",
+  // id="${bodyId}"). Safe today; if this list ever becomes data-driven
+  // (config / localStorage / Firestore), wrap each cat.id interpolation in
+  // escHtml() per HR-4.
   const categories = [
     {
       id: 'colors', icon: zi('palette'), label: 'Colour Guide', color: 'amber',
+      // V-M-7: each tip carries pcolor instead of a neutral icon, so parents see
+      // an actual stool-color swatch to compare against the diaper. warn:true
+      // flags medically-concerning colors with a small zi('warn') badge.
       tips: [
-        { icon:zi('warn'), title:'Yellow / Mustard', text:'Completely normal for breastfed babies. Seedy, loose texture is typical. This is the gold standard (literally) for healthy baby poop.' },
-        { icon:zi('dot-red'), title:'Brown / Tan', text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
-        { icon:zi('check'), title:'Green', text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
-        { icon:zi('warn'), title:'Orange', text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
-        { icon:zi('dot-red'), title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
-        { icon:zi('dot-red'), title:'Red ' + zi('warn'), text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
-        { icon:zi('warn'), title:'White / Pale ' + zi('warn'), text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
-        { icon:zi('warn'), title:'Black ' + zi('warn'), text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
+        { pcolor:'yellow', title:'Yellow / Mustard', text:'Completely normal for breastfed babies. Seedy, loose texture is typical. This is the gold standard (literally) for healthy baby poop.' },
+        { pcolor:'brown',  title:'Brown / Tan',     text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
+        { pcolor:'green',  title:'Green',           text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
+        { pcolor:'orange', title:'Orange',          text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
+        { pcolor:'dark',   title:'Dark Brown',      text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
+        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
+        { pcolor:'white',  title:'White / Pale',  warn:true, text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
+        { pcolor:'black',  title:'Black',        warn:true, text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
       ]
     },
     {
@@ -27901,45 +28029,43 @@ function renderPoopGuide() {
     },
   ];
 
+  // Whitelist of valid pcolor keys to guard attribute emission (defense in depth).
+  const PG_PCOLORS = ['yellow','green','brown','dark','orange','red','white','black'];
+
   el.innerHTML = categories.map(cat => {
-    const bgMap = { amber:'var(--amber-light)', sky:'var(--sky-light)', sage:'var(--sage-light)', rose:'var(--rose-light)' };
-    const tcMap = { amber:'var(--tc-amber)', sky:'#3a7090', sage:'#3a7060', rose:'#b0485e' };
+    const tone = ['amber','sky','sage','rose'].indexOf(cat.color) >= 0 ? cat.color : 'amber';
+    const catId = 'pg-' + cat.id;
+    const bodyId = 'pg-body-' + cat.id;
     return `
-      <div class="tip-cat-card" style="border-radius:var(--r-xl);overflow:hidden;border:1.5px solid ${bgMap[cat.color]||'var(--amber-light)'};">
-        <div class="tc-top" onclick="this.parentElement.classList.toggle('tc-open')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${bgMap[cat.color]||'var(--amber-light)'};cursor:pointer;">
-          <div class="d-flex items-center gap-8">
-            <span style="font-size:var(--icon-base);">${cat.icon}</span>
-            <span style="font-size:var(--fs-base);font-weight:600;color:${tcMap[cat.color]||'var(--tc-amber)'};">${cat.label}</span>
+      <div class="pg-cat-card is-${tone}" id="${catId}">
+        <div class="pg-cat-top" data-action="togglePoopGuideCat" data-arg="${cat.id}">
+          <div class="pg-cat-head">
+            <span class="pg-cat-icon">${cat.icon}</span>
+            <span class="pg-cat-label">${escHtml(cat.label)}</span>
             <span class="t-sub">${cat.tips.length} tips</span>
           </div>
-          <span class="collapse-chevron" style="color:${tcMap[cat.color]||'var(--tc-amber)'};">${zi('chevron-down')}</span>
+          <span class="pg-cat-chev collapse-chevron">${zi('chevron-down')}</span>
         </div>
-        <div style="display:none;padding:10px 14px;" class="tc-body">
-          ${cat.tips.map(t => `
-            <div style="display:flex;gap:var(--sp-12);align-items:flex-start;margin-bottom:10px;">
-              <span style="font-size:var(--icon-base);flex-shrink:0;margin-top:2px;">${t.icon}</span>
-              <div>
-                <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);margin-bottom:2px;">${t.title}</div>
-                <div class="t-sub" style="line-height:var(--lh-normal)5;">${t.text}</div>
+        <div class="pg-cat-body" id="${bodyId}">
+          ${cat.tips.map(t => {
+            const leading = t.pcolor && PG_PCOLORS.indexOf(t.pcolor) >= 0
+              ? `<span class="poop-swatch poop-swatch--md" data-pcolor="${t.pcolor}"></span>`
+              : (t.icon || '');
+            const warnBadge = t.warn ? `<span class="pg-cat-warn">${zi('warn')}</span>` : '';
+            return `
+              <div class="pg-cat-row">
+                <span class="pg-cat-row-icon">${leading}</span>
+                <div>
+                  <div class="pg-cat-row-title">${escHtml(t.title)}${warnBadge}</div>
+                  <div class="t-sub pg-cat-row-text">${escHtml(t.text)}</div>
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       </div>
     `;
   }).join('');
-
-  // Toggle open/close
-  el.querySelectorAll('.tip-cat-card .tc-top').forEach(top => {
-    top.onclick = function() {
-      const body = this.nextElementSibling;
-      if (body.style.display === 'none') {
-        body.style.display = '';
-      } else {
-        body.style.display = 'none';
-      }
-    };
-  });
 }
 
 function renderHomePoop() {
@@ -34000,7 +34126,7 @@ function renderDomainHero(domainKey) {
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
-        <div class="dcp-detail">${shortDetail}</div>
+        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(shortDetail)}</div>
       </div>
     </div>`;
   });
@@ -34173,8 +34299,16 @@ function _spGetDomainDefs(zs) {
             detail: (d.poopCount || 0) + ' poops (baseline: ' + (d.baselineFreq || '?') + '/day)', tab: 'poop' },
           { name: 'Color', weight: '20%', score: r.components.color,
             detail: d.colors && d.colors.length ? 'Colors: ' + d.colors.join(', ') : 'All normal colors', tab: 'poop' },
+          // V-M-16: detail split into {icon, detail} so the consumer at
+          // diet.js:2752 can substring-chop the text safely without slicing
+          // through the SVG tag. Previously emitted as `zi('warn') + ' Blood
+          // detected'` etc.; substring(0,26) chopped mid `aria-hidden="true"`
+          // and the broken-SVG fragment swallowed the user-readable text into
+          // the SVG namespace on every Symptoms pill, every day — including
+          // the common "No blood or mucus" branch. Safety-tier surface.
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
-            detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
+            icon: d.hasBlood || d.hasMucus ? zi('warn') : zi('check'),
+            detail: d.hasBlood ? 'Blood detected' : d.hasMucus ? 'Mucus detected' : 'No blood or mucus', tab: 'poop' },
         ];
         if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
@@ -34293,7 +34427,7 @@ function _spRenderBody() {
       </div>
       <div class="sp-comp-bar"><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${c.score}%"></div></div>`;
     if (c.detail) {
-      html += `<div class="sp-comp-detail">${c.detail}</div>`;
+      html += `<div class="sp-comp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(c.detail)}</div>`;
       if (c.tab) {
         html += `<div class="sp-comp-action" onclick="closeScorePopup();setTimeout(()=>switchTab('${c.tab}'),350)">Go to ${capitalize(c.tab)} →</div>`;
       }
@@ -41294,10 +41428,18 @@ function _piGetPoops(windowDays) {
 }
 
 // ── Helper: poop color hex values ──
+// Mirrors --poop-c-* tokens in styles.css. CSS is the source of truth for
+// .poop-swatch / .poop-bar-seg backgrounds; this JS map covers contexts where
+// the raw hex is needed (chart fills, inline title color, etc.). Keep in sync.
 const POOP_COLOR_HEX = {
   yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
   orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
 };
+// Whitelist used to guard data-pcolor attribute emission (defense in depth).
+const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+function _piPcolorAttr(color) {
+  return POOP_COLOR_KEYS.indexOf(color) >= 0 ? ' data-pcolor="' + color + '"' : '';
+}
 
 // ── Feature 1: Consistency Trend ──
 
@@ -41949,7 +42091,7 @@ function computePoopColorAnomalies(windowDays) {
   return {
     insufficient: false, colorDist, total, dominantColor, anomalies, dayEntries,
     overallSeverity, severityLabel: severityLabel[overallSeverity] || 'Safe',
-    count: daysSet.size, POOP_COLOR_HEX
+    count: daysSet.size
   };
 }
 
@@ -41976,21 +42118,19 @@ function renderInfoPoopColorAnomaly() {
 
     // Color distribution bar
     html += '<div class="si-sub-label mb-4" >Color distribution</div>';
-    html += '<div class="si-bar-track" style="display:flex;overflow:hidden;height:20px;">';
+    html += '<div class="si-bar-track is-stacked">';
     const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
     sortedColors.forEach(([color, count]) => {
       const pct = (count / data.total) * 100;
-      const hex = POOP_COLOR_HEX[color] || '#8B6914';
-      html += '<div style="width:' + pct + '%;background:' + hex + ';height:100%;" title="' + color + ': ' + count + '"></div>';
+      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '"></div>';
     });
     html += '</div>';
     // Color legend
-    html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:var(--sp-4);">';
+    html += '<div class="pi-color-legend">';
     sortedColors.forEach(([color, count]) => {
-      const hex = POOP_COLOR_HEX[color] || '#8B6914';
-      html += '<div style="display:flex;align-items:center;gap:4px;font-size:var(--fs-2xs);color:var(--light);">';
-      html += '<div class="pi-color-dot" style="width:10px;height:10px;background:' + hex + ';"></div>';
-      html += color + ' (' + count + ')</div>';
+      html += '<div class="pi-color-legend-row">';
+      html += '<span class="poop-swatch poop-swatch--sm"' + _piPcolorAttr(color) + '></span>';
+      html += escHtml(color) + ' (' + count + ')</div>';
     });
     html += '</div>';
 
@@ -41999,12 +42139,11 @@ function renderInfoPoopColorAnomaly() {
     const days = Object.keys(data.dayEntries).sort();
     days.forEach(d => {
       const dayLabel = formatDate(d).slice(0, 6);
-      html += '<div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:2px;">';
-      html += '<div style="font-size:var(--fs-2xs);color:var(--light);min-width:42px;text-align:right;">' + dayLabel + '</div>';
+      html += '<div class="pi-color-tl-row">';
+      html += '<div class="pi-color-tl-label">' + escHtml(dayLabel) + '</div>';
       html += '<div class="pi-color-timeline">';
       data.dayEntries[d].forEach(c => {
-        const hex = POOP_COLOR_HEX[c] || '#8B6914';
-        html += '<div class="pi-color-dot" style="background:' + hex + ';" title="' + c + '"></div>';
+        html += '<span class="poop-swatch poop-swatch--md"' + _piPcolorAttr(c) + ' title="' + escHtml(c) + '"></span>';
       });
       html += '</div></div>';
     });
@@ -42017,8 +42156,12 @@ function renderInfoPoopColorAnomaly() {
         const key = a.date + a.color;
         if (seen.has(key)) return;
         seen.add(key);
-        const emoji = a.color === 'red' ? zi('dot-red') : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : zi('dot-red');
-        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + emoji + '</div><div class="si-reg-cause-text">' + a.color.charAt(0).toUpperCase() + a.color.slice(1) + ' stool on ' + formatDate(a.date) + ' — ' + a.context + '</div></div>';
+        // V-M-9 fix: was an identical-branch ternary returning zi('dot-red') for
+        // every color. Show the actual anomaly color as a swatch so the visual
+        // cue matches the text ("Red stool on..." / "Black stool on...").
+        const swatch = '<span class="poop-swatch poop-swatch--lg"' + _piPcolorAttr(a.color) + '></span>';
+        const colorLabel = escHtml(a.color.charAt(0).toUpperCase() + a.color.slice(1));
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + swatch + '</div><div class="si-reg-cause-text">' + colorLabel + ' stool on ' + escHtml(formatDate(a.date)) + ' — ' + escHtml(a.context || '') + '</div></div>';
       });
     }
 
@@ -51026,7 +51169,10 @@ function qaAnswerPoopColor(intentId) {
 
   // Distribution
   var totalPoops = recentPoops.length;
-  var safeColors = ['brown', 'yellow', 'green', 'tan', 'orange', 'mustard'];
+  // Mirrors SAFE_POOP_COLORS at core.js — keep in sync. V-K-1 drift-guard:
+  // candidate for promotion to a shared constant on a future intelligence.js
+  // touch (deferred to keep this round's cross-cutting surface minimal).
+  var safeColors = ['yellow', 'green', 'brown', 'dark', 'orange'];
   var dominantColor = Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
   headline = 'Most common: ' + dominantColor[0] + ' (' + dominantColor[1] + '/' + totalPoops + ')';
 
@@ -51063,7 +51209,7 @@ function qaAnswerPoopColor(intentId) {
   });
 
   if (actionItems.length === 0) {
-    actionItems.push({ text: 'Normal range: brown, yellow, green, tan, orange, mustard', signal: 'good' });
+    actionItems.push({ text: 'Normal range: yellow, green, brown, dark, orange', signal: 'good' });
   }
 
   var sections = [];
@@ -53292,7 +53438,9 @@ function deEditStool(idx) {
     title: 'Edit Stool Entry',
     fields: [
       { label: 'Consistency', id: 'consistency', type: 'select', value: s.consistency,
-        options: [{value:'watery',label:zi('drop')+' Watery'},{value:'runny',label:zi('warn')+' Runny'},{value:'soft',label:zi('check')+' Soft'},{value:'normal',label:'' + zi('check') + ' Normal'},{value:'hard',label:zi('warn')+' Hard'}] },
+        // <option> elements render text-only — zi() SVG was leaking as literal
+        // text via escHtml at intelligence.js:6831. Plain labels.
+        options: [{value:'watery',label:'Watery'},{value:'runny',label:'Runny'},{value:'soft',label:'Soft'},{value:'normal',label:'Normal'},{value:'hard',label:'Hard'}] },
       { label: 'Time', id: 'time', type: 'time', value: s.time },
       { label: 'Notes', id: 'notes', type: 'text', value: s.notes || '' }
     ],
@@ -53741,7 +53889,8 @@ function voEditEntry(idx) {
     title: 'Edit Vomiting Entry',
     fields: [
       { label: 'Type', id: 'type', type: 'select', value: e.type,
-        options: [{value:'spit-up',label:zi('warn')+' Spit-up'},{value:'vomit',label:zi('siren')+' Vomit'},{value:'projectile',label:zi('siren')+' Projectile'},{value:'bile',label:zi('warn')+' Bile/green'}] },
+        // <option> renders text-only; zi() decoration was leaking as literal text.
+        options: [{value:'spit-up',label:'Spit-up'},{value:'vomit',label:'Vomit'},{value:'projectile',label:'Projectile'},{value:'bile',label:'Bile/green'}] },
       { label: 'Time', id: 'time', type: 'time', value: e.time },
       { label: 'Notes', id: 'notes', type: 'text', value: e.notes || '' }
     ],

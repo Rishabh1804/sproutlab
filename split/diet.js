@@ -2754,7 +2754,7 @@ function renderDomainHero(domainKey) {
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
-        <div class="dcp-detail">${shortDetail}</div>
+        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(shortDetail)}</div>
       </div>
     </div>`;
   });
@@ -2927,8 +2927,16 @@ function _spGetDomainDefs(zs) {
             detail: (d.poopCount || 0) + ' poops (baseline: ' + (d.baselineFreq || '?') + '/day)', tab: 'poop' },
           { name: 'Color', weight: '20%', score: r.components.color,
             detail: d.colors && d.colors.length ? 'Colors: ' + d.colors.join(', ') : 'All normal colors', tab: 'poop' },
+          // V-M-16: detail split into {icon, detail} so the consumer at
+          // diet.js:2752 can substring-chop the text safely without slicing
+          // through the SVG tag. Previously emitted as `zi('warn') + ' Blood
+          // detected'` etc.; substring(0,26) chopped mid `aria-hidden="true"`
+          // and the broken-SVG fragment swallowed the user-readable text into
+          // the SVG namespace on every Symptoms pill, every day — including
+          // the common "No blood or mucus" branch. Safety-tier surface.
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
-            detail: d.hasBlood ? zi('warn') + ' Blood detected' : d.hasMucus ? zi('warn') + ' Mucus detected' : zi('check') + ' No blood or mucus', tab: 'poop' },
+            icon: d.hasBlood || d.hasMucus ? zi('warn') : zi('check'),
+            detail: d.hasBlood ? 'Blood detected' : d.hasMucus ? 'Mucus detected' : 'No blood or mucus', tab: 'poop' },
         ];
         if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
@@ -3047,7 +3055,7 @@ function _spRenderBody() {
       </div>
       <div class="sp-comp-bar"><div class="sp-comp-bar-fill dyn-fill ${barClass}" style="--dyn-pct:${c.score}%"></div></div>`;
     if (c.detail) {
-      html += `<div class="sp-comp-detail">${c.detail}</div>`;
+      html += `<div class="sp-comp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(c.detail)}</div>`;
       if (c.tab) {
         html += `<div class="sp-comp-action" onclick="closeScorePopup();setTimeout(()=>switchTab('${c.tab}'),350)">Go to ${capitalize(c.tab)} →</div>`;
       }

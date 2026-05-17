@@ -5752,7 +5752,10 @@ function qaAnswerPoopColor(intentId) {
 
   // Distribution
   var totalPoops = recentPoops.length;
-  var safeColors = ['brown', 'yellow', 'green', 'tan', 'orange', 'mustard'];
+  // Mirrors SAFE_POOP_COLORS at core.js — keep in sync. V-K-1 drift-guard:
+  // candidate for promotion to a shared constant on a future intelligence.js
+  // touch (deferred to keep this round's cross-cutting surface minimal).
+  var safeColors = ['yellow', 'green', 'brown', 'dark', 'orange'];
   var dominantColor = Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
   headline = 'Most common: ' + dominantColor[0] + ' (' + dominantColor[1] + '/' + totalPoops + ')';
 
@@ -5789,7 +5792,7 @@ function qaAnswerPoopColor(intentId) {
   });
 
   if (actionItems.length === 0) {
-    actionItems.push({ text: 'Normal range: brown, yellow, green, tan, orange, mustard', signal: 'good' });
+    actionItems.push({ text: 'Normal range: yellow, green, brown, dark, orange', signal: 'good' });
   }
 
   var sections = [];
@@ -8018,7 +8021,9 @@ function deEditStool(idx) {
     title: 'Edit Stool Entry',
     fields: [
       { label: 'Consistency', id: 'consistency', type: 'select', value: s.consistency,
-        options: [{value:'watery',label:zi('drop')+' Watery'},{value:'runny',label:zi('warn')+' Runny'},{value:'soft',label:zi('check')+' Soft'},{value:'normal',label:'' + zi('check') + ' Normal'},{value:'hard',label:zi('warn')+' Hard'}] },
+        // <option> elements render text-only — zi() SVG was leaking as literal
+        // text via escHtml at intelligence.js:6831. Plain labels.
+        options: [{value:'watery',label:'Watery'},{value:'runny',label:'Runny'},{value:'soft',label:'Soft'},{value:'normal',label:'Normal'},{value:'hard',label:'Hard'}] },
       { label: 'Time', id: 'time', type: 'time', value: s.time },
       { label: 'Notes', id: 'notes', type: 'text', value: s.notes || '' }
     ],
@@ -8467,7 +8472,8 @@ function voEditEntry(idx) {
     title: 'Edit Vomiting Entry',
     fields: [
       { label: 'Type', id: 'type', type: 'select', value: e.type,
-        options: [{value:'spit-up',label:zi('warn')+' Spit-up'},{value:'vomit',label:zi('siren')+' Vomit'},{value:'projectile',label:zi('siren')+' Projectile'},{value:'bile',label:zi('warn')+' Bile/green'}] },
+        // <option> renders text-only; zi() decoration was leaking as literal text.
+        options: [{value:'spit-up',label:'Spit-up'},{value:'vomit',label:'Vomit'},{value:'projectile',label:'Projectile'},{value:'bile',label:'Bile/green'}] },
       { label: 'Time', id: 'time', type: 'time', value: e.time },
       { label: 'Notes', id: 'notes', type: 'text', value: e.notes || '' }
     ],

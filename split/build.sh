@@ -3,6 +3,14 @@
 # cwd (e.g. `pnpm build` from repo root). Internal cat/node calls remain
 # relative to split/ as before; this just makes the cwd discipline implicit.
 cd "$(dirname "$0")"
+# HR-1 ship-gate: audit-emoji.sh blocks the build on emoji violations across
+# split/ + any built root artifact. Redirect to stderr so the audit's PASS
+# line doesn't pollute the HTML on stdout. Per Cipher Edict V round 2 §10 +
+# Maren V-M-10 (PR #74 carry-forward).
+if ! bash audit-emoji.sh >&2; then
+  echo "BUILD ABORTED: HR-1 audit failed. Fix violations above before building." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
