@@ -1646,6 +1646,8 @@ function toggleCatCard(cardId, itemsId) {
 
 function toggleMsCat(cat) { toggleCatCard('ms-cat-' + cat, 'ms-cat-items-' + cat); }
 
+function togglePoopGuideCat(id) { toggleCatCard('pg-' + id, 'pg-body-' + id); }
+
 // Expand only specific categories and highlight matching items
 function expandAndHighlight(containerId, filter) {
   const container = document.getElementById(containerId);
@@ -6037,15 +6039,18 @@ function renderPoopGuide() {
   const categories = [
     {
       id: 'colors', icon: zi('palette'), label: 'Colour Guide', color: 'amber',
+      // V-M-7: each tip carries pcolor instead of a neutral icon, so parents see
+      // an actual stool-color swatch to compare against the diaper. warn:true
+      // flags medically-concerning colors with a small zi('warn') badge.
       tips: [
-        { icon:zi('warn'), title:'Yellow / Mustard', text:'Completely normal for breastfed babies. Seedy, loose texture is typical. This is the gold standard (literally) for healthy baby poop.' },
-        { icon:zi('dot-red'), title:'Brown / Tan', text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
-        { icon:zi('check'), title:'Green', text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
-        { icon:zi('warn'), title:'Orange', text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
-        { icon:zi('dot-red'), title:'Dark Brown', text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
-        { icon:zi('dot-red'), title:'Red ' + zi('warn'), text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
-        { icon:zi('warn'), title:'White / Pale ' + zi('warn'), text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
-        { icon:zi('warn'), title:'Black ' + zi('warn'), text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
+        { pcolor:'yellow', title:'Yellow / Mustard', text:'Completely normal for breastfed babies. Seedy, loose texture is typical. This is the gold standard (literally) for healthy baby poop.' },
+        { pcolor:'brown',  title:'Brown / Tan',     text:'Normal, especially after starting solids. Colour darkens as the diet diversifies. Most common colour for formula-fed and older babies.' },
+        { pcolor:'green',  title:'Green',           text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
+        { pcolor:'orange', title:'Orange',          text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
+        { pcolor:'dark',   title:'Dark Brown',      text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
+        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
+        { pcolor:'white',  title:'White / Pale',  warn:true, text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
+        { pcolor:'black',  title:'Black',        warn:true, text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
       ]
     },
     {
@@ -6085,45 +6090,43 @@ function renderPoopGuide() {
     },
   ];
 
+  // Whitelist of valid pcolor keys to guard attribute emission (defense in depth).
+  const PG_PCOLORS = ['yellow','green','brown','dark','orange','red','white','black'];
+
   el.innerHTML = categories.map(cat => {
-    const bgMap = { amber:'var(--amber-light)', sky:'var(--sky-light)', sage:'var(--sage-light)', rose:'var(--rose-light)' };
-    const tcMap = { amber:'var(--tc-amber)', sky:'#3a7090', sage:'#3a7060', rose:'#b0485e' };
+    const tone = ['amber','sky','sage','rose'].indexOf(cat.color) >= 0 ? cat.color : 'amber';
+    const catId = 'pg-' + cat.id;
+    const bodyId = 'pg-body-' + cat.id;
     return `
-      <div class="tip-cat-card" style="border-radius:var(--r-xl);overflow:hidden;border:1.5px solid ${bgMap[cat.color]||'var(--amber-light)'};">
-        <div class="tc-top" onclick="this.parentElement.classList.toggle('tc-open')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${bgMap[cat.color]||'var(--amber-light)'};cursor:pointer;">
-          <div class="d-flex items-center gap-8">
-            <span style="font-size:var(--icon-base);">${cat.icon}</span>
-            <span style="font-size:var(--fs-base);font-weight:600;color:${tcMap[cat.color]||'var(--tc-amber)'};">${cat.label}</span>
+      <div class="pg-cat-card is-${tone}" id="${catId}">
+        <div class="pg-cat-top" data-action="togglePoopGuideCat" data-arg="${cat.id}">
+          <div class="pg-cat-head">
+            <span class="pg-cat-icon">${cat.icon}</span>
+            <span class="pg-cat-label">${escHtml(cat.label)}</span>
             <span class="t-sub">${cat.tips.length} tips</span>
           </div>
-          <span class="collapse-chevron" style="color:${tcMap[cat.color]||'var(--tc-amber)'};">${zi('chevron-down')}</span>
+          <span class="pg-cat-chev collapse-chevron">${zi('chevron-down')}</span>
         </div>
-        <div style="display:none;padding:10px 14px;" class="tc-body">
-          ${cat.tips.map(t => `
-            <div style="display:flex;gap:var(--sp-12);align-items:flex-start;margin-bottom:10px;">
-              <span style="font-size:var(--icon-base);flex-shrink:0;margin-top:2px;">${t.icon}</span>
-              <div>
-                <div style="font-size:var(--fs-sm);font-weight:600;color:var(--text);margin-bottom:2px;">${t.title}</div>
-                <div class="t-sub" style="line-height:var(--lh-normal)5;">${t.text}</div>
+        <div class="pg-cat-body" id="${bodyId}">
+          ${cat.tips.map(t => {
+            const leading = t.pcolor && PG_PCOLORS.indexOf(t.pcolor) >= 0
+              ? `<span class="poop-swatch poop-swatch--md" data-pcolor="${t.pcolor}"></span>`
+              : (t.icon || '');
+            const warnBadge = t.warn ? `<span class="pg-cat-warn">${zi('warn')}</span>` : '';
+            return `
+              <div class="pg-cat-row">
+                <span class="pg-cat-row-icon">${leading}</span>
+                <div>
+                  <div class="pg-cat-row-title">${escHtml(t.title)}${warnBadge}</div>
+                  <div class="t-sub pg-cat-row-text">${escHtml(t.text)}</div>
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       </div>
     `;
   }).join('');
-
-  // Toggle open/close
-  el.querySelectorAll('.tip-cat-card .tc-top').forEach(top => {
-    top.onclick = function() {
-      const body = this.nextElementSibling;
-      if (body.style.display === 'none') {
-        body.style.display = '';
-      } else {
-        body.style.display = 'none';
-      }
-    };
-  });
 }
 
 function renderHomePoop() {

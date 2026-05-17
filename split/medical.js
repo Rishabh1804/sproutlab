@@ -5961,10 +5961,18 @@ function _piGetPoops(windowDays) {
 }
 
 // ── Helper: poop color hex values ──
+// Mirrors --poop-c-* tokens in styles.css. CSS is the source of truth for
+// .poop-swatch / .poop-bar-seg backgrounds; this JS map covers contexts where
+// the raw hex is needed (chart fills, inline title color, etc.). Keep in sync.
 const POOP_COLOR_HEX = {
   yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
   orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
 };
+// Whitelist used to guard data-pcolor attribute emission (defense in depth).
+const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+function _piPcolorAttr(color) {
+  return POOP_COLOR_KEYS.indexOf(color) >= 0 ? ' data-pcolor="' + color + '"' : '';
+}
 
 // ── Feature 1: Consistency Trend ──
 
@@ -6647,17 +6655,15 @@ function renderInfoPoopColorAnomaly() {
     const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
     sortedColors.forEach(([color, count]) => {
       const pct = (count / data.total) * 100;
-      const hex = POOP_COLOR_HEX[color] || '#8B6914';
-      html += '<div style="width:' + pct + '%;background:' + hex + ';height:100%;" title="' + color + ': ' + count + '"></div>';
+      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '"></div>';
     });
     html += '</div>';
     // Color legend
-    html += '<div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;margin-top:var(--sp-4);">';
+    html += '<div class="pi-color-legend">';
     sortedColors.forEach(([color, count]) => {
-      const hex = POOP_COLOR_HEX[color] || '#8B6914';
-      html += '<div style="display:flex;align-items:center;gap:4px;font-size:var(--fs-2xs);color:var(--light);">';
-      html += '<div class="pi-color-dot" style="width:10px;height:10px;background:' + hex + ';"></div>';
-      html += color + ' (' + count + ')</div>';
+      html += '<div class="pi-color-legend-row">';
+      html += '<span class="poop-swatch poop-swatch--sm"' + _piPcolorAttr(color) + '></span>';
+      html += escHtml(color) + ' (' + count + ')</div>';
     });
     html += '</div>';
 
@@ -6666,12 +6672,11 @@ function renderInfoPoopColorAnomaly() {
     const days = Object.keys(data.dayEntries).sort();
     days.forEach(d => {
       const dayLabel = formatDate(d).slice(0, 6);
-      html += '<div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:2px;">';
-      html += '<div style="font-size:var(--fs-2xs);color:var(--light);min-width:42px;text-align:right;">' + dayLabel + '</div>';
+      html += '<div class="pi-color-tl-row">';
+      html += '<div class="pi-color-tl-label">' + escHtml(dayLabel) + '</div>';
       html += '<div class="pi-color-timeline">';
       data.dayEntries[d].forEach(c => {
-        const hex = POOP_COLOR_HEX[c] || '#8B6914';
-        html += '<div class="pi-color-dot" style="background:' + hex + ';" title="' + c + '"></div>';
+        html += '<span class="poop-swatch poop-swatch--md"' + _piPcolorAttr(c) + ' title="' + escHtml(c) + '"></span>';
       });
       html += '</div></div>';
     });
@@ -6684,8 +6689,12 @@ function renderInfoPoopColorAnomaly() {
         const key = a.date + a.color;
         if (seen.has(key)) return;
         seen.add(key);
-        const emoji = a.color === 'red' ? zi('dot-red') : a.color === 'black' ? zi('dot-red') : a.color === 'white' ? zi('dot-red') : zi('dot-red');
-        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + emoji + '</div><div class="si-reg-cause-text">' + a.color.charAt(0).toUpperCase() + a.color.slice(1) + ' stool on ' + formatDate(a.date) + ' — ' + a.context + '</div></div>';
+        // V-M-9 fix: was an identical-branch ternary returning zi('dot-red') for
+        // every color. Show the actual anomaly color as a swatch so the visual
+        // cue matches the text ("Red stool on..." / "Black stool on...").
+        const swatch = '<span class="poop-swatch poop-swatch--lg"' + _piPcolorAttr(a.color) + '></span>';
+        const colorLabel = escHtml(a.color.charAt(0).toUpperCase() + a.color.slice(1));
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + swatch + '</div><div class="si-reg-cause-text">' + colorLabel + ' stool on ' + escHtml(formatDate(a.date)) + ' — ' + escHtml(a.context || '') + '</div></div>';
       });
     }
 

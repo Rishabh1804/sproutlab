@@ -127,6 +127,18 @@
   --card-shadow:   var(--shadow);
   --border-subtle: rgba(200,180,180,0.2);
   --overlay-bg:    rgba(60,40,40,0.5);
+
+  /* Poop-color reference palette (anatomical, NOT domain).
+     Single source of truth for the picker, legend, timeline, anomaly cards,
+     and Color Guide. The medical.js POOP_COLOR_HEX mirror must stay in sync. */
+  --poop-c-yellow: #e8c84a;
+  --poop-c-green:  #6aa84f;
+  --poop-c-brown:  #8B6914;
+  --poop-c-dark:   #5a4a2a;
+  --poop-c-orange: #e8913a;
+  --poop-c-red:    #d04040;
+  --poop-c-white:  #e0ddd4;
+  --poop-c-black:  #2a2a2a;
 }
 
 /* ── Text Zoom ── */
@@ -1839,6 +1851,78 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .tc-items.tc-items.tc-items.tc-watch { background:rgba(255,248,225,0.5); border-color:rgba(255,193,7,0.3); }
 .tc-items.tc-items.tc-items.tc-add   { background:rgba(232,245,239,0.5); border-color:rgba(181,213,197,0.4); }
 .tc-items.tc-items.open { display:block; }
+
+/* ── Poop swatch (anatomical color reference) ──
+   Class-based replacement for inline-style colored dots across the
+   picker, legend, timeline, anomaly cards, and Color Guide. */
+.poop-swatch {
+  display:inline-block; flex-shrink:0;
+  width:14px; height:14px; border-radius:50%;
+  border:1px solid rgba(0,0,0,0.08);
+  vertical-align:middle;
+  background:var(--mid); /* fallback for unknown colors */
+}
+.poop-swatch--sm { width:10px; height:10px; }
+.poop-swatch--md { width:14px; height:14px; }
+.poop-swatch--lg { width:20px; height:20px; }
+.poop-swatch[data-pcolor="yellow"] { background:var(--poop-c-yellow); }
+.poop-swatch[data-pcolor="green"]  { background:var(--poop-c-green); }
+.poop-swatch[data-pcolor="brown"]  { background:var(--poop-c-brown); }
+.poop-swatch[data-pcolor="dark"]   { background:var(--poop-c-dark); }
+.poop-swatch[data-pcolor="orange"] { background:var(--poop-c-orange); }
+.poop-swatch[data-pcolor="red"]    { background:var(--poop-c-red); }
+.poop-swatch[data-pcolor="white"]  { background:var(--poop-c-white); border-color:rgba(0,0,0,0.18); }
+.poop-swatch[data-pcolor="black"]  { background:var(--poop-c-black); }
+
+/* Bar-chart segment uses the same color tokens; width stays inline-dynamic. */
+.poop-bar-seg { height:100%; }
+.poop-bar-seg[data-pcolor="yellow"] { background:var(--poop-c-yellow); }
+.poop-bar-seg[data-pcolor="green"]  { background:var(--poop-c-green); }
+.poop-bar-seg[data-pcolor="brown"]  { background:var(--poop-c-brown); }
+.poop-bar-seg[data-pcolor="dark"]   { background:var(--poop-c-dark); }
+.poop-bar-seg[data-pcolor="orange"] { background:var(--poop-c-orange); }
+.poop-bar-seg[data-pcolor="red"]    { background:var(--poop-c-red); }
+.poop-bar-seg[data-pcolor="white"]  { background:var(--poop-c-white); }
+.poop-bar-seg[data-pcolor="black"]  { background:var(--poop-c-black); }
+
+/* ── Poop Guide collapsible category cards ──
+   Class-based replacement for the inline-style chrome inside renderPoopGuide. */
+.pg-cat-card { border-radius:var(--r-xl); overflow:hidden; border:1.5px solid var(--amber-light); margin-bottom:var(--sp-8); }
+.pg-cat-card.is-amber    { border-color:var(--amber-light); }
+.pg-cat-card.is-sky      { border-color:var(--sky-light); }
+.pg-cat-card.is-sage     { border-color:var(--sage-light); }
+.pg-cat-card.is-rose     { border-color:var(--rose-light); }
+.pg-cat-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp-10) var(--sp-12); cursor:pointer;
+  background:var(--amber-light);
+}
+.pg-cat-card.is-amber .pg-cat-top { background:var(--amber-light); }
+.pg-cat-card.is-sky   .pg-cat-top { background:var(--sky-light); }
+.pg-cat-card.is-sage  .pg-cat-top { background:var(--sage-light); }
+.pg-cat-card.is-rose  .pg-cat-top { background:var(--rose-light); }
+.pg-cat-head { display:flex; align-items:center; gap:var(--sp-8); }
+.pg-cat-icon { font-size:var(--icon-base); display:inline-flex; align-items:center; }
+.pg-cat-label { font-size:var(--fs-base); font-weight:600; color:var(--tc-amber); }
+.pg-cat-card.is-amber .pg-cat-label { color:var(--tc-amber); }
+.pg-cat-card.is-sky   .pg-cat-label { color:#3a7090; }
+.pg-cat-card.is-sage  .pg-cat-label { color:#3a7060; }
+.pg-cat-card.is-rose  .pg-cat-label { color:#b0485e; }
+.pg-cat-chev { color:var(--tc-amber); display:inline-flex; align-items:center; }
+.pg-cat-card.is-sky   .pg-cat-chev { color:#3a7090; }
+.pg-cat-card.is-sage  .pg-cat-chev { color:#3a7060; }
+.pg-cat-card.is-rose  .pg-cat-chev { color:#b0485e; }
+.pg-cat-body { display:none; padding:var(--sp-10) var(--sp-12); }
+.pg-cat-body.open { display:block; }
+.pg-cat-row { display:flex; gap:var(--sp-12); align-items:flex-start; margin-bottom:var(--sp-10); }
+.pg-cat-row:last-child { margin-bottom:0; }
+.pg-cat-row-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:2px; display:inline-flex; align-items:center; gap:var(--sp-4); }
+.pg-cat-row-icon .poop-swatch { margin-top:2px; }
+.pg-cat-row-title { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-bottom:2px; display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap; }
+.pg-cat-row-text { line-height:var(--lh-normal); }
+.pg-cat-warn { display:inline-flex; align-items:center; font-size:var(--icon-xs); color:#b0485e; }
+.pg-cat-card.expanded .pg-cat-chev { transform:rotate(180deg); }
+
 .history-meal-row { display:flex; gap:var(--sp-8); margin-bottom:var(--sp-2); align-items:flex-start; }
 .history-meal-label { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; color:var(--light); min-width:62px; padding-top:1px; }
 .history-meal-val { color:var(--text); line-height:var(--lh-normal); }
@@ -3088,7 +3172,10 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .si-sub-label { font-size:var(--fs-2xs); color:var(--light); text-transform:uppercase; letter-spacing:var(--ls-wide); }
 /* ── Poop Intelligence (.pi-*) ── */
 .pi-color-timeline { display:flex; gap:var(--sp-4); flex-wrap:wrap; margin:var(--sp-8) 0; }
-.pi-color-dot { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,0.08); flex-shrink:0; }
+.pi-color-legend { display:flex; gap:var(--sp-8); flex-wrap:wrap; margin-top:var(--sp-4); }
+.pi-color-legend-row { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-2xs); color:var(--light); }
+.pi-color-tl-row { display:flex; align-items:center; gap:var(--sp-4); margin-bottom:2px; }
+.pi-color-tl-label { font-size:var(--fs-2xs); color:var(--light); min-width:42px; text-align:right; }
 .pi-watch-progress { height:8px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; margin:var(--sp-4) 0; }
 .pi-watch-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
 .pi-amount-bar { display:flex; align-items:center; gap:var(--sp-4); }
@@ -3096,7 +3183,6 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .pi-amount-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; background:var(--tc-amber); }
 .pi-symptom-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; display:inline-block; }
 .pi-symptom-row { display:flex; align-items:center; gap:var(--sp-6); flex-wrap:wrap; }
-[data-theme="dark"] .pi-color-dot { border-color:rgba(255,255,255,0.1); }
 [data-theme="dark"] .pi-watch-progress { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .pi-amount-track { background:rgba(255,255,255,0.06); }
 
@@ -3908,12 +3994,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   background:var(--amber-light); color:var(--tc-amber); font-family:'Nunito',sans-serif;
   font-size:var(--fs-sm); font-weight:600; cursor:pointer; transition:all var(--ease-fast);
 }
-.poop-color-btn .pcb-dot {
-  width:16px; height:16px; border-radius:50%; flex-shrink:0;
+.poop-color-btn .poop-swatch {
+  width:16px; height:16px;
   border:1.5px solid rgba(0,0,0,0.1);
 }
 .poop-color-btn.active-pq { background:#8a6520; color:white; border-color:#8a6520; }
-.poop-color-btn.active-pq .pcb-dot { border-color:rgba(255,255,255,0.5); }
+.poop-color-btn.active-pq .poop-swatch { border-color:rgba(255,255,255,0.5); }
 .poop-check-row {
   display:flex; gap:var(--sp-16); align-items:center; margin-top:var(--sp-4);
 }
@@ -4744,7 +4830,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 /* Dark mode active toggle overrides — tinted surface + colored text instead of deep solid bg */
 [data-theme="dark"] .pq-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
-[data-theme="dark"] .poop-color-btn.active-pq .pcb-dot { border-color:var(--tc-amber); }
+[data-theme="dark"] .poop-color-btn.active-pq .poop-swatch { border-color:var(--tc-amber); }
 [data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }

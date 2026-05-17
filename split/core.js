@@ -421,6 +421,7 @@ function init() {
     else if (action === 'toggleHistoryMonth') toggleHistoryMonth(arg);
     else if (action === 'toggleHistoryDay') toggleHistoryDay(arg);
     else if (action === 'toggleTipCat') toggleTipCat(arg);
+    else if (action === 'togglePoopGuideCat') togglePoopGuideCat(arg);
     else if (action === 'expandUpcoming') expandUpcoming(arg);
     else if (action === 'expandActivities') expandActivities(arg);
     else if (action === 'expandMilestoneByIdx') expandMilestoneByIdx(arg);
