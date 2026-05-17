@@ -3830,7 +3830,7 @@ function renderDietIntelBanner() {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
           html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
           html += '<div class="flex-1-min0">';
-          html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + escHtml(t.label) + '</span>';
+          html += '<span class="t-sm" style="font-weight:600;color:var(--text);">' + (t.icon || '') + ' ' + escHtml(t.label) + '</span>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">';
           t.foods.forEach(function(f) {
             html += '<span class="dib-synergy-pill" style="pointer-events:none;">' + escHtml(capitalize(f)) + '</span>';
@@ -3928,6 +3928,7 @@ function getMealTemplates(mealKey) {
     });
 
     var label = '';
+    var icon = '';
     var reason = '';
     var hasGrain = combo.foods.some(function(f){ return ['ragi','rice','oats','bajra','wheat'].some(function(g){ return f.includes(g); }); });
     var hasDal = combo.foods.some(function(f){ return ['dal','moong','masoor','toor','khichdi'].some(function(g){ return f.includes(g); }); });
@@ -3936,34 +3937,40 @@ function getMealTemplates(mealKey) {
     var hasNut = combo.foods.some(function(f){ return ['almond','walnut','cashew','peanut'].some(function(g){ return f.includes(g); }); });
     var hasFat = combo.foods.some(function(f){ return ['ghee','coconut oil','butter'].some(function(g){ return f.includes(g); }); });
 
+    // Split icon (raw SVG) from label (plain text) so consumers can render
+    // icon as innerHTML and escHtml the label. Previously emitted as a single
+    // `zi('X') + ' Text'` string into the label field \u2014 escHtml-bearing
+    // consumers at home.js:3833 (track-tab food chips) and home.js:4190\u21924302
+    // (suggestion card) rendered the SVG markup as literal text.
     if (hasGrain && hasDal && hasVeg) {
-      label = zi('rice') + ' Khichdi + veggies';
+      icon = zi('rice'); label = 'Khichdi + veggies';
       reason = 'Complete protein + iron + vitamins';
     } else if (hasGrain && hasDal) {
-      label = zi('rice') + ' Grain + dal combo';
+      icon = zi('rice'); label = 'Grain + dal combo';
       reason = 'Complete protein \u2014 amino acid balance';
     } else if (hasGrain && hasNut && hasFruit) {
-      label = zi('grain') + ' Porridge + fruit + nuts';
+      icon = zi('grain'); label = 'Porridge + fruit + nuts';
       reason = 'Energy + healthy fats + brain development';
     } else if (hasGrain && hasFruit) {
-      label = zi('grain') + ' Porridge + fruit';
+      icon = zi('grain'); label = 'Porridge + fruit';
       reason = 'Energy + vitamins + gentle on tummy';
     } else if (hasFruit && combo.foods.length >= 3) {
-      label = zi('fruit') + ' Fruit bowl';
+      icon = zi('fruit'); label = 'Fruit bowl';
       reason = 'Vitamins + hydration + antioxidants';
     } else if (hasFruit && combo.foods.length >= 2) {
-      label = zi('fruit') + ' Fruit mix';
+      icon = zi('fruit'); label = 'Fruit mix';
       reason = 'Variety of vitamins + easy digestion';
     } else if (hasVeg && combo.foods.length >= 2) {
-      label = zi('carrot') + ' Veggie medley';
+      icon = zi('carrot'); label = 'Veggie medley';
       reason = 'Iron + fibre + micronutrients';
     } else {
-      label = zi('spoon') + ' ' + combo.count + '\u00D7 combo';
+      icon = zi('spoon'); label = combo.count + '\u00D7 combo';
       reason = groups.size + ' food group' + (groups.size !== 1 ? 's' : '');
     }
 
     templates.push({
       foods: combo.display,
+      icon: icon,
       label: label,
       reason: reason,
       count: combo.count,
@@ -4187,7 +4194,7 @@ function generateDailySuggestions() {
         id: 'sg-tpl-' + tplFoods.slice(0, 2).map(f => _baseFoodName(f)).join('-'),
         type: 'template',
         foods: tplFoods,
-        reason: (tpl.label ? tpl.label.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]+\s*/u, '') + ' — ' : '') + (tpl.reason || 'Familiar combo'),
+        reason: (tpl.label ? tpl.label + ' — ' : '') + (tpl.reason || 'Familiar combo'),
         emoji: 'bowl',
         adopted: false, matchedMeal: null, matchedAt: null
       });
