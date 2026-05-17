@@ -6624,7 +6624,7 @@ function computePoopColorAnomalies(windowDays) {
   return {
     insufficient: false, colorDist, total, dominantColor, anomalies, dayEntries,
     overallSeverity, severityLabel: severityLabel[overallSeverity] || 'Safe',
-    count: daysSet.size, POOP_COLOR_HEX
+    count: daysSet.size
   };
 }
 

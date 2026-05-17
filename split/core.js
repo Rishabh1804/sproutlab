@@ -1527,7 +1527,17 @@ function calcDietScore(dateStr) {
 // ── POOP SCORE ──
 
 const CONSISTENCY_SCORES = { soft: 100, normal: 100, loose: 70, hard: 50, watery: 40, pellet: 30 };
-const SAFE_POOP_COLORS = ['brown', 'yellow', 'green', 'tan', 'orange', 'mustard'];
+// V-K-1 / V-K-3: Safe-color whitelist for poop colorScore. Canonical set is
+// the 8 picker keys (yellow/green/brown/dark/orange/red/white/black) minus
+// the 3 alert colors (red/white/black) which are handled by the prior branch
+// at colorScore=0 below. Previously `['brown','yellow','green','tan','orange',
+// 'mustard']` — `tan` and `mustard` were dead branches unreachable from any
+// write path; `dark` was missing despite being a picker option the Color
+// Guide marks normal-for-older-babies, causing a live silent-fail where
+// normal Dark Brown logs dampened the day score by ~4 points (20% weight
+// × (100−80)). Drift-guard: this list must stay a subset of POOP_COLOR_KEYS
+// in medical.js. Mirror at intelligence.js (qaAnswerPoopColor) must match.
+const SAFE_POOP_COLORS = ['yellow', 'green', 'brown', 'dark', 'orange'];
 
 function calcPoopScore(dateStr) {
   dateStr = dateStr || today();

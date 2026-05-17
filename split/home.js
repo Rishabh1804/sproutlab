@@ -6036,6 +6036,12 @@ function renderPoopGuide() {
 
   const ageM = ageAt().months;
 
+  // V-M-15 invariant: cat.id values below are source-controlled literals
+  // ('colors', 'consistency', 'frequency', 'warning') flowing unescaped into
+  // innerHTML attribute interpolations (id="${catId}", data-arg="${cat.id}",
+  // id="${bodyId}"). Safe today; if this list ever becomes data-driven
+  // (config / localStorage / Firestore), wrap each cat.id interpolation in
+  // escHtml() per HR-4.
   const categories = [
     {
       id: 'colors', icon: zi('palette'), label: 'Colour Guide', color: 'amber',
