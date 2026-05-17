@@ -6651,7 +6651,7 @@ function renderInfoPoopColorAnomaly() {
 
     // Color distribution bar
     html += '<div class="si-sub-label mb-4" >Color distribution</div>';
-    html += '<div class="si-bar-track" style="display:flex;overflow:hidden;height:20px;">';
+    html += '<div class="si-bar-track is-stacked">';
     const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
     sortedColors.forEach(([color, count]) => {
       const pct = (count / data.total) * 100;

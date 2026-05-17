@@ -1871,11 +1871,14 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .poop-swatch[data-pcolor="dark"]   { background:var(--poop-c-dark); }
 .poop-swatch[data-pcolor="orange"] { background:var(--poop-c-orange); }
 .poop-swatch[data-pcolor="red"]    { background:var(--poop-c-red); }
-.poop-swatch[data-pcolor="white"]  { background:var(--poop-c-white); border-color:rgba(0,0,0,0.18); }
+.poop-swatch[data-pcolor="white"]  { background:var(--poop-c-white); border-color:rgba(0,0,0,0.18); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08); }
 .poop-swatch[data-pcolor="black"]  { background:var(--poop-c-black); }
 
-/* Bar-chart segment uses the same color tokens; width stays inline-dynamic. */
-.poop-bar-seg { height:100%; }
+/* Bar-chart segment uses the same color tokens; width stays inline-dynamic.
+   var(--mid) fallback ensures unknown/orphan colors (e.g. legacy 'tan' /
+   'mustard' from SAFE_POOP_COLORS) render as a recognizable "other" segment
+   instead of an invisible gap that breaks the visual 100% sum. */
+.poop-bar-seg { height:100%; background:var(--mid); }
 .poop-bar-seg[data-pcolor="yellow"] { background:var(--poop-c-yellow); }
 .poop-bar-seg[data-pcolor="green"]  { background:var(--poop-c-green); }
 .poop-bar-seg[data-pcolor="brown"]  { background:var(--poop-c-brown); }
@@ -3131,6 +3134,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .si-bar-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-4) 0; }
 .si-bar-label { font-size:var(--fs-2xs); color:var(--light); min-width:42px; text-align:right; }
 .si-bar-track { flex:1; height:14px; background:var(--warm); border-radius:var(--r-md); overflow:hidden; }
+.si-bar-track.is-stacked { display:flex; height:20px; }
 .si-bar-fill { height:100%; border-radius:var(--r-md); transition:width 0.4s ease; }
 .si-bar-val { font-size:var(--fs-2xs); font-weight:600; min-width:32px; }
 .si-check-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) 0; border-bottom:1px solid rgba(0,0,0,0.03); }
@@ -4831,6 +4835,15 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .pq-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq { background:rgba(212,168,72,0.18); color:var(--tc-amber); border-color:rgba(212,168,72,0.35); }
 [data-theme="dark"] .poop-color-btn.active-pq .poop-swatch { border-color:var(--tc-amber); }
+/* V-M-10: --poop-c-black (#2a2a2a) and --poop-c-dark (#5a4a2a) dissolve into
+   the dark-theme surface (#2a2230) — a parent reading a "Black stool" anomaly
+   in dark theme would see an effectively-empty swatch and read the card as
+   benign. Lighten just the swatch/segment renders in dark mode; the
+   anatomical token stays accurate for chart-fill contexts that need raw hex. */
+[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#4a4a4a; border-color:rgba(255,255,255,0.25); }
+[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#7a6440; border-color:rgba(255,255,255,0.20); }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#4a4a4a; }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#7a6440; }
 [data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }
