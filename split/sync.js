@@ -669,8 +669,16 @@ function syncLeaveHousehold() {
 
   // Check if last member (§4.5 #32)
   var memberCount = _syncHousehold ? Object.keys(_syncHousehold.members || {}).length : 0;
+  // V-K-23 disposition (PR-C sync-discipline cycle) — V-K-8's defensive-parse
+  // regex catches `\bdelete\b` in the last-member message and flips the
+  // confirm button from sky Confirm → rose Delete, which correctly matches
+  // the destructive verb on disk (_syncDeleteHouseholdDoc below). The
+  // closing "Continue?" question was sky-Confirm-era softener; under rose
+  // Delete the button itself is the answer prompt, so the close-line is
+  // dropped for tonal consistency. Multi-member message stays Confirm-toned
+  // and unchanged.
   var msg = memberCount <= 1
-    ? 'You are the last member. Leaving will delete all synced data permanently. Continue?'
+    ? 'You are the last member. Leaving will delete all synced data permanently.'
     : 'Leave this household? You can keep a local copy of your data.';
 
   confirmAction(msg, function() {
