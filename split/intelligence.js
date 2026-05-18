@@ -12656,6 +12656,74 @@ function renderInfoSleepEfficiency() {
 
   if (barsEl) {
     let html = '';
+
+    // PR-EF Viz #1: 53-day sleep calendar heatmap — cell color by total
+    // night sleep minutes (bands: <240 poor, 240-540 short, 540-720 target,
+    // >720 long). Reveals weekend drift and regressions the 7-night view
+    // can hide.
+    // Card-local SVG renderer; extraction deferred per PR-EF D10.
+    const CAL_DAYS = 53;
+    const longNights = _siGetNights(CAL_DAYS);
+    if (longNights.length > 0) {
+      const totalsByDate = {};
+      longNights.forEach(n => {
+        const dur = calcSleepDuration(n.bedtime, n.wakeTime);
+        totalsByDate[n.dateStr] = (totalsByDate[n.dateStr] || 0) + (dur.total || 0);
+      });
+      const todayD = new Date(today() + 'T12:00:00');
+      const dayCells = [];
+      for (let i = CAL_DAYS - 1; i >= 0; i--) {
+        const d = new Date(todayD); d.setDate(d.getDate() - i);
+        const ds = toDateStr(d);
+        dayCells.push({ ds, total: totalsByDate[ds] || null });
+      }
+      const VB_W = 280, VB_H = 88, PAD_L = 4, PAD_R = 4, PAD_T = 4, PAD_B = 14;
+      const cols = Math.ceil(CAL_DAYS / 7);
+      const cellW = (VB_W - PAD_L - PAD_R) / cols;
+      const cellH = (VB_H - PAD_T - PAD_B) / 7;
+      let svg = '<div class="t-sm fe-sub-label mb-4">Sleep Calendar — last ' + CAL_DAYS + ' nights</div>';
+      svg += '<svg class="viz-cal-grid" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+      dayCells.forEach((cell, idx) => {
+        const col = Math.floor(idx / 7);
+        const row = idx % 7;
+        const x = PAD_L + col * cellW;
+        const y = PAD_T + row * cellH;
+        let fill, opacity = 0.9;
+        if (cell.total === null) {
+          fill = 'var(--surface-alt)';
+          opacity = 0.4;
+        } else if (cell.total < 240) {
+          fill = 'var(--cal-poor)';
+        } else if (cell.total < 540) {
+          fill = 'var(--cal-short)';
+        } else if (cell.total < 720) {
+          fill = 'var(--cal-target)';
+        } else {
+          fill = 'var(--cal-long)';
+        }
+        const title = cell.total !== null
+          ? cell.ds + ' · ' + Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm'
+          : cell.ds + ' · no data';
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '"><title>' + title + '</title></rect>';
+      });
+      // Legend
+      const legendY = VB_H - 7;
+      const legendItems = [
+        { c: 'var(--cal-poor)', label: '<4h' },
+        { c: 'var(--cal-short)', label: '4-9h' },
+        { c: 'var(--cal-target)', label: '9-12h' },
+        { c: 'var(--cal-long)', label: '>12h' }
+      ];
+      legendItems.forEach((item, i) => {
+        const lx = PAD_L + i * 60;
+        svg += '<rect x="' + lx + '" y="' + (legendY - 4) + '" width="6" height="6" fill="' + item.c + '" opacity="0.9"/>';
+        svg += '<text x="' + (lx + 9) + '" y="' + (legendY + 1) + '" font-size="6.5" fill="var(--mid)" font-family="Nunito">' + item.label + '</text>';
+      });
+      svg += '</svg>';
+      html += svg;
+    }
+
+    html += '<div class="t-sm fe-sub-label mt-12">Recent Nights</div>';
     data.results.forEach(r => {
       const color = r.efficiency >= 85 ? 'var(--tc-sage)' : r.efficiency >= 70 ? 'var(--tc-amber)' : 'var(--tc-danger)';
       const dayLabel = formatDate(r.dateStr).slice(0, 6);
@@ -14717,6 +14785,7 @@ function renderInfo() {
   renderInfoNutrientHeatmap();
   renderInfoComboFreq();
   renderInfoMealBreakdown();
+  renderInfoFeedingIntake();
   renderInfoSmartPairing();
   renderInfoAdoption();
   renderInfoRepetition();
@@ -14739,6 +14808,7 @@ function renderInfo() {
   renderInfoPoopReport();
   renderInfoIllnessFreq();
   renderInfoVaccFever();
+  renderInfoVaccGantt();
   renderInfoIllnessFood();
   renderInfoRecovery();
   renderInfoIllnessSleep();
@@ -14807,6 +14877,57 @@ function renderInfoFoodIntro() {
       </div>`;
   });
   chartHtml += '</div>';
+
+  // PR-EF Viz #3: food intro timeline — horizontal scatter where each dot
+  // is one food at its intro date, vertically positioned by food group,
+  // colored by reaction (safe/watch/avoid). Reveals per-food granularity
+  // the weekly aggregate bars hide.
+  // Card-local SVG renderer; extraction deferred per PR-EF cross-cutting D10.
+  const allFoods = data.weeks.flatMap(w => w.foods);
+  if (allFoods.length >= 3) {
+    const VB_W = 320, VB_H = 140, PAD_L = 50, PAD_R = 8, PAD_T = 8, PAD_B = 20;
+    const dates = allFoods.map(f => new Date(f.date).getTime()).filter(t => !isNaN(t));
+    const tMin = Math.min(...dates), tMax = Math.max(...dates);
+    const tRange = Math.max(1, tMax - tMin);
+    // Build lane index from groups seen in the data
+    const groupMap = {};
+    let nextLane = 0;
+    allFoods.forEach(f => {
+      const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(f.name) : null;
+      const groupLabel = cls ? cls.groupLabel : 'Other';
+      if (!(groupLabel in groupMap)) { groupMap[groupLabel] = nextLane++; }
+    });
+    const laneCount = Math.max(1, nextLane);
+    const laneH = (VB_H - PAD_T - PAD_B) / laneCount;
+    const reactColor = { safe: 'var(--tc-sage)', watch: 'var(--tc-amber)', avoid: 'var(--tc-rose)' };
+    let svg = '<div class="t-sm fe-sub-label mt-12">Food Intro Timeline</div>';
+    svg += '<svg class="viz-food-timeline" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+    // Lane labels + gridlines
+    Object.entries(groupMap).forEach(([label, idx]) => {
+      const y = PAD_T + idx * laneH + laneH / 2;
+      svg += '<line x1="' + PAD_L + '" y1="' + y + '" x2="' + (VB_W - PAD_R) + '" y2="' + y + '" stroke="var(--surface-alt)" stroke-width="0.5"/>';
+      svg += '<text x="' + (PAD_L - 4) + '" y="' + (y + 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(label.slice(0, 8)) + '</text>';
+    });
+    // Dots
+    allFoods.forEach(f => {
+      const t = new Date(f.date).getTime();
+      if (isNaN(t)) return;
+      const x = PAD_L + ((t - tMin) / tRange) * (VB_W - PAD_L - PAD_R);
+      const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(f.name) : null;
+      const groupLabel = cls ? cls.groupLabel : 'Other';
+      const y = PAD_T + groupMap[groupLabel] * laneH + laneH / 2;
+      const color = reactColor[f.reaction] || 'var(--tc-sage)';
+      const dateLabel = new Date(f.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="' + color + '" opacity="0.75"><title>' + escHtml(f.name) + ' · ' + escHtml(dateLabel) + ' · ' + escHtml(f.reaction || 'safe') + '</title></circle>';
+    });
+    // X-axis date labels (endpoints)
+    const startLbl = new Date(tMin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const endLbl = new Date(tMax).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    svg += '<text x="' + PAD_L + '" y="' + (VB_H - 4) + '" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(startLbl) + '</text>';
+    svg += '<text x="' + (VB_W - PAD_R) + '" y="' + (VB_H - 4) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(endLbl) + '</text>';
+    svg += '</svg>';
+    chartHtml += svg;
+  }
 
   // This week's foods detail
   if (data.thisWeek.foods.length > 0) {
@@ -15800,6 +15921,123 @@ function renderInfoSmartPairing() {
     unusedHtml += '</div>';
   }
   unusedEl.innerHTML = unusedHtml;
+}
+
+// ── PR-EF Viz #4: FEEDING INTAKE STACKED BAR ──
+// Surfaces the per-meal _intake fields (none/partial/full) from feedingData
+// across the last 28 days as a stacked vertical bar per day. Refusal
+// patterns and weekend gaps become visible at a glance.
+function renderInfoFeedingIntake() {
+  const summaryEl = document.getElementById('infoFeedingIntakeSummary');
+  const chartEl = document.getElementById('infoFeedingIntakeChart');
+  const insightEl = document.getElementById('infoFeedingIntakeInsight');
+  if (!summaryEl || !chartEl) return;
+
+  const WINDOW_DAYS = 28;
+  const MEAL_KEYS = ['breakfast', 'lunch', 'dinner', 'snack'];
+  const todayD = new Date(today() + 'T12:00:00');
+  const days = [];
+  for (let i = WINDOW_DAYS - 1; i >= 0; i--) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    const entry = feedingData[ds] || {};
+    const meals = MEAL_KEYS.map(k => {
+      const intake = entry[k + '_intake'];
+      const hasMeal = !!entry[k] && entry[k] !== SKIPPED_MEAL;
+      if (!hasMeal) return 'missing';
+      if (intake === 1 || intake === '1' || intake === 'full') return 'full';
+      if (intake === 0.5 || intake === '0.5' || intake === 'partial') return 'partial';
+      if (intake === 0 || intake === '0' || intake === 'none') return 'none';
+      return 'untagged'; // meal logged but intake not recorded
+    });
+    days.push({ ds, meals });
+  }
+
+  // Aggregate stats
+  let fullCt = 0, partialCt = 0, noneCt = 0, untaggedCt = 0, missingCt = 0;
+  days.forEach(d => d.meals.forEach(m => {
+    if (m === 'full') fullCt++;
+    else if (m === 'partial') partialCt++;
+    else if (m === 'none') noneCt++;
+    else if (m === 'untagged') untaggedCt++;
+    else missingCt++;
+  }));
+  const taggedTotal = fullCt + partialCt + noneCt;
+  const fullPct = taggedTotal > 0 ? Math.round((fullCt / taggedTotal) * 100) : 0;
+
+  if (taggedTotal === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No intake data tagged yet — add intake levels in the food log to surface refusal patterns.</div>';
+    chartEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  summaryEl.innerHTML = `<div class="fx-row g12 fx-row-wrap">
+    <div class="t-sm"><strong>${fullPct}%</strong> <span class="t-light">meals eaten fully</span></div>
+    <div class="t-sm t-light">·</div>
+    <div class="t-sm t-light">last ${WINDOW_DAYS}d · ${taggedTotal} tagged meals</div>
+  </div>`;
+
+  // Stacked bar SVG — card-local renderer; extraction deferred per PR-EF D10.
+  const VB_W = 320, VB_H = 100, PAD_L = 20, PAD_R = 8, PAD_T = 4, PAD_B = 16;
+  const colWidth = (VB_W - PAD_L - PAD_R) / WINDOW_DAYS;
+  const barW = Math.max(2, colWidth - 1);
+  const cellH = (VB_H - PAD_T - PAD_B) / MEAL_KEYS.length;
+  const stateColor = {
+    full:     'var(--tc-sage)',
+    partial:  'var(--tc-amber)',
+    none:     'var(--tc-rose)',
+    untagged: 'var(--surface-alt)',
+    missing:  'transparent'
+  };
+  let svg = '<svg class="viz-intake-bar" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+  // Meal-row labels
+  MEAL_KEYS.forEach((k, idx) => {
+    const y = PAD_T + idx * cellH + cellH / 2 + 2;
+    svg += '<text x="' + (PAD_L - 4) + '" y="' + y.toFixed(1) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + k.charAt(0).toUpperCase() + '</text>';
+  });
+  // Cells
+  days.forEach((d, dIdx) => {
+    const x = PAD_L + dIdx * colWidth;
+    d.meals.forEach((state, mIdx) => {
+      const y = PAD_T + mIdx * cellH;
+      const fill = stateColor[state] || stateColor.missing;
+      if (state === 'missing') {
+        // Diagonal-stripe hatch via small pattern marks
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="var(--surface-sage)" opacity="0.3"/>';
+      } else {
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="' + fill + '" opacity="0.85"><title>' + d.ds + ' · ' + MEAL_KEYS[mIdx] + ' · ' + state + '</title></rect>';
+      }
+    });
+  });
+  // X-axis endpoint labels
+  const startLbl = new Date(days[0].ds).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const endLbl = new Date(days[days.length - 1].ds).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  svg += '<text x="' + PAD_L + '" y="' + (VB_H - 4) + '" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(startLbl) + '</text>';
+  svg += '<text x="' + (VB_W - PAD_R) + '" y="' + (VB_H - 4) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(endLbl) + '</text>';
+  svg += '</svg>';
+  // Legend
+  svg += '<div class="fx-row g8 fx-row-wrap mt-4 t-xs t-light">';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;background:var(--tc-sage);vertical-align:middle;margin-right:2px;"></span> Full</span>';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;background:var(--tc-amber);vertical-align:middle;margin-right:2px;"></span> Partial</span>';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;background:var(--tc-rose);vertical-align:middle;margin-right:2px;"></span> None</span>';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;background:var(--surface-alt);vertical-align:middle;margin-right:2px;"></span> Untagged</span>';
+  svg += '</div>';
+  chartEl.innerHTML = svg;
+
+  // Insights
+  if (insightEl) {
+    let iHtml = '';
+    if (noneCt >= 3) {
+      iHtml += '<div class="si-insight si-insight-warn">' + zi('warn') + ' ' + noneCt + ' meal' + (noneCt !== 1 ? 's' : '') + ' refused in last ' + WINDOW_DAYS + 'd — watch for pattern by meal slot or food type.</div>';
+    } else if (fullPct >= 80 && taggedTotal >= 10) {
+      iHtml += '<div class="si-insight si-insight-good">' + zi('check') + ' Strong intake — ' + fullPct + '% of tagged meals eaten fully.</div>';
+    }
+    if (untaggedCt > taggedTotal) {
+      iHtml += '<div class="si-insight si-insight-info">' + zi('info') + ' Most meals are untagged. Tagging intake levels (full / partial / none) unlocks refusal-pattern detection.</div>';
+    }
+    insightEl.innerHTML = iHtml;
+  }
 }
 
 // ── ENHANCE checkFoodCombo with synergy-aware pairing suggestions ──

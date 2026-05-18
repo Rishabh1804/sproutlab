@@ -1624,6 +1624,19 @@
         </div>
       </div>
 
+      <!-- Feeding Intake (PR-EF Viz #4) -->
+      <div class="card card-daily col-full" id="infoFeedingIntakeCard">
+        <div class="card-header" data-collapse-target="infoFeedingIntakeBody" data-collapse-chevron="infoFeedingIntakeChevron">
+          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-bowl"/></svg></div> Feeding Intake</div>
+          <span class="collapse-chevron" id="infoFeedingIntakeChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+        </div>
+        <div id="infoFeedingIntakeSummary" class="mt-4"></div>
+        <div id="infoFeedingIntakeBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoFeedingIntakeChart" class="mt-4"></div>
+          <div id="infoFeedingIntakeInsight" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- Smart Pairing Suggestions -->
       <div class="card card-daily col-full" id="infoSmartPairingCard">
         <div class="card-header" data-collapse-target="infoSmartPairingBody" data-collapse-chevron="infoSmartPairingChevron">
@@ -2007,6 +2020,19 @@
         </div>
       </div>
 
+      <!-- Vaccination Schedule (PR-EF Viz #7) -->
+      <div class="card card-daily col-full" id="infoVaccGanttCard">
+        <div class="card-header" data-collapse-target="infoVaccGanttBody" data-collapse-chevron="infoVaccGanttChevron">
+          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-syringe"/></svg></div> Vaccination Schedule</div>
+          <span class="collapse-chevron" id="infoVaccGanttChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+        </div>
+        <div id="infoVaccGanttSummary" class="mt-4"></div>
+        <div id="infoVaccGanttBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoVaccGanttChart" class="mt-4"></div>
+          <div id="infoVaccGanttInsight" class="mt-8"></div>
+        </div>
+      </div>
+
       <!-- Vaccination Recovery -->
       <div class="card card-daily col-full" id="infoVaccRecoveryCard">
         <div class="card-header" data-collapse-target="infoVaccRecoveryBody" data-collapse-chevron="infoVaccRecoveryChevron">
@@ -2030,6 +2056,7 @@
         <div id="infoGrowthVelocitySummary" class="t-sm mt-4"></div>
         <div id="infoGrowthVelocityBody" class="collapse-body fx-col g8" style="display:none;">
           <div id="infoGrowthVelocityBar" class="mt-4"></div>
+          <div class="viz-chart-mount mt-8" style="height:200px;"><canvas id="growthChartInfo"></canvas></div>
           <div id="infoGrowthVelocityPercentile" class="mt-8"></div>
           <div id="infoGrowthVelocityGrid" class="mt-8"></div>
           <div id="infoGrowthVelocityInsight" class="mt-8"></div>

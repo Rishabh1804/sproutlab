@@ -1452,10 +1452,18 @@ function renderChartContext(chart, zoom) {
   ctxEl.style.display = '';
 }
 
-function drawChart() {
-  const ctx = document.getElementById('growthChart');
+// PR-EF Viz #6: optional canvasId allows mounting the same growth chart in
+// multiple contexts (medical tab + info-tab card). Per-canvas instances are
+// stashed in window._growthChartInstances keyed by canvasId so zoom/destroy
+// state doesn't cross-contaminate.
+function drawChart(canvasId) {
+  canvasId = canvasId || 'growthChart';
+  if (!window._growthChartInstances) window._growthChartInstances = {};
+  const ctx = document.getElementById(canvasId);
   if (!ctx || typeof Chart === 'undefined') return;
-  if (window._growthChartInst) window._growthChartInst.destroy();
+  if (window._growthChartInstances[canvasId]) window._growthChartInstances[canvasId].destroy();
+  // Back-compat: keep the original flat global for the default canvas only.
+  if (canvasId === 'growthChart' && window._growthChartInst) window._growthChartInst.destroy();
 
   const allPoints = growthData.filter(r => r.wt != null).map(r => ({ x: ageMonthsAt(r.date), y: r.wt, date: r.date }));
   const zoom = getChartZoomRange('wt');
@@ -1509,7 +1517,7 @@ function drawChart() {
   const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
-  window._growthChartInst = new Chart(ctx.getContext('2d'), {
+  const _chartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
     data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
     options:{
@@ -1534,13 +1542,18 @@ function drawChart() {
       }
     }
   });
+  window._growthChartInstances[canvasId] = _chartInst;
+  if (canvasId === 'growthChart') window._growthChartInst = _chartInst;
 }
 
 // ── HEIGHT CHART ──
-function drawHeightChart() {
-  const ctx = document.getElementById('heightChart');
+function drawHeightChart(canvasId) {
+  canvasId = canvasId || 'heightChart';
+  if (!window._heightChartInstances) window._heightChartInstances = {};
+  const ctx = document.getElementById(canvasId);
   if (!ctx || typeof Chart === 'undefined') return;
-  if (window._heightChartInst) window._heightChartInst.destroy();
+  if (window._heightChartInstances[canvasId]) window._heightChartInstances[canvasId].destroy();
+  if (canvasId === 'heightChart' && window._heightChartInst) window._heightChartInst.destroy();
 
   const allHtPoints = growthData.filter(r => r.ht).map(r => ({ x: ageMonthsAt(r.date), y: r.ht, date: r.date }));
   if (allHtPoints.length === 0) {
@@ -1599,7 +1612,7 @@ function drawHeightChart() {
   const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
-  window._heightChartInst = new Chart(ctx.getContext('2d'), {
+  const _hChartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
     data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
     options:{
@@ -1624,6 +1637,8 @@ function drawHeightChart() {
       }
     }
   });
+  window._heightChartInstances[canvasId] = _hChartInst;
+  if (canvasId === 'heightChart') window._heightChartInst = _hChartInst;
 }
 
 // ── GROWTH VELOCITY ──
@@ -6069,28 +6084,48 @@ function renderInfoPoopConsistencyTrend() {
   summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + trendColor + ';font-weight:600;">' + trendIcon + ' ' + trendLabel + '</span> · avg consistency: <strong>' + data.avgLabel + '</strong></div>';
 
   if (barsEl) {
-    let html = '<div class="si-sub-label mb-4" >Daily consistency</div>';
-    const displayDays = data.dayDistributions.slice(-10);
-    const conOrder = ['runny', 'watery', 'loose', 'soft', 'normal', 'hard', 'pellets', 'pellet'];
-    displayDays.forEach(d => {
-      const dayLabel = formatDate(d.dateStr).slice(0, 6);
-      html += '<div class="si-bar-row">';
-      html += '<div class="si-bar-label">' + dayLabel + '</div>';
-      html += '<div class="si-bar-track" style="display:flex;overflow:hidden;">';
-      conOrder.forEach(con => {
-        const count = d.dist[con] || 0;
-        if (count === 0) return;
-        const pct = (count / d.total) * 100;
-        html += '<div style="width:' + pct + '%;height:100%;background:' + data.CON_COLORS[con] + ';"></div>';
-      });
-      html += '</div>';
-      html += '<div class="si-bar-val" style="font-size:var(--fs-2xs);color:var(--light);">' + d.total + '</div>';
-      html += '</div>';
+    // PR-EF Viz #2: Bristol-band temporal stream — 30-day grid where each
+    // row is a consistency category and each column a day. Cell intensity
+    // by count. Replaces the previous 10-day stacked-bar view to surface
+    // category drift across a longer window.
+    // Card-local SVG renderer; extraction deferred per PR-EF D10.
+    const conRows = ['runny', 'watery', 'loose', 'soft', 'normal', 'hard', 'pellets'];
+    const conLabels = { runny:'Runny', watery:'Watery', loose:'Loose', soft:'Soft', normal:'Normal', hard:'Hard', pellets:'Pellets' };
+    const display30 = data.dayDistributions.slice(-30);
+    let html = '<div class="si-sub-label mb-4">Consistency Stream — last ' + display30.length + ' day' + (display30.length !== 1 ? 's' : '') + '</div>';
+    const VB_W = 320, VB_H = 120, PAD_L = 50, PAD_R = 8, PAD_T = 4, PAD_B = 14;
+    const rowH = (VB_H - PAD_T - PAD_B) / conRows.length;
+    const colW = (VB_W - PAD_L - PAD_R) / Math.max(1, display30.length);
+    html += '<svg class="viz-stream" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+    // Row labels + horizontal gridlines
+    conRows.forEach((con, idx) => {
+      const y = PAD_T + idx * rowH;
+      html += '<text x="' + (PAD_L - 4) + '" y="' + (y + rowH * 0.7).toFixed(1) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + conLabels[con] + '</text>';
     });
+    // Cells — intensity from count using poop-color tokens for fill (consistency-keyed).
+    display30.forEach((d, dIdx) => {
+      const x = PAD_L + dIdx * colW;
+      conRows.forEach((con, rIdx) => {
+        const count = (d.dist[con] || 0) + (con === 'pellets' ? (d.dist.pellet || 0) : 0);
+        if (count === 0) return;
+        const y = PAD_T + rIdx * rowH;
+        const opacity = count >= 3 ? 0.95 : count === 2 ? 0.7 : 0.45;
+        const fill = data.CON_COLORS[con] || 'var(--tc-sage)';
+        html += '<rect x="' + x.toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + (rowH - 1).toFixed(1) + '" fill="' + fill + '" opacity="' + opacity + '"><title>' + d.dateStr + ' · ' + conLabels[con] + ' · ' + count + '</title></rect>';
+      });
+    });
+    // X-axis endpoint labels
+    if (display30.length > 0) {
+      const startLbl = formatDate(display30[0].dateStr).slice(0, 6);
+      const endLbl = formatDate(display30[display30.length - 1].dateStr).slice(0, 6);
+      html += '<text x="' + PAD_L + '" y="' + (VB_H - 3) + '" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(startLbl) + '</text>';
+      html += '<text x="' + (VB_W - PAD_R) + '" y="' + (VB_H - 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(endLbl) + '</text>';
+    }
+    html += '</svg>';
 
     html += '<div class="si-stat-grid">';
     html += '<div class="si-stat"><div class="si-stat-val t-amber" >' + data.recentAvg + '</div><div class="si-stat-label">Recent avg</div></div>';
-    html += '<div class="si-stat"><div class="si-stat-val t-light" >' + data.prevAvg + '</div><div class="si-stat-label">Previous avg</div></div>';
+    html += '<div class="si-stat"><div class="si-stat-val t-light" >' + (data.prevAvg !== null ? data.prevAvg : '—') + '</div><div class="si-stat-label">Previous avg</div></div>';
     html += '<div class="si-stat"><div class="si-stat-val">' + (data.CON_LABEL[data.mostCommon] || data.mostCommon) + '</div><div class="si-stat-label">Most common</div></div>';
     html += '<div class="si-stat"><div class="si-stat-val">' + data.count + '</div><div class="si-stat-label">Days tracked</div></div>';
     html += '</div>';
@@ -6671,19 +6706,49 @@ function renderInfoPoopColorAnomaly() {
     });
     html += '</div>';
 
-    // Color timeline
-    html += '<div class="si-sub-label fe-section-gap" >Color timeline (last 14 days)</div>';
-    const days = Object.keys(data.dayEntries).sort();
-    days.forEach(d => {
-      const dayLabel = formatDate(d).slice(0, 6);
-      html += '<div class="pi-color-tl-row">';
-      html += '<div class="pi-color-tl-label">' + escHtml(dayLabel) + '</div>';
-      html += '<div class="pi-color-timeline">';
-      data.dayEntries[d].forEach(c => {
-        html += '<span class="poop-swatch poop-swatch--md"' + _piPcolorAttr(c) + ' title="' + escHtml(c) + '"></span>';
+    // PR-EF Viz #8: Color stream — temporal stacked area showing per-day
+    // color distribution across the window. Transitional patterns (yellow →
+    // brown maturation, anomaly clusters) become visible across the full
+    // span rather than just last 14 days of swatch rows.
+    // Card-local SVG renderer; extraction deferred per PR-EF D10.
+    html += '<div class="si-sub-label fe-section-gap" >Color Stream</div>';
+    const allDays = Object.keys(data.dayEntries).sort();
+    const display30 = allDays.slice(-30);
+    if (display30.length > 0) {
+      const COLOR_ORDER = ['yellow', 'green', 'brown', 'orange', 'dark', 'red', 'white', 'black'];
+      const COLOR_TOKEN = { yellow:'var(--poop-c-yellow)', green:'var(--poop-c-green)', brown:'var(--poop-c-brown)', orange:'var(--poop-c-orange)', dark:'var(--poop-c-dark)', red:'var(--poop-c-red)', white:'var(--poop-c-white)', black:'var(--poop-c-black)' };
+      const VB_W = 320, VB_H = 80, PAD_L = 4, PAD_R = 4, PAD_T = 4, PAD_B = 14;
+      const colW = (VB_W - PAD_L - PAD_R) / display30.length;
+      const maxPerDay = Math.max(...display30.map(d => data.dayEntries[d].length), 1);
+      const usableH = VB_H - PAD_T - PAD_B;
+      let svg = '<svg class="viz-stream" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+      display30.forEach((d, dIdx) => {
+        const x = PAD_L + dIdx * colW;
+        const dayColors = data.dayEntries[d];
+        // Count per color
+        const counts = {};
+        dayColors.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+        const totalCount = dayColors.length;
+        const colH = (totalCount / maxPerDay) * usableH;
+        let yCursor = PAD_T + usableH - colH;
+        COLOR_ORDER.forEach(color => {
+          if (!counts[color]) return;
+          const segH = (counts[color] / totalCount) * colH;
+          const fill = COLOR_TOKEN[color] || 'var(--tc-amber)';
+          svg += '<rect x="' + x.toFixed(1) + '" y="' + yCursor.toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + segH.toFixed(1) + '" fill="' + fill + '" opacity="0.9"><title>' + d + ' · ' + color + ' · ' + counts[color] + '</title></rect>';
+          yCursor += segH;
+        });
       });
-      html += '</div></div>';
-    });
+      // X-axis endpoint labels
+      const startLbl = formatDate(display30[0]).slice(0, 6);
+      const endLbl = formatDate(display30[display30.length - 1]).slice(0, 6);
+      svg += '<text x="' + PAD_L + '" y="' + (VB_H - 3) + '" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(startLbl) + '</text>';
+      svg += '<text x="' + (VB_W - PAD_R) + '" y="' + (VB_H - 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(endLbl) + '</text>';
+      svg += '</svg>';
+      html += svg;
+    } else {
+      html += '<div class="t-sm t-light">No color data yet</div>';
+    }
 
     // Anomaly cards
     if (data.anomalies.length > 0) {
@@ -7313,8 +7378,93 @@ function renderInfoMilestoneVelocity() {
 
   if (listEl) {
     let html = '';
+
+    // PR-EF Viz #5: category × status treemap — shows balance across the 4
+    // milestone categories (motor / social / language / cognitive) and within
+    // each, the maturity mix (emerging / practicing / consistent / mastered).
+    // Card-local layout + render; extraction deferred per PR-EF D10.
+    const CATS = ['motor', 'social', 'language', 'cognitive'];
+    const STATUSES = ['emerging', 'practicing', 'consistent', 'mastered'];
+    const STATUS_TOKEN = {
+      emerging:   'var(--ms-emerging)',
+      practicing: 'var(--ms-practicing)',
+      consistent: 'var(--ms-consistent)',
+      mastered:   'var(--ms-mastered)'
+    };
+    // Counts: cat → status → count
+    const catTotals = {};
+    const catStatusCounts = {};
+    CATS.forEach(c => {
+      catTotals[c] = 0;
+      catStatusCounts[c] = {};
+      STATUSES.forEach(s => { catStatusCounts[c][s] = 0; });
+    });
+    milestones.forEach(m => {
+      const c = (m.cat || '').toLowerCase();
+      const s = (m.status || '').toLowerCase();
+      if (CATS.includes(c) && STATUSES.includes(s)) {
+        catTotals[c]++;
+        catStatusCounts[c][s]++;
+      }
+    });
+    const totalMs = CATS.reduce((sum, c) => sum + catTotals[c], 0);
+    if (totalMs > 0) {
+      const VB_W = 320, VB_H = 160;
+      // Slice-and-dice layout: alternate H/V to maintain low aspect ratios.
+      // 2-row × 2-col outer grid for the 4 categories, sized proportionally
+      // by category total.
+      const topPair = ['motor', 'social'];
+      const botPair = ['language', 'cognitive'];
+      const topSum = catTotals[topPair[0]] + catTotals[topPair[1]];
+      const botSum = catTotals[botPair[0]] + catTotals[botPair[1]];
+      const topH = topSum + botSum > 0 ? (topSum / (topSum + botSum)) * VB_H : VB_H / 2;
+      let svg = '<div class="t-sm fe-sub-label mb-4">Milestone Map</div>';
+      svg += '<svg class="viz-treemap" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+      function renderCatBlock(cat, x, y, w, h) {
+        const total = catTotals[cat];
+        if (total === 0) {
+          svg += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="var(--surface-alt)" opacity="0.25" stroke="white" stroke-width="1"/>';
+          svg += '<text x="' + (x + 4) + '" y="' + (y + 10) + '" font-size="8" fill="var(--mid)" font-family="Nunito" font-weight="600">' + cat + '</text>';
+          svg += '<text x="' + (x + 4) + '" y="' + (y + 20) + '" font-size="7" fill="var(--light)" font-family="Nunito">(none)</text>';
+          return;
+        }
+        // Inside the cat block, lay out 4 status sub-rows (or fewer if some empty)
+        // by status weight. Use horizontal sub-strips.
+        let cursorY = y;
+        STATUSES.forEach(st => {
+          const ct = catStatusCounts[cat][st];
+          if (ct === 0) return;
+          const subH = (ct / total) * h;
+          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + STATUS_TOKEN[st] + '" opacity="0.85" stroke="white" stroke-width="1"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
+          // Label if sub-block is large enough
+          if (subH >= 14 && w >= 40) {
+            svg += '<text x="' + (x + 4) + '" y="' + (cursorY + subH / 2 + 3).toFixed(1) + '" font-size="7" fill="white" font-family="Nunito" font-weight="500">' + st + ' (' + ct + ')</text>';
+          }
+          cursorY += subH;
+        });
+        // Cat label on top-left, overlaid
+        svg += '<text x="' + (x + 4) + '" y="' + (y + 10) + '" font-size="8" fill="white" font-family="Nunito" font-weight="700" style="text-shadow:0 0 2px rgba(0,0,0,0.4);">' + cat + ' (' + total + ')</text>';
+      }
+      // Top row split between top pair
+      const topW0 = topSum > 0 ? (catTotals[topPair[0]] / topSum) * VB_W : VB_W / 2;
+      renderCatBlock(topPair[0], 0, 0, topW0, topH);
+      renderCatBlock(topPair[1], topW0, 0, VB_W - topW0, topH);
+      // Bottom row split between bot pair
+      const botW0 = botSum > 0 ? (catTotals[botPair[0]] / botSum) * VB_W : VB_W / 2;
+      renderCatBlock(botPair[0], 0, topH, botW0, VB_H - topH);
+      renderCatBlock(botPair[1], botW0, topH, VB_W - botW0, VB_H - topH);
+      svg += '</svg>';
+      // Legend
+      svg += '<div class="fx-row g8 fx-row-wrap mt-4 t-xs t-light">';
+      STATUSES.forEach(st => {
+        svg += '<span><span style="display:inline-block;width:10px;height:10px;background:' + STATUS_TOKEN[st] + ';vertical-align:middle;margin-right:2px;"></span>' + st + '</span>';
+      });
+      svg += '</div>';
+      html += svg;
+    }
+
     if (progressing.length > 0) {
-      html += '<div class="si-sub-label mb-4" >Progressing</div>';
+      html += '<div class="si-sub-label fe-section-gap mb-4" >Progressing</div>';
       progressing.forEach(m => {
         const rateStr = m.rate >= 1 ? m.rate.toFixed(1) + '/day' : (m.rate * 7).toFixed(1) + '/week';
         let projStr = '';
@@ -7805,6 +7955,112 @@ function renderInfoVaccFever() {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
     ).join('');
+  }
+}
+
+// ── PR-EF Viz #7: VACCINATION GANTT ──
+// Horizontal timeline grouped by vaccine-series lane. Past doses are filled
+// circles connected by lines; upcoming doses are hollow circles. Surfaces
+// series-completion gaps and upcoming schedule pressure at a glance.
+function renderInfoVaccGantt() {
+  const summaryEl = document.getElementById('infoVaccGanttSummary');
+  const chartEl = document.getElementById('infoVaccGanttChart');
+  const insightEl = document.getElementById('infoVaccGanttInsight');
+  if (!summaryEl || !chartEl) return;
+
+  const allVacc = (vaccData || []).filter(v => v.date);
+  if (allVacc.length === 0) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No vaccination records yet</div>';
+    chartEl.innerHTML = '';
+    if (insightEl) insightEl.innerHTML = '';
+    return;
+  }
+
+  // Group by canonical series prefix. SproutLab vaccines often share a prefix
+  // (DPT-1, DPT-2, etc.); group on the prefix up to a digit or hyphen.
+  function _seriesKey(name) {
+    if (!name) return 'Other';
+    const m = name.match(/^([A-Za-z]+(?:[A-Za-z/]*[A-Za-z])?)/);
+    if (m) return m[1];
+    return name.split(/[-\s\d]/)[0] || 'Other';
+  }
+  const series = {};
+  allVacc.forEach(v => {
+    const k = _seriesKey(v.name);
+    if (!series[k]) series[k] = [];
+    series[k].push(v);
+  });
+  // Sort each series by date
+  Object.values(series).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
+  // Sort lanes by first dose date
+  const laneOrder = Object.keys(series).sort((a, b) => series[a][0].date.localeCompare(series[b][0].date));
+  const completedCount = allVacc.filter(v => !v.upcoming).length;
+  const upcomingCount = allVacc.filter(v => v.upcoming).length;
+
+  summaryEl.innerHTML = `<div class="fx-row g12 fx-row-wrap">
+    <div class="t-sm"><strong>${completedCount}</strong> <span class="t-light">completed</span></div>
+    <div class="t-sm t-light">·</div>
+    <div class="t-sm"><strong>${upcomingCount}</strong> <span class="t-light">upcoming</span></div>
+    <div class="t-sm t-light">·</div>
+    <div class="t-sm t-light">${laneOrder.length} series</div>
+  </div>`;
+
+  // SVG Gantt — card-local renderer; extraction deferred per PR-EF D10.
+  const VB_W = 320, VB_H = Math.max(80, 20 + laneOrder.length * 18 + 20);
+  const PAD_L = 70, PAD_R = 8, PAD_T = 8, PAD_B = 16;
+  const allDates = allVacc.map(v => new Date(v.date).getTime()).filter(t => !isNaN(t));
+  const tMin = Math.min(...allDates);
+  const tMax = Math.max(...allDates, Date.now() + 30 * 86400000); // pad to upcoming
+  const tRange = Math.max(1, tMax - tMin);
+  const laneH = (VB_H - PAD_T - PAD_B) / Math.max(1, laneOrder.length);
+  let svg = '<svg class="viz-gantt" viewBox="0 0 ' + VB_W + ' ' + VB_H + '" style="width:100%;max-width:480px;display:block;margin:0 auto;">';
+  laneOrder.forEach((seriesName, lIdx) => {
+    const y = PAD_T + lIdx * laneH + laneH / 2;
+    svg += '<text x="' + (PAD_L - 4) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-size="8" fill="var(--mid)" font-family="Nunito" font-weight="500">' + escHtml(seriesName.slice(0, 10)) + '</text>';
+    svg += '<line x1="' + PAD_L + '" y1="' + y.toFixed(1) + '" x2="' + (VB_W - PAD_R) + '" y2="' + y.toFixed(1) + '" stroke="var(--surface-alt)" stroke-width="0.5"/>';
+    // Connect dots within series
+    const doses = series[seriesName];
+    if (doses.length > 1) {
+      const xStart = PAD_L + ((new Date(doses[0].date).getTime() - tMin) / tRange) * (VB_W - PAD_L - PAD_R);
+      const xEnd = PAD_L + ((new Date(doses[doses.length - 1].date).getTime() - tMin) / tRange) * (VB_W - PAD_L - PAD_R);
+      svg += '<line x1="' + xStart.toFixed(1) + '" y1="' + y.toFixed(1) + '" x2="' + xEnd.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="var(--tc-lav)" stroke-width="1" opacity="0.4"/>';
+    }
+    doses.forEach(dose => {
+      const t = new Date(dose.date).getTime();
+      if (isNaN(t)) return;
+      const x = PAD_L + ((t - tMin) / tRange) * (VB_W - PAD_L - PAD_R);
+      const fill = dose.upcoming ? 'transparent' : 'var(--tc-lav)';
+      const stroke = dose.upcoming ? 'var(--tc-amber)' : 'var(--tc-lav)';
+      const dateLabel = new Date(dose.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"><title>' + escHtml(dose.name) + ' · ' + escHtml(dateLabel) + (dose.upcoming ? ' · upcoming' : '') + '</title></circle>';
+    });
+  });
+  // X-axis endpoint labels
+  const xStartLbl = new Date(tMin).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+  const xEndLbl = new Date(tMax).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+  svg += '<text x="' + PAD_L + '" y="' + (VB_H - 3) + '" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(xStartLbl) + '</text>';
+  svg += '<text x="' + (VB_W - PAD_R) + '" y="' + (VB_H - 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(xEndLbl) + '</text>';
+  svg += '</svg>';
+  // Legend
+  svg += '<div class="fx-row g8 fx-row-wrap mt-4 t-xs t-light">';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--tc-lav);vertical-align:middle;margin-right:2px;"></span> Completed</span>';
+  svg += '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:transparent;border:1.5px solid var(--tc-amber);vertical-align:middle;margin-right:2px;"></span> Upcoming</span>';
+  svg += '</div>';
+  chartEl.innerHTML = svg;
+
+  // Insight
+  if (insightEl) {
+    let iHtml = '';
+    if (upcomingCount > 0) {
+      const nextDose = allVacc.filter(v => v.upcoming).sort((a, b) => a.date.localeCompare(b.date))[0];
+      if (nextDose) {
+        const daysUntil = Math.round((new Date(nextDose.date).getTime() - Date.now()) / 86400000);
+        if (daysUntil >= 0 && daysUntil <= 30) {
+          iHtml += '<div class="si-insight si-insight-info">' + zi('bell') + ' <strong>' + escHtml(nextDose.name) + '</strong> due in ' + daysUntil + ' day' + (daysUntil !== 1 ? 's' : '') + '.</div>';
+        }
+      }
+    }
+    insightEl.innerHTML = iHtml;
   }
 }
 
@@ -9739,6 +9995,13 @@ function renderInfoGrowthVelocity() {
       iHtml += '<div class="si-insight si-insight-info">Weight (' + Math.round(data.proportionFlag.weightPct) + 'th) and height (' + Math.round(data.proportionFlag.heightPct) + 'th) percentiles differ significantly. Mention this at the next visit.</div>';
     }
     insightEl.innerHTML = iHtml;
+  }
+
+  // PR-EF Viz #6: render the percentile-band growth chart into the info-tab
+  // canvas mount. drawChart() is the same Chart.js renderer the Medical tab
+  // uses; the canvasId parameter keeps the two instances isolated.
+  if (typeof drawChart === 'function' && document.getElementById('growthChartInfo')) {
+    drawChart('growthChartInfo');
   }
 }
 
