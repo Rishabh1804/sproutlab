@@ -7647,7 +7647,13 @@ function renderInfoIllnessFreq() {
   bHtml += '</div>';
   if (breakdownEl) breakdownEl.innerHTML = bHtml;
 
-  // Insights
+  // V-M-21 contract — `ins.text` is sanctioned raw HTML; this renderer emits it
+  // directly into innerHTML (no escHtml at the boundary). PRODUCER-SIDE INVARIANT:
+  // each `insights.push({ type, text })` site must escape user-derived data
+  // before composing it into `text`. The canonical pattern is iconText() from
+  // core.js for icon-plus-user-text compositions (V-K-10 PR-A). Adding raw
+  // user-string interpolation here is an XSS vector. Mirror sites: medical.js
+  // 7784, 7926, 8070, 8231, 8358, 8494, 8704 — all share this contract.
   if (insightsEl) {
     if (data.insights.length > 0) {
       insightsEl.innerHTML = data.insights.map(ins =>
@@ -7778,7 +7784,8 @@ function renderInfoVaccFever() {
   visibleResults.forEach(r => { tlHtml += _vaccRow(r); });
   if (timelineEl) timelineEl.innerHTML = tlHtml;
 
-  // Insights
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651 for the
+  // full producer-side invariant.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
@@ -7920,7 +7927,7 @@ function renderInfoIllnessFood() {
     corrEl.innerHTML = '';
   }
 
-  // Insights
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight si-insight-warn">' + ins.text + '</div>'
@@ -8065,6 +8072,7 @@ function renderInfoRecovery() {
   if (weightEl) weightEl.innerHTML = html;
   if (appetiteEl) appetiteEl.innerHTML = '';
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -8226,6 +8234,7 @@ function renderInfoIllnessSleep() {
     if (overlayEl) overlayEl.innerHTML += statsHtml;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
@@ -8353,6 +8362,7 @@ function renderInfoFoodReaction() {
     timelineEl.innerHTML = html;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -8489,6 +8499,7 @@ function renderInfoRepetition() {
     barsEl.innerHTML = '';
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'
@@ -8699,6 +8710,7 @@ function renderInfoTexture() {
     timelineEl.innerHTML = html;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'

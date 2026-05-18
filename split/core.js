@@ -412,6 +412,14 @@ function init() {
     else if (action === 'toggleInsightsPulse') { const ep = document.getElementById('insightsPulseExpanded'); ep.style.display = ep.style.display === 'none' ? '' : 'none'; }
     else if (action === 'startSleepNow') startSleepNow();
     else if (action === 'closeQuickLogAll') closeQuickLogAll();
+    // PR-B HR-3 cleanup — Food-tag modal rtog buttons (home.js:3181 area).
+    // ntmToggleCat: radio-style category selection (exclusive within parent
+    // wrapper). ntmToggleOpt: multi-toggle for nutrient + tag chips.
+    else if (action === 'ntmToggleCat') {
+      btn.parentElement.querySelectorAll('.rtog').forEach(b => b.className = 'rtog');
+      btn.className = 'rtog active-ok';
+    }
+    else if (action === 'ntmToggleOpt') btn.classList.toggle('active-ok');
     // ── Dynamic render actions (with args) ──
     else if (action === 'switchTab') switchTab(arg);
     else if (action === 'switchTrackSub') switchTrackSub(arg);
@@ -3380,7 +3388,11 @@ window.addEventListener('popstate', e => {
 });
 
 function confirmAction(msg, callback, btnText) {
-  const label = btnText || (msg.toLowerCase().startsWith('delete') ? 'Delete' : 'Confirm');
+  // V-K-8 (PR-B) — defensive parsing: the prior `startsWith('delete')` heuristic
+  // missed forms like "Are you sure you want to delete this entry?" where the
+  // destructive token isn't the leading word. Word-boundary match catches the
+  // token anywhere in the message; explicit btnText still wins.
+  const label = btnText || (/\bdelete\b/i.test(msg) ? 'Delete' : 'Confirm');
   const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';

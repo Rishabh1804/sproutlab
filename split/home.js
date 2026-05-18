@@ -3178,18 +3178,18 @@ function showNutrientTagModal(foodName) {
       <div class="fx-wrap g4 mb-12" id="ntm-cats">
         ${['grains','fruits','vegs','dairy','nuts'].map(c => {
           const labels = {grains: zi('bowl') + ' Grain/Lentil', fruits: zi('spoon') + ' Fruit', vegs: zi('spoon') + ' Vegetable', dairy: zi('drop') + ' Dairy/Fat', nuts: zi('spoon') + ' Nut/Seed'};
-          return `<button class="rtog" data-cat="${c}" onclick="this.parentElement.querySelectorAll('.rtog').forEach(b=>b.className='rtog');this.className='rtog active-ok'">${labels[c]}</button>`;
+          return `<button class="rtog" data-cat="${c}" data-action="ntmToggleCat">${labels[c]}</button>`;
         }).join('')}
       </div>
 
       <div class="section-label-light">Key nutrients</div>
       <div class="fx-wrap g4 mb-12" id="ntm-nutrients">
-        ${['iron','calcium','protein','vitamin C','vitamin A','fibre','healthy fats','omega-3','zinc','folate','potassium','magnesium','antioxidants','carbs','vitamin E','vitamin K','probiotics'].map(n => `<button class="rtog" data-nut="${n}" onclick="this.classList.toggle('active-ok')">${n}</button>`).join('')}
+        ${['iron','calcium','protein','vitamin C','vitamin A','fibre','healthy fats','omega-3','zinc','folate','potassium','magnesium','antioxidants','carbs','vitamin E','vitamin K','probiotics'].map(n => `<button class="rtog" data-nut="${n}" data-action="ntmToggleOpt">${n}</button>`).join('')}
       </div>
 
       <div class="section-label-light">Properties</div>
       <div class="fx-wrap g4 mb-12" id="ntm-tags">
-        ${['iron-rich','brain-health','bone-health','protein-rich','healthy-fats','vitamin-C','vitamin-A','omega-3','digestive','energy','immune-boost','antioxidant','gut-health','hydrating','cooling','anti-inflammatory','easy-digest','gluten-free','constipation-relief','fermented'].map(t => `<button class="rtog" data-tag="${t}" onclick="this.classList.toggle('active-ok')">${t.replace(/-/g,' ')}</button>`).join('')}
+        ${['iron-rich','brain-health','bone-health','protein-rich','healthy-fats','vitamin-C','vitamin-A','omega-3','digestive','energy','immune-boost','antioxidant','gut-health','hydrating','cooling','anti-inflammatory','easy-digest','gluten-free','constipation-relief','fermented'].map(t => `<button class="rtog" data-tag="${t}" data-action="ntmToggleOpt">${t.replace(/-/g,' ')}</button>`).join('')}
       </div>
 
       <div class="modal-btns">
@@ -8398,6 +8398,14 @@ function renderTodayPlan() {
           actionAttr = ` onclick="${item.action}" class="ptr"`;
         }
       }
+      // V-M-20 contract — `item.htmlDetail: true` opts this row's `item.detail`
+      // out of escHtml and emits it as raw HTML below. PRODUCER-SIDE INVARIANT:
+      // any user-derived data in `detail` must pass through escHtml() or
+      // iconText() (core.js) before being placed on the item. Adding new
+      // `htmlDetail: true` sites without honoring this invariant is an XSS
+      // vector. Default branch (htmlDetail falsy) routes through escHtml at the
+      // boundary per HR-4. Adoption pattern: see iconText() adoptions at
+      // home.js plan-detail meal/vaccine renders.
       html += `<div class="plan-item"${actionAttr}>
         <div class="plan-time">${item.time}</div>
         <div class="plan-icon">${item.icon}</div>
