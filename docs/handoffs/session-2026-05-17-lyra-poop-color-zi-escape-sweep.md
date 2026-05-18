@@ -262,6 +262,10 @@ Per prior chronicle convention (pattern (c) — carry-forwards in chronicle tail
 
 This chronicle is the artifact. Per prior chronicle pattern (`session-2026-05-16-lyra-hr-1-total-closure.md`), watch-list entries live here in the carry-forward tail; a future Codex session ingests this file directly. No cross-cluster Codex repo writes attempted this round — keeps the artifact provenance clean (single chronicle, single signature).
 
+### Sibling chronicle (post-merge consult, same date)
+
+- **`docs/handoffs/session-2026-05-17-mode2-maren-spec-consult.md` (s-2026-05-17-02)** — Mode-2 committee consult convened by the Architect immediately after PR #75 merged, on the maren.md spec-touch surface + HTML companion architectural question. The cross-Governor peer-review beat owed by §6 LOC refresh above (kael.md + maren.md mechanical refreshes flagged as owing canon-gov-002 peer-review) is **discharged** in s-2026-05-17-02 §T4 — both Governors endorsed the other's LOC refresh inline in their Section 1 closes. Spec-content amendments queued by that consult (V-K-11..V-K-17 + V-M-22..V-M-29) remain owed at a future Rung-2 spec-touch cycle.
+
 ---
 
 ## 8. Closing note
