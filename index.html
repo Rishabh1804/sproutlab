@@ -4846,11 +4846,15 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    the dark-theme surface (#2a2230) — a parent reading a "Black stool" anomaly
    in dark theme would see an effectively-empty swatch and read the card as
    benign. Lighten just the swatch/segment renders in dark mode; the
-   anatomical token stays accurate for chart-fill contexts that need raw hex. */
-[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#4a4a4a; border-color:rgba(255,255,255,0.25); }
-[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#7a6440; border-color:rgba(255,255,255,0.20); }
-[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#4a4a4a; }
-[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#7a6440; }
+   anatomical token stays accurate for chart-fill contexts that need raw hex.
+   V-M-10b (PR-B) — initial overrides (#4a4a4a / #7a6440) only reached 1.7:1
+   and 2.7:1 against --surface dark, below WCAG 1.4.11's 3:1 AA-large threshold
+   for graphical UI components. Brightened to #7a7a7a (3.57:1) and #8a7050
+   (3.30:1); verify via docs/POOP_COLOR_REFERENCE.html contrast cells. */
+[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#7a7a7a; border-color:rgba(255,255,255,0.25); }
+[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#8a7050; border-color:rgba(255,255,255,0.20); }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#7a7a7a; }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#8a7050; }
 [data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }
@@ -17057,6 +17061,14 @@ function init() {
     else if (action === 'toggleInsightsPulse') { const ep = document.getElementById('insightsPulseExpanded'); ep.style.display = ep.style.display === 'none' ? '' : 'none'; }
     else if (action === 'startSleepNow') startSleepNow();
     else if (action === 'closeQuickLogAll') closeQuickLogAll();
+    // PR-B HR-3 cleanup — Food-tag modal rtog buttons (home.js:3181 area).
+    // ntmToggleCat: radio-style category selection (exclusive within parent
+    // wrapper). ntmToggleOpt: multi-toggle for nutrient + tag chips.
+    else if (action === 'ntmToggleCat') {
+      btn.parentElement.querySelectorAll('.rtog').forEach(b => b.className = 'rtog');
+      btn.className = 'rtog active-ok';
+    }
+    else if (action === 'ntmToggleOpt') btn.classList.toggle('active-ok');
     // ── Dynamic render actions (with args) ──
     else if (action === 'switchTab') switchTab(arg);
     else if (action === 'switchTrackSub') switchTrackSub(arg);
@@ -20055,7 +20067,11 @@ window.addEventListener('popstate', e => {
 });
 
 function confirmAction(msg, callback, btnText) {
-  const label = btnText || (msg.toLowerCase().startsWith('delete') ? 'Delete' : 'Confirm');
+  // V-K-8 (PR-B) — defensive parsing: the prior `startsWith('delete')` heuristic
+  // missed forms like "Are you sure you want to delete this entry?" where the
+  // destructive token isn't the leading word. Word-boundary match catches the
+  // token anywhere in the message; explicit btnText still wins.
+  const label = btnText || (/\bdelete\b/i.test(msg) ? 'Delete' : 'Confirm');
   const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
@@ -25134,18 +25150,18 @@ function showNutrientTagModal(foodName) {
       <div class="fx-wrap g4 mb-12" id="ntm-cats">
         ${['grains','fruits','vegs','dairy','nuts'].map(c => {
           const labels = {grains: zi('bowl') + ' Grain/Lentil', fruits: zi('spoon') + ' Fruit', vegs: zi('spoon') + ' Vegetable', dairy: zi('drop') + ' Dairy/Fat', nuts: zi('spoon') + ' Nut/Seed'};
-          return `<button class="rtog" data-cat="${c}" onclick="this.parentElement.querySelectorAll('.rtog').forEach(b=>b.className='rtog');this.className='rtog active-ok'">${labels[c]}</button>`;
+          return `<button class="rtog" data-cat="${c}" data-action="ntmToggleCat">${labels[c]}</button>`;
         }).join('')}
       </div>
 
       <div class="section-label-light">Key nutrients</div>
       <div class="fx-wrap g4 mb-12" id="ntm-nutrients">
-        ${['iron','calcium','protein','vitamin C','vitamin A','fibre','healthy fats','omega-3','zinc','folate','potassium','magnesium','antioxidants','carbs','vitamin E','vitamin K','probiotics'].map(n => `<button class="rtog" data-nut="${n}" onclick="this.classList.toggle('active-ok')">${n}</button>`).join('')}
+        ${['iron','calcium','protein','vitamin C','vitamin A','fibre','healthy fats','omega-3','zinc','folate','potassium','magnesium','antioxidants','carbs','vitamin E','vitamin K','probiotics'].map(n => `<button class="rtog" data-nut="${n}" data-action="ntmToggleOpt">${n}</button>`).join('')}
       </div>
 
       <div class="section-label-light">Properties</div>
       <div class="fx-wrap g4 mb-12" id="ntm-tags">
-        ${['iron-rich','brain-health','bone-health','protein-rich','healthy-fats','vitamin-C','vitamin-A','omega-3','digestive','energy','immune-boost','antioxidant','gut-health','hydrating','cooling','anti-inflammatory','easy-digest','gluten-free','constipation-relief','fermented'].map(t => `<button class="rtog" data-tag="${t}" onclick="this.classList.toggle('active-ok')">${t.replace(/-/g,' ')}</button>`).join('')}
+        ${['iron-rich','brain-health','bone-health','protein-rich','healthy-fats','vitamin-C','vitamin-A','omega-3','digestive','energy','immune-boost','antioxidant','gut-health','hydrating','cooling','anti-inflammatory','easy-digest','gluten-free','constipation-relief','fermented'].map(t => `<button class="rtog" data-tag="${t}" data-action="ntmToggleOpt">${t.replace(/-/g,' ')}</button>`).join('')}
       </div>
 
       <div class="modal-btns">
@@ -30352,6 +30368,14 @@ function renderTodayPlan() {
           actionAttr = ` onclick="${item.action}" class="ptr"`;
         }
       }
+      // V-M-20 contract — `item.htmlDetail: true` opts this row's `item.detail`
+      // out of escHtml and emits it as raw HTML below. PRODUCER-SIDE INVARIANT:
+      // any user-derived data in `detail` must pass through escHtml() or
+      // iconText() (core.js) before being placed on the item. Adding new
+      // `htmlDetail: true` sites without honoring this invariant is an XSS
+      // vector. Default branch (htmlDetail falsy) routes through escHtml at the
+      // boundary per HR-4. Adoption pattern: see iconText() adoptions at
+      // home.js plan-detail meal/vaccine renders.
       html += `<div class="plan-item"${actionAttr}>
         <div class="plan-time">${item.time}</div>
         <div class="plan-icon">${item.icon}</div>
@@ -43137,7 +43161,13 @@ function renderInfoIllnessFreq() {
   bHtml += '</div>';
   if (breakdownEl) breakdownEl.innerHTML = bHtml;
 
-  // Insights
+  // V-M-21 contract — `ins.text` is sanctioned raw HTML; this renderer emits it
+  // directly into innerHTML (no escHtml at the boundary). PRODUCER-SIDE INVARIANT:
+  // each `insights.push({ type, text })` site must escape user-derived data
+  // before composing it into `text`. The canonical pattern is iconText() from
+  // core.js for icon-plus-user-text compositions (V-K-10 PR-A). Adding raw
+  // user-string interpolation here is an XSS vector. Mirror sites: medical.js
+  // 7782, 7925, 8070, 8232, 8360, 8497, 8708 — all share this contract.
   if (insightsEl) {
     if (data.insights.length > 0) {
       insightsEl.innerHTML = data.insights.map(ins =>
@@ -43268,7 +43298,8 @@ function renderInfoVaccFever() {
   visibleResults.forEach(r => { tlHtml += _vaccRow(r); });
   if (timelineEl) timelineEl.innerHTML = tlHtml;
 
-  // Insights
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645 for the
+  // full producer-side invariant.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
@@ -43410,7 +43441,7 @@ function renderInfoIllnessFood() {
     corrEl.innerHTML = '';
   }
 
-  // Insights
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight si-insight-warn">' + ins.text + '</div>'
@@ -43555,6 +43586,7 @@ function renderInfoRecovery() {
   if (weightEl) weightEl.innerHTML = html;
   if (appetiteEl) appetiteEl.innerHTML = '';
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -43716,6 +43748,7 @@ function renderInfoIllnessSleep() {
     if (overlayEl) overlayEl.innerHTML += statsHtml;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
@@ -43843,6 +43876,7 @@ function renderInfoFoodReaction() {
     timelineEl.innerHTML = html;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -43979,6 +44013,7 @@ function renderInfoRepetition() {
     barsEl.innerHTML = '';
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'
@@ -44189,6 +44224,7 @@ function renderInfoTexture() {
     timelineEl.innerHTML = html;
   }
 
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'

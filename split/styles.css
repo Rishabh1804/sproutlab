@@ -4839,11 +4839,15 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    the dark-theme surface (#2a2230) — a parent reading a "Black stool" anomaly
    in dark theme would see an effectively-empty swatch and read the card as
    benign. Lighten just the swatch/segment renders in dark mode; the
-   anatomical token stays accurate for chart-fill contexts that need raw hex. */
-[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#4a4a4a; border-color:rgba(255,255,255,0.25); }
-[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#7a6440; border-color:rgba(255,255,255,0.20); }
-[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#4a4a4a; }
-[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#7a6440; }
+   anatomical token stays accurate for chart-fill contexts that need raw hex.
+   V-M-10b (PR-B) — initial overrides (#4a4a4a / #7a6440) only reached 1.7:1
+   and 2.7:1 against --surface dark, below WCAG 1.4.11's 3:1 AA-large threshold
+   for graphical UI components. Brightened to #7a7a7a (3.57:1) and #8a7050
+   (3.30:1); verify via docs/POOP_COLOR_REFERENCE.html contrast cells. */
+[data-theme="dark"] .poop-swatch[data-pcolor="black"]  { background:#7a7a7a; border-color:rgba(255,255,255,0.25); }
+[data-theme="dark"] .poop-swatch[data-pcolor="dark"]   { background:#8a7050; border-color:rgba(255,255,255,0.20); }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="black"] { background:#7a7a7a; }
+[data-theme="dark"] .poop-bar-seg[data-pcolor="dark"]  { background:#8a7050; }
 [data-theme="dark"] .sq-btn.active-sq { background:rgba(155,168,216,0.14); color:var(--tc-indigo); border-color:rgba(155,168,216,0.35); }
 [data-theme="dark"] .rtog.active-ok { background:rgba(122,192,160,0.18); color:var(--tc-sage); border-color:rgba(122,192,160,0.35); }
 [data-theme="dark"] .rtog.active-watch { background:rgba(212,176,64,0.18); color:var(--tc-warn); border-color:rgba(212,176,64,0.35); }
