@@ -49,7 +49,9 @@ Split-file PWA. 11 modules, ~65,725 lines total (post-PR-75; was 64,402 at last 
 
 **Module map:** [docs/MODULE_MAP.html](docs/MODULE_MAP.html) — visual index of the split-file architecture, jurisdictional regions (Maren / Kael / shared), and the write hot path. Built from a specific commit; drift-check with `wc -l split/*`. Open in a browser, not as text.
 
-**Authoritative source:** when this file and the map disagree on LOC counts or layout snapshots, **the map wins** (it's regenerated from a committed snapshot). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
+**Poop-color reference:** [docs/POOP_COLOR_REFERENCE.html](docs/POOP_COLOR_REFERENCE.html) — token × theme × render-context × lexicon-membership chart for the 8 anatomical poop-color tokens. Auto-generated each build by `split/build-poop-reference.mjs`; reads `--poop-c-*` tokens from `styles.css`, dark-theme overrides, `POOP_COLOR_HEX` from `medical.js`, `SAFE_POOP_COLORS` from `core.js`. Maren-primary consult on contrast findings; Kael-primary consult on lexicon-drift findings.
+
+**Authoritative source:** when this file and the maps disagree on LOC counts, token values, or layout snapshots, **the maps win** (they're regenerated from committed source). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
 
 ```
 split/

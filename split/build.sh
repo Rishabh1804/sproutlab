@@ -14,6 +14,12 @@ fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
+# Mode-2 maren-consult priority-1 build: regenerate docs/POOP_COLOR_REFERENCE.html
+# from canonical token + override + lexicon sources. Stderr-redirected per
+# audit-emoji.sh precedent. Per V-K-17 (Maren-elevated to load-bearing): the
+# chart must stay byte-fresh against styles.css / medical.js / core.js or it
+# misleads the audit motion at the exact moment the audit needs sharpest signal.
+node build-poop-reference.mjs >&2
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">
