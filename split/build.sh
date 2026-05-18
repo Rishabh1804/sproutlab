@@ -20,6 +20,12 @@ node bump-version.mjs ../manifest.json
 # chart must stay byte-fresh against styles.css / medical.js / core.js or it
 # misleads the audit motion at the exact moment the audit needs sharpest signal.
 node build-poop-reference.mjs >&2
+# Mode-2 maren-consult priority-2 build: regenerate docs/CARETICKET_STATE_MACHINE.html
+# from canonical CARETICKETS_SPEC_v5.md §Lifecycle + intelligence.js ct* handler
+# functions. V-M-28 audit-surface visualization — drift between the spec's
+# 6 transitions and the implementation's status-assignment sites surfaces as
+# block/should flags in the chart's drift report.
+node build-careticket-state-machine.mjs >&2
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">

@@ -51,6 +51,8 @@ Split-file PWA. 11 modules, ~65,725 lines total (post-PR-75; was 64,402 at last 
 
 **Poop-color reference:** [docs/POOP_COLOR_REFERENCE.html](docs/POOP_COLOR_REFERENCE.html) — token × theme × render-context × lexicon-membership chart for the 8 anatomical poop-color tokens. Auto-generated each build by `split/build-poop-reference.mjs`; reads `--poop-c-*` tokens from `styles.css`, dark-theme overrides, `POOP_COLOR_HEX` from `medical.js`, `SAFE_POOP_COLORS` from `core.js`. Maren-primary consult on contrast findings; Kael-primary consult on lexicon-drift findings.
 
+**CareTicket state machine:** [docs/CARETICKET_STATE_MACHINE.html](docs/CARETICKET_STATE_MACHINE.html) — 6-transition lifecycle, spec vs implementation side-by-side. Auto-generated each build by `split/build-careticket-state-machine.mjs`; reads §Lifecycle from `docs/CARETICKETS_SPEC_v5.md` and `ct*` handler functions from `intelligence.js`. Drift report flags spec/implementation divergence (Maren-primary consult; CareTicket transitions are an active audit surface where drift could silently mark a parent's escalation resolved without the spec gate firing).
+
 **Authoritative source:** when this file and the maps disagree on LOC counts, token values, or layout snapshots, **the maps win** (they're regenerated from committed source). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
 
 ```
