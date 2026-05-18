@@ -5961,15 +5961,10 @@ function _piGetPoops(windowDays) {
 }
 
 // ── Helper: poop color hex values ──
-// Mirrors --poop-c-* tokens in styles.css. CSS is the source of truth for
-// .poop-swatch / .poop-bar-seg backgrounds; this JS map covers contexts where
-// the raw hex is needed (chart fills, inline title color, etc.). Keep in sync.
-const POOP_COLOR_HEX = {
-  yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
-  orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
-};
-// Whitelist used to guard data-pcolor attribute emission (defense in depth).
-const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+// POOP_COLOR_HEX + POOP_COLOR_KEYS moved to core.js (V-K-1-followup + Cipher
+// Round-2 §9) so home.js / diet.js / medical.js / intelligence.js share a
+// single source of truth. CSS is canonical for the rendered swatch (--poop-c-*
+// in styles.css); core.js POOP_COLOR_HEX covers chart-fill / inline-title.
 function _piPcolorAttr(color) {
   return POOP_COLOR_KEYS.indexOf(color) >= 0 ? ' data-pcolor="' + color + '"' : '';
 }
@@ -7577,7 +7572,7 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: zi(recent[i].iconKey) + ' ' + escHtml(recent[i].illnessType) + ' and ' + zi(recent[j].iconKey) + ' ' + escHtml(recent[j].illnessType) + ' overlapped around ' +
+          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' +
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights
@@ -7653,7 +7648,7 @@ function renderInfoIllnessFreq() {
   // before composing it into `text`. The canonical pattern is iconText() from
   // core.js for icon-plus-user-text compositions (V-K-10 PR-A). Adding raw
   // user-string interpolation here is an XSS vector. Mirror sites: medical.js
-  // 7784, 7926, 8070, 8231, 8358, 8494, 8704 — all share this contract.
+  // 7782, 7925, 8070, 8232, 8360, 8497, 8708 — all share this contract.
   if (insightsEl) {
     if (data.insights.length > 0) {
       insightsEl.innerHTML = data.insights.map(ins =>
@@ -7784,7 +7779,7 @@ function renderInfoVaccFever() {
   visibleResults.forEach(r => { tlHtml += _vaccRow(r); });
   if (timelineEl) timelineEl.innerHTML = tlHtml;
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651 for the
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645 for the
   // full producer-side invariant.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
@@ -7927,7 +7922,7 @@ function renderInfoIllnessFood() {
     corrEl.innerHTML = '';
   }
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight si-insight-warn">' + ins.text + '</div>'
@@ -8072,7 +8067,7 @@ function renderInfoRecovery() {
   if (weightEl) weightEl.innerHTML = html;
   if (appetiteEl) appetiteEl.innerHTML = '';
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -8234,7 +8229,7 @@ function renderInfoIllnessSleep() {
     if (overlayEl) overlayEl.innerHTML += statsHtml;
   }
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight">' + ins.text + '</div>'
@@ -8362,7 +8357,7 @@ function renderInfoFoodReaction() {
     timelineEl.innerHTML = html;
   }
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : '') + '">' + ins.text + '</div>'
@@ -8499,7 +8494,7 @@ function renderInfoRepetition() {
     barsEl.innerHTML = '';
   }
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'
@@ -8710,7 +8705,7 @@ function renderInfoTexture() {
     timelineEl.innerHTML = html;
   }
 
-  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7651.
+  // V-M-21 contract — `ins.text` raw-HTML emit; see medical.js:7645.
   if (insightsEl) {
     insightsEl.innerHTML = data.insights.map(ins =>
       '<div class="si-insight ' + (ins.type === 'warn' ? 'si-insight-warn' : ins.type === 'good' ? 'si-insight-good' : '') + '">' + ins.text + '</div>'

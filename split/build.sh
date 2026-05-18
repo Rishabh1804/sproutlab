@@ -11,6 +11,14 @@ if ! bash audit-emoji.sh >&2; then
   echo "BUILD ABORTED: HR-1 audit failed. Fix violations above before building." >&2
   exit 1
 fi
+# V-K-10 ship-gate: audit-icon-text.sh flags `(label|text|reason|detail): zi(`
+# field-assignments — the canonical icon-data-shape leak class. PR-A landed
+# iconText() in core.js as the canonical replacement; this lint catches future
+# regressions. Stderr-redirected per audit-emoji.sh precedent.
+if ! bash audit-icon-text.sh >&2; then
+  echo 'BUILD ABORTED: V-K-10 icon-text audit failed. Adopt iconText() or annotate `// raw-html-ok`.' >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

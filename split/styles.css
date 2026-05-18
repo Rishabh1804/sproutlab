@@ -130,7 +130,7 @@
 
   /* Poop-color reference palette (anatomical, NOT domain).
      Single source of truth for the picker, legend, timeline, anomaly cards,
-     and Color Guide. The medical.js POOP_COLOR_HEX mirror must stay in sync. */
+     and Color Guide. The core.js POOP_COLOR_HEX mirror must stay in sync. */
   --poop-c-yellow: #e8c84a;
   --poop-c-green:  #6aa84f;
   --poop-c-brown:  #8B6914;

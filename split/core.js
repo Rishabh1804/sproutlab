@@ -1547,6 +1547,27 @@ const CONSISTENCY_SCORES = { soft: 100, normal: 100, loose: 70, hard: 50, watery
 // in medical.js. Mirror at intelligence.js (qaAnswerPoopColor) must match.
 const SAFE_POOP_COLORS = ['yellow', 'green', 'brown', 'dark', 'orange'];
 
+// V-K-1-followup + Cipher Round-2 §9 (PR #75) — POOP_COLOR_HEX promoted from
+// medical.js to core.js so that home.js / diet.js / medical.js / intelligence.js
+// share a single source of truth for the 8 anatomical poop-color hex tokens.
+// Mirrors --poop-c-* tokens in styles.css (CSS is canonical for the rendered
+// swatch; this JS map covers chart-fill / inline-title contexts where the raw
+// hex is needed). Drift-guard: docs/POOP_COLOR_REFERENCE.html (auto-built each
+// build via split/build-poop-reference.mjs) reads this constant directly and
+// the chart's contrast cells surface any drift against the CSS tokens.
+const POOP_COLOR_HEX = {
+  yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
+  orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
+};
+// Whitelist used to guard data-pcolor attribute emission (defense in depth).
+const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+// Display labels for the 8 keys. Most are title-case of the key; `dark` and
+// `white` use the parent-facing wording the picker UI carries.
+const POOP_COLOR_LABELS = {
+  yellow: 'Yellow', green: 'Green', brown: 'Brown', dark: 'Dark Brown',
+  orange: 'Orange', red: 'Red', white: 'White/Pale', black: 'Black'
+};
+
 function calcPoopScore(dateStr) {
   dateStr = dateStr || today();
   const dayPoops = getPoopsForDate(dateStr);
@@ -2587,6 +2608,15 @@ function escHtml(s) {
   if (typeof s !== 'string') s = s == null ? '' : String(s);
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
+// V-K-10 (PR #75 carry-forward) — iconText(name, text) returns raw HTML:
+// `zi(name) + ' ' + escHtml(text)`. The text component is escaped at the
+// helper; the SVG fragment is preserved as raw HTML. Use this whenever an
+// icon + user-text-like string flows into a sanctioned raw-HTML emit (e.g.
+// htmlDetail: true plan items, ins.text insight rows, any innerHTML buffer).
+// The lint at split/audit-icon-text.sh flags `(label|text|reason|detail):
+// zi(` field-assignments — adopt iconText() there to close the data-shape
+// leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
+function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 // _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML

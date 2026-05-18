@@ -5639,18 +5639,16 @@ let _poopConsistency = 'normal';
 let _poopAmount = 'medium';
 let _poopEditIdx = null;
 
-const POOP_COLORS = {
-  yellow:  { hex:'#e8c840', label:'Yellow' },
-  green:   { hex:'#6b9e4a', label:'Green' },
-  brown:   { hex:'#8b6914', label:'Brown' },
-  dark:    { hex:'#3d2b1f', label:'Dark Brown' },
-  orange:  { hex:'#e0882a', label:'Orange' },
-  red:     { hex:'#c0392b', label:'Red' },
-  white:   { hex:'#f0ede6', label:'White/Pale' },
-  black:   { hex:'#1a1a1a', label:'Black' },
-  tan:     { hex:'#d2b48c', label:'Tan' },
-  mustard: { hex:'#c8a030', label:'Mustard' },
-};
+// Cipher Round-2 §9 (PR #75) + V-K-1-followup — POOP_COLORS derived from the
+// canonical POOP_COLOR_HEX + POOP_COLOR_LABELS in core.js. Previously this map
+// carried its own hex literals that had drifted (yellow #e8c840 vs canonical
+// #e8c84a, dark #3d2b1f vs canonical #5a4a2a, etc.) plus two orphan keys
+// (`tan` and `mustard`) unreachable from the 8-key picker. Single-source-of-
+// truth: the picker, the renders, and the chart all read the same hex now.
+const POOP_COLORS = POOP_COLOR_KEYS.reduce((acc, k) => {
+  acc[k] = { hex: POOP_COLOR_HEX[k], label: POOP_COLOR_LABELS[k] };
+  return acc;
+}, {});
 
 function _poopColorDot(colorKey) {
   const col = POOP_COLORS[colorKey] || POOP_COLORS.yellow;
@@ -8007,14 +8005,14 @@ function renderTodayPlan() {
         items.push({
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
-          detail: zi('check') + ' Booked — ' + getVaccApptLabel(bookedData),
+          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)),
           tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
-          detail: zi('warn') + ' Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule',
+          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'),
           tag: 'med', done: false, htmlDetail: true
         });
       }
@@ -8023,7 +8021,7 @@ function renderTodayPlan() {
       // Booked but no details — nudge to add date
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
-        detail: '' + zi('check') + ' Booked — tap to add appointment date & time',
+        detail: iconText('check', 'Booked — tap to add appointment date & time'),
         tag: 'med', done: false, htmlDetail: true,
         action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
@@ -8091,7 +8089,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '8–9', icon: zi('sun'), title: 'Breakfast',
-    detail: bfDone ? zi('check') + ' ' + escHtml(todayEntry.breakfast) : bfSuggestion,
+    detail: bfDone ? iconText('check', todayEntry.breakfast) : bfSuggestion,
     tag: 'food', done: bfDone, htmlDetail: bfDone,
     action: bfDone ? null : '_qlMeal="breakfast";openQuickModal("feed")'
   });
@@ -8161,7 +8159,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '12–1', icon: zi('sun'), title: 'Lunch',
-    detail: lnDone ? zi('check') + ' ' + escHtml(todayEntry.lunch) : lnSuggestion,
+    detail: lnDone ? iconText('check', todayEntry.lunch) : lnSuggestion,
     tag: 'food', done: lnDone, htmlDetail: lnDone,
     action: lnDone ? null : '_qlMeal="lunch";openQuickModal("feed")'
   });
@@ -8235,7 +8233,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '6–7', icon: zi('moon'), title: 'Dinner',
-    detail: dnDone ? zi('check') + ' ' + escHtml(todayEntry.dinner) : dnSuggestion,
+    detail: dnDone ? iconText('check', todayEntry.dinner) : dnSuggestion,
     tag: 'food', done: dnDone, htmlDetail: dnDone,
     action: dnDone ? null : '_qlMeal="dinner";openQuickModal("feed")'
   });
@@ -8244,7 +8242,7 @@ function renderTodayPlan() {
   const skDone = isRealMeal(todayEntry.snack);
   items.push({
     time: '10–4', icon: zi('spoon'), title: 'Snack',
-    detail: skDone ? zi('check') + ' ' + escHtml(todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
+    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
     tag: 'food', done: skDone, htmlDetail: skDone,
     action: skDone ? null : '_qlMeal="snack";openQuickModal("feed")'
   });
