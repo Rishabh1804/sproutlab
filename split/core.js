@@ -4313,9 +4313,9 @@ function getTrend(current, previous, threshold, decimals) {
   const dec = decimals != null ? decimals : 1;
   const delta = +(current - previous).toFixed(dec);
   const absDelta = Math.abs(delta);
-  if (absDelta <= threshold) return { arrow:'→', delta:0, direction:'flat', cls:'trend-flat', text:'→ stable' };
-  if (delta > 0) return { arrow:'↑', delta, direction:'up', cls:'trend-up', text:'↑ +' + absDelta.toFixed(dec) };
-  return { arrow:'↓', delta, direction:'down', cls:'trend-down', text:'↓ -' + absDelta.toFixed(dec) };
+  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', text: iconText('trending-flat', 'stable') };
+  if (delta > 0) return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', text: iconText('trending-up', '+' + absDelta.toFixed(dec)) };
+  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', text: iconText('trending-down', '-' + absDelta.toFixed(dec)) };
 }
 
 // Get dates array for a window ending at offsetDays before today
@@ -4448,6 +4448,12 @@ function getPercentileNarrative() {
   }
   return `${zi('chart')} Drifted from ${olderPct.text} to ${currentPct.text} percentile over ${timeLabel} — worth monitoring.`;
 }
+
+// Wake-up sleep-loss minutes per night-waking, age-banded. Younger babies
+// have shorter re-settle cycles; older babies need more active soothing
+// per waking. Boundaries align with nap-transition scoring bands in data.js.
+// Consumed by computeSleepEfficiency() in intelligence.js.
+const WAKE_LOSS_MIN = { '0-12mo': 12, '12-24mo': 8, '24mo+': 5 };
 
 // ── SLEEP TREND (7d vs prior 7d) ──
 function getSleepTrend7d() {

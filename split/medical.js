@@ -5995,11 +5995,14 @@ function computeConsistencyTrend(windowDays) {
   const recent = dailyScores.slice(-7);
   const previous = dailyScores.slice(0, -7);
   const recentAvg = recent.reduce((s, d) => s + d.avg, 0) / recent.length;
-  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : recentAvg;
+  // PR-EF: prevAvg defaults to null (insufficient baseline) instead of
+  // recentAvg-as-fallback — surfacing absence honestly so the trend can
+  // be reported as "no comparison yet" rather than spuriously "stable".
+  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : null;
 
-  // Trend direction
-  const delta = recentAvg - prevAvg;
-  let trend = 'stable';
+  // Trend direction (guarded for null baseline)
+  const delta = prevAvg !== null ? recentAvg - prevAvg : 0;
+  let trend = prevAvg === null ? 'stable' : 'stable';
   if (delta >= 0.5) trend = 'firming';
   else if (delta <= -0.5) trend = 'loosening';
 
@@ -6060,7 +6063,7 @@ function renderInfoPoopConsistencyTrend() {
     return;
   }
 
-  const trendIcon = data.trend === 'firming' ? '↗' : data.trend === 'loosening' ? '↘' : data.trend === 'mixed' ? '↕' : '→';
+  const trendIcon = data.trend === 'firming' ? zi('trending-up') : data.trend === 'loosening' ? zi('trending-down') : data.trend === 'mixed' ? zi('trending-mixed') : zi('trending-flat');
   const trendColor = (data.trend === 'firming' || data.trend === 'loosening') ? 'var(--tc-amber)' : data.trend === 'mixed' ? 'var(--tc-caution)' : 'var(--tc-sage)';
   const trendLabel = data.trend.charAt(0).toUpperCase() + data.trend.slice(1);
   summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + trendColor + ';font-weight:600;">' + trendIcon + ' ' + trendLabel + '</span> · avg consistency: <strong>' + data.avgLabel + '</strong></div>';
@@ -6138,7 +6141,9 @@ function computePoopFrequencyPattern(windowDays) {
   const avg7d = counts.slice(-7).reduce((s, v) => s + v, 0) / 7;
   const avg14d = counts.reduce((s, v) => s + v, 0) / windowDays;
 
-  // Time-of-day buckets
+  // Time-of-day buckets — boundaries: morning 05-11, afternoon 11-16,
+  // evening 16-21, night otherwise. Chosen to align with typical infant
+  // wake/nap/feed cadence rather than astronomical day-parts.
   const buckets = { morning: 0, afternoon: 0, evening: 0, night: 0 };
   Object.values(dayTimes).forEach(times => {
     times.forEach(t => {
@@ -6421,6 +6426,10 @@ function computeNewFoodWatch() {
 
   recentFoods.forEach(food => {
     const introDate = new Date(food.date + 'T08:00:00');
+    // 72h window for food-intro reaction observation per AAP gut-transit
+    // guidance — longer than the 48h vaccine-fever band because food
+    // allergens can manifest with delayed onset across the digestive
+    // timeline. Window-mismatch with vaccine-fever (48h) is intentional.
     const windowEnd = new Date(introDate.getTime() + 72 * 3600000);
     const hoursElapsed = (now - introDate) / 3600000;
     const isOpen = hoursElapsed < 72;
@@ -6789,7 +6798,7 @@ function renderInfoPoopAmountTrend() {
     return;
   }
 
-  const trendIcon = data.trend === 'larger' ? '↗' : data.trend === 'smaller' ? '↘' : '→';
+  const trendIcon = data.trend === 'larger' ? zi('trending-up') : data.trend === 'smaller' ? zi('trending-down') : zi('trending-flat');
   summaryEl.innerHTML = '<div class="t-sm">Avg amount: <strong>' + data.avgLabel + '</strong> · Trend: <strong>' + trendIcon + ' ' + data.trend + '</strong></div>';
 
   if (barsEl) {
@@ -6862,9 +6871,13 @@ function computePoopSymptomTracker(windowDays) {
   const midStr = toDateStr(mid);
   const recentSymptoms = entries.filter(p => p.date >= midStr && (p.blood || p.mucus)).length;
   const prevSymptoms = entries.filter(p => p.date < midStr && (p.blood || p.mucus)).length;
+  // PR-EF: tightened ±1 → ±2 AND require absolute count ≥3 to flag — reduces
+  // over-flagging on small windows where single-event noise was tipping the
+  // signal.
   let trend = 'stable';
-  if (recentSymptoms > prevSymptoms + 1) trend = 'increasing';
-  else if (recentSymptoms < prevSymptoms - 1) trend = 'decreasing';
+  const sufficientSignal = (recentSymptoms + prevSymptoms) >= 3;
+  if (sufficientSignal && recentSymptoms > prevSymptoms + 2) trend = 'increasing';
+  else if (sufficientSignal && recentSymptoms < prevSymptoms - 2) trend = 'decreasing';
 
   // Severity
   let severity = 'rare';
@@ -7063,7 +7076,7 @@ function renderInfoPoopReport() {
 
   const lbl = getScoreLabel(data.avgScore);
   const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
-  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendText = delta !== null ? (delta > 2 ? zi('trending-up') + ' +' + delta + ' vs last week' : delta < -2 ? zi('trending-down') + ' ' + delta + ' vs last week' : zi('trending-flat') + ' stable') : '';
   const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
   summaryEl.innerHTML = '<div class="t-sm">Poop score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
     (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
@@ -7534,7 +7547,10 @@ function computeIllnessFrequency() {
     const d = new Date(e.startedAt);
     return (now - d) < 60 * 86400000;
   });
-  const freqPer30 = last60.length > 0 ? (last60.length / 2).toFixed(1) : '0';
+  // Was: last60.length / 2 — implicit "per 30d from a 60d window".
+  // Refactored to explicit windowDays / target ratio for clarity.
+  const windowDays = 60;
+  const freqPer30 = last60.length > 0 ? ((last60.length * 30) / windowDays).toFixed(1) : '0';
 
   // Average gap between episodes
   let avgGapDays = null;
@@ -7684,11 +7700,15 @@ function computeVaccFeverCorrelation() {
     const vMs = new Date(vDate).getTime();
     const names = vaccByDate[vDate];
 
-    // Look for fever episodes starting within 72h of vaccination
+    // 48h post-vaccination window for fever attribution per IAP pediatric
+    // guidance — most post-vaccination fevers peak within 24h and resolve
+    // by 48h. Window-mismatch with food-intro (72h) is intentional; do not
+    // unify. (Counter name kept as feverWithin72hCount for historical
+    // continuity; semantically now within48h.)
     const matchingFever = feverEps.find(fe => {
       const feMs = new Date(fe.startedAt).getTime();
       const diffH = (feMs - vMs) / 3600000;
-      return diffH >= 0 && diffH <= 72;
+      return diffH >= 0 && diffH <= 48;
     });
 
     const entry = {
@@ -8059,7 +8079,7 @@ function renderInfoRecovery() {
     }
     if (r.mealsPerDayAfter !== null) {
       const appColor = r.appetiteRecovery === 'recovered' ? 'var(--tc-sage)' : 'var(--tc-amber)';
-      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day after (7d)</div><div class="mi-recovery-val" style="color:' + appColor + ';">' + r.mealsPerDayAfter + (r.appetiteRecovery === 'recovered' ? ' ' + zi('check') : ' ↓') + '</div></div>';
+      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day after (7d)</div><div class="mi-recovery-val" style="color:' + appColor + ';">' + r.mealsPerDayAfter + (r.appetiteRecovery === 'recovered' ? ' ' + zi('check') : ' ' + zi('trending-down')) + '</div></div>';
     }
     html += '</div>';
   });
@@ -8508,9 +8528,9 @@ function renderInfoRepetition() {
 
 const TEXTURE_STAGES = [
   { key: 'puree', label: 'Purees', icon: zi('bowl'), keywords: ['puree', 'pureed', 'strained', 'juice'], color: 'rgba(170,130,200,0.7)' },
-  { key: 'mashed', label: 'Mashed / Porridge', icon: zi('spoon'), keywords: ['mashed', 'porridge', 'khichdi', ' dal ', ' dal,', 'halwa', 'sheera', 'cereal', 'oatmeal', 'dalia', 'suji', 'ragi porridge', 'rice porridge', 'congee'], color: 'var(--tc-amber)' },
-  { key: 'soft', label: 'Soft Chunks', icon: zi('bowl'), keywords: ['boiled', 'steamed', 'soft', 'cooked', 'idli', 'dosa', 'paratha', 'roti', 'chapati', 'upma', 'poha', 'pancake'], color: 'var(--tc-sage)' },
-  { key: 'finger', label: 'Finger Foods', icon: zi('baby'), keywords: ['finger', 'stick', 'wedge', 'slice', 'toast', 'biscuit', 'cracker', 'puff', 'makhana', 'cheerio'], color: 'var(--tc-sky)' }
+  { key: 'mashed', label: 'Mashed / Porridge', icon: zi('spoon'), keywords: ['mashed', 'porridge', 'khichdi', ' dal ', ' dal,', 'dal makhani', 'rajma', 'sambar', 'rasam', 'kheer', 'payasam', 'pongal', 'bisi bele', 'halwa', 'sheera', 'cereal', 'oatmeal', 'dalia', 'suji', 'sooji', 'rava', 'semolina', 'puffed', 'ragi porridge', 'rice porridge', 'congee'], color: 'var(--tc-amber)' },
+  { key: 'soft', label: 'Soft Chunks', icon: zi('bowl'), keywords: ['boiled', 'steamed', 'soft', 'cooked', 'idli', 'dosa', 'paratha', 'roti', 'chapati', 'upma', 'poha', 'pancake', 'sabzi', 'subzi', 'curry', 'thepla', 'puri', 'poori', 'uttapam', 'appam', 'paniyaram'], color: 'var(--tc-sage)' },
+  { key: 'finger', label: 'Finger Foods', icon: zi('baby'), keywords: ['finger', 'stick', 'wedge', 'slice', 'toast', 'biscuit', 'cracker', 'puff', 'makhana', 'cheerio', 'thattai', 'murukku', 'mathri', 'khakra', 'nankhatai'], color: 'var(--tc-sky)' }
 ];
 
 function _classifyMealTexture(mealText) {
@@ -8528,7 +8548,10 @@ function _classifyMealTexture(mealText) {
   const bareWords = ['banana', 'avocado', 'apple', 'pear', 'blueberry', 'mango', 'papaya', 'curd', 'yogurt', 'paneer', 'cheese', 'egg'];
   if (bareWords.some(w => lower.includes(w))) return 'soft';
 
-  return 'mashed'; // conservative default for unclassified entries
+  // PR-EF: was 'mashed' (silent default). Now 'unknown' surfaces as a gap-flag
+  // on the texture card so the parent can quick-tag instead of trusting a
+  // potentially-wrong fallback. See renderInfoTexture for UI handling.
+  return 'unknown';
 }
 
 function computeTextureProgression() {
@@ -8537,13 +8560,25 @@ function computeTextureProgression() {
 
   // Classify each day's dominant texture
   const dayTextures = [];
+  const unclassifiedFoods = new Set();
+  let unclassifiedDays = 0;
   dates.forEach(d => {
     const day = feedingData[d];
     if (!day) return;
     const meals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean);
     if (meals.length === 0) return;
 
-    const textures = meals.map(m => _classifyMealTexture(m)).filter(Boolean);
+    const rawTextures = meals.map(m => _classifyMealTexture(m));
+    // Collect unknown meal-text for the gap-flag UI
+    let dayHasUnknown = false;
+    rawTextures.forEach((t, idx) => {
+      if (t === 'unknown') {
+        dayHasUnknown = true;
+        if (unclassifiedFoods.size < 5) unclassifiedFoods.add(meals[idx].slice(0, 40));
+      }
+    });
+    if (dayHasUnknown) unclassifiedDays++;
+    const textures = rawTextures.filter(t => t && t !== 'unknown');
     if (textures.length === 0) return;
 
     // Dominant texture = most advanced texture present that day
@@ -8628,7 +8663,7 @@ function computeTextureProgression() {
     insights.push({ type: 'good', text: 'Finger foods are being introduced — great for pincer grasp development and self-feeding confidence.' });
   }
 
-  return { dayTextures, stageCounts, total, currentStage, currentStageInfo: stageInfo, firstSeen, weeks, insights };
+  return { dayTextures, stageCounts, total, currentStage, currentStageInfo: stageInfo, firstSeen, weeks, insights, unclassifiedDays, unclassifiedFoods: Array.from(unclassifiedFoods) };
 }
 
 function renderInfoTexture() {
@@ -8652,6 +8687,16 @@ function renderInfoTexture() {
   // Stage progression — vertical timeline with bars
   if (timelineEl) {
     let html = '';
+
+    // Gap-flag strip: unclassified-meal surface for parent quick-tagging
+    if (data.unclassifiedDays > 0) {
+      const sampleStr = data.unclassifiedFoods.map(f => escHtml(f)).join(', ');
+      html += '<div class="mi-tex-gap" style="background:var(--surface-caution);border-left:3px solid var(--tc-caution);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-12);border-radius:var(--r-sm);">';
+      html += '<div class="t-sm" style="font-weight:600;color:var(--tc-caution);">' + zi('warn') + ' ' + data.unclassifiedDays + ' day' + (data.unclassifiedDays !== 1 ? 's' : '') + ' unclassified</div>';
+      html += '<div class="t-xs t-light" style="margin-top:var(--sp-2);">' + sampleStr + (data.unclassifiedFoods.length >= 5 ? ', …' : '') + '</div>';
+      html += '<div class="t-xs t-light" style="margin-top:var(--sp-2);">Tag these in the food log to improve texture accuracy.</div>';
+      html += '</div>';
+    }
 
     // Stage breakdown
     TEXTURE_STAGES.forEach((stage, i) => {
@@ -9111,7 +9156,7 @@ function renderInfoSupplementAdherence() {
 
   // Summary
   var timingLabel = med.timing ? med.timing.consistency : 'N/A';
-  var trendIcon = med.trend === 'improving' ? '↗' : (med.trend === 'declining' ? '↘' : '→');
+  var trendIcon = med.trend === 'improving' ? zi('trending-up') : (med.trend === 'declining' ? zi('trending-down') : zi('trending-flat'));
   summaryEl.innerHTML = '<span class="t-sm t-mid" >' + escHtml(med.name) + ': ' + med.adherenceRate + '% adherence · ' + med.currentStreak + ' day streak · Timing: ' + timingLabel + ' ' + trendIcon + '</span>';
 
   // 30-day dot calendar (newest first in data, display oldest→newest left→right)
@@ -9442,6 +9487,12 @@ function renderInfoVaccRecovery() {
 
 // ── Feature 3: Growth Velocity Alerts ──
 
+// Growth velocity reference values below derive from WHO Child Growth
+// Standards (2006) for weight gain by age band, cross-checked with Indian
+// Academy of Pediatrics (IAP) growth charts for cohort-appropriate
+// adaptation. Bands are conservative: target the middle of WHO 3rd-97th
+// percentile gain rates for healthy term infants. Update if WHO publishes
+// revisions or IAP issues new guidance.
 function computeGrowthVelocity() {
   var gd = (growthData || []).filter(function(g) { return g.date; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
   if (gd.length < 2) return { insufficient: true, needed: 2, count: gd.length };

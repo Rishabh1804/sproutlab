@@ -234,6 +234,11 @@ function _islClearAll() {
 
 // ── Step 1: resolveTimeQuery() ──
 
+// Throughout SproutLab, `new Date(dateStr + 'T12:00:00')` constructs a Date
+// at local-noon for a given YYYY-MM-DD. The noon anchor is intentional and
+// HR-12-compliant: it sidesteps DST transitions (which shift midnight to
+// 11pm/1am of the prior day in some zones) and keeps day-of-week / age-in-days
+// arithmetic stable across DST boundaries. Do not "simplify" to midnight.
 function resolveTimeQuery(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var todayStr = today();
@@ -2706,7 +2711,7 @@ function qaExecuteQuery(text) {
 // ── ANSWER CARD RENDERER ──
 
 function qaRenderAnswer(container, answer) {
-  var signalIcons = { good: zi('check'), warn: zi('warn'), action: '→', info: zi('info'), neutral: '·' };
+  var signalIcons = { good: zi('check'), warn: zi('warn'), action: zi('arrow-right'), info: zi('info'), neutral: '·' };
   var signalClasses = { good: 'qa-item-good', warn: 'qa-item-warn', action: 'qa-item-action', info: 'qa-item-info', neutral: 'qa-item-neutral' };
 
   var domainCls = answer.domain ? ' qa-answer-' + answer.domain : '';
@@ -6684,7 +6689,7 @@ function renderInfoAdoption() {
 
   // Summary line
   const pct = Math.round(data.overallRate * 100);
-  const trendIcon = data.trend === 'improving' ? '↗' : data.trend === 'declining' ? '↘' : '→';
+  const trendIcon = data.trend === 'improving' ? zi('trending-up') : data.trend === 'declining' ? zi('trending-down') : zi('trending-flat');
   const trendColor = data.trend === 'improving' ? 'var(--tc-sage)' : data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--light)';
   const trendLabel = data.trend === 'improving' ? 'improving' : data.trend === 'declining' ? 'declining' : 'steady';
   summaryEl.innerHTML = '<div class="fx-row g8 fx-row-wrap" >' +
@@ -12528,7 +12533,7 @@ function renderInfoSleepBedtimeDrift() {
     return;
   }
 
-  const dirIcon = data.direction === 'later' ? '↗' : data.direction === 'earlier' ? '↙' : '→';
+  const dirIcon = data.direction === 'later' ? zi('trending-up') : data.direction === 'earlier' ? zi('trending-down') : zi('trending-flat');
   const dirColor = data.direction === 'stable' ? 'var(--tc-sage)' : 'var(--tc-amber)';
   summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + dirColor + ';font-weight:700;">' + dirIcon + '</span> Avg bedtime: <strong>' + data.avgBedtimeStr + '</strong> · ' +
     (data.direction === 'stable' ? 'Stable' : Math.abs(data.driftPerWeek) + 'min/' + (data.direction === 'later' ? 'week later' : 'week earlier')) + '</div>';
@@ -12593,10 +12598,21 @@ function computeSleepEfficiency() {
   const nights = _siGetNights(7);
   if (nights.length < 3) return { insufficient: true, count: nights.length, needed: 3 };
 
+  // Age-banded wake-loss: younger babies have shorter re-settle cycles;
+  // older babies need more active soothing per waking. Bands consume
+  // WAKE_LOSS_MIN constant defined in core.js.
+  function _wakeLossFor(dateStr, wakes) {
+    const ageMo = ageAt(dateStr).months;
+    const perWake = ageMo < 12 ? WAKE_LOSS_MIN['0-12mo']
+                  : ageMo < 24 ? WAKE_LOSS_MIN['12-24mo']
+                  : WAKE_LOSS_MIN['24mo+'];
+    return wakes * perWake;
+  }
+
   const results = nights.map(n => {
     const dur = calcSleepDuration(n.bedtime, n.wakeTime);
     const wakes = n.wakeUps || 0;
-    const lostMin = wakes * 10;
+    const lostMin = _wakeLossFor(n.dateStr, wakes);
     const effectiveMin = Math.max(0, dur.total - lostMin);
     const efficiency = dur.total > 0 ? Math.round((effectiveMin / dur.total) * 100) : 0;
     return { dateStr: n.dateStr, totalMin: dur.total, effectiveMin, wakes, efficiency };
@@ -12610,7 +12626,7 @@ function computeSleepEfficiency() {
   if (prevWeek.length >= 3) {
     const prevResults = prevWeek.map(n => {
       const dur = calcSleepDuration(n.bedtime, n.wakeTime);
-      const lostMin = (n.wakeUps || 0) * 10;
+      const lostMin = _wakeLossFor(n.dateStr, n.wakeUps || 0);
       return dur.total > 0 ? Math.round(((dur.total - lostMin) / dur.total) * 100) : 0;
     });
     const prevAvg = Math.round(prevResults.reduce((s, v) => s + v, 0) / prevResults.length);
@@ -12635,7 +12651,7 @@ function renderInfoSleepEfficiency() {
     return;
   }
 
-  const trendIcon = data.trend === 'improving' ? '↑' : data.trend === 'declining' ? '↓' : '→';
+  const trendIcon = data.trend === 'improving' ? zi('trending-up') : data.trend === 'declining' ? zi('trending-down') : zi('trending-flat');
   summaryEl.innerHTML = '<div class="t-sm">Avg efficiency: <strong>' + data.avgEff + '%</strong> (last ' + data.count + ' nights) <span style="color:' + (data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--tc-sage)') + ';font-weight:600;">' + trendIcon + '</span></div>';
 
   if (barsEl) {
@@ -12888,7 +12904,7 @@ function renderInfoSleepReport() {
 
   const lbl = getScoreLabel(data.avgScore);
   const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
-  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendText = delta !== null ? (delta > 2 ? zi('trending-up') + ' +' + delta + ' vs last week' : delta < -2 ? zi('trending-down') + ' ' + delta + ' vs last week' : zi('trending-flat') + ' stable') : '';
   const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
   summaryEl.innerHTML = '<div class="t-sm">Sleep score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
     (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
@@ -14615,7 +14631,11 @@ function renderInfoMilestoneSleepCorrelation() {
     if (w.isRegression) regressions.push(w);
   });
 
-  // Check co-occurrence (burst within ±1 week of regression)
+  // Co-occurrence window: burst within ±1 week of regression. The ±1-week
+  // pad accommodates the empirical lag between developmental burst and sleep
+  // disruption — sleep dips often trail the burst by 3-7 days as the cognitive
+  // load consolidates. Tighter (same-week only) would miss the trailing dips;
+  // wider (±2 weeks) would over-attribute coincident-but-unrelated dips.
   var coOccurrences = 0;
   bursts.forEach(function(b) {
     var bIdx = weeks.indexOf(b);
@@ -14748,9 +14768,9 @@ function renderInfoFoodIntro() {
 
   // Trend badge
   const trendConfig = {
-    accelerating: { icon: '↗', color: 'var(--tc-sage)', label: 'Accelerating' },
-    steady:       { icon: '→', color: 'var(--light)',   label: 'Steady' },
-    slowing:      { icon: '↘', color: 'var(--tc-amber)',label: 'Slowing' },
+    accelerating: { icon: zi('trending-up'),   color: 'var(--tc-sage)', label: 'Accelerating' },
+    steady:       { icon: zi('trending-flat'), color: 'var(--light)',   label: 'Steady' },
+    slowing:      { icon: zi('trending-down'), color: 'var(--tc-amber)',label: 'Slowing' },
     'no data':    { icon: '–', color: 'var(--light)',   label: 'No data' }
   };
   const t = trendConfig[data.trend] || trendConfig['steady'];
@@ -15124,7 +15144,10 @@ function computeFoodCombos(windowDays) {
         const prev = new Date(sortedDates[i - 1]);
         const cur = new Date(sortedDates[i]);
         const diff = Math.round((cur - prev) / 86400000);
-        currentStreak = diff === 1 ? currentStreak + 1 : 1;
+        // Sliding window: 1-day tolerance. Combo on day 1 + day 3 still streaks
+        // (1-day skip allowed for parent's logging gaps). diff === 0 idempotent.
+        currentStreak = (diff >= 1 && diff <= 2) ? currentStreak + 1
+                       : (diff === 0 ? currentStreak : 1);
       }
       if (currentStreak > maxStreak) maxStreak = currentStreak;
     }
@@ -15160,7 +15183,8 @@ function computeFoodCombos(windowDays) {
 }
 
 function renderInfoComboFreq() {
-  const data = computeFoodCombos(30);
+  const COMBO_WINDOW_DAYS = 30;
+  const data = computeFoodCombos(COMBO_WINDOW_DAYS);
   const summaryEl = document.getElementById('infoComboSummary');
   const topEl = document.getElementById('infoComboTop');
   const onceEl = document.getElementById('infoComboOnce');
@@ -15175,7 +15199,7 @@ function renderInfoComboFreq() {
 
   // Summary with best combo highlight
   let summaryHtml = `<div class="fx-row g12 fx-row-wrap" >
-    <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals</span></div>
+    <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals in last ${COMBO_WINDOW_DAYS}d</span></div>
     <div class="t-sm t-light" >·</div>
     <div class="t-sm" style="color:${data.uniqueness >= 60 ? 'var(--tc-sage)' : data.uniqueness >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)'};font-weight:600;">${data.uniqueness}% variety</div>
   </div>`;
@@ -15454,7 +15478,7 @@ function renderInfoMealBreakdown() {
   gridHtml += '<div class="mb-meal-grid">';
   MEAL_SLOTS.forEach(m => {
     const density = data.mealDensity[m.key];
-    const pct = Math.round((density / 8) * 100); // out of 8 key nutrients max
+    const pct = Math.round((density / KEY_NUTRIENTS.length) * 100); // out of key-nutrient count (was hardcoded 8)
     const stats = data.mealStats[m.key];
     const topNutrients = Object.entries(stats.nutrientHits).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0).slice(0, 3).map(([k]) => k);
 
@@ -15598,7 +15622,9 @@ function computeSmartPairings() {
 
     ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
       if (!isRealMeal(entry[meal])) return;
-      const raw = entry[meal].split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+      // Split on comma, plus, ampersand, and connecting words "with"/"and" —
+      // prevents "rice with dal" or "carrot & spinach" from parsing as one food.
+      const raw = entry[meal].split(/[,+&]| with |\s+and\s+/i).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
       const expanded = _expandMealFoods(raw);
 
       // Check every synergy against this expanded meal

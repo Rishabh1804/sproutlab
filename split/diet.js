@@ -3317,7 +3317,7 @@ function renderAlertIntelligence() {
   if (concerns.length) {
     html += `<div class="ai-section-label">${zi('siren')} Active Concerns <span class="ai-section-count">(${concerns.length})</span></div>`;
     concerns.slice(0, 5).forEach(c => {
-      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : '→';
+      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : zi('trending-flat');
       const trendClass = c.trend === 'worsening' ? 'ait-worsening' : c.trend === 'improving' ? 'ait-improving' : 'ait-stable';
       const trendLabel = c.trend === 'worsening' ? 'Getting worse' : c.trend === 'improving' ? 'Improving' : 'Stable';
       const daysStr = c.daysSinceLast !== null ? c.daysSinceLast + 'd ago' : '';
@@ -3340,7 +3340,7 @@ function renderAlertIntelligence() {
   if (recurringOnly.length) {
     html += `<div class="ai-section-label">${zi('warn')} Recurring Patterns <span class="ai-section-count">(${recurringOnly.length})</span></div>`;
     recurringOnly.slice(0, 5).forEach(c => {
-      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : '→';
+      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : zi('trending-flat');
       const trendClass = c.trend === 'worsening' ? 'ait-worsening' : c.trend === 'improving' ? 'ait-improving' : 'ait-stable';
       const trendLabel = c.trend === 'worsening' ? 'Getting worse' : c.trend === 'improving' ? 'Improving' : 'Stable';
       html += `<div class="ai-item ai-recurring ptr" onclick="${getAlertNavAction(c.key, c.title)}" >
@@ -3486,7 +3486,7 @@ function renderVarietyCard() { /* v2.4: DORMANT — insights cards replaced by t
 
   // Trend
   if (vs.trend.uniqueFoodsDelta !== 0 || vs.trend.groupsDelta !== 0) {
-    const arrow = vs.trend.direction === 'improving' ? zi('chart') : vs.trend.direction === 'declining' ? zi('chart') : '→';
+    const arrow = vs.trend.direction === 'improving' ? zi('chart') : vs.trend.direction === 'declining' ? zi('chart') : zi('trending-flat');
     const parts = [];
     if (vs.trend.uniqueFoodsDelta !== 0) parts.push((vs.trend.uniqueFoodsDelta > 0 ? '+' : '') + vs.trend.uniqueFoodsDelta + ' foods');
     if (vs.trend.groupsDelta !== 0) parts.push((vs.trend.groupsDelta > 0 ? '+' : '') + vs.trend.groupsDelta + ' group' + (Math.abs(vs.trend.groupsDelta) > 1 ? 's' : ''));

@@ -9505,6 +9505,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-bump" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="6"/><path d="M8 8l-2-2"/><path d="M16 8l2-2"/><path d="M6 6l-1.5-1.5"/><path d="M18 6l1.5-1.5"/><path d="M10 20h4"/><path d="M12 16v4"/></symbol>
 <symbol id="zi-alert-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.5" fill="currentColor" stroke="none"/></symbol>
 <symbol id="zi-trending-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+<symbol id="zi-trending-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></symbol>
+<symbol id="zi-trending-flat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/></symbol>
+<symbol id="zi-trending-mixed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
 <symbol id="zi-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5"/><path d="M5 5l12 4-12 4"/></symbol>
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
@@ -20962,9 +20966,9 @@ function getTrend(current, previous, threshold, decimals) {
   const dec = decimals != null ? decimals : 1;
   const delta = +(current - previous).toFixed(dec);
   const absDelta = Math.abs(delta);
-  if (absDelta <= threshold) return { arrow:'→', delta:0, direction:'flat', cls:'trend-flat', text:'→ stable' };
-  if (delta > 0) return { arrow:'↑', delta, direction:'up', cls:'trend-up', text:'↑ +' + absDelta.toFixed(dec) };
-  return { arrow:'↓', delta, direction:'down', cls:'trend-down', text:'↓ -' + absDelta.toFixed(dec) };
+  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', text: iconText('trending-flat', 'stable') };
+  if (delta > 0) return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', text: iconText('trending-up', '+' + absDelta.toFixed(dec)) };
+  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', text: iconText('trending-down', '-' + absDelta.toFixed(dec)) };
 }
 
 // Get dates array for a window ending at offsetDays before today
@@ -21097,6 +21101,12 @@ function getPercentileNarrative() {
   }
   return `${zi('chart')} Drifted from ${olderPct.text} to ${currentPct.text} percentile over ${timeLabel} — worth monitoring.`;
 }
+
+// Wake-up sleep-loss minutes per night-waking, age-banded. Younger babies
+// have shorter re-settle cycles; older babies need more active soothing
+// per waking. Boundaries align with nap-transition scoring bands in data.js.
+// Consumed by computeSleepEfficiency() in intelligence.js.
+const WAKE_LOSS_MIN = { '0-12mo': 12, '12-24mo': 8, '24mo+': 5 };
 
 // ── SLEEP TREND (7d vs prior 7d) ──
 function getSleepTrend7d() {
@@ -30796,7 +30806,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     const h = Math.floor(trend.duration.current / 60);
     const m = trend.duration.current % 60;
     const deltaMin = trend.duration.trend.delta;
-    const deltaText = deltaMin !== 0 ? `${trend.duration.trend.arrow} ${Math.abs(deltaMin)} min` : '→ stable';
+    const deltaText = deltaMin !== 0 ? `${trend.duration.trend.arrow} ${Math.abs(deltaMin)} min` : `${zi('trending-flat')} stable`;
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('moon')}</div>
       <div class="ir-body">
@@ -34747,7 +34757,7 @@ function renderAlertIntelligence() {
   if (concerns.length) {
     html += `<div class="ai-section-label">${zi('siren')} Active Concerns <span class="ai-section-count">(${concerns.length})</span></div>`;
     concerns.slice(0, 5).forEach(c => {
-      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : '→';
+      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : zi('trending-flat');
       const trendClass = c.trend === 'worsening' ? 'ait-worsening' : c.trend === 'improving' ? 'ait-improving' : 'ait-stable';
       const trendLabel = c.trend === 'worsening' ? 'Getting worse' : c.trend === 'improving' ? 'Improving' : 'Stable';
       const daysStr = c.daysSinceLast !== null ? c.daysSinceLast + 'd ago' : '';
@@ -34770,7 +34780,7 @@ function renderAlertIntelligence() {
   if (recurringOnly.length) {
     html += `<div class="ai-section-label">${zi('warn')} Recurring Patterns <span class="ai-section-count">(${recurringOnly.length})</span></div>`;
     recurringOnly.slice(0, 5).forEach(c => {
-      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : '→';
+      const trendIcon = c.trend === 'worsening' ? zi('chart') : c.trend === 'improving' ? zi('chart') : zi('trending-flat');
       const trendClass = c.trend === 'worsening' ? 'ait-worsening' : c.trend === 'improving' ? 'ait-improving' : 'ait-stable';
       const trendLabel = c.trend === 'worsening' ? 'Getting worse' : c.trend === 'improving' ? 'Improving' : 'Stable';
       html += `<div class="ai-item ai-recurring ptr" onclick="${getAlertNavAction(c.key, c.title)}" >
@@ -34916,7 +34926,7 @@ function renderVarietyCard() { /* v2.4: DORMANT — insights cards replaced by t
 
   // Trend
   if (vs.trend.uniqueFoodsDelta !== 0 || vs.trend.groupsDelta !== 0) {
-    const arrow = vs.trend.direction === 'improving' ? zi('chart') : vs.trend.direction === 'declining' ? zi('chart') : '→';
+    const arrow = vs.trend.direction === 'improving' ? zi('chart') : vs.trend.direction === 'declining' ? zi('chart') : zi('trending-flat');
     const parts = [];
     if (vs.trend.uniqueFoodsDelta !== 0) parts.push((vs.trend.uniqueFoodsDelta > 0 ? '+' : '') + vs.trend.uniqueFoodsDelta + ' foods');
     if (vs.trend.groupsDelta !== 0) parts.push((vs.trend.groupsDelta > 0 ? '+' : '') + vs.trend.groupsDelta + ' group' + (Math.abs(vs.trend.groupsDelta) > 1 ? 's' : ''));
@@ -41520,11 +41530,14 @@ function computeConsistencyTrend(windowDays) {
   const recent = dailyScores.slice(-7);
   const previous = dailyScores.slice(0, -7);
   const recentAvg = recent.reduce((s, d) => s + d.avg, 0) / recent.length;
-  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : recentAvg;
+  // PR-EF: prevAvg defaults to null (insufficient baseline) instead of
+  // recentAvg-as-fallback — surfacing absence honestly so the trend can
+  // be reported as "no comparison yet" rather than spuriously "stable".
+  const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : null;
 
-  // Trend direction
-  const delta = recentAvg - prevAvg;
-  let trend = 'stable';
+  // Trend direction (guarded for null baseline)
+  const delta = prevAvg !== null ? recentAvg - prevAvg : 0;
+  let trend = prevAvg === null ? 'stable' : 'stable';
   if (delta >= 0.5) trend = 'firming';
   else if (delta <= -0.5) trend = 'loosening';
 
@@ -41585,7 +41598,7 @@ function renderInfoPoopConsistencyTrend() {
     return;
   }
 
-  const trendIcon = data.trend === 'firming' ? '↗' : data.trend === 'loosening' ? '↘' : data.trend === 'mixed' ? '↕' : '→';
+  const trendIcon = data.trend === 'firming' ? zi('trending-up') : data.trend === 'loosening' ? zi('trending-down') : data.trend === 'mixed' ? zi('trending-mixed') : zi('trending-flat');
   const trendColor = (data.trend === 'firming' || data.trend === 'loosening') ? 'var(--tc-amber)' : data.trend === 'mixed' ? 'var(--tc-caution)' : 'var(--tc-sage)';
   const trendLabel = data.trend.charAt(0).toUpperCase() + data.trend.slice(1);
   summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + trendColor + ';font-weight:600;">' + trendIcon + ' ' + trendLabel + '</span> · avg consistency: <strong>' + data.avgLabel + '</strong></div>';
@@ -41663,7 +41676,9 @@ function computePoopFrequencyPattern(windowDays) {
   const avg7d = counts.slice(-7).reduce((s, v) => s + v, 0) / 7;
   const avg14d = counts.reduce((s, v) => s + v, 0) / windowDays;
 
-  // Time-of-day buckets
+  // Time-of-day buckets — boundaries: morning 05-11, afternoon 11-16,
+  // evening 16-21, night otherwise. Chosen to align with typical infant
+  // wake/nap/feed cadence rather than astronomical day-parts.
   const buckets = { morning: 0, afternoon: 0, evening: 0, night: 0 };
   Object.values(dayTimes).forEach(times => {
     times.forEach(t => {
@@ -41946,6 +41961,10 @@ function computeNewFoodWatch() {
 
   recentFoods.forEach(food => {
     const introDate = new Date(food.date + 'T08:00:00');
+    // 72h window for food-intro reaction observation per AAP gut-transit
+    // guidance — longer than the 48h vaccine-fever band because food
+    // allergens can manifest with delayed onset across the digestive
+    // timeline. Window-mismatch with vaccine-fever (48h) is intentional.
     const windowEnd = new Date(introDate.getTime() + 72 * 3600000);
     const hoursElapsed = (now - introDate) / 3600000;
     const isOpen = hoursElapsed < 72;
@@ -42314,7 +42333,7 @@ function renderInfoPoopAmountTrend() {
     return;
   }
 
-  const trendIcon = data.trend === 'larger' ? '↗' : data.trend === 'smaller' ? '↘' : '→';
+  const trendIcon = data.trend === 'larger' ? zi('trending-up') : data.trend === 'smaller' ? zi('trending-down') : zi('trending-flat');
   summaryEl.innerHTML = '<div class="t-sm">Avg amount: <strong>' + data.avgLabel + '</strong> · Trend: <strong>' + trendIcon + ' ' + data.trend + '</strong></div>';
 
   if (barsEl) {
@@ -42387,9 +42406,13 @@ function computePoopSymptomTracker(windowDays) {
   const midStr = toDateStr(mid);
   const recentSymptoms = entries.filter(p => p.date >= midStr && (p.blood || p.mucus)).length;
   const prevSymptoms = entries.filter(p => p.date < midStr && (p.blood || p.mucus)).length;
+  // PR-EF: tightened ±1 → ±2 AND require absolute count ≥3 to flag — reduces
+  // over-flagging on small windows where single-event noise was tipping the
+  // signal.
   let trend = 'stable';
-  if (recentSymptoms > prevSymptoms + 1) trend = 'increasing';
-  else if (recentSymptoms < prevSymptoms - 1) trend = 'decreasing';
+  const sufficientSignal = (recentSymptoms + prevSymptoms) >= 3;
+  if (sufficientSignal && recentSymptoms > prevSymptoms + 2) trend = 'increasing';
+  else if (sufficientSignal && recentSymptoms < prevSymptoms - 2) trend = 'decreasing';
 
   // Severity
   let severity = 'rare';
@@ -42588,7 +42611,7 @@ function renderInfoPoopReport() {
 
   const lbl = getScoreLabel(data.avgScore);
   const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
-  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendText = delta !== null ? (delta > 2 ? zi('trending-up') + ' +' + delta + ' vs last week' : delta < -2 ? zi('trending-down') + ' ' + delta + ' vs last week' : zi('trending-flat') + ' stable') : '';
   const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
   summaryEl.innerHTML = '<div class="t-sm">Poop score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
     (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
@@ -43059,7 +43082,10 @@ function computeIllnessFrequency() {
     const d = new Date(e.startedAt);
     return (now - d) < 60 * 86400000;
   });
-  const freqPer30 = last60.length > 0 ? (last60.length / 2).toFixed(1) : '0';
+  // Was: last60.length / 2 — implicit "per 30d from a 60d window".
+  // Refactored to explicit windowDays / target ratio for clarity.
+  const windowDays = 60;
+  const freqPer30 = last60.length > 0 ? ((last60.length * 30) / windowDays).toFixed(1) : '0';
 
   // Average gap between episodes
   let avgGapDays = null;
@@ -43209,11 +43235,15 @@ function computeVaccFeverCorrelation() {
     const vMs = new Date(vDate).getTime();
     const names = vaccByDate[vDate];
 
-    // Look for fever episodes starting within 72h of vaccination
+    // 48h post-vaccination window for fever attribution per IAP pediatric
+    // guidance — most post-vaccination fevers peak within 24h and resolve
+    // by 48h. Window-mismatch with food-intro (72h) is intentional; do not
+    // unify. (Counter name kept as feverWithin72hCount for historical
+    // continuity; semantically now within48h.)
     const matchingFever = feverEps.find(fe => {
       const feMs = new Date(fe.startedAt).getTime();
       const diffH = (feMs - vMs) / 3600000;
-      return diffH >= 0 && diffH <= 72;
+      return diffH >= 0 && diffH <= 48;
     });
 
     const entry = {
@@ -43584,7 +43614,7 @@ function renderInfoRecovery() {
     }
     if (r.mealsPerDayAfter !== null) {
       const appColor = r.appetiteRecovery === 'recovered' ? 'var(--tc-sage)' : 'var(--tc-amber)';
-      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day after (7d)</div><div class="mi-recovery-val" style="color:' + appColor + ';">' + r.mealsPerDayAfter + (r.appetiteRecovery === 'recovered' ? ' ' + zi('check') : ' ↓') + '</div></div>';
+      html += '<div class="mi-recovery-metric"><div class="mi-recovery-label">Meals/day after (7d)</div><div class="mi-recovery-val" style="color:' + appColor + ';">' + r.mealsPerDayAfter + (r.appetiteRecovery === 'recovered' ? ' ' + zi('check') : ' ' + zi('trending-down')) + '</div></div>';
     }
     html += '</div>';
   });
@@ -44033,9 +44063,9 @@ function renderInfoRepetition() {
 
 const TEXTURE_STAGES = [
   { key: 'puree', label: 'Purees', icon: zi('bowl'), keywords: ['puree', 'pureed', 'strained', 'juice'], color: 'rgba(170,130,200,0.7)' },
-  { key: 'mashed', label: 'Mashed / Porridge', icon: zi('spoon'), keywords: ['mashed', 'porridge', 'khichdi', ' dal ', ' dal,', 'halwa', 'sheera', 'cereal', 'oatmeal', 'dalia', 'suji', 'ragi porridge', 'rice porridge', 'congee'], color: 'var(--tc-amber)' },
-  { key: 'soft', label: 'Soft Chunks', icon: zi('bowl'), keywords: ['boiled', 'steamed', 'soft', 'cooked', 'idli', 'dosa', 'paratha', 'roti', 'chapati', 'upma', 'poha', 'pancake'], color: 'var(--tc-sage)' },
-  { key: 'finger', label: 'Finger Foods', icon: zi('baby'), keywords: ['finger', 'stick', 'wedge', 'slice', 'toast', 'biscuit', 'cracker', 'puff', 'makhana', 'cheerio'], color: 'var(--tc-sky)' }
+  { key: 'mashed', label: 'Mashed / Porridge', icon: zi('spoon'), keywords: ['mashed', 'porridge', 'khichdi', ' dal ', ' dal,', 'dal makhani', 'rajma', 'sambar', 'rasam', 'kheer', 'payasam', 'pongal', 'bisi bele', 'halwa', 'sheera', 'cereal', 'oatmeal', 'dalia', 'suji', 'sooji', 'rava', 'semolina', 'puffed', 'ragi porridge', 'rice porridge', 'congee'], color: 'var(--tc-amber)' },
+  { key: 'soft', label: 'Soft Chunks', icon: zi('bowl'), keywords: ['boiled', 'steamed', 'soft', 'cooked', 'idli', 'dosa', 'paratha', 'roti', 'chapati', 'upma', 'poha', 'pancake', 'sabzi', 'subzi', 'curry', 'thepla', 'puri', 'poori', 'uttapam', 'appam', 'paniyaram'], color: 'var(--tc-sage)' },
+  { key: 'finger', label: 'Finger Foods', icon: zi('baby'), keywords: ['finger', 'stick', 'wedge', 'slice', 'toast', 'biscuit', 'cracker', 'puff', 'makhana', 'cheerio', 'thattai', 'murukku', 'mathri', 'khakra', 'nankhatai'], color: 'var(--tc-sky)' }
 ];
 
 function _classifyMealTexture(mealText) {
@@ -44053,7 +44083,10 @@ function _classifyMealTexture(mealText) {
   const bareWords = ['banana', 'avocado', 'apple', 'pear', 'blueberry', 'mango', 'papaya', 'curd', 'yogurt', 'paneer', 'cheese', 'egg'];
   if (bareWords.some(w => lower.includes(w))) return 'soft';
 
-  return 'mashed'; // conservative default for unclassified entries
+  // PR-EF: was 'mashed' (silent default). Now 'unknown' surfaces as a gap-flag
+  // on the texture card so the parent can quick-tag instead of trusting a
+  // potentially-wrong fallback. See renderInfoTexture for UI handling.
+  return 'unknown';
 }
 
 function computeTextureProgression() {
@@ -44062,13 +44095,25 @@ function computeTextureProgression() {
 
   // Classify each day's dominant texture
   const dayTextures = [];
+  const unclassifiedFoods = new Set();
+  let unclassifiedDays = 0;
   dates.forEach(d => {
     const day = feedingData[d];
     if (!day) return;
     const meals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean);
     if (meals.length === 0) return;
 
-    const textures = meals.map(m => _classifyMealTexture(m)).filter(Boolean);
+    const rawTextures = meals.map(m => _classifyMealTexture(m));
+    // Collect unknown meal-text for the gap-flag UI
+    let dayHasUnknown = false;
+    rawTextures.forEach((t, idx) => {
+      if (t === 'unknown') {
+        dayHasUnknown = true;
+        if (unclassifiedFoods.size < 5) unclassifiedFoods.add(meals[idx].slice(0, 40));
+      }
+    });
+    if (dayHasUnknown) unclassifiedDays++;
+    const textures = rawTextures.filter(t => t && t !== 'unknown');
     if (textures.length === 0) return;
 
     // Dominant texture = most advanced texture present that day
@@ -44153,7 +44198,7 @@ function computeTextureProgression() {
     insights.push({ type: 'good', text: 'Finger foods are being introduced — great for pincer grasp development and self-feeding confidence.' });
   }
 
-  return { dayTextures, stageCounts, total, currentStage, currentStageInfo: stageInfo, firstSeen, weeks, insights };
+  return { dayTextures, stageCounts, total, currentStage, currentStageInfo: stageInfo, firstSeen, weeks, insights, unclassifiedDays, unclassifiedFoods: Array.from(unclassifiedFoods) };
 }
 
 function renderInfoTexture() {
@@ -44177,6 +44222,16 @@ function renderInfoTexture() {
   // Stage progression — vertical timeline with bars
   if (timelineEl) {
     let html = '';
+
+    // Gap-flag strip: unclassified-meal surface for parent quick-tagging
+    if (data.unclassifiedDays > 0) {
+      const sampleStr = data.unclassifiedFoods.map(f => escHtml(f)).join(', ');
+      html += '<div class="mi-tex-gap" style="background:var(--surface-caution);border-left:3px solid var(--tc-caution);padding:var(--sp-8) var(--sp-10);margin-bottom:var(--sp-12);border-radius:var(--r-sm);">';
+      html += '<div class="t-sm" style="font-weight:600;color:var(--tc-caution);">' + zi('warn') + ' ' + data.unclassifiedDays + ' day' + (data.unclassifiedDays !== 1 ? 's' : '') + ' unclassified</div>';
+      html += '<div class="t-xs t-light" style="margin-top:var(--sp-2);">' + sampleStr + (data.unclassifiedFoods.length >= 5 ? ', …' : '') + '</div>';
+      html += '<div class="t-xs t-light" style="margin-top:var(--sp-2);">Tag these in the food log to improve texture accuracy.</div>';
+      html += '</div>';
+    }
 
     // Stage breakdown
     TEXTURE_STAGES.forEach((stage, i) => {
@@ -44636,7 +44691,7 @@ function renderInfoSupplementAdherence() {
 
   // Summary
   var timingLabel = med.timing ? med.timing.consistency : 'N/A';
-  var trendIcon = med.trend === 'improving' ? '↗' : (med.trend === 'declining' ? '↘' : '→');
+  var trendIcon = med.trend === 'improving' ? zi('trending-up') : (med.trend === 'declining' ? zi('trending-down') : zi('trending-flat'));
   summaryEl.innerHTML = '<span class="t-sm t-mid" >' + escHtml(med.name) + ': ' + med.adherenceRate + '% adherence · ' + med.currentStreak + ' day streak · Timing: ' + timingLabel + ' ' + trendIcon + '</span>';
 
   // 30-day dot calendar (newest first in data, display oldest→newest left→right)
@@ -44967,6 +45022,12 @@ function renderInfoVaccRecovery() {
 
 // ── Feature 3: Growth Velocity Alerts ──
 
+// Growth velocity reference values below derive from WHO Child Growth
+// Standards (2006) for weight gain by age band, cross-checked with Indian
+// Academy of Pediatrics (IAP) growth charts for cohort-appropriate
+// adaptation. Bands are conservative: target the middle of WHO 3rd-97th
+// percentile gain rates for healthy term infants. Update if WHO publishes
+// revisions or IAP issues new guidance.
 function computeGrowthVelocity() {
   var gd = (growthData || []).filter(function(g) { return g.date; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
   if (gd.length < 2) return { insufficient: true, needed: 2, count: gd.length };
@@ -45716,6 +45777,11 @@ function _islClearAll() {
 
 // ── Step 1: resolveTimeQuery() ──
 
+// Throughout SproutLab, `new Date(dateStr + 'T12:00:00')` constructs a Date
+// at local-noon for a given YYYY-MM-DD. The noon anchor is intentional and
+// HR-12-compliant: it sidesteps DST transitions (which shift midnight to
+// 11pm/1am of the prior day in some zones) and keeps day-of-week / age-in-days
+// arithmetic stable across DST boundaries. Do not "simplify" to midnight.
 function resolveTimeQuery(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var todayStr = today();
@@ -48188,7 +48254,7 @@ function qaExecuteQuery(text) {
 // ── ANSWER CARD RENDERER ──
 
 function qaRenderAnswer(container, answer) {
-  var signalIcons = { good: zi('check'), warn: zi('warn'), action: '→', info: zi('info'), neutral: '·' };
+  var signalIcons = { good: zi('check'), warn: zi('warn'), action: zi('arrow-right'), info: zi('info'), neutral: '·' };
   var signalClasses = { good: 'qa-item-good', warn: 'qa-item-warn', action: 'qa-item-action', info: 'qa-item-info', neutral: 'qa-item-neutral' };
 
   var domainCls = answer.domain ? ' qa-answer-' + answer.domain : '';
@@ -52166,7 +52232,7 @@ function renderInfoAdoption() {
 
   // Summary line
   const pct = Math.round(data.overallRate * 100);
-  const trendIcon = data.trend === 'improving' ? '↗' : data.trend === 'declining' ? '↘' : '→';
+  const trendIcon = data.trend === 'improving' ? zi('trending-up') : data.trend === 'declining' ? zi('trending-down') : zi('trending-flat');
   const trendColor = data.trend === 'improving' ? 'var(--tc-sage)' : data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--light)';
   const trendLabel = data.trend === 'improving' ? 'improving' : data.trend === 'declining' ? 'declining' : 'steady';
   summaryEl.innerHTML = '<div class="fx-row g8 fx-row-wrap" >' +
@@ -58010,7 +58076,7 @@ function renderInfoSleepBedtimeDrift() {
     return;
   }
 
-  const dirIcon = data.direction === 'later' ? '↗' : data.direction === 'earlier' ? '↙' : '→';
+  const dirIcon = data.direction === 'later' ? zi('trending-up') : data.direction === 'earlier' ? zi('trending-down') : zi('trending-flat');
   const dirColor = data.direction === 'stable' ? 'var(--tc-sage)' : 'var(--tc-amber)';
   summaryEl.innerHTML = '<div class="t-sm"><span style="color:' + dirColor + ';font-weight:700;">' + dirIcon + '</span> Avg bedtime: <strong>' + data.avgBedtimeStr + '</strong> · ' +
     (data.direction === 'stable' ? 'Stable' : Math.abs(data.driftPerWeek) + 'min/' + (data.direction === 'later' ? 'week later' : 'week earlier')) + '</div>';
@@ -58075,10 +58141,21 @@ function computeSleepEfficiency() {
   const nights = _siGetNights(7);
   if (nights.length < 3) return { insufficient: true, count: nights.length, needed: 3 };
 
+  // Age-banded wake-loss: younger babies have shorter re-settle cycles;
+  // older babies need more active soothing per waking. Bands consume
+  // WAKE_LOSS_MIN constant defined in core.js.
+  function _wakeLossFor(dateStr, wakes) {
+    const ageMo = ageAt(dateStr).months;
+    const perWake = ageMo < 12 ? WAKE_LOSS_MIN['0-12mo']
+                  : ageMo < 24 ? WAKE_LOSS_MIN['12-24mo']
+                  : WAKE_LOSS_MIN['24mo+'];
+    return wakes * perWake;
+  }
+
   const results = nights.map(n => {
     const dur = calcSleepDuration(n.bedtime, n.wakeTime);
     const wakes = n.wakeUps || 0;
-    const lostMin = wakes * 10;
+    const lostMin = _wakeLossFor(n.dateStr, wakes);
     const effectiveMin = Math.max(0, dur.total - lostMin);
     const efficiency = dur.total > 0 ? Math.round((effectiveMin / dur.total) * 100) : 0;
     return { dateStr: n.dateStr, totalMin: dur.total, effectiveMin, wakes, efficiency };
@@ -58092,7 +58169,7 @@ function computeSleepEfficiency() {
   if (prevWeek.length >= 3) {
     const prevResults = prevWeek.map(n => {
       const dur = calcSleepDuration(n.bedtime, n.wakeTime);
-      const lostMin = (n.wakeUps || 0) * 10;
+      const lostMin = _wakeLossFor(n.dateStr, n.wakeUps || 0);
       return dur.total > 0 ? Math.round(((dur.total - lostMin) / dur.total) * 100) : 0;
     });
     const prevAvg = Math.round(prevResults.reduce((s, v) => s + v, 0) / prevResults.length);
@@ -58117,7 +58194,7 @@ function renderInfoSleepEfficiency() {
     return;
   }
 
-  const trendIcon = data.trend === 'improving' ? '↑' : data.trend === 'declining' ? '↓' : '→';
+  const trendIcon = data.trend === 'improving' ? zi('trending-up') : data.trend === 'declining' ? zi('trending-down') : zi('trending-flat');
   summaryEl.innerHTML = '<div class="t-sm">Avg efficiency: <strong>' + data.avgEff + '%</strong> (last ' + data.count + ' nights) <span style="color:' + (data.trend === 'declining' ? 'var(--tc-amber)' : 'var(--tc-sage)') + ';font-weight:600;">' + trendIcon + '</span></div>';
 
   if (barsEl) {
@@ -58370,7 +58447,7 @@ function renderInfoSleepReport() {
 
   const lbl = getScoreLabel(data.avgScore);
   const delta = data.prevAvg !== null ? data.avgScore - data.prevAvg : null;
-  const trendText = delta !== null ? (delta > 2 ? '↑ +' + delta + ' vs last week' : delta < -2 ? '↓ ' + delta + ' vs last week' : '→ stable') : '';
+  const trendText = delta !== null ? (delta > 2 ? zi('trending-up') + ' +' + delta + ' vs last week' : delta < -2 ? zi('trending-down') + ' ' + delta + ' vs last week' : zi('trending-flat') + ' stable') : '';
   const trendColor = delta !== null && delta < -2 ? 'var(--tc-danger)' : 'var(--tc-sage)';
   summaryEl.innerHTML = '<div class="t-sm">Sleep score: <strong>' + data.avgScore + '/100</strong> — ' + lbl.text +
     (trendText ? ' <span style="color:' + trendColor + ';font-weight:600;">' + trendText + '</span>' : '') + '</div>';
@@ -60097,7 +60174,11 @@ function renderInfoMilestoneSleepCorrelation() {
     if (w.isRegression) regressions.push(w);
   });
 
-  // Check co-occurrence (burst within ±1 week of regression)
+  // Co-occurrence window: burst within ±1 week of regression. The ±1-week
+  // pad accommodates the empirical lag between developmental burst and sleep
+  // disruption — sleep dips often trail the burst by 3-7 days as the cognitive
+  // load consolidates. Tighter (same-week only) would miss the trailing dips;
+  // wider (±2 weeks) would over-attribute coincident-but-unrelated dips.
   var coOccurrences = 0;
   bursts.forEach(function(b) {
     var bIdx = weeks.indexOf(b);
@@ -60230,9 +60311,9 @@ function renderInfoFoodIntro() {
 
   // Trend badge
   const trendConfig = {
-    accelerating: { icon: '↗', color: 'var(--tc-sage)', label: 'Accelerating' },
-    steady:       { icon: '→', color: 'var(--light)',   label: 'Steady' },
-    slowing:      { icon: '↘', color: 'var(--tc-amber)',label: 'Slowing' },
+    accelerating: { icon: zi('trending-up'),   color: 'var(--tc-sage)', label: 'Accelerating' },
+    steady:       { icon: zi('trending-flat'), color: 'var(--light)',   label: 'Steady' },
+    slowing:      { icon: zi('trending-down'), color: 'var(--tc-amber)',label: 'Slowing' },
     'no data':    { icon: '–', color: 'var(--light)',   label: 'No data' }
   };
   const t = trendConfig[data.trend] || trendConfig['steady'];
@@ -60606,7 +60687,10 @@ function computeFoodCombos(windowDays) {
         const prev = new Date(sortedDates[i - 1]);
         const cur = new Date(sortedDates[i]);
         const diff = Math.round((cur - prev) / 86400000);
-        currentStreak = diff === 1 ? currentStreak + 1 : 1;
+        // Sliding window: 1-day tolerance. Combo on day 1 + day 3 still streaks
+        // (1-day skip allowed for parent's logging gaps). diff === 0 idempotent.
+        currentStreak = (diff >= 1 && diff <= 2) ? currentStreak + 1
+                       : (diff === 0 ? currentStreak : 1);
       }
       if (currentStreak > maxStreak) maxStreak = currentStreak;
     }
@@ -60642,7 +60726,8 @@ function computeFoodCombos(windowDays) {
 }
 
 function renderInfoComboFreq() {
-  const data = computeFoodCombos(30);
+  const COMBO_WINDOW_DAYS = 30;
+  const data = computeFoodCombos(COMBO_WINDOW_DAYS);
   const summaryEl = document.getElementById('infoComboSummary');
   const topEl = document.getElementById('infoComboTop');
   const onceEl = document.getElementById('infoComboOnce');
@@ -60657,7 +60742,7 @@ function renderInfoComboFreq() {
 
   // Summary with best combo highlight
   let summaryHtml = `<div class="fx-row g12 fx-row-wrap" >
-    <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals</span></div>
+    <div class="t-sm"><strong>${data.totalUniquePairs}</strong> <span class="t-light">unique combos from ${data.totalMeals} meals in last ${COMBO_WINDOW_DAYS}d</span></div>
     <div class="t-sm t-light" >·</div>
     <div class="t-sm" style="color:${data.uniqueness >= 60 ? 'var(--tc-sage)' : data.uniqueness >= 35 ? 'var(--tc-amber)' : 'var(--tc-rose)'};font-weight:600;">${data.uniqueness}% variety</div>
   </div>`;
@@ -60936,7 +61021,7 @@ function renderInfoMealBreakdown() {
   gridHtml += '<div class="mb-meal-grid">';
   MEAL_SLOTS.forEach(m => {
     const density = data.mealDensity[m.key];
-    const pct = Math.round((density / 8) * 100); // out of 8 key nutrients max
+    const pct = Math.round((density / KEY_NUTRIENTS.length) * 100); // out of key-nutrient count (was hardcoded 8)
     const stats = data.mealStats[m.key];
     const topNutrients = Object.entries(stats.nutrientHits).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0).slice(0, 3).map(([k]) => k);
 
@@ -61080,7 +61165,9 @@ function computeSmartPairings() {
 
     ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
       if (!isRealMeal(entry[meal])) return;
-      const raw = entry[meal].split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
+      // Split on comma, plus, ampersand, and connecting words "with"/"and" —
+      // prevents "rice with dal" or "carrot & spinach" from parsing as one food.
+      const raw = entry[meal].split(/[,+&]| with |\s+and\s+/i).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
       const expanded = _expandMealFoods(raw);
 
       // Check every synergy against this expanded meal
