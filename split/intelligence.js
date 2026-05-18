@@ -5752,10 +5752,8 @@ function qaAnswerPoopColor(intentId) {
 
   // Distribution
   var totalPoops = recentPoops.length;
-  // Mirrors SAFE_POOP_COLORS at core.js — keep in sync. V-K-1 drift-guard:
-  // candidate for promotion to a shared constant on a future intelligence.js
-  // touch (deferred to keep this round's cross-cutting surface minimal).
-  var safeColors = ['yellow', 'green', 'brown', 'dark', 'orange'];
+  // V-K-1-followup — uses SAFE_POOP_COLORS from core.js directly (previously
+  // a duplicated literal; consolidated to single-source on the PR-A cycle).
   var dominantColor = Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
   headline = 'Most common: ' + dominantColor[0] + ' (' + dominantColor[1] + '/' + totalPoops + ')';
 
@@ -5763,7 +5761,7 @@ function qaAnswerPoopColor(intentId) {
     var color = entry[0];
     var count = entry[1];
     var pct = Math.round(count / totalPoops * 100);
-    var isSafe = safeColors.indexOf(color) >= 0;
+    var isSafe = SAFE_POOP_COLORS.indexOf(color) >= 0;
     dataItems.push({ text: color.charAt(0).toUpperCase() + color.slice(1) + ': ' + count + ' times (' + pct + '%)', signal: isSafe ? 'good' : 'warn' });
   });
 

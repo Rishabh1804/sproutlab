@@ -137,7 +137,7 @@
 
   /* Poop-color reference palette (anatomical, NOT domain).
      Single source of truth for the picker, legend, timeline, anomaly cards,
-     and Color Guide. The medical.js POOP_COLOR_HEX mirror must stay in sync. */
+     and Color Guide. The core.js POOP_COLOR_HEX mirror must stay in sync. */
   --poop-c-yellow: #e8c84a;
   --poop-c-green:  #6aa84f;
   --poop-c-brown:  #8B6914;
@@ -18184,6 +18184,27 @@ const CONSISTENCY_SCORES = { soft: 100, normal: 100, loose: 70, hard: 50, watery
 // in medical.js. Mirror at intelligence.js (qaAnswerPoopColor) must match.
 const SAFE_POOP_COLORS = ['yellow', 'green', 'brown', 'dark', 'orange'];
 
+// V-K-1-followup + Cipher Round-2 §9 (PR #75) — POOP_COLOR_HEX promoted from
+// medical.js to core.js so that home.js / diet.js / medical.js / intelligence.js
+// share a single source of truth for the 8 anatomical poop-color hex tokens.
+// Mirrors --poop-c-* tokens in styles.css (CSS is canonical for the rendered
+// swatch; this JS map covers chart-fill / inline-title contexts where the raw
+// hex is needed). Drift-guard: docs/POOP_COLOR_REFERENCE.html (auto-built each
+// build via split/build-poop-reference.mjs) reads this constant directly and
+// the chart's contrast cells surface any drift against the CSS tokens.
+const POOP_COLOR_HEX = {
+  yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
+  orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
+};
+// Whitelist used to guard data-pcolor attribute emission (defense in depth).
+const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+// Display labels for the 8 keys. Most are title-case of the key; `dark` and
+// `white` use the parent-facing wording the picker UI carries.
+const POOP_COLOR_LABELS = {
+  yellow: 'Yellow', green: 'Green', brown: 'Brown', dark: 'Dark Brown',
+  orange: 'Orange', red: 'Red', white: 'White/Pale', black: 'Black'
+};
+
 function calcPoopScore(dateStr) {
   dateStr = dateStr || today();
   const dayPoops = getPoopsForDate(dateStr);
@@ -19224,6 +19245,15 @@ function escHtml(s) {
   if (typeof s !== 'string') s = s == null ? '' : String(s);
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
+// V-K-10 (PR #75 carry-forward) — iconText(name, text) returns raw HTML:
+// `zi(name) + ' ' + escHtml(text)`. The text component is escaped at the
+// helper; the SVG fragment is preserved as raw HTML. Use this whenever an
+// icon + user-text-like string flows into a sanctioned raw-HTML emit (e.g.
+// htmlDetail: true plan items, ins.text insight rows, any innerHTML buffer).
+// The lint at split/audit-icon-text.sh flags `(label|text|reason|detail):
+// zi(` field-assignments — adopt iconText() there to close the data-shape
+// leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
+function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
 // _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
@@ -27565,18 +27595,16 @@ let _poopConsistency = 'normal';
 let _poopAmount = 'medium';
 let _poopEditIdx = null;
 
-const POOP_COLORS = {
-  yellow:  { hex:'#e8c840', label:'Yellow' },
-  green:   { hex:'#6b9e4a', label:'Green' },
-  brown:   { hex:'#8b6914', label:'Brown' },
-  dark:    { hex:'#3d2b1f', label:'Dark Brown' },
-  orange:  { hex:'#e0882a', label:'Orange' },
-  red:     { hex:'#c0392b', label:'Red' },
-  white:   { hex:'#f0ede6', label:'White/Pale' },
-  black:   { hex:'#1a1a1a', label:'Black' },
-  tan:     { hex:'#d2b48c', label:'Tan' },
-  mustard: { hex:'#c8a030', label:'Mustard' },
-};
+// Cipher Round-2 §9 (PR #75) + V-K-1-followup — POOP_COLORS derived from the
+// canonical POOP_COLOR_HEX + POOP_COLOR_LABELS in core.js. Previously this map
+// carried its own hex literals that had drifted (yellow #e8c840 vs canonical
+// #e8c84a, dark #3d2b1f vs canonical #5a4a2a, etc.) plus two orphan keys
+// (`tan` and `mustard`) unreachable from the 8-key picker. Single-source-of-
+// truth: the picker, the renders, and the chart all read the same hex now.
+const POOP_COLORS = POOP_COLOR_KEYS.reduce((acc, k) => {
+  acc[k] = { hex: POOP_COLOR_HEX[k], label: POOP_COLOR_LABELS[k] };
+  return acc;
+}, {});
 
 function _poopColorDot(colorKey) {
   const col = POOP_COLORS[colorKey] || POOP_COLORS.yellow;
@@ -29933,14 +29961,14 @@ function renderTodayPlan() {
         items.push({
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
-          detail: zi('check') + ' Booked — ' + getVaccApptLabel(bookedData),
+          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)),
           tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
-          detail: zi('warn') + ' Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule',
+          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'),
           tag: 'med', done: false, htmlDetail: true
         });
       }
@@ -29949,7 +29977,7 @@ function renderTodayPlan() {
       // Booked but no details — nudge to add date
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
-        detail: '' + zi('check') + ' Booked — tap to add appointment date & time',
+        detail: iconText('check', 'Booked — tap to add appointment date & time'),
         tag: 'med', done: false, htmlDetail: true,
         action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
@@ -30017,7 +30045,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '8–9', icon: zi('sun'), title: 'Breakfast',
-    detail: bfDone ? zi('check') + ' ' + escHtml(todayEntry.breakfast) : bfSuggestion,
+    detail: bfDone ? iconText('check', todayEntry.breakfast) : bfSuggestion,
     tag: 'food', done: bfDone, htmlDetail: bfDone,
     action: bfDone ? null : '_qlMeal="breakfast";openQuickModal("feed")'
   });
@@ -30087,7 +30115,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '12–1', icon: zi('sun'), title: 'Lunch',
-    detail: lnDone ? zi('check') + ' ' + escHtml(todayEntry.lunch) : lnSuggestion,
+    detail: lnDone ? iconText('check', todayEntry.lunch) : lnSuggestion,
     tag: 'food', done: lnDone, htmlDetail: lnDone,
     action: lnDone ? null : '_qlMeal="lunch";openQuickModal("feed")'
   });
@@ -30161,7 +30189,7 @@ function renderTodayPlan() {
   }
   items.push({
     time: '6–7', icon: zi('moon'), title: 'Dinner',
-    detail: dnDone ? zi('check') + ' ' + escHtml(todayEntry.dinner) : dnSuggestion,
+    detail: dnDone ? iconText('check', todayEntry.dinner) : dnSuggestion,
     tag: 'food', done: dnDone, htmlDetail: dnDone,
     action: dnDone ? null : '_qlMeal="dinner";openQuickModal("feed")'
   });
@@ -30170,7 +30198,7 @@ function renderTodayPlan() {
   const skDone = isRealMeal(todayEntry.snack);
   items.push({
     time: '10–4', icon: zi('spoon'), title: 'Snack',
-    detail: skDone ? zi('check') + ' ' + escHtml(todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
+    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
     tag: 'food', done: skDone, htmlDetail: skDone,
     action: skDone ? null : '_qlMeal="snack";openQuickModal("feed")'
   });
@@ -41428,15 +41456,10 @@ function _piGetPoops(windowDays) {
 }
 
 // ── Helper: poop color hex values ──
-// Mirrors --poop-c-* tokens in styles.css. CSS is the source of truth for
-// .poop-swatch / .poop-bar-seg backgrounds; this JS map covers contexts where
-// the raw hex is needed (chart fills, inline title color, etc.). Keep in sync.
-const POOP_COLOR_HEX = {
-  yellow: '#e8c84a', green: '#6aa84f', brown: '#8B6914', dark: '#5a4a2a',
-  orange: '#e8913a', red: '#d04040', white: '#e0ddd4', black: '#2a2a2a'
-};
-// Whitelist used to guard data-pcolor attribute emission (defense in depth).
-const POOP_COLOR_KEYS = Object.keys(POOP_COLOR_HEX);
+// POOP_COLOR_HEX + POOP_COLOR_KEYS moved to core.js (V-K-1-followup + Cipher
+// Round-2 §9) so home.js / diet.js / medical.js / intelligence.js share a
+// single source of truth. CSS is canonical for the rendered swatch (--poop-c-*
+// in styles.css); core.js POOP_COLOR_HEX covers chart-fill / inline-title.
 function _piPcolorAttr(color) {
   return POOP_COLOR_KEYS.indexOf(color) >= 0 ? ' data-pcolor="' + color + '"' : '';
 }
@@ -43044,7 +43067,7 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: zi(recent[i].iconKey) + ' ' + escHtml(recent[i].illnessType) + ' and ' + zi(recent[j].iconKey) + ' ' + escHtml(recent[j].illnessType) + ' overlapped around ' +
+          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' +
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights
@@ -51169,10 +51192,8 @@ function qaAnswerPoopColor(intentId) {
 
   // Distribution
   var totalPoops = recentPoops.length;
-  // Mirrors SAFE_POOP_COLORS at core.js — keep in sync. V-K-1 drift-guard:
-  // candidate for promotion to a shared constant on a future intelligence.js
-  // touch (deferred to keep this round's cross-cutting surface minimal).
-  var safeColors = ['yellow', 'green', 'brown', 'dark', 'orange'];
+  // V-K-1-followup — uses SAFE_POOP_COLORS from core.js directly (previously
+  // a duplicated literal; consolidated to single-source on the PR-A cycle).
   var dominantColor = Object.entries(colorCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
   headline = 'Most common: ' + dominantColor[0] + ' (' + dominantColor[1] + '/' + totalPoops + ')';
 
@@ -51180,7 +51201,7 @@ function qaAnswerPoopColor(intentId) {
     var color = entry[0];
     var count = entry[1];
     var pct = Math.round(count / totalPoops * 100);
-    var isSafe = safeColors.indexOf(color) >= 0;
+    var isSafe = SAFE_POOP_COLORS.indexOf(color) >= 0;
     dataItems.push({ text: color.charAt(0).toUpperCase() + color.slice(1) + ': ' + count + ' times (' + pct + '%)', signal: isSafe ? 'good' : 'warn' });
   });
 
