@@ -7416,6 +7416,10 @@ function feEditAction(idx) {
 }
 
 function feResolvePrompt() {
+  // V-M-41 shield (PR-D) — `'Resolve'` btnText prevents 'Confirm' fallback;
+  // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
+  // this at midnight post-episode — 'Resolve' names the action verb
+  // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
   confirmAction('Has Ziva\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
     resolveFeverEpisode('');
     showQLToast('' + zi('check') + ' Fever episode resolved');
@@ -8121,6 +8125,10 @@ function deEditAction(idx) {
 }
 
 function deResolvePrompt() {
+  // V-M-41 shield (PR-D) — `'Resolve'` btnText prevents 'Confirm' fallback;
+  // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
+  // this at midnight post-episode — 'Resolve' names the action verb
+  // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
   confirmAction('Has Ziva\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
     resolveDiarrhoeaEpisode('');
     showQLToast('' + zi('check') + ' Diarrhoea episode resolved');
@@ -8519,6 +8527,10 @@ function voEditAction(idx) {
 }
 
 function voResolvePrompt() {
+  // V-M-41 shield (PR-D) — `'Resolve'` btnText prevents 'Confirm' fallback;
+  // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
+  // this at midnight post-episode — 'Resolve' names the action verb
+  // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
   confirmAction('Has vomiting stopped for at least 6 hours?', function() { resolveVomitingEpisode(); showQLToast('' + zi('check') + ' Vomiting episode resolved'); }, 'Resolve');
 }
 
@@ -8751,6 +8763,10 @@ function ceSetSeverity(sev) {
 }
 
 function ceResolvePrompt() {
+  // V-M-41 shield (PR-D) — `'Resolve'` btnText prevents 'Confirm' fallback;
+  // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
+  // this at midnight post-episode — 'Resolve' names the action verb
+  // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
   confirmAction('Has the cold/cough resolved? (Symptoms mostly cleared for 24+ hours)', function() { resolveColdEpisode(); showQLToast(zi('check') + ' Cold episode resolved'); }, 'Resolve');
 }
 
