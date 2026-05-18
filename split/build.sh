@@ -19,6 +19,16 @@ if ! bash audit-icon-text.sh >&2; then
   echo 'BUILD ABORTED: V-K-10 icon-text audit failed. Adopt iconText() or annotate `// raw-html-ok`.' >&2
   exit 1
 fi
+# V-M-41 ship-gate: audit-resolve-shield.sh locks the `'Resolve'` btnText on
+# the four symptom-resolve confirmAction callers in intelligence.js. The shield
+# preserves the sage-domain label on health-restoration affirmations; without
+# it the button falls back to generic 'Confirm', a tonal regression on a
+# safety-tier illness-resolution surface. Per V-M-41 (Maren) + V-K-30 (Kael
+# word-boundary doctrine) on PR #78. Stderr-redirected per ship-gate precedent.
+if ! bash audit-resolve-shield.sh >&2; then
+  echo "BUILD ABORTED: V-M-41 resolve-shield audit failed. Restore the explicit 'Resolve' btnText argument." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
