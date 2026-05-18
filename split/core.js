@@ -3422,7 +3422,13 @@ function confirmAction(msg, callback, btnText) {
   // missed forms like "Are you sure you want to delete this entry?" where the
   // destructive token isn't the leading word. Word-boundary match catches the
   // token anywhere in the message; explicit btnText still wins.
-  const label = btnText || (/\bdelete\b/i.test(msg) ? 'Delete' : 'Confirm');
+  // V-K-24 (PR-C, sync-discipline cycle) — widened to `delete|remove|clear`
+  // word-set. Catches the two live destructive callers at medical.js:2987
+  // (`Remove ${doctors[i].name}?`) and intelligence.js:17540 (`Remove this
+  // tracking? This cannot be undone.`) that the delete-only regex missed.
+  // Word-boundary preserves the "cleared" mid-word safety (the two `cleared`
+  // callers at core.js:690 + intelligence.js:8754 carry explicit btnText anyway).
+  const label = btnText || (/\b(delete|remove|clear)\b/i.test(msg) ? 'Delete' : 'Confirm');
   const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
