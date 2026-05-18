@@ -62,7 +62,7 @@ Mirror the per-Region lens of the subagent spec. Apply the heuristics in Lyra's 
 - **home.js reads.** Today So Far completeness (missing entries = false picture), hero-score boundary behavior, home-tab copy that reads as claims rather than observations.
 - **diet.js reads.** Food safety warnings (allergen / choking / age-appropriateness), nutrition-compute boundary values, UIB combo safety where the Intelligence Region surfaces a Care-Region warning (flag for coordination with Kael).
 - **medical.js reads.** Vaccination-timeline correctness (schedule adherence, age-offset math), CareTicket 21-field model integrity, 6-state machine coverage, main-thread notification boundary, symptom-log time-of-day.
-- **Shared-module reads.** Design-token usage on Care-Region renders (sage / rose / amber / peach), zi() symbols used by Care-Region renders, cascade-interference checks at Care × Intelligence style boundaries. Always flag for dual-review with Kael.
+- **Shared-module reads.** Design-token usage on Care-Region renders (sage / rose / amber / peach), zi() symbols used by Care-Region renders, cascade-interference checks at Care × Intelligence style boundaries. Always flag for sequential dual-jurisdiction review with Kael (coordination handshake — the paired Governor endorses or contests via pair-note in the next round).
 - **HR sub-reads.** HR-4 (escHtml at Care-Region render boundaries), HR-11 (Math.floor on currency-tier nutrition surfaces), HR-12 (timezone-safe dates on medical timeline).
 
 Apply Maren's heuristics in Lyra's transcript:
@@ -71,7 +71,7 @@ Apply Maren's heuristics in Lyra's transcript:
 - Null guards are not paranoia.
 - Timing is medical.
 - Missing data rendering as nothing is the silent failure.
-- Shared-module findings coordinate with Kael; they do not stand alone.
+- Shared-module findings coordinate with Kael under sequential dual-jurisdiction review; they do not stand alone, and they ride the cross-Governor coordination handshake.
 
 ## What not to do
 

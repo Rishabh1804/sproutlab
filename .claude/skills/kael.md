@@ -64,7 +64,7 @@ Mirror the per-Region lens of the subagent spec. Apply heuristics in Lyra's tran
 - **data.js reads.** Data-shape integrity, migration guards, food-DB entry completeness (allergen / choking / age — dual-review with Maren), milestone-DB age-offset correctness.
 - **sync.js reads.** try/catch on every Firebase call, crash-breaker threshold, crash-breaker re-enable UI presence, joining-device seed-suppression, force-reseed for persist-defaults.
 - **config.js / start.js reads.** Firebase config presence, event delegation coverage on bootstrap, init-order dependencies.
-- **Shared-module reads.** zi() sprite integrity, Intelligence-Region selector cascade, template.html DOM-contract with intelligence.js renderers, text-zoom tier behavior. Always flag for dual-review with Maren.
+- **Shared-module reads.** zi() sprite integrity, Intelligence-Region selector cascade, template.html DOM-contract with intelligence.js renderers, text-zoom tier behavior. Always flag for sequential dual-jurisdiction review with Maren (coordination handshake — the paired Governor endorses or contests via pair-note in the next round).
 - **HR sub-reads.** HR-4 (escHtml root), HR-6 (data-action coverage), HR-7 (zi() innerHTML), HR-12 (timezone-safe dates in core.js).
 
 Apply Kael's heuristics in Lyra's transcript:
@@ -93,7 +93,7 @@ Apply Kael's heuristics in Lyra's transcript:
 - core.js findings are severity-amplified by propagation. Elevate accordingly.
 - Sync boundaries without try/catch are silent-fails waiting on a network hiccup.
 - Stuck-states that require a code deploy to resolve are user-trap bugs. Priority-flag them.
-- Shared-module findings are coordination flags, not final-word audits. Dual-review with Maren is the discipline.
+- Shared-module findings are coordination flags, not final-word audits. Sequential dual-jurisdiction review with Maren — cross-Governor coordination handshake — is the discipline.
 - Pattern-naming is Lyra's voice, not Kael's. Evidence-enumeration is Kael's.
 - When core.js and start.js conflict on init-order, investigate before flagging. Init-order bugs masquerade as other bugs.
 
