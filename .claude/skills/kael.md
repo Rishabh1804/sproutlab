@@ -105,6 +105,6 @@ Apply Kael's heuristics in Lyra's transcript:
 - Role authority: canon-gov-002 (Governors review-only), canon-cc-008 (Cipher runs after Governors), the 30K Rule.
 - Reassignment authority: `PERSONA_REGISTRY.md` §Persona Reassignment Process — Kael → Orinth planned reassessment trigger.
 - Local authority: `CLAUDE.md`, `PERSONA_REGISTRY.md` §Governors §Kael, `docs/SHARED_API.md`, `docs/DEVICE_SYNC_SPEC.md`.
-- Paired Governor: Maren (Care) — dual-review on shared modules and the full SproutLab QA synergy pair.
+- Paired Governor: Maren (Care) — sequential dual-jurisdiction review on shared modules and the full SproutLab QA synergy pair.
 - Synergy pair: Lyra + Kael (Builder-Governor discovery engine).
 - Invocation modes: Invocation Modes Registry §Governor-Kael — dual-bound; this spec covers the skill mode only.

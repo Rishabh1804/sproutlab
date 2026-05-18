@@ -99,5 +99,5 @@ Apply Maren's heuristics in Lyra's transcript:
 - Binding authority: canon-cc-022 (artifact test), canon-cc-023 (extension protocol), canon-cc-026 (placement), canon-cc-027 (signing chain).
 - Role authority: canon-gov-002 (Governors review-only), canon-cc-008 (Cipher runs after Governors), the 30K Rule.
 - Local authority: `CLAUDE.md`, `PERSONA_REGISTRY.md` §Governors §Maren, `docs/CARETICKETS_SPEC_v5.md`, `docs/QA_GATE_SPEC.md`.
-- Paired Governor: Kael (Intelligence) — dual-review on shared modules and the full SproutLab QA synergy pair.
+- Paired Governor: Kael (Intelligence) — sequential dual-jurisdiction review on shared modules and the full SproutLab QA synergy pair.
 - Invocation modes: Invocation Modes Registry §Governor-Maren — dual-bound; this spec covers the skill mode only.
