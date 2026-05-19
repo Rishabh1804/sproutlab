@@ -8818,7 +8818,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     const h = Math.floor(trend.duration.current / 60);
     const m = trend.duration.current % 60;
     const deltaMin = trend.duration.trend.delta;
-    const deltaText = deltaMin !== 0 ? `${trend.duration.trend.arrow} ${Math.abs(deltaMin)} min` : '→ stable';
+    const deltaText = deltaMin !== 0 ? `${trend.duration.trend.arrow} ${Math.abs(deltaMin)} min` : `${zi('trending-flat')} stable`;
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('moon')}</div>
       <div class="ir-body">

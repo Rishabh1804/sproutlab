@@ -34,7 +34,21 @@
 # EXCLUDED (typographic / text-class — allowed by HR-1 spirit):
 #   U+2010-2027   Punctuation (em-dash —, en-dash –, smart quotes)
 #   U+2190-21FF   Arrows (↑↓→←) — Maren allowance for trend-delta indicators
+#                 NARROWED: see DIRECTION-BADGE class below.
 #   U+00B0-00FF   Latin-1 Supplement (degree °, etc.)
+#
+# DIRECTION-BADGE class (PR-EF doctrine amendment to the U+2190-21FF
+# Maren allowance):
+#   Diagonal / dual arrows (↗↘↙↖↕↔) used as quoted single-glyph values
+#   are flagged unconditionally (they are always icon-context — no
+#   typographic role).
+#   Single arrows (← ↑ → ↓) are flagged only on lines that ALSO contain
+#   an `icon` / `Icon` / `arrow` / `Arrow` identifier — preserves
+#   typographic use in prose ('food → consistency') and date-range
+#   separators (formatDate(a) + ' → ' + formatDate(b)).
+#   Replace flagged glyphs with zi('trending-up' / 'trending-down' /
+#   'trending-flat' / 'trending-mixed' / 'arrow-right') per HR-1 spirit
+#   (icons via SVG system, not Unicode glyphs).
 #
 # FALSE-POSITIVE FILTER:
 #   Lines containing '[\u' — defensive sanitizer regex character classes
@@ -70,6 +84,17 @@ strict_re_pattern = (
     r']'
 )
 literal_re = re.compile(strict_re_pattern if strict else default_re_pattern)
+
+# DIRECTION-BADGE class — PR-EF doctrine amendment to the U+2190-21FF
+# Maren allowance at script header. Catches diagonal/dual arrows used as
+# quoted single-glyph icon values, and single arrows (← ↑ → ↓) when they
+# appear on a line that also contains an icon/arrow identifier.
+DIRECTION_GLYPHS = '↗↘↙↖↕↔'
+direction_badge_re = re.compile(
+    r"(['\"])\s*([" + DIRECTION_GLYPHS + r"])\s*\1"
+)
+icon_id_re = re.compile(r"icon|arrow", re.IGNORECASE)
+single_arrow_re = re.compile(r"(['\"])\s*([←-↓])\s*\1")
 
 escape_re = re.compile(r"\\u\{?([0-9A-Fa-f]{4,5})\}?")
 
@@ -135,6 +160,21 @@ for scope in scopes:
             line = lines[ln_idx]
             if is_filtered(line): continue
             hits.append((ln_idx + 1, m.group(), 0xFE0F, line.strip()[:90]))
+        # DIRECTION-BADGE class: diagonal/dual arrows always flagged
+        for m in direction_badge_re.finditer(src):
+            ln_idx = src[:m.start()].count('\n')
+            line = lines[ln_idx]
+            if is_filtered(line): continue
+            glyph = m.group(2)
+            hits.append((ln_idx + 1, glyph, ord(glyph), '[DIR-BADGE] ' + line.strip()[:90]))
+        # DIRECTION-BADGE class: single ← ↑ → ↓ flagged only on lines
+        # that also contain an icon/arrow identifier (preserves typographic use).
+        for ln_idx, line in enumerate(lines):
+            if is_filtered(line): continue
+            if not icon_id_re.search(line): continue
+            for m in single_arrow_re.finditer(line):
+                glyph = m.group(2)
+                hits.append((ln_idx + 1, glyph, ord(glyph), '[DIR-BADGE] ' + line.strip()[:90]))
         if hits:
             per_file[path] = hits
             total_hits += len(hits)

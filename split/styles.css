@@ -139,6 +139,37 @@
   --poop-c-red:    #d04040;
   --poop-c-white:  #e0ddd4;
   --poop-c-black:  #2a2a2a;
+
+  /* ── PR-EF Viz tokens ── */
+  /* Viz #1 — sleep calendar heatmap bands (semantic aliases) */
+  --cal-poor:       var(--tc-danger);
+  --cal-short:      var(--tc-amber);
+  --cal-target:     var(--tc-sage);
+  --cal-long:       var(--tc-sky);
+  /* Viz #2 — consistency stream colors (Bristol-band intensity tones) */
+  --con-runny:      rgba(220,180,90,0.7);
+  --con-watery:     rgba(220,180,90,0.9);
+  --con-loose:      rgba(180,200,140,0.7);
+  --con-soft:       rgba(140,190,160,0.7);
+  --con-normal:     var(--tc-sage);
+  --con-hard:       rgba(180,130,80,0.7);
+  --con-pellets:    rgba(140,90,60,0.7);
+  /* Viz #5 — milestone treemap status tiers */
+  --ms-emerging:    var(--surface-sage);
+  --ms-practicing:  var(--tc-sage-light);
+  --ms-consistent:  var(--tc-sage);
+  --ms-mastered:    var(--tc-indigo);
+}
+
+/* PR-EF Viz container chrome — light defaults; cards add their own padding */
+.viz-cal-grid, .viz-stream, .viz-treemap, .viz-gantt, .viz-intake-bar,
+.viz-food-timeline {
+  background: transparent;
+  margin-top: var(--sp-4);
+}
+.viz-chart-mount {
+  width: 100%;
+  position: relative;
 }
 
 /* ── Text Zoom ── */

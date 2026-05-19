@@ -29,6 +29,15 @@ if ! bash audit-resolve-shield.sh >&2; then
   echo "BUILD ABORTED: V-M-41 resolve-shield audit failed. Restore the explicit 'Resolve' btnText argument." >&2
   exit 1
 fi
+# PR-EF ship-gate: audit-viz-smoke.sh confirms the new visualization cards
+# (infoFeedingIntakeCard, infoVaccGanttCard), chart containers (growthChartInfo,
+# etc.), and CSS tokens (--cal-poor, --con-runny, --ms-emerging) are wired
+# into the built HTML. Catches silent regressions where a viz wiring is
+# removed without a build break.
+if ! bash audit-viz-smoke.sh >&2; then
+  echo "BUILD ABORTED: PR-EF viz-smoke audit failed. Restore the missing wiring." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

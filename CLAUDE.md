@@ -127,7 +127,7 @@ These are NON-NEGOTIABLE. Every session. Every line.
 **Rule:** Every new card/section/feature uses one of these domain colors. No ad-hoc hex values.
 
 ### Icon System
-**zi()** — 62 custom SVG symbols as `<symbol>` sprite in template.html (was 54 at CLAUDE.md authorship; Polish-8 amendment 2026-05-01 reflects empirical count post-Phase-3+ growth). Rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`.
+**zi()** — 109 custom SVG symbols as `<symbol>` sprite in template.html (was 105 at PR-EF base; +4 added by PR-EF Phase A: trending-down, trending-flat, trending-mixed, arrow-right). Rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`.
 
 ### Text Zoom
 Three tiers (default, medium, large) via `data-zoom` on `:root`. Header block exempt.

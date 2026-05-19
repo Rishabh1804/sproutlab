@@ -91,7 +91,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
 </head>
 <body>
 <h1>CareTicket State Machine</h1>
-<p class="subtitle">SproutLab — 6-transition lifecycle, spec vs implementation. Generated <code>2026-05-18</code>. Per the policy-floor clause in CLAUDE.md, <strong>this chart wins on transition-layout snapshots</strong>; <code>CARETICKETS_SPEC_v5.md</code> wins on transition rationale; CLAUDE.md wins on rules, HRs, build commands, persona.</p>
+<p class="subtitle">SproutLab — 6-transition lifecycle, spec vs implementation. Generated <code>2026-05-19</code>. Per the policy-floor clause in CLAUDE.md, <strong>this chart wins on transition-layout snapshots</strong>; <code>CARETICKETS_SPEC_v5.md</code> wins on transition rationale; CLAUDE.md wins on rules, HRs, build commands, persona.</p>
 
 <div class="diagram-wrap">
 <svg viewBox="0 0 520 420" width="520" height="420">
@@ -159,7 +159,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#f2a8b8">escalated</span>
       </td>
       <td class="cell-rationale">trigger — highest severity</td>
-      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17418</code></td>
+      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17697</code></td>
       <td class="cell-note">fires on highest-severity trigger</td>
     </tr>
   
@@ -171,7 +171,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#b5d5c5">resolved</span>
       </td>
       <td class="cell-rationale">criteria met + confirm, OR manual close after exhaustion</td>
-      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17434</code></td>
+      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17713</code></td>
       <td class="cell-note">criteria met + confirm, OR manual close</td>
     </tr>
   
@@ -183,7 +183,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#a8cfe0">active</span>
       </td>
       <td class="cell-rationale">clear check-in + confirm de-escalation</td>
-      <td class="cell-impl"><code>ctDeEscalate</code> @ <code>intelligence.js:17476</code></td>
+      <td class="cell-impl"><code>ctDeEscalate</code> @ <code>intelligence.js:17755</code></td>
       <td class="cell-note">clear check-in + confirm de-escalation</td>
     </tr>
   
@@ -195,7 +195,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#f2a8b8">escalated</span>
       </td>
       <td class="cell-rationale">different/higher trigger — upgrade action</td>
-      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17418</code></td>
+      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17697</code></td>
       <td class="cell-note">re-fires with different/higher trigger</td>
     </tr>
   
@@ -207,7 +207,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#b5d5c5">resolved</span>
       </td>
       <td class="cell-rationale">force-resolve with explicit confirmation + reason</td>
-      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17434</code></td>
+      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17713</code></td>
       <td class="cell-note">force=true path; explicit confirmation + reason</td>
     </tr>
   
@@ -219,7 +219,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#a8cfe0">active</span>
       </td>
       <td class="cell-rationale">reopen — suggest fresh ticket after 2 reopens</td>
-      <td class="cell-impl"><code>ctReopenTicket</code> @ <code>intelligence.js:17450</code></td>
+      <td class="cell-impl"><code>ctReopenTicket</code> @ <code>intelligence.js:17729</code></td>
       <td class="cell-note">reopen — suggest fresh ticket after 2 reopens</td>
     </tr>
   
