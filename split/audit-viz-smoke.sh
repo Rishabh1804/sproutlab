@@ -25,7 +25,9 @@ REQUIRED_CARD_IDS = [
 REQUIRED_CONTAINER_IDS = [
     'infoFeedingIntakeChart',
     'infoVaccGanttChart',
-    'growthChartInfo',
+    # V-M-18 amendment: 'growthChartInfo' canvas removed from info-tab card
+    # (Chart.js percentile bands illegible at 200px; demoted to a Medical-tab
+    # link). Audit gate no longer requires the ID.
 ]
 REQUIRED_CSS_TOKENS = [
     '--cal-poor',
