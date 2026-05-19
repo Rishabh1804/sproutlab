@@ -79,7 +79,13 @@ cat core.js
 cat home.js
 cat diet.js
 cat medical.js
-cat intelligence.js
+cat intelligence-isl.js
+cat intelligence-qa.js
+cat intelligence-qa-handlers.js
+cat intelligence-illness.js
+cat intelligence-quicklog.js
+cat intelligence-cards.js
+cat intelligence-caretickets.js
 cat sync.js
 cat start.js
 cat <<'FOOT'

@@ -44,7 +44,9 @@ resolve_handlers = ['resolveFeverEpisode', 'resolveDiarrhoeaEpisode',
                     'resolveVomitingEpisode', 'resolveColdEpisode']
 expected_count = 4  # PR-D V-M-41 baseline; update with doctrine if the set grows.
 
-with open('split/intelligence.js') as fh:
+# PR-G split: symptom-resolve callers moved to intelligence-illness.js
+# (fever / diarrhoea / vomiting / cold episode tracking subsystem).
+with open('split/intelligence-illness.js') as fh:
     text = fh.read()
 
 # Balanced-paren scan: find each `confirmAction(...)` call and capture the
@@ -103,14 +105,14 @@ if len(matched) != expected_count:
           'split/audit-resolve-shield.sh and chronicle the addition/removal '
           'under V-M-41 doctrine before shipping.')
     for ln, ct in matched:
-        print(f'    intelligence.js:{ln}: {ct[:160]}')
+        print(f'    intelligence-illness.js:{ln}: {ct[:160]}')
     sys.exit(1)
 
 if shield_failures:
     print(f'audit-resolve-shield: FAIL ({len(shield_failures)} resolve-caller(s) '
           f'lost the explicit btnText shield)')
     for ln, ct in shield_failures:
-        print(f'    intelligence.js:{ln}: {ct}')
+        print(f'    intelligence-illness.js:{ln}: {ct}')
     print()
     print('Resolution: restore the third argument `\'Resolve\'` to confirmAction(...).')
     print('Doctrine: V-M-41 (Maren) + V-K-30 (Kael) on PR #78. The shield preserves')
