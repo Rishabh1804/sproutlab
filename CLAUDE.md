@@ -11,7 +11,7 @@ You are **Lyra**, The Weaver. You see connections across domains — how a sleep
 
 **QA chain (30K Rule — 65,725 LOC; per-jurisdiction trigger):**
 1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (23,491 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
-2. **Kael** (Governor of Intelligence) audits intelligence.js + core.js + data.js + sync.js (29,786 lines post-PR-D — **≈214 LOC of headroom to 30K trigger**; next data.js-heavy spec should size growth in advance. Refresh history: 29,716 baseline → 29,724 post-PR-C estimate → Cipher V-K-33 sharpened to 29,770 → empirical 29,786 confirmed at PR-D fold per Cipher Edict V pivot on Kael-jurisdiction-touch). Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
+2. **Kael** (Governor of Intelligence) audits the 7-file `intelligence-*.js` set + core.js + data.js + sync.js. Pre-PR-G the jurisdiction monolith was at 29,786 LOC post-PR-D; PR-EF brought it to ~30,169 (breaching 30K). **PR-G discharged the breach by splitting intelligence.js into 7 subsystem-bounded files** (isl 1,029 + qa 2,234 + qa-handlers 3,614 + illness 2,541 + quicklog 4,355 + cards 2,403 + caretickets 2,224 = 18,400 LOC distributed). No single intelligence-* file breaches 30K; Kael's audit scope becomes file-pickable rather than monolith-spanning. Pattern-seeking, systematic. Audits ISL, Smart Q&A, Firebase sync boundaries.
 3. **Shared modules** (styles.css + template.html = 12,405 lines) get dual review from both Governors.
 4. Lyra synthesizes both Governor reports and implements fixes.
 5. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across both Governor jurisdictions.
@@ -51,7 +51,7 @@ Split-file PWA. 11 modules, ~65,725 lines total (post-PR-75; was 64,402 at last 
 
 **Poop-color reference:** [docs/POOP_COLOR_REFERENCE.html](docs/POOP_COLOR_REFERENCE.html) — token × theme × render-context × lexicon-membership chart for the 8 anatomical poop-color tokens. Auto-generated each build by `split/build-poop-reference.mjs`; reads `--poop-c-*` tokens from `styles.css`, dark-theme overrides, `POOP_COLOR_HEX` from `medical.js`, `SAFE_POOP_COLORS` from `core.js`. Maren-primary consult on contrast findings; Kael-primary consult on lexicon-drift findings.
 
-**CareTicket state machine:** [docs/CARETICKET_STATE_MACHINE.html](docs/CARETICKET_STATE_MACHINE.html) — 6-transition lifecycle, spec vs implementation side-by-side. Auto-generated each build by `split/build-careticket-state-machine.mjs`; reads §Lifecycle from `docs/CARETICKETS_SPEC_v5.md` and `ct*` handler functions from `intelligence.js`. Drift report flags spec/implementation divergence (Maren-primary consult; CareTicket transitions are an active audit surface where drift could silently mark a parent's escalation resolved without the spec gate firing).
+**CareTicket state machine:** [docs/CARETICKET_STATE_MACHINE.html](docs/CARETICKET_STATE_MACHINE.html) — 6-transition lifecycle, spec vs implementation side-by-side. Auto-generated each build by `split/build-careticket-state-machine.mjs`; reads §Lifecycle from `docs/CARETICKETS_SPEC_v5.md` and `ct*` handler functions from `intelligence-caretickets.js` (post-PR-G split). Drift report flags spec/implementation divergence (Maren-primary consult; CareTicket transitions are an active audit surface where drift could silently mark a parent's escalation resolved without the spec gate firing).
 
 **Authoritative source:** when this file and the maps disagree on LOC counts, token values, or layout snapshots, **the maps win** (they're regenerated from committed source). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
 
@@ -66,7 +66,13 @@ split/
 ├── home.js            ← Home tab, Today So Far, hero score (9,446 lines)
 ├── diet.js            ← Diet tab, food logging, nutrition (4,095 lines)
 ├── medical.js         ← Medical tab, vaccinations, CareTickets (9,950 lines)
-├── intelligence.js    ← ISL, Smart Q&A, UIB, search (18,107 lines)
+├── intelligence-isl.js          ← ISL: typeahead, time-query, domain-data (1,029 lines)
+├── intelligence-qa.js           ← Q&A engine, UIB, classifier (2,234)
+├── intelligence-qa-handlers.js  ← qaAnswer* handlers, Session B (3,614)
+├── intelligence-illness.js      ← fever / diarrhoea / vomiting / cold episodes (2,541)
+├── intelligence-quicklog.js     ← Activity Log + Smart Quick Log + Today So Far (4,355)
+├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* (2,403)
+├── intelligence-caretickets.js  ← CareTickets data + overlays + notifications (2,224)
 ├── sync.js            ← Firebase auth + Firestore sync (2,194 lines)
 └── start.js           ← Init + event delegation bootstrap (19 lines)
 ```

@@ -145,7 +145,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
     <th>#</th>
     <th>Transition <small>(spec)</small></th>
     <th>Rationale <small>(spec)</small></th>
-    <th>Implementing function <small>(intelligence.js)</small></th>
+    <th>Implementing function <small>(intelligence-caretickets.js)</small></th>
     <th>Note</th>
   </tr>
 </thead>
@@ -159,7 +159,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#f2a8b8">escalated</span>
       </td>
       <td class="cell-rationale">trigger — highest severity</td>
-      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17697</code></td>
+      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence-caretickets.js:1521</code></td>
       <td class="cell-note">fires on highest-severity trigger</td>
     </tr>
   
@@ -171,7 +171,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#b5d5c5">resolved</span>
       </td>
       <td class="cell-rationale">criteria met + confirm, OR manual close after exhaustion</td>
-      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17713</code></td>
+      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence-caretickets.js:1537</code></td>
       <td class="cell-note">criteria met + confirm, OR manual close</td>
     </tr>
   
@@ -183,7 +183,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#a8cfe0">active</span>
       </td>
       <td class="cell-rationale">clear check-in + confirm de-escalation</td>
-      <td class="cell-impl"><code>ctDeEscalate</code> @ <code>intelligence.js:17755</code></td>
+      <td class="cell-impl"><code>ctDeEscalate</code> @ <code>intelligence-caretickets.js:1579</code></td>
       <td class="cell-note">clear check-in + confirm de-escalation</td>
     </tr>
   
@@ -195,7 +195,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#f2a8b8">escalated</span>
       </td>
       <td class="cell-rationale">different/higher trigger — upgrade action</td>
-      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence.js:17697</code></td>
+      <td class="cell-impl"><code>ctHandleEscalation</code> @ <code>intelligence-caretickets.js:1521</code></td>
       <td class="cell-note">re-fires with different/higher trigger</td>
     </tr>
   
@@ -207,7 +207,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#b5d5c5">resolved</span>
       </td>
       <td class="cell-rationale">force-resolve with explicit confirmation + reason</td>
-      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence.js:17713</code></td>
+      <td class="cell-impl"><code>ctResolveTicket</code> @ <code>intelligence-caretickets.js:1537</code></td>
       <td class="cell-note">force=true path; explicit confirmation + reason</td>
     </tr>
   
@@ -219,7 +219,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
         <span class="state-chip" style="background:#a8cfe0">active</span>
       </td>
       <td class="cell-rationale">reopen — suggest fresh ticket after 2 reopens</td>
-      <td class="cell-impl"><code>ctReopenTicket</code> @ <code>intelligence.js:17729</code></td>
+      <td class="cell-impl"><code>ctReopenTicket</code> @ <code>intelligence-caretickets.js:1553</code></td>
       <td class="cell-note">reopen — suggest fresh ticket after 2 reopens</td>
     </tr>
   
@@ -227,15 +227,15 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
 </table>
 
 <h2>Drift report</h2>
-<div class="drift-clean">No spec/implementation drift detected. The 6 spec transitions all map to existing intelligence.js functions, and no implementation status-assignment lands on a state outside the spec's 3-state lifecycle.</div>
+<div class="drift-clean">No spec/implementation drift detected. The 6 spec transitions all map to existing intelligence-caretickets.js functions, and no implementation status-assignment lands on a state outside the spec's 3-state lifecycle.</div>
 
 <div class="legend">
-<p><strong>Reading the chart.</strong> The 6 spec transitions are numbered 1-6 in the diagram and the table. <strong>Spec columns (rose tint)</strong> are authoritative on rationale; <strong>implementation columns (lavender tint)</strong> name the function in <code>intelligence.js</code> that effects each transition. The drift report flags two failure modes: <strong>block</strong> — a spec transition with no implementation function mapped (the implementation can't produce the documented transition); <strong>should</strong> — implementation effects a transition the spec doesn't document, OR the mapped function exists but doesn't assign the documented target state.</p>
+<p><strong>Reading the chart.</strong> The 6 spec transitions are numbered 1-6 in the diagram and the table. <strong>Spec columns (rose tint)</strong> are authoritative on rationale; <strong>implementation columns (lavender tint)</strong> name the function in <code>intelligence-caretickets.js</code> that effects each transition. The drift report flags two failure modes: <strong>block</strong> — a spec transition with no implementation function mapped (the implementation can't produce the documented transition); <strong>should</strong> — implementation effects a transition the spec doesn't document, OR the mapped function exists but doesn't assign the documented target state.</p>
 <p><strong>Per V-M-28 origin:</strong> Maren-surfaced visualization candidate from the s-2026-05-17-02 Mode-2 consult (chronicle §6); ranked priority-2 by Lyra synthesis because CareTicket transitions are an active audit surface where spec-implementation drift is consequential — <code>active → resolved</code> drift could silently mark a parent's escalation as resolved without the criteria-met-or-manual-close gate firing.</p>
 </div>
 
 <div class="footer">
-<p>Generated by <code>split/build-careticket-state-machine.mjs</code> as part of <code>bash split/build.sh</code>. Drift-check: re-run the build; <code>git diff</code> shows the snapshot delta. Source-of-truth: <code>docs/CARETICKETS_SPEC_v5.md</code> §Lifecycle, <code>split/intelligence.js</code> <code>ct*</code> handler functions.</p>
+<p>Generated by <code>split/build-careticket-state-machine.mjs</code> as part of <code>bash split/build.sh</code>. Drift-check: re-run the build; <code>git diff</code> shows the snapshot delta. Source-of-truth: <code>docs/CARETICKETS_SPEC_v5.md</code> §Lifecycle, <code>split/intelligence-caretickets.js</code> <code>ct*</code> handler functions.</p>
 <p>Origin: Maren V-M-28 Mode-2 consult surface; Lyra synthesis priority-2; canon-cc-031 (Mode-2 deferral-closure coordinator) the procedural canon under which V-M-28 was filed; canon-cc-032 (two-reviewer-convergence-triggers-lens-flip) the parallel doctrine recognizing visualizations as audit-cycle-load-bearing artifacts; Architect ratification 2026-05-17.</p>
 </div>
 </body>

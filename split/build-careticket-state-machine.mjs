@@ -5,12 +5,12 @@
 // Side-by-side spec-authoritative vs implementation-actual rendering for
 // the 6-transition state machine documented in CARETICKETS_SPEC_v5.md §2
 // "Lifecycle". Surfaces drift between the spec's canonical transitions and
-// the intelligence.js functions that implement them. Generator is mechanical:
+// the intelligence-caretickets.js functions that implement them. Generator is mechanical:
 // re-run reveals new drift via `git diff` on the generated HTML.
 //
 // Sources of truth:
 //   - docs/CARETICKETS_SPEC_v5.md §2 §Lifecycle (6 transitions)
-//   - split/intelligence.js — ctHandleEscalation / ctResolveTicket /
+//   - split/intelligence-caretickets.js — ctHandleEscalation / ctResolveTicket /
 //     ctReopenTicket / ctDeEscalate (4 functions effecting the 6 transitions)
 //
 // Per V-M-28 chronicle: "active audit surface; ranks higher than V-M-26
@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
 const specPath   = join(__dirname, '..', 'docs', 'CARETICKETS_SPEC_v5.md');
-const intelPath  = join(__dirname, 'intelligence.js');
+const intelPath  = join(__dirname, 'intelligence-caretickets.js');
 const outPath    = join(__dirname, '..', 'docs', 'CARETICKET_STATE_MACHINE.html');
 
 const spec  = readFileSync(specPath, 'utf8');
@@ -50,7 +50,7 @@ for (const line of lifecycleBlock.split('\n')) {
 }
 
 // ── parse implementation transition sites ──
-// For each line of intelligence.js where `*.status = 'X'` is set, attribute
+// For each line of intelligence-caretickets.js where `*.status = 'X'` is set, attribute
 // to the enclosing top-level function. Walk linearly.
 const intelLines = intel.split('\n');
 const fnHeaderRe = /^function\s+(\w+)\s*\(/;
@@ -114,7 +114,7 @@ const driftFlags = [];
 for (const t of specTransitions) {
   if (!t.implFn) driftFlags.push({
     severity: 'block',
-    text: 'Spec transition `' + t.from + ' → ' + t.to + '` has no mapped implementing function in intelligence.js. Drift: spec defines a transition the implementation does not effect.'
+    text: 'Spec transition `' + t.from + ' → ' + t.to + '` has no mapped implementing function in intelligence-caretickets.js. Drift: spec defines a transition the implementation does not effect.'
   });
   else if (t.implFn && t.implSites.length === 0) driftFlags.push({
     severity: 'should',
@@ -127,7 +127,7 @@ const specTargets = new Set(specTransitions.map(t => t.to));
 for (const a of implAssignments) {
   if (!specTargets.has(a.toState)) driftFlags.push({
     severity: 'should',
-    text: '`' + a.fn + '` at intelligence.js:' + a.line + ' assigns status `' + a.toState + '` which is not a target-state in the spec\'s 6-transition lifecycle. Drift: implementation effects a transition the spec does not document.'
+    text: '`' + a.fn + '` at intelligence-caretickets.js:' + a.line + ' assigns status `' + a.toState + '` which is not a target-state in the spec\'s 6-transition lifecycle. Drift: implementation effects a transition the spec does not document.'
   });
 }
 
@@ -205,8 +205,8 @@ const svgTransitions = [
 // ── render side-by-side spec/impl table ──
 const tableRows = specTransitions.map((t, idx) => {
   const sitesHtml = (t.implSites && t.implSites.length > 0)
-    ? t.implSites.map(s => `<code>${t.implFn}</code> @ <code>intelligence.js:${s.line}</code>`).join('<br>')
-    : (t.implFn ? `<code>${t.implFn}</code> @ <code>intelligence.js:${t.implLine || '?'}</code>` : `<span class="missing">no mapped implementation</span>`);
+    ? t.implSites.map(s => `<code>${t.implFn}</code> @ <code>intelligence-caretickets.js:${s.line}</code>`).join('<br>')
+    : (t.implFn ? `<code>${t.implFn}</code> @ <code>intelligence-caretickets.js:${t.implLine || '?'}</code>` : `<span class="missing">no mapped implementation</span>`);
   return `
     <tr>
       <td class="cell-num">${idx + 1}</td>
@@ -223,7 +223,7 @@ const tableRows = specTransitions.map((t, idx) => {
 }).join('');
 
 const driftBlock = driftFlags.length === 0
-  ? `<div class="drift-clean">No spec/implementation drift detected. The 6 spec transitions all map to existing intelligence.js functions, and no implementation status-assignment lands on a state outside the spec's 3-state lifecycle.</div>`
+  ? `<div class="drift-clean">No spec/implementation drift detected. The 6 spec transitions all map to existing intelligence-caretickets.js functions, and no implementation status-assignment lands on a state outside the spec's 3-state lifecycle.</div>`
   : `<ul class="drift-list">${driftFlags.map(f => `<li class="drift-${f.severity}"><strong>${f.severity}</strong> · ${f.text}</li>`).join('')}</ul>`;
 
 const html = `<!DOCTYPE html>
@@ -340,7 +340,7 @@ code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
     <th>#</th>
     <th>Transition <small>(spec)</small></th>
     <th>Rationale <small>(spec)</small></th>
-    <th>Implementing function <small>(intelligence.js)</small></th>
+    <th>Implementing function <small>(intelligence-caretickets.js)</small></th>
     <th>Note</th>
   </tr>
 </thead>
@@ -353,12 +353,12 @@ ${tableRows}
 ${driftBlock}
 
 <div class="legend">
-<p><strong>Reading the chart.</strong> The 6 spec transitions are numbered 1-6 in the diagram and the table. <strong>Spec columns (rose tint)</strong> are authoritative on rationale; <strong>implementation columns (lavender tint)</strong> name the function in <code>intelligence.js</code> that effects each transition. The drift report flags two failure modes: <strong>block</strong> — a spec transition with no implementation function mapped (the implementation can't produce the documented transition); <strong>should</strong> — implementation effects a transition the spec doesn't document, OR the mapped function exists but doesn't assign the documented target state.</p>
+<p><strong>Reading the chart.</strong> The 6 spec transitions are numbered 1-6 in the diagram and the table. <strong>Spec columns (rose tint)</strong> are authoritative on rationale; <strong>implementation columns (lavender tint)</strong> name the function in <code>intelligence-caretickets.js</code> that effects each transition. The drift report flags two failure modes: <strong>block</strong> — a spec transition with no implementation function mapped (the implementation can't produce the documented transition); <strong>should</strong> — implementation effects a transition the spec doesn't document, OR the mapped function exists but doesn't assign the documented target state.</p>
 <p><strong>Per V-M-28 origin:</strong> Maren-surfaced visualization candidate from the s-2026-05-17-02 Mode-2 consult (chronicle §6); ranked priority-2 by Lyra synthesis because CareTicket transitions are an active audit surface where spec-implementation drift is consequential — <code>active → resolved</code> drift could silently mark a parent's escalation as resolved without the criteria-met-or-manual-close gate firing.</p>
 </div>
 
 <div class="footer">
-<p>Generated by <code>split/build-careticket-state-machine.mjs</code> as part of <code>bash split/build.sh</code>. Drift-check: re-run the build; <code>git diff</code> shows the snapshot delta. Source-of-truth: <code>docs/CARETICKETS_SPEC_v5.md</code> §Lifecycle, <code>split/intelligence.js</code> <code>ct*</code> handler functions.</p>
+<p>Generated by <code>split/build-careticket-state-machine.mjs</code> as part of <code>bash split/build.sh</code>. Drift-check: re-run the build; <code>git diff</code> shows the snapshot delta. Source-of-truth: <code>docs/CARETICKETS_SPEC_v5.md</code> §Lifecycle, <code>split/intelligence-caretickets.js</code> <code>ct*</code> handler functions.</p>
 <p>Origin: Maren V-M-28 Mode-2 consult surface; Lyra synthesis priority-2; canon-cc-031 (Mode-2 deferral-closure coordinator) the procedural canon under which V-M-28 was filed; canon-cc-032 (two-reviewer-convergence-triggers-lens-flip) the parallel doctrine recognizing visualizations as audit-cycle-load-bearing artifacts; Architect ratification 2026-05-17.</p>
 </div>
 </body>
