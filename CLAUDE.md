@@ -77,7 +77,7 @@ split/
 └── start.js           ← Init + event delegation bootstrap (19 lines)
 ```
 
-**Concat order:** config → data → core → home → diet → medical → intelligence → sync → start
+**Concat order:** config → data → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
 
 ### Build
 
