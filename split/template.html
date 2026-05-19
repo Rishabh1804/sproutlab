@@ -1853,10 +1853,14 @@
         </div>
       </div>
 
-      <!-- 5. Color Anomaly -->
+      <!-- 5. Stool Color Pattern (V-M-16 amendment: was "Color Anomaly" —
+           card body shows "All clear" most of the time, which contradicts
+           the alarming title. A parent should read the title and feel
+           informed, not primed for an alarm. Card renderer still surfaces
+           anomaly entries explicitly when present.) -->
       <div class="card card-daily col-full" id="infoPoopColorCard">
         <div class="card-header" data-collapse-target="infoPoopColorBody" data-collapse-chevron="infoPoopColorChevron">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-palette"/></svg></div> Color Anomaly</div>
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-palette"/></svg></div> Stool Color Pattern</div>
           <span class="collapse-chevron" id="infoPoopColorChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoPoopColorSummary" class="mt-4"></div>
@@ -2056,10 +2060,17 @@
         <div id="infoGrowthVelocitySummary" class="t-sm mt-4"></div>
         <div id="infoGrowthVelocityBody" class="collapse-body fx-col g8" style="display:none;">
           <div id="infoGrowthVelocityBar" class="mt-4"></div>
-          <div class="viz-chart-mount mt-8" style="height:200px;"><canvas id="growthChartInfo"></canvas></div>
           <div id="infoGrowthVelocityPercentile" class="mt-8"></div>
           <div id="infoGrowthVelocityGrid" class="mt-8"></div>
           <div id="infoGrowthVelocityInsight" class="mt-8"></div>
+          <!-- V-M-18 amendment: was a small Chart.js canvas ('growthChartInfo')
+               here showing the WHO percentile band at 200px tall. Per Maren —
+               the percentile bands were illegible at that size; the chart was
+               decoration, the text was signal. Removed the canvas; replaced
+               with a link to the full Medical-tab growth chart for inspection. -->
+          <div class="fx-row mt-8">
+            <button class="btn btn-ghost t-sm" data-action="switchTab" data-arg="medical" style="padding:var(--sp-4) var(--sp-10);">View full growth chart on Medical tab</button>
+          </div>
         </div>
       </div>
 

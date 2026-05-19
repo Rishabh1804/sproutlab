@@ -7385,13 +7385,29 @@ function renderInfoMilestoneVelocity() {
     // milestone categories (motor / social / language / cognitive) and within
     // each, the maturity mix (emerging / practicing / consistent / mastered).
     // Card-local layout + render; extraction deferred per PR-EF D10.
+    //
+    // V-K-31 / Cipher A2 amendment: original color scheme encoded STATUS in
+    // hue (--ms-emerging/practicing/consistent/mastered) and gave categories
+    // zero hue variation — the treemap's primary insight (category
+    // distribution at a glance) was lost because all 4 cats looked the same
+    // green family. Inverted: CATEGORY now encodes hue (using the 4 domain
+    // tones — sage / lav / sky / amber, mapped 1:1 to motor/social/language/
+    // cognitive), STATUS encodes opacity stepping (0.35 → 0.55 → 0.75 → 0.95).
+    // Parent's eye reads category-balance from the four color regions, then
+    // maturity-depth from the within-region density.
     const CATS = ['motor', 'social', 'language', 'cognitive'];
     const STATUSES = ['emerging', 'practicing', 'consistent', 'mastered'];
-    const STATUS_TOKEN = {
-      emerging:   'var(--ms-emerging)',
-      practicing: 'var(--ms-practicing)',
-      consistent: 'var(--ms-consistent)',
-      mastered:   'var(--ms-mastered)'
+    const CAT_HUE = {
+      motor:     'var(--tc-sage)',
+      social:    'var(--tc-lav)',
+      language:  'var(--tc-sky)',
+      cognitive: 'var(--tc-amber)'
+    };
+    const STATUS_OPACITY = {
+      emerging:   0.35,
+      practicing: 0.55,
+      consistent: 0.75,
+      mastered:   0.95
     };
     // Counts: cat → status → count
     const catTotals = {};
@@ -7431,21 +7447,34 @@ function renderInfoMilestoneVelocity() {
           return;
         }
         // Inside the cat block, lay out 4 status sub-rows (or fewer if some empty)
-        // by status weight. Use horizontal sub-strips.
+        // by status weight. Use horizontal sub-strips. Each sub-strip uses the
+        // CATEGORY hue with STATUS-tier opacity, so the parent reads
+        // category-balance from color regions and maturity-depth from intensity.
+        const hue = CAT_HUE[cat] || 'var(--tc-sage)';
         let cursorY = y;
         STATUSES.forEach(st => {
           const ct = catStatusCounts[cat][st];
           if (ct === 0) return;
           const subH = (ct / total) * h;
-          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + STATUS_TOKEN[st] + '" opacity="0.85" stroke="white" stroke-width="1"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
-          // Label if sub-block is large enough
-          if (subH >= 14 && w >= 40) {
-            svg += '<text x="' + (x + 4) + '" y="' + (cursorY + subH / 2 + 3).toFixed(1) + '" font-size="7" fill="white" font-family="Nunito" font-weight="500">' + st + ' (' + ct + ')</text>';
+          const opacity = STATUS_OPACITY[st] || 0.5;
+          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + hue + '" opacity="' + opacity + '" stroke="white" stroke-width="1"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
+          // Status label inside sub-strip only when it fits (V-K-31: avoid overflow).
+          // Conservative bounds: need subH >= 16 AND w >= 60 AND room for the
+          // cat-header at the top of the block (skip status label that lands in
+          // the top 16 px of the cat block to avoid colliding with the title).
+          const inHeaderZone = cursorY < y + 16;
+          if (subH >= 16 && w >= 60 && !inHeaderZone) {
+            svg += '<text x="' + (x + 4) + '" y="' + (cursorY + subH / 2 + 3).toFixed(1) + '" font-size="7" fill="white" font-family="Nunito" font-weight="500" style="text-shadow:0 0 2px rgba(0,0,0,0.3);">' + st + ' · ' + ct + '</text>';
           }
           cursorY += subH;
         });
-        // Cat label on top-left, overlaid
-        svg += '<text x="' + (x + 4) + '" y="' + (y + 10) + '" font-size="8" fill="white" font-family="Nunito" font-weight="700" style="text-shadow:0 0 2px rgba(0,0,0,0.4);">' + cat + ' (' + total + ')</text>';
+        // Cat label on top-left, overlaid. V-K-31: only render full label if
+        // the block is wide enough to hold "cognitive (8)" (the longest cat
+        // name). Otherwise abbreviate to first 3 letters + count.
+        const catLabel = (w >= 88)
+          ? cat + ' (' + total + ')'
+          : cat.slice(0, 3) + ' (' + total + ')';
+        svg += '<text x="' + (x + 4) + '" y="' + (y + 11) + '" font-size="9" fill="white" font-family="Nunito" font-weight="700" style="text-shadow:0 0 3px rgba(0,0,0,0.5);">' + catLabel + '</text>';
       }
       // Top row split between top pair
       const topW0 = topSum > 0 ? (catTotals[topPair[0]] / topSum) * VB_W : VB_W / 2;
@@ -7456,11 +7485,22 @@ function renderInfoMilestoneVelocity() {
       renderCatBlock(botPair[0], 0, topH, botW0, VB_H - topH);
       renderCatBlock(botPair[1], botW0, topH, VB_W - botW0, VB_H - topH);
       svg += '</svg>';
-      // Legend
-      svg += '<div class="fx-row g8 fx-row-wrap mt-4 t-xs t-light">';
-      STATUSES.forEach(st => {
-        svg += '<span><span style="display:inline-block;width:10px;height:10px;background:' + STATUS_TOKEN[st] + ';vertical-align:middle;margin-right:2px;"></span>' + st + '</span>';
+      // V-K-31 amendment: dual-legend — category hues + status-opacity ramp.
+      // Category legend names the 4 domain colors so the parent decodes
+      // which region is which milestone domain. Status legend uses a single
+      // hue with the 4 opacity stops so the maturity-depth encoding reads
+      // independently of category.
+      svg += '<div class="fx-col g4 mt-4 t-xs t-light">';
+      svg += '<div class="fx-row g8 fx-row-wrap"><span class="t-light" style="font-weight:500;">Category:</span>';
+      CATS.forEach(c => {
+        svg += '<span><span style="display:inline-block;width:10px;height:10px;background:' + CAT_HUE[c] + ';vertical-align:middle;margin-right:2px;opacity:0.85;"></span>' + c + '</span>';
       });
+      svg += '</div>';
+      svg += '<div class="fx-row g8 fx-row-wrap"><span class="t-light" style="font-weight:500;">Maturity:</span>';
+      STATUSES.forEach(st => {
+        svg += '<span><span style="display:inline-block;width:10px;height:10px;background:var(--tc-sage);opacity:' + STATUS_OPACITY[st] + ';vertical-align:middle;margin-right:2px;"></span>' + st + '</span>';
+      });
+      svg += '</div>';
       svg += '</div>';
       html += svg;
     }
@@ -8823,16 +8863,30 @@ function computeTextureProgression() {
   dates.forEach(d => {
     const day = feedingData[d];
     if (!day) return;
-    const meals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(Boolean);
+    // V-M-15 amendment: filter SKIPPED_MEAL before classification — a parent
+    // who deliberately skipped a meal shouldn't see "skipped" surfaced as an
+    // unclassified-food entry. isRealMeal() lives in core.js and treats
+    // SKIPPED_MEAL ('—skipped—') as falsy.
+    const meals = [day.breakfast, day.lunch, day.dinner, day.snack].filter(isRealMeal);
     if (meals.length === 0) return;
 
     const rawTextures = meals.map(m => _classifyMealTexture(m));
-    // Collect unknown meal-text for the gap-flag UI
+    // Collect unknown meal-text for the gap-flag UI.
+    // V-M-15 dedup amendment: split each meal's comma/plus/&/with-and tokens
+    // into individual food names before adding to the Set, so "Orange" from
+    // "Orange, Watermelon" and a standalone "Orange" entry don't double-count.
     let dayHasUnknown = false;
     rawTextures.forEach((t, idx) => {
       if (t === 'unknown') {
         dayHasUnknown = true;
-        if (unclassifiedFoods.size < 5) unclassifiedFoods.add(meals[idx].slice(0, 40));
+        if (unclassifiedFoods.size < 5) {
+          const tokens = meals[idx].split(/[,+&]| with |\s+and\s+/i)
+            .map(s => s.trim().toLowerCase())
+            .filter(s => s.length > 1 && s !== '—skipped—');
+          tokens.forEach(tok => {
+            if (unclassifiedFoods.size < 5) unclassifiedFoods.add(tok);
+          });
+        }
       }
     });
     if (dayHasUnknown) unclassifiedDays++;
@@ -9999,19 +10053,15 @@ function renderInfoGrowthVelocity() {
     insightEl.innerHTML = iHtml;
   }
 
-  // PR-EF Viz #6: render the percentile-band growth chart into the info-tab
-  // canvas mount. drawChart() is the same Chart.js renderer the Medical tab
-  // uses; the canvasId parameter keeps the two instances isolated.
-  //
-  // V-M-9 synthesis: render is unconditional on every dispatcher pass (no
-  // lazy-init guard) — Maren's monitor-only verdict accepts this for now
-  // given Ziva's growth dataset is ~12 entries and Chart.js init at this
-  // size is sub-100ms in practice. Lazy-init (e.g., hook the chevron-open
-  // event in `data-collapse-target` machinery) becomes load-bearing only
-  // if parent reports lag on the info-tab; chronicle forward.
-  if (typeof drawChart === 'function' && document.getElementById('growthChartInfo')) {
-    drawChart('growthChartInfo');
-  }
+  // V-M-18 amendment: was rendering the WHO percentile-band chart via
+  // drawChart('growthChartInfo') into a 200px-tall canvas in this card.
+  // The bands were illegible at that size — Maren's verdict was that the
+  // chart was decoration and the insight text was the actual signal. Canvas
+  // mount removed from template.html; this card now surfaces the load-
+  // bearing text + a "View full growth chart" button that switches to the
+  // Medical tab where the chart renders at usable size. V-M-9 (lazy-init
+  // monitor-only) auto-closes because the unconditional canvas render is
+  // gone.
 }
 
 // ── Feature 4: Doctor Visit Preparation ──

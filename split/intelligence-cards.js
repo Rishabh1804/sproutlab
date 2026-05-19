@@ -1102,7 +1102,11 @@ function renderInfoFoodIntro() {
   const displayWeeks = data.weeks.slice(-8);
   const maxCount = Math.max(...displayWeeks.map(w => w.count), 1);
 
-  let chartHtml = '<div class="t-sm fe-sub-label" >Weekly Introduction Rate</div>';
+  // V-K-28 amendment: the bars carried floating numbers (5, 4, 6, ...) with
+  // no label naming the unit. A parent reading the chart couldn't tell whether
+  // the numbers were foods, meals, or combos. Add a "foods / week" sub-label
+  // under the chart title so the value-axis intent is explicit.
+  let chartHtml = '<div class="t-sm fe-sub-label" >Weekly Introduction Rate <span class="t-light" style="font-weight:400;">— foods / week</span></div>';
   chartHtml += '<div class="info-intro-chart">';
   displayWeeks.forEach(w => {
     const pct = Math.max((w.count / maxCount) * 100, 4);
@@ -1148,7 +1152,15 @@ function renderInfoFoodIntro() {
     Object.entries(groupMap).forEach(([label, idx]) => {
       const y = PAD_T + idx * laneH + laneH / 2;
       svg += '<line x1="' + PAD_L + '" y1="' + y + '" x2="' + (VB_W - PAD_R) + '" y2="' + y + '" stroke="var(--surface-alt)" stroke-width="0.5"/>';
-      svg += '<text x="' + (PAD_L - 4) + '" y="' + (y + 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(label.slice(0, 8)) + '</text>';
+      // V-K-29 amendment: was `label.slice(0, 8)` — produced fragments like
+      // "Grains G", "Vegetab #" because the 8-char cut landed mid-word (and
+      // mid-ampersand for compound labels like "Grains & Cereals"). Now
+      // split on a word/ampersand boundary and take the leading token, which
+      // gives compact-but-complete lane labels (Grains, Vegetables, Fruits,
+      // Dairy, Nuts, Other, Spices). HR-10 spirit: no text-overflow,
+      // truncate at word boundaries instead.
+      const shortLabel = label.split(/\s*[&,]\s*|\s+/)[0];
+      svg += '<text x="' + (PAD_L - 4) + '" y="' + (y + 3) + '" text-anchor="end" font-size="7" fill="var(--mid)" font-family="Nunito">' + escHtml(shortLabel) + '</text>';
     });
     // Dots
     allFoods.forEach(f => {
@@ -1183,21 +1195,53 @@ function renderInfoFoodIntro() {
 
   chartEl.innerHTML = chartHtml;
 
-  // "Foods to Try" suggestions
-  const suggestions = getUntriedSuggestions(5);
+  // V-M-17 amendment: "Foods to Try" used to render one list-item per
+  // suggestion with `<strong>{name}</strong> · {group} · {reason}`. When
+  // multiple suggestions shared an identical reason (e.g. five non-veg foods
+  // all carrying "No non-veg in 7 days"), the parent saw five visually
+  // identical lines — stuck-state masquerading as recommendations. Now group
+  // by reason: one heading per gap, chips for each food. Fewer lines, clearer
+  // signal, and the eye reads "consider this category" rather than five
+  // duplicates.
+  const suggestions = getUntriedSuggestions(8);
   let tryHtml = '<div class="t-sm fe-sub-label" >Foods to Try Next</div>';
   if (suggestions.length === 0) {
     tryHtml += '<div class="t-sm t-light">Amazing — you\'ve covered the full taxonomy!</div>';
   } else {
-    tryHtml += '<div class="fx-col g4">';
+    // Group by reason text. Preserve first-occurrence order for stable rendering.
+    const groups = [];
+    const reasonIdx = {};
     suggestions.forEach(s => {
-      tryHtml += `
-        <div class="list-item li-row">
-          <div class="li-body">
-            <strong>${escHtml(s.name)}</strong>
-            <span class="t-sm t-light">${escHtml(s.groupLabel)} · ${escHtml(s.reason)}</span>
-          </div>
-        </div>`;
+      const key = (s.reason || 'Explore something new') + '||' + (s.groupLabel || '');
+      if (reasonIdx[key] == null) {
+        reasonIdx[key] = groups.length;
+        groups.push({ reason: s.reason || 'Explore something new', groupLabel: s.groupLabel || '', items: [] });
+      }
+      groups[reasonIdx[key]].items.push(s);
+    });
+    tryHtml += '<div class="fx-col g8">';
+    groups.forEach(g => {
+      // If the gap has 3+ suggestions, render as a category heading + chips.
+      // For 1-2 suggestions, keep the legacy list-item format so single
+      // recommendations don't lose their per-item visual weight.
+      if (g.items.length >= 3) {
+        tryHtml += '<div class="li-row" style="flex-direction:column;align-items:flex-start;gap:var(--sp-4);">';
+        tryHtml += '<div><strong>' + escHtml(g.reason) + '</strong>'
+          + (g.groupLabel ? ' <span class="t-sm t-light">· ' + escHtml(g.groupLabel) + '</span>' : '')
+          + '</div>';
+        tryHtml += '<div class="fx-wrap g4">';
+        g.items.forEach(it => {
+          tryHtml += '<span class="info-food-chip is-sage">' + escHtml(it.name) + '</span>';
+        });
+        tryHtml += '</div></div>';
+      } else {
+        g.items.forEach(s => {
+          tryHtml += '<div class="list-item li-row"><div class="li-body">'
+            + '<strong>' + escHtml(s.name) + '</strong>'
+            + '<span class="t-sm t-light">' + escHtml(s.groupLabel || '') + ' · ' + escHtml(s.reason || '') + '</span>'
+            + '</div></div>';
+        });
+      }
     });
     tryHtml += '</div>';
   }
