@@ -6015,9 +6015,11 @@ function computeConsistencyTrend(windowDays) {
   // be reported as "no comparison yet" rather than spuriously "stable".
   const prevAvg = previous.length > 0 ? previous.reduce((s, d) => s + d.avg, 0) / previous.length : null;
 
-  // Trend direction (guarded for null baseline)
+  // Trend direction (guarded for null baseline — V-M-3 synthesis: collapsed
+  // the redundant `prevAvg === null ? 'stable' : 'stable'` ternary that
+  // V-M-3 flagged; both branches assigned the same value).
   const delta = prevAvg !== null ? recentAvg - prevAvg : 0;
-  let trend = prevAvg === null ? 'stable' : 'stable';
+  let trend = 'stable';
   if (delta >= 0.5) trend = 'firming';
   else if (delta <= -0.5) trend = 'loosening';
 
@@ -10000,6 +10002,13 @@ function renderInfoGrowthVelocity() {
   // PR-EF Viz #6: render the percentile-band growth chart into the info-tab
   // canvas mount. drawChart() is the same Chart.js renderer the Medical tab
   // uses; the canvasId parameter keeps the two instances isolated.
+  //
+  // V-M-9 synthesis: render is unconditional on every dispatcher pass (no
+  // lazy-init guard) — Maren's monitor-only verdict accepts this for now
+  // given Ziva's growth dataset is ~12 entries and Chart.js init at this
+  // size is sub-100ms in practice. Lazy-init (e.g., hook the chevron-open
+  // event in `data-collapse-target` machinery) becomes load-bearing only
+  // if parent reports lag on the info-tab; chronicle forward.
   if (typeof drawChart === 'function' && document.getElementById('growthChartInfo')) {
     drawChart('growthChartInfo');
   }

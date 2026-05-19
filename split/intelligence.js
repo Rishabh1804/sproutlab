@@ -12594,20 +12594,21 @@ function renderInfoSleepBedtimeDrift() {
 
 // ── Sleep Efficiency ──
 
+// PR-EF synthesis (V-K-11 amendment): age-banded wake-loss helper, lifted
+// to module scope so both computeSleepEfficiency() and the calendar
+// heatmap in renderInfoSleepEfficiency() can read it. Reads the
+// WAKE_LOSS_MIN constant defined in core.js.
+function _wakeLossFor(dateStr, wakes) {
+  const ageMo = ageAt(dateStr).months;
+  const perWake = ageMo < 12 ? WAKE_LOSS_MIN['0-12mo']
+                : ageMo < 24 ? WAKE_LOSS_MIN['12-24mo']
+                : WAKE_LOSS_MIN['24mo+'];
+  return wakes * perWake;
+}
+
 function computeSleepEfficiency() {
   const nights = _siGetNights(7);
   if (nights.length < 3) return { insufficient: true, count: nights.length, needed: 3 };
-
-  // Age-banded wake-loss: younger babies have shorter re-settle cycles;
-  // older babies need more active soothing per waking. Bands consume
-  // WAKE_LOSS_MIN constant defined in core.js.
-  function _wakeLossFor(dateStr, wakes) {
-    const ageMo = ageAt(dateStr).months;
-    const perWake = ageMo < 12 ? WAKE_LOSS_MIN['0-12mo']
-                  : ageMo < 24 ? WAKE_LOSS_MIN['12-24mo']
-                  : WAKE_LOSS_MIN['24mo+'];
-    return wakes * perWake;
-  }
 
   const results = nights.map(n => {
     const dur = calcSleepDuration(n.bedtime, n.wakeTime);
@@ -12666,16 +12667,18 @@ function renderInfoSleepEfficiency() {
     const longNights = _siGetNights(CAL_DAYS);
     if (longNights.length > 0) {
       const totalsByDate = {};
+      const lossByDate = {};
       longNights.forEach(n => {
         const dur = calcSleepDuration(n.bedtime, n.wakeTime);
         totalsByDate[n.dateStr] = (totalsByDate[n.dateStr] || 0) + (dur.total || 0);
+        lossByDate[n.dateStr] = (lossByDate[n.dateStr] || 0) + _wakeLossFor(n.dateStr, n.wakeUps || 0);
       });
       const todayD = new Date(today() + 'T12:00:00');
       const dayCells = [];
       for (let i = CAL_DAYS - 1; i >= 0; i--) {
         const d = new Date(todayD); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
-        dayCells.push({ ds, total: totalsByDate[ds] || null });
+        dayCells.push({ ds, total: totalsByDate[ds] || null, loss: lossByDate[ds] || 0 });
       }
       const VB_W = 280, VB_H = 88, PAD_L = 4, PAD_R = 4, PAD_T = 4, PAD_B = 14;
       const cols = Math.ceil(CAL_DAYS / 7);
@@ -12702,9 +12705,17 @@ function renderInfoSleepEfficiency() {
           fill = 'var(--cal-long)';
         }
         const title = cell.total !== null
-          ? cell.ds + ' · ' + Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm'
+          ? cell.ds + ' · ' + Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm' + (cell.loss > 0 ? ' · ' + cell.loss + 'min lost to wakings' : '')
           : cell.ds + ' · no data';
         svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '"><title>' + title + '</title></rect>';
+        // PR-EF V-K-11: wake-loss corner dot — surfaces "disrupted but
+        // long-enough" nights that the duration band alone can't distinguish.
+        // Threshold 45min ≈ 3+ wakings for a 12mo+ baby or 4+ for an infant.
+        if (cell.loss > 45 && cell.total !== null) {
+          const dotX = x + cellW - 2.5;
+          const dotY = y + 2.5;
+          svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95"/>';
+        }
       });
       // Legend
       const legendY = VB_H - 7;
@@ -12719,6 +12730,10 @@ function renderInfoSleepEfficiency() {
         svg += '<rect x="' + lx + '" y="' + (legendY - 4) + '" width="6" height="6" fill="' + item.c + '" opacity="0.9"/>';
         svg += '<text x="' + (lx + 9) + '" y="' + (legendY + 1) + '" font-size="6.5" fill="var(--mid)" font-family="Nunito">' + item.label + '</text>';
       });
+      // V-K-11: corner-dot legend entry for wake-loss disruption
+      const dotLx = PAD_L + 4 * 60;
+      svg += '<circle cx="' + (dotLx + 3) + '" cy="' + (legendY - 1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95"/>';
+      svg += '<text x="' + (dotLx + 9) + '" y="' + (legendY + 1) + '" font-size="6.5" fill="var(--mid)" font-family="Nunito">disrupted</text>';
       svg += '</svg>';
       html += svg;
     }
