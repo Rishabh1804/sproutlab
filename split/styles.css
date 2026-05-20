@@ -3703,6 +3703,83 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .confirm-box p { font-size:var(--fs-base); color:var(--text); margin-bottom:var(--sp-16); line-height:var(--lh-relaxed); }
 .confirm-btns { display:flex; gap:var(--sp-8); justify-content:center; }
 
+/* ── Viz detail popup (PR-I — viz interactivity layer) ── */
+/* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
+   HTML cell) gets a pointer cursor without a per-element class. */
+[data-action="vizShowDetail"] { cursor:pointer; }
+.viz-detail-overlay {
+  position:fixed; inset:0; background:rgba(60,40,40,0.24);
+  backdrop-filter:blur(3px);
+  /* Above the floating FAB + corner buttons (z-index 1000-1002) so the
+     bottom-sheet card is not occluded by them. */
+  z-index:1100;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn 0.15s ease;
+}
+.viz-detail-card {
+  background:var(--surface); width:100%; max-width:420px;
+  border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+  border-top:4px solid var(--vd-accent, var(--tc-lav));
+  box-shadow:0 -8px 44px rgba(0,0,0,0.18);
+  padding:var(--sp-20) var(--sp-24) var(--sp-24);
+  position:relative; animation:vizSheetUp 0.24s ease;
+}
+@keyframes vizSheetUp { from{opacity:0;transform:translateY(48px)} to{opacity:1;transform:translateY(0)} }
+@media (min-width:500px) {
+  .viz-detail-overlay { align-items:center; }
+  .viz-detail-card {
+    border-radius:var(--r-2xl); max-width:360px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.2); animation:popIn 0.22s ease;
+  }
+}
+.viz-detail-close {
+  position:absolute; top:var(--sp-8); right:var(--sp-8);
+  width:44px; height:44px; min-width:44px; min-height:44px;
+  border:none; background:transparent; color:var(--light);
+  cursor:pointer; border-radius:var(--r-md);
+  display:flex; align-items:center; justify-content:center;
+  transition:color var(--ease-fast);
+}
+.viz-detail-close:hover { color:var(--mid); }
+.viz-detail-head {
+  display:flex; align-items:center; gap:var(--sp-10);
+  margin-bottom:var(--sp-12); padding-right:var(--sp-32);
+}
+.viz-detail-icon {
+  width:36px; height:36px; border-radius:var(--r-lg); flex-shrink:0;
+  background:var(--vd-tint, var(--lav-light)); color:var(--vd-accent, var(--tc-lav));
+  display:flex; align-items:center; justify-content:center;
+}
+.viz-detail-titles { min-width:0; }
+.viz-detail-title {
+  font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600;
+  color:var(--text); line-height:var(--lh-tight);
+}
+.viz-detail-subtitle { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-2); }
+.viz-detail-rows { display:flex; flex-direction:column; }
+.viz-detail-row {
+  display:flex; justify-content:space-between; gap:var(--sp-16);
+  padding:var(--sp-8) 0; border-bottom:1px solid var(--surface-alt);
+}
+.viz-detail-row:last-child { border-bottom:none; }
+.viz-detail-row-label { font-size:var(--fs-sm); color:var(--mid); font-weight:600; flex-shrink:0; }
+.viz-detail-row-value {
+  font-size:var(--fs-sm); color:var(--text); font-weight:700;
+  text-align:right; word-break:break-word;
+}
+.viz-detail-note {
+  margin-top:var(--sp-12); padding:var(--sp-10) var(--sp-12);
+  background:var(--vd-tint, var(--lav-light)); border-radius:var(--r-lg);
+  font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed);
+}
+.viz-detail-sage   { --vd-accent:var(--tc-sage);   --vd-tint:var(--sage-light); }
+.viz-detail-rose   { --vd-accent:var(--tc-rose);   --vd-tint:var(--rose-light); }
+.viz-detail-amber  { --vd-accent:var(--tc-amber);  --vd-tint:var(--amber-light); }
+.viz-detail-lav    { --vd-accent:var(--tc-lav);    --vd-tint:var(--lav-light); }
+.viz-detail-sky    { --vd-accent:var(--tc-sky);    --vd-tint:var(--sky-light); }
+.viz-detail-indigo { --vd-accent:var(--tc-indigo); --vd-tint:var(--indigo-light); }
+.viz-detail-peach  { --vd-accent:var(--tc-amber);  --vd-tint:var(--peach-light); }
+
 /* ── Unity System: Shared utility classes ── */
 
 /* Flex layouts */
@@ -4898,6 +4975,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .visit-item { background:var(--surface-alt); }
 [data-theme="dark"] .confirm-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .confirm-box { background:var(--surface); }
+[data-theme="dark"] .viz-detail-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .pbadge.pb-rose { background:rgba(242,168,184,0.1); }
 [data-theme="dark"] .pbadge.pb-sky { background:rgba(168,207,224,0.1); }
 [data-theme="dark"] .pbadge.pb-sage { background:rgba(181,213,197,0.1); }

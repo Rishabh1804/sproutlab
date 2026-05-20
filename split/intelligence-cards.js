@@ -1113,8 +1113,16 @@ function renderInfoFoodIntro() {
     const weekDate = new Date(w.weekStart);
     const label = weekDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     const foodNames = w.foods.map(f => f.name).join(', ') || 'None';
+    const weekDetail = {
+      title: 'Foods This Week', subtitle: 'Week of ' + label, domain: 'sage', icon: 'bowl',
+      rows: [
+        { label: 'Week starting', value: label },
+        { label: 'New foods', value: w.count }
+      ],
+      note: foodNames === 'None' ? 'No new foods introduced this week.' : foodNames
+    };
     chartHtml += `
-      <div class="info-intro-bar-col" title="${foodNames}">
+      <div class="info-intro-bar-col" title="${foodNames}" data-action="vizShowDetail" data-arg="${vizArg(weekDetail)}">
         <div class="t-xs" style="color:var(--mid);font-weight:600;">${w.count}</div>
         <div class="info-intro-bar-track">
           <div class="info-intro-bar dyn-fill-h" style="--dyn-pct:${pct}%"></div>
@@ -1172,7 +1180,16 @@ function renderInfoFoodIntro() {
       const y = PAD_T + groupMap[groupLabel] * laneH + laneH / 2;
       const color = reactColor[f.reaction] || 'var(--tc-sage)';
       const dateLabel = new Date(f.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="' + color + '" opacity="0.75"><title>' + escHtml(f.name) + ' · ' + escHtml(dateLabel) + ' · ' + escHtml(f.reaction || 'safe') + '</title></circle>';
+      const rxLabel = { safe: 'Tolerated well', watch: 'Watch — mild reaction', avoid: 'Avoid — reaction noted' }[f.reaction] || 'Tolerated well';
+      const introDetail = {
+        title: f.name, subtitle: 'Introduced ' + dateLabel, domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Food group', value: groupLabel },
+          { label: 'Introduced', value: dateLabel },
+          { label: 'Reaction', value: rxLabel }
+        ]
+      };
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="' + color + '" opacity="0.75" data-action="vizShowDetail" data-arg="' + vizArg(introDetail) + '"><title>' + escHtml(f.name) + ' · ' + escHtml(dateLabel) + ' · ' + escHtml(f.reaction || 'safe') + '</title></circle>';
     });
     // X-axis date labels (endpoints)
     const startLbl = new Date(tMin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
@@ -1657,7 +1674,20 @@ function renderInfoComboFreq() {
       const densityLabel = p.density >= 4 ? 'Nutrient-rich' : p.density >= 2 ? 'Decent' : p.density === 0 ? 'Unknown' : 'Light';
       const densityColor = p.density >= 4 ? 'var(--tc-sage)' : p.density >= 2 ? 'var(--mid)' : 'var(--light)';
 
-      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;flex-wrap:wrap;">
+      const comboDetail = {
+        title: p.food1 + ' + ' + p.food2,
+        subtitle: p.count + '× in last ' + COMBO_WINDOW_DAYS + ' days',
+        domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Times paired', value: p.count + '×' },
+          { label: 'Nutrient density', value: densityLabel + ' (' + p.density + '/8)' },
+          { label: 'Key nutrients', value: p.keyNutsHit.length > 0 ? p.keyNutsHit.join(', ') : 'None tracked' },
+          p.synergy ? { label: 'Synergy', value: p.synergy.type } : null,
+          p.maxStreak >= 3 ? { label: 'Longest streak', value: p.maxStreak + ' days' } : null
+        ],
+        note: p.recommendation || ''
+      };
+      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;flex-wrap:wrap;" data-action="vizShowDetail" data-arg="${vizArg(comboDetail)}">
         <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--sage-light);border-radius:var(--r-xl);z-index:0;"></div>
         <div class="li-body" style="position:relative;z-index:1;min-width:0;">
           <div class="fx-row g4 fx-row-wrap" >
@@ -1889,7 +1919,15 @@ function renderInfoMealBreakdown() {
     const stats = data.mealStats[m.key];
     const topNutrients = Object.entries(stats.nutrientHits).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0).slice(0, 3).map(([k]) => k);
 
-    gridHtml += `<div class="mb-meal-card">
+    const mealCardDetail = {
+      title: m.label + ' Nutrition', subtitle: 'Last 7 days', domain: 'sage', icon: 'bowl',
+      rows: [
+        { label: 'Avg nutrient density', value: density },
+        { label: 'Key-nutrient coverage', value: pct + '%' },
+        { label: 'Top nutrients', value: topNutrients.length > 0 ? topNutrients.join(', ') : 'No data' }
+      ]
+    };
+    gridHtml += `<div class="mb-meal-card" data-action="vizShowDetail" data-arg="${vizArg(mealCardDetail)}">
       <div class="mb-meal-label">${m.emoji} ${m.label}</div>
       <div class="mb-meal-score" style="color:${density >= 3 ? 'var(--tc-sage)' : density >= 1.5 ? 'var(--tc-amber)' : 'var(--light)'};">${density}</div>
       <div class="mb-meal-nutrients">${topNutrients.length > 0 ? topNutrients.join(', ') : 'no data'}</div>
@@ -1904,7 +1942,14 @@ function renderInfoMealBreakdown() {
   MEAL_SLOTS.forEach(m => {
     const pct = data.distribution[m.key];
     if (pct > 0) {
-      gridHtml += `<div class="mb-dist-seg" style="flex:${pct};background:${m.color};" title="${m.label}: ${pct}%">${pct > 12 ? m.short : ''}</div>`;
+      const distDetail = {
+        title: m.label, subtitle: 'Share of daily meals', domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Meal', value: m.label },
+          { label: 'Share of meals', value: pct + '%' }
+        ]
+      };
+      gridHtml += `<div class="mb-dist-seg" style="flex:${pct};background:${m.color};" title="${m.label}: ${pct}%" data-action="vizShowDetail" data-arg="${vizArg(distDetail)}">${pct > 12 ? m.short : ''}</div>`;
     }
   });
   gridHtml += '</div>';
@@ -1953,7 +1998,15 @@ function renderInfoMealBreakdown() {
       } else {
         const alpha = score === 0 ? 0.08 : Math.min(0.2 + (score / 8) * 0.6, 0.8);
         const baseColor = MEAL_SLOTS[mi].color.replace(/[\d.]+\)$/, `${alpha})`);
-        weeklyHtml += `<div class="mb-weekly-cell" style="background:${baseColor};color:${score >= 3 ? 'var(--tc-sage)' : score > 0 ? 'var(--mid)' : 'var(--light)'};font-size:var(--fs-xs);">${score}</div>`;
+        const cellDetail = {
+          title: m.label, subtitle: dayLabel, domain: 'sage', icon: 'bowl',
+          rows: [
+            { label: 'Day', value: dayLabel },
+            { label: 'Meal', value: m.label },
+            { label: 'Nutrient score', value: score + ' / 8' }
+          ]
+        };
+        weeklyHtml += `<div class="mb-weekly-cell" style="background:${baseColor};color:${score >= 3 ? 'var(--tc-sage)' : score > 0 ? 'var(--mid)' : 'var(--light)'};font-size:var(--fs-xs);" data-action="vizShowDetail" data-arg="${vizArg(cellDetail)}">${score}</div>`;
       }
     });
     weeklyHtml += '</div>';
@@ -2160,7 +2213,16 @@ function renderInfoSmartPairing() {
     topHtml += '<div class="fx-col g4">';
     data.todayActionable.forEach(a => {
       const emoji = a.type === 'absorption' ? zi('link') : a.type === 'complete' ? zi('sparkle') : zi('sprout');
-      topHtml += `<div class="sp-pair-card">
+      const apDetail = {
+        title: a.food + ' + ' + a.partner, subtitle: 'Pairing suggestion', domain: 'lav', icon: 'sparkle',
+        rows: [
+          { label: 'Already have', value: a.food },
+          { label: 'Add', value: a.partner },
+          { label: 'Synergy type', value: a.type }
+        ],
+        note: a.reason
+      };
+      topHtml += `<div class="sp-pair-card" data-action="vizShowDetail" data-arg="${vizArg(apDetail)}">
         <div class="sp-pair-foods">${emoji} Add <strong>${escHtml(a.partner)}</strong> to pair with ${escHtml(a.food)}</div>
         <div class="sp-pair-reason">${escHtml(a.reason)}</div>
         <div><span class="sp-pair-type sp-type-${a.type}">${a.type}</span></div>
@@ -2176,7 +2238,12 @@ function renderInfoSmartPairing() {
     gapHtml += '<div class="t-sm fe-sub-label" >Fill Nutrient Gaps</div>';
     gapHtml += '<div class="fx-col g4">';
     data.gapSuggestions.forEach(g => {
-      gapHtml += `<div class="list-item li-row">
+      const gapDetail = {
+        title: g.nutrient + ' gap', subtitle: 'Foods that help', domain: 'amber', icon: 'bowl',
+        rows: [ { label: 'Nutrient gap', value: g.nutrient } ],
+        note: 'Try: ' + g.foods.join(', ')
+      };
+      gapHtml += `<div class="list-item li-row" data-action="vizShowDetail" data-arg="${vizArg(gapDetail)}">
         <div class="li-body">
           <span class="sp-gap-chip">${escHtml(g.nutrient)}</span>
           <span class="t-sm t-light" style="margin-top:2px;">Try ${g.foods.map(f => '<strong>' + escHtml(f) + '</strong>').join(', ')}</span>
@@ -2198,7 +2265,15 @@ function renderInfoSmartPairing() {
       if (p.gapsFilled && p.gapsFilled.length > 0) {
         extra = ` · fills ${p.gapsFilled.slice(0, 2).join(', ')} gap`;
       }
-      unusedHtml += `<div class="sp-pair-card">
+      const upDetail = {
+        title: p.food1 + ' + ' + p.food2, subtitle: 'Untried synergy', domain: 'lav', icon: 'sparkle',
+        rows: [
+          { label: 'Pair', value: p.food1 + ' + ' + p.food2 },
+          { label: 'Synergy type', value: p.type }
+        ],
+        note: p.reason + extra
+      };
+      unusedHtml += `<div class="sp-pair-card" data-action="vizShowDetail" data-arg="${vizArg(upDetail)}">
         <div class="sp-pair-foods">${emoji} ${escHtml(p.food1)} + ${escHtml(p.food2)}</div>
         <div class="sp-pair-reason">${escHtml(p.reason)}${extra}</div>
         <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
@@ -2236,7 +2311,13 @@ function renderInfoFeedingIntake() {
       if (intake === 0 || intake === '0' || intake === 'none') return 'none';
       return 'untagged'; // meal logged but intake not recorded
     });
-    days.push({ ds, meals });
+    // Parallel array of the logged food text per meal — fed into the
+    // per-cell detail popup so a tap answers "what did she eat?".
+    const mealFoods = MEAL_KEYS.map(k => {
+      const v = entry[k];
+      return (v && v !== SKIPPED_MEAL) ? v : '';
+    });
+    days.push({ ds, meals, mealFoods });
   }
 
   // Aggregate stats
@@ -2292,7 +2373,18 @@ function renderInfoFeedingIntake() {
         // Diagonal-stripe hatch via small pattern marks
         svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="var(--surface-sage)" opacity="0.3"/>';
       } else {
-        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="' + fill + '" opacity="0.85"><title>' + d.ds + ' · ' + MEAL_KEYS[mIdx] + ' · ' + state + '</title></rect>';
+        const mealName = MEAL_KEYS[mIdx].charAt(0).toUpperCase() + MEAL_KEYS[mIdx].slice(1);
+        const stateLabel = { full: 'Ate fully', partial: 'Ate partially', none: 'Refused', untagged: 'Intake not tagged' }[state] || state;
+        const intakeDetail = {
+          title: mealName, subtitle: formatDate(d.ds), domain: 'sage', icon: 'bowl',
+          rows: [
+            { label: 'Date', value: formatDate(d.ds) },
+            { label: 'Meal', value: mealName },
+            { label: 'Intake', value: stateLabel },
+            { label: 'Food', value: d.mealFoods[mIdx] || 'Not recorded' }
+          ]
+        };
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="' + fill + '" opacity="0.85" data-action="vizShowDetail" data-arg="' + vizArg(intakeDetail) + '"><title>' + d.ds + ' · ' + MEAL_KEYS[mIdx] + ' · ' + state + '</title></rect>';
       }
     });
   });

@@ -3710,6 +3710,83 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .confirm-box p { font-size:var(--fs-base); color:var(--text); margin-bottom:var(--sp-16); line-height:var(--lh-relaxed); }
 .confirm-btns { display:flex; gap:var(--sp-8); justify-content:center; }
 
+/* ── Viz detail popup (PR-I — viz interactivity layer) ── */
+/* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
+   HTML cell) gets a pointer cursor without a per-element class. */
+[data-action="vizShowDetail"] { cursor:pointer; }
+.viz-detail-overlay {
+  position:fixed; inset:0; background:rgba(60,40,40,0.24);
+  backdrop-filter:blur(3px);
+  /* Above the floating FAB + corner buttons (z-index 1000-1002) so the
+     bottom-sheet card is not occluded by them. */
+  z-index:1100;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn 0.15s ease;
+}
+.viz-detail-card {
+  background:var(--surface); width:100%; max-width:420px;
+  border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+  border-top:4px solid var(--vd-accent, var(--tc-lav));
+  box-shadow:0 -8px 44px rgba(0,0,0,0.18);
+  padding:var(--sp-20) var(--sp-24) var(--sp-24);
+  position:relative; animation:vizSheetUp 0.24s ease;
+}
+@keyframes vizSheetUp { from{opacity:0;transform:translateY(48px)} to{opacity:1;transform:translateY(0)} }
+@media (min-width:500px) {
+  .viz-detail-overlay { align-items:center; }
+  .viz-detail-card {
+    border-radius:var(--r-2xl); max-width:360px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.2); animation:popIn 0.22s ease;
+  }
+}
+.viz-detail-close {
+  position:absolute; top:var(--sp-8); right:var(--sp-8);
+  width:44px; height:44px; min-width:44px; min-height:44px;
+  border:none; background:transparent; color:var(--light);
+  cursor:pointer; border-radius:var(--r-md);
+  display:flex; align-items:center; justify-content:center;
+  transition:color var(--ease-fast);
+}
+.viz-detail-close:hover { color:var(--mid); }
+.viz-detail-head {
+  display:flex; align-items:center; gap:var(--sp-10);
+  margin-bottom:var(--sp-12); padding-right:var(--sp-32);
+}
+.viz-detail-icon {
+  width:36px; height:36px; border-radius:var(--r-lg); flex-shrink:0;
+  background:var(--vd-tint, var(--lav-light)); color:var(--vd-accent, var(--tc-lav));
+  display:flex; align-items:center; justify-content:center;
+}
+.viz-detail-titles { min-width:0; }
+.viz-detail-title {
+  font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600;
+  color:var(--text); line-height:var(--lh-tight);
+}
+.viz-detail-subtitle { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-2); }
+.viz-detail-rows { display:flex; flex-direction:column; }
+.viz-detail-row {
+  display:flex; justify-content:space-between; gap:var(--sp-16);
+  padding:var(--sp-8) 0; border-bottom:1px solid var(--surface-alt);
+}
+.viz-detail-row:last-child { border-bottom:none; }
+.viz-detail-row-label { font-size:var(--fs-sm); color:var(--mid); font-weight:600; flex-shrink:0; }
+.viz-detail-row-value {
+  font-size:var(--fs-sm); color:var(--text); font-weight:700;
+  text-align:right; word-break:break-word;
+}
+.viz-detail-note {
+  margin-top:var(--sp-12); padding:var(--sp-10) var(--sp-12);
+  background:var(--vd-tint, var(--lav-light)); border-radius:var(--r-lg);
+  font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed);
+}
+.viz-detail-sage   { --vd-accent:var(--tc-sage);   --vd-tint:var(--sage-light); }
+.viz-detail-rose   { --vd-accent:var(--tc-rose);   --vd-tint:var(--rose-light); }
+.viz-detail-amber  { --vd-accent:var(--tc-amber);  --vd-tint:var(--amber-light); }
+.viz-detail-lav    { --vd-accent:var(--tc-lav);    --vd-tint:var(--lav-light); }
+.viz-detail-sky    { --vd-accent:var(--tc-sky);    --vd-tint:var(--sky-light); }
+.viz-detail-indigo { --vd-accent:var(--tc-indigo); --vd-tint:var(--indigo-light); }
+.viz-detail-peach  { --vd-accent:var(--tc-amber);  --vd-tint:var(--peach-light); }
+
 /* ── Unity System: Shared utility classes ── */
 
 /* Flex layouts */
@@ -4905,6 +4982,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .visit-item { background:var(--surface-alt); }
 [data-theme="dark"] .confirm-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .confirm-box { background:var(--surface); }
+[data-theme="dark"] .viz-detail-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .pbadge.pb-rose { background:rgba(242,168,184,0.1); }
 [data-theme="dark"] .pbadge.pb-sky { background:rgba(168,207,224,0.1); }
 [data-theme="dark"] .pbadge.pb-sage { background:rgba(181,213,197,0.1); }
@@ -17009,6 +17087,8 @@ function init() {
     else if (action === 'checkFoodCombo') checkFoodCombo();
     else if (action === 'openGrowthModal') openGrowthModal();
     else if (action === 'openGrowthChart') openGrowthChartModal();
+    else if (action === 'vizShowDetail') vizShowDetail(arg);
+    else if (action === 'vizCloseDetail') history.back();
     else if (action === 'toggleSettingsSidebar') toggleSettingsSidebar();
     else if (action === 'closeSettingsSidebar') closeSettingsSidebar();
     else if (action === 'closeScorePopup') closeScorePopup();
@@ -20126,6 +20206,9 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 // ── Back gesture / back button closes overlays instead of leaving the page ──
 window.addEventListener('popstate', e => {
   const state = e.state;
+  // Close the viz detail popup first — it sits above modals (PR-I).
+  const vizDetail = document.querySelector('.viz-detail-overlay');
+  if (vizDetail) { vizDetail.remove(); return; }
   // Close any open overlay
   const cropOverlay = document.getElementById('cropOverlay');
   if (cropOverlay && cropOverlay.classList.contains('open')) { closeCrop(); return; }
@@ -20166,6 +20249,84 @@ function confirmAction(msg, callback, btnText) {
   overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+// ─────────────────────────────────────────
+// VIZ DETAIL POPUP (PR-I — viz interactivity layer)
+// ─────────────────────────────────────────
+// Generic tap-to-detail primitive shared by every info-tab trend graph.
+// SVG <title> tooltips degrade to nothing on touch devices — a parent
+// tapping a dot/cell/bar/segment gets the full record instead. Each viz
+// emits data-action="vizShowDetail" data-arg="{json}" on its data
+// elements; the JSON is one `detail` object built by the viz's own
+// formatter. HR-6 delegation routes the tap here; HR-3 — no inline
+// handlers.
+
+// vizArg — encode a detail object into a double-quoted HTML attribute.
+// escHtml is unsuitable here: it rewrites \n to <br> (corrupts JSON) and
+// leaves " unescaped (breaks the attribute). JSON.stringify already
+// escapes \, " and control chars within string values; we only need to
+// HTML-escape the quote and angle/amp glyphs so the attribute parses.
+function vizArg(detail) {
+  return JSON.stringify(detail)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// vizDetailPopup — render a warm, domain-accented detail card.
+// detail: { title, subtitle, domain, icon, rows:[{label,value}], note }
+// domain ∈ sage|rose|amber|lav|sky|indigo|peach (defaults to lav).
+var VIZ_DETAIL_DOMAINS = { sage:1, rose:1, amber:1, lav:1, sky:1, indigo:1, peach:1 };
+function vizDetailPopup(detail) {
+  if (!detail || typeof detail !== 'object') return;
+  // Re-tapping a data element while a popup is open swaps content in place;
+  // only the first open pushes a history entry, so one back-gesture closes.
+  var alreadyOpen = !!document.querySelector('.viz-detail-overlay');
+  closeVizDetailPopup();
+  var domain = VIZ_DETAIL_DOMAINS[detail.domain] ? detail.domain : 'lav';
+  var rowsHtml = '';
+  (detail.rows || []).forEach(function(r) {
+    if (!r || r.label == null) return;
+    rowsHtml += '<div class="viz-detail-row">'
+      + '<span class="viz-detail-row-label">' + escHtml(r.label) + '</span>'
+      + '<span class="viz-detail-row-value">' + escHtml(r.value == null ? '' : String(r.value)) + '</span>'
+      + '</div>';
+  });
+  var overlay = document.createElement('div');
+  overlay.className = 'viz-detail-overlay';
+  overlay.innerHTML =
+    '<div class="viz-detail-card viz-detail-' + domain + '" role="dialog" aria-modal="true" aria-label="'
+      + escHtml(detail.title || 'Detail') + '">'
+    + '<button class="viz-detail-close" data-action="vizCloseDetail" aria-label="Close">' + zi('close') + '</button>'
+    + '<div class="viz-detail-head">'
+    + (detail.icon ? '<span class="viz-detail-icon">' + zi(detail.icon) + '</span>' : '')
+    + '<div class="viz-detail-titles">'
+    + '<div class="viz-detail-title">' + escHtml(detail.title || 'Detail') + '</div>'
+    + (detail.subtitle ? '<div class="viz-detail-subtitle">' + escHtml(detail.subtitle) + '</div>' : '')
+    + '</div></div>'
+    + (rowsHtml ? '<div class="viz-detail-rows">' + rowsHtml + '</div>' : '')
+    + (detail.note ? '<div class="viz-detail-note">' + escHtml(detail.note) + '</div>' : '')
+    + '</div>';
+  overlay.onclick = function(e) { if (e.target === overlay) history.back(); };
+  document.body.appendChild(overlay);
+  if (!alreadyOpen) history.pushState({ overlay: 'vizDetail' }, '');
+}
+
+function closeVizDetailPopup() {
+  var overlay = document.querySelector('.viz-detail-overlay');
+  if (overlay) overlay.remove();
+}
+
+// vizShowDetail — delegation entry point. arg is the vizArg-encoded JSON
+// string (the browser has already HTML-decoded the attribute on read).
+function vizShowDetail(argJson) {
+  if (!argJson) return;
+  var detail;
+  try { detail = JSON.parse(argJson); }
+  catch (e) { return; }
+  vizDetailPopup(detail);
 }
 
 // ─────────────────────────────────────────
@@ -41717,7 +41878,15 @@ function renderInfoPoopConsistencyTrend() {
         const y = PAD_T + rIdx * rowH;
         const opacity = count >= 3 ? 0.95 : count === 2 ? 0.7 : 0.45;
         const fill = data.CON_COLORS[con] || 'var(--tc-sage)';
-        html += '<rect x="' + x.toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + (rowH - 1).toFixed(1) + '" fill="' + fill + '" opacity="' + opacity + '"><title>' + d.dateStr + ' · ' + conLabels[con] + ' · ' + count + '</title></rect>';
+        const bristolDetail = {
+          title: 'Stool Consistency', subtitle: formatDate(d.dateStr), domain: 'amber', icon: 'diaper',
+          rows: [
+            { label: 'Date', value: formatDate(d.dateStr) },
+            { label: 'Consistency', value: conLabels[con] },
+            { label: 'Times that day', value: count }
+          ]
+        };
+        html += '<rect x="' + x.toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + (rowH - 1).toFixed(1) + '" fill="' + fill + '" opacity="' + opacity + '" data-action="vizShowDetail" data-arg="' + vizArg(bristolDetail) + '"><title>' + d.dateStr + ' · ' + conLabels[con] + ' · ' + count + '</title></rect>';
       });
     });
     // X-axis endpoint labels
@@ -42300,7 +42469,15 @@ function renderInfoPoopColorAnomaly() {
     const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
     sortedColors.forEach(([color, count]) => {
       const pct = (count / data.total) * 100;
-      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '"></div>';
+      const colorDistDetail = {
+        title: 'Stool Colour', subtitle: 'Across all entries', domain: 'amber', icon: 'diaper',
+        rows: [
+          { label: 'Colour', value: color.charAt(0).toUpperCase() + color.slice(1) },
+          { label: 'Entries', value: count },
+          { label: 'Share', value: Math.round(pct) + '%' }
+        ]
+      };
+      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '" data-action="vizShowDetail" data-arg="' + vizArg(colorDistDetail) + '"></div>';
     });
     html += '</div>';
     // Color legend
@@ -42341,7 +42518,15 @@ function renderInfoPoopColorAnomaly() {
           if (!counts[color]) return;
           const segH = (counts[color] / totalCount) * colH;
           const fill = COLOR_TOKEN[color] || 'var(--tc-amber)';
-          svg += '<rect x="' + x.toFixed(1) + '" y="' + yCursor.toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + segH.toFixed(1) + '" fill="' + fill + '" opacity="0.9"><title>' + d + ' · ' + color + ' · ' + counts[color] + '</title></rect>';
+          const colorStreamDetail = {
+            title: 'Stool Colour', subtitle: formatDate(d), domain: 'amber', icon: 'diaper',
+            rows: [
+              { label: 'Date', value: formatDate(d) },
+              { label: 'Colour', value: color.charAt(0).toUpperCase() + color.slice(1) },
+              { label: 'Times that day', value: counts[color] }
+            ]
+          };
+          svg += '<rect x="' + x.toFixed(1) + '" y="' + yCursor.toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + segH.toFixed(1) + '" fill="' + fill + '" opacity="0.9" data-action="vizShowDetail" data-arg="' + vizArg(colorStreamDetail) + '"><title>' + d + ' · ' + color + ' · ' + counts[color] + '</title></rect>';
           yCursor += segH;
         });
       });
@@ -43055,13 +43240,25 @@ function renderInfoMilestoneVelocity() {
         // CATEGORY hue with STATUS-tier opacity, so the parent reads
         // category-balance from color regions and maturity-depth from intensity.
         const hue = CAT_HUE[cat] || 'var(--tc-sage)';
+        const CAT_DOMAIN = { motor: 'sage', social: 'lav', language: 'sky', cognitive: 'amber' };
         let cursorY = y;
         STATUSES.forEach(st => {
           const ct = catStatusCounts[cat][st];
           if (ct === 0) return;
           const subH = (ct / total) * h;
           const opacity = STATUS_OPACITY[st] || 0.5;
-          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + hue + '" opacity="' + opacity + '" stroke="white" stroke-width="1"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
+          const catCap = cat.charAt(0).toUpperCase() + cat.slice(1);
+          const stCap = st.charAt(0).toUpperCase() + st.slice(1);
+          const treeDetail = {
+            title: catCap + ' Milestones', subtitle: stCap + ' stage',
+            domain: CAT_DOMAIN[cat] || 'lav', icon: 'star',
+            rows: [
+              { label: 'Category', value: catCap },
+              { label: 'Stage', value: stCap },
+              { label: 'Milestones', value: ct }
+            ]
+          };
+          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + hue + '" opacity="' + opacity + '" stroke="white" stroke-width="1" data-action="vizShowDetail" data-arg="' + vizArg(treeDetail) + '"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
           // Status label inside sub-strip only when it fits (V-K-31: avoid overflow).
           // Conservative bounds: need subH >= 16 AND w >= 60 AND room for the
           // cat-header at the top of the block (skip status label that lands in
@@ -43678,7 +43875,16 @@ function renderInfoVaccGantt() {
       const fill = dose.upcoming ? 'transparent' : 'var(--tc-lav)';
       const stroke = dose.upcoming ? 'var(--tc-amber)' : 'var(--tc-lav)';
       const dateLabel = new Date(dose.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"><title>' + escHtml(dose.name) + ' · ' + escHtml(dateLabel) + (dose.upcoming ? ' · upcoming' : '') + '</title></circle>';
+      const ganttDetail = {
+        title: dose.name, subtitle: dose.upcoming ? 'Upcoming dose' : 'Completed dose',
+        domain: 'lav', icon: 'syringe',
+        rows: [
+          { label: 'Series', value: seriesName },
+          { label: dose.upcoming ? 'Scheduled' : 'Given', value: dateLabel },
+          { label: 'Status', value: dose.upcoming ? 'Upcoming' : 'Completed' }
+        ]
+      };
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5" data-action="vizShowDetail" data-arg="' + vizArg(ganttDetail) + '"><title>' + escHtml(dose.name) + ' · ' + escHtml(dateLabel) + (dose.upcoming ? ' · upcoming' : '') + '</title></circle>';
     });
   });
   // X-axis endpoint labels
@@ -44403,7 +44609,16 @@ function renderInfoRepetition() {
     data.all.forEach(f => {
       const isFatigued = f.pct >= 60 && f.streak >= 5;
       const barColor = isFatigued ? 'var(--tc-rose)' : f.pct >= 50 ? 'var(--tc-amber)' : 'var(--tc-sage)';
-      html += '<div class="mi-food-row">';
+      const repDetail = {
+        title: f.food, subtitle: 'Last ' + data.totalDays + ' days',
+        domain: isFatigued ? 'rose' : f.pct >= 50 ? 'amber' : 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Appears on', value: f.pct + '% of days' },
+          { label: 'Longest streak', value: f.streak + ' day' + (f.streak !== 1 ? 's' : '') },
+          { label: 'Status', value: isFatigued ? 'Over-repeated' : f.pct >= 50 ? 'Nearing repetition' : 'Good variety' }
+        ]
+      };
+      html += '<div class="mi-food-row" data-action="vizShowDetail" data-arg="' + vizArg(repDetail) + '">';
       html += '<div class="mi-food-name">' + f.food + '</div>';
       html += '<div class="mi-food-bar"><div class="mi-food-fill" style="width:' + f.pct + '%;background:' + barColor + ';"></div></div>';
       html += '<div class="mi-food-count">' + f.pct + '% · ' + f.streak + 'd</div>';
@@ -44621,7 +44836,16 @@ function renderInfoTexture() {
       const isCurrent = stage.key === data.currentStage;
       const firstDate = data.firstSeen[stage.key];
 
-      html += '<div class="mi-tex-stage">';
+      const texStageDetail = {
+        title: stage.label, subtitle: isCurrent ? 'Current texture stage' : 'Texture stage',
+        domain: 'sage', icon: 'spoon',
+        rows: count > 0 ? [
+          { label: 'Days at this texture', value: count },
+          { label: 'Share', value: pct + '%' },
+          firstDate ? { label: 'First seen', value: formatDate(firstDate).replace(/, \d{4}$/, '') } : null
+        ] : [ { label: 'Status', value: 'Not yet introduced' } ]
+      };
+      html += '<div class="mi-tex-stage" data-action="vizShowDetail" data-arg="' + vizArg(texStageDetail) + '">';
       html += '<div class="mi-tex-icon" style="background:' + (count > 0 ? stage.color : 'var(--surface-alt)') + ';' + (isCurrent ? 'box-shadow:0 0 0 2px ' + stage.color + ';' : '') + '">' + stage.icon + '</div>';
       html += '<div class="mi-tex-info">';
       html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">' + zi('dot-red') + ' current</span>' : '') + '</div>';
@@ -44656,7 +44880,15 @@ function renderInfoTexture() {
             html += '<div class="mi-tex-week-cell t-light" >·</div>';
           } else {
             const cls = 'mi-tex-' + s.key;
-            html += '<div class="mi-tex-week-cell ' + cls + '">' + count + '</div>';
+            const texCellDetail = {
+              title: s.label, subtitle: w.label, domain: 'sage', icon: 'spoon',
+              rows: [
+                { label: 'Week', value: w.label },
+                { label: 'Texture', value: s.label },
+                { label: 'Days', value: count }
+              ]
+            };
+            html += '<div class="mi-tex-week-cell ' + cls + '" data-action="vizShowDetail" data-arg="' + vizArg(texCellDetail) + '">' + count + '</div>';
           }
         });
       });
@@ -52661,7 +52893,16 @@ function renderInfoAdoption() {
     }
     if (isToday) cls += ' sa-cell-today';
     const title = d.rate !== null ? (d.date + ': ' + Math.round(d.rate * 100) + '% (' + d.adopted + '/' + d.items + ')') : (d.date + ': no suggestions');
-    hmHtml += '<div class="' + cls + '" title="' + title + '"></div>';
+    const adoptDetail = d.rate !== null ? {
+      title: 'Suggestion Adoption', subtitle: formatDate(d.date), domain: 'lav', icon: 'sparkle',
+      rows: [
+        { label: 'Date', value: formatDate(d.date) },
+        { label: 'Adopted', value: d.adopted + ' of ' + d.items },
+        { label: 'Adoption rate', value: Math.round(d.rate * 100) + '%' }
+      ]
+    } : null;
+    const adoptAttr = adoptDetail ? ' data-action="vizShowDetail" data-arg="' + vizArg(adoptDetail) + '"' : '';
+    hmHtml += '<div class="' + cls + '" title="' + title + '"' + adoptAttr + '></div>';
   });
   hmHtml += '</div>';
   if (heatmapEl) heatmapEl.innerHTML = hmHtml;
@@ -52678,7 +52919,15 @@ function renderInfoAdoption() {
     const d = data.byType[tc.key];
     const pct = d.total > 0 ? Math.round((d.adopted / d.total) * 100) : 0;
     const fillW = d.total > 0 ? pct : 0;
-    typesHtml += '<div class="sa-type-row">';
+    const typeDetail = {
+      title: tc.label + ' Suggestions', subtitle: 'Adoption breakdown', domain: 'lav', icon: 'sparkle',
+      rows: [
+        { label: 'Type', value: tc.label },
+        { label: 'Adopted', value: d.adopted + ' of ' + d.total },
+        { label: 'Adoption rate', value: pct + '%' }
+      ]
+    };
+    typesHtml += '<div class="sa-type-row" data-action="vizShowDetail" data-arg="' + vizArg(typeDetail) + '">';
     typesHtml += '<div class="sa-type-icon">' + tc.icon + '</div>';
     typesHtml += '<div class="sa-type-label">' + tc.label + '</div>';
     typesHtml += '<div class="sa-type-bar"><div class="sa-type-fill ' + tc.fillCls + '" style="width:' + fillW + '%;"></div></div>';
@@ -58506,7 +58755,15 @@ function renderInfoSleepBedtimeDrift() {
 
     // Dots
     pts.forEach((p, i) => {
-      svg += '<circle cx="' + scaleX(i) + '" cy="' + scaleY(p.min) + '" r="3.5" fill="var(--tc-indigo)" opacity="0.8"/>';
+      const bedStr = _siMinToBedtime(p.min);
+      const driftDetail = {
+        title: 'Bedtime', subtitle: formatDate(p.date), domain: 'indigo', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(p.date) },
+          { label: 'Bedtime', value: bedStr }
+        ]
+      };
+      svg += '<circle cx="' + scaleX(i) + '" cy="' + scaleY(p.min) + '" r="3.5" fill="var(--tc-indigo)" opacity="0.8" data-action="vizShowDetail" data-arg="' + vizArg(driftDetail) + '"><title>' + escHtml(formatDate(p.date) + ' · ' + bedStr) + '</title></circle>';
     });
 
     // Y-axis labels
@@ -58644,17 +58901,29 @@ function renderInfoSleepEfficiency() {
         } else {
           fill = 'var(--cal-long)';
         }
-        const title = cell.total !== null
-          ? cell.ds + ' · ' + Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm' + (cell.loss > 0 ? ' · ' + cell.loss + 'min lost to wakings' : '')
+        const hadSleep = cell.total !== null;
+        const totalStr = hadSleep ? Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm' : '';
+        const title = hadSleep
+          ? cell.ds + ' · ' + totalStr + (cell.loss > 0 ? ' · ' + cell.loss + 'min lost to wakings' : '')
           : cell.ds + ' · no data';
-        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '"><title>' + title + '</title></rect>';
+        const calDetail = {
+          title: 'Night Sleep', subtitle: formatDate(cell.ds), domain: 'sky', icon: 'moon',
+          rows: hadSleep ? [
+            { label: 'Date', value: formatDate(cell.ds) },
+            { label: 'Total sleep', value: totalStr },
+            { label: 'Lost to wakings', value: cell.loss > 0 ? cell.loss + ' min' : 'None' }
+          ] : [ { label: 'Date', value: formatDate(cell.ds) } ],
+          note: hadSleep ? '' : 'No sleep logged this night.'
+        };
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '" data-action="vizShowDetail" data-arg="' + vizArg(calDetail) + '"><title>' + title + '</title></rect>';
         // PR-EF V-K-11: wake-loss corner dot — surfaces "disrupted but
         // long-enough" nights that the duration band alone can't distinguish.
         // Threshold 45min ≈ 3+ wakings for a 12mo+ baby or 4+ for an infant.
         if (cell.loss > 45 && cell.total !== null) {
           const dotX = x + cellW - 2.5;
           const dotY = y + 2.5;
-          svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95"/>';
+          // pointer-events:none — taps fall through to the cell rect beneath.
+          svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95" pointer-events="none"/>';
         }
       });
       // Legend
@@ -58682,7 +58951,17 @@ function renderInfoSleepEfficiency() {
     data.results.forEach(r => {
       const color = r.efficiency >= 85 ? 'var(--tc-sage)' : r.efficiency >= 70 ? 'var(--tc-amber)' : 'var(--tc-danger)';
       const dayLabel = formatDate(r.dateStr).slice(0, 6);
-      html += '<div class="si-bar-row">';
+      const effDetail = {
+        title: 'Sleep Efficiency', subtitle: formatDate(r.dateStr), domain: 'sky', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(r.dateStr) },
+          { label: 'Total sleep', value: Math.floor(r.totalMin / 60) + 'h ' + (r.totalMin % 60) + 'm' },
+          { label: 'Effective sleep', value: Math.floor(r.effectiveMin / 60) + 'h ' + (r.effectiveMin % 60) + 'm' },
+          { label: 'Wake-ups', value: r.wakes },
+          { label: 'Efficiency', value: r.efficiency + '%' }
+        ]
+      };
+      html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(effDetail) + '">';
       html += '<div class="si-bar-label">' + dayLabel + '</div>';
       html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + r.efficiency + '%;background:' + color + ';"></div></div>';
       html += '<div class="si-bar-val" style="color:' + color + ';">' + r.efficiency + '%</div>';
@@ -58812,7 +59091,18 @@ function renderInfoSleepWakeWindows() {
       showDay.sleepBlocks.forEach((b, i) => {
         // Sleep block
         const dur = calcSleepDuration(b.bed, b.wake);
-        html += '<div class="si-ww-block si-ww-sleep" title="Sleep">' + (b.type === 'night' ? zi('moon') : zi('zzz')) + '<span>' + dur.h + 'h' + (dur.m > 0 ? dur.m : '') + '</span></div>';
+        const sbDetail = {
+          title: b.type === 'night' ? 'Night Sleep' : 'Nap',
+          subtitle: formatDate(showDay.dateStr), domain: 'sky',
+          icon: b.type === 'night' ? 'moon' : 'zzz',
+          rows: [
+            { label: 'Type', value: b.type === 'night' ? 'Night sleep' : 'Nap' },
+            { label: 'Asleep', value: b.bed },
+            { label: 'Awake', value: b.wake },
+            { label: 'Duration', value: dur.h + 'h ' + dur.m + 'm' }
+          ]
+        };
+        html += '<div class="si-ww-block si-ww-sleep" title="Sleep" data-action="vizShowDetail" data-arg="' + vizArg(sbDetail) + '">' + (b.type === 'night' ? zi('moon') : zi('zzz')) + '<span>' + dur.h + 'h' + (dur.m > 0 ? dur.m : '') + '</span></div>';
         // Wake window after this block (if not last)
         if (i < showDay.windows.length) {
           const ww = showDay.windows[i];
@@ -58820,7 +59110,16 @@ function renderInfoSleepWakeWindows() {
           const wwM = ww.gapMin % 60;
           const wwColor = ww.gapMin > data.idealMax ? 'rgba(240,180,80,0.15)' : ww.gapMin < data.idealMin ? 'rgba(155,168,216,0.15)' : 'rgba(58,112,96,0.1)';
           const wwTextColor = ww.gapMin > data.idealMax ? 'var(--tc-amber)' : ww.gapMin < data.idealMin ? 'var(--tc-indigo)' : 'var(--tc-sage)';
-          html += '<div class="si-ww-block si-ww-wake" style="background:' + wwColor + ';color:' + wwTextColor + ';">'+zi('sun')+'<span>' + wwH + 'h' + (wwM > 0 ? wwM : '') + '</span></div>';
+          const wwStatus = ww.gapMin > data.idealMax ? 'Longer than ideal' : ww.gapMin < data.idealMin ? 'Shorter than ideal' : 'Well-timed';
+          const wwDetail = {
+            title: 'Wake Window', subtitle: formatDate(showDay.dateStr), domain: 'amber', icon: 'sun',
+            rows: [
+              { label: 'Awake for', value: wwH + 'h ' + wwM + 'm' },
+              { label: 'Ideal range', value: idealStr },
+              { label: 'Assessment', value: wwStatus }
+            ]
+          };
+          html += '<div class="si-ww-block si-ww-wake" style="background:' + wwColor + ';color:' + wwTextColor + ';" data-action="vizShowDetail" data-arg="' + vizArg(wwDetail) + '">'+zi('sun')+'<span>' + wwH + 'h' + (wwM > 0 ? wwM : '') + '</span></div>';
         }
       });
       html += '</div>';
@@ -59227,7 +59526,17 @@ function renderInfoSleepDayNight() {
     data.bucketStats.forEach(b => {
       const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
       const isOpt = data.optimal && b.napCount === data.optimal.napCount;
-      html += '<div class="si-bar-row">';
+      const bucketDetail = {
+        title: 'Nap Count vs Sleep',
+        subtitle: b.napCount + ' nap' + (b.napCount !== 1 ? 's' : '') + ' per day',
+        domain: 'indigo', icon: 'zzz',
+        rows: [
+          { label: 'Naps that day', value: b.napCount },
+          { label: 'Avg night score', value: b.avgScore },
+          { label: 'Days observed', value: b.days }
+        ]
+      };
+      html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(bucketDetail) + '">';
       html += '<div class="si-bar-label">' + b.napCount + ' nap' + (b.napCount !== 1 ? 's' : '') + '</div>';
       html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isOpt ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
       html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + '</div>';
@@ -59240,7 +59549,15 @@ function renderInfoSleepDayNight() {
       data.bandStats.forEach(b => {
         const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
         const isBest = data.bestBand && b.band === data.bestBand.band;
-        html += '<div class="si-bar-row">';
+        const bandDetail = {
+          title: 'Nap Duration vs Sleep', subtitle: b.label, domain: 'indigo', icon: 'zzz',
+          rows: [
+            { label: 'Nap duration', value: b.label },
+            { label: 'Avg night score', value: b.avgScore },
+            { label: 'Days observed', value: b.days }
+          ]
+        };
+        html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(bandDetail) + '">';
         html += '<div class="si-bar-label">' + b.label + '</div>';
         html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isBest ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
         html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + ' <span style="font-size:var(--fs-2xs);color:var(--light);font-weight:400;">(' + b.days + 'd)</span></div>';
@@ -59666,7 +59983,14 @@ function renderInfoSleepRegression() {
     recentSorted.forEach(d => {
       const pct = Math.max(8, d.score);
       const color = d.score >= 70 ? 'var(--tc-sage)' : d.score >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
-      html += '<div class="si-reg-col" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '"></div>';
+      const regDetail = {
+        title: 'Sleep Score', subtitle: formatDate(d.dateStr), domain: 'indigo', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(d.dateStr) },
+          { label: 'Sleep score', value: d.score + ' / 100' }
+        ]
+      };
+      html += '<div class="si-reg-col" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '" data-action="vizShowDetail" data-arg="' + vizArg(regDetail) + '"></div>';
     });
     html += '</div>';
 
@@ -60826,8 +61150,16 @@ function renderInfoFoodIntro() {
     const weekDate = new Date(w.weekStart);
     const label = weekDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     const foodNames = w.foods.map(f => f.name).join(', ') || 'None';
+    const weekDetail = {
+      title: 'Foods This Week', subtitle: 'Week of ' + label, domain: 'sage', icon: 'bowl',
+      rows: [
+        { label: 'Week starting', value: label },
+        { label: 'New foods', value: w.count }
+      ],
+      note: foodNames === 'None' ? 'No new foods introduced this week.' : foodNames
+    };
     chartHtml += `
-      <div class="info-intro-bar-col" title="${foodNames}">
+      <div class="info-intro-bar-col" title="${foodNames}" data-action="vizShowDetail" data-arg="${vizArg(weekDetail)}">
         <div class="t-xs" style="color:var(--mid);font-weight:600;">${w.count}</div>
         <div class="info-intro-bar-track">
           <div class="info-intro-bar dyn-fill-h" style="--dyn-pct:${pct}%"></div>
@@ -60885,7 +61217,16 @@ function renderInfoFoodIntro() {
       const y = PAD_T + groupMap[groupLabel] * laneH + laneH / 2;
       const color = reactColor[f.reaction] || 'var(--tc-sage)';
       const dateLabel = new Date(f.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="' + color + '" opacity="0.75"><title>' + escHtml(f.name) + ' · ' + escHtml(dateLabel) + ' · ' + escHtml(f.reaction || 'safe') + '</title></circle>';
+      const rxLabel = { safe: 'Tolerated well', watch: 'Watch — mild reaction', avoid: 'Avoid — reaction noted' }[f.reaction] || 'Tolerated well';
+      const introDetail = {
+        title: f.name, subtitle: 'Introduced ' + dateLabel, domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Food group', value: groupLabel },
+          { label: 'Introduced', value: dateLabel },
+          { label: 'Reaction', value: rxLabel }
+        ]
+      };
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="' + color + '" opacity="0.75" data-action="vizShowDetail" data-arg="' + vizArg(introDetail) + '"><title>' + escHtml(f.name) + ' · ' + escHtml(dateLabel) + ' · ' + escHtml(f.reaction || 'safe') + '</title></circle>';
     });
     // X-axis date labels (endpoints)
     const startLbl = new Date(tMin).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
@@ -61370,7 +61711,20 @@ function renderInfoComboFreq() {
       const densityLabel = p.density >= 4 ? 'Nutrient-rich' : p.density >= 2 ? 'Decent' : p.density === 0 ? 'Unknown' : 'Light';
       const densityColor = p.density >= 4 ? 'var(--tc-sage)' : p.density >= 2 ? 'var(--mid)' : 'var(--light)';
 
-      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;flex-wrap:wrap;">
+      const comboDetail = {
+        title: p.food1 + ' + ' + p.food2,
+        subtitle: p.count + '× in last ' + COMBO_WINDOW_DAYS + ' days',
+        domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Times paired', value: p.count + '×' },
+          { label: 'Nutrient density', value: densityLabel + ' (' + p.density + '/8)' },
+          { label: 'Key nutrients', value: p.keyNutsHit.length > 0 ? p.keyNutsHit.join(', ') : 'None tracked' },
+          p.synergy ? { label: 'Synergy', value: p.synergy.type } : null,
+          p.maxStreak >= 3 ? { label: 'Longest streak', value: p.maxStreak + ' days' } : null
+        ],
+        note: p.recommendation || ''
+      };
+      topHtml += `<div class="list-item li-row" style="position:relative;overflow:hidden;flex-wrap:wrap;" data-action="vizShowDetail" data-arg="${vizArg(comboDetail)}">
         <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:var(--sage-light);border-radius:var(--r-xl);z-index:0;"></div>
         <div class="li-body" style="position:relative;z-index:1;min-width:0;">
           <div class="fx-row g4 fx-row-wrap" >
@@ -61602,7 +61956,15 @@ function renderInfoMealBreakdown() {
     const stats = data.mealStats[m.key];
     const topNutrients = Object.entries(stats.nutrientHits).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0).slice(0, 3).map(([k]) => k);
 
-    gridHtml += `<div class="mb-meal-card">
+    const mealCardDetail = {
+      title: m.label + ' Nutrition', subtitle: 'Last 7 days', domain: 'sage', icon: 'bowl',
+      rows: [
+        { label: 'Avg nutrient density', value: density },
+        { label: 'Key-nutrient coverage', value: pct + '%' },
+        { label: 'Top nutrients', value: topNutrients.length > 0 ? topNutrients.join(', ') : 'No data' }
+      ]
+    };
+    gridHtml += `<div class="mb-meal-card" data-action="vizShowDetail" data-arg="${vizArg(mealCardDetail)}">
       <div class="mb-meal-label">${m.emoji} ${m.label}</div>
       <div class="mb-meal-score" style="color:${density >= 3 ? 'var(--tc-sage)' : density >= 1.5 ? 'var(--tc-amber)' : 'var(--light)'};">${density}</div>
       <div class="mb-meal-nutrients">${topNutrients.length > 0 ? topNutrients.join(', ') : 'no data'}</div>
@@ -61617,7 +61979,14 @@ function renderInfoMealBreakdown() {
   MEAL_SLOTS.forEach(m => {
     const pct = data.distribution[m.key];
     if (pct > 0) {
-      gridHtml += `<div class="mb-dist-seg" style="flex:${pct};background:${m.color};" title="${m.label}: ${pct}%">${pct > 12 ? m.short : ''}</div>`;
+      const distDetail = {
+        title: m.label, subtitle: 'Share of daily meals', domain: 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Meal', value: m.label },
+          { label: 'Share of meals', value: pct + '%' }
+        ]
+      };
+      gridHtml += `<div class="mb-dist-seg" style="flex:${pct};background:${m.color};" title="${m.label}: ${pct}%" data-action="vizShowDetail" data-arg="${vizArg(distDetail)}">${pct > 12 ? m.short : ''}</div>`;
     }
   });
   gridHtml += '</div>';
@@ -61666,7 +62035,15 @@ function renderInfoMealBreakdown() {
       } else {
         const alpha = score === 0 ? 0.08 : Math.min(0.2 + (score / 8) * 0.6, 0.8);
         const baseColor = MEAL_SLOTS[mi].color.replace(/[\d.]+\)$/, `${alpha})`);
-        weeklyHtml += `<div class="mb-weekly-cell" style="background:${baseColor};color:${score >= 3 ? 'var(--tc-sage)' : score > 0 ? 'var(--mid)' : 'var(--light)'};font-size:var(--fs-xs);">${score}</div>`;
+        const cellDetail = {
+          title: m.label, subtitle: dayLabel, domain: 'sage', icon: 'bowl',
+          rows: [
+            { label: 'Day', value: dayLabel },
+            { label: 'Meal', value: m.label },
+            { label: 'Nutrient score', value: score + ' / 8' }
+          ]
+        };
+        weeklyHtml += `<div class="mb-weekly-cell" style="background:${baseColor};color:${score >= 3 ? 'var(--tc-sage)' : score > 0 ? 'var(--mid)' : 'var(--light)'};font-size:var(--fs-xs);" data-action="vizShowDetail" data-arg="${vizArg(cellDetail)}">${score}</div>`;
       }
     });
     weeklyHtml += '</div>';
@@ -61873,7 +62250,16 @@ function renderInfoSmartPairing() {
     topHtml += '<div class="fx-col g4">';
     data.todayActionable.forEach(a => {
       const emoji = a.type === 'absorption' ? zi('link') : a.type === 'complete' ? zi('sparkle') : zi('sprout');
-      topHtml += `<div class="sp-pair-card">
+      const apDetail = {
+        title: a.food + ' + ' + a.partner, subtitle: 'Pairing suggestion', domain: 'lav', icon: 'sparkle',
+        rows: [
+          { label: 'Already have', value: a.food },
+          { label: 'Add', value: a.partner },
+          { label: 'Synergy type', value: a.type }
+        ],
+        note: a.reason
+      };
+      topHtml += `<div class="sp-pair-card" data-action="vizShowDetail" data-arg="${vizArg(apDetail)}">
         <div class="sp-pair-foods">${emoji} Add <strong>${escHtml(a.partner)}</strong> to pair with ${escHtml(a.food)}</div>
         <div class="sp-pair-reason">${escHtml(a.reason)}</div>
         <div><span class="sp-pair-type sp-type-${a.type}">${a.type}</span></div>
@@ -61889,7 +62275,12 @@ function renderInfoSmartPairing() {
     gapHtml += '<div class="t-sm fe-sub-label" >Fill Nutrient Gaps</div>';
     gapHtml += '<div class="fx-col g4">';
     data.gapSuggestions.forEach(g => {
-      gapHtml += `<div class="list-item li-row">
+      const gapDetail = {
+        title: g.nutrient + ' gap', subtitle: 'Foods that help', domain: 'amber', icon: 'bowl',
+        rows: [ { label: 'Nutrient gap', value: g.nutrient } ],
+        note: 'Try: ' + g.foods.join(', ')
+      };
+      gapHtml += `<div class="list-item li-row" data-action="vizShowDetail" data-arg="${vizArg(gapDetail)}">
         <div class="li-body">
           <span class="sp-gap-chip">${escHtml(g.nutrient)}</span>
           <span class="t-sm t-light" style="margin-top:2px;">Try ${g.foods.map(f => '<strong>' + escHtml(f) + '</strong>').join(', ')}</span>
@@ -61911,7 +62302,15 @@ function renderInfoSmartPairing() {
       if (p.gapsFilled && p.gapsFilled.length > 0) {
         extra = ` · fills ${p.gapsFilled.slice(0, 2).join(', ')} gap`;
       }
-      unusedHtml += `<div class="sp-pair-card">
+      const upDetail = {
+        title: p.food1 + ' + ' + p.food2, subtitle: 'Untried synergy', domain: 'lav', icon: 'sparkle',
+        rows: [
+          { label: 'Pair', value: p.food1 + ' + ' + p.food2 },
+          { label: 'Synergy type', value: p.type }
+        ],
+        note: p.reason + extra
+      };
+      unusedHtml += `<div class="sp-pair-card" data-action="vizShowDetail" data-arg="${vizArg(upDetail)}">
         <div class="sp-pair-foods">${emoji} ${escHtml(p.food1)} + ${escHtml(p.food2)}</div>
         <div class="sp-pair-reason">${escHtml(p.reason)}${extra}</div>
         <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
@@ -61949,7 +62348,13 @@ function renderInfoFeedingIntake() {
       if (intake === 0 || intake === '0' || intake === 'none') return 'none';
       return 'untagged'; // meal logged but intake not recorded
     });
-    days.push({ ds, meals });
+    // Parallel array of the logged food text per meal — fed into the
+    // per-cell detail popup so a tap answers "what did she eat?".
+    const mealFoods = MEAL_KEYS.map(k => {
+      const v = entry[k];
+      return (v && v !== SKIPPED_MEAL) ? v : '';
+    });
+    days.push({ ds, meals, mealFoods });
   }
 
   // Aggregate stats
@@ -62005,7 +62410,18 @@ function renderInfoFeedingIntake() {
         // Diagonal-stripe hatch via small pattern marks
         svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="var(--surface-sage)" opacity="0.3"/>';
       } else {
-        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="' + fill + '" opacity="0.85"><title>' + d.ds + ' · ' + MEAL_KEYS[mIdx] + ' · ' + state + '</title></rect>';
+        const mealName = MEAL_KEYS[mIdx].charAt(0).toUpperCase() + MEAL_KEYS[mIdx].slice(1);
+        const stateLabel = { full: 'Ate fully', partial: 'Ate partially', none: 'Refused', untagged: 'Intake not tagged' }[state] || state;
+        const intakeDetail = {
+          title: mealName, subtitle: formatDate(d.ds), domain: 'sage', icon: 'bowl',
+          rows: [
+            { label: 'Date', value: formatDate(d.ds) },
+            { label: 'Meal', value: mealName },
+            { label: 'Intake', value: stateLabel },
+            { label: 'Food', value: d.mealFoods[mIdx] || 'Not recorded' }
+          ]
+        };
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + (cellH - 1).toFixed(1) + '" fill="' + fill + '" opacity="0.85" data-action="vizShowDetail" data-arg="' + vizArg(intakeDetail) + '"><title>' + d.ds + ' · ' + MEAL_KEYS[mIdx] + ' · ' + state + '</title></rect>';
       }
     });
   });

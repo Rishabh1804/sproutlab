@@ -287,6 +287,8 @@ function init() {
     else if (action === 'checkFoodCombo') checkFoodCombo();
     else if (action === 'openGrowthModal') openGrowthModal();
     else if (action === 'openGrowthChart') openGrowthChartModal();
+    else if (action === 'vizShowDetail') vizShowDetail(arg);
+    else if (action === 'vizCloseDetail') history.back();
     else if (action === 'toggleSettingsSidebar') toggleSettingsSidebar();
     else if (action === 'closeSettingsSidebar') closeSettingsSidebar();
     else if (action === 'closeScorePopup') closeScorePopup();
@@ -3404,6 +3406,9 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 // ── Back gesture / back button closes overlays instead of leaving the page ──
 window.addEventListener('popstate', e => {
   const state = e.state;
+  // Close the viz detail popup first — it sits above modals (PR-I).
+  const vizDetail = document.querySelector('.viz-detail-overlay');
+  if (vizDetail) { vizDetail.remove(); return; }
   // Close any open overlay
   const cropOverlay = document.getElementById('cropOverlay');
   if (cropOverlay && cropOverlay.classList.contains('open')) { closeCrop(); return; }
@@ -3444,6 +3449,84 @@ function confirmAction(msg, callback, btnText) {
   overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+// ─────────────────────────────────────────
+// VIZ DETAIL POPUP (PR-I — viz interactivity layer)
+// ─────────────────────────────────────────
+// Generic tap-to-detail primitive shared by every info-tab trend graph.
+// SVG <title> tooltips degrade to nothing on touch devices — a parent
+// tapping a dot/cell/bar/segment gets the full record instead. Each viz
+// emits data-action="vizShowDetail" data-arg="{json}" on its data
+// elements; the JSON is one `detail` object built by the viz's own
+// formatter. HR-6 delegation routes the tap here; HR-3 — no inline
+// handlers.
+
+// vizArg — encode a detail object into a double-quoted HTML attribute.
+// escHtml is unsuitable here: it rewrites \n to <br> (corrupts JSON) and
+// leaves " unescaped (breaks the attribute). JSON.stringify already
+// escapes \, " and control chars within string values; we only need to
+// HTML-escape the quote and angle/amp glyphs so the attribute parses.
+function vizArg(detail) {
+  return JSON.stringify(detail)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// vizDetailPopup — render a warm, domain-accented detail card.
+// detail: { title, subtitle, domain, icon, rows:[{label,value}], note }
+// domain ∈ sage|rose|amber|lav|sky|indigo|peach (defaults to lav).
+var VIZ_DETAIL_DOMAINS = { sage:1, rose:1, amber:1, lav:1, sky:1, indigo:1, peach:1 };
+function vizDetailPopup(detail) {
+  if (!detail || typeof detail !== 'object') return;
+  // Re-tapping a data element while a popup is open swaps content in place;
+  // only the first open pushes a history entry, so one back-gesture closes.
+  var alreadyOpen = !!document.querySelector('.viz-detail-overlay');
+  closeVizDetailPopup();
+  var domain = VIZ_DETAIL_DOMAINS[detail.domain] ? detail.domain : 'lav';
+  var rowsHtml = '';
+  (detail.rows || []).forEach(function(r) {
+    if (!r || r.label == null) return;
+    rowsHtml += '<div class="viz-detail-row">'
+      + '<span class="viz-detail-row-label">' + escHtml(r.label) + '</span>'
+      + '<span class="viz-detail-row-value">' + escHtml(r.value == null ? '' : String(r.value)) + '</span>'
+      + '</div>';
+  });
+  var overlay = document.createElement('div');
+  overlay.className = 'viz-detail-overlay';
+  overlay.innerHTML =
+    '<div class="viz-detail-card viz-detail-' + domain + '" role="dialog" aria-modal="true" aria-label="'
+      + escHtml(detail.title || 'Detail') + '">'
+    + '<button class="viz-detail-close" data-action="vizCloseDetail" aria-label="Close">' + zi('close') + '</button>'
+    + '<div class="viz-detail-head">'
+    + (detail.icon ? '<span class="viz-detail-icon">' + zi(detail.icon) + '</span>' : '')
+    + '<div class="viz-detail-titles">'
+    + '<div class="viz-detail-title">' + escHtml(detail.title || 'Detail') + '</div>'
+    + (detail.subtitle ? '<div class="viz-detail-subtitle">' + escHtml(detail.subtitle) + '</div>' : '')
+    + '</div></div>'
+    + (rowsHtml ? '<div class="viz-detail-rows">' + rowsHtml + '</div>' : '')
+    + (detail.note ? '<div class="viz-detail-note">' + escHtml(detail.note) + '</div>' : '')
+    + '</div>';
+  overlay.onclick = function(e) { if (e.target === overlay) history.back(); };
+  document.body.appendChild(overlay);
+  if (!alreadyOpen) history.pushState({ overlay: 'vizDetail' }, '');
+}
+
+function closeVizDetailPopup() {
+  var overlay = document.querySelector('.viz-detail-overlay');
+  if (overlay) overlay.remove();
+}
+
+// vizShowDetail — delegation entry point. arg is the vizArg-encoded JSON
+// string (the browser has already HTML-decoded the attribute on read).
+function vizShowDetail(argJson) {
+  if (!argJson) return;
+  var detail;
+  try { detail = JSON.parse(argJson); }
+  catch (e) { return; }
+  vizDetailPopup(detail);
 }
 
 // ─────────────────────────────────────────
