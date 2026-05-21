@@ -29059,9 +29059,14 @@ const SEV_LABEL = { action: zi('siren') + ' Action', watch: zi('warn') + ' Watch
 // to 'snooze' regardless of severity: they can be deferred but never
 // permanently dismissed or acknowledged away — Maren V-M-17 doctrine.
 const ALERT_MODE = { action: 'action', watch: 'snooze', positive: 'acknowledge', info: 'dismiss' };
+// Keys that must never resolve to a permanently-clearing mode, independent of
+// the safetyLocked flag (V-M-33 backstop): if a future edit drops safetyLocked
+// from a vaccine / checkup reminder, this still forces it to 'snooze'.
+const SAFETY_LOCKED_KEY = /^(vacc-reminder|dev-checkup)/;
 function getAlertMode(a) {
   const base = ALERT_MODE[a.severity] || 'dismiss';
-  if (a.safetyLocked && base !== 'action') return 'snooze';
+  const locked = a.safetyLocked || SAFETY_LOCKED_KEY.test(a.key || '');
+  if (locked && base !== 'action') return 'snooze';
   return base;
 }
 
