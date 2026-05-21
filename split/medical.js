@@ -6113,7 +6113,15 @@ function renderInfoPoopConsistencyTrend() {
         const y = PAD_T + rIdx * rowH;
         const opacity = count >= 3 ? 0.95 : count === 2 ? 0.7 : 0.45;
         const fill = data.CON_COLORS[con] || 'var(--tc-sage)';
-        html += '<rect x="' + x.toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + (rowH - 1).toFixed(1) + '" fill="' + fill + '" opacity="' + opacity + '"><title>' + d.dateStr + ' · ' + conLabels[con] + ' · ' + count + '</title></rect>';
+        const bristolDetail = {
+          title: 'Stool Consistency', subtitle: formatDate(d.dateStr), domain: 'amber', icon: 'diaper',
+          rows: [
+            { label: 'Date', value: formatDate(d.dateStr) },
+            { label: 'Consistency', value: conLabels[con] },
+            { label: 'Times that day', value: count }
+          ]
+        };
+        html += '<rect x="' + x.toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + (rowH - 1).toFixed(1) + '" fill="' + fill + '" opacity="' + opacity + '" data-action="vizShowDetail" data-arg="' + vizArg(bristolDetail) + '"><title>' + d.dateStr + ' · ' + conLabels[con] + ' · ' + count + '</title></rect>';
       });
     });
     // X-axis endpoint labels
@@ -6696,7 +6704,15 @@ function renderInfoPoopColorAnomaly() {
     const sortedColors = Object.entries(data.colorDist).sort((a, b) => b[1] - a[1]);
     sortedColors.forEach(([color, count]) => {
       const pct = (count / data.total) * 100;
-      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '"></div>';
+      const colorDistDetail = {
+        title: 'Stool Colour', subtitle: 'Across all entries', domain: 'amber', icon: 'diaper',
+        rows: [
+          { label: 'Colour', value: color.charAt(0).toUpperCase() + color.slice(1) },
+          { label: 'Entries', value: count },
+          { label: 'Share', value: Math.round(pct) + '%' }
+        ]
+      };
+      html += '<div class="poop-bar-seg"' + _piPcolorAttr(color) + ' style="width:' + pct + '%;" title="' + escHtml(color) + ': ' + count + '" data-action="vizShowDetail" data-arg="' + vizArg(colorDistDetail) + '"></div>';
     });
     html += '</div>';
     // Color legend
@@ -6737,7 +6753,15 @@ function renderInfoPoopColorAnomaly() {
           if (!counts[color]) return;
           const segH = (counts[color] / totalCount) * colH;
           const fill = COLOR_TOKEN[color] || 'var(--tc-amber)';
-          svg += '<rect x="' + x.toFixed(1) + '" y="' + yCursor.toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + segH.toFixed(1) + '" fill="' + fill + '" opacity="0.9"><title>' + d + ' · ' + color + ' · ' + counts[color] + '</title></rect>';
+          const colorStreamDetail = {
+            title: 'Stool Colour', subtitle: formatDate(d), domain: 'amber', icon: 'diaper',
+            rows: [
+              { label: 'Date', value: formatDate(d) },
+              { label: 'Colour', value: color.charAt(0).toUpperCase() + color.slice(1) },
+              { label: 'Times that day', value: counts[color] }
+            ]
+          };
+          svg += '<rect x="' + x.toFixed(1) + '" y="' + yCursor.toFixed(1) + '" width="' + Math.max(1, colW - 0.5).toFixed(1) + '" height="' + segH.toFixed(1) + '" fill="' + fill + '" opacity="0.9" data-action="vizShowDetail" data-arg="' + vizArg(colorStreamDetail) + '"><title>' + d + ' · ' + color + ' · ' + counts[color] + '</title></rect>';
           yCursor += segH;
         });
       });
@@ -7451,13 +7475,25 @@ function renderInfoMilestoneVelocity() {
         // CATEGORY hue with STATUS-tier opacity, so the parent reads
         // category-balance from color regions and maturity-depth from intensity.
         const hue = CAT_HUE[cat] || 'var(--tc-sage)';
+        const CAT_DOMAIN = { motor: 'sage', social: 'lav', language: 'sky', cognitive: 'amber' };
         let cursorY = y;
         STATUSES.forEach(st => {
           const ct = catStatusCounts[cat][st];
           if (ct === 0) return;
           const subH = (ct / total) * h;
           const opacity = STATUS_OPACITY[st] || 0.5;
-          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + hue + '" opacity="' + opacity + '" stroke="white" stroke-width="1"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
+          const catCap = cat.charAt(0).toUpperCase() + cat.slice(1);
+          const stCap = st.charAt(0).toUpperCase() + st.slice(1);
+          const treeDetail = {
+            title: catCap + ' Milestones', subtitle: stCap + ' stage',
+            domain: CAT_DOMAIN[cat] || 'lav', icon: 'star',
+            rows: [
+              { label: 'Category', value: catCap },
+              { label: 'Stage', value: stCap },
+              { label: 'Milestones', value: ct }
+            ]
+          };
+          svg += '<rect x="' + x + '" y="' + cursorY.toFixed(1) + '" width="' + w + '" height="' + subH.toFixed(1) + '" fill="' + hue + '" opacity="' + opacity + '" stroke="white" stroke-width="1" data-action="vizShowDetail" data-arg="' + vizArg(treeDetail) + '"><title>' + cat + ' · ' + st + ' · ' + ct + '</title></rect>';
           // Status label inside sub-strip only when it fits (V-K-31: avoid overflow).
           // Conservative bounds: need subH >= 16 AND w >= 60 AND room for the
           // cat-header at the top of the block (skip status label that lands in
@@ -8074,7 +8110,16 @@ function renderInfoVaccGantt() {
       const fill = dose.upcoming ? 'transparent' : 'var(--tc-lav)';
       const stroke = dose.upcoming ? 'var(--tc-amber)' : 'var(--tc-lav)';
       const dateLabel = new Date(dose.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5"><title>' + escHtml(dose.name) + ' · ' + escHtml(dateLabel) + (dose.upcoming ? ' · upcoming' : '') + '</title></circle>';
+      const ganttDetail = {
+        title: dose.name, subtitle: dose.upcoming ? 'Upcoming dose' : 'Completed dose',
+        domain: 'lav', icon: 'syringe',
+        rows: [
+          { label: 'Series', value: seriesName },
+          { label: dose.upcoming ? 'Scheduled' : 'Given', value: dateLabel },
+          { label: 'Status', value: dose.upcoming ? 'Upcoming' : 'Completed' }
+        ]
+      };
+      svg += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.5" data-action="vizShowDetail" data-arg="' + vizArg(ganttDetail) + '"><title>' + escHtml(dose.name) + ' · ' + escHtml(dateLabel) + (dose.upcoming ? ' · upcoming' : '') + '</title></circle>';
     });
   });
   // X-axis endpoint labels
@@ -8799,7 +8844,16 @@ function renderInfoRepetition() {
     data.all.forEach(f => {
       const isFatigued = f.pct >= 60 && f.streak >= 5;
       const barColor = isFatigued ? 'var(--tc-rose)' : f.pct >= 50 ? 'var(--tc-amber)' : 'var(--tc-sage)';
-      html += '<div class="mi-food-row">';
+      const repDetail = {
+        title: f.food, subtitle: 'Last ' + data.totalDays + ' days',
+        domain: isFatigued ? 'rose' : f.pct >= 50 ? 'amber' : 'sage', icon: 'bowl',
+        rows: [
+          { label: 'Appears on', value: f.pct + '% of days' },
+          { label: 'Longest streak', value: f.streak + ' day' + (f.streak !== 1 ? 's' : '') },
+          { label: 'Status', value: isFatigued ? 'Time to vary the menu' : f.pct >= 50 ? 'Coming up often' : 'Good variety' }
+        ]
+      };
+      html += '<div class="mi-food-row" data-action="vizShowDetail" data-arg="' + vizArg(repDetail) + '">';
       html += '<div class="mi-food-name">' + f.food + '</div>';
       html += '<div class="mi-food-bar"><div class="mi-food-fill" style="width:' + f.pct + '%;background:' + barColor + ';"></div></div>';
       html += '<div class="mi-food-count">' + f.pct + '% · ' + f.streak + 'd</div>';
@@ -9017,7 +9071,16 @@ function renderInfoTexture() {
       const isCurrent = stage.key === data.currentStage;
       const firstDate = data.firstSeen[stage.key];
 
-      html += '<div class="mi-tex-stage">';
+      const texStageDetail = {
+        title: stage.label, subtitle: isCurrent ? 'Current texture stage' : 'Texture stage',
+        domain: 'sage', icon: 'spoon',
+        rows: count > 0 ? [
+          { label: 'Days at this texture', value: count },
+          { label: 'Share', value: pct + '%' },
+          firstDate ? { label: 'First seen', value: formatDate(firstDate).replace(/, \d{4}$/, '') } : null
+        ] : [ { label: 'Status', value: 'Not yet introduced' } ]
+      };
+      html += '<div class="mi-tex-stage" data-action="vizShowDetail" data-arg="' + vizArg(texStageDetail) + '">';
       html += '<div class="mi-tex-icon" style="background:' + (count > 0 ? stage.color : 'var(--surface-alt)') + ';' + (isCurrent ? 'box-shadow:0 0 0 2px ' + stage.color + ';' : '') + '">' + stage.icon + '</div>';
       html += '<div class="mi-tex-info">';
       html += '<div class="mi-tex-label">' + stage.label + (isCurrent ? ' <span style="font-size:var(--fs-xs);color:' + stage.color + ';">' + zi('dot-red') + ' current</span>' : '') + '</div>';
@@ -9052,7 +9115,15 @@ function renderInfoTexture() {
             html += '<div class="mi-tex-week-cell t-light" >·</div>';
           } else {
             const cls = 'mi-tex-' + s.key;
-            html += '<div class="mi-tex-week-cell ' + cls + '">' + count + '</div>';
+            const texCellDetail = {
+              title: s.label, subtitle: w.label, domain: 'sage', icon: 'spoon',
+              rows: [
+                { label: 'Week', value: w.label },
+                { label: 'Texture', value: s.label },
+                { label: 'Days', value: count }
+              ]
+            };
+            html += '<div class="mi-tex-week-cell ' + cls + '" data-action="vizShowDetail" data-arg="' + vizArg(texCellDetail) + '">' + count + '</div>';
           }
         });
       });

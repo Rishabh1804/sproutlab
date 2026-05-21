@@ -3464,7 +3464,16 @@ function renderInfoAdoption() {
     }
     if (isToday) cls += ' sa-cell-today';
     const title = d.rate !== null ? (d.date + ': ' + Math.round(d.rate * 100) + '% (' + d.adopted + '/' + d.items + ')') : (d.date + ': no suggestions');
-    hmHtml += '<div class="' + cls + '" title="' + title + '"></div>';
+    const adoptDetail = d.rate !== null ? {
+      title: 'Suggestion Adoption', subtitle: formatDate(d.date), domain: 'lav', icon: 'sparkle',
+      rows: [
+        { label: 'Date', value: formatDate(d.date) },
+        { label: 'Adopted', value: d.adopted + ' of ' + d.items },
+        { label: 'Adoption rate', value: Math.round(d.rate * 100) + '%' }
+      ]
+    } : null;
+    const adoptAttr = adoptDetail ? ' data-action="vizShowDetail" data-arg="' + vizArg(adoptDetail) + '"' : '';
+    hmHtml += '<div class="' + cls + '" title="' + title + '"' + adoptAttr + '></div>';
   });
   hmHtml += '</div>';
   if (heatmapEl) heatmapEl.innerHTML = hmHtml;
@@ -3481,7 +3490,15 @@ function renderInfoAdoption() {
     const d = data.byType[tc.key];
     const pct = d.total > 0 ? Math.round((d.adopted / d.total) * 100) : 0;
     const fillW = d.total > 0 ? pct : 0;
-    typesHtml += '<div class="sa-type-row">';
+    const typeDetail = {
+      title: tc.label + ' Suggestions', subtitle: 'Adoption breakdown', domain: 'lav', icon: 'sparkle',
+      rows: [
+        { label: 'Type', value: tc.label },
+        { label: 'Adopted', value: d.adopted + ' of ' + d.total },
+        { label: 'Adoption rate', value: pct + '%' }
+      ]
+    };
+    typesHtml += '<div class="sa-type-row" data-action="vizShowDetail" data-arg="' + vizArg(typeDetail) + '">';
     typesHtml += '<div class="sa-type-icon">' + tc.icon + '</div>';
     typesHtml += '<div class="sa-type-label">' + tc.label + '</div>';
     typesHtml += '<div class="sa-type-bar"><div class="sa-type-fill ' + tc.fillCls + '" style="width:' + fillW + '%;"></div></div>';

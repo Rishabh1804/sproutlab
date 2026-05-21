@@ -3154,7 +3154,15 @@ function renderInfoSleepBedtimeDrift() {
 
     // Dots
     pts.forEach((p, i) => {
-      svg += '<circle cx="' + scaleX(i) + '" cy="' + scaleY(p.min) + '" r="3.5" fill="var(--tc-indigo)" opacity="0.8"/>';
+      const bedStr = _siMinToBedtime(p.min);
+      const driftDetail = {
+        title: 'Bedtime', subtitle: formatDate(p.date), domain: 'indigo', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(p.date) },
+          { label: 'Bedtime', value: bedStr }
+        ]
+      };
+      svg += '<circle cx="' + scaleX(i) + '" cy="' + scaleY(p.min) + '" r="3.5" fill="var(--tc-indigo)" opacity="0.8" data-action="vizShowDetail" data-arg="' + vizArg(driftDetail) + '"><title>' + escHtml(formatDate(p.date) + ' · ' + bedStr) + '</title></circle>';
     });
 
     // Y-axis labels
@@ -3292,17 +3300,29 @@ function renderInfoSleepEfficiency() {
         } else {
           fill = 'var(--cal-long)';
         }
-        const title = cell.total !== null
-          ? cell.ds + ' · ' + Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm' + (cell.loss > 0 ? ' · ' + cell.loss + 'min lost to wakings' : '')
+        const hadSleep = cell.total !== null;
+        const totalStr = hadSleep ? Math.floor(cell.total / 60) + 'h ' + (cell.total % 60) + 'm' : '';
+        const title = hadSleep
+          ? cell.ds + ' · ' + totalStr + (cell.loss > 0 ? ' · ' + cell.loss + 'min lost to wakings' : '')
           : cell.ds + ' · no data';
-        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '"><title>' + title + '</title></rect>';
+        const calDetail = {
+          title: 'Night Sleep', subtitle: formatDate(cell.ds), domain: 'sky', icon: 'moon',
+          rows: hadSleep ? [
+            { label: 'Date', value: formatDate(cell.ds) },
+            { label: 'Total sleep', value: totalStr },
+            { label: 'Lost to wakings', value: cell.loss > 0 ? cell.loss + ' min' : 'None' }
+          ] : [ { label: 'Date', value: formatDate(cell.ds) } ],
+          note: hadSleep ? '' : 'No sleep logged this night.'
+        };
+        svg += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, cellW - 1).toFixed(1) + '" height="' + Math.max(1, cellH - 1).toFixed(1) + '" rx="1" fill="' + fill + '" opacity="' + opacity + '" data-action="vizShowDetail" data-arg="' + vizArg(calDetail) + '"><title>' + title + '</title></rect>';
         // PR-EF V-K-11: wake-loss corner dot — surfaces "disrupted but
         // long-enough" nights that the duration band alone can't distinguish.
         // Threshold 45min ≈ 3+ wakings for a 12mo+ baby or 4+ for an infant.
         if (cell.loss > 45 && cell.total !== null) {
           const dotX = x + cellW - 2.5;
           const dotY = y + 2.5;
-          svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95"/>';
+          // pointer-events:none — taps fall through to the cell rect beneath.
+          svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="1.4" fill="var(--tc-amber)" opacity="0.95" pointer-events="none"/>';
         }
       });
       // Legend
@@ -3330,7 +3350,17 @@ function renderInfoSleepEfficiency() {
     data.results.forEach(r => {
       const color = r.efficiency >= 85 ? 'var(--tc-sage)' : r.efficiency >= 70 ? 'var(--tc-amber)' : 'var(--tc-danger)';
       const dayLabel = formatDate(r.dateStr).slice(0, 6);
-      html += '<div class="si-bar-row">';
+      const effDetail = {
+        title: 'Sleep Efficiency', subtitle: formatDate(r.dateStr), domain: 'sky', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(r.dateStr) },
+          { label: 'Total sleep', value: Math.floor(r.totalMin / 60) + 'h ' + (r.totalMin % 60) + 'm' },
+          { label: 'Effective sleep', value: Math.floor(r.effectiveMin / 60) + 'h ' + (r.effectiveMin % 60) + 'm' },
+          { label: 'Wake-ups', value: r.wakes },
+          { label: 'Efficiency', value: r.efficiency + '%' }
+        ]
+      };
+      html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(effDetail) + '">';
       html += '<div class="si-bar-label">' + dayLabel + '</div>';
       html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + r.efficiency + '%;background:' + color + ';"></div></div>';
       html += '<div class="si-bar-val" style="color:' + color + ';">' + r.efficiency + '%</div>';
@@ -3460,7 +3490,18 @@ function renderInfoSleepWakeWindows() {
       showDay.sleepBlocks.forEach((b, i) => {
         // Sleep block
         const dur = calcSleepDuration(b.bed, b.wake);
-        html += '<div class="si-ww-block si-ww-sleep" title="Sleep">' + (b.type === 'night' ? zi('moon') : zi('zzz')) + '<span>' + dur.h + 'h' + (dur.m > 0 ? dur.m : '') + '</span></div>';
+        const sbDetail = {
+          title: b.type === 'night' ? 'Night Sleep' : 'Nap',
+          subtitle: formatDate(showDay.dateStr), domain: 'sky',
+          icon: b.type === 'night' ? 'moon' : 'zzz',
+          rows: [
+            { label: 'Type', value: b.type === 'night' ? 'Night sleep' : 'Nap' },
+            { label: 'Asleep', value: b.bed },
+            { label: 'Awake', value: b.wake },
+            { label: 'Duration', value: dur.h + 'h ' + dur.m + 'm' }
+          ]
+        };
+        html += '<div class="si-ww-block si-ww-sleep" title="Sleep" data-action="vizShowDetail" data-arg="' + vizArg(sbDetail) + '">' + (b.type === 'night' ? zi('moon') : zi('zzz')) + '<span>' + dur.h + 'h' + (dur.m > 0 ? dur.m : '') + '</span></div>';
         // Wake window after this block (if not last)
         if (i < showDay.windows.length) {
           const ww = showDay.windows[i];
@@ -3468,7 +3509,16 @@ function renderInfoSleepWakeWindows() {
           const wwM = ww.gapMin % 60;
           const wwColor = ww.gapMin > data.idealMax ? 'rgba(240,180,80,0.15)' : ww.gapMin < data.idealMin ? 'rgba(155,168,216,0.15)' : 'rgba(58,112,96,0.1)';
           const wwTextColor = ww.gapMin > data.idealMax ? 'var(--tc-amber)' : ww.gapMin < data.idealMin ? 'var(--tc-indigo)' : 'var(--tc-sage)';
-          html += '<div class="si-ww-block si-ww-wake" style="background:' + wwColor + ';color:' + wwTextColor + ';">'+zi('sun')+'<span>' + wwH + 'h' + (wwM > 0 ? wwM : '') + '</span></div>';
+          const wwStatus = ww.gapMin > data.idealMax ? 'Longer than ideal' : ww.gapMin < data.idealMin ? 'Shorter than ideal' : 'Well-timed';
+          const wwDetail = {
+            title: 'Wake Window', subtitle: formatDate(showDay.dateStr), domain: 'amber', icon: 'sun',
+            rows: [
+              { label: 'Awake for', value: wwH + 'h ' + wwM + 'm' },
+              { label: 'Ideal range', value: idealStr },
+              { label: 'Assessment', value: wwStatus }
+            ]
+          };
+          html += '<div class="si-ww-block si-ww-wake" style="background:' + wwColor + ';color:' + wwTextColor + ';" data-action="vizShowDetail" data-arg="' + vizArg(wwDetail) + '">'+zi('sun')+'<span>' + wwH + 'h' + (wwM > 0 ? wwM : '') + '</span></div>';
         }
       });
       html += '</div>';
@@ -3875,7 +3925,17 @@ function renderInfoSleepDayNight() {
     data.bucketStats.forEach(b => {
       const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
       const isOpt = data.optimal && b.napCount === data.optimal.napCount;
-      html += '<div class="si-bar-row">';
+      const bucketDetail = {
+        title: 'Nap Count vs Sleep',
+        subtitle: b.napCount + ' nap' + (b.napCount !== 1 ? 's' : '') + ' per day',
+        domain: 'indigo', icon: 'zzz',
+        rows: [
+          { label: 'Naps that day', value: b.napCount },
+          { label: 'Avg night score', value: b.avgScore },
+          { label: 'Days observed', value: b.days }
+        ]
+      };
+      html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(bucketDetail) + '">';
       html += '<div class="si-bar-label">' + b.napCount + ' nap' + (b.napCount !== 1 ? 's' : '') + '</div>';
       html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isOpt ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
       html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + '</div>';
@@ -3888,7 +3948,15 @@ function renderInfoSleepDayNight() {
       data.bandStats.forEach(b => {
         const color = b.avgScore >= 70 ? 'var(--tc-sage)' : b.avgScore >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
         const isBest = data.bestBand && b.band === data.bestBand.band;
-        html += '<div class="si-bar-row">';
+        const bandDetail = {
+          title: 'Nap Duration vs Sleep', subtitle: b.label, domain: 'indigo', icon: 'zzz',
+          rows: [
+            { label: 'Nap duration', value: b.label },
+            { label: 'Avg night score', value: b.avgScore },
+            { label: 'Days observed', value: b.days }
+          ]
+        };
+        html += '<div class="si-bar-row" data-action="vizShowDetail" data-arg="' + vizArg(bandDetail) + '">';
         html += '<div class="si-bar-label">' + b.label + '</div>';
         html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + b.avgScore + '%;background:' + color + ';' + (isBest ? 'box-shadow:0 0 0 2px ' + color + ';' : '') + '"></div></div>';
         html += '<div class="si-bar-val" style="color:' + color + ';">' + b.avgScore + ' <span style="font-size:var(--fs-2xs);color:var(--light);font-weight:400;">(' + b.days + 'd)</span></div>';
@@ -4314,7 +4382,14 @@ function renderInfoSleepRegression() {
     recentSorted.forEach(d => {
       const pct = Math.max(8, d.score);
       const color = d.score >= 70 ? 'var(--tc-sage)' : d.score >= 40 ? 'var(--tc-amber)' : 'var(--tc-danger)';
-      html += '<div class="si-reg-col" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '"></div>';
+      const regDetail = {
+        title: 'Sleep Score', subtitle: formatDate(d.dateStr), domain: 'indigo', icon: 'moon',
+        rows: [
+          { label: 'Date', value: formatDate(d.dateStr) },
+          { label: 'Sleep score', value: d.score + ' / 100' }
+        ]
+      };
+      html += '<div class="si-reg-col" style="height:' + pct + '%;background:' + color + ';" title="' + formatDate(d.dateStr) + ': ' + d.score + '" data-action="vizShowDetail" data-arg="' + vizArg(regDetail) + '"></div>';
     });
     html += '</div>';
 
