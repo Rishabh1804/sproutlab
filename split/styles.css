@@ -1139,6 +1139,53 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   vertical-align: middle;
 }
 .ml-6 { margin-left: var(--sp-6); }
+
+/* ─── Vaccination timeline — Gantt reshape (PR-K) ─── */
+.vc-gantt { padding: var(--sp-4) 0; }
+.vc-gantt-rows { display: flex; flex-direction: column; }
+.vc-gantt-row { display: flex; gap: var(--sp-10); }
+.vc-gantt-spine {
+  display: flex; flex-direction: column; align-items: center;
+  width: 18px; flex-shrink: 0;
+}
+.vc-gantt-node {
+  width: 16px; height: 16px; border-radius: var(--r-full); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: var(--sp-2); border: 2px solid var(--tc-lav);
+}
+.vc-gantt-node-done { background: var(--tc-lav); color: var(--white); }
+.vc-gantt-node-done .zi { width: 9px; height: 9px; }
+.vc-gantt-node-pending { background: var(--card-bg); border-style: dashed; }
+.vc-gantt-spine::after {
+  content: ''; flex: 1; width: 2px;
+  background: rgba(110,94,154,0.2); margin: var(--sp-2) 0;
+}
+.vc-gantt-row:last-child .vc-gantt-spine::after { display: none; }
+.vc-gantt-rowbody { flex: 1; min-width: 0; padding-bottom: var(--sp-16); }
+.vc-gantt-age {
+  font-size: var(--fs-2xs); font-weight: 700; color: var(--tc-lav);
+  text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: var(--sp-6);
+}
+.vc-gantt-chips { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
+.vc-gantt-chip {
+  display: inline-flex; align-items: center; gap: var(--sp-6);
+  padding: var(--sp-4) var(--sp-10); border-radius: var(--r-full);
+  border: 1px solid var(--card-border); background: var(--card-bg);
+  font-size: var(--fs-xs); font-weight: 600; color: var(--text);
+  cursor: pointer; position: relative;
+  transition: transform var(--ease-fast);
+}
+.vc-gantt-chip:active { transform: scale(0.96); }
+.vc-timeline-dot.vc-gantt-chipdot { width: 12px; height: 12px; }
+.vc-gantt-chip-name { white-space: nowrap; }
+.vc-gantt-delay {
+  width: 12px; height: 12px; border-radius: var(--r-full);
+  background: var(--tc-amber); color: #fff; font-size: 7px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+[data-theme="dark"] .vc-gantt-chip { background: var(--surface); border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] .vc-gantt-spine::after { background: rgba(184,168,224,0.25); }
+
 .vc-timeline-detail {
   position: fixed;
   bottom: 0;
