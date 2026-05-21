@@ -3063,6 +3063,17 @@ function switchTab(name) {
   window.scrollTo({ top: 0 });
 }
 
+// Switch to a tab, then smooth-scroll a specific card into view. For
+// dynamically rendered links (e.g. alert action buttons) where the static
+// [data-tab-scroll] binding wired up at init does not apply.
+function gotoCard(tab, cardId) {
+  switchTab(tab);
+  setTimeout(() => {
+    const c = document.getElementById(cardId);
+    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 140);
+}
+
 function switchTrackSub(sub) {
   if (!TRACK_SUB_ORDER.includes(sub)) sub = 'diet';
   _activeTrackSub = sub;
