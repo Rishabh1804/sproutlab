@@ -373,10 +373,58 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 // HOME TAB RENDER
 // ─────────────────────────────────────────
+// ── "Today for Ziva" — the Home lede (PR-K) ──
+// A warm, scannable card that answers the one question a tired parent opens
+// the app with: what matters today? Headline + age + date, then the single
+// highest-priority item (an action or watch alert) — or a calm all-clear.
+function renderTodayHero() {
+  const card = document.getElementById('todayHeroCard');
+  if (!card) return;
+  const ageEl = document.getElementById('thAge');
+  const dateEl = document.getElementById('thDate');
+  const focusEl = document.getElementById('thFocus');
+
+  // Age + date line
+  const a = ageAt();
+  let ageStr = a.months + (a.months === 1 ? ' month' : ' months');
+  if (a.days) ageStr += ', ' + a.days + (a.days === 1 ? ' day' : ' days');
+  if (ageEl) ageEl.textContent = ageStr + ' old';
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // The one thing that matters today — highest-priority alert, else all-clear.
+  let focusHTML = '';
+  try {
+    const alerts = computeAlerts();
+    const top = alerts.find(x => x.severity === 'action') || alerts.find(x => x.severity === 'watch');
+    if (top) {
+      const sevCls = top.severity === 'action' ? 'thf-action' : 'thf-watch';
+      focusHTML = `<div class="th-focus-row ${sevCls}">
+        <div class="th-focus-icon">${top.icon || zi('bell')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">Today's focus</div>
+          <div class="th-focus-text">${escHtml(top.title)}</div>
+        </div>
+        ${top.tab ? `<button class="th-focus-btn" data-action="switchTab" data-arg="${escAttr(top.tab)}" data-stop="1">View</button>` : ''}
+      </div>`;
+    } else {
+      focusHTML = `<div class="th-focus-row thf-clear">
+        <div class="th-focus-icon">${zi('sparkle')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">All clear</div>
+          <div class="th-focus-text">Nothing needs your attention today — enjoy the time together.</div>
+        </div>
+      </div>`;
+    }
+  } catch (e) { console.error('todayHero focus:', e); }
+  if (focusEl) focusEl.innerHTML = focusHTML;
+  card.style.display = focusHTML ? '' : 'none';
+}
+
 function renderHome() {
   _clearModifierCache();
   _postVaccCached = null;
   updateHeader();
+  renderTodayHero();
   renderHomeFeverBanner();
   renderHomeDiarrhoeaBanner();
   renderHomeVomitingBanner();

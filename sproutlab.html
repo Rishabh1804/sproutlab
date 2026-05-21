@@ -2239,6 +2239,51 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   .stat-pills-grid { grid-template-columns:repeat(3, 1fr); gap:var(--sp-8); }
 }
 
+/* ─── "Today for Ziva" — the Home lede (PR-K) ─── */
+.today-hero {
+  background:linear-gradient(135deg, var(--peach-light), var(--warm));
+  border:1px solid rgba(250,212,180,0.5);
+}
+.th-head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-8); }
+.th-title {
+  font-family:'Fraunces', serif; font-size:var(--fs-xl); font-weight:600;
+  color:var(--text); line-height:1.2;
+}
+.th-age { font-size:var(--fs-sm); font-weight:600; color:var(--mid); flex-shrink:0; }
+.th-date { font-size:var(--fs-sm); color:var(--light); margin-top:var(--sp-2); }
+.th-focus { margin-top:var(--sp-12); }
+.th-focus-row {
+  display:flex; align-items:center; gap:var(--sp-10);
+  padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--white); border-left:3px solid var(--sage);
+}
+.th-focus-row.thf-action { border-left-color:var(--rose); }
+.th-focus-row.thf-watch  { border-left-color:var(--amber); }
+.th-focus-row.thf-clear  { border-left-color:var(--sage); }
+.th-focus-icon {
+  width:36px; height:36px; flex-shrink:0; border-radius:var(--r-full);
+  background:var(--peach-light); display:flex; align-items:center; justify-content:center;
+}
+.th-focus-icon .zi { width:var(--icon-md); height:var(--icon-md); }
+.th-focus-body { flex:1; min-width:0; }
+.th-focus-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:0.04em;
+  text-transform:uppercase; color:var(--light);
+}
+.th-focus-text { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-top:var(--sp-2); }
+.th-focus-btn {
+  flex-shrink:0; font-size:var(--fs-sm); font-weight:600;
+  padding:var(--sp-6) var(--sp-12); border-radius:var(--r-full);
+  border:none; background:var(--text); color:var(--white); cursor:pointer;
+}
+.th-focus-btn:active { transform:scale(0.95); }
+[data-theme="dark"] .today-hero {
+  background:linear-gradient(135deg, rgba(250,212,180,0.10), rgba(255,255,255,0.03));
+  border-color:rgba(250,212,180,0.2);
+}
+[data-theme="dark"] .th-focus-row { background:var(--mid); }
+[data-theme="dark"] .th-focus-icon { background:rgba(250,212,180,0.14); }
+
 .home-stat-pill {
   border-radius:var(--r-xl); padding:var(--sp-12);
   text-align:center; min-width:0;
@@ -9817,6 +9862,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="wg-dots" id="wgDots"></div>
           <button class="btn btn-rose wg-btn" id="wgNext" data-wgnav="1">Next →</button>
         </div>
+      </div>
+
+      <!-- ─── TODAY FOR ZIVA — the Home lede (PR-K) ─── -->
+      <div class="card col-full today-hero" id="todayHeroCard" style="display:none;">
+        <div class="th-head">
+          <div class="th-title">Today for Ziva</div>
+          <div class="th-age" id="thAge">—</div>
+        </div>
+        <div class="th-date" id="thDate">—</div>
+        <div class="th-focus" id="thFocus"></div>
       </div>
 
       <!-- ─── TIER 1: COMPACT VITALS (expandable) ─── -->
@@ -22611,10 +22666,58 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 // HOME TAB RENDER
 // ─────────────────────────────────────────
+// ── "Today for Ziva" — the Home lede (PR-K) ──
+// A warm, scannable card that answers the one question a tired parent opens
+// the app with: what matters today? Headline + age + date, then the single
+// highest-priority item (an action or watch alert) — or a calm all-clear.
+function renderTodayHero() {
+  const card = document.getElementById('todayHeroCard');
+  if (!card) return;
+  const ageEl = document.getElementById('thAge');
+  const dateEl = document.getElementById('thDate');
+  const focusEl = document.getElementById('thFocus');
+
+  // Age + date line
+  const a = ageAt();
+  let ageStr = a.months + (a.months === 1 ? ' month' : ' months');
+  if (a.days) ageStr += ', ' + a.days + (a.days === 1 ? ' day' : ' days');
+  if (ageEl) ageEl.textContent = ageStr + ' old';
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // The one thing that matters today — highest-priority alert, else all-clear.
+  let focusHTML = '';
+  try {
+    const alerts = computeAlerts();
+    const top = alerts.find(x => x.severity === 'action') || alerts.find(x => x.severity === 'watch');
+    if (top) {
+      const sevCls = top.severity === 'action' ? 'thf-action' : 'thf-watch';
+      focusHTML = `<div class="th-focus-row ${sevCls}">
+        <div class="th-focus-icon">${top.icon || zi('bell')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">Today's focus</div>
+          <div class="th-focus-text">${escHtml(top.title)}</div>
+        </div>
+        ${top.tab ? `<button class="th-focus-btn" data-action="switchTab" data-arg="${escAttr(top.tab)}" data-stop="1">View</button>` : ''}
+      </div>`;
+    } else {
+      focusHTML = `<div class="th-focus-row thf-clear">
+        <div class="th-focus-icon">${zi('sparkle')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">All clear</div>
+          <div class="th-focus-text">Nothing needs your attention today — enjoy the time together.</div>
+        </div>
+      </div>`;
+    }
+  } catch (e) { console.error('todayHero focus:', e); }
+  if (focusEl) focusEl.innerHTML = focusHTML;
+  card.style.display = focusHTML ? '' : 'none';
+}
+
 function renderHome() {
   _clearModifierCache();
   _postVaccCached = null;
   updateHeader();
+  renderTodayHero();
   renderHomeFeverBanner();
   renderHomeDiarrhoeaBanner();
   renderHomeVomitingBanner();

@@ -2232,6 +2232,51 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   .stat-pills-grid { grid-template-columns:repeat(3, 1fr); gap:var(--sp-8); }
 }
 
+/* ─── "Today for Ziva" — the Home lede (PR-K) ─── */
+.today-hero {
+  background:linear-gradient(135deg, var(--peach-light), var(--warm));
+  border:1px solid rgba(250,212,180,0.5);
+}
+.th-head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-8); }
+.th-title {
+  font-family:'Fraunces', serif; font-size:var(--fs-xl); font-weight:600;
+  color:var(--text); line-height:1.2;
+}
+.th-age { font-size:var(--fs-sm); font-weight:600; color:var(--mid); flex-shrink:0; }
+.th-date { font-size:var(--fs-sm); color:var(--light); margin-top:var(--sp-2); }
+.th-focus { margin-top:var(--sp-12); }
+.th-focus-row {
+  display:flex; align-items:center; gap:var(--sp-10);
+  padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
+  background:var(--white); border-left:3px solid var(--sage);
+}
+.th-focus-row.thf-action { border-left-color:var(--rose); }
+.th-focus-row.thf-watch  { border-left-color:var(--amber); }
+.th-focus-row.thf-clear  { border-left-color:var(--sage); }
+.th-focus-icon {
+  width:36px; height:36px; flex-shrink:0; border-radius:var(--r-full);
+  background:var(--peach-light); display:flex; align-items:center; justify-content:center;
+}
+.th-focus-icon .zi { width:var(--icon-md); height:var(--icon-md); }
+.th-focus-body { flex:1; min-width:0; }
+.th-focus-label {
+  font-size:var(--fs-2xs); font-weight:700; letter-spacing:0.04em;
+  text-transform:uppercase; color:var(--light);
+}
+.th-focus-text { font-size:var(--fs-sm); font-weight:600; color:var(--text); margin-top:var(--sp-2); }
+.th-focus-btn {
+  flex-shrink:0; font-size:var(--fs-sm); font-weight:600;
+  padding:var(--sp-6) var(--sp-12); border-radius:var(--r-full);
+  border:none; background:var(--text); color:var(--white); cursor:pointer;
+}
+.th-focus-btn:active { transform:scale(0.95); }
+[data-theme="dark"] .today-hero {
+  background:linear-gradient(135deg, rgba(250,212,180,0.10), rgba(255,255,255,0.03));
+  border-color:rgba(250,212,180,0.2);
+}
+[data-theme="dark"] .th-focus-row { background:var(--mid); }
+[data-theme="dark"] .th-focus-icon { background:rgba(250,212,180,0.14); }
+
 .home-stat-pill {
   border-radius:var(--r-xl); padding:var(--sp-12);
   text-align:center; min-width:0;
