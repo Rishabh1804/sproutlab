@@ -7386,8 +7386,9 @@ function computeAlerts() {
             title: m.name + ' streak broken after ' + priorStreak + ' days',
             body: 'Yesterday\'s dose was missed or skipped, breaking a ' + priorStreak + '-day streak.',
             tip: getEscalatedTip('supp-streak-broken'),
-            action: { label: 'View Medical', fn: 'switchTab("medical")' },
-            tab: 'medical'          });
+            action: { label: 'View 30-day history', fn: 'gotoCard("info","infoSupplementCard")' },
+            tab: 'info'
+          });
         }
       }
     }
@@ -7509,8 +7510,9 @@ function computeAlerts() {
       title: capitalize(r.food) + ' linked to ' + (conTypes || 'abnormal') + ' stool (' + pct + '%)',
       body: capitalize(r.food) + ' has been followed by unusual poop ' + r.abnormalAfter + ' out of ' + r.totalOccurrences + ' times (' + r.confidence + ' confidence).',
       tip: getEscalatedTip('food-correlation'),
-      action: { label: 'View Evidence', fn: 'switchTab("insights")' },
-      tab: 'insights'    });
+      action: { label: 'View Evidence', fn: 'gotoCard("insights","insightsCorrelationCard")' },
+      tab: 'insights'
+    });
   });
 
   // ─── 17. FOOD GROUP GAP ───

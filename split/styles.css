@@ -2295,7 +2295,9 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .th-focus-row {
   display:flex; align-items:center; gap:var(--sp-10);
   padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
-  background:var(--white); border-left:3px solid var(--sage);
+  /* translucent so the row settles into the warm card rather than reading
+     as a stark white block floating on top of it */
+  background:rgba(255,255,255,0.62); border-left:3px solid var(--sage);
 }
 .th-focus-row.thf-action { border-left-color:var(--rose); }
 .th-focus-row.thf-watch  { border-left-color:var(--amber); }
@@ -2314,14 +2316,19 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .th-focus-btn {
   flex-shrink:0; font-size:var(--fs-sm); font-weight:600;
   padding:var(--sp-6) var(--sp-12); border-radius:var(--r-full);
-  border:none; background:var(--text); color:var(--white); cursor:pointer;
+  /* soft card-toned pill — calmer than a hard dark button, themes correctly */
+  border:1px solid var(--card-border); background:var(--card-bg); color:var(--text);
+  cursor:pointer;
 }
 .th-focus-btn:active { transform:scale(0.95); }
 [data-theme="dark"] .today-hero {
   background:linear-gradient(135deg, rgba(250,212,180,0.10), rgba(255,255,255,0.03));
   border-color:rgba(250,212,180,0.2);
 }
-[data-theme="dark"] .th-focus-row { background:var(--mid); }
+/* dark: a subtle elevated surface — NOT var(--mid), which is a light mauve
+   in dark mode and rendered the row as a glaring pale block (feedback fix) */
+[data-theme="dark"] .th-focus-row { background:rgba(255,255,255,0.05); }
+[data-theme="dark"] .th-focus-btn { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.12); }
 [data-theme="dark"] .th-focus-icon { background:rgba(250,212,180,0.14); }
 
 .home-stat-pill {
