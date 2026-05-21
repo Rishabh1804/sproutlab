@@ -436,7 +436,7 @@ test.describe('Service Worker registration (Phase 2 PR-4a)', () => {
 //
 // Five tests exercise the cache lifecycle end-to-end:
 //   positive — cache name matches manifest.version (CACHE_NAME = 'sproutlab-' + version)
-//   positive — all 8 first-party precache assets land in the cache after install
+//   positive — all 6 first-party precache assets land in the cache after install
 //   regression-guard — manifest.json is NOT precached (bypass keeps displayAppVersion fresh)
 //   regression-guard — stale prior-version caches are deleted on activate
 //   positive — cached asset served when network unavailable (offline behavior)
@@ -461,15 +461,16 @@ test.describe('Service Worker cache lifecycle (Phase 2 PR-4b)', () => {
     expect(result.cacheKeys, 'cache name = sproutlab-<version>').toContain(`sproutlab-${result.version}`);
   });
 
-  test('positive — all 8 first-party assets precached on install', async ({ page }) => {
+  test('positive — all 6 first-party assets precached on install', async ({ page }) => {
     await stubChartJs(page);
     await page.goto('/index.html?nosync');
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForTimeout(500); // let precache promises settle
 
+    // Canon 0034: HTML/navigation requests bypass the SW and are never
+    // precached — so './' and 'index.html' are intentionally absent. The
+    // precache is 6 assets: 3 icons + 3 vendored /lib/firebase-*-compat.js.
     const PRECACHE_EXPECTED = [
-      './',
-      'index.html',
       'icon-192.png',
       'icon-512.png',
       'apple-touch-icon.png',
@@ -2322,26 +2323,19 @@ test.describe('Polish-2 — governance-rule violations closed at 4 named cross-G
     expect(html.includes('background:var(--peach-light);border-left:var(--accent-w) solid #ffc107;'),
       'Site 1 violation absent: medical.js:3208 no longer carries `#ffc107` inside the inline-style attribute').toBeFalsy();
 
-    // Site 2: HR-1 — medical.js:2268 specific violation pattern. The original
-    // line emitted `\u{1F6A8} When to seek emergency care`. The same string
-    // template was BYTE-IDENTICALLY duplicated at intelligence.js:11965 — a
-    // Polish-2 build-deep finding (running-beats-reading 6th instance; cross-
-    // Governor-catch coverage gap because Cipher's PR-23 r1 audit was scoped
-    // to Maren's Care territory and missed Kael's Intelligence territory).
-    // intelligence.js:11965 is OUT of Polish-2 scope (routed to charter §6 P-1
-    // R-10 carry-forward); it still emits the pattern post-Polish-2.
-    //
-    // Once both source files were concatenated into the bundle pre-Polish-2,
-    // this pattern appeared 2× (once per source file). Polish-2 closes
-    // medical.js:2268 only, so post-Polish-2 the pattern appears 1× (from
-    // intelligence.js:11965). The binary-mode-duo regression-guard for Site
-    // 2 is therefore count-based: assert exactly 1 remaining occurrence,
-    // confirming medical.js's contribution is absent without false-positive
-    // failure on intelligence.js's still-present out-of-scope contribution.
-    const emergencyPattern = "\\u{1F6A8} When to seek emergency care";
+    // Site 2: HR-1 — the emergency-care emoji violation. The original lines
+    // emitted `\u{1F6A8} When to seek emergency care` — both the medical.js
+    // site and a byte-identical duplicate then in intelligence.js. The
+    // medical.js sites were closed by Polish-2; the intelligence.js copy was
+    // subsequently removed when intelligence.js was split into the 7-file
+    // intelligence-*.js set (the offending render path was retired in that
+    // work). Today the siren-emoji pattern is fully ABSENT from the bundle:
+    // both surviving "When to seek emergency care" strings (medical.js:2608
+    // and :2648) render the clean `zi('siren')` form, zero raw emoji.
+    const emergencyPattern = "\u{1F6A8} When to seek emergency care";
     const remainingOccurrences = html.split(emergencyPattern).length - 1;
     expect(remainingOccurrences,
-      'Site 2 medical.js:2268 contribution absent: bundle has exactly 1 remaining occurrence (intelligence.js:11965, out-of-scope per R-10 P-1)').toBe(1);
+      'Site 2: emergency-care siren-emoji violation fully absent — all surviving sites use zi(\'siren\')').toBe(0);
 
     // Site 3: HR-1 — home.js:1595 specific violation pattern. The original
     // line emitted `<div class="ms-tidbit-icon">🩺</div>`. The string-literal-
@@ -2777,11 +2771,18 @@ test.describe('Polish-6 — CSS-custom-property pivot (Path C; --dyn-pct width/h
     // const lookups + Chart.js dataset configs — Stability sub-phase
     // territory — would NOT match this width/height-pct template-literal
     // signature anyway).
+    // intelligence.js was split into 7 subsystem files (PR-G); scan all of them.
     const FILES_TO_SCAN = [
       '/split/home.js',
       '/split/diet.js',
       '/split/medical.js',
-      '/split/intelligence.js',
+      '/split/intelligence-isl.js',
+      '/split/intelligence-qa.js',
+      '/split/intelligence-qa-handlers.js',
+      '/split/intelligence-illness.js',
+      '/split/intelligence-quicklog.js',
+      '/split/intelligence-cards.js',
+      '/split/intelligence-caretickets.js',
     ];
     // Pattern: `style="width:${...}%"` or `style='width:${...}%'`.
     // Compound-partial sites pivoted to --dyn-pct don't match this pattern
@@ -2907,6 +2908,27 @@ test.describe('Polish-7 — Responsive breakpoint normalization (canonical 4-val
   });
 });
 
+// intelligence.js was split into 7 subsystem files (PR-G). Tests that need
+// "the intelligence source" fetch + concatenate all 7 into a single string.
+const INTELLIGENCE_SPLIT_FILES = [
+  '/split/intelligence-isl.js',
+  '/split/intelligence-qa.js',
+  '/split/intelligence-qa-handlers.js',
+  '/split/intelligence-illness.js',
+  '/split/intelligence-quicklog.js',
+  '/split/intelligence-cards.js',
+  '/split/intelligence-caretickets.js',
+];
+async function fetchIntelligenceSource(request: any): Promise<string> {
+  const parts: string[] = [];
+  for (const file of INTELLIGENCE_SPLIT_FILES) {
+    const res = await request.get(file);
+    expect(res.ok(), `${file} fetchable`).toBeTruthy();
+    parts.push(await res.text());
+  }
+  return parts.join('\n');
+}
+
 test.describe('Polish-10a — SVG-in-data architectural shift + HR-1/HR-4 sweep', () => {
   // Visible-bug root cause: zi() output (`<svg class="zi">`) stored as data
   // on illness-episode `emoji` fields and concatenated into HTML title="..."
@@ -2965,8 +2987,7 @@ test.describe('Polish-10a — SVG-in-data architectural shift + HR-1/HR-4 sweep'
   test('regression-guard — title="..." attrs in HR-4-fixed sites use escAttr (no raw user-data interpolation)', async ({ request }) => {
     const medRes = await request.get('/split/medical.js');
     const med = await medRes.text();
-    const intelRes = await request.get('/split/intelligence.js');
-    const intel = await intelRes.text();
+    const intel = await fetchIntelligenceSource(request);
     const homeRes = await request.get('/split/home.js');
     const home = await homeRes.text();
 
@@ -2987,8 +3008,7 @@ test.describe('Polish-10a — SVG-in-data architectural shift + HR-1/HR-4 sweep'
   test('positive — HR-1 emoji removed at 11 named cross-Governor-catch sites (Polish-10a absorption of P-1 subset)', async ({ request }) => {
     const medRes = await request.get('/split/medical.js');
     const med = await medRes.text();
-    const intelRes = await request.get('/split/intelligence.js');
-    const intel = await intelRes.text();
+    const intel = await fetchIntelligenceSource(request);
 
     // medical.js: 4 HR-1 sites previously deferred to R-10 P-1, absorbed
     // into Polish-10a (route a — single zi() swap fix-shape).
@@ -3161,8 +3181,7 @@ test.describe('Polish-10c — HR-3 onclick batch (Intelligence + Diet; ~15 sites
   });
 
   test('regression-guard — zero onclick=" attrs at converted Polish-10c ranges (intelligence.js + diet.js)', async ({ request }) => {
-    const intelRes = await request.get('/split/intelligence.js');
-    const intel = await intelRes.text();
+    const intel = await fetchIntelligenceSource(request);
     const dietRes = await request.get('/split/diet.js');
     const diet = await dietRes.text();
 
