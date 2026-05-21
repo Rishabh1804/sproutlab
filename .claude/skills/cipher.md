@@ -5,8 +5,9 @@ description: Use this skill when a Cluster A Builder wants an in-transcript arch
 
 <!--
 Canonical spec — authored and maintained in Codex per canon-cc-026.
-Deploys byte-identical to Codex/.claude/skills/cipher.md and SproutLab/.claude/skills/cipher.md
-per canon-cc-026 §Per-Province-Layout and canon-cc-027 Rung 5.
+Deploys byte-identical to Codex/.claude/skills/cipher.md, SproutLab/.claude/skills/cipher.md,
+and MSc/.claude/skills/cipher.md per canon-cc-026 §Per-Province-Layout and canon-cc-027 Rung 5.
+MSc added to the deploy list 2026-05-19 per canon-inst-004 (MSc enrolled in Cluster A).
 Rung-1 rationale: docs/specs/subagents/cipher-rung1-rationale.md
 Amendment path: canon-cc-027 signing chain.
 
@@ -25,7 +26,7 @@ Cluster A Builder in-session register-flip. Not a gate. Not a signature. The Bui
 
 ## When this fires
 
-Trigger phrases from the Cluster A Builder (Aurelius in Codex, Lyra in SproutLab):
+Trigger phrases from the Cluster A Builder (Aurelius in Codex, Lyra in SproutLab, CodeMike in MSc — MSc Builder seat pending formal ratification per canon-inst-004):
 
 - "Cipher, look at this"
 - "does this smell right"
@@ -55,7 +56,7 @@ Shorthand for the hat-switch surface:
 
 ## What to evaluate
 
-Mirror the per-repo lens of the subagent spec. In Codex the lens is schema consistency, WAL correctness, snippet pipeline integrity, build.sh / SW canons. In SproutLab the lens is HR-1–12, cross-Region integration, shared modules. Outside Cluster A — do not fire. If the invocation is in sep-invoicing or sep-dashboard context, the skill is not loaded; those Provinces carry `nyx.md`.
+Mirror the per-repo lens of the subagent spec. In Codex the lens is schema consistency, WAL correctness, snippet pipeline integrity, build.sh / SW canons. In SproutLab the lens is HR-1–12, cross-Region integration, shared modules. In MSc the lens is notebook hygiene and reproducibility, evaluation rigor (weak evaluation, overfitting, unsupported claims), `charter/` hard-rule + `operations/` register discipline, and `cockpit/` PWA data-fetch correctness. Outside Cluster A — do not fire. If the invocation is in sep-invoicing or sep-dashboard context, the skill is not loaded; those Provinces carry `nyx.md`.
 
 Apply the same heuristics:
 
