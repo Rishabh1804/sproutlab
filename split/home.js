@@ -373,10 +373,58 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 // HOME TAB RENDER
 // ─────────────────────────────────────────
+// ── "Today for Ziva" — the Home lede (PR-K) ──
+// A warm, scannable card that answers the one question a tired parent opens
+// the app with: what matters today? Headline + age + date, then the single
+// highest-priority item (an action or watch alert) — or a calm all-clear.
+function renderTodayHero() {
+  const card = document.getElementById('todayHeroCard');
+  if (!card) return;
+  const ageEl = document.getElementById('thAge');
+  const dateEl = document.getElementById('thDate');
+  const focusEl = document.getElementById('thFocus');
+
+  // Age + date line
+  const a = ageAt();
+  let ageStr = a.months + (a.months === 1 ? ' month' : ' months');
+  if (a.days) ageStr += ', ' + a.days + (a.days === 1 ? ' day' : ' days');
+  if (ageEl) ageEl.textContent = ageStr + ' old';
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // The one thing that matters today — highest-priority alert, else all-clear.
+  let focusHTML = '';
+  try {
+    const alerts = computeAlerts();
+    const top = alerts.find(x => x.severity === 'action') || alerts.find(x => x.severity === 'watch');
+    if (top) {
+      const sevCls = top.severity === 'action' ? 'thf-action' : 'thf-watch';
+      focusHTML = `<div class="th-focus-row ${sevCls}">
+        <div class="th-focus-icon">${top.icon || zi('bell')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">Today's focus</div>
+          <div class="th-focus-text">${escHtml(top.title)}</div>
+        </div>
+        ${top.tab ? `<button class="th-focus-btn" data-action="switchTab" data-arg="${escAttr(top.tab)}" data-stop="1">View</button>` : ''}
+      </div>`;
+    } else {
+      focusHTML = `<div class="th-focus-row thf-clear">
+        <div class="th-focus-icon">${zi('sparkle')}</div>
+        <div class="th-focus-body">
+          <div class="th-focus-label">All clear</div>
+          <div class="th-focus-text">Nothing needs your attention today — enjoy the time together.</div>
+        </div>
+      </div>`;
+    }
+  } catch (e) { console.error('todayHero focus:', e); }
+  if (focusEl) focusEl.innerHTML = focusHTML;
+  card.style.display = focusHTML ? '' : 'none';
+}
+
 function renderHome() {
   _clearModifierCache();
   _postVaccCached = null;
   updateHeader();
+  renderTodayHero();
   renderHomeFeverBanner();
   renderHomeDiarrhoeaBanner();
   renderHomeVomitingBanner();
@@ -6600,7 +6648,17 @@ function renderScrapbookHistory() {
 // ══════════════════════════════════════════════════════════════
 
 // ── Storage ──
-function loadAlertState()   { return load(KEYS.alertsActive, { dismissed: {} }); }
+// Alert clear-state has three buckets (PR-K 4-mode model): `dismissed` and
+// `acknowledged` are long-lived clears; `snoozed` is a short deferral. Each
+// entry stores an EXPIRY timestamp, never a bare flag — so a cleared alert
+// always self-restores after its TTL and can never be permanently lost.
+function loadAlertState() {
+  const s = load(KEYS.alertsActive, { dismissed: {}, snoozed: {}, acknowledged: {} });
+  if (!s.dismissed)    s.dismissed = {};
+  if (!s.snoozed)      s.snoozed = {};
+  if (!s.acknowledged) s.acknowledged = {};
+  return s;
+}
 function saveAlertState(s)  { save(KEYS.alertsActive, s); }
 function loadAlertHistory() { return load(KEYS.alertsHistory, []); }
 function saveAlertHistory(h){ save(KEYS.alertsHistory, h); }
@@ -6613,26 +6671,32 @@ function logAlertEvent(alertKey, eventType, alertTitle, alertSeverity) {
   saveAlertHistory(h);
 }
 
-function dismissAlert(alertKey, alertTitle) {
+// ── 4-mode alert clearing (PR-K) ──
+// dismiss / acknowledge persist for 30d; snooze defers for 3d. Storing the
+// expiry (not the action time) means the auto-clear GC is a pure timestamp
+// check with no dependency on which alerts happen to be active this render.
+const ALERT_TTL_DAYS = { dismissed: 30, acknowledged: 30, snoozed: 3 };
+
+function _clearAlert(bucket, alertKey, alertTitle, eventType) {
   const state = loadAlertState();
-  state.dismissed[alertKey] = new Date().toISOString();
+  const ttl = ALERT_TTL_DAYS[bucket] || 30;
+  state[bucket][alertKey] = new Date(Date.now() + ttl * 86400000).toISOString();
   saveAlertState(state);
-  logAlertEvent(alertKey, 'dismissed', alertTitle);
-  // Animate out all scoped instances
+  logAlertEvent(alertKey, eventType, alertTitle);
+  // Animate out all scoped instances, then re-render every alert surface.
   const safePart = alertKey.replace(/[^a-zA-Z0-9-]/g, '_');
   let found = false;
   ['ins-', 'insw-', 'hm-', 'hmw-', ''].forEach(scope => {
     const el = document.getElementById('ca-' + scope + safePart);
     if (el) { el.classList.add('dismissing'); found = true; }
   });
-  if (found) {
-    setTimeout(() => { renderRemindersAndAlerts(); renderHomeContextAlerts(); renderInsightsAlerts(); }, 300);
-  } else {
-    renderRemindersAndAlerts();
-    renderHomeContextAlerts();
-    renderInsightsAlerts();
-  }
+  const rerender = () => { renderRemindersAndAlerts(); renderHomeContextAlerts(); renderInsightsAlerts(); };
+  if (found) setTimeout(rerender, 300); else rerender();
 }
+
+function dismissAlert(alertKey, alertTitle)     { _clearAlert('dismissed', alertKey, alertTitle, 'dismissed'); }
+function acknowledgeAlert(alertKey, alertTitle) { _clearAlert('acknowledged', alertKey, alertTitle, 'acknowledged'); }
+function snoozeAlert(alertKey, alertTitle)      { _clearAlert('snoozed', alertKey, alertTitle, 'snoozed'); }
 
 function toggleAlertTip(alertKey) {
   const el = document.getElementById('ca-tip-' + alertKey.replace(/[^a-zA-Z0-9-]/g, '_'));
@@ -6644,6 +6708,27 @@ const SEV_ORDER = { action: 0, watch: 1, info: 2, positive: 3 };
 const SEV_CLASS = { action: 'ca-action', watch: 'ca-watch', info: 'ca-info', positive: 'ca-positive' };
 const SEV_BADGE = { action: 'sev-action', watch: 'sev-watch', info: 'sev-info', positive: 'sev-positive' };
 const SEV_LABEL = { action: zi('siren') + ' Action', watch: zi('warn') + ' Watch', info: zi('check') + ' Info', positive: zi('party') + ' Win' };
+
+// ── 4-mode interaction model (PR-K) ──
+// Each alert resolves to exactly one interaction mode, derived from severity:
+//   action      → CTA only, no clear control — the parent must act on it
+//   snooze      → deferrable; re-surfaces automatically after the snooze TTL
+//   acknowledge → a win; a warm "Got it" permanently clears it
+//   dismiss     → low-stakes info; the corner × permanently clears it
+// safetyLocked alerts (upcoming-vaccine / dev-checkup reminders) are forced
+// to 'snooze' regardless of severity: they can be deferred but never
+// permanently dismissed or acknowledged away — Maren V-M-17 doctrine.
+const ALERT_MODE = { action: 'action', watch: 'snooze', positive: 'acknowledge', info: 'dismiss' };
+// Keys that must never resolve to a permanently-clearing mode, independent of
+// the safetyLocked flag (V-M-33 backstop): if a future edit drops safetyLocked
+// from a vaccine / checkup reminder, this still forces it to 'snooze'.
+const SAFETY_LOCKED_KEY = /^(vacc-reminder|dev-checkup)/;
+function getAlertMode(a) {
+  const base = ALERT_MODE[a.severity] || 'dismiss';
+  const locked = a.safetyLocked || SAFETY_LOCKED_KEY.test(a.key || '');
+  if (locked && base !== 'action') return 'snooze';
+  return base;
+}
 
 // Sanitize alert keys to safe alphanumeric + dash only
 function sanitizeAlertKey(s) { return s.replace(/[^a-zA-Z0-9-]/g, '_'); }
@@ -7043,8 +7128,15 @@ function computeAlerts() {
   const state = loadAlertState();
   const bl = computeBaselines();
 
-  // Helper: check if dismissed
-  function isDismissed(key) { return !!state.dismissed[key]; }
+  // Helper: is this alert currently cleared from view? True if dismissed,
+  // acknowledged, or snoozed AND that clear-state has not yet expired. The
+  // single predicate gates every alert (warnings at their push sites,
+  // positives in a sweep below) so all three modes take effect uniformly.
+  function isDismissed(key) {
+    const now = Date.now();
+    const live = b => { const v = state[b] && state[b][key]; return !!v && now < new Date(v).getTime(); };
+    return live('dismissed') || live('acknowledged') || live('snoozed');
+  }
 
   // ═══════════════════════════════════════
   // WARNING ALERTS (with escalating tips)
@@ -7222,7 +7314,7 @@ function computeAlerts() {
             body: 'Well-baby visits at ' + mo + ' months cover growth assessment, developmental milestones, and vaccination review.',
             tip: getEscalatedTip('dev-checkup-due'),
             action: { label: 'View Medical', fn: 'switchTab("medical")' },
-            tab: 'medical', dismissable: true
+            tab: 'medical', dismissable: true, safetyLocked: true
           });
         }
       }
@@ -7266,7 +7358,7 @@ function computeAlerts() {
           body: 'Scheduled for ' + formatDate(upcoming.date) + '. Book the appointment if you haven\'t already.',
           tip: getEscalatedTip('vacc-reminder'),
           action: { label: 'View Vaccines', fn: 'switchTab("medical")' },
-          tab: 'medical', dismissable: true
+          tab: 'medical', dismissable: true, safetyLocked: true
         });
       }
     }
@@ -7701,6 +7793,14 @@ function computeAlerts() {
   // SORT, SYNTHESIS, AUTO-CLEAR, LOG
   // ═══════════════════════════════════════
 
+  // ── Gate positives through the same clear-predicate as warnings ──
+  // Warnings are gated at their individual push sites; positive alerts push
+  // unconditionally, so sweep them here. Without this, acknowledge / dismiss
+  // on a win has no effect — the very gap PR-J's win-× exposed (V-M-32).
+  for (let i = alerts.length - 1; i >= 0; i--) {
+    if (alerts[i].severity === 'positive' && isDismissed(alerts[i].key)) alerts.splice(i, 1);
+  }
+
   // ── Sort by severity (action → watch → info → positive) ──
   alerts.sort((a, b) => (SEV_ORDER[a.severity] || 3) - (SEV_ORDER[b.severity] || 3));
 
@@ -7710,17 +7810,22 @@ function computeAlerts() {
   const { alerts: synthesizedWarnings, synthesisNarrative } = applyCrossSynthesis(warningAlerts);
   const finalAlerts = [...synthesizedWarnings, ...positiveAlerts];
 
-  // ── Auto-clear: remove dismissed entries whose condition no longer exists ──
+  // ── Auto-clear: drop expired clear-state entries ──
+  // dismiss / acknowledge / snooze all store an expiry timestamp, so GC is a
+  // pure time check — once past expiry the alert self-restores. No dependency
+  // on the active set, so a still-true alert that was cleared stays cleared
+  // for its full TTL (the activeKeys-based GC silently un-cleared it early).
   const activeKeys = new Set(finalAlerts.map(a => a.key));
   const st = loadAlertState();
   let changed = false;
-  for (const dKey of Object.keys(st.dismissed)) {
-    if (!activeKeys.has(dKey)) {
-      logAlertEvent(dKey, 'resolved', dKey);
-      delete st.dismissed[dKey];
-      changed = true;
+  ['dismissed', 'acknowledged', 'snoozed'].forEach(bucket => {
+    for (const k of Object.keys(st[bucket])) {
+      if (Date.now() >= new Date(st[bucket][k]).getTime()) {
+        delete st[bucket][k];
+        changed = true;
+      }
     }
-  }
+  });
   if (changed) saveAlertState(st);
 
   // ── Auto-resolve: mark previously triggered alerts as resolved if condition cleared ──
@@ -7781,8 +7886,10 @@ function renderAlertCardHTML(a, scope) {
   const sevLabel = SEV_LABEL[a.severity] || zi('check') + ' Info';
   // Register action fn safely
   if (a.action && a.action.fn) _alertActionRegistry[safeKey] = a.action.fn;
+  // Interaction mode (PR-K): drives which clear control the card carries.
+  const mode = getAlertMode(a);
   return `<div class="ctx-alert ${sevClass}" id="ca-${safeKey}">
-    ${a.dismissable ? `<button class="ctx-alert-dismiss" data-action="dismissAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}" aria-label="Dismiss">&times;</button>` : ''}
+    ${mode === 'dismiss' ? `<button class="ctx-alert-dismiss" data-action="dismissAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}" aria-label="Dismiss">&times;</button>` : ''}
     <div class="ctx-alert-top">
       <div class="ctx-alert-icon">${a.icon}</div>
       <div class="ctx-alert-body">
@@ -7793,6 +7900,8 @@ function renderAlertCardHTML(a, scope) {
         <div class="ctx-alert-actions">
           ${a.action ? `<button class="ctx-alert-btn cab-primary" data-action="execAlertAction" data-arg="${safeKey}" data-stop="1">${escHtml(a.action.label)}</button>` : ''}
           ${a.tab ? `<button class="ctx-alert-btn cab-secondary" data-action="switchTab" data-arg="${escAttr(a.tab)}" data-stop="1">View details</button>` : ''}
+          ${mode === 'acknowledge' ? `<button class="ctx-alert-btn cab-ack" data-action="acknowledgeAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}">${zi('check')} Got it</button>` : ''}
+          ${mode === 'snooze' ? `<button class="ctx-alert-btn cab-snooze" data-action="snoozeAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}">${zi('clock')} Snooze 3d</button>` : ''}
         </div>
       </div>
     </div>
@@ -8005,14 +8114,14 @@ function renderTodayPlan() {
         items.push({
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)),
+          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)), // raw-html-ok
           tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'),
+          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'), // raw-html-ok
           tag: 'med', done: false, htmlDetail: true
         });
       }
@@ -8021,7 +8130,7 @@ function renderTodayPlan() {
       // Booked but no details — nudge to add date
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
-        detail: iconText('check', 'Booked — tap to add appointment date & time'),
+        detail: iconText('check', 'Booked — tap to add appointment date & time'), // raw-html-ok
         tag: 'med', done: false, htmlDetail: true,
         action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
@@ -8472,7 +8581,7 @@ function renderTrendChips() {
   if (sleepT.score.current != null) {
     const cls = sleepT.score.current >= 70 ? 'tc-good' : sleepT.score.current >= 40 ? 'tc-warn' : 'tc-bad';
     const arrow = sleepT.score.trend.arrow || '';
-    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.text || '', cls, tab:'sleep' });
+    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.html || '', cls, tab:'sleep' });
   } else {
     chips.push({ icon:zi('moon'), label:'Sleep', value:'No data yet', delta:'—', cls:'tc-neutral', tab:'sleep' });
   }
@@ -8790,7 +8899,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     if (trend.score.current != null) {
       const cls = trend.score.current >= 70 ? 'ipp-good' : trend.score.current >= 40 ? 'ipp-warn' : 'ipp-bad';
       pills += `<span class="ins-preview-pill ${cls}">${zi('zzz')} ${trend.score.current}/100</span>`;
-      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.text}</span>`;
+      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.html}</span>`;
     }
     if (trend.wakes.current != null) {
       const cls = trend.wakes.current <= 1 ? 'ipp-good' : trend.wakes.current <= 2 ? 'ipp-warn' : 'ipp-bad';
@@ -8808,7 +8917,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${emoji}</div>
       <div class="ir-body">
         <div class="ir-label">Sleep score (7-day avg)</div>
-        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.text ? trend.score.trend.text + ' pts' : ''}</span></div>
+        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.html ? trend.score.trend.html + ' pts' : ''}</span></div>
       </div>
     </div>`;
   }
@@ -8864,7 +8973,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${zi('clock')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg wake-ups / night</div>
-        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.text || ''}</span></div>
+        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.html || ''}</span></div>
       </div>
     </div>`;
   }
@@ -9055,7 +9164,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('chart')}</div>
     <div class="ir-body">
       <div class="ir-label">Daily frequency (7-day avg)</div>
-      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.text ? trend.freq.trend.text + '/d' : ''}</span></div>
+      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.html ? trend.freq.trend.html + '/d' : ''}</span></div>
     </div>
   </div>`;
 
@@ -9178,7 +9287,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('bowl')}</div>
     <div class="ir-body">
       <div class="ir-label">Meals logged (7 days)</div>
-      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.html || ''}</span></div>
     </div>
   </div>`;
 
@@ -9187,7 +9296,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('rainbow')}</div>
     <div class="ir-body">
       <div class="ir-label">Unique foods this week</div>
-      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.html || ''}</span></div>
     </div>
   </div>`;
 

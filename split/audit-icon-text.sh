@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 # audit-icon-text.sh — V-K-10 lint pattern (PR-A icon-data-shape closure)
-# Flags `(label|text|reason|detail):\s*zi\(` field-assignments in split/*.js,
-# the canonical bug shape from V-M-9 / V-M-10 / V-M-16 surfaced across PR
-# #74 + #75: an SVG fragment lands in a field that downstream renderers
-# pass through escHtml() at the boundary, collapsing the <use href=...>
-# element into &lt;use&gt; and absorbing the user-readable text into the
-# closing SVG tag. Adopt iconText(name, text) from core.js to escape the
-# text component at helper-time and emit the SVG as raw HTML, OR annotate
-# the line with `// raw-html-ok` when the surrounding render path is a
-# sanctioned raw-HTML emit (htmlDetail: true, ins.text, etc.).
+# Flags `(label|text|reason|detail):\s*(zi|iconText)\(` field-assignments in
+# split/*.js, the canonical bug shape from V-M-9 / V-M-10 / V-M-16 surfaced
+# across PR #74 + #75: an SVG fragment lands in a field that downstream
+# renderers pass through escHtml() at the boundary, collapsing the
+# <use href=...> element into &lt;use&gt; and absorbing the user-readable
+# text into the closing SVG tag. Adopt iconText(name, text) from core.js to
+# escape the text component at helper-time and emit the SVG as raw HTML, OR
+# annotate the line with `// raw-html-ok` when the surrounding render path is
+# a sanctioned raw-HTML emit (htmlDetail: true, ins.text, etc.).
+#
+# PR-K (V-K-14) widened the call match from `zi(` to `(zi|iconText)(`: a
+# field named `text`/`label`/`detail` carrying iconText() output still holds
+# HTML, and naming it like plain text invites the next `.textContent`
+# consumer to re-ship the PR-EF trend-pill regression. HTML-bearing fields
+# must be named `.html`/`.icon`, OR carry the `// raw-html-ok` opt-in.
 #
 # Usage:   bash split/audit-icon-text.sh   (0 = pass)
 # Returns: exit 0 if 0 unannotated hits; exit 1 otherwise.
@@ -23,10 +29,10 @@ cd "$(dirname "$0")/.."
 python3 - << 'PYEOF'
 import re, os, sys
 
-# Brief-specified pattern (s-2026-05-18 PR-A): `(label|text|reason|detail):
-# zi(`. Anchored to the start of the field token to skip incidental
-# occurrences inside strings or comments.
-pattern = re.compile(r'\b(label|text|reason|detail)\s*:\s*zi\s*\(')
+# Brief-specified pattern (s-2026-05-18 PR-A), widened by PR-K V-K-14:
+# `(label|text|reason|detail):\s*(zi|iconText)\(`. Anchored to the start of
+# the field token to skip incidental occurrences inside strings or comments.
+pattern = re.compile(r'\b(label|text|reason|detail)\s*:\s*(zi|iconText)\s*\(')
 
 # Sanctioned raw-HTML opt-in marker. Mirror the comment-annotation pattern
 # audit-emoji.sh uses for its defensive sanitizer carve-outs.
@@ -58,7 +64,7 @@ for scope in scopes:
             total_hits += len(hits)
 
 if total_hits == 0:
-    print('audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): zi(` field-assignments)')
+    print('audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)')
     sys.exit(0)
 
 print(f'audit-icon-text: FAIL ({total_hits} unannotated hits across {len(per_file)} files)')

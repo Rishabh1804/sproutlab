@@ -29,19 +29,20 @@ test('trend pills render the SVG icon as an element, not literal text', async ({
   }
 });
 
-test('positive/win alerts in What\'s Happening carry a dismiss control', async ({ page }) => {
+test('positive/win alerts in What\'s Happening carry a clear control', async ({ page }) => {
   await page.goto('/index.html?nosync');
   await page.locator('#homeUnifiedAlertsCard, #homeZenState').first().waitFor({ state: 'attached' });
   await page.waitForTimeout(800);
 
   // Win cards render with the 'hmw-' scope prefix → id="ca-hmw-...".
+  // PR-K replaced the cold corner × with the warm "Got it" (acknowledge)
+  // control — either counts as a clear affordance, so the win is not stuck.
   const winCards = page.locator('[id^="ca-hmw-"]');
   const n = await winCards.count();
-  // Seed data may or may not surface wins; only assert when present.
   for (let i = 0; i < n; i++) {
     await expect(
-      winCards.nth(i).locator('.ctx-alert-dismiss'),
-      'each win alert has a dismiss control',
+      winCards.nth(i).locator('.ctx-alert-dismiss, .cab-ack'),
+      'each win alert has a clear control',
     ).toHaveCount(1);
   }
 });

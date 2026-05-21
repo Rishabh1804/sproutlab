@@ -3959,20 +3959,22 @@ function renderVaccTimeline() {
   var hasAnyPast = vaccData.some(function(v) { return !v.upcoming; });
   if (!hasAnyPast) { el.innerHTML = ''; return; }
 
-  var cols = '';
+  // PR-K Gantt reshape: one row per IAP age group, read top-to-bottom along a
+  // spine. Each vaccine is a named, status-coloured chip (was a bare dot, with
+  // the name hidden in a title attribute). The reaction-status derivation and
+  // the vaccTimelineTap handler are unchanged — only the layout is reshaped.
+  var rows = '';
   ageOrder.forEach(function(age) {
     var names = ageGroups[age];
     if (!names || names.length === 0) return;
-    // Check if any vaccine in this group has data
     var hasSomeData = names.some(function(n) { return vaccByName[n.toLowerCase()]; });
     var hasSomeUpcoming = names.some(function(n) {
       var v = vaccByName[n.toLowerCase()];
       return v && v.upcoming;
     });
-    // Only show columns up to current age + 1 group ahead
     if (!hasSomeData && !hasSomeUpcoming) return;
 
-    var dots = names.map(function(name) {
+    var chips = names.map(function(name) {
       var v = vaccByName[name.toLowerCase()];
       if (!v) return '';
       var dotClass = 'vc-dot-nodata';
@@ -3991,28 +3993,36 @@ function renderVaccTimeline() {
       var delayBadge = '';
       if (!v.upcoming && v.scheduledDate && v.date) {
         var delayDays = Math.floor((new Date(v.date) - new Date(v.scheduledDate)) / 86400000);
-        if (delayDays > 7) delayBadge = '<span class="vc-timeline-delay">D</span>';
+        if (delayDays > 7) delayBadge = '<span class="vc-gantt-delay" title="Given over a week late">D</span>';
       }
       var idx = vaccData.indexOf(v);
-      return '<div class="vc-timeline-dot ' + dotClass + '" data-action="vaccTimelineTap" data-arg="' + idx + '" title="' + escAttr(name) + '">' +
+      return '<button class="vc-gantt-chip" data-action="vaccTimelineTap" data-arg="' + idx + '" title="' + escAttr(name) + '">' +
+        '<span class="vc-timeline-dot ' + dotClass + ' vc-gantt-chipdot"></span>' +
+        '<span class="vc-gantt-chip-name">' + escHtml(name) + '</span>' +
         delayBadge +
-        '</div>';
+        '</button>';
     }).filter(Boolean).join('');
+    if (!chips) return;
 
-    if (dots) {
-      var shortAge = age.replace(' months', 'm').replace(' weeks', 'w').replace(' years', 'y');
-      cols += '<div class="vc-timeline-col">' +
-        '<div class="vc-timeline-label">' + escHtml(shortAge) + '</div>' +
-        '<div class="vc-timeline-dots">' + dots + '</div>' +
-        '</div>';
-    }
+    var allDone = names.every(function(n) {
+      var v = vaccByName[n.toLowerCase()];
+      return v && !v.upcoming;
+    });
+    var nodeClass = allDone ? 'vc-gantt-node-done' : 'vc-gantt-node-pending';
+    rows += '<div class="vc-gantt-row">' +
+      '<div class="vc-gantt-spine"><span class="vc-gantt-node ' + nodeClass + '">' +
+        (allDone ? zi('check') : '') + '</span></div>' +
+      '<div class="vc-gantt-rowbody">' +
+        '<div class="vc-gantt-age">' + escHtml(age) + '</div>' +
+        '<div class="vc-gantt-chips">' + chips + '</div>' +
+      '</div></div>';
   });
 
-  if (!cols) { el.innerHTML = ''; return; }
+  if (!rows) { el.innerHTML = ''; return; }
 
-  el.innerHTML = '<div class="vc-timeline mt-8 mb-8">' +
+  el.innerHTML = '<div class="vc-gantt mt-8 mb-8">' +
     '<div class="fs-2xs fw-600 tc-lav mb-4">VACCINATION TIMELINE</div>' +
-    '<div class="vc-timeline-scroll">' + cols + '</div>' +
+    '<div class="vc-gantt-rows">' + rows + '</div>' +
     '<div class="fs-2xs tc-light mt-4">' +
     '<span class="vc-timeline-dot vc-dot-none vc-legend-dot"></span> No reaction ' +
     '<span class="vc-timeline-dot vc-dot-mild vc-legend-dot ml-6"></span> Mild ' +
@@ -7816,7 +7826,8 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' +
+          // iconText() escapes the illness label; this `text` is rendered via innerHTML.
+          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' + // raw-html-ok
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights
