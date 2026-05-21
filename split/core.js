@@ -667,6 +667,8 @@ function init() {
     else if (action === 'feHomeBannerLog') feHomeBannerLog();
     else if (action === 'deLogStoolQuick') deLogStoolQuick(arg);
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
+    else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
+    else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
     else if (action === 'toggleAlertTip') toggleAlertTip(arg);
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }

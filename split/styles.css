@@ -3884,6 +3884,14 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ctx-alert-btn.cab-secondary {
   background:transparent; color:var(--mid); border:1px solid var(--card-border);
 }
+/* PR-K 4-mode controls: acknowledge ("Got it") + snooze */
+.ctx-alert-btn.cab-ack {
+  background:var(--sage-light); color:var(--tc-sage); border:1px solid var(--sage);
+}
+.ctx-alert-btn.cab-snooze {
+  background:transparent; color:var(--mid); border:1px solid var(--card-border);
+}
+.ctx-alert-btn .zi { width:var(--icon-xs); height:var(--icon-xs); vertical-align:-1px; }
 .ctx-alert-dismiss {
   position:absolute; top:8px; right:8px; width:24px; height:24px;
   border:none; background:transparent; cursor:pointer; font-size:var(--icon-sm);
@@ -6640,6 +6648,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 [data-theme="dark"] .ctx-alert-sev.sev-action { background:rgba(176,72,94,0.15); border-color:rgba(176,72,94,0.25); }
 [data-theme="dark"] .ctx-alert-btn.cab-primary { background:var(--mid); }
 [data-theme="dark"] .ctx-alert-btn.cab-secondary { border-color:rgba(255,255,255,0.12); color:var(--light); }
+[data-theme="dark"] .ctx-alert-btn.cab-snooze { border-color:rgba(255,255,255,0.12); color:var(--light); }
+[data-theme="dark"] .ctx-alert-btn.cab-ack { background:rgba(181,213,197,0.14); border-color:rgba(181,213,197,0.3); }
 [data-theme="dark"] .ctx-alert-dismiss:hover { background:rgba(255,255,255,0.08); }
 [data-theme="dark"] .ca-view-all:hover { background:rgba(168,207,224,0.1); }
 [data-theme="dark"] .alert-hist-item { border-bottom-color:rgba(255,255,255,0.05); }
