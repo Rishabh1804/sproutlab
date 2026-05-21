@@ -44615,7 +44615,7 @@ function renderInfoRepetition() {
         rows: [
           { label: 'Appears on', value: f.pct + '% of days' },
           { label: 'Longest streak', value: f.streak + ' day' + (f.streak !== 1 ? 's' : '') },
-          { label: 'Status', value: isFatigued ? 'Over-repeated' : f.pct >= 50 ? 'Nearing repetition' : 'Good variety' }
+          { label: 'Status', value: isFatigued ? 'Time to vary the menu' : f.pct >= 50 ? 'Coming up often' : 'Good variety' }
         ]
       };
       html += '<div class="mi-food-row" data-action="vizShowDetail" data-arg="' + vizArg(repDetail) + '">';
