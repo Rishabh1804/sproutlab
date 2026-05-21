@@ -21190,15 +21190,20 @@ function getChartTheme() {
 // INSIGHTS — TREND ENGINE (v2.0a)
 // ─────────────────────────────────────────
 
-// Generic trend calculator: compare two values, return arrow + delta + direction
+// Generic trend calculator: compare two values, return arrow + delta + direction.
+// Return shape (V-K-14): `.label` is PLAIN text (textContent-safe); `.html`
+// is icon+label markup (innerHTML-only); `.arrow` is the bare icon SVG. HTML
+// never lives in a field named `.text` — that illegal-state shape shipped the
+// PR-EF trend-pill regression that PR-J hotfixed.
 function getTrend(current, previous, threshold, decimals) {
-  if (current == null || previous == null) return { arrow:'', delta:0, direction:'flat', cls:'trend-flat', text:'' };
+  if (current == null || previous == null) return { arrow:'', delta:0, direction:'flat', cls:'trend-flat', label:'', html:'' };
   const dec = decimals != null ? decimals : 1;
   const delta = +(current - previous).toFixed(dec);
   const absDelta = Math.abs(delta);
-  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', text: iconText('trending-flat', 'stable') };
-  if (delta > 0) return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', text: iconText('trending-up', '+' + absDelta.toFixed(dec)) };
-  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', text: iconText('trending-down', '-' + absDelta.toFixed(dec)) };
+  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', label:'stable', html: iconText('trending-flat', 'stable') };
+  if (delta > 0) { const l = '+' + absDelta.toFixed(dec); return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', label:l, html: iconText('trending-up', l) }; }
+  const l = '-' + absDelta.toFixed(dec);
+  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', label:l, html: iconText('trending-down', l) };
 }
 
 // Get dates array for a window ending at offsetDays before today
@@ -21643,8 +21648,8 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && wtEntries.length >= 2) prev = wtEntries[wtEntries.length - 2];
       const trend = getTrend(latest.wt, prev.wt, 0.05, 2);
       wtTrendEl.className = 'hsp-trend ' + trend.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      wtTrendEl.innerHTML = trend.text ? trend.text + ' kg' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      wtTrendEl.innerHTML = trend.html ? trend.html + ' kg' : '';
     } else {
       wtTrendEl.innerHTML = '';
     }
@@ -21666,8 +21671,8 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && htEntries.length >= 2) prev = htEntries[htEntries.length - 2];
       const trend = getTrend(latest.ht, prev.ht, 0.5, 1);
       htTrendEl.className = 'hsp-trend ' + trend.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      htTrendEl.innerHTML = trend.text ? trend.text + ' cm' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      htTrendEl.innerHTML = trend.html ? trend.html + ' cm' : '';
     } else {
       htTrendEl.innerHTML = '';
     }
@@ -21680,8 +21685,8 @@ function updateStatPillTrends() {
     if (sleepT.score.current != null && sleepT.score.previous != null) {
       const t = sleepT.score.trend;
       slTrendEl.className = 'hsp-trend ' + t.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      slTrendEl.innerHTML = t.text ? t.text + ' pts' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      slTrendEl.innerHTML = t.html ? t.html + ' pts' : '';
     } else {
       slTrendEl.innerHTML = '';
     }
@@ -30226,14 +30231,14 @@ function renderTodayPlan() {
         items.push({
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)),
+          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)), // raw-html-ok
           tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'),
+          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'), // raw-html-ok
           tag: 'med', done: false, htmlDetail: true
         });
       }
@@ -30242,7 +30247,7 @@ function renderTodayPlan() {
       // Booked but no details — nudge to add date
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
-        detail: iconText('check', 'Booked — tap to add appointment date & time'),
+        detail: iconText('check', 'Booked — tap to add appointment date & time'), // raw-html-ok
         tag: 'med', done: false, htmlDetail: true,
         action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
@@ -30693,7 +30698,7 @@ function renderTrendChips() {
   if (sleepT.score.current != null) {
     const cls = sleepT.score.current >= 70 ? 'tc-good' : sleepT.score.current >= 40 ? 'tc-warn' : 'tc-bad';
     const arrow = sleepT.score.trend.arrow || '';
-    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.text || '', cls, tab:'sleep' });
+    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.html || '', cls, tab:'sleep' });
   } else {
     chips.push({ icon:zi('moon'), label:'Sleep', value:'No data yet', delta:'—', cls:'tc-neutral', tab:'sleep' });
   }
@@ -31011,7 +31016,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     if (trend.score.current != null) {
       const cls = trend.score.current >= 70 ? 'ipp-good' : trend.score.current >= 40 ? 'ipp-warn' : 'ipp-bad';
       pills += `<span class="ins-preview-pill ${cls}">${zi('zzz')} ${trend.score.current}/100</span>`;
-      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.text}</span>`;
+      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.html}</span>`;
     }
     if (trend.wakes.current != null) {
       const cls = trend.wakes.current <= 1 ? 'ipp-good' : trend.wakes.current <= 2 ? 'ipp-warn' : 'ipp-bad';
@@ -31029,7 +31034,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${emoji}</div>
       <div class="ir-body">
         <div class="ir-label">Sleep score (7-day avg)</div>
-        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.text ? trend.score.trend.text + ' pts' : ''}</span></div>
+        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.html ? trend.score.trend.html + ' pts' : ''}</span></div>
       </div>
     </div>`;
   }
@@ -31085,7 +31090,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${zi('clock')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg wake-ups / night</div>
-        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.text || ''}</span></div>
+        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.html || ''}</span></div>
       </div>
     </div>`;
   }
@@ -31276,7 +31281,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('chart')}</div>
     <div class="ir-body">
       <div class="ir-label">Daily frequency (7-day avg)</div>
-      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.text ? trend.freq.trend.text + '/d' : ''}</span></div>
+      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.html ? trend.freq.trend.html + '/d' : ''}</span></div>
     </div>
   </div>`;
 
@@ -31399,7 +31404,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('bowl')}</div>
     <div class="ir-body">
       <div class="ir-label">Meals logged (7 days)</div>
-      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.html || ''}</span></div>
     </div>
   </div>`;
 
@@ -31408,7 +31413,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('rainbow')}</div>
     <div class="ir-body">
       <div class="ir-label">Unique foods this week</div>
-      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.html || ''}</span></div>
     </div>
   </div>`;
 
@@ -43584,7 +43589,8 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' +
+          // iconText() escapes the illness label; this `text` is rendered via innerHTML.
+          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' + // raw-html-ok
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights

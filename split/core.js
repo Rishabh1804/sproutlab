@@ -4390,15 +4390,20 @@ function getChartTheme() {
 // INSIGHTS — TREND ENGINE (v2.0a)
 // ─────────────────────────────────────────
 
-// Generic trend calculator: compare two values, return arrow + delta + direction
+// Generic trend calculator: compare two values, return arrow + delta + direction.
+// Return shape (V-K-14): `.label` is PLAIN text (textContent-safe); `.html`
+// is icon+label markup (innerHTML-only); `.arrow` is the bare icon SVG. HTML
+// never lives in a field named `.text` — that illegal-state shape shipped the
+// PR-EF trend-pill regression that PR-J hotfixed.
 function getTrend(current, previous, threshold, decimals) {
-  if (current == null || previous == null) return { arrow:'', delta:0, direction:'flat', cls:'trend-flat', text:'' };
+  if (current == null || previous == null) return { arrow:'', delta:0, direction:'flat', cls:'trend-flat', label:'', html:'' };
   const dec = decimals != null ? decimals : 1;
   const delta = +(current - previous).toFixed(dec);
   const absDelta = Math.abs(delta);
-  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', text: iconText('trending-flat', 'stable') };
-  if (delta > 0) return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', text: iconText('trending-up', '+' + absDelta.toFixed(dec)) };
-  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', text: iconText('trending-down', '-' + absDelta.toFixed(dec)) };
+  if (absDelta <= threshold) return { arrow: zi('trending-flat'), delta:0, direction:'flat', cls:'trend-flat', label:'stable', html: iconText('trending-flat', 'stable') };
+  if (delta > 0) { const l = '+' + absDelta.toFixed(dec); return { arrow: zi('trending-up'), delta, direction:'up', cls:'trend-up', label:l, html: iconText('trending-up', l) }; }
+  const l = '-' + absDelta.toFixed(dec);
+  return { arrow: zi('trending-down'), delta, direction:'down', cls:'trend-down', label:l, html: iconText('trending-down', l) };
 }
 
 // Get dates array for a window ending at offsetDays before today
@@ -4843,8 +4848,8 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && wtEntries.length >= 2) prev = wtEntries[wtEntries.length - 2];
       const trend = getTrend(latest.wt, prev.wt, 0.05, 2);
       wtTrendEl.className = 'hsp-trend ' + trend.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      wtTrendEl.innerHTML = trend.text ? trend.text + ' kg' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      wtTrendEl.innerHTML = trend.html ? trend.html + ' kg' : '';
     } else {
       wtTrendEl.innerHTML = '';
     }
@@ -4866,8 +4871,8 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && htEntries.length >= 2) prev = htEntries[htEntries.length - 2];
       const trend = getTrend(latest.ht, prev.ht, 0.5, 1);
       htTrendEl.className = 'hsp-trend ' + trend.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      htTrendEl.innerHTML = trend.text ? trend.text + ' cm' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      htTrendEl.innerHTML = trend.html ? trend.html + ' cm' : '';
     } else {
       htTrendEl.innerHTML = '';
     }
@@ -4880,8 +4885,8 @@ function updateStatPillTrends() {
     if (sleepT.score.current != null && sleepT.score.previous != null) {
       const t = sleepT.score.trend;
       slTrendEl.className = 'hsp-trend ' + t.cls;
-      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
-      slTrendEl.innerHTML = t.text ? t.text + ' pts' : '';
+      // getTrend().html carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      slTrendEl.innerHTML = t.html ? t.html + ' pts' : '';
     } else {
       slTrendEl.innerHTML = '';
     }

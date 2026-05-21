@@ -7816,7 +7816,8 @@ function computeIllnessFrequency() {
         seenPairs.add(pairKey);
         insights.push({
           type: 'info',
-          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' +
+          // iconText() escapes the illness label; this `text` is rendered via innerHTML.
+          text: iconText(recent[i].iconKey, recent[i].illnessType) + ' and ' + iconText(recent[j].iconKey, recent[j].illnessType) + ' overlapped around ' + // raw-html-ok
             formatDate(recent[i].startedAt).replace(/, \d{4}$/, '') + '. Co-occurring illnesses can be harder on babies — good to flag with your doctor.'
         });
         if (seenPairs.size >= 2) break coLoop; // cap at 2 overlap insights

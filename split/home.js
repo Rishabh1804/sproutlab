@@ -8005,14 +8005,14 @@ function renderTodayPlan() {
         items.push({
           time: apptDaysTo === 1 ? 'Tmrw' : apptDaysTo + 'd',
           icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)),
+          detail: iconText('check', 'Booked — ' + getVaccApptLabel(bookedData)), // raw-html-ok
           tag: 'med', done: true, htmlDetail: true
         });
       } else if (apptDaysTo < 0) {
         // Appointment was in the past but vaccine not given yet — overdue
         items.push({
           time: 'Due', icon: zi('syringe'), title: upcomingVacc.name,
-          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'),
+          detail: iconText('warn', 'Appointment was ' + formatDate(bookedData.apptDate) + ' — reschedule'), // raw-html-ok
           tag: 'med', done: false, htmlDetail: true
         });
       }
@@ -8021,7 +8021,7 @@ function renderTodayPlan() {
       // Booked but no details — nudge to add date
       items.push({
         time: zi('clock'), icon: zi('syringe'), title: upcomingVacc.name,
-        detail: iconText('check', 'Booked — tap to add appointment date & time'),
+        detail: iconText('check', 'Booked — tap to add appointment date & time'), // raw-html-ok
         tag: 'med', done: false, htmlDetail: true,
         action: { name: 'openVaccApptModal', arg: upcomingVacc.name }
       });
@@ -8472,7 +8472,7 @@ function renderTrendChips() {
   if (sleepT.score.current != null) {
     const cls = sleepT.score.current >= 70 ? 'tc-good' : sleepT.score.current >= 40 ? 'tc-warn' : 'tc-bad';
     const arrow = sleepT.score.trend.arrow || '';
-    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.text || '', cls, tab:'sleep' });
+    chips.push({ icon:zi('moon'), label:'Sleep', value: sleepT.score.current + '/100' + (arrow ? ' ' + arrow : ''), delta: sleepT.score.trend.html || '', cls, tab:'sleep' });
   } else {
     chips.push({ icon:zi('moon'), label:'Sleep', value:'No data yet', delta:'—', cls:'tc-neutral', tab:'sleep' });
   }
@@ -8790,7 +8790,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
     if (trend.score.current != null) {
       const cls = trend.score.current >= 70 ? 'ipp-good' : trend.score.current >= 40 ? 'ipp-warn' : 'ipp-bad';
       pills += `<span class="ins-preview-pill ${cls}">${zi('zzz')} ${trend.score.current}/100</span>`;
-      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.text}</span>`;
+      if (trend.score.trend.arrow) pills += `<span class="ins-preview-pill ipp-neutral">${trend.score.trend.html}</span>`;
     }
     if (trend.wakes.current != null) {
       const cls = trend.wakes.current <= 1 ? 'ipp-good' : trend.wakes.current <= 2 ? 'ipp-warn' : 'ipp-bad';
@@ -8808,7 +8808,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${emoji}</div>
       <div class="ir-body">
         <div class="ir-label">Sleep score (7-day avg)</div>
-        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.text ? trend.score.trend.text + ' pts' : ''}</span></div>
+        <div class="ir-value">${trend.score.current}/100 <span class="ir-delta ${trend.score.trend.cls}">${trend.score.trend.html ? trend.score.trend.html + ' pts' : ''}</span></div>
       </div>
     </div>`;
   }
@@ -8864,7 +8864,7 @@ function renderInsightsSleep() { /* v2.4: DORMANT — insights cards replaced by
       <div class="ir-icon">${zi('clock')}</div>
       <div class="ir-body">
         <div class="ir-label">Avg wake-ups / night</div>
-        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.text || ''}</span></div>
+        <div class="ir-value">${trend.wakes.current} <span class="ir-delta ${wakeCls}">${trend.wakes.trend.html || ''}</span></div>
       </div>
     </div>`;
   }
@@ -9055,7 +9055,7 @@ function renderInsightsPoop() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('chart')}</div>
     <div class="ir-body">
       <div class="ir-label">Daily frequency (7-day avg)</div>
-      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.text ? trend.freq.trend.text + '/d' : ''}</span></div>
+      <div class="ir-value">${trend.freq.current}/day <span class="ir-delta ${trend.freq.trend.cls}">${trend.freq.trend.html ? trend.freq.trend.html + '/d' : ''}</span></div>
     </div>
   </div>`;
 
@@ -9178,7 +9178,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('bowl')}</div>
     <div class="ir-body">
       <div class="ir-label">Meals logged (7 days)</div>
-      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.meals.current} / 21 <span class="ir-delta ${trend.meals.trend.cls}">${trend.meals.trend.html || ''}</span></div>
     </div>
   </div>`;
 
@@ -9187,7 +9187,7 @@ function renderInsightsFeed() { /* v2.4: DORMANT — insights cards replaced by 
     <div class="ir-icon">${zi('rainbow')}</div>
     <div class="ir-body">
       <div class="ir-label">Unique foods this week</div>
-      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.text || ''}</span></div>
+      <div class="ir-value">${trend.variety.current} <span class="ir-delta ${trend.variety.trend.cls}">${trend.variety.trend.html || ''}</span></div>
     </div>
   </div>`;
 
