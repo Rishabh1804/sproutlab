@@ -6,7 +6,7 @@
 // `updatefound` toast affordance on top.
 //
 // Carry-forwards from review chain folded:
-//   - PR-7 r1 (Cipher): precache list = 8 first-party assets including the
+//   - PR-7 r1 (Cipher): precache list = 6 first-party assets including the
 //     three /lib/firebase-*-compat.js (vendored, NOT CDN per source scout).
 //   - PR-11 (Cipher): manifest.json must bypass SW cache so displayAppVersion()
 //     reads current manifest, not a stale precached copy.
@@ -18,7 +18,7 @@
 
 const CACHE_PREFIX = 'sproutlab-';
 
-// Precache list: 8 first-party assets (NOT including manifest.json — see
+// Precache list: 6 first-party assets (NOT including manifest.json — see
 // fetch-handler bypass below). Cipher PR-7 r1 catch surfaced that the
 // /lib/firebase-*-compat.js files are first-party vendored, not CDN, so
 // they belong in the precache to keep Firebase auth/sync paths offline-

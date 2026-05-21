@@ -7107,7 +7107,6 @@ function applyCrossSynthesis(alerts) {
         tip: rule.tip,
         action: primaryAlert ? primaryAlert.action : null,
         tab: primaryAlert ? primaryAlert.tab : null,
-        dismissable: true,
         _synthesizedFrom: rule.ids,
       });
       rule.ids.forEach(id => consumedIds.add(id));
@@ -7156,8 +7155,7 @@ function computeAlerts() {
           body: 'It\'s past 11 AM and no meals have been logged for Ziva today.',
           tip: getEscalatedTip('no-feed-today'),
           action: { label: 'Log Feed', fn: 'openQuickModal("feed")' },
-          tab: 'diet', dismissable: true
-        });
+          tab: 'diet'        });
       }
     }
   }
@@ -7190,8 +7188,7 @@ function computeAlerts() {
           body: bodyText,
           tip: getEscalatedTip('poop-gap'),
           action: { label: 'Log Poop', fn: 'openQuickModal("poop")' },
-          tab: 'poop', dismissable: true
-        });
+          tab: 'poop'        });
       }
     }
   } else {
@@ -7204,8 +7201,7 @@ function computeAlerts() {
         body: 'No poop entries yet. Tracking frequency and consistency helps spot digestive issues early.',
         tip: getEscalatedTip('poop-gap-nodata'),
         action: { label: 'Log Poop', fn: 'openQuickModal("poop")' },
-        tab: 'poop', dismissable: true
-      });
+        tab: 'poop'      });
     }
   }
 
@@ -7227,8 +7223,7 @@ function computeAlerts() {
           body: 'Consecutive hard or pellet-like stools may indicate constipation. Increase water and fibre-rich foods.',
           tip: getEscalatedTip('hard-stool-streak'),
           action: { label: 'View Diet', fn: 'switchTab("diet")' },
-          tab: 'poop', dismissable: true
-        });
+          tab: 'poop'        });
       }
     }
   }
@@ -7250,8 +7245,7 @@ function computeAlerts() {
           body: 'Avg sleep score went from ' + (sleepTrend.score.current + Math.round(drop)) + ' to ' + sleepTrend.score.current + '. This could be a sleep regression, teething, or growth spurt.',
           tip: getEscalatedTip('sleep-score-drop'),
           action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
-          tab: 'sleep', dismissable: true
-        });
+          tab: 'sleep'        });
       }
     }
   }
@@ -7286,8 +7280,7 @@ function computeAlerts() {
           body: 'New food introduced within 48 hours (' + foodNames + ') and unusual poop detected' + (poopDesc ? ' (' + poopDesc + ')' : '') + '. Could be a reaction.',
           tip: getEscalatedTip('food-reaction'),
           action: { label: 'View Foods', fn: 'switchTab("diet")' },
-          tab: 'diet', dismissable: true
-        });
+          tab: 'diet'        });
       }
     }
   }
@@ -7314,7 +7307,7 @@ function computeAlerts() {
             body: 'Well-baby visits at ' + mo + ' months cover growth assessment, developmental milestones, and vaccination review.',
             tip: getEscalatedTip('dev-checkup-due'),
             action: { label: 'View Medical', fn: 'switchTab("medical")' },
-            tab: 'medical', dismissable: true, safetyLocked: true
+            tab: 'medical', safetyLocked: true
           });
         }
       }
@@ -7336,8 +7329,7 @@ function computeAlerts() {
           body: 'Introducing variety helps develop taste preferences and ensures nutritional balance. Time to try something new!',
           tip: getEscalatedTip('food-variety-stale'),
           action: { label: 'View Diet', fn: 'switchTab("diet")' },
-          tab: 'diet', dismissable: true
-        });
+          tab: 'diet'        });
       }
     }
   }
@@ -7358,7 +7350,7 @@ function computeAlerts() {
           body: 'Scheduled for ' + formatDate(upcoming.date) + '. Book the appointment if you haven\'t already.',
           tip: getEscalatedTip('vacc-reminder'),
           action: { label: 'View Vaccines', fn: 'switchTab("medical")' },
-          tab: 'medical', dismissable: true, safetyLocked: true
+          tab: 'medical', safetyLocked: true
         });
       }
     }
@@ -7395,7 +7387,7 @@ function computeAlerts() {
             body: 'Yesterday\'s dose was missed or skipped, breaking a ' + priorStreak + '-day streak.',
             tip: getEscalatedTip('supp-streak-broken'),
             action: { label: 'View 30-day history', fn: 'gotoCard("info","infoSupplementCard")' },
-            tab: 'info', dismissable: true
+            tab: 'info'
           });
         }
       }
@@ -7413,8 +7405,7 @@ function computeAlerts() {
         body: 'Iron is critical at ' + ageM + ' months as breastmilk iron stores deplete after 6 months. Add ragi, masoor dal, beetroot, or spinach.',
         tip: getEscalatedTip('low-iron'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
-        tab: 'diet', dismissable: true
-      });
+        tab: 'diet'      });
     }
   }
 
@@ -7429,8 +7420,7 @@ function computeAlerts() {
         body: 'Calcium supports bone development and teeth. Add ragi, paneer, yoghurt, or sesame seeds.',
         tip: getEscalatedTip('low-calcium'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
-        tab: 'diet', dismissable: true
-      });
+        tab: 'diet'      });
     }
   }
 
@@ -7445,8 +7435,7 @@ function computeAlerts() {
         body: 'Protein is essential for growth and muscle development. Include dal, paneer, curd, egg (if introduced), or nut pastes.',
         tip: getEscalatedTip('low-protein'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
-        tab: 'diet', dismissable: true
-      });
+        tab: 'diet'      });
     }
   }
 
@@ -7461,8 +7450,7 @@ function computeAlerts() {
         body: 'Ziva had iron-rich foods ' + bl.ironDays7d + ' times this week but never paired with Vitamin C, which can double iron absorption.',
         tip: getEscalatedTip('iron-no-vitc'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
-        tab: 'diet', dismissable: true
-      });
+        tab: 'diet'      });
     }
   }
 
@@ -7477,8 +7465,7 @@ function computeAlerts() {
         body: 'Ziva has been eating the exact same meals for ' + bl.sameMealStreak + ' days. Variety ensures broader nutrient coverage and builds taste acceptance.',
         tip: getEscalatedTip('meal-monotony'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
-        tab: 'diet', dismissable: true
-      });
+        tab: 'diet'      });
     }
   }
 
@@ -7503,8 +7490,7 @@ function computeAlerts() {
           body: bodyMsg,
           tip: 'Logging every meal — even "skipped" or "just breastmilk" — helps build an accurate picture of intake patterns.',
           action: { label: 'Log ' + firstMissing.charAt(0).toUpperCase() + firstMissing.slice(1), fn: '_qlMeal="' + firstMissing + '";openQuickModal("feed")' },
-          tab: 'diet', dismissable: true
-        });
+          tab: 'diet'        });
       }
     }
   }
@@ -7525,7 +7511,7 @@ function computeAlerts() {
       body: capitalize(r.food) + ' has been followed by unusual poop ' + r.abnormalAfter + ' out of ' + r.totalOccurrences + ' times (' + r.confidence + ' confidence).',
       tip: getEscalatedTip('food-correlation'),
       action: { label: 'View Evidence', fn: 'gotoCard("insights","insightsCorrelationCard")' },
-      tab: 'insights', dismissable: true
+      tab: 'insights'
     });
   });
 
@@ -7545,8 +7531,7 @@ function computeAlerts() {
       body: 'Dietary variety is important for balanced nutrition. Try adding foods from this group.',
       tip: getEscalatedTip('food-group-gap') || g.suggestion,
       action: { label: 'View Diet', fn: 'switchTab("diet")' },
-      tab: 'diet', dismissable: true
-    });
+      tab: 'diet'    });
   });
 
   // ─── 18. DINNER→BEDTIME GAP WARNING ───
@@ -7578,8 +7563,7 @@ function computeAlerts() {
               body: 'Ziva had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
               tip: 'Aim for 60–90 minutes between the last meal and bedtime. Tomorrow, try shifting dinner 15–20 minutes earlier.',
               action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
-              tab: 'sleep', dismissable: true
-            });
+              tab: 'sleep'            });
           }
         }
       }
@@ -7611,8 +7595,7 @@ function computeAlerts() {
             body: newest.name + ' was introduced on ' + formatDate(newest.date) + '. Wait until ' + formatDate(clearDateStr) + ' before introducing another new food, so any reactions can be clearly attributed.',
             tip: 'Watch for: rashes, unusual fussiness, vomiting, diarrhoea, or changes in poop within 48–72 hours of a new food.',
             action: { label: 'View Foods', fn: 'switchTab("diet")' },
-            tab: 'diet', dismissable: true
-          });
+            tab: 'diet'          });
         }
       }
     }
@@ -7632,8 +7615,7 @@ function computeAlerts() {
       body: 'Ziva slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
       tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
-      tab: 'sleep', dismissable: true
-    });
+      tab: 'sleep'    });
   }
 
   // ─── P2. SLEEP SCORE STREAK ───
@@ -7646,8 +7628,7 @@ function computeAlerts() {
       title: msg,
       body: 'Sleep score has been 75+ for ' + bl.sleepGoodStreak + ' consecutive days. Whatever you\'re doing is working.',
       tip: 'Consistency is key — keep the same bedtime, routine, and sleep environment. Note what\'s working so you can replicate it.',
-      action: null, tab: 'sleep', dismissable: true
-    });
+      action: null, tab: 'sleep'    });
   }
 
   // ─── P3. CONSISTENT DIGESTION ───
@@ -7659,8 +7640,7 @@ function computeAlerts() {
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
       body: 'All recent poops have been normal or soft consistency. Ziva\'s tummy is happy!',
       tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
-      action: null, tab: 'poop', dismissable: true
-    });
+      action: null, tab: 'poop'    });
   }
 
   // ─── P4. FOOD VARIETY WIN ───
@@ -7672,8 +7652,7 @@ function computeAlerts() {
       title: bl.newFoodsThisWeek + ' new foods this week!',
       body: 'Great variety — exposure to different tastes and textures in the first year shapes lifelong food preferences.',
       tip: 'Keep it up! Remember the 3-day rule for each new food to spot any reactions.',
-      action: null, tab: 'diet', dismissable: true
-    });
+      action: null, tab: 'diet'    });
   }
 
   // ─── P5. MEAL LOGGING STREAK ───
@@ -7685,8 +7664,7 @@ function computeAlerts() {
       title: bl.mealLoggingStreak + '-day meal logging streak!',
       body: 'All 3 meals logged for ' + bl.mealLoggingStreak + ' consecutive days. Consistent tracking gives the best insights.',
       tip: 'Your data is building a clear picture of Ziva\'s eating patterns. The more consistent the logging, the better the insights.',
-      action: null, tab: 'diet', dismissable: true
-    });
+      action: null, tab: 'diet'    });
   }
 
   // ─── P6. GROWTH ON TRACK ───
@@ -7698,8 +7676,7 @@ function computeAlerts() {
       title: 'Growth on track for ' + bl.growthConsistentWeeks + '+ weeks',
       body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. Ziva is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
-      action: null, tab: 'growth', dismissable: true
-    });
+      action: null, tab: 'growth'    });
   }
 
   // ─── P7. SUPPLEMENT STREAK ───
@@ -7720,8 +7697,7 @@ function computeAlerts() {
         title: milestoneLabel + ' of consistent ' + m.name + '!',
         body: streak + '-day streak. ' + milestoneMsg,
         tip: getD3Tip(streak),
-        action: null, tab: 'medical', dismissable: true
-      });
+        action: null, tab: 'medical'      });
     }
   });
 
@@ -7734,8 +7710,7 @@ function computeAlerts() {
       title: 'Iron-rich week — ' + bl.ironDays7d + '/7 days!',
       body: 'Ziva had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
       tip: bl.ironVitCPairCount >= 2 ? 'And you paired iron with Vitamin C ' + bl.ironVitCPairCount + ' times — maximum absorption!' : 'Tip: pair iron meals with Vitamin C (lemon, amla, orange) to boost absorption even further.',
-      action: null, tab: 'diet', dismissable: true
-    });
+      action: null, tab: 'diet'    });
   }
 
   // ─── P9. GREAT NUTRIENT BALANCE ───
@@ -7749,8 +7724,7 @@ function computeAlerts() {
       body: 'Great nutritional diversity: ' + covered + '. A balanced diet supports all-round development.',
       tip: 'You\'re covering most key nutrients. To complete the picture, look for any gaps in: ' +
         KEY_NUTRIENTS.filter(n => (bl.nutrientDays || {})[n] < 2).join(', ') + '.',
-      action: null, tab: 'diet', dismissable: true
-    });
+      action: null, tab: 'diet'    });
   }
 
   // ─── P10. IRON + VIT C SYNERGY ───
@@ -7762,8 +7736,7 @@ function computeAlerts() {
       title: 'Iron + Vitamin C paired ' + bl.ironVitCPairCount + ' times this week!',
       body: 'Pairing iron-rich foods with Vitamin C can double iron absorption. You\'re doing this consistently — excellent practice.',
       tip: 'This is one of the most impactful nutrition habits for babies. Keep it up — lemon on khichdi, amla after ragi, or mango with dal all work perfectly.',
-      action: null, tab: 'diet', dismissable: true
-    });
+      action: null, tab: 'diet'    });
   }
 
   // ═══════════════════════════════════════
