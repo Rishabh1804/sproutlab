@@ -21643,9 +21643,10 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && wtEntries.length >= 2) prev = wtEntries[wtEntries.length - 2];
       const trend = getTrend(latest.wt, prev.wt, 0.05, 2);
       wtTrendEl.className = 'hsp-trend ' + trend.cls;
-      wtTrendEl.textContent = trend.text ? trend.text + ' kg' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      wtTrendEl.innerHTML = trend.text ? trend.text + ' kg' : '';
     } else {
-      wtTrendEl.textContent = '';
+      wtTrendEl.innerHTML = '';
     }
   }
 
@@ -21665,9 +21666,10 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && htEntries.length >= 2) prev = htEntries[htEntries.length - 2];
       const trend = getTrend(latest.ht, prev.ht, 0.5, 1);
       htTrendEl.className = 'hsp-trend ' + trend.cls;
-      htTrendEl.textContent = trend.text ? trend.text + ' cm' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      htTrendEl.innerHTML = trend.text ? trend.text + ' cm' : '';
     } else {
-      htTrendEl.textContent = '';
+      htTrendEl.innerHTML = '';
     }
   }
 
@@ -21678,9 +21680,10 @@ function updateStatPillTrends() {
     if (sleepT.score.current != null && sleepT.score.previous != null) {
       const t = sleepT.score.trend;
       slTrendEl.className = 'hsp-trend ' + t.cls;
-      slTrendEl.textContent = t.text ? t.text + ' pts' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      slTrendEl.innerHTML = t.text ? t.text + ' pts' : '';
     } else {
-      slTrendEl.textContent = '';
+      slTrendEl.innerHTML = '';
     }
   }
 
@@ -29758,7 +29761,7 @@ function computeAlerts() {
       body: 'Ziva slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
       tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
-      tab: 'sleep', dismissable: false
+      tab: 'sleep', dismissable: true
     });
   }
 
@@ -29772,7 +29775,7 @@ function computeAlerts() {
       title: msg,
       body: 'Sleep score has been 75+ for ' + bl.sleepGoodStreak + ' consecutive days. Whatever you\'re doing is working.',
       tip: 'Consistency is key — keep the same bedtime, routine, and sleep environment. Note what\'s working so you can replicate it.',
-      action: null, tab: 'sleep', dismissable: false
+      action: null, tab: 'sleep', dismissable: true
     });
   }
 
@@ -29785,7 +29788,7 @@ function computeAlerts() {
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
       body: 'All recent poops have been normal or soft consistency. Ziva\'s tummy is happy!',
       tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
-      action: null, tab: 'poop', dismissable: false
+      action: null, tab: 'poop', dismissable: true
     });
   }
 
@@ -29798,7 +29801,7 @@ function computeAlerts() {
       title: bl.newFoodsThisWeek + ' new foods this week!',
       body: 'Great variety — exposure to different tastes and textures in the first year shapes lifelong food preferences.',
       tip: 'Keep it up! Remember the 3-day rule for each new food to spot any reactions.',
-      action: null, tab: 'diet', dismissable: false
+      action: null, tab: 'diet', dismissable: true
     });
   }
 
@@ -29811,7 +29814,7 @@ function computeAlerts() {
       title: bl.mealLoggingStreak + '-day meal logging streak!',
       body: 'All 3 meals logged for ' + bl.mealLoggingStreak + ' consecutive days. Consistent tracking gives the best insights.',
       tip: 'Your data is building a clear picture of Ziva\'s eating patterns. The more consistent the logging, the better the insights.',
-      action: null, tab: 'diet', dismissable: false
+      action: null, tab: 'diet', dismissable: true
     });
   }
 
@@ -29824,7 +29827,7 @@ function computeAlerts() {
       title: 'Growth on track for ' + bl.growthConsistentWeeks + '+ weeks',
       body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. Ziva is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
-      action: null, tab: 'growth', dismissable: false
+      action: null, tab: 'growth', dismissable: true
     });
   }
 
@@ -29846,7 +29849,7 @@ function computeAlerts() {
         title: milestoneLabel + ' of consistent ' + m.name + '!',
         body: streak + '-day streak. ' + milestoneMsg,
         tip: getD3Tip(streak),
-        action: null, tab: 'medical', dismissable: false
+        action: null, tab: 'medical', dismissable: true
       });
     }
   });
@@ -29860,7 +29863,7 @@ function computeAlerts() {
       title: 'Iron-rich week — ' + bl.ironDays7d + '/7 days!',
       body: 'Ziva had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
       tip: bl.ironVitCPairCount >= 2 ? 'And you paired iron with Vitamin C ' + bl.ironVitCPairCount + ' times — maximum absorption!' : 'Tip: pair iron meals with Vitamin C (lemon, amla, orange) to boost absorption even further.',
-      action: null, tab: 'diet', dismissable: false
+      action: null, tab: 'diet', dismissable: true
     });
   }
 
@@ -29875,7 +29878,7 @@ function computeAlerts() {
       body: 'Great nutritional diversity: ' + covered + '. A balanced diet supports all-round development.',
       tip: 'You\'re covering most key nutrients. To complete the picture, look for any gaps in: ' +
         KEY_NUTRIENTS.filter(n => (bl.nutrientDays || {})[n] < 2).join(', ') + '.',
-      action: null, tab: 'diet', dismissable: false
+      action: null, tab: 'diet', dismissable: true
     });
   }
 
@@ -29888,7 +29891,7 @@ function computeAlerts() {
       title: 'Iron + Vitamin C paired ' + bl.ironVitCPairCount + ' times this week!',
       body: 'Pairing iron-rich foods with Vitamin C can double iron absorption. You\'re doing this consistently — excellent practice.',
       tip: 'This is one of the most impactful nutrition habits for babies. Keep it up — lemon on khichdi, amla after ragi, or mango with dal all work perfectly.',
-      action: null, tab: 'diet', dismissable: false
+      action: null, tab: 'diet', dismissable: true
     });
   }
 

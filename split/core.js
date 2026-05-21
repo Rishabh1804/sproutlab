@@ -4843,9 +4843,10 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && wtEntries.length >= 2) prev = wtEntries[wtEntries.length - 2];
       const trend = getTrend(latest.wt, prev.wt, 0.05, 2);
       wtTrendEl.className = 'hsp-trend ' + trend.cls;
-      wtTrendEl.textContent = trend.text ? trend.text + ' kg' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      wtTrendEl.innerHTML = trend.text ? trend.text + ' kg' : '';
     } else {
-      wtTrendEl.textContent = '';
+      wtTrendEl.innerHTML = '';
     }
   }
 
@@ -4865,9 +4866,10 @@ function updateStatPillTrends() {
       if (prev.date === latest.date && htEntries.length >= 2) prev = htEntries[htEntries.length - 2];
       const trend = getTrend(latest.ht, prev.ht, 0.5, 1);
       htTrendEl.className = 'hsp-trend ' + trend.cls;
-      htTrendEl.textContent = trend.text ? trend.text + ' cm' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      htTrendEl.innerHTML = trend.text ? trend.text + ' cm' : '';
     } else {
-      htTrendEl.textContent = '';
+      htTrendEl.innerHTML = '';
     }
   }
 
@@ -4878,9 +4880,10 @@ function updateStatPillTrends() {
     if (sleepT.score.current != null && sleepT.score.previous != null) {
       const t = sleepT.score.trend;
       slTrendEl.className = 'hsp-trend ' + t.cls;
-      slTrendEl.textContent = t.text ? t.text + ' pts' : '';
+      // getTrend().text carries an SVG icon (iconText) — HR-7: set via innerHTML.
+      slTrendEl.innerHTML = t.text ? t.text + ' pts' : '';
     } else {
-      slTrendEl.textContent = '';
+      slTrendEl.innerHTML = '';
     }
   }
 
