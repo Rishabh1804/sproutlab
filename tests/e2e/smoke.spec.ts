@@ -220,13 +220,19 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
 
     await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
 
-    // Strip is the always-visible container.
+    // Strip is the indicator host. It collapses while every child is [hidden]
+    // (fix 0d856b3) and surfaces once it hosts a visible child.
     const strip = page.locator('#statusStrip');
     await expect(strip).toHaveCount(1);
-    await expect(strip).toBeVisible();
 
     // Indicator lives inside the strip (parent-child selector confirms placement).
     await expect(page.locator('#statusStrip #syncStatus')).toHaveCount(1);
+
+    // Revealing the indicator surfaces the strip — and it stays visible in
+    // essential-mode, proving the #headerFull display:none rule does not reach
+    // the strip (sibling, not descendant).
+    await page.evaluate(() => document.getElementById('syncStatus')?.removeAttribute('hidden'));
+    await expect(strip).toBeVisible();
   });
 
   test('opt-out-positive — full-mode user sees the status strip + sync indicator', async ({ page }) => {
@@ -242,9 +248,12 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
 
     const strip = page.locator('#statusStrip');
     await expect(strip).toHaveCount(1);
-    await expect(strip).toBeVisible();
-
     await expect(page.locator('#statusStrip #syncStatus')).toHaveCount(1);
+
+    // Strip collapses while empty (fix 0d856b3); revealing the indicator
+    // surfaces it in full-mode too.
+    await page.evaluate(() => document.getElementById('syncStatus')?.removeAttribute('hidden'));
+    await expect(strip).toBeVisible();
   });
 
   test('mode-contract-regression — strip is visible in BOTH modes (no display:none cascade)', async ({ page }) => {
@@ -254,12 +263,15 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
     await page.goto('/index.html?nosync');
     await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
     const stripDefault = page.locator('#statusStrip');
-    await expect(stripDefault, 'strip visible in essential-mode default').toBeVisible();
+    await expect(stripDefault, 'strip present in essential-mode default').toHaveCount(1);
+    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip').toHaveCount(1);
+    // Strip collapses while empty (fix 0d856b3); reveal the indicator so a
+    // genuine visibility check can run.
+    await page.evaluate(() => document.getElementById('syncStatus')?.removeAttribute('hidden'));
     // The essential-mode rule that hides #headerFull MUST NOT cascade — the
     // strip is a sibling of #headerFull, not a descendant.
     await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull (existing contract)').toBeHidden();
     await expect(page.locator('#statusStrip'), 'strip survives the #headerFull hide').toBeVisible();
-    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip').toHaveCount(1);
 
     // Pass 2: full mode (essential-mode OPT-OUT).
     await page.evaluate(() => {
@@ -267,9 +279,10 @@ test.describe('Status strip — sync indicator placement (Phase 2 PR-2.5)', () =
     });
     await page.reload();
     await expect(page.locator('body')).not.toHaveClass(/\bessential-mode\b/);
+    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
+    await page.evaluate(() => document.getElementById('syncStatus')?.removeAttribute('hidden'));
     await expect(page.locator('#headerFull'), 'full-mode shows #headerFull').toBeVisible();
     await expect(page.locator('#statusStrip'), 'strip stays visible in full-mode too').toBeVisible();
-    await expect(page.locator('#statusStrip #syncStatus'), 'sync indicator co-located in strip (full-mode)').toHaveCount(1);
   });
 });
 
@@ -665,7 +678,9 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
     await expect(page.locator('body')).toHaveClass(/\bessential-mode\b/);
     await expect(page.locator('#updateToast'), 'toast in DOM under essential-mode').toHaveCount(1);
     await expect(page.locator('#headerFull'), 'essential-mode hides #headerFull').toBeHidden();
-    await expect(page.locator('#statusStrip'), 'strip visible (toast container)').toBeVisible();
+    // Strip collapses while empty (fix 0d856b3); presence here, visibility is
+    // proven below once the toast (a strip child) is revealed.
+    await expect(page.locator('#statusStrip'), 'strip present (toast container)').toHaveCount(1);
     // Toast itself is hidden by [hidden] attribute, NOT by essential-mode CSS.
     // After removeAttribute('hidden'), it should be visible regardless of mode.
     await page.evaluate(() => {
@@ -1425,7 +1440,9 @@ test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
 
-    await expect(page.locator('#statusStrip'), 'strip itself visible').toBeVisible();
+    // Strip collapses while empty (fix 0d856b3); ?nosync state mode has no
+    // visible child, so assert presence rather than visibility here.
+    await expect(page.locator('#statusStrip'), 'strip present').toHaveCount(1);
     await expect(page.locator('#syncActivity'), 'activity pill hidden in state mode').toBeHidden();
   });
 
@@ -1463,8 +1480,11 @@ test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
 
-    // Pass 1: state mode (default)
-    await expect(page.locator('#statusStrip'), 'strip visible in state mode').toBeVisible();
+    // Pass 1: state mode (default). The strip collapses while empty
+    // (fix 0d856b3); ?nosync state mode has no visible child, so assert
+    // presence. The cascade guard is exercised in activity mode below, where
+    // the strip has content AND essential-mode is still on.
+    await expect(page.locator('#statusStrip'), 'strip present in state mode').toHaveCount(1);
     await expect(page.locator('#syncActivity'), 'activity pill hidden in state mode').toBeHidden();
 
     // Pass 2: drive activity mode via the publish helper directly
@@ -1481,6 +1501,9 @@ test.describe('Status-strip activity-mode contract (Phase 3 PR-19)', () => {
     await page.reload();
     await page.waitForFunction(() => typeof (window as { _syncSetActivity?: unknown })._syncSetActivity === 'function');
     await expect(page.locator('body'), 'essential-mode opted out').not.toHaveClass(/\bessential-mode\b/);
+    // Reveal a child so the strip surfaces (it collapses while empty per fix
+    // 0d856b3) — confirms the strip is visible in full-mode too.
+    await page.evaluate(() => document.getElementById('syncStatus')?.removeAttribute('hidden'));
     await expect(page.locator('#statusStrip'), 'strip visible under full mode too').toBeVisible();
   });
 });
