@@ -2306,10 +2306,15 @@ function renderInfoFeedingIntake() {
       const intake = entry[k + '_intake'];
       const hasMeal = !!entry[k] && entry[k] !== SKIPPED_MEAL;
       if (!hasMeal) return 'missing';
-      if (intake === 1 || intake === '1' || intake === 'full') return 'full';
-      if (intake === 0.5 || intake === '0.5' || intake === 'partial') return 'partial';
-      if (intake === 0 || intake === '0' || intake === 'none') return 'none';
-      return 'untagged'; // meal logged but intake not recorded
+      // Intake is logged on a 4-level scale (0.25 "Few bites" / 0.5 "Half" /
+      // 0.75 "Most" / 1 "All"); legacy entries may use 'full'/'partial'/'none'.
+      // The old classifier only matched 1/0.5/0, so meals tagged 0.25 or 0.75
+      // were wrongly counted as untagged.
+      const iv = intake === 'full' ? 1 : intake === 'partial' ? 0.5 : intake === 'none' ? 0 : parseFloat(intake);
+      if (isNaN(iv)) return 'untagged'; // meal logged but intake not recorded
+      if (iv >= 1) return 'full';
+      if (iv > 0) return 'partial';
+      return 'none';
     });
     // Parallel array of the logged food text per meal — fed into the
     // per-cell detail popup so a tap answers "what did she eat?".
