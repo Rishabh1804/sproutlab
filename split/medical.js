@@ -5315,7 +5315,7 @@ function editSleepEntry(idx) {
     const btn = document.getElementById('sleepSaveBtn');
     btn.innerHTML = zi('check') + ' Update Sleep Log';
     document.getElementById('sleepCancelBtn').style.display = '';
-    document.getElementById('sleepNightCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    openSleepLogForm('night');
   } else {
     document.getElementById('napDate').value = entry.date;
     document.getElementById('napStart').value = entry.bedtime;
@@ -5324,7 +5324,7 @@ function editSleepEntry(idx) {
     const btn = document.getElementById('napSaveBtn');
     btn.textContent = 'Update Nap';
     document.getElementById('napCancelBtn').style.display = '';
-    document.getElementById('sleepNapCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    openSleepLogForm('nap');
   }
 }
 
@@ -5412,6 +5412,32 @@ function renderSleep() {
   renderSleepTips();
 }
 
+// ── Sleep log form: collapsed-by-default card, Night/Nap segmented ──
+let _sleepLogMode = 'night';
+
+function setSleepLogMode(mode) {
+  _sleepLogMode = mode === 'nap' ? 'nap' : 'night';
+  const nightForm = document.getElementById('sleepNightCard');
+  const napForm = document.getElementById('sleepNapCard');
+  if (nightForm) nightForm.style.display = _sleepLogMode === 'night' ? '' : 'none';
+  if (napForm) napForm.style.display = _sleepLogMode === 'nap' ? '' : 'none';
+  const segNight = document.getElementById('sleepSeg-night');
+  const segNap = document.getElementById('sleepSeg-nap');
+  if (segNight) segNight.classList.toggle('active-sq', _sleepLogMode === 'night');
+  if (segNap) segNap.classList.toggle('active-sq', _sleepLogMode === 'nap');
+}
+
+// Expand the collapsed Log card (if needed), pick a segment, scroll to it.
+function openSleepLogForm(mode) {
+  const body = document.getElementById('sleepLogFormBody');
+  if (body && !body.classList.contains('open')) {
+    toggleHistoryCard('sleepLogFormBody', 'sleepLogFormChevron');
+  }
+  setSleepLogMode(mode);
+  const card = document.getElementById('sleepLogFormCard');
+  if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
 function renderSleepStats() {
   const el = document.getElementById('sleepStats');
   if (!el) return;
@@ -5469,7 +5495,7 @@ function renderSleepStats() {
       <div class="hsp-val">${lastNightStr}</div>
       <div class="hsp-label">Last night</div>
     </div>
-    <div class="home-stat-pill ${napColor}" data-scroll-to="sleepNapCard" data-scroll-block="start">
+    <div class="home-stat-pill ${napColor}" data-action="openSleepLog" data-arg="nap">
       <div class="hsp-icon"><svg class="zi"><use href="#zi-sleep"/></svg></div>
       <div class="hsp-val">${todayNaps.length > 0 ? napH + 'h ' + napM + 'm' : '—'}</div>
       <div class="hsp-label">${todayNaps.length} nap${todayNaps.length !== 1 ? 's' : ''} today</div>
