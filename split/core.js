@@ -375,7 +375,7 @@ function init() {
     else if (action === 'showComboHistory') {
       const ci = document.getElementById('comboInput');
       if (ci) ci.value = arg;
-      const hit = typeof comboHistory !== 'undefined' && comboHistory.find(x => x.q === arg);
+      const hit = comboHistory.find(x => x.q === arg);
       if (hit) renderComboResult(hit.result);
     }
     else if (action === 'openFeedingDay') {
