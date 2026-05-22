@@ -2086,7 +2086,16 @@ function _syncNotifyVisibility() {
 function _syncUpdateStatusIndicator(snap) {
   var btn = document.getElementById('syncStatus');
   if (!btn) return;
-  if (btn.hasAttribute('hidden')) btn.removeAttribute('hidden');
+  // PR-P: the indicator is silent on success. Routine states (connecting /
+  // synced / syncing) no longer consume top-of-screen real estate — only the
+  // not-syncing states (offline / halted) surface the pill, so a parent still
+  // learns when their data is genuinely not backing up.
+  if (snap.state !== 'offline' && snap.state !== 'halted') {
+    btn.setAttribute('hidden', '');
+    btn.removeAttribute('data-action');
+    return;
+  }
+  btn.removeAttribute('hidden');
   btn.setAttribute('data-state', snap.state);
 
   // Copy table — one source of truth per logical state; CSS handles color.

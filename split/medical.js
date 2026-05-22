@@ -8743,6 +8743,30 @@ function renderInfoFoodReaction() {
 // 7. FOOD REPETITION FATIGUE
 // ════════════════════════════════════════
 
+// Nourishing daily staples — fats, nuts, seeds, spices, grains & dals — are
+// EXEMPT from over-repetition flagging (feedback): giving ghee, almonds,
+// walnut, jeera etc. every day is intentional nutrition, not food fatigue.
+// Built from the FOOD_TAX categories that are staple food groups; fruits and
+// vegetables stay flaggable, since rotating those genuinely aids variety.
+const _STAPLE_FOOD_KEYS = (function () {
+  const set = new Set();
+  ['grains', 'dairy', 'nuts', 'spices'].forEach(cat => {
+    const c = (typeof FOOD_TAX !== 'undefined') && FOOD_TAX[cat];
+    if (!c || !c.subs) return;
+    Object.values(c.subs).forEach(sub => (sub.keys || []).forEach(k => set.add(k.toLowerCase())));
+  });
+  return set;
+})();
+function _isStapleFood(base) {
+  if (!base) return false;
+  const b = base.toLowerCase();
+  if (_STAPLE_FOOD_KEYS.has(b)) return true;
+  for (const k of _STAPLE_FOOD_KEYS) {
+    if (k.length >= 4 && b.includes(k)) return true;
+  }
+  return false;
+}
+
 function computeFoodRepetition() {
   const dates = Object.keys(feedingData).sort();
   if (dates.length < 5) return null;
@@ -8775,6 +8799,7 @@ function computeFoodRepetition() {
   // Find foods appearing in >60% of days over 5+ day stretches
   const fatigued = [];
   const warned = [];
+  const staples = []; // frequently-given staples — shown, but never flagged
 
   Object.entries(foodDayCount).forEach(([food, data]) => {
     const pct = Math.round((data.count / totalDays) * 100);
@@ -8794,17 +8819,22 @@ function computeFoodRepetition() {
       }
     }
 
-    if (pct >= 60 && maxStreak >= 5) {
-      fatigued.push({ food, pct, days: data.count, totalDays, streak: maxStreak });
+    const rec = { food, pct, days: data.count, totalDays, streak: maxStreak, staple: false };
+    if (_isStapleFood(food)) {
+      // A staple is never "over-repeated" — surface it only as context.
+      if (pct >= 60) staples.push(Object.assign(rec, { staple: true }));
+    } else if (pct >= 60 && maxStreak >= 5) {
+      fatigued.push(rec);
     } else if (pct >= 50 && maxStreak >= 4) {
-      warned.push({ food, pct, days: data.count, totalDays, streak: maxStreak });
+      warned.push(rec);
     }
   });
 
   // Sort by percentage descending
   fatigued.sort((a, b) => b.pct - a.pct);
   warned.sort((a, b) => b.pct - a.pct);
-  const all = [...fatigued, ...warned].slice(0, 8);
+  staples.sort((a, b) => b.pct - a.pct);
+  const all = [...fatigued, ...warned, ...staples].slice(0, 8);
 
   const insights = [];
   if (fatigued.length > 0) {
@@ -8814,14 +8844,21 @@ function computeFoodRepetition() {
         ' in most meals. Try rotating with alternatives to ensure nutrient variety and prevent food fatigue.'
     });
   }
-  if (fatigued.length === 0 && warned.length === 0) {
+  if (staples.length > 0) {
+    insights.push({
+      type: 'good',
+      text: staples.map(f => f.food).join(', ') + (staples.length === 1 ? ' appears' : ' appear') +
+        ' most days — these are nourishing daily staples (fats, nuts, grains, spices), so frequent use is intentional, not food fatigue.'
+    });
+  }
+  if (fatigued.length === 0 && warned.length === 0 && staples.length === 0) {
     insights.push({
       type: 'good',
       text: 'Good variety in the last 2 weeks — no food is dominating the diet.'
     });
   }
 
-  return { fatigued, warned, all, totalDays, insights };
+  return { fatigued, warned, staples, all, totalDays, insights };
 }
 
 function renderInfoRepetition() {
@@ -8853,15 +8890,21 @@ function renderInfoRepetition() {
   if (barsEl && data.all.length > 0) {
     let html = '<div class="t-xs t-light mb-4" >Food frequency over ' + data.totalDays + ' days (threshold: 60%)</div>';
     data.all.forEach(f => {
-      const isFatigued = f.pct >= 60 && f.streak >= 5;
-      const barColor = isFatigued ? 'var(--tc-rose)' : f.pct >= 50 ? 'var(--tc-amber)' : 'var(--tc-sage)';
+      // Staples are never "fatigued" — a frequent staple is shown in calm
+      // sage with a reassuring status, not flagged amber/rose as a concern.
+      const isFatigued = !f.staple && f.pct >= 60 && f.streak >= 5;
+      const isWarn = !f.staple && !isFatigued && f.pct >= 50;
+      const barColor = isFatigued ? 'var(--tc-rose)' : isWarn ? 'var(--tc-amber)' : 'var(--tc-sage)';
+      const status = f.staple ? 'Daily staple — fine to repeat'
+        : isFatigued ? 'Time to vary the menu'
+        : isWarn ? 'Coming up often' : 'Good variety';
       const repDetail = {
         title: f.food, subtitle: 'Last ' + data.totalDays + ' days',
-        domain: isFatigued ? 'rose' : f.pct >= 50 ? 'amber' : 'sage', icon: 'bowl',
+        domain: isFatigued ? 'rose' : isWarn ? 'amber' : 'sage', icon: 'bowl',
         rows: [
           { label: 'Appears on', value: f.pct + '% of days' },
           { label: 'Longest streak', value: f.streak + ' day' + (f.streak !== 1 ? 's' : '') },
-          { label: 'Status', value: isFatigued ? 'Time to vary the menu' : f.pct >= 50 ? 'Coming up often' : 'Good variety' }
+          { label: 'Status', value: status }
         ]
       };
       html += '<div class="mi-food-row" data-action="vizShowDetail" data-arg="' + vizArg(repDetail) + '">';
