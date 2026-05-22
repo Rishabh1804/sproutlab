@@ -669,6 +669,7 @@ function init() {
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
     else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
     else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
+    else if (action === 'gotoCard') gotoCard(arg, arg2);
     else if (action === 'toggleAlertTip') toggleAlertTip(arg);
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }
@@ -3020,6 +3021,9 @@ function getAlertNavAction(alertKey, alertTitle) {
 }
 
 function switchTab(name) {
+  // A manual tab switch (tab bar, not a gotoCard jump) abandons the
+  // card-navigation breadcrumb — back should not then rewind a stale trail.
+  if (!_gotoCardActive) _cardNavStack = [];
   _islClearAll();
   _clearModifierCache();
   _tsfExpandedId = null;
@@ -3063,15 +3067,44 @@ function switchTab(name) {
   window.scrollTo({ top: 0 });
 }
 
-// Switch to a tab, then smooth-scroll a specific card into view. For
-// dynamically rendered links (e.g. alert action buttons) where the static
+// ── Card navigation with a breadcrumb trail (PR-O) ──
+// gotoCard() switches tab, expands the target card and scrolls it into view —
+// and remembers where it came from so the back gesture returns there (e.g.
+// back to the alert that triggered the jump).
+let _cardNavStack = [];
+let _gotoCardActive = false;
+
+// Expand a collapsed card so the caller lands on its content, not its header.
+function _expandCard(card) {
+  const hdr = card.querySelector('[data-collapse-target]');
+  if (!hdr) return;
+  const body = document.getElementById(hdr.dataset.collapseTarget);
+  if (body && !body.classList.contains('open')) {
+    toggleHistoryCard(hdr.dataset.collapseTarget, hdr.dataset.collapseChevron);
+  }
+}
+
+// Switch to a tab, expand + scroll a specific card into view. For dynamically
+// rendered links (e.g. alert action buttons) where the static
 // [data-tab-scroll] binding wired up at init does not apply.
 function gotoCard(tab, cardId) {
+  // Breadcrumb: remember the current location so popstate can return to it.
+  const activePanel = document.querySelector('.tab-panel.active');
+  const fromTab = activePanel ? activePanel.id.replace('tab-', '') : 'home';
+  _cardNavStack.push({ tab: fromTab, scrollY: window.scrollY });
+  history.pushState({ slCardNav: _cardNavStack.length }, '');
+
+  _gotoCardActive = true;
   switchTab(tab);
+  _gotoCardActive = false;
+
   setTimeout(() => {
     const c = document.getElementById(cardId);
-    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 140);
+    if (c) {
+      _expandCard(c);
+      c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 160);
 }
 
 function switchTrackSub(sub) {
@@ -3433,6 +3466,16 @@ window.addEventListener('popstate', e => {
   // Close any open confirm dialog
   const confirm = document.querySelector('.confirm-overlay');
   if (confirm) { confirm.remove(); return; }
+  // Card-navigation breadcrumb (PR-O): back returns to the origin — e.g. the
+  // alert that triggered a gotoCard() jump. Unwinds one trail hop per back.
+  if (_cardNavStack.length) {
+    const ret = _cardNavStack.pop();
+    _gotoCardActive = true;
+    switchTab(ret.tab);
+    _gotoCardActive = false;
+    setTimeout(() => window.scrollTo({ top: ret.scrollY, behavior: 'smooth' }), 60);
+    return;
+  }
 });
 
 function confirmAction(msg, callback, btnText) {

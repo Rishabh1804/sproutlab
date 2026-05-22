@@ -17588,6 +17588,7 @@ function init() {
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
     else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
     else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
+    else if (action === 'gotoCard') gotoCard(arg, arg2);
     else if (action === 'toggleAlertTip') toggleAlertTip(arg);
     else if (action === 'execAlertAction') execAlertAction(arg);
     else if (action === 'skipMeals') { try { skipMeals(JSON.parse(arg)); } catch(ex) {} }
@@ -19939,6 +19940,9 @@ function getAlertNavAction(alertKey, alertTitle) {
 }
 
 function switchTab(name) {
+  // A manual tab switch (tab bar, not a gotoCard jump) abandons the
+  // card-navigation breadcrumb — back should not then rewind a stale trail.
+  if (!_gotoCardActive) _cardNavStack = [];
   _islClearAll();
   _clearModifierCache();
   _tsfExpandedId = null;
@@ -19982,15 +19986,44 @@ function switchTab(name) {
   window.scrollTo({ top: 0 });
 }
 
-// Switch to a tab, then smooth-scroll a specific card into view. For
-// dynamically rendered links (e.g. alert action buttons) where the static
+// ── Card navigation with a breadcrumb trail (PR-O) ──
+// gotoCard() switches tab, expands the target card and scrolls it into view —
+// and remembers where it came from so the back gesture returns there (e.g.
+// back to the alert that triggered the jump).
+let _cardNavStack = [];
+let _gotoCardActive = false;
+
+// Expand a collapsed card so the caller lands on its content, not its header.
+function _expandCard(card) {
+  const hdr = card.querySelector('[data-collapse-target]');
+  if (!hdr) return;
+  const body = document.getElementById(hdr.dataset.collapseTarget);
+  if (body && !body.classList.contains('open')) {
+    toggleHistoryCard(hdr.dataset.collapseTarget, hdr.dataset.collapseChevron);
+  }
+}
+
+// Switch to a tab, expand + scroll a specific card into view. For dynamically
+// rendered links (e.g. alert action buttons) where the static
 // [data-tab-scroll] binding wired up at init does not apply.
 function gotoCard(tab, cardId) {
+  // Breadcrumb: remember the current location so popstate can return to it.
+  const activePanel = document.querySelector('.tab-panel.active');
+  const fromTab = activePanel ? activePanel.id.replace('tab-', '') : 'home';
+  _cardNavStack.push({ tab: fromTab, scrollY: window.scrollY });
+  history.pushState({ slCardNav: _cardNavStack.length }, '');
+
+  _gotoCardActive = true;
   switchTab(tab);
+  _gotoCardActive = false;
+
   setTimeout(() => {
     const c = document.getElementById(cardId);
-    if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 140);
+    if (c) {
+      _expandCard(c);
+      c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 160);
 }
 
 function switchTrackSub(sub) {
@@ -20352,6 +20385,16 @@ window.addEventListener('popstate', e => {
   // Close any open confirm dialog
   const confirm = document.querySelector('.confirm-overlay');
   if (confirm) { confirm.remove(); return; }
+  // Card-navigation breadcrumb (PR-O): back returns to the origin — e.g. the
+  // alert that triggered a gotoCard() jump. Unwinds one trail hop per back.
+  if (_cardNavStack.length) {
+    const ret = _cardNavStack.pop();
+    _gotoCardActive = true;
+    switchTab(ret.tab);
+    _gotoCardActive = false;
+    setTimeout(() => window.scrollTo({ top: ret.scrollY, behavior: 'smooth' }), 60);
+    return;
+  }
 });
 
 function confirmAction(msg, callback, btnText) {
@@ -29091,6 +29134,43 @@ function getAlertMode(a) {
 // Sanitize alert keys to safe alphanumeric + dash only
 function sanitizeAlertKey(s) { return s.replace(/[^a-zA-Z0-9-]/g, '_'); }
 
+// ── Alert → evidence-card routing (PR-O) ──
+// Every alert's "View details" button (and any bare switchTab() primary)
+// should land on the specific card where that alert's data actually lives,
+// not a context-free tab switch. Keyed by alert id; { tab, card } drives
+// gotoCard(). Card ids verified present in template.html.
+const ALERT_CARD = {
+  // ── warnings ──
+  'poop-gap':           { tab: 'poop',     card: 'poopChartCard' },
+  'hard-stool-streak':  { tab: 'poop',     card: 'poopChartCard' },
+  'sleep-score-drop':   { tab: 'sleep',    card: 'sleepChartCard' },
+  'food-reaction':      { tab: 'info',     card: 'infoFoodReactionCard' },
+  'dev-checkup-due':    { tab: 'medical',  card: 'medVaccCard' },
+  'food-variety-stale': { tab: 'info',     card: 'infoFoodIntroCard' },
+  'vacc-reminder':      { tab: 'medical',  card: 'medVaccCard' },
+  'supp-streak-broken': { tab: 'info',     card: 'infoSupplementCard' },
+  'low-iron':           { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'low-calcium':        { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'low-protein':        { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'iron-no-vitc':       { tab: 'info',     card: 'infoSmartPairingCard' },
+  'meal-monotony':      { tab: 'info',     card: 'infoRepetitionCard' },
+  'food-correlation':   { tab: 'insights', card: 'insightsCorrelationCard' },
+  'food-group-gap':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'dinner-bed-gap':     { tab: 'sleep',    card: 'sleepChartCard' },
+  'reaction-window':    { tab: 'info',     card: 'infoFoodIntroCard' },
+  // ── wins ──
+  'first-sleepthrough': { tab: 'sleep',    card: 'sleepChartCard' },
+  'sleep-streak':       { tab: 'sleep',    card: 'sleepChartCard' },
+  'consistent-digestion':{ tab: 'poop',    card: 'poopChartCard' },
+  'food-variety-win':   { tab: 'info',     card: 'infoFoodIntroCard' },
+  'meal-logging-streak':{ tab: 'info',     card: 'infoMealBreakdownCard' },
+  'growth-on-track':    { tab: 'growth',   card: 'growthHeroCard' },
+  'supp-streak':        { tab: 'info',     card: 'infoSupplementCard' },
+  'iron-rich-week':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'nutrient-balance':   { tab: 'info',     card: 'infoNutrientHeatmapCard' },
+  'iron-vitc-synergy':  { tab: 'info',     card: 'infoSmartPairingCard' },
+};
+
 // ══════════════════════════════════════════════════════════
 // ██ PERSONALIZED BASELINES ENGINE
 // ══════════════════════════════════════════════════════════
@@ -30215,8 +30295,16 @@ function renderAlertCardHTML(a, scope) {
   const sevClass = SEV_CLASS[a.severity] || 'ca-info';
   const sevBadge = SEV_BADGE[a.severity] || 'sev-info';
   const sevLabel = SEV_LABEL[a.severity] || zi('check') + ' Info';
-  // Register action fn safely
-  if (a.action && a.action.fn) _alertActionRegistry[safeKey] = a.action.fn;
+  // Evidence-card route (PR-O): where this alert's data actually lives.
+  const route = ALERT_CARD[a.id];
+  // Register action fn safely. A bare switchTab() primary is upgraded to
+  // land on the evidence card; genuinely actionable primaries (openQuickModal,
+  // gotoCard) are left intact.
+  if (a.action && a.action.fn) {
+    let fn = a.action.fn;
+    if (route && /^switchTab\(/.test(fn)) fn = `gotoCard("${route.tab}","${route.card}")`;
+    _alertActionRegistry[safeKey] = fn;
+  }
   // Interaction mode (PR-K): drives which clear control the card carries.
   const mode = getAlertMode(a);
   return `<div class="ctx-alert ${sevClass}" id="ca-${safeKey}">
@@ -30230,7 +30318,9 @@ function renderAlertCardHTML(a, scope) {
         <div class="ctx-alert-tip" id="ca-tip-${safeKey}">${escHtml(a.tip)}</div>` : ''}
         <div class="ctx-alert-actions">
           ${a.action ? `<button class="ctx-alert-btn cab-primary" data-action="execAlertAction" data-arg="${safeKey}" data-stop="1">${escHtml(a.action.label)}</button>` : ''}
-          ${a.tab ? `<button class="ctx-alert-btn cab-secondary" data-action="switchTab" data-arg="${escAttr(a.tab)}" data-stop="1">View details</button>` : ''}
+          ${a.tab ? (route
+            ? `<button class="ctx-alert-btn cab-secondary" data-action="gotoCard" data-arg="${escAttr(route.tab)}" data-arg2="${escAttr(route.card)}" data-stop="1">View details</button>`
+            : `<button class="ctx-alert-btn cab-secondary" data-action="switchTab" data-arg="${escAttr(a.tab)}" data-stop="1">View details</button>`) : ''}
           ${mode === 'acknowledge' ? `<button class="ctx-alert-btn cab-ack" data-action="acknowledgeAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}">${zi('check')} Got it</button>` : ''}
           ${mode === 'snooze' ? `<button class="ctx-alert-btn cab-snooze" data-action="snoozeAlert" data-stop="1" data-arg="${escAttr(a.key)}" data-arg2="${escAttr(a.title)}">${zi('clock')} Snooze 3d</button>` : ''}
         </div>
@@ -30316,7 +30406,7 @@ function renderHomeContextAlerts() {
   // Warning alerts
   contextHTML += homeWarnings.map(a => renderAlertCardHTML(a, 'hm-')).join('');
   if (remainingWarnings > 0) {
-    contextHTML += `<div class="ca-view-all" data-tab-scroll="insights" data-scroll-to="insightsAlertsCard" data-scroll-block="center">+ ${remainingWarnings} more alert${remainingWarnings !== 1 ? 's' : ''} in Insights <span class="ca-badge">${remainingWarnings}</span> →</div>`;
+    contextHTML += `<div class="ca-view-all" data-action="gotoCard" data-arg="insights" data-arg2="insightsAlertsCard" data-stop="1">+ ${remainingWarnings} more alert${remainingWarnings !== 1 ? 's' : ''} in Insights <span class="ca-badge">${remainingWarnings}</span> →</div>`;
   }
 
   // Combine: reminders first (urgent), then context alerts, then wins
@@ -30336,7 +30426,7 @@ function renderHomeContextAlerts() {
   // Wins
   combined += homePositives.map(a => renderAlertCardHTML(a, 'hmw-')).join('');
   if (remainingPositives > 0) {
-    combined += `<div class="ca-view-all" data-tab-scroll="insights" data-scroll-to="insightsWinsCard" data-scroll-block="center">+ ${remainingPositives} more win${remainingPositives !== 1 ? 's' : ''} in Insights →</div>`;
+    combined += `<div class="ca-view-all" data-action="gotoCard" data-arg="insights" data-arg2="insightsWinsCard" data-stop="1">+ ${remainingPositives} more win${remainingPositives !== 1 ? 's' : ''} in Insights →</div>`;
   }
 
   const hasAnything = combined.trim().length > 0;
