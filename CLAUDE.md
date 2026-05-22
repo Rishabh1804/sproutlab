@@ -35,7 +35,34 @@ Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/d
 
 **Subagent vs skill split (canon-cc-022 artifact test):** subagent output is a separable, attributable interaction-artifact entering the cc-018 lifecycle (Lyra's Mode 1 spec authoring, Maren and Kael's Mode 1 jurisdictional audits, any Mode 2 committee-delegate positions). Skill output is an in-transcript register-flip — pattern-read, smell-check, Governor scout — with no signature, no gate, no Edict V chain entry. If the caller wants a signed audit or a spec-bearing record, summon the subagent. If the caller wants the voice mid-build without breaking flow, fire the skill.
 
-**QA-chain order (canon-cc-008):** Builder builds → Governors audit in parallel (Maren on Care, Kael on Intelligence, both on shared modules) → Lyra synthesizes → Cipher runs Edict V cross-cutting pass. Do not short-circuit.
+## QA Chain — Mandatory Pre-Merge Gate (canon-cc-008)
+
+**NON-NEGOTIABLE. This is a release gate, not a guideline.** Every SproutLab
+Capital change — any edit under `split/` headed for a PR — MUST clear the
+canon-cc-008 chain *before* the PR is taken out of draft or merged:
+
+1. **Build & self-check.** `build.sh` clean, all audit gates pass, e2e green.
+2. **Governor audit — Mode-1 subagents, summoned in parallel:**
+   - Diff touches `home.js`, `diet.js`, or `medical.js` → summon **Maren** (Care).
+   - Diff touches any `intelligence-*.js`, `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Kael** (Intelligence).
+   - Diff touches `styles.css` or `template.html` → summon **both** (shared-module dual review).
+   - Diff is test-only / docs-only → the Governor audit may be waived; state the waiver explicitly.
+3. **Lyra synthesizes** the Governor reports and folds in the fixes.
+4. **Cipher** runs the Edict V cross-cutting final-pass.
+5. *Only now* — mark the PR ready / merge.
+
+**The `/code-review` skill is NOT a Governor audit and does NOT discharge
+this gate.** Per the canon-cc-022 artifact test, a skill run is an
+in-transcript smell-check — no signature, no Edict V chain entry. It may
+*supplement* the chain; it never *replaces* it.
+
+A draft PR may be opened before the chain runs — but it stays draft until
+the chain completes. Marking a PR ready, merging, or skipping a Governor
+whose jurisdiction the diff touched is a canon-cc-008 short-circuit.
+
+An Architect waiver ("skip the chain" / "merge it directly") is valid only
+when **explicitly given** — surface the chain, get the explicit waiver, note
+it. Silence is not a waiver. Full procedure: `docs/QA_GATE_SPEC.md` Gate 2.5.
 
 ## What SproutLab Is
 
