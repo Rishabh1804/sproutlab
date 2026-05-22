@@ -1,5 +1,6 @@
 # SproutLab — Build QA Gate Spec
 **Created:** 9 April 2026
+**Updated:** 22 May 2026 — added Gate 2.5 (canon-cc-008 Governor audit chain)
 **Applies to:** Every SproutLab build session
 **Philosophy:** The user never asks for a QA audit. Code is not presented until it passes.
 
@@ -157,6 +158,40 @@ CHECKS:
 
 ---
 
+### Gate 2.5 — Governor Audit Chain (canon-cc-008)
+
+**When:** After Gate 2 passes, before a PR is taken out of draft or merged.
+**Owner:** Lyra (routing) → Governors (audit) → Cipher (Edict V final-pass).
+**Added:** 22 May 2026, after PRs #99–#101 were merged/staged without it.
+
+Gate 2 is the *builder's* self-check. Gate 2.5 is the *institutional* audit —
+the 30K-Rule QA chain. It is mandatory for every Capital change (any edit
+under `split/`). A draft PR may be opened first, but it stays draft until
+this gate clears.
+
+| Step | Who | Trigger |
+|------|-----|---------|
+| Care audit | **Maren** (Mode-1 subagent) | diff touches `home.js` / `diet.js` / `medical.js` |
+| Intelligence audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-*.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` |
+| Shared-module review | **both** Governors | diff touches `styles.css` / `template.html` |
+| Synthesis | **Lyra** | always — fold Governor findings into fixes |
+| Edict V final-pass | **Cipher** | always — cross-cutting sign-off |
+
+**Gate 2.5 passes when:** every touched-jurisdiction Governor has audited,
+Lyra has synthesized the findings, and Cipher has returned an `LGTM` or
+`amended` verdict.
+
+**The `/code-review` skill does NOT satisfy Gate 2.5.** A skill run is an
+in-transcript smell-check (canon-cc-022 artifact test) — no signature, no
+Edict V chain entry. Summon the Governor *subagents*; the skill may only
+supplement them.
+
+A test-only or docs-only change may waive the Governor audit — state the
+waiver explicitly. An Architect waiver ("merge it directly") is valid only
+when explicitly given; silence is not a waiver.
+
+---
+
 ### Gate 3 — Post-Deploy
 
 **When:** After user deploys and shares a screenshot or confirms it's running.
@@ -285,6 +320,7 @@ grep 'font-family' $CSS | grep -v 'Nunito\|Fraunces' || echo "  ✓ PASS"
 |------|------|------------------------|-------------------|
 | Gate 1 | Before code | All deps verified or waived | User sees the ask |
 | Gate 2 | Before delivery | Layers 1-3 all pass | **Builder only** — user never sees |
+| Gate 2.5 | Before PR ready/merge | Governors audited, Lyra synthesized, Cipher `LGTM`/`amended` | Lyra routes; chain entry recorded |
 | Gate 3 | After deploy | ≤2 cosmetic items as debt | User reviews visuals |
 
 **A session is complete when Gate 3 passes.**

@@ -1,7 +1,7 @@
 # Memory.md
 **Scope:** Persistent institutional knowledge across all repos
 **Owner:** The Consul (cross-repo overseer)
-**Updated:** 15 April 2026
+**Updated:** 22 May 2026
 
 ---
 
@@ -61,6 +61,7 @@ CA by background. Business Manager at Soma Electro Products (zinc electroplating
 - **Split-file architecture** adopted after SproutLab monolith hit ~2MB. Migration M1–M3 pain documented; all new repos start split.
 - **Aurelius snippet format** is the canonical content import mechanism. Core principle: minimal manual input.
 - **QA multi-round** continues until only cosmetic bugs remain. Caught 8 critical bugs pre-build in CareTickets spec alone.
+- **QA chain is a pre-merge gate (canon-cc-008), enforced from 22 May 2026.** A SproutLab session built and merged PRs #99 and #100 — and staged #101 — running only the `/code-review` *skill*, with the Maren/Kael Governor audits and Cipher's Edict V pass skipped. The skill is an in-transcript smell-check (canon-cc-022 artifact test), not a Governor audit, and does not discharge the chain. Correction codified in CLAUDE.md §QA Chain and QA_GATE_SPEC.md Gate 2.5: no SproutLab Capital change leaves draft or merges until the Governor→synthesis→Cipher chain has run. Silence from the Architect is not a waiver — waivers must be explicit.
 
 ## Companion Registry (Quick Reference)
 

@@ -1,7 +1,7 @@
 # AGENTS.md
 **Scope:** Cross-tool agent instructions (Claude Code, OpenAI Codex CLI, Gemini CLI)
 **Author:** Rishabh Jain
-**Updated:** 15 April 2026
+**Updated:** 22 May 2026
 
 ---
 
@@ -25,6 +25,7 @@ Three PWA projects sharing a common architectural pattern: split-file HTML conca
 6. **git --no-pager** for all git commands (Termux terminal width constraint).
 7. **Spec before build.** Complex features use the 8-pass SPEC_ITERATION_PROCESS. The spec is build-ready when the builder never makes an undocumented decision.
 8. **QA until cosmetic.** Post-build multi-round QA. Continue until only cosmetic bugs remain.
+9. **SproutLab — Governor audit chain before merge (canon-cc-008).** Every Capital change (edit under `split/`) clears the Governor→synthesis→Cipher chain before its PR leaves draft or merges: Maren audits Care files, Kael audits Intelligence files, both review shared modules, Lyra synthesizes, Cipher runs the Edict V pass. The `/code-review` skill does NOT discharge it. See CLAUDE.md §QA Chain and docs/QA_GATE_SPEC.md Gate 2.5.
 
 ## Build Commands
 
