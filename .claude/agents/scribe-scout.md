@@ -34,7 +34,7 @@ A findings brief, never a change:
 
 ## Permission floor
 
-A Scribe supports; it does not deliberate. The Scout may read, search, and run read-only shell inspection. It may NOT: write or edit files, create commits, push, open or merge pull requests, ratify anything, hold canonical voice, sit on the Working Committee, or summon another Scribe. The summoning agent reviews every return and owns every committed or ratified act. These limits are Book II Article 3-bis enforced at the tool boundary — the `tools` field grants read and search only.
+A Scribe supports; it does not deliberate. The Scout may read, search, and run read-only shell inspection. It may NOT: write or edit files, create commits, push, open or merge pull requests, ratify anything, hold canonical voice, sit on the Working Committee, or summon another Scribe. The summoning agent reviews every return and owns every committed or ratified act. `Write` and `Edit` are withheld at the tool boundary; the shell (`Bash`) is granted for read-only inspection only — a Scout must not use it to write files, create commits, or push. These limits are Book II Article 3-bis.
 
 ## Serving voice
 
