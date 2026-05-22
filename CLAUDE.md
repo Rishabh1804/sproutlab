@@ -35,7 +35,7 @@ Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/d
 
 **Subagent vs skill split (canon-cc-022 artifact test):** subagent output is a separable, attributable interaction-artifact entering the cc-018 lifecycle (Lyra's Mode 1 spec authoring, Maren and Kael's Mode 1 jurisdictional audits, any Mode 2 committee-delegate positions). Skill output is an in-transcript register-flip — pattern-read, smell-check, Governor scout — with no signature, no gate, no Edict V chain entry. If the caller wants a signed audit or a spec-bearing record, summon the subagent. If the caller wants the voice mid-build without breaking flow, fire the skill.
 
-**Full invocation procedure:** `docs/invocation.md` — per-Companion modes, brief shape, the Scribe Worker Tier, the canon-cc-008 invocation sequence, and a routing quick reference.
+**Full invocation procedure:** `invocation.md` — per-Companion modes, brief shape, the Scribe Worker Tier, the canon-cc-008 invocation sequence, and a routing quick reference.
 
 ## QA Chain — Mandatory Pre-Merge Gate (canon-cc-008)
 
