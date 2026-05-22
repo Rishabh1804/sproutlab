@@ -669,6 +669,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   background:var(--sky-light); color:var(--text); outline:none;
 }
 .add-food input:focus { border-color:var(--sky); }
+.food-slot-select {
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--sky-light);
+  font-family:'Nunito', sans-serif; font-size:var(--fs-base);
+  background:var(--sky-light); color:var(--text); outline:none;
+}
+.food-slot-select:focus { border-color:var(--sky); }
 .reaction-toggle { display:flex; gap:var(--sp-4); }
 .rtog { min-height:40px; display:inline-flex; align-items:center; justify-content:center;
   padding:var(--sp-6) var(--sp-10); border-radius:var(--r-md); border:1.5px solid var(--light);
@@ -2768,6 +2775,51 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   font-weight:600; transition:background var(--ease-fast);
 }
 [data-theme="dark"] .mb-weekly-cell { opacity:0.85; }
+
+/* ── Logging Streak (PR-N) ── */
+.streak-hero {
+  display:flex; align-items:center; gap:var(--sp-12);
+  padding:var(--sp-12) var(--sp-16); border-radius:var(--r-xl);
+  background:var(--amber-light);
+}
+[data-theme="dark"] .streak-hero { background:rgba(70,55,35,0.3); }
+.streak-flame { color:var(--tc-amber); display:flex; }
+.streak-flame .zi { width:30px; height:30px; }
+.streak-num {
+  font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600;
+  color:var(--tc-amber); line-height:var(--lh-none);
+}
+.streak-cap { font-size:var(--fs-sm); color:var(--mid); font-weight:600; }
+.streak-hero-best { margin-left:auto; text-align:right; }
+.streak-best { font-size:var(--fs-xs); color:var(--light); }
+.streak-best-val { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); }
+.streak-miles { display:flex; gap:var(--sp-8); }
+.streak-mile {
+  flex:1; text-align:center; padding:var(--sp-8) var(--sp-4);
+  border-radius:var(--r-lg); background:var(--warm);
+  border:1.5px solid transparent;
+}
+[data-theme="dark"] .streak-mile { background:rgba(255,255,255,0.04); }
+.streak-mile.reached { background:var(--amber-light); border-color:var(--tc-amber); }
+[data-theme="dark"] .streak-mile.reached { background:rgba(70,55,35,0.4); }
+.streak-mile-icon { color:var(--light); display:flex; justify-content:center; }
+.streak-mile-icon .zi { width:18px; height:18px; }
+.streak-mile.reached .streak-mile-icon { color:var(--tc-amber); }
+.streak-mile-label {
+  font-size:var(--fs-xs); font-weight:700; color:var(--mid);
+  margin-top:var(--sp-2);
+}
+.streak-mile.reached .streak-mile-label { color:var(--tc-amber); }
+.streak-grid { display:flex; gap:var(--sp-4); flex-wrap:wrap; }
+.streak-day { text-align:center; }
+.streak-dot {
+  width:18px; height:18px; border-radius:var(--r-sm);
+  background:var(--warm); margin:0 auto;
+}
+[data-theme="dark"] .streak-dot { background:rgba(255,255,255,0.06); }
+.streak-dot.partial { background:rgba(232,184,109,0.4); }
+.streak-dot.on { background:var(--tc-amber); }
+.streak-dot-label { font-size:9px; color:var(--light); margin-top:var(--sp-2); }
 
 /* ── Smart Pairing Suggestions (Feature 5) ── */
 .sp-pair-card {

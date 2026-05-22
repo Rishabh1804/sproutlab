@@ -875,6 +875,13 @@
         <div class="add-food">
           <input type="text" id="foodInput" oninput="activateBtn('foodAddBtn',this.value.trim())" placeholder="Add a food..." onkeydown="if(event.key==='Enter')addFood()">
           <input type="date" id="foodDate" style="padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);color:var(--text);outline:none;">
+          <select id="foodSlot" class="food-slot-select" aria-label="Meal slot">
+            <option value="">Any meal</option>
+            <option value="breakfast">Breakfast</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+            <option value="snack">Snack</option>
+          </select>
           <div class="reaction-toggle">
             <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
             <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
@@ -1631,6 +1638,21 @@
           <div id="infoMealBreakdownGrid" class="mt-4"></div>
           <div id="infoMealBreakdownAlerts" class="mt-8"></div>
           <div id="infoMealBreakdownWeekly" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Logging Streak (PR-N) -->
+      <div class="card card-daily col-full" id="infoStreakCard">
+        <div class="card-header" data-collapse-target="infoStreakBody" data-collapse-chevron="infoStreakChevron">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-flame"/></svg></div> Logging Streak</div>
+          <span class="collapse-chevron" id="infoStreakChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+        </div>
+        <div id="infoStreakSummary" class="mt-4"></div>
+        <div id="infoStreakBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoStreakHero" class="mt-4"></div>
+          <div id="infoStreakMilestones" class="mt-8"></div>
+          <div id="infoStreakGrid" class="mt-8"></div>
+          <div id="infoStreakMsg" class="mt-8"></div>
         </div>
       </div>
 

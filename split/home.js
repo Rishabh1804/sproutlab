@@ -3058,7 +3058,7 @@ function renderFoodCatSubContent(pid, sid) {
             <button class="food-fav-star${isFoodFavorite(f.name) ? ' active' : ''}" data-action="foodToggleFavorite" data-stop="1" data-arg="${escHtml(f.name)}" title="Favorite">${zi('star')}</button>
             <button class="food-del" data-action="deleteFoodAndRender" data-stop="1" data-arg="${f._i}" data-arg2="'${pid}','${sid}'" title="Remove">×</button>
           </div>
-          <span class="food-tag-date">${f.date ? formatDate(f.date) : 'No date'}</span>
+          <span class="food-tag-date">${f.date ? formatDate(f.date) : 'No date'}${f.mealSlot ? ' · ' + escHtml(f.mealSlot) : ''}</span>
           <span class="freq-badge ${fl.cls}">${fl.label} · ${freq}×/wk</span>
         </div>`;
       }).join('')}
@@ -3100,6 +3100,8 @@ function setReaction(r) {
 function addFood() {
   const val = document.getElementById('foodInput').value.trim();
   const dt  = document.getElementById('foodDate').value;
+  const slotEl = document.getElementById('foodSlot');
+  const slot = slotEl ? slotEl.value : '';
   if (!val) return;
 
   // Check if base food already exists
@@ -3109,16 +3111,20 @@ function addFood() {
     return fb === base || fb.includes(base) || base.includes(fb);
   });
   if (existingIdx >= 0) {
-    // Update existing: keep earlier date, escalate reaction
+    // Update existing: keep earlier date, escalate reaction, fill in meal slot if newly given
     const existing = foods[existingIdx];
     if (dt && (!existing.date || dt < existing.date)) existing.date = dt;
     if (currentReaction === 'watch') existing.reaction = 'watch';
+    if (slot && !existing.mealSlot) existing.mealSlot = slot;
   } else {
-    foods.push({ name:val, reaction:currentReaction, date:dt||today() });
+    const entry = { name:val, reaction:currentReaction, date:dt||today() };
+    if (slot) entry.mealSlot = slot;
+    foods.push(entry);
   }
 
   document.getElementById('foodInput').value = '';
   document.getElementById('foodDate').value = today();
+  if (slotEl) slotEl.value = '';
   renderFoods();
 
   // If food isn't in the built-in database, prompt for manual tagging
@@ -6762,7 +6768,7 @@ const ALERT_CARD = {
   'sleep-streak':       { tab: 'sleep',    card: 'sleepChartCard' },
   'consistent-digestion':{ tab: 'poop',    card: 'poopChartCard' },
   'food-variety-win':   { tab: 'info',     card: 'infoFoodIntroCard' },
-  'meal-logging-streak':{ tab: 'info',     card: 'infoMealBreakdownCard' },
+  'meal-logging-streak':{ tab: 'info',     card: 'infoStreakCard' },
   'growth-on-track':    { tab: 'growth',   card: 'growthHeroCard' },
   'supp-streak':        { tab: 'info',     card: 'infoSupplementCard' },
   'iron-rich-week':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
@@ -6827,9 +6833,10 @@ function computeBaselines() {
   });
   b.mealsPerDay = mealsLoggedDays > 0 ? +(mealsTotal / 7).toFixed(1) : null;
   b.fullMealDays7d = fullMealDays;
-  // Consecutive full-meal days — count days where all 3 are accounted for (logged or skipped)
+  // Consecutive full-meal days — count days where all 3 are accounted for (logged or skipped).
+  // 90-day span matches renderInfoStreak() so the streak win and the streak card agree.
   let mealStreak = 0;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 90; i++) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const ds = toDateStr(d);
     const entry = feedingData[ds];
@@ -6915,6 +6922,7 @@ function computeBaselines() {
   // ── Food variety (7d) ──
   const foodsThisWeek = foods.filter(f => f.date && poop7d.includes(f.date));
   b.newFoodsThisWeek = foodsThisWeek.length;
+  b.newFoodsList = foodsThisWeek.map(f => ({ name: f.name, date: f.date, mealSlot: f.mealSlot || '' }));
 
   // ── Nutrient analysis (7d) ──
   const nutrientDays = {}; // nutrient → count of days it appeared
@@ -7683,11 +7691,24 @@ function computeAlerts() {
   // ─── P4. FOOD VARIETY WIN ───
   if (bl.newFoodsThisWeek >= 3) {
     const key = 'positive-food-variety-' + todayStr.substring(0, 7); // monthly key
+    // Name the foods — with when and which meal slot — so the win is specific, not generic.
+    const named = (bl.newFoodsList || []).map(f => {
+      const meta = [];
+      if (f.date) {
+        const p = f.date.split('-');
+        meta.push(new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-IN', { weekday: 'short' }));
+      }
+      if (f.mealSlot) meta.push(escHtml(f.mealSlot));
+      return escHtml(f.name) + (meta.length ? ' (' + meta.join(', ') + ')' : '');
+    });
+    const foodsStr = named.length <= 4
+      ? named.join(', ')
+      : named.slice(0, 3).join(', ') + ', and ' + (named.length - 3) + ' more';
     alerts.push({
       id: 'food-variety-win', key,
       severity: 'positive', icon: zi('rainbow'),
       title: bl.newFoodsThisWeek + ' new foods this week!',
-      body: 'Great variety — exposure to different tastes and textures in the first year shapes lifelong food preferences.',
+      body: 'New this week: ' + foodsStr + '. Exposure to different tastes and textures in the first year shapes lifelong food preferences.',
       tip: 'Keep it up! Remember the 3-day rule for each new food to spot any reactions.',
       action: null, tab: 'diet'    });
   }

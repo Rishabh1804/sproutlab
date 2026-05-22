@@ -1027,6 +1027,7 @@ function renderInfo() {
   renderInfoNutrientHeatmap();
   renderInfoComboFreq();
   renderInfoMealBreakdown();
+  renderInfoStreak();
   renderInfoFeedingIntake();
   renderInfoSmartPairing();
   renderInfoAdoption();
@@ -2013,6 +2014,102 @@ function renderInfoMealBreakdown() {
   });
 
   weeklyEl.innerHTML = weeklyHtml;
+}
+
+// ── LOGGING STREAK (PR-N) ──
+// A rewarding view of the all-meals logging streak: current run, best run,
+// milestone badges and a 14-day grid. Destination for the meal-logging-streak win.
+function renderInfoStreak() {
+  const summaryEl = document.getElementById('infoStreakSummary');
+  if (!summaryEl) return;
+  const heroEl  = document.getElementById('infoStreakHero');
+  const milesEl = document.getElementById('infoStreakMilestones');
+  const gridEl  = document.getElementById('infoStreakGrid');
+  const msgEl   = document.getElementById('infoStreakMsg');
+
+  // A "full day" = breakfast + lunch + dinner all accounted for (logged or skipped).
+  function fullDay(ds) {
+    const e = feedingData[ds];
+    return !!e && ['breakfast', 'lunch', 'dinner'].filter(m => e[m]).length >= 3;
+  }
+  function anyLog(ds) {
+    const e = feedingData[ds];
+    return !!e && !!(e.breakfast || e.lunch || e.dinner || e.snack);
+  }
+
+  const todayD = new Date(today());
+  let current = 0;
+  for (let i = 0; i < 90; i++) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    if (fullDay(toDateStr(d))) current++; else break;
+  }
+  let best = 0, run = 0;
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    if (fullDay(toDateStr(d))) { run++; if (run > best) best = run; } else run = 0;
+  }
+  const grid = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    grid.push({ d, full: fullDay(ds), partial: anyLog(ds) });
+  }
+  const hasAnyData = best > 0 || grid.some(g => g.partial);
+
+  if (current > 0) {
+    summaryEl.innerHTML = `<div class="t-sm"><strong>${current}-day</strong> <span class="t-light">all-meals logging streak</span></div>`;
+  } else if (hasAnyData) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No active streak — logging all 3 meals today starts a new one</div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm t-light">Log breakfast, lunch and dinner to start a streak</div>';
+  }
+
+  heroEl.innerHTML = `<div class="streak-hero">
+    <div class="streak-flame">${zi('flame')}</div>
+    <div>
+      <div class="streak-num">${current}</div>
+      <div class="streak-cap">${current === 1 ? 'day in a row' : 'days in a row'}</div>
+    </div>
+    <div class="streak-hero-best">
+      <div class="streak-best">Best run</div>
+      <div class="streak-best-val">${best} ${best === 1 ? 'day' : 'days'}</div>
+    </div>
+  </div>`;
+
+  const MILES = [
+    { days: 3,  label: '3 days' },
+    { days: 7,  label: '1 week' },
+    { days: 14, label: '2 weeks' },
+    { days: 30, label: '1 month' },
+  ];
+  milesEl.innerHTML = '<div class="t-sm fe-sub-label">Milestones</div><div class="streak-miles mt-4">' +
+    MILES.map(m => {
+      const reached = best >= m.days;
+      return `<div class="streak-mile${reached ? ' reached' : ''}">
+        <div class="streak-mile-icon">${zi(reached ? 'flame' : 'star')}</div>
+        <div class="streak-mile-label">${m.label}</div>
+      </div>`;
+    }).join('') + '</div>';
+
+  let gHtml = '<div class="t-sm fe-sub-label">Last 14 days</div><div class="streak-grid mt-4">';
+  grid.forEach(g => {
+    const cls = g.full ? ' on' : (g.partial ? ' partial' : '');
+    const dayInitial = g.d.toLocaleDateString('en-IN', { weekday: 'narrow' });
+    const state = g.full ? 'all meals logged' : (g.partial ? 'partly logged' : 'not logged');
+    gHtml += `<div class="streak-day"><div class="streak-dot${cls}" title="${toDateStr(g.d)} — ${state}"></div><div class="streak-dot-label">${dayInitial}</div></div>`;
+  });
+  gHtml += '</div>';
+  gridEl.innerHTML = gHtml;
+
+  let msg;
+  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of Ziva\'s eating.';
+  else if (current >= 14) msg = 'Two weeks straight! Logging this consistent makes the weekly nutrient views genuinely trustworthy.';
+  else if (current >= 7)  msg = 'A full week logged — the weekly nutrient views now have a complete picture to work with.';
+  else if (current >= 3)  msg = 'Nice start. A few more days and the weekly insights will rest on a full picture.';
+  else if (current >= 1)  msg = 'Streak started — logging all 3 meals tomorrow keeps it going.';
+  else if (hasAnyData)    msg = 'Streaks reset, not erased — every full day already logged still counts toward the insights. Logging all 3 meals today begins a new run.';
+  else                    msg = 'Logging all 3 meals each day builds the data the diet insights rely on.';
+  msgEl.innerHTML = `<div class="mb-alert-item alert-good"><span>${zi('bulb')}</span><span>${msg}</span></div>`;
 }
 
 // ── FOOD INTELLIGENCE: SMART PAIRING SUGGESTIONS (Feature 5) ──
