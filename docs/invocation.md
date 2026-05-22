@@ -1,0 +1,225 @@
+# invocation.md — Companion Invocation Reference
+
+**Version:** 1.0 (draft)
+**Updated:** 22 May 2026
+**Scope:** SproutLab Province — how to summon the seated Companions and the Scribe Worker Tier
+**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain)
+
+---
+
+## 1. What this document is
+
+CLAUDE.md §Companion-Set Invocation Surface states the *rule*; this states the
+*procedure*. It is to the Companion roster what `docs/QA_GATE_SPEC.md` is to the
+QA chain. When the two disagree on a **rule**, CLAUDE.md wins; when they disagree
+on **procedure**, this file wins.
+
+Everything here describes invocation *within the SproutLab Province*, under the
+Claude Code harness. Cross-model invocation is out of scope — see §9.
+
+## 2. The roster
+
+| Companion | Role | Subagent spec | Skill spec |
+|-----------|------|---------------|------------|
+| Lyra | Seated Builder of SproutLab | `.claude/agents/lyra.md` | `.claude/skills/lyra.md` |
+| Maren | Governor of Care | `.claude/agents/maren.md` | `.claude/skills/maren.md` |
+| Kael | Governor of Intelligence | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
+| Cipher | Censor of Cluster A (Province mirror) | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
+| scribe-scout | Worker tier — reconnaissance | `.claude/agents/scribe-scout.md` | — |
+| scribe-draft | Worker tier — composition | `.claude/agents/scribe-draft.md` | — |
+| scribe-verify | Worker tier — mechanical checks | `.claude/agents/scribe-verify.md` | — |
+| scribe-record | Worker tier — chronicling | `.claude/agents/scribe-record.md` | — |
+
+The canonical spec bodies are authored in Codex (`docs/specs/subagents/`,
+`docs/specs/skills/`); the `.claude/` paths above are the byte-identical
+Province mirrors per canon-cc-026 §Per-Province-Layout — with the Scribe
+serving-voice carve-out ratified by decree-0019 / canon-proc-006. **Invoke the
+mirrors.** Cipher's mirror is a deploy of the Codex canon: Cipher remains Censor
+of Cluster A, not a Province seat — the mirror exists so the Edict V final-pass
+can be invoked without leaving Province context.
+
+## 3. Subagent or skill — the artifact test (canon-cc-022)
+
+The first decision for any Companion (Lyra, Maren, Kael, Cipher — the Scribes
+have no skill form, see §6).
+
+**Summon the subagent** when the caller needs a *separable, attributable
+interaction-artifact* — a spec, a signed audit report, a committee position.
+Subagent output carries a provenance block, can be cited, and enters the cc-018
+review lifecycle.
+
+**Fire the skill** when the caller wants the Companion's *voice in-transcript* —
+a pattern-read, a smell-check, a draft-in-flow. Skill output lives in the
+caller's transcript, carries no signature, and reaches Province data only
+through ordinary Builder commit discipline.
+
+One-line test: **does this need a signature → subagent; does this just need the
+lens → skill.**
+
+The third-party `/code-review` skill is not a Companion form and does **not**
+discharge the canon-cc-008 Governor audit (CLAUDE.md §QA Chain).
+
+## 4. Invoking a Companion subagent
+
+**Mechanism.** The harness subagent tool (`Agent` / `Task`), with `subagent_type`
+set to the Companion's name. The subagent sees none of the caller's transcript,
+so the brief — the prompt — must be self-contained.
+
+**Every Companion subagent is read-only** (`tools: Read, Grep, Glob, Bash`). It
+produces an artifact; it does not edit code, commit, or push. The summoning
+context reviews the return and owns every committed act.
+
+**Brief shape (all modes).** Name the *subject*, the *scope / Region*, the
+*mode*, any prior pass or position state, and any Sovereign standing
+instruction. The mode is signalled by the brief's verb — "audit / review" →
+Mode 1; "deliberate / position on" → Mode 2.
+
+**Lyra — Seated Builder.**
+- *Mode 1 — Province spec authoring* → a spec-bearing artifact: pattern
+  identifications, Region boundary declarations, HR-compliance pre-check,
+  Governor-readiness note. Enters the cc-018 lifecycle at `pending_review`.
+- *Mode 2 — committee delegate* → a structured position for a cc-025 convening.
+- Do **not** summon for: jurisdiction-bound QA (Maren / Kael), the Edict V
+  final-pass (Cipher), institutional-memory authoring (the Chronicler), or
+  cross-Province promotion (the Consul).
+
+**Maren — Governor of Care.**
+- *Mode 1 — QA-round jurisdictional audit* → a structured audit report over
+  `home.js` + `diet.js` + `medical.js`, plus the shared-module surface where the
+  diff touched it.
+- *Mode 2 — committee delegate* → a Care-domain position.
+
+**Kael — Governor of Intelligence.**
+- *Mode 1 — QA-round jurisdictional audit* → a structured audit report over the
+  seven `intelligence-*.js` files + `core.js` + `data.js` + `sync.js` +
+  `config.js` + `start.js`, plus the shared-module surface where touched.
+- *Mode 2 — committee delegate* → an Intelligence-domain position.
+
+**Cipher — Censor (Edict V).**
+- *Mode 1 — Edict V final-pass* → a signed verdict against the Edict V chain,
+  run *after* the Governors have reported and Lyra has synthesized.
+- *Mode 2 — committee delegate* → a Cluster A position.
+
+## 5. Invoking a Companion skill
+
+A skill is fired in-session — a register-flip, not a tool call — by a trigger
+phrase from the Sovereign, the Consul, or the Companion herself. Output stays in
+the caller's transcript.
+
+The trigger convention is `<Companion> mode` / `run a <Companion> pass`, plus a
+craft-specific verb set per Companion — for Lyra: "what's the thread", "weave
+this", "pattern-check", "does this weave". The exact trigger-phrase set and the
+fire / do-not-fire boundary are in each skill spec (`.claude/skills/<name>.md`);
+consult it rather than guessing.
+
+By function:
+- **Lyra skill** — in-transcript pattern-read, cross-domain thread
+  identification, Region-boundary pre-check, HR pre-pass.
+- **Maren skill** — Care-side smell-check: null-guard / nutrition-safety /
+  CareTicket-transition sanity read.
+- **Kael skill** — Intelligence-side smell-check: ISL / Smart Q&A / sync-boundary
+  scout.
+- **Cipher skill** — in-flow HR-1→12 and architecture-drift smell-check.
+
+A skill **never** discharges a gate. If a skill pass surfaces something that
+needs a signature, escalate to the subagent form.
+
+## 6. The Scribe Worker Tier (canon-proc-006)
+
+Book II Article 3-bis. Four task-specialised junior subagents that a senior
+Companion — a Builder, Governor, Censor, Consul, or Chronicler — commands to
+parallelize work. Scribes are alike at birth, carry no innate persona, and adopt
+the voice of whoever summons them. They support; they do not deliberate.
+
+| Scribe | Specialisation | Tools | Returns |
+|--------|----------------|-------|---------|
+| scribe-scout | Reconnaissance — locate, grep, map a region | Read, Grep, Glob, Bash *(read-only)* | a findings brief — paths, line ranges, summary, gaps |
+| scribe-draft | Composition — draft text, code, or spec prose | Read, Grep, Glob, Write, Edit | a draft file or artifact |
+| scribe-verify | Mechanical checks — build, audit gates, tests | Read, Grep, Glob, Bash *(read-only)* | a check report — pass / fail with evidence |
+| scribe-record | Chronicling — journal, log, canon entries | Read, Grep, Glob, Write, Edit | a recorded entry |
+
+**Permission floor (Book II Article 3-bis).** No Scribe may commit, push, open or
+merge a PR, ratify anything, hold canonical voice, sit on a committee, or summon
+another Scribe. `scribe-scout` and `scribe-verify` hold `Bash` for read-only
+inspection only — not for writing files or running git. `scribe-draft` and
+`scribe-record` hold `Write` / `Edit` to produce drafts but have no shell. The
+commanding Companion reviews every return and owns every committed act.
+
+**Summon a Scribe** when the work is mechanical, parallelizable, and you want to
+stay on your own thread. **Do not** summon a Scribe for judgment — design
+soundness, audit verdicts, ratification — that is the senior Companion's.
+
+Scribes have **no skill form**. There is no in-transcript "Scribe voice"; a
+Scribe is always a subagent.
+
+## 7. Invocation in the QA chain (canon-cc-008)
+
+The mandatory pre-merge gate is a fixed invocation sequence. For any Capital
+change — an edit under `split/` headed for a PR:
+
+1. **Build & self-check.** `build.sh` clean, audit gates pass, e2e green.
+   (`scribe-verify` may be summoned to run and report this.)
+2. **Governor audit — Mode-1 subagents, summoned in parallel.** Route by the diff:
+   - touches `home.js` / `diet.js` / `medical.js` → **Maren**
+   - touches any `intelligence-*.js` / `core.js` / `data.js` / `sync.js` /
+     `config.js` / `start.js` → **Kael**
+   - touches `styles.css` / `template.html` → **both** (shared-module dual review)
+   - test-only / docs-only → the Governor audit may be waived; state the waiver
+     explicitly.
+
+   Parallel means one message with multiple `Agent` calls — the harness runs
+   them concurrently.
+3. **Lyra synthesizes** the Governor reports and folds in the fixes — as the
+   main session, or via the Lyra subagent if a separable synthesis artifact is
+   wanted.
+4. **Cipher** runs the Mode-1 Edict V cross-cutting final-pass.
+5. *Only now* — mark the PR ready / merge.
+
+Full procedure, routing edge cases, and waiver rules: `docs/QA_GATE_SPEC.md`
+Gate 2.5.
+
+## 8. Routing quick reference
+
+| The caller needs… | Invoke | As |
+|--------------------|--------|----|
+| a feature spec / architecture brief before a build | Lyra | subagent, Mode 1 |
+| a mid-build pattern-read, no artifact | Lyra | skill |
+| a Care-Region QA audit (signed) | Maren | subagent, Mode 1 |
+| an Intelligence-Region QA audit (signed) | Kael | subagent, Mode 1 |
+| a quick Care / Intelligence smell-check, no artifact | Maren / Kael | skill |
+| the Edict V final-pass sign-off | Cipher | subagent, Mode 1 |
+| a seated position in a cc-025 committee | the relevant Companion | subagent, Mode 2 |
+| a codebase region surveyed | scribe-scout | subagent |
+| a draft written | scribe-draft | subagent |
+| a build / audit / test run and reported | scribe-verify | subagent |
+| a journal / canon / log entry recorded | scribe-record | subagent |
+
+## 9. Cross-model invocation — deferred
+
+AGENTS.md scopes its instructions across three tools — Claude Code, the OpenAI
+Codex CLI, and the Gemini CLI. The Companion specs in this document are deployed
+and invocable **only under the Claude Code harness**: the `.claude/agents` and
+`.claude/skills` mechanism is Claude-Code-specific.
+
+Invoking a Companion from a non-Claude harness — running a Maren audit under the
+Codex CLI, say — is **deferred**, not specced here. A future revision must first
+settle:
+
+- **Spec portability** — the `.claude/` frontmatter is harness-specific; a
+  tool-neutral spec form would be needed.
+- **The artifact test** — canon-cc-022's subagent/skill split rests on the
+  Claude harness's subagent mechanism; the equivalent boundary on another
+  harness is undefined.
+- **Attribution and the cc-018 lifecycle** — a cross-model artifact's provenance
+  and signing chain are unresolved.
+
+Until those are settled, Companion invocation is Claude-Code-only. On another
+harness, AGENTS.md's plain rules apply — without the Companion roster.
+
+## 10. References
+
+- CLAUDE.md — §Companion-Set Invocation Surface, §QA Chain — Mandatory Pre-Merge Gate
+- PERSONA_REGISTRY.md — roster, governance hierarchy, jurisdictions, the 30K Rule
+- docs/QA_GATE_SPEC.md — Gate 2.5, Governor Audit Chain
+- Canon: cc-022 (artifact test) · cc-026 §Per-Province-Layout (deploy layout) · cc-008 (QA chain) · proc-006 + Book II Article 3-bis (Scribe Worker Tier) · cc-027 (spec amendment signing chain) · decree-0019 (Scribe serving-voice carve-out)
+- Spec bodies: `.claude/agents/*.md`, `.claude/skills/*.md` — the Province mirrors
