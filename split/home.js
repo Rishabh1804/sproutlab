@@ -3577,6 +3577,33 @@ function onMealInput(meal) {
   }
 }
 
+// Wire the Diet panel's static inputs (HR-3 — no inline handlers). These
+// elements ship in template.html, so a single addEventListener pass at init
+// suffices; called from init() in core.js.
+function wireDietPanelEvents() {
+  const feedingDate = document.getElementById('feedingDate');
+  if (feedingDate) feedingDate.addEventListener('change', loadFeedingDay);
+
+  ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+    const inp = document.getElementById('meal-' + meal);
+    if (!inp) return;
+    inp.addEventListener('input', () => onMealInput(meal));
+    inp.addEventListener('focus', () => onMealFocus(meal));
+  });
+
+  const combo = document.getElementById('comboInput');
+  if (combo) {
+    combo.addEventListener('input', () => activateBtn('comboCheckBtn', combo.value.trim()));
+    combo.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkFoodCombo(); });
+  }
+
+  const food = document.getElementById('foodInput');
+  if (food) {
+    food.addEventListener('input', () => activateBtn('foodAddBtn', food.value.trim()));
+    food.addEventListener('keydown', (e) => { if (e.key === 'Enter') addFood(); });
+  }
+}
+
 function updateFeedingSaveBtn() {
   const b = document.getElementById('meal-breakfast')?.value.trim();
   const l = document.getElementById('meal-lunch')?.value.trim();

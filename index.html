@@ -676,6 +676,17 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   background:var(--sky-light); color:var(--text); outline:none;
 }
 .add-food input:focus { border-color:var(--sky); }
+/* "Can I Give This?" combo card — HR-2 token-driven classes */
+.combo-desc {
+  font-size:var(--fs-base); color:var(--mid);
+  line-height:var(--lh-relaxed); margin-bottom:var(--sp-10);
+}
+.combo-input { flex:1; min-width:180px; }
+.combo-quick-chips {
+  display:flex; flex-wrap:wrap; gap:var(--sp-8);
+  align-items:center; margin-bottom:var(--sp-10);
+}
+.combo-history { margin-top:var(--sp-12); }
 .food-slot-select {
   padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
   border:1.5px solid var(--sky-light);
@@ -10516,7 +10527,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-bowl"/></svg></div> Today's Meals <button class="help-btn" aria-label="Help" data-help="help-meals"><span class="t-sm">ⓘ</span></button></div>
           <div class="date-nav">
             <button data-action="datePrev" aria-label="Previous day">‹</button>
-            <input type="date" id="feedingDate" onchange="loadFeedingDay()">
+            <input type="date" id="feedingDate">
             <button data-action="dateNext" aria-label="Next day">›</button>
             <button class="btn-primary bp-peach" id="saveFeedBtn" data-action="saveFeedingDay">Save</button>
           </div>
@@ -10530,7 +10541,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Breakfast <span class="meal-skip-btn" id="skip-breakfast" data-skip-meal="breakfast" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-breakfast" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-breakfast"></div>
             <div class="meal-input-wrap">
-              <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('breakfast')" onfocus="onMealFocus('breakfast')" autocomplete="off">
+              <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
               <div class="meal-dropdown" id="md-breakfast"></div>
             </div>
             <div class="meal-insight" id="insight-breakfast" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-breakfast-text"></span></div>
@@ -10539,7 +10550,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Lunch <span class="meal-skip-btn" id="skip-lunch" data-skip-meal="lunch" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-lunch" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-lunch"></div>
             <div class="meal-input-wrap">
-              <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('lunch')" onfocus="onMealFocus('lunch')" autocomplete="off">
+              <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
               <div class="meal-dropdown" id="md-lunch"></div>
             </div>
             <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-lunch-text"></span></div>
@@ -10548,7 +10559,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-dinner"></div>
             <div class="meal-input-wrap">
-              <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('dinner')" onfocus="onMealFocus('dinner')" autocomplete="off">
+              <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
               <div class="meal-dropdown" id="md-dinner"></div>
             </div>
             <div class="meal-insight" id="insight-dinner" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-dinner-text"></span></div>
@@ -10557,7 +10568,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-spoon"/></svg> Snack <span class="meal-skip-btn" id="skip-snack" data-skip-meal="snack" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-snack" title="Meal time (optional)" placeholder="--:--"></div>
             <div class="dqp-zone" id="dqp-snack"></div>
             <div class="meal-input-wrap">
-              <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." oninput="onMealInput('snack')" onfocus="onMealFocus('snack')" autocomplete="off">
+              <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
               <div class="meal-dropdown" id="md-snack"></div>
             </div>
             <div class="meal-insight" id="insight-snack" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-snack-text"></span></div>
@@ -10570,14 +10581,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="card-header">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chef"/></svg></div> Can I Give This?</div>
         </div>
-        <div style="font-size:var(--fs-base);color:var(--mid);margin-bottom:10px;line-height:var(--lh-relaxed);">Ask about any food or combination — get safety info, a recipe, and dos & don'ts for Ziva's age.</div>
+        <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos & don'ts for Ziva's age.</div>
         <div class="flex-gap8-wrap-mb">
-          <input type="text" id="comboInput" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice..." style="flex:1;min-width:180px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')checkFoodCombo()" oninput="activateBtn('comboCheckBtn',this.value.trim())">
+          <input type="text" id="comboInput" class="form-input input-ctx-sage combo-input" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice...">
           <button class="btn btn-sage disabled-state btn-min80" data-action="checkFoodCombo" id="comboCheckBtn" >Check <svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></button>
         </div>
-        <div id="comboQuickChips" style="display:flex;flex-wrap:wrap;gap:var(--sp-8);align-items:center;margin-bottom:10px;"></div>
+        <div id="comboQuickChips" class="combo-quick-chips"></div>
         <div id="comboResult"></div>
-        <div id="comboHistory" style="margin-top:12px;"></div>
+        <div id="comboHistory" class="combo-history"></div>
       </div>
 
       <!-- ─── TIER 3: REFERENCE ─── -->
@@ -10592,8 +10603,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
         <div id="foodsGrid"></div>
         <div class="add-food">
-          <input type="text" id="foodInput" oninput="activateBtn('foodAddBtn',this.value.trim())" placeholder="Add a food..." onkeydown="if(event.key==='Enter')addFood()">
-          <input type="date" id="foodDate" style="padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);color:var(--text);outline:none;">
+          <input type="text" id="foodInput" placeholder="Add a food...">
+          <input type="date" id="foodDate">
           <select id="foodSlot" class="food-slot-select" aria-label="Meal slot">
             <option value="">Any meal</option>
             <option value="breakfast">Breakfast</option>
@@ -17243,6 +17254,8 @@ function init() {
   document.querySelectorAll('.meal-skip-btn[data-skip-meal]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); skipSingleMeal(btn.dataset.skipMeal); });
   });
+  // Diet panel static inputs (HR-3 — no inline handlers)
+  wireDietPanelEvents();
   // Milestone categories
   document.querySelectorAll('.rtog[data-mcat]').forEach(btn => {
     btn.addEventListener('click', () => setMilestoneCat(btn.dataset.mcat));
@@ -26087,6 +26100,33 @@ function onMealInput(meal) {
     showMealDropdown(meal, token);
   } else {
     closeMealDropdown(meal);
+  }
+}
+
+// Wire the Diet panel's static inputs (HR-3 — no inline handlers). These
+// elements ship in template.html, so a single addEventListener pass at init
+// suffices; called from init() in core.js.
+function wireDietPanelEvents() {
+  const feedingDate = document.getElementById('feedingDate');
+  if (feedingDate) feedingDate.addEventListener('change', loadFeedingDay);
+
+  ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
+    const inp = document.getElementById('meal-' + meal);
+    if (!inp) return;
+    inp.addEventListener('input', () => onMealInput(meal));
+    inp.addEventListener('focus', () => onMealFocus(meal));
+  });
+
+  const combo = document.getElementById('comboInput');
+  if (combo) {
+    combo.addEventListener('input', () => activateBtn('comboCheckBtn', combo.value.trim()));
+    combo.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkFoodCombo(); });
+  }
+
+  const food = document.getElementById('foodInput');
+  if (food) {
+    food.addEventListener('input', () => activateBtn('foodAddBtn', food.value.trim()));
+    food.addEventListener('keydown', (e) => { if (e.key === 'Enter') addFood(); });
   }
 }
 
