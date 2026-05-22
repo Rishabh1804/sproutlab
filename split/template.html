@@ -1210,92 +1210,116 @@
       <div class="card col-full card-hero hero-sleep" id="sleepDomainHero" style="display:none;"></div>
 
       <!-- ─── TIER 1: STATS ─── -->
-      <!-- stat card wrapper removed -->
-        <div class="col-full stat-pills-grid" id="sleepStats"></div>
-
-      <!-- ─── TIER 2: ACTIONS ─── -->
-      <div class="home-section-label sec-t1 col-full">Log Sleep</div>
+      <div class="col-full stat-pills-grid" id="sleepStats"></div>
 
       <!-- In-progress sleep/nap banner -->
       <div class="col-full" id="sleepInProgressBanner" style="display:none;"></div>
 
-      <!-- SLEEP LOG FORM -->
-      <div class="card card-action col-full overflow-visible" id="sleepNightCard">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Log Night Sleep</div>
+      <!-- ─── TIER 2: LOG — collapsed by default, Night/Nap segmented ─── -->
+      <div class="card card-action col-full overflow-visible" id="sleepLogFormCard">
+        <div class="card-header" data-collapse-target="sleepLogFormBody" data-collapse-chevron="sleepLogFormChevron">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-moon"/></svg></div> Log Sleep</div>
+          <span class="collapse-chevron" id="sleepLogFormChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
-        <div class="help-tip d-none" id="help-sleep">Track Ziva's bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
-        <div class="fx-col g12 mt-8">
-          <div>
-            <label class="micro-label">Date</label>
-            <div class="d-flex items-center gap-8">
-              <input type="date" id="sleepDate" oninput="updateSleepDayLabel('sleepDate','sleepDayLabel')" class="form-input input-ctx-indigo flex-1">
-              <span id="sleepDayLabel" class="day-label day-label-indigo"></span>
+        <div id="sleepLogFormBody" class="collapse-body" style="display:none;">
+          <div class="sleep-log-seg">
+            <button class="sq-btn active-sq" id="sleepSeg-night" data-action="sleepLogMode" data-arg="night"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Night sleep</button>
+            <button class="sq-btn" id="sleepSeg-nap" data-action="sleepLogMode" data-arg="nap"><svg class="zi" aria-hidden="true"><use href="#zi-zzz"/></svg> Nap</button>
+          </div>
+
+          <!-- NIGHT FORM -->
+          <div id="sleepNightCard">
+            <div class="help-tip d-none" id="help-sleep">Track Ziva's bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
+            <div class="fx-col g12">
+              <div>
+                <label class="micro-label">Date</label>
+                <div class="d-flex items-center gap-8">
+                  <input type="date" id="sleepDate" oninput="updateSleepDayLabel('sleepDate','sleepDayLabel')" class="form-input input-ctx-indigo flex-1">
+                  <span id="sleepDayLabel" class="day-label day-label-indigo"></span>
+                </div>
+              </div>
+              <div class="d-flex gap-12">
+                <div class="flex-1">
+                  <label class="micro-label">Bedtime</label>
+                  <input type="time" id="sleepBedtime" class="form-input input-ctx-indigo">
+                </div>
+                <div class="flex-1">
+                  <label class="micro-label">Wake time</label>
+                  <input type="time" id="sleepWakeTime" class="form-input input-ctx-indigo">
+                </div>
+              </div>
+              <div>
+                <label class="micro-label">Wake-ups</label>
+                <div class="d-flex items-center gap-8 mt-4">
+                  <button data-action="wakeDown" class="stepper-btn stepper-ctx-indigo">−</button>
+                  <span id="wakeCountVal" class="stepper-val stepper-ctx-indigo">0</span>
+                  <button data-action="wakeUp" class="stepper-btn stepper-ctx-indigo">+</button>
+                  <span class="t-sub" style="margin-left:4px;" id="wakeCountLabel">No wake-ups</span>
+                </div>
+              </div>
+              <div>
+                <label class="micro-label">Notes (optional)</label>
+                <input type="text" id="sleepNotes" placeholder="e.g. teething, restless..." class="form-input input-ctx-indigo">
+              </div>
+              <div class="d-flex gap-8 justify-end">
+                <button class="btn btn-ghost d-none" id="sleepCancelBtn" data-action="cancelSleepNight">Cancel</button>
+                <button class="btn btn-ghost" data-action="startSleepNight" id="sleepStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
+                <button class="btn-primary bp-indigo" data-action="addSleepEntry" id="sleepSaveBtn">Save Sleep Log</button>
+              </div>
             </div>
           </div>
-          <div class="d-flex gap-12">
-            <div class="flex-1">
-              <label class="micro-label">Bedtime</label>
-              <input type="time" id="sleepBedtime" class="form-input input-ctx-indigo">
+
+          <!-- NAP FORM -->
+          <div id="sleepNapCard" style="display:none;">
+            <div class="fx-col g12">
+              <div>
+                <label class="micro-label">Date</label>
+                <div class="d-flex items-center gap-8">
+                  <input type="date" id="napDate" oninput="updateSleepDayLabel('napDate','napDayLabel')" class="form-input input-ctx-indigo flex-1">
+                  <span id="napDayLabel" class="day-label day-label-indigo"></span>
+                </div>
+              </div>
+              <div class="d-flex gap-12">
+                <div class="flex-1">
+                  <label class="micro-label">Start</label>
+                  <input type="time" id="napStart" class="form-input input-ctx-indigo">
+                </div>
+                <div class="flex-1">
+                  <label class="micro-label">End</label>
+                  <input type="time" id="napEnd" class="form-input input-ctx-indigo">
+                </div>
+              </div>
+              <div>
+                <label class="micro-label">Notes (optional)</label>
+                <input type="text" id="napNotes" placeholder="e.g. contact nap, stroller, car seat..." class="form-input input-ctx-indigo">
+              </div>
+              <div class="d-flex gap-8 justify-end">
+                <button class="btn btn-ghost d-none" id="napCancelBtn" data-action="cancelSleepNap">Cancel</button>
+                <button class="btn btn-ghost" data-action="startSleepNap" id="napStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
+                <button class="btn-primary bp-indigo" data-action="addNapEntry" id="napSaveBtn">Save Nap</button>
+              </div>
             </div>
-            <div class="flex-1">
-              <label class="micro-label">Wake time</label>
-              <input type="time" id="sleepWakeTime" class="form-input input-ctx-indigo">
-            </div>
-          </div>
-          <div>
-            <label class="micro-label">Wake-ups</label>
-            <div class="d-flex items-center gap-8 mt-4">
-              <button data-action="wakeDown" class="stepper-btn stepper-ctx-indigo">−</button>
-              <span id="wakeCountVal" class="stepper-val stepper-ctx-indigo">0</span>
-              <button data-action="wakeUp" class="stepper-btn stepper-ctx-indigo">+</button>
-              <span class="t-sub" style="margin-left:4px;" id="wakeCountLabel">No wake-ups</span>
-            </div>
-          </div>
-          <div>
-            <label class="micro-label">Notes (optional)</label>
-            <input type="text" id="sleepNotes" placeholder="e.g. teething, restless..." class="form-input input-ctx-indigo">
-          </div>
-          <div class="d-flex gap-8 justify-end">
-            <button class="btn btn-ghost d-none" id="sleepCancelBtn" data-action="cancelSleepNight">Cancel</button>
-            <button class="btn btn-ghost" data-action="startSleepNight" id="sleepStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
-            <button class="btn-primary bp-indigo" data-action="addSleepEntry" id="sleepSaveBtn">Save Sleep Log</button>
           </div>
         </div>
       </div>
 
-      <!-- NAP LOG -->
-      <div class="card card-action col-full overflow-visible" id="sleepNapCard">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-sleep"/></svg></div> Log Nap</div>
+      <!-- ─── TIER 2b: RECENT ENTRIES (promoted so the baby's data leads) ─── -->
+      <div class="card card-info col-full" id="sleepLogCard">
+        <div class="card-header" data-collapse-target="sleepLogBody" data-collapse-chevron="sleepLogChevron">
+          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-list"/></svg></div> Sleep Logs</div>
+          <div class="d-flex items-center gap-8">
+            <span class="t-sub" id="sleepLogCount"></span>
+            <span class="collapse-chevron" id="sleepLogChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
         </div>
-        <div class="fx-col g12 mt-8">
-          <div>
-            <label class="micro-label">Date</label>
-            <div class="d-flex items-center gap-8">
-              <input type="date" id="napDate" oninput="updateSleepDayLabel('napDate','napDayLabel')" class="form-input input-ctx-indigo flex-1">
-              <span id="napDayLabel" class="day-label day-label-indigo"></span>
-            </div>
+        <div id="sleepLogPreview" class="mt-8"></div>
+        <div id="sleepLogBody" class="collapse-body" style="display:none;">
+          <div style="display:flex;gap:var(--sp-8);margin:8px 0;">
+            <button class="sq-btn active-sq" id="sleepLogFilter-all" data-sleep-filter="all">All</button>
+            <button class="sq-btn" id="sleepLogFilter-night" data-sleep-filter="night"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Night</button>
+            <button class="sq-btn" id="sleepLogFilter-nap" data-sleep-filter="nap"><svg class="zi" aria-hidden="true"><use href="#zi-zzz"/></svg> Naps</button>
           </div>
-          <div class="d-flex gap-12">
-            <div class="flex-1">
-              <label class="micro-label">Start</label>
-              <input type="time" id="napStart" class="form-input input-ctx-indigo">
-            </div>
-            <div class="flex-1">
-              <label class="micro-label">End</label>
-              <input type="time" id="napEnd" class="form-input input-ctx-indigo">
-            </div>
-          </div>
-          <div>
-            <label class="micro-label">Notes (optional)</label>
-            <input type="text" id="napNotes" placeholder="e.g. contact nap, stroller, car seat..." class="form-input input-ctx-indigo">
-          </div>
-          <div class="d-flex gap-8 justify-end">
-            <button class="btn btn-ghost d-none" id="napCancelBtn" data-action="cancelSleepNap">Cancel</button>
-            <button class="btn btn-ghost" data-action="startSleepNap" id="napStartBtn" title="Uses entered time, or current time if empty"><svg class="zi"><use href="#zi-play"/></svg> Start</button>
-            <button class="btn-primary bp-indigo" data-action="addNapEntry" id="napSaveBtn">Save Nap</button>
-          </div>
+          <div id="sleepLogList" class="fx-col g8 scroll-list"></div>
         </div>
       </div>
 
@@ -1321,26 +1345,6 @@
         </div>
         <div id="sleepTipsBody" class="collapse-body" style="display:none;">
           <div id="sleepTips" class="fx-col g8 mt-8"></div>
-        </div>
-      </div>
-
-      <!-- RECENT ENTRIES (collapsible, split night/nap) -->
-      <div class="card card-info col-full" id="sleepLogCard">
-        <div class="card-header" data-collapse-target="sleepLogBody" data-collapse-chevron="sleepLogChevron">
-          <div class="card-title"><div class="icon icon-indigo"><svg class="zi"><use href="#zi-list"/></svg></div> Sleep Logs</div>
-          <div class="d-flex items-center gap-8">
-            <span class="t-sub" id="sleepLogCount"></span>
-            <span class="collapse-chevron" id="sleepLogChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-          </div>
-        </div>
-        <div id="sleepLogPreview" class="mt-8"></div>
-        <div id="sleepLogBody" class="collapse-body" style="display:none;">
-          <div style="display:flex;gap:var(--sp-8);margin:8px 0;">
-            <button class="sq-btn active-sq" id="sleepLogFilter-all" data-sleep-filter="all">All</button>
-            <button class="sq-btn" id="sleepLogFilter-night" data-sleep-filter="night"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Night</button>
-            <button class="sq-btn" id="sleepLogFilter-nap" data-sleep-filter="nap"><svg class="zi" aria-hidden="true"><use href="#zi-zzz"/></svg> Naps</button>
-          </div>
-          <div id="sleepLogList" class="fx-col g8 scroll-list"></div>
         </div>
       </div>
 
