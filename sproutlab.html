@@ -17416,6 +17416,7 @@ function init() {
     else if (action === 'startSleepNap') startSleepNow('nap');
     else if (action === 'addNapEntry') addNapEntry();
     else if (action === 'sleepLogMode') setSleepLogMode(arg);
+    else if (action === 'openSleepLog') openSleepLogForm(arg);
     else if (action === 'cancelPoopEdit') cancelPoopEdit();
     else if (action === 'addPoopEntry') addPoopEntry();
     else if (action === 'homeFabAction') homeFabAction();
@@ -41704,7 +41705,7 @@ function renderSleepStats() {
       <div class="hsp-val">${lastNightStr}</div>
       <div class="hsp-label">Last night</div>
     </div>
-    <div class="home-stat-pill ${napColor}" data-scroll-to="sleepLogFormCard" data-scroll-block="start">
+    <div class="home-stat-pill ${napColor}" data-action="openSleepLog" data-arg="nap">
       <div class="hsp-icon"><svg class="zi"><use href="#zi-sleep"/></svg></div>
       <div class="hsp-val">${todayNaps.length > 0 ? napH + 'h ' + napM + 'm' : '—'}</div>
       <div class="hsp-label">${todayNaps.length} nap${todayNaps.length !== 1 ? 's' : ''} today</div>

@@ -387,6 +387,7 @@ function init() {
     else if (action === 'startSleepNap') startSleepNow('nap');
     else if (action === 'addNapEntry') addNapEntry();
     else if (action === 'sleepLogMode') setSleepLogMode(arg);
+    else if (action === 'openSleepLog') openSleepLogForm(arg);
     else if (action === 'cancelPoopEdit') cancelPoopEdit();
     else if (action === 'addPoopEntry') addPoopEntry();
     else if (action === 'homeFabAction') homeFabAction();
