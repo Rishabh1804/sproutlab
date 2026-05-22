@@ -62560,7 +62560,9 @@ function renderInfoStreak() {
     return !!e && !!(e.breakfast || e.lunch || e.dinner || e.snack);
   }
 
-  const todayD = new Date(today());
+  // Anchor with bare new Date() — matches computeBaselines()'s streak loop so the
+  // streak win and this card agree; new Date(today()) would parse as UTC and drift.
+  const todayD = new Date();
   let current = 0;
   for (let i = 0; i < 90; i++) {
     const d = new Date(todayD); d.setDate(d.getDate() - i);
