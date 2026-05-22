@@ -676,6 +676,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   background:var(--sky-light); color:var(--text); outline:none;
 }
 .add-food input:focus { border-color:var(--sky); }
+.food-slot-select {
+  padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--sky-light);
+  font-family:'Nunito', sans-serif; font-size:var(--fs-base);
+  background:var(--sky-light); color:var(--text); outline:none;
+}
+.food-slot-select:focus { border-color:var(--sky); }
 .reaction-toggle { display:flex; gap:var(--sp-4); }
 .rtog { min-height:40px; display:inline-flex; align-items:center; justify-content:center;
   padding:var(--sp-6) var(--sp-10); border-radius:var(--r-md); border:1.5px solid var(--light);
@@ -2775,6 +2782,51 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   font-weight:600; transition:background var(--ease-fast);
 }
 [data-theme="dark"] .mb-weekly-cell { opacity:0.85; }
+
+/* ── Logging Streak (PR-N) ── */
+.streak-hero {
+  display:flex; align-items:center; gap:var(--sp-12);
+  padding:var(--sp-12) var(--sp-16); border-radius:var(--r-xl);
+  background:var(--amber-light);
+}
+[data-theme="dark"] .streak-hero { background:rgba(70,55,35,0.3); }
+.streak-flame { color:var(--tc-amber); display:flex; }
+.streak-flame .zi { width:30px; height:30px; }
+.streak-num {
+  font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600;
+  color:var(--tc-amber); line-height:var(--lh-none);
+}
+.streak-cap { font-size:var(--fs-sm); color:var(--mid); font-weight:600; }
+.streak-hero-best { margin-left:auto; text-align:right; }
+.streak-best { font-size:var(--fs-xs); color:var(--light); }
+.streak-best-val { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); }
+.streak-miles { display:flex; gap:var(--sp-8); }
+.streak-mile {
+  flex:1; text-align:center; padding:var(--sp-8) var(--sp-4);
+  border-radius:var(--r-lg); background:var(--warm);
+  border:1.5px solid transparent;
+}
+[data-theme="dark"] .streak-mile { background:rgba(255,255,255,0.04); }
+.streak-mile.reached { background:var(--amber-light); border-color:var(--tc-amber); }
+[data-theme="dark"] .streak-mile.reached { background:rgba(70,55,35,0.4); }
+.streak-mile-icon { color:var(--light); display:flex; justify-content:center; }
+.streak-mile-icon .zi { width:18px; height:18px; }
+.streak-mile.reached .streak-mile-icon { color:var(--tc-amber); }
+.streak-mile-label {
+  font-size:var(--fs-xs); font-weight:700; color:var(--mid);
+  margin-top:var(--sp-2);
+}
+.streak-mile.reached .streak-mile-label { color:var(--tc-amber); }
+.streak-grid { display:flex; gap:var(--sp-4); flex-wrap:wrap; }
+.streak-day { text-align:center; }
+.streak-dot {
+  width:18px; height:18px; border-radius:var(--r-sm);
+  background:var(--warm); margin:0 auto;
+}
+[data-theme="dark"] .streak-dot { background:rgba(255,255,255,0.06); }
+.streak-dot.partial { background:rgba(232,184,109,0.4); }
+.streak-dot.on { background:var(--tc-amber); }
+.streak-dot-label { font-size:9px; color:var(--light); margin-top:var(--sp-2); }
 
 /* ── Smart Pairing Suggestions (Feature 5) ── */
 .sp-pair-card {
@@ -10535,6 +10587,13 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="add-food">
           <input type="text" id="foodInput" oninput="activateBtn('foodAddBtn',this.value.trim())" placeholder="Add a food..." onkeydown="if(event.key==='Enter')addFood()">
           <input type="date" id="foodDate" style="padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);color:var(--text);outline:none;">
+          <select id="foodSlot" class="food-slot-select" aria-label="Meal slot">
+            <option value="">Any meal</option>
+            <option value="breakfast">Breakfast</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+            <option value="snack">Snack</option>
+          </select>
           <div class="reaction-toggle">
             <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
             <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
@@ -11291,6 +11350,21 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div id="infoMealBreakdownGrid" class="mt-4"></div>
           <div id="infoMealBreakdownAlerts" class="mt-8"></div>
           <div id="infoMealBreakdownWeekly" class="mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Logging Streak (PR-N) -->
+      <div class="card card-daily col-full" id="infoStreakCard">
+        <div class="card-header" data-collapse-target="infoStreakBody" data-collapse-chevron="infoStreakChevron">
+          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-flame"/></svg></div> Logging Streak</div>
+          <span class="collapse-chevron" id="infoStreakChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+        </div>
+        <div id="infoStreakSummary" class="mt-4"></div>
+        <div id="infoStreakBody" class="collapse-body fx-col g8" style="display:none;">
+          <div id="infoStreakHero" class="mt-4"></div>
+          <div id="infoStreakMilestones" class="mt-8"></div>
+          <div id="infoStreakGrid" class="mt-8"></div>
+          <div id="infoStreakMsg" class="mt-8"></div>
         </div>
       </div>
 
@@ -14993,180 +15067,201 @@ const FOOD_SYNERGIES = [
 
 // @@DATA_BLOCK_12_START@@ NUTRITION
 
+// FOOD-CHEMISTRY MODEL — the `chem` field on each NUTRITION entry.
+// ─────────────────────────────────────────
+// `chem` carries three optional, plain-language descriptors so the app can
+// *explain* a food, not just tag it:
+//   • fibre        — dominant fibre character ('soluble (pectin)',
+//                    'soluble (beta-glucan)', 'mixed', 'insoluble',
+//                    'mucilaginous', 'resistant starch', 'minimal', 'none').
+//                    How a food behaves in the gut.
+//   • antiNutrients— naturally-occurring compounds that can limit mineral
+//                    absorption (phytates, oxalates, tannins) or that need
+//                    thorough cooking (lectins, protease inhibitors,
+//                    goitrogens, saponins). Soaking, fermenting and cooking
+//                    sharply reduce most of these — they are NOT a reason to
+//                    avoid the food, just context for variety and prep.
+//   • bioactives   — well-studied beneficial plant/dairy compounds.
+//
+// This is GENERAL EDUCATIONAL GUIDANCE drawn from common food-science
+// consensus — NOT a clinical or analytical reference. It carries no mg/IU
+// figures on purpose: only high-confidence qualitative facts are recorded,
+// and uncertain fields are left absent rather than guessed. Always defer to
+// a paediatrician for anything diet-related.
 const NUTRITION = {
   // ── GRAINS & STAPLES ──
-  'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'] },
-  'rice':           { nutrients:['carbs','energy','manganese'], tags:['energy','gluten-free','easy-digest'] },
-  'suji':           { nutrients:['iron','carbs','protein','selenium'], tags:['iron-rich','energy'] },
-  'khichdi':        { nutrients:['protein','carbs','iron','fibre'], tags:['complete-meal','iron-rich','easy-digest'] },
-  'oats':           { nutrients:['fibre','iron','protein','magnesium','zinc','beta-glucan'], tags:['iron-rich','digestive','heart-health','energy'] },
-  'poha':           { nutrients:['iron','carbs','fibre','vitamin B1'], tags:['iron-rich','energy','easy-digest'] },
-  'sabudana':       { nutrients:['carbs','energy','calcium','potassium'], tags:['energy','easy-digest'] },
-  'sattu':          { nutrients:['protein','iron','fibre','calcium','magnesium'], tags:['protein-rich','iron-rich','cooling','energy'] },
-  'jowar':          { nutrients:['iron','protein','fibre','phosphorus','calcium'], tags:['iron-rich','bone-health','gluten-free','protein-rich'] },
-  'bajra':          { nutrients:['iron','protein','fibre','magnesium','phosphorus','zinc'], tags:['iron-rich','protein-rich','bone-health','gluten-free'] },
-  'dalia':          { nutrients:['fibre','protein','iron','magnesium'], tags:['digestive','iron-rich','protein-rich','energy'] },
-  'idli':           { nutrients:['carbs','protein','vitamin B12','iron'], tags:['easy-digest','energy','fermented','gut-health'] },
-  'dosa':           { nutrients:['carbs','protein','iron','vitamin B12'], tags:['energy','fermented','gut-health'] },
+  'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
+  'rice':           { nutrients:['carbs','energy','manganese'], tags:['energy','gluten-free','easy-digest'], chem:{ fibre:'minimal' } },
+  'suji':           { nutrients:['iron','carbs','protein','selenium'], tags:['iron-rich','energy'], chem:{ fibre:'minimal' } },
+  'khichdi':        { nutrients:['protein','carbs','iron','fibre'], tags:['complete-meal','iron-rich','easy-digest'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'oats':           { nutrients:['fibre','iron','protein','magnesium','zinc','beta-glucan'], tags:['iron-rich','digestive','heart-health','energy'], chem:{ fibre:'soluble (beta-glucan)', antiNutrients:['phytates'], bioactives:['beta-glucan','avenanthramides'] } },
+  'poha':           { nutrients:['iron','carbs','fibre','vitamin B1'], tags:['iron-rich','energy','easy-digest'], chem:{ fibre:'minimal' } },
+  'sabudana':       { nutrients:['carbs','energy','calcium','potassium'], tags:['energy','easy-digest'], chem:{ fibre:'minimal' } },
+  'sattu':          { nutrients:['protein','iron','fibre','calcium','magnesium'], tags:['protein-rich','iron-rich','cooling','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates'], bioactives:['polyphenols'] } },
+  'jowar':          { nutrients:['iron','protein','fibre','phosphorus','calcium'], tags:['iron-rich','bone-health','gluten-free','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
+  'bajra':          { nutrients:['iron','protein','fibre','magnesium','phosphorus','zinc'], tags:['iron-rich','protein-rich','bone-health','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates'], bioactives:['polyphenols'] } },
+  'dalia':          { nutrients:['fibre','protein','iron','magnesium'], tags:['digestive','iron-rich','protein-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'idli':           { nutrients:['carbs','protein','vitamin B12','iron'], tags:['easy-digest','energy','fermented','gut-health'], chem:{ fibre:'mixed' } },
+  'dosa':           { nutrients:['carbs','protein','iron','vitamin B12'], tags:['energy','fermented','gut-health'], chem:{ fibre:'minimal' } },
 
   // ── LENTILS & LEGUMES ──
-  'moong dal':      { nutrients:['protein','iron','folate','potassium','fibre'], tags:['protein-rich','iron-rich','easy-digest'] },
-  'masoor dal':     { nutrients:['protein','iron','folate','zinc','fibre'], tags:['protein-rich','iron-rich','blood-health'] },
-  'toor dal':       { nutrients:['protein','iron','folate','fibre','magnesium'], tags:['protein-rich','iron-rich'] },
-  'chana dal':      { nutrients:['protein','iron','folate','fibre','zinc','manganese'], tags:['protein-rich','iron-rich','energy'] },
-  'urad dal':       { nutrients:['protein','iron','calcium','fibre','magnesium','phosphorus'], tags:['protein-rich','iron-rich','bone-health'] },
-  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','blood-health'] },
+  'moong dal':      { nutrients:['protein','iron','folate','potassium','fibre'], tags:['protein-rich','iron-rich','easy-digest'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'masoor dal':     { nutrients:['protein','iron','folate','zinc','fibre'], tags:['protein-rich','iron-rich','blood-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'toor dal':       { nutrients:['protein','iron','folate','fibre','magnesium'], tags:['protein-rich','iron-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'chana dal':      { nutrients:['protein','iron','folate','fibre','zinc','manganese'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'urad dal':       { nutrients:['protein','iron','calcium','fibre','magnesium','phosphorus'], tags:['protein-rich','iron-rich','bone-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','blood-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
 
   // ── VEGETABLES ──
-  'carrot':         { nutrients:['vitamin A','beta-carotene','fibre','potassium','vitamin K'], tags:['eye-health','vitamin-A','immune-boost'] },
-  'beetroot':       { nutrients:['iron','folate','fibre','manganese','potassium','vitamin C'], tags:['iron-rich','blood-health','vitamin-C'] },
-  'beans':          { nutrients:['protein','iron','fibre','vitamin K','folate'], tags:['iron-rich','protein-rich'] },
-  'bottle gourd':   { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'] },
-  'lauki':          { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'] },
-  'spinach':        { nutrients:['iron','folate','vitamin K','vitamin A','vitamin C','calcium','magnesium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','blood-health'] },
-  'sweet potato':   { nutrients:['vitamin A','fibre','potassium','vitamin C','manganese','beta-carotene'], tags:['vitamin-A','energy','immune-boost','eye-health'] },
-  'tomato':         { nutrients:['vitamin C','lycopene','potassium','vitamin K','folate'], tags:['vitamin-C','antioxidant','immune-boost'] },
-  'pumpkin':        { nutrients:['vitamin A','beta-carotene','fibre','potassium','vitamin C','iron'], tags:['vitamin-A','eye-health','immune-boost','iron-rich'] },
-  'broccoli':       { nutrients:['vitamin C','vitamin K','fibre','folate','iron','calcium','sulforaphane'], tags:['vitamin-C','bone-health','iron-rich','immune-boost','antioxidant'] },
-  'zucchini':       { nutrients:['vitamin C','fibre','potassium','manganese','vitamin A'], tags:['digestive','hydrating','vitamin-C','easy-digest'] },
-  'cucumber':       { nutrients:['water','vitamin K','potassium','fibre','silica'], tags:['hydrating','cooling','digestive'] },
-  'potato':         { nutrients:['carbs','potassium','vitamin C','vitamin B6','fibre'], tags:['energy','vitamin-C'] },
-  'drumstick':      { nutrients:['calcium','iron','vitamin A','vitamin C','protein','magnesium'], tags:['bone-health','iron-rich','vitamin-A','vitamin-C','immune-boost'] },
-  'ash gourd':      { nutrients:['water','fibre','vitamin C','zinc','calcium'], tags:['hydrating','cooling','digestive'] },
-  'ridge gourd':    { nutrients:['fibre','iron','vitamin C','zinc','water'], tags:['digestive','iron-rich','hydrating'] },
+  'carrot':         { nutrients:['vitamin A','beta-carotene','fibre','potassium','vitamin K'], tags:['eye-health','vitamin-A','immune-boost'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'beetroot':       { nutrients:['iron','folate','fibre','manganese','potassium','vitamin C'], tags:['iron-rich','blood-health','vitamin-C'], chem:{ fibre:'mixed', antiNutrients:['oxalates'], bioactives:['betalains'] } },
+  'beans':          { nutrients:['protein','iron','fibre','vitamin K','folate'], tags:['iron-rich','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['lectins'] } },
+  'bottle gourd':   { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'], chem:{ fibre:'insoluble' } },
+  'lauki':          { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'], chem:{ fibre:'insoluble' } },
+  'spinach':        { nutrients:['iron','folate','vitamin K','vitamin A','vitamin C','calcium','magnesium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','blood-health'], chem:{ fibre:'mixed', antiNutrients:['oxalates','phytates'], bioactives:['lutein','zeaxanthin'] } },
+  'sweet potato':   { nutrients:['vitamin A','fibre','potassium','vitamin C','manganese','beta-carotene'], tags:['vitamin-A','energy','immune-boost','eye-health'], chem:{ fibre:'mixed', antiNutrients:['oxalates'], bioactives:['carotenoids'] } },
+  'tomato':         { nutrients:['vitamin C','lycopene','potassium','vitamin K','folate'], tags:['vitamin-C','antioxidant','immune-boost'], chem:{ fibre:'mixed', bioactives:['lycopene'] } },
+  'pumpkin':        { nutrients:['vitamin A','beta-carotene','fibre','potassium','vitamin C','iron'], tags:['vitamin-A','eye-health','immune-boost','iron-rich'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'broccoli':       { nutrients:['vitamin C','vitamin K','fibre','folate','iron','calcium','sulforaphane'], tags:['vitamin-C','bone-health','iron-rich','immune-boost','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'], bioactives:['sulforaphane','glucosinolates'] } },
+  'zucchini':       { nutrients:['vitamin C','fibre','potassium','manganese','vitamin A'], tags:['digestive','hydrating','vitamin-C','easy-digest'], chem:{ fibre:'mixed' } },
+  'cucumber':       { nutrients:['water','vitamin K','potassium','fibre','silica'], tags:['hydrating','cooling','digestive'], chem:{ fibre:'insoluble' } },
+  'potato':         { nutrients:['carbs','potassium','vitamin C','vitamin B6','fibre'], tags:['energy','vitamin-C'], chem:{ fibre:'mixed' } },
+  'drumstick':      { nutrients:['calcium','iron','vitamin A','vitamin C','protein','magnesium'], tags:['bone-health','iron-rich','vitamin-A','vitamin-C','immune-boost'], chem:{ fibre:'insoluble' } },
+  'ash gourd':      { nutrients:['water','fibre','vitamin C','zinc','calcium'], tags:['hydrating','cooling','digestive'], chem:{ fibre:'insoluble' } },
+  'ridge gourd':    { nutrients:['fibre','iron','vitamin C','zinc','water'], tags:['digestive','iron-rich','hydrating'], chem:{ fibre:'insoluble' } },
 
   // ── FRUITS ──
-  'banana':         { nutrients:['potassium','carbs','vitamin B6','magnesium','fibre'], tags:['energy','digestive'] },
-  'apple':          { nutrients:['fibre','vitamin C','antioxidants','quercetin'], tags:['digestive','vitamin-C','antioxidant','immune-boost'] },
-  'pear':           { nutrients:['fibre','vitamin C','sorbitol','copper','potassium'], tags:['digestive','constipation-relief','vitamin-C'] },
-  'avocado':        { nutrients:['healthy fats','folate','vitamin E','vitamin K','potassium','vitamin B6'], tags:['brain-health','healthy-fats','energy'] },
-  'blueberry':      { nutrients:['antioxidants','vitamin C','fibre','vitamin K','manganese'], tags:['antioxidant','vitamin-C','brain-health','immune-boost'] },
-  'mango':          { nutrients:['vitamin C','vitamin A','folate','fibre','beta-carotene'], tags:['vitamin-C','vitamin-A','immune-boost','eye-health'] },
-  'papaya':         { nutrients:['vitamin C','fibre','digestive enzymes','folate','vitamin A','potassium'], tags:['digestive','vitamin-C','constipation-relief','immune-boost'] },
-  'date (fruit)':   { nutrients:['iron','natural sugars','fibre','calcium','potassium','magnesium'], tags:['iron-rich','energy','bone-health'] },
-  'date':           { nutrients:['iron','natural sugars','fibre','calcium','potassium','magnesium'], tags:['iron-rich','energy','bone-health'] },
-  'chiku':          { nutrients:['fibre','iron','calcium','vitamin A','vitamin C','natural sugars'], tags:['energy','iron-rich','digestive','bone-health'] },
-  'watermelon':     { nutrients:['water','lycopene','vitamin C','vitamin A','potassium'], tags:['hydrating','vitamin-C','cooling','antioxidant'] },
-  'muskmelon':      { nutrients:['vitamin A','vitamin C','potassium','water','beta-carotene'], tags:['hydrating','vitamin-A','vitamin-C','cooling','eye-health'] },
-  'pomegranate':    { nutrients:['iron','vitamin C','fibre','antioxidants','folate','potassium'], tags:['iron-rich','vitamin-C','antioxidant','blood-health'] },
-  'orange':         { nutrients:['vitamin C','fibre','folate','potassium','thiamine'], tags:['vitamin-C','immune-boost','antioxidant'] },
-  'kiwi':           { nutrients:['vitamin C','vitamin K','fibre','folate','potassium','vitamin E'], tags:['vitamin-C','immune-boost','digestive','antioxidant'] },
-  'strawberry':     { nutrients:['vitamin C','manganese','fibre','folate','antioxidants'], tags:['vitamin-C','antioxidant','immune-boost'] },
-  'plum':           { nutrients:['vitamin C','fibre','sorbitol','vitamin K','potassium'], tags:['vitamin-C','constipation-relief','digestive','antioxidant'] },
-  'prune':          { nutrients:['fibre','sorbitol','iron','potassium','vitamin K'], tags:['constipation-relief','iron-rich','digestive'] },
-  'coconut':        { nutrients:['healthy fats','fibre','manganese','copper','iron'], tags:['healthy-fats','energy','brain-health'] },
-  'lemon':          { nutrients:['vitamin C','citric acid','potassium'], tags:['vitamin-C','immune-boost','iron-absorption'] },
-  'amla':           { nutrients:['vitamin C','iron','fibre','antioxidants','calcium','chromium'], tags:['vitamin-C','immune-boost','iron-absorption','antioxidant'] },
+  'banana':         { nutrients:['potassium','carbs','vitamin B6','magnesium','fibre'], tags:['energy','digestive'], chem:{ fibre:'soluble (pectin)', bioactives:['resistant starch'] } },
+  'apple':          { nutrients:['fibre','vitamin C','antioxidants','quercetin'], tags:['digestive','vitamin-C','antioxidant','immune-boost'], chem:{ fibre:'soluble (pectin)', bioactives:['quercetin','polyphenols'] } },
+  'pear':           { nutrients:['fibre','vitamin C','sorbitol','copper','potassium'], tags:['digestive','constipation-relief','vitamin-C'], chem:{ fibre:'soluble (pectin)', bioactives:['sorbitol'] } },
+  'avocado':        { nutrients:['healthy fats','folate','vitamin E','vitamin K','potassium','vitamin B6'], tags:['brain-health','healthy-fats','energy'], chem:{ fibre:'mixed', bioactives:['lutein','monounsaturated fats'] } },
+  'blueberry':      { nutrients:['antioxidants','vitamin C','fibre','vitamin K','manganese'], tags:['antioxidant','vitamin-C','brain-health','immune-boost'], chem:{ fibre:'mixed', bioactives:['anthocyanins'] } },
+  'mango':          { nutrients:['vitamin C','vitamin A','folate','fibre','beta-carotene'], tags:['vitamin-C','vitamin-A','immune-boost','eye-health'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'papaya':         { nutrients:['vitamin C','fibre','digestive enzymes','folate','vitamin A','potassium'], tags:['digestive','vitamin-C','constipation-relief','immune-boost'], chem:{ fibre:'mixed', bioactives:['papain','carotenoids'] } },
+  'date (fruit)':   { nutrients:['iron','natural sugars','fibre','calcium','potassium','magnesium'], tags:['iron-rich','energy','bone-health'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'date':           { nutrients:['iron','natural sugars','fibre','calcium','potassium','magnesium'], tags:['iron-rich','energy','bone-health'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'chiku':          { nutrients:['fibre','iron','calcium','vitamin A','vitamin C','natural sugars'], tags:['energy','iron-rich','digestive','bone-health'], chem:{ fibre:'mixed', antiNutrients:['tannins'] } },
+  'watermelon':     { nutrients:['water','lycopene','vitamin C','vitamin A','potassium'], tags:['hydrating','vitamin-C','cooling','antioxidant'], chem:{ fibre:'minimal', bioactives:['lycopene'] } },
+  'muskmelon':      { nutrients:['vitamin A','vitamin C','potassium','water','beta-carotene'], tags:['hydrating','vitamin-A','vitamin-C','cooling','eye-health'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'pomegranate':    { nutrients:['iron','vitamin C','fibre','antioxidants','folate','potassium'], tags:['iron-rich','vitamin-C','antioxidant','blood-health'], chem:{ fibre:'insoluble', bioactives:['polyphenols'] } },
+  'orange':         { nutrients:['vitamin C','fibre','folate','potassium','thiamine'], tags:['vitamin-C','immune-boost','antioxidant'], chem:{ fibre:'soluble (pectin)', bioactives:['flavonoids'] } },
+  'kiwi':           { nutrients:['vitamin C','vitamin K','fibre','folate','potassium','vitamin E'], tags:['vitamin-C','immune-boost','digestive','antioxidant'], chem:{ fibre:'mixed', bioactives:['actinidin'] } },
+  'strawberry':     { nutrients:['vitamin C','manganese','fibre','folate','antioxidants'], tags:['vitamin-C','antioxidant','immune-boost'], chem:{ fibre:'mixed', bioactives:['anthocyanins'] } },
+  'plum':           { nutrients:['vitamin C','fibre','sorbitol','vitamin K','potassium'], tags:['vitamin-C','constipation-relief','digestive','antioxidant'], chem:{ fibre:'mixed', bioactives:['sorbitol','polyphenols'] } },
+  'prune':          { nutrients:['fibre','sorbitol','iron','potassium','vitamin K'], tags:['constipation-relief','iron-rich','digestive'], chem:{ fibre:'mixed', bioactives:['sorbitol'] } },
+  'coconut':        { nutrients:['healthy fats','fibre','manganese','copper','iron'], tags:['healthy-fats','energy','brain-health'], chem:{ fibre:'insoluble', bioactives:['medium-chain fats'] } },
+  'lemon':          { nutrients:['vitamin C','citric acid','potassium'], tags:['vitamin-C','immune-boost','iron-absorption'], chem:{ fibre:'minimal', bioactives:['flavonoids'] } },
+  'amla':           { nutrients:['vitamin C','iron','fibre','antioxidants','calcium','chromium'], tags:['vitamin-C','immune-boost','iron-absorption','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['tannins'], bioactives:['polyphenols'] } },
 
   // ── DAIRY & FATS ──
-  'ghee':           { nutrients:['healthy fats','fat-soluble vitamins','butyrate','vitamin A','vitamin D','omega-3'], tags:['healthy-fats','digestive','brain-health','bone-health'] },
-  'curd':           { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'] },
-  'yogurt':         { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'] },
-  'dahi':           { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'] },
-  'paneer':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin B12','selenium'], tags:['protein-rich','bone-health','brain-health','healthy-fats'] },
-  'cheese':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin A','vitamin B12'], tags:['protein-rich','bone-health','healthy-fats'] },
-  'butter':         { nutrients:['healthy fats','fat-soluble vitamins','vitamin A'], tags:['healthy-fats','energy','brain-health'] },
-  'coconut oil':    { nutrients:['healthy fats','lauric acid','MCTs'], tags:['healthy-fats','brain-health','immune-boost','energy'] },
+  'ghee':           { nutrients:['healthy fats','fat-soluble vitamins','butyrate','vitamin A','vitamin D','omega-3'], tags:['healthy-fats','digestive','brain-health','bone-health'], chem:{ fibre:'none', bioactives:['butyrate','conjugated linoleic acid'] } },
+  'curd':           { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
+  'yogurt':         { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
+  'dahi':           { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
+  'paneer':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin B12','selenium'], tags:['protein-rich','bone-health','brain-health','healthy-fats'], chem:{ fibre:'none' } },
+  'cheese':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin A','vitamin B12'], tags:['protein-rich','bone-health','healthy-fats'], chem:{ fibre:'none' } },
+  'butter':         { nutrients:['healthy fats','fat-soluble vitamins','vitamin A'], tags:['healthy-fats','energy','brain-health'], chem:{ fibre:'none', bioactives:['butyrate'] } },
+  'coconut oil':    { nutrients:['healthy fats','lauric acid','MCTs'], tags:['healthy-fats','brain-health','immune-boost','energy'], chem:{ fibre:'none', bioactives:['medium-chain fats'] } },
 
   // ── NUTS & SEEDS (powdered/soaked for babies) ──
-  'almonds':        { nutrients:['healthy fats','protein','calcium','vitamin E','magnesium','fibre'], tags:['brain-health','bone-health','healthy-fats','protein-rich'] },
-  'walnut':         { nutrients:['omega-3','healthy fats','protein','manganese','copper'], tags:['brain-health','omega-3','healthy-fats'] },
-  'cashew':         { nutrients:['healthy fats','protein','iron','zinc','magnesium','copper'], tags:['brain-health','iron-rich','healthy-fats','protein-rich'] },
-  'peanut':         { nutrients:['protein','healthy fats','fibre','folate','vitamin E','iron','zinc'], tags:['protein-rich','healthy-fats','iron-rich','energy'] },
-  'sesame':         { nutrients:['calcium','iron','zinc','magnesium','healthy fats','copper','fibre'], tags:['bone-health','iron-rich','brain-health','healthy-fats'] },
-  'til':            { nutrients:['calcium','iron','zinc','magnesium','healthy fats','copper','fibre'], tags:['bone-health','iron-rich','brain-health','healthy-fats'] },
-  'flaxseed':       { nutrients:['omega-3','fibre','protein','magnesium','lignans'], tags:['omega-3','brain-health','digestive','heart-health'] },
-  'pumpkin seeds':  { nutrients:['zinc','iron','magnesium','protein','healthy fats','omega-3'], tags:['immune-boost','iron-rich','brain-health','protein-rich'] },
+  'almonds':        { nutrients:['healthy fats','protein','calcium','vitamin E','magnesium','fibre'], tags:['brain-health','bone-health','healthy-fats','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'walnut':         { nutrients:['omega-3','healthy fats','protein','manganese','copper'], tags:['brain-health','omega-3','healthy-fats'], chem:{ fibre:'mixed', antiNutrients:['phytates'], bioactives:['polyphenols'] } },
+  'cashew':         { nutrients:['healthy fats','protein','iron','zinc','magnesium','copper'], tags:['brain-health','iron-rich','healthy-fats','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'peanut':         { nutrients:['protein','healthy fats','fibre','folate','vitamin E','iron','zinc'], tags:['protein-rich','healthy-fats','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'sesame':         { nutrients:['calcium','iron','zinc','magnesium','healthy fats','copper','fibre'], tags:['bone-health','iron-rich','brain-health','healthy-fats'], chem:{ fibre:'mixed', antiNutrients:['phytates','oxalates'], bioactives:['lignans'] } },
+  'til':            { nutrients:['calcium','iron','zinc','magnesium','healthy fats','copper','fibre'], tags:['bone-health','iron-rich','brain-health','healthy-fats'], chem:{ fibre:'mixed', antiNutrients:['phytates','oxalates'], bioactives:['lignans'] } },
+  'flaxseed':       { nutrients:['omega-3','fibre','protein','magnesium','lignans'], tags:['omega-3','brain-health','digestive','heart-health'], chem:{ fibre:'mucilaginous', antiNutrients:['phytates'], bioactives:['lignans'] } },
+  'pumpkin seeds':  { nutrients:['zinc','iron','magnesium','protein','healthy fats','omega-3'], tags:['immune-boost','iron-rich','brain-health','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
 
   // ── SPICES & ENHANCERS (small amounts for babies) ──
-  'turmeric':       { nutrients:['curcumin','iron','manganese','antioxidants'], tags:['anti-inflammatory','immune-boost','antioxidant'] },
-  'jeera':          { nutrients:['iron','manganese','antioxidants'], tags:['digestive','iron-rich','anti-inflammatory'] },
-  'cumin':          { nutrients:['iron','manganese','antioxidants'], tags:['digestive','iron-rich','anti-inflammatory'] },
-  'ajwain':         { nutrients:['fibre','antioxidants','thymol'], tags:['digestive','anti-inflammatory'] },
-  'hing':           { nutrients:['antioxidants','volatile oils'], tags:['digestive','anti-inflammatory'] },
+  'turmeric':       { nutrients:['curcumin','iron','manganese','antioxidants'], tags:['anti-inflammatory','immune-boost','antioxidant'], chem:{ fibre:'insoluble', bioactives:['curcumin'] } },
+  'jeera':          { nutrients:['iron','manganese','antioxidants'], tags:['digestive','iron-rich','anti-inflammatory'], chem:{ fibre:'insoluble', bioactives:['essential oils'] } },
+  'cumin':          { nutrients:['iron','manganese','antioxidants'], tags:['digestive','iron-rich','anti-inflammatory'], chem:{ fibre:'insoluble', bioactives:['essential oils'] } },
+  'ajwain':         { nutrients:['fibre','antioxidants','thymol'], tags:['digestive','anti-inflammatory'], chem:{ fibre:'insoluble', bioactives:['thymol'] } },
+  'hing':           { nutrients:['antioxidants','volatile oils'], tags:['digestive','anti-inflammatory'], chem:{ bioactives:['volatile oils'] } },
 
   // ── EXPANDED: MORE GRAINS & STAPLES ──
-  'amaranth':       { nutrients:['protein','iron','calcium','magnesium','fibre','lysine'], tags:['protein-rich','iron-rich','bone-health','gluten-free'] },
-  'rajgira':        { nutrients:['protein','iron','calcium','magnesium','fibre','lysine'], tags:['protein-rich','iron-rich','bone-health','gluten-free'] },
-  'barley':         { nutrients:['fibre','iron','selenium','manganese','copper'], tags:['digestive','iron-rich','heart-health'] },
-  'wheat':          { nutrients:['carbs','protein','fibre','iron','B vitamins'], tags:['energy','iron-rich','protein-rich'] },
-  'maida':          { nutrients:['carbs','energy'], tags:['energy'] },
-  'rava':           { nutrients:['iron','carbs','protein','selenium'], tags:['iron-rich','energy'] },
-  'vermicelli':     { nutrients:['carbs','protein','iron'], tags:['energy'] },
-  'bread':          { nutrients:['carbs','iron','fibre'], tags:['energy'] },
-  'roti':           { nutrients:['carbs','protein','fibre','iron'], tags:['energy','iron-rich'] },
-  'chapati':        { nutrients:['carbs','protein','fibre','iron'], tags:['energy','iron-rich'] },
-  'paratha':        { nutrients:['carbs','protein','healthy fats','iron'], tags:['energy','iron-rich'] },
+  'amaranth':       { nutrients:['protein','iron','calcium','magnesium','fibre','lysine'], tags:['protein-rich','iron-rich','bone-health','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','oxalates'] } },
+  'rajgira':        { nutrients:['protein','iron','calcium','magnesium','fibre','lysine'], tags:['protein-rich','iron-rich','bone-health','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','oxalates'] } },
+  'barley':         { nutrients:['fibre','iron','selenium','manganese','copper'], tags:['digestive','iron-rich','heart-health'], chem:{ fibre:'soluble (beta-glucan)', antiNutrients:['phytates'], bioactives:['beta-glucan'] } },
+  'wheat':          { nutrients:['carbs','protein','fibre','iron','B vitamins'], tags:['energy','iron-rich','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'maida':          { nutrients:['carbs','energy'], tags:['energy'], chem:{ fibre:'minimal' } },
+  'rava':           { nutrients:['iron','carbs','protein','selenium'], tags:['iron-rich','energy'], chem:{ fibre:'minimal' } },
+  'vermicelli':     { nutrients:['carbs','protein','iron'], tags:['energy'], chem:{ fibre:'minimal' } },
+  'bread':          { nutrients:['carbs','iron','fibre'], tags:['energy'], chem:{ fibre:'minimal' } },
+  'roti':           { nutrients:['carbs','protein','fibre','iron'], tags:['energy','iron-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'chapati':        { nutrients:['carbs','protein','fibre','iron'], tags:['energy','iron-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'paratha':        { nutrients:['carbs','protein','healthy fats','iron'], tags:['energy','iron-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
 
   // ── EXPANDED: MORE LENTILS & LEGUMES ──
-  'chana dal':      { nutrients:['protein','iron','fibre','folate','zinc','magnesium'], tags:['protein-rich','iron-rich','energy'] },
-  'urad dal':       { nutrients:['protein','iron','fibre','calcium','magnesium','potassium'], tags:['protein-rich','iron-rich','bone-health'] },
-  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','digestive'] },
-  'chickpeas':      { nutrients:['protein','iron','fibre','folate','zinc','manganese'], tags:['protein-rich','iron-rich','energy'] },
-  'chole':          { nutrients:['protein','iron','fibre','folate','zinc','manganese'], tags:['protein-rich','iron-rich','energy'] },
-  'soybean':        { nutrients:['protein','iron','calcium','omega-3','fibre','isoflavones'], tags:['protein-rich','iron-rich','bone-health'] },
+  'chana dal':      { nutrients:['protein','iron','fibre','folate','zinc','magnesium'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'urad dal':       { nutrients:['protein','iron','fibre','calcium','magnesium','potassium'], tags:['protein-rich','iron-rich','bone-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','digestive'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'chickpeas':      { nutrients:['protein','iron','fibre','folate','zinc','manganese'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins','saponins'] } },
+  'chole':          { nutrients:['protein','iron','fibre','folate','zinc','manganese'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins','saponins'] } },
+  'soybean':        { nutrients:['protein','iron','calcium','omega-3','fibre','isoflavones'], tags:['protein-rich','iron-rich','bone-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins','protease inhibitors'], bioactives:['isoflavones'] } },
 
   // ── EXPANDED: MORE VEGETABLES ──
-  'moringa':        { nutrients:['iron','calcium','vitamin A','vitamin C','protein','potassium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','protein-rich','immune-boost'] },
-  'drumstick':      { nutrients:['iron','calcium','vitamin A','vitamin C','protein'], tags:['iron-rich','bone-health','vitamin-A','immune-boost'] },
-  'drumstick leaves':{ nutrients:['iron','calcium','vitamin A','vitamin C','protein','potassium','magnesium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','protein-rich'] },
-  'lauki':          { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'] },
-  'ash gourd':      { nutrients:['water','fibre','vitamin C','zinc','potassium'], tags:['hydrating','digestive','cooling'] },
-  'ridge gourd':    { nutrients:['fibre','vitamin C','iron','zinc','water'], tags:['digestive','iron-rich','hydrating'] },
-  'bitter gourd':   { nutrients:['vitamin C','iron','fibre','folate','zinc'], tags:['vitamin-C','iron-rich','immune-boost'] },
-  'snake gourd':    { nutrients:['fibre','vitamin C','zinc','water'], tags:['digestive','hydrating'] },
-  'capsicum':       { nutrients:['vitamin C','vitamin A','fibre','folate'], tags:['vitamin-C','vitamin-A','antioxidant'] },
-  'bell pepper':    { nutrients:['vitamin C','vitamin A','fibre','folate'], tags:['vitamin-C','vitamin-A','antioxidant'] },
-  'green peas':     { nutrients:['protein','iron','fibre','vitamin C','folate','zinc'], tags:['protein-rich','iron-rich','vitamin-C'] },
-  'corn':           { nutrients:['carbs','fibre','vitamin B','iron','zinc'], tags:['energy','digestive'] },
-  'cauliflower':    { nutrients:['vitamin C','vitamin K','fibre','folate'], tags:['vitamin-C','immune-boost','digestive'] },
-  'cabbage':        { nutrients:['vitamin C','vitamin K','fibre','folate'], tags:['vitamin-C','digestive'] },
-  'onion':          { nutrients:['vitamin C','fibre','folate','quercetin'], tags:['immune-boost','anti-inflammatory'] },
-  'garlic':         { nutrients:['allicin','vitamin C','manganese','selenium'], tags:['immune-boost','anti-inflammatory','antioxidant'] },
-  'ginger':         { nutrients:['gingerol','vitamin C','magnesium'], tags:['digestive','anti-inflammatory','immune-boost'] },
-  'mushroom':       { nutrients:['vitamin D','protein','selenium','B vitamins','zinc'], tags:['immune-boost','protein-rich','bone-health'] },
-  'lettuce':        { nutrients:['water','vitamin K','folate','fibre'], tags:['hydrating','digestive'] },
-  'radish':         { nutrients:['vitamin C','fibre','potassium','folate'], tags:['vitamin-C','digestive'] },
-  'turnip':         { nutrients:['vitamin C','fibre','potassium','folate'], tags:['vitamin-C','digestive'] },
-  'yam':            { nutrients:['carbs','fibre','potassium','vitamin C','manganese'], tags:['energy','digestive','vitamin-C'] },
-  'colocasia':      { nutrients:['carbs','fibre','potassium','magnesium','iron'], tags:['energy','iron-rich','digestive'] },
-  'arbi':           { nutrients:['carbs','fibre','potassium','magnesium','iron'], tags:['energy','iron-rich','digestive'] },
+  'moringa':        { nutrients:['iron','calcium','vitamin A','vitamin C','protein','potassium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','protein-rich','immune-boost'], chem:{ fibre:'mixed', antiNutrients:['oxalates'], bioactives:['polyphenols'] } },
+  'drumstick':      { nutrients:['iron','calcium','vitamin A','vitamin C','protein'], tags:['iron-rich','bone-health','vitamin-A','immune-boost'], chem:{ fibre:'insoluble' } },
+  'drumstick leaves':{ nutrients:['iron','calcium','vitamin A','vitamin C','protein','potassium','magnesium'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C','protein-rich'], chem:{ fibre:'mixed', antiNutrients:['oxalates'], bioactives:['polyphenols'] } },
+  'lauki':          { nutrients:['water','fibre','zinc','vitamin C','potassium'], tags:['hydrating','digestive','cooling'], chem:{ fibre:'insoluble' } },
+  'ash gourd':      { nutrients:['water','fibre','vitamin C','zinc','potassium'], tags:['hydrating','digestive','cooling'], chem:{ fibre:'insoluble' } },
+  'ridge gourd':    { nutrients:['fibre','vitamin C','iron','zinc','water'], tags:['digestive','iron-rich','hydrating'], chem:{ fibre:'insoluble' } },
+  'bitter gourd':   { nutrients:['vitamin C','iron','fibre','folate','zinc'], tags:['vitamin-C','iron-rich','immune-boost'], chem:{ fibre:'insoluble', bioactives:['momordicin'] } },
+  'snake gourd':    { nutrients:['fibre','vitamin C','zinc','water'], tags:['digestive','hydrating'], chem:{ fibre:'insoluble' } },
+  'capsicum':       { nutrients:['vitamin C','vitamin A','fibre','folate'], tags:['vitamin-C','vitamin-A','antioxidant'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'bell pepper':    { nutrients:['vitamin C','vitamin A','fibre','folate'], tags:['vitamin-C','vitamin-A','antioxidant'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'green peas':     { nutrients:['protein','iron','fibre','vitamin C','folate','zinc'], tags:['protein-rich','iron-rich','vitamin-C'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'corn':           { nutrients:['carbs','fibre','vitamin B','iron','zinc'], tags:['energy','digestive'], chem:{ fibre:'insoluble', antiNutrients:['phytates'], bioactives:['lutein','zeaxanthin'] } },
+  'cauliflower':    { nutrients:['vitamin C','vitamin K','fibre','folate'], tags:['vitamin-C','immune-boost','digestive'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'], bioactives:['glucosinolates'] } },
+  'cabbage':        { nutrients:['vitamin C','vitamin K','fibre','folate'], tags:['vitamin-C','digestive'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'], bioactives:['glucosinolates'] } },
+  'onion':          { nutrients:['vitamin C','fibre','folate','quercetin'], tags:['immune-boost','anti-inflammatory'], chem:{ fibre:'mixed', bioactives:['quercetin'] } },
+  'garlic':         { nutrients:['allicin','vitamin C','manganese','selenium'], tags:['immune-boost','anti-inflammatory','antioxidant'], chem:{ fibre:'mixed', bioactives:['allicin'] } },
+  'ginger':         { nutrients:['gingerol','vitamin C','magnesium'], tags:['digestive','anti-inflammatory','immune-boost'], chem:{ fibre:'insoluble', bioactives:['gingerol'] } },
+  'mushroom':       { nutrients:['vitamin D','protein','selenium','B vitamins','zinc'], tags:['immune-boost','protein-rich','bone-health'], chem:{ fibre:'mixed', bioactives:['beta-glucan'] } },
+  'lettuce':        { nutrients:['water','vitamin K','folate','fibre'], tags:['hydrating','digestive'], chem:{ fibre:'insoluble' } },
+  'radish':         { nutrients:['vitamin C','fibre','potassium','folate'], tags:['vitamin-C','digestive'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'] } },
+  'turnip':         { nutrients:['vitamin C','fibre','potassium','folate'], tags:['vitamin-C','digestive'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'] } },
+  'yam':            { nutrients:['carbs','fibre','potassium','vitamin C','manganese'], tags:['energy','digestive','vitamin-C'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
+  'colocasia':      { nutrients:['carbs','fibre','potassium','magnesium','iron'], tags:['energy','iron-rich','digestive'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
+  'arbi':           { nutrients:['carbs','fibre','potassium','magnesium','iron'], tags:['energy','iron-rich','digestive'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
 
   // ── EXPANDED: MORE FRUITS ──
-  'litchi':         { nutrients:['vitamin C','copper','potassium','fibre'], tags:['vitamin-C','antioxidant','energy'] },
-  'lychee':         { nutrients:['vitamin C','copper','potassium','fibre'], tags:['vitamin-C','antioxidant','energy'] },
-  'grapes':         { nutrients:['vitamin C','vitamin K','potassium','antioxidants'], tags:['vitamin-C','antioxidant','energy'] },
-  'plum':           { nutrients:['vitamin C','fibre','potassium','vitamin K','sorbitol'], tags:['vitamin-C','digestive','constipation-relief'] },
-  'prune':          { nutrients:['fibre','iron','vitamin K','potassium','sorbitol'], tags:['iron-rich','digestive','constipation-relief'] },
-  'fig':            { nutrients:['calcium','iron','fibre','potassium','magnesium'], tags:['bone-health','iron-rich','digestive','energy'] },
-  'anjeer':         { nutrients:['calcium','iron','fibre','potassium','magnesium'], tags:['bone-health','iron-rich','digestive','energy'] },
-  'jackfruit':      { nutrients:['vitamin C','vitamin A','fibre','potassium','magnesium'], tags:['vitamin-C','vitamin-A','energy','digestive'] },
-  'guava':          { nutrients:['vitamin C','fibre','folate','potassium','vitamin A'], tags:['vitamin-C','immune-boost','digestive','antioxidant'] },
-  'muskmelon':      { nutrients:['vitamin A','vitamin C','potassium','water'], tags:['vitamin-A','vitamin-C','hydrating','cooling'] },
-  'jamun':          { nutrients:['iron','vitamin C','fibre','antioxidants'], tags:['iron-rich','vitamin-C','antioxidant'] },
-  'sitaphal':       { nutrients:['vitamin C','fibre','potassium','magnesium','vitamin B6'], tags:['vitamin-C','energy','digestive'] },
-  'custard apple':  { nutrients:['vitamin C','fibre','potassium','magnesium','vitamin B6'], tags:['vitamin-C','energy','digestive'] },
-  'coconut':        { nutrients:['healthy fats','fibre','manganese','copper','MCTs'], tags:['healthy-fats','brain-health','energy'] },
-  'coconut water':  { nutrients:['potassium','sodium','magnesium','calcium','water'], tags:['hydrating','cooling','energy'] },
-  'amla':           { nutrients:['vitamin C','iron','calcium','antioxidants','fibre'], tags:['vitamin-C','immune-boost','iron-rich','antioxidant'] },
-  'raisins':        { nutrients:['iron','fibre','potassium','natural sugars','calcium'], tags:['iron-rich','energy','digestive','bone-health'] },
-  'kishmish':       { nutrients:['iron','fibre','potassium','natural sugars','calcium'], tags:['iron-rich','energy','digestive','bone-health'] },
-  'strawberry':     { nutrients:['vitamin C','fibre','folate','antioxidants','manganese'], tags:['vitamin-C','antioxidant','immune-boost'] },
-  'peach':          { nutrients:['vitamin C','vitamin A','fibre','potassium'], tags:['vitamin-C','vitamin-A','digestive'] },
+  'litchi':         { nutrients:['vitamin C','copper','potassium','fibre'], tags:['vitamin-C','antioxidant','energy'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'lychee':         { nutrients:['vitamin C','copper','potassium','fibre'], tags:['vitamin-C','antioxidant','energy'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'grapes':         { nutrients:['vitamin C','vitamin K','potassium','antioxidants'], tags:['vitamin-C','antioxidant','energy'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'plum':           { nutrients:['vitamin C','fibre','potassium','vitamin K','sorbitol'], tags:['vitamin-C','digestive','constipation-relief'], chem:{ fibre:'mixed', bioactives:['sorbitol','polyphenols'] } },
+  'prune':          { nutrients:['fibre','iron','vitamin K','potassium','sorbitol'], tags:['iron-rich','digestive','constipation-relief'], chem:{ fibre:'mixed', bioactives:['sorbitol'] } },
+  'fig':            { nutrients:['calcium','iron','fibre','potassium','magnesium'], tags:['bone-health','iron-rich','digestive','energy'], chem:{ fibre:'mixed', bioactives:['ficin'] } },
+  'anjeer':         { nutrients:['calcium','iron','fibre','potassium','magnesium'], tags:['bone-health','iron-rich','digestive','energy'], chem:{ fibre:'mixed', bioactives:['ficin'] } },
+  'jackfruit':      { nutrients:['vitamin C','vitamin A','fibre','potassium','magnesium'], tags:['vitamin-C','vitamin-A','energy','digestive'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'guava':          { nutrients:['vitamin C','fibre','folate','potassium','vitamin A'], tags:['vitamin-C','immune-boost','digestive','antioxidant'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'muskmelon':      { nutrients:['vitamin A','vitamin C','potassium','water'], tags:['vitamin-A','vitamin-C','hydrating','cooling'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
+  'jamun':          { nutrients:['iron','vitamin C','fibre','antioxidants'], tags:['iron-rich','vitamin-C','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['tannins'], bioactives:['anthocyanins'] } },
+  'sitaphal':       { nutrients:['vitamin C','fibre','potassium','magnesium','vitamin B6'], tags:['vitamin-C','energy','digestive'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'custard apple':  { nutrients:['vitamin C','fibre','potassium','magnesium','vitamin B6'], tags:['vitamin-C','energy','digestive'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'coconut':        { nutrients:['healthy fats','fibre','manganese','copper','MCTs'], tags:['healthy-fats','brain-health','energy'], chem:{ fibre:'insoluble', bioactives:['medium-chain fats'] } },
+  'coconut water':  { nutrients:['potassium','sodium','magnesium','calcium','water'], tags:['hydrating','cooling','energy'], chem:{ fibre:'none', bioactives:['electrolytes'] } },
+  'amla':           { nutrients:['vitamin C','iron','calcium','antioxidants','fibre'], tags:['vitamin-C','immune-boost','iron-rich','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['tannins'], bioactives:['polyphenols'] } },
+  'raisins':        { nutrients:['iron','fibre','potassium','natural sugars','calcium'], tags:['iron-rich','energy','digestive','bone-health'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'kishmish':       { nutrients:['iron','fibre','potassium','natural sugars','calcium'], tags:['iron-rich','energy','digestive','bone-health'], chem:{ fibre:'mixed', bioactives:['polyphenols'] } },
+  'strawberry':     { nutrients:['vitamin C','fibre','folate','antioxidants','manganese'], tags:['vitamin-C','antioxidant','immune-boost'], chem:{ fibre:'mixed', bioactives:['anthocyanins'] } },
+  'peach':          { nutrients:['vitamin C','vitamin A','fibre','potassium'], tags:['vitamin-C','vitamin-A','digestive'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
 
   // ── EXPANDED: MORE DAIRY & FATS ──
-  'coconut oil':    { nutrients:['healthy fats','MCTs','lauric acid'], tags:['healthy-fats','brain-health','energy','immune-boost'] },
-  'butter':         { nutrients:['healthy fats','vitamin A','vitamin D','calcium'], tags:['healthy-fats','vitamin-A','bone-health'] },
-  'cheese':         { nutrients:['calcium','protein','vitamin A','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','brain-health'] },
-  'yogurt':         { nutrients:['calcium','protein','probiotics','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','gut-health'] },
-  'dahi':           { nutrients:['calcium','protein','probiotics','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','gut-health'] },
+  'coconut oil':    { nutrients:['healthy fats','MCTs','lauric acid'], tags:['healthy-fats','brain-health','energy','immune-boost'], chem:{ fibre:'none', bioactives:['medium-chain fats'] } },
+  'butter':         { nutrients:['healthy fats','vitamin A','vitamin D','calcium'], tags:['healthy-fats','vitamin-A','bone-health'], chem:{ fibre:'none', bioactives:['butyrate'] } },
+  'cheese':         { nutrients:['calcium','protein','vitamin A','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','brain-health'], chem:{ fibre:'none' } },
+  'yogurt':         { nutrients:['calcium','protein','probiotics','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','gut-health'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
+  'dahi':           { nutrients:['calcium','protein','probiotics','vitamin B12','phosphorus'], tags:['bone-health','protein-rich','gut-health'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
 
   // ── EXPANDED: MORE SEEDS ──
-  'chia seeds':     { nutrients:['omega-3','fibre','calcium','protein','iron','magnesium'], tags:['omega-3','brain-health','bone-health','iron-rich','digestive'] },
-  'sunflower seeds':{ nutrients:['vitamin E','selenium','protein','healthy fats','magnesium'], tags:['antioxidant','protein-rich','healthy-fats','brain-health'] },
-  'garden cress':   { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'] },
-  'halim':          { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'] },
-  'aliv':           { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'] },
+  'chia seeds':     { nutrients:['omega-3','fibre','calcium','protein','iron','magnesium'], tags:['omega-3','brain-health','bone-health','iron-rich','digestive'], chem:{ fibre:'mucilaginous', antiNutrients:['phytates'], bioactives:['polyphenols'] } },
+  'sunflower seeds':{ nutrients:['vitamin E','selenium','protein','healthy fats','magnesium'], tags:['antioxidant','protein-rich','healthy-fats','brain-health'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'garden cress':   { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'], chem:{ fibre:'mucilaginous', antiNutrients:['goitrogens'] } },
+  'halim':          { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'], chem:{ fibre:'mucilaginous', antiNutrients:['goitrogens'] } },
+  'aliv':           { nutrients:['iron','calcium','protein','folate','vitamin C'], tags:['iron-rich','bone-health','protein-rich'], chem:{ fibre:'mucilaginous', antiNutrients:['goitrogens'] } },
 };
 // @@DATA_BLOCK_12_END@@
 
@@ -16877,9 +16972,9 @@ const ESCALATING_TIPS = {
     'Ziva has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
   ],
   'food-correlation': [
-    'This food has been linked to unusual poop a few times. It may just be coincidence — keep feeding it and see if the pattern holds. Note the consistency each time.',
-    'The pattern is becoming consistent. Try pausing this food for a week, then reintroduce in a small quantity. If the poop changes again, it may be a sensitivity.',
-    'Multiple occurrences of digestive upset after this food. Discuss with your paediatrician — they may recommend an elimination diet or further testing.',
+    'This is a pattern SproutLab spotted in the log — this food has appeared close to a few unusual nappies. A pattern is not a diagnosis, and with a small number of days coincidence is very likely. Keep offering the food normally and note the stool each time so the picture gets clearer.',
+    'The pattern is still holding. Foods change stool through ordinary chemistry, not anything wrong: extra fibre and fruit sugar alcohols (the sorbitol in pear and prune) pull water into the gut and soften stool, while low-fibre starches can firm it. To test gently, pause just this one food for about a week, then reintroduce a small amount and watch — that isolates it from everything else in the diet.',
+    'Digestive changes have followed this food several times now. That makes a mild sensitivity worth considering — but coincidence is still possible, and only a paediatrician can tell the two apart. Bring your food-and-stool notes to the next visit; if they agree, they may suggest a short, structured elimination trial. There is no need to cut foods broadly on your own.',
   ],
   'food-group-gap': [
     'Try adding one food from this group to a meal this week. Variety builds both nutrition and acceptance.',
@@ -16890,9 +16985,9 @@ const ESCALATING_TIPS = {
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Missed a day — just continue normally tomorrow. Don\'t double up the dose.',
-    'Supplements work best with consistency. Try linking it to a daily routine — right after the morning feed works well.',
-    'Frequent missed doses this month. Vitamin D is critical for bone development at this age. Consider setting a daily alarm or keeping drops next to the feeding chair.',
+    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s drops as usual; there is no need to double up for the missed day.',
+    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking the drops to the morning feed makes them hard to forget.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the drops next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
@@ -25463,7 +25558,7 @@ function renderFoodCatSubContent(pid, sid) {
             <button class="food-fav-star${isFoodFavorite(f.name) ? ' active' : ''}" data-action="foodToggleFavorite" data-stop="1" data-arg="${escHtml(f.name)}" title="Favorite">${zi('star')}</button>
             <button class="food-del" data-action="deleteFoodAndRender" data-stop="1" data-arg="${f._i}" data-arg2="'${pid}','${sid}'" title="Remove">×</button>
           </div>
-          <span class="food-tag-date">${f.date ? formatDate(f.date) : 'No date'}</span>
+          <span class="food-tag-date">${f.date ? formatDate(f.date) : 'No date'}${f.mealSlot ? ' · ' + escHtml(f.mealSlot) : ''}</span>
           <span class="freq-badge ${fl.cls}">${fl.label} · ${freq}×/wk</span>
         </div>`;
       }).join('')}
@@ -25505,6 +25600,8 @@ function setReaction(r) {
 function addFood() {
   const val = document.getElementById('foodInput').value.trim();
   const dt  = document.getElementById('foodDate').value;
+  const slotEl = document.getElementById('foodSlot');
+  const slot = slotEl ? slotEl.value : '';
   if (!val) return;
 
   // Check if base food already exists
@@ -25514,16 +25611,20 @@ function addFood() {
     return fb === base || fb.includes(base) || base.includes(fb);
   });
   if (existingIdx >= 0) {
-    // Update existing: keep earlier date, escalate reaction
+    // Update existing: keep earlier date, escalate reaction, fill in meal slot if newly given
     const existing = foods[existingIdx];
     if (dt && (!existing.date || dt < existing.date)) existing.date = dt;
     if (currentReaction === 'watch') existing.reaction = 'watch';
+    if (slot && !existing.mealSlot) existing.mealSlot = slot;
   } else {
-    foods.push({ name:val, reaction:currentReaction, date:dt||today() });
+    const entry = { name:val, reaction:currentReaction, date:dt||today() };
+    if (slot) entry.mealSlot = slot;
+    foods.push(entry);
   }
 
   document.getElementById('foodInput').value = '';
   document.getElementById('foodDate').value = today();
+  if (slotEl) slotEl.value = '';
   renderFoods();
 
   // If food isn't in the built-in database, prompt for manual tagging
@@ -29167,7 +29268,7 @@ const ALERT_CARD = {
   'sleep-streak':       { tab: 'sleep',    card: 'sleepChartCard' },
   'consistent-digestion':{ tab: 'poop',    card: 'poopChartCard' },
   'food-variety-win':   { tab: 'info',     card: 'infoFoodIntroCard' },
-  'meal-logging-streak':{ tab: 'info',     card: 'infoMealBreakdownCard' },
+  'meal-logging-streak':{ tab: 'info',     card: 'infoStreakCard' },
   'growth-on-track':    { tab: 'growth',   card: 'growthHeroCard' },
   'supp-streak':        { tab: 'info',     card: 'infoSupplementCard' },
   'iron-rich-week':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
@@ -29232,9 +29333,10 @@ function computeBaselines() {
   });
   b.mealsPerDay = mealsLoggedDays > 0 ? +(mealsTotal / 7).toFixed(1) : null;
   b.fullMealDays7d = fullMealDays;
-  // Consecutive full-meal days — count days where all 3 are accounted for (logged or skipped)
+  // Consecutive full-meal days — count days where all 3 are accounted for (logged or skipped).
+  // 90-day span matches renderInfoStreak() so the streak win and the streak card agree.
   let mealStreak = 0;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 90; i++) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const ds = toDateStr(d);
     const entry = feedingData[ds];
@@ -29320,6 +29422,7 @@ function computeBaselines() {
   // ── Food variety (7d) ──
   const foodsThisWeek = foods.filter(f => f.date && poop7d.includes(f.date));
   b.newFoodsThisWeek = foodsThisWeek.length;
+  b.newFoodsList = foodsThisWeek.map(f => ({ name: f.name, date: f.date, mealSlot: f.mealSlot || '' }));
 
   // ── Nutrient analysis (7d) ──
   const nutrientDays = {}; // nutrient → count of days it appeared
@@ -30088,11 +30191,24 @@ function computeAlerts() {
   // ─── P4. FOOD VARIETY WIN ───
   if (bl.newFoodsThisWeek >= 3) {
     const key = 'positive-food-variety-' + todayStr.substring(0, 7); // monthly key
+    // Name the foods — with when and which meal slot — so the win is specific, not generic.
+    const named = (bl.newFoodsList || []).map(f => {
+      const meta = [];
+      if (f.date) {
+        const p = f.date.split('-');
+        meta.push(new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-IN', { weekday: 'short' }));
+      }
+      if (f.mealSlot) meta.push(escHtml(f.mealSlot));
+      return escHtml(f.name) + (meta.length ? ' (' + meta.join(', ') + ')' : '');
+    });
+    const foodsStr = named.length <= 4
+      ? named.join(', ')
+      : named.slice(0, 3).join(', ') + ', and ' + (named.length - 3) + ' more';
     alerts.push({
       id: 'food-variety-win', key,
       severity: 'positive', icon: zi('rainbow'),
       title: bl.newFoodsThisWeek + ' new foods this week!',
-      body: 'Great variety — exposure to different tastes and textures in the first year shapes lifelong food preferences.',
+      body: 'New this week: ' + foodsStr + '. Exposure to different tastes and textures in the first year shapes lifelong food preferences.',
       tip: 'Keep it up! Remember the 3-day rule for each new food to spot any reactions.',
       action: null, tab: 'diet'    });
   }
@@ -61434,6 +61550,7 @@ function renderInfo() {
   renderInfoNutrientHeatmap();
   renderInfoComboFreq();
   renderInfoMealBreakdown();
+  renderInfoStreak();
   renderInfoFeedingIntake();
   renderInfoSmartPairing();
   renderInfoAdoption();
@@ -62420,6 +62537,104 @@ function renderInfoMealBreakdown() {
   });
 
   weeklyEl.innerHTML = weeklyHtml;
+}
+
+// ── LOGGING STREAK (PR-N) ──
+// A rewarding view of the all-meals logging streak: current run, best run,
+// milestone badges and a 14-day grid. Destination for the meal-logging-streak win.
+function renderInfoStreak() {
+  const summaryEl = document.getElementById('infoStreakSummary');
+  if (!summaryEl) return;
+  const heroEl  = document.getElementById('infoStreakHero');
+  const milesEl = document.getElementById('infoStreakMilestones');
+  const gridEl  = document.getElementById('infoStreakGrid');
+  const msgEl   = document.getElementById('infoStreakMsg');
+
+  // A "full day" = breakfast + lunch + dinner all accounted for (logged or skipped).
+  function fullDay(ds) {
+    const e = feedingData[ds];
+    return !!e && ['breakfast', 'lunch', 'dinner'].filter(m => e[m]).length >= 3;
+  }
+  function anyLog(ds) {
+    const e = feedingData[ds];
+    return !!e && !!(e.breakfast || e.lunch || e.dinner || e.snack);
+  }
+
+  // Anchor with bare new Date() — matches computeBaselines()'s streak loop so the
+  // streak win and this card agree; new Date(today()) would parse as UTC and drift.
+  const todayD = new Date();
+  let current = 0;
+  for (let i = 0; i < 90; i++) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    if (fullDay(toDateStr(d))) current++; else break;
+  }
+  let best = 0, run = 0;
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    if (fullDay(toDateStr(d))) { run++; if (run > best) best = run; } else run = 0;
+  }
+  const grid = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(todayD); d.setDate(d.getDate() - i);
+    const ds = toDateStr(d);
+    grid.push({ d, full: fullDay(ds), partial: anyLog(ds) });
+  }
+  const hasAnyData = best > 0 || grid.some(g => g.partial);
+
+  if (current > 0) {
+    summaryEl.innerHTML = `<div class="t-sm"><strong>${current}-day</strong> <span class="t-light">all-meals logging streak</span></div>`;
+  } else if (hasAnyData) {
+    summaryEl.innerHTML = '<div class="t-sm t-light">No active streak — logging all 3 meals today starts a new one</div>';
+  } else {
+    summaryEl.innerHTML = '<div class="t-sm t-light">Log breakfast, lunch and dinner to start a streak</div>';
+  }
+
+  heroEl.innerHTML = `<div class="streak-hero">
+    <div class="streak-flame">${zi('flame')}</div>
+    <div>
+      <div class="streak-num">${current}</div>
+      <div class="streak-cap">${current === 1 ? 'day in a row' : 'days in a row'}</div>
+    </div>
+    <div class="streak-hero-best">
+      <div class="streak-best">Best run</div>
+      <div class="streak-best-val">${best} ${best === 1 ? 'day' : 'days'}</div>
+    </div>
+  </div>`;
+
+  const MILES = [
+    { days: 3,  label: '3 days' },
+    { days: 7,  label: '1 week' },
+    { days: 14, label: '2 weeks' },
+    { days: 30, label: '1 month' },
+  ];
+  milesEl.innerHTML = '<div class="t-sm fe-sub-label">Milestones</div><div class="streak-miles mt-4">' +
+    MILES.map(m => {
+      const reached = best >= m.days;
+      return `<div class="streak-mile${reached ? ' reached' : ''}">
+        <div class="streak-mile-icon">${zi(reached ? 'flame' : 'star')}</div>
+        <div class="streak-mile-label">${m.label}</div>
+      </div>`;
+    }).join('') + '</div>';
+
+  let gHtml = '<div class="t-sm fe-sub-label">Last 14 days</div><div class="streak-grid mt-4">';
+  grid.forEach(g => {
+    const cls = g.full ? ' on' : (g.partial ? ' partial' : '');
+    const dayInitial = g.d.toLocaleDateString('en-IN', { weekday: 'narrow' });
+    const state = g.full ? 'all meals logged' : (g.partial ? 'partly logged' : 'not logged');
+    gHtml += `<div class="streak-day"><div class="streak-dot${cls}" title="${toDateStr(g.d)} — ${state}"></div><div class="streak-dot-label">${dayInitial}</div></div>`;
+  });
+  gHtml += '</div>';
+  gridEl.innerHTML = gHtml;
+
+  let msg;
+  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of Ziva\'s eating.';
+  else if (current >= 14) msg = 'Two weeks straight! Logging this consistent makes the weekly nutrient views genuinely trustworthy.';
+  else if (current >= 7)  msg = 'A full week logged — the weekly nutrient views now have a complete picture to work with.';
+  else if (current >= 3)  msg = 'Nice start. A few more days and the weekly insights will rest on a full picture.';
+  else if (current >= 1)  msg = 'Streak started — logging all 3 meals tomorrow keeps it going.';
+  else if (hasAnyData)    msg = 'Streaks reset, not erased — every full day already logged still counts toward the insights. Logging all 3 meals today begins a new run.';
+  else                    msg = 'Logging all 3 meals each day builds the data the diet insights rely on.';
+  msgEl.innerHTML = `<div class="mb-alert-item alert-good"><span>${zi('bulb')}</span><span>${msg}</span></div>`;
 }
 
 // ── FOOD INTELLIGENCE: SMART PAIRING SUGGESTIONS (Feature 5) ──
