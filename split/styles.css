@@ -669,6 +669,17 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   background:var(--sky-light); color:var(--text); outline:none;
 }
 .add-food input:focus { border-color:var(--sky); }
+/* "Can I Give This?" combo card — HR-2 token-driven classes */
+.combo-desc {
+  font-size:var(--fs-base); color:var(--mid);
+  line-height:var(--lh-relaxed); margin-bottom:var(--sp-10);
+}
+.combo-input { flex:1; min-width:180px; }
+.combo-quick-chips {
+  display:flex; flex-wrap:wrap; gap:var(--sp-8);
+  align-items:center; margin-bottom:var(--sp-10);
+}
+.combo-history { margin-top:var(--sp-12); }
 .food-slot-select {
   padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
   border:1.5px solid var(--sky-light);

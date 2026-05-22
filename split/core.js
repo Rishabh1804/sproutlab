@@ -214,6 +214,8 @@ function init() {
   document.querySelectorAll('.meal-skip-btn[data-skip-meal]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); skipSingleMeal(btn.dataset.skipMeal); });
   });
+  // Diet panel static inputs (HR-3 — no inline handlers)
+  wireDietPanelEvents();
   // Milestone categories
   document.querySelectorAll('.rtog[data-mcat]').forEach(btn => {
     btn.addEventListener('click', () => setMilestoneCat(btn.dataset.mcat));
