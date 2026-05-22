@@ -683,7 +683,7 @@ function renderRemindersAndAlerts() {
   const ydEntry = feedingData[ydKey];
   const ydFeedMissing = !ydEntry || (!ydEntry.breakfast && !ydEntry.lunch && !ydEntry.dinner && !ydEntry.snack);
   if (ydFeedMissing) {
-    html += `<div class="info-strip is-warn tappable" onclick="document.getElementById('feedingDate').value='${ydKey}';loadFeedingDay();switchTab('diet');">
+    html += `<div class="info-strip is-warn tappable" data-action="openFeedingDay" data-arg="${ydKey}">
       <span class="info-strip-icon"><svg class="zi"><use href="#zi-warn"/></svg></span>
       <div><strong class="tc-warn">Yesterday's meals not logged</strong>
       <div class="t-sub">${formatDate(ydKey)} · Tap to log retroactively</div></div>
@@ -6362,13 +6362,11 @@ function renderHistoryPreviews() {
     const todayMissing = !todayEntry || (!todayEntry.breakfast && !todayEntry.lunch && !todayEntry.dinner && !todayEntry.snack);
 
     if (ydMissing) {
-      feedPrev.innerHTML = `<div class="info-strip is-warn">
+      feedPrev.innerHTML = `<div class="info-strip is-warn tappable" data-action="openFeedingDay" data-arg="${ydKey}">
         <span><svg class="zi"><use href="#zi-warn"/></svg></span>
         <div><strong class="tc-warn">Yesterday not logged</strong>
         <div class="t-sub">${formatDate(ydKey)} · Tap to log retroactively</div></div>
       </div>`;
-      feedPrev.onclick = () => { document.getElementById('feedingDate').value = ydKey; loadFeedingDay(); switchTab('diet'); };
-      feedPrev.style.cursor = 'pointer';
     } else if (todayEntry && (todayEntry.breakfast || todayEntry.lunch || todayEntry.dinner || todayEntry.snack)) {
       const parts = [todayEntry.breakfast, todayEntry.lunch, todayEntry.dinner, todayEntry.snack].filter(Boolean);
       feedPrev.innerHTML = `<div class="info-strip is-sage">
@@ -6376,16 +6374,12 @@ function renderHistoryPreviews() {
         <div><strong class="tc-sage">Today · ${parts.length} meal${parts.length > 1 ? 's' : ''} logged</strong>
         <div class="t-sub">${parts.join(' · ').substring(0, 80)}${parts.join(' · ').length > 80 ? '…' : ''}</div></div>
       </div>`;
-      feedPrev.onclick = null;
-      feedPrev.style.cursor = 'default';
     } else {
-      feedPrev.innerHTML = `<div class="info-strip is-peach">
+      feedPrev.innerHTML = `<div class="info-strip is-peach tappable" data-action="switchTab" data-arg="diet">
         <span><svg class="zi"><use href="#zi-bowl"/></svg></span>
         <div><strong class="t-caution">No meals logged today yet</strong>
         <div class="t-sub">Tap to go to diet tab</div></div>
       </div>`;
-      feedPrev.onclick = () => switchTab('diet');
-      feedPrev.style.cursor = 'pointer';
     }
   }
 

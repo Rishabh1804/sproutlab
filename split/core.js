@@ -365,6 +365,25 @@ function init() {
     else if (action === 'logColdAction' && typeof logColdAction === 'function') logColdAction(arg2, _epGetSelectedTime(arg));
     else if (action === 'showHeatmapDetail' && typeof showHeatmapDetail === 'function') showHeatmapDetail(arg, Number(arg2), arg3);
     else if (action === 'toggleCorrEvidence' && typeof toggleCorrEvidence === 'function') toggleCorrEvidence(Number(arg));
+    // Issue #104 — HR-3 conversion of the diet.js combo-card compound onclicks
+    // (set comboInput value + run check) deferred by Polish-10c. data-arg
+    // user-content is escHtml-escaped per the Maren F-35-1 doctrine.
+    else if (action === 'applyComboQuery') {
+      const ci = document.getElementById('comboInput');
+      if (ci) { ci.value = arg; activateBtn('comboCheckBtn', true); checkFoodCombo(); }
+    }
+    else if (action === 'showComboHistory') {
+      const ci = document.getElementById('comboInput');
+      if (ci) ci.value = arg;
+      const hit = comboHistory.find(x => x.q === arg);
+      if (hit) renderComboResult(hit.result);
+    }
+    else if (action === 'openFeedingDay') {
+      const fd = document.getElementById('feedingDate');
+      if (fd) fd.value = arg;
+      loadFeedingDay();
+      switchTab('diet');
+    }
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();

@@ -17405,6 +17405,25 @@ function init() {
     else if (action === 'logColdAction' && typeof logColdAction === 'function') logColdAction(arg2, _epGetSelectedTime(arg));
     else if (action === 'showHeatmapDetail' && typeof showHeatmapDetail === 'function') showHeatmapDetail(arg, Number(arg2), arg3);
     else if (action === 'toggleCorrEvidence' && typeof toggleCorrEvidence === 'function') toggleCorrEvidence(Number(arg));
+    // Issue #104 — HR-3 conversion of the diet.js combo-card compound onclicks
+    // (set comboInput value + run check) deferred by Polish-10c. data-arg
+    // user-content is escHtml-escaped per the Maren F-35-1 doctrine.
+    else if (action === 'applyComboQuery') {
+      const ci = document.getElementById('comboInput');
+      if (ci) { ci.value = arg; activateBtn('comboCheckBtn', true); checkFoodCombo(); }
+    }
+    else if (action === 'showComboHistory') {
+      const ci = document.getElementById('comboInput');
+      if (ci) ci.value = arg;
+      const hit = comboHistory.find(x => x.q === arg);
+      if (hit) renderComboResult(hit.result);
+    }
+    else if (action === 'openFeedingDay') {
+      const fd = document.getElementById('feedingDate');
+      if (fd) fd.value = arg;
+      loadFeedingDay();
+      switchTab('diet');
+    }
     else if (action === 'editUpcomingVaccDate') editUpcomingVaccDate();
     else if (action === 'openMedModal') openMedModal();
     else if (action === 'toggleVisitForm') toggleVisitForm();
@@ -23209,7 +23228,7 @@ function renderRemindersAndAlerts() {
   const ydEntry = feedingData[ydKey];
   const ydFeedMissing = !ydEntry || (!ydEntry.breakfast && !ydEntry.lunch && !ydEntry.dinner && !ydEntry.snack);
   if (ydFeedMissing) {
-    html += `<div class="info-strip is-warn tappable" onclick="document.getElementById('feedingDate').value='${ydKey}';loadFeedingDay();switchTab('diet');">
+    html += `<div class="info-strip is-warn tappable" data-action="openFeedingDay" data-arg="${ydKey}">
       <span class="info-strip-icon"><svg class="zi"><use href="#zi-warn"/></svg></span>
       <div><strong class="tc-warn">Yesterday's meals not logged</strong>
       <div class="t-sub">${formatDate(ydKey)} · Tap to log retroactively</div></div>
@@ -28888,13 +28907,11 @@ function renderHistoryPreviews() {
     const todayMissing = !todayEntry || (!todayEntry.breakfast && !todayEntry.lunch && !todayEntry.dinner && !todayEntry.snack);
 
     if (ydMissing) {
-      feedPrev.innerHTML = `<div class="info-strip is-warn">
+      feedPrev.innerHTML = `<div class="info-strip is-warn tappable" data-action="openFeedingDay" data-arg="${ydKey}">
         <span><svg class="zi"><use href="#zi-warn"/></svg></span>
         <div><strong class="tc-warn">Yesterday not logged</strong>
         <div class="t-sub">${formatDate(ydKey)} · Tap to log retroactively</div></div>
       </div>`;
-      feedPrev.onclick = () => { document.getElementById('feedingDate').value = ydKey; loadFeedingDay(); switchTab('diet'); };
-      feedPrev.style.cursor = 'pointer';
     } else if (todayEntry && (todayEntry.breakfast || todayEntry.lunch || todayEntry.dinner || todayEntry.snack)) {
       const parts = [todayEntry.breakfast, todayEntry.lunch, todayEntry.dinner, todayEntry.snack].filter(Boolean);
       feedPrev.innerHTML = `<div class="info-strip is-sage">
@@ -28902,16 +28919,12 @@ function renderHistoryPreviews() {
         <div><strong class="tc-sage">Today · ${parts.length} meal${parts.length > 1 ? 's' : ''} logged</strong>
         <div class="t-sub">${parts.join(' · ').substring(0, 80)}${parts.join(' · ').length > 80 ? '…' : ''}</div></div>
       </div>`;
-      feedPrev.onclick = null;
-      feedPrev.style.cursor = 'default';
     } else {
-      feedPrev.innerHTML = `<div class="info-strip is-peach">
+      feedPrev.innerHTML = `<div class="info-strip is-peach tappable" data-action="switchTab" data-arg="diet">
         <span><svg class="zi"><use href="#zi-bowl"/></svg></span>
         <div><strong class="t-caution">No meals logged today yet</strong>
         <div class="t-sub">Tap to go to diet tab</div></div>
       </div>`;
-      feedPrev.onclick = () => switchTab('diet');
-      feedPrev.style.cursor = 'pointer';
     }
   }
 
@@ -32580,7 +32593,7 @@ function renderComboQuickChips() {
 
   el.innerHTML = `<div style="font-size:var(--fs-sm);color:var(--light);margin-bottom:5px;width:100%;">Try asking:</div>` +
     chips.map(c =>
-      `<span class="chip ${c.cls}" onclick="document.getElementById('comboInput').value='${c.text.replace(/'/g, "\\'")}';activateBtn('comboCheckBtn',true);checkFoodCombo()">${c.text}</span>`
+      `<span class="chip ${c.cls}" data-action="applyComboQuery" data-arg="${escHtml(c.text)}">${c.text}</span>`
     ).join('');
 }
 
@@ -33005,7 +33018,7 @@ function renderComboResult(r) {
       html += `<div class="fx-col g4">`;
       pairings.forEach(p => {
         const gapNote = p.gapsFilled && p.gapsFilled.length > 0 ? ` · fills ${p.gapsFilled.join(', ')}` : '';
-        html += `<div class="sp-pair-card ptr"  onclick="document.getElementById('comboInput').value='${escHtml(queryFoods.join(' + '))} + ${escHtml(p.partner)}';activateBtn('comboCheckBtn',true);checkFoodCombo();">
+        html += `<div class="sp-pair-card ptr" data-action="applyComboQuery" data-arg="${escHtml(queryFoods.join(' + ') + ' + ' + p.partner)}">
           <div class="sp-pair-foods">${p.emoji} Add <strong>${escHtml(p.partner)}</strong></div>
           <div class="sp-pair-reason">${escHtml(p.reason)}${gapNote}</div>
           <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
@@ -33049,7 +33062,7 @@ function renderComboHistory() {
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
   comboHistory.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
-    html += `<div class="combo-hist-item" onclick="document.getElementById('comboInput').value='${h.q.replace(/'/g, "\\'")}';renderComboResult(comboHistory.find(x=>x.q==='${h.q.replace(/'/g, "\\'")}').result)">
+    html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>
       <div class="combo-hist-a">${escHtml(h.result.headline)}</div>
     </div>`;

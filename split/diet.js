@@ -425,7 +425,7 @@ function renderComboQuickChips() {
 
   el.innerHTML = `<div style="font-size:var(--fs-sm);color:var(--light);margin-bottom:5px;width:100%;">Try asking:</div>` +
     chips.map(c =>
-      `<span class="chip ${c.cls}" onclick="document.getElementById('comboInput').value='${c.text.replace(/'/g, "\\'")}';activateBtn('comboCheckBtn',true);checkFoodCombo()">${c.text}</span>`
+      `<span class="chip ${c.cls}" data-action="applyComboQuery" data-arg="${escHtml(c.text)}">${c.text}</span>`
     ).join('');
 }
 
@@ -850,7 +850,7 @@ function renderComboResult(r) {
       html += `<div class="fx-col g4">`;
       pairings.forEach(p => {
         const gapNote = p.gapsFilled && p.gapsFilled.length > 0 ? ` · fills ${p.gapsFilled.join(', ')}` : '';
-        html += `<div class="sp-pair-card ptr"  onclick="document.getElementById('comboInput').value='${escHtml(queryFoods.join(' + '))} + ${escHtml(p.partner)}';activateBtn('comboCheckBtn',true);checkFoodCombo();">
+        html += `<div class="sp-pair-card ptr" data-action="applyComboQuery" data-arg="${escHtml(queryFoods.join(' + ') + ' + ' + p.partner)}">
           <div class="sp-pair-foods">${p.emoji} Add <strong>${escHtml(p.partner)}</strong></div>
           <div class="sp-pair-reason">${escHtml(p.reason)}${gapNote}</div>
           <div><span class="sp-pair-type sp-type-${p.type}">${p.type}</span></div>
@@ -894,7 +894,7 @@ function renderComboHistory() {
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
   comboHistory.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
-    html += `<div class="combo-hist-item" onclick="document.getElementById('comboInput').value='${h.q.replace(/'/g, "\\'")}';renderComboResult(comboHistory.find(x=>x.q==='${h.q.replace(/'/g, "\\'")}').result)">
+    html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>
       <div class="combo-hist-a">${escHtml(h.result.headline)}</div>
     </div>`;
