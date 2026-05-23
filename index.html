@@ -2,7 +2,7 @@ audit-emoji.sh [default (5 surfaced ranges)]: 0 HR-1 violations across split, in
 audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)
 audit-resolve-shield: PASS (4 resolve-caller(s) carry the explicit `'Resolve'` btnText shield per V-M-41 doctrine)
 audit-viz-smoke: PASS (4 ids + 5 tokens) across template.html + styles.css
-[bump-version] 2026.05.23-7 → 2026.05.23-8
+[bump-version] 2026.05.23-8 → 2026.05.23-9
 [poop-reference] wrote /home/user/sproutlab/docs/POOP_COLOR_REFERENCE.html
 [careticket-sm] wrote /home/user/sproutlab/docs/CARETICKET_STATE_MACHINE.html — 6 transitions, 0 drift flags
 <!DOCTYPE html>
@@ -17253,7 +17253,7 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
-    if (!mTime || !mFoods || mFoods === '—skipped—' || mFoods === '—skipped—') return;
+    if (!mTime || !mFoods || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
     var delta = mMin - targetMin; // signed: negative = meal before dose

@@ -164,7 +164,7 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
-    if (!mTime || !mFoods || mFoods === '—skipped—' || mFoods === '—skipped—') return;
+    if (!mTime || !mFoods || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
     var delta = mMin - targetMin; // signed: negative = meal before dose
