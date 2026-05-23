@@ -3200,8 +3200,12 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
     const core = await (await request.get('/split/core.js')).text();
     const escHtmlBody = core.match(/function escHtml\(s\)\s*\{[\s\S]*?\n\}/);
     expect(escHtmlBody, 'escHtml definition found in core.js').not.toBeNull();
-    expect(escHtmlBody![0].includes(`replace(/"/g,'&quot;')`),
-      `escHtml must escape " → &quot; (issue #107 V-K-14). Body was:\n${escHtmlBody?.[0]}`)
+    // Tolerant of whitespace and quote-delimiter variation (Kael V-K-17):
+    // a future reformat like `replace(/"/g, "&quot;")` or extra spaces must
+    // still satisfy the guard so long as the semantic `"` → `&quot;` survives.
+    const quotEscapePattern = /\.replace\(\s*\/"\/g\s*,\s*['"]&quot;['"]\s*\)/;
+    expect(quotEscapePattern.test(escHtmlBody![0]),
+      `escHtml must escape " → &quot; (issue #107 V-K-14). Body was:\n${escHtmlBody![0]}`)
       .toBeTruthy();
   });
 });
