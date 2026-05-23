@@ -2634,7 +2634,10 @@ function migrateScrapbookIds() {
 
 function escHtml(s) {
   if (typeof s !== 'string') s = s == null ? '' : String(s);
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  // Escapes & < > " \n — covers HTML body context and double-quoted attribute
+  // context. The " → &quot; closes the F-35-1 data-arg corner per issue #107
+  // (a literal " in user content would otherwise break out of data-arg="…").
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
 }
 // V-K-10 (PR #75 carry-forward) — iconText(name, text) returns raw HTML:
 // `zi(name) + ' ' + escHtml(text)`. The text component is escaped at the

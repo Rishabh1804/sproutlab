@@ -3158,17 +3158,55 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
     // user-content data-arg / data-arg2 positions; apostrophe in double-
     // quoted HTML attribute is parser-safe; escHtml leaves apostrophe
     // literal; dataset.arg returns clean string.
-    const homeRes = await request.get('/split/home.js');
+    //
+    // #107 extension: also scan diet.js — PR #106 moved user-content
+    // data-arg escaping into the combo-card render sites (c.text, h.q,
+    // p.partner, queryFoods), so the doctrine guard now reaches both
+    // files Maren governs the render boundaries of.
+    const [homeRes, dietRes] = await Promise.all([
+      request.get('/split/home.js'),
+      request.get('/split/diet.js'),
+    ]);
     const home = await homeRes.text();
+    const diet = await dietRes.text();
 
     // Affected fields: m.name (medication), nextMilestone.text (milestone),
     // val (food meal value), f.name (food name), comboStr (combo string),
     // s.partner (synergy partner food name).
-    const buggyPattern = /data-arg2?="\$\{escAttr\((m\.name|nextMilestone\.text|comboStr|s\.partner|f\.name|val)\b/g;
-    const violations = home.match(buggyPattern) || [];
-    expect(violations,
-      `Polish-10b r2: zero escAttr in user-content data-arg positions (Maren F-35-1 fix). Found: ${violations.join(' | ')}`)
+    const buggyPatternHome = /data-arg2?="\$\{escAttr\((m\.name|nextMilestone\.text|comboStr|s\.partner|f\.name|val)\b/g;
+    // diet.js user-content fields: c.text (combo quick-chip), h.q (combo
+    // history query), p.partner (synergy partner), queryFoods (parsed combo).
+    const buggyPatternDiet = /data-arg2?="\$\{escAttr\((c\.text|h\.q|p\.partner|queryFoods)\b/g;
+    const homeViolations = home.match(buggyPatternHome) || [];
+    const dietViolations = diet.match(buggyPatternDiet) || [];
+    expect(homeViolations,
+      `home.js: zero escAttr in user-content data-arg positions (Maren F-35-1 fix). Found: ${homeViolations.join(' | ')}`)
       .toEqual([]);
+    expect(dietViolations,
+      `diet.js: zero escAttr in user-content data-arg positions (#107 coverage extension). Found: ${dietViolations.join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('regression-guard (#107 V-K-14) — escHtml escapes " for double-quoted attribute safety', async ({ request }) => {
+    // Issue #107 V-K-14 fix: escHtml now escapes " → &quot; so that
+    // data-arg="..." attributes carrying user-content are safe against
+    // attribute-breakout. Without this, a literal " in user content
+    // (e.g. a combo-history query like `sweet "tangy" sauce`) would
+    // terminate the attribute early; dataset.arg would arrive truncated
+    // and comboHistory.find(x => x.q === arg) would silently miss.
+    // The F-35-1 doctrine continues to mandate escHtml-not-escAttr for
+    // user-content data-arg; this guard locks in the " coverage that
+    // escHtml previously lacked.
+    const core = await (await request.get('/split/core.js')).text();
+    const escHtmlBody = core.match(/function escHtml\(s\)\s*\{[\s\S]*?\n\}/);
+    expect(escHtmlBody, 'escHtml definition found in core.js').not.toBeNull();
+    // Tolerant of whitespace and quote-delimiter variation (Kael V-K-17):
+    // a future reformat like `replace(/"/g, "&quot;")` or extra spaces must
+    // still satisfy the guard so long as the semantic `"` → `&quot;` survives.
+    const quotEscapePattern = /\.replace\(\s*\/"\/g\s*,\s*['"]&quot;['"]\s*\)/;
+    expect(quotEscapePattern.test(escHtmlBody![0]),
+      `escHtml must escape " → &quot; (issue #107 V-K-14). Body was:\n${escHtmlBody![0]}`)
+      .toBeTruthy();
   });
 });
 
