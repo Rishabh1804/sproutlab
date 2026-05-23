@@ -23,6 +23,8 @@ test('regression-guard-c1-no-duplicate-nutrition-keys: split/data.js NUTRITION b
   expect(endIdx).toBeGreaterThan(startIdx);
 
   const body = src.slice(startIdx, endIdx + 1);
+  // Single-quoted keys only — matches the project's NUTRITION-block convention.
+  // If a future PR introduces "double-quoted" keys, harden this regex.
   const keyRE = /^\s*'([^']+)'\s*:\s*\{/gm;
   const counts = new Map<string, number>();
   let m: RegExpExecArray | null;
@@ -77,6 +79,10 @@ test('regression-guard-c1-synonyms-not-in-nutrition: synonym keys are not declar
   await page.waitForTimeout(700);
 
   const r = await page.evaluate(() => {
+    // Asymmetric with the synonymToCanonical map above by design: this list
+    // is keys that previously LIVED in NUTRITION and were removed in C-1.
+    // 'yoghurt' belongs in the alias-resolve check (it's in _FOOD_ALIASES)
+    // but not here — it was never a NUTRITION key, only an alias.
     const removedSynonyms = ['yogurt', 'dahi', 'lauki', 'til', 'date (fruit)', 'lychee', 'kishmish', 'aliv'];
     return removedSynonyms.filter((k) => Object.prototype.hasOwnProperty.call(NUTRITION, k));
   });

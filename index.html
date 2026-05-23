@@ -48194,6 +48194,8 @@ function _iqRenderPicker() {
       var rHtml = '<div class="iq-new-section">';
       rHtml += '<div class="iq-new-label"><div class="icon icon-indigo">' + zi('sparkle') + '</div> New to try</div>';
       rHtml += '<div class="iq-group-chips">';
+      // INVARIANT: matches[] is sourced from Object.keys(NUTRITION) above —
+      // every entry is a live NUTRITION key, so NUTRITION[food] is defined.
       matches.slice(0, 12).forEach(function(food) {
         var display = food.charAt(0).toUpperCase() + food.slice(1);
         var nutrients = (NUTRITION[food].nutrients || []).slice(0, 3).join(', ');
