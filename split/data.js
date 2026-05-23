@@ -2250,7 +2250,7 @@ const NUTRITION = {
   'toor dal':       { nutrients:['protein','iron','folate','fibre','magnesium'], tags:['protein-rich','iron-rich'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
   'chana dal':      { nutrients:['protein','iron','folate','fibre','zinc','manganese','magnesium'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
   'urad dal':       { nutrients:['protein','iron','calcium','fibre','magnesium','phosphorus','potassium'], tags:['protein-rich','iron-rich','bone-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
-  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','blood-health','digestive'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
+  'rajma':          { nutrients:['protein','iron','fibre','folate','potassium','zinc'], tags:['protein-rich','iron-rich','blood-health'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins'] } },
 
   // ── VEGETABLES ──
   'carrot':         { nutrients:['vitamin A','beta-carotene','fibre','potassium','vitamin K'], tags:['eye-health','vitamin-A','immune-boost'], chem:{ fibre:'mixed', bioactives:['carotenoids'] } },
@@ -2289,14 +2289,14 @@ const NUTRITION = {
   'prune':          { nutrients:['fibre','sorbitol','iron','potassium','vitamin K'], tags:['constipation-relief','iron-rich','digestive'], chem:{ fibre:'mixed', bioactives:['sorbitol'] } },
   'coconut':        { nutrients:['healthy fats','fibre','manganese','copper','iron','MCTs'], tags:['healthy-fats','energy','brain-health'], chem:{ fibre:'insoluble', bioactives:['medium-chain fats'] } },
   'lemon':          { nutrients:['vitamin C','citric acid','potassium'], tags:['vitamin-C','immune-boost','iron-absorption'], chem:{ fibre:'minimal', bioactives:['flavonoids'] } },
-  'amla':           { nutrients:['vitamin C','iron','fibre','antioxidants','calcium','chromium'], tags:['vitamin-C','immune-boost','iron-absorption','iron-rich','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['tannins'], bioactives:['polyphenols'] } },
+  'amla':           { nutrients:['vitamin C','iron','fibre','antioxidants','calcium','chromium'], tags:['vitamin-C','immune-boost','iron-absorption','antioxidant'], chem:{ fibre:'mixed', antiNutrients:['tannins'], bioactives:['polyphenols'] } },
 
   // ── DAIRY & FATS ──
   'ghee':           { nutrients:['healthy fats','fat-soluble vitamins','butyrate','vitamin A','vitamin D','omega-3'], tags:['healthy-fats','digestive','brain-health','bone-health'], chem:{ fibre:'none', bioactives:['butyrate','conjugated linoleic acid'] } },
   'curd':           { nutrients:['protein','calcium','probiotics','vitamin B12','phosphorus','zinc'], tags:['gut-health','bone-health','protein-rich','immune-boost','fermented'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
   'paneer':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin B12','selenium'], tags:['protein-rich','bone-health','brain-health','healthy-fats'], chem:{ fibre:'none' } },
-  'cheese':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin A','vitamin B12'], tags:['protein-rich','bone-health','healthy-fats','brain-health'], chem:{ fibre:'none' } },
-  'butter':         { nutrients:['healthy fats','fat-soluble vitamins','vitamin A','vitamin D','calcium'], tags:['healthy-fats','energy','brain-health','vitamin-A','bone-health'], chem:{ fibre:'none', bioactives:['butyrate'] } },
+  'cheese':         { nutrients:['protein','calcium','phosphorus','healthy fats','vitamin A','vitamin B12'], tags:['protein-rich','bone-health','healthy-fats'], chem:{ fibre:'none' } },
+  'butter':         { nutrients:['healthy fats','fat-soluble vitamins','vitamin A'], tags:['healthy-fats','energy','vitamin-A'], chem:{ fibre:'none', bioactives:['butyrate'] } },
   'coconut oil':    { nutrients:['healthy fats','lauric acid','MCTs'], tags:['healthy-fats','brain-health','immune-boost','energy'], chem:{ fibre:'none', bioactives:['medium-chain fats'] } },
 
   // ── NUTS & SEEDS (powdered/soaked for babies) ──
