@@ -2293,6 +2293,50 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .supp-skip-btn:hover { border-color:var(--rose); color:var(--rose); background:var(--rose-light); }
 
+/* Vit D3 tracking v1 — done-state card, inline time-edit, and pattern card */
+.supp-alert-done {
+  background:var(--sage-light);
+  border-left-color:var(--sage);
+}
+.supp-alert-done .supp-alert-title { color:var(--tc-sage); }
+.supp-alert-done .supp-alert-detail { color:var(--tc-sage); }
+.supp-check-btn-alt {
+  background:transparent;
+  color:var(--tc-sage);
+  border:1.5px solid var(--sage);
+}
+.supp-check-btn-alt:hover { background:var(--sage-light); }
+.supp-time-input {
+  font-family:'Nunito',sans-serif; font-size:var(--fs-base);
+  padding:var(--sp-6) var(--sp-10); border-radius:var(--r-md);
+  border:1.5px solid var(--border); background:var(--bg);
+  color:var(--text); min-height:40px;
+}
+.supp-fat-badge {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  font-size:var(--fs-sm); color:var(--tc-sage); font-weight:600;
+}
+.supp-fat-badge-neutral { color:var(--mid); font-weight:400; }
+.supp-adjust-btn {
+  font-size:var(--fs-sm); padding:var(--sp-4) var(--sp-10);
+  min-height:auto;
+}
+.med-d3-summary {
+  padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
+  font-size:var(--fs-base); color:var(--mid);
+}
+.med-d3-summary-row { padding:var(--sp-2) 0; }
+.med-d3-log {
+  padding-top:var(--sp-6); border-top:1px solid var(--border);
+  font-size:var(--fs-sm); line-height:var(--lh-normal);
+}
+.med-d3-log-row {
+  display:flex; gap:var(--sp-12); padding:var(--sp-2) 0;
+}
+.med-d3-log-date {
+  min-width:80px; color:var(--mid); font-weight:400;
+}
+
 /* ── Home stat pills ── */
 /* ── Stat pills grid — balanced sizing ── */
 .stat-pills-grid {
@@ -10451,6 +10495,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="med-list" id="medList"></div>
       </div>
 
+      <!-- VIT D3 14-DAY PATTERN -->
+      <div class="card card-info col-full" id="medD3PatternCard">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D3 — 14-day pattern</div>
+        </div>
+        <div id="medD3PatternBody"></div>
+      </div>
+
       <!-- VACCINATION COVERAGE CHECK -->
       <div class="card card-info col-full" id="medVaccCoverage">
         <div class="card-header" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
@@ -17093,6 +17145,122 @@ function save(key, val) {
 }
 
 // ─────────────────────────────────────────
+// MED-CHECK SCHEMA HELPERS — v1 Vit D3 tracking
+// ─────────────────────────────────────────
+// medChecks[date][medName] accepts two shapes (backwards-compat, non-destructive migration):
+//   • Legacy string: 'done:HH:MM' | 'done:late' | 'done' | 'skipped'  — HH:MM was tap-time
+//   • New object: { status, givenAt, loggedAt, withFat, fatFood, fatDelta }
+// Every reader migrates via parseMedCheck() so writers can emit the new shape unconditionally.
+function parseMedCheck(val) {
+  if (!val) return null;
+  if (typeof val === 'object') {
+    return {
+      status:   val.status || null,
+      givenAt:  val.givenAt || null,
+      loggedAt: val.loggedAt || null,
+      withFat:  typeof val.withFat === 'boolean' ? val.withFat : null,
+      fatFood:  val.fatFood || null,
+      fatDelta: typeof val.fatDelta === 'number' ? val.fatDelta : null,
+    };
+  }
+  if (typeof val !== 'string') return null;
+  if (val === 'skipped') return { status:'skipped', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val === 'done:late' || val === 'done') return { status:'late', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val.indexOf('done:') === 0) {
+    var t = val.slice(5);
+    var isTime = /^\d{1,2}:\d{2}$/.test(t);
+    return {
+      status: isTime ? 'done' : (t === 'late' ? 'late' : 'done'),
+      givenAt: isTime ? t : null,
+      loggedAt: null, // legacy didn't separate; givenAt was actually tap-time but treat as best-known
+      withFat: null,
+      fatFood: null,
+      fatDelta: null,
+    };
+  }
+  return null;
+}
+function medCheckIsDone(val) {
+  var p = parseMedCheck(val);
+  return !!(p && (p.status === 'done' || p.status === 'late'));
+}
+function medCheckSkipped(val) {
+  var p = parseMedCheck(val);
+  return !!(p && p.status === 'skipped');
+}
+function medCheckGivenAt(val) {
+  var p = parseMedCheck(val);
+  return p ? p.givenAt : null;
+}
+
+// Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
+// the C-1.5 factuality work flows through automatically — no second source of truth.
+var _fatBearingFoodNamesCache = null;
+function _getFatBearingFoodNames() {
+  if (_fatBearingFoodNamesCache) return _fatBearingFoodNamesCache;
+  var out = [];
+  if (typeof NUTRITION === 'object' && NUTRITION) {
+    Object.keys(NUTRITION).forEach(function(name) {
+      var e = NUTRITION[name];
+      if (!e) return;
+      var tags = e.tags || [];
+      var nuts = e.nutrients || [];
+      if (tags.indexOf('healthy-fats') >= 0 || nuts.indexOf('healthy fats') >= 0 ||
+          nuts.indexOf('omega-3') >= 0 || nuts.indexOf('MCTs') >= 0) {
+        out.push(name);
+      }
+    });
+  }
+  // Indian-prep augmentation: paratha carries ghee in default preparation.
+  if (out.indexOf('paratha') < 0) out.push('paratha');
+  _fatBearingFoodNamesCache = out;
+  return out;
+}
+function _hhmmToMinutes(s) {
+  if (!s) return -1;
+  var m = String(s).match(/^(\d{1,2}):(\d{2})/);
+  return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : -1;
+}
+
+// Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
+// Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
+function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
+  var win = (typeof windowMinutes === 'number') ? windowMinutes : 60;
+  var result = { withFat:false, fatFood:null, fatDelta:null };
+  var targetMin = _hhmmToMinutes(timeStr);
+  if (targetMin < 0) return result;
+  if (typeof feedingData !== 'object' || !feedingData) return result;
+  var day = feedingData[dateStr];
+  if (!day) return result;
+  var fatSet = _getFatBearingFoodNames();
+  var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+  var best = null;
+  meals.forEach(function(m) {
+    var mTime = day[m + '_time'];
+    var mFoods = day[m];
+    if (!mTime || !mFoods || mFoods === '—skipped—') return;
+    var mMin = _hhmmToMinutes(mTime);
+    if (mMin < 0) return;
+    var delta = mMin - targetMin; // signed: negative = meal before dose
+    if (Math.abs(delta) > win) return;
+    var lower = String(mFoods).toLowerCase();
+    var matched = null;
+    for (var i = 0; i < fatSet.length; i++) {
+      if (lower.indexOf(fatSet[i]) >= 0) { matched = fatSet[i]; break; }
+    }
+    if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
+      best = { food: matched, delta: delta };
+    }
+  });
+  if (best) {
+    result.withFat = true;
+    result.fatFood = best.food;
+    result.fatDelta = best.delta;
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────
 // DEFAULT DATA (pre-loaded)
 // ─────────────────────────────────────────
 const DOB        = new Date(2025, 8, 4, 17, 9); // Sep 4, 2025 at 17:09 IST
@@ -23226,39 +23394,57 @@ function renderRemindersAndAlerts() {
     </div>`;
   }
 
-  // ── 4. TODAY'S MED REMINDERS — only show unresolved ones ──
+  // ── 4. TODAY'S MED REMINDERS — show pending with two-button + Adjust on done ──
+  // Vit D3 tracking v1: pending state offers "Done now" + "Done at..." + Skip.
+  // Done state renders captured givenAt + with-fat context with a reachable Adjust.
   let allTodayResolved = true;
   activeMeds.forEach((m, idx) => {
     const dayLog = medChecks[todayStr] || {};
     const status = dayLog[m.name];
-    const isDone = status && status.startsWith('done:');
-    const isSkipped = status === 'skipped';
+    const parsed = parseMedCheck(status);
+    const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
+    const isSkipped = !!(parsed && parsed.status === 'skipped');
     const isResolved = isDone || isSkipped;
     if (!isResolved) allTodayResolved = false;
 
     if (!isResolved) {
-      // Only show unresolved meds
       html += `
       <div class="supp-alert" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('warn')}</div>
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done</button>
+            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
+            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done at...</button>
             <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${escHtml(m.freq || 'As prescribed')}</div>
       </div>`;
+    } else if (isDone) {
+      const givenAt = parsed && parsed.givenAt ? parsed.givenAt : null;
+      const withFat = parsed && parsed.withFat === true;
+      const fatFood = parsed && parsed.fatFood ? parsed.fatFood : null;
+      const timeText = givenAt ? 'Done at ' + escHtml(givenAt) : 'Done today';
+      const fatBadge = withFat && fatFood
+        ? `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`
+        : (givenAt && !withFat ? `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal nearby</span>` : '');
+      html += `
+      <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('check')}</div>
+          <div class="supp-alert-title">${timeText} — ${escHtml(m.name)}</div>
+          <div class="supp-alert-action">
+            <button class="supp-skip-btn supp-adjust-btn" data-action="openMedAdjust" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Adjust</button>
+          </div>
+        </div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
+      </div>`;
     }
   });
 
-  // If all today's meds are resolved, show a compact summary instead
-  if (activeMeds.length > 0 && allTodayResolved) {
-    html += `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 12px;border-radius:var(--r-lg);background:var(--sage-light);font-size:var(--fs-base);color:var(--tc-sage);">
-      <span><svg class="zi"><use href="#zi-check"/></svg></span> All medications done for today
-    </div>`;
-  }
+  // Vit D3 tracking v1: the all-resolved banner is redundant now that done-state
+  // cards render their own captured time + with-fat context. Removed.
 
   // v2.3: Store HTML — renderHomeContextAlerts will combine and render both
   window._remindersHTML = html;
@@ -23405,12 +23591,25 @@ function fmtTips(s) {
           .replace(/\{\{NO\}\}/g, '<span class="icon-rose">' + zi('warn') + '</span>');
 }
 
-function markMedDone(name, idx) {
+// Vit D3 tracking v1: markMedDone emits the new object schema with
+// actual administration time (givenAt) + auto-detected fat-meal context.
+// givenTime is optional — defaults to "now" (the "Done now" button path).
+// The "Done at..." flow passes a parent-stated HH:MM string.
+function markMedDone(name, idx, givenTime) {
   const todayStr = today();
   const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  const loggedAt = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  const givenAt = (typeof givenTime === 'string' && /^\d{1,2}:\d{2}$/.test(givenTime)) ? givenTime : loggedAt;
+  const fat = _detectFatContextNearTime(givenAt, todayStr);
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
-  medChecks[todayStr][name] = 'done:' + timeStr;
+  medChecks[todayStr][name] = {
+    status:   'done',
+    givenAt:  givenAt,
+    loggedAt: loggedAt,
+    withFat:  fat.withFat,
+    fatFood:  fat.fatFood,
+    fatDelta: fat.fatDelta,
+  };
   save(KEYS.medChecks, medChecks);
   _tsfMarkDirty();
   _islMarkDirty('medical');
@@ -23422,6 +23621,77 @@ function markMedDone(name, idx) {
   } else {
     renderRemindersAndAlerts(); renderHomeContextAlerts();
   }
+}
+
+// Open the inline "Done at..." time-edit in the reminder card. Reveals a
+// time-input + Save/Cancel pair inside the card without a modal.
+function openMedDoneAt(name, idx) {
+  const card = document.getElementById('supp-alert-' + idx);
+  if (!card) return;
+  const actionRow = card.querySelector('.supp-alert-action');
+  if (!actionRow || actionRow.dataset.editing === '1') return;
+  actionRow.dataset.editing = '1';
+  const now = new Date();
+  const nowStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); // HH:MM 24h for input
+  actionRow.innerHTML =
+    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(nowStr) + '">' +
+    '<button class="supp-check-btn" data-action="confirmMedDoneAt" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
+    '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
+}
+function confirmMedDoneAt(name, idx) {
+  const input = document.getElementById('supp-time-' + idx);
+  const picked = input && input.value ? input.value : null;
+  markMedDone(name, idx, picked);
+}
+function cancelMedDoneAt(idx) {
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+
+// Adjust the administration time of an already-logged dose. Re-runs with-fat
+// detection on the new givenAt. Works on today's dose (the only adjust surface
+// in v1; past-day adjusts continue to use resolveMissedMed).
+function adjustMedTime(name, idx, newTime) {
+  const todayStr = today();
+  if (!medChecks[todayStr] || !medChecks[todayStr][name]) return;
+  if (!newTime || !/^\d{1,2}:\d{2}$/.test(newTime)) return;
+  const existing = parseMedCheck(medChecks[todayStr][name]);
+  if (!existing || existing.status === 'skipped') return;
+  const fat = _detectFatContextNearTime(newTime, todayStr);
+  const now = new Date();
+  medChecks[todayStr][name] = {
+    status:   existing.status,
+    givenAt:  newTime,
+    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+    withFat:  fat.withFat,
+    fatFood:  fat.fatFood,
+    fatDelta: fat.fatDelta,
+  };
+  save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
+  _islMarkDirty('medical');
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+function openMedAdjust(name, idx) {
+  const card = document.getElementById('supp-alert-' + idx);
+  if (!card) return;
+  const actionRow = card.querySelector('.supp-alert-action');
+  if (!actionRow || actionRow.dataset.editing === '1') return;
+  actionRow.dataset.editing = '1';
+  const cur = parseMedCheck(medChecks[today()] && medChecks[today()][name]);
+  const curAt = (cur && cur.givenAt) || new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  // Re-format HH:MM (handle "08:42 AM" legacy by stripping any AM/PM tail)
+  const norm = String(curAt).replace(/\s*(AM|PM)\s*$/i, '');
+  actionRow.innerHTML =
+    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(norm) + '">' +
+    '<button class="supp-check-btn" data-action="confirmMedAdjust" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
+    '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
+}
+function confirmMedAdjust(name, idx) {
+  const input = document.getElementById('supp-time-' + idx);
+  const picked = input && input.value ? input.value : null;
+  adjustMedTime(name, idx, picked);
 }
 
 function markMedSkipped(name, idx) {
@@ -27685,24 +27955,19 @@ function _obIsTeethingActive() {
 }
 
 function _obCheckVitD3() {
-  // Check if Vit D3 hasn't been given today
+  // Returns true if Vit D3 needs attention (not given today or no D3 med tracked).
+  // Schema-aware via medCheckIsDone (handles both legacy 'done:HH:MM' string and new object shape).
   var todayStr = today();
   var dayEntry = medChecks ? medChecks[todayStr] : null;
   if (!dayEntry) return true;
-  // Check all meds for D3
   var d3Given = false;
-  var d3Found = false;
   var activeMeds = (meds || []).filter(function(m) { return m.active; });
   activeMeds.forEach(function(m) {
     if (m.name && m.name.toLowerCase().indexOf('d3') >= 0) {
-      d3Found = true;
-      var status = dayEntry[m.name];
-      if (status && status.indexOf('done') === 0) d3Given = true;
+      if (medCheckIsDone(dayEntry[m.name])) d3Given = true;
     }
   });
-  // If no D3 med tracked, or D3 not given today
-  if (!d3Given) return true;
-  return false;
+  return !d3Given;
 }
 
 function _obGetNextVaccine() {
@@ -31205,11 +31470,23 @@ function renderTrendChips() {
   const total = Math.max(Object.keys(nutrientDays).length, 5);
   chips.push({ icon:zi('bowl'), label:'Nutrients', value: covered + '/' + total + ' groups', delta: covered >= total ? 'balanced' : 'gaps', cls: covered >= total ? 'tc-good' : 'tc-warn', tab:'diet' });
 
-  // Vitamin D3
+  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled)
   if (d3Med) {
     const todayStr = today();
-    const d3Done = medChecks[todayStr] && medChecks[todayStr][d3Med.name] && medChecks[todayStr][d3Med.name].startsWith('done:');
-    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: d3Done ? 'Done today' : 'Pending', delta: d3Done ? zi('check') : 'pending', cls: d3Done ? 'tc-good' : 'tc-warn', tab:'medical' });
+    const d3Val = medChecks[todayStr] && medChecks[todayStr][d3Med.name];
+    const d3Parsed = parseMedCheck(d3Val);
+    const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    let valueText, deltaText;
+    if (d3Done) {
+      const t = d3Parsed.givenAt;
+      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + d3Parsed.fatFood : '';
+      valueText = t ? ('Done at ' + t + fat) : 'Done today';
+      deltaText = zi('check');
+    } else {
+      valueText = 'Pending';
+      deltaText = 'pending';
+    }
+    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: valueText, delta: deltaText, cls: d3Done ? 'tc-good' : 'tc-warn', tab:'medical' });
   }
 
   let html = '';
@@ -40575,6 +40852,101 @@ function renderMeds() {
     `;
     list.appendChild(div);
   });
+  // Vit D3 tracking v1: refresh the 14-day pattern card whenever meds re-render.
+  renderMedD3PatternCard();
+}
+
+// Vit D3 tracking v1: 14-day pattern card.
+// Renders adherence %, usual-time band, with-fat rate, top fat pairing, current streak,
+// and a compact 14-day log. Hidden if no active D3 med tracked.
+function renderMedD3PatternCard() {
+  const card = document.getElementById('medD3PatternCard');
+  const body = document.getElementById('medD3PatternBody');
+  if (!card || !body) return;
+  const d3Med = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().indexOf('d3') >= 0);
+  if (!d3Med) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const todayStr = today();
+  // 14-day window ending today
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
+    days.push({ date: ds, parsed: parsed });
+  }
+  // Aggregate stats
+  const doneDays = days.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const skippedDays = days.filter(d => d.parsed && d.parsed.status === 'skipped');
+  const unloggedDays = days.filter(d => !d.parsed);
+  const adherence = days.length > 0 ? Math.round((doneDays.length / days.length) * 100) : 0;
+  // Usual-time band: take givenAt minutes, find central 80% range
+  const mins = doneDays.map(d => _hhmmToMinutes(d.parsed.givenAt)).filter(m => m >= 0).sort((a,b) => a-b);
+  let usualBand = null;
+  if (mins.length >= 3) {
+    const lo = mins[Math.floor(mins.length * 0.1)];
+    const hi = mins[Math.floor(mins.length * 0.9)];
+    usualBand = _minutesToHhmm(lo) + '–' + _minutesToHhmm(hi);
+  } else if (mins.length > 0) {
+    usualBand = _minutesToHhmm(mins[0]) + (mins.length > 1 ? '–' + _minutesToHhmm(mins[mins.length-1]) : '');
+  }
+  // With-fat rate
+  const withFatKnown = doneDays.filter(d => d.parsed.withFat === true || d.parsed.withFat === false);
+  const withFatCount = doneDays.filter(d => d.parsed.withFat === true).length;
+  const fatRate = withFatKnown.length > 0 ? Math.round((withFatCount / withFatKnown.length) * 100) : null;
+  // Top fat food
+  const fatFoodCounts = {};
+  doneDays.forEach(d => { if (d.parsed.fatFood) fatFoodCounts[d.parsed.fatFood] = (fatFoodCounts[d.parsed.fatFood] || 0) + 1; });
+  let topFatFood = null, topN = 0;
+  Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
+  // Streak: consecutive done-days ending today
+  let streak = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
+    else break;
+  }
+  // Build summary lines
+  const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
+  let summary = '<div class="med-d3-summary">';
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${days.length} days (${adherence}%)</strong></div>`;
+  if (usualBand) summary += `<div class="med-d3-summary-row">${zi('clock')} Usual time: ${escHtml(usualBand)}</div>`;
+  if (fatRate !== null) {
+    const fatCls = fatRate >= 70 ? 'tc-sage' : 'tc-warn';
+    summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
+  }
+  if (topFatFood) summary += `<div class="med-d3-summary-row">${zi('check')} Usually paired with: <strong>${escHtml(topFatFood)}</strong></div>`;
+  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} Current streak: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
+  if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
+  summary += '</div>';
+  // 14-day compact list (most-recent first)
+  let list = '<div class="med-d3-log">';
+  days.slice().reverse().forEach(d => {
+    const label = d.date === todayStr ? 'Today' : formatDate(d.date);
+    let row;
+    if (!d.parsed) {
+      row = `<span class="tc-warn">Not logged</span>`;
+    } else if (d.parsed.status === 'skipped') {
+      row = `<span class="tc-warn">Skipped</span>`;
+    } else {
+      const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
+      const fat = d.parsed.withFat === true && d.parsed.fatFood
+        ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
+        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal nearby</span>` : '');
+      row = t + fat;
+    }
+    list += `<div class="med-d3-log-row"><span class="med-d3-log-date">${escHtml(label)}</span><span>${row}</span></div>`;
+  });
+  list += '</div>';
+  body.innerHTML = summary + list;
+}
+
+// Helper: HH:MM minutes → "HH:MM" 24h string.
+function _minutesToHhmm(m) {
+  if (typeof m !== 'number' || m < 0) return '';
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 }
 
 function openMedModal() {
@@ -47278,18 +47650,27 @@ function _islMedicalData(startDate, endDate) {
   var suppTotal = 0;
   var d3Times = [];
 
+  // Vit D3 tracking v1: schema-aware via parseMedCheck (handles legacy string + new object shape).
+  // d3Times now also carries the with-fat context for downstream analysis surfaces.
+  var d3WithFat = 0;
+  var d3WithoutFat = 0;
+  var d3FatFoods = [];
   dates.forEach(function(ds) {
     var dayChecks = medChecks[ds];
     if (dayChecks) {
       var anyDone = false;
       Object.keys(dayChecks).forEach(function(name) {
-        var val = dayChecks[name];
-        if (typeof val === 'string' && val.startsWith('done')) {
+        var parsed = parseMedCheck(dayChecks[name]);
+        if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
           anyDone = true;
-          // Extract D3 time
           if (/d3|vitamin d/i.test(name)) {
-            var timePart = val.replace('done:', '').replace('done', '');
-            if (timePart) d3Times.push(timePart);
+            if (parsed.givenAt) d3Times.push(parsed.givenAt);
+            if (parsed.withFat === true) {
+              d3WithFat++;
+              if (parsed.fatFood) d3FatFoods.push(parsed.fatFood);
+            } else if (parsed.withFat === false) {
+              d3WithoutFat++;
+            }
           }
         }
       });
@@ -47320,11 +47701,26 @@ function _islMedicalData(startDate, endDate) {
 
   var medScore = calcMedicalScore();
 
+  var d3FatTotal = d3WithFat + d3WithoutFat;
+  var d3FatRate = d3FatTotal > 0 ? Math.round((d3WithFat / d3FatTotal) * 100) : null;
+  // Most-common fat food across the window (Mode of d3FatFoods)
+  var d3FatTopFood = null;
+  if (d3FatFoods.length > 0) {
+    var counts = {};
+    d3FatFoods.forEach(function(f) { counts[f] = (counts[f] || 0) + 1; });
+    var top = null, topN = 0;
+    Object.keys(counts).forEach(function(k) { if (counts[k] > topN) { top = k; topN = counts[k]; } });
+    d3FatTopFood = top;
+  }
   return {
     suppAdherence: suppTotal > 0 ? Math.round((suppDays / suppTotal) * 100) : null,
     suppDays: suppDays,
     suppTotal: suppTotal,
     d3Times: d3Times,
+    d3WithFat: d3WithFat,
+    d3WithoutFat: d3WithoutFat,
+    d3FatRate: d3FatRate,
+    d3FatTopFood: d3FatTopFood,
     vaccCompleted: completed.length,
     vaccUpcoming: upcoming.length > 0 ? upcoming[0] : null,
     growthInRange: rangeGrowth,
@@ -50314,7 +50710,13 @@ function _qaRoutine() {
   if (pp.totalCount > 0) items.push({ text: 'Poop: avg ' + pp.avgPerDay + '/day, mostly ' + (pp.mostCommonConsistency || 'normal'), signal: 'neutral', icon: zi('diaper') });
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
-  if (md.suppAdherence !== null) items.push({ text: 'Vit D3: ' + md.suppAdherence + '% adherence', signal: md.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn', icon: zi('pill') });
+  if (md.suppAdherence !== null) {
+    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
+      d3Text += ' · ' + md.d3FatRate + '% with fat';
+    }
+    items.push({ text: d3Text, signal: md.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn', icon: zi('pill') });
+  }
 
   var age = ageAt();
   return {
@@ -50541,9 +50943,14 @@ function _qaDoctorPrep() {
     items.push({ text: 'Next vaccine: ' + gd.vaccUpcoming.name + (vDays > 0 ? ' in ' + vDays + ' days' : ' \u2014 due now'), signal: vDays <= 3 ? 'action' : 'info' });
   }
 
-  // D3 adherence
+  // D3 adherence + with-fat enrichment (only if we have enough samples to be meaningful)
   if (gd.suppAdherence !== null) {
     items.push({ text: 'D3 adherence (30d): ' + gd.suppAdherence + '%', signal: gd.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn' });
+    if (gd.d3FatRate !== null && (gd.d3WithFat + gd.d3WithoutFat) >= 5) {
+      var fatText = 'D3 with-fat absorption (30d): ' + gd.d3FatRate + '% of doses';
+      if (gd.d3FatTopFood) fatText += ' · most often ' + gd.d3FatTopFood;
+      items.push({ text: fatText, signal: gd.d3FatRate >= 70 ? 'good' : 'info' });
+    }
   }
 
   // Recent concerns from last 7 days

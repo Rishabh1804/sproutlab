@@ -65,6 +65,122 @@ function save(key, val) {
 }
 
 // ─────────────────────────────────────────
+// MED-CHECK SCHEMA HELPERS — v1 Vit D3 tracking
+// ─────────────────────────────────────────
+// medChecks[date][medName] accepts two shapes (backwards-compat, non-destructive migration):
+//   • Legacy string: 'done:HH:MM' | 'done:late' | 'done' | 'skipped'  — HH:MM was tap-time
+//   • New object: { status, givenAt, loggedAt, withFat, fatFood, fatDelta }
+// Every reader migrates via parseMedCheck() so writers can emit the new shape unconditionally.
+function parseMedCheck(val) {
+  if (!val) return null;
+  if (typeof val === 'object') {
+    return {
+      status:   val.status || null,
+      givenAt:  val.givenAt || null,
+      loggedAt: val.loggedAt || null,
+      withFat:  typeof val.withFat === 'boolean' ? val.withFat : null,
+      fatFood:  val.fatFood || null,
+      fatDelta: typeof val.fatDelta === 'number' ? val.fatDelta : null,
+    };
+  }
+  if (typeof val !== 'string') return null;
+  if (val === 'skipped') return { status:'skipped', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val === 'done:late' || val === 'done') return { status:'late', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val.indexOf('done:') === 0) {
+    var t = val.slice(5);
+    var isTime = /^\d{1,2}:\d{2}$/.test(t);
+    return {
+      status: isTime ? 'done' : (t === 'late' ? 'late' : 'done'),
+      givenAt: isTime ? t : null,
+      loggedAt: null, // legacy didn't separate; givenAt was actually tap-time but treat as best-known
+      withFat: null,
+      fatFood: null,
+      fatDelta: null,
+    };
+  }
+  return null;
+}
+function medCheckIsDone(val) {
+  var p = parseMedCheck(val);
+  return !!(p && (p.status === 'done' || p.status === 'late'));
+}
+function medCheckSkipped(val) {
+  var p = parseMedCheck(val);
+  return !!(p && p.status === 'skipped');
+}
+function medCheckGivenAt(val) {
+  var p = parseMedCheck(val);
+  return p ? p.givenAt : null;
+}
+
+// Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
+// the C-1.5 factuality work flows through automatically — no second source of truth.
+var _fatBearingFoodNamesCache = null;
+function _getFatBearingFoodNames() {
+  if (_fatBearingFoodNamesCache) return _fatBearingFoodNamesCache;
+  var out = [];
+  if (typeof NUTRITION === 'object' && NUTRITION) {
+    Object.keys(NUTRITION).forEach(function(name) {
+      var e = NUTRITION[name];
+      if (!e) return;
+      var tags = e.tags || [];
+      var nuts = e.nutrients || [];
+      if (tags.indexOf('healthy-fats') >= 0 || nuts.indexOf('healthy fats') >= 0 ||
+          nuts.indexOf('omega-3') >= 0 || nuts.indexOf('MCTs') >= 0) {
+        out.push(name);
+      }
+    });
+  }
+  // Indian-prep augmentation: paratha carries ghee in default preparation.
+  if (out.indexOf('paratha') < 0) out.push('paratha');
+  _fatBearingFoodNamesCache = out;
+  return out;
+}
+function _hhmmToMinutes(s) {
+  if (!s) return -1;
+  var m = String(s).match(/^(\d{1,2}):(\d{2})/);
+  return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : -1;
+}
+
+// Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
+// Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
+function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
+  var win = (typeof windowMinutes === 'number') ? windowMinutes : 60;
+  var result = { withFat:false, fatFood:null, fatDelta:null };
+  var targetMin = _hhmmToMinutes(timeStr);
+  if (targetMin < 0) return result;
+  if (typeof feedingData !== 'object' || !feedingData) return result;
+  var day = feedingData[dateStr];
+  if (!day) return result;
+  var fatSet = _getFatBearingFoodNames();
+  var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+  var best = null;
+  meals.forEach(function(m) {
+    var mTime = day[m + '_time'];
+    var mFoods = day[m];
+    if (!mTime || !mFoods || mFoods === '—skipped—') return;
+    var mMin = _hhmmToMinutes(mTime);
+    if (mMin < 0) return;
+    var delta = mMin - targetMin; // signed: negative = meal before dose
+    if (Math.abs(delta) > win) return;
+    var lower = String(mFoods).toLowerCase();
+    var matched = null;
+    for (var i = 0; i < fatSet.length; i++) {
+      if (lower.indexOf(fatSet[i]) >= 0) { matched = fatSet[i]; break; }
+    }
+    if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
+      best = { food: matched, delta: delta };
+    }
+  });
+  if (best) {
+    result.withFat = true;
+    result.fatFood = best.food;
+    result.fatDelta = best.delta;
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────
 // DEFAULT DATA (pre-loaded)
 // ─────────────────────────────────────────
 const DOB        = new Date(2025, 8, 4, 17, 9); // Sep 4, 2025 at 17:09 IST

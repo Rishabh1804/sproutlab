@@ -4324,6 +4324,101 @@ function renderMeds() {
     `;
     list.appendChild(div);
   });
+  // Vit D3 tracking v1: refresh the 14-day pattern card whenever meds re-render.
+  renderMedD3PatternCard();
+}
+
+// Vit D3 tracking v1: 14-day pattern card.
+// Renders adherence %, usual-time band, with-fat rate, top fat pairing, current streak,
+// and a compact 14-day log. Hidden if no active D3 med tracked.
+function renderMedD3PatternCard() {
+  const card = document.getElementById('medD3PatternCard');
+  const body = document.getElementById('medD3PatternBody');
+  if (!card || !body) return;
+  const d3Med = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().indexOf('d3') >= 0);
+  if (!d3Med) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const todayStr = today();
+  // 14-day window ending today
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
+    days.push({ date: ds, parsed: parsed });
+  }
+  // Aggregate stats
+  const doneDays = days.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const skippedDays = days.filter(d => d.parsed && d.parsed.status === 'skipped');
+  const unloggedDays = days.filter(d => !d.parsed);
+  const adherence = days.length > 0 ? Math.round((doneDays.length / days.length) * 100) : 0;
+  // Usual-time band: take givenAt minutes, find central 80% range
+  const mins = doneDays.map(d => _hhmmToMinutes(d.parsed.givenAt)).filter(m => m >= 0).sort((a,b) => a-b);
+  let usualBand = null;
+  if (mins.length >= 3) {
+    const lo = mins[Math.floor(mins.length * 0.1)];
+    const hi = mins[Math.floor(mins.length * 0.9)];
+    usualBand = _minutesToHhmm(lo) + '–' + _minutesToHhmm(hi);
+  } else if (mins.length > 0) {
+    usualBand = _minutesToHhmm(mins[0]) + (mins.length > 1 ? '–' + _minutesToHhmm(mins[mins.length-1]) : '');
+  }
+  // With-fat rate
+  const withFatKnown = doneDays.filter(d => d.parsed.withFat === true || d.parsed.withFat === false);
+  const withFatCount = doneDays.filter(d => d.parsed.withFat === true).length;
+  const fatRate = withFatKnown.length > 0 ? Math.round((withFatCount / withFatKnown.length) * 100) : null;
+  // Top fat food
+  const fatFoodCounts = {};
+  doneDays.forEach(d => { if (d.parsed.fatFood) fatFoodCounts[d.parsed.fatFood] = (fatFoodCounts[d.parsed.fatFood] || 0) + 1; });
+  let topFatFood = null, topN = 0;
+  Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
+  // Streak: consecutive done-days ending today
+  let streak = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
+    else break;
+  }
+  // Build summary lines
+  const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
+  let summary = '<div class="med-d3-summary">';
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${days.length} days (${adherence}%)</strong></div>`;
+  if (usualBand) summary += `<div class="med-d3-summary-row">${zi('clock')} Usual time: ${escHtml(usualBand)}</div>`;
+  if (fatRate !== null) {
+    const fatCls = fatRate >= 70 ? 'tc-sage' : 'tc-warn';
+    summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
+  }
+  if (topFatFood) summary += `<div class="med-d3-summary-row">${zi('check')} Usually paired with: <strong>${escHtml(topFatFood)}</strong></div>`;
+  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} Current streak: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
+  if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
+  summary += '</div>';
+  // 14-day compact list (most-recent first)
+  let list = '<div class="med-d3-log">';
+  days.slice().reverse().forEach(d => {
+    const label = d.date === todayStr ? 'Today' : formatDate(d.date);
+    let row;
+    if (!d.parsed) {
+      row = `<span class="tc-warn">Not logged</span>`;
+    } else if (d.parsed.status === 'skipped') {
+      row = `<span class="tc-warn">Skipped</span>`;
+    } else {
+      const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
+      const fat = d.parsed.withFat === true && d.parsed.fatFood
+        ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
+        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal nearby</span>` : '');
+      row = t + fat;
+    }
+    list += `<div class="med-d3-log-row"><span class="med-d3-log-date">${escHtml(label)}</span><span>${row}</span></div>`;
+  });
+  list += '</div>';
+  body.innerHTML = summary + list;
+}
+
+// Helper: HH:MM minutes → "HH:MM" 24h string.
+function _minutesToHhmm(m) {
+  if (typeof m !== 'number' || m < 0) return '';
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 }
 
 function openMedModal() {

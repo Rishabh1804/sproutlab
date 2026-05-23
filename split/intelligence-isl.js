@@ -546,18 +546,27 @@ function _islMedicalData(startDate, endDate) {
   var suppTotal = 0;
   var d3Times = [];
 
+  // Vit D3 tracking v1: schema-aware via parseMedCheck (handles legacy string + new object shape).
+  // d3Times now also carries the with-fat context for downstream analysis surfaces.
+  var d3WithFat = 0;
+  var d3WithoutFat = 0;
+  var d3FatFoods = [];
   dates.forEach(function(ds) {
     var dayChecks = medChecks[ds];
     if (dayChecks) {
       var anyDone = false;
       Object.keys(dayChecks).forEach(function(name) {
-        var val = dayChecks[name];
-        if (typeof val === 'string' && val.startsWith('done')) {
+        var parsed = parseMedCheck(dayChecks[name]);
+        if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
           anyDone = true;
-          // Extract D3 time
           if (/d3|vitamin d/i.test(name)) {
-            var timePart = val.replace('done:', '').replace('done', '');
-            if (timePart) d3Times.push(timePart);
+            if (parsed.givenAt) d3Times.push(parsed.givenAt);
+            if (parsed.withFat === true) {
+              d3WithFat++;
+              if (parsed.fatFood) d3FatFoods.push(parsed.fatFood);
+            } else if (parsed.withFat === false) {
+              d3WithoutFat++;
+            }
           }
         }
       });
@@ -588,11 +597,26 @@ function _islMedicalData(startDate, endDate) {
 
   var medScore = calcMedicalScore();
 
+  var d3FatTotal = d3WithFat + d3WithoutFat;
+  var d3FatRate = d3FatTotal > 0 ? Math.round((d3WithFat / d3FatTotal) * 100) : null;
+  // Most-common fat food across the window (Mode of d3FatFoods)
+  var d3FatTopFood = null;
+  if (d3FatFoods.length > 0) {
+    var counts = {};
+    d3FatFoods.forEach(function(f) { counts[f] = (counts[f] || 0) + 1; });
+    var top = null, topN = 0;
+    Object.keys(counts).forEach(function(k) { if (counts[k] > topN) { top = k; topN = counts[k]; } });
+    d3FatTopFood = top;
+  }
   return {
     suppAdherence: suppTotal > 0 ? Math.round((suppDays / suppTotal) * 100) : null,
     suppDays: suppDays,
     suppTotal: suppTotal,
     d3Times: d3Times,
+    d3WithFat: d3WithFat,
+    d3WithoutFat: d3WithoutFat,
+    d3FatRate: d3FatRate,
+    d3FatTopFood: d3FatTopFood,
     vaccCompleted: completed.length,
     vaccUpcoming: upcoming.length > 0 ? upcoming[0] : null,
     growthInRange: rangeGrowth,

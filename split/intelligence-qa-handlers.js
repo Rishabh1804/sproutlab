@@ -317,7 +317,13 @@ function _qaRoutine() {
   if (pp.totalCount > 0) items.push({ text: 'Poop: avg ' + pp.avgPerDay + '/day, mostly ' + (pp.mostCommonConsistency || 'normal'), signal: 'neutral', icon: zi('diaper') });
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
-  if (md.suppAdherence !== null) items.push({ text: 'Vit D3: ' + md.suppAdherence + '% adherence', signal: md.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn', icon: zi('pill') });
+  if (md.suppAdherence !== null) {
+    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
+      d3Text += ' · ' + md.d3FatRate + '% with fat';
+    }
+    items.push({ text: d3Text, signal: md.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn', icon: zi('pill') });
+  }
 
   var age = ageAt();
   return {
@@ -544,9 +550,14 @@ function _qaDoctorPrep() {
     items.push({ text: 'Next vaccine: ' + gd.vaccUpcoming.name + (vDays > 0 ? ' in ' + vDays + ' days' : ' \u2014 due now'), signal: vDays <= 3 ? 'action' : 'info' });
   }
 
-  // D3 adherence
+  // D3 adherence + with-fat enrichment (only if we have enough samples to be meaningful)
   if (gd.suppAdherence !== null) {
     items.push({ text: 'D3 adherence (30d): ' + gd.suppAdherence + '%', signal: gd.suppAdherence >= ISL_THRESHOLDS.D3_ADHERENCE_GOOD_PCT ? 'good' : 'warn' });
+    if (gd.d3FatRate !== null && (gd.d3WithFat + gd.d3WithoutFat) >= 5) {
+      var fatText = 'D3 with-fat absorption (30d): ' + gd.d3FatRate + '% of doses';
+      if (gd.d3FatTopFood) fatText += ' · most often ' + gd.d3FatTopFood;
+      items.push({ text: fatText, signal: gd.d3FatRate >= 70 ? 'good' : 'info' });
+    }
   }
 
   // Recent concerns from last 7 days
