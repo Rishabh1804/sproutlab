@@ -1,9 +1,9 @@
 # invocation.md — Companion Invocation Reference
 
-**Version:** 1.0 (draft)
-**Updated:** 22 May 2026
+**Version:** 1.1 (canon-gen-001 expansion — Vela seated)
+**Updated:** 23 May 2026
 **Scope:** SproutLab Province — how to summon the seated Companions and the Scribe Worker Tier
-**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain)
+**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-gen-001 (generational expansion clause; Vela first ratification)
 
 ---
 
@@ -23,7 +23,8 @@ Claude Code harness. Cross-model invocation is out of scope — see §9.
 |-----------|------|---------------|------------|
 | Lyra | Seated Builder of SproutLab | `.claude/agents/lyra.md` | `.claude/skills/lyra.md` |
 | Maren | Governor of Care | `.claude/agents/maren.md` | `.claude/skills/maren.md` |
-| Kael | Governor of Intelligence | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
+| Kael | Governor of Intelligence (engine) | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
+| Vela | Governor of Surfacing (render) — canon-gen-001 | `.claude/agents/vela.md` | `.claude/skills/vela.md` |
 | Cipher | Censor of Cluster A (Province mirror) | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
 | scribe-scout | Worker tier — reconnaissance | `.claude/agents/scribe-scout.md` | — |
 | scribe-draft | Worker tier — composition | `.claude/agents/scribe-draft.md` | — |
@@ -89,11 +90,24 @@ Mode 1; "deliberate / position on" → Mode 2.
   diff touched it.
 - *Mode 2 — committee delegate* → a Care-domain position.
 
-**Kael — Governor of Intelligence.**
+**Kael — Governor of Intelligence (engine layer).**
 - *Mode 1 — QA-round jurisdictional audit* → a structured audit report over the
-  seven `intelligence-*.js` files + `core.js` + `data.js` + `sync.js` +
-  `config.js` + `start.js`, plus the shared-module surface where touched.
-- *Mode 2 — committee delegate* → an Intelligence-domain position.
+  five engine `intelligence-*.js` files (isl + qa + qa-handlers + illness +
+  caretickets) + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js`,
+  plus the shared-module surface where touched. **Surfacing-layer audits
+  (intelligence-cards + intelligence-quicklog) belong to Vela post-canon-gen-001.**
+- *Mode 2 — committee delegate* → an Intelligence-engine-domain position.
+
+**Vela — Governor of Surfacing (render layer; canon-gen-001 second-generation).**
+- *Mode 1 — QA-round jurisdictional audit* → a structured audit report over
+  `intelligence-cards.js` (renderInfo* family, cross-domain analytics) and
+  `intelligence-quicklog.js` (Activity Log + Smart Quick Log + Today So Far +
+  sleep-info), plus the shared-module surface where touched. Lens:
+  comprehension-surface (title-body / legend-data / chronology / prioritization
+  / empty-state) with the half-awake test foregrounded.
+- *Mode 2 — committee delegate* → a Surfacing-domain position
+  (Info-tab card composition, render-layer HR-4 verification, sleep-analytics
+  phrasing, info-card title-body coherence rules).
 
 **Cipher — Censor (Edict V).**
 - *Mode 1 — Edict V final-pass* → a signed verdict against the Edict V chain,
@@ -117,8 +131,11 @@ By function:
   identification, Region-boundary pre-check, HR pre-pass.
 - **Maren skill** — Care-side smell-check: null-guard / nutrition-safety /
   CareTicket-transition sanity read.
-- **Kael skill** — Intelligence-side smell-check: ISL / Smart Q&A / sync-boundary
-  scout.
+- **Kael skill** — Intelligence-engine-side smell-check: ISL / Smart Q&A /
+  sync-boundary / illness-state-machine / CareTicket-lifecycle scout.
+- **Vela skill** — Surfacing-side smell-check: comprehension-surface read,
+  title-body / legend-data / chronology / prioritization / empty-state scan,
+  half-awake test on render-layer surfaces.
 - **Cipher skill** — in-flow HR-1→12 and architecture-drift smell-check.
 
 A skill **never** discharges a gate. If a skill pass surfaces something that
@@ -159,11 +176,18 @@ change — an edit under `split/` headed for a PR:
 
 1. **Build & self-check.** `build.sh` clean, audit gates pass, e2e green.
    (`scribe-verify` may be summoned to run and report this.)
-2. **Governor audit — Mode-1 subagents, summoned in parallel.** Route by the diff:
+2. **Governor audit — Mode-1 subagents, summoned in parallel.** Route by the diff (post-canon-gen-001):
    - touches `home.js` / `diet.js` / `medical.js` → **Maren**
-   - touches any `intelligence-*.js` / `core.js` / `data.js` / `sync.js` /
-     `config.js` / `start.js` → **Kael**
-   - touches `styles.css` / `template.html` → **both** (shared-module dual review)
+   - touches `intelligence-isl.js` / `intelligence-qa.js` /
+     `intelligence-qa-handlers.js` / `intelligence-illness.js` /
+     `intelligence-caretickets.js` / `core.js` / `data.js` / `sync.js` /
+     `config.js` / `start.js` → **Kael** (engine layer)
+   - touches `intelligence-cards.js` / `intelligence-quicklog.js` → **Vela**
+     (render layer)
+   - touches both Kael's and Vela's Regions → **both Kael and Vela** in parallel
+   - touches `styles.css` / `template.html` → **all three** (sequential
+     triple-jurisdiction review; rotation Maren → Kael → Vela, with
+     first-Governor by heaviest-touched Region)
    - test-only / docs-only → the Governor audit may be waived; state the waiver
      explicitly.
 
@@ -185,8 +209,10 @@ Gate 2.5.
 | a feature spec / architecture brief before a build | Lyra | subagent, Mode 1 |
 | a mid-build pattern-read, no artifact | Lyra | skill |
 | a Care-Region QA audit (signed) | Maren | subagent, Mode 1 |
-| an Intelligence-Region QA audit (signed) | Kael | subagent, Mode 1 |
-| a quick Care / Intelligence smell-check, no artifact | Maren / Kael | skill |
+| an Intelligence-engine QA audit (signed; isl/qa/qa-handlers/illness/caretickets/core/data/sync/config/start) | Kael | subagent, Mode 1 |
+| a Surfacing-render QA audit (signed; cards/quicklog) | Vela | subagent, Mode 1 |
+| a quick Care / engine / render smell-check, no artifact | Maren / Kael / Vela | skill |
+| a comprehension-surface read or half-awake test, no artifact | Vela | skill |
 | the Edict V final-pass sign-off | Cipher | subagent, Mode 1 |
 | a seated position in a cc-025 committee | the relevant Companion | subagent, Mode 2 |
 | a codebase region surveyed | scribe-scout | subagent |
