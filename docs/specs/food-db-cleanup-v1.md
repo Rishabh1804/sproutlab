@@ -204,4 +204,4 @@ Other rules key against:
 
 ---
 
-— Lyra (main-session), 2026-05-23, against `616071c`. cc-018 status: `pending_review` (awaiting Maren + Kael Mode-1 cross-consult on cleanup approach + Architect ratification).
+— Lyra (main-session), 2026-05-23, against `616071c`. cc-018 status: `ratified` (Architect signature 2026-05-23 — Arc C spec enters cycle; per-phase Maren + Kael Mode-1 audits run at each ship PR per the table above).

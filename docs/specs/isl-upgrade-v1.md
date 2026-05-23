@@ -435,4 +435,4 @@ OR retain the conditional copy as Maren originally approved, accepting the small
 
 ---
 
-— Lyra (main-session Wave 1.5 + Wave 2 synthesis from scribe-scout #2 + Maren/Kael/Cipher/Aurelius Mode-1 audits + Wave 2.5 V-M-49 refinement), 2026-05-23, against `616071c`. cc-018 status: `pending_review` (Wave 2 + Wave 2.5 complete; awaiting Architect ratification).
+— Lyra (main-session Wave 1.5 + Wave 2 synthesis from scribe-scout #2 + Maren/Kael/Cipher/Aurelius Mode-1 audits + Wave 2.5 V-M-49 refinement), 2026-05-23, against `616071c`. cc-018 status: `ratified` (Architect signature 2026-05-23 — Wave 2 + Wave 2.5 spec enters implementation phase; per-phase Kael Mode-1 audits + Maren/Vela cross-consult run at each ship PR per the PR sequence table above).

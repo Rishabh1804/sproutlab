@@ -217,4 +217,4 @@ Arc D is a single-PR ratification. The next session (or the next session-handoff
 
 ---
 
-— Lyra (main-session, Architect-directed; canon-gen-001 first ratification), 2026-05-23, against `7d53f5b`. cc-018 status: `pending_ratification` (Architect signature required for canon-gen-001 introduction).
+— Lyra (main-session, Architect-directed; canon-gen-001 first ratification), 2026-05-23, against `7d53f5b`. cc-018 status: `ratified` (Architect signature 2026-05-23 — canon-gen-001 enters canon as the generational expansion clause).
