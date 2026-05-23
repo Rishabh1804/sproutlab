@@ -3127,9 +3127,8 @@ function addFood() {
   if (slotEl) slotEl.value = '';
   renderFoods();
 
-  // If food isn't in the built-in database, prompt for manual tagging
-  const lower = val.toLowerCase();
-  if (!NUTRITION[lower] && !nutritionCache[lower]) {
+  // If food isn't in the built-in database (or resolvable via _FOOD_ALIASES), prompt for manual tagging
+  if (!getNutrition(val)) {
     showNutrientTagModal(val);
   }
 }
@@ -3218,8 +3217,7 @@ function saveManualNutrition(foodName, nutrients, tags, category) {
 }
 
 function showNutrientTagModal(foodName) {
-  const lower = foodName.toLowerCase();
-  if (NUTRITION[lower] || nutritionCache[lower]) return; // already known
+  if (getNutrition(foodName)) return; // already known (resolves via _FOOD_ALIASES)
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
@@ -3709,9 +3707,8 @@ function addNewFoodFromMeal(meal, foodName) {
     FOOD_SUGGESTIONS['Added'].push(foodName);
   }
 
-  // Manual nutrition tagging for unknown foods
-  const lower = foodName.toLowerCase();
-  if (!NUTRITION[lower] && !nutritionCache[lower]) {
+  // Manual nutrition tagging for unknown foods (resolves via _FOOD_ALIASES)
+  if (!getNutrition(foodName)) {
     showNutrientTagModal(foodName);
   }
 
