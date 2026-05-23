@@ -1,3 +1,10 @@
+audit-emoji.sh [default (5 surfaced ranges)]: 0 HR-1 violations across split, index.html, sproutlab.html
+audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)
+audit-resolve-shield: PASS (4 resolve-caller(s) carry the explicit `'Resolve'` btnText shield per V-M-41 doctrine)
+audit-viz-smoke: PASS (4 ids + 5 tokens) across template.html + styles.css
+[bump-version] 2026.05.23-7 → 2026.05.23-8
+[poop-reference] wrote /home/user/sproutlab/docs/POOP_COLOR_REFERENCE.html
+[careticket-sm] wrote /home/user/sproutlab/docs/CARETICKET_STATE_MACHINE.html — 6 transitions, 0 drift flags
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2268,7 +2275,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .supp-alert-title { flex:1; font-size:var(--fs-md); font-weight:600; color:var(--text); }
 .supp-alert.done .supp-alert-title { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-title { color:var(--tc-rose); }
-.supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; }
+.supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 .supp-alert-detail { font-size:var(--fs-base); font-weight:400; color:var(--mid); padding-left:var(--sp-24); line-height:var(--lh-normal); }
 .supp-alert.done .supp-alert-detail { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-detail { color:var(--tc-rose); }
@@ -2332,9 +2339,11 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .med-d3-log-row {
   display:flex; gap:var(--sp-12); padding:var(--sp-2) 0;
+  flex-wrap:nowrap;
 }
+.med-d3-log-row > :last-child { min-width:0; overflow-wrap:break-word; flex:1; }
 .med-d3-log-date {
-  min-width:80px; color:var(--mid); font-weight:400;
+  min-width:64px; color:var(--mid); font-weight:400; flex-shrink:0;
 }
 
 /* ── Home stat pills ── */
@@ -10498,7 +10507,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <!-- VIT D3 14-DAY PATTERN -->
       <div class="card card-info col-full" id="medD3PatternCard">
         <div class="card-header">
-          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D3 — 14-day pattern</div>
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D3 · 14-day pattern</div>
         </div>
         <div id="medD3PatternBody"></div>
       </div>
@@ -17153,6 +17162,8 @@ function save(key, val) {
 // Every reader migrates via parseMedCheck() so writers can emit the new shape unconditionally.
 function parseMedCheck(val) {
   if (!val) return null;
+  // V-K-72: arrays are typeof 'object' but not med-check shapes — reject explicitly.
+  if (Array.isArray(val)) return null;
   if (typeof val === 'object') {
     return {
       status:   val.status || null,
@@ -17224,6 +17235,8 @@ function _hhmmToMinutes(s) {
 
 // Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
 // Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
+// V-K-69: token-equality matching (with _baseFoodName alias normalization) instead of substring
+// `indexOf` — avoids the coconut-water-matches-coconut false-positive.
 function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var win = (typeof windowMinutes === 'number') ? windowMinutes : 60;
   var result = { withFat:false, fatFood:null, fatDelta:null };
@@ -17233,20 +17246,33 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var day = feedingData[dateStr];
   if (!day) return result;
   var fatSet = _getFatBearingFoodNames();
+  var fatLookup = {};
+  for (var fi = 0; fi < fatSet.length; fi++) fatLookup[fatSet[fi]] = true;
   var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
   var best = null;
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
-    if (!mTime || !mFoods || mFoods === '—skipped—') return;
+    if (!mTime || !mFoods || mFoods === '—skipped—' || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
     var delta = mMin - targetMin; // signed: negative = meal before dose
     if (Math.abs(delta) > win) return;
-    var lower = String(mFoods).toLowerCase();
+    // Tokenize the meal text on comma / " and " / "+" / "&". Trim each token. Empty tokens dropped.
+    var tokens = String(mFoods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
     var matched = null;
-    for (var i = 0; i < fatSet.length; i++) {
-      if (lower.indexOf(fatSet[i]) >= 0) { matched = fatSet[i]; break; }
+    for (var ti = 0; ti < tokens.length; ti++) {
+      var tok = tokens[ti];
+      // Try exact token match first.
+      if (fatLookup[tok]) { matched = tok; break; }
+      // V-K-69: if the token is itself a known NUTRITION key but NOT in fatLookup, do NOT attempt
+      // alias normalisation — the parent logged a specific known food that is NOT fat-bearing
+      // (e.g. 'coconut water' is a distinct NUTRITION entry from 'coconut'; _baseFoodName would
+      // strip 'water' as a form-word and incorrectly return 'coconut').
+      if (typeof NUTRITION === 'object' && NUTRITION[tok]) continue;
+      // Otherwise try alias-normalized base name (catches 'yogurt' → 'curd', 'fresh ghee' → 'ghee').
+      var base = (typeof _baseFoodName === 'function') ? _baseFoodName(tok) : tok;
+      if (base !== tok && fatLookup[base]) { matched = base; break; }
     }
     if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
       best = { food: matched, delta: delta };
@@ -17537,6 +17563,11 @@ function init() {
     else if (action === 'resolveMissedMedSkipped' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'skipped');
     else if (action === 'markMedDone' && typeof markMedDone === 'function') markMedDone(arg, Number(arg2));
     else if (action === 'markMedSkipped' && typeof markMedSkipped === 'function') markMedSkipped(arg, Number(arg2));
+    else if (action === 'openMedDoneAt' && typeof openMedDoneAt === 'function') openMedDoneAt(arg, Number(arg2));
+    else if (action === 'confirmMedDoneAt' && typeof confirmMedDoneAt === 'function') confirmMedDoneAt(arg, Number(arg2));
+    else if (action === 'cancelMedDoneAt' && typeof cancelMedDoneAt === 'function') cancelMedDoneAt(Number(arg2));
+    else if (action === 'openMedAdjust' && typeof openMedAdjust === 'function') openMedAdjust(arg, Number(arg2));
+    else if (action === 'confirmMedAdjust' && typeof confirmMedAdjust === 'function') confirmMedAdjust(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
@@ -17873,6 +17904,11 @@ function init() {
     else if (action === 'resolveMissedMed') resolveMissedMed(arg, arg2, arg3);
     else if (action === 'markMedDone') markMedDone(arg, parseInt(arg2));
     else if (action === 'markMedSkipped') markMedSkipped(arg, parseInt(arg2));
+    else if (action === 'openMedDoneAt') openMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'confirmMedDoneAt') confirmMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'cancelMedDoneAt') cancelMedDoneAt(parseInt(arg2));
+    else if (action === 'openMedAdjust') openMedAdjust(arg, parseInt(arg2));
+    else if (action === 'confirmMedAdjust') confirmMedAdjust(arg, parseInt(arg2));
     else if (action === 'overrideMilestoneStatus') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); overrideMilestoneStatus(...args); }
     else if (action === 'upcomingToMilestone') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); upcomingToMilestone(...args); }
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
@@ -18901,7 +18937,8 @@ function calcMedicalScore() {
       const ds = toDateStr(d);
       const dayChecks = medChecks[ds];
       if (dayChecks) {
-        const anyDone = Object.values(dayChecks).some(v => typeof v === 'string' && v.startsWith('done'));
+        // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
+        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }
@@ -23415,7 +23452,7 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
             <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
-            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done at...</button>
+            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Done at...</button>
             <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
@@ -23423,12 +23460,15 @@ function renderRemindersAndAlerts() {
       </div>`;
     } else if (isDone) {
       const givenAt = parsed && parsed.givenAt ? parsed.givenAt : null;
-      const withFat = parsed && parsed.withFat === true;
       const fatFood = parsed && parsed.fatFood ? parsed.fatFood : null;
       const timeText = givenAt ? 'Done at ' + escHtml(givenAt) : 'Done today';
-      const fatBadge = withFat && fatFood
-        ? `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`
-        : (givenAt && !withFat ? `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal nearby</span>` : '');
+      // V-M-61: null withFat (legacy / unknown) renders no badge. V-M-63: softer framing.
+      let fatBadge = '';
+      if (parsed && parsed.withFat === true && fatFood) {
+        fatBadge = `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`;
+      } else if (parsed && parsed.withFat === false && givenAt) {
+        fatBadge = `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal logged nearby</span>`;
+      }
       html += `
       <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
         <div class="supp-alert-top">
@@ -23598,7 +23638,9 @@ function fmtTips(s) {
 function markMedDone(name, idx, givenTime) {
   const todayStr = today();
   const now = new Date();
-  const loggedAt = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  // V-M-60: storage uses 24h en-GB (HH:MM). Display layer formats for the user;
+  // the storage layer must be canonical so _hhmmToMinutes parses correctly across AM/PM.
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   const givenAt = (typeof givenTime === 'string' && /^\d{1,2}:\d{2}$/.test(givenTime)) ? givenTime : loggedAt;
   const fat = _detectFatContextNearTime(givenAt, todayStr);
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
@@ -23659,10 +23701,11 @@ function adjustMedTime(name, idx, newTime) {
   if (!existing || existing.status === 'skipped') return;
   const fat = _detectFatContextNearTime(newTime, todayStr);
   const now = new Date();
+  // V-M-65: canonical 24h storage (en-GB).
   medChecks[todayStr][name] = {
     status:   existing.status,
     givenAt:  newTime,
-    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
     withFat:  fat.withFat,
     fatFood:  fat.fatFood,
     fatDelta: fat.fatDelta,
@@ -25333,8 +25376,9 @@ function renderMedLog() {
     const [year, mon] = monthKey.split('-');
     const monthLabel = `${monthNames[parseInt(mon) - 1]} ${year}`;
     const monthId = 'ml-' + monthKey;
-    const givenCount = items.filter(e => e.status.startsWith('done')).length;
-    const skippedCount = items.filter(e => e.status === 'skipped').length;
+    // V-K-66: schema-aware filtering — items can carry legacy string status OR new object status.
+    const givenCount = items.filter(e => medCheckIsDone(e.status)).length;
+    const skippedCount = items.filter(e => medCheckSkipped(e.status)).length;
 
     html += `<div class="history-month" id="${monthId}">
       <div class="history-month-header" data-action="toggleHistoryMonth" data-arg="${monthId}" style="background:linear-gradient(135deg,var(--sky-light),var(--sky-light));border-color:rgba(168,207,224,0.4);">
@@ -25362,12 +25406,15 @@ function renderMedLog() {
       html += `<div style=""font-weight:600;font-size:var(--fs-sm);color:var(--tc-sky);margin-bottom:4px;">${dayName}, ${dayNum} ${monthNames[parseInt(mon) - 1]}</div>`;
 
       dayItems.forEach(e => {
-        const isDone = e.status.startsWith('done');
-        const timeStr = isDone ? e.status.replace('done:', '') : '';
+        // V-K-66: schema-aware status read.
+        const parsed = parseMedCheck(e.status);
+        const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
+        const isLate = !!(parsed && parsed.status === 'late');
+        const timeStr = parsed && parsed.givenAt ? parsed.givenAt : '';
         const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
-        const timePart = timeStr && timeStr !== 'late' ? ` at ${timeStr}` : timeStr === 'late' ? ' (logged late)' : '';
+        const timePart = isLate ? ' (logged late)' : (timeStr ? ` at ${escHtml(timeStr)}` : '');
 
         html += `
           <div style="display:flex;align-items:center;gap:var(--sp-8);padding:3px 0;font-size:var(--fs-base);">
@@ -29208,7 +29255,8 @@ function renderHistoryPreviews() {
       </div>`;
     } else {
       // Show today's status
-      const todayDone = activeMeds.filter(m => todayChecks[m.name] && todayChecks[m.name].startsWith('done'));
+      // V-K-66: schema-aware via medCheckIsDone.
+      const todayDone = activeMeds.filter(m => medCheckIsDone(todayChecks[m.name]));
       if (todayDone.length === activeMeds.length && activeMeds.length > 0) {
         medPrev.innerHTML = `<div class="info-strip is-sage">
           <span><svg class="zi"><use href="#zi-check"/></svg></span>
@@ -29700,23 +29748,24 @@ function computeBaselines() {
 
   // ── Supplement adherence (D3) ──
   const activeMeds = meds.filter(m => m.active);
+  // V-K-66: schema-aware reads via medCheckIsDone / medCheckSkipped (handles legacy string + new object).
   activeMeds.forEach(m => {
     const mKey = sanitizeAlertKey(m.name);
     let streak = 0;
     for (let i = 0; i < 90; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
-      // Skip today if not yet resolved
-      if (i === 0) {
-        const dayLog = medChecks[ds] || {};
-        const status = dayLog[m.name];
-        if (!status || (!status.startsWith('done:') && status !== 'skipped')) continue;
-        if (status.startsWith('done:')) { streak++; continue; }
-        break; // skipped breaks streak
-      }
       const dayLog = medChecks[ds] || {};
       const status = dayLog[m.name];
-      if (status && status.startsWith('done:')) { streak++; }
+      const isDone = medCheckIsDone(status);
+      const isSkipped = medCheckSkipped(status);
+      // Skip today if not yet resolved (no entry at all)
+      if (i === 0) {
+        if (!isDone && !isSkipped) continue;
+        if (isDone) { streak++; continue; }
+        break; // skipped breaks streak
+      }
+      if (isDone) { streak++; }
       else break;
     }
     b['suppStreak_' + mKey] = streak;
@@ -29731,7 +29780,7 @@ function computeBaselines() {
       if (ds < (m.start || '2025-09-04')) continue;
       total30++;
       const dayLog = medChecks[ds] || {};
-      if (dayLog[m.name] && dayLog[m.name].startsWith('done:')) given30++;
+      if (medCheckIsDone(dayLog[m.name])) given30++;
     }
     b['suppAdherence30_' + mKey] = total30 > 0 ? Math.floor((given30 / total30) * 100) : null;
     b['suppGiven30_' + mKey] = given30;
@@ -30230,7 +30279,10 @@ function computeAlerts() {
     const ydStr = toDateStr(yd);
     const ydLog = medChecks[ydStr] || {};
     const ydStatus = ydLog[m.name];
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydStatus || ydStatus === 'skipped');
+    // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
+    const ydDone = medCheckIsDone(ydStatus);
+    const ydSkipped = medCheckSkipped(ydStatus);
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
@@ -30238,7 +30290,7 @@ function computeAlerts() {
         const d = new Date(); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
         const dl = medChecks[ds] || {};
-        if (dl[m.name] && dl[m.name].startsWith('done:')) priorStreak++;
+        if (medCheckIsDone(dl[m.name])) priorStreak++;
         else break;
       }
       if (priorStreak >= 3) {
@@ -31035,13 +31087,24 @@ function renderTodayPlan() {
     });
   }
 
-  // D3 supplement
+  // D3 supplement — V-K-66: schema-aware via parseMedCheck (legacy string + new object both handled).
   const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
   if (d3Med) {
-    const d3Done = medChecks[todayStr] && medChecks[todayStr][d3Med.name] && medChecks[todayStr][d3Med.name].startsWith('done:');
+    const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][d3Med.name]);
+    const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;
+    const d3Fat = d3Parsed && d3Parsed.withFat === true && d3Parsed.fatFood ? d3Parsed.fatFood : null;
+    let doneDetail;
+    if (d3Done) {
+      const timePart = d3Given ? ' at ' + escHtml(d3Given) : '';
+      const fatPart = d3Fat ? ' · with ' + escHtml(d3Fat) : '';
+      doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + fatPart;
+    } else {
+      doneDetail = d3Med.dose + ' — give with or after a feed for best absorption';
+    }
     items.push({
       time: '9 AM', icon: zi('pill'), title: d3Med.name,
-      detail: d3Done ? '<svg class="zi"><use href="#zi-check"/></svg> Done today' : d3Med.dose + ' — give with or after a feed for best absorption',
+      detail: doneDetail,
       tag: 'med', done: d3Done, htmlDetail: d3Done
     });
   }
@@ -31470,7 +31533,8 @@ function renderTrendChips() {
   const total = Math.max(Object.keys(nutrientDays).length, 5);
   chips.push({ icon:zi('bowl'), label:'Nutrients', value: covered + '/' + total + ' groups', delta: covered >= total ? 'balanced' : 'gaps', cls: covered >= total ? 'tc-good' : 'tc-warn', tab:'diet' });
 
-  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled)
+  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled).
+  // V-M-62 + V-K-70: fatFood comes from parent feedingData input — escape at this render boundary.
   if (d3Med) {
     const todayStr = today();
     const d3Val = medChecks[todayStr] && medChecks[todayStr][d3Med.name];
@@ -31479,8 +31543,8 @@ function renderTrendChips() {
     let valueText, deltaText;
     if (d3Done) {
       const t = d3Parsed.givenAt;
-      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + d3Parsed.fatFood : '';
-      valueText = t ? ('Done at ' + t + fat) : 'Done today';
+      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + escHtml(d3Parsed.fatFood) : '';
+      valueText = t ? ('Done at ' + escHtml(t) + fat) : 'Done today';
       deltaText = zi('check');
     } else {
       valueText = 'Pending';
@@ -38761,7 +38825,8 @@ function renderMedicalStats() {
     if (dateKey.startsWith('_') || typeof val !== 'object') return;
     if (new Date(dateKey) < weekAgo) return;
     totalDays++;
-    Object.values(val).forEach(s => { if (s.startsWith('done')) givenCount++; });
+    // V-K-66: schema-aware count — handles both legacy string and new object shapes.
+    Object.values(val).forEach(s => { if (medCheckIsDone(s)) givenCount++; });
   });
 
   el.innerHTML = `
@@ -40900,9 +40965,16 @@ function renderMedD3PatternCard() {
   doneDays.forEach(d => { if (d.parsed.fatFood) fatFoodCounts[d.parsed.fatFood] = (fatFoodCounts[d.parsed.fatFood] || 0) + 1; });
   let topFatFood = null, topN = 0;
   Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
-  // Streak: consecutive done-days ending today
+  // Streak: consecutive done-days ending today.
+  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
+  // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
   let streak = 0;
-  for (let i = days.length - 1; i >= 0; i--) {
+  let streakLabel = 'Current streak';
+  const todayParsed = days[days.length - 1].parsed;
+  const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
+  const startIdx = todayResolved ? days.length - 1 : days.length - 2;
+  if (!todayResolved) streakLabel = 'Streak through yesterday';
+  for (let i = startIdx; i >= 0; i--) {
     if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
     else break;
   }
@@ -40916,7 +40988,7 @@ function renderMedD3PatternCard() {
     summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
   }
   if (topFatFood) summary += `<div class="med-d3-summary-row">${zi('check')} Usually paired with: <strong>${escHtml(topFatFood)}</strong></div>`;
-  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} Current streak: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
+  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} ${streakLabel}: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
   if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
   summary += '</div>';
   // 14-day compact list (most-recent first)
@@ -40930,9 +41002,11 @@ function renderMedD3PatternCard() {
       row = `<span class="tc-warn">Skipped</span>`;
     } else {
       const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
+      // V-M-61 + V-M-63: only render the "no fat-meal" line on explicit false
+      // (not null/unknown), with softened framing.
       const fat = d.parsed.withFat === true && d.parsed.fatFood
         ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
-        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal nearby</span>` : '');
+        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal logged nearby</span>` : '');
       row = t + fat;
     }
     list += `<div class="med-d3-log-row"><span class="med-d3-log-date">${escHtml(label)}</span><span>${row}</span></div>`;
@@ -46079,9 +46153,10 @@ function computeSupplementAdherence(windowDays) {
       var dow = d.getDay();
 
       var calStatus = 'missed';
-      if (status && status.indexOf('done') === 0) {
-        var timeStr = status.replace('done:', '');
-        if (timeStr === 'late') {
+      // V-K-66: schema-aware status read.
+      var parsedStatus = parseMedCheck(status);
+      if (parsedStatus && (parsedStatus.status === 'done' || parsedStatus.status === 'late')) {
+        if (parsedStatus.status === 'late') {
           lateCount++;
           calStatus = 'late';
           doneCount++; // late still counts as done for adherence
@@ -46089,10 +46164,11 @@ function computeSupplementAdherence(windowDays) {
           doneCount++;
           calStatus = 'done';
           // Parse time
+          var timeStr = parsedStatus.givenAt || '';
           var parsed = _parseSupplementTime(timeStr);
           if (parsed !== null) times.push(parsed);
         }
-      } else if (status === 'skipped') {
+      } else if (parsedStatus && parsedStatus.status === 'skipped') {
         skippedCount++;
         calStatus = 'skipped';
         dayOfWeekMisses[dow]++;
@@ -58447,37 +58523,38 @@ function _tsfCollectEvents() {
   });
 
   // ── Supplements (medChecks) today ──
+  // V-K-67: schema-aware via parseMedCheck — accepts BOTH legacy 'done:HH:MM' strings AND new object shape.
   const todayMedChecks = medChecks[t] || {};
   Object.keys(todayMedChecks).forEach(function(medName) {
     const val = todayMedChecks[medName];
-    if (typeof val !== 'string') return;
+    const parsed = parseMedCheck(val);
+    if (!parsed) return;
     let timeStr = null;
     let timeMin = null;
     let displayTime = '';
-    if (val.startsWith('done:')) {
-      const timePart = val.replace('done:', '').trim();
-      if (timePart !== 'late') {
-        timeMin = _tsfTimeToMinutes(timePart);
-        timeStr = timePart;
-        displayTime = _tsfFormatTime(timePart);
-      }
+    if ((parsed.status === 'done' || parsed.status === 'late') && parsed.givenAt) {
+      timeMin = _tsfTimeToMinutes(parsed.givenAt);
+      timeStr = parsed.givenAt;
+      displayTime = _tsfFormatTime(parsed.givenAt);
     }
+    const detail = (parsed.status === 'done' || parsed.status === 'late') ? 'Done' : (parsed.status === 'skipped' ? 'Skipped' : '');
     const ev = {
       id: 'med-' + medName,
       type: 'med',
       time: timeStr,
       timeMin: timeMin,
       label: medName,
-      detail: val.startsWith('done:') ? 'Done' : val === 'skipped' ? 'Skipped' : '',
+      detail: detail,
       icon: zi('pill'),
       color: 'sky',
       inferred: false,
       displayTime: displayTime,
-      status: val
+      status: val,
+      parsed: parsed
     };
     if (timeMin !== null) {
       events.push(ev);
-    } else if (val !== 'skipped') {
+    } else if (parsed.status !== 'skipped') {
       noTimeEvents.push(ev);
     }
   });
@@ -58513,9 +58590,9 @@ function _tsfGetAnchor() {
     poopData.filter(function(p) { return p.date === d; }).forEach(function() { dayCount++; });
     // Activities
     (activityLog[d] || []).forEach(function() { dayCount++; });
-    // Meds
+    // Meds — V-K-67: schema-aware via medCheckIsDone.
     const mc = medChecks[d] || {};
-    Object.keys(mc).forEach(function(k) { if (mc[k] && mc[k].toString().startsWith('done')) dayCount++; });
+    Object.keys(mc).forEach(function(k) { if (medCheckIsDone(mc[k])) dayCount++; });
     if (dayCount > 0) {
       totalEvents += dayCount;
       daysWithData++;
@@ -58580,11 +58657,11 @@ function _tsfDetectPatterns() {
           }
         });
       } else if (def.type === 'med' && def.medName) {
+        // V-K-67: schema-aware via parseMedCheck.
         const mc = medChecks[d] || {};
-        const val = mc[def.medName];
-        if (val && typeof val === 'string' && val.startsWith('done:')) {
-          const timePart = val.replace('done:', '').trim();
-          const mm = _tsfTimeToMinutes(timePart);
+        const parsed = parseMedCheck(mc[def.medName]);
+        if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
+          const mm = parsed.givenAt ? _tsfTimeToMinutes(parsed.givenAt) : null;
           found = true;
           if (mm !== null) foundMin = mm;
         }
@@ -58676,8 +58753,9 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = mc && typeof mc === 'string' && (mc.startsWith('done') || mc === 'skipped');
+      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
     }
 
     if (alreadyLogged) return;
@@ -58729,7 +58807,19 @@ function _tsfRenderEventExpanded(ev) {
     if (ev.duration) html += '<div>Duration: ' + ev.duration + ' min</div>';
     if (ev.domains && ev.domains.length > 0) html += '<div>Domains: ' + escHtml(ev.domains.join(', ')) + '</div>';
   } else if (ev.type === 'med') {
-    if (ev.status) html += '<div>Status: ' + escHtml(ev.status.replace('done:', 'Done at ')) + '</div>';
+    // V-K-67: schema-aware via parseMedCheck (handles both legacy string + new object).
+    const parsedStatus = parseMedCheck(ev.status);
+    if (parsedStatus) {
+      let statusText;
+      if (parsedStatus.status === 'skipped') statusText = 'Skipped';
+      else if (parsedStatus.status === 'late') statusText = 'Done (logged late)';
+      else if (parsedStatus.status === 'done') statusText = parsedStatus.givenAt ? 'Done at ' + parsedStatus.givenAt : 'Done';
+      else statusText = '';
+      if (statusText) html += '<div>Status: ' + escHtml(statusText) + '</div>';
+      if (parsedStatus.withFat === true && parsedStatus.fatFood) {
+        html += '<div>With fat: ' + escHtml(parsedStatus.fatFood) + '</div>';
+      }
+    }
   }
   return html || '<div>No additional details</div>';
 }

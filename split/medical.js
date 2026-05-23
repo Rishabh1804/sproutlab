@@ -2233,7 +2233,8 @@ function renderMedicalStats() {
     if (dateKey.startsWith('_') || typeof val !== 'object') return;
     if (new Date(dateKey) < weekAgo) return;
     totalDays++;
-    Object.values(val).forEach(s => { if (s.startsWith('done')) givenCount++; });
+    // V-K-66: schema-aware count — handles both legacy string and new object shapes.
+    Object.values(val).forEach(s => { if (medCheckIsDone(s)) givenCount++; });
   });
 
   el.innerHTML = `
@@ -4372,9 +4373,16 @@ function renderMedD3PatternCard() {
   doneDays.forEach(d => { if (d.parsed.fatFood) fatFoodCounts[d.parsed.fatFood] = (fatFoodCounts[d.parsed.fatFood] || 0) + 1; });
   let topFatFood = null, topN = 0;
   Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
-  // Streak: consecutive done-days ending today
+  // Streak: consecutive done-days ending today.
+  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
+  // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
   let streak = 0;
-  for (let i = days.length - 1; i >= 0; i--) {
+  let streakLabel = 'Current streak';
+  const todayParsed = days[days.length - 1].parsed;
+  const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
+  const startIdx = todayResolved ? days.length - 1 : days.length - 2;
+  if (!todayResolved) streakLabel = 'Streak through yesterday';
+  for (let i = startIdx; i >= 0; i--) {
     if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
     else break;
   }
@@ -4388,7 +4396,7 @@ function renderMedD3PatternCard() {
     summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
   }
   if (topFatFood) summary += `<div class="med-d3-summary-row">${zi('check')} Usually paired with: <strong>${escHtml(topFatFood)}</strong></div>`;
-  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} Current streak: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
+  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} ${streakLabel}: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
   if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
   summary += '</div>';
   // 14-day compact list (most-recent first)
@@ -4402,9 +4410,11 @@ function renderMedD3PatternCard() {
       row = `<span class="tc-warn">Skipped</span>`;
     } else {
       const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
+      // V-M-61 + V-M-63: only render the "no fat-meal" line on explicit false
+      // (not null/unknown), with softened framing.
       const fat = d.parsed.withFat === true && d.parsed.fatFood
         ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
-        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal nearby</span>` : '');
+        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal logged nearby</span>` : '');
       row = t + fat;
     }
     list += `<div class="med-d3-log-row"><span class="med-d3-log-date">${escHtml(label)}</span><span>${row}</span></div>`;
@@ -9551,9 +9561,10 @@ function computeSupplementAdherence(windowDays) {
       var dow = d.getDay();
 
       var calStatus = 'missed';
-      if (status && status.indexOf('done') === 0) {
-        var timeStr = status.replace('done:', '');
-        if (timeStr === 'late') {
+      // V-K-66: schema-aware status read.
+      var parsedStatus = parseMedCheck(status);
+      if (parsedStatus && (parsedStatus.status === 'done' || parsedStatus.status === 'late')) {
+        if (parsedStatus.status === 'late') {
           lateCount++;
           calStatus = 'late';
           doneCount++; // late still counts as done for adherence
@@ -9561,10 +9572,11 @@ function computeSupplementAdherence(windowDays) {
           doneCount++;
           calStatus = 'done';
           // Parse time
+          var timeStr = parsedStatus.givenAt || '';
           var parsed = _parseSupplementTime(timeStr);
           if (parsed !== null) times.push(parsed);
         }
-      } else if (status === 'skipped') {
+      } else if (parsedStatus && parsedStatus.status === 'skipped') {
         skippedCount++;
         calStatus = 'skipped';
         dayOfWeekMisses[dow]++;

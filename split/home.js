@@ -711,7 +711,7 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
             <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
-            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done at...</button>
+            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Done at...</button>
             <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
@@ -719,12 +719,15 @@ function renderRemindersAndAlerts() {
       </div>`;
     } else if (isDone) {
       const givenAt = parsed && parsed.givenAt ? parsed.givenAt : null;
-      const withFat = parsed && parsed.withFat === true;
       const fatFood = parsed && parsed.fatFood ? parsed.fatFood : null;
       const timeText = givenAt ? 'Done at ' + escHtml(givenAt) : 'Done today';
-      const fatBadge = withFat && fatFood
-        ? `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`
-        : (givenAt && !withFat ? `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal nearby</span>` : '');
+      // V-M-61: null withFat (legacy / unknown) renders no badge. V-M-63: softer framing.
+      let fatBadge = '';
+      if (parsed && parsed.withFat === true && fatFood) {
+        fatBadge = `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`;
+      } else if (parsed && parsed.withFat === false && givenAt) {
+        fatBadge = `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal logged nearby</span>`;
+      }
       html += `
       <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
         <div class="supp-alert-top">
@@ -894,7 +897,9 @@ function fmtTips(s) {
 function markMedDone(name, idx, givenTime) {
   const todayStr = today();
   const now = new Date();
-  const loggedAt = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  // V-M-60: storage uses 24h en-GB (HH:MM). Display layer formats for the user;
+  // the storage layer must be canonical so _hhmmToMinutes parses correctly across AM/PM.
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   const givenAt = (typeof givenTime === 'string' && /^\d{1,2}:\d{2}$/.test(givenTime)) ? givenTime : loggedAt;
   const fat = _detectFatContextNearTime(givenAt, todayStr);
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
@@ -955,10 +960,11 @@ function adjustMedTime(name, idx, newTime) {
   if (!existing || existing.status === 'skipped') return;
   const fat = _detectFatContextNearTime(newTime, todayStr);
   const now = new Date();
+  // V-M-65: canonical 24h storage (en-GB).
   medChecks[todayStr][name] = {
     status:   existing.status,
     givenAt:  newTime,
-    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
+    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
     withFat:  fat.withFat,
     fatFood:  fat.fatFood,
     fatDelta: fat.fatDelta,
@@ -2629,8 +2635,9 @@ function renderMedLog() {
     const [year, mon] = monthKey.split('-');
     const monthLabel = `${monthNames[parseInt(mon) - 1]} ${year}`;
     const monthId = 'ml-' + monthKey;
-    const givenCount = items.filter(e => e.status.startsWith('done')).length;
-    const skippedCount = items.filter(e => e.status === 'skipped').length;
+    // V-K-66: schema-aware filtering — items can carry legacy string status OR new object status.
+    const givenCount = items.filter(e => medCheckIsDone(e.status)).length;
+    const skippedCount = items.filter(e => medCheckSkipped(e.status)).length;
 
     html += `<div class="history-month" id="${monthId}">
       <div class="history-month-header" data-action="toggleHistoryMonth" data-arg="${monthId}" style="background:linear-gradient(135deg,var(--sky-light),var(--sky-light));border-color:rgba(168,207,224,0.4);">
@@ -2658,12 +2665,15 @@ function renderMedLog() {
       html += `<div style=""font-weight:600;font-size:var(--fs-sm);color:var(--tc-sky);margin-bottom:4px;">${dayName}, ${dayNum} ${monthNames[parseInt(mon) - 1]}</div>`;
 
       dayItems.forEach(e => {
-        const isDone = e.status.startsWith('done');
-        const timeStr = isDone ? e.status.replace('done:', '') : '';
+        // V-K-66: schema-aware status read.
+        const parsed = parseMedCheck(e.status);
+        const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
+        const isLate = !!(parsed && parsed.status === 'late');
+        const timeStr = parsed && parsed.givenAt ? parsed.givenAt : '';
         const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
-        const timePart = timeStr && timeStr !== 'late' ? ` at ${timeStr}` : timeStr === 'late' ? ' (logged late)' : '';
+        const timePart = isLate ? ' (logged late)' : (timeStr ? ` at ${escHtml(timeStr)}` : '');
 
         html += `
           <div style="display:flex;align-items:center;gap:var(--sp-8);padding:3px 0;font-size:var(--fs-base);">
@@ -6504,7 +6514,8 @@ function renderHistoryPreviews() {
       </div>`;
     } else {
       // Show today's status
-      const todayDone = activeMeds.filter(m => todayChecks[m.name] && todayChecks[m.name].startsWith('done'));
+      // V-K-66: schema-aware via medCheckIsDone.
+      const todayDone = activeMeds.filter(m => medCheckIsDone(todayChecks[m.name]));
       if (todayDone.length === activeMeds.length && activeMeds.length > 0) {
         medPrev.innerHTML = `<div class="info-strip is-sage">
           <span><svg class="zi"><use href="#zi-check"/></svg></span>
@@ -6996,23 +7007,24 @@ function computeBaselines() {
 
   // ── Supplement adherence (D3) ──
   const activeMeds = meds.filter(m => m.active);
+  // V-K-66: schema-aware reads via medCheckIsDone / medCheckSkipped (handles legacy string + new object).
   activeMeds.forEach(m => {
     const mKey = sanitizeAlertKey(m.name);
     let streak = 0;
     for (let i = 0; i < 90; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
-      // Skip today if not yet resolved
-      if (i === 0) {
-        const dayLog = medChecks[ds] || {};
-        const status = dayLog[m.name];
-        if (!status || (!status.startsWith('done:') && status !== 'skipped')) continue;
-        if (status.startsWith('done:')) { streak++; continue; }
-        break; // skipped breaks streak
-      }
       const dayLog = medChecks[ds] || {};
       const status = dayLog[m.name];
-      if (status && status.startsWith('done:')) { streak++; }
+      const isDone = medCheckIsDone(status);
+      const isSkipped = medCheckSkipped(status);
+      // Skip today if not yet resolved (no entry at all)
+      if (i === 0) {
+        if (!isDone && !isSkipped) continue;
+        if (isDone) { streak++; continue; }
+        break; // skipped breaks streak
+      }
+      if (isDone) { streak++; }
       else break;
     }
     b['suppStreak_' + mKey] = streak;
@@ -7027,7 +7039,7 @@ function computeBaselines() {
       if (ds < (m.start || '2025-09-04')) continue;
       total30++;
       const dayLog = medChecks[ds] || {};
-      if (dayLog[m.name] && dayLog[m.name].startsWith('done:')) given30++;
+      if (medCheckIsDone(dayLog[m.name])) given30++;
     }
     b['suppAdherence30_' + mKey] = total30 > 0 ? Math.floor((given30 / total30) * 100) : null;
     b['suppGiven30_' + mKey] = given30;
@@ -7526,7 +7538,10 @@ function computeAlerts() {
     const ydStr = toDateStr(yd);
     const ydLog = medChecks[ydStr] || {};
     const ydStatus = ydLog[m.name];
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydStatus || ydStatus === 'skipped');
+    // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
+    const ydDone = medCheckIsDone(ydStatus);
+    const ydSkipped = medCheckSkipped(ydStatus);
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
@@ -7534,7 +7549,7 @@ function computeAlerts() {
         const d = new Date(); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
         const dl = medChecks[ds] || {};
-        if (dl[m.name] && dl[m.name].startsWith('done:')) priorStreak++;
+        if (medCheckIsDone(dl[m.name])) priorStreak++;
         else break;
       }
       if (priorStreak >= 3) {
@@ -8331,13 +8346,24 @@ function renderTodayPlan() {
     });
   }
 
-  // D3 supplement
+  // D3 supplement — V-K-66: schema-aware via parseMedCheck (legacy string + new object both handled).
   const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
   if (d3Med) {
-    const d3Done = medChecks[todayStr] && medChecks[todayStr][d3Med.name] && medChecks[todayStr][d3Med.name].startsWith('done:');
+    const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][d3Med.name]);
+    const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;
+    const d3Fat = d3Parsed && d3Parsed.withFat === true && d3Parsed.fatFood ? d3Parsed.fatFood : null;
+    let doneDetail;
+    if (d3Done) {
+      const timePart = d3Given ? ' at ' + escHtml(d3Given) : '';
+      const fatPart = d3Fat ? ' · with ' + escHtml(d3Fat) : '';
+      doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + fatPart;
+    } else {
+      doneDetail = d3Med.dose + ' — give with or after a feed for best absorption';
+    }
     items.push({
       time: '9 AM', icon: zi('pill'), title: d3Med.name,
-      detail: d3Done ? '<svg class="zi"><use href="#zi-check"/></svg> Done today' : d3Med.dose + ' — give with or after a feed for best absorption',
+      detail: doneDetail,
       tag: 'med', done: d3Done, htmlDetail: d3Done
     });
   }
@@ -8766,7 +8792,8 @@ function renderTrendChips() {
   const total = Math.max(Object.keys(nutrientDays).length, 5);
   chips.push({ icon:zi('bowl'), label:'Nutrients', value: covered + '/' + total + ' groups', delta: covered >= total ? 'balanced' : 'gaps', cls: covered >= total ? 'tc-good' : 'tc-warn', tab:'diet' });
 
-  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled)
+  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled).
+  // V-M-62 + V-K-70: fatFood comes from parent feedingData input — escape at this render boundary.
   if (d3Med) {
     const todayStr = today();
     const d3Val = medChecks[todayStr] && medChecks[todayStr][d3Med.name];
@@ -8775,8 +8802,8 @@ function renderTrendChips() {
     let valueText, deltaText;
     if (d3Done) {
       const t = d3Parsed.givenAt;
-      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + d3Parsed.fatFood : '';
-      valueText = t ? ('Done at ' + t + fat) : 'Done today';
+      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + escHtml(d3Parsed.fatFood) : '';
+      valueText = t ? ('Done at ' + escHtml(t) + fat) : 'Done today';
       deltaText = zi('check');
     } else {
       valueText = 'Pending';

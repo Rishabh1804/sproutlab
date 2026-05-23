@@ -73,6 +73,8 @@ function save(key, val) {
 // Every reader migrates via parseMedCheck() so writers can emit the new shape unconditionally.
 function parseMedCheck(val) {
   if (!val) return null;
+  // V-K-72: arrays are typeof 'object' but not med-check shapes — reject explicitly.
+  if (Array.isArray(val)) return null;
   if (typeof val === 'object') {
     return {
       status:   val.status || null,
@@ -144,6 +146,8 @@ function _hhmmToMinutes(s) {
 
 // Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
 // Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
+// V-K-69: token-equality matching (with _baseFoodName alias normalization) instead of substring
+// `indexOf` — avoids the coconut-water-matches-coconut false-positive.
 function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var win = (typeof windowMinutes === 'number') ? windowMinutes : 60;
   var result = { withFat:false, fatFood:null, fatDelta:null };
@@ -153,20 +157,33 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var day = feedingData[dateStr];
   if (!day) return result;
   var fatSet = _getFatBearingFoodNames();
+  var fatLookup = {};
+  for (var fi = 0; fi < fatSet.length; fi++) fatLookup[fatSet[fi]] = true;
   var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
   var best = null;
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
-    if (!mTime || !mFoods || mFoods === '—skipped—') return;
+    if (!mTime || !mFoods || mFoods === '—skipped—' || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
     var delta = mMin - targetMin; // signed: negative = meal before dose
     if (Math.abs(delta) > win) return;
-    var lower = String(mFoods).toLowerCase();
+    // Tokenize the meal text on comma / " and " / "+" / "&". Trim each token. Empty tokens dropped.
+    var tokens = String(mFoods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
     var matched = null;
-    for (var i = 0; i < fatSet.length; i++) {
-      if (lower.indexOf(fatSet[i]) >= 0) { matched = fatSet[i]; break; }
+    for (var ti = 0; ti < tokens.length; ti++) {
+      var tok = tokens[ti];
+      // Try exact token match first.
+      if (fatLookup[tok]) { matched = tok; break; }
+      // V-K-69: if the token is itself a known NUTRITION key but NOT in fatLookup, do NOT attempt
+      // alias normalisation — the parent logged a specific known food that is NOT fat-bearing
+      // (e.g. 'coconut water' is a distinct NUTRITION entry from 'coconut'; _baseFoodName would
+      // strip 'water' as a form-word and incorrectly return 'coconut').
+      if (typeof NUTRITION === 'object' && NUTRITION[tok]) continue;
+      // Otherwise try alias-normalized base name (catches 'yogurt' → 'curd', 'fresh ghee' → 'ghee').
+      var base = (typeof _baseFoodName === 'function') ? _baseFoodName(tok) : tok;
+      if (base !== tok && fatLookup[base]) { matched = base; break; }
     }
     if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
       best = { food: matched, delta: delta };
@@ -457,6 +474,11 @@ function init() {
     else if (action === 'resolveMissedMedSkipped' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'skipped');
     else if (action === 'markMedDone' && typeof markMedDone === 'function') markMedDone(arg, Number(arg2));
     else if (action === 'markMedSkipped' && typeof markMedSkipped === 'function') markMedSkipped(arg, Number(arg2));
+    else if (action === 'openMedDoneAt' && typeof openMedDoneAt === 'function') openMedDoneAt(arg, Number(arg2));
+    else if (action === 'confirmMedDoneAt' && typeof confirmMedDoneAt === 'function') confirmMedDoneAt(arg, Number(arg2));
+    else if (action === 'cancelMedDoneAt' && typeof cancelMedDoneAt === 'function') cancelMedDoneAt(Number(arg2));
+    else if (action === 'openMedAdjust' && typeof openMedAdjust === 'function') openMedAdjust(arg, Number(arg2));
+    else if (action === 'confirmMedAdjust' && typeof confirmMedAdjust === 'function') confirmMedAdjust(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
@@ -793,6 +815,11 @@ function init() {
     else if (action === 'resolveMissedMed') resolveMissedMed(arg, arg2, arg3);
     else if (action === 'markMedDone') markMedDone(arg, parseInt(arg2));
     else if (action === 'markMedSkipped') markMedSkipped(arg, parseInt(arg2));
+    else if (action === 'openMedDoneAt') openMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'confirmMedDoneAt') confirmMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'cancelMedDoneAt') cancelMedDoneAt(parseInt(arg2));
+    else if (action === 'openMedAdjust') openMedAdjust(arg, parseInt(arg2));
+    else if (action === 'confirmMedAdjust') confirmMedAdjust(arg, parseInt(arg2));
     else if (action === 'overrideMilestoneStatus') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); overrideMilestoneStatus(...args); }
     else if (action === 'upcomingToMilestone') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); upcomingToMilestone(...args); }
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
@@ -1821,7 +1848,8 @@ function calcMedicalScore() {
       const ds = toDateStr(d);
       const dayChecks = medChecks[ds];
       if (dayChecks) {
-        const anyDone = Object.values(dayChecks).some(v => typeof v === 'string' && v.startsWith('done'));
+        // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
+        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }

@@ -1871,37 +1871,38 @@ function _tsfCollectEvents() {
   });
 
   // ── Supplements (medChecks) today ──
+  // V-K-67: schema-aware via parseMedCheck — accepts BOTH legacy 'done:HH:MM' strings AND new object shape.
   const todayMedChecks = medChecks[t] || {};
   Object.keys(todayMedChecks).forEach(function(medName) {
     const val = todayMedChecks[medName];
-    if (typeof val !== 'string') return;
+    const parsed = parseMedCheck(val);
+    if (!parsed) return;
     let timeStr = null;
     let timeMin = null;
     let displayTime = '';
-    if (val.startsWith('done:')) {
-      const timePart = val.replace('done:', '').trim();
-      if (timePart !== 'late') {
-        timeMin = _tsfTimeToMinutes(timePart);
-        timeStr = timePart;
-        displayTime = _tsfFormatTime(timePart);
-      }
+    if ((parsed.status === 'done' || parsed.status === 'late') && parsed.givenAt) {
+      timeMin = _tsfTimeToMinutes(parsed.givenAt);
+      timeStr = parsed.givenAt;
+      displayTime = _tsfFormatTime(parsed.givenAt);
     }
+    const detail = (parsed.status === 'done' || parsed.status === 'late') ? 'Done' : (parsed.status === 'skipped' ? 'Skipped' : '');
     const ev = {
       id: 'med-' + medName,
       type: 'med',
       time: timeStr,
       timeMin: timeMin,
       label: medName,
-      detail: val.startsWith('done:') ? 'Done' : val === 'skipped' ? 'Skipped' : '',
+      detail: detail,
       icon: zi('pill'),
       color: 'sky',
       inferred: false,
       displayTime: displayTime,
-      status: val
+      status: val,
+      parsed: parsed
     };
     if (timeMin !== null) {
       events.push(ev);
-    } else if (val !== 'skipped') {
+    } else if (parsed.status !== 'skipped') {
       noTimeEvents.push(ev);
     }
   });
@@ -1937,9 +1938,9 @@ function _tsfGetAnchor() {
     poopData.filter(function(p) { return p.date === d; }).forEach(function() { dayCount++; });
     // Activities
     (activityLog[d] || []).forEach(function() { dayCount++; });
-    // Meds
+    // Meds — V-K-67: schema-aware via medCheckIsDone.
     const mc = medChecks[d] || {};
-    Object.keys(mc).forEach(function(k) { if (mc[k] && mc[k].toString().startsWith('done')) dayCount++; });
+    Object.keys(mc).forEach(function(k) { if (medCheckIsDone(mc[k])) dayCount++; });
     if (dayCount > 0) {
       totalEvents += dayCount;
       daysWithData++;
@@ -2004,11 +2005,11 @@ function _tsfDetectPatterns() {
           }
         });
       } else if (def.type === 'med' && def.medName) {
+        // V-K-67: schema-aware via parseMedCheck.
         const mc = medChecks[d] || {};
-        const val = mc[def.medName];
-        if (val && typeof val === 'string' && val.startsWith('done:')) {
-          const timePart = val.replace('done:', '').trim();
-          const mm = _tsfTimeToMinutes(timePart);
+        const parsed = parseMedCheck(mc[def.medName]);
+        if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
+          const mm = parsed.givenAt ? _tsfTimeToMinutes(parsed.givenAt) : null;
           found = true;
           if (mm !== null) foundMin = mm;
         }
@@ -2100,8 +2101,9 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = mc && typeof mc === 'string' && (mc.startsWith('done') || mc === 'skipped');
+      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
     }
 
     if (alreadyLogged) return;
@@ -2153,7 +2155,19 @@ function _tsfRenderEventExpanded(ev) {
     if (ev.duration) html += '<div>Duration: ' + ev.duration + ' min</div>';
     if (ev.domains && ev.domains.length > 0) html += '<div>Domains: ' + escHtml(ev.domains.join(', ')) + '</div>';
   } else if (ev.type === 'med') {
-    if (ev.status) html += '<div>Status: ' + escHtml(ev.status.replace('done:', 'Done at ')) + '</div>';
+    // V-K-67: schema-aware via parseMedCheck (handles both legacy string + new object).
+    const parsedStatus = parseMedCheck(ev.status);
+    if (parsedStatus) {
+      let statusText;
+      if (parsedStatus.status === 'skipped') statusText = 'Skipped';
+      else if (parsedStatus.status === 'late') statusText = 'Done (logged late)';
+      else if (parsedStatus.status === 'done') statusText = parsedStatus.givenAt ? 'Done at ' + parsedStatus.givenAt : 'Done';
+      else statusText = '';
+      if (statusText) html += '<div>Status: ' + escHtml(statusText) + '</div>';
+      if (parsedStatus.withFat === true && parsedStatus.fatFood) {
+        html += '<div>With fat: ' + escHtml(parsedStatus.fatFood) + '</div>';
+      }
+    }
   }
   return html || '<div>No additional details</div>';
 }
