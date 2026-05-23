@@ -334,6 +334,105 @@ function qaAnswerMealCombo(intentId) {
 **B-2 insert point clarified ("after `:1885`" → "after the function ends ~`:2020`").**
 **"Zero `if(true)return;`" claim scoped to intelligence-* (V-M-54).**
 
+## Wave 2.5 refinement — V-M-49 cross-Region read line-level lock
+
+**Trigger:** Architect-directed refinement (2026-05-23 session). V-M-49 was specced at the *schema + per-rule copy + tri-resolution architecture* level in Wave 2 but the **cross-Region read** for rule #6's state-match (`banana` + `constipation`) was left at "consult intelligence-illness.js active episodes + recent poop consistency. Cross-Region read." That sentence has two corrections to make and one architectural clarification to lock.
+
+### Correction 1 — `constipation` lives in medical.js, NOT intelligence-illness.js
+
+Pre-refinement spec text (B-1.3 architecture, line 165): *"State-match: rule.foods[i] in {constipation, fever, diarrhoea, ...} -> consult intelligence-illness.js active episodes + recent poop consistency (catches rule #6: constipation). Cross-Region read."*
+
+**Correction:** `intelligence-illness.js` carries fever, diarrhoea, vomiting, and cold episode state machines (`getActiveFeverEpisode()` at `:9`, `getActiveDiarrhoeaEpisode()` at `:830`, `getActiveVomitingEpisode()` at `:1437`, `getActiveColdEpisode()` at `:1737`). It does NOT carry a constipation episode — there is no `getActiveConstipationEpisode()`.
+
+**Constipation is detected via stool-shape signals in `medical.js`** at `computePoopAmountTrend(windowDays)` (`medical.js:6852`). The function returns `.constipationSignal: boolean` computed as: any poop entry in the window with `amount === 'small' && (consistency === 'hard' || consistency === 'pellets')` (`medical.js:6903`).
+
+**Jurisdictional correction:** `intelligence-illness.js` is Kael's jurisdiction; `medical.js` is **Maren's jurisdiction**. The state-match read for `constipation` is a cross-Region read into **Maren's** territory, not Kael's. This is a stronger jurisdictional crossing than the original spec implied.
+
+### Lock — Exact API surface for state-match per rule
+
+`computeMealCombos(date)` state-match dispatch by token:
+
+| State token | Active-state accessor | File:line | Jurisdiction | Active-state predicate |
+|-------------|----------------------|-----------|--------------|------------------------|
+| `'fever'` | `getActiveFeverEpisode()` | `intelligence-illness.js:9` | Kael | `!== null` |
+| `'diarrhoea'` | `getActiveDiarrhoeaEpisode()` | `intelligence-illness.js:830` | Kael | `!== null` |
+| `'vomiting'` | `getActiveVomitingEpisode()` | `intelligence-illness.js:1437` | Kael | `!== null` |
+| `'cold'` | `getActiveColdEpisode()` | `intelligence-illness.js:1737` | Kael | `!== null` |
+| `'constipation'` | `computePoopAmountTrend(3).constipationSignal` | `medical.js:6852` | **Maren** | `=== true` |
+
+**Window argument for constipation:** `windowDays=3`. Rationale: matches Phase 4 §`intelligence-illness.js` improvement-detection window (which uses last-3-stools heuristics — line 969). Three days is the standard SproutLab constipation-evaluation window; longer windows risk surfacing stale signal, shorter risk under-coverage.
+
+**Default for tokens not in the table:** the state-match dispatcher returns `false` (no match) and logs a `console.warn` naming the unrecognized state token. New tokens added to `COMBO_RULES` rule definitions must be added to this table as part of the same PR (regression-guarded — see below).
+
+### Lock — Cross-Region read jurisdictional discipline
+
+Because `computeMealCombos(date)` lives in `intelligence-cards.js` (post-canon-gen-001: **Vela's jurisdiction**) but reads from:
+- `intelligence-illness.js` (Kael's jurisdiction) for fever/diarrhoea/vomiting/cold tokens
+- `medical.js` (Maren's jurisdiction) for the constipation token
+- `data.js` (Kael's jurisdiction) for `NUTRITION`, `COMBO_RULES`, `_FOOD_ALIASES`
+- `intelligence-isl.js` (Kael's jurisdiction) for `getDomainData('diet', ...)` and `_baseFoodName()`
+
+…Phase B-1's PR triggers **all three Governors** in the canon-cc-008 audit chain:
+- **Maren** for the `medical.js` constipation read (a Care-Region accessor consumed by a Surfacing-Region data fn)
+- **Kael** for the `intelligence-illness.js` / `data.js` / `intelligence-isl.js` reads and the data-fn correctness
+- **Vela** for the `intelligence-cards.js` data-fn placement and the chip-stack render contract
+
+This is the **first Phase since canon-gen-001 to summon all three Governors in parallel for a non-shared-module diff**. Setting the precedent: cross-Region reads from a Vela-jurisdiction file route to all relevant Governors based on the target Regions of the reads.
+
+### Lock — Render contract for state-match findings in chip-stack
+
+The `computeMealCombos(date)` return shape for state-match findings (already specced at line 167–172) is `{ ruleId, foods:[a,b], signal, copy }`. The shape is **identical to tag-match and name-match findings** — the chip-stack consumer does not know or care which resolution path produced the entry. The state-match path is invisible at render time.
+
+This is intentional. The parent sees "If Ziva is constipated, swap banana for pear, papaya, or prune today." (rule #6 copy) regardless of whether constipation was detected via state-match or — in some future enhancement — via direct parent log entry of "constipation" as a symptom.
+
+**Chip-stack render layer (Vela's jurisdiction):** the per-chip render in `intelligence-cards.js` chip-stack and in the `qaAnswerMealCombo` UIB renderer is shape-uniform. Vela audits whether the rendered chip communicates the rule's tone correctly — `info` signal (rule #6 is info-signal per Maren-approved table) renders with `zi('bulb')` or `zi('info')`, NOT `zi('warn')`. This parallels the V-M-48 Variety nudge icon-ban (no `zi('warn')`/`zi('siren')` on info-signal tiles).
+
+### Lock — Caching / staleness
+
+`computeMealCombos(date)` is called fresh on:
+- Each chip-stack render trigger (post-meal-save in `[Today]` segment).
+- Each `qaAnswerMealCombo` invocation (UIB answer-card for `meal_combo_check` intent).
+
+No cache is held. Constipation signal staleness is bounded by the freshness of the underlying `_piGetPoops(3)` window (which is recomputed on each call). No `_islMarkDirty('diet')` / `_islMarkDirty('medical')` coordination is needed because there is no cache to invalidate.
+
+**Performance note:** `computePoopAmountTrend(3)` walks the last 3 days of poop entries. For Ziva's current data shape (~2–4 poops/day = 6–12 entries), the walk is O(n) trivial. For future-Ziva at 12+ months with more entries, the window is still bounded. No optimization needed.
+
+### Lock — Rule #6 copy disambiguation (cross-check with Maren-approved table)
+
+The Maren-approved per-rule copy table at line 202–211 lists rule #6 as: *"If Ziva is constipated, swap banana for pear, papaya, or prune today."*
+
+**Refinement:** the copy fires only when `state-match: constipation === true`. If the parent logs banana when constipation is NOT detected (i.e., recent poops are normal or soft), rule #6 does NOT fire and no chip surfaces. This is the correct Maren-tier behavior: don't surface constipation guidance when there is no constipation signal — that would be over-warning.
+
+**Wave 2.5 amendment to the copy:** verify that the rendered copy is conditional on the active state, not a static "if constipated" framing. The current copy ("If Ziva is constipated…") reads as static and could surface confusingly when constipation IS active (parent reads "if" and thinks "this is just a generic note, not a current signal"). 
+
+**Alternative copy (Maren-deferred decision):** *"Ziva's recent poops show a constipation signal. Swap banana for pear, papaya, or prune today."* — names the active signal directly. More accurate.
+
+OR retain the conditional copy as Maren originally approved, accepting the small ambiguity.
+
+**Resolution:** retain the Maren-approved copy from Wave 2 as the v1 ship. Open a Maren-tier follow-up for v2 to consider the active-signal-naming alternative. This is a phrasing call, not a load-bearing semantic.
+
+### Regression guards (additions to B-1 set)
+
+- `regression-guard-combo-tri-resolution` (already on the list — locked).
+- `regression-guard-state-match-token-table-complete` (NEW V-M-49 refinement): every state token used in `COMBO_RULES` definitions has an entry in the state-match dispatch table.
+- `regression-guard-constipation-state-match-medical-read` (NEW V-M-49 refinement): the constipation state-match correctly reads `computePoopAmountTrend(3).constipationSignal` from `medical.js`, NOT from `intelligence-illness.js` (which has no constipation episode).
+- `regression-guard-state-match-render-shape-uniform` (NEW V-M-49 refinement): state-match return entries share `{ ruleId, foods, signal, copy }` shape with tag-match and name-match — chip-stack consumer is resolution-agnostic.
+- `regression-guard-rule-6-suppression-when-no-constipation` (NEW V-M-49 refinement): rule #6 does NOT fire when constipationSignal is false (suppression discipline).
+
+### Cross-spec coordination
+
+**Arc D dependency:** Phase B-1 summons all three Governors per the cross-Region read discipline above. Arc D must ratify first so Vela is seated and CLAUDE.md routing rules are live.
+
+**Arc C dependency:** Phase B-1's `chemRollup` reads `NUTRITION[base].chem.*` directly. Arc C Phase C-4 renames `chem.fibre` → `chem.fibreCharacter`. If B-1 ships AFTER C-4, the chemRollup field reads `NUTRITION[base].chem.fibreCharacter`. If B-1 ships BEFORE C-4 (not recommended per Arc C sequencing — "spec now, ship before B-1"), B-1's chemRollup uses the old `chem.fibre` name and gets renamed in C-4's sweep. Recommended sequence: Arc D → Arc C Phase C-1 + C-2 + C-4 → Arc B Phase B-1.
+
+**No conflict with V-M-50.** V-M-50's chip operates pre-meal-save (during meal-input typing in `home.js`). V-M-49's chip-stack operates post-meal-save (in `[Today]` segment via `computeMealCombos(date)`). Distinct temporal windows; distinct files; no overlap.
+
+## Wave 2.5 amendments — verdict
+
+- V-M-49: LOCKED. State-match cross-Region read corrected from intelligence-illness.js → medical.js for the constipation token. Cross-Region read jurisdictional discipline (three-Governor parallel summoning for B-1's PR) ratified. Render-shape uniformity locked. Caching/staleness locked (no cache needed). Rule #6 suppression discipline named.
+- Phase B-1 implementation may proceed against V-M-49 with no further open questions.
+- Phase B-1 audit chain summons Maren + Kael + Vela in parallel — the first non-shared-module diff to do so since canon-gen-001.
+
 ---
 
-— Lyra (main-session Wave 1.5 + Wave 2 synthesis from scribe-scout #2 + Maren/Kael/Cipher/Aurelius Mode-1 audits), 2026-05-23, against `b2670f7`. cc-018 status: `pending_review` (Wave 2 complete; awaiting Architect ratification).
+— Lyra (main-session Wave 1.5 + Wave 2 synthesis from scribe-scout #2 + Maren/Kael/Cipher/Aurelius Mode-1 audits + Wave 2.5 V-M-49 refinement), 2026-05-23, against `616071c`. cc-018 status: `pending_review` (Wave 2 + Wave 2.5 complete; awaiting Architect ratification).

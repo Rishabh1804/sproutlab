@@ -280,6 +280,124 @@ The `dqp-zone` currently emits, per meal: up to three "same-as previous day" pil
 ### Wave 2 amendments declined (with rationale)
 None. All Wave 2 required and recommended fixes folded above.
 
+## Wave 2.5 refinement — V-M-50 "introduce with care" chip lock
+
+**Trigger:** Architect-directed refinement (2026-05-23 session). V-M-50 was specced at the *trigger + phrasing + dismissibility* level in Wave 2 but left four specifics open: blocks-save?, chip-vs-modal?, both-rules-fire?, render-position?. This refinement locks all four.
+
+### Lock 1 — Does the chip BLOCK SAVE?
+
+**Decision: NO. The chip warns but does not block save.**
+
+**Reasoning (Maren-lens):**
+- A blocking chip is paternalistic. The parent might still log "honey" because they decided to introduce it early under pediatrician advice — the app does not know that context. Blocking that log would be wrong.
+- More critically: a parent who already gave the food without realizing the risk STILL needs to log it so the symptom-checker and CareTicket pipeline can monitor for reactions. Blocking would suppress the most important logging case.
+- The chip's job is *information*, not gatekeeping. Maren's voice: "Tell the parent. Trust the parent."
+
+**Implementation:** the chip renders alongside Save remaining fully enabled. No disabled state. No "are you sure?" interstitial.
+
+### Lock 2 — Chip vs modal at meal-input?
+
+**Decision: CHIP. In-flow, non-blocking, dismissible.**
+
+**Reasoning:**
+- Modals block flow, force dismissal, and demand attention the parent (one-handed, holding a baby, at meal-input time) cannot afford to give. Maren's voice: "A modal at meal-input is a usability tax on the most-pressured moment in the day."
+- Chip is glanceable, in-flow, peripheral-vision-readable. Matches the existing Diet Intel Banner and combo-chip pattern parents already know.
+- Modal precedent in SproutLab is reserved for irreversible-action confirmations (CareTicket close, force-reseed) — meal-input does not meet that threshold.
+
+**Implementation:** the chip is a `<div class="age-allergen-chip">` rendered inline below the meal-input field, ABOVE the per-meal insight strip. NOT a `<dialog>`. NOT a fixed-position toast.
+
+### Lock 3 — Both AGE_RULE and ALLERGEN fire for the same food
+
+**Decision: render TWO stacked chips, each with its own rule message and dismissal token.**
+
+**Concrete case:** honey is both age-gated (`AGE_RULES['honey'].minMonth = 12`) and known-allergen-adjacent (rare for honey specifically, but used as the canonical multi-rule example). For a 7-month-old, both rules fire.
+
+**Render:**
+```
+[ ⓘ Honey: wait until 12 months — risk of infant botulism.        ✕ ]
+[ ⓘ Honey: if introducing later, watch 3 days for reaction.        ✕ ]
+```
+
+**Why two chips, not one combined:**
+- Distinct rule attribution — parent can see the chip stack came from two independent reads, not one merged advisory.
+- Distinct dismissal — dismissing the age-rule chip does not dismiss the allergen-rule chip and vice versa.
+- Distinct render-tracking — debug + audit trail of which chip dismissed when.
+- Compositionality — if a future rule (e.g., a choking-hazard `CHOKING_HAZARDS` table) is added, the chip stack extends cleanly; a merged-chip approach would need a custom multi-rule template.
+
+**Implementation:** the chip-render loop iterates [`AGE_RULE`, `ALLERGEN`] for the typed food, emitting a chip per rule that fires. Order: AGE_RULE first (typically the more-load-bearing safety signal), then ALLERGEN.
+
+### Lock 4 — Render position and chip structure
+
+**Decision: inline below the meal-input field, above the per-meal insight strip, within the meal-card box. Stacked vertically.**
+
+**Visual hierarchy within meal-card (Phase 2 + Phase 1 combined, top-to-bottom):**
+1. Meal label + meal-skip icon-toggle (V-M-52 `zi-skip`)
+2. Meal-input field with autocomplete dropdown
+3. **NEW (V-M-50): Age/Allergen chip stack** (renders when typed/selected food matches `AGE_RULES` or `ALLERGENS`; 0–2 chips)
+4. `dqp-zone` Recent row (V-M-52 compressed, 6 chips + expand)
+5. Per-meal insight strip
+6. (Save button is meal-card-level, not per-meal-input — unchanged)
+
+**Markup shape:**
+```html
+<div class="age-allergen-stack" data-meal="{meal}" data-food="{food}">
+  <div class="age-allergen-chip" role="status" data-rule="AGE_RULE">
+    <span class="aa-icon">{zi('clock')}</span>
+    <span class="aa-text">{escHtml(ruleMessage)}</span>
+    <button type="button"
+            class="aa-dismiss"
+            data-action="dismissAgeAllergenChip"
+            data-arg="{food}::AGE_RULE"
+            aria-label="Dismiss {food} age guidance">
+      {zi('x')}
+    </button>
+  </div>
+  <!-- Optional second chip for ALLERGEN, same shape, data-rule="ALLERGEN", data-arg="{food}::ALLERGEN" -->
+</div>
+```
+
+**Dismissal token shape:** `{food}::{ruleKey}` where `ruleKey ∈ {AGE_RULE, ALLERGEN}`. Stored per-session in a module-scope `Set` (NOT localStorage — per V-M-50's per-session-only discipline). Cleared on session reload (intentional re-surfacing).
+
+### a11y discipline (locked, required not optional per Maren)
+
+- `role="status"` on the chip — non-critical live region; screen readers announce on render without interrupting.
+- `aria-label` on the dismiss button names the food + rule explicitly (`"Dismiss honey age guidance"`, `"Dismiss honey allergen guidance"`).
+- Keyboard nav: chip is in-tab-order; dismiss button receives focus on Tab from the meal-input.
+- Esc key: dismisses the chip whose dismiss button currently holds focus (delegated handler at `core.js:340–520` dispatcher branch).
+- Focus ring on dismiss button uses the existing `--focus-ring-*` token system (HR-5 compliant).
+- Color contrast on the chip background + text + icon: WCAG AA minimum (4.5:1 for text, 3:1 for icon vs background). Token assignment uses the existing `sage` domain (positive/neutral signal — NOT `rose` which is reserved for medical alerts).
+
+### Edge cases (resolved)
+
+| Case | Resolution |
+|------|------------|
+| Food in NUTRITION but not in AGE_RULES/ALLERGENS | Silent. No chip. dietIntelBanner + comboFreq cover synergies; chip is exclusive to AGE/ALLERGEN. |
+| Food NOT in NUTRITION (parent typed custom name) | Silent. No canonical food → no rule lookup possible. The quick-add form (Open Q 4 KEEP) is the safety surface for custom foods; chip is for canonical-food meal-input only. |
+| Food typed via autocomplete dropdown selection vs free-text | Both trigger chip-render. Hook: `onMealInput` (free-text typeahead) + `selectMealDropdown` (autocomplete commit). Both call `updateAgeAllergenChip(food, meal)`. |
+| Parent dismisses chip mid-typing, then re-types same food | Chip stays dismissed for the session. Re-renders on next session reload. |
+| Parent dismisses chip, then types a DIFFERENT food that also fires the same rule | New chip renders (different `data-arg` token). |
+| Parent in dark mode | Chip uses the `--bg-soft-sage` token which has its own dark-mode override; contrast checked at Phase 2 audit. |
+| Multiple meal-cards open simultaneously (4 cards = breakfast/lunch/dinner/snack) | Each meal-card has its own chip stack scoped via `data-meal="{meal}"`. Dismissal in one card does not affect another. |
+
+### Regression guards (additions to A-2 set)
+
+- `regression-guard-age-allergen-chip-fires` (already on the list — locked).
+- `regression-guard-age-allergen-chip-not-blocking` (NEW V-M-50 refinement): meal-card Save remains enabled with chip rendered.
+- `regression-guard-age-allergen-chip-dual-rule-stack` (NEW V-M-50 refinement): both AGE_RULE and ALLERGEN fire → two chips render with distinct dismissal tokens.
+- `regression-guard-age-allergen-chip-a11y` (NEW V-M-50 refinement): role="status", aria-label correct, Tab order correct, Esc dismisses focused chip.
+
+### Cross-spec coordination
+
+**Arc D dependency:** V-M-50 ships in Arc A Phase 2 against `home.js` (Maren's jurisdiction) + `template.html` + `styles.css` (shared, triple-Gov post-canon-gen-001) + `core.js` (Kael's jurisdiction for the dispatcher branch). Vela has no direct touch in V-M-50 (no Surfacing-Region file). Phase 2 audit chain: Maren primary + Kael + Vela on shared modules + Lyra synth + Cipher.
+
+**No conflict with V-M-49.** V-M-49's `computeMealCombos(date)` operates post-meal-save (chip stack consumed in `[Today]` segment AFTER save). V-M-50's chip operates pre-meal-save (during meal-input typing). Distinct temporal windows; no overlap.
+
+## Wave 2.5 amendments — verdict
+
+- V-M-50: LOCKED. All four open specifics resolved (blocks-save? NO; chip-vs-modal? CHIP; both-rules-fire? TWO STACKED CHIPS; render-position? inline below meal-input above insight strip).
+- Phase 2 implementation may proceed against V-M-50 with no further open questions.
+- Phase 2 audit chain summons Maren primary; Kael + Vela on shared-module touch only.
+
 ---
 
-— Lyra (Mode-1 subagent + Wave 1.5 + Wave 2 main-session synthesis), 2026-05-23, against `b2670f7`. cc-018 status: `pending_review` (Wave 2 complete; awaiting Architect ratification).
+— Lyra (Mode-1 subagent + Wave 1.5 + Wave 2 main-session synthesis + Wave 2.5 V-M-50 refinement), 2026-05-23, against `616071c`. cc-018 status: `pending_review` (Wave 2 + Wave 2.5 complete; awaiting Architect ratification).
