@@ -4402,6 +4402,16 @@ function renderMedD3PatternCard() {
     if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
   }
+  // V-M-74: fresh-install warm-start — when the parent has just installed and hasn't
+  // logged a dose yet, don't slap them with a rose-tier "0/1 days (0%)". Render a
+  // softer "Just getting started" stripe with no aggressive percentile / streak / fat
+  // surfaces yet.
+  if (eligibleDays.length === 1 && doneDays.length === 0 && skippedDays.length === 0) {
+    body.innerHTML = '<div class="med-d3-summary"><div class="med-d3-summary-row">'
+      + zi('clock') + ' Just getting started — log today\'s dose to begin tracking.'
+      + '</div></div>';
+    return;
+  }
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
   let summary = '<div class="med-d3-summary">';

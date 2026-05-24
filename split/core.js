@@ -93,11 +93,15 @@ function parseMedCheck(val) {
     // CR-2: accept BOTH 'HH:MM' (24h) AND 'HH:MM am|pm' / 'HH:MM AM|PM' (legacy en-IN 12h).
     // The pre-v1 markMedDone used en-IN locale which produced 12h+suffix strings;
     // those must round-trip through parseMedCheck without losing givenAt.
-    var isHHMM24 = /^\d{1,2}:\d{2}$/.test(t);
+    // V-K-73: tighten range validation — pre-fix, '24:00' / '25:99' passed the structural
+    // regex and stored as givenAt, then _hhmmToMinutes returned out-of-range minutes (1440+).
+    var hhmm24 = t.match(/^(\d{1,2}):(\d{2})$/);
     var ampmMatch = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
     var givenAt = null;
-    if (isHHMM24) {
-      givenAt = t;
+    if (hhmm24) {
+      var h24 = parseInt(hhmm24[1], 10);
+      var m24 = parseInt(hhmm24[2], 10);
+      if (h24 >= 0 && h24 <= 23 && m24 >= 0 && m24 <= 59) givenAt = t;
     } else if (ampmMatch) {
       var h = parseInt(ampmMatch[1], 10);
       var mm = ampmMatch[2];
@@ -201,7 +205,10 @@ function _refreshTodayMedWithFat() {
 // CR-9: display formatter — 24h canonical 'HH:MM' → '8:42 AM' / '2:30 PM' for parent-facing surfaces.
 // The schema stores 24h (en-GB canonical) per V-M-60; this formatter renders the Indian-parent 12h convention.
 function _formatTime12h(hhmm) {
-  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '';
+  // V-M-72: string-only guard at entry so a future render site without an outer
+  // `if (givenAt)` check can't leak literal 'null' / 'undefined' to the parent.
+  if (typeof hhmm !== 'string' || !hhmm) return '';
+  if (!/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm;
   var parts = hhmm.split(':');
   var h = parseInt(parts[0], 10);
   var m = parts[1];
@@ -566,6 +573,7 @@ function init() {
     else if (action === 'cancelMedDoneAt' && typeof cancelMedDoneAt === 'function') cancelMedDoneAt(Number(arg2));
     else if (action === 'openMedAdjust' && typeof openMedAdjust === 'function') openMedAdjust(arg, Number(arg2));
     else if (action === 'confirmMedAdjust' && typeof confirmMedAdjust === 'function') confirmMedAdjust(arg, Number(arg2));
+    else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
@@ -907,6 +915,7 @@ function init() {
     else if (action === 'cancelMedDoneAt') cancelMedDoneAt(parseInt(arg2));
     else if (action === 'openMedAdjust') openMedAdjust(arg, parseInt(arg2));
     else if (action === 'confirmMedAdjust') confirmMedAdjust(arg, parseInt(arg2));
+    else if (action === 'undoMedSkip') undoMedSkip(arg, parseInt(arg2));
     else if (action === 'overrideMilestoneStatus') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); overrideMilestoneStatus(...args); }
     else if (action === 'upcomingToMilestone') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); upcomingToMilestone(...args); }
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }

@@ -538,6 +538,140 @@ test('regression-guard-d3-qaSupplement-schema-aware: qaAnswerSupplement reads ne
   expect(r.givenText).toContain('ghee');
 });
 
+test('regression-guard-d3-undoMedSkip-clears-to-pending: Undo skip does NOT silently log at tap-time', async ({ page }) => {
+  // V-M-68 + V-M-73: pre-fix, Undo skip wired to markMedDone(name, idx) with no givenTime,
+  // which silently substituted tap-time. Reintroduced the CR-4 class of bug through a
+  // different door. Fix: Undo clears the entry back to undefined (pending state) so the
+  // parent makes an explicit choice via [Done now] / [Done at...] / [Skip].
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    // First: skip
+    markMedSkipped(d3.name, 0);
+    const afterSkip = medChecks[t][d3.name];
+    // Then: undo
+    undoMedSkip(d3.name, 0);
+    const afterUndo = medChecks[t] ? medChecks[t][d3.name] : undefined;
+    return {
+      skipStatus: afterSkip && afterSkip.status,
+      undoIsCleared: afterUndo === undefined,
+      didNotSilentlyLog: !afterUndo || afterUndo.status !== 'done',
+    };
+  });
+
+  expect(r.skipStatus).toBe('skipped');
+  expect(r.undoIsCleared, 'Undo must clear medChecks entry back to undefined (pending)').toBe(true);
+  expect(r.didNotSilentlyLog, 'Undo must NOT fabricate a "Done at tap-time" record').toBe(true);
+});
+
+test('regression-guard-d3-yesterday-skipped-schema-aware: home medical preview reads new object shape for ydSkipped', async ({ page }) => {
+  // V-K-74: pre-fix, home.js used `ydChecks[m.name] === 'skipped'` strict-equality which
+  // silently missed the new object shape. Parent who skipped yesterday saw the
+  // "Yesterday's meds not logged" danger strip instead of the "Skipped yesterday" warn strip.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const yesterday = _offsetDateStr(today(), -1);
+    if (!medChecks[yesterday]) medChecks[yesterday] = {};
+    medChecks[yesterday][d3.name] = { status:'skipped', givenAt:null, loggedAt:'10:00', withFat:null, fatFood:null, fatDelta:null };
+    return {
+      schemaAwareSkipped: medCheckSkipped(medChecks[yesterday][d3.name]),
+      schemaAwareNotDone: !medCheckIsDone(medChecks[yesterday][d3.name]),
+    };
+  });
+
+  expect(r.schemaAwareSkipped, 'medCheckSkipped must recognise the new object-shape skipped state').toBe(true);
+  expect(r.schemaAwareNotDone, 'object-shape skip must NOT register as done').toBe(true);
+});
+
+test('regression-guard-d3-parseMedCheck-range-validates-24h: out-of-range hour/minute rejected', async ({ page }) => {
+  // V-K-73: pre-fix the 24h regex was purely structural; '24:00' / '25:99' passed and
+  // stored verbatim as givenAt, then _hhmmToMinutes returned 1440+ minutes (out of range).
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    return {
+      ok_valid_morning: parseMedCheck('done:08:42').givenAt,
+      ok_valid_midnight: parseMedCheck('done:00:00').givenAt,
+      ok_valid_23h:    parseMedCheck('done:23:59').givenAt,
+      reject_24h:      parseMedCheck('done:24:00').givenAt,
+      reject_25h:      parseMedCheck('done:25:99').givenAt,
+      reject_99m:      parseMedCheck('done:08:99').givenAt,
+    };
+  });
+
+  expect(r.ok_valid_morning).toBe('08:42');
+  expect(r.ok_valid_midnight).toBe('00:00');
+  expect(r.ok_valid_23h).toBe('23:59');
+  expect(r.reject_24h, '24:00 must be rejected as out-of-range').toBeNull();
+  expect(r.reject_25h, '25:99 must be rejected').toBeNull();
+  expect(r.reject_99m, '08:99 must be rejected (minute >= 60)').toBeNull();
+});
+
+test('regression-guard-d3-formatTime12h-string-guard: non-string inputs return empty string, never literal "null" / "undefined"', async ({ page }) => {
+  // V-M-72: defensive — a future render site that forgets the outer `if (givenAt)` guard
+  // would otherwise leak literal 'null' to the parent. Now the function entry-guards.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    return {
+      onNull:      _formatTime12h(null),
+      onUndefined: _formatTime12h(undefined),
+      onNumber:    _formatTime12h(842),
+      onBoolean:   _formatTime12h(true),
+      onArray:     _formatTime12h([]),
+      onObject:    _formatTime12h({}),
+    };
+  });
+
+  expect(r.onNull).toBe('');
+  expect(r.onUndefined).toBe('');
+  expect(r.onNumber).toBe('');
+  expect(r.onBoolean).toBe('');
+  expect(r.onArray).toBe('');
+  expect(r.onObject).toBe('');
+});
+
+test('regression-guard-d3-refresh-never-flips-true-to-false: positive withFat observation is never erased', async ({ page }) => {
+  // CR-14 invariant verification — _refreshTodayMedWithFat must only flip false→true,
+  // never true→false. A parent who edited the feedingData meal text to remove the fat
+  // food after the dose was logged must NOT see their original positive observation erased.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    feedingData[t] = { breakfast:'chapati, ghee', breakfast_time:'08:30' };
+    if (medChecks[t]) delete medChecks[t][d3.name];
+    markMedDone(d3.name, 0, '08:45');
+    const before = medChecks[t][d3.name];
+    // Now: remove the ghee from the meal text. Re-running refresh must NOT flip true→false.
+    feedingData[t].breakfast = 'chapati, banana';
+    _refreshTodayMedWithFat();
+    const after = medChecks[t][d3.name];
+    return {
+      beforeWithFat: before && before.withFat,
+      afterWithFat:  after && after.withFat,
+      afterFood:     after && after.fatFood,
+    };
+  });
+
+  expect(r.beforeWithFat).toBe(true);
+  expect(r.afterWithFat, 'refresh must NEVER flip true → false').toBe(true);
+  expect(r.afterFood, 'fatFood must be preserved').toBe('ghee');
+});
+
 test('regression-guard-d3-adjust-flow: adjustMedTime updates givenAt AND re-runs with-fat detection on the new time', async ({ page }) => {
   // Mark done at 14:00 with no nearby fat-meal (no breakfast logged) — should be withFat:false.
   // Then adjust to 08:45 which IS near a 08:30 fat-meal — should flip to withFat:true.

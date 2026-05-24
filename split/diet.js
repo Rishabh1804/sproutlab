@@ -2413,6 +2413,10 @@ function _miSetIntake(dateStr, meal, value) {
   feedingData[dateStr][meal + '_intake'] = value;
   save(KEYS.feeding, feedingData);
   _islMarkDirty('diet');
+  // V-M-70: intake adjustment alone doesn't change meal content (so withFat won't flip),
+  // but completes the contract that EVERY feedingData mutation re-evaluates today's
+  // negative-withFat doses. Defensive — harmless when nothing matches.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
 }
 
 function _miLevelFor(value) {

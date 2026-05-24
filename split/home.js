@@ -747,20 +747,22 @@ function renderRemindersAndAlerts() {
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
       </div>`;
     } else if (isSkipped) {
-      // CR-5: NEW skipped-state render. Pre-fix, the skipped branch produced no card at all
-      // and the 'All medications done for today' banner was removed — the parent got zero
-      // visual acknowledgement of their explicit skip, while _obCheckVitD3 kept flagging
-      // 'Vit D3 pending' on the home overlay, contradicting the just-recorded action.
+      // CR-5: skipped-state render with explicit acknowledgement + Undo affordance.
+      // V-M-68 + V-M-73 fix: Undo no longer calls markMedDone(name, idx) directly (which
+      // silently substituted tap-time as the administration time, exactly the CR-4 class
+      // of bug). Instead Undo clears the skip back to PENDING — the card re-renders with
+      // the standard [Done now] [Done at...] [Skip] buttons, forcing the parent to make
+      // an explicit choice. No fabricated time, no destroyed audit trail.
       html += `
       <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('skip-forward')}</div>
           <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-skip-btn supp-adjust-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
+            <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
           </div>
         </div>
-        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to revert and log a dose.</div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to clear and log the dose.</div>
       </div>`;
     }
   });
@@ -975,6 +977,22 @@ function confirmMedDoneAt(name, idx) {
   markMedDone(name, idx, picked);
 }
 function cancelMedDoneAt(idx) {
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+
+// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). The skip's
+// loggedAt audit trail is dropped — acceptable because the parent's post-Undo intent is
+// "I want to log the dose properly now," not "preserve the misclick." Re-renders so the
+// parent sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
+function undoMedSkip(name, idx) {
+  const todayStr = today();
+  if (medChecks[todayStr] && medChecks[todayStr][name] !== undefined) {
+    delete medChecks[todayStr][name];
+    save(KEYS.medChecks, medChecks);
+    _tsfMarkDirty();
+    _islMarkDirty('medical');
+  }
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
 }
@@ -6578,9 +6596,11 @@ function renderHistoryPreviews() {
     const ydChecks = medChecks[ydKey] || {};
     const activeMeds = meds.filter(m => m.active);
 
-    // Check yesterday for missed/skipped
-    const ydMissed = activeMeds.filter(m => !ydChecks[m.name]);
-    const ydSkipped = activeMeds.filter(m => ydChecks[m.name] === 'skipped');
+    // Check yesterday for missed/skipped — V-K-74: schema-aware via medCheckSkipped.
+    // Pre-fix `=== 'skipped'` missed the new object shape; parent who skipped yesterday
+    // saw the "Yesterday's meds not logged" danger strip instead of "Skipped yesterday".
+    const ydMissed = activeMeds.filter(m => !ydChecks[m.name] || (!medCheckIsDone(ydChecks[m.name]) && !medCheckSkipped(ydChecks[m.name])));
+    const ydSkipped = activeMeds.filter(m => medCheckSkipped(ydChecks[m.name]));
 
     if (ydMissed.length > 0) {
       medPrev.innerHTML = `<div class="info-strip is-danger">

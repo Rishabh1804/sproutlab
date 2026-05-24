@@ -1887,7 +1887,11 @@ function _tsfCollectEvents() {
       timeStr = parsed.givenAt;
       displayTime = _tsfFormatTime(parsed.givenAt);
     }
-    const detail = (parsed.status === 'done' || parsed.status === 'late') ? 'Done' : (parsed.status === 'skipped' ? 'Skipped' : '');
+    // V-V-17: chip detail carries the late marker so a half-awake parent reading only the
+    // chip (without tapping to expand) can see retroactive logs at a glance.
+    const detail = parsed.status === 'late' ? 'Done (late)'
+                 : (parsed.status === 'done' ? 'Done'
+                 : (parsed.status === 'skipped' ? 'Skipped' : ''));
     const ev = {
       id: 'med-' + medName,
       type: 'med',
@@ -2753,6 +2757,8 @@ function skipMeals(mealKeys) {
     if (!feedingData[dateStr][m]) feedingData[dateStr][m] = '—skipped—';
   });
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract on every feedingData mutation.
+  if (typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   renderHomeMealProgress();
   updateMealSkipButtons();
   showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
@@ -2771,6 +2777,8 @@ function skipSingleMeal(mealKey) {
   if (feedingData[dateStr][mealKey] && feedingData[dateStr][mealKey] !== '—skipped—') return; // already has food
   feedingData[dateStr][mealKey] = '—skipped—';
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   const input = document.getElementById('meal-' + mealKey);
   if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
   const timeInput = document.getElementById('mealtime-' + mealKey);
@@ -2786,6 +2794,8 @@ function unskipSingleMeal(mealKey) {
   if (!feedingData[dateStr]) return;
   feedingData[dateStr][mealKey] = '';
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   const input = document.getElementById('meal-' + mealKey);
   if (input) { input.value = ''; input.placeholder = 'Type to search foods...'; input.disabled = false; }
   const timeInput = document.getElementById('mealtime-' + mealKey);

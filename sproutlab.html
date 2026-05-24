@@ -1,3 +1,10 @@
+audit-emoji.sh [default (5 surfaced ranges)]: 0 HR-1 violations across split, index.html, sproutlab.html
+audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)
+audit-resolve-shield: PASS (4 resolve-caller(s) carry the explicit `'Resolve'` btnText shield per V-M-41 doctrine)
+audit-viz-smoke: PASS (4 ids + 5 tokens) across template.html + styles.css
+[bump-version] 2026.05.24-1 → 2026.05.24-2
+[poop-reference] wrote /home/user/sproutlab/docs/POOP_COLOR_REFERENCE.html
+[careticket-sm] wrote /home/user/sproutlab/docs/CARETICKET_STATE_MACHINE.html — 6 transitions, 0 drift flags
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2328,10 +2335,13 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .supp-alert-skipped .supp-alert-title { color:var(--tc-warn); }
 .supp-alert-skipped .supp-alert-detail { color:var(--tc-warn); }
-/* CR-7: openMedAdjust hint when no historical time was captured */
+/* CR-7: openMedAdjust hint when no historical time was captured.
+   V-V-10: explicit --mid colour so the italic reads as neutral observation rather than
+   inheriting --tc-sage from .supp-alert-done (which read as confirmatory not directive).
+   V-V-11: baked-in fs-sm so the class is self-contained if a future caller forgets t-sm. */
 .supp-adjust-hint {
   display:inline-block; margin-right:var(--sp-6);
-  font-style:italic;
+  font-style:italic; font-size:var(--fs-sm); color:var(--mid);
 }
 .med-d3-summary {
   padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
@@ -17187,11 +17197,15 @@ function parseMedCheck(val) {
     // CR-2: accept BOTH 'HH:MM' (24h) AND 'HH:MM am|pm' / 'HH:MM AM|PM' (legacy en-IN 12h).
     // The pre-v1 markMedDone used en-IN locale which produced 12h+suffix strings;
     // those must round-trip through parseMedCheck without losing givenAt.
-    var isHHMM24 = /^\d{1,2}:\d{2}$/.test(t);
+    // V-K-73: tighten range validation — pre-fix, '24:00' / '25:99' passed the structural
+    // regex and stored as givenAt, then _hhmmToMinutes returned out-of-range minutes (1440+).
+    var hhmm24 = t.match(/^(\d{1,2}):(\d{2})$/);
     var ampmMatch = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
     var givenAt = null;
-    if (isHHMM24) {
-      givenAt = t;
+    if (hhmm24) {
+      var h24 = parseInt(hhmm24[1], 10);
+      var m24 = parseInt(hhmm24[2], 10);
+      if (h24 >= 0 && h24 <= 23 && m24 >= 0 && m24 <= 59) givenAt = t;
     } else if (ampmMatch) {
       var h = parseInt(ampmMatch[1], 10);
       var mm = ampmMatch[2];
@@ -17295,7 +17309,10 @@ function _refreshTodayMedWithFat() {
 // CR-9: display formatter — 24h canonical 'HH:MM' → '8:42 AM' / '2:30 PM' for parent-facing surfaces.
 // The schema stores 24h (en-GB canonical) per V-M-60; this formatter renders the Indian-parent 12h convention.
 function _formatTime12h(hhmm) {
-  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '';
+  // V-M-72: string-only guard at entry so a future render site without an outer
+  // `if (givenAt)` check can't leak literal 'null' / 'undefined' to the parent.
+  if (typeof hhmm !== 'string' || !hhmm) return '';
+  if (!/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm;
   var parts = hhmm.split(':');
   var h = parseInt(parts[0], 10);
   var m = parts[1];
@@ -17660,6 +17677,7 @@ function init() {
     else if (action === 'cancelMedDoneAt' && typeof cancelMedDoneAt === 'function') cancelMedDoneAt(Number(arg2));
     else if (action === 'openMedAdjust' && typeof openMedAdjust === 'function') openMedAdjust(arg, Number(arg2));
     else if (action === 'confirmMedAdjust' && typeof confirmMedAdjust === 'function') confirmMedAdjust(arg, Number(arg2));
+    else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
@@ -18001,6 +18019,7 @@ function init() {
     else if (action === 'cancelMedDoneAt') cancelMedDoneAt(parseInt(arg2));
     else if (action === 'openMedAdjust') openMedAdjust(arg, parseInt(arg2));
     else if (action === 'confirmMedAdjust') confirmMedAdjust(arg, parseInt(arg2));
+    else if (action === 'undoMedSkip') undoMedSkip(arg, parseInt(arg2));
     else if (action === 'overrideMilestoneStatus') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); overrideMilestoneStatus(...args); }
     else if (action === 'upcomingToMilestone') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); upcomingToMilestone(...args); }
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
@@ -23580,20 +23599,22 @@ function renderRemindersAndAlerts() {
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
       </div>`;
     } else if (isSkipped) {
-      // CR-5: NEW skipped-state render. Pre-fix, the skipped branch produced no card at all
-      // and the 'All medications done for today' banner was removed — the parent got zero
-      // visual acknowledgement of their explicit skip, while _obCheckVitD3 kept flagging
-      // 'Vit D3 pending' on the home overlay, contradicting the just-recorded action.
+      // CR-5: skipped-state render with explicit acknowledgement + Undo affordance.
+      // V-M-68 + V-M-73 fix: Undo no longer calls markMedDone(name, idx) directly (which
+      // silently substituted tap-time as the administration time, exactly the CR-4 class
+      // of bug). Instead Undo clears the skip back to PENDING — the card re-renders with
+      // the standard [Done now] [Done at...] [Skip] buttons, forcing the parent to make
+      // an explicit choice. No fabricated time, no destroyed audit trail.
       html += `
       <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('skip-forward')}</div>
           <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-skip-btn supp-adjust-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
+            <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
           </div>
         </div>
-        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to revert and log a dose.</div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to clear and log the dose.</div>
       </div>`;
     }
   });
@@ -23808,6 +23829,22 @@ function confirmMedDoneAt(name, idx) {
   markMedDone(name, idx, picked);
 }
 function cancelMedDoneAt(idx) {
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+
+// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). The skip's
+// loggedAt audit trail is dropped — acceptable because the parent's post-Undo intent is
+// "I want to log the dose properly now," not "preserve the misclick." Re-renders so the
+// parent sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
+function undoMedSkip(name, idx) {
+  const todayStr = today();
+  if (medChecks[todayStr] && medChecks[todayStr][name] !== undefined) {
+    delete medChecks[todayStr][name];
+    save(KEYS.medChecks, medChecks);
+    _tsfMarkDirty();
+    _islMarkDirty('medical');
+  }
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
 }
@@ -29411,9 +29448,11 @@ function renderHistoryPreviews() {
     const ydChecks = medChecks[ydKey] || {};
     const activeMeds = meds.filter(m => m.active);
 
-    // Check yesterday for missed/skipped
-    const ydMissed = activeMeds.filter(m => !ydChecks[m.name]);
-    const ydSkipped = activeMeds.filter(m => ydChecks[m.name] === 'skipped');
+    // Check yesterday for missed/skipped — V-K-74: schema-aware via medCheckSkipped.
+    // Pre-fix `=== 'skipped'` missed the new object shape; parent who skipped yesterday
+    // saw the "Yesterday's meds not logged" danger strip instead of "Skipped yesterday".
+    const ydMissed = activeMeds.filter(m => !ydChecks[m.name] || (!medCheckIsDone(ydChecks[m.name]) && !medCheckSkipped(ydChecks[m.name])));
+    const ydSkipped = activeMeds.filter(m => medCheckSkipped(ydChecks[m.name]));
 
     if (ydMissed.length > 0) {
       medPrev.innerHTML = `<div class="info-strip is-danger">
@@ -35099,6 +35138,10 @@ function _miSetIntake(dateStr, meal, value) {
   feedingData[dateStr][meal + '_intake'] = value;
   save(KEYS.feeding, feedingData);
   _islMarkDirty('diet');
+  // V-M-70: intake adjustment alone doesn't change meal content (so withFat won't flip),
+  // but completes the contract that EVERY feedingData mutation re-evaluates today's
+  // negative-withFat doses. Defensive — harmless when nothing matches.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
 }
 
 function _miLevelFor(value) {
@@ -41182,6 +41225,16 @@ function renderMedD3PatternCard() {
   for (let i = startIdx; i >= 0; i--) {
     if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
+  }
+  // V-M-74: fresh-install warm-start — when the parent has just installed and hasn't
+  // logged a dose yet, don't slap them with a rose-tier "0/1 days (0%)". Render a
+  // softer "Just getting started" stripe with no aggressive percentile / streak / fat
+  // surfaces yet.
+  if (eligibleDays.length === 1 && doneDays.length === 0 && skippedDays.length === 0) {
+    body.innerHTML = '<div class="med-d3-summary"><div class="med-d3-summary-row">'
+      + zi('clock') + ' Just getting started — log today\'s dose to begin tracking.'
+      + '</div></div>';
+    return;
   }
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
@@ -58770,7 +58823,11 @@ function _tsfCollectEvents() {
       timeStr = parsed.givenAt;
       displayTime = _tsfFormatTime(parsed.givenAt);
     }
-    const detail = (parsed.status === 'done' || parsed.status === 'late') ? 'Done' : (parsed.status === 'skipped' ? 'Skipped' : '');
+    // V-V-17: chip detail carries the late marker so a half-awake parent reading only the
+    // chip (without tapping to expand) can see retroactive logs at a glance.
+    const detail = parsed.status === 'late' ? 'Done (late)'
+                 : (parsed.status === 'done' ? 'Done'
+                 : (parsed.status === 'skipped' ? 'Skipped' : ''));
     const ev = {
       id: 'med-' + medName,
       type: 'med',
@@ -59636,6 +59693,8 @@ function skipMeals(mealKeys) {
     if (!feedingData[dateStr][m]) feedingData[dateStr][m] = '—skipped—';
   });
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract on every feedingData mutation.
+  if (typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   renderHomeMealProgress();
   updateMealSkipButtons();
   showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
@@ -59654,6 +59713,8 @@ function skipSingleMeal(mealKey) {
   if (feedingData[dateStr][mealKey] && feedingData[dateStr][mealKey] !== '—skipped—') return; // already has food
   feedingData[dateStr][mealKey] = '—skipped—';
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   const input = document.getElementById('meal-' + mealKey);
   if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
   const timeInput = document.getElementById('mealtime-' + mealKey);
@@ -59669,6 +59730,8 @@ function unskipSingleMeal(mealKey) {
   if (!feedingData[dateStr]) return;
   feedingData[dateStr][mealKey] = '';
   save(KEYS.feeding, feedingData);
+  // V-M-70: complete the _refreshTodayMedWithFat contract.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   const input = document.getElementById('meal-' + mealKey);
   if (input) { input.value = ''; input.placeholder = 'Type to search foods...'; input.disabled = false; }
   const timeInput = document.getElementById('mealtime-' + mealKey);

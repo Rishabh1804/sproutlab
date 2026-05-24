@@ -2321,10 +2321,13 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .supp-alert-skipped .supp-alert-title { color:var(--tc-warn); }
 .supp-alert-skipped .supp-alert-detail { color:var(--tc-warn); }
-/* CR-7: openMedAdjust hint when no historical time was captured */
+/* CR-7: openMedAdjust hint when no historical time was captured.
+   V-V-10: explicit --mid colour so the italic reads as neutral observation rather than
+   inheriting --tc-sage from .supp-alert-done (which read as confirmatory not directive).
+   V-V-11: baked-in fs-sm so the class is self-contained if a future caller forgets t-sm. */
 .supp-adjust-hint {
   display:inline-block; margin-right:var(--sp-6);
-  font-style:italic;
+  font-style:italic; font-size:var(--fs-sm); color:var(--mid);
 }
 .med-d3-summary {
   padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
