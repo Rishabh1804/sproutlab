@@ -254,3 +254,30 @@ test('regression-guard-d3-v2-t1-6-t3-14: pending filters treat cleared sentinel 
   expect(r.parsedIsNull, 'parseMedCheck returns null for cleared').toBe(true);
   expect(r.readsAsPending, 'T3-14: combined helper check correctly classifies cleared as pending').toBe(true);
 });
+
+// ── T3-14 corrupted-empty-object corner (Maren synth-fold) ───────────────────
+test('regression-guard-d3-v2-t3-14-corrupted-empty: empty-object partial-write reads as pending', async ({ page }) => {
+  // The T3-14 fix's diff comment explicitly cites "corrupted partial-write records" as
+  // motivation. This regression guards the empty-object {} case — an interrupted Firestore
+  // partial-write or a legacy migration leftover — does not silently exclude the med from
+  // pending surfaces (which the raw truthy-check used to do).
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    if (!medChecks[t]) medChecks[t] = {};
+    medChecks[t][d3.name] = {}; // corrupted partial-write
+    return {
+      isDone:    medCheckIsDone(medChecks[t][d3.name]),
+      isSkipped: medCheckSkipped(medChecks[t][d3.name]),
+      readsAsPending: !medCheckIsDone(medChecks[t][d3.name]) && !medCheckSkipped(medChecks[t][d3.name]),
+    };
+  });
+
+  expect(r.isDone, 'empty object is not done').toBe(false);
+  expect(r.isSkipped, 'empty object is not skipped').toBe(false);
+  expect(r.readsAsPending, 'T3-14: corrupted {} must surface as pending so parent re-logs').toBe(true);
+});

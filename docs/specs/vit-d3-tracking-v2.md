@@ -285,4 +285,33 @@ const isPending = !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(today
 - No CareTicket integration
 - Cipher Edict V runs after Lyra synth completes
 
-— Lyra, 2026-05-24, v0 draft for canon-cc-008 round 1.
+---
+
+## Synth fold-in (post-Governor audits)
+
+Lyra's synthesis of Maren V-M-77..82 + Kael V-K-88..95 + Vela V-V-25..30 folded these small items into the same PR:
+
+1. **HR-4 fix at `home.js:6664`** (Maren) — `escHtml(m.name)` added to the medication-preview pending list interpolation. Pre-existing violation but the T3-14 fix touched the line; cleaner to close it now than tag-and-defer.
+2. **`renderMedD3PatternCard()` in `undoMedSkip`** (Kael pair-note to Maren) — same-device same-tab undo on the medical tab refreshes the 14-day pattern card without waiting for sync echo or tab re-switch. Mirrors the T1-4 mutating-write re-render contract.
+3. **V-K-95 sync-race comment at `undoMedSkip`** — primes future audit consumer that simultaneous-undo races resolve last-write-wins on the slot and lose one device's `clearedAt`.
+4. **Regression test `regression-guard-d3-v2-t3-14-corrupted-empty`** (Maren test gap) — defensive guard for the `{}` partial-write corner that the T3-14 diff comment explicitly cites as motivation.
+
+## Deferred to Tier 2 (registered, not shipped in this PR)
+
+Six Governor findings sit at LOW or MEDIUM severity and don't warrant a v2-Tier-1 scope expansion. They form the seed of the Tier 2 spec:
+
+| Tag | Source | Surface | Disposition |
+|---|---|---|---|
+| V-M-77 | Maren | `home.js:1043` preserveWithFat truth-table tightening (`fat.withFat !== true` vs `=== false`) — currently dead path | Tier 2 defence-in-depth |
+| V-M-78 | Maren | Chained-undo audit loss: `undoMedSkip` second cycle (cleared → skip → cleared) deletes the slot because `parseMedCheck(cleared) === null` falls into the `else { delete }` branch | Tier 2 — preserve the most recent `priorLoggedAt` regardless of current parsed status |
+| V-M-79 | Maren | Fallback `else { delete }` in `undoMedSkip` should `console.warn` for telemetry rather than silent delete (sync-race or chained-undo reachability) | Tier 2 |
+| V-M-81 | Maren | Midnight-rollover cleared crosses to `ydMissed` as "Yesterday's meds not logged" — care-safe framing but spec didn't document it. Documented now. | No code change; doctrine note only |
+| V-K-91 | Kael | `_refreshTodayMedWithFat` performance: 3 render passes per fat-context flip. Fires only when `mutated===true` (rare); acceptable | No change |
+| V-K-94 | Kael | `priorStatus`/`priorLoggedAt`/`clearedAt` persist via Firestore single-doc but no current reader consumes them. Future audit consumer must tolerate fields being absent on legacy records written pre-PR-122 | Tier 2 / v3 consumer obligation |
+| V-K-95 | Kael | Two-device simultaneous-undo race loses one `clearedAt` (last-write-wins). Comment added in this PR; full multi-history schema deferred | Tier 2 |
+| V-V-25 | Vela | Skipped chip ≈ Done chip pixel-identical except one-word detail text. Half-awake test marginal. CSS-only muted/strikethrough variant. | Tier 2 — styles.css touch → triple-jurisdiction review |
+| V-V-30 | Vela | TSF skipped chip lacks Undo affordance that lives on home reminder card. Cross-Region surface gap. | Tier 2 — either add affordance, or formalize the read-surface convention |
+
+The earlier Vit D3 v2 backlog at `docs/specs/vit-d3-tracking-v2-backlog.md` remains the canonical source for the pre-existing Tier 2 items (T2-7..T2-12 + Tier 3 T3-13 + T3-15). When Tier 2 work starts, this section folds into the Tier 2 spec.
+
+— Lyra, 2026-05-24, post-synth ratification (round 1 canon-cc-008).

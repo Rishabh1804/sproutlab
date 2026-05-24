@@ -1020,8 +1020,16 @@ function undoMedSkip(name, idx) {
     _tsfMarkDirty();
     _islMarkDirty('medical');
   }
+  // V-K-95 (synth-fold): Firestore single-doc merge preserves the cleared sentinel's
+  // priorStatus / priorLoggedAt / clearedAt fields across devices. A two-device simultaneous-undo
+  // race resolves last-write-wins on the slot — only one clearedAt survives. Acceptable in v2
+  // (both writers had the same intent); a future audit consumer should not assume singular history.
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
+  // Kael pair-note synth: same-device same-tab undo on the medical tab should refresh the
+  // 14-day pattern card grid without waiting for a sync echo or tab re-switch. Mirrors the
+  // T1-4 contract that mutating writes also re-render their dependent surfaces.
+  if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard();
 }
 
 // Adjust the administration time of an already-logged dose. Re-runs with-fat
@@ -6661,7 +6669,7 @@ function renderHistoryPreviews() {
         medPrev.innerHTML = `<div class="info-strip is-sky">
           <span><svg class="zi"><use href="#zi-pill"/></svg></span>
           <div><strong class="tc-sky">${todayDone.length}/${activeMeds.length} given today</strong>
-          <div class="t-sub">Pending: ${activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).map(m => m.name).join(', ') || 'None'}</div></div>
+          <div class="t-sub">Pending: ${activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).map(m => escHtml(m.name)).join(', ') || 'None'}</div></div>
         </div>`;
       } else {
         medPrev.innerHTML = `<div class="info-strip is-neutral">
