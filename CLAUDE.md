@@ -122,16 +122,36 @@ split/
 
 ### Build
 
+**Canonical invocation (use this):**
+
 ```bash
-cd ~/storage/shared/SproutLab/split
-bash build.sh > sproutlab.html
-# Then sync to serve paths:
-cp sproutlab.html ../index.html
-cp sproutlab.html ../sproutlab.html
+pnpm build
+# Then commit and push:
 git add -A && git commit -m "description" && git --no-pager push
 ```
 
-**NEVER use raw cat.** Always build.sh. The split-file build is NOT a simple concatenation — it injects DOCTYPE, style tags, script tags, and Chart.js CDN link.
+`pnpm build` calls `split/build-safe.sh` which (a) invokes `build.sh` with
+correct STDOUT/STDERR redirection, (b) validates the output starts with
+`<!DOCTYPE html>` and is > 100KB, and (c) mirrors `sproutlab.html` →
+`index.html`. **Use this, not direct `bash split/build.sh` invocations.**
+
+**Why the wrapper exists** (PR #118 incident, ratified in PR #120):
+`build.sh` writes HTML to STDOUT and audit gates to STDERR. A caller
+invoking `bash build.sh > out.html 2>&1` will have the `2>&1` merge STDERR
+into STDOUT *after* STDOUT has been redirected to the file — audit text
+gets prepended to the HTML and pollutes the rendered page. `build-safe.sh`
+enforces the correct redirection (`> $OUT 2> $LOG`) and validates the
+output before declaring success.
+
+**Direct `bash build.sh` invocation is supported but ad-hoc**: if you
+must invoke `build.sh` manually (e.g. inside a script that needs the raw
+STDOUT), use `bash build.sh > out.html 2> /tmp/build.log` (STDERR to a
+separate file, never `2>&1`). Then validate: `head -1 out.html` must equal
+`<!DOCTYPE html>`.
+
+**NEVER use raw cat.** Always `pnpm build` (or `build.sh` via the wrapper).
+The split-file build is NOT a simple concatenation — it injects DOCTYPE,
+style tags, script tags, and Chart.js CDN link.
 
 ## Hard Rules (HR-1 through HR-12)
 
