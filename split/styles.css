@@ -2261,7 +2261,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .supp-alert-title { flex:1; font-size:var(--fs-md); font-weight:600; color:var(--text); }
 .supp-alert.done .supp-alert-title { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-title { color:var(--tc-rose); }
-.supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; }
+.supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 .supp-alert-detail { font-size:var(--fs-base); font-weight:400; color:var(--mid); padding-left:var(--sp-24); line-height:var(--lh-normal); }
 .supp-alert.done .supp-alert-detail { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-detail { color:var(--tc-rose); }
@@ -2285,6 +2285,67 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   min-height:40px; display:inline-flex; align-items:center;
 }
 .supp-skip-btn:hover { border-color:var(--rose); color:var(--rose); background:var(--rose-light); }
+
+/* Vit D3 tracking v1 — done-state card, inline time-edit, and pattern card */
+.supp-alert-done {
+  background:var(--sage-light);
+  border-left-color:var(--sage);
+}
+.supp-alert-done .supp-alert-title { color:var(--tc-sage); }
+.supp-alert-done .supp-alert-detail { color:var(--tc-sage); }
+.supp-check-btn-alt {
+  background:transparent;
+  color:var(--tc-sage);
+  border:1.5px solid var(--sage);
+}
+.supp-check-btn-alt:hover { background:var(--sage-light); }
+.supp-time-input {
+  font-family:'Nunito',sans-serif; font-size:var(--fs-base);
+  padding:var(--sp-6) var(--sp-10); border-radius:var(--r-md);
+  border:1.5px solid var(--border); background:var(--bg);
+  color:var(--text); min-height:40px;
+}
+.supp-fat-badge {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  font-size:var(--fs-sm); color:var(--tc-sage); font-weight:600;
+}
+.supp-fat-badge-neutral { color:var(--mid); font-weight:400; }
+.supp-adjust-btn {
+  font-size:var(--fs-sm); padding:var(--sp-4) var(--sp-10);
+  min-height:auto;
+}
+/* CR-5: skipped-state reminder card variant — distinct from done/missed */
+.supp-alert-skipped {
+  background:var(--amber-light);
+  border-left-color:var(--amber);
+}
+.supp-alert-skipped .supp-alert-title { color:var(--tc-warn); }
+.supp-alert-skipped .supp-alert-detail { color:var(--tc-warn); }
+/* CR-7: openMedAdjust hint when no historical time was captured.
+   V-V-10: explicit --mid colour so the italic reads as neutral observation rather than
+   inheriting --tc-sage from .supp-alert-done (which read as confirmatory not directive).
+   V-V-11: baked-in fs-sm so the class is self-contained if a future caller forgets t-sm. */
+.supp-adjust-hint {
+  display:inline-block; margin-right:var(--sp-6);
+  font-style:italic; font-size:var(--fs-sm); color:var(--mid);
+}
+.med-d3-summary {
+  padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
+  font-size:var(--fs-base); color:var(--mid);
+}
+.med-d3-summary-row { padding:var(--sp-2) 0; }
+.med-d3-log {
+  padding-top:var(--sp-6); border-top:1px solid var(--border);
+  font-size:var(--fs-sm); line-height:var(--lh-normal);
+}
+.med-d3-log-row {
+  display:flex; gap:var(--sp-12); padding:var(--sp-2) 0;
+  flex-wrap:nowrap;
+}
+.med-d3-log-row > :last-child { min-width:0; overflow-wrap:break-word; flex:1; }
+.med-d3-log-date {
+  min-width:64px; color:var(--mid); font-weight:400; flex-shrink:0;
+}
 
 /* ── Home stat pills ── */
 /* ── Stat pills grid — balanced sizing ── */

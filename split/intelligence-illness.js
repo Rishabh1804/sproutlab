@@ -2062,6 +2062,8 @@ function saveFeedingDay() {
   save(KEYS.feeding, feedingData);
   _tsfMarkDirty();
   _islMarkDirty('diet');
+  // CR-14: re-evaluate with-fat for today's dose entries that were logged before this meal.
+  if (d === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   // Auto-introduce any new foods from all meal slots
   autoIntroduceFoodsFromDay(d);
   renderFeedingHistory();

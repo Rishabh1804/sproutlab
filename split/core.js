@@ -65,6 +65,233 @@ function save(key, val) {
 }
 
 // ─────────────────────────────────────────
+// MED-CHECK SCHEMA HELPERS — v1 Vit D3 tracking
+// ─────────────────────────────────────────
+// medChecks[date][medName] accepts two shapes (backwards-compat, non-destructive migration):
+//   • Legacy string: 'done:HH:MM' | 'done:late' | 'done' | 'skipped'  — HH:MM was tap-time
+//   • New object: { status, givenAt, loggedAt, withFat, fatFood, fatDelta }
+// Every reader migrates via parseMedCheck() so writers can emit the new shape unconditionally.
+function parseMedCheck(val) {
+  if (!val) return null;
+  // V-K-72: arrays are typeof 'object' but not med-check shapes — reject explicitly.
+  if (Array.isArray(val)) return null;
+  if (typeof val === 'object') {
+    return {
+      status:   val.status || null,
+      givenAt:  val.givenAt || null,
+      loggedAt: val.loggedAt || null,
+      withFat:  typeof val.withFat === 'boolean' ? val.withFat : null,
+      fatFood:  val.fatFood || null,
+      fatDelta: typeof val.fatDelta === 'number' ? val.fatDelta : null,
+    };
+  }
+  if (typeof val !== 'string') return null;
+  if (val === 'skipped') return { status:'skipped', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val === 'done:late' || val === 'done') return { status:'late', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
+  if (val.indexOf('done:') === 0) {
+    var t = val.slice(5);
+    // CR-2: accept BOTH 'HH:MM' (24h) AND 'HH:MM am|pm' / 'HH:MM AM|PM' (legacy en-IN 12h).
+    // The pre-v1 markMedDone used en-IN locale which produced 12h+suffix strings;
+    // those must round-trip through parseMedCheck without losing givenAt.
+    // V-K-73: tighten range validation — pre-fix, '24:00' / '25:99' passed the structural
+    // regex and stored as givenAt, then _hhmmToMinutes returned out-of-range minutes (1440+).
+    var hhmm24 = t.match(/^(\d{1,2}):(\d{2})$/);
+    var ampmMatch = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+    var givenAt = null;
+    if (hhmm24) {
+      var h24 = parseInt(hhmm24[1], 10);
+      var m24 = parseInt(hhmm24[2], 10);
+      if (h24 >= 0 && h24 <= 23 && m24 >= 0 && m24 <= 59) givenAt = t;
+    } else if (ampmMatch) {
+      var h = parseInt(ampmMatch[1], 10);
+      var mm = ampmMatch[2];
+      var ampm = ampmMatch[3].toLowerCase();
+      if (ampm === 'pm' && h !== 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+      givenAt = (h < 10 ? '0' + h : String(h)) + ':' + mm;
+    }
+    return {
+      status: givenAt !== null ? 'done' : (t === 'late' ? 'late' : 'done'),
+      givenAt: givenAt,
+      loggedAt: null,
+      withFat: null,
+      fatFood: null,
+      fatDelta: null,
+    };
+  }
+  return null;
+}
+function medCheckIsDone(val) {
+  var p = parseMedCheck(val);
+  return !!(p && (p.status === 'done' || p.status === 'late'));
+}
+function medCheckSkipped(val) {
+  var p = parseMedCheck(val);
+  return !!(p && p.status === 'skipped');
+}
+function medCheckGivenAt(val) {
+  var p = parseMedCheck(val);
+  return p ? p.givenAt : null;
+}
+
+// Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
+// the C-1.5 factuality work flows through automatically — no second source of truth.
+var _fatBearingFoodNamesCache = null;
+function _getFatBearingFoodNames() {
+  if (_fatBearingFoodNamesCache) return _fatBearingFoodNamesCache;
+  var out = [];
+  if (typeof NUTRITION === 'object' && NUTRITION) {
+    Object.keys(NUTRITION).forEach(function(name) {
+      var e = NUTRITION[name];
+      if (!e) return;
+      var tags = e.tags || [];
+      var nuts = e.nutrients || [];
+      if (tags.indexOf('healthy-fats') >= 0 || nuts.indexOf('healthy fats') >= 0 ||
+          nuts.indexOf('omega-3') >= 0 || nuts.indexOf('MCTs') >= 0) {
+        out.push(name);
+      }
+    });
+  }
+  // Indian-prep augmentation: paratha carries ghee in default preparation.
+  if (out.indexOf('paratha') < 0) out.push('paratha');
+  _fatBearingFoodNamesCache = out;
+  return out;
+}
+function _hhmmToMinutes(s) {
+  if (!s) return -1;
+  var m = String(s).match(/^(\d{1,2}):(\d{2})/);
+  return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : -1;
+}
+
+// CR-14: re-run with-fat detection on today's dose entries that currently report withFat:false.
+// markMedDone freezes withFat at log-time against the feedingData snapshot; if the parent logs
+// the dose BEFORE typing the breakfast row that accompanied it, withFat stays permanently false
+// unless they tap Adjust. This helper is called from the feedingData save paths to catch the
+// "logged dose first, logged meal second" sequence within the ±60min window.
+// Only flips withFat:false → true (never the reverse — never erases a real positive observation).
+// Returns true if any record was updated.
+function _refreshTodayMedWithFat() {
+  if (typeof medChecks !== 'object' || !medChecks) return false;
+  var t = today();
+  var dayMC = medChecks[t];
+  if (!dayMC) return false;
+  var mutated = false;
+  Object.keys(dayMC).forEach(function(name) {
+    var parsed = parseMedCheck(dayMC[name]);
+    if (!parsed) return;
+    if (parsed.status !== 'done' && parsed.status !== 'late') return;
+    if (!parsed.givenAt) return;
+    if (parsed.withFat !== false) return; // only redetect when previously negative
+    var fresh = _detectFatContextNearTime(parsed.givenAt, t);
+    if (fresh.withFat === true) {
+      // Preserve the rest of the object; only update the fat fields.
+      var cur = (typeof dayMC[name] === 'object' && !Array.isArray(dayMC[name])) ? dayMC[name] : parsed;
+      dayMC[name] = Object.assign({}, cur, {
+        withFat:  true,
+        fatFood:  fresh.fatFood,
+        fatDelta: fresh.fatDelta,
+      });
+      mutated = true;
+    }
+  });
+  if (mutated) {
+    save(KEYS.medChecks, medChecks);
+    if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
+    if (typeof _islMarkDirty === 'function') _islMarkDirty('medical');
+  }
+  return mutated;
+}
+
+// CR-9: display formatter — 24h canonical 'HH:MM' → '8:42 AM' / '2:30 PM' for parent-facing surfaces.
+// The schema stores 24h (en-GB canonical) per V-M-60; this formatter renders the Indian-parent 12h convention.
+function _formatTime12h(hhmm) {
+  // V-M-72: string-only guard at entry so a future render site without an outer
+  // `if (givenAt)` check can't leak literal 'null' / 'undefined' to the parent.
+  if (typeof hhmm !== 'string' || !hhmm) return '';
+  if (!/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm;
+  var parts = hhmm.split(':');
+  var h = parseInt(parts[0], 10);
+  var m = parts[1];
+  if (isNaN(h) || h < 0 || h > 23) return hhmm;
+  if (h === 0) return '12:' + m + ' AM';
+  if (h === 12) return '12:' + m + ' PM';
+  if (h > 12) return (h - 12) + ':' + m + ' PM';
+  return h + ':' + m + ' AM';
+}
+
+// Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
+// Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
+// V-K-69: token-equality matching (with _baseFoodName alias normalization) instead of substring
+// `indexOf` — avoids the coconut-water-matches-coconut false-positive.
+function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
+  var win = (typeof windowMinutes === 'number') ? windowMinutes : 60;
+  var result = { withFat:false, fatFood:null, fatDelta:null };
+  var targetMin = _hhmmToMinutes(timeStr);
+  if (targetMin < 0) return result;
+  if (typeof feedingData !== 'object' || !feedingData) return result;
+  var day = feedingData[dateStr];
+  if (!day) return result;
+  var fatSet = _getFatBearingFoodNames();
+  var fatLookup = {};
+  for (var fi = 0; fi < fatSet.length; fi++) fatLookup[fatSet[fi]] = true;
+  // CR-12: iterate meals in chronological proximity order (closest-to-dose-time first)
+  // instead of the hard-coded ['breakfast','lunch','dinner','snack'] order — eliminates
+  // the meal-name-iteration bias when two meals tie in absolute delta.
+  var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+  var mealEntries = [];
+  meals.forEach(function(m) {
+    var mTime = day[m + '_time'];
+    var mFoods = day[m];
+    if (!mTime || !mFoods || mFoods === '—skipped—') return;
+    var mMin = _hhmmToMinutes(mTime);
+    if (mMin < 0) return;
+    var delta = mMin - targetMin;
+    if (Math.abs(delta) > win) return;
+    mealEntries.push({ meal: m, foods: mFoods, min: mMin, delta: delta, abs: Math.abs(delta) });
+  });
+  mealEntries.sort(function(a, b) { return a.abs - b.abs; });
+
+  var best = null;
+  mealEntries.forEach(function(entry) {
+    if (best !== null) return; // already found the closest match
+    // Tokenize the meal text on comma / " and " / "+" / "&". Trim each token. Empty tokens dropped.
+    var tokens = String(entry.foods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
+    var matched = null;
+    for (var ti = 0; ti < tokens.length; ti++) {
+      var tok = tokens[ti];
+      // Try exact token match first.
+      if (fatLookup[tok]) { matched = tok; break; }
+      // V-K-69: if the token is itself a known NUTRITION key but NOT in fatLookup, do NOT attempt
+      // alias normalisation — the parent logged a specific known food that is NOT fat-bearing
+      // (e.g. 'coconut water' is a distinct NUTRITION entry from 'coconut'; _baseFoodName would
+      // strip 'water' as a form-word and incorrectly return 'coconut').
+      if (typeof NUTRITION === 'object' && NUTRITION[tok]) continue;
+      // Otherwise try alias-normalized base name (catches 'yogurt' → 'curd', 'fresh ghee' → 'ghee').
+      var base = (typeof _baseFoodName === 'function') ? _baseFoodName(tok) : tok;
+      if (base !== tok && fatLookup[base]) { matched = base; break; }
+      // CR-13: plural/singular drift — NUTRITION is keyed inconsistently ('almonds' plural,
+      // 'walnut' singular). Try both depluralization and pluralization against fatLookup directly.
+      if (tok.length > 3 && tok.charAt(tok.length - 1) === 's') {
+        var singular = tok.slice(0, -1);
+        if (fatLookup[singular]) { matched = singular; break; }
+      } else if (tok.length > 2) {
+        var plural = tok + 's';
+        if (fatLookup[plural]) { matched = plural; break; }
+      }
+    }
+    if (matched) {
+      best = { food: matched, delta: entry.delta };
+    }
+  });
+  if (best) {
+    result.withFat = true;
+    result.fatFood = best.food;
+    result.fatDelta = best.delta;
+  }
+  return result;
+}
+
+// ─────────────────────────────────────────
 // DEFAULT DATA (pre-loaded)
 // ─────────────────────────────────────────
 const DOB        = new Date(2025, 8, 4, 17, 9); // Sep 4, 2025 at 17:09 IST
@@ -341,6 +568,12 @@ function init() {
     else if (action === 'resolveMissedMedSkipped' && typeof resolveMissedMed === 'function') resolveMissedMed(arg, arg2, 'skipped');
     else if (action === 'markMedDone' && typeof markMedDone === 'function') markMedDone(arg, Number(arg2));
     else if (action === 'markMedSkipped' && typeof markMedSkipped === 'function') markMedSkipped(arg, Number(arg2));
+    else if (action === 'openMedDoneAt' && typeof openMedDoneAt === 'function') openMedDoneAt(arg, Number(arg2));
+    else if (action === 'confirmMedDoneAt' && typeof confirmMedDoneAt === 'function') confirmMedDoneAt(arg, Number(arg2));
+    else if (action === 'cancelMedDoneAt' && typeof cancelMedDoneAt === 'function') cancelMedDoneAt(Number(arg2));
+    else if (action === 'openMedAdjust' && typeof openMedAdjust === 'function') openMedAdjust(arg, Number(arg2));
+    else if (action === 'confirmMedAdjust' && typeof confirmMedAdjust === 'function') confirmMedAdjust(arg, Number(arg2));
+    else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
@@ -677,6 +910,12 @@ function init() {
     else if (action === 'resolveMissedMed') resolveMissedMed(arg, arg2, arg3);
     else if (action === 'markMedDone') markMedDone(arg, parseInt(arg2));
     else if (action === 'markMedSkipped') markMedSkipped(arg, parseInt(arg2));
+    else if (action === 'openMedDoneAt') openMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'confirmMedDoneAt') confirmMedDoneAt(arg, parseInt(arg2));
+    else if (action === 'cancelMedDoneAt') cancelMedDoneAt(parseInt(arg2));
+    else if (action === 'openMedAdjust') openMedAdjust(arg, parseInt(arg2));
+    else if (action === 'confirmMedAdjust') confirmMedAdjust(arg, parseInt(arg2));
+    else if (action === 'undoMedSkip') undoMedSkip(arg, parseInt(arg2));
     else if (action === 'overrideMilestoneStatus') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); overrideMilestoneStatus(...args); }
     else if (action === 'upcomingToMilestone') { const args = arg.split(',').map(s=>s.trim().replace(/^'|'$/g,'')); upcomingToMilestone(...args); }
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
@@ -1705,7 +1944,8 @@ function calcMedicalScore() {
       const ds = toDateStr(d);
       const dayChecks = medChecks[ds];
       if (dayChecks) {
-        const anyDone = Object.values(dayChecks).some(v => typeof v === 'string' && v.startsWith('done'));
+        // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
+        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }

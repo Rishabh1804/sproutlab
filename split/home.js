@@ -690,39 +690,85 @@ function renderRemindersAndAlerts() {
     </div>`;
   }
 
-  // ── 4. TODAY'S MED REMINDERS — only show unresolved ones ──
+  // ── 4. TODAY'S MED REMINDERS — show pending with two-button + Adjust on done ──
+  // Vit D3 tracking v1: pending state offers "Done now" + "Done at..." + Skip.
+  // Done state renders captured givenAt + with-fat context with a reachable Adjust.
   let allTodayResolved = true;
   activeMeds.forEach((m, idx) => {
     const dayLog = medChecks[todayStr] || {};
     const status = dayLog[m.name];
-    const isDone = status && status.startsWith('done:');
-    const isSkipped = status === 'skipped';
+    const parsed = parseMedCheck(status);
+    const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
+    const isSkipped = !!(parsed && parsed.status === 'skipped');
     const isResolved = isDone || isSkipped;
     if (!isResolved) allTodayResolved = false;
 
     if (!isResolved) {
-      // Only show unresolved meds
       html += `
       <div class="supp-alert" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('warn')}</div>
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
           <div class="supp-alert-action">
-            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done</button>
+            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
+            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Done at...</button>
             <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
           </div>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${escHtml(m.freq || 'As prescribed')}</div>
       </div>`;
+    } else if (isDone) {
+      const givenAt = parsed && parsed.givenAt ? parsed.givenAt : null;
+      const fatFood = parsed && parsed.fatFood ? parsed.fatFood : null;
+      const isLate = parsed && parsed.status === 'late';
+      // CR-9: render 12h for parent-facing surfaces. Storage stays 24h en-GB canonical.
+      // CR-15: surface 'logged late' marker on the title here too — was inconsistent
+      // vs the TSF event-detail expansion which always showed it.
+      let timeText;
+      if (givenAt) timeText = 'Done at ' + escHtml(_formatTime12h(givenAt)) + (isLate ? ' (logged late)' : '');
+      else if (isLate) timeText = 'Done — logged late';
+      else timeText = 'Done today';
+      // V-M-61: null withFat (legacy / unknown) renders no badge. V-M-63: softer framing.
+      let fatBadge = '';
+      if (parsed && parsed.withFat === true && fatFood) {
+        fatBadge = `<span class="supp-fat-badge">${zi('check')} with ${escHtml(fatFood)}</span>`;
+      } else if (parsed && parsed.withFat === false && givenAt) {
+        fatBadge = `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal logged nearby</span>`;
+      }
+      html += `
+      <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('check')}</div>
+          <div class="supp-alert-title">${timeText} — ${escHtml(m.name)}</div>
+          <div class="supp-alert-action">
+            <button class="supp-skip-btn supp-adjust-btn" data-action="openMedAdjust" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Adjust</button>
+          </div>
+        </div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
+      </div>`;
+    } else if (isSkipped) {
+      // CR-5: skipped-state render with explicit acknowledgement + Undo affordance.
+      // V-M-68 + V-M-73 fix: Undo no longer calls markMedDone(name, idx) directly (which
+      // silently substituted tap-time as the administration time, exactly the CR-4 class
+      // of bug). Instead Undo clears the skip back to PENDING — the card re-renders with
+      // the standard [Done now] [Done at...] [Skip] buttons, forcing the parent to make
+      // an explicit choice. No fabricated time, no destroyed audit trail.
+      html += `
+      <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('skip-forward')}</div>
+          <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
+          <div class="supp-alert-action">
+            <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
+          </div>
+        </div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to clear and log the dose.</div>
+      </div>`;
     }
   });
 
-  // If all today's meds are resolved, show a compact summary instead
-  if (activeMeds.length > 0 && allTodayResolved) {
-    html += `<div style="display:flex;align-items:center;gap:var(--sp-8);padding:8px 12px;border-radius:var(--r-lg);background:var(--sage-light);font-size:var(--fs-base);color:var(--tc-sage);">
-      <span><svg class="zi"><use href="#zi-check"/></svg></span> All medications done for today
-    </div>`;
-  }
+  // Vit D3 tracking v1: the all-resolved banner is redundant now that done-state
+  // cards render their own captured time + with-fat context. Removed.
 
   // v2.3: Store HTML — renderHomeContextAlerts will combine and render both
   window._remindersHTML = html;
@@ -869,12 +915,27 @@ function fmtTips(s) {
           .replace(/\{\{NO\}\}/g, '<span class="icon-rose">' + zi('warn') + '</span>');
 }
 
-function markMedDone(name, idx) {
+// Vit D3 tracking v1: markMedDone emits the new object schema with
+// actual administration time (givenAt) + auto-detected fat-meal context.
+// givenTime is optional — defaults to "now" (the "Done now" button path).
+// The "Done at..." flow passes a parent-stated HH:MM string.
+function markMedDone(name, idx, givenTime) {
   const todayStr = today();
   const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  // V-M-60: storage uses 24h en-GB (HH:MM). Display layer formats for the user;
+  // the storage layer must be canonical so _hhmmToMinutes parses correctly across AM/PM.
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const givenAt = (typeof givenTime === 'string' && /^\d{1,2}:\d{2}$/.test(givenTime)) ? givenTime : loggedAt;
+  const fat = _detectFatContextNearTime(givenAt, todayStr);
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
-  medChecks[todayStr][name] = 'done:' + timeStr;
+  medChecks[todayStr][name] = {
+    status:   'done',
+    givenAt:  givenAt,
+    loggedAt: loggedAt,
+    withFat:  fat.withFat,
+    fatFood:  fat.fatFood,
+    fatDelta: fat.fatDelta,
+  };
   save(KEYS.medChecks, medChecks);
   _tsfMarkDirty();
   _islMarkDirty('medical');
@@ -888,11 +949,130 @@ function markMedDone(name, idx) {
   }
 }
 
-function markMedSkipped(name, idx) {
+// Open the inline "Done at..." time-edit in the reminder card. Reveals a
+// time-input + Save/Cancel pair inside the card without a modal.
+function openMedDoneAt(name, idx) {
+  const card = document.getElementById('supp-alert-' + idx);
+  if (!card) return;
+  const actionRow = card.querySelector('.supp-alert-action');
+  if (!actionRow || actionRow.dataset.editing === '1') return;
+  actionRow.dataset.editing = '1';
+  const now = new Date();
+  const nowStr = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); // HH:MM 24h for input
+  actionRow.innerHTML =
+    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(nowStr) + '">' +
+    '<button class="supp-check-btn" data-action="confirmMedDoneAt" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
+    '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
+}
+function confirmMedDoneAt(name, idx) {
+  // CR-4: validate before falling through to markMedDone — empty / malformed input must
+  // surface an error, not silently substitute tap-time and overwrite the parent's intent.
+  const input = document.getElementById('supp-time-' + idx);
+  const picked = input && input.value ? input.value : null;
+  if (!picked || !/^\d{1,2}:\d{2}$/.test(picked)) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Pick a time, or tap Cancel');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
+  markMedDone(name, idx, picked);
+}
+function cancelMedDoneAt(idx) {
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+
+// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). The skip's
+// loggedAt audit trail is dropped — acceptable because the parent's post-Undo intent is
+// "I want to log the dose properly now," not "preserve the misclick." Re-renders so the
+// parent sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
+function undoMedSkip(name, idx) {
   const todayStr = today();
-  if (!medChecks[todayStr]) medChecks[todayStr] = {};
-  medChecks[todayStr][name] = 'skipped';
+  if (medChecks[todayStr] && medChecks[todayStr][name] !== undefined) {
+    delete medChecks[todayStr][name];
+    save(KEYS.medChecks, medChecks);
+    _tsfMarkDirty();
+    _islMarkDirty('medical');
+  }
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+
+// Adjust the administration time of an already-logged dose. Re-runs with-fat
+// detection on the new givenAt. Works on today's dose (the only adjust surface
+// in v1; past-day adjusts continue to use resolveMissedMed).
+function adjustMedTime(name, idx, newTime) {
+  const todayStr = today();
+  if (!medChecks[todayStr] || !medChecks[todayStr][name]) return;
+  if (!newTime || !/^\d{1,2}:\d{2}$/.test(newTime)) return;
+  const existing = parseMedCheck(medChecks[todayStr][name]);
+  if (!existing || existing.status === 'skipped') return;
+  const fat = _detectFatContextNearTime(newTime, todayStr);
+  const now = new Date();
+  // V-M-65: canonical 24h storage (en-GB).
+  medChecks[todayStr][name] = {
+    status:   existing.status,
+    givenAt:  newTime,
+    loggedAt: existing.loggedAt || now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
+    withFat:  fat.withFat,
+    fatFood:  fat.fatFood,
+    fatDelta: fat.fatDelta,
+  };
   save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
+  _islMarkDirty('medical');
+  renderRemindersAndAlerts();
+  renderHomeContextAlerts();
+}
+function openMedAdjust(name, idx) {
+  const card = document.getElementById('supp-alert-' + idx);
+  if (!card) return;
+  const actionRow = card.querySelector('.supp-alert-action');
+  if (!actionRow || actionRow.dataset.editing === '1') return;
+  actionRow.dataset.editing = '1';
+  // CR-7: prefill with the captured givenAt if present; if absent (legacy record with no
+  // time captured), leave the input EMPTY rather than substituting the current clock time.
+  // confirmMedAdjust's CR-8 validation will block a save with no time, so the parent must
+  // actively type a value to overwrite the historical record — no accidental clobbers.
+  const cur = parseMedCheck(medChecks[today()] && medChecks[today()][name]);
+  const curAt = cur && cur.givenAt ? cur.givenAt : '';
+  const norm = String(curAt).replace(/\s*(AM|PM)\s*$/i, '');
+  const hint = norm ? '' : '<span class="supp-adjust-hint t-sub t-sm">No time captured — enter actual time:</span>';
+  actionRow.innerHTML =
+    hint +
+    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(norm) + '">' +
+    '<button class="supp-check-btn" data-action="confirmMedAdjust" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
+    '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
+}
+function confirmMedAdjust(name, idx) {
+  // CR-8: validate before falling through to adjustMedTime — empty / malformed input
+  // must surface an error and NOT wedge the editor (adjustMedTime's old early-return
+  // left dataset.editing='1' set, blocking reopens).
+  const input = document.getElementById('supp-time-' + idx);
+  const picked = input && input.value ? input.value : null;
+  if (!picked || !/^\d{1,2}:\d{2}$/.test(picked)) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Pick a time, or tap Cancel');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
+  adjustMedTime(name, idx, picked);
+}
+
+function markMedSkipped(name, idx) {
+  // CR-10: emit new object schema. Skipped doses now carry loggedAt for audit trail.
+  const todayStr = today();
+  const now = new Date();
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  if (!medChecks[todayStr]) medChecks[todayStr] = {};
+  medChecks[todayStr][name] = {
+    status:   'skipped',
+    givenAt:  null,
+    loggedAt: loggedAt,
+    withFat:  null,
+    fatFood:  null,
+    fatDelta: null,
+  };
+  save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
   _islMarkDirty('medical');
 
   const el = document.getElementById('supp-alert-' + idx);
@@ -905,13 +1085,34 @@ function markMedSkipped(name, idx) {
 }
 
 function resolveMissedMed(name, dateStr, action) {
+  // CR-10: emit new object schema for both retroactive done-mark and retroactive skip.
+  // Retroactive done has no givenAt (no specific administration time was captured) so
+  // with-fat detection is left null — the 14-day card's withFatKnown denominator
+  // correctly excludes records with no time-anchored fat context.
   if (!medChecks[dateStr]) medChecks[dateStr] = {};
+  const now = new Date();
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   if (action === 'done') {
-    medChecks[dateStr][name] = 'done:late';
+    medChecks[dateStr][name] = {
+      status:   'late',
+      givenAt:  null,
+      loggedAt: loggedAt,
+      withFat:  null,
+      fatFood:  null,
+      fatDelta: null,
+    };
   } else {
-    medChecks[dateStr][name] = 'skipped';
+    medChecks[dateStr][name] = {
+      status:   'skipped',
+      givenAt:  null,
+      loggedAt: loggedAt,
+      withFat:  null,
+      fatFood:  null,
+      fatDelta: null,
+    };
   }
   save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
   _islMarkDirty('medical');
   renderRemindersAndAlerts(); renderHomeContextAlerts();
 }
@@ -2527,8 +2728,9 @@ function renderMedLog() {
     const [year, mon] = monthKey.split('-');
     const monthLabel = `${monthNames[parseInt(mon) - 1]} ${year}`;
     const monthId = 'ml-' + monthKey;
-    const givenCount = items.filter(e => e.status.startsWith('done')).length;
-    const skippedCount = items.filter(e => e.status === 'skipped').length;
+    // V-K-66: schema-aware filtering — items can carry legacy string status OR new object status.
+    const givenCount = items.filter(e => medCheckIsDone(e.status)).length;
+    const skippedCount = items.filter(e => medCheckSkipped(e.status)).length;
 
     html += `<div class="history-month" id="${monthId}">
       <div class="history-month-header" data-action="toggleHistoryMonth" data-arg="${monthId}" style="background:linear-gradient(135deg,var(--sky-light),var(--sky-light));border-color:rgba(168,207,224,0.4);">
@@ -2556,12 +2758,18 @@ function renderMedLog() {
       html += `<div style=""font-weight:600;font-size:var(--fs-sm);color:var(--tc-sky);margin-bottom:4px;">${dayName}, ${dayNum} ${monthNames[parseInt(mon) - 1]}</div>`;
 
       dayItems.forEach(e => {
-        const isDone = e.status.startsWith('done');
-        const timeStr = isDone ? e.status.replace('done:', '') : '';
+        // V-K-66: schema-aware status read. CR-9: 12h display for parent-facing time.
+        // CR-15: when both givenAt AND late are present, surface "at HH:MM (late)" — not just "(logged late)".
+        const parsed = parseMedCheck(e.status);
+        const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
+        const isLate = !!(parsed && parsed.status === 'late');
+        const timeStr = parsed && parsed.givenAt ? parsed.givenAt : '';
         const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
-        const timePart = timeStr && timeStr !== 'late' ? ` at ${timeStr}` : timeStr === 'late' ? ' (logged late)' : '';
+        let timePart = '';
+        if (timeStr) timePart = ' at ' + escHtml(_formatTime12h(timeStr)) + (isLate ? ' (late)' : '');
+        else if (isLate) timePart = ' (logged late)';
 
         html += `
           <div style="display:flex;align-items:center;gap:var(--sp-8);padding:3px 0;font-size:var(--fs-base);">
@@ -5149,24 +5357,23 @@ function _obIsTeethingActive() {
 }
 
 function _obCheckVitD3() {
-  // Check if Vit D3 hasn't been given today
+  // Returns true if Vit D3 needs attention.
+  // CR-5: Skipped doses count as RESOLVED — parent explicitly chose to skip and
+  // _obCheckVitD3 must respect that decision, otherwise the home overlay keeps
+  // flagging 'D3 pending' in contradiction to the parent's just-recorded skip.
   var todayStr = today();
   var dayEntry = medChecks ? medChecks[todayStr] : null;
   if (!dayEntry) return true;
-  // Check all meds for D3
-  var d3Given = false;
-  var d3Found = false;
+  var d3Resolved = false;
   var activeMeds = (meds || []).filter(function(m) { return m.active; });
   activeMeds.forEach(function(m) {
     if (m.name && m.name.toLowerCase().indexOf('d3') >= 0) {
-      d3Found = true;
-      var status = dayEntry[m.name];
-      if (status && status.indexOf('done') === 0) d3Given = true;
+      if (medCheckIsDone(dayEntry[m.name]) || medCheckSkipped(dayEntry[m.name])) {
+        d3Resolved = true;
+      }
     }
   });
-  // If no D3 med tracked, or D3 not given today
-  if (!d3Given) return true;
-  return false;
+  return !d3Resolved;
 }
 
 function _obGetNextVaccine() {
@@ -6389,9 +6596,11 @@ function renderHistoryPreviews() {
     const ydChecks = medChecks[ydKey] || {};
     const activeMeds = meds.filter(m => m.active);
 
-    // Check yesterday for missed/skipped
-    const ydMissed = activeMeds.filter(m => !ydChecks[m.name]);
-    const ydSkipped = activeMeds.filter(m => ydChecks[m.name] === 'skipped');
+    // Check yesterday for missed/skipped — V-K-74: schema-aware via medCheckSkipped.
+    // Pre-fix `=== 'skipped'` missed the new object shape; parent who skipped yesterday
+    // saw the "Yesterday's meds not logged" danger strip instead of "Skipped yesterday".
+    const ydMissed = activeMeds.filter(m => !ydChecks[m.name] || (!medCheckIsDone(ydChecks[m.name]) && !medCheckSkipped(ydChecks[m.name])));
+    const ydSkipped = activeMeds.filter(m => medCheckSkipped(ydChecks[m.name]));
 
     if (ydMissed.length > 0) {
       medPrev.innerHTML = `<div class="info-strip is-danger">
@@ -6407,7 +6616,8 @@ function renderHistoryPreviews() {
       </div>`;
     } else {
       // Show today's status
-      const todayDone = activeMeds.filter(m => todayChecks[m.name] && todayChecks[m.name].startsWith('done'));
+      // V-K-66: schema-aware via medCheckIsDone.
+      const todayDone = activeMeds.filter(m => medCheckIsDone(todayChecks[m.name]));
       if (todayDone.length === activeMeds.length && activeMeds.length > 0) {
         medPrev.innerHTML = `<div class="info-strip is-sage">
           <span><svg class="zi"><use href="#zi-check"/></svg></span>
@@ -6899,23 +7109,24 @@ function computeBaselines() {
 
   // ── Supplement adherence (D3) ──
   const activeMeds = meds.filter(m => m.active);
+  // V-K-66: schema-aware reads via medCheckIsDone / medCheckSkipped (handles legacy string + new object).
   activeMeds.forEach(m => {
     const mKey = sanitizeAlertKey(m.name);
     let streak = 0;
     for (let i = 0; i < 90; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
-      // Skip today if not yet resolved
-      if (i === 0) {
-        const dayLog = medChecks[ds] || {};
-        const status = dayLog[m.name];
-        if (!status || (!status.startsWith('done:') && status !== 'skipped')) continue;
-        if (status.startsWith('done:')) { streak++; continue; }
-        break; // skipped breaks streak
-      }
       const dayLog = medChecks[ds] || {};
       const status = dayLog[m.name];
-      if (status && status.startsWith('done:')) { streak++; }
+      const isDone = medCheckIsDone(status);
+      const isSkipped = medCheckSkipped(status);
+      // Skip today if not yet resolved (no entry at all)
+      if (i === 0) {
+        if (!isDone && !isSkipped) continue;
+        if (isDone) { streak++; continue; }
+        break; // skipped breaks streak
+      }
+      if (isDone) { streak++; }
       else break;
     }
     b['suppStreak_' + mKey] = streak;
@@ -6930,7 +7141,7 @@ function computeBaselines() {
       if (ds < (m.start || '2025-09-04')) continue;
       total30++;
       const dayLog = medChecks[ds] || {};
-      if (dayLog[m.name] && dayLog[m.name].startsWith('done:')) given30++;
+      if (medCheckIsDone(dayLog[m.name])) given30++;
     }
     b['suppAdherence30_' + mKey] = total30 > 0 ? Math.floor((given30 / total30) * 100) : null;
     b['suppGiven30_' + mKey] = given30;
@@ -7429,7 +7640,10 @@ function computeAlerts() {
     const ydStr = toDateStr(yd);
     const ydLog = medChecks[ydStr] || {};
     const ydStatus = ydLog[m.name];
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydStatus || ydStatus === 'skipped');
+    // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
+    const ydDone = medCheckIsDone(ydStatus);
+    const ydSkipped = medCheckSkipped(ydStatus);
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
@@ -7437,7 +7651,7 @@ function computeAlerts() {
         const d = new Date(); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
         const dl = medChecks[ds] || {};
-        if (dl[m.name] && dl[m.name].startsWith('done:')) priorStreak++;
+        if (medCheckIsDone(dl[m.name])) priorStreak++;
         else break;
       }
       if (priorStreak >= 3) {
@@ -8234,13 +8448,27 @@ function renderTodayPlan() {
     });
   }
 
-  // D3 supplement
+  // D3 supplement — V-K-66: schema-aware via parseMedCheck (legacy string + new object both handled).
+  // CR-9: 12h display via _formatTime12h. CR-15: surface 'logged late' marker.
   const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
   if (d3Med) {
-    const d3Done = medChecks[todayStr] && medChecks[todayStr][d3Med.name] && medChecks[todayStr][d3Med.name].startsWith('done:');
+    const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][d3Med.name]);
+    const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
+    const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;
+    const d3Fat = d3Parsed && d3Parsed.withFat === true && d3Parsed.fatFood ? d3Parsed.fatFood : null;
+    let doneDetail;
+    if (d3Done) {
+      const timePart = d3Given ? ' at ' + escHtml(_formatTime12h(d3Given)) : '';
+      const latePart = d3Late ? ' (logged late)' : '';
+      const fatPart = d3Fat ? ' · with ' + escHtml(d3Fat) : '';
+      doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + latePart + fatPart;
+    } else {
+      doneDetail = d3Med.dose + ' — give with or after a feed for best absorption';
+    }
     items.push({
       time: '9 AM', icon: zi('pill'), title: d3Med.name,
-      detail: d3Done ? '<svg class="zi"><use href="#zi-check"/></svg> Done today' : d3Med.dose + ' — give with or after a feed for best absorption',
+      detail: doneDetail,
       tag: 'med', done: d3Done, htmlDetail: d3Done
     });
   }
@@ -8669,11 +8897,36 @@ function renderTrendChips() {
   const total = Math.max(Object.keys(nutrientDays).length, 5);
   chips.push({ icon:zi('bowl'), label:'Nutrients', value: covered + '/' + total + ' groups', delta: covered >= total ? 'balanced' : 'gaps', cls: covered >= total ? 'tc-good' : 'tc-warn', tab:'diet' });
 
-  // Vitamin D3
+  // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled).
+  // V-M-62 + V-K-70: fatFood comes from parent feedingData input — escape at this render boundary.
+  // CR-9: 12h display formatter for parent-facing time.
+  // CR-15: surface 'logged late' marker so chip and event-detail agree on status.
+  // CR-5: also render explicit "Skipped today" rather than "Pending" when status:'skipped'.
   if (d3Med) {
     const todayStr = today();
-    const d3Done = medChecks[todayStr] && medChecks[todayStr][d3Med.name] && medChecks[todayStr][d3Med.name].startsWith('done:');
-    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: d3Done ? 'Done today' : 'Pending', delta: d3Done ? zi('check') : 'pending', cls: d3Done ? 'tc-good' : 'tc-warn', tab:'medical' });
+    const d3Val = medChecks[todayStr] && medChecks[todayStr][d3Med.name];
+    const d3Parsed = parseMedCheck(d3Val);
+    const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    const d3Skipped = !!(d3Parsed && d3Parsed.status === 'skipped');
+    const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
+    let valueText, deltaText, cls;
+    if (d3Done) {
+      const t = d3Parsed.givenAt;
+      const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + escHtml(d3Parsed.fatFood) : '';
+      const lateTag = d3Late ? ' (late)' : '';
+      valueText = t ? ('Done at ' + escHtml(_formatTime12h(t)) + lateTag + fat) : (d3Late ? 'Done — logged late' : 'Done today');
+      deltaText = zi('check');
+      cls = 'tc-good';
+    } else if (d3Skipped) {
+      valueText = 'Skipped today';
+      deltaText = 'skipped';
+      cls = 'tc-warn';
+    } else {
+      valueText = 'Pending';
+      deltaText = 'pending';
+      cls = 'tc-warn';
+    }
+    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: valueText, delta: deltaText, cls: cls, tab:'medical' });
   }
 
   let html = '';

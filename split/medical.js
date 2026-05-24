@@ -2233,7 +2233,8 @@ function renderMedicalStats() {
     if (dateKey.startsWith('_') || typeof val !== 'object') return;
     if (new Date(dateKey) < weekAgo) return;
     totalDays++;
-    Object.values(val).forEach(s => { if (s.startsWith('done')) givenCount++; });
+    // V-K-66: schema-aware count — handles both legacy string and new object shapes.
+    Object.values(val).forEach(s => { if (medCheckIsDone(s)) givenCount++; });
   });
 
   el.innerHTML = `
@@ -4324,6 +4325,146 @@ function renderMeds() {
     `;
     list.appendChild(div);
   });
+  // Vit D3 tracking v1: refresh the 14-day pattern card whenever meds re-render.
+  renderMedD3PatternCard();
+}
+
+// Vit D3 tracking v1: 14-day pattern card.
+// Renders adherence %, usual-time band, with-fat rate, top fat pairing, current streak,
+// and a compact 14-day log. Hidden if no active D3 med tracked.
+function renderMedD3PatternCard() {
+  const card = document.getElementById('medD3PatternCard');
+  const body = document.getElementById('medD3PatternBody');
+  if (!card || !body) return;
+  const d3Med = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().indexOf('d3') >= 0);
+  if (!d3Med) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  const todayStr = today();
+  // 14-day window ending today
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
+    days.push({ date: ds, parsed: parsed });
+  }
+  // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
+  // pre-fix divided by the full 14-day window unconditionally, giving wildly different
+  // numbers vs computeSupplementAdherence on the same screen for a recently-activated med.
+  const medStart = d3Med.start || '2025-09-04';
+  const trackStart = medChecks._trackingSince || '0000-00-00';
+  const effectiveStart = medStart > trackStart ? medStart : trackStart;
+  const eligibleDays = days.filter(d => d.date >= effectiveStart);
+  const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
+  const unloggedDays = eligibleDays.filter(d => !d.parsed);
+  const adherence = eligibleDays.length > 0 ? Math.round((doneDays.length / eligibleDays.length) * 100) : 0;
+  // Usual-time band: take givenAt minutes, find central 80% range.
+  // CR-11: use (N-1)*p indexing instead of N*p (which collapsed to the max for many N
+  // and degraded 'central 80%' into 'min-to-max range') AND require N>=5 for the band
+  // to be statistically meaningful — below that, show honest min-max range with a tag.
+  const mins = doneDays.map(d => _hhmmToMinutes(d.parsed.givenAt)).filter(m => m >= 0).sort((a,b) => a-b);
+  let usualBand = null;
+  let usualBandLabel = 'Usual time';
+  if (mins.length >= 5) {
+    const lo = mins[Math.floor((mins.length - 1) * 0.1)];
+    const hi = mins[Math.floor((mins.length - 1) * 0.9)];
+    usualBand = _minutesToHhmm(lo) + '–' + _minutesToHhmm(hi);
+  } else if (mins.length >= 2) {
+    usualBand = _minutesToHhmm(mins[0]) + '–' + _minutesToHhmm(mins[mins.length-1]);
+    usualBandLabel = 'Time range so far';
+  } else if (mins.length === 1) {
+    usualBand = _minutesToHhmm(mins[0]);
+    usualBandLabel = 'Only one timed dose';
+  }
+  // With-fat rate
+  const withFatKnown = doneDays.filter(d => d.parsed.withFat === true || d.parsed.withFat === false);
+  const withFatCount = doneDays.filter(d => d.parsed.withFat === true).length;
+  const fatRate = withFatKnown.length > 0 ? Math.round((withFatCount / withFatKnown.length) * 100) : null;
+  // Top fat food
+  const fatFoodCounts = {};
+  doneDays.forEach(d => { if (d.parsed.fatFood) fatFoodCounts[d.parsed.fatFood] = (fatFoodCounts[d.parsed.fatFood] || 0) + 1; });
+  let topFatFood = null, topN = 0;
+  Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
+  // Streak: consecutive done-days ending today.
+  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
+  // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // CR-6: walk over eligibleDays (post-medStart) not raw days, so a recently-activated med
+  // doesn't see its streak punished by pre-activation no-data rows.
+  let streak = 0;
+  let streakLabel = 'Current streak';
+  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
+  const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
+  const startIdx = todayResolved ? eligibleDays.length - 1 : eligibleDays.length - 2;
+  if (!todayResolved) streakLabel = 'Streak through yesterday';
+  for (let i = startIdx; i >= 0; i--) {
+    if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
+    else break;
+  }
+  // V-M-74: fresh-install warm-start — when the parent has just installed and hasn't
+  // logged a dose yet, don't slap them with a rose-tier "0/1 days (0%)". Render a
+  // softer "Just getting started" stripe with no aggressive percentile / streak / fat
+  // surfaces yet.
+  if (eligibleDays.length === 1 && doneDays.length === 0 && skippedDays.length === 0) {
+    body.innerHTML = '<div class="med-d3-summary"><div class="med-d3-summary-row">'
+      + zi('clock') + ' Just getting started — log today\'s dose to begin tracking.'
+      + '</div></div>';
+    return;
+  }
+  // Build summary lines
+  const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
+  let summary = '<div class="med-d3-summary">';
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${eligibleDays.length} days (${adherence}%)</strong></div>`;
+  // CR-9: render times in 12h for parent-facing display.
+  if (usualBand) {
+    const bandDisplay = usualBand.split('–').map(t => _formatTime12h(t)).join('–');
+    summary += `<div class="med-d3-summary-row">${zi('clock')} ${escHtml(usualBandLabel)}: ${escHtml(bandDisplay)}</div>`;
+  }
+  if (fatRate !== null) {
+    const fatCls = fatRate >= 70 ? 'tc-sage' : 'tc-warn';
+    summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
+  }
+  if (topFatFood) summary += `<div class="med-d3-summary-row">${zi('check')} Usually paired with: <strong>${escHtml(topFatFood)}</strong></div>`;
+  if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} ${streakLabel}: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
+  if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
+  summary += '</div>';
+  // 14-day compact list (most-recent first) — iterates raw days (so pre-medStart rows
+  // show 'Not tracked yet' rather than vanishing entirely; the adherence math above
+  // uses eligibleDays so the user-visible numbers are correct).
+  let list = '<div class="med-d3-log">';
+  days.slice().reverse().forEach(d => {
+    const label = d.date === todayStr ? 'Today' : formatDate(d.date);
+    let row;
+    if (d.date < effectiveStart) {
+      row = `<span class="t-sub">Not tracked yet</span>`;
+    } else if (!d.parsed) {
+      row = `<span class="tc-warn">Not logged</span>`;
+    } else if (d.parsed.status === 'skipped') {
+      row = `<span class="tc-warn">Skipped</span>`;
+    } else {
+      // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
+      const isLate = d.parsed.status === 'late';
+      const t = d.parsed.givenAt
+        ? 'Done at ' + escHtml(_formatTime12h(d.parsed.givenAt)) + (isLate ? ' (late)' : '')
+        : (isLate ? 'Done (logged late)' : 'Done');
+      const fat = d.parsed.withFat === true && d.parsed.fatFood
+        ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
+        : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal logged nearby</span>` : '');
+      row = t + fat;
+    }
+    list += `<div class="med-d3-log-row"><span class="med-d3-log-date">${escHtml(label)}</span><span>${row}</span></div>`;
+  });
+  list += '</div>';
+  body.innerHTML = summary + list;
+}
+
+// Helper: HH:MM minutes → "HH:MM" 24h string.
+function _minutesToHhmm(m) {
+  if (typeof m !== 'number' || m < 0) return '';
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
 }
 
 function openMedModal() {
@@ -9456,9 +9597,10 @@ function computeSupplementAdherence(windowDays) {
       var dow = d.getDay();
 
       var calStatus = 'missed';
-      if (status && status.indexOf('done') === 0) {
-        var timeStr = status.replace('done:', '');
-        if (timeStr === 'late') {
+      // V-K-66: schema-aware status read.
+      var parsedStatus = parseMedCheck(status);
+      if (parsedStatus && (parsedStatus.status === 'done' || parsedStatus.status === 'late')) {
+        if (parsedStatus.status === 'late') {
           lateCount++;
           calStatus = 'late';
           doneCount++; // late still counts as done for adherence
@@ -9466,10 +9608,11 @@ function computeSupplementAdherence(windowDays) {
           doneCount++;
           calStatus = 'done';
           // Parse time
+          var timeStr = parsedStatus.givenAt || '';
           var parsed = _parseSupplementTime(timeStr);
           if (parsed !== null) times.push(parsed);
         }
-      } else if (status === 'skipped') {
+      } else if (parsedStatus && parsedStatus.status === 'skipped') {
         skippedCount++;
         calStatus = 'skipped';
         dayOfWeekMisses[dow]++;
@@ -9576,14 +9719,23 @@ function computeSupplementAdherence(windowDays) {
 }
 
 function _parseSupplementTime(str) {
-  // Parse 'HH:MM am/pm' or 'HH:MM AM/PM' to minutes since midnight
+  // CR-3: parse BOTH 24h 'HH:MM' (new schema writes via en-GB) AND 12h 'HH:MM am|pm' (legacy)
+  // to minutes since midnight. Pre-CR3 this only accepted the 12h suffixed form, so every
+  // post-v1 24h write returned null and the timing-analysis surface silently died.
   if (!str || str === 'late') return null;
   str = str.trim().toLowerCase();
-  var match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
-  if (!match) return null;
-  var h = parseInt(match[1], 10);
-  var m = parseInt(match[2], 10);
-  var ampm = match[3];
+  var match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    var h24 = parseInt(match24[1], 10);
+    var m24 = parseInt(match24[2], 10);
+    if (h24 < 0 || h24 > 23 || m24 < 0 || m24 > 59) return null;
+    return h24 * 60 + m24;
+  }
+  var match12 = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!match12) return null;
+  var h = parseInt(match12[1], 10);
+  var m = parseInt(match12[2], 10);
+  var ampm = match12[3];
   if (ampm === 'pm' && h !== 12) h += 12;
   if (ampm === 'am' && h === 12) h = 0;
   return h * 60 + m;
