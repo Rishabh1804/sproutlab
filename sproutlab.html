@@ -1,10 +1,3 @@
-audit-emoji.sh [default (5 surfaced ranges)]: 0 HR-1 violations across split, index.html, sproutlab.html
-audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)
-audit-resolve-shield: PASS (4 resolve-caller(s) carry the explicit `'Resolve'` btnText shield per V-M-41 doctrine)
-audit-viz-smoke: PASS (4 ids + 5 tokens) across template.html + styles.css
-[bump-version] 2026.05.23-8 → 2026.05.23-9
-[poop-reference] wrote /home/user/sproutlab/docs/POOP_COLOR_REFERENCE.html
-[careticket-sm] wrote /home/user/sproutlab/docs/CARETICKET_STATE_MACHINE.html — 6 transitions, 0 drift flags
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2327,6 +2320,18 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .supp-adjust-btn {
   font-size:var(--fs-sm); padding:var(--sp-4) var(--sp-10);
   min-height:auto;
+}
+/* CR-5: skipped-state reminder card variant — distinct from done/missed */
+.supp-alert-skipped {
+  background:var(--amber-light);
+  border-left-color:var(--amber);
+}
+.supp-alert-skipped .supp-alert-title { color:var(--tc-warn); }
+.supp-alert-skipped .supp-alert-detail { color:var(--tc-warn); }
+/* CR-7: openMedAdjust hint when no historical time was captured */
+.supp-adjust-hint {
+  display:inline-block; margin-right:var(--sp-6);
+  font-style:italic;
 }
 .med-d3-summary {
   padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
@@ -17179,11 +17184,26 @@ function parseMedCheck(val) {
   if (val === 'done:late' || val === 'done') return { status:'late', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
   if (val.indexOf('done:') === 0) {
     var t = val.slice(5);
-    var isTime = /^\d{1,2}:\d{2}$/.test(t);
+    // CR-2: accept BOTH 'HH:MM' (24h) AND 'HH:MM am|pm' / 'HH:MM AM|PM' (legacy en-IN 12h).
+    // The pre-v1 markMedDone used en-IN locale which produced 12h+suffix strings;
+    // those must round-trip through parseMedCheck without losing givenAt.
+    var isHHMM24 = /^\d{1,2}:\d{2}$/.test(t);
+    var ampmMatch = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+    var givenAt = null;
+    if (isHHMM24) {
+      givenAt = t;
+    } else if (ampmMatch) {
+      var h = parseInt(ampmMatch[1], 10);
+      var mm = ampmMatch[2];
+      var ampm = ampmMatch[3].toLowerCase();
+      if (ampm === 'pm' && h !== 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+      givenAt = (h < 10 ? '0' + h : String(h)) + ':' + mm;
+    }
     return {
-      status: isTime ? 'done' : (t === 'late' ? 'late' : 'done'),
-      givenAt: isTime ? t : null,
-      loggedAt: null, // legacy didn't separate; givenAt was actually tap-time but treat as best-known
+      status: givenAt !== null ? 'done' : (t === 'late' ? 'late' : 'done'),
+      givenAt: givenAt,
+      loggedAt: null,
       withFat: null,
       fatFood: null,
       fatDelta: null,
@@ -17233,6 +17253,59 @@ function _hhmmToMinutes(s) {
   return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : -1;
 }
 
+// CR-14: re-run with-fat detection on today's dose entries that currently report withFat:false.
+// markMedDone freezes withFat at log-time against the feedingData snapshot; if the parent logs
+// the dose BEFORE typing the breakfast row that accompanied it, withFat stays permanently false
+// unless they tap Adjust. This helper is called from the feedingData save paths to catch the
+// "logged dose first, logged meal second" sequence within the ±60min window.
+// Only flips withFat:false → true (never the reverse — never erases a real positive observation).
+// Returns true if any record was updated.
+function _refreshTodayMedWithFat() {
+  if (typeof medChecks !== 'object' || !medChecks) return false;
+  var t = today();
+  var dayMC = medChecks[t];
+  if (!dayMC) return false;
+  var mutated = false;
+  Object.keys(dayMC).forEach(function(name) {
+    var parsed = parseMedCheck(dayMC[name]);
+    if (!parsed) return;
+    if (parsed.status !== 'done' && parsed.status !== 'late') return;
+    if (!parsed.givenAt) return;
+    if (parsed.withFat !== false) return; // only redetect when previously negative
+    var fresh = _detectFatContextNearTime(parsed.givenAt, t);
+    if (fresh.withFat === true) {
+      // Preserve the rest of the object; only update the fat fields.
+      var cur = (typeof dayMC[name] === 'object' && !Array.isArray(dayMC[name])) ? dayMC[name] : parsed;
+      dayMC[name] = Object.assign({}, cur, {
+        withFat:  true,
+        fatFood:  fresh.fatFood,
+        fatDelta: fresh.fatDelta,
+      });
+      mutated = true;
+    }
+  });
+  if (mutated) {
+    save(KEYS.medChecks, medChecks);
+    if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
+    if (typeof _islMarkDirty === 'function') _islMarkDirty('medical');
+  }
+  return mutated;
+}
+
+// CR-9: display formatter — 24h canonical 'HH:MM' → '8:42 AM' / '2:30 PM' for parent-facing surfaces.
+// The schema stores 24h (en-GB canonical) per V-M-60; this formatter renders the Indian-parent 12h convention.
+function _formatTime12h(hhmm) {
+  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '';
+  var parts = hhmm.split(':');
+  var h = parseInt(parts[0], 10);
+  var m = parts[1];
+  if (isNaN(h) || h < 0 || h > 23) return hhmm;
+  if (h === 0) return '12:' + m + ' AM';
+  if (h === 12) return '12:' + m + ' PM';
+  if (h > 12) return (h - 12) + ':' + m + ' PM';
+  return h + ':' + m + ' AM';
+}
+
 // Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
 // Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
 // V-K-69: token-equality matching (with _baseFoodName alias normalization) instead of substring
@@ -17248,18 +17321,28 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var fatSet = _getFatBearingFoodNames();
   var fatLookup = {};
   for (var fi = 0; fi < fatSet.length; fi++) fatLookup[fatSet[fi]] = true;
+  // CR-12: iterate meals in chronological proximity order (closest-to-dose-time first)
+  // instead of the hard-coded ['breakfast','lunch','dinner','snack'] order — eliminates
+  // the meal-name-iteration bias when two meals tie in absolute delta.
   var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
-  var best = null;
+  var mealEntries = [];
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
     if (!mTime || !mFoods || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
-    var delta = mMin - targetMin; // signed: negative = meal before dose
+    var delta = mMin - targetMin;
     if (Math.abs(delta) > win) return;
+    mealEntries.push({ meal: m, foods: mFoods, min: mMin, delta: delta, abs: Math.abs(delta) });
+  });
+  mealEntries.sort(function(a, b) { return a.abs - b.abs; });
+
+  var best = null;
+  mealEntries.forEach(function(entry) {
+    if (best !== null) return; // already found the closest match
     // Tokenize the meal text on comma / " and " / "+" / "&". Trim each token. Empty tokens dropped.
-    var tokens = String(mFoods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
+    var tokens = String(entry.foods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
     var matched = null;
     for (var ti = 0; ti < tokens.length; ti++) {
       var tok = tokens[ti];
@@ -17273,9 +17356,18 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
       // Otherwise try alias-normalized base name (catches 'yogurt' → 'curd', 'fresh ghee' → 'ghee').
       var base = (typeof _baseFoodName === 'function') ? _baseFoodName(tok) : tok;
       if (base !== tok && fatLookup[base]) { matched = base; break; }
+      // CR-13: plural/singular drift — NUTRITION is keyed inconsistently ('almonds' plural,
+      // 'walnut' singular). Try both depluralization and pluralization against fatLookup directly.
+      if (tok.length > 3 && tok.charAt(tok.length - 1) === 's') {
+        var singular = tok.slice(0, -1);
+        if (fatLookup[singular]) { matched = singular; break; }
+      } else if (tok.length > 2) {
+        var plural = tok + 's';
+        if (fatLookup[plural]) { matched = plural; break; }
+      }
     }
-    if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
-      best = { food: matched, delta: delta };
+    if (matched) {
+      best = { food: matched, delta: entry.delta };
     }
   });
   if (best) {
@@ -23461,7 +23553,14 @@ function renderRemindersAndAlerts() {
     } else if (isDone) {
       const givenAt = parsed && parsed.givenAt ? parsed.givenAt : null;
       const fatFood = parsed && parsed.fatFood ? parsed.fatFood : null;
-      const timeText = givenAt ? 'Done at ' + escHtml(givenAt) : 'Done today';
+      const isLate = parsed && parsed.status === 'late';
+      // CR-9: render 12h for parent-facing surfaces. Storage stays 24h en-GB canonical.
+      // CR-15: surface 'logged late' marker on the title here too — was inconsistent
+      // vs the TSF event-detail expansion which always showed it.
+      let timeText;
+      if (givenAt) timeText = 'Done at ' + escHtml(_formatTime12h(givenAt)) + (isLate ? ' (logged late)' : '');
+      else if (isLate) timeText = 'Done — logged late';
+      else timeText = 'Done today';
       // V-M-61: null withFat (legacy / unknown) renders no badge. V-M-63: softer framing.
       let fatBadge = '';
       if (parsed && parsed.withFat === true && fatFood) {
@@ -23479,6 +23578,22 @@ function renderRemindersAndAlerts() {
           </div>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
+      </div>`;
+    } else if (isSkipped) {
+      // CR-5: NEW skipped-state render. Pre-fix, the skipped branch produced no card at all
+      // and the 'All medications done for today' banner was removed — the parent got zero
+      // visual acknowledgement of their explicit skip, while _obCheckVitD3 kept flagging
+      // 'Vit D3 pending' on the home overlay, contradicting the just-recorded action.
+      html += `
+      <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('skip-forward')}</div>
+          <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
+          <div class="supp-alert-action">
+            <button class="supp-skip-btn supp-adjust-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
+          </div>
+        </div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to revert and log a dose.</div>
       </div>`;
     }
   });
@@ -23681,8 +23796,15 @@ function openMedDoneAt(name, idx) {
     '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
 }
 function confirmMedDoneAt(name, idx) {
+  // CR-4: validate before falling through to markMedDone — empty / malformed input must
+  // surface an error, not silently substitute tap-time and overwrite the parent's intent.
   const input = document.getElementById('supp-time-' + idx);
   const picked = input && input.value ? input.value : null;
+  if (!picked || !/^\d{1,2}:\d{2}$/.test(picked)) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Pick a time, or tap Cancel');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
   markMedDone(name, idx, picked);
 }
 function cancelMedDoneAt(idx) {
@@ -23722,26 +23844,50 @@ function openMedAdjust(name, idx) {
   const actionRow = card.querySelector('.supp-alert-action');
   if (!actionRow || actionRow.dataset.editing === '1') return;
   actionRow.dataset.editing = '1';
+  // CR-7: prefill with the captured givenAt if present; if absent (legacy record with no
+  // time captured), leave the input EMPTY rather than substituting the current clock time.
+  // confirmMedAdjust's CR-8 validation will block a save with no time, so the parent must
+  // actively type a value to overwrite the historical record — no accidental clobbers.
   const cur = parseMedCheck(medChecks[today()] && medChecks[today()][name]);
-  const curAt = (cur && cur.givenAt) || new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-  // Re-format HH:MM (handle "08:42 AM" legacy by stripping any AM/PM tail)
+  const curAt = cur && cur.givenAt ? cur.givenAt : '';
   const norm = String(curAt).replace(/\s*(AM|PM)\s*$/i, '');
+  const hint = norm ? '' : '<span class="supp-adjust-hint t-sub t-sm">No time captured — enter actual time:</span>';
   actionRow.innerHTML =
+    hint +
     '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(norm) + '">' +
     '<button class="supp-check-btn" data-action="confirmMedAdjust" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
     '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
 }
 function confirmMedAdjust(name, idx) {
+  // CR-8: validate before falling through to adjustMedTime — empty / malformed input
+  // must surface an error and NOT wedge the editor (adjustMedTime's old early-return
+  // left dataset.editing='1' set, blocking reopens).
   const input = document.getElementById('supp-time-' + idx);
   const picked = input && input.value ? input.value : null;
+  if (!picked || !/^\d{1,2}:\d{2}$/.test(picked)) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Pick a time, or tap Cancel');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
   adjustMedTime(name, idx, picked);
 }
 
 function markMedSkipped(name, idx) {
+  // CR-10: emit new object schema. Skipped doses now carry loggedAt for audit trail.
   const todayStr = today();
+  const now = new Date();
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
-  medChecks[todayStr][name] = 'skipped';
+  medChecks[todayStr][name] = {
+    status:   'skipped',
+    givenAt:  null,
+    loggedAt: loggedAt,
+    withFat:  null,
+    fatFood:  null,
+    fatDelta: null,
+  };
   save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
   _islMarkDirty('medical');
 
   const el = document.getElementById('supp-alert-' + idx);
@@ -23754,13 +23900,34 @@ function markMedSkipped(name, idx) {
 }
 
 function resolveMissedMed(name, dateStr, action) {
+  // CR-10: emit new object schema for both retroactive done-mark and retroactive skip.
+  // Retroactive done has no givenAt (no specific administration time was captured) so
+  // with-fat detection is left null — the 14-day card's withFatKnown denominator
+  // correctly excludes records with no time-anchored fat context.
   if (!medChecks[dateStr]) medChecks[dateStr] = {};
+  const now = new Date();
+  const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   if (action === 'done') {
-    medChecks[dateStr][name] = 'done:late';
+    medChecks[dateStr][name] = {
+      status:   'late',
+      givenAt:  null,
+      loggedAt: loggedAt,
+      withFat:  null,
+      fatFood:  null,
+      fatDelta: null,
+    };
   } else {
-    medChecks[dateStr][name] = 'skipped';
+    medChecks[dateStr][name] = {
+      status:   'skipped',
+      givenAt:  null,
+      loggedAt: loggedAt,
+      withFat:  null,
+      fatFood:  null,
+      fatDelta: null,
+    };
   }
   save(KEYS.medChecks, medChecks);
+  _tsfMarkDirty();
   _islMarkDirty('medical');
   renderRemindersAndAlerts(); renderHomeContextAlerts();
 }
@@ -25406,7 +25573,8 @@ function renderMedLog() {
       html += `<div style=""font-weight:600;font-size:var(--fs-sm);color:var(--tc-sky);margin-bottom:4px;">${dayName}, ${dayNum} ${monthNames[parseInt(mon) - 1]}</div>`;
 
       dayItems.forEach(e => {
-        // V-K-66: schema-aware status read.
+        // V-K-66: schema-aware status read. CR-9: 12h display for parent-facing time.
+        // CR-15: when both givenAt AND late are present, surface "at HH:MM (late)" — not just "(logged late)".
         const parsed = parseMedCheck(e.status);
         const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
         const isLate = !!(parsed && parsed.status === 'late');
@@ -25414,7 +25582,9 @@ function renderMedLog() {
         const icon = isDone ? zi('check') : zi('skip-forward');
         const label = isDone ? 'Given' : 'Skipped';
         const color = isDone ? '#3a7060' : '#926030';
-        const timePart = isLate ? ' (logged late)' : (timeStr ? ` at ${escHtml(timeStr)}` : '');
+        let timePart = '';
+        if (timeStr) timePart = ' at ' + escHtml(_formatTime12h(timeStr)) + (isLate ? ' (late)' : '');
+        else if (isLate) timePart = ' (logged late)';
 
         html += `
           <div style="display:flex;align-items:center;gap:var(--sp-8);padding:3px 0;font-size:var(--fs-base);">
@@ -28002,19 +28172,23 @@ function _obIsTeethingActive() {
 }
 
 function _obCheckVitD3() {
-  // Returns true if Vit D3 needs attention (not given today or no D3 med tracked).
-  // Schema-aware via medCheckIsDone (handles both legacy 'done:HH:MM' string and new object shape).
+  // Returns true if Vit D3 needs attention.
+  // CR-5: Skipped doses count as RESOLVED — parent explicitly chose to skip and
+  // _obCheckVitD3 must respect that decision, otherwise the home overlay keeps
+  // flagging 'D3 pending' in contradiction to the parent's just-recorded skip.
   var todayStr = today();
   var dayEntry = medChecks ? medChecks[todayStr] : null;
   if (!dayEntry) return true;
-  var d3Given = false;
+  var d3Resolved = false;
   var activeMeds = (meds || []).filter(function(m) { return m.active; });
   activeMeds.forEach(function(m) {
     if (m.name && m.name.toLowerCase().indexOf('d3') >= 0) {
-      if (medCheckIsDone(dayEntry[m.name])) d3Given = true;
+      if (medCheckIsDone(dayEntry[m.name]) || medCheckSkipped(dayEntry[m.name])) {
+        d3Resolved = true;
+      }
     }
   });
-  return !d3Given;
+  return !d3Resolved;
 }
 
 function _obGetNextVaccine() {
@@ -31088,17 +31262,20 @@ function renderTodayPlan() {
   }
 
   // D3 supplement — V-K-66: schema-aware via parseMedCheck (legacy string + new object both handled).
+  // CR-9: 12h display via _formatTime12h. CR-15: surface 'logged late' marker.
   const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
   if (d3Med) {
     const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][d3Med.name]);
     const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
+    const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
     const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;
     const d3Fat = d3Parsed && d3Parsed.withFat === true && d3Parsed.fatFood ? d3Parsed.fatFood : null;
     let doneDetail;
     if (d3Done) {
-      const timePart = d3Given ? ' at ' + escHtml(d3Given) : '';
+      const timePart = d3Given ? ' at ' + escHtml(_formatTime12h(d3Given)) : '';
+      const latePart = d3Late ? ' (logged late)' : '';
       const fatPart = d3Fat ? ' · with ' + escHtml(d3Fat) : '';
-      doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + fatPart;
+      doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + latePart + fatPart;
     } else {
       doneDetail = d3Med.dose + ' — give with or after a feed for best absorption';
     }
@@ -31535,22 +31712,34 @@ function renderTrendChips() {
 
   // Vitamin D3 — schema-aware (legacy 'done:HH:MM' string + new object shape both handled).
   // V-M-62 + V-K-70: fatFood comes from parent feedingData input — escape at this render boundary.
+  // CR-9: 12h display formatter for parent-facing time.
+  // CR-15: surface 'logged late' marker so chip and event-detail agree on status.
+  // CR-5: also render explicit "Skipped today" rather than "Pending" when status:'skipped'.
   if (d3Med) {
     const todayStr = today();
     const d3Val = medChecks[todayStr] && medChecks[todayStr][d3Med.name];
     const d3Parsed = parseMedCheck(d3Val);
     const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
-    let valueText, deltaText;
+    const d3Skipped = !!(d3Parsed && d3Parsed.status === 'skipped');
+    const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
+    let valueText, deltaText, cls;
     if (d3Done) {
       const t = d3Parsed.givenAt;
       const fat = d3Parsed.withFat === true && d3Parsed.fatFood ? ' · with ' + escHtml(d3Parsed.fatFood) : '';
-      valueText = t ? ('Done at ' + escHtml(t) + fat) : 'Done today';
+      const lateTag = d3Late ? ' (late)' : '';
+      valueText = t ? ('Done at ' + escHtml(_formatTime12h(t)) + lateTag + fat) : (d3Late ? 'Done — logged late' : 'Done today');
       deltaText = zi('check');
+      cls = 'tc-good';
+    } else if (d3Skipped) {
+      valueText = 'Skipped today';
+      deltaText = 'skipped';
+      cls = 'tc-warn';
     } else {
       valueText = 'Pending';
       deltaText = 'pending';
+      cls = 'tc-warn';
     }
-    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: valueText, delta: deltaText, cls: d3Done ? 'tc-good' : 'tc-warn', tab:'medical' });
+    chips.push({ icon:zi('sun'), label:'Vitamin D3', value: valueText, delta: deltaText, cls: cls, tab:'medical' });
   }
 
   let html = '';
@@ -40941,20 +41130,34 @@ function renderMedD3PatternCard() {
     const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
     days.push({ date: ds, parsed: parsed });
   }
-  // Aggregate stats
-  const doneDays = days.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
-  const skippedDays = days.filter(d => d.parsed && d.parsed.status === 'skipped');
-  const unloggedDays = days.filter(d => !d.parsed);
-  const adherence = days.length > 0 ? Math.round((doneDays.length / days.length) * 100) : 0;
-  // Usual-time band: take givenAt minutes, find central 80% range
+  // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
+  // pre-fix divided by the full 14-day window unconditionally, giving wildly different
+  // numbers vs computeSupplementAdherence on the same screen for a recently-activated med.
+  const medStart = d3Med.start || '2025-09-04';
+  const trackStart = medChecks._trackingSince || '0000-00-00';
+  const effectiveStart = medStart > trackStart ? medStart : trackStart;
+  const eligibleDays = days.filter(d => d.date >= effectiveStart);
+  const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
+  const unloggedDays = eligibleDays.filter(d => !d.parsed);
+  const adherence = eligibleDays.length > 0 ? Math.round((doneDays.length / eligibleDays.length) * 100) : 0;
+  // Usual-time band: take givenAt minutes, find central 80% range.
+  // CR-11: use (N-1)*p indexing instead of N*p (which collapsed to the max for many N
+  // and degraded 'central 80%' into 'min-to-max range') AND require N>=5 for the band
+  // to be statistically meaningful — below that, show honest min-max range with a tag.
   const mins = doneDays.map(d => _hhmmToMinutes(d.parsed.givenAt)).filter(m => m >= 0).sort((a,b) => a-b);
   let usualBand = null;
-  if (mins.length >= 3) {
-    const lo = mins[Math.floor(mins.length * 0.1)];
-    const hi = mins[Math.floor(mins.length * 0.9)];
+  let usualBandLabel = 'Usual time';
+  if (mins.length >= 5) {
+    const lo = mins[Math.floor((mins.length - 1) * 0.1)];
+    const hi = mins[Math.floor((mins.length - 1) * 0.9)];
     usualBand = _minutesToHhmm(lo) + '–' + _minutesToHhmm(hi);
-  } else if (mins.length > 0) {
-    usualBand = _minutesToHhmm(mins[0]) + (mins.length > 1 ? '–' + _minutesToHhmm(mins[mins.length-1]) : '');
+  } else if (mins.length >= 2) {
+    usualBand = _minutesToHhmm(mins[0]) + '–' + _minutesToHhmm(mins[mins.length-1]);
+    usualBandLabel = 'Time range so far';
+  } else if (mins.length === 1) {
+    usualBand = _minutesToHhmm(mins[0]);
+    usualBandLabel = 'Only one timed dose';
   }
   // With-fat rate
   const withFatKnown = doneDays.filter(d => d.parsed.withFat === true || d.parsed.withFat === false);
@@ -40968,21 +41171,27 @@ function renderMedD3PatternCard() {
   // Streak: consecutive done-days ending today.
   // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
   // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // CR-6: walk over eligibleDays (post-medStart) not raw days, so a recently-activated med
+  // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayParsed = days[days.length - 1].parsed;
+  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
   const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
-  const startIdx = todayResolved ? days.length - 1 : days.length - 2;
+  const startIdx = todayResolved ? eligibleDays.length - 1 : eligibleDays.length - 2;
   if (!todayResolved) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
-    if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
+    if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
   }
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
   let summary = '<div class="med-d3-summary">';
-  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${days.length} days (${adherence}%)</strong></div>`;
-  if (usualBand) summary += `<div class="med-d3-summary-row">${zi('clock')} Usual time: ${escHtml(usualBand)}</div>`;
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${eligibleDays.length} days (${adherence}%)</strong></div>`;
+  // CR-9: render times in 12h for parent-facing display.
+  if (usualBand) {
+    const bandDisplay = usualBand.split('–').map(t => _formatTime12h(t)).join('–');
+    summary += `<div class="med-d3-summary-row">${zi('clock')} ${escHtml(usualBandLabel)}: ${escHtml(bandDisplay)}</div>`;
+  }
   if (fatRate !== null) {
     const fatCls = fatRate >= 70 ? 'tc-sage' : 'tc-warn';
     summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
@@ -40991,19 +41200,25 @@ function renderMedD3PatternCard() {
   if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} ${streakLabel}: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
   if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
   summary += '</div>';
-  // 14-day compact list (most-recent first)
+  // 14-day compact list (most-recent first) — iterates raw days (so pre-medStart rows
+  // show 'Not tracked yet' rather than vanishing entirely; the adherence math above
+  // uses eligibleDays so the user-visible numbers are correct).
   let list = '<div class="med-d3-log">';
   days.slice().reverse().forEach(d => {
     const label = d.date === todayStr ? 'Today' : formatDate(d.date);
     let row;
-    if (!d.parsed) {
+    if (d.date < effectiveStart) {
+      row = `<span class="t-sub">Not tracked yet</span>`;
+    } else if (!d.parsed) {
       row = `<span class="tc-warn">Not logged</span>`;
     } else if (d.parsed.status === 'skipped') {
       row = `<span class="tc-warn">Skipped</span>`;
     } else {
-      const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
-      // V-M-61 + V-M-63: only render the "no fat-meal" line on explicit false
-      // (not null/unknown), with softened framing.
+      // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
+      const isLate = d.parsed.status === 'late';
+      const t = d.parsed.givenAt
+        ? 'Done at ' + escHtml(_formatTime12h(d.parsed.givenAt)) + (isLate ? ' (late)' : '')
+        : (isLate ? 'Done (logged late)' : 'Done');
       const fat = d.parsed.withFat === true && d.parsed.fatFood
         ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
         : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal logged nearby</span>` : '');
@@ -46275,14 +46490,23 @@ function computeSupplementAdherence(windowDays) {
 }
 
 function _parseSupplementTime(str) {
-  // Parse 'HH:MM am/pm' or 'HH:MM AM/PM' to minutes since midnight
+  // CR-3: parse BOTH 24h 'HH:MM' (new schema writes via en-GB) AND 12h 'HH:MM am|pm' (legacy)
+  // to minutes since midnight. Pre-CR3 this only accepted the 12h suffixed form, so every
+  // post-v1 24h write returned null and the timing-analysis surface silently died.
   if (!str || str === 'late') return null;
   str = str.trim().toLowerCase();
-  var match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
-  if (!match) return null;
-  var h = parseInt(match[1], 10);
-  var m = parseInt(match[2], 10);
-  var ampm = match[3];
+  var match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    var h24 = parseInt(match24[1], 10);
+    var m24 = parseInt(match24[2], 10);
+    if (h24 < 0 || h24 > 23 || m24 < 0 || m24 > 59) return null;
+    return h24 * 60 + m24;
+  }
+  var match12 = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!match12) return null;
+  var h = parseInt(match12[1], 10);
+  var m = parseInt(match12[2], 10);
+  var ampm = match12[3];
   if (ampm === 'pm' && h !== 12) h += 12;
   if (ampm === 'am' && h === 12) h = 0;
   return h * 60 + m;
@@ -53517,14 +53741,19 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
-      // Today's status
+      // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;
-      if (!todayStatus) {
+      var todayParsed = parseMedCheck(todayStatus);
+      if (!todayParsed) {
         actionItems.push({ text: 'Not given today yet — don\'t forget!', signal: 'action' });
-      } else if (todayStatus.indexOf('done') === 0) {
-        var timeGiven = todayStatus.replace('done:', '');
-        actionItems.push({ text: 'Given today at ' + timeGiven, signal: 'good' });
+      } else if (todayParsed.status === 'done' || todayParsed.status === 'late') {
+        var timeGiven = todayParsed.givenAt ? _formatTime12h(todayParsed.givenAt) : 'unrecorded time';
+        var lateTag = todayParsed.status === 'late' ? ' (logged late)' : '';
+        var fatTag = todayParsed.withFat === true && todayParsed.fatFood ? ' with ' + todayParsed.fatFood : '';
+        actionItems.push({ text: 'Given today at ' + timeGiven + fatTag + lateTag, signal: 'good' });
+      } else if (todayParsed.status === 'skipped') {
+        actionItems.push({ text: 'Skipped today', signal: 'info' });
       }
     });
   } catch(e) {
@@ -56173,6 +56402,8 @@ function saveFeedingDay() {
   save(KEYS.feeding, feedingData);
   _tsfMarkDirty();
   _islMarkDirty('diet');
+  // CR-14: re-evaluate with-fat for today's dose entries that were logged before this meal.
+  if (d === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   // Auto-introduce any new foods from all meal slots
   autoIntroduceFoodsFromDay(d);
   renderFeedingHistory();
@@ -58072,6 +58303,8 @@ function saveQLFeed() {
   _tsfMarkDirty();
 
   _islMarkDirty('diet');
+  // CR-14: re-evaluate with-fat for today's dose entries that were logged before this meal.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   // Auto-introduce new foods
   autoIntroduceFoodsFromDay(dateStr);
 
@@ -58808,13 +59041,18 @@ function _tsfRenderEventExpanded(ev) {
     if (ev.domains && ev.domains.length > 0) html += '<div>Domains: ' + escHtml(ev.domains.join(', ')) + '</div>';
   } else if (ev.type === 'med') {
     // V-K-67: schema-aware via parseMedCheck (handles both legacy string + new object).
+    // CR-9 + CR-15: 12h display via _formatTime12h, unified late surface ('Done at X (logged late)').
     const parsedStatus = parseMedCheck(ev.status);
     if (parsedStatus) {
       let statusText;
       if (parsedStatus.status === 'skipped') statusText = 'Skipped';
-      else if (parsedStatus.status === 'late') statusText = 'Done (logged late)';
-      else if (parsedStatus.status === 'done') statusText = parsedStatus.givenAt ? 'Done at ' + parsedStatus.givenAt : 'Done';
-      else statusText = '';
+      else if (parsedStatus.status === 'late') {
+        statusText = parsedStatus.givenAt
+          ? 'Done at ' + _formatTime12h(parsedStatus.givenAt) + ' (logged late)'
+          : 'Done (logged late)';
+      } else if (parsedStatus.status === 'done') {
+        statusText = parsedStatus.givenAt ? 'Done at ' + _formatTime12h(parsedStatus.givenAt) : 'Done';
+      } else statusText = '';
       if (statusText) html += '<div>Status: ' + escHtml(statusText) + '</div>';
       if (parsedStatus.withFat === true && parsedStatus.fatFood) {
         html += '<div>With fat: ' + escHtml(parsedStatus.fatFood) + '</div>';

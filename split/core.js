@@ -90,11 +90,26 @@ function parseMedCheck(val) {
   if (val === 'done:late' || val === 'done') return { status:'late', givenAt:null, loggedAt:null, withFat:null, fatFood:null, fatDelta:null };
   if (val.indexOf('done:') === 0) {
     var t = val.slice(5);
-    var isTime = /^\d{1,2}:\d{2}$/.test(t);
+    // CR-2: accept BOTH 'HH:MM' (24h) AND 'HH:MM am|pm' / 'HH:MM AM|PM' (legacy en-IN 12h).
+    // The pre-v1 markMedDone used en-IN locale which produced 12h+suffix strings;
+    // those must round-trip through parseMedCheck without losing givenAt.
+    var isHHMM24 = /^\d{1,2}:\d{2}$/.test(t);
+    var ampmMatch = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+    var givenAt = null;
+    if (isHHMM24) {
+      givenAt = t;
+    } else if (ampmMatch) {
+      var h = parseInt(ampmMatch[1], 10);
+      var mm = ampmMatch[2];
+      var ampm = ampmMatch[3].toLowerCase();
+      if (ampm === 'pm' && h !== 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+      givenAt = (h < 10 ? '0' + h : String(h)) + ':' + mm;
+    }
     return {
-      status: isTime ? 'done' : (t === 'late' ? 'late' : 'done'),
-      givenAt: isTime ? t : null,
-      loggedAt: null, // legacy didn't separate; givenAt was actually tap-time but treat as best-known
+      status: givenAt !== null ? 'done' : (t === 'late' ? 'late' : 'done'),
+      givenAt: givenAt,
+      loggedAt: null,
       withFat: null,
       fatFood: null,
       fatDelta: null,
@@ -144,6 +159,59 @@ function _hhmmToMinutes(s) {
   return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : -1;
 }
 
+// CR-14: re-run with-fat detection on today's dose entries that currently report withFat:false.
+// markMedDone freezes withFat at log-time against the feedingData snapshot; if the parent logs
+// the dose BEFORE typing the breakfast row that accompanied it, withFat stays permanently false
+// unless they tap Adjust. This helper is called from the feedingData save paths to catch the
+// "logged dose first, logged meal second" sequence within the ±60min window.
+// Only flips withFat:false → true (never the reverse — never erases a real positive observation).
+// Returns true if any record was updated.
+function _refreshTodayMedWithFat() {
+  if (typeof medChecks !== 'object' || !medChecks) return false;
+  var t = today();
+  var dayMC = medChecks[t];
+  if (!dayMC) return false;
+  var mutated = false;
+  Object.keys(dayMC).forEach(function(name) {
+    var parsed = parseMedCheck(dayMC[name]);
+    if (!parsed) return;
+    if (parsed.status !== 'done' && parsed.status !== 'late') return;
+    if (!parsed.givenAt) return;
+    if (parsed.withFat !== false) return; // only redetect when previously negative
+    var fresh = _detectFatContextNearTime(parsed.givenAt, t);
+    if (fresh.withFat === true) {
+      // Preserve the rest of the object; only update the fat fields.
+      var cur = (typeof dayMC[name] === 'object' && !Array.isArray(dayMC[name])) ? dayMC[name] : parsed;
+      dayMC[name] = Object.assign({}, cur, {
+        withFat:  true,
+        fatFood:  fresh.fatFood,
+        fatDelta: fresh.fatDelta,
+      });
+      mutated = true;
+    }
+  });
+  if (mutated) {
+    save(KEYS.medChecks, medChecks);
+    if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
+    if (typeof _islMarkDirty === 'function') _islMarkDirty('medical');
+  }
+  return mutated;
+}
+
+// CR-9: display formatter — 24h canonical 'HH:MM' → '8:42 AM' / '2:30 PM' for parent-facing surfaces.
+// The schema stores 24h (en-GB canonical) per V-M-60; this formatter renders the Indian-parent 12h convention.
+function _formatTime12h(hhmm) {
+  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return hhmm || '';
+  var parts = hhmm.split(':');
+  var h = parseInt(parts[0], 10);
+  var m = parts[1];
+  if (isNaN(h) || h < 0 || h > 23) return hhmm;
+  if (h === 0) return '12:' + m + ' AM';
+  if (h === 12) return '12:' + m + ' PM';
+  if (h > 12) return (h - 12) + ':' + m + ' PM';
+  return h + ':' + m + ' AM';
+}
+
 // Detect whether a fat-bearing food was logged in feedingData near `timeStr` on `dateStr`.
 // Window: ±60min default. Returns { withFat, fatFood, fatDelta } (delta signed: negative = food first).
 // V-K-69: token-equality matching (with _baseFoodName alias normalization) instead of substring
@@ -159,18 +227,28 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
   var fatSet = _getFatBearingFoodNames();
   var fatLookup = {};
   for (var fi = 0; fi < fatSet.length; fi++) fatLookup[fatSet[fi]] = true;
+  // CR-12: iterate meals in chronological proximity order (closest-to-dose-time first)
+  // instead of the hard-coded ['breakfast','lunch','dinner','snack'] order — eliminates
+  // the meal-name-iteration bias when two meals tie in absolute delta.
   var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
-  var best = null;
+  var mealEntries = [];
   meals.forEach(function(m) {
     var mTime = day[m + '_time'];
     var mFoods = day[m];
     if (!mTime || !mFoods || mFoods === '—skipped—') return;
     var mMin = _hhmmToMinutes(mTime);
     if (mMin < 0) return;
-    var delta = mMin - targetMin; // signed: negative = meal before dose
+    var delta = mMin - targetMin;
     if (Math.abs(delta) > win) return;
+    mealEntries.push({ meal: m, foods: mFoods, min: mMin, delta: delta, abs: Math.abs(delta) });
+  });
+  mealEntries.sort(function(a, b) { return a.abs - b.abs; });
+
+  var best = null;
+  mealEntries.forEach(function(entry) {
+    if (best !== null) return; // already found the closest match
     // Tokenize the meal text on comma / " and " / "+" / "&". Trim each token. Empty tokens dropped.
-    var tokens = String(mFoods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
+    var tokens = String(entry.foods).toLowerCase().split(/\s*,\s*|\s+and\s+|\s*\+\s*|\s*&\s*/).map(function(s) { return s.trim(); }).filter(Boolean);
     var matched = null;
     for (var ti = 0; ti < tokens.length; ti++) {
       var tok = tokens[ti];
@@ -184,9 +262,18 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
       // Otherwise try alias-normalized base name (catches 'yogurt' → 'curd', 'fresh ghee' → 'ghee').
       var base = (typeof _baseFoodName === 'function') ? _baseFoodName(tok) : tok;
       if (base !== tok && fatLookup[base]) { matched = base; break; }
+      // CR-13: plural/singular drift — NUTRITION is keyed inconsistently ('almonds' plural,
+      // 'walnut' singular). Try both depluralization and pluralization against fatLookup directly.
+      if (tok.length > 3 && tok.charAt(tok.length - 1) === 's') {
+        var singular = tok.slice(0, -1);
+        if (fatLookup[singular]) { matched = singular; break; }
+      } else if (tok.length > 2) {
+        var plural = tok + 's';
+        if (fatLookup[plural]) { matched = plural; break; }
+      }
     }
-    if (matched && (best === null || Math.abs(delta) < Math.abs(best.delta))) {
-      best = { food: matched, delta: delta };
+    if (matched) {
+      best = { food: matched, delta: entry.delta };
     }
   });
   if (best) {

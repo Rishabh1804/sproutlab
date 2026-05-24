@@ -1420,6 +1420,8 @@ function saveQLFeed() {
   _tsfMarkDirty();
 
   _islMarkDirty('diet');
+  // CR-14: re-evaluate with-fat for today's dose entries that were logged before this meal.
+  if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
   // Auto-introduce new foods
   autoIntroduceFoodsFromDay(dateStr);
 
@@ -2156,13 +2158,18 @@ function _tsfRenderEventExpanded(ev) {
     if (ev.domains && ev.domains.length > 0) html += '<div>Domains: ' + escHtml(ev.domains.join(', ')) + '</div>';
   } else if (ev.type === 'med') {
     // V-K-67: schema-aware via parseMedCheck (handles both legacy string + new object).
+    // CR-9 + CR-15: 12h display via _formatTime12h, unified late surface ('Done at X (logged late)').
     const parsedStatus = parseMedCheck(ev.status);
     if (parsedStatus) {
       let statusText;
       if (parsedStatus.status === 'skipped') statusText = 'Skipped';
-      else if (parsedStatus.status === 'late') statusText = 'Done (logged late)';
-      else if (parsedStatus.status === 'done') statusText = parsedStatus.givenAt ? 'Done at ' + parsedStatus.givenAt : 'Done';
-      else statusText = '';
+      else if (parsedStatus.status === 'late') {
+        statusText = parsedStatus.givenAt
+          ? 'Done at ' + _formatTime12h(parsedStatus.givenAt) + ' (logged late)'
+          : 'Done (logged late)';
+      } else if (parsedStatus.status === 'done') {
+        statusText = parsedStatus.givenAt ? 'Done at ' + _formatTime12h(parsedStatus.givenAt) : 'Done';
+      } else statusText = '';
       if (statusText) html += '<div>Status: ' + escHtml(statusText) + '</div>';
       if (parsedStatus.withFat === true && parsedStatus.fatFood) {
         html += '<div>With fat: ' + escHtml(parsedStatus.fatFood) + '</div>';

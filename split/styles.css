@@ -2314,6 +2314,18 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   font-size:var(--fs-sm); padding:var(--sp-4) var(--sp-10);
   min-height:auto;
 }
+/* CR-5: skipped-state reminder card variant — distinct from done/missed */
+.supp-alert-skipped {
+  background:var(--amber-light);
+  border-left-color:var(--amber);
+}
+.supp-alert-skipped .supp-alert-title { color:var(--tc-warn); }
+.supp-alert-skipped .supp-alert-detail { color:var(--tc-warn); }
+/* CR-7: openMedAdjust hint when no historical time was captured */
+.supp-adjust-hint {
+  display:inline-block; margin-right:var(--sp-6);
+  font-style:italic;
+}
 .med-d3-summary {
   padding:var(--sp-8) 0; line-height:var(--lh-relaxed);
   font-size:var(--fs-base); color:var(--mid);

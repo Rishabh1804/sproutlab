@@ -220,6 +220,324 @@ test('regression-guard-d3-data-action-delegation: openMedDoneAt is registered in
   expect(missing, 'every new data-action handler must be a function on window scope').toEqual([]);
 });
 
+test('regression-guard-d3-parseMedCheck-legacy-ampm: legacy "done:HH:MM am|pm" strings parse to canonical 24h givenAt', async ({ page }) => {
+  // CR-2: pre-PR markMedDone used en-IN locale which produced 'done:08:42 am' / 'done:02:30 PM'.
+  // parseMedCheck must round-trip these into 24h canonical so the pattern card + Med Log
+  // + Q&A surfaces stop hollowing out historical doses.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const fixtures = [
+      { input: 'done:08:42 am', expectGivenAt: '08:42' },
+      { input: 'done:08:42 AM', expectGivenAt: '08:42' },
+      { input: 'done:02:30 pm', expectGivenAt: '14:30' },
+      { input: 'done:12:00 pm', expectGivenAt: '12:00' },
+      { input: 'done:12:30 am', expectGivenAt: '00:30' },
+      { input: 'done:9:5 am',   expectGivenAt: null   }, // single-digit minute — still rejected (data-quality boundary)
+    ];
+    return fixtures.map(f => {
+      const p = parseMedCheck(f.input);
+      return { input: f.input, ok: p && p.givenAt === f.expectGivenAt, actualGivenAt: p ? p.givenAt : null };
+    }).filter(r => !r.ok);
+  });
+
+  expect(r, 'legacy AM/PM strings must round-trip to 24h canonical via parseMedCheck').toEqual([]);
+});
+
+test('regression-guard-d3-parseSupplementTime-24h: _parseSupplementTime accepts the new 24h HH:MM writes', async ({ page }) => {
+  // CR-3: pre-fix only accepted 12h+suffix; every new 24h write returned null and the
+  // medical-tab adherence card silently dropped to 'No timing data'.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    return {
+      h24_morning:   _parseSupplementTime('08:42'),     // → 522 min
+      h24_evening:   _parseSupplementTime('21:00'),     // → 1260 min
+      h24_midnight:  _parseSupplementTime('00:00'),     // → 0 min
+      h12_morning:   _parseSupplementTime('08:42 am'),  // → 522 min
+      h12_afternoon: _parseSupplementTime('2:30 pm'),   // → 870 min
+      late_marker:   _parseSupplementTime('late'),      // → null
+      invalid_h24:   _parseSupplementTime('25:00'),     // → null (out-of-range)
+      invalid_min:   _parseSupplementTime('08:60'),     // → null (out-of-range minute)
+    };
+  });
+
+  expect(r.h24_morning).toBe(8 * 60 + 42);
+  expect(r.h24_evening).toBe(21 * 60);
+  expect(r.h24_midnight).toBe(0);
+  expect(r.h12_morning).toBe(8 * 60 + 42);
+  expect(r.h12_afternoon).toBe(14 * 60 + 30);
+  expect(r.late_marker).toBeNull();
+  expect(r.invalid_h24).toBeNull();
+  expect(r.invalid_min).toBeNull();
+});
+
+test('regression-guard-d3-formatTime12h: canonical 24h HH:MM renders as 12h with AM/PM at display boundaries', async ({ page }) => {
+  // CR-9: V-M-60 storage is canonical 24h en-GB. Display surfaces must reformat to 12h
+  // for the parent-facing convention.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    return {
+      morning:   _formatTime12h('08:42'),    // 8:42 AM
+      noon:      _formatTime12h('12:00'),    // 12:00 PM
+      afternoon: _formatTime12h('14:30'),    // 2:30 PM
+      midnight:  _formatTime12h('00:30'),    // 12:30 AM
+      empty:     _formatTime12h(''),         // ''
+      malformed: _formatTime12h('not-time'), // 'not-time' (pass-through)
+    };
+  });
+
+  expect(r.morning).toBe('8:42 AM');
+  expect(r.noon).toBe('12:00 PM');
+  expect(r.afternoon).toBe('2:30 PM');
+  expect(r.midnight).toBe('12:30 AM');
+  expect(r.empty).toBe('');
+  expect(r.malformed).toBe('not-time');
+});
+
+test('regression-guard-d3-confirmMedDoneAt-empty-input: empty time-input blocks save (no silent fallback to tap-time)', async ({ page }) => {
+  // CR-4: pre-fix, an empty time-input fell through to markMedDone(null) which silently
+  // substituted tap-time as givenAt — the "Done at..." intent was lost. Now blocks save.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    if (medChecks[t]) delete medChecks[t][d3.name];
+    // Simulate the inline editor: create the input element with an empty value.
+    document.body.insertAdjacentHTML('beforeend', '<div id="supp-alert-99"><input type="time" id="supp-time-99" value=""></div>');
+    confirmMedDoneAt(d3.name, 99);
+    const after = medChecks[t] ? medChecks[t][d3.name] : undefined;
+    document.getElementById('supp-alert-99').remove();
+    return { afterDefined: after !== undefined };
+  });
+
+  expect(r.afterDefined, 'empty input must NOT write a med-check entry').toBe(false);
+});
+
+test('regression-guard-d3-skipped-surface-renders: skipped state renders an explicit card with Undo affordance', async ({ page }) => {
+  // CR-5: pre-fix, skipped doses produced no card AND _obCheckVitD3 still flagged 'pending'.
+  // Parent got zero acknowledgement of their explicit skip + a contradictory overlay.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    markMedSkipped(d3.name, 0);
+    // Force a re-render
+    renderRemindersAndAlerts();
+    const html = window._remindersHTML || '';
+    return {
+      hasSkippedCard: html.indexOf('supp-alert-skipped') >= 0,
+      hasUndoButton: html.indexOf('Undo skip') >= 0,
+      obCheck: _obCheckVitD3(),
+      storedShape: typeof medChecks[today()][d3.name],
+    };
+  });
+
+  expect(r.hasSkippedCard, 'isSkipped state must render its own card').toBe(true);
+  expect(r.hasUndoButton, 'skipped card must surface an Undo affordance').toBe(true);
+  expect(r.obCheck, '_obCheckVitD3 must treat skip as resolved (false = no attention needed)').toBe(false);
+  expect(r.storedShape, 'markMedSkipped must now emit object schema').toBe('object');
+});
+
+test('regression-guard-d3-resolveMissedMed-object-shape: backfill via missed-med flow writes the new object schema', async ({ page }) => {
+  // CR-10: pre-fix, resolveMissedMed still wrote legacy 'done:late' / 'skipped' strings.
+  // Now writes the canonical 6-field object so downstream consumers stay consistent.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const yesterday = _offsetDateStr(today(), -1);
+    if (medChecks[yesterday]) delete medChecks[yesterday][d3.name];
+    resolveMissedMed(d3.name, yesterday, 'done');
+    const doneEntry = medChecks[yesterday][d3.name];
+    resolveMissedMed(d3.name, yesterday, 'skipped');
+    const skipEntry = medChecks[yesterday][d3.name];
+    return {
+      doneShape: typeof doneEntry,
+      doneStatus: doneEntry && doneEntry.status,
+      doneHasLoggedAt: doneEntry && typeof doneEntry.loggedAt === 'string',
+      skipShape: typeof skipEntry,
+      skipStatus: skipEntry && skipEntry.status,
+    };
+  });
+
+  expect(r.doneShape).toBe('object');
+  expect(r.doneStatus).toBe('late');
+  expect(r.doneHasLoggedAt, 'late-backfill must record loggedAt for audit trail').toBe(true);
+  expect(r.skipShape).toBe('object');
+  expect(r.skipStatus).toBe('skipped');
+});
+
+test('regression-guard-d3-coconut-water-still-rejected-after-tie-fix: chronological tie-breaker preserves V-K-69 fix', async ({ page }) => {
+  // CR-12: switched _detectFatContextNearTime iteration order from meal-name to chronological
+  // proximity. Make sure the V-K-69 NUTRITION-known-skip still fires regardless of iteration.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    if (!feedingData[t]) feedingData[t] = {};
+    // Mix of meals — non-fat coconut water at exact dose time should NOT match
+    feedingData[t].breakfast = 'coconut water, banana';
+    feedingData[t].breakfast_time = '08:45'; // exactly at dose time
+    feedingData[t].lunch = '';
+    feedingData[t].lunch_time = '';
+    if (medChecks[t]) delete medChecks[t][d3.name];
+    markMedDone(d3.name, 0, '08:45');
+    const stored = medChecks[t][d3.name];
+    return { withFat: stored && stored.withFat, fatFood: stored && stored.fatFood };
+  });
+
+  expect(r.withFat, 'coconut water (NUTRITION-known non-fat) must not match coconut after tie-fix').toBe(false);
+});
+
+test('regression-guard-d3-plural-singular-drift: parent typing "walnuts" matches "walnut" fat-set entry', async ({ page }) => {
+  // CR-13: NUTRITION is keyed inconsistently ('almonds' plural, 'walnut' singular). Parent
+  // natural typing must work both directions.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    if (!feedingData[t]) feedingData[t] = {};
+    feedingData[t].breakfast = 'walnuts, banana'; // parent typed plural; NUTRITION key is 'walnut' singular
+    feedingData[t].breakfast_time = '08:30';
+    feedingData[t].lunch = '';
+    feedingData[t].lunch_time = '';
+    if (medChecks[t]) delete medChecks[t][d3.name];
+    markMedDone(d3.name, 0, '08:45');
+    const stored1 = medChecks[t][d3.name];
+    // Also test the inverse: 'almond' (singular) → NUTRITION key 'almonds' (plural)
+    feedingData[t].breakfast = 'almond, banana';
+    delete medChecks[t][d3.name];
+    markMedDone(d3.name, 0, '08:45');
+    const stored2 = medChecks[t][d3.name];
+    return {
+      walnuts_withFat: stored1 && stored1.withFat,
+      walnuts_food: stored1 && stored1.fatFood,
+      almond_withFat: stored2 && stored2.withFat,
+    };
+  });
+
+  expect(r.walnuts_withFat, 'parent typing "walnuts" must match "walnut" fat-set entry').toBe(true);
+  expect(r.almond_withFat, 'parent typing "almond" must match "almonds" via alias path').toBe(true);
+});
+
+test('regression-guard-d3-pattern-adherence-respects-medStart: a med activated 3 days ago shows N/3, not N/14', async ({ page }) => {
+  // CR-6: pre-fix divided by 14 always; pattern card disagreed with computeSupplementAdherence
+  // for a recently-activated med. Now restricts the denominator to days post-medStart.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    // Set d3Med.start to 3 days ago. Also set _trackingSince to a much earlier date
+    // so it doesn't dominate the effectiveStart calculation in the fresh-install context.
+    const startDate = _offsetDateStr(today(), -2);
+    d3.start = startDate;
+    medChecks._trackingSince = _offsetDateStr(today(), -30);
+    // Mark all 3 days as done
+    for (let i = 0; i < 3; i++) {
+      const ds = _offsetDateStr(today(), -i);
+      if (!medChecks[ds]) medChecks[ds] = {};
+      medChecks[ds][d3.name] = { status:'done', givenAt:'08:00', loggedAt:'08:00', withFat:false, fatFood:null, fatDelta:null };
+    }
+    // Render the pattern card and read the adherence text
+    renderMedD3PatternCard();
+    const body = document.getElementById('medD3PatternBody');
+    const html = body ? body.innerHTML : '';
+    return {
+      has3of3: html.indexOf('3/3 days') >= 0,
+      has3of14: html.indexOf('3/14 days') >= 0,
+      htmlSample: html.slice(0, 400),
+      medStart: d3.start,
+    };
+  });
+
+  expect(r.has3of3, 'adherence must use eligibleDays.length (= days from medStart) — got HTML: ' + r.htmlSample).toBe(true);
+  expect(r.has3of14, 'must NOT divide by raw 14-day window').toBe(false);
+});
+
+test('regression-guard-d3-snapshot-fat-refresh: logging a fat-meal AFTER the dose flips withFat:false → true', async ({ page }) => {
+  // CR-14: pre-fix, markMedDone froze withFat:false against the snapshot at log-time. If
+  // the parent logged the dose BEFORE the meal, withFat stayed false forever.
+  // Fix: _refreshTodayMedWithFat re-evaluates negative-withFat doses on feedingData save.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    // Clear feedingData and medChecks for today
+    feedingData[t] = {};
+    if (medChecks[t]) delete medChecks[t][d3.name];
+    // First: mark D3 done at 08:45 with NO meal logged yet → withFat:false
+    markMedDone(d3.name, 0, '08:45');
+    const before = medChecks[t][d3.name];
+    // Now: log breakfast with ghee at 08:30
+    feedingData[t].breakfast = 'chapati, ghee';
+    feedingData[t].breakfast_time = '08:30';
+    // Trigger the refresh
+    _refreshTodayMedWithFat();
+    const after = medChecks[t][d3.name];
+    return {
+      beforeWithFat: before && before.withFat,
+      afterWithFat:  after && after.withFat,
+      afterFood:     after && after.fatFood,
+    };
+  });
+
+  expect(r.beforeWithFat, 'dose logged before meal must initially be withFat:false').toBe(false);
+  expect(r.afterWithFat, 'after the meal is logged, refresh must flip withFat to true').toBe(true);
+  expect(r.afterFood).toBe('ghee');
+});
+
+test('regression-guard-d3-qaSupplement-schema-aware: qaAnswerSupplement reads new object shape without try/catch swallowing', async ({ page }) => {
+  // CR-1: pre-fix, qaAnswerSupplement.indexOf('done')/.replace('done:','') threw on the new
+  // object shape. The try/catch swallowed it and returned 'Unable to compute'. Now schema-aware.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
+    if (!d3) return { skipped: 'no D3 med' };
+    const t = today();
+    if (!medChecks[t]) medChecks[t] = {};
+    medChecks[t][d3.name] = { status:'done', givenAt:'14:30', loggedAt:'14:30', withFat:true, fatFood:'ghee', fatDelta:-5 };
+    const result = qaAnswerSupplement('supplement');
+    // The 'Given today at X' actionItem confirms the schema-aware read worked.
+    const items = (result.sections || []).reduce((acc, s) => acc.concat(s.items || []), []);
+    const givenLine = items.find(i => i.text && i.text.indexOf('Given today at') === 0);
+    return {
+      headline: result.headline,
+      hasGivenLine: !!givenLine,
+      givenText: givenLine ? givenLine.text : null,
+    };
+  });
+
+  expect(r.headline, 'must NOT return the catch-fallback "Unable to compute"').not.toBe('Unable to compute');
+  expect(r.hasGivenLine, 'today\'s "Given at X" actionItem must surface').toBe(true);
+  expect(r.givenText).toContain('2:30 PM');
+  expect(r.givenText).toContain('ghee');
+});
+
 test('regression-guard-d3-adjust-flow: adjustMedTime updates givenAt AND re-runs with-fat detection on the new time', async ({ page }) => {
   // Mark done at 14:00 with no nearby fat-meal (no breakfast logged) — should be withFat:false.
   // Then adjust to 08:45 which IS near a 08:30 fat-meal — should flip to withFat:true.

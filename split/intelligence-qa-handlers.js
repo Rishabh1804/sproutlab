@@ -3048,14 +3048,19 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
-      // Today's status
+      // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;
-      if (!todayStatus) {
+      var todayParsed = parseMedCheck(todayStatus);
+      if (!todayParsed) {
         actionItems.push({ text: 'Not given today yet — don\'t forget!', signal: 'action' });
-      } else if (todayStatus.indexOf('done') === 0) {
-        var timeGiven = todayStatus.replace('done:', '');
-        actionItems.push({ text: 'Given today at ' + timeGiven, signal: 'good' });
+      } else if (todayParsed.status === 'done' || todayParsed.status === 'late') {
+        var timeGiven = todayParsed.givenAt ? _formatTime12h(todayParsed.givenAt) : 'unrecorded time';
+        var lateTag = todayParsed.status === 'late' ? ' (logged late)' : '';
+        var fatTag = todayParsed.withFat === true && todayParsed.fatFood ? ' with ' + todayParsed.fatFood : '';
+        actionItems.push({ text: 'Given today at ' + timeGiven + fatTag + lateTag, signal: 'good' });
+      } else if (todayParsed.status === 'skipped') {
+        actionItems.push({ text: 'Skipped today', signal: 'info' });
       }
     });
   } catch(e) {

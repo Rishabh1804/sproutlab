@@ -4349,20 +4349,34 @@ function renderMedD3PatternCard() {
     const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
     days.push({ date: ds, parsed: parsed });
   }
-  // Aggregate stats
-  const doneDays = days.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
-  const skippedDays = days.filter(d => d.parsed && d.parsed.status === 'skipped');
-  const unloggedDays = days.filter(d => !d.parsed);
-  const adherence = days.length > 0 ? Math.round((doneDays.length / days.length) * 100) : 0;
-  // Usual-time band: take givenAt minutes, find central 80% range
+  // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
+  // pre-fix divided by the full 14-day window unconditionally, giving wildly different
+  // numbers vs computeSupplementAdherence on the same screen for a recently-activated med.
+  const medStart = d3Med.start || '2025-09-04';
+  const trackStart = medChecks._trackingSince || '0000-00-00';
+  const effectiveStart = medStart > trackStart ? medStart : trackStart;
+  const eligibleDays = days.filter(d => d.date >= effectiveStart);
+  const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
+  const unloggedDays = eligibleDays.filter(d => !d.parsed);
+  const adherence = eligibleDays.length > 0 ? Math.round((doneDays.length / eligibleDays.length) * 100) : 0;
+  // Usual-time band: take givenAt minutes, find central 80% range.
+  // CR-11: use (N-1)*p indexing instead of N*p (which collapsed to the max for many N
+  // and degraded 'central 80%' into 'min-to-max range') AND require N>=5 for the band
+  // to be statistically meaningful — below that, show honest min-max range with a tag.
   const mins = doneDays.map(d => _hhmmToMinutes(d.parsed.givenAt)).filter(m => m >= 0).sort((a,b) => a-b);
   let usualBand = null;
-  if (mins.length >= 3) {
-    const lo = mins[Math.floor(mins.length * 0.1)];
-    const hi = mins[Math.floor(mins.length * 0.9)];
+  let usualBandLabel = 'Usual time';
+  if (mins.length >= 5) {
+    const lo = mins[Math.floor((mins.length - 1) * 0.1)];
+    const hi = mins[Math.floor((mins.length - 1) * 0.9)];
     usualBand = _minutesToHhmm(lo) + '–' + _minutesToHhmm(hi);
-  } else if (mins.length > 0) {
-    usualBand = _minutesToHhmm(mins[0]) + (mins.length > 1 ? '–' + _minutesToHhmm(mins[mins.length-1]) : '');
+  } else if (mins.length >= 2) {
+    usualBand = _minutesToHhmm(mins[0]) + '–' + _minutesToHhmm(mins[mins.length-1]);
+    usualBandLabel = 'Time range so far';
+  } else if (mins.length === 1) {
+    usualBand = _minutesToHhmm(mins[0]);
+    usualBandLabel = 'Only one timed dose';
   }
   // With-fat rate
   const withFatKnown = doneDays.filter(d => d.parsed.withFat === true || d.parsed.withFat === false);
@@ -4376,21 +4390,27 @@ function renderMedD3PatternCard() {
   // Streak: consecutive done-days ending today.
   // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
   // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // CR-6: walk over eligibleDays (post-medStart) not raw days, so a recently-activated med
+  // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayParsed = days[days.length - 1].parsed;
+  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
   const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
-  const startIdx = todayResolved ? days.length - 1 : days.length - 2;
+  const startIdx = todayResolved ? eligibleDays.length - 1 : eligibleDays.length - 2;
   if (!todayResolved) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
-    if (days[i].parsed && (days[i].parsed.status === 'done' || days[i].parsed.status === 'late')) streak++;
+    if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
   }
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
   let summary = '<div class="med-d3-summary">';
-  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${days.length} days (${adherence}%)</strong></div>`;
-  if (usualBand) summary += `<div class="med-d3-summary-row">${zi('clock')} Usual time: ${escHtml(usualBand)}</div>`;
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${eligibleDays.length} days (${adherence}%)</strong></div>`;
+  // CR-9: render times in 12h for parent-facing display.
+  if (usualBand) {
+    const bandDisplay = usualBand.split('–').map(t => _formatTime12h(t)).join('–');
+    summary += `<div class="med-d3-summary-row">${zi('clock')} ${escHtml(usualBandLabel)}: ${escHtml(bandDisplay)}</div>`;
+  }
   if (fatRate !== null) {
     const fatCls = fatRate >= 70 ? 'tc-sage' : 'tc-warn';
     summary += `<div class="med-d3-summary-row">${zi('bowl')} <span class="${fatCls}">With-fat rate: ${withFatCount} of ${withFatKnown.length} doses (${fatRate}%)</span></div>`;
@@ -4399,19 +4419,25 @@ function renderMedD3PatternCard() {
   if (streak > 0) summary += `<div class="med-d3-summary-row">${zi('trending-flat')} ${streakLabel}: <strong>${streak} day${streak === 1 ? '' : 's'}</strong></div>`;
   if (unloggedDays.length > 0) summary += `<div class="med-d3-summary-row tc-warn">${zi('warn')} ${unloggedDays.length} day${unloggedDays.length === 1 ? '' : 's'} not logged in this window</div>`;
   summary += '</div>';
-  // 14-day compact list (most-recent first)
+  // 14-day compact list (most-recent first) — iterates raw days (so pre-medStart rows
+  // show 'Not tracked yet' rather than vanishing entirely; the adherence math above
+  // uses eligibleDays so the user-visible numbers are correct).
   let list = '<div class="med-d3-log">';
   days.slice().reverse().forEach(d => {
     const label = d.date === todayStr ? 'Today' : formatDate(d.date);
     let row;
-    if (!d.parsed) {
+    if (d.date < effectiveStart) {
+      row = `<span class="t-sub">Not tracked yet</span>`;
+    } else if (!d.parsed) {
       row = `<span class="tc-warn">Not logged</span>`;
     } else if (d.parsed.status === 'skipped') {
       row = `<span class="tc-warn">Skipped</span>`;
     } else {
-      const t = d.parsed.givenAt ? 'Done at ' + escHtml(d.parsed.givenAt) : 'Done';
-      // V-M-61 + V-M-63: only render the "no fat-meal" line on explicit false
-      // (not null/unknown), with softened framing.
+      // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
+      const isLate = d.parsed.status === 'late';
+      const t = d.parsed.givenAt
+        ? 'Done at ' + escHtml(_formatTime12h(d.parsed.givenAt)) + (isLate ? ' (late)' : '')
+        : (isLate ? 'Done (logged late)' : 'Done');
       const fat = d.parsed.withFat === true && d.parsed.fatFood
         ? ` <span class="tc-sage">· with ${escHtml(d.parsed.fatFood)}</span>`
         : (d.parsed.withFat === false ? ` <span class="t-sub">· no fat-meal logged nearby</span>` : '');
@@ -9683,14 +9709,23 @@ function computeSupplementAdherence(windowDays) {
 }
 
 function _parseSupplementTime(str) {
-  // Parse 'HH:MM am/pm' or 'HH:MM AM/PM' to minutes since midnight
+  // CR-3: parse BOTH 24h 'HH:MM' (new schema writes via en-GB) AND 12h 'HH:MM am|pm' (legacy)
+  // to minutes since midnight. Pre-CR3 this only accepted the 12h suffixed form, so every
+  // post-v1 24h write returned null and the timing-analysis surface silently died.
   if (!str || str === 'late') return null;
   str = str.trim().toLowerCase();
-  var match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
-  if (!match) return null;
-  var h = parseInt(match[1], 10);
-  var m = parseInt(match[2], 10);
-  var ampm = match[3];
+  var match24 = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    var h24 = parseInt(match24[1], 10);
+    var m24 = parseInt(match24[2], 10);
+    if (h24 < 0 || h24 > 23 || m24 < 0 || m24 > 59) return null;
+    return h24 * 60 + m24;
+  }
+  var match12 = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!match12) return null;
+  var h = parseInt(match12[1], 10);
+  var m = parseInt(match12[2], 10);
+  var ampm = match12[3];
   if (ampm === 'pm' && h !== 12) h += 12;
   if (ampm === 'am' && h === 12) h = 0;
   return h * 60 + m;
