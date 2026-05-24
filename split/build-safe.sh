@@ -19,7 +19,10 @@ ROOT="$(cd .. && pwd)"
 OUT="$ROOT/sproutlab.html"
 INDEX="$ROOT/index.html"
 LOG="$(mktemp -t sl-build.XXXXXX.log)"
-trap "rm -f $LOG" EXIT
+# V-K-86 (Kael synth): single-quoted trap body — `$LOG` expands at exit time
+# rather than registration time. Stylistic robustness against future refactors
+# that might reassign LOG between trap and exit.
+trap 'rm -f "$LOG"' EXIT
 
 # Run build.sh with proper redirection: STDOUT → file, STDERR → log.
 # `set -e` will trip if build.sh exits non-zero.
@@ -45,7 +48,24 @@ if [ "$FIRST" != "<!DOCTYPE html>" ]; then
   exit 1
 fi
 
+# V-K-84 (Kael synth): also assert the document ends with </html>. Bounds the
+# corruption surface at both ends — catches a class of leak where STDERR text
+# arrives AFTER the DOCTYPE line (the first-line check above wouldn't see it)
+# but lands somewhere inside the body or after the closing tag.
+LAST="$(tail -1 "$OUT")"
+if [ "$LAST" != "</html>" ]; then
+  echo "BUILD CORRUPTED — $OUT does not end with </html>." >&2
+  echo "Last line was: $LAST" >&2
+  echo "" >&2
+  echo "Last 10 lines of output (for diagnosis):" >&2
+  tail -10 "$OUT" >&2
+  exit 1
+fi
+
 # Validate size: a truncated build would be < 100KB. Real builds are several MB.
+# Per Maren advisory: this is belt-and-braces alongside the DOCTYPE/closing-tag
+# checks above — the structural checks are the primary corruption guard; size
+# catches gross truncation that somehow preserves the bookends.
 SIZE="$(wc -c < "$OUT")"
 if [ "$SIZE" -lt 102400 ]; then
   echo "BUILD CORRUPTED — $OUT is suspiciously small ($SIZE bytes; expected > 100KB)." >&2

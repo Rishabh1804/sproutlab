@@ -33,9 +33,13 @@ Three PWA projects sharing a common architectural pattern: split-file HTML conca
 # Codex (self-copying)
 cd split && bash build.sh
 
-# SproutLab (stdout redirect + manual copy)
-cd split && bash build.sh > sproutlab.html
-cp sproutlab.html ../index.html && cp sproutlab.html ../sproutlab.html
+# SproutLab — canonical (post-PR #120):
+pnpm build
+# This calls split/build-safe.sh which (a) invokes build.sh with correct
+# STDOUT/STDERR redirection, (b) validates <!DOCTYPE html>…</html> bookends
+# and size, (c) mirrors sproutlab.html → index.html. NEVER use
+# `bash split/build.sh > out.html 2>&1` — the 2>&1 captures STDERR into the
+# output file and corrupts the HTML (PR #117/#118 incident).
 
 # SEP Invoicing (stdout redirect + manual copy)
 cd split && bash build.sh > ../sep-invoicing.html
