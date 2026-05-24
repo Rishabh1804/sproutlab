@@ -2,7 +2,7 @@ audit-emoji.sh [default (5 surfaced ranges)]: 0 HR-1 violations across split, in
 audit-icon-text: PASS (0 unannotated `(label|text|reason|detail): (zi|iconText)(` field-assignments)
 audit-resolve-shield: PASS (4 resolve-caller(s) carry the explicit `'Resolve'` btnText shield per V-M-41 doctrine)
 audit-viz-smoke: PASS (4 ids + 5 tokens) across template.html + styles.css
-[bump-version] 2026.05.24-3 → 2026.05.24-4
+[bump-version] 2026.05.24-4 → 2026.05.24-5
 [poop-reference] wrote /home/user/sproutlab/docs/POOP_COLOR_REFERENCE.html
 [careticket-sm] wrote /home/user/sproutlab/docs/CARETICKET_STATE_MACHINE.html — 6 transitions, 0 drift flags
 <!DOCTYPE html>
@@ -2269,10 +2269,20 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   border-left-color:var(--tc-danger);
 }
 .supp-alert-top {
-  display:flex; align-items:center; gap:var(--sp-8);
+  /* HF-1: flex-wrap so the 3-button action row drops to its own line below the title
+     when horizontal space is tight, rather than squeezing the title into a vertical stack.
+     Closes Vit D3 v2 backlog item (Vela V-V-01 alternative recommendation, originally
+     deferred). Surfaced live post-PR #116 merge — title was wrapping word-by-word into
+     ~80px residual width while flex-shrink:0 on .supp-alert-action held ~250px. */
+  display:flex; align-items:center; gap:var(--sp-8); flex-wrap:wrap;
 }
 .supp-alert-icon { font-size:var(--icon-md); flex-shrink:0; }
-.supp-alert-title { flex:1; font-size:var(--fs-md); font-weight:600; color:var(--text); }
+.supp-alert-title {
+  /* HF-1: min-width:0 lets the title compress past its longest-word width via normal
+     line-wrapping (flex items default to min-width:auto = longest atom). Pairs with the
+     parent's flex-wrap so the action row drops below before the title is forced to wrap. */
+  flex:1; min-width:0; font-size:var(--fs-md); font-weight:600; color:var(--text);
+}
 .supp-alert.done .supp-alert-title { color:var(--tc-sage); }
 .supp-alert.missed .supp-alert-title { color:var(--tc-rose); }
 .supp-alert-action { flex-shrink:0; display:flex; gap:var(--sp-4); align-items:center; flex-wrap:wrap; justify-content:flex-end; }
