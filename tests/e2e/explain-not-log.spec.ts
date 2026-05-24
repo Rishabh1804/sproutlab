@@ -29,7 +29,9 @@ test('every NUTRITION food carries a conservative chem model (no fabricated nume
     return { total: entries.length, missing, badFibre, numeric };
   });
 
-  expect(r.total).toBeGreaterThanOrEqual(130);
+  // Post-Arc-C C-1 dedupe: synonym keys (yogurt, dahi, lauki, til, lychee, kishmish, aliv, date (fruit))
+  // moved out of NUTRITION into _FOOD_ALIASES; floor drops from 130 distinct to 120.
+  expect(r.total).toBeGreaterThanOrEqual(120);
   expect(r.missing).toEqual([]);
   expect(r.badFibre).toEqual([]);
   expect(r.numeric).toEqual([]); // high-confidence qualitative facts only
