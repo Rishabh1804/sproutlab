@@ -1908,7 +1908,16 @@ function _tsfCollectEvents() {
     };
     if (timeMin !== null) {
       events.push(ev);
-    } else if (parsed.status !== 'skipped') {
+    } else if (parsed.status === 'skipped' && parsed.loggedAt) {
+      // T1-3: skipped doses are CR-10 audit-bearing events. The pre-fix filter dropped
+      // them entirely (timeMin null AND status === 'skipped' hit neither push branch).
+      // Surface them in the chronological timeline at loggedAt — the day's record is
+      // honest, and a half-awake parent scanning TSF sees the skip in temporal context.
+      ev.timeMin = _tsfTimeToMinutes(parsed.loggedAt);
+      ev.time = parsed.loggedAt;
+      ev.displayTime = _tsfFormatTime(parsed.loggedAt);
+      events.push(ev);
+    } else {
       noTimeEvents.push(ev);
     }
   });

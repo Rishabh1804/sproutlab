@@ -538,11 +538,12 @@ test('regression-guard-d3-qaSupplement-schema-aware: qaAnswerSupplement reads ne
   expect(r.givenText).toContain('ghee');
 });
 
-test('regression-guard-d3-undoMedSkip-clears-to-pending: Undo skip does NOT silently log at tap-time', async ({ page }) => {
-  // V-M-68 + V-M-73: pre-fix, Undo skip wired to markMedDone(name, idx) with no givenTime,
-  // which silently substituted tap-time. Reintroduced the CR-4 class of bug through a
-  // different door. Fix: Undo clears the entry back to undefined (pending state) so the
-  // parent makes an explicit choice via [Done now] / [Done at...] / [Skip].
+test('regression-guard-d3-undoMedSkip-reads-as-pending: Undo skip does NOT silently log at tap-time AND preserves CR-10 audit trail', async ({ page }) => {
+  // V-M-68 + V-M-73 + T1-6 (v2): Undo skip must NOT fabricate a "Done at tap-time" record
+  // (the CR-4 class of bug). T1-6 (v2) refines V-M-68's `delete` to a `cleared` sentinel
+  // that preserves CR-10's loggedAt audit trail. parseMedCheck returns null for cleared,
+  // so every existing reader treats the slot as pending — the reminder card still offers
+  // the [Done now] / [Done at...] / [Skip] choice without a fabricated time.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
 
@@ -550,22 +551,32 @@ test('regression-guard-d3-undoMedSkip-clears-to-pending: Undo skip does NOT sile
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
     if (!d3) return { skipped: 'no D3 med' };
     const t = today();
-    // First: skip
+    // First: skip — produces {status:'skipped', loggedAt:'HH:MM', ...}
     markMedSkipped(d3.name, 0);
     const afterSkip = medChecks[t][d3.name];
-    // Then: undo
+    const skipLoggedAt = afterSkip && afterSkip.loggedAt;
+    // Then: undo — T1-6 preserves audit via cleared sentinel
     undoMedSkip(d3.name, 0);
-    const afterUndo = medChecks[t] ? medChecks[t][d3.name] : undefined;
+    const afterUndo = medChecks[t] && medChecks[t][d3.name];
     return {
-      skipStatus: afterSkip && afterSkip.status,
-      undoIsCleared: afterUndo === undefined,
-      didNotSilentlyLog: !afterUndo || afterUndo.status !== 'done',
+      skipStatus:         afterSkip && afterSkip.status,
+      skipLoggedAt:       skipLoggedAt,
+      didNotSilentlyLog:  !afterUndo || afterUndo.status !== 'done',
+      afterUndoStatus:    afterUndo && afterUndo.status,
+      afterUndoPriorLoggedAt: afterUndo && afterUndo.priorLoggedAt,
+      readsAsPending:     parseMedCheck(afterUndo) === null,
+      notDoneViaHelper:   !medCheckIsDone(afterUndo),
+      notSkippedViaHelper: !medCheckSkipped(afterUndo),
     };
   });
 
   expect(r.skipStatus).toBe('skipped');
-  expect(r.undoIsCleared, 'Undo must clear medChecks entry back to undefined (pending)').toBe(true);
   expect(r.didNotSilentlyLog, 'Undo must NOT fabricate a "Done at tap-time" record').toBe(true);
+  expect(r.afterUndoStatus, 'T1-6: undo writes a cleared sentinel').toBe('cleared');
+  expect(r.afterUndoPriorLoggedAt, 'T1-6: cleared sentinel preserves CR-10 loggedAt audit trail').toBe(r.skipLoggedAt);
+  expect(r.readsAsPending, 'T1-6: parseMedCheck returns null for cleared so readers see pending').toBe(true);
+  expect(r.notDoneViaHelper, 'cleared must read as not-done').toBe(true);
+  expect(r.notSkippedViaHelper, 'cleared must read as not-skipped (parent undid it)').toBe(true);
 });
 
 test('regression-guard-d3-yesterday-skipped-schema-aware: home medical preview reads new object shape for ydSkipped', async ({ page }) => {

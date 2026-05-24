@@ -870,7 +870,7 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Medical highlights — D3 adherence
   if (md.suppTotal > 0) {
     if (md.suppDays > 0) {
-      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + md.d3Times[0] : ''), signal: 'good' });
+      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + _formatTime12h(md.d3Times[0]) : ''), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
     } else {
       concerns.push({ domain: 'medical', text: 'Vit D3 missed', signal: 'warn' });
     }

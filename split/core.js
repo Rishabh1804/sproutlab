@@ -76,6 +76,12 @@ function parseMedCheck(val) {
   // V-K-72: arrays are typeof 'object' but not med-check shapes — reject explicitly.
   if (Array.isArray(val)) return null;
   if (typeof val === 'object') {
+    // T1-6 (v2): the `cleared` sentinel is an audit-only record produced by undoMedSkip
+    // — every active-state reader should see the slot as pending. The raw priorStatus /
+    // priorLoggedAt / clearedAt fields persist on medChecks[date][name] for future audit
+    // tooling, but parseMedCheck returns null so existing readers (TSF, ISL, pattern card,
+    // Q&A, reminder card) treat it as no-record.
+    if (val.status === 'cleared') return null;
     return {
       status:   val.status || null,
       givenAt:  val.givenAt || null,
@@ -198,6 +204,12 @@ function _refreshTodayMedWithFat() {
     save(KEYS.medChecks, medChecks);
     if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
     if (typeof _islMarkDirty === 'function') _islMarkDirty('medical');
+    // T1-4 (V-V-13 advisory): the helper mutates medChecks AND dirties caches but used
+    // to leave visible badges stale. Trigger the render surfaces that consume withFat
+    // so a parent on home or medical sees the flipped state without re-navigating.
+    if (typeof renderRemindersAndAlerts === 'function') renderRemindersAndAlerts();
+    if (typeof renderHomeContextAlerts === 'function') renderHomeContextAlerts();
+    if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard();
   }
   return mutated;
 }
@@ -3389,7 +3401,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') { renderMilestoneStats(); renderMilestoneHighlights(); }
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }

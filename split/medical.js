@@ -2303,7 +2303,11 @@ function orderMedicalCards() {
   const todayKey = today();
   const activeMeds = meds.filter(m => m.active);
   const todayChecks = medChecks[todayKey] || {};
-  const medsPending = activeMeds.filter(m => !todayChecks[m.name]).length;
+  // T1-6 / T3-14: schema-aware pending check. Raw truthy missed (a) corrupted partial-write
+  // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
+  // truthy object in the slot but neither is a done dose. Use the same parsed semantics every
+  // other medChecks reader does.
+  const medsPending = activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).length;
 
   // Build ordered list: stats always first, then priority cards
   const cards = [];
