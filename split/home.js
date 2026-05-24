@@ -704,16 +704,22 @@ function renderRemindersAndAlerts() {
     if (!isResolved) allTodayResolved = false;
 
     if (!isResolved) {
+      // HF-2: action row is now a SIBLING of .supp-alert-top (not a child) so it never
+      // competes with the title for horizontal space. Parent .supp-alert is column-flex,
+      // so the action row stacks below title naturally. Closes Vit D3 v2 backlog item
+      // (Vela V-V-01 original structural recommendation; PR #117 attempted a CSS-only
+      // wrap fix that backfired — min-width:0 let the title shrink past its content and
+      // the parent never triggered wrap).
       html += `
       <div class="supp-alert" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('warn')}</div>
           <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
-          <div class="supp-alert-action">
-            <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
-            <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Done at...</button>
-            <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
-          </div>
+        </div>
+        <div class="supp-alert-action">
+          <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
+          <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Done at...</button>
+          <button class="supp-skip-btn" data-action="markMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Skip</button>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${escHtml(m.freq || 'As prescribed')}</div>
       </div>`;
@@ -735,14 +741,15 @@ function renderRemindersAndAlerts() {
       } else if (parsed && parsed.withFat === false && givenAt) {
         fatBadge = `<span class="supp-fat-badge supp-fat-badge-neutral">no fat-meal logged nearby</span>`;
       }
+      // HF-2: action row sibling of top, same as pending.
       html += `
       <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('check')}</div>
           <div class="supp-alert-title">${timeText} — ${escHtml(m.name)}</div>
-          <div class="supp-alert-action">
-            <button class="supp-skip-btn supp-adjust-btn" data-action="openMedAdjust" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Adjust</button>
-          </div>
+        </div>
+        <div class="supp-alert-action">
+          <button class="supp-skip-btn supp-adjust-btn" data-action="openMedAdjust" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Adjust</button>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fatBadge}</div>
       </div>`;
@@ -753,14 +760,15 @@ function renderRemindersAndAlerts() {
       // of bug). Instead Undo clears the skip back to PENDING — the card re-renders with
       // the standard [Done now] [Done at...] [Skip] buttons, forcing the parent to make
       // an explicit choice. No fabricated time, no destroyed audit trail.
+      // HF-2: action row sibling of top, same as pending/done.
       html += `
       <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('skip-forward')}</div>
           <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
-          <div class="supp-alert-action">
-            <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
-          </div>
+        </div>
+        <div class="supp-alert-action">
+          <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
         </div>
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}Skip recorded — tap Undo to clear and log the dose.</div>
       </div>`;
