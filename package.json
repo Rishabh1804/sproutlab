@@ -4,7 +4,7 @@
   "private": true,
   "description": "Dev-only test harness + build script for SproutLab. Production artifact (sproutlab.html / index.html) is built by `pnpm build`; this package.json itself is not part of the runtime bundle.",
   "scripts": {
-    "build": "bash split/build.sh > sproutlab.html && cp sproutlab.html index.html",
+    "build": "bash split/build-safe.sh",
     "test:e2e": "playwright test",
     "test:e2e:stress": "playwright test --repeat-each=5",
     "test:e2e:ci": "CI=1 playwright test --repeat-each=5",

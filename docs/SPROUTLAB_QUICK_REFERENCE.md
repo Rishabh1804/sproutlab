@@ -41,7 +41,7 @@ pnpm build              # bumps manifest version + builds sproutlab.html + copie
 git add -A && git commit -m "message" && git push
 ```
 
-`pnpm build` is the canonical entry; `bash split/build.sh > sproutlab.html && cp sproutlab.html index.html` is the same steps written out (PR-8 wired the script + made build.sh self-locating so `pnpm build` works from any cwd). The manifest version bump runs first (`split/bump-version.mjs`); errors go to stderr so the stdout HTML stream stays clean.
+`pnpm build` is the canonical entry — calls `split/build-safe.sh` which wraps `bash build.sh > sproutlab.html 2> /tmp/build.log`, validates the output starts with `<!DOCTYPE html>`, ends with `</html>`, and is > 100KB, then mirrors to `index.html`. (Post-PR #120; closes the PR #117/#118 STDERR-leak class.) The manifest version bump runs inside `build.sh` (`split/bump-version.mjs`); audit gates + version bump + doc-generator output go to stderr so the stdout HTML stream stays clean. `build-safe.sh` captures stderr to a log and tails it back to the caller for visibility. **NEVER invoke `bash split/build.sh > out.html 2>&1` directly** — the `2>&1` captures STDERR into the output file and corrupts the HTML.
 
 ---
 
