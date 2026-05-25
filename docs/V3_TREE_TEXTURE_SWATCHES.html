@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SproutLab v3.0 Tree — Background Texture Swatches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Nunito:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --warm:       #fef6f0;
+  --warm-deep:  #f5e9dd;
+  --text:       #3a2a2a;
+  --mid:        #5a4242;
+  --light:      #806c6c;
+  --softer:     #b5a8a8;
+  --glass:      rgba(58, 42, 42, 0.08);
+  --sage:   #b5d5c5;
+  --rose:   #f2a8b8;
+  --amber:  #e8b86d;
+  --lav:    #c9b8e8;
+  --sky:    #a8cfe0;
+  --indigo: #9ba8d8;
+  --peach:  #fad4b4;
+  --tc-rose: #9e3e52;
+  --tc-amber: #856404;
+  --tc-indigo: #3a4685;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: #2a1f22;
+  color: #f0e5e0;
+  padding: 32px 20px 60px;
+}
+.page-head {
+  max-width: 1200px;
+  margin: 0 auto 28px;
+}
+.page-head h1 {
+  margin: 0 0 6px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(22px, 4vw, 30px);
+  letter-spacing: -0.5px;
+}
+.page-head p {
+  margin: 0;
+  color: #cdb8b3;
+  font-size: 14px;
+}
+.page-head .ask {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(232,184,109,0.12);
+  border-left: 3px solid var(--amber);
+  border-radius: 6px;
+  font-size: 13px;
+  color: #f0e5e0;
+}
+
+.grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.swatch {
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--warm);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25), 0 12px 60px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+}
+.swatch-canvas {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--glass);
+}
+.swatch-label {
+  padding: 14px 18px;
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  background: var(--warm);
+  color: var(--text);
+}
+.swatch-label h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.swatch-label .meta {
+  margin: 3px 0 0;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--mid);
+  font-style: italic;
+}
+.swatch-label .verdict {
+  margin: 8px 0 0;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--tc-rose);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.swatch-label .verdict.good { color: var(--tc-indigo); }
+
+/* Sample node overlay used inside every canvas */
+.sample-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  pointer-events: none;
+}
+.sample-node {
+  width: 92px; height: 92px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #a8b3dd 0%, #8693c8 100%);
+  border: 3px solid var(--tc-indigo);
+  box-shadow: 0 10px 30px rgba(58,70,133,0.35), 0 0 0 4px rgba(232,184,109,0.30), 0 0 32px rgba(232,184,109,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 18px;
+  position: relative;
+}
+.sample-node::after {
+  content: 'v3-3';
+  position: absolute;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.sample-node-small {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #f2b7c4 0%, #d98ca0 100%);
+  border: 2.5px solid var(--tc-rose);
+  box-shadow: 0 6px 18px rgba(158,62,82,0.30);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 12px;
+  position: relative;
+}
+.sample-node-small::after {
+  content: 'v3-1';
+  position: absolute;
+}
+.sample-connector {
+  position: absolute;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(58,42,42,0.6) 0%, rgba(58,42,42,0.4) 100%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+}
+.sample-tag {
+  position: absolute;
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--mid);
+  background: rgba(254, 246, 240, 0.85);
+  padding: 3px 8px;
+  border-radius: 999px;
+  top: 16px;
+  left: 16px;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 1: Pure warm cream (baseline — current)
+   ─────────────────────────────────────────────────── */
+.tex-clean .swatch-canvas {
+  background:
+    radial-gradient(circle at 25% 30%, rgba(168,207,224,0.10) 0%, transparent 50%),
+    radial-gradient(circle at 78% 70%, rgba(201,184,232,0.08) 0%, transparent 50%),
+    var(--warm);
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 2: Light parchment — fine grain, warm
+   ─────────────────────────────────────────────────── */
+.tex-parchment .swatch-canvas {
+  background:
+    radial-gradient(ellipse at center, rgba(232,184,109,0.05) 0%, transparent 70%),
+    repeating-linear-gradient(0deg,
+      rgba(140,100,80,0.018) 0px,
+      rgba(140,100,80,0.018) 1px,
+      transparent 1px,
+      transparent 3px),
+    repeating-linear-gradient(90deg,
+      rgba(140,100,80,0.012) 0px,
+      rgba(140,100,80,0.012) 1px,
+      transparent 1px,
+      transparent 4px),
+    var(--warm);
+}
+.tex-parchment .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(180,150,120,0.10) 0%, transparent 25%),
+    radial-gradient(circle at 85% 80%, rgba(180,150,120,0.08) 0%, transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(220,200,180,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 3: Aged paper — visible grain, more contrast
+   ─────────────────────────────────────────────────── */
+.tex-aged .swatch-canvas {
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(180,140,100,0.16) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 60%, rgba(160,110,80,0.12) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 80%, rgba(190,160,120,0.10) 0%, transparent 35%),
+    radial-gradient(ellipse at 80% 20%, rgba(190,160,120,0.10) 0%, transparent 35%),
+    #f3e4d2;
+}
+.tex-aged .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(23deg,
+      rgba(120,80,50,0.025) 0px,
+      rgba(120,80,50,0.025) 1px,
+      transparent 1px,
+      transparent 6px),
+    repeating-linear-gradient(67deg,
+      rgba(120,80,50,0.022) 0px,
+      rgba(120,80,50,0.022) 1px,
+      transparent 1px,
+      transparent 9px);
+  pointer-events: none;
+}
+.tex-aged .swatch-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(80,50,30,0.18) 0%, transparent 8%),
+    radial-gradient(circle at 90% 92%, rgba(80,50,30,0.15) 0%, transparent 8%),
+    radial-gradient(circle at 88% 12%, rgba(80,50,30,0.12) 0%, transparent 6%);
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 4: Marble vein — Imperator-style
+   ─────────────────────────────────────────────────── */
+.tex-marble .swatch-canvas {
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.45) 0%, transparent 35%),
+    radial-gradient(ellipse at 70% 70%, rgba(220,200,180,0.30) 0%, transparent 40%),
+    linear-gradient(135deg, #ede0d1 0%, #f5ead8 100%);
+}
+.tex-marble .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(140,110,90,0.10) 31%, rgba(140,110,90,0.10) 32%, transparent 33%, transparent 48%, rgba(140,110,90,0.08) 49%, rgba(140,110,90,0.08) 50%, transparent 51%),
+    linear-gradient(75deg, transparent 60%, rgba(160,130,110,0.08) 61%, rgba(160,130,110,0.08) 62.5%, transparent 63.5%);
+  pointer-events: none;
+}
+.tex-marble .swatch-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(34deg,
+      rgba(180,150,130,0.04) 0px,
+      rgba(180,150,130,0.04) 1px,
+      transparent 1px,
+      transparent 8px);
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 5: Linen weave — nursery-aligned
+   ─────────────────────────────────────────────────── */
+.tex-linen .swatch-canvas {
+  background:
+    radial-gradient(circle at 40% 30%, rgba(245,233,221,0.6) 0%, transparent 60%),
+    var(--warm-deep);
+}
+.tex-linen .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(180,150,130,0.06) 0px,
+      rgba(180,150,130,0.06) 1.5px,
+      transparent 1.5px,
+      transparent 4px),
+    repeating-linear-gradient(90deg,
+      rgba(180,150,130,0.07) 0px,
+      rgba(180,150,130,0.07) 1.5px,
+      transparent 1.5px,
+      transparent 4px);
+  pointer-events: none;
+}
+.tex-linen .swatch-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 60%, rgba(58,42,42,0.06) 100%);
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 6: Watercolor wash — soft + warm + airy
+   ─────────────────────────────────────────────────── */
+.tex-watercolor .swatch-canvas {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(168,207,224,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 70% 60% at 80% 75%, rgba(201,184,232,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(232,184,109,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 70% 30%, rgba(245,232,221,0.40) 0%, transparent 100%),
+    var(--warm);
+}
+.tex-watercolor .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 35% 60%, rgba(180,213,197,0.15) 0%, transparent 30%),
+    radial-gradient(circle at 65% 40%, rgba(250,212,180,0.12) 0%, transparent 35%);
+  pointer-events: none;
+}
+.tex-watercolor .swatch-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(140,100,80,0.008) 0px,
+      rgba(140,100,80,0.008) 1px,
+      transparent 1px,
+      transparent 3px);
+  pointer-events: none;
+}
+
+/* Detail callout block at the bottom of the page */
+.callout {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  padding: 18px 22px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: #cdb8b3;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.callout strong { color: #f0e5e0; }
+.callout ul { margin: 8px 0 0; padding-left: 20px; }
+.callout li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>v3.0 Tree — background texture swatches</h1>
+  <p>Six approaches, same boss node + secondary node + connector overlaid on each. Compare how the foreground reads.</p>
+  <div class="ask"><strong>What to look for:</strong> can you read the node text? Does the texture support or fight the content? Does it feel "cozy nursery journal" or wrong-register? Each swatch has my verdict; pick one (or "do this but lighter" / "blend 3+4" etc.) and I'll lock the rebuild.</div>
+</div>
+
+<div class="grid">
+
+  <!-- 1. Clean -->
+  <div class="swatch tex-clean">
+    <div class="swatch-canvas">
+      <span class="sample-tag">A</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>A. Clean cream (baseline)</h3>
+      <p class="meta">What we have now. Subtle radial gradient overlay; no texture.</p>
+      <p class="verdict">Verdict: too light. Reads as web app, not artifact.</p>
+    </div>
+  </div>
+
+  <!-- 2. Parchment -->
+  <div class="swatch tex-parchment">
+    <div class="swatch-canvas">
+      <span class="sample-tag">B</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>B. Light parchment</h3>
+      <p class="meta">Fine grain (1px horizontal + 1px vertical at very low opacity) + soft sepia spots. Subtle warmth.</p>
+      <p class="verdict good">Verdict: good middle ground. Quietly textured, still calm.</p>
+    </div>
+  </div>
+
+  <!-- 3. Aged paper -->
+  <div class="swatch tex-aged">
+    <div class="swatch-canvas">
+      <span class="sample-tag">C</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>C. Aged paper</h3>
+      <p class="meta">Stronger grain (diagonal crosshatch at low opacity) + corner stains + warmer base. Maximum texture before legibility cost.</p>
+      <p class="verdict">Verdict: dramatic, but starts fighting node text. May overwhelm at 32 nodes.</p>
+    </div>
+  </div>
+
+  <!-- 4. Marble -->
+  <div class="swatch tex-marble">
+    <div class="swatch-canvas">
+      <span class="sample-tag">D</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>D. Marble vein (Imperator-style)</h3>
+      <p class="meta">Diagonal veining + high-contrast highlights. Closest to the Imperator visual register you cited.</p>
+      <p class="verdict">Verdict: powerful for grand-strategy registers — wrong for nursery journal. Breaks the warm-sturdy-calm brief.</p>
+    </div>
+  </div>
+
+  <!-- 5. Linen -->
+  <div class="swatch tex-linen">
+    <div class="swatch-canvas">
+      <span class="sample-tag">E</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>E. Linen weave</h3>
+      <p class="meta">Cross-hatch at 1.5px in both axes + soft vignette. Reads as fabric/journal-cloth. Nursery-aligned.</p>
+      <p class="verdict good">Verdict: distinctively SproutLab. Tactile but quiet.</p>
+    </div>
+  </div>
+
+  <!-- 6. Watercolor -->
+  <div class="swatch tex-watercolor">
+    <div class="swatch-canvas">
+      <span class="sample-tag">F</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>F. Watercolor wash</h3>
+      <p class="meta">Soft pastel washes of sky/lavender/amber/peach blooms over warm cream. Almost no grain — colour-only atmosphere.</p>
+      <p class="verdict good">Verdict: most "warm + sturdy + calm" of the six. Domain-token palette is already woven in.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="callout">
+  <strong>How to read these:</strong>
+  <ul>
+    <li>The large indigo circle is a boss node (v3-3); the smaller rose circle is a Wave-1 node (v3-1); the connector is a standard edge.</li>
+    <li>All six have the exact same node treatment overlaid — only the background varies.</li>
+    <li>The "A" through "F" tag in the corner is what a tier-label would look like rendered against each background.</li>
+  </ul>
+  <strong>My ranking (most to least suitable for SproutLab brand):</strong> F (watercolor) ≈ B (parchment) > E (linen) > C (aged) > A (clean) > D (marble).
+  <br><br>
+  <strong>The hybrid I'd actually build:</strong> watercolor wash for atmosphere (F) + 1px linen grain at ~3% opacity (E) for tactility. Best of both. Want me to draft that as a 7th swatch?
+</div>
+
+</body>
+</html>
