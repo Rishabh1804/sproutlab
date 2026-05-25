@@ -2,587 +2,838 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=4.0, user-scalable=yes">
+<meta name="theme-color" content="#fef6f0">
 <title>SproutLab v3.0 — Progression Tree</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
-  /* SproutLab tokens — mirrors CLAUDE.md design system + styles.css */
-  :root {
-    --warm:        #fef6f0;
-    --warm-deep:   #f5e9dd;
-    --text:        #3a2a2a;
-    --mid:         #5a4242;
-    --light:       #806c6c;
-    --glass:       rgba(58, 42, 42, 0.06);
-    --glass-strong:rgba(58, 42, 42, 0.12);
+/* ───────────────────────────────────────────────────────────────────
+   SproutLab tokens — mirrors CLAUDE.md design system + styles.css
+   ─────────────────────────────────────────────────────────────────── */
+:root {
+  --warm:       #fef6f0;
+  --warm-deep:  #f5e9dd;
+  --surface:    #ffffff;
+  --text:       #3a2a2a;
+  --mid:        #5a4242;
+  --light:      #806c6c;
+  --softer:     #b5a8a8;
+  --glass:      rgba(58, 42, 42, 0.06);
+  --glass-strong: rgba(58, 42, 42, 0.14);
 
-    /* Domain colors */
-    --sage:   #b5d5c5;
-    --rose:   #f2a8b8;
-    --amber:  #e8b86d;
-    --lav:    #c9b8e8;
-    --sky:    #a8cfe0;
-    --indigo: #9ba8d8;
-    --peach:  #fad4b4;
+  --sage:   #b5d5c5;
+  --rose:   #f2a8b8;
+  --amber:  #e8b86d;
+  --lav:    #c9b8e8;
+  --sky:    #a8cfe0;
+  --indigo: #9ba8d8;
+  --peach:  #fad4b4;
 
-    --tc-sage:   #2d6e4f;
-    --tc-rose:   #9e3e52;
-    --tc-amber:  #856404;
-    --tc-lav:    #5e4d8a;
-    --tc-sky:    #2a6a85;
-    --tc-indigo: #3a4685;
-    --tc-warn:   #856404;
+  --tc-sage:   #2d6e4f;
+  --tc-rose:   #9e3e52;
+  --tc-amber:  #856404;
+  --tc-lav:    #5e4d8a;
+  --tc-sky:    #2a6a85;
+  --tc-indigo: #3a4685;
 
-    --r-sm: 8px;
-    --r-md: 12px;
-    --r-lg: 18px;
-    --r-xl: 24px;
-  }
+  --shadow-sm: 0 1px 2px rgba(58,42,42,0.06), 0 2px 4px rgba(58,42,42,0.04);
+  --shadow-md: 0 4px 8px rgba(58,42,42,0.08), 0 8px 24px rgba(58,42,42,0.06);
+  --shadow-lg: 0 10px 30px rgba(58,42,42,0.18), 0 20px 60px rgba(58,42,42,0.10);
 
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--warm); color: var(--text); font-family: 'Nunito', 'Helvetica Neue', system-ui, -apple-system, sans-serif; line-height: 1.5; }
+  --r-sm: 6px;  --r-md: 10px;  --r-lg: 16px;  --r-xl: 22px;
+}
 
-  header {
-    padding: 20px 28px 12px;
-    border-bottom: 1px solid var(--glass-strong);
-    background: linear-gradient(180deg, var(--warm) 0%, var(--warm-deep) 100%);
-  }
-  header h1 { margin: 0 0 4px; font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 26px; letter-spacing: -0.5px; }
-  header .subtitle { margin: 0; color: var(--mid); font-size: 14px; }
-  header .subtitle strong { color: var(--text); }
+[data-theme="dark"] {
+  --warm:       #1b1416;
+  --warm-deep:  #251b1e;
+  --surface:    #2a1f22;
+  --text:       #f0e5e0;
+  --mid:        #cdb8b3;
+  --light:      #968080;
+  --softer:     #6a5757;
+  --glass:      rgba(255,255,255,0.05);
+  --glass-strong: rgba(255,255,255,0.10);
+}
 
-  .legend {
-    display: flex; flex-wrap: wrap; gap: 12px 18px;
-    padding: 12px 28px;
-    background: var(--warm);
-    border-bottom: 1px solid var(--glass);
-    font-size: 12px;
-    color: var(--mid);
-  }
-  .legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .legend-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1.5px solid var(--text); }
-  .legend-swatch.lswatch-pre   { background: var(--warm); border-style: dashed; }
-  .legend-swatch.lswatch-wave1 { background: var(--sky); }
-  .legend-swatch.lswatch-wave2 { background: var(--lav); }
-  .legend-swatch.lswatch-wave3 { background: var(--warm); }
-  .legend-swatch.lswatch-care   { background: var(--rose); }
-  .legend-swatch.lswatch-engine { background: var(--indigo); }
-  .legend-swatch.lswatch-surface{ background: var(--peach); }
-  .legend-swatch.lswatch-shared { background: var(--sage); }
-  .legend-swatch.lswatch-boss   { background: var(--amber); border-width: 3px; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--warm);
+  color: var(--text);
+  font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    padding: 10px 28px;
-    background: var(--warm);
-    border-bottom: 1px solid var(--glass);
-  }
-  .filter-btn {
-    border: 1.5px solid var(--light); background: transparent; color: var(--mid);
-    padding: 6px 12px; border-radius: var(--r-md);
-    font-family: inherit; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.15s ease;
-  }
-  .filter-btn:hover { border-color: var(--text); color: var(--text); }
-  .filter-btn.active { background: var(--text); color: var(--warm); border-color: var(--text); }
-  .filter-divider { width: 1px; background: var(--glass-strong); margin: 4px 6px; }
+/* ───────────────────────────────────────────────────────────────────
+   App chrome — top bar + filter dock
+   ─────────────────────────────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-  main {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 0;
-    height: calc(100vh - 200px);
-    min-height: 700px;
-  }
+.topbar {
+  background: linear-gradient(180deg, var(--warm) 0%, var(--warm-deep) 100%);
+  border-bottom: 1px solid var(--glass-strong);
+  padding: 16px 18px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+.topbar h1 {
+  margin: 0 0 2px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(20px, 4vw, 26px);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.topbar .sub {
+  margin: 0;
+  font-size: clamp(11px, 2.4vw, 13px);
+  color: var(--mid);
+}
+.topbar .sub code { font-size: 0.9em; padding: 1px 6px; background: var(--glass); border-radius: 4px; }
 
-  .canvas-wrap {
-    overflow: auto;
-    background: var(--warm);
-    position: relative;
-    padding: 24px;
-  }
-  .canvas-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
-  .canvas-wrap::-webkit-scrollbar-thumb { background: var(--glass-strong); border-radius: 5px; }
+.filter-dock {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.filter-dock::-webkit-scrollbar { height: 4px; }
+.filter-dock::-webkit-scrollbar-thumb { background: var(--glass-strong); border-radius: 2px; }
+.chip {
+  flex-shrink: 0;
+  border: 1.5px solid var(--light);
+  background: transparent;
+  color: var(--mid);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  font-variant-numeric: tabular-nums;
+}
+.chip:hover, .chip:focus { border-color: var(--text); color: var(--text); outline: none; }
+.chip.active { background: var(--text); color: var(--warm); border-color: var(--text); }
+.chip-divider { width: 1px; background: var(--glass-strong); margin: 4px 4px; align-self: stretch; flex-shrink: 0; }
 
-  svg.tree { display: block; background: var(--warm); }
+/* ───────────────────────────────────────────────────────────────────
+   Canvas
+   ─────────────────────────────────────────────────────────────────── */
+.canvas-shell {
+  flex: 1;
+  position: relative;
+  background:
+    radial-gradient(circle at 25% 35%, rgba(168,207,224,0.06) 0%, transparent 45%),
+    radial-gradient(circle at 75% 65%, rgba(201,184,232,0.06) 0%, transparent 45%),
+    var(--warm);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  /* Node styles via SVG classes */
-  .node-rect {
-    cursor: pointer;
-    transition: filter 0.15s ease, stroke-width 0.15s ease;
-  }
-  .node-rect.dimmed { opacity: 0.18; }
-  .node-rect.highlighted { stroke-width: 3.5; filter: drop-shadow(0 4px 8px rgba(58,42,42,0.25)); }
-  .node-label {
-    pointer-events: none;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 11px;
-    fill: var(--text);
-    text-anchor: middle;
-  }
-  .node-sub {
-    pointer-events: none;
-    font-family: 'Nunito', sans-serif;
-    font-weight: 500;
-    font-size: 9px;
-    fill: var(--mid);
-    text-anchor: middle;
-  }
-  .node-label.dimmed, .node-sub.dimmed { opacity: 0.18; }
+svg.tree {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 720px;
+  background: transparent;
+}
 
-  /* Edge styles */
-  .edge { fill: none; stroke: var(--mid); stroke-width: 1.5; opacity: 0.45; transition: opacity 0.15s ease, stroke-width 0.15s ease; }
-  .edge.dimmed { opacity: 0.06; }
-  .edge.highlighted { stroke: var(--text); stroke-width: 2.5; opacity: 1; }
-  .edge.critical { stroke-width: 2.2; opacity: 0.65; stroke: var(--tc-rose); }
-  .edge.critical.highlighted { stroke: var(--tc-rose); opacity: 1; stroke-width: 3.2; }
-  .edge.calibration { stroke-dasharray: 5 4; stroke: var(--tc-lav); opacity: 0.65; }
-  .edge.gate { stroke-dasharray: 3 3; stroke: var(--light); opacity: 0.55; }
+/* SVG element classes */
+.node-group { cursor: pointer; transition: opacity 0.2s ease; }
+.node-group:hover .node-rect { filter: drop-shadow(0 6px 14px rgba(58,42,42,0.18)); }
+.node-rect {
+  transition: stroke-width 0.15s ease, transform 0.15s ease;
+  filter: drop-shadow(0 1px 2px rgba(58,42,42,0.08));
+}
+.node-rect.boss { filter: drop-shadow(0 3px 8px rgba(232,184,109,0.45)); }
+.node-rect.highlighted { stroke-width: 3.5 !important; filter: drop-shadow(0 6px 16px rgba(58,42,42,0.25)); }
+.node-rect.selected { stroke-width: 4 !important; filter: drop-shadow(0 8px 22px rgba(58,42,42,0.30)); }
+.node-group.dimmed { opacity: 0.18; }
 
-  /* Layer headers in canvas */
-  .layer-label {
-    pointer-events: none;
-    font-family: 'Fraunces', Georgia, serif;
-    font-size: 13px;
-    font-weight: 600;
-    fill: var(--light);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .layer-divider { stroke: var(--glass-strong); stroke-width: 1; stroke-dasharray: 2 4; }
+.node-label {
+  pointer-events: none;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  fill: var(--text);
+  text-anchor: middle;
+}
+.node-sub {
+  pointer-events: none;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  fill: var(--mid);
+  text-anchor: middle;
+  letter-spacing: 0.1px;
+}
 
-  /* Detail panel */
-  aside.detail-panel {
-    background: var(--warm-deep);
-    border-left: 1px solid var(--glass-strong);
-    overflow-y: auto;
-    padding: 20px 22px 32px;
-  }
-  aside.detail-panel h2 {
-    margin: 0 0 6px;
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 600;
-    font-size: 22px;
-    letter-spacing: -0.4px;
-  }
-  aside.detail-panel .tag-row {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    margin: 6px 0 16px;
-  }
-  .tag {
-    display: inline-block;
-    padding: 3px 9px;
-    border-radius: var(--r-md);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-  }
-  .tag-wave1 { background: var(--sky); color: var(--tc-sky); }
-  .tag-wave2 { background: var(--lav); color: var(--tc-lav); }
-  .tag-wave3 { background: var(--glass); color: var(--mid); border: 1.5px solid var(--light); }
-  .tag-prewave { background: transparent; color: var(--mid); border: 1.5px dashed var(--light); }
-  .tag-engine { background: var(--indigo); color: var(--warm); }
-  .tag-care { background: var(--rose); color: var(--warm); }
-  .tag-surface { background: var(--peach); color: var(--text); }
-  .tag-shared { background: var(--sage); color: var(--tc-sage); }
-  .tag-boss { background: var(--amber); color: var(--text); border: 1.5px solid var(--text); }
-  .tag-critical { background: var(--tc-rose); color: var(--warm); }
+.edge {
+  fill: none;
+  stroke: var(--mid);
+  stroke-width: 1.6;
+  opacity: 0.40;
+  transition: opacity 0.15s ease, stroke-width 0.15s ease;
+}
+.edge.critical { stroke-width: 2.2; opacity: 0.55; stroke: var(--tc-rose); }
+.edge.calibration { stroke-dasharray: 5 5; stroke: var(--tc-lav); opacity: 0.60; }
+.edge.gate { stroke-dasharray: 3 4; stroke: var(--light); opacity: 0.50; }
+.edge.dimmed { opacity: 0.05; }
+.edge.highlighted { opacity: 1; stroke-width: 2.8; }
+.edge.critical.highlighted { stroke-width: 3.2; }
 
-  aside.detail-panel section { margin: 14px 0 0; }
-  aside.detail-panel section h3 {
-    margin: 0 0 4px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--light);
-    font-weight: 700;
-  }
-  aside.detail-panel section p { margin: 0 0 6px; font-size: 13px; color: var(--text); }
-  aside.detail-panel section .files { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--mid); background: var(--glass); padding: 4px 8px; border-radius: var(--r-sm); display: inline-block; }
-  aside.detail-panel .link-list { list-style: none; padding: 0; margin: 0; }
-  aside.detail-panel .link-list li { padding: 3px 0; }
-  aside.detail-panel .link-list a {
-    color: var(--tc-sky);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    border-bottom: 1px dotted var(--tc-sky);
-  }
-  aside.detail-panel .link-list a:hover { color: var(--tc-indigo); border-bottom-style: solid; }
+.layer-band {
+  fill: var(--glass);
+}
+.layer-band.alt {
+  fill: transparent;
+}
+.layer-label {
+  pointer-events: none;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--light);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
 
-  .empty-state {
-    color: var(--light);
-    font-style: italic;
-    font-size: 13px;
-    padding: 40px 12px;
-    text-align: center;
-  }
+/* ───────────────────────────────────────────────────────────────────
+   Floating controls
+   ─────────────────────────────────────────────────────────────────── */
+.zoom-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 25;
+}
+.zoom-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--glass-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  font-family: inherit;
+  transition: transform 0.1s ease;
+}
+.zoom-btn:active { transform: scale(0.92); }
+.zoom-btn:hover { background: var(--warm-deep); }
 
-  footer {
-    padding: 14px 28px;
-    border-top: 1px solid var(--glass-strong);
-    font-size: 12px;
-    color: var(--light);
-    text-align: center;
-    background: var(--warm-deep);
-  }
-  footer a { color: var(--tc-sky); text-decoration: none; border-bottom: 1px dotted var(--tc-sky); }
+.legend-fab {
+  position: fixed;
+  bottom: 20px;
+  left: 16px;
+  z-index: 25;
+}
+.legend-toggle {
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+.legend-content {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-strong);
+  box-shadow: var(--shadow-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+  display: none;
+}
+.legend-content.open { display: block; }
+.legend-section { margin-bottom: 10px; }
+.legend-section:last-child { margin-bottom: 0; }
+.legend-section h4 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--light);
+}
+.legend-row { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mid);
+}
+.legend-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1.5px solid var(--text); }
+.legend-swatch.pre { background: var(--warm); border-style: dashed; }
+.legend-swatch.w1 { background: var(--sky); }
+.legend-swatch.w2 { background: var(--lav); }
+.legend-swatch.w3 { background: var(--warm); }
+.legend-swatch.engine { background: var(--indigo); }
+.legend-swatch.care { background: var(--rose); }
+.legend-swatch.surface { background: var(--peach); }
+.legend-swatch.shared { background: var(--sage); }
+.legend-swatch.boss { background: var(--amber); border-width: 3px; }
+.legend-line { width: 22px; height: 0; border-top: 2px solid var(--mid); flex-shrink: 0; }
+.legend-line.critical { border-color: var(--tc-rose); border-width: 2.5px; }
+.legend-line.calib { border-style: dashed; border-color: var(--tc-lav); }
+.legend-line.gate { border-style: dashed; border-color: var(--light); }
 
-  @media (max-width: 900px) {
-    main { grid-template-columns: 1fr; height: auto; }
-    aside.detail-panel { border-left: none; border-top: 1px solid var(--glass-strong); max-height: 50vh; }
-    .canvas-wrap { height: 60vh; }
+/* ───────────────────────────────────────────────────────────────────
+   Detail panel — overlay (works on mobile + desktop)
+   ─────────────────────────────────────────────────────────────────── */
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(58,42,42,0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 40;
+  backdrop-filter: blur(2px);
+}
+.detail-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.detail-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+  z-index: 41;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+}
+.detail-sheet.open { transform: translateY(0); }
+
+.detail-grip {
+  width: 38px; height: 4px;
+  background: var(--softer);
+  border-radius: 2px;
+  margin: 10px auto 6px;
+  flex-shrink: 0;
+}
+.detail-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 36px; height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 2;
+}
+.detail-close:hover { background: var(--glass-strong); }
+
+.detail-body {
+  overflow-y: auto;
+  padding: 12px 22px 32px;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-body h2 {
+  margin: 4px 40px 4px 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(20px, 4.5vw, 26px);
+  letter-spacing: -0.4px;
+  line-height: 1.15;
+}
+.detail-body .tag-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 10px 0 18px;
+}
+.tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.tag-prewave { background: transparent; color: var(--mid); border: 1.5px dashed var(--light); }
+.tag-wave1 { background: var(--sky); color: var(--tc-sky); }
+.tag-wave2 { background: var(--lav); color: var(--tc-lav); }
+.tag-wave3 { background: var(--glass); color: var(--mid); border: 1.5px solid var(--light); }
+.tag-engine { background: var(--indigo); color: var(--warm); }
+.tag-care { background: var(--rose); color: var(--warm); }
+.tag-surface { background: var(--peach); color: var(--text); }
+.tag-shared { background: var(--sage); color: var(--tc-sage); }
+.tag-boss { background: var(--amber); color: var(--text); border: 1.5px solid var(--text); }
+.tag-critical { background: var(--tc-rose); color: var(--warm); }
+
+.detail-body section {
+  padding: 12px 0;
+  border-top: 1px solid var(--glass);
+}
+.detail-body section:first-of-type { border-top: none; padding-top: 0; }
+.detail-body section h3 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--light);
+  font-weight: 700;
+}
+.detail-body section p { margin: 0; font-size: 14px; color: var(--text); }
+.detail-body section .files {
+  font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 12px; line-height: 1.6;
+  color: var(--mid);
+  background: var(--glass);
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  display: block;
+  word-break: break-word;
+}
+.detail-body section.cipher-gate {
+  background: linear-gradient(180deg, rgba(232,184,109,0.10), transparent);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  border-top: none;
+  border-left: 3px solid var(--amber);
+  margin: 8px 0;
+}
+.detail-body section.cipher-gate h3 { color: var(--tc-amber); }
+
+.link-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.link-list .empty { color: var(--light); font-style: italic; font-size: 12px; }
+.link-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--warm-deep);
+  border: 1px solid var(--glass-strong);
+  border-radius: var(--r-md);
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.12s ease;
+  text-align: left;
+}
+.link-pill:hover { background: var(--surface); border-color: var(--text); transform: translateX(2px); }
+.link-pill .arrow { color: var(--light); flex-shrink: 0; font-weight: 700; }
+.link-pill .role { color: var(--mid); font-weight: 500; }
+
+/* ───────────────────────────────────────────────────────────────────
+   Desktop layout: side rail when wide
+   ─────────────────────────────────────────────────────────────────── */
+@media (min-width: 980px) {
+  .detail-sheet {
+    top: 88px;
+    left: auto;
+    bottom: 16px;
+    right: 16px;
+    width: 380px;
+    max-height: calc(100vh - 110px);
+    border-radius: var(--r-xl);
+    transform: translateX(110%);
   }
+  .detail-sheet.open { transform: translateX(0); }
+  .detail-backdrop { display: none; }
+  .detail-grip { display: none; }
+  .zoom-controls { bottom: 20px; right: auto; left: 20px; flex-direction: row; }
+  .legend-fab { top: 110px; left: 18px; right: auto; bottom: auto; }
+  .legend-content { margin-top: 8px; margin-bottom: 0; }
+}
+
+/* Initial empty-state inside the panel */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--light);
+}
+.empty-state .eyebrow {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--mid);
+  margin-bottom: 8px;
+}
+.empty-state .hint {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.empty-state strong { color: var(--tc-rose); }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>SproutLab v3.0 — Progression Tree</h1>
-  <p class="subtitle"><strong>32 candidates</strong> · 3 waves · dependency DAG · click any node for details · hover to highlight connections · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></p>
-</header>
+<div class="app">
+  <header class="topbar">
+    <h1>SproutLab v3.0 — Progression Tree</h1>
+    <p class="sub"><strong>32 candidates · 4 layers · companion to</strong> <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></p>
+    <div class="filter-dock" id="filters">
+      <button class="chip active" data-filter="all">All</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="wave1">Wave 1</button>
+      <button class="chip" data-filter="wave1+2">Wave 1+2</button>
+      <button class="chip" data-filter="wave3">Wave 3+</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="critical">Critical path</button>
+      <button class="chip" data-filter="boss">Boss nodes</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="engine">Engine</button>
+      <button class="chip" data-filter="care">Care</button>
+      <button class="chip" data-filter="surface">Surface</button>
+    </div>
+  </header>
 
-<div class="legend">
-  <span class="legend-item"><span class="legend-swatch lswatch-pre"></span>Pre-Wave 1 (in-flight gates)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-wave1"></span>Wave 1 (foundation, ratified)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-wave2"></span>Wave 2 (reservoirs, forward-planning)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-wave3"></span>Wave 3+ (catchments, post-usage)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-boss"></span>★ Boss / critical-path</span>
-  <span style="width:18px"></span>
-  <span class="legend-item"><span class="legend-swatch lswatch-engine"></span>Engine (Kael)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-care"></span>Care (Maren)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-surface"></span>Surface (Vela)</span>
-  <span class="legend-item"><span class="legend-swatch lswatch-shared"></span>Shared / cross-region</span>
-</div>
-
-<div class="controls">
-  <button class="filter-btn active" data-filter="all">All (32)</button>
-  <span class="filter-divider"></span>
-  <button class="filter-btn" data-filter="wave1">Wave 1 only</button>
-  <button class="filter-btn" data-filter="wave1+2">Wave 1 + 2</button>
-  <button class="filter-btn" data-filter="wave3">Wave 3+ catchments</button>
-  <span class="filter-divider"></span>
-  <button class="filter-btn" data-filter="critical">Critical paths</button>
-  <button class="filter-btn" data-filter="boss">Boss nodes only</button>
-  <span class="filter-divider"></span>
-  <button class="filter-btn" data-filter="engine">Engine track</button>
-  <button class="filter-btn" data-filter="care">Care track</button>
-  <button class="filter-btn" data-filter="surface">Surface track</button>
-</div>
-
-<main>
-  <div class="canvas-wrap">
-    <svg class="tree" id="tree" viewBox="0 0 1400 1860" width="1400" height="1860" preserveAspectRatio="xMidYMin meet"></svg>
+  <div class="canvas-shell" id="canvasShell">
+    <svg class="tree" id="tree" viewBox="0 0 1100 1260" preserveAspectRatio="xMidYMin meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SproutLab v3.0 progression tree, interactive DAG with 32 nodes"></svg>
   </div>
-  <aside class="detail-panel" id="detail">
-    <div class="empty-state">
-      Click any node to view its scope, dependencies, what it unlocks, and Cipher gates.<br><br>
-      <span style="color:var(--tc-rose);font-weight:700">v3-3</span> and <span style="color:var(--tc-rose);font-weight:700">R-1</span> are the two boss nodes — the highest-leverage single arcs in the tree.
+
+  <div class="zoom-controls" aria-label="Zoom controls">
+    <button class="zoom-btn" id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+    <button class="zoom-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+    <button class="zoom-btn" id="zoomReset" title="Reset view" aria-label="Reset view" style="font-size:14px">⟲</button>
+  </div>
+
+  <div class="legend-fab">
+    <div class="legend-content" id="legendContent">
+      <div class="legend-section">
+        <h4>Wave (vertical position)</h4>
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-swatch pre"></span>Pre-Wave 1 (gates)</span>
+          <span class="legend-item"><span class="legend-swatch w1"></span>Wave 1 (foundation)</span>
+          <span class="legend-item"><span class="legend-swatch w2"></span>Wave 2 (reservoirs)</span>
+          <span class="legend-item"><span class="legend-swatch w3"></span>Wave 3+ (catchments)</span>
+        </div>
+      </div>
+      <div class="legend-section">
+        <h4>Region (border color)</h4>
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-swatch engine"></span>Engine (Kael)</span>
+          <span class="legend-item"><span class="legend-swatch care"></span>Care (Maren)</span>
+          <span class="legend-item"><span class="legend-swatch surface"></span>Surface (Vela)</span>
+          <span class="legend-item"><span class="legend-swatch shared"></span>Shared</span>
+          <span class="legend-item"><span class="legend-swatch boss"></span>★ Boss</span>
+        </div>
+      </div>
+      <div class="legend-section">
+        <h4>Edges</h4>
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-line"></span>Standard</span>
+          <span class="legend-item"><span class="legend-line critical"></span>Critical path</span>
+          <span class="legend-item"><span class="legend-line calib"></span>Calibration (back-edge)</span>
+          <span class="legend-item"><span class="legend-line gate"></span>Pre-arc gate</span>
+        </div>
+      </div>
+    </div>
+    <button class="legend-toggle" id="legendToggle">Legend</button>
+  </div>
+
+  <div class="detail-backdrop" id="detailBackdrop"></div>
+  <aside class="detail-sheet" id="detailSheet" aria-label="Node details">
+    <div class="detail-grip"></div>
+    <button class="detail-close" id="detailClose" aria-label="Close detail panel">×</button>
+    <div class="detail-body" id="detailBody">
+      <div class="empty-state">
+        <p class="eyebrow">click any node</p>
+        <p class="hint">
+          The two boss nodes are <strong>v3-3</strong> and <strong>R-1</strong>.<br>
+          Tap them first to see the spine.<br><br>
+          Tap "Legend" (bottom-left) for the color key.<br>
+          Use the zoom controls if you need a closer look.
+        </p>
+      </div>
     </div>
   </aside>
-</main>
-
-<footer>
-  Generated for the SproutLab v3.0 Roundtable Chronicle · 2026-05-25 ·
-  <a href="../docs/specs/sproutlab-v3-roundtable-2026-05-25.md">chronicle source</a> ·
-  <a href="https://github.com/Rishabh1804/sproutlab/pull/129">PR #129</a>
-</footer>
+</div>
 
 <script>
-/* ─────────────────────────────────────────────────────────────────────────
-   TREE DATA — single source of truth for nodes + edges + detail panel
-   ───────────────────────────────────────────────────────────────────────── */
-
+/* ────────────────────────────────────────────────────────────────────
+   TREE DATA — nodes + edges
+   ──────────────────────────────────────────────────────────────────── */
 const NODES = {
-  /* Pre-Wave 1 gates */
-  'PR-126': { x: 380, y: 130, w: 130, h: 50, wave: 'preWave1', region: 'shared',
-              label: 'PR #126', sub: 'D3 Phase 2-B', boss: false, critical: false,
-              status: 'Ready at merge gate',
-              files: 'split/home.js · split/core.js · tests/e2e/vit-d3-tracking-v2-tier-2-b.spec.ts',
-              composes: 'Five Tier-2 items: markMedDone three-state + Adjust midnight rollover + future-time gate + outing-intent + preserveWithFat tightening',
-              description: 'In-flight D3 Phase 2-B implementation. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Awaiting Architect merge call. Establishes the toast-and-abort precedent that v3-1 reminderRegistry inherits.',
-              cipherGates: null },
-  'PR-127': { x: 530, y: 130, w: 130, h: 50, wave: 'preWave1', region: 'shared',
-              label: 'PR #127', sub: 'Sleep spec v1', boss: false, critical: true,
-              status: 'Draft (amended); branch-only',
-              files: 'docs/specs/sleep-redesign-v1.md',
-              composes: 'Classifier (night/nap/contact) + lazy normalizer + write-side UX shift + scoring wiring',
-              description: 'Sleep redesign v1 spec — three arcs sequenced after food-sub-tab. Subsumes the midnight-rollover bug as a natural consequence of dayAttribution rule. Critical-path: v3-3 engine primitives depend on ratified scoring primitive shape (which this spec defines via sibling #128).',
-              cipherGates: null },
-  'PR-128': { x: 680, y: 130, w: 130, h: 50, wave: 'preWave1', region: 'engine',
-              label: 'PR #128', sub: 'Scoring spec v1', boss: false, critical: true,
-              status: 'Draft; branch-only',
-              files: 'docs/specs/scoring-redesign-v1.md',
-              composes: 'RECOMMENDATION_ROSTER + _evaluateRecommendation + _scoreDay + _scoreWindow + _scoreDayHero + severity model + reward-tilted 2:1',
-              description: 'Engine primitive foundation for v3-3. Establishes the generic recommendation + scoring + severity-message + cross-domain hero score system. v3-3 cannot open until #128 ratifies.',
-              cipherGates: null },
-  'FoodST':{ x: 950, y: 130, w: 150, h: 50, wave: 'preWave1', region: 'care',
-             label: 'Food Sub-Tab arc', sub: 'separate, in-flight', boss: false, critical: false,
-             status: 'Pre-required by Architect direction',
-             files: 'split/diet.js + split/data.js',
-             composes: 'Food sub-tab UI + food-object shape (precedes v3-8 parseFeeding)',
-             description: 'Separate in-flight arc per Architect sequencing — food-sub-tab UI work. v3-8 (parseFeeding normalizer) is post-required so the new food shape is normalized at v1 design time.',
-             cipherGates: null },
+  /* ── Pre-Wave 1 gates (y ≈ 80) ── */
+  'PR-126': { x: 280, y: 70, w: 130, h: 46, wave: 'preWave1', region: 'shared',
+    label: 'PR #126', sub: 'D3 Phase 2-B', boss: false, critical: false,
+    status: 'Ready at merge gate',
+    files: 'split/home.js · split/core.js · tests/e2e/vit-d3-tracking-v2-tier-2-b.spec.ts',
+    composes: 'Five Tier-2 items: markMedDone three-state + Adjust midnight rollover + future-time gate + outing-intent + preserveWithFat tightening',
+    description: 'In-flight D3 Phase 2-B impl. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Awaiting Architect merge call. Establishes the toast-and-abort precedent that v3-1 reminderRegistry inherits.' },
+  'PR-127': { x: 425, y: 70, w: 130, h: 46, wave: 'preWave1', region: 'shared',
+    label: 'PR #127', sub: 'Sleep spec v1', boss: false, critical: true,
+    status: 'Draft (amended) · branch-only',
+    files: 'docs/specs/sleep-redesign-v1.md',
+    composes: 'Classifier (night/nap/contact) + lazy normalizer + write-side UX shift + scoring wiring',
+    description: 'Sleep redesign v1 spec — three arcs sequenced after food-sub-tab. Subsumes the midnight-rollover bug as a natural consequence of the dayAttribution rule. v3-3 depends on the ratified scoring primitive shape this spec defines via sibling #128.' },
+  'PR-128': { x: 570, y: 70, w: 130, h: 46, wave: 'preWave1', region: 'engine',
+    label: 'PR #128', sub: 'Scoring spec v1', boss: false, critical: true,
+    status: 'Draft · branch-only',
+    files: 'docs/specs/scoring-redesign-v1.md',
+    composes: 'RECOMMENDATION_ROSTER + _evaluateRecommendation + _scoreDay + _scoreWindow + _scoreDayHero + severity model + reward-tilted 2:1',
+    description: 'The engine primitive foundation for v3-3. Generic recommendation + scoring + severity-message + cross-domain hero score system. v3-3 cannot open until #128 ratifies.' },
+  'FoodST': { x: 800, y: 70, w: 140, h: 46, wave: 'preWave1', region: 'care',
+    label: 'Food Sub-Tab', sub: 'separate, in-flight', boss: false, critical: false,
+    status: 'Pre-required by Architect direction',
+    files: 'split/diet.js · split/data.js',
+    composes: 'Food sub-tab UI + food-object shape (precedes v3-8 parseFeeding)',
+    description: 'Separate in-flight arc per Architect sequencing — food-sub-tab UI work. v3-8 (parseFeeding normalizer) is post-required so the new food shape is normalized at v1 design time.' },
 
-  /* Wave 1 — Foundation */
-  'v3-5':  { x: 200, y: 320, w: 150, h: 56, wave: 'wave1', region: 'surface',
-             label: 'v3-5', sub: 'Chip Taxonomy + TSF Story', boss: true, critical: true,
-             status: 'Ratified §4.2; styles.css mutex 1st',
-             files: 'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
-             composes: 'vela-arc-1 unified chip-state taxonomy + vela-arc-2 Today So Far story-arc',
-             description: 'Establishes 8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + the story-arc-summary primitive ("Solid day. Three meals, one nap, D3 with breakfast, no flags."). First in the styles.css mutex chain — establishes the token vocabulary v3-6 + v3-1 consume.',
-             cipherGates: 'styles.css mutex 1st: must complete triple-jurisdiction round before v3-6 opens.' },
-  'v3-3':  { x: 600, y: 320, w: 160, h: 56, wave: 'wave1', region: 'engine',
-             label: 'v3-3 ★', sub: 'Engine Primitives SPINE', boss: true, critical: true,
-             status: 'Ratified §4.2; THE highest-leverage arc',
-             files: 'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js',
-             composes: 'kael-arc-1 _correlate primitive + kael-arc-3 ISL event-anchor + scoring-redesign-v1 _scoreDay',
-             description: 'The engine primitives that everything consumes. _correlate(domainA, domainB, window) + _resolveEventAnchor("since the fever") + _scoreDay/Window/Hero + getActiveIllnessPosture + getSyncPosture. Unlocks 4 Wave-1 arcs + 4 Wave-2 reservoirs. If you build only one thing, build this.',
-             cipherGates: 'cipher-4: v3-3 spec body MUST include an HR-12 tz-construction test plan section. _resolveEventAnchor is date-arithmetic; IST/UTC day-boundary swap risk is real.' },
-  'v3-8':  { x: 1000, y: 320, w: 140, h: 56, wave: 'wave1', region: 'care',
-             label: 'v3-8', sub: 'Feeding Normalizer', boss: false, critical: false,
-             status: 'Ratified §4.2; post-required by Food Sub-Tab',
-             files: 'split/diet.js · split/core.js',
-             composes: 'maren-arc-3 parseFeeding normalizer + food-sub-tab integration',
-             description: 'parseFeeding(val) mirrors parseMedCheck — tolerates legacy string shape + current object shape + food-sub-tab incoming shape. Retires raw truthy-checks on feedingData[date][meal] (same family as T3-14 bug).',
-             cipherGates: null },
-  'v3-9':  { x: 1200, y: 320, w: 140, h: 56, wave: 'wave1', region: 'shared',
-             label: 'v3-9', sub: 'Intent Graph + Splits', boss: false, critical: false,
-             status: 'Ratified §4.2; canon-gen-001 pre-emption',
-             files: 'split/intelligence-qa.js → split + split/medical.js → 3-way split',
-             composes: 'kael-arc-2 intent graph + maren-arc-4 medical.js split (vaccines/illness/growth)',
-             description: 'Replace the flat 30-intent if/else if ladder with a parent/child intent graph (qa.intent.graph.json) + preemptive medical.js split into 3 files before crossing 30K canon-gen-001 trigger. Unlocks knowledge-graph layer (R-8).',
-             cipherGates: 'cipher-7: may land as 2 PRs (v3-9a Kael / v3-9b Maren) for routing cleanliness — atomic landing acceptable on Architect call.' },
+  /* ── Wave 1 layer A: foundation roots (y ≈ 210) ── */
+  'v3-5':  { x: 100, y: 200, w: 150, h: 54, wave: 'wave1', region: 'surface',
+    label: 'v3-5 ★', sub: 'Chip Taxonomy + TSF Story', boss: true, critical: true,
+    status: 'Ratified · styles.css mutex 1st',
+    files: 'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
+    composes: 'vela-arc-1 unified chip-state taxonomy + vela-arc-2 Today So Far story-arc',
+    description: '8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + the story-arc-summary primitive ("Solid day. Three meals, one nap, D3 with breakfast, no flags."). First in the styles.css mutex chain — establishes the token vocabulary v3-6 + v3-1 consume.' },
+  'v3-3':  { x: 470, y: 200, w: 180, h: 60, wave: 'wave1', region: 'engine',
+    label: 'v3-3 ★', sub: 'Engine Primitives — SPINE', boss: true, critical: true,
+    status: 'THE highest-leverage arc',
+    files: 'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js',
+    composes: 'kael-arc-1 _correlate + kael-arc-3 ISL event-anchor + scoring-redesign-v1 _scoreDay',
+    cipherGates: 'cipher-4: v3-3 spec body MUST include an HR-12 tz-construction test plan section. _resolveEventAnchor is date-arithmetic — IST/UTC day-boundary swap risk is real.',
+    description: 'Every Wave-2 reservoir + 4 Wave-1 arcs depend on this. _correlate(domainA, domainB, window) + _resolveEventAnchor("since the fever") + _scoreDay/Window/Hero + getActiveIllnessPosture + getSyncPosture. If you build only one thing, build this.' },
+  'v3-8':  { x: 740, y: 200, w: 150, h: 54, wave: 'wave1', region: 'care',
+    label: 'v3-8', sub: 'Feeding Normalizer', boss: false, critical: false,
+    status: 'Ratified · post-required by Food Sub-Tab',
+    files: 'split/diet.js · split/core.js',
+    composes: 'maren-arc-3 parseFeeding normalizer + food-sub-tab integration',
+    description: 'parseFeeding(val) mirrors parseMedCheck — tolerates legacy string + current object + food-sub-tab incoming shape. Retires raw truthy-checks on feedingData[date][meal] (same bug family as T3-14).' },
+  'v3-9':  { x: 920, y: 200, w: 150, h: 54, wave: 'wave1', region: 'shared',
+    label: 'v3-9', sub: 'Intent Graph + Splits', boss: false, critical: false,
+    status: 'Ratified · canon-gen-001 pre-emption',
+    files: 'split/intelligence-qa.js → split · split/medical.js → 3-way split',
+    composes: 'kael-arc-2 intent graph + maren-arc-4 medical.js split (vaccines/illness/growth)',
+    cipherGates: 'cipher-7: may land as 2 PRs (v3-9a Kael · v3-9b Maren) for routing cleanliness.',
+    description: 'Replace flat 30-intent if/else ladder with parent/child intent graph (qa.intent.graph.json) + preemptive medical.js split into 3 files before 30K canon-gen-001 trigger fires. Unlocks knowledge-graph layer (R-8).' },
 
-  'v3-6':  { x: 200, y: 460, w: 150, h: 50, wave: 'wave1', region: 'surface',
-             label: 'v3-6', sub: 'Card Priority', boss: false, critical: false,
-             status: 'Ratified §4.2; styles.css mutex 2nd',
-             files: 'split/intelligence-cards.js · split/styles.css',
-             composes: 'vela-arc-3 card priority + Maren\'s severity floor doctrine',
-             description: 'Every renderInfo* card declares one of three priority tiers — urgent (action needed), notable (read on glance), ambient (available on tap). Master sorts by tier. Ambient renders collapsed by default. Severity tiers categorical (not numeric) — Maren\'s safety floor non-negotiable.',
-             cipherGates: 'styles.css mutex 2nd: depends on v3-5\'s chip vocabulary.' },
-  'v3-2':  { x: 480, y: 460, w: 140, h: 50, wave: 'wave1', region: 'care',
-             label: 'v3-2', sub: 'CT Triggers + Posture', boss: false, critical: false,
-             status: 'Ratified §4.2',
-             files: 'split/medical.js · split/intelligence-caretickets.js · split/intelligence-illness.js',
-             composes: 'maren-arc-2 + kael-arc-4 (single merged arc)',
-             description: 'CT_TRIGGERS declarative registry + getActiveIllnessPosture() reads fever/diarrhoea/vomiting/cold as a set. "Ziva has been compound-symptomatic 3 days — escalation tier 2" becomes a real surface. 100% of ctCreate call sites route through the registry (build-time grep gate).',
-             cipherGates: null },
-  'v3-4':  { x: 720, y: 460, w: 140, h: 50, wave: 'wave1', region: 'surface',
-             label: 'v3-4', sub: 'Narrative Layer', boss: false, critical: false,
-             status: 'Ratified §4.2',
-             files: 'split/intelligence-cards.js · split/intelligence-isl.js',
-             composes: 'vela-arc-4 prose templates + kael-arc-1 data source',
-             description: 'Cross-domain narrative-prose layer. "Ziva sleeps ~40 min longer on days she eats by 6 PM" (likely, n=18) — coefficient → passage with hedge tier (certain/likely/tentative). Kael\'s correlations become Vela\'s parent-passages.',
-             cipherGates: 'cipher-5: v3-4 spec body MUST define narrativeProse(template, vars) helper that escHtmls every interpolated var at the template boundary + build-time grep gate forbidding raw ${} inside narrative-prose-template files outside that helper. HR-4 at a NEW render-boundary class.' },
+  /* ── Wave 1 layer B (y ≈ 320) ── */
+  'v3-6':  { x: 100, y: 320, w: 150, h: 50, wave: 'wave1', region: 'surface',
+    label: 'v3-6', sub: 'Card Priority', boss: false, critical: false,
+    status: 'styles.css mutex 2nd',
+    files: 'split/intelligence-cards.js · split/styles.css',
+    composes: 'vela-arc-3 + Maren\'s severity floor doctrine',
+    description: 'Every renderInfo* card declares one of three priority tiers — urgent / notable / ambient. Master sorts by tier. Ambient collapses by default. Severity floors are categorical — a win-card never outranks a vaccine reminder.' },
+  'v3-2':  { x: 320, y: 320, w: 150, h: 50, wave: 'wave1', region: 'care',
+    label: 'v3-2', sub: 'CT Triggers + Posture', boss: false, critical: false,
+    status: 'Ratified',
+    files: 'split/medical.js · split/intelligence-caretickets.js · split/intelligence-illness.js',
+    composes: 'maren-arc-2 + kael-arc-4 (single merged arc)',
+    description: 'CT_TRIGGERS declarative registry + getActiveIllnessPosture() reads fever/diarrhoea/vomiting/cold as a set. "Ziva has been compound-symptomatic 3 days — escalation tier 2" becomes a real surface.' },
+  'v3-4':  { x: 540, y: 320, w: 150, h: 50, wave: 'wave1', region: 'surface',
+    label: 'v3-4', sub: 'Narrative Layer', boss: false, critical: false,
+    status: 'Ratified',
+    files: 'split/intelligence-cards.js · split/intelligence-isl.js',
+    composes: 'vela-arc-4 prose templates + kael-arc-1 data source',
+    cipherGates: 'cipher-5: v3-4 spec MUST define narrativeProse(template, vars) helper that escHtmls every var at the template boundary + build-time grep gate forbidding raw ${} outside the helper.',
+    description: 'Cross-domain narrative-prose layer. Coefficient → passage with hedge tier (certain/likely/tentative). "Ziva sleeps ~40 min longer on days she eats by 6 PM" (likely, n=18).' },
 
-  'v3-1':  { x: 380, y: 600, w: 160, h: 56, wave: 'wave1', region: 'care',
-             label: 'v3-1', sub: 'Recommendation Pipeline', boss: true, critical: true,
-             status: 'Ratified §4.2; BLOCKED on §4.8 #2',
-             files: 'split/home.js · split/medical.js · split/intelligence-caretickets.js · split/sync.js',
-             composes: 'maren-arc-1 reminderRegistry + vela recommendation-surface-tier + kael-arc-5 RecommendationEvent log',
-             description: 'Unified pipeline from data → recommendation event → ranked surface → escalation. Retires window._remindersHTML global stash. Single ranked safety-first reminder. Escalation pipeline: gentle (toast) → firm (TSF chip) → urgent (home card) → CareTicket. styles.css mutex 3rd.',
-             cipherGates: '🔴 BLOCKED on §4.8 #2: RecommendationEvent Firestore collection schema must ratify before v3-1 opens (cipher-8). Resolution path: PR #128 amends to mark Firestore-collection (c) in-scope OR Kael spec-drafts at v3-1 kickoff.' },
-  'v3-7':  { x: 660, y: 600, w: 140, h: 50, wave: 'wave1', region: 'care',
-             label: 'v3-7', sub: 'Empty-State Doctrine', boss: false, critical: false,
-             status: 'Ratified §4.2; carries CV3-003',
-             files: 'sweep: home.js + medical.js + diet.js + intelligence-cards.js + intelligence-quicklog.js',
-             composes: 'maren-arc-5 + Vela\'s empty-state phrasing',
-             description: 'Null-render is a defect; absent data renders a first-class careEmptyState(domain, reason). "We haven\'t seen D3 since Tuesday" instead of silent blank. Canon entry CV3-003 (Honest-Empty-State doctrine) — Cluster-cross promoted to Codex.',
-             cipherGates: null },
+  /* ── Wave 1 layer C (y ≈ 440) ── */
+  'v3-1':  { x: 300, y: 440, w: 170, h: 60, wave: 'wave1', region: 'care',
+    label: 'v3-1 ★', sub: 'Recommendation Pipeline', boss: true, critical: true,
+    status: '🔴 BLOCKED on §4.8 #2',
+    files: 'split/home.js · split/medical.js · split/intelligence-caretickets.js · split/sync.js',
+    composes: 'maren-arc-1 reminderRegistry + vela recommendation-surface-tier + kael-arc-5 RecommendationEvent log',
+    cipherGates: '🔴 BLOCKED on §4.8 #2: RecommendationEvent Firestore collection schema must ratify before v3-1 opens (cipher-8). Resolution: PR #128 amends to mark (c) in-scope OR Kael spec-drafts at v3-1 kickoff.',
+    description: 'Unified pipeline: data → recommendation event → ranked surface → escalation. Retires window._remindersHTML global stash. Escalation: gentle (toast) → firm (TSF chip) → urgent (home card) → CareTicket. styles.css mutex 3rd.' },
+  'v3-7':  { x: 530, y: 440, w: 150, h: 50, wave: 'wave1', region: 'care',
+    label: 'v3-7', sub: 'Empty-State Doctrine', boss: false, critical: false,
+    status: 'Carries CV3-003 (Cluster-cross)',
+    files: 'sweep: home.js · medical.js · diet.js · intelligence-cards.js · intelligence-quicklog.js',
+    composes: 'maren-arc-5 + Vela\'s empty-state phrasing',
+    description: 'Null-render is a defect; absent data renders a first-class careEmptyState(domain, reason). "We haven\'t seen D3 since Tuesday" instead of silent blank. Canon entry CV3-003 (Honest-Empty-State doctrine) — promoted to Codex.' },
 
-  /* Wave 2 — Reservoirs */
-  'R-9':   { x: 180, y: 800, w: 140, h: 52, wave: 'wave2', region: 'shared',
-             label: 'R-9', sub: 'Routine Library', boss: false, critical: false,
-             status: 'Forward-planning §8',
-             files: 'data/care-routines.json (new) · core.js _applyRoutine',
-             composes: 'New routine-template primitive',
-             description: 'Named composite routines — weekday morning / sick day / travel day / nanny shift — pre-populate expected log entries + adjust severity floors for the day. Foundation for caregiver-multiplicity catchment (C-1). Travel-day suppresses false anomalies in R-4.',
-             cipherGates: null },
-  'R-5':   { x: 340, y: 800, w: 140, h: 52, wave: 'wave2', region: 'engine',
-             label: 'R-5', sub: 'Feedback Loop', boss: false, critical: false,
-             status: 'Forward-planning §8; the secret weapon',
-             files: 'core.js + sync.js (recommendationEvents schema extension)',
-             composes: 'userFeedback field on recommendationEvents + _calibrateConfidence primitive',
-             description: 'Per-recommendation parent-mark (useful / noise) → engine calibrates per-Ziva confidence floors + deprecates dismissed surfaces. The trust-progressive doctrine. Back-edge: feedback continually refines R-1 adaptive baselines — turns Wave 2 from one-shot release into continually-improving system.',
-             cipherGates: null },
-  'R-1':   { x: 580, y: 800, w: 160, h: 56, wave: 'wave2', region: 'engine',
-             label: 'R-1 ★', sub: 'Adaptive Layer', boss: true, critical: true,
-             status: 'Forward-planning §8; the level-2 boss',
-             files: 'core.js + RECOMMENDATION_ROSTER per-Ziva override fields',
-             composes: 'Personalised typical-time bands + score baselines + absorption windows',
-             description: 'The engine learns Ziva\'s baselines, not just clinical standards. Her usual wake-up is 06:42, not "infants typically wake 06:00-08:00." Adaptive-vs-clinical hierarchy: fall back to standards when n < threshold, override with personalised when n ≥ threshold + confidence floor. Unlocks R-2, R-4, R-6 (growth velocity), and C-7/C-9 downstream.',
-             cipherGates: null },
-  'R-3':   { x: 800, y: 800, w: 140, h: 52, wave: 'wave2', region: 'care',
-             label: 'R-3', sub: 'Audit / History', boss: false, critical: false,
-             status: 'Forward-planning §8',
-             files: 'core.js _aggregateWindow + integration ziva_scrapbook + ziva_avatar_full',
-             composes: 'Longitudinal aggregator + scrapbook/photo weaving + pediatric-visit-prep export',
-             description: 'Ziva at 4 months vs Ziva at 8 months. Week / month / quarter views. Milestone-anchored timeline. Pediatric-visit-prep bundles last 30 days for doctor handoff. Export to PDF / shareable link. Longitudinal value compounds with each month of data.',
-             cipherGates: null },
-  'R-7':   { x: 960, y: 800, w: 130, h: 52, wave: 'wave2', region: 'care',
-             label: 'R-7', sub: 'Mood Tier', boss: false, critical: false,
-             status: 'Forward-planning §8 (Lyra add)',
-             files: 'day-record schema: moodTier 1-4 (nullable in v1)',
-             composes: 'Optional engine-derived suggestion via _inferMoodTier',
-             description: '4-tier daily affect tracker — fussy / mixed / content / bright. One-tap parent input OR auto-inferred from TSF event density + illness state + sleep quality. Mood as canary domain — correlates with upstream signals to surface clusters ("Two fussy days; new food Tuesday, disrupted sleep Wednesday — possible gut-tolerance signal").',
-             cipherGates: null },
-  'R-8':   { x: 1200, y: 800, w: 140, h: 52, wave: 'wave2', region: 'engine',
-             label: 'R-8', sub: 'Knowledge Graph', boss: false, critical: false,
-             status: 'Forward-planning §8 (Lyra add)',
-             files: 'data/knowledge-graph.json (NEW) · core.js _traverseKB',
-             composes: 'Food + Milestone + Illness + NUTRITION + Standards as graph',
-             description: 'Reshape the four big lookup tables as a graph — "Iron-rich foods" node connects to "rolling milestone" via "iron supports neuromuscular development." Graph traversal lets one Q&A pull from many tables. Foundation for inference-without-opacity; ML-ready substrate.',
-             cipherGates: null },
+  /* ── Wave 2 reservoirs (y ≈ 620) ── */
+  'R-9':   { x: 60,  y: 600, w: 140, h: 52, wave: 'wave2', region: 'shared',
+    label: 'R-9', sub: 'Routine Library', boss: false, critical: false,
+    status: 'Forward-planning §8',
+    files: 'data/care-routines.json (NEW) · core.js _applyRoutine',
+    composes: 'Named composite routines (weekday morning / sick day / travel day / nanny shift)',
+    description: 'Pre-populate expected log entries + adjust severity floors for the day. Foundation for caregiver-multiplicity catchment (C-1). Travel-day suppresses false anomalies in R-4.' },
+  'R-5':   { x: 220, y: 600, w: 140, h: 52, wave: 'wave2', region: 'engine',
+    label: 'R-5', sub: 'Feedback Loop', boss: false, critical: false,
+    status: 'The secret weapon',
+    files: 'core.js · sync.js · recommendationEvents.userFeedback field',
+    composes: 'userFeedback on recommendationEvents + _calibrateConfidence primitive',
+    description: 'Parent marks each recommendation useful/noise → engine calibrates per-Ziva confidence floors + deprecates dismissed surfaces. Trust-progressive doctrine. Back-edge to R-1: feedback continually refines adaptive baselines — turns Wave 2 from one-shot release into continually-improving system.' },
+  'R-1':   { x: 470, y: 600, w: 180, h: 60, wave: 'wave2', region: 'engine',
+    label: 'R-1 ★', sub: 'Adaptive Layer', boss: true, critical: true,
+    status: 'Level-2 boss · §8',
+    files: 'core.js · RECOMMENDATION_ROSTER per-Ziva override fields',
+    composes: 'Personalised typical-time bands + score baselines + absorption windows',
+    description: 'Engine learns Ziva\'s baselines, not just clinical standards. Her wake-up is 06:42, not "infants typically wake 06:00–08:00." Adaptive-vs-clinical hierarchy: fall back to standards when n is low; override with personalised when n + confidence floor passes. Unlocks R-2 + R-4 + R-6 + C-7 + C-9.' },
+  'R-3':   { x: 690, y: 600, w: 140, h: 52, wave: 'wave2', region: 'care',
+    label: 'R-3', sub: 'Audit / History', boss: false, critical: false,
+    status: 'Forward-planning §8',
+    files: 'core.js _aggregateWindow · ziva_scrapbook + ziva_avatar_full integration',
+    composes: 'Longitudinal aggregator + scrapbook/photo weaving + pediatric-visit-prep export',
+    description: 'Ziva at 4 months vs Ziva at 8 months. Week / month / quarter views. Milestone-anchored timeline. Pediatric-visit-prep bundles last 30 days for doctor handoff. Export to PDF / shareable link.' },
+  'R-7':   { x: 850, y: 600, w: 140, h: 52, wave: 'wave2', region: 'care',
+    label: 'R-7', sub: 'Mood Tier', boss: false, critical: false,
+    status: 'Forward-planning §8 (Lyra add)',
+    files: 'day-record schema: moodTier 1-4 (nullable in v1)',
+    composes: 'Optional engine-derived suggestion via _inferMoodTier',
+    description: '4-tier daily affect — fussy / mixed / content / bright. One-tap parent input OR auto-inferred from TSF event density + illness state + sleep quality. Mood as canary domain — correlates with upstream signals.' },
+  'R-8':   { x: 1000, y: 600, w: 130, h: 52, wave: 'wave2', region: 'engine',
+    label: 'R-8', sub: 'Knowledge Graph', boss: false, critical: false,
+    status: 'Forward-planning §8 (Lyra add)',
+    files: 'data/knowledge-graph.json (NEW) · core.js _traverseKB',
+    composes: 'Food + Milestone + Illness + NUTRITION + Standards as graph',
+    description: 'Reshape four big lookup tables as a graph. "Iron-rich foods" → "rolling milestone" via "iron supports neuromuscular development." Graph traversal lets one Q&A pull from many tables. ML-ready substrate.' },
 
-  'R-2':   { x: 450, y: 980, w: 140, h: 52, wave: 'wave2', region: 'engine',
-             label: 'R-2', sub: 'Predictive Surface', boss: false, critical: false,
-             status: 'Forward-planning §8',
-             files: 'core.js _forecastDomain(domain, horizon, ctx)',
-             composes: 'Forecast with hedged certainty + sample-size disclosure',
-             description: 'The "alive" feeling. Tonight\'s likely wake-time window: 06:30-07:15 (high confidence, n=21). Tomorrow\'s afternoon-nap probability if morning nap < 45min: 92%. All hedged, all sample-size-disclosed. Extends Kael\'s "predictive milestone never personalised" risk register to all forecast surfaces.',
-             cipherGates: null },
-  'R-4':   { x: 700, y: 980, w: 140, h: 52, wave: 'wave2', region: 'engine',
-             label: 'R-4', sub: 'Anomaly Detection', boss: false, critical: false,
-             status: 'Forward-planning §8',
-             files: 'core.js _detectAnomaly(domain, signal, ctx)',
-             composes: 'σ-floor threshold reading R-1 baselines',
-             description: 'Pattern-break. Not "X tends to follow Y" but "today\'s X is 2.5σ out of Ziva\'s usual band." Soft notice with hedge tier. Sleep starting at 23:30 when usual is 21:00 ± 30min → soft notice. 4-night-in-a-row pattern break on a previously stable rhythm → CareTicket auto-creation candidate.',
-             cipherGates: null },
-  'R-6':   { x: 900, y: 980, w: 150, h: 52, wave: 'wave2', region: 'care',
-             label: 'R-6 ★', sub: 'Growth + Activity', boss: false, critical: true,
-             status: 'Architect-added §8; the integrator',
-             files: 'ziva_growth + new activityLevel 1-4 schema field on day-record · medical.js growth chart',
-             composes: 'Weight + height velocity + NEW 4-tier daily activity input',
-             description: 'The integrator domain. Sleep + feed + meds + contact all converge on growth and developmental trajectory. Without this, every reservoir is a constellation; with it, you see the gravity well they orbit. Architect quote: "see even more how everything is adding up to something tangible." Candidate CV3-005 Outcome-anchor doctrine — every recommendation must trace to growth-or-activity outcome.',
-             cipherGates: null },
+  /* ── Wave 2 derived (y ≈ 740) ── */
+  'R-2':   { x: 350, y: 740, w: 140, h: 52, wave: 'wave2', region: 'engine',
+    label: 'R-2', sub: 'Predictive Surface', boss: false, critical: true,
+    status: 'Forward-planning §8',
+    files: 'core.js _forecastDomain(domain, horizon, ctx)',
+    composes: 'Forecast with hedged certainty + sample-size disclosure',
+    description: 'The "alive" feeling lives here. Tonight\'s likely wake-time window: 06:30–07:15 (high confidence, n=21). Tomorrow\'s afternoon-nap probability if morning nap < 45min: 92%. All hedged, all sample-size-disclosed.' },
+  'R-4':   { x: 540, y: 740, w: 140, h: 52, wave: 'wave2', region: 'engine',
+    label: 'R-4', sub: 'Anomaly Detection', boss: false, critical: false,
+    status: 'Forward-planning §8',
+    files: 'core.js _detectAnomaly(domain, signal, ctx)',
+    composes: 'σ-floor threshold reading R-1 baselines',
+    description: 'Pattern-break. "Today\'s X is 2.5σ out of Ziva\'s usual band." Soft notice with hedge tier. Sleep at 23:30 when usual is 21:00 ± 30min → soft notice. 4-night-in-a-row break → CareTicket auto-creation candidate.' },
+  'R-6':   { x: 730, y: 740, w: 160, h: 56, wave: 'wave2', region: 'care',
+    label: 'R-6 ★', sub: 'Growth + Activity', boss: false, critical: true,
+    status: 'Architect-added · the integrator',
+    files: 'ziva_growth + NEW activityLevel 1-4 schema field · medical.js growth chart',
+    composes: 'Weight + height velocity + NEW 4-tier daily activity input',
+    description: 'The integrator domain. Sleep + feed + meds + contact all converge on growth + developmental trajectory. Architect: "see even more how everything is adding up to something tangible." Candidate CV3-005 Outcome-anchor doctrine — every recommendation must trace to growth-or-activity outcome.' },
 
-  /* Wave 3+ — Catchments */
-  'C-1':   { x: 150, y: 1180, w: 130, h: 48, wave: 'wave3', region: 'shared',
-             label: 'C-1', sub: 'Caregiver Multi', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: '__sync_updatedBy surfaces + role registry',
-             composes: 'Co-parent / nanny / grandparent role-aware surfaces',
-             description: 'Asymmetric caregivers — "nanny logs lunch + nap; Mom logs nights." Data already carries __sync_updatedBy. Builds on R-9 routine library as substrate.',
-             cipherGates: null },
-  'C-3':   { x: 290, y: 1180, w: 130, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-3', sub: 'Notification Engine', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'sync.js + new push registration + iCal feed',
-             composes: 'Push notifications + calendar integration + watch face',
-             description: 'In-tab → ambient surfaces. Push notifications, calendar integration (iCal feed), watch face. Currently v2 deferred reminder/notification scheduling explicitly; v3.x could land it.',
-             cipherGates: null },
-  'C-9':   { x: 450, y: 1180, w: 130, h: 48, wave: 'wave3', region: 'engine',
-             label: 'C-9', sub: 'ML Calibration', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'core.js + R-5 feedback loop substrate',
-             composes: 'ML-derived recommendation calibration replacing rule-based weights',
-             description: 'Once R-5 feedback log has enough signal, ML calibration replaces rule-based confidence floors. Per-Ziva learned weights. Foundation: rule-based explainability stays; ML augments rather than replaces.',
-             cipherGates: null },
-  'C-2':   { x: 620, y: 1180, w: 130, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-2', sub: 'Active Intervention', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'home.js + medical.js + new goal-tracking primitive',
-             composes: 'Sleep training schedules + weaning plans + bedtime-shift goals',
-             description: 'Descriptive → gently prescriptive. Parent sets a goal (shift bedtime from 22:30 to 21:30 over 2 weeks); engine tracks adherence to the plan. Needs R-2 (predictive) + R-6 (outcome anchor) to fire honestly.',
-             cipherGates: null },
-  'C-7':   { x: 780, y: 1180, w: 140, h: 48, wave: 'wave3', region: 'engine',
-             label: 'C-7', sub: 'Cross-Domain CT', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'intelligence-caretickets.js trigger doctrine extension',
-             composes: 'Compound-trigger CareTickets (3 nights sleep + new food = gut tolerance check)',
-             description: 'CareTicket triggers fire on cross-domain patterns, not just single-domain conditions. Needs R-1 (Ziva baselines) + R-4 (anomaly detection) to identify the compound condition honestly.',
-             cipherGates: null },
-  'C-6':   { x: 940, y: 1180, w: 130, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-6', sub: 'Photo Weaving', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'ziva_scrapbook surfaces + R-3 audit integration',
-             composes: 'Time-anchored photos in the day/week narrative',
-             description: 'Existing ziva_scrapbook key currently unused. Photos tied to milestones, growth chart, daily journal — currently siloed. v3.x weaves them into the narrative layer (R-3 audit).',
-             cipherGates: null },
-  'C-11':  { x: 1200, y: 1180, w: 140, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-11', sub: 'EHR / Pediatric Sync', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'medical-vaccines.js (post v3-9b split)',
-             composes: 'CoWIN / pediatric provider integration · vaccination record sync',
-             description: 'Pediatric provider integration — vaccination records sync, electronic health record handoff. Especially relevant for India (CoWIN integration, govt vaccine certificates). Depends on v3-9b medical-vaccines.js split being clean.',
-             cipherGates: null },
+  /* ── Wave 3 connected (y ≈ 900) ── */
+  'C-1':   { x: 50,  y: 880, w: 130, h: 46, wave: 'wave3', region: 'shared',
+    label: 'C-1', sub: 'Caregiver Multi', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: '__sync_updatedBy surfaces + role registry',
+    composes: 'Co-parent / nanny / grandparent role-aware surfaces',
+    description: 'Asymmetric caregivers — "nanny logs lunch + nap; Mom logs nights." Data already carries __sync_updatedBy. Builds on R-9 routine library.' },
+  'C-3':   { x: 200, y: 880, w: 130, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-3', sub: 'Notification Engine', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'sync.js · push registration · iCal feed',
+    composes: 'Push notifications + calendar integration + watch face',
+    description: 'In-tab → ambient surfaces. v2 deferred reminder/notification scheduling explicitly; v3.x could land it.' },
+  'C-9':   { x: 350, y: 880, w: 130, h: 46, wave: 'wave3', region: 'engine',
+    label: 'C-9', sub: 'ML Calibration', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'core.js · R-5 feedback loop substrate',
+    composes: 'ML-derived calibration replacing rule-based weights',
+    description: 'Once R-5 feedback log has enough signal, ML calibration replaces rule-based confidence floors. Rule-based explainability stays; ML augments rather than replaces.' },
+  'C-2':   { x: 500, y: 880, w: 130, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-2', sub: 'Active Intervention', boss: false, critical: true,
+    status: 'Catchment §8 · end-game',
+    files: 'home.js · medical.js · goal-tracking primitive',
+    composes: 'Sleep training + weaning plans + bedtime-shift goals',
+    description: 'Descriptive → gently prescriptive. Parent sets a goal (shift bedtime from 22:30 to 21:30 over 2 weeks); engine tracks plan adherence. Needs R-2 (predictive) + R-6 (outcome anchor) to fire honestly.' },
+  'C-7':   { x: 650, y: 880, w: 140, h: 46, wave: 'wave3', region: 'engine',
+    label: 'C-7', sub: 'Cross-Domain CT', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'intelligence-caretickets.js trigger doctrine',
+    composes: 'Compound-trigger CareTickets (sleep + new food = gut tolerance check)',
+    description: 'CareTicket triggers fire on cross-domain patterns. Needs R-1 (Ziva baselines) + R-4 (anomaly detection) to identify compound conditions honestly.' },
+  'C-6':   { x: 810, y: 880, w: 130, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-6', sub: 'Photo Weaving', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'ziva_scrapbook · R-3 audit integration',
+    composes: 'Time-anchored photos in the day/week narrative',
+    description: 'ziva_scrapbook key currently unused. Photos tied to milestones, growth chart, daily journal — currently siloed. v3.x weaves them into the narrative layer (R-3 audit).' },
+  'C-11':  { x: 970, y: 880, w: 150, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-11', sub: 'EHR / Pediatric Sync', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'medical-vaccines.js (post v3-9b split)',
+    composes: 'CoWIN / pediatric provider integration · vaccination record sync',
+    description: 'Pediatric provider integration — vaccination record sync, EHR handoff. Especially relevant for India (CoWIN integration). Depends on v3-9b medical-vaccines.js split.' },
 
-  /* Wave 3+ side-quests (independent of Wave 2) */
-  'C-4':   { x: 260, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'shared',
-             label: 'C-4', sub: 'Privacy Surface', boss: false, critical: false,
-             status: 'Catchment §8; side-quest',
-             files: 'home.js settings tab + sync.js per-domain toggle',
-             composes: 'Per-domain sync toggle + data-sovereignty controls',
-             description: 'As intelligence layer grows, parent control becomes a Care concern. Where is data stored, what syncs, what stays local. Per-domain sync toggle.',
-             cipherGates: null },
-  'C-5':   { x: 420, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'surface',
-             label: 'C-5', sub: 'Voice Input', boss: false, critical: false,
-             status: 'Catchment §8; side-quest',
-             files: 'intelligence-quicklog.js + Web Speech API',
-             composes: 'Hands-free Smart Quick Log via voice transcription',
-             description: 'Smart Quick Log has predictions but parent still taps. Voice transcription for hands-free logging while feeding/holding baby. Confirmations via chip vocabulary (depends on v3-5).',
-             cipherGates: null },
-  'C-8':   { x: 580, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-8', sub: 'Calendar Integration', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'medical.js vaccination ledger + new iCal export',
-             composes: 'Google Calendar / iCal export for vaccinations + pediatric visits',
-             description: 'External calendar integration. Google Calendar feed for vaccinations and pediatric visits. iCal export. Feeds into C-3 notification engine as a surface.',
-             cipherGates: null },
-  'C-12':  { x: 740, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'shared',
-             label: 'C-12', sub: 'Localization', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'all surface files + new i18n/locale data structure',
-             composes: 'Hindi + regional dialects (Punjabi, Tamil, Bengali, etc.)',
-             description: 'Localization for India deployment beyond Ziva-first. All surface text routes through i18n. Depends on v3-5 chip vocabulary being token-driven.',
-             cipherGates: null },
-  'C-13':  { x: 900, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'engine',
-             label: 'C-13', sub: 'Wearable Integration', boss: false, critical: false,
-             status: 'Catchment §8',
-             files: 'new sync layer + scoring-redesign integration',
-             composes: 'Smartwatch activity import + baby monitor sleep data',
-             description: 'Wearable integration — smartwatch for activity-level auto-detection, baby monitor for sleep duration/quality. Feeds activityLevel (R-6) automatically. Scoring engine consumes wearable signal.',
-             cipherGates: null },
-  'C-14':  { x: 1060, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'engine',
-             label: 'C-14', sub: 'Offline-First Hardening', boss: false, critical: false,
-             status: 'Catchment §8; side-quest',
-             files: 'sync.js + service worker',
-             composes: 'PWA service worker robustness + offline-first UX surfaces',
-             description: 'sync.js has circuit breaker but UX could go further. Explicit offline-mode indicator, queued-write surfaces, conflict resolution UI. Important for mobile-first usage in low-connectivity scenarios.',
-             cipherGates: null },
-  'C-19':  { x: 1220, y: 1380, w: 130, h: 48, wave: 'wave3', region: 'care',
-             label: 'C-19/20', sub: 'Export + Restore UI', boss: false, critical: false,
-             status: 'Catchment §8; side-quest',
-             files: 'home.js settings tab + new export/restore surfaces',
-             composes: 'GDPR-style data export + parent-facing backup/restore UI',
-             description: 'Currently restore is dev-tool-only. Parent-facing backup/restore UI + GDPR-style data export. Becomes important if account migration or device switch is needed.',
-             cipherGates: null },
+  /* ── Wave 3 side-quests (y ≈ 1020) ── */
+  'C-4':   { x: 130, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'shared',
+    label: 'C-4', sub: 'Privacy Surface', boss: false, critical: false,
+    status: 'Side-quest §8',
+    files: 'home.js settings tab · sync.js per-domain toggle',
+    composes: 'Per-domain sync toggle + data-sovereignty controls',
+    description: 'As intelligence layer grows, parent control becomes a Care concern. Where is data stored, what syncs, what stays local.' },
+  'C-5':   { x: 280, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'surface',
+    label: 'C-5', sub: 'Voice Input', boss: false, critical: false,
+    status: 'Side-quest §8',
+    files: 'intelligence-quicklog.js · Web Speech API',
+    composes: 'Hands-free Smart Quick Log via voice transcription',
+    description: 'Voice transcription for hands-free logging while feeding/holding baby. Confirmations via chip vocabulary (depends on v3-5).' },
+  'C-8':   { x: 430, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-8', sub: 'Calendar Integration', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'medical.js vaccination ledger · iCal export',
+    composes: 'Google Calendar / iCal feed for vaccinations + visits',
+    description: 'External calendar integration. iCal feed for vaccinations + pediatric visits. Feeds C-3 notification engine as a surface.' },
+  'C-12':  { x: 580, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'shared',
+    label: 'C-12', sub: 'Localization', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'all surface files · i18n/locale data',
+    composes: 'Hindi + regional dialects',
+    description: 'Localization for India deployment beyond Ziva-first. All surface text routes through i18n. Depends on v3-5 chip vocabulary being token-driven.' },
+  'C-13':  { x: 730, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'engine',
+    label: 'C-13', sub: 'Wearable Integration', boss: false, critical: false,
+    status: 'Catchment §8',
+    files: 'new sync layer · scoring-redesign integration',
+    composes: 'Smartwatch activity + baby monitor sleep import',
+    description: 'Wearable integration — smartwatch for activity-level auto-detection, baby monitor for sleep duration/quality. Feeds activityLevel (R-6) automatically.' },
+  'C-14':  { x: 880, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'engine',
+    label: 'C-14', sub: 'Offline-First Hardening', boss: false, critical: false,
+    status: 'Side-quest §8',
+    files: 'sync.js · service worker',
+    composes: 'PWA service worker robustness + offline-first UX',
+    description: 'sync.js has circuit breaker but UX could go further. Explicit offline-mode indicator, queued-write surfaces, conflict resolution UI.' },
+  'C-19':  { x: 1030, y: 1010, w: 130, h: 46, wave: 'wave3', region: 'care',
+    label: 'C-19/20', sub: 'Export + Restore UI', boss: false, critical: false,
+    status: 'Side-quest §8',
+    files: 'home.js settings tab · export/restore surfaces',
+    composes: 'GDPR-style data export + parent-facing backup/restore UI',
+    description: 'Currently restore is dev-tool-only. Parent-facing backup/restore UI + data export. Becomes important if account migration or device switch is needed.' },
 };
 
-/* Edges: from → to with type */
 const EDGES = [
-  /* Pre-Wave 1 → Wave 1 gates */
+  /* Pre-Wave 1 → Wave 1 */
   { from: 'PR-126', to: 'v3-1', type: 'gate' },
   { from: 'PR-127', to: 'v3-3', type: 'critical' },
   { from: 'PR-128', to: 'v3-3', type: 'critical' },
   { from: 'FoodST', to: 'v3-8', type: 'gate' },
-
   /* Wave 1 engine spine */
   { from: 'v3-3', to: 'v3-1', type: 'critical' },
   { from: 'v3-3', to: 'v3-2', type: 'normal' },
   { from: 'v3-3', to: 'v3-4', type: 'normal' },
   { from: 'v3-3', to: 'v3-6', type: 'normal' },
-
   /* Wave 1 styles.css mutex */
   { from: 'v3-5', to: 'v3-6', type: 'critical' },
   { from: 'v3-6', to: 'v3-1', type: 'critical' },
-
   /* Wave 1 follow-ons */
   { from: 'v3-1', to: 'v3-7', type: 'normal' },
-
   /* Wave 1 → Wave 2 */
   { from: 'v3-3', to: 'R-1', type: 'critical' },
   { from: 'v3-3', to: 'R-3', type: 'normal' },
@@ -591,13 +842,11 @@ const EDGES = [
   { from: 'v3-1', to: 'R-5', type: 'normal' },
   { from: 'v3-1', to: 'R-9', type: 'normal' },
   { from: 'v3-9', to: 'R-8', type: 'normal' },
-
   /* Wave 2 internal */
   { from: 'R-1', to: 'R-2', type: 'critical' },
   { from: 'R-1', to: 'R-4', type: 'normal' },
   { from: 'R-1', to: 'R-6', type: 'normal' },
   { from: 'R-5', to: 'R-1', type: 'calibration' },
-
   /* Wave 2 → Wave 3 */
   { from: 'R-9', to: 'C-1', type: 'normal' },
   { from: 'R-2', to: 'C-2', type: 'critical' },
@@ -609,8 +858,7 @@ const EDGES = [
   { from: 'R-1',  to: 'C-7', type: 'normal' },
   { from: 'R-5',  to: 'C-9', type: 'normal' },
   { from: 'v3-9', to: 'C-11', type: 'normal' },
-
-  /* Independent catchments */
+  /* Side-quests */
   { from: 'v3-3', to: 'C-4', type: 'normal' },
   { from: 'v3-5', to: 'C-5', type: 'normal' },
   { from: 'v3-3', to: 'C-14', type: 'normal' },
@@ -619,240 +867,244 @@ const EDGES = [
   { from: 'PR-128', to: 'C-13', type: 'normal' },
 ];
 
-/* ─────────────────────────────────────────────────────────────────────────
-   RENDER — build SVG nodes + edges from data
-   ───────────────────────────────────────────────────────────────────────── */
-
+/* ────────────────────────────────────────────────────────────────────
+   RENDER
+   ──────────────────────────────────────────────────────────────────── */
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('tree');
 
-function regionColor(region) {
-  return {
-    'engine':  { fill: '#a8b3dd', stroke: '#3a4685' }, // indigo+sky blend
-    'care':    { fill: '#f2b7c4', stroke: '#9e3e52' },
-    'surface': { fill: '#dec1e3', stroke: '#5e4d8a' }, // lav+peach blend
-    'shared':  { fill: '#c4dccc', stroke: '#2d6e4f' },
-    'pre':     { fill: '#fef6f0', stroke: '#806c6c' },
-  }[region] || { fill: '#fef6f0', stroke: '#806c6c' };
+/* Color resolver */
+function regionFill(region, wave) {
+  const palette = {
+    engine:  { base: '#a8b3dd', stroke: '#3a4685' },
+    care:    { base: '#f0afba', stroke: '#9e3e52' },
+    surface: { base: '#dfc4e8', stroke: '#5e4d8a' },
+    shared:  { base: '#bbdcc9', stroke: '#2d6e4f' },
+    pre:     { base: '#fef6f0', stroke: '#806c6c' },
+  };
+  const p = palette[region] || palette.pre;
+  if (wave === 'preWave1') return { fill: '#fef6f0', stroke: p.stroke, dash: true };
+  if (wave === 'wave1')    return { fill: p.base, stroke: p.stroke, dash: false };
+  if (wave === 'wave2')    return { fill: mix(p.base, '#ffffff', 0.40), stroke: p.stroke, dash: false };
+  if (wave === 'wave3')    return { fill: '#ffffff', stroke: p.stroke, dash: false };
+  return { fill: '#fef6f0', stroke: '#806c6c', dash: false };
+}
+function mix(hexA, hexB, t) {
+  const a = parseHex(hexA), b = parseHex(hexB);
+  const ch = c => Math.round(a[c] + (b[c] - a[c]) * t).toString(16).padStart(2,'0');
+  return '#' + ch(0) + ch(1) + ch(2);
+}
+function parseHex(hex) {
+  const h = hex.replace('#','');
+  return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
 }
 
-function nodeFill(node) {
-  const rc = regionColor(node.region);
-  if (node.wave === 'preWave1') return { fill: 'var(--warm)', stroke: rc.stroke, dashed: true };
-  if (node.wave === 'wave1')    return { fill: rc.fill, stroke: rc.stroke, dashed: false };
-  if (node.wave === 'wave2')    return { fill: lighten(rc.fill, 0.25), stroke: rc.stroke, dashed: false };
-  if (node.wave === 'wave3')    return { fill: 'var(--warm)', stroke: rc.stroke, dashed: false };
-  return { fill: 'var(--warm)', stroke: '#806c6c', dashed: false };
-}
+/* Group all rendered content in a pan/zoom container <g> */
+const root = document.createElementNS(SVG_NS, 'g');
+root.setAttribute('id', 'tree-root');
+svg.appendChild(root);
 
-function lighten(hex, amt) {
-  /* simple mix-with-white */
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substr(0,2), 16), g = parseInt(h.substr(2,2), 16), b = parseInt(h.substr(4,2), 16);
-  const mix = (c) => Math.round(c + (255 - c) * amt).toString(16).padStart(2,'0');
-  return '#' + mix(r) + mix(g) + mix(b);
-}
-
-/* Draw layer dividers + labels */
-function drawLayerScaffold() {
-  const layers = [
-    { y: 80,   label: 'Pre-Wave 1 — in-flight gates' },
-    { y: 270,  label: 'Wave 1 — foundation (ratified)' },
-    { y: 750,  label: 'Wave 2 — reservoirs (forward-planning per §8)' },
-    { y: 1130, label: 'Wave 3+ — catchments (post-usage)' },
+/* Layer bands */
+function drawScaffold() {
+  const bands = [
+    { y: 40,   h: 100, label: 'Pre-Wave 1 — in-flight gates', alt: false },
+    { y: 175,  h: 305, label: 'Wave 1 — foundation (ratified)', alt: true },
+    { y: 575,  h: 250, label: 'Wave 2 — reservoirs (forward-planning · §8)', alt: false },
+    { y: 855,  h: 235, label: 'Wave 3+ — catchments (post-usage signal)', alt: true },
   ];
-  layers.forEach(l => {
+  bands.forEach(b => {
+    const r = document.createElementNS(SVG_NS, 'rect');
+    r.setAttribute('class', 'layer-band' + (b.alt ? ' alt' : ''));
+    r.setAttribute('x', 0); r.setAttribute('y', b.y);
+    r.setAttribute('width', 1100); r.setAttribute('height', b.h);
+    root.appendChild(r);
     const t = document.createElementNS(SVG_NS, 'text');
     t.setAttribute('class', 'layer-label');
-    t.setAttribute('x', 28);
-    t.setAttribute('y', l.y);
-    t.textContent = l.label;
-    svg.appendChild(t);
-    const line = document.createElementNS(SVG_NS, 'line');
-    line.setAttribute('class', 'layer-divider');
-    line.setAttribute('x1', 280);
-    line.setAttribute('y1', l.y - 4);
-    line.setAttribute('x2', 1380);
-    line.setAttribute('y2', l.y - 4);
-    svg.appendChild(line);
+    t.setAttribute('x', 18); t.setAttribute('y', b.y + 22);
+    t.textContent = b.label;
+    root.appendChild(t);
   });
 }
+drawScaffold();
 
-/* Draw an edge from parent to child node */
-function drawEdge(edge) {
-  const a = NODES[edge.from], b = NODES[edge.to];
-  if (!a || !b) return;
-  const ax = a.x + a.w / 2;
-  const ay = a.y + a.h;        // bottom-center of parent
-  const bx = b.x + b.w / 2;
-  const by = b.y;              // top-center of child
-  /* Calibration edge (R-5 → R-1) goes upward — invert */
-  let path;
-  if (edge.type === 'calibration') {
-    const ay2 = a.y;             // top-center of R-5
-    const by2 = b.y + b.h;       // bottom-center of R-1
-    const midY = (ay2 + by2) / 2;
-    path = `M${a.x + a.w / 2},${ay2} Q${a.x + a.w / 2},${midY - 30} ${(a.x + a.w / 2 + bx) / 2},${midY - 30} T${bx},${by2}`;
-  } else {
-    const midY = (ay + by) / 2;
-    path = `M${ax},${ay} C${ax},${midY} ${bx},${midY} ${bx},${by}`;
-  }
-  const p = document.createElementNS(SVG_NS, 'path');
-  p.setAttribute('class', 'edge edge-' + edge.type + (edge.type === 'critical' ? ' critical' : '') + (edge.type === 'calibration' ? ' calibration' : '') + (edge.type === 'gate' ? ' gate' : ''));
-  p.setAttribute('d', path);
-  p.dataset.from = edge.from;
-  p.dataset.to = edge.to;
-  svg.appendChild(p);
-  return p;
+/* Edges */
+function drawEdges() {
+  EDGES.forEach(e => {
+    const a = NODES[e.from], b = NODES[e.to];
+    if (!a || !b) return;
+    let d;
+    if (e.type === 'calibration') {
+      /* Goes upward from R-5 to R-1 */
+      const ax = a.x + a.w / 2;
+      const ay = a.y;          /* top of R-5 */
+      const bx = b.x + b.w / 2;
+      const by = b.y + b.h;    /* bottom of R-1 */
+      const mid = (ay + by) / 2;
+      d = `M${ax},${ay} C${ax},${mid} ${bx - 80},${mid - 20} ${bx},${by}`;
+    } else {
+      const ax = a.x + a.w / 2;
+      const ay = a.y + a.h;
+      const bx = b.x + b.w / 2;
+      const by = b.y;
+      const mid = (ay + by) / 2;
+      d = `M${ax},${ay} C${ax},${mid} ${bx},${mid} ${bx},${by}`;
+    }
+    const p = document.createElementNS(SVG_NS, 'path');
+    let cls = 'edge';
+    if (e.type === 'critical') cls += ' critical';
+    if (e.type === 'calibration') cls += ' calibration';
+    if (e.type === 'gate') cls += ' gate';
+    p.setAttribute('class', cls);
+    p.setAttribute('d', d);
+    p.dataset.from = e.from;
+    p.dataset.to = e.to;
+    root.appendChild(p);
+  });
 }
+drawEdges();
 
-function drawNode(id, node) {
-  const fillSpec = nodeFill(node);
-  const g = document.createElementNS(SVG_NS, 'g');
-  g.dataset.id = id;
-  g.style.cursor = 'pointer';
+/* Nodes */
+function drawNodes() {
+  Object.entries(NODES).forEach(([id, n]) => {
+    const f = regionFill(n.region, n.wave);
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'node-group');
+    g.dataset.id = id;
 
-  const rect = document.createElementNS(SVG_NS, 'rect');
-  rect.setAttribute('class', 'node-rect');
-  rect.setAttribute('x', node.x);
-  rect.setAttribute('y', node.y);
-  rect.setAttribute('width', node.w);
-  rect.setAttribute('height', node.h);
-  rect.setAttribute('rx', node.boss ? 8 : 10);
-  rect.setAttribute('fill', fillSpec.fill);
-  rect.setAttribute('stroke', fillSpec.stroke);
-  rect.setAttribute('stroke-width', node.boss ? 3.5 : 1.8);
-  if (fillSpec.dashed) rect.setAttribute('stroke-dasharray', '5 4');
-  g.appendChild(rect);
+    const rect = document.createElementNS(SVG_NS, 'rect');
+    rect.setAttribute('class', 'node-rect' + (n.boss ? ' boss' : ''));
+    rect.setAttribute('x', n.x);
+    rect.setAttribute('y', n.y);
+    rect.setAttribute('width', n.w);
+    rect.setAttribute('height', n.h);
+    rect.setAttribute('rx', n.boss ? 10 : 12);
+    rect.setAttribute('fill', f.fill);
+    rect.setAttribute('stroke', f.stroke);
+    rect.setAttribute('stroke-width', n.boss ? 3 : 1.8);
+    if (f.dash) rect.setAttribute('stroke-dasharray', '5 4');
+    g.appendChild(rect);
 
-  const lbl = document.createElementNS(SVG_NS, 'text');
-  lbl.setAttribute('class', 'node-label');
-  lbl.setAttribute('x', node.x + node.w / 2);
-  lbl.setAttribute('y', node.y + 19);
-  lbl.textContent = node.label;
-  g.appendChild(lbl);
+    const lbl = document.createElementNS(SVG_NS, 'text');
+    lbl.setAttribute('class', 'node-label');
+    lbl.setAttribute('x', n.x + n.w / 2);
+    lbl.setAttribute('y', n.y + (n.h >= 56 ? 23 : 20));
+    lbl.textContent = n.label;
+    g.appendChild(lbl);
 
-  const sub = document.createElementNS(SVG_NS, 'text');
-  sub.setAttribute('class', 'node-sub');
-  sub.setAttribute('x', node.x + node.w / 2);
-  sub.setAttribute('y', node.y + node.h - (node.h >= 56 ? 13 : 10));
-  sub.textContent = node.sub;
-  g.appendChild(sub);
+    const sub = document.createElementNS(SVG_NS, 'text');
+    sub.setAttribute('class', 'node-sub');
+    sub.setAttribute('x', n.x + n.w / 2);
+    sub.setAttribute('y', n.y + n.h - (n.h >= 56 ? 14 : 11));
+    sub.textContent = n.sub;
+    g.appendChild(sub);
 
-  g.addEventListener('click', () => selectNode(id));
-  g.addEventListener('mouseenter', () => highlightNode(id));
-  g.addEventListener('mouseleave', () => clearHighlight());
+    g.addEventListener('click', (ev) => { ev.stopPropagation(); selectNode(id); });
+    g.addEventListener('mouseenter', () => highlight(id, false));
+    g.addEventListener('mouseleave', () => { if (!selectedId) clearHighlight(); else highlight(selectedId, true); });
 
-  svg.appendChild(g);
-  return g;
+    root.appendChild(g);
+  });
 }
+drawNodes();
 
-/* Build everything */
-drawLayerScaffold();
-const edgeEls = EDGES.map(drawEdge);
-const nodeEls = Object.keys(NODES).map(id => ({ id, el: drawNode(id, NODES[id]) }));
+/* ────────────────────────────────────────────────────────────────────
+   INTERACTIVITY
+   ──────────────────────────────────────────────────────────────────── */
 
-/* ─────────────────────────────────────────────────────────────────────────
-   INTERACTIVITY — click, hover, filter
-   ───────────────────────────────────────────────────────────────────────── */
+let selectedId = null;
 
 function getConnected(id) {
-  const upstream = EDGES.filter(e => e.to === id).map(e => e.from);
-  const downstream = EDGES.filter(e => e.from === id).map(e => e.to);
-  return { upstream, downstream };
+  return {
+    up:   EDGES.filter(e => e.to === id).map(e => e.from),
+    down: EDGES.filter(e => e.from === id).map(e => e.to),
+  };
 }
 
-function highlightNode(id) {
+function highlight(id, persist) {
   if (!id) return;
   const conn = getConnected(id);
-  const allHighlighted = new Set([id, ...conn.upstream, ...conn.downstream]);
-  document.querySelectorAll('.node-rect').forEach(el => {
-    const gId = el.parentNode.dataset.id;
-    if (allHighlighted.has(gId)) el.classList.add('highlighted');
-    else el.classList.add('dimmed');
+  const set = new Set([id, ...conn.up, ...conn.down]);
+  document.querySelectorAll('.node-group').forEach(g => {
+    const gid = g.dataset.id;
+    g.classList.toggle('dimmed', !set.has(gid));
+    const r = g.querySelector('.node-rect');
+    if (gid === id) r.classList.add(persist ? 'selected' : 'highlighted');
+    else r.classList.remove('selected', 'highlighted');
   });
-  document.querySelectorAll('.node-label, .node-sub').forEach(el => {
-    const gId = el.parentNode.dataset.id;
-    if (!allHighlighted.has(gId)) el.classList.add('dimmed');
-  });
-  document.querySelectorAll('.edge').forEach(el => {
-    if (el.dataset.from === id || el.dataset.to === id) el.classList.add('highlighted');
-    else el.classList.add('dimmed');
+  document.querySelectorAll('.edge').forEach(e => {
+    const onPath = e.dataset.from === id || e.dataset.to === id;
+    e.classList.toggle('highlighted', onPath);
+    e.classList.toggle('dimmed', !onPath);
   });
 }
 
 function clearHighlight() {
-  document.querySelectorAll('.node-rect, .node-label, .node-sub, .edge').forEach(el => {
-    el.classList.remove('highlighted', 'dimmed');
-  });
+  document.querySelectorAll('.node-group').forEach(g => g.classList.remove('dimmed'));
+  document.querySelectorAll('.node-rect').forEach(r => r.classList.remove('highlighted', 'selected'));
+  document.querySelectorAll('.edge').forEach(e => e.classList.remove('highlighted', 'dimmed'));
 }
+
+const WAVE_LABEL = { preWave1:'Pre-Wave 1', wave1:'Wave 1', wave2:'Wave 2', wave3:'Wave 3+' };
 
 function selectNode(id) {
   const n = NODES[id];
   if (!n) return;
-  const conn = getConnected(id);
+  selectedId = id;
+  highlight(id, true);
 
+  const conn = getConnected(id);
   const tags = [];
-  tags.push(`<span class="tag tag-${n.wave === 'preWave1' ? 'prewave' : n.wave}">${{preWave1:'Pre-Wave 1', wave1:'Wave 1', wave2:'Wave 2', wave3:'Wave 3+'}[n.wave]}</span>`);
+  tags.push(`<span class="tag tag-${n.wave === 'preWave1' ? 'prewave' : n.wave}">${WAVE_LABEL[n.wave]}</span>`);
   if (n.region && n.region !== 'pre') tags.push(`<span class="tag tag-${n.region}">${n.region.charAt(0).toUpperCase() + n.region.slice(1)}</span>`);
   if (n.boss) tags.push(`<span class="tag tag-boss">★ Boss</span>`);
   if (n.critical) tags.push(`<span class="tag tag-critical">Critical path</span>`);
 
-  let upHtml = conn.upstream.length
-    ? '<ul class="link-list">' + conn.upstream.map(uid => `<li><a data-link="${uid}">↑ ${NODES[uid].label} — ${NODES[uid].sub}</a></li>`).join('') + '</ul>'
-    : '<p style="color:var(--light); font-style:italic; font-size:12px">— root node, no dependencies —</p>';
-  let downHtml = conn.downstream.length
-    ? '<ul class="link-list">' + conn.downstream.map(did => `<li><a data-link="${did}">↓ ${NODES[did].label} — ${NODES[did].sub}</a></li>`).join('') + '</ul>'
-    : '<p style="color:var(--light); font-style:italic; font-size:12px">— leaf node, unlocks nothing further in this tree —</p>';
+  const upHtml = conn.up.length
+    ? `<ul class="link-list">${conn.up.map(uid => `<li><button class="link-pill" data-link="${uid}"><span class="arrow">↑</span><span>${NODES[uid].label}</span><span class="role">— ${NODES[uid].sub}</span></button></li>`).join('')}</ul>`
+    : `<p class="empty">— root node, no dependencies —</p>`;
+  const downHtml = conn.down.length
+    ? `<ul class="link-list">${conn.down.map(did => `<li><button class="link-pill" data-link="${did}"><span class="arrow">↓</span><span>${NODES[did].label}</span><span class="role">— ${NODES[did].sub}</span></button></li>`).join('')}</ul>`
+    : `<p class="empty">— leaf node, nothing further in this tree —</p>`;
 
-  const detail = document.getElementById('detail');
-  detail.innerHTML = `
+  document.getElementById('detailBody').innerHTML = `
     <h2>${n.label} — ${n.sub}</h2>
     <div class="tag-row">${tags.join(' ')}</div>
-    <section>
-      <h3>Status</h3>
-      <p>${n.status}</p>
-    </section>
-    <section>
-      <h3>Description</h3>
-      <p>${n.description}</p>
-    </section>
+    <section><h3>Status</h3><p>${n.status}</p></section>
+    <section><h3>Description</h3><p>${n.description}</p></section>
     ${n.composes ? `<section><h3>Composes</h3><p>${n.composes}</p></section>` : ''}
-    ${n.files ? `<section><h3>Files touched</h3><p><span class="files">${n.files}</span></p></section>` : ''}
-    ${n.cipherGates ? `<section><h3>Cipher gates / locks</h3><p>${n.cipherGates}</p></section>` : ''}
-    <section>
-      <h3>Depends on (upstream)</h3>
-      ${upHtml}
-    </section>
-    <section>
-      <h3>Unlocks (downstream)</h3>
-      ${downHtml}
-    </section>
+    ${n.files    ? `<section><h3>Files touched</h3><span class="files">${n.files}</span></section>` : ''}
+    ${n.cipherGates ? `<section class="cipher-gate"><h3>Cipher gate / lock</h3><p>${n.cipherGates}</p></section>` : ''}
+    <section><h3>Depends on (upstream)</h3>${upHtml}</section>
+    <section><h3>Unlocks (downstream)</h3>${downHtml}</section>
   `;
 
-  /* Wire up jump links */
-  detail.querySelectorAll('a[data-link]').forEach(a => {
-    a.addEventListener('click', () => {
-      const tid = a.dataset.link;
-      selectNode(tid);
-      highlightNode(tid);
-      setTimeout(clearHighlight, 1800);
-    });
+  document.getElementById('detailBody').querySelectorAll('.link-pill').forEach(b => {
+    b.addEventListener('click', () => selectNode(b.dataset.link));
   });
 
-  /* Highlight the selected node */
-  clearHighlight();
-  highlightNode(id);
-  setTimeout(() => {
-    /* keep persistent highlight on selected by NOT clearing */
-  }, 0);
+  openSheet();
 }
 
-/* Filter buttons */
+/* Detail sheet open/close */
+const sheet = document.getElementById('detailSheet');
+const backdrop = document.getElementById('detailBackdrop');
+function openSheet() { sheet.classList.add('open'); backdrop.classList.add('open'); }
+function closeSheet() {
+  sheet.classList.remove('open');
+  backdrop.classList.remove('open');
+  selectedId = null;
+  clearHighlight();
+  applyFilter(currentFilter);  // re-apply any active filter
+}
+document.getElementById('detailClose').addEventListener('click', closeSheet);
+backdrop.addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && selectedId) closeSheet(); });
+
+/* Filters */
 const FILTERS = {
   'all':       () => true,
   'wave1':     n => n.wave === 'wave1' || n.wave === 'preWave1',
-  'wave1+2':   n => n.wave === 'wave1' || n.wave === 'wave2' || n.wave === 'preWave1',
+  'wave1+2':   n => n.wave !== 'wave3',
   'wave3':     n => n.wave === 'wave3',
   'critical':  n => n.critical === true,
   'boss':      n => n.boss === true,
@@ -860,33 +1112,104 @@ const FILTERS = {
   'care':      n => n.region === 'care',
   'surface':   n => n.region === 'surface',
 };
+let currentFilter = 'all';
 
 function applyFilter(filter) {
-  const pred = FILTERS[filter] || FILTERS['all'];
-  document.querySelectorAll('.node-rect').forEach(el => {
-    const id = el.parentNode.dataset.id;
-    const matches = pred(NODES[id]);
-    el.classList.toggle('dimmed', !matches);
+  currentFilter = filter;
+  const pred = FILTERS[filter] || FILTERS.all;
+  document.querySelectorAll('.node-group').forEach(g => {
+    const id = g.dataset.id;
+    g.classList.toggle('dimmed', !pred(NODES[id]));
   });
-  document.querySelectorAll('.node-label, .node-sub').forEach(el => {
-    const id = el.parentNode.dataset.id;
-    const matches = pred(NODES[id]);
-    el.classList.toggle('dimmed', !matches);
-  });
-  document.querySelectorAll('.edge').forEach(el => {
-    const fromOk = pred(NODES[el.dataset.from]);
-    const toOk = pred(NODES[el.dataset.to]);
-    el.classList.toggle('dimmed', !(fromOk && toOk));
+  document.querySelectorAll('.edge').forEach(e => {
+    const fromOk = pred(NODES[e.dataset.from]);
+    const toOk = pred(NODES[e.dataset.to]);
+    e.classList.toggle('dimmed', !(fromOk && toOk));
   });
 }
 
-document.querySelectorAll('.filter-btn').forEach(btn => {
+document.querySelectorAll('.chip').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     applyFilter(btn.dataset.filter);
+    if (selectedId) highlight(selectedId, true);  // restore selection emphasis
   });
 });
+
+/* Legend toggle */
+const legendContent = document.getElementById('legendContent');
+document.getElementById('legendToggle').addEventListener('click', () => {
+  legendContent.classList.toggle('open');
+});
+
+/* Pan + zoom on the SVG via transform */
+let viewState = { tx: 0, ty: 0, scale: 1 };
+function applyView() {
+  root.setAttribute('transform', `translate(${viewState.tx}, ${viewState.ty}) scale(${viewState.scale})`);
+}
+function zoomBy(factor, center) {
+  /* Zoom around a center point (in SVG coords). If no center given, use viewBox center. */
+  const c = center || { x: 550, y: 630 };
+  const oldScale = viewState.scale;
+  let newScale = Math.max(0.4, Math.min(3.5, oldScale * factor));
+  if (newScale === oldScale) return;
+  /* Adjust translate so the center point stays under the cursor */
+  viewState.tx = c.x - (c.x - viewState.tx) * (newScale / oldScale);
+  viewState.ty = c.y - (c.y - viewState.ty) * (newScale / oldScale);
+  viewState.scale = newScale;
+  applyView();
+}
+document.getElementById('zoomIn').addEventListener('click', () => zoomBy(1.25));
+document.getElementById('zoomOut').addEventListener('click', () => zoomBy(0.8));
+document.getElementById('zoomReset').addEventListener('click', () => {
+  viewState = { tx: 0, ty: 0, scale: 1 };
+  applyView();
+});
+
+/* Wheel zoom (desktop) */
+svg.addEventListener('wheel', e => {
+  if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaY) < 30) return;  /* let normal scroll happen */
+  e.preventDefault();
+  const rect = svg.getBoundingClientRect();
+  const vbWidth = 1100, vbHeight = 1260;
+  const scaleX = vbWidth / rect.width, scaleY = vbHeight / rect.height;
+  const svgX = (e.clientX - rect.left) * scaleX;
+  const svgY = (e.clientY - rect.top) * scaleY;
+  zoomBy(e.deltaY < 0 ? 1.15 : 0.87, { x: svgX, y: svgY });
+}, { passive: false });
+
+/* Touch + mouse drag pan */
+let dragState = null;
+svg.addEventListener('pointerdown', e => {
+  /* Don't pan if pointerdown started on a node */
+  const node = e.target.closest('.node-group');
+  if (node) return;
+  dragState = { startX: e.clientX, startY: e.clientY, originTx: viewState.tx, originTy: viewState.ty };
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', e => {
+  if (!dragState) return;
+  const rect = svg.getBoundingClientRect();
+  const scaleX = 1100 / rect.width;
+  const scaleY = 1260 / rect.height;
+  viewState.tx = dragState.originTx + (e.clientX - dragState.startX) * scaleX;
+  viewState.ty = dragState.originTy + (e.clientY - dragState.startY) * scaleY;
+  applyView();
+});
+svg.addEventListener('pointerup', e => {
+  dragState = null;
+  try { svg.releasePointerCapture(e.pointerId); } catch(_) {}
+});
+svg.addEventListener('pointercancel', () => { dragState = null; });
+
+/* Click empty SVG to clear selection */
+svg.addEventListener('click', e => {
+  if (e.target === svg || e.target.classList.contains('layer-band')) {
+    if (selectedId) closeSheet();
+  }
+});
+
 </script>
 </body>
 </html>
