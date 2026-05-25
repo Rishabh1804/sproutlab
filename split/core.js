@@ -1001,6 +1001,12 @@ function init() {
       _tsfShowAll = true;
       renderTodaySoFar();
     }
+    else if (action === 'tsfExpandTimeline') {
+      // v3-5 spine collapse: open the full chronological list below the
+      // story-arc summary. Resets on tab-switch (see switchTab).
+      _tsfShowSpine = false;
+      renderTodaySoFar();
+    }
     else if (action === 'tsfNudgeTap') {
       // arg = pattern key, arg2 = meal type, arg3 = med name
       if (arg && arg.startsWith('med-') && arg3) {
@@ -3316,6 +3322,7 @@ function switchTab(name) {
   _clearModifierCache();
   _tsfExpandedId = null;
   _tsfShowAll = false;
+  _tsfShowSpine = true;
   // Redirect domain tabs to Track tab
   if (TRACK_SUB_ORDER.includes(name)) {
     const sub = name;

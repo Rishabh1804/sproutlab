@@ -47,6 +47,16 @@ if ! bash audit-hr12-v3-3.sh >&2; then
   echo "BUILD ABORTED: v3-3 HR-12 cipher-4 audit failed. Annotate or refactor." >&2
   exit 1
 fi
+# v3-5 Charter Extensibility ship-gate: audit-chip-taxonomy-v3-5.sh blocks
+# ad-hoc tsf-event-{state} class strings outside the canonical registry
+# (split/styles.css). Spec: docs/specs/v3-5-chip-taxonomy-tsf-story.md
+# §Cross-surface adoption (build-time audit gate row). Charter CV3-006
+# extensibility axis: data-state attribute is the single source of truth;
+# class-bag drift is what the Charter explicitly rules out.
+if ! bash audit-chip-taxonomy-v3-5.sh >&2; then
+  echo "BUILD ABORTED: v3-5 chip-taxonomy audit failed. Migrate to data-state or annotate." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
