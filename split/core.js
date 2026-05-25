@@ -187,7 +187,14 @@ function _refreshTodayMedWithFat() {
     if (!parsed) return;
     if (parsed.status !== 'done' && parsed.status !== 'late') return;
     if (!parsed.givenAt) return;
-    if (parsed.withFat !== false) return; // only redetect when previously negative
+    // T2-B.1 (Phase 2-B) extension of CR-14: redetect for any non-true prior observation,
+    // not just === false. The three-state schema introduced by T2-B.1 at markMedDone writes
+    // withFat:null when no meals were logged at dose-time (an "unknown" state, not a
+    // "negative" state). The same self-resolving contract applies — the parent's later meal
+    // save should flip null → true the same way it flips false → true. Also closes a small
+    // legacy-record gap: pre-CR-10 strings parse to withFat:null and were never redetected;
+    // post-fix they flip to true on the first qualifying meal save like any other record.
+    if (parsed.withFat === true) return; // already positive — never erase a real observation
     var fresh = _detectFatContextNearTime(parsed.givenAt, t);
     if (fresh.withFat === true) {
       // Preserve the rest of the object; only update the fat fields.

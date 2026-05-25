@@ -334,17 +334,20 @@ test('regression-guard-d3-skipped-surface-renders: skipped state renders an expl
     // Force a re-render
     renderRemindersAndAlerts();
     const html = window._remindersHTML || '';
+    // T2-B.4 (Phase 2-B): _obCheckVitD3 renamed to _obCheckVitD3Needed(intent). The
+    // home-overlay invocation pattern uses 'overlay' intent which preserves the original
+    // V-M-67/74 "skip counts as resolved" doctrine.
     return {
       hasSkippedCard: html.indexOf('supp-alert-skipped') >= 0,
       hasUndoButton: html.indexOf('Undo skip') >= 0,
-      obCheck: _obCheckVitD3(),
+      obCheck: _obCheckVitD3Needed('overlay'),
       storedShape: typeof medChecks[today()][d3.name],
     };
   });
 
   expect(r.hasSkippedCard, 'isSkipped state must render its own card').toBe(true);
   expect(r.hasUndoButton, 'skipped card must surface an Undo affordance').toBe(true);
-  expect(r.obCheck, '_obCheckVitD3 must treat skip as resolved (false = no attention needed)').toBe(false);
+  expect(r.obCheck, '_obCheckVitD3Needed(overlay) must treat skip as resolved (false = no attention needed)').toBe(false);
   expect(r.storedShape, 'markMedSkipped must now emit object schema').toBe('object');
 });
 
@@ -504,7 +507,12 @@ test('regression-guard-d3-snapshot-fat-refresh: logging a fat-meal AFTER the dos
     };
   });
 
-  expect(r.beforeWithFat, 'dose logged before meal must initially be withFat:false').toBe(false);
+  // T2-B.1 (Phase 2-B): markMedDone with feedingData[t] empty (no meals AT ALL logged today)
+  // now writes withFat:null instead of withFat:false — "unknown" not "negative." The refresh
+  // helper at _refreshTodayMedWithFat redetects on `withFat !== true` post-T2-B.1 so the
+  // null state self-resolves to true the same way false used to. Accept either negative
+  // start state; what matters is the flip to true after the meal save.
+  expect(r.beforeWithFat, 'dose logged before any meal must initially be a non-true observation (null or false)').not.toBe(true);
   expect(r.afterWithFat, 'after the meal is logged, refresh must flip withFat to true').toBe(true);
   expect(r.afterFood).toBe('ghee');
 });
