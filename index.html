@@ -17182,6 +17182,12 @@ function parseMedCheck(val) {
   // V-K-72: arrays are typeof 'object' but not med-check shapes — reject explicitly.
   if (Array.isArray(val)) return null;
   if (typeof val === 'object') {
+    // T1-6 (v2): the `cleared` sentinel is an audit-only record produced by undoMedSkip
+    // — every active-state reader should see the slot as pending. The raw priorStatus /
+    // priorLoggedAt / clearedAt fields persist on medChecks[date][name] for future audit
+    // tooling, but parseMedCheck returns null so existing readers (TSF, ISL, pattern card,
+    // Q&A, reminder card) treat it as no-record.
+    if (val.status === 'cleared') return null;
     return {
       status:   val.status || null,
       givenAt:  val.givenAt || null,
@@ -17304,6 +17310,12 @@ function _refreshTodayMedWithFat() {
     save(KEYS.medChecks, medChecks);
     if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
     if (typeof _islMarkDirty === 'function') _islMarkDirty('medical');
+    // T1-4 (V-V-13 advisory): the helper mutates medChecks AND dirties caches but used
+    // to leave visible badges stale. Trigger the render surfaces that consume withFat
+    // so a parent on home or medical sees the flipped state without re-navigating.
+    if (typeof renderRemindersAndAlerts === 'function') renderRemindersAndAlerts();
+    if (typeof renderHomeContextAlerts === 'function') renderHomeContextAlerts();
+    if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard();
   }
   return mutated;
 }
@@ -20495,7 +20507,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') { renderMilestoneStats(); renderMilestoneHighlights(); }
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -23843,20 +23855,47 @@ function cancelMedDoneAt(idx) {
   renderHomeContextAlerts();
 }
 
-// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). The skip's
-// loggedAt audit trail is dropped — acceptable because the parent's post-Undo intent is
-// "I want to log the dose properly now," not "preserve the misclick." Re-renders so the
-// parent sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
+// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). T1-6 (v2):
+// the skip's loggedAt audit trail is now preserved via a `cleared` sentinel so a future
+// audit or Q&A surface can reconstruct the skip → undo → done sequence. parseMedCheck
+// returns null for cleared, so every existing reader treats it as pending — the parent
+// still sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
 function undoMedSkip(name, idx) {
   const todayStr = today();
-  if (medChecks[todayStr] && medChecks[todayStr][name] !== undefined) {
-    delete medChecks[todayStr][name];
+  const existing = medChecks[todayStr] && medChecks[todayStr][name];
+  if (existing !== undefined) {
+    const parsedExisting = parseMedCheck(existing);
+    if (parsedExisting && parsedExisting.status === 'skipped') {
+      const now = new Date();
+      const clearedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      medChecks[todayStr][name] = {
+        status:        'cleared',
+        givenAt:       null,
+        loggedAt:      null,
+        withFat:       null,
+        fatFood:       null,
+        fatDelta:      null,
+        priorStatus:   'skipped',
+        priorLoggedAt: parsedExisting.loggedAt || null,
+        clearedAt:     clearedAt,
+      };
+    } else {
+      delete medChecks[todayStr][name];
+    }
     save(KEYS.medChecks, medChecks);
     _tsfMarkDirty();
     _islMarkDirty('medical');
   }
+  // V-K-95 (synth-fold): Firestore single-doc merge preserves the cleared sentinel's
+  // priorStatus / priorLoggedAt / clearedAt fields across devices. A two-device simultaneous-undo
+  // race resolves last-write-wins on the slot — only one clearedAt survives. Acceptable in v2
+  // (both writers had the same intent); a future audit consumer should not assume singular history.
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
+  // Kael pair-note synth: same-device same-tab undo on the medical tab should refresh the
+  // 14-day pattern card grid without waiting for a sync echo or tab re-switch. Mirrors the
+  // T1-4 contract that mutating writes also re-render their dependent surfaces.
+  if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard();
 }
 
 // Adjust the administration time of an already-logged dose. Re-runs with-fat
@@ -23870,14 +23909,20 @@ function adjustMedTime(name, idx, newTime) {
   if (!existing || existing.status === 'skipped') return;
   const fat = _detectFatContextNearTime(newTime, todayStr);
   const now = new Date();
+  // T1-1 (CR-14 extension): never erase a positive withFat observation via Adjust.
+  // If the prior record had withFat:true and re-detection at the new time returns
+  // false, the parent's earlier observation is the source of truth — they may have
+  // edited the meal text after the fact, or the new time happens to fall outside
+  // the ±60min window even though the original pairing was real.
+  const preserveWithFat = (existing.withFat === true && fat.withFat === false);
   // V-M-65: canonical 24h storage (en-GB).
   medChecks[todayStr][name] = {
     status:   existing.status,
     givenAt:  newTime,
     loggedAt: existing.loggedAt || now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
-    withFat:  fat.withFat,
-    fatFood:  fat.fatFood,
-    fatDelta: fat.fatDelta,
+    withFat:  preserveWithFat ? true              : fat.withFat,
+    fatFood:  preserveWithFat ? existing.fatFood  : fat.fatFood,
+    fatDelta: preserveWithFat ? existing.fatDelta : fat.fatDelta,
   };
   save(KEYS.medChecks, medChecks);
   _tsfMarkDirty();
@@ -29490,7 +29535,7 @@ function renderHistoryPreviews() {
         medPrev.innerHTML = `<div class="info-strip is-sky">
           <span><svg class="zi"><use href="#zi-pill"/></svg></span>
           <div><strong class="tc-sky">${todayDone.length}/${activeMeds.length} given today</strong>
-          <div class="t-sub">Pending: ${activeMeds.filter(m => !todayChecks[m.name]).map(m => m.name).join(', ') || 'None'}</div></div>
+          <div class="t-sub">Pending: ${activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).map(m => escHtml(m.name)).join(', ') || 'None'}</div></div>
         </div>`;
       } else {
         medPrev.innerHTML = `<div class="info-strip is-neutral">
@@ -39137,7 +39182,11 @@ function orderMedicalCards() {
   const todayKey = today();
   const activeMeds = meds.filter(m => m.active);
   const todayChecks = medChecks[todayKey] || {};
-  const medsPending = activeMeds.filter(m => !todayChecks[m.name]).length;
+  // T1-6 / T3-14: schema-aware pending check. Raw truthy missed (a) corrupted partial-write
+  // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
+  // truthy object in the slot but neither is a done dose. Use the same parsed semantics every
+  // other medChecks reader does.
+  const medsPending = activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).length;
 
   // Build ordered list: stats always first, then priority cards
   const cards = [];
@@ -48337,7 +48386,7 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Medical highlights — D3 adherence
   if (md.suppTotal > 0) {
     if (md.suppDays > 0) {
-      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + md.d3Times[0] : ''), signal: 'good' });
+      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + _formatTime12h(md.d3Times[0]) : ''), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
     } else {
       concerns.push({ domain: 'medical', text: 'Vit D3 missed', signal: 'warn' });
     }
@@ -58854,7 +58903,16 @@ function _tsfCollectEvents() {
     };
     if (timeMin !== null) {
       events.push(ev);
-    } else if (parsed.status !== 'skipped') {
+    } else if (parsed.status === 'skipped' && parsed.loggedAt) {
+      // T1-3: skipped doses are CR-10 audit-bearing events. The pre-fix filter dropped
+      // them entirely (timeMin null AND status === 'skipped' hit neither push branch).
+      // Surface them in the chronological timeline at loggedAt — the day's record is
+      // honest, and a half-awake parent scanning TSF sees the skip in temporal context.
+      ev.timeMin = _tsfTimeToMinutes(parsed.loggedAt);
+      ev.time = parsed.loggedAt;
+      ev.displayTime = _tsfFormatTime(parsed.loggedAt);
+      events.push(ev);
+    } else {
       noTimeEvents.push(ev);
     }
   });
@@ -66506,7 +66564,7 @@ const SYNC_RENDER_DEPS = {
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
   [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
   [KEYS.doctors]:           { global: 'doctors',     renderers: { 'track:medical': ['renderDoctorPrep'] } },
-  [KEYS.medChecks]:         { global: 'medChecks',   renderers: { 'track:medical': ['renderMedicalStats'] } },
+  [KEYS.medChecks]:         { global: 'medChecks',   renderers: { 'track:medical': ['renderMedicalStats', 'renderMedD3PatternCard'] } }, // T1-2: pattern card joins the sync push render list so it live-updates when device A's Done propagates to device B
   [KEYS.feverEpisodes]:     { global: null, renderers: { home: ['renderHomeFeverBanner'],     'track:medical': ['renderFeverEpisodeCard'] } },
   [KEYS.diarrhoeaEpisodes]: { global: null, renderers: { home: ['renderHomeDiarrhoeaBanner'], 'track:medical': ['renderDiarrhoeaEpisodeCard'] } },
   [KEYS.vomitingEpisodes]:  { global: null, renderers: { home: ['renderHomeVomitingBanner'],  'track:medical': ['renderVomitingEpisodeCard'] } },

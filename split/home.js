@@ -989,20 +989,47 @@ function cancelMedDoneAt(idx) {
   renderHomeContextAlerts();
 }
 
-// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). The skip's
-// loggedAt audit trail is dropped — acceptable because the parent's post-Undo intent is
-// "I want to log the dose properly now," not "preserve the misclick." Re-renders so the
-// parent sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
+// V-M-68 + V-M-73: revert a skip back to PENDING (not to "Done at tap-time"). T1-6 (v2):
+// the skip's loggedAt audit trail is now preserved via a `cleared` sentinel so a future
+// audit or Q&A surface can reconstruct the skip → undo → done sequence. parseMedCheck
+// returns null for cleared, so every existing reader treats it as pending — the parent
+// still sees the original [Done now] [Done at...] [Skip] choice without a fabricated time.
 function undoMedSkip(name, idx) {
   const todayStr = today();
-  if (medChecks[todayStr] && medChecks[todayStr][name] !== undefined) {
-    delete medChecks[todayStr][name];
+  const existing = medChecks[todayStr] && medChecks[todayStr][name];
+  if (existing !== undefined) {
+    const parsedExisting = parseMedCheck(existing);
+    if (parsedExisting && parsedExisting.status === 'skipped') {
+      const now = new Date();
+      const clearedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      medChecks[todayStr][name] = {
+        status:        'cleared',
+        givenAt:       null,
+        loggedAt:      null,
+        withFat:       null,
+        fatFood:       null,
+        fatDelta:      null,
+        priorStatus:   'skipped',
+        priorLoggedAt: parsedExisting.loggedAt || null,
+        clearedAt:     clearedAt,
+      };
+    } else {
+      delete medChecks[todayStr][name];
+    }
     save(KEYS.medChecks, medChecks);
     _tsfMarkDirty();
     _islMarkDirty('medical');
   }
+  // V-K-95 (synth-fold): Firestore single-doc merge preserves the cleared sentinel's
+  // priorStatus / priorLoggedAt / clearedAt fields across devices. A two-device simultaneous-undo
+  // race resolves last-write-wins on the slot — only one clearedAt survives. Acceptable in v2
+  // (both writers had the same intent); a future audit consumer should not assume singular history.
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
+  // Kael pair-note synth: same-device same-tab undo on the medical tab should refresh the
+  // 14-day pattern card grid without waiting for a sync echo or tab re-switch. Mirrors the
+  // T1-4 contract that mutating writes also re-render their dependent surfaces.
+  if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard();
 }
 
 // Adjust the administration time of an already-logged dose. Re-runs with-fat
@@ -1016,14 +1043,20 @@ function adjustMedTime(name, idx, newTime) {
   if (!existing || existing.status === 'skipped') return;
   const fat = _detectFatContextNearTime(newTime, todayStr);
   const now = new Date();
+  // T1-1 (CR-14 extension): never erase a positive withFat observation via Adjust.
+  // If the prior record had withFat:true and re-detection at the new time returns
+  // false, the parent's earlier observation is the source of truth — they may have
+  // edited the meal text after the fact, or the new time happens to fall outside
+  // the ±60min window even though the original pairing was real.
+  const preserveWithFat = (existing.withFat === true && fat.withFat === false);
   // V-M-65: canonical 24h storage (en-GB).
   medChecks[todayStr][name] = {
     status:   existing.status,
     givenAt:  newTime,
     loggedAt: existing.loggedAt || now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
-    withFat:  fat.withFat,
-    fatFood:  fat.fatFood,
-    fatDelta: fat.fatDelta,
+    withFat:  preserveWithFat ? true              : fat.withFat,
+    fatFood:  preserveWithFat ? existing.fatFood  : fat.fatFood,
+    fatDelta: preserveWithFat ? existing.fatDelta : fat.fatDelta,
   };
   save(KEYS.medChecks, medChecks);
   _tsfMarkDirty();
@@ -6636,7 +6669,7 @@ function renderHistoryPreviews() {
         medPrev.innerHTML = `<div class="info-strip is-sky">
           <span><svg class="zi"><use href="#zi-pill"/></svg></span>
           <div><strong class="tc-sky">${todayDone.length}/${activeMeds.length} given today</strong>
-          <div class="t-sub">Pending: ${activeMeds.filter(m => !todayChecks[m.name]).map(m => m.name).join(', ') || 'None'}</div></div>
+          <div class="t-sub">Pending: ${activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).map(m => escHtml(m.name)).join(', ') || 'None'}</div></div>
         </div>`;
       } else {
         medPrev.innerHTML = `<div class="info-strip is-neutral">
