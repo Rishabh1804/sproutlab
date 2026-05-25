@@ -19,7 +19,7 @@ Replace the parent-decided sleep classification with an engine-derived three-cla
 
 1. **Fewer parent decisions at log-time.** Parent enters factual inputs only — `bedtime`, `wakeTime`, `location` (+ optional `wakeUps`, `quality`, `notes`). The engine derives `class` and `dayAttribution`.
 2. **Location as a first-class dimension.** `bed | sofa | contact | others-with-comment`. Contact is its own developmental category; bed and sofa are independent-of-caregiver; sofa's quality concern routes through scoring, not classification.
-3. **Surface-quality scoring layer.** Location feeds into the score primitive — bed and contact carry positive scoring weight; sofa, car, and "others" carry negative weight. Class-combinations involving a nap get a positive rating (more sleep is better for infants/toddlers per Architect doctrine).
+3. **Surface-quality scoring layer.** Class itself contributes per-record (all three classes positive — "more sleep is better"); location quality drives a per-record multiplier (bed neutral; sofa, car, others negative with variable range); day-level **contact-combination bonus** fires when a day has a contact-class record alongside a night-class OR nap-class record.
 
 ## What Sleep Redesign v1 is NOT
 
@@ -166,32 +166,51 @@ Threshold rationale (300 minutes / 05:00): the live data shows the bug case at b
 
 ## Surface-quality scoring (Arc 3)
 
-Architect-ratified contract (this session):
-- **Class combinations involving `nap` get a positive rating.** More sleep is better for infants/toddlers. The scoring engine sums sleep contributions; a `nap` record adds positively regardless of duration.
-- **Location quality drives a multiplier.** Bed and contact carry positive scoring weight (structured / developmentally-valuable). Sofa and "others" (car, stroller, etc.) carry negative scoring weight (suboptimal surface).
-- Sleep surface quality affects scoring directly — `quality` and `wakeUps` fields contribute as auxiliary signals.
+Architect-ratified contract (this session, with correction):
+- **Class itself contributes to score.** `night`, `nap`, and `contact` each have a per-record baseline contribution. All three are positive — "more sleep is better for infants/toddlers."
+- **Day-level combinations *with contact* get a positive bonus.** A day containing a `contact`-class record alongside a `night`-class OR `nap`-class record gets a `contact-combination` day-level bonus. Reflects the developmental value of contact-sleep complementing structured sleep — `nap + contact` or `night + contact` together signal a richer day than either alone. (Architect ratification this session, correction to v0 draft: "it's not in combination of nap, it should have been in combination with contact. so nap+contact or sleep+contact gets a score +ve.")
+- **Location quality drives a variable-range multiplier.** Bed is neutral baseline. Sofa, car, and "others" carry **negative**, variable-range weights — sofa is the mildest penalty (still indoors, semi-structured), car is heavier (vibration, restraint, often awkward posture), "others" defaults to a mid-range penalty and may be refined by the `locationNote` at future arcs. Contact is captured by class itself (not double-counted as location).
+- **Quality + wakeUps as auxiliary signals.** `quality` and `wakeUps` apply multiplicatively per record.
 
-**Concrete scoring contract (Arc 3 implements; values illustrative, ratified at Arc 3 implementation):**
+**Class baseline contributions (per record):**
 
-| Class | Location | Score weight |
+| Class | Baseline |
+|---|---|
+| night | +1.0 |
+| contact | +0.8 (developmental value; close to night) |
+| nap | +0.7 |
+
+**Location quality multipliers (per record):**
+
+| Location | Multiplier | Rationale |
 |---|---|---|
-| night | bed | +1.0 (baseline) |
-| night | contact | +0.9 (close-second; structured but not independent) |
-| night | sofa | +0.4 (penalty; suboptimal surface) |
-| night | others | +0.4 (assumed sofa-equivalent) |
-| nap | bed | +0.7 |
-| nap | contact | +0.8 (contact-nap is developmentally-valuable) |
-| nap | sofa | +0.3 |
-| nap | others | +0.3 |
-| contact | (n/a — class IS location) | +0.8 |
+| bed | ×1.0 (neutral baseline) | Structured, intended sleep surface |
+| sofa | ×0.7 (mild penalty) | Indoor, semi-structured; not the intended sleep surface |
+| car | ×0.5 (heavier penalty) | Vibration, restraint, awkward posture; episodic-only |
+| others | ×0.6 (default mid-penalty) | Comment-readable; engine treats as worse-than-sofa, better-than-car default |
 
-**Class-combination-with-nap bonus:** if a day's sleepData contains at least one `nap` AND at least one `night` record, add a small day-level bonus to the day's sleep score (e.g. +0.1). Reflects the "more sleep is better" doctrine — a day with both structured night sleep AND daytime naps is better than night-only.
+Note: when `class === 'contact'` the location is implicitly contact (the class IS the location); the location multiplier doesn't apply — class baseline carries the full weight.
 
-**Quality + wakeUps as auxiliary signals:**
-- `quality === 'good'` → multiplier ×1.1; `'fair'` → ×1.0; `'poor'` → ×0.85
-- `wakeUps >= 5` on a night-class record → multiplier ×0.85 (signals disrupted sleep)
+**Day-level contact-combination bonus:**
 
-Arc 3 spec ratifies the exact numbers; this spec body locks the *shape* of the scoring contract.
+```
+day_score = sum(record.classBaseline × record.locationMultiplier × auxiliaryMultipliers)
+          + contactCombinationBonus(day)
+
+contactCombinationBonus(day):
+  hasContact = day records include any class === 'contact'
+  hasStructured = day records include any class === 'night' OR class === 'nap'
+  return (hasContact AND hasStructured) ? +0.2 : 0.0
+```
+
+The bonus is day-level (not per-record) and fires once per qualifying day regardless of how many contact records are present.
+
+**Auxiliary multipliers (per record):**
+- `quality === 'good'` → ×1.1; `'fair'` → ×1.0; `'poor'` → ×0.85; `null` → ×1.0
+- `wakeUps >= 5` on a `night`-class record → ×0.85 (signals disrupted night sleep)
+- `wakeUps` on `nap` / `contact` records is meaningful but doesn't apply this multiplier (different developmental signal)
+
+Arc 3 spec ratifies the exact numbers and may refine the variable-range location penalties (the "variable" framing leaves room — sofa could be ×0.6–0.8 depending on what the live data shows; car could be ×0.4–0.6 etc.). This spec body locks the **shape** of the scoring contract: class baseline × location multiplier × auxiliary multipliers, plus a day-level contact-combination bonus.
 
 ---
 
