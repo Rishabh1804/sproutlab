@@ -242,6 +242,32 @@ settle:
 Until those are settled, Companion invocation is Claude-Code-only. On another
 harness, AGENTS.md's plain rules apply — without the Companion roster.
 
+## 9-bis. Session-end ritual — progression tree refresh
+
+**Architect-ratified doctrine** (2026-05-25): at the end of every session, Lyra refreshes `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` to reflect the current state of every node on the v3.0 progression DAG. The tree is the canonical "where are we" surface for the multi-session arc work; if it lags reality, future sessions open with a stale picture and burn context catching up.
+
+**What "refresh" means at minimum:**
+
+- **Node status updates** — every node whose status changed during the session moves to the right state: `ratified` (whole arc merged) / `in-flight` (PR open) / `drafted` (spec ratified, impl PR pending) / `forward-planning` (no spec). Reference the merge SHA in the node `description` for the audit trail.
+- **New PRs surfaced** — any new arc PR opened in the session gets reflected on its corresponding tree node (`description` cites the PR number).
+- **Charter / canon entries** — if a new CV-numbered canon entry landed (CV3-NNN), the header `meta` line cites it as "governed by `CV3-NNN`" so the doctrine context follows the tree.
+- **Header date** — the "last refresh" timestamp in the header advances to the session date.
+
+**What "refresh" does NOT mean:**
+
+- Layout overhaul. The DAG positions are stable; node x/y coordinates change only when a new node lands or a node retires.
+- Re-running the canon-cc-008 chain on the tree HTML itself. The tree is a chronicling artifact, not a Capital change; chain waived per docs-only branch.
+
+**Where the refresh lands:**
+
+- Sometimes its own PR (titled `tree-update: session YYYY-MM-DD`)
+- Sometimes folded into a session-end handoff doc PR
+- Sometimes folded into the last arc PR of the session (when the arc itself drives the status changes)
+
+**Process discipline:** the refresh is *not* optional. A session that closes without the tree refresh leaves the next session with a stale view of the gate. Future-Lyra should flag this if they open a session and the tree's `last refresh` date is behind `git log -1 origin/main`.
+
+The HTML is data-driven — refreshing it is editing the `NODES` constant inline, not a render rewrite. Edits typically span 5–15 lines per session.
+
 ## 10. References
 
 - CLAUDE.md — §Companion-Set Invocation Surface, §QA Chain — Mandatory Pre-Merge Gate

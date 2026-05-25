@@ -647,7 +647,7 @@ footer a { color: var(--tc-sky); }
   <header>
     <div class="hd-row">
       <h1>SproutLab v3.0 — Progression Tree</h1>
-      <div class="meta">32 nodes · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
+      <div class="meta">32 nodes · last refresh 2026-05-25 (post-#131/#132/#133) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
     </div>
   </header>
 
@@ -835,33 +835,33 @@ const GLYPHS = {
    ───────────────────────────────────────────────────────── */
 const NODES = {
   /* Layer 1 — Pre-Wave 1 (y ≈ 100) */
-  'PR-126': { x: 280, y: 90, status:'in-flight', wave:'preWave1', region:'shared', glyph:'merge', tier:1, critical:false, capstone:null,
-    label:'PR #126', sub:'D3 Phase 2-B', files:'split/home.js · split/core.js', composes:'5 Tier-2 items: markMedDone three-state, Adjust midnight rollover, future-time gate, outing-intent, preserveWithFat tightening',
-    description:'In-flight D3 Phase 2-B impl. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Awaiting Architect merge call. Establishes toast-and-abort precedent v3-1 inherits.' },
-  'PR-127': { x: 470, y: 90, status:'drafted', wave:'preWave1', region:'shared', glyph:'document', tier:1, critical:true, capstone:null,
-    label:'PR #127', sub:'Sleep spec v1', files:'docs/specs/sleep-redesign-v1.md',
+  'PR-126': { x: 280, y: 90, status:'ratified', wave:'preWave1', region:'shared', glyph:'merge', tier:1, critical:false, capstone:null,
+    label:'PR #126', sub:'D3 Phase 2-B · MERGED', files:'split/home.js · split/core.js', composes:'5 Tier-2 items: markMedDone three-state, Adjust midnight rollover, future-time gate, outing-intent, preserveWithFat tightening',
+    description:'MERGED 2026-05-25 at sha 464e5cf. D3 Phase 2-B impl shipped. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Established toast-and-abort precedent v3-1 inherits.' },
+  'PR-127': { x: 470, y: 90, status:'ratified', wave:'preWave1', region:'shared', glyph:'document', tier:1, critical:true, capstone:null,
+    label:'PR #127', sub:'Sleep spec v1 · MERGED', files:'docs/specs/sleep-redesign-v1.md',
     composes:'Classifier (night/nap/contact) + lazy normalizer + write-side UX shift + scoring wiring',
-    description:'Sleep redesign v1 spec; three arcs sequenced after food-sub-tab. Subsumes the midnight-rollover bug as a natural consequence of the dayAttribution rule. v3-3 depends on this spec ratifying.' },
-  'PR-128': { x: 660, y: 90, status:'drafted', wave:'preWave1', region:'engine', glyph:'document', tier:1, critical:true, capstone:null,
-    label:'PR #128', sub:'Scoring spec v1', files:'docs/specs/scoring-redesign-v1.md',
+    description:'MERGED 2026-05-25 at sha 1f81e09. Sleep redesign v1 spec ratified. Three impl arcs sequenced after food-sub-tab. Subsumes midnight-rollover bug as natural consequence of dayAttribution rule. v3-3 gate cleared.' },
+  'PR-128': { x: 660, y: 90, status:'ratified', wave:'preWave1', region:'engine', glyph:'document', tier:1, critical:true, capstone:null,
+    label:'PR #128', sub:'Scoring spec v1 · MERGED', files:'docs/specs/scoring-redesign-v1.md',
     composes:'RECOMMENDATION_ROSTER + _evaluateRecommendation + _scoreDay + _scoreWindow + _scoreDayHero + severity model',
-    description:'Engine primitive foundation for v3-3. Generic recommendation + scoring + severity-message + cross-domain hero score system. v3-3 cannot open until this ratifies.' },
+    description:'MERGED 2026-05-25 at sha d034f91. Scoring redesign v1 sibling spec ratified. Engine primitive foundation for v3-3. v3-3 gate cleared.' },
   'FoodST': { x: 920, y: 90, status:'in-flight', wave:'preWave1', region:'care', glyph:'bowl', tier:1, critical:false, capstone:null,
-    label:'Food Sub-Tab', sub:'separate arc, in-flight', files:'split/diet.js · split/data.js',
-    composes:'Food sub-tab UI + food-object shape (precedes v3-8 parseFeeding)',
-    description:'Separate in-flight arc per Architect sequencing. v3-8 (parseFeeding normalizer) is post-required so the new food shape is normalized at v1 design time.' },
+    label:'Food Sub-Tab', sub:'PR #133 · v0 scoping draft', files:'docs/specs/food-sub-tab-v1.md',
+    composes:'Food sub-tab UI + structured food-object shape (precedes v3-8 parseFeeding); 5 implementation phases F-1..F-5',
+    description:'PR #133 opened 2026-05-25 — v0 SCOPING DRAFT awaiting Architect ratification on 10 open scope questions. Proposes 3 sub-tabs (Log / Library / Patterns) + structured food-object shape that v3-8 parseFeeding normalizer must tolerate.' },
 
   /* Layer 2 — Wave 1 roots (y ≈ 290) */
-  'v3-5':  { x: 130, y: 280, status:'ratified', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
-    label:'v3-5', sub:'Chip Taxonomy + TSF Story', files:'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
+  'v3-5':  { x: 130, y: 280, status:'drafted', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
+    label:'v3-5', sub:'Chip Taxonomy + TSF Story · SPEC RATIFIED', files:'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
     composes:'vela-arc-1 unified chip-state taxonomy + vela-arc-2 Today So Far story-arc',
     cipherGates:'styles.css mutex 1st: must complete triple-jurisdiction round before v3-6 opens. Establishes the chip-state token vocabulary.',
-    description:'8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + the story-arc-summary primitive. First in the styles.css mutex chain. v3.0 capstone: surface-vocabulary establisher.' },
-  'v3-3':  { x: 550, y: 270, status:'ratified', wave:'wave1', region:'engine', glyph:'gear', tier:2, critical:true, capstone:'gold',
-    label:'v3-3', sub:'Engine Primitives · SPINE', files:'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js',
+    description:'SPEC RATIFIED via PR #132 (a6950f8). docs/specs/v3-5-chip-taxonomy-tsf-story.md on main. Impl PR pending. 8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + story-arc-summary primitive. First in styles.css mutex chain. v3.0 gold capstone.' },
+  'v3-3':  { x: 550, y: 270, status:'drafted', wave:'wave1', region:'engine', glyph:'gear', tier:2, critical:true, capstone:'gold',
+    label:'v3-3', sub:'Engine Primitives · SPEC RATIFIED', files:'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js',
     composes:'kael-arc-1 _correlate + kael-arc-3 ISL event-anchor + scoring-redesign-v1 _scoreDay',
-    cipherGates:'cipher-4: v3-3 spec body MUST include an HR-12 tz-construction test plan section. _resolveEventAnchor is date-arithmetic; IST/UTC day-boundary swap risk is real.',
-    description:'The highest-leverage single arc. _correlate + _resolveEventAnchor + _scoreDay/Window/Hero + getActiveIllnessPosture + getSyncPosture. v3.0 capstone: if you build only one thing, build this.' },
+    cipherGates:'cipher-4: v3-3 spec body includes HR-12 tz-construction test plan section ✓ + build-time grep gate against `new Date(` outside justified sites.',
+    description:'SPEC RATIFIED via PR #131 (ea6a583). docs/specs/v3-3-engine-spine.md on main. Impl PR pending. The highest-leverage single arc. 5 primitives: _correlate + _resolveEventAnchor + _scoreDay/Window/Hero + getActiveIllnessPosture + getSyncPosture. v3.0 gold capstone — if you build only one thing, build this.' },
   'v3-8':  { x: 920, y: 280, status:'ratified', wave:'wave1', region:'care', glyph:'spoon', tier:2, critical:false, capstone:null,
     label:'v3-8', sub:'Feeding Normalizer', files:'split/diet.js · split/core.js',
     composes:'maren-arc-3 parseFeeding normalizer + food-sub-tab integration',
