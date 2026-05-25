@@ -7898,6 +7898,27 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .tsf-event-live .tsf-event-detail { animation:tsfPulse 2s ease-in-out infinite; }
 .tsf-event-live[data-calm="true"] .tsf-event-detail { animation:none; }
 @keyframes tsfPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+/* T2-A.3 (V-V-25): skipped-chip discriminator. Post-T1-3 a Skipped chip and a Done
+   chip in the TSF timeline are pixel-identical except for the one-word detail string
+   ("Skipped" vs "Done") — half-awake parents at 2 AM can miss it. Strikethrough the
+   label, warn-color the time slot, fade the icon. Token-only: --tc-warn for the
+   strike color + time slot, --light for the dimmed label. The chip wrapper carries
+   data-state="skipped" set by _tsfRenderEvent in intelligence-quicklog.js.
+   V-V-32 (Vela synth-fold): dark-theme variant intentionally absent — --tc-warn and
+   --light cascade theme-aware via [data-theme="dark"] overrides further down this file,
+   so the strikethrough + dimmed label reads correctly in both themes without explicit
+   override. Future Governors: do not mistake the absence for an oversight.
+   V-V-31 (Vela synth-fold): if a future event type ever carries BOTH
+   tsf-event-inferred AND data-state="skipped" on the same chip, the time-slot rule
+   below collides with .tsf-event-inferred .tsf-event-time (italic + opacity 0.7).
+   Impossible today (inferred is set only on meal-time fallback, never on med events;
+   only meds can be skipped) — re-evaluate if that boundary shifts. */
+.tsf-event[data-state="skipped"] .tsf-event-label { text-decoration:line-through; text-decoration-color:var(--tc-warn); color:var(--light); }
+.tsf-event[data-state="skipped"] .tsf-event-time  { color:var(--tc-warn); opacity:0.7; }
+/* V-M-86 (Maren synth-fold, triple-jurisdiction round 2): the icon selector is deliberately
+   tightened from spec's bare `.icon` to `.tsf-event-icon .icon`, mirroring the parent
+   rule at line 7886 — prevents bleed if `.icon` ever appears bare elsewhere inside a chip. */
+.tsf-event[data-state="skipped"] .tsf-event-icon .icon { opacity:0.6; }
 .tsf-event-expanded-detail { padding:var(--sp-4) var(--sp-4) var(--sp-8) calc(var(--sp-32) + var(--sp-8) + var(--sp-24) + var(--sp-8) + var(--sp-4)); font-size:var(--fs-xs); color:var(--mid); line-height:1.5; border-top:1px solid var(--glass-strong); margin-top:0; }
 .tsf-show-earlier { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-6) 0; cursor:pointer; font-weight:600; }
 .tsf-show-earlier:active { opacity:0.6; }
@@ -41239,10 +41260,25 @@ function renderMedD3PatternCard() {
   const trackStart = medChecks._trackingSince || '0000-00-00';
   const effectiveStart = medStart > trackStart ? medStart : trackStart;
   const eligibleDays = days.filter(d => d.date >= effectiveStart);
+  // T2-A.1: when today is unlogged (parent hasn't tapped Done yet — e.g. 8 AM pre-dose),
+  // exclude it from adherence + unloggedDays. The V-M-64 streak fallback already excludes
+  // today via startIdx = len-2; the adherence math + warn-tier "N days not logged" surface
+  // follow suit so all three card lines agree at the boundary instead of reading
+  // "13/14 (93%) · streak through yesterday 13 · 1 day not logged" for a perfect-streak parent.
+  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
+  const lastDayIsToday = eligibleDays.length > 0 && eligibleDays[eligibleDays.length - 1].date === todayStr;
+  // V-M-83 (Maren synth-fold, Phase 2-A): mirror T2-A.2's todayIsSkippedOrUnlogged.
+  // A legitimately-skipped today should be excluded from adherence on the same boundary
+  // that excludes it from the streak walk — otherwise the card reads "Adherence: 13/14
+  // (93%)" beside "Streak through yesterday: 13 days," reproducing the very three-line
+  // incoherence T2-A.1 was authored to eliminate, just at a different boundary.
+  const excludeToday = (!todayParsed || todayParsed.status === 'skipped') && lastDayIsToday;
+  const adherenceWindow = excludeToday ? eligibleDays.slice(0, -1) : eligibleDays;
   const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
   const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
-  const unloggedDays = eligibleDays.filter(d => !d.parsed);
-  const adherence = eligibleDays.length > 0 ? Math.round((doneDays.length / eligibleDays.length) * 100) : 0;
+  const adherenceDone = adherenceWindow.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const unloggedDays = adherenceWindow.filter(d => !d.parsed);
+  const adherence = adherenceWindow.length > 0 ? Math.round((adherenceDone.length / adherenceWindow.length) * 100) : 0;
   // Usual-time band: take givenAt minutes, find central 80% range.
   // CR-11: use (N-1)*p indexing instead of N*p (which collapsed to the max for many N
   // and degraded 'central 80%' into 'min-to-max range') AND require N>=5 for the band
@@ -41271,16 +41307,18 @@ function renderMedD3PatternCard() {
   let topFatFood = null, topN = 0;
   Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
   // Streak: consecutive done-days ending today.
-  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
-  // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), walk from yesterday and
+  // label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // T2-A.2: extend the same fallback to status:'skipped'. A legitimate skip (sick,
+  // dose-form change, doctor advice) shouldn't zero out the historical streak — the
+  // parent's prior run is intact in spirit and the card should reflect that.
   // CR-6: walk over eligibleDays (post-medStart) not raw days, so a recently-activated med
   // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
-  const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
-  const startIdx = todayResolved ? eligibleDays.length - 1 : eligibleDays.length - 2;
-  if (!todayResolved) streakLabel = 'Streak through yesterday';
+  const todayIsSkippedOrUnlogged = !todayParsed || todayParsed.status === 'skipped';
+  const startIdx = todayIsSkippedOrUnlogged ? eligibleDays.length - 2 : eligibleDays.length - 1;
+  if (todayIsSkippedOrUnlogged) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
     if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
@@ -41298,7 +41336,7 @@ function renderMedD3PatternCard() {
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
   let summary = '<div class="med-d3-summary">';
-  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${eligibleDays.length} days (${adherence}%)</strong></div>`;
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${adherenceDone.length}/${adherenceWindow.length} days (${adherence}%)</strong></div>`;
   // CR-9: render times in 12h for parent-facing display.
   if (usualBand) {
     const bandDisplay = usualBand.split('–').map(t => _formatTime12h(t)).join('–');
@@ -59283,9 +59321,15 @@ function renderTodaySoFar() {
     const liveClass = ev.isLive ? ' tsf-event-live' : '';
     const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
     const calmAttr = ev.isCalm ? ' data-calm="true"' : '';
+    // T2-A.3 (V-V-25): data-state discriminator for the half-awake test. Post-T1-3 a
+    // skipped chip and a Done chip are pixel-identical except for the detail string.
+    // The CSS .tsf-event[data-state="skipped"] variant in styles.css strikes through
+    // the label, warn-colors the time slot, and fades the icon — distinguishable at
+    // a glance. Phase 2-C TSF Undo affordance will land on the same chip family.
+    const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
 
     html += '<div class="tsf-event-wrap' + expandedClass + '">';
-    html += '<div class="tsf-event' + inferredClass + liveClass + '" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
+    html += '<div class="tsf-event' + inferredClass + liveClass + '"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
     html += '<div class="tsf-event-time">' + escHtml(ev.displayTime || '') + '</div>';
 
     // Icon with domain color
@@ -59322,8 +59366,11 @@ function renderTodaySoFar() {
       const isExpanded = _tsfExpandedId === ev.id;
       const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
       const iconColorClass = ev.color === 'amber' ? 'icon-amber' : ev.color === 'sage' ? 'icon-sage' : ev.color === 'sky' ? 'icon-sky' : 'icon-indigo';
+      // T2-A.3: parity with the timed-events branch — legacy 'skipped' strings (no loggedAt)
+      // still hit this no-time fallback; the discriminator must apply here too.
+      const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
       html += '<div class="tsf-event-wrap' + expandedClass + '">';
-      html += '<div class="tsf-event" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
+      html += '<div class="tsf-event"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
       html += '<div class="tsf-event-time"></div>';
       html += '<div class="tsf-event-icon"><div class="icon ' + iconColorClass + '">' + ev.icon + '</div></div>';
       html += '<div class="tsf-event-body">';

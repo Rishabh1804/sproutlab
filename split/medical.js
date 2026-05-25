@@ -4360,10 +4360,25 @@ function renderMedD3PatternCard() {
   const trackStart = medChecks._trackingSince || '0000-00-00';
   const effectiveStart = medStart > trackStart ? medStart : trackStart;
   const eligibleDays = days.filter(d => d.date >= effectiveStart);
+  // T2-A.1: when today is unlogged (parent hasn't tapped Done yet — e.g. 8 AM pre-dose),
+  // exclude it from adherence + unloggedDays. The V-M-64 streak fallback already excludes
+  // today via startIdx = len-2; the adherence math + warn-tier "N days not logged" surface
+  // follow suit so all three card lines agree at the boundary instead of reading
+  // "13/14 (93%) · streak through yesterday 13 · 1 day not logged" for a perfect-streak parent.
+  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
+  const lastDayIsToday = eligibleDays.length > 0 && eligibleDays[eligibleDays.length - 1].date === todayStr;
+  // V-M-83 (Maren synth-fold, Phase 2-A): mirror T2-A.2's todayIsSkippedOrUnlogged.
+  // A legitimately-skipped today should be excluded from adherence on the same boundary
+  // that excludes it from the streak walk — otherwise the card reads "Adherence: 13/14
+  // (93%)" beside "Streak through yesterday: 13 days," reproducing the very three-line
+  // incoherence T2-A.1 was authored to eliminate, just at a different boundary.
+  const excludeToday = (!todayParsed || todayParsed.status === 'skipped') && lastDayIsToday;
+  const adherenceWindow = excludeToday ? eligibleDays.slice(0, -1) : eligibleDays;
   const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
   const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
-  const unloggedDays = eligibleDays.filter(d => !d.parsed);
-  const adherence = eligibleDays.length > 0 ? Math.round((doneDays.length / eligibleDays.length) * 100) : 0;
+  const adherenceDone = adherenceWindow.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
+  const unloggedDays = adherenceWindow.filter(d => !d.parsed);
+  const adherence = adherenceWindow.length > 0 ? Math.round((adherenceDone.length / adherenceWindow.length) * 100) : 0;
   // Usual-time band: take givenAt minutes, find central 80% range.
   // CR-11: use (N-1)*p indexing instead of N*p (which collapsed to the max for many N
   // and degraded 'central 80%' into 'min-to-max range') AND require N>=5 for the band
@@ -4392,16 +4407,18 @@ function renderMedD3PatternCard() {
   let topFatFood = null, topN = 0;
   Object.keys(fatFoodCounts).forEach(k => { if (fatFoodCounts[k] > topN) { topFatFood = k; topN = fatFoodCounts[k]; } });
   // Streak: consecutive done-days ending today.
-  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), don't punish the streak —
-  // walk from yesterday and label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // V-M-64: if today is unlogged (parent hasn't tapped Done yet), walk from yesterday and
+  // label "through yesterday" so a 30-day perfect run doesn't read as 0.
+  // T2-A.2: extend the same fallback to status:'skipped'. A legitimate skip (sick,
+  // dose-form change, doctor advice) shouldn't zero out the historical streak — the
+  // parent's prior run is intact in spirit and the card should reflect that.
   // CR-6: walk over eligibleDays (post-medStart) not raw days, so a recently-activated med
   // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
-  const todayResolved = !!(todayParsed && (todayParsed.status === 'done' || todayParsed.status === 'late' || todayParsed.status === 'skipped'));
-  const startIdx = todayResolved ? eligibleDays.length - 1 : eligibleDays.length - 2;
-  if (!todayResolved) streakLabel = 'Streak through yesterday';
+  const todayIsSkippedOrUnlogged = !todayParsed || todayParsed.status === 'skipped';
+  const startIdx = todayIsSkippedOrUnlogged ? eligibleDays.length - 2 : eligibleDays.length - 1;
+  if (todayIsSkippedOrUnlogged) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
     if (eligibleDays[i] && eligibleDays[i].parsed && (eligibleDays[i].parsed.status === 'done' || eligibleDays[i].parsed.status === 'late')) streak++;
     else break;
@@ -4419,7 +4436,7 @@ function renderMedD3PatternCard() {
   // Build summary lines
   const sigClass = adherence >= 90 ? 'tc-sage' : adherence >= 70 ? 'tc-warn' : 'tc-rose';
   let summary = '<div class="med-d3-summary">';
-  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${doneDays.length}/${eligibleDays.length} days (${adherence}%)</strong></div>`;
+  summary += `<div class="med-d3-summary-row"><strong class="${sigClass}">Adherence: ${adherenceDone.length}/${adherenceWindow.length} days (${adherence}%)</strong></div>`;
   // CR-9: render times in 12h for parent-facing display.
   if (usualBand) {
     const bandDisplay = usualBand.split('–').map(t => _formatTime12h(t)).join('–');
