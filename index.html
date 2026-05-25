@@ -17125,6 +17125,160 @@ const ESCALATING_TIPS = {
   ],
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — Engine Primitive Foundation: scoring + recommendation constants
+// Spec: docs/specs/v3-3-engine-spine.md
+// Sibling: docs/specs/scoring-redesign-v1.md (defines schema; this is the v1 data)
+// Charter alignment (CV3-006):
+//   - Honesty: every age-range carries cadence + strength; severity_messages carry parent-legible wording
+//   - Extensibility: adding a recommendation = adding a row in RECOMMENDATION_ROSTER. v2+ fields reserved as null.
+//   - Warmth: severity_messages tuned to "warm + sturdy + calm" (CV3-002 hedge-tier discipline at the engine layer)
+// ─────────────────────────────────────────────────────────────────────────
+
+// Standards-selector fallback chain. _evaluateRecommendation reads ziva_reference_standard
+// from localStorage; if the selected standard lacks a key for a recommendation, the chain
+// falls back through these in order until a match is found.
+const STANDARDS_FALLBACK_CHAIN = ['who'];
+
+// Severity threshold scaffold per scoring-redesign-v1.md §Severity model.
+// 3-level escalation: gentle (score below baseline but >= 0) / firm (score < 0) /
+// urgent (score deeply negative OR strong-strength recommendation unmet >= 3 days).
+const SEVERITY_THRESHOLDS = {
+  gentle:  { scoreCeil: 0,     daysUnmetFloor: 0, strengthMatch: ['*'] },
+  firm:    { scoreCeil: -0.3,  daysUnmetFloor: 2, strengthMatch: ['*'] },
+  urgent:  { scoreCeil: -0.8,  daysUnmetFloor: 3, strengthMatch: ['strong'] },
+};
+
+// Per-domain weights for _scoreDayHero cross-domain unification.
+// Calibration TBD at Scoring Arc S-4 (chronicle row v3-9 / Wave 2 R-1 adaptive layer).
+// v1 defaults are illustrative; treat as ratifyable at arc-S-4 spec time.
+const DOMAIN_WEIGHTS_HERO = {
+  sleep:    0.4,
+  feed:     0.3,
+  activity: 0.3,
+  // Future: medical, milestones, mood
+};
+
+// RECOMMENDATION_ROSTER — the substrate of scoring-redesign-v1.md.
+// Adding a recommendation = adding a row. v2+ fields reserved as null (engine ignores).
+const RECOMMENDATION_ROSTER = {
+  humanContact: {
+    key: 'humanContact',
+    domain: 'sleep',
+    metCriterion: 'count',  // count of qualifying records per day (vs 'duration' for hours-based)
+    rewardWeight:  0.3,
+    missedWeight: -0.15,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+        { startMo: 12, endMo: 24, cadence: 'optional', strength: 'beneficial', minPerDay: 0 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+        { startMo: 12, endMo: 24, cadence: 'optional', strength: 'beneficial', minPerDay: 0 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'unmet-today',         text: 'Skin-to-skin time today — even 10 min counts.' },
+      firm:   { strength: 'unmet-2days',         text: 'Two days without human contact — try a wrap or chest-to-chest now.' },
+      urgent: { strength: 'unmet-3+days OR critical-window', text: 'Skin-to-skin is highly recommended at this age. Hold time, often.' },
+    },
+    successorOnExpiry: { key: 'outdoorTime', mode: 'placeholder-v1' },
+    // v2+ reserved (engine ignores):
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  sleepAmount: {
+    key: 'sleepAmount',
+    domain: 'sleep',
+    metCriterion: 'duration',
+    rewardWeight:  0.4,
+    missedWeight: -0.2,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 11, idealHoursPerDay: 13 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 11, idealHoursPerDay: 13 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'short-by-1h',  text: 'Ziva\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
+      firm:   { strength: 'short-by-2h+', text: 'Two-plus hours short on sleep. Consider an extra nap or earlier bedtime.' },
+      urgent: { strength: 'critical',     text: 'Significant sleep deficit. A calm, dim evening + earlier bedtime tonight.' },
+    },
+    successorOnExpiry: null,  // sleepAmount never ages out
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  outdoorTime: {
+    // Placeholder per Architect direction — successor for humanContact at 12mo.
+    // Calibration deferred per chronicle §8 R-9 follow-on.
+    key: 'outdoorTime',
+    domain: 'activity',
+    metCriterion: 'count',
+    rewardWeight:  0.3,
+    missedWeight: -0.15,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'unmet-today',  text: 'Outdoor time today — even 20 min counts.' },
+      firm:   { strength: 'unmet-2days',  text: 'Two days indoors — a short outdoor stretch today.' },
+      urgent: { strength: 'unmet-3+days', text: 'Outdoor exposure matters at this age. Plan a walk today.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  // Future rows: tummyTime · vitD3Adherence · vaccinationOnSchedule · screenTimeCeiling · etc.
+};
 // ─────────────────────────────────────────
 // SVG ICON HELPER — Ziva Sketch icon set
 // ─────────────────────────────────────────
@@ -22894,6 +23048,301 @@ function _bugDismissTooltip() {
 function _bugInit() {
   _bugInitFabLongPress();
   _bugShowTooltipIfNew();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — Engine Primitive Foundation: scoring primitives
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3
+// Sibling: docs/specs/scoring-redesign-v1.md (defines contracts)
+// Charter alignment (CV3-006):
+//   - Honesty: severity-level disclosure on every _scoreDay output; no floor on negative scores
+//   - Extensibility: domain-plug-in pattern (_domainPerRecordScore + _domainDayBonuses registries);
+//     adding a domain = registering handlers, no engine change
+//   - Warmth: severity_messages flow from data.js RECOMMENDATION_ROSTER constants — content tuned
+//     for parent-legible passage; no engine-side prose construction
+// HR-12 safe: uses today() + _offsetDateStr; no raw Date() except _zivaDob constant + Date.parse
+//   for the single static DOB → ms-of-epoch baseline.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Ziva's DOB anchor — single source of truth for age math.
+// Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
+// HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
+const _ZIVA_DOB = '2025-09-04';
+const _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+
+// Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
+// HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
+function _zivaAgeInDays(dateStr) {
+  if (typeof dateStr !== 'string') return 0;
+  const ms = Date.parse(dateStr + 'T00:00:00Z');
+  if (isNaN(ms)) return 0;
+  return Math.max(0, Math.round((ms - _ZIVA_DOB_MS) / (24 * 60 * 60 * 1000)));
+}
+
+// Standards-selector — reads from existing localStorage infra (medical.js:1294 surface).
+// Falls back to 'who' if unset or unknown. Used by every recommendation evaluator.
+function _getActiveStandard() {
+  try {
+    var raw = localStorage.getItem('ziva_reference_standard');
+    if (raw === 'iap' || raw === 'eu' || raw === 'cn' || raw === 'who') return raw;
+    return 'who';
+  } catch (e) { return 'who'; }
+}
+
+// Resolve the active age-range row for a recommendation against the parent's selected standard.
+// Walks the standard's ageRanges; falls back through STANDARDS_FALLBACK_CHAIN if no row matches.
+// Returns null when the recommendation is aged-out (no matching age-range in any standard).
+function _resolveAgeRange(recRow, ageInDays) {
+  const ageMo = ageInDays / 30.44;
+  const std = _getActiveStandard();
+  const tryChain = [std].concat(STANDARDS_FALLBACK_CHAIN.filter(function(s) { return s !== std; }));
+  for (var i = 0; i < tryChain.length; i++) {
+    const standardSpec = recRow.standards && recRow.standards[tryChain[i]];
+    if (!standardSpec || !standardSpec.ageRanges) continue;
+    for (var j = 0; j < standardSpec.ageRanges.length; j++) {
+      const r = standardSpec.ageRanges[j];
+      if (ageMo >= r.startMo && ageMo < r.endMo) return r;
+    }
+  }
+  return null;
+}
+
+// Evaluate a single recommendation against today's data + standard.
+// Pure function. No DOM. No localStorage write. Returns null on unknown key.
+// recentData shape: { today: {...domain data for today}, history: [...recent days] }
+// Output: { status, metToday, daysSinceMet, severityLevel, activeRange }
+//   status: 'active' | 'aged-out' | 'unknown'
+//   metToday: boolean
+//   daysSinceMet: days since last met (or -1 if never met within history window)
+//   severityLevel: 'gentle' | 'firm' | 'urgent' | null (null = met or aged-out)
+function _evaluateRecommendation(key, ageInDays, recentData) {
+  const rec = (typeof RECOMMENDATION_ROSTER !== 'undefined') ? RECOMMENDATION_ROSTER[key] : null;
+  if (!rec) return { status: 'unknown' };
+  const activeRange = _resolveAgeRange(rec, ageInDays);
+  if (!activeRange) {
+    return { status: 'aged-out', successor: rec.successorOnExpiry || null };
+  }
+  // metToday evaluation depends on metCriterion. Domain-specific handlers register their
+  // own predicates; v1 ships generic 'count' and 'duration' evaluators against recentData.
+  var metToday = _evaluateMetCriterion(rec, activeRange, recentData && recentData.today);
+  // daysSinceMet via _countDaysSinceLastMet — walks history backward looking for the most
+  // recent day where the criterion was met. Capped at 30 days.
+  var daysSinceMet = _countDaysSinceLastMet(rec, recentData && recentData.history);
+  // Severity derivation — combines metToday + daysSinceMet + recommendation strength.
+  var severityLevel = null;
+  if (!metToday) {
+    if (daysSinceMet >= 3 && activeRange.strength === 'strong') severityLevel = 'urgent';
+    else if (daysSinceMet >= 2) severityLevel = 'firm';
+    else severityLevel = 'gentle';
+  }
+  return {
+    status: 'active',
+    activeRange: activeRange,
+    metToday: metToday,
+    daysSinceMet: daysSinceMet,
+    severityLevel: severityLevel,
+  };
+}
+
+// Generic met-criterion evaluator. Domain plug-ins can override via _domainEvaluateMet registry
+// (registered at Sleep Arc 3 / Scoring Arc S-2 — the merged consumer arc).
+function _evaluateMetCriterion(rec, activeRange, todayData) {
+  if (!todayData) return false;
+  if (rec.metCriterion === 'count') {
+    // 'count' criterion: domain-specific count of qualifying records >= minPerDay.
+    // Domain handler returns the count; v1 ships sleep-handler at Sleep Arc 3.
+    if (typeof _domainMetCount === 'function') {
+      var c = _domainMetCount(rec.domain, rec.key, todayData);
+      return typeof c === 'number' && c >= (activeRange.minPerDay || 0);
+    }
+    return false;
+  }
+  if (rec.metCriterion === 'duration') {
+    if (typeof _domainMetDuration === 'function') {
+      var hrs = _domainMetDuration(rec.domain, rec.key, todayData);
+      return typeof hrs === 'number' && hrs >= (activeRange.minHoursPerDay || 0);
+    }
+    return false;
+  }
+  return false;
+}
+
+// Walk history backward looking for last day the criterion was met. -1 if never within window.
+function _countDaysSinceLastMet(rec, history) {
+  if (!Array.isArray(history) || history.length === 0) return 30;  // cap
+  for (var i = 0; i < history.length && i < 30; i++) {
+    const day = history[i];
+    if (day && day._met) return i + 1;
+    // history rows pre-tagged with _met by caller (scoring-redesign-v1 contract); fallback ignore.
+  }
+  return 30;
+}
+
+// _scoreDay — per-domain per-day score primitive.
+// Spec: scoring-redesign-v1.md §Architecture.
+// Output: { raw, rewards, penalties, dayBonuses, total, contributions[],
+//           severityLevel, unmetRecommendations[], generatedMessages[] }
+// v3-3 ships this scaffold. Domain plug-ins (Sleep Arc 3 / Scoring Arc S-2) register handlers.
+function _scoreDay(domain, dateStr, dataset) {
+  const ageInDays = _zivaAgeInDays(dateStr);
+  const recentData = _buildRecentData(domain, dateStr, dataset);
+
+  // 1. Per-record contributions via domain handler.
+  var records = recentData && recentData.today && recentData.today.records;
+  if (!Array.isArray(records)) records = [];
+  const recordContribs = [];
+  var raw = 0;
+  for (var i = 0; i < records.length; i++) {
+    var c = 0;
+    if (typeof _domainPerRecordScore === 'function') {
+      c = _domainPerRecordScore(domain, records[i]);
+    }
+    raw += c;
+    recordContribs.push({ recordIndex: i, value: c });
+  }
+
+  // 2. Recommendation rewards + penalties for this domain.
+  var rewards = 0, penalties = 0;
+  const unmet = [], messages = [];
+  if (typeof RECOMMENDATION_ROSTER !== 'undefined') {
+    const recs = Object.values(RECOMMENDATION_ROSTER).filter(function(r) { return r.domain === domain; });
+    for (var r = 0; r < recs.length; r++) {
+      const rec = recs[r];
+      const evald = _evaluateRecommendation(rec.key, ageInDays, recentData);
+      if (evald.status !== 'active') continue;
+      if (evald.metToday) {
+        rewards += rec.rewardWeight || 0;
+      } else {
+        penalties += rec.missedWeight || 0;
+        if (rec.streakPenalty && evald.daysSinceMet >= rec.streakPenalty.afterDays) {
+          var streakDays = Math.min(
+            evald.daysSinceMet - rec.streakPenalty.afterDays + 1,
+            rec.streakPenalty.capDays || 7
+          );
+          penalties += (rec.streakPenalty.perDayBonus || 0) * streakDays;
+        }
+        unmet.push({ key: rec.key, severityLevel: evald.severityLevel });
+        if (evald.severityLevel && rec.severityMessages && rec.severityMessages[evald.severityLevel]) {
+          messages.push({
+            key: rec.key,
+            severityLevel: evald.severityLevel,
+            text: rec.severityMessages[evald.severityLevel].text,
+            strength: rec.severityMessages[evald.severityLevel].strength,
+          });
+        }
+      }
+    }
+  }
+
+  // 3. Day-level domain bonuses (e.g., sleep's contact-combination bonus).
+  var dayBonuses = 0;
+  if (typeof _domainDayBonuses === 'function') {
+    var b = _domainDayBonuses(domain, records);
+    if (typeof b === 'number') dayBonuses = b;
+  }
+
+  // 4. Total + severity classification.
+  const total = raw + rewards + penalties + dayBonuses;
+  const severityLevel = _classifyDaySeverity(total, unmet);
+
+  return {
+    raw: raw,
+    rewards: rewards,
+    penalties: penalties,
+    dayBonuses: dayBonuses,
+    total: total,
+    contributions: recordContribs,
+    severityLevel: severityLevel,
+    unmetRecommendations: unmet,
+    generatedMessages: messages,
+  };
+}
+
+// Build a "recent data" envelope for a domain on a given date.
+// v1 scaffold — domain handlers register their own data extractors. Returns a shape compatible
+// with _evaluateRecommendation's recentData parameter even when no domain handler is registered.
+function _buildRecentData(domain, dateStr, dataset) {
+  if (typeof _domainBuildRecentData === 'function') {
+    return _domainBuildRecentData(domain, dateStr, dataset);
+  }
+  return { today: { records: [] }, history: [] };
+}
+
+// Derive the day's severity-level from its total + unmet count.
+// Per scoring-redesign-v1.md §Severity model (3-level: gentle / firm / urgent).
+function _classifyDaySeverity(total, unmet) {
+  if (!Array.isArray(unmet)) unmet = [];
+  // No-floor policy: don't clamp negative scores — surface severity-messages instead.
+  if (unmet.some(function(u) { return u.severityLevel === 'urgent'; })) return 'urgent';
+  if (total < -0.3 || unmet.some(function(u) { return u.severityLevel === 'firm'; })) return 'firm';
+  if (total < 0 || unmet.length > 0) return 'gentle';
+  return null;  // healthy day
+}
+
+// _scoreWindow — N-day rolling aggregate of _scoreDay outputs.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 contract).
+// Output: { perDay[], avgTotal, avgRaw, avgRewards, avgPenalties, totalUnmet, severityCounts }
+// HR-12 safe: uses _offsetDateStr for day iteration.
+function _scoreWindow(domain, days, endDate, dataset) {
+  if (typeof days !== 'number' || days < 1) days = 7;
+  if (typeof endDate !== 'string') endDate = today();
+  const perDay = [];
+  let sumTotal = 0, sumRaw = 0, sumRewards = 0, sumPenalties = 0, totalUnmet = 0;
+  const sevCounts = { gentle: 0, firm: 0, urgent: 0 };
+  for (let i = 0; i < days; i++) {
+    const ds = _offsetDateStr(endDate, -(days - 1 - i));
+    const score = _scoreDay(domain, ds, dataset);
+    perDay.push({ date: ds, score: score });
+    sumTotal += score.total;
+    sumRaw += score.raw;
+    sumRewards += score.rewards;
+    sumPenalties += score.penalties;
+    totalUnmet += (score.unmetRecommendations || []).length;
+    if (score.severityLevel && sevCounts[score.severityLevel] !== undefined) sevCounts[score.severityLevel]++;
+  }
+  return {
+    perDay: perDay,
+    avgTotal:    sumTotal / days,
+    avgRaw:      sumRaw / days,
+    avgRewards:  sumRewards / days,
+    avgPenalties: sumPenalties / days,
+    totalUnmet:  totalUnmet,
+    severityCounts: sevCounts,
+    windowDays:  days,
+    endDate:     endDate,
+  };
+}
+
+// _scoreDayHero — cross-domain weighted hero score for a single day.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 §_scoreDayHero).
+// Reads DOMAIN_WEIGHTS_HERO from data.js; iterates each domain; aggregates total + severity.
+function _scoreDayHero(dateStr, dataset) {
+  if (typeof dateStr !== 'string') dateStr = today();
+  const weights = (typeof DOMAIN_WEIGHTS_HERO !== 'undefined') ? DOMAIN_WEIGHTS_HERO : { sleep: 0.4, feed: 0.3, activity: 0.3 };
+  const perDomain = {};
+  let weighted = 0;
+  const allMessages = [];
+  const severityRank = { urgent: 3, firm: 2, gentle: 1 };
+  let topSeverity = null, topRank = 0;
+  Object.keys(weights).forEach(function(domain) {
+    const score = _scoreDay(domain, dateStr, dataset);
+    perDomain[domain] = score;
+    weighted += score.total * (weights[domain] || 0);
+    if (score.severityLevel && severityRank[score.severityLevel] > topRank) {
+      topRank = severityRank[score.severityLevel];
+      topSeverity = score.severityLevel;
+    }
+    if (Array.isArray(score.generatedMessages)) {
+      score.generatedMessages.forEach(function(m) { allMessages.push(m); });
+    }
+  });
+  return {
+    total: weighted,
+    perDomain: perDomain,
+    severityLevel: topSeverity,
+    generatedMessages: allMessages,
+    date: dateStr,
+  };
 }
 // HEADER / QUICK STATS
 // ─────────────────────────────────────────
@@ -48014,6 +48463,192 @@ function resolveTimeQuery(text) {
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// _resolveEventAnchor — v3-3 event-anchored temporal-window resolver (NEW)
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 2
+// Region: Kael
+//
+// Charter alignment (CV3-006):
+//   - Honesty: returns null when anchor cannot be resolved (no inferred ranges).
+//   - Extensibility: ANCHOR_RESOLVERS is a row-addition table. New anchor pattern
+//     plugs in by adding a row — no caller-site changes.
+//   - Warmth: produces a friendly `label` field ready for narrative-layer prose.
+//
+// HR-12 cipher-4 gate: zero raw `new Date()` arithmetic. All day-arithmetic
+// goes through _offsetDateStr / string operations on YYYY-MM-DD slices.
+// Episode/milestone/vaccine source dates are sliced to YYYY-MM-DD before use.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Anchor resolver table — row-addition extensibility.
+// Each resolver: { match: RegExp, resolve: (m, ctx, todayStr) => {start, end, label} | null }
+var ANCHOR_RESOLVERS = [
+  // ── since the {illness} ──
+  {
+    match: /\bsince\s+(?:the\s+)?(fever|cold|diarrho?ea|vomit(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kind = m[1];
+      var ep = _anchorMostRecentIllnessEpisode(kind);
+      if (!ep || !ep.startedAt) return null;
+      var startStr = ep.startedAt.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startStr)) return null;
+      return { start: startStr, end: todayStr, label: 'since the ' + kind + ' (' + _anchorFormatLabel(startStr) + ')' };
+    },
+  },
+  // ── the week of {vaccine} ──  (±3 days around vaccine date)
+  {
+    match: /\bthe\s+week\s+of\s+(.+)$/,
+    resolve: function(m, ctx, todayStr) {
+      var vaccineName = m[1].trim();
+      var rec = _anchorFindVaccineRecord(vaccineName);
+      if (!rec || !rec.date) return null;
+      var dateStr = rec.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+      return {
+        start: _offsetDateStr(dateStr, -3),
+        end: _offsetDateStr(dateStr, +3),
+        label: 'the week of ' + rec.name + ' (' + _anchorFormatLabel(dateStr) + ')',
+      };
+    },
+  },
+  // ── before solids ──
+  {
+    match: /\bbefore\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      var dob = _anchorDob(ctx);
+      if (!dob) return null;
+      return { start: dob, end: _offsetDateStr(milestoneDateStr, -1), label: 'before solids' };
+    },
+  },
+  // ── after solids ──
+  {
+    match: /\bafter\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      return { start: milestoneDateStr, end: todayStr, label: 'after solids' };
+    },
+  },
+  // ── since {milestone keyword} ──
+  // (e.g. "since rolling", "since babbling", "since crawling")
+  {
+    match: /\bsince\s+(rolling|crawl(?:ing)?|sit(?:ting)?|babbl(?:ing)?|walk(?:ing)?|stand(?:ing)?|cruis(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kw = m[1].replace(/ing$/, '').replace(/(s)$/, '$1');
+      var ms = _anchorFindMilestoneByKeyword(kw);
+      if (!ms) return null;
+      var firstDate = _anchorMilestoneFirstDate(ms);
+      if (!firstDate) return null;
+      return { start: firstDate, end: todayStr, label: 'since ' + m[1] + ' (' + _anchorFormatLabel(firstDate) + ')' };
+    },
+  },
+  // ── that week / that day (referent-anchored; requires ctx.referent) ──
+  {
+    match: /\bthat\s+(week|day)\b/,
+    resolve: function(m, ctx, todayStr) {
+      if (!ctx || !ctx.referent || !ctx.referent.date) return null;
+      var ref = ctx.referent.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ref)) return null;
+      if (m[1] === 'day') return { start: ref, end: ref, label: 'that day (' + _anchorFormatLabel(ref) + ')' };
+      return { start: _offsetDateStr(ref, -3), end: _offsetDateStr(ref, +3), label: 'that week (' + _anchorFormatLabel(ref) + ')' };
+    },
+  },
+];
+
+// Most-recent-illness lookup. Prefers active episode; falls back to most-recently-resolved.
+function _anchorMostRecentIllnessEpisode(kind) {
+  var arr = null;
+  if (kind === 'fever' && typeof _feverEpisodes !== 'undefined') arr = _feverEpisodes;
+  else if (kind === 'cold' && typeof _coldEpisodes !== 'undefined') arr = _coldEpisodes;
+  else if ((kind === 'diarrhoea' || kind === 'diarrhea') && typeof _diarrhoeaEpisodes !== 'undefined') arr = _diarrhoeaEpisodes;
+  else if ((kind === 'vomiting' || kind === 'vomit') && typeof _vomitingEpisodes !== 'undefined') arr = _vomitingEpisodes;
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  var active = arr.find(function(e) { return e && e.status === 'active'; });
+  if (active) return active;
+  // Most-recent by startedAt.
+  var sorted = arr.filter(function(e) { return e && e.startedAt; }).sort(function(a, b) {
+    return (a.startedAt < b.startedAt) ? 1 : -1;
+  });
+  return sorted[0] || null;
+}
+
+// Vaccine lookup by partial name match (case-insensitive). Reads `vaccData` global.
+function _anchorFindVaccineRecord(query) {
+  if (typeof vaccData !== 'object' || !Array.isArray(vaccData)) return null;
+  var q = query.toLowerCase();
+  var matches = vaccData.filter(function(v) {
+    return v && v.date && !v.upcoming && v.name && v.name.toLowerCase().indexOf(q) !== -1;
+  });
+  if (matches.length === 0) return null;
+  // Most-recent.
+  matches.sort(function(a, b) { return (a.date < b.date) ? 1 : -1; });
+  return matches[0];
+}
+
+// Milestone lookup by keyword (case-insensitive substring on .text).
+function _anchorFindMilestoneByKeyword(kw) {
+  if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
+  var q = kw.toLowerCase();
+  return milestones.find(function(m) {
+    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+  }) || null;
+}
+
+// Earliest non-null progression-date on a milestone (emerging → mastered).
+function _anchorMilestoneFirstDate(ms) {
+  var fields = ['emergingAt', 'practicingAt', 'consistentAt', 'masteredAt'];
+  var earliest = null;
+  for (var i = 0; i < fields.length; i++) {
+    var raw = ms[fields[i]];
+    if (!raw) continue;
+    var ds = raw.substring(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) continue;
+    if (earliest === null || ds < earliest) earliest = ds;
+  }
+  return earliest;
+}
+
+// DOB accessor — prefers ctx.baby.dob, falls back to _ZIVA_DOB constant.
+function _anchorDob(ctx) {
+  if (ctx && ctx.baby && typeof ctx.baby.dob === 'string') return ctx.baby.dob.substring(0, 10);
+  if (typeof _ZIVA_DOB === 'string') return _ZIVA_DOB;
+  return null;
+}
+
+// Friendly date label "Mar 12" — uses Intl in IST-safe mode (noon construction).
+function _anchorFormatLabel(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  var d = new Date(dateStr + 'T12:00:00');  // HR-12-safe: noon construction avoids day-boundary shift; label-formatting only (no arithmetic).
+  if (isNaN(d.getTime())) return dateStr;
+  try {
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+// _resolveEventAnchor — event-anchored temporal-window resolver.
+// Returns {start, end, label} on resolution; null otherwise.
+function _resolveEventAnchor(token, ctx) {
+  if (typeof token !== 'string' || !token.trim()) return null;
+  var lower = token.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var todayStr = (typeof today === 'function') ? today() : (ctx && ctx.now ? toDateStr(ctx.now) : null);
+  if (!todayStr) return null;
+  for (var i = 0; i < ANCHOR_RESOLVERS.length; i++) {
+    var row = ANCHOR_RESOLVERS[i];
+    var m = lower.match(row.match);
+    if (!m) continue;
+    var out = row.resolve(m, ctx || {}, todayStr);
+    if (out && out.start && out.end) return out;
+  }
+  return null;
+}
+
 // ── Step 2: getDomainData('sleep') ──
 
 function getDomainData(domain, startDate, endDate) {
@@ -57116,6 +57751,379 @@ function closeQuickLogAll() {
   resetQLSheet();
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — getActiveIllnessPosture()
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 4
+// Reads getActiveFeverEpisode + getActiveDiarrhoeaEpisode + getActiveVomitingEpisode
+// + getActiveColdEpisode as a SET. Surfaces compound illness state for CareTicket
+// trigger doctrine (v3-2), recommendation severity escalation (Scoring Arc S-2),
+// and cross-domain CareTicket triggers (C-7).
+//
+// Output: { compoundSymptomDays, escalationTier, primarySymptom, activeIllnesses }
+//   compoundSymptomDays: int — days where 2+ illness types overlap in the recent 30-day window
+//   escalationTier: 0 (nothing active) → 3 (critical compound: 3+ illnesses, multi-day)
+//   primarySymptom: type with longest current active duration, or null
+//   activeIllnesses: array of {type, startDate, severity, daysActive}
+//
+// HR-12 safe: reads existing episode start-date strings (YYYY-MM-DD); uses today() for
+// day-arithmetic; no raw Date() construction.
+// ─────────────────────────────────────────────────────────────────────────
+function getActiveIllnessPosture() {
+  var active = [];
+  var fever = getActiveFeverEpisode();
+  if (fever) active.push({
+    type: 'fever',
+    startDate: fever.startDate || null,
+    severity: fever.maxTemp ? (fever.maxTemp >= 39 ? 'high' : fever.maxTemp >= 38 ? 'moderate' : 'low') : 'low',
+    daysActive: fever.startDate ? _daysBetween(fever.startDate, today()) + 1 : 0,
+  });
+  var diarrh = getActiveDiarrhoeaEpisode();
+  if (diarrh) active.push({
+    type: 'diarrhoea',
+    startDate: diarrh.startDate || null,
+    severity: diarrh.stoolCount && diarrh.stoolCount >= 6 ? 'high' : 'moderate',
+    daysActive: diarrh.startDate ? _daysBetween(diarrh.startDate, today()) + 1 : 0,
+  });
+  var vomit = getActiveVomitingEpisode();
+  if (vomit) active.push({
+    type: 'vomiting',
+    startDate: vomit.startDate || null,
+    severity: 'moderate',
+    daysActive: vomit.startDate ? _daysBetween(vomit.startDate, today()) + 1 : 0,
+  });
+  var cold = getActiveColdEpisode();
+  if (cold) active.push({
+    type: 'cold',
+    startDate: cold.startDate || null,
+    severity: 'low',
+    daysActive: cold.startDate ? _daysBetween(cold.startDate, today()) + 1 : 0,
+  });
+
+  // Compound day calc: days in the recent 30-day window where 2+ illness types overlap.
+  // We walk 30 days back from today() and count days where multiple active illnesses
+  // had startDate <= that day AND (no endDate OR endDate >= that day).
+  var compoundDays = 0;
+  if (active.length >= 2) {
+    var dayCursor = today();
+    for (var d = 0; d < 30; d++) {
+      var dayStr = _offsetDateStr(today(), -d);
+      var overlapCount = active.filter(function(ep) {
+        return ep.startDate && ep.startDate <= dayStr;
+      }).length;
+      if (overlapCount >= 2) compoundDays++;
+    }
+  }
+
+  // Escalation tier: 0..3 per spec.
+  var tier = 0;
+  if (active.length === 1) tier = 1;
+  else if (active.length === 2) tier = compoundDays >= 2 ? 2 : 1;
+  else if (active.length >= 3) tier = compoundDays >= 2 ? 3 : 2;
+
+  // Primary symptom: longest-active among active.
+  var primary = null;
+  if (active.length > 0) {
+    primary = active.reduce(function(longest, ep) {
+      return (ep.daysActive > (longest ? longest.daysActive : 0)) ? ep : longest;
+    }, null);
+  }
+
+  return {
+    compoundSymptomDays: compoundDays,
+    escalationTier: tier,
+    primarySymptom: primary ? primary.type : null,
+    activeIllnesses: active,
+  };
+}
+
+// Helper: days between two YYYY-MM-DD strings (HR-12 safe — uses _offsetDateStr / day-key math).
+// Returns positive int when dateB >= dateA.
+function _daysBetween(dateA, dateB) {
+  if (!dateA || !dateB) return 0;
+  // Walk forward from dateA until we hit dateB. Bounded to a sensible cap to avoid runaway.
+  var cur = dateA;
+  var count = 0;
+  while (cur < dateB && count < 365) {
+    cur = _offsetDateStr(cur, 1);
+    count++;
+  }
+  return count;
+}
+// ─────────────────────────────────────────────────────────────────────────
+// intelligence-correlate.js — v3-3 cross-domain correlation primitive (NEW)
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 1
+// Region: Kael (engine layer)
+//
+// Charter alignment (CV3-006):
+//   - Honesty: every correlation surface discloses {sampleSize, confidence, n}.
+//     Confidence-floor gated; returns null below floor (n < 7 OR |strength| < 0.4).
+//   - Extensibility: SIGNAL_EXTRACTORS is a row-addition table. New domain pairs
+//     plug in by adding a row — no engine code change.
+//   - Warmth: engine-only output; pre-shaped for v3-4 narrative-layer hedge-tier prose.
+//
+// HR-12 honored: zero raw `new Date()` arithmetic. Date iteration uses _offsetDateStr;
+// signal extractors read existing data via string-keyed lookups.
+// ─────────────────────────────────────────────────────────────────────────
+
+// SIGNAL_EXTRACTORS — domain×signal → (dateStr) → number|null.
+// Each extractor returns a numeric signal for the given day, or null if no data.
+// Adding a new domain-signal pair = adding a row here. No engine code change.
+//
+// V-K-87 (Kael Mode-1, canon-cc-008 v3-3): sleepData / poopData / growthData are
+// flat arrays of {date, ...} records — NOT date-keyed maps. Extractors must
+// filter-by-date, not index. (feedingData + medChecks ARE date-keyed maps.)
+const SIGNAL_EXTRACTORS = {
+  // ── sleep domain (sleepData is an array of {date, type, bedtime, wakeTime, wakeUps?}) ──
+  'sleep:total': function(dateStr) {
+    if (!Array.isArray(sleepData)) return null;
+    var entries = sleepData.filter(function(s) { return s && s.date === dateStr && s.bedtime && s.wakeTime; });
+    if (entries.length === 0) return null;
+    if (typeof calcSleepDuration !== 'function') return null;
+    var totalMin = 0;
+    entries.forEach(function(e) {
+      var d = calcSleepDuration(e.bedtime, e.wakeTime);
+      if (d && typeof d.total === 'number' && d.total > 0) totalMin += d.total;
+    });
+    return totalMin > 0 ? (totalMin / 60) : null;  // hours
+  },
+  'sleep:wakeUps': function(dateStr) {
+    if (!Array.isArray(sleepData)) return null;
+    var entries = sleepData.filter(function(s) { return s && s.date === dateStr; });
+    if (entries.length === 0) return null;
+    if (typeof getWakeCount !== 'function') return null;
+    var sum = 0, any = false;
+    entries.forEach(function(e) {
+      if (e && e.wakeUps != null) { sum += getWakeCount(e); any = true; }
+    });
+    return any ? sum : null;
+  },
+  'sleep:onsetMin': function(dateStr) {
+    if (!Array.isArray(sleepData)) return null;
+    // Use the earliest 'night' entry's bedtime as proxy for onset.
+    var nights = sleepData.filter(function(s) { return s && s.date === dateStr && s.type === 'night' && s.bedtime; });
+    if (nights.length === 0) return null;
+    if (typeof _hhmmToMinutes !== 'function') return null;
+    var earliest = null;
+    nights.forEach(function(n) {
+      var m = _hhmmToMinutes(n.bedtime);
+      if (m < 0) return;
+      if (earliest === null || m < earliest) earliest = m;
+    });
+    return earliest;
+  },
+
+  // ── feeding domain ──
+  'feeding:mealCount': function(dateStr) {
+    if (typeof feedingData !== 'object' || !feedingData) return null;
+    var day = feedingData[dateStr];
+    if (!day) return null;
+    var slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+    var count = 0;
+    slots.forEach(function(s) {
+      var v = day[s];
+      if (!v) return;
+      if (typeof v === 'string' && v.trim() && v !== 'null' && v !== 'undefined') count++;
+      else if (typeof v === 'object' && v !== null) count++;  // structured shape (post-food-sub-tab)
+    });
+    return count;
+  },
+  'feeding:fatRatio': function(dateStr) {
+    if (typeof feedingData !== 'object' || !feedingData) return null;
+    var day = feedingData[dateStr];
+    if (!day) return null;
+    // V-K-87b: don't degrade to 0 when fat-detector helper is absent —
+    // returning null keeps Pearson honest and lets the confidence-floor suppress.
+    if (typeof _isFatBearingText !== 'function') return null;
+    var slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+    var fatCount = 0, totalCount = 0;
+    slots.forEach(function(s) {
+      var v = day[s];
+      if (!v) return;
+      var hasText = (typeof v === 'string' && v.trim() && v !== 'null' && v !== 'undefined') || (typeof v === 'object' && v && v.text);
+      if (!hasText) return;
+      totalCount++;
+      var text = (typeof v === 'string') ? v : (v.text || '');
+      if (_isFatBearingText(text)) fatCount++;
+    });
+    return totalCount > 0 ? (fatCount / totalCount) : null;
+  },
+
+  // ── med domain ──
+  'med:givenCount': function(dateStr) {
+    if (typeof medChecks !== 'object' || !medChecks) return null;
+    var day = medChecks[dateStr];
+    if (!day || typeof day !== 'object') return null;
+    var count = 0;
+    Object.keys(day).forEach(function(k) {
+      if (k === '_trackingSince') return;
+      if (typeof medCheckIsDone === 'function' && medCheckIsDone(day[k])) count++;
+    });
+    return count;
+  },
+  'med:withFatRatio': function(dateStr) {
+    if (typeof medChecks !== 'object' || !medChecks) return null;
+    var day = medChecks[dateStr];
+    if (!day || typeof day !== 'object') return null;
+    var withFat = 0, total = 0;
+    Object.keys(day).forEach(function(k) {
+      if (k === '_trackingSince') return;
+      if (typeof parseMedCheck !== 'function') return;
+      var parsed = parseMedCheck(day[k]);
+      if (!parsed || (parsed.status !== 'done' && parsed.status !== 'late')) return;
+      total++;
+      if (parsed.withFat === true) withFat++;
+    });
+    return total > 0 ? (withFat / total) : null;
+  },
+
+  // ── illness domain ──
+  'illness:active': function(dateStr) {
+    // Best-effort: check whether any episode was active on dateStr.
+    // For "today" we have direct accessors; for historical days we'd need episode date ranges.
+    // v1: only compute for today (returns null for past dates without episode-range data).
+    if (dateStr !== today()) return null;  // v2 candidate: walk episode ranges
+    var active = 0;
+    if (typeof getActiveFeverEpisode === 'function' && getActiveFeverEpisode()) active++;
+    if (typeof getActiveDiarrhoeaEpisode === 'function' && getActiveDiarrhoeaEpisode()) active++;
+    if (typeof getActiveVomitingEpisode === 'function' && getActiveVomitingEpisode()) active++;
+    if (typeof getActiveColdEpisode === 'function' && getActiveColdEpisode()) active++;
+    return active;
+  },
+
+  // ── poop domain (poopData is an array of {date, ...}) ──
+  'poop:count': function(dateStr) {
+    if (!Array.isArray(poopData)) return null;
+    var matches = poopData.filter(function(p) { return p && p.date === dateStr; });
+    return matches.length > 0 ? matches.length : null;
+  },
+
+  // ── growth domain (growthData is an array of {date, wt, ht}; sparse — only measurement days) ──
+  'growth:weightKg': function(dateStr) {
+    if (!Array.isArray(growthData)) return null;
+    var match = growthData.find(function(r) { return r && r.date === dateStr && typeof r.wt === 'number'; });
+    return match ? match.wt : null;
+  },
+};
+
+// Helper for confidence classification.
+function _correlateConfidenceLabel(sampleSize, strength) {
+  var s = Math.abs(strength);
+  if (sampleSize >= 21 && s >= 0.7) return 'high';
+  if (sampleSize >= 14 && s >= 0.5) return 'medium';
+  if (sampleSize >= 7 && s >= 0.4) return 'low';
+  return null;  // below confidence floor
+}
+
+// Pearson correlation on two parallel arrays (already filtered to matched pairs).
+function _pearson(xs, ys) {
+  var n = xs.length;
+  if (n < 2) return 0;
+  var meanX = 0, meanY = 0;
+  for (var i = 0; i < n; i++) { meanX += xs[i]; meanY += ys[i]; }
+  meanX /= n; meanY /= n;
+  var num = 0, denomX = 0, denomY = 0;
+  for (var j = 0; j < n; j++) {
+    var dx = xs[j] - meanX;
+    var dy = ys[j] - meanY;
+    num += dx * dy;
+    denomX += dx * dx;
+    denomY += dy * dy;
+  }
+  var denom = Math.sqrt(denomX * denomY);
+  if (denom === 0) return 0;
+  return num / denom;
+}
+
+// _correlate — the cross-domain correlation primitive.
+// Spec contract per docs/specs/v3-3-engine-spine.md §Primitive 1.
+//
+// Inputs:
+//   domainA, domainB: 'sleep' | 'feeding' | 'med' | 'illness' | 'poop' | 'growth' (extensible)
+//   windowDays: rolling window in days (e.g. 14, 30)
+//   opts: { signalA, signalB, lagDays?, confidenceFloor?, endDate? }
+//     signalA, signalB: required; the SIGNAL_EXTRACTORS key suffixes after 'domain:'
+//     lagDays: max ±lag to scan in days (default 3)
+//     confidenceFloor: minimum |strength| to consider valid (default 0.4)
+//     endDate: window end (default today())
+//
+// Returns: { lag, strength, confidence, sampleSize, points[], domainA, domainB, signalA, signalB, windowDays }
+// OR null if sampleSize < 7 OR best |strength| < confidenceFloor.
+function _correlate(domainA, domainB, windowDays, opts) {
+  opts = opts || {};
+  if (!opts.signalA || !opts.signalB) return null;
+  var keyA = domainA + ':' + opts.signalA;
+  var keyB = domainB + ':' + opts.signalB;
+  var extA = SIGNAL_EXTRACTORS[keyA];
+  var extB = SIGNAL_EXTRACTORS[keyB];
+  if (!extA || !extB) return null;
+  if (typeof windowDays !== 'number' || windowDays < 7) windowDays = 14;
+  var endDate = (typeof opts.endDate === 'string') ? opts.endDate : today();
+  var floor = (typeof opts.confidenceFloor === 'number') ? opts.confidenceFloor : 0.4;
+  var maxLag = (typeof opts.lagDays === 'number') ? Math.max(0, Math.min(7, opts.lagDays)) : 3;
+
+  // Pull aligned daily values. Drop days where either extractor returns null/undefined/NaN.
+  var rawPoints = [];  // [{date, valA, valB}, ...]
+  for (var i = 0; i < windowDays; i++) {
+    var ds = _offsetDateStr(endDate, -(windowDays - 1 - i));
+    var a = extA(ds), b = extB(ds);
+    if (a === null || a === undefined || isNaN(a)) continue;
+    if (b === null || b === undefined || isNaN(b)) continue;
+    rawPoints.push({ date: ds, valA: a, valB: b });
+  }
+  if (rawPoints.length < 7) return null;
+
+  // Scan lags [-maxLag, +maxLag]; pick strongest |strength|.
+  var bestLag = 0, bestStrength = 0, bestN = rawPoints.length;
+  for (var lag = -maxLag; lag <= maxLag; lag++) {
+    var xs = [], ys = [];
+    for (var k = 0; k < rawPoints.length; k++) {
+      var idxA = k;
+      var idxB = k + lag;
+      if (idxB < 0 || idxB >= rawPoints.length) continue;
+      xs.push(rawPoints[idxA].valA);
+      ys.push(rawPoints[idxB].valB);
+    }
+    if (xs.length < 7) continue;
+    var s = _pearson(xs, ys);
+    if (Math.abs(s) > Math.abs(bestStrength)) {
+      bestStrength = s;
+      bestLag = lag;
+      bestN = xs.length;
+    }
+  }
+
+  // Apply confidence floor.
+  if (Math.abs(bestStrength) < floor) return null;
+  var conf = _correlateConfidenceLabel(bestN, bestStrength);
+  if (!conf) return null;
+
+  return {
+    lag: bestLag,
+    strength: bestStrength,
+    confidence: conf,
+    sampleSize: bestN,
+    points: rawPoints,
+    domainA: domainA,
+    domainB: domainB,
+    signalA: opts.signalA,
+    signalB: opts.signalB,
+    windowDays: windowDays,
+  };
+}
+
+// Convenience: list every available {domain, signal} pair the engine can correlate.
+// Useful for v3-4 narrative layer + R-1 adaptive layer enumeration.
+function _correlateAvailableSignals() {
+  var out = {};
+  Object.keys(SIGNAL_EXTRACTORS).forEach(function(key) {
+    var parts = key.split(':');
+    if (parts.length !== 2) return;
+    if (!out[parts[0]]) out[parts[0]] = [];
+    out[parts[0]].push(parts[1]);
+  });
+  return out;
+}
 // ═══════════════════════════════════════════════════════════════
 // ACTIVITY LOG: Modal handlers
 // ═══════════════════════════════════════════════════════════════
@@ -68679,6 +69687,44 @@ function initSyncVisibility() {
   onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — getSyncPosture()
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 5
+// Synchronous in-memory read of sync-layer health. NO network round-trip
+// (Kael v3.0 risk register: "Sync deadlocks via observability over-reach").
+// Consumers in home.js / medical.js / intelligence layer can read sync state
+// without try/catch dances.
+//
+// Output: { circuitOpen, lastSyncMs, pendingWrites, healthTier }
+//   circuitOpen: boolean — crash-circuit-breaker state (_syncDisabled)
+//   lastSyncMs:  number | null — wall-clock ms of last successful sync
+//   pendingWrites: number — best-effort queued-writes count (0 in v1; placeholder)
+//   healthTier: 'healthy' | 'degraded' | 'broken'
+//
+// HR-12 safe: reads in-memory state only; no Date construction except for the
+// lastSyncMs accessor which returns existing _lastSyncTs (already wall-clock ms).
+// ─────────────────────────────────────────────────────────────────────────
+function getSyncPosture() {
+  var circuitOpen = !!_syncDisabled;
+  var lastMs = (typeof _lastSyncTs !== 'undefined' && _lastSyncTs) ? _lastSyncTs : null;
+  // pendingWrites: v1 best-effort — sync.js does not currently expose a queue counter.
+  // Placeholder 0; future arc may surface real queue depth once a write-queue primitive lands.
+  var pending = 0;
+  var tier = 'healthy';
+  if (circuitOpen) {
+    tier = 'broken';
+  } else if (lastMs && (Date.now() - lastMs) > 60 * 60 * 1000) {
+    // No successful sync in the last hour → degraded.
+    tier = 'degraded';
+  }
+  return {
+    circuitOpen: circuitOpen,
+    lastSyncMs: lastMs,
+    pendingWrites: pending,
+    healthTier: tier,
+  };
+}
 // ─────────────────────────────────────────
 // START — must be last in concat order
 // ─────────────────────────────────────────

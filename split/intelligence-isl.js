@@ -375,6 +375,192 @@ function resolveTimeQuery(text) {
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// _resolveEventAnchor — v3-3 event-anchored temporal-window resolver (NEW)
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 2
+// Region: Kael
+//
+// Charter alignment (CV3-006):
+//   - Honesty: returns null when anchor cannot be resolved (no inferred ranges).
+//   - Extensibility: ANCHOR_RESOLVERS is a row-addition table. New anchor pattern
+//     plugs in by adding a row — no caller-site changes.
+//   - Warmth: produces a friendly `label` field ready for narrative-layer prose.
+//
+// HR-12 cipher-4 gate: zero raw `new Date()` arithmetic. All day-arithmetic
+// goes through _offsetDateStr / string operations on YYYY-MM-DD slices.
+// Episode/milestone/vaccine source dates are sliced to YYYY-MM-DD before use.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Anchor resolver table — row-addition extensibility.
+// Each resolver: { match: RegExp, resolve: (m, ctx, todayStr) => {start, end, label} | null }
+var ANCHOR_RESOLVERS = [
+  // ── since the {illness} ──
+  {
+    match: /\bsince\s+(?:the\s+)?(fever|cold|diarrho?ea|vomit(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kind = m[1];
+      var ep = _anchorMostRecentIllnessEpisode(kind);
+      if (!ep || !ep.startedAt) return null;
+      var startStr = ep.startedAt.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startStr)) return null;
+      return { start: startStr, end: todayStr, label: 'since the ' + kind + ' (' + _anchorFormatLabel(startStr) + ')' };
+    },
+  },
+  // ── the week of {vaccine} ──  (±3 days around vaccine date)
+  {
+    match: /\bthe\s+week\s+of\s+(.+)$/,
+    resolve: function(m, ctx, todayStr) {
+      var vaccineName = m[1].trim();
+      var rec = _anchorFindVaccineRecord(vaccineName);
+      if (!rec || !rec.date) return null;
+      var dateStr = rec.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+      return {
+        start: _offsetDateStr(dateStr, -3),
+        end: _offsetDateStr(dateStr, +3),
+        label: 'the week of ' + rec.name + ' (' + _anchorFormatLabel(dateStr) + ')',
+      };
+    },
+  },
+  // ── before solids ──
+  {
+    match: /\bbefore\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      var dob = _anchorDob(ctx);
+      if (!dob) return null;
+      return { start: dob, end: _offsetDateStr(milestoneDateStr, -1), label: 'before solids' };
+    },
+  },
+  // ── after solids ──
+  {
+    match: /\bafter\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      return { start: milestoneDateStr, end: todayStr, label: 'after solids' };
+    },
+  },
+  // ── since {milestone keyword} ──
+  // (e.g. "since rolling", "since babbling", "since crawling")
+  {
+    match: /\bsince\s+(rolling|crawl(?:ing)?|sit(?:ting)?|babbl(?:ing)?|walk(?:ing)?|stand(?:ing)?|cruis(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kw = m[1].replace(/ing$/, '').replace(/(s)$/, '$1');
+      var ms = _anchorFindMilestoneByKeyword(kw);
+      if (!ms) return null;
+      var firstDate = _anchorMilestoneFirstDate(ms);
+      if (!firstDate) return null;
+      return { start: firstDate, end: todayStr, label: 'since ' + m[1] + ' (' + _anchorFormatLabel(firstDate) + ')' };
+    },
+  },
+  // ── that week / that day (referent-anchored; requires ctx.referent) ──
+  {
+    match: /\bthat\s+(week|day)\b/,
+    resolve: function(m, ctx, todayStr) {
+      if (!ctx || !ctx.referent || !ctx.referent.date) return null;
+      var ref = ctx.referent.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ref)) return null;
+      if (m[1] === 'day') return { start: ref, end: ref, label: 'that day (' + _anchorFormatLabel(ref) + ')' };
+      return { start: _offsetDateStr(ref, -3), end: _offsetDateStr(ref, +3), label: 'that week (' + _anchorFormatLabel(ref) + ')' };
+    },
+  },
+];
+
+// Most-recent-illness lookup. Prefers active episode; falls back to most-recently-resolved.
+function _anchorMostRecentIllnessEpisode(kind) {
+  var arr = null;
+  if (kind === 'fever' && typeof _feverEpisodes !== 'undefined') arr = _feverEpisodes;
+  else if (kind === 'cold' && typeof _coldEpisodes !== 'undefined') arr = _coldEpisodes;
+  else if ((kind === 'diarrhoea' || kind === 'diarrhea') && typeof _diarrhoeaEpisodes !== 'undefined') arr = _diarrhoeaEpisodes;
+  else if ((kind === 'vomiting' || kind === 'vomit') && typeof _vomitingEpisodes !== 'undefined') arr = _vomitingEpisodes;
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  var active = arr.find(function(e) { return e && e.status === 'active'; });
+  if (active) return active;
+  // Most-recent by startedAt.
+  var sorted = arr.filter(function(e) { return e && e.startedAt; }).sort(function(a, b) {
+    return (a.startedAt < b.startedAt) ? 1 : -1;
+  });
+  return sorted[0] || null;
+}
+
+// Vaccine lookup by partial name match (case-insensitive). Reads `vaccData` global.
+function _anchorFindVaccineRecord(query) {
+  if (typeof vaccData !== 'object' || !Array.isArray(vaccData)) return null;
+  var q = query.toLowerCase();
+  var matches = vaccData.filter(function(v) {
+    return v && v.date && !v.upcoming && v.name && v.name.toLowerCase().indexOf(q) !== -1;
+  });
+  if (matches.length === 0) return null;
+  // Most-recent.
+  matches.sort(function(a, b) { return (a.date < b.date) ? 1 : -1; });
+  return matches[0];
+}
+
+// Milestone lookup by keyword (case-insensitive substring on .text).
+function _anchorFindMilestoneByKeyword(kw) {
+  if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
+  var q = kw.toLowerCase();
+  return milestones.find(function(m) {
+    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+  }) || null;
+}
+
+// Earliest non-null progression-date on a milestone (emerging → mastered).
+function _anchorMilestoneFirstDate(ms) {
+  var fields = ['emergingAt', 'practicingAt', 'consistentAt', 'masteredAt'];
+  var earliest = null;
+  for (var i = 0; i < fields.length; i++) {
+    var raw = ms[fields[i]];
+    if (!raw) continue;
+    var ds = raw.substring(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) continue;
+    if (earliest === null || ds < earliest) earliest = ds;
+  }
+  return earliest;
+}
+
+// DOB accessor — prefers ctx.baby.dob, falls back to _ZIVA_DOB constant.
+function _anchorDob(ctx) {
+  if (ctx && ctx.baby && typeof ctx.baby.dob === 'string') return ctx.baby.dob.substring(0, 10);
+  if (typeof _ZIVA_DOB === 'string') return _ZIVA_DOB;
+  return null;
+}
+
+// Friendly date label "Mar 12" — uses Intl in IST-safe mode (noon construction).
+function _anchorFormatLabel(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  var d = new Date(dateStr + 'T12:00:00');  // HR-12-safe: noon construction avoids day-boundary shift; label-formatting only (no arithmetic).
+  if (isNaN(d.getTime())) return dateStr;
+  try {
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+// _resolveEventAnchor — event-anchored temporal-window resolver.
+// Returns {start, end, label} on resolution; null otherwise.
+function _resolveEventAnchor(token, ctx) {
+  if (typeof token !== 'string' || !token.trim()) return null;
+  var lower = token.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var todayStr = (typeof today === 'function') ? today() : (ctx && ctx.now ? toDateStr(ctx.now) : null);
+  if (!todayStr) return null;
+  for (var i = 0; i < ANCHOR_RESOLVERS.length; i++) {
+    var row = ANCHOR_RESOLVERS[i];
+    var m = lower.match(row.match);
+    if (!m) continue;
+    var out = row.resolve(m, ctx || {}, todayStr);
+    if (out && out.start && out.end) return out;
+  }
+  return null;
+}
+
 // ── Step 2: getDomainData('sleep') ──
 
 function getDomainData(domain, startDate, endDate) {

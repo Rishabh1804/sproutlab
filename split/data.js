@@ -4141,3 +4141,157 @@ const ESCALATING_TIPS = {
   ],
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — Engine Primitive Foundation: scoring + recommendation constants
+// Spec: docs/specs/v3-3-engine-spine.md
+// Sibling: docs/specs/scoring-redesign-v1.md (defines schema; this is the v1 data)
+// Charter alignment (CV3-006):
+//   - Honesty: every age-range carries cadence + strength; severity_messages carry parent-legible wording
+//   - Extensibility: adding a recommendation = adding a row in RECOMMENDATION_ROSTER. v2+ fields reserved as null.
+//   - Warmth: severity_messages tuned to "warm + sturdy + calm" (CV3-002 hedge-tier discipline at the engine layer)
+// ─────────────────────────────────────────────────────────────────────────
+
+// Standards-selector fallback chain. _evaluateRecommendation reads ziva_reference_standard
+// from localStorage; if the selected standard lacks a key for a recommendation, the chain
+// falls back through these in order until a match is found.
+const STANDARDS_FALLBACK_CHAIN = ['who'];
+
+// Severity threshold scaffold per scoring-redesign-v1.md §Severity model.
+// 3-level escalation: gentle (score below baseline but >= 0) / firm (score < 0) /
+// urgent (score deeply negative OR strong-strength recommendation unmet >= 3 days).
+const SEVERITY_THRESHOLDS = {
+  gentle:  { scoreCeil: 0,     daysUnmetFloor: 0, strengthMatch: ['*'] },
+  firm:    { scoreCeil: -0.3,  daysUnmetFloor: 2, strengthMatch: ['*'] },
+  urgent:  { scoreCeil: -0.8,  daysUnmetFloor: 3, strengthMatch: ['strong'] },
+};
+
+// Per-domain weights for _scoreDayHero cross-domain unification.
+// Calibration TBD at Scoring Arc S-4 (chronicle row v3-9 / Wave 2 R-1 adaptive layer).
+// v1 defaults are illustrative; treat as ratifyable at arc-S-4 spec time.
+const DOMAIN_WEIGHTS_HERO = {
+  sleep:    0.4,
+  feed:     0.3,
+  activity: 0.3,
+  // Future: medical, milestones, mood
+};
+
+// RECOMMENDATION_ROSTER — the substrate of scoring-redesign-v1.md.
+// Adding a recommendation = adding a row. v2+ fields reserved as null (engine ignores).
+const RECOMMENDATION_ROSTER = {
+  humanContact: {
+    key: 'humanContact',
+    domain: 'sleep',
+    metCriterion: 'count',  // count of qualifying records per day (vs 'duration' for hours-based)
+    rewardWeight:  0.3,
+    missedWeight: -0.15,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+        { startMo: 12, endMo: 24, cadence: 'optional', strength: 'beneficial', minPerDay: 0 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+        { startMo: 12, endMo: 24, cadence: 'optional', strength: 'beneficial', minPerDay: 0 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  cadence: 'daily', strength: 'strong',      minPerDay: 1 },
+        { startMo: 6,  endMo: 12, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'unmet-today',         text: 'Skin-to-skin time today — even 10 min counts.' },
+      firm:   { strength: 'unmet-2days',         text: 'Two days without human contact — try a wrap or chest-to-chest now.' },
+      urgent: { strength: 'unmet-3+days OR critical-window', text: 'Skin-to-skin is highly recommended at this age. Hold time, often.' },
+    },
+    successorOnExpiry: { key: 'outdoorTime', mode: 'placeholder-v1' },
+    // v2+ reserved (engine ignores):
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  sleepAmount: {
+    key: 'sleepAmount',
+    domain: 'sleep',
+    metCriterion: 'duration',
+    rewardWeight:  0.4,
+    missedWeight: -0.2,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 11, idealHoursPerDay: 13 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 11, idealHoursPerDay: 13 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 14, idealHoursPerDay: 16 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 12, idealHoursPerDay: 14 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'short-by-1h',  text: 'Ziva\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
+      firm:   { strength: 'short-by-2h+', text: 'Two-plus hours short on sleep. Consider an extra nap or earlier bedtime.' },
+      urgent: { strength: 'critical',     text: 'Significant sleep deficit. A calm, dim evening + earlier bedtime tonight.' },
+    },
+    successorOnExpiry: null,  // sleepAmount never ages out
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  outdoorTime: {
+    // Placeholder per Architect direction — successor for humanContact at 12mo.
+    // Calibration deferred per chronicle §8 R-9 follow-on.
+    key: 'outdoorTime',
+    domain: 'activity',
+    metCriterion: 'count',
+    rewardWeight:  0.3,
+    missedWeight: -0.15,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 12, endMo: 999, cadence: 'daily', strength: 'recommended', minPerDay: 1 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'unmet-today',  text: 'Outdoor time today — even 20 min counts.' },
+      firm:   { strength: 'unmet-2days',  text: 'Two days indoors — a short outdoor stretch today.' },
+      urgent: { strength: 'unmet-3+days', text: 'Outdoor exposure matters at this age. Plan a walk today.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  // Future rows: tummyTime · vitD3Adherence · vaccinationOnSchedule · screenTimeCeiling · etc.
+};

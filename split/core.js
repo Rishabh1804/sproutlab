@@ -5768,3 +5768,298 @@ function _bugInit() {
   _bugInitFabLongPress();
   _bugShowTooltipIfNew();
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — Engine Primitive Foundation: scoring primitives
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3
+// Sibling: docs/specs/scoring-redesign-v1.md (defines contracts)
+// Charter alignment (CV3-006):
+//   - Honesty: severity-level disclosure on every _scoreDay output; no floor on negative scores
+//   - Extensibility: domain-plug-in pattern (_domainPerRecordScore + _domainDayBonuses registries);
+//     adding a domain = registering handlers, no engine change
+//   - Warmth: severity_messages flow from data.js RECOMMENDATION_ROSTER constants — content tuned
+//     for parent-legible passage; no engine-side prose construction
+// HR-12 safe: uses today() + _offsetDateStr; no raw Date() except _zivaDob constant + Date.parse
+//   for the single static DOB → ms-of-epoch baseline.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Ziva's DOB anchor — single source of truth for age math.
+// Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
+// HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
+const _ZIVA_DOB = '2025-09-04';
+const _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+
+// Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
+// HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
+function _zivaAgeInDays(dateStr) {
+  if (typeof dateStr !== 'string') return 0;
+  const ms = Date.parse(dateStr + 'T00:00:00Z');
+  if (isNaN(ms)) return 0;
+  return Math.max(0, Math.round((ms - _ZIVA_DOB_MS) / (24 * 60 * 60 * 1000)));
+}
+
+// Standards-selector — reads from existing localStorage infra (medical.js:1294 surface).
+// Falls back to 'who' if unset or unknown. Used by every recommendation evaluator.
+function _getActiveStandard() {
+  try {
+    var raw = localStorage.getItem('ziva_reference_standard');
+    if (raw === 'iap' || raw === 'eu' || raw === 'cn' || raw === 'who') return raw;
+    return 'who';
+  } catch (e) { return 'who'; }
+}
+
+// Resolve the active age-range row for a recommendation against the parent's selected standard.
+// Walks the standard's ageRanges; falls back through STANDARDS_FALLBACK_CHAIN if no row matches.
+// Returns null when the recommendation is aged-out (no matching age-range in any standard).
+function _resolveAgeRange(recRow, ageInDays) {
+  const ageMo = ageInDays / 30.44;
+  const std = _getActiveStandard();
+  const tryChain = [std].concat(STANDARDS_FALLBACK_CHAIN.filter(function(s) { return s !== std; }));
+  for (var i = 0; i < tryChain.length; i++) {
+    const standardSpec = recRow.standards && recRow.standards[tryChain[i]];
+    if (!standardSpec || !standardSpec.ageRanges) continue;
+    for (var j = 0; j < standardSpec.ageRanges.length; j++) {
+      const r = standardSpec.ageRanges[j];
+      if (ageMo >= r.startMo && ageMo < r.endMo) return r;
+    }
+  }
+  return null;
+}
+
+// Evaluate a single recommendation against today's data + standard.
+// Pure function. No DOM. No localStorage write. Returns null on unknown key.
+// recentData shape: { today: {...domain data for today}, history: [...recent days] }
+// Output: { status, metToday, daysSinceMet, severityLevel, activeRange }
+//   status: 'active' | 'aged-out' | 'unknown'
+//   metToday: boolean
+//   daysSinceMet: days since last met (or -1 if never met within history window)
+//   severityLevel: 'gentle' | 'firm' | 'urgent' | null (null = met or aged-out)
+function _evaluateRecommendation(key, ageInDays, recentData) {
+  const rec = (typeof RECOMMENDATION_ROSTER !== 'undefined') ? RECOMMENDATION_ROSTER[key] : null;
+  if (!rec) return { status: 'unknown' };
+  const activeRange = _resolveAgeRange(rec, ageInDays);
+  if (!activeRange) {
+    return { status: 'aged-out', successor: rec.successorOnExpiry || null };
+  }
+  // metToday evaluation depends on metCriterion. Domain-specific handlers register their
+  // own predicates; v1 ships generic 'count' and 'duration' evaluators against recentData.
+  var metToday = _evaluateMetCriterion(rec, activeRange, recentData && recentData.today);
+  // daysSinceMet via _countDaysSinceLastMet — walks history backward looking for the most
+  // recent day where the criterion was met. Capped at 30 days.
+  var daysSinceMet = _countDaysSinceLastMet(rec, recentData && recentData.history);
+  // Severity derivation — combines metToday + daysSinceMet + recommendation strength.
+  var severityLevel = null;
+  if (!metToday) {
+    if (daysSinceMet >= 3 && activeRange.strength === 'strong') severityLevel = 'urgent';
+    else if (daysSinceMet >= 2) severityLevel = 'firm';
+    else severityLevel = 'gentle';
+  }
+  return {
+    status: 'active',
+    activeRange: activeRange,
+    metToday: metToday,
+    daysSinceMet: daysSinceMet,
+    severityLevel: severityLevel,
+  };
+}
+
+// Generic met-criterion evaluator. Domain plug-ins can override via _domainEvaluateMet registry
+// (registered at Sleep Arc 3 / Scoring Arc S-2 — the merged consumer arc).
+function _evaluateMetCriterion(rec, activeRange, todayData) {
+  if (!todayData) return false;
+  if (rec.metCriterion === 'count') {
+    // 'count' criterion: domain-specific count of qualifying records >= minPerDay.
+    // Domain handler returns the count; v1 ships sleep-handler at Sleep Arc 3.
+    if (typeof _domainMetCount === 'function') {
+      var c = _domainMetCount(rec.domain, rec.key, todayData);
+      return typeof c === 'number' && c >= (activeRange.minPerDay || 0);
+    }
+    return false;
+  }
+  if (rec.metCriterion === 'duration') {
+    if (typeof _domainMetDuration === 'function') {
+      var hrs = _domainMetDuration(rec.domain, rec.key, todayData);
+      return typeof hrs === 'number' && hrs >= (activeRange.minHoursPerDay || 0);
+    }
+    return false;
+  }
+  return false;
+}
+
+// Walk history backward looking for last day the criterion was met. -1 if never within window.
+function _countDaysSinceLastMet(rec, history) {
+  if (!Array.isArray(history) || history.length === 0) return 30;  // cap
+  for (var i = 0; i < history.length && i < 30; i++) {
+    const day = history[i];
+    if (day && day._met) return i + 1;
+    // history rows pre-tagged with _met by caller (scoring-redesign-v1 contract); fallback ignore.
+  }
+  return 30;
+}
+
+// _scoreDay — per-domain per-day score primitive.
+// Spec: scoring-redesign-v1.md §Architecture.
+// Output: { raw, rewards, penalties, dayBonuses, total, contributions[],
+//           severityLevel, unmetRecommendations[], generatedMessages[] }
+// v3-3 ships this scaffold. Domain plug-ins (Sleep Arc 3 / Scoring Arc S-2) register handlers.
+function _scoreDay(domain, dateStr, dataset) {
+  const ageInDays = _zivaAgeInDays(dateStr);
+  const recentData = _buildRecentData(domain, dateStr, dataset);
+
+  // 1. Per-record contributions via domain handler.
+  var records = recentData && recentData.today && recentData.today.records;
+  if (!Array.isArray(records)) records = [];
+  const recordContribs = [];
+  var raw = 0;
+  for (var i = 0; i < records.length; i++) {
+    var c = 0;
+    if (typeof _domainPerRecordScore === 'function') {
+      c = _domainPerRecordScore(domain, records[i]);
+    }
+    raw += c;
+    recordContribs.push({ recordIndex: i, value: c });
+  }
+
+  // 2. Recommendation rewards + penalties for this domain.
+  var rewards = 0, penalties = 0;
+  const unmet = [], messages = [];
+  if (typeof RECOMMENDATION_ROSTER !== 'undefined') {
+    const recs = Object.values(RECOMMENDATION_ROSTER).filter(function(r) { return r.domain === domain; });
+    for (var r = 0; r < recs.length; r++) {
+      const rec = recs[r];
+      const evald = _evaluateRecommendation(rec.key, ageInDays, recentData);
+      if (evald.status !== 'active') continue;
+      if (evald.metToday) {
+        rewards += rec.rewardWeight || 0;
+      } else {
+        penalties += rec.missedWeight || 0;
+        if (rec.streakPenalty && evald.daysSinceMet >= rec.streakPenalty.afterDays) {
+          var streakDays = Math.min(
+            evald.daysSinceMet - rec.streakPenalty.afterDays + 1,
+            rec.streakPenalty.capDays || 7
+          );
+          penalties += (rec.streakPenalty.perDayBonus || 0) * streakDays;
+        }
+        unmet.push({ key: rec.key, severityLevel: evald.severityLevel });
+        if (evald.severityLevel && rec.severityMessages && rec.severityMessages[evald.severityLevel]) {
+          messages.push({
+            key: rec.key,
+            severityLevel: evald.severityLevel,
+            text: rec.severityMessages[evald.severityLevel].text,
+            strength: rec.severityMessages[evald.severityLevel].strength,
+          });
+        }
+      }
+    }
+  }
+
+  // 3. Day-level domain bonuses (e.g., sleep's contact-combination bonus).
+  var dayBonuses = 0;
+  if (typeof _domainDayBonuses === 'function') {
+    var b = _domainDayBonuses(domain, records);
+    if (typeof b === 'number') dayBonuses = b;
+  }
+
+  // 4. Total + severity classification.
+  const total = raw + rewards + penalties + dayBonuses;
+  const severityLevel = _classifyDaySeverity(total, unmet);
+
+  return {
+    raw: raw,
+    rewards: rewards,
+    penalties: penalties,
+    dayBonuses: dayBonuses,
+    total: total,
+    contributions: recordContribs,
+    severityLevel: severityLevel,
+    unmetRecommendations: unmet,
+    generatedMessages: messages,
+  };
+}
+
+// Build a "recent data" envelope for a domain on a given date.
+// v1 scaffold — domain handlers register their own data extractors. Returns a shape compatible
+// with _evaluateRecommendation's recentData parameter even when no domain handler is registered.
+function _buildRecentData(domain, dateStr, dataset) {
+  if (typeof _domainBuildRecentData === 'function') {
+    return _domainBuildRecentData(domain, dateStr, dataset);
+  }
+  return { today: { records: [] }, history: [] };
+}
+
+// Derive the day's severity-level from its total + unmet count.
+// Per scoring-redesign-v1.md §Severity model (3-level: gentle / firm / urgent).
+function _classifyDaySeverity(total, unmet) {
+  if (!Array.isArray(unmet)) unmet = [];
+  // No-floor policy: don't clamp negative scores — surface severity-messages instead.
+  if (unmet.some(function(u) { return u.severityLevel === 'urgent'; })) return 'urgent';
+  if (total < -0.3 || unmet.some(function(u) { return u.severityLevel === 'firm'; })) return 'firm';
+  if (total < 0 || unmet.length > 0) return 'gentle';
+  return null;  // healthy day
+}
+
+// _scoreWindow — N-day rolling aggregate of _scoreDay outputs.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 contract).
+// Output: { perDay[], avgTotal, avgRaw, avgRewards, avgPenalties, totalUnmet, severityCounts }
+// HR-12 safe: uses _offsetDateStr for day iteration.
+function _scoreWindow(domain, days, endDate, dataset) {
+  if (typeof days !== 'number' || days < 1) days = 7;
+  if (typeof endDate !== 'string') endDate = today();
+  const perDay = [];
+  let sumTotal = 0, sumRaw = 0, sumRewards = 0, sumPenalties = 0, totalUnmet = 0;
+  const sevCounts = { gentle: 0, firm: 0, urgent: 0 };
+  for (let i = 0; i < days; i++) {
+    const ds = _offsetDateStr(endDate, -(days - 1 - i));
+    const score = _scoreDay(domain, ds, dataset);
+    perDay.push({ date: ds, score: score });
+    sumTotal += score.total;
+    sumRaw += score.raw;
+    sumRewards += score.rewards;
+    sumPenalties += score.penalties;
+    totalUnmet += (score.unmetRecommendations || []).length;
+    if (score.severityLevel && sevCounts[score.severityLevel] !== undefined) sevCounts[score.severityLevel]++;
+  }
+  return {
+    perDay: perDay,
+    avgTotal:    sumTotal / days,
+    avgRaw:      sumRaw / days,
+    avgRewards:  sumRewards / days,
+    avgPenalties: sumPenalties / days,
+    totalUnmet:  totalUnmet,
+    severityCounts: sevCounts,
+    windowDays:  days,
+    endDate:     endDate,
+  };
+}
+
+// _scoreDayHero — cross-domain weighted hero score for a single day.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 §_scoreDayHero).
+// Reads DOMAIN_WEIGHTS_HERO from data.js; iterates each domain; aggregates total + severity.
+function _scoreDayHero(dateStr, dataset) {
+  if (typeof dateStr !== 'string') dateStr = today();
+  const weights = (typeof DOMAIN_WEIGHTS_HERO !== 'undefined') ? DOMAIN_WEIGHTS_HERO : { sleep: 0.4, feed: 0.3, activity: 0.3 };
+  const perDomain = {};
+  let weighted = 0;
+  const allMessages = [];
+  const severityRank = { urgent: 3, firm: 2, gentle: 1 };
+  let topSeverity = null, topRank = 0;
+  Object.keys(weights).forEach(function(domain) {
+    const score = _scoreDay(domain, dateStr, dataset);
+    perDomain[domain] = score;
+    weighted += score.total * (weights[domain] || 0);
+    if (score.severityLevel && severityRank[score.severityLevel] > topRank) {
+      topRank = severityRank[score.severityLevel];
+      topSeverity = score.severityLevel;
+    }
+    if (Array.isArray(score.generatedMessages)) {
+      score.generatedMessages.forEach(function(m) { allMessages.push(m); });
+    }
+  });
+  return {
+    total: weighted,
+    perDomain: perDomain,
+    severityLevel: topSeverity,
+    generatedMessages: allMessages,
+    date: dateStr,
+  };
+}
