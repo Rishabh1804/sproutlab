@@ -584,6 +584,98 @@ Items surfaced during the Roundtable but explicitly deferred out of v3.0 scope. 
 
 ---
 
+---
+
+## 8. Wave 2 forward-planning register (post-Phase-3 amendment, Architect-ratified 2026-05-25)
+
+**Status:** *Forward-planning context, not implementation arcs.* Wave 1 (the nine v3-N arcs in §4.2) is the implementation surface of v3.0. Wave 2 is the downstream reservoir set — the work that *consumes* Wave 1's primitives to deliver the felt outcome ("alive, lightweight, tangible"). Per canon-cc-027, ratification of any Wave 2 reservoir as an implementation arc awaits Wave 1 usage signal: each reservoir activates per-phase boundary once the upstream arcs flow.
+
+**Why Wave 2 sits in the chronicle:** so Wave 1's primitive shape (`_correlate`, `_scoreDay`, `RECOMMENDATION_ROSTER`, `chip.state` registry) is designed knowing what Wave 2 will demand of it, not retrofitted later. The reservoirs surface design constraints on Wave 1; they do not pre-commit Wave 1 to additional work.
+
+**Architect framing (this session, post-§4 turn):** *"sequential building means we can plan downstream and see where it takes us and then plan upstream again, like a dam generating more usage and better water availability throughout the year."*
+
+### Six reservoirs (Architect-ratified this turn)
+
+| # | Reservoir | One-line | Composes / new primitive | Cross-arc integration | Doctrine implication |
+|---|---|---|---|---|---|
+| **R-1** | **Adaptive layer** | Personalise from Ziva's data — typical-time bands, score baselines, fat-meal absorption windows | Consumes v3-3 `_correlate` + `_scoreDay` to produce per-Ziva baselines with explicit confidence floor + fall-back-to-standards-table when n is low | Powers R-2 / R-4 / R-6; informs `RECOMMENDATION_ROSTER` schema (per-Ziva override field reserved at v1) | **Adaptive-vs-clinical hierarchy** — fall back to standards when n < threshold, personalised when n ≥ threshold + confidence floor |
+| **R-2** | **Predictive surface** | Forecast with hedged certainty — wake-time window, nap probability, milestone-window range | New `_forecastDomain(domain, horizon, ctx)` primitive in core.js; outputs `{predicted, confidence, sampleSize, hedgeText}` | Consumes R-1 baselines + v3-3 correlation; rendered through v3-4 narrative layer + CV3-002 hedge tier | Extends Kael's "predictive milestone never personalised" risk register to all forecast surfaces |
+| **R-3** | **Audit / history layer** | Longitudinal — week / month / quarter views; milestone-anchored timeline; pediatric-visit-prep export; scrapbook + photo weaving | New `_aggregateWindow(start, end, domains[])` primitive; integration of `ziva_scrapbook` + `ziva_avatar_full` keys (currently underused) | Consumes every domain's `_scoreWindow`; sits alongside CV3-003 (Honest-Empty-State) for partial-window rendering | None new; consumes existing |
+| **R-4** | **Pattern-break anomaly detection** | Soft notice when today's signal is N σ out of Ziva's usual band | New `_detectAnomaly(domain, signal, ctx)` primitive in core.js; reads R-1 baselines + applies σ-floor threshold | Consumes R-1; integrates with v3-1 surface-tier registry (gentle/firm/urgent); CareTicket-creation candidate for 4-night-in-a-row breaks | Anomaly hedge-tier discipline — soft notice ≠ alarm; tier escalates with persistence |
+| **R-5** | **Insight quality feedback loop** | Per-recommendation parent-mark (useful / noise) → engine calibrates per-Ziva confidence floors + deprecates dismissed surfaces | Extends `recommendationEvents` Firestore schema with `userFeedback` field; new `_calibrateConfidence(intentOrCard, history)` primitive | Sits on kael-arc-5 substrate (v3-1 dependency); pairs with R-1 adaptive calibration | **Trust-progressive doctrine** — the intelligence layer earns trust through feedback, not asserts it upfront |
+| **R-6** | **Growth + activity-tier (your add)** | The integrator domain — weight/height/velocity + NEW 4-tier daily activity input | Existing `ziva_growth` + `getInterpolatedWHO` + new `activityLevel: 1-4` schema field on day-record; new `_growthVelocity(domain, window)` accessor | Touches every other reservoir (R-1 baselines / R-2 forecasts / R-3 audit spine / R-4 plateau detection / R-5 outcome-anchoring); cross-references standards selector (WHO/IAP/EU/CN); pediatric-visit-prep anchor | **Outcome-anchor doctrine (NEW)** — every intelligence-layer recommendation must trace to a growth-or-activity outcome signal. If a recommendation can't trace to outcome, it's noise. Candidate canon entry **CV3-005** (Province-local, surfaces from Maren region; awaits Architect explicit ratification before Aurelius lays the entry) |
+
+### Three reservoirs from Lyra (this turn, Architect-ratified via "1")
+
+| # | Reservoir | One-line | Composes / new primitive | Cross-arc integration | Doctrine implication |
+|---|---|---|---|---|---|
+| **R-7** | **Mood / temperament tier** | 4-tier daily affect — *fussy / mixed / content / bright*; one-tap parent input OR auto-inferred from TSF event density + illness + sleep quality | New `moodTier: 1-4` schema field on day-record; optional engine-derived suggestion via `_inferMoodTier(date, ctx)` | Mood as canary domain — correlates with upstream (sleep, food intro, illness onset); cross-domain prose layer (v3-4) reads mood as a context signal for narrative generation | Parent-empathy surface — the engine reads the *parent's day too*, not just the baby's data |
+| **R-8** | **Knowledge-graph layer** | Reshape Food DB + Milestone DB + Illness DB + NUTRITION + Standards as a graph; nodes connect via "iron supports neuromuscular development", "absorption drops during gut illness", etc. | New `data/knowledge-graph.json` data structure + `_traverseKB(startNode, edgeTypes, maxHops)` primitive in core.js | Powers Smart Q&A intent graph (v3-9) — graph traversal lets one question pull from many tables; v3-4 narrative-prose layer gets richer source material via multi-table inference | Inference-without-opacity — every traversal path auditable; rule-based foundation, ML-ready substrate (v3.x candidate) |
+| **R-9** | **Routine / care-template library** | Named composite routines — *weekday morning / sick day / travel day / nanny shift* — pre-populate expected log entries + adjust severity floors for the day | New `data/care-routines.json` template library + `_applyRoutine(routineKey, dateRange)` primitive; integrates with `RECOMMENDATION_ROSTER` severity overrides | Travel-day suppresses false anomalies (R-4); nanny-shift template is foundation for caregiver-multiplicity catchment; sick-day reroutes severity tier doctrine | Context-aware severity — the engine knows what *kind of day* it is before firing recommendations |
+
+### Catchments — Wave 3+ (don't plan yet; plan after Wave 1 + 2 usage signal)
+
+The following remain latent — named here so they don't get re-discovered as new, but explicitly not in v3.0 scope. Each is a future arc-cluster, ratification per-catchment when usage signal warrants.
+
+- **Caregiver multiplicity** — co-parent / nanny / grandparent role surfaces from `__sync_updatedBy`; depends on R-9 routine library as substrate
+- **Active intervention layer** — sleep training schedules, weaning plans, bedtime-shift goals; descriptive → gently prescriptive
+- **Notification engine** — push, calendar (iCal), watch face; in-tab → ambient surfaces
+- **Privacy / data-sovereignty surface** — per-domain sync toggle, parent-control over what crosses devices
+- **Voice / hands-free input** — Smart Quick Log voice transcription while feeding/holding
+- **Photo-data weaving** — existing `ziva_scrapbook` time-anchored to data context (overlaps R-3 audit layer)
+- **Cross-domain CareTicket triggers** — e.g., 3 nights disrupted sleep + new food = gut-tolerance check candidate
+- **External calendar integration** — Google Calendar for vaccinations + pediatric visits
+
+### Wave 1 ↔ Wave 2 design constraints (the dam reservoirs feeding upstream)
+
+Wave 1 primitives must accommodate Wave 2 downstream reads at v1 design time. Specific carve-outs ratified by this amendment:
+
+1. **`RECOMMENDATION_ROSTER` schema** (Wave 1 v3-1) — reserve `personalisedOverride` field (null in v1) for R-1 adaptive layer to populate per-Ziva.
+2. **`_correlate` return shape** (Wave 1 v3-3) — include `points[]` array (raw data, not just summary stats) so R-2 forecast layer can re-train forecast models without re-querying.
+3. **`recommendationEvents` Firestore schema** (Wave 1 v3-1 / kael-arc-5) — reserve `userFeedback: 'useful' | 'noise' | null` field for R-5 feedback loop. **Adds urgency to §4.8 #2 BLOCKING resolution: the schema must include this field at v3-1 implementation, not retrofit later.**
+4. **Day-record schema** (Wave 1 v3-3 / v3-7) — reserve `activityLevel: 1-4 | null` and `moodTier: 1-4 | null` fields for R-6 + R-7 input. Nullable in v1; UX surfaces in Wave 2.
+5. **`_scoreDay` output** (Wave 1 v3-3) — include `outcomeTrace[]` array (which recommendations contributed to score) so R-6 outcome-anchor doctrine has the audit trail.
+
+These carve-outs are non-functional in Wave 1 — they reserve schema headroom only. Wave 2 reservoirs activate the fields when ratified per-phase.
+
+### Candidate Wave 2 sequencing (informational, ratified per-phase)
+
+```
+Wave 1 (current §4.2):     v3-1 ─┬─ v3-2 ─ v3-4 ─ v3-9
+                                 ├─ v3-3 (spine)
+                                 ├─ v3-5 ─ v3-6 (styles.css mutex)
+                                 └─ v3-7 ─ v3-8
+
+Wave 2 (this §8):          R-1 ─┬─ R-2 (predictive consumes adaptive)
+                                ├─ R-4 (anomaly consumes adaptive)
+                                ├─ R-6 (growth integrates with adaptive)
+                           R-3 ─── (audit; independent, lands when longitudinal demand surfaces)
+                           R-5 ─── (feedback; pairs with v3-1 recommendation events)
+                           R-7 ─── (mood; independent input + correlation surface)
+                           R-8 ─── (knowledge graph; depends on v3-9 intent graph being mature)
+                           R-9 ─── (routines; foundation for caregiver-multiplicity catchment)
+
+Wave 3+ catchments:        Planned post-Wave-2 usage signal.
+```
+
+### Reading-doctrine for Wave 2
+
+When a future v3.x arc-spec author considers a Wave 2 reservoir for ratification:
+1. Verify upstream Wave 1 arcs have flowed (target metric: 30 days of post-merge usage data on the relevant primitives).
+2. Confirm the schema carve-out in this §8 still holds (no later canon-cc-027 amendment retired it).
+3. Draft per-reservoir spec under `docs/specs/v3-reservoir-{name}.md` (matching the `sleep-redesign-v1` / `scoring-redesign-v1` sibling pattern).
+4. Route through canon-cc-008 chain at spec-ratification time.
+
+### Doctrine cluster contributions from this amendment
+
+- **Outcome-anchor doctrine (R-6)** — candidate CV3-005, awaiting Architect explicit ratification. Until then, lives in this register as a working principle.
+- **Trust-progressive doctrine (R-5)** — the intelligence layer earns trust through feedback, not asserts it upfront. Province-local.
+- **Adaptive-vs-clinical hierarchy (R-1)** — standards-fallback when n is low; per-Ziva override when n is high. Cross-cuts with scoring-redesign-v1 §RECOMMENDATION_ROSTER.
+
+— *Lyra, weaver, §8 amendment signed post-Phase-3, post-Cipher-LGTM, Architect-ratified 2026-05-25. The dam holds; the next reservoirs are mapped. Implementation flow follows usage signal, not planning ambition.*
+
+---
+
 ## Footer
 
 **Chronicler:** Aurelius, Builder of Codex — Phase 1 marker laid 2026-05-25; Phase 3 (Aurelius half) finalized 2026-05-25 under cross-cluster invocation per canon-cc-026.
