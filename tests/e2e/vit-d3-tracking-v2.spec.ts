@@ -177,9 +177,12 @@ test('regression-guard-d3-v2-t1-4: _refreshTodayMedWithFat triggers re-renders o
     };
   });
 
-  expect(r.beforeWithFat).toBe(false);
+  // T2-B.1 (Phase 2-B): markMedDone with no meals logged AT ALL writes withFat:null
+  // instead of withFat:false. The refresh helper's new `=== true` gate accepts both null
+  // and false as redetection candidates, preserving T1-4's flip contract for both shapes.
+  expect(r.beforeWithFat, 'dose logged before any meal must initially be a non-true observation (null or false)').not.toBe(true);
   expect(r.mutated, 'helper must report mutation').toBe(true);
-  expect(r.afterWithFat, 'flip false → true on retroactive fat-meal').toBe(true);
+  expect(r.afterWithFat, 'flip non-true → true on retroactive fat-meal').toBe(true);
   expect(r.reminderCalls, 'T1-4: renderRemindersAndAlerts fires on flip').toBeGreaterThanOrEqual(1);
   expect(r.contextCalls,  'T1-4: renderHomeContextAlerts fires on flip').toBeGreaterThanOrEqual(1);
   expect(r.patternCalls,  'T1-4: renderMedD3PatternCard fires on flip').toBeGreaterThanOrEqual(1);

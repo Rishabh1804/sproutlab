@@ -935,12 +935,32 @@ function markMedDone(name, idx, givenTime) {
   const loggedAt = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   const givenAt = (typeof givenTime === 'string' && /^\d{1,2}:\d{2}$/.test(givenTime)) ? givenTime : loggedAt;
   const fat = _detectFatContextNearTime(givenAt, todayStr);
+  // T2-B.1: half-awake morning. Parent gives D3 at 7:55 AM BEFORE logging breakfast.
+  // _detectFatContextNearTime finds no meal in window → returns withFat:false. The
+  // reminder card would immediately show "no fat-meal logged nearby" — false negative
+  // because the parent simply hasn't logged the meal YET. Three-state schema: when
+  // detection finds no fat AND zero meals logged today AT ALL, write withFat:null
+  // (unknown) instead of withFat:false. The render side already gates the badge on
+  // `withFat === false` (line ~742), so null naturally suppresses the badge. The
+  // refresh helper at core.js _refreshTodayMedWithFat flips null/false → true on the
+  // first qualifying meal save (per CR-14 + T1-1 doctrine), so the unknown state
+  // self-resolves once the parent logs breakfast.
+  const dayFeed = feedingData[todayStr] || {};
+  // V-M-89 (Maren synth-fold): defensive against legacy installs where a meal field was
+  // stored as the literal string 'null' or 'undefined' (pre-CR-10 corner). Without the
+  // explicit guards a truthy-non-empty 'null' string would short-circuit noMealsLoggedToday
+  // → withFat:false written → false "no fat-meal" badge fires on a 7:55 AM dose.
+  const noMealsLoggedToday = !['breakfast','lunch','dinner','snack'].some(function(m) {
+    var v = dayFeed[m];
+    return v && String(v).trim() && v !== 'null' && v !== 'undefined';
+  });
+  const writeWithFat = (fat.withFat === false && noMealsLoggedToday) ? null : fat.withFat;
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
   medChecks[todayStr][name] = {
     status:   'done',
     givenAt:  givenAt,
     loggedAt: loggedAt,
-    withFat:  fat.withFat,
+    withFat:  writeWithFat,
     fatFood:  fat.fatFood,
     fatDelta: fat.fatDelta,
   };
@@ -982,7 +1002,22 @@ function confirmMedDoneAt(name, idx) {
     if (input) { try { input.focus(); } catch(e) {} }
     return;
   }
+  // T2-B.3: reject future times. A mistyped 23:00 (meant 11:00) would stamp the future,
+  // re-run detection at an empty window, and silently corrupt withFat. Block at the editor.
+  // V-M-90 (Maren synth-fold): strict `>` — same-minute picks are accepted as "just now"
+  // (parent logs within the wall-clock minute the dose was actually given). `>=` would
+  // forbid the most common case of "I just gave it" within the current minute.
+  if (_hhmmToMinutes(picked) > _hhmmToMinutes(_currentHHMM())) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Time must be in the past');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
   markMedDone(name, idx, picked);
+}
+// T2-B.3 helper: canonical 24h HH:MM for current wall-clock, matching the en-GB storage
+// convention (V-M-60). Used by the future-time gate in confirmMedDoneAt + confirmMedAdjust.
+function _currentHHMM() {
+  return new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
 }
 function cancelMedDoneAt(idx) {
   renderRemindersAndAlerts();
@@ -1035,8 +1070,24 @@ function undoMedSkip(name, idx) {
 // Adjust the administration time of an already-logged dose. Re-runs with-fat
 // detection on the new givenAt. Works on today's dose (the only adjust surface
 // in v1; past-day adjusts continue to use resolveMissedMed).
-function adjustMedTime(name, idx, newTime) {
-  const todayStr = today();
+function adjustMedTime(name, idx, newTime, dayStr) {
+  // T2-B.2: dayStr is the captured-at-open day. Defaults to today() for legacy callers.
+  // If today() has rolled past the captured day (parent opened editor at 23:58, saved at
+  // 00:01), don't silently write a record on the new day's empty slot — toast and abort
+  // so the parent knows why Save didn't take effect. Pre-fix the function would no-op
+  // silently because medChecks[newToday][name] was undefined, leaving the editor wedged
+  // in the now-empty new-date slot.
+  const todayStr = dayStr || today();
+  if (todayStr !== today()) {
+    // V-M-88 (Maren synth-fold): soften toast — no past-day Adjust UI exists in v1
+    // (the spec confirms past-day adjusts continue to use resolveMissedMed). A tired
+    // parent at 00:01 reading "please re-open Adjust on yesterday's record" would tap
+    // around looking for a button that isn't there. Reassure that the prior save stands.
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Date changed at midnight — yesterday\'s dose is already saved');
+    renderRemindersAndAlerts();
+    renderHomeContextAlerts();
+    return;
+  }
   if (!medChecks[todayStr] || !medChecks[todayStr][name]) return;
   if (!newTime || !/^\d{1,2}:\d{2}$/.test(newTime)) return;
   const existing = parseMedCheck(medChecks[todayStr][name]);
@@ -1048,7 +1099,12 @@ function adjustMedTime(name, idx, newTime) {
   // false, the parent's earlier observation is the source of truth — they may have
   // edited the meal text after the fact, or the new time happens to fall outside
   // the ±60min window even though the original pairing was real.
-  const preserveWithFat = (existing.withFat === true && fat.withFat === false);
+  // T2-B.5 (V-M-77): tighten the truth-table from `=== false` to `!== true` so a future
+  // _detectFatContextNearTime that legitimately returns withFat:null (unknown) doesn't
+  // accidentally erase a positive observation. Currently dead path (detector always
+  // returns boolean per core.js:_detectFatContextNearTime) — doctrine-cleaner for the
+  // T2-B.1 three-state schema that introduces withFat:null at the markMedDone path.
+  const preserveWithFat = (existing.withFat === true && fat.withFat !== true);
   // V-M-65: canonical 24h storage (en-GB).
   medChecks[todayStr][name] = {
     status:   existing.status,
@@ -1078,9 +1134,12 @@ function openMedAdjust(name, idx) {
   const curAt = cur && cur.givenAt ? cur.givenAt : '';
   const norm = String(curAt).replace(/\s*(AM|PM)\s*$/i, '');
   const hint = norm ? '' : '<span class="supp-adjust-hint t-sub t-sm">No time captured — enter actual time:</span>';
+  // T2-B.2: capture today() at editor-open time and thread via data-captured-day so
+  // confirmMedAdjust can detect midnight rollover before writing to the wrong slot.
+  const capturedToday = today();
   actionRow.innerHTML =
     hint +
-    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(norm) + '">' +
+    '<input type="time" class="supp-time-input" id="supp-time-' + idx + '" value="' + escAttr(norm) + '" data-captured-day="' + escAttr(capturedToday) + '">' +
     '<button class="supp-check-btn" data-action="confirmMedAdjust" data-arg="' + escAttr(name) + '" data-arg2="' + idx + '">Save</button>' +
     '<button class="supp-skip-btn" data-action="cancelMedDoneAt" data-arg2="' + idx + '">Cancel</button>';
 }
@@ -1095,7 +1154,18 @@ function confirmMedAdjust(name, idx) {
     if (input) { try { input.focus(); } catch(e) {} }
     return;
   }
-  adjustMedTime(name, idx, picked);
+  // T2-B.3: reject future times. Parent mistypes 23:00 when they meant 11:00 →
+  // adjustMedTime stamps the future stamp, re-runs detection (no fat-meal at 23:00),
+  // withFat may flip true→false. Block at the editor so the parent can correct without
+  // wedging the slot. Strict `>` per V-M-90 — same-minute picks pass (see confirmMedDoneAt).
+  if (_hhmmToMinutes(picked) > _hhmmToMinutes(_currentHHMM())) {
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Time must be in the past');
+    if (input) { try { input.focus(); } catch(e) {} }
+    return;
+  }
+  // T2-B.2: pass the captured day to adjustMedTime so it can detect midnight rollover.
+  const capturedDay = input && input.dataset ? input.dataset.capturedDay : null;
+  adjustMedTime(name, idx, picked, capturedDay);
 }
 
 function markMedSkipped(name, idx) {
@@ -5142,8 +5212,9 @@ function _obGetPackList(wx, ageM) {
     items.push('Extra outfit (#2)');
   }
 
-  // Medical context
-  var vitD3Needed = _obCheckVitD3();
+  // Medical context — T2-B.4: outing-pack intent, skip != resolved (parent might undo
+  // or the morning skip might not preclude bringing the bottle on an afternoon outing).
+  var vitD3Needed = _obCheckVitD3Needed('outing-pack');
   if (vitD3Needed) items.push('Vitamin D3 drops');
 
   if (_obIsTeethingActive() && !items.some(function(i) { return i.indexOf('Teething') >= 0; })) {
@@ -5345,8 +5416,10 @@ function _obRenderActivity(outing) {
 function _obRenderMedical() {
   var items = [];
 
-  // Vit D3 check
-  var vitD3 = _obCheckVitD3();
+  // Vit D3 check — T2-B.4: outing-give intent, skip != resolved (still surface as a
+  // checkable item on the outing checklist; parent may have skipped this morning for a
+  // reason that doesn't apply to the outing itself, e.g. brand swap pending).
+  var vitD3 = _obCheckVitD3Needed('outing-give');
   if (vitD3) {
     items.push({ icon: 'pill', color: 'sky', text: 'Give Vit D3 before leaving (if not already given today)' });
   }
@@ -5397,24 +5470,26 @@ function _obIsTeethingActive() {
   });
 }
 
-function _obCheckVitD3() {
-  // Returns true if Vit D3 needs attention.
-  // CR-5: Skipped doses count as RESOLVED — parent explicitly chose to skip and
-  // _obCheckVitD3 must respect that decision, otherwise the home overlay keeps
-  // flagging 'D3 pending' in contradiction to the parent's just-recorded skip.
+// T2-B.4: intent-aware D3 surfacing. V-M-67/74's original "skip counts as resolved"
+// doctrine was correct for the home overlay (parent sees the dose as handled, don't nag).
+// The same helper services the outing-planner packing list + outing give-list, where
+// skip != resolved — a 7 AM misclick-skip would silently suppress D3 from packing for an
+// afternoon outing. Route the semantic by intent:
+//   'overlay'      — skip counts as resolved (parent decided; don't keep flagging)
+//   'outing-pack'  — skip != resolved (still pack the bottle; parent may undo or re-give)
+//   'outing-give'  — skip != resolved (still surface as checkable on the outing)
+// 'done' is universally resolved across all intents.
+function _obCheckVitD3Needed(intent) {
   var todayStr = today();
   var dayEntry = medChecks ? medChecks[todayStr] : null;
-  if (!dayEntry) return true;
-  var d3Resolved = false;
   var activeMeds = (meds || []).filter(function(m) { return m.active; });
-  activeMeds.forEach(function(m) {
-    if (m.name && m.name.toLowerCase().indexOf('d3') >= 0) {
-      if (medCheckIsDone(dayEntry[m.name]) || medCheckSkipped(dayEntry[m.name])) {
-        d3Resolved = true;
-      }
-    }
-  });
-  return !d3Resolved;
+  var d3 = null;
+  activeMeds.forEach(function(m) { if (m.name && m.name.toLowerCase().indexOf('d3') >= 0) d3 = m; });
+  if (!d3) return false;
+  var todayCheck = dayEntry ? dayEntry[d3.name] : null;
+  if (medCheckIsDone(todayCheck)) return false;
+  if (intent === 'overlay' && medCheckSkipped(todayCheck)) return false;
+  return true;
 }
 
 function _obGetNextVaccine() {
