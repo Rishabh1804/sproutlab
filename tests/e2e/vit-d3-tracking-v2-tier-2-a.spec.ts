@@ -97,6 +97,11 @@ test('regression-guard-d3-v2-t2-a-2: pattern card preserves through-yesterday st
   expect(r.text, 'T2-A.2: streak label must read "through yesterday" on legitimate skip').toContain('Streak through yesterday');
   expect(r.text, 'T2-A.2: 13-day prior streak must be preserved (not zeroed)').toContain('13 days');
   expect(r.text, 'T2-A.2: must NOT show the "Current streak: 0" regression').not.toContain('Current streak');
+  // V-M-85 (Maren synth-fold): T2-A.1 boundary mirrored at the skipped-today case via V-M-83.
+  // Skipped today must be excluded from adherence denominator on the same boundary that
+  // excludes it from the streak walk — otherwise the card renders "13/14 (93%)" beside
+  // "Streak through yesterday: 13" (the three-line incoherence T2-A.1 was authored to fix).
+  expect(r.text, 'V-M-83: skipped today must be excluded from adherence (13/13 not 13/14)').toContain('Adherence: 13/13 days (100%)');
 });
 
 // ── T2-A.3 ───────────────────────────────────────────────────────────────────

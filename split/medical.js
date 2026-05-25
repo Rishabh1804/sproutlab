@@ -4367,7 +4367,12 @@ function renderMedD3PatternCard() {
   // "13/14 (93%) · streak through yesterday 13 · 1 day not logged" for a perfect-streak parent.
   const todayParsed = eligibleDays.length > 0 ? eligibleDays[eligibleDays.length - 1].parsed : null;
   const lastDayIsToday = eligibleDays.length > 0 && eligibleDays[eligibleDays.length - 1].date === todayStr;
-  const excludeToday = !todayParsed && lastDayIsToday;
+  // V-M-83 (Maren synth-fold, Phase 2-A): mirror T2-A.2's todayIsSkippedOrUnlogged.
+  // A legitimately-skipped today should be excluded from adherence on the same boundary
+  // that excludes it from the streak walk — otherwise the card reads "Adherence: 13/14
+  // (93%)" beside "Streak through yesterday: 13 days," reproducing the very three-line
+  // incoherence T2-A.1 was authored to eliminate, just at a different boundary.
+  const excludeToday = (!todayParsed || todayParsed.status === 'skipped') && lastDayIsToday;
   const adherenceWindow = excludeToday ? eligibleDays.slice(0, -1) : eligibleDays;
   const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
   const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
