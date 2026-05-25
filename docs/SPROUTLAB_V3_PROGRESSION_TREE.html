@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=4.0">
+<meta name="theme-color" content="#f5e9dd">
+<title>SproutLab v3.0 — Progression Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ────────── TOKENS (mirrors styles.css) ────────── */
+:root {
+  --warm:       #fef6f0;
+  --warm-deep:  #f5e9dd;
+  --paper:      #f3e4d2;
+  --surface:    #fffbf7;
+  --text:       #3a2a2a;
+  --mid:        #5a4242;
+  --light:      #806c6c;
+  --softer:     #b5a8a8;
+  --glass:      rgba(58, 42, 42, 0.08);
+  --glass-strong: rgba(58, 42, 42, 0.16);
+  --sage:   #b5d5c5;   --tc-sage:   #2d6e4f;
+  --rose:   #f2a8b8;   --tc-rose:   #9e3e52;
+  --amber:  #e8b86d;   --tc-amber:  #856404;
+  --lav:    #c9b8e8;   --tc-lav:    #5e4d8a;
+  --sky:    #a8cfe0;   --tc-sky:    #2a6a85;
+  --indigo: #9ba8d8;   --tc-indigo: #3a4685;
+  --peach:  #fad4b4;
+  --gold:        #d4a93c;
+  --gold-bright: #f0c553;
+  --silver:      #b5b5c0;
+  --silver-bright: #e0e0e8;
+  --shadow-sm: 0 1px 3px rgba(58,42,42,0.08);
+  --shadow-md: 0 4px 12px rgba(58,42,42,0.10), 0 12px 28px rgba(58,42,42,0.06);
+  --shadow-lg: 0 14px 40px rgba(58,42,42,0.20), 0 28px 80px rgba(58,42,42,0.10);
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 22px; --r-xxl: 28px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--text);
+  line-height: 1.5;
+  overflow: hidden;
+  /* Texture H: watercolor wash + parchment grain — set on the canvas, not body */
+  background: var(--warm);
+}
+
+.app { display: grid; grid-template-rows: auto auto 1fr; height: 100vh; min-height: 600px; }
+
+/* ────────── HEADER ────────── */
+header {
+  padding: 14px 20px 10px;
+  background: linear-gradient(180deg, var(--warm) 0%, var(--warm-deep) 100%);
+  border-bottom: 1px solid var(--glass-strong);
+  z-index: 30;
+  position: relative;
+}
+header .hd-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+header h1 {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(20px, 3vw, 26px);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+header .meta { font-size: 12px; color: var(--mid); }
+header .meta code { padding: 1px 6px; background: var(--glass); border-radius: 4px; font-size: 0.92em; }
+
+/* ────────── FILTER + PLAN BAR ────────── */
+.controls {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 20px;
+  background: var(--warm-deep);
+  border-bottom: 1px solid var(--glass-strong);
+  z-index: 25;
+  position: relative;
+  overflow: hidden;
+}
+.filter-strip {
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+.filter-strip::-webkit-scrollbar { height: 4px; }
+.filter-strip::-webkit-scrollbar-thumb { background: var(--glass-strong); border-radius: 2px; }
+.chip {
+  flex-shrink: 0;
+  border: 1.5px solid var(--light);
+  background: transparent;
+  color: var(--mid);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font: 600 12px 'Nunito', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.chip:hover, .chip:focus { border-color: var(--text); color: var(--text); outline: none; }
+.chip.active { background: var(--text); color: var(--warm); border-color: var(--text); }
+.chip.plan-toggle { border-color: var(--gold); color: var(--tc-amber); }
+.chip.plan-toggle.active { background: var(--gold); color: var(--text); border-color: var(--gold); }
+.chip-divider { width: 1px; align-self: stretch; background: var(--glass-strong); margin: 2px 4px; flex-shrink: 0; }
+
+/* Plan tray — appears when 1+ nodes are planned */
+.plan-tray {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 20px;
+  background: linear-gradient(90deg, rgba(232,184,109,0.18) 0%, rgba(232,184,109,0.08) 100%);
+  border-bottom: 1px solid var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tc-amber);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.plan-tray.open { max-height: 80px; padding: 10px 20px; }
+.plan-tray .pt-label { white-space: nowrap; }
+.plan-queue {
+  display: flex; gap: 6px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px 0;
+}
+.plan-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface);
+  border: 1.5px solid var(--gold);
+  color: var(--text);
+  padding: 4px 8px 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.plan-pill .pp-order { background: var(--gold); color: var(--text); border-radius: 999px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
+.plan-pill .pp-x { color: var(--light); font-size: 13px; padding: 0 2px; }
+.plan-pill:hover { background: var(--warm); }
+.plan-action {
+  flex-shrink: 0;
+  background: var(--gold);
+  color: var(--text);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font: 700 11px 'Nunito', sans-serif;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.plan-action:hover { background: var(--gold-bright); }
+.plan-action.secondary { background: transparent; color: var(--tc-amber); border: 1.5px solid var(--gold); }
+.plan-action.secondary:hover { background: rgba(212,169,60,0.10); }
+
+/* ────────── MAIN CANVAS ────────── */
+.canvas-shell {
+  position: relative;
+  overflow: hidden;
+  /* Texture H — watercolor wash + parchment grain + sepia spots */
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(168,207,224,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 70% 60% at 80% 75%, rgba(201,184,232,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(232,184,109,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 70% 30%, rgba(245,232,221,0.40) 0%, transparent 100%),
+    var(--warm);
+}
+.canvas-shell::before {
+  /* Parchment sepia spots + watercolor flora */
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(180,150,120,0.10) 0%, transparent 25%),
+    radial-gradient(circle at 85% 80%, rgba(180,150,120,0.08) 0%, transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(220,200,180,0.06) 0%, transparent 60%),
+    radial-gradient(circle at 35% 60%, rgba(180,213,197,0.15) 0%, transparent 30%),
+    radial-gradient(circle at 65% 40%, rgba(250,212,180,0.12) 0%, transparent 35%);
+  pointer-events: none;
+  z-index: 1;
+}
+.canvas-shell::after {
+  /* Parchment fine grain */
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(140,100,80,0.020) 0px, rgba(140,100,80,0.020) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(140,100,80,0.014) 0px, rgba(140,100,80,0.014) 1px, transparent 1px, transparent 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+svg.tree {
+  display: block;
+  width: 100%; height: 100%;
+  cursor: grab;
+  user-select: none;
+  position: relative;
+  z-index: 2;
+}
+svg.tree.grabbing { cursor: grabbing; }
+
+/* ────────── NODE STYLES (SVG classes) ────────── */
+.node-group { transition: opacity 0.2s ease; cursor: pointer; }
+.node-group.dimmed { opacity: 0.14; }
+.node-group.dimmed .node-label-bg { opacity: 0; }
+
+/* Outer halo (capstone only) */
+.node-halo { pointer-events: none; opacity: 0; transition: opacity 0.2s ease; }
+.node-halo.show { opacity: 1; }
+.node-halo.gold { filter: drop-shadow(0 0 8px rgba(232,184,109,0.6)); }
+.node-halo.silver { filter: drop-shadow(0 0 6px rgba(181,181,192,0.5)); }
+
+/* Status ring (outer stroke of the node) */
+.node-ring {
+  fill: none;
+  stroke-width: 3;
+  transition: stroke-width 0.15s ease;
+}
+.node-ring.ratified    { stroke: var(--tc-sage); }
+.node-ring.in-flight   { stroke: var(--amber); stroke-width: 3.5; }
+.node-ring.drafted     { stroke: var(--tc-lav); stroke-dasharray: 0; }
+.node-ring.forward     { stroke: var(--light); stroke-width: 2.2; stroke-dasharray: 4 3; }
+
+/* In-flight pulse animation */
+@keyframes inFlightPulse {
+  0%, 100% { stroke-opacity: 1; stroke-width: 3.5; }
+  50% { stroke-opacity: 0.5; stroke-width: 4.5; }
+}
+.node-ring.in-flight { animation: inFlightPulse 2s ease-in-out infinite; }
+
+/* Plan-mode golden ring overlay */
+.node-plan-ring {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-dasharray: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.node-plan-ring.show {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(232,184,109,0.7));
+}
+
+/* Inner fill — region color */
+.node-fill { stroke: none; transition: filter 0.15s ease; }
+.node-fill.engine  { fill: #a8b3dd; }
+.node-fill.care    { fill: #f0afba; }
+.node-fill.surface { fill: #dfc4e8; }
+.node-fill.shared  { fill: #bbdcc9; }
+
+/* Glyph in the node */
+.node-glyph {
+  pointer-events: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+  fill: none;
+  stroke: #ffffff;
+}
+
+/* Hover / selected emphasis */
+.node-group.highlighted .node-ring { stroke-width: 4.5; }
+.node-group.selected .node-ring { stroke-width: 5; }
+.node-group.selected .node-fill { filter: brightness(1.10); }
+
+/* Capstone marker (small star above the node) */
+.node-capstone-mark { pointer-events: none; }
+
+/* Label below the node */
+.node-label-bg {
+  fill: var(--surface);
+  stroke: var(--glass-strong);
+  stroke-width: 0.5;
+  filter: drop-shadow(0 1px 2px rgba(58,42,42,0.08));
+  transition: opacity 0.2s ease;
+}
+.node-label {
+  pointer-events: none;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 12px;
+  fill: var(--text);
+  text-anchor: middle;
+}
+.node-sub {
+  pointer-events: none;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 9.5px;
+  fill: var(--mid);
+  text-anchor: middle;
+  letter-spacing: 0.1px;
+}
+
+/* Plan queue order badge inside node */
+.node-plan-badge {
+  pointer-events: none;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  fill: var(--text);
+  text-anchor: middle;
+}
+
+/* ────────── EDGES ────────── */
+.edge {
+  fill: none;
+  stroke: var(--mid);
+  stroke-width: 2;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, stroke-width 0.15s ease;
+}
+.edge.critical { stroke: var(--tc-rose); stroke-width: 2.5; opacity: 0.55; }
+.edge.calibration { stroke: var(--tc-lav); stroke-width: 2; opacity: 0.55; stroke-dasharray: 6 5; }
+.edge.gate { stroke: var(--light); stroke-width: 2; opacity: 0.45; stroke-dasharray: 3 4; }
+.edge.dimmed { opacity: 0.04 !important; }
+.edge.highlighted { opacity: 1 !important; stroke-width: 3.5 !important; }
+.edge.planned { stroke: var(--gold); stroke-width: 3; opacity: 0.85; filter: drop-shadow(0 0 4px rgba(232,184,109,0.5)); }
+
+/* ────────── LAYER GUTTERS ────────── */
+.layer-gutter {
+  fill: var(--surface);
+  fill-opacity: 0.35;
+  stroke: var(--glass-strong);
+  stroke-width: 0.5;
+}
+.layer-label {
+  pointer-events: none;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 11px;
+  fill: var(--mid);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.layer-num {
+  pointer-events: none;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-size: 20px;
+  fill: var(--light);
+  fill-opacity: 0.5;
+}
+
+/* ────────── HOVER TOOLTIP (primary read pattern) ────────── */
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  background: var(--surface);
+  border: 1px solid var(--glass-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 320px;
+  color: var(--text);
+}
+.tooltip.show { opacity: 1; }
+.tt-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.tt-sub { color: var(--mid); font-size: 11px; margin-bottom: 8px; font-weight: 600; }
+.tt-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.tt-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.tt-tag-r-ratified { background: var(--sage); color: var(--tc-sage); }
+.tt-tag-r-in-flight { background: var(--amber); color: var(--tc-amber); }
+.tt-tag-r-drafted   { background: var(--lav); color: var(--tc-lav); }
+.tt-tag-r-forward   { background: transparent; color: var(--mid); border: 1px dashed var(--light); }
+.tt-tag-rg-engine  { background: var(--indigo); color: var(--warm); }
+.tt-tag-rg-care    { background: var(--rose); color: var(--warm); }
+.tt-tag-rg-surface { background: var(--peach); color: var(--text); }
+.tt-tag-rg-shared  { background: var(--sage); color: var(--tc-sage); }
+.tt-tag-boss { background: var(--gold); color: var(--text); border: 1.5px solid var(--text); }
+.tt-tag-crit { background: var(--tc-rose); color: var(--warm); }
+.tt-desc { color: var(--text); font-size: 12px; line-height: 1.5; }
+.tt-hint { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--glass); color: var(--light); font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+.tt-hint kbd { background: var(--glass); border: 1px solid var(--glass-strong); padding: 1px 5px; border-radius: 3px; font-family: 'Nunito'; font-size: 10px; font-weight: 700; }
+
+/* ────────── DETAIL PANEL (click → side rail) ────────── */
+.detail-rail {
+  position: fixed;
+  top: 100px; bottom: 70px; right: 16px;
+  width: 380px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  z-index: 45;
+  transform: translateX(420px);
+  transition: transform 0.25s cubic-bezier(0.3, 0.7, 0.2, 1);
+  display: flex; flex-direction: column;
+}
+.detail-rail.open { transform: translateX(0); }
+.dr-head { padding: 20px 22px 14px; border-bottom: 1px solid var(--glass); flex-shrink: 0; position: relative; }
+.dr-head h2 { margin: 0 36px 4px 0; font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; letter-spacing: -0.4px; line-height: 1.15; }
+.dr-head .dr-sub { margin: 0; color: var(--mid); font-weight: 600; font-size: 13px; }
+.dr-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  border: none; border-radius: 50%;
+  background: var(--glass); color: var(--text);
+  font-size: 18px; cursor: pointer; line-height: 1;
+}
+.dr-close:hover { background: var(--glass-strong); }
+.dr-body { overflow-y: auto; padding: 14px 22px 20px; flex: 1; -webkit-overflow-scrolling: touch; }
+.dr-body section { padding: 12px 0; border-top: 1px solid var(--glass); }
+.dr-body section:first-of-type { border-top: none; padding-top: 4px; }
+.dr-body section h3 { margin: 0 0 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--light); font-weight: 700; }
+.dr-body section p { margin: 0; font-size: 13px; color: var(--text); }
+.dr-body .files { font-family: 'SF Mono', 'JetBrains Mono', Consolas, monospace; font-size: 11px; line-height: 1.6; color: var(--mid); background: var(--glass); padding: 8px 10px; border-radius: var(--r-sm); display: block; word-break: break-word; }
+.dr-body .cipher-gate { background: linear-gradient(180deg, rgba(232,184,109,0.10), transparent); border-left: 3px solid var(--amber); padding: 11px 14px; border-radius: var(--r-md); border-top: none; }
+.dr-body .cipher-gate h3 { color: var(--tc-amber); }
+.dr-body .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 16px; }
+.dr-actions { display: flex; gap: 8px; padding: 12px 22px; border-top: 1px solid var(--glass-strong); flex-shrink: 0; }
+.dr-action {
+  flex: 1; padding: 10px 14px;
+  border-radius: var(--r-md);
+  font: 700 12px 'Nunito', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1.5px solid var(--light);
+  background: transparent;
+  color: var(--mid);
+}
+.dr-action:hover { border-color: var(--text); color: var(--text); }
+.dr-action.primary { background: var(--gold); border-color: var(--gold); color: var(--text); }
+.dr-action.primary:hover { background: var(--gold-bright); }
+.dr-action.primary.planned { background: var(--surface); color: var(--tc-amber); border-color: var(--gold); }
+.link-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 5px; }
+.link-list .empty { color: var(--light); font-style: italic; font-size: 12px; }
+.link-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--warm-deep);
+  border: 1px solid var(--glass-strong);
+  border-radius: var(--r-md);
+  padding: 7px 10px;
+  font: 600 12.5px 'Nunito';
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: left;
+  width: 100%;
+  transition: all 0.12s ease;
+}
+.link-pill:hover { background: var(--surface); border-color: var(--text); transform: translateX(2px); }
+.link-pill .arrow { color: var(--light); font-weight: 800; flex-shrink: 0; }
+.link-pill .role { color: var(--mid); font-weight: 500; }
+
+/* ────────── FLOATING UI: zoom + legend ────────── */
+.zoom-controls {
+  position: fixed; bottom: 16px; right: 16px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 25;
+}
+.zoom-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: 700 18px 'Nunito';
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.1s ease;
+}
+.zoom-btn:active { transform: scale(0.92); }
+.zoom-btn:hover { background: var(--warm-deep); }
+
+.legend-fab { position: fixed; bottom: 16px; left: 16px; z-index: 25; max-width: 360px; }
+.legend-toggle {
+  border-radius: 999px;
+  border: 1px solid var(--glass-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: 700 12px 'Nunito';
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+.legend-content {
+  display: none;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-strong);
+  box-shadow: var(--shadow-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.legend-content.open { display: block; }
+.legend-content h4 { margin: 0 0 6px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--light); }
+.legend-section { margin-bottom: 10px; }
+.legend-section:last-child { margin-bottom: 0; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--mid); }
+.legend-sw { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--text); }
+.legend-sw.ratified { background: var(--sage); border-color: var(--tc-sage); }
+.legend-sw.inflight { background: var(--amber); border-color: var(--tc-amber); }
+.legend-sw.drafted  { background: var(--lav); border-color: var(--tc-lav); }
+.legend-sw.forward  { background: var(--warm); border-style: dashed; border-color: var(--light); }
+.legend-sw.engine   { background: var(--indigo); border-color: var(--tc-indigo); }
+.legend-sw.care     { background: var(--rose); border-color: var(--tc-rose); }
+.legend-sw.surface  { background: var(--peach); border-color: var(--text); }
+.legend-sw.shared   { background: var(--sage); border-color: var(--tc-sage); }
+.legend-sw.gold     { background: var(--gold); border-color: var(--text); border-width: 3px; }
+.legend-sw.silver   { background: var(--silver); border-color: var(--text); border-width: 2.5px; }
+.legend-line { width: 22px; height: 0; border-top: 2px solid var(--mid); flex-shrink: 0; }
+.legend-line.crit  { border-color: var(--tc-rose); border-width: 2.5px; }
+.legend-line.calib { border-style: dashed; border-color: var(--tc-lav); }
+.legend-line.gate  { border-style: dashed; border-color: var(--light); }
+.legend-line.plan  { border-color: var(--gold); border-width: 3px; }
+
+/* ────────── MOBILE LAYOUT (different surface, not responsive collapse) ────────── */
+.mobile-only { display: none; }
+.desktop-only { display: block; }
+
+@media (max-width: 880px) {
+  body { overflow: auto; }
+  .app { display: block; height: auto; min-height: 100vh; grid-template-rows: none; }
+  .desktop-only { display: none; }
+  .mobile-only { display: block; }
+  .canvas-shell { display: none; }
+  .controls { position: sticky; top: 0; top: 0; }
+  .detail-rail { left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 82vh; border-radius: var(--r-xl) var(--r-xl) 0 0; transform: translateY(100%); }
+  .detail-rail.open { transform: translateY(0); }
+  .zoom-controls { display: none; }
+  .legend-fab { position: relative; bottom: auto; left: auto; max-width: none; padding: 8px 14px; }
+  .legend-toggle { width: 100%; }
+}
+
+/* MOBILE — vertical wave-tier list */
+.mobile-tree {
+  padding: 12px 14px 80px;
+  background: var(--warm);
+  /* Texture H — lighter for mobile */
+  background:
+    radial-gradient(ellipse 80% 40% at 30% 20%, rgba(168,207,224,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 90% 50% at 70% 80%, rgba(201,184,232,0.14) 0%, transparent 100%),
+    var(--warm);
+}
+.m-tier {
+  margin-bottom: 28px;
+  padding: 14px 12px 4px;
+  background: rgba(255,251,247,0.6);
+  border: 1px solid var(--glass-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.m-tier-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px 12px; border-bottom: 1px solid var(--glass); margin-bottom: 12px; }
+.m-tier-head .m-tier-num {
+  font-family: 'Fraunces', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--light); opacity: 0.55;
+  flex-shrink: 0;
+}
+.m-tier-head .m-tier-title {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--mid);
+  margin-left: 10px;
+  flex: 1; line-height: 1.3;
+}
+.m-tier-count { font: 700 11px 'Nunito'; color: var(--light); background: var(--glass); padding: 3px 8px; border-radius: 999px; }
+.m-node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 0 2px; }
+.m-node {
+  position: relative;
+  background: var(--surface);
+  border: 2px solid var(--light);
+  border-radius: var(--r-md);
+  padding: 12px 10px 10px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-node:active { transform: scale(0.97); box-shadow: var(--shadow-md); }
+.m-node.boss { padding-top: 16px; }
+.m-node.r-ratified { border-color: var(--tc-sage); }
+.m-node.r-in-flight { border-color: var(--amber); }
+.m-node.r-drafted { border-color: var(--tc-lav); }
+.m-node.r-forward { border-color: var(--light); border-style: dashed; }
+.m-node.planned { box-shadow: 0 0 0 2px var(--gold), 0 4px 12px rgba(232,184,109,0.30); }
+.m-node-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.m-glyph {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.m-glyph.engine  { background: linear-gradient(160deg, #a8b3dd 0%, #8693c8 100%); }
+.m-glyph.care    { background: linear-gradient(160deg, #f0afba 0%, #d98ca0 100%); }
+.m-glyph.surface { background: linear-gradient(160deg, #dfc4e8 0%, #b89dca 100%); }
+.m-glyph.shared  { background: linear-gradient(160deg, #bbdcc9 0%, #94b8a5 100%); }
+.m-id { font-family: 'Fraunces', serif; font-weight: 700; font-size: 14px; color: var(--text); }
+.m-cap-star { position: absolute; top: 4px; right: 8px; font-size: 14px; font-weight: 800; color: var(--gold); }
+.m-cap-star.silver { color: var(--silver); }
+.m-sub { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 5px; }
+.m-status { font-size: 9px; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.6px; }
+.m-status.in-flight { color: var(--tc-amber); }
+.m-status.ratified { color: var(--tc-sage); }
+.m-status.drafted { color: var(--tc-lav); }
+.m-plan-badge { position: absolute; bottom: 6px; right: 8px; background: var(--gold); color: var(--text); width: 18px; height: 18px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 800 10px 'Nunito'; }
+
+.m-empty { text-align: center; color: var(--light); padding: 28px 16px; font-style: italic; font-size: 13px; }
+.m-charter-bar {
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(168,207,224,0.18), rgba(201,184,232,0.14));
+  border-radius: var(--r-lg);
+  margin-bottom: 18px;
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  color: var(--text);
+  border: 1px solid var(--glass-strong);
+}
+.m-charter-bar small { display: block; font-family: 'Nunito'; font-size: 11px; color: var(--mid); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+footer { padding: 14px 18px; font-size: 11px; color: var(--light); text-align: center; border-top: 1px solid var(--glass); }
+footer a { color: var(--tc-sky); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ───────────── Header ───────────── -->
+  <header>
+    <div class="hd-row">
+      <h1>SproutLab v3.0 — Progression Tree</h1>
+      <div class="meta">32 nodes · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
+    </div>
+  </header>
+
+  <!-- ───────────── Filter + Plan toggle ───────────── -->
+  <div class="controls">
+    <div class="filter-strip" id="filters">
+      <button class="chip active" data-filter="all">All</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="wave1">Wave 1</button>
+      <button class="chip" data-filter="wave1+2">Wave 1+2</button>
+      <button class="chip" data-filter="wave3">Wave 3+</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="critical">Critical path</button>
+      <button class="chip" data-filter="boss">Boss nodes</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="engine">Engine</button>
+      <button class="chip" data-filter="care">Care</button>
+      <button class="chip" data-filter="surface">Surface</button>
+      <span class="chip-divider"></span>
+      <button class="chip plan-toggle" id="planFilter" data-filter="planned">Plan view</button>
+    </div>
+  </div>
+
+  <!-- ───────────── Plan tray (appears when nodes are planned) ───────────── -->
+  <div class="plan-tray" id="planTray">
+    <span class="pt-label">Plan queue:</span>
+    <div class="plan-queue" id="planQueue"></div>
+    <button class="plan-action secondary" id="planClear">Clear</button>
+    <button class="plan-action" id="planCommit">Commit plan</button>
+  </div>
+
+  <!-- ───────────── Desktop canvas ───────────── -->
+  <div class="canvas-shell desktop-only" id="canvasShell">
+    <svg class="tree" id="tree" viewBox="0 0 1300 1500" preserveAspectRatio="xMidYMid meet" role="img" aria-label="v3.0 progression tree DAG">
+      <!-- Glyph definitions used by every node -->
+      <defs id="glyphDefs"></defs>
+    </svg>
+  </div>
+
+  <!-- ───────────── Mobile tree ───────────── -->
+  <div class="mobile-only" id="mobileTree">
+    <div class="mobile-tree" id="mobileBody"></div>
+  </div>
+
+</div>
+
+<!-- ───────────── Floating tooltip (desktop hover) ───────────── -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- ───────────── Detail rail / sheet ───────────── -->
+<aside class="detail-rail" id="detailRail" aria-label="Node details">
+  <div class="dr-head">
+    <h2 id="drTitle">—</h2>
+    <p class="dr-sub" id="drSub">—</p>
+    <button class="dr-close" id="drClose" aria-label="Close">×</button>
+  </div>
+  <div class="dr-body" id="drBody"></div>
+  <div class="dr-actions">
+    <button class="dr-action primary" id="drPlanBtn">Add to plan</button>
+    <button class="dr-action" id="drCloseSec">Close</button>
+  </div>
+</aside>
+
+<!-- ───────────── Floating controls (desktop) ───────────── -->
+<div class="zoom-controls desktop-only">
+  <button class="zoom-btn" id="zoomIn" title="Zoom in">+</button>
+  <button class="zoom-btn" id="zoomOut" title="Zoom out">−</button>
+  <button class="zoom-btn" id="zoomReset" title="Reset view" style="font-size:14px">⟲</button>
+</div>
+
+<div class="legend-fab desktop-only">
+  <div class="legend-content" id="legendContent">
+    <div class="legend-section">
+      <h4>Status (border)</h4>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-sw ratified"></span>Ratified</span>
+        <span class="legend-item"><span class="legend-sw inflight"></span>In-flight (PR open)</span>
+        <span class="legend-item"><span class="legend-sw drafted"></span>Drafted</span>
+        <span class="legend-item"><span class="legend-sw forward"></span>Forward-planning</span>
+      </div>
+    </div>
+    <div class="legend-section">
+      <h4>Region (fill)</h4>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-sw engine"></span>Engine · Kael</span>
+        <span class="legend-item"><span class="legend-sw care"></span>Care · Maren</span>
+        <span class="legend-item"><span class="legend-sw surface"></span>Surface · Vela</span>
+        <span class="legend-item"><span class="legend-sw shared"></span>Shared</span>
+      </div>
+    </div>
+    <div class="legend-section">
+      <h4>Capstone halo</h4>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-sw gold"></span>★ v3.0 boss (v3-3, v3-5)</span>
+        <span class="legend-item"><span class="legend-sw silver"></span>☆ v3.x boss (R-1, R-6)</span>
+      </div>
+    </div>
+    <div class="legend-section">
+      <h4>Edges</h4>
+      <div class="legend-row">
+        <span class="legend-item"><span class="legend-line"></span>Standard</span>
+        <span class="legend-item"><span class="legend-line crit"></span>Critical</span>
+        <span class="legend-item"><span class="legend-line calib"></span>Calibration</span>
+        <span class="legend-item"><span class="legend-line gate"></span>Pre-arc gate</span>
+        <span class="legend-item"><span class="legend-line plan"></span>Planned path</span>
+      </div>
+    </div>
+    <div class="legend-section">
+      <h4>Interactions</h4>
+      <div class="legend-row" style="display:block; line-height:1.7; font-size:11px; color:var(--mid);">
+        <strong>Hover</strong>: tooltip + ancestor chain illuminates · <strong>Click</strong>: open detail panel · <strong>Right-click</strong>: toggle plan-mode · <strong>Drag canvas</strong>: pan · <strong>Wheel / buttons</strong>: zoom
+      </div>
+    </div>
+  </div>
+  <button class="legend-toggle" id="legendToggle">Legend</button>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   GLYPHS — inline SVG path strings, zi() style
+   ───────────────────────────────────────────────────────── */
+const GLYPHS = {
+  // Engine / primitive
+  'gear':    '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.07 4.93l-2.12 2.12M7.05 16.95l-2.12 2.12M19.07 19.07l-2.12-2.12M7.05 7.05L4.93 4.93"/>',
+  'chart-up': '<path d="M3 17l5-5 4 4 7-8"/><path d="M14 8h5v5"/>',
+  'chart':    '<path d="M3 21h18"/><path d="M5 21V11M10 21V7M15 21V13M20 21V5"/>',
+  'compass':  '<circle cx="12" cy="12" r="9"/><path d="M16 8l-3 6-6 3 3-6 6-3z"/>',
+  'pulse':    '<path d="M3 12h4l3-9 4 18 3-9h4"/>',
+
+  // Surface / chip / card
+  'layers':   '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 18l9 5 9-5"/>',
+  'card':     '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 11h18M7 16h4"/>',
+  'pen':      '<path d="M3 17l12-12a2 2 0 0 1 3 3L6 20l-4 1 1-4z"/>',
+  'eye':      '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+
+  // Care / safety
+  'heart':    '<path d="M21 8.5c0-2.5-2-4.5-4.5-4.5-1.7 0-3.2.9-4 2.3C11.7 4.9 10.2 4 8.5 4 6 4 4 6 4 8.5c0 5.5 8 11 8 11s8-5.5 8-11z"/>',
+  'shield':   '<path d="M12 2L3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6l-9-4z"/>',
+  'bell':     '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.5 21a2 2 0 0 0 3 0"/>',
+
+  // Food
+  'bowl':     '<path d="M3 11h18M4 11s0 8 8 8 8-8 8-8M8 7c0-2 1.5-3 4-3s4 1 4 3"/>',
+  'spoon':    '<ellipse cx="6.5" cy="6.5" rx="4" ry="3" transform="rotate(-45 6.5 6.5)"/><path d="M9 9l11 11"/>',
+
+  // Branching / graph
+  'branch':   '<path d="M6 3v6M18 9v12M6 21v-6"/><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="6" cy="18" r="2"/><path d="M8 6h8M8 18h8"/>',
+  'network':  '<circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6l3 5M17 6l-3 5M14 13l3 4M10 13l-3 4"/>',
+
+  // Adaptive / growth
+  'seedling': '<path d="M7 20s0-6 5-9c0 0 1-7 8-7-1 7-6 8-8 8-3 0-5 4-5 8z"/><path d="M7 20h10"/>',
+  'plant':    '<path d="M12 20V9"/><path d="M12 9s-5-1-5-5c4 0 5 5 5 5z"/><path d="M12 9s5-1 5-5c-4 0-5 5-5 5z"/><path d="M5 20h14"/>',
+
+  // Time / history / book
+  'book':     '<path d="M4 4h7a3 3 0 0 1 3 3v14H7a3 3 0 0 1-3-3V4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v14h7a3 3 0 0 0 3-3V4z"/>',
+  'clock':    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+
+  // Mood
+  'face':     '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="0.8" fill="currentColor"/><circle cx="15" cy="10" r="0.8" fill="currentColor"/>',
+  'thumb':    '<path d="M14 9V5a2 2 0 0 0-4 0v4H7l-2 11h11l2-7-2-4h-2z"/>',
+
+  // Routines / list
+  'list':     '<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/>',
+
+  // Caregivers / people
+  'users':    '<circle cx="9" cy="8" r="3"/><path d="M3 21s0-6 6-6 6 6 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M14 21s0-5 5-5 5 5 5 5"/>',
+
+  // Calendar / external
+  'calendar': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  'globe':    '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  'lock':     '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  'mic':      '<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>',
+  'image':    '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M3 17l5-5 4 4 6-6 3 3"/>',
+  'chip':     '<rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/><rect x="9" y="9" width="6" height="6" rx="0.5"/>',
+  'hospital': '<rect x="4" y="4" width="16" height="17" rx="1"/><path d="M12 8v8M8 12h8"/>',
+  'watch':    '<circle cx="12" cy="12" r="6"/><path d="M9 3l1 3M15 3l-1 3M9 21l1-3M15 21l-1-3"/><path d="M12 9v3l2 1"/>',
+  'wifi-off': '<path d="M2 8l3 3M22 8l-3 3M5 11l7 7 7-7"/><path d="M2 2l20 20"/>',
+  'export':   '<path d="M21 12V8a2 2 0 0 0-2-2h-7M15 3l-4 4 4 4M3 12v4a2 2 0 0 0 2 2h7M9 21l4-4-4-4"/>',
+  'target':   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>',
+  'document': '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"/><path d="M14 3v6h6M9 13h6M9 17h6"/>',
+  'merge':    '<path d="M6 3v8M18 13v8"/><path d="M6 11s0 6 6 6 6-6 6-6"/><circle cx="6" cy="3" r="2"/><circle cx="18" cy="21" r="2"/>',
+};
+
+/* ─────────────────────────────────────────────────────────
+   NODES + EDGES (data)
+   ───────────────────────────────────────────────────────── */
+const NODES = {
+  /* Layer 1 — Pre-Wave 1 (y ≈ 100) */
+  'PR-126': { x: 280, y: 90, status:'in-flight', wave:'preWave1', region:'shared', glyph:'merge', tier:1, critical:false, capstone:null,
+    label:'PR #126', sub:'D3 Phase 2-B', files:'split/home.js · split/core.js', composes:'5 Tier-2 items: markMedDone three-state, Adjust midnight rollover, future-time gate, outing-intent, preserveWithFat tightening',
+    description:'In-flight D3 Phase 2-B impl. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Awaiting Architect merge call. Establishes toast-and-abort precedent v3-1 inherits.' },
+  'PR-127': { x: 470, y: 90, status:'drafted', wave:'preWave1', region:'shared', glyph:'document', tier:1, critical:true, capstone:null,
+    label:'PR #127', sub:'Sleep spec v1', files:'docs/specs/sleep-redesign-v1.md',
+    composes:'Classifier (night/nap/contact) + lazy normalizer + write-side UX shift + scoring wiring',
+    description:'Sleep redesign v1 spec; three arcs sequenced after food-sub-tab. Subsumes the midnight-rollover bug as a natural consequence of the dayAttribution rule. v3-3 depends on this spec ratifying.' },
+  'PR-128': { x: 660, y: 90, status:'drafted', wave:'preWave1', region:'engine', glyph:'document', tier:1, critical:true, capstone:null,
+    label:'PR #128', sub:'Scoring spec v1', files:'docs/specs/scoring-redesign-v1.md',
+    composes:'RECOMMENDATION_ROSTER + _evaluateRecommendation + _scoreDay + _scoreWindow + _scoreDayHero + severity model',
+    description:'Engine primitive foundation for v3-3. Generic recommendation + scoring + severity-message + cross-domain hero score system. v3-3 cannot open until this ratifies.' },
+  'FoodST': { x: 920, y: 90, status:'in-flight', wave:'preWave1', region:'care', glyph:'bowl', tier:1, critical:false, capstone:null,
+    label:'Food Sub-Tab', sub:'separate arc, in-flight', files:'split/diet.js · split/data.js',
+    composes:'Food sub-tab UI + food-object shape (precedes v3-8 parseFeeding)',
+    description:'Separate in-flight arc per Architect sequencing. v3-8 (parseFeeding normalizer) is post-required so the new food shape is normalized at v1 design time.' },
+
+  /* Layer 2 — Wave 1 roots (y ≈ 290) */
+  'v3-5':  { x: 130, y: 280, status:'ratified', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
+    label:'v3-5', sub:'Chip Taxonomy + TSF Story', files:'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
+    composes:'vela-arc-1 unified chip-state taxonomy + vela-arc-2 Today So Far story-arc',
+    cipherGates:'styles.css mutex 1st: must complete triple-jurisdiction round before v3-6 opens. Establishes the chip-state token vocabulary.',
+    description:'8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + the story-arc-summary primitive. First in the styles.css mutex chain. v3.0 capstone: surface-vocabulary establisher.' },
+  'v3-3':  { x: 550, y: 270, status:'ratified', wave:'wave1', region:'engine', glyph:'gear', tier:2, critical:true, capstone:'gold',
+    label:'v3-3', sub:'Engine Primitives · SPINE', files:'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js',
+    composes:'kael-arc-1 _correlate + kael-arc-3 ISL event-anchor + scoring-redesign-v1 _scoreDay',
+    cipherGates:'cipher-4: v3-3 spec body MUST include an HR-12 tz-construction test plan section. _resolveEventAnchor is date-arithmetic; IST/UTC day-boundary swap risk is real.',
+    description:'The highest-leverage single arc. _correlate + _resolveEventAnchor + _scoreDay/Window/Hero + getActiveIllnessPosture + getSyncPosture. v3.0 capstone: if you build only one thing, build this.' },
+  'v3-8':  { x: 920, y: 280, status:'ratified', wave:'wave1', region:'care', glyph:'spoon', tier:2, critical:false, capstone:null,
+    label:'v3-8', sub:'Feeding Normalizer', files:'split/diet.js · split/core.js',
+    composes:'maren-arc-3 parseFeeding normalizer + food-sub-tab integration',
+    description:'parseFeeding(val) mirrors parseMedCheck. Tolerates legacy string + current object + food-sub-tab shape. Retires raw truthy-checks on feedingData[date][meal] — same bug family as T3-14.' },
+  'v3-9':  { x: 1130, y: 280, status:'ratified', wave:'wave1', region:'shared', glyph:'branch', tier:2, critical:false, capstone:null,
+    label:'v3-9', sub:'Intent Graph + Splits', files:'split/intelligence-qa.js → split · split/medical.js → 3-way split',
+    composes:'kael-arc-2 intent graph + maren-arc-4 medical.js split (vaccines/illness/growth)',
+    cipherGates:'cipher-7: may land as 2 PRs (v3-9a Kael · v3-9b Maren) for routing cleanliness.',
+    description:'Replace flat 30-intent if/else ladder with parent/child intent graph (qa.intent.graph.json) + preemptive medical.js split before 30K canon-gen-001 trigger fires. Unlocks knowledge graph (R-8).' },
+
+  /* Layer 2b — Wave 1 mid (y ≈ 420) */
+  'v3-6':  { x: 130, y: 420, status:'ratified', wave:'wave1', region:'surface', glyph:'card', tier:2, critical:false, capstone:null,
+    label:'v3-6', sub:'Card Priority', files:'split/intelligence-cards.js · split/styles.css',
+    composes:'vela-arc-3 + Maren\'s severity floor doctrine',
+    description:'Three priority tiers: urgent / notable / ambient. Master sorts by tier. Ambient collapses by default. Severity floors categorical — a win-card never outranks a vaccine reminder.' },
+  'v3-2':  { x: 380, y: 420, status:'ratified', wave:'wave1', region:'care', glyph:'shield', tier:2, critical:false, capstone:null,
+    label:'v3-2', sub:'CT Triggers + Posture', files:'split/medical.js · split/intelligence-caretickets.js · split/intelligence-illness.js',
+    composes:'maren-arc-2 + kael-arc-4 (single merged arc)',
+    description:'CT_TRIGGERS declarative registry + getActiveIllnessPosture() reads all 4 illness state machines as a set. "Ziva has been compound-symptomatic 3 days — escalation tier 2" becomes a real surface.' },
+  'v3-4':  { x: 660, y: 420, status:'ratified', wave:'wave1', region:'surface', glyph:'pen', tier:2, critical:false, capstone:null,
+    label:'v3-4', sub:'Narrative Layer', files:'split/intelligence-cards.js · split/intelligence-isl.js',
+    composes:'vela-arc-4 prose templates + kael-arc-1 data source',
+    cipherGates:'cipher-5: v3-4 spec MUST define narrativeProse(template, vars) helper that escHtmls every var at the template boundary + build-time grep gate forbidding raw ${} outside the helper.',
+    description:'Cross-domain narrative-prose layer. Coefficient → passage with hedge tier (certain/likely/tentative). "Ziva sleeps ~40 min longer on days she eats by 6 PM" (likely, n=18).' },
+
+  /* Layer 2c — Wave 1 final (y ≈ 560) */
+  'v3-1':  { x: 380, y: 560, status:'ratified', wave:'wave1', region:'care', glyph:'bell', tier:2, critical:true, capstone:null,
+    label:'v3-1', sub:'Recommendation Pipeline', files:'split/home.js · split/medical.js · split/intelligence-caretickets.js · split/sync.js',
+    composes:'maren-arc-1 reminderRegistry + vela recommendation-surface-tier + kael-arc-5 RecommendationEvent log',
+    cipherGates:'🔴 BLOCKED on §4.8 #2: RecommendationEvent Firestore collection schema must ratify before v3-1 opens (cipher-8). Resolution: PR #128 amends to mark (c) in-scope OR Kael spec-drafts at v3-1 kickoff.',
+    description:'Unified pipeline: data → recommendation event → ranked surface → escalation. Retires window._remindersHTML. Escalation: gentle (toast) → firm (TSF chip) → urgent (home card) → CareTicket. styles.css mutex 3rd.' },
+  'v3-7':  { x: 660, y: 560, status:'ratified', wave:'wave1', region:'care', glyph:'eye', tier:2, critical:false, capstone:null,
+    label:'v3-7', sub:'Empty-State Doctrine', files:'sweep: home.js · medical.js · diet.js · intelligence-cards.js · intelligence-quicklog.js',
+    composes:'maren-arc-5 + Vela\'s empty-state phrasing',
+    description:'Null-render is a defect; absent data renders a first-class careEmptyState(domain, reason). "We haven\'t seen D3 since Tuesday" instead of silent blank. Carries CV3-003 (Honest-Empty-State, Cluster-cross).' },
+
+  /* Layer 3 — Wave 2 reservoirs (y ≈ 740) */
+  'R-9':   { x: 80,  y: 740, status:'forward', wave:'wave2', region:'shared', glyph:'list', tier:3, critical:false, capstone:null,
+    label:'R-9', sub:'Routine Library', files:'data/care-routines.json · core.js _applyRoutine',
+    composes:'Named composite routines (weekday morning / sick day / travel day / nanny shift)',
+    description:'Pre-populate expected log entries + adjust severity floors for the day. Foundation for caregiver-multiplicity catchment (C-1). Travel-day suppresses false anomalies in R-4.' },
+  'R-5':   { x: 230, y: 740, status:'forward', wave:'wave2', region:'engine', glyph:'thumb', tier:3, critical:false, capstone:null,
+    label:'R-5', sub:'Feedback Loop', files:'core.js + sync.js · recommendationEvents.userFeedback field',
+    composes:'userFeedback on recommendationEvents + _calibrateConfidence primitive',
+    description:'Parent marks each recommendation useful/noise → engine calibrates per-Ziva confidence floors + deprecates dismissed surfaces. Trust-progressive doctrine. Back-edge to R-1: feedback continually refines adaptive baselines.' },
+  'R-1':   { x: 540, y: 730, status:'forward', wave:'wave2', region:'engine', glyph:'seedling', tier:3, critical:true, capstone:'silver',
+    label:'R-1', sub:'Adaptive Layer', files:'core.js · RECOMMENDATION_ROSTER per-Ziva override fields',
+    composes:'Personalised typical-time bands + score baselines + absorption windows',
+    description:'Engine learns Ziva\'s baselines, not just clinical standards. Her wake-up is 06:42, not "infants typically wake 06:00–08:00." Adaptive-vs-clinical hierarchy. v3.x capstone: unlocks R-2 + R-4 + R-6 + C-7 + C-9.' },
+  'R-3':   { x: 750, y: 740, status:'forward', wave:'wave2', region:'care', glyph:'book', tier:3, critical:false, capstone:null,
+    label:'R-3', sub:'Audit / History', files:'core.js _aggregateWindow · ziva_scrapbook + ziva_avatar_full',
+    composes:'Longitudinal aggregator + scrapbook/photo weaving + pediatric-visit-prep export',
+    description:'Ziva at 4 months vs Ziva at 8 months. Week / month / quarter views. Milestone-anchored timeline. Pediatric-visit-prep bundles last 30 days for doctor handoff. Export to PDF / shareable link.' },
+  'R-7':   { x: 920, y: 740, status:'forward', wave:'wave2', region:'care', glyph:'face', tier:3, critical:false, capstone:null,
+    label:'R-7', sub:'Mood Tier', files:'day-record schema: moodTier 1-4 (nullable in v1)',
+    composes:'Optional engine-derived suggestion via _inferMoodTier',
+    description:'4-tier daily affect — fussy / mixed / content / bright. One-tap parent input OR auto-inferred from TSF event density + illness state + sleep quality. Mood as canary domain.' },
+  'R-8':   { x: 1130, y: 740, status:'forward', wave:'wave2', region:'engine', glyph:'network', tier:3, critical:false, capstone:null,
+    label:'R-8', sub:'Knowledge Graph', files:'data/knowledge-graph.json (NEW) · core.js _traverseKB',
+    composes:'Food + Milestone + Illness + NUTRITION + Standards as graph',
+    description:'Reshape four big lookup tables as a graph. "Iron-rich foods" → "rolling milestone" via "iron supports neuromuscular development." Graph traversal lets one Q&A pull from many tables. ML-ready substrate.' },
+
+  /* Layer 3b — Wave 2 derived (y ≈ 880) */
+  'R-2':   { x: 420, y: 880, status:'forward', wave:'wave2', region:'engine', glyph:'chart-up', tier:3, critical:true, capstone:null,
+    label:'R-2', sub:'Predictive Surface', files:'core.js _forecastDomain(domain, horizon, ctx)',
+    composes:'Forecast with hedged certainty + sample-size disclosure',
+    description:'The "alive" feeling lives here. Tonight\'s likely wake-time window: 06:30–07:15 (high confidence, n=21). Tomorrow\'s afternoon-nap probability if morning nap < 45min: 92%. All hedged, all sample-size-disclosed.' },
+  'R-4':   { x: 620, y: 880, status:'forward', wave:'wave2', region:'engine', glyph:'pulse', tier:3, critical:false, capstone:null,
+    label:'R-4', sub:'Anomaly Detection', files:'core.js _detectAnomaly(domain, signal, ctx)',
+    composes:'σ-floor threshold reading R-1 baselines',
+    description:'Pattern-break. "Today\'s X is 2.5σ out of Ziva\'s usual band." Soft notice with hedge tier. Sleep at 23:30 when usual is 21:00 ± 30min → soft notice. 4-night-in-a-row break → CareTicket auto-creation candidate.' },
+  'R-6':   { x: 830, y: 870, status:'forward', wave:'wave2', region:'care', glyph:'plant', tier:3, critical:true, capstone:'silver',
+    label:'R-6', sub:'Growth + Activity', files:'ziva_growth + NEW activityLevel 1-4 · medical.js growth chart',
+    composes:'Weight + height velocity + NEW 4-tier daily activity input',
+    description:'The integrator domain. Sleep + feed + meds + contact all converge on growth + developmental trajectory. Architect: "see even more how everything is adding up to something tangible." v3.x capstone + candidate CV3-005 Outcome-anchor doctrine.' },
+
+  /* Layer 4 — Wave 3 connected (y ≈ 1060) */
+  'C-1':   { x: 60,  y: 1060, status:'forward', wave:'wave3', region:'shared', glyph:'users', tier:4, critical:false, capstone:null,
+    label:'C-1', sub:'Caregiver Multi', files:'__sync_updatedBy surfaces + role registry',
+    composes:'Co-parent / nanny / grandparent role-aware surfaces',
+    description:'Asymmetric caregivers — "nanny logs lunch + nap; Mom logs nights." Data already carries __sync_updatedBy. Builds on R-9 routine library.' },
+  'C-3':   { x: 220, y: 1060, status:'forward', wave:'wave3', region:'care', glyph:'bell', tier:4, critical:false, capstone:null,
+    label:'C-3', sub:'Notification Engine', files:'sync.js · push registration · iCal feed',
+    composes:'Push notifications + calendar integration + watch face',
+    description:'In-tab → ambient surfaces. v2 deferred reminder/notification scheduling explicitly; v3.x could land it.' },
+  'C-9':   { x: 380, y: 1060, status:'forward', wave:'wave3', region:'engine', glyph:'chip', tier:4, critical:false, capstone:null,
+    label:'C-9', sub:'ML Calibration', files:'core.js · R-5 feedback loop substrate',
+    composes:'ML-derived calibration replacing rule-based weights',
+    description:'Once R-5 feedback log has enough signal, ML calibration replaces rule-based confidence floors. Rule-based explainability stays; ML augments rather than replaces.' },
+  'C-2':   { x: 540, y: 1060, status:'forward', wave:'wave3', region:'care', glyph:'target', tier:4, critical:true, capstone:null,
+    label:'C-2', sub:'Active Intervention', files:'home.js · medical.js · goal-tracking primitive',
+    composes:'Sleep training + weaning plans + bedtime-shift goals',
+    description:'Descriptive → gently prescriptive. Parent sets goals (shift bedtime 22:30 → 21:30 over 2 weeks); engine tracks plan adherence. Needs R-2 (predictive) + R-6 (outcome anchor).' },
+  'C-7':   { x: 700, y: 1060, status:'forward', wave:'wave3', region:'engine', glyph:'compass', tier:4, critical:false, capstone:null,
+    label:'C-7', sub:'Cross-Domain CT', files:'intelligence-caretickets.js trigger doctrine',
+    composes:'Compound-trigger CareTickets (sleep + new food = gut tolerance check)',
+    description:'CareTicket triggers fire on cross-domain patterns. Needs R-1 (Ziva baselines) + R-4 (anomaly detection) to identify compound conditions honestly.' },
+  'C-6':   { x: 870, y: 1060, status:'forward', wave:'wave3', region:'care', glyph:'image', tier:4, critical:false, capstone:null,
+    label:'C-6', sub:'Photo Weaving', files:'ziva_scrapbook · R-3 audit integration',
+    composes:'Time-anchored photos in the day/week narrative',
+    description:'ziva_scrapbook key currently unused. Photos tied to milestones, growth chart, daily journal — currently siloed. v3.x weaves them into the narrative layer (R-3 audit).' },
+  'C-11':  { x: 1090, y: 1060, status:'forward', wave:'wave3', region:'care', glyph:'hospital', tier:4, critical:false, capstone:null,
+    label:'C-11', sub:'EHR / Pediatric Sync', files:'medical-vaccines.js (post v3-9b split)',
+    composes:'CoWIN / pediatric provider integration · vaccination record sync',
+    description:'Pediatric provider integration — vaccination record sync, EHR handoff. Especially relevant for India (CoWIN integration). Depends on v3-9b medical-vaccines.js split.' },
+
+  /* Layer 4b — Wave 3 side-quests (y ≈ 1200) */
+  'C-4':   { x: 140, y: 1200, status:'forward', wave:'wave3', region:'shared', glyph:'lock', tier:4, critical:false, capstone:null,
+    label:'C-4', sub:'Privacy Surface', files:'home.js settings tab · sync.js per-domain toggle',
+    composes:'Per-domain sync toggle + data-sovereignty controls',
+    description:'As intelligence layer grows, parent control becomes a Care concern. Where is data stored, what syncs, what stays local.' },
+  'C-5':   { x: 300, y: 1200, status:'forward', wave:'wave3', region:'surface', glyph:'mic', tier:4, critical:false, capstone:null,
+    label:'C-5', sub:'Voice Input', files:'intelligence-quicklog.js · Web Speech API',
+    composes:'Hands-free Smart Quick Log via voice transcription',
+    description:'Voice transcription for hands-free logging while feeding/holding baby. Confirmations via chip vocabulary (depends on v3-5).' },
+  'C-8':   { x: 460, y: 1200, status:'forward', wave:'wave3', region:'care', glyph:'calendar', tier:4, critical:false, capstone:null,
+    label:'C-8', sub:'Calendar Integration', files:'medical.js vaccination ledger · iCal export',
+    composes:'Google Calendar / iCal feed for vaccinations + visits',
+    description:'External calendar integration. iCal feed for vaccinations + pediatric visits. Feeds C-3 notification engine as a surface.' },
+  'C-12':  { x: 620, y: 1200, status:'forward', wave:'wave3', region:'shared', glyph:'globe', tier:4, critical:false, capstone:null,
+    label:'C-12', sub:'Localization', files:'all surface files · i18n/locale data',
+    composes:'Hindi + regional dialects',
+    description:'Localization for India deployment beyond Ziva-first. All surface text routes through i18n. Depends on v3-5 chip vocabulary being token-driven.' },
+  'C-13':  { x: 780, y: 1200, status:'forward', wave:'wave3', region:'engine', glyph:'watch', tier:4, critical:false, capstone:null,
+    label:'C-13', sub:'Wearable Integration', files:'new sync layer · scoring-redesign integration',
+    composes:'Smartwatch activity + baby monitor sleep import',
+    description:'Wearable integration — smartwatch for activity-level auto-detection, baby monitor for sleep duration/quality. Feeds activityLevel (R-6) automatically.' },
+  'C-14':  { x: 940, y: 1200, status:'forward', wave:'wave3', region:'engine', glyph:'wifi-off', tier:4, critical:false, capstone:null,
+    label:'C-14', sub:'Offline-First', files:'sync.js · service worker',
+    composes:'PWA service worker robustness + offline-first UX',
+    description:'sync.js has circuit breaker but UX could go further. Explicit offline-mode indicator, queued-write surfaces, conflict resolution UI.' },
+  'C-19':  { x: 1100, y: 1200, status:'forward', wave:'wave3', region:'care', glyph:'export', tier:4, critical:false, capstone:null,
+    label:'C-19/20', sub:'Export + Restore UI', files:'home.js settings · export/restore surfaces',
+    composes:'GDPR-style data export + parent-facing backup/restore UI',
+    description:'Currently restore is dev-tool-only. Parent-facing backup/restore UI + data export. Becomes important if account migration or device switch is needed.' },
+};
+
+const EDGES = [
+  /* Pre-Wave 1 → Wave 1 */
+  { from:'PR-126', to:'v3-1', type:'gate' },
+  { from:'PR-127', to:'v3-3', type:'critical' },
+  { from:'PR-128', to:'v3-3', type:'critical' },
+  { from:'FoodST', to:'v3-8', type:'gate' },
+  /* Wave 1 spine */
+  { from:'v3-3', to:'v3-1', type:'critical' },
+  { from:'v3-3', to:'v3-2', type:'normal' },
+  { from:'v3-3', to:'v3-4', type:'normal' },
+  { from:'v3-3', to:'v3-6', type:'normal' },
+  /* styles.css mutex */
+  { from:'v3-5', to:'v3-6', type:'critical' },
+  { from:'v3-6', to:'v3-1', type:'critical' },
+  /* Wave 1 follow-ons */
+  { from:'v3-1', to:'v3-7', type:'normal' },
+  /* Wave 1 → Wave 2 */
+  { from:'v3-3', to:'R-1', type:'critical' },
+  { from:'v3-3', to:'R-3', type:'normal' },
+  { from:'v3-3', to:'R-6', type:'normal' },
+  { from:'v3-3', to:'R-7', type:'normal' },
+  { from:'v3-1', to:'R-5', type:'normal' },
+  { from:'v3-1', to:'R-9', type:'normal' },
+  { from:'v3-9', to:'R-8', type:'normal' },
+  /* Wave 2 internal */
+  { from:'R-1', to:'R-2', type:'critical' },
+  { from:'R-1', to:'R-4', type:'normal' },
+  { from:'R-1', to:'R-6', type:'normal' },
+  { from:'R-5', to:'R-1', type:'calibration' },
+  /* Wave 2 → Wave 3 */
+  { from:'R-9', to:'C-1', type:'normal' },
+  { from:'R-2', to:'C-2', type:'critical' },
+  { from:'R-6', to:'C-2', type:'normal' },
+  { from:'v3-1', to:'C-3', type:'normal' },
+  { from:'C-8',  to:'C-3', type:'normal' },
+  { from:'R-3',  to:'C-6', type:'normal' },
+  { from:'R-4',  to:'C-7', type:'normal' },
+  { from:'R-1',  to:'C-7', type:'normal' },
+  { from:'R-5',  to:'C-9', type:'normal' },
+  { from:'v3-9', to:'C-11', type:'normal' },
+  /* Side-quests */
+  { from:'v3-3', to:'C-4', type:'normal' },
+  { from:'v3-5', to:'C-5', type:'normal' },
+  { from:'v3-3', to:'C-14', type:'normal' },
+  { from:'v3-5', to:'C-12', type:'normal' },
+  { from:'v3-3', to:'C-19', type:'normal' },
+  { from:'PR-128', to:'C-13', type:'normal' },
+];
+
+const TIERS = [
+  { num: 'I',   yTop: 50,   yBottom: 175,  label: 'Pre-Wave 1 — gates in flight' },
+  { num: 'II',  yTop: 195,  yBottom: 670,  label: 'Wave 1 — foundation (ratified)' },
+  { num: 'III', yTop: 690,  yBottom: 1010, label: 'Wave 2 — reservoirs (forward-planning)' },
+  { num: 'IV',  yTop: 1030, yBottom: 1290, label: 'Wave 3+ — catchments (post-usage signal)' },
+];
+
+/* ─────────────────────────────────────────────────────────
+   RENDER
+   ───────────────────────────────────────────────────────── */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('tree');
+const defs = document.getElementById('glyphDefs');
+
+/* Build glyph symbols once */
+Object.entries(GLYPHS).forEach(([id, body]) => {
+  defs.insertAdjacentHTML('beforeend',
+    `<symbol id="g-${id}" viewBox="0 0 24 24">${body}</symbol>`);
+});
+
+/* Render layer — root <g> for pan/zoom */
+const root = document.createElementNS(SVG_NS, 'g');
+root.setAttribute('id', 'tree-root');
+svg.appendChild(root);
+
+/* Tier gutters + labels */
+function drawTiers() {
+  TIERS.forEach(t => {
+    const r = document.createElementNS(SVG_NS, 'rect');
+    r.setAttribute('class', 'layer-gutter');
+    r.setAttribute('x', 14); r.setAttribute('y', t.yTop);
+    r.setAttribute('width', 1272); r.setAttribute('height', t.yBottom - t.yTop);
+    r.setAttribute('rx', 14);
+    root.appendChild(r);
+
+    const num = document.createElementNS(SVG_NS, 'text');
+    num.setAttribute('class', 'layer-num');
+    num.setAttribute('x', 30); num.setAttribute('y', t.yTop + 30);
+    num.textContent = t.num;
+    root.appendChild(num);
+
+    const lbl = document.createElementNS(SVG_NS, 'text');
+    lbl.setAttribute('class', 'layer-label');
+    lbl.setAttribute('x', 64); lbl.setAttribute('y', t.yTop + 25);
+    lbl.textContent = t.label;
+    root.appendChild(lbl);
+  });
+}
+drawTiers();
+
+/* Edges */
+function drawEdges() {
+  EDGES.forEach(e => {
+    const a = NODES[e.from], b = NODES[e.to];
+    if (!a || !b) return;
+    let d;
+    if (e.type === 'calibration') {
+      const ax = a.x, ay = a.y - radiusOf(a);
+      const bx = b.x, by = b.y + radiusOf(b);
+      const mid = (ay + by) / 2;
+      d = `M${ax},${ay} C${ax},${mid - 30} ${bx - 60},${mid} ${bx},${by}`;
+    } else {
+      const ay = a.y + radiusOf(a);
+      const by = b.y - radiusOf(b);
+      const mid = (ay + by) / 2;
+      d = `M${a.x},${ay} C${a.x},${mid} ${b.x},${mid} ${b.x},${by}`;
+    }
+    const p = document.createElementNS(SVG_NS, 'path');
+    let cls = 'edge';
+    if (e.type === 'critical') cls += ' critical';
+    if (e.type === 'calibration') cls += ' calibration';
+    if (e.type === 'gate') cls += ' gate';
+    p.setAttribute('class', cls);
+    p.setAttribute('d', d);
+    p.dataset.from = e.from; p.dataset.to = e.to;
+    root.appendChild(p);
+  });
+}
+function radiusOf(n) {
+  if (n.capstone === 'gold') return 38;
+  if (n.capstone === 'silver') return 34;
+  if (n.critical) return 30;
+  return 26;
+}
+drawEdges();
+
+/* Nodes */
+function drawNodes() {
+  Object.entries(NODES).forEach(([id, n]) => {
+    const r = radiusOf(n);
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'node-group');
+    g.dataset.id = id;
+    g.setAttribute('transform', `translate(${n.x}, ${n.y})`);
+
+    /* Capstone halo (drawn beneath everything else) */
+    if (n.capstone) {
+      const halo = document.createElementNS(SVG_NS, 'circle');
+      halo.setAttribute('class', `node-halo show ${n.capstone}`);
+      halo.setAttribute('cx', 0); halo.setAttribute('cy', 0);
+      halo.setAttribute('r', r + 9);
+      halo.setAttribute('fill', n.capstone === 'gold' ? 'var(--gold-bright)' : 'var(--silver-bright)');
+      halo.setAttribute('fill-opacity', n.capstone === 'gold' ? '0.30' : '0.22');
+      g.appendChild(halo);
+    }
+
+    /* Plan-mode ring (shown when planned) */
+    const planRing = document.createElementNS(SVG_NS, 'circle');
+    planRing.setAttribute('class', 'node-plan-ring');
+    planRing.setAttribute('cx', 0); planRing.setAttribute('cy', 0);
+    planRing.setAttribute('r', r + 4);
+    g.appendChild(planRing);
+
+    /* Inner fill */
+    const fill = document.createElementNS(SVG_NS, 'circle');
+    fill.setAttribute('class', `node-fill ${n.region}`);
+    fill.setAttribute('cx', 0); fill.setAttribute('cy', 0);
+    fill.setAttribute('r', r);
+    g.appendChild(fill);
+
+    /* Status ring (outer stroke) */
+    const ring = document.createElementNS(SVG_NS, 'circle');
+    ring.setAttribute('class', `node-ring ${n.status}`);
+    ring.setAttribute('cx', 0); ring.setAttribute('cy', 0);
+    ring.setAttribute('r', r);
+    g.appendChild(ring);
+
+    /* Glyph */
+    if (n.glyph && GLYPHS[n.glyph]) {
+      const glyphSize = n.capstone === 'gold' ? 32 : (n.capstone === 'silver' ? 30 : (n.critical ? 26 : 22));
+      const use = document.createElementNS(SVG_NS, 'use');
+      use.setAttribute('href', `#g-${n.glyph}`);
+      use.setAttribute('x', -glyphSize/2); use.setAttribute('y', -glyphSize/2);
+      use.setAttribute('width', glyphSize); use.setAttribute('height', glyphSize);
+      use.setAttribute('class', 'node-glyph');
+      g.appendChild(use);
+    }
+
+    /* Capstone star mark above the node */
+    if (n.capstone) {
+      const star = document.createElementNS(SVG_NS, 'text');
+      star.setAttribute('class', 'node-capstone-mark');
+      star.setAttribute('x', 0); star.setAttribute('y', -(r + 14));
+      star.setAttribute('text-anchor', 'middle');
+      star.setAttribute('font-family', 'Fraunces, serif');
+      star.setAttribute('font-size', '14');
+      star.setAttribute('font-weight', '800');
+      star.setAttribute('fill', n.capstone === 'gold' ? '#d4a93c' : '#9999a8');
+      star.textContent = n.capstone === 'gold' ? '★' : '☆';
+      g.appendChild(star);
+    }
+
+    /* Plan badge (queue number, hidden by default) */
+    const planBadge = document.createElementNS(SVG_NS, 'g');
+    planBadge.setAttribute('class', 'node-plan-badge-group');
+    planBadge.style.display = 'none';
+    const planCircle = document.createElementNS(SVG_NS, 'circle');
+    planCircle.setAttribute('cx', r - 6); planCircle.setAttribute('cy', -r + 6);
+    planCircle.setAttribute('r', 9);
+    planCircle.setAttribute('fill', 'var(--gold)');
+    planCircle.setAttribute('stroke', 'var(--text)'); planCircle.setAttribute('stroke-width', '1.5');
+    planBadge.appendChild(planCircle);
+    const planText = document.createElementNS(SVG_NS, 'text');
+    planText.setAttribute('class', 'node-plan-badge');
+    planText.setAttribute('x', r - 6); planText.setAttribute('y', -r + 9.5);
+    planText.textContent = '';
+    planBadge.appendChild(planText);
+    g.appendChild(planBadge);
+
+    /* Label below the node — with a pill background for readability over texture */
+    const labelTxt = `${n.label} · ${n.sub}`;
+    const labelWidth = Math.min(220, 9 + labelTxt.length * 5.3);
+    const labelY = r + 14;
+    const labelBg = document.createElementNS(SVG_NS, 'rect');
+    labelBg.setAttribute('class', 'node-label-bg');
+    labelBg.setAttribute('x', -labelWidth/2);
+    labelBg.setAttribute('y', labelY - 1);
+    labelBg.setAttribute('width', labelWidth);
+    labelBg.setAttribute('height', 24);
+    labelBg.setAttribute('rx', 6);
+    labelBg.setAttribute('fill-opacity', '0.90');
+    g.appendChild(labelBg);
+    const lbl1 = document.createElementNS(SVG_NS, 'text');
+    lbl1.setAttribute('class', 'node-label');
+    lbl1.setAttribute('x', 0); lbl1.setAttribute('y', labelY + 11);
+    lbl1.textContent = n.label;
+    g.appendChild(lbl1);
+    const lbl2 = document.createElementNS(SVG_NS, 'text');
+    lbl2.setAttribute('class', 'node-sub');
+    lbl2.setAttribute('x', 0); lbl2.setAttribute('y', labelY + 21);
+    lbl2.textContent = n.sub;
+    g.appendChild(lbl2);
+
+    /* Events */
+    g.addEventListener('click', (ev) => { ev.stopPropagation(); selectNode(id); });
+    g.addEventListener('mouseenter', () => onHover(id));
+    g.addEventListener('mouseleave', () => onLeave(id));
+    g.addEventListener('contextmenu', (ev) => { ev.preventDefault(); togglePlan(id); });
+
+    root.appendChild(g);
+  });
+}
+drawNodes();
+
+/* ─────────────────────────────────────────────────────────
+   INTERACTIVITY — hover, click, plan mode, filters, zoom/pan
+   ───────────────────────────────────────────────────────── */
+let selectedId = null;
+const planQueue = JSON.parse(localStorage.getItem('sproutlab_v3_plan') || '[]');
+
+/* Get all ancestors of a node (full chain up) */
+function getAncestors(id) {
+  const seen = new Set();
+  const stack = [id];
+  while (stack.length) {
+    const cur = stack.pop();
+    EDGES.filter(e => e.to === cur && !seen.has(e.from)).forEach(e => {
+      seen.add(e.from); stack.push(e.from);
+    });
+  }
+  return seen;
+}
+function getDescendants(id) {
+  const seen = new Set();
+  const stack = [id];
+  while (stack.length) {
+    const cur = stack.pop();
+    EDGES.filter(e => e.from === cur && !seen.has(e.to)).forEach(e => {
+      seen.add(e.to); stack.push(e.to);
+    });
+  }
+  return seen;
+}
+
+/* Hover behavior — illuminate ancestor chain + immediate descendants */
+const tooltip = document.getElementById('tooltip');
+function onHover(id) {
+  if (selectedId) return; // selection takes precedence
+  highlightChain(id);
+  showTooltip(id);
+}
+function onLeave(id) {
+  if (selectedId) return;
+  clearHighlight();
+  hideTooltip();
+}
+function highlightChain(id) {
+  const ups = getAncestors(id);
+  const downs = getDescendants(id);
+  const all = new Set([id, ...ups, ...downs]);
+  document.querySelectorAll('.node-group').forEach(g => {
+    const gid = g.dataset.id;
+    g.classList.toggle('dimmed', !all.has(gid));
+    g.classList.toggle('highlighted', gid === id);
+  });
+  document.querySelectorAll('.edge').forEach(e => {
+    const onPath = all.has(e.dataset.from) && all.has(e.dataset.to);
+    e.classList.toggle('highlighted', onPath);
+    e.classList.toggle('dimmed', !onPath);
+  });
+}
+function clearHighlight() {
+  document.querySelectorAll('.node-group').forEach(g => { g.classList.remove('dimmed', 'highlighted', 'selected'); });
+  document.querySelectorAll('.edge').forEach(e => e.classList.remove('highlighted', 'dimmed'));
+  applyFilter(currentFilter);  // reapply any active filter
+}
+
+/* Tooltip rendering */
+const WAVE_LABEL = { preWave1:'Pre-Wave 1', wave1:'Wave 1', wave2:'Wave 2', wave3:'Wave 3+' };
+const REG_LABEL  = { engine:'Engine', care:'Care', surface:'Surface', shared:'Shared', pre:'Shared' };
+const STATUS_LABEL = { ratified:'Ratified', 'in-flight':'In-flight', drafted:'Drafted', forward:'Forward-planning' };
+function showTooltip(id) {
+  const n = NODES[id]; if (!n) return;
+  const isPlanned = planQueue.indexOf(id) >= 0;
+  const tags = [];
+  tags.push(`<span class="tt-tag tt-tag-r-${n.status}">${STATUS_LABEL[n.status]}</span>`);
+  if (n.region && n.region !== 'pre') tags.push(`<span class="tt-tag tt-tag-rg-${n.region}">${REG_LABEL[n.region]}</span>`);
+  if (n.capstone === 'gold') tags.push(`<span class="tt-tag tt-tag-boss">★ v3.0 boss</span>`);
+  if (n.capstone === 'silver') tags.push(`<span class="tt-tag tt-tag-boss" style="background:var(--silver);">☆ v3.x boss</span>`);
+  if (n.critical) tags.push(`<span class="tt-tag tt-tag-crit">Critical path</span>`);
+  if (isPlanned) tags.push(`<span class="tt-tag" style="background:var(--gold);color:var(--text);border:1px solid var(--text);">▸ Planned #${planQueue.indexOf(id)+1}</span>`);
+
+  tooltip.innerHTML = `
+    <div class="tt-title">${n.label} · ${n.sub}</div>
+    <div class="tt-sub">${WAVE_LABEL[n.wave]}</div>
+    <div class="tt-tags">${tags.join('')}</div>
+    <div class="tt-desc">${n.description}</div>
+    <div class="tt-hint"><kbd>click</kbd> details · <kbd>right-click</kbd> ${isPlanned ? 'un-plan' : 'plan'}</div>
+  `;
+  tooltip.classList.add('show');
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+document.addEventListener('mousemove', e => {
+  if (!tooltip.classList.contains('show')) return;
+  const r = tooltip.getBoundingClientRect();
+  let x = e.clientX + 16, y = e.clientY + 16;
+  if (x + r.width > window.innerWidth - 12) x = e.clientX - r.width - 16;
+  if (y + r.height > window.innerHeight - 12) y = e.clientY - r.height - 16;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+});
+
+/* Click → open detail rail */
+const rail = document.getElementById('detailRail');
+function selectNode(id) {
+  const n = NODES[id]; if (!n) return;
+  selectedId = id;
+  hideTooltip();
+  highlightChain(id);
+  document.querySelectorAll('.node-group').forEach(g => {
+    g.classList.toggle('selected', g.dataset.id === id);
+  });
+
+  const isPlanned = planQueue.indexOf(id) >= 0;
+  const orderIdx = isPlanned ? (planQueue.indexOf(id) + 1) : null;
+
+  document.getElementById('drTitle').textContent = `${n.label} · ${n.sub}`;
+  document.getElementById('drSub').textContent = WAVE_LABEL[n.wave] + (n.region && n.region !== 'pre' ? ` · ${REG_LABEL[n.region]}` : '');
+
+  const tags = [];
+  tags.push(`<span class="tt-tag tt-tag-r-${n.status}">${STATUS_LABEL[n.status]}</span>`);
+  if (n.region && n.region !== 'pre') tags.push(`<span class="tt-tag tt-tag-rg-${n.region}">${REG_LABEL[n.region]}</span>`);
+  if (n.capstone === 'gold') tags.push(`<span class="tt-tag tt-tag-boss">★ v3.0 boss</span>`);
+  if (n.capstone === 'silver') tags.push(`<span class="tt-tag tt-tag-boss" style="background:var(--silver);">☆ v3.x boss</span>`);
+  if (n.critical) tags.push(`<span class="tt-tag tt-tag-crit">Critical path</span>`);
+  if (isPlanned) tags.push(`<span class="tt-tag" style="background:var(--gold);color:var(--text);">▸ Planned #${orderIdx}</span>`);
+
+  const ups = EDGES.filter(e => e.to === id).map(e => e.from);
+  const downs = EDGES.filter(e => e.from === id).map(e => e.to);
+  const linkPill = (uid, arr, dir) => {
+    const m = NODES[uid];
+    return `<li><button class="link-pill" data-link="${uid}"><span class="arrow">${dir}</span><span>${m.label}</span><span class="role">— ${m.sub}</span></button></li>`;
+  };
+
+  document.getElementById('drBody').innerHTML = `
+    <div class="tag-row">${tags.join('')}</div>
+    <section><h3>Description</h3><p>${n.description}</p></section>
+    ${n.composes ? `<section><h3>Composes</h3><p>${n.composes}</p></section>` : ''}
+    ${n.files ? `<section><h3>Files touched</h3><span class="files">${n.files}</span></section>` : ''}
+    ${n.cipherGates ? `<section class="cipher-gate"><h3>Cipher gate</h3><p>${n.cipherGates}</p></section>` : ''}
+    <section><h3>Depends on (upstream)</h3>
+      ${ups.length ? `<ul class="link-list">${ups.map(u => linkPill(u, ups, '↑')).join('')}</ul>` : '<p class="empty">— root —</p>'}
+    </section>
+    <section><h3>Unlocks (downstream)</h3>
+      ${downs.length ? `<ul class="link-list">${downs.map(d => linkPill(d, downs, '↓')).join('')}</ul>` : '<p class="empty">— leaf —</p>'}
+    </section>
+  `;
+  document.getElementById('drBody').querySelectorAll('.link-pill').forEach(b => {
+    b.addEventListener('click', () => selectNode(b.dataset.link));
+  });
+
+  const planBtn = document.getElementById('drPlanBtn');
+  if (isPlanned) {
+    planBtn.textContent = '✓ Planned · tap to remove';
+    planBtn.classList.add('planned');
+  } else {
+    planBtn.textContent = 'Add to plan';
+    planBtn.classList.remove('planned');
+  }
+  planBtn.onclick = () => { togglePlan(id); selectNode(id); };
+
+  rail.classList.add('open');
+}
+function deselect() {
+  selectedId = null;
+  rail.classList.remove('open');
+  clearHighlight();
+}
+document.getElementById('drClose').addEventListener('click', deselect);
+document.getElementById('drCloseSec').addEventListener('click', deselect);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && selectedId) deselect(); });
+
+/* Plan mode */
+function togglePlan(id) {
+  const idx = planQueue.indexOf(id);
+  if (idx >= 0) planQueue.splice(idx, 1);
+  else planQueue.push(id);
+  localStorage.setItem('sproutlab_v3_plan', JSON.stringify(planQueue));
+  renderPlanTray();
+  updatePlanRings();
+  if (selectedId === id) selectNode(id);
+}
+function updatePlanRings() {
+  document.querySelectorAll('.node-group').forEach(g => {
+    const id = g.dataset.id;
+    const idx = planQueue.indexOf(id);
+    const ring = g.querySelector('.node-plan-ring');
+    const badgeGroup = g.querySelector('.node-plan-badge-group');
+    const badgeText = g.querySelector('.node-plan-badge');
+    if (idx >= 0) {
+      ring.classList.add('show');
+      badgeGroup.style.display = '';
+      badgeText.textContent = (idx + 1);
+    } else {
+      ring.classList.remove('show');
+      badgeGroup.style.display = 'none';
+    }
+  });
+  /* Highlight planned-path edges */
+  document.querySelectorAll('.edge').forEach(e => {
+    const onPlan = planQueue.includes(e.dataset.from) && planQueue.includes(e.dataset.to);
+    e.classList.toggle('planned', onPlan);
+  });
+}
+function renderPlanTray() {
+  const tray = document.getElementById('planTray');
+  const q = document.getElementById('planQueue');
+  if (planQueue.length === 0) { tray.classList.remove('open'); return; }
+  tray.classList.add('open');
+  q.innerHTML = planQueue.map((id, i) => {
+    const n = NODES[id]; if (!n) return '';
+    return `<button class="plan-pill" data-id="${id}"><span class="pp-order">${i+1}</span>${n.label}<span class="pp-x" data-remove="${id}">×</span></button>`;
+  }).join('');
+  q.querySelectorAll('.plan-pill').forEach(p => {
+    p.addEventListener('click', (e) => {
+      if (e.target.dataset.remove) { togglePlan(e.target.dataset.remove); return; }
+      selectNode(p.dataset.id);
+    });
+  });
+}
+document.getElementById('planClear').addEventListener('click', () => {
+  if (!confirm('Clear plan queue? Local-only; chronicle is not affected.')) return;
+  planQueue.length = 0;
+  localStorage.setItem('sproutlab_v3_plan', JSON.stringify(planQueue));
+  renderPlanTray();
+  updatePlanRings();
+});
+document.getElementById('planCommit').addEventListener('click', () => {
+  if (planQueue.length === 0) return;
+  alert(`COMMIT PLAN (stub — coming soon)\n\nThis will draft a canon-cc-027 amendment PR proposing the following sequencing for §4.3 of the chronicle:\n\n${planQueue.map((id,i)=>`${i+1}. ${id} — ${NODES[id].label} · ${NODES[id].sub}`).join('\n')}\n\nWired in a future iteration.`);
+});
+
+/* Filters */
+const FILTERS = {
+  'all':      () => true,
+  'wave1':    n => n.wave === 'wave1' || n.wave === 'preWave1',
+  'wave1+2':  n => n.wave !== 'wave3',
+  'wave3':    n => n.wave === 'wave3',
+  'critical': n => n.critical === true,
+  'boss':     n => !!n.capstone,
+  'engine':   n => n.region === 'engine',
+  'care':     n => n.region === 'care',
+  'surface':  n => n.region === 'surface',
+  'planned':  n => planQueue.indexOf(getNodeId(n)) >= 0,
+};
+function getNodeId(node) {
+  for (const [id, n] of Object.entries(NODES)) if (n === node) return id;
+  return null;
+}
+let currentFilter = 'all';
+function applyFilter(filter) {
+  currentFilter = filter;
+  const pred = FILTERS[filter] || FILTERS.all;
+  document.querySelectorAll('.node-group').forEach(g => {
+    g.classList.toggle('dimmed', !pred(NODES[g.dataset.id]));
+  });
+  document.querySelectorAll('.edge').forEach(e => {
+    const a = NODES[e.dataset.from], b = NODES[e.dataset.to];
+    e.classList.toggle('dimmed', !(pred(a) && pred(b)));
+  });
+}
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+    c.classList.add('active');
+    applyFilter(c.dataset.filter);
+    if (selectedId) highlightChain(selectedId);
+  });
+});
+
+/* Legend toggle */
+document.getElementById('legendToggle').addEventListener('click', () => {
+  document.getElementById('legendContent').classList.toggle('open');
+});
+
+/* Pan + zoom */
+let view = { tx: 0, ty: 0, s: 1 };
+function applyView() { root.setAttribute('transform', `translate(${view.tx},${view.ty}) scale(${view.s})`); }
+function zoomBy(f, center) {
+  const c = center || { x: 650, y: 750 };
+  const o = view.s;
+  let ns = Math.max(0.4, Math.min(3.5, o * f));
+  if (ns === o) return;
+  view.tx = c.x - (c.x - view.tx) * (ns / o);
+  view.ty = c.y - (c.y - view.ty) * (ns / o);
+  view.s = ns; applyView();
+}
+document.getElementById('zoomIn').addEventListener('click', () => zoomBy(1.2));
+document.getElementById('zoomOut').addEventListener('click', () => zoomBy(0.83));
+document.getElementById('zoomReset').addEventListener('click', () => { view = { tx:0, ty:0, s:1 }; applyView(); });
+
+svg.addEventListener('wheel', e => {
+  if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaY) < 50) return;
+  e.preventDefault();
+  const rect = svg.getBoundingClientRect();
+  const sx = (e.clientX - rect.left) * (1300 / rect.width);
+  const sy = (e.clientY - rect.top) * (1500 / rect.height);
+  zoomBy(e.deltaY < 0 ? 1.13 : 0.88, { x: sx, y: sy });
+}, { passive: false });
+
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  if (e.target.closest('.node-group')) return;
+  drag = { sx: e.clientX, sy: e.clientY, otx: view.tx, oty: view.ty };
+  svg.classList.add('grabbing');
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const rect = svg.getBoundingClientRect();
+  const fx = 1300 / rect.width, fy = 1500 / rect.height;
+  view.tx = drag.otx + (e.clientX - drag.sx) * fx;
+  view.ty = drag.oty + (e.clientY - drag.sy) * fy;
+  applyView();
+});
+svg.addEventListener('pointerup', e => { drag = null; svg.classList.remove('grabbing'); try { svg.releasePointerCapture(e.pointerId); } catch(_){} });
+svg.addEventListener('pointercancel', () => { drag = null; svg.classList.remove('grabbing'); });
+
+svg.addEventListener('click', e => {
+  if (e.target === svg || e.target.classList.contains('layer-gutter') || e.target.classList.contains('layer-label') || e.target.classList.contains('layer-num')) {
+    if (selectedId) deselect();
+  }
+});
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE — vertical tier-list (different surface)
+   ───────────────────────────────────────────────────────── */
+function renderMobile() {
+  const body = document.getElementById('mobileBody');
+  const tiers = TIERS.map((t, i) => ({
+    num: t.num,
+    title: t.label,
+    nodes: Object.entries(NODES).filter(([_,n]) => n.tier === i + 1),
+  }));
+
+  let html = `<div class="m-charter-bar">"The app is starting to breathe." — v3.0 mandate<small>32 nodes · 4 tiers · long-press a node to plan</small></div>`;
+
+  tiers.forEach(t => {
+    html += `<div class="m-tier"><div class="m-tier-head"><span class="m-tier-num">${t.num}</span><span class="m-tier-title">${t.title}</span><span class="m-tier-count">${t.nodes.length}</span></div>`;
+    html += `<div class="m-node-grid">`;
+    t.nodes.forEach(([id, n]) => {
+      const planIdx = planQueue.indexOf(id);
+      html += `<div class="m-node r-${n.status} ${planIdx >= 0 ? 'planned' : ''} ${n.capstone ? 'boss' : ''}" data-id="${id}">
+        ${n.capstone ? `<span class="m-cap-star ${n.capstone}">${n.capstone === 'gold' ? '★' : '☆'}</span>` : ''}
+        <div class="m-node-top">
+          <div class="m-glyph ${n.region}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GLYPHS[n.glyph] || ''}</svg>
+          </div>
+          <div class="m-id">${n.label}</div>
+        </div>
+        <div class="m-sub">${n.sub}</div>
+        <div class="m-status ${n.status}">${STATUS_LABEL[n.status]}</div>
+        ${planIdx >= 0 ? `<span class="m-plan-badge">${planIdx + 1}</span>` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  body.innerHTML = html;
+
+  /* Tap = open detail; long-press = plan toggle */
+  body.querySelectorAll('.m-node').forEach(el => {
+    let pressTimer = null;
+    el.addEventListener('pointerdown', () => {
+      pressTimer = setTimeout(() => { togglePlan(el.dataset.id); renderMobile(); pressTimer = null; }, 500);
+    });
+    el.addEventListener('pointerup', (e) => {
+      if (pressTimer) { clearTimeout(pressTimer); selectNode(el.dataset.id); pressTimer = null; }
+    });
+    el.addEventListener('pointerleave', () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } });
+  });
+}
+
+/* Initialize */
+renderPlanTray();
+updatePlanRings();
+if (window.matchMedia && window.matchMedia('(max-width: 880px)').matches) {
+  renderMobile();
+}
+window.addEventListener('resize', () => {
+  if (window.matchMedia('(max-width: 880px)').matches) renderMobile();
+});
+</script>
+</body>
+</html>
