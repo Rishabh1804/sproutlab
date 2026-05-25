@@ -482,11 +482,26 @@ Cipher's per-doctrine verdict on the four new doctrines registered in §4.6:
 
 **Clean.** This Roundtable doc = subagent artifact (Lyra Mode-1, Aurelius chronicler-mode, Cipher Edict V — all signed). Future v3-N PRs = each a subagent artifact at its own canon-cc-008 close. In-flow skill calls during implementation = not artifacts. No action.
 
-### Re-Edict status
+### Re-Edict — Round 2
 
-**Round 2 pending.** Cipher re-Edicts after Lyra's fold to verify the amendments landed cleanly. No Governor re-pass required (synthesis-tier amendments, not jurisdictional findings).
+**Edict V verdict (Round 2): `LGTM`.** All 9 amendments landed cleanly at their named locations; §5 write-up, §6 scope lines, and the footer hold the chain together without drift. Zero Round-2 findings raised.
 
-— *Cipher, Censor of Cluster A, Edict V signed Phase 3, Round 1. 2026-05-25.*
+Round 2 verification pass — each Round 1 finding confirmed-landed:
+- **cipher-1** ✓ — §2.3 footnote ⁽¹⁾ explicitly names branch-only state for PR #127/#128
+- **cipher-2** ✓ — §4.5 #11 carries full operational protocol + demote-to-aspiration clause
+- **cipher-3** ✓ — §4.5 #1 + #12 both carry ⁽ᶜ⁻³⁾ target-not-gate footnote
+- **cipher-4** ✓ — §4.2 v3-3 row footnoted with HR-12 `tz-construction` test-plan-as-MUST
+- **cipher-5** ✓ — §4.2 v3-4 row footnoted with `narrativeProse()` helper + build-time grep gate
+- **cipher-6** ✓ — §4.4 surface-tier row carries HR-5 lock to 7 domain-color tokens
+- **cipher-7** ✓ — §4.2 v3-9 row footnoted with two-PR option (v3-9a Kael / v3-9b Maren)
+- **cipher-8** ✓ — §4.8 #2 carries 🔴 BLOCKING marker; #1/#3/#4/#5 marked non-blocking
+- **cipher-9** ✓ — §4.3 styles.css mutex paragraph ratifies the v3-5 → v3-6 → v3-1 sequential lock
+
+**§6 scope reconciliation:** CV3-001 + CV3-002 → Province-local; CV3-003 + CV3-004 → Cluster-cross (Codex promote). Matches Round 1 verdict byte-for-byte. Scope-resolved preamble at §6 head names the fold; original tentative-Province-local framing preserved in rationale text for traceability — the right call.
+
+**Final action:** Open PR for ratification. Architect ratifies at merge gate; this chronicle is sealed.
+
+— *Cipher, Censor of Cluster A. Edict V signed Phase 3, Round 1 (`amended`) + Round 2 (`LGTM`). 2026-05-25. Chronicle closed.*
 
 ---
 
