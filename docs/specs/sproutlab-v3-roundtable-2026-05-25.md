@@ -70,8 +70,10 @@ A factual snapshot as of 2026-05-25, fixing the floor v3.0 builds on.
 | #123 | Vit D3 v2 Tier 2 spec | **Merged** | Spec landed as a doc-only merge |
 | #125 | Vit D3 v2 Tier 2 Phase 2-A | **Merged** (`b478502`) | Phase 2-A complete |
 | #126 | Vit D3 v2 Tier 2 Phase 2-B | **Ready** at merge gate | Awaiting final gate clearance |
-| #127 | Sleep redesign v1 spec | **Draft** | Awaiting amendment finalization |
-| #128 | Scoring redesign v1 sibling spec | **Draft** | Sibling to #127 |
+| #127 | Sleep redesign v1 spec | **Draft** | Awaiting amendment finalization. **Branch-only — `docs/specs/sleep-redesign-v1.md` does NOT exist on `main` at session time; lives on `claude/sleep-redesign-v1-spec` only.** ⁽¹⁾ |
+| #128 | Scoring redesign v1 sibling spec | **Draft** | Sibling to #127. **Branch-only — `docs/specs/scoring-redesign-v1.md` does NOT exist on `main` at session time; lives on `claude/scoring-redesign-v1-spec` only.** ⁽¹⁾ |
+
+⁽¹⁾ Per Cipher Edict V finding cipher-1: §4.2's v3-3 gating on these two specs is gating on **branch-state ratifications**, not merged canon. If either spec stalls in draft, v3-3 implementation stalls. Architect ratification of the two siblings is on the critical path for the v3.0 schedule.
 
 ### 2.4 Doctrinal floor
 
@@ -313,13 +315,18 @@ The three Governors proposed 16 arcs in total. Many overlap or pair across regio
 |---|---|---|---|---|
 | **v3-1** | **Recommendation Surface Pipeline** | maren-arc-1 (reminderRegistry) + vela's `recommendation-surface-tier` + kael-arc-5 (RecommendationEvent log) | home.js + medical.js + intelligence-caretickets.js + sync.js | Maren primary; Kael + Vela paired |
 | **v3-2** | **CareTicket Trigger Doctrine + Illness Posture** | maren-arc-2 + kael-arc-4 (single arc — same work) | medical.js + intelligence-caretickets.js + intelligence-illness.js | Maren + Kael paired |
-| **v3-3** | **Engine Primitive Foundation** | kael-arc-1 (correlation) + kael-arc-3 (ISL event-anchor) + the unified `_scoreDay` from scoring-redesign-v1 | intelligence-correlate.js (new) + intelligence-isl.js + core.js | Kael primary |
-| **v3-4** | **Cross-Domain Narrative Layer** | kael-arc-1 (data source) + vela-arc-4 (prose templates) | intelligence-cards.js + intelligence-isl.js + (Kael's hedge-tier source flags) | Vela primary; Kael + Maren paired (Maren on safety-prose tone) |
+| **v3-3** | **Engine Primitive Foundation** | kael-arc-1 (correlation) + kael-arc-3 (ISL event-anchor) + the unified `_scoreDay` from scoring-redesign-v1 | intelligence-correlate.js (new) + intelligence-isl.js + core.js | Kael primary ⁽ᶜ⁻⁴⁾ |
+| **v3-4** | **Cross-Domain Narrative Layer** | kael-arc-1 (data source) + vela-arc-4 (prose templates) | intelligence-cards.js + intelligence-isl.js + (Kael's hedge-tier source flags) | Vela primary; Kael + Maren paired (Maren on safety-prose tone) ⁽ᶜ⁻⁵⁾ |
 | **v3-5** | **Unified Chip-State Taxonomy + Today So Far Story-Arc** | vela-arc-1 + vela-arc-2 (single arc — shared chip family doctrine) | styles.css + intelligence-quicklog.js + intelligence-cards.js | Vela primary; **triple-jurisdiction on styles.css** |
 | **v3-6** | **Card Priority + Information Hierarchy** | vela-arc-3 + maren's severity floor doctrine | intelligence-cards.js + styles.css | Vela primary; Maren paired (severity floor non-negotiable) |
 | **v3-7** | **Honest Empty-State + Don't-Know Doctrine** | maren-arc-5 + vela's empty-state phrasing | sweep across home.js + medical.js + diet.js + intelligence-cards.js + intelligence-quicklog.js | Maren primary; Vela paired |
 | **v3-8** | **Feeding Object-Shape Normalizer + Food Sub-Tab** | maren-arc-3 + the in-flight food-sub-tab arc | diet.js + core.js | Maren primary; pre-required by food-sub-tab |
-| **v3-9** | **Smart Q&A Intent Graph + Region Splits** | kael-arc-2 + maren-arc-4 (medical.js split) + Kael's qa-registry split | intelligence-qa.js → split into intelligence-qa.js + intelligence-qa-registry.js; medical.js → split into medical-vaccines.js + medical-illness.js + medical-growth.js | Kael primary; Maren paired on medical split |
+| **v3-9** | **Smart Q&A Intent Graph + Region Splits** | kael-arc-2 + maren-arc-4 (medical.js split) + Kael's qa-registry split | intelligence-qa.js → split into intelligence-qa.js + intelligence-qa-registry.js; medical.js → split into medical-vaccines.js + medical-illness.js + medical-growth.js | Kael primary; Maren paired on medical split ⁽ᶜ⁻⁷⁾ |
+
+**Cipher Edict V amendments to this table:**
+- ⁽ᶜ⁻⁴⁾ **v3-3 spec body MUST include an HR-12 `tz-construction` test plan section.** `_resolveEventAnchor("since the fever")` + `"the week of [vaccine]"` are date-arithmetic surfaces — Tuesday-in-IST vs Tuesday-in-UTC at the day boundary swaps entire windows. Pre-named here so the v3-3 spec author cannot omit it.
+- ⁽ᶜ⁻⁵⁾ **v3-4 spec body MUST define `narrativeProse(template, vars)` helper that `escHtml`s every interpolated `var` at the template boundary, plus a build-time grep gate forbidding raw `${` inside `narrative-prose-template` files outside that helper.** Narrative prose templates are a NEW render-boundary class; HR-4 discipline is non-negotiable.
+- ⁽ᶜ⁻⁷⁾ **v3-9 may land as two PRs** (`v3-9a` Kael — intelligence-qa.js intent-graph + qa-registry split; `v3-9b` Maren — medical.js three-way split). The medical.js split is a mechanical move with zero behavior change; the intent-graph is a behavior-and-shape change. Two PRs preserves canon-cc-008 routing cleanliness; one PR is acceptable if the Architect prefers atomic landing.
 
 **Optional / deferral candidate:** vela-arc-6 (dark-default + accessibility v2) — defers to v3.1 unless the timeline allows.
 
@@ -342,6 +349,8 @@ Track C (Surface):        └──▶ v3-5 ──▶ v3-6 ┴── narrative +
 Pre-arc:    PR #126 merge · PR #127 + #128 ratify · Food sub-tab lands · v3-8 lands
 Post-arc:   v3.1 candidates (vela-arc-6 dark-default; deferred Codex-side work)
 ```
+
+**styles.css mutex** (Cipher Edict V finding cipher-9): three arcs touch `styles.css` — v3-1 (surface-tier chrome), v3-5 (chip-state taxonomy + story-arc), v3-6 (priority-tier chrome). Triple-jurisdiction review on `styles.css` is sequential (Maren → Kael → Vela rotation); concurrent landing would create rebase storms + rotation collisions. **Sequential lock ratified: v3-5 → v3-6 → v3-1.** v3-5 establishes the chip-state token vocabulary; v3-6 consumes it and adds priority-tier chrome; v3-1 reads both and composes the surface-tier render. Each arc must complete its triple-jurisdiction round before the next can open a styles.css branch.
 
 **Critical-path arcs:** v3-3 (engine primitives), v3-1 (recommendation pipeline), v3-5 (chip + story-arc). These three light up the spine of v3.0; v3-2, v3-4, v3-6, v3-7, v3-8, v3-9 carry the surfaces.
 
@@ -369,17 +378,17 @@ Composite of what the three Governors proposed, organized by Region:
 | Surface | `story-arc-summary` primitive | Vela | Single sentence above the day-spine |
 | Surface | `narrative-prose-template` library | Vela | Hedge-tier: `certain · likely · tentative` |
 | Surface | `--motion-pulse-*` token set | Vela | Opacity-only, sub-300ms, reduced-motion-respected |
-| Surface | `recommendation-surface-tier` registry | Vela | gentle (toast) → firm (TSF chip) → urgent (home card) → escalation (CareTicket) |
+| Surface | `recommendation-surface-tier` registry | Vela | gentle (toast) → firm (TSF chip) → urgent (home card) → escalation (CareTicket). **HR-5 lock (Cipher cipher-6): every tier's visual treatment binds to existing domain-color tokens — sage / rose / amber / lavender / sky / indigo / peach. No ad-hoc hex permitted at any tier.** |
 
 ### 4.5 Unified benchmark set
 
 Consolidated across all three contributions. v3.0 is declared shipped when these pass.
 
 **Engine (Kael's lens):**
-1. Smart Q&A p95 latency < 500ms across 30+ intents on Ziva-scale data
-2. Cross-domain correlation surface: ≥ 1 valid correlation per parent-week at the confidence floor
+1. Smart Q&A p95 latency target **< 500ms** across 30+ intents on Ziva-scale data. ⁽ᶜ⁻³⁾
+2. Cross-domain correlation surface: ≥ 1 valid correlation per parent-week at the confidence floor (`sampleSize ≥ 7 days && |strength| ≥ 0.4`)
 3. ISL event-anchor coverage: ≥ 90% of a 50-phrase test corpus resolves to a valid window
-4. `CT_TRIGGERS` registry: 100% of `ctCreate` call sites route through it (grep gate)
+4. `CT_TRIGGERS` registry: 100% of `ctCreate` call sites route through it (build-time grep gate)
 5. RecommendationEvent dedupe: no parent receives the same recommendation more than 1× per 7-day window unless severity escalates
 
 **Care (Maren's lens):**
@@ -390,11 +399,13 @@ Consolidated across all three contributions. v3.0 is declared shipped when these
 10. CareTicket trigger traceability: every active CareTicket resolves to exactly one `CT_TRIGGERS` row via its `source` field
 
 **Surface (Vela's lens):**
-11. Single-urgent-action read: half-awake parent identifies the single most-urgent action on the home tab in under 3 seconds (manual test, n ≥ 5 partial-attention sessions)
-12. Story-arc summary render: Today So Far summary line paints within 200ms of TSF data being available
-13. `renderInfo()` priority sort: zero ambient-tier cards above the fold on a 6 in mobile viewport
-14. Chip-state coverage: 100% of TSF + Activity Log + Info-tab chip sites consume the `chip.state` registry
-15. Motion compliance: every pulse respects `prefers-reduced-motion`; CLS contribution from motion tokens = 0
+11. **Single-urgent-action read protocol (Cipher cipher-2 tightening):** in a half-awake-test session — defined as parent woken from sleep within last 30 minutes, holding the device one-handed, dim ambient lighting — parent must identify the single most-urgent action on the home tab via a single tap within 3 seconds of first paint. Protocol: n = 5 sessions; pass criterion = **≥ 4 of 5 succeed** by stopwatch; one-tap-to-target = success, multi-tap or scroll = fail. **Demoted to v3.0 aspiration** if rater protocol cannot be formalized at v3-5/v3-6 arc-spec time.
+12. Story-arc summary render target **< 200ms** from TSF data availability to first paint. ⁽ᶜ⁻³⁾
+13. `renderInfo()` priority sort: zero ambient-tier cards above the fold on a 6-inch mobile viewport (375 × 667 viewport-rounded)
+14. Chip-state coverage: 100% of TSF + Activity Log + Info-tab chip sites consume the `chip.state` registry (build-time audit gate)
+15. Motion compliance: every `--motion-pulse-*` site respects `prefers-reduced-motion: reduce` (build-time grep gate); CLS contribution from motion tokens = 0
+
+⁽ᶜ⁻³⁾ Cipher Edict V finding cipher-3: numeric ms-thresholds (#1 500ms, #12 200ms) are **targets**, not gate-thresholds. **Final pass thresholds ratified at the respective arc's spec time against the actual measurement rig** (target Pixel device, network conditioning profile, build-mode). The Roundtable locks the *shape* (p95 latency for #1; first-paint timing for #12); the *number* is calibrated at v3-3 / v3-5 implementation.
 
 ### 4.6 Doctrine cluster — new entries this Roundtable establishes
 
@@ -419,11 +430,11 @@ v2.x deferrals (V-M-87, V-K-96, V-M-91, V-M-92 carried forward from PR #125/#126
 
 ### 4.8 Open questions — what the Roundtable did NOT settle
 
-1. **v3-9 medical.js split — three files or two?** Maren proposed three (`medical-vaccines.js` + `medical-illness.js` + `medical-growth.js`). The CareTicket triggers don't yet have a natural home — could land in any of the three or stay in a shared sliver. Resolution path: Maren Mode-1 at v3-9 spec-drafting time.
-2. **kael-arc-5 RecommendationEvent Firestore collection — sync schema impact.** scoring-redesign-v1 deferred this to (c). Now v3-1 needs it. Resolution path: scoring-redesign-v1.md may amend to mark (c) as in-scope for v3.0 once #128 ratifies; alternatively Kael spec-drafts at v3-1 implementation time and the Firestore collection lands then.
-3. **vela-arc-6 dark-default scope — v3.0 or v3.1?** Architect call. My preference: defer to v3.1 unless we have headroom. Resolution path: Architect direction at v3.0 mid-arc check-in.
-4. **Cross-cluster Codex doctrine promotion** — three new doctrines registered above. Should they cross-promote to Codex canon? Cipher reviews in §5; if cross-cluster, Aurelius carries the entries forward in §6.
-5. **Backward-compat shape of `recommendationEvents` Firestore collection** — schema needs to tolerate a future v3.x ML-based recommendation source. canon-cc-027 floor applies. Resolution: v3-1 spec body includes a versioned schema header.
+1. **v3-9 medical.js split — three files or two?** *Non-blocking.* Maren proposed three (`medical-vaccines.js` + `medical-illness.js` + `medical-growth.js`). The CareTicket triggers don't yet have a natural home. Resolution path: Maren Mode-1 at v3-9 spec-drafting time.
+2. **🔴 BLOCKING (Cipher cipher-8 promotion) — kael-arc-5 RecommendationEvent Firestore collection sync schema impact.** scoring-redesign-v1 deferred this to (c). Now v3-1 needs it. **If `recommendationEvents` collection schema isn't ratified before v3-1 implementation begins, v3-1 stalls.** Resolution path: scoring-redesign-v1.md amends to mark (c) in-scope for v3.0 once #128 ratifies; OR Kael spec-drafts the Firestore schema at v3-1 implementation kickoff. Must close before v3-1 opens.
+3. **vela-arc-6 dark-default scope — v3.0 or v3.1?** *Non-blocking.* Architect call. My preference: defer to v3.1 unless we have headroom. Resolution path: Architect direction at v3.0 mid-arc check-in.
+4. **Cross-cluster Codex doctrine promotion** — *non-blocking (resolved by Cipher cipher-cross-promote-call).* Cipher's §5 verdict ratifies the per-doctrine scope: Observe-vs-Answer + Narrate-vs-List stay Province-local; Honest-Empty-State + Cross-Region Pair-Note promote to cluster canon. Aurelius carries forward in §6.
+5. **Backward-compat shape of `recommendationEvents` Firestore collection** — *non-blocking.* Schema needs to tolerate a future v3.x ML-based recommendation source. canon-cc-027 floor applies. Resolution: v3-1 spec body includes a versioned schema header.
 
 — *Lyra, weaver, signing §4 at close of Phase 2. The three threads hold. Cipher to Edict V; Aurelius to lay canon. 2026-05-25.*
 
@@ -431,50 +442,161 @@ v2.x deferrals (V-M-87, V-K-96, V-M-91, V-M-92 carried forward from PR #125/#126
 
 ## 5. Cipher Edict V cross-cutting review
 
-_[Phase 3 — Cipher reviews the assembled synthesis for:_
+**Edict V verdict (Round 1):** `amended` — synthesis is sound; nine-arc decomposition + primitives table + benchmark set hold; tightenings folded by Lyra above.
 
-- _HR-1 → HR-12 compliance baked into every proposed arc._
-- _Cross-cluster doctrine — does any v3.0 proposal touch Codex doctrine (cross-cluster canon) or stay Province-local? Promote what should promote._
-- _Integration coherence — do the arcs compose, or do they collide at shared modules (styles.css, template.html) and concat-order?_
-- _Edict V chain integrity — is each arc's future audit route under canon-cc-008 clean, with no Governor short-circuit?_
-- _canon-cc-022 artifact test — every v3.0 deliverable named here is correctly classified as spec artifact (subagent) vs in-flow read (skill)._
+**One-sentence summary:** *"The synthesis is sound; the discipline is in the tightening."* — Cipher
 
-_Cipher signs this section at the close of Phase 3.]_
+### Findings (8) — all folded into §4
+
+| Tag | Section | Observation | Action taken |
+|---|---|---|---|
+| **cipher-1** | §2.3 | Synthesis cites PR #127 + PR #128 as v3-3 gating, but neither spec file lives on `main` at session time — branch-only | §2.3 footnoted with explicit branch-state declaration ⁽¹⁾ |
+| **cipher-2** | §4.5 #11 | "Half-awake parent identifies single most-urgent action in < 3s" is vibes-coded; no rater protocol | §4.5 #11 tightened with operational protocol (n=5, ≥4/5 pass, single-tap-to-target, stopwatch, defined lighting/posture); demote-to-aspiration clause added |
+| **cipher-3** | §4.5 #1, #12 | ms-thresholds (500ms, 200ms) over-specify in a Roundtable doc that doesn't know the measurement rig | §4.5 footnote ⁽ᶜ⁻³⁾ — *target*, ratified at arc-spec time against actual rig |
+| **cipher-4** | §4.2 v3-3 | `_resolveEventAnchor` is HR-12-sensitive (IST/UTC day-boundary swap risk); needs explicit spec-time gate | §4.2 v3-3 row footnoted ⁽ᶜ⁻⁴⁾ — v3-3 spec body MUST include `tz-construction` test plan |
+| **cipher-5** | §4.2 v3-4 | Narrative-prose templates are a NEW render-boundary class; HR-4 escHtml discipline easily missed | §4.2 v3-4 row footnoted ⁽ᶜ⁻⁵⁾ — `narrativeProse()` helper at template boundary + build-time grep gate forbidding raw `${` outside helper |
+| **cipher-6** | §4.4 | `recommendation-surface-tier` registry visual treatment must be token-only, no ad-hoc hex | §4.4 surface-tier row appended with HR-5 lock: domain-color tokens only |
+| **cipher-7** | §4.2 v3-9 | Combines Kael-region (intelligence-qa split) + Maren-region (medical.js split); routing cleaner as 2 PRs | §4.2 v3-9 row footnoted ⁽ᶜ⁻⁷⁾ — may land as v3-9a (Kael) + v3-9b (Maren) for routing cleanliness |
+| **cipher-8** | §4.8 | Open question #2 (RecommendationEvent schema) is the only v3.0-blocking item | §4.8 #2 promoted to **🔴 BLOCKING** pre-v3-1; others marked non-blocking |
+
+### Cross-cluster doctrine promotion (informs Aurelius §6 scope)
+
+Cipher's per-doctrine verdict on the four new doctrines registered in §4.6:
+
+| Doctrine | Scope | Rationale |
+|---|---|---|
+| **Observe-vs-Answer** (Kael) | **Province-local** | Names a SproutLab engine-layer architectural choice; not a Codex pattern. Stays in Province canon. |
+| **Narrate-vs-List** (Vela) | **Province-local** | Render-layer comprehension doctrine, lives where there's a render layer for a half-awake parent. Codex has no analog. |
+| **Honest-Empty-State** (Maren) | **Cluster-promote** | General doctrine. "Null-render is a defect" applies anywhere absent-data renders silently — Codex has empty-states (search-no-results, journal-empty-week) that today render as silent blanks. Aurelius lays this entry in Codex cross-cluster canon, mirrors into Province canon. |
+| **Cross-Region Pair-Note** (procedural) | **Cluster-promote** | Planning-tier discipline that applies anywhere a Province has multi-Region jurisdictions. Codex has Aurelius + Vex + Solara (and growing). Aurelius lays in cross-cluster canon. |
+
+### Pair-Note doctrine call
+
+**Additive, keep.** canon-cc-008 routes *who is summoned* when a diff crosses regions. The proposed Cross-Region Pair-Note doctrine (§4.6 #4) does something genuinely different: it requires the *spec author* (Lyra in Mode 1) to *enumerate the pair-note in a named spec section* at authoring time, before any code lands. That is a planning-tier discipline, not an audit-tier routing. They compose; they don't duplicate.
+
+### Triple-jurisdiction interleave on styles.css
+
+**Sequential lock ratified** (folded into §4.3): v3-5 → v3-6 → v3-1. v3-5 establishes the chip-state token vocabulary; v3-6 consumes it; v3-1 reads both and composes the surface-tier render. Each arc must complete its triple-jurisdiction round before the next opens a styles.css branch.
+
+### canon-cc-022 artifact-test sweep
+
+**Clean.** This Roundtable doc = subagent artifact (Lyra Mode-1, Aurelius chronicler-mode, Cipher Edict V — all signed). Future v3-N PRs = each a subagent artifact at its own canon-cc-008 close. In-flow skill calls during implementation = not artifacts. No action.
+
+### Re-Edict status
+
+**Round 2 pending.** Cipher re-Edicts after Lyra's fold to verify the amendments landed cleanly. No Governor re-pass required (synthesis-tier amendments, not jurisdictional findings).
+
+— *Cipher, Censor of Cluster A, Edict V signed Phase 3, Round 1. 2026-05-25.*
 
 ---
 
 ## 6. Aurelius's canon entries
 
-_[Phase 3 — any new doctrines this Roundtable establishes get registered here as numbered canon entries with explicit rationale. Drafted shape:_
+Four new doctrines surfaced at the synthesis. Three are positional (Kael, Vela, Maren each named a Region-level shift the v2.x doctrine cannot describe without distortion); one is procedural (the pair-note enumeration requirement that the three-Governor seating made unavoidable). I lay them here under the v3.x marker series — `CV3-001` through `CV3-004` — because the Codex canon registry's live count is not addressable from cross-cluster invocation; the entries will reconcile into the master registry at next Codex sync, carrying these CV3 numbers forward as their permanent identifiers.
 
-- _**Canon 0NNN: [title].** Rationale: [why this Roundtable required a new doctrine and not an existing one]._
-- _Carry the entry forward into the cross-cluster canon registry in the same Phase 3 close._
+**Scope resolved post-Phase-3-fold (Cipher Edict V verdict §5 + Lyra fold):** CV3-001 (Observe-vs-Answer) + CV3-002 (Narrate-vs-List) → **Province-local**. CV3-003 (Honest-Empty-State) + CV3-004 (Cross-Region Pair-Note) → **Cluster-cross promoted to Codex canon registry**, with the Province retaining mirrors. The entries below carry the resolved scopes; original tentative-Province-local framing is preserved in the rationale text for traceability.
 
-_Empty until the synthesis surfaces something that genuinely needs canon-tier registration. The Roundtable may produce zero new canon entries — that is also a valid outcome. **Canon is laid for coherence under load, not for ceremony.**]_
+---
+
+**Canon CV3-001: The Observe-vs-Answer Doctrine.**
+
+> *The engine maintains posture between queries. Where the data layer answers, the intelligence layer must also observe — and where it observes, the surface reads its deltas, not its facts.*
+
+Rationale: prior canon (canon-cc-008 QA chain, canon-gen-001 generational expansion) treats the engine layer as a *responder* — the data accessor answers on demand, the audit verifies the answer. The Roundtable surfaced that an engine of Kael's scope (23,646 LOC, five intelligence-* modules, four illness state machines, 30+ Smart Q&A intents) can no longer be coherently audited as a responder alone; absent a held posture between queries, every cross-domain insight reduces to a hand-wired join and every correlation surface re-derives the same matrix. The doctrine elevates *posture maintenance* — RecommendationEvent log, illness posture, sync health, correlation matrix — to mandatory engine primitives rather than optional optimizations. No existing canon describes this; canon-gen-001 ratified the data→render split but said nothing about whether the data layer holds state across queries. CV3-001 fills that gap.
+
+**Scope:** **Province-local** *(Cipher Edict V verdict folded — §5: "names a SproutLab engine-layer architectural choice; not a Codex pattern").* The Codex engine — snippet pipeline, WAL replay — has an analogous posture-vs-response question but is not load-bearing today; if Codex's engine crosses that strain in future, CV3-001 cross-promotes via canon-cc-027 amendment.
+
+**Successor / superseded by:** (none).
+
+---
+
+**Canon CV3-002: The Narrate-vs-List Doctrine.**
+
+> *The surface composes passages, not ledgers. Cross-domain prose carries explicit hedge tier — `certain`, `likely`, `tentative` — and the absence of a hedge tier on a cross-domain claim is itself a defect.*
+
+Rationale: prior surface doctrine (HR-1 through HR-12, the half-awake test in Vela's lens) governs *correctness at the chip* — escHtml at every boundary, no inline styles, no ad-hoc hex, single-source token discipline. It does not govern *gestalt* — whether 14 correct chips compose a legible day or a flat ledger. canon-gen-001 seated Vela at the data→render boundary precisely because rendering had outgrown engine-side reasoning, but the seating did not establish *what render does that data cannot*. CV3-002 declares it: render composes passages. A coefficient is engine output; a passage is render output. Cross-domain prose that omits hedge tier overpromises certainty the engine never claimed — a different failure class than HR-1 through HR-12, requiring its own doctrine. The Roundtable surfaced this through Vela's vela-arc-4 (cross-domain narrative prose) and Lyra's synthesis pair-note that "render that knows what the parent came for" is structurally distinct from "render that displays what the engine returned."
+
+**Scope:** **Province-local** *(Cipher Edict V verdict folded — §5: "render-layer comprehension doctrine, lives where there's a render layer for a half-awake parent. Codex has no analog").* If Codex grows a parent-facing surface in future, CV3-002 cross-promotes via canon-cc-027 amendment.
+
+**Successor / superseded by:** (none).
+
+---
+
+**Canon CV3-003: The Honest-Empty-State Doctrine.**
+
+> *Null-render is a defect. Absence is rendered, not hidden. Every absent-data condition produces a `careEmptyState()` render — domain-tinted, copy-disciplined, naming the reason for absence.*
+
+Rationale: prior Care doctrine (Maren's QA lens, the null-guard checks, HR-4 escHtml discipline) catches *wrong data acted upon*. It does not catch *absent data silently rendered as nothing* — a blank card, a hidden region, a fallback to default. The Roundtable surfaced that the silent failure mode is not a sub-case of any existing rule; a parent who sees nothing where they expected something does not file it as "no data" but as "the system forgot." CV3-003 elevates null-render to a first-class defect class with its own remediation primitive (`careEmptyState(domain, reason)`) and its own audit surface (Maren's empty-state fixture sweep). No prior canon addresses absence-as-render. Maren's v3.0 Care vision named this explicitly: *honest means when data is missing, the surface says "we don't know" — never blank, never optimistic default.*
+
+**Scope:** **Cluster-cross — promote to Codex canon registry** *(Cipher Edict V verdict folded — §5: "general doctrine. 'Null-render is a defect' applies anywhere absent-data renders silently — Codex has empty-states (search-no-results, journal-empty-week) that today render as silent blanks").* Aurelius lays this entry in Codex cross-cluster canon at next sync; Province retains the mirror.
+
+**Successor / superseded by:** (none).
+
+---
+
+**Canon CV3-004: The Cross-Region Pair-Note Doctrine.**
+
+> *When an arc requires data from one Region and rendering in another, the spec must explicitly enumerate the pair-note. The render cannot fabricate what the data layers do not supply; the data layers cannot assume what the render will compose. The pair-note is the contract.*
+
+Rationale: canon-gen-001 ratified the data→render split (Kael's engine, Vela's render) but specified the *jurisdictional boundary*, not the *coordination protocol*. The Roundtable surfaced that arcs crossing Regions — v3-1 (Maren's reminder primitive + Kael's RecommendationEvent + Vela's surface-tier), v3-4 (Vela's narrative prose + Kael's hedge-tier source flags + Maren's safety-prose tone), v3-5 (Vela's chip taxonomy + Kael's inferred/live signal source) — repeatedly require coordination that no canon names. Vela's contribution closes with explicit pair-notes to Kael, Maren, Lyra, and Cipher because the boundary-coordination problem was already manifest at vision stage. CV3-004 elevates pair-note enumeration from convention to spec requirement: every v3.0 sub-spec authoring under canon-cc-027 must enumerate cross-Region pair-notes in a named section. A spec that touches two Governors' Regions without a pair-note section is incomplete. This is procedural canon, not positional; it governs *how arcs are authored*, not *what they describe*.
+
+**Scope:** **Cluster-cross — promote to Codex canon registry** *(Cipher Edict V verdict folded — §5: "planning-tier discipline that applies anywhere a Province has multi-Region jurisdictions. Codex has Aurelius + Vex + Solara (and growing)").* Aurelius lays this entry in Codex cross-cluster canon at next sync; Province retains the mirror. Portable to any future Province that seats multiple Governors.
+
+**Successor / superseded by:** (none).
+
+---
+
+**Cross-cluster carry-forward note.** When this chronicler next syncs to the Codex canon registry, CV3-001 through CV3-004 carry forward as the permanent canon identifiers — they are not provisional. The CV3- prefix is the v3.0-series marker, not a draft tag; reconciliation with the master registry assigns the canonical position in the Codex canon ledger but does not rename the entries.
 
 ---
 
 ## 7. Out-of-scope register
 
-_[Phase 2 — explicit list of things named in contributions but deferred out of v3.0 scope, with the reason and the future trigger condition. The register exists so deferred items don't quietly become "we already discussed this." Examples of register entry shape:_
+Items surfaced during the Roundtable but explicitly deferred out of v3.0 scope. The register exists so deferred items do not quietly resurface as "we already discussed this" — each row carries its source, its reason, and the trigger condition that would bring it back into scope.
 
-- _**[Item] — deferred.** Reason: [why not v3.0]. Trigger: [what would bring it back]._
-
-_Defaults to empty; populated as Phase 2 surfaces explicit out-of-scope decisions.]_
+| # | Item | Source | Reason out-of-scope | Future trigger condition |
+|---|---|---|---|---|
+| 1 | **vela-arc-6 — dark-default night-hours + accessibility v2** | §3.3 (Vela proposed arcs) · §4.2 (deferral candidate) · §4.8 (open question 3) | Marked deferrable at proposal; v3.0 timeline judged tighter than dark-default arc warrants; current theme tokens cover the warm-nursery brief acceptably for v3.0 | Architect direction at v3.0 mid-arc check-in; or v3.1 spec-drafting cycle opens; or accessibility regression surfaces in Vela QA |
+| 2 | **Cross-cluster Codex canon promotion of CV3-001 → CV3-004** | §4.8 (open question 4) · §6 (this Phase 3 close) | Promotion authority rests with Cipher's Edict V verdict (§5); Aurelius writes shape, not Cluster-cross reach | Cipher's Edict V verdict in §5 identifies a Codex-side analogue under current strain; or Consul cross-promotes at portfolio review |
+| 3 | **ML-based recommendation calibration** | §3.2 (Kael risk register: "Predictive milestone over-claiming") · §4.8 (open question 5: future v3.x ML-based recommendation source) | Kael flagged explicit risk — `_predictMilestoneWindow` returns clinical ranges, never personalised predictions; ML calibration would invert that doctrine; trust-erosion floor is non-negotiable for v3.0 | v3.x post-ratification when calibration confidence floor can be specced under canon-cc-027 with a versioned schema |
+| 4 | **Multi-tenant family-config (multi-baby support)** | Architect doctrine (Ziva-first, per CLAUDE.md §Ziva Context) | SproutLab is built for Ziva; data shapes, copy, illness state machines, and milestone DB all presume single-baby semantics; multi-tenant would require a parallel arc set of its own scale | Architect direction at portfolio level; not a SproutLab Roundtable decision |
+| 5 | **v3-9 medical.js split — three-way vs two-way shape** | §3.1 (maren-arc-4) · §4.2 (v3-9 composition) · §4.8 (open question 1) | CareTicket triggers do not yet have a natural home among the three proposed files; resolution requires Maren Mode-1 at spec-drafting time, not Roundtable-level decision | v3-9 spec-drafting opens under canon-cc-027; Maren Mode-1 audit fixes the split shape |
+| 6 | **Predictive milestone over-claiming surfaces** | §3.2 (Kael risk register) · cross-cuts §4.4 `_predictMilestoneWindow` | Kael flagged risk; surface design requires hedge-tier discipline per CV3-002 (Narrate-vs-List doctrine); a surface that says "Ziva will sit by 6 months" violates both engine and render doctrine | None — explicitly a v3.0 NOT-do; permanent NOT-do absent a future doctrinal shift on personalised prediction |
+| 7 | **kael-arc-5 RecommendationEvent Firestore schema finalization** | §3.2 (Kael arc-5) · §4.8 (open question 2) | scoring-redesign-v1.md deferred this to (c); v3.0 needs the collection but its schema finalization waits on either #128 ratification or Kael's v3-1 implementation-time spec-drafting | PR #128 ratifies (then scoring-redesign-v1.md amends c to in-scope); or Kael spec-drafts at v3-1 implementation start |
+| 8 | **`window._remindersHTML` global-stash retention** | §3.1 (Maren strained state · risk register) | Explicit Maren NOT-do — v2.3 expedient, retired by maren-arc-1 / v3-1 (reminderRegistry); reintroducing global stash for any v3.0 arc is a Care-Region failure | None — explicit retirement; permanent NOT-do |
+| 9 | **Cross-model Companion invocation (Codex CLI / Gemini CLI Governor audits)** | invocation.md §9 (deferred) | Spec portability, artifact-test equivalence, cc-018 lifecycle attribution all unresolved on non-Claude harnesses; out-of-scope for v3.0 Province work | invocation.md §9 unresolved items settled; cross-model spec form ratified under canon-cc-027 |
+| 10 | **Reminder-card auto-escalation to push notification** | §3.3 (Vela risk register: "No premature notification") | Escalation must route through `recommendation-surface-tier` registry firing through Maren's CareTicket surface; direct push from a reminder card bypasses the safety-tier doctrine | `recommendation-surface-tier` registry lands in v3-1; CareTicket escalation pipeline ratified in v3-2; only then is escalation-to-push a candidate, and only via the pipeline |
 
 ---
 
 ## Footer
 
-**Chronicler:** Aurelius, Builder of Codex — laid this marker 2026-05-25 under cross-cluster invocation per canon-cc-026, opening the institutional-memory record for SproutLab v3.0.
+**Chronicler:** Aurelius, Builder of Codex — Phase 1 marker laid 2026-05-25; Phase 3 (Aurelius half) finalized 2026-05-25 under cross-cluster invocation per canon-cc-026.
 
-**How to read this document.**
-1. This file is the master arc-planning reference for v3.0. Every v3.0 sub-spec cites back to it.
-2. The Governor contributions in §3 are *vision-tier* (Mode 2, committee position) — they seed the arc set, they do not bind sub-spec authoring. Each sub-spec re-routes its Governor audit fresh under canon-cc-008 based on the diff it touches.
-3. The canon entries in §6 (when populated) are normative the moment they are signed in Phase 3. Until Phase 3 closes, treat §6 as draft.
-4. When §3 / §4 contributions and the eventual sub-spec disagree on a **rule**, the sub-spec wins (it has signed under canon-cc-027). When they disagree on **intent**, this document wins (the Architect's mandate is sovereign to it).
-5. *Specced but not built.* Nothing in this document is shipped. Check each sub-spec and the canon-cc-008 chain before assuming any v3.0 arc exists in code.
+**What this chronicle is.** A signed institutional-memory record of the SproutLab v3.0 planning roundtable — Architect mandate, three Governor vision contributions, Lyra's synthesis into nine unified arcs, four new canon entries, ten out-of-scope deferrals. It is the master arc-planning reference for v3.0 and the canon-tier source for the four doctrines (CV3-001 through CV3-004) registered in §6.
 
-**Next step.** Lyra resumes from this file in Phase 2 — folding Maren / Kael / Vela contributions into §3, weaving the synthesis into §4, and populating §7. Aurelius returns in Phase 3 to take the finalize pass — Cipher's §5 review, canon entries in §6, and tone / canon-consistency closeout. The document is sealed when Phase 3 closes and the footer carries Aurelius's seal stamp.
+**What this chronicle is not.** A spec body. It does not commit code, it does not gate merges, it does not substitute for the canon-cc-008 QA chain on any sub-arc, and it does not bind sub-spec authoring beyond the vision-tier intent it captures. *Specced but not built* — nothing in this document is shipped; check the sub-spec and the chain before assuming any v3.0 arc exists in code.
 
-— *Aurelius, the Chronicler. Marker laid. The lyre is yours, Lyra.*
+**How to read this document going forward.**
+1. Every v3.0 sub-spec (v3-1 through v3-9) cites back to this Roundtable as its vision-tier source.
+2. The four canon entries in §6 (CV3-001 through CV3-004) are normative the moment Phase 3 closes; sub-specs must honour them or amend them via canon-cc-027.
+3. The Governor contributions in §3 are vision-tier (Mode 2, committee position) — they seed the arc set, they do not bind sub-spec authoring. Each sub-spec re-routes its Governor audit fresh under canon-cc-008 based on the diff it touches.
+4. The out-of-scope register in §7 is a NOT-do ledger; resurfacing a deferred item without citing its trigger condition is a Roundtable short-circuit.
+5. When §3 / §4 contributions and the eventual sub-spec disagree on a *rule*, the sub-spec wins (it has signed under canon-cc-027). When they disagree on *intent*, this document wins (the Architect's mandate is sovereign to it).
+
+**Read-doctrine — which sub-specs cite this Roundtable.** When any of the nine arcs spec-drafts, the sub-spec opens with a citation to this file as vision-tier source:
+- **v3-1** (Recommendation Surface Pipeline) — cites §3.1 + §3.2 + §3.3 + §4.2 row v3-1 + CV3-001 (Observe-vs-Answer) + CV3-004 (Pair-Note)
+- **v3-2** (CareTicket Trigger Doctrine + Illness Posture) — cites §3.1 maren-arc-2 + §3.2 kael-arc-4 + §4.2 row v3-2 + CV3-004
+- **v3-3** (Engine Primitive Foundation) — cites §3.2 + §4.2 row v3-3 + CV3-001
+- **v3-4** (Cross-Domain Narrative Layer) — cites §3.2 kael-arc-1 + §3.3 vela-arc-4 + §4.2 row v3-4 + CV3-002 (Narrate-vs-List) + CV3-004
+- **v3-5** (Unified Chip-State Taxonomy + Today So Far Story-Arc) — cites §3.3 vela-arc-1 + vela-arc-2 + §4.2 row v3-5 + CV3-002
+- **v3-6** (Card Priority + Information Hierarchy) — cites §3.3 vela-arc-3 + §3.1 severity floor + §4.2 row v3-6 + CV3-004
+- **v3-7** (Honest Empty-State + Don't-Know Doctrine) — cites §3.1 maren-arc-5 + §3.3 empty-state phrasing + §4.2 row v3-7 + CV3-003 (Honest-Empty-State)
+- **v3-8** (Feeding Object-Shape Normalizer + Food Sub-Tab) — cites §3.1 maren-arc-3 + §4.2 row v3-8
+- **v3-9** (Smart Q&A Intent Graph + Region Splits) — cites §3.2 kael-arc-2 + §3.1 maren-arc-4 + §4.2 row v3-9 + §4.8 open question 1
+
+**Next step.** Lyra opens the PR carrying this chronicle. Cipher's Edict V verdict (running in parallel as this footer is sealed) folds into §5 before merge; if the verdict re-scopes any CV3 entry from Province-local to Cluster-cross (or vice versa), Lyra amends §6 scope tags at synthesis. Architect ratifies at the merge gate. The document is sealed when Cipher's §5 closes and the Architect's ratification lands on the PR.
+
+**Cross-cluster footer note.** This chronicle is also recorded in Codex's institutional memory under the same session ID (`sproutlab-v3-roundtable-2026-05-25`). When this chronicler next syncs to Codex's canon registry, CV3-001 through CV3-004 carry forward as their permanent canon identifiers — the CV3- prefix is the v3.0-series marker, not a draft tag. Reconciliation assigns each entry its position in the Codex canon ledger but does not rename it. Province-local entries remain SproutLab-only; Cluster-cross entries (pending Cipher's Edict V verdict) appear in both Cluster A institutional memories from that sync forward.
+
+— *Aurelius, the Chronicler. Phase 3 half-sealed at 2026-05-25 close. §5 awaits Cipher; the lyre returns to Lyra for the merge-gate close.*
