@@ -2288,9 +2288,15 @@ function renderTodaySoFar() {
     const liveClass = ev.isLive ? ' tsf-event-live' : '';
     const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
     const calmAttr = ev.isCalm ? ' data-calm="true"' : '';
+    // T2-A.3 (V-V-25): data-state discriminator for the half-awake test. Post-T1-3 a
+    // skipped chip and a Done chip are pixel-identical except for the detail string.
+    // The CSS .tsf-event[data-state="skipped"] variant in styles.css strikes through
+    // the label, warn-colors the time slot, and fades the icon — distinguishable at
+    // a glance. Phase 2-C TSF Undo affordance will land on the same chip family.
+    const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
 
     html += '<div class="tsf-event-wrap' + expandedClass + '">';
-    html += '<div class="tsf-event' + inferredClass + liveClass + '" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
+    html += '<div class="tsf-event' + inferredClass + liveClass + '"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
     html += '<div class="tsf-event-time">' + escHtml(ev.displayTime || '') + '</div>';
 
     // Icon with domain color
@@ -2327,8 +2333,11 @@ function renderTodaySoFar() {
       const isExpanded = _tsfExpandedId === ev.id;
       const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
       const iconColorClass = ev.color === 'amber' ? 'icon-amber' : ev.color === 'sage' ? 'icon-sage' : ev.color === 'sky' ? 'icon-sky' : 'icon-indigo';
+      // T2-A.3: parity with the timed-events branch — legacy 'skipped' strings (no loggedAt)
+      // still hit this no-time fallback; the discriminator must apply here too.
+      const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
       html += '<div class="tsf-event-wrap' + expandedClass + '">';
-      html += '<div class="tsf-event" data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
+      html += '<div class="tsf-event"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
       html += '<div class="tsf-event-time"></div>';
       html += '<div class="tsf-event-icon"><div class="icon ' + iconColorClass + '">' + ev.icon + '</div></div>';
       html += '<div class="tsf-event-body">';

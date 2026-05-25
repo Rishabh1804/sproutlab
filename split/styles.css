@@ -7891,6 +7891,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .tsf-event-live .tsf-event-detail { animation:tsfPulse 2s ease-in-out infinite; }
 .tsf-event-live[data-calm="true"] .tsf-event-detail { animation:none; }
 @keyframes tsfPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+/* T2-A.3 (V-V-25): skipped-chip discriminator. Post-T1-3 a Skipped chip and a Done
+   chip in the TSF timeline are pixel-identical except for the one-word detail string
+   ("Skipped" vs "Done") — half-awake parents at 2 AM can miss it. Strikethrough the
+   label, warn-color the time slot, fade the icon. Token-only: --tc-warn for the
+   strike color + time slot, --light for the dimmed label. The chip wrapper carries
+   data-state="skipped" set by _tsfRenderEvent in intelligence-quicklog.js. */
+.tsf-event[data-state="skipped"] .tsf-event-label { text-decoration:line-through; text-decoration-color:var(--tc-warn); color:var(--light); }
+.tsf-event[data-state="skipped"] .tsf-event-time  { color:var(--tc-warn); opacity:0.7; }
+.tsf-event[data-state="skipped"] .tsf-event-icon .icon { opacity:0.6; }
 .tsf-event-expanded-detail { padding:var(--sp-4) var(--sp-4) var(--sp-8) calc(var(--sp-32) + var(--sp-8) + var(--sp-24) + var(--sp-8) + var(--sp-4)); font-size:var(--fs-xs); color:var(--mid); line-height:1.5; border-top:1px solid var(--glass-strong); margin-top:0; }
 .tsf-show-earlier { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-6) 0; cursor:pointer; font-weight:600; }
 .tsf-show-earlier:active { opacity:0.6; }
