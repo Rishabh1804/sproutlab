@@ -59921,7 +59921,10 @@ function _tsfDeriveChipState(ev) {
 // When the first cross-domain producer lands, branch by `confidence`
 // here and return the prose modifier; the renderer concatenates.
 function _tsfHedgePhrase(confidence) {
-  // v0: every branch returns '' — no cross-domain claims surfaced.
+  // v0 contract shape — every branch fires only when a future producer
+  // hands a confidence. No producer in v3-5; the return values are pre-
+  // staged for v3-4: 'high' → assertive (empty modifier); 'medium' →
+  // softened ("tends to "); 'low' → not-surfaced ('' — caller suppresses).
   if (confidence === 'high') return '';
   if (confidence === 'medium') return 'tends to ';
   return '';
