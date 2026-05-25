@@ -13,19 +13,19 @@
 
 ## What Sleep Redesign v1 is
 
-Replace the parent-decided sleep classification with an engine-derived three-class model (`night | nap | contact`) plus a `location` dimension that doubles as the input to surface-quality scoring. The classifier subsumes the midnight-rollover bug as a natural consequence of its day-attribution rule — no special-case rollover code path needed.
+Replace the parent-decided sleep classification with an engine-derived three-class model (`night | nap | contact`) plus a `location` dimension (`bed | sofa | contact | human | others`) that doubles as the input to **surface-quality scoring** (defined in the sibling spec `docs/specs/scoring-redesign-v1.md`). The classifier subsumes the midnight-rollover bug as a natural consequence of its day-attribution rule — no special-case rollover code path needed.
 
 **Three concurrent shifts:**
 
 1. **Fewer parent decisions at log-time.** Parent enters factual inputs only — `bedtime`, `wakeTime`, `location` (+ optional `wakeUps`, `quality`, `notes`). The engine derives `class` and `dayAttribution`.
-2. **Location as a first-class dimension.** `bed | sofa | contact | others-with-comment`. Contact is its own developmental category; bed and sofa are independent-of-caregiver; sofa's quality concern routes through scoring, not classification.
-3. **Surface-quality scoring layer.** Class itself contributes per-record (all three classes positive — "more sleep is better"); location quality drives a per-record multiplier (bed neutral; sofa, car, others negative with variable range); day-level **contact-combination bonus** fires when a day has a contact-class record alongside a night-class OR nap-class record.
+2. **Location as a first-class dimension — five options.** `bed | sofa | contact | human | others-with-comment`. **Both `contact` and `human` produce `class === 'contact'`** (developmental category is the same), but **`human` is the highest-quality surface variant** (skin-to-skin / kangaroo-care optimum; carries the ×1.3 multiplier in scoring). Generic `contact` is broader (carrier, sling, parent-lap-with-clothes). Sofa stays in the duration/cross-morning gate (can be classified `night`); the quality concern routes through scoring.
+3. **Sleep is the first consumer of the new scoring primitive** (sibling spec `scoring-redesign-v1.md`). This spec defines the sleep-domain per-record contributions and the **contact-combination day-level bonus**; the sibling spec defines `_scoreDay()`, recommendations (`humanContact` + `sleepAmount`), and the cross-domain hero score.
 
 ## What Sleep Redesign v1 is NOT
 
 - A breaking schema change. Lazy read-time migration; original parent inputs (`type` / `napType`) preserved as audit data on every legacy record.
 - A retroactive backfill. Records are rewritten only when the parent edits them (or via an opt-in future migration arc).
-- A scoring-system rewrite. Adds location-quality weighting; doesn't restructure the existing score primitives.
+- A scoring-system definition. The scoring primitive — `_scoreDay()`, `RECOMMENDATION_ROSTER`, severity messages, cross-domain hero score — lives in the sibling spec `docs/specs/scoring-redesign-v1.md`. This spec defines only the **sleep-domain** contributions to that primitive (per-record class × location contributions + the contact-combination day-level bonus + sleep-specific recommendation entries `humanContact` and `sleepAmount`).
 - A `wakeUps` / `quality` removal. Those stay as optional parent inputs (auxiliary metadata; not classification axes).
 - A v2 of the sleep surface. v1 establishes the engine primitive + lazy normalizer + UX shift. v2 (if needed) handles aggregate reporting redesign once the new schema settles.
 
@@ -70,8 +70,11 @@ Arc 1's classifier handles this case via its day-attribution rule (`bedtimeMin <
   date: 'YYYY-MM-DD',          // dayAttribution from the classifier (NOT wall-clock at write time)
   bedtime: 'HH:MM',
   wakeTime: 'HH:MM',
-  location: 'bed' | 'sofa' | 'contact' | 'others',
+  location: 'bed' | 'sofa' | 'contact' | 'human' | 'others',
   locationNote: string | null, // only when location === 'others'
+  // 'human' = skin-to-skin / direct human-body contact (kangaroo-care optimum); carries
+  // the highest scoring multiplier and drives the age-bound humanContact recommendation
+  // defined in scoring-redesign-v1.md §RECOMMENDATION_ROSTER.
   wakeUps: number | null,      // optional auxiliary metadata
   quality: 'good' | 'fair' | 'poor' | null,
   notes: string,
@@ -130,9 +133,9 @@ SproutLab is Ziva-first, audit-first, Firestore-synced. The cons of one-shot (sy
 3. bedtimeMin = _hhmmToMinutes(bedtime)
 
 class:
-  if location === 'contact'                       → 'contact'
-  else if durationMinutes ≥ 240 AND crossesMorning → 'night'   // ≥4h ending in the morning
-  else                                            → 'nap'
+  if location === 'contact' OR location === 'human' → 'contact'   // both produce contact-class; quality differentiates via scoring multiplier
+  else if durationMinutes ≥ 240 AND crossesMorning  → 'night'     // ≥4h ending in the morning
+  else                                              → 'nap'
 
 dayAttribution:
   if bedtimeMin < 300                              → dateKey − 1     // 00:00–04:59 wall-clock = prior day's overflow
@@ -144,7 +147,7 @@ confidence:
   low    — class is 'nap' AND durationMinutes < 60 (short cap-nap; could be transitional)
 ```
 
-**Confirmation on `contact`:** contact-location keeps the entry in `'contact'` class regardless of duration or time-of-day. A 6-hour contact-sleep at night is a "contact" record, not a "night" record. Developmentally distinct: contact sleep is parent-body-anchored, structurally different from independent night sleep. (Architect ratification this session: "night, nap and contact will count as 3 things.")
+**Confirmation on `contact` / `human`:** both locations keep the entry in `'contact'` class regardless of duration or time-of-day. A 6-hour contact-sleep at night is a "contact" record, not a "night" record. Developmentally distinct: contact sleep is parent-body-anchored, structurally different from independent night sleep. `human` is the highest-quality contact variant (skin-to-skin / kangaroo care; ×1.3 scoring multiplier per `scoring-redesign-v1.md` §Surface-quality scoring); generic `contact` is broader (×0.9 in scoring; still strongly positive). (Architect ratification this session: "night, nap and contact will count as 3 things" + "contact should also include human, that's 1.3 (best quality). recommended once daily till a certain age.")
 
 **Confirmation on `sofa`:** sofa goes through the duration/cross-morning gate — a long sofa sleep CAN be classified as `'night'`. The sofa-quality concern routes through the **scoring** layer, not classification. (Architect ratification this session: "sofa quality actually determines that but that's too much input from a parent, so we'll default sofa to sleep if it falls in that range, we'll use the scoring system to penalise sleep and nap on sofa/car/other areas than contact or bed.")
 
@@ -164,53 +167,64 @@ Threshold rationale (300 minutes / 05:00): the live data shows the bug case at b
 
 ---
 
-## Surface-quality scoring (Arc 3)
+## Sleep-domain scoring contributions (consumed by `scoring-redesign-v1.md`)
 
-Architect-ratified contract (this session, with correction):
-- **Class itself contributes to score.** `night`, `nap`, and `contact` each have a per-record baseline contribution. All three are positive — "more sleep is better for infants/toddlers."
-- **Day-level combinations *with contact* get a positive bonus.** A day containing a `contact`-class record alongside a `night`-class OR `nap`-class record gets a `contact-combination` day-level bonus. Reflects the developmental value of contact-sleep complementing structured sleep — `nap + contact` or `night + contact` together signal a richer day than either alone. (Architect ratification this session, correction to v0 draft: "it's not in combination of nap, it should have been in combination with contact. so nap+contact or sleep+contact gets a score +ve.")
-- **Location quality drives a variable-range multiplier.** Bed is neutral baseline. Sofa, car, and "others" carry **negative**, variable-range weights — sofa is the mildest penalty (still indoors, semi-structured), car is heavier (vibration, restraint, often awkward posture), "others" defaults to a mid-range penalty and may be refined by the `locationNote` at future arcs. Contact is captured by class itself (not double-counted as location).
-- **Quality + wakeUps as auxiliary signals.** `quality` and `wakeUps` apply multiplicatively per record.
+The general scoring contract — `_scoreDay()`, `RECOMMENDATION_ROSTER`, severity messages, reward:penalty 2:1 doctrine, no-floor severity-message generation, cross-domain hero score — lives in the **sibling spec** [`docs/specs/scoring-redesign-v1.md`](./scoring-redesign-v1.md). This section defines the **sleep-domain** plug-ins that the scoring primitive consumes via its `_domainPerRecordScore('sleep', record)` and `_domainDayBonuses('sleep', records)` hooks.
 
-**Class baseline contributions (per record):**
+### Per-record contributions (`_domainPerRecordScore('sleep', record)`)
+
+Each sleep record contributes:
+```
+contribution = classBaseline × locationMultiplier × auxiliaryMultipliers
+```
+
+**Class baselines** (positive across the board — "more sleep is better"):
 
 | Class | Baseline |
 |---|---|
 | night | +1.0 |
-| contact | +0.8 (developmental value; close to night) |
+| contact | +0.8 |
 | nap | +0.7 |
 
-**Location quality multipliers (per record):**
+**Location multipliers:**
 
 | Location | Multiplier | Rationale |
 |---|---|---|
-| bed | ×1.0 (neutral baseline) | Structured, intended sleep surface |
-| sofa | ×0.7 (mild penalty) | Indoor, semi-structured; not the intended sleep surface |
-| car | ×0.5 (heavier penalty) | Vibration, restraint, awkward posture; episodic-only |
-| others | ×0.6 (default mid-penalty) | Comment-readable; engine treats as worse-than-sofa, better-than-car default |
+| bed | ×1.0 neutral baseline | Structured, intended sleep surface |
+| **human** | **×1.3 best quality** | Skin-to-skin / kangaroo-care optimum; recommended at least daily through the standards-bound age window per `humanContact` recommendation in the sibling spec |
+| contact (generic) | ×0.9 strongly positive | Carrier, sling, parent-lap-with-clothes; not skin-to-skin but still developmentally valuable |
+| sofa | ×0.7 mild penalty | Indoor, semi-structured; not the intended sleep surface |
+| car | ×0.5 heavier penalty | Vibration, restraint, awkward posture; episodic-only |
+| others | ×0.6 default mid-penalty | Comment-readable; treated as worse-than-sofa, better-than-car default |
 
-Note: when `class === 'contact'` the location is implicitly contact (the class IS the location); the location multiplier doesn't apply — class baseline carries the full weight.
+When `class === 'contact'` the location-multiplier applies based on the `location` field — `human` (×1.3) outranks generic `contact` (×0.9), driving the recommendation: parent should aim for `location:'human'` at least daily through the standards-bound age window.
 
-**Day-level contact-combination bonus:**
+**Auxiliary multipliers** (applied to class × location product):
+- `quality === 'good'` → ×1.1; `'fair'` → ×1.0; `'poor'` → ×0.85; `null` → ×1.0
+- `wakeUps >= 5` on a `class === 'night'` record → ×0.85 (signals disrupted night sleep)
+- `wakeUps` on `nap` / `contact` records doesn't apply this multiplier (different developmental signal)
+
+### Day-level bonus (`_domainDayBonuses('sleep', records)`)
+
+**Contact-combination bonus** (Architect ratification this session: "nap+contact or sleep+contact gets a score +ve"):
 
 ```
-day_score = sum(record.classBaseline × record.locationMultiplier × auxiliaryMultipliers)
-          + contactCombinationBonus(day)
-
 contactCombinationBonus(day):
-  hasContact = day records include any class === 'contact'
+  hasContact   = day records include any class === 'contact'        // either 'contact' or 'human' location
   hasStructured = day records include any class === 'night' OR class === 'nap'
   return (hasContact AND hasStructured) ? +0.2 : 0.0
 ```
 
-The bonus is day-level (not per-record) and fires once per qualifying day regardless of how many contact records are present.
+Day-level (not per-record); fires once per qualifying day regardless of how many contact records are present. Reflects the developmental value of contact-sleep complementing structured sleep.
 
-**Auxiliary multipliers (per record):**
-- `quality === 'good'` → ×1.1; `'fair'` → ×1.0; `'poor'` → ×0.85; `null` → ×1.0
-- `wakeUps >= 5` on a `night`-class record → ×0.85 (signals disrupted night sleep)
-- `wakeUps` on `nap` / `contact` records is meaningful but doesn't apply this multiplier (different developmental signal)
+### Recommendations defined here (registered in the sibling spec's `RECOMMENDATION_ROSTER`)
 
-Arc 3 spec ratifies the exact numbers and may refine the variable-range location penalties (the "variable" framing leaves room — sofa could be ×0.6–0.8 depending on what the live data shows; car could be ×0.4–0.6 etc.). This spec body locks the **shape** of the scoring contract: class baseline × location multiplier × auxiliary multipliers, plus a day-level contact-combination bonus.
+This spec defines two sleep-domain recommendations; both live in `scoring-redesign-v1.md` §RECOMMENDATION_ROSTER:
+
+- **`humanContact`** — age-bound (per active standard), `metCriterion:'count'`, `minPerDay:1` in active age windows. Met by any sleep record with `location:'human'` on the day. Successor at expiry: `outdoorTime` (placeholder per Architect; ratified at successor-arc implementation time).
+- **`sleepAmount`** — total daily sleep hours per age band; `metCriterion:'duration'`. Met by `sum(durationMin) ≥ minHoursPerDay × 60` across all classes for the day. Severity escalates with deficit (deficit × `missedWeight` per hour below min).
+
+All numeric values above (baselines, multipliers, bonuses) are illustrative for the spec body. Arc 3 / Scoring Arc S-2 calibration ratifies the live values against the actual data.
 
 ---
 
@@ -221,8 +235,8 @@ Implementation runs as three independent PRs, sequenced **AFTER the food sub-tab
 | Arc | Items | Files touched | Region routing | Approx PR scope |
 |---|---|---|---|---|
 | **Arc 1 — Classifier + lazy normalizer** | `classifySleep()` + `normalizeSleep()` in core.js + read-side adoption in `_islSleepData` (intelligence-isl.js) + nap-stack chart adoption in medical.js + TSF nap-pattern adoption in intelligence-quicklog.js | core.js + intelligence-isl.js + medical.js + intelligence-quicklog.js | Maren + Kael + Vela (engine-primary + multi-region read adoption); no styles.css → no triple-jurisdiction | 1 PR |
-| **Arc 2 — Write-side UX shift** | Unified sleep form (bedtime + wakeTime + location chip selector); collapse `saveQLSleep` / `saveQLNap` / `saveSleep` / `saveNap` write paths into one shared write helper that emits the new schema | intelligence-quicklog.js + medical.js + styles.css (chip selector tokens) | Maren + Vela (write paths) + triple-jurisdiction on styles.css | 1 PR |
-| **Arc 3 — Scoring integration** | Location-quality multipliers wired into the existing score engine; class-combination-with-nap day-level bonus; quality + wakeUps multipliers | core.js + home.js (score engine) | Kael primary (score engine) + Maren consult (home.js render of the score) | 1 PR |
+| **Arc 2 — Write-side UX shift** | Unified sleep form (bedtime + wakeTime + 5-option location chip selector incl. `human`); collapse `saveQLSleep` / `saveQLNap` / `saveSleep` / `saveNap` write paths into one shared write helper that emits the new schema | intelligence-quicklog.js + medical.js + styles.css (chip selector tokens) | Maren + Vela (write paths) + triple-jurisdiction on styles.css | 1 PR |
+| **Arc 3 — Scoring wiring (merged with Scoring Arc S-2)** | Register `_domainPerRecordScore('sleep', record)` and `_domainDayBonuses('sleep', records)` handlers; register sleep-domain recommendations (`humanContact`, `sleepAmount`) in the sibling spec's `RECOMMENDATION_ROSTER`. **Effectively coordinated with sibling Scoring Arc S-2** — the two arcs land as one PR | core.js (handlers + ROSTER entries) + data.js (ROSTER) | Kael primary + Maren consult | 1 merged PR |
 
 **Arc 1 alone solves the live bug** (`2026-05-18` rollover) because the normalizer's day-attribution rule reassigns the 00:40 record to Sunday on every read pass. No write to disk needed for the live fix. Arc 2 then prevents future occurrences at write-time. Arc 3 lights up the scoring surface.
 
@@ -349,15 +363,19 @@ This doctrine line clusters with PR #122 T1-2 / PR #125 T2-A.1+A.2 / PR #126 T2-
 
 ---
 
-## Arc 3 — Scoring integration (summary; detail spec at Arc 3 implementation time)
+## Arc 3 — Scoring wiring (merged with Scoring Arc S-2; detail in sibling spec)
 
-**Scope:** wire location-quality multipliers into the existing sleep score primitive (likely in `core.js` and surfaced in `home.js`'s hero score). Add the class-combination-with-nap day-level bonus. Add quality + wakeUps multipliers.
+**Scope:** the sleep-domain plug-ins into the scoring primitive defined in `docs/specs/scoring-redesign-v1.md`. Effectively coordinated with that spec's Arc S-2 — the two arcs land as a single merged PR.
 
-**Region routing:** Kael primary (score engine in core.js) + Maren consult (home.js render of the score gauge / hero score impact).
+- Register `_domainPerRecordScore('sleep', record)` handler in core.js — computes `classBaseline × locationMultiplier × auxiliaryMultipliers` from a normalized sleep record (post-Arc-1 normalizer output).
+- Register `_domainDayBonuses('sleep', records)` handler in core.js — implements the `contactCombinationBonus` (above).
+- Register sleep-domain recommendations in the sibling spec's `RECOMMENDATION_ROSTER` (data.js): `humanContact` (with `successorOnExpiry: 'outdoorTime'` placeholder) and `sleepAmount` (with per-standard age-banded `minHoursPerDay`).
 
-**Tests:** scoring delta tests — assert that a sofa-night scores lower than a bed-night, a bed+contact-nap day scores higher than a bed-only day, etc.
+**Region routing:** Kael primary (handlers + ROSTER entries in core.js + data.js) + Maren consult (home.js render of the resulting score). No styles.css → no triple-jurisdiction.
 
-**Sequencing:** Arc 3 starts AFTER Arc 2 — needs the `location` field to be live on new records before scoring can use it meaningfully.
+**Tests:** scoring delta tests — assert that a sofa-night scores lower than a bed-night; a human-contact day scores higher than a generic-contact day; a `night + contact` day fires the contact-combination bonus; `humanContact` evaluates met/unmet correctly across the four standards.
+
+**Sequencing:** Arc 3 starts AFTER **both** Sleep Arc 2 (need `location` field live on new records) AND Scoring Arc S-1 (need `RECOMMENDATION_ROSTER` + `_evaluateRecommendation` primitives) — then merges with Scoring Arc S-2 as one PR.
 
 ---
 
@@ -367,13 +385,27 @@ This doctrine line clusters with PR #122 T1-2 / PR #125 T2-A.1+A.2 / PR #126 T2-
 - **"Data collection easier" doctrine** — Architect direction (this session): reduce parent decision points at log-time; let the intelligence engine derive what it can.
 - **Lazy-migration audit-safety** — preserve parent-recorded data on disk; derive new shape at read. Mirror of T1-6's `parseMedCheck` returning null for the `cleared` sentinel (raw audit preserved, active-state derived).
 - **Schema-aware reads via centralized normalizers** — `parseMedCheck` for med-checks, `normalizeSleep` for sleep records. Future Governors auditing this region check the normalizer call site at every read.
+- **Standards-selector binding doctrine** — established with the sibling spec `scoring-redesign-v1.md`. Any age-bound or developmentally-graded surface routes through `_getActiveStandard()` (reads `ziva_reference_standard` localStorage). Sleep's `humanContact` recommendation + `sleepAmount` per-age minimums are first consumers.
+- **Reward-tilted scoring (2:1)** — established with the sibling spec. Met-recommendation reward is 2× the magnitude of missed-penalty. Future Governors must preserve this asymmetry when extending sleep-domain scoring.
+
+## Sibling spec relationship
+
+This spec and `docs/specs/scoring-redesign-v1.md` are siblings — neither requires the other for ratification, but the implementation arcs interleave:
+
+- Sleep Arc 1 (classifier + lazy normalizer) — **independent**; fixes the live `2026-05-18` rollover at read time. No scoring dependency.
+- Sleep Arc 2 (write-side UX + `human` location) — **independent**; adds the 5-option location selector.
+- Scoring Arc S-1 (`RECOMMENDATION_ROSTER` + `_evaluateRecommendation`) — **independent of sleep arcs**; establishes the primitive.
+- **Sleep Arc 3 = Scoring Arc S-2** — merged arc. Implements `_scoreDay()` with sleep as the first consumer. Wires the per-record handler + day-bonus handler + ROSTER entries (`humanContact`, `sleepAmount`).
+- Scoring Arcs S-3 + S-4 — depend on the merged Sleep-Arc-3/S-2 work; light up escalation surfaces + cross-domain hero score.
+
+**Recommended landing order** (per Architect cross-spec sequencing): food sub-tab arc → Sleep Arc 1 → Scoring Arc S-1 → Sleep Arc 2 → **merged Sleep Arc 3 / Scoring Arc S-2** → Scoring Arc S-3 → Scoring Arc S-4. D3 Phase 2-C interleaves wherever cycles are available.
 
 ## QA chain (canon-cc-008)
 
 - **This PR (spec, docs-only):** canon-cc-008 **explicitly waived** per the "docs-only" branch of the chain. Mirrors PR #123's pattern.
 - **Arc 1:** Maren + Kael + Vela parallel (core.js + intelligence-isl.js + medical.js + intelligence-quicklog.js); no styles.css → no triple-jurisdiction. Lyra synth → Cipher Edict V.
 - **Arc 2:** Maren + Vela parallel + triple-jurisdiction on styles.css (rotation Maren → Kael → Vela, first-Governor by heaviest-touched Region — likely Vela for the chip selector). Lyra synth → Cipher Edict V.
-- **Arc 3:** Kael primary + Maren consult (score-engine touches); no triple-jurisdiction. Lyra synth → Cipher Edict V.
+- **Arc 3 (merged with Scoring Arc S-2):** Kael primary (handlers + ROSTER entries in core.js + data.js) + Maren consult (home.js render of the resulting score). No triple-jurisdiction. Lyra synth → Cipher Edict V.
 
 ## HR pre-check (Arc 1)
 
@@ -399,6 +431,7 @@ Arc 2 + Arc 3 HR-checks ratified at their own implementation-time specs.
 
 ## Doctrinal references
 
+- **`docs/specs/scoring-redesign-v1.md` (sibling spec)** — the engine primitive (`_scoreDay`, `RECOMMENDATION_ROSTER`, severity messages, cross-domain hero score). Sleep is the first consumer.
 - `docs/specs/vit-d3-tracking-v1.md` — Maren-primary care-tier write-path doctrine; CR-numbered conventions
 - `docs/specs/vit-d3-tracking-v2-tier-2.md` §T2-B.2 — D3 Adjust midnight-rollover precedent (toast-and-abort variant)
 - `CLAUDE.md` §Ziva Context (sleep tracking is a core developmental surface) + §Hard Rules + §canon-cc-008 chain
