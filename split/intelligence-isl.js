@@ -535,8 +535,7 @@ function _anchorDob(ctx) {
 // Friendly date label "Mar 12" — uses Intl in IST-safe mode (noon construction).
 function _anchorFormatLabel(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-  // HR-12: construct at noon to avoid day-boundary shift across timezones.
-  var d = new Date(dateStr + 'T12:00:00');
+  var d = new Date(dateStr + 'T12:00:00');  // HR-12-safe: noon construction avoids day-boundary shift; label-formatting only (no arithmetic).
   if (isNaN(d.getTime())) return dateStr;
   try {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });

@@ -89,6 +89,42 @@ test('regression-guard-v3-3-correlate-lag-analysis: reports strongest lag across
   expect(Math.abs(r.strength)).toBeGreaterThan(0.95);
 });
 
+test('regression-guard-v3-3-signal-extractors-array-shape: sleep/poop/growth extractors filter arrays correctly (V-K-87)', async ({ page }) => {
+  // Kael Mode-1 finding (canon-cc-008 v3-3): sleepData/poopData/growthData
+  // are flat arrays, NOT date-keyed maps. Extractors that index by [dateStr]
+  // silently return null for every historical day → confidence-floor never
+  // clears → consumer surfaces show nothing. This guard catches regression.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+
+  const r = await page.evaluate(() => {
+    const t = today();
+    const origSleep = Array.isArray(sleepData) ? sleepData.slice() : [];
+    const origPoop = Array.isArray(poopData) ? poopData.slice() : [];
+    const origGrowth = Array.isArray(growthData) ? growthData.slice() : [];
+    sleepData = [
+      { date: t, type: 'night', bedtime: '20:00', wakeTime: '06:30', wakeUps: 2 },
+      { date: t, type: 'nap', bedtime: '12:00', wakeTime: '13:30' },
+    ];
+    poopData = [{ date: t }, { date: t }, { date: t }];
+    growthData = [{ date: t, wt: 8.4, ht: 70 }];
+    const sleepTotal = SIGNAL_EXTRACTORS['sleep:total'](t);
+    const sleepWakes = SIGNAL_EXTRACTORS['sleep:wakeUps'](t);
+    const sleepOnset = SIGNAL_EXTRACTORS['sleep:onsetMin'](t);
+    const poopCount = SIGNAL_EXTRACTORS['poop:count'](t);
+    const weight = SIGNAL_EXTRACTORS['growth:weightKg'](t);
+    sleepData = origSleep; poopData = origPoop; growthData = origGrowth;
+    return { sleepTotal, sleepWakes, sleepOnset, poopCount, weight };
+  });
+
+  expect(r.sleepTotal, 'sleep:total must filter array by date and sum durations (hours)').not.toBeNull();
+  expect(r.sleepTotal).toBeCloseTo(12, 0); // 10.5h night + 1.5h nap = 12h
+  expect(r.sleepWakes, 'sleep:wakeUps must sum getWakeCount across day').toBe(2);
+  expect(r.sleepOnset, 'sleep:onsetMin must return bedtime minutes (20:00 = 1200)').toBe(1200);
+  expect(r.poopCount, 'poop:count must return filtered array length').toBe(3);
+  expect(r.weight, 'growth:weightKg must find matching date+wt record').toBe(8.4);
+});
+
 test('regression-guard-v3-3-correlate-available-signals: enumerator exposes domain-grouped signal map', async ({ page }) => {
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
@@ -172,25 +208,75 @@ test('regression-guard-v3-3-event-anchor-milestone: "since rolling" → mileston
   expect(r.out.end).toBe(r.todayStr);
 });
 
-test('regression-guard-v3-3-event-anchor-tz-safe: "the week of solids" window is reproducible across timezones', async ({ page }) => {
+test('regression-guard-v3-3-event-anchor-tz-safe: vaccine ±3d window is reproducible across timezones (HR-12)', async ({ page }) => {
+  // Spec §HR-12 Test plan: seed vaccine date '2026-05-25'; window must be
+  // exactly {start:'2026-05-22', end:'2026-05-28'} regardless of local tz
+  // (CI runs UTC; manual IST run must produce identical strings).
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+
+  const r = await page.evaluate(() => {
+    const orig = Array.isArray(vaccData) ? vaccData.slice() : [];
+    vaccData = [{ name: 'MMR-1', date: '2026-05-25', upcoming: false }];
+    const out = _resolveEventAnchor('the week of MMR', {});
+    vaccData = orig;
+    return out;
+  });
+
+  expect(r).not.toBeNull();
+  expect(r.start, 'tz-safe: start MUST be 2026-05-22 (no boundary drift)').toBe('2026-05-22');
+  expect(r.end, 'tz-safe: end MUST be 2026-05-28 (no boundary drift)').toBe('2026-05-28');
+});
+
+test('regression-guard-v3-3-event-anchor-before-solids: milestone date resolves to dob → milestone window', async ({ page }) => {
+  // Covers the milestone-anchored before/after path that the prior degenerate
+  // tz-safe test was attempting (but routing to vaccine regex).
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
 
   const r = await page.evaluate(() => {
     const orig = Array.isArray(milestones) ? milestones.slice() : [];
-    milestones = [{ id: 'solids', text: 'Started solids', status: 'mastered', cat: 'feeding', masteredAt: '2026-05-25' }];
-    const out = _resolveEventAnchor('the week of solids', {});
+    milestones = [{ id: 'solids', text: 'Started solids', status: 'mastered', cat: 'feeding', masteredAt: '2026-03-15' }];
+    const before = _resolveEventAnchor('before solids', { baby: { dob: '2025-09-04' } });
+    const after = _resolveEventAnchor('after solids', { baby: { dob: '2025-09-04' } });
     milestones = orig;
-    return out;
+    return { before, after };
   });
 
-  // Fallback to vaccine-style lookup won't fire (no vaccData 'solids' record),
-  // but the after/before-solids resolvers won't either ("the week of" pattern is vaccine).
-  // The test simply asserts that whatever resolves, returns YYYY-MM-DD shaped strings (no NaN/Invalid Date).
-  if (r) {
-    expect(r.start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(r.end).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  }
+  expect(r.before).not.toBeNull();
+  expect(r.before.start).toBe('2025-09-04');
+  expect(r.before.end).toBe('2026-03-14');
+  expect(r.after).not.toBeNull();
+  expect(r.after.start).toBe('2026-03-15');
+});
+
+test('regression-guard-v3-3-correlate-tz-safe: _correlate walks IST calendar days (no UTC drift on day boundary)', async ({ page }) => {
+  // Spec §HR-12 Test plan row 3: signal extractors keyed by YYYY-MM-DD must
+  // receive the LOCAL (IST) calendar day, not the UTC day. Test stubs an
+  // extractor that records each dateStr it sees; assert the sequence is the
+  // last 14 strings produced by `_offsetDateStr(today(), -k)` for k in 13..0.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+
+  const r = await page.evaluate(() => {
+    const seenA: string[] = [];
+    const seenB: string[] = [];
+    const origA = SIGNAL_EXTRACTORS['sleep:total'];
+    const origB = SIGNAL_EXTRACTORS['feeding:mealCount'];
+    SIGNAL_EXTRACTORS['sleep:total'] = (ds: string) => { seenA.push(ds); return 10; };
+    SIGNAL_EXTRACTORS['feeding:mealCount'] = (ds: string) => { seenB.push(ds); return 3; };
+    _correlate('sleep', 'feeding', 14, { signalA: 'total', signalB: 'mealCount' });
+    SIGNAL_EXTRACTORS['sleep:total'] = origA;
+    SIGNAL_EXTRACTORS['feeding:mealCount'] = origB;
+    const expected: string[] = [];
+    const t = today();
+    for (let i = 0; i < 14; i++) expected.push(_offsetDateStr(t, -(14 - 1 - i)));
+    return { seenA, seenB, expected };
+  });
+
+  expect(r.seenA, 'sleep extractor must be called with the locally-iterated 14-day window').toEqual(r.expected);
+  expect(r.seenB, 'feeding extractor must be called with the SAME 14 locally-iterated days').toEqual(r.expected);
+  expect(r.seenA[r.seenA.length - 1], 'last day MUST be today() — no UTC roll-back').toBe(r.expected[13]);
 });
 
 test('regression-guard-v3-3-event-anchor-null-when-unresolvable: returns null on unknown anchor token', async ({ page }) => {

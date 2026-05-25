@@ -38,6 +38,15 @@ if ! bash audit-viz-smoke.sh >&2; then
   echo "BUILD ABORTED: PR-EF viz-smoke audit failed. Restore the missing wiring." >&2
   exit 1
 fi
+# v3-3 HR-12 cipher-4 ship-gate: audit-hr12-v3-3.sh blocks raw `new Date(` /
+# `Date.now(` / `Date.parse(` constructions inside the v3-3 engine surface
+# (intelligence-correlate.js + the _resolveEventAnchor block in intelligence-isl.js)
+# unless annotated `// HR-12-safe: <rationale>`. Spec: docs/specs/v3-3-engine-spine.md
+# §HR-12 Test plan row 5. Stderr-redirected per audit-emoji.sh precedent.
+if ! bash audit-hr12-v3-3.sh >&2; then
+  echo "BUILD ABORTED: v3-3 HR-12 cipher-4 audit failed. Annotate or refactor." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

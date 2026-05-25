@@ -17,41 +17,47 @@
 // SIGNAL_EXTRACTORS — domain×signal → (dateStr) → number|null.
 // Each extractor returns a numeric signal for the given day, or null if no data.
 // Adding a new domain-signal pair = adding a row here. No engine code change.
+//
+// V-K-87 (Kael Mode-1, canon-cc-008 v3-3): sleepData / poopData / growthData are
+// flat arrays of {date, ...} records — NOT date-keyed maps. Extractors must
+// filter-by-date, not index. (feedingData + medChecks ARE date-keyed maps.)
 const SIGNAL_EXTRACTORS = {
-  // ── sleep domain ──
+  // ── sleep domain (sleepData is an array of {date, type, bedtime, wakeTime, wakeUps?}) ──
   'sleep:total': function(dateStr) {
-    if (typeof sleepData !== 'object' || !sleepData) return null;
-    var entries = sleepData[dateStr];
-    if (!Array.isArray(entries) || entries.length === 0) return null;
+    if (!Array.isArray(sleepData)) return null;
+    var entries = sleepData.filter(function(s) { return s && s.date === dateStr && s.bedtime && s.wakeTime; });
+    if (entries.length === 0) return null;
+    if (typeof calcSleepDuration !== 'function') return null;
     var totalMin = 0;
     entries.forEach(function(e) {
-      if (e && typeof e.duration === 'number' && e.duration > 0) totalMin += e.duration;
+      var d = calcSleepDuration(e.bedtime, e.wakeTime);
+      if (d && typeof d.total === 'number' && d.total > 0) totalMin += d.total;
     });
     return totalMin > 0 ? (totalMin / 60) : null;  // hours
   },
   'sleep:wakeUps': function(dateStr) {
-    if (typeof sleepData !== 'object' || !sleepData) return null;
-    var entries = sleepData[dateStr];
-    if (!Array.isArray(entries) || entries.length === 0) return null;
+    if (!Array.isArray(sleepData)) return null;
+    var entries = sleepData.filter(function(s) { return s && s.date === dateStr; });
+    if (entries.length === 0) return null;
+    if (typeof getWakeCount !== 'function') return null;
     var sum = 0, any = false;
     entries.forEach(function(e) {
-      if (e && typeof e.wakeUps === 'number') { sum += e.wakeUps; any = true; }
+      if (e && e.wakeUps != null) { sum += getWakeCount(e); any = true; }
     });
     return any ? sum : null;
   },
   'sleep:onsetMin': function(dateStr) {
-    if (typeof sleepData !== 'object' || !sleepData) return null;
-    var entries = sleepData[dateStr];
-    if (!Array.isArray(entries) || entries.length === 0) return null;
-    // Use the earliest 'night' entry's start time as proxy for onset.
-    var nights = entries.filter(function(e) { return e && (e.kind === 'night' || e.type === 'night'); });
+    if (!Array.isArray(sleepData)) return null;
+    // Use the earliest 'night' entry's bedtime as proxy for onset.
+    var nights = sleepData.filter(function(s) { return s && s.date === dateStr && s.type === 'night' && s.bedtime; });
     if (nights.length === 0) return null;
-    var earliest = nights.reduce(function(min, n) {
-      if (!n || !n.startTime) return min;
-      var m = _hhmmToMinutes(n.startTime);
-      if (m < 0) return min;
-      return (min === null || m < min) ? m : min;
-    }, null);
+    if (typeof _hhmmToMinutes !== 'function') return null;
+    var earliest = null;
+    nights.forEach(function(n) {
+      var m = _hhmmToMinutes(n.bedtime);
+      if (m < 0) return;
+      if (earliest === null || m < earliest) earliest = m;
+    });
     return earliest;
   },
 
@@ -74,7 +80,9 @@ const SIGNAL_EXTRACTORS = {
     if (typeof feedingData !== 'object' || !feedingData) return null;
     var day = feedingData[dateStr];
     if (!day) return null;
-    if (typeof _detectFatContextNearTime !== 'function') return null;
+    // V-K-87b: don't degrade to 0 when fat-detector helper is absent —
+    // returning null keeps Pearson honest and lets the confidence-floor suppress.
+    if (typeof _isFatBearingText !== 'function') return null;
     var slots = ['breakfast', 'lunch', 'dinner', 'snack'];
     var fatCount = 0, totalCount = 0;
     slots.forEach(function(s) {
@@ -83,9 +91,8 @@ const SIGNAL_EXTRACTORS = {
       var hasText = (typeof v === 'string' && v.trim() && v !== 'null' && v !== 'undefined') || (typeof v === 'object' && v && v.text);
       if (!hasText) return;
       totalCount++;
-      // Best-effort: derive fat status from the meal text via fat-set substring match.
       var text = (typeof v === 'string') ? v : (v.text || '');
-      if (typeof _isFatBearingText === 'function' && _isFatBearingText(text)) fatCount++;
+      if (_isFatBearingText(text)) fatCount++;
     });
     return totalCount > 0 ? (fatCount / totalCount) : null;
   },
@@ -132,22 +139,18 @@ const SIGNAL_EXTRACTORS = {
     return active;
   },
 
-  // ── poop domain ──
+  // ── poop domain (poopData is an array of {date, ...}) ──
   'poop:count': function(dateStr) {
-    if (typeof poopData !== 'object' || !poopData) return null;
-    var day = poopData[dateStr];
-    if (!day) return null;
-    if (Array.isArray(day)) return day.length;
-    if (typeof day === 'object' && Array.isArray(day.entries)) return day.entries.length;
-    return null;
+    if (!Array.isArray(poopData)) return null;
+    var matches = poopData.filter(function(p) { return p && p.date === dateStr; });
+    return matches.length > 0 ? matches.length : null;
   },
 
-  // ── growth domain (sparse signal; only present on measurement days) ──
+  // ── growth domain (growthData is an array of {date, wt, ht}; sparse — only measurement days) ──
   'growth:weightKg': function(dateStr) {
-    if (typeof growthData !== 'object' || !growthData) return null;
-    var day = growthData[dateStr];
-    if (!day || typeof day.weight !== 'number') return null;
-    return day.weight;
+    if (!Array.isArray(growthData)) return null;
+    var match = growthData.find(function(r) { return r && r.date === dateStr && typeof r.wt === 'number'; });
+    return match ? match.wt : null;
   },
 };
 
