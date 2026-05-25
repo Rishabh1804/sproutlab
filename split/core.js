@@ -194,6 +194,9 @@ function _refreshTodayMedWithFat() {
     // save should flip null → true the same way it flips false → true. Also closes a small
     // legacy-record gap: pre-CR-10 strings parse to withFat:null and were never redetected;
     // post-fix they flip to true on the first qualifying meal save like any other record.
+    // V-K-99 (Kael synth-fold): CR-14 invariant proof site. `parsed.withFat === true`
+    // short-circuits here, so a true observation is never overwritten by this helper —
+    // future Censors tracing CR-14 land on this line.
     if (parsed.withFat === true) return; // already positive — never erase a real observation
     var fresh = _detectFatContextNearTime(parsed.givenAt, t);
     if (fresh.withFat === true) {

@@ -946,7 +946,14 @@ function markMedDone(name, idx, givenTime) {
   // first qualifying meal save (per CR-14 + T1-1 doctrine), so the unknown state
   // self-resolves once the parent logs breakfast.
   const dayFeed = feedingData[todayStr] || {};
-  const noMealsLoggedToday = !['breakfast','lunch','dinner','snack'].some(function(m) { return dayFeed[m] && String(dayFeed[m]).trim(); });
+  // V-M-89 (Maren synth-fold): defensive against legacy installs where a meal field was
+  // stored as the literal string 'null' or 'undefined' (pre-CR-10 corner). Without the
+  // explicit guards a truthy-non-empty 'null' string would short-circuit noMealsLoggedToday
+  // → withFat:false written → false "no fat-meal" badge fires on a 7:55 AM dose.
+  const noMealsLoggedToday = !['breakfast','lunch','dinner','snack'].some(function(m) {
+    var v = dayFeed[m];
+    return v && String(v).trim() && v !== 'null' && v !== 'undefined';
+  });
   const writeWithFat = (fat.withFat === false && noMealsLoggedToday) ? null : fat.withFat;
   if (!medChecks[todayStr]) medChecks[todayStr] = {};
   medChecks[todayStr][name] = {
@@ -997,6 +1004,9 @@ function confirmMedDoneAt(name, idx) {
   }
   // T2-B.3: reject future times. A mistyped 23:00 (meant 11:00) would stamp the future,
   // re-run detection at an empty window, and silently corrupt withFat. Block at the editor.
+  // V-M-90 (Maren synth-fold): strict `>` — same-minute picks are accepted as "just now"
+  // (parent logs within the wall-clock minute the dose was actually given). `>=` would
+  // forbid the most common case of "I just gave it" within the current minute.
   if (_hhmmToMinutes(picked) > _hhmmToMinutes(_currentHHMM())) {
     if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Time must be in the past');
     if (input) { try { input.focus(); } catch(e) {} }
@@ -1069,7 +1079,11 @@ function adjustMedTime(name, idx, newTime, dayStr) {
   // in the now-empty new-date slot.
   const todayStr = dayStr || today();
   if (todayStr !== today()) {
-    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Date changed — please re-open Adjust on yesterday\'s record');
+    // V-M-88 (Maren synth-fold): soften toast — no past-day Adjust UI exists in v1
+    // (the spec confirms past-day adjusts continue to use resolveMissedMed). A tired
+    // parent at 00:01 reading "please re-open Adjust on yesterday's record" would tap
+    // around looking for a button that isn't there. Reassure that the prior save stands.
+    if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Date changed at midnight — yesterday\'s dose is already saved');
     renderRemindersAndAlerts();
     renderHomeContextAlerts();
     return;
@@ -1143,7 +1157,7 @@ function confirmMedAdjust(name, idx) {
   // T2-B.3: reject future times. Parent mistypes 23:00 when they meant 11:00 →
   // adjustMedTime stamps the future stamp, re-runs detection (no fat-meal at 23:00),
   // withFat may flip true→false. Block at the editor so the parent can correct without
-  // wedging the slot.
+  // wedging the slot. Strict `>` per V-M-90 — same-minute picks pass (see confirmMedDoneAt).
   if (_hhmmToMinutes(picked) > _hhmmToMinutes(_currentHHMM())) {
     if (typeof showQLToast === 'function') showQLToast(zi('warn') + ' Time must be in the past');
     if (input) { try { input.focus(); } catch(e) {} }
