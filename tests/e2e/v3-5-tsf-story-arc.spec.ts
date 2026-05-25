@@ -177,6 +177,144 @@ test('regression-guard-v3-5-spine-prefers-urgent: spine picks urgent event first
   expect(r.picks, 'night sleep is in the spine').toContain('c');
 });
 
+// ── regression-guard-v3-5-summary-oxford-and (V-V-33 fold) ─────────────
+test('regression-guard-v3-5-summary-oxford-and: summary uses Oxford-style "and" join, not CSV ledger', async ({ page }) => {
+  // V-V-33 (Vela synth-fold): the original join-loop had identical `, ` on
+  // both ternary branches (dead code) — the intended Oxford-style "and"
+  // discriminator collapsed and the summary read as inventory, not passage.
+  // CV3-002 Narrate-vs-List + Charter Warmth. This guard locks the fix.
+  await gotoFresh(page);
+  const r = await page.evaluate(() => {
+    if (typeof _tsfGenerateSummary !== 'function') return { skipped: 'helper not exported' };
+    const t = today();
+    // Two-part: "Solid day. Three meals and one nap."
+    const twoParts = _tsfGenerateSummary(t, {
+      events: [
+        { type: 'feed', state: 'done' }, { type: 'feed', state: 'done' }, { type: 'feed', state: 'done' },
+        { type: 'nap', state: 'done' },
+      ],
+      noTimeEvents: [],
+    }, {});
+    // Three-part (Oxford comma): "Solid day. Three meals, one nap, and one care-note."
+    const threeParts = _tsfGenerateSummary(t, {
+      events: [
+        { type: 'feed', state: 'done' }, { type: 'feed', state: 'done' }, { type: 'feed', state: 'done' },
+        { type: 'nap', state: 'done' },
+        { type: 'careticket', state: 'done' },
+      ],
+      noTimeEvents: [],
+    }, {});
+    return { twoParts, threeParts };
+  });
+  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
+  // Two-part: plain " and " (no Oxford comma)
+  expect(r.twoParts, 'two-part summary joins with " and "').toContain(' and ');
+  expect(r.twoParts, 'two-part summary does NOT carry Oxford comma').not.toMatch(/,\s+and/);
+  // Three+ part: Oxford comma ", and "
+  expect(r.threeParts, 'three-part summary uses Oxford-style ", and "').toMatch(/,\s+and\s/);
+});
+
+// ── regression-guard-v3-5-pending-headline-safety (V-M-89 fold) ────────
+test('regression-guard-v3-5-pending-headline-safety: contradicts-the-ledger guard + length cap', async ({ page }) => {
+  // V-M-89 (Maren synth-fold): if a producer hands a stale pendingHeadline
+  // asserting a negation ("D3 missed") about a domain that has a logged
+  // event in today's data, fall through to the normal summary branch
+  // rather than parrot the stale headline. Worst-case avoided: parent
+  // re-administers a dose that already landed.
+  await gotoFresh(page);
+  const r = await page.evaluate(() => {
+    if (typeof _tsfGenerateSummary !== 'function') return { skipped: 'helper not exported' };
+    const t = today();
+    // Scenario 1: stale "D3 missed" headline but a med event IS in today's data.
+    const withMed = _tsfGenerateSummary(t, {
+      events: [{ type: 'med', state: 'done', label: 'D3' }, { type: 'feed', state: 'done' }],
+      noTimeEvents: [],
+    }, { pendingHeadline: 'D3 missed yesterday — let\'s catch up.' });
+    // Scenario 2: same headline but NO med event today → headline honored.
+    const noMed = _tsfGenerateSummary(t, {
+      events: [{ type: 'feed', state: 'done' }],
+      noTimeEvents: [],
+    }, { pendingHeadline: 'D3 missed yesterday — let\'s catch up.' });
+    // Scenario 3: pendingHeadline longer than 80 chars → clipped.
+    const longHeadline = 'A'.repeat(200);
+    const clipped = _tsfGenerateSummary(t, {
+      events: [{ type: 'feed', state: 'done' }],
+      noTimeEvents: [],
+    }, { pendingHeadline: longHeadline });
+    return { withMed, noMed, clipped };
+  });
+  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
+  expect(r.withMed, 'ledger wins: med event today + "missed" headline → fall through').not.toContain('missed');
+  expect(r.noMed, 'no contradicting med event today → headline honored').toContain('missed');
+  expect(r.clipped.length, 'pendingHeadline capped at 80 chars').toBeLessThanOrEqual(80);
+});
+
+// ── regression-guard-v3-5-summary-activity-careticket (V-K-91 fold) ────
+test('regression-guard-v3-5-summary-activity-careticket: activity + care-note surface in parts', async ({ page }) => {
+  // V-K-91 (Kael synth-fold): activity and careticket counts are taxonomy
+  // citizens. A CT-heavy day used to fall through to "Solid day. N events
+  // logged." — narratively flat, warmth-axis fail per chronicle §3.3.
+  await gotoFresh(page);
+  const r = await page.evaluate(() => {
+    if (typeof _tsfGenerateSummary !== 'function') return { skipped: 'helper not exported' };
+    const t = today();
+    const withCT = _tsfGenerateSummary(t, {
+      events: [
+        { type: 'feed', state: 'done' },
+        { type: 'careticket', state: 'done' },
+        { type: 'careticket', state: 'done' },
+      ],
+      noTimeEvents: [],
+    }, {});
+    const withActivity = _tsfGenerateSummary(t, {
+      events: [
+        { type: 'feed', state: 'done' },
+        { type: 'activity', state: 'done' },
+      ],
+      noTimeEvents: [],
+    }, {});
+    return { withCT, withActivity };
+  });
+  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
+  expect(r.withCT, 'careticket count surfaces as "care-notes"').toContain('care-notes');
+  expect(r.withActivity, 'activity count surfaces in parts').toContain('activity');
+});
+
+// ── regression-guard-v3-5-window-chip-states-exposed (V-K-89 fold) ─────
+test('regression-guard-v3-5-window-chip-states-exposed: _TSF_CHIP_STATES on window', async ({ page }) => {
+  await gotoFresh(page);
+  const r = await page.evaluate(() => {
+    const states = (window as any)._TSF_CHIP_STATES;
+    if (!Array.isArray(states)) return { found: false };
+    return { found: true, states };
+  });
+  expect(r.found, '_TSF_CHIP_STATES exposed on window').toBe(true);
+  expect(r.states, '_TSF_CHIP_STATES enumerates the 8 canonical states').toEqual(
+    ['urgent','live','calm','skipped','late','inferred','pending','done']
+  );
+});
+
+// ── regression-guard-v3-5-spine-includes-live (V-K-90 fold) ────────────
+test('regression-guard-v3-5-spine-includes-live: live event surfaces in spine when no urgent + no night-sleep', async ({ page }) => {
+  // V-K-90 (Kael synth-fold): mid-nap parent should see the active sleep
+  // in the spine. Before the fold, the chronological pad excluded isLive
+  // events, silently dropping the live nap from the 3-event spine.
+  await gotoFresh(page);
+  const r = await page.evaluate(() => {
+    if (typeof _tsfDaySpineSelect !== 'function') return { skipped: 'helper not exported' };
+    const events = [
+      { id: 'a', type: 'feed', timeMin: 480, state: 'done' },
+      { id: 'b', type: 'feed', timeMin: 750, state: 'done' },
+      { id: 'c', type: 'feed', timeMin: 900, state: 'done' },
+      { id: 'd', type: 'nap', timeMin: 840, state: 'live', isLive: true },
+    ];
+    const picks = _tsfDaySpineSelect(events).map(ev => ev.id);
+    return { picks };
+  });
+  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
+  expect(r.picks, 'live event surfaces in the spine').toContain('d');
+});
+
 // ── regression-guard-v3-5-summary-perf-budget (cipher-3 target) ────────
 test('regression-guard-v3-5-summary-perf-budget: summary paints within 200ms target', async ({ page }) => {
   // Per spec: 200ms is a target (cipher-3 calibrated), not a strict gate

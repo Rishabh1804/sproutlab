@@ -149,7 +149,11 @@ test('regression-guard-v3-5-urgent-state: data-state="urgent" CSS rule defines r
     return { found: false };
   });
   expect(r.found, 'CSS registry contains data-state="urgent" border rule').toBe(true);
-  expect(r.cssText, 'urgent border uses --tc-rose token').toMatch(/--tc-rose/);
+  // V-M-87 (Maren synth-fold): border uses --rose-deep so the dark-theme
+  // cascade amplifies rather than dilutes — the token D2 phase-spec §2.3
+  // reserved for "DO-NOT callout border" amplification. Time-slot text
+  // remains --tc-rose (verified separately in the urgent state's other rules).
+  expect(r.cssText, 'urgent border uses --rose-deep amplification token').toMatch(/--rose-deep/);
 });
 
 // ── regression-guard-v3-5-pending-state (CSS contract) ─────────────────

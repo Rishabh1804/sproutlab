@@ -1678,7 +1678,14 @@ function _tsfIsMealLogged(todayEntry, meal) {
 // State precedence (highest wins; single value per chip). Mutual-exclusion is
 // the Charter Extensibility honor — the deriver picks one, the renderer
 // reads it once, no class-bag drift.
+//
+// V-K-89 (Kael synth-fold): exposed on window so the e2e test suite can
+// assert the registry shape (regression-guard-v3-5-chip-state-attr-mutex
+// and friends) against the canonical enumeration instead of a literal
+// array. The constant remains the single source of truth for amendments;
+// future state additions update one declaration, then surface here.
 const _TSF_CHIP_STATES = ['urgent','live','calm','skipped','late','inferred','pending','done'];
+if (typeof window !== 'undefined') window._TSF_CHIP_STATES = _TSF_CHIP_STATES;
 
 function _tsfDeriveChipState(ev) {
   if (!ev) return 'done';
@@ -1702,15 +1709,38 @@ function _tsfDeriveChipState(ev) {
   return 'done';
 }
 
+// _tsfHedgePhrase — hedge-tier modifier for cross-domain prose. v0 stub.
+// V-K-88 (Kael synth-fold): the spec §Hedge-tier discipline (CV3-002 +
+// Charter Honesty) requires cross-domain phrasing to carry _correlate's
+// confidence floor — assertive for 'high', "tends to" for 'medium',
+// not-surfaced for 'low'. v3-5 IMPL composes from event counts only and
+// makes no cross-domain claims, so no producer reads this today. The
+// stub establishes the contract shape so v3-4 (Narrative Layer) inherits
+// a typed surface rather than re-deriving the discipline from the spec.
+// When the first cross-domain producer lands, branch by `confidence`
+// here and return the prose modifier; the renderer concatenates.
+function _tsfHedgePhrase(confidence) {
+  // v0: every branch returns '' — no cross-domain claims surfaced.
+  if (confidence === 'high') return '';
+  if (confidence === 'medium') return 'tends to ';
+  return '';
+}
+
 // _tsfGenerateSummary — story-arc summary line for Today So Far. Kael pair-note
 // (CV3-004 Cross-Region Pair-Note). Vela renders the result above the event
-// list per spec §Story-arc summary primitive. Hedge-tier discipline (CV3-002):
-// when summary references cross-domain patterns, prose carries the confidence
-// floor — assertive for 'high', "tends to" for 'medium', omitted for 'low'.
+// list per spec §Story-arc summary primitive.
+//
+// v0 hedge-discipline posture (V-V-35 / V-K-88 synth-fold): this v0 helper
+// composes from event counts + illness posture only. It does NOT call
+// _correlate — therefore no hedge-tier surface fires today, and the
+// honesty floor holds vacuously. When v3-4 wires cross-domain prose,
+// route the _correlate confidence through _tsfHedgePhrase above.
 //
 // @param {string} dateKey — YYYY-MM-DD for the day being summarised
 // @param {object} eventsObj — { events, noTimeEvents } from _tsfCollectEvents
 // @param {object} ctx — { illnessPosture?, severityLevel?, pendingHeadline? }
+//   severityLevel + pendingHeadline are forward-compat scaffolding; no
+//   producer in v3-5 (V-V-36 audit-trail note). illnessPosture is wired.
 // @returns {string} parent-legible single sentence; never blank
 function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   ctx = ctx || {};
@@ -1722,7 +1752,22 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (all.length === 0) return 'Quiet day so far.';
 
   // Pending-headline takes precedence — domain miss carrying its own copy.
-  if (ctx.pendingHeadline) return ctx.pendingHeadline;
+  // V-M-89 (Maren synth-fold): two safety-tier guardrails apply:
+  // (1) Length cap (80 chars) — forces producer-side discipline and bounds
+  //     the typography envelope at the render surface.
+  // (2) Contradicts-the-ledger guard — if the headline asserts a negation
+  //     ("missed", "no D3", "not yet") about a domain that has a logged
+  //     event in today's data, fall through to the normal summary branch
+  //     rather than parrot a stale headline. The ledger wins over the
+  //     narrator. Worst-case avoided: stale "D3 missed" headline → parent
+  //     re-administers a dose that already landed (dose-stacking).
+  if (ctx.pendingHeadline) {
+    const headline = String(ctx.pendingHeadline).slice(0, 80);
+    const contradictsMed = /missed|no D3|not yet/i.test(headline);
+    const hasMedToday = all.some(function(ev) { return ev.type === 'med'; });
+    if (!(contradictsMed && hasMedToday)) return headline;
+    // else fall through to normal summary branch
+  }
 
   // Urgent state present — surface the urgent action as headline.
   const urgent = all.find(function(ev) { return ev.urgency === 'urgent' || ev.state === 'urgent'; });
@@ -1755,22 +1800,34 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
   if (counts.med > 0) parts.push('D3 logged');
   if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
+  // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
+  // citizens. "care-note" is the soft surface word — neither "ticket"
+  // (engine-internal) nor "follow-up" (implies action-required).
+  if (counts.activity > 0) parts.push(num(counts.activity, 'activity', 'activities'));
+  if (counts.ct > 0) parts.push(counts.ct === 1 ? 'one care-note' : counts.ct + ' care-notes');
 
   // Lead with the day-character word per illness posture + skip count.
   let lead = 'Solid day.';
   if (ctx.illnessPosture && ctx.illnessPosture.active) lead = 'Resting day.';
   else if (counts.skipped > 0) lead = 'Mixed day so far.';
 
-  // Compose: "Solid day. Three meals, one nap, D3 logged."
+  // Compose: "Solid day. Three meals, one nap, D3 logged, and two poops."
   // Empty parts list (only careticket / activity entries logged) → leaner copy.
   if (parts.length === 0) {
     return lead + ' ' + all.length + ' event' + (all.length === 1 ? '' : 's') + ' logged.';
   }
 
-  // Sentence-case first part already by lead; join with commas + final period.
+  // V-V-33 (Vela synth-fold): Oxford-style "and" on the final join so the
+  // sentence reads as a passage, not a CSV ledger. The previous ternary
+  // had identical branches (', ' vs ', ') — dead code; the intended
+  // discriminator collapsed. CV3-002 Narrate-vs-List + Charter Warmth.
   let summary = lead + ' ' + parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
   for (let i = 1; i < parts.length; i++) {
-    summary += (i === parts.length - 1 && parts.length > 1 ? ', ' : ', ') + parts[i];
+    if (i === parts.length - 1) {
+      summary += (parts.length > 2 ? ', and ' : ' and ') + parts[i];
+    } else {
+      summary += ', ' + parts[i];
+    }
   }
   // Skipped-disclosure tail: "Mixed day so far. Three meals, D3 logged. One skip."
   if (counts.skipped > 0 && lead.indexOf('Mixed') === 0) {
@@ -1799,8 +1856,18 @@ function _tsfDaySpineSelect(events) {
   // 2: night sleep entry (type='sleep')
   const night = events.find(function(ev) { return ev.type === 'sleep'; });
   if (night) pick(night);
+  // 2.5 (V-K-90 Kael synth-fold): any live-in-progress event. A mid-nap
+  // parent opening TSF should see the active sleep in the spine — without
+  // this pick a busy weekday with no night-sleep yet would silently drop
+  // the live nap from the spine while showing earlier settled events.
+  // The live event IS the most-significant in-the-moment signal; the
+  // "settled day-arc" framing below still excludes it from the chronological
+  // pad step to avoid double-counting.
+  const live = events.find(function(ev) { return ev.isLive === true; });
+  if (live) pick(live);
   // 3: most-recent timed event by timeMin descending (skip live-in-progress
-  // so the spine reads as a settled day-arc, not a moment-in-time snapshot)
+  // so the spine reads as a settled day-arc, not a moment-in-time snapshot
+  // — and so the live pick from step 2.5 isn't double-counted here)
   const sorted = events.slice().filter(function(ev) {
     return ev.timeMin !== null && ev.timeMin !== undefined && !ev.isLive;
   }).sort(function(a, b) { return (b.timeMin || 0) - (a.timeMin || 0); });

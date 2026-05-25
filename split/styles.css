@@ -7944,8 +7944,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    recommendation reaches severityLevel === 'urgent'; v3-5 ratifies the
    visual contract. Maren pair-note: urgent must never be visually
    outranked by done — the rose-accent border + bold time slot carry
-   that floor per spec §Cross-Region pair-notes. */
-.tsf-event[data-state="urgent"] { border-left:3px solid var(--tc-rose); padding-left:calc(var(--sp-4) - 3px); }
+   that floor per spec §Cross-Region pair-notes.
+   V-M-87 (Maren synth-fold): border uses --rose-deep (not --tc-rose) so
+   the dark-theme cascade amplifies rather than dilutes — --rose-deep is
+   the token D2 phase-spec §2.3 reserved for "DO-NOT callout border,
+   dark theme, brighter than --tc-rose dark for amplification on dark
+   surfaces." Time-slot text remains --tc-rose because the time is text
+   on background, not the attention-grab signal. */
+.tsf-event[data-state="urgent"] { border-left:3px solid var(--rose-deep); padding-left:calc(var(--sp-4) - 3px); }
 .tsf-event[data-state="urgent"] .tsf-event-time { color:var(--tc-rose); font-weight:700; }
 
 /* pending — domain-specific "expected but not yet logged". Outline-only,
