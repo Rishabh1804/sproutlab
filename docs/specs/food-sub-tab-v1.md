@@ -1,10 +1,10 @@
-# Food Sub-Tab v1 — diet-tab sub-navigation + structured food-entry shape (v0 SCOPING SPEC)
+# Food Sub-Tab v1 — diet-tab sub-navigation + structured food-entry shape
 
-**Spec version:** v0 — **SCOPING DRAFT awaiting Architect ratification of scope**
-**Date:** 2026-05-25
+**Spec version:** v1 — **RATIFIED 2026-05-25** (Architect: *"1-10 all defaults"*)
+**Date:** 2026-05-25 (ratified same session as scoping draft)
 **Branch:** `claude/food-sub-tab-v1-spec`
 **Author:** Lyra (main-session — Mode-1 spec authoring)
-**Status:** v0 SCOPING — pre-required by v3-8 (Feeding Normalizer) per `docs/specs/sproutlab-v3-roundtable-2026-05-25.md` §4.2. Architect direction this session: *"let's also start food sub tab arc that's in flight."* This arc was named across multiple turns but never scope-locked. This spec body **proposes** a v0 scope based on inferable signals + **explicitly surfaces** what needs Architect ratification before implementation begins.
+**Status:** v1 RATIFIED — all 10 v0 scope-questions answered with Lyra's proposed defaults. F-1 implementation arc can open against this spec.
 **Promoted from:**
 - Chronicle §4.2 v3-8 row — names Food Sub-Tab as pre-required (parseFeeding normalizer must know the food-sub-tab incoming shape at v1 design time)
 - Architect direction this session: sequencing — "we'll implement this sleep upgrade after food sub-tab arc is completed. keeps the features and upgrades sequential and easy to track."
@@ -16,11 +16,24 @@
 
 ---
 
-## ⚠️ This spec is a SCOPING DRAFT, not an implementation spec
+## Ratification record (2026-05-25)
 
-The Food Sub-Tab arc has been named across multiple Architect turns this session as "in flight" and "pre-required by v3-8" — but **the actual scope has never been locked**. This spec body proposes a v0 scope based on what we can defensibly infer, but **opens with explicit asks** so the Architect can ratify, amend, or reject the proposed scope before implementation begins.
+Architect ratified all 10 scope questions with Lyra's proposed defaults via: **"1-10 all defaults."** Locked answers:
 
-**If you (Architect) ratify the v0 scope below as-is**, this spec can iterate toward an implementation spec. **If the v0 scope diverges from what you have in mind**, please surface that and I'll redraft from your direction.
+| # | Question | Ratified answer |
+|---|---|---|
+| 1 | Sub-tab count + naming | **3 sub-tabs: Log / Library / Patterns** |
+| 2 | Structured item shape | **Minimum `{name, qty, unit, source, nutritionRef}`** (richer fields are v2 candidates) |
+| 3 | `derivedAllergens` compute site | **Write-time** (cached on the record) |
+| 4 | Legacy string parsing strategy | **Best-effort tokenize against NUTRITION**; legacy `text` preserved as source-of-truth fallback |
+| 5 | Quick-add chip vocabulary | **Last-7-days most-recent + last-30-days most-frequent, per meal-time slot** |
+| 6 | Relationship to `home.js:3266 renderFoods` | **Relocate to Library sub-tab** |
+| 7 | Cross-Region scope | **Maren primary + Vela consult + Kael consult + triple-jurisdiction on styles.css for F-1** |
+| 8 | `diet.js` region split candidate | **DEFER** — keep intact; revisit if/when crosses ~5,500 LOC after F-1+F-2 |
+| 9 | Smart Quick Log integration | **COEXIST** — structured entry is canonical; SQL adopts the new shape in a future arc |
+| 10 | v3-8 dependency direction | **CONFIRMED** — Food Sub-Tab F-2 first, v3-8 (`parseFeeding`) after |
+
+The rest of this spec body — proposed v0 scope, primitives, phasing, Charter alignment, HR pre-check, out-of-scope register, doctrinal references — now reads as **ratified v1 scope**. The section formerly titled "What needs ratification" is superseded by this table.
 
 ---
 
