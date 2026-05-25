@@ -83,6 +83,7 @@ cat intelligence-isl.js
 cat intelligence-qa.js
 cat intelligence-qa-handlers.js
 cat intelligence-illness.js
+cat intelligence-correlate.js
 cat intelligence-quicklog.js
 cat intelligence-cards.js
 cat intelligence-caretickets.js

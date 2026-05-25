@@ -23278,6 +23278,72 @@ function _classifyDaySeverity(total, unmet) {
   if (total < 0 || unmet.length > 0) return 'gentle';
   return null;  // healthy day
 }
+
+// _scoreWindow — N-day rolling aggregate of _scoreDay outputs.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 contract).
+// Output: { perDay[], avgTotal, avgRaw, avgRewards, avgPenalties, totalUnmet, severityCounts }
+// HR-12 safe: uses _offsetDateStr for day iteration.
+function _scoreWindow(domain, days, endDate, dataset) {
+  if (typeof days !== 'number' || days < 1) days = 7;
+  if (typeof endDate !== 'string') endDate = today();
+  const perDay = [];
+  let sumTotal = 0, sumRaw = 0, sumRewards = 0, sumPenalties = 0, totalUnmet = 0;
+  const sevCounts = { gentle: 0, firm: 0, urgent: 0 };
+  for (let i = 0; i < days; i++) {
+    const ds = _offsetDateStr(endDate, -(days - 1 - i));
+    const score = _scoreDay(domain, ds, dataset);
+    perDay.push({ date: ds, score: score });
+    sumTotal += score.total;
+    sumRaw += score.raw;
+    sumRewards += score.rewards;
+    sumPenalties += score.penalties;
+    totalUnmet += (score.unmetRecommendations || []).length;
+    if (score.severityLevel && sevCounts[score.severityLevel] !== undefined) sevCounts[score.severityLevel]++;
+  }
+  return {
+    perDay: perDay,
+    avgTotal:    sumTotal / days,
+    avgRaw:      sumRaw / days,
+    avgRewards:  sumRewards / days,
+    avgPenalties: sumPenalties / days,
+    totalUnmet:  totalUnmet,
+    severityCounts: sevCounts,
+    windowDays:  days,
+    endDate:     endDate,
+  };
+}
+
+// _scoreDayHero — cross-domain weighted hero score for a single day.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 §_scoreDayHero).
+// Reads DOMAIN_WEIGHTS_HERO from data.js; iterates each domain; aggregates total + severity.
+function _scoreDayHero(dateStr, dataset) {
+  if (typeof dateStr !== 'string') dateStr = today();
+  const weights = (typeof DOMAIN_WEIGHTS_HERO !== 'undefined') ? DOMAIN_WEIGHTS_HERO : { sleep: 0.4, feed: 0.3, activity: 0.3 };
+  const perDomain = {};
+  let weighted = 0;
+  const allMessages = [];
+  const severityRank = { urgent: 3, firm: 2, gentle: 1 };
+  let topSeverity = null, topRank = 0;
+  Object.keys(weights).forEach(function(domain) {
+    const score = _scoreDay(domain, dateStr, dataset);
+    perDomain[domain] = score;
+    weighted += score.total * (weights[domain] || 0);
+    if (score.severityLevel && severityRank[score.severityLevel] > topRank) {
+      topRank = severityRank[score.severityLevel];
+      topSeverity = score.severityLevel;
+    }
+    if (Array.isArray(score.generatedMessages)) {
+      score.generatedMessages.forEach(function(m) { allMessages.push(m); });
+    }
+  });
+  return {
+    total: weighted,
+    perDomain: perDomain,
+    severityLevel: topSeverity,
+    generatedMessages: allMessages,
+    date: dateStr,
+  };
+}
 // HEADER / QUICK STATS
 // ─────────────────────────────────────────
 // ageAt, preciseAge → migrated to core.js
@@ -48397,6 +48463,193 @@ function resolveTimeQuery(text) {
   return null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// _resolveEventAnchor — v3-3 event-anchored temporal-window resolver (NEW)
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 2
+// Region: Kael
+//
+// Charter alignment (CV3-006):
+//   - Honesty: returns null when anchor cannot be resolved (no inferred ranges).
+//   - Extensibility: ANCHOR_RESOLVERS is a row-addition table. New anchor pattern
+//     plugs in by adding a row — no caller-site changes.
+//   - Warmth: produces a friendly `label` field ready for narrative-layer prose.
+//
+// HR-12 cipher-4 gate: zero raw `new Date()` arithmetic. All day-arithmetic
+// goes through _offsetDateStr / string operations on YYYY-MM-DD slices.
+// Episode/milestone/vaccine source dates are sliced to YYYY-MM-DD before use.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Anchor resolver table — row-addition extensibility.
+// Each resolver: { match: RegExp, resolve: (m, ctx, todayStr) => {start, end, label} | null }
+var ANCHOR_RESOLVERS = [
+  // ── since the {illness} ──
+  {
+    match: /\bsince\s+(?:the\s+)?(fever|cold|diarrho?ea|vomit(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kind = m[1];
+      var ep = _anchorMostRecentIllnessEpisode(kind);
+      if (!ep || !ep.startedAt) return null;
+      var startStr = ep.startedAt.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startStr)) return null;
+      return { start: startStr, end: todayStr, label: 'since the ' + kind + ' (' + _anchorFormatLabel(startStr) + ')' };
+    },
+  },
+  // ── the week of {vaccine} ──  (±3 days around vaccine date)
+  {
+    match: /\bthe\s+week\s+of\s+(.+)$/,
+    resolve: function(m, ctx, todayStr) {
+      var vaccineName = m[1].trim();
+      var rec = _anchorFindVaccineRecord(vaccineName);
+      if (!rec || !rec.date) return null;
+      var dateStr = rec.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+      return {
+        start: _offsetDateStr(dateStr, -3),
+        end: _offsetDateStr(dateStr, +3),
+        label: 'the week of ' + rec.name + ' (' + _anchorFormatLabel(dateStr) + ')',
+      };
+    },
+  },
+  // ── before solids ──
+  {
+    match: /\bbefore\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      var dob = _anchorDob(ctx);
+      if (!dob) return null;
+      return { start: dob, end: _offsetDateStr(milestoneDateStr, -1), label: 'before solids' };
+    },
+  },
+  // ── after solids ──
+  {
+    match: /\bafter\s+solids\b/,
+    resolve: function(m, ctx, todayStr) {
+      var ms = _anchorFindMilestoneByKeyword('solids');
+      if (!ms) return null;
+      var milestoneDateStr = _anchorMilestoneFirstDate(ms);
+      if (!milestoneDateStr) return null;
+      return { start: milestoneDateStr, end: todayStr, label: 'after solids' };
+    },
+  },
+  // ── since {milestone keyword} ──
+  // (e.g. "since rolling", "since babbling", "since crawling")
+  {
+    match: /\bsince\s+(rolling|crawl(?:ing)?|sit(?:ting)?|babbl(?:ing)?|walk(?:ing)?|stand(?:ing)?|cruis(?:ing)?)\b/,
+    resolve: function(m, ctx, todayStr) {
+      var kw = m[1].replace(/ing$/, '').replace(/(s)$/, '$1');
+      var ms = _anchorFindMilestoneByKeyword(kw);
+      if (!ms) return null;
+      var firstDate = _anchorMilestoneFirstDate(ms);
+      if (!firstDate) return null;
+      return { start: firstDate, end: todayStr, label: 'since ' + m[1] + ' (' + _anchorFormatLabel(firstDate) + ')' };
+    },
+  },
+  // ── that week / that day (referent-anchored; requires ctx.referent) ──
+  {
+    match: /\bthat\s+(week|day)\b/,
+    resolve: function(m, ctx, todayStr) {
+      if (!ctx || !ctx.referent || !ctx.referent.date) return null;
+      var ref = ctx.referent.date.substring(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ref)) return null;
+      if (m[1] === 'day') return { start: ref, end: ref, label: 'that day (' + _anchorFormatLabel(ref) + ')' };
+      return { start: _offsetDateStr(ref, -3), end: _offsetDateStr(ref, +3), label: 'that week (' + _anchorFormatLabel(ref) + ')' };
+    },
+  },
+];
+
+// Most-recent-illness lookup. Prefers active episode; falls back to most-recently-resolved.
+function _anchorMostRecentIllnessEpisode(kind) {
+  var arr = null;
+  if (kind === 'fever' && typeof _feverEpisodes !== 'undefined') arr = _feverEpisodes;
+  else if (kind === 'cold' && typeof _coldEpisodes !== 'undefined') arr = _coldEpisodes;
+  else if ((kind === 'diarrhoea' || kind === 'diarrhea') && typeof _diarrhoeaEpisodes !== 'undefined') arr = _diarrhoeaEpisodes;
+  else if ((kind === 'vomiting' || kind === 'vomit') && typeof _vomitingEpisodes !== 'undefined') arr = _vomitingEpisodes;
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  var active = arr.find(function(e) { return e && e.status === 'active'; });
+  if (active) return active;
+  // Most-recent by startedAt.
+  var sorted = arr.filter(function(e) { return e && e.startedAt; }).sort(function(a, b) {
+    return (a.startedAt < b.startedAt) ? 1 : -1;
+  });
+  return sorted[0] || null;
+}
+
+// Vaccine lookup by partial name match (case-insensitive). Reads `vaccData` global.
+function _anchorFindVaccineRecord(query) {
+  if (typeof vaccData !== 'object' || !Array.isArray(vaccData)) return null;
+  var q = query.toLowerCase();
+  var matches = vaccData.filter(function(v) {
+    return v && v.date && !v.upcoming && v.name && v.name.toLowerCase().indexOf(q) !== -1;
+  });
+  if (matches.length === 0) return null;
+  // Most-recent.
+  matches.sort(function(a, b) { return (a.date < b.date) ? 1 : -1; });
+  return matches[0];
+}
+
+// Milestone lookup by keyword (case-insensitive substring on .text).
+function _anchorFindMilestoneByKeyword(kw) {
+  if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
+  var q = kw.toLowerCase();
+  return milestones.find(function(m) {
+    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+  }) || null;
+}
+
+// Earliest non-null progression-date on a milestone (emerging → mastered).
+function _anchorMilestoneFirstDate(ms) {
+  var fields = ['emergingAt', 'practicingAt', 'consistentAt', 'masteredAt'];
+  var earliest = null;
+  for (var i = 0; i < fields.length; i++) {
+    var raw = ms[fields[i]];
+    if (!raw) continue;
+    var ds = raw.substring(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) continue;
+    if (earliest === null || ds < earliest) earliest = ds;
+  }
+  return earliest;
+}
+
+// DOB accessor — prefers ctx.baby.dob, falls back to _ZIVA_DOB constant.
+function _anchorDob(ctx) {
+  if (ctx && ctx.baby && typeof ctx.baby.dob === 'string') return ctx.baby.dob.substring(0, 10);
+  if (typeof _ZIVA_DOB === 'string') return _ZIVA_DOB;
+  return null;
+}
+
+// Friendly date label "Mar 12" — uses Intl in IST-safe mode (noon construction).
+function _anchorFormatLabel(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  // HR-12: construct at noon to avoid day-boundary shift across timezones.
+  var d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  try {
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+// _resolveEventAnchor — event-anchored temporal-window resolver.
+// Returns {start, end, label} on resolution; null otherwise.
+function _resolveEventAnchor(token, ctx) {
+  if (typeof token !== 'string' || !token.trim()) return null;
+  var lower = token.toLowerCase().replace(/[?!.,]/g, '').trim();
+  var todayStr = (typeof today === 'function') ? today() : (ctx && ctx.now ? toDateStr(ctx.now) : null);
+  if (!todayStr) return null;
+  for (var i = 0; i < ANCHOR_RESOLVERS.length; i++) {
+    var row = ANCHOR_RESOLVERS[i];
+    var m = lower.match(row.match);
+    if (!m) continue;
+    var out = row.resolve(m, ctx || {}, todayStr);
+    if (out && out.start && out.end) return out;
+  }
+  return null;
+}
+
 // ── Step 2: getDomainData('sleep') ──
 
 function getDomainData(domain, startDate, endDate) {
@@ -57597,6 +57850,277 @@ function _daysBetween(dateA, dateB) {
     count++;
   }
   return count;
+}
+// ─────────────────────────────────────────────────────────────────────────
+// intelligence-correlate.js — v3-3 cross-domain correlation primitive (NEW)
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 1
+// Region: Kael (engine layer)
+//
+// Charter alignment (CV3-006):
+//   - Honesty: every correlation surface discloses {sampleSize, confidence, n}.
+//     Confidence-floor gated; returns null below floor (n < 7 OR |strength| < 0.4).
+//   - Extensibility: SIGNAL_EXTRACTORS is a row-addition table. New domain pairs
+//     plug in by adding a row — no engine code change.
+//   - Warmth: engine-only output; pre-shaped for v3-4 narrative-layer hedge-tier prose.
+//
+// HR-12 honored: zero raw `new Date()` arithmetic. Date iteration uses _offsetDateStr;
+// signal extractors read existing data via string-keyed lookups.
+// ─────────────────────────────────────────────────────────────────────────
+
+// SIGNAL_EXTRACTORS — domain×signal → (dateStr) → number|null.
+// Each extractor returns a numeric signal for the given day, or null if no data.
+// Adding a new domain-signal pair = adding a row here. No engine code change.
+const SIGNAL_EXTRACTORS = {
+  // ── sleep domain ──
+  'sleep:total': function(dateStr) {
+    if (typeof sleepData !== 'object' || !sleepData) return null;
+    var entries = sleepData[dateStr];
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+    var totalMin = 0;
+    entries.forEach(function(e) {
+      if (e && typeof e.duration === 'number' && e.duration > 0) totalMin += e.duration;
+    });
+    return totalMin > 0 ? (totalMin / 60) : null;  // hours
+  },
+  'sleep:wakeUps': function(dateStr) {
+    if (typeof sleepData !== 'object' || !sleepData) return null;
+    var entries = sleepData[dateStr];
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+    var sum = 0, any = false;
+    entries.forEach(function(e) {
+      if (e && typeof e.wakeUps === 'number') { sum += e.wakeUps; any = true; }
+    });
+    return any ? sum : null;
+  },
+  'sleep:onsetMin': function(dateStr) {
+    if (typeof sleepData !== 'object' || !sleepData) return null;
+    var entries = sleepData[dateStr];
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+    // Use the earliest 'night' entry's start time as proxy for onset.
+    var nights = entries.filter(function(e) { return e && (e.kind === 'night' || e.type === 'night'); });
+    if (nights.length === 0) return null;
+    var earliest = nights.reduce(function(min, n) {
+      if (!n || !n.startTime) return min;
+      var m = _hhmmToMinutes(n.startTime);
+      if (m < 0) return min;
+      return (min === null || m < min) ? m : min;
+    }, null);
+    return earliest;
+  },
+
+  // ── feeding domain ──
+  'feeding:mealCount': function(dateStr) {
+    if (typeof feedingData !== 'object' || !feedingData) return null;
+    var day = feedingData[dateStr];
+    if (!day) return null;
+    var slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+    var count = 0;
+    slots.forEach(function(s) {
+      var v = day[s];
+      if (!v) return;
+      if (typeof v === 'string' && v.trim() && v !== 'null' && v !== 'undefined') count++;
+      else if (typeof v === 'object' && v !== null) count++;  // structured shape (post-food-sub-tab)
+    });
+    return count;
+  },
+  'feeding:fatRatio': function(dateStr) {
+    if (typeof feedingData !== 'object' || !feedingData) return null;
+    var day = feedingData[dateStr];
+    if (!day) return null;
+    if (typeof _detectFatContextNearTime !== 'function') return null;
+    var slots = ['breakfast', 'lunch', 'dinner', 'snack'];
+    var fatCount = 0, totalCount = 0;
+    slots.forEach(function(s) {
+      var v = day[s];
+      if (!v) return;
+      var hasText = (typeof v === 'string' && v.trim() && v !== 'null' && v !== 'undefined') || (typeof v === 'object' && v && v.text);
+      if (!hasText) return;
+      totalCount++;
+      // Best-effort: derive fat status from the meal text via fat-set substring match.
+      var text = (typeof v === 'string') ? v : (v.text || '');
+      if (typeof _isFatBearingText === 'function' && _isFatBearingText(text)) fatCount++;
+    });
+    return totalCount > 0 ? (fatCount / totalCount) : null;
+  },
+
+  // ── med domain ──
+  'med:givenCount': function(dateStr) {
+    if (typeof medChecks !== 'object' || !medChecks) return null;
+    var day = medChecks[dateStr];
+    if (!day || typeof day !== 'object') return null;
+    var count = 0;
+    Object.keys(day).forEach(function(k) {
+      if (k === '_trackingSince') return;
+      if (typeof medCheckIsDone === 'function' && medCheckIsDone(day[k])) count++;
+    });
+    return count;
+  },
+  'med:withFatRatio': function(dateStr) {
+    if (typeof medChecks !== 'object' || !medChecks) return null;
+    var day = medChecks[dateStr];
+    if (!day || typeof day !== 'object') return null;
+    var withFat = 0, total = 0;
+    Object.keys(day).forEach(function(k) {
+      if (k === '_trackingSince') return;
+      if (typeof parseMedCheck !== 'function') return;
+      var parsed = parseMedCheck(day[k]);
+      if (!parsed || (parsed.status !== 'done' && parsed.status !== 'late')) return;
+      total++;
+      if (parsed.withFat === true) withFat++;
+    });
+    return total > 0 ? (withFat / total) : null;
+  },
+
+  // ── illness domain ──
+  'illness:active': function(dateStr) {
+    // Best-effort: check whether any episode was active on dateStr.
+    // For "today" we have direct accessors; for historical days we'd need episode date ranges.
+    // v1: only compute for today (returns null for past dates without episode-range data).
+    if (dateStr !== today()) return null;  // v2 candidate: walk episode ranges
+    var active = 0;
+    if (typeof getActiveFeverEpisode === 'function' && getActiveFeverEpisode()) active++;
+    if (typeof getActiveDiarrhoeaEpisode === 'function' && getActiveDiarrhoeaEpisode()) active++;
+    if (typeof getActiveVomitingEpisode === 'function' && getActiveVomitingEpisode()) active++;
+    if (typeof getActiveColdEpisode === 'function' && getActiveColdEpisode()) active++;
+    return active;
+  },
+
+  // ── poop domain ──
+  'poop:count': function(dateStr) {
+    if (typeof poopData !== 'object' || !poopData) return null;
+    var day = poopData[dateStr];
+    if (!day) return null;
+    if (Array.isArray(day)) return day.length;
+    if (typeof day === 'object' && Array.isArray(day.entries)) return day.entries.length;
+    return null;
+  },
+
+  // ── growth domain (sparse signal; only present on measurement days) ──
+  'growth:weightKg': function(dateStr) {
+    if (typeof growthData !== 'object' || !growthData) return null;
+    var day = growthData[dateStr];
+    if (!day || typeof day.weight !== 'number') return null;
+    return day.weight;
+  },
+};
+
+// Helper for confidence classification.
+function _correlateConfidenceLabel(sampleSize, strength) {
+  var s = Math.abs(strength);
+  if (sampleSize >= 21 && s >= 0.7) return 'high';
+  if (sampleSize >= 14 && s >= 0.5) return 'medium';
+  if (sampleSize >= 7 && s >= 0.4) return 'low';
+  return null;  // below confidence floor
+}
+
+// Pearson correlation on two parallel arrays (already filtered to matched pairs).
+function _pearson(xs, ys) {
+  var n = xs.length;
+  if (n < 2) return 0;
+  var meanX = 0, meanY = 0;
+  for (var i = 0; i < n; i++) { meanX += xs[i]; meanY += ys[i]; }
+  meanX /= n; meanY /= n;
+  var num = 0, denomX = 0, denomY = 0;
+  for (var j = 0; j < n; j++) {
+    var dx = xs[j] - meanX;
+    var dy = ys[j] - meanY;
+    num += dx * dy;
+    denomX += dx * dx;
+    denomY += dy * dy;
+  }
+  var denom = Math.sqrt(denomX * denomY);
+  if (denom === 0) return 0;
+  return num / denom;
+}
+
+// _correlate — the cross-domain correlation primitive.
+// Spec contract per docs/specs/v3-3-engine-spine.md §Primitive 1.
+//
+// Inputs:
+//   domainA, domainB: 'sleep' | 'feeding' | 'med' | 'illness' | 'poop' | 'growth' (extensible)
+//   windowDays: rolling window in days (e.g. 14, 30)
+//   opts: { signalA, signalB, lagDays?, confidenceFloor?, endDate? }
+//     signalA, signalB: required; the SIGNAL_EXTRACTORS key suffixes after 'domain:'
+//     lagDays: max ±lag to scan in days (default 3)
+//     confidenceFloor: minimum |strength| to consider valid (default 0.4)
+//     endDate: window end (default today())
+//
+// Returns: { lag, strength, confidence, sampleSize, points[], domainA, domainB, signalA, signalB, windowDays }
+// OR null if sampleSize < 7 OR best |strength| < confidenceFloor.
+function _correlate(domainA, domainB, windowDays, opts) {
+  opts = opts || {};
+  if (!opts.signalA || !opts.signalB) return null;
+  var keyA = domainA + ':' + opts.signalA;
+  var keyB = domainB + ':' + opts.signalB;
+  var extA = SIGNAL_EXTRACTORS[keyA];
+  var extB = SIGNAL_EXTRACTORS[keyB];
+  if (!extA || !extB) return null;
+  if (typeof windowDays !== 'number' || windowDays < 7) windowDays = 14;
+  var endDate = (typeof opts.endDate === 'string') ? opts.endDate : today();
+  var floor = (typeof opts.confidenceFloor === 'number') ? opts.confidenceFloor : 0.4;
+  var maxLag = (typeof opts.lagDays === 'number') ? Math.max(0, Math.min(7, opts.lagDays)) : 3;
+
+  // Pull aligned daily values. Drop days where either extractor returns null/undefined/NaN.
+  var rawPoints = [];  // [{date, valA, valB}, ...]
+  for (var i = 0; i < windowDays; i++) {
+    var ds = _offsetDateStr(endDate, -(windowDays - 1 - i));
+    var a = extA(ds), b = extB(ds);
+    if (a === null || a === undefined || isNaN(a)) continue;
+    if (b === null || b === undefined || isNaN(b)) continue;
+    rawPoints.push({ date: ds, valA: a, valB: b });
+  }
+  if (rawPoints.length < 7) return null;
+
+  // Scan lags [-maxLag, +maxLag]; pick strongest |strength|.
+  var bestLag = 0, bestStrength = 0, bestN = rawPoints.length;
+  for (var lag = -maxLag; lag <= maxLag; lag++) {
+    var xs = [], ys = [];
+    for (var k = 0; k < rawPoints.length; k++) {
+      var idxA = k;
+      var idxB = k + lag;
+      if (idxB < 0 || idxB >= rawPoints.length) continue;
+      xs.push(rawPoints[idxA].valA);
+      ys.push(rawPoints[idxB].valB);
+    }
+    if (xs.length < 7) continue;
+    var s = _pearson(xs, ys);
+    if (Math.abs(s) > Math.abs(bestStrength)) {
+      bestStrength = s;
+      bestLag = lag;
+      bestN = xs.length;
+    }
+  }
+
+  // Apply confidence floor.
+  if (Math.abs(bestStrength) < floor) return null;
+  var conf = _correlateConfidenceLabel(bestN, bestStrength);
+  if (!conf) return null;
+
+  return {
+    lag: bestLag,
+    strength: bestStrength,
+    confidence: conf,
+    sampleSize: bestN,
+    points: rawPoints,
+    domainA: domainA,
+    domainB: domainB,
+    signalA: opts.signalA,
+    signalB: opts.signalB,
+    windowDays: windowDays,
+  };
+}
+
+// Convenience: list every available {domain, signal} pair the engine can correlate.
+// Useful for v3-4 narrative layer + R-1 adaptive layer enumeration.
+function _correlateAvailableSignals() {
+  var out = {};
+  Object.keys(SIGNAL_EXTRACTORS).forEach(function(key) {
+    var parts = key.split(':');
+    if (parts.length !== 2) return;
+    if (!out[parts[0]]) out[parts[0]] = [];
+    out[parts[0]].push(parts[1]);
+  });
+  return out;
 }
 // ═══════════════════════════════════════════════════════════════
 // ACTIVITY LOG: Modal handlers

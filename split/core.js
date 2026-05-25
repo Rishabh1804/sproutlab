@@ -5997,3 +5997,69 @@ function _classifyDaySeverity(total, unmet) {
   if (total < 0 || unmet.length > 0) return 'gentle';
   return null;  // healthy day
 }
+
+// _scoreWindow — N-day rolling aggregate of _scoreDay outputs.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 contract).
+// Output: { perDay[], avgTotal, avgRaw, avgRewards, avgPenalties, totalUnmet, severityCounts }
+// HR-12 safe: uses _offsetDateStr for day iteration.
+function _scoreWindow(domain, days, endDate, dataset) {
+  if (typeof days !== 'number' || days < 1) days = 7;
+  if (typeof endDate !== 'string') endDate = today();
+  const perDay = [];
+  let sumTotal = 0, sumRaw = 0, sumRewards = 0, sumPenalties = 0, totalUnmet = 0;
+  const sevCounts = { gentle: 0, firm: 0, urgent: 0 };
+  for (let i = 0; i < days; i++) {
+    const ds = _offsetDateStr(endDate, -(days - 1 - i));
+    const score = _scoreDay(domain, ds, dataset);
+    perDay.push({ date: ds, score: score });
+    sumTotal += score.total;
+    sumRaw += score.raw;
+    sumRewards += score.rewards;
+    sumPenalties += score.penalties;
+    totalUnmet += (score.unmetRecommendations || []).length;
+    if (score.severityLevel && sevCounts[score.severityLevel] !== undefined) sevCounts[score.severityLevel]++;
+  }
+  return {
+    perDay: perDay,
+    avgTotal:    sumTotal / days,
+    avgRaw:      sumRaw / days,
+    avgRewards:  sumRewards / days,
+    avgPenalties: sumPenalties / days,
+    totalUnmet:  totalUnmet,
+    severityCounts: sevCounts,
+    windowDays:  days,
+    endDate:     endDate,
+  };
+}
+
+// _scoreDayHero — cross-domain weighted hero score for a single day.
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 3 (scoring-redesign-v1 §_scoreDayHero).
+// Reads DOMAIN_WEIGHTS_HERO from data.js; iterates each domain; aggregates total + severity.
+function _scoreDayHero(dateStr, dataset) {
+  if (typeof dateStr !== 'string') dateStr = today();
+  const weights = (typeof DOMAIN_WEIGHTS_HERO !== 'undefined') ? DOMAIN_WEIGHTS_HERO : { sleep: 0.4, feed: 0.3, activity: 0.3 };
+  const perDomain = {};
+  let weighted = 0;
+  const allMessages = [];
+  const severityRank = { urgent: 3, firm: 2, gentle: 1 };
+  let topSeverity = null, topRank = 0;
+  Object.keys(weights).forEach(function(domain) {
+    const score = _scoreDay(domain, dateStr, dataset);
+    perDomain[domain] = score;
+    weighted += score.total * (weights[domain] || 0);
+    if (score.severityLevel && severityRank[score.severityLevel] > topRank) {
+      topRank = severityRank[score.severityLevel];
+      topSeverity = score.severityLevel;
+    }
+    if (Array.isArray(score.generatedMessages)) {
+      score.generatedMessages.forEach(function(m) { allMessages.push(m); });
+    }
+  });
+  return {
+    total: weighted,
+    perDomain: perDomain,
+    severityLevel: topSeverity,
+    generatedMessages: allMessages,
+    date: dateStr,
+  };
+}
