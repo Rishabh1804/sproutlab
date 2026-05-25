@@ -2209,3 +2209,41 @@ function initSyncVisibility() {
   onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — getSyncPosture()
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 5
+// Synchronous in-memory read of sync-layer health. NO network round-trip
+// (Kael v3.0 risk register: "Sync deadlocks via observability over-reach").
+// Consumers in home.js / medical.js / intelligence layer can read sync state
+// without try/catch dances.
+//
+// Output: { circuitOpen, lastSyncMs, pendingWrites, healthTier }
+//   circuitOpen: boolean — crash-circuit-breaker state (_syncDisabled)
+//   lastSyncMs:  number | null — wall-clock ms of last successful sync
+//   pendingWrites: number — best-effort queued-writes count (0 in v1; placeholder)
+//   healthTier: 'healthy' | 'degraded' | 'broken'
+//
+// HR-12 safe: reads in-memory state only; no Date construction except for the
+// lastSyncMs accessor which returns existing _lastSyncTs (already wall-clock ms).
+// ─────────────────────────────────────────────────────────────────────────
+function getSyncPosture() {
+  var circuitOpen = !!_syncDisabled;
+  var lastMs = (typeof _lastSyncTs !== 'undefined' && _lastSyncTs) ? _lastSyncTs : null;
+  // pendingWrites: v1 best-effort — sync.js does not currently expose a queue counter.
+  // Placeholder 0; future arc may surface real queue depth once a write-queue primitive lands.
+  var pending = 0;
+  var tier = 'healthy';
+  if (circuitOpen) {
+    tier = 'broken';
+  } else if (lastMs && (Date.now() - lastMs) > 60 * 60 * 1000) {
+    // No successful sync in the last hour → degraded.
+    tier = 'degraded';
+  }
+  return {
+    circuitOpen: circuitOpen,
+    lastSyncMs: lastMs,
+    pendingWrites: pending,
+    healthTier: tier,
+  };
+}

@@ -2541,3 +2541,102 @@ function closeQuickLogAll() {
   resetQLSheet();
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────
+// v3-3 — getActiveIllnessPosture()
+// Spec: docs/specs/v3-3-engine-spine.md §Primitive 4
+// Reads getActiveFeverEpisode + getActiveDiarrhoeaEpisode + getActiveVomitingEpisode
+// + getActiveColdEpisode as a SET. Surfaces compound illness state for CareTicket
+// trigger doctrine (v3-2), recommendation severity escalation (Scoring Arc S-2),
+// and cross-domain CareTicket triggers (C-7).
+//
+// Output: { compoundSymptomDays, escalationTier, primarySymptom, activeIllnesses }
+//   compoundSymptomDays: int — days where 2+ illness types overlap in the recent 30-day window
+//   escalationTier: 0 (nothing active) → 3 (critical compound: 3+ illnesses, multi-day)
+//   primarySymptom: type with longest current active duration, or null
+//   activeIllnesses: array of {type, startDate, severity, daysActive}
+//
+// HR-12 safe: reads existing episode start-date strings (YYYY-MM-DD); uses today() for
+// day-arithmetic; no raw Date() construction.
+// ─────────────────────────────────────────────────────────────────────────
+function getActiveIllnessPosture() {
+  var active = [];
+  var fever = getActiveFeverEpisode();
+  if (fever) active.push({
+    type: 'fever',
+    startDate: fever.startDate || null,
+    severity: fever.maxTemp ? (fever.maxTemp >= 39 ? 'high' : fever.maxTemp >= 38 ? 'moderate' : 'low') : 'low',
+    daysActive: fever.startDate ? _daysBetween(fever.startDate, today()) + 1 : 0,
+  });
+  var diarrh = getActiveDiarrhoeaEpisode();
+  if (diarrh) active.push({
+    type: 'diarrhoea',
+    startDate: diarrh.startDate || null,
+    severity: diarrh.stoolCount && diarrh.stoolCount >= 6 ? 'high' : 'moderate',
+    daysActive: diarrh.startDate ? _daysBetween(diarrh.startDate, today()) + 1 : 0,
+  });
+  var vomit = getActiveVomitingEpisode();
+  if (vomit) active.push({
+    type: 'vomiting',
+    startDate: vomit.startDate || null,
+    severity: 'moderate',
+    daysActive: vomit.startDate ? _daysBetween(vomit.startDate, today()) + 1 : 0,
+  });
+  var cold = getActiveColdEpisode();
+  if (cold) active.push({
+    type: 'cold',
+    startDate: cold.startDate || null,
+    severity: 'low',
+    daysActive: cold.startDate ? _daysBetween(cold.startDate, today()) + 1 : 0,
+  });
+
+  // Compound day calc: days in the recent 30-day window where 2+ illness types overlap.
+  // We walk 30 days back from today() and count days where multiple active illnesses
+  // had startDate <= that day AND (no endDate OR endDate >= that day).
+  var compoundDays = 0;
+  if (active.length >= 2) {
+    var dayCursor = today();
+    for (var d = 0; d < 30; d++) {
+      var dayStr = _offsetDateStr(today(), -d);
+      var overlapCount = active.filter(function(ep) {
+        return ep.startDate && ep.startDate <= dayStr;
+      }).length;
+      if (overlapCount >= 2) compoundDays++;
+    }
+  }
+
+  // Escalation tier: 0..3 per spec.
+  var tier = 0;
+  if (active.length === 1) tier = 1;
+  else if (active.length === 2) tier = compoundDays >= 2 ? 2 : 1;
+  else if (active.length >= 3) tier = compoundDays >= 2 ? 3 : 2;
+
+  // Primary symptom: longest-active among active.
+  var primary = null;
+  if (active.length > 0) {
+    primary = active.reduce(function(longest, ep) {
+      return (ep.daysActive > (longest ? longest.daysActive : 0)) ? ep : longest;
+    }, null);
+  }
+
+  return {
+    compoundSymptomDays: compoundDays,
+    escalationTier: tier,
+    primarySymptom: primary ? primary.type : null,
+    activeIllnesses: active,
+  };
+}
+
+// Helper: days between two YYYY-MM-DD strings (HR-12 safe — uses _offsetDateStr / day-key math).
+// Returns positive int when dateB >= dateA.
+function _daysBetween(dateA, dateB) {
+  if (!dateA || !dateB) return 0;
+  // Walk forward from dateA until we hit dateB. Bounded to a sensible cap to avoid runaway.
+  var cur = dateA;
+  var count = 0;
+  while (cur < dateB && count < 365) {
+    cur = _offsetDateStr(cur, 1);
+    count++;
+  }
+  return count;
+}
