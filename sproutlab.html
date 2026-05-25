@@ -7903,9 +7903,21 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    ("Skipped" vs "Done") — half-awake parents at 2 AM can miss it. Strikethrough the
    label, warn-color the time slot, fade the icon. Token-only: --tc-warn for the
    strike color + time slot, --light for the dimmed label. The chip wrapper carries
-   data-state="skipped" set by _tsfRenderEvent in intelligence-quicklog.js. */
+   data-state="skipped" set by _tsfRenderEvent in intelligence-quicklog.js.
+   V-V-32 (Vela synth-fold): dark-theme variant intentionally absent — --tc-warn and
+   --light cascade theme-aware via [data-theme="dark"] overrides further down this file,
+   so the strikethrough + dimmed label reads correctly in both themes without explicit
+   override. Future Governors: do not mistake the absence for an oversight.
+   V-V-31 (Vela synth-fold): if a future event type ever carries BOTH
+   tsf-event-inferred AND data-state="skipped" on the same chip, the time-slot rule
+   below collides with .tsf-event-inferred .tsf-event-time (italic + opacity 0.7).
+   Impossible today (inferred is set only on meal-time fallback, never on med events;
+   only meds can be skipped) — re-evaluate if that boundary shifts. */
 .tsf-event[data-state="skipped"] .tsf-event-label { text-decoration:line-through; text-decoration-color:var(--tc-warn); color:var(--light); }
 .tsf-event[data-state="skipped"] .tsf-event-time  { color:var(--tc-warn); opacity:0.7; }
+/* V-M-86 (Maren synth-fold, triple-jurisdiction round 2): the icon selector is deliberately
+   tightened from spec's bare `.icon` to `.tsf-event-icon .icon`, mirroring the parent
+   rule at line 7886 — prevents bleed if `.icon` ever appears bare elsewhere inside a chip. */
 .tsf-event[data-state="skipped"] .tsf-event-icon .icon { opacity:0.6; }
 .tsf-event-expanded-detail { padding:var(--sp-4) var(--sp-4) var(--sp-8) calc(var(--sp-32) + var(--sp-8) + var(--sp-24) + var(--sp-8) + var(--sp-4)); font-size:var(--fs-xs); color:var(--mid); line-height:1.5; border-top:1px solid var(--glass-strong); margin-top:0; }
 .tsf-show-earlier { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-6) 0; cursor:pointer; font-weight:600; }
