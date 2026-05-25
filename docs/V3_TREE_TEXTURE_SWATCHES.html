@@ -367,6 +367,91 @@ body {
   pointer-events: none;
 }
 
+/* ───────────────────────────────────────────────────
+   Swatch 7 (G): F + E — watercolor wash + linen cross-hatch
+   "fabric/journal-cloth with warm atmosphere"
+   ─────────────────────────────────────────────────── */
+.tex-FE .swatch-canvas {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(168,207,224,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 70% 60% at 80% 75%, rgba(201,184,232,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(232,184,109,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 70% 30%, rgba(245,232,221,0.40) 0%, transparent 100%),
+    var(--warm);
+}
+.tex-FE .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 35% 60%, rgba(180,213,197,0.15) 0%, transparent 30%),
+    radial-gradient(circle at 65% 40%, rgba(250,212,180,0.12) 0%, transparent 35%);
+  pointer-events: none;
+}
+.tex-FE .swatch-canvas::after {
+  /* Linen weave at low opacity, on top of watercolor */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(140,100,80,0.030) 0px,
+      rgba(140,100,80,0.030) 1.5px,
+      transparent 1.5px,
+      transparent 5px),
+    repeating-linear-gradient(90deg,
+      rgba(140,100,80,0.030) 0px,
+      rgba(140,100,80,0.030) 1.5px,
+      transparent 1.5px,
+      transparent 5px);
+  pointer-events: none;
+}
+
+/* ───────────────────────────────────────────────────
+   Swatch 8 (H): F + B — watercolor wash + parchment grain
+   "aged-journal page with warm wash"
+   ─────────────────────────────────────────────────── */
+.tex-FB .swatch-canvas {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%, rgba(168,207,224,0.18) 0%, transparent 100%),
+    radial-gradient(ellipse 70% 60% at 80% 75%, rgba(201,184,232,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(232,184,109,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 65% 55% at 70% 30%, rgba(245,232,221,0.40) 0%, transparent 100%),
+    var(--warm);
+}
+.tex-FB .swatch-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* Parchment sepia spots */
+    radial-gradient(circle at 15% 20%, rgba(180,150,120,0.10) 0%, transparent 25%),
+    radial-gradient(circle at 85% 80%, rgba(180,150,120,0.08) 0%, transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(220,200,180,0.06) 0%, transparent 60%),
+    /* Watercolor flora */
+    radial-gradient(circle at 35% 60%, rgba(180,213,197,0.15) 0%, transparent 30%),
+    radial-gradient(circle at 65% 40%, rgba(250,212,180,0.12) 0%, transparent 35%);
+  pointer-events: none;
+}
+.tex-FB .swatch-canvas::after {
+  /* Parchment fine grain — horizontal + vertical separately */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(140,100,80,0.020) 0px,
+      rgba(140,100,80,0.020) 1px,
+      transparent 1px,
+      transparent 3px),
+    repeating-linear-gradient(90deg,
+      rgba(140,100,80,0.014) 0px,
+      rgba(140,100,80,0.014) 1px,
+      transparent 1px,
+      transparent 4px);
+  pointer-events: none;
+}
+
 /* Detail callout block at the bottom of the page */
 .callout {
   max-width: 1200px;
@@ -496,18 +581,61 @@ body {
     </div>
   </div>
 
+  <!-- 7. F+E hybrid (my recommendation) -->
+  <div class="swatch tex-FE">
+    <div class="swatch-canvas">
+      <span class="sample-tag">G</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>G. F + E (watercolor + linen)</h3>
+      <p class="meta">Watercolor blooms underneath, linen cross-hatch (1.5px both axes, ~3% opacity) on top. Atmosphere from F, tactility from E.</p>
+      <p class="verdict good">Verdict: my recommendation — fabric/journal-cloth feel with the warm pastel atmosphere. Calm + tactile + on-brand.</p>
+    </div>
+  </div>
+
+  <!-- 8. F+B hybrid (Architect curiosity) -->
+  <div class="swatch tex-FB">
+    <div class="swatch-canvas">
+      <span class="sample-tag">H</span>
+      <div class="sample-overlay">
+        <div class="sample-node"></div>
+        <div class="sample-connector" style="width:80px; left:50%;"></div>
+        <div class="sample-node-small"></div>
+      </div>
+    </div>
+    <div class="swatch-label">
+      <h3>H. F + B (watercolor + parchment)</h3>
+      <p class="meta">Watercolor blooms underneath, parchment fine-grain (1px H+V separately) + soft sepia spots. Atmosphere from F, document/page-aged feel from B.</p>
+      <p class="verdict good">Verdict: reads as "aged journal page with a warm wash" — leans more "chronicle/canon" than G's "nursery cloth." Both work; pick based on the artifact's voice.</p>
+    </div>
+  </div>
+
 </div>
 
 <div class="callout">
   <strong>How to read these:</strong>
   <ul>
     <li>The large indigo circle is a boss node (v3-3); the smaller rose circle is a Wave-1 node (v3-1); the connector is a standard edge.</li>
-    <li>All six have the exact same node treatment overlaid — only the background varies.</li>
-    <li>The "A" through "F" tag in the corner is what a tier-label would look like rendered against each background.</li>
+    <li>All eight have the exact same node treatment overlaid — only the background varies.</li>
+    <li>The "A" through "H" tag in the corner is what a tier-label would look like rendered against each background.</li>
   </ul>
-  <strong>My ranking (most to least suitable for SproutLab brand):</strong> F (watercolor) ≈ B (parchment) > E (linen) > C (aged) > A (clean) > D (marble).
+  <strong>The two finalist hybrids:</strong>
+  <ul>
+    <li><strong>G (F+E)</strong> — watercolor atmosphere + linen cross-hatch. Reads as <em>nursery cloth / fabric journal</em>. Strongest "warm + sturdy + calm" feel; the cross-hatch is symmetric so it doesn't pull the eye in a direction.</li>
+    <li><strong>H (F+B)</strong> — watercolor atmosphere + parchment grain + soft sepia spots. Reads as <em>aged journal page with a warm wash</em>. Leans more "chronicle/canon document" — feels like a planning artifact.</li>
+  </ul>
+  <strong>The pick depends on what voice you want the artifact to speak in:</strong>
   <br><br>
-  <strong>The hybrid I'd actually build:</strong> watercolor wash for atmosphere (F) + 1px linen grain at ~3% opacity (E) for tactility. Best of both. Want me to draft that as a 7th swatch?
+  G says: <em>this is your daughter's tracking journal — soft, daily, intimate.</em>
+  <br>
+  H says: <em>this is a planning chronicle for a long-running build — sturdy, deliberate, official.</em>
+  <br><br>
+  For the v3.0 progression tree specifically, I lean <strong>H</strong> — it's a planning document, not a daily-use surface. For the actual app surfaces (home tab, info tab, today-so-far), <strong>G</strong> would be the right choice. Different artifacts get different textures.
 </div>
 
 </body>
