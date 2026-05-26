@@ -76,9 +76,25 @@ Every visual treatment binds to existing domain tokens. No ad-hoc hex. The tier 
 
 | Tier | Color tokens | Decoration | Initial collapse state |
 |---|---|---|---|
-| `urgent` | `--rose-deep` border-left 3px; `--text` title color | bold title; subtle 1px elevation shadow above default | expanded |
+| `urgent` | `--rose-deep` border-left 3px; `--text` title color | bold title; `--shadow-card-urgent` elevation (derived token, see IMPL note below) | expanded |
 | `notable` | default (no border-left); `--text` title color | clean | preserves the card's existing default (`infoXxxBody` `display:none` per template.html) |
-| `ambient` | `--glass-strong` border-left 2px; `--mid` title color; surface tint via `background:var(--glass)` 0.6 opacity overlay | clean | collapsed (forced — `data-card-priority="ambient"` overrides any expanded default) |
+| `ambient` | `--glass-strong` border-left 2px; `--mid` title color; surface tint via `--card-surface-ambient` (derived token, see IMPL note below) | clean | collapsed (forced — `data-card-priority="ambient"` overrides any expanded default) |
+
+**IMPL-note — derived tokens (F1 + F2 /review skill-pass amendment 2026-05-27):** the urgent elevation and the ambient surface tint each introduce ONE derived token in the priority-tier CSS block. Concrete IMPL form:
+
+```css
+/* v3-6 priority-tier derived tokens — compose from existing design-system tokens */
+:root {
+  --card-surface-ambient: var(--glass);      /* alpha already encoded in --glass */
+  --shadow-card-urgent:   0 6px 24px var(--shadow);  /* slightly deeper than default --shadow */
+}
+[data-theme="dark"] {
+  --card-surface-ambient: /* dark-theme equivalent — Maren second-round audit picks the binding */;
+  --shadow-card-urgent:   /* dark-theme equivalent — Maren picks the binding */;
+}
+```
+
+Two-token rule: no inline `rgba(...)` composition, no inline `box-shadow` values — the CSS-variants block owns both treatments via named tokens. This keeps the styles.css triple-jurisdiction audit on tokens-grain (HR-5) and gives Maren a concrete value to verify in the severity-floor pass.
 
 **Maren severity-floor honor (CV3-004 pair-note enumerated below):** the `urgent` tier visual must never be visually outranked by the `notable` tier (i.e., rose-accent border-left + bold title categorically more attention-grabbing than default chrome). This mirrors the v3-5 V-M-87 floor (urgent chip vs done chip). Maren's Mode-1 audit on `styles.css` (triple-jurisdiction second round) verifies the floor holds.
 
@@ -156,6 +172,8 @@ Adherence cards may read `window._scoreDay(domain, todayDateKey(), <dataset>)` t
 - A `null` `severityLevel` means met-or-aged-out → card tiers notable or ambient based on data presence
 - A `'gentle'` or `'firm'` severityLevel → card tiers `notable` (urgent is reserved for `'urgent'`-level severity only, mirroring the chip-state's urgent contract)
 
+**Severity-collapse-to-notable IMPL-note (F5 /review skill-pass amendment 2026-05-27):** `'gentle'` and `'firm'` both route to `notable` by design — they do NOT carry independent card-tier visual treatments under v3-6. Visual discriminability between `gentle`-severity and `firm`-severity cards is intentionally **out-of-scope** for v3-6; the card's *internal* chips (consumed via the v3-5 chip-state attribute) remain the discriminator until v3-1 introduces a card-internal recommendation-surface-tier scheme that can wire a richer card-chrome map. Architect override is available per canon-cc-027 if `'firm'`-as-distinct-tier is preferred at v3-6 time.
+
 **RECOMMENDATION_ROSTER.severityMessages.*.strength carry-forward (open question §3 from session handoff 2026-05-26):** when adherence cards read `_scoreDay` output, the `.strength` strings (`'strong'` / `'mild'`) are engine-internal labels — they MUST NOT be `.text`-substituted into rendered prose. v3-6 cards consume `severityLevel` only; `strength` is read in the tier deriver but never rendered. Vela's primary audit verifies this floor.
 
 ---
@@ -186,6 +204,13 @@ function _sortInfoTabByPriority() {
 ```
 
 **DOM reorder, not CSS order.** Screen reader reading order matches visual priority order — half-awake-test honor at the a11y tier too.
+
+**Sort-timing IMPL-note (F4 + F6 /review skill-pass amendment 2026-05-27):** the sort post-pass MUST run **synchronously within the same microtask** as the `renderInfo()` master — no `setTimeout`, no `requestAnimationFrame`, no `await` boundary between the last tier emission and the sort. Two reasons:
+
+1. **Visible-reflow avoidance.** A boundary between tier emission and sort risks the browser painting the pre-sort DOM order — the parent watches a card-shuffle. Synchronous-within-microtask guarantees one paint at the post-sort order.
+2. **`.card:nth-child(N)` animation-delay interaction.** styles.css:299-303 staggers card fade-up via `:nth-child(1..5)` selectors. The selectors resolve against post-DOM-order positions at the moment the animation starts. If sort runs after the animation begins, the staggered delays apply to the wrong cards. Synchronous-within-microtask sort keeps the animation aligned to the visible order.
+
+**Performance characterization (F4):** the post-pass is one O(n log n) sort over ~45 nodes per `renderInfo()` invocation; sub-frame at every render (well under the 200 ms v3-5-cipher-3 budget). No debounce required; tier-emission idempotency is not a load-bearing optimization at this n. IMPL acceptance criterion: a tier-assignments-unchanged second consecutive `renderInfo()` call MAY skip the sort post-pass as a future optimization, but v3-6 ships the unconditional sort — the optimization is not required.
 
 ### Scope of cards
 
@@ -280,6 +305,7 @@ The script name is `split/audit-card-priority-v3-6.sh`.
 | `regression-guard-v3-6-screen-reader-order-matches-visual` | DOM reading order matches visual priority order (DOM reorder, not CSS `order`) |
 | `regression-guard-v3-6-urgent-vs-notable-visual-floor` | Computed-style `border-left-width` on `urgent` > `notable`; computed-style title font-weight on `urgent` ≥ on `notable` (Maren severity floor) |
 | `regression-guard-v3-6-urgent-card-vs-urgent-chip-floor` | Urgent card chrome's visual weight categorically larger than urgent chip chrome's (Maren floor at cross-tier visual hierarchy) |
+| `regression-guard-v3-6-no-visible-reflow-after-paint` | **(F3 /review skill-pass amendment 2026-05-27)** Sort post-pass completes synchronously within the same microtask as `renderInfo()` — no observable reflow between first paint and final card order; Perf API marker or screenshot-diff fixture |
 | `regression-guard-v3-6-half-awake-test` | Manual test fixture per cipher-2: n=5 partial-attention sessions, ≥4/5 identify the urgent card within section in ≤3 s |
 
 ### Functional tests — Honesty axis
@@ -413,6 +439,23 @@ All existing 216 e2e tests must remain green. No card-content changes — pure a
 - vela-arc-5 (Pulse Motion) — if it lands, reads `data-card-priority="urgent"` as the pulse-anchor selector
 
 **V-V-34 dormant-gate cross-link (carried from v3-5):** v3-1's recommendation-pipeline spec MUST address the no-time `urgent` spine-suppression case (three options: promote to synthetic header / include in spine pick-set / require synthetic timeMin). v3-6 does NOT close V-V-34 — the dormant gate stays registered. v3-6's adherence cards always have a `dateKey` (today) so the no-time edge does not arise at the card tier; the gate remains a chip-tier concern carried to v3-1.
+
+---
+
+## Review-pass amendments (canon-cc-022 register)
+
+Six findings from the in-transcript `/review` skill pass on 2026-05-27 (NOT an Edict V chain entry — skill-grade, in-transcript register-flip per canon-cc-022). Folded inline to canonicalize before merge so the IMPL author sees them as part of the spec body, not as a separate PR-thread artifact.
+
+| # | Folded into | Substance |
+|---|---|---|
+| **F1** | §Visual contract per tier (IMPL-note block) | Ambient surface tint named via `--card-surface-ambient` derived token; no inline rgba composition. |
+| **F2** | §Visual contract per tier (IMPL-note block) | Urgent elevation named via `--shadow-card-urgent` derived token; no inline box-shadow values. |
+| **F3** | §Functional tests — half-awake / a11y | Added `regression-guard-v3-6-no-visible-reflow-after-paint` row. |
+| **F4** | §Sort implementation (IMPL-note block) | Performance characterization + idempotency-skip future-optimization framing. |
+| **F5** | §`_scoreDay` integration (IMPL-note block) | `'gentle'` and `'firm'` collapse-to-`notable` is intentional; card chips remain the discriminator until v3-1. |
+| **F6** | §Sort implementation (IMPL-note block, with F4) | No setTimeout / RAF / await boundary between tier emission and sort; preserves `.card:nth-child(N)` animation alignment. |
+
+Source register: review pass was an in-transcript skill output (no signature, no Edict V chain entry per canon-cc-022 artifact test). The substantive canon-cc-008 chain runs on the IMPL PR; these amendments arrive *with* the spec at ratification time and feed the IMPL canon-cc-008 chain as inputs.
 
 ---
 
