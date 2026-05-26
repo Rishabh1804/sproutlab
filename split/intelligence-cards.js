@@ -46,7 +46,15 @@ function _setCardPriority(cardId, tier) {
       (window._CARD_PRIORITY_TIERS || []).join(', '));
   }
   var card = document.getElementById(cardId);
-  if (!card) return; // card not in DOM (tab not yet rendered) — idempotent no-op
+  if (!card) {
+    // card not in DOM (tab not yet rendered) — idempotent no-op.
+    // V-V-43 (Vela primary audit, 2026-05-27): warn on typo'd ids so producer
+    // contract drift surfaces at dev-time rather than silently no-op'ing.
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('_setCardPriority: cardId "' + cardId + '" not found in DOM');
+    }
+    return;
+  }
   card.setAttribute('data-card-priority', tier);
 
   // Collapse-body mirror per spec §The producer contract. The body id is the

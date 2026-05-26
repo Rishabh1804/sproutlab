@@ -11601,12 +11601,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
       <!-- Weekly Nutrient Heatmap -->
       <div class="card card-daily col-full" id="infoNutrientHeatmapCard">
-        <div class="card-header" data-collapse-target="infoHeatmapBody" data-collapse-chevron="infoHeatmapChevron">
+        <div class="card-header" data-collapse-target="infoNutrientHeatmapBody" data-collapse-chevron="infoNutrientHeatmapChevron">
           <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-chart"/></svg></div> Weekly Nutrient Heatmap</div>
-          <span class="collapse-chevron" id="infoHeatmapChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          <span class="collapse-chevron" id="infoNutrientHeatmapChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoHeatmapSummary" class="mt-4"></div>
-        <div id="infoHeatmapBody" class="collapse-body fx-col g8" style="display:none;">
+        <div id="infoNutrientHeatmapBody" class="collapse-body fx-col g8" style="display:none;">
           <div id="infoHeatmapGrid" class="mt-4"></div>
           <div id="infoHeatmapDetail" class="mt-8"></div>
         </div>
@@ -11614,12 +11614,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
       <!-- Food Combo Frequency -->
       <div class="card card-daily col-full" id="infoComboFreqCard">
-        <div class="card-header" data-collapse-target="infoComboBody" data-collapse-chevron="infoComboChevron">
+        <div class="card-header" data-collapse-target="infoComboFreqBody" data-collapse-chevron="infoComboFreqChevron">
           <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-link"/></svg></div> Food Combos</div>
-          <span class="collapse-chevron" id="infoComboChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          <span class="collapse-chevron" id="infoComboFreqChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="infoComboSummary" class="mt-4"></div>
-        <div id="infoComboBody" class="collapse-body fx-col g8" style="display:none;">
+        <div id="infoComboFreqBody" class="collapse-body fx-col g8" style="display:none;">
           <div id="infoComboTop" class="mt-4"></div>
           <div id="infoComboOnce" class="mt-8"></div>
         </div>
@@ -63748,7 +63748,15 @@ function _setCardPriority(cardId, tier) {
       (window._CARD_PRIORITY_TIERS || []).join(', '));
   }
   var card = document.getElementById(cardId);
-  if (!card) return; // card not in DOM (tab not yet rendered) — idempotent no-op
+  if (!card) {
+    // card not in DOM (tab not yet rendered) — idempotent no-op.
+    // V-V-43 (Vela primary audit, 2026-05-27): warn on typo'd ids so producer
+    // contract drift surfaces at dev-time rather than silently no-op'ing.
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('_setCardPriority: cardId "' + cardId + '" not found in DOM');
+    }
+    return;
+  }
   card.setAttribute('data-card-priority', tier);
 
   // Collapse-body mirror per spec §The producer contract. The body id is the
