@@ -444,6 +444,9 @@ function renderHome() {
   renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
+  // V-M-89 synth-fold: renderSleepArc3Insights is now hoisted into the end of
+  // renderHomeSleep itself (medical.js) so every refresh path includes it.
+  // No separate call needed here.
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
@@ -9987,3 +9990,209 @@ function ctRenderZone() {
 }
 
 // ── CareTickets action stubs removed — all actions handled by ctHandleOverlayAction in intelligence.js ──
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sleep Arc 3 / Scoring S-2 (merged) — sleep-surface consumption.
+// Reads the v3-3 _scoreDay('sleep', today()) output + the cross-domain
+// _scoreDayHero(today()) hero score and appends parent-legible insights
+// into the existing #homeSleepContent region rendered by renderHomeSleep().
+//
+// Spec: docs/specs/sleep-redesign-v1.md §sleep-surface consumption
+// Sibling: docs/specs/scoring-redesign-v1.md (hero score consumer)
+//
+// HR-1 (no emojis): all icons via zi(). HR-2 (no inline styles): class-driven.
+// HR-3 (no inline handlers): data-action only. HR-4 (escHtml): every dynamic
+// string in the prose passes through escHtml(). HR-5 (tokens-only): no
+// hex values; relies on existing card-info / info-strip / tc-* tokens.
+// HR-6 (data-action delegation): inherited via switchTab pattern.
+//
+// Honesty discipline:
+//   - The severityMessages.*.strength field is engine-internal posture
+//     metadata. It is NEVER text-substituted into prose. Renderers use
+//     severityMessages.*.text (and ONLY text) for parent-facing strings.
+//   - Per-day total is shown as engine-derived; no clamping (no-floor doctrine).
+//   - Classification confidence + class breakdown disclosed when present
+//     (Charter honesty axis — every claim self-discloses provenance).
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderSleepArc3Insights() {
+  var el = document.getElementById('homeSleepContent');
+  if (!el) return;
+  // Guard: if the v3-3 spine isn't loaded (defensive — e.g. unit-test envs),
+  // skip silently.
+  if (typeof _scoreDay !== 'function') return;
+  if (typeof today !== 'function') return;
+  var todayStr = today();
+
+  var sleepScore;
+  try {
+    sleepScore = _scoreDay('sleep', todayStr);
+  } catch (e) {
+    console.error('renderSleepArc3Insights _scoreDay:', e);
+    return;
+  }
+  if (!sleepScore) return;
+
+  // Build the class breakdown from the engine-driven recentData.
+  var recent;
+  try {
+    recent = (typeof _domainBuildRecentData === 'function')
+      ? _domainBuildRecentData('sleep', todayStr, null)
+      : null;
+  } catch (e) { recent = null; }
+  var records = (recent && recent.today && Array.isArray(recent.today.records))
+    ? recent.today.records
+    : [];
+
+  // Classification engine output — count + duration per class.
+  //
+  // V-M-91 synth-fold (Maren Mode-1 audit, 2026-05-27): separate human-contact
+  // tracking from generic-contact aggregate. The legacy `anyHuman` flag attached
+  // a "(human)" tag to the aggregated contact line whenever ANY contact record
+  // was location:'human' — over-claiming on days with mixed contact + human
+  // records ("2 contact (human) 1h 45m" when only one was human). The fix
+  // splits the human-contact count from the generic-contact count so the
+  // surface label describes the aggregate it labels.
+  var counts = { night: 0, nap: 0, contact: 0, human: 0 };
+  var durations = { night: 0, nap: 0, contact: 0, human: 0 };  // minutes
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r || !r._class) continue;
+    // Class-bucket disaggregates 'contact' into pure-contact vs human-contact
+    // by reading _location (NOT by collapsing onto a single class — the
+    // _class === 'contact' is preserved for engine semantics).
+    if (r._class === 'contact' && r._location === 'human') {
+      counts.human++;
+      if (typeof r._durationMin === 'number') durations.human += r._durationMin;
+    } else if (counts[r._class] !== undefined) {
+      counts[r._class]++;
+      if (typeof r._durationMin === 'number') durations[r._class] += r._durationMin;
+    }
+  }
+  var totalRecords = counts.night + counts.nap + counts.contact + counts.human;
+  if (totalRecords === 0) return;  // renderHomeSleep already showed the empty state
+
+  // V-M-92 synth-fold (Maren Mode-1 audit, 2026-05-27): formatHm previously
+  // used Math.round which produced "1h 60m" at half-minute totals
+  // (min=119.5 → h=1, m=Math.round(59.5)=60). Floor-and-carry the same
+  // way HR-11 currency discipline floors — never report ambiguous minute
+  // values across the hour boundary.
+  var formatHm = function(min) {
+    var totalMin = Math.floor(min);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin - h * 60;
+    return h + 'h ' + m + 'm';
+  };
+
+  // Hero (cross-domain) score read — disclose sleep's contribution.
+  var hero = null;
+  try { hero = (typeof _scoreDayHero === 'function') ? _scoreDayHero(todayStr) : null; } catch (e) { hero = null; }
+
+  // Build the insight strip(s). Class-driven (HR-2); zi() icons (HR-1);
+  // escHtml() at every interpolation boundary (HR-4).
+  var parts = [];
+
+  // Strip 1 — classification breakdown.
+  // V-M-91 synth-fold: split contact vs human-contact aggregates — the surface
+  // label describes the count it labels (no aggregate-level over-claim).
+  var breakdown = [];
+  if (counts.night > 0) {
+    breakdown.push(escHtml(counts.night + ' night ' + formatHm(durations.night)));
+  }
+  if (counts.nap > 0) {
+    breakdown.push(escHtml(counts.nap + ' nap' + (counts.nap > 1 ? 's' : '') + ' ' + formatHm(durations.nap)));
+  }
+  if (counts.contact > 0) {
+    breakdown.push(escHtml(counts.contact + ' contact ' + formatHm(durations.contact)));
+  }
+  if (counts.human > 0) {
+    breakdown.push(escHtml(counts.human + ' human ' + formatHm(durations.human)));
+  }
+  if (breakdown.length > 0) {
+    parts.push(
+      '<div class="info-strip is-indigo mt-6" id="sleepArc3Breakdown">' +
+        '<span>' + zi('sparkle') + '</span>' +
+        '<div><strong class="tc-indigo">Today’s sleep mix</strong>' +
+        '<div class="t-sub">' + breakdown.join(' · ') + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 2 — engine-derived severity guidance (if any unmet recommendations).
+  // The severityMessages.*.text field is the ONLY safe field to render —
+  // never the .strength field (engine-internal posture metadata).
+  var msgs = Array.isArray(sleepScore.generatedMessages) ? sleepScore.generatedMessages : [];
+  if (msgs.length > 0) {
+    // Pick the highest-severity message for the headline strip.
+    var rank = { urgent: 3, firm: 2, gentle: 1 };
+    var top = msgs[0];
+    for (var j = 1; j < msgs.length; j++) {
+      if ((rank[msgs[j].severityLevel] || 0) > (rank[top.severityLevel] || 0)) top = msgs[j];
+    }
+    // top.text — engine-vetted prose; escHtml at boundary (HR-4).
+    // top.strength — NEVER substituted into prose (honesty floor).
+    var tone = top.severityLevel === 'urgent' ? 'is-rose'
+            : top.severityLevel === 'firm' ? 'is-amber'
+            : 'is-indigo';
+    var icon = top.severityLevel === 'urgent' ? zi('warn')
+            : top.severityLevel === 'firm' ? zi('clock')
+            : zi('moon');
+    // V-M-94 synth-fold: add `tappable` class to tappable strips so the
+    // affordance is discoverable (the existing renderHomeSleep info-strip
+    // pattern uses `tappable` for surface-tap discoverability).
+    parts.push(
+      '<div class="info-strip ' + tone + ' tappable mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + icon + '</span>' +
+        '<div><strong class="tc-indigo">Sleep guidance</strong>' +
+        '<div class="t-sub">' + escHtml(top.text) + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 3 — hero score sleep contribution.
+  //
+  // V-M-90 synth-fold (Maren Mode-1 audit, 2026-05-27): replace the raw float
+  // "Sleep score today: 2.45" with a parent-legible severity-band headline
+  // sourced from the engine's severityLevel classification. The raw float
+  // has no scale / no reference range / no certainty disclosure — a tired
+  // parent reads "-0.15 (contact-combination bonus active)" and has zero
+  // anchor for "is that bad? is that good?" The Charter cipher-honesty axis
+  // is explicit: every claim carries certainty + source. The severityLevel
+  // classification IS parent-legible; the raw float is not.
+  //
+  // The contact-combination bonus is surfaced as a positive headline
+  // ("Contact + structured sleep both logged — bonus active") when sd.dayBonuses
+  // > 0, separate from the score headline, so the warm cross-domain
+  // disclosure lands without entangling with severity framing.
+  if (hero && hero.perDomain && hero.perDomain.sleep) {
+    var sd = hero.perDomain.sleep;
+    var sev = sd.severityLevel;
+    var heroLine;
+    if (sev === 'urgent') heroLine = 'Sleep — needs attention now';
+    else if (sev === 'firm') heroLine = 'Sleep — heads up';
+    else if (sev === 'gentle') heroLine = 'Sleep — track today';
+    else heroLine = 'Sleep on track today';
+    var heroSub = (sd.dayBonuses && sd.dayBonuses > 0)
+      ? 'Contact + structured sleep both logged today — bonus active.'
+      : 'Engine-derived band; tap to see the sleep tab for details.';
+    parts.push(
+      '<div class="info-strip is-indigo tappable mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + zi('moon') + '</span>' +
+        '<div><strong class="tc-indigo">' + escHtml(heroLine) + '</strong>' +
+        '<div class="t-sub">' + escHtml(heroSub) + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  if (parts.length === 0) return;
+
+  // Idempotent append: remove any prior insight nodes before re-rendering.
+  ['sleepArc3Breakdown', 'sleepArc3Severity', 'sleepArc3Hero'].forEach(function(id) {
+    var existing = document.getElementById(id);
+    if (existing && existing.parentNode === el) el.removeChild(existing);
+  });
+  // Append via a temp container — preserves the existing renderHomeSleep DOM.
+  var wrap = document.createElement('div');
+  wrap.innerHTML = parts.join('');
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+}
