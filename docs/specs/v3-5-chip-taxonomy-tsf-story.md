@@ -75,6 +75,8 @@ Eight states. **No more without a canon-cc-027 amendment.** Decorative variants 
 | `urgent` | `ev.urgency === 'urgent'` (NEW — fed by `_scoreDay.severityLevel === 'urgent'` from v3-3) | v3-1 recommendation pipeline at firm/urgent severity |
 | `pending` | Domain-specific "expected but not yet logged" predicate | Reminder pipeline / D3 not-yet-given today / scheduled feed window |
 
+**Producer contract for `pending` (V-M-88 / V-K-91 synth-fold, ratified 2026-05-25):** the producer MUST verify the canonical log-source has no matching entry for the day before setting `ev.pending = true`. The deriver's precedence places `pending` below `done` (so a logged event still wins), but producers cannot rely on the deriver alone — the predicate must be set from data, not from race-state. Producers SHOULD also wire `ev.detail` with the expected-by clock ("expected by HH:MM") so the chip carries the soft commitment instead of standing as a bare dashed outline. A `pending` chip without an `ev.detail` string is a producer bug.
+
 ### Why an attribute, not a class
 
 `data-state="..."` is single-value (one state per chip) — enforces mutual exclusion. Class names (`tsf-event-skipped`, `tsf-event-inferred`) historically allowed accidental multi-state stacking. The attribute is the **Charter Extensibility honor** — selectors are `[data-state="X"]`; renderers read `ev.state` once, set the attribute once, no class-bag drift.
@@ -96,13 +98,15 @@ Every visual treatment binds to existing domain tokens. No ad-hoc hex.
 
 ### Cross-surface adoption
 
-Every chip-rendering site routes through the attribute:
+Every chip that carries **event-state semantics** routes through the attribute. Chips in other taxonomies (food-reaction discriminators, AL-domain tags) retain their own class vocabulary — the 8-state registry is scoped to the `tsf-event` family, not to every visual pill in the app.
 
 | File | Site | Change |
 |---|---|---|
 | `intelligence-quicklog.js` | `renderTodaySoFar` event chip render (both timed + no-time branches) | Set `data-state` on the wrapper per `ev.state` |
-| `intelligence-quicklog.js` | Activity Log chip render | Same |
-| `intelligence-cards.js` | Info-tab cross-domain card chips | Same |
+| `intelligence-quicklog.js` | Activity Log chip render | `.al-chip-${domain}` is a domain-tag family, not an event-state family — out of scope for v3-5 |
+| `intelligence-cards.js` | Info-tab cross-domain card chips | `.info-food-chip` carries food-reaction semantics (`is-warn` / `is-sage`), not event state — out of scope for v3-5. Future cards adopting event-state surface migrate then. |
+
+**V-K-92 / V-V-37 synth-fold (ratified 2026-05-25):** the row above narrowed from the original v0 "every chip-rendering site routes through the attribute" framing. Vela primary audit confirmed `.info-food-chip` is a food-reaction tag family (distinct from `tsf-event`); Kael consult flagged the same gap from the opposite direction. The 8-state registry vocabulary is intentionally scoped to event chips. Future chip families that DO carry event-state (logged / skipped / late / pending) adopt `data-state`; chip families that carry different semantics (reaction tags, domain tags, ingredient lists) keep their own attribute discipline.
 
 **Build-time audit gate (Charter Extensibility honor):** grep for `tsf-event-skipped` / `tsf-event-late` / etc. class strings outside the registry CSS file. Any ad-hoc class string fails the build unless comment-justified. The attribute is the single source of truth.
 
@@ -305,6 +309,7 @@ All existing 173 e2e tests must remain green. Pre-existing build-script-contract
 - **vela-arc-6 Dark-Default for Night Hours + A11y v2** — chronicle §7 out-of-scope; deferred to v3.1
 - **Activity Log redesign** — only the chip-attribute adoption lands here; broader AL surface is future work
 - **Smart Quick Log redesign** — same; only chip-attribute adoption
+- **No-time `urgent` spine-suppression (V-V-34 synth-fold, dormant)** — `_tsfDaySpineSelect` currently selects from `allEvents` (timed) only; the no-time branch is hidden while the spine is collapsed. Today this is harmless because no producer wires `ev.urgency = 'urgent'` on a no-time event. **Gate carried forward to v3-1:** the recommendation pipeline's spec MUST address whether urgent events without `timeMin` are (a) promoted into a synthetic header above the spine, (b) included in the spine's pick-set, or (c) required to carry a synthetic `timeMin`. v3-1 producer SHALL NOT ship until this case is closed.
 
 ---
 

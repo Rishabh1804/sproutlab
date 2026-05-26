@@ -7887,31 +7887,99 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .tsf-event-body { flex:1; min-width:0; }
 .tsf-event-label { font-size:var(--fs-sm); color:var(--text); line-height:1.3; }
 .tsf-event-detail { font-size:var(--fs-xs); color:var(--light); }
-.tsf-event-inferred .tsf-event-time { font-style:italic; opacity:0.7; }
-.tsf-event-live .tsf-event-detail { animation:tsfPulse 2s ease-in-out infinite; }
-.tsf-event-live[data-calm="true"] .tsf-event-detail { animation:none; }
-@keyframes tsfPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
-/* T2-A.3 (V-V-25): skipped-chip discriminator. Post-T1-3 a Skipped chip and a Done
-   chip in the TSF timeline are pixel-identical except for the one-word detail string
-   ("Skipped" vs "Done") — half-awake parents at 2 AM can miss it. Strikethrough the
-   label, warn-color the time slot, fade the icon. Token-only: --tc-warn for the
-   strike color + time slot, --light for the dimmed label. The chip wrapper carries
-   data-state="skipped" set by _tsfRenderEvent in intelligence-quicklog.js.
-   V-V-32 (Vela synth-fold): dark-theme variant intentionally absent — --tc-warn and
-   --light cascade theme-aware via [data-theme="dark"] overrides further down this file,
-   so the strikethrough + dimmed label reads correctly in both themes without explicit
-   override. Future Governors: do not mistake the absence for an oversight.
-   V-V-31 (Vela synth-fold): if a future event type ever carries BOTH
-   tsf-event-inferred AND data-state="skipped" on the same chip, the time-slot rule
-   below collides with .tsf-event-inferred .tsf-event-time (italic + opacity 0.7).
-   Impossible today (inferred is set only on meal-time fallback, never on med events;
-   only meds can be skipped) — re-evaluate if that boundary shifts. */
+/* ═══════════════════════════════════════════════════════════════════════
+   v3-5 — Unified chip-state taxonomy registry (single source of truth).
+   Spec: docs/specs/v3-5-chip-taxonomy-tsf-story.md §The 8-state chip-state
+   registry. Charter axis primarily served: Architectural Extensibility
+   (CV3-006) — one attribute per chip, mutual-exclusion enforced by the
+   attribute model. Adding a state = one CSS variant here + one branch
+   in _tsfDeriveChipState in intelligence-quicklog.js.
+
+   State precedence in the deriver (highest wins, single value resolved):
+   urgent > live > calm > skipped > late > inferred > pending > done
+
+   V-V-31 collision concern (T2-A.3 era) resolved by the attribute model:
+   the previous class-based system allowed `tsf-event-inferred` AND
+   `data-state="skipped"` to co-occur on the same wrapper; under v3-5
+   each chip carries exactly one data-state and the deriver picks one
+   per precedence. The V-V-31 / V-V-32 wisdom carries forward — see the
+   `data-state="skipped"` block below for the legacy precedent. */
+
+/* done — default for any logged event without a more-specific state.
+   Visual contract: clean — the per-event icon-color class already carries
+   the sage affirmation; no extra chip-level decoration. */
+.tsf-event[data-state="done"] { /* clean — icon carries the affirmation */ }
+
+/* skipped — T2-A.3 (V-V-25) precedent. Strikethrough label + warn-color
+   time slot + faded icon. V-V-32: dark-theme variant intentionally absent
+   — --tc-warn and --light cascade theme-aware via the [data-theme="dark"]
+   overrides further down this file, so the strikethrough + dimmed label
+   read correctly in both themes without explicit override.
+   V-M-86 (Maren synth-fold): icon selector tightened to
+   `.tsf-event-icon .icon` to prevent bleed if `.icon` ever appears bare
+   elsewhere inside a chip. */
 .tsf-event[data-state="skipped"] .tsf-event-label { text-decoration:line-through; text-decoration-color:var(--tc-warn); color:var(--light); }
 .tsf-event[data-state="skipped"] .tsf-event-time  { color:var(--tc-warn); opacity:0.7; }
-/* V-M-86 (Maren synth-fold, triple-jurisdiction round 2): the icon selector is deliberately
-   tightened from spec's bare `.icon` to `.tsf-event-icon .icon`, mirroring the parent
-   rule at line 7886 — prevents bleed if `.icon` ever appears bare elsewhere inside a chip. */
 .tsf-event[data-state="skipped"] .tsf-event-icon .icon { opacity:0.6; }
+
+/* late — retroactive Done log; amber-tinted time slot.
+   Token-bound to --tc-amber; cascades theme-aware. */
+.tsf-event[data-state="late"] .tsf-event-time { color:var(--tc-amber); font-weight:600; }
+
+/* inferred — pattern-fallback time (not a logged event). Italic time +
+   0.7 opacity on the wrapper. Migrated from class-based `.tsf-event-inferred`. */
+.tsf-event[data-state="inferred"] .tsf-event-time { font-style:italic; opacity:0.7; }
+
+/* live — recent log under the TSF refresh window; pulse the detail slot.
+   Migrated from class-based `.tsf-event-live`. */
+.tsf-event[data-state="live"] .tsf-event-detail { animation:tsfPulse 2s ease-in-out infinite; }
+
+/* calm — explicit opt-out of pulse for a long-running live event
+   (existing precedent: night sleep elapsed >= 120m). Migrated from
+   class-based `.tsf-event-live[data-calm="true"]`. */
+.tsf-event[data-state="calm"] .tsf-event-detail { animation:none; }
+
+/* urgent — safety-tier escalation. Rose-accent border + bold rose time slot.
+   Producer (v3-1 recommendation pipeline) wires the state when an unmet
+   recommendation reaches severityLevel === 'urgent'; v3-5 ratifies the
+   visual contract. Maren pair-note: urgent must never be visually
+   outranked by done — the rose-accent border + bold time slot carry
+   that floor per spec §Cross-Region pair-notes.
+   V-M-87 (Maren synth-fold): border uses --rose-deep (not --tc-rose) so
+   the dark-theme cascade amplifies rather than dilutes — --rose-deep is
+   the token D2 phase-spec §2.3 reserved for "DO-NOT callout border,
+   dark theme, brighter than --tc-rose dark for amplification on dark
+   surfaces." Time-slot text remains --tc-rose because the time is text
+   on background, not the attention-grab signal. */
+.tsf-event[data-state="urgent"] { border-left:3px solid var(--rose-deep); padding-left:calc(var(--sp-4) - 3px); }
+.tsf-event[data-state="urgent"] .tsf-event-time { color:var(--tc-rose); font-weight:700; }
+
+/* pending — domain-specific "expected but not yet logged". Outline-only,
+   light text, dashed border. Producer (reminder pipeline / D3 not-yet-given
+   today / scheduled feed window) wires the state when a chip should appear
+   before its corresponding logged event lands. */
+.tsf-event[data-state="pending"] { border:1px dashed var(--glass-strong); }
+.tsf-event[data-state="pending"] .tsf-event-label { color:var(--light); }
+.tsf-event[data-state="pending"] .tsf-event-time { color:var(--light); }
+
+@keyframes tsfPulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+
+/* prefers-reduced-motion — disable tsfPulse for users who opt out
+   (Charter Warmth cross-check, HR-5 a11y cascade). */
+@media (prefers-reduced-motion: reduce) {
+  .tsf-event[data-state="live"] .tsf-event-detail { animation:none; }
+}
+
+/* ─── v3-5 story-arc summary (vela-arc-2) ─────────────────────────────
+   Single-sentence narrative summary line above the event list on Today
+   So Far. Renders a passage, not a ledger (CV3-002 Narrate-vs-List).
+   Generated by _tsfGenerateSummary (Kael pair-note region; data-side
+   primitive owned by Kael, render owned by Vela per spec §Cross-Region
+   pair-notes). ────────────────────────────────────────────────────── */
+.tsf-story-arc { font-family:Fraunces, serif; font-size:var(--fs-md); line-height:1.45; color:var(--text); padding:var(--sp-4) 0 var(--sp-8) 0; }
+.tsf-story-arc[data-empty="true"] { color:var(--mid); font-style:italic; }
+.tsf-expand-timeline { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-8) 0 var(--sp-4) 0; cursor:pointer; font-weight:600; }
+.tsf-expand-timeline:active { opacity:0.6; }
 .tsf-event-expanded-detail { padding:var(--sp-4) var(--sp-4) var(--sp-8) calc(var(--sp-32) + var(--sp-8) + var(--sp-24) + var(--sp-8) + var(--sp-4)); font-size:var(--fs-xs); color:var(--mid); line-height:1.5; border-top:1px solid var(--glass-strong); margin-top:0; }
 .tsf-show-earlier { text-align:center; font-size:var(--fs-xs); color:var(--tc-indigo); padding:var(--sp-6) 0; cursor:pointer; font-weight:600; }
 .tsf-show-earlier:active { opacity:0.6; }

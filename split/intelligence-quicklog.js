@@ -1596,6 +1596,11 @@ function saveQLPoop() {
 
 let _tsfExpandedId = null;
 let _tsfShowAll = false;
+// v3-5: day-spine collapse. Default true → render summary + 3 most-significant
+// events + "Show full timeline (N)" expand. Flipped false by tsfExpandTimeline.
+// Resets to true on tab switch (see core.js switchTab) so each fresh visit
+// honors the spine-first read.
+let _tsfShowSpine = true;
 let _tsfPatternCache = null;
 let _tsfAnchorCache = null;
 let _tsfCacheDirty = true;
@@ -1663,6 +1668,221 @@ function _tsfIsMealLogged(todayEntry, meal) {
   const foods = todayEntry[meal] || '';
   const time = todayEntry[meal + '_time'] || '';
   return (typeof foods === 'string' && foods.trim().length > 0) || (typeof time === 'string' && time.trim().length > 0);
+}
+
+// ─── v3-5 chip-state taxonomy — data-side primitives (Kael pair-note) ───
+// Spec: docs/specs/v3-5-chip-taxonomy-tsf-story.md §The 8-state chip-state
+// registry + §Cross-Region pair-notes. Vela owns the render (sets
+// `data-state` from ev.state), Kael owns the derivation.
+
+// State precedence (highest wins; single value per chip). Mutual-exclusion is
+// the Charter Extensibility honor — the deriver picks one, the renderer
+// reads it once, no class-bag drift.
+//
+// V-K-89 (Kael synth-fold): exposed on window so the e2e test suite can
+// assert the registry shape (regression-guard-v3-5-chip-state-attr-mutex
+// and friends) against the canonical enumeration instead of a literal
+// array. The constant remains the single source of truth for amendments;
+// future state additions update one declaration, then surface here.
+const _TSF_CHIP_STATES = ['urgent','live','calm','skipped','late','inferred','pending','done'];
+if (typeof window !== 'undefined') window._TSF_CHIP_STATES = _TSF_CHIP_STATES;
+
+function _tsfDeriveChipState(ev) {
+  if (!ev) return 'done';
+  // urgent — v3-1 producer (recommendation pipeline) sets ev.urgency
+  // when an unmet rec hits severityLevel === 'urgent' per v3-3 _scoreDay.
+  if (ev.urgency === 'urgent') return 'urgent';
+  // live / calm — sleep-in-progress; calm opts out of pulse for the
+  // long-running quiet case (existing isCalm precedent).
+  if (ev.isLive === true) return ev.isCalm === true ? 'calm' : 'live';
+  // skipped / late — med events surface parsed.status; T2-A.3 (V-V-25)
+  // established the precedent for skipped.
+  if (ev.parsed && ev.parsed.status === 'skipped') return 'skipped';
+  if (ev.parsed && ev.parsed.status === 'late')    return 'late';
+  // inferred — meal-time fallback (no logged time; engine guessed).
+  if (ev.inferred === true) return 'inferred';
+  // pending — domain-specific "expected, not yet logged". Producer wires
+  // ev.pending = true (reminder pipeline / D3-not-yet-given today / scheduled
+  // feed window). No producer in v3-5 — the state is reserved for downstream.
+  if (ev.pending === true) return 'pending';
+  // done — default for any logged event without a more-specific state.
+  return 'done';
+}
+
+// _tsfHedgePhrase — hedge-tier modifier for cross-domain prose. v0 stub.
+// V-K-88 (Kael synth-fold): the spec §Hedge-tier discipline (CV3-002 +
+// Charter Honesty) requires cross-domain phrasing to carry _correlate's
+// confidence floor — assertive for 'high', "tends to" for 'medium',
+// not-surfaced for 'low'. v3-5 IMPL composes from event counts only and
+// makes no cross-domain claims, so no producer reads this today. The
+// stub establishes the contract shape so v3-4 (Narrative Layer) inherits
+// a typed surface rather than re-deriving the discipline from the spec.
+// When the first cross-domain producer lands, branch by `confidence`
+// here and return the prose modifier; the renderer concatenates.
+function _tsfHedgePhrase(confidence) {
+  // v0 contract shape — every branch fires only when a future producer
+  // hands a confidence. No producer in v3-5; the return values are pre-
+  // staged for v3-4: 'high' → assertive (empty modifier); 'medium' →
+  // softened ("tends to "); 'low' → not-surfaced ('' — caller suppresses).
+  if (confidence === 'high') return '';
+  if (confidence === 'medium') return 'tends to ';
+  return '';
+}
+
+// _tsfGenerateSummary — story-arc summary line for Today So Far. Kael pair-note
+// (CV3-004 Cross-Region Pair-Note). Vela renders the result above the event
+// list per spec §Story-arc summary primitive.
+//
+// v0 hedge-discipline posture (V-V-35 / V-K-88 synth-fold): this v0 helper
+// composes from event counts + illness posture only. It does NOT call
+// _correlate — therefore no hedge-tier surface fires today, and the
+// honesty floor holds vacuously. When v3-4 wires cross-domain prose,
+// route the _correlate confidence through _tsfHedgePhrase above.
+//
+// @param {string} dateKey — YYYY-MM-DD for the day being summarised
+// @param {object} eventsObj — { events, noTimeEvents } from _tsfCollectEvents
+// @param {object} ctx — { illnessPosture?, severityLevel?, pendingHeadline? }
+//   severityLevel + pendingHeadline are forward-compat scaffolding; no
+//   producer in v3-5 (V-V-36 audit-trail note). illnessPosture is wired.
+// @returns {string} parent-legible single sentence; never blank
+function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
+  ctx = ctx || {};
+  const events = (eventsObj && eventsObj.events) || [];
+  const noTimeEvents = (eventsObj && eventsObj.noTimeEvents) || [];
+  const all = events.concat(noTimeEvents);
+
+  // Empty state — CV3-003 Honest-Empty-State honor. Always voiced, never blank.
+  if (all.length === 0) return 'Quiet day so far.';
+
+  // Pending-headline takes precedence — domain miss carrying its own copy.
+  // V-M-89 (Maren synth-fold): two safety-tier guardrails apply:
+  // (1) Length cap (80 chars) — forces producer-side discipline and bounds
+  //     the typography envelope at the render surface.
+  // (2) Contradicts-the-ledger guard — if the headline asserts a negation
+  //     ("missed", "no D3", "not yet") about a domain that has a logged
+  //     event in today's data, fall through to the normal summary branch
+  //     rather than parrot a stale headline. The ledger wins over the
+  //     narrator. Worst-case avoided: stale "D3 missed" headline → parent
+  //     re-administers a dose that already landed (dose-stacking).
+  if (ctx.pendingHeadline) {
+    const headline = String(ctx.pendingHeadline).slice(0, 80);
+    const contradictsMed = /missed|no D3|not yet/i.test(headline);
+    const hasMedToday = all.some(function(ev) { return ev.type === 'med'; });
+    if (!(contradictsMed && hasMedToday)) return headline;
+    // else fall through to normal summary branch
+  }
+
+  // Urgent state present — surface the urgent action as headline.
+  const urgent = all.find(function(ev) { return ev.urgency === 'urgent' || ev.state === 'urgent'; });
+  if (urgent) {
+    const label = (urgent.label || 'Action needed').toString();
+    return label + ' — needs attention.';
+  }
+
+  // Count by type for the narrative.
+  const counts = { meal: 0, nap: 0, night: 0, med: 0, poop: 0, activity: 0, ct: 0, skipped: 0 };
+  all.forEach(function(ev) {
+    if (ev.state === 'skipped') counts.skipped++;
+    if (ev.type === 'feed') counts.meal++;
+    else if (ev.type === 'nap') counts.nap++;
+    else if (ev.type === 'sleep') counts.night++;
+    else if (ev.type === 'med') counts.med++;
+    else if (ev.type === 'poop') counts.poop++;
+    else if (ev.type === 'activity') counts.activity++;
+    else if (ev.type === 'ct' || ev.type === 'careticket') counts.ct++;
+  });
+
+  function num(n, singular, plural) {
+    const word = (n === 1 ? 'one' : n === 2 ? 'two' : n === 3 ? 'three' : n === 4 ? 'four' : String(n));
+    return word + ' ' + (n === 1 ? singular : plural);
+  }
+
+  const parts = [];
+  if (counts.meal > 0) parts.push(num(counts.meal, 'meal', 'meals'));
+  if (counts.night > 0) parts.push('night sleep');
+  if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
+  if (counts.med > 0) parts.push('D3 logged');
+  if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
+  // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
+  // citizens. "care-note" is the soft surface word — neither "ticket"
+  // (engine-internal) nor "follow-up" (implies action-required).
+  if (counts.activity > 0) parts.push(num(counts.activity, 'activity', 'activities'));
+  if (counts.ct > 0) parts.push(counts.ct === 1 ? 'one care-note' : counts.ct + ' care-notes');
+
+  // Lead with the day-character word per illness posture + skip count.
+  let lead = 'Solid day.';
+  if (ctx.illnessPosture && ctx.illnessPosture.active) lead = 'Resting day.';
+  else if (counts.skipped > 0) lead = 'Mixed day so far.';
+
+  // Compose: "Solid day. Three meals, one nap, D3 logged, and two poops."
+  // Empty parts list (only careticket / activity entries logged) → leaner copy.
+  if (parts.length === 0) {
+    return lead + ' ' + all.length + ' event' + (all.length === 1 ? '' : 's') + ' logged.';
+  }
+
+  // V-V-33 (Vela synth-fold): Oxford-style "and" on the final join so the
+  // sentence reads as a passage, not a CSV ledger. The previous ternary
+  // had identical branches (', ' vs ', ') — dead code; the intended
+  // discriminator collapsed. CV3-002 Narrate-vs-List + Charter Warmth.
+  let summary = lead + ' ' + parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  for (let i = 1; i < parts.length; i++) {
+    if (i === parts.length - 1) {
+      summary += (parts.length > 2 ? ', and ' : ' and ') + parts[i];
+    } else {
+      summary += ', ' + parts[i];
+    }
+  }
+  // Skipped-disclosure tail: "Mixed day so far. Three meals, D3 logged. One skip."
+  if (counts.skipped > 0 && lead.indexOf('Mixed') === 0) {
+    summary += '. ' + (counts.skipped === 1 ? 'One skip' : counts.skipped + ' skips');
+  }
+  return summary + '.';
+}
+
+// _tsfDaySpineSelect — pick the 3 most-significant events for the default
+// collapsed view per spec §Day-spine collapse pattern:
+// 1. Highest-severity unmet recommendation (urgent / pending if surfaced)
+// 2. The day's night-class sleep entry (if any)
+// 3. The most-recent timed event
+function _tsfDaySpineSelect(events) {
+  if (!events || events.length === 0) return [];
+  if (events.length <= 3) return events.slice();
+  const picks = [];
+  const taken = Object.create(null);
+  function pick(ev) {
+    if (!ev || taken[ev.id]) return;
+    picks.push(ev); taken[ev.id] = true;
+  }
+  // 1: any urgent-state event
+  const urgent = events.find(function(ev) { return ev.state === 'urgent' || ev.urgency === 'urgent'; });
+  if (urgent) pick(urgent);
+  // 2: night sleep entry (type='sleep')
+  const night = events.find(function(ev) { return ev.type === 'sleep'; });
+  if (night) pick(night);
+  // 2.5 (V-K-90 Kael synth-fold): any live-in-progress event. A mid-nap
+  // parent opening TSF should see the active sleep in the spine — without
+  // this pick a busy weekday with no night-sleep yet would silently drop
+  // the live nap from the spine while showing earlier settled events.
+  // The live event IS the most-significant in-the-moment signal; the
+  // "settled day-arc" framing below still excludes it from the chronological
+  // pad step to avoid double-counting.
+  const live = events.find(function(ev) { return ev.isLive === true; });
+  if (live) pick(live);
+  // 3: most-recent timed event by timeMin descending (skip live-in-progress
+  // so the spine reads as a settled day-arc, not a moment-in-time snapshot
+  // — and so the live pick from step 2.5 isn't double-counted here)
+  const sorted = events.slice().filter(function(ev) {
+    return ev.timeMin !== null && ev.timeMin !== undefined && !ev.isLive;
+  }).sort(function(a, b) { return (b.timeMin || 0) - (a.timeMin || 0); });
+  for (let i = 0; i < sorted.length && picks.length < 3; i++) pick(sorted[i]);
+  // Fallback: if still under 3, pad from the unsorted list
+  for (let i = 0; i < events.length && picks.length < 3; i++) pick(events[i]);
+  // Return picks in chronological order so the spine reads top-to-bottom
+  return picks.sort(function(a, b) {
+    const ta = a.timeMin == null ? Infinity : a.timeMin;
+    const tb = b.timeMin == null ? Infinity : b.timeMin;
+    return ta - tb;
+  });
 }
 
 function _tsfCollectEvents() {
@@ -1930,6 +2150,10 @@ function _tsfCollectEvents() {
 
   // Sort by timeMin ascending
   events.sort(function(a, b) { return (a.timeMin || 0) - (b.timeMin || 0); });
+
+  // v3-5: derive the chip state once per event. Render reads ev.state.
+  events.forEach(function(ev) { ev.state = _tsfDeriveChipState(ev); });
+  noTimeEvents.forEach(function(ev) { ev.state = _tsfDeriveChipState(ev); });
 
   return { events: events, noTimeEvents: noTimeEvents };
 }
@@ -2240,6 +2464,17 @@ function renderTodaySoFar() {
   else if (fillPct >= 20) warmthLevel = 2;
   html += '<div class="tsf-warmth-bar"><div class="tsf-warmth-fill" data-level="' + warmthLevel + '" style="width:' + Math.max(fillPct, 3) + '%"></div></div>';
 
+  // ── v3-5 story-arc summary (vela-arc-2) ──
+  // Single-sentence narrative above the event list. Empty-state carries
+  // CV3-003 Honest-Empty-State honor ("Quiet day so far."). Hedge-tier
+  // discipline lives inside _tsfGenerateSummary per CV3-002.
+  const summaryCtx = {
+    illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null)
+  };
+  const summary = _tsfGenerateSummary(today(), collected, summaryCtx);
+  const summaryEmpty = totalCount === 0 ? ' data-empty="true"' : '';
+  html += '<div class="tsf-story-arc"' + summaryEmpty + '>' + escHtml(summary) + '</div>';
+
   // ── Empty state ──
   if (totalCount === 0) {
     html += '<div class="tsf-empty">No events logged yet';
@@ -2249,21 +2484,28 @@ function renderTodaySoFar() {
     return;
   }
 
-  // ── Event list with soft cap ──
+  // ── Event list — v3-5 day-spine collapse ──
+  // Default: 3 most-significant events (urgent then night-sleep then most-recent).
+  // Expanded (_tsfShowSpine === false): full chronological list with legacy
+  // SOFT_CAP=8 collapse preserved for very long days. Charter Warmth:
+  // day-spine reduces 2-AM information density.
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const SOFT_CAP = 8;
-  let visibleEvents = allEvents;
+  let visibleEvents;
+  let usingSpine = false;
   let hiddenCount = 0;
 
-  if (allEvents.length > SOFT_CAP && !_tsfShowAll) {
-    // Show first event + most recent 7
+  if (_tsfShowSpine && allEvents.length > 3) {
+    visibleEvents = _tsfDaySpineSelect(allEvents);
+    usingSpine = true;
+  } else if (allEvents.length > SOFT_CAP && !_tsfShowAll) {
     const firstEvent = allEvents.slice(0, 1);
     const recentEvents = allEvents.slice(-(SOFT_CAP - 1));
     hiddenCount = allEvents.length - SOFT_CAP;
-    visibleEvents = firstEvent;
-    // Add "show earlier" placeholder
-    visibleEvents = visibleEvents.concat([{ _showEarlier: true, count: hiddenCount }]).concat(recentEvents);
+    visibleEvents = firstEvent.concat([{ _showEarlier: true, count: hiddenCount }]).concat(recentEvents);
+  } else {
+    visibleEvents = allEvents;
   }
 
   html += '<div class="tsf-event-list">';
@@ -2277,26 +2519,24 @@ function renderTodaySoFar() {
       return;
     }
 
-    // Insert Now marker before first event after current time
-    if (!nowMarkerPlaced && ev.timeMin !== null && ev.timeMin > nowMin && !ev.isLive) {
+    // Insert Now marker before first event after current time (skip in spine
+    // mode since spine selection isn't chronologically exhaustive)
+    if (!usingSpine && !nowMarkerPlaced && ev.timeMin !== null && ev.timeMin > nowMin && !ev.isLive) {
       html += '<div class="tsf-now">Now \u00b7 ' + _tsfMinutesToDisplay(nowMin) + '</div>';
       nowMarkerPlaced = true;
     }
 
     const isExpanded = _tsfExpandedId === ev.id;
-    const inferredClass = ev.inferred ? ' tsf-event-inferred' : '';
-    const liveClass = ev.isLive ? ' tsf-event-live' : '';
     const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
-    const calmAttr = ev.isCalm ? ' data-calm="true"' : '';
-    // T2-A.3 (V-V-25): data-state discriminator for the half-awake test. Post-T1-3 a
-    // skipped chip and a Done chip are pixel-identical except for the detail string.
-    // The CSS .tsf-event[data-state="skipped"] variant in styles.css strikes through
-    // the label, warn-colors the time slot, and fades the icon — distinguishable at
-    // a glance. Phase 2-C TSF Undo affordance will land on the same chip family.
-    const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
+    // v3-5: single data-state attribute carries every chip variant. ev.state
+    // is derived in _tsfDeriveChipState (Kael pair-note) per the 8-state
+    // precedence; mutual-exclusion is the Charter Extensibility honor.
+    // T2-A.3 (V-V-25) skipped precedent and the legacy `inferred` / `live` class
+    // selectors have all migrated under this single attribute. // chip-taxonomy-ok: migration-history
+    const stateAttr = ev.state ? ' data-state="' + ev.state + '"' : '';
 
     html += '<div class="tsf-event-wrap' + expandedClass + '">';
-    html += '<div class="tsf-event' + inferredClass + liveClass + '"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '"' + calmAttr + '>';
+    html += '<div class="tsf-event"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
     html += '<div class="tsf-event-time">' + escHtml(ev.displayTime || '') + '</div>';
 
     // Icon with domain color
@@ -2318,24 +2558,33 @@ function renderTodaySoFar() {
     html += '</div>'; // close tsf-event-wrap
   });
 
-  // Now marker after all events if not yet placed
-  if (!nowMarkerPlaced) {
+  // Now marker after all events if not yet placed (skip in spine mode)
+  if (!usingSpine && !nowMarkerPlaced) {
     html += '<div class="tsf-now">Now \u00b7 ' + _tsfMinutesToDisplay(nowMin) + '</div>';
   }
 
   html += '</div>'; // end tsf-event-list
 
-  // ── No-time events (above nudges, below Now) ──
-  if (noTimeEvents.length > 0) {
+  // ── v3-5 "Show full timeline (N)" — spine-collapse expand chip ──
+  if (usingSpine) {
+    const fullCount = allEvents.length + noTimeEvents.length;
+    html += '<div class="tsf-expand-timeline" data-action="tsfExpandTimeline">Show full timeline (' + fullCount + ')</div>';
+  }
+
+  // ── No-time events (above nudges, below Now). Hidden while the spine is
+  // collapsed so the parent sees the 3-event passage without no-time clutter. ──
+  if (noTimeEvents.length > 0 && !usingSpine) {
     html += '<div class="tsf-no-time">';
     html += '<div class="tsf-no-time-label">Time not logged</div>';
     noTimeEvents.forEach(function(ev) {
       const isExpanded = _tsfExpandedId === ev.id;
       const expandedClass = isExpanded ? ' tsf-event-expanded' : '';
       const iconColorClass = ev.color === 'amber' ? 'icon-amber' : ev.color === 'sage' ? 'icon-sage' : ev.color === 'sky' ? 'icon-sky' : 'icon-indigo';
-      // T2-A.3: parity with the timed-events branch — legacy 'skipped' strings (no loggedAt)
-      // still hit this no-time fallback; the discriminator must apply here too.
-      const stateAttr = (ev.parsed && ev.parsed.status === 'skipped') ? ' data-state="skipped"' : '';
+      // v3-5: data-state derived in _tsfDeriveChipState. T2-A.3 parity with
+      // the timed-events branch is preserved through the deriver (legacy
+      // 'skipped' strings without loggedAt flow this no-time fallback and
+      // surface as data-state="skipped" via the deriver).
+      const stateAttr = ev.state ? ' data-state="' + ev.state + '"' : '';
       html += '<div class="tsf-event-wrap' + expandedClass + '">';
       html += '<div class="tsf-event"' + stateAttr + ' data-action="tsfToggleEvent" data-arg="' + escHtml(ev.id) + '">';
       html += '<div class="tsf-event-time"></div>';

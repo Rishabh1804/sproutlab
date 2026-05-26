@@ -719,18 +719,32 @@ test.describe('Update-detection toast (Phase 2 PR-5)', () => {
 // existing PR-3 manifest-version triad (above, lines ~290–365) covers the
 // build-output side; this just guards the entry point.
 
-test.describe('Build script contract (Phase 3 PR-8)', () => {
-  test('positive — package.json declares a `build` script that invokes split/build.sh', async ({ request }) => {
+test.describe('Build script contract (Phase 3 PR-8; PR #120 build-safe wrapper)', () => {
+  test('positive — package.json drives through split/build-safe.sh and the wrapper produces + mirrors the artifacts', async ({ request }) => {
     const res = await request.get('/package.json');
     expect(res.ok(), 'package.json fetchable').toBeTruthy();
     const pkg = await res.json();
     expect(pkg.scripts, 'package.json has scripts block').toBeTruthy();
     expect(pkg.scripts.build, 'scripts.build entry present').toBeTruthy();
-    // Substring match — exact wording can iterate (e.g. future prepush hook),
-    // but the entry must drive split/build.sh, not bypass it.
-    expect(pkg.scripts.build, 'build script invokes split/build.sh').toContain('split/build.sh');
-    expect(pkg.scripts.build, 'build script writes sproutlab.html').toContain('sproutlab.html');
-    expect(pkg.scripts.build, 'build script copies to index.html').toContain('index.html');
+    // The build entry must drive through split/ — bypassing it (e.g. a raw
+    // `cat` concat or a different toolchain) defeats the audit-gate floor.
+    expect(pkg.scripts.build, 'build script invokes a script under split/').toContain('split/');
+    // PR #120 introduced the canonical safe wrapper. The wrapper enforces
+    // correct STDOUT/STDERR redirection and validates the output before
+    // declaring success — bypassing it re-opens the PR #118 STDERR-leak
+    // class of bug. The package.json entry must drive through the wrapper.
+    expect(pkg.scripts.build, 'build script drives through build-safe.sh wrapper').toContain('build-safe.sh');
+
+    // The original PR-8 contract also checked that the build pipeline wrote
+    // sproutlab.html and mirrored to index.html. Post-PR-#120 those literal
+    // invariants live inside the wrapper script, not in the package.json
+    // one-liner. Verify the wrapper itself carries them.
+    const wrapperRes = await request.get('/split/build-safe.sh');
+    expect(wrapperRes.ok(), 'split/build-safe.sh fetchable').toBeTruthy();
+    const wrapperBody = await wrapperRes.text();
+    expect(wrapperBody, 'wrapper produces sproutlab.html').toContain('sproutlab.html');
+    expect(wrapperBody, 'wrapper mirrors to index.html').toContain('index.html');
+    expect(wrapperBody, 'wrapper invokes build.sh').toContain('build.sh');
   });
 });
 
