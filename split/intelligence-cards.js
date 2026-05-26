@@ -3,6 +3,179 @@
 // CROSS-DOMAIN INTELLIGENCE — 6 Cards
 // ════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════
+// v3-6 — Card-priority registry (single source of truth).
+// Spec: docs/specs/v3-6-card-priority.md §The three-tier card-priority
+// registry. Three named tiers, mutex precedence order
+// (urgent > notable > ambient). Adding a tier is a canon-cc-027 amendment
+// — the three sync sites are this constant + the CSS variants in
+// styles.css + the deriver branches in _setCardPriority. The meta-audit
+// test regression-guard-v3-6-tier-registry-sync closes the v3-5
+// cipher-extensibility-2 dormant gate by asserting the three sites stay
+// aligned at build time.
+// ═══════════════════════════════════════════════════════════════════════
+window._CARD_PRIORITY_TIERS = ['urgent', 'notable', 'ambient'];
+
+/**
+ * Apply a card-priority tier to an Info-tab card wrapper.
+ *
+ * @param {string} cardId  the card wrapper element id (e.g. 'infoFoodIntroCard')
+ * @param {string} tier    one of window._CARD_PRIORITY_TIERS; throws on invalid tier
+ *
+ * Side effects (HR-2 floor — no inline style.display=...; the existing
+ * data-collapse-target machinery owns the `.open` class + `style.display`
+ * pair, but the spec §The producer contract §HR-2 floor specifies class
+ * toggle. The card body element here is the `<id>+'Body'` companion of the
+ * card wrapper. We mirror the toggleHistoryCard outcome by setting the
+ * class state directly):
+ *   - Sets data-card-priority="<tier>" on the wrapper
+ *   - tier === 'ambient': forces the collapse body closed (.open removed,
+ *     display:none) + chevron rotation cleared
+ *   - tier === 'urgent':  forces the collapse body open (.open added,
+ *     display:block) + chevron rotated 180deg
+ *   - tier === 'notable': does NOT touch the collapse body (preserves the
+ *     user's last tap state during the session — last-write-wins idempotency
+ *     means a re-render at notable does not stomp an explicit user-expand)
+ *
+ * Idempotent — safe to call multiple times per render; last call wins.
+ * Spec: docs/specs/v3-6-card-priority.md §The producer contract.
+ */
+function _setCardPriority(cardId, tier) {
+  if (!window._CARD_PRIORITY_TIERS || window._CARD_PRIORITY_TIERS.indexOf(tier) === -1) {
+    throw new Error('_setCardPriority: invalid tier "' + tier + '" — expected one of ' +
+      (window._CARD_PRIORITY_TIERS || []).join(', '));
+  }
+  var card = document.getElementById(cardId);
+  if (!card) return; // card not in DOM (tab not yet rendered) — idempotent no-op
+  card.setAttribute('data-card-priority', tier);
+
+  // Collapse-body mirror per spec §The producer contract. The body id is the
+  // template-html convention (`<cardId without 'Card' suffix>Body`). Mirrors
+  // the toggleHistoryCard outcome rather than calling it to avoid the
+  // setTimeout boundary the toggle helper uses for animation. Chevron id
+  // follows the same convention.
+  var bodyId = cardId.replace(/Card$/, 'Body');
+  var chevronId = cardId.replace(/Card$/, 'Chevron');
+  var body = document.getElementById(bodyId);
+  var chev = document.getElementById(chevronId);
+  if (!body) return; // no collapse body wired — tier visual still applies
+
+  if (tier === 'ambient') {
+    // Mirror toggleHistoryCard's close outcome (home.js:6018). The existing
+    // collapse machinery already drives open/closed via the `.open` class +
+    // body.style.display pair; v3-6 honors that contract rather than
+    // introducing a parallel CSS-only path. HR-2 carve-out: this is not a
+    // *visual* inline style (no color, no shadow, no spacing) — it is the
+    // existing display-toggle protocol the chevron / class transitions key
+    // off. Tier *chrome* (border / surface tint / shadow) is token-driven
+    // in styles.css per spec §Visual contract.
+    body.classList.remove('open');
+    body.style.display = 'none'; // collapse-machinery-mirror
+    if (chev) chev.style.transform = '';
+  } else if (tier === 'urgent') {
+    // Mirror toggleHistoryCard's open outcome (home.js:6018) — see ambient
+    // branch above for the HR-2 carve-out rationale.
+    body.classList.add('open');
+    body.style.display = 'block'; // collapse-machinery-mirror
+    if (chev) chev.style.transform = 'rotate(180deg)';
+  }
+  // tier === 'notable' falls through — collapse body untouched (preserves
+  // user's last tap state during the session per spec §The producer contract).
+}
+
+/**
+ * Section-internal sort post-pass for the Info tab.
+ *
+ * Sort respects the existing .home-section-label scaffold — each label
+ * gates a section, and the section's cards (.card.card-daily.col-full
+ * with id matching /^info[A-Z]/) re-order within the label, never across
+ * labels. Cross-section template order is preserved (warmth axis: domain
+ * grouping is a comprehension scaffold per spec §Above-the-section-fold).
+ *
+ * Sort key: tier (urgent > notable > ambient) — cards without a
+ * data-card-priority attribute (renderInfo functions outside
+ * intelligence-cards.js that don't yet emit a tier) default to notable.
+ * Secondary sort is template-order (stable) — preserves intra-tier
+ * order so the result is predictable.
+ *
+ * DOM reorder via parentNode.appendChild (a11y: reading order matches
+ * visual priority order per spec §Sort implementation).
+ *
+ * F4 + F6 sort-timing IMPL-note: synchronous within the same microtask
+ * as renderInfo() — no setTimeout, no requestAnimationFrame, no await
+ * boundary between tier emission and sort. Two reasons:
+ *   1. Visible-reflow avoidance — one paint at the post-sort order.
+ *   2. .card:nth-child(N) animation-delay alignment with the staggered
+ *      :nth-child(1..5) fade-up in styles.css.
+ */
+function _sortInfoTabByPriority() {
+  var TIER_RANK = { urgent: 0, notable: 1, ambient: 2 };
+  var tab = document.getElementById('tab-info');
+  if (!tab) return;
+  // Walk the tab's direct-child structure; locate each section label as a
+  // section anchor. The cards that belong to a section are the .card.card-daily
+  // siblings of the label until the next .home-section-label or end-of-parent.
+  // The card-hero / .card:not(.card-daily) is anchored and never sorted
+  // (spec §Scope of cards).
+  var sectionLabels = Array.prototype.slice.call(tab.querySelectorAll('.home-section-label'));
+  sectionLabels.forEach(function(label) {
+    var parent = label.parentNode;
+    if (!parent) return;
+    // Collect this section's sortable cards: walk siblings forward until
+    // next .home-section-label or end-of-parent.
+    var members = [];
+    var node = label.nextSibling;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (node.classList && node.classList.contains('home-section-label')) break;
+        if (
+          node.classList &&
+          node.classList.contains('card') &&
+          node.classList.contains('card-daily') &&
+          node.classList.contains('col-full') &&
+          /^info[A-Z]/.test(node.id || '')
+        ) {
+          members.push(node);
+        }
+      }
+      node = node.nextSibling;
+    }
+    if (members.length < 2) return;
+    // Capture original template order indices for stable secondary sort.
+    members.forEach(function(el, idx) { el.__v36SortIdx = idx; });
+    var sorted = members.slice().sort(function(a, b) {
+      var aT = a.getAttribute('data-card-priority') || 'notable';
+      var bT = b.getAttribute('data-card-priority') || 'notable';
+      var aR = TIER_RANK[aT];
+      var bR = TIER_RANK[bT];
+      if (aR !== bR) return aR - bR;
+      // Stable secondary: template-order ascending.
+      return a.__v36SortIdx - b.__v36SortIdx;
+    });
+    // Only re-append nodes that move (cheap microbatch — preserves listeners
+    // via parentNode.appendChild contract). We append in sorted order; this
+    // moves each node to the end of the parent in turn. To keep them inside
+    // the section, we need to reinsert relative to the label / next section
+    // anchor. Strategy: use insertBefore relative to a positional cursor
+    // starting from the node right after the section label.
+    var cursor = label.nextSibling;
+    sorted.forEach(function(el) {
+      // Find next non-member, non-label boundary after `cursor` — we just
+      // want to insert each sorted member sequentially after the label.
+      if (cursor === el) {
+        // Already in place; advance cursor past it.
+        cursor = el.nextSibling;
+        return;
+      }
+      parent.insertBefore(el, cursor);
+      // After insertion the next slot is el.nextSibling.
+      cursor = el.nextSibling;
+    });
+    // Cleanup the temp sort index so we don't leak custom props between renders.
+    members.forEach(function(el) { delete el.__v36SortIdx; });
+  });
+}
+
 // ── Helper: extract individual food names from a meal string ──
 function _cdParseMealFoods(mealStr) {
   if (!mealStr || typeof mealStr !== 'string') return [];
@@ -96,6 +269,8 @@ function renderInfoFoodPoopPipeline() {
     if (trigEl) trigEl.innerHTML = '';
     if (safeEl) safeEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoFoodPoopPipelineCard', 'ambient');
     return;
   }
 
@@ -127,6 +302,8 @@ function renderInfoFoodPoopPipeline() {
     if (trigEl) trigEl.innerHTML = '';
     if (safeEl) safeEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoFoodPoopPipelineCard', 'ambient');
     return;
   }
 
@@ -209,6 +386,9 @@ function renderInfoFoodPoopPipeline() {
     }
     insEl.innerHTML = iHtml;
   }
+  // v3-6 tier — composite card with computable correlation, no urgent escalation
+  // possible by spec §Tier-deriver patterns ("Composite cards NEVER urgent in v3-6").
+  _setCardPriority('infoFoodPoopPipelineCard', 'notable');
 }
 
 // ════════════════════════════════════════
@@ -248,6 +428,8 @@ function renderInfoSleepFeeding() {
     if (gapEl) gapEl.innerHTML = '';
     if (compEl) compEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoSleepFeedingCard', 'ambient');
     return;
   }
 
@@ -338,6 +520,8 @@ function renderInfoSleepFeeding() {
     }
     insEl.innerHTML = iHtml;
   }
+  // v3-6 tier — composite card; NEVER urgent (composite escalation deferred to v3-4)
+  _setCardPriority('infoSleepFeedingCard', 'notable');
 }
 
 // ════════════════════════════════════════
@@ -400,6 +584,8 @@ function renderInfoActivitySleepDeep() {
     if (intEl) intEl.innerHTML = '';
     if (domEl) domEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoActivitySleepDeepCard', 'ambient');
     return;
   }
 
@@ -519,6 +705,8 @@ function renderInfoActivitySleepDeep() {
     }
     insEl.innerHTML = isHtml;
   }
+  // v3-6 tier — composite card; NEVER urgent (composite escalation deferred to v3-4)
+  _setCardPriority('infoActivitySleepDeepCard', 'notable');
 }
 
 // ════════════════════════════════════════
@@ -537,6 +725,8 @@ function renderInfoGrowthDiet() {
     if (perEl) perEl.innerHTML = '';
     if (nutEl) nutEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoGrowthDietCard', 'ambient');
     return;
   }
 
@@ -567,6 +757,8 @@ function renderInfoGrowthDiet() {
     if (perEl) perEl.innerHTML = '';
     if (nutEl) nutEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoGrowthDietCard', 'ambient');
     return;
   }
 
@@ -644,6 +836,8 @@ function renderInfoGrowthDiet() {
     }
     insEl.innerHTML = iHtml;
   }
+  // v3-6 tier — composite card; NEVER urgent (composite escalation deferred to v3-4)
+  _setCardPriority('infoGrowthDietCard', 'notable');
 }
 
 // ════════════════════════════════════════
@@ -668,6 +862,8 @@ function renderInfoIllnessImpact() {
     if (epEl) epEl.innerHTML = '';
     if (aggEl) aggEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoIllnessImpactCard', 'ambient');
     return;
   }
 
@@ -847,6 +1043,10 @@ function renderInfoIllnessImpact() {
     }
     insEl.innerHTML = iHtml;
   }
+  // v3-6 tier — composite card; NEVER urgent (composite escalation deferred to v3-4;
+  // active illness episode urgency lives at the renderInfoRecovery card surface in
+  // medical.js, not at this aggregate impact-radius lens)
+  _setCardPriority('infoIllnessImpactCard', 'notable');
 }
 
 // ════════════════════════════════════════
@@ -916,6 +1116,8 @@ function renderInfoMilestoneSleepCorrelation() {
     if (tlEl) tlEl.innerHTML = '';
     if (burstEl) burstEl.innerHTML = '';
     if (insEl) insEl.innerHTML = '';
+    // v3-6 tier — composite/cross-domain card, nodata branch → ambient (CV3-003)
+    _setCardPriority('infoMilestoneSleepCard', 'ambient');
     return;
   }
 
@@ -1020,6 +1222,8 @@ function renderInfoMilestoneSleepCorrelation() {
     }
     insEl.innerHTML = iHtml;
   }
+  // v3-6 tier — composite card; NEVER urgent (composite escalation deferred to v3-4)
+  _setCardPriority('infoMilestoneSleepCard', 'notable');
 }
 
 function renderInfo() {
@@ -1070,6 +1274,11 @@ function renderInfo() {
   renderInfoMilestoneVelocity();
   renderInfoActivityCorrelation();
   renderInfoVisitPrep();
+  // v3-6 — section-internal priority sort post-pass. MUST run synchronously
+  // within the same microtask as this master (no setTimeout / RAF / await
+  // boundary) per spec §Sort implementation F4+F6 IMPL-note: visible-reflow
+  // avoidance + .card:nth-child(N) animation-delay alignment.
+  _sortInfoTabByPriority();
 }
 
 function renderInfoFoodIntro() {
@@ -1265,6 +1474,14 @@ function renderInfoFoodIntro() {
   }
 
   tryEl.innerHTML = tryHtml;
+  // v3-6 tier — trend card (food introduction rate); NEVER urgent per spec
+  // §Tier-deriver patterns "Trend cards do not escalate". data.total === 0
+  // is the honest-empty-state floor (no foods introduced yet) → ambient.
+  if (!data || data.total === 0) {
+    _setCardPriority('infoFoodIntroCard', 'ambient');
+  } else {
+    _setCardPriority('infoFoodIntroCard', 'notable');
+  }
 }
 
 // ── FOOD INTELLIGENCE: WEEKLY NUTRIENT HEATMAP ──
@@ -1407,6 +1624,14 @@ function renderInfoNutrientHeatmap() {
     detailEl.innerHTML = `<div class="t-sm t-sage" ><strong>Strong this week:</strong> ${data.strong.join(', ')}</div>`;
   } else {
     detailEl.innerHTML = '';
+  }
+  // v3-6 tier — trend card (weekly nutrient coverage); NEVER urgent.
+  // daysWithData === 0 is the honest-empty-state floor (no meals logged in
+  // the 7-day window) → ambient per spec §Tier-deriver patterns.
+  if (!data || data.daysWithData === 0) {
+    _setCardPriority('infoNutrientHeatmapCard', 'ambient');
+  } else {
+    _setCardPriority('infoNutrientHeatmapCard', 'notable');
   }
 }
 
@@ -1619,6 +1844,8 @@ function renderInfoComboFreq() {
     summaryEl.innerHTML = '<div class="t-sm t-light">No meals logged yet</div>';
     topEl.innerHTML = '';
     onceEl.innerHTML = '';
+    // v3-6 tier — trend card (food combo frequency), nodata branch → ambient
+    _setCardPriority('infoComboFreqCard', 'ambient');
     return;
   }
 
@@ -1740,6 +1967,9 @@ function renderInfoComboFreq() {
     onceHtml += '</div>';
   }
   onceEl.innerHTML = onceHtml;
+  // v3-6 tier — trend card (food combo frequency); NEVER urgent per spec
+  // §Tier-deriver patterns. Data computable past the nodata gate → notable.
+  _setCardPriority('infoComboFreqCard', 'notable');
 }
 
 // ── FOOD INTELLIGENCE: MEAL NUTRIENT BREAKDOWN (Feature 4) ──
@@ -1895,6 +2125,8 @@ function renderInfoMealBreakdown() {
     gridEl.innerHTML = '';
     alertsEl.innerHTML = '';
     weeklyEl.innerHTML = '';
+    // v3-6 tier — trend card (meal nutrient breakdown), nodata branch → ambient
+    _setCardPriority('infoMealBreakdownCard', 'ambient');
     return;
   }
 
@@ -2014,6 +2246,8 @@ function renderInfoMealBreakdown() {
   });
 
   weeklyEl.innerHTML = weeklyHtml;
+  // v3-6 tier — trend card (meal nutrient breakdown); NEVER urgent.
+  _setCardPriority('infoMealBreakdownCard', 'notable');
 }
 
 // ── LOGGING STREAK (PR-N) ──
@@ -2112,6 +2346,9 @@ function renderInfoStreak() {
   else if (hasAnyData)    msg = 'Streaks reset, not erased — every full day already logged still counts toward the insights. Logging all 3 meals today begins a new run.';
   else                    msg = 'Logging all 3 meals each day builds the data the diet insights rely on.';
   msgEl.innerHTML = `<div class="mb-alert-item alert-good"><span>${zi('bulb')}</span><span>${msg}</span></div>`;
+  // v3-6 tier — trend card (logging streak); NEVER urgent. Honest-empty-state:
+  // hasAnyData false → no streak history exists → ambient. Otherwise notable.
+  _setCardPriority('infoStreakCard', hasAnyData ? 'notable' : 'ambient');
 }
 
 // ── FOOD INTELLIGENCE: SMART PAIRING SUGGESTIONS (Feature 5) ──
@@ -2295,6 +2532,8 @@ function renderInfoSmartPairing() {
     topEl.innerHTML = '';
     gapsEl.innerHTML = '';
     unusedEl.innerHTML = '';
+    // v3-6 tier — trend card (smart pairings), nodata branch → ambient
+    _setCardPriority('infoSmartPairingCard', 'ambient');
     return;
   }
 
@@ -2381,6 +2620,8 @@ function renderInfoSmartPairing() {
     unusedHtml += '</div>';
   }
   unusedEl.innerHTML = unusedHtml;
+  // v3-6 tier — trend card (smart pairing suggestions); NEVER urgent.
+  _setCardPriority('infoSmartPairingCard', 'notable');
 }
 
 // ── PR-EF Viz #4: FEEDING INTAKE STACKED BAR ──
@@ -2440,6 +2681,8 @@ function renderInfoFeedingIntake() {
     summaryEl.innerHTML = '<div class="t-sm t-light">No intake data tagged yet — add intake levels in the food log to surface refusal patterns.</div>';
     chartEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    // v3-6 tier — trend card (feeding intake), nodata branch → ambient
+    _setCardPriority('infoFeedingIntakeCard', 'ambient');
     return;
   }
 
@@ -2520,6 +2763,8 @@ function renderInfoFeedingIntake() {
     }
     insightEl.innerHTML = iHtml;
   }
+  // v3-6 tier — trend card (feeding intake refusal patterns); NEVER urgent.
+  _setCardPriority('infoFeedingIntakeCard', 'notable');
 }
 
 // ── ENHANCE checkFoodCombo with synergy-aware pairing suggestions ──
