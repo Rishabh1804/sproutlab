@@ -4293,5 +4293,139 @@ const RECOMMENDATION_ROSTER = {
     crossDomainSynergies:  null,
     perAgeRewardOverride:  null,
   },
+  // ─────────────────────────────────────────────────────────────────────
+  // Sleep Arc 3 / Scoring S-2 (merged) — additional sleep-domain rows.
+  // Spec: docs/specs/sleep-redesign-v1.md §sleep-domain scoring contributions
+  // Sibling: docs/specs/scoring-redesign-v1.md §RECOMMENDATION_ROSTER
+  //
+  // These rows surface finer-grained sleep guidance beyond the headline
+  // sleepAmount row. The v3-3 spine resolves the active age-range against
+  // the parent-selected standard; sleep-domain handlers in core.js evaluate
+  // metCriterion against the normalized sleep records for the day.
+  //
+  // Honesty discipline: every row carries cadence + strength + severity
+  // text (parent-legible prose); severityMessages.*.strength is the
+  // engine-internal posture label — consumers MUST NEVER `.text`-substitute
+  // the strength field into prose (CV3-006 honesty floor).
+  // ─────────────────────────────────────────────────────────────────────
+  nightSleepHours: {
+    key: 'nightSleepHours',
+    domain: 'sleep',
+    metCriterion: 'duration',  // hours of night-class sleep per day
+    rewardWeight:  0.35,
+    missedWeight: -0.18,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 10, idealHoursPerDay: 11 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 10, idealHoursPerDay: 11 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'short-by-1h',  text: 'Night sleep was a little short — an earlier bedtime tomorrow.' },
+      firm:   { strength: 'short-by-2h+', text: 'Night sleep ran two-plus hours short. A calm wind-down tonight.' },
+      urgent: { strength: 'critical',     text: 'Night sleep is significantly short. Quiet evening, early bedtime.' },
+    },
+    successorOnExpiry: null,
+    // v2+ reserved:
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  napCount: {
+    key: 'napCount',
+    domain: 'sleep',
+    metCriterion: 'count',  // count of nap-class records per day
+    rewardWeight:  0.2,
+    missedWeight: -0.1,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.05, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        // Nap-count guidance by age band — calibrated to the WHO/AAP nap-consolidation arc.
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
+        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
+        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 12, cadence: 'multiple', strength: 'recommended', minPerDay: 2 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 12, cadence: 'multiple', strength: 'recommended', minPerDay: 2 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'one-short',  text: 'One nap short of the usual count today — a calm afternoon helps.' },
+      firm:   { strength: 'two-short',  text: 'Two naps short today. A quieter morning tomorrow could rebuild.' },
+      urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  contactMinutes: {
+    key: 'contactMinutes',
+    domain: 'sleep',
+    metCriterion: 'duration',  // hours of contact-class sleep per day (minutes-scale; stored as hrs for spine compat)
+    rewardWeight:  0.25,
+    missedWeight: -0.1,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.05, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        // Encouraged most strongly in the first 6 months (kangaroo-care window).
+        // minHoursPerDay treated as a soft target by the duration evaluator.
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+        { startMo: 6,  endMo: 12, minHoursPerDay: 0.25, idealHoursPerDay: 1.0, strength: 'beneficial' },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+        { startMo: 6,  endMo: 12, minHoursPerDay: 0.25, idealHoursPerDay: 1.0, strength: 'beneficial' },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'low-today',     text: 'Contact-sleep was light today — a babywearing nap tomorrow.' },
+      firm:   { strength: 'low-2days',     text: 'Two quiet days for contact-sleep. Try a wrap or sling carry today.' },
+      urgent: { strength: 'critical-window', text: 'Contact-sleep is highly valued in this window. Hold time, often.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
   // Future rows: tummyTime · vitD3Adherence · vaccinationOnSchedule · screenTimeCeiling · etc.
 };

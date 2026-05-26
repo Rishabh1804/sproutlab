@@ -17345,6 +17345,140 @@ const RECOMMENDATION_ROSTER = {
     crossDomainSynergies:  null,
     perAgeRewardOverride:  null,
   },
+  // ─────────────────────────────────────────────────────────────────────
+  // Sleep Arc 3 / Scoring S-2 (merged) — additional sleep-domain rows.
+  // Spec: docs/specs/sleep-redesign-v1.md §sleep-domain scoring contributions
+  // Sibling: docs/specs/scoring-redesign-v1.md §RECOMMENDATION_ROSTER
+  //
+  // These rows surface finer-grained sleep guidance beyond the headline
+  // sleepAmount row. The v3-3 spine resolves the active age-range against
+  // the parent-selected standard; sleep-domain handlers in core.js evaluate
+  // metCriterion against the normalized sleep records for the day.
+  //
+  // Honesty discipline: every row carries cadence + strength + severity
+  // text (parent-legible prose); severityMessages.*.strength is the
+  // engine-internal posture label — consumers MUST NEVER `.text`-substitute
+  // the strength field into prose (CV3-006 honesty floor).
+  // ─────────────────────────────────────────────────────────────────────
+  nightSleepHours: {
+    key: 'nightSleepHours',
+    domain: 'sleep',
+    metCriterion: 'duration',  // hours of night-class sleep per day
+    rewardWeight:  0.35,
+    missedWeight: -0.18,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.1, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 10, idealHoursPerDay: 11 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+        { startMo: 12, endMo: 24, minHoursPerDay: 10, idealHoursPerDay: 11 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  minHoursPerDay: 8,  idealHoursPerDay: 10 },
+        { startMo: 4,  endMo: 12, minHoursPerDay: 9,  idealHoursPerDay: 11 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'short-by-1h',  text: 'Night sleep was a little short — an earlier bedtime tomorrow.' },
+      firm:   { strength: 'short-by-2h+', text: 'Night sleep ran two-plus hours short. A calm wind-down tonight.' },
+      urgent: { strength: 'critical',     text: 'Night sleep is significantly short. Quiet evening, early bedtime.' },
+    },
+    successorOnExpiry: null,
+    // v2+ reserved:
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  napCount: {
+    key: 'napCount',
+    domain: 'sleep',
+    metCriterion: 'count',  // count of nap-class records per day
+    rewardWeight:  0.2,
+    missedWeight: -0.1,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.05, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        // Nap-count guidance by age band — calibrated to the WHO/AAP nap-consolidation arc.
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
+        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
+        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 12, cadence: 'multiple', strength: 'recommended', minPerDay: 2 },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
+        { startMo: 4,  endMo: 12, cadence: 'multiple', strength: 'recommended', minPerDay: 2 },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'one-short',  text: 'One nap short of the usual count today — a calm afternoon helps.' },
+      firm:   { strength: 'two-short',  text: 'Two naps short today. A quieter morning tomorrow could rebuild.' },
+      urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
+  contactMinutes: {
+    key: 'contactMinutes',
+    domain: 'sleep',
+    metCriterion: 'duration',  // hours of contact-class sleep per day (minutes-scale; stored as hrs for spine compat)
+    rewardWeight:  0.25,
+    missedWeight: -0.1,
+    streakPenalty: { afterDays: 3, perDayBonus: -0.05, capDays: 7 },
+    standards: {
+      who: { ageRanges: [
+        // Encouraged most strongly in the first 6 months (kangaroo-care window).
+        // minHoursPerDay treated as a soft target by the duration evaluator.
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+        { startMo: 6,  endMo: 12, minHoursPerDay: 0.25, idealHoursPerDay: 1.0, strength: 'beneficial' },
+      ]},
+      iap: { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+        { startMo: 6,  endMo: 12, minHoursPerDay: 0.25, idealHoursPerDay: 1.0, strength: 'beneficial' },
+      ]},
+      eu:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+      ]},
+      cn:  { ageRanges: [
+        { startMo: 0,  endMo: 6,  minHoursPerDay: 0.5, idealHoursPerDay: 1.5, strength: 'recommended' },
+      ]},
+    },
+    severityMessages: {
+      gentle: { strength: 'low-today',     text: 'Contact-sleep was light today — a babywearing nap tomorrow.' },
+      firm:   { strength: 'low-2days',     text: 'Two quiet days for contact-sleep. Try a wrap or sling carry today.' },
+      urgent: { strength: 'critical-window', text: 'Contact-sleep is highly valued in this window. Hold time, often.' },
+    },
+    successorOnExpiry: null,
+    durationMinMinutes:    null,
+    qualityGate:           null,
+    timeWindowOfDay:       null,
+    crossDomainSynergies:  null,
+    perAgeRewardOverride:  null,
+  },
   // Future rows: tummyTime · vitD3Adherence · vaccinationOnSchedule · screenTimeCeiling · etc.
 };
 // ─────────────────────────────────────────
@@ -23419,6 +23553,263 @@ function _scoreDayHero(dateStr, dataset) {
     date: dateStr,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sleep Arc 3 / Scoring S-2 (merged) — sleep-domain registration against
+// v3-3 engine spine. First consumer of the engine substrate.
+//
+// Spec: docs/specs/sleep-redesign-v1.md §sleep-domain scoring contributions
+// Sibling: docs/specs/scoring-redesign-v1.md (Arc S-2 — merged)
+//
+// Architect correction (2026-05-25, non-negotiable): contact-combination
+// scoring bonus is night+contact OR nap+contact — NOT nap-combination only.
+//
+// Charter alignment (CV3-006):
+//   - Honesty: contributions disclose class + location + multipliers; the
+//     severityMessages.*.strength field is engine-internal (consumers must
+//     never text-substitute it into prose); no floor on negative scores;
+//     classifier returns confidence ('high'|'medium'|'low').
+//   - Extensibility: handlers register as global functions dispatching on
+//     domain; new domain = new dispatch branch, no engine fork.
+//   - Warmth: severity-message TEXT lives in data.js RECOMMENDATION_ROSTER
+//     constants — content tuned for parent-legible passage; engine never
+//     constructs prose at runtime.
+//
+// HR-12 safe: uses _offsetDateStr / today() / _hhmmToMinutes; no raw
+// new Date() arithmetic. (Some pre-existing helpers below e.g. _offsetDateStr
+// itself wrap timezone-safe Date construction internally per CLAUDE.md HR-12.)
+// ─────────────────────────────────────────────────────────────────────────
+
+// Sleep classification — engine-derived class + day-attribution.
+// Three-class output: 'night' | 'nap' | 'contact'. Day-attribution rule routes
+// past-midnight bedtimes to the prior date, subsuming the parent-attribution
+// rollover bug (sleep-redesign-v1 Arc 1 contract).
+//
+// Locations 'contact' AND 'human' both produce class === 'contact' — the
+// developmental category is the same; the scoring layer differentiates
+// quality via locationMultiplier (human ×1.3 > contact ×0.9).
+function classifySleep(bedtime, wakeTime, location, dateKey) {
+  if (typeof bedtime !== 'string' || typeof wakeTime !== 'string') return null;
+  var bMin = _hhmmToMinutes(bedtime);
+  var wMin = _hhmmToMinutes(wakeTime);
+  if (bMin < 0 || wMin < 0) return null;
+  var durationMinutes = wMin >= bMin ? (wMin - bMin) : (wMin + 1440 - bMin);
+  var crossesMorning = wMin >= 300 && wMin <= 720;  // 05:00–12:00
+  var cls;
+  if (location === 'contact' || location === 'human') {
+    cls = 'contact';
+  } else if (durationMinutes >= 240 && crossesMorning) {
+    cls = 'night';
+  } else {
+    cls = 'nap';
+  }
+  // Day-attribution rule: bedtimes in 00:00–04:59 are previous-day overflow
+  // (e.g., parent logs Sunday-night spillover on Monday morning).
+  var dayAttribution = (bMin < 300 && typeof dateKey === 'string')
+    ? _offsetDateStr(dateKey, -1)
+    : dateKey;
+  var confidence;
+  if (cls === 'contact' || (cls === 'night' && durationMinutes >= 240 && crossesMorning)) {
+    confidence = 'high';
+  } else if (cls === 'nap' && durationMinutes >= 180) {
+    confidence = 'medium';
+  } else {
+    confidence = 'low';
+  }
+  return {
+    class: cls,
+    dayAttribution: dayAttribution,
+    durationMin: durationMinutes,
+    confidence: confidence,
+  };
+}
+
+// normalizeSleep — lazy read-time normalizer. Adds derived underscore-prefixed
+// fields (never persisted; originals untouched). Legacy records (with `type`
+// + `napType`, no `location`) default to location:'bed' — the dominant case
+// in the live data. Returns null on missing/invalid input.
+function normalizeSleep(record) {
+  if (!record || typeof record !== 'object') return null;
+  var location = (record.location || 'bed');
+  var derived = classifySleep(record.bedtime, record.wakeTime, location, record.date);
+  if (!derived) return null;
+  return Object.assign({}, record, {
+    _location: location,
+    _class: derived.class,
+    _dayAttribution: derived.dayAttribution,
+    _durationMin: derived.durationMin,
+    _confidence: derived.confidence,
+  });
+}
+
+// Sleep-domain class baselines, location multipliers, and auxiliary
+// multipliers — values per sleep-redesign-v1.md §Per-record contributions.
+// Held as module-private constants so they can be tuned without touching
+// the dispatcher. Architect ratification this session: "more sleep is
+// better" — all baselines are positive.
+var _SLEEP_CLASS_BASELINE = {
+  night:   1.0,   // structured, intended sleep surface
+  contact: 0.8,   // parent-body-anchored, developmentally distinct
+  nap:     0.7,   // daytime cap
+};
+
+var _SLEEP_LOCATION_MULT = {
+  bed:     1.0,   // neutral baseline
+  human:   1.3,   // skin-to-skin / kangaroo-care optimum (highest quality)
+  contact: 0.9,   // carrier / sling / parent-lap-with-clothes
+  sofa:    0.7,   // semi-structured; not the intended sleep surface
+  car:     0.5,   // vibration, restraint, awkward posture — episodic only
+  others:  0.6,   // free-text comment; treated as worse-than-sofa default
+};
+
+// _domainPerRecordScore — global dispatcher. Per-record contribution for the
+// domain. v3-3 spine calls this with (domain, record). Sleep returns
+// classBaseline × locationMultiplier × auxiliaryMultipliers.
+// Future domains add a branch; engine code never touched.
+function _domainPerRecordScore(domain, record) {
+  if (domain !== 'sleep') return 0;
+  if (!record || typeof record !== 'object') return 0;
+  // Records may arrive pre-normalized (from _domainBuildRecentData) or raw.
+  // Detect via _class presence — if absent, normalize on the fly.
+  var norm = (record._class && record._location)
+    ? record
+    : normalizeSleep(record);
+  if (!norm) return 0;
+  var base = _SLEEP_CLASS_BASELINE[norm._class];
+  if (typeof base !== 'number') return 0;
+  var loc = _SLEEP_LOCATION_MULT[norm._location];
+  if (typeof loc !== 'number') loc = _SLEEP_LOCATION_MULT.bed;
+  var product = base * loc;
+  // Auxiliary multipliers:
+  //   quality === 'good' → ×1.1; 'fair' → ×1.0; 'poor' → ×0.85; null → ×1.0
+  if (record.quality === 'good') product *= 1.1;
+  else if (record.quality === 'poor') product *= 0.85;
+  //   wakeUps ≥ 5 on a night record → ×0.85 (disrupted night signal)
+  if (norm._class === 'night' && typeof record.wakeUps === 'number' && record.wakeUps >= 5) {
+    product *= 0.85;
+  }
+  return product;
+}
+
+// _domainDayBonuses — global dispatcher. Day-level bonus for the domain.
+// Sleep: contact-combination bonus. NON-NEGOTIABLE per Architect correction
+// (2026-05-25): fires for night+contact OR nap+contact — both qualify.
+// NOT nap-combination only. Day-level (not per-record); fires once per
+// qualifying day regardless of how many contact records are present.
+function _domainDayBonuses(domain, records) {
+  if (domain !== 'sleep') return 0;
+  if (!Array.isArray(records) || records.length === 0) return 0;
+  var hasContact = false;
+  var hasStructured = false;  // 'night' OR 'nap' — Architect 2026-05-25 ratification
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r) continue;
+    var cls = r._class;
+    if (!cls) {
+      var norm = normalizeSleep(r);
+      cls = norm && norm._class;
+    }
+    if (cls === 'contact') hasContact = true;
+    else if (cls === 'night' || cls === 'nap') hasStructured = true;
+  }
+  return (hasContact && hasStructured) ? 0.2 : 0;
+}
+
+// _domainMetCount — global dispatcher. Returns count of records matching the
+// recommendation's met-criterion on todayData. The recommendation key drives
+// the predicate: 'humanContact' requires location === 'human'.
+// todayData shape (from _domainBuildRecentData): { records: [normalized...] }
+function _domainMetCount(domain, key, todayData) {
+  if (domain !== 'sleep') return 0;
+  if (!todayData || !Array.isArray(todayData.records)) return 0;
+  var records = todayData.records;
+  if (key === 'humanContact') {
+    var count = 0;
+    for (var i = 0; i < records.length; i++) {
+      if (records[i] && records[i]._location === 'human') count++;
+    }
+    return count;
+  }
+  if (key === 'napCount') {
+    var nc = 0;
+    for (var j = 0; j < records.length; j++) {
+      if (records[j] && records[j]._class === 'nap') nc++;
+    }
+    return nc;
+  }
+  return 0;
+}
+
+// _domainMetDuration — global dispatcher. Returns total hours of qualifying
+// duration for the recommendation key on todayData.
+// 'sleepAmount' sums durationMin across ALL classes (night + nap + contact).
+// 'nightSleepHours' sums only night-class records.
+// 'contactMinutes' returns hours-equivalent (callers compare to
+//    minHoursPerDay; for minutes-based recs we keep the same hours scale).
+function _domainMetDuration(domain, key, todayData) {
+  if (domain !== 'sleep') return 0;
+  if (!todayData || !Array.isArray(todayData.records)) return 0;
+  var records = todayData.records;
+  var totalMin = 0;
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r) continue;
+    var dur = typeof r._durationMin === 'number' ? r._durationMin : 0;
+    if (key === 'sleepAmount') {
+      totalMin += dur;
+    } else if (key === 'nightSleepHours' && r._class === 'night') {
+      totalMin += dur;
+    } else if (key === 'contactMinutes' && r._class === 'contact') {
+      totalMin += dur;
+    }
+  }
+  return totalMin / 60;
+}
+
+// _domainBuildRecentData — global dispatcher. Builds the
+// { today: { records: [...] }, history: [...] } envelope the v3-3 spine
+// passes through to _evaluateRecommendation + _scoreDay.
+//
+// Sleep semantics:
+//   today.records  = sleepData filtered by _dayAttribution === dateStr (post-normalize)
+//   history        = array of { date, _met } for the prior 14 days; _met is
+//                    a per-key bag so _countDaysSinceLastMet can resolve.
+// HR-12 safe: history dates via _offsetDateStr.
+function _domainBuildRecentData(domain, dateStr, dataset) {
+  if (domain !== 'sleep') {
+    return { today: { records: [] }, history: [] };
+  }
+  var raw = (dataset && Array.isArray(dataset.sleepData)) ? dataset.sleepData
+          : (typeof sleepData !== 'undefined' && Array.isArray(sleepData)) ? sleepData
+          : [];
+  var normalized = [];
+  for (var i = 0; i < raw.length; i++) {
+    var n = normalizeSleep(raw[i]);
+    if (n) normalized.push(n);
+  }
+  // Today's records — those whose _dayAttribution matches dateStr.
+  var todayRecords = normalized.filter(function(r) {
+    return r._dayAttribution === dateStr;
+  });
+  // History — 14 days of {date, _met} envelopes for streak calculation.
+  // Each day's _met is set true if ANY sleep record landed on that day; the
+  // generic v3-3 _countDaysSinceLastMet walks history backward looking for
+  // the first _met:true entry.
+  var history = [];
+  for (var d = 1; d <= 14; d++) {
+    var ds = _offsetDateStr(dateStr, -d);
+    var anyOnDay = false;
+    for (var k = 0; k < normalized.length; k++) {
+      if (normalized[k]._dayAttribution === ds) { anyOnDay = true; break; }
+    }
+    history.push({ date: ds, _met: anyOnDay });
+  }
+  return {
+    today: { records: todayRecords, dateStr: dateStr },
+    history: history,
+  };
+}
+
 // HEADER / QUICK STATS
 // ─────────────────────────────────────────
 // ageAt, preciseAge → migrated to core.js
@@ -23865,6 +24256,7 @@ function renderHome() {
   renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
+  try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
@@ -33408,6 +33800,172 @@ function ctRenderZone() {
 }
 
 // ── CareTickets action stubs removed — all actions handled by ctHandleOverlayAction in intelligence.js ──
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sleep Arc 3 / Scoring S-2 (merged) — sleep-surface consumption.
+// Reads the v3-3 _scoreDay('sleep', today()) output + the cross-domain
+// _scoreDayHero(today()) hero score and appends parent-legible insights
+// into the existing #homeSleepContent region rendered by renderHomeSleep().
+//
+// Spec: docs/specs/sleep-redesign-v1.md §sleep-surface consumption
+// Sibling: docs/specs/scoring-redesign-v1.md (hero score consumer)
+//
+// HR-1 (no emojis): all icons via zi(). HR-2 (no inline styles): class-driven.
+// HR-3 (no inline handlers): data-action only. HR-4 (escHtml): every dynamic
+// string in the prose passes through escHtml(). HR-5 (tokens-only): no
+// hex values; relies on existing card-info / info-strip / tc-* tokens.
+// HR-6 (data-action delegation): inherited via switchTab pattern.
+//
+// Honesty discipline:
+//   - The severityMessages.*.strength field is engine-internal posture
+//     metadata. It is NEVER text-substituted into prose. Renderers use
+//     severityMessages.*.text (and ONLY text) for parent-facing strings.
+//   - Per-day total is shown as engine-derived; no clamping (no-floor doctrine).
+//   - Classification confidence + class breakdown disclosed when present
+//     (Charter honesty axis — every claim self-discloses provenance).
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderSleepArc3Insights() {
+  var el = document.getElementById('homeSleepContent');
+  if (!el) return;
+  // Guard: if the v3-3 spine isn't loaded (defensive — e.g. unit-test envs),
+  // skip silently.
+  if (typeof _scoreDay !== 'function') return;
+  if (typeof today !== 'function') return;
+  var todayStr = today();
+
+  var sleepScore;
+  try {
+    sleepScore = _scoreDay('sleep', todayStr);
+  } catch (e) {
+    console.error('renderSleepArc3Insights _scoreDay:', e);
+    return;
+  }
+  if (!sleepScore) return;
+
+  // Build the class breakdown from the engine-driven recentData.
+  var recent;
+  try {
+    recent = (typeof _domainBuildRecentData === 'function')
+      ? _domainBuildRecentData('sleep', todayStr, null)
+      : null;
+  } catch (e) { recent = null; }
+  var records = (recent && recent.today && Array.isArray(recent.today.records))
+    ? recent.today.records
+    : [];
+
+  // Classification engine output — count + duration per class. Honest
+  // disclosure: surfaces always include the count, even if zero, so the
+  // parent reads "0 contact" rather than the surface omitting the row.
+  var counts = { night: 0, nap: 0, contact: 0 };
+  var durations = { night: 0, nap: 0, contact: 0 };  // minutes
+  var anyHuman = false;
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r || !r._class) continue;
+    if (counts[r._class] !== undefined) counts[r._class]++;
+    if (durations[r._class] !== undefined && typeof r._durationMin === 'number') {
+      durations[r._class] += r._durationMin;
+    }
+    if (r._location === 'human') anyHuman = true;
+  }
+  var totalRecords = counts.night + counts.nap + counts.contact;
+  if (totalRecords === 0) return;  // renderHomeSleep already showed the empty state
+
+  // Helper — render hh:mm from minutes.
+  var formatHm = function(min) {
+    var h = Math.floor(min / 60);
+    var m = Math.round(min - h * 60);
+    return h + 'h ' + m + 'm';
+  };
+
+  // Hero (cross-domain) score read — disclose sleep's contribution.
+  var hero = null;
+  try { hero = (typeof _scoreDayHero === 'function') ? _scoreDayHero(todayStr) : null; } catch (e) { hero = null; }
+
+  // Build the insight strip(s). Class-driven (HR-2); zi() icons (HR-1);
+  // escHtml() at every interpolation boundary (HR-4).
+  var parts = [];
+
+  // Strip 1 — classification breakdown.
+  // Honest: surfaces all three classes; uses parent-legible labels.
+  var breakdown = [];
+  if (counts.night > 0) {
+    breakdown.push(escHtml(counts.night + ' night ' + formatHm(durations.night)));
+  }
+  if (counts.nap > 0) {
+    breakdown.push(escHtml(counts.nap + ' nap' + (counts.nap > 1 ? 's' : '') + ' ' + formatHm(durations.nap)));
+  }
+  if (counts.contact > 0) {
+    var humanTag = anyHuman ? ' (human)' : '';
+    breakdown.push(escHtml(counts.contact + ' contact' + humanTag + ' ' + formatHm(durations.contact)));
+  }
+  if (breakdown.length > 0) {
+    parts.push(
+      '<div class="info-strip is-indigo mt-6" id="sleepArc3Breakdown">' +
+        '<span>' + zi('sparkle') + '</span>' +
+        '<div><strong class="tc-indigo">Today’s sleep mix</strong>' +
+        '<div class="t-sub">' + breakdown.join(' · ') + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 2 — engine-derived severity guidance (if any unmet recommendations).
+  // The severityMessages.*.text field is the ONLY safe field to render —
+  // never the .strength field (engine-internal posture metadata).
+  var msgs = Array.isArray(sleepScore.generatedMessages) ? sleepScore.generatedMessages : [];
+  if (msgs.length > 0) {
+    // Pick the highest-severity message for the headline strip.
+    var rank = { urgent: 3, firm: 2, gentle: 1 };
+    var top = msgs[0];
+    for (var j = 1; j < msgs.length; j++) {
+      if ((rank[msgs[j].severityLevel] || 0) > (rank[top.severityLevel] || 0)) top = msgs[j];
+    }
+    // top.text — engine-vetted prose; escHtml at boundary (HR-4).
+    // top.strength — NEVER substituted into prose (honesty floor).
+    var tone = top.severityLevel === 'urgent' ? 'is-rose'
+            : top.severityLevel === 'firm' ? 'is-amber'
+            : 'is-indigo';
+    var icon = top.severityLevel === 'urgent' ? zi('warn')
+            : top.severityLevel === 'firm' ? zi('clock')
+            : zi('moon');
+    parts.push(
+      '<div class="info-strip ' + tone + ' mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + icon + '</span>' +
+        '<div><strong class="tc-indigo">Sleep guidance</strong>' +
+        '<div class="t-sub">' + escHtml(top.text) + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 3 — hero score sleep contribution (warm cross-domain disclosure).
+  if (hero && hero.perDomain && hero.perDomain.sleep) {
+    var sd = hero.perDomain.sleep;
+    var heroLine = 'Sleep score today: ' + (Math.round(sd.total * 100) / 100);
+    if (sd.dayBonuses && sd.dayBonuses > 0) {
+      heroLine += ' (contact-combination bonus active)';
+    }
+    parts.push(
+      '<div class="info-strip is-indigo mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + zi('moon') + '</span>' +
+        '<div><strong class="tc-indigo">' + escHtml(heroLine) + '</strong>' +
+        '<div class="t-sub">' + escHtml('Engine-derived from class × location × auxiliary multipliers.') + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  if (parts.length === 0) return;
+
+  // Idempotent append: remove any prior insight nodes before re-rendering.
+  ['sleepArc3Breakdown', 'sleepArc3Severity', 'sleepArc3Hero'].forEach(function(id) {
+    var existing = document.getElementById(id);
+    if (existing && existing.parentNode === el) el.removeChild(existing);
+  });
+  // Append via a temp container — preserves the existing renderHomeSleep DOM.
+  var wrap = document.createElement('div');
+  wrap.innerHTML = parts.join('');
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+}
 // INSIGHTS & TIPS ENGINE
 // ─────────────────────────────────────────
 const ALL_TIPS = [

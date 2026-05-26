@@ -6070,3 +6070,260 @@ function _scoreDayHero(dateStr, dataset) {
     date: dateStr,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sleep Arc 3 / Scoring S-2 (merged) — sleep-domain registration against
+// v3-3 engine spine. First consumer of the engine substrate.
+//
+// Spec: docs/specs/sleep-redesign-v1.md §sleep-domain scoring contributions
+// Sibling: docs/specs/scoring-redesign-v1.md (Arc S-2 — merged)
+//
+// Architect correction (2026-05-25, non-negotiable): contact-combination
+// scoring bonus is night+contact OR nap+contact — NOT nap-combination only.
+//
+// Charter alignment (CV3-006):
+//   - Honesty: contributions disclose class + location + multipliers; the
+//     severityMessages.*.strength field is engine-internal (consumers must
+//     never text-substitute it into prose); no floor on negative scores;
+//     classifier returns confidence ('high'|'medium'|'low').
+//   - Extensibility: handlers register as global functions dispatching on
+//     domain; new domain = new dispatch branch, no engine fork.
+//   - Warmth: severity-message TEXT lives in data.js RECOMMENDATION_ROSTER
+//     constants — content tuned for parent-legible passage; engine never
+//     constructs prose at runtime.
+//
+// HR-12 safe: uses _offsetDateStr / today() / _hhmmToMinutes; no raw
+// new Date() arithmetic. (Some pre-existing helpers below e.g. _offsetDateStr
+// itself wrap timezone-safe Date construction internally per CLAUDE.md HR-12.)
+// ─────────────────────────────────────────────────────────────────────────
+
+// Sleep classification — engine-derived class + day-attribution.
+// Three-class output: 'night' | 'nap' | 'contact'. Day-attribution rule routes
+// past-midnight bedtimes to the prior date, subsuming the parent-attribution
+// rollover bug (sleep-redesign-v1 Arc 1 contract).
+//
+// Locations 'contact' AND 'human' both produce class === 'contact' — the
+// developmental category is the same; the scoring layer differentiates
+// quality via locationMultiplier (human ×1.3 > contact ×0.9).
+function classifySleep(bedtime, wakeTime, location, dateKey) {
+  if (typeof bedtime !== 'string' || typeof wakeTime !== 'string') return null;
+  var bMin = _hhmmToMinutes(bedtime);
+  var wMin = _hhmmToMinutes(wakeTime);
+  if (bMin < 0 || wMin < 0) return null;
+  var durationMinutes = wMin >= bMin ? (wMin - bMin) : (wMin + 1440 - bMin);
+  var crossesMorning = wMin >= 300 && wMin <= 720;  // 05:00–12:00
+  var cls;
+  if (location === 'contact' || location === 'human') {
+    cls = 'contact';
+  } else if (durationMinutes >= 240 && crossesMorning) {
+    cls = 'night';
+  } else {
+    cls = 'nap';
+  }
+  // Day-attribution rule: bedtimes in 00:00–04:59 are previous-day overflow
+  // (e.g., parent logs Sunday-night spillover on Monday morning).
+  var dayAttribution = (bMin < 300 && typeof dateKey === 'string')
+    ? _offsetDateStr(dateKey, -1)
+    : dateKey;
+  var confidence;
+  if (cls === 'contact' || (cls === 'night' && durationMinutes >= 240 && crossesMorning)) {
+    confidence = 'high';
+  } else if (cls === 'nap' && durationMinutes >= 180) {
+    confidence = 'medium';
+  } else {
+    confidence = 'low';
+  }
+  return {
+    class: cls,
+    dayAttribution: dayAttribution,
+    durationMin: durationMinutes,
+    confidence: confidence,
+  };
+}
+
+// normalizeSleep — lazy read-time normalizer. Adds derived underscore-prefixed
+// fields (never persisted; originals untouched). Legacy records (with `type`
+// + `napType`, no `location`) default to location:'bed' — the dominant case
+// in the live data. Returns null on missing/invalid input.
+function normalizeSleep(record) {
+  if (!record || typeof record !== 'object') return null;
+  var location = (record.location || 'bed');
+  var derived = classifySleep(record.bedtime, record.wakeTime, location, record.date);
+  if (!derived) return null;
+  return Object.assign({}, record, {
+    _location: location,
+    _class: derived.class,
+    _dayAttribution: derived.dayAttribution,
+    _durationMin: derived.durationMin,
+    _confidence: derived.confidence,
+  });
+}
+
+// Sleep-domain class baselines, location multipliers, and auxiliary
+// multipliers — values per sleep-redesign-v1.md §Per-record contributions.
+// Held as module-private constants so they can be tuned without touching
+// the dispatcher. Architect ratification this session: "more sleep is
+// better" — all baselines are positive.
+var _SLEEP_CLASS_BASELINE = {
+  night:   1.0,   // structured, intended sleep surface
+  contact: 0.8,   // parent-body-anchored, developmentally distinct
+  nap:     0.7,   // daytime cap
+};
+
+var _SLEEP_LOCATION_MULT = {
+  bed:     1.0,   // neutral baseline
+  human:   1.3,   // skin-to-skin / kangaroo-care optimum (highest quality)
+  contact: 0.9,   // carrier / sling / parent-lap-with-clothes
+  sofa:    0.7,   // semi-structured; not the intended sleep surface
+  car:     0.5,   // vibration, restraint, awkward posture — episodic only
+  others:  0.6,   // free-text comment; treated as worse-than-sofa default
+};
+
+// _domainPerRecordScore — global dispatcher. Per-record contribution for the
+// domain. v3-3 spine calls this with (domain, record). Sleep returns
+// classBaseline × locationMultiplier × auxiliaryMultipliers.
+// Future domains add a branch; engine code never touched.
+function _domainPerRecordScore(domain, record) {
+  if (domain !== 'sleep') return 0;
+  if (!record || typeof record !== 'object') return 0;
+  // Records may arrive pre-normalized (from _domainBuildRecentData) or raw.
+  // Detect via _class presence — if absent, normalize on the fly.
+  var norm = (record._class && record._location)
+    ? record
+    : normalizeSleep(record);
+  if (!norm) return 0;
+  var base = _SLEEP_CLASS_BASELINE[norm._class];
+  if (typeof base !== 'number') return 0;
+  var loc = _SLEEP_LOCATION_MULT[norm._location];
+  if (typeof loc !== 'number') loc = _SLEEP_LOCATION_MULT.bed;
+  var product = base * loc;
+  // Auxiliary multipliers:
+  //   quality === 'good' → ×1.1; 'fair' → ×1.0; 'poor' → ×0.85; null → ×1.0
+  if (record.quality === 'good') product *= 1.1;
+  else if (record.quality === 'poor') product *= 0.85;
+  //   wakeUps ≥ 5 on a night record → ×0.85 (disrupted night signal)
+  if (norm._class === 'night' && typeof record.wakeUps === 'number' && record.wakeUps >= 5) {
+    product *= 0.85;
+  }
+  return product;
+}
+
+// _domainDayBonuses — global dispatcher. Day-level bonus for the domain.
+// Sleep: contact-combination bonus. NON-NEGOTIABLE per Architect correction
+// (2026-05-25): fires for night+contact OR nap+contact — both qualify.
+// NOT nap-combination only. Day-level (not per-record); fires once per
+// qualifying day regardless of how many contact records are present.
+function _domainDayBonuses(domain, records) {
+  if (domain !== 'sleep') return 0;
+  if (!Array.isArray(records) || records.length === 0) return 0;
+  var hasContact = false;
+  var hasStructured = false;  // 'night' OR 'nap' — Architect 2026-05-25 ratification
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r) continue;
+    var cls = r._class;
+    if (!cls) {
+      var norm = normalizeSleep(r);
+      cls = norm && norm._class;
+    }
+    if (cls === 'contact') hasContact = true;
+    else if (cls === 'night' || cls === 'nap') hasStructured = true;
+  }
+  return (hasContact && hasStructured) ? 0.2 : 0;
+}
+
+// _domainMetCount — global dispatcher. Returns count of records matching the
+// recommendation's met-criterion on todayData. The recommendation key drives
+// the predicate: 'humanContact' requires location === 'human'.
+// todayData shape (from _domainBuildRecentData): { records: [normalized...] }
+function _domainMetCount(domain, key, todayData) {
+  if (domain !== 'sleep') return 0;
+  if (!todayData || !Array.isArray(todayData.records)) return 0;
+  var records = todayData.records;
+  if (key === 'humanContact') {
+    var count = 0;
+    for (var i = 0; i < records.length; i++) {
+      if (records[i] && records[i]._location === 'human') count++;
+    }
+    return count;
+  }
+  if (key === 'napCount') {
+    var nc = 0;
+    for (var j = 0; j < records.length; j++) {
+      if (records[j] && records[j]._class === 'nap') nc++;
+    }
+    return nc;
+  }
+  return 0;
+}
+
+// _domainMetDuration — global dispatcher. Returns total hours of qualifying
+// duration for the recommendation key on todayData.
+// 'sleepAmount' sums durationMin across ALL classes (night + nap + contact).
+// 'nightSleepHours' sums only night-class records.
+// 'contactMinutes' returns hours-equivalent (callers compare to
+//    minHoursPerDay; for minutes-based recs we keep the same hours scale).
+function _domainMetDuration(domain, key, todayData) {
+  if (domain !== 'sleep') return 0;
+  if (!todayData || !Array.isArray(todayData.records)) return 0;
+  var records = todayData.records;
+  var totalMin = 0;
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r) continue;
+    var dur = typeof r._durationMin === 'number' ? r._durationMin : 0;
+    if (key === 'sleepAmount') {
+      totalMin += dur;
+    } else if (key === 'nightSleepHours' && r._class === 'night') {
+      totalMin += dur;
+    } else if (key === 'contactMinutes' && r._class === 'contact') {
+      totalMin += dur;
+    }
+  }
+  return totalMin / 60;
+}
+
+// _domainBuildRecentData — global dispatcher. Builds the
+// { today: { records: [...] }, history: [...] } envelope the v3-3 spine
+// passes through to _evaluateRecommendation + _scoreDay.
+//
+// Sleep semantics:
+//   today.records  = sleepData filtered by _dayAttribution === dateStr (post-normalize)
+//   history        = array of { date, _met } for the prior 14 days; _met is
+//                    a per-key bag so _countDaysSinceLastMet can resolve.
+// HR-12 safe: history dates via _offsetDateStr.
+function _domainBuildRecentData(domain, dateStr, dataset) {
+  if (domain !== 'sleep') {
+    return { today: { records: [] }, history: [] };
+  }
+  var raw = (dataset && Array.isArray(dataset.sleepData)) ? dataset.sleepData
+          : (typeof sleepData !== 'undefined' && Array.isArray(sleepData)) ? sleepData
+          : [];
+  var normalized = [];
+  for (var i = 0; i < raw.length; i++) {
+    var n = normalizeSleep(raw[i]);
+    if (n) normalized.push(n);
+  }
+  // Today's records — those whose _dayAttribution matches dateStr.
+  var todayRecords = normalized.filter(function(r) {
+    return r._dayAttribution === dateStr;
+  });
+  // History — 14 days of {date, _met} envelopes for streak calculation.
+  // Each day's _met is set true if ANY sleep record landed on that day; the
+  // generic v3-3 _countDaysSinceLastMet walks history backward looking for
+  // the first _met:true entry.
+  var history = [];
+  for (var d = 1; d <= 14; d++) {
+    var ds = _offsetDateStr(dateStr, -d);
+    var anyOnDay = false;
+    for (var k = 0; k < normalized.length; k++) {
+      if (normalized[k]._dayAttribution === ds) { anyOnDay = true; break; }
+    }
+    history.push({ date: ds, _met: anyOnDay });
+  }
+  return {
+    today: { records: todayRecords, dateStr: dateStr },
+    history: history,
+  };
+}
+

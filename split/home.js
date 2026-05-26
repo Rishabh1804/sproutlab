@@ -444,6 +444,7 @@ function renderHome() {
   renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
+  try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
@@ -9987,3 +9988,169 @@ function ctRenderZone() {
 }
 
 // ── CareTickets action stubs removed — all actions handled by ctHandleOverlayAction in intelligence.js ──
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sleep Arc 3 / Scoring S-2 (merged) — sleep-surface consumption.
+// Reads the v3-3 _scoreDay('sleep', today()) output + the cross-domain
+// _scoreDayHero(today()) hero score and appends parent-legible insights
+// into the existing #homeSleepContent region rendered by renderHomeSleep().
+//
+// Spec: docs/specs/sleep-redesign-v1.md §sleep-surface consumption
+// Sibling: docs/specs/scoring-redesign-v1.md (hero score consumer)
+//
+// HR-1 (no emojis): all icons via zi(). HR-2 (no inline styles): class-driven.
+// HR-3 (no inline handlers): data-action only. HR-4 (escHtml): every dynamic
+// string in the prose passes through escHtml(). HR-5 (tokens-only): no
+// hex values; relies on existing card-info / info-strip / tc-* tokens.
+// HR-6 (data-action delegation): inherited via switchTab pattern.
+//
+// Honesty discipline:
+//   - The severityMessages.*.strength field is engine-internal posture
+//     metadata. It is NEVER text-substituted into prose. Renderers use
+//     severityMessages.*.text (and ONLY text) for parent-facing strings.
+//   - Per-day total is shown as engine-derived; no clamping (no-floor doctrine).
+//   - Classification confidence + class breakdown disclosed when present
+//     (Charter honesty axis — every claim self-discloses provenance).
+// ─────────────────────────────────────────────────────────────────────────
+
+function renderSleepArc3Insights() {
+  var el = document.getElementById('homeSleepContent');
+  if (!el) return;
+  // Guard: if the v3-3 spine isn't loaded (defensive — e.g. unit-test envs),
+  // skip silently.
+  if (typeof _scoreDay !== 'function') return;
+  if (typeof today !== 'function') return;
+  var todayStr = today();
+
+  var sleepScore;
+  try {
+    sleepScore = _scoreDay('sleep', todayStr);
+  } catch (e) {
+    console.error('renderSleepArc3Insights _scoreDay:', e);
+    return;
+  }
+  if (!sleepScore) return;
+
+  // Build the class breakdown from the engine-driven recentData.
+  var recent;
+  try {
+    recent = (typeof _domainBuildRecentData === 'function')
+      ? _domainBuildRecentData('sleep', todayStr, null)
+      : null;
+  } catch (e) { recent = null; }
+  var records = (recent && recent.today && Array.isArray(recent.today.records))
+    ? recent.today.records
+    : [];
+
+  // Classification engine output — count + duration per class. Honest
+  // disclosure: surfaces always include the count, even if zero, so the
+  // parent reads "0 contact" rather than the surface omitting the row.
+  var counts = { night: 0, nap: 0, contact: 0 };
+  var durations = { night: 0, nap: 0, contact: 0 };  // minutes
+  var anyHuman = false;
+  for (var i = 0; i < records.length; i++) {
+    var r = records[i];
+    if (!r || !r._class) continue;
+    if (counts[r._class] !== undefined) counts[r._class]++;
+    if (durations[r._class] !== undefined && typeof r._durationMin === 'number') {
+      durations[r._class] += r._durationMin;
+    }
+    if (r._location === 'human') anyHuman = true;
+  }
+  var totalRecords = counts.night + counts.nap + counts.contact;
+  if (totalRecords === 0) return;  // renderHomeSleep already showed the empty state
+
+  // Helper — render hh:mm from minutes.
+  var formatHm = function(min) {
+    var h = Math.floor(min / 60);
+    var m = Math.round(min - h * 60);
+    return h + 'h ' + m + 'm';
+  };
+
+  // Hero (cross-domain) score read — disclose sleep's contribution.
+  var hero = null;
+  try { hero = (typeof _scoreDayHero === 'function') ? _scoreDayHero(todayStr) : null; } catch (e) { hero = null; }
+
+  // Build the insight strip(s). Class-driven (HR-2); zi() icons (HR-1);
+  // escHtml() at every interpolation boundary (HR-4).
+  var parts = [];
+
+  // Strip 1 — classification breakdown.
+  // Honest: surfaces all three classes; uses parent-legible labels.
+  var breakdown = [];
+  if (counts.night > 0) {
+    breakdown.push(escHtml(counts.night + ' night ' + formatHm(durations.night)));
+  }
+  if (counts.nap > 0) {
+    breakdown.push(escHtml(counts.nap + ' nap' + (counts.nap > 1 ? 's' : '') + ' ' + formatHm(durations.nap)));
+  }
+  if (counts.contact > 0) {
+    var humanTag = anyHuman ? ' (human)' : '';
+    breakdown.push(escHtml(counts.contact + ' contact' + humanTag + ' ' + formatHm(durations.contact)));
+  }
+  if (breakdown.length > 0) {
+    parts.push(
+      '<div class="info-strip is-indigo mt-6" id="sleepArc3Breakdown">' +
+        '<span>' + zi('sparkle') + '</span>' +
+        '<div><strong class="tc-indigo">Today’s sleep mix</strong>' +
+        '<div class="t-sub">' + breakdown.join(' · ') + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 2 — engine-derived severity guidance (if any unmet recommendations).
+  // The severityMessages.*.text field is the ONLY safe field to render —
+  // never the .strength field (engine-internal posture metadata).
+  var msgs = Array.isArray(sleepScore.generatedMessages) ? sleepScore.generatedMessages : [];
+  if (msgs.length > 0) {
+    // Pick the highest-severity message for the headline strip.
+    var rank = { urgent: 3, firm: 2, gentle: 1 };
+    var top = msgs[0];
+    for (var j = 1; j < msgs.length; j++) {
+      if ((rank[msgs[j].severityLevel] || 0) > (rank[top.severityLevel] || 0)) top = msgs[j];
+    }
+    // top.text — engine-vetted prose; escHtml at boundary (HR-4).
+    // top.strength — NEVER substituted into prose (honesty floor).
+    var tone = top.severityLevel === 'urgent' ? 'is-rose'
+            : top.severityLevel === 'firm' ? 'is-amber'
+            : 'is-indigo';
+    var icon = top.severityLevel === 'urgent' ? zi('warn')
+            : top.severityLevel === 'firm' ? zi('clock')
+            : zi('moon');
+    parts.push(
+      '<div class="info-strip ' + tone + ' mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + icon + '</span>' +
+        '<div><strong class="tc-indigo">Sleep guidance</strong>' +
+        '<div class="t-sub">' + escHtml(top.text) + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  // Strip 3 — hero score sleep contribution (warm cross-domain disclosure).
+  if (hero && hero.perDomain && hero.perDomain.sleep) {
+    var sd = hero.perDomain.sleep;
+    var heroLine = 'Sleep score today: ' + (Math.round(sd.total * 100) / 100);
+    if (sd.dayBonuses && sd.dayBonuses > 0) {
+      heroLine += ' (contact-combination bonus active)';
+    }
+    parts.push(
+      '<div class="info-strip is-indigo mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
+        '<span>' + zi('moon') + '</span>' +
+        '<div><strong class="tc-indigo">' + escHtml(heroLine) + '</strong>' +
+        '<div class="t-sub">' + escHtml('Engine-derived from class × location × auxiliary multipliers.') + '</div></div>' +
+      '</div>'
+    );
+  }
+
+  if (parts.length === 0) return;
+
+  // Idempotent append: remove any prior insight nodes before re-rendering.
+  ['sleepArc3Breakdown', 'sleepArc3Severity', 'sleepArc3Hero'].forEach(function(id) {
+    var existing = document.getElementById(id);
+    if (existing && existing.parentNode === el) el.removeChild(existing);
+  });
+  // Append via a temp container — preserves the existing renderHomeSleep DOM.
+  var wrap = document.createElement('div');
+  wrap.innerHTML = parts.join('');
+  while (wrap.firstChild) el.appendChild(wrap.firstChild);
+}
