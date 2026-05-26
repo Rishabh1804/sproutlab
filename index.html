@@ -23377,11 +23377,29 @@ function _evaluateMetCriterion(rec, activeRange, todayData) {
 }
 
 // Walk history backward looking for last day the criterion was met. -1 if never within window.
+//
+// V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): `day._met` may be either
+// (a) a per-key bag { recKey1: bool, recKey2: bool, ... } emitted by domain
+//     handlers whose recommendations differentiate by predicate (sleep's
+//     humanContact / napCount / nightSleepHours / contactMinutes etc.), OR
+// (b) a single boolean — the legacy/single-predicate shape (acceptable
+//     fallback for domains where every recommendation shares the same
+//     "any record this day" criterion).
+// Both forms are accepted. Per-key bag is preferred for predicate-distinct
+// recommendations because a single boolean collapses the streak counter
+// across keys — a baby who slept every day in bed would otherwise return
+// daysSinceMet=1 for humanContact even with zero `location:'human'` records,
+// breaking the 2:1 reward:penalty doctrine + 3-day urgent escalation.
 function _countDaysSinceLastMet(rec, history) {
   if (!Array.isArray(history) || history.length === 0) return 30;  // cap
   for (var i = 0; i < history.length && i < 30; i++) {
     const day = history[i];
-    if (day && day._met) return i + 1;
+    if (!day || day._met === undefined || day._met === null) continue;
+    if (typeof day._met === 'object') {
+      if (rec && rec.key && day._met[rec.key]) return i + 1;
+    } else if (day._met) {
+      return i + 1;
+    }
     // history rows pre-tagged with _met by caller (scoring-redesign-v1 contract); fallback ignore.
   }
   return 30;
@@ -23766,6 +23784,35 @@ function _domainMetDuration(domain, key, todayData) {
   return totalMin / 60;
 }
 
+// _sleepMetBagForDay — per-key met-criterion bag for sleep recommendations.
+// V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): emit per-key presence
+// flags so _countDaysSinceLastMet can differentiate across the sleep
+// RECOMMENDATION_ROSTER rows (humanContact / napCount / nightSleepHours /
+// contactMinutes / sleepAmount) rather than collapsing them to a single
+// boolean. Predicate-presence semantics (any record matching the
+// predicate on the day) — the threshold gate lives in _evaluateRecommendation's
+// metToday read; the history streak only needs "did the parent do this at all."
+function _sleepMetBagForDay(dayRecords) {
+  var bag = {
+    humanContact: false,
+    napCount: false,
+    nightSleepHours: false,
+    contactMinutes: false,
+    sleepAmount: false,
+  };
+  if (!Array.isArray(dayRecords) || dayRecords.length === 0) return bag;
+  for (var i = 0; i < dayRecords.length; i++) {
+    var r = dayRecords[i];
+    if (!r) continue;
+    bag.sleepAmount = true; // any sleep record satisfies the cross-class total predicate
+    if (r._location === 'human') bag.humanContact = true;
+    if (r._class === 'nap') bag.napCount = true;
+    if (r._class === 'night') bag.nightSleepHours = true;
+    if (r._class === 'contact') bag.contactMinutes = true;
+  }
+  return bag;
+}
+
 // _domainBuildRecentData — global dispatcher. Builds the
 // { today: { records: [...] }, history: [...] } envelope the v3-3 spine
 // passes through to _evaluateRecommendation + _scoreDay.
@@ -23792,17 +23839,28 @@ function _domainBuildRecentData(domain, dateStr, dataset) {
     return r._dayAttribution === dateStr;
   });
   // History — 14 days of {date, _met} envelopes for streak calculation.
-  // Each day's _met is set true if ANY sleep record landed on that day; the
-  // generic v3-3 _countDaysSinceLastMet walks history backward looking for
-  // the first _met:true entry.
+  //
+  // V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): _met is a PER-KEY bag
+  // so the generic v3-3 _countDaysSinceLastMet can resolve per-recommendation
+  // (humanContact / napCount / nightSleepHours / contactMinutes / sleepAmount).
+  // The legacy single-boolean shape collapsed the streak counter across keys
+  // — a baby who slept every day in bed but had zero `location:'human'`
+  // records would return daysSinceMet=1 for humanContact, breaking the
+  // 2:1 reward:penalty doctrine + 3-day urgent escalation contract.
+  //
+  // Per-key predicates (presence-of-predicate-record on the day, not
+  // threshold-met): the streak counter measures "days since the parent did
+  // this at all" — which is precisely the escalation signal the safety
+  // floor needs. The threshold/count gate lives in _evaluateRecommendation's
+  // metToday read, not in the history streak.
   var history = [];
   for (var d = 1; d <= 14; d++) {
     var ds = _offsetDateStr(dateStr, -d);
-    var anyOnDay = false;
+    var dayRecords = [];
     for (var k = 0; k < normalized.length; k++) {
-      if (normalized[k]._dayAttribution === ds) { anyOnDay = true; break; }
+      if (normalized[k]._dayAttribution === ds) dayRecords.push(normalized[k]);
     }
-    history.push({ date: ds, _met: anyOnDay });
+    history.push({ date: ds, _met: _sleepMetBagForDay(dayRecords) });
   }
   return {
     today: { records: todayRecords, dateStr: dateStr },
@@ -24256,7 +24314,9 @@ function renderHome() {
   renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
-  try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
+  // V-M-89 synth-fold: renderSleepArc3Insights is now hoisted into the end of
+  // renderHomeSleep itself (medical.js) so every refresh path includes it.
+  // No separate call needed here.
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
@@ -33854,28 +33914,43 @@ function renderSleepArc3Insights() {
     ? recent.today.records
     : [];
 
-  // Classification engine output — count + duration per class. Honest
-  // disclosure: surfaces always include the count, even if zero, so the
-  // parent reads "0 contact" rather than the surface omitting the row.
-  var counts = { night: 0, nap: 0, contact: 0 };
-  var durations = { night: 0, nap: 0, contact: 0 };  // minutes
-  var anyHuman = false;
+  // Classification engine output — count + duration per class.
+  //
+  // V-M-91 synth-fold (Maren Mode-1 audit, 2026-05-27): separate human-contact
+  // tracking from generic-contact aggregate. The legacy `anyHuman` flag attached
+  // a "(human)" tag to the aggregated contact line whenever ANY contact record
+  // was location:'human' — over-claiming on days with mixed contact + human
+  // records ("2 contact (human) 1h 45m" when only one was human). The fix
+  // splits the human-contact count from the generic-contact count so the
+  // surface label describes the aggregate it labels.
+  var counts = { night: 0, nap: 0, contact: 0, human: 0 };
+  var durations = { night: 0, nap: 0, contact: 0, human: 0 };  // minutes
   for (var i = 0; i < records.length; i++) {
     var r = records[i];
     if (!r || !r._class) continue;
-    if (counts[r._class] !== undefined) counts[r._class]++;
-    if (durations[r._class] !== undefined && typeof r._durationMin === 'number') {
-      durations[r._class] += r._durationMin;
+    // Class-bucket disaggregates 'contact' into pure-contact vs human-contact
+    // by reading _location (NOT by collapsing onto a single class — the
+    // _class === 'contact' is preserved for engine semantics).
+    if (r._class === 'contact' && r._location === 'human') {
+      counts.human++;
+      if (typeof r._durationMin === 'number') durations.human += r._durationMin;
+    } else if (counts[r._class] !== undefined) {
+      counts[r._class]++;
+      if (typeof r._durationMin === 'number') durations[r._class] += r._durationMin;
     }
-    if (r._location === 'human') anyHuman = true;
   }
-  var totalRecords = counts.night + counts.nap + counts.contact;
+  var totalRecords = counts.night + counts.nap + counts.contact + counts.human;
   if (totalRecords === 0) return;  // renderHomeSleep already showed the empty state
 
-  // Helper — render hh:mm from minutes.
+  // V-M-92 synth-fold (Maren Mode-1 audit, 2026-05-27): formatHm previously
+  // used Math.round which produced "1h 60m" at half-minute totals
+  // (min=119.5 → h=1, m=Math.round(59.5)=60). Floor-and-carry the same
+  // way HR-11 currency discipline floors — never report ambiguous minute
+  // values across the hour boundary.
   var formatHm = function(min) {
-    var h = Math.floor(min / 60);
-    var m = Math.round(min - h * 60);
+    var totalMin = Math.floor(min);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin - h * 60;
     return h + 'h ' + m + 'm';
   };
 
@@ -33888,7 +33963,8 @@ function renderSleepArc3Insights() {
   var parts = [];
 
   // Strip 1 — classification breakdown.
-  // Honest: surfaces all three classes; uses parent-legible labels.
+  // V-M-91 synth-fold: split contact vs human-contact aggregates — the surface
+  // label describes the count it labels (no aggregate-level over-claim).
   var breakdown = [];
   if (counts.night > 0) {
     breakdown.push(escHtml(counts.night + ' night ' + formatHm(durations.night)));
@@ -33897,8 +33973,10 @@ function renderSleepArc3Insights() {
     breakdown.push(escHtml(counts.nap + ' nap' + (counts.nap > 1 ? 's' : '') + ' ' + formatHm(durations.nap)));
   }
   if (counts.contact > 0) {
-    var humanTag = anyHuman ? ' (human)' : '';
-    breakdown.push(escHtml(counts.contact + ' contact' + humanTag + ' ' + formatHm(durations.contact)));
+    breakdown.push(escHtml(counts.contact + ' contact ' + formatHm(durations.contact)));
+  }
+  if (counts.human > 0) {
+    breakdown.push(escHtml(counts.human + ' human ' + formatHm(durations.human)));
   }
   if (breakdown.length > 0) {
     parts.push(
@@ -33929,8 +34007,11 @@ function renderSleepArc3Insights() {
     var icon = top.severityLevel === 'urgent' ? zi('warn')
             : top.severityLevel === 'firm' ? zi('clock')
             : zi('moon');
+    // V-M-94 synth-fold: add `tappable` class to tappable strips so the
+    // affordance is discoverable (the existing renderHomeSleep info-strip
+    // pattern uses `tappable` for surface-tap discoverability).
     parts.push(
-      '<div class="info-strip ' + tone + ' mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
+      '<div class="info-strip ' + tone + ' tappable mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
         '<span>' + icon + '</span>' +
         '<div><strong class="tc-indigo">Sleep guidance</strong>' +
         '<div class="t-sub">' + escHtml(top.text) + '</div></div>' +
@@ -33938,18 +34019,37 @@ function renderSleepArc3Insights() {
     );
   }
 
-  // Strip 3 — hero score sleep contribution (warm cross-domain disclosure).
+  // Strip 3 — hero score sleep contribution.
+  //
+  // V-M-90 synth-fold (Maren Mode-1 audit, 2026-05-27): replace the raw float
+  // "Sleep score today: 2.45" with a parent-legible severity-band headline
+  // sourced from the engine's severityLevel classification. The raw float
+  // has no scale / no reference range / no certainty disclosure — a tired
+  // parent reads "-0.15 (contact-combination bonus active)" and has zero
+  // anchor for "is that bad? is that good?" The Charter cipher-honesty axis
+  // is explicit: every claim carries certainty + source. The severityLevel
+  // classification IS parent-legible; the raw float is not.
+  //
+  // The contact-combination bonus is surfaced as a positive headline
+  // ("Contact + structured sleep both logged — bonus active") when sd.dayBonuses
+  // > 0, separate from the score headline, so the warm cross-domain
+  // disclosure lands without entangling with severity framing.
   if (hero && hero.perDomain && hero.perDomain.sleep) {
     var sd = hero.perDomain.sleep;
-    var heroLine = 'Sleep score today: ' + (Math.round(sd.total * 100) / 100);
-    if (sd.dayBonuses && sd.dayBonuses > 0) {
-      heroLine += ' (contact-combination bonus active)';
-    }
+    var sev = sd.severityLevel;
+    var heroLine;
+    if (sev === 'urgent') heroLine = 'Sleep — needs attention now';
+    else if (sev === 'firm') heroLine = 'Sleep — heads up';
+    else if (sev === 'gentle') heroLine = 'Sleep — track today';
+    else heroLine = 'Sleep on track today';
+    var heroSub = (sd.dayBonuses && sd.dayBonuses > 0)
+      ? 'Contact + structured sleep both logged today — bonus active.'
+      : 'Engine-derived band; tap to see the sleep tab for details.';
     parts.push(
-      '<div class="info-strip is-indigo mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
+      '<div class="info-strip is-indigo tappable mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
         '<span>' + zi('moon') + '</span>' +
         '<div><strong class="tc-indigo">' + escHtml(heroLine) + '</strong>' +
-        '<div class="t-sub">' + escHtml('Engine-derived from class × location × auxiliary multipliers.') + '</div></div>' +
+        '<div class="t-sub">' + escHtml(heroSub) + '</div></div>' +
       '</div>'
     );
   }
@@ -44159,6 +44259,16 @@ function renderHomeSleep() {
   }
 
   el.innerHTML = html;
+
+  // V-M-89 synth-fold (Maren Mode-1 audit, 2026-05-27): hoist the Sleep Arc 3
+  // insights strip into the renderHomeSleep refresh path. Without this,
+  // standalone callers (saveQLSleep / saveQLNap / addSleepEntry / addNapEntry /
+  // startSleepNow / endSleepNow / sleep-delete) silently wipe the strip via
+  // this innerHTML write — the parent logs a contact-nap and the strip
+  // vanishes. Single point of insertion at the canonical refresh boundary.
+  if (typeof renderSleepArc3Insights === 'function') {
+    try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
+  }
 }
 
 function renderSleepHistoryPreview() {

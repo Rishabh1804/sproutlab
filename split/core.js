@@ -5894,11 +5894,29 @@ function _evaluateMetCriterion(rec, activeRange, todayData) {
 }
 
 // Walk history backward looking for last day the criterion was met. -1 if never within window.
+//
+// V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): `day._met` may be either
+// (a) a per-key bag { recKey1: bool, recKey2: bool, ... } emitted by domain
+//     handlers whose recommendations differentiate by predicate (sleep's
+//     humanContact / napCount / nightSleepHours / contactMinutes etc.), OR
+// (b) a single boolean — the legacy/single-predicate shape (acceptable
+//     fallback for domains where every recommendation shares the same
+//     "any record this day" criterion).
+// Both forms are accepted. Per-key bag is preferred for predicate-distinct
+// recommendations because a single boolean collapses the streak counter
+// across keys — a baby who slept every day in bed would otherwise return
+// daysSinceMet=1 for humanContact even with zero `location:'human'` records,
+// breaking the 2:1 reward:penalty doctrine + 3-day urgent escalation.
 function _countDaysSinceLastMet(rec, history) {
   if (!Array.isArray(history) || history.length === 0) return 30;  // cap
   for (var i = 0; i < history.length && i < 30; i++) {
     const day = history[i];
-    if (day && day._met) return i + 1;
+    if (!day || day._met === undefined || day._met === null) continue;
+    if (typeof day._met === 'object') {
+      if (rec && rec.key && day._met[rec.key]) return i + 1;
+    } else if (day._met) {
+      return i + 1;
+    }
     // history rows pre-tagged with _met by caller (scoring-redesign-v1 contract); fallback ignore.
   }
   return 30;
@@ -6283,6 +6301,35 @@ function _domainMetDuration(domain, key, todayData) {
   return totalMin / 60;
 }
 
+// _sleepMetBagForDay — per-key met-criterion bag for sleep recommendations.
+// V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): emit per-key presence
+// flags so _countDaysSinceLastMet can differentiate across the sleep
+// RECOMMENDATION_ROSTER rows (humanContact / napCount / nightSleepHours /
+// contactMinutes / sleepAmount) rather than collapsing them to a single
+// boolean. Predicate-presence semantics (any record matching the
+// predicate on the day) — the threshold gate lives in _evaluateRecommendation's
+// metToday read; the history streak only needs "did the parent do this at all."
+function _sleepMetBagForDay(dayRecords) {
+  var bag = {
+    humanContact: false,
+    napCount: false,
+    nightSleepHours: false,
+    contactMinutes: false,
+    sleepAmount: false,
+  };
+  if (!Array.isArray(dayRecords) || dayRecords.length === 0) return bag;
+  for (var i = 0; i < dayRecords.length; i++) {
+    var r = dayRecords[i];
+    if (!r) continue;
+    bag.sleepAmount = true; // any sleep record satisfies the cross-class total predicate
+    if (r._location === 'human') bag.humanContact = true;
+    if (r._class === 'nap') bag.napCount = true;
+    if (r._class === 'night') bag.nightSleepHours = true;
+    if (r._class === 'contact') bag.contactMinutes = true;
+  }
+  return bag;
+}
+
 // _domainBuildRecentData — global dispatcher. Builds the
 // { today: { records: [...] }, history: [...] } envelope the v3-3 spine
 // passes through to _evaluateRecommendation + _scoreDay.
@@ -6309,17 +6356,28 @@ function _domainBuildRecentData(domain, dateStr, dataset) {
     return r._dayAttribution === dateStr;
   });
   // History — 14 days of {date, _met} envelopes for streak calculation.
-  // Each day's _met is set true if ANY sleep record landed on that day; the
-  // generic v3-3 _countDaysSinceLastMet walks history backward looking for
-  // the first _met:true entry.
+  //
+  // V-K-93 synth-fold (Kael Mode-1 audit, 2026-05-27): _met is a PER-KEY bag
+  // so the generic v3-3 _countDaysSinceLastMet can resolve per-recommendation
+  // (humanContact / napCount / nightSleepHours / contactMinutes / sleepAmount).
+  // The legacy single-boolean shape collapsed the streak counter across keys
+  // — a baby who slept every day in bed but had zero `location:'human'`
+  // records would return daysSinceMet=1 for humanContact, breaking the
+  // 2:1 reward:penalty doctrine + 3-day urgent escalation contract.
+  //
+  // Per-key predicates (presence-of-predicate-record on the day, not
+  // threshold-met): the streak counter measures "days since the parent did
+  // this at all" — which is precisely the escalation signal the safety
+  // floor needs. The threshold/count gate lives in _evaluateRecommendation's
+  // metToday read, not in the history streak.
   var history = [];
   for (var d = 1; d <= 14; d++) {
     var ds = _offsetDateStr(dateStr, -d);
-    var anyOnDay = false;
+    var dayRecords = [];
     for (var k = 0; k < normalized.length; k++) {
-      if (normalized[k]._dayAttribution === ds) { anyOnDay = true; break; }
+      if (normalized[k]._dayAttribution === ds) dayRecords.push(normalized[k]);
     }
-    history.push({ date: ds, _met: anyOnDay });
+    history.push({ date: ds, _met: _sleepMetBagForDay(dayRecords) });
   }
   return {
     today: { records: todayRecords, dateStr: dateStr },

@@ -444,7 +444,9 @@ function renderHome() {
   renderOutingPlannerCard();
   renderTomorrowPrep();
   renderHomeSleep();
-  try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
+  // V-M-89 synth-fold: renderSleepArc3Insights is now hoisted into the end of
+  // renderHomeSleep itself (medical.js) so every refresh path includes it.
+  // No separate call needed here.
   renderHomePoop();
   // v2.3: renderHomeVacc, renderUpcomingEvents, renderDoctorPrep, renderRecoFood,
   // renderHomeActivity, renderPlanPreview, renderWeeklySummary moved to their new tabs
@@ -10042,28 +10044,43 @@ function renderSleepArc3Insights() {
     ? recent.today.records
     : [];
 
-  // Classification engine output — count + duration per class. Honest
-  // disclosure: surfaces always include the count, even if zero, so the
-  // parent reads "0 contact" rather than the surface omitting the row.
-  var counts = { night: 0, nap: 0, contact: 0 };
-  var durations = { night: 0, nap: 0, contact: 0 };  // minutes
-  var anyHuman = false;
+  // Classification engine output — count + duration per class.
+  //
+  // V-M-91 synth-fold (Maren Mode-1 audit, 2026-05-27): separate human-contact
+  // tracking from generic-contact aggregate. The legacy `anyHuman` flag attached
+  // a "(human)" tag to the aggregated contact line whenever ANY contact record
+  // was location:'human' — over-claiming on days with mixed contact + human
+  // records ("2 contact (human) 1h 45m" when only one was human). The fix
+  // splits the human-contact count from the generic-contact count so the
+  // surface label describes the aggregate it labels.
+  var counts = { night: 0, nap: 0, contact: 0, human: 0 };
+  var durations = { night: 0, nap: 0, contact: 0, human: 0 };  // minutes
   for (var i = 0; i < records.length; i++) {
     var r = records[i];
     if (!r || !r._class) continue;
-    if (counts[r._class] !== undefined) counts[r._class]++;
-    if (durations[r._class] !== undefined && typeof r._durationMin === 'number') {
-      durations[r._class] += r._durationMin;
+    // Class-bucket disaggregates 'contact' into pure-contact vs human-contact
+    // by reading _location (NOT by collapsing onto a single class — the
+    // _class === 'contact' is preserved for engine semantics).
+    if (r._class === 'contact' && r._location === 'human') {
+      counts.human++;
+      if (typeof r._durationMin === 'number') durations.human += r._durationMin;
+    } else if (counts[r._class] !== undefined) {
+      counts[r._class]++;
+      if (typeof r._durationMin === 'number') durations[r._class] += r._durationMin;
     }
-    if (r._location === 'human') anyHuman = true;
   }
-  var totalRecords = counts.night + counts.nap + counts.contact;
+  var totalRecords = counts.night + counts.nap + counts.contact + counts.human;
   if (totalRecords === 0) return;  // renderHomeSleep already showed the empty state
 
-  // Helper — render hh:mm from minutes.
+  // V-M-92 synth-fold (Maren Mode-1 audit, 2026-05-27): formatHm previously
+  // used Math.round which produced "1h 60m" at half-minute totals
+  // (min=119.5 → h=1, m=Math.round(59.5)=60). Floor-and-carry the same
+  // way HR-11 currency discipline floors — never report ambiguous minute
+  // values across the hour boundary.
   var formatHm = function(min) {
-    var h = Math.floor(min / 60);
-    var m = Math.round(min - h * 60);
+    var totalMin = Math.floor(min);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin - h * 60;
     return h + 'h ' + m + 'm';
   };
 
@@ -10076,7 +10093,8 @@ function renderSleepArc3Insights() {
   var parts = [];
 
   // Strip 1 — classification breakdown.
-  // Honest: surfaces all three classes; uses parent-legible labels.
+  // V-M-91 synth-fold: split contact vs human-contact aggregates — the surface
+  // label describes the count it labels (no aggregate-level over-claim).
   var breakdown = [];
   if (counts.night > 0) {
     breakdown.push(escHtml(counts.night + ' night ' + formatHm(durations.night)));
@@ -10085,8 +10103,10 @@ function renderSleepArc3Insights() {
     breakdown.push(escHtml(counts.nap + ' nap' + (counts.nap > 1 ? 's' : '') + ' ' + formatHm(durations.nap)));
   }
   if (counts.contact > 0) {
-    var humanTag = anyHuman ? ' (human)' : '';
-    breakdown.push(escHtml(counts.contact + ' contact' + humanTag + ' ' + formatHm(durations.contact)));
+    breakdown.push(escHtml(counts.contact + ' contact ' + formatHm(durations.contact)));
+  }
+  if (counts.human > 0) {
+    breakdown.push(escHtml(counts.human + ' human ' + formatHm(durations.human)));
   }
   if (breakdown.length > 0) {
     parts.push(
@@ -10117,8 +10137,11 @@ function renderSleepArc3Insights() {
     var icon = top.severityLevel === 'urgent' ? zi('warn')
             : top.severityLevel === 'firm' ? zi('clock')
             : zi('moon');
+    // V-M-94 synth-fold: add `tappable` class to tappable strips so the
+    // affordance is discoverable (the existing renderHomeSleep info-strip
+    // pattern uses `tappable` for surface-tap discoverability).
     parts.push(
-      '<div class="info-strip ' + tone + ' mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
+      '<div class="info-strip ' + tone + ' tappable mt-6" id="sleepArc3Severity" data-action="switchTab" data-arg="sleep">' +
         '<span>' + icon + '</span>' +
         '<div><strong class="tc-indigo">Sleep guidance</strong>' +
         '<div class="t-sub">' + escHtml(top.text) + '</div></div>' +
@@ -10126,18 +10149,37 @@ function renderSleepArc3Insights() {
     );
   }
 
-  // Strip 3 — hero score sleep contribution (warm cross-domain disclosure).
+  // Strip 3 — hero score sleep contribution.
+  //
+  // V-M-90 synth-fold (Maren Mode-1 audit, 2026-05-27): replace the raw float
+  // "Sleep score today: 2.45" with a parent-legible severity-band headline
+  // sourced from the engine's severityLevel classification. The raw float
+  // has no scale / no reference range / no certainty disclosure — a tired
+  // parent reads "-0.15 (contact-combination bonus active)" and has zero
+  // anchor for "is that bad? is that good?" The Charter cipher-honesty axis
+  // is explicit: every claim carries certainty + source. The severityLevel
+  // classification IS parent-legible; the raw float is not.
+  //
+  // The contact-combination bonus is surfaced as a positive headline
+  // ("Contact + structured sleep both logged — bonus active") when sd.dayBonuses
+  // > 0, separate from the score headline, so the warm cross-domain
+  // disclosure lands without entangling with severity framing.
   if (hero && hero.perDomain && hero.perDomain.sleep) {
     var sd = hero.perDomain.sleep;
-    var heroLine = 'Sleep score today: ' + (Math.round(sd.total * 100) / 100);
-    if (sd.dayBonuses && sd.dayBonuses > 0) {
-      heroLine += ' (contact-combination bonus active)';
-    }
+    var sev = sd.severityLevel;
+    var heroLine;
+    if (sev === 'urgent') heroLine = 'Sleep — needs attention now';
+    else if (sev === 'firm') heroLine = 'Sleep — heads up';
+    else if (sev === 'gentle') heroLine = 'Sleep — track today';
+    else heroLine = 'Sleep on track today';
+    var heroSub = (sd.dayBonuses && sd.dayBonuses > 0)
+      ? 'Contact + structured sleep both logged today — bonus active.'
+      : 'Engine-derived band; tap to see the sleep tab for details.';
     parts.push(
-      '<div class="info-strip is-indigo mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
+      '<div class="info-strip is-indigo tappable mt-6" id="sleepArc3Hero" data-action="switchTab" data-arg="sleep">' +
         '<span>' + zi('moon') + '</span>' +
         '<div><strong class="tc-indigo">' + escHtml(heroLine) + '</strong>' +
-        '<div class="t-sub">' + escHtml('Engine-derived from class × location × auxiliary multipliers.') + '</div></div>' +
+        '<div class="t-sub">' + escHtml(heroSub) + '</div></div>' +
       '</div>'
     );
   }

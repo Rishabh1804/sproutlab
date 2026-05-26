@@ -6092,6 +6092,16 @@ function renderHomeSleep() {
   }
 
   el.innerHTML = html;
+
+  // V-M-89 synth-fold (Maren Mode-1 audit, 2026-05-27): hoist the Sleep Arc 3
+  // insights strip into the renderHomeSleep refresh path. Without this,
+  // standalone callers (saveQLSleep / saveQLNap / addSleepEntry / addNapEntry /
+  // startSleepNow / endSleepNow / sleep-delete) silently wipe the strip via
+  // this innerHTML write — the parent logs a contact-nap and the strip
+  // vanishes. Single point of insertion at the canonical refresh boundary.
+  if (typeof renderSleepArc3Insights === 'function') {
+    try { renderSleepArc3Insights(); } catch(e) { console.error('sleep arc3 insights:', e); }
+  }
 }
 
 function renderSleepHistoryPreview() {
