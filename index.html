@@ -23594,8 +23594,10 @@ function _scoreDayHero(dateStr, dataset) {
 //     constructs prose at runtime.
 //
 // HR-12 safe: uses _offsetDateStr / today() / _hhmmToMinutes; no raw
-// new Date() arithmetic. (Some pre-existing helpers below e.g. _offsetDateStr
-// itself wrap timezone-safe Date construction internally per CLAUDE.md HR-12.)
+// new Date() arithmetic. Note: _offsetDateStr is safe under IST (UTC+5:30)
+// deployment; its negative-offset behavior under west-of-UTC timezones is
+// a pre-existing endemic concern tracked as the V-K-95 follow-up
+// (Kael cipher-honesty-s3 amendment, 2026-05-27).
 // ─────────────────────────────────────────────────────────────────────────
 
 // Sleep classification — engine-derived class + day-attribution.
