@@ -647,7 +647,7 @@ footer a { color: var(--tc-sky); }
   <header>
     <div class="hd-row">
       <h1>SproutLab v3.0 — Progression Tree</h1>
-      <div class="meta">32 nodes · last refresh 2026-05-26 (post-#138 — v3-5 impl ratified; gold tier fully ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
+      <div class="meta">32 nodes · last refresh 2026-05-27 (post-#143 + #144 — v3-6 IMPL ratified [styles.css mutex position 2 closed; v3-1 unblocked]; sleep arc 3 / scoring s-2 IMPL ratified [first v3-3 engine-spine consumer]; gold tier still fully ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
     </div>
   </header>
 
@@ -839,13 +839,13 @@ const NODES = {
     label:'PR #126', sub:'D3 Phase 2-B · MERGED', files:'split/home.js · split/core.js', composes:'5 Tier-2 items: markMedDone three-state, Adjust midnight rollover, future-time gate, outing-intent, preserveWithFat tightening',
     description:'MERGED 2026-05-25 at sha 464e5cf. D3 Phase 2-B impl shipped. canon-cc-008 chain discharged (Maren + Kael clear-with-notes; Cipher LGTM). Established toast-and-abort precedent v3-1 inherits.' },
   'PR-127': { x: 470, y: 90, status:'ratified', wave:'preWave1', region:'shared', glyph:'document', tier:1, critical:true, capstone:null,
-    label:'PR #127', sub:'Sleep spec v1 · MERGED', files:'docs/specs/sleep-redesign-v1.md',
+    label:'PR #127', sub:'Sleep spec v1 · IMPL MERGED', files:'docs/specs/sleep-redesign-v1.md',
     composes:'Classifier (night/nap/contact) + lazy normalizer + write-side UX shift + scoring wiring',
-    description:'MERGED 2026-05-25 at sha 1f81e09. Sleep redesign v1 spec ratified. Three impl arcs sequenced after food-sub-tab. Subsumes midnight-rollover bug as natural consequence of dayAttribution rule. v3-3 gate cleared.' },
+    description:'Spec MERGED 2026-05-25 at sha 1f81e09. IMPL MERGED 2026-05-27 at sha a312696 via PR #143 — Sleep Arc 3 / Scoring S-2 IMPL; first v3-3 engine-spine consumer. Three-class classifier (night/nap/contact) + locationMultiplier (human ×1.3 > contact ×0.9; bed baseline; sofa/car penalty) + day-attribution rollover (bedtime<05:00 attributes to prior day) all live. Subsumes midnight-rollover bug as natural consequence of dayAttribution rule. Architect correction honored: contact-combination bonus fires for night+contact OR nap+contact (explicit regression guard rejects nap-combination-only narrowing).' },
   'PR-128': { x: 660, y: 90, status:'ratified', wave:'preWave1', region:'engine', glyph:'document', tier:1, critical:true, capstone:null,
-    label:'PR #128', sub:'Scoring spec v1 · MERGED', files:'docs/specs/scoring-redesign-v1.md',
+    label:'PR #128', sub:'Scoring spec v1 · IMPL MERGED', files:'docs/specs/scoring-redesign-v1.md',
     composes:'RECOMMENDATION_ROSTER + _evaluateRecommendation + _scoreDay + _scoreWindow + _scoreDayHero + severity model',
-    description:'MERGED 2026-05-25 at sha d034f91. Scoring redesign v1 sibling spec ratified. Engine primitive foundation for v3-3. v3-3 gate cleared.' },
+    description:'Spec MERGED 2026-05-25 at sha d034f91. IMPL MERGED 2026-05-27 at sha a312696 via PR #143 — first v3-3 consumer + first 5 RECOMMENDATION_ROSTER row additions (nightSleepHours, napCount, contactMinutes, humanContact, sleepAmount; all v1 schema-honored). V-K-93 per-key _met bag (Kael Mode-1 audit) preserves the 2:1 reward:penalty doctrine + 3-day urgent-escalation contract for predicate-distinct recommendations. severityMessages.*.strength engine-internal labels never .text-substituted into rendered prose (2026-05-26 §3 cosmetic NOTE closed at the card tier + sleep surface). canon-cc-008 chain cleared: Maren primary (3 BLOCKING + 6 NOTES) + Kael consult (1 BLOCKING + 6 NOTES) + Cipher Edict V CLEAN (V-K-95 _offsetDateStr pre-existing hazard → follow-up PR scope).' },
   'FoodST': { x: 920, y: 90, status:'ratified', wave:'preWave1', region:'care', glyph:'bowl', tier:1, critical:false, capstone:null,
     label:'Food Sub-Tab', sub:'PR #133 · v1 RATIFIED', files:'docs/specs/food-sub-tab-v1.md',
     composes:'Food sub-tab UI + structured food-object shape (precedes v3-8 parseFeeding); 5 implementation phases F-1..F-5',
@@ -874,9 +874,10 @@ const NODES = {
 
   /* Layer 2b — Wave 1 mid (y ≈ 420) */
   'v3-6':  { x: 130, y: 420, status:'ratified', wave:'wave1', region:'surface', glyph:'card', tier:2, critical:false, capstone:null,
-    label:'v3-6', sub:'Card Priority', files:'split/intelligence-cards.js · split/styles.css',
+    label:'v3-6', sub:'Card Priority · IMPL MERGED', files:'split/intelligence-cards.js · split/styles.css · split/template.html · split/build.sh · split/audit-card-priority-v3-6.sh',
     composes:'vela-arc-3 + Maren\'s severity floor doctrine',
-    description:'Three priority tiers: urgent / notable / ambient. Master sorts by tier. Ambient collapses by default. Severity floors categorical — a win-card never outranks a vaccine reminder.' },
+    cipherGates:'audit-card-priority-v3-6: build-time grep + producer-coverage gate ratified ✓ (wired into split/build.sh as the 7th audit gate — HR-cipher pattern from v3-3 + v3-5 mirrored). regression-guard-v3-6-tier-registry-sync meta-audit closes the cipher-extensibility-2 dormant gate from v3-5 (three-site sync: constant + CSS variants + deriver branches). 22 active regression guards green + 1 skip (cipher-2 half-awake manual fixture). styles.css mutex 2nd released on this merge: v3-1 (CT Notifications) styles.css branch authorized to open.',
+    description:'IMPL MERGED 2026-05-27 at sha dd985ed via PR #144 (spec at #141, sha 664aceb). Three priority tiers via data-card-priority attribute: urgent / notable / ambient (mutex precedence; canon-cc-027 amendment floor for tier additions). _setCardPriority(cardId, tier) producer helper + _sortInfoTabByPriority post-pass (section-internal sort; DOM reorder — screen-reader reading order = visual priority order; synchronous within microtask). 13 renderInfo* in intelligence-cards.js (Vela\'s region) tier; ~30 cross-Region renderInfo* default to "notable" via sort fallback (deferred-with-named-obligation: V-V-39 → claude/v3-6-quicklog-tier-followup branch; V-V-40 medical.js reaction cards → v3-1 cycle). Two derived tokens: --card-surface-ambient + --shadow-card-urgent (F1+F2 review-pass amendments). HR-2 carve-out: _setCardPriority\'s body.style.display + chev.style.transform inline writes mirror the existing toggleHistoryCard pattern (annotated // collapse-machinery-mirror; FOLD with watch-list for collapse-machinery unification). canon-cc-008 chain cleared: Vela primary (1 BLOCKING V-V-38 bodyId derivation mismatch on infoNutrientHeatmapCard + infoComboFreqCard, folded + 6 NOTES) + Maren second-round (0 BLOCKING + 5 NOTES) + Kael third-round (0 BLOCKING + 5 NOTES) + Cipher Edict V CLEAN across cipher-honesty / cipher-extensibility / cipher-warmth (CV3-006). All 3 Agent-A deviations RATIFIED at Cipher terminal verdict.' },
   'v3-2':  { x: 380, y: 420, status:'ratified', wave:'wave1', region:'care', glyph:'shield', tier:2, critical:false, capstone:null,
     label:'v3-2', sub:'CT Triggers + Posture', files:'split/medical.js · split/intelligence-caretickets.js · split/intelligence-illness.js',
     composes:'maren-arc-2 + kael-arc-4 (single merged arc)',
