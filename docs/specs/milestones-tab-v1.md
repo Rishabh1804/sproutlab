@@ -124,10 +124,12 @@ This is the same posture-shift that made D3 tracking tolerable (v3-3 era) — th
 - Current engine status: `confirmed` (n=5 evidence, high-conf) / `practicing` (n=2, medium-conf) / `not-yet` (n=0)
 - Three tap targets (the **confirmation states** ratified at Q5) — **HR-1 floor: all glyphs via `zi()`** (F3 /review skill-pass amendment 2026-05-27):
   - **`zi('check')` Saw it today** → adds a high-confidence evidence row + advances status if threshold met
-  - **`zi('sparkle')` Practicing** → adds a medium-confidence evidence row + sets status to practicing
+  - **`zi('trending-flat')` Practicing** → adds a medium-confidence evidence row + sets status to practicing
   - **`zi('arrow-right')` Not yet** → suppresses this milestone in the in-window proposals for 7 days (parent told us; engine doesn't re-prompt)
 
-The three zi() names above exist in the current 109-symbol sprite (sprite includes `check`, `sparkle`, `arrow-right` — the latter added in PR-EF Phase A per CLAUDE.md). Vela's render-layer audit may reassign at IMPL time within the existing sprite.
+The three zi() names above exist in the current 109-symbol sprite (sprite includes `check`, `trending-flat`, `arrow-right` — the latter two added in PR-EF Phase A per CLAUDE.md). Vela's render-layer audit may reassign at IMPL time within the existing sprite.
+
+**Practicing-tap glyph note (G2 /review skill-pass amendment 2026-05-27):** the Practicing tap-state glyph was originally spec'd as `zi('sparkle')` but `sparkle` is also the canonical sensory-domain icon in `ACTIVITY_CATEGORIES` — meaning a sensory-domain milestone card would render `zi('sparkle')` as BOTH its milestone-domain icon AND its Practicing tap button (visual collision; half-awake-test ambiguity). Reassigned to `zi('trending-flat')` — semantically "steady, in-progress" matches the hedge-tier of the Practicing state and avoids the cross-meaning with the sensory domain.
 
 **Confidence-floor honor (CV3-006 Honesty + Kael risk register):** an in-window proposal NEVER reads `_predictMilestoneWindow` output and renders without the *band* disclosure. The clinical band IS the hedge tier at the card tier (just as `_tsfHedgePhrase` is the hedge tier at the prose tier).
 
@@ -179,6 +181,8 @@ Order:
 4. **Bulk catch-up grid** (Primitive 3 — collapsed by default)
 5. **Recent evidence feed** (existing surface, collapsed by default; v1 preserves the chronological history view)
 
+**Relocation contract (G3 /review skill-pass amendment 2026-05-27):** the F2 "relocate from flat layout" operations across Library + Patterns are **template-restructure only**. Existing element IDs (`#milestonesDomainHero` / `#milestoneStats` / `#milestoneHighlights` / `#msCatWheels` / `#recentEvidenceFeed` / `#msActiveMilestones`) and their corresponding `home.js` render-function bindings (`getElementById` consumers) are **preserved unchanged**. The IMPL diff moves the `<div id="...">` wrappers into the new sub-tab containers; the JS-side fetch-by-ID contract continues to resolve. No render-function refactor required for the relocation itself.
+
 ### Library sub-tab — full milestone DB browsable
 
 Order:
@@ -198,7 +202,7 @@ Order:
 3. **Category Progress wheels** — existing `#msCatWheels`; reads ACTIVITY_CATEGORIES registry (no longer the hard-coded 4-category array)
 4. **Weekly summary card** — narrate this week's evidence ("3 new motor; 2 language; pointing now consistent") per CV3-002
 5. **Pediatric-visit prep card** — see §Three return-visit surfaces below
-6. **Milestone-window correlation card** — surfaces v3-4 `renderInfoMilestoneSleepCorrelation` from the Info tab via tap-to-jump cross-link (F6 /review skill-pass amendment 2026-05-27): inline teaser passage rendered from the v3-4 narrative-prose template + a tap target with `data-action="switchTab" data-arg="insights"` that opens the Info tab scrolled to the full card. The card itself stays canonically in `intelligence-cards.js` (Vela's region); the milestones tab renders the teaser + link.
+6. **Milestone-window correlation card** — surfaces v3-4 `renderInfoMilestoneSleepCorrelation` from the Info tab via tap-to-jump cross-link (F6 /review skill-pass amendment 2026-05-27; tab-routing-fix per G1 amendment 2026-05-27): inline teaser passage rendered from the v3-4 narrative-prose template + a tap target with `data-action="switchTab" data-arg="info"` that opens the Info tab (template.html:1589 `id="tab-info"`) scrolled to the full card. The card itself stays canonically in `intelligence-cards.js` (Vela's region); the milestones tab renders the teaser + link.
 
 ### Sub-tab navigation chrome
 
@@ -415,7 +419,7 @@ Includes a tap-to-export-PDF (v1 minimum: tap-to-copy-as-text; PDF export is R-3
 | `regression-guard-milestones-v1-trajectory-ribbon-tap-routes-to-library` | Tap on a ribbon marker opens the corresponding milestone row in Library sub-tab |
 | `regression-guard-milestones-v1-pediatric-prep-derives` | Pediatric-prep card surfaces ≥1 narrated bullet when there is ≥1 high-conf confirmation OR practicing milestone OR active CareTicket in last 30 days |
 | `regression-guard-milestones-v1-pediatric-prep-copy-as-text` | Tap-to-copy-as-text path delivers the rendered prose to clipboard (PDF export deferred to R-3) |
-| `regression-guard-milestones-v1-patterns-correlation-cross-link` | **(F6 amendment)** Patterns sub-tab Milestone-window correlation cross-link renders an inline teaser passage + carries `data-action="switchTab" data-arg="insights"` tap target that opens the Info tab |
+| `regression-guard-milestones-v1-patterns-correlation-cross-link` | **(F6 + G1 amendments)** Patterns sub-tab Milestone-window correlation cross-link renders an inline teaser passage + carries `data-action="switchTab" data-arg="info"` tap target (NOT `insights` — that routes to the wrong tab; G1 corrected) that opens the Info tab (`#tab-info`, template.html:1589) |
 
 ### Functional tests — backward-compat & integration (F7 /review skill-pass amendment 2026-05-27)
 
@@ -577,16 +581,31 @@ Ten findings from the in-transcript `/review` skill pass on 2026-05-27 (NOT an E
 |---|---|---|
 | **F1** | §Primitive 2 (suppression-state storage IMPL-note) | "Not yet" tap stores per-milestone suppress-until at `ziva_milestone_suppress` localStorage key in `{ <milestoneKey>: <epochMs> }` shape; Firebase-sync replicable; auto-expires after 7 days; no manual unsuppress UI in v1. |
 | **F2** | §3-sub-tab layout (Library + Patterns ordering) | Existing 7-card flat layout's `#milestonesDomainHero` → top of Library sub-tab; `#milestoneStats` + `#milestoneHighlights` → top of Patterns sub-tab. Each existing surface gets an explicit new home. |
-| **F3** | §Primitive 2 (zi() name mapping for tap states) | HR-1 floor on tap-target glyphs: `zi('check')` / `zi('sparkle')` / `zi('arrow-right')` for Saw-it / Practicing / Not-yet. All three exist in the 109-symbol sprite. |
+| **F3** | §Primitive 2 (zi() name mapping for tap states) | HR-1 floor on tap-target glyphs: `zi('check')` / `zi('trending-flat')` / `zi('arrow-right')` for Saw-it / Practicing / Not-yet. All three exist in the 109-symbol sprite. *(Practicing glyph reassigned from `sparkle` to `trending-flat` per G2 second-pass — see G-series below.)* |
 | **F4** | §Trajectory ribbon (marker-filter scope) | Ribbon does NOT render every milestone in MILESTONES_DB. v1 marker-set = confirmed + practicing + milestones whose clinical-band intersects `birth..currentAge+3m`. Caps marker count at ~30-40; preserves 200ms perf budget on mobile. |
 | **F5** | §"Today" header card (mid-state narration template) | Third canonical narration template added: in-window present, no recent evidence ("Ziva is 7m 24d. In-window: pointing, pincer grasp. No new evidence this week — quiet stretch."). Helper consumes the v3-4 `_NARRATIVE_PROSE_TEMPLATES` registry pattern at IMPL time. |
-| **F6** | §Patterns sub-tab (Milestone-window correlation cross-link shape) | Cross-link is **tap-to-jump** via `data-action="switchTab" data-arg="insights"`; inline teaser passage rendered from v3-4 narrative-prose template; canonical card stays in `intelligence-cards.js` (Vela's region). |
+| **F6** | §Patterns sub-tab (Milestone-window correlation cross-link shape) | Cross-link is **tap-to-jump** via `data-action="switchTab" data-arg="info"`; inline teaser passage rendered from v3-4 narrative-prose template; canonical card stays in `intelligence-cards.js` (Vela's region). *(Tab-routing target corrected from `insights` → `info` per G1 second-pass — the Info tab is `id="tab-info"` at template.html:1589; `tab-insights` is a different tab. See G-series below.)* |
 | **F7** | §Test plan (new §backward-compat & integration sub-section) | Three new regression guards added: backward-compat-legacy-entries (Q6); scrapbook-evidence-integration (Q8); suppress-state-storage (F1). Plus F4/F5/F6/F9-tagged additions to existing test rows. |
 | **F8** | §Build-time audit gate (gate-count hedge) | "9th audit gate" softened to "8th or 9th depending on v3-4 IMPL sequencing" — both arcs are mutex-independent so either ordering is acceptable. |
 | **F9** | §Build-time audit gate (banned-pattern two-scope expansion) | `audit-activity-categories-v1.sh` now declares TWO scopes: Scope A (activity-category enumeration drift) + Scope B (personalised-milestone-prediction prose; Kael risk-register floor). Two distinct opt-in markers: `// activity-categories-ok:` (A) and `// no-personalised-prediction-ok:` (B). |
 | **F10** | §Registry shape (accent-assignment calibration note) | v1 accent assignments (`language → lavender`, `cognitive → sky`) overlap with established design-system semantic colors. Marked as v1 calibration subject to Vela's render-layer audit at IMPL time; alternative palette suggested (language → indigo, social → peach, cognitive → amber). Audit-gate enforces registry-as-source-of-truth either way. |
 
 Source register: review pass was an in-transcript skill output (no signature, no Edict V chain entry per canon-cc-022 artifact test). The substantive canon-cc-008 chain runs on the IMPL PR; these amendments arrive *with* the spec at ratification time and feed the IMPL canon-cc-008 chain as inputs.
+
+### Second-pass amendments (G-series, 2026-05-27)
+
+A second `/review` skill pass on the F1-F10-folded spec body surfaced three additional findings; all three folded here. G4 (narration-matrix 4th-cell gap) + G5 (audit-script rename) carried as Architect-decision-deferrals — neither has concrete spec-impact at v1 ratification time; both recorded for IMPL author awareness.
+
+| # | Folded into | Substance |
+|---|---|---|
+| **G1** | §Patterns sub-tab item 6 + §Functional tests row + §Review-pass F-register row | Cross-link `data-arg` corrected from `"insights"` (wrong tab — that's `tab-insights` at template.html:1492) to `"info"` (the actual Info tab at template.html:1589). The v3-4 `renderInfoMilestoneSleepCorrelation` card lives on `tab-info`; the spec previously routed taps to the wrong tab. BLOCKING for IMPL author if not folded. |
+| **G2** | §Primitive 2 (Practicing tap glyph reassignment) + §Review-pass F3 register row | Practicing tap-state glyph reassigned from `zi('sparkle')` to `zi('trending-flat')`. `sparkle` is the canonical sensory-domain icon in ACTIVITY_CATEGORIES — a sensory-domain milestone card would have rendered `sparkle` twice (milestone-domain icon + Practicing tap button), creating a half-awake-test ambiguity. `trending-flat` semantically matches "steady, in-progress" and exists in the 109-symbol sprite (PR-EF Phase A). |
+| **G3** | §Log sub-tab end (Relocation contract clarification) | F2 "relocate from flat layout" is **template-restructure only**. Existing element IDs and their `home.js` render-function bindings (`getElementById` consumers) are preserved unchanged. The IMPL diff moves `<div id="...">` wrappers into new sub-tab containers; no render-function refactor required for the relocation itself. |
+
+### Carried forward (G-series deferrals, NOT folded)
+
+- **G4** — narration-matrix 4th-cell gap. The three "Today" header templates (full-data / mid-state / empty-state) cover three of four state-cells; the missing cell is *in-window=N + recent-evidence=Y* (a late-confirming baby with nothing currently in-window). Low-probability edge case. IMPL author may add a 4th template OR fall back to the mid-state shape with "no in-window" framing dropped. Either resolution is Charter-clean. Not folded — IMPL discretion.
+- **G5** — audit-script rename cosmetic. `audit-activity-categories-v1.sh` now enforces two scopes per F9; the name only describes Scope A. Candidate rename: `audit-milestones-tab-v1.sh` (scope-neutral). Cosmetic; opt-in markers stay differentiated. Not folded — IMPL author may rename at IMPL-time if desired.
 
 ---
 
