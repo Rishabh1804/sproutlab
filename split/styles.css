@@ -9876,3 +9876,100 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 }
 [data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   v3-6 — Card-priority registry (single source of truth, card tier).
+   Spec: docs/specs/v3-6-card-priority.md §The three-tier card-priority
+   registry + §Visual contract per tier. Charter axis primarily served:
+   Linguistic + visual warmth (CV3-006 Axis 3) — gestalt-lift on the
+   Info tab via a three-tier mutex hierarchy. Architectural extensibility
+   (Axis 2) — one attribute per card, mutual exclusion enforced by the
+   attribute model. Adding a tier = one CSS variant here + one constant
+   in window._CARD_PRIORITY_TIERS + one branch in _setCardPriority +
+   canon-cc-027 amendment.
+
+   Tier precedence (mutex, highest first): urgent > notable > ambient.
+
+   The three sync sites the meta-audit test
+   regression-guard-v3-6-tier-registry-sync watches:
+     1. window._CARD_PRIORITY_TIERS constant (intelligence-cards.js)
+     2. The data-card-priority CSS variants in this block
+     3. The deriver branches in _setCardPriority (intelligence-cards.js)
+
+   v3-5 cipher-extensibility-2 dormant gate is closed by that meta-audit
+   — the three-site sync pattern v3-5 surfaced is enforced at v3-6.
+
+   F1 + F2 IMPL-note (review-pass amendment 2026-05-27): two derived
+   tokens compose from existing design-system tokens. No inline rgba
+   composition, no inline box-shadow values. Maren second-round audit
+   picks the dark-theme bindings. ────────────────────────────────────── */
+
+/* Derived tokens — compose from existing tokens; no ad-hoc hex */
+:root {
+  /* Ambient surface tint binds to the existing glass token whose alpha
+     already encodes the warm-light overlay. Maren second-round audit may
+     refine to a dedicated value if the contrast floor demands it. */
+  --card-surface-ambient: var(--glass);
+  /* Urgent elevation composes from the existing --shadow token at a deeper
+     radius/offset than the default --shadow (which the base .card uses at
+     4px 20px). The 6px 24px values widen the rose-domain salience without
+     introducing a new color token. */
+  --shadow-card-urgent: 0 6px 24px var(--shadow);
+}
+[data-theme="dark"] {
+  /* Dark-theme bindings — Maren picks the final value at triple-jurisdiction
+     audit time per spec §IMPL-note. Sensible defaults: same composition
+     pattern as light-theme, the dark-theme --glass / --shadow already
+     cascade. */
+  --card-surface-ambient: var(--glass);
+  --shadow-card-urgent: 0 6px 24px var(--shadow);
+}
+
+/* urgent — actionable card-internal insight the parent should see now.
+   Rose-deep border-left 3px (mirrors the v3-5 chip-tier urgent contract
+   one tier larger) + --text title color + bold title font-weight + the
+   --shadow-card-urgent derived elevation. Maren severity-floor honor
+   (V-M-87 echo): --rose-deep is the D2 phase-spec §2.3 token reserved
+   for DO-NOT callout border amplification — never softens below the
+   safety threshold across themes.
+
+   Per spec §Tier-deriver patterns: trend cards and composite cards
+   NEVER urgent. This visual contract activates only when an adherence
+   or reaction card's data deriver returns the urgent signal.
+
+   Selector specificity note: .card.card-daily already defines a
+   border-left:3px solid var(--border-subtle) at line 2521; the
+   .card[data-card-priority="..."] block here recolors / re-widths via
+   higher attribute-selector specificity so the priority chrome wins
+   the cascade. */
+.card[data-card-priority="urgent"] {
+  border-left: 3px solid var(--rose-deep);
+  box-shadow: var(--shadow-card-urgent);
+}
+.card[data-card-priority="urgent"] .card-title {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* notable — default tier (trends with data, computable correlations).
+   Clean chrome — explicit no-op preserves the base .card visual contract.
+   This block exists so the registry has a CSS site per tier (the three
+   sync sites the meta-audit reads). The deriver leaves the collapse body
+   alone for notable, preserving the user's last tap state per spec. */
+.card[data-card-priority="notable"] { /* clean — base .card carries the chrome */ }
+
+/* ambient — no actionable signal (si-nodata branch or baseline historical
+   data with no recent delta). --glass-strong border-left 2px + --mid title
+   color + --card-surface-ambient surface tint. Body forced collapsed by
+   _setCardPriority (mirrors toggleHistoryCard close outcome).
+
+   Per spec §Tier-deriver patterns: every si-nodata branch always routes
+   ambient — CV3-003 honest-empty-state cross-cut. The card-header (title
+   + chevron) remains visible and tappable; the card announces itself. */
+.card[data-card-priority="ambient"] {
+  border-left: 2px solid var(--glass-strong);
+  background: var(--card-surface-ambient);
+}
+.card[data-card-priority="ambient"] .card-title {
+  color: var(--mid);
+}
+

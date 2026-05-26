@@ -57,6 +57,18 @@ if ! bash audit-chip-taxonomy-v3-5.sh >&2; then
   echo "BUILD ABORTED: v3-5 chip-taxonomy audit failed. Migrate to data-state or annotate." >&2
   exit 1
 fi
+# v3-6 Charter Extensibility ship-gate: audit-card-priority-v3-6.sh blocks
+# ad-hoc card-{urgent|notable|ambient} class strings outside the canonical
+# registry (split/styles.css) AND verifies that every renderInfo* function
+# in intelligence-cards.js that fetches its card wrapper also emits a tier
+# via _setCardPriority. Spec: docs/specs/v3-6-card-priority.md §Build-time
+# audit gate. Charter CV3-006 extensibility axis: data-card-priority is
+# the single source of truth at the card tier (parallels v3-5 data-state
+# at the chip tier).
+if ! bash audit-card-priority-v3-6.sh >&2; then
+  echo "BUILD ABORTED: v3-6 card-priority audit failed. Migrate to data-card-priority or annotate." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
