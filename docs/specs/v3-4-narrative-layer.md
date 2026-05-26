@@ -65,8 +65,10 @@ A registry keyed by cross-domain renderer (one row per renderer). Each row carri
  * Single source of truth for passage shape, hedge-tier mapping, sample
  * floor, empty-state phrasing. Mirrors the v3-5 _TSF_CHIP_STATES doctrine:
  * single constant; call-sites read by key; audit-gate guards drift.
- * Placement: split/data.js OR new split/intelligence-narrative.js — IMPL
- * call; either landing is Charter-clean (§Files touched IMPL-note).
+ * Placement: `split/data.js` (Kael's region) per Architect ratification
+ * 2026-05-27 — mirrors the `RECOMMENDATION_ROSTER` row-addition substrate
+ * precedent from scoring-redesign-v1. See §Architect-decision register
+ * (below) for the locked-in rationale.
  */
 window._NARRATIVE_PROSE_TEMPLATES = {
   'foodPoopPipeline': {
@@ -116,7 +118,7 @@ Six rows. **Adding a future row = adding a future cross-domain renderer**; the t
 
 ### Cross-tier interaction with v3-5
 
-v3-5's `_tsfHedgePhrase(confidence)` lives in `intelligence-quicklog.js` and is consumed by the *story-arc summary* on Today So Far (chip-tier surface). v3-4's `_narrativeProse(rendererKey, vars, correlation)` lives in `intelligence-cards.js`-adjacent (or `intelligence-narrative.js` new module — IMPL call) and is consumed by the six *cross-domain card renderers* (card-tier surface). Both honor the same hedge-tier discipline. v3-4's producer is the typed registry consumer; v3-5's stub is the surface-level modifier.
+v3-5's `_tsfHedgePhrase(confidence)` lives in `intelligence-quicklog.js` and is consumed by the *story-arc summary* on Today So Far (chip-tier surface). v3-4's `_narrativeProse(rendererKey, vars, correlation)` lives in `intelligence-cards.js` (Vela's region) and is consumed by the six *cross-domain card renderers* (card-tier surface). The registry it reads (`_NARRATIVE_PROSE_TEMPLATES`) lives in `split/data.js` (Kael's region) per Architect ratification 2026-05-27 — the data declaration is data-grain, the consumer is render-grain; the split mirrors the `RECOMMENDATION_ROSTER` precedent. Both surfaces honor the same hedge-tier discipline. v3-4's producer is the typed registry consumer; v3-5's stub is the surface-level modifier.
 
 **v3-4 fills the v3-5 stub.** The `_tsfHedgePhrase` body in `intelligence-quicklog.js` today returns `''` / `'tends to '` / `''` as a contract-shape placeholder. v3-4 promotes it to the canonical hedge phrase producer (see §The `_tsfHedgePhrase(confidence)` producer wiring below); the registry's `hedgeTierMap` values delegate to it.
 
@@ -249,7 +251,7 @@ This is stated explicitly so the v3-1 unblock condition does not gate on v3-4: v
 
 ## Triple-jurisdiction routing — canon-cc-008 chain
 
-**Vela primary.** `intelligence-quicklog.js` and `intelligence-cards.js` are Vela's region; the `_tsfHedgePhrase` producer wiring and the six cross-domain renderer rewrites both land there. (Registry placement: if the registry lands in `data.js` it crosses into Kael's region — see §Files touched + LOC estimate IMPL-note; either landing is Charter-clean.)
+**Vela primary.** `intelligence-quicklog.js` and `intelligence-cards.js` are Vela's region; the `_tsfHedgePhrase` producer wiring and the six cross-domain renderer rewrites both land there. The `_NARRATIVE_PROSE_TEMPLATES` registry lands in `data.js` (Kael's region) per Architect ratification 2026-05-27 — Kael's audit covers the registry shape + the `_correlate` read contract synthesis from there; Vela's audit covers `_narrativeProse` + the six renderer rewrites + the build-time grep gate. Cross-Region pair-note (CV3-004) enumerated in §Cross-Region pair-notes.
 
 **Kael consult** — Kael reviews two specific items:
 1. **`_correlate` confidence-tier read contract** — the renderer-side synthesis of `{strength, confidence, sampleSize}` against the v3-3 primitive's documented shape. v3-4's renderers synthesize rather than call `_correlate` directly today, but the synthesis must produce shapes compatible with the v3-3 contract (future-migration safety).
@@ -297,7 +299,8 @@ For every cross-domain renderer named in `_NARRATIVE_PROSE_TEMPLATES`, the scrip
 |---|---|---|---|
 | `split/intelligence-quicklog.js` | Vela | `_tsfHedgePhrase` body fill — promote stub branches to canonical producer | ~30 |
 | `split/intelligence-cards.js` | Vela | Six cross-domain `renderInfo*` rewrites — passage envelope + chart-demote-to-disclosure | ~250 |
-| `split/data.js` (or `split/intelligence-narrative.js` NEW) | Kael (if data.js) / Vela (if new module) | `_NARRATIVE_PROSE_TEMPLATES` registry + `_narrativeProse` helper | ~150 |
+| `split/data.js` | Kael | `_NARRATIVE_PROSE_TEMPLATES` registry (per Architect ratification 2026-05-27 — mirrors `RECOMMENDATION_ROSTER` precedent) | ~100 |
+| `split/intelligence-cards.js` (or co-located helper) | Vela | `_narrativeProse(rendererKey, vars, correlation)` helper — read-side consumer of the registry; escHtml at boundary | ~50 |
 | `split/styles.css` | — | UNCHANGED | 0 |
 | `split/audit-narrative-prose-v3-4.sh` (NEW) | — | Build-time audit gate | ~80 |
 | `split/build.sh` | shared | Wire the audit gate into the ship-gate chain | ~3 changed |
@@ -305,7 +308,7 @@ For every cross-domain renderer named in `_NARRATIVE_PROSE_TEMPLATES`, the scrip
 
 **Total LOC estimate:** ~760 (mostly the six renderer rewrites + tests). No new CSS; the passage uses existing text classes.
 
-**IMPL-note — registry placement (Architect call at IMPL-pass):** `data.js` is the canonical row-addition substrate (mirrors `RECOMMENDATION_ROSTER` from v3-3 / scoring-redesign-v1); landing the registry there places it in Kael's region. Alternatively, a new `split/intelligence-narrative.js` module (Vela's region) keeps the registry render-grain-adjacent. Either landing is Charter-clean; the spec is neutral. v0 recommendation: `data.js` (consistency with `RECOMMENDATION_ROSTER` precedent + Kael's read contract on `_correlate` shape).
+**IMPL-note — registry placement (Architect ratified 2026-05-27):** `_NARRATIVE_PROSE_TEMPLATES` lands in `split/data.js` (Kael's region) — mirrors the `RECOMMENDATION_ROSTER` row-addition substrate precedent from scoring-redesign-v1. Rationale: the templates ARE data declarations (passage strings + hedge mappings + sample floors + empty-state strings); the consumer (`_narrativeProse`) is render-grain and lives in Vela's region. Splitting data from consumer mirrors the v3-3 / scoring-s-2 doctrine (`RECOMMENDATION_ROSTER` in `data.js` consumed by `_scoreDay` machinery in `core.js`). Cross-Region pair-note covers the audit routing (Kael on registry shape; Vela on consumer + grep gate).
 
 ---
 
@@ -405,7 +408,7 @@ All existing e2e tests must remain green. Pre-existing build-script-contract fai
 
 ### Axes the spec could risk regressing — with mitigations
 
-- **Extensibility (registry placement):** placing the registry in `data.js` (Kael's region) vs a new `intelligence-narrative.js` module (Vela's region) is an open question. **Mitigation:** spec is neutral; Architect call at IMPL-pass; both landings carry the same audit-gate coverage.
+- **Extensibility (registry placement):** Architect ratified 2026-05-27 — registry lands in `data.js` (Kael's region) per the `RECOMMENDATION_ROSTER` precedent. The data/consumer split (data in Kael's region; consumer in Vela's region) mirrors the v3-3 doctrine. No longer an open question.
 - **Warmth (chart demote regression risk):** demoting charts to disclosure could read as "hiding data" if the disclosure affordance is not obvious. **Mitigation:** `regression-guard-v3-4-chart-disclosure-tappable` verifies the expand affordance is present and tap-targetable (mobile-first Warmth honor).
 
 ---
@@ -471,6 +474,17 @@ Specific items Kael reviews:
 - **R-1 silver capstone (adaptive layer)** — R-1's per-Ziva baseline calibration consumes the cross-domain prose envelope as the surface tier; v3-4's `_narrativeProse` is the consumer hook for R-1's adaptive thresholds
 - **R-2 predictive surface (chronicle §6 reservoir)** — R-2's forecast prose ("wake-time window, nap probability, milestone-window range with hedged certainty") consumes the same `_tsfHedgePhrase` producer + a future `_forecastProse` registry that mirrors `_NARRATIVE_PROSE_TEMPLATES`
 - **C-1..C-14 catchment (Wave 3 candidates)** — voice input + localization + other catchment arcs read the prose envelope as the canonical cross-domain surface
+
+---
+
+## Architect-decision register (canon-cc-022)
+
+Architect ratifications folded inline before merge so the IMPL author sees them as canonical spec body. canon-cc-022 register-flip pattern carried forward from PR #141's F1-F6 review-pass amendments register.
+
+| Decision | Ratified | Resolution | Rationale |
+|---|---|---|---|
+| **Registry placement** — `data.js` (Kael) vs new `intelligence-narrative.js` (Vela) | 2026-05-27 | **`split/data.js` (Kael's region)** | Mirrors the `RECOMMENDATION_ROSTER` row-addition substrate precedent from scoring-redesign-v1 / v3-3. The templates ARE data declarations (passage strings + hedge mappings + sample floors + empty-state strings); the consumer (`_narrativeProse`) is render-grain in Vela's region. The data/consumer split mirrors v3-3 doctrine (`RECOMMENDATION_ROSTER` in `data.js` consumed by `_scoreDay` machinery in `core.js`). Cross-Region pair-note covers the audit routing (Kael on registry shape + `_correlate` read contract synthesis; Vela on consumer + grep gate). Folded into §Registry shape (line ~68), §Cross-tier interaction with v3-5 (line ~119), §Triple-jurisdiction routing (line ~252), §Files touched + LOC estimate (lines ~300, ~308), §Axes the spec could risk regressing (line ~408). |
+| **Per-renderer confidence-threshold tuning** | 2026-05-27 | **DEFER TO IMPL-TIME** | v0 ships defaults (`\|diff\| >= 20 → high`, `>= 10 → medium`, `< 10 → low`); per-renderer overrides land at IMPL time per Kael's read-side audit findings. Not a ratification decision — calibration. The registry shape (§Registry shape) supports optional `confidenceThresholds` per renderer; absent thresholds fall back to defaults. |
 
 ---
 
