@@ -647,7 +647,7 @@ footer a { color: var(--tc-sky); }
   <header>
     <div class="hd-row">
       <h1>SproutLab v3.0 — Progression Tree</h1>
-      <div class="meta">32 nodes · last refresh 2026-05-25 (post-#131/#132/#133/#135 — v3-3 impl ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
+      <div class="meta">32 nodes · last refresh 2026-05-26 (post-#138 — v3-5 impl ratified; gold tier fully ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
     </div>
   </header>
 
@@ -852,11 +852,11 @@ const NODES = {
     description:'MERGED 2026-05-25 at sha 20c7773. v1 spec ratified — Architect locked all 10 scope questions to Lyra defaults. F-1 sub-tab scaffold → F-2 Log entry → F-3 Library → F-4 Patterns → F-5 v3-8 parseFeeding integration. Impl arc opens after styles.css mutex clears.' },
 
   /* Layer 2 — Wave 1 roots (y ≈ 290) */
-  'v3-5':  { x: 130, y: 280, status:'drafted', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
-    label:'v3-5', sub:'Chip Taxonomy + TSF Story · SPEC RATIFIED', files:'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js',
+  'v3-5':  { x: 130, y: 280, status:'ratified', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
+    label:'v3-5', sub:'Chip Taxonomy + TSF Story · IMPL RATIFIED', files:'split/styles.css · split/intelligence-quicklog.js · split/intelligence-cards.js · split/core.js · split/audit-chip-taxonomy-v3-5.sh (NEW)',
     composes:'vela-arc-1 unified chip-state taxonomy + vela-arc-2 Today So Far story-arc',
-    cipherGates:'styles.css mutex 1st: must complete triple-jurisdiction round before v3-6 opens. Establishes the chip-state token vocabulary.',
-    description:'SPEC RATIFIED via PR #132 (a6950f8). docs/specs/v3-5-chip-taxonomy-tsf-story.md on main. Impl PR pending. 8 named chip states (done/skipped/late/inferred/live/calm/urgent/pending) + story-arc-summary primitive. First in styles.css mutex chain. v3.0 gold capstone.' },
+    cipherGates:'audit-chip-taxonomy-v3-5: build-time grep gate ratified ✓ (wired into split/build.sh after audit-hr12-v3-3 — HR-cipher pattern from v3-3 mirrored). 21/21 regression guards green. styles.css mutex 1st released on this merge: v3-6 (Card Priority) + v3-1 (CT Notifications) styles.css branches authorized to open.',
+    description:'IMPL MERGED 2026-05-26 at sha 785fc1f via PR #138. 8-state chip taxonomy (done/skipped/late/inferred/live/calm/urgent/pending) via data-state attribute with mutex precedence (urgent > live > calm > skipped > late > inferred > pending > done). _tsfDeriveChipState + _tsfGenerateSummary + _tsfDaySpineSelect + _tsfHedgePhrase helpers. Story-arc summary above TSF event list with Oxford-and join + contradicts-the-ledger pendingHeadline safety guard + 80-char cap. Day-spine collapses default to 3 most-significant events (urgent → night-sleep → live → most-recent) with "Show full timeline (N)" expand. Producers wired: done/skipped/late/inferred/live/calm. Producers reserved: urgent (v3-1) + pending (downstream reminder pipeline) — CSS contracts + deriver branches + e2e guards in place. canon-cc-008 chain cleared: Vela primary (1 BLOCKING + 4 NOTES, all folded) + Maren consult (1 BLOCKING + 5 NOTES, all folded; pair-note sign-off ratified) + Kael consult (7 NOTES, all folded) + Cipher Edict V CLEAN across cipher-honesty / cipher-extensibility / cipher-warmth (CV3-006). Spec amendments landed in same PR (V-V-37+V-K-92 §Cross-surface narrowing; V-M-88 §pending producer contract; V-V-34 §Out-of-scope dormant gate to v3-1). v3.0 gold capstone — surface vocabulary now live. Gold tier fully ratified (v3-3 + v3-5).' },
   'v3-3':  { x: 550, y: 270, status:'ratified', wave:'wave1', region:'engine', glyph:'gear', tier:2, critical:true, capstone:'gold',
     label:'v3-3', sub:'Engine Primitives · IMPL RATIFIED', files:'split/intelligence-correlate.js (NEW) · split/intelligence-isl.js · split/core.js · split/intelligence-illness.js · split/sync.js · split/data.js',
     composes:'kael-arc-1 _correlate + kael-arc-3 ISL event-anchor + scoring-redesign-v1 _scoreDay',
