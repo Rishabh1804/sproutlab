@@ -119,17 +119,32 @@ This is the same posture-shift that made D3 tracking tolerable (v3-3 era) — th
 
 **Per-milestone row shape:**
 - Milestone name (e.g., "Pointing")
-- zi() icon (domain-keyed: motor → `run`, language → `chat`, social → `handshake`, sensory → `sparkle`, cognitive → `brain`)
+- zi() icon (domain-keyed; read from `ACTIVITY_CATEGORIES[domain].icon`)
 - Clinical-band disclosure: *"Typically 9–14 months (WHO). Ziva is 7m 24d — early band."* — never personalised
 - Current engine status: `confirmed` (n=5 evidence, high-conf) / `practicing` (n=2, medium-conf) / `not-yet` (n=0)
-- Three tap targets (the **confirmation states** ratified at Q5):
-  - **✓ Saw it today** → adds a high-confidence evidence row + advances status if threshold met
-  - **〰️ Practicing** → adds a medium-confidence evidence row + sets status to practicing
-  - **⏭ Not yet** → suppresses this milestone in the in-window proposals for 7 days (parent told us; engine doesn't re-prompt)
+- Three tap targets (the **confirmation states** ratified at Q5) — **HR-1 floor: all glyphs via `zi()`** (F3 /review skill-pass amendment 2026-05-27):
+  - **`zi('check')` Saw it today** → adds a high-confidence evidence row + advances status if threshold met
+  - **`zi('sparkle')` Practicing** → adds a medium-confidence evidence row + sets status to practicing
+  - **`zi('arrow-right')` Not yet** → suppresses this milestone in the in-window proposals for 7 days (parent told us; engine doesn't re-prompt)
+
+The three zi() names above exist in the current 109-symbol sprite (sprite includes `check`, `sparkle`, `arrow-right` — the latter added in PR-EF Phase A per CLAUDE.md). Vela's render-layer audit may reassign at IMPL time within the existing sprite.
 
 **Confidence-floor honor (CV3-006 Honesty + Kael risk register):** an in-window proposal NEVER reads `_predictMilestoneWindow` output and renders without the *band* disclosure. The clinical band IS the hedge tier at the card tier (just as `_tsfHedgePhrase` is the hedge tier at the prose tier).
 
 **Cap at 3 cards:** if more than 3 milestones are in-window, surface only the top 3 by engagement priority (a heuristic the IMPL author calibrates: probably "most-recently-progressing" + "longest-in-window-without-evidence" + "newest-in-window"). Remaining in-window milestones live in the **Library** sub-tab.
+
+**Suppression-state storage (F1 /review skill-pass amendment 2026-05-27):** the "Not yet" tap stores a per-milestone suppress-until timestamp at a dedicated localStorage key:
+
+```js
+// localStorage key: ziva_milestone_suppress
+// Shape:
+{
+  <milestoneKey>: <epochMs>,  // e.g., 'pointing': 1717182000000
+  // ...
+}
+```
+
+Sync-replicable via the existing Firebase sync pipeline (same shape pattern as other ziva_* keys). The in-window proposal selector reads this map and filters out milestones whose suppress-until is still future. Auto-expires after 7 days (no manual unsuppress UI in v1; future v1.x candidate if Architect needs it). Mirrors the existing per-milestone manual-override mechanism shape at `home.js:2148` ("Edit Override (engine: practicing)").
 
 ### Primitive 3 — Bulk catch-up grid
 
@@ -168,19 +183,22 @@ Order:
 
 Order:
 
-1. **Domain filter chips** — motor / language / social / sensory / cognitive (read from ACTIVITY_CATEGORIES)
-2. **Age-band sectioning** — milestones grouped by clinical-range start age; collapses-by-default outside Ziva's current 6-month band
-3. **Per-milestone card** — name + clinical band + current status + cumulative evidence count + tap-to-confirm (same three-state tap targets as Primitive 2)
-4. **Legacy history view** — collapsed; lists pre-v1 free-text Log Activity entries (Q6 ratified — backward-compat surface)
+1. **`#milestonesDomainHero`** (existing card, relocated from the flat layout — F2 /review skill-pass amendment 2026-05-27) — the cross-domain milestone hero score sits at the top of Library as the "where Ziva is overall" orienting card
+2. **Domain filter chips** — motor / language / social / sensory / cognitive (read from ACTIVITY_CATEGORIES)
+3. **Age-band sectioning** — milestones grouped by clinical-range start age; collapses-by-default outside Ziva's current 6-month band
+4. **Per-milestone card** — name + clinical band + current status + cumulative evidence count + tap-to-confirm (same three-state tap targets as Primitive 2)
+5. **Legacy history view** — collapsed; lists pre-v1 free-text Log Activity entries (Q6 ratified — backward-compat surface)
 
 ### Patterns sub-tab — engine-derived insights
 
 Order:
 
-1. **Category Progress wheels** — existing `#msCatWheels`; reads ACTIVITY_CATEGORIES registry (no longer the hard-coded 4-category array)
-2. **Weekly summary card** — narrate this week's evidence ("3 new motor; 2 language; pointing now consistent") per CV3-002
-3. **Pediatric-visit prep card** — see §Three return-visit surfaces below
-4. **Milestone-window correlation card** — surfaces v3-4 `renderInfoMilestoneSleepCorrelation` from the Info tab via cross-link (Vela pair-note: the card itself stays in `intelligence-cards.js`; the milestones tab links to it)
+1. **`#milestoneStats` pills** (existing surface, relocated from the flat layout — F2 /review skill-pass amendment 2026-05-27) — the per-domain stat pills sit at the top of Patterns as the at-a-glance numeric summary
+2. **`#milestoneHighlights` card** (existing surface, relocated — F2) — the celebratory + concerning highlights surface, lifted from the flat layout
+3. **Category Progress wheels** — existing `#msCatWheels`; reads ACTIVITY_CATEGORIES registry (no longer the hard-coded 4-category array)
+4. **Weekly summary card** — narrate this week's evidence ("3 new motor; 2 language; pointing now consistent") per CV3-002
+5. **Pediatric-visit prep card** — see §Three return-visit surfaces below
+6. **Milestone-window correlation card** — surfaces v3-4 `renderInfoMilestoneSleepCorrelation` from the Info tab via tap-to-jump cross-link (F6 /review skill-pass amendment 2026-05-27): inline teaser passage rendered from the v3-4 narrative-prose template + a tap target with `data-action="switchTab" data-arg="insights"` that opens the Info tab scrolled to the full card. The card itself stays canonically in `intelligence-cards.js` (Vela's region); the milestones tab renders the teaser + link.
 
 ### Sub-tab navigation chrome
 
@@ -226,20 +244,31 @@ window.ACTIVITY_CATEGORIES = [
 ];
 ```
 
+**Accent assignments — v1 calibration subject to Vela's render-layer audit (F10 /review skill-pass amendment 2026-05-27):** the five accent assignments above use the design-system 7-domain palette but overlap with established semantic colors — specifically, `lavender` is the design-system color for "Milestones, achievements, intelligence" *generally* (used as the milestones-tab accent itself), and `sky` is reserved for "Sleep, hydration." Assigning these to language and cognitive sub-categories creates implicit cognitive load. The v1 assignments are a starting point; Vela's render-layer audit at IMPL time may reassign within the 7-domain palette to relieve the overlap (candidate alternative: language → indigo, social → peach, cognitive → amber, freeing sky+lavender for their established meanings; sage stays on motor as the developmental/positive-status anchor). The audit-gate enforces the registry-as-source-of-truth either way; the specific token values are calibration, not contract.
+
 ### Registry doctrine
 
 Five categories. **No more without a canon-cc-027 amendment.** The milestone DB rows in `data.js` already carry `domain: '<one of these keys>'`; the registry locks the consumer surface to the same vocabulary.
 
 ### Build-time audit gate
 
-`split/audit-activity-categories-v1.sh` — 9th audit gate (after `audit-card-priority-v3-6` becomes 7th and `audit-narrative-prose-v3-4` becomes 8th at v3-4 IMPL).
+`split/audit-activity-categories-v1.sh` — **8th or 9th audit gate depending on v3-4 IMPL sequencing** (F8 /review skill-pass amendment 2026-05-27): if v3-4 IMPL lands first, this is the 9th gate (audit-card-priority-v3-6 7th → audit-narrative-prose-v3-4 8th → audit-activity-categories-v1 9th); if milestones-tab-v1 IMPL lands first, this is the 8th. Either ordering is acceptable per the sequencing (mutex-independent arcs).
 
-**Banned patterns:** hard-coded category arrays anywhere except the registry definition itself. Specifically:
-- `['motor'.*'language'.*'social'` and permutations
+**Banned patterns — TWO scopes per F9 /review skill-pass amendment 2026-05-27:**
+
+*Scope A — Activity-category enumeration drift (the spec's primary scope):*
+- `['motor'.*'language'.*'social'` and permutations (hard-coded category arrays)
 - `\bcatOrder\s*=` (the home.js drift idiom)
 - Object literals with the category keys as fixed top-level keys (e.g., `{ motor: ..., language: ..., social: ... }`) outside the registry consumer pattern
 
-**Opt-in escape:** `// activity-categories-ok: <rationale>` on the same line, per HR-12 / chip-taxonomy convention.
+*Scope B — Personalised-milestone-prediction prose (the Kael risk-register floor):*
+- `Ziva will\s+[a-z]+\s+by\s+\d` — the canonical no-go pattern ("Ziva will sit by 6 months")
+- `Ziva (should|is going to|is expected to)\s+[a-z]+\s+by\s+\d`
+- Any interpolation that combines `_predictMilestoneWindow` output with `dob` to render a personalised-date prediction in rendered prose
+
+The audit script enforces both scopes; the two banned-pattern sets are documented separately in the script body so future contributors can extend either scope without conflating the concerns.
+
+**Opt-in escape:** `// activity-categories-ok: <rationale>` (scope A) OR `// no-personalised-prediction-ok: <rationale>` (scope B) on the same line, per HR-12 / chip-taxonomy convention.
 
 ### Three-site sync meta-audit (continues the v3-6 pattern)
 
@@ -266,6 +295,12 @@ Renders even when no in-window milestones (CV3-003 empty-state honor):
 
 > *"Ziva is 4m 12d. No milestones in-window yet — early days. Tap Library to explore what's next."*
 
+**Mid-state narration template (F5 /review skill-pass amendment 2026-05-27)** — in-window milestones present but no recent evidence (the common case for a low-engagement week):
+
+> *"Ziva is 7m 24d. In-window: pointing, pincer grasp. No new evidence this week — quiet stretch."*
+
+The three templates (full-data, empty-state, mid-state-no-recent-evidence) are the v1 canonical voice-set; IMPL author may add additional conditional shapes within the same hedge-tier discipline. The narration helper consumes the v3-4 `_NARRATIVE_PROSE_TEMPLATES` registry pattern at IMPL time (template-row likely keyed `'milestonesTodayHeader'` with `hedgeTierMap` / `sampleFloor` / `emptyState` fields per v3-4 spec).
+
 Honesty floor: never overclaims; never personalises beyond clinical bands.
 
 ### Trajectory ribbon (Patterns sub-tab top OR shared across all 3 sub-tabs — IMPL call)
@@ -277,6 +312,13 @@ Honesty floor: never overclaims; never personalises beyond clinical bands.
 - Tap → opens the milestone row in Library sub-tab
 
 Parent sees the **arc** of Ziva's development at a glance. Lavender background accent (milestone domain).
+
+**Marker-filter scope (F4 /review skill-pass amendment 2026-05-27):** the ribbon does NOT render every milestone in MILESTONES_DB. The v1 marker-set is constrained to **confirmed + practicing + currently-in-window**:
+- All `confirmed` milestones (their actual confirmed-date marker)
+- All `practicing` milestones (clinical-band-midpoint marker, outlined)
+- All milestones whose clinical-band intersects `birth..currentAge+3m` (the active+near-future band, dashed)
+
+This caps the marker count at ~30-40 in the typical case rather than the full ~100+ from MILESTONES_DB, keeping the 200ms perf budget achievable on mobile. Far-future not-yet milestones live in the Library sub-tab's age-band sectioning, not on the ribbon.
 
 **Performance gate:** ribbon renders within 200ms of tab-switch (cipher-3 budget; same as v3-5 story-arc summary).
 
@@ -357,7 +399,7 @@ Includes a tap-to-export-PDF (v1 minimum: tap-to-copy-as-text; PDF export is R-3
 | Test | Asserts |
 |---|---|
 | `regression-guard-milestones-v1-clinical-band-disclosed` | Every in-window proposal renders "Typically X–Y months (standard); Ziva is Z — band" — never personalised prediction |
-| `regression-guard-milestones-v1-no-personalised-prediction` | Render text NEVER contains "Ziva will [milestone] by [date]"; build-time grep gate (subset of audit-activity-categories-v1.sh) |
+| `regression-guard-milestones-v1-no-personalised-prediction` | Render text NEVER contains "Ziva will [milestone] by [date]" or sibling patterns; build-time grep gate Scope B of `audit-activity-categories-v1.sh` (F9 amendment — two-scope audit script) |
 | `regression-guard-milestones-v1-empty-state-voiced` | Empty in-window state renders "No milestones in-window yet — early days" per CV3-003; never blank |
 | `regression-guard-milestones-v1-strength-not-rendered` | Engine-internal `strength` / `confidence` field labels never `.text`-substituted into rendered prose (carries forward from 2026-05-26 cosmetic NOTE family) |
 
@@ -367,10 +409,21 @@ Includes a tap-to-export-PDF (v1 minimum: tap-to-copy-as-text; PDF export is R-3
 |---|---|
 | `regression-guard-milestones-v1-today-header-narrates` | "Today" header card renders Ziva's age + in-window list + last evidence as a single sentence (CV3-002 honor) |
 | `regression-guard-milestones-v1-today-header-empty-state` | Empty-state today header renders the early-days voice (no blank) |
-| `regression-guard-milestones-v1-trajectory-ribbon-paints` | Trajectory ribbon paints all confirmed + practicing + in-window milestones within 200ms (cipher-3 perf budget) |
+| `regression-guard-milestones-v1-today-header-mid-state` | **(F5 amendment)** Mid-state today header (in-window present, no recent evidence) renders the "quiet stretch" voice template — neither empty-state nor full-data |
+| `regression-guard-milestones-v1-trajectory-ribbon-paints` | Trajectory ribbon paints confirmed + practicing + in-window milestones (per F4 marker-filter scope) within 200ms (cipher-3 perf budget) |
+| `regression-guard-milestones-v1-trajectory-ribbon-marker-filter` | **(F4 amendment)** Ribbon does NOT render far-future not-yet milestones (those whose clinical-band starts >3m beyond currentAge); they live in Library age-band sectioning instead |
 | `regression-guard-milestones-v1-trajectory-ribbon-tap-routes-to-library` | Tap on a ribbon marker opens the corresponding milestone row in Library sub-tab |
 | `regression-guard-milestones-v1-pediatric-prep-derives` | Pediatric-prep card surfaces ≥1 narrated bullet when there is ≥1 high-conf confirmation OR practicing milestone OR active CareTicket in last 30 days |
 | `regression-guard-milestones-v1-pediatric-prep-copy-as-text` | Tap-to-copy-as-text path delivers the rendered prose to clipboard (PDF export deferred to R-3) |
+| `regression-guard-milestones-v1-patterns-correlation-cross-link` | **(F6 amendment)** Patterns sub-tab Milestone-window correlation cross-link renders an inline teaser passage + carries `data-action="switchTab" data-arg="insights"` tap target that opens the Info tab |
+
+### Functional tests — backward-compat & integration (F7 /review skill-pass amendment 2026-05-27)
+
+| Test | Asserts |
+|---|---|
+| `regression-guard-milestones-v1-backward-compat-legacy-entries` | Pre-v1 free-text Log Activity entries surface in Library sub-tab's "history" view (Q6 ratification); their original shape preserved; never silently dropped |
+| `regression-guard-milestones-v1-scrapbook-evidence-integration` | A scrapbook photo tagged to a milestone via `scrapMilestonePicker` (template.html:1109) contributes to that milestone's evidence count rendered on its in-window proposal card + Library row (Q8 ratification — bidirectional link) |
+| `regression-guard-milestones-v1-suppress-state-storage` | **(F1 amendment)** "Not yet" tap writes to `ziva_milestone_suppress` localStorage key in the documented per-milestone shape; suppression auto-expires after 7 days; suppressed milestones do NOT appear in in-window proposals during the suppress window |
 
 ### Functional tests — layout uniformization
 
@@ -513,6 +566,27 @@ Per cipher-9 rotation: **Maren → Kael → Vela** (Maren first-Gov by heaviest-
 - All v3.0 styles.css mutex positions (v3-5 / v3-6) are RELEASED as of session-end 2026-05-27
 - v3-1 holds position 3 (still draft; styles.css branch openable)
 - milestones-tab-v1 holds position 4 — sub-tab chrome triple-jurisdiction; can open after v3-1 closes OR before v3-1 opens (Architect call at IMPL-pass timing)
+
+---
+
+## Review-pass amendments (canon-cc-022)
+
+Ten findings from the in-transcript `/review` skill pass on 2026-05-27 (NOT an Edict V chain entry — skill-grade, in-transcript register-flip per canon-cc-022). Folded inline to canonicalize before merge so the IMPL author sees them as part of the spec body, not as a separate PR-thread artifact. Mirrors the canon-cc-022 register-flip pattern from PR #141 (v3-6 spec F1-F6 fold).
+
+| # | Folded into | Substance |
+|---|---|---|
+| **F1** | §Primitive 2 (suppression-state storage IMPL-note) | "Not yet" tap stores per-milestone suppress-until at `ziva_milestone_suppress` localStorage key in `{ <milestoneKey>: <epochMs> }` shape; Firebase-sync replicable; auto-expires after 7 days; no manual unsuppress UI in v1. |
+| **F2** | §3-sub-tab layout (Library + Patterns ordering) | Existing 7-card flat layout's `#milestonesDomainHero` → top of Library sub-tab; `#milestoneStats` + `#milestoneHighlights` → top of Patterns sub-tab. Each existing surface gets an explicit new home. |
+| **F3** | §Primitive 2 (zi() name mapping for tap states) | HR-1 floor on tap-target glyphs: `zi('check')` / `zi('sparkle')` / `zi('arrow-right')` for Saw-it / Practicing / Not-yet. All three exist in the 109-symbol sprite. |
+| **F4** | §Trajectory ribbon (marker-filter scope) | Ribbon does NOT render every milestone in MILESTONES_DB. v1 marker-set = confirmed + practicing + milestones whose clinical-band intersects `birth..currentAge+3m`. Caps marker count at ~30-40; preserves 200ms perf budget on mobile. |
+| **F5** | §"Today" header card (mid-state narration template) | Third canonical narration template added: in-window present, no recent evidence ("Ziva is 7m 24d. In-window: pointing, pincer grasp. No new evidence this week — quiet stretch."). Helper consumes the v3-4 `_NARRATIVE_PROSE_TEMPLATES` registry pattern at IMPL time. |
+| **F6** | §Patterns sub-tab (Milestone-window correlation cross-link shape) | Cross-link is **tap-to-jump** via `data-action="switchTab" data-arg="insights"`; inline teaser passage rendered from v3-4 narrative-prose template; canonical card stays in `intelligence-cards.js` (Vela's region). |
+| **F7** | §Test plan (new §backward-compat & integration sub-section) | Three new regression guards added: backward-compat-legacy-entries (Q6); scrapbook-evidence-integration (Q8); suppress-state-storage (F1). Plus F4/F5/F6/F9-tagged additions to existing test rows. |
+| **F8** | §Build-time audit gate (gate-count hedge) | "9th audit gate" softened to "8th or 9th depending on v3-4 IMPL sequencing" — both arcs are mutex-independent so either ordering is acceptable. |
+| **F9** | §Build-time audit gate (banned-pattern two-scope expansion) | `audit-activity-categories-v1.sh` now declares TWO scopes: Scope A (activity-category enumeration drift) + Scope B (personalised-milestone-prediction prose; Kael risk-register floor). Two distinct opt-in markers: `// activity-categories-ok:` (A) and `// no-personalised-prediction-ok:` (B). |
+| **F10** | §Registry shape (accent-assignment calibration note) | v1 accent assignments (`language → lavender`, `cognitive → sky`) overlap with established design-system semantic colors. Marked as v1 calibration subject to Vela's render-layer audit at IMPL time; alternative palette suggested (language → indigo, social → peach, cognitive → amber). Audit-gate enforces registry-as-source-of-truth either way. |
+
+Source register: review pass was an in-transcript skill output (no signature, no Edict V chain entry per canon-cc-022 artifact test). The substantive canon-cc-008 chain runs on the IMPL PR; these amendments arrive *with* the spec at ratification time and feed the IMPL canon-cc-008 chain as inputs.
 
 ---
 
