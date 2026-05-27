@@ -4024,9 +4024,37 @@ function deleteActivityEntry(dateStr, entryId) {
   confirmAction('Delete this entry? Milestone evidence will be recomputed.', () => {
     const idx = activityLog[dateStr].findIndex(e => e && e.id === entryId);
     if (idx < 0) return;
+    // Capture the entry BEFORE splice so we can derive the milestone slug
+    // (for milestones-tab-v1 taps) and clear the related hide/deprioritize
+    // state — otherwise the milestone stays hidden from in-window proposals
+    // for the full 24h post-tap window even after the parent deletes the
+    // evidence. Architect bug-report 2026-05-27 #13: "deletion will happen
+    // in the same tab under recent activity evidence, once it is deleted
+    // from there it ideally should be back on the queue."
+    const removed = activityLog[dateStr][idx];
     activityLog[dateStr].splice(idx, 1);
     if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
     save(KEYS.activityLog, activityLog);
+    // If the deleted entry was a milestones-tab-v1 Confirm/Practicing tap,
+    // clear the corresponding milestoneSuppress[slug] 24h-hide entry +
+    // _msNotYetSession[slug] deprioritize entry. milestoneSuppress is keyed
+    // by slugify(MILESTONE_STANDARDS row.text) (core.js:6046); the entry
+    // text field stores that same row text, so slugify-on-text round-trips.
+    if (removed && removed.source === 'milestones-tab-v1-tap' && removed.text
+        && typeof slugify === 'function') {
+      const slug = slugify(removed.text);
+      if (slug) {
+        if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null
+            && slug in milestoneSuppress) {
+          delete milestoneSuppress[slug];
+          save(KEYS.milestoneSuppress, milestoneSuppress);
+        }
+        if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null
+            && slug in _msNotYetSession) {
+          delete _msNotYetSession[slug];
+        }
+      }
+    }
     if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
     if (typeof renderMilestones === 'function') renderMilestones();
     if (typeof renderHomeActivity === 'function') renderHomeActivity();
