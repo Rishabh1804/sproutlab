@@ -2176,22 +2176,46 @@ function setMsActivityLevel(target) {
 function renderMsInWindowProposals() {
   const el = document.getElementById('msInWindowProposals');
   if (!el) return;
-  // _zivaAgeInDays(today()) per core.js canonical pattern; no-arg returns 0.
+  // Request more candidates (5 instead of 3) so we have room to reorder
+  // "Not yet"-tapped items to the bottom without losing primary slots.
+  // Engine still caps internally; surface still shows ≤3 primary at top
+  // plus any Not-yet-tapped items appended at the end with the
+  // is-deprioritized visual.
   const ageDays = _zivaAgeInDays(today());
   let items = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
-      items = _getInWindowMilestones(ageDays, 3, {}) || [];
+      items = _getInWindowMilestones(ageDays, 5, {}) || [];
     }
   } catch (e) { items = []; }
   if (items.length === 0) {
     el.innerHTML = '<div class="t-sub-light text-center py-4">No milestones in-window right now — early days.</div>';
     return;
   }
-  el.innerHTML = items.map(it => _renderMsInWindowCard(it)).join('');
+  // Split: primary (not in _msNotYetSession) vs deprioritized (tapped Not yet
+  // this session). Render primary first then deprioritized last per the
+  // V-V-57 + V-M-103 amendment ("push to bottom"). Primary stack capped at
+  // 3 for the spec contract; remaining primary items roll into the
+  // deprioritized tail to keep the surface from overflowing.
+  const primary = [];
+  const deprioritized = [];
+  items.forEach(it => {
+    if (_msNotYetSession[it.milestoneId]) deprioritized.push(it);
+    else primary.push(it);
+  });
+  // Cap primary at 3; spill the rest into the deprioritized tail (sorted by
+  // priority via engine ordering preserved through both buckets).
+  const PRIMARY_CAP = 3;
+  const overflow = primary.splice(PRIMARY_CAP);
+  const ordered = primary.concat(overflow, deprioritized);
+  el.innerHTML = ordered.map(it => {
+    const isDepri = !!_msNotYetSession[it.milestoneId];
+    return _renderMsInWindowCard(it, { deprioritized: isDepri });
+  }).join('');
 }
 
-function _renderMsInWindowCard(item) {
+function _renderMsInWindowCard(item, opts) {
+  const deprioritized = !!(opts && opts.deprioritized);
   const win = item.window || {};
   const text = escHtml(item.text || '');
   const icon = item.icon || '';
@@ -2232,7 +2256,7 @@ function _renderMsInWindowCard(item) {
   const tapDataAttrs = ' data-ms-id="' + milestoneIdEsc + '"'
     + ' data-ms-text="' + msTextEsc + '"'
     + ' data-ms-domain="' + msDomainEsc + '"';
-  return '<div class="ms-inwindow-card" data-safety-tier="' + (safetyTier ? 'true' : 'false')
+  return '<div class="ms-inwindow-card' + (deprioritized ? ' is-deprioritized' : '') + '" data-safety-tier="' + (safetyTier ? 'true' : 'false')
     + '" data-domain="' + msDomainEsc + '">'
     + '<div class="ms-inwindow-head">'
     + '<span class="ms-inwindow-icon">' + (icon || zi('star')) + '</span>'
@@ -2270,6 +2294,45 @@ function _msWindowBandLabel(win) {
   return 'in band';
 }
 
+// Session-local "Not yet" deprioritize map. Architect amendment to V-V-57 /
+// V-M-103 (2026-05-27 #7): "Not yet pushes the option to the bottom" instead
+// of suppress-7-days-hide. The card stays visible, just at the end of the
+// in-window stack, so the parent never feels the system "hid" their answer.
+// Session-local for v1 (resets on reload); persistent storage is a v1.1
+// candidate. Keyed by milestoneId; value = epoch ms the parent tapped.
+const _msNotYetSession = {};
+
+// 24h hide-after-tap window for Confirm/Practicing. Replaces the 7-day
+// suppress that the prior notYetMsInWindow wrote. Calendar logic: a tap
+// today means "I've responded to this proposal for today"; the engine
+// surfaces it again tomorrow if still in-window (parent may want to log
+// it again across days).
+const MS_HIDE_AFTER_TAP_MS = 24 * 60 * 60 * 1000;
+
+// Helper: animate a card out then run the callback. Picks the card by
+// data-ms-id walking from the tap target up. If the card isn't found
+// (defensive — DOM may have changed mid-render), run the callback
+// immediately so the write-path still fires.
+function _msAnimateCardOut(target, klass, cb) {
+  const msId = target && target.dataset && target.dataset.msId;
+  let card = target && target.closest ? target.closest('.ms-inwindow-card') : null;
+  if (!card) {
+    if (typeof cb === 'function') cb();
+    return;
+  }
+  card.classList.add(klass);
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    if (typeof cb === 'function') cb();
+  };
+  card.addEventListener('transitionend', finish, { once: true });
+  // Safety: if transitionend doesn't fire (interrupted / reduced-motion),
+  // run the callback after the animation duration anyway.
+  setTimeout(finish, 380);
+}
+
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
@@ -2278,40 +2341,62 @@ function _msWindowBandLabel(win) {
 // so _msRecordEvidence can construct the canonical activityLog entry shape
 // (which existing readers consume — renderCategoryWheels reads entry.domains;
 // renderRecentEvidence reads entry.text + entry.evidence).
+//
+// New behavior (Architect feedback 2026-05-27 #7):
+// - Confirm + Practicing: card slides out, evidence recorded, milestone
+//   hidden from in-window proposals for 24h so the stack makes way for
+//   other options.
+// - Not yet: card slides DOWN, gets pushed to the bottom of the stack
+//   (still visible, just deprioritized). No 7-day hide.
 function confirmMsInWindow(target) {
   if (!target || !target.dataset) return;
-  _msRecordEvidence(target.dataset.msId, 'high', target.dataset.msText, target.dataset.msDomain);
-  renderMilestones();
+  const msId = target.dataset.msId;
+  const msText = target.dataset.msText;
+  const msDomain = target.dataset.msDomain;
+  _msAnimateCardOut(target, 'is-sliding-out', () => {
+    _msRecordEvidence(msId, 'high', msText, msDomain);
+    _msHideForADay(msId);
+    renderMilestones();
+  });
 }
 
 function practicingMsInWindow(target) {
   if (!target || !target.dataset) return;
-  _msRecordEvidence(target.dataset.msId, 'medium', target.dataset.msText, target.dataset.msDomain);
-  renderMilestones();
+  const msId = target.dataset.msId;
+  const msText = target.dataset.msText;
+  const msDomain = target.dataset.msDomain;
+  _msAnimateCardOut(target, 'is-sliding-out', () => {
+    _msRecordEvidence(msId, 'medium', msText, msDomain);
+    _msHideForADay(msId);
+    renderMilestones();
+  });
 }
 
 function notYetMsInWindow(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  // Suppress 7 days. Engine-prep PR-A registered KEYS.milestoneSuppress in
-  // SYNC_KEYS with a _postReceiveMilestoneSuppress merge-on-receive hook
-  // (sync.js:154; per V-K-104 + V-M-116 floor). Cross-device replication
-  // requires the save() wrapper (which triggers syncWrite); direct
-  // localStorage.setItem bypasses it AND bypasses the in-memory
-  // milestoneSuppress global that _getInWindowMilestones reads at
-  // core.js:6016 — so suppression would have ZERO effect until reload.
-  //
-  // Proper write: mutate the module-global object in place + save() through
-  // the wrapper. milestoneSuppress is declared at core.js:389.
+  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. _msNotYetSession
+  // is consulted by renderMsInWindowProposals to reorder deprioritized
+  // cards to the end of the stack. Card animates DOWN then re-renders at
+  // the bottom. milestoneSuppress is NOT touched — that key now signals
+  // only the 24h post-Confirm/Practicing hide.
+  _msNotYetSession[msId] = Date.now();
+  _msAnimateCardOut(target, 'is-sliding-down', () => {
+    renderMilestones();
+  });
+}
+
+// 24h hide write via the existing milestoneSuppress sync-aware path. The
+// engine at core.js:6049 filters out entries whose value > now — so
+// writing Date.now() + 24h hides the milestone for exactly 24 hours.
+// V-K-104 + V-M-116 floor preserved (save() triggers syncWrite). Pruning
+// expired entries on each write keeps the map small.
+function _msHideForADay(msId) {
+  if (!msId) return;
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
   _msPruneExpiredSuppress();
-  const untilTs = Date.now() + (7 * 86400000);
-  milestoneSuppress[msId] = untilTs;
+  milestoneSuppress[msId] = Date.now() + MS_HIDE_AFTER_TAP_MS;
   save(KEYS.milestoneSuppress, milestoneSuppress);
-  if (typeof showQLToast === 'function') {
-    showQLToast('Suppressed for 7 days. <button class="al-undo-btn" data-action="undoMsSuppress" data-ms-id="' + escHtml(msId) + '">Undo</button>', 5000);
-  }
-  renderMilestones();
 }
 
 function undoMsSuppress(target) {
@@ -3453,18 +3538,26 @@ function renderCategoryWheels() {
   const el = document.getElementById('msCatWheels');
   if (!el) return;
 
-  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
-    motor:     { icon:zi('run'), label:'Motor',     color:'var(--tc-sage)' },
-    language:  { icon:zi('chat'), label:'Language',   color:'#3a7090' },
-    social:    { icon:zi('handshake'), label:'Social',     color:'#966525' },
-    cognitive: { icon:zi('brain'), label:'Cognitive',  color:'var(--tc-lav)' },
-  };
+  // 5-cat registry consumer (Architect feedback 2026-05-27: Patterns sub-tab
+  // was missing sensory). Pre-v1 4-cat hardcode was opt-in-marker-annotated
+  // as deprecation-cycle technical debt during the audit-gate setup — but
+  // this is a LIVE consumer surface, not dead code, so the missing-sensory
+  // wheel was visible to the parent. Migration consumes window.ACTIVITY_CATEGORIES
+  // (single source of truth) with [data-domain] CSS cascade for accent color
+  // — no hardcoded hex per HR-6.
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  const catMeta = {};
+  cats.forEach(c => {
+    catMeta[c.key] = { icon: zi(c.icon), label: c.label, accent: c.accent };
+  });
 
   const R = 22, C = 2 * Math.PI * R;
 
-  // Compute evidence counts per domain from activityLog
-  const domainEvidence = { motor: 0, language: 0, social: 0, cognitive: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
-  const domainDays = { motor: new Set(), language: new Set(), social: new Set(), cognitive: new Set() };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  // Compute evidence counts per domain from activityLog. Domain bins built
+  // from the registry so a 5th tier addition lands without surface touch.
+  const domainEvidence = {};
+  const domainDays = {};
+  cats.forEach(c => { domainEvidence[c.key] = 0; domainDays[c.key] = new Set(); });
   Object.entries(activityLog).forEach(([dateStr, entries]) => {
     if (!Array.isArray(entries)) return;
     entries.forEach(e => {
@@ -3478,7 +3571,8 @@ function renderCategoryWheels() {
   });
 
   let html = '';
-  ['motor','language','social','cognitive'].forEach(cat => {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  cats.forEach(c => {
+    const cat = c.key;
     const meta = catMeta[cat];
     // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
     const catMs = milestones.filter(m => (m.domain || m.cat || 'motor') === cat);
@@ -3488,14 +3582,19 @@ function renderCategoryWheels() {
     const dayCount = domainDays[cat].size;
     const evidLabel = evCount > 0 ? evCount + ' ev · ' + dayCount + 'd' : '';
 
-    html += '<div class="ms-cat-wheel" data-action-mcat="' + cat + '">' +
+    // data-domain on the wheel container lets the canonical CSS cascade
+    // (--al-tc) drive the stroke + percent label color. .ms-cat-wheel-pct
+    // already uses inline style for color (pre-existing carve-out, mirrors
+    // trajectory marker currentColor pass-through); the cascade-fed value
+    // keeps registry as single source of truth.
+    html += '<div class="ms-cat-wheel" data-action-mcat="' + cat + '" data-domain="' + escHtml(cat) + '">' +
       '<svg viewBox="0 0 50 50">' +
         '<circle class="mcw-track" cx="25" cy="25" r="' + R + '"/>' +
-        '<circle class="mcw-fill" cx="25" cy="25" r="' + R + '" stroke="' + meta.color + '" stroke-dasharray="' + C + '" stroke-dashoffset="' + fill + '"/>' +
+        '<circle class="mcw-fill" cx="25" cy="25" r="' + R + '" stroke="currentColor" stroke-dasharray="' + C + '" stroke-dashoffset="' + fill + '"/>' +
       '</svg>' +
-      '<div class="ms-cat-wheel-pct" style="color:' + meta.color + ';">' + avgPct + '%</div>' +
-      '<div class="ms-cat-wheel-label">' + meta.label + '</div>' +
-      (evidLabel ? '<div class="ms-cat-wheel-ev">' + evidLabel + '</div>' : '') +
+      '<div class="ms-cat-wheel-pct">' + avgPct + '%</div>' +
+      '<div class="ms-cat-wheel-label">' + escHtml(meta.label) + '</div>' +
+      (evidLabel ? '<div class="ms-cat-wheel-ev">' + escHtml(evidLabel) + '</div>' : '') +
     '</div>';
   });
   el.innerHTML = html;

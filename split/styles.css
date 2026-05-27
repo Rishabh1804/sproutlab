@@ -1482,6 +1482,12 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   transition:transform var(--ease-fast); flex:1; max-width:80px;
 }
 .ms-cat-wheel:active { transform:scale(0.95); }
+/* Cascade-driven accent: --al-tc resolves per-domain via [data-domain]
+   (sage / lavender / peach / amber / sky). The wheel's `color` property
+   feeds both the SVG currentColor stroke (via stroke="currentColor" on
+   .mcw-fill) and the .ms-cat-wheel-pct percent label (inherits color).
+   No per-domain hardcoded hex; registry is single source of truth. */
+.ms-cat-wheel[data-domain] { color: var(--al-tc, var(--tc-lav)); }
 .ms-cat-wheel svg { width:56px; height:56px; transform:rotate(-90deg); }
 .ms-cat-wheel svg circle { fill:none; stroke-linecap:round; }
 .ms-cat-wheel svg .mcw-track { stroke:var(--border-subtle); stroke-width:5; }
@@ -6234,8 +6240,37 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   background:var(--surface);
   border-left:var(--accent-w) solid var(--al-border, var(--lavender));
   box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  /* Tap-out + push-down animation support — closes Architect feedback
+     2026-05-27 #7. Confirm/Practicing slide the card left out of the
+     stack ("make way for other options"); Not-yet slides the card down
+     to be reordered to the bottom on the next render. transform-origin
+     left to keep the slide feel anchored. */
+  transform-origin:left center;
+  transition:transform var(--ease-med), opacity var(--ease-med), max-height var(--ease-med), margin var(--ease-med);
+  overflow:hidden;
 }
 .ms-inwindow-card[data-safety-tier="true"] { border:3px solid var(--rose-deep); }
+.ms-inwindow-card.is-sliding-out {
+  transform:translateX(-110%);
+  opacity:0;
+  max-height:0;
+  margin-top:0;
+  margin-bottom:0;
+  padding-top:0;
+  padding-bottom:0;
+}
+.ms-inwindow-card.is-sliding-down {
+  transform:translateY(40px) scale(0.96);
+  opacity:0.35;
+}
+/* Deprioritized cards (pushed to bottom via Not-yet tap) — visually muted
+   so they read as "answered but kept around". Still tappable; the parent
+   can re-tap Confirm or Practicing later when the milestone unfolds. */
+.ms-inwindow-card.is-deprioritized {
+  opacity:0.65;
+  background:var(--warm);
+}
+.ms-inwindow-card.is-deprioritized .ms-inwindow-text { font-weight:500; }
 .ms-inwindow-head { display:flex; align-items:flex-start; gap:var(--sp-8); }
 .ms-inwindow-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:var(--sp-2); }
 .ms-inwindow-body { flex:1; min-width:0; }
