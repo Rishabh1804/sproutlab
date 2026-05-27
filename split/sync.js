@@ -147,6 +147,12 @@ const SYNC_KEYS = {
   // arm below: SYNC_KEYS alone arms a listener that dispatches against an
   // undefined dep (silent render miss); SYNC_RENDER_DEPS alone is dead config.
   [KEYS.scrapbook]:          { collection: 'scrapbook',   model: 'per-entry' },
+  // milestone-engine-prep-v1 PR-A — engine substrate keys explicitly
+  // registered per V-K-104 floor (no falling through ziva_* pattern picker).
+  // Both single-doc; cross-device merge via dedicated _postReceive hooks
+  // (V-M-116 — last-write-wins on whole-doc is unsafe for per-key state).
+  [KEYS.milestoneSuppress]:  { collection: 'milestones',  model: 'single-doc' },
+  [KEYS.activityMeta]:       { collection: 'activities',  model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -239,6 +245,17 @@ const SYNC_RENDER_DEPS = {
   // (the home-tab scrapbook card body) + renderScrapbookHistory (the
   // history-tab section). Both are safe-no-op if their tab isn't active.
   [KEYS.scrapbook]:         { global: 'scrapbook',    renderers: { 'history': ['renderScrapbook', 'renderScrapbookHistory'] } },
+  // milestone-engine-prep-v1 PR-A — engine substrate render deps.
+  // postReceive hooks fold remote+local per-key state on cross-device receive
+  // (V-M-116 + V-K-111 floors). Renderers are placeholder-empty in PR-A —
+  // milestones-tab-v1 IMPL wires `renderMilestonesTab` and friends as
+  // consumers; renderHome rehydrates today's activityLevel chip when present.
+  // mergeOnReceive (V-M-116 floor): pure merge function (remoteVal, localPrior) → merged
+  // applied BEFORE the listener-handler save, so cross-device per-key state on both sides
+  // survives last-write-wins. Distinct from `postReceive` (no-args; operates on global
+  // in-place — used by _postReceiveMilestones for migration + dedupe).
+  [KEYS.milestoneSuppress]: { global: 'milestoneSuppress', mergeOnReceive: '_postReceiveMilestoneSuppress', renderers: { home: ['renderHome'], 'track:milestones': ['renderActiveMilestones'] } },
+  [KEYS.activityMeta]:      { global: 'activityMeta',     mergeOnReceive: '_postReceiveActivityMeta',     renderers: { home: ['renderHome'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -388,6 +405,72 @@ function _syncDispatchRender(lsKey, value, attribution) {
     }
   }
   return attribution || null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// milestone-engine-prep-v1 PR-A — cross-device merge-on-receive hooks
+// (V-M-116 + V-K-111 floors). Pure functions: (remoteMap, localMap) → merged.
+// Invoked by the listener handler BEFORE save (sync.js:1568+) so cross-device
+// per-key state on both sides survives last-write-wins on single-doc shapes.
+//
+// Pattern: timestamp-max-per-key merge + auto-purge of expired entries (for
+// the suppress map). The same shape applies to activityMeta — there, per-day
+// objects merge field-by-field with last-write-wins on each scalar field.
+// ─────────────────────────────────────────────────────────────────────────
+
+// _postReceiveMilestoneSuppress — V-K-104 + V-M-116 hard contract.
+// Merges remoteMap and localMap by max-timestamp per milestoneKey. Auto-
+// purges entries whose suppress-until is in the past (the "Not yet" 7-day
+// silence honor). Idempotent + associative.
+function _postReceiveMilestoneSuppress(remoteMap, localMap) {
+  var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
+  var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
+  var merged = {};
+  // Seed with local entries.
+  Object.keys(lm).forEach(function(k) {
+    if (typeof lm[k] === 'number') merged[k] = lm[k];
+  });
+  // Fold remote — keep whichever side suppressed LATER (max ts wins).
+  Object.keys(rm).forEach(function(k) {
+    var rTs = (typeof rm[k] === 'number') ? rm[k] : 0;
+    var lTs = (typeof merged[k] === 'number') ? merged[k] : 0;
+    if (rTs > lTs) merged[k] = rTs;
+  });
+  // Purge expired entries — auto-cleanup pass on every receive.
+  var now = Date.now();
+  Object.keys(merged).forEach(function(k) {
+    if (merged[k] <= now) delete merged[k];
+  });
+  return merged;
+}
+
+// _postReceiveActivityMeta — V-K-111 + V-M-116 hard contract.
+// Single-doc shape: { [dateKey]: { activityLevel: 1-4 } }. Merges per-dateKey
+// per-field with last-write-wins on the scalar level. Because the doc shape
+// has no inline timestamps, the merge uses "remote-wins on conflict, both-
+// sides-preserved on no-conflict" semantics — this matches what the parent
+// expects: a tag set on one device shows up on the other; clearing on one
+// device doesn't resurrect from the other.
+function _postReceiveActivityMeta(remoteMap, localMap) {
+  var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
+  var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
+  var merged = {};
+  // Seed with local per-dateKey objects (deep-copy field set).
+  Object.keys(lm).forEach(function(dk) {
+    var d = lm[dk];
+    if (d && typeof d === 'object' && !Array.isArray(d)) {
+      merged[dk] = {};
+      Object.keys(d).forEach(function(f) { merged[dk][f] = d[f]; });
+    }
+  });
+  // Fold remote — remote-wins on scalar conflict; both sides preserved otherwise.
+  Object.keys(rm).forEach(function(dk) {
+    var rDay = rm[dk];
+    if (!rDay || typeof rDay !== 'object' || Array.isArray(rDay)) return;
+    if (!merged[dk]) merged[dk] = {};
+    Object.keys(rDay).forEach(function(f) { merged[dk][f] = rDay[f]; });
+  });
+  return merged;
 }
 
 // _syncRecordLastWriter — PR-19 (Phase 3 R2 amendment) — persistent
@@ -1551,18 +1634,35 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
         }
       }
 
+      // milestone-engine-prep-v1 PR-A — mergeOnReceive hook (V-M-116 + V-K-111
+      // floors). Pure (remoteVal, localPrior) → merged function applied before
+      // save so cross-device per-key state survives last-write-wins on single-doc
+      // shapes. No-op when SYNC_RENDER_DEPS[key] lacks a mergeOnReceive field,
+      // or when the named hook isn't a function — falls through to remoteVal.
+      var _saveVal = remoteVal;
+      var _depCfg = SYNC_RENDER_DEPS[key];
+      if (_depCfg && _depCfg.mergeOnReceive) {
+        try {
+          var _mergeFn = (typeof window !== 'undefined') ? window[_depCfg.mergeOnReceive] : undefined;
+          if (typeof _mergeFn === 'function') _saveVal = _mergeFn(remoteVal, current);
+        } catch(e) {
+          console.warn('[sync] merge-on-receive ' + key + '/' + _depCfg.mergeOnReceive + ':', e);
+          _saveVal = remoteVal;
+        }
+      }
+
       anyChanged = true;
       _remoteWriteDepth++;
-      try { save(key, remoteVal); }
+      try { save(key, _saveVal); }
       finally { _remoteWriteDepth--; }
-      _syncShadow[key] = _syncCloneDeep(remoteVal);
+      _syncShadow[key] = _syncCloneDeep(_saveVal);
 
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the
       // toast-with-reload fallback in _syncQueueToast (graceful degradation).
       // Hotfix: dispatch failures log via console.warn (not _syncRecordCrash);
       // see _syncDispatchRender comment for jurisdictional rationale.
-      try { _syncDispatchRender(key, remoteVal, attribution); }
+      try { _syncDispatchRender(key, _saveVal, attribution); }
       catch(e) { console.warn('[sync-dispatch] outer/' + key + ':', e); }
 
       // PR-19 (Phase 3 R2 amendment): persistent attribution sidecar.

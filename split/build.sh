@@ -69,6 +69,17 @@ if ! bash audit-card-priority-v3-6.sh >&2; then
   echo "BUILD ABORTED: v3-6 card-priority audit failed. Migrate to data-card-priority or annotate." >&2
   exit 1
 fi
+# milestone-engine-prep-v1 ship-gate (8th audit gate): audit-no-personalised-
+# prediction-v1.sh blocks two cipher-honesty violation classes on the milestone
+# surface — Scope B personalised-prediction prose ("Ziva will <verb> by …") and
+# Scope A hardcoded source attribution ("(WHO)"/"(IAP)"/etc.) + V-M-115 unverified
+# parenthetical ("(unverified)") in JS render code. Python regex engine (V-K-112
+# floor) with self-test on 5 adversarial inputs at startup. Spec:
+# docs/specs/milestone-engine-prep-v1.md §Build-time audit gate.
+if ! bash audit-no-personalised-prediction-v1.sh >&2; then
+  echo "BUILD ABORTED: milestone-engine-prep-v1 audit failed. Read clinical bands from row.source; never personalise; never render '(unverified)'." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
