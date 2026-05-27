@@ -584,6 +584,8 @@ This is a **breaking data-shape change at the consumer-read tier**. The IMPL aut
 
 **Kael's PR-split recommendation (synth-fold ratified — see §Sequencing for full split structure):** the engine-prep IMPL benefits from being split into PR-A (data-tier — Kael-primary, ships clean) + PR-B (migration sweep + merge logic — Maren-primary, ships against the now-stable data-tier).
 
+**Test-suite placement note (cipher-honesty-4 synth-fold):** the V-K-119 divergence-state regression test (collide rows with conflicting `cat:` and `domain:` values; verify reconciliation fires) lives in **PR-A's e2e test suite** alongside the merge-function update — the merge function itself ships in PR-A. PR-B's e2e suite focuses on the 18-site consumer-migration sweep + load-time migration + post-receive integration. IMPL author runs PR-A's full e2e before opening PR-B; PR-B inherits a stable merge surface.
+
 ---
 
 ## Seed-data expansion — sensory + cognitive
@@ -734,8 +736,8 @@ This audit is **standalone**, not bundled with activity-categories (which lands 
 | `split/core.js` | Kael | `_predictMilestoneWindow` + `_getInWindowMilestones` + `_getActivityLevelToday` + `_setActivityLevelToday` helpers; KEYS additions for `milestoneSuppress` | ~280 added |
 | `split/data.js` | Kael | `MILESTONE_STANDARDS` rows extended with `source:` + optional `endMonth:` + optional `safetyTier:` (194 rows touched, mostly field-only edits) + `DEFAULT_MILESTONES` `cat:` → `domain:` migration (7 rows) + 2 new seed rows (sensory + cognitive) + `MILESTONE_SOURCE` constant | ~250 changed, ~40 added |
 | `split/sync.js` | Kael | `SYNC_KEYS` + `SYNC_RENDER_DEPS` additions for `KEYS.milestoneSuppress`; verify activityLog._meta survives existing migration handlers | ~25 added |
-| `split/home.js` | Maren | Consumer migration `m.cat` → `m.domain` at **10 drift sites** (1670 outlier-resolution + 1860 / 2258 / 2297 / 2298 / 2312 / 2495 / 3798 / 6769 / 8628) + load-time `milestones` localStorage migration block | ~80 changed |
-| `split/medical.js` | Maren | Consumer migration at **3 drift sites** (`renderActiveMilestones` :461 + `renderUpcomingMilestones` :4788 + :4814) + `_postReceiveMilestones` field-survival verification | ~30 changed |
+| `split/home.js` | Maren | Consumer migration `m.cat` → `m.domain` at **9 in-scope drift sites** (`home.js:1670` excluded per V-M-117 outlier) — constant defs (1860 / 2258 / 2297 / 2298 / 2312 / 2495 / 3798 / 6769 / 8628) + reader call-sites (1847 / 2032 / 2314 / 5963 / 5997) + load-time `milestones` localStorage migration block. See §Primitive 5 drift-site table for the canonical enumeration. | ~120 changed |
+| `split/medical.js` | Maren | Consumer migration at **7 drift sites** — constant defs (`renderActiveMilestones` :461 + `renderUpcomingMilestones` :4788 + :4814) + reader call-sites (`:483` per-row read in renderActiveMilestones + `:4884` data-arg3 emission + `:7653` Milestone Map treemap) + `_postReceiveMilestones` integration (V-K-110 + V-M-110 merge-function update) | ~60 changed |
 | `split/start.js` (or initializer) | Kael | Load-time migration for legacy `cat:` → `domain:` (idempotent) | ~20 added |
 | `split/audit-no-personalised-prediction-v1.sh` (NEW) | — | Build-time audit gate (Scope B broadened per V-K-106 + V-M-106 hardcoded-source floor) | ~140 |
 | `split/build.sh` | shared | Wire the new audit gate as the 8th gate | ~5 changed |
@@ -880,7 +882,7 @@ All existing milestone-related tests must remain green. The `cat:` → `domain:`
 - The `MILESTONE_SOURCE` controlled vocabulary (`'WHO' | 'CDC' | 'IAP' | 'EU' | 'CN' | 'unverified'`) — Care-tier verification that no relevant pediatric clinical standard is missing
 - The 2 new seed milestones (1 sensory + 1 cognitive) — Maren picks which clinical-band-and-source the IMPL author lands; Care-tier read on whether the chosen milestones are safety-aware-or-neutral
 - The `safetyTier: true` flag list on `MILESTONE_STANDARDS` rows — Maren curates the list (choking-readiness, swallow-coordination, etc.); the engine respects the flag in `_getInWindowMilestones` cap-bypass logic (V-M-102 fold)
-- The `home.js` + `medical.js` consumer migration discipline — Care-floor sign-off on whether the 7+1 enumerated drift sites are correctly migrated (scribe-verify confirms the line numbers at IMPL time)
+- The `home.js` + `medical.js` consumer migration discipline — Care-floor sign-off on whether the **18 enumerated drift sites** (9 home.js in-scope + 7 medical.js + the load-time + the merge-function update; `home.js:1670` excluded per V-M-117 as activity-domain) are correctly migrated. The canonical drift-site table is at §Primitive 5 — Maren reads that directly, not this pair-note summary (cipher-extensibility-5 synth-fold corrected the stale pre-V-K-113 count).
 
 ### Pair-note to Vela
 
