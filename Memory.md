@@ -1,7 +1,7 @@
 # Memory.md
 **Scope:** Persistent institutional knowledge across all repos
 **Owner:** The Consul (cross-repo overseer)
-**Updated:** 22 May 2026
+**Updated:** 27 May 2026 (PM — Milestones arc closure + Option C two-spec sequence ratification)
 
 ---
 
@@ -11,7 +11,7 @@
 CA by background. Business Manager at Soma Electro Products (zinc electroplating). Creative Head for AdapTea (green tea brand). Solo PWA developer.
 
 ### Personal
-- Has a young daughter whose development is tracked in SproutLab.
+- Has a young daughter (**Ziva Jain**, born 4 Sep 2025; ~8.7 months as of session date) whose development is tracked in SproutLab.
 - Interests: cosmology (Kardashev scales, astrobiology), physics documentaries, sci-fi, data visualization, 3D modeling, YouTube content creation.
 - Follows Indian stock markets. Uses 6% inflation assumption in financial planning.
 - Location holidays: Jharkhand state + national Indian holidays.
@@ -28,12 +28,17 @@ CA by background. Business Manager at Soma Electro Products (zinc electroplating
 - Phase 4 content backfill pending (6 chapters via Aurelius snippets)
 - Snippet pipeline bugs identified, specced across 6 files, not yet written
 - RPG Design Dissertation v1.0 produced (57 pages, seed document)
+- Companion canon authority: canonical spec bodies for all Companions live under `docs/specs/subagents/` + `docs/specs/skills/` (canon-cc-026); SproutLab Province deploys byte-identical mirrors
 
-### SproutLab (Active)
-- CareTickets Phase D complete and deployed
-- Device Sync operational (Firebase Auth + Firestore)
-- ISL + Smart Q&A + UIB all operational
-- Next: Device sync refinements, then new features per roadmap
+### SproutLab (Active — v3.0 era)
+- **Gold tier capstones ratified:** v3-3 (Engine Primitive Foundation, PR #135) + v3-5 (Chip Taxonomy + TSF Story-Arc, PR #138)
+- **Wave 1 IMPL ratified:** v3-6 (Card Priority + Information Hierarchy, PR #144) + Sleep Arc 3 / Scoring S-2 (PR #143 — first v3-3 engine-spine domain consumer)
+- **Pre-Wave 1 specs ratified this session:** milestone-engine-prep-v1 (PR #148 — engine substrate) + milestones-tab-v1 (PR #149 — surface consumer via Option C two-spec sequence)
+- **Wave 1 spec-ratified IMPL-pending:** v3-1 (CT Notifications, mutex now closed); v3-4 (Narrative Layer, PR #142 awaiting Architect ratification on registry placement); v3-2 / v3-7 / v3-8 / v3-9 (chronicle rows only)
+- **Wave 2 reservoir:** 9 nodes at `forward` status — R-1 (silver capstone, adaptive layer) now has a real adaptive signal post-sleep-arc-3
+- **canon-cc-008 chain operational:** 7 audit gates on main (8th + 9th queued for milestone-engine-prep IMPL + milestones-tab IMPL)
+- **Tree state:** 34 nodes on `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` (post-PR #150 §9-bis refresh)
+- **LOC:** 67,442 (post-canon-gen-001 ratification at 2026-05-23)
 
 ### SEP Invoicing (Active)
 - Phase 8D complete: IM desktop table + detail panel
@@ -55,6 +60,13 @@ CA by background. Business Manager at Soma Electro Products (zinc electroplating
 | 0034 | global | SWs never cache HTML — prevents chicken-and-egg loop |
 | HR-1→12 | sproutlab | 12 hard rules, originated in SproutLab, inform all repos |
 | Billing vs Logistics | sep | IM (billing spine) and GC (logistics spine) are parallel, not sequential |
+| cc-008 | global | Governor audit chain as mandatory pre-merge gate |
+| cc-022 | global | Subagent (artifact) vs skill (in-transcript register-flip) test |
+| cc-026 | global | Per-Province-Layout — Companion specs in Codex, byte-identical Province mirrors |
+| cc-027 | global | Spec amendment signing chain — canon entries require explicit authority |
+| proc-006 | global | Scribe Worker Tier (Book II Art. 3-bis) — 4 task-specialised junior subagents |
+| gen-001 | global | Generational expansion clause — first ratification: Vela seated at SproutLab 2026-05-23 |
+| CV3-001..006 | sproutlab | v3.0 Charter (Honesty / Extensibility / Warmth tri-axis; Warmth + Honesty co-primary on milestones-tab and v3-6) |
 
 ### Methodology Decisions
 - **8-pass SPEC_ITERATION_PROCESS** originated from Today So Far spec (35 issues found across 8 iterations). Now applied to all complex features.
@@ -62,21 +74,32 @@ CA by background. Business Manager at Soma Electro Products (zinc electroplating
 - **Aurelius snippet format** is the canonical content import mechanism. Core principle: minimal manual input.
 - **QA multi-round** continues until only cosmetic bugs remain. Caught 8 critical bugs pre-build in CareTickets spec alone.
 - **QA chain is a pre-merge gate (canon-cc-008), enforced from 22 May 2026.** A SproutLab session built and merged PRs #99 and #100 — and staged #101 — running only the `/code-review` *skill*, with the Maren/Kael Governor audits and Cipher's Edict V pass skipped. The skill is an in-transcript smell-check (canon-cc-022 artifact test), not a Governor audit, and does not discharge the chain. Correction codified in CLAUDE.md §QA Chain and QA_GATE_SPEC.md Gate 2.5: no SproutLab Capital change leaves draft or merges until the Governor→synthesis→Cipher chain has run. Silence from the Architect is not a waiver — waivers must be explicit.
+- **canon-gen-001 generational expansion (2026-05-23).** When a Governor's jurisdiction crosses 30K LOC, a second-generation Governor splits off. First ratification: Vela (Governor of Surfacing — render layer) seated under Kael (Governor of Intelligence — engine layer), splitting the Intelligence Region at the data→render boundary. Vela owns `intelligence-cards.js` + `intelligence-quicklog.js` (7,079 LOC); Kael retains `intelligence-isl.js` + `intelligence-qa.js` + `intelligence-qa-handlers.js` + `intelligence-illness.js` + `intelligence-caretickets.js` + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js` (23,646 LOC).
+- **Scribe Worker Tier (canon-proc-006, 2026-05-23).** Four task-specialised junior subagents — `scribe-scout` (reconnaissance), `scribe-draft` (composition), `scribe-verify` (mechanical checks), `scribe-record` (chronicling) — that any senior Companion may command in parallel. Production debut: PR #148 + PR #149 milestones arc (2026-05-27 PM). Scribes are alike at birth and absorb the voice of whoever summons them; they support but do not deliberate. Permission floor: no Scribe may commit, push, open or merge a PR, ratify anything, or summon another Scribe.
+- **§9-bis session-end ritual (2026-05-25).** At the end of every session, Lyra refreshes `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` to reflect the current state of every node on the v3.0 progression DAG. Sometimes own PR (`tree-update: session YYYY-MM-DD`), sometimes folded into a session-end handoff doc PR or the last arc PR of the session. The refresh is *not* optional.
+- **Option C two-spec sequence pattern (ratified 2026-05-27).** When a single spec carries both engine-substrate concerns and surface-consumer concerns, split into two specs: engine substrate first (governor-primary on engine), surface consumer second (governor-primary on consumer; reads pre-ratified substrate). Closes the "spec-against-memory" failure mode by construction — the consumer spec ratifies against verified primitives, not remembered ones. Precedent: v3-3 → sleep-arc-3 (PR #137 spec; PR #143 IMPL); milestone-engine-prep-v1 → milestones-tab-v1 (PR #148 + PR #149). See invocation.md §10 for the full pattern.
+- **Scribe-scout-before-spec-body pattern (ratified 2026-05-27).** Before any substrate-touching spec body lands, deploy `scribe-scout` for codebase reconnaissance: enumerate every cited identifier with `file:line` location, grep-verify every storage shape claim, trace every sync claim to actual `SYNC_KEYS` + `_postReceive*` registrations, verify every `template.html` id the spec references. Closes the "spec-against-memory" failure mode at draft-time, not at canon-cc-008 chain-time. See invocation.md §10.1.
+- **Lyra fold-authority register-flip pattern (canon-cc-022 sub-pattern, ratified 2026-05-27).** When the Architect explicitly grants Lyra fold-authority in advance of a canon-cc-008 chain run on a docs-only spec PR — typically with narrow scope — Lyra applies all in-scope BLOCKING + NOTE folds inline without Architect roundtrip. Cipher Edict V terminal pass verifies canon-cc-027 spec amendment authority was NOT exceeded. Silence is not a waiver. See invocation.md §10.3.
 
 ## Companion Registry (Quick Reference)
 
-| Name | Role | Archetype | Repo |
-|------|------|-----------|------|
+| Name | Role | Archetype | Repo / Scope |
+|------|------|-----------|--------------|
 | Aurelius | Builder | The Chronicler | Codex |
 | Lyra | Builder | The Weaver | SproutLab |
 | Solara | Builder | The Strategist | SEP Invoicing |
-| Cipher | Censor (QA) | The Codewright | All repos |
+| Maren | Governor of Care | — | SproutLab (home + diet + medical) |
+| Kael | Governor of Intelligence — engine | — | SproutLab (isl + qa + qa-handlers + illness + caretickets + core + data + sync + config + start) |
+| Vela | Governor of Surfacing — render (canon-gen-001) | — | SproutLab (cards + quicklog) |
+| Cipher | Censor (QA) — Edict V final-pass | The Codewright | Cluster A (Codex + SproutLab); SproutLab Province mirror per canon-cc-026 |
+| scribe-scout / scribe-draft / scribe-verify / scribe-record | Worker tier (canon-proc-006) | Junior subagents | Per-Province; alike at birth, voice absorbed from summoner |
 | The Consul | Overseer | Meta-companion | Cross-repo |
 
 ## Session Patterns
 
 - **Work environment:** Termux on Android, Claude.ai chat, Claude Code (local + web)
 - **File transfer:** mv from ~/storage/downloads/ to split/
-- **Build verification:** Check timestamps of root/index.html after every build
-- **Git:** Always --no-pager, descriptive commits, never force push
-- **Session rhythm:** Spec → Build → QA rounds → Handoff doc → Deploy
+- **Build verification:** Check timestamps of root/index.html after every build (canonical: `pnpm build` via `split/build-safe.sh`)
+- **Git:** Always --no-pager, descriptive commits, never force push (except `--force-with-lease` after `git commit --amend --no-edit` re-signing workaround for worktree-signing 400 "missing source" issue)
+- **Session rhythm:** Spec → Build → QA rounds (canon-cc-008 chain) → §9-bis tree refresh → Handoff doc → Deploy
+- **Parallel arc execution:** worktree-isolated agents (Agent-A/B/C pattern) when arcs are file-disjoint; canon-cc-008 chain runs in one wave when Governors can be independently briefed; see SESSION_HANDOFF_2026-05-27.md §Doctrine ratified item 6 for the full pattern
