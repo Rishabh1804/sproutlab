@@ -133,7 +133,7 @@ cat <<'MID'
      checks `window.Motion` and falls back to CSS-class transitions if it
      hasn't loaded (offline parent on a flight, blocked CDN, etc.). Loaded
      after Chart.js so chart rendering takes priority on cold-start. -->
-<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js" defer></script>
 </head>
 <body>
 MID
