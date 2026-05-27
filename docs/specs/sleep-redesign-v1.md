@@ -274,6 +274,14 @@ function classifySleep(bedtime, wakeTime, location, dateKey) {
   if (cls === 'contact' || (cls === 'night' && durationMinutes >= 240 && crossesMorning)) confidence = 'high';
   else if (cls === 'nap' && durationMinutes >= 180)            confidence = 'medium';
   else                                                         confidence = 'low';
+  // V-K-94 deferral (Architect ratified 2026-05-28): the 60-179 min nap band
+  // currently falls through to 'low' here. The band's ratification — low /
+  // medium / or new tier — is DEFERRED with a hard trigger condition: any
+  // future arc that surfaces `_confidence` to the parent (today it's engine-
+  // internal) MUST land AFTER this band ratifies. Until then, the fall-through
+  // to 'low' is the v1 design; not a Honesty violation because the field never
+  // renders. The trigger condition is the gate; the spec amendment lands at
+  // the first surface arc that consumes _confidence in rendered prose.
   return { class: cls, dayAttribution, durationMin: durationMinutes, confidence };
 }
 
