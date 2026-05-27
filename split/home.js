@@ -3462,8 +3462,17 @@ function renderRecentEvidence() {
   Object.entries(obsByMilestone).forEach(([ms, occs]) => {
     if (occs.length < ROLLUP_THRESHOLD) return;
     const sorted = occs.slice().sort((a, b) => {
-      const aTs = a.entry.ts || a.dateStr;
-      const bTs = b.entry.ts || b.dateStr;
+      // ts is canonically an ISO string per intelligence-quicklog.js:262, but
+      // entries written by milestones-tab-v1 batch-2 (before the hotfix in
+      // PR #160) wrote ts: Date.now() (number) — .localeCompare on number
+      // throws TypeError. Coerce both operands to string before compare so
+      // legacy in-localStorage number-ts entries don't crash this sort.
+      // The init-time _migrateActivityLogTsShape pass converts legacy
+      // entries forward; this defensive coerce closes the race where the
+      // sort runs before that migration (or on a device that hasn't loaded
+      // the migration yet via sync).
+      const aTs = String(a.entry.ts || a.dateStr || '');
+      const bTs = String(b.entry.ts || b.dateStr || '');
       return bTs.localeCompare(aTs);
     });
     rollups.push({
@@ -3522,7 +3531,13 @@ function renderRecentEvidence() {
 
   // ── Render per-day groups (excluding rolled-up entries) ──
   dayKeys.forEach((dateStr, dayIdx) => {
-    const allEntries = dayGroups[dateStr].slice().sort((a, b) => (b.ts || b._date).localeCompare(a.ts || a._date));
+    // Coerce ts to string before .localeCompare — legacy number-ts entries
+    // from PR #159 batch-2 pre-hotfix would throw TypeError. The orchestrator
+    // at renderMilestones runs renderRecentEvidence UNWRAPPED, so a throw
+    // here kills every milestones-tab-v1 surface downstream (Today header,
+    // chip strip, in-window proposals, bulk grid). Defensive coerce + the
+    // init-time _migrateActivityLogTsShape pass close the failure-class.
+    const allEntries = dayGroups[dateStr].slice().sort((a, b) => String(b.ts || b._date || '').localeCompare(String(a.ts || a._date || '')));
     const entries = allEntries.filter(e => !(e.id && rolledIds.has(e.id)));
     if (entries.length === 0) return;
 
