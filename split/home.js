@@ -3551,10 +3551,30 @@ function deleteMilestone(i) {
   // of which × button was clicked. Now data-arg is the bare index string.
   const idx = typeof i === 'number' ? i : parseInt(i, 10);
   if (!Number.isInteger(idx) || idx < 0 || idx >= milestones.length) return;
+  // Capture the deleted milestone's id BEFORE splice so we can clear
+  // related state (suppress + deprioritize) that referenced it.
+  // Architect bug-report 2026-05-27 #12: "deleting from history is not
+  // bringing it back to the queue". Root cause — milestoneSuppress[id]
+  // still carried the 24h post-Confirm/Practicing hide timestamp, so the
+  // in-window engine kept skipping the row even after the milestone row
+  // itself was removed. Same for the session-local _msNotYetSession
+  // deprioritize map. Clear both on delete so the proposal returns
+  // immediately to the queue.
+  const deleted = milestones[idx];
+  const deletedId = deleted && deleted.id;
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
   milestones.splice(idx, 1);
   save(KEYS.milestones, milestones);
+  if (deletedId) {
+    if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null && deletedId in milestoneSuppress) {
+      delete milestoneSuppress[deletedId];
+      save(KEYS.milestoneSuppress, milestoneSuppress);
+    }
+    if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null && deletedId in _msNotYetSession) {
+      delete _msNotYetSession[deletedId];
+    }
+  }
   renderMilestones();
   renderUpcomingMilestones();
   expandedMsCats.forEach(id => {

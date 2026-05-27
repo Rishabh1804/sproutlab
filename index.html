@@ -16429,6 +16429,17 @@ const MILESTONE_STANDARDS = {
     { text:'Waves bye-bye', icon:zi('baby'), desc:'Imitates waving — a social communication milestone. Usually 7–9 months.', advanced:false, domain:'social', source:'unverified' },
     { text:'Stands holding furniture (cruising prep)', icon:zi('run'), desc:'Pulls up and stands while holding furniture for support. Legs bear full weight.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Says mama/dada (non-specific)', icon:zi('chat'), desc:'Uses mama/dada sounds but not yet directed at the right person. Specific use is 10–12 months.', advanced:true, domain:'language', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + language depth for the 7m
+    // bracket. Architect ask: "need to load up on milestones as well". Per
+    // V-M-114 honesty floor, all new rows ship source:'unverified'; future
+    // Care-tier curation arc upgrades attribution row-by-row against the
+    // canonical references (WHO Motor Study + IAP DASII + AAP Bright Futures
+    // + CDC Learn-the-Signs).
+    { text:'Tracks moving objects across midline', icon:zi('eye'), desc:'Follows a toy moving from one side of the body to the other with eyes — bilateral visual coordination strengthening.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Turns head toward soft sounds', icon:zi('chat'), desc:'Localises quieter sounds — a rattle in another room, your voice from the kitchen. Auditory mapping refining.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Explores textures with hands and mouth', icon:zi('sparkle'), desc:'Squeezes a soft toy, mouths a wooden ring, pats a textured book. Tactile discrimination building.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
+    { text:'Plays peek-a-boo with interest', icon:zi('face'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Imitates simple sounds back', icon:zi('chat'), desc:'Hears you say "ba" and tries "ba" back — early conversational turn-taking.', advanced:false, domain:'language', source:'unverified' },
   ],
   8: [
     { text:'Pincer grasp developing', icon:zi('baby'), desc:'Begins using thumb and forefinger to pick up small items — a major fine motor milestone.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
@@ -16438,6 +16449,13 @@ const MILESTONE_STANDARDS = {
     { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together intentionally — motor planning + social imitation.', advanced:false, domain:'social', source:'unverified' },
     { text:'Points at objects', icon:zi('baby'), desc:'Uses index finger to point — early communication milestone, usually 8–12 months.', advanced:true, domain:'language', source:'unverified' },
     { text:'Stands momentarily without support', icon:zi('run'), desc:'Lets go of furniture and balances for a few seconds — pre-walking confidence.', advanced:true, domain:'motor', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + language at 8m bracket.
+    { text:'Recognises familiar faces from across the room', icon:zi('eye'), desc:'Lights up when a familiar person walks in — visual recognition + social memory at distance.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Responds to different tones of voice', icon:zi('chat'), desc:'Reacts differently to a soothing voice vs an excited voice — auditory + emotional discrimination.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Pats and pokes textured surfaces with intent', icon:zi('sparkle'), desc:'Investigates rough, smooth, soft, bumpy with deliberate touch. Tactile vocabulary expanding.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Looks for a fallen toy', icon:zi('star'), desc:'Glances down when something drops from her hand — emerging object-permanence + cause-effect.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Babbles long strings of sounds', icon:zi('chat'), desc:'"Bababa", "mamamama", "dadada" extended runs with rhythm and intonation — pre-speech jargon.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Plays interactive games (so big! pat-a-cake)', icon:zi('handshake'), desc:'Joins in with simple back-and-forth games — social engagement + memory.', advanced:false, domain:'social', source:'unverified' },
   ],
   9: [
     { text:'Pincer grasp refined', icon:zi('baby'), desc:'Neat thumb-forefinger grip for picking up small items like puffs and peas.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
@@ -16448,6 +16466,13 @@ const MILESTONE_STANDARDS = {
     { text:'First steps (with support)', icon:zi('run'), desc:'Takes steps while holding hands or pushing a walker — early walking readiness.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Says mama/dada with meaning', icon:zi('chat'), desc:'Uses "mama" for mother and "dada" for father specifically — true first words.', advanced:true, domain:'language', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'"Give me the ball" or "come here" — understands and acts on one-step commands.', advanced:true, domain:'cognitive', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + social at 9m bracket.
+    { text:'Plays with food textures (squishing, mashing)', icon:zi('bowl'), desc:'Explores food with hands deliberately — squishes banana, mashes rice. Tactile + oral sensory integration.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
+    { text:'Notices subtle sound differences', icon:zi('bell'), desc:'Turns toward a soft click, a distant voice, footsteps. Auditory discrimination refining.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Visually inspects small details', icon:zi('eye'), desc:'Studies a leaf, an ant, a button — close focus on small things signals visual acuity maturing.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Looks at named pictures in a book', icon:zi('book'), desc:'You say "where\'s the dog?" and she looks at the picture. Receptive vocabulary + symbol recognition.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Shows preference for certain toys', icon:zi('heart'), desc:'Reaches for favorites repeatedly, may protest when taken away. Early preference + memory.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Shares interest by looking back and forth', icon:zi('eye'), desc:'Looks at an object, then at you, then back — "joint attention", a key social-cognitive milestone.', advanced:false, domain:'social', source:'unverified' },
   ],
   10: [
     { text:'Stands alone briefly', icon:zi('run'), desc:'Balances without holding anything for several seconds.', advanced:false, domain:'motor', source:'unverified' },
@@ -28569,10 +28594,30 @@ function deleteMilestone(i) {
   // of which × button was clicked. Now data-arg is the bare index string.
   const idx = typeof i === 'number' ? i : parseInt(i, 10);
   if (!Number.isInteger(idx) || idx < 0 || idx >= milestones.length) return;
+  // Capture the deleted milestone's id BEFORE splice so we can clear
+  // related state (suppress + deprioritize) that referenced it.
+  // Architect bug-report 2026-05-27 #12: "deleting from history is not
+  // bringing it back to the queue". Root cause — milestoneSuppress[id]
+  // still carried the 24h post-Confirm/Practicing hide timestamp, so the
+  // in-window engine kept skipping the row even after the milestone row
+  // itself was removed. Same for the session-local _msNotYetSession
+  // deprioritize map. Clear both on delete so the proposal returns
+  // immediately to the queue.
+  const deleted = milestones[idx];
+  const deletedId = deleted && deleted.id;
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
   milestones.splice(idx, 1);
   save(KEYS.milestones, milestones);
+  if (deletedId) {
+    if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null && deletedId in milestoneSuppress) {
+      delete milestoneSuppress[deletedId];
+      save(KEYS.milestoneSuppress, milestoneSuppress);
+    }
+    if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null && deletedId in _msNotYetSession) {
+      delete _msNotYetSession[deletedId];
+    }
+  }
   renderMilestones();
   renderUpcomingMilestones();
   expandedMsCats.forEach(id => {
