@@ -1892,6 +1892,16 @@ const MS_TRAJECTORY_GEOM = {
   confirmedCap: 12, practicingCap: 8, notYetCap: 5, globalCap: 20,
 };
 
+// Regression-honesty floor threshold (V-M-104 + V-M-121) — Maren NOTE-1
+// fold-close: both renderMsTodayHeader (regression-detection pass) and
+// renderMsPediatricPrep (regressions section) read this single const so the
+// "never quiet stretch with regressions present" floor stays coherent across
+// the two surfaces. The runtime `const REGRESSION_DAYS = 30` at home.js:3000+
+// lives inside renderRegressionAlerts inner scope — not reachable from the
+// module-scope renderers below — so this duplicate IS the reliable source.
+// Future schedule change → flip this one literal.
+const MS_REGRESSION_DAYS = 30;
+
 // Sub-tab switcher — invoked by data-action="switchMsSub" + data-ms-sub="<key>"
 function switchMsSub(target) {
   const subKey = (target && target.dataset && target.dataset.msSub) || 'log';
@@ -1962,9 +1972,10 @@ function renderMsTodayHeader() {
           mostRecentConfirmedTime = ts;
           mostRecentConfirmedMs = m;
         }
-        // Regression check folded into same pass
+        // Regression check folded into same pass — single floor const so
+        // renderMsPediatricPrep stays in sync (Maren NOTE-1 fold-close).
         const daysSince = (now - ts) / 86400000;
-        if (daysSince > 30) hasRegression = true;
+        if (daysSince > MS_REGRESSION_DAYS) hasRegression = true;
       }
     }
   });
@@ -2211,6 +2222,7 @@ function notYetMsInWindow(target) {
   // Proper write: mutate the module-global object in place + save() through
   // the wrapper. milestoneSuppress is declared at core.js:389.
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
+  _msPruneExpiredSuppress();
   const untilTs = Date.now() + (7 * 86400000);
   milestoneSuppress[msId] = untilTs;
   save(KEYS.milestoneSuppress, milestoneSuppress);
@@ -2224,9 +2236,26 @@ function undoMsSuppress(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
+  _msPruneExpiredSuppress();
   delete milestoneSuppress[msId];
   save(KEYS.milestoneSuppress, milestoneSuppress);
   renderMilestones();
+}
+
+// Suppress-map garbage collection — Maren NOTE-2 fold-close. The suppress
+// map grows monotonically without pruning; entries are { milestoneId: untilTs }
+// where untilTs is the future epochMs when suppression expires. Once now >
+// untilTs the entry is dead weight (no consumer reads it; _getInWindowMilestones
+// at core.js:6016 already gates on untilTs > now). Pruning on write-paths
+// (notYet + undo) keeps the map small without a separate GC tick. Cheap O(n)
+// where n is the suppress count (typical: <10 active entries).
+function _msPruneExpiredSuppress() {
+  if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
+  const now = Date.now();
+  Object.keys(milestoneSuppress).forEach(k => {
+    const v = milestoneSuppress[k];
+    if (typeof v !== 'number' || v <= now) delete milestoneSuppress[k];
+  });
 }
 
 // Record evidence into activityLog — canonical write shape matching the
@@ -2259,6 +2288,12 @@ function _msRecordEvidence(milestoneId, confidence, msText, msDomain) {
     evidence: [{
       milestone: milestoneId,
       confidence: confidence,
+      // domain on the inner evidence record — Kael NOTE-1 fold-close.
+      // _alGetDomainNudge at intelligence-quicklog.js:667-671 falls back to
+      // ev.domain when EVIDENCE_PATTERNS lookup misses (short-key vs
+      // milestoneId-slug mismatch). Without this field, milestone taps
+      // silently miss domain-nudge attribution.
+      domain: msDomain || '',
       context: 'milestones-tab-v1-tap',
     }],
   };
@@ -2479,6 +2514,14 @@ function renderMsTrajectoryRibbon() {
     const cy = h / 2;
     const accent = accentByDomain[m.domain] || 'lavender';
     const color = 'var(--' + accent + ')';
+    // HR-2 carve-out (Maren NOTE-3 close): inline style passes a CSS token
+    // through `color` to power the `currentColor` reference in the marker's
+    // CSS rule (`.ms-trajectory-marker[data-state="confirmed"] { fill:currentColor }`).
+    // The alternative — 5 per-domain CSS rules duplicating the registry
+    // accent values — is exactly the parallel-table failure-mode the 9th
+    // audit gate exists to prevent. Registry → currentColor pass-through
+    // keeps ACTIVITY_CATEGORIES as the single source of truth for accent.
+    // Mirrors the v3-6 _setCardPriority collapse-machinery-mirror precedent.
     return '<circle class="ms-trajectory-marker" data-state="' + (m.state === 'confirmed' ? 'confirmed' : 'hedged')
       + '" cx="' + cx + '" cy="' + cy + '" r="' + markerR + '" style="color:' + color + '"/>';
   }).join('');
@@ -2527,14 +2570,17 @@ function renderMsPediatricPrep() {
   const practicingItems = (milestones || []).filter(m => (m.status === 'practicing' || m.status === 'emerging'))
     .map(m => ({ text: m.text, count: recentObsByMs[m.id] || recentObsByMs[m.text] || 0 }))
     .slice(0, 3);
-  // Regressions — confirmed but no recent evidence in REGRESSION_DAYS window
-  const REGRESSION_DAYS_LOCAL = (typeof REGRESSION_DAYS !== 'undefined') ? REGRESSION_DAYS : 30;
+  // Regressions — confirmed but no recent evidence in MS_REGRESSION_DAYS window.
+  // The prior `typeof REGRESSION_DAYS !== 'undefined'` check was always false
+  // (REGRESSION_DAYS lives inside renderRegressionAlerts inner scope, not
+  // module-scope) so the fallback always fired. Module-scope const fixes the
+  // surface-coherence floor (Maren NOTE-1).
   const regressions = (milestones || []).filter(m => {
     if (m.status !== 'consistent' && m.status !== 'mastered') return false;
     const t = m.consistentAt || m.masteredAt;
     if (!t) return false;
     const daysSince = (now - new Date(t).getTime()) / 86400000;
-    return daysSince > REGRESSION_DAYS_LOCAL;
+    return daysSince > MS_REGRESSION_DAYS;
   }).slice(0, 2);
   // Build narration (CV3-002 narrate-vs-list). Observation-counts only per
   // V-K-120 — never engine-internal labels.
