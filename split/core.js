@@ -1145,6 +1145,22 @@ function init() {
     if (!Array.isArray(poopData)) poopData = [];
     if (!Array.isArray(growthData)) growthData = DEFAULT_GROWTH.slice();
     if (!Array.isArray(milestones)) milestones = DEFAULT_MILESTONES.slice();
+    // milestone-engine-prep-v1 PR-B — cold-load cat→domain migration (V-K-110
+    // + V-K-119 floors). Runs once at boot before any consumer reads
+    // milestones; idempotent (skips already-migrated rows). The same
+    // migration also runs inside _postReceiveMilestones (medical.js:145+)
+    // so cross-device sync receives also re-migrate; this cold-load handles
+    // the first-ever-v1-boot case before any sync receive fires.
+    // V-K-132 fold (Kael PR-B audit): try-wrap matches _postReceiveMilestones
+    // posture so a malformed milestones[] from localStorage doesn't brick boot.
+    try {
+      milestones.forEach(row => {
+        if (!row || typeof row !== 'object') return;
+        if (row.cat && !row.domain) row.domain = row.cat;
+        // V-K-119: divergence reconciliation — domain wins, clear cat.
+        if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+      });
+    } catch(e) { console.warn('[cold-load milestones] cat→domain migration:', e); }
     // Migrate old milestone statuses to 5-stage model
     milestones.forEach(m => migrateMilestoneStatus(m));
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
@@ -1179,12 +1195,20 @@ function init() {
   });
 
   // Migrate old milestone format (done:boolean) → new (status string)
+  // milestone-engine-prep-v1 PR-B: emit `domain:` for new rows; legacy `cat:`
+  // path stays for the very-old (done:boolean) shape to round-trip cleanly.
+  // The cold-load cat→domain migration above already promoted any inbound
+  // cat: to domain:, so once a row has domain it stays canonical.
   milestones = milestones.map(m => {
     if ('done' in m && !('status' in m)) {
-      return { text:m.text, status:m.done?'done':'pending', advanced:m.advanced||false, doneAt:m.done?today():null, inProgressAt:null, cat:m.cat||guessMilestoneCat(m.text) };
+      const guessed = m.domain || m.cat || guessMilestoneCat(m.text);
+      return { text:m.text, status:m.done?'done':'pending', advanced:m.advanced||false, doneAt:m.done?today():null, inProgressAt:null, domain: guessed };
     }
-    // Ensure cat field exists on all milestones
-    if (!m.cat) m.cat = guessMilestoneCat(m.text);
+    // Ensure domain field exists on every milestone. Skip if either domain or
+    // cat is set (cat surfaces as transitional fallback per spec deprecation
+    // cycle — the cold-load migration promotes it to domain on the very next
+    // pass; intermediate rows with cat: only are honored read-side).
+    if (!m.domain && !m.cat) m.domain = guessMilestoneCat(m.text);
     return m;
   });
   // PR-ε.0 §1 — assign stable ids before save (idempotent; runs once
@@ -2115,7 +2139,8 @@ function calcMilestoneScore() {
   } else {
     // Fallback: milestone presence
     categories.forEach(cat => {
-      const catMs = milestones.filter(m => m.cat === cat);
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      const catMs = milestones.filter(m => (m.domain || m.cat) === cat);
       if (catMs.length > 0 && catMs.some(m => (MS_STAGE_META[m.status]?.pct || 0) > 0)) catProgressSum += 1;
     });
   }
@@ -2664,7 +2689,9 @@ function renderScrapMilestonePickerList() {
   const byCat = {};
   const catOrder = [];
   milestones.forEach(m => {
-    const cat = m.cat || 'other';
+    // milestone-engine-prep-v1 PR-B — V-K-131 fold: read via domain
+    // fallback so post-migration rows aren't all bucketed into 'other'.
+    const cat = m.domain || m.cat || 'other';
     if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
     byCat[cat].push(m);
   });
@@ -6060,7 +6087,12 @@ function _getInWindowMilestones(ageDays, n, opts) {
         milestoneId: milestoneId,
         text: row.text || '',
         icon: row.icon || '',
-        domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
+        // V-V-74 fold (Vela PR-B audit): fallback intentionally preserved as
+        // cross-device-sync compatibility floor during the deprecation cycle
+        // (devices on the old schema still emit cat:-only rows that arrive
+        // via _postReceiveMilestones, which migrates them before render).
+        // Drop in v1.1 once deprecation window closes.
+        domain: row.domain || row.cat || 'motor',
         // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
         // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
         // Mirror the FULL shape so milestones-tab-v1 consumers reading

@@ -826,13 +826,18 @@ function _islMilestoneData(startDate, endDate) {
       if (m[field]) {
         var d = m[field].substring(0, 10);
         if (d >= startDate && d <= endDate) {
-          progressed.push({ text: m.text, status: m.status, date: d, cat: m.cat });
+          // milestone-engine-prep-v1 PR-B — V-K-130 fold: ISL projection
+          // surfaces both domain (canonical) + cat (legacy fallback);
+          // downstream consumers can read either during deprecation.
+          progressed.push({ text: m.text, status: m.status, date: d, domain: m.domain || m.cat, cat: m.cat });
         }
       }
     });
     // Active milestones
     if (['emerging', 'practicing', 'consistent'].includes(m.status)) {
-      active.push({ text: m.text, status: m.status, cat: m.cat });
+      // milestone-engine-prep-v1 PR-B — V-K-130 fold: ISL projection
+      // surfaces both domain (canonical) + cat (legacy fallback).
+      active.push({ text: m.text, status: m.status, domain: m.domain || m.cat, cat: m.cat });
     }
   });
 
