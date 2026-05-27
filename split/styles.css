@@ -6246,6 +6246,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-traj-axis-tick { stroke:var(--mid); stroke-width:0.8; opacity:0.55; }
 .ms-traj-axis-label { font-size:8px; fill:var(--mid); font-family:'Nunito',sans-serif; opacity:0.85; }
 
+/* Lane guide-lines — very low opacity structural cue (no chart-like grid).
+   State identity is conveyed by marker color + matching legend chips. */
+.ms-traj-lane-guide { stroke:var(--mid); stroke-width:0.5; opacity:0.18; stroke-dasharray:1 2; }
+.ms-traj-lane-empty { font-size:9px; fill:var(--mid); opacity:0.4; font-family:'Nunito',sans-serif; }
+
 /* Current-age vertical indicator. Dashed; rose tint so it reads as
    "you are here" without competing with the markers. */
 .ms-traj-current { stroke:var(--tc-rose); stroke-width:1.1; stroke-dasharray:3 2; opacity:0.65; }

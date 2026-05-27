@@ -6253,6 +6253,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-traj-axis-tick { stroke:var(--mid); stroke-width:0.8; opacity:0.55; }
 .ms-traj-axis-label { font-size:8px; fill:var(--mid); font-family:'Nunito',sans-serif; opacity:0.85; }
 
+/* Lane guide-lines — very low opacity structural cue (no chart-like grid).
+   State identity is conveyed by marker color + matching legend chips. */
+.ms-traj-lane-guide { stroke:var(--mid); stroke-width:0.5; opacity:0.18; stroke-dasharray:1 2; }
+.ms-traj-lane-empty { font-size:9px; fill:var(--mid); opacity:0.4; font-family:'Nunito',sans-serif; }
+
 /* Current-age vertical indicator. Dashed; rose tint so it reads as
    "you are here" without competing with the markers. */
 .ms-traj-current { stroke:var(--tc-rose); stroke-width:1.1; stroke-dasharray:3 2; opacity:0.65; }
@@ -26658,14 +26663,23 @@ const MS_ACTIVITY_LEVEL_TIERS = [
 // intact post-global-cap-20-slice; sum (25) exceeds cap to leave room for
 // merge prioritization within the 20-marker budget per V-K-122.
 //
-// Post-overhaul (Architect feedback 2026-05-27): viewBox sized for an age-axis
-// timeline (width=360, height=72) + bottom-padding for month labels. Three
-// distinct visual states (confirmed/practicing/coming-up) — Architect call
-// over the V-V-49 2-state collapse since live use showed the merged
-// "practicing-or-in-window" bucket didn't convey state clarity warmly enough.
+// State-lanes overhaul v2 (Architect feedback 2026-05-27 #2): live use showed
+// the temporal-axis single-line design clustered badly when babies hit
+// milestone bursts at similar ages (real biology: 4-6m motor + sensory
+// cluster on the same X). 3 horizontal state-lanes (celebrated / practicing
+// / coming-up) each with collision-aware lateral spacing replace the single
+// jittered line. Shared age axis + current-age indicator span all lanes.
+// Lane height accommodates marker r=5 + padding (~28px); 3 lanes + axis ≈
+// 108px total.
 const MS_TRAJECTORY_GEOM = {
-  width: 360, height: 72,
-  padL: 12, padR: 12, padT: 6, padB: 20,
+  width: 360, height: 108,
+  padL: 14, padR: 14, padT: 6, padB: 22,
+  // Y-centers per state lane (top → bottom: celebrated → practicing → coming-up).
+  lane: { celebrated: 18, practicing: 44, comingup: 70 },
+  // Minimum horizontal spacing between markers in the same lane (~2× marker
+  // diameter so collision-pushed markers don't touch). Sorted-left-to-right
+  // walk enforces this floor.
+  laneMinSpacing: 14,
   markerR: 5, markerRSmall: 4, markerStroke: 1.8,
   confirmedCap: 12, practicingCap: 8, notYetCap: 5, globalCap: 20,
   axisTickMonths: 3,
@@ -27373,21 +27387,35 @@ function renderMsTrajectoryRibbon() {
   const allAgeM = merged.map(m => m.ageM);
   const maxMarkerAge = Math.max(...allAgeM);
   const maxAge = Math.max(currentAgeM + 2, maxMarkerAge + 1, 9);
-  const ageToX = ageM => G.padL + (Math.max(0, ageM) / maxAge) * (G.width - G.padL - G.padR);
-  // Single Y line for the markers, with tiny domain-keyed jitter so overlapping
-  // markers don't fully obscure each other. Domain lane offset is bounded
-  // (±3px max) so the markers still read as "on the timeline".
-  const cats = (window.ACTIVITY_CATEGORIES || []);
-  const domainLane = {};
-  cats.forEach((c, i) => {
-    // Spread lanes across [-3, +3] centered on 0
-    domainLane[c.key] = (i - (cats.length - 1) / 2) * (cats.length > 1 ? 6 / (cats.length - 1) : 0);
-  });
-  const baseY = G.padT + (G.height - G.padT - G.padB) / 2;
+  const innerW = G.width - G.padL - G.padR;
+  const xMin = G.padL;
+  const xMax = G.width - G.padR;
+  const ageToX = ageM => G.padL + (Math.max(0, ageM) / maxAge) * innerW;
+
+  // Lane layout — collision-aware lateral spacing within each state lane.
+  // Sorted left-to-right walk; each marker placed at max(naturalX, lastX +
+  // minSpacing) so dense bursts spread laterally instead of stacking
+  // invisibly. layoutX clamps at the right edge — overflow is rare given
+  // the sub-bucket caps but the clamp keeps markers on-canvas. naturalX is
+  // preserved on the layout object for the SVG <title> readability anchor.
+  function _layoutLane(items, laneY) {
+    const sorted = items.slice().sort((a, b) => a.ageM - b.ageM);
+    let lastX = -Infinity;
+    return sorted.map(it => {
+      const naturalX = ageToX(it.ageM);
+      let x = Math.max(naturalX, lastX + G.laneMinSpacing);
+      if (x > xMax - 2) x = xMax - 2; // clamp at right edge
+      lastX = x;
+      return Object.assign({}, it, { layoutX: x, layoutY: laneY, naturalX });
+    });
+  }
+  const celebratedLayout = _layoutLane(celebrated, G.lane.celebrated);
+  const practicingLayout = _layoutLane(practicing, G.lane.practicing);
+  const comingUpLayout   = _layoutLane(comingUp,   G.lane.comingup);
 
   // Axis ticks (every G.axisTickMonths months)
-  const axisLine = '<line class="ms-traj-axis" x1="' + G.padL + '" y1="' + (G.height - G.padB + 1)
-    + '" x2="' + (G.width - G.padR) + '" y2="' + (G.height - G.padB + 1) + '"/>';
+  const axisLine = '<line class="ms-traj-axis" x1="' + xMin + '" y1="' + (G.height - G.padB + 1)
+    + '" x2="' + xMax + '" y2="' + (G.height - G.padB + 1) + '"/>';
   const axisTicks = [];
   for (let m = 0; m <= Math.ceil(maxAge); m += G.axisTickMonths) {
     const x = ageToX(m);
@@ -27397,7 +27425,18 @@ function renderMsTrajectoryRibbon() {
       + '" text-anchor="middle">' + m + 'm</text>');
   }
 
-  // Current-age vertical indicator. Dashed; subtle but parseable.
+  // Faint lane guide-lines — very low opacity so they read as a subtle
+  // structural cue, not chart-like grid lines. State identity is conveyed
+  // by the marker color (top sage, middle amber, bottom lavender) +
+  // matching legend chips below the SVG; no explicit lane labels needed
+  // (keeps the canvas warm rather than chart-y).
+  const guides = [G.lane.celebrated, G.lane.practicing, G.lane.comingup].map(y =>
+    '<line class="ms-traj-lane-guide" x1="' + xMin + '" y1="' + y
+    + '" x2="' + xMax + '" y2="' + y + '"/>'
+  ).join('');
+  const labels = '';
+
+  // Current-age vertical indicator spanning all 3 lanes.
   const currX = ageToX(Math.min(currentAgeM, maxAge));
   const currIndicator =
       '<line class="ms-traj-current" x1="' + currX + '" y1="' + G.padT
@@ -27405,33 +27444,44 @@ function renderMsTrajectoryRibbon() {
     + '<text class="ms-traj-current-label" x="' + currX + '" y="' + (G.padT + 7)
     + '" text-anchor="middle">now</text>';
 
-  // Marker render. Three SVG shapes per state for clean differentiation
-  // (state styling lives in CSS rules keyed on data-state attribute).
-  const markers = merged.map(m => {
-    const cx = ageToX(m.ageM);
-    const cy = baseY + (domainLane[m.ms && m.ms.domain] || 0);
+  // Empty-lane fallbacks — muted "—" centered in the lane so the structural
+  // 3-state hierarchy stays visible even when a bucket is empty.
+  const emptyLaneMarker = (y) => '<text class="ms-traj-lane-empty" x="' + (xMin + innerW / 2)
+    + '" y="' + (y + 3) + '" text-anchor="middle">—</text>';
+  const emptyMarkers = [];
+  if (celebratedLayout.length === 0) emptyMarkers.push(emptyLaneMarker(G.lane.celebrated));
+  if (practicingLayout.length === 0) emptyMarkers.push(emptyLaneMarker(G.lane.practicing));
+  if (comingUpLayout.length === 0)   emptyMarkers.push(emptyLaneMarker(G.lane.comingup));
+
+  // Marker render — 3 SVG shapes per state. layoutX/layoutY come from the
+  // lane-layout pass; titleEl carries the milestone text for hover/long-press.
+  function _renderMarker(m) {
+    const cx = m.layoutX;
+    const cy = m.layoutY;
     const msId = m.ms && m.ms.id ? m.ms.id : '';
     const msText = m.ms && m.ms.text ? m.ms.text : '';
     const tappable = msId ? ' data-action="gotoMsRow" data-ms-id="' + escHtml(msId) + '"' : '';
     const titleEl = msText ? '<title>' + escHtml(msText) + '</title>' : '';
     if (m.state === 'celebrated') {
-      // Filled sage circle + soft glow via filter (CSS).
       return '<circle class="ms-trajectory-marker" data-state="celebrated"'
         + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerR + '">'
         + titleEl + '</circle>';
     }
     if (m.state === 'practicing') {
-      // Outer amber ring + inner amber dot — "in progress" shape.
       return '<g class="ms-trajectory-marker" data-state="practicing"' + tappable + '>'
         + '<circle class="ms-traj-ring" cx="' + cx + '" cy="' + cy + '" r="' + (G.markerR + 1) + '"/>'
         + '<circle class="ms-traj-core" cx="' + cx + '" cy="' + cy + '" r="' + (G.markerR - 1.5) + '"/>'
         + titleEl + '</g>';
     }
-    // comingup — outlined lavender circle, smaller; never tappable if no id
     return '<circle class="ms-trajectory-marker" data-state="comingup"'
       + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerRSmall + '">'
       + titleEl + '</circle>';
-  }).join('');
+  }
+  const markers = []
+    .concat(celebratedLayout.map(_renderMarker))
+    .concat(practicingLayout.map(_renderMarker))
+    .concat(comingUpLayout.map(_renderMarker))
+    .join('');
 
   // Legend — three swatches with distinct visual + warmer labels.
   const swatchSVG = (state) => '<svg class="ms-traj-legend-swatch" viewBox="0 0 14 14" aria-hidden="true">'
@@ -27466,10 +27516,13 @@ function renderMsTrajectoryRibbon() {
     + zi('chart-up') + '</div> Trajectory</div></div>'
     + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + G.width + ' ' + G.height + '"'
     + ' preserveAspectRatio="xMidYMid meet" role="img"'
-    + ' aria-label="Milestone trajectory along Ziva\'s age in months: '
+    + ' aria-label="Milestone trajectory: '
     + nCel + ' celebrated, ' + nPra + ' practicing, ' + nCom + ' coming up. Now: '
     + (Math.round(currentAgeM * 10) / 10) + ' months">'
-    + axisLine + axisTicks.join('') + currIndicator + markers
+    + guides + labels
+    + axisLine + axisTicks.join('') + currIndicator
+    + emptyMarkers.join('')
+    + markers
     + '</svg>'
     + legend
     + '<div class="ms-trajectory-label">' + escHtml(caption) + '</div>';
