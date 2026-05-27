@@ -2649,7 +2649,8 @@ function qaAnswerMilestoneGeneral(intentId) {
     var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
     var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
     categories.forEach(function(cat) {
-      var catMs = (milestones || []).filter(function(m) { return m.cat === cat; });
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      var catMs = (milestones || []).filter(function(m) { return (m.domain || m.cat) === cat; });
       var mastered = catMs.filter(function(m) { return m.status === 'mastered'; }).length;
       var inProgress = catMs.filter(function(m) { return ['emerging','practicing','consistent'].includes(m.status); }).length;
       if (catMs.length > 0) {
@@ -2685,7 +2686,8 @@ function qaAnswerMilestoneGeneral(intentId) {
       }
       if (ms.components.categories < 50) {
         var missing = categories.filter(function(cat) {
-          return !(milestones || []).some(function(m) { return m.cat === cat && m.status !== 'not-started'; });
+          // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+          return !(milestones || []).some(function(m) { return (m.domain || m.cat) === cat && m.status !== 'not-started'; });
         });
         if (missing.length > 0) {
           actionItems.push({ text: 'Missing activity in: ' + missing.map(function(c) { return catNames[c]; }).join(', '), signal: 'action' });

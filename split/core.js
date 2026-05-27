@@ -1145,6 +1145,18 @@ function init() {
     if (!Array.isArray(poopData)) poopData = [];
     if (!Array.isArray(growthData)) growthData = DEFAULT_GROWTH.slice();
     if (!Array.isArray(milestones)) milestones = DEFAULT_MILESTONES.slice();
+    // milestone-engine-prep-v1 PR-B — cold-load cat→domain migration (V-K-110
+    // + V-K-119 floors). Runs once at boot before any consumer reads
+    // milestones; idempotent (skips already-migrated rows). The same
+    // migration also runs inside _postReceiveMilestones (medical.js:145+)
+    // so cross-device sync receives also re-migrate; this cold-load handles
+    // the first-ever-v1-boot case before any sync receive fires.
+    milestones.forEach(row => {
+      if (!row || typeof row !== 'object') return;
+      if (row.cat && !row.domain) row.domain = row.cat;
+      // V-K-119: divergence reconciliation — domain wins, clear cat.
+      if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+    });
     // Migrate old milestone statuses to 5-stage model
     milestones.forEach(m => migrateMilestoneStatus(m));
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
@@ -1179,12 +1191,20 @@ function init() {
   });
 
   // Migrate old milestone format (done:boolean) → new (status string)
+  // milestone-engine-prep-v1 PR-B: emit `domain:` for new rows; legacy `cat:`
+  // path stays for the very-old (done:boolean) shape to round-trip cleanly.
+  // The cold-load cat→domain migration above already promoted any inbound
+  // cat: to domain:, so once a row has domain it stays canonical.
   milestones = milestones.map(m => {
     if ('done' in m && !('status' in m)) {
-      return { text:m.text, status:m.done?'done':'pending', advanced:m.advanced||false, doneAt:m.done?today():null, inProgressAt:null, cat:m.cat||guessMilestoneCat(m.text) };
+      const guessed = m.domain || m.cat || guessMilestoneCat(m.text);
+      return { text:m.text, status:m.done?'done':'pending', advanced:m.advanced||false, doneAt:m.done?today():null, inProgressAt:null, domain: guessed };
     }
-    // Ensure cat field exists on all milestones
-    if (!m.cat) m.cat = guessMilestoneCat(m.text);
+    // Ensure domain field exists on every milestone. Skip if either domain or
+    // cat is set (cat surfaces as transitional fallback per spec deprecation
+    // cycle — the cold-load migration promotes it to domain on the very next
+    // pass; intermediate rows with cat: only are honored read-side).
+    if (!m.domain && !m.cat) m.domain = guessMilestoneCat(m.text);
     return m;
   });
   // PR-ε.0 §1 — assign stable ids before save (idempotent; runs once
@@ -2115,7 +2135,8 @@ function calcMilestoneScore() {
   } else {
     // Fallback: milestone presence
     categories.forEach(cat => {
-      const catMs = milestones.filter(m => m.cat === cat);
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      const catMs = milestones.filter(m => (m.domain || m.cat) === cat);
       if (catMs.length > 0 && catMs.some(m => (MS_STAGE_META[m.status]?.pct || 0) > 0)) catProgressSum += 1;
     });
   }

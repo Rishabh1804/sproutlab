@@ -144,6 +144,20 @@ function checkEvidenceRegression(milestoneKeyword, currentAutoStatus) {
 // devices run this code, Firestore lands at deduped+migrated state.
 function _postReceiveMilestones() {
   if (!Array.isArray(milestones)) return;
+  // milestone-engine-prep-v1 PR-B — row-migration on EVERY sync receive
+  // (V-K-110 + V-M-110 floor). Placed BEFORE migrateMilestoneStatus +
+  // dedupeMilestonesByText so post-merge rows carry the new schema before
+  // any downstream consumer reads them. V-K-119 floor: when both `cat:`
+  // and `domain:` are present and disagree, prefer domain and clear cat
+  // (the migration direction is one-way; cat-vs-domain conflict means a
+  // partial-state row).
+  try {
+    milestones.forEach(row => {
+      if (!row || typeof row !== 'object') return;
+      if (row.cat && !row.domain) row.domain = row.cat;
+      if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+    });
+  } catch(e) { console.warn('[post-receive milestones] cat→domain migration:', e); }
   try {
     if (typeof migrateMilestoneStatus === 'function') {
       milestones.forEach(m => migrateMilestoneStatus(m));
@@ -195,7 +209,24 @@ function _mergeMilestoneFieldsInline(winner, loser) {
     }
   }
   if (loser.advanced) winner.advanced = true;
-  if (!winner.cat && loser.cat) winner.cat = loser.cat;
+  // milestone-engine-prep-v1 PR-B — V-M-110 + V-K-110 + V-K-119 + V-M-116
+  // synth-folds. Replaces the legacy `cat:` write-back with explicit merge
+  // logic for the new fields. Drops the cat write-back entirely so cross-
+  // device sync no longer re-pollutes migrated rows with `cat:` from a
+  // losing-side entry on a device that hasn't updated yet.
+  //
+  // Domain — additive merge (winner-keeps-or-loser-fills). Legacy cat:
+  // surfaces as a one-way fallback only when neither side has domain (covers
+  // pre-migration losing-row from a device still on the old schema).
+  if (!winner.domain && loser.domain) winner.domain = loser.domain;
+  if (!winner.domain && loser.cat)   winner.domain = loser.cat;
+  // safetyTier — loser-wins-on-true (Care-floor: once flagged, always flagged).
+  if (loser.safetyTier) winner.safetyTier = true;
+  // source — prefer attributed over 'unverified' (winner-keeps-or-loser-upgrades).
+  if ((!winner.source || winner.source === 'unverified') &&
+      loser.source && loser.source !== 'unverified') {
+    winner.source = loser.source;
+  }
   if (loser.__sync_updatedBy) {
     const mAt = loser.__sync_updatedBy.at || 0;
     const curAt = (winner.__sync_updatedBy && winner.__sync_updatedBy.at) || 0;
@@ -480,7 +511,8 @@ function renderActiveMilestones() {
   html += '<div class="ms-active-list">';
 
   shown.forEach(m => {
-    const cat = m.cat || 'motor';
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const cat = m.domain || m.cat || 'motor';
     const stageMeta = MS_STAGE_META[m.status] || MS_STAGE_META.not_started;
     const pct = stageMeta.pct;
     const icon = catIcons[cat] || zi('star');
@@ -4796,7 +4828,8 @@ function renderUpcomingMilestones() {
   const stateGroups = {};
   items.forEach(item => {
     const s = item.currentStatus;
-    const c = item.cat || 'motor';
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const c = item.domain || item.cat || 'motor';
     if (!stateGroups[s]) stateGroups[s] = {};
     if (!stateGroups[s][c]) stateGroups[s][c] = [];
     stateGroups[s][c].push(item);
@@ -4881,7 +4914,10 @@ function renderUpcomingItem(item) {
   // into key; data-arg = item.text (user-text), data-arg2 = bool-as-string
   // for advanced, data-arg3 = item.cat. data-stop="1" preserves the
   // event.stopPropagation() from the pre-migration form.
-  const catVal = item.cat || 'motor';
+  // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+  // V-M-111 Care-floor: this value emits to data-arg3 in handler routing —
+  // a missing migration here = handler dispatched against legacy category.
+  const catVal = item.domain || item.cat || 'motor';
   if (isDone) {
     actionsHtml = '<span class="upcoming-badge achieved-badge">' + zi('check') + ' Achieved</span>';
   } else if (isIP) {
@@ -7650,7 +7686,8 @@ function renderInfoMilestoneVelocity() {
       STATUSES.forEach(s => { catStatusCounts[c][s] = 0; });
     });
     milestones.forEach(m => {
-      const c = (m.cat || '').toLowerCase();
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      const c = (m.domain || m.cat || '').toLowerCase();
       const s = (m.status || '').toLowerCase();
       if (CATS.includes(c) && STATUSES.includes(s)) {
         catTotals[c]++;

@@ -554,8 +554,9 @@ test('regression-guard-milestone-engine-prep-v1-seed-rows: 2 new sensory + cogni
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
   const r = await page.evaluate(() => {
-    const sensory = DEFAULT_MILESTONES.find((m: any) => m.cat === 'sensory');
-    const cognitive = DEFAULT_MILESTONES.find((m: any) => m.cat === 'cognitive');
+    // PR-B cat→domain rename: read via domain (canonical) with legacy fallback.
+    const sensory = DEFAULT_MILESTONES.find((m: any) => (m.domain || m.cat) === 'sensory');
+    const cognitive = DEFAULT_MILESTONES.find((m: any) => (m.domain || m.cat) === 'cognitive');
     return {
       sensoryText: sensory?.text,
       sensorySafety: sensory?.safetyTier === true,

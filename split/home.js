@@ -1844,7 +1844,11 @@ function renderMilestoneList() {
 
   const groups = {};
   milestones.forEach((m, i) => {
-    const cat = m.cat || 'motor';
+    // milestone-engine-prep-v1 PR-B: cat→domain rename; transitional fallback
+    // reads legacy cat: during the deprecation cycle. PR-A's data-tier ships
+    // domain: as canonical; _postReceiveMilestones row-migration ensures
+    // cross-device sync also carries domain: forward.
+    const cat = m.domain || m.cat || 'motor';
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push({ ...m, _i: i });
   });
@@ -2029,7 +2033,8 @@ function expandAndHighlight(containerId, filter) {
     milestones.forEach((m, i) => {
       if (!filter(m, i)) return;
       // Open this milestone's category
-      const cat = m.cat || 'motor';
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      const cat = m.domain || m.cat || 'motor';
       if (!openedCats.has(cat)) {
         const items = document.getElementById('ms-cat-items-' + cat);
         const card = document.getElementById('ms-cat-' + cat);
@@ -2311,7 +2316,8 @@ function renderCategoryWheels() {
   let html = '';
   ['motor','language','social','cognitive'].forEach(cat => {
     const meta = catMeta[cat];
-    const catMs = milestones.filter(m => (m.cat || 'motor') === cat);
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const catMs = milestones.filter(m => (m.domain || m.cat || 'motor') === cat);
     const avgPct = catMs.length > 0 ? Math.round(catMs.reduce((s, m) => s + (MS_STAGE_META[m.status]?.pct || 0), 0) / catMs.length) : 0;
     const fill = C - (avgPct / 100) * C;
     const evCount = domainEvidence[cat];
@@ -3819,7 +3825,8 @@ function renderMilestoneHighlights() {
   let hlHtml = '';
 
   if (latestMs) {
-    const ci = catIcons[latestMs.cat] || zi('star');
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const ci = catIcons[latestMs.domain || latestMs.cat] || zi('star');
     const dateInfo = latestMs.doneAt ? formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : '';
     const latestIdx = milestones.indexOf(latestMs);
     hlHtml += `
@@ -5960,7 +5967,8 @@ function renderMilestoneHistory() {
 
   // Latest milestone highlight
   if (latestMs) {
-    const cat = latestMs.cat || 'motor';
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const cat = latestMs.domain || latestMs.cat || 'motor';
     const cm = catMeta[cat] || catMeta.motor;
     html += `
       <div style="display:flex;align-items:center;gap:var(--sp-12);padding:14px 16px;border-radius:var(--r-xl);background:${cm.bg};border-left:var(--accent-w) solid ${cm.color};margin-bottom:14px;">
@@ -5994,7 +6002,8 @@ function renderMilestoneHistory() {
   html += '<div class="fx-col g8">';
 
   timeline.forEach(m => {
-    const cat = m.cat || 'motor';
+    // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+    const cat = m.domain || m.cat || 'motor';
     const cm = catMeta[cat] || catMeta.motor;
     const isDone = m.type === 'done';
     const statusIcon = isDone ? zi('check') : zi('target');
@@ -6767,7 +6776,8 @@ function renderHistoryPreviews() {
 
     if (latestMs) {
       const catMeta = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
-      const catIcon = catMeta[latestMs.cat] || zi('star');
+      // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
+      const catIcon = catMeta[latestMs.domain || latestMs.cat] || zi('star');
       msPrev.innerHTML = `<div class="info-strip is-sage">
         <span>${catIcon}</span>
         <div><strong class="tc-sage">Latest: ${escHtml(latestMs.text)}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</strong>
