@@ -2309,51 +2309,105 @@ const _msNotYetSession = {};
 // it again across days).
 const MS_HIDE_AFTER_TAP_MS = 24 * 60 * 60 * 1000;
 
-// Helper: animate a card out then run the callback. Picks the card by
-// data-ms-id walking from the tap target up. If the card isn't found
-// (defensive — DOM may have changed mid-render), run the callback
-// immediately so the write-path still fires.
-function _msAnimateCardOut(target, klass, cb) {
-  const msId = target && target.dataset && target.dataset.msId;
-  let card = target && target.closest ? target.closest('.ms-inwindow-card') : null;
-  if (!card) {
-    if (typeof cb === 'function') cb();
-    return;
+// ─── Motion One animation foundation (Architect 2026-05-27 #10) ──────
+// Motion One UMD is loaded via deferred CDN script in build.sh → exposes
+// window.Motion with animate / spring / timeline / stagger / inView. All
+// call sites in this file check window.Motion at invocation time + fall
+// back to the CSS-class transition for offline / blocked-CDN / cached-
+// from-pre-Motion-build users. The fallback is functionally equivalent
+// (slide-out + drop-down) just with --ease-med cubic-bezier instead of
+// spring physics.
+//
+// Reduced-motion check: respects user OS-level prefers-reduced-motion.
+// Skips animation entirely and fires the callback immediately so the
+// data write still happens. Accessibility floor per design principles.
+function _msPrefersReducedMotion() {
+  try {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) { return false; }
+}
+
+// Animation: tapped card swipes right with slight rotation — the "Tinder
+// off the deck" feel for Confirm/Practicing. ease-in cubic-bezier so the
+// card accelerates as it leaves (production quality vs the flat linear-ish
+// feel of CSS transition + ease-med).
+function _msSwipeCardOut(card, cb) {
+  if (!card) { if (cb) cb(); return; }
+  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
+  if (window.Motion && window.Motion.animate) {
+    const controls = window.Motion.animate(card,
+      { x: ['0%', '15%', '120%'], rotate: [0, 2, 8], opacity: [1, 0.9, 0] },
+      { duration: 0.42, easing: [0.32, 0, 0.67, 0] }
+    );
+    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
+  } else {
+    // CSS-class fallback — same shape, simpler easing.
+    card.classList.add('is-sliding-out');
+    let done = false;
+    const finish = () => { if (done) return; done = true; if (cb) cb(); };
+    card.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 460);
   }
-  card.classList.add(klass);
-  let done = false;
-  const finish = () => {
-    if (done) return;
-    done = true;
-    if (typeof cb === 'function') cb();
-  };
-  card.addEventListener('transitionend', finish, { once: true });
-  // Safety: if transitionend doesn't fire (interrupted / reduced-motion),
-  // run the callback after the animation duration anyway.
-  setTimeout(finish, 380);
+}
+
+// Animation: Not-yet drop with spring overshoot — card travels down,
+// overshoots slightly, settles back. Conveys "moved to the bottom" with
+// physical weight. After the spring settles, renderMilestones runs +
+// the card re-renders at the bottom of the stack with .is-deprioritized.
+function _msDropCardDown(card, cb) {
+  if (!card) { if (cb) cb(); return; }
+  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
+  if (window.Motion && window.Motion.animate && window.Motion.spring) {
+    const controls = window.Motion.animate(card,
+      { y: 32, scale: 0.96, opacity: 0.55 },
+      { easing: window.Motion.spring({ stiffness: 90, damping: 11, mass: 1 }) }
+    );
+    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
+  } else {
+    card.classList.add('is-sliding-down');
+    let done = false;
+    const finish = () => { if (done) return; done = true; if (cb) cb(); };
+    card.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 460);
+  }
+}
+
+// Post-render settle-in for the deprioritized card at its new bottom-of-
+// stack position. Subtle slide-up-from-below + fade-in so the parent sees
+// the card "landing" at the new position rather than just appearing.
+// Targets the LAST .is-deprioritized card in the in-window stack (the
+// one just tapped Not-yet).
+function _msSettleDeprioritizedCard() {
+  if (_msPrefersReducedMotion()) return;
+  if (!window.Motion || !window.Motion.animate) return;
+  const all = document.querySelectorAll('#msInWindowProposals .ms-inwindow-card.is-deprioritized');
+  if (!all.length) return;
+  const last = all[all.length - 1];
+  window.Motion.animate(last,
+    { y: ['12px', 0], opacity: [0.2, 0.65] },
+    { duration: 0.36, easing: [0.22, 0.61, 0.36, 1] }
+  );
 }
 
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
 //
-// Each handler reads ms-id + ms-text + ms-domain from the tap-button dataset
-// so _msRecordEvidence can construct the canonical activityLog entry shape
-// (which existing readers consume — renderCategoryWheels reads entry.domains;
-// renderRecentEvidence reads entry.text + entry.evidence).
-//
-// New behavior (Architect feedback 2026-05-27 #7):
-// - Confirm + Practicing: card slides out, evidence recorded, milestone
+// New behavior (Architect feedback 2026-05-27 #7 + #10):
+// - Confirm + Practicing: card Tinder-swipes right with rotation +
+//   acceleration (cubic-bezier ease-in), evidence recorded, milestone
 //   hidden from in-window proposals for 24h so the stack makes way for
 //   other options.
-// - Not yet: card slides DOWN, gets pushed to the bottom of the stack
-//   (still visible, just deprioritized). No 7-day hide.
+// - Not yet: card drops down with spring physics overshoot, gets pushed
+//   to the bottom of the stack with a subtle "settle in" animation at
+//   its new position. No 7-day hide.
 function confirmMsInWindow(target) {
   if (!target || !target.dataset) return;
   const msId = target.dataset.msId;
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
-  _msAnimateCardOut(target, 'is-sliding-out', () => {
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'high', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
@@ -2365,7 +2419,8 @@ function practicingMsInWindow(target) {
   const msId = target.dataset.msId;
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
-  _msAnimateCardOut(target, 'is-sliding-out', () => {
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'medium', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
@@ -2381,8 +2436,15 @@ function notYetMsInWindow(target) {
   // the bottom. milestoneSuppress is NOT touched — that key now signals
   // only the 24h post-Confirm/Practicing hide.
   _msNotYetSession[msId] = Date.now();
-  _msAnimateCardOut(target, 'is-sliding-down', () => {
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msDropCardDown(card, () => {
     renderMilestones();
+    // requestAnimationFrame so layout settles before the settle-in tween.
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(_msSettleDeprioritizedCard);
+    } else {
+      _msSettleDeprioritizedCard();
+    }
   });
 }
 
