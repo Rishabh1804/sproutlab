@@ -1181,11 +1181,16 @@
     <div class="ms-sub-panel" id="ms-sub-library" role="tabpanel" aria-labelledby="msSubLibrary">
       <div class="grid">
 
+        <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID).
+             Architect correction post-spec ratification: hero on TOP — the
+             score card anchors the parent's view of where Ziva is overall
+             before they scan the active-evidence list below. Spec body had
+             the evidence-driven primary above the hero; live use surfaced
+             that hero-as-anchor reads better. -->
+        <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
+
         <!-- Active milestones (evidence-driven primary view; preserved ID per V-M-119 + G3) -->
         <div class="card card-daily col-full" id="msActiveMilestones" style="display:none;"></div>
-
-        <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID) -->
-        <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
 
         <!-- Domain filter chips (read from window.ACTIVITY_CATEGORIES) -->
         <div class="col-full ms-domain-filter" id="msDomainFilter"></div>

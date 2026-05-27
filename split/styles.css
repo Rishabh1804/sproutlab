@@ -6207,7 +6207,20 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-trajectory-marker { stroke-width:1.8; }
 .ms-trajectory-marker[data-state="confirmed"] { fill:currentColor; stroke:none; }
 .ms-trajectory-marker[data-state="hedged"] { fill:transparent; stroke:currentColor; }
+.ms-trajectory-marker[data-action="gotoMsRow"] { cursor:pointer; }
+.ms-trajectory-marker[data-action="gotoMsRow"]:hover { stroke-width:2.4; }
+.ms-trajectory-legend { display:flex; gap:var(--sp-12); justify-content:center; padding:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-2xs); color:var(--mid); }
+.ms-traj-legend-item { display:inline-flex; align-items:center; gap:var(--sp-4); }
+.ms-traj-legend-swatch { width:12px; height:12px; }
 .ms-trajectory-label { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-4); text-align:center; }
+
+/* Brief landing-confirmation highlight for milestone rows scrolled into view
+   by trajectory ribbon tap. Fades over 1.8s; class is removed by JS. */
+.ms-row-highlight { animation: msRowHighlight 1.8s ease-out; }
+@keyframes msRowHighlight {
+  0%   { background-color: var(--surface-lav); }
+  100% { background-color: transparent; }
+}
 
 /* ── Pediatric-visit prep card (Patterns sub-tab) — return-visit surface 3 ──
    V-V-53: narrated-only v1 minimum (no copy-as-text + no PDF; deferred to R-3).

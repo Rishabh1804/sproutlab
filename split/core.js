@@ -625,6 +625,7 @@ function init() {
     else if (action === 'submitMsBulkSelections' && typeof submitMsBulkSelections === 'function') submitMsBulkSelections();
     else if (action === 'filterMsDomain' && typeof filterMsDomain === 'function') filterMsDomain(btn);
     else if (action === 'gotoMsCorrelation' && typeof gotoMsCorrelation === 'function') gotoMsCorrelation();
+    else if (action === 'gotoMsRow' && typeof gotoMsRow === 'function') gotoMsRow(btn);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
     else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
     else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);
