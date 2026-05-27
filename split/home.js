@@ -2407,8 +2407,13 @@ function renderMsBulkGrid() {
         + '<span>' + text + '</span>'
         + '</button>';
     }).join('');
-    return '<div class="ms-bulk-section">'
-      + '<div class="ms-pediatric-prep-section-label">' + escHtml(c.label) + '</div>'
+    // data-domain on the section parent enables the canonical [data-domain]
+    // CSS cascade (styles.css ~8851 defining --al-tint/--al-tc/--al-border per
+    // domain) to flow into the label + chips inside without per-chip attrs.
+    // V-M-120 + HR-6 closure: domain identity reads per-section + per-chip
+    // instead of the prior uniform lavender on all bulk surfaces.
+    return '<div class="ms-bulk-section" data-domain="' + escHtml(c.key) + '">'
+      + '<div class="ms-bulk-section-label">' + escHtml(c.label) + '</div>'
       + '<div class="ms-bulk-grid">' + chips + '</div>'
       + '</div>';
   }).filter(Boolean).join('');

@@ -6145,7 +6145,23 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-activity-level-strip { padding:var(--sp-8) 0; }
 .ms-al-prompt { font-size:var(--fs-sm); color:var(--mid); margin-bottom:var(--sp-8); text-align:center; }
 .ms-al-chips { display:flex; gap:var(--sp-6); justify-content:space-between; flex-wrap:nowrap; }
-.ms-al-chip { flex:1 1 0; min-width:0; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-lg); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; text-align:center; transition:background var(--ease-fast), border-color var(--ease-fast); }
+.ms-al-chip {
+  /* activityLevel tiers are intensity (1-4 Quiet/Calm/Active/Peak), NOT a
+     domain — uniform lavender accent for the "milestones-tab-overall"
+     surface per design table. HR-8 floor: min-height 44px via internal
+     label+desc stacking (label fs-sm ~ 14px + desc fs-2xs ~ 9px + sp-8
+     vertical padding ≈ 47px). */
+  flex:1 1 0;
+  min-width:0;
+  min-height:44px;
+  padding:var(--sp-8) var(--sp-4);
+  border-radius:var(--r-lg);
+  background:var(--warm);
+  border:1px solid var(--border-subtle);
+  cursor:pointer;
+  text-align:center;
+  transition:background var(--ease-fast), border-color var(--ease-fast);
+}
 .ms-al-chip:active { transform:scale(0.96); }
 .ms-al-chip-label { font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .ms-al-chip-desc { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-2); }
@@ -6156,9 +6172,21 @@ body.ql-locked .dark-toggle { pointer-events:none; }
    Up to 3 cards (engine cap; safetyTier:true bypasses per V-M-125 in-window
    qualifier). Status pills (V-V-57 evidenceStatus: confirmed/practicing/not-yet).
    Three tap targets: zi('check')/zi('trending-flat')/zi('arrow-right').
-   Care-tier safetyTier:true border-accent uses --rose-deep (V-V-64 + V-M-124). */
+   Care-tier safetyTier:true border-accent uses --rose-deep (V-V-64 + V-M-124).
+   Per-domain accent: consumes the canonical [data-domain] cascade
+   (styles.css ~8851 — defines --al-tint/--al-tc/--al-border per domain).
+   Border-left + status pill colors flow via cascade; the lavender default
+   only fires for cards without a data-domain attribute. HR-6 closure
+   (Architect feedback 2026-05-27 #4: "don't we have domain colour codes?
+   why is this all uniform?"). */
 .ms-inwindow-stack { display:flex; flex-direction:column; gap:var(--sp-12); }
-.ms-inwindow-card { padding:var(--sp-12) var(--sp-16); border-radius:var(--r-xl); background:var(--surface); border-left:var(--accent-w) solid var(--lavender); box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.ms-inwindow-card {
+  padding:var(--sp-12) var(--sp-16);
+  border-radius:var(--r-xl);
+  background:var(--surface);
+  border-left:var(--accent-w) solid var(--al-border, var(--lavender));
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
 .ms-inwindow-card[data-safety-tier="true"] { border:3px solid var(--rose-deep); }
 .ms-inwindow-head { display:flex; align-items:flex-start; gap:var(--sp-8); }
 .ms-inwindow-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:var(--sp-2); }
@@ -6170,51 +6198,115 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-status-pill[data-status="confirmed"] { background:rgba(58,112,96,0.1); color:var(--tc-sage); }
 .ms-status-pill[data-status="practicing"] { background:var(--lav-light); color:var(--tc-lav); }
 .ms-status-pill[data-status="not-yet"] { background:var(--warm); color:var(--mid); }
+/* Tap targets — HR-8 floor: ≥36px tap area. min-height:36px ensures the
+   sp-8 padding + line-height still clears the floor on cramped viewports.
+   Color flows from data-action-tap state semantics (sage=confirm,
+   lavender=practicing, neutral=not-yet) — these are STATUS-triad colors,
+   not domain colors per design table row "Status Triad". */
 .ms-tap-targets { display:flex; gap:var(--sp-6); margin-top:var(--sp-12); }
-.ms-tap-btn { flex:1; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:var(--sp-4); font-size:var(--fs-xs); color:var(--text); transition:background var(--ease-fast); }
+.ms-tap-btn {
+  flex:1;
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-6);
+  border-radius:var(--r-md);
+  background:var(--warm);
+  border:1px solid var(--border-subtle);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--sp-4);
+  font-size:var(--fs-xs);
+  color:var(--text);
+  transition:background var(--ease-fast);
+}
 .ms-tap-btn:hover { background:var(--surface-lav); }
-.ms-tap-btn[data-action-tap="confirm"] { color:var(--tc-sage); }
+.ms-tap-btn[data-action-tap="confirm"]    { color:var(--tc-sage); }
 .ms-tap-btn[data-action-tap="practicing"] { color:var(--tc-lav); }
-.ms-tap-btn[data-action-tap="not-yet"] { color:var(--mid); }
+.ms-tap-btn[data-action-tap="not-yet"]    { color:var(--mid); }
 .ms-tap-btn-icon { font-size:var(--icon-sm); }
 
 /* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ──
    The OUTER card (#msBulkGrid) toggles only via render-time visibility (no
    items → display:none). The chevron in the header toggles the INNER
    #msBulkGridBody via aria-expanded — so the header (chevron + title)
-   stays reachable for re-open. */
+   stays reachable for re-open. Per-section domain cascade flows via
+   data-domain on .ms-bulk-section parent into label + chips. */
 .ms-bulk-grid-card { padding:var(--sp-12); }
 .ms-bulk-grid-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-8); }
 .ms-bulk-grid-body { overflow:hidden; transition:max-height var(--ease-fast); }
 .ms-bulk-grid-body[aria-expanded="false"] { max-height:0; visibility:hidden; }
 .ms-bulk-grid-body[aria-expanded="true"]  { max-height:none; visibility:visible; }
+.ms-bulk-section { margin-bottom:var(--sp-12); }
+.ms-bulk-section-label {
+  /* Mirrors .section-label rules from §5 Section Label System: uppercase,
+     fs-sm, ls-wide. Color flows from --al-tc via [data-domain] cascade. */
+  font-size:var(--fs-sm);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:var(--ls-wide);
+  color:var(--al-tc, var(--mid));
+  margin-bottom:var(--sp-6);
+}
 .ms-bulk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:var(--sp-6); }
-.ms-bulk-chip { padding:var(--sp-6) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; font-size:var(--fs-xs); display:flex; align-items:center; gap:var(--sp-4); }
-.ms-bulk-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); color:var(--tc-lav); font-weight:600; }
-.ms-bulk-chip-icon { font-size:var(--icon-sm); flex-shrink:0; }
+.ms-bulk-chip {
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-10);
+  border-radius:var(--r-md);
+  background:var(--surface);
+  border:1px solid var(--al-border, var(--border-subtle));
+  cursor:pointer;
+  font-size:var(--fs-xs);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:var(--sp-6);
+  transition:background var(--ease-fast), border-color var(--ease-fast);
+}
+.ms-bulk-chip:hover { background:var(--al-tint, var(--surface-lav)); }
+.ms-bulk-chip[data-selected="true"] {
+  background:var(--al-tint, var(--surface-lav));
+  border-color:var(--al-tc, var(--lavender));
+  color:var(--al-tc, var(--tc-lav));
+  font-weight:700;
+}
+.ms-bulk-chip-icon { font-size:var(--icon-sm); flex-shrink:0; color:var(--al-tc, var(--mid)); }
 .ms-bulk-submit { margin-top:var(--sp-12); }
 
 /* ── Domain filter chips (Library sub-tab) — reads ACTIVITY_CATEGORIES.
-   Post-Architect feedback 2026-05-27: dark-mode readability fix — chips
-   were near-invisible against the dark page (--warm background almost
-   matches surrounding card). Adding stronger background contrast + an
-   explicit active-state visual signal (lavender tint + border) so the
-   filter selection reads at a glance. ── */
+   Each chip carries data-domain="<key>" so it consumes the canonical
+   cascade — active state shows the chip's OWN domain accent (motor→sage,
+   language→lavender, etc.) rather than uniform lavender. HR-6 + HR-8
+   closure. Dark-mode parity preserved via override at the cascade-value
+   level (theme-specific rgba adjustments). ── */
 .ms-domain-filter { display:flex; gap:var(--sp-6); flex-wrap:wrap; padding:var(--sp-4) 0; }
 .ms-domain-chip {
-  padding:var(--sp-6) var(--sp-12);
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-12);
   border-radius:var(--r-md);
   background:var(--warm);
   border:1px solid var(--border-subtle);
   color:var(--text);
   font-size:var(--fs-xs);
   cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-4);
   transition:background var(--ease-fast), border-color var(--ease-fast), color var(--ease-fast);
 }
-.ms-domain-chip:hover { background:var(--surface-lav); }
+.ms-domain-chip:hover { background:var(--al-tint, var(--surface-lav)); }
 .ms-domain-chip[data-active="true"] {
   font-weight:700;
-  background:var(--surface-lav);
+  background:var(--al-tint, var(--surface-lav));
+  border-color:var(--al-tc, var(--lavender));
+  color:var(--al-tc, var(--tc-lav));
+}
+/* "All" chip has data-domain="all" — no cascade match → falls to the
+   lavender default (the milestones-tab-overall accent per design-table
+   row "Milestones, achievements → lavender"). Explicit rule so the All
+   state reads cohesively rather than as a "missing token" gray. */
+.ms-domain-chip[data-domain="all"][data-active="true"] {
+  background:var(--lav-light);
   border-color:var(--lavender);
   color:var(--tc-lav);
 }
@@ -6223,11 +6315,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   border-color:rgba(255,255,255,0.14);
   color:var(--text);
 }
-[data-theme="dark"] .ms-domain-chip:hover { background:rgba(201,184,232,0.16); }
+[data-theme="dark"] .ms-domain-chip:hover { background:rgba(255,255,255,0.10); }
 [data-theme="dark"] .ms-domain-chip[data-active="true"] {
-  background:rgba(201,184,232,0.22);
-  border-color:var(--lavender);
-  color:var(--tc-lav);
+  background:var(--al-active-dk, rgba(201,184,232,0.22));
+  border-color:var(--al-tc, var(--lavender));
 }
 
 /* Domain filter visibility class — class-driven hide for milestoneList items
@@ -6320,7 +6411,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 /* ── Correlation cross-link teaser (Patterns sub-tab) ──
    V-V-48 + V-V-63: uses gotoCard('info','infoMilestoneSleepCard') canonical
    pattern; cardId verified against template.html. */
-.ms-correlation-teaser { padding:var(--sp-8) var(--sp-12); background:var(--warm); border-radius:var(--r-md); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); cursor:pointer; transition:background var(--ease-fast); }
+.ms-correlation-teaser { min-height:44px; padding:var(--sp-10) var(--sp-12); background:var(--warm); border-radius:var(--r-md); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); cursor:pointer; transition:background var(--ease-fast); border:1px solid var(--border-subtle); }
 .ms-correlation-teaser:hover { background:var(--surface-lav); }
 .ms-correlation-teaser-text { font-size:var(--fs-sm); color:var(--text); flex:1; }
 .ms-correlation-teaser-chev { font-size:var(--icon-sm); color:var(--light); flex-shrink:0; }
@@ -27182,8 +27273,13 @@ function renderMsBulkGrid() {
         + '<span>' + text + '</span>'
         + '</button>';
     }).join('');
-    return '<div class="ms-bulk-section">'
-      + '<div class="ms-pediatric-prep-section-label">' + escHtml(c.label) + '</div>'
+    // data-domain on the section parent enables the canonical [data-domain]
+    // CSS cascade (styles.css ~8851 defining --al-tint/--al-tc/--al-border per
+    // domain) to flow into the label + chips inside without per-chip attrs.
+    // V-M-120 + HR-6 closure: domain identity reads per-section + per-chip
+    // instead of the prior uniform lavender on all bulk surfaces.
+    return '<div class="ms-bulk-section" data-domain="' + escHtml(c.key) + '">'
+      + '<div class="ms-bulk-section-label">' + escHtml(c.label) + '</div>'
       + '<div class="ms-bulk-grid">' + chips + '</div>'
       + '</div>';
   }).filter(Boolean).join('');
