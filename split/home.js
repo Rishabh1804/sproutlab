@@ -2276,7 +2276,11 @@ function addMilestone() {
   const t = document.getElementById('mText').value.trim();
   if (!t) return;
   // PR-ε.0 §1 — custom milestones use genId (DEFAULTs use slugify(text)).
-  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
+  // milestone-engine-prep-v1 PR-B — V-M-127 fold: emit canonical domain:
+  // on parent-authored custom milestones. The _milestoneCat module-local
+  // still carries the legacy variable name through the deprecation cycle;
+  // its semantics is "domain selected via the category-chip modal".
+  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), domain:_milestoneCat, doneAt:today(), inProgressAt:today() });
   logMilestoneEvent(t, 'mastered', today());
   closeModal('milestoneModal');
   renderMilestones();

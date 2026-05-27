@@ -1151,12 +1151,16 @@ function init() {
     // migration also runs inside _postReceiveMilestones (medical.js:145+)
     // so cross-device sync receives also re-migrate; this cold-load handles
     // the first-ever-v1-boot case before any sync receive fires.
-    milestones.forEach(row => {
-      if (!row || typeof row !== 'object') return;
-      if (row.cat && !row.domain) row.domain = row.cat;
-      // V-K-119: divergence reconciliation — domain wins, clear cat.
-      if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
-    });
+    // V-K-132 fold (Kael PR-B audit): try-wrap matches _postReceiveMilestones
+    // posture so a malformed milestones[] from localStorage doesn't brick boot.
+    try {
+      milestones.forEach(row => {
+        if (!row || typeof row !== 'object') return;
+        if (row.cat && !row.domain) row.domain = row.cat;
+        // V-K-119: divergence reconciliation — domain wins, clear cat.
+        if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+      });
+    } catch(e) { console.warn('[cold-load milestones] cat→domain migration:', e); }
     // Migrate old milestone statuses to 5-stage model
     milestones.forEach(m => migrateMilestoneStatus(m));
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
@@ -2685,7 +2689,9 @@ function renderScrapMilestonePickerList() {
   const byCat = {};
   const catOrder = [];
   milestones.forEach(m => {
-    const cat = m.cat || 'other';
+    // milestone-engine-prep-v1 PR-B — V-K-131 fold: read via domain
+    // fallback so post-migration rows aren't all bucketed into 'other'.
+    const cat = m.domain || m.cat || 'other';
     if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
     byCat[cat].push(m);
   });
@@ -6081,7 +6087,12 @@ function _getInWindowMilestones(ageDays, n, opts) {
         milestoneId: milestoneId,
         text: row.text || '',
         icon: row.icon || '',
-        domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
+        // V-V-74 fold (Vela PR-B audit): fallback intentionally preserved as
+        // cross-device-sync compatibility floor during the deprecation cycle
+        // (devices on the old schema still emit cat:-only rows that arrive
+        // via _postReceiveMilestones, which migrates them before render).
+        // Drop in v1.1 once deprecation window closes.
+        domain: row.domain || row.cat || 'motor',
         // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
         // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
         // Mirror the FULL shape so milestones-tab-v1 consumers reading

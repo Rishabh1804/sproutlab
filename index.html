@@ -18754,12 +18754,16 @@ function init() {
     // migration also runs inside _postReceiveMilestones (medical.js:145+)
     // so cross-device sync receives also re-migrate; this cold-load handles
     // the first-ever-v1-boot case before any sync receive fires.
-    milestones.forEach(row => {
-      if (!row || typeof row !== 'object') return;
-      if (row.cat && !row.domain) row.domain = row.cat;
-      // V-K-119: divergence reconciliation — domain wins, clear cat.
-      if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
-    });
+    // V-K-132 fold (Kael PR-B audit): try-wrap matches _postReceiveMilestones
+    // posture so a malformed milestones[] from localStorage doesn't brick boot.
+    try {
+      milestones.forEach(row => {
+        if (!row || typeof row !== 'object') return;
+        if (row.cat && !row.domain) row.domain = row.cat;
+        // V-K-119: divergence reconciliation — domain wins, clear cat.
+        if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+      });
+    } catch(e) { console.warn('[cold-load milestones] cat→domain migration:', e); }
     // Migrate old milestone statuses to 5-stage model
     milestones.forEach(m => migrateMilestoneStatus(m));
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
@@ -20288,7 +20292,9 @@ function renderScrapMilestonePickerList() {
   const byCat = {};
   const catOrder = [];
   milestones.forEach(m => {
-    const cat = m.cat || 'other';
+    // milestone-engine-prep-v1 PR-B — V-K-131 fold: read via domain
+    // fallback so post-migration rows aren't all bucketed into 'other'.
+    const cat = m.domain || m.cat || 'other';
     if (!byCat[cat]) { byCat[cat] = []; catOrder.push(cat); }
     byCat[cat].push(m);
   });
@@ -23684,7 +23690,12 @@ function _getInWindowMilestones(ageDays, n, opts) {
         milestoneId: milestoneId,
         text: row.text || '',
         icon: row.icon || '',
-        domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
+        // V-V-74 fold (Vela PR-B audit): fallback intentionally preserved as
+        // cross-device-sync compatibility floor during the deprecation cycle
+        // (devices on the old schema still emit cat:-only rows that arrive
+        // via _postReceiveMilestones, which migrates them before render).
+        // Drop in v1.1 once deprecation window closes.
+        domain: row.domain || row.cat || 'motor',
         // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
         // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
         // Mirror the FULL shape so milestones-tab-v1 consumers reading
@@ -26643,7 +26654,11 @@ function addMilestone() {
   const t = document.getElementById('mText').value.trim();
   if (!t) return;
   // PR-ε.0 §1 — custom milestones use genId (DEFAULTs use slugify(text)).
-  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), cat:_milestoneCat, doneAt:today(), inProgressAt:today() });
+  // milestone-engine-prep-v1 PR-B — V-M-127 fold: emit canonical domain:
+  // on parent-authored custom milestones. The _milestoneCat module-local
+  // still carries the legacy variable name through the deprecation cycle;
+  // its semantics is "domain selected via the category-chip modal".
+  milestones.push({ id: genId(), text:t, status:'mastered', advanced:document.getElementById('mAdv').checked, masteredAt:today(), emergingAt:today(), domain:_milestoneCat, doneAt:today(), inProgressAt:today() });
   logMilestoneEvent(t, 'mastered', today());
   closeModal('milestoneModal');
   renderMilestones();
@@ -39067,9 +39082,12 @@ function syncMilestoneStatuses() {
     if (!ms) {
       // Evidence exists for a milestone not in the array — only create if keyword maps to a real milestone
       if (!KEYWORD_TO_MILESTONE[keyword]) return;
+      // milestone-engine-prep-v1 PR-B — V-M-128 + V-K-128 fold: emit canonical
+      // domain: on evidence-driven auto-created rows. The helper is literally
+      // called domainForKeyword — irony of writing its return to cat: closed.
       ms = {
         text: createMilestoneLabel(keyword),
-        cat: domainForKeyword(keyword),
+        domain: domainForKeyword(keyword),
         status: 'not_started',
         advanced: false,
         manualStatus: null,
@@ -43643,15 +43661,25 @@ function upcomingToMilestone(text, advanced, status, cat) {
       existing.status = 'done';
       existing.doneAt = todayStr;
     }
-    if (cat && !existing.cat) existing.cat = cat;
+    // milestone-engine-prep-v1 PR-B — V-M-126 fold (Maren primary audit):
+    // patch domain: (not legacy cat:) on the existing row so we don't
+    // re-introduce divergent-state (both cat: and domain: set) on a row
+    // that the migration already cleaned. Guard on existing.domain
+    // because the migration ensures domain is canonical post-boot.
+    if (cat && !existing.domain) existing.domain = cat;
   } else {
+    // milestone-engine-prep-v1 PR-B — V-M-125 fold (Maren primary audit):
+    // emit canonical domain: on the new row. Writing cat: here would have
+    // created a pre-v1-shape row that downstream migration would have to
+    // re-clean, with a cross-device-sync window where peers could receive
+    // legacy shape before the local migration pass fires.
     milestones.push({
       text,
       status,
       advanced: !!advanced,
       doneAt: status === 'done' ? todayStr : null,
       inProgressAt: status === 'in_progress' ? todayStr : null,
-      cat: cat || guessMilestoneCat(text),
+      domain: cat || guessMilestoneCat(text),
     });
   }
   save(KEYS.milestones, milestones);
@@ -50201,13 +50229,18 @@ function _islMilestoneData(startDate, endDate) {
       if (m[field]) {
         var d = m[field].substring(0, 10);
         if (d >= startDate && d <= endDate) {
-          progressed.push({ text: m.text, status: m.status, date: d, cat: m.cat });
+          // milestone-engine-prep-v1 PR-B — V-K-130 fold: ISL projection
+          // surfaces both domain (canonical) + cat (legacy fallback);
+          // downstream consumers can read either during deprecation.
+          progressed.push({ text: m.text, status: m.status, date: d, domain: m.domain || m.cat, cat: m.cat });
         }
       }
     });
     // Active milestones
     if (['emerging', 'practicing', 'consistent'].includes(m.status)) {
-      active.push({ text: m.text, status: m.status, cat: m.cat });
+      // milestone-engine-prep-v1 PR-B — V-K-130 fold: ISL projection
+      // surfaces both domain (canonical) + cat (legacy fallback).
+      active.push({ text: m.text, status: m.status, domain: m.domain || m.cat, cat: m.cat });
     }
   });
 
@@ -55667,8 +55700,13 @@ function qaAnswerMilestoneSpecific(intentId) {
       social: 'Peek-a-boo, mirror play, social interactions with other babies',
       cognitive: 'Object permanence games, stacking toys, cause-and-effect toys'
     };
-    if (m.cat && activitySuggestions[m.cat] && m.status !== 'mastered') {
-      actionItems.push({ text: 'Try: ' + activitySuggestions[m.cat], signal: 'action' });
+    // milestone-engine-prep-v1 PR-B — V-K-129 fold: legacy cat: alone
+    // silently dropped post-migration rows from the activity-suggestion
+    // surface — parent asks Smart Q&A about a milestone and the "WHAT TO
+    // TRY" action item disappears. Read via domain || cat fallback.
+    var _msDomain = m.domain || m.cat;
+    if (_msDomain && activitySuggestions[_msDomain] && m.status !== 'mastered') {
+      actionItems.push({ text: 'Try: ' + activitySuggestions[_msDomain], signal: 'action' });
     }
 
     var sections = [];

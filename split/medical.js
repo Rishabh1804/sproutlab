@@ -393,9 +393,12 @@ function syncMilestoneStatuses() {
     if (!ms) {
       // Evidence exists for a milestone not in the array — only create if keyword maps to a real milestone
       if (!KEYWORD_TO_MILESTONE[keyword]) return;
+      // milestone-engine-prep-v1 PR-B — V-M-128 + V-K-128 fold: emit canonical
+      // domain: on evidence-driven auto-created rows. The helper is literally
+      // called domainForKeyword — irony of writing its return to cat: closed.
       ms = {
         text: createMilestoneLabel(keyword),
-        cat: domainForKeyword(keyword),
+        domain: domainForKeyword(keyword),
         status: 'not_started',
         advanced: false,
         manualStatus: null,
@@ -4969,15 +4972,25 @@ function upcomingToMilestone(text, advanced, status, cat) {
       existing.status = 'done';
       existing.doneAt = todayStr;
     }
-    if (cat && !existing.cat) existing.cat = cat;
+    // milestone-engine-prep-v1 PR-B — V-M-126 fold (Maren primary audit):
+    // patch domain: (not legacy cat:) on the existing row so we don't
+    // re-introduce divergent-state (both cat: and domain: set) on a row
+    // that the migration already cleaned. Guard on existing.domain
+    // because the migration ensures domain is canonical post-boot.
+    if (cat && !existing.domain) existing.domain = cat;
   } else {
+    // milestone-engine-prep-v1 PR-B — V-M-125 fold (Maren primary audit):
+    // emit canonical domain: on the new row. Writing cat: here would have
+    // created a pre-v1-shape row that downstream migration would have to
+    // re-clean, with a cross-device-sync window where peers could receive
+    // legacy shape before the local migration pass fires.
     milestones.push({
       text,
       status,
       advanced: !!advanced,
       doneAt: status === 'done' ? todayStr : null,
       inProgressAt: status === 'in_progress' ? todayStr : null,
-      cat: cat || guessMilestoneCat(text),
+      domain: cat || guessMilestoneCat(text),
     });
   }
   save(KEYS.milestones, milestones);

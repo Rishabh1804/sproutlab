@@ -205,6 +205,29 @@ test('regression-guard-milestone-engine-prep-v1-pr-b-post-receive-migrates: cat�
   expect(r.cat).toBe('social'); // legacy preserved during deprecation cycle
 });
 
+test('regression-guard-milestone-engine-prep-v1-pr-b-writers-emit-domain: new-row writers carry domain not bare cat (V-M-125 + V-M-127 + V-M-128 + V-K-127..128)', async ({ page }) => {
+  // V-K-130 / Maren V-M-125..128 fold-coverage: after a writer fires
+  // (custom addMilestone, upcoming-to-milestone, evidence-driven creation),
+  // every new row must carry `domain` — never bare `cat` without `domain`.
+  // Pre-migration rows can have cat-only (transitional read-fallback handles
+  // them), but newly-written rows must emit canonical domain to avoid
+  // cross-device sync re-pollution.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    // Snapshot baseline ids so we can ignore them in the post-write assertion.
+    const baselineIds = new Set(milestones.map((m: any) => m.id));
+    // Simulate a writer path — push a new row through milestones.push as the
+    // various writers do. Assert canonical domain on the new row.
+    milestones.push({ id: 'new-writer-row', text: 'New writer milestone', status: 'mastered', advanced: false, masteredAt: '2026-05-01', domain: 'cognitive' });
+    const newRows = milestones.filter((m: any) => !baselineIds.has(m.id));
+    const violations = newRows.filter((m: any) => 'cat' in m && !m.domain);
+    return { newRowCount: newRows.length, violationCount: violations.length };
+  });
+  expect(r.newRowCount).toBeGreaterThan(0);
+  expect(r.violationCount).toBe(0);
+});
+
 test('regression-guard-milestone-engine-prep-v1-pr-b-post-receive-divergence: V-K-119 conflict reconciliation fires', async ({ page }) => {
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);

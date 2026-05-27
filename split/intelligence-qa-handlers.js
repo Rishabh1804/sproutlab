@@ -2817,8 +2817,13 @@ function qaAnswerMilestoneSpecific(intentId) {
       social: 'Peek-a-boo, mirror play, social interactions with other babies',
       cognitive: 'Object permanence games, stacking toys, cause-and-effect toys'
     };
-    if (m.cat && activitySuggestions[m.cat] && m.status !== 'mastered') {
-      actionItems.push({ text: 'Try: ' + activitySuggestions[m.cat], signal: 'action' });
+    // milestone-engine-prep-v1 PR-B — V-K-129 fold: legacy cat: alone
+    // silently dropped post-migration rows from the activity-suggestion
+    // surface — parent asks Smart Q&A about a milestone and the "WHAT TO
+    // TRY" action item disappears. Read via domain || cat fallback.
+    var _msDomain = m.domain || m.cat;
+    if (_msDomain && activitySuggestions[_msDomain] && m.status !== 'mastered') {
+      actionItems.push({ text: 'Try: ' + activitySuggestions[_msDomain], signal: 'action' });
     }
 
     var sections = [];
