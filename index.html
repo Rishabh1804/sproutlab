@@ -6247,28 +6247,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   background:var(--surface);
   border-left:var(--accent-w) solid var(--al-border, var(--lavender));
   box-shadow:0 1px 4px rgba(0,0,0,0.04);
-  /* Tap-out + push-down animation support — closes Architect feedback
-     2026-05-27 #7. Confirm/Practicing slide the card left out of the
-     stack ("make way for other options"); Not-yet slides the card down
-     to be reordered to the bottom on the next render. transform-origin
-     left to keep the slide feel anchored. */
+  /* Tap-out + push-down animation support (Architect 2026-05-27 #7+#10).
+     Motion One drives the primary animation when window.Motion is available;
+     these CSS rules are the FALLBACK path (offline parent, blocked CDN,
+     cached pre-Motion HTML). Transitions only animate transform + opacity —
+     padding/margin/max-height collapse was removed because non-animatable
+     auto→0 transitions caused an instant height-jump that read as
+     "disappearing" rather than "swiping out" (Architect bug-report fix
+     2026-05-27 #11). The card retains its slot during the slide; the
+     subsequent renderMilestones() removes it from the DOM cleanly. */
   transform-origin:left center;
-  transition:transform var(--ease-med), opacity var(--ease-med), max-height var(--ease-med), margin var(--ease-med);
-  overflow:hidden;
+  transition:transform var(--ease-med), opacity var(--ease-med);
 }
 .ms-inwindow-card[data-safety-tier="true"] { border:3px solid var(--rose-deep); }
 .ms-inwindow-card.is-sliding-out {
   transform:translateX(-110%);
   opacity:0;
-  max-height:0;
-  margin-top:0;
-  margin-bottom:0;
-  padding-top:0;
-  padding-bottom:0;
+  pointer-events:none;
 }
 .ms-inwindow-card.is-sliding-down {
   transform:translateY(40px) scale(0.96);
   opacity:0.35;
+  pointer-events:none;
 }
 /* Deprioritized cards (pushed to bottom via Not-yet tap) — visually muted
    so they read as "answered but kept around". Still tappable; the parent
@@ -10391,7 +10391,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
      checks `window.Motion` and falls back to CSS-class transitions if it
      hasn't loaded (offline parent on a flight, blocked CDN, etc.). Loaded
      after Chart.js so chart rendering takes priority on cold-start. -->
-<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js" defer></script>
 </head>
 <body>
 <!-- ═══ Ziva Sketch Icon Set ═══ -->
