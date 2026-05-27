@@ -23516,10 +23516,22 @@ function _predictMilestoneWindow(milestoneId, opts) {
 
   // Baby's current age — read module-global DOB via _zivaAgeInDays(today()).
   // V-K-118 floor: never Date.now() millis arithmetic; always derive nowDays
-  // via the timezone-safe helper.
-  const dateForAge = opts.dobOverride ? toDateStr(new Date(opts.dobOverride)) : today();
-  const nowDays = _zivaAgeInDays(today());
-  const ageDays = nowDays;
+  // via the timezone-safe helper. V-V-69 fold (Vela engine-prep PR-A audit):
+  // opts.dobOverride must actually override DOB for test-isolation (spec
+  // V-K-115 contract). Production callers omit and we use the module-global
+  // _ZIVA_DOB_MS; tests inject a DOB and we compute ageDays = today - dobOverride
+  // via the same UTC-midnight idiom _zivaAgeInDays uses internally.
+  let ageDays;
+  if (opts.dobOverride) {
+    const dobStr = toDateStr(new Date(opts.dobOverride));
+    const dobMs = Date.parse(dobStr + 'T00:00:00Z');
+    const todayMs = Date.parse(today() + 'T00:00:00Z');
+    ageDays = (isNaN(dobMs) || isNaN(todayMs))
+      ? 0
+      : Math.max(0, Math.round((todayMs - dobMs) / (24 * 60 * 60 * 1000)));
+  } else {
+    ageDays = _zivaAgeInDays(today());
+  }
   const ageWeeks = Math.floor(ageDays / 7);
   const ageMonths = Math.floor(ageDays / 30.44);
   const ageDaysRemainder = Math.round(ageDays - (ageMonths * 30.44));
@@ -23652,16 +23664,34 @@ function _getInWindowMilestones(ageDays, n, opts) {
         text: row.text || '',
         icon: row.icon || '',
         domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
-        window: {
-          expectedStart: expectedStart,
-          expectedEnd: expectedEnd,
-          expectedStartMonths: Math.round(expectedStart / 30.44),
-          expectedEndMonths: Math.round(expectedEnd / 30.44),
-          expectedStartMonthsFloat: expectedStart / 30.44,
-          expectedEndMonthsFloat: expectedEnd / 30.44,
-          source: row.source || 'unverified',
-          standardKey: standardKey,
-        },
+        // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
+        // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
+        // Mirror the FULL shape so milestones-tab-v1 consumers reading
+        // result[i].window get ageDays/Weeks/Months/Remainder + windowStatus
+        // without needing a second _predictMilestoneWindow round-trip per
+        // candidate (V-V-55 half-awake floor — consumers stop computing the
+        // same split 3+ times per render).
+        window: (function() {
+          var ws;
+          if (ageDays < expectedStart) ws = 'pre-window';
+          else if (ageDays > expectedEnd) ws = 'post-window';
+          else ws = 'in-window';
+          return {
+            expectedStart: expectedStart,
+            expectedEnd: expectedEnd,
+            expectedStartMonths: Math.round(expectedStart / 30.44),
+            expectedEndMonths: Math.round(expectedEnd / 30.44),
+            expectedStartMonthsFloat: expectedStart / 30.44,
+            expectedEndMonthsFloat: expectedEnd / 30.44,
+            ageDays: ageDays,
+            ageWeeks: Math.floor(ageDays / 7),
+            ageMonths: Math.floor(ageDays / 30.44),
+            ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
+            windowStatus: ws,
+            source: row.source || 'unverified',
+            standardKey: standardKey,
+          };
+        })(),
         evidenceStatus: evidenceStatus,
         evidenceCount: evidenceCount,
         lastEvidenceAt: lastEvidenceAt,

@@ -204,6 +204,75 @@ test('regression-guard-milestone-engine-prep-v1-in-window-suppression-filter: su
   expect(r.foundSuppressed).toBe(false);
 });
 
+test('regression-guard-milestone-engine-prep-v1-in-window-per-item-shape: per-item return mirrors contract (V-V-71 fold)', async ({ page }) => {
+  // V-V-71 fold (Vela engine-prep PR-A audit): assert the per-item return
+  // carries the full set of contract fields including the V-V-68-expanded
+  // `window` sub-object (mirrors _predictMilestoneWindow ReturnType).
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    const inWindow = _getInWindowMilestones(220, 10, { standardKey: 'who' });
+    const item = inWindow[0];
+    if (!item) return null;
+    return {
+      hasMilestoneId: typeof item.milestoneId === 'string',
+      hasText: typeof item.text === 'string',
+      hasIcon: typeof item.icon === 'string',
+      hasDomain: typeof item.domain === 'string',
+      hasEvidenceStatus: ['confirmed', 'practicing', 'not-yet'].includes(item.evidenceStatus),
+      hasEvidenceCount: typeof item.evidenceCount === 'number',
+      hasLastEvidenceAt: item.lastEvidenceAt === null || typeof item.lastEvidenceAt === 'number',
+      hasPriority: typeof item.priority === 'number',
+      hasSafetyTier: typeof item.safetyTier === 'boolean',
+      // V-V-68: window sub-object carries the full _predictMilestoneWindow shape
+      windowKeys: item.window ? Object.keys(item.window).sort().join(',') : null,
+    };
+  });
+  expect(r).not.toBeNull();
+  expect(r.hasMilestoneId).toBe(true);
+  expect(r.hasText).toBe(true);
+  expect(r.hasIcon).toBe(true);
+  expect(r.hasDomain).toBe(true);
+  expect(r.hasEvidenceStatus).toBe(true);
+  expect(r.hasEvidenceCount).toBe(true);
+  expect(r.hasLastEvidenceAt).toBe(true);
+  expect(r.hasPriority).toBe(true);
+  expect(r.hasSafetyTier).toBe(true);
+  // V-V-68 expanded window shape — full _predictMilestoneWindow contract mirrored
+  expect(r.windowKeys).toContain('ageDays');
+  expect(r.windowKeys).toContain('ageMonths');
+  expect(r.windowKeys).toContain('ageDaysRemainder');
+  expect(r.windowKeys).toContain('windowStatus');
+  expect(r.windowKeys).toContain('expectedStart');
+  expect(r.windowKeys).toContain('expectedEnd');
+  expect(r.windowKeys).toContain('source');
+  expect(r.windowKeys).toContain('standardKey');
+});
+
+test('regression-guard-milestone-engine-prep-v1-predict-window-dob-override: opts.dobOverride routes through dateForAge (V-V-69 fold)', async ({ page }) => {
+  // V-V-69 fold (Vela engine-prep PR-A audit): opts.dobOverride must actually
+  // affect the ageDays calculation. Spec V-K-115 ratified the param "for unit-
+  // test injection only" — confirm it's not silently ignored.
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    const id = slugify('Sits without support for extended periods');
+    const today = _predictMilestoneWindow(id, { standardKey: 'who' });
+    // Inject a dobOverride of today — ageDays should land at 0.
+    const todayStr = (function() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    })();
+    const overridden = _predictMilestoneWindow(id, { standardKey: 'who', dobOverride: todayStr });
+    return {
+      todayAgeDays: today.ageDays,
+      overriddenAgeDays: overridden.ageDays,
+    };
+  });
+  expect(r.overriddenAgeDays).toBe(0);
+  expect(r.todayAgeDays).toBeGreaterThan(0); // Ziva is born 4 Sep 2025; today is later
+});
+
 test('regression-guard-milestone-engine-prep-v1-in-window-explicit-state-injection: opts.standards/milestones inject cleanly (V-K-108)', async ({ page }) => {
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
