@@ -6187,10 +6187,41 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-bulk-chip-icon { font-size:var(--icon-sm); flex-shrink:0; }
 .ms-bulk-submit { margin-top:var(--sp-12); }
 
-/* ── Domain filter chips (Library sub-tab) — reads ACTIVITY_CATEGORIES ── */
-.ms-domain-filter { display:flex; gap:var(--sp-4); flex-wrap:wrap; padding:var(--sp-4) 0; }
-.ms-domain-chip { padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); font-size:var(--fs-xs); cursor:pointer; }
-.ms-domain-chip[data-active="true"] { font-weight:700; }
+/* ── Domain filter chips (Library sub-tab) — reads ACTIVITY_CATEGORIES.
+   Post-Architect feedback 2026-05-27: dark-mode readability fix — chips
+   were near-invisible against the dark page (--warm background almost
+   matches surrounding card). Adding stronger background contrast + an
+   explicit active-state visual signal (lavender tint + border) so the
+   filter selection reads at a glance. ── */
+.ms-domain-filter { display:flex; gap:var(--sp-6); flex-wrap:wrap; padding:var(--sp-4) 0; }
+.ms-domain-chip {
+  padding:var(--sp-6) var(--sp-12);
+  border-radius:var(--r-md);
+  background:var(--warm);
+  border:1px solid var(--border-subtle);
+  color:var(--text);
+  font-size:var(--fs-xs);
+  cursor:pointer;
+  transition:background var(--ease-fast), border-color var(--ease-fast), color var(--ease-fast);
+}
+.ms-domain-chip:hover { background:var(--surface-lav); }
+.ms-domain-chip[data-active="true"] {
+  font-weight:700;
+  background:var(--surface-lav);
+  border-color:var(--lavender);
+  color:var(--tc-lav);
+}
+[data-theme="dark"] .ms-domain-chip {
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(255,255,255,0.14);
+  color:var(--text);
+}
+[data-theme="dark"] .ms-domain-chip:hover { background:rgba(201,184,232,0.16); }
+[data-theme="dark"] .ms-domain-chip[data-active="true"] {
+  background:rgba(201,184,232,0.22);
+  border-color:var(--lavender);
+  color:var(--tc-lav);
+}
 
 /* Domain filter visibility class — class-driven hide for milestoneList items
    per HR-2 (no inline style mutation). filterMsDomain toggles this class on
@@ -6202,17 +6233,53 @@ body.ql-locked .dark-toggle { pointer-events:none; }
    V-K-122: global cap 20 markers post-bucket-merge.
    V-V-66: ≥9px marker diameter + ≥1.8px stroke at 320px viewport.
    Lavender domain accent: --surface-lav background. */
+/* ── Trajectory ribbon — MAJOR OVERHAUL post-Architect feedback 2026-05-27.
+   3 visual states (celebrated/practicing/coming-up) + age-axis + current-age
+   indicator + warmer narrative caption. The V-V-49 2-state collapse is
+   rebated per Architect call: live use showed "practicing-or-in-window"
+   merged bucket didn't convey state clarity warmly enough. ── */
 .ms-trajectory-card { padding:var(--sp-12) var(--sp-16); background:var(--surface-lav); }
-.ms-trajectory-svg { width:100%; height:48px; display:block; }
-.ms-trajectory-marker { stroke-width:1.8; }
-.ms-trajectory-marker[data-state="confirmed"] { fill:currentColor; stroke:none; }
-.ms-trajectory-marker[data-state="hedged"] { fill:transparent; stroke:currentColor; }
+.ms-trajectory-svg { width:100%; height:auto; display:block; }
+
+/* Age axis (bottom). Subtle line with periodic ticks + month labels. */
+.ms-traj-axis { stroke:var(--mid); stroke-width:0.6; opacity:0.5; }
+.ms-traj-axis-tick { stroke:var(--mid); stroke-width:0.8; opacity:0.55; }
+.ms-traj-axis-label { font-size:8px; fill:var(--mid); font-family:'Nunito',sans-serif; opacity:0.85; }
+
+/* Lane guide-lines — very low opacity structural cue (no chart-like grid).
+   State identity is conveyed by marker color + matching legend chips. */
+.ms-traj-lane-guide { stroke:var(--mid); stroke-width:0.5; opacity:0.18; stroke-dasharray:1 2; }
+.ms-traj-lane-empty { font-size:9px; fill:var(--mid); opacity:0.4; font-family:'Nunito',sans-serif; }
+
+/* Current-age vertical indicator. Dashed; rose tint so it reads as
+   "you are here" without competing with the markers. */
+.ms-traj-current { stroke:var(--tc-rose); stroke-width:1.1; stroke-dasharray:3 2; opacity:0.65; }
+.ms-traj-current-label { font-size:8px; fill:var(--tc-rose); font-family:'Nunito',sans-serif; font-weight:700; }
+
+/* Markers — 3 distinct states. V-V-66 ≥9px-diameter / ≥1.8px-stroke pixel-
+   scale floor honored at default sizes (markerR:5 → 10px diameter;
+   markerRSmall:4 → 8px borderline, compensated by 1.8px stroke). */
+.ms-trajectory-marker { transition: filter var(--ease-fast); }
+.ms-trajectory-marker[data-state="celebrated"] { fill:var(--sage-deepest); stroke:none; filter:drop-shadow(0 0 1.5px rgba(95,140,120,0.45)); }
+.ms-trajectory-marker[data-state="practicing"] { /* group element — children carry the visual */ }
+.ms-trajectory-marker[data-state="practicing"] .ms-traj-ring { fill:transparent; stroke:var(--amber-deep); stroke-width:1.8; }
+.ms-trajectory-marker[data-state="practicing"] .ms-traj-core { fill:var(--amber-deep); stroke:none; }
+.ms-trajectory-marker[data-state="comingup"]  { fill:transparent; stroke:var(--lavender); stroke-width:1.8; stroke-dasharray:2 1.5; opacity:0.85; }
 .ms-trajectory-marker[data-action="gotoMsRow"] { cursor:pointer; }
-.ms-trajectory-marker[data-action="gotoMsRow"]:hover { stroke-width:2.4; }
-.ms-trajectory-legend { display:flex; gap:var(--sp-12); justify-content:center; padding:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-2xs); color:var(--mid); }
+.ms-trajectory-marker[data-action="gotoMsRow"]:hover { filter:brightness(1.15) drop-shadow(0 0 2px rgba(95,140,120,0.55)); }
+
+/* Legend swatches use the SAME styling as the markers so the visual key
+   on the page matches the markers exactly. */
+.ms-trajectory-legend { display:flex; gap:var(--sp-12); justify-content:center; padding:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-2xs); color:var(--mid); flex-wrap:wrap; }
 .ms-traj-legend-item { display:inline-flex; align-items:center; gap:var(--sp-4); }
-.ms-traj-legend-swatch { width:12px; height:12px; }
-.ms-trajectory-label { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-4); text-align:center; }
+.ms-traj-legend-item[data-state="celebrated"] { color:var(--tc-sage); font-weight:600; }
+.ms-traj-legend-item[data-state="practicing"] { color:var(--tc-amber); font-weight:600; }
+.ms-traj-legend-item[data-state="comingup"]   { color:var(--tc-lav); font-weight:600; }
+.ms-traj-legend-swatch { width:14px; height:14px; flex-shrink:0; }
+.ms-traj-legend-swatch circle[data-state="celebrated"] { fill:var(--sage-deepest); stroke:none; }
+.ms-traj-legend-swatch circle[data-state="comingup"]   { fill:transparent; stroke:var(--lavender); stroke-width:1.8; stroke-dasharray:2 1.5; }
+
+.ms-trajectory-label { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-6); text-align:center; line-height:1.4; padding:0 var(--sp-8); }
 
 /* Brief landing-confirmation highlight for milestone rows scrolled into view
    by trajectory ribbon tap. Fades over 1.8s; class is removed by JS. */

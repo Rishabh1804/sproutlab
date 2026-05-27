@@ -1887,9 +1887,27 @@ const MS_ACTIVITY_LEVEL_TIERS = [
 // confirmed=12 / practicing=8 / not-yet=5 keeps each bucket's priority signal
 // intact post-global-cap-20-slice; sum (25) exceeds cap to leave room for
 // merge prioritization within the 20-marker budget per V-K-122.
+//
+// State-lanes overhaul v2 (Architect feedback 2026-05-27 #2): live use showed
+// the temporal-axis single-line design clustered badly when babies hit
+// milestone bursts at similar ages (real biology: 4-6m motor + sensory
+// cluster on the same X). 3 horizontal state-lanes (celebrated / practicing
+// / coming-up) each with collision-aware lateral spacing replace the single
+// jittered line. Shared age axis + current-age indicator span all lanes.
+// Lane height accommodates marker r=5 + padding (~28px); 3 lanes + axis ≈
+// 108px total.
 const MS_TRAJECTORY_GEOM = {
-  width: 320, height: 48, padding: 16, markerR: 4.5,
+  width: 360, height: 108,
+  padL: 14, padR: 14, padT: 6, padB: 22,
+  // Y-centers per state lane (top → bottom: celebrated → practicing → coming-up).
+  lane: { celebrated: 18, practicing: 44, comingup: 70 },
+  // Minimum horizontal spacing between markers in the same lane (~2× marker
+  // diameter so collision-pushed markers don't touch). Sorted-left-to-right
+  // walk enforces this floor.
+  laneMinSpacing: 14,
+  markerR: 5, markerRSmall: 4, markerStroke: 1.8,
   confirmedCap: 12, practicingCap: 8, notYetCap: 5, globalCap: 20,
+  axisTickMonths: 3,
 };
 
 // Regression-honesty floor threshold (V-M-104 + V-M-121) — Maren NOTE-1
@@ -2481,105 +2499,258 @@ function filterMsDomain(target) {
 // bucket-merge per V-K-122. ≥9px diameter + ≥1.8px stroke per V-V-66.
 // Color: domain-keyed (reads ACTIVITY_CATEGORIES[milestone.domain].accent).
 // Performance gate: renders within 200ms (cipher-3 budget).
+// Compute age in fractional months at a given ISO date (or today). Used by
+// the trajectory ribbon to position markers along an age X-axis. Returns
+// null when the date is unparseable so the caller can skip the marker
+// rather than coerce-to-zero (which would mis-place malformed dates at
+// birth-age in the visualization).
+function _msAgeMonthsAt(isoDate) {
+  if (!isoDate) return null;
+  const a = ageAt(isoDate);
+  if (!a || (a.months === 0 && a.days === 0 && isoDate)) {
+    // Verify by re-parsing — ageAt returns {0,0} both for DOB and for invalid input
+    const parsed = new Date(isoDate);
+    if (isNaN(parsed.getTime())) return null;
+  }
+  return (a.months || 0) + ((a.days || 0) / 30.44);
+}
+
+// Trajectory ribbon (Patterns sub-tab; return-visit surface 2). MAJOR
+// OVERHAUL post-Architect feedback 2026-05-27 (V-V-49 collapse rebated):
+// - Temporal X-axis (age in months) replaces evenly-spaced markers; markers
+//   land at the age they were celebrated/started/expected, conveying Ziva's
+//   journey along time rather than as a flat dot sequence.
+// - 3 distinct visual states (over V-V-49 2-state collapse): "celebrated"
+//   (sage filled) / "practicing" (amber filled + sage ring halo) / "coming
+//   up" (lavender outlined). Architect call: warmth + clarity > the V-V-49
+//   collapse, since live use showed the merged hedged-bucket didn't convey
+//   state cleanly. The labels also no longer share the "or" pattern that
+//   collapsed two distinct journey-states into one chip.
+// - Month-axis ticks every 3 months along the bottom with labels.
+// - Dashed vertical "now" indicator at Ziva's current age — gives the
+//   parent the answer to "where is Ziva today?" without reading prose.
+// - All markers tappable when they have a milestone id (V-V-48 contract).
+// - SVG <title> for native hover/long-press tooltip showing milestone text.
 function renderMsTrajectoryRibbon() {
   const el = document.getElementById('msTrajectoryRibbon');
   if (!el) return;
-  // Collect 3 buckets: confirmed + practicing + in-window not-yet
-  const cats = (window.ACTIVITY_CATEGORIES || []);
-  const accentByDomain = {};
-  cats.forEach(c => { accentByDomain[c.key] = c.accent; });
-  const ageDays = _zivaAgeInDays(today());
 
-  // Bucket 1: confirmed (top by recency; sub-bucket cap from MS_TRAJECTORY_GEOM).
-  // Skip rows whose stage timestamps are missing/invalid rather than coercing
-  // to epoch-0 (which would silently bucket malformed dates as "oldest" 1970).
-  const confirmedAll = (milestones || []).filter(m => m.status === 'consistent' || m.status === 'mastered')
+  const G = MS_TRAJECTORY_GEOM;
+  const ageDays = _zivaAgeInDays(today());
+  const currentAgeM = ageDays / 30.44;
+
+  // Bucket 1: celebrated (consistent + mastered)
+  const celebrated = (milestones || [])
+    .filter(m => m.status === 'consistent' || m.status === 'mastered')
     .map(m => {
-      const ts = new Date(m.consistentAt || m.masteredAt || 0).getTime();
-      return { ms: m, domain: m.domain || m.cat || 'motor', ts: isFinite(ts) ? ts : 0, state: 'confirmed', priority: 0 };
+      const dateStr = m.consistentAt || m.masteredAt;
+      const ageM = _msAgeMonthsAt(dateStr);
+      return ageM == null ? null : {
+        ms: m, ageM, state: 'celebrated',
+        ts: new Date(dateStr).getTime(),
+      };
     })
-    .filter(x => x.ts > 0)
-    .sort((a, b) => b.ts - a.ts);
-  // Bucket 2: practicing
-  const practicingAll = (milestones || []).filter(m => m.status === 'practicing' || m.status === 'emerging')
+    .filter(Boolean)
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, G.confirmedCap);
+
+  // Bucket 2: practicing (practicing + emerging)
+  const practicing = (milestones || [])
+    .filter(m => m.status === 'practicing' || m.status === 'emerging')
     .map(m => {
-      const ts = new Date(m.practicingAt || m.emergingAt || 0).getTime();
-      return { ms: m, domain: m.domain || m.cat || 'motor', ts: isFinite(ts) ? ts : 0, state: 'hedged', priority: 0.5 };
-    });
-  // Bucket 3: in-window not-yet (≤MS_TRAJECTORY_GEOM.notYetCap floor)
-  let inWindowNotYet = [];
+      const dateStr = m.practicingAt || m.emergingAt;
+      const ageM = _msAgeMonthsAt(dateStr);
+      return ageM == null ? null : {
+        ms: m, ageM, state: 'practicing',
+        ts: new Date(dateStr).getTime(),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, G.practicingCap);
+
+  // Bucket 3: in-window not-yet (anticipation)
+  let comingUp = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
-      inWindowNotYet = (_getInWindowMilestones(ageDays, Infinity, {}) || [])
+      comingUp = (_getInWindowMilestones(ageDays, Infinity, {}) || [])
         .filter(it => it.evidenceStatus === 'not-yet')
-        .map(it => ({
-          ms: { text: it.text, domain: it.domain },
-          domain: it.domain || 'motor',
-          ts: 0,
-          state: 'hedged',
-          priority: it.priority || 0,
-        }));
+        .map(it => {
+          // window.expectedStartMonths is the clinical-band start; position
+          // markers at the band-start for the "coming up" framing (rather
+          // than current age, which would cluster them at the 'now' line).
+          const win = it.window || {};
+          const startM = (typeof win.expectedStartMonths === 'number') ? win.expectedStartMonths
+            : (typeof win.expectedStart === 'number' ? win.expectedStart / 30.44 : currentAgeM);
+          return {
+            ms: { text: it.text, id: it.milestoneId, domain: it.domain },
+            ageM: startM,
+            state: 'comingup',
+            priority: it.priority || 0,
+          };
+        })
+        .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+        .slice(0, G.notYetCap);
     }
-  } catch (e) { inWindowNotYet = []; }
-  inWindowNotYet = inWindowNotYet
-    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
-    .slice(0, MS_TRAJECTORY_GEOM.notYetCap);
+  } catch (e) { comingUp = []; }
 
-  // Merge + global cap from MS_TRAJECTORY_GEOM (V-K-122). Sub-bucket caps
-  // are author choices documented at the geometry-const block above.
-  let merged = []
-    .concat(confirmedAll.slice(0, MS_TRAJECTORY_GEOM.confirmedCap))
-    .concat(practicingAll.slice(0, MS_TRAJECTORY_GEOM.practicingCap))
-    .concat(inWindowNotYet);
-  merged = merged.slice(0, MS_TRAJECTORY_GEOM.globalCap);
+  // Merged + global cap. Sub-bucket caps already applied above; the global
+  // cap (V-K-122) is the final safety floor.
+  const merged = [].concat(celebrated, practicing, comingUp).slice(0, G.globalCap);
+  const nCel = merged.filter(m => m.state === 'celebrated').length;
+  const nPra = merged.filter(m => m.state === 'practicing').length;
+  const nCom = merged.filter(m => m.state === 'comingup').length;
+
   if (merged.length === 0) {
-    el.innerHTML = '<div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div>'
-      + '<div class="t-sub-light text-center py-4">No milestone trajectory yet — early days.</div>';
+    el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
+      + zi('chart-up') + '</div> Trajectory</div></div>'
+      + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
-  // Render SVG ribbon — markers spaced evenly across the viewBox width
-  const { width: w, height: h, padding, markerR } = MS_TRAJECTORY_GEOM;
-  const innerW = w - padding * 2;
-  const step = merged.length > 1 ? innerW / (merged.length - 1) : 0;
-  // Count by state for the legend below the SVG (warmth signal: tells the
-  // parent what they're looking at without needing to tap individual markers).
-  let nConfirmed = 0, nHedged = 0;
-  const markers = merged.map((m, i) => {
-    const cx = padding + step * i;
-    const cy = h / 2;
-    const accent = accentByDomain[m.domain] || 'lavender';
-    const color = 'var(--' + accent + ')';
-    const isConfirmed = m.state === 'confirmed';
-    if (isConfirmed) nConfirmed++; else nHedged++;
+
+  // X-axis range. min: 0m (birth). max: at least currentAge + 2, or maxMarker + 1.
+  const allAgeM = merged.map(m => m.ageM);
+  const maxMarkerAge = Math.max(...allAgeM);
+  const maxAge = Math.max(currentAgeM + 2, maxMarkerAge + 1, 9);
+  const innerW = G.width - G.padL - G.padR;
+  const xMin = G.padL;
+  const xMax = G.width - G.padR;
+  const ageToX = ageM => G.padL + (Math.max(0, ageM) / maxAge) * innerW;
+
+  // Lane layout — collision-aware lateral spacing within each state lane.
+  // Sorted left-to-right walk; each marker placed at max(naturalX, lastX +
+  // minSpacing) so dense bursts spread laterally instead of stacking
+  // invisibly. layoutX clamps at the right edge — overflow is rare given
+  // the sub-bucket caps but the clamp keeps markers on-canvas. naturalX is
+  // preserved on the layout object for the SVG <title> readability anchor.
+  function _layoutLane(items, laneY) {
+    const sorted = items.slice().sort((a, b) => a.ageM - b.ageM);
+    let lastX = -Infinity;
+    return sorted.map(it => {
+      const naturalX = ageToX(it.ageM);
+      let x = Math.max(naturalX, lastX + G.laneMinSpacing);
+      if (x > xMax - 2) x = xMax - 2; // clamp at right edge
+      lastX = x;
+      return Object.assign({}, it, { layoutX: x, layoutY: laneY, naturalX });
+    });
+  }
+  const celebratedLayout = _layoutLane(celebrated, G.lane.celebrated);
+  const practicingLayout = _layoutLane(practicing, G.lane.practicing);
+  const comingUpLayout   = _layoutLane(comingUp,   G.lane.comingup);
+
+  // Axis ticks (every G.axisTickMonths months)
+  const axisLine = '<line class="ms-traj-axis" x1="' + xMin + '" y1="' + (G.height - G.padB + 1)
+    + '" x2="' + xMax + '" y2="' + (G.height - G.padB + 1) + '"/>';
+  const axisTicks = [];
+  for (let m = 0; m <= Math.ceil(maxAge); m += G.axisTickMonths) {
+    const x = ageToX(m);
+    axisTicks.push('<line class="ms-traj-axis-tick" x1="' + x + '" y1="' + (G.height - G.padB + 1)
+      + '" x2="' + x + '" y2="' + (G.height - G.padB + 4) + '"/>');
+    axisTicks.push('<text class="ms-traj-axis-label" x="' + x + '" y="' + (G.height - 3)
+      + '" text-anchor="middle">' + m + 'm</text>');
+  }
+
+  // Faint lane guide-lines — very low opacity so they read as a subtle
+  // structural cue, not chart-like grid lines. State identity is conveyed
+  // by the marker color (top sage, middle amber, bottom lavender) +
+  // matching legend chips below the SVG; no explicit lane labels needed
+  // (keeps the canvas warm rather than chart-y).
+  const guides = [G.lane.celebrated, G.lane.practicing, G.lane.comingup].map(y =>
+    '<line class="ms-traj-lane-guide" x1="' + xMin + '" y1="' + y
+    + '" x2="' + xMax + '" y2="' + y + '"/>'
+  ).join('');
+  const labels = '';
+
+  // Current-age vertical indicator spanning all 3 lanes.
+  const currX = ageToX(Math.min(currentAgeM, maxAge));
+  const currIndicator =
+      '<line class="ms-traj-current" x1="' + currX + '" y1="' + G.padT
+    + '" x2="' + currX + '" y2="' + (G.height - G.padB + 1) + '"/>'
+    + '<text class="ms-traj-current-label" x="' + currX + '" y="' + (G.padT + 7)
+    + '" text-anchor="middle">now</text>';
+
+  // Empty-lane fallbacks — muted "—" centered in the lane so the structural
+  // 3-state hierarchy stays visible even when a bucket is empty.
+  const emptyLaneMarker = (y) => '<text class="ms-traj-lane-empty" x="' + (xMin + innerW / 2)
+    + '" y="' + (y + 3) + '" text-anchor="middle">—</text>';
+  const emptyMarkers = [];
+  if (celebratedLayout.length === 0) emptyMarkers.push(emptyLaneMarker(G.lane.celebrated));
+  if (practicingLayout.length === 0) emptyMarkers.push(emptyLaneMarker(G.lane.practicing));
+  if (comingUpLayout.length === 0)   emptyMarkers.push(emptyLaneMarker(G.lane.comingup));
+
+  // Marker render — 3 SVG shapes per state. layoutX/layoutY come from the
+  // lane-layout pass; titleEl carries the milestone text for hover/long-press.
+  function _renderMarker(m) {
+    const cx = m.layoutX;
+    const cy = m.layoutY;
     const msId = m.ms && m.ms.id ? m.ms.id : '';
     const msText = m.ms && m.ms.text ? m.ms.text : '';
-    // V-V-48 fold-close: markers are tappable; tap → gotoCard('track',
-    // 'milestoneRow_'+id) navigates to the row on the Library sub-tab.
-    // SVG <title> child provides the native hover/long-press tooltip.
-    // Confirmed markers have data-ms-id (id known); not-yet/practicing
-    // engine-derived items may lack id and render non-tappable (no
-    // data-action) so the parent isn't promised navigation that won't work.
-    // HR-2 carve-out (Maren NOTE-3 close): inline style passes a CSS token
-    // through `color` to power the `currentColor` reference in the marker's
-    // CSS rule. Registry → currentColor pass-through keeps ACTIVITY_CATEGORIES
-    // as the single source of truth for accent (5-rule alternative would
-    // duplicate the registry in CSS — the failure-mode the 9th gate prevents).
     const tappable = msId ? ' data-action="gotoMsRow" data-ms-id="' + escHtml(msId) + '"' : '';
     const titleEl = msText ? '<title>' + escHtml(msText) + '</title>' : '';
-    return '<circle class="ms-trajectory-marker" data-state="' + (isConfirmed ? 'confirmed' : 'hedged')
-      + '"' + tappable
-      + ' cx="' + cx + '" cy="' + cy + '" r="' + markerR + '" style="color:' + color + '">'
+    if (m.state === 'celebrated') {
+      return '<circle class="ms-trajectory-marker" data-state="celebrated"'
+        + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerR + '">'
+        + titleEl + '</circle>';
+    }
+    if (m.state === 'practicing') {
+      return '<g class="ms-trajectory-marker" data-state="practicing"' + tappable + '>'
+        + '<circle class="ms-traj-ring" cx="' + cx + '" cy="' + cy + '" r="' + (G.markerR + 1) + '"/>'
+        + '<circle class="ms-traj-core" cx="' + cx + '" cy="' + cy + '" r="' + (G.markerR - 1.5) + '"/>'
+        + titleEl + '</g>';
+    }
+    return '<circle class="ms-trajectory-marker" data-state="comingup"'
+      + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerRSmall + '">'
       + titleEl + '</circle>';
-  }).join('');
-  // Legend + caption — give the parent the visual key without a tap.
+  }
+  const markers = []
+    .concat(celebratedLayout.map(_renderMarker))
+    .concat(practicingLayout.map(_renderMarker))
+    .concat(comingUpLayout.map(_renderMarker))
+    .join('');
+
+  // Legend — three swatches with distinct visual + warmer labels.
+  const swatchSVG = (state) => '<svg class="ms-traj-legend-swatch" viewBox="0 0 14 14" aria-hidden="true">'
+    + (state === 'practicing'
+        ? '<circle class="ms-traj-ring" cx="7" cy="7" r="6"/><circle class="ms-traj-core" cx="7" cy="7" r="2.5"/>'
+        : '<circle data-state="' + state + '" cx="7" cy="7" r="' + (state === 'comingup' ? '5' : '6') + '"/>')
+    + '</svg>';
   const legend = '<div class="ms-trajectory-legend">'
-    + '<span class="ms-traj-legend-item"><svg class="ms-traj-legend-swatch" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" data-state="confirmed" style="color:var(--lavender)"/></svg> Confirmed (' + nConfirmed + ')</span>'
-    + '<span class="ms-traj-legend-item"><svg class="ms-traj-legend-swatch" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" data-state="hedged" style="color:var(--lavender)"/></svg> Practicing or in-window (' + nHedged + ')</span>'
+    + '<span class="ms-traj-legend-item" data-state="celebrated">' + swatchSVG('celebrated') + ' ' + nCel + ' celebrated</span>'
+    + '<span class="ms-traj-legend-item" data-state="practicing">' + swatchSVG('practicing') + ' ' + nPra + ' practicing</span>'
+    + '<span class="ms-traj-legend-item" data-state="comingup">' + swatchSVG('comingup') + ' ' + nCom + ' coming up</span>'
     + '</div>';
-  el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div></div>'
-    + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Milestone trajectory: ' + nConfirmed + ' confirmed, ' + nHedged + ' practicing or in-window">' + markers + '</svg>'
+
+  // Narrative caption — warmer than "X markers on Ziva's timeline".
+  // Phrases the picture as a journey, not as a count of dots. Half-awake-test
+  // anchor: a tired parent should grok the present-state from the caption
+  // alone, without parsing the markers.
+  let caption;
+  if (nCel > 0 && nCom > 0) {
+    caption = 'Ziva has celebrated ' + nCel + ', is working on ' + nPra
+      + (nPra === 1 ? '' : '')
+      + ', with ' + nCom + ' more on the horizon. Tap a marker for details.';
+  } else if (nCel > 0) {
+    caption = nCel + ' milestone' + (nCel === 1 ? '' : 's') + ' celebrated. Tap a marker for details.';
+  } else if (nPra > 0) {
+    caption = nPra + ' milestone' + (nPra === 1 ? '' : 's') + ' in progress. Tap a marker for details.';
+  } else {
+    caption = nCom + ' coming up — Ziva\'s journey is just starting.';
+  }
+
+  el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
+    + zi('chart-up') + '</div> Trajectory</div></div>'
+    + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + G.width + ' ' + G.height + '"'
+    + ' preserveAspectRatio="xMidYMid meet" role="img"'
+    + ' aria-label="Milestone trajectory: '
+    + nCel + ' celebrated, ' + nPra + ' practicing, ' + nCom + ' coming up. Now: '
+    + (Math.round(currentAgeM * 10) / 10) + ' months">'
+    + guides + labels
+    + axisLine + axisTicks.join('') + currIndicator
+    + emptyMarkers.join('')
+    + markers
+    + '</svg>'
     + legend
-    + '<div class="ms-trajectory-label">' + escHtml(String(merged.length)) + ' milestones on Ziva\'s timeline. Tap a confirmed marker to jump to the milestone.</div>';
+    + '<div class="ms-trajectory-label">' + escHtml(caption) + '</div>';
 }
 
 // Trajectory marker tap → switch to Library sub-tab + scroll to the row.
@@ -3462,8 +3633,17 @@ function renderRecentEvidence() {
   Object.entries(obsByMilestone).forEach(([ms, occs]) => {
     if (occs.length < ROLLUP_THRESHOLD) return;
     const sorted = occs.slice().sort((a, b) => {
-      const aTs = a.entry.ts || a.dateStr;
-      const bTs = b.entry.ts || b.dateStr;
+      // ts is canonically an ISO string per intelligence-quicklog.js:262, but
+      // entries written by milestones-tab-v1 batch-2 (before the hotfix in
+      // PR #160) wrote ts: Date.now() (number) — .localeCompare on number
+      // throws TypeError. Coerce both operands to string before compare so
+      // legacy in-localStorage number-ts entries don't crash this sort.
+      // The init-time _migrateActivityLogTsShape pass converts legacy
+      // entries forward; this defensive coerce closes the race where the
+      // sort runs before that migration (or on a device that hasn't loaded
+      // the migration yet via sync).
+      const aTs = String(a.entry.ts || a.dateStr || '');
+      const bTs = String(b.entry.ts || b.dateStr || '');
       return bTs.localeCompare(aTs);
     });
     rollups.push({
@@ -3522,7 +3702,13 @@ function renderRecentEvidence() {
 
   // ── Render per-day groups (excluding rolled-up entries) ──
   dayKeys.forEach((dateStr, dayIdx) => {
-    const allEntries = dayGroups[dateStr].slice().sort((a, b) => (b.ts || b._date).localeCompare(a.ts || a._date));
+    // Coerce ts to string before .localeCompare — legacy number-ts entries
+    // from PR #159 batch-2 pre-hotfix would throw TypeError. The orchestrator
+    // at renderMilestones runs renderRecentEvidence UNWRAPPED, so a throw
+    // here kills every milestones-tab-v1 surface downstream (Today header,
+    // chip strip, in-window proposals, bulk grid). Defensive coerce + the
+    // init-time _migrateActivityLogTsShape pass close the failure-class.
+    const allEntries = dayGroups[dateStr].slice().sort((a, b) => String(b.ts || b._date || '').localeCompare(String(a.ts || a._date || '')));
     const entries = allEntries.filter(e => !(e.id && rolledIds.has(e.id)));
     if (entries.length === 0) return;
 

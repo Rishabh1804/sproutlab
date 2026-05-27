@@ -1136,6 +1136,32 @@ function init() {
   activityLog  = load(KEYS.activityLog, null) || {};
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
 
+  // milestones-tab-v1 hotfix #2 — one-time entry.ts shape migration.
+  // PR #159 batch-2 (pre-hotfix #160) wrote evidence entries with
+  // ts: Date.now() (number); the canonical writer at intelligence-quicklog.js:
+  // _alSlotToTimestamp returns ISO string. Sort sites (renderRecentEvidence
+  // home.js:3467/3525) call .localeCompare on ts — throws on number, kills
+  // the home-tab + milestones-tab renderers downstream. Convert number-ts
+  // entries to ISO string in place; idempotent (skips string-ts entries).
+  // V-K-132 try-wrap posture so a malformed activityLog doesn't brick boot.
+  try {
+    let _alTsMigratedCount = 0;
+    Object.keys(activityLog).forEach(dateStr => {
+      const dayEntries = activityLog[dateStr];
+      if (!Array.isArray(dayEntries)) return;
+      dayEntries.forEach(entry => {
+        if (entry && typeof entry.ts === 'number' && isFinite(entry.ts)) {
+          entry.ts = new Date(entry.ts).toISOString();
+          _alTsMigratedCount++;
+        }
+      });
+    });
+    if (_alTsMigratedCount > 0) {
+      save(KEYS.activityLog, activityLog);
+      console.log('[ms-tab-v1 hotfix] migrated', _alTsMigratedCount, 'activityLog entries from number-ts to ISO-string-ts');
+    }
+  } catch (e) { console.warn('[ms-tab-v1 hotfix] activityLog ts-shape migration failed:', e); }
+
   // milestone-engine-prep-v1 PR-A — activityMeta + milestoneSuppress hydration.
   // V-K-111 floor: activityMeta is the SEPARATE per-day-meta key family (not
   // an _meta sentinel on activityLog) to avoid breaking 20+ Array.isArray
