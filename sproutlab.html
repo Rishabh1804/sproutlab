@@ -6150,23 +6150,78 @@ body.ql-locked .dark-toggle { pointer-events:none; }
      domain — uniform lavender accent for the "milestones-tab-overall"
      surface per design table. HR-8 floor: min-height 44px via internal
      label+desc stacking (label fs-sm ~ 14px + desc fs-2xs ~ 9px + sp-8
-     vertical padding ≈ 47px). */
+     vertical padding ≈ 47px). 2px border baseline so the selected-state
+     border-color change reads without a width jump. */
   flex:1 1 0;
   min-width:0;
   min-height:44px;
   padding:var(--sp-8) var(--sp-4);
   border-radius:var(--r-lg);
   background:var(--warm);
-  border:1px solid var(--border-subtle);
+  border:2px solid var(--border-subtle);
   cursor:pointer;
   text-align:center;
-  transition:background var(--ease-fast), border-color var(--ease-fast);
+  transition:background var(--ease-fast), border-color var(--ease-fast), transform var(--ease-fast), box-shadow var(--ease-fast);
 }
 .ms-al-chip:active { transform:scale(0.96); }
 .ms-al-chip-label { font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .ms-al-chip-desc { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-2); }
-.ms-al-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); }
-.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); }
+/* Selected state — stronger visual closure on "the effect must be apparent"
+   (Architect feedback 2026-05-27 #6). Three reinforcing signals: tinted
+   background, lavender border, lifted scale + soft drop-shadow halo, label
+   font-weight bump + color shift. */
+.ms-al-chip[data-selected="true"] {
+  background:var(--surface-lav);
+  border-color:var(--lavender);
+  transform:scale(1.04);
+  box-shadow:0 4px 12px rgba(201,184,232,0.30);
+}
+.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); font-weight:700; }
+.ms-al-chip[data-selected="true"] .ms-al-chip-desc { color:var(--tc-lav); opacity:0.85; }
+
+/* Inline status under the chip strip — shown only when activityLevel is set.
+   Closes the "what does this do?" gap: confirms what was logged + gives
+   warm contextual narration about the tier. Same lavender tint as the chip,
+   reads as a continuation rather than a separate surface. */
+.ms-al-status {
+  margin-top:var(--sp-12);
+  padding:var(--sp-10) var(--sp-12);
+  border-radius:var(--r-lg);
+  background:var(--surface-lav);
+  border-left:var(--accent-w) solid var(--lavender);
+}
+.ms-al-status-tag {
+  display:flex;
+  align-items:center;
+  gap:var(--sp-4);
+  font-size:var(--fs-sm);
+  color:var(--tc-lav);
+  font-weight:600;
+}
+.ms-al-status-tag .zi { width:14px; height:14px; }
+.ms-al-status-narration {
+  margin-top:var(--sp-4);
+  font-size:var(--fs-xs);
+  color:var(--mid);
+  line-height:var(--lh-relaxed);
+}
+[data-theme="dark"] .ms-al-status { background:rgba(201,184,232,0.12); }
+
+/* Today header activity tag — surfaces the activityLevel as part of the
+   day's anchor narration. Small lavender pill above the Today passage. */
+.ms-today-activity-tag {
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-4);
+  margin-bottom:var(--sp-6);
+  padding:var(--sp-2) var(--sp-8);
+  border-radius:var(--r-full);
+  background:var(--lav-light);
+  color:var(--tc-lav);
+  font-size:var(--fs-xs);
+  font-weight:600;
+}
+.ms-today-activity-tag .zi { width:12px; height:12px; }
 
 /* ── In-window milestone proposals (Primitive 2) ──
    Up to 3 cards (engine cap; safetyTier:true bypasses per V-M-125 in-window
@@ -16286,6 +16341,26 @@ window._MILESTONE_NARRATION_TEMPLATES = {
   emptyState: {
     passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
   },
+};
+
+// MS_ACTIVITY_LEVEL_NARRATIONS — warm contextual prose per activityLevel tier.
+// Architect feedback 2026-05-27: "what's happening with the info we select in
+// 'How was Ziva today?' right now I select peak and it just stays there, not
+// much state change happens. For a parent the effect of this option must be
+// apparent."
+//
+// Used by renderMsActivityLevelStrip to surface an inline status BELOW the
+// chips after the parent selects a tier — closes the missing-consequence
+// gap. Honesty floor (CV3-006): the prose is observational + supportive,
+// never predictive ("Ziva will do X because of today's Peak") which would
+// trip audit-no-personalised-prediction-v1.sh Scope B. Tier-keyed by 1-4
+// matching the chip tiers; engine-extensibility floor for future 5th tier
+// lands as a new key without surface refactor.
+window.MS_ACTIVITY_LEVEL_NARRATIONS = {
+  1: 'Quiet days are gentle. Good time for cuddles, read-aloud, and rest — often follows a stretch of higher-energy days.',
+  2: 'Settled play days build steady comfort. The unspectacular days matter just as much.',
+  3: 'Engaged, high-output days often surface new skills. Watch for milestones unfolding.',
+  4: 'Big-energy days mean Ziva\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
 };
 
 // WHO Motor Development Study + WHO developmental milestones
@@ -26936,7 +27011,29 @@ function renderMsTodayHeader() {
     lastEvidenceRelative: lastEvidenceRelative,
   };
   const passage = tpl.passage.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
-  el.innerHTML = '<div class="ms-today-passage">' + passage + '</div>';
+
+  // activityLevel echo — when the parent has logged today's energy, surface
+  // a small tag above the narrative passage so the Today header acknowledges
+  // their input as part of the day's anchor. Closes the "apparent effect"
+  // feedback chain alongside the chip-strip inline status. Tag stays absent
+  // when activityLevel is null (honesty floor: no echo for no signal).
+  let activityTag = '';
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      const todayKey = today();
+      const lvl = _getActivityLevelToday(todayKey);
+      if (lvl != null) {
+        const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === lvl);
+        if (tier) {
+          activityTag = '<div class="ms-today-activity-tag">'
+            + zi('bolt') + ' <strong>' + escHtml(tier.label) + '</strong> day'
+            + '</div>';
+        }
+      }
+    }
+  } catch (e) { /* honesty floor: no echo on read-failure */ }
+
+  el.innerHTML = activityTag + '<div class="ms-today-passage">' + passage + '</div>';
 }
 
 // Helper: relative-time formatter (no engine-internal labels per V-K-120).
@@ -26981,16 +27078,50 @@ function renderMsActivityLevelStrip() {
       + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
       + '</button>';
   }).join('');
-  el.innerHTML = '<div class="ms-al-prompt">How was Ziva today?</div>'
-    + '<div class="ms-al-chips">' + chips + '</div>';
+  // Prompt swaps once a level is logged — "How was Ziva today?" → "Today's
+  // energy" — so the question/answer relationship reads as resolved.
+  // Inline status surfaces the consequence: which tier was logged + a
+  // warm contextual narration. CV3-006 Warmth axis closure on the
+  // Architect's "the effect must be apparent" feedback. The status reads
+  // BELOW the chip strip because the selected chip is the answer; the
+  // status is the system's acknowledgement + context.
+  const prompt = (currentLevel == null) ? 'How was Ziva today?' : 'Today\'s energy';
+  let statusHtml = '';
+  if (currentLevel != null) {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === currentLevel);
+    const narrations = (window.MS_ACTIVITY_LEVEL_NARRATIONS || {});
+    const narration = narrations[currentLevel] || '';
+    const tierLabel = tier ? tier.label : '';
+    statusHtml = '<div class="ms-al-status" role="status" aria-live="polite">'
+      + '<div class="ms-al-status-tag">' + zi('check') + ' Logged · <strong>' + escHtml(tierLabel) + '</strong></div>'
+      + (narration ? '<div class="ms-al-status-narration">' + escHtml(narration) + '</div>' : '')
+      + '</div>';
+  }
+  el.innerHTML = '<div class="ms-al-prompt">' + escHtml(prompt) + '</div>'
+    + '<div class="ms-al-chips">' + chips + '</div>'
+    + statusHtml;
 }
 
 // Handler: setMsActivityLevel — data-action delegate; writes the level via
 // engine-prep _setActivityLevelToday and re-renders the strip.
+//
+// Triple feedback channel (Architect "apparent effect" close): (1) visual —
+// renderMsActivityLevelStrip refreshes with stronger selected-chip styling +
+// inline status with warm narration; (2) cross-surface — renderMsTodayHeader
+// refreshes to incorporate the activityLevel into the day's anchor
+// narration; (3) transient — toast confirmation acknowledges the input
+// immediately. Three independent signals so even a half-awake parent
+// catches at least one.
 function setMsActivityLevel(target) {
   const level = parseInt(target && target.dataset && target.dataset.level, 10);
   if (!level || level < 1 || level > MS_ACTIVITY_LEVEL_TIERS.length) return;
   const todayStr = today();
+  let prevLevel = null;
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      prevLevel = _getActivityLevelToday(todayStr);
+    }
+  } catch (e) { prevLevel = null; }
   try {
     if (typeof _setActivityLevelToday === 'function') {
       _setActivityLevelToday(todayStr, level);
@@ -26999,6 +27130,14 @@ function setMsActivityLevel(target) {
   renderMsActivityLevelStrip();
   // Today header may shift state — re-render (single try-with-warn)
   try { renderMsTodayHeader(); } catch (e) { console.warn('renderMsTodayHeader fail:', e); }
+  // Transient confirmation toast — only on actual change (not rapid-re-tap
+  // on the same tier) so a parent thumbing through tiers doesn't get a
+  // toast cascade. showQLToast replaces any in-flight toast so a quick
+  // sequence Quiet→Calm→Active→Peak collapses to the last toast naturally.
+  if (level !== prevLevel && typeof showQLToast === 'function') {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === level);
+    if (tier) showQLToast('Logged · ' + tier.label + ' day', 2400);
+  }
 }
 
 // In-window milestone proposals (Primitive 2) — engine-prep

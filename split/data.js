@@ -2770,6 +2770,26 @@ window._MILESTONE_NARRATION_TEMPLATES = {
   },
 };
 
+// MS_ACTIVITY_LEVEL_NARRATIONS — warm contextual prose per activityLevel tier.
+// Architect feedback 2026-05-27: "what's happening with the info we select in
+// 'How was Ziva today?' right now I select peak and it just stays there, not
+// much state change happens. For a parent the effect of this option must be
+// apparent."
+//
+// Used by renderMsActivityLevelStrip to surface an inline status BELOW the
+// chips after the parent selects a tier — closes the missing-consequence
+// gap. Honesty floor (CV3-006): the prose is observational + supportive,
+// never predictive ("Ziva will do X because of today's Peak") which would
+// trip audit-no-personalised-prediction-v1.sh Scope B. Tier-keyed by 1-4
+// matching the chip tiers; engine-extensibility floor for future 5th tier
+// lands as a new key without surface refactor.
+window.MS_ACTIVITY_LEVEL_NARRATIONS = {
+  1: 'Quiet days are gentle. Good time for cuddles, read-aloud, and rest — often follows a stretch of higher-energy days.',
+  2: 'Settled play days build steady comfort. The unspectacular days matter just as much.',
+  3: 'Engaged, high-output days often surface new skills. Watch for milestones unfolding.',
+  4: 'Big-energy days mean Ziva\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
+};
+
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {

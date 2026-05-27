@@ -6143,23 +6143,78 @@ body.ql-locked .dark-toggle { pointer-events:none; }
      domain — uniform lavender accent for the "milestones-tab-overall"
      surface per design table. HR-8 floor: min-height 44px via internal
      label+desc stacking (label fs-sm ~ 14px + desc fs-2xs ~ 9px + sp-8
-     vertical padding ≈ 47px). */
+     vertical padding ≈ 47px). 2px border baseline so the selected-state
+     border-color change reads without a width jump. */
   flex:1 1 0;
   min-width:0;
   min-height:44px;
   padding:var(--sp-8) var(--sp-4);
   border-radius:var(--r-lg);
   background:var(--warm);
-  border:1px solid var(--border-subtle);
+  border:2px solid var(--border-subtle);
   cursor:pointer;
   text-align:center;
-  transition:background var(--ease-fast), border-color var(--ease-fast);
+  transition:background var(--ease-fast), border-color var(--ease-fast), transform var(--ease-fast), box-shadow var(--ease-fast);
 }
 .ms-al-chip:active { transform:scale(0.96); }
 .ms-al-chip-label { font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .ms-al-chip-desc { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-2); }
-.ms-al-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); }
-.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); }
+/* Selected state — stronger visual closure on "the effect must be apparent"
+   (Architect feedback 2026-05-27 #6). Three reinforcing signals: tinted
+   background, lavender border, lifted scale + soft drop-shadow halo, label
+   font-weight bump + color shift. */
+.ms-al-chip[data-selected="true"] {
+  background:var(--surface-lav);
+  border-color:var(--lavender);
+  transform:scale(1.04);
+  box-shadow:0 4px 12px rgba(201,184,232,0.30);
+}
+.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); font-weight:700; }
+.ms-al-chip[data-selected="true"] .ms-al-chip-desc { color:var(--tc-lav); opacity:0.85; }
+
+/* Inline status under the chip strip — shown only when activityLevel is set.
+   Closes the "what does this do?" gap: confirms what was logged + gives
+   warm contextual narration about the tier. Same lavender tint as the chip,
+   reads as a continuation rather than a separate surface. */
+.ms-al-status {
+  margin-top:var(--sp-12);
+  padding:var(--sp-10) var(--sp-12);
+  border-radius:var(--r-lg);
+  background:var(--surface-lav);
+  border-left:var(--accent-w) solid var(--lavender);
+}
+.ms-al-status-tag {
+  display:flex;
+  align-items:center;
+  gap:var(--sp-4);
+  font-size:var(--fs-sm);
+  color:var(--tc-lav);
+  font-weight:600;
+}
+.ms-al-status-tag .zi { width:14px; height:14px; }
+.ms-al-status-narration {
+  margin-top:var(--sp-4);
+  font-size:var(--fs-xs);
+  color:var(--mid);
+  line-height:var(--lh-relaxed);
+}
+[data-theme="dark"] .ms-al-status { background:rgba(201,184,232,0.12); }
+
+/* Today header activity tag — surfaces the activityLevel as part of the
+   day's anchor narration. Small lavender pill above the Today passage. */
+.ms-today-activity-tag {
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-4);
+  margin-bottom:var(--sp-6);
+  padding:var(--sp-2) var(--sp-8);
+  border-radius:var(--r-full);
+  background:var(--lav-light);
+  color:var(--tc-lav);
+  font-size:var(--fs-xs);
+  font-weight:600;
+}
+.ms-today-activity-tag .zi { width:12px; height:12px; }
 
 /* ── In-window milestone proposals (Primitive 2) ──
    Up to 3 cards (engine cap; safetyTier:true bypasses per V-M-125 in-window

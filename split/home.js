@@ -2038,7 +2038,29 @@ function renderMsTodayHeader() {
     lastEvidenceRelative: lastEvidenceRelative,
   };
   const passage = tpl.passage.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
-  el.innerHTML = '<div class="ms-today-passage">' + passage + '</div>';
+
+  // activityLevel echo — when the parent has logged today's energy, surface
+  // a small tag above the narrative passage so the Today header acknowledges
+  // their input as part of the day's anchor. Closes the "apparent effect"
+  // feedback chain alongside the chip-strip inline status. Tag stays absent
+  // when activityLevel is null (honesty floor: no echo for no signal).
+  let activityTag = '';
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      const todayKey = today();
+      const lvl = _getActivityLevelToday(todayKey);
+      if (lvl != null) {
+        const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === lvl);
+        if (tier) {
+          activityTag = '<div class="ms-today-activity-tag">'
+            + zi('bolt') + ' <strong>' + escHtml(tier.label) + '</strong> day'
+            + '</div>';
+        }
+      }
+    }
+  } catch (e) { /* honesty floor: no echo on read-failure */ }
+
+  el.innerHTML = activityTag + '<div class="ms-today-passage">' + passage + '</div>';
 }
 
 // Helper: relative-time formatter (no engine-internal labels per V-K-120).
@@ -2083,16 +2105,50 @@ function renderMsActivityLevelStrip() {
       + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
       + '</button>';
   }).join('');
-  el.innerHTML = '<div class="ms-al-prompt">How was Ziva today?</div>'
-    + '<div class="ms-al-chips">' + chips + '</div>';
+  // Prompt swaps once a level is logged — "How was Ziva today?" → "Today's
+  // energy" — so the question/answer relationship reads as resolved.
+  // Inline status surfaces the consequence: which tier was logged + a
+  // warm contextual narration. CV3-006 Warmth axis closure on the
+  // Architect's "the effect must be apparent" feedback. The status reads
+  // BELOW the chip strip because the selected chip is the answer; the
+  // status is the system's acknowledgement + context.
+  const prompt = (currentLevel == null) ? 'How was Ziva today?' : 'Today\'s energy';
+  let statusHtml = '';
+  if (currentLevel != null) {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === currentLevel);
+    const narrations = (window.MS_ACTIVITY_LEVEL_NARRATIONS || {});
+    const narration = narrations[currentLevel] || '';
+    const tierLabel = tier ? tier.label : '';
+    statusHtml = '<div class="ms-al-status" role="status" aria-live="polite">'
+      + '<div class="ms-al-status-tag">' + zi('check') + ' Logged · <strong>' + escHtml(tierLabel) + '</strong></div>'
+      + (narration ? '<div class="ms-al-status-narration">' + escHtml(narration) + '</div>' : '')
+      + '</div>';
+  }
+  el.innerHTML = '<div class="ms-al-prompt">' + escHtml(prompt) + '</div>'
+    + '<div class="ms-al-chips">' + chips + '</div>'
+    + statusHtml;
 }
 
 // Handler: setMsActivityLevel — data-action delegate; writes the level via
 // engine-prep _setActivityLevelToday and re-renders the strip.
+//
+// Triple feedback channel (Architect "apparent effect" close): (1) visual —
+// renderMsActivityLevelStrip refreshes with stronger selected-chip styling +
+// inline status with warm narration; (2) cross-surface — renderMsTodayHeader
+// refreshes to incorporate the activityLevel into the day's anchor
+// narration; (3) transient — toast confirmation acknowledges the input
+// immediately. Three independent signals so even a half-awake parent
+// catches at least one.
 function setMsActivityLevel(target) {
   const level = parseInt(target && target.dataset && target.dataset.level, 10);
   if (!level || level < 1 || level > MS_ACTIVITY_LEVEL_TIERS.length) return;
   const todayStr = today();
+  let prevLevel = null;
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      prevLevel = _getActivityLevelToday(todayStr);
+    }
+  } catch (e) { prevLevel = null; }
   try {
     if (typeof _setActivityLevelToday === 'function') {
       _setActivityLevelToday(todayStr, level);
@@ -2101,6 +2157,14 @@ function setMsActivityLevel(target) {
   renderMsActivityLevelStrip();
   // Today header may shift state — re-render (single try-with-warn)
   try { renderMsTodayHeader(); } catch (e) { console.warn('renderMsTodayHeader fail:', e); }
+  // Transient confirmation toast — only on actual change (not rapid-re-tap
+  // on the same tier) so a parent thumbing through tiers doesn't get a
+  // toast cascade. showQLToast replaces any in-flight toast so a quick
+  // sequence Quiet→Calm→Active→Peak collapses to the last toast naturally.
+  if (level !== prevLevel && typeof showQLToast === 'function') {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === level);
+    if (tier) showQLToast('Logged · ' + tier.label + ' day', 2400);
+  }
 }
 
 // In-window milestone proposals (Primitive 2) — engine-prep
