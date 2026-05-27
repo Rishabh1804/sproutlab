@@ -1652,12 +1652,15 @@ function renderHomeActivity() {
   if (!acts.length) { el.innerHTML = '<div class="t-sub-light">All activities up to date!</div>'; return; }
   const doy = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
 
-  const catMeta = {
-    motor:    { icon:zi('run'), label:'Motor' },
-    sensory:  { icon:zi('palette'), label:'Sensory' },
-    language: { icon:zi('chat'), label:'Language' },
-    social:   { icon:zi('handshake'), label:'Social' },
-  };
+  // V-M-117 fold (milestones-tab-v1 IMPL carry-forward from engine-prep handoff):
+  // catMeta + activity-category order now read from window.ACTIVITY_CATEGORIES
+  // (data.js — 5-cat canonical). Pre-v1 4-cat outlier `['motor','sensory',
+  // 'language','social']` dropped cognitive entirely; the registry is the
+  // single source of truth — activities tagged with `cognitive` type now
+  // surface naturally on the daily rotation when present in the pool.
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  const catMeta = {};
+  cats.forEach(c => { catMeta[c.key] = { icon: zi(c.icon), label: c.label }; });
 
   // Group by type
   const groups = {};
@@ -1667,9 +1670,9 @@ function renderHomeActivity() {
   });
 
   // Pick one from each available category, rotated daily
-  const catOrder = ['motor','sensory','language','social'];
+  const domainOrder = cats.map(c => c.key);
   const picks = [];
-  catOrder.forEach(cat => {
+  domainOrder.forEach(cat => {
     const pool = groups[cat];
     if (!pool || pool.length === 0) return;
     picks.push(pool[doy % pool.length]);
@@ -1861,7 +1864,7 @@ function renderMilestoneList() {
     return 0;
   }));
 
-  const catOrder = ['motor', 'language', 'social', 'cognitive'];
+  const catOrder = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   let html = '<div class="ms-cats">';
 
   catOrder.forEach(cat => {
@@ -2260,7 +2263,7 @@ function deleteMilestone(i) {
 let _milestoneCat = 'motor';
 function setMilestoneCat(cat) {
   _milestoneCat = cat;
-  ['motor','language','social','cognitive'].forEach(c => {
+  ['motor','language','social','cognitive'].forEach(c => {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const btn = document.getElementById('mcat-' + c);
     btn.className = c === cat ? 'rtog active-ok' : 'rtog';
   });
@@ -2303,8 +2306,8 @@ function renderCategoryWheels() {
   const R = 22, C = 2 * Math.PI * R;
 
   // Compute evidence counts per domain from activityLog
-  const domainEvidence = { motor: 0, language: 0, social: 0, cognitive: 0 };
-  const domainDays = { motor: new Set(), language: new Set(), social: new Set(), cognitive: new Set() };
+  const domainEvidence = { motor: 0, language: 0, social: 0, cognitive: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  const domainDays = { motor: new Set(), language: new Set(), social: new Set(), cognitive: new Set() };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   Object.entries(activityLog).forEach(([dateStr, entries]) => {
     if (!Array.isArray(entries)) return;
     entries.forEach(e => {
@@ -2318,7 +2321,7 @@ function renderCategoryWheels() {
   });
 
   let html = '';
-  ['motor','language','social','cognitive'].forEach(cat => {
+  ['motor','language','social','cognitive'].forEach(cat => {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const meta = catMeta[cat];
     // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
     const catMs = milestones.filter(m => (m.domain || m.cat || 'motor') === cat);
@@ -2502,7 +2505,7 @@ function renderRecentEvidence() {
   }
 
   feedEl.style.display = '';
-  const domainIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain'), sensory: zi('sparkle') };
+  const domainIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain'), sensory: zi('sparkle') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   const todayStr = today();
   const yesterdayStr = toDateStr(new Date(Date.now() - 86400000));
 
@@ -3805,7 +3808,7 @@ function renderMilestoneHighlights() {
   const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
   const latestDone = doneMs.filter(m => m.doneAt).sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
   const latestMs = latestDone[0] || doneMs[doneMs.length - 1];
-  const catIcons = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
+  const catIcons = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
 
   const mo = getAgeInMonths();
   const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
@@ -6778,8 +6781,8 @@ function renderHistoryPreviews() {
     const latest = done.filter(m => m.doneAt).sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
     const latestMs = latest[0] || done[done.length - 1];
 
-    if (latestMs) {
-      const catMeta = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };
+    if (latestMs) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+      const catMeta = { motor:zi('run'), language:zi('chat'), social:zi('handshake'), cognitive:zi('brain') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
       // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
       const catIcon = catMeta[latestMs.domain || latestMs.cat] || zi('star');
       msPrev.innerHTML = `<div class="info-strip is-sage">
@@ -8639,7 +8642,7 @@ function renderTodayPlan() {
   const todayActivities = Array.isArray(activityLog[todayStr]) ? activityLog[todayStr] : [];
 
   // Prioritize under-evidenced domains
-  const domainEvCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  const domainEvCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   Object.values(activityLog).forEach(dayEntries => {
     if (!Array.isArray(dayEntries)) return;
     dayEntries.forEach(e => { (e.domains || []).forEach(d => { domainEvCounts[d] = (domainEvCounts[d] || 0) + 1; }); });

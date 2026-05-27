@@ -492,7 +492,7 @@ function renderActiveMilestones() {
   if (!el) return;
 
   // Collect milestones with evidence (active = emerging/practicing/consistent)
-  const catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
+  const catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   const active = milestones.map((m, i) => ({ ...m, _i: i }))
     .filter(m => m.evidenceCount > 0 && ['emerging', 'practicing', 'consistent', 'mastered'].includes(m.status))
     .sort((a, b) => {
@@ -4847,7 +4847,7 @@ function renderUpcomingMilestones() {
   });
 
   const stateOrder = ['pending', 'in_progress'];
-  const catOrder = ['motor', 'language', 'social', 'cognitive'];
+  const catOrder = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
 
   let html = '<div class="upcoming-cats">';
 
@@ -7560,9 +7560,9 @@ function renderInfoActivityConsistency() {
   if (dotsEl) dotsEl.innerHTML = dotHtml;
 
   // Domain balance bars
-  if (domainsEl) {
-    const domainColors = { motor: 'var(--sage)', language: '#6aafcc', social: '#d4a04a', cognitive: 'var(--lavender)', sensory: '#c87070' };
-    const allDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
+  if (domainsEl) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    const domainColors = { motor: 'var(--sage)', language: '#6aafcc', social: '#d4a04a', cognitive: 'var(--lavender)', sensory: '#c87070' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    const allDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const maxDom = Math.max(...allDomains.map(d => domainTotals[d] || 0), 1);
     let dHtml = '<div class="si-sub-label mb-4" >Domain Distribution</div>';
     allDomains.forEach(d => {
@@ -7676,7 +7676,7 @@ function renderInfoMilestoneVelocity() {
     // cognitive), STATUS encodes opacity stepping (0.35 → 0.55 → 0.75 → 0.95).
     // Parent's eye reads category-balance from the four color regions, then
     // maturity-depth from the within-region density.
-    const CATS = ['motor', 'social', 'language', 'cognitive'];
+    const CATS = ['motor', 'social', 'language', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const STATUSES = ['emerging', 'practicing', 'consistent', 'mastered'];
     const CAT_HUE = {
       motor:     'var(--tc-sage)',
@@ -7733,7 +7733,7 @@ function renderInfoMilestoneVelocity() {
         // CATEGORY hue with STATUS-tier opacity, so the parent reads
         // category-balance from color regions and maturity-depth from intensity.
         const hue = CAT_HUE[cat] || 'var(--tc-sage)';
-        const CAT_DOMAIN = { motor: 'sage', social: 'lav', language: 'sky', cognitive: 'amber' };
+        const CAT_DOMAIN = { motor: 'sage', social: 'lav', language: 'sky', cognitive: 'amber' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
         let cursorY = y;
         STATUSES.forEach(st => {
           const ct = catStatusCounts[cat][st];

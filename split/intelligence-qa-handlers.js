@@ -1318,8 +1318,8 @@ function qaAnswerActivityGeneral(intentId) {
   }
 
   // Domain balance
-  var domains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
-  var domainLabels = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive', sensory: 'Sensory' };
+  var domains = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  var domainLabels = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive', sensory: 'Sensory' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var dc = actData.domainCounts;
   var coveredDomains = domains.filter(function(d) { return (dc[d] || 0) > 0; });
   var missingDomains = domains.filter(function(d) { return (dc[d] || 0) === 0; });
@@ -2605,7 +2605,7 @@ function qaAnswerActivitySleep(intentId) {
   }
 
   // Domain effects
-  var domainNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+  var domainNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   if (actData.domainCounts) {
     var topDomain = Object.entries(actData.domainCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
     if (topDomain) {
@@ -2645,9 +2645,9 @@ function qaAnswerMilestoneGeneral(intentId) {
     var headline = 'Milestone Score: ' + ms.score + '/100';
 
     // Category breakdown
-    var categories = ['motor', 'language', 'social', 'cognitive'];
-    var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
-    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+    var categories = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     categories.forEach(function(cat) {
       // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
       var catMs = (milestones || []).filter(function(m) { return (m.domain || m.cat) === cat; });
@@ -3229,11 +3229,11 @@ function qaAnswerTomorrow(intentId) {
 
   // Activity suggestion
   var actData = _qaActivityDays14d();
-  if (actData.domainCounts) {
-    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+  if (actData.domainCounts) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     var weakestDomain = null;
     var weakestCount = Infinity;
-    ['motor', 'language', 'social', 'cognitive'].forEach(function(dom) {
+    ['motor', 'language', 'social', 'cognitive'].forEach(function(dom) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
       var count = actData.domainCounts[dom] || 0;
       if (count < weakestCount) { weakestCount = count; weakestDomain = dom; }
     });

@@ -1796,7 +1796,7 @@ function _tpGenerateActivitySuggestions() {
   var suggestions = [];
 
   // Domain balance from activity log
-  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var totalEntries = 0;
   var todayD = new Date(today());
   for (var i = 0; i < 14; i++) {

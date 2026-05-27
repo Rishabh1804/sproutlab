@@ -631,7 +631,7 @@ function renderInfoActivitySleepDeep() {
   });
 
   // 3c: Domain effects
-  var domainNames = ['motor','language','social','cognitive','sensory'];
+  var domainNames = ['motor','language','social','cognitive','sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var domainEffects = [];
   var overallAvg = Math.round(pairs.reduce(function(a, p) { return a + p.sleepScore; }, 0) / pairs.length);
 

@@ -2705,6 +2705,71 @@ var PORTABLE_PREP_TIPS = {
 //     + CDC Learn-the-Signs references.
 const MILESTONE_SOURCE = ['WHO', 'CDC', 'AAP', 'IAP', 'EU', 'CN', 'unverified'];
 
+// ACTIVITY_CATEGORIES — consumer-side registry for the 5-cat activity-domain
+// vocabulary. Engine-prep migrated milestone rows cat:→domain: at the data tier
+// (PR #154); this is the surface-tier mirror for milestones-tab-v1 consumers.
+// Spec: docs/specs/milestones-tab-v1.md §Consumer-side ACTIVITY_CATEGORIES.
+//
+// Doctrine (V-M-120 Lyra fold-call): registry MIRRORS the existing
+// [data-domain] cascade at styles.css:8628-8636 — language→lavender,
+// cognitive→sky (NOT the closed PR #147 reassignment that would have silently
+// overwritten an 18+ call-site binding contract). Milestone-overall semantic
+// surfaces via existing Milestone Timeline header icon-lav + trajectory
+// ribbon --surface-lav background; no shared-module CSS migration required.
+//
+// Five categories. NO MORE without canon-cc-027 amendment (registry-doctrine
+// floor; mirrors v3-5 chip taxonomy + v3-6 card priority pattern).
+//
+// Build-time invariant: audit-activity-categories-v1.sh bans ad-hoc category
+// arrays (['motor','sensory','language','social',...] permutations outside
+// this registry) + bans top-level catOrder= idiom + bans object literals with
+// category keys as fixed top-level keys outside the registry consumer pattern.
+// Opt-in escape: `// activity-categories-ok: <rationale>`.
+window.ACTIVITY_CATEGORIES = [
+  { key: 'motor',     label: 'Motor',     icon: 'run',       accent: 'sage'     },
+  { key: 'language',  label: 'Language',  icon: 'chat',      accent: 'lavender' },
+  { key: 'social',    label: 'Social',    icon: 'handshake', accent: 'peach'    },
+  { key: 'sensory',   label: 'Sensory',   icon: 'sparkle',   accent: 'amber'    },
+  { key: 'cognitive', label: 'Cognitive', icon: 'brain',     accent: 'sky'      },
+];
+
+// _MILESTONE_NARRATION_TEMPLATES — single-domain milestone narration registry
+// for the "Today" header card on the milestones-tab-v1 Log sub-tab. Spec:
+// docs/specs/milestones-tab-v1.md §Three return-visit surfaces → "Today" header.
+//
+// Doctrinal carve-out (V-V-47 + V-V-60 + V-V-62 + V-K-125 + V-V-74):
+// SEPARATE from v3-4's _NARRATIVE_PROSE_TEMPLATES which is scoped to
+// cross-domain `_correlate` consumers ONLY. Single-domain milestone
+// narration is shape-distinct (no hedgeTierMap, no sampleFloor); future
+// single-domain narration registries will follow this carve-out shape.
+//
+// Template selection (2x2 state-cell matrix per V-V-54 fold):
+//   inWindow.length > 0 && hasRecentEvidence(7d)  → fullData
+//   inWindow.length > 0 && !hasRecentEvidence(7d) → midState
+//   inWindow.length === 0 && hasRecentEvidence(30d) → betweenWindow (V-V-54 4th cell)
+//   inWindow.length === 0 && !hasRecentEvidence(30d) → emptyState
+//
+// Honesty floor (V-M-104 + V-M-121 fold): if #msRegressionAlerts surface
+// signals concern (home.js REGRESSION_DAYS = 30 — 30 days without evidence
+// on a confirmed milestone), the Today header NEVER uses "quiet stretch"
+// framing; falls through to betweenWindow (if recent confirmation exists)
+// or emptyState.
+window._MILESTONE_NARRATION_TEMPLATES = {
+  fullData: {
+    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. Last evidence: {lastEvidenceText} ({lastEvidenceRelative}).',
+  },
+  midState: {
+    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. No new evidence this week — quiet stretch.',
+  },
+  betweenWindow: {
+    // V-V-54 fold: in-window.length === 0 + recent-evidence === Y
+    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. {recentConfirmedMilestone} confirmed {lastEvidenceRelative}. No milestones currently in-window — between-window stretch.',
+  },
+  emptyState: {
+    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
+  },
+};
+
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {

@@ -1787,7 +1787,7 @@ function computeMilestoneModifier() {
       });
     }
   }
-  const domainsActive = ['motor', 'language', 'social', 'cognitive'].filter(c => domainRecent[c]).length;
+  const domainsActive = ['motor', 'language', 'social', 'cognitive'].filter(c => domainRecent[c]).length;  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   let domVal = domainsActive === 4 ? 100 : domainsActive === 3 ? 80 : domainsActive === 2 ? 55 : domainsActive === 1 ? 35 : 20;
   factors.push({ name: 'Domain balance', value: domVal, weight: 0.30 });
 
@@ -2115,7 +2115,7 @@ function calcMilestoneScore() {
   const completionScore = Math.round(Math.min(completionRate, 1) * 100);
 
   // B. Category coverage (20%) — all 4 domains have recent evidence
-  const categories = ['motor', 'language', 'social', 'cognitive'];
+  const categories = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   const hasActivityLog = Object.keys(activityLog).length > 0;
 
   let catProgressSum = 0;
@@ -2687,7 +2687,7 @@ function renderScrapMilestonePickerList() {
   }
   // Group by category, render section per category that has any entries.
   const byCat = {};
-  const catOrder = [];
+  const catOrder = [];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   milestones.forEach(m => {
     // milestone-engine-prep-v1 PR-B — V-K-131 fold: read via domain
     // fallback so post-migration rows aren't all bucketed into 'other'.

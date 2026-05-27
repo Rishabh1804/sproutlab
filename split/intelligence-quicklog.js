@@ -686,7 +686,7 @@ function _alGetDomainNudge() {
   });
   if (Object.keys(suggestDomains).length >= 3) return null;
 
-  var standardDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
+  var standardDomains = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var domainCount = 0;
   standardDomains.forEach(function(d) { if (domainCounts[d]) domainCount++; });
   var avg = totalEntries / Math.max(domainCount, 1);
@@ -4607,6 +4607,10 @@ function computeSleepRegression() {
   }
 
   // Cross-reference: recent milestones
+  // Milestones-tab-v1 IMPL carry-forward (handoff §intelligence-quicklog.js:4616/4623):
+  // Projection emits `domain:` (canonical post-engine-prep PR-B migration)
+  // with `m.domain || m.cat || ''` transitional fallback per V-K-126 deprecation
+  // doctrine (drops at v1.1).
   const recentMilestones = (milestones || []).filter(m => {
     if (!isMsStarted(m)) return false;
     const mDate = m.emergingAt || m.practicingAt || m.consistentAt || m.masteredAt;
@@ -4615,7 +4619,7 @@ function computeSleepRegression() {
     return dayDiff >= 0 && dayDiff <= 21;
   }).map(m => {
     const stage = m.status || 'unknown';
-    return { text: m.text, stage, cat: m.cat || '' };
+    return { text: m.text, stage, domain: m.domain || m.cat || '' };
   });
 
   // Cross-reference: recent vaccinations
@@ -4625,16 +4629,19 @@ function computeSleepRegression() {
     return dayDiff >= 0 && dayDiff <= 14;
   }).map(v => ({ name: v.name || v.vaccine || 'Vaccine', date: v.date }));
 
-  // Possible causes
+  // Possible causes — canonical 5-cat domain keys (motor/language/social/sensory/cognitive)
+  // per ACTIVITY_CATEGORIES registry. Pre-migration legacy strings ('Gross Motor' /
+  // 'Fine Motor' / 'Cognitive' / 'Language') dropped — they never match post-engine-prep
+  // data (handoff carry-forward closure).
   const causes = [];
-  const motorMs = recentMilestones.filter(m => m.cat === 'Gross Motor' || m.cat === 'Fine Motor');
+  const motorMs = recentMilestones.filter(m => m.domain === 'motor');
   if (motorMs.length > 0 && severity !== 'none') {
     causes.push({ icon: zi('run'), text: 'Motor milestone burst: ' + motorMs.map(m => m.text).slice(0, 2).join(', ') });
   }
   if (recentVaccs.length > 0 && severity !== 'none') {
     causes.push({ icon: zi('syringe'), text: 'Recent vaccination: ' + recentVaccs.map(v => v.name).slice(0, 2).join(', ') + ' (' + formatDate(recentVaccs[0].date) + ')' });
   }
-  const cogMs = recentMilestones.filter(m => m.cat === 'Cognitive' || m.cat === 'Language');
+  const cogMs = recentMilestones.filter(m => m.domain === 'cognitive' || m.domain === 'language');
   if (cogMs.length > 0 && severity !== 'none') {
     causes.push({ icon: zi('brain'), text: 'Cognitive/language leap: ' + cogMs.map(m => m.text).slice(0, 2).join(', ') });
   }
