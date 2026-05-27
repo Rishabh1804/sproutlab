@@ -90,7 +90,7 @@ The engine-prep migrated milestone rows from `cat:` to `domain:` at the data-tie
 
 ### Primitive 1 — `activityLevel: 1-4` daily chip
 
-**Surface:** top of **Log** sub-tab. Single chip selector. **MUST be non-scrolling** (4 chips fit on screen at ≤6in mobile) per V-V-52 half-awake budget.
+**Surface:** top of **Log** sub-tab. Single chip selector. **MUST be non-scrolling** (4 chips fit on screen at ≤6in mobile) per V-V-52 half-awake budget. **Layout (V-V-65 fold):** chip strip renders **below** the empty-state prompt — prompt-as-label-above-strip arrangement. Strip MUST NOT wrap at 320px (iPhone SE 1st-gen still in field) — `chip-strip-no-wrap-at-320px` regression guard asserts.
 
 | Tier | Label | Description |
 |---|---|---|
@@ -128,12 +128,14 @@ The engine-prep migrated milestone rows from `cat:` to `domain:` at the data-tie
 | Status pill | `evidenceStatus` value → token chrome (confirmed=sage / practicing=lavender hedge / not-yet=neutral) |
 | Three tap targets | `zi('check')` "Saw it today" / `zi('trending-flat')` "Practicing" / `zi('arrow-right')` "Not yet" — tooltip MUST include "Practicing" word (Maren V-V-50 watch-list) |
 
-**Tap behaviors:**
-- **Saw it today** → add high-conf evidence; advance status if threshold
-- **Practicing** → add medium-conf evidence; set status to practicing
+**Tap behaviors** (write-side semantics; render-side prose stays in observation-count framings per V-K-120/V-K-121 fold — see §"Engine-internal label boundary" below):
+- **Saw it today** → record high-confidence observation (engine-side `confidence: 'high'` write); advance `evidenceStatus` if threshold
+- **Practicing** → record practicing observation (engine-side `confidence: 'medium'` write); set `evidenceStatus: 'practicing'`
 - **Not yet** → suppress 7 days via `ziva_milestone_suppress`; show 5-second undo toast (V-M-103)
 
-**Care-tier safety floor:** engine pre-applies `safetyTier:true` cap-bypass; surface renders all returned items (typical: 3 cards; rare: 4-5 when multiple safety-tier rows in-window).
+**Engine-internal label boundary (V-K-120 + V-K-121 + V-K-123 fold):** the engine-side `confidence: 'high' | 'medium' | 'low'` write enum is **write-side vocabulary only** — it MUST NOT leak into rendered prose. The surface prose uses `evidenceStatus` value (`confirmed` / `practicing` / `not-yet` per V-V-57) and observation-count framings ONLY. Test guard `strength-not-rendered` (test plan §Honesty floor) asserts grep finds no `'high-conf'` / `'medium-conf'` / `'low-conf'` / `'high-confidence'` / `'medium-confidence'` literal strings in any milestone-tab-v1 surface render function (home.js + medical.js + intelligence-cards.js touchpoints).
+
+**Care-tier safety floor:** engine pre-applies `safetyTier:true` cap-bypass for **in-window** safety-tier rows per engine-prep §Primitive 2 (V-M-125 fold — `safetyTier === true` rows bypass the n-cap IF in-window, not unconditionally; post-window safety-tier rows do not phantom-surface); surface renders all returned items (typical: 3 cards; rare: 4-5 when multiple safety-tier rows in-window).
 
 ### Primitive 3 — Bulk catch-up grid
 
@@ -161,16 +163,17 @@ Mirrors `food-sub-tab-v1`. **V-V-46 chrome doctrine resolved**: active sub-tab u
 
 ### Library sub-tab — full milestone DB + relocated cards
 
-Closes V-M-100's 5 unmapped surfaces concern:
+Closes V-M-100's 5 unmapped surfaces concern + V-M-119 fold (12-surface enumeration completes):
 
-1. **`#milestonesDomainHero`** (relocated per V-M-100 + G3) — preserved IDs; render-function bindings unchanged
-2. **Domain filter chips** — read from `ACTIVITY_CATEGORIES`
-3. **`#upcomingMilestoneList`** (relocated per V-M-100) — "Coming Up Next" preview
-4. **`#msTimelineContent`** (relocated per V-M-100) — Milestone Timeline (event log; coexists with trajectory ribbon in Patterns)
-5. **`#milestoneList` + Add-Custom-Milestone** (relocated per V-M-100) — full list + `openMilestoneModal` CTA preserved
-6. **Age-band sectioning** — `_getInWindowMilestones(ageDays, ∞)` grouped by clinical-range
-7. **`#activityList`** (relocated per V-M-100) — "Recommended Activities" reads `MILESTONE_ACTIVITIES`
-8. **Legacy history view** — collapsed; pre-v1 free-text Log Activity entries
+1. **`#msActiveMilestones`** (relocated per V-M-100 + V-M-119 fold) — **evidence-driven primary view** rendered by `renderActiveMilestones` (`medical.js:457`); preserved ID; stage-grouped (emerging / practicing / consistent / mastered). Placed above `#milestonesDomainHero` because parent's "what has Ziva actually shown me lately" anchor is more frequent than the domain-hero browse path.
+2. **`#milestonesDomainHero`** (relocated per V-M-100 + G3) — preserved IDs; render-function bindings unchanged
+3. **Domain filter chips** — read from `ACTIVITY_CATEGORIES`
+4. **`#upcomingMilestoneList`** (relocated per V-M-100) — "Coming Up Next" preview
+5. **`#msTimelineContent`** (relocated per V-M-100) — Milestone Timeline (event log; coexists with trajectory ribbon in Patterns)
+6. **`#milestoneList` + Add-Custom-Milestone** (relocated per V-M-100) — full list + `openMilestoneModal` CTA preserved
+7. **Age-band sectioning** — `_getInWindowMilestones(ageDays, ∞)` grouped by clinical-range
+8. **`#activityList`** (relocated per V-M-100) — "Recommended Activities" reads `MILESTONE_ACTIVITIES`
+9. **Legacy history view** — collapsed; pre-v1 free-text Log Activity entries
 
 ### Patterns sub-tab — engine-derived insights
 
@@ -181,13 +184,15 @@ Closes V-M-100's 5 unmapped surfaces concern:
 5. **Weekly summary card** — narrate week's evidence per CV3-002
 6. **Pediatric-visit prep card** (see §Three return-visit surfaces — narrated-card-only v1 minimum)
 7. **Trajectory ribbon** (see §Three return-visit surfaces)
-8. **Milestone-window correlation cross-link** — `gotoCard('info', 'infoMilestoneSleepCorrelationCard')` (V-V-48 — uses canonical `gotoCard()` pattern at `core.js:3385`); inline teaser as summary-headline format; does NOT add to v3-4 `_NARRATIVE_PROSE_TEMPLATES` (V-V-62 + engine-prep V-V-60)
+8. **Milestone-window correlation cross-link** — `gotoCard('info', 'infoMilestoneSleepCard')` (V-V-48 — uses canonical `gotoCard()` pattern at `core.js:3385`; V-V-63 fold — cardId verified against `template.html:2196` `id="infoMilestoneSleepCard"`; the renderer at `intelligence-cards.js:1064` is `renderInfoMilestoneSleepCorrelation()` — function name carries "Correlation" suffix but the *card* id does NOT); inline teaser as summary-headline format; does NOT add to v3-4 `_NARRATIVE_PROSE_TEMPLATES` (V-V-62 + engine-prep V-V-60); IMPL MUST honor the `home.js:7093` "Card ids verified present in template.html" discipline — regression guard `correlation-cross-link-cardId-verified` asserts `document.getElementById('infoMilestoneSleepCard') !== null` before the cross-link wires up
 
 ### Sub-tab navigation chrome — V-V-46 resolution
 
 - **Active sub-tab chrome:** existing `.track-sub-btn.active` rose chrome (uniform across all 5 Track sub-tabs)
-- **Lavender domain accent surfaces INSIDE sub-tab:** trajectory ribbon background (`--surface-lav`); in-window proposal card border-accent on `safetyTier:true` rows (`--lav-deep`); pediatric-prep card title (`--tc-lav`)
+- **Lavender domain accent surfaces INSIDE sub-tab:** trajectory ribbon background (`--surface-lav`); pediatric-prep card title (`--tc-lav`)
+- **Care-tier safetyTier:true border-accent (V-V-64 + V-M-124 fold):** in-window proposal card border-accent on `safetyTier:true` rows uses `border: 3px solid var(--rose-deep)` (the existing D2-DONOT border token at `styles.css:52` — token verified live). Care-tier amplification, not domain-tier emphasis: `--rose-deep` is the parent-action "this matters more" signal; lavender domain accent still surfaces inside the card body via the existing `[data-domain]` cascade. Phantom `--lav-deep` token from earlier draft REJECTED — no such token exists in styles.css (verified: only `--lav-light` `:38`, `--tc-lav` `:53`, `--lavender` `:37`, `--surface-lav` `:84`).
 - `regression-guard-milestones-v1-active-subtab-rose-accent` test (renamed from prior `lavender-accent`) — warmth-coherent uniformization
+- `regression-guard-safetytier-rose-deep-border` test — asserts `safetyTier:true` in-window card renders with computed `border-color` resolving to `--rose-deep`
 
 ---
 
@@ -199,15 +204,15 @@ Engine-prep migrated milestone rows to `domain:` at data-tier (PR #148). v1 land
 
 ```js
 window.ACTIVITY_CATEGORIES = [
-  { key: 'motor',     label: 'Motor',     icon: 'run',       accent: 'sage'   },
-  { key: 'language',  label: 'Language',  icon: 'chat',      accent: 'indigo' },
-  { key: 'social',    label: 'Social',    icon: 'handshake', accent: 'peach'  },
-  { key: 'sensory',   label: 'Sensory',   icon: 'sparkle',   accent: 'amber'  },
-  { key: 'cognitive', label: 'Cognitive', icon: 'brain',     accent: 'sky'    },
+  { key: 'motor',     label: 'Motor',     icon: 'run',       accent: 'sage'     },
+  { key: 'language',  label: 'Language',  icon: 'chat',      accent: 'lavender' },
+  { key: 'social',    label: 'Social',    icon: 'handshake', accent: 'peach'    },
+  { key: 'sensory',   label: 'Sensory',   icon: 'sparkle',   accent: 'amber'    },
+  { key: 'cognitive', label: 'Cognitive', icon: 'brain',     accent: 'sky'      },
 ];
 ```
 
-**Accent reassignment (V-V-46 / V-M-89 fold):** closed PR #147 draft assigned `language → lavender` + `cognitive → sky` overlapping with "lavender = Milestones overall" semantic. Re-author: `motor → sage`; `language → indigo`; `social → peach`; `sensory → amber`; `cognitive → sky`. Frees `lavender` for milestones-overall semantic.
+**Accent preservation (V-M-120 fold — Lyra synth-call):** the registry MIRRORS the existing binding `[data-domain]` cascade at `styles.css:8628-8636` (`data-domain="language" → --tc-lav`; `data-domain="cognitive" → --tc-sky`) + `CLAUDE.md:189` design-system table (*"lavender | Milestones, achievements, intelligence"* — note: at the per-domain cascade level, **language inherits lavender** as the domain-text-color token; "milestones-overall" semantic is a higher-tier surface concern, not a per-domain conflict). Closed PR #147 draft proposed `language → indigo` + `cognitive → sky` to free lavender, but Maren V-M-120 surfaced that the reassignment silently overwrites a binding contract with 18+ consumer call-sites (`.al-chip-language` `styles.css:5980`, `.al-chip-cognitive` `:5982`, `.ms-active-item.language` `:6030`, `[data-domain]` cascade `:8628-8636`, plus Activity Log + Smart Quick Log + Today So Far consumers). **Lyra fold-call:** preserve the existing cascade. Milestone-overall semantic surfaces via (a) existing Milestone Timeline header `icon-lav` glyph (template.html:1181 + line 1182 *"Milestone Timeline"* heading using `--tc-lav`); (b) trajectory ribbon `--surface-lav` background (this spec line ~278). Track sub-tab "Milestones" header chrome retains its existing identity. **No CLAUDE.md design-system table amendment required**; no shared-module CSS migration scope expansion required.
 
 ### Registry doctrine
 
@@ -263,16 +268,17 @@ window._MILESTONE_NARRATION_TEMPLATES = {
 - `inWindow.length === 0 && hasRecentEvidence(30d)` → `betweenWindow` (V-V-54)
 - `inWindow.length === 0 && !hasRecentEvidence(30d)` → `emptyState`
 
-**Honesty floor (V-M-104 fold):** if `#msRegressionAlerts` surface signals concern (confirmed milestone gone 14+ days without evidence), the Today header uses `betweenWindow` (if recent confirmation exists) OR `emptyState` — NEVER "quiet stretch" framing when regression alerts present.
+**Honesty floor (V-M-104 + V-M-121 fold):** if `#msRegressionAlerts` surface signals concern (confirmed milestone gone 30+ days without evidence per `home.js:2340` `REGRESSION_DAYS = 30` constant — V-M-121 fold corrects earlier "14+ days" claim to match the live producer-side logic), the Today header uses `betweenWindow` (if recent confirmation exists) OR `emptyState` — NEVER "quiet stretch" framing when regression alerts present.
 
 ### Trajectory ribbon (Patterns sub-tab)
 
 **Simplified visual contract** (V-V-49):
-- **Marker filter:** confirmed milestones + practicing milestones + in-window-not-yet milestones (capped at 5 most-imminent)
+- **Marker filter (V-K-122 fold — global cap, not per-bucket cap-at-5-only):** combine three buckets — confirmed milestones + practicing milestones + in-window-not-yet milestones — then apply a **global cap of 20 markers** via priority score (recency-weighted for confirmed; engine `priority` field for not-yet/practicing). The "cap at 5 most-imminent" floor on the not-yet bucket carries forward as a sub-bucket floor; the confirmed bucket caps via recency-top-N to keep the ribbon legible at 12m+ when typically-developing tracking datasets accumulate 30+ confirmed milestones.
 - **2 visual states (V-V-49 collapse):** filled = confirmed; outlined = hedged (practicing or not-yet-but-in-window). Drops the three-state distinction.
-- **Marker density:** ~15-20 markers via prioritization
+- **Marker density:** ~15-20 markers via prioritization (post-global-cap).
+- **Pixel-scale floor (V-V-66 fold):** minimum marker diameter ≥9px at narrowest supported viewport (320px); outlined-marker `stroke-width` ≥1.8px (preserves fill-vs-outline distinguishability under low-brightness half-awake conditions). Regression guard `trajectory-ribbon-marker-min-diameter-9px` + screenshot-diff test at 6in viewport with 18 markers.
 - **Color:** domain-keyed (reads `ACTIVITY_CATEGORIES[milestone.domain].accent`)
-- **Tap → `gotoCard('track', 'milestoneRow_' + milestoneId)`** (V-V-48 — canonical pattern at `core.js:3385`)
+- **Tap → `gotoCard('track', 'milestoneRow_' + milestoneId)`** (V-V-48 — canonical pattern at `core.js:3385`; V-V-48 carry-watch — IMPL verifies `milestoneRow_<id>` ids actually render on the Library sub-tab milestone list)
 
 **Performance gate:** ribbon renders within 200ms (cipher-3 budget).
 **Background:** lavender domain accent (`--surface-lav`).
@@ -283,11 +289,17 @@ window._MILESTONE_NARRATION_TEMPLATES = {
 
 **Auto-derived "Things to mention"** from: recent evidence (30d) + practicing milestones + active CareTickets + recent regressions (`#msRegressionAlerts`).
 
-**Narration shape (CV3-002):**
+**Narration shape (CV3-002, V-K-120 fold — no engine-internal `high-conf` label leak):**
 
-> *"Next visit: not yet scheduled. Things to mention this month: pointing confirmed (5 obs, high-conf); standing-with-support practicing (2 obs); food-introduction rate steady (12 new foods in 30 days). [If regressions present]: Worth mentioning — {regressionMilestoneText} hasn't shown evidence in {days} days."*
+> *"Next visit: not yet scheduled. Things to mention this month: pointing confirmed (5 observations); standing-with-support practicing (2 observations); food-introduction rate steady (12 new foods in 30 days). [If regressions present]: Worth mentioning — {regressionMilestoneText} hasn't shown evidence in {days} days."*
 
-**Care-tier register-tag (V-M-109 fold):** card carries visible *"for visit-prep only — not a clinical record"* footer.
+Engine-write-side `confidence: 'high' | 'medium'` enum stays in the data layer; surface prose uses observation-counts + `evidenceStatus` value (`confirmed` / `practicing` / `not-yet` per V-V-57) only. Pair-note 411 contract honored. Pre-existing leak carrier at `medical.js:531` (`% high-conf` in `renderActiveMilestones`) is out-of-jurisdiction here but Maren-primary at IMPL routes the carrier-fix in the same PR per V-K-120 pair-note.
+
+**Care-perspective framing (V-M-123 fold):** narration prose narrates Care-tier value beyond visit-prep — reads as a weekly Care summary the parent could anchor on between visits, not as a clinical-record-builder waiting for the copy-out affordance. R-3 copy/PDF deferral is the right scope-cut; the card earns surface existence as a Care-summary card with pediatric-visit framing, not as a checklist-builder.
+
+**Care-tier register-tag (V-M-109 + V-M-122 fold):** card carries visible *"for visit-prep only — not a clinical record"* footer. **Visual contract (V-M-122 fold):** register-tag renders with `border-top: 1px solid var(--mid)`, `font-size: var(--fs-xs)`, `color: var(--tc-rose)` (or equivalent) — sufficient visual weight to be parsed as terminal-statement, not as a skippable footnote. Sequential triple-jurisdiction on styles.css at IMPL covers the visual-tier sign-off (Maren → Kael → Vela; Vela half-awake-test confirms the footer reads as register-tag, not as soft caveat).
+
+**Screenshot-bypass defense-in-depth (V-V-67 fold):** parents who can't copy will screenshot. Register-tag MUST stay within visible viewport at typical phone screenshot dimensions (320px / 375px / 414px widths). Regression guard `screenshot-bypass-register-tag-visible` captures rendered card height + asserts register-tag stays within viewport crop window at standard breakpoints.
 
 **No tap-to-copy + no PDF in v1.** Both deferred to R-3 (Wave 2 audit/history). V-V-53 ratified.
 
@@ -297,7 +309,7 @@ window._MILESTONE_NARRATION_TEMPLATES = {
 
 | File | Region | Type | Lines |
 |---|---|---|---|
-| `split/template.html` | Shared | New 3-sub-tab scaffold; all 12 existing surfaces relocated per V-M-100 (preserved IDs per G3) | ~220 changed |
+| `split/template.html` | Shared | New 3-sub-tab scaffold; all 11 existing ID-bearing surfaces relocated per V-M-100 + V-M-119 fold (preserved IDs per G3): `recentEvidenceFeed`, `msActiveMilestones`, `milestonesDomainHero`, `milestoneStats`, `milestoneHighlights`, `msCatWheels`, `msRegressionAlerts`, `milestoneList`, `msTimelineContent`, `upcomingMilestoneList`, `activityList` | ~220 changed |
 | `split/styles.css` | Shared | Sub-tab nav rose chrome (V-V-46); chip variants; trajectory ribbon (V-V-49 simplified); pediatric-prep + register-tag (V-M-109); in-window card chrome | ~180 added |
 | `split/data.js` | Kael | `ACTIVITY_CATEGORIES` (5 rows) + `_MILESTONE_NARRATION_TEMPLATES` (4 templates per V-V-54) | ~60 added |
 | `split/home.js` | Maren | New milestone-tab render functions; `activityLevel` chip handler; in-window renderer; bulk-grid; "Today" header narration helper; trajectory ribbon; pediatric-prep card; 4-template narration logic; relocated surface integration | ~750 added, ~80 changed |
@@ -338,15 +350,16 @@ window._MILESTONE_NARRATION_TEMPLATES = {
 ### Honesty floor (5)
 - `clinical-band-disclosed` / `omit-paren-on-unverified` (V-M-115) / `no-personalised-prediction` (engine-prep gate enforces) / `empty-state-voiced` / `strength-not-rendered`
 
-### Return-visit surfaces (8)
-- `today-header-4-templates` / `today-header-between-window` (V-V-54) / `trajectory-ribbon-paints` (200ms) / `trajectory-ribbon-2-state-visual` / `trajectory-ribbon-gotocard` (V-V-48) / `pediatric-prep-narrated-only` (V-V-53) / `pediatric-prep-register-tag` (V-M-109) / `correlation-cross-link-gotocard` (V-V-48 + V-V-62)
+### Return-visit surfaces (11)
+- `today-header-4-templates` / `today-header-between-window` (V-V-54) / `today-header-regression-days-30` (V-M-121) / `trajectory-ribbon-paints` (200ms) / `trajectory-ribbon-2-state-visual` / `trajectory-ribbon-marker-min-diameter-9px` (V-V-66) / `trajectory-ribbon-global-cap-20` (V-K-122) / `trajectory-ribbon-gotocard` (V-V-48) / `pediatric-prep-narrated-only` (V-V-53) / `pediatric-prep-register-tag` (V-M-109 + V-M-122) / `pediatric-prep-no-engine-internal-labels` (V-K-120) / `screenshot-bypass-register-tag-visible` (V-V-67) / `correlation-cross-link-cardId-verified` (V-V-63) / `correlation-cross-link-gotocard` (V-V-48 + V-V-62)
 
-### Layout uniformization (5)
-- `three-subtabs-render` / `active-subtab-rose-accent` (V-V-46) / `domain-accent-inside-cards` / `12-surfaces-relocated` (G3 preserved-IDs) / `screen-reader-order`
+### Layout uniformization (6)
+- `three-subtabs-render` / `active-subtab-rose-accent` (V-V-46) / `domain-accent-inside-cards` / `11-surfaces-relocated` (G3 preserved-IDs — enumerated 11: `recentEvidenceFeed`, `msActiveMilestones`, `milestonesDomainHero`, `milestoneStats`, `milestoneHighlights`, `msCatWheels`, `msRegressionAlerts`, `milestoneList`, `msTimelineContent`, `upcomingMilestoneList`, `activityList`; V-M-119 fold corrects earlier "12 surfaces" claim to enumerated 11 ID-bearing IDs) / `safetytier-rose-deep-border` (V-V-64 + V-M-124) / `screen-reader-order`
 
-### Half-awake fixture (V-V-52 split per cipher-2)
-- **First-encounter** (n=5; ≤6s per confirm — comprehension floor)
+### Half-awake fixture (V-V-52 split per cipher-2; V-V-65 fold — per-confirm scope, not per-tab-entry)
+- **First-encounter** (n=5; ≤6s **per confirm** — comprehension floor; budget applies to single chip-set OR single in-window proposal tap, NOT to whole-tab-entry comprehension time)
 - **Steady-state** (n=5; ≤3s per confirm; ≤2s activityLevel — warmth-lift)
+- Test names: `half-awake-first-encounter-per-confirm-le-6s`, `half-awake-steady-state-per-confirm-le-3s`, `half-awake-activitylevel-le-2s`, `chip-strip-no-wrap-at-320px` (V-V-65)
 
 ### Regression sweep
 All existing milestone tests green. Engine-prep PR-A + PR-B IMPL must merge first.
@@ -396,7 +409,7 @@ All existing milestone tests green. Engine-prep PR-A + PR-B IMPL must merge firs
 
 ### Axes the spec could risk regressing — with mitigations
 
-- **Warmth (chrome doctrine):** uniform-rose active chrome means parent doesn't see lavender-as-active-signal for milestone tab. **Mitigation:** domain accent inside cards + trajectory ribbon background; parent learns "milestone = lavender" via card context.
+- **Warmth (chrome doctrine):** uniform-rose active chrome means parent doesn't see lavender-as-active-signal for milestone tab. **Mitigation:** Milestone Timeline header `icon-lav` glyph (template.html:1181) + trajectory ribbon `--surface-lav` background; parent learns "milestone = lavender" via header chrome + ribbon context. Per-domain cascade (V-M-120 fold) preserves binding `language → lavender` / `cognitive → sky` semantic — no design-system contract regression on Activity Log / Smart Quick Log / Today So Far surfaces.
 - **Honesty (under-warning on regressions):** "quiet stretch" framing could under-reassure on regression weeks. **Mitigation:** regression-detection logic checks `#msRegressionAlerts`; when alerts present, Today uses `betweenWindow` or `emptyState` template — never "quiet stretch."
 
 ---
@@ -456,6 +469,58 @@ Sequential triple-jurisdiction on `styles.css` per cipher-9: Maren → Kael → 
 - **Future single-domain narration registries** — `_MILESTONE_NARRATION_TEMPLATES` is the first
 
 **IMPL PR sequence:** v1 IMPL is **single-PR** (engine-prep was split; this surface consumes the now-stable substrate).
+
+---
+
+## Lyra synth-fold register (canon-cc-008 chain on PR #149)
+
+Per Architect directive 2026-05-27 (*"don't wait for me to fold issues, Lyra will take that call — directive: don't defer issues directly related to milestones tab"*), the full canon-cc-008 chain ran on this docs-only spec PR. Three Governors deployed Scribes for parallel codebase reconnaissance. All findings folded inline above. Register:
+
+### BLOCKING folds (4 — inline ratified)
+
+| ID | Governor | Surface | Fold resolution |
+|----|----------|---------|------------------|
+| V-V-63 | Vela | phantom cardId `infoMilestoneSleepCorrelationCard` | Fixed to `infoMilestoneSleepCard` (verified at `template.html:2196`); `correlation-cross-link-cardId-verified` regression guard added |
+| V-V-64 | Vela | phantom CSS token `--lav-deep` | Resolved with V-M-124 — use existing `--rose-deep` token at `styles.css:52` (Care-tier amplification on `safetyTier:true` border-accent, not domain-tier emphasis) |
+| V-M-119 | Maren | `#msActiveMilestones` missing from V-M-100 relocation table | Added as Library sub-tab item 0 (evidence-driven primary view; preserved ID; `renderActiveMilestones` at `medical.js:457`); surface count corrected from "12" → enumerated 11 ID-bearing surfaces |
+| V-M-120 | Maren | `ACTIVITY_CATEGORIES` accent reassignment contradicts `[data-domain]` cascade | **Lyra fold-call: preserve existing cascade.** Registry mirrors `styles.css:8628-8636` binding (language → lavender; cognitive → sky). Milestone-overall semantic surfaces via existing `icon-lav` glyph on Milestone Timeline header + trajectory ribbon `--surface-lav` background. No 18-site shared-module CSS migration required. No CLAUDE.md design-system table amendment needed |
+
+### NOTE / carry-watch folds (10 — inline ratified)
+
+| ID | Governor | Surface | Fold resolution |
+|----|----------|---------|------------------|
+| V-M-121 | Maren | REGRESSION_DAYS=30 vs spec's "14+ days" | Spec body §"Today header card" updated to cite `home.js:2340 REGRESSION_DAYS = 30` |
+| V-M-122 | Maren | Register-tag visual tier discipline | Visual contract spec'd (`border-top: 1px solid var(--mid)`, `var(--fs-xs)`, `var(--tc-rose)`); sequential triple-jurisdiction on styles.css at IMPL |
+| V-M-123 | Maren | Pediatric-prep Care-perspective framing | "Care-summary card with pediatric-visit framing" framing added to §Pediatric-visit prep card |
+| V-M-124 | Maren | safetyTier visual tier — `--rose-deep` Care-amplification | Folded with V-V-64 (above) |
+| V-M-125 | Maren | safetyTier cap-bypass "if in-window" qualifier | §Care-tier safety floor amended to "for **in-window** safety-tier rows per engine-prep §Primitive 2" |
+| V-V-65 | Vela | Half-awake budget scope (per-confirm, not per-tab-entry) | §Half-awake fixture explicitly scoped per-confirm; `chip-strip-no-wrap-at-320px` regression guard added |
+| V-V-66 | Vela | Trajectory ribbon marker pixel-scale floor | Minimum diameter ≥9px + stroke-width ≥1.8px at 320px viewport; screenshot-diff test |
+| V-V-67 | Vela | Pediatric-prep screenshot-bypass defense-in-depth | `screenshot-bypass-register-tag-visible` regression guard added |
+| V-K-120 | Kael | `(5 obs, high-conf)` engine-internal label leak in narration sample line 288 | Narration sample rewritten to `(5 observations)`; `strength-not-rendered` regression guard scope expanded with explicit grep assertion shape |
+| V-K-121 | Kael | Tap-behavior write-side vocab (`high-conf` / `medium-conf` literal strings) | Spec body §Primitive 2 tap behaviors renamed to render-safe synonyms ("record high-confidence observation" — engine-side enum write only); engine-internal label boundary §added |
+| V-K-122 | Kael | Trajectory ribbon marker-density inconsistency (cap-at-5 per-bucket) | Global cap of 20 markers post-bucket-merge spec'd; per-bucket sub-floors carry forward |
+| V-K-123 | Kael | Pair-note 411 self-consistency vs narration sample line 288 | Closed via V-K-120 fix |
+
+### Positive closure verifications (sign-off ratifications — no amendment)
+
+- **V-M-126** (Maren): V-V-46 chrome doctrine uniform-rose + lavender-inside resolution is parent-coherent — sign-off ratified
+- **V-M-127** (Maren): `#milestoneList` + `openMilestoneModal` Add-path correctly preserved in Library sub-tab item 6 — G3 preserved-IDs closure verified
+- **V-V-68** (Vela): chrome doctrine resolution closes clean (`styles.css:5015` `.track-sub-btn.active` uniform-rose verified)
+- **V-V-69** (Vela): `gotoCard()` canonical pattern at `core.js:3385` closes (reopened only via V-V-63 specific cardId — now folded)
+- **V-V-70** (Vela): trajectory ribbon 2-state collapse doctrine closes (pixel-scale carried by V-V-66 fold)
+- **V-V-71** (Vela): half-awake split-fixture doctrine closes (budget-scope carried by V-V-65 fold)
+- **V-V-72** (Vela): pediatric-prep narrated-only v1 minimum doctrine closes (screenshot-bypass carried by V-V-67 fold)
+- **V-V-73** (Vela): V-V-54 4th-cell `betweenWindow` template — all four 2×2 state-cells covered cleanly
+- **V-V-74** (Vela): V-V-62 cross-spec carry-forward — `_MILESTONE_NARRATION_TEMPLATES` genuinely separate from v3-4 typed-registry; doctrinal carve-out V-V-60 honored
+- **V-K-124** (Kael): 5-key ACTIVITY_CATEGORIES covers 100% of migrated `domain:` values across `DEFAULT_MILESTONES` + `MILESTONE_STANDARDS`
+- **V-K-125** (Kael): `_MILESTONE_NARRATION_TEMPLATES` carve-out shape-distinct from v3-4 typed registry (no `hedgeTierMap`, no `sampleFloor`)
+- **V-K-126** (Kael): engine-prep output schema consumption verified field-by-field (V-V-55 month-split + V-V-56 per-item display + V-V-57 rename; `priority` enumerated but not rendered — good)
+- **V-K-127** (Kael): `audit-activity-categories-v1.sh` scope-separation verified standalone (Scope C, distinct from engine-prep's Scope A + B)
+
+### Cipher Edict V terminal pass
+
+Folded synthesis ready for Cipher Edict V cross-cutting terminal pass.
 
 ---
 
