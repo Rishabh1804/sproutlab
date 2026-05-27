@@ -3416,6 +3416,10 @@ function renderInfoSleepBedtimeDrift() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
     if (chartEl) chartEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    // V-V-39 fold (Vela ratification 2026-05-28): si-nodata branches tier
+    // ambient per CV3-003 honest-empty-state — otherwise sort fallback
+    // defaults them to notable, jumping a no-data card above happy-path peers.
+    _setCardPriority('infoSleepBedtimeDriftCard', 'ambient');
     return;
   }
 
@@ -3532,6 +3536,10 @@ function computeSleepEfficiency() {
   return { insufficient: false, results: results.reverse(), avgEff, best, worst, trend, count: results.length };
 }
 
+// V-V-39 fold (Vela ratification 2026-05-28): every renderInfoSleep* function
+// below adds _setCardPriority(cardId, 'ambient') on its si-nodata branch so
+// no-data cards tier ambient (not notable via sort fallback). CV3-003 honest-
+// empty-state cross-cut closed within Vela's jurisdiction.
 function renderInfoSleepEfficiency() {
   const summaryEl = document.getElementById('infoSleepEfficiencySummary');
   const barsEl = document.getElementById('infoSleepEfficiencyBars');
@@ -3543,6 +3551,7 @@ function renderInfoSleepEfficiency() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
     if (barsEl) barsEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepEfficiencyCard', 'ambient');
     return;
   }
 
@@ -3768,6 +3777,7 @@ function renderInfoSleepWakeWindows() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days with nap+night data (have ' + data.count + ')</div>';
     if (timelineEl) timelineEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepWakeWindowsCard', 'ambient');
     return;
   }
 
@@ -3918,6 +3928,7 @@ function renderInfoSleepReport() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
     if (detailsEl) detailsEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepReportCard', 'ambient');
     return;
   }
 
@@ -4084,6 +4095,7 @@ function renderInfoSleepNapTransition() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days of data (have ' + data.count + ')</div>';
     if (checklistEl) checklistEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepNapTransitionCard', 'ambient');
     return;
   }
 
@@ -4208,6 +4220,7 @@ function renderInfoSleepDayNight() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' days with nap+night data (have ' + data.count + ')</div>';
     if (chartEl) chartEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepDayNightCard', 'ambient');
     return;
   }
 
@@ -4488,6 +4501,7 @@ function renderInfoSleepBestNight() {
     summaryEl.innerHTML = '<div class="si-nodata">Need ' + data.needed + ' nights of data (have ' + data.count + ')</div>';
     if (factorsEl) factorsEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepBestNightCard', 'ambient');
     return;
   }
 
@@ -4664,6 +4678,7 @@ function renderInfoSleepRegression() {
     summaryEl.innerHTML = '<div class="si-nodata">' + msg + '</div>';
     if (timelineEl) timelineEl.innerHTML = '';
     if (insightEl) insightEl.innerHTML = '';
+    _setCardPriority('infoSleepRegressionCard', 'ambient');
     return;
   }
 

@@ -4330,6 +4330,21 @@ const RECOMMENDATION_ROSTER = {
   // text (parent-legible prose); severityMessages.*.strength is the
   // engine-internal posture label — consumers MUST NEVER `.text`-substitute
   // the strength field into prose (CV3-006 honesty floor).
+  //
+  // V-K-96 design-choice (Architect ratified 2026-05-28, option (b)
+  // document):  the 3 sleep-domain rows below (nightSleepHours, napCount,
+  // contactMinutes) declare ZERO bands with `strength:'strong'`. Engine
+  // escalates to `urgent` only when `activeRange.strength === 'strong'`,
+  // so the `urgent` severityMessages.text on these rows is DEAD PROSE in
+  // v1 — escalation path is missedWeight + streakPenalty, NOT the strong-
+  // strength path. Sibling sleepAmount has the same shape (pre-existing
+  // precedent). The `urgent` prose stays declared as defense-in-depth: if
+  // a future Care-tier review concludes early-month sleep deficits warrant
+  // engine-side `urgent` (not just streak-side), promoting an early-month
+  // band to `strength:'strong'` lights up the existing prose without an
+  // additional spec roundtrip. Honesty floor preserved — no consumer can
+  // hit the dead path in v1, so no parent ever reads a band that wasn't
+  // ratified as urgent.
   // ─────────────────────────────────────────────────────────────────────
   nightSleepHours: {
     key: 'nightSleepHours',
