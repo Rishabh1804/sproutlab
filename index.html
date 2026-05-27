@@ -6214,7 +6214,20 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-trajectory-marker { stroke-width:1.8; }
 .ms-trajectory-marker[data-state="confirmed"] { fill:currentColor; stroke:none; }
 .ms-trajectory-marker[data-state="hedged"] { fill:transparent; stroke:currentColor; }
+.ms-trajectory-marker[data-action="gotoMsRow"] { cursor:pointer; }
+.ms-trajectory-marker[data-action="gotoMsRow"]:hover { stroke-width:2.4; }
+.ms-trajectory-legend { display:flex; gap:var(--sp-12); justify-content:center; padding:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-2xs); color:var(--mid); }
+.ms-traj-legend-item { display:inline-flex; align-items:center; gap:var(--sp-4); }
+.ms-traj-legend-swatch { width:12px; height:12px; }
 .ms-trajectory-label { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-4); text-align:center; }
+
+/* Brief landing-confirmation highlight for milestone rows scrolled into view
+   by trajectory ribbon tap. Fades over 1.8s; class is removed by JS. */
+.ms-row-highlight { animation: msRowHighlight 1.8s ease-out; }
+@keyframes msRowHighlight {
+  0%   { background-color: var(--surface-lav); }
+  100% { background-color: transparent; }
+}
 
 /* ── Pediatric-visit prep card (Patterns sub-tab) — return-visit surface 3 ──
    V-V-53: narrated-only v1 minimum (no copy-as-text + no PDF; deferred to R-3).
@@ -11306,11 +11319,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <div class="ms-sub-panel" id="ms-sub-library" role="tabpanel" aria-labelledby="msSubLibrary">
       <div class="grid">
 
+        <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID).
+             Architect correction post-spec ratification: hero on TOP — the
+             score card anchors the parent's view of where Ziva is overall
+             before they scan the active-evidence list below. Spec body had
+             the evidence-driven primary above the hero; live use surfaced
+             that hero-as-anchor reads better. -->
+        <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
+
         <!-- Active milestones (evidence-driven primary view; preserved ID per V-M-119 + G3) -->
         <div class="card card-daily col-full" id="msActiveMilestones" style="display:none;"></div>
-
-        <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID) -->
-        <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
 
         <!-- Domain filter chips (read from window.ACTIVITY_CATEGORIES) -->
         <div class="col-full ms-domain-filter" id="msDomainFilter"></div>
@@ -18501,6 +18519,7 @@ function init() {
     else if (action === 'submitMsBulkSelections' && typeof submitMsBulkSelections === 'function') submitMsBulkSelections();
     else if (action === 'filterMsDomain' && typeof filterMsDomain === 'function') filterMsDomain(btn);
     else if (action === 'gotoMsCorrelation' && typeof gotoMsCorrelation === 'function') gotoMsCorrelation();
+    else if (action === 'gotoMsRow' && typeof gotoMsRow === 'function') gotoMsRow(btn);
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
     else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
     else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);
@@ -26905,6 +26924,23 @@ function undoMsSuppress(target) {
   renderMilestones();
 }
 
+// Best-effort EVIDENCE_PATTERNS short-key resolver. Maps MILESTONE_STANDARDS
+// row text → canonical short key (`'sit'`, `'roll'`, ...) via the existing
+// milestoneKeywordScore() pattern (home.js:2836). Returns null when no
+// keyword matches; caller falls back to the slug so evidence still persists
+// (just won't promote via syncMilestoneStatuses's keyword-iteration loop).
+function _msResolveEvidenceKey(msText) {
+  if (!msText) return null;
+  if (typeof KEYWORD_TO_MILESTONE === 'undefined' || typeof milestoneKeywordScore !== 'function') return null;
+  let bestKw = null, bestScore = 0;
+  Object.entries(KEYWORD_TO_MILESTONE).forEach(([k, v]) => {
+    if (!v) return;
+    const score = milestoneKeywordScore(msText, k);
+    if (score > bestScore) { bestScore = score; bestKw = k; }
+  });
+  return bestKw;
+}
+
 // Suppress-map garbage collection — Maren NOTE-2 fold-close. The suppress
 // map grows monotonically without pruning; entries are { milestoneId: untilTs }
 // where untilTs is the future epochMs when suppression expires. Once now >
@@ -26940,22 +26976,37 @@ function _msRecordEvidence(milestoneId, confidence, msText, msDomain) {
   if (!milestoneId) return;
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) return;
   const dateStr = today();
-  const ts = Date.now();
+  // ts is an ISO string per the canonical writer shape at intelligence-quicklog.js:
+  // _alSlotToTimestamp returns `now.toISOString()`. Downstream readers
+  // (renderRecentEvidence sort at home.js:3442 calls `.localeCompare`) require
+  // a string; Date.now() (number) throws TypeError on .localeCompare.
+  const iso = new Date().toISOString();
+  // Best-effort EVIDENCE_PATTERNS short-key resolution. syncMilestoneStatuses
+  // iterates EVIDENCE_PATTERNS.milestone short keys (`'sit'`, `'roll'`, ...)
+  // and calls getMilestoneEvidence(keyword) which matches `ev.milestone ===
+  // keyword`. The engine-prep MILESTONE_STANDARDS row text → slug naming
+  // (e.g. 'sits-without-support-for-extended-periods') won't match those
+  // short keys → tap evidence stays orphaned + status never promotes.
+  // Resolve the row text → best short key via milestoneKeywordScore
+  // (existing pattern at home.js:2836). Falls back to the slug when no
+  // keyword maps — evidence persists for the recent-evidence feed but
+  // won't advance the in-window status pill. Known follow-up: engine-prep
+  // should emit a canonical short-key when MILESTONE_STANDARDS rows
+  // align with EVIDENCE_PATTERNS entries (v1.1 / engine pass).
+  const shortKey = _msResolveEvidenceKey(msText) || milestoneId;
   const entry = {
-    id: 'ms_v1_' + ts,
+    id: 'ms_v1_' + Date.now(),
     text: msText || '',
     type: 'observation',
-    ts: ts,
+    ts: iso,
     source: 'milestones-tab-v1-tap',
     domains: msDomain ? [msDomain] : [],
     evidence: [{
-      milestone: milestoneId,
+      milestone: shortKey,
       confidence: confidence,
       // domain on the inner evidence record — Kael NOTE-1 fold-close.
       // _alGetDomainNudge at intelligence-quicklog.js:667-671 falls back to
-      // ev.domain when EVIDENCE_PATTERNS lookup misses (short-key vs
-      // milestoneId-slug mismatch). Without this field, milestone taps
-      // silently miss domain-nudge attribution.
+      // ev.domain when EVIDENCE_PATTERNS lookup misses.
       domain: msDomain || '',
       context: 'milestones-tab-v1-tap',
     }],
@@ -27172,25 +27223,64 @@ function renderMsTrajectoryRibbon() {
   const { width: w, height: h, padding, markerR } = MS_TRAJECTORY_GEOM;
   const innerW = w - padding * 2;
   const step = merged.length > 1 ? innerW / (merged.length - 1) : 0;
+  // Count by state for the legend below the SVG (warmth signal: tells the
+  // parent what they're looking at without needing to tap individual markers).
+  let nConfirmed = 0, nHedged = 0;
   const markers = merged.map((m, i) => {
     const cx = padding + step * i;
     const cy = h / 2;
     const accent = accentByDomain[m.domain] || 'lavender';
     const color = 'var(--' + accent + ')';
+    const isConfirmed = m.state === 'confirmed';
+    if (isConfirmed) nConfirmed++; else nHedged++;
+    const msId = m.ms && m.ms.id ? m.ms.id : '';
+    const msText = m.ms && m.ms.text ? m.ms.text : '';
+    // V-V-48 fold-close: markers are tappable; tap → gotoCard('track',
+    // 'milestoneRow_'+id) navigates to the row on the Library sub-tab.
+    // SVG <title> child provides the native hover/long-press tooltip.
+    // Confirmed markers have data-ms-id (id known); not-yet/practicing
+    // engine-derived items may lack id and render non-tappable (no
+    // data-action) so the parent isn't promised navigation that won't work.
     // HR-2 carve-out (Maren NOTE-3 close): inline style passes a CSS token
     // through `color` to power the `currentColor` reference in the marker's
-    // CSS rule (`.ms-trajectory-marker[data-state="confirmed"] { fill:currentColor }`).
-    // The alternative — 5 per-domain CSS rules duplicating the registry
-    // accent values — is exactly the parallel-table failure-mode the 9th
-    // audit gate exists to prevent. Registry → currentColor pass-through
-    // keeps ACTIVITY_CATEGORIES as the single source of truth for accent.
-    // Mirrors the v3-6 _setCardPriority collapse-machinery-mirror precedent.
-    return '<circle class="ms-trajectory-marker" data-state="' + (m.state === 'confirmed' ? 'confirmed' : 'hedged')
-      + '" cx="' + cx + '" cy="' + cy + '" r="' + markerR + '" style="color:' + color + '"/>';
+    // CSS rule. Registry → currentColor pass-through keeps ACTIVITY_CATEGORIES
+    // as the single source of truth for accent (5-rule alternative would
+    // duplicate the registry in CSS — the failure-mode the 9th gate prevents).
+    const tappable = msId ? ' data-action="gotoMsRow" data-ms-id="' + escHtml(msId) + '"' : '';
+    const titleEl = msText ? '<title>' + escHtml(msText) + '</title>' : '';
+    return '<circle class="ms-trajectory-marker" data-state="' + (isConfirmed ? 'confirmed' : 'hedged')
+      + '"' + tappable
+      + ' cx="' + cx + '" cy="' + cy + '" r="' + markerR + '" style="color:' + color + '">'
+      + titleEl + '</circle>';
   }).join('');
+  // Legend + caption — give the parent the visual key without a tap.
+  const legend = '<div class="ms-trajectory-legend">'
+    + '<span class="ms-traj-legend-item"><svg class="ms-traj-legend-swatch" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" data-state="confirmed" style="color:var(--lavender)"/></svg> Confirmed (' + nConfirmed + ')</span>'
+    + '<span class="ms-traj-legend-item"><svg class="ms-traj-legend-swatch" viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.5" data-state="hedged" style="color:var(--lavender)"/></svg> Practicing or in-window (' + nHedged + ')</span>'
+    + '</div>';
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div></div>'
-    + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet">' + markers + '</svg>'
-    + '<div class="ms-trajectory-label">' + escHtml(String(merged.length)) + ' milestones on Ziva\'s timeline</div>';
+    + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Milestone trajectory: ' + nConfirmed + ' confirmed, ' + nHedged + ' practicing or in-window">' + markers + '</svg>'
+    + legend
+    + '<div class="ms-trajectory-label">' + escHtml(String(merged.length)) + ' milestones on Ziva\'s timeline. Tap a confirmed marker to jump to the milestone.</div>';
+}
+
+// Trajectory marker tap → switch to Library sub-tab + scroll to the row.
+// V-V-48 contract: gotoCard pattern at core.js:3385 anchors by element id.
+// Library sub-tab must be active before scrollIntoView for the row to be
+// visible (the panel is display:none when inactive).
+function gotoMsRow(target) {
+  const msId = target && target.dataset && target.dataset.msId;
+  if (!msId) return;
+  // Ensure Library sub-tab is active before scroll-into-view
+  const fakeTarget = { dataset: { msSub: 'library' } };
+  switchMsSub(fakeTarget);
+  const row = document.getElementById('milestoneRow_' + msId);
+  if (row && typeof row.scrollIntoView === 'function') {
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Brief highlight class for visual landing-confirmation; CSS animates the fade.
+    row.classList.add('ms-row-highlight');
+    setTimeout(() => row.classList.remove('ms-row-highlight'), 1800);
+  }
 }
 
 // Pediatric-visit prep card (Patterns sub-tab; return-visit surface 3) —
@@ -27216,7 +27306,10 @@ function renderMsPediatricPrep() {
     : [];
   allEntries.forEach(a => {
     if (!a) return;
-    const ts = (typeof a.ts === 'number') ? a.ts : new Date(a.timestamp || 0).getTime();
+    // a.ts is an ISO string per canonical entry shape (intelligence-quicklog.js:262).
+    // Cover both shapes defensively (number-ts legacy + string-ts canonical).
+    const ts = (typeof a.ts === 'number') ? a.ts
+      : (a.ts ? new Date(a.ts).getTime() : new Date(a.timestamp || 0).getTime());
     if (!ts || (now - ts) > thirtyDayMs) return;
     const evidenceArr = Array.isArray(a.evidence) ? a.evidence : (a.milestone ? [{ milestone: a.milestone }] : []);
     evidenceArr.forEach(ev => {
@@ -27373,8 +27466,12 @@ function renderMilestoneList() {
     const avgPct = items.length > 0 ? Math.round(items.reduce((s, m) => s + (MS_STAGE_META[m.status]?.pct || 0), 0) / items.length) : 0;
     const catId = 'ms-cat-' + cat;
 
+    // Wrapping section carries data-domain="<key>" so the Library sub-tab's
+    // Domain Filter chips (filterMsDomain) can toggle visibility per category
+    // via the .ms-domain-hidden class. Without this attribute, the filter
+    // query selector finds no targets and the chip taps appear inert.
     html += `
-      <div>
+      <div class="ms-cat-section" data-domain="${cat}">
         <div class="ms-cat-card ${cat}" id="${catId}" data-action="toggleMsCat" data-arg="${cat}">
           <div class="ms-cat-top">
             <div class="ms-cat-icon">${meta.icon}</div>
@@ -27461,8 +27558,13 @@ function renderMilestoneList() {
         }
       }
 
+      // V-V-48 carry-watch closure: id="milestoneRow_<id>" enables the
+      // trajectory ribbon tap → gotoCard('track', 'milestoneRow_'+id) cross-
+      // link to land at the specific milestone row. Pre-IMPL the ids were
+      // absent; the cross-link would scroll to the tab top, not the row.
+      const _msRowId = m.id ? `milestoneRow_${m.id}` : '';
       html += `
-          <div class="milestone-item ${cls}" data-ms-idx="${m._i}">
+          <div class="milestone-item ${cls}" data-ms-idx="${m._i}"${_msRowId ? ` id="${_msRowId}"` : ''}>
             <div class="ms-top-row">
               <div class="milestone-check">${stageMeta.icon}</div>
               <div class="milestone-text">
