@@ -1,5 +1,5 @@
 # Spec Iteration Process — From Draft to Build-Ready
-**Version:** 1.0 · **Created:** 6 April 2026 · **Generalized:** 9 April 2026
+**Version:** 1.1 · **Created:** 6 April 2026 · **Generalized:** 9 April 2026 · **Updated:** 27 May 2026 (Pass 0 scribe-scout pre-pass + Option C two-spec sequence pattern)
 **Origin:** Developed during SproutLab's Today So Far spec (8 iterations, ~35 issues found)
 **Scope:** General-purpose — applies to any project in this library
 
@@ -47,11 +47,33 @@ Not all specs need the same rigor. The type determines which passes to emphasize
 
 ---
 
-## 2. The Eight Passes
+## 2. The Eight Passes (+ Pass 0 for substrate-touching specs)
 
 One spec. One reviewer. Eight passes. Each pass has a different lens — moving from structural decisions down to data-level edge cases. Each pass has a diminishing return curve. Passes 1–4 find structural and correctness issues. Passes 5–6 find design and integration issues. Passes 7–8 find cosmetic issues and confirm completion.
 
 **The key discipline:** Each pass has a single lens. Don't try to catch bugs during the concept pass. Don't question the concept during the consistency pass. The narrowing focus is what makes each pass productive.
+
+---
+
+### Pass 0: Scribe-scout codebase reconnaissance (substrate-touching specs only)
+
+**Lens:** Does the spec cite the codebase as it IS, not as it is remembered?
+
+**Trigger:** the spec touches existing primitives, KEYS families, registries, render functions, or `template.html` ids.
+
+**Procedure:** before any spec body is drafted, deploy `scribe-scout` (canon-proc-006) with narrow reconnaissance tasks:
+- Enumerate every cited identifier with its `file:line` location
+- Grep-verify every storage-shape claim live (no remembered shapes)
+- Trace every sync claim to actual `SYNC_KEYS` + `_postReceive*` registrations (or document its absence)
+- Enumerate every `template.html` id the spec references; verify each exists at the named line
+
+**What this pass catches:** Phantom identifiers, wrong field-names, false sync claims, missing surfaces, drift between remembered codebase and current codebase. Closes the "spec-against-memory" failure mode at draft-time, not at canon-cc-008 chain-time.
+
+**Outcome:** Every claim in the spec body is grounded in a `file:line` citation. The spec body then drafts against verified primitives.
+
+**Origin:** SproutLab closed PR #147 (2026-05-27) surfaced 9 BLOCKING + 19 NOTE from spec-against-memory authoring. Architect-ratified correction: scribe-scout BEFORE spec body.
+
+**Migration variant:** N/A — migrations are scope-bounded transformations of existing patterns; Pass 0 is for spec drafts that propose new primitives or consume existing ones.
 
 ---
 
@@ -191,15 +213,29 @@ One spec. One reviewer. Eight passes. Each pass has a different lens — moving 
 ## 3. The Pattern
 
 ```
-Pass 1:  Concept level     — "Is this the right thing?"
-Pass 2:  Data flow level   — "Can this be built?"
-Pass 3:  Integration level — "Where does it collide?"
-Pass 4:  Bug level         — "What breaks today?"
-Pass 5:  Drift level       — "What breaks in 3 months?"
-Pass 6:  Builder level     — "What makes someone stop and ask?"
-Pass 7:  Consistency level — "Does it agree with itself?"
-Pass 8:  Completion level  — "Am I done?"
+Pass 0:  Reconnaissance     — "Is the cited codebase the actual codebase?"  [substrate-touching specs only]
+Pass 1:  Concept level      — "Is this the right thing?"
+Pass 2:  Data flow level    — "Can this be built?"
+Pass 3:  Integration level  — "Where does it collide?"
+Pass 4:  Bug level          — "What breaks today?"
+Pass 5:  Drift level        — "What breaks in 3 months?"
+Pass 6:  Builder level      — "What makes someone stop and ask?"
+Pass 7:  Consistency level  — "Does it agree with itself?"
+Pass 8:  Completion level   — "Am I done?"
 ```
+
+### Option C two-spec sequence (when one spec spans engine + consumer)
+
+If the proposed spec carries **both** engine-substrate concerns (touches primitives / KEYS / registries / sync) AND surface-consumer concerns (touches render functions / `template.html` ids), the eight passes still apply — but consider splitting into TWO specs:
+
+1. **Engine substrate spec first** — primary Governor on the engine layer. Surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gates ratified at the substrate level.
+2. **Surface consumer spec second** — primary Governor on the consumer; reads pre-ratified substrate. May add a second audit gate for consumer-side concerns (scope-separation).
+
+**Precedent:** SproutLab v3-3 → sleep-arc-3 (PR #137 spec; PR #143 IMPL — first v3-3 consumer); milestone-engine-prep-v1 → milestones-tab-v1 (PR #148 + PR #149 — Option C ratification).
+
+**Rationale:** authoring against a stable substrate eliminates the "spec-against-memory" surface area; the consumer spec ratifies against verified primitives, not remembered ones.
+
+**Sequencing:** the consumer spec MUST cite the engine-prep merge sha as ratified before it merges. The IMPL sequence mirrors: engine IMPL first (may itself split via canon-cc-008 PR-A/PR-B per V-K-113 pattern), then consumer IMPL.
 
 ---
 
@@ -259,6 +295,7 @@ Before declaring a spec build-ready, verify:
 
 | Version | Date | Change |
 |---------|------|--------|
+| 1.1 | 27 May 2026 | Added Pass 0 (scribe-scout codebase reconnaissance for substrate-touching specs) after closed PR #147 surfaced 9 BLOCKING + 19 NOTE from spec-against-memory authoring. Added Option C two-spec sequence pattern (engine substrate first + surface consumer second) — precedent: v3-3 → sleep-arc-3 + milestone-engine-prep → milestones-tab. |
 | 1.0 | 9 Apr 2026 | Generalized from SproutLab-specific version. Added spec types (feature, architecture, migration). Added standard spec sections. Added migration pass variants. Clarified QA_PROCESS boundary. |
 
 ---

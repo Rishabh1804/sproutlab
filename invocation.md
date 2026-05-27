@@ -1,9 +1,9 @@
 # invocation.md — Companion Invocation Reference
 
-**Version:** 1.1 (canon-gen-001 expansion — Vela seated)
-**Updated:** 23 May 2026
+**Version:** 1.2 (Option C two-spec sequence + scribe-scout-before-spec-body + Lyra fold-authority register-flip patterns ratified)
+**Updated:** 2026-05-27 (PM — milestones arc)
 **Scope:** SproutLab Province — how to summon the seated Companions and the Scribe Worker Tier
-**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-gen-001 (generational expansion clause; Vela first ratification)
+**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-cc-027 (spec amendment signing chain) · canon-gen-001 (generational expansion clause; Vela first ratification)
 
 ---
 
@@ -268,10 +268,62 @@ harness, AGENTS.md's plain rules apply — without the Companion roster.
 
 The HTML is data-driven — refreshing it is editing the `NODES` constant inline, not a render rewrite. Edits typically span 5–15 lines per session.
 
-## 10. References
+## 10. Spec-authoring patterns (ratified 2026-05-27 PM after closed PR #147 chain)
+
+The closed PR #147 chain surfaced a fatal failure mode — authoring a substrate-touching spec from the codebase as remembered — and the Architect ratified three patterns that close it by construction.
+
+### 10.1 Scribe-scout-before-spec-body pattern
+
+**Trigger:** any spec that touches existing primitives, KEYS families, registries, render functions, or `template.html` ids.
+
+**Procedure:** before the spec body lands, deploy `scribe-scout` for codebase reconnaissance with narrow tasks:
+- enumerate every cited identifier with its `file:line` location
+- grep-verify every storage shape claim live (no remembered shapes)
+- trace every sync claim to actual `SYNC_KEYS` + `_postReceive*` registrations (or its absence)
+- enumerate every `template.html` id the spec references; verify each exists
+
+**Rationale:** the closed PR #147 9 BLOCKING findings root-cause to memory-authoring: phantom `_predictMilestoneWindow` + `MILESTONES_DB` identifiers, wrong field-name (`cat:` vs `domain:`), false sync claim, 5 unmapped surfaces. Scribe-scout reconnaissance catches each of these at draft-time, not at canon-cc-008 chain-time.
+
+**Authority:** canon-proc-006 (Scribe Worker Tier) + Architect directive 2026-05-27 (Option C ratification).
+
+### 10.2 Option C two-spec sequence pattern
+
+**Trigger:** when a single spec would carry both engine-substrate concerns and surface-consumer concerns (the substrate touches one Governor's region; the consumer touches another's).
+
+**Procedure:** split into two specs:
+1. **Engine substrate spec** first — primary Governor on the engine layer (Kael for `intelligence-*`/`core`/`data`/`sync`; Maren for `home`/`diet`/`medical`-side primitives); surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gate ratified at the substrate level.
+2. **Surface consumer spec** second — primary Governor on the consumer; reads pre-ratified substrate. May add a second audit gate for consumer-side concerns (scope-separation per `audit-no-personalised-prediction-v1.sh` + `audit-activity-categories-v1.sh` example).
+
+**Sequencing:** the consumer spec MUST cite the engine-prep merge sha as ratified before it merges. The IMPL sequence mirrors: engine IMPL first (may itself split via canon-cc-008 PR-A/PR-B per V-K-113 pattern), then consumer IMPL.
+
+**Precedent:** v3-3 → sleep-arc-3/scoring-s-2 (PR #137 spec; PR #143 IMPL — first v3-3 consumer); milestone-engine-prep-v1 → milestones-tab-v1 (PR #148 + PR #149).
+
+**Rationale:** authoring against a stable substrate eliminates the "spec-against-memory" surface area; the consumer spec ratifies against verified primitives, not remembered ones.
+
+**Authority:** Architect ratification 2026-05-27 (*"Do the two spec sequence, run the chain after engine prep before moving on to milestones tab"*).
+
+### 10.3 Lyra fold-authority register-flip pattern
+
+**Trigger:** when the Architect explicitly grants Lyra fold-authority in advance of a canon-cc-008 chain run on a docs-only spec PR — typically with narrow scope ("don't defer issues directly related to milestones tab").
+
+**Procedure:** after the three Governors return their audits + Lyra synthesizes a single fold-matrix, Lyra applies all in-scope BLOCKING + NOTE folds inline to the spec body without Architect roundtrip. Cipher Edict V terminal pass verifies:
+- canon-cc-027 spec amendment authority NOT exceeded (no canon entries silently amended; no registry contracts silently overwritten outside spec body)
+- Lyra fold-authority scoped to the Architect's stated topic — out-of-scope items escalate normally
+
+**Output:** the synth-folded spec body carries a §"Lyra synth-fold register" enumerating every fold with (a) Governor-id (b) BLOCKING/NOTE tier (c) fold resolution. The register becomes audit-trail at merge time.
+
+**Authority:** canon-cc-022 (register-flip pattern) + Architect-explicit fold-authority grant.
+
+**Anti-pattern:** silence is not a waiver. Without an explicit grant, Lyra surfaces BLOCKING findings to the Architect for fold-or-carry decision; Architect rules.
+
+---
+
+## 11. References
 
 - CLAUDE.md — §Companion-Set Invocation Surface, §QA Chain — Mandatory Pre-Merge Gate
 - PERSONA_REGISTRY.md — roster, governance hierarchy, jurisdictions, the 30K Rule
 - docs/QA_GATE_SPEC.md — Gate 2.5, Governor Audit Chain
-- Canon: cc-022 (artifact test) · cc-026 §Per-Province-Layout (deploy layout) · cc-008 (QA chain) · proc-006 + Book II Article 3-bis (Scribe Worker Tier) · cc-027 (spec amendment signing chain) · decree-0019 (Scribe serving-voice carve-out)
+- docs/BUGS.md §Operational Rules — failure-mode catalogue + closures
+- Canon: cc-022 (artifact test + register-flip pattern) · cc-026 §Per-Province-Layout (deploy layout) · cc-008 (QA chain) · proc-006 + Book II Article 3-bis (Scribe Worker Tier) · cc-027 (spec amendment signing chain) · decree-0019 (Scribe serving-voice carve-out) · gen-001 (generational expansion clause — Vela)
 - Spec bodies: `.claude/agents/*.md`, `.claude/skills/*.md` — the Province mirrors
+- Pattern precedents: PR #137/#143 (v3-3 → sleep-arc-3 two-spec sequence) · PR #148/#149 (milestone-engine-prep → milestones-tab two-spec sequence — Option C ratification)

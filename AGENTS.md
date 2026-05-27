@@ -1,7 +1,7 @@
 # AGENTS.md
 **Scope:** Cross-tool agent instructions (Claude Code, OpenAI Codex CLI, Gemini CLI)
 **Author:** Rishabh Jain
-**Updated:** 22 May 2026
+**Updated:** 27 May 2026 (post-canon-gen-001 + Scribe Worker Tier ratification)
 
 ---
 
@@ -12,7 +12,7 @@ Three PWA projects sharing a common architectural pattern: split-file HTML conca
 | Project | Lines | Modules | Persona | Domain |
 |---------|-------|---------|---------|--------|
 | Codex | 5,300 | 8 | Aurelius | Project tracking / RPG |
-| SproutLab | 63,611 | 11 | Lyra | Baby development tracker |
+| SproutLab | 67,442 | 17 (post-intelligence-* split) | Lyra | Baby development tracker |
 | SEP Invoicing | 7,100 | 22 | Solara | Industrial invoicing |
 
 ## Non-Negotiable Rules
@@ -25,7 +25,14 @@ Three PWA projects sharing a common architectural pattern: split-file HTML conca
 6. **git --no-pager** for all git commands (Termux terminal width constraint).
 7. **Spec before build.** Complex features use the 8-pass SPEC_ITERATION_PROCESS. The spec is build-ready when the builder never makes an undocumented decision.
 8. **QA until cosmetic.** Post-build multi-round QA. Continue until only cosmetic bugs remain.
-9. **SproutLab — Governor audit chain before merge (canon-cc-008).** Every Capital change (edit under `split/`) clears the Governor→synthesis→Cipher chain before its PR leaves draft or merges: Maren audits Care files, Kael audits Intelligence files, both review shared modules, Lyra synthesizes, Cipher runs the Edict V pass. The `/code-review` skill does NOT discharge it. See CLAUDE.md §QA Chain and docs/QA_GATE_SPEC.md Gate 2.5.
+9. **SproutLab — Governor audit chain before merge (canon-cc-008; post-canon-gen-001 routing).** Every Capital change (edit under `split/`) clears the Governor→synthesis→Cipher chain before its PR leaves draft or merges. Routing by diff:
+   - touches `home.js` / `diet.js` / `medical.js` → **Maren** (Care)
+   - touches `intelligence-isl.js` / `intelligence-qa.js` / `intelligence-qa-handlers.js` / `intelligence-illness.js` / `intelligence-caretickets.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` → **Kael** (Intelligence engine)
+   - touches `intelligence-cards.js` / `intelligence-quicklog.js` → **Vela** (Surfacing render — canon-gen-001 second-generation; seated 2026-05-23)
+   - touches `styles.css` / `template.html` → **all three** in sequential triple-jurisdiction (rotation Maren → Kael → Vela, first-Governor by heaviest-touched Region)
+   - Lyra synthesizes; Cipher runs the Edict V cross-cutting final-pass. The `/code-review` skill does NOT discharge the gate. See CLAUDE.md §QA Chain and docs/QA_GATE_SPEC.md Gate 2.5.
+10. **Scribe Worker Tier (canon-proc-006, Book II Art. 3-bis).** Senior Companions may command four task-specialised junior subagents — `scribe-scout` (reconnaissance), `scribe-draft` (composition), `scribe-verify` (mechanical checks), `scribe-record` (chronicling) — to parallelize work. Scribes are alike at birth, absorb the voice of whoever summons them, and CANNOT commit / push / open or merge PRs / ratify / hold canonical voice / summon another Scribe. The commanding Companion reviews every return and owns every committed act. See invocation.md §6.
+11. **Spec-against-memory closure (2026-05-27).** Substrate-touching specs MUST be authored against scribe-scout codebase reconnaissance, not against the codebase as remembered. Closed PR #147 demonstrated the failure mode (9 BLOCKING + 19 NOTE from phantom identifiers + wrong field-names + false sync claims). When a single spec carries both engine-substrate and surface-consumer concerns, use the **Option C two-spec sequence** pattern (invocation.md §10.2). See docs/BUGS.md §Operational Rules for failure-mode catalogue.
 
 ## Build Commands
 
