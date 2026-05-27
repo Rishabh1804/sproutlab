@@ -4721,7 +4721,7 @@ function renderActivities() {
   label.textContent = `${activities.length} activities · ${mo} months`;
 
   // Group by type
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:    { icon:zi('run'), label:'Motor' },
     sensory:  { icon:zi('palette'), label:'Sensory' },
     language: { icon:zi('chat'), label:'Language' },
@@ -4820,7 +4820,7 @@ function renderUpcomingMilestones() {
     pending:     { icon:zi('target'), label:'Coming Up', desc:'to watch for' },
     in_progress: { icon:zi('target'),  label:'In Progress', desc:'started' },
   };
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:     { icon:zi('run'), label:'Motor' },
     language:  { icon:zi('chat'), label:'Language' },
     social:    { icon:zi('handshake'), label:'Social' },
@@ -7678,7 +7678,7 @@ function renderInfoMilestoneVelocity() {
     // maturity-depth from the within-region density.
     const CATS = ['motor', 'social', 'language', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const STATUSES = ['emerging', 'practicing', 'consistent', 'mastered'];
-    const CAT_HUE = {
+    const CAT_HUE = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor:     'var(--tc-sage)',
       social:    'var(--tc-lav)',
       language:  'var(--tc-sky)',

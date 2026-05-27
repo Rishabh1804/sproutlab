@@ -168,7 +168,7 @@ function _alInjectSlotDurContainers() {
   _alSlotsInjected = true;
 }
 
-const AL_DOMAIN_META = {
+const AL_DOMAIN_META = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
   motor:     { icon: zi('run'), label: 'Motor' },
   language:  { icon: zi('chat'), label: 'Language' },
   social:    { icon: zi('handshake'), label: 'Social' },

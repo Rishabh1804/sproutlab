@@ -6178,9 +6178,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-tap-btn[data-action-tap="not-yet"] { color:var(--mid); }
 .ms-tap-btn-icon { font-size:var(--icon-sm); }
 
-/* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ── */
+/* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ──
+   The OUTER card (#msBulkGrid) toggles only via render-time visibility (no
+   items → display:none). The chevron in the header toggles the INNER
+   #msBulkGridBody via aria-expanded — so the header (chevron + title)
+   stays reachable for re-open. */
 .ms-bulk-grid-card { padding:var(--sp-12); }
 .ms-bulk-grid-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-8); }
+.ms-bulk-grid-body { overflow:hidden; transition:max-height var(--ease-fast); }
+.ms-bulk-grid-body[aria-expanded="false"] { max-height:0; visibility:hidden; }
+.ms-bulk-grid-body[aria-expanded="true"]  { max-height:none; visibility:visible; }
 .ms-bulk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:var(--sp-6); }
 .ms-bulk-chip { padding:var(--sp-6) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; font-size:var(--fs-xs); display:flex; align-items:center; gap:var(--sp-4); }
 .ms-bulk-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); color:var(--tc-lav); font-weight:600; }
@@ -6191,6 +6198,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-domain-filter { display:flex; gap:var(--sp-4); flex-wrap:wrap; padding:var(--sp-4) 0; }
 .ms-domain-chip { padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); font-size:var(--fs-xs); cursor:pointer; }
 .ms-domain-chip[data-active="true"] { font-weight:700; }
+
+/* Domain filter visibility class — class-driven hide for milestoneList items
+   per HR-2 (no inline style mutation). filterMsDomain toggles this class on
+   [data-domain] children of #milestoneList. */
+.ms-domain-hidden { display:none; }
 
 /* ── Trajectory ribbon (Patterns sub-tab) — return-visit surface 2 ──
    V-V-49 collapse: 2 visual states (filled=confirmed, outlined=hedged).
@@ -26479,14 +26491,21 @@ function renderMilestones() {
   // The v1 renderers populate the new IDs added in the 3-sub-tab scaffold;
   // existing renderers above continue to populate the preserved IDs per
   // V-M-100 + V-M-119 + G3 (preserved-IDs floor for backward-compat).
-  try { renderMsTodayHeader(); } catch (e) {}
-  try { renderMsActivityLevelStrip(); } catch (e) {}
-  try { renderMsInWindowProposals(); } catch (e) {}
-  try { renderMsBulkGrid(); } catch (e) {}
-  try { renderMsDomainFilter(); } catch (e) {}
-  try { renderMsTrajectoryRibbon(); } catch (e) {}
-  try { renderMsPediatricPrep(); } catch (e) {}
-  try { renderMsCorrelationTeaser(); } catch (e) {}
+  //
+  // Isolation: each renderer is invoked in a per-iteration try so that one
+  // surface throwing doesn't poison the rest; caught errors are logged
+  // (console.warn — never swallowed) so dev-mode QA + canon-cc-008 chain
+  // can spot regressions. The pre-existing renderers above are intentionally
+  // NOT wrapped — they're production-stable and a throw should surface.
+  const _v1Renderers = [
+    renderMsTodayHeader, renderMsActivityLevelStrip, renderMsInWindowProposals,
+    renderMsBulkGrid, renderMsDomainFilter, renderMsTrajectoryRibbon,
+    renderMsPediatricPrep, renderMsCorrelationTeaser,
+  ];
+  _v1Renderers.forEach(fn => {
+    try { fn(); }
+    catch (e) { console.warn('milestones-tab-v1 render fail:', fn.name, e); }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -26507,6 +26526,34 @@ function renderMilestones() {
 // - V-V-46 uniform-rose chrome + lavender-inside (chrome doctrine)
 // - V-M-125 safetyTier in-window cap-bypass qualifier
 // ═══════════════════════════════════════════════════════════════════════
+
+// Cardinal IDs the milestones-tab-v1 surface references — promoted to
+// module-scope constants so the V-V-63 regression-guard binding stays
+// textually pinned (verify in renderMsCorrelationTeaser; consume in
+// gotoMsCorrelation). Renames to template.html require touching this
+// constant table, which makes the dependency reviewable.
+const MS_CORRELATION_TARGET_CARD = 'infoMilestoneSleepCard';
+
+// 4-tier activityLevel registry — lifted out of renderMsActivityLevelStrip
+// so any future spec extension (5 tiers, label rename, i18n) lands in one
+// place. Engine-prep KEYS.activityMeta stores { activityLevel: 1-N }.
+const MS_ACTIVITY_LEVEL_TIERS = [
+  { level: 1, label: 'Quiet',  desc: 'Sick, sleepy, low engagement' },
+  { level: 2, label: 'Calm',   desc: 'Normal day, settled play'      },
+  { level: 3, label: 'Active', desc: 'Engaged, high-output day'      },
+  { level: 4, label: 'Peak',   desc: "“Couldn't stop moving”" },
+];
+
+// Trajectory ribbon geometry constants (V-V-66: ≥9px diameter / ≥1.8px stroke
+// pixel-scale floor at 320px viewport). Lifted here so the V-V-66 contract
+// lives next to the values that enforce it. Sub-bucket cap rationale:
+// confirmed=12 / practicing=8 / not-yet=5 keeps each bucket's priority signal
+// intact post-global-cap-20-slice; sum (25) exceeds cap to leave room for
+// merge prioritization within the 20-marker budget per V-K-122.
+const MS_TRAJECTORY_GEOM = {
+  width: 320, height: 48, padding: 16, markerR: 4.5,
+  confirmedCap: 12, practicingCap: 8, notYetCap: 5, globalCap: 20,
+};
 
 // Sub-tab switcher — invoked by data-action="switchMsSub" + data-ms-sub="<key>"
 function switchMsSub(target) {
@@ -26542,51 +26589,57 @@ function renderMsTodayHeader() {
   const ageMonths = ageInfo.months || 0;
   const ageDaysRem = ageInfo.days || 0;
   // Read engine-prep in-window via _getInWindowMilestones (engagement-priority selector)
-  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : (ageMonths * 30 + ageDaysRem);
+  // _zivaAgeInDays(today()) per core.js:5969 + 6018 canonical pattern — the
+  // signature requires a dateStr; no-arg returns 0 (newborn window).
+  const ageDays = _zivaAgeInDays(today());
   let inWindow = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
       inWindow = _getInWindowMilestones(ageDays, 5, {}) || [];
     }
   } catch (e) { inWindow = []; }
-  // Recent-evidence check from existing milestones array
+  // Recent-evidence + most-recent-confirmed tracked in ONE pass with separate
+  // accumulators: mostRecentEvidenceTime is the latest of ANY stage stamp;
+  // mostRecentConfirmedMs is the latest of consistent/mastered specifically.
+  // Single-pass + decoupled trackers fix the scope bug where a recent
+  // practicing entry suppressed identification of an older confirmation.
   const now = Date.now();
   const sevenDayMs = 7 * 86400000;
   const thirtyDayMs = 30 * 86400000;
   let mostRecentConfirmedMs = null;
+  let mostRecentConfirmedTime = 0;
   let mostRecentEvidenceTime = 0;
+  // hasRegression: any consistent/mastered without evidence in REGRESSION_DAYS
+  let hasRegression = false;
   (milestones || []).forEach(m => {
-    const t = m.consistentAt || m.masteredAt || m.practicingAt || m.emergingAt;
-    if (!t) return;
-    const ts = new Date(t).getTime();
-    if (ts > mostRecentEvidenceTime) {
-      mostRecentEvidenceTime = ts;
-      if (m.status === 'consistent' || m.status === 'mastered') {
-        mostRecentConfirmedMs = m;
+    const tAny = m.consistentAt || m.masteredAt || m.practicingAt || m.emergingAt;
+    if (tAny) {
+      const ts = new Date(tAny).getTime();
+      if (ts > mostRecentEvidenceTime) mostRecentEvidenceTime = ts;
+    }
+    if (m.status === 'consistent' || m.status === 'mastered') {
+      const tConf = m.consistentAt || m.masteredAt;
+      if (tConf) {
+        const ts = new Date(tConf).getTime();
+        if (ts > mostRecentConfirmedTime) {
+          mostRecentConfirmedTime = ts;
+          mostRecentConfirmedMs = m;
+        }
+        // Regression check folded into same pass
+        const daysSince = (now - ts) / 86400000;
+        if (daysSince > 30) hasRegression = true;
       }
     }
   });
-  const hasRecent7d = (now - mostRecentEvidenceTime) <= sevenDayMs;
-  const hasRecent30d = (now - mostRecentEvidenceTime) <= thirtyDayMs;
-  // Regression-alerts honesty floor: if regression alerts present, NEVER use
-  // "quiet stretch" framing (midState). Fall through to betweenWindow or emptyState.
-  const REGRESSION_DAYS_LOCAL = (typeof REGRESSION_DAYS !== 'undefined') ? REGRESSION_DAYS : 30;
-  let hasRegression = false;
-  (milestones || []).forEach(m => {
-    if (m.status !== 'consistent' && m.status !== 'mastered') return;
-    const t = m.consistentAt || m.masteredAt;
-    if (!t) return;
-    const daysSince = (now - new Date(t).getTime()) / 86400000;
-    if (daysSince > REGRESSION_DAYS_LOCAL) hasRegression = true;
-  });
-  // Template selection per V-V-54 2x2 state-cell matrix
+  const hasRecent7d = mostRecentEvidenceTime > 0 && (now - mostRecentEvidenceTime) <= sevenDayMs;
+  const hasRecent30d = mostRecentEvidenceTime > 0 && (now - mostRecentEvidenceTime) <= thirtyDayMs;
+  // Template selection per V-V-54 2x2 state-cell matrix; regression-honesty
+  // floor (V-M-104 + V-M-121): never "quiet stretch" framing when regression
+  // alerts present.
   let templateKey;
   if (inWindow.length > 0 && hasRecent7d) {
     templateKey = 'fullData';
   } else if (inWindow.length > 0 && !hasRecent7d) {
-    // V-V-54 + V-M-104 honesty floor: if regression alerts present, do not
-    // use "quiet stretch" framing — fall through to betweenWindow if recent
-    // confirmation exists, else emptyState.
     templateKey = hasRegression ? (hasRecent30d ? 'betweenWindow' : 'emptyState') : 'midState';
   } else if (inWindow.length === 0 && hasRecent30d) {
     templateKey = 'betweenWindow';
@@ -26595,7 +26648,9 @@ function renderMsTodayHeader() {
   }
   const tpl = templates[templateKey];
   if (!tpl || !tpl.passage) { el.innerHTML = ''; return; }
-  // Variable substitution — escHtml at all interpolation boundaries (HR-4)
+  // Variable substitution — escHtml at all interpolation boundaries (HR-4).
+  // Single-regex callback replaces ALL occurrences of each placeholder; a
+  // template author who reuses a placeholder twice no longer leaks the literal.
   const inWindowList = inWindow.map(it => escHtml(it.text || '')).join(', ');
   const recentConfirmedText = mostRecentConfirmedMs
     ? escHtml(mostRecentConfirmedMs.text || 'a milestone')
@@ -26603,23 +26658,29 @@ function renderMsTodayHeader() {
   const lastEvidenceText = mostRecentConfirmedMs
     ? escHtml(mostRecentConfirmedMs.text || '')
     : '';
-  const lastEvidenceRelative = mostRecentEvidenceTime > 0
-    ? escHtml(_msRelativeTime(mostRecentEvidenceTime))
-    : '';
-  const passage = tpl.passage
-    .replace('{ageMonths}', String(ageMonths))
-    .replace('{ageDaysRemainder}', String(ageDaysRem))
-    .replace('{inWindowList}', inWindowList || 'no in-window milestones')
-    .replace('{recentConfirmedMilestone}', recentConfirmedText)
-    .replace('{lastEvidenceText}', lastEvidenceText)
-    .replace('{lastEvidenceRelative}', lastEvidenceRelative);
+  // Use mostRecentConfirmedTime for the betweenWindow template — that's the
+  // template's contract ({recentConfirmedMilestone} confirmed {lastEvidenceRelative}).
+  const lastEvidenceRelative = mostRecentConfirmedTime > 0
+    ? escHtml(_msRelativeTime(mostRecentConfirmedTime))
+    : (mostRecentEvidenceTime > 0 ? escHtml(_msRelativeTime(mostRecentEvidenceTime)) : '');
+  const vars = {
+    ageMonths: String(ageMonths),
+    ageDaysRemainder: String(ageDaysRem),
+    inWindowList: inWindowList || 'no in-window milestones',
+    recentConfirmedMilestone: recentConfirmedText,
+    lastEvidenceText: lastEvidenceText,
+    lastEvidenceRelative: lastEvidenceRelative,
+  };
+  const passage = tpl.passage.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
   el.innerHTML = '<div class="ms-today-passage">' + passage + '</div>';
 }
 
-// Helper: relative-time formatter (no engine-internal labels per V-K-120)
+// Helper: relative-time formatter (no engine-internal labels per V-K-120).
+// Future-clock guard: clock-skewed devices or NTP drift can produce ts > now.
+// Clamp diffMs to 0 so prose never renders "-2 days ago".
 function _msRelativeTime(ts) {
   if (!ts) return '';
-  const diffMs = Date.now() - ts;
+  const diffMs = Math.max(0, Date.now() - ts);
   const diffDays = Math.floor(diffMs / 86400000);
   if (diffDays === 0) return 'today';
   if (diffDays === 1) return 'yesterday';
@@ -26635,20 +26696,19 @@ function _msRelativeTime(ts) {
 function renderMsActivityLevelStrip() {
   const el = document.getElementById('msActivityLevelStrip');
   if (!el) return;
-  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  // today() is the canonical HR-12-safe local-date helper (core.js:3713,
+  // hoisted via concat order). No local shadow — earlier draft used
+  // `const today = (typeof today === 'function') ? today() : ...` which
+  // triggered TDZ ReferenceError (typeof on a block-scoped const in its
+  // own initializer throws per ES2015 spec).
+  const todayStr = today();
   let currentLevel = null;
   try {
     if (typeof _getActivityLevelToday === 'function') {
-      currentLevel = _getActivityLevelToday(today);
+      currentLevel = _getActivityLevelToday(todayStr);
     }
   } catch (e) { currentLevel = null; }
-  const tiers = [
-    { level: 1, label: 'Quiet',  desc: 'Sick, sleepy, low engagement' },
-    { level: 2, label: 'Calm',   desc: 'Normal day, settled play'      },
-    { level: 3, label: 'Active', desc: 'Engaged, high-output day'      },
-    { level: 4, label: 'Peak',   desc: '"Couldn\'t stop moving"'       },
-  ];
-  const chips = tiers.map(t => {
+  const chips = MS_ACTIVITY_LEVEL_TIERS.map(t => {
     const selected = (currentLevel === t.level);
     return '<button class="ms-al-chip" data-selected="' + (selected ? 'true' : 'false')
       + '" data-action="setMsActivityLevel" data-level="' + t.level + '"'
@@ -26665,16 +26725,16 @@ function renderMsActivityLevelStrip() {
 // engine-prep _setActivityLevelToday and re-renders the strip.
 function setMsActivityLevel(target) {
   const level = parseInt(target && target.dataset && target.dataset.level, 10);
-  if (!level || level < 1 || level > 4) return;
-  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  if (!level || level < 1 || level > MS_ACTIVITY_LEVEL_TIERS.length) return;
+  const todayStr = today();
   try {
     if (typeof _setActivityLevelToday === 'function') {
-      _setActivityLevelToday(today, level);
+      _setActivityLevelToday(todayStr, level);
     }
-  } catch (e) {}
+  } catch (e) { console.warn('setMsActivityLevel write failed:', e); }
   renderMsActivityLevelStrip();
-  // Today header may shift state — re-render
-  try { renderMsTodayHeader(); } catch (e) {}
+  // Today header may shift state — re-render (single try-with-warn)
+  try { renderMsTodayHeader(); } catch (e) { console.warn('renderMsTodayHeader fail:', e); }
 }
 
 // In-window milestone proposals (Primitive 2) — engine-prep
@@ -26686,7 +26746,8 @@ function setMsActivityLevel(target) {
 function renderMsInWindowProposals() {
   const el = document.getElementById('msInWindowProposals');
   if (!el) return;
-  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+  // _zivaAgeInDays(today()) per core.js canonical pattern; no-arg returns 0.
+  const ageDays = _zivaAgeInDays(today());
   let items = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
@@ -26732,8 +26793,17 @@ function _renderMsInWindowCard(item) {
     'not-yet':  'Not yet',
   }[evidenceStatus] || 'Not yet';
   const milestoneIdEsc = escHtml(item.milestoneId || '');
+  const msTextEsc = escHtml(item.text || '');
+  const msDomainEsc = escHtml(item.domain || 'motor');
+  // Tap buttons carry the full context (id + text + domain) the canonical
+  // activityLog write shape needs: { domains: [domain], evidence: [{milestone}] }.
+  // Without these, _msRecordEvidence cannot construct the entry shape that
+  // existing readers (renderCategoryWheels, ISL accessors) consume.
+  const tapDataAttrs = ' data-ms-id="' + milestoneIdEsc + '"'
+    + ' data-ms-text="' + msTextEsc + '"'
+    + ' data-ms-domain="' + msDomainEsc + '"';
   return '<div class="ms-inwindow-card" data-safety-tier="' + (safetyTier ? 'true' : 'false')
-    + '" data-domain="' + escHtml(item.domain || 'motor') + '">'
+    + '" data-domain="' + msDomainEsc + '">'
     + '<div class="ms-inwindow-head">'
     + '<span class="ms-inwindow-icon">' + (icon || zi('star')) + '</span>'
     + '<div class="ms-inwindow-body">'
@@ -26743,11 +26813,11 @@ function _renderMsInWindowCard(item) {
     + '<div class="mt-4"><span class="ms-status-pill" data-status="' + escHtml(evidenceStatus) + '">' + escHtml(statusLabel) + '</span></div>'
     + '</div></div>'
     + '<div class="ms-tap-targets">'
-    + '<button class="ms-tap-btn" data-action-tap="confirm" data-action="confirmMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Saw it today">'
+    + '<button class="ms-tap-btn" data-action-tap="confirm" data-action="confirmMsInWindow"' + tapDataAttrs + ' title="Saw it today">'
     + '<span class="ms-tap-btn-icon">' + zi('check') + '</span><span>Saw it today</span></button>'
-    + '<button class="ms-tap-btn" data-action-tap="practicing" data-action="practicingMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Practicing">'
+    + '<button class="ms-tap-btn" data-action-tap="practicing" data-action="practicingMsInWindow"' + tapDataAttrs + ' title="Practicing">'
     + '<span class="ms-tap-btn-icon">' + zi('trending-flat') + '</span><span>Practicing</span></button>'
-    + '<button class="ms-tap-btn" data-action-tap="not-yet" data-action="notYetMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Not yet">'
+    + '<button class="ms-tap-btn" data-action-tap="not-yet" data-action="notYetMsInWindow"' + tapDataAttrs + ' title="Not yet">'
     + '<span class="ms-tap-btn-icon">' + zi('arrow-right') + '</span><span>Not yet</span></button>'
     + '</div>'
     + '</div>';
@@ -26773,32 +26843,40 @@ function _msWindowBandLabel(win) {
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
+//
+// Each handler reads ms-id + ms-text + ms-domain from the tap-button dataset
+// so _msRecordEvidence can construct the canonical activityLog entry shape
+// (which existing readers consume — renderCategoryWheels reads entry.domains;
+// renderRecentEvidence reads entry.text + entry.evidence).
 function confirmMsInWindow(target) {
-  const msId = target && target.dataset && target.dataset.msId;
-  if (!msId) return;
-  _msRecordEvidence(msId, 'high');
+  if (!target || !target.dataset) return;
+  _msRecordEvidence(target.dataset.msId, 'high', target.dataset.msText, target.dataset.msDomain);
   renderMilestones();
 }
 
 function practicingMsInWindow(target) {
-  const msId = target && target.dataset && target.dataset.msId;
-  if (!msId) return;
-  _msRecordEvidence(msId, 'medium');
+  if (!target || !target.dataset) return;
+  _msRecordEvidence(target.dataset.msId, 'medium', target.dataset.msText, target.dataset.msDomain);
   renderMilestones();
 }
 
 function notYetMsInWindow(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  // Suppress 7 days via ziva_milestone_suppress (engine-prep KEYS.milestoneSuppress).
-  // 5-second undo toast per V-M-103.
-  const suppressKey = (typeof KEYS !== 'undefined' && KEYS.milestoneSuppress) ? KEYS.milestoneSuppress : 'ziva_milestone_suppress';
-  let suppress = {};
-  try { suppress = JSON.parse(localStorage.getItem(suppressKey) || '{}'); } catch (e) { suppress = {}; }
+  // Suppress 7 days. Engine-prep PR-A registered KEYS.milestoneSuppress in
+  // SYNC_KEYS with a _postReceiveMilestoneSuppress merge-on-receive hook
+  // (sync.js:154; per V-K-104 + V-M-116 floor). Cross-device replication
+  // requires the save() wrapper (which triggers syncWrite); direct
+  // localStorage.setItem bypasses it AND bypasses the in-memory
+  // milestoneSuppress global that _getInWindowMilestones reads at
+  // core.js:6016 — so suppression would have ZERO effect until reload.
+  //
+  // Proper write: mutate the module-global object in place + save() through
+  // the wrapper. milestoneSuppress is declared at core.js:389.
+  if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
   const untilTs = Date.now() + (7 * 86400000);
-  suppress[msId] = untilTs;
-  try { localStorage.setItem(suppressKey, JSON.stringify(suppress)); } catch (e) {}
-  // Show undo toast
+  milestoneSuppress[msId] = untilTs;
+  save(KEYS.milestoneSuppress, milestoneSuppress);
   if (typeof showQLToast === 'function') {
     showQLToast('Suppressed for 7 days. <button class="al-undo-btn" data-action="undoMsSuppress" data-ms-id="' + escHtml(msId) + '">Undo</button>', 5000);
   }
@@ -26808,38 +26886,69 @@ function notYetMsInWindow(target) {
 function undoMsSuppress(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  const suppressKey = (typeof KEYS !== 'undefined' && KEYS.milestoneSuppress) ? KEYS.milestoneSuppress : 'ziva_milestone_suppress';
-  let suppress = {};
-  try { suppress = JSON.parse(localStorage.getItem(suppressKey) || '{}'); } catch (e) { suppress = {}; }
-  delete suppress[msId];
-  try { localStorage.setItem(suppressKey, JSON.stringify(suppress)); } catch (e) {}
+  if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
+  delete milestoneSuppress[msId];
+  save(KEYS.milestoneSuppress, milestoneSuppress);
   renderMilestones();
 }
 
-// Record evidence — write to activityLog at engine-prep confidence enum.
-// Surface prose never renders the enum value per V-K-120/V-K-121 boundary.
-function _msRecordEvidence(milestoneId, confidence) {
-  if (typeof activityLog === 'undefined' || !Array.isArray(activityLog)) return;
-  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
-  activityLog.push({
-    milestone: milestoneId,
-    confidence: confidence,
-    date: today,
-    timestamp: new Date().toISOString(),
+// Record evidence into activityLog — canonical write shape matching the
+// pattern at intelligence-quicklog.js:257-285. activityLog is a date-keyed
+// Object (NOT Array — core.js:1136 explicitly coerces Array → {}); entries
+// live in per-day arrays accessed via activityLog[dateStr].
+//
+// Entry shape mirrors quicklog's: { id, text, type:'observation', ts,
+// source, domains:[...], evidence:[{milestone, confidence, context}] }.
+// Existing readers (renderCategoryWheels via entry.domains, renderRecentEvidence
+// via entry.text + entry.evidence) need this shape.
+//
+// Postscript (the 4 lines every other activityLog writer calls) — _tsfMarkDirty
+// invalidates the Today So Far cache; _islMarkDirty('activities'|'milestones')
+// invalidates the ISL query caches; syncMilestoneStatuses() is what advances
+// a milestone from emerging→practicing→consistent based on evidence count
+// — without it, taps add evidence but milestones never promote status.
+function _msRecordEvidence(milestoneId, confidence, msText, msDomain) {
+  if (!milestoneId) return;
+  if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) return;
+  const dateStr = today();
+  const ts = Date.now();
+  const entry = {
+    id: 'ms_v1_' + ts,
+    text: msText || '',
+    type: 'observation',
+    ts: ts,
     source: 'milestones-tab-v1-tap',
-  });
-  if (typeof save === 'function' && typeof KEYS !== 'undefined') {
-    save(KEYS.activityLog || 'ziva_activity', activityLog);
-  }
+    domains: msDomain ? [msDomain] : [],
+    evidence: [{
+      milestone: milestoneId,
+      confidence: confidence,
+      context: 'milestones-tab-v1-tap',
+    }],
+  };
+  if (!activityLog[dateStr]) activityLog[dateStr] = [];
+  activityLog[dateStr].push(entry);
+  save(KEYS.activityLog, activityLog);
+  // Postscript — every activityLog writer in the codebase calls these four.
+  if (typeof _tsfMarkDirty === 'function') _tsfMarkDirty();
+  if (typeof _islMarkDirty === 'function') { _islMarkDirty('activities'); _islMarkDirty('milestones'); }
+  if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
 }
 
 // Bulk catch-up grid (Primitive 3) — _getInWindowMilestones with cap=Infinity;
 // surface filters out already-confirmed. Tap-tap-done: each selected chip
-// emits medium-confidence evidence on submit. Collapsed-by-default per spec.
+// emits medium-confidence evidence on submit.
+//
+// Collapsed-by-default contract: the bulk grid HEADER (with chevron) is
+// always visible; the chevron toggles only the inner #msBulkGridBody. The
+// outer container's `display:none` initial state is set in template.html
+// and is only removed by renderMsBulkGrid when there ARE items to show
+// (i.e. the whole card hides when there's no in-window catch-up content
+// at all). The body starts collapsed; user's expand/collapse state is
+// preserved across re-renders by reading the existing aria-expanded attr.
 function renderMsBulkGrid() {
   const el = document.getElementById('msBulkGrid');
   if (!el) return;
-  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+  const ageDays = _zivaAgeInDays(today());
   let items = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
@@ -26847,7 +26956,8 @@ function renderMsBulkGrid() {
     }
   } catch (e) { items = []; }
   if (items.length === 0) {
-    el.innerHTML = '<div class="t-sub-light text-center py-4">No age-band milestones to catch up on.</div>';
+    el.style.display = 'none';
+    el.innerHTML = '';
     return;
   }
   // Group by domain per spec
@@ -26864,7 +26974,13 @@ function renderMsBulkGrid() {
     const chips = group.map(it => {
       const text = escHtml(it.text || '');
       const idEsc = escHtml(it.milestoneId || '');
-      return '<button class="ms-bulk-chip" data-action="toggleMsBulkChip" data-ms-id="' + idEsc + '" data-selected="false">'
+      const domainEsc = escHtml(it.domain || c.key);
+      const textEsc = escHtml(it.text || '');
+      return '<button class="ms-bulk-chip" data-action="toggleMsBulkChip"'
+        + ' data-ms-id="' + idEsc + '"'
+        + ' data-ms-text="' + textEsc + '"'
+        + ' data-ms-domain="' + domainEsc + '"'
+        + ' data-selected="false">'
         + '<span class="ms-bulk-chip-icon">' + (it.icon || zi('star')) + '</span>'
         + '<span>' + text + '</span>'
         + '</button>';
@@ -26874,12 +26990,20 @@ function renderMsBulkGrid() {
       + '<div class="ms-bulk-grid">' + chips + '</div>'
       + '</div>';
   }).filter(Boolean).join('');
+  // Preserve user's prior expand/collapse state across re-renders so a tap
+  // elsewhere doesn't fight the user's intent. Default = collapsed.
+  const body = document.getElementById('msBulkGridBody');
+  const wasExpanded = body && body.getAttribute('aria-expanded') === 'true';
+  const bodyExpanded = wasExpanded ? 'true' : 'false';
   el.innerHTML = '<div class="ms-bulk-grid-header">'
     + '<div class="card-title">Bulk catch-up</div>'
-    + '<button class="t-sub-light" data-action="toggleMsBulkGridOpen">' + zi('chevron-down') + '</button>'
+    + '<button class="t-sub-light" data-action="toggleMsBulkGridOpen" aria-controls="msBulkGridBody" aria-expanded="' + bodyExpanded + '">' + zi('chevron-down') + '</button>'
     + '</div>'
+    + '<div id="msBulkGridBody" class="ms-bulk-grid-body" aria-expanded="' + bodyExpanded + '">'
     + sections
-    + '<div class="ms-bulk-submit"><button class="btn-primary bp-sage" data-action="submitMsBulkSelections">Add evidence</button></div>';
+    + '<div class="ms-bulk-submit"><button class="btn-primary bp-sage" data-action="submitMsBulkSelections">Add evidence</button></div>'
+    + '</div>';
+  // Outer card visible because we have content; CSS handles body collapse via aria-expanded.
   el.style.display = '';
 }
 
@@ -26889,10 +27013,15 @@ function toggleMsBulkChip(target) {
   target.dataset.selected = cur ? 'false' : 'true';
 }
 
+// Toggle the INNER body, not the outer card — keeps the chevron reachable
+// to reopen. aria-expanded carries the state; CSS handles the visual collapse.
 function toggleMsBulkGridOpen(target) {
-  const el = document.getElementById('msBulkGrid');
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? '' : 'none';
+  const body = document.getElementById('msBulkGridBody');
+  if (!body) return;
+  const cur = body.getAttribute('aria-expanded') === 'true';
+  const next = cur ? 'false' : 'true';
+  body.setAttribute('aria-expanded', next);
+  if (target) target.setAttribute('aria-expanded', next);
 }
 
 function submitMsBulkSelections() {
@@ -26901,7 +27030,7 @@ function submitMsBulkSelections() {
   const selected = el.querySelectorAll('.ms-bulk-chip[data-selected="true"]');
   selected.forEach(chip => {
     const msId = chip.dataset.msId;
-    if (msId) _msRecordEvidence(msId, 'medium');
+    if (msId) _msRecordEvidence(msId, 'medium', chip.dataset.msText, chip.dataset.msDomain);
   });
   if (typeof showQLToast === 'function' && selected.length > 0) {
     showQLToast('Added evidence for ' + selected.length + ' milestone(s).', 3000);
@@ -26930,12 +27059,16 @@ function filterMsDomain(target) {
   bar.querySelectorAll('.ms-domain-chip').forEach(c => {
     c.dataset.active = (c.dataset.domain === dom) ? 'true' : 'false';
   });
-  // Filter the milestoneList items
+  // Filter the milestoneList items via class toggle — HR-2 floor: CSS
+  // classes + design tokens only; no inline style mutation. The
+  // .ms-domain-hidden class lives in styles.css and applies display:none
+  // via a CSS rule, so transitions on .milestone-item compose correctly.
   const list = document.getElementById('milestoneList');
   if (!list) return;
   list.querySelectorAll('[data-domain]').forEach(item => {
     const itemDom = item.dataset.domain;
-    item.style.display = (dom === 'all' || itemDom === dom) ? '' : 'none';
+    const hidden = !(dom === 'all' || itemDom === dom);
+    item.classList.toggle('ms-domain-hidden', hidden);
   });
 }
 
@@ -26951,28 +27084,25 @@ function renderMsTrajectoryRibbon() {
   const cats = (window.ACTIVITY_CATEGORIES || []);
   const accentByDomain = {};
   cats.forEach(c => { accentByDomain[c.key] = c.accent; });
-  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+  const ageDays = _zivaAgeInDays(today());
 
-  // Bucket 1: confirmed (top by recency, cap 10)
+  // Bucket 1: confirmed (top by recency; sub-bucket cap from MS_TRAJECTORY_GEOM).
+  // Skip rows whose stage timestamps are missing/invalid rather than coercing
+  // to epoch-0 (which would silently bucket malformed dates as "oldest" 1970).
   const confirmedAll = (milestones || []).filter(m => m.status === 'consistent' || m.status === 'mastered')
-    .map(m => ({
-      ms: m,
-      domain: m.domain || m.cat || 'motor',
-      ts: new Date(m.consistentAt || m.masteredAt || 0).getTime() || 0,
-      state: 'confirmed',
-      priority: 0,
-    }))
+    .map(m => {
+      const ts = new Date(m.consistentAt || m.masteredAt || 0).getTime();
+      return { ms: m, domain: m.domain || m.cat || 'motor', ts: isFinite(ts) ? ts : 0, state: 'confirmed', priority: 0 };
+    })
+    .filter(x => x.ts > 0)
     .sort((a, b) => b.ts - a.ts);
   // Bucket 2: practicing
   const practicingAll = (milestones || []).filter(m => m.status === 'practicing' || m.status === 'emerging')
-    .map(m => ({
-      ms: m,
-      domain: m.domain || m.cat || 'motor',
-      ts: new Date(m.practicingAt || m.emergingAt || 0).getTime() || 0,
-      state: 'hedged',
-      priority: 0.5,
-    }));
-  // Bucket 3: in-window not-yet (≤5 most-imminent floor; sub-bucket cap)
+    .map(m => {
+      const ts = new Date(m.practicingAt || m.emergingAt || 0).getTime();
+      return { ms: m, domain: m.domain || m.cat || 'motor', ts: isFinite(ts) ? ts : 0, state: 'hedged', priority: 0.5 };
+    });
+  // Bucket 3: in-window not-yet (≤MS_TRAJECTORY_GEOM.notYetCap floor)
   let inWindowNotYet = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
@@ -26987,24 +27117,24 @@ function renderMsTrajectoryRibbon() {
         }));
     }
   } catch (e) { inWindowNotYet = []; }
-  inWindowNotYet = inWindowNotYet.sort((a, b) => (b.priority || 0) - (a.priority || 0)).slice(0, 5);
+  inWindowNotYet = inWindowNotYet
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+    .slice(0, MS_TRAJECTORY_GEOM.notYetCap);
 
-  // Merge + global cap 20 by priority (recency for confirmed, engine priority for others)
+  // Merge + global cap from MS_TRAJECTORY_GEOM (V-K-122). Sub-bucket caps
+  // are author choices documented at the geometry-const block above.
   let merged = []
-    .concat(confirmedAll.slice(0, 12))
-    .concat(practicingAll.slice(0, 8))
+    .concat(confirmedAll.slice(0, MS_TRAJECTORY_GEOM.confirmedCap))
+    .concat(practicingAll.slice(0, MS_TRAJECTORY_GEOM.practicingCap))
     .concat(inWindowNotYet);
-  // V-K-122 global cap: 20 markers max post-merge
-  merged = merged.slice(0, 20);
+  merged = merged.slice(0, MS_TRAJECTORY_GEOM.globalCap);
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div>'
       + '<div class="t-sub-light text-center py-4">No milestone trajectory yet — early days.</div>';
     return;
   }
-  // Render SVG ribbon — markers spaced evenly across 100% width
-  const w = 320;
-  const h = 48;
-  const padding = 16;
+  // Render SVG ribbon — markers spaced evenly across the viewBox width
+  const { width: w, height: h, padding, markerR } = MS_TRAJECTORY_GEOM;
   const innerW = w - padding * 2;
   const step = merged.length > 1 ? innerW / (merged.length - 1) : 0;
   const markers = merged.map((m, i) => {
@@ -27012,15 +27142,12 @@ function renderMsTrajectoryRibbon() {
     const cy = h / 2;
     const accent = accentByDomain[m.domain] || 'lavender';
     const color = 'var(--' + accent + ')';
-    // V-V-66: ≥9px diameter (r=4.5) + ≥1.8px stroke for outlined
-    if (m.state === 'confirmed') {
-      return '<circle class="ms-trajectory-marker" data-state="confirmed" cx="' + cx + '" cy="' + cy + '" r="4.5" style="color:' + color + '"/>';
-    }
-    return '<circle class="ms-trajectory-marker" data-state="hedged" cx="' + cx + '" cy="' + cy + '" r="4.5" style="color:' + color + '"/>';
+    return '<circle class="ms-trajectory-marker" data-state="' + (m.state === 'confirmed' ? 'confirmed' : 'hedged')
+      + '" cx="' + cx + '" cy="' + cy + '" r="' + markerR + '" style="color:' + color + '"/>';
   }).join('');
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div></div>'
     + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet">' + markers + '</svg>'
-    + '<div class="ms-trajectory-label">' + escHtml(merged.length) + ' milestones on Ziva\'s timeline</div>';
+    + '<div class="ms-trajectory-label">' + escHtml(String(merged.length)) + ' milestones on Ziva\'s timeline</div>';
 }
 
 // Pediatric-visit prep card (Patterns sub-tab; return-visit surface 3) —
@@ -27035,13 +27162,24 @@ function renderMsPediatricPrep() {
   const now = Date.now();
   const thirtyDayMs = 30 * 86400000;
   // Recent evidence — count observations from activityLog within 30 days,
-  // grouped by milestoneId. Then map back to milestone text.
+  // grouped by milestoneId. activityLog is a date-keyed Object (NOT Array;
+  // core.js:1136 enforces) whose values are per-day arrays of entries; each
+  // entry carries an `evidence: [{milestone, confidence, context}]` array
+  // (canonical shape per intelligence-quicklog.js:257-270). Iterate per-day
+  // arrays via Object.values + flatMap; then count entry.evidence[i].milestone.
   const recentObsByMs = {};
-  (typeof activityLog !== 'undefined' && Array.isArray(activityLog) ? activityLog : []).forEach(a => {
-    if (!a || !a.milestone) return;
-    const ts = new Date(a.date || a.timestamp || 0).getTime();
+  const allEntries = (typeof activityLog === 'object' && activityLog !== null && !Array.isArray(activityLog))
+    ? Object.values(activityLog).reduce((acc, day) => Array.isArray(day) ? acc.concat(day) : acc, [])
+    : [];
+  allEntries.forEach(a => {
+    if (!a) return;
+    const ts = (typeof a.ts === 'number') ? a.ts : new Date(a.timestamp || 0).getTime();
     if (!ts || (now - ts) > thirtyDayMs) return;
-    recentObsByMs[a.milestone] = (recentObsByMs[a.milestone] || 0) + 1;
+    const evidenceArr = Array.isArray(a.evidence) ? a.evidence : (a.milestone ? [{ milestone: a.milestone }] : []);
+    evidenceArr.forEach(ev => {
+      if (!ev || !ev.milestone) return;
+      recentObsByMs[ev.milestone] = (recentObsByMs[ev.milestone] || 0) + 1;
+    });
   });
   // Confirmed milestones with recent observations
   const confirmedItems = (milestones || []).filter(m => (m.status === 'consistent' || m.status === 'mastered'))
@@ -27109,8 +27247,12 @@ function renderMsPediatricPrep() {
 function renderMsCorrelationTeaser() {
   const el = document.getElementById('msCorrelationTeaser');
   if (!el) return;
-  // V-V-63 regression-guard: verify cardId exists before wiring up
-  const targetCard = document.getElementById('infoMilestoneSleepCard');
+  // V-V-63 regression-guard: verify cardId exists before wiring up.
+  // Both the verify and the navigation read from MS_CORRELATION_TARGET_CARD
+  // (module-scope const at top of v1 block) — a template.html rename now
+  // requires touching exactly one site instead of two; the V-V-63 guard
+  // and the gotoCard call are textually pinned.
+  const targetCard = document.getElementById(MS_CORRELATION_TARGET_CARD);
   if (!targetCard) { el.innerHTML = ''; return; }
   el.innerHTML = '<button class="ms-correlation-teaser" data-action="gotoMsCorrelation">'
     + '<span class="ms-correlation-teaser-text">Milestone × Sleep correlation</span>'
@@ -27120,7 +27262,7 @@ function renderMsCorrelationTeaser() {
 
 function gotoMsCorrelation() {
   if (typeof gotoCard === 'function') {
-    gotoCard('info', 'infoMilestoneSleepCard');
+    gotoCard('info', MS_CORRELATION_TARGET_CARD);
   }
 }
 
@@ -27136,12 +27278,20 @@ function renderMilestoneList() {
     return;
   }
 
-  const catMeta = {
-    motor:     { icon:zi('run'), label:'Motor',     color:'sage' },
-    language:  { icon:zi('chat'), label:'Language',   color:'sky' },
-    social:    { icon:zi('handshake'), label:'Social',     color:'peach' },
-    cognitive: { icon:zi('brain'), label:'Cognitive',  color:'lav' },
-  };
+  // catMeta + domainOrder are now derived from window.ACTIVITY_CATEGORIES — the
+  // canonical 5-cat registry (motor / language / social / sensory / cognitive)
+  // landed in data.js at milestones-tab-v1 batch 1. Two correctness fixes:
+  // (a) +sensory — engine-prep PR-A V-K-103 seeded a `domain:'sensory'` row
+  //     with safetyTier:true (mouths-objects choking-watch); pre-v1 4-cat
+  //     iteration dropped that Care-tier milestone from the visible list.
+  // (b) accent colors now mirror the registry (language→lavender,
+  //     cognitive→sky) per V-M-120 [data-domain] cascade preservation,
+  //     fixing a visual desync with the Domain Filter chips on the same
+  //     sub-tab. Local color short-tokens map registry.accent → CSS suffix.
+  const _accentToColorTok = { lavender: 'lav', sky: 'sky', sage: 'sage', peach: 'peach', amber: 'amber', rose: 'rose', indigo: 'indigo' };
+  const _cats = (window.ACTIVITY_CATEGORIES || []);
+  const catMeta = {};
+  _cats.forEach(c => { catMeta[c.key] = { icon: zi(c.icon), label: c.label, color: _accentToColorTok[c.accent] || c.accent }; });
 
   const groups = {};
   milestones.forEach((m, i) => {
@@ -27162,10 +27312,13 @@ function renderMilestoneList() {
     return 0;
   }));
 
-  const catOrder = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  // Registry-derived domain order (replaces pre-v1 `catOrder = [...]` idiom).
+  // The audit gate bans `\bcatOrder\s*=` precisely to prevent registry forks,
+  // so the canonical-consumer pattern uses a registry-derived name.
+  const domainOrder = _cats.map(c => c.key);
   let html = '<div class="ms-cats">';
 
-  catOrder.forEach(cat => {
+  domainOrder.forEach(cat => {
     const items = groups[cat];
     if (!items || items.length === 0) return;
     const meta = catMeta[cat];
@@ -27594,7 +27747,7 @@ function renderCategoryWheels() {
   const el = document.getElementById('msCatWheels');
   if (!el) return;
 
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:     { icon:zi('run'), label:'Motor',     color:'var(--tc-sage)' },
     language:  { icon:zi('chat'), label:'Language',   color:'#3a7090' },
     social:    { icon:zi('handshake'), label:'Social',     color:'#966525' },
@@ -31261,7 +31414,7 @@ function renderMilestoneHistory() {
   const latest = done.filter(m => m.doneAt).sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
   const latestMs = latest[0] || done[done.length - 1];
 
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:    { icon:zi('run'), color:'var(--sage)', bg:'var(--sage-light)', textColor:'#3a7060' },
     language: { icon:zi('chat'), color:'var(--sky)', bg:'var(--sky-light)', textColor:'#3a7090' },
     social:   { icon:zi('handshake'), color:'var(--peach)', bg:'var(--peach-light)', textColor:'#926030' },
@@ -37330,7 +37483,7 @@ function _tpGenerateActivitySuggestions() {
   var domainList = Object.entries(domainCounts).sort(function(a, b) { return a[1] - b[1]; });
 
   // Activity name suggestions per domain
-  var domainActivities = {
+  var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor: { name: 'Tummy time or crawling practice', icon: zi('run'), duration: '10 min' },
     language: { name: 'Board book + pointing game', icon: zi('book'), duration: '10 min' },
     social: { name: 'Peekaboo or mirror play', icon: zi('baby'), duration: '10 min' },
@@ -44333,7 +44486,7 @@ function renderActivities() {
   label.textContent = `${activities.length} activities · ${mo} months`;
 
   // Group by type
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:    { icon:zi('run'), label:'Motor' },
     sensory:  { icon:zi('palette'), label:'Sensory' },
     language: { icon:zi('chat'), label:'Language' },
@@ -44432,7 +44585,7 @@ function renderUpcomingMilestones() {
     pending:     { icon:zi('target'), label:'Coming Up', desc:'to watch for' },
     in_progress: { icon:zi('target'),  label:'In Progress', desc:'started' },
   };
-  const catMeta = {
+  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor:     { icon:zi('run'), label:'Motor' },
     language:  { icon:zi('chat'), label:'Language' },
     social:    { icon:zi('handshake'), label:'Social' },
@@ -47290,7 +47443,7 @@ function renderInfoMilestoneVelocity() {
     // maturity-depth from the within-region density.
     const CATS = ['motor', 'social', 'language', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     const STATUSES = ['emerging', 'practicing', 'consistent', 'mastered'];
-    const CAT_HUE = {
+    const CAT_HUE = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor:     'var(--tc-sage)',
       social:    'var(--tc-lav)',
       language:  'var(--tc-sky)',
@@ -55132,11 +55285,11 @@ function qaAnswerActivityGeneral(intentId) {
 
   if (missingDomains.length === 0) {
     dataItems.push({ text: 'All 5 developmental domains covered — balanced stimulation', signal: 'good' });
-  } else if (missingDomains.length <= 2) {
+  } else if (missingDomains.length <= 2) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var missingLabels = missingDomains.map(function(d) { return domainLabels[d]; });
     dataItems.push({ text: 'Missing domains: ' + missingLabels.join(', '), signal: 'warn' });
     // Suggest activities for weakest domain
-    var domainActivities = {
+    var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'tummy time, crawling practice, or reaching for toys',
       language: 'reading books, singing songs, or naming objects',
       social: 'peek-a-boo, mirror play, or social games',
@@ -56589,7 +56742,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     };
   }
 
-  if (matched.length > 0) {
+  if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
     var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
@@ -56617,7 +56770,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     }
 
     // Activity suggestions
-    var activitySuggestions = {
+    var activitySuggestions = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'Floor play, tummy time, obstacle courses, reaching games',
       language: 'Read together, narrate activities, sing songs, respond to babbling',
       social: 'Peek-a-boo, mirror play, social interactions with other babies',
@@ -57043,8 +57196,8 @@ function qaAnswerTomorrow(intentId) {
       var count = actData.domainCounts[dom] || 0;
       if (count < weakestCount) { weakestCount = count; weakestDomain = dom; }
     });
-    if (weakestDomain) {
-      var domainActivities = {
+    if (weakestDomain) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
+      var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
         motor: 'tummy time, crawling practice, or standing exercises',
         language: 'reading, singing, or narrating activities',
         social: 'peek-a-boo, mirror play, or social interaction',
@@ -60544,7 +60697,7 @@ function _alInjectSlotDurContainers() {
   _alSlotsInjected = true;
 }
 
-const AL_DOMAIN_META = {
+const AL_DOMAIN_META = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
   motor:     { icon: zi('run'), label: 'Motor' },
   language:  { icon: zi('chat'), label: 'Language' },
   social:    { icon: zi('handshake'), label: 'Social' },

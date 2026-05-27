@@ -1326,11 +1326,11 @@ function qaAnswerActivityGeneral(intentId) {
 
   if (missingDomains.length === 0) {
     dataItems.push({ text: 'All 5 developmental domains covered — balanced stimulation', signal: 'good' });
-  } else if (missingDomains.length <= 2) {
+  } else if (missingDomains.length <= 2) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var missingLabels = missingDomains.map(function(d) { return domainLabels[d]; });
     dataItems.push({ text: 'Missing domains: ' + missingLabels.join(', '), signal: 'warn' });
     // Suggest activities for weakest domain
-    var domainActivities = {
+    var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'tummy time, crawling practice, or reaching for toys',
       language: 'reading books, singing songs, or naming objects',
       social: 'peek-a-boo, mirror play, or social games',
@@ -2783,7 +2783,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     };
   }
 
-  if (matched.length > 0) {
+  if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
     var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
@@ -2811,7 +2811,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     }
 
     // Activity suggestions
-    var activitySuggestions = {
+    var activitySuggestions = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'Floor play, tummy time, obstacle courses, reaching games',
       language: 'Read together, narrate activities, sing songs, respond to babbling',
       social: 'Peek-a-boo, mirror play, social interactions with other babies',
@@ -3237,8 +3237,8 @@ function qaAnswerTomorrow(intentId) {
       var count = actData.domainCounts[dom] || 0;
       if (count < weakestCount) { weakestCount = count; weakestDomain = dom; }
     });
-    if (weakestDomain) {
-      var domainActivities = {
+    if (weakestDomain) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
+      var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
         motor: 'tummy time, crawling practice, or standing exercises',
         language: 'reading, singing, or narrating activities',
         social: 'peek-a-boo, mirror play, or social interaction',

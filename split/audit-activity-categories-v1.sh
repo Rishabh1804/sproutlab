@@ -99,13 +99,21 @@ for regex, sample, should_match in SELF_TEST:
         )
         sys.exit(2)
 
-# Object-literal self-test runs differently (multi-key count on a block):
+# Object-literal self-test — covers BOTH single-line and multi-line object
+# literals (the prior 2-line window missed 3+-line forks; brace-tracking
+# closes that gap).
 def count_obj_keys(block):
     return len({m.group(1) for m in OBJ_LITERAL_4PLUS.finditer(block)})
-# 4-key positive case:
+# 4-key positive case (single-line):
 adv_obj_4 = "{ motor: 'M', language: 'L', social: 'S', cognitive: 'C' }"
 if count_obj_keys(adv_obj_4) < 4:
-    print('audit-activity-categories-v1: SELF-TEST FAIL — object-literal 4-key adversarial not detected')
+    print('audit-activity-categories-v1: SELF-TEST FAIL — single-line 4-key adversarial not detected')
+    sys.exit(2)
+# Multi-line positive case (one key per line — the case the prior 2-line
+# window missed entirely):
+adv_obj_multi = "const m = {\n  motor: 0,\n  language: 0,\n  social: 0,\n  cognitive: 0,\n};"
+if count_obj_keys(adv_obj_multi) < 4:
+    print('audit-activity-categories-v1: SELF-TEST FAIL — multi-line 4-key adversarial not detected by regex')
     sys.exit(2)
 # 2-key negative case:
 adv_obj_2 = "{ motor: 'M', language: 'L' }"
@@ -144,51 +152,77 @@ for path in files:
             lines = text.split('\n')
     except (IOError, OSError):
         continue
+    # Per-line array + catOrder scan
     for i, line in enumerate(lines, start=1):
-        has_marker = bool(OPT_IN_MARKER.search(line))
-        if has_marker:
+        if OPT_IN_MARKER.search(line):
             continue
         code_portion = line.split('//', 1)[0]
         if ARRAY_PERMUTATION.search(code_portion):
             array_hits.append((path, i, line.strip()[:180]))
         if CATORDER_IDIOM.search(code_portion):
             catorder_hits.append((path, i, line.strip()[:180]))
-    # Object-literal scan: walk lines, count keys appearing in a window of
-    # the current line + next line (a 2-line window catches the common
-    # `{ motor: ..., language: ..., social: ..., cognitive: ... }` pattern
-    # whether single-line or split across the opening brace + content). If
-    # any 2-line window contains ≥4 of 5 category keys at key position AND
-    # NEITHER line carries the opt-in marker, flag the starting line.
-    for i in range(len(lines)):
-        window_text = lines[i]
-        if i + 1 < len(lines):
-            window_text = window_text + '\n' + lines[i + 1]
-        # Skip if either line in the window carries the marker
-        if OPT_IN_MARKER.search(window_text):
+    # Object-literal scan via BRACE-TRACKING (replaces the prior 2-line
+    # sliding window which missed forks spanning 3+ lines — e.g. one key
+    # per line). For each `{` opener that's not inside a string or comment,
+    # walk forward collecting code-portion content until the matching `}`
+    # at the same nesting depth; count distinct canonical-key matches in
+    # that block. If ≥4 of 5 keys appear AND no enclosing line carries the
+    # opt-in marker, flag the opener's line.
+    #
+    # Heuristic limits: scan blocks up to MAX_BLOCK_LINES (60) to avoid
+    # pathological runaway on giant nested objects. Strings/comments are
+    # stripped per-line by splitting on `//` (code_portion) and removing
+    # single/double-quoted spans within the code portion (so quoted braces
+    # don't confuse the depth counter).
+    MAX_BLOCK_LINES = 60
+    STRING_LITERAL = re.compile(r"""(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")""")
+    flagged_starts = set()
+    code_lines_cache = []
+    for ln in lines:
+        cp = ln.split('//', 1)[0]
+        # Remove string literals to avoid quoted-brace confusion
+        cp = STRING_LITERAL.sub('""', cp)
+        code_lines_cache.append(cp)
+    for start_idx, start_cp in enumerate(code_lines_cache):
+        open_pos = start_cp.find('{')
+        if open_pos < 0:
             continue
-        # Code-portion only for each line
-        code_lines = []
-        for wl in window_text.split('\n'):
-            code_lines.append(wl.split('//', 1)[0])
-        code_window = '\n'.join(code_lines)
-        keys_present = {m.group(1) for m in OBJ_LITERAL_4PLUS.finditer(code_window)}
+        # Walk forward tracking depth
+        depth = 0
+        block_lines = []
+        end_idx = None
+        i_cur = start_idx
+        col_cur = open_pos
+        while i_cur < len(code_lines_cache) and (i_cur - start_idx) < MAX_BLOCK_LINES:
+            cur_cp = code_lines_cache[i_cur]
+            # On first line, slice from open_pos onward; subsequent lines whole
+            seg = cur_cp[col_cur:] if i_cur == start_idx else cur_cp
+            block_lines.append(seg)
+            for ch in seg:
+                if ch == '{':
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end_idx = i_cur
+                        break
+            if end_idx is not None:
+                break
+            i_cur += 1
+            col_cur = 0
+        if end_idx is None:
+            continue
+        block_text = '\n'.join(block_lines)
+        # Opt-in marker check over the ORIGINAL (un-stripped) block lines
+        original_block = '\n'.join(lines[start_idx:end_idx + 1])
+        if OPT_IN_MARKER.search(original_block):
+            continue
+        keys_present = {m.group(1) for m in OBJ_LITERAL_4PLUS.finditer(block_text)}
         if len(keys_present) >= 4:
-            # Avoid duplicate flagging: only flag if the FIRST line in the
-            # window is the one with the most keys (or the brace-opener).
-            first_line_keys = {m.group(1) for m in OBJ_LITERAL_4PLUS.finditer(code_lines[0])}
-            if len(first_line_keys) >= 1 or '{' in code_lines[0]:
-                obj_hits.append((path, i + 1, lines[i].strip()[:180], sorted(keys_present)))
-
-# De-duplicate obj_hits by (path, line)
-seen = set()
-deduped_obj = []
-for h in obj_hits:
-    key = (h[0], h[1])
-    if key in seen:
-        continue
-    seen.add(key)
-    deduped_obj.append(h)
-obj_hits = deduped_obj
+            # Flag the brace-opener line (deduped via set)
+            if start_idx + 1 not in flagged_starts:
+                flagged_starts.add(start_idx + 1)
+                obj_hits.append((path, start_idx + 1, lines[start_idx].strip()[:180], sorted(keys_present)))
 
 total = len(array_hits) + len(catorder_hits) + len(obj_hits)
 

@@ -6171,9 +6171,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-tap-btn[data-action-tap="not-yet"] { color:var(--mid); }
 .ms-tap-btn-icon { font-size:var(--icon-sm); }
 
-/* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ── */
+/* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ──
+   The OUTER card (#msBulkGrid) toggles only via render-time visibility (no
+   items → display:none). The chevron in the header toggles the INNER
+   #msBulkGridBody via aria-expanded — so the header (chevron + title)
+   stays reachable for re-open. */
 .ms-bulk-grid-card { padding:var(--sp-12); }
 .ms-bulk-grid-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-8); }
+.ms-bulk-grid-body { overflow:hidden; transition:max-height var(--ease-fast); }
+.ms-bulk-grid-body[aria-expanded="false"] { max-height:0; visibility:hidden; }
+.ms-bulk-grid-body[aria-expanded="true"]  { max-height:none; visibility:visible; }
 .ms-bulk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:var(--sp-6); }
 .ms-bulk-chip { padding:var(--sp-6) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; font-size:var(--fs-xs); display:flex; align-items:center; gap:var(--sp-4); }
 .ms-bulk-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); color:var(--tc-lav); font-weight:600; }
@@ -6184,6 +6191,11 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-domain-filter { display:flex; gap:var(--sp-4); flex-wrap:wrap; padding:var(--sp-4) 0; }
 .ms-domain-chip { padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); font-size:var(--fs-xs); cursor:pointer; }
 .ms-domain-chip[data-active="true"] { font-weight:700; }
+
+/* Domain filter visibility class — class-driven hide for milestoneList items
+   per HR-2 (no inline style mutation). filterMsDomain toggles this class on
+   [data-domain] children of #milestoneList. */
+.ms-domain-hidden { display:none; }
 
 /* ── Trajectory ribbon (Patterns sub-tab) — return-visit surface 2 ──
    V-V-49 collapse: 2 visual states (filled=confirmed, outlined=hedged).

@@ -1817,7 +1817,7 @@ function _tpGenerateActivitySuggestions() {
   var domainList = Object.entries(domainCounts).sort(function(a, b) { return a[1] - b[1]; });
 
   // Activity name suggestions per domain
-  var domainActivities = {
+  var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor: { name: 'Tummy time or crawling practice', icon: zi('run'), duration: '10 min' },
     language: { name: 'Board book + pointing game', icon: zi('book'), duration: '10 min' },
     social: { name: 'Peekaboo or mirror play', icon: zi('baby'), duration: '10 min' },
