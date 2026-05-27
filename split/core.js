@@ -613,6 +613,18 @@ function init() {
     else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    // milestones-tab-v1 actions (data-action delegation per HR-3)
+    else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
+    else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
+    else if (action === 'confirmMsInWindow' && typeof confirmMsInWindow === 'function') confirmMsInWindow(btn);
+    else if (action === 'practicingMsInWindow' && typeof practicingMsInWindow === 'function') practicingMsInWindow(btn);
+    else if (action === 'notYetMsInWindow' && typeof notYetMsInWindow === 'function') notYetMsInWindow(btn);
+    else if (action === 'undoMsSuppress' && typeof undoMsSuppress === 'function') undoMsSuppress(btn);
+    else if (action === 'toggleMsBulkChip' && typeof toggleMsBulkChip === 'function') toggleMsBulkChip(btn);
+    else if (action === 'toggleMsBulkGridOpen' && typeof toggleMsBulkGridOpen === 'function') toggleMsBulkGridOpen(btn);
+    else if (action === 'submitMsBulkSelections' && typeof submitMsBulkSelections === 'function') submitMsBulkSelections();
+    else if (action === 'filterMsDomain' && typeof filterMsDomain === 'function') filterMsDomain(btn);
+    else if (action === 'gotoMsCorrelation' && typeof gotoMsCorrelation === 'function') gotoMsCorrelation();
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
     else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
     else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);

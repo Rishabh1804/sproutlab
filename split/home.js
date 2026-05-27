@@ -1824,6 +1824,653 @@ function renderMilestones() {
   renderMilestoneTimeline();
   renderRecentEvidence();
   renderActiveMilestones();
+  // milestones-tab-v1 surfaces (per spec docs/specs/milestones-tab-v1.md)
+  // The v1 renderers populate the new IDs added in the 3-sub-tab scaffold;
+  // existing renderers above continue to populate the preserved IDs per
+  // V-M-100 + V-M-119 + G3 (preserved-IDs floor for backward-compat).
+  try { renderMsTodayHeader(); } catch (e) {}
+  try { renderMsActivityLevelStrip(); } catch (e) {}
+  try { renderMsInWindowProposals(); } catch (e) {}
+  try { renderMsBulkGrid(); } catch (e) {}
+  try { renderMsDomainFilter(); } catch (e) {}
+  try { renderMsTrajectoryRibbon(); } catch (e) {}
+  try { renderMsPediatricPrep(); } catch (e) {}
+  try { renderMsCorrelationTeaser(); } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// milestones-tab-v1 — Track-tab 5th sub-tab redesign
+// Spec: docs/specs/milestones-tab-v1.md (ratified PR #149)
+//
+// Three input primitives + 3-sub-tab layout (Log/Library/Patterns) + three
+// return-visit surfaces (Today header / trajectory ribbon / pediatric-prep).
+// Consumes engine-prep primitives: _predictMilestoneWindow,
+// _getInWindowMilestones, _getActivityLevelToday, _setActivityLevelToday,
+// KEYS.activityMeta, KEYS.milestoneSuppress.
+//
+// Doctrine in force:
+// - V-V-70 omit-parenthetical-when-source-unverified (V-M-115 hard contract)
+// - V-V-72 priority-mix framing (not "soonest-to-age-out")
+// - V-K-120 + V-K-121 engine-internal label boundary (no high-conf in prose)
+// - V-M-104 + V-M-121 regression-honesty floor (REGRESSION_DAYS=30)
+// - V-V-46 uniform-rose chrome + lavender-inside (chrome doctrine)
+// - V-M-125 safetyTier in-window cap-bypass qualifier
+// ═══════════════════════════════════════════════════════════════════════
+
+// Sub-tab switcher — invoked by data-action="switchMsSub" + data-ms-sub="<key>"
+function switchMsSub(target) {
+  const subKey = (target && target.dataset && target.dataset.msSub) || 'log';
+  const bar = document.getElementById('msSubBar');
+  if (!bar) return;
+  // Toggle button active state + ARIA
+  bar.querySelectorAll('.ms-sub-btn').forEach(btn => {
+    const isActive = btn.dataset.msSub === subKey;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  // Toggle sub-panel visibility
+  const panels = document.querySelectorAll('#tab-milestones .ms-sub-panel');
+  panels.forEach(p => {
+    const isActive = p.id === ('ms-sub-' + subKey);
+    p.classList.toggle('active', isActive);
+  });
+}
+
+// "Today" header card (return-visit surface 1) — 4 narration templates from
+// _MILESTONE_NARRATION_TEMPLATES. Template selection: 2x2 state-cell matrix
+// (inWindow count × hasRecentEvidence). Regression-honesty floor: when
+// #msRegressionAlerts surface signals concern (30+ days without evidence
+// per home.js REGRESSION_DAYS const), NEVER use "quiet stretch" framing.
+function renderMsTodayHeader() {
+  const el = document.getElementById('msTodayHeader');
+  if (!el) return;
+  const templates = (window._MILESTONE_NARRATION_TEMPLATES || {});
+  // Pull engine-prep window snapshot for age framing
+  const ageInfo = (typeof ageAt === 'function') ? ageAt() : null;
+  if (!ageInfo) { el.innerHTML = ''; return; }
+  const ageMonths = ageInfo.months || 0;
+  const ageDaysRem = ageInfo.days || 0;
+  // Read engine-prep in-window via _getInWindowMilestones (engagement-priority selector)
+  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : (ageMonths * 30 + ageDaysRem);
+  let inWindow = [];
+  try {
+    if (typeof _getInWindowMilestones === 'function') {
+      inWindow = _getInWindowMilestones(ageDays, 5, {}) || [];
+    }
+  } catch (e) { inWindow = []; }
+  // Recent-evidence check from existing milestones array
+  const now = Date.now();
+  const sevenDayMs = 7 * 86400000;
+  const thirtyDayMs = 30 * 86400000;
+  let mostRecentConfirmedMs = null;
+  let mostRecentEvidenceTime = 0;
+  (milestones || []).forEach(m => {
+    const t = m.consistentAt || m.masteredAt || m.practicingAt || m.emergingAt;
+    if (!t) return;
+    const ts = new Date(t).getTime();
+    if (ts > mostRecentEvidenceTime) {
+      mostRecentEvidenceTime = ts;
+      if (m.status === 'consistent' || m.status === 'mastered') {
+        mostRecentConfirmedMs = m;
+      }
+    }
+  });
+  const hasRecent7d = (now - mostRecentEvidenceTime) <= sevenDayMs;
+  const hasRecent30d = (now - mostRecentEvidenceTime) <= thirtyDayMs;
+  // Regression-alerts honesty floor: if regression alerts present, NEVER use
+  // "quiet stretch" framing (midState). Fall through to betweenWindow or emptyState.
+  const REGRESSION_DAYS_LOCAL = (typeof REGRESSION_DAYS !== 'undefined') ? REGRESSION_DAYS : 30;
+  let hasRegression = false;
+  (milestones || []).forEach(m => {
+    if (m.status !== 'consistent' && m.status !== 'mastered') return;
+    const t = m.consistentAt || m.masteredAt;
+    if (!t) return;
+    const daysSince = (now - new Date(t).getTime()) / 86400000;
+    if (daysSince > REGRESSION_DAYS_LOCAL) hasRegression = true;
+  });
+  // Template selection per V-V-54 2x2 state-cell matrix
+  let templateKey;
+  if (inWindow.length > 0 && hasRecent7d) {
+    templateKey = 'fullData';
+  } else if (inWindow.length > 0 && !hasRecent7d) {
+    // V-V-54 + V-M-104 honesty floor: if regression alerts present, do not
+    // use "quiet stretch" framing — fall through to betweenWindow if recent
+    // confirmation exists, else emptyState.
+    templateKey = hasRegression ? (hasRecent30d ? 'betweenWindow' : 'emptyState') : 'midState';
+  } else if (inWindow.length === 0 && hasRecent30d) {
+    templateKey = 'betweenWindow';
+  } else {
+    templateKey = 'emptyState';
+  }
+  const tpl = templates[templateKey];
+  if (!tpl || !tpl.passage) { el.innerHTML = ''; return; }
+  // Variable substitution — escHtml at all interpolation boundaries (HR-4)
+  const inWindowList = inWindow.map(it => escHtml(it.text || '')).join(', ');
+  const recentConfirmedText = mostRecentConfirmedMs
+    ? escHtml(mostRecentConfirmedMs.text || 'a milestone')
+    : 'A recent milestone';
+  const lastEvidenceText = mostRecentConfirmedMs
+    ? escHtml(mostRecentConfirmedMs.text || '')
+    : '';
+  const lastEvidenceRelative = mostRecentEvidenceTime > 0
+    ? escHtml(_msRelativeTime(mostRecentEvidenceTime))
+    : '';
+  const passage = tpl.passage
+    .replace('{ageMonths}', String(ageMonths))
+    .replace('{ageDaysRemainder}', String(ageDaysRem))
+    .replace('{inWindowList}', inWindowList || 'no in-window milestones')
+    .replace('{recentConfirmedMilestone}', recentConfirmedText)
+    .replace('{lastEvidenceText}', lastEvidenceText)
+    .replace('{lastEvidenceRelative}', lastEvidenceRelative);
+  el.innerHTML = '<div class="ms-today-passage">' + passage + '</div>';
+}
+
+// Helper: relative-time formatter (no engine-internal labels per V-K-120)
+function _msRelativeTime(ts) {
+  if (!ts) return '';
+  const diffMs = Date.now() - ts;
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return diffDays + ' days ago';
+  if (diffDays < 30) return Math.floor(diffDays / 7) + ' weeks ago';
+  return Math.floor(diffDays / 30) + ' months ago';
+}
+
+// activityLevel:1-4 chip strip (Primitive 1) — single-tap chip; reads
+// _getActivityLevelToday and writes via _setActivityLevelToday. Honest no-
+// signal at activityLevel:null (empty-state prompt: "How was Ziva today?";
+// V-V-65 fold: prompt-as-label-above-strip; non-scrolling at 320px).
+function renderMsActivityLevelStrip() {
+  const el = document.getElementById('msActivityLevelStrip');
+  if (!el) return;
+  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  let currentLevel = null;
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      currentLevel = _getActivityLevelToday(today);
+    }
+  } catch (e) { currentLevel = null; }
+  const tiers = [
+    { level: 1, label: 'Quiet',  desc: 'Sick, sleepy, low engagement' },
+    { level: 2, label: 'Calm',   desc: 'Normal day, settled play'      },
+    { level: 3, label: 'Active', desc: 'Engaged, high-output day'      },
+    { level: 4, label: 'Peak',   desc: '"Couldn\'t stop moving"'       },
+  ];
+  const chips = tiers.map(t => {
+    const selected = (currentLevel === t.level);
+    return '<button class="ms-al-chip" data-selected="' + (selected ? 'true' : 'false')
+      + '" data-action="setMsActivityLevel" data-level="' + t.level + '"'
+      + ' aria-pressed="' + (selected ? 'true' : 'false') + '">'
+      + '<div class="ms-al-chip-label">' + escHtml(t.label) + '</div>'
+      + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
+      + '</button>';
+  }).join('');
+  el.innerHTML = '<div class="ms-al-prompt">How was Ziva today?</div>'
+    + '<div class="ms-al-chips">' + chips + '</div>';
+}
+
+// Handler: setMsActivityLevel — data-action delegate; writes the level via
+// engine-prep _setActivityLevelToday and re-renders the strip.
+function setMsActivityLevel(target) {
+  const level = parseInt(target && target.dataset && target.dataset.level, 10);
+  if (!level || level < 1 || level > 4) return;
+  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  try {
+    if (typeof _setActivityLevelToday === 'function') {
+      _setActivityLevelToday(today, level);
+    }
+  } catch (e) {}
+  renderMsActivityLevelStrip();
+  // Today header may shift state — re-render
+  try { renderMsTodayHeader(); } catch (e) {}
+}
+
+// In-window milestone proposals (Primitive 2) — engine-prep
+// _getInWindowMilestones(ageDays, 3, opts). Engine pre-applies safetyTier:true
+// cap-bypass for in-window safety-tier rows per V-M-125 in-window qualifier.
+// Per-card render: text + zi(icon) + clinical-band disclosure (omit-paren-
+// on-unverified per V-M-115 hard contract) + age framing + status pill +
+// three tap targets (Saw it today / Practicing / Not yet).
+function renderMsInWindowProposals() {
+  const el = document.getElementById('msInWindowProposals');
+  if (!el) return;
+  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+  let items = [];
+  try {
+    if (typeof _getInWindowMilestones === 'function') {
+      items = _getInWindowMilestones(ageDays, 3, {}) || [];
+    }
+  } catch (e) { items = []; }
+  if (items.length === 0) {
+    el.innerHTML = '<div class="t-sub-light text-center py-4">No milestones in-window right now — early days.</div>';
+    return;
+  }
+  el.innerHTML = items.map(it => _renderMsInWindowCard(it)).join('');
+}
+
+function _renderMsInWindowCard(item) {
+  const win = item.window || {};
+  const text = escHtml(item.text || '');
+  const icon = item.icon || '';
+  const safetyTier = item.safetyTier === true;
+  const evidenceStatus = item.evidenceStatus || 'not-yet';
+  // V-V-70 + V-M-115 hard contract: omit source parenthetical entirely
+  // when source === 'unverified'. The audit gate Scope A bans the
+  // "(unverified)" literal in render code; the conditional below is the
+  // honesty floor for the parenthetical.
+  let sourcePart = '';
+  if (win.source && win.source !== 'unverified') {
+    sourcePart = ' (' + escHtml(win.source) + ')';  // milestone-source-ok: per-row source attribution from data
+  }
+  const startM = (win.expectedStartMonths != null) ? String(win.expectedStartMonths) : '';
+  const endM = (win.expectedEndMonths != null) ? String(win.expectedEndMonths) : '';
+  const bandText = (startM && endM) ? ('Typically ' + startM + '–' + endM + ' months' + sourcePart + '.') : '';
+  const ageM = (win.ageMonths != null) ? String(win.ageMonths) : '?';
+  const ageRem = (win.ageDaysRemainder != null) ? String(win.ageDaysRemainder) : '0';
+  // V-V-72 fold: priority-mix framing. Window classification reads
+  // window.windowStatus (V-V-57 rename). "early band"/"in band"/"late band"
+  // is the parent-legible framing — never "soonest-to-age-out".
+  const bandLabel = _msWindowBandLabel(win);
+  const ageText = 'Ziva is ' + ageM + 'm ' + ageRem + 'd' + (bandLabel ? ' — ' + bandLabel : '');
+  // Status pill: confirmed / practicing / not-yet (V-V-57). Tooltip MUST
+  // include the word "Practicing" per Maren V-V-50 watch-list.
+  const statusLabel = {
+    confirmed: 'Confirmed',
+    practicing: 'Practicing',
+    'not-yet':  'Not yet',
+  }[evidenceStatus] || 'Not yet';
+  const milestoneIdEsc = escHtml(item.milestoneId || '');
+  return '<div class="ms-inwindow-card" data-safety-tier="' + (safetyTier ? 'true' : 'false')
+    + '" data-domain="' + escHtml(item.domain || 'motor') + '">'
+    + '<div class="ms-inwindow-head">'
+    + '<span class="ms-inwindow-icon">' + (icon || zi('star')) + '</span>'
+    + '<div class="ms-inwindow-body">'
+    + '<div class="ms-inwindow-text">' + text + '</div>'
+    + (bandText ? '<div class="ms-inwindow-band">' + escHtml(bandText) + '</div>' : '')
+    + '<div class="ms-inwindow-age">' + escHtml(ageText) + '</div>'
+    + '<div class="mt-4"><span class="ms-status-pill" data-status="' + escHtml(evidenceStatus) + '">' + escHtml(statusLabel) + '</span></div>'
+    + '</div></div>'
+    + '<div class="ms-tap-targets">'
+    + '<button class="ms-tap-btn" data-action-tap="confirm" data-action="confirmMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Saw it today">'
+    + '<span class="ms-tap-btn-icon">' + zi('check') + '</span><span>Saw it today</span></button>'
+    + '<button class="ms-tap-btn" data-action-tap="practicing" data-action="practicingMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Practicing">'
+    + '<span class="ms-tap-btn-icon">' + zi('trending-flat') + '</span><span>Practicing</span></button>'
+    + '<button class="ms-tap-btn" data-action-tap="not-yet" data-action="notYetMsInWindow" data-ms-id="' + milestoneIdEsc + '" title="Not yet">'
+    + '<span class="ms-tap-btn-icon">' + zi('arrow-right') + '</span><span>Not yet</span></button>'
+    + '</div>'
+    + '</div>';
+}
+
+function _msWindowBandLabel(win) {
+  if (!win) return '';
+  if (win.windowStatus === 'pre-window') return 'pre-window';
+  if (win.windowStatus === 'post-window') return 'post-window';
+  // In-window: split into early/in/late band by position in window
+  const ageDays = win.ageDays;
+  const expS = win.expectedStart;
+  const expE = win.expectedEnd;
+  if (typeof ageDays === 'number' && typeof expS === 'number' && typeof expE === 'number' && expE > expS) {
+    const pos = (ageDays - expS) / (expE - expS);
+    if (pos < 0.33) return 'early band';
+    if (pos > 0.67) return 'late band';
+    return 'in band';
+  }
+  return 'in band';
+}
+
+// Tap handlers — write-side semantics. Engine-internal confidence enum
+// stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
+// uses observation-counts + evidenceStatus value only.
+function confirmMsInWindow(target) {
+  const msId = target && target.dataset && target.dataset.msId;
+  if (!msId) return;
+  _msRecordEvidence(msId, 'high');
+  renderMilestones();
+}
+
+function practicingMsInWindow(target) {
+  const msId = target && target.dataset && target.dataset.msId;
+  if (!msId) return;
+  _msRecordEvidence(msId, 'medium');
+  renderMilestones();
+}
+
+function notYetMsInWindow(target) {
+  const msId = target && target.dataset && target.dataset.msId;
+  if (!msId) return;
+  // Suppress 7 days via ziva_milestone_suppress (engine-prep KEYS.milestoneSuppress).
+  // 5-second undo toast per V-M-103.
+  const suppressKey = (typeof KEYS !== 'undefined' && KEYS.milestoneSuppress) ? KEYS.milestoneSuppress : 'ziva_milestone_suppress';
+  let suppress = {};
+  try { suppress = JSON.parse(localStorage.getItem(suppressKey) || '{}'); } catch (e) { suppress = {}; }
+  const untilTs = Date.now() + (7 * 86400000);
+  suppress[msId] = untilTs;
+  try { localStorage.setItem(suppressKey, JSON.stringify(suppress)); } catch (e) {}
+  // Show undo toast
+  if (typeof showQLToast === 'function') {
+    showQLToast('Suppressed for 7 days. <button class="al-undo-btn" data-action="undoMsSuppress" data-ms-id="' + escHtml(msId) + '">Undo</button>', 5000);
+  }
+  renderMilestones();
+}
+
+function undoMsSuppress(target) {
+  const msId = target && target.dataset && target.dataset.msId;
+  if (!msId) return;
+  const suppressKey = (typeof KEYS !== 'undefined' && KEYS.milestoneSuppress) ? KEYS.milestoneSuppress : 'ziva_milestone_suppress';
+  let suppress = {};
+  try { suppress = JSON.parse(localStorage.getItem(suppressKey) || '{}'); } catch (e) { suppress = {}; }
+  delete suppress[msId];
+  try { localStorage.setItem(suppressKey, JSON.stringify(suppress)); } catch (e) {}
+  renderMilestones();
+}
+
+// Record evidence — write to activityLog at engine-prep confidence enum.
+// Surface prose never renders the enum value per V-K-120/V-K-121 boundary.
+function _msRecordEvidence(milestoneId, confidence) {
+  if (typeof activityLog === 'undefined' || !Array.isArray(activityLog)) return;
+  const today = (typeof today === 'function') ? today() : new Date().toISOString().slice(0, 10);
+  activityLog.push({
+    milestone: milestoneId,
+    confidence: confidence,
+    date: today,
+    timestamp: new Date().toISOString(),
+    source: 'milestones-tab-v1-tap',
+  });
+  if (typeof save === 'function' && typeof KEYS !== 'undefined') {
+    save(KEYS.activityLog || 'ziva_activity', activityLog);
+  }
+}
+
+// Bulk catch-up grid (Primitive 3) — _getInWindowMilestones with cap=Infinity;
+// surface filters out already-confirmed. Tap-tap-done: each selected chip
+// emits medium-confidence evidence on submit. Collapsed-by-default per spec.
+function renderMsBulkGrid() {
+  const el = document.getElementById('msBulkGrid');
+  if (!el) return;
+  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+  let items = [];
+  try {
+    if (typeof _getInWindowMilestones === 'function') {
+      items = _getInWindowMilestones(ageDays, Infinity, {}) || [];
+    }
+  } catch (e) { items = []; }
+  if (items.length === 0) {
+    el.innerHTML = '<div class="t-sub-light text-center py-4">No age-band milestones to catch up on.</div>';
+    return;
+  }
+  // Group by domain per spec
+  const byDomain = {};
+  items.forEach(it => {
+    const dom = it.domain || 'motor';
+    if (!byDomain[dom]) byDomain[dom] = [];
+    byDomain[dom].push(it);
+  });
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  const sections = cats.map(c => {
+    const group = byDomain[c.key] || [];
+    if (group.length === 0) return '';
+    const chips = group.map(it => {
+      const text = escHtml(it.text || '');
+      const idEsc = escHtml(it.milestoneId || '');
+      return '<button class="ms-bulk-chip" data-action="toggleMsBulkChip" data-ms-id="' + idEsc + '" data-selected="false">'
+        + '<span class="ms-bulk-chip-icon">' + (it.icon || zi('star')) + '</span>'
+        + '<span>' + text + '</span>'
+        + '</button>';
+    }).join('');
+    return '<div class="ms-bulk-section">'
+      + '<div class="ms-pediatric-prep-section-label">' + escHtml(c.label) + '</div>'
+      + '<div class="ms-bulk-grid">' + chips + '</div>'
+      + '</div>';
+  }).filter(Boolean).join('');
+  el.innerHTML = '<div class="ms-bulk-grid-header">'
+    + '<div class="card-title">Bulk catch-up</div>'
+    + '<button class="t-sub-light" data-action="toggleMsBulkGridOpen">' + zi('chevron-down') + '</button>'
+    + '</div>'
+    + sections
+    + '<div class="ms-bulk-submit"><button class="btn-primary bp-sage" data-action="submitMsBulkSelections">Add evidence</button></div>';
+  el.style.display = '';
+}
+
+function toggleMsBulkChip(target) {
+  if (!target) return;
+  const cur = target.dataset.selected === 'true';
+  target.dataset.selected = cur ? 'false' : 'true';
+}
+
+function toggleMsBulkGridOpen(target) {
+  const el = document.getElementById('msBulkGrid');
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+function submitMsBulkSelections() {
+  const el = document.getElementById('msBulkGrid');
+  if (!el) return;
+  const selected = el.querySelectorAll('.ms-bulk-chip[data-selected="true"]');
+  selected.forEach(chip => {
+    const msId = chip.dataset.msId;
+    if (msId) _msRecordEvidence(msId, 'medium');
+  });
+  if (typeof showQLToast === 'function' && selected.length > 0) {
+    showQLToast('Added evidence for ' + selected.length + ' milestone(s).', 3000);
+  }
+  renderMilestones();
+}
+
+// Domain filter chips (Library sub-tab) — reads ACTIVITY_CATEGORIES.
+// Wires to the existing milestoneList filter (currently shows all; filter
+// extension is a v1.x candidate per spec out-of-scope register).
+function renderMsDomainFilter() {
+  const el = document.getElementById('msDomainFilter');
+  if (!el) return;
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  el.innerHTML = '<button class="ms-domain-chip" data-active="true" data-action="filterMsDomain" data-domain="all">All</button>'
+    + cats.map(c => '<button class="ms-domain-chip" data-action="filterMsDomain" data-domain="' + escHtml(c.key) + '" data-domain-accent="' + escHtml(c.accent) + '">'
+      + zi(c.icon) + ' ' + escHtml(c.label) + '</button>').join('');
+}
+
+function filterMsDomain(target) {
+  const dom = target && target.dataset && target.dataset.domain;
+  if (!dom) return;
+  // Toggle active state on chips
+  const bar = document.getElementById('msDomainFilter');
+  if (!bar) return;
+  bar.querySelectorAll('.ms-domain-chip').forEach(c => {
+    c.dataset.active = (c.dataset.domain === dom) ? 'true' : 'false';
+  });
+  // Filter the milestoneList items
+  const list = document.getElementById('milestoneList');
+  if (!list) return;
+  list.querySelectorAll('[data-domain]').forEach(item => {
+    const itemDom = item.dataset.domain;
+    item.style.display = (dom === 'all' || itemDom === dom) ? '' : 'none';
+  });
+}
+
+// Trajectory ribbon (Patterns sub-tab; return-visit surface 2) — 2-state visual
+// (filled=confirmed, outlined=hedged) per V-V-49. Global cap 20 markers post-
+// bucket-merge per V-K-122. ≥9px diameter + ≥1.8px stroke per V-V-66.
+// Color: domain-keyed (reads ACTIVITY_CATEGORIES[milestone.domain].accent).
+// Performance gate: renders within 200ms (cipher-3 budget).
+function renderMsTrajectoryRibbon() {
+  const el = document.getElementById('msTrajectoryRibbon');
+  if (!el) return;
+  // Collect 3 buckets: confirmed + practicing + in-window not-yet
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  const accentByDomain = {};
+  cats.forEach(c => { accentByDomain[c.key] = c.accent; });
+  const ageDays = (typeof _zivaAgeInDays === 'function') ? _zivaAgeInDays() : 210;
+
+  // Bucket 1: confirmed (top by recency, cap 10)
+  const confirmedAll = (milestones || []).filter(m => m.status === 'consistent' || m.status === 'mastered')
+    .map(m => ({
+      ms: m,
+      domain: m.domain || m.cat || 'motor',
+      ts: new Date(m.consistentAt || m.masteredAt || 0).getTime() || 0,
+      state: 'confirmed',
+      priority: 0,
+    }))
+    .sort((a, b) => b.ts - a.ts);
+  // Bucket 2: practicing
+  const practicingAll = (milestones || []).filter(m => m.status === 'practicing' || m.status === 'emerging')
+    .map(m => ({
+      ms: m,
+      domain: m.domain || m.cat || 'motor',
+      ts: new Date(m.practicingAt || m.emergingAt || 0).getTime() || 0,
+      state: 'hedged',
+      priority: 0.5,
+    }));
+  // Bucket 3: in-window not-yet (≤5 most-imminent floor; sub-bucket cap)
+  let inWindowNotYet = [];
+  try {
+    if (typeof _getInWindowMilestones === 'function') {
+      inWindowNotYet = (_getInWindowMilestones(ageDays, Infinity, {}) || [])
+        .filter(it => it.evidenceStatus === 'not-yet')
+        .map(it => ({
+          ms: { text: it.text, domain: it.domain },
+          domain: it.domain || 'motor',
+          ts: 0,
+          state: 'hedged',
+          priority: it.priority || 0,
+        }));
+    }
+  } catch (e) { inWindowNotYet = []; }
+  inWindowNotYet = inWindowNotYet.sort((a, b) => (b.priority || 0) - (a.priority || 0)).slice(0, 5);
+
+  // Merge + global cap 20 by priority (recency for confirmed, engine priority for others)
+  let merged = []
+    .concat(confirmedAll.slice(0, 12))
+    .concat(practicingAll.slice(0, 8))
+    .concat(inWindowNotYet);
+  // V-K-122 global cap: 20 markers max post-merge
+  merged = merged.slice(0, 20);
+  if (merged.length === 0) {
+    el.innerHTML = '<div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div>'
+      + '<div class="t-sub-light text-center py-4">No milestone trajectory yet — early days.</div>';
+    return;
+  }
+  // Render SVG ribbon — markers spaced evenly across 100% width
+  const w = 320;
+  const h = 48;
+  const padding = 16;
+  const innerW = w - padding * 2;
+  const step = merged.length > 1 ? innerW / (merged.length - 1) : 0;
+  const markers = merged.map((m, i) => {
+    const cx = padding + step * i;
+    const cy = h / 2;
+    const accent = accentByDomain[m.domain] || 'lavender';
+    const color = 'var(--' + accent + ')';
+    // V-V-66: ≥9px diameter (r=4.5) + ≥1.8px stroke for outlined
+    if (m.state === 'confirmed') {
+      return '<circle class="ms-trajectory-marker" data-state="confirmed" cx="' + cx + '" cy="' + cy + '" r="4.5" style="color:' + color + '"/>';
+    }
+    return '<circle class="ms-trajectory-marker" data-state="hedged" cx="' + cx + '" cy="' + cy + '" r="4.5" style="color:' + color + '"/>';
+  }).join('');
+  el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">' + zi('chart-up') + '</div> Trajectory</div></div>'
+    + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="xMidYMid meet">' + markers + '</svg>'
+    + '<div class="ms-trajectory-label">' + escHtml(merged.length) + ' milestones on Ziva\'s timeline</div>';
+}
+
+// Pediatric-visit prep card (Patterns sub-tab; return-visit surface 3) —
+// narrated-only v1 minimum (V-V-53; copy-as-text + PDF deferred to R-3).
+// Auto-derived "Things to mention" from recent evidence (30d) + practicing +
+// active CareTickets + recent regressions. Visible register-tag footer
+// "for visit-prep only — not a clinical record" per V-M-109 + V-M-122.
+// No engine-internal labels (high-conf etc.) per V-K-120 + V-K-121 boundary.
+function renderMsPediatricPrep() {
+  const el = document.getElementById('msPediatricPrep');
+  if (!el) return;
+  const now = Date.now();
+  const thirtyDayMs = 30 * 86400000;
+  // Recent evidence — count observations from activityLog within 30 days,
+  // grouped by milestoneId. Then map back to milestone text.
+  const recentObsByMs = {};
+  (typeof activityLog !== 'undefined' && Array.isArray(activityLog) ? activityLog : []).forEach(a => {
+    if (!a || !a.milestone) return;
+    const ts = new Date(a.date || a.timestamp || 0).getTime();
+    if (!ts || (now - ts) > thirtyDayMs) return;
+    recentObsByMs[a.milestone] = (recentObsByMs[a.milestone] || 0) + 1;
+  });
+  // Confirmed milestones with recent observations
+  const confirmedItems = (milestones || []).filter(m => (m.status === 'consistent' || m.status === 'mastered'))
+    .map(m => ({ text: m.text, count: recentObsByMs[m.id] || recentObsByMs[m.text] || 0 }))
+    .filter(it => it.count > 0)
+    .slice(0, 4);
+  // Practicing milestones
+  const practicingItems = (milestones || []).filter(m => (m.status === 'practicing' || m.status === 'emerging'))
+    .map(m => ({ text: m.text, count: recentObsByMs[m.id] || recentObsByMs[m.text] || 0 }))
+    .slice(0, 3);
+  // Regressions — confirmed but no recent evidence in REGRESSION_DAYS window
+  const REGRESSION_DAYS_LOCAL = (typeof REGRESSION_DAYS !== 'undefined') ? REGRESSION_DAYS : 30;
+  const regressions = (milestones || []).filter(m => {
+    if (m.status !== 'consistent' && m.status !== 'mastered') return false;
+    const t = m.consistentAt || m.masteredAt;
+    if (!t) return false;
+    const daysSince = (now - new Date(t).getTime()) / 86400000;
+    return daysSince > REGRESSION_DAYS_LOCAL;
+  }).slice(0, 2);
+  // Build narration (CV3-002 narrate-vs-list). Observation-counts only per
+  // V-K-120 — never engine-internal labels.
+  const parts = [];
+  parts.push('<div class="card-header"><div class="card-title"><div class="icon icon-rose">' + zi('hospital') + '</div> Pediatric-visit prep</div></div>');
+  parts.push('<div class="ms-pediatric-prep-narration">');
+  parts.push('Next visit: not yet scheduled. Things to mention this month:');
+  parts.push('</div>');
+  if (confirmedItems.length > 0) {
+    parts.push('<div class="ms-pediatric-prep-section">');
+    parts.push('<div class="ms-pediatric-prep-section-label">Confirmed recently</div>');
+    parts.push('<ul>');
+    confirmedItems.forEach(it => {
+      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+    });
+    parts.push('</ul></div>');
+  }
+  if (practicingItems.length > 0) {
+    parts.push('<div class="ms-pediatric-prep-section">');
+    parts.push('<div class="ms-pediatric-prep-section-label">Practicing</div>');
+    parts.push('<ul>');
+    practicingItems.forEach(it => {
+      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+    });
+    parts.push('</ul></div>');
+  }
+  if (regressions.length > 0) {
+    parts.push('<div class="ms-pediatric-prep-section">');
+    parts.push('<div class="ms-pediatric-prep-section-label">Worth mentioning</div>');
+    parts.push('<ul>');
+    regressions.forEach(m => {
+      const t = m.consistentAt || m.masteredAt;
+      const daysSince = Math.floor((now - new Date(t).getTime()) / 86400000);
+      parts.push('<li>' + escHtml(m.text || '') + ' — no evidence in ' + daysSince + ' days</li>');
+    });
+    parts.push('</ul></div>');
+  }
+  // Register-tag footer per V-M-109 + V-M-122
+  parts.push('<div class="ms-pediatric-prep-tag">For visit-prep only — not a clinical record</div>');
+  el.innerHTML = parts.join('');
+}
+
+// Correlation cross-link teaser (Patterns sub-tab) — uses canonical
+// gotoCard() pattern. V-V-63 fold: cardId verified against
+// template.html `id="infoMilestoneSleepCard"` (NOT phantom
+// `infoMilestoneSleepCorrelationCard`).
+function renderMsCorrelationTeaser() {
+  const el = document.getElementById('msCorrelationTeaser');
+  if (!el) return;
+  // V-V-63 regression-guard: verify cardId exists before wiring up
+  const targetCard = document.getElementById('infoMilestoneSleepCard');
+  if (!targetCard) { el.innerHTML = ''; return; }
+  el.innerHTML = '<button class="ms-correlation-teaser" data-action="gotoMsCorrelation">'
+    + '<span class="ms-correlation-teaser-text">Milestone × Sleep correlation</span>'
+    + '<span class="ms-correlation-teaser-chev">' + zi('arrow-right') + '</span>'
+    + '</button>';
+}
+
+function gotoMsCorrelation() {
+  if (typeof gotoCard === 'function') {
+    gotoCard('info', 'infoMilestoneSleepCard');
+  }
 }
 
 // renderMilestoneList — extracted from renderMilestones (PR-α). Owns the

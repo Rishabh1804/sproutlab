@@ -1127,87 +1127,141 @@
     </div>
   </div>
 
-  <!-- ══════════════ TAB 4: MILESTONES ══════════════ -->
+  <!-- ══════════════ TAB 4: MILESTONES (v1 — 3-sub-tab redesign) ══════════════ -->
+  <!--
+    milestones-tab-v1: Track-tab 5th sub-tab redesigned around three input
+    primitives + 3-sub-tab layout (mirrors food-sub-tab-v1) + three return-visit
+    surfaces (Today header / trajectory ribbon / pediatric-prep). All 11
+    ID-bearing surfaces from the prior flat layout relocated per V-M-100 +
+    V-M-119 (preserved IDs per G3): recentEvidenceFeed, msActiveMilestones,
+    milestonesDomainHero, milestoneStats, milestoneHighlights, msCatWheels,
+    msRegressionAlerts, milestoneList, msTimelineContent, upcomingMilestoneList,
+    activityList. Chrome doctrine V-V-46: active sub-tab uses existing
+    uniform-rose .track-sub-btn.active chrome; lavender domain accent surfaces
+    INSIDE cards (Milestone Timeline icon-lav header + trajectory ribbon
+    --surface-lav background) so per-domain [data-domain] cascade is preserved.
+  -->
   <div class="track-sub-panel" id="tab-milestones">
-    <div class="grid">
 
-      <!-- ─── LOG ACTIVITY BUTTON ─── -->
-      <div class="col-full" style="padding:0 0 4px;">
-        <button class="btn-primary bp-sage al-log-btn" data-quick-modal="activity"><svg class="zi"><use href="#zi-run"/></svg> Log Activity / Observation</button>
+    <!-- Inner sub-tab nav (Log / Library / Patterns) -->
+    <div class="ms-sub-bar" id="msSubBar" role="tablist">
+      <button class="track-sub-btn ms-sub-btn active" data-action="switchMsSub" data-ms-sub="log" role="tab" aria-selected="true">Log</button>
+      <button class="track-sub-btn ms-sub-btn" data-action="switchMsSub" data-ms-sub="library" role="tab" aria-selected="false">Library</button>
+      <button class="track-sub-btn ms-sub-btn" data-action="switchMsSub" data-ms-sub="patterns" role="tab" aria-selected="false">Patterns</button>
+    </div>
+
+    <!-- ═══ LOG SUB-TAB — daily input + "Today" return-visit surface ═══ -->
+    <div class="ms-sub-panel active" id="ms-sub-log" role="tabpanel" aria-labelledby="msSubLog">
+      <div class="grid">
+
+        <!-- "Today" header card (4 narration templates per V-V-54: fullData / midState / betweenWindow / emptyState) -->
+        <div class="card card-info col-full ms-today-card" id="msTodayHeader" data-card-priority="notable"></div>
+
+        <!-- activityLevel:1-4 chip strip (Primitive 1) — non-scrolling at 320px per V-V-65 -->
+        <div class="col-full ms-activity-level-strip" id="msActivityLevelStrip"></div>
+
+        <!-- In-window milestone proposals (Primitive 2) — engine-prep _getInWindowMilestones; safetyTier:true bypasses cap per V-M-125 -->
+        <div class="col-full ms-inwindow-stack" id="msInWindowProposals"></div>
+
+        <!-- Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path -->
+        <div class="card card-info col-full ms-bulk-grid-card" id="msBulkGrid" style="display:none;"></div>
+
+        <!-- Recent evidence feed (relocated per V-M-100; collapsed by default) -->
+        <div class="card card-daily col-full" id="recentEvidenceFeed" style="display:none;"></div>
+
+        <!-- Legacy Log Activity button (backward-compat for free-text log entry) -->
+        <div class="col-full" style="padding:0 0 4px;">
+          <button class="btn-primary bp-sage al-log-btn" data-quick-modal="activity"><svg class="zi"><use href="#zi-run"/></svg> Log Activity / Observation</button>
+        </div>
+
       </div>
+    </div>
 
-      <!-- ─── RECENT EVIDENCE FEED ─── -->
-      <div class="card card-daily col-full" id="recentEvidenceFeed" style="display:none;"></div>
+    <!-- ═══ LIBRARY SUB-TAB — full milestone DB + relocated cards ═══ -->
+    <div class="ms-sub-panel" id="ms-sub-library" role="tabpanel" aria-labelledby="msSubLibrary">
+      <div class="grid">
 
-      <!-- ─── ACTIVE MILESTONES (evidence-driven primary view) ─── -->
-      <div class="card card-daily col-full" id="msActiveMilestones" style="display:none;"></div>
+        <!-- Active milestones (evidence-driven primary view; preserved ID per V-M-119 + G3) -->
+        <div class="card card-daily col-full" id="msActiveMilestones" style="display:none;"></div>
 
-      <!-- ─── DOMAIN SCORE HERO ─── -->
-      <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
+        <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID) -->
+        <div class="card col-full card-hero hero-milestones" id="milestonesDomainHero" style="display:none;"></div>
 
-      <!-- ─── TIER 1: STATS ─── -->
+        <!-- Domain filter chips (read from window.ACTIVITY_CATEGORIES) -->
+        <div class="col-full ms-domain-filter" id="msDomainFilter"></div>
+
+        <!-- Coming Up Next (relocated per V-M-100; preserved ID) -->
+        <div class="card card-info col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-crystal"/></svg></div> Coming Up Next</div>
+            <span class="t-sm t-light" id="upcomingAgeLabel"></span>
+          </div>
+          <div id="upcomingMilestoneList"></div>
+        </div>
+
+        <!-- Milestone Timeline (relocated per V-M-100; preserved ID; icon-lav header carries milestone-overall semantic per V-M-120 fold) -->
+        <div class="card card-info col-full">
+          <div class="card-header" data-collapse-target="msTimelineBody" data-collapse-chevron="msTimelineChevron">
+            <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-book"/></svg></div> Milestone Timeline</div>
+            <span class="collapse-chevron" id="msTimelineChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="msTimelineBody" class="collapse-body">
+            <div id="msTimelineContent" class="mt-8"></div>
+          </div>
+        </div>
+
+        <!-- All milestones (5-stage) + Add Custom (relocated per V-M-100; preserved ID + openMilestoneModal CTA per V-M-127 closure) -->
+        <div class="card card-action col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-star"/></svg></div> Milestones</div>
+            <button class="btn-primary bp-sage" data-action="openMilestoneModal">+ Add</button>
+          </div>
+          <div class="milestone-list" id="milestoneList"></div>
+        </div>
+
+        <!-- Recommended Activities (relocated per V-M-100; preserved ID; reads MILESTONE_ACTIVITIES) -->
+        <div class="card card-info col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-target"/></svg></div> Recommended Activities</div>
+            <span class="t-sm t-light" id="activityAgeLabel"></span>
+          </div>
+          <div id="activityList"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ PATTERNS SUB-TAB — engine-derived insights + return-visit surfaces ═══ -->
+    <div class="ms-sub-panel" id="ms-sub-patterns" role="tabpanel" aria-labelledby="msSubPatterns">
+      <div class="grid">
+
+        <!-- Milestone stats pills (relocated per V-M-100; preserved ID; reads ACTIVITY_CATEGORIES) -->
         <div class="col-full stat-pills-grid" id="milestoneStats"></div>
 
-      <!-- HIGHLIGHTS -->
-      <div class="card card-info col-full" id="milestoneHighlights"></div>
+        <!-- Milestone highlights (relocated per V-M-100; preserved ID) -->
+        <div class="card card-info col-full" id="milestoneHighlights"></div>
 
-      <!-- ─── CATEGORY PROGRESS WHEELS ─── -->
-      <div class="card card-daily col-full card-gradient-warm">
-        <div class="micro-label text-center mb-4 fw-600" >Category Progress</div>
-        <div class="ms-cat-wheels" id="msCatWheels"></div>
-      </div>
+        <!-- Regression alerts (CARE-TIER critical surface; relocated per V-M-100; preserved ID) -->
+        <div id="msRegressionAlerts" class="col-full"></div>
 
-      <!-- ─── REGRESSION ALERTS ─── -->
-      <div id="msRegressionAlerts" class="col-full"></div>
-
-      <!-- ─── TIER 2: ACTIONS ─── -->
-      <div class="home-section-label sec-t1 col-full">Track & Record</div>
-
-      <!-- ALL MILESTONES (5-stage) -->
-      <div class="card card-action col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-star"/></svg></div> Milestones</div>
-          <button class="btn-primary bp-sage" data-action="openMilestoneModal">+ Add</button>
+        <!-- Category progress wheels (relocated per V-M-100; preserved ID; reads ACTIVITY_CATEGORIES 5-cat) -->
+        <div class="card card-daily col-full card-gradient-warm">
+          <div class="micro-label text-center mb-4 fw-600">Category Progress</div>
+          <div class="ms-cat-wheels" id="msCatWheels"></div>
         </div>
-        <div class="milestone-list" id="milestoneList"></div>
+
+        <!-- Trajectory ribbon (return-visit surface; 2-state visual per V-V-49; global cap 20 per V-K-122; ≥9px/≥1.8px per V-V-66; lavender domain accent --surface-lav background) -->
+        <div class="card card-info col-full ms-trajectory-card" id="msTrajectoryRibbon" data-card-priority="notable"></div>
+
+        <!-- Pediatric-visit prep card (return-visit surface; narrated-only v1 minimum per V-V-53; visual register-tag contract per V-M-122; screenshot-bypass defense per V-V-67) -->
+        <div class="card card-info col-full ms-pediatric-prep-card" id="msPediatricPrep" data-card-priority="notable"></div>
+
+        <!-- Milestone-window correlation cross-link teaser (cardId verified at template.html infoMilestoneSleepCard per V-V-63) -->
+        <div class="col-full ms-correlation-teaser" id="msCorrelationTeaser"></div>
+
       </div>
-
-      <!-- ─── MILESTONE JOURNEY ─── -->
-      <div class="home-section-label sec-t2 col-full">Journey</div>
-
-      <!-- MILESTONE TIMELINE -->
-      <div class="card card-info col-full">
-        <div class="card-header" data-collapse-target="msTimelineBody" data-collapse-chevron="msTimelineChevron">
-          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-book"/></svg></div> Milestone Timeline</div>
-          <span class="collapse-chevron" id="msTimelineChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-        </div>
-        <div id="msTimelineBody" class="collapse-body">
-          <div id="msTimelineContent" class="mt-8"></div>
-        </div>
-      </div>
-
-      <!-- ─── TIER 3: REFERENCE ─── -->
-      <div class="home-section-label sec-t3 col-full">What to Expect</div>
-
-      <!-- UPCOMING MILESTONES -->
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-lav"><svg class="zi"><use href="#zi-crystal"/></svg></div> Coming Up Next</div>
-          <span class="t-sm t-light" id="upcomingAgeLabel"></span>
-        </div>
-        <div id="upcomingMilestoneList"></div>
-      </div>
-
-      <!-- RECOMMENDED ACTIVITIES -->
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-target"/></svg></div> Recommended Activities</div>
-          <span class="t-sm t-light" id="activityAgeLabel"></span>
-        </div>
-        <div id="activityList"></div>
-      </div>
-
     </div>
+
   </div>
 
   <!-- ══════════════ TAB 7: SLEEP ══════════════ -->
