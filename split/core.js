@@ -51,6 +51,15 @@ const KEYS = {
   // per-entry models, (b) zero risk of echo-loop via diff (sync-internal
   // metadata never enters the SYNC_KEYS write path).
   lastWriters: 'ziva_last_writers',
+  // milestone-engine-prep-v1 PR-A — engine substrate keys.
+  // milestoneSuppress: per-milestone suppress-until timestamp (the "Not yet"
+  //   tap's 7-day silence honor). Cross-device sync-replicable via SYNC_KEYS
+  //   + _postReceiveMilestoneSuppress merge hook (V-K-104 + V-M-116 floors).
+  // activityMeta: single-doc { [dateKey]: { activityLevel: 1-4 } } separate
+  //   from the activityLog array (V-K-111 floor — switching activityLog to
+  //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
+  milestoneSuppress: 'ziva_milestone_suppress',
+  activityMeta:      'ziva_activity_meta',
 };
 
 function load(key, def) {
@@ -372,6 +381,12 @@ const MS_STAGE_META = {
 // INIT
 // ─────────────────────────────────────────
 let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, medChecks, customEvents, scrapbook, doctors, sleepData, poopData, currentReaction, _careTickets;
+// milestone-engine-prep-v1 PR-A — engine substrate module-globals.
+// activityMeta: single-doc { [dateKey]: { activityLevel: 1-4 } }, separate
+//   key family from activityLog per V-K-111 floor.
+// milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
+// Both hydrated from localStorage in init flow alongside the other data globals.
+let activityMeta, milestoneSuppress;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -1107,6 +1122,16 @@ function init() {
   // Load activity log (evidence-based milestones)
   activityLog  = load(KEYS.activityLog, null) || {};
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
+
+  // milestone-engine-prep-v1 PR-A — activityMeta + milestoneSuppress hydration.
+  // V-K-111 floor: activityMeta is the SEPARATE per-day-meta key family (not
+  // an _meta sentinel on activityLog) to avoid breaking 20+ Array.isArray
+  // consumers. V-K-104 floor: milestoneSuppress is explicitly registered for
+  // sync (see SYNC_KEYS in sync.js) — no falling through ziva_* pattern picker.
+  activityMeta = load(KEYS.activityMeta, null) || {};
+  if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
+  milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
+  if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
 
   // Load tomorrow's planned meals
   _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
@@ -5813,6 +5838,335 @@ function _getActiveStandard() {
     if (raw === 'iap' || raw === 'eu' || raw === 'cn' || raw === 'who') return raw;
     return 'who';
   } catch (e) { return 'who'; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// milestone-engine-prep-v1 PR-A — 4 engine primitives (V-K-113 split).
+// Spec: docs/specs/milestone-engine-prep-v1.md §Primitive 1..3.
+// Charter alignment (CV3-006): Honesty primary (clinical bands never
+// personalised; activityLevel:null is honest no-signal); Extensibility
+// co-primary (explicit-state-injection signature; row-addition substrate).
+// ─────────────────────────────────────────────────────────────────────────
+
+// _predictMilestoneWindow — Primitive 1.
+// Clinical-range predictor for a single milestone. PURE function. NEVER
+// personalised — returns the typical clinical band from the active reference
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
+// Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
+function _predictMilestoneWindow(milestoneId, opts) {
+  opts = opts || {};
+  if (typeof milestoneId !== 'string' || !milestoneId) return null;
+  const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
+  if (!standards) return null;
+  const standardKey = opts.standardKey || _getActiveStandard();
+  const standardSpec = standards[standardKey];
+  if (!standardSpec || typeof standardSpec !== 'object') return null;
+
+  // Walk brackets (integer month keys) to find the row whose slugify(text)
+  // matches milestoneId. Match by slug per the DEFAULT_MILESTONES id
+  // convention (data.js:1471) — no per-row id field exists on MILESTONE_STANDARDS.
+  let matchedRow = null;
+  let matchedBracket = null;
+  const bracketKeys = Object.keys(standardSpec)
+    .map(function(k) { return parseInt(k, 10); })
+    .filter(function(k) { return !isNaN(k); })
+    .sort(function(a, b) { return a - b; });
+  for (var i = 0; i < bracketKeys.length; i++) {
+    const bracket = bracketKeys[i];
+    const rows = standardSpec[bracket];
+    if (!Array.isArray(rows)) continue;
+    for (var j = 0; j < rows.length; j++) {
+      if (slugify(rows[j].text || '') === milestoneId) {
+        matchedRow = rows[j];
+        matchedBracket = bracket;
+        break;
+      }
+    }
+    if (matchedRow) break;
+  }
+  if (!matchedRow) return null;
+
+  // V-K-116 — advanced-row derivation rule: advanced:true offsets by +1 bracket.
+  // Treats the advanced flag as a clinical-band shift (matches row.desc intent
+  // which often says "may appear here but typical is later").
+  const effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
+  // Find the next bracket for the end-fallback. V-K-114: highest-bracket
+  // (12m) default end is 18*30.44 ≈ 548 days when no explicit endMonth set.
+  const startBracketIdx = bracketKeys.indexOf(matchedBracket);
+  const nextBracket = bracketKeys[startBracketIdx + 1];
+  let endBracket;
+  if (typeof matchedRow.endMonth === 'number') {
+    endBracket = matchedRow.endMonth;
+  } else if (matchedRow.advanced) {
+    // Advanced row: end at (K+2)*30.44 - 1 days. V-K-116 contract.
+    endBracket = matchedBracket + 2;
+  } else if (typeof nextBracket === 'number') {
+    endBracket = nextBracket;
+  } else {
+    // Top bracket fallback per V-K-114
+    endBracket = 18;
+  }
+  const expectedStart = effectiveStartBracket * 30.44;
+  // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
+  // For non-advanced rows, end = endBracket * 30.44 - 1 to land at the bracket-end day.
+  const expectedEnd = (endBracket * 30.44) - 1;
+
+  // Baby's current age — read module-global DOB via _zivaAgeInDays(today()).
+  // V-K-118 floor: never Date.now() millis arithmetic; always derive nowDays
+  // via the timezone-safe helper. V-V-69 fold (Vela engine-prep PR-A audit):
+  // opts.dobOverride must actually override DOB for test-isolation (spec
+  // V-K-115 contract). Production callers omit and we use the module-global
+  // _ZIVA_DOB_MS; tests inject a DOB and we compute ageDays = today - dobOverride
+  // via the same UTC-midnight idiom _zivaAgeInDays uses internally.
+  let ageDays;
+  if (opts.dobOverride) {
+    const dobStr = toDateStr(new Date(opts.dobOverride));
+    const dobMs = Date.parse(dobStr + 'T00:00:00Z');
+    const todayMs = Date.parse(today() + 'T00:00:00Z');
+    ageDays = (isNaN(dobMs) || isNaN(todayMs))
+      ? 0
+      : Math.max(0, Math.round((todayMs - dobMs) / (24 * 60 * 60 * 1000)));
+  } else {
+    ageDays = _zivaAgeInDays(today());
+  }
+  const ageWeeks = Math.floor(ageDays / 7);
+  const ageMonths = Math.floor(ageDays / 30.44);
+  const ageDaysRemainder = Math.round(ageDays - (ageMonths * 30.44));
+
+  // V-V-57 — windowStatus (renamed from `status` to avoid collision with
+  // _getInWindowMilestones[i].evidenceStatus). Three states.
+  let windowStatus;
+  if (ageDays < expectedStart) windowStatus = 'pre-window';
+  else if (ageDays > expectedEnd) windowStatus = 'post-window';
+  else windowStatus = 'in-window';
+
+  // V-M-114 floor — source defaults to 'unverified'. Never walk wrapping key.
+  const source = matchedRow.source || 'unverified';
+
+  return {
+    expectedStart: expectedStart,
+    expectedEnd: expectedEnd,
+    expectedStartMonths: Math.round(expectedStart / 30.44),
+    expectedEndMonths: Math.round(expectedEnd / 30.44),
+    expectedStartMonthsFloat: expectedStart / 30.44,
+    expectedEndMonthsFloat: expectedEnd / 30.44,
+    ageDays: ageDays,
+    ageWeeks: ageWeeks,
+    ageMonths: ageMonths,
+    ageDaysRemainder: ageDaysRemainder,
+    windowStatus: windowStatus,
+    source: source,
+    standardKey: standardKey,
+  };
+}
+
+// _getInWindowMilestones — Primitive 2.
+// Returns up to n milestones whose clinical-band currently overlaps ageDays.
+// Explicit-state-injection signature per the v3-3 _correlate precedent
+// (V-K-108 fold). safetyTier:true rows bypass the n-cap (V-M-102 floor).
+function _getInWindowMilestones(ageDays, n, opts) {
+  opts = opts || {};
+  if (typeof ageDays !== 'number' || ageDays < 0) ageDays = 0;
+  if (typeof n !== 'number' || n < 0) n = 3;
+  const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
+  if (!standards) return [];
+  const standardKey = opts.standardKey || _getActiveStandard();
+  const standardSpec = standards[standardKey];
+  if (!standardSpec || typeof standardSpec !== 'object') return [];
+  const milestonesGlobal = opts.milestones || (typeof milestones !== 'undefined' ? milestones : []);
+  const suppressMap = opts.suppressMap || (typeof milestoneSuppress !== 'undefined' ? milestoneSuppress : {});
+  // V-K-118 floor: nowAgeDays derived via _zivaAgeInDays(today()), never millis arithmetic.
+  const nowAgeDays = (typeof opts.nowAgeDays === 'number') ? opts.nowAgeDays : _zivaAgeInDays(today());
+  const weights = opts.weights || { recency: 0.4, window: 0.4, practicing: 0.2 };
+  const nowMs = Date.now();
+
+  // Index existing milestones by slug-id for evidence lookup.
+  const evidenceByText = {};
+  if (Array.isArray(milestonesGlobal)) {
+    for (var i = 0; i < milestonesGlobal.length; i++) {
+      const m = milestonesGlobal[i];
+      if (!m || !m.text) continue;
+      evidenceByText[slugify(m.text)] = m;
+    }
+  }
+
+  // Walk brackets, pick rows whose [expectedStart..expectedEnd] overlaps ageDays.
+  const candidates = [];
+  const bracketKeys = Object.keys(standardSpec)
+    .map(function(k) { return parseInt(k, 10); })
+    .filter(function(k) { return !isNaN(k); })
+    .sort(function(a, b) { return a - b; });
+  for (var bi = 0; bi < bracketKeys.length; bi++) {
+    const bracket = bracketKeys[bi];
+    const rows = standardSpec[bracket];
+    if (!Array.isArray(rows)) continue;
+    const nextBracket = bracketKeys[bi + 1];
+    for (var ri = 0; ri < rows.length; ri++) {
+      const row = rows[ri];
+      const milestoneId = slugify(row.text || '');
+      if (!milestoneId) continue;
+      // Suppression filter — entries whose suppress-until > now skip.
+      if (suppressMap[milestoneId] && suppressMap[milestoneId] > nowMs) continue;
+      // Derive window (mirror _predictMilestoneWindow logic).
+      const effStart = row.advanced ? (bracket + 1) : bracket;
+      let endBr;
+      if (typeof row.endMonth === 'number') endBr = row.endMonth;
+      else if (row.advanced) endBr = bracket + 2;
+      else if (typeof nextBracket === 'number') endBr = nextBracket;
+      else endBr = 18;
+      const expectedStart = effStart * 30.44;
+      const expectedEnd = (endBr * 30.44) - 1;
+      if (ageDays < expectedStart || ageDays > expectedEnd) continue;
+
+      // Evidence status — driven by the parent's milestones global.
+      const ev = evidenceByText[milestoneId];
+      let evidenceStatus = 'not-yet';
+      if (ev) {
+        if (ev.status === 'mastered' || ev.status === 'consistent') evidenceStatus = 'confirmed';
+        else if (ev.status === 'practicing' || ev.status === 'emerging') evidenceStatus = 'practicing';
+      }
+      const evidenceCount = (ev && typeof ev.evidenceCount === 'number') ? ev.evidenceCount : 0;
+      // lastEvidenceAt — epoch ms from the most recent stage timestamp on the entry.
+      let lastEvidenceAt = null;
+      if (ev) {
+        const stageStamps = ['masteredAt', 'consistentAt', 'practicingAt', 'emergingAt']
+          .map(function(f) { return ev[f]; })
+          .filter(function(s) { return typeof s === 'string'; })
+          .map(function(s) {
+            const t = Date.parse(s + 'T00:00:00Z');
+            return isNaN(t) ? null : t;
+          })
+          .filter(function(t) { return t !== null; });
+        if (stageStamps.length) lastEvidenceAt = Math.max.apply(null, stageStamps);
+      }
+
+      // V-V-59 floor: never-seen-neutral = 0.5 (honest no-signal).
+      let recencyScore;
+      if (lastEvidenceAt === null) {
+        recencyScore = 0.5;
+      } else {
+        const lastEvidenceDays = _zivaAgeInDays(toDateStr(new Date(lastEvidenceAt)));
+        const rawScore = 1 - (nowAgeDays - lastEvidenceDays) / 30;
+        recencyScore = Math.max(0, Math.min(1, rawScore));
+      }
+      const rawOpenness = 1 - (ageDays - expectedStart) / Math.max(1, expectedEnd - expectedStart);
+      const windowOpenness = Math.max(0, Math.min(1, rawOpenness));
+      const practicingBoost = (evidenceStatus === 'practicing') ? 1 : 0;
+      const priority = (weights.recency * recencyScore)
+                     + (weights.window * windowOpenness)
+                     + (weights.practicing * practicingBoost);
+
+      candidates.push({
+        milestoneId: milestoneId,
+        text: row.text || '',
+        icon: row.icon || '',
+        domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
+        // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
+        // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
+        // Mirror the FULL shape so milestones-tab-v1 consumers reading
+        // result[i].window get ageDays/Weeks/Months/Remainder + windowStatus
+        // without needing a second _predictMilestoneWindow round-trip per
+        // candidate (V-V-55 half-awake floor — consumers stop computing the
+        // same split 3+ times per render).
+        window: (function() {
+          var ws;
+          if (ageDays < expectedStart) ws = 'pre-window';
+          else if (ageDays > expectedEnd) ws = 'post-window';
+          else ws = 'in-window';
+          return {
+            expectedStart: expectedStart,
+            expectedEnd: expectedEnd,
+            expectedStartMonths: Math.round(expectedStart / 30.44),
+            expectedEndMonths: Math.round(expectedEnd / 30.44),
+            expectedStartMonthsFloat: expectedStart / 30.44,
+            expectedEndMonthsFloat: expectedEnd / 30.44,
+            ageDays: ageDays,
+            ageWeeks: Math.floor(ageDays / 7),
+            ageMonths: Math.floor(ageDays / 30.44),
+            ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
+            windowStatus: ws,
+            source: row.source || 'unverified',
+            standardKey: standardKey,
+          };
+        })(),
+        evidenceStatus: evidenceStatus,
+        evidenceCount: evidenceCount,
+        lastEvidenceAt: lastEvidenceAt,
+        priority: priority,
+        safetyTier: row.safetyTier === true,
+      });
+    }
+  }
+
+  // Sort by priority descending.
+  candidates.sort(function(a, b) { return b.priority - a.priority; });
+
+  // V-M-102 floor: safetyTier:true rows bypass the n-cap; always surface.
+  const safetyRows = candidates.filter(function(c) { return c.safetyTier; });
+  const nonSafety = candidates.filter(function(c) { return !c.safetyTier; });
+  const capped = nonSafety.slice(0, n);
+  // Concat safety rows ABOVE the cap, deduped by milestoneId.
+  const result = [];
+  const seenIds = {};
+  for (var s = 0; s < safetyRows.length; s++) {
+    if (!seenIds[safetyRows[s].milestoneId]) {
+      result.push(safetyRows[s]);
+      seenIds[safetyRows[s].milestoneId] = true;
+    }
+  }
+  for (var c = 0; c < capped.length; c++) {
+    if (!seenIds[capped[c].milestoneId]) {
+      result.push(capped[c]);
+      seenIds[capped[c].milestoneId] = true;
+    }
+  }
+  return result;
+}
+
+// _getActivityLevelToday — Primitive 3 (getter).
+// Returns 1-4 or null. null is the honest "no signal" state — never inferred,
+// never defaulted to 2. Reads from window.activityMeta (V-K-111 separate
+// key family; not activityLog._meta).
+function _getActivityLevelToday(dateKey) {
+  if (typeof dateKey !== 'string' || !dateKey) return null;
+  const meta = (typeof activityMeta === 'object' && activityMeta) ? activityMeta : null;
+  if (!meta) return null;
+  const dayMeta = meta[dateKey];
+  if (!dayMeta || typeof dayMeta !== 'object') return null;
+  const lvl = dayMeta.activityLevel;
+  if (lvl === 1 || lvl === 2 || lvl === 3 || lvl === 4) return lvl;
+  return null;
+}
+
+// _setActivityLevelToday — Primitive 3 (setter).
+// Lazy-creates window.activityMeta and activityMeta[dateKey] as needed.
+// Idempotent: same dateKey + same level → no write (storage-quiet).
+// null clears the field and removes empty per-day objects.
+function _setActivityLevelToday(dateKey, level) {
+  if (typeof dateKey !== 'string' || !dateKey) return;
+  if (level !== null && level !== 1 && level !== 2 && level !== 3 && level !== 4) return;
+  if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) {
+    activityMeta = {};
+  }
+  const existing = activityMeta[dateKey];
+  if (level === null) {
+    if (!existing) return; // already clear — storage-quiet
+    if (typeof existing === 'object' && 'activityLevel' in existing) {
+      delete existing.activityLevel;
+      // If the per-day object is now empty, remove the dateKey entry.
+      if (Object.keys(existing).length === 0) delete activityMeta[dateKey];
+      save(KEYS.activityMeta, activityMeta);
+    }
+    return;
+  }
+  // Idempotent guard.
+  if (existing && existing.activityLevel === level) return;
+  if (!existing || typeof existing !== 'object') {
+    activityMeta[dateKey] = { activityLevel: level };
+  } else {
+    existing.activityLevel = level;
+  }
+  save(KEYS.activityMeta, activityMeta);
 }
 
 // Resolve the active age-range row for a recommendation against the parent's selected standard.

@@ -14625,6 +14625,13 @@ const DEFAULT_MILESTONES = [
   { id: slugify('Babbling'), text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', cat:'language' },
   { id: slugify('Responds to name'), text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', cat:'language' },
   { id: slugify('Pulls to stand using support (from sitting)'), text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', cat:'motor' },
+  // V-K-103 + V-M-118 closure — sensory + cognitive seed rows so the 5-cat
+  // ACTIVITY_CATEGORIES registry consumed by milestones-tab-v1 has content in
+  // every category at first-install. Both ship source:'unverified' per V-M-114
+  // floor; mouths-objects carries safetyTier:true (gates choking-watch posture
+  // upgrade, Maren-signed 2026-05-27).
+  { id: slugify('Mouths and explores objects with hands'), text:'Mouths and explores objects with hands', status:'practicing', advanced:false, emergingAt:'2026-01-04', practicingAt:'2026-02-04', cat:'sensory', source:'unverified', safetyTier:true },
+  { id: slugify('Searches for hidden objects (object permanence emerging)'), text:'Searches for hidden objects (object permanence emerging)', status:'emerging', advanced:false, emergingAt:'2026-03-04', cat:'cognitive', source:'unverified' },
 ];
 
 const DEFAULT_FOODS = [
@@ -15831,270 +15838,286 @@ var PORTABLE_PREP_TIPS = {
 
 // @@DATA_BLOCK_20_START@@ MILESTONE_STANDARDS
 
+// MILESTONE_SOURCE — controlled vocabulary for per-row clinical-band source
+// attribution on MILESTONE_STANDARDS rows. Per spec §Clinical-band source-
+// attribution (V-M-106 + V-M-113 + V-M-114 + V-M-115 hard contracts):
+//   • Every MILESTONE_STANDARDS row carries source: as a schema field
+//   • Default is 'unverified' — NEVER walk the wrapping standard-key
+//     (`who:` / `iap:` / `eu:` / `cn:`) to stamp source on the rows under it;
+//     the wrapping is an authoring claim, not per-row provenance.
+//   • Consumer render contract (V-M-115): omit the parenthetical entirely
+//     when row.source === 'unverified'. Rendering "(unverified)" is a
+//     cipher-honesty violation; audit-no-personalised-prediction-v1.sh
+//     Scope A bans the literal in render code.
+//   • Future curation arc upgrades 'unverified' rows to attributed rows
+//     against canonical WHO Motor Study + IAP DASII + AAP Bright Futures
+//     + CDC Learn-the-Signs references.
+const MILESTONE_SOURCE = ['WHO', 'CDC', 'AAP', 'IAP', 'EU', 'CN', 'unverified'];
+
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {
   6: [
-    { text:'Sits without support for extended periods', icon:zi('baby'), desc:'Can sit steadily on the floor without toppling — core strength is building.', advanced:false, cat:'motor' },
-    { text:'Starts raking grasp', icon:zi('baby'), desc:'Uses whole hand to scoop small objects. Precursor to the pincer grasp.', advanced:false, cat:'motor' },
-    { text:'Transfers objects between hands', icon:zi('hourglass'), desc:'Passes a toy from one hand to the other — shows bilateral brain coordination.', advanced:false, cat:'motor' },
-    { text:'Recognises familiar faces vs strangers', icon:zi('baby'), desc:'May show preference for known caregivers and wariness of new faces.', advanced:false, cat:'social' },
-    { text:'Begins consonant babbling (ba-ba, da-da)', icon:zi('chat'), desc:'Repetitive consonant-vowel combos appear — early speech building blocks.', advanced:false, cat:'language' },
-    { text:'Pulls to stand from sitting', icon:zi('run'), desc:'Uses furniture or hands to pull up to standing — shows exceptional leg strength.', advanced:true, cat:'motor' },
-    { text:'Crawls or commando crawls', icon:zi('baby'), desc:'Some babies begin crawling at 6 months — most do by 8–9 months. Commando (belly) crawling counts.', advanced:true, cat:'motor' },
+    { text:'Sits without support for extended periods', icon:zi('baby'), desc:'Can sit steadily on the floor without toppling — core strength is building.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Starts raking grasp', icon:zi('baby'), desc:'Uses whole hand to scoop small objects. Precursor to the pincer grasp.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Transfers objects between hands', icon:zi('hourglass'), desc:'Passes a toy from one hand to the other — shows bilateral brain coordination.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Recognises familiar faces vs strangers', icon:zi('baby'), desc:'May show preference for known caregivers and wariness of new faces.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Begins consonant babbling (ba-ba, da-da)', icon:zi('chat'), desc:'Repetitive consonant-vowel combos appear — early speech building blocks.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Pulls to stand from sitting', icon:zi('run'), desc:'Uses furniture or hands to pull up to standing — shows exceptional leg strength.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Crawls or commando crawls', icon:zi('baby'), desc:'Some babies begin crawling at 6 months — most do by 8–9 months. Commando (belly) crawling counts.', advanced:true, cat:'motor', source:'unverified' },
   ],
   7: [
-    { text:'Crawling (hands and knees)', icon:zi('baby'), desc:'Classic crawling emerges — some babies skip this and scoot or shuffle instead. All are normal.', advanced:false, cat:'motor' },
-    { text:'Sits independently with good balance', icon:zi('lotus'), desc:'Can sit, lean, reach for toys without falling — trunk control is solid.', advanced:false, cat:'motor' },
-    { text:'Responds to own name consistently', icon:zi('baby'), desc:'Turns head reliably when name is called — sign of language comprehension developing.', advanced:false, cat:'language' },
-    { text:'Understands "no" (tone)', icon:zi('warn'), desc:'Pauses or looks when you say "no" firmly — understands tone before words.', advanced:false, cat:'cognitive' },
-    { text:'Finger feeding begins', icon:zi('spoon'), desc:'Picks up puffs or soft finger foods and brings to mouth — fine motor + self-feeding.', advanced:false, cat:'motor' },
-    { text:'Waves bye-bye', icon:zi('baby'), desc:'Imitates waving — a social communication milestone. Usually 7–9 months.', advanced:false, cat:'social' },
-    { text:'Stands holding furniture (cruising prep)', icon:zi('run'), desc:'Pulls up and stands while holding furniture for support. Legs bear full weight.', advanced:true, cat:'motor' },
-    { text:'Says mama/dada (non-specific)', icon:zi('chat'), desc:'Uses mama/dada sounds but not yet directed at the right person. Specific use is 10–12 months.', advanced:true, cat:'language' },
+    { text:'Crawling (hands and knees)', icon:zi('baby'), desc:'Classic crawling emerges — some babies skip this and scoot or shuffle instead. All are normal.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Sits independently with good balance', icon:zi('lotus'), desc:'Can sit, lean, reach for toys without falling — trunk control is solid.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Responds to own name consistently', icon:zi('baby'), desc:'Turns head reliably when name is called — sign of language comprehension developing.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Understands "no" (tone)', icon:zi('warn'), desc:'Pauses or looks when you say "no" firmly — understands tone before words.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Finger feeding begins', icon:zi('spoon'), desc:'Picks up puffs or soft finger foods and brings to mouth — fine motor + self-feeding.', advanced:false, cat:'motor', source:'unverified', safetyTier:true },
+    { text:'Waves bye-bye', icon:zi('baby'), desc:'Imitates waving — a social communication milestone. Usually 7–9 months.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Stands holding furniture (cruising prep)', icon:zi('run'), desc:'Pulls up and stands while holding furniture for support. Legs bear full weight.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says mama/dada (non-specific)', icon:zi('chat'), desc:'Uses mama/dada sounds but not yet directed at the right person. Specific use is 10–12 months.', advanced:true, cat:'language', source:'unverified' },
   ],
   8: [
-    { text:'Pincer grasp developing', icon:zi('baby'), desc:'Begins using thumb and forefinger to pick up small items — a major fine motor milestone.', advanced:false, cat:'motor' },
-    { text:'Cruising (walks holding furniture)', icon:zi('run'), desc:'Moves sideways along furniture while holding on — building balance for walking.', advanced:false, cat:'motor' },
-    { text:'Separation anxiety peaks', icon:zi('baby'), desc:'Cries when primary caregiver leaves — sign of strong attachment, not a problem.', advanced:false, cat:'social' },
-    { text:'Object permanence strengthens', icon:zi('star'), desc:'Searches for hidden toys — understands things exist even when out of sight.', advanced:false, cat:'cognitive' },
-    { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together intentionally — motor planning + social imitation.', advanced:false, cat:'social' },
-    { text:'Points at objects', icon:zi('baby'), desc:'Uses index finger to point — early communication milestone, usually 8–12 months.', advanced:true, cat:'language' },
-    { text:'Stands momentarily without support', icon:zi('run'), desc:'Lets go of furniture and balances for a few seconds — pre-walking confidence.', advanced:true, cat:'motor' },
+    { text:'Pincer grasp developing', icon:zi('baby'), desc:'Begins using thumb and forefinger to pick up small items — a major fine motor milestone.', advanced:false, cat:'motor', source:'unverified', safetyTier:true },
+    { text:'Cruising (walks holding furniture)', icon:zi('run'), desc:'Moves sideways along furniture while holding on — building balance for walking.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Separation anxiety peaks', icon:zi('baby'), desc:'Cries when primary caregiver leaves — sign of strong attachment, not a problem.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Object permanence strengthens', icon:zi('star'), desc:'Searches for hidden toys — understands things exist even when out of sight.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together intentionally — motor planning + social imitation.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Points at objects', icon:zi('baby'), desc:'Uses index finger to point — early communication milestone, usually 8–12 months.', advanced:true, cat:'language', source:'unverified' },
+    { text:'Stands momentarily without support', icon:zi('run'), desc:'Lets go of furniture and balances for a few seconds — pre-walking confidence.', advanced:true, cat:'motor', source:'unverified' },
   ],
   9: [
-    { text:'Pincer grasp refined', icon:zi('baby'), desc:'Neat thumb-forefinger grip for picking up small items like puffs and peas.', advanced:false, cat:'motor' },
-    { text:'Pulls to stand easily', icon:zi('run'), desc:'Gets from sitting to standing with minimal effort — leg and core strength well developed.', advanced:false, cat:'motor' },
-    { text:'Understands simple words', icon:zi('book'), desc:'Looks at correct object when you say "ball", "bottle", etc. — receptive language growing.', advanced:false, cat:'language' },
-    { text:'Stranger anxiety may ease', icon:zi('baby'), desc:'Becomes more social again after the 8-month anxiety peak.', advanced:false, cat:'social' },
-    { text:'Bangs objects together purposefully', icon:zi('star'), desc:'Deliberately hits two toys together — cause-and-effect understanding deepens.', advanced:false, cat:'cognitive' },
-    { text:'First steps (with support)', icon:zi('run'), desc:'Takes steps while holding hands or pushing a walker — early walking readiness.', advanced:true, cat:'motor' },
-    { text:'Says mama/dada with meaning', icon:zi('chat'), desc:'Uses "mama" for mother and "dada" for father specifically — true first words.', advanced:true, cat:'language' },
-    { text:'Follows simple instructions', icon:zi('list'), desc:'"Give me the ball" or "come here" — understands and acts on one-step commands.', advanced:true, cat:'cognitive' },
+    { text:'Pincer grasp refined', icon:zi('baby'), desc:'Neat thumb-forefinger grip for picking up small items like puffs and peas.', advanced:false, cat:'motor', source:'unverified', safetyTier:true },
+    { text:'Pulls to stand easily', icon:zi('run'), desc:'Gets from sitting to standing with minimal effort — leg and core strength well developed.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Understands simple words', icon:zi('book'), desc:'Looks at correct object when you say "ball", "bottle", etc. — receptive language growing.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Stranger anxiety may ease', icon:zi('baby'), desc:'Becomes more social again after the 8-month anxiety peak.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Bangs objects together purposefully', icon:zi('star'), desc:'Deliberately hits two toys together — cause-and-effect understanding deepens.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'First steps (with support)', icon:zi('run'), desc:'Takes steps while holding hands or pushing a walker — early walking readiness.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says mama/dada with meaning', icon:zi('chat'), desc:'Uses "mama" for mother and "dada" for father specifically — true first words.', advanced:true, cat:'language', source:'unverified' },
+    { text:'Follows simple instructions', icon:zi('list'), desc:'"Give me the ball" or "come here" — understands and acts on one-step commands.', advanced:true, cat:'cognitive', source:'unverified' },
   ],
   10: [
-    { text:'Stands alone briefly', icon:zi('run'), desc:'Balances without holding anything for several seconds.', advanced:false, cat:'motor' },
-    { text:'Cruise confidently', icon:zi('run'), desc:'Moves quickly along furniture, may let go briefly.', advanced:false, cat:'motor' },
-    { text:'Uses gestures (shaking head, reaching)', icon:zi('baby'), desc:'Communicates wants through gestures — bridges gap before words.', advanced:false, cat:'language' },
-    { text:'Stacks 2 blocks', icon:zi('baby'), desc:'Places one block on another — spatial awareness + hand steadiness.', advanced:false, cat:'cognitive' },
-    { text:'Walks independently', icon:zi('run'), desc:'Takes several steps without holding anything. Average age is 12 months, but 10–15 months is all normal.', advanced:true, cat:'motor' },
-    { text:'Says 1–2 words beyond mama/dada', icon:zi('chat'), desc:'May say "hi", "no", "bye" or a pet name. True words with consistent meaning.', advanced:true, cat:'language' },
+    { text:'Stands alone briefly', icon:zi('run'), desc:'Balances without holding anything for several seconds.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Cruise confidently', icon:zi('run'), desc:'Moves quickly along furniture, may let go briefly.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Uses gestures (shaking head, reaching)', icon:zi('baby'), desc:'Communicates wants through gestures — bridges gap before words.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Stacks 2 blocks', icon:zi('baby'), desc:'Places one block on another — spatial awareness + hand steadiness.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Takes several steps without holding anything. Average age is 12 months, but 10–15 months is all normal.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says 1–2 words beyond mama/dada', icon:zi('chat'), desc:'May say "hi", "no", "bye" or a pet name. True words with consistent meaning.', advanced:true, cat:'language', source:'unverified' },
   ],
   11: [
-    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking while holding just one of your hands.', advanced:false, cat:'motor' },
-    { text:'Drinks from a cup (with help)', icon:zi('drop'), desc:'Takes sips from an open cup when held — oral motor coordination developing.', advanced:false, cat:'motor' },
-    { text:'Puts objects into containers', icon:zi('note'), desc:'Drops toys into a box deliberately — understanding of "in" and "out".', advanced:false, cat:'cognitive' },
-    { text:'Imitates actions', icon:zi('mirror'), desc:'Copies clapping, stirring, phone-to-ear — social learning through observation.', advanced:false, cat:'social' },
-    { text:'Walks independently', icon:zi('run'), desc:'Many babies walk between 11–13 months — wide range is completely normal.', advanced:false, cat:'motor' },
-    { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, cat:'language' },
+    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking while holding just one of your hands.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Drinks from a cup (with help)', icon:zi('drop'), desc:'Takes sips from an open cup when held — oral motor coordination developing.', advanced:false, cat:'motor', source:'unverified', safetyTier:true },
+    { text:'Puts objects into containers', icon:zi('note'), desc:'Drops toys into a box deliberately — understanding of "in" and "out".', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Imitates actions', icon:zi('mirror'), desc:'Copies clapping, stirring, phone-to-ear — social learning through observation.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Many babies walk between 11–13 months — wide range is completely normal.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, cat:'language', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, cat:'motor' },
-    { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Uses specific words consistently. Receptive vocabulary is 10–50+ words.', advanced:false, cat:'language' },
-    { text:'Follows one-step instructions', icon:zi('list'), desc:'"Bring the shoe", "sit down" — understands and acts on simple requests.', advanced:false, cat:'cognitive' },
-    { text:'Uses spoon (messily)', icon:zi('spoon'), desc:'Attempts self-feeding with a spoon — will be messy but is great for independence.', advanced:false, cat:'motor' },
-    { text:'Plays peek-a-boo independently', icon:zi('baby'), desc:'Initiates peek-a-boo or hiding games — shows social play and memory.', advanced:false, cat:'social' },
-    { text:'Scribbles with crayon', icon:zi('palette'), desc:'Makes marks on paper when given a crayon — early fine motor + creative expression.', advanced:true, cat:'motor' },
-    { text:'Says 5+ words', icon:zi('chat'), desc:'Expanding vocabulary with clear intent. May combine a word + gesture.', advanced:true, cat:'language' },
-    { text:'Runs (toddles fast)', icon:zi('run'), desc:'Moves at speed once walking is stable — balance and coordination accelerating.', advanced:true, cat:'motor' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Uses specific words consistently. Receptive vocabulary is 10–50+ words.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Follows one-step instructions', icon:zi('list'), desc:'"Bring the shoe", "sit down" — understands and acts on simple requests.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Uses spoon (messily)', icon:zi('spoon'), desc:'Attempts self-feeding with a spoon — will be messy but is great for independence.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Plays peek-a-boo independently', icon:zi('baby'), desc:'Initiates peek-a-boo or hiding games — shows social play and memory.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Scribbles with crayon', icon:zi('palette'), desc:'Makes marks on paper when given a crayon — early fine motor + creative expression.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says 5+ words', icon:zi('chat'), desc:'Expanding vocabulary with clear intent. May combine a word + gesture.', advanced:true, cat:'language', source:'unverified' },
+    { text:'Runs (toddles fast)', icon:zi('run'), desc:'Moves at speed once walking is stable — balance and coordination accelerating.', advanced:true, cat:'motor', source:'unverified' },
   ],
   },
 
   // IAP / DASII — Indian Academy of Pediatrics developmental guidelines
   iap: {
   6: [
-    { text:'Rolls both ways freely', icon:zi('hourglass'), desc:'Rolls from back to tummy and back without effort — good trunk rotation.', advanced:false, cat:'motor' },
-    { text:'Sits with support (tripod sitting)', icon:zi('baby'), desc:'Sits using hands for balance on the floor — IAP expects this by 6m.', advanced:false, cat:'motor' },
-    { text:'Reaches and grasps objects', icon:zi('baby'), desc:'Accurately reaches for and grabs a rattle or toy placed nearby.', advanced:false, cat:'motor' },
-    { text:'Turns to sound source', icon:zi('baby'), desc:'Locates and turns toward a voice or sound — auditory processing milestone.', advanced:false, cat:'language' },
-    { text:'Stranger awareness begins', icon:zi('baby'), desc:'Shows discomfort or hesitation with unfamiliar people.', advanced:false, cat:'social' },
-    { text:'Enjoys peekaboo', icon:zi('baby'), desc:'Laughs and anticipates during peekaboo games — early social cognition.', advanced:false, cat:'cognitive' },
-    { text:'Sits without support', icon:zi('lotus'), desc:'Sits independently without hand support — ahead of IAP 7m expectation.', advanced:true, cat:'motor' },
+    { text:'Rolls both ways freely', icon:zi('hourglass'), desc:'Rolls from back to tummy and back without effort — good trunk rotation.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Sits with support (tripod sitting)', icon:zi('baby'), desc:'Sits using hands for balance on the floor — IAP expects this by 6m.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Reaches and grasps objects', icon:zi('baby'), desc:'Accurately reaches for and grabs a rattle or toy placed nearby.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Turns to sound source', icon:zi('baby'), desc:'Locates and turns toward a voice or sound — auditory processing milestone.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Stranger awareness begins', icon:zi('baby'), desc:'Shows discomfort or hesitation with unfamiliar people.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Enjoys peekaboo', icon:zi('baby'), desc:'Laughs and anticipates during peekaboo games — early social cognition.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Sits without support', icon:zi('lotus'), desc:'Sits independently without hand support — ahead of IAP 7m expectation.', advanced:true, cat:'motor', source:'unverified' },
   ],
   7: [
-    { text:'Sits without support steadily', icon:zi('lotus'), desc:'IAP expects stable independent sitting by 7 months.', advanced:false, cat:'motor' },
-    { text:'Bounces when held in standing', icon:zi('run'), desc:'Bears weight on legs and bounces actively when held upright.', advanced:false, cat:'motor' },
-    { text:'Transfers objects hand to hand', icon:zi('hourglass'), desc:'Deliberately passes toys between hands — bilateral coordination.', advanced:false, cat:'motor' },
-    { text:'Babbles chains of syllables', icon:zi('chat'), desc:'Produces strings like "ba-ba-ba" or "ma-ma-ma" — canonical babbling.', advanced:false, cat:'language' },
-    { text:'Looks for dropped objects', icon:zi('baby'), desc:'Tracks and searches for a toy that falls — early object permanence.', advanced:false, cat:'cognitive' },
-    { text:'Shows affection to caregivers', icon:zi('baby'), desc:'Reaches for parents, nuzzles, or vocalizes happily when held.', advanced:false, cat:'social' },
-    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando crawling — pulling forward using arms. Early mobility.', advanced:true, cat:'motor' },
+    { text:'Sits without support steadily', icon:zi('lotus'), desc:'IAP expects stable independent sitting by 7 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Bounces when held in standing', icon:zi('run'), desc:'Bears weight on legs and bounces actively when held upright.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Transfers objects hand to hand', icon:zi('hourglass'), desc:'Deliberately passes toys between hands — bilateral coordination.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Babbles chains of syllables', icon:zi('chat'), desc:'Produces strings like "ba-ba-ba" or "ma-ma-ma" — canonical babbling.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Looks for dropped objects', icon:zi('baby'), desc:'Tracks and searches for a toy that falls — early object permanence.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Shows affection to caregivers', icon:zi('baby'), desc:'Reaches for parents, nuzzles, or vocalizes happily when held.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando crawling — pulling forward using arms. Early mobility.', advanced:true, cat:'motor', source:'unverified' },
   ],
   8: [
-    { text:'Gets to sitting position independently', icon:zi('baby'), desc:'Can move from lying to sitting without help — core strength + motor planning.', advanced:false, cat:'motor' },
-    { text:'Crawling on hands and knees', icon:zi('baby'), desc:'IAP expects crawling by 8–9 months. Some babies scoot instead — equally valid.', advanced:false, cat:'motor' },
-    { text:'Pincer grasp emerging', icon:zi('baby'), desc:'Starts picking up small objects with thumb and forefinger.', advanced:false, cat:'motor' },
-    { text:'Responds to own name', icon:zi('baby'), desc:'Consistently turns when name is called — receptive language milestone.', advanced:false, cat:'language' },
-    { text:'Separation anxiety intensifies', icon:zi('baby'), desc:'Strong protest when parent leaves — peak of attachment behaviour, normal and healthy.', advanced:false, cat:'social' },
-    { text:'Explores objects by mouthing, shaking, banging', icon:zi('scope'), desc:'Uses multiple senses to understand objects — scientific exploration phase.', advanced:false, cat:'cognitive' },
-    { text:'Pulls to stand', icon:zi('run'), desc:'Uses furniture to pull up to standing — strong legs and determination.', advanced:true, cat:'motor' },
+    { text:'Gets to sitting position independently', icon:zi('baby'), desc:'Can move from lying to sitting without help — core strength + motor planning.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Crawling on hands and knees', icon:zi('baby'), desc:'IAP expects crawling by 8–9 months. Some babies scoot instead — equally valid.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Pincer grasp emerging', icon:zi('baby'), desc:'Starts picking up small objects with thumb and forefinger.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Responds to own name', icon:zi('baby'), desc:'Consistently turns when name is called — receptive language milestone.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Separation anxiety intensifies', icon:zi('baby'), desc:'Strong protest when parent leaves — peak of attachment behaviour, normal and healthy.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Explores objects by mouthing, shaking, banging', icon:zi('scope'), desc:'Uses multiple senses to understand objects — scientific exploration phase.', advanced:false, cat:'cognitive', source:'unverified', safetyTier:true },
+    { text:'Pulls to stand', icon:zi('run'), desc:'Uses furniture to pull up to standing — strong legs and determination.', advanced:true, cat:'motor', source:'unverified' },
   ],
   9: [
-    { text:'Pulls to stand on furniture', icon:zi('run'), desc:'IAP expects pulling to stand by 9 months — a key gross motor milestone.', advanced:false, cat:'motor' },
-    { text:'Refined pincer grasp', icon:zi('baby'), desc:'Clean thumb-index finger pick up of small items like cereal pieces.', advanced:false, cat:'motor' },
-    { text:'Says "mama" or "dada" (non-specific)', icon:zi('chat'), desc:'Produces these sounds but not yet with specific meaning — IAP 9m expectation.', advanced:false, cat:'language' },
-    { text:'Understands "no"', icon:zi('warn'), desc:'Pauses activity when told "no" — comprehension developing.', advanced:false, cat:'cognitive' },
-    { text:'Plays pat-a-cake', icon:zi('baby'), desc:'Claps along to rhymes — social imitation + motor coordination.', advanced:false, cat:'social' },
-    { text:'Points with index finger', icon:zi('baby'), desc:'Uses pointing to communicate interest — proto-declarative pointing.', advanced:false, cat:'language' },
-    { text:'Cruises along furniture', icon:zi('run'), desc:'Walks sideways holding furniture — balance building for independent walking.', advanced:true, cat:'motor' },
+    { text:'Pulls to stand on furniture', icon:zi('run'), desc:'IAP expects pulling to stand by 9 months — a key gross motor milestone.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Refined pincer grasp', icon:zi('baby'), desc:'Clean thumb-index finger pick up of small items like cereal pieces.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says "mama" or "dada" (non-specific)', icon:zi('chat'), desc:'Produces these sounds but not yet with specific meaning — IAP 9m expectation.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Understands "no"', icon:zi('warn'), desc:'Pauses activity when told "no" — comprehension developing.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Plays pat-a-cake', icon:zi('baby'), desc:'Claps along to rhymes — social imitation + motor coordination.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Points with index finger', icon:zi('baby'), desc:'Uses pointing to communicate interest — proto-declarative pointing.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Cruises along furniture', icon:zi('run'), desc:'Walks sideways holding furniture — balance building for independent walking.', advanced:true, cat:'motor', source:'unverified' },
   ],
   10: [
-    { text:'Stands with support confidently', icon:zi('run'), desc:'Stands holding furniture with good balance and one hand free.', advanced:false, cat:'motor' },
-    { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats small pieces of food independently.', advanced:false, cat:'motor' },
-    { text:'Waves bye-bye', icon:zi('baby'), desc:'IAP expects social waving by 10 months.', advanced:false, cat:'social' },
-    { text:'Imitates gestures', icon:zi('mirror'), desc:'Copies actions like clapping, stirring, phone to ear.', advanced:false, cat:'social' },
-    { text:'Understands simple commands', icon:zi('list'), desc:'"Give it to me", "come here" — acts on one-step requests.', advanced:false, cat:'cognitive' },
-    { text:'Stands momentarily alone', icon:zi('run'), desc:'Lets go and balances for a few seconds independently.', advanced:true, cat:'motor' },
-    { text:'Says 1–2 words with meaning', icon:zi('chat'), desc:'Consistent use of a word for the right thing — true language begins.', advanced:true, cat:'language' },
+    { text:'Stands with support confidently', icon:zi('run'), desc:'Stands holding furniture with good balance and one hand free.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats small pieces of food independently.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Waves bye-bye', icon:zi('baby'), desc:'IAP expects social waving by 10 months.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Imitates gestures', icon:zi('mirror'), desc:'Copies actions like clapping, stirring, phone to ear.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Understands simple commands', icon:zi('list'), desc:'"Give it to me", "come here" — acts on one-step requests.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Stands momentarily alone', icon:zi('run'), desc:'Lets go and balances for a few seconds independently.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says 1–2 words with meaning', icon:zi('chat'), desc:'Consistent use of a word for the right thing — true language begins.', advanced:true, cat:'language', source:'unverified' },
   ],
   11: [
-    { text:'Cruises well', icon:zi('run'), desc:'Moves confidently along furniture, may use one hand.', advanced:false, cat:'motor' },
-    { text:'Puts objects into container', icon:zi('note'), desc:'Drops toys into a cup or box deliberately.', advanced:false, cat:'cognitive' },
-    { text:'Says "mama/dada" with meaning', icon:zi('chat'), desc:'IAP expects specific use of mama/dada by 11 months.', advanced:false, cat:'language' },
-    { text:'Cooperates with dressing', icon:zi('baby'), desc:'Extends arm for sleeve or lifts foot for shoe — body awareness.', advanced:false, cat:'social' },
-    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Takes steps while holding one of your hands.', advanced:false, cat:'motor' },
-    { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — wide range of normal.', advanced:true, cat:'motor' },
+    { text:'Cruises well', icon:zi('run'), desc:'Moves confidently along furniture, may use one hand.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Puts objects into container', icon:zi('note'), desc:'Drops toys into a cup or box deliberately.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Says "mama/dada" with meaning', icon:zi('chat'), desc:'IAP expects specific use of mama/dada by 11 months.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Cooperates with dressing', icon:zi('baby'), desc:'Extends arm for sleeve or lifts foot for shoe — body awareness.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Takes steps while holding one of your hands.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — wide range of normal.', advanced:true, cat:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, cat:'motor' },
-    { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Small but real vocabulary with consistent meanings.', advanced:false, cat:'language' },
-    { text:'Drinks from cup with help', icon:zi('drop'), desc:'Takes sips from an open cup when held.', advanced:false, cat:'motor' },
-    { text:'Follows simple instructions', icon:zi('list'), desc:'"Sit down", "give me" — one-step commands understood and followed.', advanced:false, cat:'cognitive' },
-    { text:'Shows objects to others', icon:zi('baby'), desc:'Holds up a toy to show you — shared attention, a key social milestone.', advanced:false, cat:'social' },
-    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Tries to self-feed with spoon — messy but shows independence.', advanced:true, cat:'motor' },
-    { text:'Says 4+ words', icon:zi('chat'), desc:'Growing vocabulary beyond mama/dada — IAP advanced for 12m.', advanced:true, cat:'language' },
+    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Small but real vocabulary with consistent meanings.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Drinks from cup with help', icon:zi('drop'), desc:'Takes sips from an open cup when held.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Follows simple instructions', icon:zi('list'), desc:'"Sit down", "give me" — one-step commands understood and followed.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Shows objects to others', icon:zi('baby'), desc:'Holds up a toy to show you — shared attention, a key social milestone.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Tries to self-feed with spoon — messy but shows independence.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says 4+ words', icon:zi('chat'), desc:'Growing vocabulary beyond mama/dada — IAP advanced for 12m.', advanced:true, cat:'language', source:'unverified' },
   ],
   },
 
   // Euro-Growth / ASQ-based European developmental milestones
   eu: {
   6: [
-    { text:'Rolls from back to tummy', icon:zi('hourglass'), desc:'Can roll over in both directions — core strength milestone.', advanced:false, cat:'motor' },
-    { text:'Sits with minimal support', icon:zi('baby'), desc:'Sits with hands on floor for balance (tripod). Independent sitting by 7m.', advanced:false, cat:'motor' },
-    { text:'Reaches for and grasps toys', icon:zi('baby'), desc:'Accurate reaching and voluntary grasp of objects.', advanced:false, cat:'motor' },
-    { text:'Vocalises to get attention', icon:zi('chat'), desc:'Uses sounds deliberately to call a caregiver or express needs.', advanced:false, cat:'language' },
-    { text:'Laughs and squeals', icon:zi('baby'), desc:'Full belly laughs and high-pitched squeals during play.', advanced:false, cat:'social' },
-    { text:'Explores objects with mouth', icon:zi('baby'), desc:'Brings everything to mouth — primary exploration method at this age.', advanced:false, cat:'cognitive' },
-    { text:'Sits independently', icon:zi('lotus'), desc:'Sits without any support — ahead of typical European 7m timeline.', advanced:true, cat:'motor' },
+    { text:'Rolls from back to tummy', icon:zi('hourglass'), desc:'Can roll over in both directions — core strength milestone.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Sits with minimal support', icon:zi('baby'), desc:'Sits with hands on floor for balance (tripod). Independent sitting by 7m.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Reaches for and grasps toys', icon:zi('baby'), desc:'Accurate reaching and voluntary grasp of objects.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Vocalises to get attention', icon:zi('chat'), desc:'Uses sounds deliberately to call a caregiver or express needs.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Laughs and squeals', icon:zi('baby'), desc:'Full belly laughs and high-pitched squeals during play.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Explores objects with mouth', icon:zi('baby'), desc:'Brings everything to mouth — primary exploration method at this age.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Sits independently', icon:zi('lotus'), desc:'Sits without any support — ahead of typical European 7m timeline.', advanced:true, cat:'motor', source:'unverified' },
   ],
   7: [
-    { text:'Sits independently and stable', icon:zi('lotus'), desc:'European guidelines expect stable sitting by 7 months.', advanced:false, cat:'motor' },
-    { text:'Passes toys hand to hand', icon:zi('hourglass'), desc:'Transfers objects between hands — midline crossing skill.', advanced:false, cat:'motor' },
-    { text:'Babbles with consonant sounds', icon:zi('chat'), desc:'Produces repeated syllables like "ba-ba", "da-da" — canonical babbling phase.', advanced:false, cat:'language' },
-    { text:'Finds partially hidden toy', icon:zi('star'), desc:'Pulls cloth off a partially covered toy — early object permanence.', advanced:false, cat:'cognitive' },
-    { text:'Enjoys social games', icon:zi('brain'), desc:'Actively participates in peekaboo, tickle games — social reciprocity.', advanced:false, cat:'social' },
-    { text:'Bears weight on legs when held', icon:zi('run'), desc:'Pushes down actively when held in standing position.', advanced:false, cat:'motor' },
-    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando-style forward movement. Some skip this entirely — normal.', advanced:true, cat:'motor' },
+    { text:'Sits independently and stable', icon:zi('lotus'), desc:'European guidelines expect stable sitting by 7 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Passes toys hand to hand', icon:zi('hourglass'), desc:'Transfers objects between hands — midline crossing skill.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Babbles with consonant sounds', icon:zi('chat'), desc:'Produces repeated syllables like "ba-ba", "da-da" — canonical babbling phase.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Finds partially hidden toy', icon:zi('star'), desc:'Pulls cloth off a partially covered toy — early object permanence.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Enjoys social games', icon:zi('brain'), desc:'Actively participates in peekaboo, tickle games — social reciprocity.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Bears weight on legs when held', icon:zi('run'), desc:'Pushes down actively when held in standing position.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando-style forward movement. Some skip this entirely — normal.', advanced:true, cat:'motor', source:'unverified' },
   ],
   8: [
-    { text:'Crawls on hands and knees', icon:zi('baby'), desc:'Classic quadruped crawling. European expectation is 8–10 months.', advanced:false, cat:'motor' },
-    { text:'Develops pincer grasp', icon:zi('baby'), desc:'Picks up small objects between thumb and finger — major fine motor step.', advanced:false, cat:'motor' },
-    { text:'Responds to own name', icon:zi('baby'), desc:'Turns reliably when name is called across the room.', advanced:false, cat:'language' },
-    { text:'Shows separation anxiety', icon:zi('baby'), desc:'Protests when caregiver leaves — healthy attachment sign.', advanced:false, cat:'social' },
-    { text:'Explores cause and effect', icon:zi('scope'), desc:'Drops toys to watch them fall, pushes buttons repeatedly — learning causality.', advanced:false, cat:'cognitive' },
-    { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together on purpose — motor planning meets social imitation.', advanced:false, cat:'social' },
-    { text:'Pulls to stand', icon:zi('run'), desc:'Uses furniture to pull up — strong for 8 months.', advanced:true, cat:'motor' },
+    { text:'Crawls on hands and knees', icon:zi('baby'), desc:'Classic quadruped crawling. European expectation is 8–10 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Develops pincer grasp', icon:zi('baby'), desc:'Picks up small objects between thumb and finger — major fine motor step.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Responds to own name', icon:zi('baby'), desc:'Turns reliably when name is called across the room.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Shows separation anxiety', icon:zi('baby'), desc:'Protests when caregiver leaves — healthy attachment sign.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Explores cause and effect', icon:zi('scope'), desc:'Drops toys to watch them fall, pushes buttons repeatedly — learning causality.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together on purpose — motor planning meets social imitation.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Pulls to stand', icon:zi('run'), desc:'Uses furniture to pull up — strong for 8 months.', advanced:true, cat:'motor', source:'unverified' },
   ],
   9: [
-    { text:'Pulls to standing', icon:zi('run'), desc:'European norm expects pull-to-stand by 9–10 months.', advanced:false, cat:'motor' },
-    { text:'Pincer grasp well established', icon:zi('baby'), desc:'Neat pickup of small items like raisins, peas — precise fine motor.', advanced:false, cat:'motor' },
-    { text:'Uses gestures to communicate', icon:zi('baby'), desc:'Points, reaches, waves — gestural communication before words.', advanced:false, cat:'language' },
-    { text:'Finds fully hidden objects', icon:zi('star'), desc:'Searches under cloth for completely hidden toy — full object permanence.', advanced:false, cat:'cognitive' },
-    { text:'Shows preference for certain people', icon:zi('star'), desc:'Clear attachment hierarchy — prefers primary caregivers.', advanced:false, cat:'social' },
-    { text:'Bangs objects together', icon:zi('star'), desc:'Holds two objects and deliberately bangs them — bilateral coordination.', advanced:false, cat:'motor' },
-    { text:'First steps with support', icon:zi('run'), desc:'Takes steps while holding hands or furniture — early for European norms.', advanced:true, cat:'motor' },
+    { text:'Pulls to standing', icon:zi('run'), desc:'European norm expects pull-to-stand by 9–10 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Pincer grasp well established', icon:zi('baby'), desc:'Neat pickup of small items like raisins, peas — precise fine motor.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Uses gestures to communicate', icon:zi('baby'), desc:'Points, reaches, waves — gestural communication before words.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Finds fully hidden objects', icon:zi('star'), desc:'Searches under cloth for completely hidden toy — full object permanence.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Shows preference for certain people', icon:zi('star'), desc:'Clear attachment hierarchy — prefers primary caregivers.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Bangs objects together', icon:zi('star'), desc:'Holds two objects and deliberately bangs them — bilateral coordination.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'First steps with support', icon:zi('run'), desc:'Takes steps while holding hands or furniture — early for European norms.', advanced:true, cat:'motor', source:'unverified' },
   ],
   10: [
-    { text:'Cruises along furniture', icon:zi('run'), desc:'Walks sideways holding furniture for support — balance developing.', advanced:false, cat:'motor' },
-    { text:'Stands alone briefly', icon:zi('run'), desc:'Lets go and balances for a few seconds.', advanced:false, cat:'motor' },
-    { text:'Understands "no" and simple words', icon:zi('book'), desc:'Responds appropriately to familiar words and tone.', advanced:false, cat:'cognitive' },
-    { text:'Waves bye-bye', icon:zi('baby'), desc:'Social gesture — learned through imitation.', advanced:false, cat:'social' },
-    { text:'Drinks from cup with assistance', icon:zi('drop'), desc:'Takes sips from an open cup when helped.', advanced:false, cat:'motor' },
-    { text:'Walks independently', icon:zi('run'), desc:'Some European babies walk by 10 months — on the early side.', advanced:true, cat:'motor' },
-    { text:'Says first word', icon:zi('chat'), desc:'One clear word used consistently with meaning.', advanced:true, cat:'language' },
+    { text:'Cruises along furniture', icon:zi('run'), desc:'Walks sideways holding furniture for support — balance developing.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Stands alone briefly', icon:zi('run'), desc:'Lets go and balances for a few seconds.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Understands "no" and simple words', icon:zi('book'), desc:'Responds appropriately to familiar words and tone.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Waves bye-bye', icon:zi('baby'), desc:'Social gesture — learned through imitation.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Drinks from cup with assistance', icon:zi('drop'), desc:'Takes sips from an open cup when helped.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Some European babies walk by 10 months — on the early side.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says first word', icon:zi('chat'), desc:'One clear word used consistently with meaning.', advanced:true, cat:'language', source:'unverified' },
   ],
   11: [
-    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking with one-hand support.', advanced:false, cat:'motor' },
-    { text:'Picks up small objects neatly', icon:zi('baby'), desc:'Precise pincer grasp for tiny items — well refined.', advanced:false, cat:'motor' },
-    { text:'Imitates adult actions', icon:zi('mirror'), desc:'Copies phone-to-ear, stirring, sweeping — deferred imitation developing.', advanced:false, cat:'cognitive' },
-    { text:'Says mama/dada specifically', icon:zi('chat'), desc:'Uses "mama" and "dada" for the correct parent.', advanced:false, cat:'language' },
-    { text:'Plays social games independently', icon:zi('brain'), desc:'Initiates peekaboo, pat-a-cake without prompting.', advanced:false, cat:'social' },
-    { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, cat:'motor' },
+    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Confident walking with one-hand support.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Picks up small objects neatly', icon:zi('baby'), desc:'Precise pincer grasp for tiny items — well refined.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Imitates adult actions', icon:zi('mirror'), desc:'Copies phone-to-ear, stirring, sweeping — deferred imitation developing.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Says mama/dada specifically', icon:zi('chat'), desc:'Uses "mama" and "dada" for the correct parent.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Plays social games independently', icon:zi('brain'), desc:'Initiates peekaboo, pat-a-cake without prompting.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, cat:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, cat:'motor' },
-    { text:'Says 2–6 words', icon:zi('chat'), desc:'Small vocabulary with consistent meaning. Understands many more.', advanced:false, cat:'language' },
-    { text:'Follows simple instructions', icon:zi('list'), desc:'Acts on one-step commands like "give me the ball".', advanced:false, cat:'cognitive' },
-    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Self-feeding with a spoon — messy but developing.', advanced:false, cat:'motor' },
-    { text:'Shows objects to share attention', icon:zi('baby'), desc:'Holds up a toy for you to see — joint attention milestone.', advanced:false, cat:'social' },
-    { text:'Scribbles when given crayon', icon:zi('palette'), desc:'Makes marks on paper — early fine motor expression.', advanced:true, cat:'motor' },
-    { text:'Stacks 2–3 blocks', icon:zi('baby'), desc:'Builds a small tower — hand-eye coordination + spatial awareness.', advanced:true, cat:'cognitive' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says 2–6 words', icon:zi('chat'), desc:'Small vocabulary with consistent meaning. Understands many more.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Follows simple instructions', icon:zi('list'), desc:'Acts on one-step commands like "give me the ball".', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Self-feeding with a spoon — messy but developing.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Shows objects to share attention', icon:zi('baby'), desc:'Holds up a toy for you to see — joint attention milestone.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Scribbles when given crayon', icon:zi('palette'), desc:'Makes marks on paper — early fine motor expression.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Stacks 2–3 blocks', icon:zi('baby'), desc:'Builds a small tower — hand-eye coordination + spatial awareness.', advanced:true, cat:'cognitive', source:'unverified' },
   ],
   },
 
   // Chinese developmental standards (CIP/Gesell-based)
   cn: {
   6: [
-    { text:'Rolls freely in both directions', icon:zi('hourglass'), desc:'Rolls tummy to back and back to tummy smoothly.', advanced:false, cat:'motor' },
-    { text:'Sits briefly with hand support', icon:zi('baby'), desc:'Chinese standards expect supported sitting by 6 months.', advanced:false, cat:'motor' },
-    { text:'Grasps objects with whole hand', icon:zi('baby'), desc:'Palmar grasp — picks up toys using full hand.', advanced:false, cat:'motor' },
-    { text:'Turns toward voice', icon:zi('baby'), desc:'Localises sound and turns head toward the speaker.', advanced:false, cat:'language' },
-    { text:'Distinguishes familiar from unfamiliar faces', icon:zi('baby'), desc:'Shows clear preference for caregivers — social cognition developing.', advanced:false, cat:'social' },
-    { text:'Mouths and explores objects', icon:zi('baby'), desc:'Primary method of exploring the world — taste and texture.', advanced:false, cat:'cognitive' },
-    { text:'Sits independently', icon:zi('lotus'), desc:'Sits without support — early for Chinese 7m standard.', advanced:true, cat:'motor' },
+    { text:'Rolls freely in both directions', icon:zi('hourglass'), desc:'Rolls tummy to back and back to tummy smoothly.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Sits briefly with hand support', icon:zi('baby'), desc:'Chinese standards expect supported sitting by 6 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Grasps objects with whole hand', icon:zi('baby'), desc:'Palmar grasp — picks up toys using full hand.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Turns toward voice', icon:zi('baby'), desc:'Localises sound and turns head toward the speaker.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Distinguishes familiar from unfamiliar faces', icon:zi('baby'), desc:'Shows clear preference for caregivers — social cognition developing.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Mouths and explores objects', icon:zi('baby'), desc:'Primary method of exploring the world — taste and texture.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Sits independently', icon:zi('lotus'), desc:'Sits without support — early for Chinese 7m standard.', advanced:true, cat:'motor', source:'unverified' },
   ],
   7: [
-    { text:'Sits independently and stably', icon:zi('lotus'), desc:'Chinese standards expect independent sitting by 7 months.', advanced:false, cat:'motor' },
-    { text:'Transfers objects between hands', icon:zi('hourglass'), desc:'Passes toys from one hand to the other deliberately.', advanced:false, cat:'motor' },
-    { text:'Babbles syllable chains', icon:zi('chat'), desc:'Produces "ba-ba-ba" or "ma-ma-ma" repetitive syllables.', advanced:false, cat:'language' },
-    { text:'Recognises mirror reflection', icon:zi('mirror'), desc:'Shows interest in own reflection — early self-awareness.', advanced:false, cat:'cognitive' },
-    { text:'Reaches for familiar people', icon:zi('baby'), desc:'Extends arms to be picked up by caregivers.', advanced:false, cat:'social' },
-    { text:'Bears weight on legs', icon:zi('run'), desc:'Bounces and pushes down when held in standing.', advanced:false, cat:'motor' },
-    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando crawling — early mobility ahead of 8m standard.', advanced:true, cat:'motor' },
+    { text:'Sits independently and stably', icon:zi('lotus'), desc:'Chinese standards expect independent sitting by 7 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Transfers objects between hands', icon:zi('hourglass'), desc:'Passes toys from one hand to the other deliberately.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Babbles syllable chains', icon:zi('chat'), desc:'Produces "ba-ba-ba" or "ma-ma-ma" repetitive syllables.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Recognises mirror reflection', icon:zi('mirror'), desc:'Shows interest in own reflection — early self-awareness.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Reaches for familiar people', icon:zi('baby'), desc:'Extends arms to be picked up by caregivers.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Bears weight on legs', icon:zi('run'), desc:'Bounces and pushes down when held in standing.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Crawls on belly', icon:zi('baby'), desc:'Commando crawling — early mobility ahead of 8m standard.', advanced:true, cat:'motor', source:'unverified' },
   ],
   8: [
-    { text:'Crawls on hands and knees', icon:zi('baby'), desc:'Chinese standard expects crawling by 8–9 months.', advanced:false, cat:'motor' },
-    { text:'Pulls to kneeling', icon:zi('run'), desc:'Uses furniture to pull up to kneeling position.', advanced:false, cat:'motor' },
-    { text:'Inferior pincer grasp', icon:zi('baby'), desc:'Picks up small objects between thumb and side of index finger.', advanced:false, cat:'motor' },
-    { text:'Responds to name', icon:zi('baby'), desc:'Turns consistently when called — language comprehension.', advanced:false, cat:'language' },
-    { text:'Stranger anxiety present', icon:zi('baby'), desc:'Shows fear or crying with unfamiliar people — healthy attachment.', advanced:false, cat:'social' },
-    { text:'Plays peek-a-boo', icon:zi('baby'), desc:'Anticipates and enjoys the reveal — object permanence + social play.', advanced:false, cat:'cognitive' },
-    { text:'Pulls to stand', icon:zi('run'), desc:'Pulls up to standing using furniture — ahead of 9m standard.', advanced:true, cat:'motor' },
+    { text:'Crawls on hands and knees', icon:zi('baby'), desc:'Chinese standard expects crawling by 8–9 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Pulls to kneeling', icon:zi('run'), desc:'Uses furniture to pull up to kneeling position.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Inferior pincer grasp', icon:zi('baby'), desc:'Picks up small objects between thumb and side of index finger.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Responds to name', icon:zi('baby'), desc:'Turns consistently when called — language comprehension.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Stranger anxiety present', icon:zi('baby'), desc:'Shows fear or crying with unfamiliar people — healthy attachment.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Plays peek-a-boo', icon:zi('baby'), desc:'Anticipates and enjoys the reveal — object permanence + social play.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Pulls to stand', icon:zi('run'), desc:'Pulls up to standing using furniture — ahead of 9m standard.', advanced:true, cat:'motor', source:'unverified' },
   ],
   9: [
-    { text:'Pulls to stand on furniture', icon:zi('run'), desc:'Chinese standard expects pulling to stand by 9 months.', advanced:false, cat:'motor' },
-    { text:'Superior pincer grasp', icon:zi('baby'), desc:'Neat thumb-tip to index-tip pickup of small items.', advanced:false, cat:'motor' },
-    { text:'Says "mama/baba" (non-specific)', icon:zi('chat'), desc:'Produces parent-like sounds without specific meaning yet.', advanced:false, cat:'language' },
-    { text:'Understands simple prohibitions', icon:zi('warn'), desc:'Pauses when told "no" or "don\'t touch" — comprehension developing.', advanced:false, cat:'cognitive' },
-    { text:'Waves goodbye', icon:zi('baby'), desc:'Social gesture learned through imitation.', advanced:false, cat:'social' },
-    { text:'Claps hands on request', icon:zi('baby'), desc:'Claps when asked or when hearing music — motor + social.', advanced:false, cat:'social' },
-    { text:'Cruises along furniture', icon:zi('run'), desc:'Steps sideways holding furniture — early for 10m standard.', advanced:true, cat:'motor' },
+    { text:'Pulls to stand on furniture', icon:zi('run'), desc:'Chinese standard expects pulling to stand by 9 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Superior pincer grasp', icon:zi('baby'), desc:'Neat thumb-tip to index-tip pickup of small items.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says "mama/baba" (non-specific)', icon:zi('chat'), desc:'Produces parent-like sounds without specific meaning yet.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Understands simple prohibitions', icon:zi('warn'), desc:'Pauses when told "no" or "don\'t touch" — comprehension developing.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Waves goodbye', icon:zi('baby'), desc:'Social gesture learned through imitation.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Claps hands on request', icon:zi('baby'), desc:'Claps when asked or when hearing music — motor + social.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Cruises along furniture', icon:zi('run'), desc:'Steps sideways holding furniture — early for 10m standard.', advanced:true, cat:'motor', source:'unverified' },
   ],
   10: [
-    { text:'Cruises along furniture', icon:zi('run'), desc:'Chinese standard expects cruising by 10 months.', advanced:false, cat:'motor' },
-    { text:'Stands alone momentarily', icon:zi('run'), desc:'Lets go of support and balances briefly.', advanced:false, cat:'motor' },
-    { text:'Points to desired objects', icon:zi('baby'), desc:'Uses index finger pointing to communicate wants.', advanced:false, cat:'language' },
-    { text:'Imitates simple actions', icon:zi('mirror'), desc:'Copies adult gestures like clapping, waving, phone-to-ear.', advanced:false, cat:'cognitive' },
-    { text:'Shows objects to caregiver', icon:zi('baby'), desc:'Holds up toys to show — joint attention and sharing.', advanced:false, cat:'social' },
-    { text:'Walks with both hands held', icon:zi('run'), desc:'Takes steps while holding both of your hands.', advanced:false, cat:'motor' },
-    { text:'Says first meaningful word', icon:zi('chat'), desc:'One clear word used with intent — early for Chinese 12m standard.', advanced:true, cat:'language' },
+    { text:'Cruises along furniture', icon:zi('run'), desc:'Chinese standard expects cruising by 10 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Stands alone momentarily', icon:zi('run'), desc:'Lets go of support and balances briefly.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Points to desired objects', icon:zi('baby'), desc:'Uses index finger pointing to communicate wants.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Imitates simple actions', icon:zi('mirror'), desc:'Copies adult gestures like clapping, waving, phone-to-ear.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Shows objects to caregiver', icon:zi('baby'), desc:'Holds up toys to show — joint attention and sharing.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Walks with both hands held', icon:zi('run'), desc:'Takes steps while holding both of your hands.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says first meaningful word', icon:zi('chat'), desc:'One clear word used with intent — early for Chinese 12m standard.', advanced:true, cat:'language', source:'unverified' },
   ],
   11: [
-    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Steps confidently with single-hand support.', advanced:false, cat:'motor' },
-    { text:'Releases objects voluntarily', icon:zi('note'), desc:'Deliberately drops toys into containers — controlled release.', advanced:false, cat:'motor' },
-    { text:'Says "mama/baba" specifically', icon:zi('chat'), desc:'Uses parent words for the correct person.', advanced:false, cat:'language' },
-    { text:'Cooperates with dressing', icon:zi('baby'), desc:'Extends limbs to help with putting on clothes.', advanced:false, cat:'social' },
-    { text:'Finds hidden objects', icon:zi('star'), desc:'Searches under cups and cloths for hidden toys.', advanced:false, cat:'cognitive' },
-    { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — early for Chinese standard.', advanced:true, cat:'motor' },
+    { text:'Walks with one hand held', icon:zi('handshake'), desc:'Steps confidently with single-hand support.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Releases objects voluntarily', icon:zi('note'), desc:'Deliberately drops toys into containers — controlled release.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says "mama/baba" specifically', icon:zi('chat'), desc:'Uses parent words for the correct person.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Cooperates with dressing', icon:zi('baby'), desc:'Extends limbs to help with putting on clothes.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Finds hidden objects', icon:zi('star'), desc:'Searches under cups and cloths for hidden toys.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — early for Chinese standard.', advanced:true, cat:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, cat:'motor' },
-    { text:'Says 2–3 meaningful words', icon:zi('chat'), desc:'Small vocabulary used consistently and correctly.', advanced:false, cat:'language' },
-    { text:'Follows one-step instructions', icon:zi('list'), desc:'Understands and acts on simple commands.', advanced:false, cat:'cognitive' },
-    { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats food pieces independently.', advanced:false, cat:'motor' },
-    { text:'Plays simple give-and-take games', icon:zi('brain'), desc:'Hands toy to you and expects it back — social reciprocity.', advanced:false, cat:'social' },
-    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Tries to scoop food with a spoon — messy but shows independence.', advanced:true, cat:'motor' },
-    { text:'Says 5+ words', icon:zi('chat'), desc:'Rapidly growing vocabulary — advanced for Chinese 12m standard.', advanced:true, cat:'language' },
+    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Says 2–3 meaningful words', icon:zi('chat'), desc:'Small vocabulary used consistently and correctly.', advanced:false, cat:'language', source:'unverified' },
+    { text:'Follows one-step instructions', icon:zi('list'), desc:'Understands and acts on simple commands.', advanced:false, cat:'cognitive', source:'unverified' },
+    { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats food pieces independently.', advanced:false, cat:'motor', source:'unverified' },
+    { text:'Plays simple give-and-take games', icon:zi('brain'), desc:'Hands toy to you and expects it back — social reciprocity.', advanced:false, cat:'social', source:'unverified' },
+    { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Tries to scoop food with a spoon — messy but shows independence.', advanced:true, cat:'motor', source:'unverified' },
+    { text:'Says 5+ words', icon:zi('chat'), desc:'Rapidly growing vocabulary — advanced for Chinese 12m standard.', advanced:true, cat:'language', source:'unverified' },
   ],
   },
 };
@@ -17631,6 +17654,15 @@ const KEYS = {
   // per-entry models, (b) zero risk of echo-loop via diff (sync-internal
   // metadata never enters the SYNC_KEYS write path).
   lastWriters: 'ziva_last_writers',
+  // milestone-engine-prep-v1 PR-A — engine substrate keys.
+  // milestoneSuppress: per-milestone suppress-until timestamp (the "Not yet"
+  //   tap's 7-day silence honor). Cross-device sync-replicable via SYNC_KEYS
+  //   + _postReceiveMilestoneSuppress merge hook (V-K-104 + V-M-116 floors).
+  // activityMeta: single-doc { [dateKey]: { activityLevel: 1-4 } } separate
+  //   from the activityLog array (V-K-111 floor — switching activityLog to
+  //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
+  milestoneSuppress: 'ziva_milestone_suppress',
+  activityMeta:      'ziva_activity_meta',
 };
 
 function load(key, def) {
@@ -17952,6 +17984,12 @@ const MS_STAGE_META = {
 // INIT
 // ─────────────────────────────────────────
 let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, medChecks, customEvents, scrapbook, doctors, sleepData, poopData, currentReaction, _careTickets;
+// milestone-engine-prep-v1 PR-A — engine substrate module-globals.
+// activityMeta: single-doc { [dateKey]: { activityLevel: 1-4 } }, separate
+//   key family from activityLog per V-K-111 floor.
+// milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
+// Both hydrated from localStorage in init flow alongside the other data globals.
+let activityMeta, milestoneSuppress;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -18687,6 +18725,16 @@ function init() {
   // Load activity log (evidence-based milestones)
   activityLog  = load(KEYS.activityLog, null) || {};
   if (typeof activityLog !== 'object' || activityLog === null || Array.isArray(activityLog)) activityLog = {};
+
+  // milestone-engine-prep-v1 PR-A — activityMeta + milestoneSuppress hydration.
+  // V-K-111 floor: activityMeta is the SEPARATE per-day-meta key family (not
+  // an _meta sentinel on activityLog) to avoid breaking 20+ Array.isArray
+  // consumers. V-K-104 floor: milestoneSuppress is explicitly registered for
+  // sync (see SYNC_KEYS in sync.js) — no falling through ziva_* pattern picker.
+  activityMeta = load(KEYS.activityMeta, null) || {};
+  if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
+  milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
+  if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
 
   // Load tomorrow's planned meals
   _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
@@ -23393,6 +23441,335 @@ function _getActiveStandard() {
     if (raw === 'iap' || raw === 'eu' || raw === 'cn' || raw === 'who') return raw;
     return 'who';
   } catch (e) { return 'who'; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// milestone-engine-prep-v1 PR-A — 4 engine primitives (V-K-113 split).
+// Spec: docs/specs/milestone-engine-prep-v1.md §Primitive 1..3.
+// Charter alignment (CV3-006): Honesty primary (clinical bands never
+// personalised; activityLevel:null is honest no-signal); Extensibility
+// co-primary (explicit-state-injection signature; row-addition substrate).
+// ─────────────────────────────────────────────────────────────────────────
+
+// _predictMilestoneWindow — Primitive 1.
+// Clinical-range predictor for a single milestone. PURE function. NEVER
+// personalised — returns the typical clinical band from the active reference
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
+// Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
+function _predictMilestoneWindow(milestoneId, opts) {
+  opts = opts || {};
+  if (typeof milestoneId !== 'string' || !milestoneId) return null;
+  const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
+  if (!standards) return null;
+  const standardKey = opts.standardKey || _getActiveStandard();
+  const standardSpec = standards[standardKey];
+  if (!standardSpec || typeof standardSpec !== 'object') return null;
+
+  // Walk brackets (integer month keys) to find the row whose slugify(text)
+  // matches milestoneId. Match by slug per the DEFAULT_MILESTONES id
+  // convention (data.js:1471) — no per-row id field exists on MILESTONE_STANDARDS.
+  let matchedRow = null;
+  let matchedBracket = null;
+  const bracketKeys = Object.keys(standardSpec)
+    .map(function(k) { return parseInt(k, 10); })
+    .filter(function(k) { return !isNaN(k); })
+    .sort(function(a, b) { return a - b; });
+  for (var i = 0; i < bracketKeys.length; i++) {
+    const bracket = bracketKeys[i];
+    const rows = standardSpec[bracket];
+    if (!Array.isArray(rows)) continue;
+    for (var j = 0; j < rows.length; j++) {
+      if (slugify(rows[j].text || '') === milestoneId) {
+        matchedRow = rows[j];
+        matchedBracket = bracket;
+        break;
+      }
+    }
+    if (matchedRow) break;
+  }
+  if (!matchedRow) return null;
+
+  // V-K-116 — advanced-row derivation rule: advanced:true offsets by +1 bracket.
+  // Treats the advanced flag as a clinical-band shift (matches row.desc intent
+  // which often says "may appear here but typical is later").
+  const effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
+  // Find the next bracket for the end-fallback. V-K-114: highest-bracket
+  // (12m) default end is 18*30.44 ≈ 548 days when no explicit endMonth set.
+  const startBracketIdx = bracketKeys.indexOf(matchedBracket);
+  const nextBracket = bracketKeys[startBracketIdx + 1];
+  let endBracket;
+  if (typeof matchedRow.endMonth === 'number') {
+    endBracket = matchedRow.endMonth;
+  } else if (matchedRow.advanced) {
+    // Advanced row: end at (K+2)*30.44 - 1 days. V-K-116 contract.
+    endBracket = matchedBracket + 2;
+  } else if (typeof nextBracket === 'number') {
+    endBracket = nextBracket;
+  } else {
+    // Top bracket fallback per V-K-114
+    endBracket = 18;
+  }
+  const expectedStart = effectiveStartBracket * 30.44;
+  // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
+  // For non-advanced rows, end = endBracket * 30.44 - 1 to land at the bracket-end day.
+  const expectedEnd = (endBracket * 30.44) - 1;
+
+  // Baby's current age — read module-global DOB via _zivaAgeInDays(today()).
+  // V-K-118 floor: never Date.now() millis arithmetic; always derive nowDays
+  // via the timezone-safe helper. V-V-69 fold (Vela engine-prep PR-A audit):
+  // opts.dobOverride must actually override DOB for test-isolation (spec
+  // V-K-115 contract). Production callers omit and we use the module-global
+  // _ZIVA_DOB_MS; tests inject a DOB and we compute ageDays = today - dobOverride
+  // via the same UTC-midnight idiom _zivaAgeInDays uses internally.
+  let ageDays;
+  if (opts.dobOverride) {
+    const dobStr = toDateStr(new Date(opts.dobOverride));
+    const dobMs = Date.parse(dobStr + 'T00:00:00Z');
+    const todayMs = Date.parse(today() + 'T00:00:00Z');
+    ageDays = (isNaN(dobMs) || isNaN(todayMs))
+      ? 0
+      : Math.max(0, Math.round((todayMs - dobMs) / (24 * 60 * 60 * 1000)));
+  } else {
+    ageDays = _zivaAgeInDays(today());
+  }
+  const ageWeeks = Math.floor(ageDays / 7);
+  const ageMonths = Math.floor(ageDays / 30.44);
+  const ageDaysRemainder = Math.round(ageDays - (ageMonths * 30.44));
+
+  // V-V-57 — windowStatus (renamed from `status` to avoid collision with
+  // _getInWindowMilestones[i].evidenceStatus). Three states.
+  let windowStatus;
+  if (ageDays < expectedStart) windowStatus = 'pre-window';
+  else if (ageDays > expectedEnd) windowStatus = 'post-window';
+  else windowStatus = 'in-window';
+
+  // V-M-114 floor — source defaults to 'unverified'. Never walk wrapping key.
+  const source = matchedRow.source || 'unverified';
+
+  return {
+    expectedStart: expectedStart,
+    expectedEnd: expectedEnd,
+    expectedStartMonths: Math.round(expectedStart / 30.44),
+    expectedEndMonths: Math.round(expectedEnd / 30.44),
+    expectedStartMonthsFloat: expectedStart / 30.44,
+    expectedEndMonthsFloat: expectedEnd / 30.44,
+    ageDays: ageDays,
+    ageWeeks: ageWeeks,
+    ageMonths: ageMonths,
+    ageDaysRemainder: ageDaysRemainder,
+    windowStatus: windowStatus,
+    source: source,
+    standardKey: standardKey,
+  };
+}
+
+// _getInWindowMilestones — Primitive 2.
+// Returns up to n milestones whose clinical-band currently overlaps ageDays.
+// Explicit-state-injection signature per the v3-3 _correlate precedent
+// (V-K-108 fold). safetyTier:true rows bypass the n-cap (V-M-102 floor).
+function _getInWindowMilestones(ageDays, n, opts) {
+  opts = opts || {};
+  if (typeof ageDays !== 'number' || ageDays < 0) ageDays = 0;
+  if (typeof n !== 'number' || n < 0) n = 3;
+  const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
+  if (!standards) return [];
+  const standardKey = opts.standardKey || _getActiveStandard();
+  const standardSpec = standards[standardKey];
+  if (!standardSpec || typeof standardSpec !== 'object') return [];
+  const milestonesGlobal = opts.milestones || (typeof milestones !== 'undefined' ? milestones : []);
+  const suppressMap = opts.suppressMap || (typeof milestoneSuppress !== 'undefined' ? milestoneSuppress : {});
+  // V-K-118 floor: nowAgeDays derived via _zivaAgeInDays(today()), never millis arithmetic.
+  const nowAgeDays = (typeof opts.nowAgeDays === 'number') ? opts.nowAgeDays : _zivaAgeInDays(today());
+  const weights = opts.weights || { recency: 0.4, window: 0.4, practicing: 0.2 };
+  const nowMs = Date.now();
+
+  // Index existing milestones by slug-id for evidence lookup.
+  const evidenceByText = {};
+  if (Array.isArray(milestonesGlobal)) {
+    for (var i = 0; i < milestonesGlobal.length; i++) {
+      const m = milestonesGlobal[i];
+      if (!m || !m.text) continue;
+      evidenceByText[slugify(m.text)] = m;
+    }
+  }
+
+  // Walk brackets, pick rows whose [expectedStart..expectedEnd] overlaps ageDays.
+  const candidates = [];
+  const bracketKeys = Object.keys(standardSpec)
+    .map(function(k) { return parseInt(k, 10); })
+    .filter(function(k) { return !isNaN(k); })
+    .sort(function(a, b) { return a - b; });
+  for (var bi = 0; bi < bracketKeys.length; bi++) {
+    const bracket = bracketKeys[bi];
+    const rows = standardSpec[bracket];
+    if (!Array.isArray(rows)) continue;
+    const nextBracket = bracketKeys[bi + 1];
+    for (var ri = 0; ri < rows.length; ri++) {
+      const row = rows[ri];
+      const milestoneId = slugify(row.text || '');
+      if (!milestoneId) continue;
+      // Suppression filter — entries whose suppress-until > now skip.
+      if (suppressMap[milestoneId] && suppressMap[milestoneId] > nowMs) continue;
+      // Derive window (mirror _predictMilestoneWindow logic).
+      const effStart = row.advanced ? (bracket + 1) : bracket;
+      let endBr;
+      if (typeof row.endMonth === 'number') endBr = row.endMonth;
+      else if (row.advanced) endBr = bracket + 2;
+      else if (typeof nextBracket === 'number') endBr = nextBracket;
+      else endBr = 18;
+      const expectedStart = effStart * 30.44;
+      const expectedEnd = (endBr * 30.44) - 1;
+      if (ageDays < expectedStart || ageDays > expectedEnd) continue;
+
+      // Evidence status — driven by the parent's milestones global.
+      const ev = evidenceByText[milestoneId];
+      let evidenceStatus = 'not-yet';
+      if (ev) {
+        if (ev.status === 'mastered' || ev.status === 'consistent') evidenceStatus = 'confirmed';
+        else if (ev.status === 'practicing' || ev.status === 'emerging') evidenceStatus = 'practicing';
+      }
+      const evidenceCount = (ev && typeof ev.evidenceCount === 'number') ? ev.evidenceCount : 0;
+      // lastEvidenceAt — epoch ms from the most recent stage timestamp on the entry.
+      let lastEvidenceAt = null;
+      if (ev) {
+        const stageStamps = ['masteredAt', 'consistentAt', 'practicingAt', 'emergingAt']
+          .map(function(f) { return ev[f]; })
+          .filter(function(s) { return typeof s === 'string'; })
+          .map(function(s) {
+            const t = Date.parse(s + 'T00:00:00Z');
+            return isNaN(t) ? null : t;
+          })
+          .filter(function(t) { return t !== null; });
+        if (stageStamps.length) lastEvidenceAt = Math.max.apply(null, stageStamps);
+      }
+
+      // V-V-59 floor: never-seen-neutral = 0.5 (honest no-signal).
+      let recencyScore;
+      if (lastEvidenceAt === null) {
+        recencyScore = 0.5;
+      } else {
+        const lastEvidenceDays = _zivaAgeInDays(toDateStr(new Date(lastEvidenceAt)));
+        const rawScore = 1 - (nowAgeDays - lastEvidenceDays) / 30;
+        recencyScore = Math.max(0, Math.min(1, rawScore));
+      }
+      const rawOpenness = 1 - (ageDays - expectedStart) / Math.max(1, expectedEnd - expectedStart);
+      const windowOpenness = Math.max(0, Math.min(1, rawOpenness));
+      const practicingBoost = (evidenceStatus === 'practicing') ? 1 : 0;
+      const priority = (weights.recency * recencyScore)
+                     + (weights.window * windowOpenness)
+                     + (weights.practicing * practicingBoost);
+
+      candidates.push({
+        milestoneId: milestoneId,
+        text: row.text || '',
+        icon: row.icon || '',
+        domain: row.domain || row.cat || 'motor', // PR-B will drop the cat fallback
+        // V-V-68 fold (Vela engine-prep PR-A audit): the spec contract at
+        // §Primitive 2 line 220 declares `window: ReturnType<_predictMilestoneWindow>`.
+        // Mirror the FULL shape so milestones-tab-v1 consumers reading
+        // result[i].window get ageDays/Weeks/Months/Remainder + windowStatus
+        // without needing a second _predictMilestoneWindow round-trip per
+        // candidate (V-V-55 half-awake floor — consumers stop computing the
+        // same split 3+ times per render).
+        window: (function() {
+          var ws;
+          if (ageDays < expectedStart) ws = 'pre-window';
+          else if (ageDays > expectedEnd) ws = 'post-window';
+          else ws = 'in-window';
+          return {
+            expectedStart: expectedStart,
+            expectedEnd: expectedEnd,
+            expectedStartMonths: Math.round(expectedStart / 30.44),
+            expectedEndMonths: Math.round(expectedEnd / 30.44),
+            expectedStartMonthsFloat: expectedStart / 30.44,
+            expectedEndMonthsFloat: expectedEnd / 30.44,
+            ageDays: ageDays,
+            ageWeeks: Math.floor(ageDays / 7),
+            ageMonths: Math.floor(ageDays / 30.44),
+            ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
+            windowStatus: ws,
+            source: row.source || 'unverified',
+            standardKey: standardKey,
+          };
+        })(),
+        evidenceStatus: evidenceStatus,
+        evidenceCount: evidenceCount,
+        lastEvidenceAt: lastEvidenceAt,
+        priority: priority,
+        safetyTier: row.safetyTier === true,
+      });
+    }
+  }
+
+  // Sort by priority descending.
+  candidates.sort(function(a, b) { return b.priority - a.priority; });
+
+  // V-M-102 floor: safetyTier:true rows bypass the n-cap; always surface.
+  const safetyRows = candidates.filter(function(c) { return c.safetyTier; });
+  const nonSafety = candidates.filter(function(c) { return !c.safetyTier; });
+  const capped = nonSafety.slice(0, n);
+  // Concat safety rows ABOVE the cap, deduped by milestoneId.
+  const result = [];
+  const seenIds = {};
+  for (var s = 0; s < safetyRows.length; s++) {
+    if (!seenIds[safetyRows[s].milestoneId]) {
+      result.push(safetyRows[s]);
+      seenIds[safetyRows[s].milestoneId] = true;
+    }
+  }
+  for (var c = 0; c < capped.length; c++) {
+    if (!seenIds[capped[c].milestoneId]) {
+      result.push(capped[c]);
+      seenIds[capped[c].milestoneId] = true;
+    }
+  }
+  return result;
+}
+
+// _getActivityLevelToday — Primitive 3 (getter).
+// Returns 1-4 or null. null is the honest "no signal" state — never inferred,
+// never defaulted to 2. Reads from window.activityMeta (V-K-111 separate
+// key family; not activityLog._meta).
+function _getActivityLevelToday(dateKey) {
+  if (typeof dateKey !== 'string' || !dateKey) return null;
+  const meta = (typeof activityMeta === 'object' && activityMeta) ? activityMeta : null;
+  if (!meta) return null;
+  const dayMeta = meta[dateKey];
+  if (!dayMeta || typeof dayMeta !== 'object') return null;
+  const lvl = dayMeta.activityLevel;
+  if (lvl === 1 || lvl === 2 || lvl === 3 || lvl === 4) return lvl;
+  return null;
+}
+
+// _setActivityLevelToday — Primitive 3 (setter).
+// Lazy-creates window.activityMeta and activityMeta[dateKey] as needed.
+// Idempotent: same dateKey + same level → no write (storage-quiet).
+// null clears the field and removes empty per-day objects.
+function _setActivityLevelToday(dateKey, level) {
+  if (typeof dateKey !== 'string' || !dateKey) return;
+  if (level !== null && level !== 1 && level !== 2 && level !== 3 && level !== 4) return;
+  if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) {
+    activityMeta = {};
+  }
+  const existing = activityMeta[dateKey];
+  if (level === null) {
+    if (!existing) return; // already clear — storage-quiet
+    if (typeof existing === 'object' && 'activityLevel' in existing) {
+      delete existing.activityLevel;
+      // If the per-day object is now empty, remove the dateKey entry.
+      if (Object.keys(existing).length === 0) delete activityMeta[dateKey];
+      save(KEYS.activityMeta, activityMeta);
+    }
+    return;
+  }
+  // Idempotent guard.
+  if (existing && existing.activityLevel === level) return;
+  if (!existing || typeof existing !== 'object') {
+    activityMeta[dateKey] = { activityLevel: level };
+  } else {
+    existing.activityLevel = level;
+  }
+  save(KEYS.activityMeta, activityMeta);
 }
 
 // Resolve the active age-range row for a recommendation against the parent's selected standard.
@@ -68969,6 +69346,12 @@ const SYNC_KEYS = {
   // arm below: SYNC_KEYS alone arms a listener that dispatches against an
   // undefined dep (silent render miss); SYNC_RENDER_DEPS alone is dead config.
   [KEYS.scrapbook]:          { collection: 'scrapbook',   model: 'per-entry' },
+  // milestone-engine-prep-v1 PR-A — engine substrate keys explicitly
+  // registered per V-K-104 floor (no falling through ziva_* pattern picker).
+  // Both single-doc; cross-device merge via dedicated _postReceive hooks
+  // (V-M-116 — last-write-wins on whole-doc is unsafe for per-key state).
+  [KEYS.milestoneSuppress]:  { collection: 'milestones',  model: 'single-doc' },
+  [KEYS.activityMeta]:       { collection: 'activities',  model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -69061,6 +69444,17 @@ const SYNC_RENDER_DEPS = {
   // (the home-tab scrapbook card body) + renderScrapbookHistory (the
   // history-tab section). Both are safe-no-op if their tab isn't active.
   [KEYS.scrapbook]:         { global: 'scrapbook',    renderers: { 'history': ['renderScrapbook', 'renderScrapbookHistory'] } },
+  // milestone-engine-prep-v1 PR-A — engine substrate render deps.
+  // postReceive hooks fold remote+local per-key state on cross-device receive
+  // (V-M-116 + V-K-111 floors). Renderers are placeholder-empty in PR-A —
+  // milestones-tab-v1 IMPL wires `renderMilestonesTab` and friends as
+  // consumers; renderHome rehydrates today's activityLevel chip when present.
+  // mergeOnReceive (V-M-116 floor): pure merge function (remoteVal, localPrior) → merged
+  // applied BEFORE the listener-handler save, so cross-device per-key state on both sides
+  // survives last-write-wins. Distinct from `postReceive` (no-args; operates on global
+  // in-place — used by _postReceiveMilestones for migration + dedupe).
+  [KEYS.milestoneSuppress]: { global: 'milestoneSuppress', mergeOnReceive: '_postReceiveMilestoneSuppress', renderers: { home: ['renderHome'], 'track:milestones': ['renderActiveMilestones'] } },
+  [KEYS.activityMeta]:      { global: 'activityMeta',     mergeOnReceive: '_postReceiveActivityMeta',     renderers: { home: ['renderHome'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -69210,6 +69604,72 @@ function _syncDispatchRender(lsKey, value, attribution) {
     }
   }
   return attribution || null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// milestone-engine-prep-v1 PR-A — cross-device merge-on-receive hooks
+// (V-M-116 + V-K-111 floors). Pure functions: (remoteMap, localMap) → merged.
+// Invoked by the listener handler BEFORE save (sync.js:1568+) so cross-device
+// per-key state on both sides survives last-write-wins on single-doc shapes.
+//
+// Pattern: timestamp-max-per-key merge + auto-purge of expired entries (for
+// the suppress map). The same shape applies to activityMeta — there, per-day
+// objects merge field-by-field with last-write-wins on each scalar field.
+// ─────────────────────────────────────────────────────────────────────────
+
+// _postReceiveMilestoneSuppress — V-K-104 + V-M-116 hard contract.
+// Merges remoteMap and localMap by max-timestamp per milestoneKey. Auto-
+// purges entries whose suppress-until is in the past (the "Not yet" 7-day
+// silence honor). Idempotent + associative.
+function _postReceiveMilestoneSuppress(remoteMap, localMap) {
+  var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
+  var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
+  var merged = {};
+  // Seed with local entries.
+  Object.keys(lm).forEach(function(k) {
+    if (typeof lm[k] === 'number') merged[k] = lm[k];
+  });
+  // Fold remote — keep whichever side suppressed LATER (max ts wins).
+  Object.keys(rm).forEach(function(k) {
+    var rTs = (typeof rm[k] === 'number') ? rm[k] : 0;
+    var lTs = (typeof merged[k] === 'number') ? merged[k] : 0;
+    if (rTs > lTs) merged[k] = rTs;
+  });
+  // Purge expired entries — auto-cleanup pass on every receive.
+  var now = Date.now();
+  Object.keys(merged).forEach(function(k) {
+    if (merged[k] <= now) delete merged[k];
+  });
+  return merged;
+}
+
+// _postReceiveActivityMeta — V-K-111 + V-M-116 hard contract.
+// Single-doc shape: { [dateKey]: { activityLevel: 1-4 } }. Merges per-dateKey
+// per-field with last-write-wins on the scalar level. Because the doc shape
+// has no inline timestamps, the merge uses "remote-wins on conflict, both-
+// sides-preserved on no-conflict" semantics — this matches what the parent
+// expects: a tag set on one device shows up on the other; clearing on one
+// device doesn't resurrect from the other.
+function _postReceiveActivityMeta(remoteMap, localMap) {
+  var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
+  var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
+  var merged = {};
+  // Seed with local per-dateKey objects (deep-copy field set).
+  Object.keys(lm).forEach(function(dk) {
+    var d = lm[dk];
+    if (d && typeof d === 'object' && !Array.isArray(d)) {
+      merged[dk] = {};
+      Object.keys(d).forEach(function(f) { merged[dk][f] = d[f]; });
+    }
+  });
+  // Fold remote — remote-wins on scalar conflict; both sides preserved otherwise.
+  Object.keys(rm).forEach(function(dk) {
+    var rDay = rm[dk];
+    if (!rDay || typeof rDay !== 'object' || Array.isArray(rDay)) return;
+    if (!merged[dk]) merged[dk] = {};
+    Object.keys(rDay).forEach(function(f) { merged[dk][f] = rDay[f]; });
+  });
+  return merged;
 }
 
 // _syncRecordLastWriter — PR-19 (Phase 3 R2 amendment) — persistent
@@ -70373,18 +70833,35 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
         }
       }
 
+      // milestone-engine-prep-v1 PR-A — mergeOnReceive hook (V-M-116 + V-K-111
+      // floors). Pure (remoteVal, localPrior) → merged function applied before
+      // save so cross-device per-key state survives last-write-wins on single-doc
+      // shapes. No-op when SYNC_RENDER_DEPS[key] lacks a mergeOnReceive field,
+      // or when the named hook isn't a function — falls through to remoteVal.
+      var _saveVal = remoteVal;
+      var _depCfg = SYNC_RENDER_DEPS[key];
+      if (_depCfg && _depCfg.mergeOnReceive) {
+        try {
+          var _mergeFn = (typeof window !== 'undefined') ? window[_depCfg.mergeOnReceive] : undefined;
+          if (typeof _mergeFn === 'function') _saveVal = _mergeFn(remoteVal, current);
+        } catch(e) {
+          console.warn('[sync] merge-on-receive ' + key + '/' + _depCfg.mergeOnReceive + ':', e);
+          _saveVal = remoteVal;
+        }
+      }
+
       anyChanged = true;
       _remoteWriteDepth++;
-      try { save(key, remoteVal); }
+      try { save(key, _saveVal); }
       finally { _remoteWriteDepth--; }
-      _syncShadow[key] = _syncCloneDeep(remoteVal);
+      _syncShadow[key] = _syncCloneDeep(_saveVal);
 
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the
       // toast-with-reload fallback in _syncQueueToast (graceful degradation).
       // Hotfix: dispatch failures log via console.warn (not _syncRecordCrash);
       // see _syncDispatchRender comment for jurisdictional rationale.
-      try { _syncDispatchRender(key, remoteVal, attribution); }
+      try { _syncDispatchRender(key, _saveVal, attribution); }
       catch(e) { console.warn('[sync-dispatch] outer/' + key + ':', e); }
 
       // PR-19 (Phase 3 R2 amendment): persistent attribution sidecar.
