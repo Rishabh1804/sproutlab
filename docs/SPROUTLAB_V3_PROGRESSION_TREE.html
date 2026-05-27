@@ -647,7 +647,7 @@ footer a { color: var(--tc-sky); }
   <header>
     <div class="hd-row">
       <h1>SproutLab v3.0 — Progression Tree</h1>
-      <div class="meta">32 nodes · last refresh 2026-05-27 (post-#143 + #144 — v3-6 IMPL ratified [styles.css mutex position 2 closed; v3-1 unblocked]; sleep arc 3 / scoring s-2 IMPL ratified [first v3-3 engine-spine consumer]; gold tier still fully ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
+      <div class="meta">34 nodes · last refresh 2026-05-27 (post-#148 + #149 — Option C two-spec sequence ratified: milestone-engine-prep-v1 [engine substrate] + milestones-tab-v1 [surface consumer]; full canon-cc-008 chain cleared on both via parallel Governor deploys + Scribe Worker Tier + Lyra synth-fold + Cipher Edict V terminal pass; v3-6 IMPL ratified at #144; sleep arc 3 / scoring s-2 IMPL ratified at #143; gold tier still fully ratified) · governed by <code>CV3-006</code> Charter · companion to <code>docs/specs/sproutlab-v3-roundtable-2026-05-25.md</code></div>
     </div>
   </header>
 
@@ -850,6 +850,14 @@ const NODES = {
     label:'Food Sub-Tab', sub:'PR #133 · v1 RATIFIED', files:'docs/specs/food-sub-tab-v1.md',
     composes:'Food sub-tab UI + structured food-object shape (precedes v3-8 parseFeeding); 5 implementation phases F-1..F-5',
     description:'MERGED 2026-05-25 at sha 20c7773. v1 spec ratified — Architect locked all 10 scope questions to Lyra defaults. F-1 sub-tab scaffold → F-2 Log entry → F-3 Library → F-4 Patterns → F-5 v3-8 parseFeeding integration. Impl arc opens after styles.css mutex clears.' },
+  'MEP':    { x: 1080, y: 90, status:'ratified', wave:'preWave1', region:'engine', glyph:'spark', tier:1, critical:false, capstone:null,
+    label:'Milestone Engine Prep', sub:'PR #148 · v1 RATIFIED', files:'docs/specs/milestone-engine-prep-v1.md',
+    composes:'Engine substrate for milestones-tab-v1 (Option C two-spec sequence first half); 5 primitives + cat→domain migration + audit gate',
+    description:'SPEC MERGED 2026-05-27 at sha 2cd8587. Five primitives ratified: _predictMilestoneWindow(milestoneId, opts) clinical-range predictor (never personalised); _getInWindowMilestones(ageDays, n, opts) engagement-priority selector with safetyTier cap-bypass; _getActivityLevelToday/_setActivityLevelToday getter/setter pair; KEYS.activityMeta + KEYS.milestoneSuppress with explicit SYNC_KEYS + _postReceiveActivityMeta merge. cat:→domain: migration across 18 consumer sites + MILESTONE_STANDARDS schema-extended with source: + optional endMonth: + optional safetyTier:. Two new seed milestones added: mouths-objects (sensory, safetyTier:true) + object-permanence-emerging (cognitive). Audit gate audit-no-personalised-prediction-v1.sh (Python regex + self-test) wired into split/build.sh per V-K-112. canon-cc-008 chain cleared: Kael primary (1 BLOCKING + multiple NOTE; spec authored from scribe-scout codebase reconnaissance — addresses closed PR #147 "spec-against-memory" failure mode) + Maren consult + Vela consult + Lyra synth-fold + Cipher Edict V CLEAN. PR-A/PR-B IMPL split ratified per V-K-113. 1042 lines.' },
+  'MS-Tab': { x: 1240, y: 90, status:'ratified', wave:'preWave1', region:'care', glyph:'card', tier:1, critical:false, capstone:null,
+    label:'Milestones Tab', sub:'PR #149 · v1 RATIFIED', files:'docs/specs/milestones-tab-v1.md',
+    composes:'Track-tab 5th sub-tab redesign (Option C two-spec sequence second half); consumes milestone-engine-prep-v1 substrate; mirrors food-sub-tab-v1 Log/Library/Patterns layout',
+    description:'SPEC MERGED 2026-05-27 at sha aa2b51b. Re-authored against verified engine-prep substrate (closes the closed PR #147 9-BLOCKING / 19-NOTE chain). Three input primitives: activityLevel:1-4 chip via _getActivityLevelToday + KEYS.activityMeta; in-window proposals via _getInWindowMilestones(ageDays, 3, opts) with safetyTier:true cap-bypass; bulk catch-up grid. 3-sub-tab layout mirrors food-sub-tab-v1: Log / Library / Patterns. All 11 ID-bearing surfaces from flat layout relocated per V-M-100 + V-M-119 (preserved IDs per G3): recentEvidenceFeed, msActiveMilestones, milestonesDomainHero, milestoneStats, milestoneHighlights, msCatWheels, msRegressionAlerts, milestoneList, msTimelineContent, upcomingMilestoneList, activityList. Three return-visit surfaces: "Today" header (4 narration templates including betweenWindow 4th cell per V-V-54); trajectory ribbon (2-state visual per V-V-49; global cap of 20 markers post-bucket-merge per V-K-122; ≥9px diameter / ≥1.8px stroke per V-V-66); pediatric-prep card (narrated-only v1 minimum per V-V-53; visual register-tag contract per V-M-122; screenshot-bypass defense per V-V-67). Consumer-side ACTIVITY_CATEGORIES registry (5 keys) preserving binding [data-domain] cascade per V-M-120 Lyra fold-call (no shared-module migration; milestone-overall semantic via existing icon-lav header + ribbon --surface-lav background). _MILESTONE_NARRATION_TEMPLATES separate registry honoring V-V-60 doctrinal carve-out. Engine-internal label boundary explicit (V-K-120 + V-K-121: write-side confidence enum stays in data layer; surface prose uses evidenceStatus + observation-counts only). Build-time audit gate audit-activity-categories-v1.sh standalone (Scope C). Chrome doctrine V-V-46 resolution: uniform-rose active chrome + lavender domain accent INSIDE sub-tab cards. canon-cc-008 chain cleared: Maren primary clear-with-notes (2 BLOCKING V-M-119 + V-M-120 + 6 NOTE) + Kael consult clear-with-notes (4 coverage-gaps V-K-120..123 + 4 positive confirmations) + Vela consult amendments-required (2 BLOCKING V-V-63 + V-V-64 + 3 carry-watches + 7 closure verifications) + Lyra synth-fold (all 4 BLOCKING + 10 NOTE folded inline; spec grew 477 → 542 lines on commit 7bec32f) + Cipher Edict V MARK-READY (Honesty / Extensibility / Warmth all PASS). IMPL single-PR (~2,100 LOC est.); Maren primary on home.js + medical.js; Kael consult on data.js; Vela consult on comprehension; sequential triple-jurisdiction on styles.css per cipher-9.' },
 
   /* Layer 2 — Wave 1 roots (y ≈ 290) */
   'v3-5':  { x: 130, y: 280, status:'ratified', wave:'wave1', region:'surface', glyph:'layers', tier:2, critical:true, capstone:'gold',
@@ -1006,6 +1014,15 @@ const EDGES = [
   { from:'PR-127', to:'v3-3', type:'critical' },
   { from:'PR-128', to:'v3-3', type:'critical' },
   { from:'FoodST', to:'v3-8', type:'gate' },
+  /* Option C two-spec sequence — milestones-tab arc */
+  { from:'MEP',    to:'MS-Tab', type:'critical' },
+  { from:'FoodST', to:'MS-Tab', type:'normal' },
+  { from:'v3-4',   to:'MS-Tab', type:'normal' },
+  { from:'v3-5',   to:'MS-Tab', type:'normal' },
+  { from:'v3-6',   to:'MS-Tab', type:'normal' },
+  { from:'MS-Tab', to:'R-6',    type:'critical' },
+  { from:'MS-Tab', to:'R-3',    type:'normal' },
+  { from:'MS-Tab', to:'R-2',    type:'normal' },
   /* Wave 1 spine */
   { from:'v3-3', to:'v3-1', type:'critical' },
   { from:'v3-3', to:'v3-2', type:'normal' },
