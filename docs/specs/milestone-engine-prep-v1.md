@@ -76,38 +76,69 @@ The **engine substrate** that `milestones-tab-v1` (separate spec, follows ratifi
 /**
  * Clinical-range predictor for a single milestone. Pure function. NEVER
  * personalised — returns the typical clinical band from the active reference
- * standard (WHO / CDC / IAP / etc.), NOT a Ziva-specific prediction.
+ * standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
  *
  * @param {string} milestoneId   - the milestone key (e.g. 'sit', 'point', 'roll')
- * @param {Date|string} dob      - date of birth (timezone-safe via _zivaAgeInDays internally)
- * @param {object} opts          - { standardKey?: 'who'|'cdc'|'iap'|... default = _referenceStandard }
+ * @param {object} opts          - {
+ *     standardKey?: 'who'|'cdc'|'aap'|'iap'|...  default = _referenceStandard
+ *     dobOverride?: Date|string                   for unit-test injection only;
+ *                                                 production callers omit (function
+ *                                                 reads module-global DOB at data.js:319);
+ *                                                 mirrors _correlate's opts.endDate
+ *                                                 pattern (V-K-115 synth-fold)
+ *   }
  * @returns {object|null}
- *   { expectedStart: number,   // age in days
- *     expectedEnd:   number,   // age in days
- *     expectedStartMonths: number,  // for parent-legible rendering
- *     expectedEndMonths:   number,
- *     ageDays:    number,      // baby's current age in days
- *     ageWeeks:   number,      // baby's current age in weeks (parent-legible)
- *     status:     'pre-window' | 'in-window' | 'post-window',
- *     source:     'WHO' | 'CDC' | 'IAP' | 'EU' | 'CN' | <other>,  // from data
- *     standardKey: string,     // the standard the band was read from
+ *   {
+ *     // window position (clinical-temporal)
+ *     expectedStart:      number,  // age in days
+ *     expectedEnd:        number,  // age in days
+ *     expectedStartMonths: number, // INTEGER (rounded) — for parent-legible prose
+ *     expectedEndMonths:   number, // INTEGER (rounded) — for parent-legible prose
+ *     expectedStartMonthsFloat: number,  // float — for trajectory-ribbon x-positioning
+ *     expectedEndMonthsFloat:   number,  // float — for ribbon (V-V-58 synth-fold)
+ *
+ *     // baby's current age (parent-legible — V-V-55 synth-fold adds month split)
+ *     ageDays:           number,  // baby's current age in days
+ *     ageWeeks:          number,  // baby's current age in weeks
+ *     ageMonths:         number,  // INTEGER months (floor) — for "Ziva is 7m 24d"
+ *     ageDaysRemainder:  number,  // days within the partial month
+ *
+ *     // window-position classification (V-V-57 synth-fold — renamed from `status`
+ *     // to avoid collision with _getInWindowMilestones[i].evidenceStatus)
+ *     windowStatus:      'pre-window' | 'in-window' | 'post-window',
+ *
+ *     // source attribution (always present; 'unverified' is the honest default —
+ *     // V-M-114 synth-fold: NEVER walk the bracket-standard wrapping-key to stamp
+ *     // a source; only attribute when the per-row source: field is explicitly set)
+ *     source:            'WHO' | 'CDC' | 'AAP' | 'IAP' | 'EU' | 'CN' | 'unverified',
+ *     standardKey:       string,     // the standard the band was read from
  *   }
  *   OR null if milestoneId is not in MILESTONE_STANDARDS[standardKey].
  *
  * Source-of-truth: MILESTONE_STANDARDS[standardKey][monthBracket][...rows]. Each
- * row carries the milestone + its expected-band. Source attribution
- * (WHO / CDC / IAP) is per-band, read from the data — never hardcoded in
- * rendered prose.
+ * row carries the milestone + (post-v1) its source field, advanced flag, and
+ * optional safetyTier flag. Source attribution is per-row, read from the data —
+ * never hardcoded in rendered prose, never inferred from the wrapping key.
  *
- * Honesty floor: this function NEVER returns a "Ziva will <milestone> by <date>"
- * shape. The expectedStart..expectedEnd window is clinical-typical, parent-
- * legible as "Typically 9–14 months (WHO)" — never as a personalised prediction.
- * The audit-no-personalised-prediction-v1.sh gate enforces this at build time
- * by greping for "Ziva will [predicate] by [date]"-shape patterns in consumer-
- * side prose.
+ * Honesty floor (V-M-115 hard contract): this function NEVER returns a "Ziva will
+ * <milestone> by <date>" shape. The expectedStart..expectedEnd window is clinical-
+ * typical, parent-legible as "Typically 9–14 months (WHO)." When source ===
+ * 'unverified', the consumer MUST omit the parenthetical entirely — rendering
+ * "(unverified)" parenthetically is a cipher-honesty violation and audit-gate
+ * Scope A bans it explicitly. The audit-no-personalised-prediction-v1.sh gate
+ * enforces both floors at build time.
  */
-function _predictMilestoneWindow(milestoneId, dob, opts) { /* ... */ }
+function _predictMilestoneWindow(milestoneId, opts) { /* ... */ }
 ```
+
+**Synth-fold annotations:**
+- **V-V-55:** `ageMonths` + `ageDaysRemainder` added — consumers stop computing the same split 3+ times per render
+- **V-V-56:** see Primitive 2; this primitive's output is the *window*, the per-item display fields land in `_getInWindowMilestones`
+- **V-V-57:** `status` → `windowStatus` — collision with `_getInWindowMilestones[i].evidenceStatus` avoided
+- **V-V-58:** precision contract — integer fields (`expectedStartMonths`/`expectedEndMonths`) for prose; float-paired fields (`expectedStartMonthsFloat`/`expectedEndMonthsFloat`) for the trajectory ribbon
+- **V-K-115:** `dob` parameter dropped; replaced with `opts.dobOverride` for test isolation only — production callers omit; mirrors `_correlate` opts-injection precedent
+- **V-M-113:** `AAP` (American Academy of Pediatrics) added to `MILESTONE_SOURCE` vocabulary between `CDC` and `IAP`
+- **V-M-114 + V-M-115:** source defaults to `'unverified'` (honest no-claim); render contract MUST omit parenthetical for unverified — both ratified as hard contracts
 
 ### Read-source contract
 
@@ -122,15 +153,25 @@ v1 ratifies a schema extension: rows gain explicit `source:` (the per-row source
 For a row in bracket-month `K`:
 - `expectedStart = K * 30.44` days (bracket-month start → average days)
 - `expectedEnd = row.endMonth ? row.endMonth * 30.44 : (nextBracketMonth * 30.44 - 1)` days
-- For the highest bracket (12m), `expectedEnd` defaults to 18 months (542 days) absent explicit `endMonth:` — clinical-typical bracket-end window per WHO defaults
+- For the highest bracket (12m), `expectedEnd` defaults to `18 * 30.44 = 547.92 days ≈ 548 days` absent explicit `endMonth:` — clinical-typical bracket-end window per WHO defaults (V-K-114 synth-fold corrected the 542-day typo)
 
 The IMPL adds an explicit `endMonth:` to rows where the WHO/IAP/EU/CN reference data provides a specific upper bound; rows without explicit endMonth use the next-bracket fallback.
 
-### Per-row source-attribution discipline
+### `advanced: true` row interaction (V-K-116 synth-fold)
 
-v1 ratifies that every `MILESTONE_STANDARDS` row carries an explicit `source:` field. The `source` value flows through `_predictMilestoneWindow` output as the `source` field, which the rendered prose interpolates as `"Typically X–Y months ({source})."` — read from data, never hardcoded.
+`MILESTONE_STANDARDS` rows carry an `advanced: boolean` field. An advanced-tagged row in bracket K is clinically "may appear here, but typical band is later" — emitting `Typically K–K+1 months` for it collides with the row's own `desc` field which often explicitly says otherwise.
 
-If a row is missing `source:` (pre-v1 data), `_predictMilestoneWindow` returns `source: 'unverified'` (NOT 'WHO' — defaulting to a clinical authority that isn't actually the source is a cipher-honesty violation). The IMPL diff includes a data-curation pass to attribute every existing row by walking the bracket-standard wrapping (`who:` → `'WHO'` etc.); the only rows that ship as `source: 'unverified'` are those whose original authoring source the IMPL author can't trace from commit history.
+v1 ratifies the **advanced-row derivation rule**: if `row.advanced === true`, the function returns `expectedStart = (K+1) * 30.44` and `expectedEnd = (K+2) * 30.44 - 1` — offset by +1 bracket. This treats the advanced flag as a *clinical-band shift*, matching the row authors' intent. Rationale: simpler than per-row `endMonth:` curation for the advanced cases; aligns engine output with row prose. IMPL author may override on a per-row basis by setting explicit `endMonth:`.
+
+### Per-row source-attribution discipline (V-M-114 synth-fold — reversed from earlier draft)
+
+v1 ratifies that every `MILESTONE_STANDARDS` row gains an explicit `source:` field as a **schema extension**. The `source` value flows through `_predictMilestoneWindow` output, and the rendered prose conditionally interpolates the parenthetical only when source is attributed.
+
+**Authoring honesty floor (V-M-114 ratification):** the IMPL diff ships **every existing row as `source: 'unverified'` BY DEFAULT.** The IMPL author MUST NOT walk the bracket-standard wrapping-key (`who:` / `iap:` / `eu:` / `cn:`) and stamp `source: 'WHO'` / `source: 'IAP'` etc. on the rows it contains. The wrapping is an authoring claim, not a per-row provenance — rows under `who:` may have IAP-flavored phrasings, age-bracket placements, or example-content that drifted during authoring. A subsequent Care-tier curation arc (Wave-2 deferrable; out-of-scope register entry below) walks the rows against canonical WHO Motor Development Study + IAP DASII + AAP Bright Futures + CDC Learn-the-Signs references and upgrades attribution row-by-row.
+
+**Render contract (V-M-115 hard contract):** consumer rendering MUST conditionally omit the source parenthetical when `window.source === 'unverified'`. Rendering `"Typically 9–14 months (unverified)."` parenthetically is a cipher-honesty violation — `'unverified'` reads as a category to the parent (suggesting "unverified milestone"), when it actually means "we don't know the clinical source." Audit-gate Scope A bans `\(unverified\)` in consumer-side render code as a hard build-time rule.
+
+**Two new seed milestones** (V-M-118 synth-fold; ship in `DEFAULT_MILESTONES` per §Seed-data expansion below) also ship with `source: 'unverified'` — future curation arc upgrades.
 
 ### Honesty floor — restated
 
@@ -145,13 +186,12 @@ A consumer reading `_predictMilestoneWindow` output and rendering "Ziva will [mi
 ```js
 /**
  * Returns up to n milestones whose clinical-band currently overlaps the given
- * ageDays. Explicit-state-injection signature per the v3-3 _correlate precedent —
- * the function is pure when opts carries the dependencies; falls through to
- * module-global reads when opts is empty (production convenience).
+ * ageDays. Explicit-state-injection signature per the v3-3 _correlate precedent.
  *
  * @param {number} ageDays
  * @param {number} n          - max milestones to return (cap-at-3 is the surface
- *                              floor; engine returns up to n; consumer caps)
+ *                              floor; engine returns up to n; safetyTier:true rows
+ *                              bypass the cap per Care-floor)
  * @param {object} opts       - state-injection bag:
  *   {
  *     standards?:    MILESTONE_STANDARDS  (default: module global)
@@ -159,41 +199,76 @@ A consumer reading `_predictMilestoneWindow` output and rendering "Ziva will [mi
  *     activityLog?:  array                (default: module global `activityLog`)
  *     suppressMap?:  object               (default: read from ziva_milestone_suppress)
  *     standardKey?:  string               (default: _referenceStandard)
- *     now?:          number               (default: Date.now() — for test isolation)
+ *     nowAgeDays?:   number               (default: _zivaAgeInDays(today()) — HR-12-safe;
+ *                                          V-K-118 synth-fold: NEVER Date.now() millis
+ *                                          arithmetic — always derive nowDays via the
+ *                                          existing _zivaAgeInDays helper which is
+ *                                          timezone-safe at core.js:5801)
+ *     weights?:      { recency, window, practicing }  (default: { 0.4, 0.4, 0.2 })
  *   }
  * @returns {Array<{
- *   milestoneId: string,
- *   window:      ReturnType<_predictMilestoneWindow>,
- *   status:      'confirmed' | 'practicing' | 'not-yet',
- *   evidenceCount: number,
- *   lastEvidenceAt: number | null,  // epoch ms
- *   priority:    number,            // engagement-priority score (debug surface)
+ *   // identity + display fields (V-V-56 synth-fold — denormalize-for-consumer;
+ *   // surface arc reads these directly instead of round-tripping into the registry
+ *   // for every card render)
+ *   milestoneId:     string,
+ *   text:            string,    // milestone's parent-legible display string
+ *   icon:            string,    // zi-* key (name only; surface wraps via zi())
+ *   domain:          string,    // post-migration category (motor/language/social/sensory/cognitive)
+ *
+ *   // window + status (V-V-57 synth-fold — renamed `status` → `evidenceStatus`
+ *   // to avoid collision with _predictMilestoneWindow.windowStatus)
+ *   window:          ReturnType<_predictMilestoneWindow>,
+ *   evidenceStatus:  'confirmed' | 'practicing' | 'not-yet',
+ *
+ *   // evidence state
+ *   evidenceCount:   number,
+ *   lastEvidenceAt:  number | null,   // epoch ms; null = never observed
+ *
+ *   // priority debug surface
+ *   priority:        number,
+ *
+ *   // safety-tier flag (carried through from MILESTONE_STANDARDS[...row].safetyTier)
+ *   safetyTier:      boolean,
  * }>}
  *
  * Engagement-priority heuristic (calibrated, not opaque):
  *   priority = weight_recency * recencyScore +
  *              weight_window * windowOpenness +
- *              weight_practicing * (status === 'practicing' ? 1 : 0)
+ *              weight_practicing * (evidenceStatus === 'practicing' ? 1 : 0)
  *
- * Where:
- *   recencyScore  = clamp((nowDays - lastEvidenceDays) / 30, 0, 1)  // higher = more recent
+ * Where (V-K-118 synth-fold — all math in age-days, never millis):
+ *   nowDays         = nowAgeDays  // already-derived via _zivaAgeInDays(today())
+ *   lastEvidenceDays = lastEvidenceAt ? _zivaAgeInDays(toDateStr(new Date(lastEvidenceAt))) : null
+ *
+ *   recencyScore = lastEvidenceDays === null
+ *                    ? 0.5   // V-V-59 synth-fold: never-seen-is-neutral (not stale, not fresh)
+ *                            // — a freshly-discovered in-window milestone with zero history
+ *                            // shouldn't dominate over practicing milestones, nor be buried;
+ *                            // 0.5 is the honest no-signal score
+ *                    : clamp(1 - (nowDays - lastEvidenceDays) / 30, 0, 1)  // newer = higher
+ *
  *   windowOpenness = clamp(1 - (ageDays - expectedStart) / (expectedEnd - expectedStart), 0, 1)
  *
- * Default weights (v1): recency=0.4, window=0.4, practicing=0.2.
+ * Default weights (v1): recency=0.4, window=0.4, practicing=0.2 (Vela ACCEPT V-V-59).
  * IMPL author may tune; weights are exposed in opts.weights for testability.
  *
- * Suppression: milestones whose suppressMap[milestoneId] > now are excluded
+ * Suppression: milestones whose suppressMap[milestoneId] > nowMs are excluded
  * from the return set entirely (the "Not yet" tap's 7-day silence honor).
  *
- * Care-tier safety floor (per V-M-102 fold): milestones tagged
- * MILESTONE_STANDARDS[...row].safetyTier === true bypass the n-cap — they
- * always surface in the return set if in-window, even if their priority
- * score wouldn't otherwise place them in the top n. The IMPL pass adds
- * the safetyTier field to choking-readiness, swallow-coordination, and
- * sibling Care-floor milestones (curation list at IMPL time, Maren-signed).
+ * Care-tier safety floor (per V-M-102 + V-M-112 + V-K-117 synth-fold): rows tagged
+ * MILESTONE_STANDARDS[...row].safetyTier === true bypass the n-cap — they always
+ * surface in the return set if in-window. The canonical v1 safetyTier curation
+ * list is enumerated in §safetyTier seed-data section below (Maren-signed
+ * 2026-05-27 in audit V-M-112).
  */
 function _getInWindowMilestones(ageDays, n, opts) { /* ... */ }
 ```
+
+**Synth-fold annotations:**
+- **V-V-56:** Per-item display fields (`text`, `icon`, `domain`) added — engine projects them; surface no longer round-trips into the registry per card render
+- **V-V-57:** `status` → `evidenceStatus` to avoid the collision with `_predictMilestoneWindow.windowStatus`
+- **V-V-59:** `recencyScore` null-branch returns `0.5` (never-seen-neutral — honest no-signal; not stale-deprioritized nor fresh-prioritized)
+- **V-K-118:** All priority math is age-days (never millis-epoch). `opts.nowAgeDays` defaults via `_zivaAgeInDays(today())`. HR-12 hazard from `Date.now()` arithmetic closed.
 
 ### Care-tier safety floor (V-M-102 fold)
 
@@ -203,26 +278,84 @@ Closes Maren's V-M-102 finding from the closed PR #147 chain. Milestones with sa
 
 Closes Kael's V-K-108. The opts parameter takes explicit `standards / milestones / activityLog / suppressMap` so the function is unit-testable without module-global setup. Production callers pass empty `opts: {}`; the function falls through to module-global reads. Mirrors the v3-3 `_correlate` precedent.
 
+### safetyTier seed-data + curation (V-M-112 + V-K-117 synth-fold)
+
+V-M-102's safetyTier mechanism is sound; V-K-117 caught that the prior spec referenced data rows (`choking-readiness`, `swallow-coordination`) that DON'T exist in `MILESTONE_STANDARDS`. v1 ratifies the canonical Maren-signed curation list of existing rows + the new seed rows the IMPL adds:
+
+**Existing `MILESTONE_STANDARDS` rows that gain `safetyTier: true` (Maren-signed 2026-05-27 via V-M-112):**
+
+| Row | Location | Domain | safety-floor rationale |
+|---|---|---|---|
+| "Finger feeding begins" | `data.js:2702` (WHO bracket 7, motor) | motor | gates the safe-finger-food window |
+| "Pincer grasp developing" | `data.js:2708` (WHO bracket 8, motor) | motor | gates the safe-small-pieces window |
+| "Pincer grasp refined" | `data.js:2717` (WHO bracket 9, motor) | motor | gates choking-readiness floor |
+| "Drinks from a cup (with help)" | `data.js:2736` (WHO bracket 11, motor) | motor | gates oral-motor swallow coordination |
+| "Explores objects by mouthing, shaking, banging" | `data.js:2733` (IAP bracket 8) | cognitive | gates mouthing-phase choking-watch (cognitive-by-bracket, safety-by-action) |
+| Any "Chew*" / "Bit*" / "Munch*" rows IMPL grep finds across all 4 standards | (IMPL discovery) | motor | gates oral-motor maturity safety floor |
+
+**Two new seed milestones in `DEFAULT_MILESTONES` (per §Seed-data expansion below):**
+
+| New seed row | Domain | safetyTier? | Rationale |
+|---|---|---|---|
+| `mouths-objects` "Mouths and explores objects with hands" — clinical-band 4–7m | sensory | **`true`** | bridges existing rows to safety-flag territory; signals choking-watch posture upgrade |
+| `object-permanence-emerging` "Searches for hidden objects (object permanence emerging)" — clinical-band 6–9m | cognitive | `false` | pure cognitive; age-appropriate for Ziva at ~7m; no safety overlap |
+
+All other rows: `safetyTier: false` (the default; equivalent to absence). The cap-bypass logic in `_getInWindowMilestones` only special-cases `safetyTier === true`.
+
+**Schema-extension note:** the new `safetyTier:` field on `MILESTONE_STANDARDS` rows is net-additive (no existing reader checks for absence-as-false vs truly-absent). Maren-consult at IMPL time on any "Chew*" / "Bit*" / "Munch*" rows IMPL author discovers in the grep pass — these may warrant `safetyTier: true` based on Care-floor read on the specific row.
+
 ---
 
 ## Primitive 3 — `_getActivityLevelToday(dateKey)` + `_setActivityLevelToday(dateKey, level)`
 
-### Storage shape (schema decision per scribe-scout 2026-05-27)
+### Storage shape — REVERSED to a separate per-day key family (V-K-111 synth-fold)
 
-**The `ziva_day_<dateKey>` shape claimed in earlier authoring DOES NOT EXIST in the codebase.** Scribe-scout verified: the codebase uses date-*inside-value* sharding (`activityLog[date]`), not date-*as-key* sharding. There is no per-day-keyed localStorage family.
+**Earlier draft decision:** land `activityLevel:1-4` on `activityLog[date]._meta.activityLevel` as a wrapper-shape extension of the existing per-day entry.
 
-v1 ratifies that `activityLevel:1-4` lands on the existing `activityLog[date]` per-day entry as a new `_meta.activityLevel` field, NOT as a new `ziva_day_*` key family. Rationale:
-- `activityLog` is already in `SYNC_KEYS` (`collection: 'activities', model: 'single-doc'`) — cross-device sync is solved
-- The existing per-day shape (`activityLog[date] = [entry, entry, ...]`) extends naturally to `activityLog[date] = { entries: [...], _meta: { activityLevel: 1..4 | null } }` OR to a sentinel meta-entry — IMPL author picks the shape that minimizes existing-consumer disturbance
-- Avoids a schema introduction (new top-level KEYS family) per V-K-104's "explicit-registry-only" floor — staying inside the already-registered key keeps the sync contract solved
+**V-K-111 found this breaks 20+ existing array-only consumers silently.** Scribe-grep-verified: `intelligence-cards.js:560,912,1092`; `intelligence-quicklog.js:273,502,506,598,628,633,635,665,713,1086,2053,2179`; `home.js:2482,2657,2659,2661,2662,2672,2673,2706,2707`; `medical.js:7471,7494,7814` — all use `Array.isArray(activityLog[ds]) ? activityLog[ds] : []` or `activityLog[dateStr].push(entry)` or `activityLog[dateStr].length === 0` or `delete activityLog[dateStr]`. Switching to `{ entries, _meta }` makes `Array.isArray()` return false → consumers see `[]` → user-visible data disappears (today's logged activities vanish from Today So Far, the Smart Quick Log, the activity heatmap). The sentinel-meta-entry alternative is exposed to the empty-delete sweep at `intelligence-quicklog.js:638` + `home.js:2662` — undoing the last real activity also nukes the sentinel-meta-entry, silently dropping `activityLevel`.
 
-**The chronicle §4.2 reservation** for `activityLevel: 1-4 | null` per-day is honored — v1 ratifies the *field*, not a *new key family*. The chronicle text says "per day-record"; the codebase's day-record IS `activityLog[date]`.
+**v1 ratifies: separate per-day key family.** A new `KEYS.activityMeta` family with per-day keys `ziva_activity_meta` (the single-doc-shape, NOT one-key-per-date — the doc is `{ [dateKey]: { activityLevel } }`). Sync-registered the explicit way per V-K-104's floor.
+
+```js
+// localStorage key: ziva_activity_meta
+// Shape (single-doc; per-day fields keyed by dateKey):
+{
+  '2026-05-27': { activityLevel: 3 },
+  '2026-05-26': { activityLevel: 2 },
+  // ... unset days simply not present in the object — _getActivityLevelToday returns null
+}
+```
+
+**Registry additions** (in addition to the suppress-state key):
+
+```js
+// In core.js KEYS:
+KEYS.activityMeta = 'ziva_activity_meta';
+
+// In sync.js SYNC_KEYS:
+[KEYS.activityMeta]: { collection: 'activities', model: 'single-doc' },
+
+// In sync.js SYNC_RENDER_DEPS (renders that depend on activityLevel):
+[KEYS.activityMeta]: {
+  global: 'activityMeta',
+  renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestonesTab'] }
+},
+```
+
+**Why this is the right shape:**
+- Zero disturbance to the existing `activityLog[date]` array-only consumers (the 20+ sites stay untouched)
+- Explicit-registry-only sync per V-K-104 floor (the key is named, sync-registered, render-dep-mapped — never falls through `ziva_*` pattern picker)
+- Per-day fields keyed by dateKey in a single doc keep the doc-size small (one entry per day; ~1KB at year-end)
+- Future per-day fields (mood-tier from R-7, energy-level from R-6 forward, etc.) extend the doc by adding fields per dateKey — no schema-fork
+
+**The chronicle §4.2 reservation** for `activityLevel: 1-4 | null` per day-record is honored — v1 ratifies the *field*, on the right *storage key*. The chronicle's "per day-record" intent maps to the new `KEYS.activityMeta[dateKey].activityLevel` shape; the codebase's "activityLog" array-shape is correctly left alone for activity log entries (the things the parent logs), and the new key is for activity-meta (things the system or parent tags about the day as a whole).
 
 ### Contract
 
 ```js
 /**
- * Read activityLevel for any day from activityLog[dateKey]._meta.
+ * Read activityLevel for any day from the new ziva_activity_meta key (V-K-111
+ * synth-fold reversed the prior activityLog._meta decision).
  *
  * @param {string} dateKey  - 'YYYY-MM-DD' (timezone-safe via today() upstream;
  *                            today() at core.js:3649 confirmed local-timezone-safe)
@@ -230,48 +363,43 @@ v1 ratifies that `activityLevel:1-4` lands on the existing `activityLog[date]` p
  *   null = unset for that day (the honest "no signal" state — never inferred,
  *   never defaulted to 2). R-6 IMPL reads null as "no signal".
  *
- * Reads from: window.activityLog[dateKey] (already-loaded module-global per
- * sync.js postReceive pipeline) — the existing date-keyed object. Returns
- * activityLog[dateKey]?._meta?.activityLevel ?? null.
+ * Reads from: window.activityMeta[dateKey] (the new module-global loaded from
+ * KEYS.activityMeta = 'ziva_activity_meta'). Returns
+ * activityMeta?.[dateKey]?.activityLevel ?? null.
  */
 function _getActivityLevelToday(dateKey) { /* ... */ }
 
 /**
- * Write activityLevel for any day to activityLog[dateKey]._meta.activityLevel.
+ * Write activityLevel for any day to the new ziva_activity_meta key.
  *
  * @param {string} dateKey
  * @param {1 | 2 | 3 | 4 | null} level  - pass null to clear
  *
- * Lazy-create semantics (V-K-109 fold + scribe-scout 2026-05-27 schema-shape
- * verified): if activityLog[dateKey] does not yet exist for dateKey, this
- * function CREATES the per-day entry with the minimal shape required to host
- * _meta (the IMPL picks: either `{ entries: [], _meta: { activityLevel } }` if
- * the existing consumer code reads `.entries`, OR a sentinel-meta-entry in the
- * array form that consumers already handle). The IMPL pass verifies the
- * minimum-disturbance shape against existing renderTodayActivities + similar
- * consumers in home.js / medical.js / intelligence-quicklog.js.
+ * Lazy-create semantics: if window.activityMeta does not yet exist (first-ever
+ * use of any per-day-meta field), this function initializes it as `{}`. If
+ * activityMeta[dateKey] does not yet exist for the given day, this function
+ * creates a new per-day object `{ activityLevel: level }`. If level is null,
+ * the function clears the field — and if the resulting per-day object is empty
+ * (no other meta fields present), removes the dateKey entry entirely.
  *
  * Idempotent: same dateKey + same level produces no write (storage-quiet).
  * Same dateKey + different level overwrites.
  *
- * Sync: piggybacks on the existing KEYS.activityLog → SYNC_KEYS entry. No
- * new sync registration required (verified per scribe-scout — activityLog
- * is the canonical per-day sync surface).
+ * Sync: explicit per V-K-104 — KEYS.activityMeta is registered in SYNC_KEYS
+ * with `{ collection: 'activities', model: 'single-doc' }`. Write triggers
+ * save(KEYS.activityMeta, activityMeta) which routes through the sync
+ * write-shim at sync.js:908 cleanly.
  *
- * Triggers: save(KEYS.activityLog, activityLog) per existing conventions —
- * which routes through the sync write-shim at sync.js:908 cleanly because
- * KEYS.activityLog is already in SYNC_KEYS.
+ * Zero disturbance to the existing activityLog[date] array-only consumers
+ * (V-K-111 closure — the 20+ sites that use Array.isArray(activityLog[ds])
+ * stay untouched).
  */
 function _setActivityLevelToday(dateKey, level) { /* ... */ }
 ```
 
-### Lazy per-day-entry creation (V-K-109 fold + schema-shape re-grounded)
+### Lazy creation (V-K-109 fold + V-K-111 schema-shape correction)
 
-Closes Kael's V-K-109 against the **actual storage shape** (not the spec-claimed `ziva_day_*` shape). The setter creates the `activityLog[dateKey]` entry lazily if missing, with the minimum-disturbance shape per the IMPL discovery pass.
-
-### Existing-consumer pass-through (`_postReceiveMilestones`-shape note)
-
-Scribe-scout noted that `medical.js:145 _postReceiveMilestones` runs migration + dedupe on every cross-device milestone sync receive. The activityLog sync surface has a similar `_postReceive*` handler shape (per sync.js SYNC_RENDER_DEPS pattern). The new `_meta.activityLevel` field must survive any existing `_postReceiveActivityLog`-style migration pass — IMPL verifies via grep at IMPL time. The field is additive; existing migration logic that operates on `.entries` ignores `._meta` cleanly.
+The setter creates `window.activityMeta` AND `activityMeta[dateKey]` lazily as needed. Both operations are on the new dedicated key family — no collision with the existing `activityLog` array-shape consumers (Kael's V-K-111 floor verified).
 
 ---
 
@@ -312,6 +440,32 @@ The Care floor (per V-K-104): cross-device replication of the suppress map is re
 
 Pre-v1 devices have no suppress map; `_getInWindowMilestones` reads the key as `null` and skips suppression filter. No migration needed (additive key).
 
+### Cross-device merge-on-receive (V-M-116 synth-fold)
+
+The single-doc sync model is *last-write-wins on the whole doc* — if grandparent's tablet writes `{pointing: T1}` and parent's phone writes `{pointing: T1+1, pincer: T2}` near-simultaneously, the later write wins the entire doc, potentially overwriting per-key state on the other device.
+
+**v1 ratifies a `_postReceiveMilestoneSuppress` merge hook** in `sync.js` SYNC_RENDER_DEPS:
+
+```js
+// Pseudo-shape — IMPL writes the actual function in sync.js
+function _postReceiveMilestoneSuppress(remoteMap, localMap) {
+  const merged = { ...localMap };
+  Object.entries(remoteMap || {}).forEach(([milestoneKey, remoteTs]) => {
+    const localTs = merged[milestoneKey] || 0;
+    // Timestamp-max merge: whichever device suppressed *later* wins per-key
+    if (remoteTs > localTs) merged[milestoneKey] = remoteTs;
+  });
+  // Purge expired entries on each merge pass (auto-cleanup)
+  const now = Date.now();
+  Object.keys(merged).forEach(k => { if (merged[k] <= now) delete merged[k]; });
+  return merged;
+}
+```
+
+This closes the silent-failure path Maren V-M-116 surfaced: the grandparent's tablet suppressions and the parent's phone suppressions both survive cross-device. The hook fires on every sync receive of `KEYS.milestoneSuppress`; the merge is associative + idempotent.
+
+**The same merge-on-receive pattern applies to `KEYS.activityMeta`** (per V-K-111's new key family) — IMPL adds a `_postReceiveActivityMeta` with timestamp-max-per-dateKey-per-field merge so cross-device activityLevel writes don't overwrite each other on the whole-doc shape.
+
 ---
 
 ## Primitive 5 — `cat:` → `domain:` field-name migration
@@ -343,29 +497,92 @@ v1 ratifies the **`domain:` direction** (chosen for vocabulary consistency with 
 1. **`DEFAULT_MILESTONES`** at `data.js:1471–1479` — **7 rows** (scribe-scout confirmed, NOT 8 as prior authoring claimed). Each row's `cat: '<category>'` → `domain: '<category>'`.
 2. **`MILESTONE_STANDARDS`** at `data.js:2686–2951` — 194 leaf rows across 4 standards (`who`/`iap`/`eu`/`cn`). Each row's `cat:` → `domain:`.
 
-**Plus load-time migration** for already-saved `milestones` localStorage — chronicle §4.2 backward-compat floor. The IMPL author lands the load-time migration inside `start.js` or the existing initializer that reads `KEYS.milestones`, BEFORE any consumer reads `m.domain`. The migration also must coexist with `_postReceiveMilestones` (`medical.js:145`) which runs migration + dedupe on every cross-device sync receive — the IMPL author verifies `_postReceiveMilestones` doesn't strip the new `domain` field during dedupe.
+**Plus sync-substrate-aware migration** (V-K-110 + V-M-110 synth-fold — corrects the scribe-table's earlier-false `_postReceiveMilestones` claim). The earlier draft proposed a load-time-only migration; Kael verified that `_mergeMilestoneFieldsInline:198` explicitly carries `cat:` field-by-name (`if (!winner.cat && loser.cat) winner.cat = loser.cat;`). This means: even with load-time migration, every cross-device sync receive re-pollutes the migrated array with `cat:` from the losing-side entry. The migration is not idempotent across the sync substrate.
 
-```js
-// Load-time migration (placement: start.js init OR medical.js _postReceiveMilestones)
-const m = JSON.parse(localStorage.getItem(KEYS.milestones) || '[]');
-const migrated = m.map(row => row.cat && !row.domain ? { ...row, domain: row.cat } : row);
-if (migrated.some((r, i) => r !== m[i])) {
-  localStorage.setItem(KEYS.milestones, JSON.stringify(migrated));
-}
-```
+**v1 ratifies the corrected migration approach** — three coordinated changes:
 
-Preserves the legacy `cat` field alongside the new `domain` field for one minor release cycle, then v1.1 IMPL drops `cat`.
+1. **Update `_mergeMilestoneFieldsInline` at `medical.js:198`** with explicit merge logic for the new fields, and drop the `cat:` write-back:
+   ```js
+   // V1 — replaces the legacy `cat` line at medical.js:198
+   // Domain: winner-keeps-or-loser-fills (additive merge)
+   if (!winner.domain && loser.domain) winner.domain = loser.domain;
+   // Legacy cat: fallback only when neither has domain (covers pre-migration
+   // losing-row from a device that hasn't updated yet)
+   if (!winner.domain && loser.cat) winner.domain = loser.cat;
+   // safetyTier: loser-wins-on-true (Care-floor: once flagged, always flagged)
+   if (loser.safetyTier) winner.safetyTier = true;
+   // source: winner-keeps-or-loser-fills, preferring attributed over 'unverified'
+   if ((!winner.source || winner.source === 'unverified') && loser.source && loser.source !== 'unverified') {
+     winner.source = loser.source;
+   }
+   // DROP the legacy cat write-back — winner.cat is no longer written here.
+   // (Legacy cat field is read-only-with-fallback during the deprecation cycle;
+   // v1.1 IMPL removes the read-fallbacks across consumer sites.)
+   ```
+
+2. **Place the row-migration INSIDE `_postReceiveMilestones`** (medical.js:145+, before `dedupeMilestonesByText` runs), so every sync-receive re-migrates incoming rows:
+   ```js
+   // In _postReceiveMilestones (medical.js:145+), BEFORE the existing migration calls:
+   milestones.forEach(row => {
+     // Forward-migrate cat → domain (idempotent: skips already-migrated rows)
+     if (row.cat && !row.domain) row.domain = row.cat;
+     // V-K-119 synth-fold: divergence reconciliation — if both fields present
+     // and disagree, prefer the new domain field and clear cat (the migration
+     // direction is one-way; cat-vs-domain conflict means a partial-state row)
+     if (row.cat && row.domain && row.cat !== row.domain) row.cat = null;
+   });
+   ```
+
+3. **Keep a thin load-time migration** at `start.js` init for the cold-load case (device boots before any sync receive fires), with the same row-walk shape. This handles the first-ever-v1-load before any other sync write/receive cycle.
+
+The legacy `cat` field is preserved as **read-only-with-fallback** during the deprecation cycle (v1.1 IMPL drops the read-fallbacks across consumer sites). The merge function explicitly does NOT write `cat:` going forward, so the field is no longer re-introduced cross-device.
+
+### Drift-site enumeration — 18 total sites (V-K-113 + V-M-111 synth-fold)
+
+The earlier draft listed 12 sites (constant-array/object DEFINITIONS). Scribe-verify subsequent passes found 6 additional `m.cat`/`item.cat` READER call-sites the constant-literal grep missed:
+
+| File:line | Site type | Current shape | Migration action |
+|---|---|---|---|
+| `home.js:1670` | **OUTLIER — activity-domain, not milestone-domain** (V-M-117) | `['motor','sensory','language','social']` rotating daily-activity picks | **OUT OF v1 SCOPE.** Site reads activity-records (`.type` field), not milestones. Aligns when `milestones-tab-v1` lands `ACTIVITY_CATEGORIES` registry. |
+| `home.js:1847` | reader (V-M-111 / V-K-113) | `const cat = m.cat \|\| 'motor';` (forEach grouping) | rename `cat` → `domain`; fallback via legacy field |
+| `home.js:1860` | constant def | `const catOrder = ['motor', 'language', 'social', 'cognitive'];` | replace with registry-iteration |
+| `home.js:2032` | reader (V-K-113) | same `m.cat \|\| 'motor'` idiom (filter callback) | rename + fallback |
+| `home.js:2258` | constant def | 4-cat forEach | registry-iteration |
+| `home.js:2297` | constant def | 4-cat domainEvidence object | build from registry |
+| `home.js:2298` | constant def | 4-cat domainDays object | build from registry |
+| `home.js:2312` | constant def | 4-cat forEach | registry-iteration |
+| `home.js:2314` | reader (V-K-113) | `milestones.filter(m => (m.cat \|\| 'motor') === cat)` | rename + fallback |
+| `home.js:2495` | constant def | 5-cat domainIcons; 4-cat consuming loop | build from registry; consuming loop becomes 5-cat |
+| `home.js:3798` | constant def | 4-cat catIcons | build from registry |
+| `home.js:5963` | reader (V-M-111) | `const cat = latestMs.cat \|\| 'motor';` (Latest-milestone-highlight) | rename + fallback |
+| `home.js:5997` | reader (V-M-111 / V-K-113) | `const cat = m.cat \|\| 'motor';` (timeline forEach) | rename + fallback |
+| `home.js:6769` | constant def | 4-cat catMeta | build from registry |
+| `home.js:8628` | constant def | 5-cat domainEvCounts | build from registry |
+| `medical.js:461` | constant def | 4-cat catIcons in `renderActiveMilestones` (V-M-101) | build from registry |
+| `medical.js:483` | reader (V-K-113) | per-row `m.cat \|\| 'motor'` inside `renderActiveMilestones` | rename + fallback |
+| `medical.js:4788` | constant def | 4-cat catMeta in `renderUpcomingMilestones` | build from registry |
+| `medical.js:4814` | constant def | 4-cat catOrder in same function | build from registry |
+| `medical.js:4884` | reader (V-M-111) | `const catVal = item.cat \|\| 'motor';` — emits `data-arg3="${catVal}"` into handler | rename + fallback (Care-floor: handler routing) |
+| `medical.js:7653` | reader (V-M-111) | `const c = (m.cat \|\| '').toLowerCase();` in Milestone Map treemap | rename + fallback |
+
+**Final v1 IMPL scope: 18 sites** (10 home.js + 7 medical.js + the load-time migration block + the merge-function update). `home.js:1670` is **excluded** (V-M-117 — activity-domain, deferred to milestones-tab-v1).
 
 ### IMPL author guidance
 
 This is a **breaking data-shape change at the consumer-read tier**. The IMPL author MUST:
-- Update **all 12** consumer read sites in a single PR (no half-migration)
-- Resolve the `home.js:1670` outlier with Maren-consult before merging (is it semantically separate or did it drift from the canonical 4-cat?)
+- Update **all 18 in-scope sites** in a single PR (no half-migration)
+- Skip `home.js:1670` per V-M-117 (out-of-scope; activity-domain not milestone-domain)
+- Update `_mergeMilestoneFieldsInline:198` with the explicit V1 merge logic above
+- Place the row-migration INSIDE `_postReceiveMilestones` per V-K-110
+- Keep the thin cold-load migration in `start.js` for first-ever-v1-boot
 - Run the existing e2e suite to catch any missed consumer
-- Verify the load-time migration is idempotent (re-running on already-migrated data is a no-op)
-- Verify `_postReceiveMilestones` migration pass at `medical.js:145` lets `domain` field survive
+- Verify the post-migration `m.domain` reads land cleanly with legacy-`cat` fallback
+- Run a divergence-state regression test: collide two rows with conflicting cat/domain values and verify the V-K-119 reconciliation fires (`cat → null` after divergence detected)
+- Run a regression guard against the sync substrate: post-migration sync receive does NOT re-introduce `cat:` on winning rows
 
-**Updated LOC estimate for the migration:** ~250-350 lines across `data.js` (~80+194 row edits → most are minimal field-renames but the volume is real) + `home.js` (10 consumer sites, ~80 changed lines) + `medical.js` (3 consumer sites + the renderActiveMilestones edit, ~25 changed lines) + the load-time migration block (~20 lines) + the registry-read helper if v1 adds one (~30 lines).
+**Updated LOC estimate** (per Kael V-K-113's expansion to 18 sites + Kael's split recommendation in §Sequencing): ~400-500 lines for the migration sweep + merge-function update + load-time + post-receive integration + e2e divergence-test additions.
+
+**Kael's PR-split recommendation (synth-fold ratified — see §Sequencing for full split structure):** the engine-prep IMPL benefits from being split into PR-A (data-tier — Kael-primary, ships clean) + PR-B (migration sweep + merge logic — Maren-primary, ships against the now-stable data-tier).
 
 ---
 
@@ -433,17 +650,60 @@ v1 IMPL adds a comment to v3-4's `_NARRATIVE_PROSE_TEMPLATES` definition site (d
 
 ## Build-time audit gate — `audit-no-personalised-prediction-v1.sh`
 
-### Scope
+### Engine ratification (V-K-112 synth-fold)
 
-Scope B from the closed PR #147's F9 fold, **broadened** per Kael's V-K-106 (the original regex was too narrow on multi-word predicates).
+V-K-112 verified mechanically: the spec's `\s`/`\w` PCRE escapes match **0/9** adversarial inputs under default `grep -E` (POSIX-extended treats `\s`/`\w` as literal). The gate would ship green-but-empty.
 
-### Banned patterns
+v1 ratifies **Python** as the regex engine — honoring the `audit-hr12-v3-3.sh` precedent (which uses Python's `re.compile` for exactly this kind of PCRE-equivalent regex). The audit script is a `bash` wrapper that invokes `python3 -c "..."` for the regex pass, or a standalone `.sh` that shells to Python. Mirrors:
 
 ```sh
-# Scope B v1 (broadened):
-"Ziva (will|should|might|is going to|is expected to|is on track to)\s+[\w\s\-]{1,40}?\s+by\s+\d"
-"Ziva (will|should|might|is going to|is expected to|is on track to)\s+(be\s+)?[\w\s\-]{1,40}?\s+(by|at|around)\s+(month|week|day|\d)"
-"\(WHO\)" OR "\(CDC\)" OR "\(IAP\)" outside data-read paths (V-M-106 hardcoded-source-floor)
+#!/bin/bash
+# audit-no-personalised-prediction-v1.sh — Honesty-floor gate on personalised-
+# prediction prose. V-K-112 synth-fold: Python regex engine ratified (matches
+# audit-hr12-v3-3.sh precedent; default grep -E matches zero adversarial inputs).
+exec python3 -c "
+import re, sys
+# Scope B patterns (V-K-106 broadened):
+banned = [
+    re.compile(r'Ziva (will|should|might|is going to|is expected to|is on track to)\s+(be\s+)?[\w\s\-]{1,40}?\s+(by|at|around)\s+(month|week|day|\d)', re.IGNORECASE),
+    # Scope A (V-M-106 + V-M-115 hardcoded-source + unverified-paren bans):
+    re.compile(r'\((WHO|CDC|AAP|IAP|EU|CN)\)'),
+    re.compile(r'\(unverified\)'),
+]
+# (full implementation walks split/ files, applies regexes, checks opt-in markers)
+...
+"
+```
+
+### Engine self-test (V-K-112 hard contract)
+
+The audit script MUST self-validate its own regex against its spec-cited adversarial inputs at script-startup. If any of the following adversarial prose passes through Scope B's regex, the script exits non-zero with a "regex engine mismatch" error before scanning the codebase:
+
+```
+SELF_TEST_ADVERSARIAL = [
+    'Ziva will sit by 6',
+    'Ziva will be sitting by 6 months',
+    'Ziva will pull-to-stand by 9 months',
+    'Ziva will say first words by 12 months',
+    'Ziva should walk by month 12',
+]
+# Every one of these MUST match Scope B's regex. If any doesn't, the gate
+# is misconfigured and the audit fails fast before scanning split/.
+```
+
+This closes V-K-93 + V-K-112 tautology-pattern carry-forward: the gate self-tests its own correctness before claiming green on the codebase.
+
+### Banned patterns (Scope A + Scope B — V-K-106 + V-M-106 + V-M-115 synth-fold)
+
+**Scope B — personalised-prediction prose (Honesty floor on engine-output rendering):**
+```
+re.compile(r'Ziva (will|should|might|is going to|is expected to|is on track to)\s+(be\s+)?[\w\s\-]{1,40}?\s+(by|at|around)\s+(month|week|day|\d)', re.IGNORECASE)
+```
+
+**Scope A — hardcoded source attribution + unverified parenthetical (Honesty floor on rendered prose):**
+```
+re.compile(r'\((WHO|CDC|AAP|IAP|EU|CN)\)')   # bans hardcoded literal "(WHO)" / "(CDC)" / etc. in render code
+re.compile(r'\(unverified\)')                 # V-M-115 hard contract: "(unverified)" parenthetical is the cipher-honesty violation
 ```
 
 ### Opt-in escape
@@ -453,7 +713,7 @@ Scope B from the closed PR #147's F9 fold, **broadened** per Kael's V-K-106 (the
 // milestone-source-ok: <rationale>
 ```
 
-Two markers — one per scope, separable (per Maren's V-M-108 recommendation to keep the two scopes distinct in the audit-script architecture).
+Two markers — one per scope, separable (per V-K-106 + V-M-108 + V-M-115 separation recommendation).
 
 ### Ship-gate wiring
 
@@ -461,7 +721,7 @@ v1 IMPL wires `audit-no-personalised-prediction-v1.sh` into `split/build.sh` as 
 
 ### Standalone
 
-This audit is **standalone**, not bundled with activity-categories (which lands with milestones-tab-v1 — `audit-activity-categories-v1.sh`). The two scopes are doctrinally separate: this gate is the Honesty floor on personalised-prediction prose; activity-categories is the Extensibility floor on the category-vocabulary registry. Keeping them separate scripts honors the V-K-106 + V-M-108 separation recommendation.
+This audit is **standalone**, not bundled with activity-categories (which lands with milestones-tab-v1 — `audit-activity-categories-v1.sh`). The two scopes are doctrinally separate: this gate is the Honesty floor on personalised-prediction prose + source-attribution rendering; activity-categories is the Extensibility floor on the category-vocabulary registry. Keeping them separate scripts honors the V-K-106 + V-M-108 + V-M-115 separation recommendation.
 
 ---
 
@@ -651,7 +911,7 @@ Lyra deployed a scribe-scout (canon-proc-006) for parallel codebase reconnaissan
 | 109 zi() symbols in template.html | **109 confirmed.** Spot-check: 20/21 expected glyphs present; **`zi-eye` missing** | §Out-of-scope register (substitution guidance for downstream milestones-tab-v1) |
 | `home.js:2148` is the override-machinery citation | Off-by-one: badge render is at **`home.js:1923–1925`**; `overrideMilestoneStatus` is at **`home.js:2149`** | §Primitive 4 — override-machinery citation corrected |
 | Override machinery uses separate storage key | **Per-row field on `milestones[i]`** (manualStatus + manualAt). Not a separate localStorage family. | §Primitive 4 note (ziva_milestone_suppress is intentionally separate from override — different semantics: TTL-suppression vs status-correction-with-auto-reconciliation) |
-| `_postReceiveMilestones` runs migration on sync receive | **Confirmed** at `medical.js:145`. Runs `migrateMilestoneStatus + migrateMilestoneIds + dedupeMilestonesByText`. New fields (`domain`, `safetyTier`, etc.) pass through unchanged because the migration operates on enum/id/text only. | §Primitive 5 (field-survival verification step added) |
+| `_postReceiveMilestones` runs migration on sync receive | **Confirmed** at `medical.js:145`. **Earlier claim "operates on enum/id/text only" is INCORRECT** (Kael V-K-110 + Maren V-M-110 caught at chain): `dedupeMilestonesByText` calls `_mergeMilestoneFieldsInline:198` which explicitly carries `cat:` field-by-name (`if (!winner.cat && loser.cat) winner.cat = loser.cat;`). Migration claim updated at §Primitive 5 — merge function MUST be updated with explicit logic for `domain` / `safetyTier` / `source` AND drop `cat:` write-back. | §Primitive 5 (corrected to place migration INSIDE `_postReceiveMilestones` + merge-function update + V-K-119 divergence reconciliation) |
 
 The scribe-scout's full report is the authoring substrate; the spec body above carries the verified file:line + shape claims forward. Future Governor audits should cross-reference the scribe report (preserved in session transcript) if they want to verify any individual claim.
 
@@ -692,6 +952,16 @@ The scribe-scout's full report is the authoring substrate; the spec body above c
 - v3-6-quicklog-tier-followup (V-V-39 named follow-up from PR #144's Vela audit) — independent
 - offsetdatestr-tz-hazard-fix (V-K-95 named follow-up from PR #143's Kael audit) — independent
 
+**IMPL-pass split recommendation (Kael V-K-113 synth-fold ratified):**
+
+Per Kael's audit, the engine-prep IMPL is large enough that bundling everything into one PR creates an unwieldy diff (substantially more than the v3-3 → sleep-arc-3 sequence shipped in single PRs). The IMPL ships as two coordinated PRs:
+
+- **PR-A — Data-tier (Kael-primary).** Schema extension on `MILESTONE_STANDARDS` rows (`source:` / optional `endMonth:` / optional `safetyTier:`); 2 new seed rows (sensory + cognitive); the Maren-signed safetyTier curation list applied to the 5 existing rows + the new sensory seed; `MILESTONE_SOURCE` constant; clinical-band source-attribution default-to-`'unverified'` discipline; engine helpers `_predictMilestoneWindow` + `_getInWindowMilestones` + `_getActivityLevelToday` getter/setter; KEYS + SYNC_KEYS + SYNC_RENDER_DEPS additions for `KEYS.milestoneSuppress` + `KEYS.activityMeta`; `_postReceiveMilestoneSuppress` + `_postReceiveActivityMeta` merge-on-receive hooks; the standalone `audit-no-personalised-prediction-v1.sh` audit gate (Python engine + self-test); e2e tests for the new primitives + audit gate. Estimated ~700-900 LOC. Maren-consult on the safetyTier curation list + the 2 seed-row picks (already provided inline at §safetyTier seed-data + curation).
+
+- **PR-B — Migration sweep (Maren-primary, Kael-consult).** `cat:` → `domain:` field-name migration on `DEFAULT_MILESTONES` + `MILESTONE_STANDARDS`; the 18 consumer-site sweep (10 home.js + 7 medical.js + the medical.js:483 reader + skip 1670 per V-M-117); `_mergeMilestoneFieldsInline:198` update + drop of `cat:` write-back; the row-migration placed inside `_postReceiveMilestones`; the thin cold-load migration at `start.js`; V-K-119 divergence reconciliation; e2e tests for the migration + post-receive integration + divergence-state regression. Estimated ~500-700 LOC. Kael-consult on the merge-function correctness + post-receive integration.
+
+The split honors the v3-3 → sleep-arc-3 pattern (engine substrate first, then consumer wiring) at the IMPL tier. **PR-B depends on PR-A merging first** — the migration sweep reads from the data-tier shape PR-A ratifies.
+
 **Sequencing-with-milestones-tab-v1:**
 ```
 milestone-engine-prep-v1 spec    →    canon-cc-008 chain    →    ratify    ┐
@@ -700,6 +970,54 @@ milestones-tab-v1 spec (re-author)  →  canon-cc-008 chain  →  ratify    → 
                                                                             │
                                                                             └──  parallel-safe: V-V-39 follow-up, V-K-95 follow-up, v3-1 spec authoring
 ```
+
+---
+
+## Governor-chain synth-fold register (canon-cc-022 + canon-cc-008)
+
+Per Architect direction 2026-05-27, the full canon-cc-008 chain ran on THIS spec PR (heavier-than-usual scrutiny on a docs-only PR). Three Governors audited in parallel — **Kael primary** (engine substrate) + **Maren consult** (Care floor + consumer migration) + **Vela consult** (contract-floor + half-awake-forward-projection). Each Governor deployed Scribe Worker Tier (canon-proc-006) for parallel verification. Cumulative findings:
+
+| Governor | BLOCKING | NOTE | Verdict |
+|---|---|---|---|
+| **Vela** | 2 (V-V-55..56) | 6 (V-V-57..62) | cipher-warmth CLEAN-after-folds; cipher-honesty CLEAN; cipher-extensibility CLEAN |
+| **Maren** | 3 (V-M-110..112) | 6 (V-M-113..118) | cipher-honesty SOUND-with-folds; cipher-extensibility SOUND-with-folds; cipher-warmth N/A |
+| **Kael** | 4 (V-K-110..113) | 6 (V-K-114..119) | cipher-honesty BLOCKING (pre-fold); cipher-extensibility BLOCKING (pre-fold); cipher-warmth CLEAN |
+
+**All 9 BLOCKING findings folded inline by Lyra (per Architect fold-authority directive — "don't defer issues directly related to milestones tab"). All 18 NOTE findings folded or explicitly carried per the table below.**
+
+### Fold register
+
+| # | Fold target | Substance |
+|---|---|---|
+| **V-V-55** | §Primitive 1 output shape | Added `ageMonths` (integer) + `ageDaysRemainder` to `_predictMilestoneWindow` output; consumers stop computing the same split 3+ times per render |
+| **V-V-56** | §Primitive 2 output shape | Added `text` + `icon` + `domain` per-item to `_getInWindowMilestones` return; engine projects display fields, no round-trip to registry |
+| **V-V-57** | §Primitive 1 + §Primitive 2 | Renamed `status` collision: `_predictMilestoneWindow.status` → `windowStatus`; `_getInWindowMilestones[i].status` → `evidenceStatus` |
+| **V-V-58** | §Primitive 1 output shape | Precision contract: `expectedStartMonths` / `expectedEndMonths` as integer (rounded) for prose; paired `expectedStartMonthsFloat` / `expectedEndMonthsFloat` for trajectory-ribbon x-positioning |
+| **V-V-59** | §Primitive 2 priority math | `recencyScore` null-branch returns `0.5` (never-seen-neutral; honest no-signal) |
+| **V-V-60** | §Doctrinal clarification (no edit needed) | RATIFIED — `_NARRATIVE_PROSE_TEMPLATES` typed-registry scope cross-domain-`_correlate`-only |
+| **V-V-61** | §Out-of-scope register (no edit needed) | RATIFIED — `zi-eye` deferral; `zi-scope` / `zi-sparkle` substitute for downstream |
+| **V-V-62** | §Out-of-scope register | RATIFIED — cross-spec carry-forward NOTE for milestones-tab-v1 IMPL (don't cross-wire engine-prep into v3-4 `_NARRATIVE_PROSE_TEMPLATES.milestoneSleepCorrelation`) |
+| **V-M-110 + V-K-110** | §Primitive 5 — sync-substrate-aware migration | `_mergeMilestoneFieldsInline:198` updated with explicit merge logic for `domain` / `safetyTier` / `source`; `cat:` write-back DROPPED; row-migration placed INSIDE `_postReceiveMilestones`; thin cold-load migration at `start.js` |
+| **V-M-111 + V-K-113** | §Primitive 5 — drift-site table | Expanded to 18 sites (10 home.js + 7 medical.js + medical.js:483 reader; `home.js:1670` excluded per V-M-117). 6 additional reader sites added beyond the 12 constant-def sites the earlier draft listed. |
+| **V-M-112 + V-K-117** | §Primitive 2 — safetyTier seed-data + curation | Promoted Maren-signed canonical safetyTier curation list inline (5 existing rows + 2 new seed rows). Closes the deferred-Care-decision-in-engine-spec failure mode. |
+| **V-K-111** | §Primitive 3 — storage-shape REVERSED | Reversed `activityLog[date]._meta` decision (Kael caught it breaks 20+ array-only consumers silently). Ratified separate `ziva_activity_meta` per-day key family with explicit KEYS + SYNC_KEYS + SYNC_RENDER_DEPS registration. |
+| **V-K-112** | §Audit gate — engine ratification | Ratified Python regex engine (audit-hr12-v3-3.sh precedent). Added engine self-test on 5 adversarial inputs at script-startup. Closes V-K-93 tautology pattern. |
+| **V-M-113** | §Primitive 1 source vocabulary | Added `'AAP'` to `MILESTONE_SOURCE` between `'CDC'` and `'IAP'` |
+| **V-M-114** | §Per-row source-attribution discipline (reversed) | Default every existing row to `source: 'unverified'`. **DO NOT** walk the wrapping-key to stamp source. Care-tier curation arc (Wave-2 deferrable) upgrades attribution row-by-row. |
+| **V-M-115** | §Primitive 1 + §Audit gate Scope A | Hard contract: rendering `(unverified)` parenthetically is the cipher-honesty violation. Audit gate Scope A bans `\(unverified\)` in render code. |
+| **V-M-116** | §Primitive 4 — cross-device merge-on-receive | `_postReceiveMilestoneSuppress` hook with timestamp-max-per-key merge. Same pattern applied to `KEYS.activityMeta` per V-K-111. |
+| **V-M-117** | §Primitive 5 drift-site table + §Out-of-scope | `home.js:1670` is activity-domain (`.type` field reads activity-records), NOT milestone-domain. OUT of v1 IMPL scope; aligns when milestones-tab-v1 lands `ACTIVITY_CATEGORIES` registry. |
+| **V-M-118** | §safetyTier seed-data + curation | Canonical seed picks: `mouths-objects` (sensory, safetyTier:true; clinical-band 4-7m) + `object-permanence-emerging` (cognitive, safetyTier:false; clinical-band 6-9m). |
+| **V-K-114** | §Expected-window derivation policy | Fixed `542 days` typo → `547.92 ≈ 548 days` (`18 * 30.44`) for bracket-12 default |
+| **V-K-115** | §Primitive 1 signature | Dropped `dob` parameter from public contract; replaced with `opts.dobOverride` for unit-test injection only (production callers read module-global `DOB`) |
+| **V-K-116** | §Expected-window derivation policy | Advanced-row derivation rule: `advanced: true` rows offset by +1 bracket (`expectedStart = (K+1) * 30.44`) |
+| **V-K-118** | §Primitive 2 priority math | All math in age-days (never millis-epoch). `opts.nowAgeDays` defaults via `_zivaAgeInDays(today())`. HR-12 hazard from `Date.now()` arithmetic closed. |
+| **V-K-119** | §Primitive 5 migration block | Divergence-state reconciliation: if both `cat` and `domain` present and disagree, prefer `domain` and clear `cat`. |
+| **V-K-113 (split recommendation)** | §Sequencing — IMPL-pass split | Ratified Kael's PR-A (data-tier, Kael-primary) + PR-B (migration sweep, Maren-primary) split. PR-B depends on PR-A merging first. |
+
+### Source register
+
+Three Governor audits ran via canon-cc-008 chain (subagent Mode-1 invocations per canon-cc-022 artifact test — signed, Edict V chain entries). Lyra synthesis carries fold authority per Architect directive 2026-05-27 *"don't wait for me to fold issues, Lyra will take that call - directive: don't defer issues directly related to milestones tab."* Cipher Edict V terminal pass follows this synth-fold.
 
 ---
 
