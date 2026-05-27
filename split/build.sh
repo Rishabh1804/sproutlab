@@ -80,6 +80,22 @@ if ! bash audit-no-personalised-prediction-v1.sh >&2; then
   echo "BUILD ABORTED: milestone-engine-prep-v1 audit failed. Read clinical bands from row.source; never personalise; never render '(unverified)'." >&2
   exit 1
 fi
+# milestones-tab-v1 ship-gate (9th audit gate): audit-activity-categories-v1.sh
+# blocks registry-fork drift on the 5-cat activity-domain vocabulary
+# (motor/language/social/sensory/cognitive). Three banned patterns: array-
+# literal permutations of category keys (≥3 of 5), `\bcatOrder\s*=` idiom,
+# and parallel object-literal label tables (≥4 of 5 category keys outside
+# the registry consumer pattern). Python regex (V-K-112 floor) + self-test.
+# Opt-in escape `// activity-categories-ok: <rationale>` for genuine
+# exemptions; pre-existing drift sites are marker-annotated pending follow-
+# up dead-code-removal pass. Spec: docs/specs/milestones-tab-v1.md §Build-
+# time audit gate. Charter CV3-006 extensibility axis: window.ACTIVITY_CATEGORIES
+# in data.js is the single source of truth at the activity-domain tier
+# (parallels v3-5 data-state at chip + v3-6 data-card-priority at card).
+if ! bash audit-activity-categories-v1.sh >&2; then
+  echo "BUILD ABORTED: milestones-tab-v1 audit failed. Consume ACTIVITY_CATEGORIES; never fork the registry." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

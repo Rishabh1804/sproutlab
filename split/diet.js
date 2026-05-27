@@ -1796,7 +1796,7 @@ function _tpGenerateActivitySuggestions() {
   var suggestions = [];
 
   // Domain balance from activity log
-  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };
+  var domainCounts = { motor: 0, language: 0, social: 0, cognitive: 0, sensory: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var totalEntries = 0;
   var todayD = new Date(today());
   for (var i = 0; i < 14; i++) {
@@ -1817,7 +1817,7 @@ function _tpGenerateActivitySuggestions() {
   var domainList = Object.entries(domainCounts).sort(function(a, b) { return a[1] - b[1]; });
 
   // Activity name suggestions per domain
-  var domainActivities = {
+  var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     motor: { name: 'Tummy time or crawling practice', icon: zi('run'), duration: '10 min' },
     language: { name: 'Board book + pointing game', icon: zi('book'), duration: '10 min' },
     social: { name: 'Peekaboo or mirror play', icon: zi('baby'), duration: '10 min' },

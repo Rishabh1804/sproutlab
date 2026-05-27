@@ -613,6 +613,18 @@ function init() {
     else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    // milestones-tab-v1 actions (data-action delegation per HR-3)
+    else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
+    else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
+    else if (action === 'confirmMsInWindow' && typeof confirmMsInWindow === 'function') confirmMsInWindow(btn);
+    else if (action === 'practicingMsInWindow' && typeof practicingMsInWindow === 'function') practicingMsInWindow(btn);
+    else if (action === 'notYetMsInWindow' && typeof notYetMsInWindow === 'function') notYetMsInWindow(btn);
+    else if (action === 'undoMsSuppress' && typeof undoMsSuppress === 'function') undoMsSuppress(btn);
+    else if (action === 'toggleMsBulkChip' && typeof toggleMsBulkChip === 'function') toggleMsBulkChip(btn);
+    else if (action === 'toggleMsBulkGridOpen' && typeof toggleMsBulkGridOpen === 'function') toggleMsBulkGridOpen(btn);
+    else if (action === 'submitMsBulkSelections' && typeof submitMsBulkSelections === 'function') submitMsBulkSelections();
+    else if (action === 'filterMsDomain' && typeof filterMsDomain === 'function') filterMsDomain(btn);
+    else if (action === 'gotoMsCorrelation' && typeof gotoMsCorrelation === 'function') gotoMsCorrelation();
     else if (action === 'expandMilestoneByIdx' && typeof expandMilestoneByIdx === 'function') expandMilestoneByIdx(Number(arg));
     else if (action === 'expandUpcomingItem' && typeof expandUpcomingItem === 'function') expandUpcomingItem(arg);
     else if (action === 'fillDietMeal' && typeof fillDietMeal === 'function') fillDietMeal(arg, arg2);
@@ -1787,7 +1799,7 @@ function computeMilestoneModifier() {
       });
     }
   }
-  const domainsActive = ['motor', 'language', 'social', 'cognitive'].filter(c => domainRecent[c]).length;
+  const domainsActive = ['motor', 'language', 'social', 'cognitive'].filter(c => domainRecent[c]).length;  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   let domVal = domainsActive === 4 ? 100 : domainsActive === 3 ? 80 : domainsActive === 2 ? 55 : domainsActive === 1 ? 35 : 20;
   factors.push({ name: 'Domain balance', value: domVal, weight: 0.30 });
 
@@ -2115,7 +2127,7 @@ function calcMilestoneScore() {
   const completionScore = Math.round(Math.min(completionRate, 1) * 100);
 
   // B. Category coverage (20%) — all 4 domains have recent evidence
-  const categories = ['motor', 'language', 'social', 'cognitive'];
+  const categories = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   const hasActivityLog = Object.keys(activityLog).length > 0;
 
   let catProgressSum = 0;
@@ -2687,7 +2699,7 @@ function renderScrapMilestonePickerList() {
   }
   // Group by category, render section per category that has any entries.
   const byCat = {};
-  const catOrder = [];
+  const catOrder = [];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   milestones.forEach(m => {
     // milestone-engine-prep-v1 PR-B — V-K-131 fold: read via domain
     // fallback so post-migration rows aren't all bucketed into 'other'.

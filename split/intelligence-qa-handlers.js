@@ -1318,19 +1318,19 @@ function qaAnswerActivityGeneral(intentId) {
   }
 
   // Domain balance
-  var domains = ['motor', 'language', 'social', 'cognitive', 'sensory'];
-  var domainLabels = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive', sensory: 'Sensory' };
+  var domains = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  var domainLabels = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive', sensory: 'Sensory' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   var dc = actData.domainCounts;
   var coveredDomains = domains.filter(function(d) { return (dc[d] || 0) > 0; });
   var missingDomains = domains.filter(function(d) { return (dc[d] || 0) === 0; });
 
   if (missingDomains.length === 0) {
     dataItems.push({ text: 'All 5 developmental domains covered — balanced stimulation', signal: 'good' });
-  } else if (missingDomains.length <= 2) {
+  } else if (missingDomains.length <= 2) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var missingLabels = missingDomains.map(function(d) { return domainLabels[d]; });
     dataItems.push({ text: 'Missing domains: ' + missingLabels.join(', '), signal: 'warn' });
     // Suggest activities for weakest domain
-    var domainActivities = {
+    var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'tummy time, crawling practice, or reaching for toys',
       language: 'reading books, singing songs, or naming objects',
       social: 'peek-a-boo, mirror play, or social games',
@@ -2605,7 +2605,7 @@ function qaAnswerActivitySleep(intentId) {
   }
 
   // Domain effects
-  var domainNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+  var domainNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
   if (actData.domainCounts) {
     var topDomain = Object.entries(actData.domainCounts).sort(function(a, b) { return b[1] - a[1]; })[0];
     if (topDomain) {
@@ -2645,9 +2645,9 @@ function qaAnswerMilestoneGeneral(intentId) {
     var headline = 'Milestone Score: ' + ms.score + '/100';
 
     // Category breakdown
-    var categories = ['motor', 'language', 'social', 'cognitive'];
-    var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };
-    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+    var categories = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catIcons = { motor: zi('run'), language: zi('chat'), social: zi('handshake'), cognitive: zi('brain') };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     categories.forEach(function(cat) {
       // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
       var catMs = (milestones || []).filter(function(m) { return (m.domain || m.cat) === cat; });
@@ -2783,7 +2783,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     };
   }
 
-  if (matched.length > 0) {
+  if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
     var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
@@ -2811,7 +2811,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     }
 
     // Activity suggestions
-    var activitySuggestions = {
+    var activitySuggestions = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
       motor: 'Floor play, tummy time, obstacle courses, reaching games',
       language: 'Read together, narrate activities, sing songs, respond to babbling',
       social: 'Peek-a-boo, mirror play, social interactions with other babies',
@@ -3229,16 +3229,16 @@ function qaAnswerTomorrow(intentId) {
 
   // Activity suggestion
   var actData = _qaActivityDays14d();
-  if (actData.domainCounts) {
-    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };
+  if (actData.domainCounts) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+    var catNames = { motor: 'Motor', language: 'Language', social: 'Social', cognitive: 'Cognitive' };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
     var weakestDomain = null;
     var weakestCount = Infinity;
-    ['motor', 'language', 'social', 'cognitive'].forEach(function(dom) {
+    ['motor', 'language', 'social', 'cognitive'].forEach(function(dom) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
       var count = actData.domainCounts[dom] || 0;
       if (count < weakestCount) { weakestCount = count; weakestDomain = dom; }
     });
-    if (weakestDomain) {
-      var domainActivities = {
+    if (weakestDomain) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
+      var domainActivities = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
         motor: 'tummy time, crawling practice, or standing exercises',
         language: 'reading, singing, or narrating activities',
         social: 'peek-a-boo, mirror play, or social interaction',
