@@ -1489,6 +1489,12 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   transition:transform var(--ease-fast); flex:1; max-width:80px;
 }
 .ms-cat-wheel:active { transform:scale(0.95); }
+/* Cascade-driven accent: --al-tc resolves per-domain via [data-domain]
+   (sage / lavender / peach / amber / sky). The wheel's `color` property
+   feeds both the SVG currentColor stroke (via stroke="currentColor" on
+   .mcw-fill) and the .ms-cat-wheel-pct percent label (inherits color).
+   No per-domain hardcoded hex; registry is single source of truth. */
+.ms-cat-wheel[data-domain] { color: var(--al-tc, var(--tc-lav)); }
 .ms-cat-wheel svg { width:56px; height:56px; transform:rotate(-90deg); }
 .ms-cat-wheel svg circle { fill:none; stroke-linecap:round; }
 .ms-cat-wheel svg .mcw-track { stroke:var(--border-subtle); stroke-width:5; }
@@ -6145,21 +6151,133 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-activity-level-strip { padding:var(--sp-8) 0; }
 .ms-al-prompt { font-size:var(--fs-sm); color:var(--mid); margin-bottom:var(--sp-8); text-align:center; }
 .ms-al-chips { display:flex; gap:var(--sp-6); justify-content:space-between; flex-wrap:nowrap; }
-.ms-al-chip { flex:1 1 0; min-width:0; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-lg); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; text-align:center; transition:background var(--ease-fast), border-color var(--ease-fast); }
+.ms-al-chip {
+  /* activityLevel tiers are intensity (1-4 Quiet/Calm/Active/Peak), NOT a
+     domain — uniform lavender accent for the "milestones-tab-overall"
+     surface per design table. HR-8 floor: min-height 44px via internal
+     label+desc stacking (label fs-sm ~ 14px + desc fs-2xs ~ 9px + sp-8
+     vertical padding ≈ 47px). 2px border baseline so the selected-state
+     border-color change reads without a width jump. */
+  flex:1 1 0;
+  min-width:0;
+  min-height:44px;
+  padding:var(--sp-8) var(--sp-4);
+  border-radius:var(--r-lg);
+  background:var(--warm);
+  border:2px solid var(--border-subtle);
+  cursor:pointer;
+  text-align:center;
+  transition:background var(--ease-fast), border-color var(--ease-fast), transform var(--ease-fast), box-shadow var(--ease-fast);
+}
 .ms-al-chip:active { transform:scale(0.96); }
 .ms-al-chip-label { font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .ms-al-chip-desc { font-size:var(--fs-2xs); color:var(--light); margin-top:var(--sp-2); }
-.ms-al-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); }
-.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); }
+/* Selected state — stronger visual closure on "the effect must be apparent"
+   (Architect feedback 2026-05-27 #6). Three reinforcing signals: tinted
+   background, lavender border, lifted scale + soft drop-shadow halo, label
+   font-weight bump + color shift. */
+.ms-al-chip[data-selected="true"] {
+  background:var(--surface-lav);
+  border-color:var(--lavender);
+  transform:scale(1.04);
+  box-shadow:0 4px 12px rgba(201,184,232,0.30);
+}
+.ms-al-chip[data-selected="true"] .ms-al-chip-label { color:var(--tc-lav); font-weight:700; }
+.ms-al-chip[data-selected="true"] .ms-al-chip-desc { color:var(--tc-lav); opacity:0.85; }
+
+/* Inline status under the chip strip — shown only when activityLevel is set.
+   Closes the "what does this do?" gap: confirms what was logged + gives
+   warm contextual narration about the tier. Same lavender tint as the chip,
+   reads as a continuation rather than a separate surface. */
+.ms-al-status {
+  margin-top:var(--sp-12);
+  padding:var(--sp-10) var(--sp-12);
+  border-radius:var(--r-lg);
+  background:var(--surface-lav);
+  border-left:var(--accent-w) solid var(--lavender);
+}
+.ms-al-status-tag {
+  display:flex;
+  align-items:center;
+  gap:var(--sp-4);
+  font-size:var(--fs-sm);
+  color:var(--tc-lav);
+  font-weight:600;
+}
+.ms-al-status-tag .zi { width:14px; height:14px; }
+.ms-al-status-narration {
+  margin-top:var(--sp-4);
+  font-size:var(--fs-xs);
+  color:var(--mid);
+  line-height:var(--lh-relaxed);
+}
+[data-theme="dark"] .ms-al-status { background:rgba(201,184,232,0.12); }
+
+/* Today header activity tag — surfaces the activityLevel as part of the
+   day's anchor narration. Small lavender pill above the Today passage. */
+.ms-today-activity-tag {
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-4);
+  margin-bottom:var(--sp-6);
+  padding:var(--sp-2) var(--sp-8);
+  border-radius:var(--r-full);
+  background:var(--lav-light);
+  color:var(--tc-lav);
+  font-size:var(--fs-xs);
+  font-weight:600;
+}
+.ms-today-activity-tag .zi { width:12px; height:12px; }
 
 /* ── In-window milestone proposals (Primitive 2) ──
    Up to 3 cards (engine cap; safetyTier:true bypasses per V-M-125 in-window
    qualifier). Status pills (V-V-57 evidenceStatus: confirmed/practicing/not-yet).
    Three tap targets: zi('check')/zi('trending-flat')/zi('arrow-right').
-   Care-tier safetyTier:true border-accent uses --rose-deep (V-V-64 + V-M-124). */
+   Care-tier safetyTier:true border-accent uses --rose-deep (V-V-64 + V-M-124).
+   Per-domain accent: consumes the canonical [data-domain] cascade
+   (styles.css ~8851 — defines --al-tint/--al-tc/--al-border per domain).
+   Border-left + status pill colors flow via cascade; the lavender default
+   only fires for cards without a data-domain attribute. HR-6 closure
+   (Architect feedback 2026-05-27 #4: "don't we have domain colour codes?
+   why is this all uniform?"). */
 .ms-inwindow-stack { display:flex; flex-direction:column; gap:var(--sp-12); }
-.ms-inwindow-card { padding:var(--sp-12) var(--sp-16); border-radius:var(--r-xl); background:var(--surface); border-left:var(--accent-w) solid var(--lavender); box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.ms-inwindow-card {
+  padding:var(--sp-12) var(--sp-16);
+  border-radius:var(--r-xl);
+  background:var(--surface);
+  border-left:var(--accent-w) solid var(--al-border, var(--lavender));
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+  /* Tap-out + push-down animation support — closes Architect feedback
+     2026-05-27 #7. Confirm/Practicing slide the card left out of the
+     stack ("make way for other options"); Not-yet slides the card down
+     to be reordered to the bottom on the next render. transform-origin
+     left to keep the slide feel anchored. */
+  transform-origin:left center;
+  transition:transform var(--ease-med), opacity var(--ease-med), max-height var(--ease-med), margin var(--ease-med);
+  overflow:hidden;
+}
 .ms-inwindow-card[data-safety-tier="true"] { border:3px solid var(--rose-deep); }
+.ms-inwindow-card.is-sliding-out {
+  transform:translateX(-110%);
+  opacity:0;
+  max-height:0;
+  margin-top:0;
+  margin-bottom:0;
+  padding-top:0;
+  padding-bottom:0;
+}
+.ms-inwindow-card.is-sliding-down {
+  transform:translateY(40px) scale(0.96);
+  opacity:0.35;
+}
+/* Deprioritized cards (pushed to bottom via Not-yet tap) — visually muted
+   so they read as "answered but kept around". Still tappable; the parent
+   can re-tap Confirm or Practicing later when the milestone unfolds. */
+.ms-inwindow-card.is-deprioritized {
+  opacity:0.65;
+  background:var(--warm);
+}
+.ms-inwindow-card.is-deprioritized .ms-inwindow-text { font-weight:500; }
 .ms-inwindow-head { display:flex; align-items:flex-start; gap:var(--sp-8); }
 .ms-inwindow-icon { font-size:var(--icon-base); flex-shrink:0; margin-top:var(--sp-2); }
 .ms-inwindow-body { flex:1; min-width:0; }
@@ -6170,51 +6288,115 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-status-pill[data-status="confirmed"] { background:rgba(58,112,96,0.1); color:var(--tc-sage); }
 .ms-status-pill[data-status="practicing"] { background:var(--lav-light); color:var(--tc-lav); }
 .ms-status-pill[data-status="not-yet"] { background:var(--warm); color:var(--mid); }
+/* Tap targets — HR-8 floor: ≥36px tap area. min-height:36px ensures the
+   sp-8 padding + line-height still clears the floor on cramped viewports.
+   Color flows from data-action-tap state semantics (sage=confirm,
+   lavender=practicing, neutral=not-yet) — these are STATUS-triad colors,
+   not domain colors per design table row "Status Triad". */
 .ms-tap-targets { display:flex; gap:var(--sp-6); margin-top:var(--sp-12); }
-.ms-tap-btn { flex:1; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:var(--sp-4); font-size:var(--fs-xs); color:var(--text); transition:background var(--ease-fast); }
+.ms-tap-btn {
+  flex:1;
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-6);
+  border-radius:var(--r-md);
+  background:var(--warm);
+  border:1px solid var(--border-subtle);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--sp-4);
+  font-size:var(--fs-xs);
+  color:var(--text);
+  transition:background var(--ease-fast);
+}
 .ms-tap-btn:hover { background:var(--surface-lav); }
-.ms-tap-btn[data-action-tap="confirm"] { color:var(--tc-sage); }
+.ms-tap-btn[data-action-tap="confirm"]    { color:var(--tc-sage); }
 .ms-tap-btn[data-action-tap="practicing"] { color:var(--tc-lav); }
-.ms-tap-btn[data-action-tap="not-yet"] { color:var(--mid); }
+.ms-tap-btn[data-action-tap="not-yet"]    { color:var(--mid); }
 .ms-tap-btn-icon { font-size:var(--icon-sm); }
 
 /* ── Bulk catch-up grid (Primitive 3) — collapsed-by-default exception path ──
    The OUTER card (#msBulkGrid) toggles only via render-time visibility (no
    items → display:none). The chevron in the header toggles the INNER
    #msBulkGridBody via aria-expanded — so the header (chevron + title)
-   stays reachable for re-open. */
+   stays reachable for re-open. Per-section domain cascade flows via
+   data-domain on .ms-bulk-section parent into label + chips. */
 .ms-bulk-grid-card { padding:var(--sp-12); }
 .ms-bulk-grid-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-8); }
 .ms-bulk-grid-body { overflow:hidden; transition:max-height var(--ease-fast); }
 .ms-bulk-grid-body[aria-expanded="false"] { max-height:0; visibility:hidden; }
 .ms-bulk-grid-body[aria-expanded="true"]  { max-height:none; visibility:visible; }
+.ms-bulk-section { margin-bottom:var(--sp-12); }
+.ms-bulk-section-label {
+  /* Mirrors .section-label rules from §5 Section Label System: uppercase,
+     fs-sm, ls-wide. Color flows from --al-tc via [data-domain] cascade. */
+  font-size:var(--fs-sm);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:var(--ls-wide);
+  color:var(--al-tc, var(--mid));
+  margin-bottom:var(--sp-6);
+}
 .ms-bulk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:var(--sp-6); }
-.ms-bulk-chip { padding:var(--sp-6) var(--sp-8); border-radius:var(--r-md); background:var(--warm); border:1px solid var(--border-subtle); cursor:pointer; font-size:var(--fs-xs); display:flex; align-items:center; gap:var(--sp-4); }
-.ms-bulk-chip[data-selected="true"] { background:var(--surface-lav); border-color:var(--lavender); color:var(--tc-lav); font-weight:600; }
-.ms-bulk-chip-icon { font-size:var(--icon-sm); flex-shrink:0; }
+.ms-bulk-chip {
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-10);
+  border-radius:var(--r-md);
+  background:var(--surface);
+  border:1px solid var(--al-border, var(--border-subtle));
+  cursor:pointer;
+  font-size:var(--fs-xs);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:var(--sp-6);
+  transition:background var(--ease-fast), border-color var(--ease-fast);
+}
+.ms-bulk-chip:hover { background:var(--al-tint, var(--surface-lav)); }
+.ms-bulk-chip[data-selected="true"] {
+  background:var(--al-tint, var(--surface-lav));
+  border-color:var(--al-tc, var(--lavender));
+  color:var(--al-tc, var(--tc-lav));
+  font-weight:700;
+}
+.ms-bulk-chip-icon { font-size:var(--icon-sm); flex-shrink:0; color:var(--al-tc, var(--mid)); }
 .ms-bulk-submit { margin-top:var(--sp-12); }
 
 /* ── Domain filter chips (Library sub-tab) — reads ACTIVITY_CATEGORIES.
-   Post-Architect feedback 2026-05-27: dark-mode readability fix — chips
-   were near-invisible against the dark page (--warm background almost
-   matches surrounding card). Adding stronger background contrast + an
-   explicit active-state visual signal (lavender tint + border) so the
-   filter selection reads at a glance. ── */
+   Each chip carries data-domain="<key>" so it consumes the canonical
+   cascade — active state shows the chip's OWN domain accent (motor→sage,
+   language→lavender, etc.) rather than uniform lavender. HR-6 + HR-8
+   closure. Dark-mode parity preserved via override at the cascade-value
+   level (theme-specific rgba adjustments). ── */
 .ms-domain-filter { display:flex; gap:var(--sp-6); flex-wrap:wrap; padding:var(--sp-4) 0; }
 .ms-domain-chip {
-  padding:var(--sp-6) var(--sp-12);
+  min-height:36px;
+  padding:var(--sp-8) var(--sp-12);
   border-radius:var(--r-md);
   background:var(--warm);
   border:1px solid var(--border-subtle);
   color:var(--text);
   font-size:var(--fs-xs);
   cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:var(--sp-4);
   transition:background var(--ease-fast), border-color var(--ease-fast), color var(--ease-fast);
 }
-.ms-domain-chip:hover { background:var(--surface-lav); }
+.ms-domain-chip:hover { background:var(--al-tint, var(--surface-lav)); }
 .ms-domain-chip[data-active="true"] {
   font-weight:700;
-  background:var(--surface-lav);
+  background:var(--al-tint, var(--surface-lav));
+  border-color:var(--al-tc, var(--lavender));
+  color:var(--al-tc, var(--tc-lav));
+}
+/* "All" chip has data-domain="all" — no cascade match → falls to the
+   lavender default (the milestones-tab-overall accent per design-table
+   row "Milestones, achievements → lavender"). Explicit rule so the All
+   state reads cohesively rather than as a "missing token" gray. */
+.ms-domain-chip[data-domain="all"][data-active="true"] {
+  background:var(--lav-light);
   border-color:var(--lavender);
   color:var(--tc-lav);
 }
@@ -6223,11 +6405,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   border-color:rgba(255,255,255,0.14);
   color:var(--text);
 }
-[data-theme="dark"] .ms-domain-chip:hover { background:rgba(201,184,232,0.16); }
+[data-theme="dark"] .ms-domain-chip:hover { background:rgba(255,255,255,0.10); }
 [data-theme="dark"] .ms-domain-chip[data-active="true"] {
-  background:rgba(201,184,232,0.22);
-  border-color:var(--lavender);
-  color:var(--tc-lav);
+  background:var(--al-active-dk, rgba(201,184,232,0.22));
+  border-color:var(--al-tc, var(--lavender));
 }
 
 /* Domain filter visibility class — class-driven hide for milestoneList items
@@ -6320,7 +6501,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 /* ── Correlation cross-link teaser (Patterns sub-tab) ──
    V-V-48 + V-V-63: uses gotoCard('info','infoMilestoneSleepCard') canonical
    pattern; cardId verified against template.html. */
-.ms-correlation-teaser { padding:var(--sp-8) var(--sp-12); background:var(--warm); border-radius:var(--r-md); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); cursor:pointer; transition:background var(--ease-fast); }
+.ms-correlation-teaser { min-height:44px; padding:var(--sp-10) var(--sp-12); background:var(--warm); border-radius:var(--r-md); display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); cursor:pointer; transition:background var(--ease-fast); border:1px solid var(--border-subtle); }
 .ms-correlation-teaser:hover { background:var(--surface-lav); }
 .ms-correlation-teaser-text { font-size:var(--fs-sm); color:var(--text); flex:1; }
 .ms-correlation-teaser-chev { font-size:var(--icon-sm); color:var(--light); flex-shrink:0; }
@@ -10201,6 +10382,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
+     with animate / spring / timeline / stagger / inView). ~12kb gzipped; WAAPI
+     wrapper from the Framer team. Adopted at the milestones-tab-v1 IMPL for
+     production-quality tap-out/reorder + opens the door for richer animations
+     across other tabs (sleep visualizations, growth ring draw-in, etc.).
+     The library is OPT-IN at the call site — every animation entry-point
+     checks `window.Motion` and falls back to CSS-class transitions if it
+     hasn't loaded (offline parent on a flight, blocked CDN, etc.). Loaded
+     after Chart.js so chart rendering takes priority on cold-start. -->
+<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js" defer></script>
 </head>
 <body>
 <!-- ═══ Ziva Sketch Icon Set ═══ -->
@@ -16197,6 +16388,26 @@ window._MILESTONE_NARRATION_TEMPLATES = {
   },
 };
 
+// MS_ACTIVITY_LEVEL_NARRATIONS — warm contextual prose per activityLevel tier.
+// Architect feedback 2026-05-27: "what's happening with the info we select in
+// 'How was Ziva today?' right now I select peak and it just stays there, not
+// much state change happens. For a parent the effect of this option must be
+// apparent."
+//
+// Used by renderMsActivityLevelStrip to surface an inline status BELOW the
+// chips after the parent selects a tier — closes the missing-consequence
+// gap. Honesty floor (CV3-006): the prose is observational + supportive,
+// never predictive ("Ziva will do X because of today's Peak") which would
+// trip audit-no-personalised-prediction-v1.sh Scope B. Tier-keyed by 1-4
+// matching the chip tiers; engine-extensibility floor for future 5th tier
+// lands as a new key without surface refactor.
+window.MS_ACTIVITY_LEVEL_NARRATIONS = {
+  1: 'Quiet days are gentle. Good time for cuddles, read-aloud, and rest — often follows a stretch of higher-energy days.',
+  2: 'Settled play days build steady comfort. The unspectacular days matter just as much.',
+  3: 'Engaged, high-output days often surface new skills. Watch for milestones unfolding.',
+  4: 'Big-energy days mean Ziva\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
+};
+
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {
@@ -21614,6 +21825,38 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     const currentIdx = TAB_ORDER.indexOf(currentTab);
     if (currentIdx === -1) return;
 
+    // If on Track → Milestones, swipe cycles the inner Log / Library /
+    // Patterns sub-tabs first. At inner edges (Log + swipe right, Patterns
+    // + swipe left) the gesture falls through to the Track sub-tab block
+    // below, which itself bubbles to top-level tabs at Track-sub-tab edges.
+    // This makes the inner sub-tabs consistent with the multi-level swipe
+    // pattern established at the Track-sub-tab tier (matches the
+    // canon-cc-008 cross-jurisdiction Vela "half-awake test" — single
+    // gesture, predictable result, edges escape rather than dead-end).
+    if (currentTab === 'track' && _activeTrackSub === 'milestones') {
+      const MS_SUB_ORDER = ['log', 'library', 'patterns'];
+      const activePanel = document.querySelector('#tab-milestones .ms-sub-panel.active');
+      const innerActive = activePanel ? activePanel.id.replace('ms-sub-', '') : 'log';
+      const innerIdx = MS_SUB_ORDER.indexOf(innerActive);
+      if (innerIdx !== -1) {
+        if (dx < -60 && innerIdx < MS_SUB_ORDER.length - 1) {
+          if (typeof switchMsSub === 'function') {
+            switchMsSub({ dataset: { msSub: MS_SUB_ORDER[innerIdx + 1] } });
+          }
+          return;
+        } else if (dx > 60 && innerIdx > 0) {
+          if (typeof switchMsSub === 'function') {
+            switchMsSub({ dataset: { msSub: MS_SUB_ORDER[innerIdx - 1] } });
+          }
+          return;
+        }
+        // Inner-edge fall-through: deliberate; Track-sub-tab block below
+        // handles the next-level bubble (Inner Log + swipe right →
+        // previous Track sub-tab, Inner Patterns + swipe left → next
+        // Track sub-tab / next top-level tab per existing logic).
+      }
+    }
+
     // If on Track tab, swipe cycles through sub-tabs instead of top-level tabs
     if (currentTab === 'track') {
       const subIdx = TRACK_SUB_ORDER.indexOf(_activeTrackSub);
@@ -26813,7 +27056,29 @@ function renderMsTodayHeader() {
     lastEvidenceRelative: lastEvidenceRelative,
   };
   const passage = tpl.passage.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
-  el.innerHTML = '<div class="ms-today-passage">' + passage + '</div>';
+
+  // activityLevel echo — when the parent has logged today's energy, surface
+  // a small tag above the narrative passage so the Today header acknowledges
+  // their input as part of the day's anchor. Closes the "apparent effect"
+  // feedback chain alongside the chip-strip inline status. Tag stays absent
+  // when activityLevel is null (honesty floor: no echo for no signal).
+  let activityTag = '';
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      const todayKey = today();
+      const lvl = _getActivityLevelToday(todayKey);
+      if (lvl != null) {
+        const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === lvl);
+        if (tier) {
+          activityTag = '<div class="ms-today-activity-tag">'
+            + zi('bolt') + ' <strong>' + escHtml(tier.label) + '</strong> day'
+            + '</div>';
+        }
+      }
+    }
+  } catch (e) { /* honesty floor: no echo on read-failure */ }
+
+  el.innerHTML = activityTag + '<div class="ms-today-passage">' + passage + '</div>';
 }
 
 // Helper: relative-time formatter (no engine-internal labels per V-K-120).
@@ -26858,16 +27123,50 @@ function renderMsActivityLevelStrip() {
       + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
       + '</button>';
   }).join('');
-  el.innerHTML = '<div class="ms-al-prompt">How was Ziva today?</div>'
-    + '<div class="ms-al-chips">' + chips + '</div>';
+  // Prompt swaps once a level is logged — "How was Ziva today?" → "Today's
+  // energy" — so the question/answer relationship reads as resolved.
+  // Inline status surfaces the consequence: which tier was logged + a
+  // warm contextual narration. CV3-006 Warmth axis closure on the
+  // Architect's "the effect must be apparent" feedback. The status reads
+  // BELOW the chip strip because the selected chip is the answer; the
+  // status is the system's acknowledgement + context.
+  const prompt = (currentLevel == null) ? 'How was Ziva today?' : 'Today\'s energy';
+  let statusHtml = '';
+  if (currentLevel != null) {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === currentLevel);
+    const narrations = (window.MS_ACTIVITY_LEVEL_NARRATIONS || {});
+    const narration = narrations[currentLevel] || '';
+    const tierLabel = tier ? tier.label : '';
+    statusHtml = '<div class="ms-al-status" role="status" aria-live="polite">'
+      + '<div class="ms-al-status-tag">' + zi('check') + ' Logged · <strong>' + escHtml(tierLabel) + '</strong></div>'
+      + (narration ? '<div class="ms-al-status-narration">' + escHtml(narration) + '</div>' : '')
+      + '</div>';
+  }
+  el.innerHTML = '<div class="ms-al-prompt">' + escHtml(prompt) + '</div>'
+    + '<div class="ms-al-chips">' + chips + '</div>'
+    + statusHtml;
 }
 
 // Handler: setMsActivityLevel — data-action delegate; writes the level via
 // engine-prep _setActivityLevelToday and re-renders the strip.
+//
+// Triple feedback channel (Architect "apparent effect" close): (1) visual —
+// renderMsActivityLevelStrip refreshes with stronger selected-chip styling +
+// inline status with warm narration; (2) cross-surface — renderMsTodayHeader
+// refreshes to incorporate the activityLevel into the day's anchor
+// narration; (3) transient — toast confirmation acknowledges the input
+// immediately. Three independent signals so even a half-awake parent
+// catches at least one.
 function setMsActivityLevel(target) {
   const level = parseInt(target && target.dataset && target.dataset.level, 10);
   if (!level || level < 1 || level > MS_ACTIVITY_LEVEL_TIERS.length) return;
   const todayStr = today();
+  let prevLevel = null;
+  try {
+    if (typeof _getActivityLevelToday === 'function') {
+      prevLevel = _getActivityLevelToday(todayStr);
+    }
+  } catch (e) { prevLevel = null; }
   try {
     if (typeof _setActivityLevelToday === 'function') {
       _setActivityLevelToday(todayStr, level);
@@ -26876,6 +27175,14 @@ function setMsActivityLevel(target) {
   renderMsActivityLevelStrip();
   // Today header may shift state — re-render (single try-with-warn)
   try { renderMsTodayHeader(); } catch (e) { console.warn('renderMsTodayHeader fail:', e); }
+  // Transient confirmation toast — only on actual change (not rapid-re-tap
+  // on the same tier) so a parent thumbing through tiers doesn't get a
+  // toast cascade. showQLToast replaces any in-flight toast so a quick
+  // sequence Quiet→Calm→Active→Peak collapses to the last toast naturally.
+  if (level !== prevLevel && typeof showQLToast === 'function') {
+    const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === level);
+    if (tier) showQLToast('Logged · ' + tier.label + ' day', 2400);
+  }
 }
 
 // In-window milestone proposals (Primitive 2) — engine-prep
@@ -26887,22 +27194,46 @@ function setMsActivityLevel(target) {
 function renderMsInWindowProposals() {
   const el = document.getElementById('msInWindowProposals');
   if (!el) return;
-  // _zivaAgeInDays(today()) per core.js canonical pattern; no-arg returns 0.
+  // Request more candidates (5 instead of 3) so we have room to reorder
+  // "Not yet"-tapped items to the bottom without losing primary slots.
+  // Engine still caps internally; surface still shows ≤3 primary at top
+  // plus any Not-yet-tapped items appended at the end with the
+  // is-deprioritized visual.
   const ageDays = _zivaAgeInDays(today());
   let items = [];
   try {
     if (typeof _getInWindowMilestones === 'function') {
-      items = _getInWindowMilestones(ageDays, 3, {}) || [];
+      items = _getInWindowMilestones(ageDays, 5, {}) || [];
     }
   } catch (e) { items = []; }
   if (items.length === 0) {
     el.innerHTML = '<div class="t-sub-light text-center py-4">No milestones in-window right now — early days.</div>';
     return;
   }
-  el.innerHTML = items.map(it => _renderMsInWindowCard(it)).join('');
+  // Split: primary (not in _msNotYetSession) vs deprioritized (tapped Not yet
+  // this session). Render primary first then deprioritized last per the
+  // V-V-57 + V-M-103 amendment ("push to bottom"). Primary stack capped at
+  // 3 for the spec contract; remaining primary items roll into the
+  // deprioritized tail to keep the surface from overflowing.
+  const primary = [];
+  const deprioritized = [];
+  items.forEach(it => {
+    if (_msNotYetSession[it.milestoneId]) deprioritized.push(it);
+    else primary.push(it);
+  });
+  // Cap primary at 3; spill the rest into the deprioritized tail (sorted by
+  // priority via engine ordering preserved through both buckets).
+  const PRIMARY_CAP = 3;
+  const overflow = primary.splice(PRIMARY_CAP);
+  const ordered = primary.concat(overflow, deprioritized);
+  el.innerHTML = ordered.map(it => {
+    const isDepri = !!_msNotYetSession[it.milestoneId];
+    return _renderMsInWindowCard(it, { deprioritized: isDepri });
+  }).join('');
 }
 
-function _renderMsInWindowCard(item) {
+function _renderMsInWindowCard(item, opts) {
+  const deprioritized = !!(opts && opts.deprioritized);
   const win = item.window || {};
   const text = escHtml(item.text || '');
   const icon = item.icon || '';
@@ -26943,7 +27274,7 @@ function _renderMsInWindowCard(item) {
   const tapDataAttrs = ' data-ms-id="' + milestoneIdEsc + '"'
     + ' data-ms-text="' + msTextEsc + '"'
     + ' data-ms-domain="' + msDomainEsc + '"';
-  return '<div class="ms-inwindow-card" data-safety-tier="' + (safetyTier ? 'true' : 'false')
+  return '<div class="ms-inwindow-card' + (deprioritized ? ' is-deprioritized' : '') + '" data-safety-tier="' + (safetyTier ? 'true' : 'false')
     + '" data-domain="' + msDomainEsc + '">'
     + '<div class="ms-inwindow-head">'
     + '<span class="ms-inwindow-icon">' + (icon || zi('star')) + '</span>'
@@ -26981,48 +27312,171 @@ function _msWindowBandLabel(win) {
   return 'in band';
 }
 
+// Session-local "Not yet" deprioritize map. Architect amendment to V-V-57 /
+// V-M-103 (2026-05-27 #7): "Not yet pushes the option to the bottom" instead
+// of suppress-7-days-hide. The card stays visible, just at the end of the
+// in-window stack, so the parent never feels the system "hid" their answer.
+// Session-local for v1 (resets on reload); persistent storage is a v1.1
+// candidate. Keyed by milestoneId; value = epoch ms the parent tapped.
+const _msNotYetSession = {};
+
+// 24h hide-after-tap window for Confirm/Practicing. Replaces the 7-day
+// suppress that the prior notYetMsInWindow wrote. Calendar logic: a tap
+// today means "I've responded to this proposal for today"; the engine
+// surfaces it again tomorrow if still in-window (parent may want to log
+// it again across days).
+const MS_HIDE_AFTER_TAP_MS = 24 * 60 * 60 * 1000;
+
+// ─── Motion One animation foundation (Architect 2026-05-27 #10) ──────
+// Motion One UMD is loaded via deferred CDN script in build.sh → exposes
+// window.Motion with animate / spring / timeline / stagger / inView. All
+// call sites in this file check window.Motion at invocation time + fall
+// back to the CSS-class transition for offline / blocked-CDN / cached-
+// from-pre-Motion-build users. The fallback is functionally equivalent
+// (slide-out + drop-down) just with --ease-med cubic-bezier instead of
+// spring physics.
+//
+// Reduced-motion check: respects user OS-level prefers-reduced-motion.
+// Skips animation entirely and fires the callback immediately so the
+// data write still happens. Accessibility floor per design principles.
+function _msPrefersReducedMotion() {
+  try {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) { return false; }
+}
+
+// Animation: tapped card swipes right with slight rotation — the "Tinder
+// off the deck" feel for Confirm/Practicing. ease-in cubic-bezier so the
+// card accelerates as it leaves (production quality vs the flat linear-ish
+// feel of CSS transition + ease-med).
+function _msSwipeCardOut(card, cb) {
+  if (!card) { if (cb) cb(); return; }
+  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
+  if (window.Motion && window.Motion.animate) {
+    const controls = window.Motion.animate(card,
+      { x: ['0%', '15%', '120%'], rotate: [0, 2, 8], opacity: [1, 0.9, 0] },
+      { duration: 0.42, easing: [0.32, 0, 0.67, 0] }
+    );
+    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
+  } else {
+    // CSS-class fallback — same shape, simpler easing.
+    card.classList.add('is-sliding-out');
+    let done = false;
+    const finish = () => { if (done) return; done = true; if (cb) cb(); };
+    card.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 460);
+  }
+}
+
+// Animation: Not-yet drop with spring overshoot — card travels down,
+// overshoots slightly, settles back. Conveys "moved to the bottom" with
+// physical weight. After the spring settles, renderMilestones runs +
+// the card re-renders at the bottom of the stack with .is-deprioritized.
+function _msDropCardDown(card, cb) {
+  if (!card) { if (cb) cb(); return; }
+  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
+  if (window.Motion && window.Motion.animate && window.Motion.spring) {
+    const controls = window.Motion.animate(card,
+      { y: 32, scale: 0.96, opacity: 0.55 },
+      { easing: window.Motion.spring({ stiffness: 90, damping: 11, mass: 1 }) }
+    );
+    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
+  } else {
+    card.classList.add('is-sliding-down');
+    let done = false;
+    const finish = () => { if (done) return; done = true; if (cb) cb(); };
+    card.addEventListener('transitionend', finish, { once: true });
+    setTimeout(finish, 460);
+  }
+}
+
+// Post-render settle-in for the deprioritized card at its new bottom-of-
+// stack position. Subtle slide-up-from-below + fade-in so the parent sees
+// the card "landing" at the new position rather than just appearing.
+// Targets the LAST .is-deprioritized card in the in-window stack (the
+// one just tapped Not-yet).
+function _msSettleDeprioritizedCard() {
+  if (_msPrefersReducedMotion()) return;
+  if (!window.Motion || !window.Motion.animate) return;
+  const all = document.querySelectorAll('#msInWindowProposals .ms-inwindow-card.is-deprioritized');
+  if (!all.length) return;
+  const last = all[all.length - 1];
+  window.Motion.animate(last,
+    { y: ['12px', 0], opacity: [0.2, 0.65] },
+    { duration: 0.36, easing: [0.22, 0.61, 0.36, 1] }
+  );
+}
+
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
 //
-// Each handler reads ms-id + ms-text + ms-domain from the tap-button dataset
-// so _msRecordEvidence can construct the canonical activityLog entry shape
-// (which existing readers consume — renderCategoryWheels reads entry.domains;
-// renderRecentEvidence reads entry.text + entry.evidence).
+// New behavior (Architect feedback 2026-05-27 #7 + #10):
+// - Confirm + Practicing: card Tinder-swipes right with rotation +
+//   acceleration (cubic-bezier ease-in), evidence recorded, milestone
+//   hidden from in-window proposals for 24h so the stack makes way for
+//   other options.
+// - Not yet: card drops down with spring physics overshoot, gets pushed
+//   to the bottom of the stack with a subtle "settle in" animation at
+//   its new position. No 7-day hide.
 function confirmMsInWindow(target) {
   if (!target || !target.dataset) return;
-  _msRecordEvidence(target.dataset.msId, 'high', target.dataset.msText, target.dataset.msDomain);
-  renderMilestones();
+  const msId = target.dataset.msId;
+  const msText = target.dataset.msText;
+  const msDomain = target.dataset.msDomain;
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msSwipeCardOut(card, () => {
+    _msRecordEvidence(msId, 'high', msText, msDomain);
+    _msHideForADay(msId);
+    renderMilestones();
+  });
 }
 
 function practicingMsInWindow(target) {
   if (!target || !target.dataset) return;
-  _msRecordEvidence(target.dataset.msId, 'medium', target.dataset.msText, target.dataset.msDomain);
-  renderMilestones();
+  const msId = target.dataset.msId;
+  const msText = target.dataset.msText;
+  const msDomain = target.dataset.msDomain;
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msSwipeCardOut(card, () => {
+    _msRecordEvidence(msId, 'medium', msText, msDomain);
+    _msHideForADay(msId);
+    renderMilestones();
+  });
 }
 
 function notYetMsInWindow(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  // Suppress 7 days. Engine-prep PR-A registered KEYS.milestoneSuppress in
-  // SYNC_KEYS with a _postReceiveMilestoneSuppress merge-on-receive hook
-  // (sync.js:154; per V-K-104 + V-M-116 floor). Cross-device replication
-  // requires the save() wrapper (which triggers syncWrite); direct
-  // localStorage.setItem bypasses it AND bypasses the in-memory
-  // milestoneSuppress global that _getInWindowMilestones reads at
-  // core.js:6016 — so suppression would have ZERO effect until reload.
-  //
-  // Proper write: mutate the module-global object in place + save() through
-  // the wrapper. milestoneSuppress is declared at core.js:389.
+  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. _msNotYetSession
+  // is consulted by renderMsInWindowProposals to reorder deprioritized
+  // cards to the end of the stack. Card animates DOWN then re-renders at
+  // the bottom. milestoneSuppress is NOT touched — that key now signals
+  // only the 24h post-Confirm/Practicing hide.
+  _msNotYetSession[msId] = Date.now();
+  const card = target.closest && target.closest('.ms-inwindow-card');
+  _msDropCardDown(card, () => {
+    renderMilestones();
+    // requestAnimationFrame so layout settles before the settle-in tween.
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(_msSettleDeprioritizedCard);
+    } else {
+      _msSettleDeprioritizedCard();
+    }
+  });
+}
+
+// 24h hide write via the existing milestoneSuppress sync-aware path. The
+// engine at core.js:6049 filters out entries whose value > now — so
+// writing Date.now() + 24h hides the milestone for exactly 24 hours.
+// V-K-104 + V-M-116 floor preserved (save() triggers syncWrite). Pruning
+// expired entries on each write keeps the map small.
+function _msHideForADay(msId) {
+  if (!msId) return;
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null) return;
   _msPruneExpiredSuppress();
-  const untilTs = Date.now() + (7 * 86400000);
-  milestoneSuppress[msId] = untilTs;
+  milestoneSuppress[msId] = Date.now() + MS_HIDE_AFTER_TAP_MS;
   save(KEYS.milestoneSuppress, milestoneSuppress);
-  if (typeof showQLToast === 'function') {
-    showQLToast('Suppressed for 7 days. <button class="al-undo-btn" data-action="undoMsSuppress" data-ms-id="' + escHtml(msId) + '">Undo</button>', 5000);
-  }
-  renderMilestones();
 }
 
 function undoMsSuppress(target) {
@@ -27182,8 +27636,13 @@ function renderMsBulkGrid() {
         + '<span>' + text + '</span>'
         + '</button>';
     }).join('');
-    return '<div class="ms-bulk-section">'
-      + '<div class="ms-pediatric-prep-section-label">' + escHtml(c.label) + '</div>'
+    // data-domain on the section parent enables the canonical [data-domain]
+    // CSS cascade (styles.css ~8851 defining --al-tint/--al-tc/--al-border per
+    // domain) to flow into the label + chips inside without per-chip attrs.
+    // V-M-120 + HR-6 closure: domain identity reads per-section + per-chip
+    // instead of the prior uniform lavender on all bulk surfaces.
+    return '<div class="ms-bulk-section" data-domain="' + escHtml(c.key) + '">'
+      + '<div class="ms-bulk-section-label">' + escHtml(c.label) + '</div>'
       + '<div class="ms-bulk-grid">' + chips + '</div>'
       + '</div>';
   }).filter(Boolean).join('');
@@ -28159,18 +28618,26 @@ function renderCategoryWheels() {
   const el = document.getElementById('msCatWheels');
   if (!el) return;
 
-  const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
-    motor:     { icon:zi('run'), label:'Motor',     color:'var(--tc-sage)' },
-    language:  { icon:zi('chat'), label:'Language',   color:'#3a7090' },
-    social:    { icon:zi('handshake'), label:'Social',     color:'#966525' },
-    cognitive: { icon:zi('brain'), label:'Cognitive',  color:'var(--tc-lav)' },
-  };
+  // 5-cat registry consumer (Architect feedback 2026-05-27: Patterns sub-tab
+  // was missing sensory). Pre-v1 4-cat hardcode was opt-in-marker-annotated
+  // as deprecation-cycle technical debt during the audit-gate setup — but
+  // this is a LIVE consumer surface, not dead code, so the missing-sensory
+  // wheel was visible to the parent. Migration consumes window.ACTIVITY_CATEGORIES
+  // (single source of truth) with [data-domain] CSS cascade for accent color
+  // — no hardcoded hex per HR-6.
+  const cats = (window.ACTIVITY_CATEGORIES || []);
+  const catMeta = {};
+  cats.forEach(c => {
+    catMeta[c.key] = { icon: zi(c.icon), label: c.label, accent: c.accent };
+  });
 
   const R = 22, C = 2 * Math.PI * R;
 
-  // Compute evidence counts per domain from activityLog
-  const domainEvidence = { motor: 0, language: 0, social: 0, cognitive: 0 };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
-  const domainDays = { motor: new Set(), language: new Set(), social: new Set(), cognitive: new Set() };  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  // Compute evidence counts per domain from activityLog. Domain bins built
+  // from the registry so a 5th tier addition lands without surface touch.
+  const domainEvidence = {};
+  const domainDays = {};
+  cats.forEach(c => { domainEvidence[c.key] = 0; domainDays[c.key] = new Set(); });
   Object.entries(activityLog).forEach(([dateStr, entries]) => {
     if (!Array.isArray(entries)) return;
     entries.forEach(e => {
@@ -28184,7 +28651,8 @@ function renderCategoryWheels() {
   });
 
   let html = '';
-  ['motor','language','social','cognitive'].forEach(cat => {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  cats.forEach(c => {
+    const cat = c.key;
     const meta = catMeta[cat];
     // milestone-engine-prep-v1 PR-B: cat→domain rename with legacy fallback.
     const catMs = milestones.filter(m => (m.domain || m.cat || 'motor') === cat);
@@ -28194,14 +28662,19 @@ function renderCategoryWheels() {
     const dayCount = domainDays[cat].size;
     const evidLabel = evCount > 0 ? evCount + ' ev · ' + dayCount + 'd' : '';
 
-    html += '<div class="ms-cat-wheel" data-action-mcat="' + cat + '">' +
+    // data-domain on the wheel container lets the canonical CSS cascade
+    // (--al-tc) drive the stroke + percent label color. .ms-cat-wheel-pct
+    // already uses inline style for color (pre-existing carve-out, mirrors
+    // trajectory marker currentColor pass-through); the cascade-fed value
+    // keeps registry as single source of truth.
+    html += '<div class="ms-cat-wheel" data-action-mcat="' + cat + '" data-domain="' + escHtml(cat) + '">' +
       '<svg viewBox="0 0 50 50">' +
         '<circle class="mcw-track" cx="25" cy="25" r="' + R + '"/>' +
-        '<circle class="mcw-fill" cx="25" cy="25" r="' + R + '" stroke="' + meta.color + '" stroke-dasharray="' + C + '" stroke-dashoffset="' + fill + '"/>' +
+        '<circle class="mcw-fill" cx="25" cy="25" r="' + R + '" stroke="currentColor" stroke-dasharray="' + C + '" stroke-dashoffset="' + fill + '"/>' +
       '</svg>' +
-      '<div class="ms-cat-wheel-pct" style="color:' + meta.color + ';">' + avgPct + '%</div>' +
-      '<div class="ms-cat-wheel-label">' + meta.label + '</div>' +
-      (evidLabel ? '<div class="ms-cat-wheel-ev">' + evidLabel + '</div>' : '') +
+      '<div class="ms-cat-wheel-pct">' + avgPct + '%</div>' +
+      '<div class="ms-cat-wheel-label">' + escHtml(meta.label) + '</div>' +
+      (evidLabel ? '<div class="ms-cat-wheel-ev">' + escHtml(evidLabel) + '</div>' : '') +
     '</div>';
   });
   el.innerHTML = html;

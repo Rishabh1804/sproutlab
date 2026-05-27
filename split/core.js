@@ -3653,6 +3653,38 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     const currentIdx = TAB_ORDER.indexOf(currentTab);
     if (currentIdx === -1) return;
 
+    // If on Track → Milestones, swipe cycles the inner Log / Library /
+    // Patterns sub-tabs first. At inner edges (Log + swipe right, Patterns
+    // + swipe left) the gesture falls through to the Track sub-tab block
+    // below, which itself bubbles to top-level tabs at Track-sub-tab edges.
+    // This makes the inner sub-tabs consistent with the multi-level swipe
+    // pattern established at the Track-sub-tab tier (matches the
+    // canon-cc-008 cross-jurisdiction Vela "half-awake test" — single
+    // gesture, predictable result, edges escape rather than dead-end).
+    if (currentTab === 'track' && _activeTrackSub === 'milestones') {
+      const MS_SUB_ORDER = ['log', 'library', 'patterns'];
+      const activePanel = document.querySelector('#tab-milestones .ms-sub-panel.active');
+      const innerActive = activePanel ? activePanel.id.replace('ms-sub-', '') : 'log';
+      const innerIdx = MS_SUB_ORDER.indexOf(innerActive);
+      if (innerIdx !== -1) {
+        if (dx < -60 && innerIdx < MS_SUB_ORDER.length - 1) {
+          if (typeof switchMsSub === 'function') {
+            switchMsSub({ dataset: { msSub: MS_SUB_ORDER[innerIdx + 1] } });
+          }
+          return;
+        } else if (dx > 60 && innerIdx > 0) {
+          if (typeof switchMsSub === 'function') {
+            switchMsSub({ dataset: { msSub: MS_SUB_ORDER[innerIdx - 1] } });
+          }
+          return;
+        }
+        // Inner-edge fall-through: deliberate; Track-sub-tab block below
+        // handles the next-level bubble (Inner Log + swipe right →
+        // previous Track sub-tab, Inner Patterns + swipe left → next
+        // Track sub-tab / next top-level tab per existing logic).
+      }
+    }
+
     // If on Track tab, swipe cycles through sub-tabs instead of top-level tabs
     if (currentTab === 'track') {
       const subIdx = TRACK_SUB_ORDER.indexOf(_activeTrackSub);

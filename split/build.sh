@@ -124,6 +124,16 @@ cat styles.css
 cat <<'MID'
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
+     with animate / spring / timeline / stagger / inView). ~12kb gzipped; WAAPI
+     wrapper from the Framer team. Adopted at the milestones-tab-v1 IMPL for
+     production-quality tap-out/reorder + opens the door for richer animations
+     across other tabs (sleep visualizations, growth ring draw-in, etc.).
+     The library is OPT-IN at the call site — every animation entry-point
+     checks `window.Motion` and falls back to CSS-class transitions if it
+     hasn't loaded (offline parent on a flight, blocked CDN, etc.). Loaded
+     after Chart.js so chart rendering takes priority on cold-start. -->
+<script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.js" defer></script>
 </head>
 <body>
 MID
