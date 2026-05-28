@@ -6130,6 +6130,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-sub-panel { display:none; }
 .ms-sub-panel.active { display:block; }
 
+/* ── food-sub-tab-v1 F-1 — inner Log/Library/Patterns sub-tabs on the diet
+   surface. Mirrors the milestones-tab-v1 sub-bar/panel pattern so a parent
+   learns one sub-tab gesture across both tabs (V-V-46 chrome doctrine:
+   uniform-rose active + sage domain accent INSIDE cards per design table).
+   Inherits .track-sub-btn.active styling — no chrome override. */
+.diet-sub-bar { display:flex; gap:var(--sp-4); padding:var(--sp-8) 0 var(--sp-12); justify-content:center; flex-wrap:nowrap; }
+.diet-sub-btn { min-width:80px; }
+.diet-sub-panel { display:none; }
+.diet-sub-panel.active { display:block; }
+
 /* ── "Today" header card (Log sub-tab) — return-visit surface 1 ──
    4 narration templates (fullData/midState/betweenWindow/emptyState) from
    _MILESTONE_NARRATION_TEMPLATES. Honesty floor (V-M-104/V-M-121): if

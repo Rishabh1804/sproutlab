@@ -1,3 +1,36 @@
+// ═══════════════════════════════════════════════════════════════════════
+// food-sub-tab-v1 F-1 — inner sub-tab navigation (Log / Library / Patterns)
+// Spec: docs/specs/food-sub-tab-v1.md (ratified PR #133)
+//
+// Mirrors the milestones-tab-v1 switchMsSub pattern: toggle the active
+// button's ARIA + class, swap which .diet-sub-panel has the .active class.
+// Inherits .track-sub-btn.active uniform-rose chrome per V-V-46 doctrine.
+// Sub-tab order: log → library → patterns (DIET_SUB_ORDER consumed by the
+// swipe extension in core.js handleSwipe for inner-sub-tab cycling).
+//
+// F-2 will replace the existing meal-card markup in the Log sub-tab with
+// the structured item builder; F-3 will add typeahead-search + filter
+// chips to the Library sub-tab; F-4 will add the nutrient heatmap +
+// allergen trend to the Patterns sub-tab; F-5 lands parseFeeding (v3-8).
+// ═══════════════════════════════════════════════════════════════════════
+const DIET_SUB_ORDER = ['log', 'library', 'patterns'];
+
+function switchDietSub(target) {
+  const subKey = (target && target.dataset && target.dataset.dietSub) || 'log';
+  const bar = document.getElementById('dietSubBar');
+  if (!bar) return;
+  bar.querySelectorAll('.diet-sub-btn').forEach(btn => {
+    const isActive = btn.dataset.dietSub === subKey;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  const panels = document.querySelectorAll('#tab-diet .diet-sub-panel');
+  panels.forEach(p => {
+    const isActive = p.id === ('diet-sub-' + subKey);
+    p.classList.toggle('active', isActive);
+  });
+}
+
 // INSIGHTS & TIPS ENGINE
 // ─────────────────────────────────────────
 const ALL_TIPS = [

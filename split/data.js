@@ -2687,6 +2687,98 @@ var PORTABLE_PREP_TIPS = {
 };
 // @@DATA_BLOCK_19_END@@
 
+// ───────────────────────────────────────────────────────────────────────
+// food-sub-tab-v1 F-1 — structured feeding-entry shape (declaration only)
+// ───────────────────────────────────────────────────────────────────────
+// Spec: docs/specs/food-sub-tab-v1.md §2 "Structured food-entry shape (the
+// NEW shape v3-8 must tolerate)".
+//
+// F-1 deliverable: declare the shape + ratify the contract (this block).
+// F-2 will land the structured Log entry form that writes the new shape.
+// F-5 will land parseFeeding (v3-8) that round-trips legacy + structured
+// shapes into a canonical object.
+//
+// PRE-V1 SHAPE (legacy; coexists indefinitely per F-1 "additive" doctrine):
+//   feedingData[dateStr] = {
+//     breakfast: 'paratha with ghee, banana',  // string
+//     breakfast_time: '08:30',
+//     lunch: '...',
+//     lunch_time: '...',
+//     dinner: '...', dinner_time: '...',
+//     snack: '...',  snack_time:  '...',
+//   }
+//
+// V1 STRUCTURED SHAPE (additive; rolls in via F-2 entry form):
+//   feedingData[dateStr] = {
+//     breakfast: {
+//       items: [
+//         { name: 'paratha', qty: 1,   unit: 'piece', source: 'library', nutritionRef: 'paratha' },
+//         { name: 'ghee',    qty: 1,   unit: 'tsp',   source: 'library', nutritionRef: 'ghee'    },
+//         { name: 'banana',  qty: 0.5, unit: 'piece', source: 'library', nutritionRef: 'banana'  },
+//       ],
+//       time: '08:30',
+//       note: 'optional free-text',
+//       derivedAllergens:  ['gluten', 'dairy'],  // computed at write-time per scope-Q3
+//       derivedFatBearing: true,                 // computed at write-time
+//       // Legacy compat (generated from items + time for downstream readers):
+//       text: 'paratha with ghee, banana',
+//       breakfast_time: '08:30',
+//     },
+//     // Same shape per meal slot...
+//   }
+//
+// CONTRACT KEYS:
+// - `items[]` — array of structured food entries; every entry MUST carry
+//   {name, qty, unit, source, nutritionRef} (scope-Q2 ratified minimum).
+//   `source` ∈ {'library' | 'parent-noted' | 'inferred'} for allergen
+//   provenance attribution (scope-Q3 ratified write-time derivation).
+//   `nutritionRef` is the lookup key into window.NUTRITION (data.js) for
+//   the canonical nutrient/allergen/age-gate row.
+// - `time` — meal time as 'HH:MM' (24-hour).
+// - `note` — optional parent free-text (escHtml at render boundary).
+// - `derivedAllergens[]` — computed at write-time by looking up each
+//   `items[i].nutritionRef` in NUTRITION and unioning their allergen flags.
+//   Per-row source attribution flows via the `source` field on each item.
+// - `derivedFatBearing` — boolean; computed at write-time; consumed by
+//   _detectFatContextNearTime (core.js) for fat-context intelligence.
+// - `text` — generated legacy-compat string ('item1, item2, item3') so the
+//   pre-v1 readers in home.js + diet.js still render correctly during the
+//   deprecation cycle. parseFeeding (F-5 = v3-8) drops this requirement
+//   once all readers migrate to the structured shape.
+// - `breakfast_time` / `lunch_time` / etc. — legacy field name preserved
+//   on the per-meal object (same value as `time`); ditto deprecation cycle.
+//
+// MIGRATION POLICY (lazy, per scope-Q4 ratified "best-effort tokenize"):
+// - No mass rewrite of existing feedingData records.
+// - Legacy string records read through parseFeeding (F-5) → canonical
+//   object with items[] derived from string-parse + best-effort NUTRITION
+//   matching. Items array may be empty for un-parseable strings; the
+//   original string is preserved as `text` for display.
+// - New writes (from the F-2 structured entry form) emit the new shape.
+// - Both shapes coexist on disk indefinitely.
+//
+// HONESTY FLOOR (CV3-006 Charter axis 1):
+// - `source: 'inferred'` items disclose their inference status; never
+//   stamped as 'library' if the lookup wasn't an exact match.
+// - `derivedAllergens` carries provenance: each allergen flag traces to
+//   the items[i].nutritionRef that contributed it.
+// - Parent overrides (e.g. "I know this is gluten-free even though the
+//   library says it has wheat") write `source:'parent-noted'` with the
+//   parent's override explicit.
+//
+// F-1 STUB HELPERS (real impl lands at F-2 + F-5):
+window._FEEDING_V1_SCHEMA_VERSION = 1;
+// parseFeedingV1Stub — F-1 placeholder. Returns the input unchanged so any
+// caller that reaches for parseFeeding pre-F-5 still gets the legacy value.
+// F-5 replaces this with the real parseFeeding(val) normalizer per v3-8.
+window.parseFeedingV1Stub = function(val) { return val; };
+// isStructuredFeedingV1 — runtime shape-check helper. Pre-v1 meal values
+// are strings; v1 structured values are objects with an `items` array.
+// Used by F-2 readers to branch render paths during the deprecation cycle.
+window.isStructuredFeedingV1 = function(mealVal) {
+  return mealVal && typeof mealVal === 'object' && Array.isArray(mealVal.items);
+};
+
 // @@DATA_BLOCK_20_START@@ MILESTONE_STANDARDS
 
 // MILESTONE_SOURCE — controlled vocabulary for per-row clinical-band source

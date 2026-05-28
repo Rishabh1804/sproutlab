@@ -6137,6 +6137,16 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-sub-panel { display:none; }
 .ms-sub-panel.active { display:block; }
 
+/* ── food-sub-tab-v1 F-1 — inner Log/Library/Patterns sub-tabs on the diet
+   surface. Mirrors the milestones-tab-v1 sub-bar/panel pattern so a parent
+   learns one sub-tab gesture across both tabs (V-V-46 chrome doctrine:
+   uniform-rose active + sage domain accent INSIDE cards per design table).
+   Inherits .track-sub-btn.active styling — no chrome override. */
+.diet-sub-bar { display:flex; gap:var(--sp-4); padding:var(--sp-8) 0 var(--sp-12); justify-content:center; flex-wrap:nowrap; }
+.diet-sub-btn { min-width:80px; }
+.diet-sub-panel { display:none; }
+.diet-sub-panel.active { display:block; }
+
 /* ── "Today" header card (Log sub-tab) — return-visit surface 1 ──
    4 narration templates (fullData/midState/betweenWindow/emptyState) from
    _MILESTONE_NARRATION_TEMPLATES. Honesty floor (V-M-104/V-M-121): if
@@ -11183,127 +11193,172 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   </div>
 
   <!-- ══════════════ TAB 3: DIET ══════════════ -->
+  <!-- ══════════════ TAB 6: DIET (v1 — 3-sub-tab redesign per food-sub-tab-v1) ══════════════ -->
+  <!--
+    food-sub-tab-v1 F-1: navigation scaffold. Three sub-tabs (Log / Library /
+    Patterns) mirror the milestones-tab-v1 layout per spec
+    docs/specs/food-sub-tab-v1.md §1 ("3 sub-tabs: Log / Library / Patterns").
+    Chrome doctrine V-V-46 holds — uniform-rose active sub-tab via inherited
+    .track-sub-btn.active; sage domain accent surfaces INSIDE cards per
+    design-table row "Diet, food cards → sage". All existing IDs preserved
+    (dietDomainHero, dietStats, mealcards, foodsGrid, comboInput, comboResult,
+    tipsList, etc.) so the renderers in diet.js + home.js don't break.
+
+    F-1 content distribution:
+    - Log: dietDomainHero + dietStats + Today's Meals (the primary daily
+      entry surface)
+    - Library: Foods Introduced (food DB browse + add-food form)
+    - Patterns: Can I Give This? combo check + Insights & Tips
+
+    F-2 will replace Today's Meals with the structured item builder; F-3 will
+    add typeahead + nutrition browser to Library; F-4 will add the nutrient
+    heatmap + allergen trend to Patterns; F-5 lands parseFeeding (v3-8).
+  -->
   <div class="track-sub-panel" id="tab-diet">
-    <div class="grid">
 
-      <!-- ─── DOMAIN SCORE HERO ─── -->
-      <div class="card col-full card-hero hero-diet" id="dietDomainHero" style="display:none;"></div>
+    <!-- Inner sub-tab nav (Log / Library / Patterns) — mirrors .ms-sub-bar -->
+    <div class="diet-sub-bar" id="dietSubBar" role="tablist">
+      <button class="track-sub-btn diet-sub-btn active" data-action="switchDietSub" data-diet-sub="log" role="tab" aria-selected="true">Log</button>
+      <button class="track-sub-btn diet-sub-btn" data-action="switchDietSub" data-diet-sub="library" role="tab" aria-selected="false">Library</button>
+      <button class="track-sub-btn diet-sub-btn" data-action="switchDietSub" data-diet-sub="patterns" role="tab" aria-selected="false">Patterns</button>
+    </div>
 
-      <!-- ─── TIER 1: STATS ─── -->
+    <!-- ═══ LOG SUB-TAB — daily meal entry + domain hero + stats ═══ -->
+    <div class="diet-sub-panel active" id="diet-sub-log" role="tabpanel" aria-labelledby="dietSubLog">
+      <div class="grid">
+
+        <!-- Domain score hero (preserved ID; renderers in diet.js read this) -->
+        <div class="card col-full card-hero hero-diet" id="dietDomainHero" style="display:none;"></div>
+
+        <!-- Stats pills (preserved ID) -->
         <div class="col-full stat-pills-grid" id="dietStats"></div>
 
-      <!-- ─── TIER 2: ACTIONS ─── -->
-      <div class="home-section-label sec-t1 col-full">Log & Check</div>
+        <div class="home-section-label sec-t1 col-full">Log &amp; Check</div>
 
-      <!-- TODAY'S ENTRY -->
-      <div class="card card-action col-full card-overflow-visible">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-bowl"/></svg></div> Today's Meals <button class="help-btn" aria-label="Help" data-help="help-meals"><span class="t-sm">ⓘ</span></button></div>
-          <div class="date-nav">
-            <button data-action="datePrev" aria-label="Previous day">‹</button>
-            <input type="date" id="feedingDate">
-            <button data-action="dateNext" aria-label="Next day">›</button>
-            <button class="btn-primary bp-peach" id="saveFeedBtn" data-action="saveFeedingDay">Save</button>
-          </div>
-        </div>
-        <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
-
-        <div id="dietIntelBanner"></div>
-
-        <div class="meal-cards">
-          <div class="meal-card breakfast">
-            <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Breakfast <span class="meal-skip-btn" id="skip-breakfast" data-skip-meal="breakfast" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-breakfast" title="Meal time (optional)" placeholder="--:--"></div>
-            <div class="dqp-zone" id="dqp-breakfast"></div>
-            <div class="meal-input-wrap">
-              <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-              <div class="meal-dropdown" id="md-breakfast"></div>
+        <!-- Today's Meals — daily entry, primary Log-sub-tab surface (F-2 replaces with structured item builder) -->
+        <div class="card card-action col-full card-overflow-visible">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-bowl"/></svg></div> Today's Meals <button class="help-btn" aria-label="Help" data-help="help-meals"><span class="t-sm">ⓘ</span></button></div>
+            <div class="date-nav">
+              <button data-action="datePrev" aria-label="Previous day">‹</button>
+              <input type="date" id="feedingDate">
+              <button data-action="dateNext" aria-label="Next day">›</button>
+              <button class="btn-primary bp-peach" id="saveFeedBtn" data-action="saveFeedingDay">Save</button>
             </div>
-            <div class="meal-insight" id="insight-breakfast" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-breakfast-text"></span></div>
           </div>
-          <div class="meal-card lunch">
-            <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Lunch <span class="meal-skip-btn" id="skip-lunch" data-skip-meal="lunch" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-lunch" title="Meal time (optional)" placeholder="--:--"></div>
-            <div class="dqp-zone" id="dqp-lunch"></div>
-            <div class="meal-input-wrap">
-              <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-              <div class="meal-dropdown" id="md-lunch"></div>
+          <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+
+          <div id="dietIntelBanner"></div>
+
+          <div class="meal-cards">
+            <div class="meal-card breakfast">
+              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Breakfast <span class="meal-skip-btn" id="skip-breakfast" data-skip-meal="breakfast" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-breakfast" title="Meal time (optional)" placeholder="--:--"></div>
+              <div class="dqp-zone" id="dqp-breakfast"></div>
+              <div class="meal-input-wrap">
+                <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
+                <div class="meal-dropdown" id="md-breakfast"></div>
+              </div>
+              <div class="meal-insight" id="insight-breakfast" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-breakfast-text"></span></div>
             </div>
-            <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-lunch-text"></span></div>
-          </div>
-          <div class="meal-card dinner">
-            <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
-            <div class="dqp-zone" id="dqp-dinner"></div>
-            <div class="meal-input-wrap">
-              <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-              <div class="meal-dropdown" id="md-dinner"></div>
+            <div class="meal-card lunch">
+              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Lunch <span class="meal-skip-btn" id="skip-lunch" data-skip-meal="lunch" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-lunch" title="Meal time (optional)" placeholder="--:--"></div>
+              <div class="dqp-zone" id="dqp-lunch"></div>
+              <div class="meal-input-wrap">
+                <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
+                <div class="meal-dropdown" id="md-lunch"></div>
+              </div>
+              <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-lunch-text"></span></div>
             </div>
-            <div class="meal-insight" id="insight-dinner" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-dinner-text"></span></div>
-          </div>
-          <div class="meal-card snack">
-            <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-spoon"/></svg> Snack <span class="meal-skip-btn" id="skip-snack" data-skip-meal="snack" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-snack" title="Meal time (optional)" placeholder="--:--"></div>
-            <div class="dqp-zone" id="dqp-snack"></div>
-            <div class="meal-input-wrap">
-              <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-              <div class="meal-dropdown" id="md-snack"></div>
+            <div class="meal-card dinner">
+              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
+              <div class="dqp-zone" id="dqp-dinner"></div>
+              <div class="meal-input-wrap">
+                <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
+                <div class="meal-dropdown" id="md-dinner"></div>
+              </div>
+              <div class="meal-insight" id="insight-dinner" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-dinner-text"></span></div>
             </div>
-            <div class="meal-insight" id="insight-snack" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-snack-text"></span></div>
+            <div class="meal-card snack">
+              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-spoon"/></svg> Snack <span class="meal-skip-btn" id="skip-snack" data-skip-meal="snack" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-snack" title="Meal time (optional)" placeholder="--:--"></div>
+              <div class="dqp-zone" id="dqp-snack"></div>
+              <div class="meal-input-wrap">
+                <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
+                <div class="meal-dropdown" id="md-snack"></div>
+              </div>
+              <div class="meal-insight" id="insight-snack" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-snack-text"></span></div>
+            </div>
           </div>
         </div>
+
       </div>
-
-      <!-- CAN I GIVE THIS? -->
-      <div class="card card-action col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chef"/></svg></div> Can I Give This?</div>
-        </div>
-        <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos & don'ts for Ziva's age.</div>
-        <div class="flex-gap8-wrap-mb">
-          <input type="text" id="comboInput" class="form-input input-ctx-sage combo-input" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice...">
-          <button class="btn btn-sage disabled-state btn-min80" data-action="checkFoodCombo" id="comboCheckBtn" >Check <svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></button>
-        </div>
-        <div id="comboQuickChips" class="combo-quick-chips"></div>
-        <div id="comboResult"></div>
-        <div id="comboHistory" class="combo-history"></div>
-      </div>
-
-      <!-- ─── TIER 3: REFERENCE ─── -->
-      <div class="home-section-label sec-t3 col-full">Reference</div>
-
-      <!-- FOODS INTRODUCED -->
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced <button class="help-btn" aria-label="Help" data-help="help-foods"><span class="t-sm">ⓘ</span></button></div>
-          <span class="t-sm t-light" id="foodsTotalCount"></span>
-        </div>
-        <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
-        <div id="foodsGrid"></div>
-        <div class="add-food">
-          <input type="text" id="foodInput" placeholder="Add a food...">
-          <input type="date" id="foodDate">
-          <select id="foodSlot" class="food-slot-select" aria-label="Meal slot">
-            <option value="">Any meal</option>
-            <option value="breakfast">Breakfast</option>
-            <option value="lunch">Lunch</option>
-            <option value="dinner">Dinner</option>
-            <option value="snack">Snack</option>
-          </select>
-          <div class="reaction-toggle">
-            <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
-            <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
-          </div>
-          <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
-        </div>
-      </div>
-
-      <!-- INSIGHTS & TIPS -->
-      <div class="card card-info col-full">
-        <div class="card-header">
-          <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bulb"/></svg></div> Insights & Tips</div>
-          <span class="t-sm t-light" id="tipsCount"></span>
-        </div>
-        <div id="tipsList"></div>
-      </div>
-
     </div>
+
+    <!-- ═══ LIBRARY SUB-TAB — Foods Introduced + (F-3) nutrition browser ═══ -->
+    <div class="diet-sub-panel" id="diet-sub-library" role="tabpanel" aria-labelledby="dietSubLibrary">
+      <div class="grid">
+
+        <div class="home-section-label sec-t3 col-full">Foods reference</div>
+
+        <!-- Foods Introduced (preserved IDs; F-3 will add typeahead-search + filter chips here) -->
+        <div class="card card-info col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced <button class="help-btn" aria-label="Help" data-help="help-foods"><span class="t-sm">ⓘ</span></button></div>
+            <span class="t-sm t-light" id="foodsTotalCount"></span>
+          </div>
+          <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
+          <div id="foodsGrid"></div>
+          <div class="add-food">
+            <input type="text" id="foodInput" placeholder="Add a food...">
+            <input type="date" id="foodDate">
+            <select id="foodSlot" class="food-slot-select" aria-label="Meal slot">
+              <option value="">Any meal</option>
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+            <div class="reaction-toggle">
+              <button class="rtog active-ok" id="rtog-ok" data-reaction="ok"><svg class="zi"><use href="#zi-check"/></svg> Fine</button>
+              <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
+            </div>
+            <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ PATTERNS SUB-TAB — combo intelligence + insights + (F-4) nutrient heatmap ═══ -->
+    <div class="diet-sub-panel" id="diet-sub-patterns" role="tabpanel" aria-labelledby="dietSubPatterns">
+      <div class="grid">
+
+        <!-- Can I Give This? combo check (per spec §1 Patterns mapping) -->
+        <div class="card card-action col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chef"/></svg></div> Can I Give This?</div>
+          </div>
+          <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos &amp; don'ts for Ziva's age.</div>
+          <div class="flex-gap8-wrap-mb">
+            <input type="text" id="comboInput" class="form-input input-ctx-sage combo-input" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice...">
+            <button class="btn btn-sage disabled-state btn-min80" data-action="checkFoodCombo" id="comboCheckBtn" >Check <svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></button>
+          </div>
+          <div id="comboQuickChips" class="combo-quick-chips"></div>
+          <div id="comboResult"></div>
+          <div id="comboHistory" class="combo-history"></div>
+        </div>
+
+        <!-- Insights &amp; Tips (preserved IDs) -->
+        <div class="card card-info col-full">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-bulb"/></svg></div> Insights &amp; Tips</div>
+            <span class="t-sm t-light" id="tipsCount"></span>
+          </div>
+          <div id="tipsList"></div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <!-- ══════════════ TAB: FEEDING HISTORY ══════════════ -->
@@ -16305,6 +16360,98 @@ var PORTABLE_PREP_TIPS = {
 };
 // @@DATA_BLOCK_19_END@@
 
+// ───────────────────────────────────────────────────────────────────────
+// food-sub-tab-v1 F-1 — structured feeding-entry shape (declaration only)
+// ───────────────────────────────────────────────────────────────────────
+// Spec: docs/specs/food-sub-tab-v1.md §2 "Structured food-entry shape (the
+// NEW shape v3-8 must tolerate)".
+//
+// F-1 deliverable: declare the shape + ratify the contract (this block).
+// F-2 will land the structured Log entry form that writes the new shape.
+// F-5 will land parseFeeding (v3-8) that round-trips legacy + structured
+// shapes into a canonical object.
+//
+// PRE-V1 SHAPE (legacy; coexists indefinitely per F-1 "additive" doctrine):
+//   feedingData[dateStr] = {
+//     breakfast: 'paratha with ghee, banana',  // string
+//     breakfast_time: '08:30',
+//     lunch: '...',
+//     lunch_time: '...',
+//     dinner: '...', dinner_time: '...',
+//     snack: '...',  snack_time:  '...',
+//   }
+//
+// V1 STRUCTURED SHAPE (additive; rolls in via F-2 entry form):
+//   feedingData[dateStr] = {
+//     breakfast: {
+//       items: [
+//         { name: 'paratha', qty: 1,   unit: 'piece', source: 'library', nutritionRef: 'paratha' },
+//         { name: 'ghee',    qty: 1,   unit: 'tsp',   source: 'library', nutritionRef: 'ghee'    },
+//         { name: 'banana',  qty: 0.5, unit: 'piece', source: 'library', nutritionRef: 'banana'  },
+//       ],
+//       time: '08:30',
+//       note: 'optional free-text',
+//       derivedAllergens:  ['gluten', 'dairy'],  // computed at write-time per scope-Q3
+//       derivedFatBearing: true,                 // computed at write-time
+//       // Legacy compat (generated from items + time for downstream readers):
+//       text: 'paratha with ghee, banana',
+//       breakfast_time: '08:30',
+//     },
+//     // Same shape per meal slot...
+//   }
+//
+// CONTRACT KEYS:
+// - `items[]` — array of structured food entries; every entry MUST carry
+//   {name, qty, unit, source, nutritionRef} (scope-Q2 ratified minimum).
+//   `source` ∈ {'library' | 'parent-noted' | 'inferred'} for allergen
+//   provenance attribution (scope-Q3 ratified write-time derivation).
+//   `nutritionRef` is the lookup key into window.NUTRITION (data.js) for
+//   the canonical nutrient/allergen/age-gate row.
+// - `time` — meal time as 'HH:MM' (24-hour).
+// - `note` — optional parent free-text (escHtml at render boundary).
+// - `derivedAllergens[]` — computed at write-time by looking up each
+//   `items[i].nutritionRef` in NUTRITION and unioning their allergen flags.
+//   Per-row source attribution flows via the `source` field on each item.
+// - `derivedFatBearing` — boolean; computed at write-time; consumed by
+//   _detectFatContextNearTime (core.js) for fat-context intelligence.
+// - `text` — generated legacy-compat string ('item1, item2, item3') so the
+//   pre-v1 readers in home.js + diet.js still render correctly during the
+//   deprecation cycle. parseFeeding (F-5 = v3-8) drops this requirement
+//   once all readers migrate to the structured shape.
+// - `breakfast_time` / `lunch_time` / etc. — legacy field name preserved
+//   on the per-meal object (same value as `time`); ditto deprecation cycle.
+//
+// MIGRATION POLICY (lazy, per scope-Q4 ratified "best-effort tokenize"):
+// - No mass rewrite of existing feedingData records.
+// - Legacy string records read through parseFeeding (F-5) → canonical
+//   object with items[] derived from string-parse + best-effort NUTRITION
+//   matching. Items array may be empty for un-parseable strings; the
+//   original string is preserved as `text` for display.
+// - New writes (from the F-2 structured entry form) emit the new shape.
+// - Both shapes coexist on disk indefinitely.
+//
+// HONESTY FLOOR (CV3-006 Charter axis 1):
+// - `source: 'inferred'` items disclose their inference status; never
+//   stamped as 'library' if the lookup wasn't an exact match.
+// - `derivedAllergens` carries provenance: each allergen flag traces to
+//   the items[i].nutritionRef that contributed it.
+// - Parent overrides (e.g. "I know this is gluten-free even though the
+//   library says it has wheat") write `source:'parent-noted'` with the
+//   parent's override explicit.
+//
+// F-1 STUB HELPERS (real impl lands at F-2 + F-5):
+window._FEEDING_V1_SCHEMA_VERSION = 1;
+// parseFeedingV1Stub — F-1 placeholder. Returns the input unchanged so any
+// caller that reaches for parseFeeding pre-F-5 still gets the legacy value.
+// F-5 replaces this with the real parseFeeding(val) normalizer per v3-8.
+window.parseFeedingV1Stub = function(val) { return val; };
+// isStructuredFeedingV1 — runtime shape-check helper. Pre-v1 meal values
+// are strings; v1 structured values are objects with an `items` array.
+// Used by F-2 readers to branch render paths during the deprecation cycle.
+window.isStructuredFeedingV1 = function(mealVal) {
+  return mealVal && typeof mealVal === 'object' && Array.isArray(mealVal.items);
+};
+
 // @@DATA_BLOCK_20_START@@ MILESTONE_STANDARDS
 
 // MILESTONE_SOURCE — controlled vocabulary for per-row clinical-band source
@@ -18810,6 +18957,7 @@ function init() {
     else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    else if (action === 'switchDietSub' && typeof switchDietSub === 'function') switchDietSub(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -21849,6 +21997,33 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     const currentIdx = TAB_ORDER.indexOf(currentTab);
     if (currentIdx === -1) return;
+
+    // If on Track → Diet, swipe cycles the inner Log / Library / Patterns
+    // sub-tabs first (food-sub-tab-v1 F-1 swipe parity, mirrors the
+    // milestones-tab-v1 #ms-sub-bar pattern). At inner edges the gesture
+    // falls through to the Track sub-tab block below, which itself bubbles
+    // to top-level tabs at Track-sub-tab edges.
+    if (currentTab === 'track' && _activeTrackSub === 'diet') {
+      const DIET_INNER_ORDER = ['log', 'library', 'patterns'];
+      const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
+      const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
+      const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
+      if (innerIdx !== -1) {
+        if (dx < -60 && innerIdx < DIET_INNER_ORDER.length - 1) {
+          if (typeof switchDietSub === 'function') {
+            switchDietSub({ dataset: { dietSub: DIET_INNER_ORDER[innerIdx + 1] } });
+          }
+          return;
+        } else if (dx > 60 && innerIdx > 0) {
+          if (typeof switchDietSub === 'function') {
+            switchDietSub({ dataset: { dietSub: DIET_INNER_ORDER[innerIdx - 1] } });
+          }
+          return;
+        }
+        // Inner-edge fall-through: deliberate; Track-sub-tab block below
+        // handles the next-level bubble.
+      }
+    }
 
     // If on Track → Milestones, swipe cycles the inner Log / Library /
     // Patterns sub-tabs first. At inner edges (Log + swipe right, Patterns
@@ -30334,6 +30509,33 @@ function renderFoodChips() {
       document.querySelectorAll('.meal-dropdown.open').forEach(d => d.classList.remove('open'));
     }
   });
+
+  // Meal-dropdown pick / add — pointerdown delegation with preventDefault.
+  // Architect bug-report 2026-05-28: tapping a dropdown item dismissed the
+  // mobile keyboard because the input's blur fired before the pick handler
+  // could call inp.focus(). Pointerdown fires BEFORE blur, and
+  // preventDefault on pointerdown stops the input from blurring at all —
+  // keyboard stays summoned across multi-food picks. Unifies mouse +
+  // touch via the Pointer Events API. Same listener handles both
+  // .meal-dd-item (pick existing food) and .meal-dd-add (add new food).
+  // Replaces the inline onmousedown handlers — incidental HR-3 cleanup
+  // (data-action delegation universal). Guard against renderFoodChips
+  // being called multiple times — listener attaches once per page load.
+  if (!window._mealDropdownPointerWired) {
+    window._mealDropdownPointerWired = true;
+    document.addEventListener('pointerdown', e => {
+      const pickEl = e.target.closest('[data-meal-pick]');
+      const addEl  = e.target.closest('[data-meal-add]');
+      if (!pickEl && !addEl) return;
+      // CRITICAL: preventDefault BEFORE blur — keeps input focused + keyboard up.
+      e.preventDefault();
+      if (pickEl) {
+        pickMealFood(pickEl.dataset.mealPick, pickEl.dataset.mealFood);
+      } else if (addEl) {
+        addNewFoodFromMeal(addEl.dataset.mealAdd, addEl.dataset.mealFood);
+      }
+    });
+  }
 }
 
 // Get the last "token" being typed (after last comma)
@@ -30411,7 +30613,12 @@ function showMealDropdown(meal, query) {
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.forEach(food => {
       totalMatches++;
-      html += `<div class="meal-dd-item" onmousedown="pickMealFood('${meal}','${food.replace(/'/g, "\\'")}')">
+      // Architect bug-report 2026-05-28: dropdown picks dismissed the
+      // keyboard + dropped the cursor on mobile. Migrating from inline
+      // onmousedown (HR-3 carve-out) to data-attribute delegation with a
+      // global pointerdown listener that preventDefault's BEFORE the input
+      // blurs. Closes keyboard-dismiss friction on multi-food meals.
+      html += `<div class="meal-dd-item" data-meal-pick="${escAttr(meal)}" data-meal-food="${escAttr(food)}">
         ${highlightMatch(food, q)}
       </div>`;
     });
@@ -30422,7 +30629,7 @@ function showMealDropdown(meal, query) {
   const exactMatch = allFoods.some(f => f.toLowerCase() === q);
   if (query.length >= 2 && !exactMatch) {
     const capitalized = query.charAt(0).toUpperCase() + query.slice(1);
-    html += `<div class="meal-dd-add" onmousedown="addNewFoodFromMeal('${meal}','${capitalized.replace(/'/g, "\\'")}')">
+    html += `<div class="meal-dd-add" data-meal-add="${escAttr(meal)}" data-meal-food="${escAttr(capitalized)}">
       ＋ Add "<strong>${escHtml(capitalized)}</strong>" as new food
     </div>`;
   }
@@ -30450,6 +30657,7 @@ function closeMealDropdown(meal) {
 
 function pickMealFood(meal, food) {
   const inp = document.getElementById('meal-' + meal);
+  if (!inp) return;
   const parts = inp.value.split(',').map(s => s.trim()).filter(Boolean);
   // Replace the last token (what user was typing) with the picked food
   if (parts.length > 0) {
@@ -30461,6 +30669,14 @@ function pickMealFood(meal, food) {
   closeMealDropdown(meal);
   updateMealInsight(meal);
   inp.focus();
+  // Architect bug-report 2026-05-28: cursor was landing at position 0
+  // after value assignment, so parents had to drag the caret to the end
+  // before typing the next food. setSelectionRange parks the cursor at
+  // the end of the new value (after the trailing ", ") so the next
+  // keystroke continues naturally. Paired with the pointerdown-preventDefault
+  // wiring below to keep the on-screen keyboard summoned across picks.
+  const _len = inp.value.length;
+  try { inp.setSelectionRange(_len, _len); } catch (e) { /* unsupported input type — ignore */ }
   // Auto-add to Foods Introduced if not already tracked (base food matching)
   const lower = food.toLowerCase().trim();
   const base = _baseFoodName(lower);
@@ -36664,6 +36880,39 @@ function renderSleepArc3Insights() {
   wrap.innerHTML = parts.join('');
   while (wrap.firstChild) el.appendChild(wrap.firstChild);
 }
+// ═══════════════════════════════════════════════════════════════════════
+// food-sub-tab-v1 F-1 — inner sub-tab navigation (Log / Library / Patterns)
+// Spec: docs/specs/food-sub-tab-v1.md (ratified PR #133)
+//
+// Mirrors the milestones-tab-v1 switchMsSub pattern: toggle the active
+// button's ARIA + class, swap which .diet-sub-panel has the .active class.
+// Inherits .track-sub-btn.active uniform-rose chrome per V-V-46 doctrine.
+// Sub-tab order: log → library → patterns (DIET_SUB_ORDER consumed by the
+// swipe extension in core.js handleSwipe for inner-sub-tab cycling).
+//
+// F-2 will replace the existing meal-card markup in the Log sub-tab with
+// the structured item builder; F-3 will add typeahead-search + filter
+// chips to the Library sub-tab; F-4 will add the nutrient heatmap +
+// allergen trend to the Patterns sub-tab; F-5 lands parseFeeding (v3-8).
+// ═══════════════════════════════════════════════════════════════════════
+const DIET_SUB_ORDER = ['log', 'library', 'patterns'];
+
+function switchDietSub(target) {
+  const subKey = (target && target.dataset && target.dataset.dietSub) || 'log';
+  const bar = document.getElementById('dietSubBar');
+  if (!bar) return;
+  bar.querySelectorAll('.diet-sub-btn').forEach(btn => {
+    const isActive = btn.dataset.dietSub === subKey;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  const panels = document.querySelectorAll('#tab-diet .diet-sub-panel');
+  panels.forEach(p => {
+    const isActive = p.id === ('diet-sub-' + subKey);
+    p.classList.toggle('active', isActive);
+  });
+}
+
 // INSIGHTS & TIPS ENGINE
 // ─────────────────────────────────────────
 const ALL_TIPS = [
