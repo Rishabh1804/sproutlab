@@ -5,6 +5,8 @@
 **Branch:** `claude/food-sub-tab-v1-spec`
 **Author:** Lyra (main-session — Mode-1 spec authoring)
 **Status:** v1 RATIFIED — all 10 v0 scope-questions answered with Lyra's proposed defaults. F-1 implementation arc can open against this spec.
+
+> **F-1 IMPL ratified 2026-05-28 PM** (PR #165, sha `daa9756`). Sub-tab navigation scaffold (Log / Library / Patterns; mirrors milestones-tab-v1 doctrine — V-V-46 chrome inherited from `.track-sub-btn.active`; `.diet-sub-bar` + `.diet-sub-btn` + `.diet-sub-panel` classes mirror `.ms-sub-bar`/`.ms-sub-btn`/`.ms-sub-panel`) + swipe parity (3rd-nesting-level swipe extension for Track→Diet inner sub-tabs) + structured shape schema declared (`window._FEEDING_V1_SCHEMA_VERSION = 1` + `parseFeedingV1Stub` + `isStructuredFeedingV1` helpers in data.js; full shape contract in 60-line inline doc block; F-5 will implement the real `parseFeeding` normalizer). Bonus closure: long-standing meal-dropdown keyboard-dismiss + caret-position friction folded into PR #165 via `pointerdown` delegation + `setSelectionRange(len, len)` — multi-food entry now flows without breaks on mobile. F-2..F-5 queued for the next session.
 **Promoted from:**
 - Chronicle §4.2 v3-8 row — names Food Sub-Tab as pre-required (parseFeeding normalizer must know the food-sub-tab incoming shape at v1 design time)
 - Architect direction this session: sequencing — "we'll implement this sleep upgrade after food sub-tab arc is completed. keeps the features and upgrades sequential and easy to track."
