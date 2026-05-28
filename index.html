@@ -30509,6 +30509,33 @@ function renderFoodChips() {
       document.querySelectorAll('.meal-dropdown.open').forEach(d => d.classList.remove('open'));
     }
   });
+
+  // Meal-dropdown pick / add — pointerdown delegation with preventDefault.
+  // Architect bug-report 2026-05-28: tapping a dropdown item dismissed the
+  // mobile keyboard because the input's blur fired before the pick handler
+  // could call inp.focus(). Pointerdown fires BEFORE blur, and
+  // preventDefault on pointerdown stops the input from blurring at all —
+  // keyboard stays summoned across multi-food picks. Unifies mouse +
+  // touch via the Pointer Events API. Same listener handles both
+  // .meal-dd-item (pick existing food) and .meal-dd-add (add new food).
+  // Replaces the inline onmousedown handlers — incidental HR-3 cleanup
+  // (data-action delegation universal). Guard against renderFoodChips
+  // being called multiple times — listener attaches once per page load.
+  if (!window._mealDropdownPointerWired) {
+    window._mealDropdownPointerWired = true;
+    document.addEventListener('pointerdown', e => {
+      const pickEl = e.target.closest('[data-meal-pick]');
+      const addEl  = e.target.closest('[data-meal-add]');
+      if (!pickEl && !addEl) return;
+      // CRITICAL: preventDefault BEFORE blur — keeps input focused + keyboard up.
+      e.preventDefault();
+      if (pickEl) {
+        pickMealFood(pickEl.dataset.mealPick, pickEl.dataset.mealFood);
+      } else if (addEl) {
+        addNewFoodFromMeal(addEl.dataset.mealAdd, addEl.dataset.mealFood);
+      }
+    });
+  }
 }
 
 // Get the last "token" being typed (after last comma)
@@ -30586,7 +30613,12 @@ function showMealDropdown(meal, query) {
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.forEach(food => {
       totalMatches++;
-      html += `<div class="meal-dd-item" onmousedown="pickMealFood('${meal}','${food.replace(/'/g, "\\'")}')">
+      // Architect bug-report 2026-05-28: dropdown picks dismissed the
+      // keyboard + dropped the cursor on mobile. Migrating from inline
+      // onmousedown (HR-3 carve-out) to data-attribute delegation with a
+      // global pointerdown listener that preventDefault's BEFORE the input
+      // blurs. Closes keyboard-dismiss friction on multi-food meals.
+      html += `<div class="meal-dd-item" data-meal-pick="${escAttr(meal)}" data-meal-food="${escAttr(food)}">
         ${highlightMatch(food, q)}
       </div>`;
     });
@@ -30597,7 +30629,7 @@ function showMealDropdown(meal, query) {
   const exactMatch = allFoods.some(f => f.toLowerCase() === q);
   if (query.length >= 2 && !exactMatch) {
     const capitalized = query.charAt(0).toUpperCase() + query.slice(1);
-    html += `<div class="meal-dd-add" onmousedown="addNewFoodFromMeal('${meal}','${capitalized.replace(/'/g, "\\'")}')">
+    html += `<div class="meal-dd-add" data-meal-add="${escAttr(meal)}" data-meal-food="${escAttr(capitalized)}">
       ＋ Add "<strong>${escHtml(capitalized)}</strong>" as new food
     </div>`;
   }
@@ -30625,6 +30657,7 @@ function closeMealDropdown(meal) {
 
 function pickMealFood(meal, food) {
   const inp = document.getElementById('meal-' + meal);
+  if (!inp) return;
   const parts = inp.value.split(',').map(s => s.trim()).filter(Boolean);
   // Replace the last token (what user was typing) with the picked food
   if (parts.length > 0) {
@@ -30636,6 +30669,14 @@ function pickMealFood(meal, food) {
   closeMealDropdown(meal);
   updateMealInsight(meal);
   inp.focus();
+  // Architect bug-report 2026-05-28: cursor was landing at position 0
+  // after value assignment, so parents had to drag the caret to the end
+  // before typing the next food. setSelectionRange parks the cursor at
+  // the end of the new value (after the trailing ", ") so the next
+  // keystroke continues naturally. Paired with the pointerdown-preventDefault
+  // wiring below to keep the on-screen keyboard summoned across picks.
+  const _len = inp.value.length;
+  try { inp.setSelectionRange(_len, _len); } catch (e) { /* unsupported input type — ignore */ }
   // Auto-add to Foods Introduced if not already tracked (base food matching)
   const lower = food.toLowerCase().trim();
   const base = _baseFoodName(lower);
