@@ -2350,67 +2350,100 @@ function _msSwipeCardOut(card, cb) {
   }
 }
 
-// Animation: Not-yet drop with spring overshoot — card travels down,
-// overshoots slightly, settles back. Conveys "moved to the bottom" with
-// physical weight. After the spring settles, renderMilestones runs +
-// the card re-renders at the bottom of the stack with .is-deprioritized.
-function _msDropCardDown(card, cb) {
-  if (!card) { if (cb) cb(); return; }
-  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
-  if (window.Motion && window.Motion.animate && window.Motion.spring) {
-    const controls = window.Motion.animate(card,
-      { y: 32, scale: 0.96, opacity: 0.55 },
-      { easing: window.Motion.spring({ stiffness: 90, damping: 11, mass: 1 }) }
-    );
-    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
-  } else {
-    card.classList.add('is-sliding-down');
-    let done = false;
-    const finish = () => { if (done) return; done = true; if (cb) cb(); };
-    card.addEventListener('transitionend', finish, { once: true });
-    setTimeout(finish, 460);
-  }
+// Animation: Not-yet drop — replaced by FLIP transition in notYetMsInWindow.
+// The prior spring-physics drop caused visible oscillation (Architect 2026-05-
+// 27 #14: "clicking on it leads to the card jump on its place twice") + the
+// hard repaint jump from original slot to bottom of stack felt non-continuous.
+// FLIP (First-Last-Invert-Play) collapses both visual artifacts: the card
+// transitions continuously from its top position down to the new bottom slot
+// while siblings reflow up in the same gesture. Kept as a no-op fallback
+// signature so any in-flight references degrade gracefully.
+function _msDropCardDown(card, cb) { if (cb) cb(); }
+
+// Post-render settle-in for the deprioritized card — also replaced by FLIP.
+// Kept as a no-op stub; the FLIP opacity tween handles the visual settle.
+function _msSettleDeprioritizedCard() { /* FLIP handles this now */ }
+
+// FLIP helpers (Architect feedback 2026-05-27 #14) ──────────────────────
+// Snapshot the current in-window stack card positions, keyed by ms-id.
+function _msSnapshotInWindowRects() {
+  const out = new Map();
+  const stack = document.getElementById('msInWindowProposals');
+  if (!stack) return out;
+  stack.querySelectorAll('.ms-inwindow-card').forEach(card => {
+    const tapBtn = card.querySelector('[data-ms-id]');
+    if (!tapBtn) return;
+    const id = tapBtn.dataset.msId;
+    if (id) out.set(id, card.getBoundingClientRect());
+  });
+  return out;
 }
 
-// Post-render settle-in for the deprioritized card at its new bottom-of-
-// stack position. Subtle slide-up-from-below + fade-in so the parent sees
-// the card "landing" at the new position rather than just appearing.
-// Targets the LAST .is-deprioritized card in the in-window stack (the
-// one just tapped Not-yet).
-function _msSettleDeprioritizedCard() {
+// FLIP playback: for each card present in the post-render stack, compute the
+// position-delta from its pre-render rect + animate from that delta back to
+// 0. Cards that didn't exist before (new ones) are skipped — they appear
+// in their natural position with no jarring slide. The deprioritized card
+// (Not-yet target) gets an additional opacity tween 1 → 0.65 to mirror the
+// .is-deprioritized CSS opacity, so the visual state-change feels gradual
+// instead of stepping at the end of the slide.
+function _msFLIPCards(beforeRects, opts) {
+  opts = opts || {};
   if (_msPrefersReducedMotion()) return;
   if (!window.Motion || !window.Motion.animate) return;
-  const all = document.querySelectorAll('#msInWindowProposals .ms-inwindow-card.is-deprioritized');
-  if (!all.length) return;
-  const last = all[all.length - 1];
-  window.Motion.animate(last,
-    { y: ['12px', 0], opacity: [0.2, 0.65] },
-    { duration: 0.36, easing: [0.22, 0.61, 0.36, 1] }
-  );
+  const excludeId = opts.excludeId || null;
+  const animateDepriOpacity = !!opts.animateDepriOpacity;
+  const stack = document.getElementById('msInWindowProposals');
+  if (!stack) return;
+  stack.querySelectorAll('.ms-inwindow-card').forEach(card => {
+    const tapBtn = card.querySelector('[data-ms-id]');
+    if (!tapBtn) return;
+    const id = tapBtn.dataset.msId;
+    if (excludeId && id === excludeId) return;
+    const before = beforeRects.get(id);
+    if (!before) return;
+    const after = card.getBoundingClientRect();
+    const dy = before.top - after.top;
+    const dx = before.left - after.left;
+    const isDepriCard = animateDepriOpacity && card.classList.contains('is-deprioritized');
+    if (Math.abs(dy) < 1 && Math.abs(dx) < 1 && !isDepriCard) return;
+    const keyframes = {};
+    if (Math.abs(dy) >= 1) keyframes.y = [dy + 'px', '0px'];
+    if (Math.abs(dx) >= 1) keyframes.x = [dx + 'px', '0px'];
+    // For the just-deprioritized card, tween opacity from full → 0.65 in
+    // sync with the slide so the visual mute happens continuously across
+    // the movement (rather than snapping at the end of the slide).
+    if (isDepriCard) keyframes.opacity = [1, 0.65];
+    window.Motion.animate(card, keyframes,
+      { duration: 0.48, easing: [0.22, 0.61, 0.36, 1] }
+    );
+  });
 }
 
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
 //
-// New behavior (Architect feedback 2026-05-27 #7 + #10):
-// - Confirm + Practicing: card Tinder-swipes right with rotation +
-//   acceleration (cubic-bezier ease-in), evidence recorded, milestone
-//   hidden from in-window proposals for 24h so the stack makes way for
-//   other options.
-// - Not yet: card drops down with spring physics overshoot, gets pushed
-//   to the bottom of the stack with a subtle "settle in" animation at
-//   its new position. No 7-day hide.
+// New behavior (Architect feedback 2026-05-27 #7 + #10 + #14):
+// - Confirm + Practicing: tapped card Tinder-swipes right with rotation +
+//   acceleration; siblings FLIP-reflow up to fill the gap in parallel.
+//   Evidence recorded, milestone hidden from in-window proposals for 24h.
+// - Not yet: card transitions continuously from original position to the
+//   new bottom-of-stack slot via FLIP (no spring oscillation, no repaint
+//   jump). Opacity tweens to deprioritized 0.65 in sync with the slide.
+//   Siblings slide up to fill the original gap.
 function confirmMsInWindow(target) {
   if (!target || !target.dataset) return;
   const msId = target.dataset.msId;
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
   const card = target.closest && target.closest('.ms-inwindow-card');
+  const beforeRects = _msSnapshotInWindowRects();
   _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'high', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
+    // FLIP siblings — exclude the swiped-out card (it's gone from DOM)
+    _msFLIPCards(beforeRects, { excludeId: msId });
   });
 }
 
@@ -2420,32 +2453,26 @@ function practicingMsInWindow(target) {
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
   const card = target.closest && target.closest('.ms-inwindow-card');
+  const beforeRects = _msSnapshotInWindowRects();
   _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'medium', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
+    _msFLIPCards(beforeRects, { excludeId: msId });
   });
 }
 
 function notYetMsInWindow(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. _msNotYetSession
-  // is consulted by renderMsInWindowProposals to reorder deprioritized
-  // cards to the end of the stack. Card animates DOWN then re-renders at
-  // the bottom. milestoneSuppress is NOT touched — that key now signals
-  // only the 24h post-Confirm/Practicing hide.
+  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. FLIP makes the
+  // transition continuous — card slides from its current position to the
+  // new bottom slot in one gesture, siblings reflow up to fill the gap.
+  // No spring oscillation; no hard repaint jump.
+  const beforeRects = _msSnapshotInWindowRects();
   _msNotYetSession[msId] = Date.now();
-  const card = target.closest && target.closest('.ms-inwindow-card');
-  _msDropCardDown(card, () => {
-    renderMilestones();
-    // requestAnimationFrame so layout settles before the settle-in tween.
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(_msSettleDeprioritizedCard);
-    } else {
-      _msSettleDeprioritizedCard();
-    }
-  });
+  renderMilestones();
+  _msFLIPCards(beforeRects, { animateDepriOpacity: true });
 }
 
 // 24h hide write via the existing milestoneSuppress sync-aware path. The
@@ -3551,10 +3578,30 @@ function deleteMilestone(i) {
   // of which × button was clicked. Now data-arg is the bare index string.
   const idx = typeof i === 'number' ? i : parseInt(i, 10);
   if (!Number.isInteger(idx) || idx < 0 || idx >= milestones.length) return;
+  // Capture the deleted milestone's id BEFORE splice so we can clear
+  // related state (suppress + deprioritize) that referenced it.
+  // Architect bug-report 2026-05-27 #12: "deleting from history is not
+  // bringing it back to the queue". Root cause — milestoneSuppress[id]
+  // still carried the 24h post-Confirm/Practicing hide timestamp, so the
+  // in-window engine kept skipping the row even after the milestone row
+  // itself was removed. Same for the session-local _msNotYetSession
+  // deprioritize map. Clear both on delete so the proposal returns
+  // immediately to the queue.
+  const deleted = milestones[idx];
+  const deletedId = deleted && deleted.id;
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
   milestones.splice(idx, 1);
   save(KEYS.milestones, milestones);
+  if (deletedId) {
+    if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null && deletedId in milestoneSuppress) {
+      delete milestoneSuppress[deletedId];
+      save(KEYS.milestoneSuppress, milestoneSuppress);
+    }
+    if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null && deletedId in _msNotYetSession) {
+      delete _msNotYetSession[deletedId];
+    }
+  }
   renderMilestones();
   renderUpcomingMilestones();
   expandedMsCats.forEach(id => {
@@ -4004,9 +4051,37 @@ function deleteActivityEntry(dateStr, entryId) {
   confirmAction('Delete this entry? Milestone evidence will be recomputed.', () => {
     const idx = activityLog[dateStr].findIndex(e => e && e.id === entryId);
     if (idx < 0) return;
+    // Capture the entry BEFORE splice so we can derive the milestone slug
+    // (for milestones-tab-v1 taps) and clear the related hide/deprioritize
+    // state — otherwise the milestone stays hidden from in-window proposals
+    // for the full 24h post-tap window even after the parent deletes the
+    // evidence. Architect bug-report 2026-05-27 #13: "deletion will happen
+    // in the same tab under recent activity evidence, once it is deleted
+    // from there it ideally should be back on the queue."
+    const removed = activityLog[dateStr][idx];
     activityLog[dateStr].splice(idx, 1);
     if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
     save(KEYS.activityLog, activityLog);
+    // If the deleted entry was a milestones-tab-v1 Confirm/Practicing tap,
+    // clear the corresponding milestoneSuppress[slug] 24h-hide entry +
+    // _msNotYetSession[slug] deprioritize entry. milestoneSuppress is keyed
+    // by slugify(MILESTONE_STANDARDS row.text) (core.js:6046); the entry
+    // text field stores that same row text, so slugify-on-text round-trips.
+    if (removed && removed.source === 'milestones-tab-v1-tap' && removed.text
+        && typeof slugify === 'function') {
+      const slug = slugify(removed.text);
+      if (slug) {
+        if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null
+            && slug in milestoneSuppress) {
+          delete milestoneSuppress[slug];
+          save(KEYS.milestoneSuppress, milestoneSuppress);
+        }
+        if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null
+            && slug in _msNotYetSession) {
+          delete _msNotYetSession[slug];
+        }
+      }
+    }
     if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
     if (typeof renderMilestones === 'function') renderMilestones();
     if (typeof renderHomeActivity === 'function') renderHomeActivity();

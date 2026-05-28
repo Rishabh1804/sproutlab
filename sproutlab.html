@@ -16429,6 +16429,17 @@ const MILESTONE_STANDARDS = {
     { text:'Waves bye-bye', icon:zi('baby'), desc:'Imitates waving — a social communication milestone. Usually 7–9 months.', advanced:false, domain:'social', source:'unverified' },
     { text:'Stands holding furniture (cruising prep)', icon:zi('run'), desc:'Pulls up and stands while holding furniture for support. Legs bear full weight.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Says mama/dada (non-specific)', icon:zi('chat'), desc:'Uses mama/dada sounds but not yet directed at the right person. Specific use is 10–12 months.', advanced:true, domain:'language', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + language depth for the 7m
+    // bracket. Architect ask: "need to load up on milestones as well". Per
+    // V-M-114 honesty floor, all new rows ship source:'unverified'; future
+    // Care-tier curation arc upgrades attribution row-by-row against the
+    // canonical references (WHO Motor Study + IAP DASII + AAP Bright Futures
+    // + CDC Learn-the-Signs).
+    { text:'Tracks moving objects across midline', icon:zi('eye'), desc:'Follows a toy moving from one side of the body to the other with eyes — bilateral visual coordination strengthening.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Turns head toward soft sounds', icon:zi('chat'), desc:'Localises quieter sounds — a rattle in another room, your voice from the kitchen. Auditory mapping refining.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Explores textures with hands and mouth', icon:zi('sparkle'), desc:'Squeezes a soft toy, mouths a wooden ring, pats a textured book. Tactile discrimination building.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
+    { text:'Plays peek-a-boo with interest', icon:zi('face'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Imitates simple sounds back', icon:zi('chat'), desc:'Hears you say "ba" and tries "ba" back — early conversational turn-taking.', advanced:false, domain:'language', source:'unverified' },
   ],
   8: [
     { text:'Pincer grasp developing', icon:zi('baby'), desc:'Begins using thumb and forefinger to pick up small items — a major fine motor milestone.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
@@ -16438,6 +16449,13 @@ const MILESTONE_STANDARDS = {
     { text:'Claps hands', icon:zi('baby'), desc:'Brings palms together intentionally — motor planning + social imitation.', advanced:false, domain:'social', source:'unverified' },
     { text:'Points at objects', icon:zi('baby'), desc:'Uses index finger to point — early communication milestone, usually 8–12 months.', advanced:true, domain:'language', source:'unverified' },
     { text:'Stands momentarily without support', icon:zi('run'), desc:'Lets go of furniture and balances for a few seconds — pre-walking confidence.', advanced:true, domain:'motor', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + language at 8m bracket.
+    { text:'Recognises familiar faces from across the room', icon:zi('eye'), desc:'Lights up when a familiar person walks in — visual recognition + social memory at distance.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Responds to different tones of voice', icon:zi('chat'), desc:'Reacts differently to a soothing voice vs an excited voice — auditory + emotional discrimination.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Pats and pokes textured surfaces with intent', icon:zi('sparkle'), desc:'Investigates rough, smooth, soft, bumpy with deliberate touch. Tactile vocabulary expanding.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Looks for a fallen toy', icon:zi('star'), desc:'Glances down when something drops from her hand — emerging object-permanence + cause-effect.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Babbles long strings of sounds', icon:zi('chat'), desc:'"Bababa", "mamamama", "dadada" extended runs with rhythm and intonation — pre-speech jargon.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Plays interactive games (so big! pat-a-cake)', icon:zi('handshake'), desc:'Joins in with simple back-and-forth games — social engagement + memory.', advanced:false, domain:'social', source:'unverified' },
   ],
   9: [
     { text:'Pincer grasp refined', icon:zi('baby'), desc:'Neat thumb-forefinger grip for picking up small items like puffs and peas.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
@@ -16448,6 +16466,13 @@ const MILESTONE_STANDARDS = {
     { text:'First steps (with support)', icon:zi('run'), desc:'Takes steps while holding hands or pushing a walker — early walking readiness.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Says mama/dada with meaning', icon:zi('chat'), desc:'Uses "mama" for mother and "dada" for father specifically — true first words.', advanced:true, domain:'language', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'"Give me the ball" or "come here" — understands and acts on one-step commands.', advanced:true, domain:'cognitive', source:'unverified' },
+    // 2026-05-27 expansion — sensory + cognitive + social at 9m bracket.
+    { text:'Plays with food textures (squishing, mashing)', icon:zi('bowl'), desc:'Explores food with hands deliberately — squishes banana, mashes rice. Tactile + oral sensory integration.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
+    { text:'Notices subtle sound differences', icon:zi('bell'), desc:'Turns toward a soft click, a distant voice, footsteps. Auditory discrimination refining.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Visually inspects small details', icon:zi('eye'), desc:'Studies a leaf, an ant, a button — close focus on small things signals visual acuity maturing.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Looks at named pictures in a book', icon:zi('book'), desc:'You say "where\'s the dog?" and she looks at the picture. Receptive vocabulary + symbol recognition.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Shows preference for certain toys', icon:zi('heart'), desc:'Reaches for favorites repeatedly, may protest when taken away. Early preference + memory.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Shares interest by looking back and forth', icon:zi('eye'), desc:'Looks at an object, then at you, then back — "joint attention", a key social-cognitive milestone.', advanced:false, domain:'social', source:'unverified' },
   ],
   10: [
     { text:'Stands alone briefly', icon:zi('run'), desc:'Balances without holding anything for several seconds.', advanced:false, domain:'motor', source:'unverified' },
@@ -27368,67 +27393,100 @@ function _msSwipeCardOut(card, cb) {
   }
 }
 
-// Animation: Not-yet drop with spring overshoot — card travels down,
-// overshoots slightly, settles back. Conveys "moved to the bottom" with
-// physical weight. After the spring settles, renderMilestones runs +
-// the card re-renders at the bottom of the stack with .is-deprioritized.
-function _msDropCardDown(card, cb) {
-  if (!card) { if (cb) cb(); return; }
-  if (_msPrefersReducedMotion()) { if (cb) cb(); return; }
-  if (window.Motion && window.Motion.animate && window.Motion.spring) {
-    const controls = window.Motion.animate(card,
-      { y: 32, scale: 0.96, opacity: 0.55 },
-      { easing: window.Motion.spring({ stiffness: 90, damping: 11, mass: 1 }) }
-    );
-    controls.finished.then(() => { if (cb) cb(); }).catch(() => { if (cb) cb(); });
-  } else {
-    card.classList.add('is-sliding-down');
-    let done = false;
-    const finish = () => { if (done) return; done = true; if (cb) cb(); };
-    card.addEventListener('transitionend', finish, { once: true });
-    setTimeout(finish, 460);
-  }
+// Animation: Not-yet drop — replaced by FLIP transition in notYetMsInWindow.
+// The prior spring-physics drop caused visible oscillation (Architect 2026-05-
+// 27 #14: "clicking on it leads to the card jump on its place twice") + the
+// hard repaint jump from original slot to bottom of stack felt non-continuous.
+// FLIP (First-Last-Invert-Play) collapses both visual artifacts: the card
+// transitions continuously from its top position down to the new bottom slot
+// while siblings reflow up in the same gesture. Kept as a no-op fallback
+// signature so any in-flight references degrade gracefully.
+function _msDropCardDown(card, cb) { if (cb) cb(); }
+
+// Post-render settle-in for the deprioritized card — also replaced by FLIP.
+// Kept as a no-op stub; the FLIP opacity tween handles the visual settle.
+function _msSettleDeprioritizedCard() { /* FLIP handles this now */ }
+
+// FLIP helpers (Architect feedback 2026-05-27 #14) ──────────────────────
+// Snapshot the current in-window stack card positions, keyed by ms-id.
+function _msSnapshotInWindowRects() {
+  const out = new Map();
+  const stack = document.getElementById('msInWindowProposals');
+  if (!stack) return out;
+  stack.querySelectorAll('.ms-inwindow-card').forEach(card => {
+    const tapBtn = card.querySelector('[data-ms-id]');
+    if (!tapBtn) return;
+    const id = tapBtn.dataset.msId;
+    if (id) out.set(id, card.getBoundingClientRect());
+  });
+  return out;
 }
 
-// Post-render settle-in for the deprioritized card at its new bottom-of-
-// stack position. Subtle slide-up-from-below + fade-in so the parent sees
-// the card "landing" at the new position rather than just appearing.
-// Targets the LAST .is-deprioritized card in the in-window stack (the
-// one just tapped Not-yet).
-function _msSettleDeprioritizedCard() {
+// FLIP playback: for each card present in the post-render stack, compute the
+// position-delta from its pre-render rect + animate from that delta back to
+// 0. Cards that didn't exist before (new ones) are skipped — they appear
+// in their natural position with no jarring slide. The deprioritized card
+// (Not-yet target) gets an additional opacity tween 1 → 0.65 to mirror the
+// .is-deprioritized CSS opacity, so the visual state-change feels gradual
+// instead of stepping at the end of the slide.
+function _msFLIPCards(beforeRects, opts) {
+  opts = opts || {};
   if (_msPrefersReducedMotion()) return;
   if (!window.Motion || !window.Motion.animate) return;
-  const all = document.querySelectorAll('#msInWindowProposals .ms-inwindow-card.is-deprioritized');
-  if (!all.length) return;
-  const last = all[all.length - 1];
-  window.Motion.animate(last,
-    { y: ['12px', 0], opacity: [0.2, 0.65] },
-    { duration: 0.36, easing: [0.22, 0.61, 0.36, 1] }
-  );
+  const excludeId = opts.excludeId || null;
+  const animateDepriOpacity = !!opts.animateDepriOpacity;
+  const stack = document.getElementById('msInWindowProposals');
+  if (!stack) return;
+  stack.querySelectorAll('.ms-inwindow-card').forEach(card => {
+    const tapBtn = card.querySelector('[data-ms-id]');
+    if (!tapBtn) return;
+    const id = tapBtn.dataset.msId;
+    if (excludeId && id === excludeId) return;
+    const before = beforeRects.get(id);
+    if (!before) return;
+    const after = card.getBoundingClientRect();
+    const dy = before.top - after.top;
+    const dx = before.left - after.left;
+    const isDepriCard = animateDepriOpacity && card.classList.contains('is-deprioritized');
+    if (Math.abs(dy) < 1 && Math.abs(dx) < 1 && !isDepriCard) return;
+    const keyframes = {};
+    if (Math.abs(dy) >= 1) keyframes.y = [dy + 'px', '0px'];
+    if (Math.abs(dx) >= 1) keyframes.x = [dx + 'px', '0px'];
+    // For the just-deprioritized card, tween opacity from full → 0.65 in
+    // sync with the slide so the visual mute happens continuously across
+    // the movement (rather than snapping at the end of the slide).
+    if (isDepriCard) keyframes.opacity = [1, 0.65];
+    window.Motion.animate(card, keyframes,
+      { duration: 0.48, easing: [0.22, 0.61, 0.36, 1] }
+    );
+  });
 }
 
 // Tap handlers — write-side semantics. Engine-internal confidence enum
 // stays in the data layer per V-K-120 + V-K-121 boundary; surface prose
 // uses observation-counts + evidenceStatus value only.
 //
-// New behavior (Architect feedback 2026-05-27 #7 + #10):
-// - Confirm + Practicing: card Tinder-swipes right with rotation +
-//   acceleration (cubic-bezier ease-in), evidence recorded, milestone
-//   hidden from in-window proposals for 24h so the stack makes way for
-//   other options.
-// - Not yet: card drops down with spring physics overshoot, gets pushed
-//   to the bottom of the stack with a subtle "settle in" animation at
-//   its new position. No 7-day hide.
+// New behavior (Architect feedback 2026-05-27 #7 + #10 + #14):
+// - Confirm + Practicing: tapped card Tinder-swipes right with rotation +
+//   acceleration; siblings FLIP-reflow up to fill the gap in parallel.
+//   Evidence recorded, milestone hidden from in-window proposals for 24h.
+// - Not yet: card transitions continuously from original position to the
+//   new bottom-of-stack slot via FLIP (no spring oscillation, no repaint
+//   jump). Opacity tweens to deprioritized 0.65 in sync with the slide.
+//   Siblings slide up to fill the original gap.
 function confirmMsInWindow(target) {
   if (!target || !target.dataset) return;
   const msId = target.dataset.msId;
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
   const card = target.closest && target.closest('.ms-inwindow-card');
+  const beforeRects = _msSnapshotInWindowRects();
   _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'high', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
+    // FLIP siblings — exclude the swiped-out card (it's gone from DOM)
+    _msFLIPCards(beforeRects, { excludeId: msId });
   });
 }
 
@@ -27438,32 +27496,26 @@ function practicingMsInWindow(target) {
   const msText = target.dataset.msText;
   const msDomain = target.dataset.msDomain;
   const card = target.closest && target.closest('.ms-inwindow-card');
+  const beforeRects = _msSnapshotInWindowRects();
   _msSwipeCardOut(card, () => {
     _msRecordEvidence(msId, 'medium', msText, msDomain);
     _msHideForADay(msId);
     renderMilestones();
+    _msFLIPCards(beforeRects, { excludeId: msId });
   });
 }
 
 function notYetMsInWindow(target) {
   const msId = target && target.dataset && target.dataset.msId;
   if (!msId) return;
-  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. _msNotYetSession
-  // is consulted by renderMsInWindowProposals to reorder deprioritized
-  // cards to the end of the stack. Card animates DOWN then re-renders at
-  // the bottom. milestoneSuppress is NOT touched — that key now signals
-  // only the 24h post-Confirm/Practicing hide.
+  // V-V-57 / V-M-103 amendment: push to bottom, don't hide. FLIP makes the
+  // transition continuous — card slides from its current position to the
+  // new bottom slot in one gesture, siblings reflow up to fill the gap.
+  // No spring oscillation; no hard repaint jump.
+  const beforeRects = _msSnapshotInWindowRects();
   _msNotYetSession[msId] = Date.now();
-  const card = target.closest && target.closest('.ms-inwindow-card');
-  _msDropCardDown(card, () => {
-    renderMilestones();
-    // requestAnimationFrame so layout settles before the settle-in tween.
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(_msSettleDeprioritizedCard);
-    } else {
-      _msSettleDeprioritizedCard();
-    }
-  });
+  renderMilestones();
+  _msFLIPCards(beforeRects, { animateDepriOpacity: true });
 }
 
 // 24h hide write via the existing milestoneSuppress sync-aware path. The
@@ -28569,10 +28621,30 @@ function deleteMilestone(i) {
   // of which × button was clicked. Now data-arg is the bare index string.
   const idx = typeof i === 'number' ? i : parseInt(i, 10);
   if (!Number.isInteger(idx) || idx < 0 || idx >= milestones.length) return;
+  // Capture the deleted milestone's id BEFORE splice so we can clear
+  // related state (suppress + deprioritize) that referenced it.
+  // Architect bug-report 2026-05-27 #12: "deleting from history is not
+  // bringing it back to the queue". Root cause — milestoneSuppress[id]
+  // still carried the 24h post-Confirm/Practicing hide timestamp, so the
+  // in-window engine kept skipping the row even after the milestone row
+  // itself was removed. Same for the session-local _msNotYetSession
+  // deprioritize map. Clear both on delete so the proposal returns
+  // immediately to the queue.
+  const deleted = milestones[idx];
+  const deletedId = deleted && deleted.id;
   const expandedMsCats = [];
   document.querySelectorAll('.ms-cat-items.open').forEach(el => expandedMsCats.push(el.id));
   milestones.splice(idx, 1);
   save(KEYS.milestones, milestones);
+  if (deletedId) {
+    if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null && deletedId in milestoneSuppress) {
+      delete milestoneSuppress[deletedId];
+      save(KEYS.milestoneSuppress, milestoneSuppress);
+    }
+    if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null && deletedId in _msNotYetSession) {
+      delete _msNotYetSession[deletedId];
+    }
+  }
   renderMilestones();
   renderUpcomingMilestones();
   expandedMsCats.forEach(id => {
@@ -29022,9 +29094,37 @@ function deleteActivityEntry(dateStr, entryId) {
   confirmAction('Delete this entry? Milestone evidence will be recomputed.', () => {
     const idx = activityLog[dateStr].findIndex(e => e && e.id === entryId);
     if (idx < 0) return;
+    // Capture the entry BEFORE splice so we can derive the milestone slug
+    // (for milestones-tab-v1 taps) and clear the related hide/deprioritize
+    // state — otherwise the milestone stays hidden from in-window proposals
+    // for the full 24h post-tap window even after the parent deletes the
+    // evidence. Architect bug-report 2026-05-27 #13: "deletion will happen
+    // in the same tab under recent activity evidence, once it is deleted
+    // from there it ideally should be back on the queue."
+    const removed = activityLog[dateStr][idx];
     activityLog[dateStr].splice(idx, 1);
     if (activityLog[dateStr].length === 0) delete activityLog[dateStr];
     save(KEYS.activityLog, activityLog);
+    // If the deleted entry was a milestones-tab-v1 Confirm/Practicing tap,
+    // clear the corresponding milestoneSuppress[slug] 24h-hide entry +
+    // _msNotYetSession[slug] deprioritize entry. milestoneSuppress is keyed
+    // by slugify(MILESTONE_STANDARDS row.text) (core.js:6046); the entry
+    // text field stores that same row text, so slugify-on-text round-trips.
+    if (removed && removed.source === 'milestones-tab-v1-tap' && removed.text
+        && typeof slugify === 'function') {
+      const slug = slugify(removed.text);
+      if (slug) {
+        if (typeof milestoneSuppress === 'object' && milestoneSuppress !== null
+            && slug in milestoneSuppress) {
+          delete milestoneSuppress[slug];
+          save(KEYS.milestoneSuppress, milestoneSuppress);
+        }
+        if (typeof _msNotYetSession === 'object' && _msNotYetSession !== null
+            && slug in _msNotYetSession) {
+          delete _msNotYetSession[slug];
+        }
+      }
+    }
     if (typeof syncMilestoneStatuses === 'function') syncMilestoneStatuses();
     if (typeof renderMilestones === 'function') renderMilestones();
     if (typeof renderHomeActivity === 'function') renderHomeActivity();
