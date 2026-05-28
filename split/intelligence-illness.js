@@ -2416,13 +2416,12 @@ function openQuickModal(type) {
     document.querySelectorAll('.ql-meal-pill').forEach(p => {
       p.classList.toggle('active', p.dataset.meal === _qlMeal);
     });
-    document.getElementById('qlFeedInput').value = '';
     const qlTimeEl = document.getElementById('qlFeedTime');
     if (qlTimeEl) qlTimeEl.value = '';
-    const qlDD = document.getElementById('qlFeedDropdown');
-    if (qlDD) qlDD.classList.remove('open');
-    renderQLSameAsPills();
-    renderQLFreqPills();
+    // F-2: reset items list state + render the four autofill regions
+    // (L1 repeat / L2 combo / items list / L3 next-item ribbon).
+    if (typeof _qlFeedReset === 'function') _qlFeedReset();
+    if (typeof _qlRenderFeedSheet === 'function') _qlRenderFeedSheet();
     // Reset intake pills to default (Most)
     _miWireQLIntakePills();
     // Hide backfill UI unless in backfill mode

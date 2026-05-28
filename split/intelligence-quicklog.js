@@ -1688,6 +1688,8 @@ function qaAnswerFavoriteFoods() {
 function setQLMeal(meal) {
   _qlMeal = meal;
   document.querySelectorAll('.ql-meal-pill').forEach(p => p.classList.toggle('active', p.dataset.meal === meal));
+  // F-2: refresh autofill regions on meal change — repeats + combos differ per slot.
+  if (typeof _qlRenderFeedSheet === 'function') _qlRenderFeedSheet();
 }
 
 function adjQLWake(delta) {
@@ -1736,32 +1738,339 @@ function undoLastQL() {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// F-2 — FOB Feed sheet render + handlers
+// Spec: docs/specs/food-sub-tab-v1.md §F-2
+// State: _qlFeedItems is the current items array being built. Stays in
+// sync with the rendered Items list via _qlRenderItemsList. Save writes
+// structured shape via _fdWriteStructuredMeal (data.js).
+// ═══════════════════════════════════════════════════════════════
+
+var _qlFeedItems = [];
+var _qlFeedSourceFlow = 'fob-feed';  // 'fob-repeat' | 'fob-combo' | 'fob-novel' | 'fob-feed'
+
+function _qlFeedReset() {
+  _qlFeedItems = [];
+  _qlFeedSourceFlow = 'fob-feed';
+  var inp = document.getElementById('qlFeedInput');
+  if (inp) inp.value = '';
+  var dd = document.getElementById('qlFeedDropdown');
+  if (dd) { dd.innerHTML = ''; dd.classList.remove('open'); }
+}
+
+// Render all dynamic regions of the FOB Feed sheet. Called on open + after
+// every state change (item add/remove/qty adjust, meal slot change).
+function _qlRenderFeedSheet() {
+  _qlRenderRepeatRail();
+  _qlRenderCombosRail();
+  _qlRenderItemsList();
+  _qlRenderNextItemRibbon();
+}
+
+// L1 — Repeat rail. Surfaces yesterday's/recent matching-slot meals as
+// one-tap apply chips. For dinner, "Same as today's lunch" leads if logged.
+function _qlRenderRepeatRail() {
+  var wrap = document.getElementById('qlFeedRepeatWrap');
+  var rail = document.getElementById('qlFeedRepeatRail');
+  if (!wrap || !rail) return;
+  var candidates = window._fdGetRepeatCandidates(_qlMeal, 3);
+  if (!candidates || candidates.length === 0) {
+    wrap.style.display = 'none';
+    rail.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  rail.innerHTML = candidates.map(function(c, i) {
+    return '<div class="ql-feed-repeat-chip' + (i === 0 ? ' primary' : '') + '"' +
+           ' data-action="qlFeedApplyRepeat" data-arg="' + escAttr(c.id) + '">' +
+           '<div class="ql-feed-repeat-head">' +
+             '<svg class="zi"><use href="#zi-rainbow"/></svg> ' + escHtml(c.label) +
+           '</div>' +
+           '<div class="ql-feed-repeat-sub">' + escHtml(c.itemsText) + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+// L2 — Combo template rail. Hidden once items present (parent has
+// committed to building manually; offering full-replace combos would
+// confuse). Shows rolling-14d top combos OR curated cold-start fallback.
+function _qlRenderCombosRail() {
+  var wrap = document.getElementById('qlFeedCombosWrap');
+  var rail = document.getElementById('qlFeedCombosRail');
+  var label = document.getElementById('qlFeedCombosLabel');
+  if (!wrap || !rail) return;
+  if (_qlFeedItems.length > 0) {
+    wrap.style.display = 'none';
+    rail.innerHTML = '';
+    return;
+  }
+  var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 3 });
+  if (!combos || combos.length === 0) {
+    wrap.style.display = 'none';
+    rail.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  if (label) {
+    label.textContent = combos[0].source === 'curated'
+      ? 'Suggested combos'
+      : 'Your usual ' + _qlMeal;
+  }
+  rail.innerHTML = combos.map(function(c) {
+    var freq = c.freq ? '<span class="ql-feed-combo-conf">' + c.freq + '×</span>' : '';
+    return '<div class="ql-feed-combo-chip" data-action="qlFeedApplyCombo" data-arg="' + escAttr(c.id) + '">' +
+           '<div class="ql-feed-combo-head">' +
+             '<svg class="zi"><use href="#zi-bowl"/></svg> ' + escHtml(c.label) + freq +
+           '</div>' +
+           '<div class="ql-feed-combo-sub">' + escHtml(c.itemsText) + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+// Items list — current meal items with qty stepper + remove.
+function _qlRenderItemsList() {
+  var list = document.getElementById('qlFeedItemsList');
+  if (!list) return;
+  if (_qlFeedItems.length === 0) {
+    list.innerHTML = '<div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>';
+    return;
+  }
+  list.innerHTML = _qlFeedItems.map(function(item, idx) {
+    var initial = (item.name || '?').charAt(0).toUpperCase();
+    var qtyDisplay = _qlFormatQty(item.qty);
+    return '<div class="ql-feed-item-row">' +
+           '<span class="ql-feed-item-icon">' + escHtml(initial) + '</span>' +
+           '<div class="ql-feed-item-name">' + escHtml(item.name) +
+             '<span class="ql-feed-item-meta">' + escHtml(item.source || 'manual') + '</span>' +
+           '</div>' +
+           '<div class="ql-feed-qty-stepper">' +
+             '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="dec" type="button" aria-label="Decrease quantity">−</button>' +
+             '<span class="ql-feed-qty-val">' + qtyDisplay +
+               '<span class="ql-feed-qty-unit"> ' + escHtml(item.unit || '') + '</span>' +
+             '</span>' +
+             '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="inc" type="button" aria-label="Increase quantity">+</button>' +
+           '</div>' +
+           '<button class="ql-feed-item-x" data-action="qlFeedRemoveItem" data-arg="' + idx + '" type="button" aria-label="Remove ' + escAttr(item.name) + '">×</button>' +
+           '</div>';
+  }).join('');
+}
+
+// Format qty as a unicode vulgar fraction when possible (¼ ½ ¾) plus
+// mixed numbers (1¼, 1½, 2¾). Outside the common set, falls back to
+// decimal with 2dp rounding.
+function _qlFormatQty(q) {
+  if (typeof q !== 'number' || isNaN(q)) return '1';
+  if (q === 0.25) return '¼';
+  if (q === 0.5)  return '½';
+  if (q === 0.75) return '¾';
+  var whole = Math.floor(q);
+  var frac = Math.round((q - whole) * 100) / 100;
+  if (frac === 0) return String(whole);
+  if (frac === 0.25) return whole + '¼';
+  if (frac === 0.5)  return whole + '½';
+  if (frac === 0.75) return whole + '¾';
+  return (Math.round(q * 100) / 100).toString();
+}
+
+// L3 — Next-item ribbon. Only appears after first item added. Confidence
+// % surfaced per chip (CV3-006 Honesty axis: parent sees WHY suggested).
+function _qlRenderNextItemRibbon() {
+  var wrap = document.getElementById('qlFeedNextWrap');
+  var ribbon = document.getElementById('qlFeedNextRibbon');
+  var label = document.getElementById('qlFeedNextLabel');
+  if (!wrap || !ribbon) return;
+  if (_qlFeedItems.length === 0) {
+    wrap.style.display = 'none';
+    ribbon.innerHTML = '';
+    return;
+  }
+  var predictions = window._fdGetNextItemPredictions(_qlFeedItems, _qlMeal, 4);
+  if (!predictions || predictions.length === 0) {
+    wrap.style.display = 'none';
+    ribbon.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  if (label) {
+    var anchorName = _qlFeedItems[_qlFeedItems.length - 1].name;
+    label.textContent = _qlFeedItems.length === 1
+      ? 'You usually add (with ' + anchorName + ')'
+      : 'You usually add';
+  }
+  ribbon.innerHTML = predictions.map(function(p) {
+    return '<button class="ql-feed-next-chip" data-action="qlFeedAddItem"' +
+           ' data-arg="' + escAttr(p.name) + '" data-arg2="next" type="button">' +
+           '+ ' + escHtml(p.name) +
+           '<span class="ql-feed-next-conf">' + p.confidence + '%</span>' +
+           '</button>';
+  }).join('');
+}
+
+// ── F-2 handlers ──
+
+function qlFeedApplyRepeat(id) {
+  var cands = window._fdGetRepeatCandidates(_qlMeal, 6);
+  var found = cands.find(function(c) { return c.id === id; });
+  if (!found) return;
+  _qlFeedItems = found.items.slice().map(function(it) { return Object.assign({}, it); });
+  _qlFeedSourceFlow = 'fob-repeat';
+  _qlRenderFeedSheet();
+}
+
+function qlFeedApplyCombo(id) {
+  var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 6 });
+  var found = combos.find(function(c) { return c.id === id; });
+  if (!found) return;
+  _qlFeedItems = found.items.slice().map(function(it) { return Object.assign({}, it); });
+  _qlFeedSourceFlow = 'fob-combo';
+  _qlRenderFeedSheet();
+}
+
+function qlFeedAddItem(name, source) {
+  if (!name) return;
+  var defaults = window._fdResolveQtyDefaults(name);
+  _qlFeedItems.push({
+    name: name,
+    qty: defaults.qty,
+    unit: defaults.unit,
+    nutritionRef: String(name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim(),
+    source: source || 'manual',
+  });
+  if (source === 'next' || source === 'typeahead') {
+    if (_qlFeedSourceFlow === 'fob-feed') _qlFeedSourceFlow = 'fob-novel';
+  }
+  // Clear typeahead input + dropdown
+  var inp = document.getElementById('qlFeedInput');
+  if (inp) inp.value = '';
+  var dd = document.getElementById('qlFeedDropdown');
+  if (dd) { dd.innerHTML = ''; dd.classList.remove('open'); }
+  _qlRenderFeedSheet();
+}
+
+function qlFeedAdjustQty(idxStr, dir) {
+  var idx = parseInt(idxStr, 10);
+  if (isNaN(idx) || !_qlFeedItems[idx]) return;
+  var item = _qlFeedItems[idx];
+  var defaults = window._fdResolveQtyDefaults(item.name);
+  var step = defaults.step || 0.25;
+  var delta = (dir === 'inc') ? step : -step;
+  var newQty = item.qty + delta;
+  if (newQty <= 0) return;  // don't allow zero — use × to remove
+  item.qty = Math.round(newQty * 100) / 100;
+  _qlRenderItemsList();
+}
+
+function qlFeedRemoveItem(idxStr) {
+  var idx = parseInt(idxStr, 10);
+  if (isNaN(idx) || !_qlFeedItems[idx]) return;
+  _qlFeedItems.splice(idx, 1);
+  _qlRenderFeedSheet();
+}
+
+function qlFeedTypeaheadInput() {
+  var inp = document.getElementById('qlFeedInput');
+  if (!inp) return;
+  var q = inp.value.trim();
+  var dd = document.getElementById('qlFeedDropdown');
+  if (!dd) return;
+  if (q.length < 1) {
+    dd.classList.remove('open');
+    dd.innerHTML = '';
+    return;
+  }
+  var matches = window._fdSearchNutrition(q, { max: 8 });
+  if (matches.length === 0) {
+    dd.innerHTML = '<div class="meal-dropdown-empty">No match. Press Enter to add as new food.</div>';
+    dd.classList.add('open');
+    return;
+  }
+  dd.innerHTML = matches.map(function(m) {
+    return '<div class="meal-dropdown-row ql-feed-ta-row"' +
+           ' data-action="qlFeedAddItem" data-arg="' + escAttr(m.name) + '" data-arg2="typeahead">' +
+           '<span class="ql-feed-ta-name">' + escHtml(m.name) + '</span>' +
+           '<span class="ql-feed-ta-meta">' + escHtml(m.source) + ' · ' +
+             _qlFormatQty(m.qty) + ' ' + escHtml(m.unit) +
+           '</span>' +
+           '</div>';
+  }).join('');
+  dd.classList.add('open');
+}
+
+function qlFeedSkipMeal() {
+  var dateStr = _qlBackfillDate || today();
+  if (!_qlMeal) return;
+  // Capture prev value for undo
+  var fd = load(KEYS.feeding, {}) || {};
+  var prevVal = fd[dateStr] ? fd[dateStr][_qlMeal] : '';
+  window._fdMarkMealSkipped(dateStr, _qlMeal);
+  var meal = _qlMeal;
+  var undoFn = function() {
+    var f = load(KEYS.feeding, {}) || {};
+    if (f[dateStr]) { f[dateStr][meal] = prevVal || ''; save(KEYS.feeding, f); feedingData = f; }
+    if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
+    var curTab2 = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+    if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
+    if (curTab2 === 'home') renderHome();
+  };
+  closeQuickLogAll();
+  showQLToast(capitalize(meal) + ' marked as skipped', 4000, undoFn);
+  var curTab = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+  if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
+  if (curTab === 'home') renderHome();
+}
+
 // ── Quick Log Save Functions ──
 
 function saveQLFeed() {
-  const food = document.getElementById('qlFeedInput').value.trim();
-  if (!food) { document.getElementById('qlFeedInput').focus(); return; }
   const dateStr = _qlBackfillDate || today();
 
-  // Load feeding data and merge into the correct day
-  const feeding = load(KEYS.feeding, {}) || {};
-  if (!feeding[dateStr]) feeding[dateStr] = { breakfast:'', lunch:'', dinner:'', snack:'' };
-  const day = feeding[dateStr];
+  // F-2: Fold any unsubmitted typed text in qlFeedInput as a final item
+  // (covers the "typed without picking typeahead → pressed Save" case).
+  // Comma-split for parents who paste a multi-item line.
+  const typedRaw = (document.getElementById('qlFeedInput')?.value || '').trim();
+  if (typedRaw) {
+    typedRaw.split(',').map(function(s) { return s.trim(); }).filter(Boolean).forEach(function(nm) {
+      const defaults = window._fdResolveQtyDefaults(nm);
+      _qlFeedItems.push({
+        name: nm,
+        qty: defaults.qty,
+        unit: defaults.unit,
+        nutritionRef: String(nm).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim(),
+        source: 'typed',
+      });
+    });
+    if (_qlFeedSourceFlow === 'fob-feed') _qlFeedSourceFlow = 'fob-novel';
+    document.getElementById('qlFeedInput').value = '';
+  }
+
+  // Guard: must have at least one item to save.
+  if (_qlFeedItems.length === 0) {
+    document.getElementById('qlFeedInput')?.focus();
+    return;
+  }
 
   // Capture prev value for undo BEFORE mutation
+  const feedingPrev = load(KEYS.feeding, {}) || {};
   const undoMealKey = _qlMeal;
-  const prevMealValue = day[undoMealKey] || '';
+  const prevMealValue = (feedingPrev[dateStr] && feedingPrev[dateStr][undoMealKey]) || '';
 
-  day[_qlMeal] = day[_qlMeal] ? day[_qlMeal] + ', ' + food : food;
-  // Save meal time if entered
-  const qlTime = document.getElementById('qlFeedTime')?.value;
-  if (qlTime) day[_qlMeal + '_time'] = qlTime;
-  // Save intake level from QL pills
-  if (_qlSelectedIntake && _qlMeal !== 'snack') {
-    day[_qlMeal + '_intake'] = _qlSelectedIntake;
-  }
-  save(KEYS.feeding, feeding);
-  feedingData = feeding;
+  // Build the structured payload + write via the canonical F-2 writer.
+  const qlTime = (document.getElementById('qlFeedTime')?.value) || null;
+  const overallIntake = (typeof _qlSelectedIntake === 'number' && _qlSelectedIntake > 0)
+    ? _qlSelectedIntake
+    : 0.75;  // ratified default "Most"
+  const payload = {
+    items: _qlFeedItems.slice(),
+    time: qlTime,
+    overallIntake: overallIntake,
+    sourceFlow: _qlFeedSourceFlow,
+  };
+  window._fdWriteStructuredMeal(dateStr, _qlMeal, payload);
+
+  // Build legacy `food` string for downstream callers (toast nutrient flash,
+  // autoIntroduceFoodsFromDay, _qlFeedInsight). Comma-joined item names.
+  const food = _qlFeedItems.map(function(it) { return it.name; }).join(', ');
+
   _tsfMarkDirty();
 
   _islMarkDirty('diet');

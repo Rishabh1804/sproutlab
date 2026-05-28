@@ -6739,6 +6739,255 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ql-save-nap   { background:linear-gradient(135deg, #7e66b4, #7060a8); }
 .ql-save-poop  { background:linear-gradient(135deg, #8a6520, #946225); }
 
+/* ═══════════════════════════════════════════════════════════════
+   F-2 — FOB Feed sheet (autofill-first redesign)
+   Spec: docs/specs/food-sub-tab-v1.md §F-2
+   Four rail surfaces (L1 repeat / L2 combo / items / L3 next-item)
+   + per-food qty steppers + skip-meal button. Tokens-only per HR-4.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Rail wrapper — same vertical rhythm as other ql-form sections */
+.ql-feed-rail-wrap { display:flex; flex-direction:column; gap:var(--sp-4); }
+.ql-feed-rail { display:flex; flex-direction:column; gap:var(--sp-6); }
+
+/* L1 Repeat chips — sage outlined; primary chip emphasized */
+.ql-feed-repeat-chip {
+  background:var(--white);
+  border:1.5px solid var(--sage);
+  border-radius:var(--r-xl);
+  padding:var(--sp-10) var(--sp-12);
+  cursor:pointer;
+  min-height:36px;
+  transition:transform var(--ease-fast), background-color var(--ease-fast);
+  box-shadow:0 1px 3px rgba(60,40,40,0.04);
+}
+.ql-feed-repeat-chip:active { transform:scale(0.985); }
+.ql-feed-repeat-chip.primary {
+  background:var(--sage-light);
+  border-width:2px;
+}
+.ql-feed-repeat-head {
+  display:flex; align-items:center; gap:var(--sp-6);
+  font-weight:700; color:var(--tc-sage);
+  font-size:var(--fs-sm);
+}
+.ql-feed-repeat-head .zi { width:var(--icon-base); height:var(--icon-base); }
+.ql-feed-repeat-sub {
+  font-size:var(--fs-xs);
+  color:var(--mid);
+  margin-top:var(--sp-4);
+  font-weight:500;
+  line-height:var(--lh-snug);
+}
+
+/* L2 Combo chips — lavender outlined; freq badge inline */
+.ql-feed-combo-chip {
+  background:var(--lav-light);
+  border:1.5px solid var(--lavender);
+  border-radius:var(--r-xl);
+  padding:var(--sp-10) var(--sp-12);
+  cursor:pointer;
+  min-height:36px;
+  transition:transform var(--ease-fast);
+}
+.ql-feed-combo-chip:active { transform:scale(0.985); }
+.ql-feed-combo-head {
+  display:flex; align-items:center; gap:var(--sp-6);
+  font-weight:700; color:var(--tc-lav);
+  font-size:var(--fs-sm);
+}
+.ql-feed-combo-head .zi { width:var(--icon-base); height:var(--icon-base); }
+.ql-feed-combo-conf {
+  margin-left:auto;
+  font-size:var(--fs-2xs);
+  background:var(--lavender); color:var(--text);
+  padding:var(--sp-2) var(--sp-6);
+  border-radius:var(--r-full);
+  font-weight:700;
+}
+.ql-feed-combo-sub {
+  font-size:var(--fs-xs);
+  color:var(--mid);
+  margin-top:var(--sp-4);
+  font-weight:500;
+  line-height:var(--lh-snug);
+}
+
+/* Items list — current meal being built */
+.ql-feed-items-list {
+  background:var(--white);
+  border:1px solid #ece4dd;
+  border-radius:var(--r-xl);
+  overflow:hidden;
+}
+.ql-feed-items-empty {
+  text-align:center;
+  color:var(--light);
+  padding:var(--sp-16);
+  font-style:italic;
+  font-size:var(--fs-sm);
+}
+.ql-feed-item-row {
+  display:flex; align-items:center; gap:var(--sp-8);
+  padding:var(--sp-8) var(--sp-10);
+  border-bottom:1px solid #f4ece6;
+  min-height:48px;
+}
+.ql-feed-item-row:last-of-type { border-bottom:none; }
+.ql-feed-item-icon {
+  width:28px; height:28px;
+  background:var(--sage-light); color:var(--tc-sage);
+  border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:var(--fs-sm); font-weight:700;
+  flex-shrink:0;
+}
+.ql-feed-item-name {
+  flex:1; font-weight:600; font-size:var(--fs-base);
+  display:flex; flex-direction:column;
+  line-height:var(--lh-snug);
+}
+.ql-feed-item-meta {
+  font-size:var(--fs-2xs);
+  color:var(--light);
+  text-transform:uppercase;
+  letter-spacing:var(--ls-wide);
+  font-weight:500;
+  margin-top:var(--sp-2);
+}
+.ql-feed-item-x {
+  width:32px; height:32px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:var(--r-full);
+  background:var(--rose-light); color:var(--tc-rose);
+  font-weight:700; font-size:var(--fs-md);
+  border:none; cursor:pointer;
+  flex-shrink:0;
+  margin-left:var(--sp-2);
+  transition:transform var(--ease-fast);
+}
+.ql-feed-item-x:active { transform:scale(0.9); }
+
+/* Per-food quantity stepper — [− qty unit +] */
+.ql-feed-qty-stepper {
+  display:inline-flex; align-items:center;
+  background:var(--warm);
+  border-radius:var(--r-full);
+  padding:var(--sp-2);
+  flex-shrink:0;
+}
+.ql-feed-qty-step {
+  width:32px; height:32px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:var(--r-full);
+  background:var(--white); color:var(--tc-sage);
+  font-weight:700; font-size:var(--fs-base);
+  border:1px solid #ece4dd;
+  cursor:pointer;
+  font-family:'Nunito', sans-serif;
+  transition:transform var(--ease-fast);
+}
+.ql-feed-qty-step:active { transform:scale(0.92); background:var(--sage-light); }
+.ql-feed-qty-val {
+  padding:0 var(--sp-8);
+  font-weight:700;
+  min-width:52px; text-align:center;
+  font-size:var(--fs-sm);
+  color:var(--text);
+}
+.ql-feed-qty-unit {
+  font-size:var(--fs-2xs);
+  color:var(--mid);
+  letter-spacing:0;
+  font-weight:500;
+}
+
+/* L3 Next-item ribbon — horizontal scroll; confidence % per chip */
+.ql-feed-next-ribbon {
+  display:flex; gap:var(--sp-6);
+  overflow-x:auto;
+  padding:var(--sp-4) 0;
+  -webkit-overflow-scrolling:touch;
+}
+.ql-feed-next-chip {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  background:var(--sage-light);
+  color:var(--tc-sage);
+  font-weight:700; font-size:var(--fs-sm);
+  padding:var(--sp-6) var(--sp-12);
+  border-radius:var(--r-full);
+  border:1px solid var(--sage);
+  flex-shrink:0;
+  min-height:36px;
+  cursor:pointer;
+  font-family:'Nunito', sans-serif;
+  transition:transform var(--ease-fast);
+}
+.ql-feed-next-chip:active { transform:scale(0.94); }
+.ql-feed-next-conf {
+  font-size:9px;
+  background:var(--white); color:var(--tc-sage);
+  border-radius:var(--r-full);
+  padding:1px var(--sp-6);
+  margin-left:var(--sp-2);
+  font-weight:700;
+  letter-spacing:0;
+}
+
+/* L4 Typeahead dropdown rows — qty hint inlined */
+.ql-feed-ta-row {
+  display:flex; align-items:center; gap:var(--sp-8);
+  padding:var(--sp-8) var(--sp-10);
+  border-bottom:1px solid #f4ece6;
+  cursor:pointer;
+  min-height:36px;
+}
+.ql-feed-ta-row:last-of-type { border-bottom:none; }
+.ql-feed-ta-row:active { background:var(--sage-light); }
+.ql-feed-ta-name {
+  flex:1;
+  font-weight:600; font-size:var(--fs-base);
+  color:var(--text);
+}
+.ql-feed-ta-meta {
+  font-size:var(--fs-2xs);
+  color:var(--mid);
+  text-transform:uppercase;
+  letter-spacing:var(--ls-wide);
+  font-weight:500;
+}
+
+/* Skip meal button — neutral chrome; pairs visually with Save Feed */
+.ql-save-skip {
+  background:var(--warm);
+  color:var(--mid);
+  border:1.5px solid #d8ccc4;
+  border-radius:var(--r-full);
+  padding:var(--sp-10) var(--sp-16);
+  font-weight:600; font-size:var(--fs-sm);
+  font-family:'Nunito', sans-serif;
+  cursor:pointer;
+  min-height:44px;
+  transition:transform var(--ease-fast), background-color var(--ease-fast);
+}
+.ql-save-skip:active { transform:scale(0.97); background:#f0e8e0; }
+.ql-save-skip:hover { background:#f8f0e8; }
+
+/* Dark mode — preserve domain identity; deepen backgrounds */
+[data-theme="dark"] .ql-feed-repeat-chip { background:var(--surface-alt); border-color:var(--tc-sage); }
+[data-theme="dark"] .ql-feed-repeat-chip.primary { background:#1e3028; }
+[data-theme="dark"] .ql-feed-repeat-head { color:#7ac0a0; }
+[data-theme="dark"] .ql-feed-combo-chip { background:#2a2240; border-color:var(--tc-lav); }
+[data-theme="dark"] .ql-feed-combo-head { color:#b8a8e0; }
+[data-theme="dark"] .ql-feed-combo-conf { background:var(--lavender); color:var(--text); }
+[data-theme="dark"] .ql-feed-items-list { background:var(--surface); border-color:#3a2e3e; }
+[data-theme="dark"] .ql-feed-item-row { border-bottom-color:#3a2e3e; }
+[data-theme="dark"] .ql-feed-qty-stepper { background:#221c28; }
+[data-theme="dark"] .ql-feed-qty-step { background:var(--surface); border-color:#3a2e3e; color:#7ac0a0; }
+[data-theme="dark"] .ql-feed-next-chip { background:#1e3028; color:#7ac0a0; border-color:var(--tc-sage); }
+[data-theme="dark"] .ql-feed-next-conf { background:var(--surface); color:#7ac0a0; }
+[data-theme="dark"] .ql-save-skip { background:#221c28; color:var(--mid); border-color:#3a2e3e; }
+
 /* ── Quick Log Toast ── */
 .ql-toast {
   position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
