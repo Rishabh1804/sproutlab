@@ -27,6 +27,16 @@
 
 ## Ratification record (Architect carry-forward + Option C re-author)
 
+> **IMPL doctrine amendments — Architect overrides 2026-05-28 PM session** (PRs #159-#164). The spec body text below preserves the original v1 ratification language; the following four IMPL-doctrine deltas supersede specific spec lines as noted. Full body amendments queued for v1.1 spec revision; see `docs/SESSION_HANDOFF_2026-05-28_PM.md` §Doctrine amendments queued for spec body v1.1.
+>
+> 1. **V-V-49 REBATED — 3-state state-lanes** replaces the "2 visual states (filled/outlined)" collapse. Three distinct visual states (celebrated sage filled / practicing amber donut / coming-up lavender dashed outline) on a state-lane horizontal layout (top→bottom y=18/44/70 px) with collision-aware lateral spacing per lane. Reason: live use showed merged hedged-bucket "Practicing or in-window" smashed two journey-states + identical lavender swatches at 12px. Spec body §"Trajectory ribbon" L275-279 reads pre-override.
+>
+> 2. **V-V-57 + V-M-103 DEPRECATED — push-to-bottom + 24h hide** replaces the 7-day Not-yet suppress + 5-second undo toast. Not-yet now writes to a session-local `_msNotYetSession` map that reorders the card to the bottom of the in-window stack (still visible, deprioritized via `.is-deprioritized` muted-bg + opacity 0.65). Confirm/Practicing now write `milestoneSuppress[id] = now + 24h` (24h post-tap hide instead of 7-day). Spec body §"Tap behaviors" L134 + §"Test plan" L344 (guard names `inwindow-not-yet-suppress` / `inwindow-not-yet-undo-toast`) read pre-override.
+>
+> 3. **Motion One adopted as app-wide animation foundation** (PR #162 + #163). UMD via deferred CDN (`window.Motion` global with `animate` / `spring` / `timeline` / `stagger` / `inView`). Opt-in-with-fallback pattern at every call site; reduced-motion respect via `matchMedia`. FLIP technique for list-reorder via `_msSnapshotInWindowRects` + `_msFLIPCards` helpers. Documented in `docs/DESIGN_PRINCIPLES.md` §Animation Foundation.
+>
+> 4. **HR-2 carve-out — trajectory marker `currentColor` pass-through.** Inline `style="color:..."` on `.ms-trajectory-marker` propagates the ACTIVITY_CATEGORIES domain accent via CSS `currentColor`. Mirrors the v3-6 `_setCardPriority` `// collapse-machinery-mirror` carve-out precedent. Annotated `// motion-currentcolor-carveout` at the inline-style site.
+
 Original `milestones-tab-v1` ratification (10 scope questions + co-primary axes + PRECEDES-R-6) **carries forward unchanged**. Option C re-author adds substrate-grounded resolutions for the design conflicts the closed PR #147 chain surfaced.
 
 | # | Question | Ratified answer | Re-author resolution |

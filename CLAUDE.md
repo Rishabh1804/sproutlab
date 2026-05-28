@@ -151,7 +151,10 @@ separate file, never `2>&1`). Then validate: `head -1 out.html` must equal
 
 **NEVER use raw cat.** Always `pnpm build` (or `build.sh` via the wrapper).
 The split-file build is NOT a simple concatenation — it injects DOCTYPE,
-style tags, script tags, and Chart.js CDN link.
+style tags, script tags, and two CDN scripts in fixed order: **Chart.js**
+(chart rendering, blocking) then **Motion One** (`defer`, so chart
+cold-start takes priority). Motion One v10.18.0 UMD via
+`dist/motion.min.js` — see `docs/DESIGN_PRINCIPLES.md` §Animation Foundation.
 
 ## Hard Rules (HR-1 through HR-12)
 

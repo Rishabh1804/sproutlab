@@ -146,6 +146,31 @@ These tokens replace ad-hoc hex literals that were duplicated across multiple co
 
 **Polish-3 coverage-gap corrective** (Polish-4 fold-in): `#f0ebfb` duplicates → `var(--lav-light)` at 5 styles.css sites. Polish-3's canonical-13 sweep missed `--lav-light` because the naming inconsistency (`--lav-light` ≠ `--lavender-light`) tripped scout pattern-matching. 8th `running-beats-reading` instance.
 
+### Animation Foundation
+
+**Motion One** (`window.Motion`) — app-wide animation foundation adopted at the milestones-tab-v1 IMPL (PR #162 + #163, 2026-05-28). UMD distribution via deferred CDN in `split/build.sh:127-136` after Chart.js so chart cold-start takes priority. ~12kb gzipped; WAAPI wrapper from the Framer team.
+
+Primitives in use: `animate`, `spring`, `timeline`, `stagger`, `inView`. Scroll-linked and gesture APIs available for future arcs.
+
+**Opt-in-with-fallback posture** — every animation call-site gates on `window.Motion` availability:
+
+```js
+if (window.Motion && window.Motion.animate) {
+  window.Motion.animate(element, { x: '110%', rotate: 8, opacity: 0 },
+    { duration: 0.42, easing: [0.32, 0, 0.67, 0] });
+} else {
+  element.classList.add('is-sliding-out');  // CSS-class fallback
+}
+```
+
+The fallback engages for offline parents (in-flight), blocked CDNs, or HTML cached from a pre-Motion build. Functionally equivalent; just simpler easing.
+
+**Reduced-motion accessibility floor** — every animation entry-point checks `window.matchMedia('(prefers-reduced-motion: reduce)')`. If matches, the animation is skipped + the callback fires immediately so the data write still happens. Per the "warm, sturdy, calm" personality (§1 Brand & Visual Identity): motion serves clarity, not flash; respect parents who've turned animations off.
+
+**FLIP pattern for list-reorder** (PR #164). Snapshot rects pre-render → state change + re-render → compute deltas → `Motion.animate` from delta back to 0. Helpers: `_msSnapshotInWindowRects()` + `_msFLIPCards(beforeRects, opts)` in home.js. Used for milestones-tab-v1 Not-yet card slide-to-bottom + Confirm/Practicing sibling reflow. Reusable for any future list-reorder surface.
+
+**Carve-out for `currentColor` pass-through** — see HR-2 §Carve-outs below.
+
 ### Icon System
 
 **zi() — Ziva Sketch icon set.** 54 custom SVG symbols defined as a `<symbol>` sprite in `template.html`. Rendered via the `zi(name)` helper function which returns `<svg class="zi"><use href="#zi-{name}"/></svg>`.
@@ -229,6 +254,10 @@ Zero emojis in any new `innerHTML`, `textContent`, template literal, or HTML att
 Zero `style="..."` attributes in new HTML strings or innerHTML. All styling via CSS classes with design tokens.
 
 **QA:** grep `style="` in new code → must be 0.
+
+**Documented carve-outs** (each requires a named annotation comment at the site so the carve-out is auditable):
+1. **Collapse-machinery-mirror** (PR #144 v3-6 IMPL) — `_setCardPriority` writes `body.style.display` + `chev.style.transform` inline for the collapse-card pattern. Mirrors `toggleHistoryCard` (intelligence-cards.js:81/87). Annotated `// collapse-machinery-mirror`. Defer to v1.x collapse-machinery unification.
+2. **Motion currentColor pass-through** (PR #162 milestones-tab-v1 IMPL) — `.ms-trajectory-marker` writes inline `style="color:..."` to propagate the ACTIVITY_CATEGORIES domain accent via CSS `currentColor`. The alternative (5 per-domain CSS rules duplicating the registry accents) is exactly the parallel-table failure-mode the 9th audit gate prevents. Registry → `currentColor` pass-through keeps `window.ACTIVITY_CATEGORIES` as the single source of truth. Annotated `// motion-currentcolor-carveout` (or referenced in the rationale comment block above the inline-style site).
 
 ### HR-3: No inline event handlers in new code
 Zero `onclick=`, `onchange=`, `oninput=` in new HTML. All handlers via `data-action` delegation in core.js.
@@ -394,6 +423,22 @@ See ARCHITECTURE_PATTERNS.md §13 for the Read/Act/Flow framework.
 ## 6. QA Audit Checklist (per build)
 
 > **Sync note:** This checklist should stay in sync with QA_PROCESS.md §4.
+
+### Build-time audit gates (9 live as of 2026-05-28 PM)
+
+Every `pnpm build` runs these gates sequentially in `split/build.sh`; any failure aborts the build:
+
+| # | Gate script | Purpose | Spec / PR |
+|---|---|---|---|
+| 1 | `audit-emoji.sh` | HR-1 — bans emoji in source + built artifact (Unicode range checks). | PR #74 |
+| 2 | `audit-icon-text.sh` | V-K-10 — flags `(label\|text\|reason\|detail): zi(` field-assignments. | PR-A |
+| 3 | `audit-resolve-shield.sh` | V-M-41 — locks `'Resolve'` btnText on 4 symptom-resolve `confirmAction` callers. | PR #78 |
+| 4 | `audit-viz-smoke.sh` | PR-EF — verifies new visualization cards wire into the built HTML. | PR-EF |
+| 5 | `audit-hr12-v3-3.sh` | v3-3 cipher-4 — blocks raw `new Date(` / `Date.now(` / `Date.parse(` in v3-3 engine surface unless `// HR-12-safe` annotated. | v3-3 IMPL |
+| 6 | `audit-chip-taxonomy-v3-5.sh` | v3-5 — bans ad-hoc `tsf-event-{state}` class strings outside the canonical registry. | v3-5 IMPL |
+| 7 | `audit-card-priority-v3-6.sh` | v3-6 — bans ad-hoc `card-{urgent\|notable\|ambient}` classes + verifies `renderInfo*` producer-coverage. | v3-6 IMPL |
+| 8 | `audit-no-personalised-prediction-v1.sh` | milestone-engine-prep-v1 — Scope A bans hardcoded source attribution + `(unverified)` parenthetical; Scope B bans personalised-prediction prose. Python regex + 5 adversarial self-tests. | PR #153 |
+| 9 | `audit-activity-categories-v1.sh` | milestones-tab-v1 — bans 3+-of-5 category-key array permutations + `\bcatOrder\s*=` idiom + 4+-of-5 obj-literal forks (with multi-line brace-tracking). Opt-in marker `// activity-categories-ok: <rationale>`. | PR #159 |
 
 ### Hard Rule Checks
 - [ ] HR-1: Zero emojis in new code
