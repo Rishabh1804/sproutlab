@@ -283,7 +283,6 @@ This is the critical section. Each entry documents a function that is **defined*
 | `generateTomorrowPrep()` | — | prep plan object |
 | `checkFoodCombo()` | — | void (renders combo result) |
 | `renderTips()` | — | void (DOM render) |
-| `renderQLFreqPills()` | — | void (DOM render) |
 | `updateQLFeedDropdown()` | — | void (DOM render) |
 | `resetQLSheet()` | — | void (reset QL state) |
 | `getMdiColor(score)` | number | CSS color string |
