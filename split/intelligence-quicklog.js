@@ -1093,6 +1093,351 @@ function _qlPredict() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// F-2 — Autofill intelligence layers (L1 Repeat / L2 Combo / L3 Next-item / L4 Typeahead)
+// Spec: docs/specs/food-sub-tab-v1.md §F-2; ratifications #1/#2/#6.
+// All four helpers read window.feedingData; all return shape-stable
+// arrays so the FOB Feed sheet renderer is decoupled from the source
+// data layout. parseFeedingV1 (data.js) normalizes legacy + structured
+// rows on the way in so the helpers operate on a canonical shape.
+// ═══════════════════════════════════════════════════════════════
+
+// _fdGetMealSlotByTime — thin wrapper around detectMealType() for
+// readability + decoupling. Ratification #1: existing adaptive 14d
+// window logic in _qlComputeMealWindow is BETTER than fixed bands —
+// reuse it. Returns 'breakfast' | 'lunch' | 'dinner' | 'snack'.
+window._fdGetMealSlotByTime = function() {
+  return detectMealType();
+};
+
+// L1 — Repeat candidates. Returns up to `n` (default 3) recent meals
+// for the given slot, formatted for one-tap apply. For dinner, the
+// FIRST candidate is "Same as lunch (today)" if today's lunch is logged
+// (ratification #6 — 46% lunch=dinner match in observed data).
+//
+// Each candidate: { id, label, sub, items[], itemsText, ageRel, source }
+// label  — short chip text ("Yesterday's breakfast" / "Same as lunch today")
+// sub    — items preview (truncated, comma-separated)
+// items  — array of {name, qty, unit, nutritionRef} ready to apply
+// source — 'today-lunch' | 'yesterday' | 'recent' (telemetry)
+window._fdGetRepeatCandidates = function(meal, n) {
+  n = n || 3;
+  var out = [];
+  var todayStr = today();
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+
+  function dayLabel(daysAgo) {
+    if (daysAgo === 0) return 'Today';
+    if (daysAgo === 1) return 'Yesterday';
+    if (daysAgo < 7)  return daysAgo + ' days ago';
+    return 'Last week';
+  }
+
+  function structuredItemsFromMeal(mealVal) {
+    var parsed = window.parseFeedingV1(mealVal);
+    if (!parsed || !parsed.items || parsed.items.length === 0) return null;
+    if (parsed.skipped) return null;
+    // Hydrate any items missing qty/unit via the defaults resolver
+    var items = parsed.items.map(function(it) {
+      if (it.qty !== undefined && it.unit) return it;
+      var d = window._fdResolveQtyDefaults(it.name);
+      return Object.assign({}, it, { qty: d.qty, unit: d.unit });
+    });
+    return items;
+  }
+
+  // Ratification #6 — for dinner, surface today's lunch FIRST if logged.
+  if (meal === 'dinner' && fd[todayStr] && fd[todayStr].lunch) {
+    var lunchItems = structuredItemsFromMeal(fd[todayStr].lunch);
+    if (lunchItems && lunchItems.length) {
+      out.push({
+        id: 'today-lunch',
+        label: 'Same as today\'s lunch',
+        sub: lunchItems.map(function(it){return it.name;}).join(', '),
+        items: lunchItems,
+        itemsText: lunchItems.map(function(it){return it.name;}).join(', '),
+        ageRel: 'today',
+        source: 'today-lunch',
+      });
+    }
+  }
+
+  // Walk back up to 14 days; collect candidates for the same slot.
+  for (var d = 1; d <= 14 && out.length < n; d++) {
+    var dd = new Date(); dd.setDate(dd.getDate() - d);
+    var ds = toDateStr(dd);
+    var day = fd[ds];
+    if (!day) continue;
+    var items = structuredItemsFromMeal(day[meal]);
+    if (!items) continue;
+    out.push({
+      id: 'repeat-' + ds,
+      label: (d === 1 ? 'Yesterday\'s ' : dayLabel(d).toLowerCase() + ' ') + meal,
+      sub: items.map(function(it){return it.name;}).join(', '),
+      items: items,
+      itemsText: items.map(function(it){return it.name;}).join(', '),
+      ageRel: dayLabel(d),
+      source: d === 1 ? 'yesterday' : 'recent',
+    });
+  }
+
+  return out;
+};
+
+// L2 — Combo templates. Rolling 14d window: find combos (item-sets) that
+// repeat >= 2x in the same slot. Sort by frequency desc; break ties by
+// recency. Cold-start fallback to CURATED_COMBOS when <7 days of signal.
+//
+// Each combo: { id, label, items[], freq, source }
+// label  — "Your usual breakfast" (or "Pediatrician-suggested" for curated)
+// items  — array with default qty/unit hydrated via _fdResolveQtyDefaults
+// freq   — N× (observed frequency in window) or null (curated)
+// source — '14d-rolling' | 'curated'
+window._fdGetCombosForMeal = function(meal, opts) {
+  opts = opts || {};
+  var maxResults = opts.maxResults || 3;
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+  var todayStr = today();
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+  var cutoffStr = toDateStr(cutoff);
+
+  // Collect (sorted-item-set → freq + lastDate) over 14d
+  var comboMap = {};
+  var daysWithSignal = 0;
+
+  Object.keys(fd).forEach(function(ds) {
+    if (ds < cutoffStr || ds > todayStr) return;
+    var day = fd[ds];
+    if (!day) return;
+    var parsed = window.parseFeedingV1(day[meal]);
+    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
+    daysWithSignal++;
+    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); })
+                            .filter(function(n){ return n.length > 1; });
+    if (names.length < 2) return;
+    var sig = names.slice().sort().join('|');
+    if (!comboMap[sig]) comboMap[sig] = { items: parsed.items, freq: 0, lastDate: ds, names: names };
+    comboMap[sig].freq++;
+    if (ds > comboMap[sig].lastDate) {
+      comboMap[sig].lastDate = ds;
+      comboMap[sig].items = parsed.items;  // refresh with most-recent qty/unit
+    }
+  });
+
+  // Cold start — fall through to curated if <7 days of data for this slot
+  if (daysWithSignal < 7) {
+    var ageMonths = (typeof _zivaAgeMonths === 'function') ? _zivaAgeMonths() : null;
+    var curated = window._fdGetCuratedCombosForMeal(meal, ageMonths);
+    return curated.slice(0, maxResults).map(function(c, i) {
+      var items = c.items.map(function(name) {
+        var d = window._fdResolveQtyDefaults(name);
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+      });
+      return {
+        id: 'curated-' + meal + '-' + i,
+        label: i === 0 ? 'Pediatrician-suggested' : 'Another suggestion',
+        items: items,
+        itemsText: items.map(function(it){return it.name;}).join(', '),
+        freq: null,
+        source: 'curated',
+        rationale: c.rationale,
+      };
+    });
+  }
+
+  // Rolling window — surface top combos with freq >= 2
+  var sorted = Object.keys(comboMap)
+    .map(function(sig){ return comboMap[sig]; })
+    .filter(function(c){ return c.freq >= 2; })
+    .sort(function(a, b){ return b.freq - a.freq || (b.lastDate > a.lastDate ? 1 : -1); });
+
+  if (sorted.length === 0) {
+    // No combos hit 2x — fall through to curated
+    var ageMonths2 = (typeof _zivaAgeMonths === 'function') ? _zivaAgeMonths() : null;
+    var curated2 = window._fdGetCuratedCombosForMeal(meal, ageMonths2);
+    return curated2.slice(0, maxResults).map(function(c, i) {
+      var items = c.items.map(function(name) {
+        var d = window._fdResolveQtyDefaults(name);
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+      });
+      return {
+        id: 'curated-fallback-' + meal + '-' + i,
+        label: 'Pediatrician-suggested',
+        items: items,
+        itemsText: items.map(function(it){return it.name;}).join(', '),
+        freq: null,
+        source: 'curated',
+        rationale: c.rationale,
+      };
+    });
+  }
+
+  return sorted.slice(0, maxResults).map(function(c, i) {
+    // Hydrate items with default qty/unit if missing
+    var items = c.items.map(function(it){
+      if (it.qty !== undefined && it.unit) return it;
+      var d = window._fdResolveQtyDefaults(it.name);
+      return Object.assign({}, it, { qty: d.qty, unit: d.unit });
+    });
+    return {
+      id: 'combo-' + i,
+      label: i === 0 ? 'Your usual ' + meal : 'Another usual',
+      items: items,
+      itemsText: items.map(function(it){return it.name;}).join(', '),
+      freq: c.freq,
+      source: '14d-rolling',
+    };
+  });
+};
+
+// L3 — Next-item prediction. Given a set of items already in the current
+// meal, return the top `n` foods that co-occur with them in the rolling
+// 14d window of the same slot. Each prediction carries an honest
+// confidence % (CV3-006 Honesty axis — parents see WHY a suggestion is
+// surfaced). Excludes foods already in currentItems.
+//
+// Each prediction: { name, confidence, freq, denom }
+//   confidence: rounded percentage (0-100)
+//   freq:       count of co-occurrences with currentItems set
+//   denom:      total observations of the anchor item(s)
+window._fdGetNextItemPredictions = function(currentItems, meal, n) {
+  n = n || 4;
+  if (!Array.isArray(currentItems) || currentItems.length === 0) return [];
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+  var todayStr = today();
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+  var cutoffStr = toDateStr(cutoff);
+
+  // Normalize current items to lowercase base names
+  var currentSet = {};
+  var anchorNames = currentItems.map(function(it) {
+    var name = String(it.name || it || '').toLowerCase().trim();
+    currentSet[name] = true;
+    return name;
+  });
+
+  // Walk 14d; for each day's same-slot entry that contains AT LEAST ONE
+  // anchor item, count co-occurrences of every other item in that meal.
+  var coCount = {};   // candidate name → co-occurrence count
+  var anchorDenom = 0;  // total days where any anchor item appears in slot
+
+  Object.keys(fd).forEach(function(ds) {
+    if (ds < cutoffStr || ds > todayStr) return;
+    var day = fd[ds];
+    if (!day) return;
+    var parsed = window.parseFeedingV1(day[meal]);
+    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
+    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); });
+    // Does this day contain any anchor item?
+    var hasAnchor = anchorNames.some(function(a) { return names.indexOf(a) >= 0; });
+    if (!hasAnchor) return;
+    anchorDenom++;
+    // Count every non-anchor item that appears
+    names.forEach(function(n) {
+      if (currentSet[n]) return;  // skip items already in current meal
+      if (!coCount[n]) coCount[n] = { name: parsed.items.find(function(it) { return String(it.name).toLowerCase().trim() === n; }).name, freq: 0 };
+      coCount[n].freq++;
+    });
+  });
+
+  if (anchorDenom < 2) return [];  // not enough signal yet
+
+  var ranked = Object.keys(coCount).map(function(k) {
+    var c = coCount[k];
+    return {
+      name: c.name,
+      freq: c.freq,
+      denom: anchorDenom,
+      confidence: Math.round((c.freq / anchorDenom) * 100),
+    };
+  }).filter(function(p) { return p.confidence >= 20; })  // floor — don't surface noisy 1/14 hits
+    .sort(function(a, b) { return b.confidence - a.confidence; });
+
+  return ranked.slice(0, n);
+};
+
+// L4 — Typeahead. As-you-type match against NUTRITION + ziva_foods
+// (parent-introduced foods). Returns matches with default qty/unit
+// inlined so the dropdown can render the qty hint without an extra
+// resolver call per row.
+//
+// Each match: { name, source: 'nutrition' | 'introduced' | 'recent', qty, unit, step }
+window._fdSearchNutrition = function(query, opts) {
+  opts = opts || {};
+  var max = opts.max || 8;
+  if (!query || typeof query !== 'string') return [];
+  var q = query.toLowerCase().trim();
+  if (q.length < 1) return [];
+
+  var seen = {};
+  var matches = [];
+
+  function pushMatch(name, src) {
+    var key = String(name).toLowerCase().trim();
+    if (seen[key]) return;
+    seen[key] = true;
+    var d = window._fdResolveQtyDefaults(name);
+    matches.push({
+      name: name,
+      source: src,
+      qty: d.qty,
+      unit: d.unit,
+      step: d.step,
+    });
+  }
+
+  // 1. NUTRITION — base lookup (canonical food names)
+  if (typeof NUTRITION === 'object' && NUTRITION) {
+    Object.keys(NUTRITION).forEach(function(k) {
+      if (matches.length >= max * 2) return;
+      if (k.indexOf(q) === 0) pushMatch(k.charAt(0).toUpperCase() + k.slice(1), 'nutrition');
+    });
+    // Looser match — name contains query (after exact-prefix matches)
+    Object.keys(NUTRITION).forEach(function(k) {
+      if (matches.length >= max * 2) return;
+      if (k.indexOf(q) > 0) pushMatch(k.charAt(0).toUpperCase() + k.slice(1), 'nutrition');
+    });
+  }
+
+  // 2. Parent-introduced foods (ziva_foods list)
+  try {
+    var introduced = (typeof load === 'function') ? load(KEYS && KEYS.foods, []) || [] : [];
+    if (Array.isArray(introduced)) {
+      introduced.forEach(function(entry) {
+        if (matches.length >= max * 2) return;
+        var nm = entry && entry.name ? String(entry.name) : '';
+        if (!nm) return;
+        if (nm.toLowerCase().indexOf(q) >= 0) pushMatch(nm, 'introduced');
+      });
+    }
+  } catch(e) { /* introduced list is best-effort */ }
+
+  // 3. Recent items from feedingData (last 14 days, any slot) — surfaces
+  // foods the parent has actually been using (catches typeahead matches
+  // for foods that exist in their flow but not yet in NUTRITION).
+  try {
+    var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+    var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 14);
+    var cutoffStr = toDateStr(cutoff);
+    Object.keys(fd).forEach(function(ds) {
+      if (matches.length >= max * 2) return;
+      if (ds < cutoffStr) return;
+      ['breakfast','lunch','dinner','snack'].forEach(function(m) {
+        if (matches.length >= max * 2) return;
+        var parsed = window.parseFeedingV1(fd[ds][m]);
+        if (!parsed || !parsed.items) return;
+        parsed.items.forEach(function(it) {
+          if (matches.length >= max * 2) return;
+          var nm = it.name || '';
+          if (nm.toLowerCase().indexOf(q) >= 0) pushMatch(nm, 'recent');
+        });
+      });
+    });
+  } catch(e) { /* best-effort */ }
+
+  return matches.slice(0, max);
+};
+
+// ═══════════════════════════════════════════════════════════════
 // SMART QUICK LOG — Suggest Card Rendering
 // ═══════════════════════════════════════════════════════════════
 
