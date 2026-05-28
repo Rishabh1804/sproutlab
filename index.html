@@ -16949,11 +16949,17 @@ window.parseFeedingV1Stub = window.parseFeedingV1;
 // muted "Skipped" pills and are excluded from nutrition-snapshot diversity
 // penalties. Reversible — writing a real entry overwrites the skip.
 // ═══════════════════════════════════════════════════════════════════════
+// Writes the canonical SKIPPED_MEAL sentinel at the legacy [meal] field
+// (matches existing app-wide pattern at core.js:3119; consumers in
+// home.js Today's Meals + diet.js stats + intelligence-cards.js + isl
+// all key off this sentinel — there's no reason to invent a new one).
+// Also clears any v1 sidecar from prior structured writes.
 window._fdMarkMealSkipped = function(dateKey, meal) {
   if (!dateKey || !meal) return false;
   var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
   if (!fd[dateKey]) fd[dateKey] = { breakfast: '', lunch: '', dinner: '', snack: '' };
-  fd[dateKey][meal] = { skipped: true, skippedAt: Date.now(), items: [] };
+  fd[dateKey][meal] = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  delete fd[dateKey][meal + '_v1'];
   if (typeof save === 'function' && typeof KEYS !== 'undefined' && KEYS.feeding) {
     save(KEYS.feeding, fd);
   }
@@ -16968,26 +16974,35 @@ window._fdIsMealSkipped = function(dateKey, meal) {
   var day = fd[dateKey];
   if (!day) return false;
   var mv = day[meal];
-  return !!(mv && typeof mv === 'object' && mv.skipped === true);
+  var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  if (mv === sentinel) return true;
+  if (mv && typeof mv === 'object' && mv.skipped === true) return true;  // legacy F-2-prerelease shape
+  return false;
 };
 
 // ═══════════════════════════════════════════════════════════════════════
 // _fdWriteStructuredMeal — canonical writer for the F-2 FOB Feed sheet.
-// Writes the structured shape under feedingData[dateKey][meal] AND
-// auto-generates legacy compat fields (text, {meal}_time, {meal}_intake)
-// so existing readers (home.js Today's Meals summary, diet stats, combo
-// intelligence, parseMealNutrition) continue working unchanged until
-// F-5 lands the read-side normalizer.
+//
+// Backward-compat doctrine (load-bearing): existing readers across
+// home.js Today's Meals, diet.js stats + combos, intelligence-cards.js,
+// intelligence-isl.js, medical.js all assume `feedingData[date][meal]`
+// is a STRING. Writing an object there breaks every legacy reader.
+//
+// So this writer keeps the legacy string at [meal] (comma-joined item
+// names) AND tucks the rich structured shape into a [meal + '_v1']
+// SIDECAR field. F-2 readers (L1-L4 helpers, saveQLFeed, diet Log
+// sub-tab review) reach for the sidecar via _fdReadDayMeal; legacy
+// readers continue reading the comma-string at [meal] unchanged.
+// F-5's parseFeeding normalizer will eventually unify the reads.
 //
 // payload: { items: [{name, qty, unit, nutritionRef}], time, overallIntake, note, sourceFlow }
-// Returns the structured shape that was written.
+// Returns the structured shape that was written to the sidecar.
 // ═══════════════════════════════════════════════════════════════════════
 window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
   if (!dateKey || !meal || !payload) return null;
   payload = payload || {};
   var items = Array.isArray(payload.items) ? payload.items.slice() : [];
-  // Legacy compat: comma-joined text for downstream readers (Today's Meals
-  // summary, diet combos, parseMealNutrition). Trailing comma kept off.
+  // Legacy comma-joined text — what existing readers expect at [meal].
   var textCompat = items.map(function(it) { return it.name; }).join(', ');
 
   var structured = {
@@ -16995,15 +17010,19 @@ window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
     time: payload.time || null,
     overallIntake: (typeof payload.overallIntake === 'number') ? payload.overallIntake : 0.75,  // ratified DEFAULT "Most"
     note: payload.note || '',
-    sourceFlow: payload.sourceFlow || 'fob-feed',  // telemetry: fob-repeat | fob-combo | fob-novel | fob-feed | diet-tab
+    sourceFlow: payload.sourceFlow || 'fob-feed',
     schemaVersion: window._FEEDING_V1_SCHEMA_VERSION,
-    text: textCompat,
+    writtenAt: Date.now(),
   };
 
   var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
   if (!fd[dateKey]) fd[dateKey] = { breakfast: '', lunch: '', dinner: '', snack: '' };
-  fd[dateKey][meal] = structured;
-  // Legacy compat fields at the day level (existing readers reach for these)
+  // Legacy string at the canonical slot (load-bearing for existing readers).
+  fd[dateKey][meal] = textCompat;
+  // Structured shape in sidecar — F-2 readers (L1-L4 helpers + diet Log
+  // review surface) reach here for qty + sourceFlow + overallIntake.
+  fd[dateKey][meal + '_v1'] = structured;
+  // Legacy time + intake at the day level (existing readers reach for these).
   if (structured.time) fd[dateKey][meal + '_time'] = structured.time;
   fd[dateKey][meal + '_intake'] = structured.overallIntake;
 
@@ -17012,6 +17031,57 @@ window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
   }
   if (typeof feedingData !== 'undefined') feedingData = fd;
   return structured;
+};
+
+// _fdReadDayMeal — canonical reader. Returns the F-2 view of a meal slot
+// regardless of which shape sits on disk. Reads the [meal + '_v1']
+// sidecar first; falls back to parsing the legacy string at [meal].
+// Returns: { items[], time, overallIntake, skipped, sourceFlow, legacyText }
+window._fdReadDayMeal = function(dayObj, mealKey) {
+  if (!dayObj || !mealKey) return { items: [], skipped: false };
+  var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  var legacy = dayObj[mealKey];
+  // Skip sentinel — both forms
+  if (legacy === sentinel) {
+    return { items: [], skipped: true, legacyText: sentinel };
+  }
+  // Sidecar present — return the structured shape
+  var sidecar = dayObj[mealKey + '_v1'];
+  if (sidecar && Array.isArray(sidecar.items)) {
+    return {
+      items: sidecar.items,
+      time: sidecar.time || dayObj[mealKey + '_time'] || null,
+      overallIntake: typeof sidecar.overallIntake === 'number' ? sidecar.overallIntake : (dayObj[mealKey + '_intake'] || 0.75),
+      sourceFlow: sidecar.sourceFlow || 'fob-feed',
+      skipped: false,
+      legacyText: typeof legacy === 'string' ? legacy : (sidecar.items.map(function(it){return it.name;}).join(', ')),
+    };
+  }
+  // Legacy F-2-prerelease structured-at-[meal] shape (early-development
+  // fixtures may carry this; treat as canonical and migrate-on-read).
+  if (legacy && typeof legacy === 'object' && Array.isArray(legacy.items)) {
+    return {
+      items: legacy.items,
+      time: legacy.time || dayObj[mealKey + '_time'] || null,
+      overallIntake: typeof legacy.overallIntake === 'number' ? legacy.overallIntake : 0.75,
+      sourceFlow: legacy.sourceFlow || 'fob-feed',
+      skipped: legacy.skipped === true,
+      legacyText: legacy.items.map(function(it){return it.name;}).join(', '),
+    };
+  }
+  // Pure legacy string — parse via comma-split + qty resolver
+  if (typeof legacy === 'string' && legacy.trim()) {
+    var parsed = window.parseFeedingV1(legacy);
+    return {
+      items: parsed.items || [],
+      time: dayObj[mealKey + '_time'] || null,
+      overallIntake: dayObj[mealKey + '_intake'] || 0.75,
+      sourceFlow: 'legacy-string',
+      skipped: false,
+      legacyText: legacy,
+    };
+  }
+  return { items: [], skipped: false, legacyText: '' };
 };
 
 // @@DATA_BLOCK_20_START@@ MILESTONE_STANDARDS
@@ -63479,22 +63549,21 @@ window._fdGetRepeatCandidates = function(meal, n) {
     return 'Last week';
   }
 
-  function structuredItemsFromMeal(mealVal) {
-    var parsed = window.parseFeedingV1(mealVal);
-    if (!parsed || !parsed.items || parsed.items.length === 0) return null;
-    if (parsed.skipped) return null;
-    // Hydrate any items missing qty/unit via the defaults resolver
-    var items = parsed.items.map(function(it) {
+  function itemsFromDay(day, mealKey) {
+    if (!day) return null;
+    var rec = window._fdReadDayMeal(day, mealKey);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return null;
+    // Hydrate any items missing qty/unit (legacy-string-parsed records lack them).
+    return rec.items.map(function(it) {
       if (it.qty !== undefined && it.unit) return it;
-      var d = window._fdResolveQtyDefaults(it.name);
-      return Object.assign({}, it, { qty: d.qty, unit: d.unit });
+      var defaults = window._fdResolveQtyDefaults(it.name);
+      return Object.assign({}, it, { qty: defaults.qty, unit: defaults.unit });
     });
-    return items;
   }
 
   // Ratification #6 — for dinner, surface today's lunch FIRST if logged.
-  if (meal === 'dinner' && fd[todayStr] && fd[todayStr].lunch) {
-    var lunchItems = structuredItemsFromMeal(fd[todayStr].lunch);
+  if (meal === 'dinner' && fd[todayStr]) {
+    var lunchItems = itemsFromDay(fd[todayStr], 'lunch');
     if (lunchItems && lunchItems.length) {
       out.push({
         id: 'today-lunch',
@@ -63512,9 +63581,7 @@ window._fdGetRepeatCandidates = function(meal, n) {
   for (var d = 1; d <= 14 && out.length < n; d++) {
     var dd = new Date(); dd.setDate(dd.getDate() - d);
     var ds = toDateStr(dd);
-    var day = fd[ds];
-    if (!day) continue;
-    var items = structuredItemsFromMeal(day[meal]);
+    var items = itemsFromDay(fd[ds], meal);
     if (!items) continue;
     out.push({
       id: 'repeat-' + ds,
@@ -63555,18 +63622,18 @@ window._fdGetCombosForMeal = function(meal, opts) {
     if (ds < cutoffStr || ds > todayStr) return;
     var day = fd[ds];
     if (!day) return;
-    var parsed = window.parseFeedingV1(day[meal]);
-    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
+    var rec = window._fdReadDayMeal(day, meal);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
     daysWithSignal++;
-    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); })
-                            .filter(function(n){ return n.length > 1; });
+    var names = rec.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); })
+                         .filter(function(n){ return n.length > 1; });
     if (names.length < 2) return;
     var sig = names.slice().sort().join('|');
-    if (!comboMap[sig]) comboMap[sig] = { items: parsed.items, freq: 0, lastDate: ds, names: names };
+    if (!comboMap[sig]) comboMap[sig] = { items: rec.items, freq: 0, lastDate: ds, names: names };
     comboMap[sig].freq++;
     if (ds > comboMap[sig].lastDate) {
       comboMap[sig].lastDate = ds;
-      comboMap[sig].items = parsed.items;  // refresh with most-recent qty/unit
+      comboMap[sig].items = rec.items;  // refresh with most-recent qty/unit
     }
   });
 
@@ -63671,9 +63738,9 @@ window._fdGetNextItemPredictions = function(currentItems, meal, n) {
     if (ds < cutoffStr || ds > todayStr) return;
     var day = fd[ds];
     if (!day) return;
-    var parsed = window.parseFeedingV1(day[meal]);
-    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
-    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); });
+    var rec = window._fdReadDayMeal(day, meal);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
+    var names = rec.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); });
     // Does this day contain any anchor item?
     var hasAnchor = anchorNames.some(function(a) { return names.indexOf(a) >= 0; });
     if (!hasAnchor) return;
@@ -63681,7 +63748,7 @@ window._fdGetNextItemPredictions = function(currentItems, meal, n) {
     // Count every non-anchor item that appears
     names.forEach(function(n) {
       if (currentSet[n]) return;  // skip items already in current meal
-      if (!coCount[n]) coCount[n] = { name: parsed.items.find(function(it) { return String(it.name).toLowerCase().trim() === n; }).name, freq: 0 };
+      if (!coCount[n]) coCount[n] = { name: rec.items.find(function(it) { return String(it.name).toLowerCase().trim() === n; }).name, freq: 0 };
       coCount[n].freq++;
     });
   });
@@ -63770,9 +63837,9 @@ window._fdSearchNutrition = function(query, opts) {
       if (ds < cutoffStr) return;
       ['breakfast','lunch','dinner','snack'].forEach(function(m) {
         if (matches.length >= max * 2) return;
-        var parsed = window.parseFeedingV1(fd[ds][m]);
-        if (!parsed || !parsed.items) return;
-        parsed.items.forEach(function(it) {
+        var rec = window._fdReadDayMeal(fd[ds], m);
+        if (!rec || rec.skipped || !rec.items) return;
+        rec.items.forEach(function(it) {
           if (matches.length >= max * 2) return;
           var nm = it.name || '';
           if (nm.toLowerCase().indexOf(q) >= 0) pushMatch(nm, 'recent');
@@ -64459,11 +64526,18 @@ function saveQLFeed() {
   // Accuracy tracking
   _qlLogAction('feed:' + _qlMeal, _qlSuggestUsed);
 
-  // Build undo function
+  // Build undo function — restore prev legacy value AND clear the v1 sidecar
+  // (otherwise stale structured data lingers after undo).
   const undoDateStr = dateStr;
   const undoFn = () => {
     const f = load(KEYS.feeding, {}) || {};
-    if (f[undoDateStr]) { f[undoDateStr][undoMealKey] = prevMealValue; save(KEYS.feeding, f); feedingData = f; _islMarkDirty('diet'); }
+    if (f[undoDateStr]) {
+      f[undoDateStr][undoMealKey] = prevMealValue;
+      delete f[undoDateStr][undoMealKey + '_v1'];
+      save(KEYS.feeding, f);
+      feedingData = f;
+      _islMarkDirty('diet');
+    }
   };
 
   closeQuickLogAll();

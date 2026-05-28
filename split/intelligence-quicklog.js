@@ -1132,22 +1132,21 @@ window._fdGetRepeatCandidates = function(meal, n) {
     return 'Last week';
   }
 
-  function structuredItemsFromMeal(mealVal) {
-    var parsed = window.parseFeedingV1(mealVal);
-    if (!parsed || !parsed.items || parsed.items.length === 0) return null;
-    if (parsed.skipped) return null;
-    // Hydrate any items missing qty/unit via the defaults resolver
-    var items = parsed.items.map(function(it) {
+  function itemsFromDay(day, mealKey) {
+    if (!day) return null;
+    var rec = window._fdReadDayMeal(day, mealKey);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return null;
+    // Hydrate any items missing qty/unit (legacy-string-parsed records lack them).
+    return rec.items.map(function(it) {
       if (it.qty !== undefined && it.unit) return it;
-      var d = window._fdResolveQtyDefaults(it.name);
-      return Object.assign({}, it, { qty: d.qty, unit: d.unit });
+      var defaults = window._fdResolveQtyDefaults(it.name);
+      return Object.assign({}, it, { qty: defaults.qty, unit: defaults.unit });
     });
-    return items;
   }
 
   // Ratification #6 — for dinner, surface today's lunch FIRST if logged.
-  if (meal === 'dinner' && fd[todayStr] && fd[todayStr].lunch) {
-    var lunchItems = structuredItemsFromMeal(fd[todayStr].lunch);
+  if (meal === 'dinner' && fd[todayStr]) {
+    var lunchItems = itemsFromDay(fd[todayStr], 'lunch');
     if (lunchItems && lunchItems.length) {
       out.push({
         id: 'today-lunch',
@@ -1165,9 +1164,7 @@ window._fdGetRepeatCandidates = function(meal, n) {
   for (var d = 1; d <= 14 && out.length < n; d++) {
     var dd = new Date(); dd.setDate(dd.getDate() - d);
     var ds = toDateStr(dd);
-    var day = fd[ds];
-    if (!day) continue;
-    var items = structuredItemsFromMeal(day[meal]);
+    var items = itemsFromDay(fd[ds], meal);
     if (!items) continue;
     out.push({
       id: 'repeat-' + ds,
@@ -1208,18 +1205,18 @@ window._fdGetCombosForMeal = function(meal, opts) {
     if (ds < cutoffStr || ds > todayStr) return;
     var day = fd[ds];
     if (!day) return;
-    var parsed = window.parseFeedingV1(day[meal]);
-    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
+    var rec = window._fdReadDayMeal(day, meal);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
     daysWithSignal++;
-    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); })
-                            .filter(function(n){ return n.length > 1; });
+    var names = rec.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); })
+                         .filter(function(n){ return n.length > 1; });
     if (names.length < 2) return;
     var sig = names.slice().sort().join('|');
-    if (!comboMap[sig]) comboMap[sig] = { items: parsed.items, freq: 0, lastDate: ds, names: names };
+    if (!comboMap[sig]) comboMap[sig] = { items: rec.items, freq: 0, lastDate: ds, names: names };
     comboMap[sig].freq++;
     if (ds > comboMap[sig].lastDate) {
       comboMap[sig].lastDate = ds;
-      comboMap[sig].items = parsed.items;  // refresh with most-recent qty/unit
+      comboMap[sig].items = rec.items;  // refresh with most-recent qty/unit
     }
   });
 
@@ -1324,9 +1321,9 @@ window._fdGetNextItemPredictions = function(currentItems, meal, n) {
     if (ds < cutoffStr || ds > todayStr) return;
     var day = fd[ds];
     if (!day) return;
-    var parsed = window.parseFeedingV1(day[meal]);
-    if (!parsed || !parsed.items || parsed.items.length === 0 || parsed.skipped) return;
-    var names = parsed.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); });
+    var rec = window._fdReadDayMeal(day, meal);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
+    var names = rec.items.map(function(it){ return String(it.name || '').toLowerCase().trim(); });
     // Does this day contain any anchor item?
     var hasAnchor = anchorNames.some(function(a) { return names.indexOf(a) >= 0; });
     if (!hasAnchor) return;
@@ -1334,7 +1331,7 @@ window._fdGetNextItemPredictions = function(currentItems, meal, n) {
     // Count every non-anchor item that appears
     names.forEach(function(n) {
       if (currentSet[n]) return;  // skip items already in current meal
-      if (!coCount[n]) coCount[n] = { name: parsed.items.find(function(it) { return String(it.name).toLowerCase().trim() === n; }).name, freq: 0 };
+      if (!coCount[n]) coCount[n] = { name: rec.items.find(function(it) { return String(it.name).toLowerCase().trim() === n; }).name, freq: 0 };
       coCount[n].freq++;
     });
   });
@@ -1423,9 +1420,9 @@ window._fdSearchNutrition = function(query, opts) {
       if (ds < cutoffStr) return;
       ['breakfast','lunch','dinner','snack'].forEach(function(m) {
         if (matches.length >= max * 2) return;
-        var parsed = window.parseFeedingV1(fd[ds][m]);
-        if (!parsed || !parsed.items) return;
-        parsed.items.forEach(function(it) {
+        var rec = window._fdReadDayMeal(fd[ds], m);
+        if (!rec || rec.skipped || !rec.items) return;
+        rec.items.forEach(function(it) {
           if (matches.length >= max * 2) return;
           var nm = it.name || '';
           if (nm.toLowerCase().indexOf(q) >= 0) pushMatch(nm, 'recent');
@@ -2112,11 +2109,18 @@ function saveQLFeed() {
   // Accuracy tracking
   _qlLogAction('feed:' + _qlMeal, _qlSuggestUsed);
 
-  // Build undo function
+  // Build undo function — restore prev legacy value AND clear the v1 sidecar
+  // (otherwise stale structured data lingers after undo).
   const undoDateStr = dateStr;
   const undoFn = () => {
     const f = load(KEYS.feeding, {}) || {};
-    if (f[undoDateStr]) { f[undoDateStr][undoMealKey] = prevMealValue; save(KEYS.feeding, f); feedingData = f; _islMarkDirty('diet'); }
+    if (f[undoDateStr]) {
+      f[undoDateStr][undoMealKey] = prevMealValue;
+      delete f[undoDateStr][undoMealKey + '_v1'];
+      save(KEYS.feeding, f);
+      feedingData = f;
+      _islMarkDirty('diet');
+    }
   };
 
   closeQuickLogAll();
