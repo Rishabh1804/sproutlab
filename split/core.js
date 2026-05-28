@@ -613,6 +613,7 @@ function init() {
     else if (action === 'undoMedSkip' && typeof undoMedSkip === 'function') undoMedSkip(arg, Number(arg2));
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
+    else if (action === 'switchDietSub' && typeof switchDietSub === 'function') switchDietSub(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -3652,6 +3653,33 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     const currentIdx = TAB_ORDER.indexOf(currentTab);
     if (currentIdx === -1) return;
+
+    // If on Track → Diet, swipe cycles the inner Log / Library / Patterns
+    // sub-tabs first (food-sub-tab-v1 F-1 swipe parity, mirrors the
+    // milestones-tab-v1 #ms-sub-bar pattern). At inner edges the gesture
+    // falls through to the Track sub-tab block below, which itself bubbles
+    // to top-level tabs at Track-sub-tab edges.
+    if (currentTab === 'track' && _activeTrackSub === 'diet') {
+      const DIET_INNER_ORDER = ['log', 'library', 'patterns'];
+      const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
+      const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
+      const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
+      if (innerIdx !== -1) {
+        if (dx < -60 && innerIdx < DIET_INNER_ORDER.length - 1) {
+          if (typeof switchDietSub === 'function') {
+            switchDietSub({ dataset: { dietSub: DIET_INNER_ORDER[innerIdx + 1] } });
+          }
+          return;
+        } else if (dx > 60 && innerIdx > 0) {
+          if (typeof switchDietSub === 'function') {
+            switchDietSub({ dataset: { dietSub: DIET_INNER_ORDER[innerIdx - 1] } });
+          }
+          return;
+        }
+        // Inner-edge fall-through: deliberate; Track-sub-tab block below
+        // handles the next-level bubble.
+      }
+    }
 
     // If on Track → Milestones, swipe cycles the inner Log / Library /
     // Patterns sub-tabs first. At inner edges (Log + swipe right, Patterns
