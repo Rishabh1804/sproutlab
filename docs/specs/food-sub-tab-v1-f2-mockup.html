@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Food Sub-Tab v1 F-2 — UX policy mockup (three options)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #fffaf7;
+  --white: #ffffff;
+  --warm: #fef6f0;
+  --text: #2a1f1c;
+  --mid: #6b5d57;
+  --light: #9a8b85;
+  --sage: #b5d5c5;
+  --sage-light: #e8f5ef;
+  --tc-sage: #3a7060;
+  --rose: #f2a8b8;
+  --rose-light: #fde8ed;
+  --tc-rose: #9e3e52;
+  --amber: #e8b86d;
+  --amber-light: #fef6e8;
+  --tc-amber: #8a6520;
+  --lavender: #c9b8e8;
+  --lav-light: #f0ebfb;
+  --tc-lav: #6e5e9a;
+  --sky-light: #e8f4fa;
+  --peach: #fad4b4;
+  --peach-light: #fef3ea;
+  --surface-warn: #fffdf5;
+  --tc-warn: #856404;
+  --border-warn: #ffc107;
+  --sp-2: 2px;  --sp-4: 4px;  --sp-6: 6px;  --sp-8: 8px;
+  --sp-10: 10px; --sp-12: 12px; --sp-16: 16px;
+  --sp-20: 20px; --sp-24: 24px; --sp-32: 32px;
+  --fs-2xs: 0.56rem; --fs-xs: 0.65rem; --fs-sm: 0.75rem;
+  --fs-base: 0.85rem; --fs-md: 0.95rem; --fs-lg: 1.1rem;
+  --fs-xl: 1.35rem; --fs-2xl: 1.6rem;
+  --r-sm: 4px; --r-md: 8px; --r-lg: 12px;
+  --r-xl: 14px; --r-2xl: 20px; --r-full: 9999px;
+  --ls-wide: 0.08em;
+  --shadow-sm: 0 1px 3px rgba(60, 40, 40, 0.08);
+  --shadow-md: 0 2px 8px rgba(60, 40, 40, 0.1);
+  --shadow-card: 0 4px 16px rgba(60, 40, 40, 0.08);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  padding: 0;
+}
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--sp-24) var(--sp-16);
+}
+header.intro {
+  background: linear-gradient(180deg, var(--peach-light) 0%, var(--cream) 100%);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-24) var(--sp-20);
+  margin-bottom: var(--sp-32);
+  box-shadow: var(--shadow-sm);
+}
+header.intro h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: var(--fs-2xl);
+  margin: 0 0 var(--sp-8) 0;
+  line-height: 1.2;
+  color: var(--text);
+}
+header.intro .sub {
+  color: var(--mid);
+  font-size: var(--fs-md);
+  margin: 0 0 var(--sp-16) 0;
+}
+header.intro .meta {
+  display: flex; flex-wrap: wrap; gap: var(--sp-8);
+  font-size: var(--fs-xs);
+  color: var(--light);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+header.intro .meta span {
+  background: var(--white);
+  padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full);
+  border: 1px solid #ece4dd;
+}
+.option-block {
+  margin-bottom: var(--sp-32);
+  padding-top: var(--sp-16);
+  border-top: 2px dashed #e6dad2;
+}
+.option-block:first-of-type { border-top: none; padding-top: 0; }
+.option-head {
+  display: flex; align-items: baseline; gap: var(--sp-12);
+  margin-bottom: var(--sp-8);
+  flex-wrap: wrap;
+}
+.option-pill {
+  display: inline-flex; align-items: center;
+  background: var(--lavender);
+  color: var(--text);
+  padding: var(--sp-4) var(--sp-12);
+  border-radius: var(--r-full);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.option-head h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  margin: 0;
+  line-height: 1.3;
+}
+.option-tag { font-size: var(--fs-xs); color: var(--mid); }
+.option-desc {
+  color: var(--mid);
+  font-size: var(--fs-base);
+  margin: 0 0 var(--sp-16) 0;
+  max-width: 720px;
+}
+.scope-strip {
+  display: flex; gap: var(--sp-8); flex-wrap: wrap;
+  margin-bottom: var(--sp-16);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--tc-sage);
+}
+.scope-strip .sw {
+  background: var(--sage-light);
+  padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full);
+  border: 1px solid var(--sage);
+}
+.scope-strip .sw.warn { background: var(--surface-warn); color: var(--tc-warn); border-color: var(--border-warn); }
+.scope-strip .sw.neutral { background: var(--warm); color: var(--mid); border-color: #ece4dd; }
+
+/* phone-frame surface mock */
+.phone-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-20);
+}
+@media (min-width: 760px) {
+  .phone-row {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+.phone {
+  background: var(--cream);
+  border: 1px solid #e6dad2;
+  border-radius: var(--r-2xl);
+  padding: var(--sp-12);
+  box-shadow: var(--shadow-card);
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+.phone-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--light);
+  text-align: center;
+  margin-bottom: var(--sp-8);
+}
+
+/* Inner surfaces — mirror styles.css */
+.tab-bar {
+  display: flex; gap: var(--sp-4); margin-bottom: var(--sp-12);
+  background: var(--warm);
+  padding: var(--sp-4);
+  border-radius: var(--r-full);
+}
+.tab-btn {
+  flex: 1;
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-8) var(--sp-12);
+  border-radius: var(--r-full);
+  color: var(--mid);
+  cursor: default;
+  background: transparent;
+  border: none;
+}
+.tab-btn.active { background: var(--rose); color: var(--text); }
+
+.sub-tab-bar {
+  display: flex; gap: var(--sp-4); margin-bottom: var(--sp-12);
+  border-bottom: 1px solid #ece4dd;
+  padding-bottom: var(--sp-8);
+}
+.sub-tab-btn {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  color: var(--mid);
+  background: transparent;
+  border: none;
+}
+.sub-tab-btn.active { background: var(--rose); color: var(--text); }
+
+/* Section label */
+.section-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--mid);
+  margin: var(--sp-16) 0 var(--sp-8) 0;
+}
+
+/* Meal card — STRUCTURED (F-2 new) */
+.meal-card-structured {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12) var(--sp-12);
+  margin-bottom: var(--sp-12);
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--sage);
+}
+.meal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-8);
+}
+.meal-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--text);
+}
+.meal-time-pill {
+  font-size: var(--fs-xs);
+  color: var(--tc-sage);
+  background: var(--sage-light);
+  padding: var(--sp-2) var(--sp-8);
+  border-radius: var(--r-full);
+  font-weight: 600;
+}
+.item-row {
+  display: flex; align-items: center; gap: var(--sp-8);
+  padding: var(--sp-6) 0;
+  border-bottom: 1px dashed #ece4dd;
+}
+.item-row:last-of-type { border-bottom: none; }
+.item-name {
+  flex: 1;
+  font-size: var(--fs-base);
+  color: var(--text);
+  font-weight: 500;
+}
+.item-qty {
+  font-size: var(--fs-sm);
+  color: var(--mid);
+  background: var(--warm);
+  padding: var(--sp-2) var(--sp-8);
+  border-radius: var(--r-md);
+  min-width: 56px; text-align: center;
+}
+.item-x {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--rose-light); color: var(--tc-rose);
+  font-weight: 700;
+  font-size: var(--fs-base);
+}
+.item-row .nutri-tag {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--tc-amber);
+  background: var(--amber-light);
+  padding: var(--sp-2) var(--sp-6);
+  border-radius: var(--r-sm);
+  font-weight: 700;
+}
+
+.add-item-bar {
+  display: flex; gap: var(--sp-6);
+  margin-top: var(--sp-10);
+  align-items: center;
+}
+.add-item-input {
+  flex: 1;
+  padding: var(--sp-8) var(--sp-10);
+  border: 1px solid #d8ccc4;
+  border-radius: var(--r-md);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-base);
+  background: var(--cream);
+  color: var(--text);
+}
+.add-item-input::placeholder { color: var(--light); }
+.add-item-btn {
+  background: var(--sage); color: var(--text);
+  font-weight: 700;
+  font-size: var(--fs-base);
+  padding: var(--sp-8) var(--sp-16);
+  border-radius: var(--r-full);
+  border: none;
+  font-family: 'Nunito', sans-serif;
+}
+
+.quick-chip-rail {
+  margin-top: var(--sp-10);
+  display: flex; flex-wrap: wrap; gap: var(--sp-6);
+}
+.quick-chip {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  background: var(--sage-light);
+  color: var(--tc-sage);
+  border: 1px solid var(--sage);
+}
+.quick-chip-label {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--light);
+  width: 100%;
+  margin-bottom: var(--sp-4);
+}
+
+/* LEGACY free-text card */
+.meal-card-legacy {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12);
+  margin-bottom: var(--sp-12);
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--peach);
+}
+.legacy-text-input {
+  width: 100%;
+  margin-top: var(--sp-8);
+  padding: var(--sp-10);
+  border: 1px solid #d8ccc4;
+  border-radius: var(--r-md);
+  background: var(--cream);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+.legacy-text-input.has-content { color: var(--text); }
+.legacy-dropdown-hint {
+  font-size: var(--fs-xs);
+  color: var(--light);
+  margin-top: var(--sp-4);
+  text-align: right;
+  font-style: italic;
+}
+
+/* Toggle (Option C) */
+.mode-toggle {
+  display: flex; align-items: center; gap: var(--sp-8);
+  background: var(--lav-light);
+  border-radius: var(--r-full);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-12);
+}
+.mode-toggle-btn {
+  flex: 1;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-6) var(--sp-10);
+  border-radius: var(--r-full);
+  text-align: center;
+  color: var(--tc-lav);
+  background: transparent;
+  border: none;
+  font-family: 'Nunito', sans-serif;
+}
+.mode-toggle-btn.active { background: var(--lavender); color: var(--text); }
+.mode-toggle-info {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--tc-lav);
+  margin-bottom: var(--sp-12);
+  text-align: center;
+}
+
+/* Cross-out for retired surface (Option A) */
+.retired-surface {
+  position: relative;
+  background: var(--warm);
+  border: 2px dashed var(--rose);
+  border-radius: var(--r-xl);
+  padding: var(--sp-16);
+  text-align: center;
+  color: var(--tc-rose);
+  font-style: italic;
+  font-size: var(--fs-sm);
+}
+.retired-surface::before {
+  content: 'RETIRED IN F-2';
+  display: block;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  font-size: var(--fs-xs);
+  color: var(--tc-rose);
+  margin-bottom: var(--sp-6);
+}
+
+.preserved-surface {
+  position: relative;
+  background: var(--sage-light);
+  border: 2px solid var(--sage);
+  border-radius: var(--r-xl);
+  padding: var(--sp-12);
+}
+.preserved-surface::before {
+  content: 'PRESERVED — unchanged by F-2';
+  display: block;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  font-size: var(--fs-2xs);
+  color: var(--tc-sage);
+  margin-bottom: var(--sp-8);
+}
+
+.note-box {
+  background: var(--lav-light);
+  border-left: 3px solid var(--lavender);
+  padding: var(--sp-12);
+  border-radius: var(--r-md);
+  margin-top: var(--sp-16);
+  font-size: var(--fs-sm);
+  color: var(--tc-lav);
+  line-height: 1.5;
+}
+.note-box strong { color: var(--text); }
+
+/* Trade-off table */
+.tradeoffs {
+  background: var(--white);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-20);
+  box-shadow: var(--shadow-card);
+  margin-top: var(--sp-32);
+}
+.tradeoffs h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  margin: 0 0 var(--sp-16) 0;
+}
+.tradeoffs table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.tradeoffs th, .tradeoffs td {
+  text-align: left;
+  padding: var(--sp-10) var(--sp-8);
+  border-bottom: 1px solid #ece4dd;
+  vertical-align: top;
+}
+.tradeoffs th {
+  font-weight: 700;
+  background: var(--warm);
+  color: var(--text);
+  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-wide);
+}
+.tradeoffs th:first-child { width: 28%; }
+.tradeoffs td.v-a { background: rgba(181, 213, 197, 0.18); }
+.tradeoffs td.v-b { background: rgba(232, 184, 109, 0.10); }
+.tradeoffs td.v-c { background: rgba(201, 184, 232, 0.12); }
+.tradeoffs tr:hover td { background: var(--warm); }
+
+.tradeoffs td .verdict {
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  display: inline-block;
+  padding: var(--sp-2) var(--sp-6);
+  border-radius: var(--r-sm);
+  margin-right: var(--sp-4);
+}
+.verdict.good { background: var(--sage-light); color: var(--tc-sage); }
+.verdict.watch { background: var(--amber-light); color: var(--tc-amber); }
+.verdict.cost { background: var(--rose-light); color: var(--tc-rose); }
+.verdict.neutral { background: var(--lav-light); color: var(--tc-lav); }
+
+.recommendation {
+  margin-top: var(--sp-24);
+  background: var(--sage-light);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-20);
+  border-left: 4px solid var(--sage);
+}
+.recommendation h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  margin: 0 0 var(--sp-8) 0;
+  color: var(--tc-sage);
+}
+.recommendation p { margin: 0 0 var(--sp-8) 0; color: var(--text); }
+.recommendation .signature {
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  font-style: italic;
+  margin-top: var(--sp-16);
+}
+
+footer {
+  margin-top: var(--sp-32);
+  padding-top: var(--sp-16);
+  border-top: 1px solid #ece4dd;
+  font-size: var(--fs-xs);
+  color: var(--light);
+  text-align: center;
+}
+footer a { color: var(--tc-lav); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="intro">
+  <h1>Food Sub-Tab v1 — F-2 entry-form policy</h1>
+  <p class="sub">Three implementation options for the structured meal-entry surface. Same item-builder pattern (typeahead + quick-add chips + qty/unit pickers); they differ on what happens to the legacy free-text meal-input on the home tab.</p>
+  <div class="meta">
+    <span>spec: docs/specs/food-sub-tab-v1.md</span>
+    <span>F-1 shipped: PR #165</span>
+    <span>F-5 normalizer: lands AFTER F-2</span>
+    <span>Architect decision needed</span>
+  </div>
+</header>
+
+<!-- ───────────────────────────── OPTION A ───────────────────────────── -->
+<section class="option-block">
+  <div class="option-head">
+    <span class="option-pill">Option A</span>
+    <h2>Full replace — structured-only on diet Log; legacy text-input retired</h2>
+  </div>
+  <p class="option-desc">The diet Log sub-tab becomes the single canonical meal-entry surface. The home-tab <code>.meal-input-wrap</code> per-meal text cards are retired this PR; the home tab keeps Today So Far / Diet Quick Picker / Intel banner unchanged, but loses the inline meal-input cards. Spec §4 alignment: "Save → emits structured shape; legacy <code>text</code> compat field generated for downstream readers." One canonical surface; F-5 normalizer reads two shapes (legacy stored records + new structured).</p>
+  <div class="scope-strip">
+    <span class="sw">1 entry surface</span>
+    <span class="sw">2 stored shapes (legacy + structured)</span>
+    <span class="sw warn">retires home meal-input</span>
+    <span class="sw">cleanest UX</span>
+  </div>
+  <div class="phone-row">
+
+    <div class="phone">
+      <div class="phone-label">Diet tab → Log sub-tab</div>
+      <div class="tab-bar">
+        <button class="tab-btn">Home</button>
+        <button class="tab-btn active">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="sub-tab-bar">
+        <button class="sub-tab-btn active">Log</button>
+        <button class="sub-tab-btn">Library</button>
+        <button class="sub-tab-btn">Patterns</button>
+      </div>
+
+      <div class="section-label">Today · Wed, May 27</div>
+
+      <div class="meal-card-structured">
+        <div class="meal-head">
+          <span class="meal-title">Breakfast</span>
+          <span class="meal-time-pill">8:30 am</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Paratha</span>
+          <span class="nutri-tag">gluten</span>
+          <span class="item-qty">1 pc</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Ghee</span>
+          <span class="nutri-tag">dairy</span>
+          <span class="item-qty">1 tsp</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Banana</span>
+          <span class="item-qty">½ pc</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="quick-chip-rail">
+          <span class="quick-chip-label">Quick-add (last 7d most recent)</span>
+          <span class="quick-chip">+ Idli</span>
+          <span class="quick-chip">+ Dosa</span>
+          <span class="quick-chip">+ Porridge</span>
+          <span class="quick-chip">+ Curd</span>
+        </div>
+        <div class="add-item-bar">
+          <input class="add-item-input" placeholder="Add item — try 'dal'…">
+          <button class="add-item-btn">Add</button>
+        </div>
+      </div>
+
+      <div class="meal-card-structured" style="border-left-color: var(--amber);">
+        <div class="meal-head">
+          <span class="meal-title">Lunch</span>
+          <span class="meal-time-pill" style="background: var(--amber-light); color: var(--tc-amber);">empty</span>
+        </div>
+        <div class="add-item-bar">
+          <input class="add-item-input" placeholder="What did Ziva have at lunch?">
+          <button class="add-item-btn">Add</button>
+        </div>
+        <div class="quick-chip-rail">
+          <span class="quick-chip-label">Quick-add (last 30d most frequent at lunch)</span>
+          <span class="quick-chip">+ Dal khichdi</span>
+          <span class="quick-chip">+ Curd rice</span>
+          <span class="quick-chip">+ Ragi porridge</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Home tab — meal-input cards retired</div>
+      <div class="tab-bar">
+        <button class="tab-btn active">Home</button>
+        <button class="tab-btn">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="section-label">Today So Far</div>
+      <div class="meal-card-legacy" style="border-left-color: var(--sky-light);">
+        <span class="meal-title">Day at a glance</span>
+        <div style="margin-top: 6px; font-size: var(--fs-sm); color: var(--mid);">Breakfast logged · 3 items · 1 hr ago</div>
+      </div>
+
+      <div class="section-label">Meal-input cards</div>
+      <div class="retired-surface">
+        <code>.meal-input-wrap</code> per-meal text cards removed.<br>
+        Tap "Add to log" → opens diet Log sub-tab.
+      </div>
+
+      <div class="section-label">Diet Quick Picker</div>
+      <div class="preserved-surface">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="quick-chip" style="background: var(--peach-light); border-color: var(--peach); color: var(--tc-amber);">Iron foods</span>
+          <span class="quick-chip" style="background: var(--peach-light); border-color: var(--peach); color: var(--tc-amber);">Brain fats</span>
+          <span class="quick-chip" style="background: var(--peach-light); border-color: var(--peach); color: var(--tc-amber);">Probiotics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Trade-off in one line:</strong> simplest mental model + cleanest F-5 normalizer test surface, but burns the parent's existing home-tab meal-input muscle memory. Risk: a parent typing at the home tab will hit dead space until they relearn the Log sub-tab. Mitigation: home-tab "Day at a glance" card includes a "+ Add to log" CTA that opens the diet Log sub-tab.
+  </div>
+</section>
+
+<!-- ───────────────────────────── OPTION B ───────────────────────────── -->
+<section class="option-block">
+  <div class="option-head">
+    <span class="option-pill" style="background: var(--amber);">Option B</span>
+    <h2>Coexist — structured on diet Log; home-tab legacy preserved</h2>
+  </div>
+  <p class="option-desc">The diet Log sub-tab ships the new structured item builder. The home-tab <code>.meal-input-wrap</code> per-meal text cards are preserved unchanged — parents who use the home-tab quick-input keep the muscle memory they have. F-3 (Library consolidation) or a later PR can unify the surfaces; F-5 normalizer reads three shapes (legacy stored + free-text-now + structured). Lowest risk; preserves existing parent flow.</p>
+  <div class="scope-strip">
+    <span class="sw">2 entry surfaces</span>
+    <span class="sw">3 stored shapes (legacy + free-text + structured)</span>
+    <span class="sw neutral">home meal-input unchanged</span>
+    <span class="sw">muscle memory preserved</span>
+  </div>
+  <div class="phone-row">
+
+    <div class="phone">
+      <div class="phone-label">Diet tab → Log sub-tab</div>
+      <div class="tab-bar">
+        <button class="tab-btn">Home</button>
+        <button class="tab-btn active">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="sub-tab-bar">
+        <button class="sub-tab-btn active">Log</button>
+        <button class="sub-tab-btn">Library</button>
+        <button class="sub-tab-btn">Patterns</button>
+      </div>
+
+      <div class="section-label">Today · Wed, May 27</div>
+
+      <div class="meal-card-structured">
+        <div class="meal-head">
+          <span class="meal-title">Breakfast</span>
+          <span class="meal-time-pill">8:30 am</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Paratha</span>
+          <span class="nutri-tag">gluten</span>
+          <span class="item-qty">1 pc</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Ghee</span>
+          <span class="nutri-tag">dairy</span>
+          <span class="item-qty">1 tsp</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Banana</span>
+          <span class="item-qty">½ pc</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="quick-chip-rail">
+          <span class="quick-chip-label">Quick-add</span>
+          <span class="quick-chip">+ Idli</span>
+          <span class="quick-chip">+ Dosa</span>
+          <span class="quick-chip">+ Curd</span>
+        </div>
+        <div class="add-item-bar">
+          <input class="add-item-input" placeholder="Add item — try 'dal'…">
+          <button class="add-item-btn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Home tab — legacy meal-input preserved</div>
+      <div class="tab-bar">
+        <button class="tab-btn active">Home</button>
+        <button class="tab-btn">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="section-label">Today So Far</div>
+      <div class="meal-card-legacy" style="border-left-color: var(--sky-light);">
+        <span class="meal-title">Day at a glance</span>
+        <div style="margin-top: 6px; font-size: var(--fs-sm); color: var(--mid);">Breakfast logged · 3 items · 1 hr ago</div>
+      </div>
+
+      <div class="section-label">Meal-input cards (legacy free-text)</div>
+      <div class="preserved-surface">
+        <div class="meal-card-legacy" style="margin: 0 0 8px 0; box-shadow: none; background: var(--white);">
+          <div class="meal-head">
+            <span class="meal-title">Breakfast</span>
+            <span class="meal-time-pill">8:30 am</span>
+          </div>
+          <input class="legacy-text-input has-content" value="paratha with ghee, banana">
+          <div class="legacy-dropdown-hint">tap any food in the type-ahead</div>
+        </div>
+        <div class="meal-card-legacy" style="margin: 0; box-shadow: none; background: var(--white); border-left-color: var(--amber);">
+          <div class="meal-head">
+            <span class="meal-title">Lunch</span>
+            <span class="meal-time-pill" style="background: var(--amber-light); color: var(--tc-amber);">empty</span>
+          </div>
+          <input class="legacy-text-input" placeholder="What did Ziva have at lunch?">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Trade-off in one line:</strong> safest path for parent flow + zero muscle-memory cost, but the app has two entry surfaces emitting different shapes — F-5 normalizer must read three shapes (legacy stored + free-text-now + structured). Two surfaces also means a parent who logs structured on diet Log but glances at the home meal-input may not see the latest entries reflected without a cross-surface render. F-3 (or a follow-up PR) unifies later.
+  </div>
+</section>
+
+<!-- ───────────────────────────── OPTION C ───────────────────────────── -->
+<section class="option-block">
+  <div class="option-head">
+    <span class="option-pill" style="background: var(--lavender);">Option C</span>
+    <h2>Toggle — structured by default; "Simple mode" opt-in fallback</h2>
+  </div>
+  <p class="option-desc">The diet Log sub-tab shows the structured item builder by default. A persistent toggle pill at the top lets parents switch the sub-tab into "Simple mode" — free-text per-meal cards inside the same Log sub-tab. Mode preference saves to localStorage. Home-tab meal-input cards retired (same as Option A). Highest UX safety net; doubles the form surface area inside the Log sub-tab; F-5 normalizer reads three shapes.</p>
+  <div class="scope-strip">
+    <span class="sw">1 entry surface, 2 modes</span>
+    <span class="sw">3 stored shapes</span>
+    <span class="sw warn">retires home meal-input</span>
+    <span class="sw warn">2× UX code surface</span>
+  </div>
+  <div class="phone-row">
+
+    <div class="phone">
+      <div class="phone-label">Diet Log — Structured mode (default)</div>
+      <div class="tab-bar">
+        <button class="tab-btn">Home</button>
+        <button class="tab-btn active">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="sub-tab-bar">
+        <button class="sub-tab-btn active">Log</button>
+        <button class="sub-tab-btn">Library</button>
+        <button class="sub-tab-btn">Patterns</button>
+      </div>
+
+      <div class="mode-toggle">
+        <button class="mode-toggle-btn active">Structured</button>
+        <button class="mode-toggle-btn">Simple</button>
+      </div>
+      <div class="mode-toggle-info">your choice — saved across sessions</div>
+
+      <div class="meal-card-structured">
+        <div class="meal-head">
+          <span class="meal-title">Breakfast</span>
+          <span class="meal-time-pill">8:30 am</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Paratha</span>
+          <span class="nutri-tag">gluten</span>
+          <span class="item-qty">1 pc</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Ghee</span>
+          <span class="nutri-tag">dairy</span>
+          <span class="item-qty">1 tsp</span>
+          <span class="item-x">×</span>
+        </div>
+        <div class="quick-chip-rail">
+          <span class="quick-chip">+ Idli</span>
+          <span class="quick-chip">+ Banana</span>
+          <span class="quick-chip">+ Curd</span>
+        </div>
+        <div class="add-item-bar">
+          <input class="add-item-input" placeholder="Add item…">
+          <button class="add-item-btn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Diet Log — Simple mode (toggled)</div>
+      <div class="tab-bar">
+        <button class="tab-btn">Home</button>
+        <button class="tab-btn active">Track</button>
+        <button class="tab-btn">Care</button>
+      </div>
+      <div class="sub-tab-bar">
+        <button class="sub-tab-btn active">Log</button>
+        <button class="sub-tab-btn">Library</button>
+        <button class="sub-tab-btn">Patterns</button>
+      </div>
+
+      <div class="mode-toggle">
+        <button class="mode-toggle-btn">Structured</button>
+        <button class="mode-toggle-btn active">Simple</button>
+      </div>
+      <div class="mode-toggle-info">your choice — saved across sessions</div>
+
+      <div class="meal-card-legacy">
+        <div class="meal-head">
+          <span class="meal-title">Breakfast</span>
+          <span class="meal-time-pill">8:30 am</span>
+        </div>
+        <input class="legacy-text-input has-content" value="paratha with ghee, banana">
+        <div class="legacy-dropdown-hint">type-ahead picks single food</div>
+      </div>
+      <div class="meal-card-legacy" style="border-left-color: var(--amber);">
+        <div class="meal-head">
+          <span class="meal-title">Lunch</span>
+          <span class="meal-time-pill" style="background: var(--amber-light); color: var(--tc-amber);">empty</span>
+        </div>
+        <input class="legacy-text-input" placeholder="What did Ziva have at lunch?">
+      </div>
+      <div class="meal-card-legacy" style="border-left-color: var(--lavender);">
+        <div class="meal-head">
+          <span class="meal-title">Dinner</span>
+          <span class="meal-time-pill" style="background: var(--lav-light); color: var(--tc-lav);">empty</span>
+        </div>
+        <input class="legacy-text-input" placeholder="What did Ziva have at dinner?">
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Trade-off in one line:</strong> highest safety net + lets parents choose, but doubles the code surface inside the Log sub-tab (every render path branches on mode); F-5 normalizer must read three shapes; the toggle itself becomes a UX surface to design + test (where does it sit, does it persist across days, does it animate). Likely overbuilt for Ziva-first; could become useful when the app eventually supports multiple babies / multiple caretakers with different preferences.
+  </div>
+</section>
+
+<!-- ───────────────────────────── TRADE-OFF MATRIX ───────────────────────────── -->
+<div class="tradeoffs">
+  <h2>Trade-off matrix</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Axis</th>
+        <th>A — Full replace</th>
+        <th>B — Coexist</th>
+        <th>C — Toggle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Entry surfaces</strong></td>
+        <td class="v-a"><span class="verdict good">1</span> diet Log only</td>
+        <td class="v-b"><span class="verdict watch">2</span> diet Log + home meal-input</td>
+        <td class="v-c"><span class="verdict watch">1 + mode</span> diet Log w/ toggle</td>
+      </tr>
+      <tr>
+        <td><strong>Stored shapes (F-5 reads)</strong></td>
+        <td class="v-a"><span class="verdict good">2</span> legacy + structured</td>
+        <td class="v-b"><span class="verdict watch">3</span> legacy + free-text + structured</td>
+        <td class="v-c"><span class="verdict watch">3</span> legacy + simple-mode-text + structured</td>
+      </tr>
+      <tr>
+        <td><strong>Code surface (lines added)</strong></td>
+        <td class="v-a"><span class="verdict good">smallest</span> ~750 LOC est.</td>
+        <td class="v-b"><span class="verdict neutral">medium</span> ~900 LOC est. (preserves home path)</td>
+        <td class="v-c"><span class="verdict cost">largest</span> ~1,150 LOC est. (both modes live)</td>
+      </tr>
+      <tr>
+        <td><strong>Parent muscle-memory</strong></td>
+        <td class="v-a"><span class="verdict cost">burned</span> home meal-input gone</td>
+        <td class="v-b"><span class="verdict good">preserved</span> home unchanged</td>
+        <td class="v-c"><span class="verdict good">preserved via toggle</span> opt-in</td>
+      </tr>
+      <tr>
+        <td><strong>F-5 normalizer test surface</strong></td>
+        <td class="v-a"><span class="verdict good">simplest</span> 2 shapes</td>
+        <td class="v-b"><span class="verdict watch">harder</span> 3 shapes, cross-surface drift</td>
+        <td class="v-c"><span class="verdict watch">harder</span> 3 shapes</td>
+      </tr>
+      <tr>
+        <td><strong>"Single source of truth" arc</strong></td>
+        <td class="v-a"><span class="verdict good">direct</span> diet Log canonical</td>
+        <td class="v-b"><span class="verdict watch">requires F-3 unification</span></td>
+        <td class="v-c"><span class="verdict cost">requires future deprecation arc</span></td>
+      </tr>
+      <tr>
+        <td><strong>Mobile 1-handed tap budget</strong></td>
+        <td class="v-a"><span class="verdict good">best</span> one place</td>
+        <td class="v-b"><span class="verdict watch">worst</span> may flip-flop</td>
+        <td class="v-c"><span class="verdict neutral">medium</span> one extra tap to choose mode</td>
+      </tr>
+      <tr>
+        <td><strong>Spec §4 alignment</strong></td>
+        <td class="v-a"><span class="verdict good">direct</span> "Save → emits structured"</td>
+        <td class="v-b"><span class="verdict watch">partial</span> home tab still free-text</td>
+        <td class="v-c"><span class="verdict watch">mixed</span> structured default + free-text mode</td>
+      </tr>
+      <tr>
+        <td><strong>Risk of regression</strong></td>
+        <td class="v-a"><span class="verdict watch">moderate</span> replaces home muscle memory</td>
+        <td class="v-b"><span class="verdict good">lowest</span> home unchanged</td>
+        <td class="v-c"><span class="verdict watch">moderate</span> toggle state across sessions</td>
+      </tr>
+      <tr>
+        <td><strong>Honesty axis (CV3-006)</strong></td>
+        <td class="v-a"><span class="verdict good">PASS</span> one entry; clear source</td>
+        <td class="v-b"><span class="verdict watch">PASS-with-note</span> dual sources to track</td>
+        <td class="v-c"><span class="verdict good">PASS</span> per-mode source clear</td>
+      </tr>
+      <tr>
+        <td><strong>Warmth axis (CV3-006)</strong></td>
+        <td class="v-a"><span class="verdict watch">mixed</span> new pattern to learn</td>
+        <td class="v-b"><span class="verdict good">PASS</span> familiar home unchanged</td>
+        <td class="v-c"><span class="verdict good">PASS</span> parent choice respected</td>
+      </tr>
+      <tr>
+        <td><strong>Extensibility (CV3-006)</strong></td>
+        <td class="v-a"><span class="verdict good">PASS</span> single surface to extend</td>
+        <td class="v-b"><span class="verdict watch">PASS</span> two surfaces to extend in lockstep</td>
+        <td class="v-c"><span class="verdict cost">cost</span> every new feature × 2 modes</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="recommendation">
+  <h3>Lyra's read</h3>
+  <p>I lean <strong>Option A — Full replace</strong> for this session. The food-sub-tab F-1 scaffold (PR #165) already moved the meal-card surface conceptually into the diet Log sub-tab — the home-tab <code>.meal-input-wrap</code> is the legacy holdover; F-2's job is to make the diet Log the canonical entry. F-5 normalizer test surface stays at 2 shapes (legacy stored + structured), the cleanest path for the v3-8 normalizer arc.</p>
+  <p>That said: if the muscle-memory risk feels load-bearing — parents type at the home tab today, and a sudden retirement could read as "the app took away the place I log breakfast" — <strong>Option B</strong> is the safer compromise. The cost is F-3 (or a later PR) needs to unify, and F-5 reads three shapes. That cost is real but bounded.</p>
+  <p><strong>Option C</strong> reads to me as a v2-or-later feature, not a v1 one. The toggle adds UX complexity for a Ziva-first app where there's one parent + one caretaker; if SproutLab ever generalises (multi-baby, multi-caretaker with divergent preferences), C becomes the obvious move. For now: the doubled code surface + the toggle-state UX design is overbuilt.</p>
+  <p>Whatever you pick, F-2 will ship typeahead + quick-add chips + qty/unit pickers as the structured surface — those are core to the spec. The variable is what happens to home-tab <code>.meal-input-wrap</code>.</p>
+  <div class="signature">— Lyra, F-2 scoping. Mockup served for Architect decision. After ratification, I'll fold the chosen option into the F-2 IMPL PR + run <code>/code-review xhigh</code> before the canon-cc-008 chain (AGENTS.md Rule 13).</div>
+</div>
+
+<footer>
+  food-sub-tab-v1 F-2 mockup · spec: <code>docs/specs/food-sub-tab-v1.md</code> · F-1: PR #165 · F-2 branch: <code>claude/food-sub-tab-v1-impl-GXBKC</code>
+</footer>
+
+</div>
+</body>
+</html>
