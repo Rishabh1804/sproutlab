@@ -1,6 +1,6 @@
-# Spec: Diet Tab Rework v1
+# Spec: Diet Tab Rework v1 — SUPERSEDED
 
-**Version:** v1.0 draft (Mode-1 + Wave 1.5 + Wave 2 main-session synthesis)
+**Version:** v1.0 draft (Mode-1 + Wave 1.5 + Wave 2 main-session synthesis) — **superseded 2026-05-28**
 **Date:** 2026-05-23
 **Authors:**
 - Lyra (Mode-1 subagent) — primary spec body (Wave 1)
@@ -11,17 +11,19 @@
 **Against commit:** `b2670f7`
 **Cross-references:** `docs/specs/isl-upgrade-v1.md` (Arc B — Phase 3 of this spec depends on Arc B's keystone trio)
 
-## Status
+## Status — SUPERSEDED (2026-05-28)
 
-`pending_review` (cc-018). Prerequisites for `ratified`:
+**`superseded` (cc-018). Retained for provenance. Do not implement from this body.**
 
-- Architect ratification of IA pattern A, the Wave-1.5 fold-in, the Wave-2 amendments, and the two-spec arc-pair strategy.
-- Maren Mode-1 audit — **complete** (V-M-47 through V-M-54 issued; verdict: yes-with-fixes; fixes folded below).
-- Kael Mode-1 audit — **complete** (V-K-49 through V-K-57 issued; verdict: yes-with-fixes; fixes folded below).
-- Cipher Mode-1 Edict V pre-pass — **complete** (verdict: pass-with-fixes; fixes folded below).
-- Aurelius cross-cluster chronicling — **complete** (verdict: chronicling-ready; amendments folded; Codex Memory.md candidates per Chronicler's discretion post-ratify).
+> Arc A here redesigned the Diet tab into `[Today] [Score] [Insights] [Library]` segments. Between authoring (2026-05-23) and now, **`food-sub-tab-v1` was ratified and shipped** (PRs #166 / #168, spec amendments #167 / #169), restructuring the *same* surface (`#tab-diet`) into a different, now-merged IA — **`[Log] [Library] [Patterns]`** (`switchDietSub` / `.diet-sub-panel` on `main`). Two competing IA visions for one surface; the merged one wins.
 
-**Companion-set deploy delta — paired ratification.** This spec and `isl-upgrade-v1.md` form a single arc-pair artifact under cc-018. Ratifying one without the other constitutes a canon-cc-008 short-circuit unless the Architect explicitly defers one — in which case Arc A Phase 3 must be deferred until Arc B Phase B-1 ratifies separately.
+**Disposition (Architect, 2026-05-28 post-F-2 board triage):**
+
+- **Arc A IA rework — PARKED.** Phases 1, 2, 4, 5, 6 (the whole-tab restructure: segment router `switchDietSegment`, `renderDietSegment` dispatcher, `ziva_diet_segment` sticky-state, meal-card `dqp` compression, expand-by-default Insights, Library overlay) are obsolete — `main` already carries diet sub-tab nav + structured F-1/F-2 entry. Implementing them as-written would rip out merged scaffolding.
+- **Surviving content → migrated to Arc B.** The Phase-3 chemistry/combo surfacing (Fibre Variety / Bioactive Diversity / Variety-nudge tiles, per-food Chemistry detail, `meal_combo_check` chip-stack) was the genuinely valuable half. It is **re-homed into `isl-upgrade-v1.md` (Arc B, §Surfacing re-home)**, re-targeted from Arc A's segments to the merged `[Patterns]` (analytics tiles + combo surfacing) and `[Library]` (per-food chemistry) sub-tabs.
+- **Surviving Care-gap → carried forward.** V-M-50 (the meal-input flow surfaces no proactive age/allergen signal) is a real pre-existing Care gap, independent of IA. Re-evaluate against the F-2 FOB Feed-sheet entry flow; not actioned here.
+
+The Wave-1/1.5/2 audit record below (Maren V-M-47–54, Kael V-K-49–57, Cipher Edict V, Aurelius) is preserved unchanged as the provenance trail.
 
 ## Why
 

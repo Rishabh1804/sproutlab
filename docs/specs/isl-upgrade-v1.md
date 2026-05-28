@@ -8,19 +8,19 @@
 
 **Authority chain:** `CLAUDE.md` §QA Chain · canon-cc-008 · canon-cc-022 · cc-018 `pending_review`
 **Against commit:** `b2670f7`
-**Cross-references:** `docs/specs/diet-rework-v1.md` (Arc A — Phase 3 depends on Arc B's keystone trio)
+**Cross-references:** `docs/specs/diet-rework-v1.md` (Arc A — **SUPERSEDED 2026-05-28**; its IA rework is parked, its chem/combo surfacing re-homed here into the merged `food-sub-tab-v1` sub-tabs — see §Surfacing re-home)
 
 ## Status
 
 `pending_review` (cc-018). Prerequisites for `ratified`:
 
-- Architect ratification of the upgrade roadmap, the Wave-2 amendments, and the Arc-A/Arc-B sequencing.
+- Architect ratification of the upgrade roadmap and the Wave-2 amendments. (Arc-A/Arc-B sequencing is moot — Arc A superseded 2026-05-28; Arc B ratifies standalone.)
 - Kael Mode-1 audit — **complete** (V-K-49 through V-K-57 issued; verdict: yes-with-fixes; fixes folded below).
 - Maren Mode-1 cross-consult — **complete** (V-M-47 through V-M-54 issued; copy + schema + safety-override findings folded below).
 - Cipher Mode-1 Edict V pre-pass — **complete** (verdict: pass-with-fixes; fixes folded below).
 - Aurelius cross-cluster chronicling — **complete** (verdict: chronicling-ready; Codex Memory.md candidates per Chronicler's discretion post-ratify).
 
-**Companion-set deploy delta — paired ratification.** This spec and `diet-rework-v1.md` form a single arc-pair artifact under cc-018. Ratifying one without the other constitutes a canon-cc-008 short-circuit unless the Architect explicitly defers one — in which case Arc A Phase 3 must be deferred until Arc B Phase B-1 ratifies separately.
+**Arc-pair dissolved — Arc B now stands alone (2026-05-28).** Arc A (`diet-rework-v1.md`) is superseded by the ratified-and-merged `food-sub-tab-v1` IA; its surfacing targets are re-homed here (see §Surfacing re-home). Arc B is self-contained on the intelligence layer and **ratifies standalone** — there is no longer a paired Arc A to gate against. The engine work (B-1, B-3, B-4) is surface-agnostic; only the B-2 card surfacing re-points to the merged `[Patterns]` / `[Library]` sub-tabs.
 
 ## Why
 
@@ -56,6 +56,19 @@ Arc A Phase 3 is blocked on this layer. Hence this Arc B — surgically targeted
 - **Diet-side surfaces (`diet.js`, `home.js`, `core.js` segment routing) — see Arc A (C-REQ-3 boundary).**
 
 **Hard boundary.** Arc B does not modify ISL semantics — it extends ISL surface. Existing intents, handlers, and accessors keep their contracts. New surfaces are additive.
+
+## Surfacing re-home (2026-05-28 — Arc A superseded)
+
+Arc B's engine outputs were originally surfaced by Arc A's `[Today]` / `[Score]` / `[Library]` segments. With Arc A parked (its IA superseded by the merged `food-sub-tab-v1`), the **B-2 surfacing re-targets the merged `food-sub-tab-v1` sub-tabs** on `main` (`switchDietSub` / `.diet-sub-panel`):
+
+| Engine output (Arc B) | Original Arc A home | Re-homed target (merged IA) |
+|-----------------------|---------------------|------------------------------|
+| `renderInfoChemVariety` (Fibre Variety + Bioactive Diversity tiles) | `[Score]` segment | **`[Patterns]`** sub-tab (analytics surface) |
+| `renderInfoVarietyNudge` (Variety-nudge tile, V-M-48 copy locked) | `[Score]` segment | **`[Patterns]`** sub-tab |
+| Per-food Chemistry detail (`chem.fibre`/`antiNutrients`/`bioactives`) | `[Library]` per-food overlay | **`[Library]`** sub-tab per-food view |
+| `meal_combo_check` chip-stack (`computeMealCombos`) | `[Today]` post-log chips | logging/review surface — **F-3 Log review surface or `[Patterns]`** (exact placement confirmed against the F-2/F-3 surface contracts at B-2 implementation time, not pinned here) |
+
+**The B-1 keystone trio (`chemRollup` + `meal_combo_check` intent + `qaAnswerMealCombo` + `computeMealCombos`) is surface-agnostic and unchanged** — it ships regardless of where the cards ultimately land. Only B-2 (the card renderers) carries the re-home; its `intelligence-cards.js` insert points are unaffected (engine-side), only the diet-tab mount call-sites change from Arc A segments to the merged sub-tab panels.
 
 ## State of the union (scout #2 + Wave 2 corrections)
 
@@ -295,7 +308,7 @@ function qaAnswerMealCombo(intentId) {
 | B-3 | Temporal parser ext + silent-catch console.error | `resolveTimeQuery` += `last Tuesday` + `N weeks ago` (HR-12 medium); `console.error` in `intelligence-qa.js:1670–1672` | `claude/sproutlab-isl-upgrade-p3` | Kael | small | Kael Mode-1 → synth → Cipher. **(Scope-collapsed from original B-3 per V-K-49 — pre-alpha intent rows retired.)** |
 | B-4 | Boundary cleanup (hygiene) | Relocate `_qaUpdateSuggestions` + `QA_SUGGEST_POOL` + `_qaDetectDomain` → qa (~172 LOC); `renderInfoAdoption` → cards (~30 LOC). | `claude/sproutlab-isl-upgrade-p4` | Kael | small (~200 LOC moved, concat-order safe) | Kael Mode-1 → synth → Cipher. |
 
-**Dependency on Arc A.** Arc A Phase 3 depends on Arc B Phase B-1. Arc A Phases 1, 2, 4, 5, 6 are independent.
+**Arc A dependency — dissolved.** Arc A is superseded (parked 2026-05-28); Arc B no longer gates or is gated by it. B-2 surfacing re-homes to the merged `food-sub-tab-v1` sub-tabs (see §Surfacing re-home). B-1/B-3/B-4 are surface-agnostic and unaffected.
 
 **Regression-guard names (from Cipher Edict V + Wave 2 additions, locked):**
 - B-1: `regression-guard-chemrollup-contract`, `regression-guard-meal-combo-intent-registered`, `regression-guard-combo-tri-resolution` (V-K-53 — confirms tri-resolution catches rule #6).
