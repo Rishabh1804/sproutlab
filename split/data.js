@@ -2779,6 +2779,428 @@ window.isStructuredFeedingV1 = function(mealVal) {
   return mealVal && typeof mealVal === 'object' && Array.isArray(mealVal.items);
 };
 
+// ═══════════════════════════════════════════════════════════════════════
+// F-2 — per-food quantity defaults, CURATED_COMBOS, skip state, write helper
+// Spec: docs/specs/food-sub-tab-v1.md §F-2; ratifications #2 + #4 + #6.
+// Sidecar registry `NUTRITION_QTY_DEFAULTS` carries explicit qty/unit/step
+// for the top-used foods (the ones the 79-day feeding-data sample shows
+// parents actually log). Foods without an explicit override fall through
+// `_fdResolveQtyDefaults` to a category-based default. Kept as a sidecar
+// (not inline NUTRITION fields) so the qty data is discoverable in one
+// block — same intent as ratification #4 ("extend NUTRITION rows") with
+// edit-locality + maintainability preserved.
+// ═══════════════════════════════════════════════════════════════════════
+
+// Per-food explicit qty defaults. Keys MUST exist in NUTRITION (the
+// audit gate verifies). qty is a number (fractional allowed); unit is a
+// short display string ('pc' / 'tsp' / 'bowl' / 'cup' / 'piece'); step
+// is the +/- increment a single qty-stepper tap applies.
+window.NUTRITION_QTY_DEFAULTS = {
+  // ── GRAINS & STAPLES ──
+  'khichdi':        { qty: 1,    unit: 'bowl', step: 0.25 },
+  'ragi':           { qty: 1,    unit: 'cup',  step: 0.25 },   // porridge form
+  'rice':           { qty: 0.5,  unit: 'bowl', step: 0.25 },
+  'suji':           { qty: 1,    unit: 'cup',  step: 0.25 },
+  'oats':           { qty: 1,    unit: 'cup',  step: 0.25 },
+  'bajra':          { qty: 1,    unit: 'pc',   step: 0.5 },    // roti form
+  'jowar':          { qty: 1,    unit: 'pc',   step: 0.5 },
+  'idli':           { qty: 1,    unit: 'pc',   step: 1 },
+  'dosa':           { qty: 1,    unit: 'pc',   step: 0.5 },
+  'roti':           { qty: 1,    unit: 'pc',   step: 0.5 },
+  'paratha':        { qty: 1,    unit: 'pc',   step: 0.5 },
+  'poha':           { qty: 0.5,  unit: 'bowl', step: 0.25 },
+  // ── LENTILS ──
+  'moong dal':      { qty: 0.5,  unit: 'bowl', step: 0.25 },
+  'masoor dal':     { qty: 0.5,  unit: 'bowl', step: 0.25 },
+  'toor dal':       { qty: 0.5,  unit: 'bowl', step: 0.25 },
+  // ── VEGETABLES ──
+  'carrot':         { qty: 0.25, unit: 'cup',  step: 0.25 },   // mashed/puree form
+  'beetroot':       { qty: 0.25, unit: 'cup',  step: 0.25 },
+  'bottle gourd':   { qty: 0.25, unit: 'cup',  step: 0.25 },
+  'spinach':        { qty: 0.25, unit: 'cup',  step: 0.25 },
+  'tomato':         { qty: 0.5,  unit: 'pc',   step: 0.5 },
+  'cucumber':       { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  'beans':          { qty: 0.25, unit: 'cup',  step: 0.25 },
+  // ── FRUITS ──
+  'apple':          { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  'banana':         { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  'mango':          { qty: 0.25, unit: 'pc',   step: 0.25 },   // small pieces typical
+  'avocado':        { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  'blueberry':      { qty: 5,    unit: 'pc',   step: 2 },
+  'pear':           { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  'papaya':         { qty: 0.25, unit: 'pc',   step: 0.25 },
+  'watermelon':     { qty: 1,    unit: 'cup',  step: 0.5 },    // cubed
+  'pomegranate':    { qty: 0.25, unit: 'cup',  step: 0.25 },   // seeds
+  'date':           { qty: 1,    unit: 'pc',   step: 1 },
+  'chiku':          { qty: 0.5,  unit: 'pc',   step: 0.25 },
+  // ── DAIRY & FATS ──
+  'ghee':           { qty: 1,    unit: 'tsp',  step: 0.5 },
+  'curd':           { qty: 0.25, unit: 'cup',  step: 0.25 },
+  'paneer':         { qty: 1,    unit: 'tbsp', step: 0.5 },    // crumbled
+  // ── NUTS & SEEDS (powdered/soaked) ──
+  'almonds':        { qty: 2,    unit: 'pc',   step: 1 },
+  'walnut':         { qty: 1,    unit: 'pc',   step: 1 },
+  'cashew':         { qty: 2,    unit: 'pc',   step: 1 },
+  'flaxseed':       { qty: 0.5,  unit: 'tsp',  step: 0.5 },
+  'chia seeds':     { qty: 0.5,  unit: 'tsp',  step: 0.5 },
+  // ── SPICES (trace amounts for babies) ──
+  'jeera':          { qty: 0.25, unit: 'tsp',  step: 0.25 },
+  'cumin':          { qty: 0.25, unit: 'tsp',  step: 0.25 },
+  'turmeric':       { qty: 0.25, unit: 'tsp',  step: 0.25 },
+  // ── LIQUIDS ──
+  'coconut water':  { qty: 0.5,  unit: 'cup',  step: 0.25 },
+  'lemon':          { qty: 1,    unit: 'tsp',  step: 0.5 },    // juice
+};
+
+// Category-based fallback for any NUTRITION row without an explicit qty
+// override. `_fdResolveQtyDefaults` walks the food name + NUTRITION tags
+// to pick the best-fitting category. Foods that mismatch all heuristics
+// fall through to the 'fallback' bucket.
+window._FOOD_QTY_CATEGORY_DEFAULTS = {
+  'porridge':       { qty: 1,    unit: 'cup',     step: 0.25 },
+  'roti-flatbread': { qty: 1,    unit: 'pc',      step: 0.5  },
+  'grain-staple':   { qty: 0.5,  unit: 'bowl',    step: 0.25 },
+  'dal-legume':     { qty: 0.5,  unit: 'bowl',    step: 0.25 },
+  'veg-piece':      { qty: 0.5,  unit: 'pc',      step: 0.25 },
+  'veg-mashed':     { qty: 0.25, unit: 'cup',     step: 0.25 },
+  'fruit-piece':    { qty: 0.5,  unit: 'pc',      step: 0.25 },
+  'fruit-berry':    { qty: 5,    unit: 'pc',      step: 2    },
+  'fruit-mash':     { qty: 2,    unit: 'tbsp',    step: 1    },
+  'nut-piece':      { qty: 1,    unit: 'pc',      step: 1    },
+  'fat-cooking':    { qty: 1,    unit: 'tsp',     step: 0.5  },
+  'spice':          { qty: 0.25, unit: 'tsp',     step: 0.25 },
+  'liquid-drink':   { qty: 0.5,  unit: 'cup',     step: 0.25 },
+  'fallback':       { qty: 1,    unit: 'serving', step: 1    },
+};
+
+// Strip a prep-form word ("ragi porridge"→"ragi", "banana mash"→"banana",
+// "bajra roti"→"bajra") so a curated explicit override / NUTRITION row can
+// be matched before the broad category fallthrough. Returns '' when
+// stripping would empty the string (the food name IS the prep word, e.g.
+// "porridge", "roti") so callers fall back to the original base. (V-K-201)
+window._fdStripPrepSuffix = function(base) {
+  if (!base) return '';
+  return String(base)
+    .replace(/\b(porridge|mash|puree|pure|sauce|roti|chapati|paratha)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Resolve a food name to its best NUTRITION key for the nutrient join:
+// paren-strip, and if that isn't a NUTRITION row, try the prep-suffix-
+// stripped stem ("ragi porridge"→"ragi"). Falls back to the paren-stripped
+// base when neither matches, preserving legacy behavior. (V-K-200)
+window._fdNutritionRef = function(name) {
+  if (!name) return '';
+  var base = String(name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
+  if (typeof NUTRITION !== 'undefined' && NUTRITION) {
+    if (NUTRITION[base]) return base;
+    var stem = window._fdStripPrepSuffix(base);
+    if (stem && stem !== base && NUTRITION[stem]) return stem;
+  }
+  return base;
+};
+
+// Resolver — explicit override wins; category fallback otherwise.
+// Returns { qty, unit, step }; never null.
+window._fdResolveQtyDefaults = function(foodName) {
+  if (!foodName) return _FOOD_QTY_CATEGORY_DEFAULTS.fallback;
+  var key = String(foodName).toLowerCase().trim();
+  // Strip parenthetical variants ("ghee (cow)" → "ghee"; "khichdi (masoor dal)" → "khichdi")
+  var base = key.replace(/\s*\([^)]*\)\s*/g, '').trim();
+  // 1. Explicit per-food override
+  if (NUTRITION_QTY_DEFAULTS[base]) return NUTRITION_QTY_DEFAULTS[base];
+  if (NUTRITION_QTY_DEFAULTS[key])  return NUTRITION_QTY_DEFAULTS[key];
+  // 1b. Prep-suffix-stripped stem ("banana mash"→"banana") so a curated
+  //     explicit qty wins over the broad category catch below. Category
+  //     heuristics still run on the un-stripped base, so unnamed mashes
+  //     ("papaya puree") keep their fruit-mash default. (V-K-201)
+  var stem = window._fdStripPrepSuffix(base);
+  if (stem && stem !== base && NUTRITION_QTY_DEFAULTS[stem]) return NUTRITION_QTY_DEFAULTS[stem];
+  // 2. Category resolver — name heuristics first
+  if (/porridge|upma|halwa/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['porridge'];
+  if (/\b(roti|chapati|paratha|naan|puri)\b/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['roti-flatbread'];
+  if (/\bdal\b|chickpeas|rajma|chole|peas/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['dal-legume'];
+  if (/\b(berry|cherry|grape|raisin)\b/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['fruit-berry'];
+  if (/mash|puree|sauce/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['fruit-mash'];
+  if (/(juice|water|coconut water|milk)/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['liquid-drink'];
+  if (/(seed|sesame|flax|chia)/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['spice'];
+  // 3. Tag-based fallback from NUTRITION
+  var n = (typeof NUTRITION !== 'undefined' && NUTRITION[base]) || (typeof NUTRITION !== 'undefined' && NUTRITION[key]);
+  if (n && n.tags) {
+    if (n.tags.indexOf('healthy-fats') >= 0 && /oil|ghee|butter/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['fat-cooking'];
+    if (n.tags.indexOf('iron-rich') >= 0 && n.tags.indexOf('protein-rich') >= 0) return _FOOD_QTY_CATEGORY_DEFAULTS['dal-legume'];
+    if (n.tags.indexOf('energy') >= 0 && n.tags.indexOf('digestive') < 0) return _FOOD_QTY_CATEGORY_DEFAULTS['grain-staple'];
+  }
+  // 4. Heuristic by nutrient profile
+  if (n && n.nutrients) {
+    if (n.nutrients.indexOf('water') >= 0) return _FOOD_QTY_CATEGORY_DEFAULTS['liquid-drink'];
+  }
+  return _FOOD_QTY_CATEGORY_DEFAULTS['fallback'];
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// CURATED_COMBOS — L2 autofill cold-start fallback (ratification #2 + #4)
+// 12 seed entries: 4 breakfast / 5 lunch+dinner / 3 snack. Age-gated via
+// minAgeMonths; surfaced when rolling-14d window has <7 days of signal.
+// Future curation arc (deferred) can expand from pediatrician guidelines.
+// ═══════════════════════════════════════════════════════════════════════
+window.CURATED_COMBOS = [
+  // ── BREAKFAST (4) ──
+  { slot: 'breakfast', items: ['Ragi porridge', 'Ghee (cow)', 'Banana mash'],
+    rationale: 'iron-base breakfast — ragi for iron, ghee for calorie density, banana for sweetness',
+    minAgeMonths: 6 },
+  { slot: 'breakfast', items: ['Avocado mash', 'Blueberry', 'Mango puree'],
+    rationale: 'good-fat + vitamin-C breakfast',
+    minAgeMonths: 6 },
+  { slot: 'breakfast', items: ['Suji', 'Ghee (cow)', 'Apple puree'],
+    rationale: 'soft-grain breakfast — gentle on stomach + cooked fruit pairing',
+    minAgeMonths: 6 },
+  { slot: 'breakfast', items: ['Oats porridge', 'Ghee (cow)', 'Banana mash'],
+    rationale: 'cereal-fruit breakfast — fibre + slow carbs',
+    minAgeMonths: 7 },
+  // ── LUNCH / DINNER (5) ──
+  { slot: 'lunch', items: ['Khichdi (masoor dal)', 'Ghee (cow)', 'Carrot', 'Bottle gourd'],
+    rationale: 'staple khichdi — protein + ghee + 2 veggies',
+    minAgeMonths: 6 },
+  { slot: 'lunch', items: ['Bajra roti', 'Masoor dal', 'Ghee (cow)', 'Spinach'],
+    rationale: 'millet-roti lunch — bajra for variety + iron-rich spinach',
+    minAgeMonths: 8 },
+  { slot: 'dinner', items: ['Khichdi (moong dal)', 'Ghee (cow)', 'Beetroot', 'Carrot'],
+    rationale: 'lighter moong dal dinner — easier overnight digestion',
+    minAgeMonths: 6 },
+  { slot: 'dinner', items: ['Rice', 'Masoor dal', 'Ghee (cow)'],
+    rationale: 'simple rice + dal dinner — fall-back when kitchen is light',
+    minAgeMonths: 6 },
+  { slot: 'lunch', items: ['Idli', 'Ghee (cow)', 'Tomato'],
+    rationale: 'south-Indian lunch — fermented + gut-friendly',
+    minAgeMonths: 7 },
+  // ── SNACK (3) ──
+  { slot: 'snack', items: ['Cucumber', 'Mango'],
+    rationale: 'hydration + sweet snack',
+    minAgeMonths: 7 },
+  { slot: 'snack', items: ['Coconut water', 'Cucumber'],
+    rationale: 'hot-day hydration — electrolytes + cooling',
+    minAgeMonths: 7 },
+  { slot: 'snack', items: ['Banana', 'Almonds'],
+    rationale: 'calorie-dense snack — fruit + nut for sustained energy',
+    minAgeMonths: 8 },
+];
+
+// Curated combo lookup — returns entries matching slot + Ziva's current age.
+window._fdGetCuratedCombosForMeal = function(meal, ageMonths) {
+  if (!meal || !Array.isArray(CURATED_COMBOS)) return [];
+  return CURATED_COMBOS.filter(function(c) {
+    if (c.slot !== meal) return false;
+    if (typeof ageMonths === 'number' && c.minAgeMonths > ageMonths) return false;
+    return true;
+  });
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// parseFeedingV1 — read-side normalizer (F-2 ships partial; F-5 ships
+// the full v3-8 parseFeeding tolerating ALL three shapes).
+// Returns: { items: [{name, qty, unit, ...}], time, overallIntake, ... }
+// regardless of input shape. Legacy strings parse via comma-split + qty
+// resolver. Skipped slots return { skipped: true, items: [] }.
+// ═══════════════════════════════════════════════════════════════════════
+window.parseFeedingV1 = function(mealVal) {
+  // Skipped state
+  if (mealVal && typeof mealVal === 'object' && mealVal.skipped === true) {
+    return { items: [], skipped: true, skippedAt: mealVal.skippedAt || null };
+  }
+  // Structured shape — return as-is (already canonical)
+  if (window.isStructuredFeedingV1(mealVal)) {
+    return mealVal;
+  }
+  // Legacy string — comma-split + resolve defaults per item
+  if (typeof mealVal === 'string') {
+    var raw = mealVal.trim();
+    if (!raw) return { items: [] };
+    // Skip sentinel reaching the normalizer directly (the live read path
+    // guards this in _fdReadDayMeal, but F-5 callers may invoke parseFeedingV1
+    // on the raw string) — must not emit a phantom "—skipped—" food. (V-K-202)
+    var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+    if (raw === sentinel) return { items: [], skipped: true };
+    var items = raw.split(',').map(function(s) {
+      var name = s.trim().replace(/,+$/, '');
+      if (!name) return null;
+      var defaults = window._fdResolveQtyDefaults(name);
+      return {
+        name: name,
+        qty: defaults.qty,
+        unit: defaults.unit,
+        source: 'legacy-parse',
+        nutritionRef: window._fdNutritionRef(name)
+      };
+    }).filter(function(x) { return x; });
+    return { items: items, _parsedFrom: 'legacy-string' };
+  }
+  // Unknown — return empty
+  return { items: [] };
+};
+// Keep the F-1 stub as an alias so any caller bound to the stub name still works.
+window.parseFeedingV1Stub = window.parseFeedingV1;
+
+// ═══════════════════════════════════════════════════════════════════════
+// Skip-state helpers (ratification #6)
+// Mark a meal slot as intentionally-skipped. Skipped slots render as
+// muted "Skipped" pills and are excluded from nutrition-snapshot diversity
+// penalties. Reversible — writing a real entry overwrites the skip.
+// ═══════════════════════════════════════════════════════════════════════
+// Writes the canonical SKIPPED_MEAL sentinel at the legacy [meal] field
+// (matches existing app-wide pattern at core.js:3119; consumers in
+// home.js Today's Meals + diet.js stats + intelligence-cards.js + isl
+// all key off this sentinel — there's no reason to invent a new one).
+// Clears the v1 sidecar AND the legacy [meal+'_time']/[meal+'_intake']
+// fields so a skip is atomic — Today So Far + diet stats don't render
+// stale time/intake for what the parent just marked as skipped.
+window._fdMarkMealSkipped = function(dateKey, meal) {
+  if (!dateKey || !meal) return false;
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+  if (!fd[dateKey]) fd[dateKey] = { breakfast: '', lunch: '', dinner: '', snack: '' };
+  fd[dateKey][meal] = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  delete fd[dateKey][meal + '_v1'];
+  delete fd[dateKey][meal + '_time'];
+  delete fd[dateKey][meal + '_intake'];
+  if (typeof save === 'function' && typeof KEYS !== 'undefined' && KEYS.feeding) {
+    save(KEYS.feeding, fd);
+  }
+  if (typeof feedingData !== 'undefined') feedingData = fd;
+  if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
+  return true;
+};
+
+window._fdIsMealSkipped = function(dateKey, meal) {
+  if (!dateKey || !meal) return false;
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+  var day = fd[dateKey];
+  if (!day) return false;
+  var mv = day[meal];
+  var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  if (mv === sentinel) return true;
+  if (mv && typeof mv === 'object' && mv.skipped === true) return true;  // legacy F-2-prerelease shape
+  return false;
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// _fdWriteStructuredMeal — canonical writer for the F-2 FOB Feed sheet.
+//
+// Backward-compat doctrine (load-bearing): existing readers across
+// home.js Today's Meals, diet.js stats + combos, intelligence-cards.js,
+// intelligence-isl.js, medical.js all assume `feedingData[date][meal]`
+// is a STRING. Writing an object there breaks every legacy reader.
+//
+// So this writer keeps the legacy string at [meal] (comma-joined item
+// names) AND tucks the rich structured shape into a [meal + '_v1']
+// SIDECAR field. F-2 readers (L1-L4 helpers, saveQLFeed, diet Log
+// sub-tab review) reach for the sidecar via _fdReadDayMeal; legacy
+// readers continue reading the comma-string at [meal] unchanged.
+// F-5's parseFeeding normalizer will eventually unify the reads.
+//
+// payload: { items: [{name, qty, unit, nutritionRef}], time, overallIntake, note, sourceFlow }
+// Returns the structured shape that was written to the sidecar.
+// ═══════════════════════════════════════════════════════════════════════
+window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
+  if (!dateKey || !meal || !payload) return null;
+  payload = payload || {};
+  var items = Array.isArray(payload.items) ? payload.items.slice() : [];
+  // Legacy comma-joined text — what existing readers expect at [meal].
+  var textCompat = items.map(function(it) { return it.name; }).join(', ');
+
+  var structured = {
+    items: items,
+    time: payload.time || null,
+    overallIntake: (typeof payload.overallIntake === 'number') ? payload.overallIntake : 0.75,  // ratified DEFAULT "Most"
+    note: payload.note || '',
+    sourceFlow: payload.sourceFlow || 'fob-feed',
+    schemaVersion: window._FEEDING_V1_SCHEMA_VERSION,
+    writtenAt: Date.now(),
+  };
+
+  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
+  if (!fd[dateKey]) fd[dateKey] = { breakfast: '', lunch: '', dinner: '', snack: '' };
+  // Legacy string at the canonical slot (load-bearing for existing readers).
+  fd[dateKey][meal] = textCompat;
+  // Structured shape in sidecar — F-2 readers (L1-L4 helpers + diet Log
+  // review surface) reach here for qty + sourceFlow + overallIntake.
+  fd[dateKey][meal + '_v1'] = structured;
+  // Legacy time at the day level (existing readers reach for this).
+  // Unconditionally write — if structured.time is null, clear the legacy
+  // field so undo/re-save flows don't leave a phantom time from a prior
+  // write attached to a different food.
+  if (structured.time) fd[dateKey][meal + '_time'] = structured.time;
+  else delete fd[dateKey][meal + '_time'];
+  // Legacy intake at the day level — only for B/L/D. Snack has the
+  // chip in the F-2 UI but the legacy invariant (pre-F-2 saveQLFeed
+  // guard `_qlMeal !== 'snack'`) was that snack carries no intake at
+  // the day level. Existing readers (intelligence-cards.js, isl, diet
+  // stats) assume snack_intake is undefined for snacks; preserve that.
+  // F-2 readers reach structured.overallIntake via _fdReadDayMeal.
+  if (meal !== 'snack') {
+    fd[dateKey][meal + '_intake'] = structured.overallIntake;
+  } else {
+    delete fd[dateKey][meal + '_intake'];
+  }
+
+  if (typeof save === 'function' && typeof KEYS !== 'undefined' && KEYS.feeding) {
+    save(KEYS.feeding, fd);
+  }
+  if (typeof feedingData !== 'undefined') feedingData = fd;
+  return structured;
+};
+
+// _fdReadDayMeal — canonical reader. Returns the F-2 view of a meal slot
+// regardless of which shape sits on disk. Reads the [meal + '_v1']
+// sidecar first; falls back to parsing the legacy string at [meal].
+// Returns: { items[], time, overallIntake, skipped, sourceFlow, legacyText }
+window._fdReadDayMeal = function(dayObj, mealKey) {
+  if (!dayObj || !mealKey) return { items: [], skipped: false };
+  var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+  var legacy = dayObj[mealKey];
+  // Skip sentinel — both forms
+  if (legacy === sentinel) {
+    return { items: [], skipped: true, legacyText: sentinel };
+  }
+  // Sidecar present — return the structured shape
+  var sidecar = dayObj[mealKey + '_v1'];
+  if (sidecar && Array.isArray(sidecar.items)) {
+    return {
+      items: sidecar.items,
+      time: sidecar.time || dayObj[mealKey + '_time'] || null,
+      overallIntake: typeof sidecar.overallIntake === 'number' ? sidecar.overallIntake : (dayObj[mealKey + '_intake'] || 0.75),
+      sourceFlow: sidecar.sourceFlow || 'fob-feed',
+      skipped: false,
+      legacyText: typeof legacy === 'string' ? legacy : (sidecar.items.map(function(it){return it.name;}).join(', ')),
+    };
+  }
+  // Legacy F-2-prerelease structured-at-[meal] shape (early-development
+  // fixtures may carry this; treat as canonical and migrate-on-read).
+  if (legacy && typeof legacy === 'object' && Array.isArray(legacy.items)) {
+    return {
+      items: legacy.items,
+      time: legacy.time || dayObj[mealKey + '_time'] || null,
+      overallIntake: typeof legacy.overallIntake === 'number' ? legacy.overallIntake : 0.75,
+      sourceFlow: legacy.sourceFlow || 'fob-feed',
+      skipped: legacy.skipped === true,
+      legacyText: legacy.items.map(function(it){return it.name;}).join(', '),
+    };
+  }
+  // Pure legacy string — parse via comma-split + qty resolver
+  if (typeof legacy === 'string' && legacy.trim()) {
+    var parsed = window.parseFeedingV1(legacy);
+    return {
+      items: parsed.items || [],
+      time: dayObj[mealKey + '_time'] || null,
+      overallIntake: dayObj[mealKey + '_intake'] || 0.75,
+      sourceFlow: 'legacy-string',
+      skipped: false,
+      legacyText: legacy,
+    };
+  }
+  return { items: [], skipped: false, legacyText: '' };
+};
+
 // @@DATA_BLOCK_20_START@@ MILESTONE_STANDARDS
 
 // MILESTONE_SOURCE — controlled vocabulary for per-row clinical-band source

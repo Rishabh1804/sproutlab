@@ -3306,21 +3306,23 @@ function sgTapChip(food) {
     showQLToast('All meals are filled for today');
     return;
   }
+  // F-2 fix (C1): set _qlMeal + explicit flag BEFORE openQuickModal so
+  // the modal preserves intent (was: openQuickModal clobbered _qlMeal
+  // to detectMealType() then a setTimeout re-set it AFTER the rails had
+  // already rendered for the wrong slot).
+  _qlMeal = nextMeal;
+  _qlMealExplicit = true;
   openQuickLog();
   openQuickModal('feed');
-  // Set meal + prefill after modal opens (openQuickModal resets _qlMeal via detectMealType)
+  // F-2 fix (B2/C4): push the suggested food directly into _qlFeedItems
+  // via the canonical handler so it appears in the Items list (not just
+  // the typeahead input). Old code used updateQLFeedDropdown +
+  // pickQLFood which write to input only — bypassing the structured
+  // shape and leaving the Items list misleadingly empty.
   setTimeout(function() {
-    _qlMeal = nextMeal;
-    const inp = document.getElementById('qlFeedInput');
-    if (inp) {
-      inp.value = food;
-      inp.focus();
-      updateQLFeedDropdown();
+    if (typeof qlFeedAddItem === 'function' && food) {
+      qlFeedAddItem(food, 'typeahead');
     }
-    // Select correct meal pill
-    document.querySelectorAll('.ql-meal-pill').forEach(p => {
-      p.classList.toggle('active', p.dataset.meal === nextMeal);
-    });
   }, 50);
 }
 

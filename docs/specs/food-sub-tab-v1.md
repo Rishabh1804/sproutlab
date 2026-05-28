@@ -6,7 +6,28 @@
 **Author:** Lyra (main-session — Mode-1 spec authoring)
 **Status:** v1 RATIFIED — all 10 v0 scope-questions answered with Lyra's proposed defaults. F-1 implementation arc can open against this spec.
 
-> **F-1 IMPL ratified 2026-05-28 PM** (PR #165, sha `daa9756`). Sub-tab navigation scaffold (Log / Library / Patterns; mirrors milestones-tab-v1 doctrine — V-V-46 chrome inherited from `.track-sub-btn.active`; `.diet-sub-bar` + `.diet-sub-btn` + `.diet-sub-panel` classes mirror `.ms-sub-bar`/`.ms-sub-btn`/`.ms-sub-panel`) + swipe parity (3rd-nesting-level swipe extension for Track→Diet inner sub-tabs) + structured shape schema declared (`window._FEEDING_V1_SCHEMA_VERSION = 1` + `parseFeedingV1Stub` + `isStructuredFeedingV1` helpers in data.js; full shape contract in 60-line inline doc block; F-5 will implement the real `parseFeeding` normalizer). Bonus closure: long-standing meal-dropdown keyboard-dismiss + caret-position friction folded into PR #165 via `pointerdown` delegation + `setSelectionRange(len, len)` — multi-food entry now flows without breaks on mobile. F-2..F-5 queued for the next session.
+> **F-1 IMPL ratified 2026-05-28 PM** (PR #165, sha `daa9756`). Sub-tab navigation scaffold (Log / Library / Patterns; mirrors milestones-tab-v1 doctrine — V-V-46 chrome inherited from `.track-sub-btn.active`; `.diet-sub-bar` + `.diet-sub-btn` + `.diet-sub-panel` classes mirror `.ms-sub-bar`/`.ms-sub-btn`/`.ms-sub-panel`) + swipe parity (3rd-nesting-level swipe extension for Track→Diet inner sub-tabs) + structured shape schema declared (`window._FEEDING_V1_SCHEMA_VERSION = 1` + `parseFeedingV1Stub` + `isStructuredFeedingV1` helpers in data.js; full shape contract in 60-line inline doc block; F-5 will implement the real `parseFeeding` normalizer). Bonus closure: long-standing meal-dropdown keyboard-dismiss + caret-position friction folded into PR #165 via `pointerdown` delegation + `setSelectionRange(len, len)` — multi-food entry now flows without breaks on mobile.
+
+> **F-2 IMPL ratified 2026-05-29** (PR #168, stages 1-4). **Scope reframed mid-discussion** — the canonical meal-entry surface today is the **FOB → FEED Log Feed sheet**, NOT a home meal-input card (the original v1 spec section "UX surfaces · Log sub-tab" mis-located the entry surface; corrected here). F-2 redesigns the FOB Feed sheet as the speed path; the diet Log sub-tab scaffold from PR #165 stays as-is and becomes the **richer review surface in F-3**.
+>
+> Seven Architect ratifications drive the redesign:
+> 1. **F-2 = FOB sheet only.** Diet Log sub-tab untouched until F-3.
+> 2. **Dynamic 14d-rolling combos + curated cold-start fallback.** `CURATED_COMBOS` registry seeds 12 entries (4 breakfast / 5 lunch+dinner / 3 snack) age-gated for 6-9m; rolling combos take over once ≥7 days of signal exist in the slot.
+> 3. **Per-meal overall intake defaults to "Most" (0.75), not "All" (1).** Honest baseline; "All" as default would bias data upward (busy parents won't step down on a normal day). Parents tap UP to "All" when Ziva finishes everything.
+> 4. **Per-food qty defaults extend NUTRITION** via the `NUTRITION_QTY_DEFAULTS` sidecar registry in data.js (Kael's region). 30+ explicit per-food entries cover the top-used foods; `_fdResolveQtyDefaults(foodName)` falls through to a 13-category resolver for the rest.
+> 5. **Hard tap-budget limits** as build-time guards. 3-tap repeat / 6-tap novel — enforced by `audit-feed-sheet-wiring-v1.sh` (10th audit gate; required-presence assertions on the 4 template wraps + writer call + 7 handlers + 7 dispatcher routes + qty/combo registry floors).
+> 6. **"Same as today's lunch"** dinner chip — leads the L1 Repeat rail when today's lunch is logged (46% lunch==dinner match rate in the 79-day feeding-data sample makes this the biggest one-tap UX win).
+> 7. **Skipped meals write the canonical `SKIPPED_MEAL` sentinel** (`'—skipped—'` per `core.js:3119`) so existing readers (home Today's Meals, diet stats, ISL day-summary, medical fat-context detector) render correctly without modification.
+>
+> **Four autofill intelligence layers wired:**
+> - **L1 Repeat** — `_fdGetRepeatCandidates(meal, n)`. Same-as-yesterday + same-as-today-lunch (dinner).
+> - **L2 Combo template** — `_fdGetCombosForMeal(meal)`. Rolling 14d top-N (`freq >= 2`) with curated fallback when `daysWithSignal < 7`.
+> - **L3 Next-item prediction** — `_fdGetNextItemPredictions(currentItems, meal, n)`. Co-occurrence-ranked with honest confidence % surfaced per chip (CV3-006 Honesty axis — parents see WHY a chip is there). Floor 20% filters noisy 1-of-14 hits.
+> - **L4 Typeahead** — `_fdSearchNutrition(query)`. Three sources: NUTRITION canonical names + ziva_foods introduced + recent items from feedingData last-14d.
+>
+> **Structured shape (sidecar architecture):** writes land at `feedingData[date][meal + '_v1']` (canonical structured shape `{items[], time, overallIntake, sourceFlow, schemaVersion, writtenAt}`) AND `feedingData[date][meal]` (legacy comma-joined string for downstream readers). Read-side canonical reader `_fdReadDayMeal(dayObj, mealKey)` returns the F-2 view regardless of which shape sits on disk. `_fdWriteStructuredMeal(dateKey, meal, payload)` is the canonical writer. Legacy `[meal]_time` + `[meal]_intake` day-level fields preserved.
+>
+> **Telemetry** — `sourceFlow` field on the structured payload measures which entry path parents actually use: `fob-repeat` | `fob-combo` | `fob-novel` | `fob-feed` (Save without repeat/combo) | `diet-tab` (reserved for F-3 review surface).
 **Promoted from:**
 - Chronicle §4.2 v3-8 row — names Food Sub-Tab as pre-required (parseFeeding normalizer must know the food-sub-tab incoming shape at v1 design time)
 - Architect direction this session: sequencing — "we'll implement this sleep upgrade after food sub-tab arc is completed. keeps the features and upgrades sequential and easy to track."

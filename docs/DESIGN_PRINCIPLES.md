@@ -424,7 +424,7 @@ See ARCHITECTURE_PATTERNS.md §13 for the Read/Act/Flow framework.
 
 > **Sync note:** This checklist should stay in sync with QA_PROCESS.md §4.
 
-### Build-time audit gates (9 live as of 2026-05-28 PM)
+### Build-time audit gates (10 live as of 2026-05-29)
 
 Every `pnpm build` runs these gates sequentially in `split/build.sh`; any failure aborts the build:
 
@@ -439,6 +439,7 @@ Every `pnpm build` runs these gates sequentially in `split/build.sh`; any failur
 | 7 | `audit-card-priority-v3-6.sh` | v3-6 — bans ad-hoc `card-{urgent\|notable\|ambient}` classes + verifies `renderInfo*` producer-coverage. | v3-6 IMPL |
 | 8 | `audit-no-personalised-prediction-v1.sh` | milestone-engine-prep-v1 — Scope A bans hardcoded source attribution + `(unverified)` parenthetical; Scope B bans personalised-prediction prose. Python regex + 5 adversarial self-tests. | PR #153 |
 | 9 | `audit-activity-categories-v1.sh` | milestones-tab-v1 — bans 3+-of-5 category-key array permutations + `\bcatOrder\s*=` idiom + 4+-of-5 obj-literal forks (with multi-line brace-tracking). Opt-in marker `// activity-categories-ok: <rationale>`. | PR #159 |
+| 10 | `audit-feed-sheet-wiring-v1.sh` | food-sub-tab-v1 F-2 — required-presence gate. Asserts the 4 FOB Feed sheet wrap IDs (`qlFeedRepeat/Combos/Items/Next/Wrap`), the `_fdWriteStructuredMeal` writer call in `saveQLFeed`, 7 F-2 handlers, 7 core.js dispatcher routes, ≥30 `NUTRITION_QTY_DEFAULTS` entries, ≥10 `CURATED_COMBOS` with all 4 slots covered. Enforces ratification #5's hard tap-budget (3/4/6) by guarding the wiring that enables those budgets. | PR #168 |
 
 ### Hard Rule Checks
 - [ ] HR-1: Zero emojis in new code

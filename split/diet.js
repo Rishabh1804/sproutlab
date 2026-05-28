@@ -2444,6 +2444,15 @@ function _miGetIntake(dateStr, meal) {
 function _miSetIntake(dateStr, meal, value) {
   if (!feedingData[dateStr]) return;
   feedingData[dateStr][meal + '_intake'] = value;
+  // F-2 fix (E_b): sync the structured sidecar's overallIntake too.
+  // Otherwise _fdReadDayMeal returns the stale sidecar value while
+  // legacy _miGetIntake returns the updated value — two surfaces
+  // disagree about the same meal's intake (FOB Feed L1 repeat shows
+  // old; home Today's Meals + diet stats show new).
+  var sidecar = feedingData[dateStr][meal + '_v1'];
+  if (sidecar && typeof sidecar === 'object') {
+    sidecar.overallIntake = value;
+  }
   save(KEYS.feeding, feedingData);
   _islMarkDirty('diet');
   // V-M-70: intake adjustment alone doesn't change meal content (so withFat won't flip),
@@ -4025,20 +4034,6 @@ function getTopMeals(n) {
     .sort((a, b) => b.count - a.count)
     .slice(0, n)
     .map(m => ({ name: m.display.charAt(0).toUpperCase() + m.display.slice(1), count: m.count }));
-}
-
-function renderQLFreqPills() {
-  const wrap = document.getElementById('qlFreqWrap');
-  const el = document.getElementById('qlFreqPills');
-  if (!wrap || !el) return;
-
-  const top = getTopMeals(5);
-  if (top.length === 0) { wrap.style.display = 'none'; return; }
-
-  wrap.style.display = '';
-  el.innerHTML = top.map(m =>
-    `<div class="ql-freq-pill" onclick="document.getElementById('qlFeedInput').value='${escHtml(m.name).replace(/'/g, "\\'")}';document.getElementById('qlFeedInput').focus();" title="${m.count}× logged">${escHtml(m.name)}</div>`
-  ).join('');
 }
 
 // ── Meal progress on Home ──

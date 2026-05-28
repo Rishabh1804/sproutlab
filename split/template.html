@@ -2421,7 +2421,7 @@
   </div>
 </div>
 
-<!-- Quick Log Modal: Feed -->
+<!-- Quick Log Modal: Feed (F-2 redesign — autofill-first; spec: docs/specs/food-sub-tab-v1.md §F-2) -->
 <div class="ql-modal-overlay" id="qlModal-feed" data-action="closeQuickModalSelf">
   <div class="ql-modal">
     <div class="ql-modal-header">
@@ -2442,14 +2442,33 @@
         <label class="micro-label">Date</label>
         <div class="ql-bf-row" id="qlBackfillPills"></div>
       </div>
-      <div id="qlFreqWrap" style="display:none;">
-        <label class="micro-label">Frequent</label>
-        <div class="ql-freq-row" id="qlFreqPills"></div>
+      <!-- F-2: L1 Repeat rail — "Same as yesterday's B" / "Same as today's lunch" (dinner only, ratification #6) -->
+      <div id="qlFeedRepeatWrap" class="ql-feed-rail-wrap" style="display:none;">
+        <label class="micro-label">Your usual</label>
+        <div class="ql-feed-rail" id="qlFeedRepeatRail"></div>
       </div>
+      <!-- F-2: L2 Combo template rail — "Your usual breakfast" rolling-14d or curated cold-start -->
+      <div id="qlFeedCombosWrap" class="ql-feed-rail-wrap" style="display:none;">
+        <label class="micro-label" id="qlFeedCombosLabel">Suggested combos</label>
+        <div class="ql-feed-rail" id="qlFeedCombosRail"></div>
+      </div>
+      <!-- F-2: Items list — populated as items added; qty steppers per row -->
+      <div id="qlFeedItemsWrap">
+        <label class="micro-label">Items</label>
+        <div class="ql-feed-items-list" id="qlFeedItemsList">
+          <div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>
+        </div>
+      </div>
+      <!-- F-2: L3 Next-item prediction ribbon — appears after first item; co-occurrence ranked -->
+      <div id="qlFeedNextWrap" class="ql-feed-rail-wrap" style="display:none;">
+        <label class="micro-label" id="qlFeedNextLabel">You usually add</label>
+        <div class="ql-feed-next-ribbon" id="qlFeedNextRibbon"></div>
+      </div>
+      <!-- F-2: L4 Typeahead input — NUTRITION + introduced foods + recent; default qty/unit inlined -->
       <div>
-        <label class="micro-label">What did Ziva eat?</label>
+        <label class="micro-label">Add item</label>
         <div class="meal-input-wrap">
-          <input type="text" id="qlFeedInput" class="form-input input-ctx-peach" placeholder="e.g. ragi porridge, dal rice..." autocomplete="off" oninput="updateQLFeedDropdown()">
+          <input type="text" id="qlFeedInput" class="form-input input-ctx-peach" placeholder="Type to add (e.g. 'av' for avocado mash)" autocomplete="off" data-action="qlFeedTypeaheadInput" data-action-on="input">
           <div class="meal-dropdown" id="qlFeedDropdown"></div>
         </div>
       </div>
@@ -2458,12 +2477,8 @@
         <input type="time" id="qlFeedTime" class="form-input input-ctx-peach" style="width:90px;padding:5px 8px;font-size:var(--fs-sm);">
         <span class="t-xs t-light">optional</span>
       </div>
-      <div id="qlSameAsWrap" style="display:none;">
-        <label class="micro-label">Quick repeat</label>
-        <div class="d-flex gap-8 flex-wrap" id="qlSameAsPills"></div>
-      </div>
       <div>
-        <label class="micro-label">How much?</label>
+        <label class="micro-label">How much overall?</label>
         <div class="ql-meal-pills" id="qlIntakePills">
           <div class="ql-intake-pill" data-mi-qlval="0.25"><svg class="zi"><use href="#zi-spoon"/></svg> Few bites</div>
           <div class="ql-intake-pill" data-mi-qlval="0.5"><svg class="zi"><use href="#zi-halfcircle"/></svg> Half</div>
@@ -2471,7 +2486,10 @@
           <div class="ql-intake-pill" data-mi-qlval="1.0"><svg class="zi"><use href="#zi-star"/></svg> All</div>
         </div>
       </div>
-      <button class="ql-save ql-save-feed">Save Feed <svg class="zi"><use href="#zi-check"/></svg></button>
+      <div class="d-flex gap-8" style="align-items:stretch;">
+        <button class="ql-save-skip" data-action="qlFeedSkipMeal" type="button" title="Mark this meal as intentionally skipped">Skip this meal</button>
+        <button class="ql-save ql-save-feed flex-1-min100">Save Feed <svg class="zi"><use href="#zi-check"/></svg></button>
+      </div>
     </div>
   </div>
 </div>

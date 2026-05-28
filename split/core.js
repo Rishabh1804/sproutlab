@@ -801,7 +801,7 @@ function init() {
     else if (action === 'navFeedDay') { document.getElementById('feedingDate').value = arg; loadFeedingDay(); switchTab('diet'); }
     else if (action === 'navTabSub') { switchTab(arg); setTimeout(() => switchTrackSub(arg2), 100); }
     else if (action === 'closeScoreAndNav') { closeScorePopup(); setTimeout(() => switchTab(arg), 350); }
-    else if (action === 'qlMealAndOpen') { _qlMeal = arg; openQuickModal(arg2); }
+    else if (action === 'qlMealAndOpen') { _qlMeal = arg; _qlMealExplicit = true; openQuickModal(arg2); }
     else if (action === 'showHeatmapDetail') showHeatmapDetail(arg, parseInt(arg2), arg3);
     else if (action === 'openDoctorModal') { const a = arg; if (a) openDoctorModal(parseInt(a)); else openDoctorModal(); }
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
@@ -972,7 +972,7 @@ function init() {
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
     else if (action === 'navTabSub') { switchTab(arg); setTimeout(() => switchTrackSub(arg2), 100); }
     else if (action === 'closeScoreAndNav') { closeScorePopup(); setTimeout(() => switchTab(arg), 350); }
-    else if (action === 'qlMealAndOpen') { _qlMeal = arg; openQuickModal(arg2); }
+    else if (action === 'qlMealAndOpen') { _qlMeal = arg; _qlMealExplicit = true; openQuickModal(arg2); }
     else if (action === 'closeAndPromptFever') { closeHomeSymptomChecker(); promptFeverTrack(); }
     else if (action === 'closeAndPromptDiarrhoea') { closeHomeSymptomChecker(); promptDiarrhoeaTrack(); }
     else if (action === 'closeAndPromptVomiting') { closeHomeSymptomChecker(); promptVomitingTrack(); }
@@ -995,6 +995,13 @@ function init() {
     else if (action === 'qlOpenPoop') { _qlSuggestUsed = true; openQuickModal('poop'); }
     else if (action === 'qlOpenActivity') { _qlSuggestUsed = true; openQuickModal('activity'); }
     else if (action === 'qlSwitchSuggest') _qlSwitchSuggest(arg);
+    // ── F-2 FOB Feed sheet handlers (spec: docs/specs/food-sub-tab-v1.md §F-2) ──
+    else if (action === 'qlFeedApplyRepeat' && typeof qlFeedApplyRepeat === 'function') qlFeedApplyRepeat(arg);
+    else if (action === 'qlFeedApplyCombo' && typeof qlFeedApplyCombo === 'function') qlFeedApplyCombo(arg);
+    else if (action === 'qlFeedAddItem' && typeof qlFeedAddItem === 'function') qlFeedAddItem(arg, arg2);
+    else if (action === 'qlFeedAdjustQty' && typeof qlFeedAdjustQty === 'function') qlFeedAdjustQty(arg, arg2);
+    else if (action === 'qlFeedRemoveItem' && typeof qlFeedRemoveItem === 'function') qlFeedRemoveItem(arg);
+    else if (action === 'qlFeedSkipMeal' && typeof qlFeedSkipMeal === 'function') qlFeedSkipMeal();
     // ── Food Favorites ──
     else if (action === 'foodToggleFavorite') {
       toggleFoodFavorite(arg);
@@ -1047,8 +1054,9 @@ function init() {
       } else if (arg === 'afternoon-poop') {
         openQuickModal('poop');
       } else if (arg2) {
-        // Feed nudge — pre-select meal type
+        // Feed nudge — pre-select meal type (F-2 fix C1: set explicit flag)
         _qlMeal = arg2;
+        _qlMealExplicit = true;
         openQuickModal('feed');
         setTimeout(function() {
           document.querySelectorAll('.ql-meal-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.meal === arg2); });
@@ -1066,6 +1074,7 @@ function init() {
     const action = el.dataset.action;
     if (action === 'checkVaccDateShift') checkVaccDateShift();
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
+    else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──

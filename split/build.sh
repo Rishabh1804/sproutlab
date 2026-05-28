@@ -96,6 +96,20 @@ if ! bash audit-activity-categories-v1.sh >&2; then
   echo "BUILD ABORTED: milestones-tab-v1 audit failed. Consume ACTIVITY_CATEGORIES; never fork the registry." >&2
   exit 1
 fi
+# food-sub-tab-v1 F-2 ship-gate (10th audit gate): audit-feed-sheet-wiring-v1.sh
+# blocks regressions that silently unwire the autofill rails or the
+# structured-shape writer in the FOB → FEED Log Feed sheet. Six required-
+# presence assertions: 4 template wraps (qlFeedRepeat/Combos/Items/Next),
+# the _fdWriteStructuredMeal call in saveQLFeed, 7 F-2 handlers, 7 core.js
+# dispatcher routes, ≥30 NUTRITION_QTY_DEFAULTS entries, ≥10 CURATED_COMBOS
+# with all 4 slots covered. Together these enforce ratification #5's hard
+# tap-budget (3-tap repeat / 4-tap combo / 6-tap novel) by guaranteeing the
+# wiring that enables those budgets stays intact. Spec: docs/specs/food-
+# sub-tab-v1.md §F-2. Charter CV3-006 warmth axis (friction reduction).
+if ! bash audit-feed-sheet-wiring-v1.sh >&2; then
+  echo "BUILD ABORTED: food-sub-tab-v1 F-2 wiring audit failed. Restore the FOB Feed sheet structural surface." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Food Sub-Tab v1 F-2 — FOB Feed sheet redesign (revised mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #fffaf7;
+  --white: #ffffff;
+  --warm: #fef6f0;
+  --text: #2a1f1c;
+  --mid: #6b5d57;
+  --light: #9a8b85;
+  --sage: #b5d5c5;
+  --sage-light: #e8f5ef;
+  --sage-deep: #3d7a60;
+  --tc-sage: #3a7060;
+  --rose: #f2a8b8;
+  --rose-light: #fde8ed;
+  --tc-rose: #9e3e52;
+  --amber: #e8b86d;
+  --amber-light: #fef6e8;
+  --tc-amber: #8a6520;
+  --lavender: #c9b8e8;
+  --lav-light: #f0ebfb;
+  --tc-lav: #6e5e9a;
+  --sky-light: #e8f4fa;
+  --peach: #fad4b4;
+  --peach-light: #fef3ea;
+  --surface-warn: #fffdf5;
+  --tc-warn: #856404;
+  --border-warn: #ffc107;
+  --sp-2: 2px; --sp-4: 4px; --sp-6: 6px; --sp-8: 8px;
+  --sp-10: 10px; --sp-12: 12px; --sp-16: 16px;
+  --sp-20: 20px; --sp-24: 24px; --sp-32: 32px;
+  --fs-2xs: 0.56rem; --fs-xs: 0.65rem; --fs-sm: 0.75rem;
+  --fs-base: 0.85rem; --fs-md: 0.95rem; --fs-lg: 1.1rem;
+  --fs-xl: 1.35rem; --fs-2xl: 1.6rem;
+  --r-sm: 4px; --r-md: 8px; --r-lg: 12px;
+  --r-xl: 14px; --r-2xl: 20px; --r-full: 9999px;
+  --ls-wide: 0.08em;
+  --shadow-sm: 0 1px 3px rgba(60, 40, 40, 0.08);
+  --shadow-md: 0 2px 8px rgba(60, 40, 40, 0.1);
+  --shadow-card: 0 4px 16px rgba(60, 40, 40, 0.08);
+  --shadow-sheet: 0 -4px 24px rgba(60, 40, 40, 0.15);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+}
+.page { max-width: 1100px; margin: 0 auto; padding: var(--sp-24) var(--sp-16); }
+
+header.intro {
+  background: linear-gradient(180deg, var(--peach-light) 0%, var(--cream) 100%);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-24) var(--sp-20);
+  margin-bottom: var(--sp-32);
+  box-shadow: var(--shadow-sm);
+}
+header.intro h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: var(--fs-2xl);
+  margin: 0 0 var(--sp-8) 0; line-height: 1.2;
+}
+header.intro .sub { color: var(--mid); font-size: var(--fs-md); margin: 0 0 var(--sp-16) 0; }
+header.intro .meta {
+  display: flex; flex-wrap: wrap; gap: var(--sp-8);
+  font-size: var(--fs-xs); color: var(--light);
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+}
+header.intro .meta span {
+  background: var(--white); padding: var(--sp-4) var(--sp-10);
+  border-radius: var(--r-full); border: 1px solid #ece4dd;
+}
+
+.ratifications {
+  background: var(--white);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-16);
+  margin-bottom: var(--sp-32);
+  border-left: 4px solid var(--sage);
+}
+.ratifications h2 {
+  font-family: 'Fraunces', serif;
+  font-size: var(--fs-md); margin: 0 0 var(--sp-8) 0;
+  color: var(--tc-sage);
+}
+.ratifications ul { margin: 0; padding-left: var(--sp-20); font-size: var(--fs-sm); }
+.ratifications li { margin-bottom: var(--sp-4); color: var(--text); }
+
+/* ── Flow diagram ── */
+.flow-diagram {
+  display: flex; align-items: center; gap: var(--sp-8);
+  margin: var(--sp-16) 0 var(--sp-24) 0;
+  padding: var(--sp-12);
+  background: var(--warm);
+  border-radius: var(--r-xl);
+  flex-wrap: wrap; justify-content: center;
+}
+.flow-step {
+  display: inline-flex; align-items: center; gap: var(--sp-6);
+  background: var(--white);
+  padding: var(--sp-8) var(--sp-12);
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm); font-weight: 600;
+  border: 1px solid #ece4dd;
+}
+.flow-step .num {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--sage); color: var(--text);
+  font-weight: 700; font-size: var(--fs-xs);
+}
+.flow-arr { color: var(--light); font-weight: 700; }
+
+/* ── Scenario blocks ── */
+.scenario {
+  margin-bottom: var(--sp-32);
+  padding-top: var(--sp-16);
+  border-top: 2px dashed #e6dad2;
+}
+.scenario:first-of-type { border-top: none; padding-top: 0; }
+.scenario-head {
+  display: flex; align-items: center; gap: var(--sp-12);
+  margin-bottom: var(--sp-8); flex-wrap: wrap;
+}
+.tap-badge {
+  display: inline-flex; align-items: center; gap: var(--sp-4);
+  background: var(--sage);
+  color: var(--text);
+  padding: var(--sp-4) var(--sp-12);
+  border-radius: var(--r-full);
+  font-weight: 700; font-size: var(--fs-sm);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.tap-badge.medium { background: var(--amber); }
+.tap-badge.long { background: var(--lavender); }
+.tap-badge.detail { background: var(--peach); }
+.scenario-head h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: var(--fs-lg);
+  margin: 0; line-height: 1.3;
+}
+.scenario-desc {
+  color: var(--mid); font-size: var(--fs-base);
+  margin: 0 0 var(--sp-16) 0; max-width: 720px;
+}
+
+/* ── Phone frame mock ── */
+.phone-row {
+  display: grid; grid-template-columns: 1fr; gap: var(--sp-20);
+}
+@media (min-width: 760px) {
+  .phone-row.two { grid-template-columns: 1fr 1fr; align-items: start; }
+  .phone-row.three { grid-template-columns: 1fr 1fr 1fr; align-items: start; }
+}
+.phone {
+  background: var(--cream);
+  border: 1px solid #e6dad2;
+  border-radius: var(--r-2xl);
+  padding: var(--sp-10);
+  box-shadow: var(--shadow-card);
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+}
+.phone-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--light);
+  text-align: center;
+  margin-bottom: var(--sp-8);
+}
+
+/* Tab strip (background context) */
+.bg-context {
+  background: var(--white);
+  border-radius: var(--r-xl);
+  padding: var(--sp-10);
+  margin-bottom: var(--sp-4);
+  opacity: 0.55;
+  filter: blur(0.4px);
+  pointer-events: none;
+}
+.bg-context .bc-line {
+  height: 10px; background: var(--warm);
+  border-radius: var(--r-sm); margin-bottom: var(--sp-6);
+}
+.bg-context .bc-line.short { width: 40%; }
+.bg-context .bc-line.med { width: 70%; }
+
+/* ── Bottom sheet (Log Feed) ── */
+.bottom-sheet {
+  background: var(--white);
+  border-radius: var(--r-2xl) var(--r-2xl) var(--sp-8) var(--sp-8);
+  padding: var(--sp-12);
+  box-shadow: var(--shadow-sheet);
+  position: relative;
+}
+.sheet-grip {
+  width: 36px; height: 4px;
+  background: #d8ccc4;
+  border-radius: var(--r-full);
+  margin: 0 auto var(--sp-12);
+}
+.sheet-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: var(--fs-lg);
+  text-align: center;
+  margin: 0 0 var(--sp-12) 0;
+}
+.sheet-close {
+  position: absolute; right: var(--sp-12); top: var(--sp-12);
+  width: 28px; height: 28px;
+  border-radius: var(--r-full);
+  background: var(--warm); color: var(--mid);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+
+/* Section label (small caps) */
+.sec-lbl {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--mid); font-weight: 700;
+  margin: var(--sp-12) 0 var(--sp-6) 0;
+}
+
+/* Meal slot strip (B/L/D/S) */
+.meal-slot-strip {
+  display: flex; gap: var(--sp-6); margin-bottom: var(--sp-8);
+}
+.meal-slot {
+  flex: 1; min-height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-lg);
+  background: var(--warm);
+  font-weight: 700; font-size: var(--fs-sm);
+  color: var(--mid);
+  border: 1.5px solid transparent;
+}
+.meal-slot.active.b { background: var(--amber-light); color: var(--tc-amber); border-color: var(--amber); }
+.meal-slot.active.l { background: var(--sage-light); color: var(--tc-sage); border-color: var(--sage); }
+.meal-slot.active.d { background: var(--lav-light); color: var(--tc-lav); border-color: var(--lavender); }
+.meal-slot.active.s { background: var(--peach-light); color: var(--tc-amber); border-color: var(--peach); }
+.meal-slot .slot-time { font-size: var(--fs-2xs); font-weight: 600; margin-top: 2px; }
+.meal-slot { flex-direction: column; }
+.meal-slot.inferred::after {
+  content: 'inferred';
+  font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--tc-sage); margin-top: 1px;
+}
+
+/* L1 — Same as / Repeat chips */
+.repeat-rail {
+  display: flex; flex-direction: column; gap: var(--sp-6);
+}
+.repeat-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-10) var(--sp-12);
+  background: var(--white);
+  border: 1.5px solid var(--sage);
+  border-radius: var(--r-xl);
+  font-size: var(--fs-sm);
+  box-shadow: var(--shadow-sm);
+}
+.repeat-chip.primary {
+  background: var(--sage-light);
+  border-width: 2px;
+}
+.repeat-chip .rc-head {
+  display: flex; align-items: center; gap: var(--sp-6);
+  font-weight: 700; color: var(--tc-sage);
+}
+.repeat-chip .rc-body {
+  font-size: var(--fs-xs);
+  color: var(--mid);
+  margin-top: 2px;
+  font-weight: 500;
+}
+.repeat-chip .rc-icon {
+  width: 28px; height: 28px;
+  background: var(--sage); color: var(--text);
+  border-radius: var(--r-full);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: var(--fs-base);
+}
+.repeat-chip .rc-tap {
+  font-size: var(--fs-2xs); color: var(--tc-sage);
+  text-transform: uppercase; letter-spacing: var(--ls-wide); font-weight: 700;
+}
+
+/* L2 — Combo template chip */
+.combo-chip {
+  display: block;
+  padding: var(--sp-10) var(--sp-12);
+  background: var(--lav-light);
+  border: 1.5px solid var(--lavender);
+  border-radius: var(--r-xl);
+  margin-bottom: var(--sp-6);
+}
+.combo-chip-title {
+  display: flex; align-items: center; gap: var(--sp-6);
+  font-weight: 700; color: var(--tc-lav);
+  font-size: var(--fs-sm);
+}
+.combo-chip-title .conf {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  background: var(--lavender); color: var(--text);
+  padding: var(--sp-2) var(--sp-6);
+  border-radius: var(--r-full);
+  font-weight: 700;
+}
+.combo-chip-foods {
+  font-size: var(--fs-xs); color: var(--mid);
+  margin-top: var(--sp-4);
+}
+
+/* ── Item rows (added) ── */
+.items-list {
+  background: var(--white);
+  border: 1px solid #ece4dd;
+  border-radius: var(--r-xl);
+  margin-bottom: var(--sp-10);
+  overflow: hidden;
+}
+.items-list .empty {
+  text-align: center; color: var(--light); padding: var(--sp-16); font-style: italic; font-size: var(--fs-sm);
+}
+.item-row {
+  display: flex; align-items: center; gap: var(--sp-8);
+  padding: var(--sp-8) var(--sp-10);
+  border-bottom: 1px solid #f4ece6;
+}
+.item-row:last-of-type { border-bottom: none; }
+.item-icon {
+  width: 24px; height: 24px;
+  background: var(--sage-light); color: var(--tc-sage);
+  border-radius: var(--r-full);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--fs-sm); font-weight: 700; flex-shrink: 0;
+}
+.item-name { flex: 1; font-weight: 600; font-size: var(--fs-base); }
+.item-name .meta {
+  font-size: var(--fs-2xs); color: var(--light);
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+  display: block; margin-top: 1px; font-weight: 500;
+}
+.item-qty {
+  display: inline-flex; align-items: center;
+  background: var(--warm);
+  border-radius: var(--r-full);
+  padding: 2px;
+  font-size: var(--fs-sm);
+}
+.qty-step {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--white); color: var(--tc-sage);
+  font-weight: 700; font-size: var(--fs-base);
+  border: 1px solid #ece4dd;
+}
+.qty-val {
+  padding: 0 var(--sp-8);
+  font-weight: 700;
+  min-width: 48px; text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.qty-val .qty-unit {
+  font-size: var(--fs-2xs); color: var(--mid);
+  text-transform: lowercase; letter-spacing: 0; font-weight: 500;
+}
+.item-x {
+  width: 24px; height: 24px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-full);
+  background: var(--rose-light); color: var(--tc-rose);
+  font-weight: 700; font-size: var(--fs-sm);
+  margin-left: var(--sp-4);
+  flex-shrink: 0;
+}
+
+/* Predicted next-item ribbon (L3) */
+.next-ribbon {
+  display: flex; gap: var(--sp-6);
+  overflow-x: auto;
+  padding: var(--sp-6) 0;
+}
+.next-chip {
+  display: inline-flex; align-items: center; gap: var(--sp-4);
+  background: var(--sage-light);
+  color: var(--tc-sage);
+  font-weight: 700; font-size: var(--fs-sm);
+  padding: var(--sp-6) var(--sp-12);
+  border-radius: var(--r-full);
+  border: 1px solid var(--sage);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.next-chip .conf {
+  font-size: 9px;
+  background: var(--white); color: var(--tc-sage);
+  border-radius: var(--r-full);
+  padding: 1px 5px;
+  margin-left: 3px;
+  font-weight: 700;
+}
+
+/* Add row (typeahead) */
+.add-row {
+  display: flex; gap: var(--sp-6);
+  margin-top: var(--sp-8);
+}
+.add-input {
+  flex: 1;
+  padding: var(--sp-8) var(--sp-10);
+  border: 1.5px solid var(--sage);
+  border-radius: var(--r-md);
+  font-family: 'Nunito', sans-serif;
+  font-size: var(--fs-base);
+  background: var(--white);
+  color: var(--text);
+}
+.add-input::placeholder { color: var(--light); }
+.add-input.typed { color: var(--text); font-weight: 600; }
+
+/* Typeahead popover */
+.typeahead {
+  margin-top: var(--sp-4);
+  background: var(--white);
+  border: 1px solid #ece4dd;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.ta-row {
+  display: flex; align-items: center; gap: var(--sp-6);
+  padding: var(--sp-8) var(--sp-10);
+  border-bottom: 1px solid #f4ece6;
+}
+.ta-row:last-of-type { border-bottom: none; }
+.ta-row.match { background: var(--sage-light); }
+.ta-row .ta-name { flex: 1; font-weight: 600; font-size: var(--fs-base); }
+.ta-row .ta-name .hi { color: var(--tc-sage); text-decoration: underline; }
+.ta-row .ta-meta { font-size: var(--fs-2xs); color: var(--mid); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+
+/* Overall intake + Time row */
+.foot-row {
+  display: flex; gap: var(--sp-6);
+  margin-top: var(--sp-10);
+  align-items: stretch;
+}
+.foot-field {
+  flex: 1;
+  background: var(--white);
+  border: 1px solid #ece4dd;
+  border-radius: var(--r-md);
+  padding: var(--sp-6) var(--sp-8);
+}
+.foot-field .ff-lbl {
+  font-size: 9px;
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+  color: var(--light); font-weight: 700;
+  margin-bottom: 2px;
+}
+.foot-field .ff-val { font-size: var(--fs-sm); font-weight: 600; }
+.intake-strip { display: flex; gap: 2px; margin-top: 2px; }
+.intake-pill {
+  flex: 1;
+  font-size: 9px;
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: var(--r-sm);
+  background: var(--warm); color: var(--mid);
+  font-weight: 700;
+}
+.intake-pill.active { background: var(--sage); color: var(--text); }
+
+/* Save button */
+.save-btn {
+  display: block; width: 100%;
+  background: var(--sage-deep);
+  color: var(--white);
+  font-weight: 700; font-size: var(--fs-md);
+  padding: var(--sp-12);
+  border-radius: var(--r-full);
+  margin-top: var(--sp-12);
+  border: none; font-family: 'Nunito', sans-serif;
+  text-align: center;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.save-btn.auto::after {
+  content: ' · auto in 2s';
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  text-transform: none;
+  opacity: 0.8;
+}
+
+/* Highlight rings on key element for tap-path */
+.tap-target {
+  position: relative;
+}
+.tap-target::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--r-2xl);
+  border: 2px dashed var(--tc-rose);
+  pointer-events: none;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Note + caption */
+.note-box {
+  background: var(--lav-light);
+  border-left: 3px solid var(--lavender);
+  padding: var(--sp-12);
+  border-radius: var(--r-md);
+  margin-top: var(--sp-16);
+  font-size: var(--fs-sm);
+  color: var(--tc-lav);
+  line-height: 1.5;
+}
+.note-box strong { color: var(--text); }
+.note-box code {
+  background: var(--white);
+  padding: 1px 6px; border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+}
+
+.callout {
+  background: var(--sage-light);
+  border-left: 3px solid var(--sage);
+  padding: var(--sp-12);
+  border-radius: var(--r-md);
+  margin-top: var(--sp-12);
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.callout strong { color: var(--tc-sage); }
+
+/* Data shape block */
+.data-shape {
+  background: #1c1719;
+  color: #e4d7cd;
+  border-radius: var(--r-xl);
+  padding: var(--sp-16);
+  margin-top: var(--sp-16);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: var(--fs-xs);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+.data-shape .k { color: #c9b8e8; }
+.data-shape .s { color: #b5d5c5; }
+.data-shape .n { color: #fad4b4; }
+.data-shape .c { color: #6b5d57; font-style: italic; }
+
+/* Intelligence layer block */
+.intel-layers {
+  background: var(--white);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-20);
+  box-shadow: var(--shadow-card);
+  margin-top: var(--sp-32);
+}
+.intel-layers h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: var(--fs-xl);
+  margin: 0 0 var(--sp-16) 0;
+}
+.layer {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: var(--sp-12);
+  padding: var(--sp-12) 0;
+  border-bottom: 1px solid #ece4dd;
+}
+.layer:last-of-type { border-bottom: none; }
+.layer .lname {
+  background: var(--lav-light);
+  color: var(--tc-lav);
+  font-weight: 700; font-size: var(--fs-sm);
+  text-align: center;
+  padding: var(--sp-8) var(--sp-6);
+  border-radius: var(--r-md);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  align-self: start;
+}
+.layer .ldesc { font-size: var(--fs-sm); color: var(--text); }
+.layer .ldesc strong { color: var(--text); }
+.layer .ldesc .src { font-size: var(--fs-xs); color: var(--mid); margin-top: var(--sp-4); display: block; }
+
+/* Open issues block */
+.open-issues {
+  background: var(--surface-warn);
+  border-radius: var(--r-2xl);
+  padding: var(--sp-20);
+  border-left: 4px solid var(--border-warn);
+  margin-top: var(--sp-32);
+}
+.open-issues h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: var(--fs-lg);
+  margin: 0 0 var(--sp-12) 0;
+  color: var(--tc-warn);
+}
+.open-issues ol { padding-left: var(--sp-20); margin: 0; }
+.open-issues li { margin-bottom: var(--sp-10); font-size: var(--fs-sm); }
+.open-issues li strong { color: var(--text); }
+
+footer {
+  margin-top: var(--sp-32);
+  padding-top: var(--sp-16);
+  border-top: 1px solid #ece4dd;
+  font-size: var(--fs-xs);
+  color: var(--light);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="intro">
+  <h1>F-2 — FOB Feed sheet redesign (revised)</h1>
+  <p class="sub">Mockup v2 — after Architect ratification of six scoping questions. Target surface: <strong>FOB → FEED Log Feed sheet</strong> (the canonical meal-entry surface today). The diet Log sub-tab scaffold from PR #165 stays as-is; F-3 fills it as the richer review surface. Four scenarios: 3-tap repeat · 4-tap combo template · 6-tap novel · per-food quantity stepper.</p>
+  <div class="meta">
+    <span>spec: docs/specs/food-sub-tab-v1.md</span>
+    <span>data: 79 days of ziva_feeding analyzed</span>
+    <span>tap budget: 3 (repeat) / 6 (novel) — HARD</span>
+    <span>F-1: PR #165</span>
+    <span>F-5 normalizer: after F-2</span>
+  </div>
+</header>
+
+<div class="ratifications">
+  <h2>Six ratifications carried into this revision</h2>
+  <ul>
+    <li><strong>1. Alternative path</strong> — F-2 = FOB Log Feed sheet only. Diet Log sub-tab scaffold (PR #165) untouched; F-3 fills it as the richer review surface.</li>
+    <li><strong>2. Dynamic combos</strong> — rolling 14d top-N per meal-slot. Intelligence layer reserves a slot for curated combo fallback (covers cold-start).</li>
+    <li><strong>3. Per-meal intake kept</strong> — Few bites / Half / Most / All as secondary field; <strong>defaults to "Most" (0.75)</strong>. Honest baseline: parents tap UP to "All" when Ziva finishes everything, or DOWN to Half/Few when she doesn't. "All" as default would bias the data upward (busy parents won't step-down on a normal day).</li>
+    <li><strong>4. Quantity defaults in NUTRITION</strong> — extend rows with <code>defaultQty + defaultUnit</code> (data.js, Kael's region; single source of truth; audit-gate-friendly).</li>
+    <li><strong>5. Hard tap-budget limits</strong> — 3-tap repeat / 6-tap novel enforced as build-time regression guards. Tighten/loosen after live use.</li>
+    <li><strong>6. "Same as lunch (today)" for dinner</strong> — green light. Data shows 46% of days have identical lunch + dinner — biggest single-tap win available.</li>
+  </ul>
+</div>
+
+<div class="flow-diagram">
+  <span class="flow-step"><span class="num">1</span> FOB tap</span>
+  <span class="flow-arr">→</span>
+  <span class="flow-step"><span class="num">2</span> FEED tap</span>
+  <span class="flow-arr">→</span>
+  <span class="flow-step"><span class="num">3+</span> Log Feed sheet</span>
+</div>
+
+<!-- ─────────────────────── SCENARIO 1 — 3-TAP REPEAT ─────────────────────── -->
+<section class="scenario">
+  <div class="scenario-head">
+    <span class="tap-badge">3 taps</span>
+    <h2>Repeat scenario — "Same as yesterday's breakfast"</h2>
+  </div>
+  <p class="scenario-desc">Parent opens FOB during breakfast time. Sheet auto-infers meal slot from time-of-day (morning → B). At the top sits the most-likely repeat: yesterday's same-slot meal as a single primary chip. <strong>Tap 3 fills the meal AND auto-saves after a 2-second confirmation window</strong> (visible countdown; tap anywhere to cancel + edit). 70% of meals follow this path in the data.</p>
+
+  <div class="phone-row">
+    <div class="phone">
+      <div class="phone-label">Tap 3 — inside Log Feed sheet</div>
+
+      <div class="bg-context">
+        <div class="bc-line med"></div>
+        <div class="bc-line short"></div>
+        <div class="bc-line"></div>
+      </div>
+
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <button class="sheet-close">×</button>
+        <h3 class="sheet-title">Log Feed</h3>
+
+        <div class="sec-lbl">MEAL · inferred from time of day</div>
+        <div class="meal-slot-strip">
+          <div class="meal-slot active b inferred">B<span class="slot-time">8a</span></div>
+          <div class="meal-slot">L<span class="slot-time">1p</span></div>
+          <div class="meal-slot">D<span class="slot-time">8p</span></div>
+          <div class="meal-slot">S<span class="slot-time">any</span></div>
+        </div>
+
+        <div class="sec-lbl">YOUR USUAL · tap to log + save</div>
+        <div class="repeat-rail">
+          <div class="repeat-chip primary tap-target">
+            <div>
+              <div class="rc-head"><span class="rc-icon">↻</span> Yesterday's breakfast</div>
+              <div class="rc-body">Avocado mash · Blueberry · Mango puree</div>
+            </div>
+            <span class="rc-tap">tap → save</span>
+          </div>
+          <div class="repeat-chip">
+            <div>
+              <div class="rc-head">3 days ago</div>
+              <div class="rc-body">Avocado mash · Banana mash · Blueberry</div>
+            </div>
+            <span class="rc-tap">tap to use</span>
+          </div>
+        </div>
+
+        <div class="sec-lbl">OR BUILD FROM SCRATCH</div>
+        <div class="add-row">
+          <input class="add-input" placeholder="Type to add… (e.g. 'av' for Avocado mash)">
+        </div>
+
+        <button class="save-btn auto">Save Feed</button>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Result — auto-saved · meal pre-filled</div>
+
+      <div class="bg-context">
+        <div class="bc-line med"></div>
+        <div class="bc-line"></div>
+        <div class="bc-line short"></div>
+      </div>
+
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Logged · Breakfast 8:30 am</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Avocado mash<span class="meta">library · 1 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">½ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">B</span>
+            <div class="item-name">Blueberry<span class="meta">library · 5 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">5 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">M</span>
+            <div class="item-name">Mango puree<span class="meta">library · ¼ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">¼ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+        </div>
+
+        <div class="foot-row">
+          <div class="foot-field">
+            <div class="ff-lbl">Time</div>
+            <div class="ff-val">8:30 am</div>
+          </div>
+          <div class="foot-field">
+            <div class="ff-lbl">Overall intake · default</div>
+            <div class="intake-strip">
+              <div class="intake-pill">Few</div>
+              <div class="intake-pill">Half</div>
+              <div class="intake-pill active">Most</div>
+              <div class="intake-pill">All</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="save-btn" style="background: var(--sage);">✓ Logged · tap to edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Tap count breakdown:</strong> Tap 1 = FOB · Tap 2 = FEED · Tap 3 = "Yesterday's breakfast" chip → sheet enters 2s auto-save window. Total = <strong>3 taps</strong>. Parent can tap anywhere to cancel auto-save + edit (e.g., bump Avocado mash from ½ → 1 pc, drop Mango, change intake). If parent taps cancel + edit, total path becomes Scenario 4 (qty stepper). The auto-save is forgiving: it surfaces a banner "Logged · undo" for 8 seconds post-save.
+  </div>
+</section>
+
+<!-- ─────────────────────── SCENARIO 2 — 4-TAP COMBO TEMPLATE ─────────────────────── -->
+<section class="scenario">
+  <div class="scenario-head">
+    <span class="tap-badge medium">4 taps</span>
+    <h2>Combo template — "Your usual breakfast" (no exact yesterday match)</h2>
+  </div>
+  <p class="scenario-desc">Scenario where yesterday's breakfast doesn't quite fit (e.g., parent fed something different yesterday + wants the "standard" usual). System surfaces the rolling 14d top-N combo as a chip. From the data: Avocado + Blueberry + Banana mash AND Avocado + Blueberry + Mango both hit 7× in the dataset → two competing top combos shown. Parent taps the right one, system fills, auto-saves.</p>
+
+  <div class="phone-row">
+    <div class="phone">
+      <div class="phone-label">Combo chips · "Your usual" patterns</div>
+
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Log Feed</h3>
+
+        <div class="sec-lbl">MEAL</div>
+        <div class="meal-slot-strip">
+          <div class="meal-slot active b">B<span class="slot-time">8a</span></div>
+          <div class="meal-slot">L<span class="slot-time">1p</span></div>
+          <div class="meal-slot">D<span class="slot-time">8p</span></div>
+          <div class="meal-slot">S<span class="slot-time">any</span></div>
+        </div>
+
+        <div class="sec-lbl">YOUR USUAL BREAKFAST · last 14 days</div>
+        <div class="combo-chip tap-target">
+          <div class="combo-chip-title">
+            ⌬ Avocado mash + Blueberry + Mango
+            <span class="conf">7×</span>
+          </div>
+          <div class="combo-chip-foods">your usual breakfast · ½ pc + 5 pc + ¼ pc</div>
+        </div>
+        <div class="combo-chip">
+          <div class="combo-chip-title">
+            ⌬ Avocado mash + Banana mash + Blueberry
+            <span class="conf">7×</span>
+          </div>
+          <div class="combo-chip-foods">your other usual · ½ pc + ½ pc + 5 pc</div>
+        </div>
+
+        <div class="sec-lbl">RECENT · last 7 days</div>
+        <div class="repeat-rail">
+          <div class="repeat-chip">
+            <div>
+              <div class="rc-head">Yesterday</div>
+              <div class="rc-body">Apple puree · Almonds · Walnut</div>
+            </div>
+            <span class="rc-tap">tap to use</span>
+          </div>
+        </div>
+
+        <button class="save-btn auto">Save Feed</button>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">After combo tap — pre-filled with per-food qty</div>
+
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Log Feed · Breakfast</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Avocado mash<span class="meta">from combo · default ½ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">½ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">B</span>
+            <div class="item-name">Blueberry<span class="meta">from combo · default 5 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">5 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">M</span>
+            <div class="item-name">Mango<span class="meta">from combo · default ¼ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">¼ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+        </div>
+
+        <div class="next-ribbon">
+          <span class="next-chip">+ Banana mash<span class="conf">43%</span></span>
+          <span class="next-chip">+ Apple puree<span class="conf">28%</span></span>
+          <span class="next-chip">+ Ghee<span class="conf">19%</span></span>
+        </div>
+
+        <div class="foot-row">
+          <div class="foot-field">
+            <div class="ff-lbl">Time</div>
+            <div class="ff-val">8:30 am</div>
+          </div>
+          <div class="foot-field">
+            <div class="ff-lbl">Intake · default Most</div>
+            <div class="intake-strip">
+              <div class="intake-pill">Few</div>
+              <div class="intake-pill">Half</div>
+              <div class="intake-pill active">Most</div>
+              <div class="intake-pill">All</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="save-btn">Save Feed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Tap count:</strong> FOB · FEED · "Avocado + Blueberry + Mango" combo chip · Save = <strong>4 taps</strong>. The next-item ribbon stays available — parent can still add Banana mash in tap 5 if Ziva had it today. Combo chips are dynamic from a rolling 14d window (per ratification #2) — if Ziva's diet shifts, the surfaced combos shift with it. Cold-start (first 14 days of use) falls back to the curated combo registry slot in the intelligence layer.
+  </div>
+</section>
+
+<!-- ─────────────────────── SCENARIO 3 — 6-TAP NOVEL ─────────────────────── -->
+<section class="scenario">
+  <div class="scenario-head">
+    <span class="tap-badge long">6 taps</span>
+    <h2>Novel meal — typeahead + next-item prediction ribbon</h2>
+  </div>
+  <p class="scenario-desc">Parent introduces a new combination Ziva hasn't had before. Type "av" → typeahead matches Avocado mash on first character pair (no need to type the full name). Tap to accept. System surfaces predicted next-item chips by co-occurrence (Blueberry @94% based on 33 of 35 prior Avocado-mash meals). Parent taps next chip; system surfaces the next ribbon. Loop until done. <strong>Per-food quantity defaults from NUTRITION</strong>.</p>
+
+  <div class="phone-row">
+    <div class="phone">
+      <div class="phone-label">Tap 3 — type "av" → typeahead</div>
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Log Feed</h3>
+
+        <div class="meal-slot-strip">
+          <div class="meal-slot active b">B<span class="slot-time">8a</span></div>
+          <div class="meal-slot">L<span class="slot-time">1p</span></div>
+          <div class="meal-slot">D<span class="slot-time">8p</span></div>
+          <div class="meal-slot">S<span class="slot-time">any</span></div>
+        </div>
+
+        <div class="sec-lbl">ITEMS</div>
+        <div class="items-list">
+          <div class="empty">Type to start adding</div>
+        </div>
+
+        <div class="add-row">
+          <input class="add-input typed tap-target" value="av">
+        </div>
+        <div class="typeahead">
+          <div class="ta-row match">
+            <span class="item-icon">A</span>
+            <div class="ta-name"><span class="hi">Av</span>ocado mash</div>
+            <span class="ta-meta">library · ½ pc default</span>
+          </div>
+          <div class="ta-row">
+            <span class="item-icon">A</span>
+            <div class="ta-name"><span class="hi">Av</span>ocado (whole)</div>
+            <span class="ta-meta">library · 1 pc default</span>
+          </div>
+        </div>
+
+        <button class="save-btn" style="background: #d8ccc4; color: var(--mid);">Save Feed (empty)</button>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Tap 4 — first item added · next-item ribbon</div>
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Log Feed · Breakfast</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Avocado mash<span class="meta">typeahead · default ½ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">½ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+            <span class="item-x">×</span>
+          </div>
+        </div>
+
+        <div class="sec-lbl">YOU USUALLY ADD · tap to add</div>
+        <div class="next-ribbon">
+          <span class="next-chip tap-target">+ Blueberry<span class="conf">94%</span></span>
+          <span class="next-chip">+ Banana mash<span class="conf">43%</span></span>
+          <span class="next-chip">+ Mango puree<span class="conf">40%</span></span>
+          <span class="next-chip">+ Mango<span class="conf">29%</span></span>
+        </div>
+
+        <div class="add-row">
+          <input class="add-input" placeholder="…or type another item">
+        </div>
+
+        <button class="save-btn">Save Feed</button>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">Tap 5 — Blueberry added · next ribbon refreshes</div>
+      <div class="bottom-sheet">
+        <div class="sheet-grip"></div>
+        <h3 class="sheet-title">Log Feed · Breakfast</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Avocado mash<span class="meta">½ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">½ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">B</span>
+            <div class="item-name">Blueberry<span class="meta">next-pick · 5 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">5 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+        </div>
+
+        <div class="sec-lbl">USUALLY WITH AVOCADO + BLUEBERRY</div>
+        <div class="next-ribbon">
+          <span class="next-chip">+ Mango<span class="conf">42%</span></span>
+          <span class="next-chip">+ Banana mash<span class="conf">38%</span></span>
+          <span class="next-chip">+ Prune puree<span class="conf">10%</span></span>
+        </div>
+
+        <button class="save-btn tap-target">Save Feed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <strong>Tap count:</strong> FOB · FEED · type "av" + tap Avocado mash (counts as 1 tap — typing is gestural; tap accepts) · tap "+ Blueberry" · (optionally tap "+ Mango") · Save = <strong>5-6 taps</strong>. The next-item ribbon recomputes after each add — it reads the rolling 14d pair-count map. <strong>Confidence % is shown so the parent sees why</strong> the suggestion is there (Honesty axis — CV3-006). Tap-budget guard: instrument the render to count taps from sheet-open to Save; regression test asserts ≤6 for a novel-meal fixture.
+  </div>
+</section>
+
+<!-- ─────────────────────── SCENARIO 4 — QTY STEPPER ─────────────────────── -->
+<section class="scenario">
+  <div class="scenario-head">
+    <span class="tap-badge detail">DETAIL</span>
+    <h2>Per-food quantity stepper · NUTRITION defaults</h2>
+  </div>
+  <p class="scenario-desc">Each item row carries <code>[− qty unit +]</code> inline. Defaults come from the food's NUTRITION row (<code>defaultQty</code> + <code>defaultUnit</code> per ratification #4). Single tap steps ± by the food's natural increment (Ghee = ±½ tsp; Walnut = ±1 pc; Avocado = ±¼ pc). Long-press the qty value opens a numeric keypad for exact entry. Adjusting qty <strong>does not count toward the tap budget</strong> — it's editing, not entry. The default values mean the common case requires zero qty taps.</p>
+
+  <div class="phone-row two">
+    <div class="phone">
+      <div class="phone-label">Stepper at rest · all defaults applied</div>
+      <div class="bottom-sheet" style="box-shadow: var(--shadow-card);">
+        <h3 class="sheet-title" style="margin-bottom: var(--sp-8);">Quantity stepper · examples</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">G</span>
+            <div class="item-name">Ghee (cow)<span class="meta">step ±½ tsp</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">1 <span class="qty-unit">tsp</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Apple<span class="meta">step ±¼ pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">½ <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">W</span>
+            <div class="item-name">Walnut<span class="meta">step ±1 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">1 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">K</span>
+            <div class="item-name">Khichdi (masoor dal)<span class="meta">step ±¼ bowl</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">1 <span class="qty-unit">bowl</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">B</span>
+            <div class="item-name">Blueberry<span class="meta">step ±2 pc</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">5 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-label">After stepping — qty adjusted on 2 items</div>
+      <div class="bottom-sheet" style="box-shadow: var(--shadow-card);">
+        <h3 class="sheet-title" style="margin-bottom: var(--sp-8);">Lunch · Khichdi template</h3>
+
+        <div class="items-list">
+          <div class="item-row">
+            <span class="item-icon">K</span>
+            <div class="item-name">Khichdi (masoor dal)<span class="meta">tapped + once</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val" style="color: var(--tc-sage);">1¼ <span class="qty-unit">bowl</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">G</span>
+            <div class="item-name">Ghee (cow)<span class="meta">default</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">1 <span class="qty-unit">tsp</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">W</span>
+            <div class="item-name">Walnut<span class="meta">tapped + twice</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val" style="color: var(--tc-sage);">3 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">A</span>
+            <div class="item-name">Almonds<span class="meta">default</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">2 <span class="qty-unit">pc</span></span><span class="qty-step">+</span></span>
+          </div>
+          <div class="item-row">
+            <span class="item-icon">C</span>
+            <div class="item-name">Carrot<span class="meta">default</span></div>
+            <span class="item-qty"><span class="qty-step">−</span><span class="qty-val">¼ <span class="qty-unit">cup</span></span><span class="qty-step">+</span></span>
+          </div>
+        </div>
+
+        <div class="foot-row">
+          <div class="foot-field">
+            <div class="ff-lbl">Time</div>
+            <div class="ff-val">1:15 pm</div>
+          </div>
+          <div class="foot-field">
+            <div class="ff-lbl">Intake</div>
+            <div class="intake-strip">
+              <div class="intake-pill">Few</div>
+              <div class="intake-pill">Half</div>
+              <div class="intake-pill active">Most</div>
+              <div class="intake-pill">All</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Why per-food + per-meal both kept:</strong> per-food <code>qty</code> answers "how much of each thing"; per-meal <code>overallIntake</code> answers "did Ziva finish what was offered". The second covers "had 2 bites and pushed away" (intake = Few bites) even when all items are listed — a distinct semantic. <strong>Default = "Most" (0.75)</strong> for honest baseline: parents tap UP to "All" when Ziva finishes everything, or DOWN to Half / Few on harder days. "All" as a default would silently bias the data upward — busy parents wouldn't step-down on a normal day. "Most" reflects the realistic typical meal where Ziva eats most-but-not-all.
+  </div>
+</section>
+
+<!-- ─────────────────────── DATA SHAPE ─────────────────────── -->
+<section class="scenario">
+  <div class="scenario-head">
+    <h2 style="font-family: 'Fraunces', serif;">What gets written to disk</h2>
+  </div>
+  <p class="scenario-desc">F-2 emits the structured shape declared in PR #165 (data.js — <code>_FEEDING_V1_SCHEMA_VERSION = 1</code>). Per-food <code>qty</code> + <code>unit</code> live on each item; per-meal <code>overallIntake</code> sits alongside. Legacy <code>text</code> + <code>{meal}_intake</code> + <code>{meal}_time</code> compat fields generated so existing readers (home tab "Today's Meals" summary, diet stats, combo intelligence) keep working until F-5 normalizes everything.</p>
+  <div class="data-shape">
+<pre style="margin: 0;"><span class="c">// What F-2 writes after Scenario 1 (3-tap repeat) on 2026-05-28</span>
+feedingData[<span class="s">'2026-05-28'</span>] = {
+  breakfast: {
+    items: [
+      { name: <span class="s">'Avocado mash'</span>, qty: <span class="n">0.5</span>, unit: <span class="s">'pc'</span>, nutritionRef: <span class="s">'avocado mash'</span>, source: <span class="s">'repeat'</span> },
+      { name: <span class="s">'Blueberry'</span>,    qty: <span class="n">5</span>,   unit: <span class="s">'pc'</span>, nutritionRef: <span class="s">'blueberry'</span>,    source: <span class="s">'repeat'</span> },
+      { name: <span class="s">'Mango puree'</span>,  qty: <span class="n">0.25</span>,unit: <span class="s">'pc'</span>, nutritionRef: <span class="s">'mango'</span>,        source: <span class="s">'repeat'</span> },
+    ],
+    time: <span class="s">'08:30'</span>,
+    overallIntake: <span class="n">0.75</span>,                           <span class="c">// 0.25/0.5/0.75/1 — DEFAULTS to 0.75 (Most) for honest baseline</span>
+    derivedAllergens: [],                       <span class="c">// computed at write per ratified scope-Q3</span>
+    derivedFatBearing: <span class="n">false</span>,
+    sourceFlow: <span class="s">'fob-repeat'</span>,                   <span class="c">// fob-repeat | fob-combo | fob-novel | diet-tab</span>
+
+    <span class="c">// LEGACY COMPAT (auto-generated; readers untouched until F-5)</span>
+    text: <span class="s">'Avocado mash, Blueberry, Mango puree'</span>,
+  },
+  breakfast_time: <span class="s">'08:30'</span>,                       <span class="c">// legacy field name preserved</span>
+  breakfast_intake: <span class="n">0.75</span>,                         <span class="c">// legacy field name preserved (Most)</span>
+}</pre>
+  </div>
+  <div class="note-box">
+    <strong>Migration policy unchanged from spec §3:</strong> lazy. No rewrite of existing 79 days of legacy string records. New writes emit structured; old reads come through <code>parseFeeding</code> (F-5) which tolerates both shapes. <code>sourceFlow</code> field new in v2 mockup — lets us measure which entry path parents actually use (telemetry for "is the 3-tap path actually getting used 70% of the time, like the data suggests it could?").
+  </div>
+</section>
+
+<!-- ─────────────────────── INTELLIGENCE LAYERS ─────────────────────── -->
+<div class="intel-layers">
+  <h2>Autofill intelligence — four layers</h2>
+  <div class="layer">
+    <span class="lname">L1</span>
+    <div class="ldesc">
+      <strong>Repeat — "Same as yesterday's B" / "Same as lunch (today)"</strong>
+      One-tap full-meal apply. Surfaces the most recent same-slot meal (or, for dinner, today's lunch — per ratification #6, the 46% match rate makes this the single biggest UX win).
+      <span class="src">Source: ziva_feeding · last 1-7 days · per meal slot</span>
+    </div>
+  </div>
+  <div class="layer">
+    <span class="lname">L2</span>
+    <div class="ldesc">
+      <strong>Combo template — "Your usual breakfast"</strong>
+      Rolling 14d top-N combos per meal slot. Currently the data has two co-tied top combos (7×) for breakfast — both surfaced. Confidence % shown.
+      <span class="src">Source: dynamic 14d rolling window · cold-start fallback to <code>CURATED_COMBOS</code> intelligence-layer registry (covers first 14 days of use; ratification #2 reserves this slot)</span>
+    </div>
+  </div>
+  <div class="layer">
+    <span class="lname">L3</span>
+    <div class="ldesc">
+      <strong>Next-item prediction ribbon</strong>
+      After each item added, ranked "+ X" chips by co-occurrence with current item set. Refreshes on each add (e.g., Avocado→Blueberry@94%; Avocado+Blueberry→Mango@42%). Confidence % shown — Honesty axis honored.
+      <span class="src">Source: dynamic 14d pair-count map · keyed on items already in current meal</span>
+    </div>
+  </div>
+  <div class="layer">
+    <span class="lname">L4</span>
+    <div class="ldesc">
+      <strong>Typeahead</strong>
+      As-you-type match against NUTRITION + parent's introduced foods (ziva_foods list). Existing typeahead pattern extended to surface the food's default qty inline in the dropdown row.
+      <span class="src">Source: NUTRITION (live) · ziva_foods (47 introduced foods)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────── OPEN ISSUES ─────────────────────── -->
+<div class="open-issues">
+  <h2>Open issues — confirm before I open IMPL commits</h2>
+  <ol>
+    <li><strong>Meal-slot inference</strong> — Scenario 1 assumes "morning → B, midday → L, evening → D". Need bands. Proposed: 5-11a → B, 11a-3p → L, 5-9p → D, anywhere else → S (default selected). Parent can override with 1 tap. Confirm bands?</li>
+    <li><strong>2-second auto-save window</strong> — Scenario 1's "tap chip → 2s countdown → save" is novel. Alternative: explicit Save button always required (=4 taps for repeat path, but no surprise saves). I lean auto-save because the "Logged · undo" banner gives 8s safety net. Confirm?</li>
+    <li><strong>Quantity step semantics</strong> — fractional steps for things like Avocado (¼ pc step) require a UI for ¼ / ½ / ¾ display. Proposed: store as floats; render as unicode vulgar fractions (¼ ½ ¾) or "0.25" if outside the common set. Long-press qty value opens numeric keypad for exact entry. OK?</li>
+    <li><strong>Curated combo registry shape</strong> — for L2 cold-start fallback (ratification #2). Proposed shape: <code>{ slot: 'breakfast', items: ['Ragi porridge', 'Ghee', 'Banana mash'], rationale: 'pediatrician-suggested', minAgeMonths: 6 }</code> in data.js. Could seed with 4-6 entries (breakfast/lunch/dinner/snack standards) until rolling-14d has signal. Confirm rough shape?</li>
+    <li><strong>Diet Log sub-tab — F-3 surface</strong> — by ratification #1, F-2 only touches FOB. The F-1 scaffold's diet Log sub-tab stays as a placeholder with "Tap to open FOB Log Feed" CTA? Or empty? Or shows today's logged meals as read-only review? I lean read-only review (zero new IMPL surface, but the sub-tab earns its existence).</li>
+    <li><strong>What does the "Skip remaining" link do</strong> in the home tab Today's Meals card (screenshot 2)? If a parent taps "skip remaining" — does it mark lunch + dinner as intentionally-skipped vs missing-data? F-2 might want to write <code>{ skipped: true }</code> on those slots for honesty in nutrition snapshot computation.</li>
+    <li><strong>Tap-budget regression-test fixture</strong> — to make ratification #5 enforceable. Proposed: <code>tests/e2e/food-fob-tap-budget.spec.ts</code> with two fixtures: (a) yesterday's-breakfast-present → 3 taps from FOB to Logged; (b) novel "av-bl-ma" meal → 6 taps from FOB to Logged. Fails the build if either exceeds. Acceptable as a guard?</li>
+  </ol>
+</div>
+
+<footer>
+  Revised mockup v2 · F-2 redesigned around FOB Log Feed sheet · spec: <code>docs/specs/food-sub-tab-v1.md</code> · F-1: PR #165 · F-2 PR: #168 (draft, awaiting design ratification) · branch: <code>claude/food-sub-tab-v1-impl-GXBKC</code>
+</footer>
+
+</div>
+</body>
+</html>
