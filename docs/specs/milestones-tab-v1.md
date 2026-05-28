@@ -1,10 +1,11 @@
 # Milestones-Tab v1 — Track-tab 5th sub-tab redesign (Option C re-author)
 
-**Spec version:** v1 — **RATIFIED 2026-05-27** (Architect: original 1-10 ratification + Charter co-primary + PRECEDES-R-6 carries forward; Option C two-spec sequence positions this as the consumer spec after `milestone-engine-prep-v1` ratifies the substrate)
-**Date:** 2026-05-27
-**Branch:** `claude/milestones-tab-v1-rewrite-spec` (this PR) → `claude/milestones-tab-v1-impl` (future)
-**Author:** Lyra (main-session — Mode-1 re-authoring with full canon-cc-008 chain context + Scribe Worker Tier)
-**Status:** v1 RATIFIED — re-authored against the now-live `milestone-engine-prep-v1` substrate (PR #148 merged 2026-05-27 at sha `2cd8587`). Closes the foundational accuracy issues the closed PR #147 chain surfaced (9 BLOCKING + 19 NOTE — all addressed at the engine-prep substrate or in this re-spec body).
+**Spec version:** v1.1 — **RATIFIED 2026-05-29** (Architect ratification of v1.1 amendments folding the 2026-05-28 PM IMPL doctrine overrides into the spec body: V-V-49 3-state state-lanes; V-V-57 + V-M-103 push-to-bottom + 24h hide; Motion One §Animation Foundation; HR-2 `currentColor` carve-out)
+**v1 ratified:** 2026-05-27 (Architect: original 1-10 ratification + Charter co-primary + PRECEDES-R-6 carries forward; Option C two-spec sequence positions this as the consumer spec after `milestone-engine-prep-v1` ratifies the substrate)
+**Date:** 2026-05-29 (v1.1) · 2026-05-27 (v1)
+**Branch:** `claude/milestones-tab-v1-rewrite-spec` (v1 PR) → `claude/milestones-tab-v1-impl` (v1 IMPL PR #159 + #160-#164 hotfix arc) → `claude/milestones-tab-v1-1-spec-amendments` (this PR — v1.1 doctrine fold)
+**Author:** Lyra (main-session — Mode-1 re-authoring + v1.1 fold)
+**Status:** v1.1 RATIFIED — the four IMPL doctrine overrides ratified at PRs #159-#164 (under Architect standing fold-authority on milestones-tab findings) are now folded into the spec body. v1 ratification carries forward; v1.1 amendments are additive doctrine — no scope expansion, no new primitives. The amendment-note block at the head of §Ratification record preserves the v1 → v1.1 transition history per the canon-cc-022 §artifact-test pattern Aurelius validated in the 2026-05-28 PM cross-verify brief.
 
 **Promoted from:**
 - Architect direction 2026-05-27 (Option C ratification): *"Do the two spec sequence, run the chain after engine prep before moving on to milestones tab... don't wait for me to fold issues, Lyra will take that call - directive : don't defer issues directly related to milestones tab."*
@@ -27,15 +28,15 @@
 
 ## Ratification record (Architect carry-forward + Option C re-author)
 
-> **IMPL doctrine amendments — Architect overrides 2026-05-28 PM session** (PRs #159-#164). The spec body text below preserves the original v1 ratification language; the following four IMPL-doctrine deltas supersede specific spec lines as noted. Full body amendments queued for v1.1 spec revision; see `docs/SESSION_HANDOFF_2026-05-28_PM.md` §Doctrine amendments queued for spec body v1.1.
+> **v1 → v1.1 transition history — four IMPL doctrine overrides ratified 2026-05-28 PM (PRs #159-#164), folded into body 2026-05-29.** The body text below now reads as v1.1; this note preserves the ratification timeline per canon-cc-022 §artifact-test. None of the four amendments expand scope or add primitives — they refine the visual contract + tap-behavior semantics + add the §Animation Foundation reference that anchors the live IMPL pattern.
 >
-> 1. **V-V-49 REBATED — 3-state state-lanes** replaces the "2 visual states (filled/outlined)" collapse. Three distinct visual states (celebrated sage filled / practicing amber donut / coming-up lavender dashed outline) on a state-lane horizontal layout (top→bottom y=18/44/70 px) with collision-aware lateral spacing per lane. Reason: live use showed merged hedged-bucket "Practicing or in-window" smashed two journey-states + identical lavender swatches at 12px. Spec body §"Trajectory ribbon" L275-279 reads pre-override.
+> 1. **V-V-49 — 3-state state-lanes** (was 2-state filled/outlined collapse). Three distinct visual states (celebrated sage filled / practicing amber donut / coming-up lavender dashed outline) on a state-lane horizontal layout (top→bottom y=18/44/70 px) with collision-aware lateral spacing per lane. Live use showed the merged hedged-bucket "Practicing or in-window" smashed two journey-states + identical lavender swatches at 12px. Folded into §"Trajectory ribbon" body.
 >
-> 2. **V-V-57 + V-M-103 DEPRECATED — push-to-bottom + 24h hide** replaces the 7-day Not-yet suppress + 5-second undo toast. Not-yet now writes to a session-local `_msNotYetSession` map that reorders the card to the bottom of the in-window stack (still visible, deprioritized via `.is-deprioritized` muted-bg + opacity 0.65). Confirm/Practicing now write `milestoneSuppress[id] = now + 24h` (24h post-tap hide instead of 7-day). Spec body §"Tap behaviors" L134 + §"Test plan" L344 (guard names `inwindow-not-yet-suppress` / `inwindow-not-yet-undo-toast`) read pre-override.
+> 2. **V-V-57 + V-M-103 — push-to-bottom + 24h hide** (was 7-day Not-yet suppress + 5-second undo toast). Not-yet writes to a session-local `_msNotYetSession` map that reorders the card to the bottom of the in-window stack (still visible, deprioritized via `.is-deprioritized` muted-bg + opacity 0.65). Confirm/Practicing write `milestoneSuppress[id] = now + 24h` (24h post-tap hide instead of 7-day). Folded into §"Tap behaviors" body + test-plan guard rename.
 >
-> 3. **Motion One adopted as app-wide animation foundation** (PR #162 + #163). UMD via deferred CDN (`window.Motion` global with `animate` / `spring` / `timeline` / `stagger` / `inView`). Opt-in-with-fallback pattern at every call site; reduced-motion respect via `matchMedia`. FLIP technique for list-reorder via `_msSnapshotInWindowRects` + `_msFLIPCards` helpers. Documented in `docs/DESIGN_PRINCIPLES.md` §Animation Foundation.
+> 3. **Motion One adopted as app-wide animation foundation** (PRs #162 + #163). UMD via deferred CDN (`window.Motion` global with `animate` / `spring` / `timeline` / `stagger` / `inView`). Opt-in-with-fallback pattern at every call site; reduced-motion respect via `matchMedia('(prefers-reduced-motion: reduce)')`. FLIP technique for list-reorder via `_msSnapshotInWindowRects` + `_msFLIPCards` helpers. New §Animation Foundation in body cites `docs/DESIGN_PRINCIPLES.md` §Animation Foundation as canonical reference + names the in-tab consumers.
 >
-> 4. **HR-2 carve-out — trajectory marker `currentColor` pass-through.** Inline `style="color:..."` on `.ms-trajectory-marker` propagates the ACTIVITY_CATEGORIES domain accent via CSS `currentColor`. Mirrors the v3-6 `_setCardPriority` `// collapse-machinery-mirror` carve-out precedent. Annotated `// motion-currentcolor-carveout` at the inline-style site.
+> 4. **HR-2 carve-out — trajectory marker `currentColor` pass-through.** Inline `style="color:..."` on `.ms-trajectory-marker` propagates the ACTIVITY_CATEGORIES domain accent via CSS `currentColor`. Mirrors the v3-6 `_setCardPriority` `// collapse-machinery-mirror` carve-out precedent. Annotated `// motion-currentcolor-carveout` at the inline-style site. Folded into §Animation Foundation cross-reference; full carve-out documentation lives in `docs/DESIGN_PRINCIPLES.md` §HR-2 carve-outs.
 
 Original `milestones-tab-v1` ratification (10 scope questions + co-primary axes + PRECEDES-R-6) **carries forward unchanged**. Option C re-author adds substrate-grounded resolutions for the design conflicts the closed PR #147 chain surfaced.
 
@@ -75,7 +76,7 @@ The Track-tab's 5th sub-tab (`#tab-milestones`) redesigned around three input pr
 ### Three return-visit surfaces
 
 - **"Today" header card** — 4 narration templates (V-V-54 + V-M-105) consuming engine-prep `_predictMilestoneWindow` output via inline templates in a separate `_MILESTONE_NARRATION_TEMPLATES` registry (V-V-47 + V-V-60 typed-registry scope honored — single-domain milestone narration is NOT cross-domain `_correlate` prose)
-- **Trajectory ribbon** — simplified visual contract (V-V-49: drop dashed; 2-state filled/outlined; ~15-20 marker density)
+- **Trajectory ribbon** — 3-state state-lanes visual (V-V-49 v1.1: celebrated/practicing/coming-up on horizontal lanes; ~15-20 marker density; FLIP-reflow on state change)
 - **Pediatric-prep card** — narrated-card-only v1 minimum (V-V-53 — copy-as-text + PDF deferred to R-3)
 
 ### Consumer-side ACTIVITY_CATEGORIES registry
@@ -138,10 +139,15 @@ The engine-prep migrated milestone rows from `cat:` to `domain:` at the data-tie
 | Status pill | `evidenceStatus` value → token chrome (confirmed=sage / practicing=lavender hedge / not-yet=neutral) |
 | Three tap targets | `zi('check')` "Saw it today" / `zi('trending-flat')` "Practicing" / `zi('arrow-right')` "Not yet" — tooltip MUST include "Practicing" word (Maren V-V-50 watch-list) |
 
-**Tap behaviors** (write-side semantics; render-side prose stays in observation-count framings per V-K-120/V-K-121 fold — see §"Engine-internal label boundary" below):
-- **Saw it today** → record high-confidence observation (engine-side `confidence: 'high'` write); advance `evidenceStatus` if threshold
-- **Practicing** → record practicing observation (engine-side `confidence: 'medium'` write); set `evidenceStatus: 'practicing'`
-- **Not yet** → suppress 7 days via `ziva_milestone_suppress`; show 5-second undo toast (V-M-103)
+**Tap behaviors** (write-side semantics; render-side prose stays in observation-count framings per V-K-120/V-K-121 fold — see §"Engine-internal label boundary" below; tap-out animation per §Animation Foundation):
+- **Saw it today** → record high-confidence observation (engine-side `confidence: 'high'` write); advance `evidenceStatus` if threshold; write `milestoneSuppress[id] = now + 24h` (24h post-Confirm hide); FLIP-reorder sibling cards via `_msFLIPCards`.
+- **Practicing** → record practicing observation (engine-side `confidence: 'medium'` write); set `evidenceStatus: 'practicing'`; write `milestoneSuppress[id] = now + 24h` (24h post-Practicing hide); FLIP-reorder sibling cards.
+- **Not yet** (V-V-57 + V-M-103 v1.1) → write to session-local `_msNotYetSession[id] = true` map (NOT persisted); card reorders to bottom of in-window stack via FLIP + `.is-deprioritized` class (muted-bg + opacity 0.65). Still visible — deprioritized, not hidden. **No undo toast** (the visible-but-muted card IS its own affordance; tapping a different state on the same card overrides). Session-local means a page refresh restores the card to its priority slot.
+
+**Suppress vs deprioritize doctrine (v1.1):**
+- `milestoneSuppress[id] = now + 24h` (persisted via `KEYS.milestoneSuppress`) — Confirm/Practicing hide for 24h; card is gone from the in-window stack until the timestamp expires
+- `_msNotYetSession[id] = true` (module-local Map, NOT persisted) — Not-yet pushes to bottom of in-window stack; card stays visible with `.is-deprioritized` muted treatment; refresh restores
+- `deleteMilestone(id)` + `deleteActivityEntry` clear BOTH keys for the milestone (PR #164 — Library × delete + Recent-activity-evidence delete return the milestone to the queue cleanly)
 
 **Engine-internal label boundary (V-K-120 + V-K-121 + V-K-123 fold):** the engine-side `confidence: 'high' | 'medium' | 'low'` write enum is **write-side vocabulary only** — it MUST NOT leak into rendered prose. The surface prose uses `evidenceStatus` value (`confirmed` / `practicing` / `not-yet` per V-V-57) and observation-count framings ONLY. Test guard `strength-not-rendered` (test plan §Honesty floor) asserts grep finds no `'high-conf'` / `'medium-conf'` / `'low-conf'` / `'high-confidence'` / `'medium-confidence'` literal strings in any milestone-tab-v1 surface render function (home.js + medical.js + intelligence-cards.js touchpoints).
 
@@ -282,12 +288,19 @@ window._MILESTONE_NARRATION_TEMPLATES = {
 
 ### Trajectory ribbon (Patterns sub-tab)
 
-**Simplified visual contract** (V-V-49):
+**3-state state-lanes visual contract** (V-V-49 v1.1):
 - **Marker filter (V-K-122 fold — global cap, not per-bucket cap-at-5-only):** combine three buckets — confirmed milestones + practicing milestones + in-window-not-yet milestones — then apply a **global cap of 20 markers** via priority score (recency-weighted for confirmed; engine `priority` field for not-yet/practicing). The "cap at 5 most-imminent" floor on the not-yet bucket carries forward as a sub-bucket floor; the confirmed bucket caps via recency-top-N to keep the ribbon legible at 12m+ when typically-developing tracking datasets accumulate 30+ confirmed milestones.
-- **2 visual states (V-V-49 collapse):** filled = confirmed; outlined = hedged (practicing or not-yet-but-in-window). Drops the three-state distinction.
+- **3 visual states on horizontal lanes (V-V-49 v1.1):**
+  - **Celebrated** (confirmed) — top lane (y=18px) — `sage` filled disc, white check inside
+  - **Practicing** — middle lane (y=44px) — `amber` donut (filled ring with hollow center)
+  - **Coming up** (in-window not-yet) — bottom lane (y=70px) — `lavender` dashed outline
+  - Collision-aware lateral spacing per lane (markers in the same lane don't overlap; cross-lane vertical separation always 26px apart so the lane structure reads at-a-glance)
+- **Why three lanes** (closes V-V-49 v1 collapse): merging practicing + not-yet into a single "hedged" state at v1's filled-vs-outlined contract smashed two distinct journey-states; identical lavender swatches at 12px were also indistinguishable from celebrated markers at low brightness. Three lanes restore journey-state clarity + leverage spatial (vertical) hierarchy instead of overloading shape.
 - **Marker density:** ~15-20 markers via prioritization (post-global-cap).
-- **Pixel-scale floor (V-V-66 fold):** minimum marker diameter ≥9px at narrowest supported viewport (320px); outlined-marker `stroke-width` ≥1.8px (preserves fill-vs-outline distinguishability under low-brightness half-awake conditions). Regression guard `trajectory-ribbon-marker-min-diameter-9px` + screenshot-diff test at 6in viewport with 18 markers.
-- **Color:** domain-keyed (reads `ACTIVITY_CATEGORIES[milestone.domain].accent`)
+- **Pixel-scale floor (V-V-66 fold):** minimum marker diameter ≥9px at narrowest supported viewport (320px); outlined-marker `stroke-width` ≥1.8px (preserves shape distinguishability under low-brightness half-awake conditions). Regression guard `trajectory-ribbon-marker-min-diameter-9px` + screenshot-diff test at 6in viewport with 18 markers.
+- **Color:** domain-keyed via `currentColor` pass-through (reads `ACTIVITY_CATEGORIES[milestone.domain].accent` injected as inline `style="color:..."` — see HR-2 carve-out §Animation Foundation; annotated `// motion-currentcolor-carveout`)
+- **Age-axis + "now" indicator** (v1.1 fold from PR #161): horizontal axis labels months 4-12; vertical "now" indicator at the current age position; geometry 108px tall (was 72px at v1).
+- **FLIP-reflow on state change:** when a marker promotes (e.g., practicing → celebrated on Confirm tap), snapshot rects pre-render → re-render with new lane assignment → animate from delta back to 0 via `Motion.animate` (or CSS-class fallback). See §Animation Foundation.
 - **Tap → `gotoCard('track', 'milestoneRow_' + milestoneId)`** (V-V-48 — canonical pattern at `core.js:3385`; V-V-48 carry-watch — IMPL verifies `milestoneRow_<id>` ids actually render on the Library sub-tab milestone list)
 
 **Performance gate:** ribbon renders within 200ms (cipher-3 budget).
@@ -312,6 +325,22 @@ Engine-write-side `confidence: 'high' | 'medium'` enum stays in the data layer; 
 **Screenshot-bypass defense-in-depth (V-V-67 fold):** parents who can't copy will screenshot. Register-tag MUST stay within visible viewport at typical phone screenshot dimensions (320px / 375px / 414px widths). Regression guard `screenshot-bypass-register-tag-visible` captures rendered card height + asserts register-tag stays within viewport crop window at standard breakpoints.
 
 **No tap-to-copy + no PDF in v1.** Both deferred to R-3 (Wave 2 audit/history). V-V-53 ratified.
+
+### Animation Foundation (v1.1)
+
+**Motion One** (`window.Motion`) — app-wide animation foundation adopted at this IMPL (PR #162 + #163, 2026-05-28). UMD via deferred CDN (`dist/motion.min.js`) loaded after Chart.js in `split/build.sh`. Canonical reference: **`docs/DESIGN_PRINCIPLES.md` §Animation Foundation** (opt-in-with-fallback pattern, reduced-motion contract, FLIP primitive). This spec amends the milestones-tab surfaces only — the cross-app pattern lives in DESIGN_PRINCIPLES + AGENTS.md Rule 12.
+
+**In-tab consumers** (this spec):
+- **Tap-out animation** on Confirm / Practicing / Not-yet: card slide-out via `Motion.animate(card, { x:'110%', rotate:8, opacity:0 }, { duration:0.42, easing:[0.32,0,0.67,0] })`. CSS-class fallback `.is-sliding-out` engages when `window.Motion` unavailable.
+- **FLIP list-reorder** on state change: `_msSnapshotInWindowRects()` captures pre-render rects → state change + `renderMilestones()` → `_msFLIPCards(beforeRects)` computes per-card delta + animates from delta back to 0 via `Motion.animate` (or CSS class fallback). For just-deprioritized Not-yet cards: opacity tweens 1 → 0.65 in sync with the slide. Replaces the spring-physics oscillation + hard repaint jump that v1 IMPL initially shipped (PR #164 closure).
+- **Trajectory ribbon marker promotion** on Confirm: lane-to-lane re-position via FLIP (practicing-lane marker → celebrated-lane marker animates the y delta back to 0).
+- **activityLevel chip selection feedback** (PR #162): inline status + Today header echo pill + toast — all gated on Motion availability with CSS-fallback parity.
+
+**Reduced-motion contract:** every animation entry-point checks `window.matchMedia('(prefers-reduced-motion: reduce)')`. If matches, the animation is skipped + the callback fires immediately so the data write still happens. The state change is the load-bearing operation; the animation is comprehension polish.
+
+**HR-2 `currentColor` carve-out** (this tab's specific instance): `.ms-trajectory-marker` writes inline `style="color: var(--<domain>-accent)"` to propagate the ACTIVITY_CATEGORIES domain accent via CSS `currentColor`. The alternative (5 per-domain CSS rules duplicating the registry accents) is exactly the parallel-table failure-mode the 9th audit gate prevents. Registry → `currentColor` pass-through keeps `window.ACTIVITY_CATEGORIES` as the single source of truth. Annotated `// motion-currentcolor-carveout` at the inline-style site. Full carve-out doctrine in `docs/DESIGN_PRINCIPLES.md` §HR-2 Carve-outs.
+
+**CDN URL discipline** (PR #163 closure): Motion v10.18.0 distributes only `dist/motion.min.js`, NOT `dist/motion.js`. Build.sh references the `.min.js` path explicitly. If a future Motion version bump lands, verify the asset path via `curl -sI <cdn-url>` before commit — a 404 silently falls all surfaces through to the CSS fallback (the v1 IMPL incident).
 
 ---
 
@@ -351,7 +380,7 @@ Engine-write-side `confidence: 'high' | 'medium'` enum stays in the data layer; 
 
 ### Input primitives (11)
 - `activitylevel-chip-set` / `activitylevel-null-default` / `activitylevel-non-scrolling`
-- `inwindow-cap-3-default` / `inwindow-safetytier-bypass-cap` / `inwindow-confirm-evidence` / `inwindow-practicing-evidence` / `inwindow-not-yet-suppress` / `inwindow-not-yet-undo-toast`
+- `inwindow-cap-3-default` / `inwindow-safetytier-bypass-cap` / `inwindow-confirm-evidence` / `inwindow-practicing-evidence` / `inwindow-confirm-24h-hide` / `inwindow-practicing-24h-hide` / `inwindow-not-yet-push-to-bottom` / `inwindow-not-yet-session-local` / `inwindow-delete-clears-suppress`
 - `bulk-grid-engine-read` / `bulk-grid-categorized`
 
 ### ACTIVITY_CATEGORIES registry (3)
@@ -361,7 +390,7 @@ Engine-write-side `confidence: 'high' | 'medium'` enum stays in the data layer; 
 - `clinical-band-disclosed` / `omit-paren-on-unverified` (V-M-115) / `no-personalised-prediction` (engine-prep gate enforces) / `empty-state-voiced` / `strength-not-rendered`
 
 ### Return-visit surfaces (11)
-- `today-header-4-templates` / `today-header-between-window` (V-V-54) / `today-header-regression-days-30` (V-M-121) / `trajectory-ribbon-paints` (200ms) / `trajectory-ribbon-2-state-visual` / `trajectory-ribbon-marker-min-diameter-9px` (V-V-66) / `trajectory-ribbon-global-cap-20` (V-K-122) / `trajectory-ribbon-gotocard` (V-V-48) / `pediatric-prep-narrated-only` (V-V-53) / `pediatric-prep-register-tag` (V-M-109 + V-M-122) / `pediatric-prep-no-engine-internal-labels` (V-K-120) / `screenshot-bypass-register-tag-visible` (V-V-67) / `correlation-cross-link-cardId-verified` (V-V-63) / `correlation-cross-link-gotocard` (V-V-48 + V-V-62)
+- `today-header-4-templates` / `today-header-between-window` (V-V-54) / `today-header-regression-days-30` (V-M-121) / `trajectory-ribbon-paints` (200ms) / `trajectory-ribbon-3-state-lanes` (V-V-49 v1.1) / `trajectory-ribbon-marker-min-diameter-9px` (V-V-66) / `trajectory-ribbon-global-cap-20` (V-K-122) / `trajectory-ribbon-gotocard` (V-V-48) / `trajectory-ribbon-flip-reflow` (v1.1) / `pediatric-prep-narrated-only` (V-V-53) / `pediatric-prep-register-tag` (V-M-109 + V-M-122) / `pediatric-prep-no-engine-internal-labels` (V-K-120) / `screenshot-bypass-register-tag-visible` (V-V-67) / `correlation-cross-link-cardId-verified` (V-V-63) / `correlation-cross-link-gotocard` (V-V-48 + V-V-62) / `motion-opt-in-fallback-present` (v1.1) / `reduced-motion-skip-animation` (v1.1) / `motion-currentcolor-carveout-annotated` (v1.1)
 
 ### Layout uniformization (6)
 - `three-subtabs-render` / `active-subtab-rose-accent` (V-V-46) / `domain-accent-inside-cards` / `11-surfaces-relocated` (G3 preserved-IDs — enumerated 11: `recentEvidenceFeed`, `msActiveMilestones`, `milestonesDomainHero`, `milestoneStats`, `milestoneHighlights`, `msCatWheels`, `msRegressionAlerts`, `milestoneList`, `msTimelineContent`, `upcomingMilestoneList`, `activityList`; V-M-119 fold corrects earlier "12 surfaces" claim to enumerated 11 ID-bearing IDs) / `safetytier-rose-deep-border` (V-V-64 + V-M-124) / `screen-reader-order`
@@ -412,7 +441,7 @@ All existing milestone tests green. Engine-prep PR-A + PR-B IMPL must merge firs
 - ✓ Layout uniformization with food-sub-tab (V-V-46 resolution)
 - ✓ Uniform-rose active chrome + lavender domain accent inside
 - ✓ "Today" header narrates per CV3-002
-- ✓ Trajectory ribbon 2-state visual (V-V-49)
+- ✓ Trajectory ribbon 3-state state-lanes (V-V-49 v1.1)
 - ✓ Pediatric-prep narrated-only v1 minimum (V-V-53)
 - ✓ Half-awake split-fixture (V-V-52)
 - ✓ DOM reading order = visual order
@@ -437,7 +466,7 @@ All existing milestone tests green. Engine-prep PR-A + PR-B IMPL must merge firs
 
 Half-awake-test sign-off on:
 - "Today" header 4-template selection (V-V-54)
-- Trajectory ribbon 2-state visual at mobile (V-V-49)
+- Trajectory ribbon 3-state state-lanes visual at mobile (V-V-49 v1.1) — lane separation legibility + FLIP-reflow on state change
 - Pediatric-prep card narrated-only earns return-visit motivation (V-V-53)
 - Cross-link via `gotoCard()` smooth-scroll + back-rewind (V-V-48)
 - Active sub-tab rose chrome (V-V-46) comprehension-coherent with food-sub-tab
@@ -518,7 +547,7 @@ Per Architect directive 2026-05-27 (*"don't wait for me to fold issues, Lyra wil
 - **V-M-127** (Maren): `#milestoneList` + `openMilestoneModal` Add-path correctly preserved in Library sub-tab item 6 — G3 preserved-IDs closure verified
 - **V-V-68** (Vela): chrome doctrine resolution closes clean (`styles.css:5015` `.track-sub-btn.active` uniform-rose verified)
 - **V-V-69** (Vela): `gotoCard()` canonical pattern at `core.js:3385` closes (reopened only via V-V-63 specific cardId — now folded)
-- **V-V-70** (Vela): trajectory ribbon 2-state collapse doctrine closes (pixel-scale carried by V-V-66 fold)
+- **V-V-70** (Vela): trajectory ribbon doctrine closes at v1.1 — 3-state state-lanes ratified (was 2-state collapse at v1; pixel-scale carried by V-V-66 fold; FLIP-reflow added at v1.1)
 - **V-V-71** (Vela): half-awake split-fixture doctrine closes (budget-scope carried by V-V-65 fold)
 - **V-V-72** (Vela): pediatric-prep narrated-only v1 minimum doctrine closes (screenshot-bypass carried by V-V-67 fold)
 - **V-V-73** (Vela): V-V-54 4th-cell `betweenWindow` template — all four 2×2 state-cells covered cleanly
@@ -550,3 +579,5 @@ Folded synthesis ready for Cipher Edict V cross-cutting terminal pass.
 ---
 
 — *Lyra (main-session), 2026-05-27. Re-authored under Option C against the now-live `milestone-engine-prep-v1` substrate (PR #148 ratified). The closed PR #147's 9 BLOCKING + 19 NOTE findings are all addressed: phantom primitives now real; field-name now `domain:`; sync claim factually true; clinical-band attribution honest with omit-on-unverified hard contract; 5 unmapped surfaces all relocated; chrome doctrine resolved as uniform-rose active + lavender accent inside; F5 forks resolved via separate `_MILESTONE_NARRATION_TEMPLATES` registry; F6 cross-link uses `gotoCard()`; trajectory ribbon simplified to 2-state visual; cap-at-3 with safetyTier:true bypass; 4th-cell narration template added; WHO source rendered conditionally; pediatric-prep v1 minimum narrated-card-only. Three return-visit surfaces earn the tab's existence. Spec ready for canon-cc-008 chain (Maren primary + Kael + Vela consult + Cipher Edict V) per Architect direction.*
+
+— *Lyra (main-session), 2026-05-29 — v1.1 fold. Four IMPL doctrine overrides ratified at PRs #159-#164 (under Architect standing fold-authority on milestones-tab findings) now sit in the spec body: trajectory ribbon is **3-state state-lanes** (not 2-state collapse — live use showed merged hedged bucket smashed two journey-states); Not-yet is **push-to-bottom session-local** (not 7-day persisted suppress + undo toast — visible-but-muted card is its own affordance; Confirm/Practicing now write the 24h hide); **Motion One** is the app-wide animation foundation referenced via new §Animation Foundation section pointing at the canonical `docs/DESIGN_PRINCIPLES.md §Animation Foundation`; HR-2 `currentColor` carve-out for trajectory marker domain accent annotated `// motion-currentcolor-carveout`. v1 → v1.1 transition history preserved in §Ratification record amendment-note per canon-cc-022 §artifact-test. Test plan guards renamed at L354 + L364 (the four 2-state / undo-toast / 7-day-suppress guards retired; nine new v1.1 guards added covering 24h hide + push-to-bottom + session-local + delete-clears-suppress + 3-state lanes + FLIP reflow + motion opt-in fallback + reduced-motion + currentcolor carve-out). No scope expansion, no new primitives — the amendments refine visual contract + tap-behavior semantics + add the animation-foundation reference that anchors the live IMPL pattern. Per the prior session's Aurelius cross-verify brief: the amendment-note pattern is canonically sound.*
