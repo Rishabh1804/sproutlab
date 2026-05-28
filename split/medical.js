@@ -3115,12 +3115,12 @@ function renderVacc() {
       if (isBooked) {
         const apptLabel = getVaccApptLabel(bookedData);
         if (apptLabel) {
-          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
+          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escHtml(upcoming.name)}">
             <span class="status-good-xs"><span class="zi-check-placeholder"></span> Booked</span>
             <span class="vc-booked-detail">${apptLabel}</span>
           </div>`;
         } else {
-          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">
+          bsEl.innerHTML = `<div class="vc-booked-pill" data-action="openVaccApptModal" data-arg="${escHtml(upcoming.name)}">
             <span class="status-good-xs"><span class="zi-check-placeholder"></span> Booked</span>
             <span class="vc-booked-detail-light">Tap to add date & time</span>
           </div>`;
@@ -3128,7 +3128,7 @@ function renderVacc() {
         bsEl.style.display = '';
       } else {
         if (safeD <= 14) {
-          bsEl.innerHTML = `<button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">${zi('clock')} Book appointment</button>`;
+          bsEl.innerHTML = `<button class="btn btn-sage vc-book-btn" data-action="markVaccBooked" data-arg="${escHtml(upcoming.name)}">${zi('clock')} Book appointment</button>`;
           bsEl.style.display = '';
         } else {
           bsEl.style.display = 'none';
@@ -3283,7 +3283,7 @@ function _vaccRenderCompletionCard(dueVaccines) {
         <div class="vc-complete-q">Was the vaccination given?</div>
       </div>
       <div class="vc-complete-actions">
-        <button class="btn btn-sage" data-action="vaccMarkDone" data-arg="${escAttr(v.name)}" data-arg2="${escAttr(dueDate)}">Yes, done today</button>
+        <button class="btn btn-sage" data-action="vaccMarkDone" data-arg="${escHtml(v.name)}" data-arg2="${escAttr(dueDate)}">Yes, done today</button>
         <button class="btn btn-ghost" data-action="vaccShowDelay" data-arg="${escAttr(dueDate)}">Not yet</button>
       </div>
     </div>`;
@@ -4313,7 +4313,7 @@ function renderVaccItem(v, status) {
       const apptLabel = getVaccApptLabel(bookedData);
       bookingHtml = apptLabel
         ? `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:var(--surface-sage);font-size:var(--fs-xs);"><span style="font-weight:600;color:var(--tc-sage);">${zi('check')} Booked</span><span style="font-weight:400;color:var(--mid);">${apptLabel}</span></div>`
-        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:var(--surface-sage);font-size:var(--fs-xs);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(v.name)}"><span style="font-weight:600;color:var(--tc-sage);">${zi('check')} Booked</span><span style="font-weight:400;color:var(--light);">Add date</span></div>`;
+        : `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:var(--sp-4);padding:2px 8px;border-radius:var(--r-full);background:var(--surface-sage);font-size:var(--fs-xs);cursor:pointer;" data-action="openVaccApptModal" data-arg="${escHtml(v.name)}"><span style="font-weight:600;color:var(--tc-sage);">${zi('check')} Booked</span><span style="font-weight:400;color:var(--light);">Add date</span></div>`;
     }
   }
   return `<div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:8px 10px;border-radius:var(--r-lg);background:${c.bg};border-left:var(--accent-w) solid ${c.border};margin-bottom:4px;">
@@ -4924,11 +4924,11 @@ function renderUpcomingItem(item) {
   if (isDone) {
     actionsHtml = '<span class="upcoming-badge achieved-badge">' + zi('check') + ' Achieved</span>';
   } else if (isIP) {
-    actionsHtml = `<button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>`;
+    actionsHtml = `<button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escHtml(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>`;
   } else {
     actionsHtml = `
-      <button class="ms-action-btn" data-action="upcomingToMilestoneInProgress" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('target')} Started</button>
-      <button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escAttr(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneInProgress" data-stop="1" data-arg="${escHtml(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('target')} Started</button>
+      <button class="ms-action-btn" data-action="upcomingToMilestoneDone" data-stop="1" data-arg="${escHtml(item.text)}" data-arg2="${item.advanced ? 'true' : 'false'}" data-arg3="${escAttr(catVal)}">${zi('check')} Done</button>
     `;
   }
 

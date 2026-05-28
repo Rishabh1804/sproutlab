@@ -313,10 +313,9 @@ let _alUpgradePrompted = {};
 let _alSuggestInjected = false;
 var _alUpgradeTimerId = null;
 
-// escHtml doesn't escape " — this helper does, for safe JSON in data-arg attributes
-function _alAttrSafe(s) {
-  return escHtml(s).replace(/"/g, '&quot;');
-}
+// V-K-47 (issue #109): the former _alAttrSafe helper was escHtml(s) +
+// a redundant .replace(/"/g,'&quot;') — a no-op since #107 made escHtml escape
+// " itself. Call sites now use escHtml(payload) directly; helper removed.
 
 // ── Step 4: Active milestone → suggestion matching ──
 
@@ -420,7 +419,7 @@ function _alRenderSuggestions() {
     html += '<div class="al-suggest-cards">';
     g.activities.forEach(function(act) {
       var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
-      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' +
+      html += '<button class="al-suggest-card" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' +
         '<span class="al-suggest-icon">' + zi(act.icon || 'run') + '</span>' +
         '<span class="al-suggest-text">' + escHtml(act.text) + '</span>' +
         '<span class="al-suggest-dur">' + act.duration + ' min</span>' +
@@ -551,7 +550,7 @@ function _alRenderYesterday() {
     var meta = AL_DOMAIN_META[dom] || { icon: zi('run'), label: '' };
     var durStr = item.duration ? ' · ' + item.duration + 'm' : '';
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
-    html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + _alAttrSafe(payload) + '">' +
+    html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
       '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
   });
@@ -752,7 +751,7 @@ function _alRenderDomainNudge() {
     nudge.suggestions.forEach(function(s, i) {
       if (i > 0) html += ' · ';
       var payload = JSON.stringify({ keyword: s.keyword, text: s.text, duration: s.duration, tip: s.tip, icon: s.icon });
-      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + _alAttrSafe(payload) + '">' + escHtml(s.text) + '</button>';
+      html += '<button class="al-nudge-link" data-action="alTapSuggestion" data-arg="' + escHtml(payload) + '">' + escHtml(s.text) + '</button>';
     });
     html += '</div>';
   }
@@ -3571,8 +3570,11 @@ function openHomeSymptomChecker() {
   overlay.style.overscrollBehavior = 'contain';
 
   // Build quick chips HTML
+  // HR-3 (issue #109): data-action delegation, not inline onclick. The
+  // dispatcher (core.js: fillSymptomCheck) sets #homeSymptomInput then runs the
+  // check. escHtml at the data-arg + text render boundary (HR-4).
   const chipsHtml = SYMPTOM_QUICK_CHIPS.map(s =>
-    '<span class="sc-quick-chip" onclick="document.getElementById(\'homeSymptomInput\').value=\'' + s + '\';runHomeSymptomCheck()">' + s + '</span>'
+    '<span class="sc-quick-chip" data-action="fillSymptomCheck" data-arg="' + escHtml(s) + '">' + escHtml(s) + '</span>'
   ).join('');
 
   overlay.innerHTML = `
