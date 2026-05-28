@@ -2865,12 +2865,40 @@ window._FOOD_QTY_CATEGORY_DEFAULTS = {
   'veg-mashed':     { qty: 0.25, unit: 'cup',     step: 0.25 },
   'fruit-piece':    { qty: 0.5,  unit: 'pc',      step: 0.25 },
   'fruit-berry':    { qty: 5,    unit: 'pc',      step: 2    },
-  'fruit-mash':     { qty: 0.5,  unit: 'pc',      step: 0.25 },
+  'fruit-mash':     { qty: 2,    unit: 'tbsp',    step: 1    },
   'nut-piece':      { qty: 1,    unit: 'pc',      step: 1    },
   'fat-cooking':    { qty: 1,    unit: 'tsp',     step: 0.5  },
   'spice':          { qty: 0.25, unit: 'tsp',     step: 0.25 },
   'liquid-drink':   { qty: 0.5,  unit: 'cup',     step: 0.25 },
   'fallback':       { qty: 1,    unit: 'serving', step: 1    },
+};
+
+// Strip a prep-form word ("ragi porridge"→"ragi", "banana mash"→"banana",
+// "bajra roti"→"bajra") so a curated explicit override / NUTRITION row can
+// be matched before the broad category fallthrough. Returns '' when
+// stripping would empty the string (the food name IS the prep word, e.g.
+// "porridge", "roti") so callers fall back to the original base. (V-K-201)
+window._fdStripPrepSuffix = function(base) {
+  if (!base) return '';
+  return String(base)
+    .replace(/\b(porridge|mash|puree|pure|sauce|roti|chapati|paratha)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Resolve a food name to its best NUTRITION key for the nutrient join:
+// paren-strip, and if that isn't a NUTRITION row, try the prep-suffix-
+// stripped stem ("ragi porridge"→"ragi"). Falls back to the paren-stripped
+// base when neither matches, preserving legacy behavior. (V-K-200)
+window._fdNutritionRef = function(name) {
+  if (!name) return '';
+  var base = String(name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
+  if (typeof NUTRITION !== 'undefined' && NUTRITION) {
+    if (NUTRITION[base]) return base;
+    var stem = window._fdStripPrepSuffix(base);
+    if (stem && stem !== base && NUTRITION[stem]) return stem;
+  }
+  return base;
 };
 
 // Resolver — explicit override wins; category fallback otherwise.
@@ -2883,6 +2911,12 @@ window._fdResolveQtyDefaults = function(foodName) {
   // 1. Explicit per-food override
   if (NUTRITION_QTY_DEFAULTS[base]) return NUTRITION_QTY_DEFAULTS[base];
   if (NUTRITION_QTY_DEFAULTS[key])  return NUTRITION_QTY_DEFAULTS[key];
+  // 1b. Prep-suffix-stripped stem ("banana mash"→"banana") so a curated
+  //     explicit qty wins over the broad category catch below. Category
+  //     heuristics still run on the un-stripped base, so unnamed mashes
+  //     ("papaya puree") keep their fruit-mash default. (V-K-201)
+  var stem = window._fdStripPrepSuffix(base);
+  if (stem && stem !== base && NUTRITION_QTY_DEFAULTS[stem]) return NUTRITION_QTY_DEFAULTS[stem];
   // 2. Category resolver — name heuristics first
   if (/porridge|upma|halwa/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['porridge'];
   if (/\b(roti|chapati|paratha|naan|puri)\b/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['roti-flatbread'];
@@ -2983,6 +3017,11 @@ window.parseFeedingV1 = function(mealVal) {
   if (typeof mealVal === 'string') {
     var raw = mealVal.trim();
     if (!raw) return { items: [] };
+    // Skip sentinel reaching the normalizer directly (the live read path
+    // guards this in _fdReadDayMeal, but F-5 callers may invoke parseFeedingV1
+    // on the raw string) — must not emit a phantom "—skipped—" food. (V-K-202)
+    var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+    if (raw === sentinel) return { items: [], skipped: true };
     var items = raw.split(',').map(function(s) {
       var name = s.trim().replace(/,+$/, '');
       if (!name) return null;
@@ -2992,7 +3031,7 @@ window.parseFeedingV1 = function(mealVal) {
         qty: defaults.qty,
         unit: defaults.unit,
         source: 'legacy-parse',
-        nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim()
+        nutritionRef: window._fdNutritionRef(name)
       };
     }).filter(function(x) { return x; });
     return { items: items, _parsedFrom: 'legacy-string' };

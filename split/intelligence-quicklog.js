@@ -1237,7 +1237,7 @@ window._fdGetCombosForMeal = function(meal, opts) {
     return curated.slice(0, maxResults).map(function(c, i) {
       var items = c.items.map(function(name) {
         var d = window._fdResolveQtyDefaults(name);
-        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(name), source: 'curated' };
       });
       return {
         id: 'curated-' + meal + '-' + i,
@@ -1264,7 +1264,7 @@ window._fdGetCombosForMeal = function(meal, opts) {
     return curated2.slice(0, maxResults).map(function(c, i) {
       var items = c.items.map(function(name) {
         var d = window._fdResolveQtyDefaults(name);
-        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(name), source: 'curated' };
       });
       return {
         id: 'curated-fallback-' + meal + '-' + i,
@@ -1816,7 +1816,22 @@ function _qlRenderFeedSheet() {
 // F-2 fix (A6): hidden once items are present (mirror the combos-rail
 // behavior). Otherwise an accidental tap on a still-visible repeat chip
 // silently wipes the parent's in-progress items with no undo affordance.
+// L1↔L2 dedup: the repeat rail (your actual history) and the combo rail
+// (templates / curated cold-start) can surface the identical food-set as two
+// differently-coloured chips. The repeat rail stashes its signatures here so
+// the combo rail can drop the duplicate and keep the more-authoritative
+// history chip. Reset at the top of every repeat-rail render. (V-V-204)
+var _qlRepeatSigs = [];
+function _qlFeedRailSig(itemsText) {
+  return String(itemsText || '').toLowerCase().split(',')
+    .map(function(s) { return s.trim(); })
+    .filter(function(s) { return s; })
+    .sort()
+    .join('|');
+}
+
 function _qlRenderRepeatRail() {
+  _qlRepeatSigs = [];
   var wrap = document.getElementById('qlFeedRepeatWrap');
   var rail = document.getElementById('qlFeedRepeatRail');
   if (!wrap || !rail) return;
@@ -1831,6 +1846,7 @@ function _qlRenderRepeatRail() {
     rail.innerHTML = '';
     return;
   }
+  _qlRepeatSigs = candidates.map(function(c) { return _qlFeedRailSig(c.itemsText); });
   wrap.style.display = '';
   rail.innerHTML = candidates.map(function(c, i) {
     return '<div class="ql-feed-repeat-chip' + (i === 0 ? ' primary' : '') + '"' +
@@ -1857,6 +1873,13 @@ function _qlRenderCombosRail() {
     return;
   }
   var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 3 });
+  // Drop any combo whose food-set duplicates a repeat-rail chip already shown
+  // above (the history chip is more authoritative). (V-V-204)
+  if (combos && combos.length && _qlRepeatSigs.length) {
+    combos = combos.filter(function(c) {
+      return _qlRepeatSigs.indexOf(_qlFeedRailSig(c.itemsText)) === -1;
+    });
+  }
   if (!combos || combos.length === 0) {
     wrap.style.display = 'none';
     rail.innerHTML = '';
@@ -1887,14 +1910,19 @@ function _qlRenderItemsList() {
     list.innerHTML = '<div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>';
     return;
   }
+  // Stable alphabetical order so the list has a fixed scan position across
+  // the four entry rails (combo-replace, repeat-replace, next/typeahead push)
+  // — sorting the array in place keeps the data-arg idx consistent with the
+  // qty-stepper / remove handlers. (V-V-202)
+  _qlFeedItems.sort(function(a, b) {
+    return String(a.name || '').toLowerCase().localeCompare(String(b.name || '').toLowerCase());
+  });
   list.innerHTML = _qlFeedItems.map(function(item, idx) {
     var initial = (item.name || '?').charAt(0).toUpperCase();
     var qtyDisplay = _qlFormatQty(item.qty);
     return '<div class="ql-feed-item-row">' +
            '<span class="ql-feed-item-icon">' + escHtml(initial) + '</span>' +
-           '<div class="ql-feed-item-name">' + escHtml(item.name) +
-             '<span class="ql-feed-item-meta">' + escHtml(item.source || 'manual') + '</span>' +
-           '</div>' +
+           '<div class="ql-feed-item-name">' + escHtml(item.name) + '</div>' +
            '<div class="ql-feed-qty-stepper">' +
              '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="dec" type="button" aria-label="Decrease quantity">−</button>' +
              '<span class="ql-feed-qty-val">' + qtyDisplay +
@@ -2004,7 +2032,7 @@ function qlFeedAddItem(name, source) {
     name: name,
     qty: defaults.qty,
     unit: defaults.unit,
-    nutritionRef: normalized,
+    nutritionRef: window._fdNutritionRef(name),
     source: source || 'manual',
   });
   if (source === 'next' || source === 'typeahead') {
@@ -3877,43 +3905,6 @@ function updateMealSkipButtons() {
       if (input) { input.disabled = false; input.placeholder = 'Type to search foods...'; }
     }
   });
-}
-
-// ── Expanded same-as pills (yesterday's all meals) ──
-function renderQLSameAsPills() {
-  const wrap = document.getElementById('qlSameAsWrap');
-  const pills = document.getElementById('qlSameAsPills');
-  if (!wrap || !pills) return;
-
-  const todayEntry = feedingData[today()] || {};
-  const meals = [];
-  const seen = new Set();
-  function add(label, value) {
-    if (value && !seen.has(value)) { meals.push({ label, value }); seen.add(value); }
-  }
-
-  // Today's meals
-  add(zi('sun')+' Today B', todayEntry.breakfast);
-  add(zi('sun')+' Today L', todayEntry.lunch);
-  add(zi('moon')+' Today D', todayEntry.dinner);
-  add(zi('spoon')+' Today S', todayEntry.snack);
-
-  // Yesterday's meals (all three)
-  const yd = new Date(); yd.setDate(yd.getDate() - 1);
-  const ydEntry = feedingData[toDateStr(yd)] || {};
-  add(zi('clock')+' Yd B', ydEntry.breakfast);
-  add(zi('clock')+' Yd L', ydEntry.lunch);
-  add(zi('clock')+' Yd D', ydEntry.dinner);
-
-  if (meals.length === 0) {
-    wrap.style.display = 'none';
-    return;
-  }
-
-  wrap.style.display = '';
-  pills.innerHTML = meals.map(m =>
-    `<button class="btn-ghost" style="font-size:var(--fs-xs);padding:5px 10px;border-radius:var(--r-2xl);" onclick="document.getElementById('qlFeedInput').value='${escHtml(m.value).replace(/'/g, "\\'")}';this.closest('#qlSameAsWrap').style.display='none';">${m.label}</button>`
-  ).join('');
 }
 
 // Close QL dropdown on blur

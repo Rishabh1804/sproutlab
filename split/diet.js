@@ -4036,20 +4036,6 @@ function getTopMeals(n) {
     .map(m => ({ name: m.display.charAt(0).toUpperCase() + m.display.slice(1), count: m.count }));
 }
 
-function renderQLFreqPills() {
-  const wrap = document.getElementById('qlFreqWrap');
-  const el = document.getElementById('qlFreqPills');
-  if (!wrap || !el) return;
-
-  const top = getTopMeals(5);
-  if (top.length === 0) { wrap.style.display = 'none'; return; }
-
-  wrap.style.display = '';
-  el.innerHTML = top.map(m =>
-    `<div class="ql-freq-pill" onclick="document.getElementById('qlFeedInput').value='${escHtml(m.name).replace(/'/g, "\\'")}';document.getElementById('qlFeedInput').focus();" title="${m.count}× logged">${escHtml(m.name)}</div>`
-  ).join('');
-}
-
 // ── Meal progress on Home ──
 
 // ── MEAL DIVERSITY INDEX ──

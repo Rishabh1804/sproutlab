@@ -6643,16 +6643,6 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ql-modal-close:hover { background:var(--rose-light); color:var(--tc-rose); }
 
 .ql-form { display:flex; flex-direction:column; gap:var(--sp-12); }
-/* Frequent meals pills */
-.ql-freq-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
-.ql-freq-pill {
-  font-size:var(--fs-xs); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-full);
-  background:var(--sage-light); border:1px solid rgba(181,213,197,0.4);
-  color:var(--tc-sage); cursor:pointer; white-space:nowrap;
-  max-width:140px;
-  transition:transform var(--ease-fast), background var(--ease-fast);
-}
-.ql-freq-pill:active { transform:scale(0.95); background:var(--accent-sage-deep); color:white; }
 /* Backfill date pills */
 .ql-bf-row { display:flex; gap:var(--sp-4); flex-wrap:wrap; }
 .ql-bf-pill {
@@ -6925,7 +6915,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .ql-feed-next-chip:active { transform:scale(0.94); }
 .ql-feed-next-conf {
-  font-size:9px;
+  font-size:var(--fs-2xs);
   background:var(--white); color:var(--tc-sage);
   border-radius:var(--r-full);
   padding:1px var(--sp-6);
@@ -6979,7 +6969,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ql-feed-repeat-head { color:#7ac0a0; }
 [data-theme="dark"] .ql-feed-combo-chip { background:#2a2240; border-color:var(--tc-lav); }
 [data-theme="dark"] .ql-feed-combo-head { color:#b8a8e0; }
-[data-theme="dark"] .ql-feed-combo-conf { background:var(--lavender); color:var(--text); }
+/* Deep-lavender badge with light text so the combo frequency/confidence
+   number stays legible in dark mode — the prior var(--text) flipped light
+   over the unchanged light-lavender fill (~1.42:1). (V-M-210 / V-V-210) */
+[data-theme="dark"] .ql-feed-combo-conf { background:#3a2f55; color:#e6dcf5; }
 [data-theme="dark"] .ql-feed-items-list { background:var(--surface); border-color:#3a2e3e; }
 [data-theme="dark"] .ql-feed-item-row { border-bottom-color:#3a2e3e; }
 [data-theme="dark"] .ql-feed-qty-stepper { background:#221c28; }
@@ -7388,8 +7381,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 @media (prefers-reduced-motion: reduce) {
   .sc-disclosure-toggle { transition:none; }
 }
-[data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
-[data-theme="dark"] .ql-freq-pill:active { background:var(--accent-sage-deep); color:var(--body-bg); }
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }
 [data-theme="dark"] .ql-bf-pill.active { background:rgba(184,168,224,0.2); color:var(--tc-lav); border-color:rgba(184,168,224,0.35); }
 [data-theme="dark"] .meal-prog-slot { background:var(--card-bg); border-color:var(--card-border); }

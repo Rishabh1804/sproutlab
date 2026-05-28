@@ -6650,16 +6650,6 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ql-modal-close:hover { background:var(--rose-light); color:var(--tc-rose); }
 
 .ql-form { display:flex; flex-direction:column; gap:var(--sp-12); }
-/* Frequent meals pills */
-.ql-freq-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
-.ql-freq-pill {
-  font-size:var(--fs-xs); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-full);
-  background:var(--sage-light); border:1px solid rgba(181,213,197,0.4);
-  color:var(--tc-sage); cursor:pointer; white-space:nowrap;
-  max-width:140px;
-  transition:transform var(--ease-fast), background var(--ease-fast);
-}
-.ql-freq-pill:active { transform:scale(0.95); background:var(--accent-sage-deep); color:white; }
 /* Backfill date pills */
 .ql-bf-row { display:flex; gap:var(--sp-4); flex-wrap:wrap; }
 .ql-bf-pill {
@@ -6932,7 +6922,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .ql-feed-next-chip:active { transform:scale(0.94); }
 .ql-feed-next-conf {
-  font-size:9px;
+  font-size:var(--fs-2xs);
   background:var(--white); color:var(--tc-sage);
   border-radius:var(--r-full);
   padding:1px var(--sp-6);
@@ -6986,7 +6976,10 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ql-feed-repeat-head { color:#7ac0a0; }
 [data-theme="dark"] .ql-feed-combo-chip { background:#2a2240; border-color:var(--tc-lav); }
 [data-theme="dark"] .ql-feed-combo-head { color:#b8a8e0; }
-[data-theme="dark"] .ql-feed-combo-conf { background:var(--lavender); color:var(--text); }
+/* Deep-lavender badge with light text so the combo frequency/confidence
+   number stays legible in dark mode — the prior var(--text) flipped light
+   over the unchanged light-lavender fill (~1.42:1). (V-M-210 / V-V-210) */
+[data-theme="dark"] .ql-feed-combo-conf { background:#3a2f55; color:#e6dcf5; }
 [data-theme="dark"] .ql-feed-items-list { background:var(--surface); border-color:#3a2e3e; }
 [data-theme="dark"] .ql-feed-item-row { border-bottom-color:#3a2e3e; }
 [data-theme="dark"] .ql-feed-qty-stepper { background:#221c28; }
@@ -7395,8 +7388,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 @media (prefers-reduced-motion: reduce) {
   .sc-disclosure-toggle { transition:none; }
 }
-[data-theme="dark"] .ql-freq-pill { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
-[data-theme="dark"] .ql-freq-pill:active { background:var(--accent-sage-deep); color:var(--body-bg); }
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }
 [data-theme="dark"] .ql-bf-pill.active { background:rgba(184,168,224,0.2); color:var(--tc-lav); border-color:rgba(184,168,224,0.35); }
 [data-theme="dark"] .meal-prog-slot { background:var(--card-bg); border-color:var(--card-border); }
@@ -16805,12 +16796,40 @@ window._FOOD_QTY_CATEGORY_DEFAULTS = {
   'veg-mashed':     { qty: 0.25, unit: 'cup',     step: 0.25 },
   'fruit-piece':    { qty: 0.5,  unit: 'pc',      step: 0.25 },
   'fruit-berry':    { qty: 5,    unit: 'pc',      step: 2    },
-  'fruit-mash':     { qty: 0.5,  unit: 'pc',      step: 0.25 },
+  'fruit-mash':     { qty: 2,    unit: 'tbsp',    step: 1    },
   'nut-piece':      { qty: 1,    unit: 'pc',      step: 1    },
   'fat-cooking':    { qty: 1,    unit: 'tsp',     step: 0.5  },
   'spice':          { qty: 0.25, unit: 'tsp',     step: 0.25 },
   'liquid-drink':   { qty: 0.5,  unit: 'cup',     step: 0.25 },
   'fallback':       { qty: 1,    unit: 'serving', step: 1    },
+};
+
+// Strip a prep-form word ("ragi porridge"→"ragi", "banana mash"→"banana",
+// "bajra roti"→"bajra") so a curated explicit override / NUTRITION row can
+// be matched before the broad category fallthrough. Returns '' when
+// stripping would empty the string (the food name IS the prep word, e.g.
+// "porridge", "roti") so callers fall back to the original base. (V-K-201)
+window._fdStripPrepSuffix = function(base) {
+  if (!base) return '';
+  return String(base)
+    .replace(/\b(porridge|mash|puree|pure|sauce|roti|chapati|paratha)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Resolve a food name to its best NUTRITION key for the nutrient join:
+// paren-strip, and if that isn't a NUTRITION row, try the prep-suffix-
+// stripped stem ("ragi porridge"→"ragi"). Falls back to the paren-stripped
+// base when neither matches, preserving legacy behavior. (V-K-200)
+window._fdNutritionRef = function(name) {
+  if (!name) return '';
+  var base = String(name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
+  if (typeof NUTRITION !== 'undefined' && NUTRITION) {
+    if (NUTRITION[base]) return base;
+    var stem = window._fdStripPrepSuffix(base);
+    if (stem && stem !== base && NUTRITION[stem]) return stem;
+  }
+  return base;
 };
 
 // Resolver — explicit override wins; category fallback otherwise.
@@ -16823,6 +16842,12 @@ window._fdResolveQtyDefaults = function(foodName) {
   // 1. Explicit per-food override
   if (NUTRITION_QTY_DEFAULTS[base]) return NUTRITION_QTY_DEFAULTS[base];
   if (NUTRITION_QTY_DEFAULTS[key])  return NUTRITION_QTY_DEFAULTS[key];
+  // 1b. Prep-suffix-stripped stem ("banana mash"→"banana") so a curated
+  //     explicit qty wins over the broad category catch below. Category
+  //     heuristics still run on the un-stripped base, so unnamed mashes
+  //     ("papaya puree") keep their fruit-mash default. (V-K-201)
+  var stem = window._fdStripPrepSuffix(base);
+  if (stem && stem !== base && NUTRITION_QTY_DEFAULTS[stem]) return NUTRITION_QTY_DEFAULTS[stem];
   // 2. Category resolver — name heuristics first
   if (/porridge|upma|halwa/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['porridge'];
   if (/\b(roti|chapati|paratha|naan|puri)\b/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['roti-flatbread'];
@@ -16923,6 +16948,11 @@ window.parseFeedingV1 = function(mealVal) {
   if (typeof mealVal === 'string') {
     var raw = mealVal.trim();
     if (!raw) return { items: [] };
+    // Skip sentinel reaching the normalizer directly (the live read path
+    // guards this in _fdReadDayMeal, but F-5 callers may invoke parseFeedingV1
+    // on the raw string) — must not emit a phantom "—skipped—" food. (V-K-202)
+    var sentinel = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
+    if (raw === sentinel) return { items: [], skipped: true };
     var items = raw.split(',').map(function(s) {
       var name = s.trim().replace(/,+$/, '');
       if (!name) return null;
@@ -16932,7 +16962,7 @@ window.parseFeedingV1 = function(mealVal) {
         qty: defaults.qty,
         unit: defaults.unit,
         source: 'legacy-parse',
-        nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim()
+        nutritionRef: window._fdNutritionRef(name)
       };
     }).filter(function(x) { return x; });
     return { items: items, _parsedFrom: 'legacy-string' };
@@ -41577,20 +41607,6 @@ function getTopMeals(n) {
     .map(m => ({ name: m.display.charAt(0).toUpperCase() + m.display.slice(1), count: m.count }));
 }
 
-function renderQLFreqPills() {
-  const wrap = document.getElementById('qlFreqWrap');
-  const el = document.getElementById('qlFreqPills');
-  if (!wrap || !el) return;
-
-  const top = getTopMeals(5);
-  if (top.length === 0) { wrap.style.display = 'none'; return; }
-
-  wrap.style.display = '';
-  el.innerHTML = top.map(m =>
-    `<div class="ql-freq-pill" onclick="document.getElementById('qlFeedInput').value='${escHtml(m.name).replace(/'/g, "\\'")}';document.getElementById('qlFeedInput').focus();" title="${m.count}× logged">${escHtml(m.name)}</div>`
-  ).join('');
-}
-
 // ── Meal progress on Home ──
 
 // ── MEAL DIVERSITY INDEX ──
@@ -63710,7 +63726,7 @@ window._fdGetCombosForMeal = function(meal, opts) {
     return curated.slice(0, maxResults).map(function(c, i) {
       var items = c.items.map(function(name) {
         var d = window._fdResolveQtyDefaults(name);
-        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(name), source: 'curated' };
       });
       return {
         id: 'curated-' + meal + '-' + i,
@@ -63737,7 +63753,7 @@ window._fdGetCombosForMeal = function(meal, opts) {
     return curated2.slice(0, maxResults).map(function(c, i) {
       var items = c.items.map(function(name) {
         var d = window._fdResolveQtyDefaults(name);
-        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: name.toLowerCase().replace(/\s*\([^)]*\)\s*/g,'').trim(), source: 'curated' };
+        return { name: name, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(name), source: 'curated' };
       });
       return {
         id: 'curated-fallback-' + meal + '-' + i,
@@ -64289,7 +64305,22 @@ function _qlRenderFeedSheet() {
 // F-2 fix (A6): hidden once items are present (mirror the combos-rail
 // behavior). Otherwise an accidental tap on a still-visible repeat chip
 // silently wipes the parent's in-progress items with no undo affordance.
+// L1↔L2 dedup: the repeat rail (your actual history) and the combo rail
+// (templates / curated cold-start) can surface the identical food-set as two
+// differently-coloured chips. The repeat rail stashes its signatures here so
+// the combo rail can drop the duplicate and keep the more-authoritative
+// history chip. Reset at the top of every repeat-rail render. (V-V-204)
+var _qlRepeatSigs = [];
+function _qlFeedRailSig(itemsText) {
+  return String(itemsText || '').toLowerCase().split(',')
+    .map(function(s) { return s.trim(); })
+    .filter(function(s) { return s; })
+    .sort()
+    .join('|');
+}
+
 function _qlRenderRepeatRail() {
+  _qlRepeatSigs = [];
   var wrap = document.getElementById('qlFeedRepeatWrap');
   var rail = document.getElementById('qlFeedRepeatRail');
   if (!wrap || !rail) return;
@@ -64304,6 +64335,7 @@ function _qlRenderRepeatRail() {
     rail.innerHTML = '';
     return;
   }
+  _qlRepeatSigs = candidates.map(function(c) { return _qlFeedRailSig(c.itemsText); });
   wrap.style.display = '';
   rail.innerHTML = candidates.map(function(c, i) {
     return '<div class="ql-feed-repeat-chip' + (i === 0 ? ' primary' : '') + '"' +
@@ -64330,6 +64362,13 @@ function _qlRenderCombosRail() {
     return;
   }
   var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 3 });
+  // Drop any combo whose food-set duplicates a repeat-rail chip already shown
+  // above (the history chip is more authoritative). (V-V-204)
+  if (combos && combos.length && _qlRepeatSigs.length) {
+    combos = combos.filter(function(c) {
+      return _qlRepeatSigs.indexOf(_qlFeedRailSig(c.itemsText)) === -1;
+    });
+  }
   if (!combos || combos.length === 0) {
     wrap.style.display = 'none';
     rail.innerHTML = '';
@@ -64360,14 +64399,19 @@ function _qlRenderItemsList() {
     list.innerHTML = '<div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>';
     return;
   }
+  // Stable alphabetical order so the list has a fixed scan position across
+  // the four entry rails (combo-replace, repeat-replace, next/typeahead push)
+  // — sorting the array in place keeps the data-arg idx consistent with the
+  // qty-stepper / remove handlers. (V-V-202)
+  _qlFeedItems.sort(function(a, b) {
+    return String(a.name || '').toLowerCase().localeCompare(String(b.name || '').toLowerCase());
+  });
   list.innerHTML = _qlFeedItems.map(function(item, idx) {
     var initial = (item.name || '?').charAt(0).toUpperCase();
     var qtyDisplay = _qlFormatQty(item.qty);
     return '<div class="ql-feed-item-row">' +
            '<span class="ql-feed-item-icon">' + escHtml(initial) + '</span>' +
-           '<div class="ql-feed-item-name">' + escHtml(item.name) +
-             '<span class="ql-feed-item-meta">' + escHtml(item.source || 'manual') + '</span>' +
-           '</div>' +
+           '<div class="ql-feed-item-name">' + escHtml(item.name) + '</div>' +
            '<div class="ql-feed-qty-stepper">' +
              '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="dec" type="button" aria-label="Decrease quantity">−</button>' +
              '<span class="ql-feed-qty-val">' + qtyDisplay +
@@ -64477,7 +64521,7 @@ function qlFeedAddItem(name, source) {
     name: name,
     qty: defaults.qty,
     unit: defaults.unit,
-    nutritionRef: normalized,
+    nutritionRef: window._fdNutritionRef(name),
     source: source || 'manual',
   });
   if (source === 'next' || source === 'typeahead') {
@@ -66350,43 +66394,6 @@ function updateMealSkipButtons() {
       if (input) { input.disabled = false; input.placeholder = 'Type to search foods...'; }
     }
   });
-}
-
-// ── Expanded same-as pills (yesterday's all meals) ──
-function renderQLSameAsPills() {
-  const wrap = document.getElementById('qlSameAsWrap');
-  const pills = document.getElementById('qlSameAsPills');
-  if (!wrap || !pills) return;
-
-  const todayEntry = feedingData[today()] || {};
-  const meals = [];
-  const seen = new Set();
-  function add(label, value) {
-    if (value && !seen.has(value)) { meals.push({ label, value }); seen.add(value); }
-  }
-
-  // Today's meals
-  add(zi('sun')+' Today B', todayEntry.breakfast);
-  add(zi('sun')+' Today L', todayEntry.lunch);
-  add(zi('moon')+' Today D', todayEntry.dinner);
-  add(zi('spoon')+' Today S', todayEntry.snack);
-
-  // Yesterday's meals (all three)
-  const yd = new Date(); yd.setDate(yd.getDate() - 1);
-  const ydEntry = feedingData[toDateStr(yd)] || {};
-  add(zi('clock')+' Yd B', ydEntry.breakfast);
-  add(zi('clock')+' Yd L', ydEntry.lunch);
-  add(zi('clock')+' Yd D', ydEntry.dinner);
-
-  if (meals.length === 0) {
-    wrap.style.display = 'none';
-    return;
-  }
-
-  wrap.style.display = '';
-  pills.innerHTML = meals.map(m =>
-    `<button class="btn-ghost" style="font-size:var(--fs-xs);padding:5px 10px;border-radius:var(--r-2xl);" onclick="document.getElementById('qlFeedInput').value='${escHtml(m.value).replace(/'/g, "\\'")}';this.closest('#qlSameAsWrap').style.display='none';">${m.label}</button>`
-  ).join('');
 }
 
 // Close QL dropdown on blur

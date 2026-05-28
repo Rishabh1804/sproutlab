@@ -127,9 +127,45 @@ else:
     if missing_slots:
         FAILS.append(('curated-combos', f'CURATED_COMBOS missing slot coverage for: {sorted(missing_slots)}'))
 
+# ── 7. NUTRITION join-integrity (V-K-203) ──
+# The qty-defaults registry and curated-combo items are only load-bearing if
+# they join to a real NUTRITION row — F-5 nutrient compute keys off
+# nutritionRef, and the qty resolver's explicit override depends on the key
+# existing. This enforces the contract the nutritionRef comment claims but
+# the gate never actually checked (a typo'd or suffix-only food would ship
+# green, contributing zero nutrient signal). Ref derivation mirrors
+# _fdNutritionRef in data.js: paren-strip, then prep-suffix-stripped stem.
+nutr_block = re.search(r'const NUTRITION\s*=\s*\{(.*?)^\};', data, re.S | re.M)
+if not nutr_block:
+    FAILS.append(('nutrition-join', 'NUTRITION knowledge base not found in data.js'))
+else:
+    nutr_keys = set(re.findall(r"^\s+'([^']+)'\s*:\s*\{", nutr_block.group(1), re.M))
+    def _nutrition_ref(name):
+        base = re.sub(r"\s*\([^)]*\)\s*", "", name.lower()).strip()
+        if base in nutr_keys:
+            return base
+        stem = re.sub(r"\s+", " ", re.sub(r"\b(porridge|mash|puree|pure|sauce|roti|chapati|paratha)\b", "", base)).strip()
+        if stem and stem != base and stem in nutr_keys:
+            return stem
+        return base
+    # 7a. every explicit qty-default key resolves to a NUTRITION row
+    if qty_block:
+        qty_keys = re.findall(r"^\s*'([^']+)'\s*:\s*\{", qty_block.group(1), re.M)
+        orphan_qty = [k for k in qty_keys if k not in nutr_keys]
+        if orphan_qty:
+            FAILS.append(('nutrition-join', f'NUTRITION_QTY_DEFAULTS keys with no NUTRITION row: {orphan_qty}'))
+    # 7b. every curated-combo item's derived nutritionRef resolves to NUTRITION
+    if combos_block:
+        combo_items = []
+        for grp in re.findall(r"items:\s*\[([^\]]*)\]", combos_block.group(1)):
+            combo_items += re.findall(r"'([^']+)'", grp)
+        orphan_combo = sorted({it for it in set(combo_items) if _nutrition_ref(it) not in nutr_keys})
+        if orphan_combo:
+            FAILS.append(('nutrition-join', f'CURATED_COMBOS items whose nutritionRef misses NUTRITION: {orphan_combo}'))
+
 # ── Report ──
 if not FAILS:
-    print(f'audit-feed-sheet-wiring-v1: PASS (4 template wraps + 1 writer call + 7 handlers + 7 dispatchers + 30+ qty defaults + 10+ curated combos with full slot coverage)')
+    print(f'audit-feed-sheet-wiring-v1: PASS (4 template wraps + 1 writer call + 7 handlers + 7 dispatchers + 30+ qty defaults + 10+ curated combos with full slot coverage + NUTRITION join-integrity)')
     sys.exit(0)
 
 print(f'audit-feed-sheet-wiring-v1: FAIL ({len(FAILS)} structural assertion(s) failed)')
@@ -143,6 +179,7 @@ print('  • handlers        — add/restore the F-2 handler functions in intell
 print('  • dispatcher      — wire each handler in core.js click delegation block')
 print('  • nutrition-qty-defaults — keep ≥30 explicit per-food qty entries (top-used floor)')
 print('  • curated-combos  — keep ≥10 entries with all 4 slots represented')
+print('  • nutrition-join  — every qty-default key + curated-combo nutritionRef must resolve to a NUTRITION row')
 print()
 print('Spec: docs/specs/food-sub-tab-v1.md §F-2 / ratification #5 hard tap-budget')
 sys.exit(1)
