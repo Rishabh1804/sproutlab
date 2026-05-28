@@ -549,6 +549,10 @@ function _alRenderYesterday() {
     var dom = (item.domains && item.domains[0]) ? item.domains[0] : '';
     var meta = AL_DOMAIN_META[dom] || { icon: zi('run'), label: '' };
     var durStr = item.duration ? ' · ' + item.duration + 'm' : '';
+    // V-K-47 (#109): item.text is textarea-sourced and may contain newlines, but
+    // JSON.stringify converts real \n into the two-char escape before escHtml runs,
+    // so escHtml's \n→<br> arm never fires on the stringified payload. Keep this
+    // stringify-before-escHtml order; do not hand-build the data-arg JSON.
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
     html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
