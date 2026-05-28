@@ -801,7 +801,7 @@ function init() {
     else if (action === 'navFeedDay') { document.getElementById('feedingDate').value = arg; loadFeedingDay(); switchTab('diet'); }
     else if (action === 'navTabSub') { switchTab(arg); setTimeout(() => switchTrackSub(arg2), 100); }
     else if (action === 'closeScoreAndNav') { closeScorePopup(); setTimeout(() => switchTab(arg), 350); }
-    else if (action === 'qlMealAndOpen') { _qlMeal = arg; openQuickModal(arg2); }
+    else if (action === 'qlMealAndOpen') { _qlMeal = arg; _qlMealExplicit = true; openQuickModal(arg2); }
     else if (action === 'showHeatmapDetail') showHeatmapDetail(arg, parseInt(arg2), arg3);
     else if (action === 'openDoctorModal') { const a = arg; if (a) openDoctorModal(parseInt(a)); else openDoctorModal(); }
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
@@ -972,7 +972,7 @@ function init() {
     else if (action === 'deleteFoodAndRender') { deleteFood(arg); renderFoodCatSubContent(arg2); }
     else if (action === 'navTabSub') { switchTab(arg); setTimeout(() => switchTrackSub(arg2), 100); }
     else if (action === 'closeScoreAndNav') { closeScorePopup(); setTimeout(() => switchTab(arg), 350); }
-    else if (action === 'qlMealAndOpen') { _qlMeal = arg; openQuickModal(arg2); }
+    else if (action === 'qlMealAndOpen') { _qlMeal = arg; _qlMealExplicit = true; openQuickModal(arg2); }
     else if (action === 'closeAndPromptFever') { closeHomeSymptomChecker(); promptFeverTrack(); }
     else if (action === 'closeAndPromptDiarrhoea') { closeHomeSymptomChecker(); promptDiarrhoeaTrack(); }
     else if (action === 'closeAndPromptVomiting') { closeHomeSymptomChecker(); promptVomitingTrack(); }
@@ -1054,8 +1054,9 @@ function init() {
       } else if (arg === 'afternoon-poop') {
         openQuickModal('poop');
       } else if (arg2) {
-        // Feed nudge — pre-select meal type
+        // Feed nudge — pre-select meal type (F-2 fix C1: set explicit flag)
         _qlMeal = arg2;
+        _qlMealExplicit = true;
         openQuickModal('feed');
         setTimeout(function() {
           document.querySelectorAll('.ql-meal-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.meal === arg2); });

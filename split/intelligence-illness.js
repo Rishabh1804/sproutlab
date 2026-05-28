@@ -2046,7 +2046,7 @@ function saveFeedingDay() {
     dinner:    document.getElementById('meal-dinner').disabled ? (existing.dinner || '') : document.getElementById('meal-dinner').value,
     snack:     document.getElementById('meal-snack').disabled ? (existing.snack || '') : document.getElementById('meal-snack').value,
   };
-  // Save optional meal times
+  // Save optional meal times + preserve F-2 sidecar when text unchanged
   ['breakfast','lunch','dinner','snack'].forEach(m => {
     const timeVal = document.getElementById('mealtime-' + m)?.value || '';
     if (timeVal) {
@@ -2058,6 +2058,18 @@ function saveFeedingDay() {
     if (existing[m + '_intake'] !== undefined) {
       feedingData[d][m + '_intake'] = existing[m + '_intake'];
     }
+    // F-2 fix (E_a): preserve the [meal + '_v1'] structured sidecar when
+    // the meal text didn't change. Without this, every Diet tab editor
+    // save silently drops the rich shape (items[], qty/unit, sourceFlow,
+    // overallIntake) that the FOB Feed sheet had written — Today So Far
+    // + L1-L4 helpers + future F-3 review surface all degrade to legacy
+    // comma-split with synthesized default qty.
+    if (existing[m + '_v1'] && feedingData[d][m] === (existing[m] || '')) {
+      feedingData[d][m + '_v1'] = existing[m + '_v1'];
+    }
+    // If text changed, the sidecar is intentionally dropped — the legacy
+    // string is now the source of truth post-edit (matches the pre-F-2
+    // behavior that this writer used to maintain implicitly).
   });
   save(KEYS.feeding, feedingData);
   _tsfMarkDirty();
@@ -2352,6 +2364,13 @@ function changeDate(dir) {
 // ─────────────────────────────────────────
 let _qlOpen = false;
 let _qlMeal = 'breakfast';
+// F-2 fix (C1): explicit-meal flag. Callers that pre-set _qlMeal before
+// openQuickModal('feed') set this to true so openQuickModal preserves
+// their intent instead of clobbering with detectMealType(). One-shot —
+// consumed (reset to false) inside openQuickModal. Without this guard,
+// every "Log Breakfast" home alert at 8 PM would silently re-route to
+// the dinner slot (detected by time-of-day) and load wrong-slot rails.
+let _qlMealExplicit = false;
 let _qlWake = 0;
 let _qlColor = 'yellow';
 let _qlCon = 'normal';
@@ -2411,7 +2430,14 @@ function openQuickModal(type) {
 
   // Pre-fill defaults
   if (type === 'feed') {
-    _qlMeal = detectMealType();
+    // F-2 fix (C1): preserve _qlMeal when a caller explicitly set it
+    // (via the _qlMealExplicit flag). Without this guard, callers like
+    // home-tab "Log Breakfast" alerts at 8 PM would have their intent
+    // clobbered to detectMealType()='dinner' and load wrong-slot rails.
+    if (!_qlMealExplicit) {
+      _qlMeal = detectMealType();
+    }
+    _qlMealExplicit = false;  // one-shot — consume the flag
     if (!_qlBackfillDate) _qlBackfillDate = null; // ensure reset for non-backfill
     document.querySelectorAll('.ql-meal-pill').forEach(p => {
       p.classList.toggle('active', p.dataset.meal === _qlMeal);

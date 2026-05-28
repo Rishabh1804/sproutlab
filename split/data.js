@@ -2896,13 +2896,13 @@ window._fdResolveQtyDefaults = function(foodName) {
   if (n && n.tags) {
     if (n.tags.indexOf('healthy-fats') >= 0 && /oil|ghee|butter/.test(base)) return _FOOD_QTY_CATEGORY_DEFAULTS['fat-cooking'];
     if (n.tags.indexOf('iron-rich') >= 0 && n.tags.indexOf('protein-rich') >= 0) return _FOOD_QTY_CATEGORY_DEFAULTS['dal-legume'];
-    if (n.tags.indexOf('energy') >= 0 && !n.tags.indexOf('digestive') >= 0) return _FOOD_QTY_CATEGORY_DEFAULTS['grain-staple'];
+    if (n.tags.indexOf('energy') >= 0 && n.tags.indexOf('digestive') < 0) return _FOOD_QTY_CATEGORY_DEFAULTS['grain-staple'];
   }
   // 4. Heuristic by nutrient profile
   if (n && n.nutrients) {
     if (n.nutrients.indexOf('water') >= 0) return _FOOD_QTY_CATEGORY_DEFAULTS['liquid-drink'];
   }
-  return _FOOD_QTY_CATEGORY_DEFAULTS['veg-piece'];
+  return _FOOD_QTY_CATEGORY_DEFAULTS['fallback'];
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -3013,13 +3013,17 @@ window.parseFeedingV1Stub = window.parseFeedingV1;
 // (matches existing app-wide pattern at core.js:3119; consumers in
 // home.js Today's Meals + diet.js stats + intelligence-cards.js + isl
 // all key off this sentinel — there's no reason to invent a new one).
-// Also clears any v1 sidecar from prior structured writes.
+// Clears the v1 sidecar AND the legacy [meal+'_time']/[meal+'_intake']
+// fields so a skip is atomic — Today So Far + diet stats don't render
+// stale time/intake for what the parent just marked as skipped.
 window._fdMarkMealSkipped = function(dateKey, meal) {
   if (!dateKey || !meal) return false;
   var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
   if (!fd[dateKey]) fd[dateKey] = { breakfast: '', lunch: '', dinner: '', snack: '' };
   fd[dateKey][meal] = (typeof SKIPPED_MEAL !== 'undefined') ? SKIPPED_MEAL : '—skipped—';
   delete fd[dateKey][meal + '_v1'];
+  delete fd[dateKey][meal + '_time'];
+  delete fd[dateKey][meal + '_intake'];
   if (typeof save === 'function' && typeof KEYS !== 'undefined' && KEYS.feeding) {
     save(KEYS.feeding, fd);
   }
@@ -3082,9 +3086,23 @@ window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
   // Structured shape in sidecar — F-2 readers (L1-L4 helpers + diet Log
   // review surface) reach here for qty + sourceFlow + overallIntake.
   fd[dateKey][meal + '_v1'] = structured;
-  // Legacy time + intake at the day level (existing readers reach for these).
+  // Legacy time at the day level (existing readers reach for this).
+  // Unconditionally write — if structured.time is null, clear the legacy
+  // field so undo/re-save flows don't leave a phantom time from a prior
+  // write attached to a different food.
   if (structured.time) fd[dateKey][meal + '_time'] = structured.time;
-  fd[dateKey][meal + '_intake'] = structured.overallIntake;
+  else delete fd[dateKey][meal + '_time'];
+  // Legacy intake at the day level — only for B/L/D. Snack has the
+  // chip in the F-2 UI but the legacy invariant (pre-F-2 saveQLFeed
+  // guard `_qlMeal !== 'snack'`) was that snack carries no intake at
+  // the day level. Existing readers (intelligence-cards.js, isl, diet
+  // stats) assume snack_intake is undefined for snacks; preserve that.
+  // F-2 readers reach structured.overallIntake via _fdReadDayMeal.
+  if (meal !== 'snack') {
+    fd[dateKey][meal + '_intake'] = structured.overallIntake;
+  } else {
+    delete fd[dateKey][meal + '_intake'];
+  }
 
   if (typeof save === 'function' && typeof KEYS !== 'undefined' && KEYS.feeding) {
     save(KEYS.feeding, fd);

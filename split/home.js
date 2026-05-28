@@ -9351,7 +9351,7 @@ function computeAlerts() {
           title: loggedMeals.length === 0 ? 'No meals logged today' : missingLabels + ' not logged today',
           body: bodyMsg,
           tip: 'Logging every meal — even "skipped" or "just breastmilk" — helps build an accurate picture of intake patterns.',
-          action: { label: 'Log ' + firstMissing.charAt(0).toUpperCase() + firstMissing.slice(1), fn: '_qlMeal="' + firstMissing + '";openQuickModal("feed")' },
+          action: { label: 'Log ' + firstMissing.charAt(0).toUpperCase() + firstMissing.slice(1), fn: '_qlMeal="' + firstMissing + '";_qlMealExplicit=true;openQuickModal("feed")' },
           tab: 'diet'        });
       }
     }
@@ -10072,7 +10072,7 @@ function renderTodayPlan() {
     time: '8–9', icon: zi('sun'), title: 'Breakfast',
     detail: bfDone ? iconText('check', todayEntry.breakfast) : bfSuggestion,
     tag: 'food', done: bfDone, htmlDetail: bfDone,
-    action: bfDone ? null : '_qlMeal="breakfast";openQuickModal("feed")'
+    action: bfDone ? null : '_qlMeal="breakfast";_qlMealExplicit=true;openQuickModal("feed")'
   });
 
   // Morning nap
@@ -10142,7 +10142,7 @@ function renderTodayPlan() {
     time: '12–1', icon: zi('sun'), title: 'Lunch',
     detail: lnDone ? iconText('check', todayEntry.lunch) : lnSuggestion,
     tag: 'food', done: lnDone, htmlDetail: lnDone,
-    action: lnDone ? null : '_qlMeal="lunch";openQuickModal("feed")'
+    action: lnDone ? null : '_qlMeal="lunch";_qlMealExplicit=true;openQuickModal("feed")'
   });
 
   // Afternoon nap
@@ -10216,7 +10216,7 @@ function renderTodayPlan() {
     time: '6–7', icon: zi('moon'), title: 'Dinner',
     detail: dnDone ? iconText('check', todayEntry.dinner) : dnSuggestion,
     tag: 'food', done: dnDone, htmlDetail: dnDone,
-    action: dnDone ? null : '_qlMeal="dinner";openQuickModal("feed")'
+    action: dnDone ? null : '_qlMeal="dinner";_qlMealExplicit=true;openQuickModal("feed")'
   });
 
   // Snack
@@ -10225,7 +10225,7 @@ function renderTodayPlan() {
     time: '10–4', icon: zi('spoon'), title: 'Snack',
     detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
     tag: 'food', done: skDone, htmlDetail: skDone,
-    action: skDone ? null : '_qlMeal="snack";openQuickModal("feed")'
+    action: skDone ? null : '_qlMeal="snack";_qlMealExplicit=true;openQuickModal("feed")'
   });
 
   // Bedtime routine
