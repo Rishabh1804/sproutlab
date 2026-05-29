@@ -4950,6 +4950,21 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    as a future host for PR-5's "update available" reload affordance.
    Container is always present (so its visibility is mode-independent); the
    #syncStatus child manages its own [hidden] state on cold boot per sl-1-2 r2. */
+/* Visually-hidden but present in the accessibility tree (issue #6 / V-V-2 /
+   V-M-1). Used by the persistent #a11yLive announce region: it must stay in
+   the a11y tree at all times (NOT display:none, which would remove it), so
+   _a11yAnnounce() writes reliably fire a polite announcement. Standard
+   clip-rect technique. */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .status-strip {
   display:flex; align-items:center; justify-content:flex-end;
   gap:var(--sp-8);
@@ -10768,8 +10783,20 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
        Strip is a sibling of tab-bar, NOT inside #headerFull, so the
        essential-mode rule does not cascade. Future host for PR-5's "update
        available" reload affordance. HR-2: no inline styles, all via tokens. -->
+  <!-- Persistent a11y live region (issue #6 / V-V-2 / V-M-1, all-regions fix).
+       A single polite live region that is ALWAYS in the accessibility tree —
+       never inside a [hidden]/display:none ancestor. The visual status surfaces
+       below (#syncStatus, #syncActivity, #updateToast, the offline/halted badge)
+       are visual-only and announce by writing their copy here via
+       _a11yAnnounce(); they no longer carry their own aria-live, because a live
+       region that toggles via [hidden] (display:none removes it from the a11y
+       tree) does not reliably fire a polite announcement on the same tick it is
+       unhidden-and-populated, on older AT. One shared region also collapses the
+       former #syncStatus + offline-badge double-announce to a single message. -->
+  <div id="a11yLive" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <div class="status-strip" id="statusStrip">
-    <button id="syncStatus" type="button" class="sync-indicator" hidden aria-live="polite" aria-atomic="true">
+    <button id="syncStatus" type="button" class="sync-indicator" hidden>
       <span class="sync-indicator__dot" aria-hidden="true"></span>
       <span class="sync-indicator__label"></span>
     </button>
@@ -10780,16 +10807,17 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
          #syncStatus visible) vs activity-mode (#syncStatus + #syncActivity
          both visible). Self-dismisses to state mode on timer expiry.
          HR-2: no inline styles; CSS in styles.css gates display via the
-         [hidden] attribute. aria-live="polite" so screen readers announce
-         the activity without interrupting current focus. -->
-    <span id="syncActivity" class="sync-activity" hidden role="status" aria-live="polite" aria-atomic="true"></span>
+         [hidden] attribute. Announcement is via the persistent #a11yLive
+         region (_a11yAnnounce in _syncSetActivity), not a per-element
+         aria-live (see #a11yLive note above). -->
+    <span id="syncActivity" class="sync-activity" hidden></span>
     <!-- Update toast (Phase 2 PR-5). Surfaced when the SW emits 'updatefound'
          AND the new worker reaches 'installed' state with an existing
          controller (= update, not first install). HR-3/HR-6: tap routes
          through data-action="syncReload" — the dispatcher wired in sl-1-2 r3.
          Lives inside #statusStrip so it survives body.essential-mode (the
          #headerFull hide rule does not cascade to the strip's siblings). -->
-    <button id="updateToast" type="button" class="update-toast" hidden role="status" aria-live="polite" aria-atomic="true" data-action="syncReload">
+    <button id="updateToast" type="button" class="update-toast" hidden data-action="syncReload">
       <span class="update-toast__icon" aria-hidden="true"><svg class="zi"><use href="#zi-sparkle"/></svg></span>
       <span class="update-toast__copy">New version available — Tap to reload</span>
     </button>
@@ -10841,17 +10869,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- Offline / halted persistent badge (Phase 1 — sl-1-3). Driven by the
        sync-visibility store from sl-1-2; hidden in connecting/online/syncing
-       states. Issue #6 item 3 (AT smoke-pass gate): the live region lives on
-       the .offline-badge__copy span, NOT the whole badge — so the Reload button
-       is a sibling of the announced region, not a descendant, and AT does not
-       re-announce the button (or the whole badge atomically) when it toggles
-       from hidden in the halted state. aria-live=polite so copy changes
-       (including pending-count updates) are announced without interrupting.
-       Reload is surfaced only in the halted state and routed through the
-       data-action dispatcher wired in sl-1-2 r3 (HR-3/HR-6). -->
+       states. Issue #6 item 3 / V-V-2 / V-M-1: this badge is VISUAL-ONLY — it
+       carries no aria-live. Its copy is announced through the persistent
+       #a11yLive region (_a11yAnnounce in _syncUpdateOfflineBadge), so the
+       announcement does not depend on this element being un-hidden in the same
+       tick its text is written (unreliable on older AT), and the Reload button
+       is never inside the announced region. Reload is surfaced only in the
+       halted state and routed through the data-action dispatcher (HR-3/HR-6). -->
   <div id="offlineBadge" class="offline-badge" hidden>
     <span class="offline-badge__icon" aria-hidden="true"><svg class="zi"><use href="#zi-alert-circle"/></svg></span>
-    <span class="offline-badge__copy" role="status" aria-live="polite" aria-atomic="true"></span>
+    <span class="offline-badge__copy"></span>
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
@@ -13583,9 +13610,13 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
     <!-- App version (Phase 2 PR-3): populated at runtime by displayAppVersion()
          which fetches manifest.json and reads .version. Hidden via :empty when
-         the fetch fails or returns no version field. role=status + polite live
-         region so screen readers announce on populate without interruption. -->
-    <div class="app-version-line" id="appVersion" role="status" aria-live="polite" aria-atomic="true"></div>
+         the fetch fails or returns no version field. V-V-2 / V-M-1 (all-regions
+         fix): this is static reference info inside the settings sidebar (a
+         [hidden] ancestor when closed), NOT a status surface — so it carries no
+         live region (an in-hidden-ancestor aria-live announced unreliably and a
+         build-stamp is not a state change a parent needs spoken). A screen-reader
+         user reads it on demand when the sidebar is open. -->
+    <div class="app-version-line" id="appVersion"></div>
   </div><!-- /sidebar-body -->
 </div><!-- /sidebar -->
 <div class="avatar-lightbox" id="avatarLightbox" data-action="closeAvatarSelf">
@@ -24489,6 +24520,10 @@ if ('serviceWorker' in navigator) {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
           const toast = document.getElementById('updateToast');
           if (toast) toast.removeAttribute('hidden');
+          // V-V-2 / V-M-1: announce via the persistent #a11yLive region (the toast
+          // is visual-only now — it toggles via [hidden], so its own aria-live was
+          // unreliable). Copy mirrors the .update-toast__copy span.
+          if (typeof _a11yAnnounce === 'function') _a11yAnnounce('New version available — Tap to reload');
         }
       });
     });
@@ -24528,6 +24563,26 @@ function isPWA() {
 // Read manifest.json's version field at runtime and surface it in the settings
 // sidebar's #appVersion line. Silent on any failure (network, parse, or
 // missing field) — the :empty CSS rule keeps the row collapsed in that case.
+// Announce a message through the persistent #a11yLive region (issue #6 / V-V-2 /
+// V-M-1). The region is always in the a11y tree (sr-only, never display:none),
+// so unlike the old per-element [hidden] live regions this fires reliably. Clear
+// then set on the next frame so AT registers a text change even when the new
+// message equals the current one (e.g. a repeated offline state); multiple calls
+// in one frame coalesce to the last message (collapses indicator+badge to one).
+function _a11yAnnounce(msg) {
+  if (typeof document === 'undefined') return;
+  var el = document.getElementById('a11yLive');
+  if (!el) return;
+  el.textContent = '';
+  var set = function() { var e = document.getElementById('a11yLive'); if (e) e.textContent = (msg == null ? '' : String(msg)); };
+  // rAF is paused in a backgrounded tab (Cipher Edict V finding #2) — a transition
+  // that happens while hidden would otherwise never run `set` until foreground, by
+  // which point a newer announce may have cleared it. Use a timer when hidden so the
+  // announcement still lands (the polite region will speak it on tab return).
+  if (typeof requestAnimationFrame === 'function' && !(document.hidden)) requestAnimationFrame(set);
+  else setTimeout(set, 0);
+}
+
 async function displayAppVersion() {
   try {
     const res = await fetch('manifest.json', { cache: 'no-store' });
@@ -73702,6 +73757,9 @@ function _syncSetActivity(text, attribution) {
     el.removeAttribute('data-attribution-uid');
   }
   el.removeAttribute('hidden');
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region (the pill is
+  // visual-only now — it toggles via [hidden], so its own aria-live was unreliable).
+  if (text && typeof _a11yAnnounce === 'function') _a11yAnnounce(text);
   if (_syncActivityHideTimer) clearTimeout(_syncActivityHideTimer);
   _syncActivityHideTimer = setTimeout(function() {
     if (el.parentNode) el.setAttribute('hidden', '');
@@ -74014,6 +74072,10 @@ function _syncDetachListeners() {
   // confirmation. Without this, a re-attach cycle would flush immediately
   // with the previous session's stale shadow.
   _syncReady = {};
+  // #53 (Kael audit): clearing the ready-fallback timers here is what protects
+  // the _syncArmReadyFallback path — its setTimeout callback is NOT generation-
+  // guarded (it touches flush-readiness state, not the snapshot-apply path), so
+  // this clear-on-detach is load-bearing. Do not remove assuming _gen covers it.
   Object.keys(_syncReadyTimers).forEach(function(c) {
     if (_syncReadyTimers[c]) clearTimeout(_syncReadyTimers[c]);
   });
@@ -75425,6 +75487,11 @@ function _syncUpdateStatusIndicator(snap) {
   if (labEl) labEl.textContent = label;
   btn.setAttribute('title', title);
   btn.setAttribute('aria-label', title);
+  // V-V-2 / V-M-1: announce through the persistent #a11yLive region (the button
+  // is visual-only now). Same-frame coalescing means the offline-badge copy —
+  // which subscribes after this and carries the fuller message — wins, so the
+  // parent hears one message, not the indicator + badge double-announce.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(title);
 
   // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
   // dispatcher. Only halted is tappable; other states are read-only pills.
@@ -75467,6 +75534,10 @@ function _syncUpdateOfflineBadge(snap) {
 
   var copyEl = badge.querySelector('.offline-badge__copy');
   if (copyEl) copyEl.textContent = copy;
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region rather than an
+  // aria-live on this (initially [hidden]) badge — reliable on older AT, and the
+  // Reload button stays outside the announced text.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(copy);
 
   // Reload surfaces only in halted (local fault); offline auto-resumes
   // on network restore, no user action needed.
@@ -75499,6 +75570,10 @@ function initSyncVisibility() {
       }
     } catch(e) { /* non-fatal — derived store still works from counters */ }
   }
+  // ORDER-DEPENDENT (Cipher Edict V finding #3): both subscribers fire synchronously
+  // per visibility change and each calls _a11yAnnounce(); same-frame calls coalesce to
+  // the LAST one. The offline badge must stay registered AFTER the indicator so the
+  // parent hears the badge's fuller copy, not the terser indicator title. Do not reorder.
   onSyncVisibilityChange(_syncUpdateStatusIndicator);
   onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }

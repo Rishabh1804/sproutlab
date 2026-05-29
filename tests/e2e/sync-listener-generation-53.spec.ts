@@ -13,6 +13,13 @@ import { test, expect, type Page } from '@playwright/test';
 // under ?nosync), so we exercise the mechanism directly through the global
 // helpers it introduces: a detach must invalidate the generation any in-flight
 // callback captured. That invariant is exactly what rejects the straggler.
+//
+// COVERAGE BOUNDARY (Kael audit, #53): this test proves the generation COUNTER
+// invariant, not that the three onSnapshot callbacks actually wire the
+// `_gen !== _syncListenerGen` guard into their bodies — that call-site wiring is
+// covered by code review, not execution (a Firestore emulator would be needed to
+// fire a real queued snapshot). A future regression that dropped the `_gen` line
+// from one callback would NOT be caught here.
 
 async function gotoApp(page: Page): Promise<void> {
   // ?nosync skips Firebase init but keeps the sync module loaded + visibility

@@ -532,6 +532,9 @@ function _syncSetActivity(text, attribution) {
     el.removeAttribute('data-attribution-uid');
   }
   el.removeAttribute('hidden');
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region (the pill is
+  // visual-only now — it toggles via [hidden], so its own aria-live was unreliable).
+  if (text && typeof _a11yAnnounce === 'function') _a11yAnnounce(text);
   if (_syncActivityHideTimer) clearTimeout(_syncActivityHideTimer);
   _syncActivityHideTimer = setTimeout(function() {
     if (el.parentNode) el.setAttribute('hidden', '');
@@ -844,6 +847,10 @@ function _syncDetachListeners() {
   // confirmation. Without this, a re-attach cycle would flush immediately
   // with the previous session's stale shadow.
   _syncReady = {};
+  // #53 (Kael audit): clearing the ready-fallback timers here is what protects
+  // the _syncArmReadyFallback path — its setTimeout callback is NOT generation-
+  // guarded (it touches flush-readiness state, not the snapshot-apply path), so
+  // this clear-on-detach is load-bearing. Do not remove assuming _gen covers it.
   Object.keys(_syncReadyTimers).forEach(function(c) {
     if (_syncReadyTimers[c]) clearTimeout(_syncReadyTimers[c]);
   });
@@ -2255,6 +2262,11 @@ function _syncUpdateStatusIndicator(snap) {
   if (labEl) labEl.textContent = label;
   btn.setAttribute('title', title);
   btn.setAttribute('aria-label', title);
+  // V-V-2 / V-M-1: announce through the persistent #a11yLive region (the button
+  // is visual-only now). Same-frame coalescing means the offline-badge copy —
+  // which subscribes after this and carries the fuller message — wins, so the
+  // parent hears one message, not the indicator + badge double-announce.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(title);
 
   // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
   // dispatcher. Only halted is tappable; other states are read-only pills.
@@ -2297,6 +2309,10 @@ function _syncUpdateOfflineBadge(snap) {
 
   var copyEl = badge.querySelector('.offline-badge__copy');
   if (copyEl) copyEl.textContent = copy;
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region rather than an
+  // aria-live on this (initially [hidden]) badge — reliable on older AT, and the
+  // Reload button stays outside the announced text.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(copy);
 
   // Reload surfaces only in halted (local fault); offline auto-resumes
   // on network restore, no user action needed.
@@ -2329,6 +2345,10 @@ function initSyncVisibility() {
       }
     } catch(e) { /* non-fatal — derived store still works from counters */ }
   }
+  // ORDER-DEPENDENT (Cipher Edict V finding #3): both subscribers fire synchronously
+  // per visibility change and each calls _a11yAnnounce(); same-frame calls coalesce to
+  // the LAST one. The offline badge must stay registered AFTER the indicator so the
+  // parent hears the badge's fuller copy, not the terser indicator title. Do not reorder.
   onSyncVisibilityChange(_syncUpdateStatusIndicator);
   onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }
