@@ -10826,7 +10826,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <div class="avatar" id="avatarEl" data-action="openAvatarLightbox"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
       <div class="avatar-edit" data-action="editAvatar">Edit</div>
     </div>
-    <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatar(event)">
+    <input type="file" id="avatarInput" accept="image/*" data-change-action="handleAvatar">
     <div class="header-info">
       <h1><span id="greetingText">Hello</span>, <span id="babyName">Ziva</span> <span id="greetingEmoji"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></span></h1>
       <p id="headerSub">Loading...</p>
@@ -10841,13 +10841,17 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- Offline / halted persistent badge (Phase 1 — sl-1-3). Driven by the
        sync-visibility store from sl-1-2; hidden in connecting/online/syncing
-       states. aria-live=polite so copy changes (including pending-count
-       updates) are announced by AT without interrupting. Reload button is
-       surfaced only in the halted state and routed through the data-action
-       dispatcher wired in sl-1-2 r3 (HR-3/HR-6). -->
-  <div id="offlineBadge" class="offline-badge" role="status" aria-live="polite" aria-atomic="true" hidden>
+       states. Issue #6 item 3 (AT smoke-pass gate): the live region lives on
+       the .offline-badge__copy span, NOT the whole badge — so the Reload button
+       is a sibling of the announced region, not a descendant, and AT does not
+       re-announce the button (or the whole badge atomically) when it toggles
+       from hidden in the halted state. aria-live=polite so copy changes
+       (including pending-count updates) are announced without interrupting.
+       Reload is surfaced only in the halted state and routed through the
+       data-action dispatcher wired in sl-1-2 r3 (HR-3/HR-6). -->
+  <div id="offlineBadge" class="offline-badge" hidden>
     <span class="offline-badge__icon" aria-hidden="true"><svg class="zi"><use href="#zi-alert-circle"/></svg></span>
-    <span class="offline-badge__copy"></span>
+    <span class="offline-badge__copy" role="status" aria-live="polite" aria-atomic="true"></span>
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
@@ -20112,6 +20116,17 @@ function init() {
     if (e.target.classList.contains('vc-check-input')) {
       const label = e.target.closest('.vc-complete-check');
       if (label) label.classList.toggle('checked', e.target.checked);
+    }
+    // HR-3 (issue #6 item 1a): delegated change-action routing for elements that
+    // emit 'change' rather than 'click' (file inputs, selects). Mirrors the
+    // data-action click dispatcher. The change event fires on (and `e.target` is)
+    // the input itself, so handlers receive the same event their inline
+    // `onchange="fn(event)"` did. Extend the map here rather than re-adding
+    // inline handlers (see #172 for the remaining onchange sweep).
+    const ca = e.target.closest('[data-change-action]');
+    if (ca) {
+      const action = ca.dataset.changeAction;
+      if (action === 'handleAvatar') handleAvatar(e);
     }
   });
 
@@ -73162,6 +73177,14 @@ let _syncUser = null;           // current firebase.auth().currentUser snapshot
 let _syncHouseholdId = null;    // active household doc ID
 let _syncHousehold = null;      // cached household doc data
 let _syncListenerUnsubs = [];   // onSnapshot unsubscribe fns
+// Issue #53 — listener generation. Bumped on every _syncDetachListeners().
+// Each onSnapshot callback captures the generation it was attached under and
+// bails if it no longer matches the live one — so a Firestore snapshot
+// callback already queued on the microtask loop at detach time cannot apply
+// stale state (e.g. clobber local via save(lsKey, entries)) after the listener
+// has been torn down. This guards the snapshot-APPLY path; the pre-existing
+// _reconcileDone reset (§6.2(d)) only guarded reconcile RE-FIRE.
+let _syncListenerGen = 0;
 let _remoteWriteDepth = 0;      // counter for remote write detection (used by save())
 let _syncUIRendered = false;    // guard for Settings section injection
 
@@ -73976,7 +73999,15 @@ function _syncDeleteCollection(ref) {
 }
 
 // ─── Detach Listeners ───
+// Issue #53 — inspection getter (top-level `let` is not a window property, so
+// expose the live generation for guards/tests via a hoisted function).
+function _syncListenerGenNow() { return _syncListenerGen; }
+
 function _syncDetachListeners() {
+  // Issue #53 — invalidate any snapshot callbacks already queued from the
+  // generation being torn down. Bump BEFORE unsub() so a straggler that fires
+  // synchronously during teardown is already stale.
+  _syncListenerGen++;
   _syncListenerUnsubs.forEach(function(unsub) { unsub(); });
   _syncListenerUnsubs = [];
   // C0 Fix 5 (Kael): reset listener-ready state so next attach re-earns
@@ -74399,6 +74430,11 @@ function _syncAttachListeners(hId) {
   // tracks the broader straggler limitation; this reset only protects
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
+  // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
+  // (called just above, and on any future re-attach) bumps _syncListenerGen; each
+  // callback below bails if its captured _gen no longer matches the live one, so a
+  // straggler snapshot queued before detach cannot apply stale state.
+  var _gen = _syncListenerGen;
   var db = firebase.firestore();
   var hRef = db.collection('households').doc(hId);
 
@@ -74426,6 +74462,7 @@ function _syncAttachListeners(hId) {
   // Data-equality checks inside the handler short-circuit metadata-only fires.
   perEntryCollections.forEach(function(col) {
     var unsub = hRef.collection(col).onSnapshot({ includeMetadataChanges: true }, function(snapshot) {
+      if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
       try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
       catch(e) { _syncRecordCrash('per-entry/' + col, e); }
     }, function(err) {
@@ -74440,6 +74477,7 @@ function _syncAttachListeners(hId) {
   // Single-doc collections (in /singles/{docName})
   singleDocNames.forEach(function(docName) {
     var unsub = hRef.collection('singles').doc(docName).onSnapshot({ includeMetadataChanges: true }, function(doc) {
+      if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
       try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
       catch(e) { _syncRecordCrash('single-doc/' + docName, e); }
     }, function(err) {
@@ -74451,6 +74489,7 @@ function _syncAttachListeners(hId) {
 
   // Household doc listener (member changes, invite code)
   var hUnsub = hRef.onSnapshot(function(doc) {
+    if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
     try {
       if (doc.exists) {
         _syncHousehold = doc.data();

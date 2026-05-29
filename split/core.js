@@ -1089,6 +1089,17 @@ function init() {
       const label = e.target.closest('.vc-complete-check');
       if (label) label.classList.toggle('checked', e.target.checked);
     }
+    // HR-3 (issue #6 item 1a): delegated change-action routing for elements that
+    // emit 'change' rather than 'click' (file inputs, selects). Mirrors the
+    // data-action click dispatcher. The change event fires on (and `e.target` is)
+    // the input itself, so handlers receive the same event their inline
+    // `onchange="fn(event)"` did. Extend the map here rather than re-adding
+    // inline handlers (see #172 for the remaining onchange sweep).
+    const ca = e.target.closest('[data-change-action]');
+    if (ca) {
+      const action = ca.dataset.changeAction;
+      if (action === 'handleAvatar') handleAvatar(e);
+    }
   });
 
   
