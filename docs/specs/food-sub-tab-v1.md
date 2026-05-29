@@ -143,6 +143,7 @@ feedingData['2026-05-25'] = {
 **Library sub-tab** browser:
 - Search + filter by allergen / nutrient / age-gate / cuisine
 - View food card: nutrition facts, allergen flags, age-appropriateness, fat-bearing marker
+- Per-food **Chemistry** detail — `chem.fibre` / `chem.antiNutrients` / `chem.bioactives` (folded from Arc B; see §Arc B reconciliation)
 - Currently lives at `home.js:3358 renderFoodCatSubContent` — relocate to diet-tab Library sub-tab
 
 **Patterns sub-tab**:
@@ -150,6 +151,7 @@ feedingData['2026-05-25'] = {
 - Nutrient heatmap (existing)
 - Allergen-trend over time (NEW — derives from `derivedAllergens` on the structured shape)
 - Cross-domain correlation cards (existing `diet.js:3397`)
+- **Chem-variety tiles** — Fibre Variety + Bioactive Diversity (`renderInfoChemVariety`) + the Variety-nudge tile (`renderInfoVarietyNudge`), folded from Arc B B-2; **pre-require Arc B B-1's `chemRollup` engine** (see §Arc B reconciliation)
 
 ## What needs ratification (Architect, please answer)
 
@@ -174,11 +176,39 @@ These are the open questions that block writing the implementation spec:
 |---|---|---|---|
 | **F-1** | Sub-tab navigation scaffold (Log / Library / Patterns) + structured shape schema (additive; legacy unchanged) | Maren primary (diet.js) + Vela consult (styles.css for tab nav tokens) + triple-jurisdiction on styles.css | Medium |
 | **F-2** | Log sub-tab structured entry form (item builder + typeahead + quick-add) | Maren primary (diet.js); pre-requires F-1 | Large |
-| **F-3** | Library sub-tab consolidation (relocate `home.js:3266 renderFoods` + add filter/search) | Maren primary; pre-requires F-1 | Medium |
-| **F-4** | Patterns sub-tab consolidation (existing combo intelligence + allergen-trend NEW) | Maren primary; pre-requires F-1 | Medium |
+| **F-3** | Library sub-tab consolidation (relocate `home.js:3266 renderFoods` + add filter/search) + per-food Chemistry detail (Arc B fold) | Maren primary; pre-requires F-1 | Medium |
+| **F-4** | Patterns sub-tab consolidation (existing combo intelligence + allergen-trend NEW + Arc B chem-variety tiles) | Maren primary; pre-requires F-1 **and Arc B B-1 for the chem tiles** | Medium |
 | **F-5** | v3-8 Feeding Normalizer (`parseFeeding`) per chronicle row v3-8 | Maren + Kael (core.js) | Small-to-medium |
 
-F-1 lands first (scaffold). F-2 / F-3 / F-4 can land in any order after F-1. F-5 lands LAST (normalizer tolerates the new shape that's already in production via F-2). This sequencing means the chronicle v3-8 row implementation kicks off after Food Sub-Tab v1 ships its core surfaces.
+F-1 lands first (scaffold). F-2 / F-3 / F-4 can land in any order after F-1 — with one cross-arc caveat: F-4's chem-variety tiles pre-require Arc B B-1 (see §Arc B reconciliation). F-5 lands LAST (normalizer tolerates the new shape that's already in production via F-2). This sequencing means the chronicle v3-8 row implementation kicks off after Food Sub-Tab v1 ships its core surfaces.
+
+---
+
+## Arc B (ISL Upgrade) reconciliation — 2026-05-29
+
+The ISL Upgrade arc (`docs/specs/isl-upgrade-v1.md`, PR #113) was originally paired with the now-superseded diet-rework Arc A. With that pair dissolved, its **diet-surfacing** outputs re-home into THIS arc's sub-tabs, while its **engine** work stays in Arc B. Verified against `main` @ `65d5bda` (post F-1/F-2): `NUTRITION.chem` + `COMBO_RULES` are still zero-consumer dead data — F-2 wired neither (its `CURATED_COMBOS` is a separate autofill structure).
+
+**Division of labour:**
+
+| Arc B piece | Home |
+|---|---|
+| **B-1 engine** — `chemRollup` on `_islDietData` + `computeMealCombos(date)` + `meal_combo_check` intent + `qaAnswerMealCombo` | **Stays in Arc B** (Kael / ISL). The intelligence engine F-4 and the combo surface consume; F-4 is a downstream **consumer**, not the owner. |
+| **B-2 cards** — `renderInfoChemVariety` (Fibre Variety + Bioactive Diversity) + `renderInfoVarietyNudge` | **Folds into F-4** — `[Patterns]` analytics tiles, additive alongside the heatmap + allergen-trend. |
+| **Per-food Chemistry detail** — `chem.fibre` / `chem.antiNutrients` / `chem.bioactives` | **Folds into F-3** — `[Library]` per-food view. |
+| **B-3** (temporal parser, `console.error`) + **B-4** (hygiene relocations) | **Stay standalone Arc B** — no food-sub-tab relation. |
+
+**Dependency direction:** F-4's chem-variety tiles and any post-log combo chips PRE-REQUIRE Arc B B-1 (`chemRollup` + `computeMealCombos`). Sequence B-1 before those F-4 tiles. The existing "Can I Give This?" combo surface and the nutrient heatmap do NOT depend on B-1 and can land in F-4 independently.
+
+**Design notes (carry into F-3/F-4 implementation):**
+
+1. **Read feeding via `_fdReadDayMeal`, not raw `entry[meal]`.** Any new analytics reading feeding data (F-4 heatmap / allergen-trend, F-3 library, and Arc B's `chemRollup`) should go through the canonical reader `_fdReadDayMeal(dayObj, mealKey)` (data.js:3160). It returns the structured `items[]` — each carrying the precise `nutritionRef` resolved at write-time — instead of forcing a second-best `_baseFoodName` re-derivation off the flattened legacy comma-string. It also stays correct when F-5's `parseFeeding` eventually drops the legacy co-write. (`_islDietData` itself still reads the legacy string today — correct but lossy; the F-4 / Arc B consumers are the natural first movers onto the richer read.)
+
+2. **Combo-lexicon disambiguation.** Five distinct "combo" concepts now coexist — keep them straight in code + copy:
+   - `CURATED_COMBOS` (data.js) — F-2 autofill cold-start suggestions for the FOB sheet.
+   - `COMBO_RULES` (data.js) — the 6 absorption/spacing rules (iron+calcium, etc.).
+   - `computeFoodCombos` (cards.js) — existing co-occurrence frequency analytics.
+   - `computeMealCombos` (Arc B, new) — per-day rule evaluation against `COMBO_RULES`.
+   - `meal_combo_check` (Arc B, new) — the QA intent surfacing `computeMealCombos`.
 
 ---
 
