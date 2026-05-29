@@ -10645,6 +10645,62 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   color: var(--mid);
 }
 
+
+/* ═══ food-sub-tab-v1 F-3 — Library search + filter + detail sheet ═══ */
+.food-lib-controls { display:flex; flex-direction:column; gap:var(--sp-8); margin:var(--sp-12) 0; }
+.food-lib-search {
+  width:100%; padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--sky-light); background:var(--glass); color:var(--text);
+  font-size:var(--fs-base); font-family:'Nunito',sans-serif;
+}
+.food-lib-search:focus { outline:none; border-color:var(--sky); }
+.food-lib-filter-rail { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.food-lib-chip {
+  padding:var(--sp-4) var(--sp-12); border-radius:var(--r-2xl);
+  border:1.5px solid var(--sage-light); background:var(--glass);
+  color:var(--mid); font-size:var(--fs-sm); font-weight:600; cursor:pointer;
+  transition:all var(--ease-fast); min-height:44px;
+}
+.food-lib-chip:active { transform:scale(0.96); }
+.food-lib-chip.active { background:var(--sage-light); border-color:var(--sage); color:var(--tc-sage); }
+.food-lib-results { margin-top:var(--sp-8); }
+.food-lib-count { font-size:var(--fs-xs); color:var(--light); margin-bottom:var(--sp-8); }
+.food-lib-cards { display:flex; flex-direction:column; gap:var(--sp-6); }
+.food-lib-card {
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8);
+  width:100%; text-align:left; padding:var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--glass-strong); background:var(--glass);
+  color:var(--text); cursor:pointer; transition:all var(--ease-fast); min-height:44px;
+}
+.food-lib-card:hover { filter:brightness(0.97); }
+.food-lib-card.tried { border-color:var(--sage-light); background:var(--sage-light); }
+.flc-name { font-size:var(--fs-base); font-weight:600; text-transform:capitalize; }
+.flc-flags { display:flex; flex-wrap:wrap; gap:var(--sp-4); align-items:center; }
+.flc-flag { display:inline-flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-xs); font-weight:700; padding:var(--sp-2) var(--sp-6); border-radius:var(--r-md); }
+.flc-tried { background:#d4edda; color:#276138; }
+.flc-allergen { background:var(--rose-light); color:var(--tc-rose); }
+.flc-aged { background:var(--peach-light); color:var(--tc-caution); }
+.food-lib-empty { padding:var(--sp-12); text-align:center; color:var(--light); font-size:var(--fs-base); }
+
+/* detail sheet */
+.fd-tried-row { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-12); }
+.fd-tried-state { font-size:var(--fs-base); font-weight:600; color:var(--mid); display:inline-flex; align-items:center; gap:var(--sp-4); }
+.fd-tried-btn { white-space:nowrap; }
+.fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
+.fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
+.fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
+.fd-section { margin-top:var(--sp-12); }
+.fd-section-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:var(--sp-6); }
+.fd-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.fd-chip { font-size:var(--fs-xs); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md); background:var(--glass-strong); color:var(--mid); text-transform:capitalize; }
+.fd-chem-row { display:flex; justify-content:space-between; gap:var(--sp-8); padding:var(--sp-4) 0; border-bottom:1px solid var(--glass-strong); }
+.fd-chem-k { font-size:var(--fs-sm); font-weight:600; color:var(--mid); }
+.fd-chem-v { font-size:var(--fs-sm); color:var(--text); text-align:right; text-transform:capitalize; }
+.fd-note { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-top:var(--sp-6); }
+[data-theme="dark"] .food-lib-search { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .food-lib-chip { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .food-lib-card { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .fd-chip { background:rgba(255,255,255,0.08); }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
@@ -11577,7 +11633,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <span class="t-sm t-light" id="foodsTotalCount"></span>
           </div>
           <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
+          <!-- F-3: search + filter rail. Typing or tapping a chip flattens the
+               accordion (#foodsGrid) into the filtered NUTRITION list (#foodLibResults). -->
+          <div class="food-lib-controls">
+            <input type="text" id="foodLibSearch" class="food-lib-search" placeholder="Search foods…" data-input-action="foodLibOnSearch" autocomplete="off" aria-label="Search the food library">
+            <div class="food-lib-filter-rail" id="foodLibFilterRail" role="group" aria-label="Filter foods"></div>
+          </div>
           <div id="foodsGrid"></div>
+          <div id="foodLibResults" class="food-lib-results" hidden></div>
           <div class="add-food">
             <input type="text" id="foodInput" placeholder="Add a food...">
             <input type="date" id="foodDate">
@@ -13756,6 +13819,17 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     </div>
     <div id="foodCatModalTabs" style="display:flex;gap:var(--sp-4);margin-bottom:12px;border-radius:var(--r-lg);padding:4px;flex-wrap:wrap;"></div>
     <div id="foodCatModalBody" style="min-height:320px;max-height:50vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- F-3: per-food detail sheet — nutrition facts + allergen/age flags + Chemistry -->
+<div class="modal-overlay" id="foodDetailSheet">
+  <div class="modal" style="max-width:480px;padding:20px 22px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 id="foodDetailTitle" class="mb-0"></h3>
+      <button data-close-modal="foodDetailSheet" style="background:none;border:none;font-size:var(--icon-md);color:var(--light);cursor:pointer;padding:4px;">&times;</button>
+    </div>
+    <div id="foodDetailBody" style="min-height:120px;max-height:60vh;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -19865,6 +19939,9 @@ function init() {
     else if (action === 'openDoctorModal') { const a = arg; if (a) openDoctorModal(parseInt(a)); else openDoctorModal(); }
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
+    else if (action === 'foodLibFilter') foodLibFilter(arg);
+    else if (action === 'foodLibDetail') foodLibDetail(arg);
+    else if (action === 'foodLibToggleTried') foodLibToggleTried(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
     // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
     // motor/language builders (home.js:8120 / :8170). Hardcoded
@@ -37356,6 +37433,10 @@ function switchDietSub(target) {
     const isActive = p.id === ('diet-sub-' + subKey);
     p.classList.toggle('active', isActive);
   });
+  // F-3: lazy-render the Library surface (accordion + filter rail + results)
+  // when its sub-tab opens. renderDietLibrary is defined below with the rest
+  // of the relocated Library code.
+  if (subKey === 'library' && typeof renderDietLibrary === 'function') renderDietLibrary();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -37689,6 +37770,250 @@ function deleteFood(i) {
     renderFoods();
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// food-sub-tab-v1 F-3 — Library search + filter + per-food detail sheet
+// Hybrid browse model (ratified 2026-05-29): the FOOD_TAX accordion above
+// (#foodsGrid) stays the default spine; typing in #foodLibSearch or tapping
+// a filter chip flattens to a filtered NUTRITION result list in
+// #foodLibResults. Tapping any result opens the detail sheet with nutrition
+// facts + allergen/age flags + Chemistry (chem.fibre / antiNutrients /
+// bioactives — the Arc B fold). Maren-primary surface; all parent-input and
+// data names escHtml'd at the render boundary (HR-4).
+// ═══════════════════════════════════════════════════════════════════════
+
+// Spice-tier exclusion. data.js §SPICE-TIER CONVENTION: spice nutrient[]
+// tokens (iron / manganese / antioxidants) are valid per-100g chemistry but
+// negligible at the ≤1g tadka serving. An anaemia-flagged parent searching
+// "high iron" must NOT be pointed at jeera/turmeric, so the nutrient-
+// threshold filter excludes every spice-tier key. Built once from FOOD_TAX.
+const _FD_SPICE_TIER = (function() {
+  const s = new Set();
+  try {
+    Object.values(FOOD_TAX.spices.subs).forEach(sub => (sub.keys || []).forEach(k => s.add(k)));
+  } catch (e) { /* FOOD_TAX shape guard — empty set is a safe degrade */ }
+  return s;
+})();
+
+// Filter registry — single source of truth for the chip rail (extensible:
+// add a row, no render-code change — mirrors the v3-5/v3-6 registry doctrine).
+// `axis` drives the predicate in _fdFoodMatchesFilter; nutrient rows carry
+// the NUTRITION token to test.
+const FOOD_LIB_FILTERS = [
+  { key:'allergen', axis:'allergen', label:'Allergen' },
+  { key:'agegate',  axis:'agegate',  label:'Age-gated' },
+  { key:'iron',     axis:'nutrient', token:'iron',    label:'High iron' },
+  { key:'protein',  axis:'nutrient', token:'protein', label:'High protein' },
+  { key:'calcium',  axis:'nutrient', token:'calcium', label:'High calcium' },
+];
+
+let _fdLibQuery = '';
+let _fdLibFilter = null; // active filter key, or null
+
+// Is a food (by canonical NUTRITION key / name) already introduced?
+function _fdIsFoodTried(name) {
+  const base = _baseFoodName(String(name).toLowerCase().trim());
+  return foods.some(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
+}
+
+// Resolve an allergen note for a food name (mirrors the diet.js combo-check
+// lookup at line ~508 — exact, suffix-stripped, then substring).
+function _fdAllergenNote(name) {
+  const n = String(name).toLowerCase().trim();
+  return ALLERGENS[n] || ALLERGENS[n.replace(/s$/, '')] ||
+    (Object.entries(ALLERGENS).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Resolve an age-gate rule {minMonth, reason} for a food name.
+function _fdAgeRule(name) {
+  const n = String(name).toLowerCase().trim();
+  return AGE_RULES[n] || AGE_RULES[n.replace(/s$/, '')] ||
+    (Object.entries(AGE_RULES).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Does a NUTRITION entry carry a nutrient token (nutrients[] or the matching
+// *-rich tag), excluding spice-tier per the per-serving caveat above?
+function _fdHasNutrient(name, nut, entry) {
+  if (_FD_SPICE_TIER.has(name)) return false;
+  const e = entry || NUTRITION[name];
+  if (!e) return false;
+  if ((e.nutrients || []).includes(nut)) return true;
+  return (e.tags || []).includes(nut + '-rich');
+}
+
+function _fdFoodMatchesFilter(name, entry) {
+  if (!_fdLibFilter) return true;
+  const f = FOOD_LIB_FILTERS.find(x => x.key === _fdLibFilter);
+  if (!f) return true;
+  if (f.axis === 'allergen') return !!_fdAllergenNote(name);
+  if (f.axis === 'agegate') {
+    const r = _fdAgeRule(name);
+    return !!r && r.minMonth > getAgeInMonths();
+  }
+  if (f.axis === 'nutrient') return _fdHasNutrient(name, f.token, entry);
+  return true;
+}
+
+// Render the filter-chip rail (idempotent; reflects active-filter state).
+function renderFoodLibFilters() {
+  const rail = document.getElementById('foodLibFilterRail');
+  if (!rail) return;
+  rail.innerHTML = FOOD_LIB_FILTERS.map(f => {
+    const on = _fdLibFilter === f.key;
+    return `<button class="food-lib-chip${on ? ' active' : ''}" data-action="foodLibFilter" data-arg="${escHtml(f.key)}" aria-pressed="${on ? 'true' : 'false'}">${escHtml(f.label)}</button>`;
+  }).join('');
+}
+
+// The flattened search/filter result list over the NUTRITION superset.
+// Accordion spine (#foodsGrid) shows when no search/filter is active;
+// results (#foodLibResults) take over when either is active.
+function renderFoodLibResults() {
+  const host = document.getElementById('foodLibResults');
+  const grid = document.getElementById('foodsGrid');
+  if (!host) return;
+  const active = !!_fdLibQuery.trim() || !!_fdLibFilter;
+  host.hidden = !active;
+  if (grid) grid.style.display = active ? 'none' : '';
+  if (!active) { host.innerHTML = ''; return; }
+
+  const q = _fdLibQuery.toLowerCase().trim();
+  const names = Object.keys(NUTRITION).filter(name => {
+    if (q && name.indexOf(q) === -1) return false;
+    return _fdFoodMatchesFilter(name, NUTRITION[name]);
+  }).sort();
+
+  if (names.length === 0) {
+    host.innerHTML = `<div class="food-lib-empty">No foods match${q ? ` "${escHtml(_fdLibQuery.trim())}"` : ''}. Try a different search or filter.</div>`;
+    return;
+  }
+
+  host.innerHTML = `<div class="food-lib-count">${names.length} food${names.length === 1 ? '' : 's'}</div>` +
+    `<div class="food-lib-cards">` + names.map(name => {
+      const tried = _fdIsFoodTried(name);
+      const allerg = _fdAllergenNote(name);
+      const ageR = _fdAgeRule(name);
+      const aged = ageR && ageR.minMonth > getAgeInMonths();
+      return `<button class="food-lib-card${tried ? ' tried' : ''}" data-action="foodLibDetail" data-arg="${escHtml(name)}">
+        <span class="flc-name">${escHtml(name)}</span>
+        <span class="flc-flags">${tried ? `<span class="flc-flag flc-tried">${zi('check')} Tried</span>` : ''}${allerg ? `<span class="flc-flag flc-allergen">${zi('warn')} Allergen</span>` : ''}${aged ? `<span class="flc-flag flc-aged">${zi('warn')} ${ageR.minMonth}m+</span>` : ''}</span>
+      </button>`;
+    }).join('') + `</div>`;
+}
+
+// Input handler (data-input-action) for the search box.
+function foodLibOnSearch(el) {
+  _fdLibQuery = (el && el.value) || '';
+  renderFoodLibResults();
+}
+
+// Filter-chip toggle (data-action click). Single-select: re-tapping clears.
+function foodLibFilter(key) {
+  _fdLibFilter = (_fdLibFilter === key) ? null : key;
+  renderFoodLibFilters();
+  renderFoodLibResults();
+}
+
+// Open the per-food detail sheet.
+function foodLibDetail(name) {
+  renderFoodDetailSheet(name);
+  openModal('foodDetailSheet');
+}
+
+function renderFoodDetailSheet(name) {
+  const titleEl = document.getElementById('foodDetailTitle');
+  const bodyEl = document.getElementById('foodDetailBody');
+  if (!titleEl || !bodyEl) return;
+  const lower = String(name).toLowerCase().trim();
+  const entry = getNutrition(lower) || NUTRITION[lower] || null;
+  const tried = _fdIsFoodTried(lower);
+  const allerg = _fdAllergenNote(lower);
+  const ageR = _fdAgeRule(lower);
+  const aged = ageR && ageR.minMonth > getAgeInMonths();
+
+  titleEl.textContent = name; // textContent — intrinsically escaped
+
+  let html = '';
+
+  // Tried status + explicit control (ratified: tap opens sheet; mark-tried
+  // is an explicit control here, not a tap side-effect).
+  html += `<div class="fd-tried-row">
+    <span class="fd-tried-state">${tried ? zi('check') + ' Tried' : 'Not tried yet'}</span>
+    <button class="btn ${tried ? 'btn-ghost' : 'btn-sky'} fd-tried-btn" data-action="foodLibToggleTried" data-arg="${escHtml(name)}">${tried ? 'Mark not tried' : 'Mark tried'}</button>
+  </div>`;
+
+  // Safety flags first (Maren altitude — safety reads before nutrition).
+  if (allerg) {
+    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+  }
+  if (aged) {
+    html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  }
+
+  // Nutrition facts.
+  if (entry && entry.nutrients && entry.nutrients.length) {
+    const spice = _FD_SPICE_TIER.has(lower);
+    html += `<div class="fd-section"><div class="fd-section-title">Key nutrients</div>
+      <div class="fd-chips">${entry.nutrients.map(n => `<span class="fd-chip">${escHtml(n)}</span>`).join('')}</div>
+      ${spice ? `<div class="fd-note">Spice-tier — these are per-100g figures, negligible at typical tadka servings.</div>` : ''}
+    </div>`;
+  }
+
+  // Chemistry (Arc B fold).
+  if (entry && entry.chem) {
+    const c = entry.chem;
+    let rows = '';
+    if (c.fibre) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Fibre</span><span class="fd-chem-v">${escHtml(c.fibre)}</span></div>`;
+    if (c.antiNutrients && c.antiNutrients.length) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Anti-nutrients</span><span class="fd-chem-v">${c.antiNutrients.map(escHtml).join(', ')}</span></div>`;
+    if (c.bioactives && c.bioactives.length) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Bioactives</span><span class="fd-chem-v">${c.bioactives.map(escHtml).join(', ')}</span></div>`;
+    if (rows) {
+      html += `<div class="fd-section"><div class="fd-section-title">Chemistry</div>${rows}
+        <div class="fd-note">General educational guidance, not a clinical reference. Soaking, cooking and fermenting sharply reduce most anti-nutrients.</div>
+      </div>`;
+    }
+  }
+
+  if (!entry) {
+    html += `<div class="fd-note">No nutrition data on file for this food yet.</div>`;
+  }
+
+  bodyEl.innerHTML = html;
+}
+
+// Toggle tried-state from the detail sheet. Adding is one-tap; removing
+// confirms first (Maren — un-marking discards the introduced-food history).
+function foodLibToggleTried(name) {
+  const lower = String(name).toLowerCase().trim();
+  if (_fdIsFoodTried(lower)) {
+    confirmAction('Remove this food from tried foods?', () => {
+      const base = _baseFoodName(lower);
+      foods = foods.filter(f => {
+        const fb = _baseFoodName(f.name.toLowerCase().trim());
+        return !(fb === base || fb.includes(base) || base.includes(fb));
+      });
+      save(KEYS.foods, foods);
+      renderFoods();
+      renderFoodDetailSheet(name);
+      renderFoodLibResults();
+    });
+  } else {
+    foods.push({ name: name, reaction: 'ok', date: today() });
+    save(KEYS.foods, foods);
+    renderFoods();
+    renderFoodDetailSheet(name);
+    renderFoodLibResults();
+  }
+}
+
+// Lazy-render hook — called by switchDietSub when the Library sub-tab opens.
+function renderDietLibrary() {
+  renderFoods();
+  renderFoodLibFilters();
+  renderFoodLibResults();
+}
+
 
 // INSIGHTS & TIPS ENGINE
 // ─────────────────────────────────────────

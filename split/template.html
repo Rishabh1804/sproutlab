@@ -916,7 +916,14 @@
             <span class="t-sm t-light" id="foodsTotalCount"></span>
           </div>
           <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
+          <!-- F-3: search + filter rail. Typing or tapping a chip flattens the
+               accordion (#foodsGrid) into the filtered NUTRITION list (#foodLibResults). -->
+          <div class="food-lib-controls">
+            <input type="text" id="foodLibSearch" class="food-lib-search" placeholder="Search foods…" data-input-action="foodLibOnSearch" autocomplete="off" aria-label="Search the food library">
+            <div class="food-lib-filter-rail" id="foodLibFilterRail" role="group" aria-label="Filter foods"></div>
+          </div>
           <div id="foodsGrid"></div>
+          <div id="foodLibResults" class="food-lib-results" hidden></div>
           <div class="add-food">
             <input type="text" id="foodInput" placeholder="Add a food...">
             <input type="date" id="foodDate">
@@ -3095,6 +3102,17 @@
     </div>
     <div id="foodCatModalTabs" style="display:flex;gap:var(--sp-4);margin-bottom:12px;border-radius:var(--r-lg);padding:4px;flex-wrap:wrap;"></div>
     <div id="foodCatModalBody" style="min-height:320px;max-height:50vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- F-3: per-food detail sheet — nutrition facts + allergen/age flags + Chemistry -->
+<div class="modal-overlay" id="foodDetailSheet">
+  <div class="modal" style="max-width:480px;padding:20px 22px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 id="foodDetailTitle" class="mb-0"></h3>
+      <button data-close-modal="foodDetailSheet" style="background:none;border:none;font-size:var(--icon-md);color:var(--light);cursor:pointer;padding:4px;">&times;</button>
+    </div>
+    <div id="foodDetailBody" style="min-height:120px;max-height:60vh;overflow-y:auto;"></div>
   </div>
 </div>
 

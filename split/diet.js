@@ -29,6 +29,10 @@ function switchDietSub(target) {
     const isActive = p.id === ('diet-sub-' + subKey);
     p.classList.toggle('active', isActive);
   });
+  // F-3: lazy-render the Library surface (accordion + filter rail + results)
+  // when its sub-tab opens. renderDietLibrary is defined below with the rest
+  // of the relocated Library code.
+  if (subKey === 'library' && typeof renderDietLibrary === 'function') renderDietLibrary();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -362,6 +366,250 @@ function deleteFood(i) {
     renderFoods();
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// food-sub-tab-v1 F-3 — Library search + filter + per-food detail sheet
+// Hybrid browse model (ratified 2026-05-29): the FOOD_TAX accordion above
+// (#foodsGrid) stays the default spine; typing in #foodLibSearch or tapping
+// a filter chip flattens to a filtered NUTRITION result list in
+// #foodLibResults. Tapping any result opens the detail sheet with nutrition
+// facts + allergen/age flags + Chemistry (chem.fibre / antiNutrients /
+// bioactives — the Arc B fold). Maren-primary surface; all parent-input and
+// data names escHtml'd at the render boundary (HR-4).
+// ═══════════════════════════════════════════════════════════════════════
+
+// Spice-tier exclusion. data.js §SPICE-TIER CONVENTION: spice nutrient[]
+// tokens (iron / manganese / antioxidants) are valid per-100g chemistry but
+// negligible at the ≤1g tadka serving. An anaemia-flagged parent searching
+// "high iron" must NOT be pointed at jeera/turmeric, so the nutrient-
+// threshold filter excludes every spice-tier key. Built once from FOOD_TAX.
+const _FD_SPICE_TIER = (function() {
+  const s = new Set();
+  try {
+    Object.values(FOOD_TAX.spices.subs).forEach(sub => (sub.keys || []).forEach(k => s.add(k)));
+  } catch (e) { /* FOOD_TAX shape guard — empty set is a safe degrade */ }
+  return s;
+})();
+
+// Filter registry — single source of truth for the chip rail (extensible:
+// add a row, no render-code change — mirrors the v3-5/v3-6 registry doctrine).
+// `axis` drives the predicate in _fdFoodMatchesFilter; nutrient rows carry
+// the NUTRITION token to test.
+const FOOD_LIB_FILTERS = [
+  { key:'allergen', axis:'allergen', label:'Allergen' },
+  { key:'agegate',  axis:'agegate',  label:'Age-gated' },
+  { key:'iron',     axis:'nutrient', token:'iron',    label:'High iron' },
+  { key:'protein',  axis:'nutrient', token:'protein', label:'High protein' },
+  { key:'calcium',  axis:'nutrient', token:'calcium', label:'High calcium' },
+];
+
+let _fdLibQuery = '';
+let _fdLibFilter = null; // active filter key, or null
+
+// Is a food (by canonical NUTRITION key / name) already introduced?
+function _fdIsFoodTried(name) {
+  const base = _baseFoodName(String(name).toLowerCase().trim());
+  return foods.some(f => {
+    const fb = _baseFoodName(f.name.toLowerCase().trim());
+    return fb === base || fb.includes(base) || base.includes(fb);
+  });
+}
+
+// Resolve an allergen note for a food name (mirrors the diet.js combo-check
+// lookup at line ~508 — exact, suffix-stripped, then substring).
+function _fdAllergenNote(name) {
+  const n = String(name).toLowerCase().trim();
+  return ALLERGENS[n] || ALLERGENS[n.replace(/s$/, '')] ||
+    (Object.entries(ALLERGENS).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Resolve an age-gate rule {minMonth, reason} for a food name.
+function _fdAgeRule(name) {
+  const n = String(name).toLowerCase().trim();
+  return AGE_RULES[n] || AGE_RULES[n.replace(/s$/, '')] ||
+    (Object.entries(AGE_RULES).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Does a NUTRITION entry carry a nutrient token (nutrients[] or the matching
+// *-rich tag), excluding spice-tier per the per-serving caveat above?
+function _fdHasNutrient(name, nut, entry) {
+  if (_FD_SPICE_TIER.has(name)) return false;
+  const e = entry || NUTRITION[name];
+  if (!e) return false;
+  if ((e.nutrients || []).includes(nut)) return true;
+  return (e.tags || []).includes(nut + '-rich');
+}
+
+function _fdFoodMatchesFilter(name, entry) {
+  if (!_fdLibFilter) return true;
+  const f = FOOD_LIB_FILTERS.find(x => x.key === _fdLibFilter);
+  if (!f) return true;
+  if (f.axis === 'allergen') return !!_fdAllergenNote(name);
+  if (f.axis === 'agegate') {
+    const r = _fdAgeRule(name);
+    return !!r && r.minMonth > getAgeInMonths();
+  }
+  if (f.axis === 'nutrient') return _fdHasNutrient(name, f.token, entry);
+  return true;
+}
+
+// Render the filter-chip rail (idempotent; reflects active-filter state).
+function renderFoodLibFilters() {
+  const rail = document.getElementById('foodLibFilterRail');
+  if (!rail) return;
+  rail.innerHTML = FOOD_LIB_FILTERS.map(f => {
+    const on = _fdLibFilter === f.key;
+    return `<button class="food-lib-chip${on ? ' active' : ''}" data-action="foodLibFilter" data-arg="${escHtml(f.key)}" aria-pressed="${on ? 'true' : 'false'}">${escHtml(f.label)}</button>`;
+  }).join('');
+}
+
+// The flattened search/filter result list over the NUTRITION superset.
+// Accordion spine (#foodsGrid) shows when no search/filter is active;
+// results (#foodLibResults) take over when either is active.
+function renderFoodLibResults() {
+  const host = document.getElementById('foodLibResults');
+  const grid = document.getElementById('foodsGrid');
+  if (!host) return;
+  const active = !!_fdLibQuery.trim() || !!_fdLibFilter;
+  host.hidden = !active;
+  if (grid) grid.style.display = active ? 'none' : '';
+  if (!active) { host.innerHTML = ''; return; }
+
+  const q = _fdLibQuery.toLowerCase().trim();
+  const names = Object.keys(NUTRITION).filter(name => {
+    if (q && name.indexOf(q) === -1) return false;
+    return _fdFoodMatchesFilter(name, NUTRITION[name]);
+  }).sort();
+
+  if (names.length === 0) {
+    host.innerHTML = `<div class="food-lib-empty">No foods match${q ? ` "${escHtml(_fdLibQuery.trim())}"` : ''}. Try a different search or filter.</div>`;
+    return;
+  }
+
+  host.innerHTML = `<div class="food-lib-count">${names.length} food${names.length === 1 ? '' : 's'}</div>` +
+    `<div class="food-lib-cards">` + names.map(name => {
+      const tried = _fdIsFoodTried(name);
+      const allerg = _fdAllergenNote(name);
+      const ageR = _fdAgeRule(name);
+      const aged = ageR && ageR.minMonth > getAgeInMonths();
+      return `<button class="food-lib-card${tried ? ' tried' : ''}" data-action="foodLibDetail" data-arg="${escHtml(name)}">
+        <span class="flc-name">${escHtml(name)}</span>
+        <span class="flc-flags">${tried ? `<span class="flc-flag flc-tried">${zi('check')} Tried</span>` : ''}${allerg ? `<span class="flc-flag flc-allergen">${zi('warn')} Allergen</span>` : ''}${aged ? `<span class="flc-flag flc-aged">${zi('warn')} ${ageR.minMonth}m+</span>` : ''}</span>
+      </button>`;
+    }).join('') + `</div>`;
+}
+
+// Input handler (data-input-action) for the search box.
+function foodLibOnSearch(el) {
+  _fdLibQuery = (el && el.value) || '';
+  renderFoodLibResults();
+}
+
+// Filter-chip toggle (data-action click). Single-select: re-tapping clears.
+function foodLibFilter(key) {
+  _fdLibFilter = (_fdLibFilter === key) ? null : key;
+  renderFoodLibFilters();
+  renderFoodLibResults();
+}
+
+// Open the per-food detail sheet.
+function foodLibDetail(name) {
+  renderFoodDetailSheet(name);
+  openModal('foodDetailSheet');
+}
+
+function renderFoodDetailSheet(name) {
+  const titleEl = document.getElementById('foodDetailTitle');
+  const bodyEl = document.getElementById('foodDetailBody');
+  if (!titleEl || !bodyEl) return;
+  const lower = String(name).toLowerCase().trim();
+  const entry = getNutrition(lower) || NUTRITION[lower] || null;
+  const tried = _fdIsFoodTried(lower);
+  const allerg = _fdAllergenNote(lower);
+  const ageR = _fdAgeRule(lower);
+  const aged = ageR && ageR.minMonth > getAgeInMonths();
+
+  titleEl.textContent = name; // textContent — intrinsically escaped
+
+  let html = '';
+
+  // Tried status + explicit control (ratified: tap opens sheet; mark-tried
+  // is an explicit control here, not a tap side-effect).
+  html += `<div class="fd-tried-row">
+    <span class="fd-tried-state">${tried ? zi('check') + ' Tried' : 'Not tried yet'}</span>
+    <button class="btn ${tried ? 'btn-ghost' : 'btn-sky'} fd-tried-btn" data-action="foodLibToggleTried" data-arg="${escHtml(name)}">${tried ? 'Mark not tried' : 'Mark tried'}</button>
+  </div>`;
+
+  // Safety flags first (Maren altitude — safety reads before nutrition).
+  if (allerg) {
+    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+  }
+  if (aged) {
+    html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  }
+
+  // Nutrition facts.
+  if (entry && entry.nutrients && entry.nutrients.length) {
+    const spice = _FD_SPICE_TIER.has(lower);
+    html += `<div class="fd-section"><div class="fd-section-title">Key nutrients</div>
+      <div class="fd-chips">${entry.nutrients.map(n => `<span class="fd-chip">${escHtml(n)}</span>`).join('')}</div>
+      ${spice ? `<div class="fd-note">Spice-tier — these are per-100g figures, negligible at typical tadka servings.</div>` : ''}
+    </div>`;
+  }
+
+  // Chemistry (Arc B fold).
+  if (entry && entry.chem) {
+    const c = entry.chem;
+    let rows = '';
+    if (c.fibre) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Fibre</span><span class="fd-chem-v">${escHtml(c.fibre)}</span></div>`;
+    if (c.antiNutrients && c.antiNutrients.length) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Anti-nutrients</span><span class="fd-chem-v">${c.antiNutrients.map(escHtml).join(', ')}</span></div>`;
+    if (c.bioactives && c.bioactives.length) rows += `<div class="fd-chem-row"><span class="fd-chem-k">Bioactives</span><span class="fd-chem-v">${c.bioactives.map(escHtml).join(', ')}</span></div>`;
+    if (rows) {
+      html += `<div class="fd-section"><div class="fd-section-title">Chemistry</div>${rows}
+        <div class="fd-note">General educational guidance, not a clinical reference. Soaking, cooking and fermenting sharply reduce most anti-nutrients.</div>
+      </div>`;
+    }
+  }
+
+  if (!entry) {
+    html += `<div class="fd-note">No nutrition data on file for this food yet.</div>`;
+  }
+
+  bodyEl.innerHTML = html;
+}
+
+// Toggle tried-state from the detail sheet. Adding is one-tap; removing
+// confirms first (Maren — un-marking discards the introduced-food history).
+function foodLibToggleTried(name) {
+  const lower = String(name).toLowerCase().trim();
+  if (_fdIsFoodTried(lower)) {
+    confirmAction('Remove this food from tried foods?', () => {
+      const base = _baseFoodName(lower);
+      foods = foods.filter(f => {
+        const fb = _baseFoodName(f.name.toLowerCase().trim());
+        return !(fb === base || fb.includes(base) || base.includes(fb));
+      });
+      save(KEYS.foods, foods);
+      renderFoods();
+      renderFoodDetailSheet(name);
+      renderFoodLibResults();
+    });
+  } else {
+    foods.push({ name: name, reaction: 'ok', date: today() });
+    save(KEYS.foods, foods);
+    renderFoods();
+    renderFoodDetailSheet(name);
+    renderFoodLibResults();
+  }
+}
+
+// Lazy-render hook — called by switchDietSub when the Library sub-tab opens.
+function renderDietLibrary() {
+  renderFoods();
+  renderFoodLibFilters();
+  renderFoodLibResults();
+}
+
 
 // INSIGHTS & TIPS ENGINE
 // ─────────────────────────────────────────

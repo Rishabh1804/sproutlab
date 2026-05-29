@@ -110,6 +110,17 @@ if ! bash audit-feed-sheet-wiring-v1.sh >&2; then
   echo "BUILD ABORTED: food-sub-tab-v1 F-2 wiring audit failed. Restore the FOB Feed sheet structural surface." >&2
   exit 1
 fi
+# food-sub-tab-v1 F-3 ship-gate (11th audit gate): audit-food-library-wiring-v1.sh
+# blocks regressions that silently unwire the diet-tab Library surface — the
+# search box, filter-chip rail, flattened results list, per-food detail sheet
+# (nutrition + allergen/age + Chemistry fold), and the dispatch routes + lazy-
+# render hook that drive them. Required-presence assertions across template.html
+# + diet.js + core.js. Spec: docs/specs/food-sub-tab-v1.md §F-3. Charter CV3-006
+# warmth axis: the Library is the parent-facing food-DB browse surface.
+if ! bash audit-food-library-wiring-v1.sh >&2; then
+  echo "BUILD ABORTED: food-sub-tab-v1 F-3 wiring audit failed. Restore the Library search/filter/detail-sheet surface." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

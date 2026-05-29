@@ -10638,3 +10638,59 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   color: var(--mid);
 }
 
+
+/* ═══ food-sub-tab-v1 F-3 — Library search + filter + detail sheet ═══ */
+.food-lib-controls { display:flex; flex-direction:column; gap:var(--sp-8); margin:var(--sp-12) 0; }
+.food-lib-search {
+  width:100%; padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--sky-light); background:var(--glass); color:var(--text);
+  font-size:var(--fs-base); font-family:'Nunito',sans-serif;
+}
+.food-lib-search:focus { outline:none; border-color:var(--sky); }
+.food-lib-filter-rail { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.food-lib-chip {
+  padding:var(--sp-4) var(--sp-12); border-radius:var(--r-2xl);
+  border:1.5px solid var(--sage-light); background:var(--glass);
+  color:var(--mid); font-size:var(--fs-sm); font-weight:600; cursor:pointer;
+  transition:all var(--ease-fast); min-height:44px;
+}
+.food-lib-chip:active { transform:scale(0.96); }
+.food-lib-chip.active { background:var(--sage-light); border-color:var(--sage); color:var(--tc-sage); }
+.food-lib-results { margin-top:var(--sp-8); }
+.food-lib-count { font-size:var(--fs-xs); color:var(--light); margin-bottom:var(--sp-8); }
+.food-lib-cards { display:flex; flex-direction:column; gap:var(--sp-6); }
+.food-lib-card {
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8);
+  width:100%; text-align:left; padding:var(--sp-12); border-radius:var(--r-lg);
+  border:1.5px solid var(--glass-strong); background:var(--glass);
+  color:var(--text); cursor:pointer; transition:all var(--ease-fast); min-height:44px;
+}
+.food-lib-card:hover { filter:brightness(0.97); }
+.food-lib-card.tried { border-color:var(--sage-light); background:var(--sage-light); }
+.flc-name { font-size:var(--fs-base); font-weight:600; text-transform:capitalize; }
+.flc-flags { display:flex; flex-wrap:wrap; gap:var(--sp-4); align-items:center; }
+.flc-flag { display:inline-flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-xs); font-weight:700; padding:var(--sp-2) var(--sp-6); border-radius:var(--r-md); }
+.flc-tried { background:#d4edda; color:#276138; }
+.flc-allergen { background:var(--rose-light); color:var(--tc-rose); }
+.flc-aged { background:var(--peach-light); color:var(--tc-caution); }
+.food-lib-empty { padding:var(--sp-12); text-align:center; color:var(--light); font-size:var(--fs-base); }
+
+/* detail sheet */
+.fd-tried-row { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-12); }
+.fd-tried-state { font-size:var(--fs-base); font-weight:600; color:var(--mid); display:inline-flex; align-items:center; gap:var(--sp-4); }
+.fd-tried-btn { white-space:nowrap; }
+.fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
+.fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
+.fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
+.fd-section { margin-top:var(--sp-12); }
+.fd-section-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:var(--sp-6); }
+.fd-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.fd-chip { font-size:var(--fs-xs); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-md); background:var(--glass-strong); color:var(--mid); text-transform:capitalize; }
+.fd-chem-row { display:flex; justify-content:space-between; gap:var(--sp-8); padding:var(--sp-4) 0; border-bottom:1px solid var(--glass-strong); }
+.fd-chem-k { font-size:var(--fs-sm); font-weight:600; color:var(--mid); }
+.fd-chem-v { font-size:var(--fs-sm); color:var(--text); text-align:right; text-transform:capitalize; }
+.fd-note { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-top:var(--sp-6); }
+[data-theme="dark"] .food-lib-search { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .food-lib-chip { background:rgba(255,255,255,0.06); }
+[data-theme="dark"] .food-lib-card { background:rgba(255,255,255,0.04); }
+[data-theme="dark"] .fd-chip { background:rgba(255,255,255,0.08); }

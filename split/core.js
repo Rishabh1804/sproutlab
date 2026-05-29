@@ -806,6 +806,9 @@ function init() {
     else if (action === 'openDoctorModal') { const a = arg; if (a) openDoctorModal(parseInt(a)); else openDoctorModal(); }
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
+    else if (action === 'foodLibFilter') foodLibFilter(arg);
+    else if (action === 'foodLibDetail') foodLibDetail(arg);
+    else if (action === 'foodLibToggleTried') foodLibToggleTried(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
     // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
     // motor/language builders (home.js:8120 / :8170). Hardcoded
