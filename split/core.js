@@ -939,6 +939,12 @@ function init() {
     else if (action === 'runHomeFoodQuery') runHomeFoodQuery();
     else if (action === 'closeHomeSymptomChecker') closeHomeSymptomChecker();
     else if (action === 'runHomeSymptomCheck') runHomeSymptomCheck();
+    else if (action === 'fillSymptomCheck') {
+      // HR-3 (issue #109): quick-chip fills #homeSymptomInput then runs the check.
+      var _hsi = document.getElementById('homeSymptomInput');
+      if (_hsi) _hsi.value = arg;
+      if (typeof runHomeSymptomCheck === 'function') runHomeSymptomCheck();
+    }
     else if (action === 'promptFeverTrack') promptFeverTrack();
     else if (action === 'promptDiarrhoeaTrack') promptDiarrhoeaTrack();
     else if (action === 'promptVomitingTrack') promptVomitingTrack();
@@ -3974,10 +3980,12 @@ function confirmAction(msg, callback, btnText) {
 // handlers.
 
 // vizArg — encode a detail object into a double-quoted HTML attribute.
-// escHtml is unsuitable here: it rewrites \n to <br> (corrupts JSON) and
-// leaves " unescaped (breaks the attribute). JSON.stringify already
-// escapes \, " and control chars within string values; we only need to
-// HTML-escape the quote and angle/amp glyphs so the attribute parses.
+// escHtml is unsuitable here because it rewrites \n to <br>, which corrupts the
+// JSON payload. (V-K-48, issue #109: escHtml DOES escape " since #107, so
+// quote-safety is no longer the distinguishing reason — the \n→<br> rewrite
+// is.) JSON.stringify already escapes \, " and control chars within string
+// values; we only need to HTML-escape the quote and angle/amp glyphs so the
+// attribute parses.
 function vizArg(detail) {
   return JSON.stringify(detail)
     .replace(/&/g, '&amp;')

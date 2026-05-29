@@ -108,7 +108,7 @@ These checks are **run as bash commands**, not mental checks. The builder must e
 ```
 CHECKS:
 1. zi() icon validation     — every zi('name') cross-referenced against the 52-icon set
-2. Attribute escaping       — every data-arg with JSON uses _alAttrSafe (or equivalent), not bare escHtml
+2. Attribute escaping       — every data-arg with JSON uses escHtml (escapes " since #107; JSON.stringify neutralises \n before escHtml runs). The _alAttrSafe helper was retired in #109/V-K-47.
 3. XSS: escHtml             — all user-originated text in innerHTML passes through escHtml()
 4. No emojis                — Unicode range grep (U+1F300–1F9FF, U+2600–27BF)
 5. No inline onclick        — grep for onclick=, onchange=, oninput=, onfocus=, onblur=
@@ -226,7 +226,7 @@ grep -oP "zi\('\K[^']+" $FILE | sort -u | while read icon; do
 done
 
 echo "── 2. Attribute escaping (JSON in data-arg) ──"
-grep 'data-arg=.*JSON\|data-arg=.*stringify\|data-arg=.*payload' $FILE | grep -v '_alAttrSafe\|_attrSafe' && echo "  ✗ UNESCAPED JSON" || echo "  ✓ PASS"
+grep 'data-arg=.*JSON\|data-arg=.*stringify\|data-arg=.*payload' $FILE | grep -v '_alAttrSafe\|_attrSafe\|escHtml' && echo "  ✗ UNESCAPED JSON" || echo "  ✓ PASS"
 
 echo "── 3. escHtml on user text ──"
 # Manual review: check innerHTML assignments with user data

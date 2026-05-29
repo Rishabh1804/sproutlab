@@ -729,24 +729,27 @@ function ctValidateTickets() {
 }
 
 // ── Notification Text ──
-
+// HR-4 (issue #110, V-K-44): this returns PLAIN TEXT for a Notification.body
+// sink (see _ctSystemNotify), which does NOT decode HTML entities. Pass
+// ticket.title RAW — escaping here renders literal &#39;/&quot; in the system
+// notification. Escape only at HTML render boundaries, never at this producer.
 function ctNotificationText(ticket) {
   var tpl = CT_TEMPLATES[ticket.category];
   if (ticket.status === 'escalated') {
-    return 'Urgent: ' + escHtml(ticket.title) + ' needs attention';
+    return 'Urgent: ' + ticket.title + ' needs attention';
   }
   if (ticket.type === 'incident') {
     var elapsed = ctTimeAgo(ticket.createdAt);
-    return escHtml(ticket.title) + ' \u2014 time for a quick check (' + elapsed + ')';
+    return ticket.title + ' \u2014 time for a quick check (' + elapsed + ')';
   }
   // Goal
   var goalTexts = {
     sleep_improve: 'How was last night? Quick check on sleep progress',
     weight_gain: 'Time for a weight check-in',
     feeding_variety: 'Any new foods today? Quick food variety check',
-    custom: 'Time to check in on: ' + escHtml(ticket.title)
+    custom: 'Time to check in on: ' + ticket.title
   };
-  return goalTexts[ticket.category] || ('Check in: ' + escHtml(ticket.title));
+  return goalTexts[ticket.category] || ('Check in: ' + ticket.title);
 }
 
 // ── Pre-Fill and Collection ──
@@ -2058,7 +2061,10 @@ function ctGetTSFEvents() {
         type: 'careticket',
         time: timeStr,
         timeMin: createdTime.getHours() * 60 + createdTime.getMinutes(),
-        label: 'Started tracking: ' + escHtml(ticket.title),
+        // HR-4 (issue #110, V-K-45): pass title RAW — the Today So Far renderer
+        // escapes ev.label via escHtml at the single render boundary
+        // (intelligence-quicklog.js). Escaping here double-escapes (&amp;quot;).
+        label: 'Started tracking: ' + ticket.title,
         detail: '',
         icon: zi(iconName),
         color: color,
@@ -2085,7 +2091,7 @@ function ctGetTSFEvents() {
         type: 'careticket',
         time: ciTimeStr,
         timeMin: ciTime.getHours() * 60 + ciTime.getMinutes(),
-        label: escHtml(ticket.title) + ' check-in',
+        label: ticket.title + ' check-in',
         detail: detailText,
         icon: zi(verdictIcon),
         color: color,
@@ -2107,7 +2113,7 @@ function ctGetTSFEvents() {
           type: 'careticket',
           time: resTimeStr,
           timeMin: resTime.getHours() * 60 + resTime.getMinutes(),
-          label: escHtml(ticket.title) + ' resolved',
+          label: ticket.title + ' resolved',
           detail: '',
           icon: zi('resolve'),
           color: 'sage',

@@ -3177,12 +3177,20 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
     // data-arg escaping into the combo-card render sites (c.text, h.q,
     // p.partner, queryFoods), so the doctrine guard now reaches both
     // files Maren governs the render boundaries of.
-    const [homeRes, dietRes] = await Promise.all([
+    //
+    // #111 extension: also scan medical.js — Maren's F-35-1 audit named the
+    // vaccine-name (v.name / upcoming.name) and upcoming-milestone (item.text)
+    // data-arg positions in medical.js, which were still using escAttr. The
+    // values are DB-curated (functionally safe today) but the doctrine guard
+    // must reach every render boundary Maren governs.
+    const [homeRes, dietRes, medRes] = await Promise.all([
       request.get('/split/home.js'),
       request.get('/split/diet.js'),
+      request.get('/split/medical.js'),
     ]);
     const home = await homeRes.text();
     const diet = await dietRes.text();
+    const med = await medRes.text();
 
     // Affected fields: m.name (medication), nextMilestone.text (milestone),
     // val (food meal value), f.name (food name), comboStr (combo string),
@@ -3191,14 +3199,66 @@ test.describe('Polish-10b — HR-3 onclick batch (Care + Home; ~24 sites)', () =
     // diet.js user-content fields: c.text (combo quick-chip), h.q (combo
     // history query), p.partner (synergy partner), queryFoods (parsed combo).
     const buggyPatternDiet = /data-arg2?="\$\{escAttr\((c\.text|h\.q|p\.partner|queryFoods)\b/g;
+    // medical.js user-content fields: item.text (upcoming-milestone), v.name /
+    // upcoming.name (vaccine names), m.name (medication name).
+    const buggyPatternMed = /data-arg2?="\$\{escAttr\((item\.text|upcoming\.name|v\.name|m\.name)\b/g;
     const homeViolations = home.match(buggyPatternHome) || [];
     const dietViolations = diet.match(buggyPatternDiet) || [];
+    const medViolations = med.match(buggyPatternMed) || [];
     expect(homeViolations,
       `home.js: zero escAttr in user-content data-arg positions (Maren F-35-1 fix). Found: ${homeViolations.join(' | ')}`)
       .toEqual([]);
     expect(dietViolations,
       `diet.js: zero escAttr in user-content data-arg positions (#107 coverage extension). Found: ${dietViolations.join(' | ')}`)
       .toEqual([]);
+    expect(medViolations,
+      `medical.js: zero escAttr in user-content data-arg positions (#111 coverage extension). Found: ${medViolations.join(' | ')}`)
+      .toEqual([]);
+  });
+
+  test('regression-guard (#110 HR-4) — CareTicket title escaped at render boundary, not producer', async ({ request }) => {
+    // Issue #110 (V-K-44 + V-K-45): escHtml was applied at producer time in
+    // intelligence-caretickets.js — both ctNotificationText (a plain-text
+    // Notification.body sink, where entities do NOT decode → literal &#39;/&quot;)
+    // and the Today So Far event labels (which the TSF renderer re-escapes via
+    // escHtml(ev.label), double-escaping to &amp;quot;). Fix: producers pass
+    // ticket.title RAW; escaping stays at the single render boundary.
+    const [ct, ql] = await Promise.all([
+      (await request.get('/split/intelligence-caretickets.js')).text(),
+      (await request.get('/split/intelligence-quicklog.js')).text(),
+    ]);
+    // Producer side: zero escHtml(ticket.title) in caretickets (raw pass-through).
+    // (Legitimate HTML-render escapes use escHtml(t.title)/escHtml(tpl.title) and
+    // are unaffected by this ticket.title-specific guard.)
+    const producerEscapes = ct.match(/escHtml\(\s*ticket\.title\s*\)/g) || [];
+    expect(producerEscapes,
+      `caretickets.js: ticket.title must be passed RAW from producers (#110) — escape only at the render boundary. Found: ${producerEscapes.join(' | ')}`)
+      .toEqual([]);
+    // Render boundary: Today So Far still escapes ev.label (single canonical escape).
+    expect(ql.includes('escHtml(ev.label)'),
+      'quicklog.js: Today So Far renderer must keep escHtml(ev.label) as the single escape boundary (#110)')
+      .toBeTruthy();
+  });
+
+  test('regression-guard (#109 HR-3 / V-K-47) — symptom quick-chip uses data-action; _alAttrSafe retired', async ({ request }) => {
+    // Issue #109: the sc-quick-chip set-value+run inline onclick (HR-3) is
+    // converted to data-action="fillSymptomCheck" with a core.js dispatcher.
+    // V-K-47: the _alAttrSafe helper (escHtml + redundant "-replace) is removed;
+    // call sites use escHtml(payload) directly (escHtml escapes " since #107).
+    const [ql, core] = await Promise.all([
+      (await request.get('/split/intelligence-quicklog.js')).text(),
+      (await request.get('/split/core.js')).text(),
+    ]);
+    expect(ql.includes("onclick=\"document.getElementById('homeSymptomInput')"),
+      'quicklog.js: sc-quick-chip inline onclick removed (HR-3, #109)').toBeFalsy();
+    expect(/data-action="fillSymptomCheck"/.test(ql),
+      'quicklog.js: sc-quick-chip uses data-action="fillSymptomCheck" (#109)').toBeTruthy();
+    expect(/function\s+_alAttrSafe\b/.test(ql),
+      'quicklog.js: _alAttrSafe helper retired (V-K-47, #109)').toBeFalsy();
+    expect(ql.includes('_alAttrSafe('),
+      'quicklog.js: zero _alAttrSafe call sites remain (V-K-47, #109)').toBeFalsy();
+    expect(core.includes("action === 'fillSymptomCheck'"),
+      'core.js: fillSymptomCheck dispatcher branch present (#109)').toBeTruthy();
   });
 
   test('regression-guard (#107 V-K-14) — escHtml escapes " for double-quoted attribute safety', async ({ request }) => {
