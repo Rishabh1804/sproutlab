@@ -7,6 +7,14 @@ let _syncUser = null;           // current firebase.auth().currentUser snapshot
 let _syncHouseholdId = null;    // active household doc ID
 let _syncHousehold = null;      // cached household doc data
 let _syncListenerUnsubs = [];   // onSnapshot unsubscribe fns
+// Issue #53 — listener generation. Bumped on every _syncDetachListeners().
+// Each onSnapshot callback captures the generation it was attached under and
+// bails if it no longer matches the live one — so a Firestore snapshot
+// callback already queued on the microtask loop at detach time cannot apply
+// stale state (e.g. clobber local via save(lsKey, entries)) after the listener
+// has been torn down. This guards the snapshot-APPLY path; the pre-existing
+// _reconcileDone reset (§6.2(d)) only guarded reconcile RE-FIRE.
+let _syncListenerGen = 0;
 let _remoteWriteDepth = 0;      // counter for remote write detection (used by save())
 let _syncUIRendered = false;    // guard for Settings section injection
 
@@ -524,6 +532,9 @@ function _syncSetActivity(text, attribution) {
     el.removeAttribute('data-attribution-uid');
   }
   el.removeAttribute('hidden');
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region (the pill is
+  // visual-only now — it toggles via [hidden], so its own aria-live was unreliable).
+  if (text && typeof _a11yAnnounce === 'function') _a11yAnnounce(text);
   if (_syncActivityHideTimer) clearTimeout(_syncActivityHideTimer);
   _syncActivityHideTimer = setTimeout(function() {
     if (el.parentNode) el.setAttribute('hidden', '');
@@ -821,13 +832,25 @@ function _syncDeleteCollection(ref) {
 }
 
 // ─── Detach Listeners ───
+// Issue #53 — inspection getter (top-level `let` is not a window property, so
+// expose the live generation for guards/tests via a hoisted function).
+function _syncListenerGenNow() { return _syncListenerGen; }
+
 function _syncDetachListeners() {
+  // Issue #53 — invalidate any snapshot callbacks already queued from the
+  // generation being torn down. Bump BEFORE unsub() so a straggler that fires
+  // synchronously during teardown is already stale.
+  _syncListenerGen++;
   _syncListenerUnsubs.forEach(function(unsub) { unsub(); });
   _syncListenerUnsubs = [];
   // C0 Fix 5 (Kael): reset listener-ready state so next attach re-earns
   // confirmation. Without this, a re-attach cycle would flush immediately
   // with the previous session's stale shadow.
   _syncReady = {};
+  // #53 (Kael audit): clearing the ready-fallback timers here is what protects
+  // the _syncArmReadyFallback path — its setTimeout callback is NOT generation-
+  // guarded (it touches flush-readiness state, not the snapshot-apply path), so
+  // this clear-on-detach is load-bearing. Do not remove assuming _gen covers it.
   Object.keys(_syncReadyTimers).forEach(function(c) {
     if (_syncReadyTimers[c]) clearTimeout(_syncReadyTimers[c]);
   });
@@ -1244,6 +1267,11 @@ function _syncAttachListeners(hId) {
   // tracks the broader straggler limitation; this reset only protects
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
+  // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
+  // (called just above, and on any future re-attach) bumps _syncListenerGen; each
+  // callback below bails if its captured _gen no longer matches the live one, so a
+  // straggler snapshot queued before detach cannot apply stale state.
+  var _gen = _syncListenerGen;
   var db = firebase.firestore();
   var hRef = db.collection('households').doc(hId);
 
@@ -1271,6 +1299,7 @@ function _syncAttachListeners(hId) {
   // Data-equality checks inside the handler short-circuit metadata-only fires.
   perEntryCollections.forEach(function(col) {
     var unsub = hRef.collection(col).onSnapshot({ includeMetadataChanges: true }, function(snapshot) {
+      if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
       try { if (!_syncDisabled) _syncHandlePerEntrySnapshot(col, snapshot); }
       catch(e) { _syncRecordCrash('per-entry/' + col, e); }
     }, function(err) {
@@ -1285,6 +1314,7 @@ function _syncAttachListeners(hId) {
   // Single-doc collections (in /singles/{docName})
   singleDocNames.forEach(function(docName) {
     var unsub = hRef.collection('singles').doc(docName).onSnapshot({ includeMetadataChanges: true }, function(doc) {
+      if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
       try { if (!_syncDisabled) _syncHandleSingleDocSnapshot(docName, doc); }
       catch(e) { _syncRecordCrash('single-doc/' + docName, e); }
     }, function(err) {
@@ -1296,6 +1326,7 @@ function _syncAttachListeners(hId) {
 
   // Household doc listener (member changes, invite code)
   var hUnsub = hRef.onSnapshot(function(doc) {
+    if (_gen !== _syncListenerGen) return;   // #53: straggler from a detached generation — do not apply
     try {
       if (doc.exists) {
         _syncHousehold = doc.data();
@@ -2231,6 +2262,11 @@ function _syncUpdateStatusIndicator(snap) {
   if (labEl) labEl.textContent = label;
   btn.setAttribute('title', title);
   btn.setAttribute('aria-label', title);
+  // V-V-2 / V-M-1: announce through the persistent #a11yLive region (the button
+  // is visual-only now). Same-frame coalescing means the offline-badge copy —
+  // which subscribes after this and carries the fuller message — wins, so the
+  // parent hears one message, not the indicator + badge double-announce.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(title);
 
   // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
   // dispatcher. Only halted is tappable; other states are read-only pills.
@@ -2273,6 +2309,10 @@ function _syncUpdateOfflineBadge(snap) {
 
   var copyEl = badge.querySelector('.offline-badge__copy');
   if (copyEl) copyEl.textContent = copy;
+  // V-V-2 / V-M-1: announce via the persistent #a11yLive region rather than an
+  // aria-live on this (initially [hidden]) badge — reliable on older AT, and the
+  // Reload button stays outside the announced text.
+  if (typeof _a11yAnnounce === 'function') _a11yAnnounce(copy);
 
   // Reload surfaces only in halted (local fault); offline auto-resumes
   // on network restore, no user action needed.
@@ -2305,6 +2345,10 @@ function initSyncVisibility() {
       }
     } catch(e) { /* non-fatal — derived store still works from counters */ }
   }
+  // ORDER-DEPENDENT (Cipher Edict V finding #3): both subscribers fire synchronously
+  // per visibility change and each calls _a11yAnnounce(); same-frame calls coalesce to
+  // the LAST one. The offline badge must stay registered AFTER the indicator so the
+  // parent hears the badge's fuller copy, not the terser indicator title. Do not reorder.
   onSyncVisibilityChange(_syncUpdateStatusIndicator);
   onSyncVisibilityChange(_syncUpdateOfflineBadge);
 }

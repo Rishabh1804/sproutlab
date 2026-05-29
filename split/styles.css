@@ -4943,6 +4943,21 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    as a future host for PR-5's "update available" reload affordance.
    Container is always present (so its visibility is mode-independent); the
    #syncStatus child manages its own [hidden] state on cold boot per sl-1-2 r2. */
+/* Visually-hidden but present in the accessibility tree (issue #6 / V-V-2 /
+   V-M-1). Used by the persistent #a11yLive announce region: it must stay in
+   the a11y tree at all times (NOT display:none, which would remove it), so
+   _a11yAnnounce() writes reliably fire a polite announcement. Standard
+   clip-rect technique. */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .status-strip {
   display:flex; align-items:center; justify-content:flex-end;
   gap:var(--sp-8);

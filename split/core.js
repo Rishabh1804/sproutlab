@@ -1089,6 +1089,17 @@ function init() {
       const label = e.target.closest('.vc-complete-check');
       if (label) label.classList.toggle('checked', e.target.checked);
     }
+    // HR-3 (issue #6 item 1a): delegated change-action routing for elements that
+    // emit 'change' rather than 'click' (file inputs, selects). Mirrors the
+    // data-action click dispatcher. The change event fires on (and `e.target` is)
+    // the input itself, so handlers receive the same event their inline
+    // `onchange="fn(event)"` did. Extend the map here rather than re-adding
+    // inline handlers (see #172 for the remaining onchange sweep).
+    const ca = e.target.closest('[data-change-action]');
+    if (ca) {
+      const action = ca.dataset.changeAction;
+      if (action === 'handleAvatar') handleAvatar(e);
+    }
   });
 
   
@@ -5450,6 +5461,10 @@ if ('serviceWorker' in navigator) {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
           const toast = document.getElementById('updateToast');
           if (toast) toast.removeAttribute('hidden');
+          // V-V-2 / V-M-1: announce via the persistent #a11yLive region (the toast
+          // is visual-only now — it toggles via [hidden], so its own aria-live was
+          // unreliable). Copy mirrors the .update-toast__copy span.
+          if (typeof _a11yAnnounce === 'function') _a11yAnnounce('New version available — Tap to reload');
         }
       });
     });
@@ -5489,6 +5504,26 @@ function isPWA() {
 // Read manifest.json's version field at runtime and surface it in the settings
 // sidebar's #appVersion line. Silent on any failure (network, parse, or
 // missing field) — the :empty CSS rule keeps the row collapsed in that case.
+// Announce a message through the persistent #a11yLive region (issue #6 / V-V-2 /
+// V-M-1). The region is always in the a11y tree (sr-only, never display:none),
+// so unlike the old per-element [hidden] live regions this fires reliably. Clear
+// then set on the next frame so AT registers a text change even when the new
+// message equals the current one (e.g. a repeated offline state); multiple calls
+// in one frame coalesce to the last message (collapses indicator+badge to one).
+function _a11yAnnounce(msg) {
+  if (typeof document === 'undefined') return;
+  var el = document.getElementById('a11yLive');
+  if (!el) return;
+  el.textContent = '';
+  var set = function() { var e = document.getElementById('a11yLive'); if (e) e.textContent = (msg == null ? '' : String(msg)); };
+  // rAF is paused in a backgrounded tab (Cipher Edict V finding #2) — a transition
+  // that happens while hidden would otherwise never run `set` until foreground, by
+  // which point a newer announce may have cleared it. Use a timer when hidden so the
+  // announcement still lands (the polite region will speak it on tab return).
+  if (typeof requestAnimationFrame === 'function' && !(document.hidden)) requestAnimationFrame(set);
+  else setTimeout(set, 0);
+}
+
 async function displayAppVersion() {
   try {
     const res = await fetch('manifest.json', { cache: 'no-store' });
