@@ -22,6 +22,8 @@
 
 **Arc-pair dissolved — Arc B now stands alone (2026-05-28).** Arc A (`diet-rework-v1.md`) is superseded by the ratified-and-merged `food-sub-tab-v1` IA; its surfacing targets are re-homed here (see §Surfacing re-home). Arc B is self-contained on the intelligence layer and **ratifies standalone** — there is no longer a paired Arc A to gate against. The engine work (B-1, B-3, B-4) is surface-agnostic; only the B-2 card surfacing re-points to the merged `[Patterns]` / `[Library]` sub-tabs.
 
+**Reconciliation update (2026-05-29).** The re-homed surfacing is now **folded into the `food-sub-tab-v1` arc itself** (PR #173), not merely re-pointed: B-2's chem-variety / variety-nudge cards land in **food-sub-tab F-4** `[Patterns]`, and the per-food Chemistry detail lands in **food-sub-tab F-3** `[Library]`. Arc B therefore narrows to its **engine + hygiene core — B-1 (the keystone-trio engine), B-3, and B-4**; the diet-tab card mounts belong to the food-sub-tab phases that consume the B-1 engine. Re-verified against `main` @ `65d5bda` (post F-1/F-2): `NUTRITION.chem` + `COMBO_RULES` remain zero-consumer dead data (F-2 wired neither — its `CURATED_COMBOS` is a separate autofill structure). See §Surfacing re-home for the updated mapping.
+
 ## Why
 
 The SproutLab intelligence layer is 7 files, ~18,400 LOC distributed (post-PR-G split): `intelligence-isl.js` (1,029) + `intelligence-qa.js` (2,234) + `intelligence-qa-handlers.js` (3,614) + `intelligence-illness.js` (2,541) + `intelligence-quicklog.js` (4,355) + `intelligence-cards.js` (**2,643** per V-K-56 re-baseline — was 2,403 at spec-write) + `intelligence-caretickets.js` (2,224). The Architect framed it as "still pre-alpha." The Wave 1.5 capability map found this framing **partially accurate** — but Wave 2 corrected a load-bearing scout error:
@@ -34,9 +36,9 @@ The SproutLab intelligence layer is 7 files, ~18,400 LOC distributed (post-PR-G 
   - The scout swept `qa-handlers.js` only. **Wave 1.5 methodology lesson:** capability-map scouts must grep across the full file-set under audit, not the file where a symbol is "expected" to live.
 - **One CLAUDE.md drift.** CLAUDE.md says "ISL: 22 intents with dedicated handlers." The canonical intent registry `QA_INTENTS` is in `intelligence-qa.js:1–175`, not in ISL, and the count is now **30** (independently verified by Kael). The doc misattributes BOTH location AND count.
 - **Data-layer surfaces waiting for ISL consumers.** `NUTRITION[*].chem` (3 sub-fields) and `COMBO_RULES` (6 rules) are present in `data.js` with zero outside-`data.js` consumers — the data is specced but the intelligence layer doesn't yet pipe it. **`COMBO_RULES` is not uniformly nutrient-keyed (V-K-53):** rule #6 is `{foods:['banana','constipation']}` — food-name + symptom. The handler must tri-resolve, not single-resolve.
-- **Region LOC over the 30K trigger (V-K-56).** Live count: 30,725 LOC for the full Kael jurisdiction (`intelligence-*.js` + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js`). Threshold is 30,000. **The Region is currently over budget, pre-arcs**, and `intelligence-cards.js` is +240 LOC since the Wave-1.5 capability map. Arcs B-1 (+~150 LOC) and B-2 (+~80 LOC) will push further. Surfaced as architectural watch-item — not a B-0 blocker, but Lyra/Cipher should plan for an `intelligence-cards.js` sub-split or similar before Region pressure becomes acute.
+- **Region LOC over the 30K trigger (V-K-56; re-baselined 2026-05-29).** Spec-write count was 30,725; **current `main` @ `65d5bda` is 34,907 LOC** for the full Kael jurisdiction (`intelligence-*.js` + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js`) — F-1/F-2 + milestones work added ~4.2K. Threshold is 30,000. **The Region is ~16% over budget before Arc B adds anything.** B-1 (~150–200 LOC) pushes further. The `intelligence-cards.js` sub-split is no longer a soft watch-item — Lyra/Cipher should treat it as a near-term precondition or pair a split with the first Arc B impl PR.
 
-Arc A Phase 3 is blocked on this layer. Hence this Arc B — surgically targeted upgrades, sized to unblock Arc A Phase 3 and resolve the boundary smells the capability map (corrected) surfaced.
+This dead-data substrate is what the diet surfacing needs. Hence this Arc B — surgically targeted intelligence-layer upgrades that pipe `chem.*` / `COMBO_RULES` to consumers (now the `food-sub-tab-v1` `[Patterns]`/`[Library]` phases, post-reconciliation) and resolve the boundary smells the capability map (corrected) surfaced. (The original "unblock Arc A Phase 3" framing is retired — Arc A is superseded; the consuming surface is the food-sub-tab arc.)
 
 ## Scope
 
@@ -57,18 +59,20 @@ Arc A Phase 3 is blocked on this layer. Hence this Arc B — surgically targeted
 
 **Hard boundary.** Arc B does not modify ISL semantics — it extends ISL surface. Existing intents, handlers, and accessors keep their contracts. New surfaces are additive.
 
-## Surfacing re-home (2026-05-28 — Arc A superseded)
+## Surfacing re-home → folded into food-sub-tab arc (2026-05-28; folded 2026-05-29)
 
-Arc B's engine outputs were originally surfaced by Arc A's `[Today]` / `[Score]` / `[Library]` segments. With Arc A parked (its IA superseded by the merged `food-sub-tab-v1`), the **B-2 surfacing re-targets the merged `food-sub-tab-v1` sub-tabs** on `main` (`switchDietSub` / `.diet-sub-panel`):
+Arc B's engine outputs were originally surfaced by Arc A's `[Today]` / `[Score]` / `[Library]` segments. Arc A is superseded by the merged `food-sub-tab-v1` IA, so the surfacing is **folded into the food-sub-tab arc** (PR #173 amends `food-sub-tab-v1.md` F-3/F-4) rather than carried as Arc B phases. Targets on `main` use `switchDietSub` / `.diet-sub-panel`:
 
-| Engine output (Arc B) | Original Arc A home | Re-homed target (merged IA) |
-|-----------------------|---------------------|------------------------------|
-| `renderInfoChemVariety` (Fibre Variety + Bioactive Diversity tiles) | `[Score]` segment | **`[Patterns]`** sub-tab (analytics surface) |
-| `renderInfoVarietyNudge` (Variety-nudge tile, V-M-48 copy locked) | `[Score]` segment | **`[Patterns]`** sub-tab |
-| Per-food Chemistry detail (`chem.fibre`/`antiNutrients`/`bioactives`) | `[Library]` per-food overlay | **`[Library]`** sub-tab per-food view |
-| `meal_combo_check` chip-stack (`computeMealCombos`) | `[Today]` post-log chips | logging/review surface — **F-3 Log review surface or `[Patterns]`** (exact placement confirmed against the F-2/F-3 surface contracts at B-2 implementation time, not pinned here) |
+| Engine output (Arc B B-1) | Consumer (food-sub-tab arc) |
+|---|---|
+| `renderInfoChemVariety` (Fibre Variety + Bioactive Diversity tiles) | **F-4** `[Patterns]` sub-tab |
+| `renderInfoVarietyNudge` (Variety-nudge tile, V-M-48 copy locked) | **F-4** `[Patterns]` sub-tab |
+| Per-food Chemistry detail (`chem.fibre`/`antiNutrients`/`bioactives`) | **F-3** `[Library]` per-food view |
+| `meal_combo_check` chip-stack (`computeMealCombos`) | **F-4** `[Patterns]` or the F-3 Log review surface (placement confirmed against F-3/F-4 surface contracts at impl time) |
 
-**The B-1 keystone trio (`chemRollup` + `meal_combo_check` intent + `qaAnswerMealCombo` + `computeMealCombos`) is surface-agnostic and unchanged** — it ships regardless of where the cards ultimately land. Only B-2 (the card renderers) carries the re-home; its `intelligence-cards.js` insert points are unaffected (engine-side), only the diet-tab mount call-sites change from Arc A segments to the merged sub-tab panels.
+**Arc B retains only the engine.** The B-1 keystone trio (`chemRollup` + `meal_combo_check` intent + `qaAnswerMealCombo` + `computeMealCombos`) ships as Arc B, surface-agnostic. The card renderers above are **food-sub-tab F-3/F-4 deliverables** that consume that engine — listed here to document the contract, not as Arc B phases. (The old B-2 roadmap/PR-sequence rows are correspondingly re-homed; Arc B's own PR sequence is **B-1 → B-3 → B-4**.)
+
+**Design note (feeding read path).** `chemRollup` and `computeMealCombos` must read feeding data via the canonical reader `_fdReadDayMeal(dayObj, mealKey)` (`data.js:3160` on `main`), NOT the raw `entry[meal]` legacy string. The F-2 writer co-writes a legacy comma-string at `entry[meal]` (so a naive read works today), but the structured `items[]` sidecar carries the precise `nutritionRef` resolved at write-time — using it avoids a second-best `_baseFoodName` re-derivation AND stays correct when F-5's `parseFeeding` eventually drops the legacy co-write. (Same note folded into `food-sub-tab-v1.md` §Arc B reconciliation.)
 
 ## State of the union (scout #2 + Wave 2 corrections)
 
@@ -113,7 +117,7 @@ Arc B's engine outputs were originally surfaced by Arc A's `[Today]` / `[Score]`
 
 ## Sequencing — the keystone trio (Phase B-1)
 
-**Minimum spec-bearing change to unblock Arc A Phase 3.** Three surgical edits:
+**Minimum spec-bearing change — the engine the food-sub-tab `[Patterns]`/`[Library]` phases consume (post-reconciliation; was framed "unblock Arc A Phase 3").** Three surgical edits:
 
 ### B-1.1 — Extend `_islDietData` with `chemRollup` (`intelligence-isl.js:446–499`)
 
@@ -234,8 +238,8 @@ function qaAnswerMealCombo(intentId) {
 | 1 | Extend `_islDietData` with `chemRollup` (3 fields) | `intelligence-isl.js:446–499` | Keystone — one accessor surfaces `chem.*` to every downstream | M | none | **yes** | **B-1** |
 | 2 | Add `meal_combo_check` intent | `intelligence-qa.js:69, :1643` | Combo intelligence surface | M | #1 | **yes** | **B-1** |
 | 3 | Implement `qaAnswerMealCombo` + `computeMealCombos` data fn | `intelligence-qa-handlers.js` between `:2395`/`:2396`; `intelligence-cards.js` (data fn after `:2020`) | Required for #2; data-fn separation enables Arc A chip-stack reuse | M | #1, #2 | **yes** | **B-1** |
-| 4 | Add `renderInfoChemVariety` + `renderInfoVarietyNudge` cards | `intelligence-cards.js` after `:2020` (V-K — corrects "after `:1885`" to "after the function ends") | Surfaces `chem.fibre`+`chem.bioactives` rollup + the Variety nudge tile (V-M-48 — Maren-drafted copy locked) | M | #1; `fibreDistribution` field ship in B-2 | **yes** | **B-2** |
-| 5 | Promote `chem.antiNutrients` to UIB warnings | `intelligence-qa.js:822` `_iqGetWarnings` | UIB already builds warnings; antiNutrients is a free signal | S | #1 | **yes** | **B-2** |
+| 4 | Add `renderInfoChemVariety` + `renderInfoVarietyNudge` cards | `intelligence-cards.js` after `:2020` (V-K — corrects "after `:1885`" to "after the function ends") | Surfaces `chem.fibre`+`chem.bioactives` rollup + the Variety nudge tile (V-M-48 — Maren-drafted copy locked) | M | #1 (defer-fields `fibreDistribution`/`bioactiveTopFive` ship with the cards) | **yes** | **→ food-sub-tab F-4 (re-homed; was B-2)** |
+| 5 | Promote `chem.antiNutrients` to UIB warnings | `intelligence-qa.js:822` `_iqGetWarnings` | UIB already builds warnings; antiNutrients is a free signal | S | #1 | **yes** | **B-1+ engine (was B-2; UIB extension, not a diet-tab card)** |
 | ~~6~~ | ~~Wire `qaAnswerFavoriteFoods` handler~~ | — | **RETIRED V-K-49 — already wired at `intelligence-quicklog.js:1322`** | — | — | — | — |
 | ~~7~~ | ~~Wire `qaAnswerPredictionAccuracy` handler — or de-register intent~~ | — | **RETIRED V-K-49 — already wired at `intelligence-quicklog.js:1290`** | — | — | — | — |
 | 8 | Extend `resolveTimeQuery` with `last/this Tuesday` + `N weeks ago` | `intelligence-isl.js:242–376` | Closes most-asked temporal gap | M | none | partial | **B-3** |
@@ -304,11 +308,11 @@ function qaAnswerMealCombo(intentId) {
 |-------|------|-------|--------|--------------|-----------|----------|
 | **B-0** | **Spec (this PR)** | This document + Arc A spec + journal. | `claude/sproutlab-diet-rework-p0` (shared with Arc A) | docs-only | small | Wave 2 complete. Architect ratification pending. |
 | B-1 | Keystone trio | `chemRollup` (3 fields) + `meal_combo_check` intent + `qaAnswerMealCombo` handler + `computeMealCombos` data fn | `claude/sproutlab-isl-upgrade-p1` | Kael (4 files); Maren cross-consult on copy/schema (locked above) | medium (~150–200 LOC) | Kael Mode-1 → Lyra synth → Cipher. |
-| B-2 | Chem-variety cards + UIB antiNutrient warnings | `renderInfoChemVariety` + `renderInfoVarietyNudge` cards (after `intelligence-cards.js:~2020`); `_iqGetWarnings` antiNutrients; defer-fields `fibreDistribution` + `bioactiveTopFive` added to `chemRollup` if needed | `claude/sproutlab-isl-upgrade-p2` | Kael; Maren cross-consult on phrasing | small–medium | Kael Mode-1 + Maren cross-consult → synth → Cipher. |
+| ~~B-2~~ | **Dissolved 2026-05-29** | Chem-variety/variety-nudge **cards → food-sub-tab F-4** (PR #173); `_iqGetWarnings` antiNutrient promotion → folds into **B-1** engine track; `chemRollup` defer-fields ship with the F-4 cards if needed. | — | — | — | — |
 | B-3 | Temporal parser ext + silent-catch console.error | `resolveTimeQuery` += `last Tuesday` + `N weeks ago` (HR-12 medium); `console.error` in `intelligence-qa.js:1670–1672` | `claude/sproutlab-isl-upgrade-p3` | Kael | small | Kael Mode-1 → synth → Cipher. **(Scope-collapsed from original B-3 per V-K-49 — pre-alpha intent rows retired.)** |
 | B-4 | Boundary cleanup (hygiene) | Relocate `_qaUpdateSuggestions` + `QA_SUGGEST_POOL` + `_qaDetectDomain` → qa (~172 LOC); `renderInfoAdoption` → cards (~30 LOC). | `claude/sproutlab-isl-upgrade-p4` | Kael | small (~200 LOC moved, concat-order safe) | Kael Mode-1 → synth → Cipher. |
 
-**Arc A dependency — dissolved.** Arc A is superseded (parked 2026-05-28); Arc B no longer gates or is gated by it. B-2 surfacing re-homes to the merged `food-sub-tab-v1` sub-tabs (see §Surfacing re-home). B-1/B-3/B-4 are surface-agnostic and unaffected.
+**Arc A dependency dissolved; Arc B PR sequence is B-1 → B-3 → B-4 (2026-05-29).** Arc A is superseded (parked 2026-05-28); Arc B no longer gates or is gated by it. The former B-2 is dissolved: its chem-variety/variety-nudge **cards fold into food-sub-tab F-4** (PR #173, see §Surfacing re-home), and its `_iqGetWarnings` antiNutrient promotion folds into the **B-1** engine track. B-1/B-3/B-4 are surface-agnostic.
 
 **Regression-guard names (from Cipher Edict V + Wave 2 additions, locked):**
 - B-1: `regression-guard-chemrollup-contract`, `regression-guard-meal-combo-intent-registered`, `regression-guard-combo-tri-resolution` (V-K-53 — confirms tri-resolution catches rule #6).
@@ -316,7 +320,7 @@ function qaAnswerMealCombo(intentId) {
 - B-3: `regression-guard-temporal-tuesday-timezone-safe` (HR-12), `regression-guard-qa-dispatch-console-error` (V-K-52 — confirms catch logs to console).
 - B-4: `regression-guard-concat-order-stable` (all relocated symbols resolve under post-move concat order).
 
-**CLAUDE.md drift fix** — separate tiny docs-only PR. Single-line correction: "ISL: 22 intents with dedicated handlers" → "Smart Q&A: 30 intents (registry in `intelligence-qa.js`); ISL: temporal query parser + 6 domain-data accessors + day/range summary generators."
+**CLAUDE.md drift fix — ALREADY RESOLVED on `main` (retire this item).** The canon-gen-001 CLAUDE.md refresh already reads "Smart Q&A: 30 intents (registry in `intelligence-qa.js`)" plus the corrected ISL line ("temporal query parser + 6 domain-data accessors + day/range summary generators"). The originally-flagged separate-PR correction (was: "ISL: 22 intents with dedicated handlers") is no longer needed.
 
 ## Open questions — Wave 2 resolutions
 
