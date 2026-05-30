@@ -3973,9 +3973,19 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .cons-watch-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-seek { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--rose-deep); margin:0 0 var(--sp-16); line-height:var(--lh-relaxed); }
 .cons-seek .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--rose-deep); margin-top:3px; }
+/* Severe-reaction strip (food-effects-v2 A-1/V-1): the emergency floor. Amber
+   per V-3 (serious-without-alarm; rose stays reserved for acute-toxin honey).
+   Left bar + fill give it weight so a half-awake parent can't skim past it; it
+   renders unconditionally and is never collapsed. */
+.cons-severe { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); }
+.cons-severe-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--amber-deep); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.cons-severe-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--amber-deep); }
+.cons-severe-list { margin:0; padding-left:var(--sp-20); }
+.cons-severe-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-btns { display:flex; gap:var(--sp-8); justify-content:flex-end; }
 [data-theme="dark"] .consequence-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .consequence-card { background:var(--surface); }
+[data-theme="dark"] .cons-severe { background:var(--surface-amber); }
 
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
@@ -16513,7 +16523,8 @@ const AGE_RULES = {
 // AGE_RULES but absent here get a light, one-line confirm instead of the rich card.
 const FOOD_EFFECTS = {
   'honey': {
-    tier:       'critical',
+    foodClass:  'acute-toxin',   // v2 taxonomy (was tier:'critical'); see docs/specs/food-effects-v2-guided-introduction.md §2
+    severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
     why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
@@ -23192,17 +23203,30 @@ function getFoodEffect(name) {
 // them proceed via onProceed. NEVER blocks — a parent may be recording an
 // exposure that already happened (e.g. a grandparent's ghutti), and the record
 // plus the watch-for guidance matter more than refusing the log.
-// detail: { tier:'critical'|'light', title, why, watchFor?:[], seekCare? }
+// detail: { severity:'critical'|'caution', title, why, watchFor?:[],
+//           severeSigns?:[], seekCare? }
+// A-4 (Maren): watchFor / seekCare render WHENEVER PRESENT — never gated on a
+// class/severity string, so a schema migration (e.g. honey's tier→foodClass)
+// can never silently drop a food's botulism watch-fors. `severity` drives
+// CHROME only (rose for 'critical', amber for 'caution'), not presence.
+// severeSigns[] (A-1/V-1): the anaphylaxis red-flags render in a persistent,
+// non-collapsible strip — separate from the calm mild watchFor[].
 function foodConsequenceCard(detail, onProceed) {
   if (!detail) { if (onProceed) onProceed(); return; }
-  const critical = detail.tier === 'critical';
+  const critical = detail.severity === 'critical';
   let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
   if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
-  if (critical && Array.isArray(detail.watchFor) && detail.watchFor.length) {
+  // Severe-reaction strip (A-1/V-1): unconditional, non-collapsible, amber.
+  if (Array.isArray(detail.severeSigns) && detail.severeSigns.length) {
+    inner += `<div class="cons-severe"><div class="cons-severe-h">${zi('siren')} If this happens, it's an emergency</div><ul class="cons-severe-list">${
+      detail.severeSigns.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul></div>`;
+  }
+  // Mild watch-fors — present whenever the record carries them (A-4 decouple).
+  if (Array.isArray(detail.watchFor) && detail.watchFor.length) {
     inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
       detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
   }
-  if (critical && detail.seekCare) {
+  if (detail.seekCare) {
     inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
   }
   // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
@@ -38216,10 +38240,10 @@ function foodLibToggleTried(name) {
     if (_ageR && _ageR.minMonth > getAgeInMonths()) {
       const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
       foodConsequenceCard(_eff ? {
-        tier: 'critical', title: _eff.title, why: _eff.why,
-        watchFor: _eff.watchFor, seekCare: _eff.seekCare
+        severity: _eff.severity || 'critical', title: _eff.title, why: _eff.why,
+        watchFor: _eff.watchFor, severeSigns: _eff.severeSigns, seekCare: _eff.seekCare
       } : {
-        tier: 'light', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
+        severity: 'caution', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
       }, _commitTried);
     } else {
       _commitTried();

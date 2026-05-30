@@ -2443,7 +2443,8 @@ const AGE_RULES = {
 // AGE_RULES but absent here get a light, one-line confirm instead of the rich card.
 const FOOD_EFFECTS = {
   'honey': {
-    tier:       'critical',
+    foodClass:  'acute-toxin',   // v2 taxonomy (was tier:'critical'); see docs/specs/food-effects-v2-guided-introduction.md §2
+    severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
     why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',

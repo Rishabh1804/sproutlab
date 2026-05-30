@@ -695,10 +695,10 @@ function foodLibToggleTried(name) {
     if (_ageR && _ageR.minMonth > getAgeInMonths()) {
       const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
       foodConsequenceCard(_eff ? {
-        tier: 'critical', title: _eff.title, why: _eff.why,
-        watchFor: _eff.watchFor, seekCare: _eff.seekCare
+        severity: _eff.severity || 'critical', title: _eff.title, why: _eff.why,
+        watchFor: _eff.watchFor, severeSigns: _eff.severeSigns, seekCare: _eff.seekCare
       } : {
-        tier: 'light', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
+        severity: 'caution', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
       }, _commitTried);
     } else {
       _commitTried();

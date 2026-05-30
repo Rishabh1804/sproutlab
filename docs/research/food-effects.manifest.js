@@ -10,7 +10,10 @@
  * Each food also has a deep brief: <food>-infant-safety.{md, html, visual.html}.
  * Append one record here whenever a new food brief is completed.
  *
- * tier:          critical | allergen | choking | timing | nutritive
+ * foodClass:     acute-toxin | allergen-introduce-early | choking-by-form |
+ *                drink-timing | substitute-caveat   (string OR array — multi-class;
+ *                v2 taxonomy, food-effects-v2 spec §2; renamed from `tier`)
+ * severity:      critical | caution   (render chrome only; decoupled from foodClass per A-4)
  * reactionType:  acute-toxin | allergy | choking | digestive | dental | renal  (array)
  * confidence:    high | moderate | weak   (strength of the evidence base)
  * Numbers/text mirror the verified brief; keep this in sync with the brief.
@@ -19,7 +22,8 @@ window.FOOD_EFFECTS_MANIFEST = [
   {
     food:          'honey',
     aliases:       [],
-    tier:          'critical',
+    foodClass:     'acute-toxin',           // v2 taxonomy (was tier:'critical') — see food-effects-v2 spec §2
+    severity:      'critical',              // render chrome; decoupled from foodClass (A-4)
     category:      'sweetener',
     effect:        'infant botulism',
     minMonth:      12,

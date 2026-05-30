@@ -4010,17 +4010,30 @@ function getFoodEffect(name) {
 // them proceed via onProceed. NEVER blocks — a parent may be recording an
 // exposure that already happened (e.g. a grandparent's ghutti), and the record
 // plus the watch-for guidance matter more than refusing the log.
-// detail: { tier:'critical'|'light', title, why, watchFor?:[], seekCare? }
+// detail: { severity:'critical'|'caution', title, why, watchFor?:[],
+//           severeSigns?:[], seekCare? }
+// A-4 (Maren): watchFor / seekCare render WHENEVER PRESENT — never gated on a
+// class/severity string, so a schema migration (e.g. honey's tier→foodClass)
+// can never silently drop a food's botulism watch-fors. `severity` drives
+// CHROME only (rose for 'critical', amber for 'caution'), not presence.
+// severeSigns[] (A-1/V-1): the anaphylaxis red-flags render in a persistent,
+// non-collapsible strip — separate from the calm mild watchFor[].
 function foodConsequenceCard(detail, onProceed) {
   if (!detail) { if (onProceed) onProceed(); return; }
-  const critical = detail.tier === 'critical';
+  const critical = detail.severity === 'critical';
   let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
   if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
-  if (critical && Array.isArray(detail.watchFor) && detail.watchFor.length) {
+  // Severe-reaction strip (A-1/V-1): unconditional, non-collapsible, amber.
+  if (Array.isArray(detail.severeSigns) && detail.severeSigns.length) {
+    inner += `<div class="cons-severe"><div class="cons-severe-h">${zi('siren')} If this happens, it's an emergency</div><ul class="cons-severe-list">${
+      detail.severeSigns.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul></div>`;
+  }
+  // Mild watch-fors — present whenever the record carries them (A-4 decouple).
+  if (Array.isArray(detail.watchFor) && detail.watchFor.length) {
     inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
       detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
   }
-  if (critical && detail.seekCare) {
+  if (detail.seekCare) {
     inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
   }
   // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
