@@ -3983,6 +3983,47 @@ function confirmAction(msg, callback, btnText) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
 
+// Resolve a FOOD_EFFECTS record with the same name-normalisation AGE_RULES uses
+// (exact → de-pluralised → substring), so 'Honey'/'honeys'/'raw honey' all hit.
+function getFoodEffect(name) {
+  if (!name || typeof FOOD_EFFECTS === 'undefined') return null;
+  const n = String(name).toLowerCase().trim();
+  return FOOD_EFFECTS[n] || FOOD_EFFECTS[n.replace(/s$/, '')] ||
+    (Object.entries(FOOD_EFFECTS).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Finding A — age-gate consequence surface. When a parent marks an age-gated
+// food tried below its gate, warn-and-allow: surface the consequence, then let
+// them proceed via onProceed. NEVER blocks — a parent may be recording an
+// exposure that already happened (e.g. a grandparent's ghutti), and the record
+// plus the watch-for guidance matter more than refusing the log.
+// detail: { tier:'critical'|'light', title, why, watchFor?:[], seekCare? }
+function foodConsequenceCard(detail, onProceed) {
+  if (!detail) { if (onProceed) onProceed(); return; }
+  const critical = detail.tier === 'critical';
+  let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
+  if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
+  if (critical && Array.isArray(detail.watchFor) && detail.watchFor.length) {
+    inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
+      detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
+  }
+  if (critical && detail.seekCare) {
+    inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
+  }
+  inner += `<div class="cons-btns">
+      <button class="btn btn-ghost" id="consCancel">Cancel</button>
+      <button class="btn btn-peach" id="consGo">Log it anyway</button>
+    </div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'consequence-overlay';
+  overlay.innerHTML = `<div class="consequence-card${critical ? ' cons-critical' : ''}">${inner}</div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#consCancel').onclick = close;
+  overlay.querySelector('#consGo').onclick = () => { close(); if (onProceed) onProceed(); };
+  overlay.onclick = e => { if (e.target === overlay) close(); };
+}
+
 // ─────────────────────────────────────────
 // VIZ DETAIL POPUP (PR-I — viz interactivity layer)
 // ─────────────────────────────────────────

@@ -3948,6 +3948,35 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .confirm-box p { font-size:var(--fs-base); color:var(--text); margin-bottom:var(--sp-16); line-height:var(--lh-relaxed); }
 .confirm-btns { display:flex; gap:var(--sp-8); justify-content:center; }
 
+/* ── Finding A — age-gate consequence card ── */
+.consequence-overlay {
+  position:fixed; inset:0; background:rgba(60,40,40,0.28);
+  backdrop-filter:blur(2px); z-index:130;
+  display:flex; align-items:center; justify-content:center;
+  animation:fadeIn 0.15s ease; padding:var(--sp-16);
+}
+.consequence-card {
+  background:white; border-radius:var(--r-xl); padding:var(--sp-24);
+  box-shadow:0 12px 40px rgba(0,0,0,0.18); max-width:360px; width:90%;
+  text-align:left; animation:popIn 0.2s ease;
+  border-top:4px solid var(--amber);
+}
+.consequence-card.cons-critical { border-top-color:var(--rose); }
+.cons-head { display:flex; align-items:center; gap:var(--sp-8); margin-bottom:var(--sp-12); }
+.cons-head .zi { width:var(--icon-md); height:var(--icon-md); flex:none; color:var(--amber-deep); }
+.cons-critical .cons-head .zi { color:var(--rose-deep); }
+.cons-title { font-size:var(--fs-lg); margin:0; color:var(--text); }
+.cons-why { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-16); }
+.cons-watch { background:var(--surface-amber); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-12); }
+.cons-watch-h { font-size:var(--fs-sm); font-weight:700; color:var(--light); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.cons-watch-list { margin:0; padding-left:var(--sp-20); }
+.cons-watch-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
+.cons-seek { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--rose-deep); margin:0 0 var(--sp-16); line-height:var(--lh-relaxed); }
+.cons-seek .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--rose-deep); margin-top:3px; }
+.cons-btns { display:flex; gap:var(--sp-8); justify-content:flex-end; }
+[data-theme="dark"] .consequence-overlay { background:var(--overlay-bg); }
+[data-theme="dark"] .consequence-card { background:var(--surface); }
+
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
    HTML cell) gets a pointer cursor without a per-element class. */
@@ -16476,6 +16505,24 @@ const AGE_RULES = {
   'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
 };
 
+// ── FOOD EFFECTS (consequence layer — Finding A) ──
+// Critical-tier foods carry an acute consequence worth surfacing the moment a
+// parent marks them tried below the AGE_RULES gate — not just the passive
+// "Not before N months" badge. Evidence base: docs/research/<food>-infant-safety.md
+// (+ docs/research/food-effects.manifest.js, the shared spine). Foods present in
+// AGE_RULES but absent here get a light, one-line confirm instead of the rich card.
+const FOOD_EFFECTS = {
+  'honey': {
+    tier:       'critical',
+    effect:     'infant botulism',
+    title:      'Honey before 12 months',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
+    seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
+    confidence: 'high',
+  },
+};
+
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
   'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
@@ -23115,6 +23162,47 @@ function confirmAction(msg, callback, btnText) {
   overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+// Resolve a FOOD_EFFECTS record with the same name-normalisation AGE_RULES uses
+// (exact → de-pluralised → substring), so 'Honey'/'honeys'/'raw honey' all hit.
+function getFoodEffect(name) {
+  if (!name || typeof FOOD_EFFECTS === 'undefined') return null;
+  const n = String(name).toLowerCase().trim();
+  return FOOD_EFFECTS[n] || FOOD_EFFECTS[n.replace(/s$/, '')] ||
+    (Object.entries(FOOD_EFFECTS).find(([k]) => n.includes(k)) || [])[1] || null;
+}
+
+// Finding A — age-gate consequence surface. When a parent marks an age-gated
+// food tried below its gate, warn-and-allow: surface the consequence, then let
+// them proceed via onProceed. NEVER blocks — a parent may be recording an
+// exposure that already happened (e.g. a grandparent's ghutti), and the record
+// plus the watch-for guidance matter more than refusing the log.
+// detail: { tier:'critical'|'light', title, why, watchFor?:[], seekCare? }
+function foodConsequenceCard(detail, onProceed) {
+  if (!detail) { if (onProceed) onProceed(); return; }
+  const critical = detail.tier === 'critical';
+  let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
+  if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
+  if (critical && Array.isArray(detail.watchFor) && detail.watchFor.length) {
+    inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
+      detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
+  }
+  if (critical && detail.seekCare) {
+    inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
+  }
+  inner += `<div class="cons-btns">
+      <button class="btn btn-ghost" id="consCancel">Cancel</button>
+      <button class="btn btn-peach" id="consGo">Log it anyway</button>
+    </div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'consequence-overlay';
+  overlay.innerHTML = `<div class="consequence-card${critical ? ' cons-critical' : ''}">${inner}</div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#consCancel').onclick = close;
+  overlay.querySelector('#consGo').onclick = () => { close(); if (onProceed) onProceed(); };
+  overlay.onclick = e => { if (e.target === overlay) close(); };
 }
 
 // ─────────────────────────────────────────
@@ -38081,20 +38169,40 @@ function foodLibToggleTried(name) {
     // base-matching entry exists here, but stay merge-aware + escalate-only so
     // the invariant holds even if the guard drifts: only push a fresh 'ok' row
     // when there is genuinely no base-matching entry; never rewrite reaction.
-    const base = _baseFoodName(lower);
-    if (!foods.some(f => _fdSameFood(base, f.name))) {
-      foods.push({ name: name, reaction: 'ok', date: today() });
-      save(KEYS.foods, foods);
+    const _commitTried = () => {
+      const base = _baseFoodName(lower);
+      if (!foods.some(f => _fdSameFood(base, f.name))) {
+        foods.push({ name: name, reaction: 'ok', date: today() });
+        save(KEYS.foods, foods);
+      }
+      renderFoods();
+      renderFoodDetailSheet(name);
+      renderFoodLibResults();
+      // V-M-204: now that the index includes foods with no NUTRITION record
+      // (honey, egg, cow's milk …), marking one tried must still prompt for
+      // nutrient tagging — otherwise it enters the diary silently absent from
+      // the iron/protein tallies a parent relies on. Mirrors addFood's prompt;
+      // showNutrientTagModal self-guards (no-ops when getNutrition resolves).
+      if (!getNutrition(lower)) showNutrientTagModal(name);
+    };
+    // V-M-205 (Finding A): if the food is age-gated and the baby is below the
+    // gate, surface the consequence before logging — a rich card for critical
+    // foods with a FOOD_EFFECTS record (honey → infant botulism), a one-line
+    // note otherwise. Warn-and-allow: proceed on confirm, abort on cancel. We
+    // never block, because the parent may be recording an exposure that already
+    // happened, and the record + watch-for guidance matter more than refusal.
+    const _ageR = _fdAgeRule(lower);
+    if (_ageR && _ageR.minMonth > getAgeInMonths()) {
+      const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+      foodConsequenceCard(_eff ? {
+        tier: 'critical', title: _eff.title, why: _eff.why,
+        watchFor: _eff.watchFor, seekCare: _eff.seekCare
+      } : {
+        tier: 'light', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
+      }, _commitTried);
+    } else {
+      _commitTried();
     }
-    renderFoods();
-    renderFoodDetailSheet(name);
-    renderFoodLibResults();
-    // V-M-204: now that the index includes foods with no NUTRITION record
-    // (honey, egg, cow's milk …), marking one tried must still prompt for
-    // nutrient tagging — otherwise it enters the diary silently absent from
-    // the iron/protein tallies a parent relies on. Mirrors addFood's prompt;
-    // showNutrientTagModal self-guards (no-ops when getNutrition resolves).
-    if (!getNutrition(lower)) showNutrientTagModal(name);
   }
 }
 

@@ -666,20 +666,40 @@ function foodLibToggleTried(name) {
     // base-matching entry exists here, but stay merge-aware + escalate-only so
     // the invariant holds even if the guard drifts: only push a fresh 'ok' row
     // when there is genuinely no base-matching entry; never rewrite reaction.
-    const base = _baseFoodName(lower);
-    if (!foods.some(f => _fdSameFood(base, f.name))) {
-      foods.push({ name: name, reaction: 'ok', date: today() });
-      save(KEYS.foods, foods);
+    const _commitTried = () => {
+      const base = _baseFoodName(lower);
+      if (!foods.some(f => _fdSameFood(base, f.name))) {
+        foods.push({ name: name, reaction: 'ok', date: today() });
+        save(KEYS.foods, foods);
+      }
+      renderFoods();
+      renderFoodDetailSheet(name);
+      renderFoodLibResults();
+      // V-M-204: now that the index includes foods with no NUTRITION record
+      // (honey, egg, cow's milk …), marking one tried must still prompt for
+      // nutrient tagging — otherwise it enters the diary silently absent from
+      // the iron/protein tallies a parent relies on. Mirrors addFood's prompt;
+      // showNutrientTagModal self-guards (no-ops when getNutrition resolves).
+      if (!getNutrition(lower)) showNutrientTagModal(name);
+    };
+    // V-M-205 (Finding A): if the food is age-gated and the baby is below the
+    // gate, surface the consequence before logging — a rich card for critical
+    // foods with a FOOD_EFFECTS record (honey → infant botulism), a one-line
+    // note otherwise. Warn-and-allow: proceed on confirm, abort on cancel. We
+    // never block, because the parent may be recording an exposure that already
+    // happened, and the record + watch-for guidance matter more than refusal.
+    const _ageR = _fdAgeRule(lower);
+    if (_ageR && _ageR.minMonth > getAgeInMonths()) {
+      const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+      foodConsequenceCard(_eff ? {
+        tier: 'critical', title: _eff.title, why: _eff.why,
+        watchFor: _eff.watchFor, seekCare: _eff.seekCare
+      } : {
+        tier: 'light', title: `Not before ${_ageR.minMonth} months`, why: _ageR.reason
+      }, _commitTried);
+    } else {
+      _commitTried();
     }
-    renderFoods();
-    renderFoodDetailSheet(name);
-    renderFoodLibResults();
-    // V-M-204: now that the index includes foods with no NUTRITION record
-    // (honey, egg, cow's milk …), marking one tried must still prompt for
-    // nutrient tagging — otherwise it enters the diary silently absent from
-    // the iron/protein tallies a parent relies on. Mirrors addFood's prompt;
-    // showNutrientTagModal self-guards (no-ops when getNutrition resolves).
-    if (!getNutrition(lower)) showNutrientTagModal(name);
   }
 }
 
