@@ -61,29 +61,63 @@ const CORE     = 'split/core.js';
 const MANIFEST = 'docs/research/food-effects.manifest.js';
 
 // ── balanced-literal extractor: walks open→close tracking depth while
-// skipping string literals (', ", `) and // + /* */ comments, so braces or
-// brackets inside strings/comments never confuse the matcher. Returns the
-// literal text including its delimiters, or null. ─────────────────────────
+// skipping the four token classes that can carry a stray brace/bracket —
+// string literals (', ", `), // line comments, /* */ block comments, AND
+// /regex/ literals — so none of them confuse the matcher. Returns the
+// literal text including its delimiters, or null.
+//
+// Regex-literal awareness (Cipher Edict-V finding, PR #181): _lookupByFoodName
+// is extracted from core.js and its body contains `/[.*+?^${}()|[\]\\]/g`, a
+// char class carrying `{ } ( ) [ ]`. A regex-blind matcher only survived by
+// the coincidence that `${}` keeps `{`/`}` adjacent (net-zero depth); a future
+// resolver edit with a bare `}` in a class would truncate the body. Skipping
+// regex literals outright makes that illegal state unrepresentable. A `/` is
+// read as a regex start only when the previous significant char is NOT an
+// operand-ender (so `a / b` division stays division) — and inside our scope
+// (pure data literals + the resolver) every non-comment `/` is in fact a
+// regex, so this is conservative. ─────────────────────────────────────────
 function extractBalanced(src, fromIndex, open, close) {
   let i = src.indexOf(open, fromIndex);
   if (i < 0) return null;
   const start = i;
-  let depth = 0, inStr = null, esc = false, lineC = false, blockC = false;
+  let depth = 0, prevSig = '';
+  const isOperandEnder = ch => /[\w$)\]}'"`]/.test(ch); // a `/` after one of these is division, not a regex
   for (; i < src.length; i++) {
     const c = src[i], n = src[i + 1];
-    if (lineC) { if (c === '\n') lineC = false; continue; }
-    if (blockC) { if (c === '*' && n === '/') { blockC = false; i++; } continue; }
-    if (inStr) {
-      if (esc) { esc = false; continue; }
-      if (c === '\\') { esc = true; continue; }
-      if (c === inStr) inStr = null;
-      continue;
+    // line comment
+    if (c === '/' && n === '/') { i += 2; while (i < src.length && src[i] !== '\n') i++; continue; }
+    // block comment
+    if (c === '/' && n === '*') { i += 2; while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++; i++; continue; }
+    // string literal (handles \-escapes; runs to the matching delimiter)
+    if (c === '"' || c === "'" || c === '`') {
+      i++;
+      while (i < src.length) {
+        if (src[i] === '\\') { i += 2; continue; }
+        if (src[i] === c) break;
+        i++;
+      }
+      prevSig = c; continue;
     }
-    if (c === '/' && n === '/') { lineC = true; i++; continue; }
-    if (c === '/' && n === '*') { blockC = true; i++; continue; }
-    if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
+    // regex literal — `/` in a regex-permitting position; skips its char
+    // class so a `/` (or brace) inside `[...]` doesn't end it early
+    if (c === '/' && !isOperandEnder(prevSig)) {
+      i++;
+      let inClass = false;
+      while (i < src.length) {
+        const r = src[i];
+        if (r === '\\') { i += 2; continue; }
+        if (r === '\n') break;            // regex can't span a newline — bail safe
+        if (r === '[') inClass = true;
+        else if (r === ']') inClass = false;
+        else if (r === '/' && !inClass) break;
+        i++;
+      }
+      prevSig = '/'; continue;
+    }
+    // brace/bracket depth
     if (c === open) depth++;
     else if (c === close) { depth--; if (depth === 0) return src.slice(start, i + 1); }
+    if (!/\s/.test(c)) prevSig = c;
   }
   return null;
 }
