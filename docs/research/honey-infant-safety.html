@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honey &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre .c{color:#8a9a7a} pre .k{color:#d8a0b0} pre .s{color:#cbb080}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+  .gap{background:var(--rose-bg);border-color:transparent}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Honey &amp; Infant Safety</h1>
+  <p class="sub">Care research brief — evidence base for surfacing food-effects in SproutLab. Honey is the archetype for the <code>FOOD_EFFECTS</code> layer.</p>
+  <div class="meta">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill">2026-05-30</span>
+    <span class="pill">Honey only · infants 0–12mo · India</span>
+    <span class="pill">+ gap-closing pass (IAP/FSSAI corrected, NFHS-5 verified)</span>
+    <span class="pill warn">Research artifact — NOT yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>No honey before 12 months — in <i>any</i> form.</b> WHO, CDC, AAP and NHS all set the same line.</li>
+      <li>The danger is <b>infant botulism</b> — an acute, potentially life-threatening illness — <b>not</b> a nutrition concern.</li>
+      <li><b>Cooking and baking do NOT make it safe.</b> The hazard is heat-resistant <i>spores</i>; baking does not kill them.</li>
+      <li><b>Treatable and usually fully recoverable</b> with prompt care (BabyBIG) — but it is a medical emergency.</li>
+      <li><b>Indian context matters most:</b> traditional prelacteal practices (<i>ghutti / janam ghutti</i>, honey on the lips/finger) are a named, real risk vector.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> · Mechanism &amp; risk <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li>Infant botulism is caused by ingested <i>C. botulinum</i> <b>spores that germinate and produce toxin <i>inside</i> the infant gut</b> (intestinal toxemia) — not pre-formed toxin in food. The toxin blocks acetylcholine → flaccid paralysis. <span class="badge b-hi">consensus</span></li>
+      <li>Infants &lt;12mo are uniquely susceptible: immature gut, low gastric acidity, no protective competitive flora. Resolves as the gut matures.</li>
+      <li>Peak onset ~3–4 months; most cases &lt;6 months.</li>
+      <li>Honey = ~20% of cases (a minority); most are environmental (soil/dust). Honey is emphasised as the one <b>avoidable</b> source.</li>
+      <li>Botulism is <b>not</b> transmitted through breast milk — a breastfeeding parent may safely eat honey.</li>
+    </ul>
+    <div class="flag"><b>⚑ Flag:</b> the ~20% honey figure is uncertain (most cases have no confirmed source). Don't overstate honey as the main cause — but it is the main <i>preventable</i> one.</div>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> · The 12-month threshold <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <div class="quote"><b>WHO:</b> "…not to feed honey to the infants before the age of 1 year."</div>
+    <div class="quote"><b>CDC:</b> "Do not give your child honey before 12 months. Do not add honey to your baby's food, water, infant formula, or pacifier."</div>
+    <div class="quote"><b>AAP:</b> "…do not give honey to a baby younger than 12 months." / "safe for children 1 year of age and older."</div>
+    <div class="quote"><b>NHS:</b> "Do not give your child honey until they're over 1 year old."</div>
+    <div class="flag"><b>⚑ Subtlety for surfacing:</b> WHO says intestinal defenses develop "older than about 6 months," yet every body still sets the line at 12 months — a deliberately <b>conservative practical floor</b>, not a precise biological switch. NHS uniquely adds a 2nd rationale: honey = sugar → tooth decay.</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> · The baking / cooking misconception <span class="badge b-hi">High</span> <span class="badge b-mod">explicit wording: Moderate</span></h2>
+  <div class="card">
+    <ul>
+      <li><i>C. botulinum</i> <b>spores are heat-resistant and survive boiling and ordinary baking.</b> Reliable destruction needs commercial-canning heat (~121 °C / 250 °F under pressure). <span class="badge b-hi">WHO</span></li>
+      <li>Botulinum <i>toxin</i> is heat-labile — <b>but irrelevant here</b>, because the hazard is the spores, which germinate <i>after</i> ingestion.</li>
+      <li>So honey baked into biscuits/bread/cakes, cooked into dishes, or in cereals/processed foods is <b>still unsafe</b> for under-1s.</li>
+    </ul>
+    <div class="flag"><b>⚑ The single most-misunderstood point.</b> Parents reason "cooking kills germs." For honey spores, it does not. CDC/NHS/AAP state the rule broadly; the explicit "even baked" sentence lives in food-safety/extension sources (UF/IFAS).</div>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> · Forms &amp; hidden sources <span class="badge b-hi">High (named cases)</span> <span class="badge b-mod">Moderate (general list)</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Pasteurized honey is still unsafe</b> — pasteurization temps too low to kill spores. <span class="badge b-mod">inference</span></li>
+      <li><b>Honey-dipped pacifiers</b> are a documented cause — 2018 Texas cluster of 4 infants. <span class="badge b-hi">Texas DSHS</span></li>
+      <li>Hidden sources: gripe water / <i>ghutti</i>, home cough remedies, honey-flavoured snacks/cereals, honey on a finger/lip/soother.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> · Symptoms <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ol>
+      <li><b>Constipation — often the <i>first</i> sign</b> (~90% of cases).</li>
+      <li>Weak/altered cry; poor feeding / weak suck (milk pooling).</li>
+      <li>Floppiness / hypotonia ("floppy baby").</li>
+      <li>Drooping eyelids (ptosis), flat facial expression, poor head control, diminished gag.</li>
+      <li>Descending, symmetric, flaccid paralysis → can reach respiratory muscles.</li>
+    </ol>
+    <p style="margin:8px 0 0;color:var(--mid);font-size:14px">Infant is usually <b>alert and afebrile</b> — reassuring but misleading. Onset <b>3–30 days</b> after ingestion.</p>
+    <div class="flag"><b>⚑ Source divergence:</b> incubation lower bound 3 days (AAP/CDC) vs 10 days (StatPearls). Use "within days to a few weeks."</div>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> · When to seek care &amp; treatment <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Medical emergency.</b> Constipation + new weakness/floppiness/feeding change → urgent evaluation (respiratory-failure risk; ~50% need airway support).</li>
+      <li>Treatment: human <b>Botulism Immune Globulin (BabyBIG / BIG-IV)</b>, started without waiting for lab confirmation. NEJM trial: hospital stay <b>5.7 → 2.6 weeks</b>.</li>
+      <li>Antibiotics not first-line; <b>aminoglycosides contraindicated</b> (worsen weakness).</li>
+      <li>Prognosis generally very good with prompt care; recovery weeks–months.</li>
+    </ul>
+    <div class="flag"><b>⚑ Mortality varies by source:</b> "&lt;15%" (broad/historical, StatPearls) vs <b>&lt;1% for promptly-treated US cases</b> (IBTPP/CDC). Use "low with prompt treatment."</div>
+  </div>
+
+  <h2><span class="ax">Axis 7</span> · Indian cultural context <span class="badge b-hi">High (govt guidance)</span> <span class="badge b-weak">Mixed (prevalence)</span></h2>
+  <div class="card">
+    <div class="quote"><b>India MoHFW/NHM (MAA module):</b> babies should not be given any drink/food "like gur, ghutti, honey, sweet water, etc." before breastfeeding starts or up to six months — "No prelacteal feeds should be given."</div>
+    <ul>
+      <li><b>Prelacteal feeds</b> = anything given before breastfeeding begins (sugar/honey/glucose water, <i>ghutti</i> — gur-/bura-/khand-/<b>janam ghutti</b>), usually first 2–3 days. Govt frames harm as infection + breastfeeding failure + colostrum loss (does not itself name botulism).</li>
+      <li>WHO/UNICEF: breastfeed within the first hour, exclusive 6 months, no other food/liquid — which prelacteal honey violates.</li>
+      <li><b>Documented Indian case:</b> 4-day-old fed raw village honey ~2h after birth "as per family tradition" → lethargy, hypotonia, absent Moro; recovered day 15. <span class="badge b-mod">n=1</span></li>
+      <li><b>Prevalence — VERIFIED (NFHS-5, 2019–21):</b> ~15.3–15.5% of children received a prelacteal feed (anything but breast milk in first 3 days), <b>down from ~20.8% in NFHS-4</b>; among those, <b>honey 8.9%</b> (~1.3–1.4% of all newborns). <span class="badge b-mod">peer-reviewed NFHS-5 microdata</span> Regional Lucknow slum study (50.6% prelacteal, 22.6% honey) is a higher-burden local figure.</li>
+      <li>Commercial <i>janam ghutti</i> / gripe-water products remain widely marketed. <span class="badge b-weak">usage rate unquantified</span></li>
+    </ul>
+    <div class="flag" style="border-left-color:var(--sage);background:var(--sage-bg)"><b>✓ Gap-closing pass (2026-05-30) — three of four closed, two by CORRECTING a claim:</b>
+      <ul style="margin:6px 0 0">
+        <li><b>IAP → do NOT attribute the rule to IAP.</b> Both primary IAP feeding PDFs (Breastfeeding + IYCF 2016, 23pp) parsed in full — <b>zero mention of honey or botulism.</b></li>
+        <li><b>FSSAI → drop &amp; reverse.</b> FSSAI's Foods for Infant Nutrition regulation <i>permits</i> honey (manufacturing spore-destruction rule only); <b>no consumer under-1 prohibition.</b> The blog claim was WHO/AAP laundered onto FSSAI. <i>(Permitting spore-destroyed honey in manufactured infant products ≠ "honey is fine for babies at home.")</i></li>
+        <li><b>NFHS-5 % → closed</b> (see verified prevalence above).</li>
+        <li><b>Indian incidence → genuinely absent</b> (no mandatory notification; case reports only). Left honestly flagged.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Proposed data shape · <code>FOOD_EFFECTS['honey']</code></h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--mid)">Drop-in record for a future <code>FOOD_EFFECTS</code> table in <code>data.js</code>, sitting alongside <code>AGE_RULES['honey']</code> (which stays the gate; this adds the <i>effect</i>). Surfacing reads <code>headline</code>+<code>why</code>+<code>seekCare</code>. <b>Not yet wired.</b></p>
+<pre><span class="c">// consequence layer atop AGE_RULES/ALLERGENS — critical-tier acute effects</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'honey'</span>: {
+    tier:        <span class="s">'critical'</span>,
+    effect:      <span class="s">'infant botulism'</span>,
+    threshold:   { minMonth: <span class="s">12</span>, basis: <span class="s">'conservative'</span> }, <span class="c">// gut defenses ~6mo+ (WHO); 12mo = universal floor</span>
+    mechanism:   <span class="s">'C. botulinum spores germinate in the immature infant gut and produce toxin.'</span>,
+    headline:    <span class="s">'Avoid before 12 months — honey can cause infant botulism.'</span>,
+    why:         <span class="s">'Honey can carry C. botulinum spores. A baby’s immature gut lets them grow…'</span>,
+    myth:        { claim: <span class="s">'Cooking or baking makes honey safe.'</span>,
+                   truth: <span class="s">'No — spores survive baking. Honey in biscuits/cooked dishes is still unsafe.'</span> },
+    hiddenSources: [<span class="s">'baked goods'</span>, <span class="s">'cooked dishes'</span>, <span class="s">'processed snacks'</span>,
+                    <span class="s">'gripe water / ghutti'</span>, <span class="s">'cough remedies'</span>, <span class="s">'honey on pacifier/finger/lip'</span>],
+    watchFor:    [<span class="s">'constipation (often first)'</span>, <span class="s">'weak/altered cry'</span>, <span class="s">'poor feeding'</span>,
+                  <span class="s">'floppiness'</span>, <span class="s">'drooping eyelids'</span>, <span class="s">'reduced facial movement'</span>],
+    timeCourse:  <span class="s">'within days to a few weeks (commonly 3–30 days)'</span>,
+    seekCare:    <span class="s">'Medical emergency. …treatable (BabyBIG); recovery usually full with prompt care.'</span>,
+    breastfeedingSafe: <span class="s">true</span>,
+    culturalNote: <span class="s">'Indian prelacteal practices (janam ghutti, honey on lips/finger) are a real vector…'</span>,
+    confidence:  <span class="s">'high'</span>,
+    lastReviewed: <span class="s">'2026-05-30'</span>,
+  },
+};</pre>
+  </div>
+
+  <h2>Sources</h2>
+  <div class="card">
+  <table>
+    <tr><th>Authority</th><th>URL</th></tr>
+    <tr><td>WHO — Botulism fact sheet</td><td><a href="https://www.who.int/news-room/fact-sheets/detail/botulism">who.int/…/botulism</a></td></tr>
+    <tr><td>CDC — foods to avoid</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/foods-and-drinks-to-avoid-or-limit.html">cdc.gov/infant-toddler-nutrition</a></td></tr>
+    <tr><td>CDC — infant botulism clinical</td><td><a href="https://www.cdc.gov/botulism/hcp/clinical-overview/infant-botulism.html">cdc.gov/botulism/…</a></td></tr>
+    <tr><td>AAP / HealthyChildren — Botulism</td><td><a href="https://www.healthychildren.org/English/health-issues/conditions/infections/Pages/Botulism.aspx">healthychildren.org/…/Botulism</a></td></tr>
+    <tr><td>NHS — foods to avoid</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk/baby/…</a></td></tr>
+    <tr><td>StatPearls / NCBI — NBK493178</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK493178/">ncbi.nlm.nih.gov/books/NBK493178</a></td></tr>
+    <tr><td>NEJM — Arnon (BabyBIG)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa051926">nejm.org/…/NEJMoa051926</a></td></tr>
+    <tr><td>Texas DSHS — honey pacifier alert</td><td><a href="https://www.dshs.texas.gov/news-alerts/infant-botulism-health-alert-nov-16-2018">dshs.texas.gov/…</a></td></tr>
+    <tr><td>India MoHFW/NHM — MAA module</td><td><a href="https://nhm.gov.in/New_Updates_2018/NHM_Components/RMNCHA/CH/Schemes/Maa/Training_Module_English_Lowres.pdf">nhm.gov.in/…/MAA module</a></td></tr>
+    <tr><td>IAP — Breastfeeding / IYCF 2016 <i>(checked: no honey/botulism mention)</i></td><td><a href="https://www.indianpediatrics.net/aug2016/703.pdf">indianpediatrics.net/aug2016/703.pdf</a></td></tr>
+    <tr><td>FSSAI — Foods for Infant Nutrition Reg. <i>(checked: permits honey; no under-1 ban)</i></td><td><a href="https://www.fssai.gov.in/upload/uploadfiles/files/Comp_IFR_VERSION-II_04_01_2024.pdf">fssai.gov.in/…/Infant Nutrition 2024</a></td></tr>
+    <tr><td>IIPS / NFHS-5 microdata — prelacteal feeding (PLOS ONE 2023)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10553319/">pmc.ncbi.nlm.nih.gov/…/PMC10553319</a></td></tr>
+    <tr><td>UNICEF India — Breastfeeding</td><td><a href="https://www.unicef.org/india/breastfeeding-0">unicef.org/india/breastfeeding</a></td></tr>
+    <tr><td>Poison Control — honey &amp; infants</td><td><a href="https://www.poison.org/articles/dont-feed-honey-to-infants">poison.org/…/honey</a></td></tr>
+    <tr><td>PMC — In Search of C. botulinum Spores</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11322261/">pmc.ncbi.nlm.nih.gov/…/PMC11322261</a></td></tr>
+    <tr><td>UF/IFAS — Infant Botulism &amp; Honey</td><td><a href="https://ask.ifas.ufl.edu/publication/AA142">ask.ifas.ufl.edu/…/AA142</a></td></tr>
+    <tr><td>M3 India — Indian honey case report</td><td><a href="https://www.m3india.in/contents/editor_pick/infant-botulism-following-consumption-of-honey">m3india.in/…/infant-botulism</a></td></tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <strong>Verification gaps — status after the 2026-05-30 gap-closing pass</strong>
+    <ol style="margin:8px 0 0">
+      <li>✅ <b>IAP</b> — CLOSED by correction. Primary PDFs parsed; no honey/botulism mention → not attributable to IAP. <i>(Fixed via curl + pypdf; original failure was WebFetch not parsing binary PDFs, not a hidden source.)</i></li>
+      <li>✅ <b>FSSAI</b> — CLOSED &amp; REVERSED. No under-1 directive exists; regulation permits honey. Claim dropped.</li>
+      <li>✅ <b>NFHS-5</b> % — CLOSED. ~15.3–15.5% national; 8.9% of those honey; down from 20.8% (NFHS-4).</li>
+      <li>⚑ <b>Indian botulism surveillance/incidence</b> — GENUINELY ABSENT (no mandatory notification). Cannot be closed; left flagged.</li>
+    </ol>
+    <p style="margin:10px 0 0;font-size:13.5px;color:var(--mid)"><b>Methodology (Maren):</b> third-party sources are legitimate for <i>facts that exist independently</i> (the NFHS-5 figure, via peer-reviewed microdata) but never a substitute for <i>"what body X officially says"</i> (IAP/FSSAI). Two of three fillable gaps closed by <i>correcting</i> a laundered claim — which is why the primary check mattered.</p>
+  </div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds Finding A, not yet implemented</strong>
+    <p style="margin:8px 0 0">When a parent marks an age-gated <b>critical-tier</b> food tried for a baby below <code>minMonth</code>, confirm with <code>headline</code> + <code>seekCare</code> rather than a silent log. The <b>myth line</b> ("cooking doesn't make it safe") and the <b>cultural note</b> are the two highest-value nuggets unique to honey.</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/honey-infant-safety.md</code> · generated 2026-05-30<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>
