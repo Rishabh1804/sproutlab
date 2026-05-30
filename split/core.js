@@ -3983,13 +3983,26 @@ function confirmAction(msg, callback, btnText) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
 
-// Resolve a FOOD_EFFECTS record with the same name-normalisation AGE_RULES uses
-// (exact → de-pluralised → substring), so 'Honey'/'honeys'/'raw honey' all hit.
-function getFoodEffect(name) {
-  if (!name || typeof FOOD_EFFECTS === 'undefined') return null;
+// Shared name-normalised table lookup: exact → de-pluralised → whole-word match.
+// The third tier uses a WORD BOUNDARY (\bkey\b), NOT bare substring, so 'honey'
+// resolves 'raw honey'/'honey water' but NOT 'honeydew'/'honeycomb' — a safe
+// library fruit must never inherit honey's critical card (V-M-205-B1). Both
+// getFoodEffect (FOOD_EFFECTS) and diet.js _fdAgeRule (AGE_RULES) route through
+// this one resolver, so the age GATE and the consequence CARD can never disagree.
+function _lookupByFoodName(table, name) {
+  if (!table || !name) return null;
   const n = String(name).toLowerCase().trim();
-  return FOOD_EFFECTS[n] || FOOD_EFFECTS[n.replace(/s$/, '')] ||
-    (Object.entries(FOOD_EFFECTS).find(([k]) => n.includes(k)) || [])[1] || null;
+  if (table[n]) return table[n];
+  const dep = n.replace(/s$/, '');
+  if (table[dep]) return table[dep];
+  return (Object.entries(table).find(([k]) =>
+    new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n)) || [])[1] || null;
+}
+
+// FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
+// resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
+function getFoodEffect(name) {
+  return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
 }
 
 // Finding A — age-gate consequence surface. When a parent marks an age-gated
@@ -4010,9 +4023,13 @@ function foodConsequenceCard(detail, onProceed) {
   if (critical && detail.seekCare) {
     inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
   }
+  // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
+  // sits rightmost (the resting-thumb target), so a half-awake parent skimming
+  // for the dismiss tap can't mistake the loud button for "proceed". "Log it
+  // anyway" is the quiet, deliberate ghost on the left.
   inner += `<div class="cons-btns">
-      <button class="btn btn-ghost" id="consCancel">Cancel</button>
-      <button class="btn btn-peach" id="consGo">Log it anyway</button>
+      <button class="btn btn-ghost" id="consGo">Log it anyway</button>
+      <button class="btn btn-sky" id="consCancel">Cancel</button>
     </div>`;
   const overlay = document.createElement('div');
   overlay.className = 'consequence-overlay';

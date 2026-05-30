@@ -3961,7 +3961,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .cons-title { font-size:var(--fs-lg); margin:0; color:var(--text); }
 .cons-why { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-16); }
 .cons-watch { background:var(--surface-amber); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-12); }
-.cons-watch-h { font-size:var(--fs-sm); font-weight:700; color:var(--light); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.cons-watch-h { font-size:var(--fs-sm); font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
 .cons-watch-list { margin:0; padding-left:var(--sp-20); }
 .cons-watch-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-seek { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--rose-deep); margin:0 0 var(--sp-16); line-height:var(--lh-relaxed); }

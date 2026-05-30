@@ -482,9 +482,10 @@ function _fdAllergenNote(name) {
 
 // Resolve an age-gate rule {minMonth, reason} for a food name.
 function _fdAgeRule(name) {
-  const n = String(name).toLowerCase().trim();
-  return AGE_RULES[n] || AGE_RULES[n.replace(/s$/, '')] ||
-    (Object.entries(AGE_RULES).find(([k]) => n.includes(k)) || [])[1] || null;
+  // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
+  // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
+  // with the consequence card (getFoodEffect uses the same resolver).
+  return _lookupByFoodName(AGE_RULES, name);
 }
 
 // Does a NUTRITION entry carry a nutrient token (nutrients[] or the matching

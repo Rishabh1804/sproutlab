@@ -3968,7 +3968,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .cons-title { font-size:var(--fs-lg); margin:0; color:var(--text); }
 .cons-why { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-16); }
 .cons-watch { background:var(--surface-amber); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-12); }
-.cons-watch-h { font-size:var(--fs-sm); font-weight:700; color:var(--light); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.cons-watch-h { font-size:var(--fs-sm); font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
 .cons-watch-list { margin:0; padding-left:var(--sp-20); }
 .cons-watch-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-seek { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--rose-deep); margin:0 0 var(--sp-16); line-height:var(--lh-relaxed); }
@@ -23164,13 +23164,26 @@ function confirmAction(msg, callback, btnText) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
 
-// Resolve a FOOD_EFFECTS record with the same name-normalisation AGE_RULES uses
-// (exact → de-pluralised → substring), so 'Honey'/'honeys'/'raw honey' all hit.
-function getFoodEffect(name) {
-  if (!name || typeof FOOD_EFFECTS === 'undefined') return null;
+// Shared name-normalised table lookup: exact → de-pluralised → whole-word match.
+// The third tier uses a WORD BOUNDARY (\bkey\b), NOT bare substring, so 'honey'
+// resolves 'raw honey'/'honey water' but NOT 'honeydew'/'honeycomb' — a safe
+// library fruit must never inherit honey's critical card (V-M-205-B1). Both
+// getFoodEffect (FOOD_EFFECTS) and diet.js _fdAgeRule (AGE_RULES) route through
+// this one resolver, so the age GATE and the consequence CARD can never disagree.
+function _lookupByFoodName(table, name) {
+  if (!table || !name) return null;
   const n = String(name).toLowerCase().trim();
-  return FOOD_EFFECTS[n] || FOOD_EFFECTS[n.replace(/s$/, '')] ||
-    (Object.entries(FOOD_EFFECTS).find(([k]) => n.includes(k)) || [])[1] || null;
+  if (table[n]) return table[n];
+  const dep = n.replace(/s$/, '');
+  if (table[dep]) return table[dep];
+  return (Object.entries(table).find(([k]) =>
+    new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n)) || [])[1] || null;
+}
+
+// FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
+// resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
+function getFoodEffect(name) {
+  return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
 }
 
 // Finding A — age-gate consequence surface. When a parent marks an age-gated
@@ -23191,9 +23204,13 @@ function foodConsequenceCard(detail, onProceed) {
   if (critical && detail.seekCare) {
     inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
   }
+  // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
+  // sits rightmost (the resting-thumb target), so a half-awake parent skimming
+  // for the dismiss tap can't mistake the loud button for "proceed". "Log it
+  // anyway" is the quiet, deliberate ghost on the left.
   inner += `<div class="cons-btns">
-      <button class="btn btn-ghost" id="consCancel">Cancel</button>
-      <button class="btn btn-peach" id="consGo">Log it anyway</button>
+      <button class="btn btn-ghost" id="consGo">Log it anyway</button>
+      <button class="btn btn-sky" id="consCancel">Cancel</button>
     </div>`;
   const overlay = document.createElement('div');
   overlay.className = 'consequence-overlay';
@@ -37985,9 +38002,10 @@ function _fdAllergenNote(name) {
 
 // Resolve an age-gate rule {minMonth, reason} for a food name.
 function _fdAgeRule(name) {
-  const n = String(name).toLowerCase().trim();
-  return AGE_RULES[n] || AGE_RULES[n.replace(/s$/, '')] ||
-    (Object.entries(AGE_RULES).find(([k]) => n.includes(k)) || [])[1] || null;
+  // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
+  // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
+  // with the consequence card (getFoodEffect uses the same resolver).
+  return _lookupByFoodName(AGE_RULES, name);
 }
 
 // Does a NUTRITION entry carry a nutrient token (nutrients[] or the matching
