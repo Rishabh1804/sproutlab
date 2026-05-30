@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Care Research — Food Effects · SproutLab</title>
+<style>
+  :root{--bg:#faf6f0;--card:#fffdf9;--ink:#2e2a26;--mid:#6b6258;--line:#e8ddcf;
+    --accent:#9a6a3a;--honey:#d99a2b;--honey-bg:#fbeccb;--rose:#b04a5e;--rose-bg:#fbe9ec;
+    --sage:#3a7060;--sage-bg:#e8f5ef;}
+  @media(prefers-color-scheme:dark){:root{--bg:#1d1a17;--card:#262220;--ink:#ece5db;--mid:#a89c8c;--line:#3a342d;
+    --accent:#c99a6a;--honey:#e8b34a;--honey-bg:#3a2c12;--rose:#e090a0;--rose-bg:#3a2026;--sage:#7ac0a0;--sage-bg:#1e3028;}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:34px 20px 80px}
+  h1{font:700 26px/1.2 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0 0 24px;max-width:600px}
+  h2{font:700 12px/1.3 Nunito;text-transform:uppercase;letter-spacing:.5px;color:var(--mid);margin:28px 0 10px}
+  .food{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:12px 0}
+  .food .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .food .name{font:700 19px/1.2 Fraunces,serif}
+  .tier{font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.4px;padding:5px 9px;border-radius:7px;background:var(--rose-bg);color:var(--rose)}
+  .one{color:var(--mid);font-size:13.5px;margin:8px 0 14px}
+  .links{display:flex;gap:8px;flex-wrap:wrap}
+  .links a{flex:1 1 auto;text-align:center;text-decoration:none;font:600 13px/1 Nunito;padding:11px 12px;border-radius:10px;border:1px solid var(--line);color:var(--ink);background:var(--bg)}
+  .links a:hover{border-color:var(--accent);color:var(--accent)}
+  .links a.primary{background:var(--honey);color:#3a2c12;border-color:transparent}
+  .note{background:var(--sage-bg);border-radius:12px;padding:14px 16px;font-size:13.5px;color:var(--ink);margin:10px 0}
+  .meta{font-size:12.5px;color:var(--mid);margin-top:8px}
+  code{font:12.5px "SF Mono",Menlo,Consolas,monospace;background:var(--honey-bg);padding:1px 5px;border-radius:5px}
+  a.plain{color:var(--sage)}
+  footer{color:var(--mid);font-size:12.5px;margin-top:34px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Care Research · Food Effects</h1>
+  <p class="sub">Evidence base for surfacing food effects in SproutLab's Care layer. Each food has a skim dashboard, a long-form brief, and a cited source doc. Honey is the archetype; more foods follow.</p>
+
+  <h2>Foods</h2>
+  <div class="food">
+    <div class="top">
+      <span class="name">Honey</span>
+      <span class="tier">Critical · infant botulism</span>
+    </div>
+    <p class="one">No honey before 12 months, in any form — the danger is infant botulism, not nutrition. Cooking/baking does <b>not</b> make it safe. Treatable but a medical emergency. For an Indian family, the <i>ghutti</i> / prelacteal-feed tradition is the live vector.</p>
+    <div class="links">
+      <a class="primary" href="honey-infant-safety.visual.html">Visual dashboard ›</a>
+      <a href="honey-infant-safety.html">Long-form brief</a>
+      <a href="honey-infant-safety.md">Source (.md)</a>
+    </div>
+    <p class="meta">Reviewed 2026-05-30 · confidence: high · WHO · CDC · AAP · NHS · India MoHFW/NHM</p>
+  </div>
+
+  <h2>How this is built</h2>
+  <div class="note">
+    One <b>data spine</b> — <code>food-effects.manifest.js</code> — holds a summary record per food, feeding both this research layer and (eventually) the in-app surfacing. New foods are authored from <code>_TEMPLATE.food-dashboard.html</code>. Once enough foods exist, a unified hub will let you browse one food, compare several, or slice by reaction. See <a class="plain" href="README.md">README.md</a> for the full plan.
+  </div>
+  <p class="meta">Three depth layers per food: <b>visual dashboard</b> (skim) → <b>long-form</b> (full prose) → <b>.md</b> (source of truth). All carry the same verified figures.</p>
+
+  <footer>SproutLab · Care research layer · informational, not medical advice. Not yet wired into the app.</footer>
+</div>
+</body>
+</html>

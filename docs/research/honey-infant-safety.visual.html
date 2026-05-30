@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honey &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  /* tabs */
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}
+  .panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  /* stat tiles */
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)} .stat.ok .n{color:var(--sage)}
+  /* badges */
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}
+  .b-crit{background:var(--rose-bg);color:var(--rose)}
+  /* bar chart */
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)} .bar.hl .lab{color:var(--honey)} .bar.hl .val{color:var(--honey)}
+  /* timeline */
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)} .tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  /* flag / callout */
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}
+  .flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  .flag b{color:inherit}
+  /* matrix */
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}
+  .yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  /* misc */
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}
+  .lead b{color:var(--accent)}
+  ul.tight{margin:6px 0;padding-left:20px}.tight li{margin:5px 0}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  pre .c{color:#8a9a7a}.k{color:#d8a0b0}.s{color:#cbb080}
+  .donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .legend{font-size:12.5px;color:var(--mid)}.legend b{color:var(--ink)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}
+  .col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Honey &amp; Infant Safety — Visual Dashboard</h1>
+  <p class="sub">Visual Care dashboard — the honey evidence base at a glance, for any agent or human deciding how to surface food-effects in SproutLab. Skim the Summary; drill into a tab only if you need the detail.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-sci">The Science</button>
+    <button class="tab" data-p="p-sym">Symptoms &amp; Care</button>
+    <button class="tab" data-p="p-ind">India Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+<!-- ───────── SUMMARY ───────── -->
+<section class="panel on" id="p-sum">
+  <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+    <p class="lead" style="margin:0">The one rule: <b>no honey before 12 months — in any form.</b> The danger is <b>infant botulism</b>, an acute illness — not a nutrition concern. <b>Cooking/baking does NOT make it safe.</b> It's treatable but a medical emergency. For this Indian family, the <b>ghutti / prelacteal-feed tradition</b> is the live risk vector.</p>
+  </div>
+
+  <div class="grid g4">
+    <div class="card stat crit"><div class="n">&lt;12<span style="font-size:14px">mo</span></div><div class="l">No honey under 12 months — WHO·CDC·AAP·NHS, unanimous</div></div>
+    <div class="card stat crit"><div class="n">acute</div><div class="l">Risk tier: infant botulism, not nutrition</div></div>
+    <div class="card stat"><div class="n">≈20%</div><div class="l">of botulism cases linked to honey — the one <i>avoidable</i> source</div></div>
+    <div class="card stat ok"><div class="n">5.7→2.6<span style="font-size:14px">wk</span></div><div class="l">hospital stay cut by BabyBIG — treatable, usually full recovery</div></div>
+  </div>
+
+  <h3>The four things to know <span class="badge b-hi">all high-confidence</span></h3>
+  <div class="grid g2">
+    <div class="card"><b>1 · Why it's different.</b> Spores germinate inside the immature infant gut and make toxin <i>in the body</i>. Older kids/adults are protected by mature gut flora; under-1s aren't. → <span class="jump" data-go="p-sci">The Science</span></div>
+    <div class="card"><b>2 · The myth that bites.</b> "Cooking kills germs" is false here — the spores survive baking (need pressure-canning heat). Honey in a biscuit is still unsafe. → <span class="jump" data-go="p-sci">The Science</span></div>
+    <div class="card"><b>3 · What to watch for.</b> Constipation first (~90%), then weak cry/suck, floppiness, drooping eyelids, descending weakness. Onset 3–30 days. → <span class="jump" data-go="p-sym">Symptoms &amp; Care</span></div>
+    <div class="card"><b>4 · The India vector.</b> Honey/ghutti as a prelacteal feed — named by MoHFW/NHM as a thing to avoid; ~15% of Indian newborns still get a prelacteal feed. → <span class="jump" data-go="p-ind">India Context</span></div>
+  </div>
+
+  <h3>When to surface this (the design hook)</h3>
+  <div class="card flag good" style="margin-top:0">
+    <b>Recommendation (Maren):</b> when a parent marks an age-gated <b>critical-tier</b> food tried for a baby below its <code>minMonth</code>, <b>confirm</b> with the headline + seek-care line rather than logging silently. Honey is the archetype. The two highest-value, honey-unique nuggets to show: the <b>baking myth</b> and the <b>cultural note</b>. Ready-to-wire shape → <span class="jump" data-go="p-data">Data Stub</span>.
+  </div>
+
+  <div style="margin-top:14px">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill">2026-05-30 · + gap-closing pass</span>
+    <span class="pill warn">Research artifact — not yet wired into the app</span>
+  </div>
+  <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>honey-infant-safety.md</code> · long-form HTML: <code>honey-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+</section>
+
+<!-- ───────── SCIENCE ───────── -->
+<section class="panel" id="p-sci">
+  <h2>Why infants — the mechanism</h2>
+  <div class="card">
+    <p style="margin:0 0 6px"><i>Clostridium botulinum</i> <b>spores</b> in honey are swallowed → in the <b>immature infant gut</b> (no protective flora, low acidity) they <b>germinate and produce toxin in the body</b> (intestinal toxemia) → toxin blocks acetylcholine → flaccid paralysis. Older children/adults are protected by mature gut flora. <span class="badge b-hi">consensus</span></p>
+  </div>
+
+  <h3>The 12-month line is a <i>conservative floor</i>, not a biological switch</h3>
+  <div class="card">
+    <!-- gut-defense timeline -->
+    <svg viewBox="0 0 600 96" width="100%" height="96" role="img" aria-label="Gut-defense timeline: danger zone 0 to 12 months; WHO notes defenses develop after about 6 months; avoidance floor set at 12 months">
+      <rect x="20" y="34" width="560" height="20" rx="10" fill="var(--track)"/>
+      <rect x="20" y="34" width="280" height="20" rx="10" fill="var(--rose-bg)"/>
+      <rect x="20" y="34" width="560" height="20" rx="10" fill="none" stroke="var(--line)"/>
+      <line x1="300" y1="24" x2="300" y2="64" stroke="var(--amber)" stroke-width="2" stroke-dasharray="4 3"/>
+      <line x1="580" y1="24" x2="580" y2="64" stroke="var(--rose)" stroke-width="3"/>
+      <circle cx="20" cy="44" r="4" fill="var(--rose)"/>
+      <text x="20" y="80" font-size="12" fill="var(--mid)">birth</text>
+      <text x="270" y="20" font-size="12" fill="var(--amber)">~6 mo · WHO: gut defenses develop</text>
+      <text x="470" y="80" font-size="12" fill="var(--rose)">12 mo · avoidance floor (all bodies)</text>
+      <text x="120" y="48" font-size="11.5" fill="var(--rose)" font-weight="700">HIGHEST RISK</text>
+    </svg>
+    <p style="font-size:12.5px;color:var(--mid);margin:4px 0 0">WHO notes natural intestinal defenses develop after ~6 months, yet every authority still sets avoidance at <b>12 months</b> — a deliberate safety margin. <span class="badge b-hi">consensus</span></p>
+  </div>
+
+  <h3>The baking myth — spores vs toxin</h3>
+  <div class="therm">
+    <div class="col safe">
+      <div style="font-size:12px;color:var(--mid)">Botulinum TOXIN</div>
+      <div class="big">destroyed ≥85°C</div>
+      <div style="font-size:12.5px">heat-labile — but <b>irrelevant to honey</b>, because honey carries spores, not pre-formed toxin</div>
+    </div>
+    <div class="col danger">
+      <div style="font-size:12px;color:var(--mid)">Botulinum SPORES (the honey hazard)</div>
+      <div class="big">survive baking</div>
+      <div style="font-size:12.5px">need ~121°C / 250°F <b>pressure-canning</b> heat. Ordinary baking/boiling does <b>not</b> kill them.</div>
+    </div>
+  </div>
+  <div class="flag"><b>⚑ Most-misunderstood point.</b> Honey baked into bread/biscuits/cakes, cooked into dishes, or in processed foods is <b>still unsafe</b> under 12 months. Pasteurization doesn't reliably kill spores either. <span class="badge b-hi">microbiology: high</span> <span class="badge b-mod">explicit-wording: moderate</span></div>
+
+  <h3>Honey is the avoidable source — not the main one</h3>
+  <div class="card donut-wrap">
+    <svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="Honey accounts for about 20 percent of infant botulism cases; about 80 percent are environmental spores from soil and dust">
+      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--track)" stroke-width="15"/>
+      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--honey)" stroke-width="15"
+        stroke-dasharray="65.3 261.4" stroke-dashoffset="0" transform="rotate(-90 60 60)" stroke-linecap="round"/>
+      <text x="60" y="56" text-anchor="middle" font-size="20" font-weight="800" fill="var(--honey)" font-family="Fraunces,serif">~20%</text>
+      <text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--mid)">from honey</text>
+    </svg>
+    <div class="legend">
+      <p style="margin:0 0 6px"><b style="color:var(--honey)">■ ~20%</b> linked to <b>honey</b> — the one source a parent can control.</p>
+      <p style="margin:0"><b>■ ~80%</b> from <b>environmental spores</b> (soil/dust); most cases have no identified source and are not preventable.</p>
+      <p style="font-size:11.5px;margin:8px 0 0">⚑ The 20% is an attribution estimate (most cases unconfirmed) — don't overstate honey as the main cause, but it <i>is</i> the main preventable one. <span class="badge b-mod">moderate</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── SYMPTOMS & CARE ───────── -->
+<section class="panel" id="p-sym">
+  <h2>Symptom progression</h2>
+  <div class="card">
+    <p style="margin:0 0 6px;font-size:13px;color:var(--mid)">Descending, symmetric, flaccid — starts at the head, moves down. Onset <b>3–30 days</b> after ingestion. Baby is usually <b>alert and afebrile</b> (reassuring but misleading).</p>
+    <div class="tl">
+      <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Constipation — often the FIRST sign <span class="badge b-hi">~90%</span></div><div class="tl-d">May precede the neuromuscular signs.</div></div>
+      <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Weak / altered cry · poor feeding · weak suck</div><div class="tl-d">Milk pooling in the mouth.</div></div>
+      <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Floppiness (hypotonia) · drooping eyelids (ptosis)</div><div class="tl-d">Poor head control, reduced facial movement, diminished gag.</div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Descending symmetric weakness → respiratory muscles</div><div class="tl-d">~50% need airway/ventilation support — the emergency.</div></div>
+    </div>
+    <p style="font-size:11.5px;color:var(--mid);margin:2px 0 0">⚑ Incubation lower bound differs by source: 3 days (AAP/CDC) vs 10 days (StatPearls). Use "within days to a few weeks."</p>
+  </div>
+
+  <h2>When to seek care &amp; treatment</h2>
+  <div class="grid g2">
+    <div class="card flag bad" style="margin:0">
+      <b>Medical emergency.</b> Constipation <b>+</b> new weakness / floppiness / feeding change → urgent evaluation. Risk of respiratory failure. <span class="badge b-hi">high</span>
+    </div>
+    <div class="card flag good" style="margin:0">
+      <b>Treatable.</b> Human Botulism Immune Globulin (<b>BabyBIG / BIG-IV</b>), started without waiting for lab confirmation. Hospital stay <b>5.7 → 2.6 weeks</b> (NEJM trial). Prognosis generally very good.
+    </div>
+  </div>
+  <div class="flag"><b>⚑ Don't:</b> antibiotics are not first-line; <b>aminoglycosides are contraindicated</b> (worsen weakness). Mortality is low with prompt treatment (&lt;1% in promptly-treated US cases; "&lt;15%" figures are broad/historical).</div>
+</section>
+
+<!-- ───────── INDIA CONTEXT ───────── -->
+<section class="panel" id="p-ind">
+  <h2>The cultural vector</h2>
+  <div class="card">
+    <p style="margin:0"><b>Prelacteal feeds</b> — anything given before breastfeeding begins (honey, <i>gur</i>, sugar water, <b>janam ghutti</b>), usually in the first 2–3 days. India's <b>MoHFW/NHM (MAA module)</b> names them directly: babies should not be given <i>"gur, ghutti, honey, sweet water, etc."</i> and <i>"no prelacteal feeds should be given."</i> <span class="badge b-hi">primary govt source</span></p>
+  </div>
+
+  <h3>Prelacteal feeding in India is declining but persists <span class="badge b-mod">NFHS-5 microdata</span></h3>
+  <div class="card">
+    <div class="bar"><span class="lab">NFHS-4 (2015–16)</span><span class="trk"><span class="fil" style="width:69%;background:var(--mid)"></span></span><span class="val">20.8%</span></div>
+    <div class="bar hl"><span class="lab">NFHS-5 (2019–21)</span><span class="trk"><span class="fil" style="width:51%"></span></span><span class="val">15.3%</span></div>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">% of children given anything other than breast milk in the first 3 days. A clear decline — but ~1 in 7 newborns still receives a prelacteal feed.</p>
+  </div>
+
+  <h3>What prelacteal-fed infants are given <span class="badge b-mod">% among prelacteal-fed</span></h3>
+  <div class="card">
+    <div class="bar"><span class="lab">Other (non-breast) milk</span><span class="trk"><span class="fil" style="width:100%;background:var(--mid)"></span></span><span class="val">71.9%</span></div>
+    <div class="bar"><span class="lab">Plain water</span><span class="trk"><span class="fil" style="width:15.6%;background:var(--mid)"></span></span><span class="val">11.2%</span></div>
+    <div class="bar hl"><span class="lab">Honey</span><span class="trk"><span class="fil" style="width:12.4%"></span></span><span class="val">8.9%</span></div>
+    <div class="bar"><span class="lab">Sugar / glucose water</span><span class="trk"><span class="fil" style="width:11.1%;background:var(--mid)"></span></span><span class="val">8.0%</span></div>
+    <div class="bar"><span class="lab">Janam ghutti</span><span class="trk"><span class="fil" style="width:7.6%;background:var(--mid)"></span></span><span class="val">5.5%</span></div>
+    <div class="bar"><span class="lab">Tea / infusions</span><span class="trk"><span class="fil" style="width:7.5%;background:var(--mid)"></span></span><span class="val">5.4%</span></div>
+    <div class="bar"><span class="lab">Infant formula</span><span class="trk"><span class="fil" style="width:6.4%;background:var(--mid)"></span></span><span class="val">4.6%</span></div>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">Honey ≈ <b>8.9%</b> of prelacteal-fed infants → roughly <b>1.3–1.4% of all newborns</b>. A documented Indian case: a 4-day-old fed raw village honey "as per family tradition" developed hypotonia; recovered by day 15. <span class="badge b-mod">n=1</span></p>
+  </div>
+
+  <h3>Gap-closing pass — two claims CORRECTED</h3>
+  <div class="card flag bad" style="margin-top:0">
+    <b>✗ IAP — do NOT attribute the rule to IAP.</b> Both primary IAP feeding PDFs (Breastfeeding + IYCF 2016, 23pp) were parsed in full → <b>zero mention of honey or botulism.</b> The "IAP says no honey" claim is unsupported.
+  </div>
+  <div class="card flag bad" style="margin-top:0">
+    <b>✗ FSSAI — reversed.</b> FSSAI's Foods for Infant Nutrition regulation <i>permits</i> honey (only a manufacturing spore-destruction rule); <b>no consumer under-1 ban.</b> The blog claim was WHO/AAP laundered onto FSSAI's name. <i>(Permitting spore-destroyed honey in manufactured products ≠ raw honey is OK at home.)</i>
+  </div>
+  <div class="card flag good" style="margin-top:0">
+    <b>✓ The India-specific authority is MoHFW/NHM</b> — not IAP/FSSAI. Plus WHO/CDC/AAP/NHS for the universal rule.
+  </div>
+</section>
+
+<!-- ───────── SOURCES & CONFIDENCE ───────── -->
+<section class="panel" id="p-src">
+  <h2>Who says what — consensus matrix</h2>
+  <div class="card" style="overflow-x:auto">
+  <table>
+    <tr><th>Authority</th><th class="c">No honey &lt;12mo</th><th class="c">Names honey</th><th class="c">India-specific</th></tr>
+    <tr><td>WHO</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    <tr><td>US CDC</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    <tr><td>India MoHFW/NHM (MAA)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>IAP <i>(checked)</i></td><td class="c dash">—</td><td class="c no">✗</td><td class="c yes">✓</td></tr>
+    <tr><td>FSSAI <i>(checked)</i></td><td class="c no">✗ permits</td><td class="c yes">✓ as allowed</td><td class="c yes">✓</td></tr>
+  </table>
+  <p style="font-size:12px;color:var(--mid);margin:6px 0 0">✓ supports · ✗ does not / opposite · — not applicable. IAP/FSSAI columns reflect the gap-closing pass: neither supports a consumer honey-under-1 rule.</p>
+  </div>
+
+  <h2>Sources</h2>
+  <div class="card" style="overflow-x:auto">
+  <table>
+    <tr><th>Authority</th><th>Link</th></tr>
+    <tr><td>WHO — Botulism fact sheet</td><td><a href="https://www.who.int/news-room/fact-sheets/detail/botulism">who.int/…/botulism</a></td></tr>
+    <tr><td>CDC — foods to avoid</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/foods-and-drinks-to-avoid-or-limit.html">cdc.gov/infant-toddler-nutrition</a></td></tr>
+    <tr><td>CDC — infant botulism clinical</td><td><a href="https://www.cdc.gov/botulism/hcp/clinical-overview/infant-botulism.html">cdc.gov/botulism</a></td></tr>
+    <tr><td>AAP / HealthyChildren — Botulism</td><td><a href="https://www.healthychildren.org/English/health-issues/conditions/infections/Pages/Botulism.aspx">healthychildren.org/…/Botulism</a></td></tr>
+    <tr><td>UK NHS — foods to avoid</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk/baby</a></td></tr>
+    <tr><td>StatPearls / NCBI — NBK493178</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK493178/">ncbi.nlm.nih.gov/books/NBK493178</a></td></tr>
+    <tr><td>NEJM — Arnon (BabyBIG trial)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa051926">nejm.org/…/NEJMoa051926</a></td></tr>
+    <tr><td>Texas DSHS — honey pacifier alert</td><td><a href="https://www.dshs.texas.gov/news-alerts/infant-botulism-health-alert-nov-16-2018">dshs.texas.gov</a></td></tr>
+    <tr><td>India MoHFW/NHM — MAA module</td><td><a href="https://nhm.gov.in/New_Updates_2018/NHM_Components/RMNCHA/CH/Schemes/Maa/Training_Module_English_Lowres.pdf">nhm.gov.in/…/MAA</a></td></tr>
+    <tr><td>IAP — Breastfeeding / IYCF 2016 <i>(no honey mention)</i></td><td><a href="https://www.indianpediatrics.net/aug2016/703.pdf">indianpediatrics.net/aug2016/703.pdf</a></td></tr>
+    <tr><td>FSSAI — Foods for Infant Nutrition Reg. <i>(permits honey)</i></td><td><a href="https://www.fssai.gov.in/upload/uploadfiles/files/Comp_IFR_VERSION-II_04_01_2024.pdf">fssai.gov.in/…/Infant Nutrition 2024</a></td></tr>
+    <tr><td>IIPS / NFHS-5 microdata (PLOS ONE 2023)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10553319/">pmc.ncbi.nlm.nih.gov/…/PMC10553319</a></td></tr>
+    <tr><td>UF/IFAS — Infant Botulism &amp; Honey (heat)</td><td><a href="https://ask.ifas.ufl.edu/publication/AA142">ask.ifas.ufl.edu/…/AA142</a></td></tr>
+  </table>
+  </div>
+
+  <div class="flag"><b>⚑ Open gap (genuinely absent):</b> India has no mandatory botulism surveillance — case reports exist, but a national incidence rate was never collected. Under-reporting is a reasoned hypothesis, not a sourced fact.</div>
+</section>
+
+<!-- ───────── DATA STUB ───────── -->
+<section class="panel" id="p-data">
+  <h2>Drop-in data shape — <code>FOOD_EFFECTS['honey']</code></h2>
+  <p style="font-size:13.5px;color:var(--mid)">Sits alongside <code>AGE_RULES['honey']</code> (which stays the gate; this adds the <i>effect</i>). The surfacing dialog reads <code>headline</code> + <code>seekCare</code>; richer surfaces use the rest. <b>Not yet wired.</b></p>
+<pre><span class="c">// consequence layer atop AGE_RULES/ALLERGENS — critical-tier acute effects</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'honey'</span>: {
+    tier:        <span class="s">'critical'</span>,            <span class="c">// acute illness, not a nutrition note</span>
+    effect:      <span class="s">'infant botulism'</span>,
+    threshold:   { minMonth: <span class="s">12</span>, basis: <span class="s">'conservative'</span> },
+    headline:    <span class="s">'Avoid before 12 months — honey can cause infant botulism.'</span>,
+    why:         <span class="s">'Honey can carry C. botulinum spores; a baby’s immature gut lets them grow…'</span>,
+    myth:        { claim: <span class="s">'Cooking or baking makes honey safe.'</span>,
+                   truth: <span class="s">'No — spores survive baking; honey in biscuits/cooked dishes is still unsafe.'</span> },
+    hiddenSources: [<span class="s">'baked goods'</span>, <span class="s">'cooked dishes'</span>, <span class="s">'gripe water / ghutti'</span>,
+                    <span class="s">'cough remedies'</span>, <span class="s">'honey on pacifier/finger/lip'</span>],
+    watchFor:    [<span class="s">'constipation (often first)'</span>, <span class="s">'weak/altered cry'</span>, <span class="s">'poor feeding'</span>,
+                  <span class="s">'floppiness'</span>, <span class="s">'drooping eyelids'</span>],
+    timeCourse:  <span class="s">'within days to a few weeks (commonly 3–30 days)'</span>,
+    seekCare:    <span class="s">'Medical emergency. Treatable (BabyBIG); recovery usually full with prompt care.'</span>,
+    breastfeedingSafe: <span class="s">true</span>,
+    culturalNote: <span class="s">'Indian prelacteal practices (janam ghutti, honey on lips/finger) are a real vector.'</span>,
+    confidence:  <span class="s">'high'</span>,
+    lastReviewed: <span class="s">'2026-05-30'</span>,
+  },
+};</pre>
+  <div class="flag good"><b>Surfacing hook:</b> trigger on <code>mark-tried</code> when <code>AGE_RULES[food].minMonth &gt; getAgeInMonths()</code> AND <code>FOOD_EFFECTS[food].tier === 'critical'</code> → confirm dialog with <code>headline</code> + <code>seekCare</code>. The <code>myth</code> + <code>culturalNote</code> are honey's unique high-value lines.</div>
+</section>
+
+<p class="foot">SproutLab · Care visual dashboard · skim layer over <code>honey-infant-safety.md</code> / <code>.html</code> · 2026-05-30<br>
+Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p);
+    if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'});
+    window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  // in-page "jump to tab" links on the summary
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){
+      activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]'));
+    });
+  });
+  function step(dir){
+    var cur = tabs.findIndex(function(t){return t.classList.contains('on');});
+    var next = cur + dir;
+    if(next >= 0 && next < tabs.length) activate(tabs[next]);
+  }
+  // ── Tab swiping (touch) — horizontal swipe switches tabs; vertical scroll untouched ──
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length>1){ tracking=false; return; }
+    sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX - sx, dy=e.changedTouches[0].clientY - sy;
+    // require a clear, mostly-horizontal swipe so vertical scrolling isn't hijacked
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);   // swipe left → next tab, swipe right → previous
+  }, {passive:true});
+  // keyboard arrows too (desktop convenience)
+  document.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1);
+  });
+</script>
+</body>
+</html>
