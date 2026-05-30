@@ -48,7 +48,7 @@ canon-cc-008 chain *before* the PR is taken out of draft or merged:
 1. **Build & self-check.** `build.sh` clean, all audit gates pass, e2e green.
 2. **Governor audit — Mode-1 subagents, summoned in parallel (post-canon-gen-001 routing):**
    - Diff touches `home.js`, `diet.js`, or `medical.js` → summon **Maren** (Care).
-   - Diff touches `intelligence-isl.js`, `intelligence-qa.js`, `intelligence-qa-handlers.js`, `intelligence-illness.js`, `intelligence-caretickets.js`, `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Kael** (Intelligence engine).
+   - Diff touches `intelligence-isl.js`, `intelligence-qa.js`, `intelligence-qa-handlers.js`, `intelligence-illness.js`, `intelligence-correlate.js`, `intelligence-caretickets.js`, `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Kael** (Intelligence engine).
    - Diff touches `intelligence-cards.js` or `intelligence-quicklog.js` → summon **Vela** (Surfacing render).
    - Diff touches **both** Kael's and Vela's Regions (engine + render) → summon **both Kael and Vela** in parallel.
    - Diff touches `styles.css` or `template.html` → summon **all three** Governors (sequential triple-jurisdiction review; rotation Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
