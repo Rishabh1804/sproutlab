@@ -3,8 +3,8 @@
 > **Purpose.** Evidence base for SproutLab's Care layer. Built to decide *what consequence-text to surface* when a parent marks **honey** "tried" for an under-12-month-old (food-sub-tab-v1 Finding A), and as the template for future per-food effect briefs.
 > **Scope.** Honey only. Infants 0–12 months. Family context: Indian.
 > **Reviewer.** Maren (Governor of Care), deep-research scout pass.
-> **Date.** 2026-05-30. **Status.** Research complete — *not yet wired into the app.*
-> **Method.** 5-angle fan-out web search → source fetch → adversarial verification → synthesis. Authorities: WHO, US CDC, AAP/HealthyChildren, UK NHS, India MoHFW/NHM, IAP, FSSAI, NIH/StatPearls, NEJM.
+> **Date.** 2026-05-30. **Status.** Research complete + gap-closing pass applied — *not yet wired into the app.*
+> **Method.** 5-angle fan-out web search → source fetch → adversarial verification → synthesis, then a targeted gap-closing pass (primary-PDF extraction + NFHS-5 microdata). Authorities: WHO, US CDC, AAP/HealthyChildren, UK NHS, India MoHFW/NHM, IIPS/NFHS-5, NIH/StatPearls, NEJM. **Note:** IAP and FSSAI were checked as primaries and do **not** support a honey-under-1 rule (see gap-closing pass) — the rule rests on WHO/CDC/AAP/NHS + MoHFW/NHM.
 
 ---
 
@@ -77,16 +77,20 @@ In typical order of appearance:
 > ⚑ *Mortality figures vary:* StatPearls "<15%" (broad/historical) vs **<1% for promptly-treated US cases** (IBTPP/CDC). Use "low with prompt treatment."
 > *Operational:* US suspected cases consult the California IBTPP 24/7 (510-231-7600). India has no equivalent single hotline located.
 
-## Axis 7 — Indian cultural context  *(confidence: HIGH for the named government guidance; MIXED for prevalence figures)*
+## Axis 7 — Indian cultural context  *(confidence: HIGH for the named government guidance + NFHS-5 prevalence; the IAP/FSSAI attributions were CHECKED and corrected — see gap-closing pass below)*
 
-- **Primary government source names honey directly.** India's MoHFW/NHM **MAA** (Mothers' Absolute Affection) ANM training module instructs that babies should **not** be given any drink/food *"like gur, ghutti, honey, sweet water, etc."* before breastfeeding starts or up to six months, and that *"No prelacteal feeds should be given."* *(STRONG — verbatim primary government document.)*
+- **The Indian primary authority for the honey rule is MoHFW/NHM — NOT IAP or FSSAI.** India's MoHFW/NHM **MAA** (Mothers' Absolute Affection) ANM training module instructs that babies should **not** be given any drink/food *"like gur, ghutti, honey, sweet water, etc."* before breastfeeding starts or up to six months, and that *"No prelacteal feeds should be given."* *(STRONG — verbatim primary government document.)*
 - **Definitions:** *Prelacteal feeds* = anything given before breastfeeding begins (sugar/honey/glucose water, *ghutti* — gur-/bura-/khand-/**janam ghutti**), usually in the first 2–3 days. The module frames the harm as **infection + breastfeeding failure + colostrum loss** — it does *not* itself name botulism. *(Strong — same source.)*
 - **WHO/UNICEF standard** — breastfeeding within the first hour, exclusive breastfeeding 6 months with no other food/liquid — which prelacteal honey directly violates. *(Strong.)*
 - **A documented Indian case:** a 4-day-old fed raw village honey ~2 hours after birth "as per family tradition" developed lethargy, limb hypotonia, and absent Moro reflex; recovered by day 15. *(Moderate — single case report, n=1.)*
-- **Prevalence (regional):** a Lucknow urban-slum study (n=524) found 50.6% gave prelacteal feeds, of which 22.6% gave honey (≈11.4% of all newborns). *(Moderate — single regional study.)*
+- **Prevalence — now VERIFIED (national, NFHS-5 2019–21):** **~15.3–15.5%** of children received a prelacteal feed (anything other than breast milk in the first 3 days), **down from ~20.8% in NFHS-4 (2015–16)** — a clear decline. Among prelacteal-fed infants, **honey was given to 8.9%** (≈1.3–1.4% of all newborns). *(Moderate-HIGH — converging peer-reviewed analyses of NFHS-5 microdata: PLOS ONE 2023 / PMC10553319, PMC12182200. The one-page National Fact Sheet does not tabulate this indicator; the full IIPS report + academic microdata analyses do.)* The earlier regional Lucknow slum study (50.6% prelacteal, 22.6% of those honey) stands as a higher-burden local figure.
 - **Commercial *janam ghutti* / gripe-water products remain widely marketed and used** despite pediatric advice. *(Moderate for availability; weak as a usage rate.)*
 
-> ⚑ *Verification gaps (close before quoting as official):* (a) exact **IAP** wording on honey — IAP breastfeeding guideline confirmed to exist, but the anti-honey sentence was not extractable (binary PDF); (b) a **primary FSSAI** honey-under-1 directive — reported via secondary sources only; (c) official **NFHS-5** prelacteal % (~15% seen in summaries, unverified to the primary table); (d) any **Indian botulism surveillance/incidence** data — none located; under-reporting is a *reasoned hypothesis*, not a sourced fact.
+> ✓ *Gap-closing pass (2026-05-30) — three of four gaps closed, two by CORRECTING a claim:*
+> - **(a) IAP:** RESOLVED by primary-PDF extraction. The IAP *Breastfeeding* chapter **and** the IAP *IYCF 2016* guidelines were parsed in full (23 pages) — **neither mentions "honey" or "botulism" at all.** ⇒ **Do NOT attribute the honey-under-1 rule to IAP.** IAP's feeding guidance is about breastfeeding/colostrum/complementary-feeding timing, not honey.
+> - **(b) FSSAI:** RESOLVED and **REVERSED.** FSSAI's primary *Foods for Infant Nutrition* regulation (2022 + 2024 versions) **permits** honey as an ingredient and lists honey-sweetened mashed food as a traditional infant food example; its *only* honey provision is a **manufacturing** rule that honey-containing products be processed to destroy *C. botulinum* spores. There is **no FSSAI consumer rule against giving honey under 1.** ⇒ **Drop the FSSAI attribution entirely** — the blog claim was WHO/AAP guidance laundered onto FSSAI's name. *(Caution: FSSAI permitting spore-destroyed honey in **manufactured** infant products is NOT permission to give a baby raw/home honey — different thing; do not let this read as "FSSAI says honey is fine for babies.")*
+> - **(c) NFHS-5 %:** RESOLVED — see the verified prevalence bullet above.
+> - **(d) Indian botulism surveillance/incidence:** **genuinely absent** (India has no mandatory botulism notification). Case reports exist; a national incidence rate does not. Under-reporting remains a *reasoned hypothesis*, not a sourced fact — left flagged.
 
 ---
 
@@ -140,18 +144,22 @@ const FOOD_EFFECTS = {
 | 7 | NEJM — Arnon et al., Human Botulism Immune Globulin (BabyBIG) | https://www.nejm.org/doi/full/10.1056/NEJMoa051926 |
 | 8 | Texas DSHS — Honey pacifier infant botulism alert (2018) | https://www.dshs.texas.gov/news-alerts/infant-botulism-health-alert-nov-16-2018 |
 | 9 | India MoHFW/NHM — MAA ANM Training Module | https://nhm.gov.in/New_Updates_2018/NHM_Components/RMNCHA/CH/Schemes/Maa/Training_Module_English_Lowres.pdf |
-| 10 | IAP — Guidelines on Breastfeeding | https://iapindia.org/guidelines-on-breastfeeding/ |
+| 10 | IAP — Guidelines on Breastfeeding *(checked: no honey/botulism mention — does NOT support the rule)* | https://iapindia.org/pdf/Ch-039-Breastfeeding.pdf · https://www.indianpediatrics.net/aug2016/703.pdf |
+| 10a | FSSAI — Foods for Infant Nutrition Regulations (2022 / 2024) *(checked: PERMITS honey; no under-1 prohibition)* | https://www.fssai.gov.in/upload/uploadfiles/files/Comp_IFR_VERSION-II_04_01_2024.pdf |
+| 10b | IIPS / NFHS-5 microdata analyses — prelacteal feeding (PLOS ONE 2023) | https://pmc.ncbi.nlm.nih.gov/articles/PMC10553319/ |
 | 11 | UNICEF India — Breastfeeding | https://www.unicef.org/india/breastfeeding-0 |
 | 12 | US Poison Control — Don't feed honey to infants | https://www.poison.org/articles/dont-feed-honey-to-infants |
 | 13 | PMC — Infant Botulism: In Search of C. botulinum Spores | https://pmc.ncbi.nlm.nih.gov/articles/PMC11322261/ |
 | 14 | UF/IFAS Extension — Infant Botulism and Honey (heat-resistance) | https://ask.ifas.ufl.edu/publication/AA142 |
 | 15 | M3 India — Infant botulism following honey (Indian case report) | https://www.m3india.in/contents/editor_pick/infant-botulism-following-consumption-of-honey |
 
-### Open verification gaps (for the next pass)
-1. Primary **IAP** verbatim honey wording (binary PDF — not extracted).
-2. Primary **FSSAI** honey-under-1 directive (secondary sources only).
-3. Official **NFHS-5** prelacteal-feeding percentage (~15% unverified to source table).
-4. Any **Indian botulism surveillance/incidence** data (none located; under-reporting is hypothesis, not fact).
+### Verification gaps — status after the 2026-05-30 gap-closing pass
+1. ✅ **IAP** verbatim honey wording — **CLOSED by correction.** Primary IAP Breastfeeding + IYCF 2016 PDFs parsed in full; **no mention of honey or botulism.** The rule is not attributable to IAP. *(Method: `curl` + `pypdf` — the original failure was WebFetch not parsing binary PDFs, not a hidden source.)*
+2. ✅ **FSSAI** honey-under-1 directive — **CLOSED and REVERSED.** No such FSSAI consumer directive exists; FSSAI's infant-nutrition regulation *permits* honey (manufacturing spore-destruction rule only). The secondary claim is dropped.
+3. ✅ **NFHS-5** prelacteal-feeding % — **CLOSED.** ~15.3–15.5% national (NFHS-5), 8.9% of those honey; down from 20.8% (NFHS-4). Peer-reviewed NFHS-5 microdata analyses.
+4. ⚑ **Indian botulism surveillance/incidence** — **GENUINELY ABSENT** (no mandatory notification in India). Case reports only; under-reporting is a hypothesis, not a sourced fact. Cannot be closed — left honestly flagged.
+
+> **Methodology note (Maren).** Third-party sources are legitimate for *facts that exist independently* (the NFHS-5 figure, via peer-reviewed microdata analysis) but are **never** a substitute for *"what body X officially says"* (IAP / FSSAI) — a parent reading "IAP recommends…" deserves IAP's actual words, not a blog's paraphrase. Two of the three "fillable" gaps closed by *correcting* a laundered claim, which is exactly why the primary check mattered.
 
 ### Surfacing recommendation (Maren) — feeds the Finding-A decision, not yet implemented
 When a parent marks an age-gated **critical-tier** food tried for a baby below `minMonth`, confirm with `headline` + `seekCare`, not a silent log. Honey is the archetype: acute, treatable, preventable, and culturally live for this family. The *myth* line ("cooking doesn't make it safe") and the *culturalNote* are the two highest-value nuggets unique to this food.

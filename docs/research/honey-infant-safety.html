@@ -66,6 +66,7 @@
     <span class="pill">Reviewer · Maren (Care)</span>
     <span class="pill">2026-05-30</span>
     <span class="pill">Honey only · infants 0–12mo · India</span>
+    <span class="pill">+ gap-closing pass (IAP/FSSAI corrected, NFHS-5 verified)</span>
     <span class="pill warn">Research artifact — NOT yet wired into the app</span>
   </div>
 </div></header>
@@ -154,10 +155,17 @@
       <li><b>Prelacteal feeds</b> = anything given before breastfeeding begins (sugar/honey/glucose water, <i>ghutti</i> — gur-/bura-/khand-/<b>janam ghutti</b>), usually first 2–3 days. Govt frames harm as infection + breastfeeding failure + colostrum loss (does not itself name botulism).</li>
       <li>WHO/UNICEF: breastfeed within the first hour, exclusive 6 months, no other food/liquid — which prelacteal honey violates.</li>
       <li><b>Documented Indian case:</b> 4-day-old fed raw village honey ~2h after birth "as per family tradition" → lethargy, hypotonia, absent Moro; recovered day 15. <span class="badge b-mod">n=1</span></li>
-      <li>Prevalence (Lucknow slum, n=524): 50.6% gave prelacteal feeds; 22.6% of those gave honey (~11.4% of newborns). <span class="badge b-mod">regional</span></li>
+      <li><b>Prevalence — VERIFIED (NFHS-5, 2019–21):</b> ~15.3–15.5% of children received a prelacteal feed (anything but breast milk in first 3 days), <b>down from ~20.8% in NFHS-4</b>; among those, <b>honey 8.9%</b> (~1.3–1.4% of all newborns). <span class="badge b-mod">peer-reviewed NFHS-5 microdata</span> Regional Lucknow slum study (50.6% prelacteal, 22.6% honey) is a higher-burden local figure.</li>
       <li>Commercial <i>janam ghutti</i> / gripe-water products remain widely marketed. <span class="badge b-weak">usage rate unquantified</span></li>
     </ul>
-    <div class="flag"><b>⚑ Verification gaps:</b> exact <b>IAP</b> honey wording (binary PDF, not extracted); a <b>primary FSSAI</b> directive (secondary only); official <b>NFHS-5</b> prelacteal % (~15% unverified); any <b>Indian botulism surveillance</b> data (none found — under-reporting is a hypothesis, not a fact).</div>
+    <div class="flag" style="border-left-color:var(--sage);background:var(--sage-bg)"><b>✓ Gap-closing pass (2026-05-30) — three of four closed, two by CORRECTING a claim:</b>
+      <ul style="margin:6px 0 0">
+        <li><b>IAP → do NOT attribute the rule to IAP.</b> Both primary IAP feeding PDFs (Breastfeeding + IYCF 2016, 23pp) parsed in full — <b>zero mention of honey or botulism.</b></li>
+        <li><b>FSSAI → drop &amp; reverse.</b> FSSAI's Foods for Infant Nutrition regulation <i>permits</i> honey (manufacturing spore-destruction rule only); <b>no consumer under-1 prohibition.</b> The blog claim was WHO/AAP laundered onto FSSAI. <i>(Permitting spore-destroyed honey in manufactured infant products ≠ "honey is fine for babies at home.")</i></li>
+        <li><b>NFHS-5 % → closed</b> (see verified prevalence above).</li>
+        <li><b>Indian incidence → genuinely absent</b> (no mandatory notification; case reports only). Left honestly flagged.</li>
+      </ul>
+    </div>
   </div>
 
   <h2>Proposed data shape · <code>FOOD_EFFECTS['honey']</code></h2>
@@ -201,7 +209,9 @@
     <tr><td>NEJM — Arnon (BabyBIG)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa051926">nejm.org/…/NEJMoa051926</a></td></tr>
     <tr><td>Texas DSHS — honey pacifier alert</td><td><a href="https://www.dshs.texas.gov/news-alerts/infant-botulism-health-alert-nov-16-2018">dshs.texas.gov/…</a></td></tr>
     <tr><td>India MoHFW/NHM — MAA module</td><td><a href="https://nhm.gov.in/New_Updates_2018/NHM_Components/RMNCHA/CH/Schemes/Maa/Training_Module_English_Lowres.pdf">nhm.gov.in/…/MAA module</a></td></tr>
-    <tr><td>IAP — Guidelines on Breastfeeding</td><td><a href="https://iapindia.org/guidelines-on-breastfeeding/">iapindia.org/…/breastfeeding</a></td></tr>
+    <tr><td>IAP — Breastfeeding / IYCF 2016 <i>(checked: no honey/botulism mention)</i></td><td><a href="https://www.indianpediatrics.net/aug2016/703.pdf">indianpediatrics.net/aug2016/703.pdf</a></td></tr>
+    <tr><td>FSSAI — Foods for Infant Nutrition Reg. <i>(checked: permits honey; no under-1 ban)</i></td><td><a href="https://www.fssai.gov.in/upload/uploadfiles/files/Comp_IFR_VERSION-II_04_01_2024.pdf">fssai.gov.in/…/Infant Nutrition 2024</a></td></tr>
+    <tr><td>IIPS / NFHS-5 microdata — prelacteal feeding (PLOS ONE 2023)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10553319/">pmc.ncbi.nlm.nih.gov/…/PMC10553319</a></td></tr>
     <tr><td>UNICEF India — Breastfeeding</td><td><a href="https://www.unicef.org/india/breastfeeding-0">unicef.org/india/breastfeeding</a></td></tr>
     <tr><td>Poison Control — honey &amp; infants</td><td><a href="https://www.poison.org/articles/dont-feed-honey-to-infants">poison.org/…/honey</a></td></tr>
     <tr><td>PMC — In Search of C. botulinum Spores</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11322261/">pmc.ncbi.nlm.nih.gov/…/PMC11322261</a></td></tr>
@@ -210,14 +220,15 @@
   </table>
   </div>
 
-  <div class="card gap">
-    <strong>Open verification gaps (next pass)</strong>
+  <div class="card">
+    <strong>Verification gaps — status after the 2026-05-30 gap-closing pass</strong>
     <ol style="margin:8px 0 0">
-      <li>Primary <b>IAP</b> verbatim honey wording (binary PDF — not extracted).</li>
-      <li>Primary <b>FSSAI</b> honey-under-1 directive (secondary sources only).</li>
-      <li>Official <b>NFHS-5</b> prelacteal-feeding % (~15% unverified to source table).</li>
-      <li>Any <b>Indian botulism surveillance/incidence</b> data (none located).</li>
+      <li>✅ <b>IAP</b> — CLOSED by correction. Primary PDFs parsed; no honey/botulism mention → not attributable to IAP. <i>(Fixed via curl + pypdf; original failure was WebFetch not parsing binary PDFs, not a hidden source.)</i></li>
+      <li>✅ <b>FSSAI</b> — CLOSED &amp; REVERSED. No under-1 directive exists; regulation permits honey. Claim dropped.</li>
+      <li>✅ <b>NFHS-5</b> % — CLOSED. ~15.3–15.5% national; 8.9% of those honey; down from 20.8% (NFHS-4).</li>
+      <li>⚑ <b>Indian botulism surveillance/incidence</b> — GENUINELY ABSENT (no mandatory notification). Cannot be closed; left flagged.</li>
     </ol>
+    <p style="margin:10px 0 0;font-size:13.5px;color:var(--mid)"><b>Methodology (Maren):</b> third-party sources are legitimate for <i>facts that exist independently</i> (the NFHS-5 figure, via peer-reviewed microdata) but never a substitute for <i>"what body X officially says"</i> (IAP/FSSAI). Two of three fillable gaps closed by <i>correcting</i> a laundered claim — which is why the primary check mattered.</p>
   </div>
 
   <div class="card tldr">
