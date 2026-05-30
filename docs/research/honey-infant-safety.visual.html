@@ -23,8 +23,9 @@
   h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
   .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
   /* tabs */
-  nav{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
     padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
   .tab:hover{color:var(--ink);background:var(--card)}
   .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
@@ -49,8 +50,8 @@
   /* bar chart */
   .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
   .bar .lab{color:var(--ink);text-align:right;font-weight:600}
-  .bar .trk{background:var(--track);border-radius:7px;height:18px;overflow:hidden}
-  .bar .fil{height:100%;border-radius:7px;background:var(--sage);min-width:2px}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
   .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
   .bar.hl .fil{background:var(--honey)} .bar.hl .lab{color:var(--honey)} .bar.hl .val{color:var(--honey)}
   /* timeline */
@@ -103,6 +104,7 @@
     <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
     <button class="tab" data-p="p-data">Data Stub</button>
   </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
 </div></header>
 
 <div class="wrap">
@@ -336,22 +338,45 @@ Informational, not medical advice. Not yet wired into the app. All chart values 
 </div>
 
 <script>
-  document.querySelectorAll('.tab').forEach(function(t){
-    t.addEventListener('click', function(){
-      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
-      document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
-      t.classList.add('on');
-      var el = document.getElementById(t.dataset.p);
-      if(el) el.classList.add('on');
-      window.scrollTo(0,0);
-    });
-  });
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p);
+    if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'});
+    window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
   // in-page "jump to tab" links on the summary
   document.querySelectorAll('[data-go]').forEach(function(j){
     j.addEventListener('click', function(){
-      var tab = document.querySelector('.tab[data-p="'+j.dataset.go+'"]');
-      if(tab) tab.click();
+      activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]'));
     });
+  });
+  function step(dir){
+    var cur = tabs.findIndex(function(t){return t.classList.contains('on');});
+    var next = cur + dir;
+    if(next >= 0 && next < tabs.length) activate(tabs[next]);
+  }
+  // ── Tab swiping (touch) — horizontal swipe switches tabs; vertical scroll untouched ──
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length>1){ tracking=false; return; }
+    sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX - sx, dy=e.changedTouches[0].clientY - sy;
+    // require a clear, mostly-horizontal swipe so vertical scrolling isn't hijacked
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);   // swipe left → next tab, swipe right → previous
+  }, {passive:true});
+  // keyboard arrows too (desktop convenience)
+  document.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1);
   });
 </script>
 </body>
