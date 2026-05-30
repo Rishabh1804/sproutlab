@@ -47,6 +47,13 @@ check diet.js 'function foodLibDetail('         'diet.js: foodLibDetail missing'
 check diet.js 'function foodLibToggleTried('    'diet.js: foodLibToggleTried missing'
 check diet.js 'function renderDietLibrary('     'diet.js: renderDietLibrary lazy-render hook missing'
 check diet.js 'const FOOD_LIB_FILTERS'          'diet.js: FOOD_LIB_FILTERS registry missing'
+# V-M-202 (Architect-ratified): the search index must be the union of the
+# nutrition DB AND the safety tables, so the highest-stakes age-gated foods
+# (honey/egg/cow-milk) absent from NUTRITION are still findable. Lock the
+# union builder + its consumption so the index can't silently revert to
+# NUTRITION-only (which would make honey unsearchable again).
+check diet.js 'const _FD_SEARCH_INDEX'          'diet.js: _FD_SEARCH_INDEX union builder missing (search would be NUTRITION-only)'
+check diet.js '_FD_SEARCH_INDEX.filter'         'diet.js: renderFoodLibResults not consuming the union index'
 check diet.js '_FD_SPICE_TIER'                  'diet.js: spice-tier exclusion set missing (per-serving safety caveat)'
 # V-K-102: the spice-tier set must carve out the sweeteners sub — jaggery/gur
 # are real per-serving iron sources, not ≤1g tadka spices. Without this, a

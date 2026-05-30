@@ -104,6 +104,27 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
     await expect(body).toContainText('Bioactives');
   });
 
+  test('high-stakes gated foods absent from NUTRITION are findable (V-M-202)', async ({ page }) => {
+    // honey (12m, botulism) has no NUTRITION record — the union index must
+    // still surface it in search, with its age gate, degrading cleanly in the
+    // sheet to "No nutrition data on file".
+    const listed = await page.evaluate(() => {
+      const el = document.getElementById('foodLibSearch') as HTMLInputElement;
+      el.value = 'honey';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      const host = document.getElementById('foodLibResults') as HTMLElement;
+      return Array.from(host.querySelectorAll('.flc-name')).map(n => (n.textContent || '').toLowerCase());
+    });
+    expect(listed).toContain('honey');
+
+    const sheet = await page.evaluate(() => {
+      (window as any).renderFoodDetailSheet('honey');
+      return (document.getElementById('foodDetailBody') as HTMLElement).textContent || '';
+    });
+    expect(sheet).toContain('Not before 12 months'); // age gate surfaced
+    expect(sheet).toContain('No nutrition data on file'); // degrades cleanly
+  });
+
   test('detail sheet surfaces an honest-absence allergen line, never blank (V-M-201)', async ({ page }) => {
     // A food with no ALLERGENS entry (e.g. chia seeds — seed allergen the table
     // doesn't yet cover) must NOT render a blank safety section that reads as

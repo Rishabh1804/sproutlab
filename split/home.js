@@ -4640,6 +4640,15 @@ function saveManualNutrition(foodName, nutrients, tags, category) {
 function showNutrientTagModal(foodName) {
   if (getNutrition(foodName)) return; // already known (resolves via _FOOD_ALIASES)
 
+  // The Save-Tags control passes the food name into saveManualNutrition. It
+  // was referencing an undefined `lower` (pre-existing ReferenceError that
+  // threw before the modal could render for any caller); define it here, and
+  // escape it for safe embedding in the single-quoted JS string literal so
+  // apostrophe-bearing names (e.g. "cow's milk", now reachable from the F-3
+  // Library) don't break the call.
+  const lower = foodName.toLowerCase();
+  const lowerArg = lower.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
@@ -4671,7 +4680,7 @@ function showNutrientTagModal(foodName) {
           const cats=this.closest('.modal').querySelector('#ntm-cats .active-ok');
           const nuts=[...this.closest('.modal').querySelectorAll('#ntm-nutrients .active-ok')].map(b=>b.dataset.nut);
           const tags=[...this.closest('.modal').querySelectorAll('#ntm-tags .active-ok')].map(b=>b.dataset.tag);
-          saveManualNutrition('${lower}',nuts.length?nuts:['unknown'],tags.length?tags:[],cats?cats.dataset.cat:'');
+          saveManualNutrition('${lowerArg}',nuts.length?nuts:['unknown'],tags.length?tags:[],cats?cats.dataset.cat:'');
           this.closest('.modal-overlay').remove();
         ">Save Tags</button>
       </div>

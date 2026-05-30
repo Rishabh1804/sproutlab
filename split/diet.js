@@ -400,6 +400,24 @@ const _FD_SPICE_TIER = (function() {
   return s;
 })();
 
+// V-M-202 (Architect-ratified scope widening) — the searchable Library index
+// is the UNION of the nutrition DB and the safety tables. The highest-stakes
+// age-gated foods (honey 12m·botulism, egg 7m, cow's milk 12m, whole nuts
+// 60m·choking) live in AGE_RULES / ALLERGENS but carry NO NUTRITION record,
+// so indexing NUTRITION alone made them unfindable — a parent vetting "honey"
+// in search got "No foods match" for the single most dangerous infant food.
+// Union them so they surface with their gate; renderFoodDetailSheet's !entry
+// branch already degrades cleanly to "No nutrition data on file". Built once
+// (all three tables are static, defined in data.js earlier in concat order).
+const _FD_SEARCH_INDEX = (function() {
+  const s = new Set(Object.keys(NUTRITION));
+  try {
+    Object.keys(AGE_RULES).forEach(k => s.add(k));
+    Object.keys(ALLERGENS).forEach(k => s.add(k));
+  } catch (e) { /* table-shape guard — NUTRITION-only is a safe degrade */ }
+  return Array.from(s);
+})();
+
 // Filter registry — single source of truth for the chip rail (extensible:
 // add a row, no render-code change — mirrors the v3-5/v3-6 registry doctrine).
 // `axis` drives the predicate in _fdFoodMatchesFilter; nutrient rows carry
@@ -494,7 +512,7 @@ function renderFoodLibResults() {
   if (!active) { host.innerHTML = ''; return; }
 
   const q = _fdLibQuery.toLowerCase().trim();
-  const names = Object.keys(NUTRITION).filter(name => {
+  const names = _FD_SEARCH_INDEX.filter(name => {
     if (q && name.indexOf(q) === -1) return false;
     return _fdFoodMatchesFilter(name, NUTRITION[name]);
   }).sort();
@@ -635,6 +653,12 @@ function foodLibToggleTried(name) {
     renderFoods();
     renderFoodDetailSheet(name);
     renderFoodLibResults();
+    // V-M-204: now that the index includes foods with no NUTRITION record
+    // (honey, egg, cow's milk …), marking one tried must still prompt for
+    // nutrient tagging — otherwise it enters the diary silently absent from
+    // the iron/protein tallies a parent relies on. Mirrors addFood's prompt;
+    // showNutrientTagModal self-guards (no-ops when getNutrition resolves).
+    if (!getNutrition(lower)) showNutrientTagModal(name);
   }
 }
 
