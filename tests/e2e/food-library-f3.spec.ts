@@ -125,6 +125,39 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
     expect(sheet).toContain('No nutrition data on file'); // degrades cleanly
   });
 
+  test('true-synonym foods collapse to one card; distinct gates stay separate (Cipher follow-up)', async ({ page }) => {
+    const search = async (q: string) => page.evaluate((query) => {
+      const el = document.getElementById('foodLibSearch') as HTMLInputElement;
+      el.value = query;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      const host = document.getElementById('foodLibResults') as HTMLElement;
+      return Array.from(host.querySelectorAll('.flc-name')).map(n => (n.textContent || '').toLowerCase());
+    }, q);
+
+    // True synonyms (identical guidance) collapse to ONE card. The winning
+    // spelling is the NUTRITION key when one exists (it carries nutrition data),
+    // else the safety-table key — so assert "exactly one card per family",
+    // spelling-agnostic, not a specific label.
+    const oneOf = (list: string[], family: string[]) =>
+      list.filter(n => family.includes(n)).length;
+
+    const milk = await search('milk');
+    expect(milk).not.toContain("cow's milk");                 // apostrophe variant folded
+    expect(oneOf(milk, ['cow milk', "cow's milk"])).toBe(1);  // cow-milk family → 1
+    const nuts = await search('nut');
+    expect(oneOf(nuts, ['whole nut', 'whole nuts'])).toBe(1); // plural folded → 1
+    expect(oneOf(await search('soy'), ['soy', 'soybean'])).toBe(1);
+    expect(oneOf(await search('almond'), ['almond', 'almonds'])).toBe(1);
+    const sesame = await search('sesame');
+    expect(sesame).toContain('sesame');                       // til folds into sesame
+    expect(sesame).not.toContain('til');
+
+    // Distinct gates — MUST survive (collapsing would lose safety guidance).
+    const egg = await search('egg');
+    expect(egg).toEqual(expect.arrayContaining(['egg', 'egg yolk', 'whole egg']));
+    expect(milk).toEqual(expect.arrayContaining(['milk', 'cow milk'])); // drink vs cooking
+  });
+
   test('detail sheet surfaces an honest-absence allergen line, never blank (V-M-201)', async ({ page }) => {
     // A food with no ALLERGENS entry (e.g. chia seeds — seed allergen the table
     // doesn't yet cover) must NOT render a blank safety section that reads as

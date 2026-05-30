@@ -37824,13 +37824,34 @@ const _FD_SPICE_TIER = (function() {
 // Union them so they surface with their gate; renderFoodDetailSheet's !entry
 // branch already degrades cleanly to "No nutrition data on file". Built once
 // (all three tables are static, defined in data.js earlier in concat order).
+//
+// True-synonym dedup (Cipher Edict-V follow-up): the safety tables carry
+// lexical variants of the SAME food with IDENTICAL guidance — showing both as
+// separate cards is pure noise. Collapse each variant to one canonical display
+// key. `_baseFoodName` supplies the til→sesame alias; _FD_SYN lists the rest
+// explicitly (it does NOT depluralise on its own without a matching alias, so
+// 'almonds'/'whole nuts' must be named here — verified against the real
+// _baseFoodName). Foods with DISTINCT gates are deliberately NOT merged: egg /
+// egg yolk / whole egg (7m yolk-start vs 8m whole) and milk / cow milk (drink
+// vs cooking) each teach a different rule and stay as separate cards — verified
+// that _baseFoodName does not strip "cow", so 'cow milk' never folds into 'milk'.
+const _FD_SYN = {
+  "cow's milk": 'cow milk', 'soybean': 'soy', 'gur': 'jaggery',
+  'almonds': 'almond', 'whole nuts': 'whole nut',
+};
 const _FD_SEARCH_INDEX = (function() {
-  const s = new Set(Object.keys(NUTRITION));
+  const canon = k => _FD_SYN[k] || _baseFoodName(k); // _baseFoodName: plurals + til→sesame
+  const out = Object.keys(NUTRITION);                // canonical already — keep verbatim
+  const seen = new Set(out.map(canon));
   try {
-    Object.keys(AGE_RULES).forEach(k => s.add(k));
-    Object.keys(ALLERGENS).forEach(k => s.add(k));
+    [].concat(Object.keys(AGE_RULES), Object.keys(ALLERGENS)).forEach(k => {
+      const c = canon(k);
+      if (seen.has(c)) return;          // already covered (NUTRITION, or an earlier variant)
+      seen.add(c);
+      out.push(k);                      // add the real key — resolves in its source table
+    });
   } catch (e) { /* table-shape guard — NUTRITION-only is a safe degrade */ }
-  return Array.from(s);
+  return out;
 })();
 
 // Filter registry — single source of truth for the chip rail (extensible:
