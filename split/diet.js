@@ -406,13 +406,22 @@ const FOOD_LIB_FILTERS = [
 let _fdLibQuery = '';
 let _fdLibFilter = null; // active filter key, or null
 
+// Does an introduced-foods entry match a canonical Library food? The Library
+// only ever deals in canonical NUTRITION keys (not free-text meal strings), so
+// this is EXACT base-name equality — NOT the bidirectional substring match the
+// app uses for parsing meal text. Substring matching here would be destructive:
+// 'sweet potato'.includes('potato') is true, so marking potato "not tried"
+// would also silently delete sweet potato (likewise coconut/coconut oil,
+// pumpkin/pumpkin seeds). One predicate, used by both the read (tried badge)
+// and the write (removal filter), so they can never disagree.
+function _fdSameFood(base, foodName) {
+  return _baseFoodName(foodName.toLowerCase().trim()) === base;
+}
+
 // Is a food (by canonical NUTRITION key / name) already introduced?
 function _fdIsFoodTried(name) {
   const base = _baseFoodName(String(name).toLowerCase().trim());
-  return foods.some(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  return foods.some(f => _fdSameFood(base, f.name));
 }
 
 // Resolve an allergen note for a food name (mirrors the diet.js combo-check
@@ -486,9 +495,12 @@ function renderFoodLibResults() {
     return;
   }
 
+  // Hoist the introduced-food base-name set ONCE per render — _fdIsFoodTried
+  // would re-derive it (loop foods × _baseFoodName) for every card otherwise.
+  const triedBases = new Set(foods.map(f => _baseFoodName(f.name.toLowerCase().trim())));
   host.innerHTML = `<div class="food-lib-count">${names.length} food${names.length === 1 ? '' : 's'}</div>` +
     `<div class="food-lib-cards">` + names.map(name => {
-      const tried = _fdIsFoodTried(name);
+      const tried = triedBases.has(_baseFoodName(name.toLowerCase().trim()));
       const allerg = _fdAllergenNote(name);
       const ageR = _fdAgeRule(name);
       const aged = ageR && ageR.minMonth > getAgeInMonths();
@@ -523,7 +535,9 @@ function renderFoodDetailSheet(name) {
   const bodyEl = document.getElementById('foodDetailBody');
   if (!titleEl || !bodyEl) return;
   const lower = String(name).toLowerCase().trim();
-  const entry = getNutrition(lower) || NUTRITION[lower] || null;
+  // getNutrition already checks NUTRITION[lower] first, then cache + normalized
+  // name — no need to re-check NUTRITION[lower] here.
+  const entry = getNutrition(lower) || null;
   const tried = _fdIsFoodTried(lower);
   const allerg = _fdAllergenNote(lower);
   const ageR = _fdAgeRule(lower);
@@ -585,10 +599,7 @@ function foodLibToggleTried(name) {
   if (_fdIsFoodTried(lower)) {
     confirmAction('Remove this food from tried foods?', () => {
       const base = _baseFoodName(lower);
-      foods = foods.filter(f => {
-        const fb = _baseFoodName(f.name.toLowerCase().trim());
-        return !(fb === base || fb.includes(base) || base.includes(fb));
-      });
+      foods = foods.filter(f => !_fdSameFood(base, f.name));
       save(KEYS.foods, foods);
       renderFoods();
       renderFoodDetailSheet(name);

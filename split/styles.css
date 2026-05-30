@@ -10670,7 +10670,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .flc-name { font-size:var(--fs-base); font-weight:600; text-transform:capitalize; }
 .flc-flags { display:flex; flex-wrap:wrap; gap:var(--sp-4); align-items:center; }
 .flc-flag { display:inline-flex; align-items:center; gap:var(--sp-2); font-size:var(--fs-xs); font-weight:700; padding:var(--sp-2) var(--sp-6); border-radius:var(--r-md); }
-.flc-tried { background:#d4edda; color:#276138; }
+.flc-tried { background:var(--sage-light); color:var(--tc-sage); }
 .flc-allergen { background:var(--rose-light); color:var(--tc-rose); }
 .flc-aged { background:var(--peach-light); color:var(--tc-caution); }
 .food-lib-empty { padding:var(--sp-12); text-align:center; color:var(--light); font-size:var(--fs-base); }

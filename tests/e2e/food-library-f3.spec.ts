@@ -51,6 +51,33 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
     expect(state.names.some(n => n === 'banana')).toBe(false);
   });
 
+  test('search box is wired through the real input-event delegator', async ({ page }) => {
+    // Regression guard for the data-action vs data-input-action dead-wire: set
+    // the value and dispatch a REAL 'input' event that bubbles to the document
+    // delegator (the diet tab is display:none in this harness, so page.fill's
+    // visibility check can't be used — but the delegated listener fires
+    // regardless of visibility). A direct foodLibOnSearch() call would NOT
+    // exercise the delegator, which is exactly where the dead-wire lived.
+    // Assert on observable DOM effects (the internal _fdLibQuery is a
+    // module-scope let, not on window). If the delegator never ran, the host
+    // stays hidden/empty; if it ran, it flattens to filtered results.
+    const result = await page.evaluate(() => {
+      const el = document.getElementById('foodLibSearch') as HTMLInputElement;
+      el.value = 'oat';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      const host = document.getElementById('foodLibResults') as HTMLElement;
+      const grid = document.getElementById('foodsGrid') as HTMLElement;
+      return {
+        hostHidden: host.hidden,              // false only if renderFoodLibResults ran
+        gridDisplay: grid.style.display,      // 'none' only if the handler ran
+        names: Array.from(host.querySelectorAll('.flc-name')).map(n => (n.textContent || '').toLowerCase()),
+      };
+    });
+    expect(result.hostHidden).toBe(false);
+    expect(result.gridDisplay).toBe('none');
+    expect(result.names.some(n => n.includes('oat'))).toBe(true);
+  });
+
   test('high-iron filter excludes spice-tier foods (per-serving safety)', async ({ page }) => {
     const names = await page.evaluate(() => {
       (window as any).foodLibFilter('iron');
@@ -87,5 +114,31 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
     const after = await page.evaluate((n) => (window as any)._fdIsFoodTried(n), novel);
     expect(before).toBe(false);
     expect(after).toBe(true);
+  });
+
+  test('mark-not-tried uses exact base match — does not delete substring-sibling foods', async ({ page }) => {
+    // Regression guard: 'sweet potato'.includes('potato') — bidirectional
+    // substring matching would delete sweet potato when un-marking potato.
+    // Drive the real public path end-to-end: add both via foodLibToggleTried
+    // (one-tap add), then remove potato via foodLibToggleTried (which raises a
+    // confirm dialog) and click the real #confirmYes button.
+    const before = await page.evaluate(() => {
+      const w = window as any;
+      w.foodLibToggleTried('potato');        // add (one-tap, no confirm)
+      w.foodLibToggleTried('sweet potato');  // add
+      return { potato: w._fdIsFoodTried('potato'), sweet: w._fdIsFoodTried('sweet potato') };
+    });
+    expect(before).toEqual({ potato: true, sweet: true });
+
+    // Un-mark potato → confirm dialog → click Delete.
+    await page.evaluate(() => (window as any).foodLibToggleTried('potato'));
+    await page.click('#confirmYes');
+
+    const after = await page.evaluate(() => {
+      const w = window as any;
+      return { potato: w._fdIsFoodTried('potato'), sweet: w._fdIsFoodTried('sweet potato') };
+    });
+    expect(after.potato).toBe(false);   // potato removed
+    expect(after.sweet).toBe(true);     // sweet potato survives — the fix
   });
 });

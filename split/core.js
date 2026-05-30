@@ -1084,6 +1084,7 @@ function init() {
     if (action === 'checkVaccDateShift') checkVaccDateShift();
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
     else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
+    else if (action === 'foodLibOnSearch' && typeof foodLibOnSearch === 'function') foodLibOnSearch(el);
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──

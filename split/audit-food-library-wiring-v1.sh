@@ -30,7 +30,7 @@ echo "audit-food-library-wiring-v1: checking F-3 Library surface wiring..." >&2
 
 # ── Template scaffold (4 host nodes + detail-sheet anatomy) ──
 check template.html 'id="foodLibSearch"'        'template: search input #foodLibSearch missing'
-check template.html 'data-input-action="foodLibOnSearch"' 'template: search input not wired to foodLibOnSearch'
+check template.html 'data-action="foodLibOnSearch" data-action-on="input"' 'template: search input not wired to foodLibOnSearch via the input delegator (data-action + data-action-on="input")'
 check template.html 'id="foodLibFilterRail"'    'template: filter rail #foodLibFilterRail missing'
 check template.html 'id="foodLibResults"'       'template: results host #foodLibResults missing'
 check template.html 'id="foodDetailSheet"'      'template: detail sheet overlay #foodDetailSheet missing'
@@ -53,6 +53,7 @@ check diet.js '_FD_SPICE_TIER'                  'diet.js: spice-tier exclusion s
 check diet.js "subKey === 'library'"            'diet.js: switchDietSub library lazy-render hook missing'
 
 # ── core.js click-dispatch routes ──
+count_ge core.js "action === 'foodLibOnSearch'"    1 'core.js: foodLibOnSearch INPUT dispatch route missing (search box would be dead)'
 count_ge core.js "action === 'foodLibFilter'"      1 'core.js: foodLibFilter dispatch route missing'
 count_ge core.js "action === 'foodLibDetail'"      1 'core.js: foodLibDetail dispatch route missing'
 count_ge core.js "action === 'foodLibToggleTried'" 1 'core.js: foodLibToggleTried dispatch route missing'
