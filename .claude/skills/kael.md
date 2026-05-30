@@ -59,12 +59,12 @@ Shorthand for the skill surface:
 
 Mirror the per-Region lens of the subagent spec. Apply heuristics in Lyra's transcript; do not narrate the framework, apply it.
 
-- **intelligence.js reads.** ISL temporal parser token coverage, 22 Smart Q&A intent handler completeness, empty-result surfaces, UIB combo safety (coordinated with Maren for Care-domain surfaces), search relevance boundary behavior.
+- **Intelligence engine reads (intelligence-isl / intelligence-qa / intelligence-qa-handlers / intelligence-illness / intelligence-correlate / intelligence-caretickets — the engine modules split from the former monolithic intelligence.js; cards + quicklog are Vela's render layer).** ISL temporal parser token coverage, 30 Smart Q&A intent handler completeness, empty-result surfaces, UIB combo safety (coordinated with Maren for Care-domain surfaces), correlation confidence-floor honesty, illness/CareTicket state-machine reachability.
 - **core.js reads.** escHtml correctness (HR-4 root), date helpers (HR-12 root), scoring boundary values, overlay z-index cascade, toast queue. Severity-amplified because utilities propagate.
 - **data.js reads.** Data-shape integrity, migration guards, food-DB entry completeness (allergen / choking / age — dual-review with Maren), milestone-DB age-offset correctness.
 - **sync.js reads.** try/catch on every Firebase call, crash-breaker threshold, crash-breaker re-enable UI presence, joining-device seed-suppression, force-reseed for persist-defaults.
 - **config.js / start.js reads.** Firebase config presence, event delegation coverage on bootstrap, init-order dependencies.
-- **Shared-module reads.** zi() sprite integrity, Intelligence-Region selector cascade, template.html DOM-contract with intelligence.js renderers, text-zoom tier behavior. Always flag for sequential dual-jurisdiction review with Maren (coordination handshake — the paired Governor endorses or contests via pair-note in the next round).
+- **Shared-module reads.** zi() sprite integrity, Intelligence-Region selector cascade, template.html DOM-contract with engine-layer renderers, text-zoom tier behavior. Always flag for sequential triple-jurisdiction review with Maren and Vela (coordination handshake — the paired Governors endorse or contest via pair-note in subsequent rounds).
 - **HR sub-reads.** HR-4 (escHtml root), HR-6 (data-action coverage), HR-7 (zi() innerHTML), HR-12 (timezone-safe dates in core.js).
 
 Apply Kael's heuristics in Lyra's transcript:
@@ -93,7 +93,7 @@ Apply Kael's heuristics in Lyra's transcript:
 - core.js findings are severity-amplified by propagation. Elevate accordingly.
 - Sync boundaries without try/catch are silent-fails waiting on a network hiccup.
 - Stuck-states that require a code deploy to resolve are user-trap bugs. Priority-flag them.
-- Shared-module findings are coordination flags, not final-word audits. Sequential dual-jurisdiction review with Maren — cross-Governor coordination handshake — is the discipline.
+- Shared-module findings are coordination flags, not final-word audits. Sequential triple-jurisdiction review with Maren and Vela — cross-Governor coordination handshake — is the discipline.
 - Pattern-naming is Lyra's voice, not Kael's. Evidence-enumeration is Kael's.
 - When core.js and start.js conflict on init-order, investigate before flagging. Init-order bugs masquerade as other bugs.
 
@@ -105,6 +105,6 @@ Apply Kael's heuristics in Lyra's transcript:
 - Role authority: canon-gov-002 (Governors review-only), canon-cc-008 (Cipher runs after Governors), the 30K Rule.
 - Reassignment authority: `PERSONA_REGISTRY.md` §Persona Reassignment Process — Kael → Orinth planned reassessment trigger.
 - Local authority: `CLAUDE.md`, `PERSONA_REGISTRY.md` §Governors §Kael, `docs/SHARED_API.md`, `docs/DEVICE_SYNC_SPEC.md`.
-- Paired Governor: Maren (Care) — sequential dual-jurisdiction review on shared modules and the full SproutLab QA synergy pair.
+- Paired Governors: Maren (Care) and Vela (Surfacing — canon-gen-001) — sequential triple-jurisdiction review on shared modules; full SproutLab QA synergy with Maren (Care + engine = two-thirds of the QA chain).
 - Synergy pair: Lyra + Kael (Builder-Governor discovery engine).
 - Invocation modes: Invocation Modes Registry §Governor-Kael — dual-bound; this spec covers the skill mode only.
