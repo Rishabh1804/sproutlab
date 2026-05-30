@@ -1,7 +1,7 @@
 # Food-Effects v2 — Guided Introduction
 
 **Companion:** Lyra (The Weaver)
-**Status:** DRAFT — Governor spec-review folded (Maren + Vela, both `amended`, 2026-05-30). Awaiting Architect ratification of §9; no food code this pass (Architect chose *spec-only*).
+**Status:** RATIFIED — Governor spec-review folded (Maren + Vela, both `amended`); Architect ratified §9 (2026-05-30). P1a build greenlit (phased α/β/γ; see §10).
 **Date opened:** 2026-05-30.
 **Descends from:** `docs/NEXT_SESSION_TARGET_2026-05-30.md` §P1 · `docs/SYNTHESIS_2026-05-30_food-effects-arc.md` (research→spine→surface pipeline) · the P0.1 sync gate (`split/audit-food-effects-sync-v1.sh`, merged #181) · the P0.2 word-boundary unification (#182).
 **First research artifact:** `docs/research/peanut-tree-nut-infant-safety.md` (cited; LEAP/EAT verified).
@@ -140,12 +140,12 @@ Honey moves to `foodClass: 'acute-toxin'`, `severity: 'critical'` (polarity *war
 
 **Load-bearing (Maren A-4):** `tier` is currently a branch key in **two** render paths — `core.js:foodConsequenceCard` (tests `tier==='critical'` at ~:4016/:4019/:4023) and `diet.js`'s age-gate detail builder (~:694–700 hardcodes `tier:'critical'`). The migration is **not** behavior-preserving unless this is handled explicitly. Resolution: render `watchFor`/`seekCare` **whenever present** (decoupled from any class/severity string, §3), and drive chrome from `severity`. **Regression anchor for P1a e2e:** honey logged below 12mo must still render the floppiness/weak-cry watch-fors **and** the seek-care line after migration. Symmetric guard: an `allergen-introduce-early` food logged below its 4-month floor surfaces a consequence (severe strip), not a silent log.
 
-## 9. What needs ratification (Architect, please confirm or correct)
+## 9. Architect ratifications (RESOLVED 2026-05-30)
 
-1. **Choking-age house rule** — `chokingUntilYears: 5` (NHS conservative over AAP's 4; governs future grapes/popcorn/raw-carrot). **Both Governors concur with 5.** Confirm to close.
-2. **High-risk branch default** — default to the international mainstream (introduce ~6mo, no prescreen) with `howToIntroduce.highRiskNote`. Maren concurs the *default*, with a guard: when the app holds a **severe-eczema or known-egg-allergy** signal for the baby, `highRiskNote` (the "talk to your paediatrician before the first nut" line) renders and is **non-suppressible** for that cohort. (Ziva is not flagged high-risk.) Confirm.
-3. **Food sequence after peanut/tree-nut** (when build is greenlit): proposed **egg → seeds (sesame/til) → cow + plant milks**. Reorder?
-4. **Nudge surface** (§5): Info / Today-So-Far, `calm`/`pending` register, never CareTicket. **Both Governors concur.** Confirm to close.
+1. **Choking-age house rule** — ✅ `chokingUntilYears: 5` (NHS conservative; governs future grapes/popcorn/raw-carrot). Both Governors + Architect concur.
+2. **High-risk branch default** — ✅ **Mainstream + cohort guard.** Default = international mainstream (introduce ~6mo, no prescreen); `howToIntroduce.highRiskNote` ("talk to your paediatrician before the first nut") renders and is **non-suppressible** when the app holds a **severe-eczema or known-egg-allergy** signal for the baby. (Ziva is not flagged high-risk.)
+3. **Food sequence after peanut/tree-nut** — ✅ **egg → seeds (sesame/til) → cow + plant milks.** (P1c.)
+4. **Nudge surface** — ✅ Info / Today-So-Far, `calm`/`pending` register, never CareTicket. Both Governors + Architect concur.
 
 ## 10. Phasing (when build is greenlit — NOT this pass)
 
