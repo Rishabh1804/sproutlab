@@ -104,6 +104,31 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
     await expect(body).toContainText('Bioactives');
   });
 
+  test('detail sheet surfaces an honest-absence allergen line, never blank (V-M-201)', async ({ page }) => {
+    // A food with no ALLERGENS entry (e.g. chia seeds — seed allergen the table
+    // doesn't yet cover) must NOT render a blank safety section that reads as
+    // "cleared". The universal 3-day-rule line must appear.
+    const body = await page.evaluate(() => {
+      (window as any).renderFoodDetailSheet('chia seeds');
+      return (document.getElementById('foodDetailBody') as HTMLElement).textContent || '';
+    });
+    expect(body).toContain('No specific allergen note on file');
+    expect(body).toContain('3 days');
+  });
+
+  test('age-gated card flag reads as a withhold, not an age rating (V-V-201)', async ({ page }) => {
+    // 'rajma' is age-gated (8m+). The card flag must read "Not yet" (withhold),
+    // never "8m+" (which parses like a toy-box "suitable 8 months and up" rating
+    // — the inverse of the rule's "not before 8 months").
+    const html = await page.evaluate(() => {
+      (window as any).foodLibFilter('agegate');
+      return (document.getElementById('foodLibResults') as HTMLElement).innerHTML;
+    });
+    expect(html).toContain('Not yet');
+    expect(html).not.toMatch(/\d+m\+/); // no "8m+" / "12m+" rating-style label
+  });
+
+
   test('mark-tried round-trips through the introduced-foods store', async ({ page }) => {
     const novel = 'dragon fruit'; // in NUTRITION, unlikely pre-seeded as tried
     const before = await page.evaluate((n) => (window as any)._fdIsFoodTried(n), novel);

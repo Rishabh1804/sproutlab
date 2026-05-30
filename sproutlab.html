@@ -10689,6 +10689,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 .fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
+.fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }
 .fd-section-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:var(--sp-6); }
 .fd-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
@@ -37791,7 +37792,16 @@ function deleteFood(i) {
 const _FD_SPICE_TIER = (function() {
   const s = new Set();
   try {
-    Object.values(FOOD_TAX.spices.subs).forEach(sub => (sub.keys || []).forEach(k => s.add(k)));
+    // V-K-101: derive from the tadka-spice subs ONLY. FOOD_TAX.spices also
+    // carries a `sweeteners` sub (jaggery/gur/mishri) — but jaggery/gur are
+    // real per-serving iron sources (a teaspoon, not a ≤1g pinch), exactly
+    // what an anaemia-flagged parent searching "High iron" should be pointed
+    // TO. The data.js §SPICE-TIER convention enumerates tadka aromatics only;
+    // excluding sweeteners keeps the runtime set matched to that policy.
+    Object.entries(FOOD_TAX.spices.subs).forEach(([sid, sub]) => {
+      if (sid === 'sweeteners') return;
+      (sub.keys || []).forEach(k => s.add(k));
+    });
   } catch (e) { /* FOOD_TAX shape guard — empty set is a safe degrade */ }
   return s;
 })();
@@ -37911,7 +37921,7 @@ function renderFoodLibResults() {
       const aged = ageR && ageR.minMonth > getAgeInMonths();
       return `<button class="food-lib-card${tried ? ' tried' : ''}" data-action="foodLibDetail" data-arg="${escHtml(name)}">
         <span class="flc-name">${escHtml(name)}</span>
-        <span class="flc-flags">${tried ? `<span class="flc-flag flc-tried">${zi('check')} Tried</span>` : ''}${allerg ? `<span class="flc-flag flc-allergen">${zi('warn')} Allergen</span>` : ''}${aged ? `<span class="flc-flag flc-aged">${zi('warn')} ${ageR.minMonth}m+</span>` : ''}</span>
+        <span class="flc-flags">${tried ? `<span class="flc-flag flc-tried">${zi('check')} Tried</span>` : ''}${allerg ? `<span class="flc-flag flc-allergen">${zi('siren')} Allergen</span>` : ''}${aged ? `<span class="flc-flag flc-aged">${zi('warn')} Not yet</span>` : ''}</span>
       </button>`;
     }).join('') + `</div>`;
 }
@@ -37966,6 +37976,13 @@ function renderFoodDetailSheet(name) {
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
   }
+  // V-M-201: absence of an allergen note must NOT read as "cleared". When no
+  // specific note is on file, surface the universal 3-day-rule guidance so a
+  // blank safety section never gets parsed as a green light — especially for
+  // seed/dairy foods (chia, cheese, paneer) that have no ALLERGENS entry yet.
+  if (!allerg) {
+    html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span>No specific allergen note on file. Introduce any new food on its own and watch for 3 days.</span></div>`;
+  }
 
   // Nutrition facts.
   if (entry && entry.nutrients && entry.nutrients.length) {
@@ -38011,8 +38028,16 @@ function foodLibToggleTried(name) {
       renderFoodLibResults();
     });
   } else {
-    foods.push({ name: name, reaction: 'ok', date: today() });
-    save(KEYS.foods, foods);
+    // V-M-203: never let a one-tap "mark tried" silently downgrade an existing
+    // 'watch' reaction to 'ok'. The _fdIsFoodTried guard normally means no
+    // base-matching entry exists here, but stay merge-aware + escalate-only so
+    // the invariant holds even if the guard drifts: only push a fresh 'ok' row
+    // when there is genuinely no base-matching entry; never rewrite reaction.
+    const base = _baseFoodName(lower);
+    if (!foods.some(f => _fdSameFood(base, f.name))) {
+      foods.push({ name: name, reaction: 'ok', date: today() });
+      save(KEYS.foods, foods);
+    }
     renderFoods();
     renderFoodDetailSheet(name);
     renderFoodLibResults();

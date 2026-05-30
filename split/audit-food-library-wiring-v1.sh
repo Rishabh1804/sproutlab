@@ -48,6 +48,11 @@ check diet.js 'function foodLibToggleTried('    'diet.js: foodLibToggleTried mis
 check diet.js 'function renderDietLibrary('     'diet.js: renderDietLibrary lazy-render hook missing'
 check diet.js 'const FOOD_LIB_FILTERS'          'diet.js: FOOD_LIB_FILTERS registry missing'
 check diet.js '_FD_SPICE_TIER'                  'diet.js: spice-tier exclusion set missing (per-serving safety caveat)'
+# V-K-102: the spice-tier set must carve out the sweeteners sub — jaggery/gur
+# are real per-serving iron sources, not ≤1g tadka spices. Without this, a
+# "High iron" search would silently suppress jaggery the moment it gains a
+# NUTRITION nutrients[] array. Enforce the documented carve-out at build time.
+check diet.js "sid === 'sweeteners'"            'diet.js: _FD_SPICE_TIER must exclude the sweeteners sub (jaggery/gur are real iron sources, not tadka spices)'
 
 # ── switchDietSub lazy-render hook ──
 check diet.js "subKey === 'library'"            'diet.js: switchDietSub library lazy-render hook missing'

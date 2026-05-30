@@ -10682,6 +10682,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 .fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
+.fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }
 .fd-section-title { font-size:var(--fs-sm); font-weight:700; color:var(--text); margin-bottom:var(--sp-6); }
 .fd-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
