@@ -20,6 +20,7 @@
   .food .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .food .name{font:700 19px/1.2 Fraunces,serif}
   .tier{font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.4px;padding:5px 9px;border-radius:7px;background:var(--rose-bg);color:var(--rose)}
+  .tier.good{background:var(--sage-bg);color:var(--sage)}
   .one{color:var(--mid);font-size:13.5px;margin:8px 0 14px}
   .links{display:flex;gap:8px;flex-wrap:wrap}
   .links a{flex:1 1 auto;text-align:center;text-decoration:none;font:600 13px/1 Nunito;padding:11px 12px;border-radius:10px;border:1px solid var(--line);color:var(--ink);background:var(--bg)}
@@ -35,7 +36,7 @@
 <body>
 <div class="wrap">
   <h1>Care Research · Food Effects</h1>
-  <p class="sub">Evidence base for surfacing food effects in SproutLab's Care layer. Each food has a skim dashboard, a long-form brief, and a cited source doc. Honey is the archetype; more foods follow.</p>
+  <p class="sub">Evidence base for surfacing food effects in SproutLab's Care layer. Each food has a skim dashboard, a long-form brief, and a cited source doc. Two shapes so far: honey (a true <i>avoid</i>) and peanut/tree nuts (a <i>guided introduction</i> — encourage early, in safe form). More foods follow.</p>
 
   <h2>Foods</h2>
   <div class="food">
@@ -50,6 +51,20 @@
       <a href="honey-infant-safety.md">Source (.md)</a>
     </div>
     <p class="meta">Reviewed 2026-05-30 · confidence: high · WHO · CDC · AAP · NHS · India MoHFW/NHM</p>
+  </div>
+
+  <div class="food">
+    <div class="top">
+      <span class="name">Peanut &amp; Tree Nuts</span>
+      <span class="tier good">Introduce early · in safe form</span>
+    </div>
+    <p class="one"><b>Not an avoid — a guided introduction.</b> Introduce around 6 months, in safe form (smooth/ground, <b>never whole</b> — choking until ~5). Early, regular nuts <b>lower</b> allergy risk (LEAP: ~81%). Two hazards — allergy &amp; choking — and grinding fixes only the choking one. For this Indian vegetarian family, groundnut/badam/akhrot/kaju are staples and soaked-ground almond paste is already a safe form.</p>
+    <div class="links">
+      <a class="primary" href="peanut-tree-nut-infant-safety.visual.html">Visual dashboard ›</a>
+      <a href="peanut-tree-nut-infant-safety.html">Long-form brief</a>
+      <a href="peanut-tree-nut-infant-safety.md">Source (.md)</a>
+    </div>
+    <p class="meta">Reviewed 2026-05-30 · confidence: high · LEAP/EAT (NEJM) · AAP · NHS · ASCIA · NIAID · IAP</p>
   </div>
 
   <h2>How this is built</h2>
