@@ -55,7 +55,7 @@ Finding A touched `data.js` + `core.js` (Kael), `diet.js` (Maren), and `styles.c
 
 | Step | Result |
 |------|--------|
-| Build + 11 audit gates + e2e | ✅ clean; **318 passed / 2 skipped** (5.7m) |
+| Build + 11 audit gates + e2e | clean — **318 passed / 2 skipped** (5.7m) |
 | **Maren** (Care: `diet.js` gate) | **BLOCKER V-M-205-B1** — `honeydew` substring-matches `honey` → melon shows botulism card. Plus affordance/honesty notes. |
 | **Kael** (engine: `data.js` `FOOD_EFFECTS` + `core.js` resolver) | cleared — resolver sound after the word-boundary fix; `FOOD_EFFECTS` schema clean |
 | **Vela** (Surfacing: `styles.css` shared + card render) | clear-with-notes — the safe action ("Cancel") carries the visual weight; "Watch for" contrast bump |
@@ -122,6 +122,10 @@ The designated branch `claude/food-sub-tab-v1-f3-RWEPG` was reset to merged `mai
   - Partner badge: `split/intelligence-cards.js:2496-2514` via `_mealFoodMatches` (defined `:2378`, loose `includes` both directions; line `:2509`); related diet.js synergy match at `diet.js:1650`.
   - *Not a live botulism-on-melon risk (different surfaces from the consequence card), but the project should have one matching semantics, not two.*
 - **P1 — the 2nd food** (whole nuts / cow's milk / egg / salt) through the pipeline. **P2 — the research hub** (Index / Compare / Reactions) once the manifest has ~5 foods.
+
+### Governance-doc factual refresh + Codex-canon reconciliation (new this session)
+End-of-session, the governance docs were refreshed to current facts (LOC, jurisdiction sums, 11 audit gates, the previously-undocumented `intelligence-correlate.js` module, concat order): `CLAUDE.md`, `PERSONA_REGISTRY.md`, and the `.claude/agents/*` + `.claude/skills/*` mirrors for Lyra/Maren/Kael/Vela. **`maren.md` and `kael.md` were structurally stale** — frozen at the pre-canon-gen-001 2-Governor world (monolithic `intelligence.js`, dual-jurisdiction shared review, 22 Q&A intents) — and were corrected to the current 3-Governor / split-module reality.
+- **Codex-canon reconciliation owed (action-required).** The `.claude/agents/*` + `.claude/skills/*` specs are canon-cc-026 byte-identical mirrors of canonicals maintained in **Codex**, which was unreachable this session (`~/Codex` absent; git proxy denied `codex`). Per Architect waiver, the **sproutlab mirrors were edited directly** — so they now **diverge from Codex canon** and bypass the canon-cc-027 signing chain (incl. Lyra self-profile / Cipher-Maren-Kael self-review carveouts). **Next Codex-reachable session: port these edits into the Codex canonicals and re-establish byte-identical parity** (or the session-start hook's Codex overlay will revert the runtime copies). Scribe specs carry no factual/LOC data — untouched.
 
 ### Inherited (still in scope)
 - **#6 item 3 — AT smoke-pass** (human-only gate; `docs/AT_SMOKE_PASS.md`; VoiceOver / TalkBack / NVDA on the live deploy).
