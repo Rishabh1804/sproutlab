@@ -121,6 +121,22 @@ if ! bash audit-food-library-wiring-v1.sh >&2; then
   echo "BUILD ABORTED: food-sub-tab-v1 F-3 wiring audit failed. Restore the Library search/filter/detail-sheet surface." >&2
   exit 1
 fi
+# P0.1 food-effects sync ship-gate (12th audit gate): audit-food-effects-sync-v1.sh
+# locks the three-layer safety spine — docs/research/food-effects.manifest.js
+# (cited source) → data.js FOOD_EFFECTS (consequence card) → data.js AGE_RULES
+# (the gate the card hangs off). Fails the build on three drift classes: an
+# untraceable FOOD_EFFECTS claim with no manifest entry, a critical-tier
+# manifest entry with no FOOD_EFFECTS record (silent gate), or a FOOD_EFFECTS
+# key that doesn't word-boundary-resolve against AGE_RULES (orphan card). Node
+# engine: extracts the live _lookupByFoodName from core.js + evals the three
+# literals so the audit's matcher IS the product's matcher (no drift), with a
+# green-but-empty self-test guard (exit 2). Lands before the 2nd food so the
+# research→spine→surface pipeline is safe to exercise. Spec:
+# docs/NEXT_SESSION_TARGET_2026-05-30.md §P0.1. Stderr-redirected per precedent.
+if ! bash audit-food-effects-sync-v1.sh >&2; then
+  echo "BUILD ABORTED: P0.1 food-effects sync audit failed. Reconcile FOOD_EFFECTS ↔ food-effects.manifest.js ↔ AGE_RULES." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
