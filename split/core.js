@@ -806,6 +806,9 @@ function init() {
     else if (action === 'openDoctorModal') { const a = arg; if (a) openDoctorModal(parseInt(a)); else openDoctorModal(); }
     else if (action === 'openFoodCatModal') openFoodCatModal(arg);
     else if (action === 'switchFoodCatSub') switchFoodCatSub(arg);
+    else if (action === 'foodLibFilter') foodLibFilter(arg);
+    else if (action === 'foodLibDetail') foodLibDetail(arg);
+    else if (action === 'foodLibToggleTried') foodLibToggleTried(arg);
     else if (action === 'openVaccApptModal') openVaccApptModal(arg);
     // PR-ε.0.1 §1 (PC-7.3 close) — plan-item activation for the 2 Class C
     // motor/language builders (home.js:8120 / :8170). Hardcoded
@@ -1081,6 +1084,7 @@ function init() {
     if (action === 'checkVaccDateShift') checkVaccDateShift();
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
     else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
+    else if (action === 'foodLibOnSearch' && typeof foodLibOnSearch === 'function') foodLibOnSearch(el);
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──
@@ -3977,6 +3981,64 @@ function confirmAction(msg, callback, btnText) {
   overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+}
+
+// Shared name-normalised table lookup: exact → de-pluralised → whole-word match.
+// The third tier uses a WORD BOUNDARY (\bkey\b), NOT bare substring, so 'honey'
+// resolves 'raw honey'/'honey water' but NOT 'honeydew'/'honeycomb' — a safe
+// library fruit must never inherit honey's critical card (V-M-205-B1). Both
+// getFoodEffect (FOOD_EFFECTS) and diet.js _fdAgeRule (AGE_RULES) route through
+// this one resolver, so the age GATE and the consequence CARD can never disagree.
+function _lookupByFoodName(table, name) {
+  if (!table || !name) return null;
+  const n = String(name).toLowerCase().trim();
+  if (table[n]) return table[n];
+  const dep = n.replace(/s$/, '');
+  if (table[dep]) return table[dep];
+  return (Object.entries(table).find(([k]) =>
+    new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n)) || [])[1] || null;
+}
+
+// FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
+// resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
+function getFoodEffect(name) {
+  return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
+}
+
+// Finding A — age-gate consequence surface. When a parent marks an age-gated
+// food tried below its gate, warn-and-allow: surface the consequence, then let
+// them proceed via onProceed. NEVER blocks — a parent may be recording an
+// exposure that already happened (e.g. a grandparent's ghutti), and the record
+// plus the watch-for guidance matter more than refusing the log.
+// detail: { tier:'critical'|'light', title, why, watchFor?:[], seekCare? }
+function foodConsequenceCard(detail, onProceed) {
+  if (!detail) { if (onProceed) onProceed(); return; }
+  const critical = detail.tier === 'critical';
+  let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
+  if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
+  if (critical && Array.isArray(detail.watchFor) && detail.watchFor.length) {
+    inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
+      detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
+  }
+  if (critical && detail.seekCare) {
+    inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
+  }
+  // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
+  // sits rightmost (the resting-thumb target), so a half-awake parent skimming
+  // for the dismiss tap can't mistake the loud button for "proceed". "Log it
+  // anyway" is the quiet, deliberate ghost on the left.
+  inner += `<div class="cons-btns">
+      <button class="btn btn-ghost" id="consGo">Log it anyway</button>
+      <button class="btn btn-sky" id="consCancel">Cancel</button>
+    </div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'consequence-overlay';
+  overlay.innerHTML = `<div class="consequence-card${critical ? ' cons-critical' : ''}">${inner}</div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#consCancel').onclick = close;
+  overlay.querySelector('#consGo').onclick = () => { close(); if (onProceed) onProceed(); };
+  overlay.onclick = e => { if (e.target === overlay) close(); };
 }
 
 // ─────────────────────────────────────────

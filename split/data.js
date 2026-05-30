@@ -2435,6 +2435,24 @@ const AGE_RULES = {
   'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
 };
 
+// ── FOOD EFFECTS (consequence layer — Finding A) ──
+// Critical-tier foods carry an acute consequence worth surfacing the moment a
+// parent marks them tried below the AGE_RULES gate — not just the passive
+// "Not before N months" badge. Evidence base: docs/research/<food>-infant-safety.md
+// (+ docs/research/food-effects.manifest.js, the shared spine). Foods present in
+// AGE_RULES but absent here get a light, one-line confirm instead of the rich card.
+const FOOD_EFFECTS = {
+  'honey': {
+    tier:       'critical',
+    effect:     'infant botulism',
+    title:      'Honey before 12 months',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
+    seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
+    confidence: 'high',
+  },
+};
+
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
   'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
