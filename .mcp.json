@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "graphify-sproutlab": {
+      "command": "uv",
+      "args": [
+        "tool", "run", "--from", "graphifyy[mcp]",
+        "python", "-m", "graphify.serve",
+        "split/graphify-out/graph.json"
+      ]
+    }
+  }
+}

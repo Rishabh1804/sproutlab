@@ -80,3 +80,25 @@ cp "$OUT" "$INDEX"
 tail -10 "$LOG" >&2
 
 echo "Build OK: $OUT ($SIZE bytes); mirrored to $INDEX." >&2
+
+# ── Graphify knowledge-graph + Province Map regeneration ──
+# Runs ONLY AFTER the HTML build, validation, and mirror have succeeded, and
+# is strictly NON-FATAL: the production artifact is sproutlab.html, not the
+# graph. A graph/map failure must never fail the build or block a release.
+#
+# Critically, this step is OUTSIDE build.sh's STDOUT stream (build.sh already
+# ran and its STDOUT is closed to $OUT) and everything here writes to STDERR —
+# so graph tooling chatter can never leak into the HTML the way audit text did
+# in the PR #118 incident. SKIP_GRAPH=1 bypasses it for fast iteration / CI.
+if [ "${SKIP_GRAPH:-}" != "1" ]; then
+  if bash "$ROOT/split/build-graph.sh" 1>&2; then
+    if command -v node >/dev/null 2>&1; then
+      node "$ROOT/split/build-province-map.mjs" 1>&2 \
+        || echo "Province Map generation failed (non-fatal); docs/PROVINCE_MAP.html may be stale." >&2
+    fi
+  else
+    echo "Graph regeneration failed (non-fatal); Province Map not refreshed." >&2
+  fi
+else
+  echo "SKIP_GRAPH=1 — graph + Province Map not regenerated this build." >&2
+fi

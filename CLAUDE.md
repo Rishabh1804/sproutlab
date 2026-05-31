@@ -82,7 +82,7 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **76,308 lines total** (refreshed 2026-05-31 post-#184 food-effects-v2 P1a; was 76,167 post-#178, 67,442 at the canon-gen-001 ratification 2026-05-23).
 
-**Module map:** [docs/MODULE_MAP.html](docs/MODULE_MAP.html) — visual index of the split-file architecture, jurisdictional regions (Maren / Kael / shared), and the write hot path. Built from a specific commit; drift-check with `wc -l split/*`. Open in a browser, not as text.
+**Province Map:** [docs/PROVINCE_MAP.html](docs/PROVINCE_MAP.html) — the graph-derived Roman provincial survey of the codebase: jurisdictions as Provinces, modules as cities (sized by symbol population), `calls` edges as roads (cross-province roads highlighted), high-degree nodes as resources, and each Province's LOC vs the 30K-rule frontier. Auto-generated each build by `split/build-province-map.mjs` from `split/graphify-out/graph.json` (the Graphify knowledge graph). **Supersedes the hand-maintained `docs/MODULE_MAP.html`** — being regenerated from committed source every build, it cannot drift (no more `wc -l split/*` drift-check). Open in a browser, not as text. *(MODULE_MAP.html is retained for now but deprecated; delete once the Province Map is trusted in production.)*
 
 **Poop-color reference:** [docs/POOP_COLOR_REFERENCE.html](docs/POOP_COLOR_REFERENCE.html) — token × theme × render-context × lexicon-membership chart for the 8 anatomical poop-color tokens. Auto-generated each build by `split/build-poop-reference.mjs`; reads `--poop-c-*` tokens from `styles.css`, dark-theme overrides, `POOP_COLOR_HEX` from `medical.js`, `SAFE_POOP_COLORS` from `core.js`. Maren-primary consult on contrast findings; Kael-primary consult on lexicon-drift findings.
 
@@ -156,6 +156,22 @@ style tags, script tags, and two CDN scripts in fixed order: **Chart.js**
 (chart rendering, blocking) then **Motion One** (`defer`, so chart
 cold-start takes priority). Motion One v10.18.0 UMD via
 `dist/motion.min.js` — see `docs/DESIGN_PRINCIPLES.md` §Animation Foundation.
+
+## Graphify — Codebase Knowledge Graph (integration pilot)
+
+**What it is.** [Graphify](https://github.com/safishamsi/graphify) (PyPI `graphifyy`) turns the split-file source into a queryable knowledge graph so Companions and Governors navigate to a symbol *by query* instead of reading 11K-line modules. The token-saving spine of this pilot. Code is parsed locally with tree-sitter (no API calls); only non-code files (in thorough mode) touch an LLM backend.
+
+**Two surfaces:**
+- **CLI (works this session):** `graphify query "<question>"`, `graphify path "A" "B"`, `graphify affected "X"`, `graphify explain "X"` — all against `split/graphify-out/graph.json`.
+- **MCP server (`graphify-sproutlab`):** `python -m graphify.serve` over the graph; exposes graph query tools as MCP calls. Registered in `.mcp.json`; in the remote `~/`-cwd harness the session-start hook materializes `~/.mcp.json`, so the server is live **the session after** it is built.
+
+**Build wiring.** `pnpm build` regenerates the graph **and** `docs/PROVINCE_MAP.html` as a **non-fatal** post-build step inside `build-safe.sh` (after HTML build + validation — never in `build.sh`'s STDOUT stream, per the PR #118 lesson). `pnpm graph` regenerates on demand. `SKIP_GRAPH=1` skips it. Output (`split/graphify-out/`) is **gitignored and always rebuilt from committed source** — a stale graph lies. The only committed, graph-derived artifact is `docs/PROVINCE_MAP.html`.
+
+**Graceful degrade (extraction mode).** `build-graph.sh` runs **thorough** extraction (AST + semantic; pulls in `styles.css` + `template.html`) when a backend credential is present (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`/`GOOGLE_API_KEY`, or local Ollama), and falls back to **code-only** (AST, free) otherwise — in which case the shared files are marked *unsurveyed* on the Province Map. No code change is needed to upgrade; just supply a backend.
+
+**Governance (canon).** Graphify is a **tool**, summoned as the `scribe-scout` reconnaissance instrument — **not a Companion seat**. The third-party `.claude/skills/graphify/` skill that `graphify install` drops is explicitly **carved out of canon-cc-026** (which governs *Companion* skill mirrors, byte-identical to Codex canon — graphify is neither). It supports; it does not deliberate, sign, or hold canonical voice.
+
+**Goal B — routing oracle.** `pnpm qa-route` (`split/qa-route.sh`) computes the **canon-cc-008 Governor summon-set** from a diff: file-level jurisdiction routing **plus** cross-province ripple traced through the graph's `calls` edges (a change in Kael's engine that dependents in Maren's Care render-path call into widens the set to Maren). It is **advisory** — it widens the summon-set, never narrows it, and **does not discharge the gate**. The gate is discharged only by summoning the named Governors and running Cipher's Edict V final-pass.
 
 ## Hard Rules (HR-1 through HR-12)
 

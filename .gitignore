@@ -5,6 +5,15 @@
 # and /sproutlab.html via cp post-build).
 split/sproutlab.html
 
+# Graphify knowledge-graph output (regenerated each build by split/build-graph.sh;
+# never committed per the "gitignore + regenerate" pilot decision — a stale graph
+# lies, so we always rebuild from committed source). Canonical location is
+# split/graphify-out/ (both `graphify update split` and `graphify extract split
+# --out split` converge there). The committed, graph-derived artifact is
+# docs/PROVINCE_MAP.html; the raw graph.json/graph.html beneath it are not.
+split/graphify-out/
+graphify-out/
+
 # Node / Playwright dev dependencies (excluded from production build artifact;
 # build.sh emits index.html from split/* only and does not sweep these paths).
 node_modules/
