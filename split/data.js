@@ -2480,7 +2480,7 @@ const FOOD_EFFECTS = {
     whyGood:    'High-value plant protein and healthy fats; early, sustained peanut markedly lowers the risk of developing a peanut allergy.',
     earlyIntroBenefit: {
       claim:    'Introducing peanut early and keeping it in the diet helps prevent peanut allergy.',
-      evidence: 'In a large randomised trial (LEAP, 2015), regular early peanut cut peanut allergy at age 5 by about 80%.',
+      evidence: 'In a large randomised trial (LEAP, 2015) of babies at higher allergy risk, regular early peanut cut peanut allergy at age 5 by about 80%.',
       paradigm: 'This reverses the old "delay nuts to avoid allergy" advice.',
     },
     safeForm: {

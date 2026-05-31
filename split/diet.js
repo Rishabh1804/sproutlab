@@ -487,7 +487,22 @@ function _fdAgeRule(name) {
   // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
-  return _lookupByFoodName(AGE_RULES, name);
+  const rule = _lookupByFoodName(AGE_RULES, name);
+  // V-M-206 (Care, food-effects-v2 P1a): a NAMED whole/chopped nut — "whole
+  // almond", "chopped cashew", "whole peanut" — must hit the 60-month whole-nut
+  // CHOKING gate, not the 6-month introduce-early floor its base nut resolves
+  // to. Without this, logging "whole almond" for a 9-month-old silently
+  // downgrades the choking protection from 60mo to 6mo. The age number is the
+  // ONLY choking guard until the encourage card's safeForm line renders (γ), so
+  // it must carry it. Triggers only for a choking-by-form food (peanut/tree
+  // nut) named with a whole/chopped form-word; falls back to the whole-nut gate.
+  if (rule && /\b(whole|chopped|crushed)\b/.test(String(name).toLowerCase())) {
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(name) : null;
+    const fc = eff && eff.foodClass;
+    const isChokingForm = Array.isArray(fc) ? fc.indexOf('choking-by-form') !== -1 : fc === 'choking-by-form';
+    if (isChokingForm) return _lookupByFoodName(AGE_RULES, 'whole nut') || rule;
+  }
+  return rule;
 }
 
 // Does a NUTRITION entry carry a nutrient token (nutrients[] or the matching
@@ -1177,10 +1192,10 @@ function checkFoodCombo() {
 
   // ── 1. Check age safety ──
   rawFoods.forEach(food => {
-    // Word-boundary resolve via the shared core.js resolver — same semantics as
-    // _fdAgeRule + the consequence card; substring matching retired (V-K-30 /
-    // honeydew-class door closed across the project, not just the safety surfaces).
-    const rule = _lookupByFoodName(AGE_RULES, food);
+    // Route through _fdAgeRule (not the bare resolver) so the V-M-206 whole/
+    // chopped-nut choking guard applies here too — "whole almond" in a combo
+    // must hit the 60mo choking gate, not the 6mo introduce-early floor.
+    const rule = _fdAgeRule(food);
     if (rule && mo < rule.minMonth) {
       verdict = 'avoid';
       verdictEmoji = zi('warn');

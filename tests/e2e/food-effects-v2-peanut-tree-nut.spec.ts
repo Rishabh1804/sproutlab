@@ -74,6 +74,21 @@ test.describe('food-effects-v2 — peanut & tree nut', () => {
     expect(gates).toEqual([6, 6, 6]);
   });
 
+  test('V-M-206: a NAMED whole/chopped nut hits the 60mo choking gate, not the 6mo floor', async ({ page }) => {
+    // The base nut is introduce-early (6mo); but "whole almond" / "chopped
+    // cashew" / "whole peanut" are the canonical infant choking hazard and must
+    // resolve to the 60mo whole-nut gate. The age number is the only choking
+    // guard until the encourage card's safeForm line renders (γ).
+    const gated = await page.evaluate(() =>
+      ['whole almond', 'whole cashew', 'whole peanut', 'chopped walnut', 'whole nut']
+        .map(n => (window as any)._fdAgeRule(n)?.minMonth));
+    expect(gated).toEqual([60, 60, 60, 60, 60]);
+    // smooth/base forms stay introduce-early — the guard must not over-trigger
+    const soft = await page.evaluate(() =>
+      ['almond', 'peanut butter', 'groundnut'].map(n => (window as any)._fdAgeRule(n)?.minMonth));
+    expect(soft).toEqual([6, 6, 6]);
+  });
+
   test('consequence card renders the non-collapsible severe strip in amber (A-1/V-1/V-3)', async ({ page }) => {
     await page.evaluate(() => {
       const eff = (window as any).getFoodEffect('peanut');
