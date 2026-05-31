@@ -1024,23 +1024,50 @@ function qaHandleFoodSafety(classified) {
   var allergenNotes = [];
   var newFoods = [];
 
-  // 1. Age safety
+  // 1+2. Age safety + allergens + food-effects polarity (food-effects v2 R2, §3.2).
+  // K-S-2: route the age + allergen lookups through _lookupByFoodName (alias +
+  // word-boundary + the R0 negation guard), fed the RAW post-split token — the
+  // bare AGE_RULES[base]/ALLERGENS[base] lookups silently MISSED aliases (badam,
+  // groundnut, akhrot, kaju) and under-warned. K-S-5: an age-appropriate
+  // allergen-introduce-early food (peanut/nut) is an ENCOURAGE (safe), not a
+  // caution — the flag becomes safe-form guidance; honey (acute-toxin) is a hard
+  // avoid (Invariant 2). The emergency floor is collected per-food on field
+  // presence (A-4 / M-S-5), OUTSIDE the polarity branch.
+  var severeFloors = [];   // {food, eff} per food carrying a floor (Invariant 1, per-food)
+  var toxin = null;        // {title, why}                — acute-toxin (honey)
+  var encourage = null;    // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(function(food) {
-    var base = _baseFoodName(food);
-    var rule = AGE_RULES[base] || AGE_RULES[food];
-    if (rule && mo < rule.minMonth) {
+    var rule = _lookupByFoodName(AGE_RULES, food);
+    var belowFloor = !!(rule && mo < rule.minMonth);
+    if (belowFloor) {
       verdict = 'avoid';
       warnings.push(food + ': ' + rule.reason);
     }
-  });
 
-  // 2. Allergens
-  rawFoods.forEach(function(food) {
-    var base = _baseFoodName(food);
-    var alert = ALLERGENS[base] || ALLERGENS[food];
+    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    if (eff && ((eff.severeSigns && eff.severeSigns.length) ||
+                (eff.watchFor && eff.watchFor.length) || eff.seekCare)) {
+      severeFloors.push({ food: food, eff: eff });
+    }
+
+    var alert = _lookupByFoodName(ALLERGENS, food);
+    var introEarlyOk = !!(eff && _effHasClass(eff, 'allergen-introduce-early') && !belowFloor);
     if (alert) {
       allergenNotes.push(food + ': ' + alert);
-      if (verdict === 'safe') verdict = 'caution';
+      if (verdict === 'safe' && !introEarlyOk) verdict = 'caution';
+    }
+
+    // Polarity (precedence: acute-toxin avoid (hard) > below-floor avoid > encourage safe).
+    if (eff && _effHasClass(eff, 'acute-toxin')) {
+      verdict = 'avoid';
+      toxin = { title: eff.title || '', why: eff.why || '' };
+    } else if (introEarlyOk) {
+      if (verdict !== 'avoid') verdict = 'safe';
+      encourage = {
+        title: eff.title || '',
+        whyGood: eff.whyGood || '',
+        safeFormNote: (eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : ''
+      };
     }
   });
 
@@ -1128,6 +1155,34 @@ function qaHandleFoodSafety(classified) {
   }
   sections.push({ label: 'SAFETY', icon: zi('shield'), items: safetyItems });
 
+  // Emergency floor (food-effects v2 §3.2, K-S-4) — pushed immediately after
+  // SAFETY, BEFORE nutrition/pairings/history, so it is never ordered below
+  // benefit content (Invariant 1; qaRenderAnswer renders sections flat/
+  // non-collapsibly). Per-food (multi-food: each food's floor in its own
+  // section), sourced from FOOD_EFFECTS (Invariant 4). The hazard leads for an
+  // acute-toxin; the safe-form gate + benefit follow for an encourage.
+  if (toxin && toxin.why) {
+    sections.push({ label: 'WHY', icon: zi('siren'), items: [{ text: toxin.why, signal: 'warn' }] });
+  }
+  severeFloors.forEach(function(sf) {
+    var eff = sf.eff;
+    var items = [];
+    (eff.severeSigns || []).forEach(function(s) { items.push({ text: s, signal: 'warn' }); });
+    (eff.watchFor || []).forEach(function(w) { items.push({ text: w, signal: 'info' }); });
+    if (eff.seekCare) items.push({ text: eff.seekCare, signal: 'warn' });
+    if (items.length) {
+      var hasSevere = !!(eff.severeSigns && eff.severeSigns.length);
+      var label = (hasSevere ? 'IF THIS HAPPENS, EMERGENCY' : 'WATCH FOR') + (rawFoods.length > 1 ? ' — ' + sf.food : '');
+      sections.push({ label: label, icon: zi('siren'), items: items });
+    }
+  });
+  if (encourage) {
+    var encItems = [];
+    if (encourage.safeFormNote) encItems.push({ text: encourage.safeFormNote, signal: 'info' });
+    if (encourage.whyGood) encItems.push({ text: encourage.whyGood, signal: 'good' });
+    if (encItems.length) sections.push({ label: 'SAFE FORM', icon: zi('sprout'), items: encItems });
+  }
+
   // Nutrition section
   if (benefits.length > 0) {
     sections.push({
@@ -1159,7 +1214,12 @@ function qaHandleFoodSafety(classified) {
     icon: 'shield',
     domain: 'peach',
     title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
-    headline: verdictText + (verdict === 'safe' ? ' \u2014 good to go' : ''),
+    // headline from the record (food-effects v2 \u00a73.1/\u00a73.2, M-S-2): the hazard for
+    // an acute-toxin, the encourage title for an age-appropriate allergen \u2014 never
+    // a bare "Safe" synthesized next to the food name. Falls back to the verdict.
+    headline: (toxin && toxin.title) ? toxin.title
+            : (encourage && verdict === 'safe' && encourage.title) ? encourage.title
+            : verdictText + (verdict === 'safe' ? ' \u2014 good to go' : ''),
     sections: sections,
     confidence: null,
     dataGap: null
