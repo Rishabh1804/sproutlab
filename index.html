@@ -23328,6 +23328,25 @@ function confirmAction(msg, callback, btnText) {
 // without `aliases` (honey, every legacy AGE_RULES/ALLERGENS entry) are
 // unchanged. Kept self-contained (no external helper) because the build audit
 // gate extracts and evals this function in isolation.
+// food-effects v2 R0 (spec §6) — negation-leak guard. The word-boundary tier in
+// _lookupByFoodName treats '-' as a boundary, so a bare \bpeanut\b matches inside
+// "peanut-free" and \bgroundnut\b inside "no groundnut" — a logged/queried
+// AVOIDANCE then resolves to the food (a green "introduce peanut" + anaphylaxis
+// floor on a food the parent EXCLUDED is strictly worse than the legacy caution).
+// This returns true when `token` is governed by an exclusion in `hay`. Keyed on
+// the SPECIFIC matched token, so a non-negated food in the same string still
+// resolves ("apple (no nuts)" → apple; "(no nuts)" alone → nothing).
+function _foodNameNegated(hay, token) {
+  if (!hay || !token) return false;
+  const t = String(token).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // suffix form: "<token>-free" / "<token> free"  (peanut-free, nut free, dairy-free)
+  if (new RegExp('\\b' + t + '[\\s-]+free\\b').test(hay)) return true;
+  // prefix form: "no <token>" / "without <token>" / "free of|from <token>"
+  // (tolerates up to two filler words: "no added nuts", "without any peanut")
+  if (new RegExp('\\b(?:no|without|free\\s+of|free\\s+from)\\b(?:\\s+\\w+){0,2}\\s+' + t + '\\b').test(hay)) return true;
+  return false;
+}
+
 function _lookupByFoodName(table, name) {
   if (!table || !name) return null;
   const n = String(name).toLowerCase().trim();
@@ -23335,10 +23354,11 @@ function _lookupByFoodName(table, name) {
   const dep = n.replace(/s$/, '');
   if (table[dep]) return table[dep];
   const wb = (token) => new RegExp('\\b' + String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n);
-  const byKey = Object.entries(table).find(([k]) => wb(k));
+  // R0: the word-boundary tiers must skip any candidate negated in `n` (§6).
+  const byKey = Object.entries(table).find(([k]) => wb(k) && !_foodNameNegated(n, k));
   if (byKey) return byKey[1];
   const byAlias = Object.values(table).find(v =>
-    v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a)));
+    v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a) && !_foodNameNegated(n, a)));
   return byAlias || null;
 }
 

@@ -135,13 +135,28 @@ function fail2(msg) { console.log(msg); process.exit(2); }
 let _lookupByFoodName;
 try {
   const coreSrc = fs.readFileSync(CORE, 'utf8');
+  // Pull the full source of any helper the resolver depends on (R0 negation
+  // guard, food-effects v2 §6: _lookupByFoodName now calls _foodNameNegated).
+  // The dependency must be in scope when the extracted resolver runs, or the
+  // self-test throws ReferenceError. Extract each present helper verbatim and
+  // declare it inside the eval IIFE the resolver closes over.
+  const extractFn = (name) => {
+    const s = coreSrc.indexOf('function ' + name);
+    if (s < 0) return '';
+    const b = extractBalanced(coreSrc, s, '{', '}');
+    const h = coreSrc.indexOf('{', s);
+    if (!b || h < 0) throw new Error('could not brace-match ' + name + ' body');
+    return coreSrc.slice(s, h) + b;
+  };
+  const deps = ['_foodNameNegated'].map(extractFn).filter(Boolean).join('\n');
   const fnStart = coreSrc.indexOf('function _lookupByFoodName');
   if (fnStart < 0) throw new Error('function _lookupByFoodName not found in ' + CORE);
   const body = extractBalanced(coreSrc, fnStart, '{', '}');
   const headerEnd = coreSrc.indexOf('{', fnStart);
   if (!body || headerEnd < 0) throw new Error('could not brace-match _lookupByFoodName body');
   const header = coreSrc.slice(fnStart, headerEnd); // "function _lookupByFoodName(table, name) "
-  _lookupByFoodName = eval('(' + header + body + ')'); // eslint-disable-line no-eval
+  // eslint-disable-next-line no-eval
+  _lookupByFoodName = eval('(function(){ ' + deps + '\nreturn (' + header + body + '); })()');
 } catch (e) {
   fail2('audit-food-effects-sync-v1: SELF-TEST FAIL — could not extract _lookupByFoodName from ' +
         CORE + ' (' + e.message + '). The audit cannot verify resolution without the live resolver.');
