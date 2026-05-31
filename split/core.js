@@ -4046,6 +4046,41 @@ function getFoodEffect(name) {
   return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
 }
 
+// foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
+// multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];
+// honey is the bare string 'acute-toxin'). A `===` check silently fails the array
+// case and drops an allergen to the legacy branch — losing BOTH the reframe and
+// the floor. Always membership-test, never ===.
+function _effHasClass(eff, cls) {
+  if (!eff || !eff.foodClass) return false;
+  return Array.isArray(eff.foodClass) ? eff.foodClass.indexOf(cls) !== -1 : eff.foodClass === cls;
+}
+
+// Shared emergency-floor renderer (food-effects v2 §3.0, M-S-7). The severe
+// anaphylaxis strip + the mild watch-fors + the seek-care line, sourced from a
+// FOOD_EFFECTS-shaped record. A-4 (Maren): each block renders on field PRESENCE
+// only — never gated on a class/severity string, so a schema change can't
+// silently drop a floor (honey carries watchFor+seekCare and no severeSigns; the
+// nuts carry all three). Reused by foodConsequenceCard (log-time card), the combo
+// checker (R1), and the allergen note (R3) — ONE floor, no bespoke drift. Returns
+// '' when the record carries no floor fields.
+function _severeFloorHtml(eff) {
+  if (!eff) return '';
+  let h = '';
+  if (Array.isArray(eff.severeSigns) && eff.severeSigns.length) {
+    h += `<div class="cons-severe"><div class="cons-severe-h">${zi('siren')} If this happens, it's an emergency</div><ul class="cons-severe-list">${
+      eff.severeSigns.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul></div>`;
+  }
+  if (Array.isArray(eff.watchFor) && eff.watchFor.length) {
+    h += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
+      eff.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
+  }
+  if (eff.seekCare) {
+    h += `<p class="cons-seek">${zi('siren')} <span>${escHtml(eff.seekCare)}</span></p>`;
+  }
+  return h;
+}
+
 // Finding A — age-gate consequence surface. When a parent marks an age-gated
 // food tried below its gate, warn-and-allow: surface the consequence, then let
 // them proceed via onProceed. NEVER blocks — a parent may be recording an
@@ -4064,19 +4099,10 @@ function foodConsequenceCard(detail, onProceed) {
   const critical = detail.severity === 'critical';
   let inner = `<div class="cons-head">${zi('warn')}<h3 class="cons-title">${escHtml(detail.title || 'Worth a pause')}</h3></div>`;
   if (detail.why) inner += `<p class="cons-why">${escHtml(detail.why)}</p>`;
-  // Severe-reaction strip (A-1/V-1): unconditional, non-collapsible, amber.
-  if (Array.isArray(detail.severeSigns) && detail.severeSigns.length) {
-    inner += `<div class="cons-severe"><div class="cons-severe-h">${zi('siren')} If this happens, it's an emergency</div><ul class="cons-severe-list">${
-      detail.severeSigns.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul></div>`;
-  }
-  // Mild watch-fors — present whenever the record carries them (A-4 decouple).
-  if (Array.isArray(detail.watchFor) && detail.watchFor.length) {
-    inner += `<div class="cons-watch"><div class="cons-watch-h">Watch for</div><ul class="cons-watch-list">${
-      detail.watchFor.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul></div>`;
-  }
-  if (detail.seekCare) {
-    inner += `<p class="cons-seek">${zi('siren')} <span>${escHtml(detail.seekCare)}</span></p>`;
-  }
+  // Emergency floor (A-1/V-1 severe strip + A-4 mild watch-fors + seek-care) via
+  // the shared renderer (M-S-7) — one floor across the log-time card, the combo
+  // checker, and the allergen note. `detail` carries the same field shape.
+  inner += _severeFloorHtml(detail);
   // Affordance (Vela V-V-1/V-V-2): the SAFE action carries the visual weight and
   // sits rightmost (the resting-thumb target), so a half-awake parent skimming
   // for the dismiss tap can't mistake the loud button for "proceed". "Log it
