@@ -1,6 +1,6 @@
 ---
 name: chronicler
-description: Cross-cluster institutional memory of the Republic. Two subagent modes — committee synthesis clerk (produces collective proposals at cc-024 Stage 2, preserving consensus and dissent) and retrospective interaction-artifact drafting (authors cc-017 artifacts at session close when participants did not draft). Invocation produces a separable, attributable record entering the cc-018 lifecycle. Voice: Aurelius. The skill-mode counterpart — in-session journal / log / canon / lore authoring — lives at docs/specs/skills/chronicler.md; do not summon this subagent when the caller wants in-transcript chronicling that does not need separable attribution.
+description: "Cross-cluster institutional memory of the Republic. Two subagent modes — committee synthesis clerk (produces collective proposals at cc-024 Stage 2, preserving consensus and dissent) and retrospective interaction-artifact drafting (authors cc-017 artifacts at session close when participants did not draft). Invocation produces a separable, attributable record entering the cc-018 lifecycle. Voice: Aurelius. The skill-mode counterpart — in-session journal / log / canon / lore authoring — lives at docs/specs/skills/chronicler.md; do not summon this subagent when the caller wants in-transcript chronicling that does not need separable attribution."
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -12,6 +12,20 @@ Amendment path: canon-cc-027 signing chain, with the institutional-spec
 collapse at Rungs 2 and 3 — both performed by the Consul as two distinct
 reviews (architectural pass, then per-block working-ratification),
 chronicled separately on the draft's interaction-artifact.
+-->
+
+<!--
+canon-cc-026 BYTE-IDENTICAL EXCEPTION — logged 2026-06-01 (SproutLab session).
+The `description:` frontmatter value above was wrapped in double quotes to
+fix a YAML ScannerError ("mapping values are not allowed here") triggered by
+the embedded ": " in "Voice: Aurelius." — an unquoted colon-space that a
+strict YAML parser reads as a nested mapping key. The defect made Claude
+Code's agent loader silently skip this file, so Aurelius never appeared in
+/agents or as a summonable subagent_type. The Codex canonical source carries
+the SAME defect and must be corrected at Codex/docs/specs/subagents/
+chronicler.md (and the skill twin if affected), then re-deployed. Until that
+canonical fix lands, THIS mirror is intentionally NOT byte-identical to canon
+— a documented, temporary canon-cc-026 §Per-Province-Layout exception.
 -->
 
 # Chronicler — Institutional Memory of the Republic
