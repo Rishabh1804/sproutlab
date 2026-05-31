@@ -3980,6 +3980,36 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .consequence-card { background:var(--surface); }
 [data-theme="dark"] .cons-severe { background:var(--surface-amber); }
 
+/* ── food-effects v2 Phase γ — persistent encourage (nut-introduction) card ──
+   Polarity→color (V-3): SAGE leads (encourage); the severe strip borrows the
+   shared .cons-severe AMBER (serious-without-alarm); rose stays reserved for
+   acute-toxin. The benefit banner is the only top-of-card affirmer — green-topped
+   reads pre-literately as "do this," never "avoid." */
+.enc-benefit { background:var(--surface-sage); border-left:3px solid var(--sage-deepest); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); }
+.enc-benefit-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--sage-deepest); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.enc-benefit-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--sage-deepest); }
+.enc-claim { font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-4); }
+.enc-evidence { font-size:var(--fs-sm); color:var(--light); line-height:var(--lh-relaxed); margin:0 0 var(--sp-8); }
+.enc-why-list { margin:0; padding-left:var(--sp-20); }
+.enc-why-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
+.enc-block { margin-bottom:var(--sp-16); }
+.enc-block-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.enc-block-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-sage); }
+.enc-proto { margin:0 0 var(--sp-12); display:flex; flex-direction:column; gap:var(--sp-4); }
+.enc-proto-row { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); }
+.enc-proto-row b { color:var(--sage-deepest); }
+.enc-form { background:var(--surface-sage); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); }
+.enc-form-sub { font-size:var(--fs-sm); font-weight:700; color:var(--text); text-transform:uppercase; letter-spacing:0.3px; margin:0 0 var(--sp-8); }
+.enc-form-list { margin:0 0 var(--sp-8); padding-left:var(--sp-20); }
+.enc-form-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
+.enc-form-list.enc-never li { color:var(--rose-deep); }
+.enc-form-note { font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-relaxed); margin:var(--sp-8) 0 0; }
+.enc-highrisk { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin:var(--sp-12) 0 0; padding:var(--sp-8) var(--sp-12); background:var(--surface-amber); border-radius:var(--r-sm); }
+.enc-emergency { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--amber-deepest); margin:var(--sp-8) 0 0; line-height:var(--lh-relaxed); }
+.enc-emergency .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--amber-deep); margin-top:3px; }
+.enc-myth { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:var(--sp-16) 0 0; padding:var(--sp-12) var(--sp-16); background:var(--surface-lav); border-radius:var(--r-md); }
+.enc-myth .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-lav); margin-top:3px; }
+
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
    HTML cell) gets a pointer cursor without a per-element class. */
