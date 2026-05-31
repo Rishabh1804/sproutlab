@@ -23341,9 +23341,15 @@ function _foodNameNegated(hay, token) {
   const t = String(token).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // suffix form: "<token>-free" / "<token> free"  (peanut-free, nut free, dairy-free)
   if (new RegExp('\\b' + t + '[\\s-]+free\\b').test(hay)) return true;
-  // prefix form: "no <token>" / "without <token>" / "free of|from <token>"
-  // (tolerates up to two filler words: "no added nuts", "without any peanut")
-  if (new RegExp('\\b(?:no|without|free\\s+of|free\\s+from)\\b(?:\\s+\\w+){0,2}\\s+' + t + '\\b').test(hay)) return true;
+  // prefix form: "no <token>" / "without <token>" / "free of|from <token>". Only a
+  // pure intensifier ("added"/"any") may sit between the negator and the token —
+  // NOT an arbitrary filler window. M-R0-N (Maren, R0 ripple): a {0,2}-word window
+  // let "no" bind ACROSS an unrelated noun to a real food ("no salt almond" →
+  // almond was GIVEN, just salt-free) and drop its allergen record — a dropped
+  // warning, worse than the spurious match R0 fixes. The negator must govern the
+  // token directly: "no added nuts" / "without any peanut" still match;
+  // "no salt almond" / "no added sugar peanut" must NOT (those are exposures).
+  if (new RegExp('\\b(?:no|without|free\\s+of|free\\s+from)\\s+(?:added\\s+|any\\s+)?' + t + '\\b').test(hay)) return true;
   return false;
 }
 

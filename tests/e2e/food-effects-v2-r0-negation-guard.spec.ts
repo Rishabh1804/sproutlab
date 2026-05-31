@@ -74,6 +74,34 @@ test.describe('food-effects v2 — R0 negation-leak guard', () => {
     expect(r.peanutPaste, 'positive "peanut paste" unaffected').toContain('allergen-introduce-early');
   });
 
+  test('M-R0-N: an unrelated leading negator must NOT suppress a real exposure', async ({ page }) => {
+    // Maren's blocking ripple finding: "no salt almond" / "no added sugar peanut"
+    // are foods the baby GOT (salt-/sugar-free) — the negator governs salt/sugar,
+    // not the food. The guard must NOT drop their allergen record (a dropped
+    // anaphylaxis warning is worse than a spurious one). The negator only
+    // suppresses when it governs the token directly (adjacent / intensifier-only).
+    const r = await page.evaluate(() => {
+      const cls = (x: any) => (x && x.foodClass)
+        ? (Array.isArray(x.foodClass) ? x.foodClass : [x.foodClass]) : [];
+      return {
+        // real exposures with an unrelated leading negator — MUST still resolve
+        noSaltAlmond: cls(getFoodEffect('no salt almond')),
+        noAddedSugarPeanut: cls(getFoodEffect('no added sugar peanut')),
+        noSaltWalnut: cls(getFoodEffect('no salt walnut')),
+        // direct-government avoidances — MUST still suppress (regression of the fix)
+        noPeanut: getFoodEffect('no peanut') === null,
+        noAddedNuts: getFoodEffect('no added nuts') === null,
+        withoutAnyPeanut: getFoodEffect('without any peanut') === null,
+      };
+    });
+    expect(r.noSaltAlmond, '"no salt almond" → almond was given (tree nut record kept)').toContain('allergen-introduce-early');
+    expect(r.noAddedSugarPeanut, '"no added sugar peanut" → peanut was given').toContain('allergen-introduce-early');
+    expect(r.noSaltWalnut.length, '"no salt walnut" → walnut was given (resolves)').toBeGreaterThan(0);
+    expect(r.noPeanut, '"no peanut" still suppressed (direct government)').toBe(true);
+    expect(r.noAddedNuts, '"no added nuts" still suppressed (intensifier)').toBe(true);
+    expect(r.withoutAnyPeanut, '"without any peanut" still suppressed (intensifier)').toBe(true);
+  });
+
   test('the guard is TARGETED — a negated modifier does not suppress a co-present food', async ({ page }) => {
     const r = await page.evaluate(() => ({
       // "apple (no nuts)" — nuts is negated, but a co-present non-negated food is not
