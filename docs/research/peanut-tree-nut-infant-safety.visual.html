@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peanut &amp; Tree Nuts — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#3a7060; --leaf:#2f7d5b; --leaf-bg:#e3f3ea;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#7ac0a0; --leaf:#7ac0a0; --leaf-bg:#1e3028;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--sage-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}
+  .panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)} .stat.ok .n{color:var(--leaf)} .stat.warn .n{color:var(--amber)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}
+  .b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--leaf)} .bar.hl .lab{color:var(--leaf)} .bar.hl .val{color:var(--leaf)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)} .tl-step.first .tl-dot{border-color:var(--leaf)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}
+  .flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}
+  .yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.good{background:var(--sage-bg);color:var(--sage);border-color:transparent}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}
+  .lead b{color:var(--accent)}
+  ul.tight{margin:6px 0;padding-left:20px}.tight li{margin:5px 0}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  pre .c{color:#8a9a7a}.k{color:#d8a0b0}.s{color:#cbb080}
+  .donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .legend{font-size:12.5px;color:var(--mid)}.legend b{color:var(--ink)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}
+  .col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Peanut &amp; Tree Nuts — Visual Dashboard</h1>
+  <p class="sub">Visual Care dashboard for the <b>guided-introduction</b> layer. Unlike honey (avoid), nuts are staples to <b>introduce early, in safe form</b>. Skim the Summary; drill into a tab for detail.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-ben">The Benefit</button>
+    <button class="tab" data-p="p-form">Safe Form</button>
+    <button class="tab" data-p="p-react">Reaction &amp; Care</button>
+    <button class="tab" data-p="p-ind">India Context</button>
+    <button class="tab" data-p="p-src">Sources</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+<!-- ───────── SUMMARY ───────── -->
+<section class="panel on" id="p-sum">
+  <div class="card" style="background:var(--sage-bg);border-color:transparent;margin-top:18px">
+    <p class="lead" style="margin:0">The one shift: <b>introduce peanut and tree nuts EARLY — around 6 months — not avoid them.</b> Early, regular introduction <b>lowers</b> allergy risk (LEAP: ~81%). The only gate is <b>FORM</b>: smooth/ground, never whole (choking until ~5). Two separate hazards — allergy and choking — and <b>grinding fixes only the choking one.</b></p>
+  </div>
+
+  <div class="grid g4">
+    <div class="card stat ok"><div class="n">~6<span style="font-size:14px">mo</span></div><div class="l">Introduce from ~6 months (not before 4) — AAP·NHS·ASCIA</div></div>
+    <div class="card stat ok"><div class="n">~81%</div><div class="l">peanut-allergy reduction with early intro — LEAP, NEJM 2015</div></div>
+    <div class="card stat warn"><div class="n">&lt;5<span style="font-size:14px">yr</span></div><div class="l">no whole/chopped nuts — choking hazard. Ground or smooth only</div></div>
+    <div class="card stat"><div class="n">2</div><div class="l">distinct hazards: allergy (intro + watch) &amp; choking (form). Different fixes</div></div>
+  </div>
+
+  <h3>The four things to know <span class="badge b-hi">all high-confidence</span></h3>
+  <div class="grid g2">
+    <div class="card"><b>1 · The advice reversed.</b> "Delay nuts to prevent allergy" is gone — delaying may <i>increase</i> allergy. Introduce early and keep offering. → <span class="jump" data-go="p-ben">The Benefit</span></div>
+    <div class="card"><b>2 · Form is the gate, not the food.</b> Whole nuts choke; smooth/ground nuts are safe and recommended early. Grinding removes the <i>choking</i> risk, not the <i>allergy</i> risk. → <span class="jump" data-go="p-form">Safe Form</span></div>
+    <div class="card"><b>3 · Watch the first exposure.</b> Small amount, at home, morning, watch ~2h. Know mild (hives/vomiting) vs severe (breathing/floppy → call 112). → <span class="jump" data-go="p-react">Reaction &amp; Care</span></div>
+    <div class="card"><b>4 · An Indian-vegetarian gift.</b> Groundnut, badam, akhrot, kaju are staples; soaked-peeled-ground almond paste is already a near-ideal safe form. → <span class="jump" data-go="p-ind">India Context</span></div>
+  </div>
+
+  <h3>When to surface this (the design hook)</h3>
+  <div class="card flag good" style="margin-top:0">
+    <b>Recommendation (food-effects-v2):</b> an <b>encourage-polarity</b> card (sage banner, not honey's rose warn-card) — benefit first, then the introduce-safely block (form + amount + watch + keep offering), then a <b>non-collapsible severe-reaction strip</b> the parent can't skim past. Ready-to-wire shape → <span class="jump" data-go="p-data">Data Stub</span>.
+  </div>
+
+  <div style="margin-top:14px">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill good">LEAP/EAT verified · NEJM</span>
+    <span class="pill warn">Research artifact — not yet wired into the app</span>
+  </div>
+  <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>peanut-tree-nut-infant-safety.md</code> · long-form HTML: <code>peanut-tree-nut-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+</section>
+
+<!-- ───────── THE BENEFIT ───────── -->
+<section class="panel" id="p-ben">
+  <h2>The advice reversed — early intro PREVENTS allergy</h2>
+  <div class="card">
+    <p style="margin:0 0 6px">Until ~2008–2015, guidance advised <b>delaying</b> allergens to prevent allergy. Reversed: <i>"no evidence that delaying introduction of allergenic foods… prevents allergies once babies are ready, typically at about 6 months"</i> (AAP). Delaying peanut <i>"may promote rather than prevent food allergies"</i> (WHO-aligned). <span class="badge b-hi">consensus</span></p>
+  </div>
+
+  <h3>LEAP trial — the pivotal evidence <span class="badge b-hi">NEJM 2015, verified</span></h3>
+  <div class="card">
+    <div class="bar"><span class="lab">Avoidance (skin-prick −)</span><span class="trk"><span class="fil" style="width:39%;background:var(--rose)"></span></span><span class="val">13.7%</span></div>
+    <div class="bar hl"><span class="lab">Early peanut (skin-prick −)</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1.9%</span></div>
+    <div class="bar"><span class="lab">Avoidance (sensitised)</span><span class="trk"><span class="fil" style="width:100%;background:var(--rose)"></span></span><span class="val">35.3%</span></div>
+    <div class="bar hl"><span class="lab">Early peanut (sensitised)</span><span class="trk"><span class="fil" style="width:30%"></span></span><span class="val">10.6%</span></div>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">640 high-risk infants randomised to regular peanut vs avoidance to age 5. <b>~81% overall reduction.</b> LEAP-On showed protection persisted after a 12-month avoidance period.</p>
+  </div>
+
+  <h3>EAT trial — the dose-and-adherence nuance</h3>
+  <div class="card">
+    <p style="margin:0">1,303 general-population infants, 6 allergens from 3 months vs ~6 months. <b>Intention-to-treat: not significant. Per-protocol (achieved the dose): significant reduction in peanut + egg allergy.</b> Only ~42% met the per-protocol target. <span class="badge b-hi">NEJM 2016</span></p>
+    <div class="flag"><b>⚑ The lesson is "introduce AND keep offering."</b> Early introduction is easy to attempt and hard to sustain — tolerance depends on repeated exposure, not a one-time taste. The app should reinforce ongoing offers, gently.</div>
+  </div>
+
+  <h3>Nutrition — the reinforcing co-benefit</h3>
+  <div class="grid g2">
+    <div class="card"><b>Peanut · almond · cashew</b><ul class="tight"><li>Plant protein + healthy fats</li><li>Almond (badam): vitamin E, magnesium, calcium</li><li>Cashew (kaju): zinc, iron, magnesium</li></ul></div>
+    <div class="card"><b>Walnut (akhrot)</b><ul class="tight"><li>Plant omega-3 ALA (~2.5 g/oz) — brain development</li><li>Complements (doesn't replace) other DHA sources</li><li>High value in a vegetarian diet</li></ul></div>
+  </div>
+  <div class="flag"><b>⚑ Don't over-claim.</b> The strongest reason to introduce early is <b>allergy prevention</b>, not a unique nutrient. Lead with prevention; nutrition reinforces. "Valuable," not "essential."</div>
+</section>
+
+<!-- ───────── SAFE FORM ───────── -->
+<section class="panel" id="p-form">
+  <h2>Form is the gate — grinding fixes choking, not allergy</h2>
+  <div class="therm">
+    <div class="col safe">
+      <div style="font-size:12px;color:var(--mid)">Smooth / ground (SAFE)</div>
+      <div class="big">introduce early</div>
+      <div style="font-size:12.5px">smooth nut butter <b>thinned</b>; finely ground nut powder/flour mixed into food; soaked-peeled-ground almond paste. Start ~¼ tsp.</div>
+    </div>
+    <div class="col danger">
+      <div style="font-size:12px;color:var(--mid)">Whole / chopped (CHOKING)</div>
+      <div class="big">never before ~5 yr</div>
+      <div style="font-size:12.5px">whole peanuts, whole/chopped tree nuts, chunky nut butter, or a thick glob off the spoon — all choking hazards.</div>
+    </div>
+  </div>
+  <div class="flag good"><b>✓ The design crux.</b> Unlike honey (cooking does NOT remove the spore hazard), for nuts <b>grinding/smoothing genuinely makes the food safe on the choking axis.</b> The allergy axis is separate and is NOT removed by form — that's managed by early introduction + watching.</div>
+  <div class="flag"><b>⚑ Upper-bound divergence.</b> AAP says under 4; NHS says under 5. House rule: the conservative <b>5</b> (also governs future grapes/popcorn/raw carrot).</div>
+
+  <h3>First-exposure protocol</h3>
+  <div class="card">
+    <div class="tl">
+      <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Small amount, one allergen at a time</div><div class="tl-d">~¼ tsp smooth/ground, stirred into a tolerated food.</div></div>
+      <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">At home, morning or midday</div><div class="tl-d">Not at dinner — so you can observe through the day.</div></div>
+      <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Watch ~2 hours</div><div class="tl-d">Most reactions appear within this window.</div></div>
+      <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">If tolerated — keep offering regularly</div><div class="tl-d">A few times a week maintains tolerance (EAT/LEAP-On lesson).</div></div>
+    </div>
+    <div class="flag bad"><b>⚑ High-risk branch (NIAID vs AAP).</b> US-NIAID: test high-risk infants (severe eczema / egg allergy) before first peanut. AAP/NHS/ASCIA: introduce ~6mo, no routine prescreen. Default = mainstream; the model surfaces a non-suppressible clinician-first note only for the eczema/egg-allergy cohort.</div>
+  </div>
+</section>
+
+<!-- ───────── REACTION & CARE ───────── -->
+<section class="panel" id="p-react">
+  <h2>Know mild from severe</h2>
+  <div class="grid g2">
+    <div class="card flag" style="margin:0"><b>Mild — one body system.</b> Itchy hives/welts, redness or rash; swelling around the mouth/eyes; vomiting, sometimes loose stool, sudden fussiness. → stop, watch closely, call your doctor.</div>
+    <div class="card flag bad" style="margin:0"><b>Severe — emergency.</b> Trouble breathing/wheeze; swelling of face/lips/tongue/throat; pale, floppy, or very sleepy; collapse. → <b>Call 112 right away</b> and use a prescribed adrenaline auto-injector.</div>
+  </div>
+  <div class="card">
+    <p style="margin:0;font-size:13px;color:var(--mid)">In babies, <b>behaviour change</b> (suddenly limp, can't hold head up) is a recognised severe sign. <b>94% of severe infant reactions involve hives; 83% involve vomiting.</b> Anaphylaxis can onset within <b>5–30 minutes</b> — keep watching across the first several exposures, not just day one.</p>
+  </div>
+  <div class="flag good"><b>✓ Reassurance.</b> Most introductions go fine. The point of "small amount, at home, watch ~2h" is exactly so that, in the rare reaction, you spot it early and act — not a reason to avoid the food.</div>
+</section>
+
+<!-- ───────── INDIA CONTEXT ───────── -->
+<section class="panel" id="p-ind">
+  <h2>An Indian-vegetarian gift</h2>
+  <div class="card">
+    <p style="margin:0">Groundnut/peanut, <b>badam</b> (almond), <b>akhrot</b> (walnut), <b>kaju</b> (cashew) are everyday foods. In a vegetarian household they are a primary source of protein and healthy fats — making early, regular introduction both culturally natural and nutritionally valuable. <span class="badge b-hi">staple status</span></p>
+  </div>
+
+  <h3>Cultural prep is already a safe form</h3>
+  <div class="card">
+    <p style="margin:0"><b>Traditional soaked-peeled-ground almond (badam) paste</b> — soaked overnight, skin removed, ground smooth, stirred into milk/porridge — is essentially a textbook infant-safe form: smooth, no choking risk, easy to dose. A cultural asset the model can affirm rather than override.</p>
+  </div>
+
+  <h3>IAP &amp; the honesty line</h3>
+  <div class="card flag good" style="margin-top:0"><b>✓ IAP (India) — choking + form confirmed.</b> Complementary-feeding guidance covers allergens + choking; peanut introduced as a small amount of peanut butter in cereal/fruit/yoghurt or dissolved in milk; whole peanuts/tree nuts not given to babies.</div>
+  <div class="card flag" style="margin-top:0"><b>⚑ Do NOT attribute early-intro-prevents-allergy to an Indian body.</b> No India-specific government early-introduction directive was located. The prevention claim is well-sourced <b>internationally</b> (AAP/NHS/ASCIA/NIAID) and culturally compatible — but it must not be laundered onto IAP/MoHFW/FSSAI (the honey-brief lesson). IAP's exact early-intro stance needs primary-PDF extraction first.</div>
+  <div class="card flag bad" style="margin-top:0"><b>✗ Separate food — soya / soya chunks.</b> Soy is its own allergen (also a legume), heavily used in this vegetarian household. Its own future record, NOT folded into peanut/tree-nut.</div>
+</section>
+
+<!-- ───────── SOURCES ───────── -->
+<section class="panel" id="p-src">
+  <h2>Who says what — consensus matrix</h2>
+  <div class="card" style="overflow-x:auto">
+  <table>
+    <tr><th>Authority</th><th class="c">Introduce ~6mo</th><th class="c">No whole nuts &lt;~5yr</th><th class="c">Prescreen high-risk</th></tr>
+    <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c yes">✓ (&lt;4)</td><td class="c no">✗ no routine</td></tr>
+    <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c yes">✓ (&lt;5)</td><td class="c no">✗ no routine</td></tr>
+    <tr><td>ASCIA (Australasia)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">✗ no routine</td></tr>
+    <tr><td>US NIAID (2017)</td><td class="c yes">✓ (4–6 high-risk)</td><td class="c yes">✓</td><td class="c yes">✓ test high-risk</td></tr>
+    <tr><td>WHO</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    <tr><td>IAP (India)</td><td class="c dash">— (form/choking yes)</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+  </table>
+  <p style="font-size:12px;color:var(--mid);margin:6px 0 0">The one genuine divergence is NIAID (test high-risk first) vs AAP/NHS/ASCIA (no routine prescreen) — region-dependent; a spec decision, not an error.</p>
+  </div>
+
+  <h2>Sources</h2>
+  <div class="card" style="overflow-x:auto">
+  <table>
+    <tr><th>Authority</th><th>Link</th></tr>
+    <tr><td>NEJM — LEAP trial (2015)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1414850">nejm.org/…/NEJMoa1414850</a></td></tr>
+    <tr><td>NEJM — LEAP-On (2016)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1514209">nejm.org/…/NEJMoa1514209</a></td></tr>
+    <tr><td>NEJM — EAT trial (2016)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1514210">nejm.org/…/NEJMoa1514210</a></td></tr>
+    <tr><td>NEJM Evidence — LEAP to adolescence (2024)</td><td><a href="https://evidence.nejm.org/doi/full/10.1056/EVIDoa2300311">evidence.nejm.org/…/EVIDoa2300311</a></td></tr>
+    <tr><td>NIAID — peanut allergy prevention (2017)</td><td><a href="https://www.niaid.nih.gov/sites/default/files/addendum-peanut-allergy-prevention-guidelines.pdf">niaid.nih.gov/…/peanut</a></td></tr>
+    <tr><td>AAP / HealthyChildren — allergens</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+    <tr><td>UK NHS — foods to avoid</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk/baby/…</a></td></tr>
+    <tr><td>ASCIA — infant feeding for allergy prevention</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+    <tr><td>IAP — Complementary Feeding (Ch-040)</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org/…/Ch-040</a></td></tr>
+    <tr><td>WHO — Complementary feeding 6–23mo (2023)</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov/books/NBK596423</a></td></tr>
+    <tr><td>Allergy &amp; Asthma Network — infant anaphylaxis</td><td><a href="https://allergyasthmanetwork.org/anaphylaxis/infant-anaphylaxis/">allergyasthmanetwork.org/…/infant-anaphylaxis</a></td></tr>
+    <tr><td>JACI In Practice — cross-reactivity</td><td><a href="https://www.jaci-inpractice.org/article/S2213-2198(18)30739-6/pdf">jaci-inpractice.org/…/cross-reactivity</a></td></tr>
+  </table>
+  </div>
+  <div class="flag"><b>⚑ Method note:</b> firecrawl_search was permission-denied; figures via WebSearch + one firecrawl_extract on the NEJM LEAP paper. All major claims double-sourced; the AAP-vs-NIAID prescreen divergence is flagged, not resolved.</div>
+</section>
+
+<!-- ───────── DATA STUB ───────── -->
+<section class="panel" id="p-data">
+  <h2>Drop-in data shape — <code>FOOD_EFFECTS['peanut']</code></h2>
+  <p style="font-size:13.5px;color:var(--mid)">Two records (peanut + tree nut) reached by <code>aliases</code>. v2 fields carry the benefit axis (<code>whyGood</code>/<code>earlyIntroBenefit</code>), the form gate (<code>safeForm</code>), the protocol (<code>howToIntroduce</code>), and the non-collapsible <code>severeSigns</code> strip. Spec: <code>docs/specs/food-effects-v2-guided-introduction.md</code>. <b>Not yet wired.</b></p>
+<pre><span class="c">// guided-introduction record — encourage polarity, two hazards</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'peanut'</span>: {
+    foodClass:  [<span class="s">'allergen-introduce-early'</span>, <span class="s">'choking-by-form'</span>],
+    severity:   <span class="s">'caution'</span>,            <span class="c">// amber, NOT rose (rose = acute-toxin honey)</span>
+    aliases:    [<span class="s">'peanuts'</span>, <span class="s">'groundnut'</span>, <span class="s">'moongphali'</span>, <span class="s">'peanut butter'</span>],
+    whyGood:    <span class="s">'High-value plant protein + healthy fats; early peanut lowers allergy risk.'</span>,
+    earlyIntroBenefit: { evidence: <span class="s">'LEAP (NEJM 2015): regular early peanut cut allergy ~80% at age 5.'</span> },
+    safeForm:   { ok:[<span class="s">'smooth peanut butter thinned'</span>, <span class="s">'finely ground peanut'</span>],
+                  never:[<span class="s">'whole peanuts'</span>, <span class="s">'chopped peanuts'</span>], chokingUntilYears: <span class="s">5</span> },
+    howToIntroduce: { amount:<span class="s">'~1/4 tsp'</span>, when:<span class="s">'morning/midday, at home'</span>, watch:<span class="s">'~2 hours'</span>,
+                  thenWhat:<span class="s">'keep offering a few times a week'</span> },
+    watchFor:    [<span class="s">'hives or a rash'</span>, <span class="s">'swelling around the mouth'</span>, <span class="s">'vomiting'</span>],
+    severeSigns: [<span class="s">'trouble breathing'</span>, <span class="s">'face/lip/tongue swelling'</span>, <span class="s">'floppy or very sleepy'</span>],
+    seekCare:    <span class="s">'Any breathing trouble or swelling: call 112 + use adrenaline if prescribed.'</span>,
+    confidence:  <span class="s">'high'</span>,
+  },
+};</pre>
+  <div class="flag good"><b>Surfacing hook:</b> an <b>encourage</b> card (sage), not honey's <b>warn</b> card (rose). Benefit banner → introduce-safely (form/amount/watch/keep-offering) → the amber <b>severe-reaction strip</b> (unconditional, never collapsed) → mild watch-fors → the "delay" myth. severity:'caution' drives amber chrome; rose stays reserved for acute-toxin.</div>
+</section>
+
+<p class="foot">SproutLab · Care visual dashboard · skim layer over <code>peanut-tree-nut-infant-safety.md</code> / <code>.html</code> · 2026-05-30<br>
+Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p);
+    if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'});
+    window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){
+      activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]'));
+    });
+  });
+  function step(dir){
+    var cur = tabs.findIndex(function(t){return t.classList.contains('on');});
+    var next = cur + dir;
+    if(next >= 0 && next < tabs.length) activate(tabs[next]);
+  }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length>1){ tracking=false; return; }
+    sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX - sx, dy=e.changedTouches[0].clientY - sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1);
+  });
+</script>
+</body>
+</html>
