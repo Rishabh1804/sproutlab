@@ -3983,20 +3983,35 @@ function confirmAction(msg, callback, btnText) {
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 }
 
-// Shared name-normalised table lookup: exact → de-pluralised → whole-word match.
-// The third tier uses a WORD BOUNDARY (\bkey\b), NOT bare substring, so 'honey'
-// resolves 'raw honey'/'honey water' but NOT 'honeydew'/'honeycomb' — a safe
-// library fruit must never inherit honey's critical card (V-M-205-B1). Both
+// Shared name-normalised table lookup: exact → de-pluralised → whole-word match
+// on the key, then whole-word match on a record's optional `aliases[]`.
+// The whole-word tiers use a WORD BOUNDARY (\bX\b), NOT bare substring, so
+// 'honey' resolves 'raw honey'/'honey water' but NOT 'honeydew'/'honeycomb' — a
+// safe library fruit must never inherit honey's critical card (V-M-205-B1). Both
 // getFoodEffect (FOOD_EFFECTS) and diet.js _fdAgeRule (AGE_RULES) route through
 // this one resolver, so the age GATE and the consequence CARD can never disagree.
+//
+// food-effects-v2 (P1a-β): a record value may carry an `aliases` array so ONE
+// record covers a whole food FAMILY logged under many names — e.g. one
+// 'tree nut' record reached by 'almond'/'badam'/'walnut'/'akhrot'/'cashew'/
+// 'kaju'. Keeps the manifest's two-record model (spec §7) without exploding
+// into a per-nut key. Aliases match by the SAME word-boundary rule, so
+// 'coconut' still never matches a 'nut' alias. Backward-compatible: records
+// without `aliases` (honey, every legacy AGE_RULES/ALLERGENS entry) are
+// unchanged. Kept self-contained (no external helper) because the build audit
+// gate extracts and evals this function in isolation.
 function _lookupByFoodName(table, name) {
   if (!table || !name) return null;
   const n = String(name).toLowerCase().trim();
   if (table[n]) return table[n];
   const dep = n.replace(/s$/, '');
   if (table[dep]) return table[dep];
-  return (Object.entries(table).find(([k]) =>
-    new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n)) || [])[1] || null;
+  const wb = (token) => new RegExp('\\b' + String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n);
+  const byKey = Object.entries(table).find(([k]) => wb(k));
+  if (byKey) return byKey[1];
+  const byAlias = Object.values(table).find(v =>
+    v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a)));
+  return byAlias || null;
 }
 
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so

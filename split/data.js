@@ -2414,6 +2414,15 @@ const AGE_RULES = {
   'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
   'whole nut': { minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
   'whole nuts':{ minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
+  // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
+  // ~6mo), NOT the 60mo 'whole nut' choking gate — that's the FORM, this is the
+  // FOOD. aliases mirror the FOOD_EFFECTS records so the age GATE and the
+  // consequence CARD agree for every name (almond/badam/akhrot/…) — the
+  // one-resolver doctrine (V-M-205-B1). reason frames introduce-early + form.
+  'peanut':   { minMonth:6, aliases:['peanuts','groundnut','groundnuts','moongphali','mungfali','peanut butter'],
+                reason:'Good to introduce from ~6 months, in safe form — smooth/ground, never whole (choking). Early, regular peanut lowers allergy risk.' },
+  'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
+                reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
   'chocolate':{ minMonth:12, reason:'Contains sugar and caffeine. Avoid before 12 months.' },
@@ -2450,6 +2459,79 @@ const FOOD_EFFECTS = {
     why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
     watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
     seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
+    confidence: 'high',
+  },
+
+  // ── food-effects-v2 P1a-β: peanut + tree nut (guided-introduction) ──
+  // Two records sharing one brief/dashboard (spec §7), reached at runtime by
+  // their `aliases` via _lookupByFoodName. Both are allergen-introduce-early
+  // (encourage early intro — LEAP) AND choking-by-form (whole = choking until
+  // ~5). severity:'caution' (amber chrome), NOT 'critical' (rose, reserved for
+  // acute-toxin). severeSigns[] is the non-collapsible emergency strip (A-1/V-1),
+  // distinct from the calm mild watchFor[]. Evidence + citations:
+  // docs/research/peanut-tree-nut-infant-safety.md (LEAP/EAT verified).
+  'peanut': {
+    foodClass:  ['allergen-introduce-early', 'choking-by-form'],
+    severity:   'caution',
+    aliases:    ['peanuts', 'groundnut', 'groundnuts', 'moongphali', 'mungfali', 'peanut butter'],
+    effect:     'food allergy + choking-by-form',
+    title:      'Peanut — good to introduce early, in safe form',
+    why:        'Around 6 months, once a few solids are going well, peanut is worth introducing — not avoiding. It is a strong plant protein and healthy-fat source, and introducing it early and regularly lowers the chance of a peanut allergy.',
+    whyGood:    'High-value plant protein and healthy fats; early, sustained peanut markedly lowers the risk of developing a peanut allergy.',
+    earlyIntroBenefit: {
+      claim:    'Introducing peanut early and keeping it in the diet helps prevent peanut allergy.',
+      evidence: 'In a large randomised trial (LEAP, 2015), regular early peanut cut peanut allergy at age 5 by about 80%.',
+      paradigm: 'This reverses the old "delay nuts to avoid allergy" advice.',
+    },
+    safeForm: {
+      ok:       ['smooth peanut butter thinned with milk, water, or puree', 'finely ground peanut or peanut flour stirred into food'],
+      never:    ['whole peanuts', 'chopped peanuts', 'a thick glob of nut butter'],
+      chokingUntilYears: 5,
+      note:     'Grinding or thinning removes the choking risk only — it does not remove the allergy risk. Never give a whole or chopped peanut before about 5 years.',
+    },
+    howToIntroduce: {
+      amount:   'start with about 1/4 teaspoon',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after',
+      thenWhat: 'if it goes well, keep offering a few times a week to hold the protection',
+      oneAtATime: true,
+      highRiskNote: 'If your baby has severe eczema or a known egg allergy, talk to your paediatrician before the first taste.',
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one.',
+    confidence: 'high',
+  },
+  'tree nut': {
+    foodClass:  ['allergen-introduce-early', 'choking-by-form'],
+    severity:   'caution',
+    aliases:    ['tree nuts', 'almond', 'almonds', 'badam', 'walnut', 'walnuts', 'akhrot', 'cashew', 'cashews', 'kaju', 'pistachio', 'pista', 'hazelnut', 'pecan', 'almond butter', 'almond paste'],
+    effect:     'food allergy + choking-by-form',
+    title:      'Tree nuts — good to introduce early, ground or smooth',
+    why:        'Almond (badam), walnut (akhrot), and cashew (kaju) are worth introducing from around 6 months, ground or as a smooth paste. They bring protein, healthy fats, vitamin E, and (walnut) plant omega-3 — valuable in a vegetarian diet.',
+    whyGood:    'Protein, healthy fats, vitamin E (almond), and plant omega-3 (walnut); early, regular introduction supports tolerance.',
+    earlyIntroBenefit: {
+      claim:    'Introducing tree nuts early, in safe form, and keeping them in the diet supports tolerance.',
+      evidence: 'The same early-introduction evidence base as peanut (LEAP/EAT) supports not delaying allergens; direct tree-nut trial evidence is thinner than for peanut.',
+      paradigm: 'This reverses the old "delay nuts to avoid allergy" advice.',
+    },
+    safeForm: {
+      ok:       ['finely ground nuts or nut powder stirred into food', 'smooth nut butter or paste thinned', 'traditional soaked, peeled, ground almond (badam) paste'],
+      never:    ['whole nuts', 'chopped nuts', 'a thick glob of nut butter'],
+      chokingUntilYears: 5,
+      note:     'Grinding or smoothing removes the choking risk only — it does not remove the allergy risk. Never give a whole or chopped nut before about 5 years.',
+    },
+    howToIntroduce: {
+      amount:   'start small (about 1/4 teaspoon)',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after',
+      thenWhat: 'if it goes well, keep offering regularly; introduce each nut on its own a few days apart',
+      oneAtATime: true,
+      highRiskNote: 'If your baby has severe eczema or a known egg allergy, talk to your paediatrician before the first taste.',
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one.',
     confidence: 'high',
   },
 };
