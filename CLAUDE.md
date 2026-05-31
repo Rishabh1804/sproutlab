@@ -30,8 +30,11 @@ The Province's seated Companions — Lyra (Builder), Maren (Governor of Care), K
 | Kael | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
 | Vela | `.claude/agents/vela.md` | `.claude/skills/vela.md` |
 | Cipher | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
+| Chronicler (Aurelius) | `.claude/agents/chronicler.md` | `.claude/skills/chronicler.md` |
 
 Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/docs/specs/subagents/cipher.md` + `…/skills/cipher.md`) per canon-cc-026 §Per-Province-Layout. Cipher remains Censor of Cluster A (Codex + SproutLab), not a Province seat; the mirror is for in-Province invocation of the Edict V final-pass and skill-mode hat-switch without leaving the Province context.
+
+**Chronicler (Aurelius)** is likewise a byte-identical Codex-canon mirror (`Codex/docs/specs/subagents/chronicler.md` + `…/skills/chronicler.md`), deployed here per canon-cc-026 §Per-Province-Layout + canon-cc-027 Rung 5 (the cross-cluster role replicates to every Province). He is a **cross-cluster visitor, not a seated SproutLab Companion** — the mirror lets a single-repo SproutLab session summon Aurelius for in-session journaling and synthesis. **His authored records persist to Codex per canon-cc-010 ("records are Codex"), and he never commits to SproutLab's Capital (Edict II)** — so durable archiving of his output still routes through Codex.
 
 **Scribe Worker Tier (Book II Art. 3-bis, canon-proc-006).** Alongside the seated Companions, each senior companion may command a detail of four task-specialised Scribes — `scribe-scout` (reconnaissance), `scribe-draft` (composition), `scribe-verify` (mechanical checks), `scribe-record` (chronicling) — to parallelize work. They deploy as subagents at `.claude/agents/scribe-*.md`, byte-identical to the Codex canonical bodies except the Province-tuned *serving voice* section (the canon-cc-026 carve-out ratified in canon-proc-006). Scribes are alike at birth and absorb the voice of whoever summons them; they support but do not deliberate — read, search, draft, run checks, but never commit, ratify, or hold canonical voice. The commanding companion reviews every return and owns every committed act.
 
