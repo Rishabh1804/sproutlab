@@ -10,26 +10,21 @@
 
 ## The recommended next move
 
-**Phase γ — build the persistent *encourage* Info-tab card.**
+**P1b — the sustained-exposure engine + nudge, with the negation-leak guard first. Architect-decided start mode: SPEC THE ENGINE FIRST.**
 
-P1a (#184) put peanut + tree nut into the data layer with the full guided-introduction schema (benefit, safe-form, watch-fors, severe-signs) — but the only surface that renders it is the **log-time consequence card**, which fires *only when a food is logged below its age floor*. Ziva is ~9 months; the peanut/tree-nut floor is 6 months — so **for the exact baby who is the right age to be introduced, none of the guidance shows.** The benefit and the safe-form rule and the anaphylaxis watch-fors all sit in `FOOD_EFFECTS`, invisible.
+> **Phase γ is SHIPPED (PR #187, ready/merged-pending).** The persistent *encourage* Info-tab card now surfaces the peanut/tree-nut benefit + safe-form + watch-for guidance to an age-appropriate parent — the gap below is closed. canon-cc-008 clean (Vela + Maren + Kael all `clear-with-notes`; M-γ-1 per-food keep-offering + V-V-γ-1 advisory-fill folded; **Cipher Edict V "Ship it."**). See `docs/SESSION_HANDOFF_2026-05-31_PM.md`.
 
-Phase γ is the surface that closes that gap: a **persistent, benefit-first Info-tab card** (Vela's `intelligence-cards.js`) that a parent seeks out *before* introducing a food. It is the move that makes the entire v2 model actually reach a parent.
+The next gap: P1a put benefit/safe-form/watch-fors into the data and γ made them *visible*, but the **sustained-exposure** lesson (EAT: tolerance depends on *keep offering*, not a one-time tick) is still un-modelled. P1b builds the engine that tracks it and the calm nudge that surfaces it — and **before any auto-counting**, the `\b(no|free|without|-free)\b` negation-leak guard (today "peanut-free" whole-word-matches `peanut`). Per the 2026-05-31 PM close, **start P1b by writing the engine spec** (the §5 open questions — exposure-log location, trailing window, nudge throttle, reaction-marking UX) for Kael spec-review *before* code.
 
 ---
 
 ## Priority ladder
 
-### P-γ (do this first) — the persistent encourage card
-Per spec `docs/specs/food-effects-v2-guided-introduction.md` §4. A `renderInfo*` card in `intelligence-cards.js` composing, in fixed order:
-1. **Benefit banner** — `whyGood` + `earlyIntroBenefit.claim`, `--surface-sage` fill + affirming icon (not `zi('warn')`). Suppressed for `acute-toxin` (honey stays warn/rose).
-2. **Introduce-safely block** — `howToIntroduce` (amount/when/watch/keep-offering) + the `safeForm` form-gate line ("ground/smooth only, never whole; grinding removes choking not allergy"), non-suppressible; carries `highRiskNote` for the eczema/egg cohort.
-3. **Severe-reaction strip** — `severeSigns[]` + emergency action, **unconditional, non-collapsible, amber** (the A-1/V-1/V-3 invariant — reuse the `.cons-severe` pattern already shipped).
-4. **Mild watch-fors + the "delay" myth.**
-Polarity→color: sage encourage, rose reserved for acute-toxin, amber the caution strip. Chain: **Vela-primary** (render); **Maren** on any safety-copy surfaced; **Cipher** Edict V terminal. e2e: the card renders benefit-first for peanut; the severe strip is non-collapsible; honey (acute-toxin) suppresses the benefit banner and stays rose.
+### P-γ — the persistent encourage card — ✅ SHIPPED (PR #187)
+Per spec `docs/specs/food-effects-v2-guided-introduction.md` §4. A `renderInfoNutIntro()` card in `intelligence-cards.js` (single combined peanut+tree-nut card, all copy record-sourced) composing, in fixed order: benefit banner (sage, `zi('sprout')`) → introduce-safely (per-food keep-offering + the non-suppressible form-gate note + the neutral high-risk note) → the **non-collapsible amber severe strip** (in the always-visible summary, never the accordion) → the "delay" myth; mild watch-fors in the collapse body. e2e `food-effects-v2-encourage-card.spec.ts` (6 guards). **Render realisation of the emergency-floor invariant: the non-collapsible content lives in the card's summary slot, not inside the collapse-body — so the uniform collapsible shell (the v3-6 "first info card has a body" contract) and the §4.3 floor both hold.**
 
-### P1b — sustained-exposure engine + nudge + the negation guard (Kael)
-Per spec §5. The exposure log (derive-on-read vs sidecar — Kael's call), `firstIntroduced`/`lastOffered`/`cadence`/**`reactionLogged`**, and the calm "keep offering" nudge (Info / Today-So-Far, `calm`/`pending` chip register, never a CareTicket, hard-suppress on `reactionLogged`). **Land the negation-leak guard FIRST** (a leading `\b(no|free|without|-free)\b` check in/around the resolver) — "peanut-free" currently whole-word-matches `peanut`, and once the engine auto-counts resolver matches it would accrue false "peanut introduced" exposures. (Kael flagged; pre-existing, becomes load-bearing here.)
+### P1b (do this first) — sustained-exposure engine + nudge + the negation guard (Kael)
+Per spec §5. **Start by SPEC-ing the engine** (Architect decision, 2026-05-31 PM): the §5 open questions — exposure-log location (derive-on-read from the feeding log vs a persisted sidecar), trailing-window length, nudge cadence/throttle, the reaction-marking UX, interaction with the introduced-foods store — go into a P1b spec for **Kael spec-review** before code. Then build: the exposure log, `firstIntroduced`/`lastOffered`/`cadence`/**`reactionLogged`**, and the calm "keep offering" nudge (Info / Today-So-Far, `calm`/`pending` chip register, never a CareTicket, hard-suppress on `reactionLogged`). **Land the negation-leak guard FIRST** (a leading `\b(no|free|without|-free)\b` check in/around the resolver) — "peanut-free" currently whole-word-matches `peanut`, and once the engine auto-counts resolver matches it would accrue false "peanut introduced" exposures. (Kael flagged; pre-existing, becomes load-bearing here.)
 
 ### P1c — the remaining foods, through the pipeline
 Architect-ratified order: **egg → seeds (sesame/til) → cow + plant milks.** Each: research (`docs/research/<food>-infant-safety.{md,html,visual.html}`) → manifest record → `FOOD_EFFECTS` + `AGE_RULES` → it surfaces automatically via the γ card → e2e + canon-cc-008. Milk is the most complex (drink-timing + the plant/"artificial"-milk `substitute-caveat` sub-typing); egg is the cleanest second exercise.

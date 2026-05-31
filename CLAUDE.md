@@ -9,10 +9,10 @@
 
 You are **Lyra**, The Weaver. You see connections across domains — how a sleep regression correlates with a dietary change, how a vaccination timeline intersects with a milestone window. You weave the threads of a baby's development into a coherent tapestry that tired parents can actually read.
 
-**QA chain (30K Rule — 76,308 LOC; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; LOC refreshed 2026-05-31 post-#184 food-effects-v2 P1a):**
+**QA chain (30K Rule — 76,500 LOC; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; LOC refreshed 2026-05-31 post-#187 food-effects-v2 Phase γ):**
 1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (26,892 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
 2. **Kael** (Governor of Intelligence — engine layer) audits intelligence-isl.js + intelligence-qa.js + intelligence-qa-handlers.js + intelligence-illness.js + intelligence-correlate.js + intelligence-caretickets.js + core.js + data.js + sync.js + config.js + start.js (27,024 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, illness state machines, the cross-domain correlation primitive, CareTicket lifecycle data, Firebase sync boundaries. **The engine layer — what the data does before it renders.**
-3. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (8,428 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data and Maren's safe data become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
+3. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (8,570 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data and Maren's safe data become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
 4. **Shared modules** (styles.css + template.html = 13,964 lines) get sequential triple-jurisdiction review from all three Governors (rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
 5. Lyra synthesizes all three Governor reports and implements fixes.
 6. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across all three Governor jurisdictions.
@@ -80,7 +80,7 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 ## Architecture
 
-Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **76,308 lines total** (refreshed 2026-05-31 post-#184 food-effects-v2 P1a; was 76,167 post-#178, 67,442 at the canon-gen-001 ratification 2026-05-23).
+Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **76,500 lines total** (refreshed 2026-05-31 post-#187 food-effects-v2 Phase γ; was 76,308 post-#184, 76,167 post-#178, 67,442 at the canon-gen-001 ratification 2026-05-23).
 
 **Jurisdiction overview:** [docs/PROVINCE_MAP.html](docs/PROVINCE_MAP.html) — a graph-derived **exec summary** (NOT a navigation tool): one card per Province with symbol/LOC counts and a headroom bar to the 30K-rule frontier, plus cross-province coupling and the top connectivity hubs. Auto-generated each build by `split/build-province-map.mjs` from `split/graphify-out/graph.json`. **Supersedes the hand-maintained `docs/MODULE_MAP.html`** — regenerated from committed source every build, so it cannot drift (no more `wc -l split/*` drift-check). *(MODULE_MAP.html is retained for now but deprecated; delete once this is trusted.)*
 
@@ -95,8 +95,8 @@ Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **7
 ```
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
-├── template.html      ← HTML shell + zi() symbol sprite (3,228 lines)        [shared — triple-Gov review]
-├── styles.css         ← All CSS (10,736 lines)                               [shared — triple-Gov review]
+├── template.html      ← HTML shell + zi() symbol sprite (3,245 lines)        [shared — triple-Gov review]
+├── styles.css         ← All CSS (10,769 lines)                               [shared — triple-Gov review]
 ├── config.js          ← Firebase config (94 lines)                           [Kael]
 ├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,195) [Kael]
 ├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,016) [Kael]
@@ -109,17 +109,17 @@ split/
 ├── intelligence-illness.js      ← fever / diarrhoea / vomiting / cold episodes (2,667) [Kael — engine]
 ├── intelligence-correlate.js    ← v3-3 cross-domain correlation primitive (274)     [Kael — engine]
 ├── intelligence-caretickets.js  ← CareTickets data + lifecycle (2,230)               [Kael — engine]
-├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* (2,896)        [Vela — render]
+├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* (3,038)        [Vela — render]
 ├── intelligence-quicklog.js     ← Activity Log + Smart Quick Log + Today So Far (5,532) [Vela — render]
 ├── sync.js            ← Firebase auth + Firestore sync (2,393 lines)         [Kael]
 └── start.js           ← Init + event delegation bootstrap (19 lines)          [Kael]
 ```
 
-**Jurisdiction summary (post-canon-gen-001; LOC refreshed 2026-05-30 post-#178):**
+**Jurisdiction summary (post-canon-gen-001; LOC refreshed 2026-05-31 post-#187):**
 - **Maren (Care):** home + diet + medical = 26,892 LOC (≈3,108 headroom to 30K)
 - **Kael (Intelligence engine):** isl + qa + qa-handlers + illness + correlate + caretickets + core + data + sync + config + start = 27,024 LOC (≈2,976 headroom to 30K — nearest-term split candidate; core.js + data.js carry the steepest recent growth)
-- **Vela (Surfacing render):** cards + quicklog = 8,428 LOC (≈21,572 headroom to 30K)
-- **Shared (triple-Gov):** styles.css + template.html = 13,964 LOC
+- **Vela (Surfacing render):** cards + quicklog = 8,570 LOC (≈21,430 headroom to 30K)
+- **Shared (triple-Gov):** styles.css + template.html = 14,014 LOC
 
 **Concat order:** config → data → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-correlate → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
 
