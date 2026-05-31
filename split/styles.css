@@ -7883,6 +7883,19 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .qa-item-action .qa-item-signal { color:var(--tc-indigo); }
 .qa-item-info .qa-item-signal { color:var(--tc-sky); }
 .qa-item-neutral .qa-item-signal { color:var(--mid); }
+/* food-effects v2 R2 (V-R2-N1/N2): the Q&A emergency-floor section must carry the
+   weight of the .cons-severe log-time floor a parent has already learned — not the
+   muted nutrition-section chrome. Amber surface + amber-deep bold label/siren (V-3:
+   serious-without-alarm; rose reserved for the acute-toxin seek-care line). Applied
+   via sec.tone==='floor' in qaRenderAnswer; reachability/order are unchanged. */
+.qa-section-floor { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); margin:var(--sp-4) var(--sp-16) var(--sp-12); padding:var(--sp-12); }
+.qa-section-floor .qa-section-label { color:var(--amber-deep); }
+.qa-section-floor .qa-section-label-icon { color:var(--amber-deep); }
+/* watch-fors inside a floor read at warn weight, not the calm 'info' sky-blue (V-R2-N2) */
+.qa-section-floor .qa-item-info .qa-item-signal { color:var(--amber-deep); }
+/* the seek-care line carries the rose-deep alarm in its TEXT, not just its icon */
+.qa-section-floor .qa-item-seek { color:var(--rose-deep); font-weight:600; }
+.qa-section-floor .qa-item-seek .qa-item-signal { color:var(--rose-deep); }
 .qa-confidence {
   padding:var(--sp-8) var(--sp-16) var(--sp-12);
   font-size:var(--fs-2xs); color:var(--light);
