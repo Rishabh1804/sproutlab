@@ -1296,9 +1296,15 @@ function checkFoodCombo() {
 
   const resultEl = document.getElementById('comboResult');
 
-  // Check cache
-  const cached = comboHistory.find(h => h.q.toLowerCase() === query.toLowerCase());
-  if (cached) { renderComboResult(cached.result); return; }
+  // Check cache. M-R1-1: a result cached before R1 lacks the emergency-floor
+  // fields — never render it directly (that drops the floor). Drop the stale
+  // entry and fall through to recompute, so the floor is always reachable.
+  const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
+  if (cachedIdx !== -1) {
+    const cached = comboHistory[cachedIdx];
+    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+  }
 
   // Parse foods from query
   const rawFoods = query.split(/[+,&]|with|and/).map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
@@ -1332,12 +1338,50 @@ function checkFoodCombo() {
     }
   });
 
-  // ── 2. Check allergens ──
+  // ── 2. Allergen flags + food-effects polarity (food-effects v2 R1, §3.0/§3.1) ──
+  // Legacy behaviour flipped ANY allergen-flagged food to `caution`. Under the
+  // model an age-appropriate allergen-introduce-early food (peanut, tree nut) is an
+  // ENCOURAGE, not a caution — the flag becomes safe-form guidance, not a wariness
+  // verdict (K-S-5). Honey (acute-toxin) is a hard avoid (Invariant 2, never
+  // softened). The emergency floor is collected for EVERY food carrying one,
+  // OUTSIDE the polarity branch, keyed on field presence (A-4 / M-S-5) — so it can
+  // never fall out of a branch. Floor placement/render: renderComboResult, above
+  // the fold (M-S-3).
+  const severeFloors = [];   // {food, eff} per food carrying a floor (M-S-3, per-food)
+  let toxin = null;          // {title, why}                — acute-toxin (honey)
+  let encourage = null;      // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(food => {
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    const rule = _fdAgeRule(food);
+    const belowFloor = !!(rule && mo < rule.minMonth);
+
+    // Emergency floor — present-only (A-4), every food, any polarity or age.
+    if (eff && ((Array.isArray(eff.severeSigns) && eff.severeSigns.length) ||
+                (Array.isArray(eff.watchFor) && eff.watchFor.length) || eff.seekCare)) {
+      severeFloors.push({ food, eff: { severeSigns: eff.severeSigns, watchFor: eff.watchFor, seekCare: eff.seekCare } });
+    }
+
+    // Legacy terse ALLERGENS note, with the caution-flip gated (K-S-5). HR-4 (M-S-9).
     const alert = _lookupByFoodName(ALLERGENS, food);
+    const introEarlyOk = !!(eff && _effHasClass(eff, 'allergen-introduce-early') && !belowFloor);
     if (alert) {
-      allergenNotes.push(`${zi('warn')} ${food}: ${alert}`);
-      if (verdict === 'safe') { verdict = 'caution'; verdictEmoji = zi('warn'); }
+      allergenNotes.push(`${zi('warn')} ${escHtml(food)}: ${escHtml(alert)}`);
+      if (verdict === 'safe' && !introEarlyOk) { verdict = 'caution'; verdictEmoji = zi('warn'); }
+    }
+
+    // Polarity verdict. Precedence: acute-toxin avoid (hard) > below-floor avoid
+    // (step 1) > encourage safe. The reframe is ATOMIC with the floor (M-S-1) —
+    // the safe verdict and the collected floor are set in the same pass.
+    if (eff && _effHasClass(eff, 'acute-toxin')) {
+      verdict = 'avoid'; verdictEmoji = zi('warn');
+      toxin = { title: eff.title || '', why: eff.why || '' };
+    } else if (introEarlyOk) {
+      if (verdict !== 'avoid') { verdict = 'safe'; verdictEmoji = zi('check'); }
+      encourage = {
+        title: eff.title || '',
+        whyGood: eff.whyGood || '',
+        safeFormNote: (eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : '',
+      };
     }
   });
 
@@ -1452,10 +1496,20 @@ function checkFoodCombo() {
   // Vegetarian check
   const nonVeg = rawFoods.filter(f => ['chicken','fish','mutton','lamb','pork','prawn','shrimp','crab','meat'].includes(f));
   if (nonVeg.length > 0) {
-    verdict = 'caution';
-    verdictEmoji = zi('warn');
+    if (verdict !== 'avoid') { verdict = 'caution'; verdictEmoji = zi('warn'); }  // never downgrade an acute-toxin/below-floor avoid
     warnings.push(`Ziva follows a vegetarian diet. ${nonVeg.join(', ')} is non-vegetarian.`);
     headline = `Note: ${nonVeg.join(', ')} is non-vegetarian — Ziva\'s diet is vegetarian`;
+  }
+
+  // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
+  // Source the headline from the record's own title — never synthesize a bare
+  // "X is safe" next to a food name. acute-toxin leads with the hazard; an
+  // age-appropriate allergen leads with the encourage title. Precedence: toxin
+  // (the hard avoid) over encourage.
+  if (toxin && toxin.title) {
+    headline = toxin.title;
+  } else if (encourage && verdict === 'safe' && encourage.title) {
+    headline = encourage.title;
   }
 
   const result = {
@@ -1468,6 +1522,12 @@ function checkFoodCombo() {
     dos, donts,
     pairs_well_with: pairsWellWith,
     _queryFoods: rawFoods,
+    // food-effects v2 R1: the emergency floor (per-food, M-S-3), the acute-toxin
+    // hazard, and the encourage benefit/safe-form gate — rendered above the fold.
+    severe_floors: severeFloors,
+    toxin,
+    encourage,
+    _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
   };
 
   // Cache
@@ -1677,7 +1737,28 @@ function renderComboResult(r) {
   const vTextClass = r.verdict === 'safe' ? 'safe' : r.verdict === 'caution' ? 'caution' : 'avoid';
 
   let html = `<div class="combo-result${vClass}">`;
-  html += `<div class="combo-verdict ${vTextClass}">${r.verdict_emoji || zi('check')} ${r.headline}</div>`;
+  html += `<div class="combo-verdict ${vTextClass}">${r.verdict_emoji || zi('check')} ${escHtml(r.headline)}</div>`;
+
+  // food-effects v2 R1 (§3.1, M-S-3): the emergency floor co-located with the
+  // verdict, ABOVE all nutrition/recipe/pairing/history — compact governs visual
+  // weight, never position or reachability. acute-toxin hazard → each food's floor
+  // (per-food, multi-food safe) → the encourage safe-form gate (A-2) → a compact
+  // benefit. Floor render via the shared _severeFloorHtml (M-S-7). Guarded so
+  // pre-R1 cached results (no these fields) render unchanged.
+  if (r.toxin && r.toxin.why) {
+    html += `<div class="combo-section"><div class="combo-body">${escHtml(r.toxin.why)}</div></div>`;
+  }
+  if (Array.isArray(r.severe_floors)) {
+    r.severe_floors.forEach(f => {
+      const floorHtml = (f && f.eff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(f.eff) : '';
+      if (floorHtml) html += `<div class="combo-section">${floorHtml}</div>`;
+    });
+  }
+  if (r.encourage) {
+    if (r.encourage.safeFormNote) html += `<div class="combo-section"><div class="combo-section-title">${zi('sprout')} Safe form</div><div class="combo-body">${escHtml(r.encourage.safeFormNote)}</div></div>`;
+    if (r.encourage.whyGood) html += `<div class="combo-section"><div class="combo-body">${escHtml(r.encourage.whyGood)}</div></div>`;
+  }
+
   if (r.explanation) html += `<div class="combo-body">${escHtml(r.explanation).replace(/\n/g,'<br>')}</div>`;
 
   if (r.nutrition_highlights) {
@@ -1685,7 +1766,7 @@ function renderComboResult(r) {
   }
 
   if (r.new_foods && r.new_foods.length > 0) {
-    html += `<div class="combo-section"><div class="combo-section-title">${zi('sparkle')} New foods to introduce first</div><div class="combo-body">${r.new_foods.join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('sparkle')} New foods to introduce first</div><div class="combo-body">${r.new_foods.map(escHtml).join(', ')} — introduce each alone for 3 days before combining.</div></div>`;
   }
 
   if (r.allergen_notes && r.allergen_notes.length > 0) {
