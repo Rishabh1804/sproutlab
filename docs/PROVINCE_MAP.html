@@ -1,114 +1,155 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>IMPERIVM SPROVTLAB — Provincial Survey</title>
+<title>SproutLab - Jurisdiction Overview</title>
 <style>
-  :root{ --ink:#3a2c18; --line:#7a5b2e; --parch:#f6ecd8; --parch2:#efe2c6; }
+  :root{ --ink:#3a2c18; --line:#cdb88f; --parch:#f7efe0; --card:#fffaf0; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--parch);color:var(--ink);
     font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;line-height:1.5}
-  header{padding:22px 28px;border-bottom:3px double var(--line);background:var(--parch2)}
-  h1{margin:0;font-size:26px;letter-spacing:3px}
-  .sub{margin-top:4px;font-size:13px;opacity:.8}
-  main{padding:22px 28px;max-width:1140px}
-  .mapwrap{border:2px solid var(--line);border-radius:10px;background:#f3e7cd;padding:8px;overflow:auto}
-  svg{display:block;width:100%;height:auto;background:
-    repeating-linear-gradient(45deg,#f3e7cd,#f3e7cd 18px,#f0e2c4 18px,#f0e2c4 36px)}
-  text{font-family:"Iowan Old Style",Palatino,Georgia,serif}
-  .pname{font-size:14px;font-weight:700;fill:#5a4220;letter-spacing:.5px}
-  .pgov{font-size:10.5px;fill:#6b522c}
-  .city{font-size:10px;fill:#3a2c18}
-  .pop{font-size:9px;fill:#7a5b2e;font-weight:700}
-  .unsurv{font-size:12px;fill:#9c6b1f;font-style:italic;letter-spacing:1px}
-  h2{margin:26px 0 8px;font-size:18px;border-bottom:1px solid var(--line);padding-bottom:4px}
-  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
-  th,td{border:1px solid #cdb88f;padding:6px 9px;text-align:left}
-  th{background:var(--parch2)}
-  td.num{text-align:right;font-variant-numeric:tabular-nums}
-  .legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;margin:10px 0 0}
-  .legend span{display:inline-flex;align-items:center;gap:6px}
-  .sw{width:26px;height:0;border-top:3px solid}
+  header{padding:22px 28px;border-bottom:3px double #7a5b2e;background:#efe2c6}
+  h1{margin:0;font-size:24px;letter-spacing:2px}
+  .sub{margin-top:5px;font-size:12.5px;opacity:.82}
   .stat{display:inline-block;margin-right:18px;font-size:13px}
   .stat b{font-size:17px}
-  footer{padding:14px 28px;font-size:11.5px;opacity:.7;border-top:1px solid var(--line)}
-  code{background:#ece0c4;padding:1px 5px;border-radius:4px;font-size:12px}
+  main{padding:22px 28px;max-width:1080px}
+  .banner{background:#eaf2ec;border:1px solid #b5d5c5;border-radius:8px;padding:12px 16px;font-size:13.5px;margin-bottom:22px}
+  .banner b{color:#2f5d45}
+  code{background:#ece0c4;padding:1px 5px;border-radius:4px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(60,40,20,.08)}
+  .cname{font-size:16px;font-weight:700}
+  .clatin{font-size:12px;font-style:italic;opacity:.7;margin-bottom:6px}
+  .cgov{font-size:12.5px;margin-bottom:8px}
+  .nums{display:flex;gap:14px;font-size:12.5px;margin-bottom:10px;flex-wrap:wrap}
+  .nums b{font-size:16px}
+  .bar{position:relative;height:20px;background:#e7dcc4;border-radius:5px;overflow:hidden;margin-bottom:4px}
+  .fill{position:absolute;inset:0 auto 0 0;background:#9bbfa6;border-radius:5px}
+  .fill.hot{background:#e0a07d}
+  .barlbl{position:relative;font-size:10.5px;line-height:20px;padding-left:8px;color:#3a2c18;font-weight:700}
+  .hd{font-size:11.5px;opacity:.78;margin-bottom:8px}
+  .note{font-size:11.5px;color:#9c6b1f;font-style:italic;margin-bottom:8px}
+  .mods{font-size:11px;opacity:.7;border-top:1px dashed var(--line);padding-top:7px;word-spacing:1px}
+  h2{margin:28px 0 8px;font-size:17px;border-bottom:1px solid #7a5b2e;padding-bottom:4px}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+  th{background:#efe2c6}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  footer{padding:14px 28px;font-size:11.5px;opacity:.7;border-top:1px solid #7a5b2e}
 </style></head>
 <body>
 <header>
-  <h1>IMPERIVM SPROVTLAB</h1>
-  <div class="sub">Provincial Survey of the Codebase &middot; generated 2026-05-31 &middot; graph @ <code>4bdb94fef7ee</code></div>
+  <h1>SPROUTLAB &middot; JURISDICTION OVERVIEW</h1>
+  <div class="sub">graph-derived exec summary &middot; generated 2026-05-31 &middot; graph @ <code>4bdb94fef7ee</code></div>
   <div class="sub" style="margin-top:8px">
     <span class="stat"><b>1,712</b> symbols</span>
     <span class="stat"><b>5,081</b> relations</span>
-    <span class="stat"><b>80,039</b> LOC</span>
+    <span class="stat"><b>79,997</b> LOC</span>
     <span class="stat">extraction: <b>code-only</b></span>
   </div>
 </header>
 <main>
-  <div class="mapwrap">
-    <svg viewBox="0 0 1090 700" role="img" aria-label="Roman provincial map of the SproutLab codebase">
-      <line x1="774.0" y1="265.0" x2="688.0" y2="265.0" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="774.0" y1="265.0" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="688.0" y1="182.5" x2="774.0" y2="265.0" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="774.0" y1="182.5" x2="774.0" y2="265.0" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="688.0" y1="182.5" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="602.0" y1="182.5" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="1.8" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="774.0" y1="182.5" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="1.7" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="688.0" y1="265.0" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="516.0" y1="265.0" x2="516.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="516.0" y1="182.5" x2="516.0" y2="347.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="580.0" y1="585.0" x2="690.0" y2="585.0" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="150.0" y1="210.0" x2="260.0" y2="210.0" stroke="#b9a98a" stroke-width="1.2" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="260.0" y1="210.0" x2="150.0" y2="300.0" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="150.0" y1="300.0" x2="150.0" y2="210.0" stroke="#b9a98a" stroke-width="0.9" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="688.0" y1="265.0" x2="688.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="688.0" y1="265.0" x2="774.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="774.0" y1="182.5" x2="602.0" y2="182.5" stroke="#b9a98a" stroke-width="0.6" stroke-opacity="0.45" stroke-dasharray="4 3"/><line x1="150.0" y1="300.0" x2="774.0" y2="265.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="774.0" y2="265.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="580.0" y1="585.0" x2="774.0" y2="265.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="260.0" y1="210.0" x2="774.0" y2="265.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="300.0" x2="516.0" y2="182.5" stroke="#9c6b1f" stroke-width="2.0" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="516.0" y2="182.5" stroke="#9c6b1f" stroke-width="6.0" stroke-opacity="0.85" /><line x1="690.0" y1="585.0" x2="516.0" y2="182.5" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="580.0" y1="585.0" x2="516.0" y2="182.5" stroke="#9c6b1f" stroke-width="2.4" stroke-opacity="0.85" /><line x1="260.0" y1="210.0" x2="516.0" y2="182.5" stroke="#9c6b1f" stroke-width="4.9" stroke-opacity="0.85" /><line x1="150.0" y1="300.0" x2="690.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="690.0" y1="585.0" x2="260.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="690.0" y1="585.0" x2="774.0" y2="182.5" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="690.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="265.0" x2="690.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="580.0" y1="585.0" x2="260.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.7" stroke-opacity="0.85" /><line x1="602.0" y1="182.5" x2="260.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="260.0" y1="210.0" x2="516.0" y2="347.5" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="774.0" y1="182.5" x2="260.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="182.5" x2="260.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="580.0" y1="585.0" x2="150.0" y2="300.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="602.0" y1="182.5" x2="150.0" y2="300.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="774.0" y1="182.5" x2="150.0" y2="300.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="265.0" x2="150.0" y2="300.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="688.0" y2="182.5" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="182.5" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="774.0" y1="182.5" x2="150.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="774.0" y1="182.5" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="602.0" y2="182.5" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="602.0" y1="182.5" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.8" stroke-opacity="0.85" /><line x1="516.0" y1="265.0" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="265.0" x2="150.0" y2="210.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="688.0" y1="265.0" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.6" stroke-opacity="0.85" /><line x1="150.0" y1="210.0" x2="580.0" y2="585.0" stroke="#9c6b1f" stroke-width="0.8" stroke-opacity="0.85" /><rect x="430" y="70" width="430" height="360" rx="14" fill="#e7b9a0" stroke="#7a5b2e" stroke-width="2" /><text x="444" y="92" class="pname">Provincia Intelligentiae</text><text x="444" y="108" class="pgov">Governor: Kael · 27,035 LOC · 2,965 to frontier</text><rect x="40" y="90" width="330" height="300" rx="14" fill="#e7b9a0" stroke="#7a5b2e" stroke-width="2" /><text x="54" y="112" class="pname">Provincia Curae</text><text x="54" y="128" class="pgov">Governor: Maren · 26,895 LOC · 3,105 to frontier</text><rect x="470" y="470" width="330" height="200" rx="14" fill="#dfd6e6" stroke="#7a5b2e" stroke-width="2" /><text x="484" y="492" class="pname">Provincia Superficiei</text><text x="484" y="508" class="pgov">Governor: Vela · 8,430 LOC · 21,570 to frontier</text><rect x="40" y="470" width="360" height="200" rx="14" fill="#e9ddc6" stroke="#7a5b2e" stroke-width="2" stroke-dasharray="8 5"/><text x="54" y="492" class="pname">Territorium Commune</text><text x="54" y="508" class="pgov">Governor: Maren + Kael + Vela</text><text x="220" y="570" text-anchor="middle" class="unsurv">UNSURVEYED—thorough extraction pending</text><rect x="890" y="90" width="170" height="560" rx="14" fill="#cfc3b0" stroke="#7a5b2e" stroke-width="2" /><text x="904" y="112" class="pname">Opera Publica</text><text x="904" y="128" class="pgov">Governor: build &amp; audit corps</text><circle cx="516.0" cy="182.5" r="30.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="516.0" cy="182.5" r="3" fill="#9c6b1f"/><text x="516.0" y="223.5" text-anchor="middle" class="city">core</text><text x="516.0" y="185.5" text-anchor="middle" class="pop">260</text><circle cx="602.0" cy="182.5" r="25.7" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="602.0" cy="182.5" r="3" fill="#9c6b1f"/><text x="602.0" y="219.2" text-anchor="middle" class="city">i-illness</text><text x="602.0" y="185.5" text-anchor="middle" class="pop">121</text><circle cx="688.0" cy="182.5" r="22.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="688.0" cy="182.5" r="3" fill="#9c6b1f"/><text x="688.0" y="215.5" text-anchor="middle" class="city">i-caretickets</text><text x="688.0" y="185.5" text-anchor="middle" class="pop">78</text><circle cx="774.0" cy="182.5" r="20.7" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="774.0" cy="182.5" r="3" fill="#9c6b1f"/><text x="774.0" y="214.2" text-anchor="middle" class="city">i-qa-handlers</text><text x="774.0" y="185.5" text-anchor="middle" class="pop">65</text><circle cx="516.0" cy="265.0" r="20.5" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="516.0" cy="265.0" r="3" fill="#9c6b1f"/><text x="516.0" y="296.5" text-anchor="middle" class="city">sync</text><text x="516.0" y="268.0" text-anchor="middle" class="pop">63</text><circle cx="602.0" cy="265.0" r="19.5" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="602.0" cy="265.0" r="3" fill="#9c6b1f"/><text x="602.0" y="295.5" text-anchor="middle" class="city">data</text><text x="602.0" y="268.0" text-anchor="middle" class="pop">54</text><circle cx="688.0" cy="265.0" r="17.6" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="688.0" cy="265.0" r="3" fill="#9c6b1f"/><text x="688.0" y="293.6" text-anchor="middle" class="city">i-qa</text><text x="688.0" y="268.0" text-anchor="middle" class="pop">39</text><circle cx="774.0" cy="265.0" r="16.9" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="774.0" cy="265.0" r="3" fill="#9c6b1f"/><text x="774.0" y="292.9" text-anchor="middle" class="city">i-isl</text><text x="774.0" y="268.0" text-anchor="middle" class="pop">34</text><circle cx="516.0" cy="347.5" r="11.5" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="516.0" y="370.0" text-anchor="middle" class="city">config</text><text x="516.0" y="350.5" text-anchor="middle" class="pop">7</text><circle cx="602.0" cy="347.5" r="11.2" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="602.0" y="369.7" text-anchor="middle" class="city">i-correlate</text><text x="602.0" y="350.5" text-anchor="middle" class="pop">6</text><circle cx="688.0" cy="347.5" r="8.7" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="688.0" y="367.2" text-anchor="middle" class="city">start</text><text x="688.0" y="350.5" text-anchor="middle" class="pop">1</text><circle cx="150.0" cy="210.0" r="30.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="150.0" cy="210.0" r="3" fill="#9c6b1f"/><text x="150.0" y="251.0" text-anchor="middle" class="city">home</text><text x="150.0" y="213.0" text-anchor="middle" class="pop">275</text><circle cx="260.0" cy="210.0" r="30.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="260.0" cy="210.0" r="3" fill="#9c6b1f"/><text x="260.0" y="251.0" text-anchor="middle" class="city">medical</text><text x="260.0" y="213.0" text-anchor="middle" class="pop">270</text><circle cx="150.0" cy="300.0" r="25.8" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="150.0" cy="300.0" r="3" fill="#9c6b1f"/><text x="150.0" y="336.8" text-anchor="middle" class="city">diet</text><text x="150.0" y="303.0" text-anchor="middle" class="pop">122</text><circle cx="580.0" cy="585.0" r="27.2" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="580.0" cy="585.0" r="3" fill="#9c6b1f"/><text x="580.0" y="623.2" text-anchor="middle" class="city">i-quicklog</text><text x="580.0" y="588.0" text-anchor="middle" class="pop">141</text><circle cx="690.0" cy="585.0" r="17.6" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><circle cx="690.0" cy="585.0" r="3" fill="#9c6b1f"/><text x="690.0" y="613.6" text-anchor="middle" class="city">i-cards</text><text x="690.0" y="588.0" text-anchor="middle" class="pop">39</text><circle cx="160.0" cy="585.0" r="7.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="160.0" y="603.0" text-anchor="middle" class="city">styles</text><circle cx="280.0" cy="585.0" r="7.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="280.0" y="603.0" text-anchor="middle" class="city">template</text><circle cx="918.3" cy="208.3" r="15.8" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="918.3" y="235.2" text-anchor="middle" class="city">build-province-map</text><text x="918.3" y="211.3" text-anchor="middle" class="pop">27</text><circle cx="946.7" cy="208.3" r="15.3" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="946.7" y="234.7" text-anchor="middle" class="city">build-poop-reference</text><text x="946.7" y="211.3" text-anchor="middle" class="pop">24</text><circle cx="975.0" cy="208.3" r="15.2" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="975.0" y="234.5" text-anchor="middle" class="city">QA_GATE_SPEC</text><text x="975.0" y="211.3" text-anchor="middle" class="pop">23</text><circle cx="1003.3" cy="208.3" r="15.0" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1003.3" y="234.3" text-anchor="middle" class="city">build-careticket-state-machine</text><text x="1003.3" y="211.3" text-anchor="middle" class="pop">22</text><circle cx="1031.7" cy="208.3" r="10.8" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1031.7" y="230.1" text-anchor="middle" class="city">audit-food-library-wiring-v1</text><text x="1031.7" y="211.3" text-anchor="middle" class="pop">5</text><circle cx="918.3" cy="296.7" r="10.8" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="918.3" y="318.5" text-anchor="middle" class="city">bump-version</text><text x="918.3" y="299.7" text-anchor="middle" class="pop">5</text><circle cx="946.7" cy="296.7" r="9.9" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="946.7" y="317.6" text-anchor="middle" class="city">build-graph</text><text x="946.7" y="299.7" text-anchor="middle" class="pop">3</text><circle cx="975.0" cy="296.7" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="975.0" y="317.1" text-anchor="middle" class="city">audit-activity-categories-v1</text><text x="975.0" y="299.7" text-anchor="middle" class="pop">2</text><circle cx="1003.3" cy="296.7" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1003.3" y="317.1" text-anchor="middle" class="city">audit-card-priority-v3-6</text><text x="1003.3" y="299.7" text-anchor="middle" class="pop">2</text><circle cx="1031.7" cy="296.7" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1031.7" y="317.1" text-anchor="middle" class="city">audit-chip-taxonomy-v3-5</text><text x="1031.7" y="299.7" text-anchor="middle" class="pop">2</text><circle cx="918.3" cy="385.0" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="918.3" y="405.4" text-anchor="middle" class="city">audit-emoji</text><text x="918.3" y="388.0" text-anchor="middle" class="pop">2</text><circle cx="946.7" cy="385.0" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="946.7" y="405.4" text-anchor="middle" class="city">audit-feed-sheet-wiring-v1</text><text x="946.7" y="388.0" text-anchor="middle" class="pop">2</text><circle cx="975.0" cy="385.0" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="975.0" y="405.4" text-anchor="middle" class="city">audit-food-effects-sync-v1</text><text x="975.0" y="388.0" text-anchor="middle" class="pop">2</text><circle cx="1003.3" cy="385.0" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1003.3" y="405.4" text-anchor="middle" class="city">audit-hr12-v3-3</text><text x="1003.3" y="388.0" text-anchor="middle" class="pop">2</text><circle cx="1031.7" cy="385.0" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1031.7" y="405.4" text-anchor="middle" class="city">audit-icon-text</text><text x="1031.7" y="388.0" text-anchor="middle" class="pop">2</text><circle cx="918.3" cy="473.3" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="918.3" y="493.7" text-anchor="middle" class="city">audit-no-personalised-prediction-v1</text><text x="918.3" y="476.3" text-anchor="middle" class="pop">2</text><circle cx="946.7" cy="473.3" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="946.7" y="493.7" text-anchor="middle" class="city">audit-resolve-shield</text><text x="946.7" y="476.3" text-anchor="middle" class="pop">2</text><circle cx="975.0" cy="473.3" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="975.0" y="493.7" text-anchor="middle" class="city">audit-viz-smoke</text><text x="975.0" y="476.3" text-anchor="middle" class="pop">2</text><circle cx="1003.3" cy="473.3" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1003.3" y="493.7" text-anchor="middle" class="city">build-safe</text><text x="1003.3" y="476.3" text-anchor="middle" class="pop">2</text><circle cx="1031.7" cy="473.3" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="1031.7" y="493.7" text-anchor="middle" class="city">build</text><text x="1031.7" y="476.3" text-anchor="middle" class="pop">2</text><circle cx="918.3" cy="561.7" r="9.4" fill="#fbf6ec" stroke="#7a5b2e" stroke-width="1.5"/><text x="918.3" y="582.1" text-anchor="middle" class="city">qa-route</text><text x="918.3" y="564.7" text-anchor="middle" class="pop">2</text>
-    </svg>
-  </div>
-  <div class="legend">
-    <span><span class="sw" style="border-color:#9c6b1f"></span> cross-province road (calls)</span>
-    <span><span class="sw" style="border-color:#b9a98a;border-top-style:dashed"></span> internal road</span>
-    <span><span class="sw" style="border-color:#e7b9a0;border-top-width:10px"></span> contested frontier (&lt;3,500 LOC to 30K)</span>
-    <span>city size = symbol population &middot; dot = resource hub (degree &ge; 30)</span>
+  <div class="banner">
+    This is a high-level <b>jurisdiction overview</b>, not a navigation tool. To explore the code graph,
+    open the interactive node graph at <code>split/graphify-out/graph.html</code> (click / search / filter),
+    or query it: <code>graphify query "..."</code> &middot; <code>graphify path "A" "B"</code> &middot;
+    <code>graphify affected "X"</code>. Routing a diff to Governors: <code>pnpm qa-route</code>.
   </div>
 
   <h2>Provinces</h2>
+  <div class="grid">
+    <div class="card" style="border-top:5px solid #9ba8d8">
+      <div class="cname">Provincia Intelligentiae</div>
+      <div class="clatin">the engine layer</div>
+      <div class="cgov">Governor: <b>Kael</b></div>
+      <div class="nums">
+        <span><b>11</b> modules</span>
+        <span><b>728</b> symbols</span>
+        <span><b>27,035</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="27,035 of 30,000 LOC">
+        <div class="fill hot" style="width:90%"></div>
+        <span class="barlbl">90% to 30K frontier &middot; CONTESTED</span>
+      </div>
+      <div class="hd">2,965 LOC headroom</div>
+      <div class="mods">core.js, i-illness.js, i-caretickets.js, i-qa-handlers.js, sync.js, data.js, i-qa.js, i-isl.js, config.js, i-correlate.js, start.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #b5d5c5">
+      <div class="cname">Provincia Curae</div>
+      <div class="clatin">home / diet / medical</div>
+      <div class="cgov">Governor: <b>Maren</b></div>
+      <div class="nums">
+        <span><b>3</b> modules</span>
+        <span><b>667</b> symbols</span>
+        <span><b>26,895</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="26,895 of 30,000 LOC">
+        <div class="fill hot" style="width:90%"></div>
+        <span class="barlbl">90% to 30K frontier &middot; CONTESTED</span>
+      </div>
+      <div class="hd">3,105 LOC headroom</div>
+      <div class="mods">home.js, medical.js, diet.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #c9b8e8">
+      <div class="cname">Provincia Superficiei</div>
+      <div class="clatin">the render layer</div>
+      <div class="cgov">Governor: <b>Vela</b></div>
+      <div class="nums">
+        <span><b>2</b> modules</span>
+        <span><b>180</b> symbols</span>
+        <span><b>8,430</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="8,430 of 30,000 LOC">
+        <div class="fill " style="width:28%"></div>
+        <span class="barlbl">28% to 30K frontier</span>
+      </div>
+      <div class="hd">21,570 LOC headroom</div>
+      <div class="mods">i-quicklog.js, i-cards.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #e8b86d">
+      <div class="cname">Territorium Commune</div>
+      <div class="clatin">styles.css + template.html</div>
+      <div class="cgov">Governor: <b>Maren + Kael + Vela</b></div>
+      <div class="nums">
+        <span><b>2</b> modules</span>
+        <span><b>0</b> symbols</span>
+        <span><b>13,966</b> LOC</span>
+      </div>
+      <div class="note">Unsurveyed &mdash; code-only extraction. Set a backend and rebuild for symbols.</div>
+      <div class="mods">styles.css, template.html</div>
+    </div>
+    <div class="card" style="border-top:5px solid #fad4b4">
+      <div class="cname">Opera Publica</div>
+      <div class="clatin">build + audit corps</div>
+      <div class="cgov">Governor: <b>(tooling)</b></div>
+      <div class="nums">
+        <span><b>21</b> modules</span>
+        <span><b>137</b> symbols</span>
+        <span><b>3,671</b> LOC</span>
+      </div>
+      
+      <div class="mods">build-province-map.mjs, build-poop-reference.mjs, QA_GATE_SPEC.md, build-careticket-state-machine.mjs, audit-food-library-wiring-v1.sh, bump-version.mjs, build-graph.sh, audit-activity-categories-v1.sh, audit-card-priority-v3-6.sh, audit-chip-taxonomy-v3-5.sh, audit-emoji.sh, audit-feed-sheet-wiring-v1.sh, audit-food-effects-sync-v1.sh, audit-hr12-v3-3.sh, audit-icon-text.sh, audit-no-personalised-prediction-v1.sh, audit-resolve-shield.sh, audit-viz-smoke.sh, build-safe.sh, build.sh, qa-route.sh</div>
+    </div></div>
+
+  <h2>Cross-province coupling (highest-traffic calls across jurisdiction borders)</h2>
   <table>
-    <thead><tr><th>Province</th><th>Governor</th><th class="num">Cities</th><th class="num">Symbols</th><th class="num">LOC</th><th class="num">Headroom to 30K</th></tr></thead>
-    <tbody><tr>
-    <td>Provincia Intelligentiae</td><td>Kael</td>
-    <td class="num">11</td>
-    <td class="num">728</td>
-    <td class="num">27,035</td>
-    <td class="num">2,965</td>
-  </tr><tr>
-    <td>Provincia Curae</td><td>Maren</td>
-    <td class="num">3</td>
-    <td class="num">667</td>
-    <td class="num">26,895</td>
-    <td class="num">3,105</td>
-  </tr><tr>
-    <td>Provincia Superficiei</td><td>Vela</td>
-    <td class="num">2</td>
-    <td class="num">180</td>
-    <td class="num">8,430</td>
-    <td class="num">21,570</td>
-  </tr><tr>
-    <td>Territorium Commune</td><td>Maren + Kael + Vela</td>
-    <td class="num">2</td>
-    <td class="num">0</td>
-    <td class="num">13,966</td>
-    <td class="num">—</td>
-  </tr><tr>
-    <td>Opera Publica</td><td>build &amp; audit corps</td>
-    <td class="num">21</td>
-    <td class="num">137</td>
-    <td class="num">3,713</td>
-    <td class="num">—</td>
-  </tr></tbody>
+    <thead><tr><th>Module</th><th>Module</th><th class="num">Calls</th><th>Border</th></tr></thead>
+    <tbody><tr><td>home.js</td><td>core.js</td><td class="num">346</td><td>Care &harr; Intelligence</td></tr><tr><td>medical.js</td><td>core.js</td><td class="num">280</td><td>Care &harr; Intelligence</td></tr><tr><td>i-quicklog.js</td><td>core.js</td><td class="num">137</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>diet.js</td><td>core.js</td><td class="num">118</td><td>Care &harr; Intelligence</td></tr><tr><td>i-illness.js</td><td>i-quicklog.js</td><td class="num">49</td><td>Intelligence &harr; Surfacing</td></tr><tr><td>home.js</td><td>i-quicklog.js</td><td class="num">44</td><td>Care &harr; Surfacing</td></tr><tr><td>i-quicklog.js</td><td>medical.js</td><td class="num">40</td><td>Surfacing &harr; Care</td></tr><tr><td>i-cards.js</td><td>medical.js</td><td class="num">35</td><td>Surfacing &harr; Care</td></tr><tr><td>home.js</td><td>i-illness.js</td><td class="num">35</td><td>Care &harr; Intelligence</td></tr><tr><td>i-cards.js</td><td>core.js</td><td class="num">31</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>i-qa-handlers.js</td><td>medical.js</td><td class="num">27</td><td>Intelligence &harr; Care</td></tr><tr><td>home.js</td><td>i-caretickets.js</td><td class="num">18</td><td>Care &harr; Intelligence</td></tr></tbody>
   </table>
 
-  <h2>Cross-province roads (highest-traffic calls across jurisdictions)</h2>
+  <h2>Connectivity hubs (highest-degree symbols per module)</h2>
   <table>
-    <thead><tr><th>Module</th><th>Module</th><th class="num">Calls</th><th>Border crossed</th></tr></thead>
-    <tbody><tr><td>home.js</td><td>core.js</td><td class="num">346</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>medical.js</td><td>core.js</td><td class="num">280</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>intelligence-quicklog.js</td><td>core.js</td><td class="num">137</td><td>Surfacing (render) ↔ Intelligence (engine)</td></tr><tr><td>diet.js</td><td>core.js</td><td class="num">118</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>intelligence-illness.js</td><td>intelligence-quicklog.js</td><td class="num">49</td><td>Intelligence (engine) ↔ Surfacing (render)</td></tr><tr><td>home.js</td><td>intelligence-quicklog.js</td><td class="num">44</td><td>Care ↔ Surfacing (render)</td></tr><tr><td>intelligence-quicklog.js</td><td>medical.js</td><td class="num">40</td><td>Surfacing (render) ↔ Care</td></tr><tr><td>intelligence-cards.js</td><td>medical.js</td><td class="num">35</td><td>Surfacing (render) ↔ Care</td></tr><tr><td>home.js</td><td>intelligence-illness.js</td><td class="num">35</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>intelligence-cards.js</td><td>core.js</td><td class="num">31</td><td>Surfacing (render) ↔ Intelligence (engine)</td></tr><tr><td>intelligence-qa-handlers.js</td><td>medical.js</td><td class="num">27</td><td>Intelligence (engine) ↔ Care</td></tr><tr><td>home.js</td><td>intelligence-caretickets.js</td><td class="num">18</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>medical.js</td><td>intelligence-isl.js</td><td class="num">15</td><td>Care ↔ Intelligence (engine)</td></tr><tr><td>intelligence-qa.js</td><td>home.js</td><td class="num">15</td><td>Intelligence (engine) ↔ Care</td></tr><tr><td>intelligence-quicklog.js</td><td>diet.js</td><td class="num">13</td><td>Surfacing (render) ↔ Care</td></tr></tbody>
-  </table>
-
-  <h2>Resources (highest-connectivity hubs)</h2>
-  <table>
-    <thead><tr><th>Symbol</th><th>City (module)</th><th>Province</th><th class="num">Degree</th></tr></thead>
-    <tbody><tr><td>zi()</td><td>core.js</td><td>Intelligence (engine)</td><td class="num">324</td></tr><tr><td>home.js</td><td>home.js</td><td>Care</td><td class="num">274</td></tr><tr><td>medical.js</td><td>medical.js</td><td>Care</td><td class="num">269</td></tr><tr><td>intelligence-quicklog.js</td><td>intelligence-quicklog.js</td><td>Surfacing (render)</td><td class="num">140</td></tr><tr><td>diet.js</td><td>diet.js</td><td>Care</td><td class="num">121</td></tr><tr><td>intelligence-illness.js</td><td>intelligence-illness.js</td><td>Intelligence (engine)</td><td class="num">120</td></tr><tr><td>intelligence-caretickets.js</td><td>intelligence-caretickets.js</td><td>Intelligence (engine)</td><td class="num">77</td></tr><tr><td>intelligence-qa-handlers.js</td><td>intelligence-qa-handlers.js</td><td>Intelligence (engine)</td><td class="num">64</td></tr><tr><td>sync.js</td><td>sync.js</td><td>Intelligence (engine)</td><td class="num">62</td></tr><tr><td>data.js</td><td>data.js</td><td>Intelligence (engine)</td><td class="num">53</td></tr><tr><td>qaExecuteQuery()</td><td>intelligence-qa.js</td><td>Intelligence (engine)</td><td class="num">51</td></tr><tr><td>renderInfo()</td><td>intelligence-cards.js</td><td>Surfacing (render)</td><td class="num">50</td></tr></tbody>
+    <thead><tr><th>Symbol</th><th>Module</th><th>Province</th><th class="num">Degree</th></tr></thead>
+    <tbody><tr><td><code>zi()</code></td><td>core.js</td><td>Intelligence</td><td class="num">324</td></tr><tr><td><code>home.js</code></td><td>home.js</td><td>Care</td><td class="num">274</td></tr><tr><td><code>medical.js</code></td><td>medical.js</td><td>Care</td><td class="num">269</td></tr><tr><td><code>intelligence-quicklog.js</code></td><td>i-quicklog.js</td><td>Surfacing</td><td class="num">140</td></tr><tr><td><code>diet.js</code></td><td>diet.js</td><td>Care</td><td class="num">121</td></tr><tr><td><code>intelligence-illness.js</code></td><td>i-illness.js</td><td>Intelligence</td><td class="num">120</td></tr><tr><td><code>intelligence-caretickets.js</code></td><td>i-caretickets.js</td><td>Intelligence</td><td class="num">77</td></tr><tr><td><code>intelligence-qa-handlers.js</code></td><td>i-qa-handlers.js</td><td>Intelligence</td><td class="num">64</td></tr><tr><td><code>sync.js</code></td><td>sync.js</td><td>Intelligence</td><td class="num">62</td></tr><tr><td><code>data.js</code></td><td>data.js</td><td>Intelligence</td><td class="num">53</td></tr><tr><td><code>qaExecuteQuery()</code></td><td>i-qa.js</td><td>Intelligence</td><td class="num">51</td></tr><tr><td><code>renderInfo()</code></td><td>i-cards.js</td><td>Surfacing</td><td class="num">50</td></tr></tbody>
   </table>
 </main>
 <footer>
   Auto-generated by <code>split/build-province-map.mjs</code> from <code>split/graphify-out/graph.json</code> each build.
-  Supersedes the hand-maintained <code>docs/MODULE_MAP.html</code> &mdash; this survey is graph-derived and cannot drift.
-  When this map and CLAUDE.md disagree on counts or layout, the map wins; CLAUDE.md wins on policy, HRs, and persona.
-  <b>Code-only extraction:</b> styles.css and template.html are unsurveyed (no LLM backend); set a backend and rebuild for the full survey.
+  Supersedes the hand-maintained <code>docs/MODULE_MAP.html</code> &mdash; graph-derived, cannot drift.
+  Map wins on counts; CLAUDE.md wins on policy.
+  <b>Code-only extraction:</b> styles.css and template.html are unsurveyed; set a backend and rebuild for the full count.
 </footer>
 </body></html>
