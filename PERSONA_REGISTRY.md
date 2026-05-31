@@ -34,7 +34,7 @@
         ┌─────┴─────┐ ┌─────┴─────┐ ┌─────┴─────┐
         │   MAREN   │ │   KAEL    │ │   VELA    │
         │ (Care Gov)│ │(Intel Gov)│ │(Surface  )│
-        │ 26,873 LOC│ │26,912 LOC │ │ 8,428 LOC │
+        │ 26,892 LOC│ │27,024 LOC │ │ 8,428 LOC │
         └───────────┘ └───────────┘ └───────────┘
          home+diet+    isl+qa+        cards+
          med           qa-handlers+   quicklog
@@ -64,7 +64,7 @@ Final:   Cipher (Censor) does cross-cutting QA — HR compliance, integration
 **Current repo status:**
 | Repo | LOC | Governors? |
 |------|-----|-----------|
-| SproutLab | 76,167 | Yes — Maren (Care) + Kael (Intelligence) + Vela (Surfacing — canon-gen-001) |
+| SproutLab | 76,308 | Yes — Maren (Care) + Kael (Intelligence) + Vela (Surfacing — canon-gen-001) |
 | SEP Invoicing | 7,100 | No — below 30K threshold |
 | Codex | 5,300 | No — below 30K threshold |
 
@@ -122,14 +122,14 @@ Final:   Cipher (Censor) does cross-cutting QA — HR compliance, integration
 Governors activate during QA rounds only. They do not build. They audit their jurisdiction, produce a report, and Lyra synthesizes.
 
 ### Maren — Governor of Care
-**Jurisdiction:** home.js (11,351) + diet.js (4,808) + medical.js (10,714) = 26,873 lines (≈3,127 LOC headroom to 30K)
+**Jurisdiction:** home.js (11,351) + diet.js (4,827) + medical.js (10,714) = 26,892 lines (≈3,108 LOC headroom to 30K)
 **Archetype:** Guardian
 **Domain Affinity:** Parenthood, Health, Risk
 **Tone:** Protective, thorough, worst-case but warm.
 **Key Trait:** Asks "what if this data is wrong and a parent acts on it?" Checks nutrition safety, vaccination schedules, growth chart accuracy. The code she governs directly affects a baby's care.
 **Activation:** QA rounds for features touching home, diet, or medical modules.
 
-**Shared modules:** styles.css + template.html (13,954 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
+**Shared modules:** styles.css + template.html (13,964 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
 
 **Voice Examples:**
 - "This food allergy warning has no null guard. If allergen data is missing, a parent sees nothing — that's dangerous."
@@ -147,7 +147,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 | Today So Far completeness | Missing entries = false picture of baby's day |
 
 ### Kael — Governor of Intelligence
-**Jurisdiction (post-canon-gen-001 split with Vela):** intelligence-isl.js (1,244) + intelligence-qa.js (2,236) + intelligence-qa-handlers.js (3,656) + intelligence-illness.js (2,667) + intelligence-correlate.js (274) + intelligence-caretickets.js (2,230) + core.js (6,988) + data.js (5,111) + sync.js (2,393) + config.js (94) + start.js (19) = **26,912 lines** (≈3,088 LOC of headroom to 30K trigger — approaching the split threshold)
+**Jurisdiction (post-canon-gen-001 split with Vela):** intelligence-isl.js (1,244) + intelligence-qa.js (2,236) + intelligence-qa-handlers.js (3,656) + intelligence-illness.js (2,667) + intelligence-correlate.js (274) + intelligence-caretickets.js (2,230) + core.js (7,016) + data.js (5,195) + sync.js (2,393) + config.js (94) + start.js (19) = **27,024 lines** (≈2,976 LOC of headroom to 30K trigger — approaching the split threshold)
 **Archetype:** Seeker
 **Domain Affinity:** Research, Trends
 **Tone:** Outward-facing, pattern-seeking, systematic.
@@ -155,7 +155,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 **Activation:** QA rounds for features touching intelligence-isl, intelligence-qa, intelligence-qa-handlers, intelligence-illness, intelligence-correlate, intelligence-caretickets, core, data, sync, config, or start modules. **Surfacing-layer audits (intelligence-cards, intelligence-quicklog) belong to Vela post-canon-gen-001.**
 **Note:** Kael is the initial Governor. May be reassigned to Orinth (The Sage) via the Persona Reassignment Process if deep architectural review becomes the primary need.
 
-**Shared modules:** styles.css + template.html (13,954 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
+**Shared modules:** styles.css + template.html (13,964 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
 
 **Voice Examples:**
 - "The temporal parser handles 'yesterday' but not 'last Tuesday'. That's an intent gap."
@@ -184,7 +184,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 **Activation:** QA rounds for features touching intelligence-cards.js or intelligence-quicklog.js. **Engine-layer audits (intelligence-isl, intelligence-qa, intelligence-qa-handlers, intelligence-illness, intelligence-correlate, intelligence-caretickets, core, data, sync, config, start) belong to Kael.**
 **Note:** Vela is the first second-generation Companion ratified under canon-gen-001 (the generational expansion clause). Her parent personas are Lyra (Builder ancestor — all Province-seated Governors descend from the Builder) and Kael (Governor predecessor — the previously-monolithic Intelligence Region split between Kael and Vela at the data→render boundary on 2026-05-23).
 
-**Shared modules:** styles.css + template.html (13,954 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
+**Shared modules:** styles.css + template.html (13,964 lines) — reviewed by ALL THREE Governors under sequential triple-jurisdiction review (canon-gen-001 rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
 
 **Voice Examples:**
 - "The card title says 'Top combos' but the body lists single foods — title-body coherence gap at intelligence-cards.js:1614."
@@ -318,11 +318,11 @@ Personas are not permanent. As a repo's needs evolve, a persona may no longer be
 
 | Repo | Current LOC | Governor Trigger | Seated Governors |
 |------|------------|-----------------|-------------------|
-| SproutLab | 76,167 | Active (canon-gen-001 expansion 2026-05-23) | Maren (Care) + Kael (Intelligence) + Vela (Surfacing) |
+| SproutLab | 76,308 | Active (canon-gen-001 expansion 2026-05-23) | Maren (Care) + Kael (Intelligence) + Vela (Surfacing) |
 | SEP Invoicing | 7,100 | At 30K | TBD — likely billing domain + logistics domain |
 | Codex | 5,300 | At 30K | TBD — likely data layer + UI layer |
 
 **Per-Region growth surfaces under canon-gen-001:**
-- **Kael's Region (Intelligence engine, 26,912 LOC):** ≈3,088 LOC from the 30K trigger — the nearest-term split candidate. Growth in intelligence-qa-handlers.js (new Smart Q&A intents), intelligence-illness.js (additional episode types), and core.js (shared utilities like the food-name resolver). Next split candidate when 30K is crossed: CareTickets + Illness state machines → new Governor (state-machine layer).
-- **Vela's Region (Surfacing, 8,428 LOC):** Natural growth as Info-tab cards accrete and Today So Far gains new cross-domain surfaces. Healthy headroom; no near-term split risk.
-- **Maren's Region (Care, 26,873 LOC):** ≈3,127 LOC from the 30K trigger. Steady growth in home.js (Today So Far card families) and medical.js (CareTicket integrations). Next split candidate when 30K is crossed: medical.js extraction → new Governor (vaccination + growth-chart layer).
+- **Kael's Region (Intelligence engine, 27,024 LOC):** ≈2,976 LOC from the 30K trigger — the nearest-term split candidate, now past the 27K mark. Growth in intelligence-qa-handlers.js (new Smart Q&A intents), intelligence-illness.js (additional episode types), and core.js + data.js (shared utilities like the food-name resolver — now alias-aware — and the FOOD_EFFECTS guided-introduction records). Next split candidate when 30K is crossed: CareTickets + Illness state machines → new Governor (state-machine layer).
+- **Vela's Region (Surfacing, 8,428 LOC):** Natural growth as Info-tab cards accrete and Today So Far gains new cross-domain surfaces — the food-effects-v2 *encourage* card (Phase γ) lands here next. Healthy headroom; no near-term split risk.
+- **Maren's Region (Care, 26,892 LOC):** ≈3,108 LOC from the 30K trigger. Steady growth in home.js (Today So Far card families) and medical.js (CareTicket integrations). Next split candidate when 30K is crossed: medical.js extraction → new Governor (vaccination + growth-chart layer).
