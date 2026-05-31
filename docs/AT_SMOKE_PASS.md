@@ -55,7 +55,7 @@ primary; NVDA is the named older-AT double-announce risk and is free.
 | 3 | Windows | JAWS | If available |
 | 3 | macOS / Safari | VoiceOver | Cmd+F5 |
 
-Test against the **live deploy** (https://rishabh1804.github.io/SproutLab/) so the
+Test against the **live deploy** (https://rishabh1804.github.io/sproutlab/) so the
 service-worker / PWA path is real, not a local file.
 
 ---
