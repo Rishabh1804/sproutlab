@@ -7890,6 +7890,19 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .qa-item-action .qa-item-signal { color:var(--tc-indigo); }
 .qa-item-info .qa-item-signal { color:var(--tc-sky); }
 .qa-item-neutral .qa-item-signal { color:var(--mid); }
+/* food-effects v2 R2 (V-R2-N1/N2): the Q&A emergency-floor section must carry the
+   weight of the .cons-severe log-time floor a parent has already learned — not the
+   muted nutrition-section chrome. Amber surface + amber-deep bold label/siren (V-3:
+   serious-without-alarm; rose reserved for the acute-toxin seek-care line). Applied
+   via sec.tone==='floor' in qaRenderAnswer; reachability/order are unchanged. */
+.qa-section-floor { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); margin:var(--sp-4) var(--sp-16) var(--sp-12); padding:var(--sp-12); }
+.qa-section-floor .qa-section-label { color:var(--amber-deep); }
+.qa-section-floor .qa-section-label-icon { color:var(--amber-deep); }
+/* watch-fors inside a floor read at warn weight, not the calm 'info' sky-blue (V-R2-N2) */
+.qa-section-floor .qa-item-info .qa-item-signal { color:var(--amber-deep); }
+/* the seek-care line carries the rose-deep alarm in its TEXT, not just its icon */
+.qa-section-floor .qa-item-seek { color:var(--rose-deep); font-weight:600; }
+.qa-section-floor .qa-item-seek .qa-item-signal { color:var(--rose-deep); }
 .qa-confidence {
   padding:var(--sp-8) var(--sp-16) var(--sp-12);
   font-size:var(--fs-2xs); color:var(--light);
@@ -55918,18 +55931,19 @@ function qaHandleFoodSafety(classified) {
   // section), sourced from FOOD_EFFECTS (Invariant 4). The hazard leads for an
   // acute-toxin; the safe-form gate + benefit follow for an encourage.
   if (toxin && toxin.why) {
-    sections.push({ label: 'WHY', icon: zi('siren'), items: [{ text: toxin.why, signal: 'warn' }] });
+    sections.push({ label: 'WHY', icon: zi('siren'), tone: 'floor', items: [{ text: toxin.why, signal: 'warn' }] });
   }
   severeFloors.forEach(function(sf) {
     var eff = sf.eff;
     var items = [];
     (eff.severeSigns || []).forEach(function(s) { items.push({ text: s, signal: 'warn' }); });
     (eff.watchFor || []).forEach(function(w) { items.push({ text: w, signal: 'info' }); });
-    if (eff.seekCare) items.push({ text: eff.seekCare, signal: 'warn' });
+    if (eff.seekCare) items.push({ text: eff.seekCare, signal: 'warn', cls: 'qa-item-seek' });
     if (items.length) {
       var hasSevere = !!(eff.severeSigns && eff.severeSigns.length);
       var label = (hasSevere ? 'IF THIS HAPPENS, EMERGENCY' : 'WATCH FOR') + (rawFoods.length > 1 ? ' — ' + sf.food : '');
-      sections.push({ label: label, icon: zi('siren'), items: items });
+      // tone:'floor' → the emergency chrome (V-R2-N1) so the strip is unmissable.
+      sections.push({ label: label, icon: zi('siren'), tone: 'floor', items: items });
     }
   });
   if (encourage) {
@@ -56520,13 +56534,13 @@ function qaRenderAnswer(container, answer) {
   // Sections
   if (answer.sections) {
     answer.sections.forEach(function(sec) {
-      html += '<div class="qa-section">';
+      html += '<div class="qa-section' + (sec.tone === 'floor' ? ' qa-section-floor' : '') + '">';
       html += '<div class="qa-section-label"><span class="qa-section-label-icon">' + sec.icon + '</span> ' + escHtml(sec.label) + '</div>';
       if (sec.items) {
         sec.items.forEach(function(item) {
           var cls = signalClasses[item.signal] || 'qa-item-neutral';
           var icon = item.icon || signalIcons[item.signal] || '·';
-          html += '<div class="qa-item ' + cls + '">';
+          html += '<div class="qa-item ' + cls + (item.cls ? ' ' + item.cls : '') + '">';
           html += '<span class="qa-item-signal">' + icon + '</span>';
           html += '<span class="qa-item-text">' + escHtml(item.text) + '</span>';
           html += '</div>';

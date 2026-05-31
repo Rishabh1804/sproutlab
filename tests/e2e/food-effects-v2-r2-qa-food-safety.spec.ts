@@ -30,6 +30,9 @@ async function ask(page: any, raw: string) {
       safeFormIdx: labelIdx(/safe form/i),
       hasEmergency: sections.some((s: any) => /emergency/i.test(s.label)),
       hasWatch: sections.some((s: any) => /watch for|^why$/i.test(s.label)),
+      // V-R2-N1: floor sections must carry the emergency tone (rendered loud).
+      floorToned: (a.sections || []).filter((s: any) => /emergency|watch for|^why$/i.test(s.label)).every((s: any) => s.tone === 'floor'),
+      anyFloorToned: (a.sections || []).some((s: any) => s.tone === 'floor'),
     };
   }, raw);
 }
@@ -53,12 +56,15 @@ test.describe('food-effects v2 — R2 Q&A food-safety (both poles + floor)', () 
     expect(a.allText).toMatch(/constipation|weak cry|floppiness/);
     // floor ordered before nutrition (K-S-4); nutrition may be absent (-1).
     if (a.nutritionIdx !== -1) expect(a.floorIdx).toBeLessThan(a.nutritionIdx);
+    // V-R2-N1: the floor carries the loud emergency tone, not muted section chrome.
+    expect(a.floorToned, 'floor sections carry tone:floor (emergency chrome)').toBe(true);
   });
 
   test('"can i give peanut?" → SAFE encourage (caution suppressed) + severe floor + safe-form', async ({ page }) => {
     const a = await ask(page, 'can i give peanut');
     expect(a.headline, 'encourage title, never bare "safe"').toContain('good to introduce early');
     expect(a.hasEmergency, 'anaphylaxis emergency floor section present').toBe(true);
+    expect(a.anyFloorToned, 'the anaphylaxis floor carries emergency chrome (V-R2-N1)').toBe(true);
     expect(a.safeFormIdx, 'safe-form gate section present').toBeGreaterThan(-1);
     expect(a.allText, 'compact whyGood benefit').toContain('plant protein');
     // the SAFETY section must NOT read "Caution" (legacy allergen flip suppressed, K-S-5)
