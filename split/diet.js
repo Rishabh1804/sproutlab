@@ -726,6 +726,135 @@ function renderDietLibrary() {
   renderFoods();
   renderFoodLibFilters();
   renderFoodLibResults();
+  renderDietNutIntro();
+}
+
+// ════════════════════════════════════════
+// Introducing nuts early — guided-introduction KNOWLEDGE card (food-effects v2)
+// ════════════════════════════════════════
+// Lives in the diet LIBRARY (the knowledge base), NOT the Info analytics tab —
+// a parent consumes reference guidance here. Surfaces the peanut + tree-nut
+// FOOD_EFFECTS records as ONE benefit-first card. (Moved here from the Info tab;
+// the Info tab is the analytics layer — nuts belong there only as analysis.)
+//
+// Invariants (carried from the γ card):
+//   • All copy is sourced from FOOD_EFFECTS — no hardcoded safety claim.
+//   • Emergency floor (A-1/V-1): the severe strip + the never-whole/choking
+//     form-gate (A-2) are PINNED in the always-visible host and never fold; the
+//     chevron toggles only the body (how-to / high-risk / mild / myth).
+//   • Polarity→color (V-3): sage benefit; amber severe strip (shared .cons-severe).
+function renderDietNutIntro() {
+  var host = document.getElementById('dietNutIntro');         // always-visible (pinned)
+  var moreHost = document.getElementById('dietNutIntroMore'); // collapse body
+  if (!host) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var peanut  = FE ? FE['peanut']   : null;
+  var treeNut = FE ? FE['tree nut'] : null;
+  // Need at least one record to say anything truthful; otherwise leave it empty.
+  if (!peanut && !treeNut) {
+    host.innerHTML = '';
+    if (moreHost) moreHost.innerHTML = '';
+    return;
+  }
+  var lead = peanut || treeNut;          // peanut carries the strongest (LEAP) evidence
+  var foods = [peanut, treeNut].filter(Boolean);
+
+  // PINNED (always visible): benefit banner + the never-whole/choking form gate
+  // + the severe emergency strip. BODY (collapsible): the how-to protocol, the
+  // high-risk advisory, the mild watch-fors, and the "delay" myth.
+  var pinned = '';
+  var body = '';
+
+  // ── Benefit banner (sage, encourage polarity — V-3) → PINNED ──
+  var benefit = (lead.earlyIntroBenefit && lead.earlyIntroBenefit.claim) ? lead.earlyIntroBenefit : null;
+  pinned += '<div class="enc-benefit">';
+  pinned += '<div class="enc-benefit-h">' + zi('sprout') + '<span>Why introduce early</span></div>';
+  if (benefit) {
+    pinned += '<p class="enc-claim">' + escHtml(benefit.claim) + '</p>';
+    if (benefit.evidence) pinned += '<p class="enc-evidence">' + escHtml(benefit.evidence) + '</p>';
+  }
+  // Each food's own cited nutrition line (no fabricated merge across records).
+  var whyItems = foods.filter(function(f){ return f.whyGood; })
+    .map(function(f){ return '<li>' + escHtml(f.whyGood) + '</li>'; }).join('');
+  if (whyItems) pinned += '<ul class="enc-why-list">' + whyItems + '</ul>';
+  pinned += '</div>';
+
+  // ── Safe-form gate (A-2) → PINNED. The "grinding removes choking NOT allergy /
+  // never whole" rule is a choking-safety line, so it stays visible when collapsed.
+  // Union the cited ok/never lists across both records (dedup). ──
+  var okSet = [], neverSet = [], note = '';
+  foods.forEach(function(f){
+    var sf = f.safeForm || {};
+    (sf.ok || []).forEach(function(x){ if (okSet.indexOf(x) === -1) okSet.push(x); });
+    (sf.never || []).forEach(function(x){ if (neverSet.indexOf(x) === -1) neverSet.push(x); });
+    if (!note && sf.note) note = sf.note;
+  });
+  if (okSet.length || neverSet.length || note) {
+    pinned += '<div class="enc-form">';
+    if (okSet.length) {
+      pinned += '<div class="enc-form-sub">Safe forms</div><ul class="enc-form-list">' +
+        okSet.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+    }
+    if (neverSet.length) {
+      pinned += '<div class="enc-form-sub">Never</div><ul class="enc-form-list enc-never">' +
+        neverSet.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+    }
+    if (note) pinned += '<p class="enc-form-note">' + escHtml(note) + '</p>';
+    pinned += '</div>';
+  }
+
+  // ── Severe-reaction strip — the emergency floor (A-1/V-1) → PINNED ──
+  // slice() first — never mutate the FOOD_EFFECTS source array.
+  var severe = (lead.severeSigns && lead.severeSigns.length) ? lead.severeSigns.slice() : [];
+  foods.forEach(function(f){
+    (f.severeSigns || []).forEach(function(s){ if (severe.indexOf(s) === -1) severe.push(s); });
+  });
+  if (severe.length) {
+    pinned += '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
+      '<span>If this happens, it’s an emergency</span></div><ul class="cons-severe-list">' +
+      severe.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+    if (lead.seekCare) {
+      pinned += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(lead.seekCare) + '</span></p>';
+    }
+    pinned += '</div>';
+  }
+
+  // ── How-to protocol (the introduce-safely steps) → BODY ──
+  var hti = lead.howToIntroduce || {};
+  body += '<div class="enc-block">';
+  body += '<div class="enc-block-h">' + zi('spoon') + '<span>How to introduce safely</span></div>';
+  body += '<div class="enc-proto">';
+  if (hti.amount)   body += '<div class="enc-proto-row"><b>Amount:</b> ' + escHtml(hti.amount) + '</div>';
+  if (hti.when)     body += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(hti.when) + '</div>';
+  if (hti.watch)    body += '<div class="enc-proto-row"><b>Watch:</b> ' + escHtml(hti.watch) + '</div>';
+  // Keep-offering guidance is PER-FOOD (Maren M-γ-1): tree nut carries the
+  // "introduce each nut on its own, a few days apart" line that peanut's does not.
+  var keepOffering = [{ rec: peanut, label: 'Peanut' }, { rec: treeNut, label: 'Tree nuts' }]
+    .filter(function(x){ return x.rec && x.rec.howToIntroduce && x.rec.howToIntroduce.thenWhat; });
+  keepOffering.forEach(function(x){
+    body += '<div class="enc-proto-row"><b>Keep offering — ' + escHtml(x.label) + ':</b> ' +
+      escHtml(x.rec.howToIntroduce.thenWhat) + '</div>';
+  });
+  body += '</div>';
+  // High-risk cohort note (Maren §9.2) — advisory + self-gating, so it sits in body.
+  if (hti.highRiskNote) body += '<p class="enc-highrisk">' + escHtml(hti.highRiskNote) + '</p>';
+  body += '</div>';
+
+  // ── Mild watch-fors — calm-secondary (spec §4.4) → BODY ──
+  var mild = (lead.watchFor && lead.watchFor.length) ? lead.watchFor.slice() : [];
+  if (mild.length) {
+    body += '<div class="cons-watch"><div class="cons-watch-h">Milder signs to watch for</div><ul class="cons-watch-list">' +
+      mild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  // ── The "delay" myth (the paradigm reversal) → BODY ──
+  var myth = (benefit && benefit.paradigm) ? benefit.paradigm : '';
+  if (myth) {
+    body += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(myth) + '</span></div>';
+  }
+
+  host.innerHTML = pinned;
+  if (moreHost) moreHost.innerHTML = body;
 }
 
 
