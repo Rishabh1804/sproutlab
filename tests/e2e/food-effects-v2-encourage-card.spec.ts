@@ -93,6 +93,17 @@ test.describe('food-effects-v2 — the encourage card (Phase γ)', () => {
     await expect(page.locator('#infoNutIntro .enc-form-list.enc-never li').first()).toBeVisible();
   });
 
+  test('M-γ-1: tree-nut attribution guidance is not dropped by the combined card', async ({ page }) => {
+    // A combined peanut+tree-nut card must still surface tree nut's distinct
+    // "introduce each nut on its own, a few days apart" guidance — otherwise a
+    // parent could offer a mixed almond/walnut/cashew paste at once and lose
+    // the ability to attribute a reaction. Sourced per-food from the records.
+    const proto = page.locator('#infoNutIntro .enc-proto');
+    await expect(proto).toContainText(/each nut on its own|few days apart/i);
+    // Both foods' keep-offering lines are labelled (no single peanut-only rhythm).
+    await expect(proto.locator('.enc-proto-row', { hasText: /Keep offering — Tree nuts/ })).toHaveCount(1);
+  });
+
   test('benefit content is record-sourced (LEAP); honey gets no benefit banner here', async ({ page }) => {
     // The cited evidence reaches the surface.
     await expect(page.locator('#infoNutIntro .enc-evidence')).toContainText(/LEAP/);

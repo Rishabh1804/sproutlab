@@ -1346,10 +1346,22 @@ function renderInfoNutIntro() {
   html += '<div class="enc-block-h">' + zi('spoon') + '<span>How to introduce safely</span></div>';
   var hti = lead.howToIntroduce || {};
   html += '<div class="enc-proto">';
+  // Amount / when / watch are materially identical across the records — source
+  // the shared first-exposure rhythm from lead.
   if (hti.amount)   html += '<div class="enc-proto-row"><b>Amount:</b> ' + escHtml(hti.amount) + '</div>';
   if (hti.when)     html += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(hti.when) + '</div>';
   if (hti.watch)    html += '<div class="enc-proto-row"><b>Watch:</b> ' + escHtml(hti.watch) + '</div>';
-  if (hti.thenWhat) html += '<div class="enc-proto-row"><b>Keep offering:</b> ' + escHtml(hti.thenWhat) + '</div>';
+  // Keep-offering guidance is PER-FOOD (Maren M-γ-1): tree nut carries the
+  // load-bearing "introduce each nut on its own, a few days apart" attribution
+  // line that peanut's does not. A combined card must never drop one food's
+  // distinct guidance — render each present food's own thenWhat, labelled, so
+  // the parent doesn't apply peanut's rhythm to a mixed-nut paste.
+  var keepOffering = [{ rec: peanut, label: 'Peanut' }, { rec: treeNut, label: 'Tree nuts' }]
+    .filter(function(x){ return x.rec && x.rec.howToIntroduce && x.rec.howToIntroduce.thenWhat; });
+  keepOffering.forEach(function(x){
+    html += '<div class="enc-proto-row"><b>Keep offering — ' + escHtml(x.label) + ':</b> ' +
+      escHtml(x.rec.howToIntroduce.thenWhat) + '</div>';
+  });
   html += '</div>';
   // Safe-form gate — union the cited ok/never lists across both records (dedup),
   // then the non-suppressible note (Maren A-2: grinding removes choking, NOT allergy).
