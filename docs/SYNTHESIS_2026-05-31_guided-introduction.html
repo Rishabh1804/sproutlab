@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Guided-Introduction Model — Session Synthesis 2026-05-31 · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--sage-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 22px}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 6px;max-width:720px}
+  .meta{color:var(--mid);font-size:12.5px;margin-top:10px}
+  .meta b{color:var(--ink)}
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:30px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  p{margin:8px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)} .stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-sage{background:var(--sage-bg);color:var(--sage)} .b-rose{background:var(--rose-bg);color:var(--rose)}
+  .b-amber{background:var(--amber-bg);color:var(--amber)} .b-honey{background:var(--honey-bg);color:var(--honey)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font:700 11.5px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  .axis{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0}
+  .axis>div{padding:14px 16px}
+  .axis .h{background:var(--rose-bg);border-right:1px solid var(--line)}
+  .axis .g{background:var(--sage-bg)}
+  .axis .lbl{font:700 11px/1 Nunito;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+  .axis .h .lbl{color:var(--rose)} .axis .g .lbl{color:var(--sage)}
+  .tl{margin:14px 0 6px;padding-left:4px}
+  .tl-step{position:relative;padding:0 0 16px 24px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent;padding-bottom:0}
+  .tl-step::before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--sage);border:2px solid var(--card)}
+  .tl-step .t{font-weight:700;font-size:13.5px}
+  .tl-step .d{color:var(--mid);font-size:13px}
+  .floor{border:2px solid var(--amber);background:var(--amber-bg);border-radius:12px;padding:14px 16px;margin:14px 0}
+  .floor .lbl{font:700 11px/1 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--amber);margin-bottom:6px}
+  .catch{border-left:3px solid var(--rose);padding:4px 0 4px 14px;margin:12px 0}
+  .catch .h{font-weight:700;color:var(--rose)}
+  ul.tight{margin:6px 0;padding-left:20px} ul.tight li{margin:4px 0}
+  code{font:12.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--track);padding:1px 5px;border-radius:5px}
+  .foot{color:var(--mid);font-size:12.5px;font-style:italic;margin-top:26px;border-top:1px solid var(--line);padding-top:16px}
+  .check{color:var(--sage);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>The Guided-Introduction Model</h1>
+    <p class="sub">Session synthesis — the food-effects layer learns to say <b>"yes, soon, here's how"</b> for the nutritious staples a baby should be introduced to early, without ever moving the one line that matters if the rare reaction comes.</p>
+    <p class="meta"><b>Companion:</b> Lyra (The Weaver) &nbsp;·&nbsp; <b>Date:</b> 2026-05-31 &nbsp;·&nbsp; <b>Arc:</b> #181 P0.1 gate → #182 P0.2 unify → #183 v2 spec + research → #184 P1a peanut/tree-nut &nbsp;·&nbsp; <b>Prose:</b> SYNTHESIS_2026-05-31_guided-introduction.md</p>
+  </div>
+</header>
+<div class="wrap">
+
+  <h2>The session in five numbers</h2>
+  <div class="grid g4">
+    <div class="card stat ok"><div class="n">4</div><div class="l">PRs merged to main (#181–#184)</div></div>
+    <div class="card stat ok"><div class="n">326</div><div class="l">e2e passing (2 skipped)</div></div>
+    <div class="card stat crit"><div class="n">2</div><div class="l">safety-tier bugs the Governor chain caught that a green build shipped</div></div>
+    <div class="card stat"><div class="n">12th</div><div class="l">build audit gate added (food-effects sync)</div></div>
+  </div>
+
+  <h2>The one idea</h2>
+  <div class="card">
+    <p>A food-effect's <b>polarity</b> (encourage vs warn) and <b>gate direction</b> (a soft "now is good" floor vs a hard "blocked below" ceiling) are <b>data, not code</b>. Honey taught the layer one shape — <em>hazard → avoid → watch → seek-care</em>. That shape is right for an acute toxin with no upside, and <b>wrong</b> for nuts, egg, seeds, and milk, where the safe action is the opposite of avoidance and fear-framing causes real harm.</p>
+    <p>A <code>foodClass</code> taxonomy makes the shape a property of the food — and lets one food carry <b>more than one</b> (peanut is both <span class="badge b-sage">allergen · introduce early</span> and <span class="badge b-amber">choking · by form</span>).</p>
+  </div>
+
+  <h2>The polarity flip — honey vs the staples</h2>
+  <div class="axis">
+    <div class="h">
+      <div class="lbl">● Acute-toxin model (honey)</div>
+      <ul class="tight">
+        <li><b>Polarity:</b> warn / avoid</li>
+        <li><b>Gate:</b> hard ceiling — blocked below 12mo</li>
+        <li><b>Hazards:</b> one (botulism)</li>
+        <li><b>Chrome:</b> rose</li>
+        <li><b>Right action:</b> do not give</li>
+      </ul>
+    </div>
+    <div class="g">
+      <div class="lbl">● Guided-introduction model (peanut, tree nut…)</div>
+      <ul class="tight">
+        <li><b>Polarity:</b> encourage</li>
+        <li><b>Gate:</b> soft floor — "now is good" from ~6mo</li>
+        <li><b>Hazards:</b> two (allergy + choking-<em>by-form</em>)</li>
+        <li><b>Chrome:</b> sage benefit, amber caution</li>
+        <li><b>Right action:</b> introduce early, in safe form, keep offering</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>The spine both Governors converged on — <span style="color:var(--amber)">the emergency floor never moves</span></h2>
+  <div class="floor">
+    <div class="lbl">⚑ Invariant (Maren A-1 · Vela V-1/V-3)</div>
+    <p style="margin:0">Benefit may lead the card. The <b>severe-reaction signs + the emergency action render unconditionally, non-collapsibly, above the fold.</b> "Calm secondary" governs visual weight and tone — <em>not presence or reachability.</em></p>
+  </div>
+  <div class="card">
+    <p>Encoded as: a <code>severeSigns[]</code> field distinct from the calm mild <code>watchFor[]</code>; an amber strip (serious-without-alarm — rose stays reserved for acute-toxin); never inside an accordion; guarded by e2e. The <code>.cons-severe</code> strip shipped in #184.</p>
+  </div>
+
+  <h2>The four moves that got us here</h2>
+  <div class="tl">
+    <div class="tl-step"><div class="t">1 · Harden before extending <span class="badge b-honey">#181 / #182</span></div><div class="d">Built the 12th audit gate (evals the <em>live</em> resolver so the gate can't drift from the product) + unified food-name matching onto one word-boundary resolver — before adding a single food.</div></div>
+    <div class="tl-step"><div class="t">2 · Research the reframe before coding it <span class="badge b-honey">#183</span></div><div class="d">Deep-research surfaced the structural truth — these foods invert honey on two axes and carry two hazards — that no schema-tinkering would have revealed. The brief drove the spec.</div></div>
+    <div class="tl-step"><div class="t">3 · Spec, Governor-reviewed, before food code <span class="badge b-honey">#183</span></div><div class="d">Maren + Vela reviewed the <em>spec</em> (SPEC_ITERATION_PROCESS); both returned <code>amended</code>, converged on one spine, folded before a line of food code.</div></div>
+    <div class="tl-step"><div class="t">4 · Build behaviour-preserving, then extend <span class="badge b-honey">#184</span></div><div class="d">P1a-α migrated honey onto the new schema with zero behaviour change (render on <em>presence</em>, not a class string — the A-4 anchor), then P1a-β added peanut + tree nut with an alias-aware resolver.</div></div>
+  </div>
+
+  <h2>What the Governor chain caught that nothing else would</h2>
+  <p class="sub">Two safety-tier bugs, both invisible to build + e2e + automated review, both caught by Maren's lens — <em>"what if this data is wrong and a parent acts on it?"</em></p>
+  <div class="catch">
+    <div class="h">soya (#182)</div>
+    <code>\bsoy\b</code> doesn't match "soya" — the dominant Indian spelling — so logged "soya chunks" silently lost its allergen flag. Domain knowledge, not a code smell.
+  </div>
+  <div class="catch">
+    <div class="h">V-M-206 — the session's signature catch (#184)</div>
+    "Whole almond" / "whole cashew" resolved to the 6-month introduce-early floor instead of the 60-month whole-nut <b>choking</b> gate — silently downgrading protection for the canonical infant choking hazard. The fix routes a named whole/chopped nut on a choking-by-form food to the 60mo gate. Verified 12/12; Cipher hammered every boundary. <span class="check">Build + e2e were green; only a Care lens caught it.</span>
+  </div>
+
+  <h2>Candidate Codex-canon entries <span class="badge b-amber">surfaced · not ratified</span></h2>
+  <table>
+    <tr><th>Entry</th><th>The rule</th></tr>
+    <tr><td><b>The guided-introduction model</b></td><td>A parent-facing food surface must be able to <em>encourage</em> as well as warn — polarity + gate-direction are data (<code>foodClass</code>) — and hold benefit + hazard + safe-form + sustained-exposure at once, without the benefit framing ever moving, collapsing, or out-prioritizing the emergency floor.</td></tr>
+    <tr><td><b>Decouple render from taxonomy</b> (A-4)</td><td>A schema rename must never silently drop a safety render. Render on <em>presence of the field</em>; drive chrome from a separate explicit <code>severity</code>.</td></tr>
+    <tr><td><b>The audit's matcher must BE the product's matcher</b></td><td>A cross-reference lint that re-implements runtime matching will drift from it. Extract + eval the live function (with a green-but-empty self-test) so the gate can't pass while the product fails.</td></tr>
+  </table>
+
+  <h2>Where it goes next</h2>
+  <div class="card">
+    <p><span class="dot" style="background:var(--sage)"></span><b>Phase γ — the persistent <em>encourage</em> Info-tab card.</b> Today, for an age-appropriate baby (Ziva ~9mo) the log-time consequence card does <b>not</b> fire — she's past the 6mo floor — so the benefit, safe-form, and watch-for guidance live in data but are <b>unreachable</b>. Phase γ is the surface that finally says the encouraging thing out loud, to the right parent, at the right age. <em>See NEXT_SESSION_TARGET_2026-05-31.md.</em></p>
+  </div>
+
+  <p class="foot">— Lyra, 2026-05-31. The honey card said "no." The work was teaching the layer to say "yes, soon, here's how" for the foods that deserve it — and proving, through two saves a green build would have shipped, that the one line which must never move is the one a parent reads in the thirty minutes after the first taste.</p>
+
+</div>
+</body>
+</html>
