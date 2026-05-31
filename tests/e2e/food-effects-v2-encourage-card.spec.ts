@@ -98,7 +98,7 @@ test.describe('food-effects-v2 — the encourage card (Phase γ)', () => {
     // "introduce each nut on its own, a few days apart" guidance — otherwise a
     // parent could offer a mixed almond/walnut/cashew paste at once and lose
     // the ability to attribute a reaction. Sourced per-food from the records.
-    const proto = page.locator('#infoNutIntro .enc-proto');
+    const proto = page.locator('#infoNutIntroCard .enc-proto');
     await expect(proto).toContainText(/each nut on its own|few days apart/i);
     // Both foods' keep-offering lines are labelled (no single peanut-only rhythm).
     await expect(proto.locator('.enc-proto-row', { hasText: /Keep offering — Tree nuts/ })).toHaveCount(1);
@@ -114,9 +114,36 @@ test.describe('food-effects-v2 — the encourage card (Phase γ)', () => {
   });
 
   test('the "delay" myth and the high-risk cohort note both reach the parent', async ({ page }) => {
-    await expect(page.locator('#infoNutIntro .enc-myth')).toBeVisible();
-    await expect(page.locator('#infoNutIntro .enc-myth')).toContainText(/delay/i);
+    // Both live in the collapse body (calm-secondary detail) — expand it, then
+    // assert they are reachable and correct.
+    await page.evaluate(() => {
+      const b = document.getElementById('infoNutIntroBody');
+      if (b) { b.classList.add('open'); (b as HTMLElement).style.display = ''; }
+    });
+    const myth = page.locator('#infoNutIntroCard .enc-myth');
+    await expect(myth).toBeVisible();
+    await expect(myth).toContainText(/delay/i);
     // High-risk note (eczema / known egg allergy → ask paediatrician) is present.
-    await expect(page.locator('#infoNutIntro .enc-highrisk')).toContainText(/eczema/i);
+    await expect(page.locator('#infoNutIntroCard .enc-highrisk')).toContainText(/eczema/i);
+  });
+
+  test('the card collapses meaningfully: the how-to detail is in the body, the floor is pinned', async ({ page }) => {
+    // The complaint γ-fix addresses: the card must collapse to a compact form,
+    // not sit permanently expanded. The how-to protocol (the bulk) is in the
+    // collapse body and hidden by default; the benefit + form gate + severe
+    // strip stay pinned and visible.
+    const proto = page.locator('#infoNutIntroBody .enc-proto');
+    await expect(proto).toHaveCount(1);            // the bulk IS in the collapse body
+    await expect(proto).toBeHidden();              // ...and collapsed by default
+    // Pinned essentials remain visible while collapsed:
+    await expect(page.locator('#infoNutIntro .enc-benefit')).toBeVisible();     // benefit leads
+    await expect(page.locator('#infoNutIntro .enc-form-note')).toBeVisible();   // never-whole / choking gate
+    await expect(page.locator('#infoNutIntro .cons-severe')).toBeVisible();     // emergency floor
+    // Expanding reveals the how-to detail.
+    await page.evaluate(() => {
+      const b = document.getElementById('infoNutIntroBody');
+      if (b) { b.classList.add('open'); (b as HTMLElement).style.display = ''; }
+    });
+    await expect(proto).toBeVisible();
   });
 });
