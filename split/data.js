@@ -2463,6 +2463,7 @@ const ALLERGENS = {
   'sesame':    'Seed allergen. Start small — ½ tsp ground. Watch for reactions.',
   'til':       'Seed allergen. Start small — ½ tsp ground. Watch for reactions.',
   'soy':       'Common allergen. Start with small amounts.',
+  'soya':      'Common allergen. Start with small amounts.',
   'soybean':   'Common allergen. Start with small amounts.',
   'wheat':     'Contains gluten. Watch for signs of intolerance — bloating, rash, loose stools.',
   'oats':      'May contain traces of gluten. Use certified gluten-free if family has coeliac history.',

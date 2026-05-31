@@ -16533,6 +16533,7 @@ const ALLERGENS = {
   'sesame':    'Seed allergen. Start small — ½ tsp ground. Watch for reactions.',
   'til':       'Seed allergen. Start small — ½ tsp ground. Watch for reactions.',
   'soy':       'Common allergen. Start with small amounts.',
+  'soya':      'Common allergen. Start with small amounts.',
   'soybean':   'Common allergen. Start with small amounts.',
   'wheat':     'Contains gluten. Watch for signs of intolerance — bloating, rash, loose stools.',
   'oats':      'May contain traces of gluten. Use certified gluten-free if family has coeliac history.',
@@ -37992,12 +37993,14 @@ function _fdIsFoodTried(name) {
   return foods.some(f => _fdSameFood(base, f.name));
 }
 
-// Resolve an allergen note for a food name (mirrors the diet.js combo-check
-// lookup at line ~508 — exact, suffix-stripped, then substring).
+// Resolve an allergen note for a food name. Routes through the shared
+// word-boundary resolver (core.js _lookupByFoodName) so allergen matching uses
+// the SAME semantics as the age gate (_fdAgeRule) and the consequence card
+// (getFoodEffect) — one food-name matching rule across the project, not two.
+// Word-boundary (not substring) retires the honeydew-class door: a name only
+// matches an ALLERGENS key on a whole word (V-K-30 word-boundary doctrine).
 function _fdAllergenNote(name) {
-  const n = String(name).toLowerCase().trim();
-  return ALLERGENS[n] || ALLERGENS[n.replace(/s$/, '')] ||
-    (Object.entries(ALLERGENS).find(([k]) => n.includes(k)) || [])[1] || null;
+  return _lookupByFoodName(ALLERGENS, name);
 }
 
 // Resolve an age-gate rule {minMonth, reason} for a food name.
@@ -38695,8 +38698,10 @@ function checkFoodCombo() {
 
   // ── 1. Check age safety ──
   rawFoods.forEach(food => {
-    // Direct match
-    const rule = AGE_RULES[food] || AGE_RULES[food.replace(/s$/, '')] || Object.entries(AGE_RULES).find(([k]) => food.includes(k))?.[1];
+    // Word-boundary resolve via the shared core.js resolver — same semantics as
+    // _fdAgeRule + the consequence card; substring matching retired (V-K-30 /
+    // honeydew-class door closed across the project, not just the safety surfaces).
+    const rule = _lookupByFoodName(AGE_RULES, food);
     if (rule && mo < rule.minMonth) {
       verdict = 'avoid';
       verdictEmoji = zi('warn');
@@ -38706,7 +38711,7 @@ function checkFoodCombo() {
 
   // ── 2. Check allergens ──
   rawFoods.forEach(food => {
-    const alert = ALLERGENS[food] || ALLERGENS[food.replace(/s$/, '')] || Object.entries(ALLERGENS).find(([k]) => food.includes(k))?.[1];
+    const alert = _lookupByFoodName(ALLERGENS, food);
     if (alert) {
       allergenNotes.push(`${zi('warn')} ${food}: ${alert}`);
       if (verdict === 'safe') { verdict = 'caution'; verdictEmoji = zi('warn'); }
