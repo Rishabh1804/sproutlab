@@ -660,7 +660,13 @@ function init() {
       const ci = document.getElementById('comboInput');
       if (ci) ci.value = arg;
       const hit = comboHistory.find(x => x.q === arg);
-      if (hit) renderComboResult(hit.result);
+      // M-R1-1: a stale (pre-R1-schema) cached result lacks the emergency floor —
+      // never render it directly; recompute so the floor stays reachable.
+      if (hit && hit.result && hit.result._schema === COMBO_RESULT_SCHEMA) {
+        renderComboResult(hit.result);
+      } else if (typeof checkFoodCombo === 'function') {
+        checkFoodCombo();
+      }
     }
     else if (action === 'openFeedingDay') {
       const fd = document.getElementById('feedingDate');
@@ -4045,6 +4051,14 @@ function _lookupByFoodName(table, name) {
 function getFoodEffect(name) {
   return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
 }
+
+// Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
+// results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
+// lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
+// it directly would drop the floor — the silent-floor-drop §10 names worse than
+// the legacy verdict. Stamp every fresh result with this tag; both read paths
+// (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
+const COMBO_RESULT_SCHEMA = 'r1-fe';
 
 // foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
 // multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];

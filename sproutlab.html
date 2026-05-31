@@ -19988,7 +19988,13 @@ function init() {
       const ci = document.getElementById('comboInput');
       if (ci) ci.value = arg;
       const hit = comboHistory.find(x => x.q === arg);
-      if (hit) renderComboResult(hit.result);
+      // M-R1-1: a stale (pre-R1-schema) cached result lacks the emergency floor —
+      // never render it directly; recompute so the floor stays reachable.
+      if (hit && hit.result && hit.result._schema === COMBO_RESULT_SCHEMA) {
+        renderComboResult(hit.result);
+      } else if (typeof checkFoodCombo === 'function') {
+        checkFoodCombo();
+      }
     }
     else if (action === 'openFeedingDay') {
       const fd = document.getElementById('feedingDate');
@@ -23373,6 +23379,14 @@ function _lookupByFoodName(table, name) {
 function getFoodEffect(name) {
   return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
 }
+
+// Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
+// results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
+// lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
+// it directly would drop the floor — the silent-floor-drop §10 names worse than
+// the legacy verdict. Stamp every fresh result with this tag; both read paths
+// (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
+const COMBO_RESULT_SCHEMA = 'r1-fe';
 
 // foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
 // multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];
@@ -39043,9 +39057,15 @@ function checkFoodCombo() {
 
   const resultEl = document.getElementById('comboResult');
 
-  // Check cache
-  const cached = comboHistory.find(h => h.q.toLowerCase() === query.toLowerCase());
-  if (cached) { renderComboResult(cached.result); return; }
+  // Check cache. M-R1-1: a result cached before R1 lacks the emergency-floor
+  // fields — never render it directly (that drops the floor). Drop the stale
+  // entry and fall through to recompute, so the floor is always reachable.
+  const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
+  if (cachedIdx !== -1) {
+    const cached = comboHistory[cachedIdx];
+    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+  }
 
   // Parse foods from query
   const rawFoods = query.split(/[+,&]|with|and/).map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
@@ -39268,6 +39288,7 @@ function checkFoodCombo() {
     severe_floors: severeFloors,
     toxin,
     encourage,
+    _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
   };
 
   // Cache

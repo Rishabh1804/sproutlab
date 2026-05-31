@@ -113,6 +113,27 @@ test.describe('food-effects v2 — R1 combo checker (both poles + floor)', () =>
     expect(r.resultClass, 'not an acute-toxin avoid').not.toContain('avoid');
   });
 
+  test('M-R1-1: a pre-R1 cached result (no floor) recomputes, never renders floorless', async ({ page }) => {
+    // Seed localStorage with a result cached BEFORE R1 — honey avoid, but no floor
+    // fields and no _schema tag — then reload so it loads into comboHistory. The
+    // cache short-circuit must treat it as stale and recompute, surfacing the
+    // botulism floor (the §10 silent-floor-drop guard).
+    await page.evaluate(() => {
+      const stale = [{
+        q: 'honey',
+        result: { verdict: 'avoid', verdict_emoji: '', headline: 'honey: OLD STALE caution', explanation: 'stale', _queryFoods: ['honey'] },
+        ts: new Date().toISOString(),
+      }];
+      localStorage.setItem('ziva_combo_history', JSON.stringify(stale));
+    });
+    await page.reload();
+    await page.waitForFunction(() => typeof checkFoodCombo === 'function' && !!document.getElementById('comboInput'), null, { timeout: 10_000 });
+    const r = await runCombo(page, 'honey');
+    expect(r.watchCount, 'stale honey recomputed → botulism floor present').toBeGreaterThan(0);
+    expect(r.verdictText, 'recomputed hazard headline, not the stale one').toContain('Honey before 12 months');
+    expect(r.html, 'the stale floorless result is not shown').not.toContain('OLD STALE');
+  });
+
   test('HR-4 (M-S-9): a script-y food token is escaped, not injected', async ({ page }) => {
     const r = await runCombo(page, '<img src=x onerror=alert(1)> + apple');
     expect(r.imgCount, 'no live <img> injected from the query').toBe(0);

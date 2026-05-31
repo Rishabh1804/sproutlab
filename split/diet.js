@@ -1296,9 +1296,15 @@ function checkFoodCombo() {
 
   const resultEl = document.getElementById('comboResult');
 
-  // Check cache
-  const cached = comboHistory.find(h => h.q.toLowerCase() === query.toLowerCase());
-  if (cached) { renderComboResult(cached.result); return; }
+  // Check cache. M-R1-1: a result cached before R1 lacks the emergency-floor
+  // fields — never render it directly (that drops the floor). Drop the stale
+  // entry and fall through to recompute, so the floor is always reachable.
+  const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
+  if (cachedIdx !== -1) {
+    const cached = comboHistory[cachedIdx];
+    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+  }
 
   // Parse foods from query
   const rawFoods = query.split(/[+,&]|with|and/).map(f => f.trim().toLowerCase()).filter(f => f.length > 0);
@@ -1521,6 +1527,7 @@ function checkFoodCombo() {
     severe_floors: severeFloors,
     toxin,
     encourage,
+    _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
   };
 
   // Cache
