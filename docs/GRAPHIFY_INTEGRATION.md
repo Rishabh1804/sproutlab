@@ -25,6 +25,7 @@ SproutLab is 18 source modules / ~76K LOC; the built artifact is 3.7 MB. Navigat
 
 - **A — navigation token savings.** `graphify benchmark split/graphify-out/graph.json` reports **~3.7× average** token reduction vs naive full-corpus (up to ~45× on an architecture-level question), on the code-only graph.
 - **B — routing oracle.** `pnpm qa-route [<base>]` computes the canon-cc-008 Governor summon-set from a diff (file-level jurisdiction routing **plus** cross-province ripple via `calls` edges). Advisory: widens the summon-set, never narrows it; does **not** discharge the gate.
+  - **Edge-direction dependency (V-K-G2):** the ripple assumes each `calls` edge is `source`=caller, `target`=callee. The graph is `directed:false`, and networkx does not guarantee endpoint stability across graphify versions. `qa-route.sh` carries a fail-loud guard — known leaf utilities (`escHtml`/`zi`) must have zero outgoing `calls`; if that breaks, the convention has flipped and the oracle **summons all three Governors** (fail-safe) rather than trust an inverted ripple.
 - **C — Visualization.** Navigation is Graphify's own **interactive node graph** `split/graphify-out/graph.html` (click / search / filter; gitignored + regenerated, open locally). `docs/PROVINCE_MAP.html` is a committed **exec summary** (jurisdiction cards + headroom-to-30K + coupling) — explicitly not navigable — that supersedes the hand-maintained, drift-prone `docs/MODULE_MAP.html`.
 
 ## Commands

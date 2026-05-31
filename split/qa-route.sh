@@ -108,6 +108,24 @@ if graph_path:
     try:
         g = json.load(open(graph_path))
         id2mod = {n["id"]: n.get("source_file", "?") for n in g.get("nodes", [])}
+        # Direction invariant (V-K-G2): the graph is undirected (directed:false); the
+        # ripple below assumes edge source=caller, target=callee. networkx does not
+        # guarantee endpoint stability on undirected graphs across graphify versions.
+        # If that convention ever flips, the ripple inverts and SILENTLY UNDER-SUMMONS
+        # a Governor — a canon-cc-008 short-circuit in advisory clothing. Fail-loud +
+        # fail-safe: known leaf utilities are callees only and MUST have zero outgoing
+        # `calls`. If that breaks, widen to ALL Governors rather than trust the ripple.
+        id2label = {n["id"]: (n.get("label") or n.get("norm_label") or "") for n in g.get("nodes", [])}
+        LEAVES = {"escHtml", "zi", "escAttr"}
+        out_calls = collections.Counter()
+        for e in g.get("links", []):
+            if e.get("relation") == "calls":
+                out_calls[id2label.get(e.get("source"), "")] += 1
+        if any(out_calls.get(lf, 0) > 0 for lf in LEAVES):
+            ripple_note.append("  !! DIRECTION INVARIANT BROKEN (V-K-G2): a known leaf has outgoing calls;")
+            ripple_note.append("     ripple may be inverted. FAIL-SAFE: summoning ALL Governors.")
+            for gname in ("Maren", "Kael", "Vela"):
+                add(gname, "fail-safe: graph edge-direction invariant broken (V-K-G2)")
         # downstream: who CALLS into a changed module (reverse of calls edge =
         # dependents). edge source --calls--> target ; if target lives in a
         # changed module, then source depends on it.

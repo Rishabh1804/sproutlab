@@ -34,7 +34,7 @@ if (!existsSync(graphPath)) {
 }
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); // apostrophe too (Vela NIT-1): context-agnostic helper
 
 // ── jurisdiction map (mirrors CLAUDE.md canon-cc-008 routing) ──
 const CARE='care', ENG='intel', REN='render', SHARED='shared', WORKS='works';
@@ -56,16 +56,31 @@ const PROVINCES = {
 const FRONTIER = 30000; // the 30K rule
 
 // ── load graph ──
-const g = JSON.parse(readFileSync(graphPath, 'utf8'));
+// Guard the parse (V-K-G1): a killed `graphify extract` in an ephemeral
+// container leaves a half-written graph.json. Degrade HONESTLY — skip, non-fatal,
+// leaving the last-good map in place — rather than throw a stack trace that
+// build-safe.sh swallows as "non-fatal" while the map silently goes stale.
+let g;
+try {
+  g = JSON.parse(readFileSync(graphPath, 'utf8'));
+} catch (err) {
+  console.error(`[province-map] graph.json unreadable/corrupt (${err.message}); skipping (non-fatal). PROVINCE_MAP.html left as-is.`);
+  process.exit(0);
+}
 const nodes = g.nodes || [];
 const links = g.links || [];
 const builtAt = String(g.built_at_commit || '(unknown commit)').slice(0, 12);
 
-// degree per node (for hubs)
+// degree per node (for hubs). Count CALLS edges only — not `contains`/`defines`
+// (V-K-G3 + Maren/Vela NIT: counting `contains` made the file-level node itself
+// the top "hub", conflating structural containment with call-connectivity).
+// Degree sums both endpoints, so it is direction-AGNOSTIC — the undirected
+// edge-direction concern (V-K-G2) affects only qa-route's ripple, not this count.
 const degree = new Map();
 const id2file = new Map();
 for (const n of nodes) { id2file.set(n.id, n.source_file || '?'); degree.set(n.id, 0); }
 for (const e of links) {
+  if (e.relation !== 'calls') continue;
   if (degree.has(e.source)) degree.set(e.source, degree.get(e.source) + 1);
   if (degree.has(e.target)) degree.set(e.target, degree.get(e.target) + 1);
 }
@@ -77,7 +92,7 @@ const liveLOC = (f) => {
   const p = join(__dirname, f);
   if (!existsSync(p)) return 0;
   const t = readFileSync(p, 'utf8');
-  return t.length ? t.split('\n').length : 0;
+  return (t.match(/\n/g) || []).length; // wc -l equivalent (V-M-map-1: split('\n') over-counted +1/file via trailing newline)
 };
 const modules = new Map(); // file -> {prov, nodes, loc, topNode, topDeg}
 const seenFiles = new Set(nodes.map(n => n.source_file).filter(Boolean));
@@ -239,9 +254,9 @@ const html = `<!DOCTYPE html>
     <tbody>${roadRows}</tbody>
   </table>
 
-  <h2>Connectivity hubs (highest-degree symbols per module)</h2>
+  <h2>Connectivity hubs (highest call-degree symbols per module)</h2>
   <table>
-    <thead><tr><th>Symbol</th><th>Module</th><th>Province</th><th class="num">Degree</th></tr></thead>
+    <thead><tr><th>Symbol</th><th>Module</th><th>Province</th><th class="num">Degree (calls)</th></tr></thead>
     <tbody>${hubs}</tbody>
   </table>
 </main>

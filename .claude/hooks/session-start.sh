@@ -96,8 +96,8 @@ if command -v uv >/dev/null 2>&1; then
   #    unless a backend credential is present (build-graph.sh auto-selects).
   if [ -f "$HOME/sproutlab/split/build-graph.sh" ]; then
     echo "[graphify] building initial SproutLab graph ..." >&2
-    bash "$HOME/sproutlab/split/build-graph.sh" >&2 2>&1 || echo "[graphify] graph build failed (non-fatal)." >&2
-    node "$HOME/sproutlab/split/build-province-map.mjs" >&2 2>&1 || true
+    bash "$HOME/sproutlab/split/build-graph.sh" >&2 || echo "[graphify] graph build failed (non-fatal)." >&2
+    node "$HOME/sproutlab/split/build-province-map.mjs" >&2 || true
   fi
 
   # 4. Materialize an absolute-path MCP config to ~/.mcp.json so the harness
