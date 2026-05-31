@@ -1235,6 +1235,7 @@ function renderInfoMilestoneSleepCorrelation() {
 }
 
 function renderInfo() {
+  renderInfoNutIntro();
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
   renderInfoComboFreq();
@@ -1287,6 +1288,147 @@ function renderInfo() {
   // boundary) per spec §Sort implementation F4+F6 IMPL-note: visible-reflow
   // avoidance + .card:nth-child(N) animation-delay alignment.
   _sortInfoTabByPriority();
+}
+
+// ════════════════════════════════════════
+// Persistent encourage card — guided introduction (food-effects v2 Phase γ)
+// ════════════════════════════════════════
+// Surfaces the peanut + tree-nut FOOD_EFFECTS records as ONE benefit-first
+// Info-tab card, so an age-appropriate parent (Ziva is past the 6-month floor)
+// reaches the benefit / safe-form / watch-for guidance that the log-time
+// consequence card only fires BELOW the gate — the γ gap. Spec §4.
+//
+// Invariants enforced here:
+//   • All copy is sourced from FOOD_EFFECTS — no hardcoded safety claim
+//     (the research→manifest→FOOD_EFFECTS pipeline is the canonical path).
+//   • Emergency floor (A-1/V-1): the severeSigns strip + the emergency action
+//     render UNCONDITIONALLY and NON-COLLAPSIBLY (the card has no accordion;
+//     see the template note). Benefit may lead, but it never moves the floor.
+//   • Form gate (A-2): the "grinding removes choking, NOT allergy / never whole"
+//     note renders whenever a record carries it — never suppressed by benefit.
+//   • Polarity→color (V-3): sage benefit banner; amber severe strip (shared
+//     .cons-severe); rose stays reserved for acute-toxin.
+function renderInfoNutIntro() {
+  var host = document.getElementById('infoNutIntro');       // always-visible summary
+  var moreHost = document.getElementById('infoNutIntroMore'); // collapse body (mild)
+  if (!host) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var peanut  = FE ? FE['peanut']   : null;
+  var treeNut = FE ? FE['tree nut'] : null;
+  // Need at least one record to say anything truthful; otherwise leave the card
+  // empty and drop it to ambient so the priority sort de-emphasises it.
+  if (!peanut && !treeNut) {
+    host.innerHTML = '';
+    if (moreHost) moreHost.innerHTML = '';
+    _setCardPriority('infoNutIntroCard', 'ambient');
+    return;
+  }
+  var lead = peanut || treeNut;          // peanut carries the strongest (LEAP) evidence
+  var foods = [peanut, treeNut].filter(Boolean);
+  var html = '';
+
+  // ── Section 1: Benefit banner (sage, encourage polarity — V-3) ──
+  var benefit = (lead.earlyIntroBenefit && lead.earlyIntroBenefit.claim) ? lead.earlyIntroBenefit : null;
+  html += '<div class="enc-benefit">';
+  html += '<div class="enc-benefit-h">' + zi('sprout') + '<span>Why introduce early</span></div>';
+  if (benefit) {
+    html += '<p class="enc-claim">' + escHtml(benefit.claim) + '</p>';
+    if (benefit.evidence) html += '<p class="enc-evidence">' + escHtml(benefit.evidence) + '</p>';
+  }
+  // Each food's own cited nutrition line (no fabricated merge across records).
+  var whyItems = foods.filter(function(f){ return f.whyGood; })
+    .map(function(f){ return '<li>' + escHtml(f.whyGood) + '</li>'; }).join('');
+  if (whyItems) html += '<ul class="enc-why-list">' + whyItems + '</ul>';
+  html += '</div>';
+
+  // ── Section 2: Introduce-safely block (protocol + non-suppressible form gate, A-2) ──
+  html += '<div class="enc-block">';
+  html += '<div class="enc-block-h">' + zi('spoon') + '<span>How to introduce safely</span></div>';
+  var hti = lead.howToIntroduce || {};
+  html += '<div class="enc-proto">';
+  // Amount / when / watch are materially identical across the records — source
+  // the shared first-exposure rhythm from lead.
+  if (hti.amount)   html += '<div class="enc-proto-row"><b>Amount:</b> ' + escHtml(hti.amount) + '</div>';
+  if (hti.when)     html += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(hti.when) + '</div>';
+  if (hti.watch)    html += '<div class="enc-proto-row"><b>Watch:</b> ' + escHtml(hti.watch) + '</div>';
+  // Keep-offering guidance is PER-FOOD (Maren M-γ-1): tree nut carries the
+  // load-bearing "introduce each nut on its own, a few days apart" attribution
+  // line that peanut's does not. A combined card must never drop one food's
+  // distinct guidance — render each present food's own thenWhat, labelled, so
+  // the parent doesn't apply peanut's rhythm to a mixed-nut paste.
+  var keepOffering = [{ rec: peanut, label: 'Peanut' }, { rec: treeNut, label: 'Tree nuts' }]
+    .filter(function(x){ return x.rec && x.rec.howToIntroduce && x.rec.howToIntroduce.thenWhat; });
+  keepOffering.forEach(function(x){
+    html += '<div class="enc-proto-row"><b>Keep offering — ' + escHtml(x.label) + ':</b> ' +
+      escHtml(x.rec.howToIntroduce.thenWhat) + '</div>';
+  });
+  html += '</div>';
+  // Safe-form gate — union the cited ok/never lists across both records (dedup),
+  // then the non-suppressible note (Maren A-2: grinding removes choking, NOT allergy).
+  var okSet = [], neverSet = [], note = '';
+  foods.forEach(function(f){
+    var sf = f.safeForm || {};
+    (sf.ok || []).forEach(function(x){ if (okSet.indexOf(x) === -1) okSet.push(x); });
+    (sf.never || []).forEach(function(x){ if (neverSet.indexOf(x) === -1) neverSet.push(x); });
+    if (!note && sf.note) note = sf.note;
+  });
+  if (okSet.length || neverSet.length || note) {
+    html += '<div class="enc-form">';
+    if (okSet.length) {
+      html += '<div class="enc-form-sub">Safe forms</div><ul class="enc-form-list">' +
+        okSet.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+    }
+    if (neverSet.length) {
+      html += '<div class="enc-form-sub">Never</div><ul class="enc-form-list enc-never">' +
+        neverSet.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+    }
+    if (note) html += '<p class="enc-form-note">' + escHtml(note) + '</p>';
+    html += '</div>';
+  }
+  // High-risk cohort note (Maren §9.2 — non-suppressible when applicable).
+  if (hti.highRiskNote) html += '<p class="enc-highrisk">' + escHtml(hti.highRiskNote) + '</p>';
+  html += '</div>';
+
+  // ── Section 3: Severe-reaction strip — the emergency floor (A-1/V-1) ──
+  // Unconditional, non-collapsible, amber. Reuses the shipped .cons-severe
+  // pattern verbatim so this card and the log-time card read identically.
+  // slice() first — never mutate the FOOD_EFFECTS source array.
+  var severe = (lead.severeSigns && lead.severeSigns.length) ? lead.severeSigns.slice() : [];
+  foods.forEach(function(f){
+    (f.severeSigns || []).forEach(function(s){ if (severe.indexOf(s) === -1) severe.push(s); });
+  });
+  if (severe.length) {
+    html += '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
+      '<span>If this happens, it’s an emergency</span></div><ul class="cons-severe-list">' +
+      severe.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+    if (lead.seekCare) {
+      html += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(lead.seekCare) + '</span></p>';
+    }
+    html += '</div>';
+  }
+
+  // ── Section 4a: the "delay" myth — stays in the always-visible summary.
+  // It is the highest-value relative-facing line (spec §4.4), so it is never
+  // folded into the collapse body.
+  var myth = (benefit && benefit.paradigm) ? benefit.paradigm : '';
+  if (myth) {
+    html += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(myth) + '</span></div>';
+  }
+
+  host.innerHTML = html;
+
+  // ── Section 4b: mild watch-fors — calm-secondary (spec §4.4), so they live in
+  // the collapse body the chevron toggles. The SEVERE strip above is never here.
+  var mild = (lead.watchFor && lead.watchFor.length) ? lead.watchFor.slice() : [];
+  if (moreHost) {
+    moreHost.innerHTML = mild.length
+      ? '<div class="cons-watch"><div class="cons-watch-h">Milder signs to watch for</div><ul class="cons-watch-list">' +
+          mild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>'
+      : '';
+  }
+
+  // Encourage cards map to card-priority 'notable' (spec §4); honey → 'urgent'.
+  _setCardPriority('infoNutIntroCard', 'notable');
 }
 
 function renderInfoFoodIntro() {
