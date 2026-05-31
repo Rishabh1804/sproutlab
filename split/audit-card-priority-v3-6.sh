@@ -49,7 +49,7 @@ class_hits_total = 0
 class_hits_per_file = {}
 
 for entry in sorted(os.listdir(SCAN_DIR)):
-    path = os.path.join(SCAN_DIR, entry)
+    path = os.path.join(SCAN_DIR, entry).replace(os.sep, '/')
     if not os.path.isfile(path):
         continue
     if path in EXEMPT:
