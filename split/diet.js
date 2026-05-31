@@ -621,17 +621,32 @@ function renderFoodDetailSheet(name) {
   </div>`;
 
   // Safety flags first (Maren altitude — safety reads before nutrition).
-  if (allerg) {
+  // food-effects v2 R3 (§3.3, M-S-6): the terse ALLERGENS string names only MILD
+  // signs (rash/swelling/vomiting) and OMITS anaphylaxis — an under-warn on this
+  // browse surface. Where a FOOD_EFFECTS record exists, surface its framing
+  // (eff.title — encourage-aware, M-S-2) + the safe-form gate + the shared
+  // emergency floor (_severeFloorHtml, M-S-7 — one floor across the action path,
+  // the combo result, and here). Fall back to the terse legacy string only when
+  // no record exists. (Render depth — inline vs link to the γ card — is Vela's
+  // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
+  const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
+  if (fdFloor) {
+    const head = (fdEff && fdEff.title) ? escHtml(fdEff.title) : 'Allergen';
+    const sub = (fdEff && fdEff.safeForm && fdEff.safeForm.note) ? escHtml(fdEff.safeForm.note)
+              : (allerg ? escHtml(allerg) : '');
+    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
+  } else if (allerg) {
     html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
   }
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
   }
   // V-M-201: absence of an allergen note must NOT read as "cleared". When no
-  // specific note is on file, surface the universal 3-day-rule guidance so a
-  // blank safety section never gets parsed as a green light — especially for
-  // seed/dairy foods (chia, cheese, paneer) that have no ALLERGENS entry yet.
-  if (!allerg) {
+  // specific note AND no record floor are on file, surface the universal
+  // 3-day-rule guidance so a blank safety section never reads as a green light.
+  if (!allerg && !fdFloor) {
     html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span>No specific allergen note on file. Introduce any new food on its own and watch for 3 days.</span></div>`;
   }
 
