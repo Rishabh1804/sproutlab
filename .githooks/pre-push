@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# pre-push — bundle-sync + integrity gate.
+#
+# Catches the "edited split/ but forgot to rebuild" failure: if any BUNDLED
+# split source changed in the pushed range but root index.html was NOT rebuilt
+# in that same range, the deployed bundle would be stale. Also rejects a
+# structurally corrupt bundle. NON-MUTATING by design: it never runs build.sh
+# (which would bump manifest.json + regenerate docs) — it only inspects git.
+#
+# Activation via core.hooksPath (SessionStart hook sets it). Bypass: git push --no-verify.
+#
+# stdin protocol (git): <local_ref> <local_sha> <remote_ref> <remote_sha> per line.
+
+set -uo pipefail
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# Files build.sh concatenates into the bundle (NOT the .sh/.mjs tooling).
+BUNDLE_RE='^split/(config|data|core|home|diet|medical|intelligence-[a-z-]+|sync|start)\.js$|^split/styles\.css$|^split/template\.html$'
+
+fail=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+  # ref deletion (all-zero local sha) → nothing to check
+  case "$local_sha" in *[!0]*) : ;; *) continue ;; esac
+
+  if printf '%s' "${remote_sha:-}" | grep -qE '^0+$'; then
+    # new branch on remote: diff against the merge-base with origin/main
+    base="$(git merge-base origin/main "$local_sha" 2>/dev/null || true)"
+  else
+    base="$remote_sha"
+  fi
+
+  if [ -n "${base:-}" ]; then
+    range_files="$(git diff --name-only "$base" "$local_sha" 2>/dev/null || true)"
+  else
+    range_files="$(git show --pretty=format: --name-only "$local_sha" 2>/dev/null || true)"
+  fi
+
+  bundle_changed=0; index_changed=0
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    printf '%s\n' "$f" | grep -qE "$BUNDLE_RE" && bundle_changed=1
+    [ "$f" = "index.html" ] && index_changed=1
+  done <<EOF
+$range_files
+EOF
+
+  if [ "$bundle_changed" -eq 1 ] && [ "$index_changed" -eq 0 ]; then
+    echo "pre-push BLOCKED: bundled split/ sources changed but root index.html was NOT rebuilt in this push range ($local_ref)." >&2
+    echo "  The deployed bundle would be stale. Run:  pnpm build  &&  git add index.html sproutlab.html  &&  commit, then re-push." >&2
+    fail=1
+  fi
+done
+
+# Structural integrity of the committed bundle at the pushed tip (HEAD tree).
+if [ -f index.html ]; then
+  first="$(head -1 index.html)"; last="$(tail -1 index.html)"; size="$(wc -c < index.html)"
+  if [ "$first" != "<!DOCTYPE html>" ] || [ "$last" != "</html>" ] || [ "$size" -lt 102400 ]; then
+    echo "pre-push BLOCKED: root index.html is structurally invalid (DOCTYPE='$first', closing='$last', size=$size; need >100KB)." >&2
+    fail=1
+  fi
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "Emergency bypass: git push --no-verify." >&2
+  exit 1
+fi
+exit 0

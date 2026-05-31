@@ -29,6 +29,18 @@
 
 set -euo pipefail
 
+# ── 0. Enforcement: activate this repo's git hooks (.githooks) every session ──
+# The hooks are DORMANT by default — git only honors .githooks after an explicit
+# `git config core.hooksPath .githooks`, which is per-clone and easy to forget.
+# Without it the pre-commit (HR-1/HR-12/icon-text) and pre-push (bundle-sync)
+# gates silently do not run. Activate idempotently for the repo this hook lives in.
+_SS_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd || true)"
+if [ -n "${_SS_REPO:-}" ] && [ -e "$_SS_REPO/.git" ] && [ -d "$_SS_REPO/.githooks" ]; then
+  if git -C "$_SS_REPO" config core.hooksPath .githooks 2>/dev/null; then
+    echo "[hooks] git enforcement active: core.hooksPath -> .githooks ($_SS_REPO)" >&2
+  fi
+fi
+
 # ── 1. Locate the SproutLab repo (source of the Province mirror specs) ──
 _self_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd || true)"
 SPROUTLAB=""
