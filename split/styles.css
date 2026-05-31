@@ -3966,9 +3966,19 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .cons-watch-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-seek { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-sm); color:var(--rose-deep); margin:0 0 var(--sp-16); line-height:var(--lh-relaxed); }
 .cons-seek .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--rose-deep); margin-top:3px; }
+/* Severe-reaction strip (food-effects-v2 A-1/V-1): the emergency floor. Amber
+   per V-3 (serious-without-alarm; rose stays reserved for acute-toxin honey).
+   Left bar + fill give it weight so a half-awake parent can't skim past it; it
+   renders unconditionally and is never collapsed. */
+.cons-severe { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); }
+.cons-severe-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--amber-deep); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.cons-severe-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--amber-deep); }
+.cons-severe-list { margin:0; padding-left:var(--sp-20); }
+.cons-severe-list li { font-size:var(--fs-base); color:var(--text); margin:var(--sp-4) 0; line-height:var(--lh-relaxed); }
 .cons-btns { display:flex; gap:var(--sp-8); justify-content:flex-end; }
 [data-theme="dark"] .consequence-overlay { background:var(--overlay-bg); }
 [data-theme="dark"] .consequence-card { background:var(--surface); }
+[data-theme="dark"] .cons-severe { background:var(--surface-amber); }
 
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or

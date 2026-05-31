@@ -199,10 +199,19 @@ for (const e of MANIFEST_ARR) {
 // ── Check 1 — every FOOD_EFFECTS key traces to a manifest entry ──
 const c1 = feKeys.filter(k => !_lookupByFoodName(manLookup, k));
 
-// ── Check 2 — every critical-tier manifest entry has a FOOD_EFFECTS record ──
+// ── Check 2 — every card-bearing manifest entry has a FOOD_EFFECTS record ──
+// v2: foodClass replaces tier and may be a string OR an array (multi-class).
+// A "card-bearing" class is one whose card surfaces a consequence/affirming
+// card the app must carry — acute-toxin (honey) and allergen-introduce-early
+// (nuts/egg/seeds). A manifest entry in one of these without a FOOD_EFFECTS
+// record is a silent gate (the card never fires). choking-by-form alone folds
+// into another class's card; drink-timing/substitute-caveat are not in scope
+// for this check yet (no records of those classes exist).
+const CARD_BEARING = new Set(['acute-toxin', 'allergen-introduce-early']);
+const classesOf = e => [].concat(e && (e.foodClass !== undefined ? e.foodClass : [])).filter(Boolean);
 const c2 = [];
 for (const e of MANIFEST_ARR) {
-  if (!e || e.tier !== 'critical') continue;
+  if (!e || !classesOf(e).some(fc => CARD_BEARING.has(fc))) continue;
   const names = [e.food].concat(Array.isArray(e.aliases) ? e.aliases : []).filter(Boolean);
   if (!names.some(nm => _lookupByFoodName(FOOD_EFFECTS, nm))) c2.push(e.food || '(unnamed manifest entry)');
 }
