@@ -5,6 +5,8 @@
   "description": "Dev-only test harness + build script for SproutLab. Production artifact (sproutlab.html / index.html) is built by `pnpm build`; this package.json itself is not part of the runtime bundle.",
   "scripts": {
     "build": "bash split/build-safe.sh",
+    "graph": "bash split/build-graph.sh && node split/build-province-map.mjs",
+    "qa-route": "bash split/qa-route.sh",
     "test:e2e": "playwright test",
     "test:e2e:stress": "playwright test --repeat-each=5",
     "test:e2e:ci": "CI=1 playwright test --repeat-each=5",

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SproutLab - Jurisdiction Overview</title>
+<style>
+  :root{ --ink:#3a2c18; --line:#cdb88f; --parch:#f7efe0; --card:#fffaf0; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--parch);color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;line-height:1.5}
+  header{padding:22px 28px;border-bottom:3px double #7a5b2e;background:#efe2c6}
+  h1{margin:0;font-size:24px;letter-spacing:2px}
+  .sub{margin-top:5px;font-size:12.5px;opacity:.82}
+  .stat{display:inline-block;margin-right:18px;font-size:13px}
+  .stat b{font-size:17px}
+  main{padding:22px 28px;max-width:1080px}
+  .banner{background:#eaf2ec;border:1px solid #b5d5c5;border-radius:8px;padding:12px 16px;font-size:13.5px;margin-bottom:22px}
+  .banner b{color:#2f5d45}
+  code{background:#ece0c4;padding:1px 5px;border-radius:4px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(60,40,20,.08)}
+  .cname{font-size:16px;font-weight:700}
+  .clatin{font-size:12px;font-style:italic;opacity:.7;margin-bottom:6px}
+  .cgov{font-size:12.5px;margin-bottom:8px}
+  .nums{display:flex;gap:14px;font-size:12.5px;margin-bottom:10px;flex-wrap:wrap}
+  .nums b{font-size:16px}
+  .bar{position:relative;height:20px;background:#e7dcc4;border-radius:5px;overflow:hidden;margin-bottom:4px}
+  .fill{position:absolute;inset:0 auto 0 0;background:#9bbfa6;border-radius:5px}
+  .fill.hot{background:#e0a07d}
+  .barlbl{position:relative;font-size:10.5px;line-height:20px;padding-left:8px;color:#3a2c18;font-weight:700}
+  .hd{font-size:11.5px;opacity:.78;margin-bottom:8px}
+  .note{font-size:11.5px;color:#9c6b1f;font-style:italic;margin-bottom:8px}
+  .mods{font-size:11px;opacity:.7;border-top:1px dashed var(--line);padding-top:7px;word-spacing:1px}
+  h2{margin:28px 0 8px;font-size:17px;border-bottom:1px solid #7a5b2e;padding-bottom:4px}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+  th{background:#efe2c6}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  footer{padding:14px 28px;font-size:11.5px;opacity:.7;border-top:1px solid #7a5b2e}
+</style></head>
+<body>
+<header>
+  <h1>SPROUTLAB &middot; JURISDICTION OVERVIEW</h1>
+  <div class="sub">graph-derived exec summary &middot; generated 2026-05-31 &middot; graph @ <code>4689ed42a6cd</code></div>
+  <div class="sub" style="margin-top:8px">
+    <span class="stat"><b>1,713</b> symbols</span>
+    <span class="stat"><b>5,082</b> relations</span>
+    <span class="stat"><b>79,991</b> LOC</span>
+    <span class="stat">extraction: <b>code-only</b></span>
+  </div>
+</header>
+<main>
+  <div class="banner">
+    This is a high-level <b>jurisdiction overview</b>, not a navigation tool. To explore the code graph,
+    open the interactive node graph at <code>split/graphify-out/graph.html</code> (click / search / filter),
+    or query it: <code>graphify query "..."</code> &middot; <code>graphify path "A" "B"</code> &middot;
+    <code>graphify affected "X"</code>. Routing a diff to Governors: <code>pnpm qa-route</code>.
+  </div>
+
+  <h2>Provinces</h2>
+  <div class="grid">
+    <div class="card" style="border-top:5px solid #9ba8d8">
+      <div class="cname">Provincia Intelligentiae</div>
+      <div class="clatin">the engine layer</div>
+      <div class="cgov">Governor: <b>Kael</b></div>
+      <div class="nums">
+        <span><b>11</b> modules</span>
+        <span><b>728</b> symbols</span>
+        <span><b>27,024</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="27,024 of 30,000 LOC">
+        <div class="fill hot" style="width:90%"></div>
+        <span class="barlbl">90% to 30K frontier &middot; CONTESTED</span>
+      </div>
+      <div class="hd">2,976 LOC headroom</div>
+      <div class="mods">core.js, i-illness.js, i-caretickets.js, i-qa-handlers.js, sync.js, data.js, i-qa.js, i-isl.js, config.js, i-correlate.js, start.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #b5d5c5">
+      <div class="cname">Provincia Curae</div>
+      <div class="clatin">home / diet / medical</div>
+      <div class="cgov">Governor: <b>Maren</b></div>
+      <div class="nums">
+        <span><b>3</b> modules</span>
+        <span><b>667</b> symbols</span>
+        <span><b>26,892</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="26,892 of 30,000 LOC">
+        <div class="fill hot" style="width:90%"></div>
+        <span class="barlbl">90% to 30K frontier &middot; CONTESTED</span>
+      </div>
+      <div class="hd">3,108 LOC headroom</div>
+      <div class="mods">home.js, medical.js, diet.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #c9b8e8">
+      <div class="cname">Provincia Superficiei</div>
+      <div class="clatin">the render layer</div>
+      <div class="cgov">Governor: <b>Vela</b></div>
+      <div class="nums">
+        <span><b>2</b> modules</span>
+        <span><b>180</b> symbols</span>
+        <span><b>8,428</b> LOC</span>
+      </div>
+      
+      <div class="bar" title="8,428 of 30,000 LOC">
+        <div class="fill " style="width:28%"></div>
+        <span class="barlbl">28% to 30K frontier</span>
+      </div>
+      <div class="hd">21,572 LOC headroom</div>
+      <div class="mods">i-quicklog.js, i-cards.js</div>
+    </div>
+    <div class="card" style="border-top:5px solid #e8b86d">
+      <div class="cname">Territorium Commune</div>
+      <div class="clatin">styles.css + template.html</div>
+      <div class="cgov">Governor: <b>Maren + Kael + Vela</b></div>
+      <div class="nums">
+        <span><b>2</b> modules</span>
+        <span><b>0</b> symbols</span>
+        <span><b>13,964</b> LOC</span>
+      </div>
+      <div class="note">Unsurveyed &mdash; code-only extraction. Set a backend and rebuild for symbols.</div>
+      <div class="mods">styles.css, template.html</div>
+    </div>
+    <div class="card" style="border-top:5px solid #fad4b4">
+      <div class="cname">Opera Publica</div>
+      <div class="clatin">build + audit corps</div>
+      <div class="cgov">Governor: <b>(tooling)</b></div>
+      <div class="nums">
+        <span><b>21</b> modules</span>
+        <span><b>138</b> symbols</span>
+        <span><b>3,683</b> LOC</span>
+      </div>
+      
+      <div class="mods">build-province-map.mjs, build-poop-reference.mjs, QA_GATE_SPEC.md, build-careticket-state-machine.mjs, audit-food-library-wiring-v1.sh, bump-version.mjs, build-graph.sh, audit-activity-categories-v1.sh, audit-card-priority-v3-6.sh, audit-chip-taxonomy-v3-5.sh, audit-emoji.sh, audit-feed-sheet-wiring-v1.sh, audit-food-effects-sync-v1.sh, audit-hr12-v3-3.sh, audit-icon-text.sh, audit-no-personalised-prediction-v1.sh, audit-resolve-shield.sh, audit-viz-smoke.sh, build-safe.sh, build.sh, qa-route.sh</div>
+    </div></div>
+
+  <h2>Cross-province coupling (highest-traffic calls across jurisdiction borders)</h2>
+  <table>
+    <thead><tr><th>Module</th><th>Module</th><th class="num">Calls</th><th>Border</th></tr></thead>
+    <tbody><tr><td>home.js</td><td>core.js</td><td class="num">346</td><td>Care &harr; Intelligence</td></tr><tr><td>medical.js</td><td>core.js</td><td class="num">280</td><td>Care &harr; Intelligence</td></tr><tr><td>i-quicklog.js</td><td>core.js</td><td class="num">137</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>diet.js</td><td>core.js</td><td class="num">118</td><td>Care &harr; Intelligence</td></tr><tr><td>i-illness.js</td><td>i-quicklog.js</td><td class="num">49</td><td>Intelligence &harr; Surfacing</td></tr><tr><td>home.js</td><td>i-quicklog.js</td><td class="num">44</td><td>Care &harr; Surfacing</td></tr><tr><td>i-quicklog.js</td><td>medical.js</td><td class="num">40</td><td>Surfacing &harr; Care</td></tr><tr><td>i-cards.js</td><td>medical.js</td><td class="num">35</td><td>Surfacing &harr; Care</td></tr><tr><td>home.js</td><td>i-illness.js</td><td class="num">35</td><td>Care &harr; Intelligence</td></tr><tr><td>i-cards.js</td><td>core.js</td><td class="num">31</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>i-qa-handlers.js</td><td>medical.js</td><td class="num">27</td><td>Intelligence &harr; Care</td></tr><tr><td>home.js</td><td>i-caretickets.js</td><td class="num">18</td><td>Care &harr; Intelligence</td></tr></tbody>
+  </table>
+
+  <h2>Connectivity hubs (highest call-degree symbols per module)</h2>
+  <table>
+    <thead><tr><th>Symbol</th><th>Module</th><th>Province</th><th class="num">Degree (calls)</th></tr></thead>
+    <tbody><tr><td><code>zi()</code></td><td>core.js</td><td>Intelligence</td><td class="num">323</td></tr><tr><td><code>showQLToast()</code></td><td>i-quicklog.js</td><td>Surfacing</td><td class="num">69</td></tr><tr><td><code>qaExecuteQuery()</code></td><td>i-qa.js</td><td>Intelligence</td><td class="num">50</td></tr><tr><td><code>renderInfo()</code></td><td>i-cards.js</td><td>Surfacing</td><td class="num">49</td></tr><tr><td><code>renderHome()</code></td><td>home.js</td><td>Care</td><td class="num">47</td></tr><tr><td><code>getDailySleepScore()</code></td><td>medical.js</td><td>Care</td><td class="num">33</td></tr><tr><td><code>_islMarkDirty()</code></td><td>i-isl.js</td><td>Intelligence</td><td class="num">28</td></tr><tr><td><code>ctHandleOverlayAction()</code></td><td>i-caretickets.js</td><td>Intelligence</td><td class="num">27</td></tr><tr><td><code>renderFeverEpisodeCard()</code></td><td>i-illness.js</td><td>Intelligence</td><td class="num">23</td></tr></tbody>
+  </table>
+</main>
+<footer>
+  Auto-generated by <code>split/build-province-map.mjs</code> from <code>split/graphify-out/graph.json</code> each build.
+  Supersedes the hand-maintained <code>docs/MODULE_MAP.html</code> &mdash; graph-derived, cannot drift.
+  Map wins on counts; CLAUDE.md wins on policy.
+  <b>Code-only extraction:</b> styles.css and template.html are unsurveyed; set a backend and rebuild for the full count.
+</footer>
+</body></html>

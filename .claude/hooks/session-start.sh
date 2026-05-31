@@ -132,3 +132,57 @@ for base in $TARGETS; do
 done
 
 echo "[companions] materialized into $total_dirs discovery dir(s) from $SPROUTLAB${CODEX:+ + $CODEX}." >&2
+
+# ── Graphify bootstrap (graphify-sproutlab integration pilot) ──
+# The container is ephemeral and graphify-out/ is gitignored, so every remote
+# session must (re)install graphify and (re)build the graph before the MCP
+# server or `graphify query` has anything to serve. All steps are best-effort
+# and NON-FATAL — a graphify hiccup must never break session start. Remote
+# (web) sessions only, matching the original pilot scoping. Repo paths use the
+# resolved $SPROUTLAB (NOT $HOME/sproutlab — same multi-repo path bug the
+# companion-autoload fix above removed).
+if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] && command -v uv >/dev/null 2>&1; then
+  export PATH="$HOME/.local/bin:$PATH"
+
+  # 1. Install graphifyy WITH the [mcp] extra (the MCP stdio server needs it).
+  if ! command -v graphify >/dev/null 2>&1; then
+    echo "[graphify] installing graphifyy[mcp] ..." >&2
+    uv tool install "graphifyy[mcp]" >/dev/null 2>&1 \
+      && echo "[graphify] installed." >&2 \
+      || echo "[graphify] install failed (non-fatal)." >&2
+  fi
+
+  # 2. Best-effort skill drop for Claude Code (does NOT touch CLAUDE.md; the
+  #    `claude install` subcommand would, so we deliberately avoid it).
+  graphify install --platform claude >/dev/null 2>&1 || true
+
+  # 3. Build the initial graph so the MCP server / CLI have data. Code-only
+  #    unless a backend credential is present (build-graph.sh auto-selects).
+  if [ -n "${SPROUTLAB:-}" ] && [ -f "$SPROUTLAB/split/build-graph.sh" ]; then
+    echo "[graphify] building initial SproutLab graph ..." >&2
+    bash "$SPROUTLAB/split/build-graph.sh" >&2 || echo "[graphify] graph build failed (non-fatal)." >&2
+    node "$SPROUTLAB/split/build-province-map.mjs" >&2 || true
+  fi
+
+  # 4. Materialize an absolute-path MCP config to ~/.mcp.json so the harness
+  #    can discover the server on the NEXT session start. Merges our entry
+  #    without clobbering any existing servers.
+  GVENV_PY="$HOME/.local/share/uv/tools/graphifyy/bin/python"
+  GRAPH_JSON="${SPROUTLAB:-/home/user/sproutlab}/split/graphify-out/graph.json"
+  if [ -x "$GVENV_PY" ]; then
+    GVENV_PY="$GVENV_PY" GRAPH_JSON="$GRAPH_JSON" MCP_OUT="$HOME/.mcp.json" python3 - <<'PYMCP' 2>/dev/null || true
+import json, os
+out=os.environ["MCP_OUT"]; py=os.environ["GVENV_PY"]; gj=os.environ["GRAPH_JSON"]
+try:
+    cfg=json.load(open(out)) if os.path.exists(out) else {}
+except Exception:
+    cfg={}
+cfg.setdefault("mcpServers",{})["graphify-sproutlab"]={
+    "command": py, "args": ["-m","graphify.serve", gj]
+}
+json.dump(cfg, open(out,"w"), indent=2)
+print()
+PYMCP
+    echo "[graphify] ~/.mcp.json updated (graphify-sproutlab server; active next session)." >&2
+  fi
+fi
