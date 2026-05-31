@@ -942,6 +942,26 @@
           </div>
         </div>
 
+        <!-- Introducing nuts early (food-effects v2 — guided-introduction KNOWLEDGE card;
+             lives in the Library, the diet knowledge base, NOT the Info analytics tab).
+             Emergency-floor invariant (§4.3, A-1/V-1): the severe-reaction strip — and the
+             never-whole/choking form-gate (A-2) — must never sit inside an accordion. The
+             always-visible PINNED slot (#dietNutIntro) carries benefit → safe-form gate →
+             SEVERE STRIP; the collapse body (#dietNutIntroBody) carries the how-to protocol
+             → high-risk note → MILD watch-fors → the "delay" myth (§4.4 calm-secondary). The
+             chevron toggles the body (the bulk); the pinned floor + choking gate never fold.
+             renderDietNutIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
+        <div class="card card-info col-full" id="dietNutIntroCard">
+          <div class="card-header" data-collapse-target="dietNutIntroBody" data-collapse-chevron="dietNutIntroChevron">
+            <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-sprout"/></svg></div> Introducing nuts early</div>
+            <span class="collapse-chevron" id="dietNutIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietNutIntro" class="mt-4"></div>
+          <div id="dietNutIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietNutIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1726,25 +1746,6 @@
 
       <!-- ─── FOOD INTELLIGENCE ─── -->
       <div class="home-section-label sec-t3 col-full">Food Intelligence</div>
-
-      <!-- Introducing nuts early (food-effects v2 Phase γ — persistent encourage card).
-           Emergency-floor invariant (§4.3, A-1/V-1): the severe-reaction strip — and
-           the never-whole/choking form-gate (A-2) — must never sit inside an accordion.
-           So the always-visible PINNED slot (#infoNutIntro) carries benefit → safe-form
-           gate → SEVERE STRIP, while the collapse body (#infoNutIntroBody) carries the
-           how-to protocol → high-risk note → MILD watch-fors → the "delay" myth (§4.4
-           calm-secondary). The chevron toggles the body (the bulk); the pinned floor +
-           choking gate are never folded. renderInfoNutIntro() fills both slots. -->
-      <div class="card card-daily col-full" id="infoNutIntroCard">
-        <div class="card-header" data-collapse-target="infoNutIntroBody" data-collapse-chevron="infoNutIntroChevron">
-          <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-sprout"/></svg></div> Introducing nuts early</div>
-          <span class="collapse-chevron" id="infoNutIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-        </div>
-        <div id="infoNutIntro" class="mt-4"></div>
-        <div id="infoNutIntroBody" class="collapse-body fx-col g8" style="display:none;">
-          <div id="infoNutIntroMore" class="mt-4"></div>
-        </div>
-      </div>
 
       <!-- Food Introduction Rate -->
       <div class="card card-daily col-full" id="infoFoodIntroCard">
