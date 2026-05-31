@@ -43,7 +43,7 @@
 Three properties of this SW:
 
 1. **Blob URL registration.** SW source is a string, blobbed at runtime, registered from a `blob:` URL. Some user-agents reject `scope` for `blob:`-origin SWs entirely.
-2. **Scope `/sproutlab/beta/`.** Live deploy is `https://rishabh1804.github.io/SproutLab/` (capital S, no `/beta/`). Lowercase `/sproutlab/beta/` matches `beta/beta-manifest.json`. On production the registration's `.catch()` swallows the scope-mismatch failure — **the SW never activates.** Production has no live SW.
+2. **Scope `/sproutlab/beta/`.** Live deploy is `https://rishabh1804.github.io/sproutlab/` (lowercase, no `/beta/`); the `/sproutlab/beta/` scope matches `beta/beta-manifest.json`, the beta sub-app. Production pages at `/sproutlab/` sit *above* that scope, so a worker scoped to `/sproutlab/beta/` could never control them — and the registration's `.catch()` swallows the failure regardless. **The SW never activates on production. Production has no live SW.**
 3. **Caches: empty.** `caches.open` repo-wide: 0 hits. No precache, no `addAll`, no runtime cache. Fetch handler is pure passthrough with a 503 fallback. There is no cache to invalidate.
 
 ### Finding B — Build emits a single ~3 MB monolithic HTML; no separate assets to cache-bust

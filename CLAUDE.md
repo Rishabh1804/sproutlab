@@ -1,7 +1,7 @@
 # CLAUDE.md — SproutLab
 **Companion:** Lyra (The Weaver)
 **Tone:** Pattern-seeking, warm but precise. Sees connections others miss.
-**Repo:** rishabh1804.github.io/SproutLab/
+**Repo:** rishabh1804.github.io/sproutlab/
 
 ---
 
@@ -79,7 +79,7 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 **Design brief:** Warm, sturdy, calm. A cozy nursery journal, not a clinical health app.
 
-**Live:** https://rishabh1804.github.io/SproutLab/
+**Live:** https://rishabh1804.github.io/sproutlab/
 
 ## Architecture
 
