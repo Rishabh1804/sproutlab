@@ -121,7 +121,157 @@ window.FOOD_EFFECTS_MANIFEST = [
     lastReviewed:  '2026-05-30',
   },
 
-  // ── append the next food here (egg / cow's milk / sesame / salt …) ──
+  // ── food-effects Phase δ: egg, soy, wheat, sesame (the four remaining big-9 allergens) ──
+  // TWO-TIER evidence discipline (verified 2026-06-01): EGG is prevention-PROVEN
+  // (PETIT RCT + EAT) and may make peanut-style confident claims. SOY / WHEAT /
+  // SESAME are introduce-early-and-SAFE but prevention is NOT RCT-proven — EAT
+  // (NEJM 2016) found "no significant effects with respect to milk, sesame, fish,
+  // or wheat" (soy untested in EAT). Their earlyIntroBenefit is framed honestly:
+  // "don't delay, it's safe" — never "early intro prevents this allergy."
+  // All four are foodClass:'allergen-introduce-early' (sage/encourage, NOT honey's
+  // rose acute-toxin) — the evidence base for the polarity-aware banner (Phase δ).
+  // `aliases` are deliberately culinary-rich so wiring into FOOD_EFFECTS closes the
+  // Kael B-1 resolution gap (tofu→soy, roti→wheat, til→sesame, anda→egg).
+  // minMonth:6 follows AAP/NHS/ASCIA (~6mo, not before 4); NOTE for wiring — the
+  // app's AGE_RULES carries egg-yolk:7 / whole-egg:8, to be reconciled with Maren.
+  {
+    food:          'egg',
+    aliases:       ['eggs','anda','egg yolk','whole egg','boiled egg','hard-boiled egg','scrambled egg','omelette','omelet'],
+    foodClass:     'allergen-introduce-early',
+    severity:      'caution',
+    category:      'egg',
+    effect:        'food allergy',
+    minMonth:      6,                      // AAP/NHS ~6mo (not before 4); reconcile with AGE_RULES egg-yolk:7 at wiring
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy'],
+    headline:      'Introduce early (~6 months), well-cooked — early egg lowers allergy risk.',
+    whyGood:       'Complete protein, choline, iron, vitamin D — and early, regular well-cooked egg helps prevent egg allergy.',
+    earlyIntroBenefit: { claim:'Early, regular well-cooked egg helps prevent egg allergy.',
+                         evidence:'PETIT (Lancet 2017): heated egg + eczema care cut egg allergy 38%→8% at 12mo (P=0.0001). EAT (NEJM 2016): per-protocol 5.5%→1.4% (P=0.009).',
+                         paradigm:'Reverses old "delay egg to prevent allergy" advice.' },
+    safeForm:      { ok:['well-cooked egg — mashed hard-boiled, scrambled, or baked into soft food','start with cooked yolk; offer whole egg once yolk is tolerated'],
+                     never:['raw or runny egg','lightly-cooked egg (no British-Lion-mark assurance exists in India)'],
+                     note:'Cook until BOTH white and yolk are solid — this is the studied safe form and removes the salmonella risk.' },
+    myth:          { claim:'Delay egg to prevent allergy.',
+                     truth:'Reversed — early, regular well-cooked egg helps prevent egg allergy; delaying may increase risk.' },
+    watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting'],
+    severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+    timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector.',
+    breastfeedingSafe: true,
+    culturalNote:  'No British-Lion-mark assured-egg scheme in India — default to fully-cooked egg (solid white and yolk). Egg allergy is common in infancy but usually outgrown by school age.',
+    confidence:    'high',
+    sources:       ['Lancet PETIT 2017','NEJM EAT 2016','AAP','UK NHS','ASCIA 2026','NIAID 2017'],
+    dashboard:     'egg-infant-safety.visual.html',   // render pending (Phase δ render step)
+    brief:         'egg-infant-safety.md',
+    longform:      'egg-infant-safety.html',           // render pending
+    lastReviewed:  '2026-06-01',
+  },
+  {
+    food:          'soy',
+    aliases:       ['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari','tvp','textured vegetable protein'],
+    foodClass:     'allergen-introduce-early',
+    severity:      'caution',
+    category:      'legume',
+    effect:        'food allergy (incl. FPIES)',
+    minMonth:      6,
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy','digestive'],   // digestive = FPIES (non-IgE), a classic soy presentation
+    headline:      'Introduce around 6 months — don\'t delay. Soft tofu, not whole edamame.',
+    whyGood:       'Valuable plant protein for a vegetarian diet (tofu, soya chunks) — introduce early alongside other solids.',
+    earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay allergens.',
+                         evidence:'AAP/NHS/ASCIA advise early introduction of soy among the major allergens; early intro is SAFE, but no RCT proves early soy prevents soy allergy (soy was not among EAT\'s prevention-positive foods).',
+                         paradigm:'Don\'t delay — but no proven soy-specific prevention claim.' },
+    safeForm:      { ok:['soft / silken tofu, smushable or blended','well-cooked soybeans mashed','soy yoghurt; soya stirred into food'],
+                     never:['whole edamame or whole soybeans (round, firm — a choking risk)','soy milk as a main drink in the first year (not a breastmilk/formula substitute)'],
+                     note:'Shell and mash edamame at 6mo; halve cooked beans at 9mo. Soft tofu needs no choking prep.' },
+    myth:          { claim:'Soy isn\'t recommended for babies.',
+                     truth:'That advice is about soy infant FORMULA for allergy prevention — not soy FOODS like tofu, which are fine to introduce around 6 months.' },
+    watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting or diarrhoea'],
+    severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy','repeated forceful vomiting + lethargy hours later (possible FPIES)'],
+    timeCourse:    'IgE: minutes to ~2 hours. FPIES (non-IgE): delayed — profuse repeated vomiting + lethargy/pallor 1–4 hours after eating.',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112. Repeated forceful vomiting with lethargy/pallor hours after a soy feed (possible FPIES): seek urgent care even without a rash.',
+    breastfeedingSafe: true,
+    culturalNote:  'Soya chunks/granules are everyday vegetarian protein in India — a concentrated soy-protein form. Some cow\'s-milk-allergic babies also react to soy; introduce as a minor ingredient first.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','FARE','CHOP (FPIES)','NEJM EAT 2016'],
+    dashboard:     'soy-infant-safety.visual.html',    // render pending
+    brief:         'soy-infant-safety.md',
+    longform:      'soy-infant-safety.html',           // render pending
+    lastReviewed:  '2026-06-01',
+  },
+  {
+    food:          'wheat',
+    aliases:       ['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','bread','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
+    foodClass:     'allergen-introduce-early',
+    severity:      'caution',
+    category:      'grain',
+    effect:        'food allergy (distinct from celiac disease)',
+    minMonth:      6,
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy'],
+    headline:      'Introduce around 6 months — don\'t delay. Soft cereal or softened roti.',
+    whyGood:       'Staple grain — soft wheat cereal, well-cooked pasta, or softened roti; introduce early alongside other solids.',
+    earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                         evidence:'AAP/NHS/ASCIA advise early introduction; EAT (NEJM 2016) verified NO significant prevention effect for wheat — early intro is SAFE but does NOT prevent wheat allergy.',
+                         paradigm:'Don\'t delay — but no proven wheat-specific prevention claim.' },
+    safeForm:      { ok:['soft wheat / multigrain cereal or porridge','well-cooked soft pasta','roti / chapati torn small and softened in milk, dal, or sabzi','suji / dalia cooked soft'],
+                     never:['large or doughy bread pieces (fresh soft bread balls up into a sticky clump — toast it or use firm strips)','loose cooked wheat / dalia that scatters in the mouth (mash or bind it)'],
+                     note:'Wheat ALLERGY is separate from celiac disease — see myth.' },
+    myth:          { claim:'Wheat allergy and gluten intolerance / celiac disease are the same.',
+                     truth:'Different conditions — wheat allergy is an immune (IgE) food allergy with rapid reactions; celiac is a separate autoimmune reaction to gluten needing medical diagnosis, not emergency care. This record is about wheat allergy.' },
+    watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting or diarrhoea','eczema flare'],
+    severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+    timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector. (Celiac is NOT an emergency — chronic; needs a doctor\'s diagnosis.)',
+    breastfeedingSafe: true,
+    culturalNote:  'Atta, maida, suji/rava, dalia, sevai are all wheat. Soft cereal and softened roti are ideal early forms. Wheat allergy is commonly outgrown in early childhood.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','NEJM EAT 2016','ESPGHAN 2016 (celiac/gluten)'],
+    dashboard:     'wheat-infant-safety.visual.html',  // render pending
+    brief:         'wheat-infant-safety.md',
+    longform:      'wheat-infant-safety.html',          // render pending
+    lastReviewed:  '2026-06-01',
+  },
+  {
+    food:          'sesame',
+    aliases:       ['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','halva','halwa','gajak','til laddoo'],
+    foodClass:     'allergen-introduce-early',
+    severity:      'caution',
+    category:      'seed',
+    effect:        'food allergy (often lifelong)',
+    minMonth:      6,
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy'],
+    headline:      'Introduce around 6 months, as thinned tahini — never a thick glob.',
+    whyGood:       'Seed source of calcium, iron and healthy fats; offer as smooth tahini thinned into food.',
+    earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                         evidence:'AAP/NHS/ASCIA name sesame among allergens to introduce early; EAT (NEJM 2016) verified NO significant prevention effect for sesame — early intro is SAFE but not proven to prevent sesame allergy. (Sesame is the US 9th major allergen, FASTER Act, labeling since Jan 1 2023 — US-only; does not apply to Indian/home foods.)',
+                         paradigm:'Don\'t delay — but no proven sesame-specific prevention claim.' },
+    safeForm:      { ok:['smooth tahini (sesame paste) thinned with water, milk, or puree','finely ground sesame stirred into food'],
+                     never:['a thick glob of tahini (sticky — a choking risk; thin it, like nut butter)','whole sesame seeds in quantity for a young infant'],
+                     note:'Same "thin the sticky glob" rule as peanut butter. Unrefined / cold-pressed gingelly (sesame) oil can still carry allergenic protein.' },
+    myth:          { claim:'Sesame allergy is outgrown like egg or milk.',
+                     truth:'Usually not — sesame allergy tends to be lifelong (~70–80% persist), so first exposures and ongoing care matter more than for commonly-outgrown allergens.' },
+    watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting'],
+    severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+    timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector. Sesame is a leading anaphylaxis trigger — watch closely.',
+    breastfeedingSafe: true,
+    culturalNote:  'Til is deeply embedded — til laddoo, gajak (peak around Makar Sankranti), chutneys, gingelly oil. Thin tahini into dal, khichdi, curd, or fruit puree; avoid loose til seeds from laddoo/gajak for young infants.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','ASCIA','FDA FASTER Act 2021','NEJM EAT 2016','J Asthma Allergy (persistence)','JAMA Netw Open 2019'],
+    dashboard:     'sesame-infant-safety.visual.html', // render pending
+    brief:         'sesame-infant-safety.md',
+    longform:      'sesame-infant-safety.html',         // render pending
+    lastReviewed:  '2026-06-01',
+  },
+
+  // ── append the next food here (cow's milk / fish / salt …) ──
 ];
 
 /* Node/CommonJS convenience (so the hub OR a build step can require it). */
