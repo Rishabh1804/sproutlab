@@ -297,6 +297,24 @@ function _aiFoodRecordFor(canonEff, key) {
   return match;
 }
 
+// "Offered on N days" — the repeated-exposure / keep-offering signal, counted
+// from the meal log (feedingData via extractDayFoods). Distinct from the
+// `foods` tried-state above: that gives the intro date + watch window; this
+// counts the days the allergen actually appeared at a meal. Same resolver
+// spine, so "almond" days count toward Tree nuts.
+function _aiExposureDays(canonEff, base) {
+  if (typeof feedingData === 'undefined' || !feedingData || typeof extractDayFoods !== 'function') return 0;
+  var n = 0;
+  Object.keys(feedingData).forEach(function(ds) {
+    var hit = extractDayFoods(ds).some(function(fn) {
+      if (canonEff && typeof getFoodEffect === 'function' && getFoodEffect(fn) === canonEff) return true;
+      return (typeof _baseFoodName === 'function') && _baseFoodName(fn) === base;
+    });
+    if (hit) n++;
+  });
+  return n;
+}
+
 function _aiComputeAllergenIntro() {
   var ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
   var tdy = (typeof today === 'function') ? today() : null;
@@ -305,7 +323,9 @@ function _aiComputeAllergenIntro() {
     var ageRule = (typeof _lookupByFoodName === 'function' && typeof AGE_RULES !== 'undefined')
       ? _lookupByFoodName(AGE_RULES, a.key) : null;
     var introMonth = (ageRule && ageRule.minMonth) ? ageRule.minMonth : 6;
+    var base = (typeof _baseFoodName === 'function') ? _baseFoodName(String(a.key).toLowerCase().trim()) : String(a.key);
     var rec = _aiFoodRecordFor(eff, a.key);
+    var exposureDays = _aiExposureDays(eff, base);
     var ageReady = ageMonths >= introMonth;
     var state, daysSince = null;
     if (rec) {
@@ -322,6 +342,7 @@ function _aiComputeAllergenIntro() {
     }
     return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
              tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
+             exposureDays: exposureDays,
              state: state, safeForm: (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : null };
   });
   return {
@@ -341,10 +362,12 @@ function renderInfoAllergenIntro() {
   var insEl = document.getElementById('infoAllergenIntroInsights');
   var data = _aiComputeAllergenIntro();
 
+  // Summary line + a glanceable sage progress bar (introduced / total).
   var sum = '<div class="t-sm"><strong>' + data.introduced + '</strong> of <strong>' + data.total + '</strong> introduced';
   if (data.ready > 0) sum += ' · <strong>' + data.ready + '</strong> ready to try';
-  if (data.watching > 0) sum += ' · ' + data.watching + ' in the 3-day watch';
+  if (data.watching > 0) sum += ' · ' + data.watching + ' watching';
   sum += '</div>';
+  sum += _cdBarHtml('Progress', data.introduced, data.total, ' / ' + data.total, 'var(--tc-sage)');
   sumEl.innerHTML = sum;
 
   var STATE = {
@@ -356,16 +379,24 @@ function renderInfoAllergenIntro() {
     reaction:   { pill: 'cd-pill-neg',     text: 'Reaction noted' }
   };
   if (listEl) {
+    // Order by actionability so what to act on floats up: ready → watching →
+    // reaction → introduced/tolerated → not-yet. Stable sort preserves set order
+    // within a tier.
+    var RANK = { ready: 0, watching: 1, reaction: 2, introduced: 3, tolerated: 3, waiting: 4 };
+    var ordered = data.items.slice().sort(function(a, b) {
+      return (RANK[a.state] != null ? RANK[a.state] : 9) - (RANK[b.state] != null ? RANK[b.state] : 9);
+    });
     var rows = '<div class="cd-section-label">High-priority allergens</div>';
-    data.items.forEach(function(i) {
+    ordered.forEach(function(i) {
       var s = STATE[i.state] || STATE.waiting;
+      var offered = i.exposureDays > 0 ? ('offered ' + i.exposureDays + (i.exposureDays === 1 ? ' day' : ' days')) : '';
       var meta;
-      if (i.state === 'tolerated') meta = 'Introduced ' + (i.date ? formatDate(i.date) : '') + ' · 3-day watch cleared';
-      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — keep watching';
-      else if (i.state === 'introduced') meta = 'Introduced';
-      else if (i.state === 'reaction') meta = 'Flagged for watch' + (i.date ? ' on ' + formatDate(i.date) : '') + ' — open the food for details';
+      if (i.state === 'tolerated') meta = (offered ? offered + ' · ' : '') + 'keep it in rotation';
+      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — watch for reactions';
+      else if (i.state === 'introduced') meta = 'Keep offering to hold tolerance';
+      else if (i.state === 'reaction') meta = 'Reaction flagged' + (i.date ? ' ' + formatDate(i.date) : '') + ' — tap to review';
       else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
-      else meta = 'Fine to wait — around ' + i.introMonth + ' months';
+      else meta = 'From ' + i.introMonth + ' months';
       // Row taps through to the food's detail sheet — the R3 floor + safe-form
       // for the same resolved food (foodLibDetail → renderFoodDetailSheet).
       rows += '<div class="cd-food-item tappable" role="button" tabindex="0" data-action="foodLibDetail" data-arg="' + escHtml(i.key) + '">' +
@@ -380,14 +411,14 @@ function renderInfoAllergenIntro() {
   if (insEl) {
     var ins;
     if (data.introduced >= data.total) {
-      ins = 'All ' + data.total + ' high-priority allergens introduced — early, regular exposure is what helps build tolerance. Keep them in rotation.';
+      ins = 'All ' + data.total + ' introduced. Keep offering each a few times a week — repeated exposure is what holds the protection.';
     } else if (data.ready > 0) {
       var readyLabels = data.items.filter(function(i){ return i.state === 'ready'; }).map(function(i){ return i.label; });
-      ins = 'Introducing allergens early, in a safe form, is protective. Good to start now: ' + readyLabels.join(', ') + '. Offer one new allergen at a time and watch for 3 days.';
+      ins = 'Early introduction in a safe form is protective. Good to start now: ' + readyLabels.join(', ') + '. One at a time, then watch 3 days.';
     } else if (data.watching > 0) {
-      ins = 'Watching a newly-introduced allergen. A mild rash alone: note it and carry on. Any trouble breathing or swelling of the face or lips: seek care right away.';
+      ins = 'Watching a new allergen. A mild rash alone: note it and carry on. Trouble breathing or swelling of the face or lips: get help right away.';
     } else {
-      ins = 'Allergens are usually introduced from around 6 months, one at a time, in a safe (smooth or thinned) form.';
+      ins = 'Allergens go in from around 6 months — one at a time, in a smooth or thinned form.';
     }
     insEl.innerHTML = '<div class="cd-section-label">What this means</div><div class="t-sm">' + escHtml(ins) + '</div>';
   }

@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test';
 // logged "almond" counts as Tree nuts introduced, and the 3-day watch /
 // tolerated / reaction states are derived, never hardcoded.
 declare const foods: any[];
+declare const feedingData: Record<string, any>;
 declare const today: () => string;
 declare const _offsetDateStr: (base: string, off: number) => string;
 declare const _aiComputeAllergenIntro: () => any;
@@ -74,13 +75,44 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
         pos: card.querySelectorAll('.cd-pill-pos').length,
         neutral: card.querySelectorAll('.cd-pill-neutral').length,
         tier: card.getAttribute('data-card-priority') || '',
+        bar: card.querySelectorAll('#infoAllergenIntroSummary .cd-bar-fill').length,
       };
     });
     expect(dom.rows, 'one row per allergen in the set').toBe(6);
     expect(dom.summary).toMatch(/2 of 6 introduced|introduced/);
     expect(dom.pos, 'tolerated + ready items carry the positive pill').toBeGreaterThan(0);
+    expect(dom.bar, 'summary carries the glanceable progress bar').toBe(1);
     // ready (4 untried) + watching (1) are actionable → notable, not ambient
     expect(dom.tier).toBe('notable');
+  });
+
+  test('exposure count: meal-log days roll up to the allergen (alias-correct)', async ({ page }) => {
+    const d = await page.evaluate(() => {
+      foods.length = 0;
+      Object.keys(feedingData).forEach((k) => delete feedingData[k]); // clear seeded defaults
+      foods.push({ name: 'cashew', reaction: 'ok', date: _offsetDateStr(today(), -10) });
+      // tree-nut foods logged at meals on 3 distinct days (cashew, almond ×2)
+      feedingData[_offsetDateStr(today(), -10)] = { breakfast: 'cashew' };
+      feedingData[_offsetDateStr(today(), -7)] = { lunch: 'almond' };
+      feedingData[_offsetDateStr(today(), -3)] = { snack: 'almond + banana' };
+      return _aiComputeAllergenIntro();
+    });
+    const tn = byKey(d, 'tree nut');
+    expect(tn.exposureDays, '3 distinct meal-log days with a tree nut, via the resolver').toBe(3);
+    expect(byKey(d, 'peanut').exposureDays, 'no peanut at any meal').toBe(0);
+  });
+
+  test('rows ordered by actionability — ready/watching float above tolerated', async ({ page }) => {
+    const order = await page.evaluate(() => {
+      foods.length = 0;
+      foods.push({ name: 'cashew', reaction: 'ok', date: _offsetDateStr(today(), -20) }); // tree nut tolerated
+      foods.push({ name: 'peanut', reaction: 'ok', date: _offsetDateStr(today(), -1) });  // peanut watching
+      renderInfoAllergenIntro();
+      return Array.from(document.querySelectorAll('#infoAllergenIntroList .cd-food-item'))
+        .map((el) => el.getAttribute('data-arg'));
+    });
+    expect(order.indexOf('peanut'), 'watching above tolerated').toBeLessThan(order.indexOf('tree nut'));
+    expect(order.indexOf('egg'), 'ready above tolerated').toBeLessThan(order.indexOf('tree nut'));
   });
 
   test('a row taps through to the food detail sheet (the R3 floor for peanut)', async ({ page }) => {
