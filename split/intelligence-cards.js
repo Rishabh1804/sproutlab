@@ -253,6 +253,150 @@ function _cdBarHtml(label, value, maxVal, suffix, color, rawLabel) {
 }
 
 // ════════════════════════════════════════
+// Allergen Introduction (analysis prototype)
+// ════════════════════════════════════════
+// The analysis layer ON TOP of the food-effects-v2 resolver spine: tracks the
+// high-priority "introduce-early" allergens and where Ziva is with each —
+// ready to try / watching the 3-day window / tolerated / reaction noted —
+// sourced from the SAME getFoodEffect + _lookupByFoodName resolver the
+// consequence surfaces use (so a logged "almond"/"cashew" correctly counts as
+// tree-nut introduced), the tried-state in `foods`, and AGE_RULES. Encourage
+// polarity — this is the guided-introduction journey, not an alarm. No
+// hardcoded safety claim: every per-food fact resolves from the data tables;
+// where a food has no FOOD_EFFECTS/AGE_RULES record we fall back to the general
+// ~6-month solids/allergen window rather than inventing a per-food rule.
+
+var AI_ALLERGEN_SET = [
+  { key: 'peanut',   label: 'Peanut' },
+  { key: 'tree nut', label: 'Tree nuts' },
+  { key: 'egg',      label: 'Egg' },
+  { key: 'sesame',   label: 'Sesame' },
+  { key: 'soy',      label: 'Soy' },
+  { key: 'wheat',    label: 'Wheat' }
+];
+
+// Earliest tried `foods` entry mapping to this allergen. Prefer the shared
+// resolver (alias-correct: almond/cashew → the tree-nut record); fall back to a
+// base-name match for allergens with no FOOD_EFFECTS record (egg/soy/wheat).
+function _aiFoodRecordFor(canonEff, key) {
+  if (typeof foods === 'undefined' || !Array.isArray(foods)) return null;
+  var base = (typeof _baseFoodName === 'function')
+    ? _baseFoodName(String(key).toLowerCase().trim()) : String(key).toLowerCase().trim();
+  var match = null;
+  foods.forEach(function(f) {
+    if (!f || !f.name) return;
+    var hit = false;
+    if (canonEff && typeof getFoodEffect === 'function') hit = (getFoodEffect(f.name) === canonEff);
+    if (!hit && typeof _baseFoodName === 'function') {
+      hit = (_baseFoodName(String(f.name).toLowerCase().trim()) === base);
+    }
+    if (!hit) return;
+    if (!match) match = f;
+    else if (f.date && (!match.date || f.date < match.date)) match = f; // earliest intro
+  });
+  return match;
+}
+
+function _aiComputeAllergenIntro() {
+  var ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  var tdy = (typeof today === 'function') ? today() : null;
+  var items = AI_ALLERGEN_SET.map(function(a) {
+    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(a.key) : null;
+    var ageRule = (typeof _lookupByFoodName === 'function' && typeof AGE_RULES !== 'undefined')
+      ? _lookupByFoodName(AGE_RULES, a.key) : null;
+    var introMonth = (ageRule && ageRule.minMonth) ? ageRule.minMonth : 6;
+    var rec = _aiFoodRecordFor(eff, a.key);
+    var ageReady = ageMonths >= introMonth;
+    var state, daysSince = null;
+    if (rec) {
+      if (rec.reaction === 'watch') {
+        state = 'reaction';
+      } else if (rec.date && tdy) {
+        daysSince = daysBetween(rec.date, tdy);
+        state = (daysSince >= 3) ? 'tolerated' : 'watching';
+      } else {
+        state = 'introduced';
+      }
+    } else {
+      state = ageReady ? 'ready' : 'waiting';
+    }
+    return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
+             tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
+             state: state, safeForm: (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : null };
+  });
+  return {
+    items: items,
+    total: items.length,
+    introduced: items.filter(function(i){ return i.tried; }).length,
+    ready: items.filter(function(i){ return i.state === 'ready'; }).length,
+    watching: items.filter(function(i){ return i.state === 'watching'; }).length,
+    ageMonths: ageMonths
+  };
+}
+
+function renderInfoAllergenIntro() {
+  var sumEl = document.getElementById('infoAllergenIntroSummary');
+  if (!sumEl) return;
+  var listEl = document.getElementById('infoAllergenIntroList');
+  var insEl = document.getElementById('infoAllergenIntroInsights');
+  var data = _aiComputeAllergenIntro();
+
+  var sum = '<div class="t-sm"><strong>' + data.introduced + '</strong> of <strong>' + data.total + '</strong> introduced';
+  if (data.ready > 0) sum += ' · <strong>' + data.ready + '</strong> ready to try';
+  if (data.watching > 0) sum += ' · ' + data.watching + ' in the 3-day watch';
+  sum += '</div>';
+  sumEl.innerHTML = sum;
+
+  var STATE = {
+    tolerated:  { pill: 'cd-pill-pos',     text: 'Tolerated' },
+    introduced: { pill: 'cd-pill-pos',     text: 'Introduced' },
+    watching:   { pill: 'cd-pill-neutral', text: 'Watching' },
+    ready:      { pill: 'cd-pill-pos',     text: 'Ready to try' },
+    waiting:    { pill: 'cd-pill-neutral', text: 'Not yet' },
+    reaction:   { pill: 'cd-pill-neg',     text: 'Reaction noted' }
+  };
+  if (listEl) {
+    var rows = '<div class="cd-section-label">High-priority allergens</div>';
+    data.items.forEach(function(i) {
+      var s = STATE[i.state] || STATE.waiting;
+      var meta;
+      if (i.state === 'tolerated') meta = 'Introduced ' + (i.date ? formatDate(i.date) : '') + ' · 3-day watch cleared';
+      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — keep watching';
+      else if (i.state === 'introduced') meta = 'Introduced';
+      else if (i.state === 'reaction') meta = 'Flagged for watch' + (i.date ? ' on ' + formatDate(i.date) : '') + ' — open the food for details';
+      else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
+      else meta = 'Fine to wait — around ' + i.introMonth + ' months';
+      rows += '<div class="cd-food-item">' +
+        '<div class="cd-food-name">' + escHtml(i.label) + '</div>' +
+        '<div class="cd-pill ' + s.pill + '">' + escHtml(s.text) + '</div>' +
+        '<div class="cd-food-meta">' + escHtml(meta) + '</div>' +
+        '</div>';
+    });
+    listEl.innerHTML = rows;
+  }
+
+  if (insEl) {
+    var ins;
+    if (data.introduced >= data.total) {
+      ins = 'All ' + data.total + ' high-priority allergens introduced — early, regular exposure is what helps build tolerance. Keep them in rotation.';
+    } else if (data.ready > 0) {
+      var readyLabels = data.items.filter(function(i){ return i.state === 'ready'; }).map(function(i){ return i.label; });
+      ins = 'Introducing allergens early, in a safe form, is protective. Good to start now: ' + readyLabels.join(', ') + '. Offer one new allergen at a time and watch for 3 days.';
+    } else if (data.watching > 0) {
+      ins = 'Watching a newly-introduced allergen. A mild rash alone: note it and carry on. Any trouble breathing or swelling of the face or lips: seek care right away.';
+    } else {
+      ins = 'Allergens are usually introduced from around 6 months, one at a time, in a safe (smooth or thinned) form.';
+    }
+    insEl.innerHTML = '<div class="cd-section-label">What this means</div><div class="t-sm">' + escHtml(ins) + '</div>';
+  }
+
+  // Composite card — never urgent (spec v3-6). Actionable (ready/watching) → notable; else ambient.
+  if (typeof _setCardPriority === 'function') {
+    _setCardPriority('infoAllergenIntroCard', (data.ready > 0 || data.watching > 0) ? 'notable' : 'ambient');
+  }
+}
+
+// ════════════════════════════════════════
 // Card 1: Food → Poop Pipeline
 // ════════════════════════════════════════
 
@@ -1272,6 +1416,7 @@ function renderInfo() {
   renderInfoSupplementAdherence();
   renderInfoVaccRecovery();
   renderInfoGrowthVelocity();
+  renderInfoAllergenIntro();
   renderInfoFoodPoopPipeline();
   renderInfoSleepFeeding();
   renderInfoActivitySleepDeep();
