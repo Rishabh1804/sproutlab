@@ -62,6 +62,32 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
     expect(egg.state, "reaction:'watch' → reaction state even though 9 days passed").toBe('reaction');
   });
 
+  test('a flagged reaction is NOT counted as introduced — open work, not a win (V-V-1)', async ({ page }) => {
+    const d = await seedAndCompute(page, [
+      { name: 'almond', reaction: 'ok', offset: -20 }, // tree nut tolerated → a real introduction
+      { name: 'egg', reaction: 'watch', offset: -9 },  // reaction → must NOT inflate the count
+    ]);
+    expect(byKey(d, 'egg').state).toBe('reaction');
+    expect(d.introduced, 'reaction excluded from the introduced rollup (bar + summary stay honest)').toBe(1);
+    expect(d.reactions, 'surfaced as its own flagged count instead').toBe(1);
+  });
+
+  test('a future-dated entry does not render a watch window that has not started (V-V-2)', async ({ page }) => {
+    const d = await seedAndCompute(page, [{ name: 'peanut', reaction: 'ok', offset: 2 }]);
+    const pn = byKey(d, 'peanut');
+    expect(pn.state, 'future date clamps to day 0 → watching, not abs()-counted tolerated').toBe('watching');
+    expect(pn.daysSince, 'clamped to 0 (renders "Day 1 of 3"), not abs(2)').toBe(0);
+  });
+
+  test('egg "ready" surfaces its own AGE_RULES floor, not the generic safe-form line (M-1)', async ({ page }) => {
+    const egg = byKey(await seedAndCompute(page, []), 'egg');
+    // egg has no FOOD_EFFECTS record; safeForm must fall back to the AGE_RULES
+    // reason (its cook-well / yolk-first floor), never null → generic copy.
+    if (egg.state === 'ready') {
+      expect(egg.safeForm, 'egg carries its own cook-well floor').toMatch(/cook/i);
+    }
+  });
+
   test('mixed log renders 6 rows with the right pills + an actionable (notable) tier', async ({ page }) => {
     const dom = await page.evaluate(() => {
       foods.length = 0;

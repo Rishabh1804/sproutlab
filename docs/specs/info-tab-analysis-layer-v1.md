@@ -8,6 +8,26 @@
 
 ---
 
+## 0. Governor spec-review record (2026-06-01)
+
+All three Governors audited the implementation against this spec under canon-cc-008 (triple-Gov: `template.html` is a shared file). All three returned **`amended`**; findings folded below.
+
+**Maren (Care) — `amended`.** Cleared reaction-precedence, two-source honesty, and fail-safe-on-missing-age. One blocker + two sharpenings:
+- **M-1** (blocking) → §3/§4: egg's gate is right (7mo via `AGE_RULES 'egg yolk'`) but egg has **no `FOOD_EFFECTS` record**, so the "Ready to try" row fell to the generic "in a safe form" — for the one allergen where safe form means *cook well, yolk first*. **Folded:** `safeForm` now falls back to the allergen's own `AGE_RULES.reason` before the generic string. No `data.js` edit (so no Kael re-summon).
+- **M-2/M-3** (sharpening): confirmed the tap-through is not an empty dead-end for soy/wheat/sesame (all present in `data.js`); the watching row now carries an explicit "tap for signs" cue.
+
+**Kael (Intelligence engine) — `amended`.** Confirmed the compute is pure, null-guards complete, and the `=== canonEff` identity comparison sound. One blocker, adjudicated down after empirical verification:
+- **B-1** (blocking, **partially accepted**): Kael reported the alias spine broken on the exposure path and the two readers disagreeing. **Empirical ground-truth eval falsified the headline** — tree-nut via "almond" resolves `tried=true, exposure=2` on *both* readers (matching the green e2e); there is no two-source disagreement. The *real* residual: egg/soy/wheat/sesame resolve by base-name only (no culinary-synonym alias table exists anywhere — "tofu"→soy, "roti"→wheat miss on *both* readers, symmetrically). **Folded:** the two readers now share one matcher (`_aiFoodMatches`) so they provably cannot drift (+ a `getFoodEffect(base)` improvement, + the by-reference invariant comment, Kael S-2); the culinary-synonym gap is documented as a known limitation (§6/§9) and a follow-up `data.js` alias task, not closed here (out of the read-only fence). S-3 (per-day resolve hoist) deferred — bounded at one-baby scale.
+
+**Vela (Surfacing) — `amended`.** Praised the compute/render split and the §7 pattern. One blocker + three sharpenings:
+- **V-V-1** (blocking) → §3: the `introduced` rollup was `items.filter(tried)`, which **included the reaction state** — so the summary + progress bar counted a flagged-reaction food as a win, contradicting its own row and re-merging at the *count* what the state machine separated. **Folded:** `introduced` now means *settled* (tried & not reaction); a new `reactions` rollup surfaces flagged work as its own "N flagged" in the summary.
+- **V-V-2** (→ engine) → guard future-dated entries: **folded** — `daysSince` clamps to 0 for a future date instead of `abs()`-counting a watch window that hasn't started.
+- **V-V-3/V-V-4** (sharpening): the full date (with year) was the longest meta and wrapped — **folded** by dropping the date from the reaction row (it lives in the detail sheet); the `watching` count is now `<strong>` like its siblings.
+
+**Synthesis (Lyra).** The two real blockers were one theme from two jurisdictions — *a flagged reaction must never read as success* (Maren at the safe-form floor, Vela at the rollup count). Both folded. Kael's B-1 was adjudicated against an empirical eval rather than a static trace; the verifiable part (reader unification + honest scoping) is folded, the unverifiable headline (two-source disagreement) was shown not to occur. All 11 e2e cases green. Remaining for the Architect: §10.
+
+---
+
 ## 1. The problem this spec exists to solve
 
 The Info tab renders ~20 `renderInfo*` cards (dispatched by `renderInfo()` at `intelligence-cards.js:1414`, itself called from `switchTab()`). They answer *"what happened"* (variety, pace, intake, correlations). **None answers a journey question:** *"where am I in the high-allergen-introduction sequence, and what should I offer next?"*
@@ -31,6 +51,8 @@ The card writes **nothing**. It derives its entire state at render time from thr
 **Why two food sources, not one.** `foods` is deduped to one entry per food — it carries the *first* intro date and any reaction flag, which drives the watch window. `feedingData` is the per-meal event log — it carries *repetition*, which is the keep-offering signal. They are complementary and must not be conflated: the date/watch comes from `foods`; the "offered N days" comes from `feedingData`. **Honesty constraint:** `extractDayFoods` dedups within a day, so the count is *days offered*, never *number of tastes*. The copy says "offered N **days**" — it must never imply a per-taste count the data can't support.
 
 The allergen set (frozen): **peanut, tree nuts, egg, sesame, soy, wheat** (`AI_ALLERGEN_SET`). Each row resolves independently; no cross-allergen inference.
+
+**Alias coverage — honest scope (Kael B-1).** Both readers run every food token through *one* matcher (`_aiFoodMatches`), so the tried-state and the exposure-count provably cannot disagree about what counts as a given allergen. That matcher is **`FOOD_EFFECTS`-alias-correct** for peanut and tree nuts (logging *almond*/*cashew* resolves to Tree nuts) and resolves egg via its `AGE_RULES` entry. It is **base-name-only for soy/wheat/sesame** — the app carries no culinary-synonym alias table, so logging *tofu* (→ soy), *roti* (→ wheat), or *scrambled egg* does **not** resolve on *either* reader. This is a symmetric miss (the card stays internally consistent — both readers agree the food wasn't logged-as-that-allergen), not a contradiction. Closing it is a `data.js` alias-table follow-up, out of this card's read-only fence.
 
 ---
 
@@ -108,7 +130,7 @@ A reaction-only state is *not* urgent here — the acute floor is the food detai
 |---|---|
 | No `foods`, no `feedingData` (fresh install) | All 6 → ready or not-yet by age alone; bar at 0/6; insight = the from-6-months line. |
 | Food logged but never at a meal (`foods` has it, `feedingData` doesn't) | State/date from `foods`; exposure count = 0 → tolerated row reads "keep it in rotation" with no count. Both sources honored independently. |
-| Allergen with no `FOOD_EFFECTS` record (egg/soy/wheat) | Resolver falls back to `_baseFoodName` match; intro-month falls back to 6 where `AGE_RULES` has no per-food rule (a general window, **not** an invented per-food claim). |
+| Allergen with no `FOOD_EFFECTS` record (egg/soy/wheat/sesame) | Resolver falls back to `_baseFoodName` match (canonical name only — culinary synonyms like *tofu*/*roti* do not resolve, §2). Intro-month falls back to 6 where `AGE_RULES` has no per-food rule (a general window, **not** an invented per-food claim). Egg is the exception: `AGE_RULES 'egg yolk'` supplies both its 7-month floor and its `reason` (the safe-form fallback, M-1). |
 | `feedingData` carries the app's seeded defaults | Counted as real exposure — it *is* the meal log. (Tests clear it to assert in isolation; production does not.) |
 | Age unavailable (`getAgeInMonths` absent) | Defaults to 0 → everything not-yet. Fails safe (never nudges to introduce below a floor it can't confirm). |
 | Singular/plural | "offered 1 day" vs "offered N days" — handled. |
@@ -122,7 +144,7 @@ This card establishes a reusable shape for Info-tab **analysis** cards (distinct
 1. **A pure `_aiCompute*()`** that returns `{ items, total, …rollups }` — no DOM, no writes, fully testable in isolation (this is what the e2e asserts against directly).
 2. **A `renderInfo*()`** that consumes the compute output: summary + progress + actionability-ordered rows + a derived "what this means" line.
 3. **Resolve every food through the shared spine** (`getFoodEffect`/`_baseFoodName`) so aliases are correct — never raw-name matching.
-4. **Two-source honesty:** when state and repetition come from different stores, keep them separate and label each for exactly what it measures.
+4. **Two-source honesty:** when state and repetition come from different stores, keep them separate, run them through *one* resolver so they cannot drift, and label each for exactly what it measures. **A rollup label is a surface claim, not a field name** (Vela V-V-1): "introduced" must count only what a parent would call introduced — a flagged reaction is open work, never folded into the success count, at the row *or* the rollup.
 5. **Glance → tap → depth:** the card never crams the detail sheet's content; it points at it.
 
 Card #2 candidates (future, not this spec): an iron/nutrient-window journey card; a milestone-window card. Each would reuse 1–5 above.
@@ -143,7 +165,7 @@ Card #2 candidates (future, not this spec): an iron/nutrient-window journey card
 ## 9. Verification contract
 
 - `pnpm build` clean (HR-1/HR-12/icon-text audits pass).
-- `tests/e2e/analytics-allergen-intro.spec.ts` — 8 cases: empty→all-ready, almond→tree-nut tolerated, peanut→watching, reaction surfacing, mixed render + notable tier + progress bar, exposure-count roll-up (alias-correct), actionability ordering, tap-through to the R3 floor.
+- `tests/e2e/analytics-allergen-intro.spec.ts` — **11 cases**: empty→all-ready, almond→tree-nut tolerated, peanut→watching, reaction surfacing, **reaction excluded from `introduced` (V-V-1)**, **future-date guard (V-V-2)**, **egg safe-form floor fallback (M-1)**, mixed render + notable tier + progress bar, exposure-count roll-up (`FOOD_EFFECTS`-alias-correct), actionability ordering, tap-through to the R3 floor.
 - **Routing for the canon-cc-008 chain:** `intelligence-cards.js` edited → **Vela** (render). The compute *reads* `feedingData` + `extractDayFoods` (Maren's diet region) without editing them → `pnpm qa-route` ripple widens the summon-set to **Maren** (cross-Province read). No `styles.css`/`template.html` → not triple-Gov. Lyra synthesizes; **Cipher** runs the Edict V final-pass.
 
 ---

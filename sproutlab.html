@@ -69498,22 +69498,37 @@ var AI_ALLERGEN_SET = [
   { key: 'wheat',    label: 'Wheat' }
 ];
 
-// Earliest tried `foods` entry mapping to this allergen. Prefer the shared
-// resolver (alias-correct: almond/cashew → the tree-nut record); fall back to a
-// base-name match for allergens with no FOOD_EFFECTS record (egg/soy/wheat).
-function _aiFoodRecordFor(canonEff, key) {
+// The SINGLE resolution spine both food-readers (`_aiFoodRecordFor` tried-state
+// and `_aiExposureDays` meal-log) run every token through — so the two sources
+// can never disagree about what counts as "tree nut" (Kael B-1). Resolution
+// order: (1) FOOD_EFFECTS identity on the raw token, (2) FOOD_EFFECTS identity
+// on the base name (catches form-prefixed tokens like "raw peanut"), (3) base-
+// name string match for allergens with NO FOOD_EFFECTS record (egg/soy/wheat/
+// sesame).
+//   `=== canonEff` is load-bearing and correct ONLY because `_lookupByFoodName`
+//   returns FOOD_EFFECTS records by reference (module-level singletons) — every
+//   getFoodEffect("almond")/("tree nut") yields the identical object. A future
+//   refactor that clones records would silently break this; keep it by-ref.
+//   LIMITATION (spec §6/§9): culinary synonyms with no alias table — "tofu"→soy,
+//   "roti"→wheat, "scrambled egg"→egg — do not resolve on EITHER reader (the app
+//   has no such alias data anywhere). Both readers agree on the miss, so the card
+//   stays internally consistent; closing the gap is a data.js alias-table task.
+function _aiFoodMatches(foodName, canonEff, base) {
+  if (!foodName) return false;
+  var fn = String(foodName).toLowerCase().trim();
+  if (canonEff && typeof getFoodEffect === 'function') {
+    if (getFoodEffect(fn) === canonEff) return true;
+    if (typeof _baseFoodName === 'function' && getFoodEffect(_baseFoodName(fn)) === canonEff) return true;
+  }
+  return (typeof _baseFoodName === 'function') && _baseFoodName(fn) === base;
+}
+
+// Earliest tried `foods` entry mapping to this allergen, via the shared matcher.
+function _aiFoodRecordFor(canonEff, base) {
   if (typeof foods === 'undefined' || !Array.isArray(foods)) return null;
-  var base = (typeof _baseFoodName === 'function')
-    ? _baseFoodName(String(key).toLowerCase().trim()) : String(key).toLowerCase().trim();
   var match = null;
   foods.forEach(function(f) {
-    if (!f || !f.name) return;
-    var hit = false;
-    if (canonEff && typeof getFoodEffect === 'function') hit = (getFoodEffect(f.name) === canonEff);
-    if (!hit && typeof _baseFoodName === 'function') {
-      hit = (_baseFoodName(String(f.name).toLowerCase().trim()) === base);
-    }
-    if (!hit) return;
+    if (!f || !f.name || !_aiFoodMatches(f.name, canonEff, base)) return;
     if (!match) match = f;
     else if (f.date && (!match.date || f.date < match.date)) match = f; // earliest intro
   });
@@ -69529,10 +69544,7 @@ function _aiExposureDays(canonEff, base) {
   if (typeof feedingData === 'undefined' || !feedingData || typeof extractDayFoods !== 'function') return 0;
   var n = 0;
   Object.keys(feedingData).forEach(function(ds) {
-    var hit = extractDayFoods(ds).some(function(fn) {
-      if (canonEff && typeof getFoodEffect === 'function' && getFoodEffect(fn) === canonEff) return true;
-      return (typeof _baseFoodName === 'function') && _baseFoodName(fn) === base;
-    });
+    var hit = extractDayFoods(ds).some(function(fn) { return _aiFoodMatches(fn, canonEff, base); });
     if (hit) n++;
   });
   return n;
@@ -69547,7 +69559,7 @@ function _aiComputeAllergenIntro() {
       ? _lookupByFoodName(AGE_RULES, a.key) : null;
     var introMonth = (ageRule && ageRule.minMonth) ? ageRule.minMonth : 6;
     var base = (typeof _baseFoodName === 'function') ? _baseFoodName(String(a.key).toLowerCase().trim()) : String(a.key);
-    var rec = _aiFoodRecordFor(eff, a.key);
+    var rec = _aiFoodRecordFor(eff, base);
     var exposureDays = _aiExposureDays(eff, base);
     var ageReady = ageMonths >= introMonth;
     var state, daysSince = null;
@@ -69555,7 +69567,10 @@ function _aiComputeAllergenIntro() {
       if (rec.reaction === 'watch') {
         state = 'reaction';
       } else if (rec.date && tdy) {
-        daysSince = daysBetween(rec.date, tdy);
+        // Guard a future-dated entry (data error / TZ edge): the watch window
+        // hasn't started, so clamp to day 0 rather than abs()-counting it as
+        // a window already underway (Vela V-V-2 / Kael).
+        daysSince = (rec.date <= tdy) ? daysBetween(rec.date, tdy) : 0;
         state = (daysSince >= 3) ? 'tolerated' : 'watching';
       } else {
         state = 'introduced';
@@ -69563,15 +69578,25 @@ function _aiComputeAllergenIntro() {
     } else {
       state = ageReady ? 'ready' : 'waiting';
     }
+    // safe-form note: FOOD_EFFECTS note (peanut/tree-nut) preferred; else the
+    // allergen's own AGE_RULES `reason` (egg's "cook well, yolk first" floor) —
+    // never the generic "in a safe form" where a real per-food floor exists (Maren M-1).
+    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note
+                 : (ageRule && ageRule.reason) ? ageRule.reason : null;
     return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
              tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
-             exposureDays: exposureDays,
-             state: state, safeForm: (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : null };
+             exposureDays: exposureDays, state: state, safeForm: safeForm };
   });
+  // "introduced" must mean a SETTLED introduction — a flagged reaction is open
+  // work, never a win. Excluding it keeps the summary + progress bar honest and
+  // stops the rollup re-merging what the state machine separated (Vela V-V-1,
+  // converging with Maren's reaction-never-suppressed invariant).
+  var settled = items.filter(function(i){ return i.tried && i.state !== 'reaction'; }).length;
   return {
     items: items,
     total: items.length,
-    introduced: items.filter(function(i){ return i.tried; }).length,
+    introduced: settled,
+    reactions: items.filter(function(i){ return i.state === 'reaction'; }).length,
     ready: items.filter(function(i){ return i.state === 'ready'; }).length,
     watching: items.filter(function(i){ return i.state === 'watching'; }).length,
     ageMonths: ageMonths
@@ -69588,7 +69613,8 @@ function renderInfoAllergenIntro() {
   // Summary line + a glanceable sage progress bar (introduced / total).
   var sum = '<div class="t-sm"><strong>' + data.introduced + '</strong> of <strong>' + data.total + '</strong> introduced';
   if (data.ready > 0) sum += ' · <strong>' + data.ready + '</strong> ready to try';
-  if (data.watching > 0) sum += ' · ' + data.watching + ' watching';
+  if (data.watching > 0) sum += ' · <strong>' + data.watching + '</strong> watching';
+  if (data.reactions > 0) sum += ' · <strong>' + data.reactions + '</strong> flagged';
   sum += '</div>';
   sum += _cdBarHtml('Progress', data.introduced, data.total, ' / ' + data.total, 'var(--tc-sage)');
   sumEl.innerHTML = sum;
@@ -69615,9 +69641,9 @@ function renderInfoAllergenIntro() {
       var offered = i.exposureDays > 0 ? ('offered ' + i.exposureDays + (i.exposureDays === 1 ? ' day' : ' days')) : '';
       var meta;
       if (i.state === 'tolerated') meta = (offered ? offered + ' · ' : '') + 'keep it in rotation';
-      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — watch for reactions';
+      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — watch, tap for signs';
       else if (i.state === 'introduced') meta = 'Keep offering to hold tolerance';
-      else if (i.state === 'reaction') meta = 'Reaction flagged' + (i.date ? ' ' + formatDate(i.date) : '') + ' — tap to review';
+      else if (i.state === 'reaction') meta = 'Reaction flagged — tap to review';
       else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
       else meta = 'From ' + i.introMonth + ' months';
       // Row taps through to the food's detail sheet — the R3 floor + safe-form
