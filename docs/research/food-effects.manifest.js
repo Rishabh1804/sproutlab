@@ -163,9 +163,9 @@ window.FOOD_EFFECTS_MANIFEST = [
     culturalNote:  'No British-Lion-mark assured-egg scheme in India — default to fully-cooked egg (solid white and yolk). Egg allergy is common in infancy but usually outgrown by school age.',
     confidence:    'high',
     sources:       ['Lancet PETIT 2017','NEJM EAT 2016','AAP','UK NHS','ASCIA 2026','NIAID 2017'],
-    dashboard:     'egg-infant-safety.visual.html',   // render pending (Phase δ render step)
+    dashboard:     'egg-infant-safety.visual.html',
     brief:         'egg-infant-safety.md',
-    longform:      'egg-infant-safety.html',           // render pending
+    longform:      'egg-infant-safety.html',
     lastReviewed:  '2026-06-01',
   },
   {
@@ -197,9 +197,9 @@ window.FOOD_EFFECTS_MANIFEST = [
     culturalNote:  'Soya chunks/granules are everyday vegetarian protein in India — a concentrated soy-protein form. Some cow\'s-milk-allergic babies also react to soy; introduce as a minor ingredient first.',
     confidence:    'high',
     sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','FARE','CHOP (FPIES)','NEJM EAT 2016'],
-    dashboard:     'soy-infant-safety.visual.html',    // render pending
+    dashboard:     'soy-infant-safety.visual.html',
     brief:         'soy-infant-safety.md',
-    longform:      'soy-infant-safety.html',           // render pending
+    longform:      'soy-infant-safety.html',
     lastReviewed:  '2026-06-01',
   },
   {
@@ -231,9 +231,9 @@ window.FOOD_EFFECTS_MANIFEST = [
     culturalNote:  'Atta, maida, suji/rava, dalia, sevai are all wheat. Soft cereal and softened roti are ideal early forms. Wheat allergy is commonly outgrown in early childhood.',
     confidence:    'high',
     sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','NEJM EAT 2016','ESPGHAN 2016 (celiac/gluten)'],
-    dashboard:     'wheat-infant-safety.visual.html',  // render pending
+    dashboard:     'wheat-infant-safety.visual.html',
     brief:         'wheat-infant-safety.md',
-    longform:      'wheat-infant-safety.html',          // render pending
+    longform:      'wheat-infant-safety.html',
     lastReviewed:  '2026-06-01',
   },
   {
@@ -265,9 +265,9 @@ window.FOOD_EFFECTS_MANIFEST = [
     culturalNote:  'Til is deeply embedded — til laddoo, gajak (peak around Makar Sankranti), chutneys, gingelly oil. Thin tahini into dal, khichdi, curd, or fruit puree; avoid loose til seeds from laddoo/gajak for young infants.',
     confidence:    'high',
     sources:       ['AAP','UK NHS','ASCIA','FDA FASTER Act 2021','NEJM EAT 2016','J Asthma Allergy (persistence)','JAMA Netw Open 2019'],
-    dashboard:     'sesame-infant-safety.visual.html', // render pending
+    dashboard:     'sesame-infant-safety.visual.html',
     brief:         'sesame-infant-safety.md',
-    longform:      'sesame-infant-safety.html',         // render pending
+    longform:      'sesame-infant-safety.html',
     lastReviewed:  '2026-06-01',
   },
 

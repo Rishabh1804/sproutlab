@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sesame (Til) &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .pill.crit{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .b-crit{background:var(--rose-bg);color:var(--rose)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.crit{background:var(--rose-bg);border-left-color:var(--rose)}
+  .flag.crit b{color:var(--rose)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre .c{color:#8a9a7a} pre .k{color:#d8a0b0} pre .s{color:#cbb080}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+  .gap{background:var(--rose-bg);border-color:transparent}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Sesame (Til) &amp; Infant Safety</h1>
+  <p class="sub">Care research brief — evidence base for SproutLab's <b>guided-introduction</b> food-effects model. Sesame is the <b>Tier-2</b> case: introduce early because it's safe and don't-delay, but <b>prevention is NOT RCT-proven</b> — and it is the <b>gravest</b> of the four allergens (rarely outgrown).</p>
+  <div class="meta">
+    <span class="pill">Reviewer · Research scout pass (for Maren, Care)</span>
+    <span class="pill">2026-06-01</span>
+    <span class="pill">Sesame / til · infants ~6–12mo (choking note to ~5yr) · India</span>
+    <span class="pill crit">Usually lifelong — ~70–80% persist</span>
+    <span class="pill warn">Research artifact — NOT yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card">
+    <p style="margin:0"><b>Purpose.</b> Evidence base for SproutLab's Care layer, feeding the <i>guided-introduction</i> food-effects model. Built to decide what to surface when a parent introduces <b>sesame (til)</b> to an under-1 — covering BOTH why to introduce early (don't-delay-allergens guidance) AND the two hazards (allergy reaction; choking-by-form). The food is not banned — the <b>FORM</b> is gated. <b>Tone caveat unique to sesame:</b> the prevention rationale here is <i>weaker</i> than peanut's — see TL;DR — and the persistence profile is <i>graver</i>, so the emergency floor is the most serious of the four allergens.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:var(--mid)"><b>Scope.</b> Sesame (til): tahini (sesame paste), til laddoo, gajak, chutneys, gingelly/sesame oil, sesame on breads/buns. Infants ~6–12 months, with the choking note running to ~5 years. Family context: Indian — til is a deeply embedded staple, not a novelty. <b>Method.</b> Multi-angle web fan-out → source fetch → adversarial cross-check → synthesis (AAP/HealthyChildren, NHS, ASCIA, NIAID; FDA + FoodSafety.gov; EAT trial NEJM 2016; J Asthma Allergy; JAMA Netw Open 2019). The <b>FDA FASTER-Act page and the ASCIA page returned 401/403 to automated fetchers</b>; those facts are corroborated across FDA indexed text, the FoodSafety.gov mirror, and independent sources — marked <b>high-confidence-but-not-direct-fetch</b>. The EAT sesame-null result is verified verbatim from PubMed 26943128.</p>
+  </div>
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>Introduce early — but be honest about <i>why</i>.</b> Consensus (AAP, NHS, ASCIA, NIAID) is to introduce sesame <b>early — around 6 months, alongside other solids</b> — and not to delay. This is the right advice. <b>But unlike peanut, this is NOT RCT-proven prevention for sesame.</b></li>
+      <li><b>The RCT did NOT find a sesame benefit.</b> The <b>EAT trial (NEJM 2016)</b> tested early introduction of six allergens including sesame and reported, verbatim, <i>"no significant effects with respect to milk, sesame, fish, or wheat."</i> (Verified PubMed 26943128.) The peanut+egg benefit does <b>not</b> transfer. <b>Do not claim early sesame prevents sesame allergy.</b></li>
+      <li><b>Sesame is the 9th major US allergen.</b> Under the <b>FASTER Act of 2021</b>, sesame became the 9th major US food allergen; mandatory labeling took effect <b>January 1, 2023</b> (e.g. "tahini (sesame)" or "Contains sesame"). The EU has long required sesame declaration. <b>This labeling does NOT apply to Indian/home foods.</b></li>
+      <li><b>The crux is FORM, not the food.</b> A thick glob of tahini is a sticky choking risk, and whole sesame seeds in quantity are a hazard. The safe form is <b>smooth tahini THINNED with water/milk/puree</b>, or <b>finely ground sesame stirred into food</b> — the same "thin the sticky glob" rule as peanut butter.</li>
+      <li><b>Sesame allergy is usually LIFELONG — this is the key tone point.</b> Unlike egg, milk, soy and wheat (commonly outgrown), <b>sesame allergy is rarely outgrown — only ~20–30% achieve tolerance, so ~70–80% persists into adulthood.</b> It is a leading cause of anaphylaxis. So first exposures and ongoing vigilance matter <b>more</b> here — the emergency floor should carry the most serious tone of the four.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> · Benefit, timing &amp; regulatory status <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Introduce around 6 months, don't delay.</b> General-population timing for sesame is <b>around 6 months</b>, once the baby is developmentally ready and a few first foods are tolerated — <b>not before 4 months</b>, and don't delay once ready. <span class="badge b-hi">NHS · AAP · ASCIA</span></li>
+      <li><b>AAP names sesame directly:</b><blockquote>"There is no evidence that delaying introduction of allergenic foods like egg, peanut, dairy and sesame prevents allergies once babies are ready, typically at about 6 months." — AAP/HealthyChildren</blockquote></li>
+      <li><b>NHS</b> lists sesame among allergenic foods to introduce (not delay), with the form note that seeds — "particularly sesame" — should be served <b>finely ground</b>.</li>
+      <li><b>ASCIA</b> (Australasia) recommends introducing common allergens including sesame in the first year, ideally before 12 months. <span class="badge b-mod">page blocked direct fetch; corroborated indirectly</span></li>
+    </ul>
+    <p style="margin:10px 0 0"><b>The EAT nuance — sesame is null (frame honestly).</b> EAT (1,303 exclusively breastfed, general-population infants) randomised early introduction of six allergens including sesame vs standard ~6 months. The abstract states, verbatim:</p>
+    <div class="quote"><b>EAT (NEJM 2016):</b> "no significant effects with respect to milk, sesame, fish, or wheat." <span class="badge b-hi">verified PubMed 26943128</span></div>
+    <p style="margin:8px 0 0">The per-protocol benefit EAT <i>did</i> find was for <b>peanut and egg only</b>.</p>
+    <div class="flag good"><b>⚑ The honest framing the model must hold:</b> early sesame is <b>SAFE</b> and there's no reason to delay — but <b>RCT evidence does not show early sesame prevents sesame allergy.</b> The "introduce early" advice for sesame is the general <i>don't-delay-allergens</i> principle (AAP/NHS/ASCIA), <b>not</b> a sesame-specific prevention result. Lead with "safe to introduce, no need to delay"; never with "introducing early will prevent the allergy."</div>
+    <p style="margin:10px 0 0"><b>Regulatory weight — sesame is now a top-tier labeled allergen.</b> Under the <b>FASTER Act of 2021</b> (Food Allergy Safety, Treatment, Education, and Research Act), sesame became the <b>9th major US food allergen</b>; the mandatory labeling requirement took effect <b>January 1, 2023</b>. US packaged foods must now declare sesame plainly (e.g. "tahini (sesame)" or a "Contains sesame" statement). The EU has long required it; the US only since 2023. <span class="badge b-mod">FDA page blocked direct fetch; FoodSafety.gov mirror corroborates</span></p>
+    <div class="flag"><b>⚑ Scope limit — flag for the spec:</b> this labeling law is <b>US (and analogously EU) packaged-food regulation. It does NOT apply to Indian-bought packets or home foods.</b> A homemade til laddoo, a loose chutney, or an unlabeled Indian sweet carries no "Contains sesame" guarantee — the parent is the label.</div>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> · Safe FORM: the choking gate <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <p style="margin:0 0 6px"><b>Two form hazards with sesame:</b></p>
+    <ul>
+      <li>A <b>thick glob of tahini</b> — sesame paste forms a sticky clump that can lodge in the airway, exactly the peanut-butter problem.</li>
+      <li><b>Whole sesame seeds given in quantity</b> — small, hard, easily inhaled. <span class="badge b-hi">NHS "seeds, particularly sesame, served finely ground"</span></li>
+    </ul>
+    <p style="margin:10px 0 6px"><b>Safe forms (the gate the food passes through):</b></p>
+    <ol>
+      <li><b>Smooth tahini (sesame paste), THINNED</b> — whisk <b>~⅛–½ tsp</b> into breast milk, formula, water, or an already-tolerated puree/yoghurt/dal/khichdi/curd/fruit puree until it's a thin, smooth consistency. (Mirrors NHS/AAP peanut-butter ~¼ tsp form.)</li>
+      <li><b>Finely ground sesame</b> stirred into food — ground to a fine meal, never left as whole seeds.</li>
+      <li><b>NEVER</b> a thick glob/spoonful of paste straight up, and <b>never whole seeds in quantity</b> for a young infant.</li>
+    </ol>
+    <p style="margin:10px 0 0"><b>India-specific form note:</b> thin tahini into <b>dal, khichdi, curd, or fruit puree</b>; <b>avoid loose til shaken off laddoo/gajak</b> for a young infant — those carry whole seeds and a hard/sticky matrix that is both a choking risk and an uncontrolled first-exposure dose.</p>
+    <div class="flag good"><b>✓ This is the design crux:</b> the choking hazard is removable by FORM transformation (thin/grind), like peanut — <i>not</i> like honey (where cooking does not remove the spore hazard). The <b>allergy axis is separate and is NOT removed by form</b> — thinning the tahini makes it safe to swallow, not safe for an allergic child.</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> · Allergy watch-fors &amp; what to do — the gravest emergency floor <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <p style="margin:0 0 8px"><b>Sesame is a leading cause of food-allergic anaphylaxis, and the allergy is usually lifelong.</b> Treat the first exposures and ongoing vigilance with the <b>most</b> seriousness of the four allergens — because, unlike egg/milk/soy/wheat, this one is very unlikely to be outgrown (Axis 5).</p>
+    <p style="margin:0 0 6px"><b>Mild–moderate reaction (one body system):</b> itchy <b>hives/welts</b>, redness or <b>rash</b>, <b>swelling</b> (esp. around the mouth/eyes), <b>vomiting</b>, sometimes loose stool/GI upset, sudden fussiness.</p>
+    <div class="flag crit"><b>Severe / anaphylaxis (act immediately):</b> difficulty breathing, <b>wheeze/persistent cough/noisy breathing</b>, <b>swelling of the face/lips/tongue/throat</b>, hoarse cry or voice, <b>pale / floppy / lethargic</b> or unusually sleepy, collapse. In babies, <i>behaviour change</i> (suddenly limp, can't hold head up) is a recognised severe sign.</div>
+    <p style="margin:10px 0 6px"><b>What to do:</b></p>
+    <ul>
+      <li><b>Mild, single-system:</b> stop the food, monitor closely, contact your doctor; an antihistamine may be advised by a clinician.</li>
+      <li><b>Any breathing difficulty, throat/face/tongue swelling, floppiness, or two body systems involved → emergency. Use an adrenaline auto-injector immediately if one has been prescribed, and call emergency services (112 / 108 in India).</b></li>
+      <li>First exposures matter especially here: the very first taste may sensitise with the reaction on a later one — keep watching across the first several exposures, not just day one. And because sesame allergy is <b>usually permanent</b>, this vigilance does not "age out" the way it tends to for milk/egg.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> · Culinary aliases &amp; hidden sources <span class="badge b-hi">High (aliases)</span> <span class="badge b-mod">Moderate (oil nuance)</span></h2>
+  <div class="card">
+    <p style="margin:0 0 6px"><b>Sesame hides under many names — a confirmed-allergic child's caregiver must recognise all of them:</b></p>
+    <ul>
+      <li><b>tahini</b> (sesame paste), <b>hummus</b> (tahini-based), <b>halva / halwa</b> (sesame variety), <b>til</b> and <b>til laddoo</b>, <b>gajak</b> (Indian sesame-jaggery brittle/sweet, peak season around <b>Makar Sankranti, mid-January</b>), <b>benne / benniseed</b>, <b>gomashio</b>, <b>goma</b> (Japanese), <b>sim sim</b>, and <b>gingelly oil (= sesame oil on South Asian labels)</b>.</li>
+      <li><b>Hidden on/in:</b> sesame seeds on <b>breads, buns, crackers, bagels</b>, sprinkled in <b>chutneys</b>, baked into <b>sweets</b>, and in many <b>dressings/spice blends</b>.</li>
+    </ul>
+    <p style="margin:10px 0 0"><b>The sesame-oil nuance (do not over-simplify):</b> <b>highly refined sesame oil is largely de-proteinized and lower-risk.</b> <b>But cold-pressed / unrefined gingelly oil — common in Indian cooking — can retain allergenic protein.</b> <span class="badge b-mod">moderate-confidence</span></p>
+    <div class="flag"><b>⚑ Do NOT assume "it's only oil, so it's safe"</b> for a confirmed sesame-allergic child. Refined oil ≠ unrefined gingelly oil; the unrefined oil prevalent in Indian kitchens can carry enough protein to react to. For a non-allergic baby this is not a barrier to introduction; for a <i>known-allergic</i> child, treat unrefined sesame/gingelly oil as a potential exposure.</div>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> · Persistence: the key tone point <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Sesame allergy is rarely outgrown.</b> Peer-reviewed data put resolution at roughly <b>20–30%</b> — meaning <b>~70–80% persists into adulthood</b>. <span class="badge b-hi">J Asthma Allergy · JAMA Netw Open 2019</span></li>
+      <li><b>Contrast that makes the tone:</b> egg, milk, soy and wheat allergies are <b>commonly outgrown</b> in childhood; <b>sesame, peanut and tree nuts tend to be lifelong</b>. Sesame sits firmly in the <i>lifelong</i> camp and is a <i>leading anaphylaxis trigger</i>.</li>
+    </ul>
+    <div class="flag crit"><b>Why this drives the model's tone:</b> for a commonly-outgrown allergen, a parent can reasonably expect the risk to fade. For sesame, the risk does <b>not</b> reliably fade — so the model's emergency floor, label-vigilance, and "carry the adrenaline plan" framing should be the <b>most serious of the four</b>, and should not soften over the toddler years the way it might for milk/egg.</div>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> · Indian &amp; cultural context <span class="badge b-hi">High (embedding)</span> <span class="badge b-mod">Moderate (India guidance/prevalence)</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Til is deeply embedded in the Indian diet</b> — <b>til laddoo, gajak, sesame chutneys, gingelly (sesame) oil</b> are everyday foods, with sesame sweets peaking around <b>Makar Sankranti (mid-January)</b>. Early, regular introduction is therefore culturally natural — the challenge is FORM (thin/grind) and first-exposure discipline, not novelty.</li>
+      <li><b>Sesame is reportedly among the more common sensitizing allergens in India</b> — appears in Indian allergy literature/parenting sources; treat as directional, not a precise figure. <span class="badge b-weak">secondary / regional</span></li>
+      <li><b>The cultural double-edge:</b> because til is <i>everywhere</i> (sweets, oils, chutneys) and often <b>unlabeled</b> in home/loose form, an Indian family both (a) introduces sesame naturally and early, and (b) faces a harder <i>avoidance</i> task if the child turns out allergic — the US "Contains sesame" label does <b>not</b> appear on a homemade laddoo or a loose chutney. <b>The parent is the label.</b></li>
+    </ul>
+    <div class="flag"><b>⚑ Gap:</b> <b>No India-specific (IAP / MoHFW / FSSAI) sesame directive</b> — on early introduction <i>or</i> on labeling — was located. The early-introduction-and-don't-delay guidance is international (AAP/NHS/ASCIA); the 9th-allergen labeling law is <b>US (FASTER Act) and does not apply in India</b>. Do not launder either onto an Indian body's name.</div>
+  </div>
+
+  <h2><span class="ax">Axis 7</span> · Myths to correct <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Myth: "Delay sesame to prevent the allergy."</b> <b>Don't delay.</b> Current guidance is to introduce sesame around 6 months and not hold it back; delaying is not protective. But the corollary myth is also wrong (next) — so frame this as "no reason to delay; it's safe," <b>not</b> "introduce early to prevent it."</li>
+      <li><b>Myth: "Early sesame prevents sesame allergy (like peanut does)."</b> <b>Not proven.</b> The EAT trial found <i>"no significant effects with respect to milk, sesame, fish, or wheat"</i> — the prevention benefit was <b>peanut + egg only</b>. Introduce early because it's safe and there's no reason to wait — <b>not</b> on a promise of prevention.</li>
+      <li><b>Myth: "Sesame allergy is outgrown like egg/milk."</b> <b>No — usually lifelong.</b> Only ~20–30% outgrow it; ~70–80% persists into adulthood, and it's a leading anaphylaxis trigger. This is the highest-value correction for sesame — it changes how seriously a family treats first exposures and ongoing label-reading.</li>
+      <li><b>Myth: "Sesame oil is always safe (it's just oil)."</b> <b>Nuanced.</b> Highly refined sesame oil is largely de-proteinized and lower-risk, but <b>unrefined / cold-pressed gingelly oil — common in Indian cooking — can retain allergenic protein</b>. Don't assume oil is safe for a <i>confirmed-allergic</i> child.</li>
+    </ul>
+  </div>
+
+  <h2>Proposed data shape · <code>FOOD_EFFECTS['sesame']</code></h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--mid)">Drop-in record for the <code>FOOD_EFFECTS</code> table, sitting alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. An <b>encourage</b>-polarity record (introduce early, safe form) carrying the <b>most serious emergency floor of the four</b>. <b>Not yet wired.</b></p>
+<pre><span class="c">// guided-introduction record — Tier-2: introduce early (safe + don't-delay), NOT a prevention promise</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'sesame'</span>: {
+    foodClass:     <span class="s">'allergen-introduce-early'</span>,
+    severity:      <span class="s">'caution'</span>,
+    category:      <span class="s">'seed'</span>,
+    effect:        <span class="s">'food allergy (often lifelong)'</span>,
+    minMonth:      <span class="s">6</span>,
+    thresholdBasis:<span class="s">'developmental-readiness'</span>,
+    allergen:      <span class="s">true</span>,
+    headline:      <span class="s">'Introduce around 6 months, as thinned tahini — never a thick glob.'</span>,
+    earlyIntroBenefit: { paradigm:<span class="s">'Don\'t delay — but no proven sesame-specific prevention claim.'</span>,
+                   evidence:<span class="s">'AAP/NHS/ASCIA name sesame; EAT (NEJM 2016) found NO significant prevention effect — early intro is SAFE but not proven to prevent sesame allergy. 9th US major allergen (FASTER Act), labeling since Jan 1 2023 — US-only.'</span> },
+    safeForm:      { ok:[<span class="s">'smooth tahini thinned with water, milk, or puree'</span>, <span class="s">'finely ground sesame stirred into food'</span>],
+                   never:[<span class="s">'a thick glob of tahini (sticky — choking risk; thin it, like nut butter)'</span>, <span class="s">'whole sesame seeds in quantity'</span>] },
+    myth:          { claim:<span class="s">'Sesame allergy is outgrown like egg or milk.'</span>,
+                   truth:<span class="s">'Usually not — tends to be lifelong (~70–80% persist), so first exposures and ongoing care matter more.'</span> },
+    watchFor:      [<span class="s">'hives / rash'</span>, <span class="s">'swelling (mouth, eyes, lips)'</span>, <span class="s">'vomiting'</span>],
+    severeSigns:   [<span class="s">'trouble breathing / wheeze'</span>, <span class="s">'face/lip/tongue swelling'</span>, <span class="s">'floppy, pale, or very sleepy'</span>],
+    seekCare:      <span class="s">'Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline. Leading anaphylaxis trigger — watch closely.'</span>,
+    culturalNote:  <span class="s">'Til laddoo, gajak (Makar Sankranti), chutneys, gingelly oil. Thin tahini into dal/khichdi/curd; avoid loose til seeds for young infants.'</span>,
+    confidence:    <span class="s">'high'</span>,
+    lastReviewed:  <span class="s">'2026-06-01'</span>,
+  },
+};</pre>
+  </div>
+
+  <h2>Source list</h2>
+  <div class="card">
+  <table>
+    <tr><th>#</th><th>Authority</th><th>Tier</th><th>URL</th></tr>
+    <tr><td>1</td><td>AAP / HealthyChildren — allergens (names sesame; no-delay)</td><td>Official</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+    <tr><td>2</td><td>UK NHS — Food allergies in babies (seeds "particularly sesame" finely ground)</td><td>Official</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+    <tr><td>3</td><td>ASCIA — Infant Feeding &amp; Allergy Prevention <i>(401/403 to fetcher)</i></td><td>Official</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+    <tr><td>4</td><td>NIAID — Food allergy guidelines for clinicians &amp; patients</td><td>Official</td><td><a href="https://www.niaid.nih.gov/diseases-conditions/guidelines-clinicians-and-patients-food-allergy">niaid.nih.gov/…/food-allergy</a></td></tr>
+    <tr><td>5</td><td>US FDA — FASTER Act: sesame the 9th major food allergen <i>(401 to fetcher)</i></td><td>Official</td><td><a href="https://www.fda.gov/food/food-allergies/faster-act-sesame-ninth-major-food-allergen">fda.gov/…/faster-act-sesame</a></td></tr>
+    <tr><td>6</td><td>FoodSafety.gov — FASTER Act 2021 (govt mirror; corroborates 9th-allergen + Jan 1 2023)</td><td>Official</td><td><a href="https://www.foodsafety.gov/blog/food-allergy-safety-treatment-education-and-research-act-2021">foodsafety.gov/blog/…/faster-act</a></td></tr>
+    <tr><td>7</td><td>NEJM — Perkins/Lack et al., EAT trial (2016); <b>sesame-null</b></td><td>Pivotal trial</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+    <tr><td>8</td><td>J Asthma Allergy — sesame allergy persistence (~20–30% resolve)</td><td>Peer-reviewed</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5414576/">pmc.ncbi.nlm.nih.gov/…/PMC5414576</a></td></tr>
+    <tr><td>9</td><td>JAMA Netw Open 2019 — sesame allergy prevalence/persistence</td><td>Peer-reviewed</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6681546/">pmc.ncbi.nlm.nih.gov/…/PMC6681546</a></td></tr>
+    <tr><td>10</td><td>Solid Starts — sesame (form, symptoms)</td><td>Secondary (advocacy/commercial)</td><td><a href="https://solidstarts.com/foods/sesame/">solidstarts.com/foods/sesame</a></td></tr>
+    <tr><td>11</td><td>Wikipedia — Tahini (culinary aliases)</td><td>Secondary (encyclopedia)</td><td><a href="https://en.wikipedia.org/wiki/Tahini">en.wikipedia.org/wiki/Tahini</a></td></tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <strong>Verification status &amp; gaps</strong>
+    <ol style="margin:8px 0 0">
+      <li>✅ <b>EAT sesame-null</b> — verified verbatim via PubMed 26943128: <i>"no significant effects with respect to milk, sesame, fish, or wheat."</i> The peanut+egg per-protocol benefit does <b>not</b> extend to sesame. The strongest discipline in this brief: <b>do not claim early sesame prevents sesame allergy.</b></li>
+      <li>✅ <b>Introduce-early / don't-delay</b> — corroborated by AAP (names sesame directly), NHS ("seeds, particularly sesame, served finely ground"), and ASCIA. Rests on <b>general don't-delay-allergens guidance</b>, not a sesame-specific RCT.</li>
+      <li>⚑ <b>FASTER Act — 9th major US allergen + Jan 1 2023 labeling</b> — <b>HIGH-CONFIDENCE-BUT-NOT-DIRECT-FETCH.</b> The FDA page (#5) returned 401; corroborated across FDA indexed text, the FoodSafety.gov mirror (#6), and independent sources. <b>Scope:</b> US (and analogously EU) packaged-food labeling — <b>does NOT apply to Indian/home foods.</b></li>
+      <li>⚑ <b>ASCIA page</b> — returned 401/403; the infant-feeding stance is corroborated via independent summaries, not a direct page read. Re-extract before any verbatim ASCIA attribution.</li>
+      <li>✅ <b>Persistence ~20–30% resolve / ~70–80% persist; leading anaphylaxis trigger</b> — peer-reviewed (J Asthma Allergy; JAMA Netw Open 2019). The tone-setting fact: sesame is <b>lifelong</b>, unlike commonly-outgrown egg/milk/soy/wheat.</li>
+      <li>⚑ <b>Sesame-oil protein nuance</b> — refined oil largely de-proteinized vs unrefined/cold-pressed gingelly oil retaining protein: allergen consensus, <b>moderate confidence</b>. Conservative line for a <i>confirmed-allergic</i> child: treat unrefined gingelly oil as a potential exposure.</li>
+      <li>⚑ <b>India-specific directive — GAP.</b> No IAP / MoHFW / FSSAI sesame directive located. Early-introduction guidance is international; the 9th-allergen labeling law is US-only and <b>does not apply in India</b>. Do not attribute either to an Indian body.</li>
+      <li>⚑ <b>Secondary sources flagged explicitly:</b> Solid Starts (#10) and Wikipedia/Tahini (#11) are secondary — used for form specifics and culinary aliases, consistent with but not a substitute for the official/peer-reviewed tiers. "India among more common sensitizing allergens" is regional/secondary and directional only.</li>
+    </ol>
+  </div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (for Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">Surface an <b>encourage</b> card (introduce early, safe thinned-tahini form) carrying the <b>most serious emergency floor of the four allergens</b>. The two highest-value nuggets unique to sesame: the <b>Tier-2 honesty line</b> — introduce early because it's safe + don't-delay, <b>NOT a prevention promise</b> (EAT null for sesame) — and the <b>usually-lifelong</b> note: ~70–80% persist, so first exposures + ongoing care matter, and vigilance should not age out. Reviewer pills: <b>Maren (Care) · 2026-06-01 · not-yet-wired</b>.</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/sesame-infant-safety.md</code> · 2026-06-01<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>

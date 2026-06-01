@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wheat &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.bad{background:var(--rose-bg);border-left-color:var(--rose)}
+  .flag.bad b{color:var(--rose)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre .c{color:#8a9a7a} pre .k{color:#d8a0b0} pre .s{color:#cbb080}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  td.c{text-align:center;font-weight:800}
+  .yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .three{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+  .three .col{flex:1;min-width:230px;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .three .col h4{font:700 12px/1.3 Nunito;text-transform:uppercase;letter-spacing:.3px;margin:0 0 4px;color:var(--mid)}
+  .three .col .big{font:800 17px/1.15 Fraunces,serif;margin:0 0 8px}
+  .three .allergy{background:var(--sage-bg)}.three .allergy .big{color:var(--sage)}
+  .three .celiac{background:var(--rose-bg)}.three .celiac .big{color:var(--rose)}
+  .three .timing{background:var(--mod-bg)}.three .timing .big{color:var(--mod)}
+  .three .col ul{margin:0;padding-left:18px;font-size:13px}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+  .gap{background:var(--rose-bg);border-color:transparent}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Wheat &amp; Infant Safety</h1>
+  <p class="sub">Care research brief — evidence base for SproutLab's <b>guided-introduction</b> food-effects model. Wheat is a <b>Tier-2 allergen</b>: introduce-early but prevention is NOT RCT-proven. The food is gated not by form alone but by <i>clarity</i> — keeping three things that look like one thing apart.</p>
+  <div class="meta">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill">2026-06-01</span>
+    <span class="pill">Wheat only · infants ~6–12mo · India</span>
+    <span class="pill">Research scout pass</span>
+    <span class="pill warn">Research artifact — NOT yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card">
+    <strong>Purpose.</strong>
+    <p style="margin:8px 0 0">Evidence base for SproutLab's Care layer, feeding the <i>guided-introduction</i> food-effects model. Built to decide what to surface when a parent introduces <b>wheat</b> to an infant — covering why to introduce early (don't delay), the honest limit on the prevention claim, and the <b>three-way conceptual split</b> that wheat uniquely forces: <i>wheat allergy</i> (IgE), <i>celiac disease</i> (autoimmune), and <i>gluten-introduction timing</i> (a celiac-prevention question).</p>
+    <p style="margin:8px 0 0"><strong>Scope.</strong> Wheat as an infant food and allergen. Infant ~6–12 months. Family context: Indian — <b>wheat/atta/roti/dalia/suji are everyday staples</b>, not novelties; the household eats wheat at most meals. Celiac and adult WDEIA are noted only to keep them <i>separated</i> from the infant-allergy question, not as infant management targets.</p>
+    <p style="margin:8px 0 0;font-size:13.5px;color:var(--mid)"><strong>Method.</strong> Multi-angle source fetch → adversarial cross-check → synthesis, with the EAT and ESPGHAN primary records as the spine. Authorities: AAP/HealthyChildren, UK NHS, ASCIA, US NIAID, WHO; pivotal trial EAT (Perkin/Lack, NEJM 2016, PubMed 26943128); celiac position paper ESPGHAN 2016 (PubMed 26815017). The EAT wheat-null result and the ESPGHAN gluten-timing window are verified verbatim from their PubMed abstracts; preparation/form specifics and culinary-alias coverage rest on reputable secondary sources (Solid Starts, CHOP, Mayo, FARE, FAACT), flagged inline. <b>No India-specific (IAP/MoHFW) early-allergen or wheat directive was located</b> — see gap.</p>
+  </div>
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>Introduce wheat early — around 6 months — and don't delay it.</b> Wheat is one of the common infant allergens; current consensus is the same as for the others: introduce around 6 months alongside other solids, don't hold it back. Delaying allergens does not prevent allergy. <i>(AAP; NHS — lists "foods containing gluten (wheat, barley, rye)"; ASCIA; NIAID.)</i></li>
+      <li><b>BUT — do NOT claim early wheat <i>prevents</i> wheat allergy.</b> This is the honest limit and the reason wheat is Tier-2, not Tier-1. The EAT trial tested early wheat directly and found <b>"no significant effects… with respect to milk, sesame, fish, or wheat."</b> Its prevention benefit was real <b>only for peanut and egg.</b> Early wheat was <i>safe</i> and is <i>fine to give early</i> — it just was <b>not shown to prevent wheat allergy.</b> <i>(Perkin/Lack, NEJM 2016; PubMed 26943128.)</i></li>
+      <li><b>Three things wear the word "wheat" — keep them rigorously apart.</b> (1) <b>Wheat allergy</b> = an IgE immune reaction to wheat <i>proteins</i> (hives, vomiting, anaphylaxis — fast). (2) <b>Celiac disease</b> = a chronic <i>autoimmune</i> reaction to <i>gluten</i> — NOT an allergy, NOT anaphylactic. (3) <b>Gluten-introduction timing</b> = a celiac-prevention question, separate from allergy. Wheat sits in all three because it contains gluten — that overlap is exactly the source of parent confusion this brief exists to defuse.</li>
+      <li><b>Celiac is not an emergency and is not "wheat allergy."</b> It's a chronic, medically-diagnosed condition (poor growth, chronic GI), not a 112-call event. Conflating it with wheat allergy is the central myth.</li>
+      <li><b>The Indian context is a gift and a trap.</b> Wheat is already in the diet daily (roti, dalia, suji, sevai), so introduction is culturally trivial — softened <b>roti/chapati pieces</b>, soft cooked suji/dalia, well-cooked pasta are near-ideal forms. The trap is the <b>alias thicket</b>: atta, maida, suji/rava, dalia, sevai, seitan, even soy sauce all <i>are</i> wheat, and fresh Indian staples carry no allergen label — so caregiver alias-knowledge is the safeguard, not the package.</li>
+      <li><b>ESPGHAN reversed the breastfeeding advice.</b> Neither breastfeeding nor breastfeeding-during-gluten-introduction reduces celiac risk (this reverses 2008 advice). Gluten may be introduced anytime <b>4–12 months</b>; timing does not change lifetime celiac incidence, only <i>when</i> it presents. Large quantities of gluten should be avoided in the first weeks and during infancy. <i>(ESPGHAN 2016; PubMed 26815017.)</i></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> · The benefit &amp; timing: introduce ~6 months, don't delay <span class="badge b-hi">High on don't-delay</span> <span class="badge b-weak">prevention NOT supported</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Introduce around 6 months, with other solids, once the baby is developmentally ready.</b> Wheat is named among the common infant allergens and is handled like the others: offer early, don't delay, keep it in the diet. The NHS explicitly lists <b>"foods containing gluten, including wheat, barley and rye"</b> among the allergenic foods to introduce from around 6 months, one at a time. <i>(NHS; AAP; ASCIA; NIAID 2017 addendum framing for early allergen introduction generally.)</i></li>
+      <li><b>Delaying does not help.</b> The general early-introduction consensus — that delaying allergenic foods does not prevent allergy — applies to wheat as a member of the allergen set. There is no benefit to holding wheat back past ~6 months in a baby who is ready for solids. <i>(AAP; NHS; ASCIA.)</i></li>
+    </ul>
+    <div class="flag"><b>⚑ The honest limit — EAT found NO wheat benefit.</b> The EAT trial (Perkin/Lack, NEJM 2016) randomised general-population breastfed infants to early introduction of six allergens (including wheat) vs standard introduction. Its abstract states, verbatim:
+      <blockquote style="margin:8px 0 0;border-left-color:var(--amber)">"…there were no significant effects with respect to milk, sesame, fish, or wheat."</blockquote>
+      The trial's prevention benefit was confined to <b>peanut and egg</b> (and only in the per-protocol, dose-achieving analysis). <b>Early wheat was safe but did not prevent wheat allergy.</b> <i>(Verified — PubMed 26943128.)</i></div>
+    <div class="flag bad"><b>⚑ Design consequence:</b> the model must say "introduce wheat early — it's safe, don't delay" <b>without</b> saying "early wheat prevents wheat allergy." That second claim is unproven and EAT is the direct evidence against it. This is the Tier-2 distinction: the <i>introduce-early</i> posture stands on safety + the don't-delay consensus, <b>not</b> on a proven prevention RCT the way peanut stands on LEAP.</div>
+    <p style="margin:10px 0 0"><b>No India-specific directive.</b> No IAP/MoHFW early-introduction or wheat guidance was located; the "introduce ~6mo, don't delay" posture is borrowed from AAP/NHS/ASCIA/NIAID and is culturally compatible with a wheat-staple Indian diet. <i>(See gap.)</i></p>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> · Wheat allergy vs celiac vs gluten-timing: the three-way split <span class="badge b-hi">High — the spine</span></h2>
+  <div class="card">
+    <p style="margin:0 0 4px">This is the single most important axis. Wheat is the one infant food where three distinct medical concepts collide under one word, and conflating them produces both needless fear and genuine error. Keep them labelled.</p>
+    <div class="three">
+      <div class="col allergy">
+        <h4>(1) This record</h4>
+        <div class="big">Wheat allergy</div>
+        <ul>
+          <li>An <b>IgE</b> immune reaction to wheat <i>proteins</i></li>
+          <li>Fast: hives, swelling, vomiting, GI upset, eczema flare, at the severe end <b>anaphylaxis</b></li>
+          <li><b>The "introduce-early" target</b> (Axes 1, 3, 4)</li>
+          <li>Commonly <b>outgrown</b> by early childhood</li>
+          <li><i>(AAP; CHOP; Mayo; FARE.)</i></li>
+        </ul>
+      </div>
+      <div class="col celiac">
+        <h4>(2) NOT an allergy</h4>
+        <div class="big">Celiac disease</div>
+        <ul>
+          <li>Chronic <b>autoimmune</b> reaction to <b>gluten</b> (wheat/barley/rye)</li>
+          <li><b>Not</b> an allergy, <b>not</b> anaphylactic</li>
+          <li>Chronic: poor growth, chronic GI, failure to thrive</li>
+          <li>Needs <b>medical diagnosis</b> (serology + specialist), not watch-and-wait</li>
+          <li><b>NOT an emergency</b> <i>(ESPGHAN 2016; celiac consensus.)</i></li>
+        </ul>
+      </div>
+      <div class="col timing">
+        <h4>(3) A celiac-prevention question</h4>
+        <div class="big">Gluten-timing</div>
+        <ul>
+          <li><i>When</i> to introduce gluten — debated in the <b>celiac</b> literature, separate from allergy</li>
+          <li>ESPGHAN 2016 (a <b>celiac</b> document): gluten anytime <b>4–12 months</b></li>
+          <li>Age <b>does not change lifetime celiac incidence</b> — shifts only <i>when</i> it presents</li>
+          <li><b>Breastfeeding reversal</b> of 2008 advice; avoid large gluten quantities early</li>
+          <li><i>(Verified — PubMed 26815017.)</i></li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin:6px 0 0"><b>The ESPGHAN 2016 conclusions, in full:</b></p>
+    <ul>
+      <li><b>"Gluten may be introduced into the infant's diet anytime between 4 and 12 completed months of age."</b></li>
+      <li>Age of introduction <b>does not change lifetime celiac incidence</b> — earlier vs later only shifts <b>when</b> celiac presents, not whether it occurs.</li>
+      <li><b>Breastfeeding reversal:</b> ESPGHAN now states that <b>neither breastfeeding nor breastfeeding at the time of gluten introduction reduces the risk of celiac disease</b> — explicitly <i>reversing</i> the 2008 advice that recommended introducing gluten while still breastfeeding.</li>
+      <li><b>"Consumption of large quantities of gluten should be avoided during the first weeks after gluten introduction and during infancy."</b></li>
+    </ul>
+    <p style="margin:10px 0 0"><b>Why wheat sits in both conversations:</b> wheat contains gluten, so it is simultaneously an <i>allergen</i> (wheat protein → IgE allergy) and the <i>vehicle for gluten</i> (→ celiac). A parent hearing "introduce wheat early" and "be careful about gluten timing" is hearing two different bodies answering two different questions. The model's job is to <b>answer each in its own lane and never let one borrow the other's authority.</b></p>
+    <div class="flag good"><b>⚑ Practical reconciliation for ~6-month introduction:</b> both lanes agree wheat/gluten can begin around 6 months — the allergy lane says "introduce early, don't delay," and the celiac lane (ESPGHAN) says "anytime 4–12 months, and avoid large quantities early." These are compatible: introduce wheat around 6 months in ordinary food-sized amounts, not in a gluten-loading binge.</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> · Safe FORM: texture &amp; choking <span class="badge b-hi">High on forms</span> <span class="badge b-mod">choking cautions partly secondary</span></h2>
+  <div class="card">
+    <p style="margin:0 0 4px">Unlike whole nuts, wheat is not intrinsically a hard-choke food — but specific wheat <i>forms</i> carry texture hazards a caregiver should pre-empt.</p>
+    <h3>Good first forms (soft, infant-friendly)</h3>
+    <ul>
+      <li><b>Soft wheat / multigrain infant cereal</b> — smooth, easy to dose, mix to a thin porridge. <i>(Solid Starts; general consensus.)</i></li>
+      <li><b>Well-cooked pasta</b> — cooked soft (past al dente), large pieces the baby can gum, or small soft pieces. <i>(Solid Starts.)</i></li>
+      <li><b>Softened roti / chapati pieces</b> — torn small and <b>soaked in milk, dal, or sabzi</b> until soft and pliable. This is the culturally native form and a near-ideal one. <i>(Secondary / culturally derived; consistent with soft-form guidance.)</i></li>
+      <li><b>Cream-of-wheat / suji (sooji/rava) / dalia (broken wheat)</b> — cooked soft to a smooth or well-mashed porridge consistency. <i>(Secondary; consistent with cereal-form guidance.)</i></li>
+    </ul>
+    <h3>Choking cautions — two specific wheat traps</h3>
+    <ol>
+      <li><b>Fresh soft bread balls up into a sticky clump</b> in a baby's mouth and can lodge — a known hazard. <b>Mitigation: toast it</b> (toast or firm bread strips don't gum together the way fresh soft bread does), or offer firm bread strips rather than squishy fresh slices. <i>(Solid Starts — bread; flagged secondary but well-established.)</i></li>
+      <li><b>Loose cooked wheat / dalia / suji scatters</b> — dry, loose grains can be inhaled/scatter rather than form a manageable bolus. <b>Mitigation: cook it soft and mash or bind</b> it (into porridge, with milk/dal) so it holds together. <i>(Secondary; consistent with loose-grain caution.)</i></li>
+    </ol>
+    <div class="flag"><b>⚑ Form note vs the nut brief:</b> with wheat, <b>form addresses choking, not allergy</b> — same principle as nuts. Cooking/softening does <b>not</b> remove the allergy hazard or the celiac relevance; a baby with wheat-protein allergy will react to soft well-cooked roti just as to bread. Form is the choking lane only.</div>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> · Emergency floor: IgE reaction vs anaphylaxis (and celiac is NOT here) <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Mild–moderate IgE reaction (single body system):</b> itchy <b>hives/welts</b>, redness or <b>rash</b>, <b>swelling</b> (especially around the mouth/eyes), <b>vomiting</b>, GI upset/loose stool, <b>eczema flare</b>, sudden fussiness. <i>(CHOP; Mayo; FARE; FAACT.)</i></li>
+      <li><b>Severe / anaphylaxis (act immediately):</b> <b>difficulty breathing</b>, wheeze/persistent cough/noisy breathing, <b>swelling of the throat/tongue/lips/face</b>, hoarse cry, <b>pale / floppy / lethargic</b> or unusually sleepy, collapse. In a baby, sudden behaviour change (limp, can't hold head up) is a recognised severe sign. <b>Two or more body systems involved = treat as anaphylaxis.</b> <i>(FAACT; FARE; consensus.)</i></li>
+    </ul>
+    <h3>What to do</h3>
+    <ul>
+      <li><b>Mild, single-system:</b> stop the food, monitor closely, contact your doctor; a clinician may advise an antihistamine.</li>
+      <li><b>Any breathing difficulty, throat/tongue/face swelling, floppiness, or two body systems → emergency. Use a prescribed adrenaline auto-injector immediately and call emergency services (112 / 108 in India).</b></li>
+    </ul>
+    <div class="flag bad"><b>⚑ Celiac is explicitly NOT an emergency.</b> Celiac disease is <b>chronic</b>, not acute — it does not cause anaphylaxis and is <b>not</b> a 112/108 event. It presents over weeks/months (poor growth, chronic GI) and needs <b>medical diagnosis</b>, not emergency response. The model must not let celiac symptoms ride the allergy-emergency rail, and must not let a parent worried about celiac think they're watching for anaphylaxis. <i>(ESPGHAN; celiac consensus.)</i></div>
+    <div class="flag"><b>⚑ Aside — WDEIA (wheat-dependent exercise-induced anaphylaxis)</b> is an <b>adult/adolescent</b> phenomenon (anaphylaxis triggered by wheat + exercise). It is <b>not relevant to infants</b> and is mentioned here only so it isn't mistaken for an infant wheat-allergy pattern. Do not surface it in infant-facing copy except to rule it out.</div>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> · Culinary aliases &amp; hidden sources: the alias thicket <span class="badge b-hi">High on alias list</span> <span class="badge b-mod">label-regime flagged</span></h2>
+  <div class="card">
+    <p style="margin:0 0 4px">Wheat hides under many names — and in an Indian kitchen, much of it is in <b>unlabeled fresh-made</b> food. Caregiver alias-knowledge is the real safeguard.</p>
+    <ul>
+      <li><b>Core flours &amp; forms:</b> atta (wholewheat), maida (refined wheat flour), <b>semolina / suji / sooji / rava</b>, <b>broken wheat / dalia</b>, <b>sevai / vermicelli</b>, durum, farina, couscous, bulgur, <b>seitan (= wheat gluten)</b>, <b>soy sauce (typically contains wheat)</b>. <i>(FARE; FAACT; CHOP.)</i></li>
+      <li><b>Related wheat grains (often missed):</b> spelt, kamut, einkorn, emmer, farro, triticale — all contain wheat/gluten and are not "wheat-free." <i>(FARE; FAACT.)</i></li>
+      <li><b>Indian staples that ARE wheat:</b> roti, chapati, paratha, naan, <b>pav</b>, upma (suji), halwa (suji/atta), samosa &amp; pakora batter/wrapper, <b>rusks and biscuits</b>, sevai/vermicelli dishes. A wheat-allergic or celiac-relevant child encounters wheat across most of a typical Indian menu — alias literacy is essential, not optional.</li>
+    </ul>
+    <h3>Label-regime divergence (flag for the spec)</h3>
+    <table>
+      <tr><th>Region</th><th>How wheat is declared</th></tr>
+      <tr><td><b>US</b></td><td>declares the allergen as <b>"wheat"</b> plainly.</td></tr>
+      <tr><td><b>EU / UK</b></td><td>declare it as <b>"cereals containing gluten"</b> (so a label may say "gluten" not "wheat").</td></tr>
+      <tr><td><b>India (FSSAI)</b></td><td>requires a <b>gluten-cereal declaration on PACKAGED food</b> — but <b>fresh, unpackaged Indian staples (roti, dalia from the local chakki, restaurant/street food) carry no allergen label at all.</b></td></tr>
+    </table>
+    <div class="flag"><b>⚑ Consequence:</b> in the Indian context the package label is the <i>weakest</i> safeguard because so much wheat intake is fresh and unlabeled. The model should lean on <b>caregiver alias-knowledge</b> (knowing suji, maida, dalia, sevai, seitan, soy sauce all = wheat) rather than on label-reading. <i>(FSSAI labelling regime; FARE/FAACT alias lists — label-regime specifics flagged as needing primary-FSSAI confirmation before any verbatim citation.)</i></div>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> · Myths to correct <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <div class="flag bad"><b>Myth: "Delay wheat to prevent allergy."</b> No. Delaying does not prevent allergy; introduce around 6 months and don't hold it back. <i>(AAP; NHS; ASCIA.)</i> (Note the honest companion truth: early wheat also wasn't <i>shown</i> to prevent allergy — EAT was null — so the correct line is "introduce early because it's safe and delaying has no benefit," not "introduce early to prevent allergy.")</div>
+    <div class="flag bad"><b>Myth: "Wheat allergy and gluten intolerance / celiac are the same thing."</b> They are NOT. Wheat allergy is a fast IgE immune reaction to wheat protein; celiac is a chronic autoimmune reaction to gluten, diagnosed medically and never anaphylactic. Treating them as one causes both false alarms (fearing anaphylaxis over a chronic condition) and false reassurance (dismissing chronic poor-growth as "just a mild allergy"). <i>(ESPGHAN; CHOP; Mayo; AAP.)</i></div>
+    <div class="flag bad"><b>Myth: "You must introduce gluten <i>while breastfeeding</i> to prevent celiac."</b> Withdrawn. ESPGHAN's 2016 position paper reversed this: <b>neither breastfeeding nor breastfeeding at the time of gluten introduction reduces celiac risk.</b> The old 2008 advice no longer stands. <i>(ESPGHAN 2016; PubMed 26815017.)</i> This myth is high-value to surface because it's <i>stale official advice</i>, not folklore — a relative or older resource may still cite the 2008 line. Name the reversal explicitly.</div>
+  </div>
+
+  <h2>Who says what — consensus matrix</h2>
+  <div class="card">
+    <table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo / don't delay</th><th class="c">Early wheat <i>prevents</i> wheat allergy</th></tr>
+      <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>UK NHS (lists gluten: wheat, barley, rye)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>ASCIA (Australasia)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>US NIAID (2017)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>EAT trial (NEJM 2016)</td><td class="c dash">— (tested it)</td><td class="c no">✗ NULL for wheat</td></tr>
+      <tr><td>ESPGHAN 2016 <i>(celiac/gluten lane)</i></td><td class="c dash">— gluten 4–12mo</td><td class="c dash">— celiac doc, not allergy</td></tr>
+    </table>
+    <p style="margin:8px 0 0;font-size:13.5px;color:var(--mid)">Every body supports introduce-early / don't-delay; <b>no body claims early wheat prevents wheat allergy</b>, and EAT is the direct null evidence. ESPGHAN belongs only in the celiac/gluten-timing lane (4–12-month window), never as allergy-prevention evidence.</p>
+  </div>
+
+  <h2>Proposed data shape · <code>FOOD_EFFECTS['wheat']</code></h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--mid)">Drop-in record mirrored from <code>food-effects.manifest.js</code>, sitting alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. The <code>myth</code> field carries the allergy-vs-celiac clarifier; <code>earlyIntroBenefit</code> is framed honestly (EAT null — no prevention claim). <b>Not yet wired.</b></p>
+<pre><span class="c">// guided-introduction record — Tier-2 allergen: introduce-early, prevention NOT proven</span>
+{
+  food:          <span class="s">'wheat'</span>,
+  aliases:       [<span class="s">'atta'</span>, <span class="s">'maida'</span>, <span class="s">'wheat flour'</span>, <span class="s">'suji'</span>, <span class="s">'sooji'</span>, <span class="s">'rava'</span>, <span class="s">'semolina'</span>, <span class="s">'dalia'</span>, <span class="s">'broken wheat'</span>, <span class="s">'roti'</span>, <span class="s">'chapati'</span>, <span class="s">'phulka'</span>, <span class="s">'paratha'</span>, <span class="s">'naan'</span>, <span class="s">'bread'</span>, <span class="s">'pasta'</span>, <span class="s">'sevai'</span>, <span class="s">'vermicelli'</span>, <span class="s">'durum'</span>, <span class="s">'couscous'</span>, <span class="s">'bulgur'</span>, <span class="s">'seitan'</span>],
+  foodClass:     <span class="s">'allergen-introduce-early'</span>,
+  severity:      <span class="s">'caution'</span>,
+  category:      <span class="s">'grain'</span>,
+  effect:        <span class="s">'food allergy (distinct from celiac disease)'</span>,
+  minMonth:      <span class="s">6</span>,
+  thresholdBasis:<span class="s">'developmental-readiness'</span>,
+  allergen:      <span class="k">true</span>,
+  reactionType:  [<span class="s">'allergy'</span>],
+  headline:      <span class="s">'Introduce around 6 months — don\'t delay. Soft cereal or softened roti.'</span>,
+  whyGood:       <span class="s">'Staple grain — soft wheat cereal, well-cooked pasta, or softened roti; introduce early alongside other solids.'</span>,
+  earlyIntroBenefit: { claim:<span class="s">'Introduce around 6 months; don\'t delay.'</span>,
+                       evidence:<span class="s">'AAP/NHS/ASCIA advise early introduction; EAT (NEJM 2016) verified NO significant prevention effect for wheat — early intro is SAFE but does NOT prevent wheat allergy.'</span>,
+                       paradigm:<span class="s">'Don\'t delay — but no proven wheat-specific prevention claim.'</span> },
+  safeForm:      { ok:[<span class="s">'soft wheat / multigrain cereal or porridge'</span>, <span class="s">'well-cooked soft pasta'</span>, <span class="s">'roti / chapati torn small and softened in milk, dal, or sabzi'</span>, <span class="s">'suji / dalia cooked soft'</span>],
+                   never:[<span class="s">'large or doughy bread pieces (fresh soft bread balls up into a sticky clump — toast it or use firm strips)'</span>, <span class="s">'loose cooked wheat / dalia that scatters in the mouth (mash or bind it)'</span>],
+                   note:<span class="s">'Wheat ALLERGY is separate from celiac disease — see myth.'</span> },
+  myth:          { claim:<span class="s">'Wheat allergy and gluten intolerance / celiac disease are the same.'</span>,
+                   truth:<span class="s">'Different conditions — wheat allergy is an immune (IgE) food allergy with rapid reactions; celiac is a separate autoimmune reaction to gluten needing medical diagnosis, not emergency care. This record is about wheat allergy.'</span> },
+  watchFor:      [<span class="s">'hives / rash'</span>, <span class="s">'swelling (mouth, eyes, lips)'</span>, <span class="s">'vomiting or diarrhoea'</span>, <span class="s">'eczema flare'</span>],
+  severeSigns:   [<span class="s">'trouble breathing / wheeze'</span>, <span class="s">'face/lip/tongue swelling'</span>, <span class="s">'floppy, pale, or very sleepy'</span>],
+  timeCourse:    <span class="s">'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min'</span>,
+  seekCare:      <span class="s">'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector. (Celiac is NOT an emergency — chronic; needs a doctor\'s diagnosis.)'</span>,
+  breastfeedingSafe: <span class="k">true</span>,
+  culturalNote:  <span class="s">'Atta, maida, suji/rava, dalia, sevai are all wheat. Soft cereal and softened roti are ideal early forms. Wheat allergy is commonly outgrown in early childhood.'</span>,
+  confidence:    <span class="s">'high'</span>,
+  sources:       [<span class="s">'AAP'</span>, <span class="s">'UK NHS'</span>, <span class="s">'ASCIA'</span>, <span class="s">'NIAID 2017'</span>, <span class="s">'NEJM EAT 2016'</span>, <span class="s">'ESPGHAN 2016 (celiac/gluten)'</span>],
+  lastReviewed:  <span class="s">'2026-06-01'</span>,
+}</pre>
+  </div>
+
+  <h2>Source list</h2>
+  <div class="card">
+  <table>
+    <tr><th>#</th><th>Authority</th><th>Type</th><th>URL</th></tr>
+    <tr><td>1</td><td>NEJM / PubMed — Perkin, Lack et al., <b>EAT trial (2016)</b> — "no significant effects… with respect to milk, sesame, fish, or wheat"</td><td>Primary (RCT)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+    <tr><td>2</td><td><b>ESPGHAN 2016</b> gluten introduction position paper (4–12mo window; breastfeeding reversal; avoid-large-quantities-early) — <i>a celiac document</i></td><td>Primary (position paper)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26815017/">pubmed.ncbi.nlm.nih.gov/26815017</a></td></tr>
+    <tr><td>3</td><td>AAP / HealthyChildren — When should I introduce wheat into my baby's diet? (wheat allergy commonly outgrown)</td><td>Official body</td><td><a href="https://www.healthychildren.org/English/tips-tools/ask-the-pediatrician/Pages/When-should-I-introduce-wheat-into-my-babys-diet.aspx">healthychildren.org/…/wheat</a></td></tr>
+    <tr><td>4</td><td>NIAID (2017) — early allergen introduction addendum framing</td><td>Official body</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5226648/">pmc.ncbi.nlm.nih.gov/…/PMC5226648</a></td></tr>
+    <tr><td>5</td><td>UK NHS — Food allergies in babies &amp; young children (lists "foods containing gluten — wheat, barley, rye")</td><td>Official body</td><td><a href="https://www.nhs.uk/conditions/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/…/food-allergies</a></td></tr>
+    <tr><td>6</td><td>ASCIA — Infant feeding &amp; allergy prevention</td><td>Official body</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+    <tr><td>7</td><td>WHO — Complementary feeding of infants &amp; young children 6–23 months</td><td>Official body</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov/books/NBK596423</a></td></tr>
+    <tr><td>8</td><td>Solid Starts — Wheat</td><td>Secondary</td><td><a href="https://solidstarts.com/foods/wheat/">solidstarts.com/foods/wheat</a></td></tr>
+    <tr><td>9</td><td>Solid Starts — Bread (toast vs soft-bread choking caution)</td><td>Secondary</td><td><a href="https://solidstarts.com/foods/bread/">solidstarts.com/foods/bread</a></td></tr>
+    <tr><td>10</td><td>CHOP — Wheat allergy</td><td>Secondary</td><td><a href="https://www.chop.edu/conditions-diseases/wheat-allergy">chop.edu/…/wheat-allergy</a></td></tr>
+    <tr><td>11</td><td>Mayo Clinic — Wheat allergy (symptoms &amp; causes)</td><td>Secondary</td><td><a href="https://www.mayoclinic.org/diseases-conditions/wheat-allergy/symptoms-causes/syc-20378897">mayoclinic.org/…/wheat-allergy</a></td></tr>
+    <tr><td>12</td><td>FARE — Wheat (allergen profile; aliases)</td><td>Secondary (advocacy)</td><td><a href="https://www.foodallergy.org/living-food-allergies/food-allergy-essentials/common-allergens/wheat">foodallergy.org/…/wheat</a></td></tr>
+    <tr><td>13</td><td>FAACT — Wheat (top allergen; aliases)</td><td>Secondary (advocacy)</td><td><a href="https://www.foodallergyawareness.org/food-allergy-and-anaphylaxis/food-allergens/wheat/">foodallergyawareness.org/…/wheat</a></td></tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <strong>Verification status &amp; gaps</strong>
+    <ol style="margin:8px 0 0">
+      <li>✅ <b>EAT wheat-null</b> — verified verbatim from the PubMed abstract (26943128): <i>"no significant effects… with respect to milk, sesame, fish, or wheat."</i> The trial's benefit was peanut + egg only. <b>Do not attribute wheat-allergy prevention to early introduction.</b></li>
+      <li>✅ <b>ESPGHAN 2016 gluten window &amp; reversals</b> — verified from the PubMed abstract (26815017): 4–12-month window; age of introduction shifts presentation not lifetime incidence; <b>breastfeeding (and breastfeeding-during-introduction) reversal of 2008 advice</b>; avoid large gluten quantities in the first weeks and during infancy. This is a <b>celiac</b> document — cite it only in the celiac/gluten-timing lane, never as allergy-prevention evidence.</li>
+      <li>✅ <b>NHS allergen listing</b> — NHS names "foods containing gluten (wheat, barley, rye)" among allergens to introduce around 6 months, one at a time.</li>
+      <li>✅ <b>Wheat allergy commonly outgrown</b> — AAP-supported; corroborated by CHOP/Mayo/FARE.</li>
+      <li>⚑ <b>Choking-form cautions (soft-bread clump; loose-grain scatter)</b> — drawn from Solid Starts (secondary). Well-established and consistent with general infant-feeding guidance, but not a top-tier body's verbatim rule. Flagged as secondary.</li>
+      <li>⚑ <b>Softened-roti / suji / dalia forms</b> — culturally derived and consistent with soft-cereal guidance, but not issued by an official body for the Indian context. Secondary/derived.</li>
+      <li>⚑ <b>FSSAI label-regime claim</b> — the US "wheat" vs EU/UK "cereals containing gluten" vs India "FSSAI gluten-cereal declaration on packaged food; fresh staples unlabeled" framing should have the FSSAI labelling rule confirmed against the primary FSSAI regulation before any verbatim citation. The <i>operational</i> conclusion (caregiver alias-knowledge is the safeguard for unlabeled fresh staples) stands regardless.</li>
+      <li>⚑ <b>No India-specific (IAP / MoHFW) early-allergen or wheat directive located.</b> Indian practice borrows AAP/ASCIA/NIAID. The "introduce ~6mo, don't delay" posture is well-sourced internationally and culturally compatible with a wheat-staple diet, but is <b>not</b> an Indian-government-issued rule. Never launder international guidance onto an Indian body's name.</li>
+      <li>⚑ <b>WDEIA</b> — adult/adolescent, not infant-relevant; included only to keep it separated from infant wheat allergy. Do not surface in infant copy except to rule out.</li>
+      <li>🚫 <b>Hard line — no overclaim.</b> The brief must not state, imply, or let the model infer that early wheat introduction <i>prevents</i> wheat allergy. The introduce-early posture rests on safety + the don't-delay consensus (Tier-2), not on a prevention RCT (which, for wheat, was null).</li>
+    </ol>
+  </div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">An <b>encourage-polarity</b> card (sage, <code>severity:'caution'</code>) — "introduce ~6mo, don't delay" first, then the safe-form block (softened roti/cereal vs the doughy-bread choke), then a non-collapsible severe-reaction strip. The two highest-value nuggets unique to wheat: the <b>"wheat allergy ≠ celiac"</b> clarifier (so a chronic-condition worry never rides the anaphylaxis rail) and the <b>Tier-2 honest-framing flag</b> (early wheat is safe + don't-delay, but EAT was null — <b>no wheat-prevention claim</b>).</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/wheat-infant-safety.md</code> · generated 2026-06-01<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>

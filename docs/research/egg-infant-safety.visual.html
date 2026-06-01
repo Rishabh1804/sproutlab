@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+  FOOD-DASHBOARD TEMPLATE · SproutLab Care research layer
+  Copy this file to  <food>-infant-safety.visual.html  and fill the {{...}}.
+  Canonical CSS + JS (tab swiping, arrow keys, charts) — DO NOT diverge; if you
+  improve a component, update this template so all dashboards inherit it.
+
+  TABS are generic; relabel per food TYPE:
+    • critical/acute-toxin (honey)  → Summary · The Science · Symptoms & Care · Context · Sources · Data
+    • allergen (egg, nuts, soy)     → Summary · Why/Allergen · Reaction & Introduction · Context · Sources · Data
+    • choking (whole nuts, grapes)  → Summary · The Hazard · Safe Prep · Context · Sources · Data
+    • timing (cow milk, salt, sugar)→ Summary · Why this age · Effects · Context · Sources · Data
+
+  COMPONENT LIBRARY (copy from the commented block at the bottom of <body>):
+    stat tiles · bar chart · donut (SVG) · timeline · thermometer split ·
+    consensus matrix · flag callouts · badges.
+  Every chart value MUST also appear as text (machine-readable for agents).
+  After filling: append a record to food-effects.manifest.js.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egg &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ── Entrance animations — re-trigger each time a panel is shown (display:none→block
+     restarts descendant animations). All gated behind prefers-reduced-motion so the
+     dashboard is fully usable (and calm) for anyone who opts out of motion. ── */
+  @media (prefers-reduced-motion: no-preference){
+    /* bars grow from the left — scaleX keeps the inline width:% target intact */
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    /* stat tiles + timeline steps + therm cols rise in with a gentle stagger */
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    /* donut sweeps in (the partial-arc value stays exact; only the reveal animates) */
+    .panel.on svg[role="img"]{animation:sweep .8s ease both}
+    @keyframes sweep{from{opacity:0;transform:rotate(-12deg) scale(.9)}to{opacity:1;transform:none}}
+    /* flag callouts slide a touch from the left edge they're anchored to */
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)}.bar.hl .lab{color:var(--honey)}.bar.hl .val{color:var(--honey)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Egg &amp; Infant Safety — Visual Dashboard</h1>
+  <p class="sub">A <b>tier-1, prevention-proven</b> allergen — like peanut, egg earns the confident <i>"introduce early to lower allergy risk"</i> claim, backed by RCTs (PETIT, EAT). The one gate is <b>cooked-state</b>, not the food. Skim the Summary; drill into a tab for detail.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-why">Why / Allergen</button>
+    <button class="tab" data-p="p-sym">Reaction &amp; Introduction</button>
+    <button class="tab" data-p="p-ctx">Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- ───────── SUMMARY ───────── -->
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0"><b>The one rule: introduce well-cooked egg early — around 6 months — and keep it regular.</b> Early, sustained egg <b>lowers</b> egg-allergy risk, RCT-proven (PETIT: 38%→8%). The only gate is <b>cooked-state</b>: fully-cooked (solid white + yolk), never runny — there is no British-Lion-mark salmonella safeguard in India.</p>
+    </div>
+
+    <div class="grid g4">
+      <!-- stat tiles: .crit (red) / .ok (sage) / default (accent) -->
+      <div class="card stat ok"><div class="n">~6<span style="font-size:14px">mo</span></div><div class="l">introduce well-cooked egg from ~6 months (not before 4) — AAP·NHS·ASCIA</div></div>
+      <div class="card stat ok"><div class="n">38<span style="font-size:14px">%</span>→8<span style="font-size:14px">%</span></div><div class="l">egg allergy at 12mo — heated egg vs placebo (PETIT, P=0.0001)</div></div>
+      <div class="card stat ok"><div class="n">5.5<span style="font-size:14px">%</span>→1.4<span style="font-size:14px">%</span></div><div class="l">EAT per-protocol egg-allergy reduction (P=0.009)</div></div>
+      <div class="card stat"><div class="n">usually<br>outgrown</div><div class="l">most egg-allergic children outgrow it by school age — calm, not alarmed</div></div>
+    </div>
+
+    <h3>The things to know <span class="badge b-hi">all high-confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · The advice reversed.</b> "Delay egg to prevent allergy" is gone — delaying does not prevent allergy and may <i>increase</i> it. Introduce ~6mo and keep offering. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>2 · Cooked-state is the gate, not the food.</b> Fully-cooked egg is the safe (and studied) form; runny/raw egg is not safe for an Indian infant — no Lion-mark, plus heating lowers allergenicity. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>3 · Watch the first exposure.</b> Small amount, fully cooked, at home, daytime, watch. Know mild (hives/vomiting) vs severe (breathing/floppy → call 112). → <span class="jump" data-go="p-sym">Reaction &amp; Introduction</span></div>
+      <div class="card"><b>4 · An Indian cultural asset.</b> Well-mashed boiled egg, firm bhurji, egg in khichdi — already fully-cooked forms. Just correct any half-boiled / runny-egg practice. → <span class="jump" data-go="p-ctx">Context</span></div>
+    </div>
+
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> an <b>encourage-polarity</b> card (sage, not honey's rose warn-card) — benefit first (the early-intro-lowers-allergy claim is RCT-earned here), then the introduce-safely block (<b>fully-cooked</b> form + ~⅓ egg amount + watch + keep offering), then a non-collapsible severe-reaction strip. The two highest-value nuggets unique to egg: the <b>fully-cook-it (no Lion-mark in India)</b> rule and the reassuring <b>usually-outgrown</b> framing.</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">2026-06-01</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>egg-infant-safety.md</code> · long-form HTML: <code>egg-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+  </section>
+
+  <!-- ───────── WHY / ALLERGEN ───────── -->
+  <section class="panel" id="p-why"><h2>Why it matters — early intro PREVENTS egg allergy</h2>
+    <div class="card">
+      <p style="margin:0 0 6px">Until ~2008–2015, guidance advised <b>delaying</b> allergenic foods (incl. egg) to prevent allergy. <b>That advice is reversed.</b> AAP/HealthyChildren now states there is no evidence that delaying allergenic foods like egg prevents allergies once a baby is ready, typically around 6 months. Delaying does not prevent allergy and may <i>increase</i> it. <span class="badge b-hi">consensus</span></p>
+    </div>
+
+    <h3>PETIT &amp; EAT — RCT reductions <span class="badge b-hi">PubMed-verified</span></h3>
+    <div class="card">
+      <div class="bar"><span class="lab">PETIT placebo</span><span class="trk"><span class="fil" style="width:100%;background:var(--rose)"></span></span><span class="val">38%</span></div>
+      <div class="bar hl"><span class="lab">PETIT heated egg</span><span class="trk"><span class="fil" style="width:21%"></span></span><span class="val">8%</span></div>
+      <div class="bar"><span class="lab">EAT per-protocol (std)</span><span class="trk"><span class="fil" style="width:14%;background:var(--rose)"></span></span><span class="val">5.5%</span></div>
+      <div class="bar hl"><span class="lab">EAT per-protocol (egg)</span><span class="trk"><span class="fil" style="width:4%"></span></span><span class="val">1.4%</span></div>
+      <p style="font-size:12px;color:var(--mid);margin:6px 0 0"><b>PETIT (Natsume et al., Lancet 2017; PMID 27939035):</b> high-risk eczematous Japanese infants on stepwise <b>heated</b> whole-egg powder (50 mg/day 6–9mo → 250 mg/day 9–12mo) <b>plus aggressive eczema treatment</b> — egg allergy at 12mo <b>8% vs 38% placebo, P=0.0001.</b> <b>EAT (Perkin/Lack, NEJM 2016; PMID 26943128):</b> per-protocol <b>1.4% vs 5.5%, P=0.009</b>; intention-to-treat <b>NOT</b> significant (7.1% vs 5.6%, P=0.32).</p>
+    </div>
+    <div class="flag"><b>⚑ Two integral conditions of the PETIT result:</b> (a) the studied form was <b>heated/cooked</b> egg, not raw; (b) <b>eczema was actively controlled</b> as part of the protocol. PETIT does not license giving raw egg, nor giving egg to an uncontrolled-eczema infant without care. For significant eczema or a strong family allergy history, early egg is still the goal — but involve a paediatrician on timing and eczema control.</div>
+    <div class="flag"><b>⚑ The EAT lesson is dose + adherence.</b> The benefit is real but depends on getting enough egg in, <b>regularly</b>. Frame egg as "introduce <b>and keep offering</b>," not a one-time tick.</div>
+
+    <h3>The safe form — fully-cooked egg <span class="badge b-hi">High</span></h3>
+    <div class="therm">
+      <div class="col safe">
+        <div style="font-size:12px;color:var(--mid)">Fully-cooked (SAFE)</div>
+        <div class="big">introduce early</div>
+        <div style="font-size:12.5px">mashed <b>hard-boiled</b> egg, <b>scrambled until firm</b>, or <b>baked into</b> food (omelette set firm, egg in khichdi/porridge cooked through). Start with about <b>⅓ of a well-cooked egg</b>.</div>
+      </div>
+      <div class="col danger">
+        <div style="font-size:12px;color:var(--mid)">Runny / raw (AVOID)</div>
+        <div class="big">not safe in India</div>
+        <div style="font-size:12.5px">runny, soft-yolk, half-boiled or lightly-cooked egg. NHS allows runny egg for infants <b>only with the British Lion mark</b> — <b>India has no equivalent scheme</b>, so cook until both white and yolk are solid.</div>
+      </div>
+    </div>
+    <div class="flag good"><b>✓ Why fully-cook.</b> Two reasons compound: <b>(1) salmonella</b> — without a control-scheme assurance, raw/undercooked egg carries an infection risk far more serious in an infant; <b>(2) allergenicity</b> — well-cooking (heating) reduces egg's allergenic potency, which is exactly why PETIT used <b>heated</b> egg powder. Egg has <b>no choking-form gate</b> (it is soft) — the gate it passes through is cooked-state, not particle-size.</div>
+  </section>
+
+  <!-- ───────── REACTION & INTRODUCTION ───────── -->
+  <section class="panel" id="p-sym"><h2>Reaction watch &amp; first introduction</h2>
+    <div class="card">
+      <p style="margin:0;font-size:13px;color:var(--mid)">Egg is among the most common infant food allergens — but, reassuringly, it is <b>commonly outgrown</b>: a <b>majority of egg-allergic children outgrow it by school age</b>, unlike peanut/tree-nut. The tone here is <b>calm and reassuring</b>, not alarmist.</p>
+    </div>
+
+    <h3>From mild to emergency</h3>
+    <div class="card">
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Mild — one body system</div><div class="tl-d">itchy hives/welts, redness or rash, swelling (esp. around mouth/eyes), vomiting, loose stool / GI upset, sudden fussiness.</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">What to do for mild</div><div class="tl-d">stop the food, monitor closely, contact your doctor; an antihistamine may be advised by a clinician.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Severe / anaphylaxis — red flags</div><div class="tl-d">difficulty/noisy breathing, wheeze, persistent cough; tongue/throat swelling or throat tightness; hoarse voice or cry; pale and floppy (sudden limpness), collapse. Two body systems involved → treat as anaphylaxis.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Act immediately</div><div class="tl-d">lay the child flat (do not stand them up); use a prescribed adrenaline auto-injector immediately; <b>call emergency services — 112 (all-India) or 108 (ambulance).</b></div></div>
+      </div>
+      <p style="font-size:12px;color:var(--mid);margin:6px 0 0">Most reactions appear within <b>minutes to ~2 hours</b>; anaphylaxis often within <b>5–30 minutes</b>. (ASCIA — First Aid for Anaphylaxis.)</p>
+    </div>
+
+    <h3>First-exposure protocol</h3>
+    <div class="card">
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Small amount, fully cooked</div><div class="tl-d">a small portion of fully-cooked egg (about ⅓ of a well-cooked egg to build toward).</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">At home, morning or midday</div><div class="tl-d">not at dinner — so you can observe through the day.</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Watch afterward</div><div class="tl-d">most reactions appear within a couple of hours.</div></div>
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">If tolerated — keep offering regularly</div><div class="tl-d">the EAT lesson: sustained, regular intake is what carries the benefit.</div></div>
+      </div>
+    </div>
+    <div class="flag good"><b>✓ Reassurance.</b> Most introductions go fine. "Small amount, fully cooked, at home, watch" exists so that, in the rare reaction, you spot it early and act — not a reason to avoid egg.</div>
+  </section>
+
+  <!-- ───────── CONTEXT ───────── -->
+  <section class="panel" id="p-ctx"><h2>Indian &amp; cultural context</h2>
+    <div class="card">
+      <p style="margin:0">Egg is a <b>common, affordable, culturally accepted</b> complementary food in India. It appears in the <b>IAP</b> (Indian Academy of Pediatrics) complementary-feeding food groups as a protein-rich infant option. <span class="badge b-hi">staple status</span></p>
+    </div>
+
+    <h3>Cultural prep is already the safe form</h3>
+    <div class="card">
+      <p style="margin:0">Indian egg preparations for infants — well-mashed boiled egg, firm scrambled egg (egg bhurji cooked through, not runny), egg stirred into khichdi/porridge and cooked — are <b>already fully-cooked forms</b>, which is exactly the safe default. A cultural asset the model can affirm. The thing to <b>correct</b> is any practice of giving <b>half-boiled / soft-yolk / runny egg</b> to a baby (no Lion-mark safeguard in India).</p>
+    </div>
+
+    <h3>Hidden-egg sources (for an avoiding household)</h3>
+    <div class="card">
+      <p style="margin:0 0 6px">Once a parent is avoiding egg, the failure mode is <b>accidental exposure via an aliased or unlabelled source</b>. Watch labels for: <b>albumin/albumen, ovalbumin, ovomucoid, ovomucin, any "ovo-" prefix, ovovitellin/vitellin, livetin, lysozyme, globulin, conalbumin</b>, "egg solids," "dried/powdered egg."</p>
+      <p style="margin:0">Hidden-egg foods common in an Indian household: <b>egg-glazed / egg-washed bakery buns and pastries</b> (the shiny glaze is frequently an egg wash), cakes/biscuits/breads, mayonnaise &amp; salad dressings, custard puddings, ice cream, some kheer mixes, <b>egg noodles / hakka noodles</b>, batters, instant pancake/cake mixes, marshmallow, meringue. Lecithin (E322) is usually soy/sunflower but <b>can be egg-derived</b> — worth checking.</p>
+    </div>
+
+    <div class="flag"><b>⚑ Read the IAP citation correctly.</b> IAP listing egg among complementary-feeding food groups is a <b>nutrition</b> statement (good infant protein/iron/choline source) — <b>NOT</b> an "introduce egg early to prevent allergy" directive. Do not launder the international early-introduction-for-prevention claim onto IAP's name (the honey-brief lesson).</div>
+    <div class="flag good"><b>✓ Vegetarian note.</b> In a vegetarian or egg-avoiding household, egg is simply not introduced — a dietary choice, not a safety failure. The prevention benefit is one input, not an obligation; the brief should not push egg on a family that doesn't eat it.</div>
+  </section>
+
+  <!-- ───────── SOURCES & CONFIDENCE ───────── -->
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo (not before 4)</th><th class="c">Fully-cook / cooked-state</th><th class="c">Early intro reduces allergy</th></tr>
+      <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c yes">✓ (runny only if Lion-mark)</td><td class="c yes">✓</td></tr>
+      <tr><td>ASCIA (Australasia, 2026)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>US NIAID (2017)</td><td class="c yes">✓</td><td class="c dash">—</td><td class="c yes">✓</td></tr>
+      <tr><td>PETIT (Lancet 2017)</td><td class="c yes">✓ (6–12mo)</td><td class="c yes">✓ (heated egg)</td><td class="c yes">✓ 38%→8%</td></tr>
+      <tr><td>EAT (NEJM 2016)</td><td class="c yes">✓</td><td class="c dash">—</td><td class="c yes">✓ per-protocol 5.5%→1.4%</td></tr>
+      <tr><td>IAP (India)</td><td class="c dash">— (nutrition food-group only)</td><td class="c dash">—</td><td class="c no">✗ no prevention directive</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">The early-intro-prevents-allergy evidence is <b>international + RCT-backed</b> (AAP/NHS/ASCIA/NIAID/PETIT/EAT). IAP's egg listing is a nutrition framing only — do <b>not</b> attribute a prevention directive to any Indian body.</p>
+    </div>
+
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>NEJM — Perkin/Lack, EAT trial (2016)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1514210">nejm.org/…/NEJMoa1514210</a></td></tr>
+      <tr><td>PubMed — EAT trial (PMID 26943128)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+      <tr><td>The Lancet — Natsume et al., PETIT trial (2017)</td><td><a href="https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(16)31418-0/abstract">thelancet.com/…/PETIT</a></td></tr>
+      <tr><td>PubMed — PETIT trial (PMID 27939035)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/27939035/">pubmed.ncbi.nlm.nih.gov/27939035</a></td></tr>
+      <tr><td>NIAID — Addendum Guidelines (~6mo / not-before-4)</td><td><a href="https://www.niaid.nih.gov/sites/default/files/addendum-peanut-allergy-prevention-guidelines.pdf">niaid.nih.gov/…/prevention</a></td></tr>
+      <tr><td>AAP / HealthyChildren — when to introduce egg &amp; allergens</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+      <tr><td>UK NHS — Food allergies in babies &amp; young children</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+      <tr><td>UK NHS — Foods to avoid (runny egg / British Lion mark)</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk/baby/…/foods-to-avoid</a></td></tr>
+      <tr><td>ASCIA — Infant Feeding for Food Allergy Prevention</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+      <tr><td>ASCIA — Updated infant-feeding guideline (Jan 2026)</td><td><a href="https://www.allergy.org.au/about-ascia/info-updates/updated-ascia-guideline-infant-feeding-for-food-allergy-prevention-published-january-2026">allergy.org.au/…/2026-update</a></td></tr>
+      <tr><td>ASCIA — First Aid for Anaphylaxis</td><td><a href="https://www.allergy.org.au/hp/anaphylaxis/first-aid-for-anaphylaxis">allergy.org.au/…/first-aid</a></td></tr>
+      <tr><td>FARE — Egg allergy (common allergens)</td><td><a href="https://www.foodallergy.org/living-food-allergy/food-allergy-essentials/common-allergens/egg">foodallergy.org/…/egg</a></td></tr>
+      <tr><td>FAACT — Egg allergen</td><td><a href="https://www.foodallergyawareness.org/food-allergy-and-anaphylaxis/food-allergens/egg/">foodallergyawareness.org/…/egg</a></td></tr>
+      <tr><td>IAP — Complementary Feeding (Ch-040; egg in food groups)</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org/…/Ch-040</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> <b>(1) No India early-egg-for-prevention directive exists</b> — IAP Ch-040 lists egg as a nutrition food-group, not an allergy-prevention recommendation; the prevention base is international (verified). Do not attribute it to IAP/MoHFW/FSSAI. <b>(2) Source-tier flag</b> — FARE/FAACT are advocacy/patient-education bodies, cited for the alias list, hidden-egg sources, mild-vs-severe symptoms, and the commonly-outgrown framing (all mainstream/corroborated), not regulator-verbatim. Trial claims rest on PETIT/EAT (primary, PubMed-verified); cooked-state &amp; timing on NHS/AAP/ASCIA. <b>(3) 112/108</b> are operational emergency numbers, not allergy-guideline-issued; ASCIA's first-aid content (lay flat, adrenaline first, then call) is the cited clinical procedure.</div>
+  </section>
+
+  <!-- ───────── DATA STUB ───────── -->
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['egg']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of egg's record in <code>food-effects.manifest.js</code>. Sits alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. <code>foodClass:'allergen-introduce-early'</code> drives the sage encourage-banner; the form gate is <b>cooked-state</b>, not particle-size. <b>Not yet wired.</b></p>
+<pre>{
+  food:          'egg',
+  aliases:       ['eggs','anda','egg yolk','whole egg','boiled egg','hard-boiled egg','scrambled egg','omelette','omelet'],
+  foodClass:     'allergen-introduce-early',
+  severity:      'caution',
+  category:      'egg',
+  effect:        'food allergy',
+  minMonth:      6,                      // AAP/NHS ~6mo (not before 4); reconcile with AGE_RULES egg-yolk:7 at wiring
+  thresholdBasis:'developmental-readiness',
+  allergen:      true,
+  reactionType:  ['allergy'],
+  headline:      'Introduce early (~6 months), well-cooked — early egg lowers allergy risk.',
+  whyGood:       'Complete protein, choline, iron, vitamin D — and early, regular well-cooked egg helps prevent egg allergy.',
+  earlyIntroBenefit: { claim:'Early, regular well-cooked egg helps prevent egg allergy.',
+                       evidence:'PETIT (Lancet 2017): heated egg + eczema care cut egg allergy 38%→8% at 12mo (P=0.0001). EAT (NEJM 2016): per-protocol 5.5%→1.4% (P=0.009).',
+                       paradigm:'Reverses old "delay egg to prevent allergy" advice.' },
+  safeForm:      { ok:['well-cooked egg — mashed hard-boiled, scrambled, or baked into soft food','start with cooked yolk; offer whole egg once yolk is tolerated'],
+                   never:['raw or runny egg','lightly-cooked egg (no British-Lion-mark assurance exists in India)'],
+                   note:'Cook until BOTH white and yolk are solid — this is the studied safe form and removes the salmonella risk.' },
+  myth:          { claim:'Delay egg to prevent allergy.',
+                   truth:'Reversed — early, regular well-cooked egg helps prevent egg allergy; delaying may increase risk.' },
+  watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting'],
+  severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+  timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+  seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector.',
+  breastfeedingSafe: true,
+  culturalNote:  'No British-Lion-mark assured-egg scheme in India — default to fully-cooked egg (solid white and yolk). Egg allergy is common in infancy but usually outgrown by school age.',
+  confidence:    'high',
+  sources:       ['Lancet PETIT 2017','NEJM EAT 2016','AAP','UK NHS','ASCIA 2026','NIAID 2017'],
+  dashboard:     'egg-infant-safety.visual.html',
+  brief:         'egg-infant-safety.md',
+  longform:      'egg-infant-safety.html',
+  lastReviewed:  '2026-06-01',
+}</pre>
+    <div class="flag good"><b>Surfacing hook:</b> an <b>encourage</b> card (sage), not honey's <b>warn</b> card (rose). Benefit banner (the RCT-earned prevention claim) → introduce-safely (<b>fully-cooked</b> form / ~⅓ egg / watch / keep-offering) → the severe-reaction strip (unconditional, never collapsed) → mild watch-fors → the "delay" myth. <code>severity:'caution'</code> drives amber chrome; rose stays reserved for acute-toxin (honey).</div>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>egg-infant-safety.md</code> / <code>.html</code> · 2026-06-01<br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<!-- ═══════ COMPONENT LIBRARY — copy a block into a panel and fill it ═══════
+<div class="bar"><span class="lab">Label</span><span class="trk"><span class="fil" style="width:73%"></span></span><span class="val">73%</span></div>
+<div class="bar hl"><span class="lab">Highlight</span><span class="trk"><span class="fil" style="width:12%"></span></span><span class="val">8.9%</span></div>
+  (bar widths are % of the track; scale all rows to the max value; ALWAYS put the real number in .val)
+
+<svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="DESCRIBE + give the number">
+  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--track)" stroke-width="15"/>
+  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--honey)" stroke-width="15"
+    stroke-dasharray="PCT_LEN REST" stroke-dashoffset="0" transform="rotate(-90 60 60)" stroke-linecap="round"/>
+  <text x="60" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="var(--honey)" font-family="Fraunces,serif">~20%</text>
+</svg>
+  (circumference for r=52 is 326.7; PCT_LEN = pct*3.267, REST = 326.7 - PCT_LEN)
+
+<div class="tl"><div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">First sign</div><div class="tl-d">detail</div></div>
+  <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Emergency</div><div class="tl-d">detail</div></div></div>
+
+<div class="therm"><div class="col safe"><div style="font-size:12px;color:var(--mid)">A</div><div class="big">safe fact</div><div>detail</div></div>
+  <div class="col danger"><div style="font-size:12px;color:var(--mid)">B</div><div class="big">danger fact</div><div>detail</div></div></div>
+
+<div class="flag good|bad"><b>label</b> text</div>   ·   <span class="badge b-hi|b-mod|b-weak">confidence</span>
+═══════════════════════════════════════════════════════════════════════ -->
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>

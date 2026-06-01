@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wheat &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ── Entrance animations — re-trigger each time a panel is shown (display:none→block
+     restarts descendant animations). All gated behind prefers-reduced-motion so the
+     dashboard is fully usable (and calm) for anyone who opts out of motion. ── */
+  @media (prefers-reduced-motion: no-preference){
+    /* bars grow from the left — scaleX keeps the inline width:% target intact */
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    /* stat tiles + timeline steps + therm cols rise in with a gentle stagger */
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    /* donut sweeps in (the partial-arc value stays exact; only the reveal animates) */
+    .panel.on svg[role="img"]{animation:sweep .8s ease both}
+    @keyframes sweep{from{opacity:0;transform:rotate(-12deg) scale(.9)}to{opacity:1;transform:none}}
+    /* flag callouts slide a touch from the left edge they're anchored to */
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)}.bar.hl .lab{color:var(--honey)}.bar.hl .val{color:var(--honey)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Wheat &amp; Infant Safety — Visual Dashboard</h1>
+  <p class="sub">Visual Care dashboard for the <b>guided-introduction</b> layer. Wheat is a <b>Tier-2 allergen</b>: introduce early and it is safe — but the defining job here is keeping <b>three look-alike concepts apart</b>: wheat allergy, celiac disease, and gluten-introduction timing.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-why">Why / Allergen</button>
+    <button class="tab" data-p="p-sym">Reaction &amp; Introduction</button>
+    <button class="tab" data-p="p-ctx">Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- ───────── SUMMARY ───────── -->
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">The one rule: <b>introduce wheat around 6 months — don't delay it</b> — as soft cereal or softened roti. It's safe to give early. But the honest limit (this is why wheat is <b>Tier-2, not Tier-1</b>): the EAT trial found early wheat did <b>NOT</b> prevent wheat allergy. And the central job — keep <b>wheat allergy ≠ celiac disease ≠ gluten-timing</b> rigorously apart.</p>
+    </div>
+
+    <div class="grid g4">
+      <div class="card stat ok"><div class="n">~6<span style="font-size:14px">mo</span></div><div class="l">Introduce around 6 months, don't delay — AAP·NHS·ASCIA·NIAID</div></div>
+      <div class="card stat"><div class="n">4–12<span style="font-size:14px">mo</span></div><div class="l">ESPGHAN gluten window (a <i>celiac</i> question) — timing doesn't change lifetime celiac incidence</div></div>
+      <div class="card stat ok"><div class="n">outgrown</div><div class="l">wheat allergy is commonly outgrown in early childhood — AAP/CHOP/Mayo/FARE</div></div>
+      <div class="card stat crit"><div class="n">3 ≠</div><div class="l">three distinct concepts under one word: allergy · celiac · gluten-timing — keep apart</div></div>
+    </div>
+
+    <h3>The four things to know <span class="badge b-hi">all high-confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Introduce early — but no prevention claim.</b> Don't delay wheat; it's safe early. EAT was null for wheat, so we never say "early wheat prevents wheat allergy." → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>2 · Three things wear the word "wheat."</b> Wheat allergy (IgE, fast) ≠ celiac (chronic autoimmune to gluten) ≠ gluten-introduction timing (a celiac-prevention question). This split is the spine. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>3 · Know mild from severe — celiac is NOT here.</b> Hives/vomiting vs breathing/floppiness (call 112/108). Celiac is chronic, not a 112 event. → <span class="jump" data-go="p-sym">Reaction &amp; Introduction</span></div>
+      <div class="card"><b>4 · The Indian alias thicket.</b> Atta, maida, suji/rava, dalia, sevai, seitan, soy sauce all = wheat — and fresh staples carry no label. Caregiver alias-knowledge is the safeguard. → <span class="jump" data-go="p-ctx">Context</span></div>
+    </div>
+
+    <h3>When to surface this (the design hook)</h3>
+    <div class="card flag good" style="margin-top:0">
+      <b>Recommendation (Maren):</b> an <b>encourage-polarity</b> card (sage, not rose) — "introduce ~6mo, don't delay" first, then the safe-form block (softened roti/cereal vs the doughy-bread choke), then a non-collapsible severe-reaction strip. The unique high-value nugget: a <b>"wheat allergy ≠ celiac"</b> clarifier the parent can't skim past, so a chronic-condition worry never rides the anaphylaxis rail. Ready-to-wire shape → <span class="jump" data-go="p-data">Data Stub</span>.
+    </div>
+    <div class="card flag" style="margin-top:0"><b>⚑ Honest-framing flag — Tier-2.</b> Early wheat is safe + don't-delay, but EAT was null: <b>no wheat-prevention claim.</b> The introduce-early posture rests on safety + the don't-delay consensus, not on a prevention RCT (which, for wheat, was null).</div>
+    <div class="card flag bad" style="margin-top:0"><b>✗ Wheat allergy ≠ celiac disease.</b> An IgE food allergy (fast, can be anaphylactic) versus a chronic autoimmune reaction to gluten (medically diagnosed, never anaphylactic). This record is about wheat <i>allergy</i>.</div>
+
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span>
+      <span class="pill">2026-06-01</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>wheat-infant-safety.md</code> · long-form HTML: <code>wheat-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+  </section>
+
+  <!-- ───────── WHY / ALLERGEN ───────── -->
+  <section class="panel" id="p-why"><h2>The three-way split — keep them apart</h2>
+    <div class="card" style="background:var(--honey-bg);border-color:transparent">
+      <p style="margin:0">Wheat is the one infant food where <b>three distinct medical concepts collide under one word.</b> Conflating them produces both needless fear and genuine error. Keep them labelled — this is the spine of the whole brief. <span class="badge b-hi">consensus</span></p>
+    </div>
+
+    <h3>Three things wear the word "wheat" <span class="badge b-hi">the centerpiece</span></h3>
+    <div class="therm">
+      <div class="col safe">
+        <div style="font-size:12px;color:var(--mid)">(1) THIS record</div>
+        <div class="big">Wheat allergy</div>
+        <div style="font-size:12.5px"><b>IgE food allergy</b> to wheat <i>proteins</i>. Fast — hives, swelling, vomiting, eczema flare, at the severe end anaphylaxis. <b>The introduce-early target.</b> Commonly <b>outgrown</b> by early childhood.</div>
+      </div>
+      <div class="col danger">
+        <div style="font-size:12px;color:var(--mid)">(2) NOT an allergy</div>
+        <div class="big">Celiac disease</div>
+        <div style="font-size:12.5px">Chronic <b>autoimmune</b> reaction to <i>gluten</i> (wheat/barley/rye). <b>NOT anaphylactic, NOT an emergency.</b> Chronic — poor growth, chronic GI, failure to thrive. Needs <b>medical diagnosis</b> (serology + specialist).</div>
+      </div>
+      <div class="col" style="background:var(--mod-bg)">
+        <div style="font-size:12px;color:var(--mid)">(3) A celiac question</div>
+        <div class="big" style="color:var(--mod)">Gluten-timing</div>
+        <div style="font-size:12.5px"><i>When</i> to introduce gluten — debated in the <b>celiac</b> literature, separate from allergy. ESPGHAN: anytime <b>4–12 months</b>; timing shifts <i>when</i> celiac presents, not <i>whether</i>.</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">All chart values in text: (1) wheat allergy = IgE, fast, outgrown, the introduce-early target. (2) celiac = chronic autoimmune to gluten, not anaphylactic, not an emergency, medically diagnosed. (3) gluten-timing = ESPGHAN's 4–12-month celiac-prevention question.</p>
+    <div class="flag"><b>⚑ Why wheat sits in both conversations.</b> Wheat contains gluten, so it's simultaneously an <i>allergen</i> (wheat protein → IgE allergy) and the <i>vehicle for gluten</i> (→ celiac). A parent hearing "introduce wheat early" and "be careful about gluten timing" is hearing two different bodies answering two different questions. <b>Answer each in its own lane; never let one borrow the other's authority.</b></div>
+
+    <h2>Axis 1 — Introduce ~6 months, don't delay</h2>
+    <div class="card">
+      <p style="margin:0 0 6px">Wheat is named among the common infant allergens and handled like the others: offer early, don't delay, keep it in the diet. The NHS explicitly lists <b>"foods containing gluten, including wheat, barley and rye"</b> among the allergenic foods to introduce from around 6 months, one at a time. Delaying allergens does not prevent allergy. <span class="badge b-hi">AAP·NHS·ASCIA·NIAID</span></p>
+    </div>
+
+    <h3>The honest limit — EAT found NO wheat benefit <span class="badge b-hi">NEJM 2016, verified</span></h3>
+    <div class="card">
+      <p style="margin:0 0 8px">The EAT trial (Perkin/Lack, NEJM 2016) randomised general-population breastfed infants to early introduction of six allergens (incl. wheat) vs standard. Its abstract states, verbatim:</p>
+      <div class="flag" style="background:var(--card);border-left-color:var(--honey)"><i>"…there were no significant effects with respect to milk, sesame, fish, or wheat."</i> <span class="badge b-hi">PubMed 26943128</span></div>
+      <p style="margin:8px 0 0">The trial's prevention benefit was confined to <b>peanut and egg</b> (and only in the per-protocol, dose-achieving analysis). <b>Early wheat was safe but did not prevent wheat allergy.</b></p>
+      <div class="flag bad"><b>⚑ Tier-2, not Tier-1.</b> Say "introduce wheat early — it's safe, don't delay" <b>without</b> saying "early wheat prevents wheat allergy." That second claim is unproven and EAT is the direct evidence against it. The introduce-early posture stands on safety + the don't-delay consensus, <b>not</b> on a proven prevention RCT the way peanut stands on LEAP.</div>
+    </div>
+
+    <h3>The gluten-timing lane — ESPGHAN 2016 (a celiac document) <span class="badge b-hi">PubMed 26815017</span></h3>
+    <div class="card">
+      <ul style="margin:0;padding-left:20px">
+        <li><b>"Gluten may be introduced into the infant's diet anytime between 4 and 12 completed months of age."</b></li>
+        <li>Age of introduction <b>does not change lifetime celiac incidence</b> — earlier vs later only shifts <i>when</i> celiac presents, not whether it occurs.</li>
+        <li><b>Breastfeeding reversal:</b> neither breastfeeding nor breastfeeding at the time of gluten introduction reduces celiac risk — explicitly <i>reversing</i> the 2008 advice.</li>
+        <li><b>"Consumption of large quantities of gluten should be avoided during the first weeks after gluten introduction and during infancy."</b></li>
+      </ul>
+      <div class="flag good"><b>✓ Practical reconciliation at ~6 months.</b> Both lanes agree wheat/gluten can begin around 6 months — the allergy lane says "introduce early, don't delay," and the celiac lane (ESPGHAN) says "anytime 4–12 months, avoid large quantities early." Compatible: introduce wheat around 6 months in ordinary food-sized amounts, not in a gluten-loading binge.</div>
+    </div>
+  </section>
+
+  <!-- ───────── REACTION & INTRODUCTION ───────── -->
+  <section class="panel" id="p-sym"><h2>Reaction &amp; introduction — know mild from severe</h2>
+    <div class="grid g2">
+      <div class="card flag" style="margin:0"><b>Mild–moderate IgE reaction (one body system).</b> Itchy hives/welts, redness or rash, swelling (especially mouth/eyes), vomiting, GI upset/loose stool, eczema flare, sudden fussiness. → stop the food, monitor closely, contact your doctor; a clinician may advise an antihistamine.</div>
+      <div class="card flag bad" style="margin:0"><b>Severe / anaphylaxis — act immediately.</b> Difficulty breathing, wheeze/persistent cough/noisy breathing, swelling of throat/tongue/lips/face, hoarse cry, pale/floppy/lethargic or unusually sleepy, collapse. → use a prescribed adrenaline auto-injector and call emergency services (<b>112 / 108</b> in India).</div>
+    </div>
+    <div class="card">
+      <p style="margin:0;font-size:13px;color:var(--mid)">In a baby, sudden behaviour change (limp, can't hold head up) is a recognised severe sign. <b>Two or more body systems involved = treat as anaphylaxis.</b> Reactions appear minutes to ~2 hours after eating; anaphylaxis often within 5–30 min.</p>
+    </div>
+    <div class="card flag bad" style="margin-top:0"><b>⚑ Celiac is explicitly NOT here.</b> Celiac disease is <b>chronic</b>, not acute — it does not cause anaphylaxis and is <b>not</b> a 112/108 event. It presents over weeks/months (poor growth, chronic GI) and needs <b>medical diagnosis</b>, not emergency response. Don't let celiac symptoms ride the allergy-emergency rail, and don't let a parent worried about celiac think they're watching for anaphylaxis.</div>
+    <div class="card flag" style="margin-top:0"><b>⚑ Aside — WDEIA</b> (wheat-dependent exercise-induced anaphylaxis) is an <b>adult/adolescent</b> phenomenon, <b>not relevant to infants</b>. Mentioned only so it isn't mistaken for an infant wheat-allergy pattern. Do not surface in infant copy except to rule out.</div>
+
+    <h2>Safe FORM — softened roti/cereal vs the choke</h2>
+    <div class="therm">
+      <div class="col safe">
+        <div style="font-size:12px;color:var(--mid)">Soft, infant-friendly (SAFE)</div>
+        <div class="big">good first forms</div>
+        <div style="font-size:12.5px">Soft wheat/multigrain cereal (thin porridge); well-cooked soft pasta; <b>softened roti/chapati</b> torn small &amp; soaked in milk/dal/sabzi; suji (sooji/rava) / dalia cooked soft to a smooth mash.</div>
+      </div>
+      <div class="col danger">
+        <div style="font-size:12px;color:var(--mid)">Two wheat choke-traps (CHOKING)</div>
+        <div class="big">toast it / bind it</div>
+        <div style="font-size:12.5px"><b>Fresh soft bread balls up</b> into a sticky clump → <b>toast it</b> or use firm strips. <b>Loose cooked wheat/dalia/suji scatters</b> → cook soft and <b>mash or bind</b> (porridge, with milk/dal) so it holds together.</div>
+      </div>
+    </div>
+    <div class="flag good"><b>✓ Form addresses choking, not allergy.</b> Same principle as nuts — cooking/softening does <b>not</b> remove the allergy hazard or the celiac relevance. A baby with wheat-protein allergy reacts to soft well-cooked roti just as to bread. Form is the choking lane only. <span class="badge b-mod">forms partly secondary, flagged</span></div>
+
+    <h3>First-exposure timeline</h3>
+    <div class="card">
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Offer a soft form, one allergen at a time</div><div class="tl-d">Soft cereal/porridge or softened roti — in ordinary food-sized amounts (not a gluten-loading binge).</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Watch ~2 hours</div><div class="tl-d">Reactions appear minutes to ~2 hours after eating; anaphylaxis often within 5–30 minutes.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">If severe signs — emergency</div><div class="tl-d">Breathing trouble, face/throat swelling, floppiness, or two body systems → adrenaline + 112/108.</div></div>
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">If tolerated — keep wheat in the diet</div><div class="tl-d">Wheat is an everyday Indian staple; ongoing offering is culturally trivial. Allergy commonly outgrown in early childhood.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── CONTEXT ───────── -->
+  <section class="panel" id="p-ctx"><h2>Context — the Indian alias thicket</h2>
+    <div class="card">
+      <p style="margin:0">Wheat is already in the diet daily — roti, dalia, suji, sevai — so introduction is culturally <b>trivial</b>: softened roti/chapati, soft cooked suji/dalia, well-cooked pasta are near-ideal forms. The trap is the <b>alias thicket</b>: many names <i>are</i> wheat, and fresh Indian staples carry <b>no allergen label</b> — so caregiver alias-knowledge is the safeguard, not the package. <span class="badge b-hi">alias list: High</span></p>
+    </div>
+
+    <h3>Wheat hides under many names</h3>
+    <div class="grid g2">
+      <div class="card"><b>Core flours &amp; forms</b><ul style="margin:6px 0;padding-left:20px"><li>atta (wholewheat), maida (refined)</li><li>semolina / suji / sooji / rava</li><li>broken wheat / dalia; sevai / vermicelli</li><li>durum, farina, couscous, bulgur</li><li><b>seitan (= wheat gluten)</b>; <b>soy sauce (typically contains wheat)</b></li></ul></div>
+      <div class="card"><b>Indian staples that ARE wheat</b><ul style="margin:6px 0;padding-left:20px"><li>roti, chapati, paratha, naan, <b>pav</b></li><li>upma (suji), halwa (suji/atta)</li><li>samosa &amp; pakora batter/wrapper</li><li>rusks and biscuits; sevai/vermicelli dishes</li></ul></div>
+    </div>
+    <div class="card"><b>Related wheat grains (often missed):</b> spelt, kamut, einkorn, emmer, farro, triticale — all contain wheat/gluten and are not "wheat-free." <span class="badge b-hi">FARE/FAACT</span></div>
+
+    <h3>Label-regime divergence</h3>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Region</th><th>How wheat is declared</th></tr>
+      <tr><td>US</td><td>declares the allergen as <b>"wheat"</b> plainly</td></tr>
+      <tr><td>EU / UK</td><td><b>"cereals containing gluten"</b> (a label may say "gluten", not "wheat")</td></tr>
+      <tr><td>India (FSSAI)</td><td>gluten-cereal declaration on <b>packaged</b> food — but <b>fresh, unpackaged staples</b> (roti, chakki dalia, restaurant/street food) carry <b>no allergen label at all</b></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Consequence.</b> In the Indian context the package label is the <i>weakest</i> safeguard, because so much wheat intake is fresh and unlabeled. Lean on <b>caregiver alias-knowledge</b> (knowing suji, maida, dalia, sevai, seitan, soy sauce all = wheat) rather than on label-reading. <span class="badge b-mod">FSSAI specifics flagged — needs primary confirmation</span></div>
+
+    <h3>Myths to correct</h3>
+    <div class="card flag bad" style="margin-top:0"><b>Myth: "Delay wheat to prevent allergy."</b> No — delaying does not prevent allergy; introduce around 6 months and don't hold it back. (Honest companion truth: early wheat also wasn't <i>shown</i> to prevent allergy — EAT was null — so the line is "introduce early because it's safe and delaying has no benefit," not "to prevent allergy.")</div>
+    <div class="card flag bad" style="margin-top:0"><b>Myth: "Wheat allergy and gluten intolerance / celiac are the same."</b> They are NOT. Fast IgE reaction to wheat protein vs chronic autoimmune reaction to gluten, diagnosed medically and never anaphylactic. Conflating causes false alarms <i>and</i> false reassurance.</div>
+    <div class="card flag bad" style="margin-top:0"><b>Myth: "You must introduce gluten <i>while breastfeeding</i> to prevent celiac."</b> Withdrawn. ESPGHAN 2016 reversed this; the old 2008 advice no longer stands. High-value to surface because it's <i>stale official advice</i>, not folklore — name the reversal explicitly.</div>
+  </section>
+
+  <!-- ───────── SOURCES & CONFIDENCE ───────── -->
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo / don't delay</th><th class="c">Early wheat <i>prevents</i> wheat allergy</th></tr>
+      <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>UK NHS (lists gluten: wheat, barley, rye)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>ASCIA (Australasia)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>US NIAID (2017)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>EAT trial (NEJM 2016)</td><td class="c dash">— (tested it)</td><td class="c no">✗ NULL for wheat</td></tr>
+      <tr><td>ESPGHAN 2016 <i>(celiac/gluten lane)</i></td><td class="c dash">— gluten 4–12mo</td><td class="c dash">— (celiac doc, not allergy)</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">Every body supports introduce-early / don't-delay; <b>no body claims early wheat prevents wheat allergy</b>, and EAT is the direct null evidence. ESPGHAN belongs only in the celiac/gluten-timing lane (4–12-month window), never as allergy-prevention evidence.</p>
+    </div>
+
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>NEJM/PubMed — EAT trial (2016) "no significant effects… milk, sesame, fish, or wheat"</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+      <tr><td>ESPGHAN 2016 — gluten introduction position paper <i>(celiac document)</i></td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26815017/">pubmed.ncbi.nlm.nih.gov/26815017</a></td></tr>
+      <tr><td>AAP / HealthyChildren — introduce wheat (allergy commonly outgrown)</td><td><a href="https://www.healthychildren.org/English/tips-tools/ask-the-pediatrician/Pages/When-should-I-introduce-wheat-into-my-babys-diet.aspx">healthychildren.org/…/wheat</a></td></tr>
+      <tr><td>NIAID (2017) — early allergen introduction addendum</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5226648/">pmc.ncbi.nlm.nih.gov/…/PMC5226648</a></td></tr>
+      <tr><td>UK NHS — food allergies in babies (lists gluten: wheat, barley, rye)</td><td><a href="https://www.nhs.uk/conditions/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/…/food-allergies</a></td></tr>
+      <tr><td>ASCIA — infant feeding &amp; allergy prevention</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+      <tr><td>WHO — complementary feeding 6–23 months</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov/books/NBK596423</a></td></tr>
+      <tr><td>Solid Starts — Wheat</td><td><a href="https://solidstarts.com/foods/wheat/">solidstarts.com/foods/wheat</a></td></tr>
+      <tr><td>Solid Starts — Bread (toast vs soft-bread choking)</td><td><a href="https://solidstarts.com/foods/bread/">solidstarts.com/foods/bread</a></td></tr>
+      <tr><td>CHOP — Wheat allergy</td><td><a href="https://www.chop.edu/conditions-diseases/wheat-allergy">chop.edu/…/wheat-allergy</a></td></tr>
+      <tr><td>Mayo Clinic — Wheat allergy</td><td><a href="https://www.mayoclinic.org/diseases-conditions/wheat-allergy/symptoms-causes/syc-20378897">mayoclinic.org/…/wheat-allergy</a></td></tr>
+      <tr><td>FARE — Wheat (aliases)</td><td><a href="https://www.foodallergy.org/living-food-allergies/food-allergy-essentials/common-allergens/wheat">foodallergy.org/…/wheat</a></td></tr>
+      <tr><td>FAACT — Wheat (aliases)</td><td><a href="https://www.foodallergyawareness.org/food-allergy-and-anaphylaxis/food-allergens/wheat/">foodallergyawareness.org/…/wheat</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> <b>(1)</b> EAT wheat-null and ESPGHAN's gluten window are verified verbatim from PubMed; <b>(2)</b> choking-form cautions (soft-bread clump, loose-grain scatter) and softened-roti/suji/dalia forms rest on secondary sources (Solid Starts, culturally derived), flagged; <b>(3)</b> the FSSAI label-regime claim needs primary-FSSAI confirmation before any verbatim citation; <b>(4)</b> <b>no India-specific (IAP/MoHFW) early-allergen or wheat directive was located</b> — the "introduce ~6mo, don't delay" posture is borrowed from AAP/NHS/ASCIA/NIAID, never to be laundered onto an Indian body; <b>(5)</b> hard line — <b>no overclaim:</b> early wheat must never be said to <i>prevent</i> wheat allergy.</div>
+  </section>
+
+  <!-- ───────── DATA STUB ───────── -->
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['wheat']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of this food's record in <code>food-effects.manifest.js</code>. Sits alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. The <code>myth</code> field carries the allergy-vs-celiac clarifier; <code>earlyIntroBenefit</code> is framed honestly (EAT null). <b>Not yet wired.</b></p>
+<pre>{
+  food:          'wheat',
+  aliases:       ['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','bread','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
+  foodClass:     'allergen-introduce-early',
+  severity:      'caution',
+  category:      'grain',
+  effect:        'food allergy (distinct from celiac disease)',
+  minMonth:      6,
+  thresholdBasis:'developmental-readiness',
+  allergen:      true,
+  reactionType:  ['allergy'],
+  headline:      'Introduce around 6 months — don\'t delay. Soft cereal or softened roti.',
+  whyGood:       'Staple grain — soft wheat cereal, well-cooked pasta, or softened roti; introduce early alongside other solids.',
+  earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                       evidence:'AAP/NHS/ASCIA advise early introduction; EAT (NEJM 2016) verified NO significant prevention effect for wheat — early intro is SAFE but does NOT prevent wheat allergy.',
+                       paradigm:'Don\'t delay — but no proven wheat-specific prevention claim.' },
+  safeForm:      { ok:['soft wheat / multigrain cereal or porridge','well-cooked soft pasta','roti / chapati torn small and softened in milk, dal, or sabzi','suji / dalia cooked soft'],
+                   never:['large or doughy bread pieces (fresh soft bread balls up into a sticky clump — toast it or use firm strips)','loose cooked wheat / dalia that scatters in the mouth (mash or bind it)'],
+                   note:'Wheat ALLERGY is separate from celiac disease — see myth.' },
+  myth:          { claim:'Wheat allergy and gluten intolerance / celiac disease are the same.',
+                   truth:'Different conditions — wheat allergy is an immune (IgE) food allergy with rapid reactions; celiac is a separate autoimmune reaction to gluten needing medical diagnosis, not emergency care. This record is about wheat allergy.' },
+  watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting or diarrhoea','eczema flare'],
+  severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+  timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+  seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector. (Celiac is NOT an emergency — chronic; needs a doctor\'s diagnosis.)',
+  breastfeedingSafe: true,
+  culturalNote:  'Atta, maida, suji/rava, dalia, sevai are all wheat. Soft cereal and softened roti are ideal early forms. Wheat allergy is commonly outgrown in early childhood.',
+  confidence:    'high',
+  sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','NEJM EAT 2016','ESPGHAN 2016 (celiac/gluten)'],
+  dashboard:     'wheat-infant-safety.visual.html',
+  brief:         'wheat-infant-safety.md',
+  longform:      'wheat-infant-safety.html',
+  lastReviewed:  '2026-06-01',
+}</pre>
+    <div class="flag good"><b>Surfacing hook:</b> an <b>encourage</b> card (sage, severity:'caution'), not a rose acute-toxin warn. Introduce-early banner → safe-form (softened roti/cereal vs doughy-bread choke) → the unconditional severe-reaction strip → the <b>myth</b> clarifier (wheat allergy ≠ celiac) so a chronic-condition worry never rides the anaphylaxis rail.</div>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>wheat-infant-safety.md</code> / <code>.html</code> · 2026-06-01<br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>
