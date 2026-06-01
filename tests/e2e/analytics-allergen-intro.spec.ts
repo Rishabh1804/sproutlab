@@ -100,13 +100,14 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
       });
       return out;
     });
-    // peanut/tree-nut/egg now all carry a long FOOD_EFFECTS note → must NOT dump
-    // it on the glance; the length-gate points them to the tap-through (Phase δ
-    // gave egg a record, so it joins peanut/tree-nut here).
-    expect(metas['peanut'], 'long note points to tap-through, not wrapped inline').toBe('In a safe form — tap for how');
-    expect(metas['tree nut']).toBe('In a safe form — tap for how');
-    expect(metas['egg'], 'egg now has a FOOD_EFFECTS record → also points to tap-through').toBe('In a safe form — tap for how');
-    // no ready meta should exceed the one-line budget
+    // Phase δ: each introduce-early allergen now carries a crisp authored
+    // safeForm.glance (≤44) — a specific row cue, not the generic pointer
+    // (Vela V-V-208-3). The full note still rides the tap-through.
+    expect(metas['peanut'], 'peanut shows its specific glance cue').toMatch(/ground or smooth/i);
+    expect(metas['tree nut']).toMatch(/ground or smooth/i);
+    expect(metas['egg'], 'egg specific floor restored to the glance').toMatch(/yolk/i);
+    expect(metas['soy']).toMatch(/tofu/i);
+    // no ready meta should exceed the one-line budget (the wrap guarantee holds)
     Object.values(metas).forEach((m) => expect(m.length).toBeLessThanOrEqual(44));
   });
 

@@ -16611,7 +16611,10 @@ const AGE_RULES = {
                 reason:'Fine from around 6 months — soft tofu or well-mashed soya. Whole edamame is a choking risk; mash it.' },
   'wheat':    { minMonth:6, aliases:['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
                 reason:'Fine from around 6 months — soft cereal or softened roti. Wheat allergy is separate from celiac disease.' },
-  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','halva','halwa','gajak','til laddoo'],
+  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','gajak','til laddoo'],
+                // 'halva'/'halwa' deliberately NOT aliases — they collide with carrot/banana/
+                // ragi/suji halwa (Kael B-1); til-halwa is covered by 'til'. Suji halwa still
+                // resolves to wheat via 'suji', correctly.
                 reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
 };
 
@@ -16655,6 +16658,7 @@ const FOOD_EFFECTS = {
       paradigm: 'This reverses the old "delay nuts to avoid allergy" advice.',
     },
     safeForm: {
+      glance:   'Ground or smooth — never whole',   // ≤44-char card-glance cue (Vela V-V-208-3)
       ok:       ['smooth peanut butter thinned with milk, water, or puree', 'finely ground peanut or peanut flour stirred into food'],
       never:    ['whole peanuts', 'chopped peanuts', 'a thick glob of nut butter'],
       chokingUntilYears: 5,
@@ -16687,6 +16691,7 @@ const FOOD_EFFECTS = {
       paradigm: 'This reverses the old "delay nuts to avoid allergy" advice.',
     },
     safeForm: {
+      glance:   'Ground or smooth paste — never whole',
       ok:       ['finely ground nuts or nut powder stirred into food', 'smooth nut butter or paste thinned', 'traditional soaked, peeled, ground almond (badam) paste'],
       never:    ['whole nuts', 'chopped nuts', 'a thick glob of nut butter'],
       chokingUntilYears: 5,
@@ -16728,6 +16733,7 @@ const FOOD_EFFECTS = {
       paradigm: 'This reverses the old "delay egg to avoid allergy" advice.',
     },
     safeForm: {
+      glance:   'Well-cooked; yolk first',
       ok:       ['well-cooked egg — mashed hard-boiled or scrambled', 'cooked yolk first, then whole egg once that is tolerated', 'egg baked into soft food'],
       never:    ['raw or runny egg', 'lightly-cooked egg (no assured-egg scheme exists in India)'],
       note:     'Cook until both white and yolk are solid — this is the studied safe form and avoids the salmonella risk. Raw or runny egg is not safe for a baby.',
@@ -16759,6 +16765,7 @@ const FOOD_EFFECTS = {
       paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
     },
     safeForm: {
+      glance:   'Soft tofu — not whole edamame',
       ok:       ['soft or silken tofu, smushable or blended', 'well-cooked soybeans, mashed', 'soy yoghurt, or soya stirred into food'],
       never:    ['whole edamame or whole soybeans (round and firm — a choking risk)', 'soy milk as a main drink in the first year'],
       note:     'Soft tofu needs no special prep. Shell and mash edamame; soy milk is not a substitute for breastmilk or formula.',
@@ -16770,7 +16777,7 @@ const FOOD_EFFECTS = {
       thenWhat: 'if it goes well, keep offering as part of the normal diet',
       oneAtATime: true,
     },
-    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting or diarrhoea'],
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting or diarrhoea', 'forceful or repeated vomiting a few hours after eating, not just right away (possible FPIES)'],
     severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy', 'repeated forceful vomiting with paleness or floppiness a few hours later (possible FPIES)'],
     seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away. Repeated forceful vomiting with paleness or floppiness a few hours after soy (possible FPIES): seek urgent care even without a rash.',
     confidence: 'high',
@@ -16789,6 +16796,7 @@ const FOOD_EFFECTS = {
       paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
     },
     safeForm: {
+      glance:   'Soft cereal or softened roti',
       ok:       ['soft wheat or multigrain cereal or porridge', 'well-cooked soft pasta', 'roti or chapati torn small and softened in milk, dal, or sabzi'],
       never:    ['large or doughy pieces of fresh bread (they ball up into a sticky clump — toast it or use firm strips)', 'loose dry cooked wheat or dalia that scatters in the mouth (mash or bind it)'],
       note:     'Wheat allergy is not the same as celiac disease — this is about the allergy.',
@@ -16808,7 +16816,7 @@ const FOOD_EFFECTS = {
   'sesame': {
     foodClass:  'allergen-introduce-early',
     severity:   'caution',
-    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'halva', 'halwa', 'gajak', 'til laddoo'],
+    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'gajak', 'til laddoo'],  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
     effect:     'food allergy (often lifelong)',
     title:      'Sesame — introduce early, as thinned tahini',
     why:        'Around 6 months, sesame is good to introduce — best as smooth tahini (sesame paste) thinned into food, not whole seeds or a thick glob. There is no reason to delay it. Sesame allergy tends to be lifelong, so watch the first tastes closely and keep an eye out as you continue.',
@@ -16819,6 +16827,7 @@ const FOOD_EFFECTS = {
       paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
     },
     safeForm: {
+      glance:   'Thinned tahini — not whole seeds',
       ok:       ['smooth tahini (sesame paste) thinned with water, milk, or puree', 'finely ground sesame stirred into food'],
       never:    ['a thick glob of tahini (sticky — a choking risk; thin it like nut butter)', 'whole sesame seeds in quantity for a young baby'],
       chokingUntilYears: 4,
@@ -69661,10 +69670,11 @@ var AI_ALLERGEN_SET = [
 //   returns FOOD_EFFECTS records by reference (module-level singletons) — every
 //   getFoodEffect("almond")/("tree nut") yields the identical object. A future
 //   refactor that clones records would silently break this; keep it by-ref.
-//   LIMITATION (spec §6/§9): culinary synonyms with no alias table — "tofu"→soy,
-//   "roti"→wheat, "scrambled egg"→egg — do not resolve on EITHER reader (the app
-//   has no such alias data anywhere). Both readers agree on the miss, so the card
-//   stays internally consistent; closing the gap is a data.js alias-table task.
+//   Culinary synonyms RESOLVE as of food-effects-v2 Phase δ — the egg/soy/wheat/
+//   sesame FOOD_EFFECTS records carry culinary-rich aliases (tofu→soy, roti→wheat,
+//   til→sesame, anda→egg), so getFoodEffect now matches them on both readers.
+//   (Residual: a few unauthored synonyms still miss; both readers agree on any miss,
+//   so the card stays internally consistent.)
 function _aiFoodMatches(foodName, canonEff, base) {
   if (!foodName) return false;
   var fn = String(foodName).toLowerCase().trim();
@@ -69733,12 +69743,13 @@ function _aiComputeAllergenIntro() {
     // safe-form note: FOOD_EFFECTS note (peanut/tree-nut) preferred; else the
     // allergen's own AGE_RULES `reason` (egg's "cook well, yolk first" floor) —
     // never the generic "in a safe form" where a real per-food floor exists (Maren M-1).
-    // The `reason` is a full age-gate sentence-pair; surface only its first
-    // sentence on the one-line glance so it doesn't wrap (the full floor rides
-    // the tap-through detail sheet). Phase δ will replace this with a crisp
-    // FOOD_EFFECTS `safeForm.note` authored for the row.
+    // Prefer the crisp authored `safeForm.glance` (≤44, Phase δ / Vela V-V-208-3) —
+    // the per-food row cue; fall back to the full `note` (the length-gate routes it
+    // to the tap-through), then to the AGE_RULES reason's first sentence.
     var reasonShort = (ageRule && ageRule.reason) ? String(ageRule.reason).split('. ')[0] : null;
-    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : reasonShort;
+    var safeForm = (eff && eff.safeForm && eff.safeForm.glance) ? eff.safeForm.glance
+                 : (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note
+                 : reasonShort;
     return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
              tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
              exposureDays: exposureDays, state: state, safeForm: safeForm };
