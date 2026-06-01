@@ -253,6 +253,209 @@ function _cdBarHtml(label, value, maxVal, suffix, color, rawLabel) {
 }
 
 // ════════════════════════════════════════
+// Allergen Introduction (analysis prototype)
+// ════════════════════════════════════════
+// The analysis layer ON TOP of the food-effects-v2 resolver spine: tracks the
+// high-priority "introduce-early" allergens and where Ziva is with each —
+// ready to try / watching the 3-day window / tolerated / reaction noted —
+// sourced from the SAME getFoodEffect + _lookupByFoodName resolver the
+// consequence surfaces use (so a logged "almond"/"cashew" correctly counts as
+// tree-nut introduced), the tried-state in `foods`, and AGE_RULES. Encourage
+// polarity — this is the guided-introduction journey, not an alarm. No
+// hardcoded safety claim: every per-food fact resolves from the data tables;
+// where a food has no FOOD_EFFECTS/AGE_RULES record we fall back to the general
+// ~6-month solids/allergen window rather than inventing a per-food rule.
+
+var AI_ALLERGEN_SET = [
+  { key: 'peanut',   label: 'Peanut' },
+  { key: 'tree nut', label: 'Tree nuts' },
+  { key: 'egg',      label: 'Egg' },
+  { key: 'sesame',   label: 'Sesame' },
+  { key: 'soy',      label: 'Soy' },
+  { key: 'wheat',    label: 'Wheat' }
+];
+
+// The SINGLE resolution spine both food-readers (`_aiFoodRecordFor` tried-state
+// and `_aiExposureDays` meal-log) run every token through — so the two sources
+// can never disagree about what counts as "tree nut" (Kael B-1). Resolution
+// order: (1) FOOD_EFFECTS identity on the raw token, (2) FOOD_EFFECTS identity
+// on the base name (catches form-prefixed tokens like "raw peanut"), (3) base-
+// name string match for allergens with NO FOOD_EFFECTS record (egg/soy/wheat/
+// sesame).
+//   `=== canonEff` is load-bearing and correct ONLY because `_lookupByFoodName`
+//   returns FOOD_EFFECTS records by reference (module-level singletons) — every
+//   getFoodEffect("almond")/("tree nut") yields the identical object. A future
+//   refactor that clones records would silently break this; keep it by-ref.
+//   LIMITATION (spec §6/§9): culinary synonyms with no alias table — "tofu"→soy,
+//   "roti"→wheat, "scrambled egg"→egg — do not resolve on EITHER reader (the app
+//   has no such alias data anywhere). Both readers agree on the miss, so the card
+//   stays internally consistent; closing the gap is a data.js alias-table task.
+function _aiFoodMatches(foodName, canonEff, base) {
+  if (!foodName) return false;
+  var fn = String(foodName).toLowerCase().trim();
+  if (canonEff && typeof getFoodEffect === 'function') {
+    if (getFoodEffect(fn) === canonEff) return true;
+    if (typeof _baseFoodName === 'function' && getFoodEffect(_baseFoodName(fn)) === canonEff) return true;
+  }
+  return (typeof _baseFoodName === 'function') && _baseFoodName(fn) === base;
+}
+
+// Earliest tried `foods` entry mapping to this allergen, via the shared matcher.
+function _aiFoodRecordFor(canonEff, base) {
+  if (typeof foods === 'undefined' || !Array.isArray(foods)) return null;
+  var match = null;
+  foods.forEach(function(f) {
+    if (!f || !f.name || !_aiFoodMatches(f.name, canonEff, base)) return;
+    if (!match) match = f;
+    else if (f.date && (!match.date || f.date < match.date)) match = f; // earliest intro
+  });
+  return match;
+}
+
+// "Offered on N days" — the repeated-exposure / keep-offering signal, counted
+// from the meal log (feedingData via extractDayFoods). Distinct from the
+// `foods` tried-state above: that gives the intro date + watch window; this
+// counts the days the allergen actually appeared at a meal. Same resolver
+// spine, so "almond" days count toward Tree nuts.
+function _aiExposureDays(canonEff, base) {
+  if (typeof feedingData === 'undefined' || !feedingData || typeof extractDayFoods !== 'function') return 0;
+  var n = 0;
+  Object.keys(feedingData).forEach(function(ds) {
+    var hit = extractDayFoods(ds).some(function(fn) { return _aiFoodMatches(fn, canonEff, base); });
+    if (hit) n++;
+  });
+  return n;
+}
+
+function _aiComputeAllergenIntro() {
+  var ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  var tdy = (typeof today === 'function') ? today() : null;
+  var items = AI_ALLERGEN_SET.map(function(a) {
+    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(a.key) : null;
+    var ageRule = (typeof _lookupByFoodName === 'function' && typeof AGE_RULES !== 'undefined')
+      ? _lookupByFoodName(AGE_RULES, a.key) : null;
+    var introMonth = (ageRule && ageRule.minMonth) ? ageRule.minMonth : 6;
+    var base = (typeof _baseFoodName === 'function') ? _baseFoodName(String(a.key).toLowerCase().trim()) : String(a.key);
+    var rec = _aiFoodRecordFor(eff, base);
+    var exposureDays = _aiExposureDays(eff, base);
+    var ageReady = ageMonths >= introMonth;
+    var state, daysSince = null;
+    if (rec) {
+      if (rec.reaction === 'watch') {
+        state = 'reaction';
+      } else if (rec.date && tdy) {
+        // Guard a future-dated entry (data error / TZ edge): the watch window
+        // hasn't started, so clamp to day 0 rather than abs()-counting it as
+        // a window already underway (Vela V-V-2 / Kael).
+        daysSince = (rec.date <= tdy) ? daysBetween(rec.date, tdy) : 0;
+        state = (daysSince >= 3) ? 'tolerated' : 'watching';
+      } else {
+        state = 'introduced';
+      }
+    } else {
+      state = ageReady ? 'ready' : 'waiting';
+    }
+    // safe-form note: FOOD_EFFECTS note (peanut/tree-nut) preferred; else the
+    // allergen's own AGE_RULES `reason` (egg's "cook well, yolk first" floor) —
+    // never the generic "in a safe form" where a real per-food floor exists (Maren M-1).
+    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note
+                 : (ageRule && ageRule.reason) ? ageRule.reason : null;
+    return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
+             tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
+             exposureDays: exposureDays, state: state, safeForm: safeForm };
+  });
+  // "introduced" must mean a SETTLED introduction — a flagged reaction is open
+  // work, never a win. Excluding it keeps the summary + progress bar honest and
+  // stops the rollup re-merging what the state machine separated (Vela V-V-1,
+  // converging with Maren's reaction-never-suppressed invariant).
+  var settled = items.filter(function(i){ return i.tried && i.state !== 'reaction'; }).length;
+  return {
+    items: items,
+    total: items.length,
+    introduced: settled,
+    reactions: items.filter(function(i){ return i.state === 'reaction'; }).length,
+    ready: items.filter(function(i){ return i.state === 'ready'; }).length,
+    watching: items.filter(function(i){ return i.state === 'watching'; }).length,
+    ageMonths: ageMonths
+  };
+}
+
+function renderInfoAllergenIntro() {
+  var sumEl = document.getElementById('infoAllergenIntroSummary');
+  if (!sumEl) return;
+  var listEl = document.getElementById('infoAllergenIntroList');
+  var insEl = document.getElementById('infoAllergenIntroInsights');
+  var data = _aiComputeAllergenIntro();
+
+  // Summary line + a glanceable sage progress bar (introduced / total).
+  var sum = '<div class="t-sm"><strong>' + data.introduced + '</strong> of <strong>' + data.total + '</strong> introduced';
+  if (data.ready > 0) sum += ' · <strong>' + data.ready + '</strong> ready to try';
+  if (data.watching > 0) sum += ' · <strong>' + data.watching + '</strong> watching';
+  if (data.reactions > 0) sum += ' · <strong>' + data.reactions + '</strong> flagged';
+  sum += '</div>';
+  sum += _cdBarHtml('Progress', data.introduced, data.total, ' / ' + data.total, 'var(--tc-sage)');
+  sumEl.innerHTML = sum;
+
+  var STATE = {
+    tolerated:  { pill: 'cd-pill-pos',     text: 'Tolerated' },
+    introduced: { pill: 'cd-pill-pos',     text: 'Introduced' },
+    watching:   { pill: 'cd-pill-neutral', text: 'Watching' },
+    ready:      { pill: 'cd-pill-pos',     text: 'Ready to try' },
+    waiting:    { pill: 'cd-pill-neutral', text: 'Not yet' },
+    reaction:   { pill: 'cd-pill-neg',     text: 'Reaction noted' }
+  };
+  if (listEl) {
+    // Order by actionability so what to act on floats up: ready → watching →
+    // reaction → introduced/tolerated → not-yet. Stable sort preserves set order
+    // within a tier.
+    var RANK = { ready: 0, watching: 1, reaction: 2, introduced: 3, tolerated: 3, waiting: 4 };
+    var ordered = data.items.slice().sort(function(a, b) {
+      return (RANK[a.state] != null ? RANK[a.state] : 9) - (RANK[b.state] != null ? RANK[b.state] : 9);
+    });
+    var rows = '<div class="cd-section-label">High-priority allergens</div>';
+    ordered.forEach(function(i) {
+      var s = STATE[i.state] || STATE.waiting;
+      var offered = i.exposureDays > 0 ? ('offered ' + i.exposureDays + (i.exposureDays === 1 ? ' day' : ' days')) : '';
+      var meta;
+      if (i.state === 'tolerated') meta = (offered ? offered + ' · ' : '') + 'keep it in rotation';
+      else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — watch, tap for signs';
+      else if (i.state === 'introduced') meta = 'Keep offering to hold tolerance';
+      else if (i.state === 'reaction') meta = 'Reaction flagged — tap to review';
+      else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
+      else meta = 'From ' + i.introMonth + ' months';
+      // Row taps through to the food's detail sheet — the R3 floor + safe-form
+      // for the same resolved food (foodLibDetail → renderFoodDetailSheet).
+      rows += '<div class="cd-food-item tappable" role="button" tabindex="0" data-action="foodLibDetail" data-arg="' + escHtml(i.key) + '">' +
+        '<div class="cd-food-name">' + escHtml(i.label) + '</div>' +
+        '<div class="cd-pill ' + s.pill + '">' + escHtml(s.text) + '</div>' +
+        '<div class="cd-food-meta">' + escHtml(meta) + '</div>' +
+        '</div>';
+    });
+    listEl.innerHTML = rows;
+  }
+
+  if (insEl) {
+    var ins;
+    if (data.introduced >= data.total) {
+      ins = 'All ' + data.total + ' introduced. Keep offering each a few times a week — repeated exposure is what holds the protection.';
+    } else if (data.ready > 0) {
+      var readyLabels = data.items.filter(function(i){ return i.state === 'ready'; }).map(function(i){ return i.label; });
+      ins = 'Early introduction in a safe form is protective. Good to start now: ' + readyLabels.join(', ') + '. One at a time, then watch 3 days.';
+    } else if (data.watching > 0) {
+      ins = 'Watching a new allergen. A mild rash alone: note it and carry on. Trouble breathing or swelling of the face or lips: get help right away.';
+    } else {
+      ins = 'Allergens go in from around 6 months — one at a time, in a smooth or thinned form.';
+    }
+    insEl.innerHTML = '<div class="cd-section-label">What this means</div><div class="t-sm">' + escHtml(ins) + '</div>';
+  }
+
+  // Composite card — never urgent (spec v3-6). Actionable (ready/watching) → notable; else ambient.
+  if (typeof _setCardPriority === 'function') {
+    _setCardPriority('infoAllergenIntroCard', (data.ready > 0 || data.watching > 0) ? 'notable' : 'ambient');
+  }
+}
+
+// ════════════════════════════════════════
 // Card 1: Food → Poop Pipeline
 // ════════════════════════════════════════
 
@@ -1272,6 +1475,7 @@ function renderInfo() {
   renderInfoSupplementAdherence();
   renderInfoVaccRecovery();
   renderInfoGrowthVelocity();
+  renderInfoAllergenIntro();
   renderInfoFoodPoopPipeline();
   renderInfoSleepFeeding();
   renderInfoActivitySleepDeep();
