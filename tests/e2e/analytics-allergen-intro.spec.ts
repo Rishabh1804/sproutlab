@@ -82,4 +82,20 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
     // ready (4 untried) + watching (1) are actionable → notable, not ambient
     expect(dom.tier).toBe('notable');
   });
+
+  test('a row taps through to the food detail sheet (the R3 floor for peanut)', async ({ page }) => {
+    await page.evaluate(() => { foods.length = 0; renderInfoAllergenIntro(); });
+    const row = page.locator('#infoAllergenIntroList .cd-food-item[data-arg="peanut"]');
+    await expect(row, 'each allergen row is wired to foodLibDetail').toHaveAttribute('data-action', 'foodLibDetail');
+    // tapping opens the detail sheet for the resolved food, carrying the floor
+    await row.evaluate((el: HTMLElement) => el.click());
+    const detail = await page.evaluate(() => {
+      const sheet = document.getElementById('foodDetailSheet');
+      const body = document.getElementById('foodDetailBody');
+      const open = !!sheet && getComputedStyle(sheet).display !== 'none';
+      return { open, severe: body ? body.querySelectorAll('.cons-severe').length : 0 };
+    });
+    expect(detail.open, 'foodDetailSheet modal opened').toBe(true);
+    expect(detail.severe, 'peanut detail carries the anaphylaxis floor (R3 continuity)').toBeGreaterThan(0);
+  });
 });

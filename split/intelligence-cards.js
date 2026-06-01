@@ -366,7 +366,9 @@ function renderInfoAllergenIntro() {
       else if (i.state === 'reaction') meta = 'Flagged for watch' + (i.date ? ' on ' + formatDate(i.date) : '') + ' — open the food for details';
       else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
       else meta = 'Fine to wait — around ' + i.introMonth + ' months';
-      rows += '<div class="cd-food-item">' +
+      // Row taps through to the food's detail sheet — the R3 floor + safe-form
+      // for the same resolved food (foodLibDetail → renderFoodDetailSheet).
+      rows += '<div class="cd-food-item tappable" role="button" tabindex="0" data-action="foodLibDetail" data-arg="' + escHtml(i.key) + '">' +
         '<div class="cd-food-name">' + escHtml(i.label) + '</div>' +
         '<div class="cd-pill ' + s.pill + '">' + escHtml(s.text) + '</div>' +
         '<div class="cd-food-meta">' + escHtml(meta) + '</div>' +
