@@ -291,7 +291,11 @@ window.FOOD_EFFECTS_MANIFEST = [
   // whenever dairy is being introduced (CMPA). All resolved at spec-review, not here.
   {
     food:          'cow milk',
-    aliases:       ['cow\'s milk','buffalo milk','bhains ka doodh','gaay ka doodh','animal milk','whole milk','full-fat milk','top milk','top feed','dairy milk','full cream milk'],
+    // K-1 (Kael): 'top feed' DROPPED — in Indian logs it frequently means FORMULA, not
+    // cow milk; firing the drink-timing card on a formula log is a Care-defect. 'top milk'
+    // kept (unambiguously cow/buffalo dilute-milk). Bare 'doodh' deliberately UNALIASED
+    // (co-occurs in 'haldi doodh', a spiced-milk food — same precision reason as bare 'milk').
+    aliases:       ['cow\'s milk','buffalo milk','bhains ka doodh','gaay ka doodh','animal milk','whole milk','full-fat milk','top milk','dairy milk','full cream milk'],
     foodClass:     'drink-timing',
     severity:      'caution',              // amber timing-caution, NOT rose acute-toxin
     category:      'dairy',
@@ -328,7 +332,9 @@ window.FOOD_EFFECTS_MANIFEST = [
     food:          'plant milk',
     // NOTE: 'soy milk' / 'soya milk' already alias to the SOY allergen record in data.js —
     // left there (soy is the allergen exception); soy is cross-referenced in copy, not re-aliased.
-    aliases:       ['almond milk','oat milk','rice milk','rice drink','cashew milk','coconut milk drink','plant-based milk','plant milks','vegan milk','toddler milk','growing-up milk','follow-on milk drink'],
+    // K-2 (Kael): 'badam milk'/'badam doodh' ADDED — the Hindi-English code-switch form an
+    // Indian parent actually types for almond-milk drink (English-only 'almond milk' missed it).
+    aliases:       ['almond milk','badam milk','badam doodh','oat milk','rice milk','rice drink','cashew milk','coconut milk drink','plant-based milk','plant milks','vegan milk','toddler milk','growing-up milk','follow-on milk drink'],
     foodClass:     'substitute-caveat',
     severity:      'caution',
     category:      'plant-milk',
