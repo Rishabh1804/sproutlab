@@ -286,10 +286,11 @@ var AI_ALLERGEN_SET = [
 //   returns FOOD_EFFECTS records by reference (module-level singletons) — every
 //   getFoodEffect("almond")/("tree nut") yields the identical object. A future
 //   refactor that clones records would silently break this; keep it by-ref.
-//   LIMITATION (spec §6/§9): culinary synonyms with no alias table — "tofu"→soy,
-//   "roti"→wheat, "scrambled egg"→egg — do not resolve on EITHER reader (the app
-//   has no such alias data anywhere). Both readers agree on the miss, so the card
-//   stays internally consistent; closing the gap is a data.js alias-table task.
+//   Culinary synonyms RESOLVE as of food-effects-v2 Phase δ — the egg/soy/wheat/
+//   sesame FOOD_EFFECTS records carry culinary-rich aliases (tofu→soy, roti→wheat,
+//   til→sesame, anda→egg), so getFoodEffect now matches them on both readers.
+//   (Residual: a few unauthored synonyms still miss; both readers agree on any miss,
+//   so the card stays internally consistent.)
 function _aiFoodMatches(foodName, canonEff, base) {
   if (!foodName) return false;
   var fn = String(foodName).toLowerCase().trim();
@@ -358,12 +359,13 @@ function _aiComputeAllergenIntro() {
     // safe-form note: FOOD_EFFECTS note (peanut/tree-nut) preferred; else the
     // allergen's own AGE_RULES `reason` (egg's "cook well, yolk first" floor) —
     // never the generic "in a safe form" where a real per-food floor exists (Maren M-1).
-    // The `reason` is a full age-gate sentence-pair; surface only its first
-    // sentence on the one-line glance so it doesn't wrap (the full floor rides
-    // the tap-through detail sheet). Phase δ will replace this with a crisp
-    // FOOD_EFFECTS `safeForm.note` authored for the row.
+    // Prefer the crisp authored `safeForm.glance` (≤44, Phase δ / Vela V-V-208-3) —
+    // the per-food row cue; fall back to the full `note` (the length-gate routes it
+    // to the tap-through), then to the AGE_RULES reason's first sentence.
     var reasonShort = (ageRule && ageRule.reason) ? String(ageRule.reason).split('. ')[0] : null;
-    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : reasonShort;
+    var safeForm = (eff && eff.safeForm && eff.safeForm.glance) ? eff.safeForm.glance
+                 : (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note
+                 : reasonShort;
     return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
              tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
              exposureDays: exposureDays, state: state, safeForm: safeForm };

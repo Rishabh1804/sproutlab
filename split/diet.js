@@ -631,14 +631,23 @@ function renderFoodDetailSheet(name) {
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
   const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
+  // Polarity (food-effects-v2): an introduce-early allergen reads ENCOURAGE —
+  // sage banner + calm sprout icon ("good to introduce, here's the safe form"),
+  // never rose/siren ("don't give"). Rose is reserved for true avoid (acute-toxin).
+  // The severe-reaction floor (fdFloor) below stays serious regardless.
+  const fdEncourage = (typeof _effHasClass === 'function') && _effHasClass(fdEff, 'allergen-introduce-early');
   if (fdFloor) {
     const head = (fdEff && fdEff.title) ? escHtml(fdEff.title) : 'Allergen';
     const sub = (fdEff && fdEff.safeForm && fdEff.safeForm.note) ? escHtml(fdEff.safeForm.note)
               : (allerg ? escHtml(allerg) : '');
-    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    const flagCls = fdEncourage ? 'fd-flag-encourage' : 'fd-flag-allergen';
+    const flagIc  = fdEncourage ? zi('sprout') : zi('siren');
+    html += `<div class="fd-flag ${flagCls}">${flagIc} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
     html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
   } else if (allerg) {
-    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+    // A milder allergen with no FOOD_EFFECTS record (kiwi, strawberry, oats …):
+    // informational + calm, never the rose alarm. Introduce carefully, watch.
+    html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
   }
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
