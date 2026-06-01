@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+  FOOD-DASHBOARD TEMPLATE · SproutLab Care research layer
+  Copy this file to  <food>-infant-safety.visual.html  and fill the {{...}}.
+  Canonical CSS + JS (tab swiping, arrow keys, charts) — DO NOT diverge; if you
+  improve a component, update this template so all dashboards inherit it.
+
+  TABS are generic; relabel per food TYPE:
+    • critical/acute-toxin (honey)  → Summary · The Science · Symptoms & Care · Context · Sources · Data
+    • allergen (egg, nuts, soy)     → Summary · Why/Allergen · Reaction & Introduction · Context · Sources · Data
+    • choking (whole nuts, grapes)  → Summary · The Hazard · Safe Prep · Context · Sources · Data
+    • timing (cow milk, salt, sugar)→ Summary · Why this age · Effects · Context · Sources · Data
+
+  COMPONENT LIBRARY (copy from the commented block at the bottom of <body>):
+    stat tiles · bar chart · donut (SVG) · timeline · thermometer split ·
+    consensus matrix · flag callouts · badges.
+  Every chart value MUST also appear as text (machine-readable for agents).
+  After filling: append a record to food-effects.manifest.js.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soy (Soya) &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ── Entrance animations — re-trigger each time a panel is shown (display:none→block
+     restarts descendant animations). All gated behind prefers-reduced-motion so the
+     dashboard is fully usable (and calm) for anyone who opts out of motion. ── */
+  @media (prefers-reduced-motion: no-preference){
+    /* bars grow from the left — scaleX keeps the inline width:% target intact */
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    /* stat tiles + timeline steps + therm cols rise in with a gentle stagger */
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    /* donut sweeps in (the partial-arc value stays exact; only the reveal animates) */
+    .panel.on svg[role="img"]{animation:sweep .8s ease both}
+    @keyframes sweep{from{opacity:0;transform:rotate(-12deg) scale(.9)}to{opacity:1;transform:none}}
+    /* flag callouts slide a touch from the left edge they're anchored to */
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)}.bar.hl .lab{color:var(--honey)}.bar.hl .val{color:var(--honey)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Soy (Soya) &amp; Infant Safety — Visual Dashboard</h1>
+  <p class="sub">Care dashboard for the <b>guided-introduction</b> layer. Soy is a <b>Tier-2</b> allergen: introduce early because it's <b>safe and nutritious</b> — <b>not</b> on a prevention promise. Two reaction branches (IgE + the delayed non-IgE <b>FPIES</b>), and one form gate. Skim the Summary; drill into a tab.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-why">Why / Allergen</button>
+    <button class="tab" data-p="p-sym">Reaction &amp; Introduction</button>
+    <button class="tab" data-p="p-ctx">Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- ───────── SUMMARY ───────── -->
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">The one rule: <b>introduce soy around 6 months — don't delay — as soft tofu, not whole edamame.</b> But hold the honesty line: early soy is <b>safe and nutritious</b>, and there's no reason to delay — yet <b>no RCT proves early soy prevents soy allergy</b> (EAT was null for soy). Two emergency branches, not one: fast <b>IgE allergy</b> AND the delayed, hives-less <b>FPIES</b> — for which soy is a classic trigger.</p>
+    </div>
+    <div class="grid g4">
+      <!-- stat tiles: .crit (red) / .ok (sage) / default (accent) -->
+      <div class="card stat ok"><div class="n">~6<span style="font-size:14px">mo</span></div><div class="l">introduce from ~6 months (not before 4) — AAP·NHS·ASCIA</div></div>
+      <div class="card stat"><div class="n">~0.4%</div><div class="l">of infants have soy allergy — uncommon (FARE)</div></div>
+      <div class="card stat ok"><div class="n">by age 3</div><div class="l">commonly outgrown; majority by age 10 (FARE·JACI)</div></div>
+      <div class="card stat crit"><div class="n">1–4<span style="font-size:14px">h</span></div><div class="l">FPIES delayed onset — vomiting + lethargy, often no rash (CHOP)</div></div>
+    </div>
+    <h3>The four things to know <span class="badge b-hi">high-confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Introduce early — but DON'T claim prevention.</b> Consensus is "don't delay" soy past ~6mo; but EAT found <i>no</i> prevention effect for soy. Safe early, not a prevention promise. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>2 · Two emergency branches.</b> Fast IgE allergy (minutes, hives/swelling/breathing) AND delayed FPIES (1–4h, profuse vomiting + lethargy, no hives, tests negative). → <span class="jump" data-go="p-sym">Reaction &amp; Introduction</span></div>
+      <div class="card"><b>3 · The crux is FORM.</b> Soft/silken tofu and mashed soybeans are infant-safe; whole edamame and whole soybeans are a choking hazard. Mashing fixes choking, not allergy. → <span class="jump" data-go="p-sym">Reaction &amp; Introduction</span></div>
+      <div class="card"><b>4 · The formula≠food trap.</b> "Soy isn't recommended for babies" means soy <i>infant formula</i> as prevention — NOT tofu and soy foods, which are fine. → <span class="jump" data-go="p-ctx">Context</span></div>
+    </div>
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> an <b>encourage-polarity</b> card (sage, not honey's rose) — but with a <b>distinct FPIES branch</b> a hives-centric card would miss (delayed vomiting + lethargy, no rash → urgent care), and the <b>formula≠food</b> myth surfaced up front. Highest-value soy nuggets: the FPIES branch and the formula-confusion trap. Ready-to-wire shape → <span class="jump" data-go="p-data">Data Stub</span>.</div>
+    <div class="card flag" style="margin-top:0"><b>⚑ Tier-2 — honest framing:</b> introduce early because it's <b>safe + nutritious</b>, <b>NOT</b> on a prevention promise (EAT was null for soy). Never tell a parent "early soy prevents soy allergy" — that claim is true for peanut/egg, false-by-evidence for soy.</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">2026-06-01</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>soy-infant-safety.md</code> · long-form HTML: <code>soy-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+  </section>
+
+  <!-- ───────── WHY / ALLERGEN ───────── -->
+  <section class="panel" id="p-why"><h2>Introduce early — but prevention is NOT proven for soy</h2>
+    <div class="card">
+      <p style="margin:0 0 6px">Mainstream guidance (AAP, NHS, ASCIA, NIAID): introduce the major allergens — soy among them — <b>around 6 months</b> alongside other solids, <b>not before 4 months</b>, and <b>don't deliberately delay</b>. Soy is one of the US <b>"Big 9"</b> major allergens. <span class="badge b-hi">consensus</span></p>
+      <p style="margin:6px 0 0">But the prevention evidence (LEAP/EAT) is for <b>peanut and egg</b>. In <b>EAT</b> (1,303 exclusively breastfed infants, 6 allergens from 3mo vs ~6mo), the per-protocol benefit was significant for <b>peanut and egg only</b>. <b>Soy showed no significant prevention effect</b> — nor did milk, sesame, or fish. <span class="badge b-hi">NEJM 2016</span></p>
+    </div>
+    <div class="flag"><b>⚑ The honest framing the model MUST use:</b> introducing soy early is <b>safe and appropriate</b>, and there's no reason to delay it — but we <b>cannot tell a parent that early soy prevents soy allergy</b>. That claim is true for peanut/egg, false-by-evidence for soy. <b>Tier-2 allergen:</b> introduce-early because there's no reason not to and the diet benefits, <b>NOT</b> because an RCT proved prevention.</div>
+
+    <h3>Why introduce at all, then?</h3>
+    <div class="card">
+      <p style="margin:0"><b>Nutrition + no-reason-to-avoid</b>, not proven prevention. Soy is a <b>complete plant protein</b> — especially valuable in a vegetarian household — and normal allergen exposure as part of a varied diet beats the downsides of unnecessary restriction.</p>
+    </div>
+
+    <h3>Often outgrown — soy is not a lifelong sentence <span class="badge b-mod">FARE · JACI (clinical)</span></h3>
+    <div class="card">
+      <div class="bar"><span class="lab">Infant prevalence</span><span class="trk"><span class="fil" style="width:6%"></span></span><span class="val">~0.4%</span></div>
+      <p style="margin:8px 0 0;font-size:12.5px;color:var(--mid)">Soy allergy affects ~<b>0.4%</b> of infants and is <b>commonly outgrown — many by ~age 3, the majority by age 10</b>. It behaves more like milk/egg (often outgrown) than peanut/tree-nut (often lifelong). "Soy allergy is permanent" is a myth.</p>
+    </div>
+  </section>
+
+  <!-- ───────── REACTION & INTRODUCTION ───────── -->
+  <section class="panel" id="p-sym"><h2>Two reaction branches — and the form gate</h2>
+
+    <h3>The form gate — tofu vs the edamame choking hazard</h3>
+    <div class="therm">
+      <div class="col safe">
+        <div style="font-size:12px;color:var(--mid)">Soft tofu / mashed soybeans (SAFE)</div>
+        <div class="big">introduce early</div>
+        <div style="font-size:12.5px">silken/soft tofu (smushable or blended), well-cooked mashed soybeans, soy yoghurt, softened-mashed soya chunks once tolerated.</div>
+      </div>
+      <div class="col danger">
+        <div style="font-size:12px;color:var(--mid)">Whole edamame / whole soybeans (CHOKING)</div>
+        <div class="big">round · firm · slippery</div>
+        <div style="font-size:12.5px">shell + mash at ~6mo; halve/quarter from ~9mo; whole beans only well past toddlerhood. Soy milk is NOT a milk substitute in year one.</div>
+      </div>
+    </div>
+    <div class="flag good"><b>✓ The design crux.</b> Mashing tofu/soybeans genuinely makes the food safe on the <b>choking</b> axis — but it does <b>nothing</b> for the <b>allergy</b> axis (IgE or FPIES), which is managed by introduction + watchfulness. Two axes, held separately.</div>
+
+    <h3>The TWO emergency branches — a hives-centric card misses FPIES</h3>
+    <div class="card">
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Branch A — IgE allergy · FAST (minutes–~2h)</div><div class="tl-d">Mild (one body system): itchy hives/welts, redness, swelling (mouth/eyes), vomiting, sometimes loose stool, sudden fussiness. In infants reactions skew to skin + GI.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Branch A — anaphylaxis · act immediately</div><div class="tl-d">Trouble breathing / wheeze / persistent cough, throat/tongue/lip/face swelling, pale or blue, floppy/limp/lethargic, collapse. → adrenaline auto-injector if prescribed + call 112 (108 India; 999 UK; 911 US). Lie flat, or sit up if breathing is hard.</div></div>
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Branch B — FPIES · DELAYED (1–4h after eating)</div><div class="tl-d">Non-IgE reaction. Profuse, repetitive (projectile) vomiting, then lethargy, pallor, risk of dehydration; sometimes diarrhoea later. <b>Often NO hives, NO swelling, NO breathing trouble</b> — looks like a stomach bug. Standard allergy tests (skin-prick, sIgE) come back <b>negative</b>. Soy is a classic trigger.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Branch B — FPIES · urgent care even with no rash</div><div class="tl-d">Repetitive vomiting + a pale/floppy/lethargic baby a couple of hours after a soy feed → urgent medical care even without any rash; severe episodes can cause dehydration/shock and may need IV fluids. Tell the clinician <i>what was eaten and when</i> — the delay is the diagnostic clue.</div></div>
+      </div>
+      <div class="flag bad"><b>⚑ The most important soy-specific safety insight.</b> A hives-centric allergy card will <b>miss FPIES entirely</b>. The soy record needs a distinct "delayed vomiting + lethargy, no rash" branch that routes to urgent care, separate from the IgE/anaphylaxis branch. Classic FPIES triggers: <b>cow's milk, soy, rice, oats</b>. <span class="badge b-mod">CHOP — clinical secondary</span></div>
+    </div>
+
+    <h3>First-exposure approach</h3>
+    <div class="card">
+      <p style="margin:0;font-size:13px;color:var(--mid)">Start soy as <b>soft/silken tofu</b> or as a <b>minor ingredient</b> mashed into an already-tolerated dish (minor-ingredient-first matters for the CMPA cross-reactivity below), watch the first exposures, then progress to softened, finely-mashed soya chunks once tolerated. Introduce soy on its own day for attribution.</p>
+    </div>
+  </section>
+
+  <!-- ───────── CONTEXT ───────── -->
+  <section class="panel" id="p-ctx"><h2>Context — the formula≠food trap, India, and the myths</h2>
+
+    <div class="card flag bad" style="margin-top:0"><b>⚑ The soy-formula ≠ soy-food trap (read this first).</b> When you see "soy is <b>not recommended</b> for babies," it almost always means <b>soy infant formula as an allergy-prevention strategy</b> — NOT soy <i>foods</i> like tofu. NIAID/ASCIA don't endorse soy formula to prevent allergy; that has nothing to do with feeding a 7-month-old mashed tofu, which is fine. This is the single most common error on this topic. <span class="badge b-hi">NIAID · ASCIA</span></div>
+
+    <h3>Indian &amp; vegetarian context — central, not peripheral</h3>
+    <div class="card">
+      <p style="margin:0"><b>Soya chunks/granules/nuggets (TVP — textured vegetable protein)</b> are everyday, affordable, concentrated plant protein in vegetarian Indian households; tofu and soy milk are increasingly common. In a vegetarian diet, soy is a high-value complete protein — making early, regular introduction both natural and nutritionally useful. Introduce as <b>soft tofu or a minor ingredient first</b>, then work up to softened/mashed soya chunks. <span class="badge b-hi">staple status</span></p>
+    </div>
+
+    <h3>Cross-reactivity to introduce carefully around</h3>
+    <div class="grid g2">
+      <div class="card"><b>Soy ↔ CMPA.</b> Some <b>cow's-milk-protein-allergic</b> babies also react to soy protein. If there's known CMPA, introduce soy cautiously as a <b>minor ingredient first</b> and consider a paediatrician's input. <span class="badge b-mod">FARE</span></div>
+      <div class="card"><b>Legume cross-sensitisation.</b> Soy is a <b>legume</b>, like peanut — some cross-sensitisation potential, though a positive test ≠ clinical allergy. Treat soy as its own allergen, on its own day. <span class="badge b-mod">FARE</span></div>
+    </div>
+
+    <h3>Myths to correct</h3>
+    <div class="card flag good" style="margin-top:0"><b>✓ "Soy is not recommended for babies."</b> Conflation — it's about soy <i>formula</i> as prevention, not tofu/soy foods (fine around 6mo). Highest-value myth on this topic.</div>
+    <div class="card flag good" style="margin-top:0"><b>✓ "Soy allergy is permanent."</b> Usually false — ~0.4% of infants, commonly outgrown by ~age 3, the majority by age 10.</div>
+    <div class="card flag" style="margin-top:0"><b>⚑ "Introduce soy early to prevent soy allergy."</b> The over-claim in the other direction — <b>not proven.</b> EAT found no significant effect for soy. Introduce early because it's safe and nutritious, NOT on a prevention promise.</div>
+    <div class="card flag" style="margin-top:0"><b>⚑ "Soy lecithin will trigger a soy-allergic child."</b> Usually not — most soy-allergic individuals tolerate soy lecithin (negligible residual protein); still label-listed, so don't auto-panic on its presence.</div>
+
+    <h3>Aliases &amp; hidden sources (for the resolver)</h3>
+    <div class="card">
+      <p style="margin:0;font-size:13px"><b>Whole-food / fermented:</b> tofu (bean curd), edamame, soybeans, <b>soya chunks/granules/nuggets = TVP</b>, miso, natto, tempeh, soy/soya flour. <b>Liquids &amp; condiments:</b> soy milk/soya drink, soy sauce, tamari (often carry <b>wheat</b> too). <b>Additives:</b> soy lecithin (usually tolerated), soy protein isolate/concentrate.</p>
+      <div class="flag" style="margin-top:8px"><b>⚑ Label nuance (US-specific).</b> Highly refined <b>soybean oil is exempt</b> from US major-allergen labelling (protein removed); cold-pressed/unrefined is not. So "no soy listed" on a US label doesn't guarantee soy-oil-free — and "soy lecithin" present doesn't mean a child will react. Applies to US labels, not Indian labelling. Surface TVP/soya chunks as full soy protein; don't auto-escalate lecithin.</div>
+    </div>
+  </section>
+
+  <!-- ───────── SOURCES & CONFIDENCE ───────── -->
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo / don't delay</th><th class="c">Early soy PREVENTS soy allergy</th></tr>
+      <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+      <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+      <tr><td>ASCIA (Australasia)</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+      <tr><td>US NIAID (2017)</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+      <tr><td>NEJM — EAT trial (2016)</td><td class="c yes">✓ (safe early)</td><td class="c no">✗ no significant effect for soy</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">Every body says "introduce early / don't delay"; <b>none</b> claims early soy <i>prevents</i> soy allergy — and EAT actively found no significant prevention effect. The "introduce-early" and "prevents-allergy" columns are NOT the same claim for soy.</p>
+    </div>
+
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Type</th><th>Link</th></tr>
+      <tr><td>AAP / HealthyChildren — when to introduce allergens</td><td>Official</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+      <tr><td>UK NHS — food allergies in babies</td><td>Official</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+      <tr><td>UK NHS — Anaphylaxis</td><td>Official</td><td><a href="https://www.nhs.uk/conditions/anaphylaxis/">nhs.uk/conditions/anaphylaxis</a></td></tr>
+      <tr><td>NIAID — Peanut Allergy Prevention Addendum (2017); soy-formula context</td><td>Official</td><td><a href="https://www.niaid.nih.gov/sites/default/files/addendum-peanut-allergy-prevention-guidelines.pdf">niaid.nih.gov/…/addendum</a></td></tr>
+      <tr><td>ASCIA — Infant Feeding for Food Allergy Prevention</td><td>Official</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+      <tr><td>WHO — Complementary feeding 6–23mo (2023)</td><td>Official</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov/books/NBK596423</a></td></tr>
+      <tr><td>NEJM — Perkins/Lack et al., EAT trial (2016); soy = no significant prevention effect</td><td>Primary trial</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+      <tr><td>FARE — Soy allergy (prevalence ~0.4%; outgrown; lecithin)</td><td>Secondary (advocacy/clinical)</td><td><a href="https://www.foodallergy.org/living-food-allergies/food-allergy-essentials/common-allergens/soy">foodallergy.org/…/soy</a></td></tr>
+      <tr><td>JACI — Natural history of soy allergy (outgrowth by 3/10)</td><td>Secondary (clinical)</td><td><a href="https://www.jacionline.org/article/S0091-6749(10)00007-2/fulltext">jacionline.org/…/soy-natural-history</a></td></tr>
+      <tr><td>CHOP — FPIES (delayed vomiting, triggers, negative tests)</td><td>Secondary (clinical)</td><td><a href="https://www.chop.edu/conditions-diseases/food-protein-induced-enterocolitis-syndrome-fpies">chop.edu/…/fpies</a></td></tr>
+      <tr><td>Solid Starts — Edamame (choking-by-form; shell + mash)</td><td>Secondary (prep)</td><td><a href="https://solidstarts.com/foods/edamame/">solidstarts.com/foods/edamame</a></td></tr>
+      <tr><td>Solid Starts — Tofu (soft/silken first form)</td><td>Secondary (prep)</td><td><a href="https://solidstarts.com/foods/tofu/">solidstarts.com/foods/tofu</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> (1) <b>FPIES detail is clinical-secondary (CHOP)</b> — the delayed-vomiting / lethargy-pallor / negative-test picture is clinically well-established, but the verbatim 1–4h timing should be re-confirmed against an official allergy body before going to parents as a hard number. (2) <b>Prevalence ~0.4% &amp; outgrowth ages (3/10)</b> are FARE + JACI (secondary/clinical), directionally robust but literature-derived, not regulator figures. (3) <b>Form specifics</b> (shell+mash at 6mo, halve at 9mo; silken-tofu-first) are Solid Starts (secondary prep), consistent with NHS choking principles. (4) <b>US soybean-oil exemption &amp; lecithin tolerance</b> are US-labelling-specific, not universal. (5) <b>No India-specific official soy/allergen directive exists</b> — no IAP/MoHFW/FSSAI guidance on allergen introduction or soy for infants was located; the early-intro guidance is entirely international, the Indian vegetarian context is cultural/nutritional. <b>Do not manufacture or attribute any Indian official soy/allergen guidance.</b></div>
+  </section>
+
+  <!-- ───────── DATA STUB ───────── -->
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['soy']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of this food's record in <code>food-effects.manifest.js</code>. Sits alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. The <code>reactionType</code> carries <code>'digestive'</code> for the non-IgE FPIES branch; <code>severeSigns</code> includes the delayed "vomiting + lethargy hours later" FPIES line; <code>earlyIntroBenefit.paradigm</code> holds the Tier-2 honesty line (no proven prevention). <b>Not yet wired.</b></p>
+<pre>{
+  food:          'soy',
+  aliases:       ['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari','tvp','textured vegetable protein'],
+  foodClass:     'allergen-introduce-early',
+  severity:      'caution',
+  category:      'legume',
+  effect:        'food allergy (incl. FPIES)',
+  minMonth:      6,
+  thresholdBasis:'developmental-readiness',
+  allergen:      true,
+  reactionType:  ['allergy','digestive'],   // digestive = FPIES (non-IgE), a classic soy presentation
+  headline:      'Introduce around 6 months — don\'t delay. Soft tofu, not whole edamame.',
+  whyGood:       'Valuable plant protein for a vegetarian diet (tofu, soya chunks) — introduce early alongside other solids.',
+  earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay allergens.',
+                       evidence:'AAP/NHS/ASCIA advise early introduction of soy among the major allergens; early intro is SAFE, but no RCT proves early soy prevents soy allergy (soy was not among EAT\'s prevention-positive foods).',
+                       paradigm:'Don\'t delay — but no proven soy-specific prevention claim.' },
+  safeForm:      { ok:['soft / silken tofu, smushable or blended','well-cooked soybeans mashed','soy yoghurt; soya stirred into food'],
+                   never:['whole edamame or whole soybeans (round, firm — a choking risk)','soy milk as a main drink in the first year (not a breastmilk/formula substitute)'],
+                   note:'Shell and mash edamame at 6mo; halve cooked beans at 9mo. Soft tofu needs no choking prep.' },
+  myth:          { claim:'Soy isn\'t recommended for babies.',
+                   truth:'That advice is about soy infant FORMULA for allergy prevention — not soy FOODS like tofu, which are fine to introduce around 6 months.' },
+  watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting or diarrhoea'],
+  severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy','repeated forceful vomiting + lethargy hours later (possible FPIES)'],
+  timeCourse:    'IgE: minutes to ~2 hours. FPIES (non-IgE): delayed — profuse repeated vomiting + lethargy/pallor 1–4 hours after eating.',
+  seekCare:      'Mild single-system: stop, monitor, call doctor. Breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112. Repeated forceful vomiting with lethargy/pallor hours after a soy feed (possible FPIES): seek urgent care even without a rash.',
+  breastfeedingSafe: true,
+  culturalNote:  'Soya chunks/granules are everyday vegetarian protein in India — a concentrated soy-protein form. Some cow\'s-milk-allergic babies also react to soy; introduce as a minor ingredient first.',
+  confidence:    'high',
+  sources:       ['AAP','UK NHS','ASCIA','NIAID 2017','FARE','CHOP (FPIES)','NEJM EAT 2016'],
+  dashboard:     'soy-infant-safety.visual.html',    // render pending
+  brief:         'soy-infant-safety.md',
+  longform:      'soy-infant-safety.html',           // render pending
+  lastReviewed:  '2026-06-01',
+}</pre>
+    <div class="flag good"><b>Surfacing hook:</b> an <b>encourage</b> card (sage), not honey's <b>warn</b> card (rose) — <code>severity:'caution'</code> drives amber chrome. But the soy card must carry a <b>distinct FPIES branch</b> (delayed vomiting + lethargy, no rash → urgent care) that a hives-centric layout would miss, and surface the <b>formula≠food</b> myth. Honesty constraint: never render "early soy prevents soy allergy" — <code>earlyIntroBenefit.paradigm</code> is the guardrail.</div>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>soy-infant-safety.md</code> / <code>.html</code> · 2026-06-01<br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<!-- ═══════ COMPONENT LIBRARY — copy a block into a panel and fill it ═══════
+<div class="bar"><span class="lab">Label</span><span class="trk"><span class="fil" style="width:73%"></span></span><span class="val">73%</span></div>
+<div class="bar hl"><span class="lab">Highlight</span><span class="trk"><span class="fil" style="width:12%"></span></span><span class="val">8.9%</span></div>
+  (bar widths are % of the track; scale all rows to the max value; ALWAYS put the real number in .val)
+
+<svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="DESCRIBE + give the number">
+  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--track)" stroke-width="15"/>
+  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--honey)" stroke-width="15"
+    stroke-dasharray="PCT_LEN REST" stroke-dashoffset="0" transform="rotate(-90 60 60)" stroke-linecap="round"/>
+  <text x="60" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="var(--honey)" font-family="Fraunces,serif">~20%</text>
+</svg>
+  (circumference for r=52 is 326.7; PCT_LEN = pct*3.267, REST = 326.7 - PCT_LEN)
+
+<div class="tl"><div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">First sign</div><div class="tl-d">detail</div></div>
+  <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Emergency</div><div class="tl-d">detail</div></div></div>
+
+<div class="therm"><div class="col safe"><div style="font-size:12px;color:var(--mid)">A</div><div class="big">safe fact</div><div>detail</div></div>
+  <div class="col danger"><div style="font-size:12px;color:var(--mid)">B</div><div class="big">danger fact</div><div>detail</div></div></div>
+
+<div class="flag good|bad"><b>label</b> text</div>   ·   <span class="badge b-hi|b-mod|b-weak">confidence</span>
+═══════════════════════════════════════════════════════════════════════ -->
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>

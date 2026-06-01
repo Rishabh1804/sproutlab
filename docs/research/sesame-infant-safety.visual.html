@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+  FOOD-DASHBOARD TEMPLATE · SproutLab Care research layer
+  Filled for SESAME (til). CSS + JS copied verbatim from _TEMPLATE.food-dashboard.html.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sesame (Til) &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ── Entrance animations — re-trigger each time a panel is shown (display:none→block
+     restarts descendant animations). All gated behind prefers-reduced-motion so the
+     dashboard is fully usable (and calm) for anyone who opts out of motion. ── */
+  @media (prefers-reduced-motion: no-preference){
+    /* bars grow from the left — scaleX keeps the inline width:% target intact */
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    /* stat tiles + timeline steps + therm cols rise in with a gentle stagger */
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    /* donut sweeps in (the partial-arc value stays exact; only the reveal animates) */
+    .panel.on svg[role="img"]{animation:sweep .8s ease both}
+    @keyframes sweep{from{opacity:0;transform:rotate(-12deg) scale(.9)}to{opacity:1;transform:none}}
+    /* flag callouts slide a touch from the left edge they're anchored to */
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)}.bar.hl .lab{color:var(--honey)}.bar.hl .val{color:var(--honey)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Sesame (Til) &amp; Infant Safety — Visual Dashboard</h1>
+  <p class="sub">Care dashboard for the <b>guided-introduction</b> layer. Sesame is a <b>Tier-2</b> allergen: introduce early because it's <b>safe</b> and there's no reason to delay — but unlike peanut, prevention is <b>not RCT-proven</b>. The defining note: sesame is the <b>gravest</b> of the four — <b>rarely outgrown</b> and a leading anaphylaxis trigger.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-why">Why / Allergen</button>
+    <button class="tab" data-p="p-sym">Reaction &amp; Introduction</button>
+    <button class="tab" data-p="p-ctx">Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <!-- ───────── SUMMARY ───────── -->
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">The one rule: <b>introduce sesame around 6 months as smooth tahini THINNED into food — never a thick glob</b> (sticky = choking, just like nut butter). Watch closely, and keep watching: sesame allergy is <b>usually lifelong (~70–80% persist)</b> and a leading anaphylaxis trigger, so first exposures and ongoing care matter more here than for any other allergen.</p>
+    </div>
+    <div class="grid g4">
+      <!-- stat tiles: .crit (red) / .ok (sage) / default (accent) -->
+      <div class="card stat ok"><div class="n">~6<span style="font-size:14px">mo</span></div><div class="l">Introduce from ~6 months (not before 4) — AAP·NHS·ASCIA</div></div>
+      <div class="card stat"><div class="n">9th</div><div class="l">major US food allergen (FASTER Act 2021)</div></div>
+      <div class="card stat crit"><div class="n">~70–80%</div><div class="l">persists into adulthood — rarely outgrown (only ~20–30% achieve tolerance)</div></div>
+      <div class="card stat"><div class="n">Jan 2023</div><div class="l">US sesame labeling in force (US packaged foods only — not Indian/home foods)</div></div>
+    </div>
+    <h3>The things to know <span class="badge b-hi">high-confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Introduce early — but be honest why.</b> AAP/NHS/ASCIA say don't delay sesame past ~6mo. But the EAT trial found <b>no sesame benefit</b> — early sesame is SAFE, not proven prevention. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>2 · Form is the gate.</b> Thinned smooth tahini or finely ground sesame are safe; a thick glob or whole seeds in quantity are choking risks. Thinning fixes choking, <i>not</i> allergy. → <span class="jump" data-go="p-sym">Reaction &amp; Introduction</span></div>
+      <div class="card"><b>3 · Usually LIFELONG — the key tone point.</b> Only ~20–30% outgrow sesame; ~70–80% persists. It is a leading anaphylaxis trigger — the gravest emergency floor of the four. → <span class="jump" data-go="p-why">Why / Allergen</span></div>
+      <div class="card"><b>4 · An Indian staple, often unlabeled.</b> Til laddoo, gajak (Makar Sankranti), gingelly oil — early intro is natural, but a homemade laddoo carries no "Contains sesame" label. The parent is the label. → <span class="jump" data-go="p-ctx">Context</span></div>
+    </div>
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> an <b>encourage-polarity</b> card (introduce early, safe form) — but with the <b>most serious emergency floor of the four allergens</b>. Lead "safe to introduce, no need to delay," <b>never</b> "introducing early prevents the allergy" (EAT null for sesame). Carry a non-collapsible severe-reaction strip <b>and</b> the "usually lifelong — vigilance doesn't age out" note. → <span class="jump" data-go="p-data">Data Stub</span></div>
+    <div class="card flag" style="margin-top:0"><b>⚑ Tier-2 honesty:</b> introduce early because it's safe + don't-delay, <b>NOT a prevention promise</b> (EAT null for sesame). And: <b>usually lifelong</b> — first exposures + ongoing care matter.</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">2026-06-01</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--mid);margin-top:10px">Full prose: <code>sesame-infant-safety.md</code> · long-form HTML: <code>sesame-infant-safety.html</code>. This dashboard is the skim layer over both.</p>
+  </section>
+
+  <!-- ───────── WHY / ALLERGEN ───────── -->
+  <section class="panel" id="p-why"><h2>Why it matters — a Tier-2 allergen that's usually lifelong</h2>
+
+    <div class="card flag" style="margin-top:0"><b>⚑ The honest framing the model must hold:</b> early sesame is <b>SAFE</b> and there's no reason to delay — but <b>RCT evidence does not show early sesame prevents sesame allergy.</b> The EAT trial reported, verbatim: <i>"no significant effects with respect to milk, sesame, fish, or wheat."</i> The peanut+egg benefit does <b>not</b> transfer. <b>Never claim early sesame prevents sesame allergy.</b> <span class="badge b-hi">EAT verified · PubMed 26943128</span></div>
+
+    <h3>Rarely outgrown — the defining fact</h3>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="Sesame allergy persistence: ~70–80% persists into adulthood; only ~20–30% is outgrown">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--track)" stroke-width="15"/>
+          <!-- persists ~75% (rose); circumference r=52 = 326.7; PCT_LEN = 75*3.267 = 245.0, REST = 81.7 -->
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--rose)" stroke-width="15"
+            stroke-dasharray="245.0 81.7" stroke-dashoffset="0" transform="rotate(-90 60 60)" stroke-linecap="round"/>
+          <text x="60" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="var(--rose)" font-family="Fraunces,serif">~75%</text>
+        </svg>
+        <div style="font-size:13px;color:var(--mid);min-width:200px;flex:1">
+          <p style="margin:0 0 6px"><b style="color:var(--rose)">~70–80% persists</b> into adulthood — sesame allergy is rarely outgrown.</p>
+          <p style="margin:0 0 6px"><b style="color:var(--sage)">Only ~20–30%</b> achieve tolerance, unlike egg, milk, soy and wheat (commonly outgrown).</p>
+          <p style="margin:0">Sesame sits firmly in the <i>lifelong</i> camp with peanut and tree nuts — and is a <b>leading anaphylaxis trigger</b>. <span class="badge b-hi">J Asthma Allergy · JAMA Netw Open 2019</span></p>
+        </div>
+      </div>
+      <div class="flag bad"><b>⚑ Why this drives the tone:</b> for a commonly-outgrown allergen, the risk fades. For sesame it does <b>not</b> — so the emergency floor, label-vigilance, and "carry the adrenaline plan" framing are the <b>most serious of the four</b>, and should <b>not</b> soften over the toddler years.</div>
+    </div>
+
+    <h3>Introduce early, don't delay <span class="badge b-hi">AAP names sesame directly</span></h3>
+    <div class="card">
+      <p style="margin:0 0 6px">General timing is <b>around 6 months</b>, once ready for solids — <b>not before 4 months</b>, and don't delay once ready.</p>
+      <blockquote style="margin:8px 0;padding:6px 0 6px 14px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic;font-size:13px">"There is no evidence that delaying introduction of allergenic foods like egg, peanut, dairy and sesame prevents allergies once babies are ready, typically at about 6 months." — AAP/HealthyChildren</blockquote>
+      <p style="margin:0;font-size:13px;color:var(--mid)">NHS lists sesame among allergens to introduce, noting seeds — "particularly sesame" — should be finely ground. ASCIA recommends common allergens incl. sesame in the first year.</p>
+    </div>
+
+    <h3>Regulatory weight — the 9th US major allergen</h3>
+    <div class="card">
+      <p style="margin:0 0 6px">Under the <b>FASTER Act of 2021</b>, sesame became the <b>9th major US food allergen</b>; mandatory labeling took effect <b>January 1, 2023</b> (e.g. "tahini (sesame)" or "Contains sesame"). The EU has long required it. <span class="badge b-mod">FDA page blocked direct fetch — corroborated via FoodSafety.gov mirror</span></p>
+      <div class="flag"><b>⚑ Scope limit:</b> this labeling is US (and analogously EU) <b>packaged-food</b> regulation. It does <b>NOT</b> apply to Indian-bought packets or home foods — a homemade til laddoo or loose chutney carries no "Contains sesame" guarantee.</div>
+    </div>
+  </section>
+
+  <!-- ───────── REACTION & INTRODUCTION ───────── -->
+  <section class="panel" id="p-sym"><h2>Reaction &amp; introduction — the gravest emergency floor</h2>
+
+    <h3>Safe form — the choking gate <span class="badge b-hi">High</span></h3>
+    <div class="therm">
+      <div class="col safe">
+        <div style="font-size:12px;color:var(--mid)">Thinned tahini / ground (SAFE)</div>
+        <div class="big">introduce early</div>
+        <div style="font-size:12.5px">smooth tahini <b>thinned</b> (~⅛–½ tsp) into milk, water, puree, yoghurt, dal, khichdi or curd; or finely ground sesame stirred in. Same "thin the sticky glob" rule as peanut butter.</div>
+      </div>
+      <div class="col danger">
+        <div style="font-size:12px;color:var(--mid)">Thick glob / whole seeds (CHOKING)</div>
+        <div class="big">never for a young infant</div>
+        <div style="font-size:12.5px">a thick spoonful of paste (sticky — lodges in the airway) or whole sesame seeds in quantity (small, hard, easily inhaled). Avoid loose til off laddoo/gajak.</div>
+      </div>
+    </div>
+    <div class="flag good"><b>✓ Design crux:</b> thinning/grinding genuinely removes the <b>choking</b> hazard (like peanut — unlike honey, where cooking doesn't remove the spore hazard). The <b>allergy axis is separate and NOT removed by form</b> — thinning makes it safe to swallow, not safe for an allergic child.</div>
+
+    <h3>The reaction watch — most serious of the four</h3>
+    <div class="card">
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">First taste — small amount, at home</div><div class="tl-d">~⅛–½ tsp thinned tahini, one allergen at a time, morning/midday so you can observe through the day.</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Mild — one body system (watch closely)</div><div class="tl-d">Itchy hives/welts, redness or rash, swelling (esp. mouth/eyes), vomiting, sometimes loose stool, sudden fussiness. → stop the food, monitor, call your doctor.</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Severe / anaphylaxis — act immediately</div><div class="tl-d">Trouble breathing, wheeze/persistent cough, face/lip/tongue/throat swelling, hoarse cry, pale/floppy/lethargic, collapse. In babies, suddenly limp / can't hold head up is a severe sign. → use a prescribed adrenaline auto-injector now, call 112 / 108 (India).</div></div>
+        <div class="tl-step"><span class="tl-dot"></span><div class="tl-t">Keep watching — vigilance does NOT age out</div><div class="tl-d">First taste may sensitise with the reaction on a later one — watch across the first several exposures. Because sesame is usually permanent, this vigilance doesn't fade the way it tends to for milk/egg.</div></div>
+      </div>
+      <div class="flag bad"><b>⚑ Anaphylaxis onset often 5–30 min.</b> Sesame is a leading cause of food-allergic anaphylaxis. Treat first exposures and ongoing care with the <b>most</b> seriousness of the four allergens.</div>
+    </div>
+  </section>
+
+  <!-- ───────── CONTEXT ───────── -->
+  <section class="panel" id="p-ctx"><h2>Context — Indian &amp; cultural</h2>
+    <div class="card">
+      <p style="margin:0"><b>Til is deeply embedded in the Indian diet</b> — <b>til laddoo</b>, <b>gajak</b> (sesame-jaggery brittle, peaking around <b>Makar Sankranti, mid-January</b>), sesame <b>chutneys</b>, and <b>gingelly (sesame) oil</b> are everyday foods. Early, regular introduction is culturally natural — the challenge is FORM (thin/grind) and first-exposure discipline, not novelty. <span class="badge b-hi">cultural embedding</span></p>
+    </div>
+
+    <h3>The cultural double-edge</h3>
+    <div class="card">
+      <p style="margin:0 0 6px">Because til is <i>everywhere</i> and often <b>unlabeled</b> in home/loose form, an Indian family both (a) introduces sesame naturally and early, and (b) faces a harder <i>avoidance</i> task if the child turns out allergic. The US "Contains sesame" label does <b>not</b> appear on a homemade laddoo or a loose chutney. <b>The parent is the label.</b></p>
+      <p style="margin:0;font-size:13px;color:var(--mid)">Form tip: thin tahini into dal, khichdi, curd or fruit puree; avoid loose til seeds shaken off laddoo/gajak for a young infant — those carry whole seeds and an uncontrolled first-exposure dose.</p>
+    </div>
+
+    <h3>Hidden under many names</h3>
+    <div class="card">
+      <p style="margin:0 0 6px">A confirmed-allergic child's caregiver must recognise: <b>tahini</b>, <b>hummus</b>, <b>halva/halwa</b> (sesame variety), <b>til / til laddoo</b>, <b>gajak</b>, <b>benne / benniseed</b>, <b>gomashio</b>, <b>goma</b>, <b>sim sim</b>, and <b>gingelly oil (= sesame oil)</b>. Hidden on breads, buns, crackers, bagels, in chutneys, sweets, dressings and spice blends.</p>
+      <div class="flag"><b>⚑ The sesame-oil nuance:</b> highly refined sesame oil is largely de-proteinized and lower-risk — <b>but cold-pressed / unrefined gingelly oil, common in Indian cooking, can retain allergenic protein.</b> For a non-allergic baby this is no barrier; for a <i>known-allergic</i> child, treat unrefined gingelly oil as a potential exposure. <span class="badge b-mod">Moderate</span></div>
+    </div>
+
+    <div class="card flag" style="margin-top:0"><b>⚑ Gap — no India-specific directive.</b> No IAP / MoHFW / FSSAI sesame directive (early-intro or labeling) was located. The early-introduction guidance is international (AAP/NHS/ASCIA); the 9th-allergen labeling law is US (FASTER Act) and does not apply in India. Do not launder either onto an Indian body. <span class="badge b-mod">India directive absent</span></div>
+  </section>
+
+  <!-- ───────── SOURCES & CONFIDENCE ───────── -->
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo</th><th class="c">Sesame finely ground / thinned</th><th class="c">Proven sesame prevention</th></tr>
+      <tr><td>AAP / HealthyChildren</td><td class="c yes">✓ (names sesame)</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c yes">✓ "particularly sesame"</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>ASCIA (Australasia)</td><td class="c yes">✓ in first year</td><td class="c yes">✓</td><td class="c no">✗ not claimed</td></tr>
+      <tr><td>EAT trial (NEJM 2016)</td><td class="c dash">— (tested early intro)</td><td class="c dash">—</td><td class="c no">✗ NULL for sesame</td></tr>
+      <tr><td>FASTER Act (US FDA)</td><td class="c dash">—</td><td class="c dash">—</td><td class="c dash">— (labeling, not intro)</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--mid);margin:6px 0 0">All authorities agree on <b>introduce early, don't delay</b> and <b>finely ground / thinned form</b> — but <b>none</b> claims early sesame <i>prevents</i> sesame allergy. EAT explicitly found no sesame effect. This is the Tier-2 honesty line.</p>
+    </div>
+
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>AAP / HealthyChildren — allergens (names sesame; no-delay)</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+      <tr><td>UK NHS — food allergies in babies (seeds "particularly sesame" finely ground)</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+      <tr><td>ASCIA — Infant Feeding &amp; Allergy Prevention <i>(401/403 to fetcher)</i></td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+      <tr><td>NIAID — Food allergy guidelines</td><td><a href="https://www.niaid.nih.gov/diseases-conditions/guidelines-clinicians-and-patients-food-allergy">niaid.nih.gov/…/food-allergy</a></td></tr>
+      <tr><td>US FDA — FASTER Act: sesame 9th major allergen <i>(401 to fetcher)</i></td><td><a href="https://www.fda.gov/food/food-allergies/faster-act-sesame-ninth-major-food-allergen">fda.gov/…/faster-act-sesame</a></td></tr>
+      <tr><td>FoodSafety.gov — FASTER Act 2021 (govt mirror)</td><td><a href="https://www.foodsafety.gov/blog/food-allergy-safety-treatment-education-and-research-act-2021">foodsafety.gov/blog/…/faster-act</a></td></tr>
+      <tr><td>NEJM — EAT trial (Perkins/Lack 2016); <b>sesame-null</b></td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+      <tr><td>J Asthma Allergy — sesame persistence (~20–30% resolve)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5414576/">pmc.ncbi.nlm.nih.gov/…/PMC5414576</a></td></tr>
+      <tr><td>JAMA Netw Open 2019 — sesame prevalence/persistence</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6681546/">pmc.ncbi.nlm.nih.gov/…/PMC6681546</a></td></tr>
+      <tr><td>Solid Starts — sesame (form, symptoms) <i>(secondary)</i></td><td><a href="https://solidstarts.com/foods/sesame/">solidstarts.com/foods/sesame</a></td></tr>
+      <tr><td>Wikipedia — Tahini (culinary aliases) <i>(secondary)</i></td><td><a href="https://en.wikipedia.org/wiki/Tahini">en.wikipedia.org/wiki/Tahini</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> (1) <b>FASTER Act</b> 9th-allergen + Jan 1 2023 labeling is <b>high-confidence-but-not-direct-fetch</b> — FDA page returned 401; corroborated via FoodSafety.gov mirror + FDA indexed text. (2) <b>ASCIA</b> page returned 401/403 — stance corroborated indirectly; re-extract before any verbatim attribution. (3) <b>Sesame-oil protein nuance</b> — allergen consensus, moderate confidence. (4) <b>No India-specific (IAP/MoHFW/FSSAI) sesame directive</b> located — genuinely absent. EAT sesame-null + persistence figures are verified high-confidence.</div>
+  </section>
+
+  <!-- ───────── DATA STUB ───────── -->
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['sesame']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of this food's record in <code>food-effects.manifest.js</code>. Sits alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. <b>Not yet wired.</b></p>
+<pre>{
+  food:          'sesame',
+  aliases:       ['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','halva','halwa','gajak','til laddoo'],
+  foodClass:     'allergen-introduce-early',
+  severity:      'caution',
+  category:      'seed',
+  effect:        'food allergy (often lifelong)',
+  minMonth:      6,
+  thresholdBasis:'developmental-readiness',
+  allergen:      true,
+  reactionType:  ['allergy'],
+  headline:      'Introduce around 6 months, as thinned tahini — never a thick glob.',
+  whyGood:       'Seed source of calcium, iron and healthy fats; offer as smooth tahini thinned into food.',
+  earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                       evidence:'AAP/NHS/ASCIA name sesame among allergens to introduce early; EAT (NEJM 2016) verified NO significant prevention effect for sesame — early intro is SAFE but not proven to prevent sesame allergy. (Sesame is the US 9th major allergen, FASTER Act, labeling since Jan 1 2023 — US-only; does not apply to Indian/home foods.)',
+                       paradigm:'Don\'t delay — but no proven sesame-specific prevention claim.' },
+  safeForm:      { ok:['smooth tahini (sesame paste) thinned with water, milk, or puree','finely ground sesame stirred into food'],
+                   never:['a thick glob of tahini (sticky — a choking risk; thin it, like nut butter)','whole sesame seeds in quantity for a young infant'],
+                   note:'Same "thin the sticky glob" rule as peanut butter. Unrefined / cold-pressed gingelly (sesame) oil can still carry allergenic protein.' },
+  myth:          { claim:'Sesame allergy is outgrown like egg or milk.',
+                   truth:'Usually not — sesame allergy tends to be lifelong (~70–80% persist), so first exposures and ongoing care matter more than for commonly-outgrown allergens.' },
+  watchFor:      ['hives / rash','swelling (mouth, eyes, lips)','vomiting'],
+  severeSigns:   ['trouble breathing / wheeze','face/lip/tongue swelling','floppy, pale, or very sleepy'],
+  timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min',
+  seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline auto-injector. Sesame is a leading anaphylaxis trigger — watch closely.',
+  breastfeedingSafe: true,
+  culturalNote:  'Til is deeply embedded — til laddoo, gajak (peak around Makar Sankranti), chutneys, gingelly oil. Thin tahini into dal, khichdi, curd, or fruit puree; avoid loose til seeds from laddoo/gajak for young infants.',
+  confidence:    'high',
+  sources:       ['AAP','UK NHS','ASCIA','FDA FASTER Act 2021','NEJM EAT 2016','J Asthma Allergy (persistence)','JAMA Netw Open 2019'],
+  dashboard:     'sesame-infant-safety.visual.html', // render pending
+  brief:         'sesame-infant-safety.md',
+  longform:      'sesame-infant-safety.html',         // render pending
+  lastReviewed:  '2026-06-01',
+}</pre>
+    <div class="flag good"><b>Surfacing hook:</b> an <b>encourage</b> card (introduce early, safe form) carrying the <b>most serious emergency floor of the four</b>. The two highest-value nuggets unique to sesame: the <b>Tier-2 honesty line</b> ("safe + don't-delay, NOT a prevention promise — EAT null") and the <b>persistence / usually-lifelong</b> note (vigilance doesn't age out).</div>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>sesame-infant-safety.md</code> / <code>.html</code> · 2026-06-01<br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>

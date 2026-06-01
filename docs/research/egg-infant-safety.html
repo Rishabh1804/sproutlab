@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egg &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--sage-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.good{background:var(--sage-bg);color:var(--sage);border-color:transparent}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre .c{color:#8a9a7a} pre .k{color:#d8a0b0} pre .s{color:#cbb080}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+  .gap{background:var(--rose-bg);border-color:transparent}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Egg &amp; Infant Safety</h1>
+  <p class="sub">Care research brief — evidence base for SproutLab's Care layer, feeding the <i>guided-introduction</i> food-effects model. Egg is a <b>tier-1, prevention-proven</b> allergen: like peanut, it earns the confident "introducing early reduces allergy risk" claim, RCT-backed (PETIT, EAT).</p>
+  <div class="meta">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill">2026-06-01</span>
+    <span class="pill">Hen's egg · infants ~6–12mo · India</span>
+    <span class="pill good">PETIT/EAT PubMed-verified</span>
+    <span class="pill warn">Research artifact — NOT yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card">
+    <p style="margin:0"><b>Purpose.</b> Evidence base for SproutLab's Care layer, feeding the <i>guided-introduction</i> food-effects model. Built to decide what to surface when a parent introduces <b>egg</b> to an under-1 — covering BOTH why to introduce early (allergy-prevention, RCT-backed) AND the two hazards (allergic reaction; the runny-egg salmonella + allergenicity trap). Egg is a <b>tier-1 "prevention-proven" allergen</b> — like peanut, it earns the confident <i>"introducing early reduces allergy risk"</i> claim, backed by randomised controlled trials (PETIT, EAT). The food is not gated by choking-form (egg is soft); it is gated by <b>cooked-state</b>.</p>
+    <p style="margin:10px 0 0"><b>Scope.</b> Hen's egg (white + yolk). Infants ~6–12 months, in a family context that is <b>Indian</b> — egg is a common, affordable, culturally accepted complementary food, but there is <b>no British-Lion-style salmonella-control mark</b> on Indian eggs, which changes the safe-form rule.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:var(--mid)"><b>Method.</b> Multi-angle web fan-out → source fetch → adversarial cross-check → synthesis. Authorities: AAP/HealthyChildren, UK NHS, ASCIA (Australasia), US NIAID, IAP (India); pivotal trials <b>PETIT (Natsume et al., Lancet 2017)</b> and <b>EAT (Perkin/Lack, NEJM 2016)</b>. Trial figures verified against the primary literature via PubMed (PETIT: PMID 27939035; EAT: PMID 26943128). A few preparation specifics rest on reputable secondary sources (flagged inline) rather than a top-tier body's verbatim words.</p>
+  </div>
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>The advice REVERSED.</b> The old "delay egg to prevent allergy" guidance is gone. Current consensus (AAP, NHS, ASCIA, NIAID-aligned): introduce egg <b>early</b> — around 6 months, alongside other solids, <b>not before 4 months</b> — and keep it in the diet regularly. Delaying does not prevent allergy and may <i>increase</i> it.</li>
+      <li><b>Early introduction PREVENTS egg allergy — RCT-proven.</b> The <b>PETIT trial</b> (high-risk eczematous Japanese infants) cut egg allergy at 12 months to <b>8% (egg group) vs 38% (placebo), P=0.0001</b> — using <b>heated egg powder</b> with <b>aggressive eczema treatment</b>. The <b>EAT trial</b> showed a per-protocol reduction (<b>1.4% vs 5.5%, P=0.009</b>) but <b>no significant intention-to-treat effect</b> — the benefit depends on sustaining regular intake.</li>
+      <li><b>The crux is COOKED-STATE, not the food.</b> The safe form is <b>fully-cooked egg</b> — mashed hard-boiled, scrambled until firm, or baked into food. <b>Runny/soft egg is not safe for an Indian infant</b>: India has no British-Lion-mark equivalent, so the salmonella safeguard the NHS relies on does not apply, and well-cooking also reduces allergenicity. Start with about <b>a third of a well-cooked egg</b>.</li>
+      <li><b>Two distinct hazards, two distinct mitigations.</b> (1) <i>Allergy</i> — mitigated by early, sustained introduction + a watchful first exposure. (2) <i>Salmonella + raw-egg allergenicity</i> — mitigated by <b>fully cooking</b>. The model must hold both at once. Egg has <b>no choking-form gate</b> (it is soft) — this is what distinguishes it from peanut/tree-nut.</li>
+      <li><b>Reassuring outlook: most children OUTGROW egg allergy.</b> Egg is among the most common infant allergens, but unlike peanut it is <b>commonly outgrown</b> — a majority of children by school age. The tone should be calm, not alarmed.</li>
+      <li><b>First exposure = small amount, fully cooked, at home, daytime, watch.</b> Know the difference between a mild reaction (hives/swelling/GI) and anaphylaxis (breathing trouble, tongue/throat swelling, hoarse voice, pale-and-floppy) — the latter is an emergency-call event (<b>112 / 108</b> in India).</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> · The benefit: early introduction reduces egg allergy <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>The paradigm flipped.</b> Until ~2008–2015, guidance advised <i>delaying</i> allergenic foods (incl. egg) to prevent allergy. That advice is reversed: AAP/HealthyChildren now states there is no evidence that delaying allergenic foods like egg prevents allergies once a baby is ready, typically around 6 months.</li>
+      <li><b>PETIT trial (the pivotal RCT for egg).</b> High-risk Japanese infants <b>with eczema</b>, randomised to a <b>stepwise heated whole-egg powder</b> regimen — <b>50 mg/day from 6–9 months, then 250 mg/day from 9–12 months</b> — <b>alongside aggressive eczema treatment</b>, vs placebo. Egg allergy at 12 months:
+        <ul>
+          <li><b>8% (egg group) vs 38% (placebo)</b> — <b>P=0.0001.</b> <span class="badge b-hi">Lancet 2017 · PMID 27939035</span></li>
+          <li><b>Two integral conditions of this result:</b> (a) the studied form was <b>HEATED/cooked egg</b> (not raw), and (b) <b>eczema was actively controlled</b> as part of the protocol. The trial does not license giving raw egg, nor giving egg to an uncontrolled-eczema infant without care.</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="flag"><b>⚑ The high-risk-eczema pathway warrants clinician input.</b> PETIT studied infants <b>with eczema</b> under <b>medical eczema management</b>. For an infant with significant eczema or a sibling/family history of food allergy, early egg is still the goal — but it is prudent to involve a paediatrician on timing and on getting eczema under control first, rather than reading PETIT as "give any eczematous baby egg at home unsupervised."</div>
+    <ul>
+      <li><b>EAT trial (the nuance — adherence matters).</b> General-population, exclusively-breastfed infants randomised to early introduction of allergens (incl. egg) vs standard introduction. For egg:
+        <ul>
+          <li><b>Per-protocol</b> (those who actually achieved the regular dose): <b>1.4% vs 5.5%, P=0.009</b> — a real, significant reduction.</li>
+          <li><b>Intention-to-treat: NOT significant</b> — overall <b>7.1% vs 5.6%, P=0.32.</b> <span class="badge b-hi">NEJM 2016 · PMID 26943128</span></li>
+        </ul>
+      </li>
+    </ul>
+    <div class="flag"><b>⚑ The EAT lesson is dose + adherence:</b> the benefit is real but depends on getting enough egg in, <b>regularly</b>. Early introduction is easy to <i>attempt</i> and hard to <i>sustain</i>. The model should frame egg as "introduce <b>and keep offering</b>," not a one-time tick.</div>
+    <ul>
+      <li><b>Timing consensus:</b> introduce egg <b>around 6 months</b>, once the baby is developmentally ready for solids and a few first foods are tolerated — <b>not before 4 months</b>. <span class="badge b-hi">NHS · AAP · ASCIA · NIAID-aligned</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> · Safe FORM: fully-cooked egg <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>The safe form is FULLY-COOKED egg.</b> Mashed/grated <b>hard-boiled</b> egg, <b>scrambled until firm and no longer runny</b>, or <b>baked into</b> another food (pancake, omelette set firm, egg stirred into porridge/khichdi and cooked through). Start with about <b>one-third of a well-cooked egg</b>. <span class="badge b-hi">AAP · NHS</span></li>
+      <li><b>Why not runny egg — the India-specific divergence.</b> NHS permits <b>runny or lightly-cooked egg for infants only if the eggs carry the British Lion mark</b> (a UK salmonella-control assurance scheme); <b>otherwise the egg must be cooked until both white and yolk are solid.</b></li>
+    </ul>
+    <div class="flag"><b>⚑ India has no British-Lion-mark equivalent.</b> Therefore the NHS "runny is fine if Lion-marked" exception <b>does not apply to an Indian family</b> — the default must be <b>fully-cooked egg (solid white + solid yolk)</b>. Two reasons compound: <b>(1) salmonella</b> — without a control-scheme assurance, raw/undercooked egg carries an infection risk that is far more serious in an infant; <b>(2) allergenicity</b> — well-cooking (heating) reduces egg's allergenic potency, which is precisely why PETIT used <b>heated</b> egg powder rather than raw.</div>
+    <ul>
+      <li><b>Egg has no choking-form gate.</b> Unlike whole peanuts/tree nuts, cooked egg is soft and does not need grinding/thinning for airway safety. The gate egg passes through is <b>cooked-state</b>, not particle-size. (Standard general choking caution — soft, age-appropriate textures — still applies, but egg is not a choking-hazard food in the nut sense.)</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> · Allergic-reaction watch-fors &amp; the emergency floor <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Egg is among the most common infant food allergens</b> — but, reassuringly, it is <b>commonly outgrown</b>: a <b>majority of egg-allergic children outgrow it by school age</b>, unlike peanut/tree-nut which tend to be lifelong. The tone here should be <b>calm and reassuring</b>, not alarmist. <span class="badge b-mod">FARE · FAACT</span></li>
+      <li><b>Mild–moderate reaction (one body system):</b> itchy <b>hives/welts</b>, redness or <b>rash</b>, <b>swelling</b> (esp. around the mouth/eyes), <b>vomiting</b>, loose stool or other <b>GI upset</b>, sudden fussiness.</li>
+    </ul>
+    <div class="flag" style="border-left-color:var(--rose);background:var(--rose-bg)"><b style="color:var(--rose)">⚑ Severe / anaphylaxis — act immediately (red flags):</b>
+      <ul style="margin:6px 0 0">
+        <li><b>Difficulty/noisy breathing</b>, wheeze, persistent cough.</li>
+        <li><b>Swelling of the tongue or throat</b>, tightness in the throat.</li>
+        <li><b>Hoarse voice or cry.</b></li>
+        <li><b>Pale and floppy</b> (in a baby, sudden limpness / can't hold head up is a recognised severe sign), collapse.</li>
+        <li><b>→ This is an emergency. Lay the child flat (do not stand them up); use an adrenaline auto-injector immediately if one has been prescribed; call emergency services — 112 (all-India) or 108 (ambulance).</b> <span class="badge b-hi">ASCIA First Aid</span></li>
+      </ul>
+    </div>
+    <ul>
+      <li><b>What to do for a mild, single-system reaction:</b> stop the food, monitor closely, contact your doctor; an antihistamine may be advised by a clinician. <b>Any breathing difficulty, tongue/throat swelling, hoarse voice, floppiness, or two body systems involved → treat as anaphylaxis (adrenaline + 112/108).</b></li>
+      <li><b>First-exposure practice:</b> offer a <b>small amount</b> of fully-cooked egg, <b>at home</b>, in the <b>morning or midday</b> (not at dinner) so you can observe through the day, and <b>watch</b> afterward — most reactions appear within a couple of hours. If tolerated, <b>keep offering regularly</b> (the EAT lesson).</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> · Culinary aliases &amp; hidden sources <span class="badge b-hi">High (alias list)</span> <span class="badge b-mod">Moderate ("lecithin is egg")</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Egg goes by many names on labels.</b> Watch for: <b>albumin / albumen, ovalbumin, ovomucoid, ovomucin, ovo-</b> (any "ovo-" prefix), <b>ovovitellin / vitellin, livetin, lysozyme</b> (often in cheese/wine as a preservative), <b>globulin, conalbumin</b>, "egg solids," "dried/powdered egg," "egg white/egg yolk."</li>
+      <li><b>Lecithin may be egg-derived.</b> Lecithin (an emulsifier, E322) is <b>usually soy- or sunflower-derived but can be egg-derived</b> — for an egg-allergic child, lecithin of unspecified origin is worth checking. <span class="badge b-mod">FARE/FAACT — "may contain," not "always egg"</span></li>
+      <li><b>Hidden-egg foods (common in an Indian household):</b>
+        <ul>
+          <li><b>Baked goods</b> — many cakes, biscuits, breads, and <b>egg-glazed / egg-washed buns and pastries</b> (the shiny glaze on bakery buns is frequently an egg wash).</li>
+          <li><b>Mayonnaise</b>, salad dressings, <b>custard and custard puddings</b>, ice cream, some <b>kheer/pudding</b> mixes.</li>
+          <li><b>Egg noodles / hakka noodles / egg-containing chow mein.</b></li>
+          <li>Batters, some "instant" pancake/cake mixes, marshmallow, meringue, certain breaded/fried coatings.</li>
+        </ul>
+      </li>
+      <li><b>Why this matters for the model:</b> once a parent is avoiding egg (suspected or confirmed allergy), the failure mode is <b>accidental exposure via an unlabelled or aliased source</b> — Indian bakery items and egg-glazed buns are a particularly easy miss. Surfacing the alias list and the bakery-glaze/noodle/custard examples is the highest-value safety content here.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> · Indian &amp; cultural context <span class="badge b-hi">High (staple + cooked-default)</span> <span class="badge b-weak">Mod→Low (India official guidance)</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Egg is a common, affordable, accepted complementary food in India.</b> It appears in the <b>IAP (Indian Academy of Pediatrics) complementary-feeding food groups</b> as a protein-rich option for infants. <span class="badge b-mod">IAP Ch-040</span></li>
+    </ul>
+    <div class="flag"><b>⚑ Read the IAP citation correctly — nutrition framing, NOT an allergy-prevention directive.</b> IAP listing egg among complementary-feeding <b>food groups</b> is a <b>nutrition</b> statement (egg is a good infant protein/iron/choline source). It is <b>not</b> an IAP statement that "introduce egg early to <i>prevent allergy</i>." Do not launder the international early-introduction-for-prevention claim onto IAP's name — see the gap note below (the honey lesson).</div>
+    <ul>
+      <li><b>The cooked-default fits Indian practice.</b> Indian egg preparations for infants — well-mashed boiled egg, firm scrambled egg (egg bhurji cooked through, not runny), egg stirred into khichdi/porridge and cooked — are <b>already fully-cooked forms</b>, which is exactly the safe default. This is a cultural asset the model can affirm. The thing to <b>correct</b> is any practice of giving <b>half-boiled / soft-yolk / runny egg</b> to a baby (no Lion-mark safeguard in India).</li>
+      <li><b>Vegetarian note:</b> in a vegetarian or egg-avoiding household, egg is simply not introduced; this is a dietary choice, not a safety failure. The brief should not push egg on a family that doesn't eat it — the prevention benefit is one input, not an obligation.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> · Myths to correct <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Myth: "Delay egg to prevent allergy."</b> <b>Reversed.</b> Delaying does not prevent egg allergy and likely increases risk; early, sustained introduction around 6 months (not before 4) is now recommended, and is <b>RCT-backed for egg specifically</b> (PETIT, EAT per-protocol). This is the highest-value myth to surface — many grandparents/relatives still believe the old rule.</li>
+      <li><b>Myth: "Egg allergy is forever."</b> <b>Mostly false for egg.</b> Unlike peanut/tree-nut, <b>most children outgrow egg allergy</b> — a majority by school age. A diagnosis is not a life sentence; re-evaluation over time (by a clinician) is standard.</li>
+      <li><b>Myth: "Runny / half-boiled egg is fine for babies."</b> <b>No — fully cook it.</b> In India there is no British-Lion-mark salmonella safeguard, so runny egg carries an infection risk; and well-cooking also lowers allergenicity. Cook until <b>both white and yolk are solid.</b></li>
+      <li><b>Myth: "If a baby reacts once, never give egg again in any form."</b> <b>Nuanced — a clinician's call.</b> Many egg-allergic children tolerate <b>baked/well-heated egg</b> even when reacting to lightly-cooked egg, and most outgrow over time; what to reintroduce and when is an <b>allergist's decision</b>, not a permanent self-imposed total ban. <span class="badge b-mod">practice-level — do not act without clinical input</span></li>
+    </ul>
+  </div>
+
+  <h2>Proposed data shape · <code>FOOD_EFFECTS['egg']</code></h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--mid)">Drop-in record (mirror of egg's entry in <code>food-effects.manifest.js</code>) for a future <code>FOOD_EFFECTS</code> table in <code>data.js</code>, sitting alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. <code>foodClass:'allergen-introduce-early'</code> drives the sage <i>encourage</i> banner; the gate is <b>cooked-state</b>, not particle-size. <b>Not yet wired.</b></p>
+<pre><span class="c">// guided-introduction record — encourage polarity, tier-1 prevention-proven allergen</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'egg'</span>: {
+    foodClass:     <span class="s">'allergen-introduce-early'</span>,
+    severity:      <span class="s">'caution'</span>,            <span class="c">// amber, NOT rose (rose = acute-toxin honey)</span>
+    effect:        <span class="s">'food allergy'</span>,
+    minMonth:      <span class="s">6</span>,                      <span class="c">// AAP/NHS ~6mo (not before 4); reconcile with AGE_RULES egg-yolk:7</span>
+    aliases:       [<span class="s">'eggs'</span>, <span class="s">'anda'</span>, <span class="s">'egg yolk'</span>, <span class="s">'whole egg'</span>, <span class="s">'boiled egg'</span>, <span class="s">'scrambled egg'</span>, <span class="s">'omelette'</span>],
+    headline:      <span class="s">'Introduce early (~6 months), well-cooked — early egg lowers allergy risk.'</span>,
+    whyGood:       <span class="s">'Complete protein, choline, iron, vitamin D — early, regular well-cooked egg helps prevent egg allergy.'</span>,
+    earlyIntroBenefit: { evidence: <span class="s">'PETIT (Lancet 2017): heated egg + eczema care cut egg allergy 38%→8% at 12mo (P=0.0001). EAT (NEJM 2016): per-protocol 5.5%→1.4% (P=0.009).'</span> },
+    safeForm:      { ok:[<span class="s">'well-cooked egg — mashed hard-boiled, scrambled, or baked into soft food'</span>],
+                     never:[<span class="s">'raw or runny egg'</span>, <span class="s">'lightly-cooked egg (no British-Lion-mark in India)'</span>],
+                     note:<span class="s">'Cook until BOTH white and yolk are solid — studied safe form; removes salmonella risk.'</span> },
+    myth:          { claim:<span class="s">'Delay egg to prevent allergy.'</span>,
+                     truth:<span class="s">'Reversed — early, regular well-cooked egg helps prevent egg allergy; delaying may increase risk.'</span> },
+    watchFor:      [<span class="s">'hives / rash'</span>, <span class="s">'swelling (mouth, eyes, lips)'</span>, <span class="s">'vomiting'</span>],
+    severeSigns:   [<span class="s">'trouble breathing / wheeze'</span>, <span class="s">'face/lip/tongue swelling'</span>, <span class="s">'floppy, pale, or very sleepy'</span>],
+    seekCare:      <span class="s">'Mild single-system: stop, monitor, call doctor. Any breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112, use prescribed adrenaline.'</span>,
+    culturalNote:  <span class="s">'No British-Lion-mark assured-egg scheme in India — default to fully-cooked egg. Egg allergy common in infancy but usually outgrown by school age.'</span>,
+    confidence:    <span class="s">'high'</span>,
+    lastReviewed:  <span class="s">'2026-06-01'</span>,
+  },
+};</pre>
+  </div>
+
+  <h2>Sources</h2>
+  <div class="card">
+  <table>
+    <tr><th>#</th><th>Authority</th><th>URL</th></tr>
+    <tr><td>1</td><td>NEJM — Perkin/Lack et al., EAT trial (2016)</td><td><a href="https://www.nejm.org/doi/full/10.1056/NEJMoa1514210">nejm.org/…/NEJMoa1514210</a></td></tr>
+    <tr><td>2</td><td>PubMed — EAT trial (PMID 26943128)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+    <tr><td>3</td><td>The Lancet — Natsume et al., PETIT trial (2017)</td><td><a href="https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(16)31418-0/abstract">thelancet.com/…/PETIT</a></td></tr>
+    <tr><td>4</td><td>PubMed — PETIT trial (PMID 27939035)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/27939035/">pubmed.ncbi.nlm.nih.gov/27939035</a></td></tr>
+    <tr><td>5</td><td>NIAID — Addendum Guidelines (allergen prevention; ~6mo / not-before-4)</td><td><a href="https://www.niaid.nih.gov/sites/default/files/addendum-peanut-allergy-prevention-guidelines.pdf">niaid.nih.gov/…/prevention</a></td></tr>
+    <tr><td>6</td><td>AAP / HealthyChildren — When to introduce egg, peanut butter &amp; other allergens</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+    <tr><td>7</td><td>UK NHS — Food allergies in babies &amp; young children</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+    <tr><td>8</td><td>UK NHS — Foods to avoid giving babies (runny egg / British Lion mark)</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk/baby/…/foods-to-avoid</a></td></tr>
+    <tr><td>9</td><td>ASCIA — Infant Feeding for Food Allergy Prevention</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+    <tr><td>10</td><td>ASCIA — Updated infant-feeding guideline (published Jan 2026)</td><td><a href="https://www.allergy.org.au/about-ascia/info-updates/updated-ascia-guideline-infant-feeding-for-food-allergy-prevention-published-january-2026">allergy.org.au/…/2026-update</a></td></tr>
+    <tr><td>11</td><td>ASCIA — First Aid for Anaphylaxis</td><td><a href="https://www.allergy.org.au/hp/anaphylaxis/first-aid-for-anaphylaxis">allergy.org.au/…/first-aid</a></td></tr>
+    <tr><td>12</td><td>FARE — Egg allergy (common allergens)</td><td><a href="https://www.foodallergy.org/living-food-allergy/food-allergy-essentials/common-allergens/egg">foodallergy.org/…/egg</a></td></tr>
+    <tr><td>13</td><td>FAACT — Egg allergen</td><td><a href="https://www.foodallergyawareness.org/food-allergy-and-anaphylaxis/food-allergens/egg/">foodallergyawareness.org/…/egg</a></td></tr>
+    <tr><td>14</td><td>IAP — Complementary Feeding parental guideline (Ch-040; egg in food groups)</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org/…/Ch-040</a></td></tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <strong>Verification status &amp; gaps</strong>
+    <ol style="margin:8px 0 0">
+      <li>✅ <b>PETIT figures</b> — verified from the primary literature via PubMed (PMID 27939035): high-risk eczematous infants; stepwise <b>heated</b> egg powder (50 mg/day 6–9 mo → 250 mg/day 9–12 mo) <b>with aggressive eczema treatment</b>; egg allergy at 12 mo <b>8% vs 38%, P=0.0001</b>. The <b>heated form</b> and <b>integral eczema control</b> are not incidental — they are conditions of the result.</li>
+      <li>✅ <b>EAT figures</b> — verified from the primary literature via PubMed (PMID 26943128): per-protocol <b>1.4% vs 5.5%, P=0.009</b>; intention-to-treat <b>NOT</b> significant (<b>7.1% vs 5.6%, P=0.32</b>). The headline lesson is <b>adherence/dose</b>, not a simple "early egg works regardless."</li>
+      <li>✅ <b>Timing reversal</b> — corroborated independently by AAP, NHS, ASCIA, NIAID-aligned framing (~6 mo, not before 4).</li>
+      <li>✅ <b>Fully-cooked default for India</b> — derived correctly: NHS permits runny egg <i>only</i> with the <b>British Lion mark</b>; India has <b>no equivalent scheme</b>, so the exception does not transfer → fully-cooked (solid white + yolk) is the default. Salmonella + reduced-allergenicity rationale is sound and aligns with PETIT's use of <b>heated</b> egg.</li>
+      <li>✅ <b>Commonly-outgrown reassurance</b> — egg allergy is typically outgrown (majority by school age), per FARE/FAACT. <i>(These are advocacy/patient-education bodies — see note 7 — but the "egg is commonly outgrown" claim is uncontroversial and consistent across mainstream paediatric allergy sources.)</i></li>
+    </ol>
+    <div class="flag"><b>⚑ India early-egg-for-prevention directive — HONEST GAP, none exists.</b> No India-specific (<b>IAP / MoHFW / NHM / FSSAI</b>) directive recommending <b>early egg introduction to <i>prevent</i> allergy</b> was located. IAP's Ch-040 lists egg among complementary-feeding <b>food groups</b> — a <b>nutrition</b> framing, <b>not</b> an allergy-prevention recommendation. The early-introduction-prevents-allergy evidence base is <b>international</b> (NHS / ASCIA / NIAID / PETIT / EAT). Treat the prevention claim as well-sourced internationally and culturally compatible with Indian practice, but <b>do not attribute an early-egg-for-prevention recommendation to IAP or any Indian body.</b> <i>(The honey-brief lesson: never launder international guidance onto an Indian body's name.)</i></div>
+    <div class="flag"><b>⚑ Source-tier flag.</b> <b>FARE</b> and <b>FAACT</b> are <b>advocacy / patient-education organisations</b>, not government regulators or primary trials — cited here for the <b>alias list, hidden-egg sources, mild-vs-severe symptom descriptions, and the commonly-outgrown framing</b>, all of which are mainstream and corroborated, but they should be labelled as advocacy-tier, not regulator-verbatim. Trial claims rest on PETIT/EAT (primary, PubMed-verified); cooked-state and timing rest on NHS/AAP/ASCIA (official bodies).</div>
+    <div class="flag"><b>⚑ Emergency numbers.</b> <b>112</b> is India's unified emergency number; <b>108</b> is the widely-used ambulance number across most Indian states. Both are practice-level/operational facts, not allergy-guideline-issued; ASCIA's first-aid <i>content</i> (lay flat, adrenaline first, then call) is the cited clinical procedure.</div>
+  </div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">Egg is a <b>tier-1, prevention-proven</b> allergen — surface it as an <b>encourage</b> card (sage), not honey's <b>warn</b> card (rose). Lead with the RCT-earned benefit (early, regular well-cooked egg lowers allergy risk: PETIT 38%→8%), then the introduce-safely block (<b>fully-cooked</b> form / about ⅓ of a well-cooked egg / watch / keep offering), then a non-collapsible severe-reaction strip. The two highest-value nuggets unique to egg: the <b>fully-cook-it</b> rule (no British-Lion-mark in India → no runny egg) and the reassuring <b>usually-outgrown</b> framing. Hold both hazards at once — allergy (early, sustained intro + watchful first exposure) and salmonella + raw-egg allergenicity (cook through).</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/egg-infant-safety.md</code> · generated 2026-06-01<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>

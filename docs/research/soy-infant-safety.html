@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soy (Soya) &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  .flag.bad{background:var(--rose-bg);border-left-color:var(--rose)}
+  .flag.bad b{color:var(--rose)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre .c{color:#8a9a7a} pre .k{color:#d8a0b0} pre .s{color:#cbb080}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  td.c{text-align:center;font-weight:800}
+  .yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+  .gap{background:var(--rose-bg);border-color:transparent}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Soy (Soya) &amp; Infant Safety</h1>
+  <p class="sub">Care research brief — evidence base for SproutLab's <b>guided-introduction</b> food-effects model. Soy is a <b>Tier-2</b> allergen: introduce early because it's safe and nutritious, <b>not</b> on a prevention promise.</p>
+  <div class="meta">
+    <span class="pill">Reviewer · Maren (Care)</span>
+    <span class="pill">2026-06-01</span>
+    <span class="pill">Soy / soya · infants ~6–12mo · India, vegetarian</span>
+    <span class="pill">Tier-2 — introduce-early-and-SAFE, prevention NOT RCT-proven</span>
+    <span class="pill warn">Research artifact — NOT yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card">
+    <p style="margin:0"><b>Purpose.</b> Evidence base for SproutLab's Care layer, feeding the <i>guided-introduction</i> food-effects model. Built to decide what to surface when a parent introduces <b>soy (soya)</b> to an under-2 — covering why to introduce early (don't delay an allergen), the safe FORM (tofu vs. choking-hazard whole edamame), and the <b>two distinct emergency branches</b> (IgE-allergy/anaphylaxis AND the delayed non-IgE <b>FPIES</b> reaction for which soy is a classic trigger). The food is not banned — and unlike peanut/egg, early introduction is <b>NOT proven to prevent</b> soy allergy. We frame honestly: safe to introduce early, prevention not established.</p>
+    <p style="margin:10px 0 0"><b>Scope.</b> Soy as a food allergen and complementary food: tofu, edamame/soybeans, soy yoghurt, and the soya-protein products central to vegetarian Indian cooking (<b>soya chunks/granules/nuggets = TVP</b>). Infants ~6–12 months, choking note running to ~5 years. Family context: Indian, vegetarian — soya chunks and tofu are protein staples, not novelties. <b>Out of scope:</b> soy <i>infant formula</i> as a feeding choice (touched only to debunk the "soy not recommended" confusion — see Axis 1 &amp; 6).</p>
+    <p style="margin:10px 0 0;font-size:14px;color:var(--mid)"><b>Method.</b> Multi-angle web fan-out → source fetch → adversarial cross-check → synthesis. Authorities: AAP/HealthyChildren, UK NHS, ASCIA (Australasia), US NIAID, WHO complementary-feeding; pivotal trial EAT (Perkins/Lack, NEJM 2016). Disease-specific clinical detail (FPIES, natural history) from CHOP, FARE, and a JACI natural-history paper — <b>flagged inline as secondary/clinical</b>. Preparation specifics rest on reputable secondary sources (Solid Starts, flagged inline) rather than a top-tier body's verbatim words.</p>
+  </div>
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>Introduce early — but DON'T claim it prevents allergy.</b> Consensus (AAP, NHS, ASCIA, NIAID): introduce major allergens, soy included, <b>around 6 months</b> alongside other solids, and <b>don't deliberately delay</b>. Soy is one of the US <b>"Big 9"</b> major allergens. <b>BUT</b> the headline prevention evidence (LEAP/EAT) is for peanut and egg. The <b>EAT trial found NO significant prevention effect for soy</b> (nor for milk, sesame, or fish). So: <i>safe to introduce early; early introduction is not proven to stop soy allergy.</i> Do not borrow the peanut prevention claim.</li>
+      <li><b>The soy-formula ≠ soy-food trap (read this first).</b> When you see "soy is <b>not recommended</b> for babies," it almost always means <b>soy infant formula as an allergy-prevention strategy</b> — NOT soy <i>foods</i> like tofu. NIAID/ASCIA do not endorse soy formula to prevent allergy; that has nothing to do with feeding a 7-month-old mashed tofu, which is fine. This is the single most common error in this topic.</li>
+      <li><b>There are TWO emergency branches, not one.</b> (1) <b>IgE allergy / anaphylaxis</b> — fast (minutes), hives/swelling/breathing trouble. (2) <b>FPIES</b> (Food Protein-Induced Enterocolitis Syndrome) — a <b>non-IgE</b> reaction that is <b>delayed (1–4 hours), with profuse repetitive vomiting + pallor/lethargy/dehydration, often NO hives</b>, frequently mistaken for a stomach bug; standard allergy tests come back <b>negative</b>. <b>Soy is a classic FPIES trigger.</b> The model must hold both branches.</li>
+      <li><b>The crux on the food itself is FORM.</b> <b>Silken/soft tofu</b> (smushable) and <b>well-cooked mashed soybeans</b> are infant-safe. <b>Whole edamame and whole soybeans are a choking hazard</b> — round, firm, slippery: shell + mash at 6 months, halve from ~9 months. <b>Soy milk is NOT a breast-milk/formula substitute in year one.</b></li>
+      <li><b>Indian vegetarian context is central, not peripheral.</b> <b>Soya chunks/granules/nuggets (TVP — textured vegetable protein)</b> are everyday protein in vegetarian households — concentrated soy protein. Introduce soy first as <b>soft tofu or as a minor ingredient</b>, then work up; soya chunks are fine once tolerated (soften/mash for the youngest).</li>
+      <li><b>Often outgrown.</b> Soy allergy affects ~<b>0.4%</b> of infants and is <b>commonly outgrown by ~age 3</b>, the majority by age 10. "Soy allergy is permanent" is a myth.</li>
+      <li><b>Watch the cross-reactivity.</b> Some <b>cow's-milk-protein-allergic (CMPA)</b> babies also react to soy — introduce soya as a <b>minor ingredient first</b>. Soy is also a <b>legume</b>, so there's some cross-sensitisation potential with peanut.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> · Benefit &amp; timing — introduce early, but prevention is NOT proven <span class="badge b-hi">High (don't-delay / safe-early)</span> <span class="badge b-hi">High (prevention unproven for soy)</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Don't deliberately delay.</b> Mainstream guidance is that there is no benefit to delaying allergenic foods past ~6 months once the baby is ready, and delay may not help: introduce the common allergens — soy among them — <b>around 6 months</b>, alongside other first foods, <b>not before 4 months</b>. <span class="badge b-hi">AAP · NHS · ASCIA</span></li>
+      <li><b>Soy is a recognised major allergen.</b> Soy is one of the US FDA <b>"Big 9"</b> major food allergens (alongside milk, egg, peanut, tree nuts, wheat, fish, shellfish, sesame), so it warrants the same single-allergen, watchful first-exposure care as the others. <span class="badge b-hi">FARE</span></li>
+      <li><b>The prevention evidence does NOT cover soy — frame this honestly.</b> The trials that flipped the "delay" paradigm tested <b>peanut</b> (LEAP) and a 6-allergen panel (EAT). In <b>EAT</b> (1,303 exclusively breastfed general-population infants, early introduction of 6 allergens from 3 months vs ~6 months): the <b>per-protocol prevention benefit was significant for peanut and egg only</b>. <b>Soy showed no significant prevention effect</b> — and neither did milk, sesame, or fish. <span class="badge b-hi">Perkins/Lack et al., NEJM 2016</span></li>
+    </ul>
+    <div class="flag"><b>⚑ The honest framing the model MUST use:</b> introducing soy early is <b>safe and appropriate</b>, and there's no reason to delay it — but we <b>cannot tell a parent that early soy prevents soy allergy</b>. That claim is true for peanut/egg, false-by-evidence for soy. Tier-2 allergen: <i>introduce-early because there's no reason not to and the diet benefits, NOT because an RCT proved prevention.</i> Conflating the two is the kind of over-claim Maren should reject.</div>
+    <p style="margin:12px 0 0"><b>Why introduce at all, then?</b> Dietary value (soy is a complete plant protein — especially valuable in a vegetarian household), normal allergen exposure as part of a varied diet, and avoiding the downsides of unnecessary restriction. The reason is <b>nutrition + no-reason-to-avoid</b>, not proven prevention.</p>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> · Safe FORM — tofu vs. the edamame choking gate <span class="badge b-hi">High (choking principle)</span> <span class="badge b-mod">Moderate (exact ages/sizes — secondary)</span></h2>
+  <div class="card">
+    <p style="margin:0 0 6px"><b>Infant-safe forms (the gate the food passes through):</b></p>
+    <ol>
+      <li><b>Silken or soft tofu</b>, in pieces a baby can mush with gums/fingers, or mashed/blended into other food. Soft tofu is one of the easier first proteins to offer by form. <span class="badge b-mod">Solid Starts — tofu</span></li>
+      <li><b>Well-cooked, mashed soybeans</b>, or soy stirred into already-tolerated purées/porridge/dal.</li>
+      <li><b>Soy yoghurt</b> (unsweetened) as a smooth vehicle.</li>
+      <li><b>Soya chunks/granules</b> softened and finely mashed/minced once soy is tolerated (see Axis 5 for the Indian-staple detail).</li>
+    </ol>
+    <p style="margin:12px 0 6px"><b>The choking hazard — whole edamame and whole soybeans.</b> Whole edamame beans and whole/firm soybeans are <b>round, firm, and slippery</b> — a classic choking shape for infants. <b>Shell and mash at ~6 months; from ~9 months offer halved/quartered</b> rather than whole, and only move toward whole beans well past toddlerhood when chewing is reliable. Never give a baby a handful of whole edamame. <span class="badge b-mod">Solid Starts — edamame; NHS choking principles</span></p>
+    <div class="flag"><b>⚑ Form removes the choking hazard but NOT the allergy hazard.</b> Mashing tofu/soybeans genuinely makes the food safe on the <b>choking</b> axis; it does nothing for the <b>allergy</b> axis (IgE or FPIES), which is managed by introduction + watchfulness. Two axes, held separately — same design crux as the peanut brief.</div>
+    <p style="margin:12px 0 0"><b>Soy milk is NOT a milk substitute in year one.</b> Fortified soy <i>drink</i> is not a replacement for breast milk or infant formula as the main milk before 12 months. It can appear as an ingredient in food, but it is not a bottle drink for an infant. <span class="badge b-hi">NHS · ASCIA</span> (Distinct again from <i>soy infant formula</i> — see Axis 1 trap.)</p>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> · Emergency floor — the TWO branches <span class="badge b-hi">High (IgE/anaphylaxis)</span> <span class="badge b-mod">Moderate-clinical (FPIES, CHOP)</span></h2>
+  <div class="card">
+    <p style="margin:0 0 8px">This food has <b>two separate reaction pathways</b>, and the parent response differs. The model must surface both — FPIES especially, because it presents with <b>no hives</b> and is routinely mistaken for gastroenteritis.</p>
+
+    <p style="margin:14px 0 4px"><b>Branch A — IgE allergy (fast, minutes):</b></p>
+    <ul>
+      <li><b>Mild–moderate (one body system):</b> itchy <b>hives/welts</b>, redness/rash, <b>swelling</b> (esp. mouth/eyes), <b>vomiting</b>, sometimes loose stool, sudden fussiness. In infants, reactions skew toward <b>skin + GI</b>, with breathing signs <b>less</b> prominent than in older children. <span class="badge b-hi">NHS</span> <span class="badge b-mod">Solid Starts (infant-pattern detail)</span></li>
+      <li><b>Severe / anaphylaxis (act immediately):</b> <b>difficulty breathing / wheeze / noisy breathing / persistent cough</b>, <b>swelling of the throat/tongue/lips/face</b>, <b>pale or blue</b> colour, hoarse cry, <b>floppy/limp/lethargic</b> or unusually sleepy, collapse. <span class="badge b-hi">NHS anaphylaxis</span>
+        <ul><li><b>Action:</b> <b>use an adrenaline auto-injector immediately if prescribed, and call emergency services (112 / 108 in India; 999 UK; 911 US).</b> Lie the child flat (or sit up if breathing is hard); do not stand them up.</li></ul>
+      </li>
+    </ul>
+
+    <p style="margin:14px 0 4px"><b>Branch B — FPIES (delayed, non-IgE — soy is a classic trigger):</b></p>
+    <ul>
+      <li><b>What it is:</b> Food Protein-Induced Enterocolitis Syndrome — a <b>non-IgE</b> food reaction affecting the gut. <b>Standard allergy tests (skin-prick, sIgE) are typically negative</b>, which is why it's missed. <span class="badge b-mod">CHOP — clinical secondary</span></li>
+      <li><b>Presentation:</b> <b>delayed — typically 1–4 hours after eating</b> — with <b>profuse, repetitive (projectile) vomiting</b>, then <b>lethargy, pallor</b>, and risk of <b>dehydration</b>; sometimes diarrhoea later. <b>Often NO hives, NO swelling, NO breathing trouble</b> — which is exactly what makes it look like a stomach bug.</li>
+      <li><b>Most common triggers:</b> <b>cow's milk, soy, rice, oats</b> are the classic FPIES foods.</li>
+      <li><b>Action:</b> repetitive vomiting + a pale/floppy/lethargic baby a couple of hours after a soy feed is a reason for <b>urgent medical care even without any rash</b> — severe FPIES episodes can cause dehydration/shock and may need IV fluids. Tell the clinician <i>what was eaten and when</i>, because the delay is the diagnostic clue.</li>
+    </ul>
+    <div class="flag bad"><b>⚑ Design note for the model:</b> a hives-centric allergy card will <b>miss FPIES entirely</b>. The soy record needs a distinct "delayed vomiting + lethargy, no rash" branch that routes to urgent care, separate from the IgE/anaphylaxis branch. This is the most important soy-specific safety insight in this brief.</div>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> · Culinary aliases &amp; hidden sources <span class="badge b-hi">High (alias list)</span> <span class="badge b-mod">Moderate (label-exemption specifics)</span></h2>
+  <div class="card">
+    <p style="margin:0 0 8px">Soy hides under many names — vital for a family reading labels and for the model's ingredient resolver:</p>
+    <ul>
+      <li><b>Whole-food / fermented:</b> tofu (bean curd), <b>edamame</b> (immature soybeans), soybeans, <b>soya chunks / granules / nuggets</b> = <b>TVP / textured vegetable protein</b> (concentrated, defatted soy protein — heavy in Indian veg cooking), <b>miso</b>, <b>natto</b>, <b>tempeh</b>, soy/soya flour.</li>
+      <li><b>Liquids &amp; condiments:</b> <b>soy milk / soya drink</b>, <b>soy sauce</b>, <b>tamari</b> (note: soy sauce/tamari also commonly carry <b>wheat</b> — a separate allergen flag).</li>
+      <li><b>Additives (usually tolerated, but label-listed):</b> <b>soy lecithin</b> (an emulsifier in chocolate, baked goods — <i>most soy-allergic individuals tolerate it</i>, but it is a soy-derived ingredient); soy protein isolate/concentrate.</li>
+      <li><b>Label-exemption nuance:</b> in the US, <b>highly refined soybean oil</b> is <b>exempt</b> from major-allergen labelling (the refining removes the protein), so it may not be flagged as "soy" on a US label. Cold-pressed/expeller/unrefined soybean oil is <b>not</b> exempt. <span class="badge b-mod">US allergen-labelling law via FARE</span></li>
+    </ul>
+    <div class="flag"><b>⚑ Flag for the resolver:</b> "no soy listed" on a US label does <b>not</b> guarantee soy-oil-free; and "soy lecithin" present does <b>not</b> mean a soy-allergic child will react (usually tolerated). Don't auto-escalate lecithin; do surface TVP/soya chunks as full soy protein.</div>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> · Indian &amp; vegetarian context <span class="badge b-hi">High (staple status + prep)</span> <span class="badge b-weak">See Axis 6 GAP (India official)</span></h2>
+  <div class="card">
+    <ul>
+      <li><b>Soya is a protein backbone of vegetarian Indian households.</b> <b>Soya chunks/granules/nuggets (TVP)</b> — rehydrated into curries, pulao, kheema-style dishes — are an everyday, affordable, concentrated plant protein. <b>Tofu</b> and soy milk are increasingly common. In a vegetarian diet (no meat/fish protein), soy is a high-value complete protein, which makes early, regular introduction both natural and nutritionally useful.</li>
+      <li><b>Introduce in soft/tofu form first, then build up.</b> Start soy as <b>soft/silken tofu</b> or as a <b>minor ingredient</b> mashed into an already-tolerated dish (see the CMPA cross-reactivity note below for <i>why</i> minor-ingredient-first), watch the first exposures, then progress to <b>softened, finely-mashed soya chunks/granules</b> once tolerated. The youngest infants should get soya chunks softened and mashed/minced, never as firm chewy pieces (texture + the legume's density).</li>
+    </ul>
+    <p style="margin:12px 0 6px"><b>Cross-reactivity to introduce carefully around:</b></p>
+    <ul>
+      <li><b>Soy ↔ CMPA:</b> some <b>cow's-milk-protein-allergic</b> babies also react to soy protein. If there's known CMPA, introduce soy cautiously as a <b>minor ingredient first</b> and consider a paediatrician's input. <span class="badge b-mod">FARE</span></li>
+      <li><b>Legume cross-sensitisation:</b> soy is a <b>legume</b>, like peanut — there is some cross-sensitisation potential, though a positive test ≠ clinical allergy. Treat soy as its own allergen, introduced on its own day for attribution. <span class="badge b-mod">FARE</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> · Myths to correct <span class="badge b-hi">High</span></h2>
+  <div class="card">
+    <div class="flag good"><b>✓ Myth: "Soy is not recommended for babies."</b> <b>Conflation.</b> This refers to <b>soy infant formula as an allergy-prevention strategy</b>, which bodies like NIAID/ASCIA do not endorse — <b>NOT</b> soy <i>foods</i> (tofu, mashed soybeans, soya chunks), which are fine to introduce around 6 months. The model should actively separate "soy formula (a milk choice)" from "soy food (a complementary food)." <b>Highest-value myth on this topic.</b></div>
+    <div class="flag good"><b>✓ Myth: "Soy allergy is permanent / lifelong."</b> <b>Usually false.</b> Soy allergy affects ~<b>0.4%</b> of infants and is <b>commonly outgrown — many by ~age 3, the majority by age 10</b>. It behaves more like milk/egg (often outgrown) than peanut/tree nut (often lifelong). <span class="badge b-mod">FARE · JACI natural-history</span></div>
+    <div class="flag"><b>⚑ Myth: "Introduce soy early to prevent soy allergy" (the over-claim in the other direction).</b> <b>Not proven.</b> The prevention evidence is peanut/egg; <b>EAT found no significant effect for soy</b>. Introduce early because it's safe and nutritious and there's no reason to delay — <b>not</b> on a prevention promise. <span class="badge b-hi">Perkins/Lack, NEJM 2016</span></div>
+    <div class="flag good"><b>✓ Myth: "Soy lecithin will trigger a soy-allergic child."</b> <b>Usually not.</b> Most soy-allergic individuals tolerate soy lecithin (negligible residual protein); it's still label-listed, so don't auto-panic on its presence. <span class="badge b-mod">FARE</span></div>
+  </div>
+
+  <h2>Who says what — consensus matrix</h2>
+  <div class="card">
+  <table>
+    <tr><th>Authority</th><th class="c">Introduce ~6mo / don't delay</th><th class="c">Early soy PREVENTS soy allergy</th></tr>
+    <tr><td>AAP / HealthyChildren</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+    <tr><td>UK NHS</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+    <tr><td>ASCIA (Australasia)</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+    <tr><td>US NIAID (2017)</td><td class="c yes">✓</td><td class="c dash">— (not claimed)</td></tr>
+    <tr><td>NEJM — EAT trial (2016)</td><td class="c yes">✓ (safe early)</td><td class="c no">✗ no significant effect for soy</td></tr>
+  </table>
+  <p style="font-size:13px;color:var(--mid);margin:6px 0 0">Every body says "introduce early / don't delay"; <b>none</b> claims early soy <i>prevents</i> soy allergy — and EAT actively found no significant prevention effect. The "introduce-early" and "prevents-allergy" columns are NOT the same claim for soy.</p>
+  </div>
+
+  <h2>Proposed data shape · <code>FOOD_EFFECTS['soy']</code></h2>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--mid)">Drop-in record for the <code>FOOD_EFFECTS</code> table in <code>data.js</code>, sitting alongside <code>AGE_RULES</code>/<code>ALLERGENS</code>. The <code>reactionType</code> carries <code>'digestive'</code> for the non-IgE FPIES branch; <code>severeSigns</code> includes the delayed "vomiting + lethargy hours later" FPIES line; <code>earlyIntroBenefit.paradigm</code> is the Tier-2 honesty guardrail (no proven prevention). <b>Not yet wired.</b></p>
+<pre><span class="c">// guided-introduction record — Tier-2 allergen (encourage polarity, no prevention claim)</span>
+<span class="k">const</span> FOOD_EFFECTS = {
+  <span class="s">'soy'</span>: {
+    foodClass:     <span class="s">'allergen-introduce-early'</span>,
+    severity:      <span class="s">'caution'</span>,            <span class="c">// amber, NOT rose (rose = acute-toxin honey)</span>
+    category:      <span class="s">'legume'</span>,
+    effect:        <span class="s">'food allergy (incl. FPIES)'</span>,
+    minMonth:      <span class="s">6</span>,
+    thresholdBasis:<span class="s">'developmental-readiness'</span>,
+    allergen:      <span class="k">true</span>,
+    reactionType:  [<span class="s">'allergy'</span>, <span class="s">'digestive'</span>],   <span class="c">// digestive = FPIES (non-IgE), a classic soy presentation</span>
+    headline:      <span class="s">'Introduce around 6 months — don\'t delay. Soft tofu, not whole edamame.'</span>,
+    whyGood:       <span class="s">'Valuable plant protein for a vegetarian diet (tofu, soya chunks) — introduce early.'</span>,
+    earlyIntroBenefit: { claim:<span class="s">'Introduce around 6 months; don\'t delay allergens.'</span>,
+                         evidence:<span class="s">'AAP/NHS/ASCIA advise early introduction; SAFE, but no RCT proves early soy prevents soy allergy (soy not among EAT\'s prevention-positive foods).'</span>,
+                         paradigm:<span class="s">'Don\'t delay — but no proven soy-specific prevention claim.'</span> },
+    safeForm:      { ok:[<span class="s">'soft / silken tofu, smushable or blended'</span>, <span class="s">'well-cooked soybeans mashed'</span>, <span class="s">'soy yoghurt; soya stirred into food'</span>],
+                     never:[<span class="s">'whole edamame or whole soybeans (round, firm — a choking risk)'</span>, <span class="s">'soy milk as a main drink in the first year'</span>],
+                     note:<span class="s">'Shell and mash edamame at 6mo; halve cooked beans at 9mo. Soft tofu needs no choking prep.'</span> },
+    myth:          { claim:<span class="s">'Soy isn\'t recommended for babies.'</span>,
+                     truth:<span class="s">'That advice is about soy infant FORMULA for allergy prevention — not soy FOODS like tofu, fine ~6 months.'</span> },
+    watchFor:      [<span class="s">'hives / rash'</span>, <span class="s">'swelling (mouth, eyes, lips)'</span>, <span class="s">'vomiting or diarrhoea'</span>],
+    severeSigns:   [<span class="s">'trouble breathing / wheeze'</span>, <span class="s">'face/lip/tongue swelling'</span>, <span class="s">'floppy, pale, or very sleepy'</span>,
+                    <span class="s">'repeated forceful vomiting + lethargy hours later (possible FPIES)'</span>],
+    timeCourse:    <span class="s">'IgE: minutes to ~2 hours. FPIES (non-IgE): delayed — profuse repeated vomiting + lethargy/pallor 1–4 hours after eating.'</span>,
+    seekCare:      <span class="s">'Mild single-system: stop, monitor, call doctor. Breathing trouble, face/throat swelling, or floppiness: EMERGENCY — call 112. Repeated forceful vomiting + lethargy/pallor hours after a soy feed (possible FPIES): urgent care even without a rash.'</span>,
+    breastfeedingSafe: <span class="k">true</span>,
+    culturalNote:  <span class="s">'Soya chunks/granules are everyday vegetarian protein in India. Some cow\'s-milk-allergic babies also react to soy; introduce as a minor ingredient first.'</span>,
+    confidence:    <span class="s">'high'</span>,
+    lastReviewed:  <span class="s">'2026-06-01'</span>,
+  },
+};</pre>
+  </div>
+
+  <h2>Source list</h2>
+  <div class="card">
+  <table>
+    <tr><th>#</th><th>Authority</th><th>Type</th><th>URL</th></tr>
+    <tr><td>1</td><td>AAP / HealthyChildren — when to introduce egg, peanut butter &amp; other allergens (don't delay; ~6 mo)</td><td>Official</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org/…/allergens</a></td></tr>
+    <tr><td>2</td><td>UK NHS — Food allergies in babies &amp; young children (signs; introduction)</td><td>Official</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/food-allergies-in-babies-and-young-children/">nhs.uk/baby/…/food-allergies</a></td></tr>
+    <tr><td>3</td><td>UK NHS — Anaphylaxis (severe-reaction signs + action)</td><td>Official</td><td><a href="https://www.nhs.uk/conditions/anaphylaxis/">nhs.uk/conditions/anaphylaxis</a></td></tr>
+    <tr><td>4</td><td>NIAID — Addendum Guidelines for Prevention of Peanut Allergy (2017); soy-formula context</td><td>Official</td><td><a href="https://www.niaid.nih.gov/sites/default/files/addendum-peanut-allergy-prevention-guidelines.pdf">niaid.nih.gov/…/addendum</a></td></tr>
+    <tr><td>5</td><td>ASCIA — Infant Feeding for Food Allergy Prevention</td><td>Official</td><td><a href="https://www.allergy.org.au/hp/papers/infant-feeding-and-allergy-prevention">allergy.org.au/…/infant-feeding</a></td></tr>
+    <tr><td>6</td><td>WHO — Complementary feeding of infants &amp; young children 6–23 months (2023)</td><td>Official</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov/books/NBK596423</a></td></tr>
+    <tr><td>7</td><td>NEJM — Perkins/Lack et al., EAT trial (2016); soy = no significant prevention effect</td><td>Primary trial</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed.ncbi.nlm.nih.gov/26943128</a></td></tr>
+    <tr><td>8</td><td>FARE — Soy allergy (prevalence ~0.4%; outgrown; allergen status; lecithin)</td><td>Secondary (advocacy/clinical)</td><td><a href="https://www.foodallergy.org/living-food-allergies/food-allergy-essentials/common-allergens/soy">foodallergy.org/…/soy</a></td></tr>
+    <tr><td>9</td><td>JACI — Natural history of soy allergy (outgrowth by age 3/10)</td><td>Secondary (clinical literature)</td><td><a href="https://www.jacionline.org/article/S0091-6749(10)00007-2/fulltext">jacionline.org/…/soy-natural-history</a></td></tr>
+    <tr><td>10</td><td>CHOP — Food Protein-Induced Enterocolitis Syndrome (FPIES): delayed vomiting, triggers, negative tests</td><td>Secondary (clinical)</td><td><a href="https://www.chop.edu/conditions-diseases/food-protein-induced-enterocolitis-syndrome-fpies">chop.edu/…/fpies</a></td></tr>
+    <tr><td>11</td><td>Solid Starts — Edamame (choking-by-form; shell + mash)</td><td>Secondary (prep)</td><td><a href="https://solidstarts.com/foods/edamame/">solidstarts.com/foods/edamame</a></td></tr>
+    <tr><td>12</td><td>Solid Starts — Tofu (soft/silken first form)</td><td>Secondary (prep)</td><td><a href="https://solidstarts.com/foods/tofu/">solidstarts.com/foods/tofu</a></td></tr>
+  </table>
+  </div>
+
+  <div class="card">
+    <strong>Verification status &amp; gaps</strong>
+    <ol style="margin:8px 0 0">
+      <li>✅ <b>"Introduce early / don't delay ~6 mo"</b> — corroborated across AAP, NHS, ASCIA, NIAID for major allergens generally; soy is a recognised major allergen (FARE / Big 9).</li>
+      <li>✅ <b>EAT null result for soy</b> — soy (with milk, sesame, fish) showed <b>no significant prevention effect</b>; benefit was peanut + egg only. The "early soy prevents soy allergy" claim is <b>not</b> supported — flagged so the model never borrows the peanut prevention frame for soy.</li>
+      <li>✅ <b>Soy formula ≠ soy food</b> — the "soy not recommended" caution is about <b>soy infant formula as prevention</b>, not tofu/soy foods. Treated as the headline myth; sourced to NIAID/ASCIA framing.</li>
+      <li>⚑ <b>FPIES detail is clinical-secondary (CHOP)</b> — the delayed-vomiting / lethargy-pallor / negative-test / cow's-milk-soy-rice-oats-triggers picture is well-established clinically but is <b>CHOP-sourced, not from a patient-facing top-tier body's verbatim allergen page</b>. Marked clinical secondary; the <i>existence</i> of a delayed non-IgE branch is not in doubt, but verbatim timings (1–4 h) should be re-confirmed against an official allergy body before going to parents as a hard number.</li>
+      <li>⚑ <b>Prevalence ~0.4% &amp; outgrowth ages (3 / 10)</b> — FARE + JACI natural-history sourced (secondary/clinical), not a regulator figure; directionally robust (soy is commonly outgrown), exact percentages are literature-derived.</li>
+      <li>⚑ <b>Form specifics (shell+mash at 6 mo, halve at 9 mo; silken-tofu-first)</b> — <b>Solid Starts</b> (secondary prep source), consistent with NHS whole-food choking principles but not a top-tier body's verbatim age/size standard. Flagged as practice-level.</li>
+      <li>⚑ <b>US soybean-oil label exemption &amp; lecithin tolerance</b> — US-labelling-law specific (via FARE); applies to US labels, <b>not</b> Indian labelling. Don't present as a universal rule.</li>
+      <li>⚑ <b>No India-specific official soy / allergen-introduction directive (the honest gap).</b> <b>No IAP / MoHFW / FSSAI directive on allergen introduction <i>or</i> on soy for infants was located.</b> The <b>IAP complementary-feeding parental guideline does not mention soy or allergen introduction at all.</b> The early-introduction guidance here is <b>entirely international</b> (AAP/NHS/ASCIA/NIAID); the Indian vegetarian context (soya chunks/tofu as staples) is cultural/nutritional, not government-issued. <b>Do not manufacture or attribute any Indian official soy/allergen guidance</b> — there is none to cite, and laundering international guidance onto an Indian body's name would repeat the error the peanut/honey briefs warn against.</li>
+    </ol>
+  </div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the food-effects-v2 model, not yet implemented</strong>
+    <p style="margin:8px 0 0">Surface soy as an <b>encourage-polarity</b> card (sage chrome, <code>severity:'caution'</code> → amber, not honey's rose) — benefit and "introduce ~6mo, don't delay" first, then the form gate (soft tofu vs whole edamame). But the soy card needs <b>two things a generic allergen card lacks</b>: (1) a <b>distinct FPIES branch</b> — delayed vomiting + lethargy/pallor, often no rash, tests negative → urgent care — that a hives-centric layout would miss entirely; and (2) the <b>formula ≠ food</b> myth surfaced up front. The honesty guardrail is non-negotiable: the model must <b>never</b> render "early soy prevents soy allergy" — Tier-2 means introduce-early-because-safe-and-nutritious, not on a prevention promise (EAT was null for soy).</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/soy-infant-safety.md</code> · generated 2026-06-01<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>
