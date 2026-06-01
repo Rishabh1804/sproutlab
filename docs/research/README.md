@@ -11,7 +11,7 @@ Evidence base for surfacing **food effects** (acute risk, allergy, choking, timi
 | `<food>-infant-safety.md` | Full cited prose brief (source of truth). |
 | `<food>-infant-safety.html` | Long-form rendered brief. |
 | `<food>-infant-safety.visual.html` | Skim-layer dashboard (built from the template). |
-| `index.html` *(future)* | The **unified dashboard** — hub over all foods (see plan below). |
+| `index.html` | The **unified dashboard** — manifest-driven hub over all foods (Index · Compare · Reactions). Built; renders live from `food-effects.manifest.js`. |
 
 Three depth layers per food: **`.visual.html`** (skim) → **`.html`** (full prose) → **`.md`** (source). All three carry the same verified figures.
 
@@ -56,9 +56,9 @@ The data model already supports this. Per food the app holds `AGE_RULES` (gate),
 
 ### Phasing
 
-- **Phase 0 — now:** template + manifest + honey. ✅
-- **Phase 1:** 3–4 more critical/allergen foods (whole nuts · egg · cow's milk · salt), each appending to the manifest.
-- **Phase 2:** build `index.html` once the manifest has ~5 foods (Index + Compare + Reactions).
-- **Phase 3:** wire the manifest into the app `data.js FOOD_EFFECTS` for the Finding-A surfacing (separate, ratified change — canon-cc-008 applies there).
+- **Phase 0:** template + manifest + honey. ✅
+- **Phase 1:** more allergen foods — peanut + tree nut (#187), then egg · soy · wheat · sesame (Phase δ, #206/#207). Manifest now holds **7** records. ✅
+- **Phase 2:** build `index.html` — the manifest-driven hub (Index + Compare + Reactions). ✅
+- **Phase 3:** wire the manifest into the app `data.js FOOD_EFFECTS` for the Finding-A surfacing. ✅ honey + peanut + tree nut (#187), egg + soy + wheat + sesame + polarity-aware banner (#208). *Next: the broader food classes (milk · fish · the choking set).*
 
 > Net: every food we research compounds. The manifest makes the unified dashboard nearly free, and doubles as the product's data source — one spine, three consumers (research hub, skim dashboards, in-app surfacing).
