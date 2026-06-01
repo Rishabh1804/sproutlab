@@ -358,8 +358,12 @@ function _aiComputeAllergenIntro() {
     // safe-form note: FOOD_EFFECTS note (peanut/tree-nut) preferred; else the
     // allergen's own AGE_RULES `reason` (egg's "cook well, yolk first" floor) —
     // never the generic "in a safe form" where a real per-food floor exists (Maren M-1).
-    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note
-                 : (ageRule && ageRule.reason) ? ageRule.reason : null;
+    // The `reason` is a full age-gate sentence-pair; surface only its first
+    // sentence on the one-line glance so it doesn't wrap (the full floor rides
+    // the tap-through detail sheet). Phase δ will replace this with a crisp
+    // FOOD_EFFECTS `safeForm.note` authored for the row.
+    var reasonShort = (ageRule && ageRule.reason) ? String(ageRule.reason).split('. ')[0] : null;
+    var safeForm = (eff && eff.safeForm && eff.safeForm.note) ? eff.safeForm.note : reasonShort;
     return { key: a.key, label: a.label, introMonth: introMonth, ageReady: ageReady,
              tried: !!rec, date: (rec && rec.date) || null, daysSince: daysSince,
              exposureDays: exposureDays, state: state, safeForm: safeForm };
@@ -421,7 +425,16 @@ function renderInfoAllergenIntro() {
       else if (i.state === 'watching') meta = 'Day ' + (i.daysSince + 1) + ' of 3 — watch, tap for signs';
       else if (i.state === 'introduced') meta = 'Keep offering to hold tolerance';
       else if (i.state === 'reaction') meta = 'Reaction flagged — tap to review';
-      else if (i.state === 'ready') meta = i.safeForm ? i.safeForm : 'Good to introduce now, in a safe form';
+      else if (i.state === 'ready') {
+        // The glance stays one line (V-V-3): surface the food's own safe-form
+        // cue only when it fits; otherwise point to the tap-through, which
+        // already carries the full floor (peanut/tree-nut's note is ~150 chars
+        // and wraps to 3 lines on a phone). Egg's trimmed floor (~40) fits and
+        // stays visible, honouring Maren M-1. Phase δ replaces this length-gate
+        // with crisp authored safeForm copy per allergen.
+        meta = !i.safeForm ? 'Good to introduce now, in a safe form'
+             : (i.safeForm.length <= 44 ? i.safeForm : 'In a safe form — tap for how');
+      }
       else meta = 'From ' + i.introMonth + ' months';
       // Row taps through to the food's detail sheet — the R3 floor + safe-form
       // for the same resolved food (foodLibDetail → renderFoodDetailSheet).

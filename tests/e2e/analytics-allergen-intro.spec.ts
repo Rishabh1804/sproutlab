@@ -85,7 +85,27 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
     // reason (its cook-well / yolk-first floor), never null → generic copy.
     if (egg.state === 'ready') {
       expect(egg.safeForm, 'egg carries its own cook-well floor').toMatch(/cook/i);
+      expect(egg.safeForm.length, 'and it is short enough to render on one line').toBeLessThanOrEqual(44);
     }
+  });
+
+  test('ready-row meta stays one line: long safe-forms point to tap-through, short ones show (Fix A)', async ({ page }) => {
+    const metas = await page.evaluate(() => {
+      foods.length = 0; // all untried → ready
+      renderInfoAllergenIntro();
+      const out: Record<string, string> = {};
+      document.querySelectorAll('#infoAllergenIntroList .cd-food-item').forEach((el) => {
+        out[el.getAttribute('data-arg') || ''] = el.querySelector('.cd-food-meta')?.textContent || '';
+      });
+      return out;
+    });
+    // peanut/tree-nut carry a ~150-char FOOD_EFFECTS note → must NOT dump it on the glance
+    expect(metas['peanut'], 'long note points to tap-through, not wrapped inline').toBe('In a safe form — tap for how');
+    expect(metas['tree nut']).toBe('In a safe form — tap for how');
+    // egg's trimmed floor fits → stays visible (M-1)
+    expect(metas['egg'], 'egg short floor stays on the glance').toMatch(/well-cooked yolk/i);
+    // no ready meta should exceed the one-line budget
+    Object.values(metas).forEach((m) => expect(m.length).toBeLessThanOrEqual(44));
   });
 
   test('mixed log renders 6 rows with the right pills + an actionable (notable) tier', async ({ page }) => {
