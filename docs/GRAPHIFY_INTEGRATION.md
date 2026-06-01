@@ -28,6 +28,20 @@ SproutLab is 18 source modules / ~76K LOC; the built artifact is 3.7 MB. Navigat
   - **Edge-direction dependency (V-K-G2):** the ripple assumes each `calls` edge is `source`=caller, `target`=callee. The graph is `directed:false`, and networkx does not guarantee endpoint stability across graphify versions. `qa-route.sh` carries a fail-loud guard — known leaf utilities (`escHtml`/`zi`) must have zero outgoing `calls`; if that breaks, the convention has flipped and the oracle **summons all three Governors** (fail-safe) rather than trust an inverted ripple.
 - **C — Visualization.** Navigation is Graphify's own **interactive node graph** `split/graphify-out/graph.html` (click / search / filter; gitignored + regenerated, open locally). `docs/PROVINCE_MAP.html` is a committed **exec summary** (jurisdiction cards + headroom-to-30K + coupling) — explicitly not navigable — that supersedes the hand-maintained, drift-prone `docs/MODULE_MAP.html`.
 
+## Field observations (dated — so the next run has a baseline)
+
+The bench number above (~3.7× / up to 45×) is graphify's own *generic* self-benchmark. This section logs what actually happened on real sessions, so future runs can compare against more than a synthetic. **Caveat that applies to every entry:** there is no token meter on the main agent thread and no cross-session telemetry — these are grounded estimates (counterfactual LOC + the subagent token counts the harness *does* report back), not metered totals. Don't read them as exact.
+
+### 2026-06-01 — Allergen Introduction card (PR #203): prototype → spec → canon-cc-008 chain → merge
+
+- **What graphify did well — two specific things, not "everything."**
+  - *One-call dispatcher map.* `explain renderInfo` returned the Info-tab dispatcher's whole fan-out (~20 `renderInfo*` cards + the `switchTab` caller + `calls` edges) in **29 lines**. That's the architecture-question case (the bench's 45× end), live — it replaced several `grep` passes to assemble the same picture.
+  - *Powering the routing oracle.* `pnpm qa-route` consumed the graph's `calls` edges to compute the cross-province ripple that widened the Governor summon-set to **Maren + Kael** (the card *reads* `feedingData`/`extractDayFoods` + `core.js` resolvers). That ripple is **not grep-able** and is the call I was most likely to under-scope by eye. Goal-B paid off concretely here.
+- **Counterfactual (navigation only).** The four relevant modules — `intelligence-cards.js` (3,100), `core.js` (7,082), `data.js` (5,195), `diet.js` (5,052) = **~20,400 LOC** — were navigated *without* reading any of them whole (targeted `Read` windows + `grep`/`sed` + ~5 graphify calls). Reading them whole would be **~160K+ tokens**; the graphify outputs that replaced the *structural* understanding were **~100 lines / ~1.5K tokens**.
+- **The bigger context lever was subagent isolation, not graphify.** The four Governor audits (Maren / Kael / Vela / Cipher) spent **~260K tokens / 80 tool-calls in their own isolated contexts**; the main thread only absorbed their final reports (~12K total). graphify made *navigation* cheap; isolation made *deep review* cheap — and isolation moved more of the budget. Worth stating plainly so graphify isn't over-credited for what the harness's fan-out architecture did.
+- **Friction (real, log it).** The first `graphify query "<prose question>"` returned **empty** — `query` wants symbol-matching keywords, not natural-language prose; `explain "<symbol>"` was the reliable surface. And the CLI needed an explicit `--graph split/graphify-out/graph.json` (the default `graphify-out/` path is wrong from repo root). Two small stumbles before it paid off. For literal string-hunting (`where is this exact line`), `grep` remained the right tool — the graph is for *structure*, not *strings*.
+- **Net.** graphify earned its place via the dispatcher map + the qa-route ripple; ~3.7× on the navigation component is believable and roughly matches the estimate for this session. It is one of two levers, and the smaller one.
+
 ## Commands
 
 ```bash
