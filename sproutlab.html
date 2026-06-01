@@ -10773,6 +10773,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fd-tried-btn { white-space:nowrap; }
 .fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 .fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
+/* encourage polarity (food-effects-v2): introduce-early allergens read sage/calm,
+   NOT rose/alarm. Rose (.fd-flag-allergen) is reserved for true "avoid". The
+   severe-reaction floor below the banner stays serious regardless. */
+.fd-flag-encourage { background:var(--sage-light); color:var(--tc-sage); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
 .fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }
@@ -16601,6 +16605,14 @@ const AGE_RULES = {
   'corn':     { minMonth:8, reason:'Hard to digest whole. After 8 months, use corn flour or well-mashed sweet corn.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
   'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
+  // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
+  // AAP/NHS/ASCIA (~6mo, don't delay); each backs a FOOD_EFFECTS record below.
+  'soy':      { minMonth:6, aliases:['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari'],
+                reason:'Fine from around 6 months — soft tofu or well-mashed soya. Whole edamame is a choking risk; mash it.' },
+  'wheat':    { minMonth:6, aliases:['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
+                reason:'Fine from around 6 months — soft cereal or softened roti. Wheat allergy is separate from celiac disease.' },
+  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','halva','halwa','gajak','til laddoo'],
+                reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
 };
 
 // ── FOOD EFFECTS (consequence layer — Finding A) ──
@@ -16691,6 +16703,137 @@ const FOOD_EFFECTS = {
     watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting'],
     severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
     seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one.',
+    confidence: 'high',
+  },
+
+  // ── food-effects-v2 Phase δ: egg, soy, wheat, sesame ──
+  // The four remaining big-9 allergens, reached by `aliases` via _lookupByFoodName
+  // (closes the culinary-synonym gap: tofu→soy, roti→wheat, til→sesame, anda→egg).
+  // All allergen-introduce-early (encourage, sage chrome — NOT honey's rose).
+  // TWO-TIER honesty (docs/research/<food>-infant-safety.md): EGG is prevention-
+  // PROVEN (PETIT/EAT) and claims it; SOY/WHEAT/SESAME are introduce-early-and-safe
+  // but earlyIntroBenefit says so plainly — EAT was null for them, so NO prevention
+  // claim. severity:'caution' (amber/sage), never 'critical' (rose = acute-toxin).
+  'egg': {
+    foodClass:  'allergen-introduce-early',
+    severity:   'caution',
+    aliases:    ['eggs', 'anda', 'egg yolk', 'whole egg', 'boiled egg', 'hard-boiled egg', 'scrambled egg', 'omelette', 'omelet'],
+    effect:     'food allergy',
+    title:      'Egg — good to introduce early, well-cooked',
+    why:        'Around 6–7 months, well-cooked egg is worth introducing — not avoiding. Introducing egg early and keeping it regular lowers the chance of an egg allergy. Give it fully cooked (solid white and yolk), starting with the yolk.',
+    whyGood:    'Complete protein, choline, iron and vitamin D — and early, regular well-cooked egg helps prevent egg allergy.',
+    earlyIntroBenefit: {
+      claim:    'Introducing well-cooked egg early and keeping it in the diet helps prevent egg allergy.',
+      evidence: 'In a randomised trial (PETIT, 2017) of higher-risk babies, heated egg from about 6 months — with eczema kept under control — cut egg allergy at 12 months from 38% to 8%.',
+      paradigm: 'This reverses the old "delay egg to avoid allergy" advice.',
+    },
+    safeForm: {
+      ok:       ['well-cooked egg — mashed hard-boiled or scrambled', 'cooked yolk first, then whole egg once that is tolerated', 'egg baked into soft food'],
+      never:    ['raw or runny egg', 'lightly-cooked egg (no assured-egg scheme exists in India)'],
+      note:     'Cook until both white and yolk are solid — this is the studied safe form and avoids the salmonella risk. Raw or runny egg is not safe for a baby.',
+    },
+    howToIntroduce: {
+      amount:   'start with a little well-cooked yolk',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after',
+      thenWhat: 'if it goes well, keep offering regularly; move to whole egg once yolk is tolerated',
+      oneAtATime: true,
+      highRiskNote: 'If your baby has severe eczema or a known food allergy, talk to your paediatrician before the first taste.',
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one.',
+    confidence: 'high',
+  },
+  'soy': {
+    foodClass:  'allergen-introduce-early',
+    severity:   'caution',
+    aliases:    ['soya', 'soybean', 'soya bean', 'tofu', 'edamame', 'soya chunks', 'soya granules', 'soya nuggets', 'soy milk', 'soya milk', 'tempeh', 'miso', 'natto', 'tamari'],
+    effect:     'food allergy (including FPIES)',
+    title:      'Soy — fine to introduce early, as soft tofu',
+    why:        'Around 6 months, soy is fine to introduce alongside other foods — there is no reason to delay it. Soft tofu and well-mashed soya are valuable plant protein, especially in a vegetarian diet. Whole edamame beans are a choking risk, so mash them.',
+    whyGood:    'Valuable plant protein for a vegetarian diet — tofu and soya chunks are everyday staples.',
+    earlyIntroBenefit: {
+      claim:    'Introduce soy around 6 months — there is no reason to delay it.',
+      evidence: 'Guidelines (AAP, NHS, ASCIA) advise introducing soy early along with other allergens. Early introduction is safe — but, unlike peanut and egg, there is no trial proof that early soy prevents soy allergy.',
+      paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
+    },
+    safeForm: {
+      ok:       ['soft or silken tofu, smushable or blended', 'well-cooked soybeans, mashed', 'soy yoghurt, or soya stirred into food'],
+      never:    ['whole edamame or whole soybeans (round and firm — a choking risk)', 'soy milk as a main drink in the first year'],
+      note:     'Soft tofu needs no special prep. Shell and mash edamame; soy milk is not a substitute for breastmilk or formula.',
+    },
+    howToIntroduce: {
+      amount:   'start with a small amount of soft tofu',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after — and note any delayed upset (see below)',
+      thenWhat: 'if it goes well, keep offering as part of the normal diet',
+      oneAtATime: true,
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting or diarrhoea'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy', 'repeated forceful vomiting with paleness or floppiness a few hours later (possible FPIES)'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away. Repeated forceful vomiting with paleness or floppiness a few hours after soy (possible FPIES): seek urgent care even without a rash.',
+    confidence: 'high',
+  },
+  'wheat': {
+    foodClass:  'allergen-introduce-early',
+    severity:   'caution',
+    aliases:    ['atta', 'maida', 'wheat flour', 'suji', 'sooji', 'rava', 'semolina', 'dalia', 'broken wheat', 'roti', 'chapati', 'phulka', 'paratha', 'naan', 'pasta', 'sevai', 'vermicelli', 'durum', 'couscous', 'bulgur', 'seitan'],
+    effect:     'food allergy (different from celiac disease)',
+    title:      'Wheat — fine to introduce early, soft-cooked',
+    why:        'Around 6 months, wheat is fine to introduce — soft wheat cereal, well-cooked pasta, or softened roti. There is no benefit to delaying it. Wheat allergy is a food allergy, and is different from celiac disease — a separate, longer-term gluten condition that needs a doctor\'s diagnosis.',
+    whyGood:    'A staple grain — soft cereal, well-cooked pasta, or softened roti, introduced early alongside other solids.',
+    earlyIntroBenefit: {
+      claim:    'Introduce wheat around 6 months — there is no reason to delay it.',
+      evidence: 'Guidelines (AAP, NHS, ASCIA) advise introducing wheat early. Early introduction is safe — but, unlike peanut and egg, a trial (EAT) did not show early wheat prevents wheat allergy.',
+      paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
+    },
+    safeForm: {
+      ok:       ['soft wheat or multigrain cereal or porridge', 'well-cooked soft pasta', 'roti or chapati torn small and softened in milk, dal, or sabzi'],
+      never:    ['large or doughy pieces of fresh bread (they ball up into a sticky clump — toast it or use firm strips)', 'loose dry cooked wheat or dalia that scatters in the mouth (mash or bind it)'],
+      note:     'Wheat allergy is not the same as celiac disease — this is about the allergy.',
+    },
+    howToIntroduce: {
+      amount:   'start with a little soft wheat cereal or softened roti',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after',
+      thenWhat: 'if it goes well, keep offering as part of the normal diet',
+      oneAtATime: true,
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting or diarrhoea'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one. Ongoing tummy upset, poor growth, or loose stools over weeks is a different concern (celiac) and needs a doctor, not emergency care.',
+    confidence: 'high',
+  },
+  'sesame': {
+    foodClass:  'allergen-introduce-early',
+    severity:   'caution',
+    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'halva', 'halwa', 'gajak', 'til laddoo'],
+    effect:     'food allergy (often lifelong)',
+    title:      'Sesame — introduce early, as thinned tahini',
+    why:        'Around 6 months, sesame is good to introduce — best as smooth tahini (sesame paste) thinned into food, not whole seeds or a thick glob. There is no reason to delay it. Sesame allergy tends to be lifelong, so watch the first tastes closely and keep an eye out as you continue.',
+    whyGood:    'A seed source of calcium, iron and healthy fats — offer as smooth tahini thinned into food.',
+    earlyIntroBenefit: {
+      claim:    'Introduce sesame around 6 months — there is no reason to delay it.',
+      evidence: 'Guidelines (AAP, NHS, ASCIA) advise introducing sesame early. Early introduction is safe — but, unlike peanut and egg, a trial (EAT) did not show early sesame prevents sesame allergy.',
+      paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
+    },
+    safeForm: {
+      ok:       ['smooth tahini (sesame paste) thinned with water, milk, or puree', 'finely ground sesame stirred into food'],
+      never:    ['a thick glob of tahini (sticky — a choking risk; thin it like nut butter)', 'whole sesame seeds in quantity for a young baby'],
+      chokingUntilYears: 4,
+      note:     'Thin tahini the same way you would thin nut butter. Unrefined gingelly (sesame) oil can still carry the allergen.',
+    },
+    howToIntroduce: {
+      amount:   'start with a little thinned tahini (about 1/8 to 1/2 tsp) stirred into a familiar food',
+      when:     'at home, in the morning or midday',
+      watch:    'watch for about 2 hours after',
+      thenWhat: 'if it goes well, keep offering regularly — and keep watching, as sesame allergy tends to persist',
+      oneAtATime: true,
+    },
+    watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one. Sesame is a common cause of severe reactions — watch closely.',
     confidence: 'high',
   },
 };
@@ -38418,14 +38561,23 @@ function renderFoodDetailSheet(name) {
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
   const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
+  // Polarity (food-effects-v2): an introduce-early allergen reads ENCOURAGE —
+  // sage banner + calm sprout icon ("good to introduce, here's the safe form"),
+  // never rose/siren ("don't give"). Rose is reserved for true avoid (acute-toxin).
+  // The severe-reaction floor (fdFloor) below stays serious regardless.
+  const fdEncourage = (typeof _effHasClass === 'function') && _effHasClass(fdEff, 'allergen-introduce-early');
   if (fdFloor) {
     const head = (fdEff && fdEff.title) ? escHtml(fdEff.title) : 'Allergen';
     const sub = (fdEff && fdEff.safeForm && fdEff.safeForm.note) ? escHtml(fdEff.safeForm.note)
               : (allerg ? escHtml(allerg) : '');
-    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    const flagCls = fdEncourage ? 'fd-flag-encourage' : 'fd-flag-allergen';
+    const flagIc  = fdEncourage ? zi('sprout') : zi('siren');
+    html += `<div class="fd-flag ${flagCls}">${flagIc} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
     html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
   } else if (allerg) {
-    html += `<div class="fd-flag fd-flag-allergen">${zi('siren')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+    // A milder allergen with no FOOD_EFFECTS record (kiwi, strawberry, oats …):
+    // informational + calm, never the rose alarm. Introduce carefully, watch.
+    html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
   }
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;

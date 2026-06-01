@@ -10766,6 +10766,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fd-tried-btn { white-space:nowrap; }
 .fd-flag { display:flex; align-items:flex-start; gap:var(--sp-6); padding:var(--sp-8) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 .fd-flag-allergen { background:var(--rose-light); color:var(--tc-rose); }
+/* encourage polarity (food-effects-v2): introduce-early allergens read sage/calm,
+   NOT rose/alarm. Rose (.fd-flag-allergen) is reserved for true "avoid". The
+   severe-reaction floor below the banner stays serious regardless. */
+.fd-flag-encourage { background:var(--sage-light); color:var(--tc-sage); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
 .fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }

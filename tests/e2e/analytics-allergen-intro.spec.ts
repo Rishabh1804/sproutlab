@@ -79,13 +79,14 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
     expect(pn.daysSince, 'clamped to 0 (renders "Day 1 of 3"), not abs(2)').toBe(0);
   });
 
-  test('egg "ready" surfaces its own AGE_RULES floor, not the generic safe-form line (M-1)', async ({ page }) => {
+  test('egg carries its cook-well floor from its FOOD_EFFECTS record (Phase δ)', async ({ page }) => {
     const egg = byKey(await seedAndCompute(page, []), 'egg');
-    // egg has no FOOD_EFFECTS record; safeForm must fall back to the AGE_RULES
-    // reason (its cook-well / yolk-first floor), never null → generic copy.
+    // Phase δ gave egg a real FOOD_EFFECTS record, so safeForm now comes from
+    // eff.safeForm.note (the full cook-well floor), superseding the M-1 AGE_RULES
+    // first-sentence stopgap. The floor is still surfaced — never null/generic;
+    // the one-line glance budget is enforced separately by the length-gate below.
     if (egg.state === 'ready') {
-      expect(egg.safeForm, 'egg carries its own cook-well floor').toMatch(/cook/i);
-      expect(egg.safeForm.length, 'and it is short enough to render on one line').toBeLessThanOrEqual(44);
+      expect(egg.safeForm, 'egg carries its own cook-well floor (FOOD_EFFECTS)').toMatch(/cook/i);
     }
   });
 
@@ -99,11 +100,12 @@ test.describe('analytics prototype — Allergen Introduction card', () => {
       });
       return out;
     });
-    // peanut/tree-nut carry a ~150-char FOOD_EFFECTS note → must NOT dump it on the glance
+    // peanut/tree-nut/egg now all carry a long FOOD_EFFECTS note → must NOT dump
+    // it on the glance; the length-gate points them to the tap-through (Phase δ
+    // gave egg a record, so it joins peanut/tree-nut here).
     expect(metas['peanut'], 'long note points to tap-through, not wrapped inline').toBe('In a safe form — tap for how');
     expect(metas['tree nut']).toBe('In a safe form — tap for how');
-    // egg's trimmed floor fits → stays visible (M-1)
-    expect(metas['egg'], 'egg short floor stays on the glance').toMatch(/well-cooked yolk/i);
+    expect(metas['egg'], 'egg now has a FOOD_EFFECTS record → also points to tap-through').toBe('In a safe form — tap for how');
     // no ready meta should exceed the one-line budget
     Object.values(metas).forEach((m) => expect(m.length).toBeLessThanOrEqual(44));
   });
