@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<!-- Visual dashboard for cow's milk + plant milks. Built from _TEMPLATE.food-dashboard.html
+     (timing food type). Skim layer over cow-milk-plant-milks-infant-safety.md / .html.
+     Every chart value is also in text (machine-readable). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cow's Milk &amp; Plant Milks &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: no-preference){
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .panel.on svg[role="img"]{animation:sweep .8s ease both}
+    @keyframes sweep{from{opacity:0;transform:rotate(-12deg) scale(.9)}to{opacity:1;transform:none}}
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:130px 1fr 52px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--honey)}.bar.hl .lab{color:var(--honey)}.bar.hl .val{color:var(--honey)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Cow's Milk &amp; Plant Milks — Infant Safety</h1>
+  <p class="sub">Milk is two foods at once: dairy is excellent <b>in food</b> from ~6 months, but cow's (or buffalo's) milk is not the <b>main drink</b> before 12 months — and plant "milks" are not substitutes for breastmilk or formula under 1.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-why">Why this age</button>
+    <button class="tab" data-p="p-sym">Plant milks &amp; reactions</button>
+    <button class="tab" data-p="p-ctx">Context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">Cow's milk is <b>fine in food from ~6 months</b> (dahi, paneer, milk cooked into khichdi) — but <b>not the main drink before 12 months</b>. The drink is gated; the dairy is not. Breastmilk or first infant formula is the milk under 1.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card stat ok"><div class="n">~6 mo</div><div class="l">dahi, paneer &amp; milk-in-food fine from here</div></div>
+      <div class="card stat crit"><div class="n">12 mo</div><div class="l">before this — not as a main drink</div></div>
+      <div class="card stat crit"><div class="n">&lt;5 yr</div><div class="l">no rice drinks (arsenic)</div></div>
+      <div class="card stat"><div class="n">~500 ml</div><div class="l">whole-milk/day cap after age 1</div></div>
+    </div>
+    <h3>The things to know <span class="badge b-hi">high confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Drink vs food.</b> Dairy in food from ~6mo; milk as the main drink waits for 12mo. → <span class="jump" data-go="p-why">Why this age</span></div>
+      <div class="card"><b>2 · Why the drink is gated.</b> Iron (low + gut blood loss), kidney load (~3× human milk), and displacement. → <span class="jump" data-go="p-why">Why this age</span></div>
+      <div class="card"><b>3 · Plant milks aren't substitutes.</b> None under 1; rice drinks none under 5 (arsenic); almond too low in protein. → <span class="jump" data-go="p-sym">Plant milks &amp; reactions</span></div>
+      <div class="card"><b>4 · Top feeding is the Indian risk.</b> Early diluted cow/buffalo milk → anaemia (child anaemia ~67%). → <span class="jump" data-go="p-ctx">Context</span></div>
+    </div>
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> Surface the moment a parent logs or asks about milk for an under-1. Lead with the reassuring carve-out — <i>dahi and paneer are good now</i> — then the one firm line: <i>not as the main drink before 12 months</i>. The single hardest safety fact is <b>no rice drinks under 5 (arsenic)</b>. Keep the CMPA emergency floor present but calm: <b>antihistamine does not treat anaphylaxis</b>.</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">+ Kael / Vela (new render polarities)</span><span class="pill">2026-06-01</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+  </section>
+
+  <section class="panel" id="p-why"><h2>Why cow's milk waits for 12 months — as a <i>drink</i></h2>
+    <div class="card">
+      <p style="margin-top:0">Three mechanisms, all easing after the first year — which is why <b>12 months</b> is the line. The bars compare the burden cow's milk places on an infant.</p>
+      <div class="bar hl"><span class="lab">Occult gut blood loss</span><span class="trk"><span class="fil" style="width:80%"></span></span><span class="val">~40%</span></div>
+      <div class="bar"><span class="lab">Iron absorbed (cow)</span><span class="trk"><span class="fil" style="width:20%"></span></span><span class="val">~10%</span></div>
+      <div class="bar ok"><span class="lab">Iron absorbed (breast)</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">~50%</span></div>
+      <div class="bar hl"><span class="lab">Renal solute load</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">~3×</span></div>
+      <p style="font-size:12.5px;color:var(--mid);margin-bottom:0">Bars scaled to their own axis. <b>~40%</b> of healthy infants on cow's milk have occult intestinal blood loss; only <b>~10%</b> of cow's-milk iron is absorbed vs <b>~50%</b> from breastmilk; cow's milk's renal solute load is <b>~3×</b> human milk. (AAP; Ziegler 2011; ESPGHAN.)</p>
+    </div>
+    <h3>The three mechanisms</h3>
+    <div class="grid g3">
+      <div class="card"><b>Iron.</b> Low in iron, poorly absorbed, <i>and</i> its protein irritates the gut → tiny blood losses (≈40% of infants). This bleeding <b>ceases after age 1</b> — the biological basis for the rule.</div>
+      <div class="card"><b>Kidneys.</b> Protein + minerals give a renal solute load ~3× human milk — riskier during a fever or diarrhoea (relevant in India).</div>
+      <div class="card"><b>Displacement.</b> A filling, low-iron drink crowds out breastmilk/formula and iron-rich solids.</div>
+    </div>
+    <h3>The carve-out: the drink is gated, the dairy is not</h3>
+    <div class="therm">
+      <div class="col safe"><div style="font-size:12px;color:var(--mid)">FINE FROM ~6 MONTHS — in food</div><div class="big">Dahi · paneer · cheese · milk in cooking</div><div>Pasteurised, full-fat, no added sugar. Plain dahi = the "plain full-fat yogurt" the guidelines mean.</div></div>
+      <div class="col danger"><div style="font-size:12px;color:var(--mid)">NOT BEFORE 12 MONTHS — as a drink</div><div class="big">Cow's / buffalo milk as the main drink</div><div>Breastmilk or first infant formula is the milk under 1. Diluting adds no iron.</div></div>
+    </div>
+    <div class="flag"><b>⚑ After 12 months:</b> whole (full-fat) milk can be the main drink — cap at <b>~500 ml (≈2 cups)/day</b> (more is linked to iron deficiency); not skimmed/low-fat as a main drink before age 2.</div>
+    <div class="flag"><b>⚑ The WHO nuance:</b> WHO (2023) permits full-fat animal milk as a <i>complement</i> from 6–11 months (low-certainty, resource-limited settings). AAP/NHS/ESPGHAN hold the firm 12-month <i>main-drink</i> line — the app's default.</div>
+  </section>
+
+  <section class="panel" id="p-sym"><h2>Plant / "artificial" milks — and the CMPA floor</h2>
+    <div class="card">
+      <p style="margin-top:0">No plant milk replaces breastmilk or formula <b>under 12 months</b>. After age 1, only <i>unsweetened, calcium-fortified</i> options as <b>part of</b> a varied diet. Ranked for a parent who must choose:</p>
+      <div class="bar ok"><span class="lab">Fortified soy</span><span class="trk"><span class="fil" style="width:88%"></span></span><span class="val">~7 g</span></div>
+      <div class="bar ok"><span class="lab">Oat</span><span class="trk"><span class="fil" style="width:50%"></span></span><span class="val">~3 g</span></div>
+      <div class="bar"><span class="lab">Almond</span><span class="trk"><span class="fil" style="width:18%"></span></span><span class="val">~1–2 g</span></div>
+      <div class="bar hl"><span class="lab">Rice — none &lt;5y</span><span class="trk"><span class="fil" style="width:12%"></span></span><span class="val">arsenic</span></div>
+      <div class="bar ok"><span class="lab">Cow's milk (ref)</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">~8 g</span></div>
+      <p style="font-size:12.5px;color:var(--mid);margin-bottom:0">Protein per cup. <b>Fortified soy (~6–7 g)</b> is the only plant milk close to cow's (~8 g) and the only one in the US "dairy group." <b>Almond ~1–2 g</b> is too low. <b>Rice drinks: none under 5</b> (inorganic arsenic) — eating rice the grain is fine. "Toddler/growing-up milks" are unnecessary (AAP). (NHS; FSA; USDA DGA.)</p>
+    </div>
+    <h3>Cow's-milk-protein allergy (CMPA) — a separate axis from the timing rule</h3>
+    <div class="card">CMPA is the <b>most common infant food allergy (~2–3%)</b>, usually <b>outgrown by 3–5</b>, and is <b>protein-driven — not lactose intolerance</b> (a different, enzyme issue, uncommon in babies). It is <i>not</i> a reason for the general infant to delay dairy-in-food.</div>
+    <h3>The emergency floor — the line that never moves</h3>
+    <div class="tl">
+      <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Mild / one system — stop, monitor, call doctor</div><div class="tl-d">hives/rash · swelling (lips, face, eyes) · vomiting · loose or bloody stool (non-IgE) · eczema flare</div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Severe / anaphylaxis — EMERGENCY (any one)</div><div class="tl-d">trouble or noisy breathing · tongue/throat swelling · hoarse cry · <b>pale and floppy</b> / limp</div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Act: lay flat → adrenaline → call 112 / 108</div><div class="tl-d">Use a prescribed adrenaline auto-injector immediately. <b>Antihistamine syrup does NOT treat anaphylaxis</b> and must never delay it.</div></div>
+    </div>
+    <div class="flag good"><b>Reassure:</b> most children outgrow CMPA; many tolerate <b>baked</b> dairy first. Reintroduction (the "milk ladder") is a <b>clinician's</b> call — never self-trial after a severe reaction.</div>
+  </section>
+
+  <section class="panel" id="p-ctx"><h2>Indian &amp; cultural context</h2>
+    <div class="card">
+      <p style="margin-top:0">Early <b>"top feeding"</b> with cow/buffalo milk — often diluted with water and sweetened — before 6–12 months is common and harmful. Dilution <b>adds no iron</b>, lowers energy, and still displaces breastmilk.</p>
+      <div class="bar hl"><span class="lab">Milk modified before feeding</span><span class="trk"><span class="fil" style="width:81%"></span></span><span class="val">81%</span></div>
+      <div class="bar"><span class="lab">…with sugar added</span><span class="trk"><span class="fil" style="width:85%"></span></span><span class="val">85%</span></div>
+      <div class="bar"><span class="lab">…with water added</span><span class="trk"><span class="fil" style="width:49%"></span></span><span class="val">49%</span></div>
+      <div class="bar crit"><span class="lab">Child anaemia (NFHS-5)</span><span class="trk"><span class="fil" style="width:67%"></span></span><span class="val">~67%</span></div>
+      <p style="font-size:12.5px;color:var(--mid);margin-bottom:0">In one Indian study, <b>81%</b> of milk was modified before feeding (sugar <b>85%</b>, water <b>49%</b>), commonly started after ~3 months. India's young-child anaemia is <b>~67%</b> (NFHS-5). (Mayuri 2012; NFHS-5.)</p>
+    </div>
+    <div class="therm">
+      <div class="col danger"><div style="font-size:12px;color:var(--mid)">BUFFALO MILK (common in India)</div><div class="big">~6.9 g fat · 3.8 g protein /100 g</div><div>Higher than cow's (~3.5 g fat, ~3.3 g protein) — an even heavier renal load for an infant.</div></div>
+      <div class="col safe"><div style="font-size:12px;color:var(--mid)">WHAT INDIAN BODIES SAY</div><div class="big">"Avoid only milk feeds; use milk to prepare foods" — IAP</div><div>MoHFW: exclusive breastfeeding = "no other foods or fluids, not even water."</div></div>
+    </div>
+    <div class="flag"><b>⚑ Honest attribution:</b> the exact <i>"no milk as a main drink before 12 months"</i> rule is the <b>international</b> bodies' line (AAP/ESPGHAN/IOM). No Indian body (IAP/MoHFW/FSSAI) was found stating it verbatim — IAP aligns <i>in spirit</i> (avoid animal milk as a watery feed; avoid milk-only feeds), but the precise threshold is not attributed to an Indian body.</div>
+  </section>
+
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">No milk as main drink &lt;12mo</th><th class="c">Dairy in food from ~6mo</th><th class="c">No rice drink &lt;5y</th></tr>
+      <tr><td>AAP (US)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+      <tr><td>NHS (UK)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+      <tr><td>CDC (US)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+      <tr><td>ESPGHAN</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+      <tr><td>FSA (UK)</td><td class="c dash">—</td><td class="c dash">—</td><td class="c yes">✓</td></tr>
+      <tr><td>WHO</td><td class="c no">✗ (6–11mo complement OK)</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+      <tr><td>IAP (India)</td><td class="c dash">~ (spirit, not verbatim)</td><td class="c yes">✓</td><td class="c dash">—</td></tr>
+    </table></div>
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>AAP — Why Formula Instead of Cow's Milk</td><td><a href="https://www.healthychildren.org/English/ages-stages/baby/formula-feeding/Pages/Why-Formula-Instead-of-Cows-Milk.aspx">healthychildren.org</a></td></tr>
+      <tr><td>US CDC — Introducing Solid Foods (carve-out)</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/when-what-and-how-to-introduce-solid-foods.html">cdc.gov</a></td></tr>
+      <tr><td>UK NHS — Drinks and cups (12mo, rice-arsenic, age-1 plant milks)</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/drinks-and-cups-for-babies-and-young-children/">nhs.uk</a></td></tr>
+      <tr><td>UK FSA — Arsenic in rice</td><td><a href="https://www.food.gov.uk/safety-hygiene/arsenic-in-rice">food.gov.uk</a></td></tr>
+      <tr><td>USDA — Dietary Guidelines 2020–2025 (fortified soy)</td><td><a href="https://www.dietaryguidelines.gov/">dietaryguidelines.gov</a></td></tr>
+      <tr><td>Ziegler 2011, Nutrition Reviews (iron / occult blood loss)</td><td><a href="https://academic.oup.com/nutritionreviews/article-pdf/69/suppl_1/S37/24094538/nutritionreviews69-s037.pdf">academic.oup.com</a></td></tr>
+      <tr><td>WHO — Feeding of infants 6–23 months (the divergence)</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov</a></td></tr>
+      <tr><td>ASCIA — First Aid for Anaphylaxis</td><td><a href="https://www.allergy.org.au/hp/anaphylaxis/first-aid-for-anaphylaxis">allergy.org.au</a></td></tr>
+      <tr><td>IAP — Parental Guideline Ch-040 (Complementary Feeding)</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org</a></td></tr>
+      <tr><td>MoHFW / NHM — Enhancing Optimal IYCF Practices</td><td><a href="https://nhm.gov.in/images/pdf/programmes/child-health/guidelines/Enhancing-optimal-IYCF-practices.pdf">nhm.gov.in</a></td></tr>
+      <tr><td>Mayuri et al. 2012, Indian J Public Health (top feeding)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/22684180/">pubmed</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> the exact <b>"no milk as a main drink before 12 months"</b> rule has <b>no verbatim Indian-body source</b> (international bodies only). NFHS-5 figures via secondary peer-reviewed analyses (not the rchiips.org fact-sheet). "Lactose intolerance is rare in infants" is clinically standard but not pinned to a regulator quote this pass. "Under 5" (not "4.5 years") is the live rice-arsenic wording. dahi/paneer naming is a category-level inference (IAP endorses the spirit). Full detail in the <code>.md</code> brief's verification section.</div>
+  </section>
+
+  <section class="panel" id="p-data"><h2>Drop-in records — <code>FOOD_EFFECTS['cow milk']</code> + <code>['plant milk']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of these foods' records in <code>food-effects.manifest.js</code> (two records, one shared brief — peanut/tree-nut precedent). They instantiate the two never-used foodClasses: <code>drink-timing</code> + <code>substitute-caveat</code>. <b>Not yet wired</b> — the render polarities for these classes are the subject of the P1c polarity spec (Kael/Vela spec-review).</p>
+<pre>// cow milk — foodClass: 'drink-timing' (fine IN FOOD ~6mo; not the main DRINK before 12mo)
+//   minMonth: 12 (as a main drink) · severity: 'caution' (amber) · allergen: true (CMPA, separate axis)
+//   safeForm repurposed as the DRINK-vs-FOOD gate; NO earlyIntroBenefit (milk is not "introduce
+//   early to prevent allergy"). CMPA watchFor/severeSigns ride alongside the timing axis.
+// plant milk — foodClass: 'substitute-caveat' (no plant milk replaces breastmilk/formula <1)
+//   never: rice drinks <5 (arsenic), any plant milk as a substitute <12mo, almond as a main drink
+//   reactionType: [] (harm is nutritional/chronic, not an acute reaction — honest gap for the spec)
+// Full records: docs/research/food-effects.manifest.js</pre>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>cow-milk-plant-milks-infant-safety.md</code> / <code>.html</code><br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>

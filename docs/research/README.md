@@ -59,6 +59,6 @@ The data model already supports this. Per food the app holds `AGE_RULES` (gate),
 - **Phase 0:** template + manifest + honey. ✅
 - **Phase 1:** more allergen foods — peanut + tree nut (#187), then egg · soy · wheat · sesame (Phase δ, #206/#207). Manifest now holds **7** records. ✅
 - **Phase 2:** build `index.html` — the manifest-driven hub (Index + Compare + Reactions). ✅
-- **Phase 3:** wire the manifest into the app `data.js FOOD_EFFECTS` for the Finding-A surfacing. ✅ honey + peanut + tree nut (#187), egg + soy + wheat + sesame + polarity-aware banner (#208). *Next: the broader food classes (milk · fish · the choking set).*
+- **Phase 3:** wire the manifest into the app `data.js FOOD_EFFECTS` for the Finding-A surfacing. ✅ honey + peanut + tree nut (#187), egg + soy + wheat + sesame + polarity-aware banner (#208). *In progress: the broader food classes — **cow milk + plant milks** research brief landed (the first `drink-timing` + `substitute-caveat` records; manifest now holds **9** records); FOOD_EFFECTS wiring follows the P1c polarity spec (new render polarities, Kael/Vela review). Then: fish · the choking set.***
 
 > Net: every food we research compounds. The manifest makes the unified dashboard nearly free, and doubles as the product's data source — one spine, three consumers (research hub, skim dashboards, in-app surfacing).

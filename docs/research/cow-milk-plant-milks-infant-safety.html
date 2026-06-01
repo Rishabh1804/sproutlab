@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cow's Milk &amp; Plant Milks &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--sage-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.good{background:var(--sage-bg);color:var(--sage);border-color:transparent}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  blockquote{margin:12px 0;padding:8px 0 8px 16px;border-left:3px solid var(--sage);color:var(--mid);font-style:italic}
+  code,pre{font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:18px;overflow:auto;font-size:12.5px;line-height:1.55}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Cow's Milk &amp; Plant / "Artificial" Milks — Infant Safety &amp; Timing</h1>
+  <p class="sub">Care Research Brief · the <code>drink-timing</code> + <code>substitute-caveat</code> foodClasses (food-effects v2). Companion to <code>cow-milk-plant-milks-infant-safety.md</code>.</p>
+  <div class="meta">
+    <span class="pill good">Reviewer · Maren (Care)</span>
+    <span class="pill">+ Kael / Vela · new render polarities</span>
+    <span class="pill">2026-06-01</span>
+    <span class="pill warn">Research artifact — not yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>Cow's milk: fine IN FOOD from ~6 months; NOT the main DRINK before 12 months.</b> Curd/dahi, paneer, cheese, and small amounts of milk cooked into khichdi/porridge are good complementary foods from ~6 months (pasteurised, full-fat, no added sugar). Milk <i>as the main drink</i> waits until <b>12 months</b> — breastmilk or first infant formula is the milk until then. <span class="badge b-hi">high</span></li>
+      <li><b>Why the drink is gated: three mechanisms.</b> (1) <b>Iron</b> — low + poorly absorbed (~10% vs ~50% from breastmilk) + protein-driven <b>occult gut blood loss</b> (≈40% of infants), which <b>ceases after age 1</b> — the basis for the rule. (2) <b>Kidneys</b> — renal solute load <b>~3× human milk</b>. (3) <b>Displacement</b> of breastmilk/formula and iron-rich solids. <span class="badge b-hi">high</span></li>
+      <li><b>After 12 months: WHOLE milk, capped at ~500 ml (≈2 cups)/day.</b> Not skimmed/low-fat as a main drink before age 2. <span class="badge b-hi">high</span></li>
+      <li><b>Plant milks are NOT substitutes under 1 — and rice milk is the one hard line.</b> No plant milk replaces breastmilk/formula under 12 months; <b>children under 5 should NOT have rice drinks</b> (arsenic). From age 1, <i>unsweetened, calcium-fortified</i> soy/oat as <b>part of</b> a varied diet; almond is too low in protein/fat; "toddler milks" are unnecessary. <span class="badge b-hi">high</span></li>
+      <li><b>CMPA is a SEPARATE axis.</b> Cow's-milk-protein allergy is the most common infant food allergy (~2–3%), usually outgrown by 3–5, <b>protein-driven — not lactose intolerance</b>. A severe reaction (breathing trouble, tongue/throat swelling, hoarse cry, <b>pale-and-floppy</b>) is an emergency — lay flat, adrenaline, call <b>112/108</b>; <b>antihistamine does NOT treat anaphylaxis</b>. <span class="badge b-hi">high</span></li>
+      <li><b>Indian context — name the real practice.</b> Early "top feeding" with cow/buffalo milk (often diluted + sugared) is common and harmful; dilution adds no iron. Buffalo milk is even higher in fat/protein. Child anaemia ~67% (NFHS-5). IAP: <i>"avoid only milk feeds; use milk to prepare foods."</i> The exact 12-month-drink threshold is the <b>international</b> bodies' line, not attributed to any Indian body. <span class="badge b-mod">honesty-flagged</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> — Cow's milk as a DRINK before 12 months: the rule + the three mechanisms <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>The threshold (cross-authority).</b> Whole cow's milk should not be the main milk drink before 12 months; introduce it as a main drink from age 1.</p>
+    <div class="quote"><b>AAP:</b> "Your baby should not receive any cow's milk … until they are about 12 months of age unless no alternative is available."</div>
+    <div class="quote"><b>CDC:</b> "Drinking cow's milk or fortified dairy alternatives is not recommended until your child is older than 12 months."</div>
+    <div class="quote"><b>NHS:</b> cows' milk "should not be given as a main drink to babies until they're 12 months old."</div>
+    <div class="quote"><b>ESPGHAN:</b> "Unmodified cow's milk should not be fed as the main milk drink to infants before the age of 12 months."</div>
+    <p><b>Mechanism (a) — Iron (the primary driver).</b> Cow's milk is low in iron, its iron is poorly absorbed (~10% vs ~50% from breastmilk), and its calcium + casein inhibit non-heme iron absorption from other foods. Its protein <b>irritates the infant gut, causing occult intestinal blood loss</b> — AAP: <i>"cow's milk protein can irritate the lining of the stomach and intestine. This can lead to loss of blood, from small amounts you can't see all the way to bloody stools."</i> This affects <b>≈40% of otherwise healthy infants</b> and <b>ceases after age 1</b> (Ziegler 2011) — the biological basis for the 12-month line. Net effect: a leading dietary cause of <b>iron-deficiency anaemia</b>.</p>
+    <p><b>Mechanism (b) — Renal solute load.</b> Cow's milk's potential renal solute load is <b>~3× human milk</b>, stressing immature kidneys. AAP: <i>"Cow's milk contains high concentrations of protein and minerals, which can stress a newborn's immature kidneys. This can cause severe illness if your baby gets a fever, diarrhea or heat stress."</i> The narrowed margin matters most during a dehydrating illness — relevant in India.</p>
+    <p><b>Mechanism (c) — Displacement.</b> Cow's milk is not complete nutrition for an under-1 and is harder to digest than breastmilk/formula; as a filling, low-iron drink it crowds out breastmilk/formula and iron-rich solids. (AAP; MedlinePlus.)</p>
+    <div class="flag"><b>⚑ The WHO divergence (surfaced honestly):</b> WHO (2023) is the outlier — for infants 6–11 months it permits "either milk formula or animal milk" (full-fat) as a <i>complement</i> (conditional, low-certainty), <b>not</b> an endorsement of cow's milk as the main drink. AAP/NHS/ESPGHAN hold the firm 12-month main-drink line (disputed WHO publicly, JPGN 2024). <b>The academy 12-month rule is the app default; WHO's allowance is a resource-limited nuance.</b></div>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> — The carve-out: cow's-milk DAIRY IN FOOD is fine from ~6 months <span class="badge b-hi">high — the heart of the model</span></h2>
+  <div class="card">
+    <p style="margin-top:0">The drink is gated; the dairy is not. From <b>around 6 months</b>, as complementary foods:</p>
+    <div class="quote"><b>CDC (cleanest):</b> "Other cow's milk products, such as yogurt without added sugars, can be introduced before 12 months."</div>
+    <div class="quote"><b>NHS (milk in cooking):</b> "Cows' milk can be used in cooking or mixed with food from around 6 months but should not be given as a main drink to babies until they're 12 months old."</div>
+    <div class="quote"><b>NHS (yogurt = dahi):</b> "Full-fat, unsweetened or plain yoghurts are a good choice because they do not contain added sugars." Plain, full-fat, unsweetened yogurt is exactly <b>dahi</b>.</div>
+    <div class="quote"><b>NHS (cheese = paneer):</b> "Babies can eat pasteurised full-fat cheese from 6 months old." <b>Paneer</b> is a fresh, pasteurised, non-mould cheese and fits this allowance.</div>
+    <ul>
+      <li><b>Full-fat, not low-fat, under 2</b> — full-fat dairy "recommended up to the age of 2, as young children need fat and energy."</li>
+      <li><b>Pasteurised only;</b> avoid unpasteurised milk/cheese, and even after 6 months avoid <b>mould-ripened soft cheeses (brie, camembert), ripened goats' cheese, and soft blue-veined cheeses.</b></li>
+    </ul>
+    <div class="flag"><b>⚑ The dahi/paneer mapping is the brief's, soundly grounded but not source-named.</b> Western regulators say "plain full-fat unsweetened yogurt" / "pasteurised full-fat cheese"; the equivalence to dahi and paneer is a category-level inference (correct nutritionally), and IAP endorses the spirit — "use milk to prepare foods." Surface it as <i>"your traditional dahi is the plain full-fat yogurt these guidelines mean,"</i> not "the NHS says dahi."</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> — After 12 months: whole milk, the amount cap, the fat rule <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>Whole, vitamin-D-fortified cow's milk</b> can become the main drink from age 1.</li>
+      <li><b>Cap ~500 ml (≈2 cups)/day</b> — the convergent recommendation (AAP ~2 cups, >24 oz linked to iron deficiency; ESPGHAN &lt;500 ml/day). More milk re-creates the iron problem.</li>
+      <li><b>Whole, not skimmed/low-fat,</b> for the young child (US: whole until 2; UK NHS: semi-skimmed OK from 1, skimmed/1% not before 5). Safe default for an Indian family: <b>whole milk</b>.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> — Plant / "artificial" milks (the <code>substitute-caveat</code> axis) <span class="badge b-hi">high (rules)</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>Core message.</b> No plant-based milk substitutes for breastmilk or formula <b>under 12 months</b>; <b>unfortified</b> plant milks are nutritionally inadequate as a main drink. From age 1, <i>unsweetened, calcium-fortified</i> options as <b>part of</b> a varied diet (not the sole drink for an under-2 — guidance-derived).</p>
+    <ul>
+      <li><b>RICE milk — the one hard safety line.</b> NHS, verbatim: <i>"Children under 5 years old should not have rice drinks as a substitute for breast milk, infant formula or cows' milk as they may contain too much arsenic."</i> Eating rice the grain is still fine. <b>Use "under 5"</b> (not "4.5 years"). (NHS; FSA.)</li>
+      <li><b>SOY milk.</b> Closest to cow's milk in protein (~6–7 g/cup vs ~8 g); <b>fortified soy is the only plant alternative in the US "dairy group"</b> (DGA). But soy is itself a major allergen, and <b>soy infant formula</b> is a separate regulated product — "only under medical supervision" (NHS).</li>
+      <li><b>ALMOND milk.</b> Very low in protein/fat (~1–2 g protein/cup); not nutritionally similar to milk. A poor sole main drink.</li>
+      <li><b>OAT milk.</b> Fortifiable but lower in protein than cow's; NHS names it among acceptable unsweetened, calcium-fortified options from age 1.</li>
+      <li><b>"Toddler/growing-up milks"</b> — AAP: "generally unnecessary and nutritionally incomplete." WHO Code extended to growing-up milks to 36 months (marketing).</li>
+      <li><b>Ranking after age 1:</b> fortified soy ≈ oat &gt; almond (low protein) &gt; rice (arsenic-restricted under 5 — avoid). Unfortified anything is the wrong choice.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> — CMPA vs lactose intolerance, and the emergency floor <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>CMPA is a separate axis from the timing rule.</b> The most common infant food allergy — AAP: <i>"Up to 3% of newborns and infants have an allergy to cow milk protein"</i> — usually <b>outgrown</b> (AAP: ~50% tolerant by 5 for IgE; consensus "most by 3–5"). ~60% IgE-mediated (rapid, minutes–2h); the rest non-IgE (delayed, GI-predominant, bloody stools, ~48h–1 week).</p>
+    <ul>
+      <li><b>CMPA ≠ lactose intolerance.</b> CMPA is an immune reaction to milk <i>protein</i>; lactose intolerance is a <i>digestive</i> issue (missing lactase) that is uncommon in young infants <span class="badge b-weak">weak — not regulator-quoted this pass</span>. Non-IgE CMPA is often misread as lactose intolerance (AAP).</li>
+      <li><b>Dairy-in-food is the normal path;</b> CMPA exclusion/reintroduction is clinician-led (a "milk ladder"), not DIY. Many children <b>tolerate baked dairy first</b>; never self-trial after a severe reaction.</li>
+    </ul>
+    <p><b>The emergency floor (the line that never moves):</b></p>
+    <ul>
+      <li><b>Mild / single-system:</b> hives/rash, swelling (lips/face/eyes), tingling mouth, vomiting, loose stool, eczema flare, fussiness → stop, monitor, call doctor.</li>
+      <li><b>Severe / anaphylaxis — act immediately (ANY one):</b> difficult/noisy breathing, wheeze/persistent cough, tongue swelling or throat tightness, hoarse voice/cry, <b>pale and floppy</b> / limp / collapse (the infant-specific severe sign).</li>
+      <li><b>Action:</b> lay the child flat; use a prescribed adrenaline auto-injector into the outer mid-thigh immediately; call <b>112</b> (unified) or <b>108</b> (ambulance). "If in doubt, give the adrenaline injector." <b>Antihistamine syrup does NOT treat anaphylaxis</b> and must never delay adrenaline. (ASCIA; AAP; NHS.)</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> — Indian &amp; cultural context <span class="badge b-hi">high (practice)</span> <span class="badge b-mod">honesty subsection</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>The prevalent practice — "top feeding."</b> Feeding cow/buffalo milk to Indian infants is widespread, commonly started before 6 months, usually <b>modified</b>: one study found <b>81%</b> modified (sugar <b>85%</b>, water <b>49%</b>), "commonly initiated post 3 months" (Mayuri 2012). MoHFW notes ~30% start complementary food at 4–5 months.</li>
+      <li><b>Why diluting doesn't fix it.</b> Dilution lowers protein/renal load somewhat but <b>adds no iron</b>, lowers energy, and still displaces breastmilk (derived from AAP/Ziegler + IAP's "watery food" framing).</li>
+      <li><b>Buffalo milk</b> (very common) is higher in fat and protein than cow's (~6.9 g fat, 3.8 g protein/100 g vs ~3.3–3.9 g fat, ~3.3 g protein) — an even higher renal solute load.</li>
+      <li><b>The anaemia backdrop.</b> Young-child anaemia ~67% (NFHS-5, up from 58.6%); exclusive breastfeeding ~63.7% (so ~36% of under-6-month infants are not exclusively breastfed).</li>
+    </ul>
+    <div class="flag"><b>⚑ Indian-body verification &amp; gaps (the no-laundering discipline — load-bearing).</b>
+      <br><b>VERIFIED:</b> <b>IAP</b> (Ch-040): <i>"Avoid watery food such as soups, fruit juices, and animal milk"</i>; <i>"Avoid only milk feeds; use milk to prepare foods for children."</i> <b>MoHFW/NHM:</b> exclusive breastfeeding = <i>"no other foods or fluids, not even water"</i>; animal milk only as a replacement-feeding fallback. <b>IMS Act 1992/FSSAI:</b> "MOTHER'S MILK IS BEST FOR YOUR BABY" mandatory label; BMS promotion banned.
+      <br><b>HONEST GAP (phrase this way in app copy):</b> <b>No Indian body states the exact "no cow/buffalo milk as the main drink before 12 months."</b> IAP aligns in spirit (avoid animal milk as a watery feed; avoid milk-only feeds) but not the precise threshold — which is the <b>international</b> bodies' (AAP/ESPGHAN/IOM) line and must not be attributed to an Indian body.</div>
+  </div>
+
+  <h2><span class="ax">Axis 7</span> — Myths to correct <span class="badge b-hi">high (except Myth 2, derived)</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>"Cow's/buffalo milk makes a baby strong and fat — give it early."</b> No — as a main drink before 12 months it causes iron-deficiency anaemia and strains the kidneys. Dairy belongs in food, not as the drink.</li>
+      <li><b>"Diluted cow's milk is fine for a young baby."</b> No — dilution adds no iron, lowers calories, still displaces breastmilk. <span class="badge b-mod">derived</span></li>
+      <li><b>"Plant milk is a healthy milk substitute for a baby."</b> No under 12 months; unfortified plant milks are inadequate. From age 1, fortified soy/oat as part of a varied diet.</li>
+      <li><b>"Rice/almond milk is a healthy main drink for my toddler."</b> No — rice drinks not for under-5s (arsenic); almond too low in protein/fat.</li>
+      <li><b>"If a baby reacts to milk, never give any dairy again."</b> Usually wrong — most outgrow CMPA by 3–5; baked dairy often tolerated first; reintroduction is a clinician's call (never self-trial after a severe reaction).</li>
+    </ul>
+  </div>
+
+  <h2>Sources &amp; verification</h2>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr><th>Authority</th><th>Tier</th><th>Link</th></tr>
+      <tr><td>AAP — Why Formula Instead of Cow's Milk</td><td>regulator/academy</td><td><a href="https://www.healthychildren.org/English/ages-stages/baby/formula-feeding/Pages/Why-Formula-Instead-of-Cows-Milk.aspx">healthychildren.org</a></td></tr>
+      <tr><td>AAP — Cow's Milk Protein Allergy (module)</td><td>academy</td><td><a href="https://publications.aap.org/first1000days/module/28106/Cow-s-Milk-Protein-Allergy">publications.aap.org</a></td></tr>
+      <tr><td>US CDC — Introducing Solid Foods</td><td>regulator</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/when-what-and-how-to-introduce-solid-foods.html">cdc.gov</a></td></tr>
+      <tr><td>UK NHS — Drinks and cups for babies</td><td>regulator</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/drinks-and-cups-for-babies-and-young-children/">nhs.uk</a></td></tr>
+      <tr><td>UK NHS — Foods to avoid / Start for Life</td><td>regulator</td><td><a href="https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/">nhs.uk</a></td></tr>
+      <tr><td>UK FSA — Arsenic in rice</td><td>regulator</td><td><a href="https://www.food.gov.uk/safety-hygiene/arsenic-in-rice">food.gov.uk</a></td></tr>
+      <tr><td>USDA — Dietary Guidelines 2020–2025</td><td>regulator</td><td><a href="https://www.dietaryguidelines.gov/">dietaryguidelines.gov</a></td></tr>
+      <tr><td>Ziegler 2011, Nutrition Reviews</td><td>primary literature</td><td><a href="https://academic.oup.com/nutritionreviews/article-pdf/69/suppl_1/S37/24094538/nutritionreviews69-s037.pdf">academic.oup.com</a></td></tr>
+      <tr><td>ESPGHAN — Iron / Complementary Feeding position papers</td><td>academy</td><td><a href="https://www.espghan.org/">espghan.org</a></td></tr>
+      <tr><td>WHO — Feeding of infants 6–23 months</td><td>regulator/global</td><td><a href="https://www.ncbi.nlm.nih.gov/books/NBK596423/">ncbi.nlm.nih.gov</a></td></tr>
+      <tr><td>NIH / MedlinePlus — Feeding 6–12 months</td><td>regulator</td><td><a href="https://medlineplus.gov/ency/article/001973.htm">medlineplus.gov</a></td></tr>
+      <tr><td>ASCIA — First Aid for Anaphylaxis; Cow's milk allergy</td><td>advocacy (allergy)</td><td><a href="https://www.allergy.org.au/hp/anaphylaxis/first-aid-for-anaphylaxis">allergy.org.au</a></td></tr>
+      <tr><td>IAP — Parental Guideline Ch-040</td><td>Indian academy</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org</a></td></tr>
+      <tr><td>MoHFW / NHM — Enhancing Optimal IYCF Practices</td><td>Indian government</td><td><a href="https://nhm.gov.in/images/pdf/programmes/child-health/guidelines/Enhancing-optimal-IYCF-practices.pdf">nhm.gov.in</a></td></tr>
+      <tr><td>Mayuri et al. 2012, Indian J Public Health</td><td>primary literature (India)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/22684180/">pubmed</a></td></tr>
+      <tr><td>NFHS-5 (2019–21) via peer-reviewed analysis</td><td>survey (India)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11381101/">pmc.ncbi.nlm.nih.gov</a></td></tr>
+    </table>
+  </div>
+  <div class="flag"><b>⚑ Verification gaps (honest):</b> (1) The exact <b>"no milk as a main drink before 12 months"</b> rule has <b>no verbatim Indian-body source</b> — international bodies only. (2) NFHS-5 figures via secondary peer-reviewed analyses, not the rchiips.org fact-sheet. (3) <b>"Lactose intolerance is rare in infants"</b> is clinically standard but not pinned to a regulator quote this pass. (4) <b>"Under 5 years,"</b> not "4.5 years," is the live rice-arsenic wording. (5) dahi/paneer naming is a category-level inference (IAP endorses the spirit). (6) ESPGHAN "&lt;500 ml" / "~3×" via well-corroborated summaries, not a clean PDF fetch; IAP 2016 academic guideline PDF returned 403 (verified IAP wording is from the consumer Ch-040).</div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">Milk is the first <b>two-class</b> exercise: cow's milk is <code>drink-timing</code> (a <b>conditional</b> card — neither honey's "avoid" nor the allergens' "encourage"), plant milks are <code>substitute-caveat</code> (an <b>inform</b> card). Lead the cow-milk card with the reassuring carve-out — <i>dahi and paneer are good now</i> — then the one firm line: <i>not as the main drink before 12 months</i>, with the three mechanisms behind a calm "why." Lead the plant-milk card with what they <i>are and aren't</i>, fronting the single hardest fact: <b>no rice drinks under 5 (arsenic)</b>. The CMPA emergency floor rides present-but-calm whenever dairy is being introduced (milk is the most common infant allergen) — <b>antihistamine does not treat anaphylaxis</b>. Because these are two never-used render polarities, the card composition is the subject of the P1c polarity spec (Kael + Vela spec-review) before any render code.</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/cow-milk-plant-milks-infant-safety.md</code> · generated 2026-06-01<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>
