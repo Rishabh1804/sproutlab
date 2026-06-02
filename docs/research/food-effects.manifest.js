@@ -363,7 +363,59 @@ window.FOOD_EFFECTS_MANIFEST = [
     lastReviewed:  '2026-06-01',
   },
 
-  // ── append the next food here (fish / salt …) ──
+  // ── food-effects-v2 P1c: fish (finfish) — the broader food classes, fish ──
+  // foodClass MULTI-VALUED: allergen-introduce-early (encourage — the ESTABLISHED δ
+  // polarity; surfaces through renderDietNutIntro with NO new render) + choking-by-form
+  // (BONES — folded into the introduce-safely block, V-2, like peanut). NO new polarity
+  // spec needed (contrast milk's drink-timing / substitute-caveat).
+  // TWO-TIER discipline: fish is introduce-early-and-SAFE, NOT prevention-proven — EAT
+  // (NEJM 2016) was NULL for fish. earlyIntroBenefit framed like soy/wheat/sesame.
+  // The NEW axis is MERCURY (species selection) — it rides in safeForm.ok/never (low- vs
+  // high-mercury species). Mercury is a chronic neurotoxin with NO reactionType enum value
+  // (like plant-milk arsenic) — reactionType carries the ACUTE reactions only (allergy + choking).
+  // No chokingUntilYears: fish's choking is bone-based (prep-removable: debone + flake),
+  // not a whole-food-until-5 rule like whole nuts.
+  {
+    food:          'fish',
+    aliases:       ['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','mackerel','sardine','mathi','salmon','tuna','surmai','seer fish','machhli','machli','fish curry','fish fry'],
+    foodClass:     ['allergen-introduce-early','choking-by-form'],
+    severity:      'caution',
+    category:      'fish',
+    effect:        'food allergy (often lifelong) + mercury (species selection) + bones (choking)',
+    minMonth:      6,                       // AAP/NHS/ASCIA ~6mo; app AGE_RULES['fish']=7 — reconcile at wiring (egg-yolk:7 precedent)
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy','choking'],   // acute reactions; mercury (chronic neurotoxin) has NO enum value — see comment
+    headline:      'Introduce around 6 months — well-cooked, deboned, low-mercury fish. Don\'t delay.',
+    whyGood:       'Oily fish (salmon, sardine, bangda) is a top source of omega-3 (DHA) for brain and eye development, plus protein, vitamin D and iron.',
+    earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                         evidence:'AAP/NHS/ASCIA advise early introduction of fish among the major allergens; EAT (NEJM 2016) verified NO significant prevention effect for fish — early intro is SAFE but does NOT prevent fish allergy.',
+                         paradigm:'Don\'t delay — but no proven fish-specific prevention claim.' },
+    safeForm:      { ok:['LOW-mercury fish — salmon, sardine, Indian mackerel (bangda), rohu, catla, pomfret, trout — thoroughly cooked, all bones removed, flaked small','canned LIGHT tuna (not albacore / white)'],
+                     never:['HIGH-mercury fish — shark (sura), swordfish, king mackerel (surmai / seer), marlin, bigeye tuna','raw or undercooked fish / sushi, and raw or lightly-cooked shellfish (food poisoning)','fish with bones left in or not hand-checked for pin bones (rohu & catla are very bony — a choking risk)','dried or salted fish (Bombay duck / bombil) — too much salt for a baby'],
+                     note:'Choose low-mercury fish, cook through, and debone meticulously. Finfish is a SEPARATE allergen from shellfish. Oily fish is great — for a girl, NHS caps oily fish at ~2 portions/week (pollutants).' },
+    howToIntroduce:{ amount:'A small amount of well-cooked, deboned, flaked low-mercury fish; for ages 1–3, ~1 oz (28 g) per serving (no official figure under 1).',
+                     when:'Around 6 months, after a few first foods are tolerated; offer at home, daytime, and watch ~2 hours.',
+                     watch:'Watch ~2 hours for a reaction. Fish allergy tends to be LIFELONG (unlike egg / milk) — treat first exposures carefully.',
+                     oneAtATime:true,
+                     highRiskNote:'' },
+    myth:          { claim:'Fish and milk together is harmful / causes white skin patches.',
+                     truth:'No scientific basis — skin patches (vitiligo) are autoimmune / genetic, not caused by food combinations. Well-cooked, deboned, low-mercury fish is a healthy early food.' },
+    watchFor:      ['hives / rash','swelling (lips, face, eyes)','itchy mouth','vomiting'],
+    severeSigns:   ['trouble breathing / wheeze','tongue or throat swelling','hoarse cry','floppy, pale, or very sleepy'],
+    timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min. (In some sensitive people, cooking vapour / steam can trigger a reaction.)',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, tongue/throat swelling, hoarse cry, or floppiness: EMERGENCY — call 112/108, use prescribed adrenaline auto-injector (antihistamine does NOT treat anaphylaxis). Fish allergy is usually lifelong; a specialist guides any testing of other species.',
+    breastfeedingSafe: true,
+    culturalNote:  'Fish is a staple early food in Bengali / coastal India (the annaprashan first-rice often includes fish). IAP lists fish among complementary "flesh foods" (a nutrition framing, NOT allergy/mercury) and says a vegetarian diet can meet a child\'s needs — so a vegetarian / Jain household not giving fish is making a valid choice. FSSAI codes predatory fish (tuna / swordfish / shark / marlin) as higher-mercury (1.0 vs 0.5 mg/kg). In Indian IYCF, iodine comes from iodized salt, not fish.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','ASCIA','US FDA/EPA (fish-mercury advice)','NEJM EAT 2016','Frontiers Immunol 2014 (parvalbumin)','FARE','IAP Ch-040','MoHFW/NHM MAA','FSSAI 2022'],
+    dashboard:     'fish-infant-safety.visual.html',
+    brief:         'fish-infant-safety.md',
+    longform:      'fish-infant-safety.html',
+    lastReviewed:  '2026-06-02',
+  },
+
+  // ── append the next food here (salt / the choking set …) ──
 ];
 
 /* Node/CommonJS convenience (so the hub OR a build step can require it). */

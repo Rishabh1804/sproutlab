@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!-- Visual dashboard for fish (finfish). Built from _TEMPLATE.food-dashboard.html
+     (allergen + mercury food type). Skim layer over fish-infant-safety.md / .html.
+     Every chart value is also in text (machine-readable). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fish &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--honey-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: no-preference){
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .bar{display:grid;grid-template-columns:140px 1fr 60px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .bar .lab{color:var(--ink);text-align:right;font-weight:600}
+  .bar .trk{display:block;background:var(--track);border:1px solid var(--line);border-radius:7px;height:18px;overflow:hidden}
+  .bar .fil{display:block;height:100%;border-radius:6px;background:var(--sage);min-width:3px}
+  .bar .val{font-weight:700;color:var(--mid);font-size:12.5px}
+  .bar.hl .fil{background:var(--rose)}.bar.hl .lab{color:var(--rose)}.bar.hl .val{color:var(--rose)}
+  .bar.ok .fil{background:var(--sage)}.bar.ok .lab{color:var(--sage)}.bar.ok .val{color:var(--sage)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Fish (Finfish) &amp; Infant Safety</h1>
+  <p class="sub">Introduce early (~6 months), well-cooked and deboned — and <b>choose low-mercury fish</b>. A high-benefit allergen (omega-3/DHA) with two extra axes: mercury (species) and bones.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-merc">Mercury &amp; species</button>
+    <button class="tab" data-p="p-prep">Safe prep &amp; benefit</button>
+    <button class="tab" data-p="p-rx">Reaction &amp; context</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--honey-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">Introduce fish <b>early (~6 months)</b>, well-cooked and <b>deboned</b> — and choose <b>low-mercury</b> fish (salmon, sardine, bangda, rohu). Don't delay; but it's introduced because it's <b>safe</b>, not because it <i>prevents</i> fish allergy (EAT was null for fish).</p>
+    </div>
+    <div class="grid g4">
+      <div class="card stat ok"><div class="n">~6 mo</div><div class="l">introduce early, don't delay</div></div>
+      <div class="card stat crit"><div class="n">7 fish</div><div class="l">to AVOID (high-mercury)</div></div>
+      <div class="card stat"><div class="n">≤2/wk</div><div class="l">oily fish for a girl (NHS)</div></div>
+      <div class="card stat crit"><div class="n">lifelong</div><div class="l">fish allergy usually persists</div></div>
+    </div>
+    <h3>The things to know <span class="badge b-hi">high confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Early, but not preventive.</b> ~6mo, don't delay — EAT was null for fish (prevention is peanut/egg only). → <span class="jump" data-go="p-prep">Safe prep</span></div>
+      <div class="card"><b>2 · Mercury — the new axis.</b> Avoid shark/swordfish/surmai; choose salmon/sardine/bangda/rohu. → <span class="jump" data-go="p-merc">Mercury</span></div>
+      <div class="card"><b>3 · Bones + cook through.</b> Remove ALL bones (rohu/katla very bony), flake, fully cook, no raw. → <span class="jump" data-go="p-prep">Safe prep</span></div>
+      <div class="card"><b>4 · High benefit.</b> Oily fish = omega-3/DHA for brain &amp; eyes. → <span class="jump" data-go="p-prep">Benefit</span></div>
+    </div>
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> Fish uses the <b>established</b> encourage polarity (sage) — no new render. Lead with the omega-3/DHA benefit, then the three fish musts: <b>low-mercury species</b>, <b>deboned + cooked through</b>, and <b>≤2 oily portions/week for a girl</b>; then the non-collapsible severe strip. Two fish-unique nuggets: the <b>mercury avoid/best lists</b> and the honest <b>"safe, not proven-preventive"</b> framing. The fish+milk myth is the top Indian relative-facing line — gently a folk belief with no basis.</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">established polarities — no new spec</span><span class="pill">2026-06-02</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+  </section>
+
+  <section class="panel" id="p-merc"><h2>Mercury &amp; species — the new axis</h2>
+    <div class="card">
+      <p style="margin-top:0">Relative mercury (higher bar = more mercury = worse for a baby). Large predators accumulate methylmercury, a neurotoxin for the developing brain.</p>
+      <div class="bar hl"><span class="lab">Shark / swordfish</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">AVOID</span></div>
+      <div class="bar hl"><span class="lab">King mackerel (surmai)</span><span class="trk"><span class="fil" style="width:92%"></span></span><span class="val">AVOID</span></div>
+      <div class="bar hl"><span class="lab">Bigeye tuna</span><span class="trk"><span class="fil" style="width:82%"></span></span><span class="val">AVOID</span></div>
+      <div class="bar"><span class="lab">Albacore tuna</span><span class="trk"><span class="fil" style="width:48%"></span></span><span class="val">limit</span></div>
+      <div class="bar ok"><span class="lab">Salmon / sardine</span><span class="trk"><span class="fil" style="width:14%"></span></span><span class="val">BEST</span></div>
+      <div class="bar ok"><span class="lab">Bangda / rohu</span><span class="trk"><span class="fil" style="width:12%"></span></span><span class="val">BEST</span></div>
+      <p style="font-size:12.5px;color:var(--mid);margin-bottom:0">Bars are relative, not absolute ppm. <b>Avoid</b> (FDA/EPA): shark, swordfish, king mackerel, marlin, bigeye tuna, orange roughy, Gulf tilefish. <b>Limit</b>: albacore/yellowfin tuna (1 serving/wk). <b>Best</b>: salmon, sardine, bangda (Indian mackerel), rohu, pomfret, trout, canned light tuna.</p>
+    </div>
+    <div class="therm">
+      <div class="col safe"><div style="font-size:12px;color:var(--mid)">BEST CHOICES (low-mercury)</div><div class="big">Salmon · sardine · bangda · rohu · pomfret</div><div>Ideal for a baby. Eat ~2 servings/week from this list.</div></div>
+      <div class="col danger"><div style="font-size:12px;color:var(--mid)">AVOID (high-mercury)</div><div class="big">Shark (sura) · swordfish · surmai/seer · marlin · bigeye tuna</div><div>NHS: under-16s avoid shark/swordfish/marlin.</div></div>
+    </div>
+    <div class="flag"><b>⚑ Indian-authority hook (FSSAI):</b> Fish 0.5 mg/kg mercury but <b>predatory fish (tuna/swordfish/shark/marlin) 1.0 mg/kg</b> — FSSAI itself codes those as higher-mercury. A food-safety ceiling, not an infant directive.</div>
+    <div class="flag"><b>⚑ Serving:</b> children 2 servings/week from Best Choices; ages 1–3 ≈ 1 oz (~28g). No FDA figure under age 1 — the list logic still applies.</div>
+  </section>
+
+  <section class="panel" id="p-prep"><h2>Safe prep &amp; the benefit</h2>
+    <div class="card">
+      <h3 style="margin-top:0">Three musts before serving</h3>
+      <div class="grid g3">
+        <div class="card" style="margin:0"><b>Debone.</b> NHS: "Remove all bones from meat or fish." Flake and check by hand — rohu/katla are very bony (~104/108 pin bones).</div>
+        <div class="card" style="margin:0"><b>Cook through.</b> No raw fish/sushi, no raw/lightly-cooked shellfish for a baby. Cold-smoked fish: cook to steaming.</div>
+        <div class="card" style="margin:0"><b>Low salt.</b> Under-1s need &lt;1g salt/day — skip dried/salted fish (Bombay duck/bombil) and salty curry.</div>
+      </div>
+    </div>
+    <div class="card flag good"><b>The benefit (why it's worth it):</b> oily fish is a top source of <b>long-chain omega-3 (DHA)</b> — builds nerve cells in the brain and eyes — plus protein, vitamin D and iron. NHS: "the health benefits are greater than the risks." Aim ~2 fish portions/week including 1 oily.</div>
+    <div class="flag"><b>⚑ Girl-specific (Ziva):</b> NHS caps oily fish at <b>≤2 portions/week for girls</b> (4 for boys) because oily-fish pollutants can build up. Iodine, in Indian IYCF, comes from iodized salt — not fish.</div>
+  </section>
+
+  <section class="panel" id="p-rx"><h2>Reaction floor &amp; Indian context</h2>
+    <div class="card">
+      <p style="margin-top:0"><b>Fish allergy tends to be lifelong</b> (unlike egg/milk), and finfish is a <b>separate</b> allergen from shellfish. Watch ~2 hours after a first taste.</p>
+      <div class="tl">
+        <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Mild / one system — stop, monitor, call doctor</div><div class="tl-d">hives/rash · swelling (lips, face, eyes) · itchy mouth · vomiting</div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Severe / anaphylaxis — EMERGENCY (any one)</div><div class="tl-d">trouble/noisy breathing · tongue or throat swelling · hoarse cry · <b>pale and floppy</b></div></div>
+        <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Act: lay flat → adrenaline → call 112 / 108</div><div class="tl-d"><b>Antihistamine does NOT treat anaphylaxis.</b> In some sensitive people, cooking steam can trigger a reaction.</div></div>
+      </div>
+    </div>
+    <div class="therm">
+      <div class="col safe"><div style="font-size:12px;color:var(--mid)">INDIAN CONTEXT — verified</div><div class="big">A staple early food; vegetarian is fine</div><div>Bengali annaprashan often includes fish. IAP: a vegetarian diet meets a child's needs.</div></div>
+      <div class="col danger"><div style="font-size:12px;color:var(--mid)">MYTH — gently corrected</div><div class="big">"Fish + milk causes skin patches"</div><div>No scientific basis — vitiligo is autoimmune/genetic, not a food combination.</div></div>
+    </div>
+    <div class="flag"><b>⚑ Honesty:</b> no Indian body recommends early fish to <i>prevent</i> allergy (IAP doesn't list fish as an allergen; 2026 IAP allergy guidelines paywalled → not attributed). The early-intro evidence is international; the EAT trial was null for fish.</div>
+  </section>
+
+  <section class="panel" id="p-src">
+    <h2>Who says what — consensus matrix</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th class="c">Introduce ~6mo</th><th class="c">Prevents fish allergy?</th><th class="c">Avoid high-Hg fish</th></tr>
+      <tr><td>AAP (US)</td><td class="c yes">✓</td><td class="c no">✗ (no claim)</td><td class="c yes">✓</td></tr>
+      <tr><td>NHS (UK)</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td></tr>
+      <tr><td>ASCIA</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c dash">—</td></tr>
+      <tr><td>EAT trial (NEJM)</td><td class="c dash">—</td><td class="c no">✗ NULL for fish</td><td class="c dash">—</td></tr>
+      <tr><td>FDA/EPA</td><td class="c dash">—</td><td class="c dash">—</td><td class="c yes">✓</td></tr>
+      <tr><td>FSSAI (India)</td><td class="c dash">—</td><td class="c dash">—</td><td class="c yes">✓ (predator ceiling)</td></tr>
+      <tr><td>IAP (India)</td><td class="c dash">~ (nutrition group)</td><td class="c no">✗ (not an allergen in IAP)</td><td class="c dash">—</td></tr>
+    </table></div>
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>AAP/HealthyChildren — allergens + seafood/DHA</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org</a></td></tr>
+      <tr><td>UK NHS — fish nutrition / foods to avoid / salt</td><td><a href="https://www.nhs.uk/live-well/eat-well/food-types/fish-and-shellfish-nutrition/">nhs.uk</a></td></tr>
+      <tr><td>ASCIA — solids + anaphylaxis first aid</td><td><a href="https://www.allergy.org.au/patients/allergy-prevention/ascia-how-to-introduce-solid-foods-to-babies">allergy.org.au</a></td></tr>
+      <tr><td>FDA/EPA — Advice About Eating Fish (mercury)</td><td><a href="https://www.fda.gov/food/consumers/advice-about-eating-fish">fda.gov</a></td></tr>
+      <tr><td>NEJM — EAT trial 2016 (null for fish)</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed</a></td></tr>
+      <tr><td>IAP — Parental Guideline Ch-040</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org</a></td></tr>
+      <tr><td>MoHFW/NHM — MAA module (fish 6–9mo)</td><td><a href="https://www.nhm.gov.in/MAA/One_Day_Sensitization_Module/One_Day_Sensitization_Module_English_lowres.pdf">nhm.gov.in</a></td></tr>
+      <tr><td>FSSAI — Contaminants Regulations 2022</td><td><a href="https://www.fssai.gov.in/upload/uploadfiles/files/Compendium_Contaminants_Regulations_28_01_2022.pdf">fssai.gov.in</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> fish prevention is UNPROVEN (EAT null) — claim is "don't delay, safe," not "prevents." No FDA serving size under age 1; Indian per-species mercury mapping is indicative (FDA principle + Chennai study + FSSAI carve-out). "Lifelong" + vapour trigger rest on advocacy-tier. No Indian body recommends early fish to prevent allergy. The fish+milk myth is a reasoned null. <code>AGE_RULES['fish']</code>=minMonth:7 — reconcile at wiring. Full detail in the <code>.md</code> brief.</div>
+  </section>
+
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['fish']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">Mirror of the fish record in <code>food-effects.manifest.js</code>. <b>Not yet wired.</b> Uses the ESTABLISHED polarities — no new render spec.</p>
+<pre>// fish — foodClass: ['allergen-introduce-early','choking-by-form']
+//   allergen-introduce-early = the δ encourage card (sage), surfaces with NO new render
+//   choking-by-form          = BONES, folded into the introduce-safely block (like peanut)
+//   severity:'caution' · allergen:true · reactionType:['allergy','choking']
+//   minMonth:6 (app AGE_RULES['fish']=7 — reconcile at wiring)
+//   earlyIntroBenefit: framed like soy/wheat/sesame — "don't delay, SAFE", NOT prevention
+//     (EAT/NEJM 2016 was NULL for fish)
+//   safeForm carries the NEW mercury axis (ok = low-mercury species; never = high-mercury
+//     predators + raw + bones-in + dried/salted). Mercury = chronic neurotoxin, NO
+//     reactionType enum value (like plant-milk arsenic) — reactionType is acute only.
+// Full record: docs/research/food-effects.manifest.js</pre>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>fish-infant-safety.md</code> / <code>.html</code><br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>

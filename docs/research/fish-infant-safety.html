@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fish &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--sage-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.good{background:var(--sage-bg);color:var(--sage);border-color:transparent}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  .flag.bad{background:var(--rose-bg);border-left-color:var(--rose)}
+  .flag.bad b{color:var(--rose)}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Fish (Finfish) — Infant Safety &amp; Introduction</h1>
+  <p class="sub">Care Research Brief · an <code>allergen-introduce-early</code> + <code>choking-by-form</code> food with two extra axes the other allergens don't have: mercury (species) and bones. Companion to <code>fish-infant-safety.md</code>.</p>
+  <div class="meta">
+    <span class="pill good">Reviewer · Maren (Care)</span>
+    <span class="pill">established render polarities — no new spec</span>
+    <span class="pill">2026-06-02</span>
+    <span class="pill warn">Research artifact — not yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>Introduce fish early (~6 months), don't delay — but NOT to "prevent fish allergy."</b> Fish is among the allergens to introduce ~6mo (not before 4). <b>But the EAT trial found NO preventive effect for fish</b> (prevention is proven only for peanut + egg). Honest claim: <i>introduce early because it's safe and nutritious</i> — never <i>early fish prevents fish allergy.</i> <span class="badge b-hi">high</span></li>
+      <li><b>The NEW axis — MERCURY.</b> Avoid the big predators — <b>shark (sura), swordfish, king mackerel (surmai/seer), marlin, bigeye tuna</b>. Best choices (low-mercury, ideal for a baby): <b>salmon, sardine, Indian mackerel (bangda), rohu, pomfret, trout, canned light tuna.</b> <span class="badge b-hi">high</span></li>
+      <li><b>Safe FORM — bones, cook-through, no raw.</b> <b>Remove ALL bones</b> and flake (rohu/katla are very bony — ~100+ pin bones); <b>cook thoroughly</b> (no raw fish/sushi, no raw shellfish); skip dried/salted fish (too much salt). <span class="badge b-hi">high</span></li>
+      <li><b>The benefit is high — omega-3/DHA for the brain.</b> Oily fish is a top source of long-chain omega-3 (DHA) for brain/eye development, plus protein and vit D. <i>"Benefits are greater than the risks"</i> within limits. <b>For a girl, NHS caps oily fish at ~2 portions/week.</b> <span class="badge b-hi">high</span></li>
+      <li><b>Fish allergy tends to be LIFELONG; it's separate from shellfish.</b> Unlike egg/milk (outgrown), fish allergy usually persists; parvalbumin is heat-stable + cross-reacts across finfish. Finfish ≠ shellfish. Emergency floor: severe reaction (breathing trouble, tongue/throat swelling, <b>pale-and-floppy</b>) → lay flat, adrenaline, call <b>112/108</b>; antihistamine does NOT treat anaphylaxis. <span class="badge b-hi">high</span></li>
+      <li><b>Indian context — a staple, and vegetarian is fine.</b> Fish is normal early food in Bengali/coastal homes (annaprashan often includes fish). IAP lists fish as a "flesh food" (nutrition) and says a vegetarian diet meets a child's needs — vegetarian/Jain abstention is a valid choice. <span class="badge b-mod">honesty-flagged</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> — Introduce early (~6mo), don't delay — but NOT prevention-proven <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <div class="quote"><b>AAP:</b> highly allergenic foods "include … wheat, sesame, soy, <b>fish</b> and shellfish"; "there is no evidence that delayed introduction of allergenic foods … prevents allergies."</div>
+    <div class="quote"><b>ASCIA:</b> solids "around 6 months of age and not before 4 months"; "delayed introduction … has been shown to increase the chance of your baby developing a food allergy."</div>
+    <div class="flag"><b>⚑ The two-tier discipline — load-bearing.</b> The <b>EAT trial</b> (NEJM 2016) found, verbatim: <i>"there were no significant effects with respect to milk, sesame, <b>fish</b>, or wheat."</i> Prevention was shown for <b>peanut and egg only</b>. So fish's benefit framing is like soy/wheat/sesame — <b>"don't delay, it's safe"</b> — NEVER a peanut/egg-style "early intro prevents this allergy" claim.</div>
+    <p style="margin-bottom:0"><b>Timing:</b> ~6 months, after a few first foods. <i>App note: <code>AGE_RULES['fish']</code> is currently minMonth:7 — reconcile with the international ~6mo at wiring (egg-yolk:7 precedent).</i></p>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> — Mercury &amp; species selection (the NEW axis) <span class="badge b-hi">high (lists)</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>Why:</b> EPA — <i>"Some fish contain higher levels of mercury that may harm the developing nervous system of a fetus or young child"</i>; larger, longer-lived fish carry the most.</p>
+    <div class="flag bad"><b>AVOID (high-mercury):</b> king mackerel, marlin, orange roughy, shark, swordfish, Gulf tilefish, bigeye tuna. NHS: under-16s avoid shark/swordfish/marlin. <b>Indian:</b> surmai/seer (king-mackerel family) + sura (shark) → avoid.</div>
+    <div class="flag good"><b>BEST CHOICES (low-mercury):</b> salmon, sardine, anchovy, trout, herring, pollock, cod, tilapia, chub mackerel, canned <i>light</i> tuna. <b>Indian:</b> rohu, catla, bangda (Indian mackerel), sardine/mathi, pomfret, bhetki.</div>
+    <p><b>Tuna tiers:</b> canned light = Best · albacore/yellowfin = Good (limit 1/wk) · bigeye = Avoid. <b>Serving:</b> children 2 servings/wk from Best Choices; ages 1–3 ≈ 1 oz (~28 g). <span class="badge b-mod">⚑ no FDA figure under age 1</span></p>
+    <div class="flag"><b>⚑ Indian-authority hook (FSSAI):</b> Fish 0.5 mg/kg mercury but <b>Predatory fish (Tuna, Marlin, Swordfish, Elasmobranch=shark) 1.0 mg/kg</b> — FSSAI itself codes those as higher-mercury, corroborating the avoid-list from an Indian body. (A population food-safety ceiling, NOT an infant directive.)</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> — Safe form: bones, thorough cooking, no raw, low salt <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <div class="quote"><b>NHS:</b> "Remove all bones from meat or fish." Method: cook, cool, "check for any bones," then flake.</div>
+    <ul>
+      <li><b>Bones = choking.</b> ⚑ Indian carps are very bony (rohu ~104 pin bones, catla ~108) — debone meticulously or choose a less-boned fillet (pomfret, salmon, bhetki, basa).</li>
+      <li><b>Cook through — no raw.</b> No raw fish/sushi (AAP); raw/lightly-cooked shellfish "best not to give it to babies" (NHS); cold-smoked/cured fish = listeria (cook to steaming).</li>
+      <li><b>Low salt.</b> Under-1s need &lt;1g salt/day; skip dried/salted fish (Bombay duck/bombil) and salty fish curry. <span class="badge b-mod">Indian-specific inference</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> — The benefit: omega-3/DHA, protein, vitamin D <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <div class="quote"><b>AAP:</b> fish is "a rich source of long chain omega-3 fatty acids used by the body to build nerve cells in the brain and eyes"; DHA "essential for a child's developing brain, nervous system and vision."</div>
+    <p>NHS: <i>"Don't stop feeding your child oily fish – the health benefits are greater than the risks, as long as they don't eat more than the recommended amounts."</i> Aim ~2 fish portions/week incl. 1 oily.</p>
+    <div class="flag"><b>⚑ Girl-specific (relevant to Ziva):</b> NHS — "give boys up to 4 portions of oily fish a week, but … girls no more than 2 portions a week" (pollutants). <b>≤2 oily-fish portions/week for a girl.</b></div>
+    <div class="flag"><b>⚑ Honesty correction:</b> In Indian IYCF (MoHFW), <b>iodine comes from iodized salt, NOT fish</b> — fish is framed for iron + vitamin A. Don't sell fish "for iodine" on an Indian-body basis.</div>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> — Allergic reaction, the emergency floor, finfish ≠ shellfish <span class="badge b-hi">high</span> <span class="badge b-mod">advocacy on "lifelong"</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>Fish allergy tends to be LIFELONG</b> (unlike egg/milk) — FARE: ~40% first react as adults. Parvalbumin is <b>heat-stable</b> (cooking doesn't remove it) and cross-reacts across finfish.</li>
+      <li><b>Finfish ≠ shellfish</b> (parvalbumin vs tropomyosin) — allergic to one doesn't mean allergic to both. Don't let shellfish's profile bleed into the finfish card.</li>
+    </ul>
+    <p><b>The emergency floor:</b></p>
+    <ul>
+      <li><b>Mild / one system:</b> hives, swelling (lips/face/eyes), tingling mouth, vomiting, abdominal pain → stop, monitor, call doctor.</li>
+      <li><b>Severe / anaphylaxis (any one):</b> trouble/noisy breathing, tongue swelling, throat tightness, wheeze, hoarse cry, <b>pale and floppy</b> / collapse.</li>
+      <li><b>Action:</b> lay flat (or upright if breathing is hard); prescribed adrenaline immediately; call <b>112/108</b>. <b>Antihistamine does NOT treat anaphylaxis.</b></li>
+      <li>⚑ <b>Fish-specific:</b> cooking vapour/steam can trigger reactions in <i>some</i> sensitive people (parvalbumin aerosolises) — not universal.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> — Indian &amp; cultural context <span class="badge b-hi">verified Indian-body</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>A staple early food</b> in Bengali/coastal India; the annaprashan first-rice (~6mo) often includes fish.</li>
+      <li><b>IAP (verbatim, Ch-040):</b> fish is in Table 4's "Flesh foods — meat, fish, poultry" group (nutrition framing; <b>not</b> in IAP's allergen list, which names milk/soya/egg/peanut/spices).</li>
+      <li><b>Vegetarian is adequate — IAP's own word:</b> "Animal origin foods … are not a must and nutritional needs of children can be easily met by vegetarian diets." A Jain/vegetarian household not giving fish is making a valid choice.</li>
+      <li><b>MoHFW:</b> names fish 6–9mo (iron + vit A). FSSAI: predatory-fish mercury ceiling (Axis 2).</li>
+    </ul>
+    <div class="flag"><b>⚑ No-laundering discipline.</b> <b>No Indian body recommends early fish to <i>prevent</i> allergy</b> — IAP doesn't even list fish as an allergen; the 2026 IAP allergy guidelines are paywalled → <b>not attributed</b>. No Indian infant-specific fish/mercury advisory; no single Indian per-species mercury table (rohu-low/surmai-high is FDA-principle + Chennai study + FSSAI carve-out, indicative).</div>
+  </div>
+
+  <h2><span class="ax">Axis 7</span> — Myths to correct <span class="badge b-hi">high (except the fish+milk null)</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>"Fish + milk causes white skin patches."</b> No scientific basis — vitiligo is autoimmune/genetic, not a food-combination effect. <span class="badge b-weak">⚑ reasoned null — no source; frame gently</span></li>
+      <li><b>"Delay fish to prevent allergy."</b> Reversed — introduce ~6mo. (But: introduce early because <i>safe</i>, not <i>proven-preventive</i> — EAT null for fish.)</li>
+      <li><b>"Babies can't have fish till age 1."</b> False — well-cooked, deboned fish from ~6mo. The real hazards are bones + species, not timing.</li>
+      <li><b>"All fish are high in mercury."</b> False — only big predators; low-mercury fish (salmon, sardine, rohu, bangda) are recommended.</li>
+      <li><b>"Fish allergy is outgrown like egg."</b> Usually not — fish allergy tends to be lifelong; treat first exposures like a persistent allergen.</li>
+    </ul>
+  </div>
+
+  <h2>Sources &amp; verification</h2>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr><th>Authority</th><th>Tier</th><th>Link</th></tr>
+      <tr><td>AAP/HealthyChildren — allergens + seafood/DHA</td><td>academy</td><td><a href="https://www.healthychildren.org/English/healthy-living/nutrition/Pages/when-to-introduce-egg-peanut-butter-and-other-common-food-allergens-to-your-baby-food-allergy-prevention-tips.aspx">healthychildren.org</a></td></tr>
+      <tr><td>UK NHS — fish nutrition / foods to avoid / salt</td><td>regulator</td><td><a href="https://www.nhs.uk/live-well/eat-well/food-types/fish-and-shellfish-nutrition/">nhs.uk</a></td></tr>
+      <tr><td>ASCIA — solids + anaphylaxis first aid</td><td>specialist body</td><td><a href="https://www.allergy.org.au/patients/allergy-prevention/ascia-how-to-introduce-solid-foods-to-babies">allergy.org.au</a></td></tr>
+      <tr><td>FDA/EPA — Advice About Eating Fish (mercury lists)</td><td>regulator</td><td><a href="https://www.fda.gov/food/consumers/advice-about-eating-fish">fda.gov</a></td></tr>
+      <tr><td>NEJM — EAT trial 2016 (no preventive effect for fish)</td><td>primary literature</td><td><a href="https://pubmed.ncbi.nlm.nih.gov/26943128/">pubmed</a></td></tr>
+      <tr><td>Frontiers Immunol 2014 — parvalbumin</td><td>primary literature</td><td><a href="https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2014.00179/full">frontiersin.org</a></td></tr>
+      <tr><td>FARE — fish allergy (lifelong; finfish≠shellfish)</td><td>advocacy</td><td><a href="https://www.foodallergy.org/living-food-allergies/food-allergy-essentials/common-allergens/fish">foodallergy.org</a></td></tr>
+      <tr><td>IAP — Parental Guideline Ch-040</td><td>Indian academy</td><td><a href="https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf">iapindia.org</a></td></tr>
+      <tr><td>MoHFW/NHM — MAA Sensitization Module</td><td>Indian government</td><td><a href="https://www.nhm.gov.in/MAA/One_Day_Sensitization_Module/One_Day_Sensitization_Module_English_lowres.pdf">nhm.gov.in</a></td></tr>
+      <tr><td>FSSAI — Contaminants Regulations 2022 (mercury)</td><td>Indian government</td><td><a href="https://www.fssai.gov.in/upload/uploadfiles/files/Compendium_Contaminants_Regulations_28_01_2022.pdf">fssai.gov.in</a></td></tr>
+    </table>
+  </div>
+  <div class="flag"><b>⚑ Verification gaps (honest):</b> (1) Fish prevention is unproven — EAT null for fish; the claim is "don't delay, safe," not "prevents allergy." (2) No FDA serving size under age 1; the Indian per-species mercury mapping is indicative (FDA principle + Chennai study + FSSAI carve-out), not one Indian table. (3) FSA listeria advice names pregnant/immunocompromised, not infants (inference); pin-bone counts + dried-fish flag are MEDIUM/inference. (4) "Lifelong" + "~40% adult-onset" + the vapour trigger rest on advocacy-tier (FARE/Anaphylaxis UK), cross-source-agreed. (5) <b>No Indian body recommends early fish to prevent allergy</b> (2026 IAP allergy guidelines paywalled → not attributed). (6) The fish+milk myth is a reasoned null (no source). (7) <code>AGE_RULES['fish']</code> = minMonth:7 — reconcile at wiring.</div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">Fish uses the <b>established</b> render polarities — <code>allergen-introduce-early</code> (the sage δ encourage card) + <code>choking-by-form</code> (the bones form-gate, folded into the introduce-safely block, like peanut). <b>No new polarity spec is needed</b> (contrast milk). Surface it as an encourage card: lead with the omega-3/DHA benefit, then the introduce-safely block carrying the three fish-specific musts — <b>low-mercury species</b> (the new axis), <b>deboned + cooked through</b> (the form-gate), and the <b>≤2 oily portions/week for a girl</b> cap — then the non-collapsible severe-reaction strip. The two highest-value fish-unique nuggets: the <b>mercury avoid/best lists</b> (with the Indian species mapping) and the honest <b>"introduce early because safe, not proven-preventive"</b> framing (EAT-null). Hold the persistence note (fish allergy is usually lifelong) so first exposures are treated carefully. The fish+milk myth is the highest-value Indian relative-facing line — present it gently as a folk belief with no scientific basis.</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/fish-infant-safety.md</code> · generated 2026-06-02<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>
