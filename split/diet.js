@@ -488,6 +488,21 @@ function _fdAgeRule(name) {
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
   const rule = _lookupByFoodName(AGE_RULES, name);
+  // K-M-1 (Kael option b, completed per Cipher Edict-V): whenever the CARD resolves to the
+  // plant-milk record but the raw GATE is NOT a dedicated plant gate, take the plant-milk gate
+  // so card and gate agree. Keyed on "card is plant milk" — NOT on the bare-'milk' fall — because
+  // the Hindi 'doodh' variants (badam doodh / kaju doodh) raw-resolve to tree-nut's alias
+  // (tree nut@6), the tree-nut FALL the earlier `rule === AGE_RULES['milk']` precondition missed
+  // (it only caught the bare-'milk' fall of the English "milk" forms). The dedicated plant gates
+  // (oat 12 / rice + rice drink 60mo arsenic) are excluded so they keep their own copy; the bare
+  // nut (card is tree nut, not plant milk) skips this guard and correctly stays at tree nut@6.
+  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk']
+      && typeof getFoodEffect === 'function' && typeof FOOD_EFFECTS !== 'undefined'
+      && getFoodEffect(name) === FOOD_EFFECTS['plant milk']
+      && rule !== AGE_RULES['plant milk'] && rule !== AGE_RULES['oat milk']
+      && rule !== AGE_RULES['rice milk'] && rule !== AGE_RULES['rice drink']) {
+    return AGE_RULES['plant milk'];
+  }
   // M-F-1 (Cipher Edict-V completion): the same bare-'fish'-KEY leak that fed the
   // consequence card also feeds this gate — "seer fish" / "shark fish" resolve to
   // AGE_RULES['fish'] (6mo) and would show a green "fine from ~6 months" badge for a
@@ -640,19 +655,40 @@ function renderFoodDetailSheet(name) {
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
   const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
-  // Polarity (food-effects-v2): an introduce-early allergen reads ENCOURAGE —
-  // sage banner + calm sprout icon ("good to introduce, here's the safe form"),
-  // never rose/siren ("don't give"). Rose is reserved for true avoid (acute-toxin).
-  // The severe-reaction floor (fdFloor) below stays serious regardless.
-  const fdEncourage = (typeof _effHasClass === 'function') && _effHasClass(fdEff, 'allergen-introduce-early');
+  // Polarity (food-effects-v2 P1c, K-6): the banner cosmetic switches off the SHARED
+  // _effPolarity resolver (core.js, milk-spec §3-bis), NOT a two-state encourage/avoid
+  // boolean. The old `fdEncourage ? sprout : siren` rendered milk's drink-timing /
+  // substitute-caveat records as a rose "avoid" SIREN here — the §1 wrong-lead on this
+  // second surface. Four polarities, one source of truth: encourage (sage/sprout, the δ
+  // allergens), warn (rose/siren, acute-toxin honey), conditional (amber/clock, cow milk
+  // drink-timing), inform (sky/info, plant-milk substitute-caveat). The severe-reaction
+  // floor (fdFloor) below stays serious regardless — it is presence-driven (severeSigns),
+  // independent of this banner cosmetic.
+  const FD_POLARITY = {
+    encourage:   { cls:'fd-flag-encourage',   ic:'sprout' },
+    warn:        { cls:'fd-flag-allergen',    ic:'siren'  },
+    conditional: { cls:'fd-flag-conditional', ic:'clock'  },
+    inform:      { cls:'fd-flag-inform',      ic:'info'   },
+  };
+  const fdPol = (typeof _effPolarity === 'function') ? _effPolarity(fdEff) : 'warn';
   if (fdFloor) {
     const head = (fdEff && fdEff.title) ? escHtml(fdEff.title) : 'Allergen';
     const sub = (fdEff && fdEff.safeForm && fdEff.safeForm.note) ? escHtml(fdEff.safeForm.note)
               : (allerg ? escHtml(allerg) : '');
-    const flagCls = fdEncourage ? 'fd-flag-encourage' : 'fd-flag-allergen';
-    const flagIc  = fdEncourage ? zi('sprout') : zi('siren');
-    html += `<div class="fd-flag ${flagCls}">${flagIc} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    const pol = FD_POLARITY[fdPol] || FD_POLARITY.warn;
+    html += `<div class="fd-flag ${pol.cls}">${zi(pol.ic)} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
     html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
+    // M-M-1 (Maren, blocking): a plant-milk DRINK redirected to the plant-milk record
+    // (almond / cashew / badam milk) still CONTAINS its tree-nut allergen, but the inform
+    // floor masks the allergen axis (the else-if below is dead when fdFloor is truthy), so the
+    // tree-nut ALLERGENS note would silently drop. Surface it alongside the inform flag, so the
+    // sheet shows BOTH axes — "not a substitute under 1" AND "contains almond, a tree-nut
+    // allergen". Scoped to the redirect target (plant milk carries no ALLERGENS note of its own,
+    // so any `allerg` here came from a DIFFERENT food); other records carry their allergen in
+    // their own floor, so this never double-prints.
+    if (typeof FOOD_EFFECTS !== 'undefined' && fdEff === FOOD_EFFECTS['plant milk'] && allerg) {
+      html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+    }
   } else if (allerg) {
     // A milder allergen with no FOOD_EFFECTS record (kiwi, strawberry, oats …):
     // informational + calm, never the rose alarm. Introduce carefully, watch.
@@ -760,6 +796,7 @@ function renderDietLibrary() {
   renderFoodLibFilters();
   renderFoodLibResults();
   renderDietNutIntro();
+  renderDietMilkIntro();
 }
 
 // ════════════════════════════════════════
@@ -888,6 +925,152 @@ function renderDietNutIntro() {
 
   host.innerHTML = pinned;
   if (moreHost) moreHost.innerHTML = body;
+}
+
+// ════════════════════════════════════════
+// Milk — the drink-timing + substitute-caveat KNOWLEDGE cards (food-effects v2 P1c)
+// ════════════════════════════════════════
+// Sibling of renderDietNutIntro (separate fns + hosts; the nut card stays untouched).
+// Renders the FIRST two cards of the never-rendered v2 polarities (milk-spec §4/§5):
+//   • cow milk   → 'drink-timing'      (#dietMilkIntro)      — CONDITIONAL, a SPLIT lead
+//     (sage carve-out "good in food now" over an amber gate "wait as the main drink",
+//     V-V-2 / M-2 skim-proof). CMPA severe strip PINNED (present-only via severeSigns,
+//     §6) with a class-aware scope header (V-V-4).
+//   • plant milk → 'substitute-caveat' (#dietPlantMilkIntro) — INFORM, a SKY banner
+//     (V-V-3, .enc-inform) leading with the hardest fact (rice <5 = arsenic). NO severe
+//     strip — the harm is nutritional/chronic, not acute (§5.3, the floor follows the hazard).
+// Records are read by DIRECT KEY (FE['cow milk'] / FE['plant milk']) — NOT via the
+// resolver — so the Library knowledge cards are immune to alias-precedence collisions.
+// All copy is FOOD_EFFECTS-sourced (no hardcoded safety claim); the only hardcoded
+// strings are the V-V-1 switched-unit HEADINGS (render copy, polarity-keyed, not reusable).
+function renderDietMilkIntro() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+
+  // ── cow milk — drink-timing (split conditional) ──
+  var milkHost = document.getElementById('dietMilkIntro');
+  var milkMore = document.getElementById('dietMilkIntroMore');
+  var cow = FE ? FE['cow milk'] : null;
+  if (milkHost) {
+    if (!cow) {
+      milkHost.innerHTML = '';
+      if (milkMore) milkMore.innerHTML = '';
+    } else {
+      var cPin = '', cBody = '';
+      // SPLIT lead (V-V-2): sage carve-out band leads, amber gate band qualifies
+      // (M-2 skim-proof — the gate is visually weighted, never a trailing clause).
+      cPin += '<div class="enc-split">';
+      if (cow.whyGood) {
+        cPin += '<div class="enc-split-good"><div class="enc-split-h">' + zi('sprout') +
+          '<span>Good in food now</span></div><p class="enc-split-body">' + escHtml(cow.whyGood) + '</p></div>';
+      }
+      if (cow.gate) {
+        cPin += '<div class="enc-split-gate"><div class="enc-split-h">' + zi('clock') +
+          '<span>Wait as the main drink</span></div><p class="enc-split-body">' + escHtml(cow.gate) + '</p></div>';
+      }
+      cPin += '</div>';
+      // Drink-vs-food block (§4.2): ok = "Fine now — in food", never = "Not yet — as a
+      // drink", note = the non-suppressible invariant ("the drink is gated; the dairy is not").
+      cPin += _milkFormBlock(cow.safeForm, 'Fine now — in food', 'Not yet — as a drink');
+      // Severe strip — the CMPA emergency floor, PINNED + present-only via severeSigns
+      // (§6/M-1), with the V-V-4 class-aware scope header (separates the ALLERGY floor
+      // from the TIMING gate). Hand-built (not _severeFloorHtml) so the header is scoped
+      // and the mild watch-fors drop to the calm body instead.
+      // M-M-2 (Maren): scope to the SEVERE path — "reacts to dairy" over-read as any reaction
+      // being an emergency, contradicting the mild-path the seekCare line and body watch-fors draw.
+      cPin += _milkSevereStrip(cow, 'A severe reaction to dairy is an emergency');
+      // BODY (collapsible): how-to (after-12mo) → mild watch-fors → myth.
+      var chti = cow.howToIntroduce || {};
+      if (chti.amount || chti.when || chti.watch) {
+        cBody += '<div class="enc-block"><div class="enc-block-h">' + zi('spoon') + '<span>How to give it</span></div><div class="enc-proto">';
+        if (chti.when)   cBody += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(chti.when) + '</div>';
+        if (chti.amount) cBody += '<div class="enc-proto-row"><b>Amount:</b> ' + escHtml(chti.amount) + '</div>';
+        if (chti.watch)  cBody += '<div class="enc-proto-row"><b>Watch:</b> ' + escHtml(chti.watch) + '</div>';
+        cBody += '</div></div>';
+      }
+      var cMild = (cow.watchFor && cow.watchFor.length) ? cow.watchFor : [];
+      if (cMild.length) {
+        cBody += '<div class="cons-watch"><div class="cons-watch-h">Milder signs to watch for</div><ul class="cons-watch-list">' +
+          cMild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+      }
+      if (cow.myth && cow.myth.truth) {
+        cBody += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(cow.myth.truth) + '</span></div>';
+      }
+      milkHost.innerHTML = cPin;
+      if (milkMore) milkMore.innerHTML = cBody;
+    }
+  }
+
+  // ── plant milk — substitute-caveat (sky inform) ──
+  var plantHost = document.getElementById('dietPlantMilkIntro');
+  var plantMore = document.getElementById('dietPlantMilkIntroMore');
+  var plant = FE ? FE['plant milk'] : null;
+  if (plantHost) {
+    if (!plant) {
+      plantHost.innerHTML = '';
+      if (plantMore) plantMore.innerHTML = '';
+    } else {
+      var pPin = '', pBody = '';
+      // INFORM banner (V-V-3, sky .enc-inform): the V-V-1 switched heading + the hardest
+      // fact fronted (headline: rice <5 = arsenic) + the age-1 nuance (whyGood).
+      pPin += '<div class="enc-inform"><div class="enc-inform-h">' + zi('info') + '<span>What it is — and what it isn\'t</span></div>';
+      if (plant.headline) pPin += '<p class="enc-inform-lead">' + escHtml(plant.headline) + '</p>';
+      if (plant.whyGood)  pPin += '<p class="enc-inform-body">' + escHtml(plant.whyGood) + '</p>';
+      pPin += '</div>';
+      // is/isn't block: ok = "From age 1, as part of a varied diet", never = "Never",
+      // note = the ranking + "not a substitute under 1".
+      pPin += _milkFormBlock(plant.safeForm, 'From age 1, as part of a varied diet', 'Never');
+      // No severe strip — substitute-caveat has no acute floor (§5.3).
+      // BODY: myth → the soy-milk allergen cross-reference (calm watch line).
+      if (plant.myth && plant.myth.truth) {
+        pBody += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(plant.myth.truth) + '</span></div>';
+      }
+      var pMild = (plant.watchFor && plant.watchFor.length) ? plant.watchFor : [];
+      if (pMild.length) {
+        pBody += '<div class="cons-watch"><div class="cons-watch-h">One thing to watch</div><ul class="cons-watch-list">' +
+          pMild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+      }
+      plantHost.innerHTML = pPin;
+      if (plantMore) plantMore.innerHTML = pBody;
+    }
+  }
+}
+
+// Shared drink-vs-food / is-isn't block for the milk cards. safeForm.ok renders under
+// `okLabel`, safeForm.never under `neverLabel`, and safeForm.note as the non-suppressible
+// enc-form-note invariant (milk-spec §4.2/§5.2). Reuses the shipped .enc-form family.
+function _milkFormBlock(sf, okLabel, neverLabel) {
+  sf = sf || {};
+  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
+  var never = (sf.never && sf.never.length) ? sf.never : [];
+  if (!ok.length && !never.length && !sf.note) return '';
+  var h = '<div class="enc-form">';
+  if (ok.length) {
+    h += '<div class="enc-form-sub">' + escHtml(okLabel) + '</div><ul class="enc-form-list">' +
+      ok.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+  }
+  if (never.length) {
+    h += '<div class="enc-form-sub">' + escHtml(neverLabel) + '</div><ul class="enc-form-list enc-never">' +
+      never.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+  }
+  if (sf.note) h += '<p class="enc-form-note">' + escHtml(sf.note) + '</p>';
+  h += '</div>';
+  return h;
+}
+
+// Present-only CMPA severe strip for a drink-timing card (milk-spec §6/V-V-4/M-1). Renders
+// the anaphylaxis red-flags + the call-112/108 emergency line ONLY when severeSigns is a
+// non-empty array (never on a class/allergen-flag proxy — M-1). `scopeHeader` separates the
+// ALLERGY floor from the TIMING gate so a parent never conflates the two axes (V-V-4).
+function _milkSevereStrip(eff, scopeHeader) {
+  if (!eff || !Array.isArray(eff.severeSigns) || !eff.severeSigns.length) return '';
+  var h = '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
+    '<span>' + escHtml(scopeHeader) + '</span></div><ul class="cons-severe-list">' +
+    eff.severeSigns.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+  if (eff.seekCare) {
+    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(eff.seekCare) + '</span></p>';
+  }
+  h += '</div>';
+  return h;
 }
 
 

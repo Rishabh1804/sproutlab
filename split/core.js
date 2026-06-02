@@ -4064,10 +4064,31 @@ function _isHighMercuryFishHost(name) {
     new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
 }
 
+// food-effects-v2 P1c (milk). A plant-milk DRINK named with a tree-nut word — "almond milk",
+// "badam doodh", "cashew milk" — resolves to the TREE-NUT record, because tree nut's
+// 'almond'/'badam'/'cashew' alias wins at the byAlias tier (tree nut precedes plant milk) over
+// plant milk's own 'almond milk'/'badam doodh' alias. That surfaces an "introduce early, ground
+// or smooth" ENCOURAGE verdict on what is a substitute-caveat DRINK — the opposite polarity,
+// and it contradicts the spec's K-2 intent (badam milk → plant milk). This guard redirects such
+// a host to the plant-milk record so both surfaces read "not a substitute under 1," not
+// "introduce early." Requires BOTH a tree-nut token AND a drink word, so the bare nut ("badam",
+// "almond butter") still correctly resolves to the tree-nut introduce-early record. Soy milk is
+// untouched (it intentionally aliases to the soy allergen record); oat/rice/coconut-drink
+// already resolve to plant milk without collision.
+const _PLANT_MILK_NUT = ['almond', 'badam', 'cashew', 'kaju'];
+function _isPlantMilkDrinkHost(name) {
+  const n = String(name || '').toLowerCase();
+  if (!/\b(milk|doodh)\b/.test(n)) return false;
+  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
+}
+
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
 // resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
 function getFoodEffect(name) {
   if (typeof FOOD_EFFECTS === 'undefined') return null;
+  // Plant-milk drink host (almond/badam/cashew milk·doodh) → plant-milk record, NOT the
+  // tree-nut encourage card it would otherwise resolve to (K-2 intent; alias-precedence fix).
+  if (_isPlantMilkDrinkHost(name) && FOOD_EFFECTS['plant milk']) return FOOD_EFFECTS['plant milk'];
   const eff = _lookupByFoodName(FOOD_EFFECTS, name);
   // M-F-1: never affirm a high-mercury fish as a safe early food (the bare 'fish' KEY leak).
   if (eff && eff === FOOD_EFFECTS['fish'] && _isHighMercuryFishHost(name)) return null;
@@ -4090,6 +4111,28 @@ const COMBO_RESULT_SCHEMA = 'r1-fe';
 function _effHasClass(eff, cls) {
   if (!eff || !eff.foodClass) return false;
   return Array.isArray(eff.foodClass) ? eff.foodClass.indexOf(cls) !== -1 : eff.foodClass === cls;
+}
+
+// Polarity resolver (food-effects-v2 P1c, milk-spec §3-bis, K-6 — the load-bearing
+// fold). Maps a FOOD_EFFECTS record's foodClass to ONE of four render polarities, so
+// every banner surface switches {fill, icon, heading, gate-render} off a SINGLE source
+// of truth instead of each re-deriving polarity from a two-state _effHasClass test (the
+// K-6 defect: renderFoodLibDetail's old `fdEncourage ? sprout : siren` rendered milk's
+// drink-timing/substitute-caveat records as a rose "avoid" SIREN — the §1 wrong-lead on
+// a second surface). Precedence matters for the multi-class records: warn (acute-toxin,
+// honey) → encourage (allergen-introduce-early; wins over a SECONDARY choking-by-form on
+// peanut/tree-nut/fish) → conditional (drink-timing cow milk; and a PRIMARY choking-by-form
+// once the choking set wires, milk-spec §9) → inform (substitute-caveat plant milk).
+// Returns 'inform' as the conservative non-alarm default for an unknown/absent class —
+// never 'warn' (a spurious siren is the failure this resolver exists to prevent).
+function _effPolarity(eff) {
+  if (!eff || !eff.foodClass) return 'inform';
+  if (_effHasClass(eff, 'acute-toxin'))               return 'warn';
+  if (_effHasClass(eff, 'allergen-introduce-early'))  return 'encourage';
+  if (_effHasClass(eff, 'drink-timing'))              return 'conditional';
+  if (_effHasClass(eff, 'choking-by-form'))           return 'conditional'; // PRIMARY (§9, deferred); secondary already caught by encourage above
+  if (_effHasClass(eff, 'substitute-caveat'))         return 'inform';
+  return 'inform';
 }
 
 // Shared emergency-floor renderer (food-effects v2 §3.0, M-S-7). The severe

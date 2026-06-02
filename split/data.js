@@ -2405,6 +2405,18 @@ const AGE_RULES = {
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
+  // food-effects-v2 P1c (K-3): a DEDICATED 'plant milk' gate so a plant-milk log no
+  // longer inherits the cow-milk reason above (curd/paneer carve-out, no rice-arsenic) —
+  // the "green-but-wrong" K-3 named. The exact-key tier of _lookupByFoodName resolves
+  // 'plant milk'/'oat milk'/'rice milk'/'rice drink' to these before the bare 'milk' key.
+  // NOTE (Kael resolver-scope): 'almond milk'/'badam milk'/'badam doodh' are NOT keyed
+  // here — they FOOD_EFFECTS-resolve to the tree-nut record (tree-nut's 'almond'/'badam'
+  // aliases win at the byAlias tier), so a dedicated plant gate for them would diverge
+  // from the card they actually fire. The rice forms carry the under-5 arsenic floor.
+  'plant milk': { minMonth:12, reason:'Not a substitute for breastmilk or formula before 12 months. From 12 months, unsweetened fortified soy or oat milk can be part of a varied diet. Rice drinks: none under 5 (arsenic).' },
+  'oat milk':   { minMonth:12, reason:'Not a milk substitute before 12 months. From 12 months, unsweetened fortified oat milk can be part of a varied diet — not the only drink.' },
+  'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
+  'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
   'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
   'sugar':    { minMonth:12, reason:'No added sugar before 12 months. Use fruit for natural sweetness.' },
   'jaggery':  { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
@@ -2742,6 +2754,82 @@ const FOOD_EFFECTS = {
     seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, tongue or throat swelling, a hoarse cry, or floppiness: call emergency services (112 or 108) right away and use a prescribed adrenaline auto-injector if you have one — an antihistamine does not treat anaphylaxis. Fish allergy is usually lifelong; a specialist guides any testing of other species.',
     confidence: 'high',
   },
+
+  // ── food-effects-v2 P1c: cow's milk + plant milks (the broader food classes) ──
+  // The first records of the two never-rendered v2 foodClasses (spec §2 + the milk
+  // polarity spec docs/specs/food-effects-v2-p1c-milk-polarities.md):
+  //   cow milk   = 'drink-timing'      — conditional: fine IN FOOD ~6mo, not the
+  //                                       main DRINK before 12mo (NEITHER avoid nor encourage).
+  //   plant milk = 'substitute-caveat' — inform: not a breastmilk/formula substitute <1;
+  //                                       rice drinks none under 5 (arsenic).
+  // NEITHER is allergen-introduce-early → NO earlyIntroBenefit (EAT found no prevention
+  // effect for milk). `safeForm` is repurposed as the DRINK-vs-FOOD / is-isn't gate (spec
+  // §8a, Kael-ratified). cow milk carries the CMPA allergic axis (watchFor/severeSigns/
+  // seekCare) ALONGSIDE the timing axis — it is the most common infant allergen, so the
+  // present-only severe floor (§6, keyed on severeSigns.length) fires here. plant milk has
+  // NO severeSigns → no acute floor (§5.3, the floor follows the hazard). Polarity is
+  // resolved by _effPolarity (core.js) — both surfaces render conditional/inform, never the
+  // rose 'avoid' siren (K-6). K-1 (Kael): 'top feed' is NOT a cow-milk alias (≈ formula in
+  // Indian logs). Bare 'milk' is deliberately UNALIASED on either record (it co-occurs in
+  // breast/formula/soy milk — the bare-'milk' precision rule, spec §7). Evidence + citations:
+  // docs/research/cow-milk-plant-milks-infant-safety.md.
+  'cow milk': {
+    foodClass:  'drink-timing',
+    severity:   'caution',              // amber timing-caution, NOT rose acute-toxin
+    aliases:    ['cow\'s milk', 'buffalo milk', 'bhains ka doodh', 'gaay ka doodh', 'animal milk', 'whole milk', 'full-fat milk', 'top milk', 'dairy milk', 'full cream milk'],
+    effect:     'iron-deficiency anaemia + renal solute load (as a main drink before 12 months)',
+    title:      'Cow\'s milk — good in food, not yet as the main drink',
+    why:        'Dairy in food is excellent from around 6 months — dahi (curd), paneer, and cheese. The caution is only about cow\'s or buffalo milk as the main drink before the first birthday: it is low in iron and hard on a baby\'s kidneys. Breastmilk or formula is the milk under 1.',
+    whyGood:    'Dairy in food is excellent from around 6 months — dahi (curd), paneer, and cheese give calcium, protein, B12, and healthy fats. The only caution is about milk as the main drink before the first birthday.',
+    // The amber gate band of the split lead (V-V-2 / M-2 skim-proof) — visually weighted
+    // equal-or-greater to the sage carve-out, so the diluted-top-milk reader can't under-read it.
+    gate:       'Not as the main drink before 12 months — cow\'s or buffalo milk is low in iron and hard on a baby\'s kidneys. Breastmilk or first infant formula is the milk under 1.',
+    safeForm: {
+      glance:   'Fine in food; wait as a drink',
+      ok:       ['dahi (curd), paneer, and pasteurised full-fat cheese from around 6 months', 'small amounts of milk cooked into khichdi, porridge, or cereal', 'from 12 months: whole (full-fat) milk as a main drink, about 500 ml (2 cups) a day at most'],
+      never:    ['cow\'s or buffalo milk as the main drink before 12 months', 'diluted or sweetened "top milk" as a breastmilk or formula substitute', 'unpasteurised milk, and mould-ripened (brie, camembert), blue, or ripened-goat cheese at any infant age', 'skimmed or low-fat milk as a main drink before age 2'],
+      note:     'The drink is gated; the dairy is not. Breastmilk or first infant formula is the milk under 12 months. Diluting cow or buffalo milk adds no iron and still displaces breastmilk.',
+    },
+    howToIntroduce: {
+      amount:   'from 12 months, about 500 ml (2 cups) of whole milk a day at most — more is linked to iron deficiency',
+      when:     'dairy in food (dahi, paneer, cheese, milk in cooking) from around 6 months; milk as a main drink from 12 months',
+      watch:    'when you first give dairy in food, watch for about 2 hours for a cow\'s-milk-protein-allergy reaction — milk is the most common infant allergen',
+    },
+    myth: {
+      claim:    'Cow\'s or buffalo milk makes a baby strong — give it early.',
+      truth:    'Before 12 months as a main drink it causes iron-deficiency anaemia and strains the kidneys. Breastmilk or formula is the milk under 1; dairy belongs in food, not in the cup.',
+    },
+    watchFor:   ['hives or a rash', 'swelling of the lips, face, or eyes', 'vomiting', 'diarrhoea or blood in the stool (delayed cow\'s-milk-protein allergy)', 'an eczema flare'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the tongue or throat', 'a hoarse cry', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild reaction to dairy (a little rash alone): stop, watch closely, and call your doctor. Any trouble breathing, tongue or throat swelling, a hoarse cry, or floppiness: call emergency services (112 or 108) right away and use a prescribed adrenaline auto-injector if you have one — an antihistamine does not treat anaphylaxis. Most children outgrow cow\'s-milk allergy by 3 to 5 years; any reintroduction (the milk ladder) is a doctor\'s call.',
+    confidence: 'high',
+  },
+  'plant milk': {
+    foodClass:  'substitute-caveat',
+    severity:   'caution',
+    aliases:    ['almond milk', 'badam milk', 'badam doodh', 'oat milk', 'rice milk', 'rice drink', 'cashew milk', 'coconut milk drink', 'plant-based milk', 'plant milks', 'vegan milk', 'toddler milk', 'growing-up milk', 'follow-on milk drink'],
+    effect:     'inadequate substitute for breastmilk or formula (under 1); rice-drink arsenic (under 5)',
+    title:      'Plant milks — not a substitute for breastmilk or formula',
+    why:        'No plant milk (almond, oat, rice, cashew, coconut) replaces breastmilk or formula in the first year. Rice drinks are not safe for any child under 5 because of arsenic. From age 1, unsweetened, calcium-fortified soy or oat milk can be part of a varied diet — but not the only drink for an under-2.',
+    whyGood:    'From age 1, unsweetened, calcium-fortified soy or oat milk can be part of a varied diet. Fortified soy is the only plant milk nutritionally close to cow\'s milk.',
+    // The sky inform banner (V-V-3) leads with the single hardest fact, fronted (rice <5 = arsenic).
+    headline:   'Not a milk substitute under 1. Rice drinks: none under 5 (arsenic). From age 1, fortified soy or oat only, as part of a varied diet.',
+    safeForm: {
+      glance:   'Not a substitute under 1',
+      ok:       ['from 12 months: unsweetened, calcium-fortified soy or oat milk, as part of a varied diet (not the only drink for an under-2)'],
+      never:    ['any plant milk as a breastmilk or formula substitute before 12 months', 'rice drinks for any child under 5 years (inorganic arsenic) — eating rice the grain is still fine', 'unfortified plant milk as a main drink', 'almond milk as a main drink (too low in protein and fat)', 'carton soy drink as infant formula (soy formula is a separate, prescribed product)'],
+      note:     'No plant milk replaces breastmilk or formula under 1. After age 1, the ranking is: fortified soy and oat first, then almond (low in protein), and rice last (arsenic — avoid under 5). "Toddler" and "growing-up" milks are unnecessary.',
+    },
+    myth: {
+      claim:    'Plant milk (almond, oat, or rice) is a healthy milk substitute for my baby or toddler.',
+      truth:    'Not under 1 — it replaces neither breastmilk nor formula. Rice drinks are unsafe under 5 (arsenic); almond milk is too low in protein and fat. From age 1, fortified soy or oat can be part of a varied diet.',
+    },
+    // Soy milk is the allergen exception — it aliases to the SOY record, not here. Cross-referenced
+    // in copy, not re-aliased. No severeSigns/seekCare: the harm is nutritional / chronic (arsenic),
+    // not an acute reaction, so this record carries NO emergency floor (spec §5.3).
+    watchFor:   ['soy milk only: hives, swelling, or vomiting — soy is a major allergen (see the soy guidance)'],
+    confidence: 'high',
+  },
 };
 
 // ── ALLERGEN FLAGS ──
@@ -2762,6 +2850,13 @@ const ALLERGENS = {
   // food-effects-v2 P1c: fish is allergen:true (a major allergen, often lifelong). Full
   // anaphylaxis floor lives on the FOOD_EFFECTS record; this is the terse browse flag.
   'fish':      'Common allergen, and often lifelong. Introduce well-cooked, deboned, low-mercury fish on its own and watch ~2 hours. Finfish is a separate allergen from shellfish.',
+  // food-effects-v2 P1c (K-4): cow milk is allergen:true (CMPA — the most common infant
+  // food allergy). The full anaphylaxis floor lives on the FOOD_EFFECTS record (severeSigns
+  // / seekCare); this terse note is the browse-surface flag, scoped to the ALLERGY axis (a
+  // SEPARATE concern from the drink-timing gate). Satisfies the §6 allergen:true↔ALLERGENS
+  // traceability invariant. 'plant milk' is allergen:false — soy milk is the exception and
+  // is flagged via the soy record, so plant milk correctly needs no ALLERGENS note.
+  'cow milk':  'Cow\'s-milk protein is the most common infant allergen (CMPA). When you first give dairy in food, watch about 2 hours; mild signs are rash, swelling, or vomiting, and a delayed reaction can be diarrhoea or blood in the stool.',
   'egg yolk':  'Less allergenic than white. Cook well. Give alone for 3 days.',
   'kiwi':      'Can cause mouth tingling. Start with small amount. Watch for oral allergy.',
   'strawberry':'Can cause allergic reaction in some babies. Introduce carefully.',
