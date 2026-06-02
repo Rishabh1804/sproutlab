@@ -1,6 +1,6 @@
 ---
 name: design-principles
-description: "SproutLab's canonical visual + UX law — the design floor for every card, section, screen, component, toast, chart, color, font, animation, and render boundary. Use BEFORE designing, building, restyling, or reviewing ANY UI in SproutLab: a new feature or card, an info-tab render, a Today So Far row, a CSS token choice, a domain-color assignment, a layout, or an overlay. Surfaces docs/DESIGN_PRINCIPLES.md (7 domain colors, Fraunces/Nunito typography, HR-1..HR-12 zero-tolerance rules, animation foundation, the half-awake test). If you are about to touch how SproutLab LOOKS or FEELS, read this first."
+description: "SproutLab's visual + UX floor. Use BEFORE designing, building, restyling, or reviewing ANY SproutLab UI — a card, info-tab render, Today So Far row, toast, chart, overlay, layout, CSS token choice, or domain-color pick. Surfaces docs/DESIGN_PRINCIPLES.md: 7 domain colors, Fraunces/Nunito type, HR-1..HR-12 zero-tolerance rules, animation foundation, the half-awake test. If you're about to touch how SproutLab looks or feels, read this first."
 trigger: /design-principles
 ---
 

@@ -6355,7 +6355,8 @@ body.ql-locked .dark-toggle { pointer-events:none; }
    Three tap targets: zi('check')/zi('trending-flat')/zi('arrow-right').
    Care-tier safetyTier:true border-accent uses --rose-deep (V-V-64 + V-M-124).
    Per-domain accent: consumes the canonical [data-domain] cascade
-   (styles.css ~9412 — defines --al-tint/--al-tc/--al-border per domain).
+   (search styles.css for "── Domain Color Cascade ──" — defines
+   --al-tint/--al-tc/--al-border per domain).
    Border-left + status pill colors flow via cascade; the lavender default
    only fires for cards without a data-domain attribute. HR-6 closure
    (Architect feedback 2026-05-27 #4: "don't we have domain colour codes?
