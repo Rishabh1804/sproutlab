@@ -62,6 +62,8 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Dark mode.** Tints do not invert to solid darks — they **recede to an 8%-alpha domain gradient over `--warm`** (`[data-theme="dark"] #tab-* .card`, `styles.css:7634–7638`), preserving domain identity ("sage stays green, rose stays pink" — see Status Triad note) while the surface darkens. A tint must survive this: if a wash only reads in light mode, it is too saturated to be a tint.
 
+**Peach is accent-only — no `--tc-*` text token (light _or_ dark).** The `—` in the `--tc-*` column of the Domain Colors table (and in both Text columns of the dark-mode table, line ~594) is intentional: peach is reserved for warmth/accent surfaces (outing planner, ambient borders), never for text-on-wash. So `--peach-light` is a *backing* tint only — do not place domain-coloured body text on it. If a future surface genuinely needs peach text-on-wash, that token must be **defined first** (light + dark), not improvised at the call site.
+
 **Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from this scale — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint token system; do not "tokenize" them into `--*-light`.
 
 #### Domain → Element Assignments
