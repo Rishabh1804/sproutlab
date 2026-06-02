@@ -4046,10 +4046,32 @@ function _lookupByFoodName(table, name) {
   return byAlias || null;
 }
 
+// food-effects-v2 P1c (Cipher Edict-V, M-F-1 completion). The fish record is reached by the
+// bare 'fish' KEY, which word-boundary-matches the trailing word of a "<species> fish" host —
+// so "seer fish" / "shark fish" (documented HIGH-MERCURY species in the record's safeForm.never)
+// still resolve to the GREEN "introduce early" verdict despite the alias trim, because the leak
+// is via the KEY, not an alias. This guard suppresses a fish-record resolution whose host names
+// a high-mercury species, mirroring the _foodNameNegated host-guard pattern — so the illegal
+// state (a high-mercury fish affirmed as a safe early food) is unrepresentable on BOTH the
+// consequence card (getFoodEffect, below) and the age gate (_fdAgeRule, diet.js). Mercury is a
+// silent neurodevelopmental exposure with no verification loop, so a false-safe here cannot be
+// caught downstream — the suppression is the only floor. (The allergen-note surface intentionally
+// still fires its calm caution for "seer fish"; the suppression targets only the GREEN affirm.)
+const _FISH_HIGH_MERCURY = ['seer', 'surmai', 'shark', 'sura', 'swordfish', 'marlin', 'king mackerel', 'bigeye'];
+function _isHighMercuryFishHost(name) {
+  const n = String(name || '').toLowerCase();
+  return _FISH_HIGH_MERCURY.some(t =>
+    new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
+}
+
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
 // resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
 function getFoodEffect(name) {
-  return (typeof FOOD_EFFECTS !== 'undefined') ? _lookupByFoodName(FOOD_EFFECTS, name) : null;
+  if (typeof FOOD_EFFECTS === 'undefined') return null;
+  const eff = _lookupByFoodName(FOOD_EFFECTS, name);
+  // M-F-1: never affirm a high-mercury fish as a safe early food (the bare 'fish' KEY leak).
+  if (eff && eff === FOOD_EFFECTS['fish'] && _isHighMercuryFishHost(name)) return null;
+  return eff;
 }
 
 // Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches

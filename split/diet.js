@@ -488,6 +488,15 @@ function _fdAgeRule(name) {
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
   const rule = _lookupByFoodName(AGE_RULES, name);
+  // M-F-1 (Cipher Edict-V completion): the same bare-'fish'-KEY leak that fed the
+  // consequence card also feeds this gate — "seer fish" / "shark fish" resolve to
+  // AGE_RULES['fish'] (6mo) and would show a green "fine from ~6 months" badge for a
+  // high-mercury species. Suppress identically to getFoodEffect, so the card and the
+  // gate agree (one-resolver doctrine): a high-mercury fish host gets neither surface.
+  if (rule && typeof AGE_RULES !== 'undefined' && rule === AGE_RULES['fish']
+      && typeof _isHighMercuryFishHost === 'function' && _isHighMercuryFishHost(name)) {
+    return null;
+  }
   // V-M-206 (Care, food-effects-v2 P1a): a NAMED whole/chopped nut — "whole
   // almond", "chopped cashew", "whole peanut" — must hit the 60-month whole-nut
   // CHOKING gate, not the 6-month introduce-early floor its base nut resolves

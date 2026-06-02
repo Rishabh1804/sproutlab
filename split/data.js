@@ -2430,7 +2430,15 @@ const AGE_RULES = {
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
   'ice cream':{ minMonth:12, reason:'Contains sugar and cow milk. Avoid before 12 months.' },
   'kheer':    { minMonth:10, reason:'Often made with cow milk and sugar. Use breast milk/formula and fruit instead.' },
-  'fish':     { minMonth:7, reason:'Introduce after 7 months. Start with mild, boneless fish. Ensure it is vegetarian diet — check with parents.' },
+  // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
+  // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
+  // (one-resolver doctrine, V-M-205-B1). A vegetarian/Jain household not giving fish is valid.
+  // aliases mirror the FOOD_EFFECTS record (one-resolver doctrine) — incl. the M-F-1 trim:
+  // high-mercury/ambiguous names (surmai/seer fish/bare mackerel/bare tuna) are NOT gated here
+  // either, so the gate and the card agree per name (both absent → a logged "surmai" gets no
+  // green verdict AND no gate badge, the safest neutral state).
+  'fish':     { minMonth:6, aliases:['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','sardine','mathi','salmon','machhli','machli','fish curry','fish fry'],
+                reason:'Fine from around 6 months — well-cooked, deboned, low-mercury fish (salmon, sardine, bangda, rohu). Avoid high-mercury fish and remove every bone. A vegetarian diet can meet a baby\'s needs, so not giving fish is a valid choice.' },
   'chicken':  { minMonth:7, reason:'Can introduce after 7 months as puree. Note: this family follows vegetarian diet.' },
   'egg':      { minMonth:7, reason:'Start with well-cooked yolk at 7+ months. White can be more allergenic.' },
   'egg yolk': { minMonth:7, reason:'Can introduce at 7+ months. Cook well. Give alone for 3 days first.' },
@@ -2682,6 +2690,58 @@ const FOOD_EFFECTS = {
     seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one. Sesame is a common cause of severe reactions — watch closely.',
     confidence: 'high',
   },
+
+  // ── food-effects-v2 P1c: fish (finfish) ──
+  // foodClass MULTI-VALUED: allergen-introduce-early (the ESTABLISHED δ encourage polarity —
+  // surfaces via the detail/consequence surfaces exactly like egg/soy/wheat/sesame, NO new
+  // render card) + choking-by-form (BONES — folded into the safe-form gate, V-2). TWO-TIER
+  // honesty: fish is introduce-early-and-SAFE, NOT prevention-proven — EAT (NEJM 2016) was
+  // NULL for fish, so earlyIntroBenefit is framed like soy/wheat/sesame ("don't delay", never
+  // "early intro prevents this allergy"). The MERCURY axis (species selection) rides in
+  // safeForm.ok/never (low- vs high-mercury species) — no new plumbing. Evidence + citations:
+  // docs/research/fish-infant-safety.md. (AGE_RULES['fish'] reconciled 7→6, egg-yolk:7 precedent.)
+  'fish': {
+    foodClass:  ['allergen-introduce-early', 'choking-by-form'],
+    severity:   'caution',
+    // M-F-1 (Maren, blocking — folded): the app aliases are the SAFE-TO-ENCOURAGE subset of
+    // the manifest's research aliases. A logged name that resolves here fires the GREEN
+    // "introduce early" verdict (diet.js introEarlyOk), so HIGH-MERCURY / ambiguous names are
+    // deliberately NOT aliased — 'surmai'/'seer fish' (king mackerel, high-mercury), bare
+    // 'mackerel' (ambiguous: king vs indian), bare 'tuna' (ambiguous: light vs bigeye/albacore).
+    // They live ONLY in safeForm.never as the in-card reference, so they never auto-affirm a
+    // high-mercury fish as a safe early food. 'indian mackerel'/'bangda' (low-mercury) are kept.
+    aliases:    ['finfish', 'rohu', 'katla', 'catla', 'pomfret', 'bhetki', 'bangda', 'indian mackerel', 'sardine', 'mathi', 'salmon', 'machhli', 'machli', 'fish curry', 'fish fry'],
+    effect:     'food allergy (often lifelong) + mercury (species selection) + bones (choking)',
+    title:      'Fish — good to introduce early, deboned and low-mercury',
+    why:        'Around 6 months, well-cooked, deboned, low-mercury fish is a valuable early food — not one to delay. Oily fish (salmon, sardine, bangda) is a top source of omega-3 (DHA) for brain and eye development. Choose low-mercury fish, cook it through, and remove every bone. (A vegetarian or Jain household not giving fish is making a valid choice — a vegetarian diet can meet a baby\'s needs.)',
+    whyGood:    'Oily fish (salmon, sardine, bangda) is a top source of omega-3 (DHA) for brain and eye development, plus protein, vitamin D, and iron.',
+    earlyIntroBenefit: {
+      claim:    'Introduce fish around 6 months — there is no reason to delay it.',
+      evidence: 'Guidelines (AAP, NHS, ASCIA) advise introducing fish early. Early introduction is safe — but, unlike peanut and egg, a trial (EAT) did not show early fish prevents fish allergy.',
+      paradigm: 'Don\'t delay allergens — but this is "safe to introduce," not a proven prevention.',
+    },
+    safeForm: {
+      glance:   'Low-mercury, deboned, well-cooked',
+      ok:       ['low-mercury fish — salmon, sardine, Indian mackerel (bangda), rohu, catla, pomfret, trout — thoroughly cooked, all bones removed, flaked small', 'canned light tuna (not albacore or white)'],
+      never:    ['high-mercury fish — shark (sura), swordfish, king mackerel (surmai or seer), marlin, bigeye tuna', 'raw or undercooked fish or sushi, and raw or lightly-cooked shellfish (food poisoning)', 'fish with bones left in or not hand-checked for pin bones (rohu and catla are very bony — a choking risk)', 'dried or salted fish (Bombay duck / bombil) — too much salt for a baby'],
+      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — for a girl, NHS caps oily fish at about 2 portions a week (pollutants).',
+    },
+    howToIntroduce: {
+      amount:   'a small amount of well-cooked, deboned, flaked low-mercury fish',
+      when:     'around 6 months, after a few first foods are tolerated; offer at home in the daytime',
+      watch:    'watch for about 2 hours after — fish allergy tends to be lifelong (unlike egg or milk), so treat first tastes carefully',
+      thenWhat: 'if it goes well, keep offering as part of the normal diet',
+      oneAtATime: true,
+    },
+    myth: {
+      claim:    'Fish and milk together is harmful, or causes white skin patches.',
+      truth:    'No scientific basis — skin patches (vitiligo) are autoimmune or genetic, not caused by food combinations. Well-cooked, deboned, low-mercury fish is a healthy early food.',
+    },
+    watchFor:   ['hives or a rash', 'swelling of the lips, face, or eyes', 'an itchy mouth', 'vomiting'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the tongue or throat', 'a hoarse cry', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, tongue or throat swelling, a hoarse cry, or floppiness: call emergency services (112 or 108) right away and use a prescribed adrenaline auto-injector if you have one — an antihistamine does not treat anaphylaxis. Fish allergy is usually lifelong; a specialist guides any testing of other species.',
+    confidence: 'high',
+  },
 };
 
 // ── ALLERGEN FLAGS ──
@@ -2699,6 +2759,9 @@ const ALLERGENS = {
   'wheat':     'Contains gluten. Watch for signs of intolerance — bloating, rash, loose stools.',
   'oats':      'May contain traces of gluten. Use certified gluten-free if family has coeliac history.',
   'egg':       'Common allergen. Start with well-cooked yolk. Introduce white separately.',
+  // food-effects-v2 P1c: fish is allergen:true (a major allergen, often lifelong). Full
+  // anaphylaxis floor lives on the FOOD_EFFECTS record; this is the terse browse flag.
+  'fish':      'Common allergen, and often lifelong. Introduce well-cooked, deboned, low-mercury fish on its own and watch ~2 hours. Finfish is a separate allergen from shellfish.',
   'egg yolk':  'Less allergenic than white. Cook well. Give alone for 3 days.',
   'kiwi':      'Can cause mouth tingling. Start with small amount. Watch for oral allergy.',
   'strawberry':'Can cause allergic reaction in some babies. Introduce carefully.',
