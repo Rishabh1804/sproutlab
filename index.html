@@ -11842,6 +11842,27 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           </div>
         </div>
 
+        <!-- Choking hazards — cut it to make it safe (food-effects-v2 P1c, the choking set;
+             spec docs/specs/food-effects-v2-p1c-milk-polarities.md §9). The FIRST
+             choking-by-form-PRIMARY render. CONDITIONAL, not avoid and not encourage — the model
+             is MODIFY, DON'T BAN: a SPLIT lead (sage carve-out "safe in the right form" over an
+             amber gate "whole forms wait until ~5"), then the cut-it-this-way safeForm block.
+             The emergency floor is CHOKING FIRST AID, NOT anaphylaxis (the floor follows the
+             hazard, §9) — back blows + chest thrusts, NEVER abdominal thrusts under 1, NO
+             adrenaline. Pinned: split lead → cut-rules → CHOKING-FIRST-AID strip; body: the
+             gagging-vs-choking myth → how-to → "normal, let it resolve" reassurance → India note.
+             renderDietChokingIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
+        <div class="card card-info col-full" id="dietChokingIntroCard">
+          <div class="card-header" data-collapse-target="dietChokingIntroBody" data-collapse-chevron="dietChokingIntroChevron">
+            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-shield"/></svg></div> Choking hazards — cut it to make it safe</div>
+            <span class="collapse-chevron" id="dietChokingIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietChokingIntro" class="mt-4"></div>
+          <div id="dietChokingIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietChokingIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -16709,6 +16730,17 @@ const AGE_RULES = {
                 // ragi/suji halwa (Kael B-1); til-halwa is covered by 'til'. Suji halwa still
                 // resolves to wheat via 'suji', correctly.
                 reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
+  // food-effects-v2 P1c (the choking set): the gate the choking-by-form card hangs off.
+  // Required for the P0.1 sync-gate Check 3 (every FOOD_EFFECTS key resolves vs AGE_RULES);
+  // 'choking hazards' resolves here by EXACT KEY. minMonth:6 frames the form-gate (modified
+  // forms from solids start), and the reason carries the chokingUntilYears:5 whole-form rule.
+  // Deliberately UN-ALIASED: the individual hazard foods (grape/popcorn/raisin/raw carrot…)
+  // are NOT keyed/aliased here, so a logged "grape" gets NO misleading "Not before N months"
+  // age badge (the choking guidance is form-based, not a clean minMonth — it surfaces via the
+  // conditional consequence card + the dedicated Library card, not the age gate). 'popcorn'
+  // (minMonth:48), 'whole nut'/'whole nuts' (60), and 'chana' (9, gas — NOT choking) already
+  // carry their own gates above and are left untouched.
+  'choking hazards': { minMonth:6, reason:'The hazard is the FORM, not the food — most are safe cut small (≤½ inch), cooked soft, ground, or thinned from around 6 months. Whole hazard forms (whole grapes, nuts, popcorn, hard sweets) wait until about 5 years: quarter grapes lengthwise, cut hot dogs lengthwise, grind nuts. A baby has no grinding molars until ~16–29 months.' },
 };
 
 // ── FOOD EFFECTS (consequence layer — Finding A) ──
@@ -17064,6 +17096,72 @@ const FOOD_EFFECTS = {
     // in copy, not re-aliased. No severeSigns/seekCare: the harm is nutritional / chronic (arsenic),
     // not an acute reaction, so this record carries NO emergency floor (spec §5.3).
     watchFor:   ['soy milk only: hives, swelling, or vomiting — soy is a major allergen (see the soy guidance)'],
+    confidence: 'high',
+  },
+  // ── food-effects-v2 P1c: the choking set — ONE combined record (the data-shape
+  //    decision, brief Appendix + milk-spec §9) ──
+  // foodClass: 'choking-by-form' PRIMARY — the FIRST standalone instance (today the class
+  // only rides SECONDARY to an allergen, e.g. peanut/tree-nut/fish where whole = choking).
+  // The hazard is the FORM (round/hard/small/sticky), not allergy or toxin. Model: MODIFY,
+  // DON'T BAN — the per-food cut rules live in safeForm.ok so no per-entity guidance is
+  // dropped (the Maren M-γ-1 lesson + the §7 single-combined precedent).
+  // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
+  // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
+  // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
+  // chest-thrusts + call-112 (NEVER abdominal thrusts under 1, NEVER adrenaline).
+  // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
+  // gate doesn't apply).
+  // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
+  // foods that do NOT already have a record AND whose alias is unambiguous. PEANUT / TREE NUT /
+  // FISH keep their own records (already choking-by-form secondary) — NOT re-aliased here.
+  // Bare 'chana' is DELIBERATELY NOT an alias: it word-boundary-matches 'chana dal' (a cooked,
+  // mashed SAFE weaning food) and 'kala/kabuli chana' (soaked-cooked) — the same false-positive
+  // class M-F-1 caught for fish. Only the unambiguous whole/roasted forms are aliased
+  // ('roasted chana'/'whole chana'/'roasted gram'/'bhuna chana'). Bare 'carrot' is likewise NOT
+  // aliased (cooked carrot purée is a #1 first food) — only 'raw carrot'/'whole carrot'.
+  // Read by DIRECT KEY in renderDietChokingIntro (alias-immune, like the milk cards); the
+  // aliases serve getFoodEffect/_fdAgeRule (log-time + detail-sheet) only. Evidence + citations:
+  // docs/research/choking-hazards-infant-safety.md.
+  'choking hazards': {
+    foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
+    severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum'],
+    effect:     'airway obstruction (choking) by food form',
+    title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
+    why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
+    whyGood:    'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Change the form: cut to ≤½ inch (a child\'s fingernail), cook soft, grind, or thin.',
+    chokingUntilYears: 5,              // whole / hazard forms wait until ~5 (NHS/HSE-conservative)
+    thresholdBasis: 'developmental-readiness',  // no grinding molars until ~16–29mo; chewing ~4
+    // The amber gate band of the conditional lead (the form-gate that qualifies the carve-out).
+    gate:       'Whole hazard forms — whole grapes, whole nuts/groundnuts, popcorn, hard/round sweets — wait until about 5 years. A young child has no grinding molars until ~16–29 months and can\'t chew them safely.',
+    // NO earlyIntroBenefit — this is choking-by-form (a mechanical hazard), not an allergen to introduce early.
+    safeForm: {
+      glance:   'Cut small, cook soft, grind — whole waits until ~5',
+      ok:       ['grapes / cherry tomatoes / round fruit — QUARTER lengthwise (halving is not enough — a half-grape still plugs the airway)', 'hot dogs / sausages — cut LENGTHWISE into strips, never coins/rounds', 'nuts — ground or flaked, or smooth nut butter thinned / spread thin (never a glob)', 'hard raw vegetables & fruit (carrot, apple) — cook soft, grate, or slice very thin', 'cheese / meat — thin strips, not chunks; raisins — chopped', 'everything ≤½ inch (~1.25 cm), soft enough to squash between finger and thumb'],
+      never:    ['whole grapes, whole nuts/groundnuts, popcorn, hard/round candy, marshmallows, chewing gum, whole seeds — for a child under about 5', 'SUPARI / areca nut — a choking AND toxicity hazard (seizures, liver injury); keep away from young children entirely', 'hot dogs / sausages cut into round coins (the classic airway plug)', 'hard raw carrot/apple chunks; thick globs or spoonfuls of nut butter'],
+      note:     'The hazard is the form. Whole nuts and popcorn are not for a child under 5; high-risk round or firm foods wait until about 4 to 5 — the app uses 5 to be safe. Whole peanut and tree nut have their OWN records — this covers the rest of the choking set.',
+    },
+    howToIntroduce: {
+      amount:   'Pieces no larger than ½ inch (~1.25 cm) / a child\'s small fingernail; round foods cut so they can\'t plug the airway.',
+      when:     'Modified / cut forms from around 6 months; whole hazard forms wait until about 5 years.',
+      watch:    'Child seated UPRIGHT, never eating while walking, playing, crawling, or lying down; always supervised at every meal.',
+    },
+    myth: {
+      claim:    'Gagging means my baby is choking.',
+      truth:    'No — gagging is LOUD (gurgle / sputter / cough), normal and protective while a baby learns to eat; let it resolve, don\'t intervene. Choking is QUIET — a silent or weak cough, can\'t breathe, cry, or make noise. THAT is the emergency. On darker skin, check the gums, inside the lips, or nailbeds for blue, not skin colour.',
+    },
+    // watchFor here is the REASSURANCE axis (normal signs — don't intervene), inverted from the
+    // allergen records (where watchFor = mild danger). Rendered under a calm "normal — let it
+    // resolve" header by renderDietChokingIntro, never a danger header.
+    watchFor:   ['gagging — LOUD, normal, and protective: let it resolve, don\'t intervene', 'an effective, forceful cough: encourage the cough, don\'t intervene'],
+    // severeSigns are the QUIET-choking emergency signs (NOT anaphylaxis); the floor renders
+    // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
+    severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
+    // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
+    // the hazard, milk-spec §9). Under-1: 5 back blows + 5 chest thrusts, NEVER abdominal thrusts.
+    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or they can\'t breathe — BABY UNDER 1: alternate 5 back blows (face-down along your forearm, head lower than the body, between the shoulder blades) and 5 chest thrusts (2 fingers, middle of the chest just below the nipple line); NEVER abdominal thrusts (Heimlich) under 1 — risk of organ damage. CHILD OVER 1: 5 back blows, then 5 abdominal thrusts. No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if they become unresponsive → start CPR.',
+    timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
+    culturalNote:'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one ENT series), often handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep it away from children. Other Indian hazards: chana / roasted gram, hard sev / namkeen / murukku, whole makhana, ber (jujube) pits.',
     confidence: 'high',
   },
 };
@@ -39032,6 +39130,7 @@ function renderDietLibrary() {
   renderFoodLibResults();
   renderDietNutIntro();
   renderDietMilkIntro();
+  renderDietChokingIntro();
 }
 
 // ════════════════════════════════════════
@@ -39306,6 +39405,92 @@ function _milkSevereStrip(eff, scopeHeader) {
   }
   h += '</div>';
   return h;
+}
+
+// ════════════════════════════════════════
+// Choking hazards — the choking-by-form KNOWLEDGE card (food-effects v2 P1c, milk-spec §9)
+// ════════════════════════════════════════
+// The FIRST choking-by-form-PRIMARY render (today the class only rides SECONDARY to an
+// allergen — peanut/tree-nut/fish, where whole = choking). Sibling of renderDietNutIntro /
+// renderDietMilkIntro (separate fn + hosts; those cards stay untouched). Reads FE['choking
+// hazards'] by DIRECT KEY — alias-immune (the curated aliases serve getFoodEffect/_fdAgeRule
+// only). Polarity is CONDITIONAL (_effPolarity → 'conditional', §3-bis §9): the model is
+// MODIFY, DON'T BAN — amber, never the rose 'avoid' siren. Render shape mirrors the cow-milk
+// drink-timing card (the other conditional): a SPLIT lead (sage carve-out "safe in the right
+// form" over an amber gate "whole forms wait until ~5"), the cut-it-this-way safeForm block,
+// then the PINNED emergency floor.
+// THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): the severe
+// strip carries the QUIET-choking signs + the back-blows/chest-thrusts seekCare, under a
+// choking-scoped header (never "allergic reaction"). All copy is FOOD_EFFECTS-sourced; the only
+// hardcoded strings are the polarity-keyed band/section HEADINGS (render copy, not reusable).
+function renderDietChokingIntro() {
+  var host = document.getElementById('dietChokingIntro');          // always-visible (pinned)
+  var moreHost = document.getElementById('dietChokingIntroMore');  // collapse body
+  if (!host) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var chk = FE ? FE['choking hazards'] : null;
+  if (!chk) {
+    host.innerHTML = '';
+    if (moreHost) moreHost.innerHTML = '';
+    return;
+  }
+  var pinned = '', body = '';
+
+  // ── SPLIT lead (conditional — the carve-out leads, the gate qualifies) → PINNED ──
+  // sage carve-out band ("safe in the right form") over amber gate band ("whole forms wait
+  // until ~5"), reusing the shipped .enc-split family (no new class).
+  pinned += '<div class="enc-split">';
+  if (chk.whyGood) {
+    pinned += '<div class="enc-split-good"><div class="enc-split-h">' + zi('sprout') +
+      '<span>Safe in the right form</span></div><p class="enc-split-body">' + escHtml(chk.whyGood) + '</p></div>';
+  }
+  if (chk.gate) {
+    pinned += '<div class="enc-split-gate"><div class="enc-split-h">' + zi('clock') +
+      '<span>Whole forms wait until ~5</span></div><p class="enc-split-body">' + escHtml(chk.gate) + '</p></div>';
+  }
+  pinned += '</div>';
+
+  // ── The cut-it-this-way block (safeForm.ok/never/note) → PINNED ──
+  // M-γ-1: the per-food cut rules (quarter grapes lengthwise, hot dogs lengthwise, grind nuts)
+  // are the load-bearing "modify, don't ban" guidance — they must NOT fold. Shared form-block
+  // helper (the same .enc-form renderer the milk cards use).
+  pinned += _milkFormBlock(chk.safeForm, 'Make it safe — cut it this way', 'Whole forms — wait until about 5');
+
+  // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
+  // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
+  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
+  pinned += _milkSevereStrip(chk, 'If your baby is choking, it\'s an emergency');
+
+  // ── BODY (collapsible) ──
+  // The gagging-vs-choking myth — the single highest-value education line (NHS): gagging is
+  // LOUD/normal/protective; choking is QUIET — THAT is the emergency.
+  if (chk.myth && chk.myth.truth) {
+    body += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(chk.myth.truth) + '</span></div>';
+  }
+  // How to keep it safe (seated upright, supervised, fingernail-sized).
+  var hti = chk.howToIntroduce || {};
+  if (hti.amount || hti.when || hti.watch) {
+    body += '<div class="enc-block"><div class="enc-block-h">' + zi('spoon') + '<span>How to keep it safe</span></div><div class="enc-proto">';
+    if (hti.when)   body += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(hti.when) + '</div>';
+    if (hti.amount) body += '<div class="enc-proto-row"><b>Size:</b> ' + escHtml(hti.amount) + '</div>';
+    if (hti.watch)  body += '<div class="enc-proto-row"><b>Supervise:</b> ' + escHtml(hti.watch) + '</div>';
+    body += '</div></div>';
+  }
+  // The reassurance axis (watchFor here is INVERTED — normal signs, don't intervene), under a
+  // calm "normal — let it resolve" header, NEVER a danger header.
+  var calm = (chk.watchFor && chk.watchFor.length) ? chk.watchFor : [];
+  if (calm.length) {
+    body += '<div class="cons-watch"><div class="cons-watch-h">Normal — let it resolve, don\'t intervene</div><ul class="cons-watch-list">' +
+      calm.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+  }
+  // Indian context (groundnut #1 aspirated FB; supari double danger) — calm-secondary.
+  if (chk.culturalNote) {
+    body += '<p class="enc-form-note">' + escHtml(chk.culturalNote) + '</p>';
+  }
+
+  host.innerHTML = pinned;
+  if (moreHost) moreHost.innerHTML = body;
 }
 
 

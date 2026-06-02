@@ -999,6 +999,27 @@
           </div>
         </div>
 
+        <!-- Choking hazards — cut it to make it safe (food-effects-v2 P1c, the choking set;
+             spec docs/specs/food-effects-v2-p1c-milk-polarities.md §9). The FIRST
+             choking-by-form-PRIMARY render. CONDITIONAL, not avoid and not encourage — the model
+             is MODIFY, DON'T BAN: a SPLIT lead (sage carve-out "safe in the right form" over an
+             amber gate "whole forms wait until ~5"), then the cut-it-this-way safeForm block.
+             The emergency floor is CHOKING FIRST AID, NOT anaphylaxis (the floor follows the
+             hazard, §9) — back blows + chest thrusts, NEVER abdominal thrusts under 1, NO
+             adrenaline. Pinned: split lead → cut-rules → CHOKING-FIRST-AID strip; body: the
+             gagging-vs-choking myth → how-to → "normal, let it resolve" reassurance → India note.
+             renderDietChokingIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
+        <div class="card card-info col-full" id="dietChokingIntroCard">
+          <div class="card-header" data-collapse-target="dietChokingIntroBody" data-collapse-chevron="dietChokingIntroChevron">
+            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-shield"/></svg></div> Choking hazards — cut it to make it safe</div>
+            <span class="collapse-chevron" id="dietChokingIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietChokingIntro" class="mt-4"></div>
+          <div id="dietChokingIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietChokingIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
