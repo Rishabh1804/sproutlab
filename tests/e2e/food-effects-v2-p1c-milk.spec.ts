@@ -197,11 +197,25 @@ test.describe('food-effects-v2 P1c — milk polarity cards', () => {
     expect(sheets.cashew).toMatch(/tree.?nut|cashew|allergen/);
   });
 
-  // ── K-M-1 (Kael, gate↔card parity): coconut milk drink takes the plant gate, not cow copy ──
-  test('K-M-1: a non-nut plant alias (coconut milk drink) gets the plant gate, not cow curd/paneer copy', async ({ page }) => {
-    const reason = await page.evaluate(() => _fdAgeRule('coconut milk drink')?.reason || '');
-    expect(reason.toLowerCase()).not.toMatch(/curd|paneer/);     // not the cow 'milk' carve-out
-    expect(reason.toLowerCase()).toMatch(/substitute|fortified|arsenic/);
+  // ── K-M-1 (Kael, gate↔card parity): coconut milk drink + the Hindi 'doodh' variants ──
+  test('K-M-1: plant-milk hosts take the plant gate, not cow curd/paneer NOR a tree-nut 6mo gate', async ({ page }) => {
+    const r = await page.evaluate(() => ({
+      coconut: _fdAgeRule('coconut milk drink')?.reason || '',
+      // the Cipher-caught leak: 'doodh' variants raw-resolve to tree-nut's alias, not the bare
+      // 'milk' key — the card says "not a substitute under 1", the gate must NOT say tree-nut@6.
+      badamDoodh: { reason: _fdAgeRule('badam doodh')?.reason || '', min: _fdAgeRule('badam doodh')?.minMonth },
+      kajuDoodh:  { reason: _fdAgeRule('kaju doodh')?.reason || '', min: _fdAgeRule('kaju doodh')?.minMonth },
+      // the bare nut still gates as an introduce-early tree nut (unchanged), and rice keeps arsenic:
+      badam: _fdAgeRule('badam')?.minMonth,
+      riceMilk: _fdAgeRule('rice milk')?.minMonth,
+    }));
+    expect(r.coconut.toLowerCase()).not.toMatch(/curd|paneer/);
+    expect(r.coconut.toLowerCase()).toMatch(/substitute|fortified|arsenic/);
+    expect(r.badamDoodh.min, 'badam doodh must NOT get the tree-nut 6mo gate').toBe(12);
+    expect(r.badamDoodh.reason.toLowerCase()).toMatch(/substitute|fortified|arsenic/);
+    expect(r.kajuDoodh.min).toBe(12);
+    expect(r.badam, 'the bare nut is still an introduce-early tree nut at ~6mo').toBe(6);
+    expect(r.riceMilk, 'rice keeps its under-5 arsenic gate (dedicated, untouched)').toBe(60);
   });
 
   // ── _effPolarity unit contract (the §3 table) ──

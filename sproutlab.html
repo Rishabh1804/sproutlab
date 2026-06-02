@@ -38723,15 +38723,19 @@ function _fdAgeRule(name) {
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
   const rule = _lookupByFoodName(AGE_RULES, name);
-  // K-M-1 (Kael, option b — the truer one-resolver expression): a name whose CARD resolves to
-  // the plant-milk record but whose GATE fell to the bare cow 'milk' key must take the plant-milk
-  // gate, so card and gate agree. This catches the nut-drink redirect (almond/cashew milk) AND
-  // 'coconut milk drink' / any future non-nut plant alias the nut-token proxy would miss. Gated
-  // on `rule === AGE_RULES['milk']` so the dedicated plant gates (oat milk 12mo / rice milk +
-  // rice drink 60mo arsenic) — which resolved to their OWN entry above — are left untouched.
-  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk'] && rule === AGE_RULES['milk']
+  // K-M-1 (Kael option b, completed per Cipher Edict-V): whenever the CARD resolves to the
+  // plant-milk record but the raw GATE is NOT a dedicated plant gate, take the plant-milk gate
+  // so card and gate agree. Keyed on "card is plant milk" — NOT on the bare-'milk' fall — because
+  // the Hindi 'doodh' variants (badam doodh / kaju doodh) raw-resolve to tree-nut's alias
+  // (tree nut@6), the tree-nut FALL the earlier `rule === AGE_RULES['milk']` precondition missed
+  // (it only caught the bare-'milk' fall of the English "milk" forms). The dedicated plant gates
+  // (oat 12 / rice + rice drink 60mo arsenic) are excluded so they keep their own copy; the bare
+  // nut (card is tree nut, not plant milk) skips this guard and correctly stays at tree nut@6.
+  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk']
       && typeof getFoodEffect === 'function' && typeof FOOD_EFFECTS !== 'undefined'
-      && getFoodEffect(name) === FOOD_EFFECTS['plant milk']) {
+      && getFoodEffect(name) === FOOD_EFFECTS['plant milk']
+      && rule !== AGE_RULES['plant milk'] && rule !== AGE_RULES['oat milk']
+      && rule !== AGE_RULES['rice milk'] && rule !== AGE_RULES['rice drink']) {
     return AGE_RULES['plant milk'];
   }
   // M-F-1 (Cipher Edict-V completion): the same bare-'fish'-KEY leak that fed the
