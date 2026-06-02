@@ -16711,7 +16711,7 @@ const AGE_RULES = {
   // green verdict AND no gate badge, the safest neutral state).
   'fish':     { minMonth:6, aliases:['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','sardine','mathi','salmon','machhli','machli','fish curry','fish fry'],
                 reason:'Fine from around 6 months — well-cooked, deboned, low-mercury fish (salmon, sardine, bangda, rohu). Avoid high-mercury fish and remove every bone. A vegetarian diet can meet a baby\'s needs, so not giving fish is a valid choice.' },
-  'chicken':  { minMonth:7, reason:'Can introduce after 7 months as puree. Note: this family follows vegetarian diet.' },
+  'chicken':  { minMonth:7, reason:'Can introduce after 7 months as a smooth, well-cooked puree, then minced — never in chunks or coins (a choking risk).' },
   'egg':      { minMonth:7, reason:'Start with well-cooked yolk at 7+ months. White can be more allergenic.' },
   'egg yolk': { minMonth:7, reason:'Can introduce at 7+ months. Cook well. Give alone for 3 days first.' },
   'whole egg': { minMonth:8, reason:'Introduce after egg yolk is tolerated. Cook thoroughly.' },
@@ -24359,6 +24359,10 @@ const NONVEG_TOKEN_SID = {
 // "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
+  // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this
+  // gates are atomic (FOOD_TAX.nonveg keys are single-token: egg/chicken/fish/prawn/shrimp/mutton),
+  // so a multi-token dish never needs union classification here. Do NOT "fix" this to union without
+  // confirming the call path — a different path (not this surfacing gate) would care.
   for (const tok in NONVEG_TOKEN_SID) {
     if (new RegExp('\\b' + tok + '\\b').test(n)) return NONVEG_TOKEN_SID[tok];
   }
@@ -40220,10 +40224,17 @@ function checkFoodCombo() {
     return sid && !_dietAllowsNonvegSid(sid);
   });
   if (offPref.length > 0) {
-    if (verdict !== 'avoid') { verdict = 'caution'; verdictEmoji = zi('warn'); }  // never downgrade an acute-toxin/below-floor avoid
     const prefLabel = DIET_PREF_LABEL[getDietPref()] || 'vegetarian';
+    // M-214-1 (Maren, blocking): the verdict AND the headline overwrite are gated together —
+    // a soft preference note must never REPLACE an 'avoid' lead line. The toxin-avoid case is
+    // restored by the §8b headline block, but a below-age-floor 'avoid' carries no toxin, so an
+    // unconditional headline overwrite here would bury the hard age-safety reason under a soft
+    // "outside your preference" note (the 2 AM under-warn). The body warning still always surfaces.
+    if (verdict !== 'avoid') {
+      verdict = 'caution'; verdictEmoji = zi('warn');
+      headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
+    }
     warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
-    headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
@@ -68630,7 +68641,9 @@ function getUntriedSuggestions(n) {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
-    // is in the current preference's allowed set.
+    // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
+  // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
+  // hides a safety signal. Fail-closed could falsely declare the taxonomy complete.
     if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
     // Age gate: skip nuts for <8m (whole), skip honey for <12m
     if (key === 'honey' && ageM < 12) return;

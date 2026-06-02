@@ -22,6 +22,7 @@ declare const getUntriedSuggestions: (n: number) => any[];
 declare const renderFoods: () => void;
 declare const getFoodEffect: (name: string) => any;
 declare const renderFoodDetailSheet: (name: string) => void;
+declare const checkFoodCombo: () => void;
 
 const setPref = (page: any, pref: string) =>
   page.evaluate((p: string) => localStorage.setItem('ziva_diet_pref', p), pref);
@@ -139,5 +140,28 @@ test.describe('dietary-preference surfacing gate (4-class)', () => {
     expect(r.effResolves, 'but getFoodEffect still resolves fish (consequence path ungated)').toBe(true);
     expect(r.severeFloor, 'and the anaphylaxis/safety floor still renders on the detail sheet').toBeGreaterThan(0);
     expect(r.seekCare).toBeGreaterThan(0);
+  });
+
+  // ── M-214-1 (Maren, blocking → fixed): the preference note must NEVER replace an 'avoid'
+  // headline. An off-preference food that is ALSO below its age floor must keep the hard
+  // age-safety reason as the lead line; the soft preference note drops to the body. ──
+  test('M-214-1: an off-preference + below-age-floor combo keeps the AGE reason as the headline', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      localStorage.setItem('ziva_diet_pref', 'veg');   // chicken is off-preference...
+      const input = document.getElementById('comboInput') as HTMLInputElement;
+      input.value = 'salt + chicken';                  // ...and salt is a below-floor (12mo) NON-toxin avoid
+      checkFoodCombo();
+      const el = document.getElementById('comboResult')!;
+      return {
+        verdictAvoid: !!el.querySelector('.combo-result.avoid'),
+        headline: (el.querySelector('.combo-verdict')?.textContent || '').toLowerCase(),
+        bodyText: (el.textContent || '').toLowerCase(),
+      };
+    });
+    expect(r.verdictAvoid, 'the verdict is still avoid (salt below its age floor)').toBe(true);
+    // the LEAD line must NOT be hijacked by the soft preference note...
+    expect(r.headline).not.toMatch(/outside.*preference|preference/);
+    // ...yet the preference note still surfaces in the body (never silently dropped).
+    expect(r.bodyText, 'the off-preference note still appears in the body').toMatch(/outside it|preference/);
   });
 });

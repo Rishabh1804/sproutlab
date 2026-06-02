@@ -4521,6 +4521,10 @@ const NONVEG_TOKEN_SID = {
 // "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
+  // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this
+  // gates are atomic (FOOD_TAX.nonveg keys are single-token: egg/chicken/fish/prawn/shrimp/mutton),
+  // so a multi-token dish never needs union classification here. Do NOT "fix" this to union without
+  // confirming the call path — a different path (not this surfacing gate) would care.
   for (const tok in NONVEG_TOKEN_SID) {
     if (new RegExp('\\b' + tok + '\\b').test(n)) return NONVEG_TOKEN_SID[tok];
   }

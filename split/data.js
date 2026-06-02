@@ -2451,7 +2451,7 @@ const AGE_RULES = {
   // green verdict AND no gate badge, the safest neutral state).
   'fish':     { minMonth:6, aliases:['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','sardine','mathi','salmon','machhli','machli','fish curry','fish fry'],
                 reason:'Fine from around 6 months — well-cooked, deboned, low-mercury fish (salmon, sardine, bangda, rohu). Avoid high-mercury fish and remove every bone. A vegetarian diet can meet a baby\'s needs, so not giving fish is a valid choice.' },
-  'chicken':  { minMonth:7, reason:'Can introduce after 7 months as puree. Note: this family follows vegetarian diet.' },
+  'chicken':  { minMonth:7, reason:'Can introduce after 7 months as a smooth, well-cooked puree, then minced — never in chunks or coins (a choking risk).' },
   'egg':      { minMonth:7, reason:'Start with well-cooked yolk at 7+ months. White can be more allergenic.' },
   'egg yolk': { minMonth:7, reason:'Can introduce at 7+ months. Cook well. Give alone for 3 days first.' },
   'whole egg': { minMonth:8, reason:'Introduce after egg yolk is tolerated. Cook thoroughly.' },

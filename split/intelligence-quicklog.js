@@ -4013,7 +4013,9 @@ function getUntriedSuggestions(n) {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
-    // is in the current preference's allowed set.
+    // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
+  // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
+  // hides a safety signal. Fail-closed could falsely declare the taxonomy complete.
     if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
     // Age gate: skip nuts for <8m (whole), skip honey for <12m
     if (key === 'honey' && ageM < 12) return;

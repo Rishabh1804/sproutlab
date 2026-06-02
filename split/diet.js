@@ -1817,10 +1817,17 @@ function checkFoodCombo() {
     return sid && !_dietAllowsNonvegSid(sid);
   });
   if (offPref.length > 0) {
-    if (verdict !== 'avoid') { verdict = 'caution'; verdictEmoji = zi('warn'); }  // never downgrade an acute-toxin/below-floor avoid
     const prefLabel = DIET_PREF_LABEL[getDietPref()] || 'vegetarian';
+    // M-214-1 (Maren, blocking): the verdict AND the headline overwrite are gated together —
+    // a soft preference note must never REPLACE an 'avoid' lead line. The toxin-avoid case is
+    // restored by the §8b headline block, but a below-age-floor 'avoid' carries no toxin, so an
+    // unconditional headline overwrite here would bury the hard age-safety reason under a soft
+    // "outside your preference" note (the 2 AM under-warn). The body warning still always surfaces.
+    if (verdict !== 'avoid') {
+      verdict = 'caution'; verdictEmoji = zi('warn');
+      headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
+    }
     warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
-    headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
