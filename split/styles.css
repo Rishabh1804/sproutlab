@@ -4013,6 +4013,36 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .enc-myth { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:var(--sp-16) 0 0; padding:var(--sp-12) var(--sp-16); background:var(--surface-lav); border-radius:var(--r-md); }
 .enc-myth .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-lav); margin-top:3px; }
 
+/* ── food-effects-v2 P1c (milk polarities, milk-spec §3/§4/§5) ──────────────
+   The drink-timing SPLIT lead (cow milk) and the substitute-caveat SKY inform
+   banner (plant milk) — the two never-rendered v2 polarities. Composition over
+   new vocabulary (V-5): the split reuses the shipped sage + amber fills; the
+   inform banner is the one genuinely new modifier (sky, V-V-3). Shared-module
+   triple-Gov (Vela-first). */
+.enc-split { display:flex; flex-direction:column; gap:var(--sp-8); margin-bottom:var(--sp-16); }
+.enc-split-good { background:var(--surface-sage); border-left:3px solid var(--sage-deepest); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); }
+/* M-2 skim-proof: the gate band carries weight EQUAL-OR-GREATER than the carve-out —
+   the amber fill + the cons-severe-strength left accent + bold body — so the prevalent
+   diluted-top-milk reader cannot under-read the gate as a trailing qualifier. */
+.enc-split-gate { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); }
+.enc-split-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-4); }
+.enc-split-good .enc-split-h { color:var(--sage-deepest); }
+.enc-split-gate .enc-split-h { color:var(--amber-deepest); }
+.enc-split-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; }
+.enc-split-good .enc-split-h .zi { color:var(--sage-deepest); }
+.enc-split-gate .enc-split-h .zi { color:var(--amber-deep); }
+.enc-split-body { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:0; }
+.enc-split-gate .enc-split-body { font-weight:700; }
+
+/* substitute-caveat INFORM banner (V-V-3): SKY, not neutral — neutral is a near-white
+   wash and register-less; sky is the existing drink/hydration domain color, AA-legible,
+   with a border-left for weight. The hardest fact (rice <5 = arsenic) is fronted in the lead. */
+.enc-inform { background:var(--surface-sky); border-left:3px solid var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); }
+.enc-inform-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--tc-sky); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.enc-inform-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-sky); }
+.enc-inform-lead { font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-4); }
+.enc-inform-body { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
    HTML cell) gets a pointer cursor without a per-element class. */
@@ -10770,6 +10800,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    NOT rose/alarm. Rose (.fd-flag-allergen) is reserved for true "avoid". The
    severe-reaction floor below the banner stays serious regardless. */
 .fd-flag-encourage { background:var(--sage-light); color:var(--tc-sage); }
+/* food-effects-v2 P1c (K-6): the four-polarity flag set on the Food Library detail
+   surface, switched off _effPolarity. conditional (drink-timing, cow milk) reads
+   amber/clock; inform (substitute-caveat, plant milk) reads sky/info — never the rose
+   .fd-flag-allergen siren (rose stays reserved for true acute-toxin "avoid"). */
+.fd-flag-conditional { background:var(--amber-light); color:var(--tc-amber); }
+.fd-flag-inform { background:var(--sky-light); color:var(--tc-sky); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
 .fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }

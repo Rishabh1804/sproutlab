@@ -962,6 +962,43 @@
           </div>
         </div>
 
+        <!-- Cow's milk — good in food, wait as a drink (food-effects-v2 P1c, the
+             drink-timing polarity; spec docs/specs/food-effects-v2-p1c-milk-polarities.md §4).
+             Conditional, NOT avoid and NOT encourage — the SPLIT lead (sage carve-out band
+             "dairy in food is good now" over an amber gate band "not the main drink before 12mo",
+             V-V-2 / M-2 skim-proof). The CMPA severe strip is PINNED (present-only via
+             severeSigns, §6) and carries a class-aware scope header (V-V-4) so the timing gate is
+             never mistaken for the allergy floor. Pinned: split banner → drink-vs-food block →
+             SEVERE STRIP; body: how-to (after-12mo) → mild watch-fors → myth.
+             renderDietMilkIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
+        <div class="card card-info col-full" id="dietMilkIntroCard">
+          <div class="card-header" data-collapse-target="dietMilkIntroBody" data-collapse-chevron="dietMilkIntroChevron">
+            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-clock"/></svg></div> Cow's milk — in food and as a drink</div>
+            <span class="collapse-chevron" id="dietMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietMilkIntro" class="mt-4"></div>
+          <div id="dietMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietMilkIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
+        <!-- Plant milks — not a substitute for breastmilk/formula (food-effects-v2 P1c, the
+             substitute-caveat polarity; spec §5). INFORM, not avoid and not encourage — a SKY
+             banner (V-V-3, .enc-inform) leading with the single hardest fact (rice drinks: none
+             under 5, arsenic). No severe strip — the harm is nutritional / chronic, not an acute
+             reaction (§5.3, the floor follows the hazard). Pinned: inform banner → is/isn't block;
+             body: myth → the soy-milk allergen cross-reference. renderDietMilkIntro() fills both. -->
+        <div class="card card-info col-full" id="dietPlantMilkIntroCard">
+          <div class="card-header" data-collapse-target="dietPlantMilkIntroBody" data-collapse-chevron="dietPlantMilkIntroChevron">
+            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-info"/></svg></div> Plant milks (almond, oat, rice)</div>
+            <span class="collapse-chevron" id="dietPlantMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietPlantMilkIntro" class="mt-4"></div>
+          <div id="dietPlantMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietPlantMilkIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 

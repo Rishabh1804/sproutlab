@@ -4020,6 +4020,36 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .enc-myth { display:flex; align-items:flex-start; gap:var(--sp-8); font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:var(--sp-16) 0 0; padding:var(--sp-12) var(--sp-16); background:var(--surface-lav); border-radius:var(--r-md); }
 .enc-myth .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-lav); margin-top:3px; }
 
+/* ── food-effects-v2 P1c (milk polarities, milk-spec §3/§4/§5) ──────────────
+   The drink-timing SPLIT lead (cow milk) and the substitute-caveat SKY inform
+   banner (plant milk) — the two never-rendered v2 polarities. Composition over
+   new vocabulary (V-5): the split reuses the shipped sage + amber fills; the
+   inform banner is the one genuinely new modifier (sky, V-V-3). Shared-module
+   triple-Gov (Vela-first). */
+.enc-split { display:flex; flex-direction:column; gap:var(--sp-8); margin-bottom:var(--sp-16); }
+.enc-split-good { background:var(--surface-sage); border-left:3px solid var(--sage-deepest); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); }
+/* M-2 skim-proof: the gate band carries weight EQUAL-OR-GREATER than the carve-out —
+   the amber fill + the cons-severe-strength left accent + bold body — so the prevalent
+   diluted-top-milk reader cannot under-read the gate as a trailing qualifier. */
+.enc-split-gate { background:var(--surface-amber); border-left:3px solid var(--amber-deep); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); }
+.enc-split-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-4); }
+.enc-split-good .enc-split-h { color:var(--sage-deepest); }
+.enc-split-gate .enc-split-h { color:var(--amber-deepest); }
+.enc-split-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; }
+.enc-split-good .enc-split-h .zi { color:var(--sage-deepest); }
+.enc-split-gate .enc-split-h .zi { color:var(--amber-deep); }
+.enc-split-body { font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin:0; }
+.enc-split-gate .enc-split-body { font-weight:700; }
+
+/* substitute-caveat INFORM banner (V-V-3): SKY, not neutral — neutral is a near-white
+   wash and register-less; sky is the existing drink/hydration domain color, AA-legible,
+   with a border-left for weight. The hardest fact (rice <5 = arsenic) is fronted in the lead. */
+.enc-inform { background:var(--surface-sky); border-left:3px solid var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); }
+.enc-inform-h { display:flex; align-items:center; gap:var(--sp-8); font-size:var(--fs-sm); font-weight:700; color:var(--tc-sky); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:var(--sp-8); }
+.enc-inform-h .zi { width:var(--icon-sm); height:var(--icon-sm); flex:none; color:var(--tc-sky); }
+.enc-inform-lead { font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-4); }
+.enc-inform-body { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+
 /* ── Viz detail popup (PR-I — viz interactivity layer) ── */
 /* Tap affordance: every wired data element (SVG dot/cell/bar/segment or
    HTML cell) gets a pointer cursor without a per-element class. */
@@ -10777,6 +10807,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    NOT rose/alarm. Rose (.fd-flag-allergen) is reserved for true "avoid". The
    severe-reaction floor below the banner stays serious regardless. */
 .fd-flag-encourage { background:var(--sage-light); color:var(--tc-sage); }
+/* food-effects-v2 P1c (K-6): the four-polarity flag set on the Food Library detail
+   surface, switched off _effPolarity. conditional (drink-timing, cow milk) reads
+   amber/clock; inform (substitute-caveat, plant milk) reads sky/info — never the rose
+   .fd-flag-allergen siren (rose stays reserved for true acute-toxin "avoid"). */
+.fd-flag-conditional { background:var(--amber-light); color:var(--tc-amber); }
+.fd-flag-inform { background:var(--sky-light); color:var(--tc-sky); }
 .fd-flag-aged { background:var(--peach-light); color:var(--tc-caution); }
 .fd-flag-neutral { background:var(--glass-strong); color:var(--mid); }
 .fd-section { margin-top:var(--sp-12); }
@@ -11766,6 +11802,43 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div id="dietNutIntro" class="mt-4"></div>
           <div id="dietNutIntroBody" class="collapse-body fx-col g8" style="display:none;">
             <div id="dietNutIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
+        <!-- Cow's milk — good in food, wait as a drink (food-effects-v2 P1c, the
+             drink-timing polarity; spec docs/specs/food-effects-v2-p1c-milk-polarities.md §4).
+             Conditional, NOT avoid and NOT encourage — the SPLIT lead (sage carve-out band
+             "dairy in food is good now" over an amber gate band "not the main drink before 12mo",
+             V-V-2 / M-2 skim-proof). The CMPA severe strip is PINNED (present-only via
+             severeSigns, §6) and carries a class-aware scope header (V-V-4) so the timing gate is
+             never mistaken for the allergy floor. Pinned: split banner → drink-vs-food block →
+             SEVERE STRIP; body: how-to (after-12mo) → mild watch-fors → myth.
+             renderDietMilkIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
+        <div class="card card-info col-full" id="dietMilkIntroCard">
+          <div class="card-header" data-collapse-target="dietMilkIntroBody" data-collapse-chevron="dietMilkIntroChevron">
+            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-clock"/></svg></div> Cow's milk — in food and as a drink</div>
+            <span class="collapse-chevron" id="dietMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietMilkIntro" class="mt-4"></div>
+          <div id="dietMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietMilkIntroMore" class="mt-4"></div>
+          </div>
+        </div>
+
+        <!-- Plant milks — not a substitute for breastmilk/formula (food-effects-v2 P1c, the
+             substitute-caveat polarity; spec §5). INFORM, not avoid and not encourage — a SKY
+             banner (V-V-3, .enc-inform) leading with the single hardest fact (rice drinks: none
+             under 5, arsenic). No severe strip — the harm is nutritional / chronic, not an acute
+             reaction (§5.3, the floor follows the hazard). Pinned: inform banner → is/isn't block;
+             body: myth → the soy-milk allergen cross-reference. renderDietMilkIntro() fills both. -->
+        <div class="card card-info col-full" id="dietPlantMilkIntroCard">
+          <div class="card-header" data-collapse-target="dietPlantMilkIntroBody" data-collapse-chevron="dietPlantMilkIntroChevron">
+            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-info"/></svg></div> Plant milks (almond, oat, rice)</div>
+            <span class="collapse-chevron" id="dietPlantMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
+          </div>
+          <div id="dietPlantMilkIntro" class="mt-4"></div>
+          <div id="dietPlantMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
+            <div id="dietPlantMilkIntroMore" class="mt-4"></div>
           </div>
         </div>
 
@@ -16568,6 +16641,18 @@ const AGE_RULES = {
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
+  // food-effects-v2 P1c (K-3): a DEDICATED 'plant milk' gate so a plant-milk log no
+  // longer inherits the cow-milk reason above (curd/paneer carve-out, no rice-arsenic) —
+  // the "green-but-wrong" K-3 named. The exact-key tier of _lookupByFoodName resolves
+  // 'plant milk'/'oat milk'/'rice milk'/'rice drink' to these before the bare 'milk' key.
+  // NOTE (Kael resolver-scope): 'almond milk'/'badam milk'/'badam doodh' are NOT keyed
+  // here — they FOOD_EFFECTS-resolve to the tree-nut record (tree-nut's 'almond'/'badam'
+  // aliases win at the byAlias tier), so a dedicated plant gate for them would diverge
+  // from the card they actually fire. The rice forms carry the under-5 arsenic floor.
+  'plant milk': { minMonth:12, reason:'Not a substitute for breastmilk or formula before 12 months. From 12 months, unsweetened fortified soy or oat milk can be part of a varied diet. Rice drinks: none under 5 (arsenic).' },
+  'oat milk':   { minMonth:12, reason:'Not a milk substitute before 12 months. From 12 months, unsweetened fortified oat milk can be part of a varied diet — not the only drink.' },
+  'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
+  'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
   'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
   'sugar':    { minMonth:12, reason:'No added sugar before 12 months. Use fruit for natural sweetness.' },
   'jaggery':  { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
@@ -16905,6 +16990,82 @@ const FOOD_EFFECTS = {
     seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, tongue or throat swelling, a hoarse cry, or floppiness: call emergency services (112 or 108) right away and use a prescribed adrenaline auto-injector if you have one — an antihistamine does not treat anaphylaxis. Fish allergy is usually lifelong; a specialist guides any testing of other species.',
     confidence: 'high',
   },
+
+  // ── food-effects-v2 P1c: cow's milk + plant milks (the broader food classes) ──
+  // The first records of the two never-rendered v2 foodClasses (spec §2 + the milk
+  // polarity spec docs/specs/food-effects-v2-p1c-milk-polarities.md):
+  //   cow milk   = 'drink-timing'      — conditional: fine IN FOOD ~6mo, not the
+  //                                       main DRINK before 12mo (NEITHER avoid nor encourage).
+  //   plant milk = 'substitute-caveat' — inform: not a breastmilk/formula substitute <1;
+  //                                       rice drinks none under 5 (arsenic).
+  // NEITHER is allergen-introduce-early → NO earlyIntroBenefit (EAT found no prevention
+  // effect for milk). `safeForm` is repurposed as the DRINK-vs-FOOD / is-isn't gate (spec
+  // §8a, Kael-ratified). cow milk carries the CMPA allergic axis (watchFor/severeSigns/
+  // seekCare) ALONGSIDE the timing axis — it is the most common infant allergen, so the
+  // present-only severe floor (§6, keyed on severeSigns.length) fires here. plant milk has
+  // NO severeSigns → no acute floor (§5.3, the floor follows the hazard). Polarity is
+  // resolved by _effPolarity (core.js) — both surfaces render conditional/inform, never the
+  // rose 'avoid' siren (K-6). K-1 (Kael): 'top feed' is NOT a cow-milk alias (≈ formula in
+  // Indian logs). Bare 'milk' is deliberately UNALIASED on either record (it co-occurs in
+  // breast/formula/soy milk — the bare-'milk' precision rule, spec §7). Evidence + citations:
+  // docs/research/cow-milk-plant-milks-infant-safety.md.
+  'cow milk': {
+    foodClass:  'drink-timing',
+    severity:   'caution',              // amber timing-caution, NOT rose acute-toxin
+    aliases:    ['cow\'s milk', 'buffalo milk', 'bhains ka doodh', 'gaay ka doodh', 'animal milk', 'whole milk', 'full-fat milk', 'top milk', 'dairy milk', 'full cream milk'],
+    effect:     'iron-deficiency anaemia + renal solute load (as a main drink before 12 months)',
+    title:      'Cow\'s milk — good in food, not yet as the main drink',
+    why:        'Dairy in food is excellent from around 6 months — dahi (curd), paneer, and cheese. The caution is only about cow\'s or buffalo milk as the main drink before the first birthday: it is low in iron and hard on a baby\'s kidneys. Breastmilk or formula is the milk under 1.',
+    whyGood:    'Dairy in food is excellent from around 6 months — dahi (curd), paneer, and cheese give calcium, protein, B12, and healthy fats. The only caution is about milk as the main drink before the first birthday.',
+    // The amber gate band of the split lead (V-V-2 / M-2 skim-proof) — visually weighted
+    // equal-or-greater to the sage carve-out, so the diluted-top-milk reader can't under-read it.
+    gate:       'Not as the main drink before 12 months — cow\'s or buffalo milk is low in iron and hard on a baby\'s kidneys. Breastmilk or first infant formula is the milk under 1.',
+    safeForm: {
+      glance:   'Fine in food; wait as a drink',
+      ok:       ['dahi (curd), paneer, and pasteurised full-fat cheese from around 6 months', 'small amounts of milk cooked into khichdi, porridge, or cereal', 'from 12 months: whole (full-fat) milk as a main drink, about 500 ml (2 cups) a day at most'],
+      never:    ['cow\'s or buffalo milk as the main drink before 12 months', 'diluted or sweetened "top milk" as a breastmilk or formula substitute', 'unpasteurised milk, and mould-ripened (brie, camembert), blue, or ripened-goat cheese at any infant age', 'skimmed or low-fat milk as a main drink before age 2'],
+      note:     'The drink is gated; the dairy is not. Breastmilk or first infant formula is the milk under 12 months. Diluting cow or buffalo milk adds no iron and still displaces breastmilk.',
+    },
+    howToIntroduce: {
+      amount:   'from 12 months, about 500 ml (2 cups) of whole milk a day at most — more is linked to iron deficiency',
+      when:     'dairy in food (dahi, paneer, cheese, milk in cooking) from around 6 months; milk as a main drink from 12 months',
+      watch:    'when you first give dairy in food, watch for about 2 hours for a cow\'s-milk-protein-allergy reaction — milk is the most common infant allergen',
+    },
+    myth: {
+      claim:    'Cow\'s or buffalo milk makes a baby strong — give it early.',
+      truth:    'Before 12 months as a main drink it causes iron-deficiency anaemia and strains the kidneys. Breastmilk or formula is the milk under 1; dairy belongs in food, not in the cup.',
+    },
+    watchFor:   ['hives or a rash', 'swelling of the lips, face, or eyes', 'vomiting', 'diarrhoea or blood in the stool (delayed cow\'s-milk-protein allergy)', 'an eczema flare'],
+    severeSigns:['trouble breathing or wheezing', 'swelling of the tongue or throat', 'a hoarse cry', 'going floppy, pale, or very sleepy'],
+    seekCare:   'A mild reaction to dairy (a little rash alone): stop, watch closely, and call your doctor. Any trouble breathing, tongue or throat swelling, a hoarse cry, or floppiness: call emergency services (112 or 108) right away and use a prescribed adrenaline auto-injector if you have one — an antihistamine does not treat anaphylaxis. Most children outgrow cow\'s-milk allergy by 3 to 5 years; any reintroduction (the milk ladder) is a doctor\'s call.',
+    confidence: 'high',
+  },
+  'plant milk': {
+    foodClass:  'substitute-caveat',
+    severity:   'caution',
+    aliases:    ['almond milk', 'badam milk', 'badam doodh', 'oat milk', 'rice milk', 'rice drink', 'cashew milk', 'coconut milk drink', 'plant-based milk', 'plant milks', 'vegan milk', 'toddler milk', 'growing-up milk', 'follow-on milk drink'],
+    effect:     'inadequate substitute for breastmilk or formula (under 1); rice-drink arsenic (under 5)',
+    title:      'Plant milks — not a substitute for breastmilk or formula',
+    why:        'No plant milk (almond, oat, rice, cashew, coconut) replaces breastmilk or formula in the first year. Rice drinks are not safe for any child under 5 because of arsenic. From age 1, unsweetened, calcium-fortified soy or oat milk can be part of a varied diet — but not the only drink for an under-2.',
+    whyGood:    'From age 1, unsweetened, calcium-fortified soy or oat milk can be part of a varied diet. Fortified soy is the only plant milk nutritionally close to cow\'s milk.',
+    // The sky inform banner (V-V-3) leads with the single hardest fact, fronted (rice <5 = arsenic).
+    headline:   'Not a milk substitute under 1. Rice drinks: none under 5 (arsenic). From age 1, fortified soy or oat only, as part of a varied diet.',
+    safeForm: {
+      glance:   'Not a substitute under 1',
+      ok:       ['from 12 months: unsweetened, calcium-fortified soy or oat milk, as part of a varied diet (not the only drink for an under-2)'],
+      never:    ['any plant milk as a breastmilk or formula substitute before 12 months', 'rice drinks for any child under 5 years (inorganic arsenic) — eating rice the grain is still fine', 'unfortified plant milk as a main drink', 'almond milk as a main drink (too low in protein and fat)', 'carton soy drink as infant formula (soy formula is a separate, prescribed product)'],
+      note:     'No plant milk replaces breastmilk or formula under 1. After age 1, the ranking is: fortified soy and oat first, then almond (low in protein), and rice last (arsenic — avoid under 5). "Toddler" and "growing-up" milks are unnecessary.',
+    },
+    myth: {
+      claim:    'Plant milk (almond, oat, or rice) is a healthy milk substitute for my baby or toddler.',
+      truth:    'Not under 1 — it replaces neither breastmilk nor formula. Rice drinks are unsafe under 5 (arsenic); almond milk is too low in protein and fat. From age 1, fortified soy or oat can be part of a varied diet.',
+    },
+    // Soy milk is the allergen exception — it aliases to the SOY record, not here. Cross-referenced
+    // in copy, not re-aliased. No severeSigns/seekCare: the harm is nutritional / chronic (arsenic),
+    // not an acute reaction, so this record carries NO emergency floor (spec §5.3).
+    watchFor:   ['soy milk only: hives, swelling, or vomiting — soy is a major allergen (see the soy guidance)'],
+    confidence: 'high',
+  },
 };
 
 // ── ALLERGEN FLAGS ──
@@ -16925,6 +17086,13 @@ const ALLERGENS = {
   // food-effects-v2 P1c: fish is allergen:true (a major allergen, often lifelong). Full
   // anaphylaxis floor lives on the FOOD_EFFECTS record; this is the terse browse flag.
   'fish':      'Common allergen, and often lifelong. Introduce well-cooked, deboned, low-mercury fish on its own and watch ~2 hours. Finfish is a separate allergen from shellfish.',
+  // food-effects-v2 P1c (K-4): cow milk is allergen:true (CMPA — the most common infant
+  // food allergy). The full anaphylaxis floor lives on the FOOD_EFFECTS record (severeSigns
+  // / seekCare); this terse note is the browse-surface flag, scoped to the ALLERGY axis (a
+  // SEPARATE concern from the drink-timing gate). Satisfies the §6 allergen:true↔ALLERGENS
+  // traceability invariant. 'plant milk' is allergen:false — soy milk is the exception and
+  // is flagged via the soy record, so plant milk correctly needs no ALLERGENS note.
+  'cow milk':  'Cow\'s-milk protein is the most common infant allergen (CMPA). When you first give dairy in food, watch about 2 hours; mild signs are rash, swelling, or vomiting, and a delayed reaction can be diarrhoea or blood in the stool.',
   'egg yolk':  'Less allergenic than white. Cook well. Give alone for 3 days.',
   'kiwi':      'Can cause mouth tingling. Start with small amount. Watch for oral allergy.',
   'strawberry':'Can cause allergic reaction in some babies. Introduce carefully.',
@@ -23633,10 +23801,31 @@ function _isHighMercuryFishHost(name) {
     new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
 }
 
+// food-effects-v2 P1c (milk). A plant-milk DRINK named with a tree-nut word — "almond milk",
+// "badam doodh", "cashew milk" — resolves to the TREE-NUT record, because tree nut's
+// 'almond'/'badam'/'cashew' alias wins at the byAlias tier (tree nut precedes plant milk) over
+// plant milk's own 'almond milk'/'badam doodh' alias. That surfaces an "introduce early, ground
+// or smooth" ENCOURAGE verdict on what is a substitute-caveat DRINK — the opposite polarity,
+// and it contradicts the spec's K-2 intent (badam milk → plant milk). This guard redirects such
+// a host to the plant-milk record so both surfaces read "not a substitute under 1," not
+// "introduce early." Requires BOTH a tree-nut token AND a drink word, so the bare nut ("badam",
+// "almond butter") still correctly resolves to the tree-nut introduce-early record. Soy milk is
+// untouched (it intentionally aliases to the soy allergen record); oat/rice/coconut-drink
+// already resolve to plant milk without collision.
+const _PLANT_MILK_NUT = ['almond', 'badam', 'cashew', 'kaju'];
+function _isPlantMilkDrinkHost(name) {
+  const n = String(name || '').toLowerCase();
+  if (!/\b(milk|doodh)\b/.test(n)) return false;
+  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t + '\\b').test(n));
+}
+
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
 // resolution matches the AGE_RULES gate exactly (word-boundary, not substring).
 function getFoodEffect(name) {
   if (typeof FOOD_EFFECTS === 'undefined') return null;
+  // Plant-milk drink host (almond/badam/cashew milk·doodh) → plant-milk record, NOT the
+  // tree-nut encourage card it would otherwise resolve to (K-2 intent; alias-precedence fix).
+  if (_isPlantMilkDrinkHost(name) && FOOD_EFFECTS['plant milk']) return FOOD_EFFECTS['plant milk'];
   const eff = _lookupByFoodName(FOOD_EFFECTS, name);
   // M-F-1: never affirm a high-mercury fish as a safe early food (the bare 'fish' KEY leak).
   if (eff && eff === FOOD_EFFECTS['fish'] && _isHighMercuryFishHost(name)) return null;
@@ -23659,6 +23848,28 @@ const COMBO_RESULT_SCHEMA = 'r1-fe';
 function _effHasClass(eff, cls) {
   if (!eff || !eff.foodClass) return false;
   return Array.isArray(eff.foodClass) ? eff.foodClass.indexOf(cls) !== -1 : eff.foodClass === cls;
+}
+
+// Polarity resolver (food-effects-v2 P1c, milk-spec §3-bis, K-6 — the load-bearing
+// fold). Maps a FOOD_EFFECTS record's foodClass to ONE of four render polarities, so
+// every banner surface switches {fill, icon, heading, gate-render} off a SINGLE source
+// of truth instead of each re-deriving polarity from a two-state _effHasClass test (the
+// K-6 defect: renderFoodLibDetail's old `fdEncourage ? sprout : siren` rendered milk's
+// drink-timing/substitute-caveat records as a rose "avoid" SIREN — the §1 wrong-lead on
+// a second surface). Precedence matters for the multi-class records: warn (acute-toxin,
+// honey) → encourage (allergen-introduce-early; wins over a SECONDARY choking-by-form on
+// peanut/tree-nut/fish) → conditional (drink-timing cow milk; and a PRIMARY choking-by-form
+// once the choking set wires, milk-spec §9) → inform (substitute-caveat plant milk).
+// Returns 'inform' as the conservative non-alarm default for an unknown/absent class —
+// never 'warn' (a spurious siren is the failure this resolver exists to prevent).
+function _effPolarity(eff) {
+  if (!eff || !eff.foodClass) return 'inform';
+  if (_effHasClass(eff, 'acute-toxin'))               return 'warn';
+  if (_effHasClass(eff, 'allergen-introduce-early'))  return 'encourage';
+  if (_effHasClass(eff, 'drink-timing'))              return 'conditional';
+  if (_effHasClass(eff, 'choking-by-form'))           return 'conditional'; // PRIMARY (§9, deferred); secondary already caught by encourage above
+  if (_effHasClass(eff, 'substitute-caveat'))         return 'inform';
+  return 'inform';
 }
 
 // Shared emergency-floor renderer (food-effects v2 §3.0, M-S-7). The severe
@@ -38512,6 +38723,14 @@ function _fdAgeRule(name) {
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
   const rule = _lookupByFoodName(AGE_RULES, name);
+  // Plant-milk drink host (almond/badam/cashew milk·doodh): the gate mirror of the
+  // getFoodEffect redirect — these resolve to the bare 'milk' (cow) gate by word-boundary,
+  // inheriting cow-milk reason copy (curd/paneer carve-out, no rice-arsenic). Redirect to the
+  // dedicated 'plant milk' gate so the card and the gate agree (one-resolver doctrine).
+  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk']
+      && typeof _isPlantMilkDrinkHost === 'function' && _isPlantMilkDrinkHost(name)) {
+    return AGE_RULES['plant milk'];
+  }
   // M-F-1 (Cipher Edict-V completion): the same bare-'fish'-KEY leak that fed the
   // consequence card also feeds this gate — "seer fish" / "shark fish" resolve to
   // AGE_RULES['fish'] (6mo) and would show a green "fine from ~6 months" badge for a
@@ -38664,18 +38883,28 @@ function renderFoodDetailSheet(name) {
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
   const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
-  // Polarity (food-effects-v2): an introduce-early allergen reads ENCOURAGE —
-  // sage banner + calm sprout icon ("good to introduce, here's the safe form"),
-  // never rose/siren ("don't give"). Rose is reserved for true avoid (acute-toxin).
-  // The severe-reaction floor (fdFloor) below stays serious regardless.
-  const fdEncourage = (typeof _effHasClass === 'function') && _effHasClass(fdEff, 'allergen-introduce-early');
+  // Polarity (food-effects-v2 P1c, K-6): the banner cosmetic switches off the SHARED
+  // _effPolarity resolver (core.js, milk-spec §3-bis), NOT a two-state encourage/avoid
+  // boolean. The old `fdEncourage ? sprout : siren` rendered milk's drink-timing /
+  // substitute-caveat records as a rose "avoid" SIREN here — the §1 wrong-lead on this
+  // second surface. Four polarities, one source of truth: encourage (sage/sprout, the δ
+  // allergens), warn (rose/siren, acute-toxin honey), conditional (amber/clock, cow milk
+  // drink-timing), inform (sky/info, plant-milk substitute-caveat). The severe-reaction
+  // floor (fdFloor) below stays serious regardless — it is presence-driven (severeSigns),
+  // independent of this banner cosmetic.
+  const FD_POLARITY = {
+    encourage:   { cls:'fd-flag-encourage',   ic:'sprout' },
+    warn:        { cls:'fd-flag-allergen',    ic:'siren'  },
+    conditional: { cls:'fd-flag-conditional', ic:'clock'  },
+    inform:      { cls:'fd-flag-inform',      ic:'info'   },
+  };
+  const fdPol = (typeof _effPolarity === 'function') ? _effPolarity(fdEff) : 'warn';
   if (fdFloor) {
     const head = (fdEff && fdEff.title) ? escHtml(fdEff.title) : 'Allergen';
     const sub = (fdEff && fdEff.safeForm && fdEff.safeForm.note) ? escHtml(fdEff.safeForm.note)
               : (allerg ? escHtml(allerg) : '');
-    const flagCls = fdEncourage ? 'fd-flag-encourage' : 'fd-flag-allergen';
-    const flagIc  = fdEncourage ? zi('sprout') : zi('siren');
-    html += `<div class="fd-flag ${flagCls}">${flagIc} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    const pol = FD_POLARITY[fdPol] || FD_POLARITY.warn;
+    html += `<div class="fd-flag ${pol.cls}">${zi(pol.ic)} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
     html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
   } else if (allerg) {
     // A milder allergen with no FOOD_EFFECTS record (kiwi, strawberry, oats …):
@@ -38784,6 +39013,7 @@ function renderDietLibrary() {
   renderFoodLibFilters();
   renderFoodLibResults();
   renderDietNutIntro();
+  renderDietMilkIntro();
 }
 
 // ════════════════════════════════════════
@@ -38912,6 +39142,150 @@ function renderDietNutIntro() {
 
   host.innerHTML = pinned;
   if (moreHost) moreHost.innerHTML = body;
+}
+
+// ════════════════════════════════════════
+// Milk — the drink-timing + substitute-caveat KNOWLEDGE cards (food-effects v2 P1c)
+// ════════════════════════════════════════
+// Sibling of renderDietNutIntro (separate fns + hosts; the nut card stays untouched).
+// Renders the FIRST two cards of the never-rendered v2 polarities (milk-spec §4/§5):
+//   • cow milk   → 'drink-timing'      (#dietMilkIntro)      — CONDITIONAL, a SPLIT lead
+//     (sage carve-out "good in food now" over an amber gate "wait as the main drink",
+//     V-V-2 / M-2 skim-proof). CMPA severe strip PINNED (present-only via severeSigns,
+//     §6) with a class-aware scope header (V-V-4).
+//   • plant milk → 'substitute-caveat' (#dietPlantMilkIntro) — INFORM, a SKY banner
+//     (V-V-3, .enc-inform) leading with the hardest fact (rice <5 = arsenic). NO severe
+//     strip — the harm is nutritional/chronic, not acute (§5.3, the floor follows the hazard).
+// Records are read by DIRECT KEY (FE['cow milk'] / FE['plant milk']) — NOT via the
+// resolver — so the Library knowledge cards are immune to alias-precedence collisions.
+// All copy is FOOD_EFFECTS-sourced (no hardcoded safety claim); the only hardcoded
+// strings are the V-V-1 switched-unit HEADINGS (render copy, polarity-keyed, not reusable).
+function renderDietMilkIntro() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+
+  // ── cow milk — drink-timing (split conditional) ──
+  var milkHost = document.getElementById('dietMilkIntro');
+  var milkMore = document.getElementById('dietMilkIntroMore');
+  var cow = FE ? FE['cow milk'] : null;
+  if (milkHost) {
+    if (!cow) {
+      milkHost.innerHTML = '';
+      if (milkMore) milkMore.innerHTML = '';
+    } else {
+      var cPin = '', cBody = '';
+      // SPLIT lead (V-V-2): sage carve-out band leads, amber gate band qualifies
+      // (M-2 skim-proof — the gate is visually weighted, never a trailing clause).
+      cPin += '<div class="enc-split">';
+      if (cow.whyGood) {
+        cPin += '<div class="enc-split-good"><div class="enc-split-h">' + zi('sprout') +
+          '<span>Good in food now</span></div><p class="enc-split-body">' + escHtml(cow.whyGood) + '</p></div>';
+      }
+      if (cow.gate) {
+        cPin += '<div class="enc-split-gate"><div class="enc-split-h">' + zi('clock') +
+          '<span>Wait as the main drink</span></div><p class="enc-split-body">' + escHtml(cow.gate) + '</p></div>';
+      }
+      cPin += '</div>';
+      // Drink-vs-food block (§4.2): ok = "Fine now — in food", never = "Not yet — as a
+      // drink", note = the non-suppressible invariant ("the drink is gated; the dairy is not").
+      cPin += _milkFormBlock(cow.safeForm, 'Fine now — in food', 'Not yet — as a drink');
+      // Severe strip — the CMPA emergency floor, PINNED + present-only via severeSigns
+      // (§6/M-1), with the V-V-4 class-aware scope header (separates the ALLERGY floor
+      // from the TIMING gate). Hand-built (not _severeFloorHtml) so the header is scoped
+      // and the mild watch-fors drop to the calm body instead.
+      cPin += _milkSevereStrip(cow, 'If your baby reacts to dairy, it\'s an emergency');
+      // BODY (collapsible): how-to (after-12mo) → mild watch-fors → myth.
+      var chti = cow.howToIntroduce || {};
+      if (chti.amount || chti.when || chti.watch) {
+        cBody += '<div class="enc-block"><div class="enc-block-h">' + zi('spoon') + '<span>How to give it</span></div><div class="enc-proto">';
+        if (chti.when)   cBody += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(chti.when) + '</div>';
+        if (chti.amount) cBody += '<div class="enc-proto-row"><b>Amount:</b> ' + escHtml(chti.amount) + '</div>';
+        if (chti.watch)  cBody += '<div class="enc-proto-row"><b>Watch:</b> ' + escHtml(chti.watch) + '</div>';
+        cBody += '</div></div>';
+      }
+      var cMild = (cow.watchFor && cow.watchFor.length) ? cow.watchFor : [];
+      if (cMild.length) {
+        cBody += '<div class="cons-watch"><div class="cons-watch-h">Milder signs to watch for</div><ul class="cons-watch-list">' +
+          cMild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+      }
+      if (cow.myth && cow.myth.truth) {
+        cBody += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(cow.myth.truth) + '</span></div>';
+      }
+      milkHost.innerHTML = cPin;
+      if (milkMore) milkMore.innerHTML = cBody;
+    }
+  }
+
+  // ── plant milk — substitute-caveat (sky inform) ──
+  var plantHost = document.getElementById('dietPlantMilkIntro');
+  var plantMore = document.getElementById('dietPlantMilkIntroMore');
+  var plant = FE ? FE['plant milk'] : null;
+  if (plantHost) {
+    if (!plant) {
+      plantHost.innerHTML = '';
+      if (plantMore) plantMore.innerHTML = '';
+    } else {
+      var pPin = '', pBody = '';
+      // INFORM banner (V-V-3, sky .enc-inform): the V-V-1 switched heading + the hardest
+      // fact fronted (headline: rice <5 = arsenic) + the age-1 nuance (whyGood).
+      pPin += '<div class="enc-inform"><div class="enc-inform-h">' + zi('info') + '<span>What it is — and what it isn\'t</span></div>';
+      if (plant.headline) pPin += '<p class="enc-inform-lead">' + escHtml(plant.headline) + '</p>';
+      if (plant.whyGood)  pPin += '<p class="enc-inform-body">' + escHtml(plant.whyGood) + '</p>';
+      pPin += '</div>';
+      // is/isn't block: ok = "From age 1, as part of a varied diet", never = "Never",
+      // note = the ranking + "not a substitute under 1".
+      pPin += _milkFormBlock(plant.safeForm, 'From age 1, as part of a varied diet', 'Never');
+      // No severe strip — substitute-caveat has no acute floor (§5.3).
+      // BODY: myth → the soy-milk allergen cross-reference (calm watch line).
+      if (plant.myth && plant.myth.truth) {
+        pBody += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(plant.myth.truth) + '</span></div>';
+      }
+      var pMild = (plant.watchFor && plant.watchFor.length) ? plant.watchFor : [];
+      if (pMild.length) {
+        pBody += '<div class="cons-watch"><div class="cons-watch-h">One thing to watch</div><ul class="cons-watch-list">' +
+          pMild.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+      }
+      plantHost.innerHTML = pPin;
+      if (plantMore) plantMore.innerHTML = pBody;
+    }
+  }
+}
+
+// Shared drink-vs-food / is-isn't block for the milk cards. safeForm.ok renders under
+// `okLabel`, safeForm.never under `neverLabel`, and safeForm.note as the non-suppressible
+// enc-form-note invariant (milk-spec §4.2/§5.2). Reuses the shipped .enc-form family.
+function _milkFormBlock(sf, okLabel, neverLabel) {
+  sf = sf || {};
+  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
+  var never = (sf.never && sf.never.length) ? sf.never : [];
+  if (!ok.length && !never.length && !sf.note) return '';
+  var h = '<div class="enc-form">';
+  if (ok.length) {
+    h += '<div class="enc-form-sub">' + escHtml(okLabel) + '</div><ul class="enc-form-list">' +
+      ok.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+  }
+  if (never.length) {
+    h += '<div class="enc-form-sub">' + escHtml(neverLabel) + '</div><ul class="enc-form-list enc-never">' +
+      never.map(function(x){ return '<li>' + escHtml(x) + '</li>'; }).join('') + '</ul>';
+  }
+  if (sf.note) h += '<p class="enc-form-note">' + escHtml(sf.note) + '</p>';
+  h += '</div>';
+  return h;
+}
+
+// Present-only CMPA severe strip for a drink-timing card (milk-spec §6/V-V-4/M-1). Renders
+// the anaphylaxis red-flags + the call-112/108 emergency line ONLY when severeSigns is a
+// non-empty array (never on a class/allergen-flag proxy — M-1). `scopeHeader` separates the
+// ALLERGY floor from the TIMING gate so a parent never conflates the two axes (V-V-4).
+function _milkSevereStrip(eff, scopeHeader) {
+  if (!eff || !Array.isArray(eff.severeSigns) || !eff.severeSigns.length) return '';
+  var h = '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
+    '<span>' + escHtml(scopeHeader) + '</span></div><ul class="cons-severe-list">' +
+    eff.severeSigns.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+  if (eff.seekCare) {
+    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(eff.seekCare) + '</span></p>';
+  }
+  h += '</div>';
+  return h;
 }
 
 
