@@ -79,21 +79,23 @@
   .lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left;
     border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; cursor:pointer;
     box-shadow:0 1px 8px var(--shadow); transition:all var(--ease-fast);
-    border-left:var(--accent-w, 3px) solid var(--mid); background:var(--card-bg); }
+    border-left:var(--accent-w, 3px) solid var(--mid); background-color:var(--card-bg); }
   /* Channel 1 — polarity rail (static classes, Cipher 3) */
   .lib-book--encourage   { border-left-color:var(--sage); }
   .lib-book--conditional { border-left-color:var(--amber); }
   .lib-book--warn        { border-left-color:var(--rose); }
   .lib-book--inform      { border-left-color:var(--sky); }
-  /* Channel 2 — subtle fading FOOD-DOMAIN tint (hero-style; mostly cream → whisper
-     of the category --*-light into the far corner). Keyed off FOOD_TAX.color. */
-  .dt-grains { background:linear-gradient(135deg, var(--card-bg) 32%, var(--sage-light)); }
-  .dt-nonveg { background:linear-gradient(135deg, var(--card-bg) 32%, var(--rose-light)); }
-  .dt-nuts   { background:linear-gradient(135deg, var(--card-bg) 32%, var(--lav-light)); }
-  .dt-dairy  { background:linear-gradient(135deg, var(--card-bg) 32%, var(--sky-light)); }
-  .dt-fruits { background:linear-gradient(135deg, var(--card-bg) 32%, var(--rose-light)); }
-  .dt-spices { background:linear-gradient(135deg, var(--card-bg) 32%, var(--amber-light)); }
-  .dt-vegs   { background:linear-gradient(135deg, var(--card-bg) 32%, var(--peach-light)); }
+  /* Channel 2 — subtle fading FOOD-DOMAIN tint (hero-style). A whisper: the pill
+     stays --card-bg; the category accent fades in over the far corner at ~12%
+     (softened per Architect tuning — was the heavier --*-light end). Keyed off
+     FOOD_TAX.color. background-IMAGE so it composites over the card-bg. */
+  .dt-grains { background-image:linear-gradient(135deg, transparent 40%, rgba(181,213,197,0.18)); }
+  .dt-nonveg { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.18)); }
+  .dt-nuts   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.18)); }
+  .dt-dairy  { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.18)); }
+  .dt-fruits { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.18)); }
+  .dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.18)); }
+  .dt-vegs   { background-image:linear-gradient(135deg, transparent 40%, rgba(250,212,180,0.18)); }
 
   .lib-book-body { flex:1; min-width:0; }
   .lib-book-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
