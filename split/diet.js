@@ -178,10 +178,11 @@ function renderFoods() {
   if (countEl) countEl.textContent = `${foods.length} foods`;
 
   const grouped = _categorizeFoods();
-  const isVeg = getDietPref() === 'veg';
-  const parentOrder = isVeg
-    ? ['grains','fruits','vegs','dairy','nuts','spices']
-    : ['grains','fruits','vegs','dairy','nuts','spices','nonveg'];
+  // Dietary-preference surfacing gate: show the nonveg parent only when the preference
+  // surfaces at least one nonveg subcategory (veg → no nonveg card; eggetarian/pescatarian/
+  // nonveg → shown, with only the surfaced subcategories counted below).
+  const parentOrder = ['grains','fruits','vegs','dairy','nuts','spices'];
+  if (_dietAllowsParent('nonveg')) parentOrder.push('nonveg');
 
   let html = '<div class="food-cats">';
 
@@ -190,6 +191,9 @@ function renderFoods() {
     const col = parent.color;
     let parentTotal = 0, parentCount = 0;
     Object.entries(parent.subs).forEach(([sid, sub]) => {
+      // Within nonveg, count only the subcategories the preference surfaces (so an
+      // eggetarian's card reads "of eggs", not "of egg+poultry+fish+meat").
+      if (pid === 'nonveg' && !_dietAllowsNonvegSid(sid)) return;
       parentTotal += sub.keys.length;
       parentCount += grouped[pid][sid].length;
     });
@@ -225,7 +229,9 @@ function openFoodCatModal(pid) {
 
   document.getElementById('foodCatModalTitle').innerHTML = `${parent.icon} ${parent.label}`;
 
-  const subIds = Object.keys(parent.subs);
+  // Surfacing gate: within nonveg, show only the subcategories the preference surfaces.
+  let subIds = Object.keys(parent.subs);
+  if (pid === 'nonveg') subIds = subIds.filter(sid => _dietAllowsNonvegSid(sid));
   const tabsEl = document.getElementById('foodCatModalTabs');
   tabsEl.style.background = _foodColorMap[col];
 
@@ -1802,12 +1808,26 @@ function checkFoodCombo() {
     else headline = 'Looks good for Ziva\'s age!';
   }
 
-  // Vegetarian check
-  const nonVeg = rawFoods.filter(f => ['chicken','fish','mutton','lamb','pork','prawn','shrimp','crab','meat'].includes(f));
-  if (nonVeg.length > 0) {
-    if (verdict !== 'avoid') { verdict = 'caution'; verdictEmoji = zi('warn'); }  // never downgrade an acute-toxin/below-floor avoid
-    warnings.push(`Ziva follows a vegetarian diet. ${nonVeg.join(', ')} is non-vegetarian.`);
-    headline = `Note: ${nonVeg.join(', ')} is non-vegetarian — Ziva\'s diet is vegetarian`;
+  // Diet-preference note (4-class gate): flag only foods OUTSIDE the current preference —
+  // a pescatarian sees no note for fish, an eggetarian none for egg, a non-veg none at all.
+  // This is a preference note, NOT a safety gate: it never downgrades an acute-toxin/below-floor
+  // 'avoid', and the food's own consequence/allergen record still fires unchanged below.
+  const offPref = rawFoods.filter(f => {
+    const sid = _dietNonvegSid(f);
+    return sid && !_dietAllowsNonvegSid(sid);
+  });
+  if (offPref.length > 0) {
+    const prefLabel = DIET_PREF_LABEL[getDietPref()] || 'vegetarian';
+    // M-214-1 (Maren, blocking): the verdict AND the headline overwrite are gated together —
+    // a soft preference note must never REPLACE an 'avoid' lead line. The toxin-avoid case is
+    // restored by the §8b headline block, but a below-age-floor 'avoid' carries no toxin, so an
+    // unconditional headline overwrite here would bury the hard age-safety reason under a soft
+    // "outside your preference" note (the 2 AM under-warn). The body warning still always surfaces.
+    if (verdict !== 'avoid') {
+      verdict = 'caution'; verdictEmoji = zi('warn');
+      headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
+    }
+    warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
@@ -5072,13 +5092,16 @@ function updateQLFeedDropdown() {
   }
 
   const q = query.toLowerCase();
-  const isVeg = getDietPref() === 'veg';
   let html = '';
   let totalMatches = 0;
 
   Object.entries(FOOD_SUGGESTIONS).forEach(([cat, items]) => {
-    if (isVeg && cat.includes('Non-Veg')) return;
-    const filtered = items.filter(f => f.toLowerCase().includes(q));
+    const isNonvegCat = cat.includes('Non-Veg');
+    let filtered = items.filter(f => f.toLowerCase().includes(q));
+    // Surfacing gate: within the non-veg category, keep only the items the preference
+    // surfaces (eggetarian → egg items only; pescatarian → egg + fish; veg → none, so the
+    // whole category drops out below). Per-item sid, since the list mixes egg/chicken/fish/meat.
+    if (isNonvegCat) filtered = filtered.filter(f => _dietAllowsNonvegSid(_dietNonvegSid(f)));
     if (filtered.length === 0) return;
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.slice(0, 8).forEach(food => {

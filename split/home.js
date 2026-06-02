@@ -5072,12 +5072,14 @@ function showMealDropdown(meal, query) {
   const q = query.toLowerCase();
   let html = '';
   let totalMatches = 0;
-  const isVeg = getDietPref() === 'veg';
 
   Object.entries(FOOD_SUGGESTIONS).forEach(([cat, items]) => {
-    // Hide non-veg category when diet pref is vegetarian
-    if (isVeg && cat.includes('Non-Veg')) return;
-    const filtered = items.filter(f => f.toLowerCase().includes(q));
+    // Surfacing gate (4-class diet preference): within the non-veg category keep only the
+    // items the preference surfaces — eggetarian → egg only, pescatarian → egg + fish, veg →
+    // none (category drops out). Per-item sid, since the list mixes egg/chicken/fish/meat.
+    const isNonvegCat = cat.includes('Non-Veg');
+    let filtered = items.filter(f => f.toLowerCase().includes(q));
+    if (isNonvegCat) filtered = filtered.filter(f => _dietAllowsNonvegSid(_dietNonvegSid(f)));
     if (filtered.length === 0) return;
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.forEach(food => {
