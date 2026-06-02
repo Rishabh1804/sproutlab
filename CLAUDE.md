@@ -199,6 +199,18 @@ These are NON-NEGOTIABLE. Every session. Every line.
 
 ## Design System
 
+**Design floor — mandatory, every agent, every surface (canon-cc-022 skill; not a Governor audit).**
+Before any Companion, Governor, or Scribe **designs, builds, restyles, or reviews any
+SproutLab surface** — a card, section, screen, component, toast, chart, overlay, color,
+font, or animation — it MUST consult [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md),
+the authoritative visual + UX floor. The `/design-principles` skill
+(`.claude/skills/design-principles/SKILL.md`) is the unmissable doorway to it — a
+quick-reference plus this standing rule. Designing without reading it is how warmth drifts
+clinical and HR violations slip in; no UI work is exempt. This is the design *floor*, read
+up front so a surface arrives at the canon-cc-008 gate already compliant — it does **not**
+discharge the QA chain (Vela / Maren / Kael audit, Cipher final-pass). The summary tables
+below are a convenience mirror; the doc wins on any disagreement.
+
 ### Typography
 | Font | Use |
 |------|-----|
