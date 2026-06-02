@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choking-Hazard Foods &amp; Infant Safety — Care Research Brief · SproutLab</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#8a6320; --amber-bg:#fbf0d9; --accent:#9a6a3a;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d;
+      --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+      --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a;
+      --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);
+    padding:34px 0 26px;margin-bottom:8px}
+  h1{font:700 27px/1.25 Fraunces,Georgia,serif;margin:0 0 6px}
+  .sub{color:var(--mid);font-size:14.5px;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--card);
+    border:1px solid var(--line);color:var(--mid)}
+  .pill.good{background:var(--sage-bg);color:var(--sage);border-color:transparent}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  h2{font:600 19px/1.3 Fraunces,Georgia,serif;margin:30px 0 12px;padding-top:10px;border-top:1px solid var(--line)}
+  h2 .ax{color:var(--accent);font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .tldr{background:var(--sage-bg);border-color:transparent}
+  .tldr ul{margin:8px 0 0;padding-left:20px}
+  .tldr li{margin:7px 0}
+  ul{margin:6px 0;padding-left:22px}
+  li{margin:6px 0}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+    padding:3px 9px;border-radius:7px;vertical-align:middle;margin-left:8px}
+  .b-hi{background:var(--hi-bg);color:var(--hi)} .b-mod{background:var(--mod-bg);color:var(--mod)} .b-weak{background:var(--weak-bg);color:var(--weak)}
+  .flag{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:6px;
+    padding:10px 14px;margin:12px 0;font-size:14px;color:var(--ink)}
+  .flag b{color:var(--amber)}
+  .flag.good{background:var(--sage-bg);border-left-color:var(--sage)}
+  .flag.good b{color:var(--sage)}
+  .flag.bad{background:var(--rose-bg);border-left-color:var(--rose)}
+  .flag.bad b{color:var(--rose)}
+  .quote{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:6px 14px;margin:8px 0;font-size:14px}
+  .quote b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mid);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td a{color:var(--sage);word-break:break-all;font-size:12px}
+  .foot{color:var(--mid);font-size:13px;margin-top:30px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Choking-Hazard Foods — Infant Safety</h1>
+  <p class="sub">Care Research Brief · the first <code>choking-by-form</code>-PRIMARY entry — a hazard by FORM (round/hard/small/sticky), not allergy. Modify, don't ban. Companion to <code>choking-hazards-infant-safety.md</code>.</p>
+  <div class="meta">
+    <span class="pill good">Reviewer · Maren (Care)</span>
+    <span class="pill">floor = choking first aid, NOT anaphylaxis</span>
+    <span class="pill">2026-06-02</span>
+    <span class="pill warn">Research artifact — not yet wired into the app</span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+  <div class="card tldr">
+    <strong>TL;DR — the parent-facing truth</strong>
+    <ul>
+      <li><b>It's about FORM, not the food — modify, don't ban.</b> Cut grapes into quarters lengthwise, hot dogs lengthwise (never coins), grind nuts or thin nut butter, cook/grate hard raw veg, cut everything to ≤½ inch (a child's fingernail). The killer shapes are <b>round</b> (corks the airway) and <b>coin/cylindrical</b> (windpipe-width). <span class="badge b-hi">high</span></li>
+      <li><b>The age window is ~4–5 years for whole hazard foods.</b> No grinding molars until ~16–29 months; whole nuts &amp; popcorn not for under-5s (NHS) / round-firm foods until 4 (AAP). The app's <code>chokingUntilYears: 5</code> is the conservative floor. <span class="badge b-hi">high</span></li>
+      <li><b>Gagging is NOT choking — the most useful thing to know.</b> Gagging is <b>LOUD</b> (normal, protective — don't intervene); choking is <b>QUIET</b> (the emergency). On darker skin, check <b>gums, inside lips, nailbeds</b> for blue. <span class="badge b-hi">high</span></li>
+      <li><b>The emergency floor is CHOKING FIRST AID — not adrenaline.</b> Baby &lt;1: alternate <b>5 back blows + 5 chest thrusts</b> (2 fingers); <b>NEVER abdominal thrusts under 1</b>. Child &gt;1: 5 back blows + 5 abdominal thrusts. No blind finger sweep. Not clearing → <b>112/108</b>; unresponsive → CPR. <span class="badge b-hi">high</span></li>
+      <li><b>Indian core: groundnuts are the #1 aspirated food; supari is a double danger.</b> Whole groundnut is the most common aspirated foreign body in Indian children (handed loose to toddlers). <b>Areca nut/supari</b> is documented in airways AND acutely toxic — keep away from children entirely. <span class="badge b-hi">high (studies)</span></li>
+      <li><b>⚑ No verified Indian-government/IAP choking-food directive.</b> The guidance (lists, cut rules, ages) is international (AAP/NHS/CDC/HSE); the Indian-ness is the food examples + ENT aspiration studies. <span class="badge b-mod">honesty-flagged</span></li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 1</span> — The mechanism: what makes a food a choking hazard <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <div class="quote"><b>AAP:</b> "If you were to design the perfect plug for a child's airway, you couldn't do much better than a hot dog … It will wedge itself in tightly and completely block the airway."</div>
+    <ul>
+      <li>Airway physics: resistance ∝ 1/radius⁴ — a small narrowing collapses airflow.</li>
+      <li>They can't grind: <b>molars don't erupt until ~16–29 months</b>; a child with front teeth still can't grind a nut. (90% of whole-nut aspiration is under 36 months, almost none over 4.)</li>
+      <li>Dangerous properties: <b>round</b> (grape, whole nut), <b>cylindrical/coin</b> (hot dog), <b>hard</b>, <b>small &amp; firm</b>, <b>sticky/compressible</b> (thick nut butter, marshmallow).</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 2</span> — The hazard list + the age window <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>The list (AAP + CDC):</b> hot dogs/sausages (highest-risk), whole grapes/cherry tomatoes, whole nuts &amp; seeds, popcorn, hard raw veg/fruit (carrot, apple), hard/round candy, marshmallows, chewing gum, chunks of meat/cheese, nut-butter globs, raisins.</p>
+    <div class="flag"><b>⚑ Honest regulator split:</b> AAP keeps high-risk round/firm foods until <b>4+, development-dependent</b>; NHS/HSE say <b>no whole nuts or popcorn under 5</b>. Both agree the floor is ~4–5, developmentally gated. The app's <code>chokingUntilYears: 5</code> is the conservative NHS/HSE-aligned floor.</div>
+  </div>
+
+  <h2><span class="ax">Axis 3</span> — The cut-it-this-way rules (modify, don't ban) <span class="badge b-hi">high — multi-regulator</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>Grapes / round fruit → QUARTER lengthwise</b> (halving isn't enough — a half-grape still plugs).</li>
+      <li><b>Hot dogs / sausages → cut LENGTHWISE into strips, never coins.</b></li>
+      <li><b>Nuts → ground/flaked, or smooth nut butter thinned/spread thin</b> (never a glob — thin into porridge/curry).</li>
+      <li><b>Hard raw veg/fruit (carrot, apple) → cook soft, grate, or slice very thin</b> (fits Indian sabzi prep).</li>
+      <li><b>Popcorn, hard candy, marshmallows, gum, whole seeds → DELAY</b> (can't reshape safe).</li>
+      <li><b>General:</b> pieces ≤½ inch / a child's fingernail; soft enough to squash; de-round.</li>
+    </ul>
+  </div>
+
+  <h2><span class="ax">Axis 4</span> — Gagging vs choking (the key parent education) <span class="badge b-hi">high</span></h2>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr><th></th><th>Gagging (normal, protective)</th><th>Choking (emergency)</th></tr>
+      <tr><td><b>Sound</b></td><td class="dash">LOUD — gurgle, sputter, cough</td><td><b>QUIET / silent</b></td></tr>
+      <tr><td><b>Breathing</b></td><td>Can breathe</td><td>Trouble / can't</td></tr>
+      <tr><td><b>Cough</b></td><td>Strong, effective</td><td>Weak or absent</td></tr>
+      <tr><td><b>Skin</b></td><td>May go red</td><td>May go blue — darker skin: check <b>gums, inside lips, nailbeds</b></td></tr>
+      <tr><td><b>Do</b></td><td><b>Let it resolve — don't intervene</b></td><td><b>Act now</b> — back blows</td></tr>
+    </table>
+    <p style="margin-bottom:0;font-size:13.5px;color:var(--mid)">NHS: <i>"Gagging is a normal reflex … Gagging is loud" vs "Choking is quiet."</i> Many parents intervene on a normal gag, or miss the silent real thing. This distinction is the single highest-value piece of choking parent-education.</p>
+  </div>
+
+  <h2><span class="ax">Axis 5</span> — The emergency floor: CHOKING FIRST AID (not anaphylaxis) <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <p style="margin-top:0"><b>Categorically different from the allergy floor — mechanical airway rescue, no adrenaline, no drugs.</b></p>
+    <ul>
+      <li><b>Recognise:</b> forceful cough → encourage coughing, don't intervene. Silent/ineffective or can't breathe → act.</li>
+      <li><b>Infant (&lt;1):</b> face-down, head low, <b>5 back blows</b> (heel of hand, between shoulder blades); then face-up, <b>5 chest thrusts</b> (2 fingers, mid-chest below nipple line); alternate, repeat. <b>⚑ NEVER abdominal thrusts (Heimlich) under 1</b> — organ damage.</li>
+      <li><b>Child (&gt;1):</b> 5 back blows + 5 abdominal thrusts.</li>
+      <li><b>Don't:</b> no blind finger sweep (pushes the object deeper); don't dangle by the ankles.</li>
+      <li><b>Escalate:</b> not clearing → call <b>112/108</b>; unresponsive → start CPR.</li>
+    </ul>
+    <div class="flag"><b>⚑ Flag:</b> a Resuscitation Council UK 2025 update reportedly moves infant chest thrusts to a "thumb-encircling" technique — unverified this pass (PDF unreadable); use the established two-finger wording; the core 5+5 is unaffected.</div>
+  </div>
+
+  <h2><span class="ax">Axis 6</span> — Indian context <span class="badge b-hi">aspiration studies</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>Groundnut is the #1 aspirated food in Indian children</b> — convergent across three ENT series (Pondicherry 67.5%, Belgaum 27.3%, Eastern India 31.8%), mostly 6–18 months; "cheap and commonly offered loose to console children." Grind it or thin the butter.</li>
+      <li><b>Supari / areca nut — double danger:</b> documented in airways AND acutely toxic (seizures, liver injury). Keep away from young children entirely.</li>
+      <li><b>Other Indian hazards (mechanism-inferred):</b> chana/roasted gram, hard sev/namkeen/murukku, whole makhana, ber (jujube) pits, watermelon/custard-apple seeds.</li>
+    </ul>
+    <div class="flag"><b>⚑ No-laundering discipline.</b> No Indian-government/IAP choking-food directive was verified (IAP 2016 + a Sept-2025 Indian Pediatrics editorial both 403-blocked — fetch-failure, not proof of absence). The guidance is international; the Indian-ness is the foods + ENT studies. Four non-Indian studies (Turkish/Montenegrin/Sri Lankan/Iranian) that surfaced in "Indian" searches were caught and excluded.</div>
+  </div>
+
+  <h2><span class="ax">Axis 7</span> — Myths to correct <span class="badge b-hi">high</span></h2>
+  <div class="card">
+    <ul style="margin-top:0">
+      <li><b>"If the baby has teeth, they can chew nuts."</b> No — grinding molars don't arrive until ~16–29 months; front teeth only bite.</li>
+      <li><b>"Gagging means choking."</b> No — gagging is loud/normal (don't intervene); choking is quiet (act).</li>
+      <li><b>"Whole groundnuts make a child strong / are fine in small bites."</b> No — the top aspiration hazard under ~4–5; grind or thin. (Separate from early <i>smooth</i> peanut for allergy prevention, which is fine from ~6mo.)</li>
+      <li><b>"A round food is fine if halved."</b> No — quarter it lengthwise.</li>
+      <li><b>"I'll just watch them / pat their back."</b> Choking is silent and fast; prevention is the real defence; the response is head-down back blows, not casual upright back-pats.</li>
+    </ul>
+  </div>
+
+  <h2>Sources &amp; verification</h2>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr><th>Authority</th><th>Tier</th><th>Link</th></tr>
+      <tr><td>AAP/HealthyChildren — Choking Prevention</td><td>academy</td><td><a href="https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx">healthychildren.org</a></td></tr>
+      <tr><td>US CDC — Choking Hazards</td><td>regulator</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/choking-hazards.html">cdc.gov</a></td></tr>
+      <tr><td>UK NHS — Safe weaning / choking &amp; gagging / first aid</td><td>regulator</td><td><a href="https://www.nhs.uk/best-start-in-life/baby/weaning/safe-weaning/choking-and-gagging-on-food/">nhs.uk</a></td></tr>
+      <tr><td>HSE Ireland — Food choking risks</td><td>regulator</td><td><a href="https://www2.hse.ie/babies-children/child-safety/choking-strangulation-suffocation/food-choking-risks/">hse.ie</a></td></tr>
+      <tr><td>British Red Cross / MedlinePlus — infant choking technique</td><td>charity / regulator</td><td><a href="https://medlineplus.gov/ency/article/000048.htm">medlineplus.gov</a></td></tr>
+      <tr><td>Cureus 2018 — FB aspiration, Pondicherry (groundnut 67.5%)</td><td>primary (India)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6347440/">pmc</a></td></tr>
+      <tr><td>Indian J Otolaryngol HNS — Belgaum (groundnut; areca 9.1%)</td><td>primary (India)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3918306/">pmc</a></td></tr>
+      <tr><td>J Otolaryngol HNS 2020 — molar timing; 90% nut aspiration &lt;36mo</td><td>primary literature</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7547491/">pmc</a></td></tr>
+    </table>
+  </div>
+  <div class="flag"><b>⚑ Verification gaps (honest):</b> (1) Age window is an honest AAP(4)/NHS(5) split — app uses 5 (conservative). (2) The airway≈straw analogy is illustrative; ½-inch + fingernail are the load-bearing values. (3) RCUK-2025 thumb-encircling update unverified (PDF unreadable) — use two-finger; chest-thrust hand wording varies UK/US — pick one. (4) chana/sev/makhana/ber are mechanism-inferred, not individually studied; the Diwali loose-nut context is uncited. (5) <b>No verified Indian choking-food directive</b> (IAP 2016 + Sept-2025 editorial 403-blocked). (6) Four non-Indian "honesty trap" studies excluded.</div>
+
+  <div class="card tldr">
+    <strong>Surfacing recommendation (Maren) — feeds the guided-introduction model, not yet implemented</strong>
+    <p style="margin:8px 0 0">The choking set is <b>ONE combined record</b> (<code>choking hazards</code>, <code>choking-by-form</code> primary) — the category nature + the shared floor justify it, and the per-food cut rules live in <code>safeForm</code> so no per-entity guidance is dropped (Maren M-γ-1). It is the <b>first <code>choking-by-form</code>-PRIMARY render</b> — a <i>conditional</i> card whose lead is the form-gate ("cut it this way / whole waits until ~5") and whose emergency floor is <b>choking first aid</b> (back blows + chest thrusts), NOT anaphylaxis. That render needs the §9 polarity resolution registered in the milk polarity spec before wiring. Highest-value lines: the <b>gagging-vs-choking</b> distinction (Axis 4) and the <b>infant back-blows/chest-thrusts (no Heimlich under 1)</b> floor. Indian standout: <b>groundnut = #1 aspirated food</b> and <b>keep supari away from children</b>.</p>
+  </div>
+
+  <p class="foot">SproutLab · Care research brief · companion to <code>docs/research/choking-hazards-infant-safety.md</code> · generated 2026-06-02<br>
+  Research artifact — informational, not medical advice. Not yet wired into the app.</p>
+</div>
+</body>
+</html>

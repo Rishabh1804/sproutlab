@@ -415,7 +415,58 @@ window.FOOD_EFFECTS_MANIFEST = [
     lastReviewed:  '2026-06-02',
   },
 
-  // ── append the next food here (salt / the choking set …) ──
+  // ── food-effects-v2 P1c: the choking set — ONE combined record (the data-shape
+  //    decision, brief Appendix) ──
+  // foodClass: 'choking-by-form' PRIMARY — the FIRST standalone instance (today the class
+  // only rides SECONDARY to an allergen, e.g. peanut/tree-nut where whole = choking). The
+  // hazard is the FORM (round/hard/small/sticky), not allergy or toxin. Model: modify, don't
+  // ban — the per-food cut rules live in safeForm so no per-entity guidance is dropped (the
+  // Maren M-γ-1 lesson + the §7 single-combined precedent).
+  // THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS — severeSigns/seekCare carry back-blows
+  // + chest-thrusts + call-112, never adrenaline. reactionType:['choking'].
+  // RESOLVER SCOPE (Kael, at wiring): aliases the hazard foods that do NOT already have a
+  // record. PEANUT / TREE NUT keep their own records (already choking-by-form) — do NOT
+  // re-alias them here (collision). RENDER: choking-by-form-PRIMARY has never rendered
+  // standalone — needs the milk-spec §9 polarity resolution before wiring.
+  {
+    food:          'choking hazards',
+    aliases:       ['grape','grapes','whole grape','cherry tomato','cherry tomatoes','popcorn','hot dog','hotdog','sausage','hard candy','boiled sweet','lollipop','marshmallow','whole carrot','raw carrot','chana','roasted gram','bhuna chana','sev','namkeen','murukku','chakli','supari','areca nut','betel nut','makhana','fox nuts','ber','jujube','raisin','raisins','chewing gum'],
+    foodClass:     'choking-by-form',      // PRIMARY (first standalone) — the form IS the hazard
+    severity:      'caution',              // amber card chrome; the emergency floor renders via severeSigns
+    category:      'choking-hazard',
+    effect:        'airway obstruction (choking) by food form',
+    minMonth:      6,                      // modified / cut forms ok from solids start (~6mo)
+    chokingUntilYears: 5,                  // whole / hazard forms wait until ~5 (NHS/HSE-conservative)
+    thresholdBasis:'developmental-readiness',  // no grinding molars until ~16–29mo; chewing ~4
+    allergen:      false,
+    reactionType:  ['choking'],
+    headline:      'Cut it to make it safe — quarter grapes lengthwise, cut hot dogs lengthwise, grind nuts. Whole hazard foods wait until ~5 years.',
+    whyGood:       'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Change the form: cut to ≤½ inch (a child\'s fingernail), cook soft, grind, or thin.',
+    // NO earlyIntroBenefit — this is choking-by-form (a mechanical hazard), not an allergen to introduce early.
+    safeForm:      { ok:['grapes / cherry tomatoes / round fruit — QUARTER lengthwise (halving is not enough)','hot dogs / sausages — cut LENGTHWISE into strips, never coins/rounds','nuts — ground or flaked, or smooth nut butter thinned / spread thin (never a glob)','hard raw vegetables & fruit (carrot, apple) — cook soft, grate, or slice very thin','cheese / meat — thin strips, not chunks; raisins — chopped','everything ≤½ inch (~1.25 cm), soft enough to squash between finger and thumb'],
+                     never:['whole grapes, whole nuts/groundnuts, popcorn, hard/round candy, marshmallows, chewing gum, whole seeds — for a child under ~5','SUPARI / areca nut — a choking AND toxicity hazard; keep away from young children entirely','hot dogs/sausages cut into round coins (the classic airway plug)','hard raw carrot/apple chunks; thick globs/spoonfuls of nut butter'],
+                     note:'The hazard is the form. Whole nuts/popcorn not under 5 (NHS); high-risk round/firm foods until ~4 (AAP) — the app uses 5 (conservative). A child has no grinding molars until ~16–29 months. (Whole peanut/tree nut have their OWN records — this covers the rest of the choking set.)' },
+    howToIntroduce:{ amount:'Pieces no larger than ½ inch (~1.25 cm) / a child\'s small fingernail; round foods cut so they can\'t plug the airway.',
+                     when:'Modified/cut forms from ~6 months; whole hazard forms wait until ~5 years.',
+                     watch:'Child seated UPRIGHT, never eating while walking, playing, crawling or lying down; always supervised at every meal.',
+                     highRiskNote:'' },
+    myth:          { claim:'Gagging means my baby is choking.',
+                     truth:'No — gagging is LOUD (gurgle/cough), normal and protective while learning to eat; let it resolve. Choking is QUIET — silent or no cough, can\'t breathe. THAT is the emergency. On darker skin, check the gums, inside the lips, or nailbeds for blue, not skin colour.' },
+    watchFor:      ['gagging — LOUD, normal, protective: let it resolve, don\'t intervene','an effective (forceful) cough: encourage coughing, don\'t intervene'],
+    severeSigns:   ['silent or no cough; can\'t breathe, cry, or make noise','turning blue (check gums, inside lips, nailbeds on darker skin)','clutching the throat, distress, or going limp'],
+    timeCourse:    'sudden, during eating; choking can be silent and fast — prevention (right-sized food + upright + supervision) is the primary defence',
+    seekCare:      'CHOKING IS A MECHANICAL EMERGENCY (not an allergy — NO adrenaline). If the cough is effective, encourage coughing. If silent / can\'t breathe: BABY UNDER 1 — alternate 5 back blows (face-down, head low, between the shoulder blades) and 5 chest thrusts (2 fingers, mid-chest below the nipple line); NEVER abdominal thrusts under 1. CHILD OVER 1 — 5 back blows + 5 abdominal thrusts. No blind finger sweep. Not clearing → call 112/108; unresponsive → start CPR.',
+    breastfeedingSafe: true,
+    culturalNote:  'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one series), commonly handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep away from children. Other Indian hazards: chana/roasted gram, hard sev/namkeen/murukku, whole makhana, ber (jujube) pits. NOTE: no Indian-government / IAP choking-food directive was verified — the guidance is international (AAP/NHS/CDC/HSE); the Indian-ness is the food examples + ENT aspiration studies.',
+    confidence:    'high',
+    sources:       ['AAP (Choking Prevention + 2010 policy)','US CDC','UK NHS','HSE Ireland','Resuscitation Council UK','British Red Cross','MedlinePlus','Cureus 2018 (groundnut, India)','Indian J Otolaryngol HNS (Belgaum)','J Otolaryngol HNS 2020 (molar timing)'],
+    dashboard:     'choking-hazards-infant-safety.visual.html',
+    brief:         'choking-hazards-infant-safety.md',
+    longform:      'choking-hazards-infant-safety.html',
+    lastReviewed:  '2026-06-02',
+  },
+
+  // ── append the next food here (salt / sugar …) ──
 ];
 
 /* Node/CommonJS convenience (so the hub OR a build step can require it). */
