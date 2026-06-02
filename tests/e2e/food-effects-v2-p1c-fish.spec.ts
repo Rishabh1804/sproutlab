@@ -86,6 +86,32 @@ test.describe('food-effects-v2 P1c — fish', () => {
     expect(r.salmon).toBe(6);
   });
 
+  test('M-F-1: high-mercury / ambiguous names do NOT fire the green encourage verdict', async ({ page }) => {
+    // Maren's blocking finding (folded): logging a high-mercury species name must not resolve
+    // to the fish encourage card (a green "good to introduce early" verdict). surmai/seer (king
+    // mackerel) + bare mackerel/tuna are documented in safeForm.never but NOT aliased, so they
+    // fire no card at all — never a false-safe one. Low-mercury names still resolve.
+    const r = await page.evaluate(() => ({
+      surmai:  !!getFoodEffect('surmai'),
+      seer:    !!getFoodEffect('seer fish'),
+      kingmac: !!getFoodEffect('king mackerel'),
+      mackerel:!!getFoodEffect('mackerel'),
+      tuna:    !!getFoodEffect('tuna'),
+      // low-mercury names still fire the encourage card:
+      bangda:  !!getFoodEffect('bangda'),
+      indMac:  !!getFoodEffect('indian mackerel'),
+      salmon:  !!getFoodEffect('salmon'),
+    }));
+    expect(r.surmai, 'surmai (king mackerel, high-mercury) must not fire the encourage card').toBe(false);
+    expect(r.seer).toBe(false);
+    expect(r.kingmac).toBe(false);
+    expect(r.mackerel, 'bare mackerel is ambiguous (king vs indian) — no green verdict').toBe(false);
+    expect(r.tuna, 'bare tuna is ambiguous (light vs bigeye/albacore) — no green verdict').toBe(false);
+    expect(r.bangda, 'indian mackerel / bangda (low-mercury) still resolves').toBe(true);
+    expect(r.indMac).toBe(true);
+    expect(r.salmon).toBe(true);
+  });
+
   test('word-boundary safety: shellfish does NOT resolve to the finfish record', async ({ page }) => {
     const r = await page.evaluate(() => ({
       shellfish: !!getFoodEffect('shellfish'),

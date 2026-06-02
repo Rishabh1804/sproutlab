@@ -2433,7 +2433,11 @@ const AGE_RULES = {
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
   // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
   // (one-resolver doctrine, V-M-205-B1). A vegetarian/Jain household not giving fish is valid.
-  'fish':     { minMonth:6, aliases:['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','mackerel','sardine','mathi','salmon','tuna','surmai','seer fish','machhli','machli','fish curry','fish fry'],
+  // aliases mirror the FOOD_EFFECTS record (one-resolver doctrine) — incl. the M-F-1 trim:
+  // high-mercury/ambiguous names (surmai/seer fish/bare mackerel/bare tuna) are NOT gated here
+  // either, so the gate and the card agree per name (both absent → a logged "surmai" gets no
+  // green verdict AND no gate badge, the safest neutral state).
+  'fish':     { minMonth:6, aliases:['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','sardine','mathi','salmon','machhli','machli','fish curry','fish fry'],
                 reason:'Fine from around 6 months — well-cooked, deboned, low-mercury fish (salmon, sardine, bangda, rohu). Avoid high-mercury fish and remove every bone. A vegetarian diet can meet a baby\'s needs, so not giving fish is a valid choice.' },
   'chicken':  { minMonth:7, reason:'Can introduce after 7 months as puree. Note: this family follows vegetarian diet.' },
   'egg':      { minMonth:7, reason:'Start with well-cooked yolk at 7+ months. White can be more allergenic.' },
@@ -2699,7 +2703,14 @@ const FOOD_EFFECTS = {
   'fish': {
     foodClass:  ['allergen-introduce-early', 'choking-by-form'],
     severity:   'caution',
-    aliases:    ['finfish', 'rohu', 'katla', 'catla', 'pomfret', 'bhetki', 'bangda', 'indian mackerel', 'mackerel', 'sardine', 'mathi', 'salmon', 'tuna', 'surmai', 'seer fish', 'machhli', 'machli', 'fish curry', 'fish fry'],
+    // M-F-1 (Maren, blocking — folded): the app aliases are the SAFE-TO-ENCOURAGE subset of
+    // the manifest's research aliases. A logged name that resolves here fires the GREEN
+    // "introduce early" verdict (diet.js introEarlyOk), so HIGH-MERCURY / ambiguous names are
+    // deliberately NOT aliased — 'surmai'/'seer fish' (king mackerel, high-mercury), bare
+    // 'mackerel' (ambiguous: king vs indian), bare 'tuna' (ambiguous: light vs bigeye/albacore).
+    // They live ONLY in safeForm.never as the in-card reference, so they never auto-affirm a
+    // high-mercury fish as a safe early food. 'indian mackerel'/'bangda' (low-mercury) are kept.
+    aliases:    ['finfish', 'rohu', 'katla', 'catla', 'pomfret', 'bhetki', 'bangda', 'indian mackerel', 'sardine', 'mathi', 'salmon', 'machhli', 'machli', 'fish curry', 'fish fry'],
     effect:     'food allergy (often lifelong) + mercury (species selection) + bones (choking)',
     title:      'Fish — good to introduce early, deboned and low-mercury',
     why:        'Around 6 months, well-cooked, deboned, low-mercury fish is a valuable early food — not one to delay. Oily fish (salmon, sardine, bangda) is a top source of omega-3 (DHA) for brain and eye development. Choose low-mercury fish, cook it through, and remove every bone. (A vegetarian or Jain household not giving fish is making a valid choice — a vegetarian diet can meet a baby\'s needs.)',
