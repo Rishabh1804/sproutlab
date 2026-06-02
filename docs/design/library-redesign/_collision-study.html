@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!-- TEMP decision-aid (not a committed design record) — subtle fading domain tint (hero-style) -->
+<html lang="en" data-zoom="default">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../split/styles.css">
+<style>
+  html,body{background:#e7dbd1;} body{margin:0;font-family:'Nunito',sans-serif;color:var(--text);}
+  .r-phone{max-width:412px;margin:0 auto;background:var(--bg,#faf6f3);min-height:100vh;padding:var(--sp-16);box-sizing:border-box;box-shadow:0 0 40px rgba(0,0,0,0.08);}
+  .r-title{font-family:'Fraunces',serif;font-size:var(--fs-2xl);font-weight:600;margin:0 0 2px;}
+  .r-lede{font-size:var(--fs-sm);color:var(--mid);margin:0 0 var(--sp-16);line-height:1.5;}
+  .r-ab{font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin:var(--sp-20) 0 var(--sp-6);}
+  .r-caption{font-size:var(--fs-2xs);color:var(--light);font-style:italic;margin:var(--sp-6) 0 var(--sp-8);padding-left:var(--sp-4);border-left:2px solid var(--card-border);line-height:1.5;}
+  .lib-band{border-radius:var(--r-2xl);padding:var(--sp-12) var(--sp-12) var(--sp-16);margin-bottom:var(--sp-8);}
+  .band-sage{background:var(--sage-light);} .band-none{background:transparent;}
+  .lib-band-label{display:flex;align-items:center;gap:var(--sp-8);font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);line-height:var(--lh-snug);margin:var(--sp-2) 0 var(--sp-10);padding-left:var(--sp-4);color:var(--tc-sage);}
+  .lib-band-label .zi{width:var(--icon-md);height:var(--icon-md);}
+  .lib-shelf-row{display:flex;flex-direction:column;gap:var(--sp-10);}
+  .lib-book{display:flex;align-items:center;gap:var(--sp-12);width:100%;text-align:left;border-radius:var(--r-lg);padding:var(--sp-12) var(--sp-16);min-height:44px;box-shadow:0 1px 8px var(--shadow);border-left:var(--accent-w,3px) solid var(--sage);}
+  .lib-book-body{flex:1;min-width:0;}
+  .lib-book-title{font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);color:var(--text);line-height:var(--lh-snug);}
+  .lib-book-glance{font-size:var(--fs-sm);color:var(--mid);margin-top:var(--sp-4);display:flex;align-items:center;gap:var(--sp-6);}
+  .lib-book-glance .zi{width:var(--icon-sm);height:var(--icon-sm);flex:0 0 auto;}
+  .lib-book-go{flex:0 0 auto;color:var(--light);} .lib-book-go .zi{width:var(--icon-base);height:var(--icon-base);}
+
+  /* === FLAT FILL (what I did before — wrong) === */
+  .flat-nonveg{background:var(--rose-light);}
+  /* === SUBTLE FADING TINT (hero-style) — mostly cream, domain pooling into the far corner === */
+  .tint-nuts  {background:linear-gradient(135deg, var(--card-bg) 38%, var(--lav-light));}
+  .tint-nonveg{background:linear-gradient(135deg, var(--card-bg) 38%, var(--rose-light));}
+  .tint-grains{background:linear-gradient(135deg, var(--card-bg) 38%, var(--sage-light));}
+  .tint-dairy {background:linear-gradient(135deg, var(--card-bg) 38%, var(--sky-light));}
+  /* cream baseline */
+  .fill-cream{background:var(--card-bg);}
+</style></head>
+<body class="libr-render">
+<svg style="display:none;">
+<symbol id="zi-sprout" viewBox="0 0 24 24"><path d="M12 22v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8c0-3 2.5-5 5-6c2.5 1 5 3 5 6c0 3.5-3 6-5 7c-2-1-5-3.5-5-7z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14c-3-1-5-4-4-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-spoon" viewBox="0 0 24 24"><path d="M12 3c2.5 0 4.5 2 4.5 4.5S14.5 12 12 12s-4.5-2-4.5-4.5S9.5 3 12 3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+<div class="r-phone">
+  <h1 class="r-title">Subtle fading tint — hero-style</h1>
+  <p class="r-lede">A fade (mostly cream → a whisper of the food-domain colour into one corner), not a flat fill. Peanut=lav · Egg/Fish=rose · Soy=sage.</p>
+
+  <div class="r-ab">flat fill (before) vs subtle fade (now) — one pill</div>
+  <button class="lib-book flat-nonveg"><span class="lib-book-body"><span class="lib-book-title">Egg — flat --rose-light fill</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>solid block</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+  <div style="height:8px"></div>
+  <button class="lib-book tint-nonveg"><span class="lib-book-body"><span class="lib-book-title">Egg — subtle rose fade</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>cream → whisper of rose</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+  <p class="r-caption">The fade keeps the pill mostly cream; the domain colour is a soft corner wash, like a hero card. Far calmer than the block.</p>
+
+  <div class="r-ab">A · subtle domain fades, NEUTRAL band, sage polarity rail</div>
+  <div class="lib-band band-none">
+    <div class="lib-band-label"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early</div>
+    <div class="lib-shelf-row">
+      <button class="lib-book tint-nuts"><span class="lib-book-body"><span class="lib-book-title">Peanut — introduce early, safe form</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-lav)"><use href="#zi-spoon"/></svg>Nuts &amp; seeds</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book tint-nonveg"><span class="lib-book-body"><span class="lib-book-title">Egg — introduce early, well-cooked</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>Non-veg · eggs</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book tint-nonveg"><span class="lib-book-body"><span class="lib-book-title">Fish — introduce early, deboned</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>Non-veg · seafood</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book tint-grains"><span class="lib-book-body"><span class="lib-book-title">Soy — fine to introduce early, soft tofu</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-sage)"><use href="#zi-spoon"/></svg>Grains &amp; legumes</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+  <p class="r-caption">Each pill now carries its food domain as a gentle fade; the sage rail + header keep the safety read. No band wash, so no rose-on-green clash.</p>
+
+  <div class="r-ab">B · same fades INSIDE the sage polarity band</div>
+  <div class="lib-band band-sage">
+    <div class="lib-band-label"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early</div>
+    <div class="lib-shelf-row">
+      <button class="lib-book tint-nuts"><span class="lib-book-body"><span class="lib-book-title">Peanut — introduce early, safe form</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-lav)"><use href="#zi-spoon"/></svg>Nuts &amp; seeds</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book tint-nonveg"><span class="lib-book-body"><span class="lib-book-title">Egg — introduce early, well-cooked</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>Non-veg · eggs</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book tint-grains"><span class="lib-book-body"><span class="lib-book-title">Soy — fine to introduce early, soft tofu</span><span class="lib-book-glance"><svg class="zi" style="color:var(--tc-sage)"><use href="#zi-spoon"/></svg>Grains &amp; legumes</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+  <p class="r-caption">With the band wash back, the rose fade on egg fights the green band again — softer than the flat block, but still two tint systems stacked. Neutral band (A) reads cleaner.</p>
+</div>
+</body></html>
