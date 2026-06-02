@@ -4079,7 +4079,7 @@ const _PLANT_MILK_NUT = ['almond', 'badam', 'cashew', 'kaju'];
 function _isPlantMilkDrinkHost(name) {
   const n = String(name || '').toLowerCase();
   if (!/\b(milk|doodh)\b/.test(n)) return false;
-  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t + '\\b').test(n));
+  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
 }
 
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so

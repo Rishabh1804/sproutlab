@@ -67,8 +67,10 @@ test.describe('food-effects-v2 P1c — milk polarity cards', () => {
   test('(b) cow milk pins the CMPA severe strip with a dairy-scoped header and the emergency line', async ({ page }) => {
     await expect(page.locator('#dietMilkIntro .cons-severe')).toHaveCount(1);
     await expect(page.locator('#dietMilkIntroBody .cons-severe')).toHaveCount(0); // pinned, never folds
-    // V-V-4 scope header separates the ALLERGY floor from the TIMING gate.
-    await expect(page.locator('#dietMilkIntro .cons-severe-h')).toContainText(/reacts to dairy/i);
+    // V-V-4 scope header separates the ALLERGY floor from the TIMING gate, scoped to the
+    // SEVERE path (M-M-2 — not "any reaction is an emergency").
+    await expect(page.locator('#dietMilkIntro .cons-severe-h')).toContainText(/severe/i);
+    await expect(page.locator('#dietMilkIntro .cons-severe-h')).toContainText(/dairy/i);
     // the emergency action: call 112/108 + the antihistamine-doesn't-treat-anaphylaxis line.
     const emg = page.locator('#dietMilkIntro .enc-emergency');
     await expect(emg).toContainText(/112|108/);
@@ -180,6 +182,26 @@ test.describe('food-effects-v2 P1c — milk polarity cards', () => {
     expect(r.cashewMilk).toBe('substitute-caveat');
     expect(r.almond, 'the bare nut still resolves to the tree-nut introduce-early record').toContain('allergen-introduce-early');
     expect(r.badam).toContain('allergen-introduce-early');
+  });
+
+  // ── M-M-1 (Maren, blocking): the redirect must NOT drop the tree-nut allergen caution ──
+  test('M-M-1: almond/cashew-milk detail sheet shows BOTH the inform line AND the tree-nut allergen', async ({ page }) => {
+    const sheets = await page.evaluate(() => {
+      const read = (n: string) => { renderFoodDetailSheet(n); return document.getElementById('foodDetailBody')!.innerHTML.toLowerCase(); };
+      return { almond: read('almond milk'), cashew: read('cashew milk') };
+    });
+    // the substitute-caveat (inform) axis is present…
+    expect(sheets.almond).toMatch(/substitute|arsenic|not a milk/);
+    // …AND the tree-nut allergen axis is preserved (the redirect must not silently drop it).
+    expect(sheets.almond, 'almond milk must still warn it contains a tree-nut allergen').toMatch(/tree.?nut|almond/);
+    expect(sheets.cashew).toMatch(/tree.?nut|cashew|allergen/);
+  });
+
+  // ── K-M-1 (Kael, gate↔card parity): coconut milk drink takes the plant gate, not cow copy ──
+  test('K-M-1: a non-nut plant alias (coconut milk drink) gets the plant gate, not cow curd/paneer copy', async ({ page }) => {
+    const reason = await page.evaluate(() => _fdAgeRule('coconut milk drink')?.reason || '');
+    expect(reason.toLowerCase()).not.toMatch(/curd|paneer/);     // not the cow 'milk' carve-out
+    expect(reason.toLowerCase()).toMatch(/substitute|fortified|arsenic/);
   });
 
   // ── _effPolarity unit contract (the §3 table) ──

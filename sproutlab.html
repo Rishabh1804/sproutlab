@@ -23816,7 +23816,7 @@ const _PLANT_MILK_NUT = ['almond', 'badam', 'cashew', 'kaju'];
 function _isPlantMilkDrinkHost(name) {
   const n = String(name || '').toLowerCase();
   if (!/\b(milk|doodh)\b/.test(n)) return false;
-  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t + '\\b').test(n));
+  return _PLANT_MILK_NUT.some(t => new RegExp('\\b' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n));
 }
 
 // FOOD_EFFECTS consequence record for a food, or null. Uses _lookupByFoodName so
@@ -38723,12 +38723,15 @@ function _fdAgeRule(name) {
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
   const rule = _lookupByFoodName(AGE_RULES, name);
-  // Plant-milk drink host (almond/badam/cashew milk·doodh): the gate mirror of the
-  // getFoodEffect redirect — these resolve to the bare 'milk' (cow) gate by word-boundary,
-  // inheriting cow-milk reason copy (curd/paneer carve-out, no rice-arsenic). Redirect to the
-  // dedicated 'plant milk' gate so the card and the gate agree (one-resolver doctrine).
-  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk']
-      && typeof _isPlantMilkDrinkHost === 'function' && _isPlantMilkDrinkHost(name)) {
+  // K-M-1 (Kael, option b — the truer one-resolver expression): a name whose CARD resolves to
+  // the plant-milk record but whose GATE fell to the bare cow 'milk' key must take the plant-milk
+  // gate, so card and gate agree. This catches the nut-drink redirect (almond/cashew milk) AND
+  // 'coconut milk drink' / any future non-nut plant alias the nut-token proxy would miss. Gated
+  // on `rule === AGE_RULES['milk']` so the dedicated plant gates (oat milk 12mo / rice milk +
+  // rice drink 60mo arsenic) — which resolved to their OWN entry above — are left untouched.
+  if (typeof AGE_RULES !== 'undefined' && AGE_RULES['plant milk'] && rule === AGE_RULES['milk']
+      && typeof getFoodEffect === 'function' && typeof FOOD_EFFECTS !== 'undefined'
+      && getFoodEffect(name) === FOOD_EFFECTS['plant milk']) {
     return AGE_RULES['plant milk'];
   }
   // M-F-1 (Cipher Edict-V completion): the same bare-'fish'-KEY leak that fed the
@@ -38906,6 +38909,17 @@ function renderFoodDetailSheet(name) {
     const pol = FD_POLARITY[fdPol] || FD_POLARITY.warn;
     html += `<div class="fd-flag ${pol.cls}">${zi(pol.ic)} <span><strong>${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
     html += fdFloor; // .cons-severe / .cons-watch / .cons-seek (shared, already-styled)
+    // M-M-1 (Maren, blocking): a plant-milk DRINK redirected to the plant-milk record
+    // (almond / cashew / badam milk) still CONTAINS its tree-nut allergen, but the inform
+    // floor masks the allergen axis (the else-if below is dead when fdFloor is truthy), so the
+    // tree-nut ALLERGENS note would silently drop. Surface it alongside the inform flag, so the
+    // sheet shows BOTH axes — "not a substitute under 1" AND "contains almond, a tree-nut
+    // allergen". Scoped to the redirect target (plant milk carries no ALLERGENS note of its own,
+    // so any `allerg` here came from a DIFFERENT food); other records carry their allergen in
+    // their own floor, so this never double-prints.
+    if (typeof FOOD_EFFECTS !== 'undefined' && fdEff === FOOD_EFFECTS['plant milk'] && allerg) {
+      html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>Allergen.</strong> ${escHtml(allerg)}</span></div>`;
+    }
   } else if (allerg) {
     // A milder allergen with no FOOD_EFFECTS record (kiwi, strawberry, oats …):
     // informational + calm, never the rose alarm. Introduce carefully, watch.
@@ -39192,7 +39206,9 @@ function renderDietMilkIntro() {
       // (§6/M-1), with the V-V-4 class-aware scope header (separates the ALLERGY floor
       // from the TIMING gate). Hand-built (not _severeFloorHtml) so the header is scoped
       // and the mild watch-fors drop to the calm body instead.
-      cPin += _milkSevereStrip(cow, 'If your baby reacts to dairy, it\'s an emergency');
+      // M-M-2 (Maren): scope to the SEVERE path — "reacts to dairy" over-read as any reaction
+      // being an emergency, contradicting the mild-path the seekCare line and body watch-fors draw.
+      cPin += _milkSevereStrip(cow, 'A severe reaction to dairy is an emergency');
       // BODY (collapsible): how-to (after-12mo) → mild watch-fors → myth.
       var chti = cow.howToIntroduce || {};
       if (chti.amount || chti.when || chti.watch) {
