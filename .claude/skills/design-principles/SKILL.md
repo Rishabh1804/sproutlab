@@ -53,15 +53,20 @@ chart cold-start wins. See `docs/DESIGN_PRINCIPLES.md` §Animation Foundation.
 `zi()` SVG sprite only — **no emojis (HR-1)**. `zi(name)` → `<svg class="zi"><use
 href="#zi-{name}"/></svg>`, set via innerHTML (HR-7).
 
-### Hard Rules — zero tolerance (§3, mirrored in CLAUDE.md HR-1..HR-12)
+### Hard Rules — zero tolerance (union of `DESIGN_PRINCIPLES.md` §3 + `CLAUDE.md` §Hard Rules)
 No emojis · no inline styles · no inline handlers (`data-action` only) · escHtml at every
 render boundary · all spacing/font/radius via tokens (no raw px) · domain color on every
-surface · no ellipsis truncation · chip text wraps · Math.floor for currency ·
-timezone-safe dates · stubs show "Coming soon" via `showQLToast()`.
+surface · no ellipsis truncation · chip text wraps · no persistent editing in overlays ·
+Math.floor for currency · timezone-safe dates · stubs show "Coming soon" via `showQLToast()`.
+
+> **Numbering caveat:** the two docs number their HRs *differently* (e.g. CLAUDE.md HR-9 =
+> "post-build QA audit"; DESIGN_PRINCIPLES.md HR-9 = "no persistent editing in overlays").
+> Any `HR-N` tag in this skill follows **CLAUDE.md's** §Hard Rules table (the policy floor).
+> Read the rule by name, not number, and check both docs.
 
 ### Tokens (§7) & UI systems (§5)
 Spacing `--sp-*` · font-size `--fs-*` · radius `--r-*` · icon `--icon-*` · ease `--ease-*`.
-4-tier card system, section labels, overlays (no persistent editing — HR-9), chips.
+4-tier card system, section labels, overlays (no persistent editing), chips.
 
 ## How to use
 
