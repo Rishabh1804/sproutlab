@@ -45,6 +45,54 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Rule:** Every new card, section, or feature must use one of these domain colors. No ad-hoc hex values in innerHTML strings.
 
+#### Tint System
+
+**Definition.** A *tint* is how a surface signals which domain it belongs to without competing with its content — domain identity carried by the background instead of by text or icon. Tint is the background member of the domain triad (accent = structural/border member, `--tc-*` = text member). It is **not a single scale.** The app uses **two families of tint across four registers**, and the "Light BG" column of the Domain Colors table is only *one* of them.
+
+**Two laws hold across all four registers** — write these down because both are invisible in the token names and easy to get backwards (a wrong call here is exactly how a wash ends up "barely visible"):
+
+1. **Light/dark hue-swap.** Light mode tints with the **pale accent** hue (`--sage` `#b5d5c5` …); dark mode tints with the **deep `--tc`** hue (`rgba(58,112,96,…)` …). *Never the same hue in both modes.* A pale-accent wash over a dark surface muddies to grey; a deep-hue wash over cream reads as dirt. The token name doesn't tell you which — the `[data-theme="dark"]` block does.
+2. **A tint is never a bare fill.** Every legible tint travels with a companion — a `border-left` accent, a 5px stripe, and/or `--tc-*` text. A domain wash *alone* on a card does not read (especially `--*-light`, which sits at ~91% L). If you drop a tint with no border and no domain text, you have built the invisible case.
+
+---
+
+**Family 1 — Cream-card tints** *(card stays cream; the tint is layered over `--warm`)*
+
+- **Hero cards** (`.card.card-hero.*`, `styles.css:5491–5595`). The section's top card: a **two-domain directional gradient** body (`135deg`, full `--*-light` strength) **plus a 5px top stripe** (`::before`) that is a saturated accent-pair gradient. Each pairing is **semantic, not decorative** — sage→amber = nutrition (diet), indigo→lavender = night/calm (sleep), lavender→sky = clinical/trust (medical), sage→lavender = achievement (milestones), amber→peach = gut (poop), rose→peach = body (growth), peach→lavender = analysis (insights); home is the signature rose→peach→sage→lavender rainbow. In **dark mode** the body composites warm overlays over `--surface` and goes moody/low-contrast — **the un-inverted bright stripe becomes the primary section signal** (it is the fallback identity layer, which is why `::before` is *not* dark-overridden).
+- **Ambient body wash** (`#tab-* .card`, light `styles.css:5993–5997`, dark `:7634–7638`). Every *non-hero* card in a tab: `--warm` + one faint domain wash @ **8–10% α**. Faint **by design** — this is warmth, not a label. Per-tab domain map:
+
+  | Tab | Domain | Light hue | Dark hue |
+  |---|---|---|---|
+  | diet | **sage** | accent @ .10 | deep @ .08 |
+  | sleep | **indigo** | accent @ .10 | deep @ .08 |
+  | poop | **amber** | accent @ .08 | deep @ .08 |
+  | medical | **rose** | accent @ .08 | deep @ .08 |
+  | milestones | **lavender** | accent @ .08 | deep @ .08 |
+
+  **Coverage gap (deliberate):** `home` and `info/intelligence` body cards take **no** ambient wash — home leans on its hero, info-tab cards are the Receded register below. A new card in those tabs is *supposed* to be untinted; don't "fix" it.
+
+**Family 2 — Colored-card tints** *(the wash IS the surface)*
+
+- **Signaling** (`--surface-*`, defs `styles.css:81–86` light / `:5269–5274` dark). The wash that reads on its own: the **deep / `--tc` hue at ~10–12% α** (`--surface-sage: rgba(61,122,96,0.12)` — note: deep hue, *not* the pale accent). Use when the surface itself must say "domain X." Always paired with a `border-left` accent (e.g. `.enc-benefit`, `.cons-severe`, `.combo-result.caution`).
+- **Receded** (`--*-light` flat fill, defs `styles.css:31–62`). The palest tier and the **most-used** fill (130 `--sage-light` sites): info-cards, pills, chips. **Only valid inside a bordered card with `--tc-*` text** — it carries no signal alone (Law 2). This is the Info-tab "cool tint, dashed border" tier (`styles.css:2537`).
+
+---
+
+**Component tint aliases.** Where a component is colour-agnostic and inherits its domain from a parent (`data-domain`) or variant class, it reads its wash through an alias so one rule serves every domain:
+
+| Alias | Defined | Resolves to | Consumed by |
+|---|---|---|---|
+| `--al-tint` | `styles.css:9412–9416` (+ default `:6358`) | a `--*-light` per `data-domain` | Activity-Log rows, milestone bulk/domain chips |
+| `--vd-tint` | `styles.css:4115–4121` | a `--*-light` per `.viz-detail-*` variant | viz-detail panels |
+
+**Developmental-domain remap (`--al-tint`).** The Activity-Log alias is the one place tint crosses *namespaces*: the five **developmental** domains (`data-domain="motor|language|cognitive|social|sensory"`) remap onto **colour** domains — Motor→sage, Language→lavender, Cognitive→sky, Social→peach, Sensory→amber (`styles.css:9408–9416`). Intentional, not a collision: a developmental domain is not a colour domain, and the mapping is documented at its definition so a Governor auditing a `data-domain` block knows it is a deliberate cross-walk, not an ad-hoc pick.
+
+**Authoring rule.** Never hand-mix a wash at the call site. Reach for the register that matches the job — Hero gradient for a section header, Ambient for a body card in a tinted tab, Signaling `--surface-*` when the surface must read alone, Receded `--*-light` for a bordered info-card — or a component alias. No raw light-hex (`#e8f5ef`, `#f0ebfb`, …) in CSS or innerHTML — that is the 8th-instance `running-beats-reading` drift class (see Polish-3/-4 `--lav-light` corrective, line ~147).
+
+**Peach is accent-only — no `--tc-*` text token (light _or_ dark).** The `—` in the `--tc-*` column of the Domain Colors table (and in both Text columns of the dark-mode table, line ~594) is intentional: peach is reserved for warmth/accent surfaces (outing planner, ambient borders), never for text-on-wash. So `--peach-light` is a *backing* tint only — do not place domain-coloured body text on it. If a future surface genuinely needs peach text-on-wash, that token must be **defined first** (light + dark), not improvised at the call site.
+
+**Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from any register above — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint system; do not "tokenize" them into `--*-light`.
+
 #### Domain → Element Assignments
 
 | UI Element | Domain Color | Why |
