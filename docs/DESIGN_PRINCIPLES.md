@@ -93,6 +93,34 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from any register above — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint system; do not "tokenize" them into `--*-light`.
 
+#### Food-Domain Colour & the Polarity Collision
+
+There is a **second** colour system in the app, orthogonal to the 7 UI domains: every food carries a **food-category colour**. It is shipped and load-bearing, but until now undocumented.
+
+**The taxonomy** (`FOOD_TAX[*].color`, `data.js:2045`):
+
+| Food category | Colour | | Food category | Colour |
+|---|---|---|---|---|
+| grains & cereals (incl. legumes) | **sage** | | nuts & seeds | **lav** |
+| fruits | **rose** | | spices | **amber** |
+| vegetables | **peach** | | non-veg (eggs, seafood, meat) | **rose** |
+| dairy & fats | **sky** | | | |
+
+Three shipped maps resolve a category colour to CSS (`data.js:2114–2116`): `_foodColorMap` (→ `--*-light` fill), `_foodBorderMap` (→ `rgba()` border), `_foodTextMap` (→ text colour). A food pill keys its colour off `FOOD_TAX.color`, **not** off any per-pill hex.
+
+**The collision (the load-bearing constraint).** Food-category colour and **safety-polarity** colour (sage = "introduce early", amber = "right time/form", rose = "wait / danger", sky = "good to know") **share the same 7 tokens with opposite meanings**. The worst overlap: **`rose` means both "danger/wait" *and* "non-veg / fruit."** So a food-domain-coloured egg or fish pill (non-veg → rose) dropped into a sage "introduce early" zone reads as *"this food is unsafe"* — the exact opposite of the truth. **You cannot wash a surface with both systems at once.**
+
+**The resolution — one structural channel, one whisper channel.** When both dimensions must appear on the same element (e.g. a Library food tile), they split across two *visually distinct* channels, and **safety always wins the structural channel**:
+
+| Dimension | Channel | Treatment |
+|---|---|---|
+| **Safety polarity** (leads) | structural | left **rail** (`border-left`, the polarity accent) + the **section header** in the polarity `--tc-*` |
+| **Food domain** (rides under) | a subtle **fade** | a hero-style `background-image` whisper over a solid `--card-bg` — pale **accent** ~22% in light, deep **`--tc` hue** ~16% in dark (the §Tint hue-swap law) |
+
+Because the food-domain channel is a *whisper*, not a wash, the rose on a non-veg pill never competes with the polarity rail/zone — it's a soft corner glow, not an alarm. **Rule of thumb:** if two colour systems must coexist on one surface, give the safety-critical one the structural channel (rail/border/header/icon) and demote the other to a sub-perceptual fade — never two competing fills or two competing washes. The one true alarm (the Emergency Deck's loud rose) stays louder than every tint, in either mode.
+
+*(Worked design record: `docs/design/library-redesign/03-*` — the Library's polarity grouping + per-food domain whisper, light and dark.)*
+
 #### Domain → Element Assignments
 
 | UI Element | Domain Color | Why |
