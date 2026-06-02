@@ -4001,18 +4001,20 @@ function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   const ageM = ageAt().months;
-  // V-M-19 amendment: respect the user's diet preference. If settings has
-  // dietPref === 'veg', non-veg foods must not surface as "Foods to Try Next."
-  // A parent who set a dietary boundary expects the app to honor it everywhere.
-  const isVeg = (typeof getDietPref === 'function') && getDietPref() === 'veg';
+  // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
+  // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
+  // expects the app to honor it everywhere. (4-class gate: veg surfaces no nonveg sid;
+  // eggetarian only eggs; pescatarian eggs + fish; nonveg all.)
+  const hasGate = (typeof _dietAllowsNonvegSid === 'function');
 
   // Collect all taxonomy foods not yet introduced
   const candidates = [];
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
-    // Diet-preference gate
-    if (isVeg && item.pid === 'nonveg') return;
+    // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
+    // is in the current preference's allowed set.
+    if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
     // Age gate: skip nuts for <8m (whole), skip honey for <12m
     if (key === 'honey' && ageM < 12) return;
     if (key === 'peanut' && ageM < 8) return;

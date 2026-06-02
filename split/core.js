@@ -4480,6 +4480,71 @@ function getDietPref() {
   return localStorage.getItem('ziva_diet_pref') || 'veg';
 }
 
+// ── Dietary-preference SURFACING GATE (4 classes; vegan deferred to its own spec) ──
+// The preference filters which foods are PROACTIVELY surfaced/recommended (the Library
+// grid + category modal, the meal-search dropdowns, the "Foods to Try Next" list, the
+// combo-checker preference note). It maps the stored `ziva_diet_pref` to the set of
+// FOOD_TAX `nonveg` subcategory ids (sids) it surfaces:
+//   veg          → none                     (today's default — lacto-vegetarian)
+//   eggetarian   → eggs                      (vegetarian + egg)
+//   pescatarian  → eggs + fish (seafood)     (vegetarian + egg + fish/seafood)
+//   nonveg       → eggs + poultry + fish + meat  (all)
+// SAFETY INVARIANT (load-bearing): this gate is SURFACING-ONLY. It must NEVER sit on the
+// consequence path — getFoodEffect / foodConsequenceCard / renderFoodDetailSheet / the combo
+// emergency floor are NOT gated. A food given despite the preference (a grandparent's spoonful)
+// must still surface its full safety record when logged. The gate hides SUGGESTIONS, never
+// SAFETY. (Vegan — which would additionally gate dairy + honey, foods currently classed veg —
+// is deferred to docs/specs/; the four classes here are all expressible from FOOD_TAX sids.)
+const DIET_PREF_NONVEG_SIDS = {
+  veg:         [],
+  eggetarian:  ['eggs'],
+  pescatarian: ['eggs', 'fish'],
+  nonveg:      ['eggs', 'poultry', 'fish', 'meat'],
+};
+const DIET_PREF_LABEL = {
+  veg:         'vegetarian',
+  eggetarian:  'eggetarian',
+  pescatarian: 'pescatarian (with egg)',
+  nonveg:      'non-vegetarian',
+};
+// Non-veg food token → FOOD_TAX subcategory id. A superset of FOOD_TAX.nonveg keys — adds the
+// synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
+// every animal food the app references from one source.
+const NONVEG_TOKEN_SID = {
+  egg: 'eggs',
+  chicken: 'poultry',
+  fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+};
+// Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
+// matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
+// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+function _dietNonvegSid(name) {
+  const n = String(name || '').toLowerCase();
+  for (const tok in NONVEG_TOKEN_SID) {
+    if (new RegExp('\\b' + tok + '\\b').test(n)) return NONVEG_TOKEN_SID[tok];
+  }
+  return null;
+}
+// Is a FOOD_TAX nonveg subcategory (sid) surfaced under the current preference?
+function _dietAllowsNonvegSid(sid) {
+  const allowed = DIET_PREF_NONVEG_SIDS[getDietPref()] || DIET_PREF_NONVEG_SIDS.veg;
+  return allowed.indexOf(sid) !== -1;
+}
+// Is a whole FOOD_TAX parent (pid) surfaced at all? Only 'nonveg' is preference-contingent for
+// the four non-vegan classes — every veg parent (grains/fruits/vegs/dairy/nuts/spices) is always
+// surfaced. (Vegan, which would gate dairy, is the deferred spec.)
+function _dietAllowsParent(pid) {
+  if (pid !== 'nonveg') return true;
+  return (DIET_PREF_NONVEG_SIDS[getDietPref()] || []).length > 0;
+}
+// Is a food NAME surfaced under the current preference? Veg foods (no nonveg sid) always pass;
+// a nonveg food passes iff its sid is in the preference's allowed set.
+function _dietAllowsFood(name) {
+  const sid = _dietNonvegSid(name);
+  return sid === null || _dietAllowsNonvegSid(sid);
+}
+
 function updateStorageUsage() {
   const MAX_BYTES = 5 * 1024 * 1024; // 5MB typical localStorage limit
 

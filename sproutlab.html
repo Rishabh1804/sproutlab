@@ -13733,6 +13733,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
               </div>
               <select id="settingsDietPref" onchange="saveDietPref()" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
                 <option value="veg">Vegetarian</option>
+                <option value="eggetarian">Eggetarian (veg + egg)</option>
+                <option value="pescatarian">Pescatarian (veg + egg + seafood)</option>
                 <option value="nonveg">Non-Vegetarian</option>
               </select>
             </div>
@@ -24316,6 +24318,71 @@ function getDietPref() {
   return localStorage.getItem('ziva_diet_pref') || 'veg';
 }
 
+// ── Dietary-preference SURFACING GATE (4 classes; vegan deferred to its own spec) ──
+// The preference filters which foods are PROACTIVELY surfaced/recommended (the Library
+// grid + category modal, the meal-search dropdowns, the "Foods to Try Next" list, the
+// combo-checker preference note). It maps the stored `ziva_diet_pref` to the set of
+// FOOD_TAX `nonveg` subcategory ids (sids) it surfaces:
+//   veg          → none                     (today's default — lacto-vegetarian)
+//   eggetarian   → eggs                      (vegetarian + egg)
+//   pescatarian  → eggs + fish (seafood)     (vegetarian + egg + fish/seafood)
+//   nonveg       → eggs + poultry + fish + meat  (all)
+// SAFETY INVARIANT (load-bearing): this gate is SURFACING-ONLY. It must NEVER sit on the
+// consequence path — getFoodEffect / foodConsequenceCard / renderFoodDetailSheet / the combo
+// emergency floor are NOT gated. A food given despite the preference (a grandparent's spoonful)
+// must still surface its full safety record when logged. The gate hides SUGGESTIONS, never
+// SAFETY. (Vegan — which would additionally gate dairy + honey, foods currently classed veg —
+// is deferred to docs/specs/; the four classes here are all expressible from FOOD_TAX sids.)
+const DIET_PREF_NONVEG_SIDS = {
+  veg:         [],
+  eggetarian:  ['eggs'],
+  pescatarian: ['eggs', 'fish'],
+  nonveg:      ['eggs', 'poultry', 'fish', 'meat'],
+};
+const DIET_PREF_LABEL = {
+  veg:         'vegetarian',
+  eggetarian:  'eggetarian',
+  pescatarian: 'pescatarian (with egg)',
+  nonveg:      'non-vegetarian',
+};
+// Non-veg food token → FOOD_TAX subcategory id. A superset of FOOD_TAX.nonveg keys — adds the
+// synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
+// every animal food the app references from one source.
+const NONVEG_TOKEN_SID = {
+  egg: 'eggs',
+  chicken: 'poultry',
+  fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+};
+// Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
+// matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
+// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+function _dietNonvegSid(name) {
+  const n = String(name || '').toLowerCase();
+  for (const tok in NONVEG_TOKEN_SID) {
+    if (new RegExp('\\b' + tok + '\\b').test(n)) return NONVEG_TOKEN_SID[tok];
+  }
+  return null;
+}
+// Is a FOOD_TAX nonveg subcategory (sid) surfaced under the current preference?
+function _dietAllowsNonvegSid(sid) {
+  const allowed = DIET_PREF_NONVEG_SIDS[getDietPref()] || DIET_PREF_NONVEG_SIDS.veg;
+  return allowed.indexOf(sid) !== -1;
+}
+// Is a whole FOOD_TAX parent (pid) surfaced at all? Only 'nonveg' is preference-contingent for
+// the four non-vegan classes — every veg parent (grains/fruits/vegs/dairy/nuts/spices) is always
+// surfaced. (Vegan, which would gate dairy, is the deferred spec.)
+function _dietAllowsParent(pid) {
+  if (pid !== 'nonveg') return true;
+  return (DIET_PREF_NONVEG_SIDS[getDietPref()] || []).length > 0;
+}
+// Is a food NAME surfaced under the current preference? Veg foods (no nonveg sid) always pass;
+// a nonveg food passes iff its sid is in the preference's allowed set.
+function _dietAllowsFood(name) {
+  const sid = _dietNonvegSid(name);
+  return sid === null || _dietAllowsNonvegSid(sid);
+}
+
 function updateStorageUsage() {
   const MAX_BYTES = 5 * 1024 * 1024; // 5MB typical localStorage limit
 
@@ -32055,12 +32122,14 @@ function showMealDropdown(meal, query) {
   const q = query.toLowerCase();
   let html = '';
   let totalMatches = 0;
-  const isVeg = getDietPref() === 'veg';
 
   Object.entries(FOOD_SUGGESTIONS).forEach(([cat, items]) => {
-    // Hide non-veg category when diet pref is vegetarian
-    if (isVeg && cat.includes('Non-Veg')) return;
-    const filtered = items.filter(f => f.toLowerCase().includes(q));
+    // Surfacing gate (4-class diet preference): within the non-veg category keep only the
+    // items the preference surfaces — eggetarian → egg only, pescatarian → egg + fish, veg →
+    // none (category drops out). Per-item sid, since the list mixes egg/chicken/fish/meat.
+    const isNonvegCat = cat.includes('Non-Veg');
+    let filtered = items.filter(f => f.toLowerCase().includes(q));
+    if (isNonvegCat) filtered = filtered.filter(f => _dietAllowsNonvegSid(_dietNonvegSid(f)));
     if (filtered.length === 0) return;
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.forEach(food => {
@@ -38512,10 +38581,11 @@ function renderFoods() {
   if (countEl) countEl.textContent = `${foods.length} foods`;
 
   const grouped = _categorizeFoods();
-  const isVeg = getDietPref() === 'veg';
-  const parentOrder = isVeg
-    ? ['grains','fruits','vegs','dairy','nuts','spices']
-    : ['grains','fruits','vegs','dairy','nuts','spices','nonveg'];
+  // Dietary-preference surfacing gate: show the nonveg parent only when the preference
+  // surfaces at least one nonveg subcategory (veg → no nonveg card; eggetarian/pescatarian/
+  // nonveg → shown, with only the surfaced subcategories counted below).
+  const parentOrder = ['grains','fruits','vegs','dairy','nuts','spices'];
+  if (_dietAllowsParent('nonveg')) parentOrder.push('nonveg');
 
   let html = '<div class="food-cats">';
 
@@ -38524,6 +38594,9 @@ function renderFoods() {
     const col = parent.color;
     let parentTotal = 0, parentCount = 0;
     Object.entries(parent.subs).forEach(([sid, sub]) => {
+      // Within nonveg, count only the subcategories the preference surfaces (so an
+      // eggetarian's card reads "of eggs", not "of egg+poultry+fish+meat").
+      if (pid === 'nonveg' && !_dietAllowsNonvegSid(sid)) return;
       parentTotal += sub.keys.length;
       parentCount += grouped[pid][sid].length;
     });
@@ -38559,7 +38632,9 @@ function openFoodCatModal(pid) {
 
   document.getElementById('foodCatModalTitle').innerHTML = `${parent.icon} ${parent.label}`;
 
-  const subIds = Object.keys(parent.subs);
+  // Surfacing gate: within nonveg, show only the subcategories the preference surfaces.
+  let subIds = Object.keys(parent.subs);
+  if (pid === 'nonveg') subIds = subIds.filter(sid => _dietAllowsNonvegSid(sid));
   const tabsEl = document.getElementById('foodCatModalTabs');
   tabsEl.style.background = _foodColorMap[col];
 
@@ -40136,12 +40211,19 @@ function checkFoodCombo() {
     else headline = 'Looks good for Ziva\'s age!';
   }
 
-  // Vegetarian check
-  const nonVeg = rawFoods.filter(f => ['chicken','fish','mutton','lamb','pork','prawn','shrimp','crab','meat'].includes(f));
-  if (nonVeg.length > 0) {
+  // Diet-preference note (4-class gate): flag only foods OUTSIDE the current preference —
+  // a pescatarian sees no note for fish, an eggetarian none for egg, a non-veg none at all.
+  // This is a preference note, NOT a safety gate: it never downgrades an acute-toxin/below-floor
+  // 'avoid', and the food's own consequence/allergen record still fires unchanged below.
+  const offPref = rawFoods.filter(f => {
+    const sid = _dietNonvegSid(f);
+    return sid && !_dietAllowsNonvegSid(sid);
+  });
+  if (offPref.length > 0) {
     if (verdict !== 'avoid') { verdict = 'caution'; verdictEmoji = zi('warn'); }  // never downgrade an acute-toxin/below-floor avoid
-    warnings.push(`Ziva follows a vegetarian diet. ${nonVeg.join(', ')} is non-vegetarian.`);
-    headline = `Note: ${nonVeg.join(', ')} is non-vegetarian — Ziva\'s diet is vegetarian`;
+    const prefLabel = DIET_PREF_LABEL[getDietPref()] || 'vegetarian';
+    warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
+    headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
@@ -43406,13 +43488,16 @@ function updateQLFeedDropdown() {
   }
 
   const q = query.toLowerCase();
-  const isVeg = getDietPref() === 'veg';
   let html = '';
   let totalMatches = 0;
 
   Object.entries(FOOD_SUGGESTIONS).forEach(([cat, items]) => {
-    if (isVeg && cat.includes('Non-Veg')) return;
-    const filtered = items.filter(f => f.toLowerCase().includes(q));
+    const isNonvegCat = cat.includes('Non-Veg');
+    let filtered = items.filter(f => f.toLowerCase().includes(q));
+    // Surfacing gate: within the non-veg category, keep only the items the preference
+    // surfaces (eggetarian → egg items only; pescatarian → egg + fish; veg → none, so the
+    // whole category drops out below). Per-item sid, since the list mixes egg/chicken/fish/meat.
+    if (isNonvegCat) filtered = filtered.filter(f => _dietAllowsNonvegSid(_dietNonvegSid(f)));
     if (filtered.length === 0) return;
     html += `<div class="meal-dd-cat">${cat}</div>`;
     filtered.slice(0, 8).forEach(food => {
@@ -68533,18 +68618,20 @@ function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   const ageM = ageAt().months;
-  // V-M-19 amendment: respect the user's diet preference. If settings has
-  // dietPref === 'veg', non-veg foods must not surface as "Foods to Try Next."
-  // A parent who set a dietary boundary expects the app to honor it everywhere.
-  const isVeg = (typeof getDietPref === 'function') && getDietPref() === 'veg';
+  // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
+  // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
+  // expects the app to honor it everywhere. (4-class gate: veg surfaces no nonveg sid;
+  // eggetarian only eggs; pescatarian eggs + fish; nonveg all.)
+  const hasGate = (typeof _dietAllowsNonvegSid === 'function');
 
   // Collect all taxonomy foods not yet introduced
   const candidates = [];
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
-    // Diet-preference gate
-    if (isVeg && item.pid === 'nonveg') return;
+    // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
+    // is in the current preference's allowed set.
+    if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
     // Age gate: skip nuts for <8m (whole), skip honey for <12m
     if (key === 'honey' && ageM < 12) return;
     if (key === 'peanut' && ageM < 8) return;

@@ -35,6 +35,18 @@ Salt, sugar (the other `drink-timing`/timing foods), shellfish (a separate aller
 
 ---
 
+## Food-effects gap audit (2026-06-02) — what the model is still missing
+Asked during the diet-preference-gate session. The model covers 11 records (honey · peanut · tree nut · egg · soy · wheat · sesame · fish · cow milk · plant milk · choking hazards). Gaps, prioritized:
+- **Shellfish** — the one missing *major* allergen (Big 9). Separate from finfish, often lifelong, frequently severe; diet-contingent. Already P-next; **the cleanest first test of the preference gate.**
+- **Salt + sugar/jaggery** — have `AGE_RULES` gates, no `FOOD_EFFECTS` record (renal load / added-sugar + dental). The `drink-timing`/quantity-caveat siblings. Already P-next.
+- **FPIES — a missing *reaction axis*, not a food.** The whole model is IgE-shaped (rash→anaphylaxis→adrenaline). FPIES (non-IgE) is profuse repeat vomiting + lethargy **1–4h** after a food (cow milk, soy, rice, oats), no rash, no adrenaline — needs rehydration. A parent seeing repeat 2h-post-food vomiting gets no fitting guidance today. Worth a cross-cutting note like "the floor follows the hazard" did for choking.
+- **India-context allergens:** mustard (sarson/rai/kasundi); buckwheat (kuttu — a real anaphylaxis trigger in vrat/fasting foods).
+- **Flag-only / niche:** favism (fava/broad beans + G6PD deficiency — hemolysis; needs G6PD status); caffeine cluster (tea/coffee/**chocolate**) + juice (gates exist); gelatin (allergen + veg/vegan/halal).
+
+## Diet-preference surfacing gate — ✅ 4 classes LANDED; vegan SPEC'd
+- **Built (this session, through canon-cc-008):** veg / **eggetarian** / **pescatarian (+egg)** / non-veg. One source of truth in `core.js` (`DIET_PREF_NONVEG_SIDS` → `_dietAllowsNonvegSid`/`_dietAllowsParent`/`_dietAllowsFood`/`_dietNonvegSid`, word-boundary classified). Gates the proactive surfaces only (Library grid + cat modal, both meal dropdowns, Foods-to-Try, combo-checker note). **Safety invariant held: the consequence path is never gated** — a food given off-preference still fires its full safety record.
+- **Deferred (spec'd, ready for Governor review):** **vegan** — `docs/specs/diet-preference-gate-vegan.md`. The hard class: it gates foods currently classed *veg* (dairy + honey) and carries a nutritional-adequacy obligation (B12/calcium/DHA) — a filter *plus* a redirect, not a one-liner. Needs a vegan-infant research brief first (research→manifest→surface).
+
 ## Carry-forward register (inherited + new)
 
 ### Human-only gate (Architect)
