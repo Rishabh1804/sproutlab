@@ -110,6 +110,15 @@ test.describe('food-effects-v2 P1c — fish', () => {
     expect(r.bangda, 'indian mackerel / bangda (low-mercury) still resolves').toBe(true);
     expect(r.indMac).toBe(true);
     expect(r.salmon).toBe(true);
+
+    // Gate surface too (Cipher #5): the one-resolver doctrine means the age gate must
+    // suppress identically — a high-mercury host gets no green "fine from ~6 months" badge.
+    const gate = await page.evaluate(() => ({
+      seer:   _fdAgeRule('seer fish'),
+      bangda: _fdAgeRule('bangda')?.minMonth,
+    }));
+    expect(gate.seer, 'seer fish (high-mercury) gets no age-gate either').toBeNull();
+    expect(gate.bangda, 'low-mercury bangda still gates at 6mo').toBe(6);
   });
 
   test('word-boundary safety: shellfish does NOT resolve to the finfish record', async ({ page }) => {
