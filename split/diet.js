@@ -1123,6 +1123,17 @@ function renderDietChokingIntro() {
   // helper (the same .enc-form renderer the milk cards use).
   pinned += _milkFormBlock(chk.safeForm, 'Make it safe — cut it this way', 'Whole forms — wait until about 5');
 
+  // ── The gagging-vs-choking discriminator — the single highest-value education line (NHS) → PINNED ──
+  // V-V-12 (Vela) + Maren's safety read, folded: the LOUD-vs-QUIET distinction must sit ABOVE the
+  // fold, adjacent to the emergency floor. The pinned floor leads with "a silent or weak cough"; a
+  // parent who never expanded the body could over-intervene on a (loud, normal) gagging baby, or
+  // miss that the floor is about the QUIET case. Pinning the myth right before the floor makes the
+  // discriminator unmissable: gagging is LOUD/normal (let it resolve) → choking is QUIET (THAT is
+  // the emergency, below). Sourced copy (chk.myth.truth), not new hardcoded safety prose.
+  if (chk.myth && chk.myth.truth) {
+    pinned += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(chk.myth.truth) + '</span></div>';
+  }
+
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
@@ -1130,11 +1141,6 @@ function renderDietChokingIntro() {
   pinned += _milkSevereStrip(chk, 'If your baby is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
-  // The gagging-vs-choking myth — the single highest-value education line (NHS): gagging is
-  // LOUD/normal/protective; choking is QUIET — THAT is the emergency.
-  if (chk.myth && chk.myth.truth) {
-    body += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(chk.myth.truth) + '</span></div>';
-  }
   // How to keep it safe (seated upright, supervised, fingernail-sized).
   var hti = chk.howToIntroduce || {};
   if (hti.amount || hti.when || hti.watch) {

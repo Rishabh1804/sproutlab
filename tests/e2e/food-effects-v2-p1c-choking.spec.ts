@@ -135,11 +135,21 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
     await expect(page.locator('#dietChokingIntro .enc-emergency')).toContainText(/back blow|chest thrust/i);
   });
 
-  // ── the gagging-vs-choking myth (highest-value education) renders in the body ──
-  test('the gagging-vs-choking myth renders (gagging LOUD/normal; choking QUIET = emergency)', async ({ page }) => {
-    const more = page.locator('#dietChokingIntroMore');
-    await expect(more.locator('.enc-myth')).toContainText(/gagging is loud/i);
-    await expect(more.locator('.enc-myth')).toContainText(/choking is quiet/i);
+  // ── the gagging-vs-choking discriminator (highest-value education) is PINNED, by the floor (V-V-12) ──
+  test('the gagging-vs-choking discriminator is PINNED above the fold (gagging LOUD/normal; choking QUIET = emergency)', async ({ page }) => {
+    const pinned = page.locator('#dietChokingIntro');
+    await expect(pinned.locator('.enc-myth')).toContainText(/gagging is loud/i);
+    await expect(pinned.locator('.enc-myth')).toContainText(/choking is quiet/i);
+    // V-V-12: it must NOT be stranded in the collapse body — the discriminator is load-bearing.
+    await expect(page.locator('#dietChokingIntroMore .enc-myth')).toHaveCount(0);
+    // and it sits immediately before the choking-first-aid floor (discriminator → emergency).
+    const order = await page.evaluate(() => {
+      const h = document.getElementById('dietChokingIntro')!;
+      const myth = h.querySelector('.enc-myth'), floor = h.querySelector('.cons-severe');
+      if (!myth || !floor) return 'missing';
+      return (myth.compareDocumentPosition(floor) & 4) ? 'myth-first' : 'floor-first';
+    });
+    expect(order).toBe('myth-first');
   });
 
   // ── the detail-sheet second surface: conditional flag, never the rose siren ──
