@@ -797,6 +797,7 @@ function renderDietLibrary() {
   renderFoodLibResults();
   renderDietNutIntro();
   renderDietMilkIntro();
+  renderDietChokingIntro();
 }
 
 // ════════════════════════════════════════
@@ -1071,6 +1072,98 @@ function _milkSevereStrip(eff, scopeHeader) {
   }
   h += '</div>';
   return h;
+}
+
+// ════════════════════════════════════════
+// Choking hazards — the choking-by-form KNOWLEDGE card (food-effects v2 P1c, milk-spec §9)
+// ════════════════════════════════════════
+// The FIRST choking-by-form-PRIMARY render (today the class only rides SECONDARY to an
+// allergen — peanut/tree-nut/fish, where whole = choking). Sibling of renderDietNutIntro /
+// renderDietMilkIntro (separate fn + hosts; those cards stay untouched). Reads FE['choking
+// hazards'] by DIRECT KEY — alias-immune (the curated aliases serve getFoodEffect/_fdAgeRule
+// only). Polarity is CONDITIONAL (_effPolarity → 'conditional', §3-bis §9): the model is
+// MODIFY, DON'T BAN — amber, never the rose 'avoid' siren. Render shape mirrors the cow-milk
+// drink-timing card (the other conditional): a SPLIT lead (sage carve-out "safe in the right
+// form" over an amber gate "whole forms wait until ~5"), the cut-it-this-way safeForm block,
+// then the PINNED emergency floor.
+// THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): the severe
+// strip carries the QUIET-choking signs + the back-blows/chest-thrusts seekCare, under a
+// choking-scoped header (never "allergic reaction"). All copy is FOOD_EFFECTS-sourced; the only
+// hardcoded strings are the polarity-keyed band/section HEADINGS (render copy, not reusable).
+function renderDietChokingIntro() {
+  var host = document.getElementById('dietChokingIntro');          // always-visible (pinned)
+  var moreHost = document.getElementById('dietChokingIntroMore');  // collapse body
+  if (!host) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var chk = FE ? FE['choking hazards'] : null;
+  if (!chk) {
+    host.innerHTML = '';
+    if (moreHost) moreHost.innerHTML = '';
+    return;
+  }
+  var pinned = '', body = '';
+
+  // ── SPLIT lead (conditional — the carve-out leads, the gate qualifies) → PINNED ──
+  // sage carve-out band ("safe in the right form") over amber gate band ("whole forms wait
+  // until ~5"), reusing the shipped .enc-split family (no new class).
+  pinned += '<div class="enc-split">';
+  if (chk.whyGood) {
+    pinned += '<div class="enc-split-good"><div class="enc-split-h">' + zi('sprout') +
+      '<span>Safe in the right form</span></div><p class="enc-split-body">' + escHtml(chk.whyGood) + '</p></div>';
+  }
+  if (chk.gate) {
+    pinned += '<div class="enc-split-gate"><div class="enc-split-h">' + zi('clock') +
+      '<span>Whole forms wait until ~5</span></div><p class="enc-split-body">' + escHtml(chk.gate) + '</p></div>';
+  }
+  pinned += '</div>';
+
+  // ── The cut-it-this-way block (safeForm.ok/never/note) → PINNED ──
+  // M-γ-1: the per-food cut rules (quarter grapes lengthwise, hot dogs lengthwise, grind nuts)
+  // are the load-bearing "modify, don't ban" guidance — they must NOT fold. Shared form-block
+  // helper (the same .enc-form renderer the milk cards use).
+  pinned += _milkFormBlock(chk.safeForm, 'Make it safe — cut it this way', 'Whole forms — wait until about 5');
+
+  // ── The gagging-vs-choking discriminator — the single highest-value education line (NHS) → PINNED ──
+  // V-V-12 (Vela) + Maren's safety read, folded: the LOUD-vs-QUIET distinction must sit ABOVE the
+  // fold, adjacent to the emergency floor. The pinned floor leads with "a silent or weak cough"; a
+  // parent who never expanded the body could over-intervene on a (loud, normal) gagging baby, or
+  // miss that the floor is about the QUIET case. Pinning the myth right before the floor makes the
+  // discriminator unmissable: gagging is LOUD/normal (let it resolve) → choking is QUIET (THAT is
+  // the emergency, below). Sourced copy (chk.myth.truth), not new hardcoded safety prose.
+  if (chk.myth && chk.myth.truth) {
+    pinned += '<div class="enc-myth">' + zi('bulb') + '<span>' + escHtml(chk.myth.truth) + '</span></div>';
+  }
+
+  // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
+  // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
+  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
+  pinned += _milkSevereStrip(chk, 'If your baby is choking, it\'s an emergency');
+
+  // ── BODY (collapsible) ──
+  // How to keep it safe (seated upright, supervised, fingernail-sized).
+  var hti = chk.howToIntroduce || {};
+  if (hti.amount || hti.when || hti.watch) {
+    body += '<div class="enc-block"><div class="enc-block-h">' + zi('spoon') + '<span>How to keep it safe</span></div><div class="enc-proto">';
+    if (hti.when)   body += '<div class="enc-proto-row"><b>When:</b> ' + escHtml(hti.when) + '</div>';
+    if (hti.amount) body += '<div class="enc-proto-row"><b>Size:</b> ' + escHtml(hti.amount) + '</div>';
+    if (hti.watch)  body += '<div class="enc-proto-row"><b>Supervise:</b> ' + escHtml(hti.watch) + '</div>';
+    body += '</div></div>';
+  }
+  // The reassurance axis (watchFor here is INVERTED — normal signs, don't intervene), under a
+  // calm "normal — let it resolve" header, NEVER a danger header.
+  var calm = (chk.watchFor && chk.watchFor.length) ? chk.watchFor : [];
+  if (calm.length) {
+    body += '<div class="cons-watch"><div class="cons-watch-h">Normal — let it resolve, don\'t intervene</div><ul class="cons-watch-list">' +
+      calm.map(function(w){ return '<li>' + escHtml(w) + '</li>'; }).join('') + '</ul></div>';
+  }
+  // Indian context (groundnut #1 aspirated FB; supari double danger) — calm-secondary.
+  if (chk.culturalNote) {
+    body += '<p class="enc-form-note">' + escHtml(chk.culturalNote) + '</p>';
+  }
+
+  host.innerHTML = pinned;
+  if (moreHost) moreHost.innerHTML = body;
 }
 
 
