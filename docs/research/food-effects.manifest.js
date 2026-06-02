@@ -271,7 +271,202 @@ window.FOOD_EFFECTS_MANIFEST = [
     lastReviewed:  '2026-06-01',
   },
 
-  // ── append the next food here (cow's milk / fish / salt …) ──
+  // ── food-effects-v2 P1c: cow's milk + plant milks (the "broader food classes") ──
+  // TWO records, one shared brief/dashboard (cow-milk-plant-milks-infant-safety.*),
+  // mirroring the peanut/tree-nut precedent (spec §7). These instantiate the TWO
+  // never-used foodClasses in the v2 taxonomy (spec §2):
+  //   cow milk   = 'drink-timing'      (fine IN FOOD ~6mo; not the main DRINK before 12mo)
+  //   plant milk = 'substitute-caveat' (no plant milk replaces breastmilk/formula <1; rice = arsenic)
+  // NEITHER is allergen-introduce-early — NO earlyIntroBenefit (milk is not an "introduce
+  // early to prevent allergy" food; EAT found NO prevention effect for milk). `safeForm`
+  // is repurposed as the DRINK-vs-FOOD gate (ok = food forms / fortified age-1 forms;
+  // never = the gated drink uses). The CMPA allergic axis (watchFor/severeSigns) rides
+  // ALONGSIDE the timing axis on the cow-milk record — milk is the most common infant allergen.
+  // OPEN for the P1c polarity spec + Kael/Vela spec-review (these two classes have no card
+  // composition yet): (1) how drink-timing / substitute-caveat render (no benefit banner —
+  // what leads?); (2) reactionType has no 'nutritional' / 'chronic-toxin' value for
+  // iron-deficiency-anaemia or rice arsenic — cow-milk uses in-enum honest values; plant
+  // milk uses [] (its harm is not an acute reaction; spec may add a value); (3) does a
+  // drink-timing card carry the severe (anaphylaxis) floor? Provisional: YES, present-only,
+  // whenever dairy is being introduced (CMPA). All resolved at spec-review, not here.
+  {
+    food:          'cow milk',
+    // K-1 (Kael): 'top feed' DROPPED — in Indian logs it frequently means FORMULA, not
+    // cow milk; firing the drink-timing card on a formula log is a Care-defect. 'top milk'
+    // kept (unambiguously cow/buffalo dilute-milk). Bare 'doodh' deliberately UNALIASED
+    // (co-occurs in 'haldi doodh', a spiced-milk food — same precision reason as bare 'milk').
+    aliases:       ['cow\'s milk','buffalo milk','bhains ka doodh','gaay ka doodh','animal milk','whole milk','full-fat milk','top milk','dairy milk','full cream milk'],
+    foodClass:     'drink-timing',
+    severity:      'caution',              // amber timing-caution, NOT rose acute-toxin
+    category:      'dairy',
+    effect:        'iron-deficiency anaemia + renal solute load (as a main drink before 12mo)',
+    minMonth:      12,                     // as a MAIN DRINK; dairy IN FOOD is fine from ~6mo (the carve-out)
+    thresholdBasis:'physiological',        // gut occult blood loss ceases ~12mo; immature renal solute tolerance
+    allergen:      true,                   // CMPA — most common infant food allergy (a SEPARATE axis from timing)
+    reactionType:  ['renal','digestive','allergy'],  // renal/digestive = timing harms (renal load, occult GI blood loss); allergy = CMPA
+    headline:      'Fine in food from ~6 months (dahi, paneer, milk in khichdi) — but not as the main drink before 12 months.',
+    whyGood:       'Dairy IN FOOD is excellent from ~6 months — dahi/curd, paneer and cheese give calcium, protein, B12 and healthy fats. The caution is only about milk AS THE MAIN DRINK before 1 year.',
+    safeForm:      { ok:['dahi / curd, paneer, and pasteurised full-fat cheese from ~6 months','small amounts of milk cooked into khichdi, porridge or cereal','from 12 months: whole (full-fat) milk as a main drink, ~500 ml (≈2 cups)/day maximum'],
+                     never:['cow\'s or buffalo milk as the MAIN DRINK before 12 months','diluted / sweetened "top milk" as a breastmilk or formula substitute','unpasteurised milk, and mould-ripened (brie/camembert), blue, or ripened-goat cheese at any infant age','skimmed / low-fat milk as a main drink before age 2'],
+                     note:'The drink is gated; the dairy is not. Breastmilk or first infant formula is the milk under 12 months. Diluting cow/buffalo milk adds no iron and still displaces breastmilk.' },
+    howToIntroduce:{ amount:'From 12 months: ~500 ml (≈2 cups) of whole milk per day maximum — more is linked to iron deficiency.',
+                     when:'As a main drink from 12 months. Dairy IN FOOD (dahi / paneer / cheese / milk in cooking) from ~6 months.',
+                     watch:'When introducing dairy in food, watch ~2 hours for a cow\'s-milk-protein-allergy reaction (milk is the most common infant allergen).',
+                     highRiskNote:'' },
+    myth:          { claim:'Cow\'s/buffalo milk makes a baby strong and fat — give it early.',
+                     truth:'Before 12 months as a main drink it causes iron-deficiency anaemia and strains the kidneys. Breastmilk or formula is the milk under 1; dairy belongs in food, not as the drink.' },
+    watchFor:      ['hives / rash','swelling (lips, face, eyes)','vomiting','diarrhoea or bloody stool (non-IgE CMPA)','eczema flare'],
+    severeSigns:   ['trouble breathing / wheeze','tongue or throat swelling','hoarse cry','floppy, pale, or very sleepy'],
+    timeCourse:    'CMPA — IgE: minutes to ~2 h; non-IgE: delayed ~48 h–1 week (GI-predominant, bloody stool). Iron deficiency from milk-as-drink: gradual over weeks–months.',
+    seekCare:      'CMPA mild single-system: stop, monitor, call doctor. Breathing trouble, tongue/throat swelling, hoarse cry, or floppiness: EMERGENCY — call 112/108, use prescribed adrenaline auto-injector (antihistamine does NOT treat anaphylaxis). Most children outgrow CMPA by 3–5; reintroduction (the milk ladder) is a clinician\'s call.',
+    breastfeedingSafe: true,
+    culturalNote:  'Early "top feeding" with cow/buffalo milk (often diluted + sugared) before 6–12 months is common in India and harmful — buffalo milk is even higher in fat/protein (heavier renal load). IAP: "avoid only milk feeds; use milk to prepare foods." India\'s young-child anaemia is ~67% (NFHS-5). The exact "no milk as a main drink before 12 months" rule is the international bodies\' line (AAP/ESPGHAN), NOT attributed to an Indian body.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','US CDC','ESPGHAN','WHO','Ziegler 2011 (Nutrition Reviews)','ASCIA (CMPA)','IAP Ch-040','MoHFW/NHM IYCF','NFHS-5'],
+    dashboard:     'cow-milk-plant-milks-infant-safety.visual.html',
+    brief:         'cow-milk-plant-milks-infant-safety.md',
+    longform:      'cow-milk-plant-milks-infant-safety.html',
+    lastReviewed:  '2026-06-01',
+  },
+  {
+    food:          'plant milk',
+    // NOTE: 'soy milk' / 'soya milk' already alias to the SOY allergen record in data.js —
+    // left there (soy is the allergen exception); soy is cross-referenced in copy, not re-aliased.
+    // K-2 (Kael): 'badam milk'/'badam doodh' ADDED — the Hindi-English code-switch form an
+    // Indian parent actually types for almond-milk drink (English-only 'almond milk' missed it).
+    aliases:       ['almond milk','badam milk','badam doodh','oat milk','rice milk','rice drink','cashew milk','coconut milk drink','plant-based milk','plant milks','vegan milk','toddler milk','growing-up milk','follow-on milk drink'],
+    foodClass:     'substitute-caveat',
+    severity:      'caution',
+    category:      'plant-milk',
+    effect:        'inadequate substitute for breastmilk/formula (<1); rice-drink arsenic (<5)',
+    minMonth:      12,                     // not a substitute under 12mo; rice drinks excluded under 5
+    thresholdBasis:'nutritional-adequacy',
+    allergen:      false,                  // soy milk is the allergen exception — handled on the soy record
+    reactionType:  [],                     // honest: no acute reaction; harm is nutritional inadequacy + chronic arsenic. No enum value fits — spec may add 'nutritional'. (hub `arr()` handles []; plant milk correctly absent from the Reactions cross-cut.)
+    headline:      'Not a milk substitute under 1. Rice drinks: none under 5 (arsenic). From age 1, fortified soy/oat only as part of a varied diet.',
+    whyGood:       'From age 1, unsweetened, calcium-fortified soy or oat milk can be PART of a varied diet. Fortified soy is the only plant milk nutritionally close to cow\'s milk.',
+    safeForm:      { ok:['from 12 months: unsweetened, calcium-fortified soy or oat milk, as PART of a varied diet (not the sole drink for an under-2)'],
+                     never:['ANY plant milk as a breastmilk or formula substitute before 12 months','RICE drinks for any child under 5 years (inorganic arsenic) — eating rice the grain is still fine','unfortified plant milk as a main drink','almond milk as a main drink (too low in protein and fat)','carton soy DRINK as infant formula (soy formula is a separate, prescribed product)'],
+                     note:'No plant milk replaces breastmilk or formula under 1. After age 1, ranking: fortified soy ≈ oat > almond (low protein) > rice (arsenic — avoid under 5). "Toddler / growing-up milks" are unnecessary (AAP).' },
+    myth:          { claim:'Plant milk (almond/oat/rice) is a healthy milk substitute for my baby or toddler.',
+                     truth:'Not under 1 — it replaces neither breastmilk nor formula. Rice drinks are unsafe under 5 (arsenic); almond milk is too low in protein/fat. From age 1, fortified soy/oat can be part of a varied diet.' },
+    watchFor:      ['soy milk only: hives / rash, swelling, vomiting — soy is a major allergen (see the soy record)'],
+    timeCourse:    'Nutritional inadequacy: gradual. Arsenic (rice drinks): a chronic/cumulative-exposure concern, not an acute reaction.',
+    seekCare:      'Not an emergency food. If a plant milk has been the main drink for an under-1 (or a rice drink given to an under-5), switch and discuss iron/nutrition with your doctor.',
+    breastfeedingSafe: true,
+    culturalNote:  'Marketed "toddler"/"growing-up" milks are unnecessary (AAP) and their promotion for children up to 36 months is restricted under the WHO Code. In India, prefer dahi/paneer plus (from 12 months) whole cow\'s milk over carton plant drinks for a young child.',
+    confidence:    'high',
+    sources:       ['UK NHS','UK FSA (arsenic)','USDA DGA 2020-2025','AAP (toddler milk)','WHO (Code)'],
+    dashboard:     'cow-milk-plant-milks-infant-safety.visual.html',
+    brief:         'cow-milk-plant-milks-infant-safety.md',
+    longform:      'cow-milk-plant-milks-infant-safety.html',
+    lastReviewed:  '2026-06-01',
+  },
+
+  // ── food-effects-v2 P1c: fish (finfish) — the broader food classes, fish ──
+  // foodClass MULTI-VALUED: allergen-introduce-early (encourage — the ESTABLISHED δ
+  // polarity; surfaces through renderDietNutIntro with NO new render) + choking-by-form
+  // (BONES — folded into the introduce-safely block, V-2, like peanut). NO new polarity
+  // spec needed (contrast milk's drink-timing / substitute-caveat).
+  // TWO-TIER discipline: fish is introduce-early-and-SAFE, NOT prevention-proven — EAT
+  // (NEJM 2016) was NULL for fish. earlyIntroBenefit framed like soy/wheat/sesame.
+  // The NEW axis is MERCURY (species selection) — it rides in safeForm.ok/never (low- vs
+  // high-mercury species). Mercury is a chronic neurotoxin with NO reactionType enum value
+  // (like plant-milk arsenic) — reactionType carries the ACUTE reactions only (allergy + choking).
+  // No chokingUntilYears: fish's choking is bone-based (prep-removable: debone + flake),
+  // not a whole-food-until-5 rule like whole nuts.
+  {
+    food:          'fish',
+    aliases:       ['finfish','rohu','katla','catla','pomfret','bhetki','bangda','indian mackerel','mackerel','sardine','mathi','salmon','tuna','surmai','seer fish','machhli','machli','fish curry','fish fry'],
+    foodClass:     ['allergen-introduce-early','choking-by-form'],
+    severity:      'caution',
+    category:      'fish',
+    effect:        'food allergy (often lifelong) + mercury (species selection) + bones (choking)',
+    minMonth:      6,                       // AAP/NHS/ASCIA ~6mo; app AGE_RULES['fish']=7 — reconcile at wiring (egg-yolk:7 precedent)
+    thresholdBasis:'developmental-readiness',
+    allergen:      true,
+    reactionType:  ['allergy','choking'],   // acute reactions; mercury (chronic neurotoxin) has NO enum value — see comment
+    headline:      'Introduce around 6 months — well-cooked, deboned, low-mercury fish. Don\'t delay.',
+    whyGood:       'Oily fish (salmon, sardine, bangda) is a top source of omega-3 (DHA) for brain and eye development, plus protein, vitamin D and iron.',
+    earlyIntroBenefit: { claim:'Introduce around 6 months; don\'t delay.',
+                         evidence:'AAP/NHS/ASCIA advise early introduction of fish among the major allergens; EAT (NEJM 2016) verified NO significant prevention effect for fish — early intro is SAFE but does NOT prevent fish allergy.',
+                         paradigm:'Don\'t delay — but no proven fish-specific prevention claim.' },
+    safeForm:      { ok:['LOW-mercury fish — salmon, sardine, Indian mackerel (bangda), rohu, catla, pomfret, trout — thoroughly cooked, all bones removed, flaked small','canned LIGHT tuna (not albacore / white)'],
+                     never:['HIGH-mercury fish — shark (sura), swordfish, king mackerel (surmai / seer), marlin, bigeye tuna','raw or undercooked fish / sushi, and raw or lightly-cooked shellfish (food poisoning)','fish with bones left in or not hand-checked for pin bones (rohu & catla are very bony — a choking risk)','dried or salted fish (Bombay duck / bombil) — too much salt for a baby'],
+                     note:'Choose low-mercury fish, cook through, and debone meticulously. Finfish is a SEPARATE allergen from shellfish. Oily fish is great — for a girl, NHS caps oily fish at ~2 portions/week (pollutants).' },
+    howToIntroduce:{ amount:'A small amount of well-cooked, deboned, flaked low-mercury fish; for ages 1–3, ~1 oz (28 g) per serving (no official figure under 1).',
+                     when:'Around 6 months, after a few first foods are tolerated; offer at home, daytime, and watch ~2 hours.',
+                     watch:'Watch ~2 hours for a reaction. Fish allergy tends to be LIFELONG (unlike egg / milk) — treat first exposures carefully.',
+                     oneAtATime:true,
+                     highRiskNote:'' },
+    myth:          { claim:'Fish and milk together is harmful / causes white skin patches.',
+                     truth:'No scientific basis — skin patches (vitiligo) are autoimmune / genetic, not caused by food combinations. Well-cooked, deboned, low-mercury fish is a healthy early food.' },
+    watchFor:      ['hives / rash','swelling (lips, face, eyes)','itchy mouth','vomiting'],
+    severeSigns:   ['trouble breathing / wheeze','tongue or throat swelling','hoarse cry','floppy, pale, or very sleepy'],
+    timeCourse:    'minutes to ~2 hours after eating; anaphylaxis often within 5–30 min. (In some sensitive people, cooking vapour / steam can trigger a reaction.)',
+    seekCare:      'Mild single-system: stop, monitor, call doctor. Any breathing trouble, tongue/throat swelling, hoarse cry, or floppiness: EMERGENCY — call 112/108, use prescribed adrenaline auto-injector (antihistamine does NOT treat anaphylaxis). Fish allergy is usually lifelong; a specialist guides any testing of other species.',
+    breastfeedingSafe: true,
+    culturalNote:  'Fish is a staple early food in Bengali / coastal India (the annaprashan first-rice often includes fish). IAP lists fish among complementary "flesh foods" (a nutrition framing, NOT allergy/mercury) and says a vegetarian diet can meet a child\'s needs — so a vegetarian / Jain household not giving fish is making a valid choice. FSSAI codes predatory fish (tuna / swordfish / shark / marlin) as higher-mercury (1.0 vs 0.5 mg/kg). In Indian IYCF, iodine comes from iodized salt, not fish.',
+    confidence:    'high',
+    sources:       ['AAP','UK NHS','ASCIA','US FDA/EPA (fish-mercury advice)','NEJM EAT 2016','Frontiers Immunol 2014 (parvalbumin)','FARE','IAP Ch-040','MoHFW/NHM MAA','FSSAI 2022'],
+    dashboard:     'fish-infant-safety.visual.html',
+    brief:         'fish-infant-safety.md',
+    longform:      'fish-infant-safety.html',
+    lastReviewed:  '2026-06-02',
+  },
+
+  // ── food-effects-v2 P1c: the choking set — ONE combined record (the data-shape
+  //    decision, brief Appendix) ──
+  // foodClass: 'choking-by-form' PRIMARY — the FIRST standalone instance (today the class
+  // only rides SECONDARY to an allergen, e.g. peanut/tree-nut where whole = choking). The
+  // hazard is the FORM (round/hard/small/sticky), not allergy or toxin. Model: modify, don't
+  // ban — the per-food cut rules live in safeForm so no per-entity guidance is dropped (the
+  // Maren M-γ-1 lesson + the §7 single-combined precedent).
+  // THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS — severeSigns/seekCare carry back-blows
+  // + chest-thrusts + call-112, never adrenaline. reactionType:['choking'].
+  // RESOLVER SCOPE (Kael, at wiring): aliases the hazard foods that do NOT already have a
+  // record. PEANUT / TREE NUT keep their own records (already choking-by-form) — do NOT
+  // re-alias them here (collision). RENDER: choking-by-form-PRIMARY has never rendered
+  // standalone — needs the milk-spec §9 polarity resolution before wiring.
+  {
+    food:          'choking hazards',
+    aliases:       ['grape','grapes','whole grape','cherry tomato','cherry tomatoes','popcorn','hot dog','hotdog','sausage','hard candy','boiled sweet','lollipop','marshmallow','whole carrot','raw carrot','chana','roasted gram','bhuna chana','sev','namkeen','murukku','chakli','supari','areca nut','betel nut','makhana','fox nuts','ber','jujube','raisin','raisins','chewing gum'],
+    foodClass:     'choking-by-form',      // PRIMARY (first standalone) — the form IS the hazard
+    severity:      'caution',              // amber card chrome; the emergency floor renders via severeSigns
+    category:      'choking-hazard',
+    effect:        'airway obstruction (choking) by food form',
+    minMonth:      6,                      // modified / cut forms ok from solids start (~6mo)
+    chokingUntilYears: 5,                  // whole / hazard forms wait until ~5 (NHS/HSE-conservative)
+    thresholdBasis:'developmental-readiness',  // no grinding molars until ~16–29mo; chewing ~4
+    allergen:      false,
+    reactionType:  ['choking'],
+    headline:      'Cut it to make it safe — quarter grapes lengthwise, cut hot dogs lengthwise, grind nuts. Whole hazard foods wait until ~5 years.',
+    whyGood:       'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Change the form: cut to ≤½ inch (a child\'s fingernail), cook soft, grind, or thin.',
+    // NO earlyIntroBenefit — this is choking-by-form (a mechanical hazard), not an allergen to introduce early.
+    safeForm:      { ok:['grapes / cherry tomatoes / round fruit — QUARTER lengthwise (halving is not enough)','hot dogs / sausages — cut LENGTHWISE into strips, never coins/rounds','nuts — ground or flaked, or smooth nut butter thinned / spread thin (never a glob)','hard raw vegetables & fruit (carrot, apple) — cook soft, grate, or slice very thin','cheese / meat — thin strips, not chunks; raisins — chopped','everything ≤½ inch (~1.25 cm), soft enough to squash between finger and thumb'],
+                     never:['whole grapes, whole nuts/groundnuts, popcorn, hard/round candy, marshmallows, chewing gum, whole seeds — for a child under ~5','SUPARI / areca nut — a choking AND toxicity hazard; keep away from young children entirely','hot dogs/sausages cut into round coins (the classic airway plug)','hard raw carrot/apple chunks; thick globs/spoonfuls of nut butter'],
+                     note:'The hazard is the form. Whole nuts/popcorn not under 5 (NHS); high-risk round/firm foods until ~4 (AAP) — the app uses 5 (conservative). A child has no grinding molars until ~16–29 months. (Whole peanut/tree nut have their OWN records — this covers the rest of the choking set.)' },
+    howToIntroduce:{ amount:'Pieces no larger than ½ inch (~1.25 cm) / a child\'s small fingernail; round foods cut so they can\'t plug the airway.',
+                     when:'Modified/cut forms from ~6 months; whole hazard forms wait until ~5 years.',
+                     watch:'Child seated UPRIGHT, never eating while walking, playing, crawling or lying down; always supervised at every meal.',
+                     highRiskNote:'' },
+    myth:          { claim:'Gagging means my baby is choking.',
+                     truth:'No — gagging is LOUD (gurgle/cough), normal and protective while learning to eat; let it resolve. Choking is QUIET — silent or no cough, can\'t breathe. THAT is the emergency. On darker skin, check the gums, inside the lips, or nailbeds for blue, not skin colour.' },
+    watchFor:      ['gagging — LOUD, normal, protective: let it resolve, don\'t intervene','an effective (forceful) cough: encourage coughing, don\'t intervene'],
+    severeSigns:   ['silent or no cough; can\'t breathe, cry, or make noise','turning blue (check gums, inside lips, nailbeds on darker skin)','clutching the throat, distress, or going limp'],
+    timeCourse:    'sudden, during eating; choking can be silent and fast — prevention (right-sized food + upright + supervision) is the primary defence',
+    seekCare:      'CHOKING IS A MECHANICAL EMERGENCY (not an allergy — NO adrenaline). If the cough is effective, encourage coughing. If silent / can\'t breathe: BABY UNDER 1 — alternate 5 back blows (face-down, head low, between the shoulder blades) and 5 chest thrusts (2 fingers, mid-chest below the nipple line); NEVER abdominal thrusts under 1. CHILD OVER 1 — 5 back blows + 5 abdominal thrusts. No blind finger sweep. Not clearing → call 112/108; unresponsive → start CPR.',
+    breastfeedingSafe: true,
+    culturalNote:  'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one series), commonly handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep away from children. Other Indian hazards: chana/roasted gram, hard sev/namkeen/murukku, whole makhana, ber (jujube) pits. NOTE: no Indian-government / IAP choking-food directive was verified — the guidance is international (AAP/NHS/CDC/HSE); the Indian-ness is the food examples + ENT aspiration studies.',
+    confidence:    'high',
+    sources:       ['AAP (Choking Prevention + 2010 policy)','US CDC','UK NHS','HSE Ireland','Resuscitation Council UK','British Red Cross','MedlinePlus','Cureus 2018 (groundnut, India)','Indian J Otolaryngol HNS (Belgaum)','J Otolaryngol HNS 2020 (molar timing)'],
+    dashboard:     'choking-hazards-infant-safety.visual.html',
+    brief:         'choking-hazards-infant-safety.md',
+    longform:      'choking-hazards-infant-safety.html',
+    lastReviewed:  '2026-06-02',
+  },
+
+  // ── append the next food here (salt / sugar …) ──
 ];
 
 /* Node/CommonJS convenience (so the hub OR a build step can require it). */

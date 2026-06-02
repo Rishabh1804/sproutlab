@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!-- Visual dashboard for the choking set. Built from _TEMPLATE.food-dashboard.html
+     (choking-by-form-PRIMARY type). Skim layer over choking-hazards-infant-safety.md / .html.
+     Every chart value is also in text (machine-readable). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choking-Hazard Foods &amp; Infant Safety — Visual Dashboard · SproutLab Care</title>
+<style>
+  :root{
+    --bg:#faf6f0; --card:#fffdf9; --ink:#2e2a26; --mid:#6b6258; --line:#e8ddcf; --track:#efe7da;
+    --sage:#3a7060; --sage-bg:#e8f5ef; --rose:#b04a5e; --rose-bg:#fbe9ec;
+    --amber:#9a7320; --amber-bg:#fbf0d9; --accent:#9a6a3a; --honey:#d99a2b; --honey-bg:#fbeccb;
+    --hi:#2f7d5b; --hi-bg:#e3f3ea; --mod:#9a7320; --mod-bg:#f7eed6; --weak:#9a5a5a; --weak-bg:#f5e6e6;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#1d1a17; --card:#262220; --ink:#ece5db; --mid:#a89c8c; --line:#3a342d; --track:#332d26;
+    --sage:#7ac0a0; --sage-bg:#1e3028; --rose:#e090a0; --rose-bg:#3a2026;
+    --amber:#e0b060; --amber-bg:#352a16; --accent:#c99a6a; --honey:#e8b34a; --honey-bg:#3a2c12;
+    --hi:#7ac0a0; --hi-bg:#1e3028; --mod:#d8b060; --mod-bg:#332a14; --weak:#e09090; --weak-bg:#3a2222; }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Nunito,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px 90px}
+  header{background:linear-gradient(160deg,var(--amber-bg),var(--bg));border-bottom:1px solid var(--line);padding:26px 0 0}
+  h1{font:700 25px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+  .sub{color:var(--mid);font-size:14px;margin:0 0 16px;max-width:680px}
+  nav{display:flex;gap:4px;margin-top:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{appearance:none;border:0;background:transparent;color:var(--mid);font:600 13.5px/1 Nunito,sans-serif;white-space:nowrap;flex:0 0 auto;
+    padding:11px 14px;border-radius:10px 10px 0 0;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:var(--ink);background:var(--card)}
+  .tab.on{color:var(--accent);background:var(--card);border-bottom-color:var(--accent)}
+  .panel{display:none;animation:f .25s ease}.panel.on{display:block}
+  @keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: no-preference){
+    .panel.on .bar .fil{transform-origin:left center;animation:grow .7s cubic-bezier(.34,1.1,.4,1) both}
+    @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    .panel.on .stat,.panel.on .tl-step,.panel.on .therm .col{animation:rise .45s ease both}
+    .panel.on .stat:nth-child(2),.panel.on .tl-step:nth-child(2),.panel.on .therm .col:nth-child(2){animation-delay:.07s}
+    .panel.on .stat:nth-child(3),.panel.on .tl-step:nth-child(3){animation-delay:.14s}
+    .panel.on .stat:nth-child(4),.panel.on .tl-step:nth-child(4){animation-delay:.21s}
+    .panel.on .tl-step:nth-child(5){animation-delay:.28s}
+    @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .panel.on .flag{animation:slidein .5s ease both}
+    @keyframes slidein{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  }
+  h2{font:600 18px/1.3 Fraunces,Georgia,serif;margin:26px 0 10px}
+  h3{font:700 13px/1.3 Nunito;text-transform:uppercase;letter-spacing:.4px;color:var(--mid);margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  .stat{text-align:center;padding:16px 10px}
+  .stat .n{font:800 26px/1 Fraunces,Georgia,serif;color:var(--accent)}
+  .stat .l{font-size:12px;color:var(--mid);margin-top:6px;line-height:1.35}
+  .stat.crit .n{color:var(--rose)}.stat.ok .n{color:var(--sage)}
+  .badge{display:inline-block;font:700 10.5px/1 Nunito;text-transform:uppercase;letter-spacing:.3px;padding:4px 8px;border-radius:6px;vertical-align:middle}
+  .b-hi{background:var(--hi-bg);color:var(--hi)}.b-mod{background:var(--mod-bg);color:var(--mod)}.b-weak{background:var(--weak-bg);color:var(--weak)}.b-crit{background:var(--rose-bg);color:var(--rose)}
+  .tl{position:relative;margin:14px 0 6px;padding-left:8px}
+  .tl-step{position:relative;padding:0 0 18px 26px;border-left:2px solid var(--line)}
+  .tl-step:last-child{border-left-color:transparent}
+  .tl-dot{position:absolute;left:-8px;top:1px;width:15px;height:15px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .tl-step.crit .tl-dot{border-color:var(--rose)}.tl-step.first .tl-dot{border-color:var(--honey)}
+  .tl-t{font-weight:700;font-size:13.5px}.tl-d{color:var(--mid);font-size:12.5px}
+  .flag{border-left:3px solid var(--amber);background:var(--amber-bg);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:13px}
+  .flag.good{border-left-color:var(--sage);background:var(--sage-bg)}.flag.bad{border-left-color:var(--rose);background:var(--rose-bg)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font:700 11px/1.2 Nunito;text-transform:uppercase;letter-spacing:.3px;color:var(--mid)}
+  td.c{text-align:center;font-weight:800}.yes{color:var(--sage)}.no{color:var(--rose)}.dash{color:var(--mid)}
+  td a{color:var(--sage);font-size:12px;word-break:break-all}
+  .pill{display:inline-block;font:600 11px/1 Nunito;padding:5px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--mid);margin:0 4px 4px 0}
+  .pill.warn{background:var(--rose-bg);color:var(--rose);border-color:transparent}
+  .jump{display:inline-block;font-weight:700;color:var(--accent);cursor:pointer;border-bottom:1px dashed var(--accent)}
+  .lead{font-size:16px;line-height:1.5}.lead b{color:var(--accent)}
+  pre{background:#1e1b18;color:#e8e2d6;border-radius:12px;padding:16px;overflow:auto;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace}
+  .therm{display:flex;gap:14px;flex-wrap:wrap}
+  .therm .col{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .therm .big{font:800 19px/1 Fraunces,serif;margin:6px 0}
+  .col.safe{background:var(--sage-bg)}.col.danger{background:var(--rose-bg)}.col.safe .big{color:var(--sage)}.col.danger .big{color:var(--rose)}
+  .foot{color:var(--mid);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Choking-Hazard Foods &amp; Infant Safety</h1>
+  <p class="sub">It's about the <b>FORM</b>, not the food — round, hard, small, sticky. Modify, don't ban: cut, cook soft, grind, thin. The emergency floor here is <b>choking first aid</b>, not adrenaline.</p>
+  <nav>
+    <button class="tab on" data-p="p-sum">Summary</button>
+    <button class="tab" data-p="p-cut">Hazards &amp; cuts</button>
+    <button class="tab" data-p="p-gag">Gag vs choke</button>
+    <button class="tab" data-p="p-aid">First aid</button>
+    <button class="tab" data-p="p-src">Sources &amp; Confidence</button>
+    <button class="tab" data-p="p-data">Data Stub</button>
+  </nav>
+  <p style="font-size:11.5px;color:var(--mid);margin:6px 0 10px">Swipe ‹ › between tabs · or use ← → arrow keys</p>
+</div></header>
+
+<div class="wrap">
+
+  <section class="panel on" id="p-sum">
+    <div class="card" style="background:var(--amber-bg);border-color:transparent;margin-top:18px">
+      <p class="lead" style="margin:0">It's about the <b>shape</b>, not the food. <b>Quarter grapes lengthwise, cut hot dogs lengthwise, grind nuts, cook hard veg soft</b> — pieces no bigger than a child's fingernail. Whole hazard foods wait until ~5 years.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card stat"><div class="n">½ inch</div><div class="l">max piece size (a child's fingernail)</div></div>
+      <div class="card stat crit"><div class="n">~5 yr</div><div class="l">whole nuts/popcorn wait until here</div></div>
+      <div class="card stat crit"><div class="n">#1</div><div class="l">groundnut — top aspirated food in India</div></div>
+      <div class="card stat ok"><div class="n">5 + 5</div><div class="l">back blows + chest thrusts (baby &lt;1)</div></div>
+    </div>
+    <h3>The things to know <span class="badge b-hi">high confidence</span></h3>
+    <div class="grid g2">
+      <div class="card"><b>1 · Modify, don't ban.</b> Cut/cook/grind defeats the round &amp; coin shapes that plug the airway. → <span class="jump" data-go="p-cut">Hazards &amp; cuts</span></div>
+      <div class="card"><b>2 · Gagging ≠ choking.</b> Gagging is loud/normal (don't intervene); choking is quiet (act). → <span class="jump" data-go="p-gag">Gag vs choke</span></div>
+      <div class="card"><b>3 · The floor is first aid.</b> Baby &lt;1: 5 back blows + 5 chest thrusts; NEVER Heimlich under 1. → <span class="jump" data-go="p-aid">First aid</span></div>
+      <div class="card"><b>4 · Indian: groundnut + supari.</b> Whole groundnut is #1 aspirated; keep supari away entirely. → <span class="jump" data-go="p-src">Context</span></div>
+    </div>
+    <h3>When to surface this</h3>
+    <div class="card flag good" style="margin-top:0"><b>Recommendation (Maren):</b> ONE combined record (the category nature + shared floor); per-food cut rules in <code>safeForm</code> (no per-entity guidance dropped — M-γ-1). The FIRST <code>choking-by-form</code>-PRIMARY render — a conditional card (lead = the form-gate) whose floor is choking first aid, not anaphylaxis (needs the milk-spec §9 polarity resolution before wiring). Highest-value: the gagging-vs-choking distinction and the infant back-blows/chest-thrusts (no Heimlich &lt;1).</div>
+    <div style="margin-top:14px">
+      <span class="pill">Reviewer · Maren (Care)</span><span class="pill">floor = choking first aid</span><span class="pill">2026-06-02</span>
+      <span class="pill warn">Research artifact — not yet wired into the app</span>
+    </div>
+  </section>
+
+  <section class="panel" id="p-cut"><h2>The hazard list &amp; how to cut it safe</h2>
+    <div class="card">
+      <p style="margin-top:0">The two killer shapes: <b>round</b> (corks the airway) and <b>coin/cylindrical</b> (windpipe-width). Modify, don't ban.</p>
+      <table>
+        <tr><th>Food</th><th>Make it safe</th></tr>
+        <tr><td><b>Grapes / cherry tomatoes</b></td><td class="yes">Quarter LENGTHWISE (halving is not enough)</td></tr>
+        <tr><td><b>Hot dogs / sausages</b></td><td class="yes">Cut LENGTHWISE into strips, never coins</td></tr>
+        <tr><td><b>Nuts / groundnuts</b></td><td class="yes">Grind/flake, or smooth nut butter thinned/spread thin</td></tr>
+        <tr><td><b>Hard raw carrot / apple</b></td><td class="yes">Cook soft, grate, or slice very thin</td></tr>
+        <tr><td><b>Popcorn, hard candy, marshmallow, gum, whole seeds</b></td><td class="no">Delay — can't reshape safe (under ~5)</td></tr>
+        <tr><td><b>Cheese / meat chunks · raisins</b></td><td class="yes">Thin strips · chop small</td></tr>
+      </table>
+      <p style="font-size:12.5px;color:var(--mid);margin-bottom:0">General rule: pieces <b>≤½ inch (~1.25 cm)</b> / a child's fingernail; soft enough to squash; round foods de-rounded. (AAP/CDC/NHS/HSE.)</p>
+    </div>
+    <div class="flag"><b>⚑ Age window (honest split):</b> AAP keeps high-risk round/firm foods until <b>4+</b> (development-dependent); NHS/HSE say <b>no whole nuts or popcorn under 5</b>. The app uses <code>chokingUntilYears: 5</code> (conservative). A child has no grinding molars until ~16–29 months.</div>
+  </section>
+
+  <section class="panel" id="p-gag"><h2>Gagging vs choking — the key distinction</h2>
+    <div class="therm">
+      <div class="col safe"><div style="font-size:12px;color:var(--mid)">GAGGING — normal &amp; protective</div><div class="big">LOUD · can breathe · strong cough</div><div>A normal reflex while learning to eat. <b>Let it resolve — don't intervene.</b></div></div>
+      <div class="col danger"><div style="font-size:12px;color:var(--mid)">CHOKING — emergency</div><div class="big">QUIET · can't breathe · weak/no cough</div><div>Silent and fast. <b>Act now</b> — shout for help, start back blows.</div></div>
+    </div>
+    <div class="flag"><b>⚑ Darker (Indian) skin:</b> look for blue on the <b>gums, inside the lips, or nailbeds</b> — not skin colour. (NHS Best Start in Life.)</div>
+    <div class="card"><b>Why it matters:</b> many parents intervene on a normal (frequent) gag when they shouldn't — and may miss the silent real thing. Teaching this distinction is the single highest-value piece of choking parent-education.</div>
+  </section>
+
+  <section class="panel" id="p-aid"><h2>Choking first aid — the emergency floor</h2>
+    <div class="card flag bad" style="margin-top:0"><b>This is mechanical airway rescue — NOT anaphylaxis. No adrenaline, no drugs.</b></div>
+    <div class="tl">
+      <div class="tl-step first"><span class="tl-dot"></span><div class="tl-t">Effective cough → encourage coughing</div><div class="tl-d">If they can cough forcefully, let them — don't intervene.</div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Baby &lt;1, silent/can't breathe → 5 back blows + 5 chest thrusts</div><div class="tl-d">Face-down, head low, heel of hand between shoulder blades ×5; then face-up, 2 fingers mid-chest below nipple line ×5. Alternate, repeat. <b>NEVER abdominal thrusts under 1.</b></div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Child &gt;1 → 5 back blows + 5 abdominal thrusts</div><div class="tl-d">No blind finger sweep (pushes it deeper). Don't dangle by the ankles.</div></div>
+      <div class="tl-step crit"><span class="tl-dot"></span><div class="tl-t">Not clearing → call 112 / 108 · unresponsive → CPR</div><div class="tl-d">Call early (speakerphone, hands free) and start CPR if they become unresponsive.</div></div>
+    </div>
+    <div class="flag"><b>⚑ Flag:</b> an RCUK 2025 update reportedly moves infant chest thrusts to a "thumb-encircling" technique — unverified this pass (PDF unreadable); use the established two-finger wording; the core 5+5 is unaffected.</div>
+  </section>
+
+  <section class="panel" id="p-src">
+    <h2>Indian context &amp; consensus</h2>
+    <div class="card">
+      <div class="therm">
+        <div class="col danger"><div style="font-size:12px;color:var(--mid)">INDIAN CORE — verified</div><div class="big">Groundnut = #1 aspirated food</div><div>Pondicherry 67.5% · Belgaum 27.3% · Eastern India 31.8%. Handed loose to toddlers.</div></div>
+        <div class="col danger"><div style="font-size:12px;color:var(--mid)">SUPARI / areca nut</div><div class="big">Double danger — in airways AND toxic</div><div>Seizures + liver injury on ingestion. Keep away from children entirely.</div></div>
+      </div>
+      <div class="flag"><b>⚑ Honesty:</b> no Indian-government/IAP choking-food directive was verified (IAP 2016 + a Sept-2025 editorial both 403-blocked). The guidance is international (AAP/NHS/CDC/HSE); the Indian-ness is the food examples + ENT studies. Four non-Indian "honesty-trap" studies were caught and excluded.</div>
+    </div>
+    <h2>Sources</h2>
+    <div class="card" style="overflow-x:auto"><table>
+      <tr><th>Authority</th><th>Link</th></tr>
+      <tr><td>AAP/HealthyChildren — Choking Prevention</td><td><a href="https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx">healthychildren.org</a></td></tr>
+      <tr><td>US CDC — Choking Hazards</td><td><a href="https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/choking-hazards.html">cdc.gov</a></td></tr>
+      <tr><td>UK NHS — choking &amp; gagging / first aid</td><td><a href="https://www.nhs.uk/best-start-in-life/baby/weaning/safe-weaning/choking-and-gagging-on-food/">nhs.uk</a></td></tr>
+      <tr><td>HSE Ireland — Food choking risks</td><td><a href="https://www2.hse.ie/babies-children/child-safety/choking-strangulation-suffocation/food-choking-risks/">hse.ie</a></td></tr>
+      <tr><td>MedlinePlus — Choking infant (no Heimlich &lt;1)</td><td><a href="https://medlineplus.gov/ency/article/000048.htm">medlineplus.gov</a></td></tr>
+      <tr><td>Cureus 2018 — groundnut aspiration, Pondicherry</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6347440/">pmc</a></td></tr>
+      <tr><td>Indian J Otolaryngol HNS — Belgaum (areca 9.1%)</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3918306/">pmc</a></td></tr>
+      <tr><td>J Otolaryngol HNS 2020 — molar timing</td><td><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7547491/">pmc</a></td></tr>
+    </table></div>
+    <div class="flag"><b>⚑ Open gaps:</b> AAP(4)/NHS(5) age split — app uses 5. Airway≈straw is illustrative; ½-inch + fingernail are load-bearing. RCUK-2025 thumb-encircling unverified — use two-finger. chana/sev/makhana/ber mechanism-inferred; Diwali context uncited. No verified Indian choking-food directive. Full detail in the <code>.md</code> brief.</div>
+  </section>
+
+  <section class="panel" id="p-data"><h2>Drop-in record — <code>FOOD_EFFECTS['choking hazards']</code></h2>
+    <p style="font-size:13.5px;color:var(--mid)">ONE combined record (the data-shape decision). <b>Not yet wired</b> — the first <code>choking-by-form</code>-PRIMARY render (needs the milk-spec §9 polarity resolution).</p>
+<pre>// choking hazards — foodClass: 'choking-by-form' (PRIMARY, first standalone)
+//   the FORM is the hazard (round/hard/small/sticky), not allergy or toxin
+//   severity:'caution' · allergen:false · reactionType:['choking']
+//   minMonth:6 (cut forms ok) + chokingUntilYears:5 (whole forms wait)
+//   safeForm carries the per-food cut rules (grape→quarter, hot dog→lengthwise,
+//     nut→grind/thin, raw veg→cook/grate) — no per-entity guidance dropped (M-γ-1)
+//   THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS — severeSigns/seekCare carry
+//     back-blows + chest-thrusts + call-112, never adrenaline
+//   RESOLVER (Kael, at wiring): aliases the hazard foods WITHOUT existing records
+//     (grape/popcorn/hot dog/chana/supari…); peanut & tree nut keep their own.
+// Full record: docs/research/food-effects.manifest.js</pre>
+  </section>
+
+  <p class="foot">SproutLab · Care visual dashboard · skim layer over <code>choking-hazards-infant-safety.md</code> / <code>.html</code><br>
+  Informational, not medical advice. Not yet wired into the app. All chart values are also in text for machine-reading.</p>
+</div>
+
+<script>
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function activate(t){
+    if(!t) return;
+    tabs.forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    t.classList.add('on');
+    var el = document.getElementById(t.dataset.p); if(el) el.classList.add('on');
+    t.scrollIntoView({inline:'center', block:'nearest'}); window.scrollTo(0,0);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t); }); });
+  document.querySelectorAll('[data-go]').forEach(function(j){
+    j.addEventListener('click', function(){ activate(document.querySelector('.tab[data-p="'+j.dataset.go+'"]')); });
+  });
+  function step(d){ var c=tabs.findIndex(function(t){return t.classList.contains('on');}); var n=c+d; if(n>=0&&n<tabs.length) activate(tabs[n]); }
+  var sx=0, sy=0, tracking=false;
+  document.addEventListener('touchstart', function(e){ if(e.touches.length>1){tracking=false;return;} sx=e.changedTouches[0].clientX; sy=e.changedTouches[0].clientY; tracking=true; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return; tracking=false;
+    var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+  document.addEventListener('keydown', function(e){ if(e.key==='ArrowRight') step(1); else if(e.key==='ArrowLeft') step(-1); });
+</script>
+</body>
+</html>
