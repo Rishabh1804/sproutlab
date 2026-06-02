@@ -62,10 +62,14 @@ test.describe('food-effects v2 — R3 allergen note / food-detail flag', () => {
     expect(d.severe, 'badam → tree-nut anaphylaxis floor').toBeGreaterThan(0);
   });
 
-  test('an ALLERGENS food with no record (egg) falls back to the terse string — no fabricated floor', async ({ page }) => {
-    const d = await detail(page, 'egg');
-    expect(d.allergenFlag, 'terse allergen flag still shown').toBe(true);
-    expect(d.severe + d.watch + d.seek, 'no record → no severe/botulism floor fabricated').toBe(0);
+  test('an ALLERGENS food with no record (kiwi) falls back to the terse string — no fabricated floor', async ({ page }) => {
+    // egg gained a FOOD_EFFECTS record in Phase δ, so it is no longer a no-record
+    // example — kiwi is (ALLERGENS-only, no FOOD_EFFECTS). A milder allergen with no
+    // record renders the calm neutral flag (.fd-flag-neutral), never the rose siren, and
+    // fabricates no severe/seek floor (V-M-201 + the M-S-6 "fall back to terse" contract).
+    const d = await detail(page, 'kiwi');
+    expect(d.neutral, 'calm neutral allergen flag shown for a no-record allergen').toBe(true);
+    expect(d.severe + d.watch + d.seek, 'no record → no severe floor fabricated').toBe(0);
   });
 
   test('V-M-201 preserved: a food with no record and no allergen shows the neutral 3-day note', async ({ page }) => {
