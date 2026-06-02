@@ -45,6 +45,25 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Rule:** Every new card, section, or feature must use one of these domain colors. No ad-hoc hex values in innerHTML strings.
 
+#### Tint System
+
+**Definition.** A *tint* is a domain accent taken down to a soft, low-saturation **surface wash** — the colour a card, pill, or banner sits *on* so the surface reads as "belonging to" a domain without competing with its content. Tint is the background member of the domain triad; the accent is the structural/border member, the `--tc-*` is the text member. The **"Light BG" column of the Domain Colors table above _is_ the canonical tint scale** — `--sage-light`, `--rose-light`, `--amber-light`, `--lav-light`, `--sky-light`, `--indigo-light`, `--peach-light`.
+
+**Rule.** Tints are never hand-mixed at the call site. A component that needs a domain wash either (a) consumes a `--*-light` token directly, or (b) consumes a **component tint alias** (below) that resolves *to* a `--*-light`. No raw light-hex (`#e8f5ef`, `#f0ebfb`, …) in CSS or innerHTML — those are the 8th-instance `running-beats-reading` drift class (see Polish-3/-4 `--lav-light` corrective, line ~147).
+
+**Component tint aliases.** Where a component is colour-agnostic and inherits its domain from a parent (`data-domain`) or a variant class, it reads its wash through an alias custom-property so the same rules serve every domain:
+
+| Alias | Defined | Resolves to | Consumed by |
+|---|---|---|---|
+| `--al-tint` | `styles.css:9412–9416` (+ default `:6358`) | a `--*-light` per `data-domain` | Activity-Log rows, milestone bulk/domain chips |
+| `--vd-tint` | `styles.css:4115–4121` | a `--*-light` per `.viz-detail-*` variant | viz-detail panels |
+
+**Developmental-domain remap (`--al-tint`).** The Activity-Log alias is the one place tint crosses *namespaces*: the five **developmental** domains (`data-domain="motor|language|cognitive|social|sensory"`) remap onto **colour** domains — Motor→sage, Language→lavender, Cognitive→sky, Social→peach, Sensory→amber (`styles.css:9408–9416`). This is intentional, not a collision: a developmental domain is not a colour domain, and the mapping is documented at its definition so a Governor auditing a `data-domain` block knows the wash is a deliberate cross-walk, not an ad-hoc pick.
+
+**Dark mode.** Tints do not invert to solid darks — they **recede to an 8%-alpha domain gradient over `--warm`** (`[data-theme="dark"] #tab-* .card`, `styles.css:7634–7638`), preserving domain identity ("sage stays green, rose stays pink" — see Status Triad note) while the surface darkens. A tint must survive this: if a wash only reads in light mode, it is too saturated to be a tint.
+
+**Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from this scale — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint token system; do not "tokenize" them into `--*-light`.
+
 #### Domain → Element Assignments
 
 | UI Element | Domain Color | Why |
