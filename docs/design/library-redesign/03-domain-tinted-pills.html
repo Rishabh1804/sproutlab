@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · Diet → Library redesign — S3 DOMAIN-TINTED PILLS (design record)
+  ─────────────────────────────────────────────────────────────────────────
+  Supersedes S2's polarity-WASHED bands. Resolution from the collision study
+  (_collision-study, Architect choice "A"): tile colour rides TWO separate
+  channels so safety-polarity and food-domain never compete —
+    • POLARITY  → the left rail + the group header (--tc-*), and the loud
+      rose Emergency Deck. Safety still leads.
+    • FOOD DOMAIN → a SUBTLE hero-style fading tint on the pill body
+      (linear-gradient 135deg: mostly --card-bg, the food category's
+      --*-light pooling softly into the far corner) — a whisper, NOT a flat
+      --*-light fill. Egg/Fish→rose, Soy→sage, Peanut/Sesame→lav,
+      Cow's milk→sky, Citrus→rose, Honey→amber, Whole-nuts→lav.
+  Bands are NEUTRAL (no wash), so a rose-domain pill no longer sits in a
+  green zone reading as danger. Domain colour resolves from FOOD_TAX.color
+  via the shipped _foodColorMap (data.js); here applied by hand for the record.
+
+  Real split/styles.css linked; real tokens only; safe-form glance is the
+  present-only M-C-4 sub-label; siren marker present only on severeSigns.
+  Phone-width, light theme (dark + hue-swap come at S8).
+-->
+<html lang="en" data-zoom="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../split/styles.css">
+<style>
+  /* ── rendering harness (NOT product CSS) ── */
+  html, body { background:#e7dbd1; }
+  body { margin:0; font-family:'Nunito',sans-serif; color:var(--text); }
+  .r-phone { max-width:412px; margin:0 auto; background:var(--bg, #faf6f3);
+    min-height:100vh; padding:var(--sp-16); box-sizing:border-box; box-shadow:0 0 40px rgba(0,0,0,0.08); }
+  .r-caption { font-size:var(--fs-2xs); color:var(--light); font-style:italic;
+    margin:var(--sp-4) 0 var(--sp-16); padding-left:var(--sp-4); border-left:2px solid var(--card-border); line-height:1.5; }
+  .r-eyebrow { font-family:'Fraunces',serif; font-size:var(--fs-xs); font-weight:600;
+    text-transform:uppercase; letter-spacing:0.08em; color:var(--mid); margin:var(--sp-24) 0 var(--sp-6); }
+  .r-eyebrow:first-of-type { margin-top:var(--sp-8); }
+  .r-title { font-family:'Fraunces',serif; font-size:var(--fs-2xl); font-weight:600; color:var(--text); margin:0 0 2px; }
+  .r-lede { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-16); line-height:1.5; }
+  .r-divider { height:1px; background:linear-gradient(90deg, var(--card-border), transparent); margin:var(--sp-24) 0 0; }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PRODUCT COMPONENT CSS (proposed)
+     ════════════════════════════════════════════════════════════════════ */
+
+  /* §3 — Emergency Deck ENTRY (loud rose signaling — the one true alarm). */
+  .emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%;
+    text-align:left; background:var(--rose-light); border-left:var(--accent-w, 3px) solid var(--rose);
+    border-radius:var(--r-2xl); padding:var(--sp-16); min-height:44px; cursor:pointer; box-shadow:0 3px 14px var(--shadow); }
+  .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full);
+    background:var(--rose); color:var(--card-bg); display:flex; align-items:center; justify-content:center; }
+  .emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
+  .emerg-entry-txt { flex:1; min-width:0; }
+  .emerg-entry-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--tc-rose); line-height:var(--lh-snug); }
+  .emerg-entry-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); }
+  .emerg-entry-go { flex:0 0 auto; color:var(--tc-rose); }
+  .emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
+
+  /* §1 — NEUTRAL group: a polarity-named header + a stack of pills. No band wash. */
+  .lib-group { margin-bottom:var(--sp-20); }
+  .lib-group-label { display:flex; align-items:center; gap:var(--sp-8);
+    font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug);
+    margin:0 0 var(--sp-10); padding-left:var(--sp-4); }
+  .lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+  .lib-group-count { margin-left:auto; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+  .lib-group--encourage   .lib-group-label { color:var(--tc-sage); }
+  .lib-group--conditional .lib-group-label { color:var(--tc-amber); }
+  .lib-group--warn        .lib-group-label { color:var(--tc-rose); }
+  .lib-group--inform      .lib-group-label { color:var(--tc-sky); }
+  .lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+
+  /* §1 — Pill: a soft daily-card carrying TWO channels.
+     Channel 1 (POLARITY): the left rail colour.
+     Channel 2 (FOOD DOMAIN): the subtle fading body tint. */
+  .lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left;
+    border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; cursor:pointer;
+    box-shadow:0 1px 8px var(--shadow); transition:all var(--ease-fast);
+    border-left:var(--accent-w, 3px) solid var(--mid); background:var(--card-bg); }
+  /* Channel 1 — polarity rail (static classes, Cipher 3) */
+  .lib-book--encourage   { border-left-color:var(--sage); }
+  .lib-book--conditional { border-left-color:var(--amber); }
+  .lib-book--warn        { border-left-color:var(--rose); }
+  .lib-book--inform      { border-left-color:var(--sky); }
+  /* Channel 2 — subtle fading FOOD-DOMAIN tint (hero-style; mostly cream → whisper
+     of the category --*-light into the far corner). Keyed off FOOD_TAX.color. */
+  .dt-grains { background:linear-gradient(135deg, var(--card-bg) 32%, var(--sage-light)); }
+  .dt-nonveg { background:linear-gradient(135deg, var(--card-bg) 32%, var(--rose-light)); }
+  .dt-nuts   { background:linear-gradient(135deg, var(--card-bg) 32%, var(--lav-light)); }
+  .dt-dairy  { background:linear-gradient(135deg, var(--card-bg) 32%, var(--sky-light)); }
+  .dt-fruits { background:linear-gradient(135deg, var(--card-bg) 32%, var(--rose-light)); }
+  .dt-spices { background:linear-gradient(135deg, var(--card-bg) 32%, var(--amber-light)); }
+  .dt-vegs   { background:linear-gradient(135deg, var(--card-bg) 32%, var(--peach-light)); }
+
+  .lib-book-body { flex:1; min-width:0; }
+  .lib-book-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+  .lib-book-glance { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); display:flex; align-items:center; gap:var(--sp-6); }
+  .lib-book-glance .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--tc-amber); }
+  .lib-book-siren { flex:0 0 auto; color:var(--rose); display:flex; align-items:center; }
+  .lib-book-siren .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-book-go { flex:0 0 auto; color:var(--light); align-self:center; }
+  .lib-book-go .zi { width:var(--icon-base); height:var(--icon-base); }
+</style>
+</head>
+<body class="libr-render">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+<symbol id="zi-sprout" viewBox="0 0 24 24"><path d="M12 22v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8c0-3 2.5-5 5-6c2.5 1 5 3 5 6c0 3.5-3 6-5 7c-2-1-5-3.5-5-7z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14c-3-1-5-4-4-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-spoon" viewBox="0 0 24 24"><path d="M12 3c2.5 0 4.5 2 4.5 4.5S14.5 12 12 12s-4.5-2-4.5-4.5S9.5 3 12 3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="zi-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/></symbol>
+<symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="zi-siren" viewBox="0 0 24 24"><path d="M6 15v-3a6 6 0 0112 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><rect x="4" y="15" width="16" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><line x1="12" y1="5" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5" y1="8" x2="3.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="19" y1="8" x2="20.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+
+<div class="r-phone">
+
+  <h1 class="r-title">Domain-tinted pills</h1>
+  <p class="r-lede">Diet → Library redesign · S3 · two colour channels that don't fight — polarity on the rail &amp; header, food domain as a subtle fading pill tint. Supersedes S2's washed bands.</p>
+
+  <!-- Emergency entry pinned: the only loud rose -->
+  <button class="emerg-entry">
+    <span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span>
+    <span class="emerg-entry-txt">
+      <span class="emerg-entry-title">In an emergency</span>
+      <span class="emerg-entry-sub">Choking · allergic reaction · delayed vomiting · poisoning</span>
+    </span>
+    <span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span>
+  </button>
+  <div style="height:var(--sp-20)"></div>
+
+  <!-- 1 · encourage -->
+  <div class="lib-group lib-group--encourage">
+    <div class="lib-group-label"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early<span class="lib-group-count">5</span></div>
+    <div class="lib-shelf-row">
+      <button class="lib-book lib-book--encourage dt-nonveg"><span class="lib-book-body"><span class="lib-book-title">Egg — good to introduce early, well-cooked</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Well-cooked; yolk first</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--encourage dt-nuts"><span class="lib-book-body"><span class="lib-book-title">Peanut — good to introduce early, in safe form</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Ground or smooth — never whole</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--encourage dt-grains"><span class="lib-book-body"><span class="lib-book-title">Soy — fine to introduce early, as soft tofu</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Soft tofu — not whole edamame</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--encourage dt-nonveg"><span class="lib-book-body"><span class="lib-book-title">Fish — good to introduce early, deboned and low-mercury</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Low-mercury, deboned, well-cooked</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--encourage dt-nuts"><span class="lib-book-body"><span class="lib-book-title">Sesame — introduce early, as thinned tahini</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Thinned tahini — not whole seeds</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+
+  <!-- 2 · conditional -->
+  <div class="lib-group lib-group--conditional">
+    <div class="lib-group-label"><svg class="zi"><use href="#zi-clock"/></svg>Right time, right form<span class="lib-group-count">2</span></div>
+    <div class="lib-shelf-row">
+      <button class="lib-book lib-book--conditional dt-dairy"><span class="lib-book-body"><span class="lib-book-title">Cow's milk — good in food, not yet as the main drink</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Fine in food; wait as a drink</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--conditional dt-fruits"><span class="lib-book-body"><span class="lib-book-title">Citrus — fine early; expect a harmless acidic rash around the mouth</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Soft segments, no seeds</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+
+  <!-- 3 · warn -->
+  <div class="lib-group lib-group--warn">
+    <div class="lib-group-label"><svg class="zi"><use href="#zi-warn"/></svg>Wait — and here's why<span class="lib-group-count">2</span></div>
+    <div class="lib-shelf-row">
+      <button class="lib-book lib-book--warn dt-spices"><span class="lib-book-body"><span class="lib-book-title">Honey before 12 months</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-warn"/></svg>Wait until age 1 — a firm rule</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <button class="lib-book lib-book--warn dt-nuts"><span class="lib-book-body"><span class="lib-book-title">Whole nuts &amp; hard round foods</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-warn"/></svg>Choking shape — change the form</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+
+  <!-- 4 · inform -->
+  <div class="lib-group lib-group--inform">
+    <div class="lib-group-label"><svg class="zi"><use href="#zi-info"/></svg>Good to know<span class="lib-group-count">1</span></div>
+    <div class="lib-shelf-row">
+      <button class="lib-book lib-book--inform dt-dairy"><span class="lib-book-body"><span class="lib-book-title">Plant milks — not a substitute for breastmilk or formula</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-info"/></svg>Not a substitute under 1</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+    </div>
+  </div>
+
+  <p class="r-caption">§Tint · two channels. <b>Rail + header = polarity</b> (sage encourage · amber conditional · rose warn · sky inform) — safety leads. <b>Pill body = a subtle fading food-domain tint</b> keyed to <code>FOOD_TAX.color</code> (egg/fish→rose, soy→sage, peanut/sesame→lav, milk→sky, citrus→rose, honey→amber, whole-nuts→lav): mostly cream with the domain pooling softly into one corner — a whisper, not a fill. Bands are neutral, so a rose-domain pill never sits in a green wash reading as danger. Safe-form glance (M-C-4) and present-only siren are unchanged; the loud rose Emergency Deck stays the one alarm.</p>
+
+  <div class="r-divider"></div>
+</div>
+</body>
+</html>
