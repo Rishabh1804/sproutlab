@@ -170,27 +170,13 @@
   .ld-link { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-12); font-size:var(--fs-sm); font-weight:700; color:var(--tc-lav); cursor:pointer; }
   .ld-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
 
-  /* guides wing */
-  .guide-list { display:flex; flex-direction:column; gap:var(--sp-10); }
-  .guide-card { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; border:none; border-left:3px solid var(--sky);
-    background:var(--card-bg); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 1px 8px var(--shadow); cursor:pointer; transition:box-shadow var(--ease-fast); }
-  .guide-card:hover { box-shadow:0 2px 14px var(--shadow); }
-  .guide-card--rose  { border-left-color:var(--rose); }
-  .guide-card--sage  { border-left-color:var(--sage); }
-  .guide-card--amber { border-left-color:var(--amber); }
-  .guide-card--sky   { border-left-color:var(--sky); }
-  .guide-card--lav   { border-left-color:var(--lavender); }
-  .guide-ic { flex:0 0 auto; width:34px; height:34px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; }
-  .guide-ic .zi { width:var(--icon-md); height:var(--icon-md); }
-  .guide-card--rose  .guide-ic { background:var(--rose-light); color:var(--tc-rose); }
-  .guide-card--sage  .guide-ic { background:var(--sage-light); color:var(--tc-sage); }
-  .guide-card--amber .guide-ic { background:var(--amber-light); color:var(--tc-amber); }
-  .guide-card--sky   .guide-ic { background:var(--sky-light); color:var(--tc-sky); }
-  .guide-card--lav   .guide-ic { background:rgba(201,184,232,0.20); color:var(--tc-lav); }
-  .guide-body { flex:1; min-width:0; }
-  .guide-t { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
-  .guide-s { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
-  .guide-card.expanded .lib-book-go { transform:rotate(90deg); }
+  /* guides wing — reuses the Browse section-header (lib-group) collapsible pattern */
+  .lib-group--sage  .lib-group-label { color:var(--tc-sage); }
+  .lib-group--amber .lib-group-label { color:var(--tc-amber); }
+  .lib-group--rose  .lib-group-label { color:var(--tc-rose); }
+  .lib-group--sky   .lib-group-label { color:var(--tc-sky); }
+  .lib-group--lav   .lib-group-label { color:var(--tc-lav); }
+  .lib-group--guide .lib-group-chev { margin-left:auto; }
   .ld-steps { margin:0; padding:0; list-style:none; }
   .ld-step { display:flex; gap:var(--sp-8); margin-bottom:var(--sp-8); }
   .ld-step:last-child { margin-bottom:0; }
@@ -379,51 +365,49 @@
 
   </div>
 
-  <!-- ══ SAFETY GUIDES WING ══ -->
+  <!-- ══ SAFETY GUIDES WING — same collapsible-section pattern as Browse foods ══ -->
   <div id="wing-guides" class="hidden">
-    <div class="guide-list">
 
-      <div class="lib-book-wrap">
-        <button class="guide-card guide-card--sage" data-action="toggleBook"><span class="guide-ic"><svg class="zi"><use href="#zi-sprout"/></svg></span><span class="guide-body"><span class="guide-t">Introducing allergens early</span><span class="guide-s">Why early, how often, what form</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
-        <div class="lib-detail"><div class="lib-detail-inner">
-          <div class="ld-sec"><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Waiting does not help.</p></div>
-          <div class="ld-sec"><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Egg</span><span class="ld-chip ld-chip--ok">Peanut</span><span class="ld-chip ld-chip--ok">Tree nuts</span><span class="ld-chip ld-chip--ok">Fish</span><span class="ld-chip ld-chip--ok">Sesame</span><span class="ld-chip ld-chip--ok">Soy</span><span class="ld-chip ld-chip--ok">Wheat</span><span class="ld-chip ld-chip--ok">Dairy</span></div></div>
-          <div class="ld-sec"><div class="ld-h">How to do it</div><p class="ld-why">One new allergen at a time, on a calm day, earlier in the day. Once it's tolerated, keep it in ~2× a week — regular exposure is what protects. Always in a smooth, age-safe form.</p></div>
-          <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>Know the reaction signs</div><ul><li>Hives spreading, swelling of lips/face, wheeze or trouble breathing, repeated vomiting, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
-        </div></div>
-      </div>
-
-      <div class="lib-book-wrap">
-        <button class="guide-card guide-card--amber" data-action="toggleBook"><span class="guide-ic"><svg class="zi"><use href="#zi-spoon"/></svg></span><span class="guide-body"><span class="guide-t">Safe shapes &amp; textures</span><span class="guide-s">Turning choking forms into safe ones</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
-        <div class="lib-detail"><div class="lib-detail-inner">
-          <div class="ld-sec"><p class="ld-why">Most choking risk is the <b>shape</b>, not the food — round, hard, or coin-shaped. Change the form and the food is safe.</p></div>
-          <div class="ld-sec"><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Nuts → ground or smooth butter</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Grapes &amp; tomatoes → quartered lengthwise</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Hard veg &amp; fruit → cooked soft or grated</span><span class="ld-chip ld-chip--never">No whole nuts, popcorn, hard sweets</span></div></div>
-          <div class="ld-sec"><div class="ld-h">Every time</div><p class="ld-why">Baby sitting upright, never propped or in a car seat, and always within arm's reach while eating.</p></div>
-          <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If choking — a mechanical emergency, NO adrenaline</div><ul><li>Silent or weak cough, can't breathe/cry, turning blue, going limp</li></ul><p class="ld-floor-act">Alternate 5 back blows and 5 chest thrusts (never abdominal thrusts under 1). Call 112/108. If unresponsive, start CPR.</p></div>
-        </div></div>
-      </div>
-
-      <div class="lib-book-wrap">
-        <button class="guide-card guide-card--sky" data-action="toggleBook"><span class="guide-ic"><svg class="zi"><use href="#zi-bowl"/></svg></span><span class="guide-body"><span class="guide-t">Milk &amp; drinks</span><span class="guide-s">What's the main drink, and when</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
-        <div class="lib-detail"><div class="lib-detail-inner">
-          <div class="ld-sec"><p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b> — nothing replaces it for the fat and nutrients a baby needs.</p></div>
-          <div class="ld-sec"><div class="ld-h">Around now</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Cow's milk fine <em>in food</em></span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Sips of water in an open cup with meals</span><span class="ld-chip ld-chip--never">Cow's milk not as the main drink yet</span><span class="ld-chip ld-chip--never">Plant milks not a substitute</span></div></div>
-          <div class="ld-sec"><div class="ld-h">At 12 months</div><p class="ld-why">Whole cow's milk can become a main drink. No sugary drinks or juice before then (or after, ideally).</p></div>
-        </div></div>
-      </div>
-
-      <div class="lib-book-wrap">
-        <button class="guide-card guide-card--lav" data-action="toggleBook"><span class="guide-ic"><svg class="zi"><use href="#zi-clock"/></svg></span><span class="guide-body"><span class="guide-t">First foods, by age</span><span class="guide-s">What changes at 6, 9 and 12 months</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
-        <div class="lib-detail"><div class="lib-detail-inner">
-          <div class="ld-sec"><ul class="ld-steps">
-            <li class="ld-step"><span class="ld-step-age">~6 mo</span><span class="ld-step-txt">Smooth purées &amp; soft single foods. Start iron-rich foods, and begin introducing the allergens.</span></li>
-            <li class="ld-step"><span class="ld-step-age">~9 mo</span><span class="ld-step-txt">Lumpier textures and soft finger foods. More variety, more self-feeding. Ziva is here.</span></li>
-            <li class="ld-step"><span class="ld-step-age">12 mo+</span><span class="ld-step-txt">Family foods. Whole cow's milk can be the main drink, and honey is finally safe.</span></li>
-          </ul></div>
-        </div></div>
-      </div>
-
+    <div class="lib-group lib-group--sage lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-sprout"/></svg>Introducing allergens early<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Waiting does not help.</p></div>
+        <div class="ld-sec"><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Egg</span><span class="ld-chip ld-chip--ok">Peanut</span><span class="ld-chip ld-chip--ok">Tree nuts</span><span class="ld-chip ld-chip--ok">Fish</span><span class="ld-chip ld-chip--ok">Sesame</span><span class="ld-chip ld-chip--ok">Soy</span><span class="ld-chip ld-chip--ok">Wheat</span><span class="ld-chip ld-chip--ok">Dairy</span></div></div>
+        <div class="ld-sec"><div class="ld-h">How to do it</div><p class="ld-why">One new allergen at a time, on a calm day, earlier in the day. Once it's tolerated, keep it in ~2× a week — regular exposure is what protects. Always in a smooth, age-safe form.</p></div>
+        <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>Know the reaction signs</div><ul><li>Hives spreading, swelling of lips/face, wheeze or trouble breathing, repeated vomiting, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+      </div></div>
     </div>
+
+    <div class="lib-group lib-group--amber lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-spoon"/></svg>Safe shapes &amp; textures<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Most choking risk is the <b>shape</b>, not the food — round, hard, or coin-shaped. Change the form and the food is safe.</p></div>
+        <div class="ld-sec"><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Nuts → ground or smooth butter</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Grapes &amp; tomatoes → quartered lengthwise</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Hard veg &amp; fruit → cooked soft or grated</span><span class="ld-chip ld-chip--never">No whole nuts, popcorn, hard sweets</span></div></div>
+        <div class="ld-sec"><div class="ld-h">Every time</div><p class="ld-why">Baby sitting upright, never propped or in a car seat, and always within arm's reach while eating.</p></div>
+        <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If choking — a mechanical emergency, NO adrenaline</div><ul><li>Silent or weak cough, can't breathe/cry, turning blue, going limp</li></ul><p class="ld-floor-act">Alternate 5 back blows and 5 chest thrusts (never abdominal thrusts under 1). Call 112/108. If unresponsive, start CPR.</p></div>
+      </div></div>
+    </div>
+
+    <div class="lib-group lib-group--sky lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-bowl"/></svg>Milk &amp; drinks<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b> — nothing replaces it for the fat and nutrients a baby needs.</p></div>
+        <div class="ld-sec"><div class="ld-h">Around now</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Cow's milk fine <em>in food</em></span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Sips of water in an open cup with meals</span><span class="ld-chip ld-chip--never">Cow's milk not as the main drink yet</span><span class="ld-chip ld-chip--never">Plant milks not a substitute</span></div></div>
+        <div class="ld-sec"><div class="ld-h">At 12 months</div><p class="ld-why">Whole cow's milk can become a main drink. No sugary drinks or juice before then (or after, ideally).</p></div>
+      </div></div>
+    </div>
+
+    <div class="lib-group lib-group--lav lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-clock"/></svg>First foods, by age<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><ul class="ld-steps">
+          <li class="ld-step"><span class="ld-step-age">~6 mo</span><span class="ld-step-txt">Smooth purées &amp; soft single foods. Start iron-rich foods, and begin introducing the allergens.</span></li>
+          <li class="ld-step"><span class="ld-step-age">~9 mo</span><span class="ld-step-txt">Lumpier textures and soft finger foods. More variety, more self-feeding. Ziva is here.</span></li>
+          <li class="ld-step"><span class="ld-step-age">12 mo+</span><span class="ld-step-txt">Family foods. Whole cow's milk can be the main drink, and honey is finally safe.</span></li>
+        </ul></div>
+      </div></div>
+    </div>
+
   </div>
 </div>
 
