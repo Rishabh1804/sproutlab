@@ -99,6 +99,34 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from any register above — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint system; do not "tokenize" them into `--*-light`.
 
+#### Food-Domain Colour & the Polarity Collision
+
+There is a **second** colour system in the app, orthogonal to the 7 UI domains: every food carries a **food-category colour**. It is shipped and load-bearing, but until now undocumented.
+
+**The taxonomy** (`FOOD_TAX[*].color`, `data.js:2045`):
+
+| Food category | Colour | | Food category | Colour |
+|---|---|---|---|---|
+| grains & cereals (incl. legumes) | **sage** | | nuts & seeds | **lav** |
+| fruits | **rose** | | spices | **amber** |
+| vegetables | **peach** | | non-veg (eggs, seafood, meat) | **rose** |
+| dairy & fats | **sky** | | | |
+
+Three shipped maps resolve a category colour to CSS (`data.js:2114–2116`): `_foodColorMap` (→ `--*-light` fill), `_foodBorderMap` (→ `rgba()` border), `_foodTextMap` (→ text colour). A food pill keys its colour off `FOOD_TAX.color`, **not** off any per-pill hex.
+
+**The collision (the load-bearing constraint).** Food-category colour and **safety-polarity** colour (sage = "introduce early", amber = "right time/form", rose = "wait / danger", sky = "good to know") **share the same 7 tokens with opposite meanings**. The worst overlap: **`rose` means both "danger/wait" *and* "non-veg / fruit."** So a food-domain-coloured egg or fish pill (non-veg → rose) dropped into a sage "introduce early" zone reads as *"this food is unsafe"* — the exact opposite of the truth. **You cannot wash a surface with both systems at once.**
+
+**The resolution — one structural channel, one whisper channel.** When both dimensions must appear on the same element (e.g. a Library food tile), they split across two *visually distinct* channels, and **safety always wins the structural channel**:
+
+| Dimension | Channel | Treatment |
+|---|---|---|
+| **Safety polarity** (leads) | structural | left **rail** (`border-left`, the polarity accent) + the **section header** in the polarity `--tc-*` |
+| **Food domain** (rides under) | a subtle **fade** | a hero-style `background-image` whisper over a solid `--card-bg` — pale **accent** ~22% in light, deep **`--tc` hue** ~16% in dark (the §Tint hue-swap law) |
+
+Because the food-domain channel is a *whisper*, not a wash, the rose on a non-veg pill never competes with the polarity rail/zone — it's a soft corner glow, not an alarm. **Rule of thumb:** if two colour systems must coexist on one surface, give the safety-critical one the structural channel (rail/border/header/icon) and demote the other to a sub-perceptual fade — never two competing fills or two competing washes. The one true alarm (the Emergency Deck's loud rose) stays louder than every tint, in either mode.
+
+*(Worked design record: `docs/design/library-redesign/03-*` — the Library's polarity grouping + per-food domain whisper, light and dark.)*
+
 #### Domain → Element Assignments
 
 | UI Element | Domain Color | Why |
@@ -712,11 +740,57 @@ Every `pnpm build` runs these gates sequentially in `split/build.sh`; any failur
 
 ---
 
+## 9. Recipes — Generative Food System (incoming patterns)
+
+> Patterns established in the **Diet → Recipes design exploration** (2026-06-03, `docs/design/recipes-tab/`).
+> **Forward-looking** — these describe how the recipes feature should be built when wired into `split/`.
+> The exploration is generator-backed (deterministic, data-driven); the wiring runs the canon-cc-008 Governor gate.
+
+### 9.1 `zi_food` — the food-icon system (`zif-*` symbols)
+A dedicated **full-colour** ingredient icon set (system name `zi_food`, symbol namespace `zif-*`), separate from the monochrome `zi()` system.
+- **Namespace `zif-*`**, 97 symbols covering 100% of the data.js food corpus (grains, legumes, vegetables, fruits, dairy & eggs, nuts & seeds, proteins, fats & sweeteners, spices & herbs).
+- **Real food colours, not domain colours.** The edible flesh uses `fill="currentColor"` so the *consumer* sets the hue — **one symbol drives every variant** (bell pepper red/yellow/green, carrot orange/purple, toor/moong/masoor/urad dal). Natural accents (green tops, brown pit/stem, egg yolk, husk) are **baked in** at fixed colours.
+- **Style:** flat fill + a warm rgba outline (`rgba(74,48,22,.22)`) so whites/creams read on light surfaces. 24×24 viewBox, like `zi()`.
+- **Deliberate departure from `zi()`:** `zif-*` is multi-fill colour; it is NOT a drop-in `zi()` call and does not satisfy HR-1's "icons via zi()" by itself — it is a sibling system for ingredient representation. Wire as its own sprite block.
+
+### 9.2 Ingredient pills use the whisper fade (never flat)
+Food/ingredient chips carry the **food-domain whisper fade** (`dt-*`), not a flat tint or a naked card:
+`background: linear-gradient(135deg, transparent 40%, rgba(<accent>,.22))` over the card base + a domain-tinted border; dark theme swaps to `transparent 30%` + the deep `--tc-*` hue. This is the decided language (ported from the library rework) — reaffirms **HR-6 (domain colour on every surface)**.
+
+### 9.3 Generative recipe fingerprint (quantity-weighted)
+A recipe's hero renders a deterministic fingerprint from its ingredients:
+- **STRIPE** (top ribbon) + **FADE** (body wash) are the recipe's primary-ingredient **domains, wavelength-ordered** (rose → peach → amber → sage → sky → indigo → lav ≈ red→violet).
+- **Band-widths are weighted by ingredient quantity (grams)** — a 60% rice / 25% carrot / 15% paneer khichdi reads sage-dominant. Trace ingredients (ghee/salt/spices) are excluded so the fingerprint never muds; cap ≤ ~4 domains.
+- Domain → colour: fruit→rose, veg→peach, legume→amber, grain→sage, dairy→sky, nuts→lavender. Fade uses `--*-light` (light) / deep `rgba` hue (dark).
+
+### 9.4 Warm-wave stripe (motion)
+The stripe is **narrow (~4px)**, uses **soft mid-tone** hues (between the pale `--*` and the harsh `--tc-*` — de-neoned), and **animates**: a translucent sheen sweeps left→right (~4.4s ease loop) over the static weighted gradient — the colour band-widths stay fixed (they encode quantity); only the highlight moves. Respect `prefers-reduced-motion` at wiring time.
+
+### 9.5 Tagline system (three layers)
+1. **Curated recipe taglines** — 2–3 per named recipe, rotated by a **day-seed** (fresh daily, deterministic within a day).
+2. **Per-ingredient bank** — 2–3 taglines per ingredient for single-food logs (61 ingredients).
+3. **Composer** (`taglines.mjs`) — for any uncurated combo: each ingredient contributes an **epithet + noun**; the **minor-share ratio picks the connector** so volume shows in the words (`<12%` "just a hint" · `~20%` "a touch" · `~30%` "a little" · `~40%` "balanced with" · `~50/50` "meets"); epithets rotate by day-seed.
+
+### 9.6 Typography — recipe "voice" line (direction C)
+Recipe titles: **roman Fraunces** (700) + a **Fraunces *italic*** descriptor line beneath (the warm "voice"). Italic is reserved for the descriptor — not eyebrows/sections. Titles: `max-width` guard + `text-wrap: balance` (the early wrap is a width guard, not a design break). Fraunces roman = structure; Fraunces italic = voice; Nunito = functional text.
+
+### 9.7 Infant-food safety rules (content floor — Care/Maren jurisdiction)
+Cross-verified against WHO 2023 / WHO-PAHO / IAP / ICMR-NIN 2024 / NHS / FAO am866e / AAP / CDC (see `docs/design/recipes-tab/RECIPE_RESEARCH.md`). **Any recipe/tagline/food surface must honour these:**
+- **Honey** — none < 12 months (infant botulism). Hard no.
+- **No added salt; no added sugar/jaggery; no fruit juice** < 12 months — **fruit sweetens** (adopted the stricter WHO/NHS line over IAP's sugar allowance).
+- **Allergens** (egg, peanut, tree nuts, dairy, sesame, fish) — introduce early (~6m), one at a time.
+- **Choking/prep** — nuts/seeds ground (never whole), grapes halved, hard veg/fruit cooked soft, egg fully cooked, fish deboned, chia soaked, raisins softened.
+- **Cow's milk** — in cooking from 6m; not a main drink until 12m.
+- **In taglines:** soft prep-cautions **fold into the phrase** ("ground almond", "halved grape"); **strict no's lead** as a prominent clause ("honey — only from age 1"). Safety **always shows first.**
+
+---
+
 ## Changelog
 
 | Version | Date | Change |
 |---------|------|--------|
 | 1.0 | 9 Apr 2026 | Initial version. Forked from DESIGN_SYSTEM_TEMPLATE.md v1.0. Filled from styles.css audit (7,772 lines), template.html SVG sprite (54 icons), VISUAL_AUDIT.md. |
+| 1.1 | 3 Jun 2026 | Added §9 — Recipes Generative Food System (incoming patterns): `zi_food` full-colour icon system (`zif-*` symbols), whisper-fade ingredient pills, quantity-weighted generative fingerprint, warm-wave stripe, 3-layer tagline system, typography "voice" line (direction C), and the infant-food safety content floor. From the Diet→Recipes design exploration (`docs/design/recipes-tab/`). |
 
 ---
 
