@@ -614,6 +614,10 @@ function init() {
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'switchDietSub' && typeof switchDietSub === 'function') switchDietSub(btn);
+    // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
+    // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
+    else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
+    else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -3555,6 +3559,21 @@ function switchTrackSub(sub) {
   window.scrollTo({ top: 0 });
 }
 
+// Diet → Recipes tap-through (WIRING_PLAN §10). From the Home Smart-Q&A
+// compact recipe card: land on Track → Diet → Recipes and expand the named
+// recipe. switchTab('diet') auto-redirects to Track and sets _activeTrackSub;
+// switchDietSub renders the Recipes panel; expandRecipeRow opens + scrolls.
+function openRecipeInTab(recipeId) {
+  if (!recipeId) return;
+  if (typeof switchTab === 'function') switchTab('diet');
+  if (typeof switchDietSub === 'function') switchDietSub({ dataset: { dietSub: 'recipes' } });
+  // The Recipes panel renders synchronously in switchDietSub's lazy hook; a
+  // short defer lets layout settle before scrolling the row into view.
+  setTimeout(function () {
+    if (typeof expandRecipeRow === 'function') expandRecipeRow(recipeId);
+  }, 80);
+}
+
 function renderTrackSubBar() {
   const el = document.getElementById('trackSubBar');
   if (!el) return;
@@ -3696,7 +3715,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     // falls through to the Track sub-tab block below, which itself bubbles
     // to top-level tabs at Track-sub-tab edges.
     if (currentTab === 'track' && _activeTrackSub === 'diet') {
-      const DIET_INNER_ORDER = ['log', 'library', 'patterns'];
+      const DIET_INNER_ORDER = ['log', 'library', 'recipes', 'patterns'];
       const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
       const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
       const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
