@@ -205,6 +205,8 @@ GENERAL_EMERGENCIES = [
 - The persistent disclaimer (`.ge-disclaimer`) is mandatory: "first-aid guidance, not a diagnosis; when in doubt, call 112."
 - The Room must read correctly at 2 AM in a panic: large tap targets (≥44px), loud-but-legible rose, no ellipsis, no clever motion.
 
+**Food↔object choking cross-link (ratified):** the *choking (object)* item carries a one-line link to the Diet→Library food emergency room — "Choking on **food**? →" → `switchTab('track')`→`switchTrackSub('diet')`→`switchDietSub('library')`. **Coordination note for PR #216:** the food emergency room should reciprocally link back to the General Room for object/non-food choking, so a panicking parent who picks the wrong door is one tap from the right one.
+
 **Design language:** rose domain throughout; `.ge-item` uses the §9.2 whisper-fade; `critical` gets the Emergency-Deck loud rose (louder than every tint). zi icons only; tokens only; dark parity.
 
 ---
@@ -314,9 +316,9 @@ Diff touches `intelligence-cards.js` (**Vela**), `home.js` + Care pre-empt + Gen
 
 ---
 
-## 14. Open for the Architect
+## 14. Open for the Architect — RESOLVED (2026-06-03)
 
-1. **General Emergency Room item set** — proposed: unresponsive/CPR · choking(object) · fall/head · bleeding · burn · poison · seizure (7). Trim/extend? (Maren will own the final list + content.)
-2. **General Room placement** — overlay from the chooser (specced). Also want a faster route in (e.g., home-FAB long-press)? Currently out of v1.
-3. **Food vs object choking** — food choking lives in the Diet→Library room (PR #216); object choking in the General Room. Cross-link between them? (Proposed: yes, a one-line "food? →" link.)
-4. **Care pre-empt Stage-2 scope** — confirm meds + vaccines + CareTickets all land before the default-flip (Maren's blocking gate).
+1. **General Emergency Room item set** — ✅ **Confirmed (7):** unresponsive/CPR · choking(object) · fall/head · bleeding · burn · poison · seizure. Maren owns the final content per the §5.3 safety floor.
+2. **General Room placement** — ✅ **Overlay-from-chooser only; faster route (home-FAB long-press) OUT of v1.**
+3. **Food vs object choking cross-link** — ✅ **Yes.** The General Room's *choking (object)* item carries a one-line cross-link to the Diet→Library food emergency room; PR #216's room should reciprocally link back (coordination note in §5.3).
+4. **Care pre-empt Stage-2 scope** — *Architect clarified "what's the default flip?"* The **default flip** = the Stage-2 change that makes `landing` the app's default-open screen (nav slot 0, boot `.active` panel, temp preview link removed, returning-user migration) and demotes the dense dashboard ("Today") to one tap behind. **Maren's gate:** the lean landing only *becomes* the screen a parent lands on at the flip — so the Care pre-empt detector MUST be extended to **due meds + overdue vaccines + overdue CareTickets** (the silent, time-axis signals) **before** the flip, or a parent sees "calm" and misses a hard-deadline signal. *Recommendation: yes, gate the flip on it — awaiting Architect confirm.*
