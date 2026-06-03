@@ -7,6 +7,11 @@
   living-shelf language to the food detail: domain WHISPER header, name + EP VOICE,
   the JOURNEY strip, then the safety-first body (polarity flag → age gate → the
   never-cross floor), safe forms, nutrition — and a single Quick-Act footer.
+  "Log a serving" opens the Quick Log FEED sheet (openQuickModal('feed')) prefilled
+  with this food. WIRING NOTE: route via a DELEGATED data-action (libLogServing,
+  arg=food key) — NOT data-quick-modal, which is bound ONCE at init (core.js) and
+  would miss this dynamically-rendered button. Handler: openQuickModal('feed') then
+  qlFeedAddItem(food) to pre-add the serving.
   TEMPLATE: sections are conditional (only render what a food has); Egg is the
   worked example (it has everything). Wires later over .modal-overlay; content
   reuses the app's getFoodEffect / _effPolarity / _libBuildGuide / NUTRITION + the
@@ -177,7 +182,7 @@
         </div>
       </div>
       <div class="fp-foot">
-        <button class="fp-foot-btn"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
+        <button class="fp-foot-btn" data-action="libLogServing" data-arg="egg"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
         <span class="fp-foot-link">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
       </div>
     </div>
@@ -231,7 +236,7 @@
         </div>
       </div>
       <div class="fp-foot">
-        <button class="fp-foot-btn"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
+        <button class="fp-foot-btn" data-action="libLogServing" data-arg="egg"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
         <span class="fp-foot-link">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
       </div>
     </div>
