@@ -25,24 +25,31 @@ const DOM = {
 
 // demo recipes: grams drive the weighting; trace ingredients excluded from the fingerprint
 const RECIPES = [
-  { title:'Veg & Paneer Khichdi', badge:'Lunch', tag:'a soft, savoury one-pot', why:'Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.',
+  { title:'Veg & Paneer Khichdi', badge:'Lunch', tags:['a soft, savoury one-pot','gentle on little tummies','comfort in a bowl'], why:'Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.',
     ings:[
       {n:'Rice', g:60, dom:'grain', icon:'rice', c:'#d8c79f'},
       {n:'Carrot', g:24, dom:'veg', icon:'carrot', c:'#e8843a'},
       {n:'Paneer', g:14, dom:'dairy', icon:'paneer', c:'#cdbf93'},
       {n:'Ghee', g:5, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
     ], time:'25 min', age:'7m+' },
-  { title:'Almond Banana Mash', badge:'Breakfast', tag:'a five-minute creamy breakfast', why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
+  { title:'Almond Banana Mash', badge:'Breakfast', tags:['a five-minute creamy breakfast','naturally sweet, no added sugar','soft, spoonable, mess-free'], why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
     ings:[
       {n:'Banana', g:100, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Almond powder', g:12, dom:'nuts', icon:'almond', c:'#b9824e'},
     ], time:'5 min', age:'6m+' },
-  { title:'Ragi Banana Porridge', badge:'Breakfast', tag:'iron-rich & naturally sweet', why:'Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.',
+  { title:'Ragi Banana Porridge', badge:'Breakfast', tags:['iron-rich & naturally sweet','a warm morning bowl','ragi’s gentle first porridge'], why:'Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.',
     ings:[
       {n:'Banana', g:50, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Ragi', g:30, dom:'grain', icon:'millet', c:'#b06a44'},
       {n:'Milk', g:8, dom:'trace', td:'dairy', icon:'milk', c:'#cdbf93'},
     ], time:'12 min', age:'7m+' },
+  // 4th = an UNCURATED mix (no tags) → proves the generative fallback
+  { title:'Carrot Moong Mash', badge:'Lunch', why:'A quick veg-and-dal mash — carrot for sweetness, moong for easy protein.',
+    ings:[
+      {n:'Carrot', g:45, dom:'veg', icon:'carrot', c:'#e8843a'},
+      {n:'Moong dal', g:30, dom:'legume', icon:'dal', c:'#9bb24a'},
+      {n:'Ghee', g:4, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'18 min', age:'6m+' },
 ];
 
 const r2 = n => Math.round(n * 10) / 10;
@@ -71,25 +78,55 @@ function fingerprint(rec) {
   const fadeD = `linear-gradient(135deg, ${doms[0].dark} 0%, ${ds.join(', ')}, ${doms.at(-1).dark} 100%)`;
   // watermark slots: dominant ingredient → big slot
   const ranked = [...prim].sort((a, b) => b.g - a.g).slice(0, 3);
-  return { doms, stripe, fadeL, fadeD, ranked,
+  const dominant = doms.slice().sort((a, b) => b.frac - a.frac)[0].d;
+  return { doms, stripe, fadeL, fadeD, ranked, dominant,
     pct: doms.map(x => `${x.d} ${Math.round(x.frac*100)}%`).join(' · ') };
 }
+
+// ── tagline system ───────────────────────────────────────────────────────────
+// Curated recipes carry 2–3 taglines, rotated by a day-seed (novelty, not random).
+// Uncurated mixes fall back to a generated line: {texture}, {dominant-domain} {form}.
+const FORM = [
+  [/khichdi/i,            ['a soft',   'one-pot']],
+  [/porridge|kheer|malt/i,['a warm',   'porridge']],
+  [/mash|pur[eé]e/i,      ['a smooth', 'mash']],
+  [/soup|broth/i,         ['a cosy',   'soup']],
+  [/dosa|idli|upma|poha/i,['a light',  'bite']],
+];
+const DOMPHRASE = {grain:'grain-led', veg:'veggie-forward', fruit:'fruit-sweet', legume:'protein-rich', dairy:'creamy', nuts:'nutty'};
+const fallbackTag = (rec, fp) => {
+  let tex = 'a gentle', form = 'bowl';
+  for (const [re, [t, f]] of FORM) if (re.test(rec.title)) { tex = t; form = f; break; }
+  return `${tex}, ${DOMPHRASE[fp.dominant] || 'wholesome'} ${form}`;
+};
+// deterministic day-seed → same dish reads fresh across days, stable within a day
+const DAYSEED = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5);
+const pickTag = (rec, fp) => {
+  const pool = (rec.tags && rec.tags.length) ? rec.tags : [fallbackTag(rec, fp)];
+  return { tag: pool[DAYSEED % pool.length], pool, generated: !(rec.tags && rec.tags.length) };
+};
 
 const SLOTS = ['s1', 's2', 's3'];
 const card = (rec) => {
   const fp = fingerprint(rec);
+  const t = pickTag(rec, fp);
   const wm = fp.ranked.map((i, k) =>
     `<span class="wi ${SLOTS[k]}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg></span>`).join('');
   const chips = rec.ings.map(i => {
     const dk = i.dom !== 'trace' ? i.dom : i.td;       // trace items tint via mapped domain
     return `<span class="gh-chip dt-${DOM[dk].dt}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`;
   }).join('');
+  // design-record only: show the tagline bank so the rotation is legible
+  const others = t.pool.filter(x => x !== t.tag);
+  const bank = t.generated
+    ? `<span class="bk-gen">generated fallback</span>`
+    : (others.length ? `+${others.length} more · rotates daily` : '');
   return `<article class="gh" style="--stripe:${fp.stripe};--fl:${fp.fadeL};--fd:${fp.fadeD}">
     <div class="gh-wm">${wm}</div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">${rec.badge}</span></div>
     <h3 class="gh-title">${rec.title}</h3>
-    <p class="gh-tag">${rec.tag}</p>
+    <p class="gh-tag">${t.tag}${bank ? `<span class="gh-bank"> · ${bank}</span>` : ''}</p>
     <p class="gh-why">${rec.why}</p>
     <div class="gh-ings">${chips}</div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>${rec.time}</b></span>
@@ -154,8 +191,10 @@ const html = `<!DOCTYPE html>
   .gh-eyebrow .zi{width:15px;height:15px;}
   .gh-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--sp-4);background:var(--tc-sage);color:var(--card-bg);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-2xs);font-weight:800;}
   /* direction C — roman title + Fraunces italic "voice" descriptor */
-  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:80%;}
+  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:92%;text-wrap:balance;}
   .gh-tag{position:relative;z-index:1;font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:var(--fs-lg);line-height:1.25;color:var(--mid);margin:0 0 var(--sp-10);max-width:82%;}
+  .gh-bank{font-family:'Nunito',sans-serif;font-style:normal;font-size:10.5px;font-weight:700;color:var(--light);opacity:.85;}
+  .bk-gen{font-family:'Nunito',sans-serif;font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--tc-sage);}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.5;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
   .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}

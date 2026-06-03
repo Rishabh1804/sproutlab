@@ -42,8 +42,10 @@
   .gh-eyebrow .zi{width:15px;height:15px;}
   .gh-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--sp-4);background:var(--tc-sage);color:var(--card-bg);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-2xs);font-weight:800;}
   /* direction C — roman title + Fraunces italic "voice" descriptor */
-  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:80%;}
+  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:92%;text-wrap:balance;}
   .gh-tag{position:relative;z-index:1;font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:var(--fs-lg);line-height:1.25;color:var(--mid);margin:0 0 var(--sp-10);max-width:82%;}
+  .gh-bank{font-family:'Nunito',sans-serif;font-style:normal;font-size:10.5px;font-weight:700;color:var(--light);opacity:.85;}
+  .bk-gen{font-family:'Nunito',sans-serif;font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--tc-sage);}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.5;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
   .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
@@ -140,7 +142,7 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
-    <p class="gh-tag">a soft, savoury one-pot</p>
+    <p class="gh-tag">gentle on little tummies<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
     <div class="gh-ings"><span class="gh-chip dt-grains"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
@@ -152,7 +154,7 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
-    <p class="gh-tag">a five-minute creamy breakfast</p>
+    <p class="gh-tag">naturally sweet, no added sugar<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
     <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-nuts"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
@@ -164,13 +166,25 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
-    <p class="gh-tag">iron-rich & naturally sweet</p>
+    <p class="gh-tag">a warm morning bowl<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
     <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-grains"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted fruit 63% · grain 38%</p>
+<article class="gh" style="--stripe:linear-gradient(90deg, #ecae7e 0%, #ecae7e 30%, #e6c078 80%, #e6c078 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 30%, var(--amber-light) 80%, var(--amber-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 30%, rgba(150,110,40,0.18) 80%, rgba(150,110,40,0.18) 100%)">
+    <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg></span><span class="wi s2"><svg class="zi" style="color:#9bb24a"><use href="#zif-dal"/></svg></span></div>
+    <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
+      <span class="gh-badge">Lunch</span></div>
+    <h3 class="gh-title">Carrot Moong Mash</h3>
+    <p class="gh-tag">a smooth, veggie-forward mash<span class="gh-bank"> · <span class="bk-gen">generated fallback</span></span></p>
+    <p class="gh-why">A quick veg-and-dal mash — carrot for sweetness, moong for easy protein.</p>
+    <div class="gh-ings"><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#9bb24a"><use href="#zif-dal"/></svg>Moong dal</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>18 min</b></span>
+      <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
+  </article>
+  <p class="fp">fingerprint · weighted veg 60% · legume 40%</p>
   </div></div><div class="r-col">
   <p class="r-mode dark">Dark</p>
   <div class="r-phone" data-theme="dark">
@@ -180,7 +194,7 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
-    <p class="gh-tag">a soft, savoury one-pot</p>
+    <p class="gh-tag">gentle on little tummies<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
     <div class="gh-ings"><span class="gh-chip dt-grains"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
@@ -192,7 +206,7 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
-    <p class="gh-tag">a five-minute creamy breakfast</p>
+    <p class="gh-tag">naturally sweet, no added sugar<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
     <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-nuts"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
@@ -204,12 +218,24 @@
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
-    <p class="gh-tag">iron-rich & naturally sweet</p>
+    <p class="gh-tag">a warm morning bowl<span class="gh-bank"> · +2 more · rotates daily</span></p>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
     <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-grains"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted fruit 63% · grain 38%</p>
+<article class="gh" style="--stripe:linear-gradient(90deg, #ecae7e 0%, #ecae7e 30%, #e6c078 80%, #e6c078 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 30%, var(--amber-light) 80%, var(--amber-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 30%, rgba(150,110,40,0.18) 80%, rgba(150,110,40,0.18) 100%)">
+    <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg></span><span class="wi s2"><svg class="zi" style="color:#9bb24a"><use href="#zif-dal"/></svg></span></div>
+    <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
+      <span class="gh-badge">Lunch</span></div>
+    <h3 class="gh-title">Carrot Moong Mash</h3>
+    <p class="gh-tag">a smooth, veggie-forward mash<span class="gh-bank"> · <span class="bk-gen">generated fallback</span></span></p>
+    <p class="gh-why">A quick veg-and-dal mash — carrot for sweetness, moong for easy protein.</p>
+    <div class="gh-ings"><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#9bb24a"><use href="#zif-dal"/></svg>Moong dal</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>18 min</b></span>
+      <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
+  </article>
+  <p class="fp">fingerprint · weighted veg 60% · legume 40%</p>
   </div></div></div>
 </body></html>
