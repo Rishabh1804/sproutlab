@@ -37,7 +37,7 @@ data-driven — add an icon/recipe/tagline = one entry, re-run, re-render.
 
 ## Open items (for the wiring phase)
 - **Wire into `split/`** — this is all `docs/design/`. Real feature = move `zif-*` sprite into `template.html`, the composer + bank into the engine layer, the hero render into the Diet→Recipes surface. **Runs the canon-cc-008 Governor QA gate** (Maren = Care/safety, Kael = engine, Vela = render; Cipher final-pass).
-- **`zif-*` is full-colour** — a deliberate departure from the monochrome `zi()` `currentColor` system. Wiring decision: new sub-system, not a drop-in `zi()` call. Confirm token strategy (a `--tc-peach` token would retire the one deep-peach literal in the stripe).
+- **`zif-*` is full-colour** — a deliberate departure from the monochrome `zi()` `currentColor` system. Wiring decision: new sub-system, not a drop-in `zi()` call. Token cleanup: `--tc-peach` is *referenced* in `styles.css` (`.meal-time-input:focus`, lines ~486/488) but **never defined** — defining it would fix that latent dangling reference *and* retire the stripe's one deep-peach literal (`#df9356`).
 - **Minor icon polish backlog:** ginger/turmeric/garlic are acceptable but the weakest.
 - **Tagline copy** is design-quality, not clinically reviewed — Maren must audit before ship (it carries safety phrasing).
 
