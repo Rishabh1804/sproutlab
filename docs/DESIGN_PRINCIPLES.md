@@ -253,6 +253,42 @@ The fallback engages for offline parents (in-flight), blocked CDNs, or HTML cach
 
 **Carve-out for `currentColor` pass-through** — see HR-2 §Carve-outs below.
 
+### Swipe & Gesture Navigation
+
+**Swipe-to-navigate is a first-class navigation primitive**, not an enhancement — parents browse one-handed, thumb-first. The behaviour lives in `handleSwipe()` (`split/core.js:3654`) and was code-defined only until this section. Any new tab, sub-tab, or tabbed surface (a Recipes sub-tab, the Library's wings, etc.) **must** honour these rules so the gesture stays predictable everywhere (Vela's half-awake test: one gesture, one predictable result).
+
+**The disambiguation rule (load-bearing).** A horizontal swipe registers only when horizontal travel dominates:
+- `|Δx| ≥ 60px` **and** `|Δy| ≤ 0.7 × |Δx|` (`core.js:3662`).
+- Distance + ratio only — **no velocity term**. A lazy diagonal is ignored, so vertical scrolling never mis-fires a tab change.
+
+**Guards — swipe is suppressed when** (in order, `core.js:3665-3678`):
+1. focus is in an `INPUT` / `TEXTAREA`;
+2. the gesture **starts inside a horizontally-scrollable element** — walk ancestors, abort if any has `scrollWidth > clientWidth + 2` and `overflow-x` is not `hidden`/`visible` (so a scrollable chip-rail or chart keeps its own pan);
+3. **any overlay is open** (`.modal-overlay.open, .crop-overlay.open, .avatar-lightbox.open, .confirm-overlay, .ql-sheet.open, .ql-modal-overlay.open, .score-popup.open, .insights-popup.open`).
+
+**Clamp, never wrap.** Every level is index-guarded and clamps at its ends — the last tab does not loop to the first. The only edge movement is the deliberate cascade below.
+
+**Multi-level cascade (innermost wins; edges bubble up).** One gesture, resolved top-down so the outcome is never ambiguous (`core.js:3698-3769`):
+1. innermost inner-sub-tabs (Diet / Milestones `log → library → patterns`) — at an inner edge the gesture **falls through** rather than dead-ending;
+2. Track sub-tabs (`TRACK_SUB_ORDER`) — at an edge, steps to the prev/next **top-level** tab;
+3. top-level tabs (`TAB_ORDER`).
+
+**Order arrays (the source of truth for direction):**
+- `TAB_ORDER` — `['home','growth','track','insights','history','info']` (`core.js:3403`)
+- `TRACK_SUB_ORDER` — `['diet','sleep','poop','medical','milestones']` (`core.js:3404`)
+- `DIET_SUB_ORDER` — `['log','library','patterns']` (`diet.js:16`)
+- `MS_SUB_ORDER` — `['log','library','patterns']` (`core.js:3729`)
+
+> **Drift hazard (active).** `DIET_SUB_ORDER` (diet.js) and `DIET_INNER_ORDER` (`core.js:3699`) are **duplicated literals, not a shared reference** — the swipe handler hard-codes its own copy. Any sub-tab added to the Diet bar (e.g. **Recipes**) MUST be added to **both** or swipe silently de-syncs from the tab bar; same for Milestones. Unifying these into one exported constant is owed tech-debt — flag it at any touch.
+
+**Right-edge back-gesture.** A swipe that *starts* in the rightmost 10% of the viewport and moves left (`touchStartClientX > screenW*0.90 && Δx < -60`, `core.js:3681`) is the **back/exit** gesture → `handleSafeExit()` (any tab → Home; Home → confirm-exit). It uses viewport-relative `clientX` for edge detection vs `screenX` for travel. Don't repurpose the right edge for content swipes.
+
+**User override.** Swipe-nav is toggleable (`ziva_swipe_tabs` in localStorage; Settings). Honour it — `handleSwipe` early-returns when off (`core.js:3656`).
+
+**Transition.** A top-level tab change plays `fadeUp 0.3s` (`styles.css:295, 3556`) + scroll-reset to top; sub-panel changes are an instant display swap. Swipe adds **no** directional slide — the fade reads as "navigated" regardless of direction.
+
+**No visible affordance.** Swipe is discoverable-by-feel; the tab/sub-tab bar is the visible control. Don't add page-dots or hint arrows without an explicit charter.
+
 ### Icon System
 
 **zi() — Ziva Sketch icon set.** 54 custom SVG symbols defined as a `<symbol>` sprite in `template.html`. Rendered via the `zi(name)` helper function which returns `<svg class="zi"><use href="#zi-{name}"/></svg>`.
