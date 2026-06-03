@@ -26,7 +26,7 @@
     --shadow:rgba(180,120,120,0.10); --line:rgba(120,90,90,0.16); --card-bg:#ffffff; --surface-alt:#fef6f0;
     --sage:#b5d5c5; --sage-light:#e8f5ef; --tc-sage:#3a7060; --rose:#f2a8b8; --rose-light:#fde8ed; --tc-rose:#9e3e52;
     --amber:#e8b86d; --amber-light:#fef6e8; --tc-amber:#8a6520; --sky:#a8cfe0; --sky-light:#e8f4fa; --tc-sky:#336580;
-    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4; --tc-indigo:#4a5080;
+    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4; --tc-peach:#9a5f30; --tc-indigo:#4a5080;
     --sp-2:2px; --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-10:10px; --sp-12:12px; --sp-16:16px; --sp-20:20px; --sp-24:24px; --sp-32:32px;
     --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem; --fs-base:0.85rem; --fs-md:0.95rem; --fs-lg:1.1rem; --fs-xl:1.35rem; --fs-2xl:1.6rem;
     --icon-xs:12px; --icon-sm:14px; --icon-base:16px; --icon-md:18px; --icon-lg:22px;
@@ -37,7 +37,7 @@
     --cream:#1a1520; --warm:#221c28; --phone-bg:#1a1620; --text:#e8e0ec; --mid:#b0a0b8; --light:#9a8aa2;
     --shadow:rgba(0,0,0,0.30); --line:rgba(255,255,255,0.10); --surface:#2a2230; --surface-alt:#221c28; --card-bg:#2a2230;
     --sage-light:#1e3028; --rose-light:#3a2030; --amber-light:#352e1e; --sky-light:#1e2838;
-    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0; --tc-indigo:#a0b0e0; --harness:#0f0b14;
+    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0; --tc-peach:#e8b488; --tc-indigo:#a0b0e0; --harness:#0f0b14;
   }
   @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
   html, body { background:var(--harness); transition:background var(--ease-med); }
@@ -149,6 +149,20 @@
   [data-theme="dark"] .nutri-chip--brain { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
   [data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
   [data-theme="dark"] .nutri-chip--energy { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
+  /* food-domain chips — tint-fade by FOOD_TAX domain (grains/fruits/vegs/dairy/nuts/spices/nonveg) */
+  .fdom-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-weight:700; font-size:var(--fs-2xs); }
+  .fdom-chip--grains { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+  .fdom-chip--fruits, .fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+  .fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 28%, rgba(250,212,180,0.42)); color:var(--tc-peach); }
+  .fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+  .fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+  .fdom-chip--spices { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+  [data-theme="dark"] .fdom-chip--grains { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+  [data-theme="dark"] .fdom-chip--fruits, [data-theme="dark"] .fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+  [data-theme="dark"] .fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.34)); }
+  [data-theme="dark"] .fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+  [data-theme="dark"] .fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+  [data-theme="dark"] .fdom-chip--spices { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
 
   /* the food pop-up + deck overlays */
   .ov { position:absolute; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:flex-start; justify-content:center; padding:24px 12px; overflow:auto; z-index:50; }
@@ -310,8 +324,8 @@ function popHtml(f){
 }
 
 var GUIDES = [
- {k:'sage',icon:'sprout',t:'Introducing allergens early',body:'<div><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy.</p></div><div><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Egg</span><span class="ld-chip ld-chip--ok">Peanut</span><span class="ld-chip ld-chip--ok">Tree nuts</span><span class="ld-chip ld-chip--ok">Fish</span><span class="ld-chip ld-chip--ok">Sesame</span><span class="ld-chip ld-chip--ok">Soy</span><span class="ld-chip ld-chip--ok">Wheat</span><span class="ld-chip ld-chip--ok">Dairy</span></div></div>'},
- {k:'amber',icon:'spoon',t:'Safe shapes & textures',body:'<div><p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p></div><div><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Nuts → ground</span><span class="ld-chip ld-chip--ok">Grapes → quartered</span><span class="ld-chip ld-chip--ok">Hard veg → cooked soft</span></div></div><div class="ld-floor"><div class="ld-floor-h">'+'<svg class="zi"><use href="#zi-siren"/></svg>'+'If choking — NO adrenaline</div><ul><li>Silent/weak cough, can’t breathe, turning blue, limp</li></ul><p>5 back blows + 5 chest thrusts (never Heimlich under 1). Call 112/108; if unresponsive, CPR.</p></div>'},
+ {k:'sage',icon:'sprout',t:'Introducing allergens early',body:'<div><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy.</p></div><div><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="fdom-chip fdom-chip--nonveg">Egg</span><span class="fdom-chip fdom-chip--nuts">Peanut</span><span class="fdom-chip fdom-chip--nuts">Tree nuts</span><span class="fdom-chip fdom-chip--nonveg">Fish</span><span class="fdom-chip fdom-chip--nuts">Sesame</span><span class="fdom-chip fdom-chip--grains">Soy</span><span class="fdom-chip fdom-chip--grains">Wheat</span><span class="fdom-chip fdom-chip--dairy">Dairy</span></div></div>'},
+ {k:'amber',icon:'spoon',t:'Safe shapes & textures',body:'<div><p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p></div><div><div class="ld-h">Change the form</div><div class="ld-chips"><span class="fdom-chip fdom-chip--nuts">Nuts → ground</span><span class="fdom-chip fdom-chip--fruits">Grapes → quartered</span><span class="fdom-chip fdom-chip--vegs">Hard veg → cooked soft</span></div></div><div class="ld-floor"><div class="ld-floor-h">'+'<svg class="zi"><use href="#zi-siren"/></svg>'+'If choking — NO adrenaline</div><ul><li>Silent/weak cough, can’t breathe, turning blue, limp</li></ul><p>5 back blows + 5 chest thrusts (never Heimlich under 1). Call 112/108; if unresponsive, CPR.</p></div>'},
  {k:'sky',icon:'info',t:'Milk & drinks',body:'<div><p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow’s milk is fine in food; plant milks are not a substitute.</p></div>'},
  {k:'lav',icon:'clock',t:'First foods, by age',body:'<div><p class="ld-why"><b>~6 mo</b> smooth purées + start allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole milk, honey ok.</p></div>'}
 ];
