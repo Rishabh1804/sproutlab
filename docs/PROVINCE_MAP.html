@@ -40,11 +40,11 @@
 <body>
 <header>
   <h1>SPROUTLAB &middot; JURISDICTION OVERVIEW</h1>
-  <div class="sub">graph-derived exec summary &middot; generated 2026-06-02 &middot; graph @ <code>4b0f20c49e49</code></div>
+  <div class="sub">graph-derived exec summary &middot; generated 2026-06-03 &middot; graph @ <code>15c817eed0c8</code></div>
   <div class="sub" style="margin-top:8px">
-    <span class="stat"><b>1,737</b> symbols</span>
-    <span class="stat"><b>5,158</b> relations</span>
-    <span class="stat"><b>81,598</b> LOC</span>
+    <span class="stat"><b>1,768</b> symbols</span>
+    <span class="stat"><b>5,246</b> relations</span>
+    <span class="stat"><b>82,769</b> LOC</span>
     <span class="stat">extraction: <b>code-only</b></span>
   </div>
 </header>
@@ -64,15 +64,15 @@
       <div class="cgov">Governor: <b>Kael</b></div>
       <div class="nums">
         <span><b>11</b> modules</span>
-        <span><b>743</b> symbols</span>
-        <span><b>27,668</b> LOC</span>
+        <span><b>744</b> symbols</span>
+        <span><b>27,717</b> LOC</span>
       </div>
       
-      <div class="bar" title="27,668 of 30,000 LOC">
+      <div class="bar" title="27,717 of 30,000 LOC">
         <div class="fill hot" style="width:92%"></div>
         <span class="barlbl">92% to 30K frontier &middot; CONTESTED</span>
       </div>
-      <div class="hd">2,332 LOC headroom</div>
+      <div class="hd">2,283 LOC headroom</div>
       <div class="mods">core.js, i-illness.js, i-caretickets.js, i-qa-handlers.js, sync.js, data.js, i-qa.js, i-isl.js, config.js, i-correlate.js, start.js</div>
     </div>
     <div class="card" style="border-top:5px solid #b5d5c5">
@@ -81,15 +81,15 @@
       <div class="cgov">Governor: <b>Maren</b></div>
       <div class="nums">
         <span><b>3</b> modules</span>
-        <span><b>672</b> symbols</span>
-        <span><b>27,436</b> LOC</span>
+        <span><b>695</b> symbols</span>
+        <span><b>27,843</b> LOC</span>
       </div>
       
-      <div class="bar" title="27,436 of 30,000 LOC">
-        <div class="fill hot" style="width:91%"></div>
-        <span class="barlbl">91% to 30K frontier &middot; CONTESTED</span>
+      <div class="bar" title="27,843 of 30,000 LOC">
+        <div class="fill hot" style="width:93%"></div>
+        <span class="barlbl">93% to 30K frontier &middot; CONTESTED</span>
       </div>
-      <div class="hd">2,564 LOC headroom</div>
+      <div class="hd">2,157 LOC headroom</div>
       <div class="mods">home.js, medical.js, diet.js</div>
     </div>
     <div class="card" style="border-top:5px solid #c9b8e8">
@@ -116,7 +116,7 @@
       <div class="nums">
         <span><b>2</b> modules</span>
         <span><b>0</b> symbols</span>
-        <span><b>14,145</b> LOC</span>
+        <span><b>14,363</b> LOC</span>
       </div>
       <div class="note">Unsurveyed &mdash; code-only extraction. Set a backend and rebuild for symbols.</div>
       <div class="mods">styles.css, template.html</div>
@@ -126,24 +126,24 @@
       <div class="clatin">build + audit corps</div>
       <div class="cgov">Governor: <b>(tooling)</b></div>
       <div class="nums">
-        <span><b>21</b> modules</span>
-        <span><b>137</b> symbols</span>
-        <span><b>3,698</b> LOC</span>
+        <span><b>22</b> modules</span>
+        <span><b>144</b> symbols</span>
+        <span><b>4,195</b> LOC</span>
       </div>
       
-      <div class="mods">build-province-map.mjs, build-poop-reference.mjs, QA_GATE_SPEC.md, build-careticket-state-machine.mjs, audit-food-library-wiring-v1.sh, bump-version.mjs, build-graph.sh, audit-activity-categories-v1.sh, audit-card-priority-v3-6.sh, audit-chip-taxonomy-v3-5.sh, audit-emoji.sh, audit-feed-sheet-wiring-v1.sh, audit-food-effects-sync-v1.sh, audit-hr12-v3-3.sh, audit-icon-text.sh, audit-no-personalised-prediction-v1.sh, audit-resolve-shield.sh, audit-viz-smoke.sh, build-safe.sh, build.sh, qa-route.sh</div>
+      <div class="mods">build-province-map.mjs, build-poop-reference.mjs, QA_GATE_SPEC.md, build-careticket-state-machine.mjs, recipes.js, audit-food-library-wiring-v1.sh, bump-version.mjs, build-graph.sh, audit-activity-categories-v1.sh, audit-card-priority-v3-6.sh, audit-chip-taxonomy-v3-5.sh, audit-emoji.sh, audit-feed-sheet-wiring-v1.sh, audit-food-effects-sync-v1.sh, audit-hr12-v3-3.sh, audit-icon-text.sh, audit-no-personalised-prediction-v1.sh, audit-resolve-shield.sh, audit-viz-smoke.sh, build-safe.sh, build.sh, qa-route.sh</div>
     </div></div>
 
   <h2>Cross-province coupling (highest-traffic calls across jurisdiction borders)</h2>
   <table>
     <thead><tr><th>Module</th><th>Module</th><th class="num">Calls</th><th>Border</th></tr></thead>
-    <tbody><tr><td>home.js</td><td>core.js</td><td class="num">346</td><td>Care &harr; Intelligence</td></tr><tr><td>medical.js</td><td>core.js</td><td class="num">280</td><td>Care &harr; Intelligence</td></tr><tr><td>i-quicklog.js</td><td>core.js</td><td class="num">137</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>diet.js</td><td>core.js</td><td class="num">133</td><td>Care &harr; Intelligence</td></tr><tr><td>i-illness.js</td><td>i-quicklog.js</td><td class="num">49</td><td>Intelligence &harr; Surfacing</td></tr><tr><td>home.js</td><td>i-quicklog.js</td><td class="num">44</td><td>Care &harr; Surfacing</td></tr><tr><td>i-quicklog.js</td><td>medical.js</td><td class="num">40</td><td>Surfacing &harr; Care</td></tr><tr><td>i-cards.js</td><td>core.js</td><td class="num">39</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>i-cards.js</td><td>medical.js</td><td class="num">35</td><td>Surfacing &harr; Care</td></tr><tr><td>home.js</td><td>i-illness.js</td><td class="num">35</td><td>Care &harr; Intelligence</td></tr><tr><td>i-qa-handlers.js</td><td>medical.js</td><td class="num">27</td><td>Intelligence &harr; Care</td></tr><tr><td>home.js</td><td>i-caretickets.js</td><td class="num">18</td><td>Care &harr; Intelligence</td></tr></tbody>
+    <tbody><tr><td>home.js</td><td>core.js</td><td class="num">346</td><td>Care &harr; Intelligence</td></tr><tr><td>medical.js</td><td>core.js</td><td class="num">280</td><td>Care &harr; Intelligence</td></tr><tr><td>diet.js</td><td>core.js</td><td class="num">154</td><td>Care &harr; Intelligence</td></tr><tr><td>i-quicklog.js</td><td>core.js</td><td class="num">137</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>i-illness.js</td><td>i-quicklog.js</td><td class="num">49</td><td>Intelligence &harr; Surfacing</td></tr><tr><td>home.js</td><td>i-quicklog.js</td><td class="num">44</td><td>Care &harr; Surfacing</td></tr><tr><td>i-quicklog.js</td><td>medical.js</td><td class="num">40</td><td>Surfacing &harr; Care</td></tr><tr><td>i-cards.js</td><td>core.js</td><td class="num">39</td><td>Surfacing &harr; Intelligence</td></tr><tr><td>home.js</td><td>i-illness.js</td><td class="num">35</td><td>Care &harr; Intelligence</td></tr><tr><td>i-cards.js</td><td>medical.js</td><td class="num">35</td><td>Surfacing &harr; Care</td></tr><tr><td>i-qa-handlers.js</td><td>medical.js</td><td class="num">27</td><td>Intelligence &harr; Care</td></tr><tr><td>home.js</td><td>i-caretickets.js</td><td class="num">18</td><td>Care &harr; Intelligence</td></tr></tbody>
   </table>
 
   <h2>Connectivity hubs (highest call-degree symbols per module)</h2>
   <table>
     <thead><tr><th>Symbol</th><th>Module</th><th>Province</th><th class="num">Degree (calls)</th></tr></thead>
-    <tbody><tr><td><code>zi()</code></td><td>core.js</td><td>Intelligence</td><td class="num">328</td></tr><tr><td><code>showQLToast()</code></td><td>i-quicklog.js</td><td>Surfacing</td><td class="num">69</td></tr><tr><td><code>renderInfo()</code></td><td>i-cards.js</td><td>Surfacing</td><td class="num">50</td></tr><tr><td><code>qaExecuteQuery()</code></td><td>i-qa.js</td><td>Intelligence</td><td class="num">50</td></tr><tr><td><code>renderHome()</code></td><td>home.js</td><td>Care</td><td class="num">47</td></tr><tr><td><code>getDailySleepScore()</code></td><td>medical.js</td><td>Care</td><td class="num">33</td></tr><tr><td><code>_islMarkDirty()</code></td><td>i-isl.js</td><td>Intelligence</td><td class="num">28</td></tr><tr><td><code>ctHandleOverlayAction()</code></td><td>i-caretickets.js</td><td>Intelligence</td><td class="num">27</td></tr><tr><td><code>renderFeverEpisodeCard()</code></td><td>i-illness.js</td><td>Intelligence</td><td class="num">23</td></tr></tbody>
+    <tbody><tr><td><code>zi()</code></td><td>core.js</td><td>Intelligence</td><td class="num">333</td></tr><tr><td><code>showQLToast()</code></td><td>i-quicklog.js</td><td>Surfacing</td><td class="num">69</td></tr><tr><td><code>renderInfo()</code></td><td>i-cards.js</td><td>Surfacing</td><td class="num">50</td></tr><tr><td><code>qaExecuteQuery()</code></td><td>i-qa.js</td><td>Intelligence</td><td class="num">50</td></tr><tr><td><code>renderHome()</code></td><td>home.js</td><td>Care</td><td class="num">47</td></tr><tr><td><code>getDailySleepScore()</code></td><td>medical.js</td><td>Care</td><td class="num">33</td></tr><tr><td><code>_islMarkDirty()</code></td><td>i-isl.js</td><td>Intelligence</td><td class="num">28</td></tr><tr><td><code>ctHandleOverlayAction()</code></td><td>i-caretickets.js</td><td>Intelligence</td><td class="num">27</td></tr><tr><td><code>renderFeverEpisodeCard()</code></td><td>i-illness.js</td><td>Intelligence</td><td class="num">23</td></tr></tbody>
   </table>
 </main>
 <footer>

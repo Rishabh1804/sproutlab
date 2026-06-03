@@ -1211,10 +1211,27 @@ function qaHandleFoodSafety(classified) {
     });
   }
 
+  // §10 (WIRING_PLAN): a compact recipe affordance, applicability-gated +
+  // corpus-sourced via the SHARED resolver (the same _resolveRecipeAnswer the
+  // Patterns combo bar uses, so the two surfaces never diverge — the fish/milk
+  // two-path defect class). Applicability = NOT 'avoid' AND not preference-
+  // blocked; an 'avoid' or off-preference food shows the reason only. The
+  // safety sections above always render regardless (the floor is never gated).
+  var _recipeApplicable = verdict !== 'avoid' &&
+    (typeof _dietAllowsFood !== 'function' || rawFoods.every(function (f) { return _dietAllowsFood(f); }));
+  var _recAns = (typeof _resolveRecipeAnswer === 'function')
+    ? _resolveRecipeAnswer(rawFoods, _recipeApplicable, {}) : null;
+  var _recipeCard = null;
+  if (_recAns) {
+    if (_recAns.kind === 'recipe') _recipeCard = { id: _recAns.recipeId, title: _recAns.title };
+    else if (_recAns.nearest) _recipeCard = { id: _recAns.nearest.id, title: _recAns.nearest.title };
+  }
+
   return {
     icon: 'shield',
     domain: 'peach',
     title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
+    recipeCard: _recipeCard,
     // headline from the record (food-effects v2 \u00a73.1/\u00a73.2, M-S-2): the hazard for
     // an acute-toxin, the encourage title for an age-appropriate allergen \u2014 never
     // a bare "Safe" synthesized next to the food name. Falls back to the verdict.
@@ -1779,6 +1796,16 @@ function qaRenderAnswer(container, answer) {
       }
       html += '</div>';
     });
+  }
+
+  // §10 (WIRING_PLAN): compact recipe card — taps through to Track → Diet →
+  // Recipes via the global data-action delegation (openRecipeInTab, core.js).
+  // The full recipe lives only in the Recipes tab (one renderer, no divergence).
+  if (answer.recipeCard && answer.recipeCard.id) {
+    html += '<button class="qa-recipe-card" data-action="openRecipeInTab" data-arg="' + escHtml(answer.recipeCard.id) + '">' +
+      zi('chef') +
+      '<span class="qa-recipe-card-main"><span class="qa-recipe-card-title">' + escHtml(answer.recipeCard.title) + '</span></span>' +
+      '<span class="qa-recipe-card-cta">Recipe ' + zi('arrow-right') + '</span></button>';
   }
 
   // Actions (CTA buttons)
