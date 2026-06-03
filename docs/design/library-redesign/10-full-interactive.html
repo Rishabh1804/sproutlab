@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · Diet → Library — FULL INTERACTIVE PROTOTYPE (food-effects-v2, S10)
+  ─────────────────────────────────────────────────────────────────────────
+  The whole thing, interacting. Self-contained (tokens inlined, opens anywhere):
+    • two wings (Browse foods / Safety guides) — toggle + SWIPE (handleSwipe rules)
+    • Browse: "Suggested for Ziva" lead → tap a chip jumps into a shelf
+    • 4 collapsible polarity shelves of living books (journey + voice + whisper)
+    • tap a FOOD NAME → the FOOD INFO POP-UP (whisper header + voice + journey,
+      safety-first body, colour-coded NUTRIENT chips, history, footer)
+    • "Log a serving" is a STUB here (not linked to Quick Log) — shows a note
+    • Safety guides: collapsible sections · Emergency entry → the Deck · light/dark
+  Data-driven: one FOODS structure drives the shelves AND the pop-ups. Mirrors the
+  real engine (FOOD_EFFECTS + _effPolarity + _libBuildGuide + NUTRITION + journey).
+-->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#fffaf7; --warm:#fef6f0; --phone-bg:#faf6f3; --text:#3d2e2e; --mid:#6e5858; --light:#806c6c;
+    --shadow:rgba(180,120,120,0.10); --line:rgba(120,90,90,0.16); --card-bg:#ffffff; --surface-alt:#fef6f0;
+    --sage:#b5d5c5; --sage-light:#e8f5ef; --tc-sage:#3a7060; --rose:#f2a8b8; --rose-light:#fde8ed; --tc-rose:#9e3e52;
+    --amber:#e8b86d; --amber-light:#fef6e8; --tc-amber:#8a6520; --sky:#a8cfe0; --sky-light:#e8f4fa; --tc-sky:#336580;
+    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4; --tc-indigo:#4a5080;
+    --sp-2:2px; --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-10:10px; --sp-12:12px; --sp-16:16px; --sp-20:20px; --sp-24:24px; --sp-32:32px;
+    --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem; --fs-base:0.85rem; --fs-md:0.95rem; --fs-lg:1.1rem; --fs-xl:1.35rem; --fs-2xl:1.6rem;
+    --icon-xs:12px; --icon-sm:14px; --icon-base:16px; --icon-md:18px; --icon-lg:22px;
+    --r-md:8px; --r-lg:12px; --r-2xl:20px; --r-full:9999px; --lh-snug:1.3; --lh-normal:1.4;
+    --ease-fast:0.15s ease; --ease-med:0.22s ease; --ease-slow:0.35s ease; --harness:#cfc6bf;
+  }
+  [data-theme="dark"] {
+    --cream:#1a1520; --warm:#221c28; --phone-bg:#1a1620; --text:#e8e0ec; --mid:#b0a0b8; --light:#9a8aa2;
+    --shadow:rgba(0,0,0,0.30); --line:rgba(255,255,255,0.10); --surface:#2a2230; --surface-alt:#221c28; --card-bg:#2a2230;
+    --sage-light:#1e3028; --rose-light:#3a2030; --amber-light:#352e1e; --sky-light:#1e2838;
+    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0; --tc-indigo:#a0b0e0; --harness:#0f0b14;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  html, body { background:var(--harness); transition:background var(--ease-med); }
+  body { margin:0; font-family:'Nunito',sans-serif; padding:24px 12px 64px; display:flex; flex-direction:column; align-items:center; }
+  .ctrl { width:412px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .ctrl-t { font-family:'Fraunces',serif; font-weight:600; font-size:14px; color:var(--mid); }
+  .theme-btn { display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--line); background:var(--card-bg); color:var(--mid); border-radius:999px; padding:6px 12px; min-height:34px; font-weight:700; font-size:12px; cursor:pointer; }
+  .theme-btn .zi { width:16px; height:16px; }
+  .r-phone { width:412px; box-sizing:border-box; background:var(--phone-bg); color:var(--text); border-radius:22px; padding:var(--sp-16); box-shadow:0 6px 30px var(--shadow); position:relative; transition:background var(--ease-med); overflow:hidden; }
+  .r-h { font-family:'Fraunces',serif; font-size:var(--fs-2xl); font-weight:600; margin:0 0 var(--sp-4); }
+  .r-sub { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-16); }
+  .zi { display:inline-block; vertical-align:middle; } .hidden { display:none !important; }
+
+  .lib-wings { display:flex; gap:var(--sp-4); background:var(--surface-alt); border-radius:var(--r-2xl); padding:var(--sp-4); margin-bottom:var(--sp-16); }
+  .lib-wing { flex:1; padding:var(--sp-10) var(--sp-8); min-height:36px; border:none; border-radius:var(--r-2xl); background:transparent; cursor:pointer; font-weight:700; font-size:var(--fs-sm); color:var(--mid); display:flex; align-items:center; justify-content:center; gap:var(--sp-6); }
+  .lib-wing--active { background:var(--card-bg); color:var(--tc-sage); box-shadow:0 2px 10px var(--shadow); }
+  .lib-wing .zi { width:var(--icon-base); height:var(--icon-base); }
+  .wing-in { animation:fadeUp var(--ease-med) both; }
+
+  .lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
+  .lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
+  .lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-lead-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); }
+  .lib-lead-chips { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-10); }
+  .lib-lead-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-6) var(--sp-12); min-height:36px; border:1.5px solid var(--sage); border-radius:var(--r-2xl); background:var(--card-bg); color:var(--tc-sage); font-weight:700; font-size:var(--fs-sm); cursor:pointer; }
+  .lib-lead-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
+  .emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-2xl); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
+  .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
+  .emerg-entry-txt { flex:1; min-width:0; }
+  .emerg-entry-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+  .emerg-entry-sub { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); }
+  .emerg-entry-go { color:var(--tc-rose); } .emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
+
+  .lib-group { margin-bottom:var(--sp-16); }
+  .lib-group-label { display:flex; align-items:center; gap:var(--sp-8); width:100%; border:none; background:transparent; cursor:pointer; text-align:left; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); margin:var(--sp-12) 0 var(--sp-10); padding:var(--sp-4); min-height:36px; }
+  .lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+  .lib-group-count { margin-left:auto; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+  .lib-group-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+  .lib-group-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-group.open .lib-group-chev { transform:rotate(90deg); }
+  .lib-group--guide .lib-group-chev { margin-left:auto; }
+  .lib-group--encourage .lib-group-label, .lib-group--sage .lib-group-label { color:var(--tc-sage); }
+  .lib-group--conditional .lib-group-label, .lib-group--amber .lib-group-label { color:var(--tc-amber); }
+  .lib-group--warn .lib-group-label, .lib-group--rose .lib-group-label { color:var(--tc-rose); }
+  .lib-group--inform .lib-group-label, .lib-group--sky .lib-group-label { color:var(--tc-sky); }
+  .lib-group--lav .lib-group-label { color:var(--tc-lav); }
+  .lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+  .lib-group:not(.open) .lib-shelf-row { display:none; }
+  .lib-group.open .lib-shelf-row { animation:fadeUp var(--ease-med) both; }
+
+  .lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 1px 8px var(--shadow); cursor:pointer; background-color:var(--card-bg); border:none; border-left:3px solid var(--mid); transition:box-shadow var(--ease-fast); }
+  .lib-book:hover { box-shadow:0 3px 16px var(--shadow); }
+  .lib-book--encourage { border-left-color:var(--sage); } .lib-book--conditional { border-left-color:var(--amber); }
+  .lib-book--warn { border-left-color:var(--rose); } .lib-book--inform { border-left-color:var(--sky); }
+  .dt-nonveg { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+  .dt-nuts { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); }
+  .dt-grains { background-image:linear-gradient(135deg, transparent 40%, rgba(181,213,197,0.22)); }
+  .dt-dairy { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); }
+  .dt-fruits { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+  .dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.22)); }
+  [data-theme="dark"] .dt-nonveg { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+  [data-theme="dark"] .dt-nuts { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.18)); }
+  [data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.16)); }
+  [data-theme="dark"] .dt-dairy { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,144,0.16)); }
+  [data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+  [data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+  .lib-book-body { flex:1; min-width:0; }
+  .lib-book-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+  .lib-book-reg { font-weight:400; color:var(--tc-sage); font-size:var(--fs-sm); }
+  .lib-book-voice { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-sm); color:var(--mid); margin-top:1px; }
+  .lib-book-glance { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+  .lib-book-glance .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--tc-amber); }
+  .lib-book-siren { flex:0 0 auto; color:var(--rose); display:flex; align-items:center; align-self:center; } .lib-book-siren .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .lib-book-go { flex:0 0 auto; color:var(--light); align-self:center; } .lib-book-go .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-untried { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); font-weight:600; font-size:var(--fs-2xs); color:var(--light); }
+  .lib-untried .dot { width:6px; height:6px; border-radius:var(--r-full); border:1.5px solid var(--light); }
+  .lib-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); width:fit-content; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+  .lib-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+  .lib-journey--settled, .lib-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+  .lib-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+
+  /* guides wing */
+  .ld-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+  .ld-inner > * + * { margin-top:var(--sp-12); }
+  .ld-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
+  .ld-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+  .ld-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+  .ld-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-size:var(--fs-2xs); font-weight:700; }
+  .ld-chip .zi { width:11px; height:11px; }
+  .ld-chip--ok { background:var(--sage-light); color:var(--tc-sage); } .ld-chip--never { background:var(--rose-light); color:var(--tc-rose); }
+  .ld-floor { margin-top:var(--sp-12); border-left:3px solid var(--rose); border-radius:var(--r-md); background:var(--rose-light); padding:var(--sp-10) var(--sp-12); }
+  .ld-floor-h { display:flex; align-items:center; gap:var(--sp-6); color:var(--tc-rose); font-weight:800; font-size:var(--fs-xs); margin-bottom:var(--sp-6); } .ld-floor-h .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .ld-floor p { margin:var(--sp-6) 0 0; font-size:var(--fs-xs); color:var(--tc-rose); font-weight:700; line-height:var(--lh-normal); }
+  .ld-floor ul { margin:0; padding-left:var(--sp-16); } .ld-floor li { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
+
+  /* nutrient colour chips */
+  .nutri-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-weight:700; font-size:var(--fs-2xs); }
+  .nutri-chip--growth { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+  .nutri-chip--blood { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+  .nutri-chip--bones { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+  .nutri-chip--brain { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+  .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+  .nutri-chip--energy { background-image:linear-gradient(135deg, transparent 28%, rgba(155,168,216,0.34)); color:var(--tc-indigo); }
+  [data-theme="dark"] .nutri-chip--growth { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+  [data-theme="dark"] .nutri-chip--blood { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+  [data-theme="dark"] .nutri-chip--bones { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+  [data-theme="dark"] .nutri-chip--brain { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+  [data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+  [data-theme="dark"] .nutri-chip--energy { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
+
+  /* the food pop-up + deck overlays */
+  .ov { position:absolute; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:flex-start; justify-content:center; padding:24px 12px; overflow:auto; z-index:50; }
+  .ov.open { display:flex; }
+  .food-pop { width:100%; max-width:372px; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 18px 60px rgba(0,0,0,0.4); overflow:hidden; animation:fadeUp var(--ease-med) both; }
+  .fp-head { position:relative; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
+  .fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
+  .fp-voice { font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-md); color:var(--mid); margin-top:2px; }
+  .fp-close { position:absolute; top:var(--sp-12); right:var(--sp-12); width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--card-bg); color:var(--mid); font-size:18px; cursor:pointer; box-shadow:0 1px 6px var(--shadow); }
+  .fp-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-10); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-weight:700; font-size:var(--fs-2xs); }
+  .fp-journey .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .fp-body { padding:var(--sp-16); max-height:440px; overflow:auto; } .fp-body > * + * { margin-top:var(--sp-16); }
+  .fp-sec-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-8); }
+  .fp-flag { display:flex; align-items:flex-start; gap:var(--sp-8); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); } .fp-flag .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+  .fp-flag--encourage { background:var(--sage-light); color:var(--tc-sage); } .fp-flag--conditional { background:var(--amber-light); color:var(--tc-amber); }
+  .fp-flag--warn { background:var(--rose-light); color:var(--tc-rose); } .fp-flag--inform { background:var(--sky-light); color:var(--tc-sky); }
+  .fp-flag--age { background:var(--amber-light); color:var(--tc-amber); margin-top:var(--sp-8); }
+  .fp-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+  .fp-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+  .fp-foot { display:flex; align-items:center; gap:var(--sp-10); padding:var(--sp-12) var(--sp-16); border-top:1px solid var(--surface-alt); }
+  .fp-foot-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border:none; border-radius:var(--r-2xl); background:var(--sage); color:var(--tc-sage); font-weight:800; font-size:var(--fs-sm); cursor:pointer; } .fp-foot-btn .zi { width:var(--icon-base); height:var(--icon-base); }
+  .fp-foot-link { display:inline-flex; align-items:center; gap:var(--sp-4); color:var(--tc-lav); font-weight:700; font-size:var(--fs-sm); cursor:pointer; white-space:nowrap; } .fp-foot-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
+  .deck-sheet { width:100%; max-width:372px; box-sizing:border-box; background:var(--phone-bg); border-radius:var(--r-2xl); padding:var(--sp-16); box-shadow:0 12px 50px rgba(0,0,0,0.5); animation:fadeUp var(--ease-med) both; }
+  .deck-head { display:flex; align-items:center; gap:var(--sp-10); margin-bottom:var(--sp-12); } .deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
+  .deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); flex:1; }
+  .deck-close { width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); font-size:16px; cursor:pointer; }
+  .floor-card { border-radius:var(--r-lg); background:var(--card-bg); box-shadow:0 1px 8px var(--shadow); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-10); border-left:3px solid var(--rose); }
+  .floor-card-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); display:flex; align-items:center; gap:var(--sp-8); } .floor-card-t .zi { width:var(--icon-base); height:var(--icon-base); }
+  .floor-face { margin-top:var(--sp-8); } .floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
+  .floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); } .floor-aid { color:var(--tc-rose); font-weight:700; }
+
+  .toast { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); background:var(--text); color:var(--cream); padding:8px 16px; border-radius:999px; font-size:var(--fs-xs); font-weight:700; opacity:0; transition:opacity var(--ease-med); z-index:80; pointer-events:none; white-space:nowrap; }
+  .toast.show { opacity:0.95; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+<symbol id="zi-sprout" viewBox="0 0 24 24"><path d="M12 22v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8c0-3 2.5-5 5-6c2.5 1 5 3 5 6c0 3.5-3 6-5 7c-2-1-5-3.5-5-7z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14c-3-1-5-4-4-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-spoon" viewBox="0 0 24 24"><path d="M12 3c2.5 0 4.5 2 4.5 4.5S14.5 12 12 12s-4.5-2-4.5-4.5S9.5 3 12 3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="zi-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/></symbol>
+<symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="zi-siren" viewBox="0 0 24 24"><path d="M6 15v-3a6 6 0 0112 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><rect x="4" y="15" width="16" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><line x1="12" y1="5" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5" y1="8" x2="3.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="19" y1="8" x2="20.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-book" viewBox="0 0 24 24"><path d="M4 4.5C4 3.1 5.1 2 6.5 2H20v20H6.5A2.5 2.5 0 014 19.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-shield" viewBox="0 0 24 24"><path d="M12 3L4 7v5c0 5 3.5 8.5 8 10c4.5-1.5 8-5 8-10V7l-8-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+<symbol id="zi-star" viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5-5-3-5 3 1-5.5-4-4 5.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
+<symbol id="zi-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="zi-moon" viewBox="0 0 24 24"><path d="M21 12.8A8.5 8.5 0 1111.2 3a6.5 6.5 0 109.8 9.8z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.12" stroke-linejoin="round"/></symbol>
+<symbol id="zi-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.12"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.2" y1="5.2" x2="6.9" y2="6.9"/><line x1="17.1" y1="17.1" x2="18.8" y2="18.8"/><line x1="18.8" y1="5.2" x2="17.1" y2="6.9"/><line x1="6.9" y1="17.1" x2="5.2" y2="18.8"/></g></symbol>
+</svg>
+
+<div class="ctrl">
+  <span class="ctrl-t">Diet → Library · full prototype · swipe ← → wings</span>
+  <button class="theme-btn" id="themeBtn"><svg class="zi" id="themeIcon"><use href="#zi-moon"/></svg><span id="themeLabel">Dark</span></button>
+</div>
+
+<div class="r-phone" id="phone">
+  <h1 class="r-h">Food library</h1>
+  <p class="r-sub">What Ziva's tried, when, and in what form.</p>
+  <div class="lib-wings">
+    <button class="lib-wing lib-wing--active" data-wing="browse"><svg class="zi"><use href="#zi-book"/></svg>Browse foods</button>
+    <button class="lib-wing" data-wing="guides"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
+  </div>
+  <button class="emerg-entry" id="emergBtn"><span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="emerg-entry-txt"><span class="emerg-entry-title">In an emergency</span><span class="emerg-entry-sub">Choking, allergic reactions &amp; first aid</span></span><span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+  <div id="wingBrowse"></div>
+  <div id="wingGuides" class="hidden"></div>
+
+  <div class="ov" id="popOv"></div>
+  <div class="ov" id="deckOv"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+var FOODS = [
+ {k:'soy',pol:'encourage',dt:'grains',name:'Soy',voice:'mild & silky',glance:'Soft tofu — not whole edamame',siren:1,journey:'untried',age:'From around 6 months.',why:'A top allergen worth introducing early, and a gentle plant protein. Offer as soft tofu or well-mashed.',ok:['Soft tofu','Mashed, well-cooked'],never:['No whole edamame'],floor:{signs:'Swelling of lips/face, hives spreading, trouble breathing, sudden floppiness',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Protein','growth'],['Iron','blood'],['Folate','blood'],['Calcium','bones']],history:''},
+ {k:'sesame',pol:'encourage',dt:'nuts',name:'Sesame',voice:'nutty & toasty',glance:'Thinned tahini — not whole seeds',siren:1,journey:'untried',age:'From around 6 months.',why:'A priority allergen. Easiest as tahini thinned into purées — whole seeds are a choking risk.',ok:['Thinned tahini','Stirred into purée'],never:['No whole seeds'],floor:{signs:'Hives spreading, swelling, wheeze or trouble breathing, floppiness',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Healthy fats','growth'],['Calcium','bones'],['Iron','blood'],['Zinc','immunity']],history:''},
+ {k:'peanut',pol:'encourage',dt:'nuts',name:'Peanut',voice:'nutty & rich',glance:'Ground or smooth — never whole',siren:1,journey:'settled',age:'From around 6 months.',why:'Early, regular exposure markedly lowers the chance of a peanut allergy. Keep it up once it is going well.',ok:['Smooth peanut butter, thinned','Peanut flour in purée'],never:['No whole / halved nuts'],floor:{signs:'Hives spreading, swelling of lips/tongue, wheeze, repeated vomiting, floppiness',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Protein','growth'],['Healthy fats','growth'],['Vitamin E','immunity'],['Magnesium','bones']],history:'First given 12 Apr · 3 servings · settled fine each time.'},
+ {k:'fish',pol:'encourage',dt:'nonveg',name:'Fish',voice:'tender & omega-rich',glance:'Low-mercury, deboned, well-cooked',siren:1,journey:'watching',age:'From around 6 months.',why:'A priority allergen and a great source of omega-3 and protein. Choose low-mercury fish, deboned and well-cooked.',ok:['Flaked, deboned','Low-mercury (salmon)'],never:['No high-mercury (shark, swordfish)'],floor:{signs:'Hives, swelling, wheeze or trouble breathing, floppiness — an antihistamine does not treat anaphylaxis',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Omega-3','brain'],['Protein','growth'],['Vitamin D','bones'],['Iodine','brain'],['Selenium','immunity']],history:'First given 28 May · 1 serving · marked watch — a little fussy after.'},
+ {k:'egg',pol:'encourage',dt:'nonveg',name:'Egg',voice:'soft & protein-rich',glance:'Well-cooked; yolk first',siren:1,journey:'regular',age:'From around 6 months, well-cooked.',why:'A regular for Ziva — well-cooked egg is a complete protein and one of the easiest allergens to keep in rotation.',ok:['Well-cooked','Yolk first, then white','Soft scramble fingers'],never:['No raw or runny'],floor:{signs:'Hives spreading, swelling of lips/face, wheeze, repeated vomiting, floppiness',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Protein','growth'],['Choline','brain'],['Vitamin D','bones'],['Vitamin B12','blood'],['Iron','blood']],history:'First given 2 Mar · 9 servings · always settled · a favourite. Well established.'},
+ {k:'citrus',pol:'conditional',dt:'fruits',name:'Citrus',voice:'bright & tangy',glance:'Soft segments, no seeds',siren:0,journey:'untried',age:'Fine to offer early.',why:'Fine to offer early. A harmless red rash can appear around the mouth from the acidity — contact irritation, not an allergy.',ok:['Soft segments, membrane off'],never:['No seeds'],floor:null,nutrients:[['Vitamin C','immunity'],['Folate','blood'],['Fibre','energy'],['Potassium','energy']],history:''},
+ {k:'cowmilk',pol:'conditional',dt:'dairy',name:"Cow's milk",voice:'creamy & gentle',glance:'Fine in food; wait as a drink',siren:1,journey:'settled',age:'In food now; as a main drink, wait until 12 months.',why:'Whole cow’s milk is fine cooked into food now (porridge, curd, paneer). As a main drink, wait until 12 months.',ok:['In food: porridge, curd, paneer'],never:['Not as the main drink yet'],floor:{signs:'Hives, swelling, wheeze, repeated vomiting or floppiness',act:'Call 112 and use a prescribed adrenaline auto-injector if you have one.'},nutrients:[['Calcium','bones'],['Protein','growth'],['Vitamin B12','blood'],['Vitamin D','bones']],history:'First given 18 Apr (in food) · 5 servings · settled fine.'},
+ {k:'honey',pol:'warn',dt:'spices',name:'Honey before 12 months',voice:'',glance:'Wait until age 1 — a firm rule',siren:0,journey:'warn',age:'No honey at all before 12 months.',why:'Honey can carry spores that cause infant botulism in babies under 1. This includes honey cooked or baked into food.',ok:[],never:['No honey at all before 12 months'],floor:{signs:'Over the next days: constipation, weak cry, poor feeding, floppiness',act:'If any appear, seek medical care promptly and mention the honey.',head:'If honey was given'},nutrients:[['Natural sugars','energy']],history:''},
+ {k:'wholenuts',pol:'warn',dt:'nuts',name:'Whole nuts & hard round foods',voice:'',glance:'Choking shape — change the form',siren:1,journey:'warn',age:'Change the form at any age.',why:'It is the shape, not the food — whole nuts, whole grapes, hard raw veg and round sweets are the classic choking forms. Change the form and the food is fine.',ok:['Nuts → ground / smooth butter','Grapes → quartered lengthwise','Hard veg → cooked soft'],never:['No whole nuts, popcorn, hard sweets'],floor:{signs:'Silent or weak cough, can’t breathe/cry, turning blue, going limp',act:'Alternate 5 back blows and 5 chest thrusts (never abdominal thrusts under 1). Call 112/108. If unresponsive, start CPR.',head:'If choking — a mechanical emergency, NO adrenaline'},nutrients:[],history:''},
+ {k:'plantmilk',pol:'inform',dt:'dairy',name:'Plant milks',voice:'mild & plant-based',glance:'Not a substitute under 1',siren:0,journey:'untried',age:'Small amounts in food; not a main milk under 1.',why:'Almond, oat and soy drinks can be used in small amounts in cooking, but under 1 they are not a substitute for breastmilk or formula.',ok:['Small amounts in food'],never:['Not a main milk under 1'],floor:null,nutrients:[['Calcium','bones'],['Fibre','energy']],history:''}
+];
+var SHELVES = [
+  {pol:'encourage',label:'Introduce early',icon:'sprout'},
+  {pol:'conditional',label:'Right time, right form',icon:'clock'},
+  {pol:'warn',label:"Wait — and here's why",icon:'warn'},
+  {pol:'inform',label:'Good to know',icon:'info'}
+];
+var POL = {encourage:{label:'Good to introduce early',icon:'sprout'},conditional:{label:'Right time, right form',icon:'clock'},warn:{label:'Wait — and here’s why',icon:'warn'},inform:{label:'Good to know',icon:'info'}};
+var byKey = {}; FOODS.forEach(function(f){ byKey[f.k]=f; });
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function zi(n){ return '<svg class="zi"><use href="#zi-'+n+'"/></svg>'; }
+
+function journeyChip(f){
+  if(f.pol==='warn') return '';
+  if(f.journey==='untried') return '<span class="lib-untried"><span class="dot"></span>Not tried yet</span>';
+  if(f.journey==='regular') return '<span class="lib-journey lib-journey--regular">'+zi('star')+'A regular for Ziva</span>';
+  if(f.journey==='watching') return '<span class="lib-journey lib-journey--watching">'+zi('eye')+'Tried · keeping an eye on it</span>';
+  return '<span class="lib-journey lib-journey--settled">'+zi('check')+'Tried · agreed with her</span>';
+}
+function bookHtml(f){
+  var reg = f.journey==='regular' ? ' <span class="lib-book-reg">· a regular now</span>' : '';
+  var voice = f.voice ? '<span class="lib-book-voice">'+esc(f.voice)+'</span>' : '';
+  var glanceIcon = f.pol==='warn' ? 'warn' : 'spoon';
+  var siren = f.siren ? '<span class="lib-book-siren">'+zi('siren')+'</span>' : '';
+  return '<button class="lib-book lib-book--'+f.pol+' dt-'+f.dt+'" data-food="'+f.k+'"><span class="lib-book-body">'+
+    '<span class="lib-book-title">'+esc(f.name)+reg+'</span>'+voice+
+    '<span class="lib-book-glance">'+zi(glanceIcon)+esc(f.glance)+'</span>'+journeyChip(f)+'</span>'+
+    siren+'<span class="lib-book-go">'+zi('arrow-right')+'</span></button>';
+}
+function leadHtml(){
+  var untried = FOODS.filter(function(f){ return f.pol==='encourage' && f.journey==='untried'; }).slice(0,3);
+  if(!untried.length) return '';
+  var chips = untried.map(function(f){ return '<button class="lib-lead-chip" data-jump="'+f.k+'">'+zi('sprout')+esc(f.name)+'</button>'; }).join('');
+  return '<div class="lib-lead"><div class="lib-lead-h">'+zi('star')+'Suggested for Ziva</div>'+
+    '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>'+
+    '<div class="lib-lead-chips">'+chips+'</div></div>';
+}
+function renderBrowse(){
+  var html = leadHtml();
+  SHELVES.forEach(function(s){
+    var fs = FOODS.filter(function(f){ return f.pol===s.pol; });
+    if(!fs.length) return;
+    fs.sort(function(a,b){ return (a.journey==='untried'?0:1)-(b.journey==='untried'?0:1); });
+    html += '<div class="lib-group lib-group--'+s.pol+'" data-shelf="'+s.pol+'">'+
+      '<button class="lib-group-label" data-toggleshelf="1">'+zi(s.icon)+esc(s.label)+
+      '<span class="lib-group-count">'+fs.length+'</span><span class="lib-group-chev">'+zi('arrow-right')+'</span></button>'+
+      '<div class="lib-shelf-row">'+fs.map(bookHtml).join('')+'</div></div>';
+  });
+  document.getElementById('wingBrowse').innerHTML = html;
+}
+
+function popHtml(f){
+  var p = POL[f.pol]||POL.inform;
+  var ok = (f.ok||[]).map(function(x){ return '<span class="ld-chip ld-chip--ok">'+zi('check')+esc(x)+'</span>'; });
+  var nv = (f.never||[]).map(function(x){ return '<span class="ld-chip ld-chip--never">'+esc(x)+'</span>'; });
+  var forms = (ok.length||nv.length) ? '<div><div class="fp-sec-h">Safe forms</div><div class="fp-chips">'+ok.join('')+nv.join('')+'</div></div>' : '';
+  var floor = f.floor ? '<div class="ld-floor"><div class="ld-floor-h">'+zi('siren')+esc(f.floor.head||'If a reaction happens — an emergency')+'</div><ul><li>'+esc(f.floor.signs)+'</li></ul><p>'+esc(f.floor.act)+'</p></div>' : '';
+  var nutri = (f.nutrients&&f.nutrients.length) ? '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">'+f.nutrients.map(function(n){ return '<span class="nutri-chip nutri-chip--'+n[1]+'">'+esc(n[0])+'</span>'; }).join('')+'</div></div>' : '';
+  var hist = f.history ? '<div><div class="fp-sec-h">Ziva\'s history</div><p class="fp-why">'+esc(f.history)+'</p></div>' : '';
+  var jchip = journeyChip(f);
+  var voice = f.voice ? '<div class="fp-voice">'+esc(f.voice)+'</div>' : '';
+  return '<div class="food-pop"><div class="fp-head dt-'+f.dt+'"><button class="fp-close" data-closepop="1">×</button>'+
+    '<div class="fp-name">'+esc(f.name)+'</div>'+voice+jchip+'</div>'+
+    '<div class="fp-body"><div>'+
+      '<div class="fp-flag fp-flag--'+f.pol+'">'+zi(p.icon)+'<span><b>'+esc(p.label)+'.</b> '+esc(f.why)+'</span></div>'+
+      (f.age?'<div class="fp-flag fp-flag--age">'+zi('warn')+'<span>'+esc(f.age)+'</span></div>':'')+floor+
+    '</div>'+forms+nutri+hist+'</div>'+
+    '<div class="fp-foot"><button class="fp-foot-btn" data-logserve="1">'+zi('plus')+'Log a serving</button>'+
+    '<span class="fp-foot-link">Full history in Info '+zi('arrow-right')+'</span></div></div>';
+}
+
+var GUIDES = [
+ {k:'sage',icon:'sprout',t:'Introducing allergens early',body:'<div><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy.</p></div><div><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Egg</span><span class="ld-chip ld-chip--ok">Peanut</span><span class="ld-chip ld-chip--ok">Tree nuts</span><span class="ld-chip ld-chip--ok">Fish</span><span class="ld-chip ld-chip--ok">Sesame</span><span class="ld-chip ld-chip--ok">Soy</span><span class="ld-chip ld-chip--ok">Wheat</span><span class="ld-chip ld-chip--ok">Dairy</span></div></div>'},
+ {k:'amber',icon:'spoon',t:'Safe shapes & textures',body:'<div><p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p></div><div><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Nuts → ground</span><span class="ld-chip ld-chip--ok">Grapes → quartered</span><span class="ld-chip ld-chip--ok">Hard veg → cooked soft</span></div></div><div class="ld-floor"><div class="ld-floor-h">'+'<svg class="zi"><use href="#zi-siren"/></svg>'+'If choking — NO adrenaline</div><ul><li>Silent/weak cough, can’t breathe, turning blue, limp</li></ul><p>5 back blows + 5 chest thrusts (never Heimlich under 1). Call 112/108; if unresponsive, CPR.</p></div>'},
+ {k:'sky',icon:'info',t:'Milk & drinks',body:'<div><p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow’s milk is fine in food; plant milks are not a substitute.</p></div>'},
+ {k:'lav',icon:'clock',t:'First foods, by age',body:'<div><p class="ld-why"><b>~6 mo</b> smooth purées + start allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole milk, honey ok.</p></div>'}
+];
+function renderGuides(){
+  document.getElementById('wingGuides').innerHTML = GUIDES.map(function(g){
+    return '<div class="lib-group lib-group--'+g.k+' lib-group--guide" data-shelf="g-'+g.k+'">'+
+      '<button class="lib-group-label" data-toggleshelf="1">'+zi(g.icon)+esc(g.t)+'<span class="lib-group-chev">'+zi('arrow-right')+'</span></button>'+
+      '<div class="lib-shelf-row"><div class="ld-inner">'+g.body+'</div></div></div>';
+  }).join('');
+}
+function deckHtml(){
+  var floors = [
+    ['Choking','Silent or weak cough, can’t breathe / cry, turning blue, going limp.','A mechanical emergency — NO adrenaline. Alternate 5 back blows and 5 chest thrusts. Never abdominal thrusts under 1. Call 112/108. If unresponsive, start CPR.'],
+    ['Allergic reaction (anaphylaxis)','Hives spreading, swelling of lips / face / tongue, wheeze, repeated vomiting, sudden floppiness.','Call 112 right away and use a prescribed adrenaline auto-injector if you have one. An antihistamine does not treat anaphylaxis.'],
+    ['Delayed vomiting (FPIES)','Repeated forceful vomiting 1–4 hours after a food, with paleness or floppiness — no rash.','Seek urgent care for fluids — babies can dehydrate fast. Note the food and time; mention FPIES.'],
+    ['Suspected poisoning / botulism','After honey or an unsafe food: constipation, weak cry, poor feeding, floppiness.','Seek medical care promptly and say what was eaten and when.']
+  ];
+  return '<div class="deck-sheet"><div class="deck-head">'+zi('siren')+'<span class="deck-title">In an emergency</span><button class="deck-close" data-closedeck="1">×</button></div>'+
+    floors.map(function(f){ return '<div class="floor-card"><div class="floor-card-t">'+zi('warn')+esc(f[0])+'</div><div class="floor-face"><div class="floor-face-h">Recognise</div><p>'+esc(f[1])+'</p></div><div class="floor-face"><div class="floor-face-h">Do</div><p class="floor-aid">'+esc(f[2])+'</p></div></div>'; }).join('')+'</div>';
+}
+
+// ── interactions ──
+function setWing(w){
+  document.querySelectorAll('.lib-wing').forEach(function(b){ b.classList.toggle('lib-wing--active', b.getAttribute('data-wing')===w); });
+  var br=document.getElementById('wingBrowse'), gu=document.getElementById('wingGuides');
+  br.classList.toggle('hidden', w!=='browse'); gu.classList.toggle('hidden', w!=='guides');
+  var shown = w==='browse'?br:gu; shown.classList.remove('wing-in'); void shown.offsetWidth; shown.classList.add('wing-in');
+}
+function curWing(){ return document.getElementById('wingGuides').classList.contains('hidden')?'browse':'guides'; }
+var toastT;
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); },2200); }
+function openPop(k){ var f=byKey[k]; if(!f) return; document.getElementById('popOv').innerHTML=popHtml(f); document.getElementById('popOv').classList.add('open'); }
+function jump(k){ var f=byKey[k]; if(!f) return; var g=document.querySelector('[data-shelf="'+f.pol+'"]'); if(g) g.classList.add('open'); openPop(k); }
+
+document.addEventListener('click', function(e){
+  var t=e.target;
+  var wing=t.closest('[data-wing]'); if(wing){ setWing(wing.getAttribute('data-wing')); return; }
+  if(t.closest('#emergBtn')){ document.getElementById('deckOv').innerHTML=deckHtml(); document.getElementById('deckOv').classList.add('open'); return; }
+  if(t.closest('[data-toggleshelf]')){ t.closest('.lib-group').classList.toggle('open'); return; }
+  var jc=t.closest('[data-jump]'); if(jc){ jump(jc.getAttribute('data-jump')); return; }
+  var bk=t.closest('[data-food]'); if(bk){ openPop(bk.getAttribute('data-food')); return; }
+  if(t.closest('[data-logserve]')){ toast('Log a serving → Quick Log (not linked in this prototype)'); return; }
+  if(t.closest('[data-closepop]') || t.id==='popOv'){ document.getElementById('popOv').classList.remove('open'); return; }
+  if(t.closest('[data-closedeck]') || t.id==='deckOv'){ document.getElementById('deckOv').classList.remove('open'); return; }
+  if(t.closest('#themeBtn')){ var h=document.documentElement, d=h.getAttribute('data-theme')==='dark'; h.setAttribute('data-theme',d?'':'dark'); document.getElementById('themeIcon').firstElementChild.setAttribute('href',d?'#zi-moon':'#zi-sun'); document.getElementById('themeLabel').textContent=d?'Dark':'Light'; return; }
+});
+
+// swipe between wings — handleSwipe rules: |dx|>=60 & |dy|<=0.7|dx|; guard when an overlay is open; clamp
+var sx=0,sy=0,arm=false, phone=document.getElementById('phone');
+phone.addEventListener('pointerdown',function(e){ sx=e.screenX; sy=e.screenY; arm=true; });
+phone.addEventListener('pointerup',function(e){
+  if(!arm) return; arm=false;
+  if(document.getElementById('popOv').classList.contains('open')||document.getElementById('deckOv').classList.contains('open')) return;
+  var dx=e.screenX-sx, dy=e.screenY-sy;
+  if(Math.abs(dx)<60 || Math.abs(dy)>Math.abs(dx)*0.7) return;
+  var w=curWing();
+  if(dx<0 && w==='browse') setWing('guides');
+  else if(dx>0 && w==='guides') setWing('browse');
+});
+
+renderBrowse(); renderGuides();
+</script>
+</body>
+</html>
