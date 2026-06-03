@@ -10869,7 +10869,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-hero-eyebrow .zi { width:15px; height:15px; }
 .recipe-hero-title { font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-2xl); line-height:1.08; color:var(--text); margin:0 0 2px; text-wrap:balance; }
 .recipe-hero-tag { font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:var(--fs-lg); line-height:1.25; color:var(--mid); margin:0 0 var(--sp-8); }
-.recipe-hero-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:0 0 var(--sp-12); }
+.recipe-hero-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:0 0 var(--sp-8); }
+.recipe-hero-more { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+.recipe-hero-more .zi { width:14px; height:14px; transition:transform var(--ease-med); }
+.recipe-hero[aria-expanded="true"] .recipe-hero-more .zi { transform:rotate(180deg); }
 
 /* Meal-slot groups + full-width recipe rows (.lib-book idiom) */
 .recipe-group { margin-bottom:var(--sp-16); }
@@ -10916,7 +10919,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 
 /* compact recipe card on the Home Smart-Q&A answer */
-.qa-recipe-card { display:flex; align-items:center; gap:var(--sp-8); margin-top:var(--sp-6); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); background:var(--card-bg); border:1px solid var(--card-border); border-left:3px solid var(--rc-rail, var(--tc-sage)); }
+.qa-recipe-card { display:flex; align-items:center; gap:var(--sp-8); min-height:44px; margin-top:var(--sp-6); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); background:var(--card-bg); border:1px solid var(--card-border); border-left:3px solid var(--rc-rail, var(--tc-sage)); }
 .qa-recipe-card .zif { width:20px; height:20px; }
 .qa-recipe-card-main { flex:1; min-width:0; }
 .qa-recipe-card-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); }

@@ -55,16 +55,16 @@ const RECIPES = [
   // ─────────────────────────── BREAKFAST ───────────────────────────
   {
     id: 'ragi-banana-porridge', title: 'Ragi Banana Porridge', slot: 'breakfast', minAgeMonths: 7,
-    ingredients: [{ name: 'ragi', qty: '1 tbsp (24 g)' }, { name: 'banana', qty: '¼, mashed (20 g)' }, { name: 'milk', qty: '2 tbsp (in cooking)' }],
+    ingredients: [{ name: 'ragi', qty: '1 tbsp (24 g)' }, { name: 'banana', qty: '¼, mashed (20 g)' }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
     steps: [
       'Dry-roast 1 tbsp ragi flour on low for 2 min until fragrant.',
       'Add ½ cup water, whisk continuously to avoid lumps, cook 5–6 min until thick.',
-      'Stir in 2 tbsp milk, cook 1 min more.',
-      'Cool slightly, fold in mashed banana off the heat. Serve warm.',
+      'Loosen with a little expressed breastmilk or water off the heat.',
+      'Cool slightly, fold in mashed banana. Serve warm.',
     ],
     dos: ['Whisk continuously for a smooth, lump-free porridge', "Banana's vitamin C helps the ragi iron absorb", 'Cook to a thick, spoonable consistency'],
-    donts: ['No added sugar — ripe banana sweetens', "Don't use cold milk as a drink before 12 months — here it cooks in", 'Serve fresh, not stored'],
+    donts: ['No added sugar — ripe banana sweetens', 'Use water or expressed breastmilk; cow’s milk as a main drink waits until 12 months', 'Serve fresh, not stored'],
     source: ['iap', 'icmr'],
   },
   {
@@ -82,17 +82,17 @@ const RECIPES = [
     source: ['nhs', 'aap'],
   },
   {
-    id: 'almond-ragi-kheer', title: 'Almond Ragi Kheer', slot: 'breakfast', minAgeMonths: 9,
+    id: 'almond-ragi-kheer', title: 'Almond Ragi Kheer (12 m+)', slot: 'breakfast', minAgeMonths: 12,
     ingredients: [{ name: 'milk', qty: '½ cup (in cooking)' }, { name: 'ragi', qty: '1 tbsp (15 g)' }, { name: 'date', qty: '1, deseeded paste' }, { name: 'almond', qty: '¼ tsp ground (3 g)' }],
     foodGroups: ['dairy', 'grains', 'fruits', 'nuts'], cuisine: 'Indian',
     steps: [
       'Soak 2 almonds, peel, and grind to an absolutely smooth paste.',
       'Soak 1 date 15 min, deseed, mash to a paste.',
-      'Cook 1 tbsp ragi in ½ cup milk on low, stirring, until thick (6–8 min).',
+      'Cook 1 tbsp ragi in ½ cup whole milk on low, stirring, until thick (6–8 min).',
       'Stir in the almond and date paste, cook 1 min. Cool and serve.',
     ],
-    dos: ['Grind almond to a completely smooth paste — never whole', 'Date provides all the sweetness needed', 'Introduce almond on its own for 3 days first'],
-    donts: ['NEVER serve whole or chopped nuts — choking risk', 'No added sugar', 'Watch for a nut reaction the first few times'],
+    dos: ['Cow’s milk as the main liquid is a first-birthday food — this is a 12 m+ treat', 'Grind almond to a completely smooth paste — never whole', 'Date provides all the sweetness needed'],
+    donts: ['Not before 12 months — cow’s milk as a main drink/liquid waits until the first birthday', 'NEVER serve whole or chopped nuts — choking risk', 'No added sugar'],
     source: ['iap', 'aap'],
   },
   {
@@ -139,16 +139,16 @@ const RECIPES = [
   },
   {
     id: 'dalia-porridge', title: 'Broken-Wheat Dalia Porridge', slot: 'breakfast', minAgeMonths: 8,
-    ingredients: [{ name: 'dalia', qty: '2 tbsp (30 g)' }, { name: 'milk', qty: '½ cup (in cooking)' }, { name: 'date', qty: '1, paste' }],
-    foodGroups: ['grains', 'dairy', 'fruits'], cuisine: 'Indian',
+    ingredients: [{ name: 'dalia', qty: '2 tbsp (30 g)' }, { name: 'date', qty: '1, paste' }],
+    foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
     steps: [
       'Dry-roast 2 tbsp dalia (broken wheat) 2 min.',
       'Pressure-cook with ½ cup water until very soft (2–3 whistles).',
-      'Add ½ cup milk and mashed date, simmer 3 min until creamy.',
+      'Add ½ cup water (or expressed breastmilk) and mashed date, simmer 3 min until creamy.',
       'Mash to an even texture. Serve warm.',
     ],
     dos: ['Cook dalia until very soft', 'Date sweetens naturally', 'Good source of fibre and iron'],
-    donts: ['No added sugar', 'Skip if there is a known wheat (gluten) reaction', "Don't serve too thick"],
+    donts: ['No added sugar', 'Skip if there is a known wheat (gluten) reaction', 'Cow’s milk as a main drink waits until 12 months — use water or breastmilk here'],
     source: ['iap', 'icmr'],
   },
 

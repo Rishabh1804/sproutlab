@@ -753,7 +753,7 @@ function _recipeDetailHtml(r, ageMonths) {
   h += '<div class="recipe-chips">';
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
-    const glyph = ic ? `<svg class="zif zi" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+    const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
     h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
@@ -794,10 +794,14 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const grp = _recipePrimaryGroup(r);
   const rail = _recipeRailColor(grp);
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
-  const glyph = ic ? `<svg class="zif zi" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+  const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
   const effMin = _recipeEffectiveMinAge(r);
-  const ageBadge = effMin > ageMonths
-    ? `<span class="recipe-age-badge">${zi('baby')} ${effMin}m+</span>` : '';
+  const withheld = effMin > ageMonths;
+  // V-R-1: one age statement per row. When the recipe is withheld (the amber
+  // age-gate badge shows), suppress the plain meta age span — the badge IS the
+  // age signal, and a duplicate "Xm+" twin dilutes its caution weight.
+  const ageBadge = withheld ? `<span class="recipe-age-badge">${zi('baby')} ${effMin}m+</span>` : '';
+  const ageMeta = withheld ? '' : `<span>${zi('baby')} ${effMin}m+</span>`;
   const slot = RECIPE_SLOT_META[r.slot];
   const slotMeta = (opts.showSlot && slot) ? `<span>${zi(slot.icon)} ${escHtml(slot.label)}</span>` : '';
   return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
@@ -806,7 +810,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
       <span class="recipe-row-main">
         <span class="recipe-row-title">${escHtml(r.title)}</span>
         <span class="recipe-row-tag">${escHtml(_recipeTagline(r))}</span>
-        <span class="recipe-row-meta">${slotMeta}<span>${zi('baby')} ${effMin}m+</span>${ageBadge}</span>
+        <span class="recipe-row-meta">${slotMeta}${ageMeta}${ageBadge}</span>
       </span>
       <span class="recipe-row-chev">${zi('chevron-down')}</span>
     </div>
@@ -824,6 +828,7 @@ function _recipeHeroHtml(r, whyText, ageMonths) {
     <h3 class="recipe-hero-title">${escHtml(r.title)}</h3>
     <p class="recipe-hero-tag">${escHtml(_recipeTagline(r))}</p>
     <p class="recipe-hero-why">${escHtml(whyText || '')}</p>
+    <span class="recipe-hero-more">${zi('chevron-down')} Tap for steps &amp; safety</span>
     <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
   </div>`;
 }

@@ -3565,6 +3565,9 @@ function switchTrackSub(sub) {
 // switchDietSub renders the Recipes panel; expandRecipeRow opens + scrolls.
 function openRecipeInTab(recipeId) {
   if (!recipeId) return;
+  // K-R-4: validate the id against the corpus index before switching tabs, so
+  // a stale/unknown id is a no-op rather than a tab-switch to a missing row.
+  if (window.RECIPES_BY_ID && !window.RECIPES_BY_ID[recipeId]) return;
   if (typeof switchTab === 'function') switchTab('diet');
   if (typeof switchDietSub === 'function') switchDietSub({ dataset: { dietSub: 'recipes' } });
   // The Recipes panel renders synchronously in switchDietSub's lazy hook; a
