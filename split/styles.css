@@ -4840,9 +4840,18 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 .footer-name {
   font-family:'Fraunces', serif; font-style:italic; font-weight:700;
-  background:linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  /* Same warm-wave as the hero stripe: a sheen sweeps over the fixed
+     wavelength gradient, clipped to the glyphs — reuses @keyframes ld-wave so
+     the cadence matches the hero exactly. */
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent; color:transparent;
+  animation:ld-wave 4.4s ease-in-out infinite;
 }
 .footer-heart {
   width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
@@ -4854,7 +4863,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   16% { transform:scale(1); }
   22% { transform:scale(1.12); }
 }
-@media (prefers-reduced-motion: reduce) { .footer-heart { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .footer-heart, .footer-name { animation:none; } }
 
 /* Vitals expanded inner divider */
 .vitals-expanded-inner { border-top:1px solid var(--border-subtle); margin-top:var(--sp-12); padding-top:var(--sp-12); }
