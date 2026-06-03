@@ -12,15 +12,15 @@ const sheet = readFileSync('docs/design/zi-food-sheet.html', 'utf8');
 const sprite = sheet.match(/<svg style="display:none">[\s\S]*?<\/svg>/)[0];
 
 // domain → wavelength order + colour expressions.
-// STRIPE uses saturated, theme-aware --tc-* tokens (visible stops); FADE stays soft (--*-light).
-// (veg has no --tc-peach token yet → deep-peach literal, flagged for tokenising at wiring.)
+// STRIPE: soft mid-tone hues (de-neoned — between the pale --* and the harsh --tc-*).
+// FADE: soft --*-light tints (theme-aware). CHIP: same --*-light bg + soft domain border.
 const DOM = {
-  fruit:  {o:0, sat:'var(--tc-rose)',  light:'var(--rose-light)',   dark:'rgba(158,62,82,0.20)'},
-  veg:    {o:1, sat:'#df9356',         light:'var(--peach-light)',  dark:'rgba(138,101,32,0.18)'},
-  legume: {o:2, sat:'var(--tc-amber)', light:'var(--amber-light)',  dark:'rgba(150,110,40,0.18)'},
-  grain:  {o:3, sat:'var(--tc-sage)',  light:'var(--sage-light)',   dark:'rgba(58,112,96,0.17)'},
-  dairy:  {o:4, sat:'var(--tc-sky)',   light:'var(--sky-light)',    dark:'rgba(58,112,144,0.18)'},
-  nuts:   {o:6, sat:'var(--tc-lav)',   light:'var(--lav-light)',    dark:'rgba(110,94,154,0.18)'},
+  fruit:  {o:0, sat:'#e59cb0', light:'var(--rose-light)',   dark:'rgba(158,62,82,0.20)',  ac:'#e59cb0'},
+  veg:    {o:1, sat:'#ecae7e', light:'var(--peach-light)',  dark:'rgba(138,101,32,0.18)', ac:'#ecae7e'},
+  legume: {o:2, sat:'#e6c078', light:'var(--amber-light)',  dark:'rgba(150,110,40,0.18)', ac:'#e6c078'},
+  grain:  {o:3, sat:'#9fcdb5', light:'var(--sage-light)',   dark:'rgba(58,112,96,0.17)',  ac:'#9fcdb5'},
+  dairy:  {o:4, sat:'#a0cce0', light:'var(--sky-light)',     dark:'rgba(58,112,144,0.18)', ac:'#a0cce0'},
+  nuts:   {o:6, sat:'#c4b4e6', light:'var(--lav-light)',     dark:'rgba(110,94,154,0.18)', ac:'#c4b4e6'},
 };
 
 // demo recipes: grams drive the weighting; trace ingredients excluded from the fingerprint
@@ -30,7 +30,7 @@ const RECIPES = [
       {n:'Rice', g:60, dom:'grain', icon:'rice', c:'#d8c79f'},
       {n:'Carrot', g:24, dom:'veg', icon:'carrot', c:'#e8843a'},
       {n:'Paneer', g:14, dom:'dairy', icon:'paneer', c:'#cdbf93'},
-      {n:'Ghee', g:5, dom:'trace', icon:'ghee', c:'#e8b94f'},
+      {n:'Ghee', g:5, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
     ], time:'25 min', age:'7m+' },
   { title:'Almond Banana Mash', badge:'Breakfast', why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
     ings:[
@@ -41,7 +41,7 @@ const RECIPES = [
     ings:[
       {n:'Banana', g:50, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Ragi', g:30, dom:'grain', icon:'millet', c:'#b06a44'},
-      {n:'Milk', g:8, dom:'trace', icon:'milk', c:'#f1eee4'},
+      {n:'Milk', g:8, dom:'trace', td:'dairy', icon:'milk', c:'#cdbf93'},
     ], time:'12 min', age:'7m+' },
 ];
 
@@ -80,8 +80,10 @@ const card = (rec) => {
   const fp = fingerprint(rec);
   const wm = fp.ranked.map((i, k) =>
     `<span class="wi ${SLOTS[k]}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg></span>`).join('');
-  const chips = rec.ings.map(i =>
-    `<span class="gh-chip"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`).join('');
+  const chips = rec.ings.map(i => {
+    const t = DOM[i.dom !== 'trace' ? i.dom : i.td];   // domain tint (trace maps via td)
+    return `<span class="gh-chip" style="background:${t.light};border-color:color-mix(in srgb, ${t.ac} 55%, transparent)"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`;
+  }).join('');
   return `<article class="gh" style="--stripe:${fp.stripe};--fl:${fp.fadeL};--fd:${fp.fadeD}">
     <div class="gh-wm">${wm}</div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
@@ -129,12 +131,12 @@ const html = `<!DOCTYPE html>
 
   .gh{position:relative;overflow:hidden;border-radius:var(--r-2xl);padding:var(--sp-24) var(--sp-24) 22px;box-shadow:0 8px 32px var(--shadow);margin-bottom:6px;background:var(--fl);}
   [data-theme="dark"] .gh{background:var(--fd);}
-  /* weighted stripe (ribbon w/ soft drop) + warm-wave sheen */
-  .gh::before{content:'';position:absolute;top:0;left:0;right:0;height:9px;z-index:2;background:var(--stripe);box-shadow:0 1px 3px rgba(60,40,20,.18);}
-  .gh::after{content:'';position:absolute;top:0;left:0;right:0;height:9px;z-index:3;pointer-events:none;
-    background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.5) 50%,transparent 62% 100%);
+  /* weighted stripe — narrow, soft hues + warm-wave sheen */
+  .gh::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;z-index:2;background:var(--stripe);}
+  .gh::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;z-index:3;pointer-events:none;
+    background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.42) 50%,transparent 62% 100%);
     background-size:320% 100%;animation:ghsweep 4.4s ease-in-out infinite;}
-  [data-theme="dark"] .gh::after{background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.26) 50%,transparent 62% 100%);background-size:320% 100%;}
+  [data-theme="dark"] .gh::after{background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.22) 50%,transparent 62% 100%);background-size:320% 100%;}
   @keyframes ghsweep{0%{background-position:135% 0;}100%{background-position:-75% 0;}}
 
   /* watermark — organic arc, dominant icon anchors the corner (bleeds slightly); non-overlapping */
@@ -153,7 +155,7 @@ const html = `<!DOCTYPE html>
   .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:33px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin-bottom:var(--sp-8);max-width:80%;}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.45;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
-  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:600;color:var(--text);}
+  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);border:1px solid transparent;border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
   .gh-chip .zi{width:15px;height:15px;flex:0 0 auto;}
   .gh-foot{position:relative;z-index:1;display:flex;align-items:center;gap:var(--sp-14);}
   .gh-meta{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-xs);color:var(--mid);}

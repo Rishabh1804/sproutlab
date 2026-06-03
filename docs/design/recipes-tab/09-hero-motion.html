@@ -20,12 +20,12 @@
 
   .gh{position:relative;overflow:hidden;border-radius:var(--r-2xl);padding:var(--sp-24) var(--sp-24) 22px;box-shadow:0 8px 32px var(--shadow);margin-bottom:6px;background:var(--fl);}
   [data-theme="dark"] .gh{background:var(--fd);}
-  /* weighted stripe (ribbon w/ soft drop) + warm-wave sheen */
-  .gh::before{content:'';position:absolute;top:0;left:0;right:0;height:9px;z-index:2;background:var(--stripe);box-shadow:0 1px 3px rgba(60,40,20,.18);}
-  .gh::after{content:'';position:absolute;top:0;left:0;right:0;height:9px;z-index:3;pointer-events:none;
-    background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.5) 50%,transparent 62% 100%);
+  /* weighted stripe — narrow, soft hues + warm-wave sheen */
+  .gh::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;z-index:2;background:var(--stripe);}
+  .gh::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;z-index:3;pointer-events:none;
+    background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.42) 50%,transparent 62% 100%);
     background-size:320% 100%;animation:ghsweep 4.4s ease-in-out infinite;}
-  [data-theme="dark"] .gh::after{background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.26) 50%,transparent 62% 100%);background-size:320% 100%;}
+  [data-theme="dark"] .gh::after{background:linear-gradient(100deg,transparent 0 38%,rgba(255,255,255,.22) 50%,transparent 62% 100%);background-size:320% 100%;}
   @keyframes ghsweep{0%{background-position:135% 0;}100%{background-position:-75% 0;}}
 
   /* watermark — organic arc, dominant icon anchors the corner (bleeds slightly); non-overlapping */
@@ -44,7 +44,7 @@
   .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:33px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin-bottom:var(--sp-8);max-width:80%;}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.45;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
-  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:600;color:var(--text);}
+  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);border:1px solid transparent;border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
   .gh-chip .zi{width:15px;height:15px;flex:0 0 auto;}
   .gh-foot{position:relative;z-index:1;display:flex;align-items:center;gap:var(--sp-14);}
   .gh-meta{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-xs);color:var(--mid);}
@@ -120,35 +120,35 @@
   <p class="r-mode light">Light</p>
   <div class="r-phone">
     <h2 class="r-h">Recipes</h2>
-    <article class="gh" style="--stripe:linear-gradient(90deg, #df9356 0%, #df9356 12.2%, var(--tc-sage) 55.1%, var(--tc-sky) 92.9%, var(--tc-sky) 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 12.2%, var(--sage-light) 55.1%, var(--sky-light) 92.9%, var(--sky-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 12.2%, rgba(58,112,96,0.17) 55.1%, rgba(58,112,144,0.18) 92.9%, rgba(58,112,144,0.18) 100%)">
+    <article class="gh" style="--stripe:linear-gradient(90deg, #ecae7e 0%, #ecae7e 12.2%, #9fcdb5 55.1%, #a0cce0 92.9%, #a0cce0 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 12.2%, var(--sage-light) 55.1%, var(--sky-light) 92.9%, var(--sky-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 12.2%, rgba(58,112,96,0.17) 55.1%, rgba(58,112,144,0.18) 92.9%, rgba(58,112,144,0.18) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg></span><span class="wi s2"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg></span><span class="wi s3"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip" style="background:var(--peach-light);border-color:color-mix(in srgb, #ecae7e 55%, transparent)"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip" style="background:var(--amber-light);border-color:color-mix(in srgb, #e6c078 55%, transparent)"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted veg 24% · grain 61% · dairy 14%</p>
-<article class="gh" style="--stripe:linear-gradient(90deg, var(--tc-rose) 0%, var(--tc-rose) 44.6%, var(--tc-lav) 94.6%, var(--tc-lav) 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 44.6%, var(--lav-light) 94.6%, var(--lav-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 44.6%, rgba(110,94,154,0.18) 94.6%, rgba(110,94,154,0.18) 100%)">
+<article class="gh" style="--stripe:linear-gradient(90deg, #e59cb0 0%, #e59cb0 44.6%, #c4b4e6 94.6%, #c4b4e6 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 44.6%, var(--lav-light) 94.6%, var(--lav-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 44.6%, rgba(110,94,154,0.18) 94.6%, rgba(110,94,154,0.18) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg></span><span class="wi s2"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--lav-light);border-color:color-mix(in srgb, #c4b4e6 55%, transparent)"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted fruit 89% · nuts 11%</p>
-<article class="gh" style="--stripe:linear-gradient(90deg, var(--tc-rose) 0%, var(--tc-rose) 31.3%, var(--tc-sage) 81.3%, var(--tc-sage) 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 31.3%, var(--sage-light) 81.3%, var(--sage-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 31.3%, rgba(58,112,96,0.17) 81.3%, rgba(58,112,96,0.17) 100%)">
+<article class="gh" style="--stripe:linear-gradient(90deg, #e59cb0 0%, #e59cb0 31.3%, #9fcdb5 81.3%, #9fcdb5 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 31.3%, var(--sage-light) 81.3%, var(--sage-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 31.3%, rgba(58,112,96,0.17) 81.3%, rgba(58,112,96,0.17) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg></span><span class="wi s2"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip"><svg class="zi" style="color:#f1eee4"><use href="#zif-milk"/></svg>Milk</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
@@ -157,35 +157,35 @@
   <p class="r-mode dark">Dark</p>
   <div class="r-phone" data-theme="dark">
     <h2 class="r-h">Recipes</h2>
-    <article class="gh" style="--stripe:linear-gradient(90deg, #df9356 0%, #df9356 12.2%, var(--tc-sage) 55.1%, var(--tc-sky) 92.9%, var(--tc-sky) 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 12.2%, var(--sage-light) 55.1%, var(--sky-light) 92.9%, var(--sky-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 12.2%, rgba(58,112,96,0.17) 55.1%, rgba(58,112,144,0.18) 92.9%, rgba(58,112,144,0.18) 100%)">
+    <article class="gh" style="--stripe:linear-gradient(90deg, #ecae7e 0%, #ecae7e 12.2%, #9fcdb5 55.1%, #a0cce0 92.9%, #a0cce0 100%);--fl:linear-gradient(135deg, var(--peach-light) 0%, var(--peach-light) 12.2%, var(--sage-light) 55.1%, var(--sky-light) 92.9%, var(--sky-light) 100%);--fd:linear-gradient(135deg, rgba(138,101,32,0.18) 0%, rgba(138,101,32,0.18) 12.2%, rgba(58,112,96,0.17) 55.1%, rgba(58,112,144,0.18) 92.9%, rgba(58,112,144,0.18) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg></span><span class="wi s2"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg></span><span class="wi s3"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip" style="background:var(--peach-light);border-color:color-mix(in srgb, #ecae7e 55%, transparent)"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip" style="background:var(--amber-light);border-color:color-mix(in srgb, #e6c078 55%, transparent)"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted veg 24% · grain 61% · dairy 14%</p>
-<article class="gh" style="--stripe:linear-gradient(90deg, var(--tc-rose) 0%, var(--tc-rose) 44.6%, var(--tc-lav) 94.6%, var(--tc-lav) 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 44.6%, var(--lav-light) 94.6%, var(--lav-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 44.6%, rgba(110,94,154,0.18) 94.6%, rgba(110,94,154,0.18) 100%)">
+<article class="gh" style="--stripe:linear-gradient(90deg, #e59cb0 0%, #e59cb0 44.6%, #c4b4e6 94.6%, #c4b4e6 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 44.6%, var(--lav-light) 94.6%, var(--lav-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 44.6%, rgba(110,94,154,0.18) 94.6%, rgba(110,94,154,0.18) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg></span><span class="wi s2"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--lav-light);border-color:color-mix(in srgb, #c4b4e6 55%, transparent)"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
   </article>
   <p class="fp">fingerprint · weighted fruit 89% · nuts 11%</p>
-<article class="gh" style="--stripe:linear-gradient(90deg, var(--tc-rose) 0%, var(--tc-rose) 31.3%, var(--tc-sage) 81.3%, var(--tc-sage) 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 31.3%, var(--sage-light) 81.3%, var(--sage-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 31.3%, rgba(58,112,96,0.17) 81.3%, rgba(58,112,96,0.17) 100%)">
+<article class="gh" style="--stripe:linear-gradient(90deg, #e59cb0 0%, #e59cb0 31.3%, #9fcdb5 81.3%, #9fcdb5 100%);--fl:linear-gradient(135deg, var(--rose-light) 0%, var(--rose-light) 31.3%, var(--sage-light) 81.3%, var(--sage-light) 100%);--fd:linear-gradient(135deg, rgba(158,62,82,0.20) 0%, rgba(158,62,82,0.20) 31.3%, rgba(58,112,96,0.17) 81.3%, rgba(58,112,96,0.17) 100%)">
     <div class="gh-wm"><span class="wi s1"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg></span><span class="wi s2"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg></span></div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
-    <div class="gh-ings"><span class="gh-chip"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip"><svg class="zi" style="color:#f1eee4"><use href="#zif-milk"/></svg>Milk</span></div>
+    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
