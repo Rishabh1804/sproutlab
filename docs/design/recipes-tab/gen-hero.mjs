@@ -25,19 +25,19 @@ const DOM = {
 
 // demo recipes: grams drive the weighting; trace ingredients excluded from the fingerprint
 const RECIPES = [
-  { title:'Veg & Paneer Khichdi', badge:'Lunch', why:'Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.',
+  { title:'Veg & Paneer Khichdi', badge:'Lunch', tag:'a soft, savoury one-pot', why:'Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.',
     ings:[
       {n:'Rice', g:60, dom:'grain', icon:'rice', c:'#d8c79f'},
       {n:'Carrot', g:24, dom:'veg', icon:'carrot', c:'#e8843a'},
       {n:'Paneer', g:14, dom:'dairy', icon:'paneer', c:'#cdbf93'},
       {n:'Ghee', g:5, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
     ], time:'25 min', age:'7m+' },
-  { title:'Almond Banana Mash', badge:'Breakfast', why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
+  { title:'Almond Banana Mash', badge:'Breakfast', tag:'a five-minute creamy breakfast', why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
     ings:[
       {n:'Banana', g:100, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Almond powder', g:12, dom:'nuts', icon:'almond', c:'#b9824e'},
     ], time:'5 min', age:'6m+' },
-  { title:'Ragi Banana Porridge', badge:'Breakfast', why:'Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.',
+  { title:'Ragi Banana Porridge', badge:'Breakfast', tag:'iron-rich & naturally sweet', why:'Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.',
     ings:[
       {n:'Banana', g:50, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Ragi', g:30, dom:'grain', icon:'millet', c:'#b06a44'},
@@ -89,6 +89,7 @@ const card = (rec) => {
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">${rec.badge}</span></div>
     <h3 class="gh-title">${rec.title}</h3>
+    <p class="gh-tag">${rec.tag}</p>
     <p class="gh-why">${rec.why}</p>
     <div class="gh-ings">${chips}</div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>${rec.time}</b></span>
@@ -152,8 +153,10 @@ const html = `<!DOCTYPE html>
   .gh-eyebrow{display:inline-flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--tc-sage);}
   .gh-eyebrow .zi{width:15px;height:15px;}
   .gh-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--sp-4);background:var(--tc-sage);color:var(--card-bg);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-2xs);font-weight:800;}
-  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:33px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin-bottom:var(--sp-8);max-width:80%;}
-  .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.45;margin-bottom:var(--sp-12);max-width:78%;}
+  /* direction C — roman title + Fraunces italic "voice" descriptor */
+  .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:80%;}
+  .gh-tag{position:relative;z-index:1;font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:var(--fs-lg);line-height:1.25;color:var(--mid);margin:0 0 var(--sp-10);max-width:82%;}
+  .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.5;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
   .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
   .gh-chip .zi{width:15px;height:15px;flex:0 0 auto;}
