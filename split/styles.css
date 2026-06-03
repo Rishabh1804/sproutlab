@@ -10821,3 +10821,118 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 [data-theme="dark"] .food-lib-chip { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .food-lib-card { background:rgba(255,255,255,0.04); }
 [data-theme="dark"] .fd-chip { background:rgba(255,255,255,0.08); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Diet → Library redesign (food-effects-v2) — the living shelf.
+   Two wings (Browse foods / Safety guides), collapsible polarity shelves of
+   living books (journey + EP voice + food-domain whisper), expand-in-place
+   detail (reuses .enc-form / .cons-severe / .enc-emergency for content), and
+   the Emergency Deck. Detail floor renders via _libBuildGuide. Design record:
+   docs/design/library-redesign/ (S4–S8). All tokens; no raw hex.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* wing control */
+.lib-wings { display:flex; gap:var(--sp-4); background:var(--surface-alt); border-radius:var(--r-2xl); padding:var(--sp-4); margin-bottom:var(--sp-16); }
+.lib-wing { flex:1; padding:var(--sp-10) var(--sp-8); min-height:36px; border:none; border-radius:var(--r-2xl); background:transparent; cursor:pointer; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:700; color:var(--mid); display:flex; align-items:center; justify-content:center; gap:var(--sp-6); white-space:nowrap; transition:all var(--ease-fast); }
+.lib-wing--active { background:var(--card-bg); color:var(--tc-sage); box-shadow:0 2px 10px var(--shadow); }
+.lib-wing .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-wing-in { animation:fadeUp var(--ease-med) both; }
+
+/* emergency entry — pinned, loud-but-calm; opens the deck */
+.emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-2xl); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
+.emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:var(--card-bg); display:flex; align-items:center; justify-content:center; }
+.emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
+.emerg-entry-txt { flex:1; min-width:0; }
+.emerg-entry-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); line-height:var(--lh-snug); }
+.emerg-entry-sub { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+.emerg-entry-go { flex:0 0 auto; align-self:center; color:var(--tc-rose); }
+.emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
+
+/* collapsible section header (shared by Browse shelves + Safety guides) */
+.lib-group { margin-bottom:var(--sp-16); }
+.lib-group-label { display:flex; align-items:center; gap:var(--sp-8); width:100%; border:none; background:transparent; cursor:pointer; text-align:left; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug); margin:var(--sp-12) 0 var(--sp-10); padding:var(--sp-4); min-height:36px; color:var(--text); }
+.lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+.lib-group-count { margin-left:auto; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+.lib-group-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+.lib-group-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-group.open .lib-group-chev { transform:rotate(90deg); }
+.lib-group--guide .lib-group-chev { margin-left:auto; }
+.lib-group--encourage .lib-group-label, .lib-group--sage  .lib-group-label { color:var(--tc-sage); }
+.lib-group--conditional .lib-group-label, .lib-group--amber .lib-group-label { color:var(--tc-amber); }
+.lib-group--warn .lib-group-label, .lib-group--rose .lib-group-label { color:var(--tc-rose); }
+.lib-group--inform .lib-group-label, .lib-group--sky .lib-group-label { color:var(--tc-sky); }
+.lib-group--lav .lib-group-label { color:var(--tc-lav); }
+.lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+.lib-group:not(.open) .lib-shelf-row { display:none; }
+.lib-group.open .lib-shelf-row { animation:fadeUp var(--ease-med) both; }
+
+/* the living book row */
+.lib-book-wrap { display:flex; flex-direction:column; }
+.lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 1px 8px var(--shadow); cursor:pointer; background-color:var(--card-bg); border:none; border-left:3px solid var(--mid); transition:box-shadow var(--ease-fast); }
+.lib-book:hover, .lib-book.expanded { box-shadow:0 3px 18px var(--shadow); }
+.lib-book--encourage   { border-left-color:var(--sage); }
+.lib-book--conditional { border-left-color:var(--amber); }
+.lib-book--warn        { border-left-color:var(--rose); }
+.lib-book--inform      { border-left-color:var(--sky); }
+.lib-book--lav         { border-left-color:var(--lavender); }
+.lib-book-body { flex:1; min-width:0; }
+.lib-book-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+.lib-book-reg { font-weight:400; color:var(--tc-sage); font-size:var(--fs-sm); }
+.lib-book-voice { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-snug); margin-top:1px; }
+.lib-book-glance { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+.lib-book-glance .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--tc-amber); }
+.lib-book-siren { flex:0 0 auto; color:var(--rose); display:flex; align-items:center; align-self:center; }
+.lib-book-siren .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.lib-book-go { flex:0 0 auto; color:var(--light); align-self:center; transition:transform var(--ease-fast); }
+.lib-book-go .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-book.expanded .lib-book-go { transform:rotate(90deg); }
+
+/* food-domain whisper (#217/#218) — light */
+.dt-grains { background-image:linear-gradient(135deg, transparent 40%, rgba(181,213,197,0.22)); }
+.dt-fruits { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+.dt-nonveg { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+.dt-dairy  { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); }
+.dt-nuts   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); }
+.dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.22)); }
+/* whisper — dark (hue-swap to deep --tc tones) */
+[data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.16)); }
+[data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+[data-theme="dark"] .dt-nonveg { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+[data-theme="dark"] .dt-dairy  { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,144,0.16)); }
+[data-theme="dark"] .dt-nuts   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.18)); }
+[data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+
+/* journey channel — Receded register, a second channel beside the safety rail/siren */
+.lib-untried { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:600; font-size:var(--fs-2xs); color:var(--light); }
+.lib-untried .lib-dot { width:6px; height:6px; border-radius:var(--r-full); border:1.5px solid var(--light); }
+.lib-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); width:fit-content; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+.lib-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.lib-journey .lib-go { width:var(--icon-xs); height:var(--icon-xs); margin-left:var(--sp-2); opacity:0.8; }
+.lib-journey--settled, .lib-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+.lib-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+.lib-book-nudge { font-size:var(--fs-sm); color:var(--tc-sage); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); font-weight:600; }
+.lib-book-nudge .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.lib-book-nudge .lib-go { width:var(--icon-xs); height:var(--icon-xs); opacity:0.8; }
+
+/* expand-in-place detail (content reuses .enc-form / .cons-severe / .enc-emergency) */
+.lib-detail { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.lib-detail.open { max-height:1200px; }
+.lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+.lib-detail-inner > * + * { margin-top:var(--sp-12); }
+
+/* Emergency Deck — overlay of the four never-cross floors (both faces stacked) */
+.lib-deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-12); overflow:auto; z-index:1200; }
+.lib-deck.open { display:flex; }
+.lib-deck-sheet { width:100%; max-width:460px; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); padding:var(--sp-16); box-shadow:0 12px 50px rgba(0,0,0,0.5); }
+.lib-deck-head { display:flex; align-items:center; gap:var(--sp-10); margin-bottom:var(--sp-12); }
+.lib-deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
+.lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
+.lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lib-deck-close .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-floor-card { border-radius:var(--r-lg); background:var(--card-bg); box-shadow:0 1px 8px var(--shadow); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-10); border-left:3px solid var(--rose); }
+.lib-floor-card-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); display:flex; align-items:center; gap:var(--sp-8); }
+.lib-floor-card-t .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-floor-face { margin-top:var(--sp-8); }
+.lib-floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
+.lib-floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
+.lib-floor-aid { color:var(--tc-rose); font-weight:700; }
