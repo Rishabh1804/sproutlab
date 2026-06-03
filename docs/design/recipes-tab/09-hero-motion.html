@@ -44,8 +44,21 @@
   .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:33px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin-bottom:var(--sp-8);max-width:80%;}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.45;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
-  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);border:1px solid transparent;border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
+  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
   .gh-chip .zi{width:15px;height:15px;flex:0 0 auto;}
+  /* food-domain WHISPER FADE — verbatim from the decided library record (transparent 40% → accent .22) */
+  .dt-grains{background-image:linear-gradient(135deg,transparent 40%,rgba(181,213,197,0.22));border-color:rgba(181,213,197,0.7);}
+  .dt-fruits{background-image:linear-gradient(135deg,transparent 40%,rgba(242,168,184,0.22));border-color:rgba(242,168,184,0.7);}
+  .dt-vegs  {background-image:linear-gradient(135deg,transparent 40%,rgba(250,212,180,0.30));border-color:rgba(245,196,150,0.8);}
+  .dt-legume{background-image:linear-gradient(135deg,transparent 40%,rgba(232,184,109,0.24));border-color:rgba(232,184,109,0.7);}
+  .dt-dairy {background-image:linear-gradient(135deg,transparent 40%,rgba(168,207,224,0.22));border-color:rgba(168,207,224,0.7);}
+  .dt-nuts  {background-image:linear-gradient(135deg,transparent 40%,rgba(201,184,232,0.22));border-color:rgba(201,184,232,0.7);}
+  [data-theme="dark"] .dt-grains{background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,96,0.18));border-color:rgba(122,192,160,0.4);}
+  [data-theme="dark"] .dt-fruits{background-image:linear-gradient(135deg,transparent 30%,rgba(158,62,82,0.20));border-color:rgba(224,144,168,0.4);}
+  [data-theme="dark"] .dt-vegs  {background-image:linear-gradient(135deg,transparent 30%,rgba(138,101,32,0.20));border-color:rgba(232,184,112,0.4);}
+  [data-theme="dark"] .dt-legume{background-image:linear-gradient(135deg,transparent 30%,rgba(150,110,40,0.20));border-color:rgba(212,168,72,0.4);}
+  [data-theme="dark"] .dt-dairy {background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,144,0.18));border-color:rgba(128,184,216,0.4);}
+  [data-theme="dark"] .dt-nuts  {background-image:linear-gradient(135deg,transparent 30%,rgba(110,94,154,0.20));border-color:rgba(184,168,224,0.4);}
   .gh-foot{position:relative;z-index:1;display:flex;align-items:center;gap:var(--sp-14);}
   .gh-meta{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-xs);color:var(--mid);}
   .gh-meta .zi{width:14px;height:14px;}.gh-meta b{color:var(--text);font-weight:700;}
@@ -126,7 +139,7 @@
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip" style="background:var(--peach-light);border-color:color-mix(in srgb, #ecae7e 55%, transparent)"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip" style="background:var(--amber-light);border-color:color-mix(in srgb, #e6c078 55%, transparent)"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-grains"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
@@ -137,7 +150,7 @@
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--lav-light);border-color:color-mix(in srgb, #c4b4e6 55%, transparent)"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-nuts"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
   </article>
@@ -148,7 +161,7 @@
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-grains"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
@@ -163,7 +176,7 @@
       <span class="gh-badge">Lunch</span></div>
     <h3 class="gh-title">Veg & Paneer Khichdi</h3>
     <p class="gh-why">Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip" style="background:var(--peach-light);border-color:color-mix(in srgb, #ecae7e 55%, transparent)"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip" style="background:var(--amber-light);border-color:color-mix(in srgb, #e6c078 55%, transparent)"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-grains"><svg class="zi" style="color:#d8c79f"><use href="#zif-rice"/></svg>Rice</span><span class="gh-chip dt-vegs"><svg class="zi" style="color:#e8843a"><use href="#zif-carrot"/></svg>Carrot</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-paneer"/></svg>Paneer</span><span class="gh-chip dt-legume"><svg class="zi" style="color:#e8b94f"><use href="#zif-ghee"/></svg>Ghee</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>25 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>
@@ -174,7 +187,7 @@
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Almond Banana Mash</h3>
     <p class="gh-why">Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--lav-light);border-color:color-mix(in srgb, #c4b4e6 55%, transparent)"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-nuts"><svg class="zi" style="color:#b9824e"><use href="#zif-almond"/></svg>Almond powder</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>5 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>6m+</b></span></div>
   </article>
@@ -185,7 +198,7 @@
       <span class="gh-badge">Breakfast</span></div>
     <h3 class="gh-title">Ragi Banana Porridge</h3>
     <p class="gh-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</p>
-    <div class="gh-ings"><span class="gh-chip" style="background:var(--rose-light);border-color:color-mix(in srgb, #e59cb0 55%, transparent)"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip" style="background:var(--sage-light);border-color:color-mix(in srgb, #9fcdb5 55%, transparent)"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip" style="background:var(--sky-light);border-color:color-mix(in srgb, #a0cce0 55%, transparent)"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
+    <div class="gh-ings"><span class="gh-chip dt-fruits"><svg class="zi" style="color:#e9c44a"><use href="#zif-banana"/></svg>Banana</span><span class="gh-chip dt-grains"><svg class="zi" style="color:#b06a44"><use href="#zif-millet"/></svg>Ragi</span><span class="gh-chip dt-dairy"><svg class="zi" style="color:#cdbf93"><use href="#zif-milk"/></svg>Milk</span></div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>12 min</b></span>
       <span class="gh-meta"><svg class="zi"><use href="#zi-baby"/></svg><b>7m+</b></span></div>
   </article>

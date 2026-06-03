@@ -15,12 +15,12 @@ const sprite = sheet.match(/<svg style="display:none">[\s\S]*?<\/svg>/)[0];
 // STRIPE: soft mid-tone hues (de-neoned — between the pale --* and the harsh --tc-*).
 // FADE: soft --*-light tints (theme-aware). CHIP: same --*-light bg + soft domain border.
 const DOM = {
-  fruit:  {o:0, sat:'#e59cb0', light:'var(--rose-light)',   dark:'rgba(158,62,82,0.20)',  ac:'#e59cb0'},
-  veg:    {o:1, sat:'#ecae7e', light:'var(--peach-light)',  dark:'rgba(138,101,32,0.18)', ac:'#ecae7e'},
-  legume: {o:2, sat:'#e6c078', light:'var(--amber-light)',  dark:'rgba(150,110,40,0.18)', ac:'#e6c078'},
-  grain:  {o:3, sat:'#9fcdb5', light:'var(--sage-light)',   dark:'rgba(58,112,96,0.17)',  ac:'#9fcdb5'},
-  dairy:  {o:4, sat:'#a0cce0', light:'var(--sky-light)',     dark:'rgba(58,112,144,0.18)', ac:'#a0cce0'},
-  nuts:   {o:6, sat:'#c4b4e6', light:'var(--lav-light)',     dark:'rgba(110,94,154,0.18)', ac:'#c4b4e6'},
+  fruit:  {o:0, sat:'#e59cb0', light:'var(--rose-light)',   dark:'rgba(158,62,82,0.20)',  dt:'fruits'},
+  veg:    {o:1, sat:'#ecae7e', light:'var(--peach-light)',  dark:'rgba(138,101,32,0.18)', dt:'vegs'},
+  legume: {o:2, sat:'#e6c078', light:'var(--amber-light)',  dark:'rgba(150,110,40,0.18)', dt:'legume'},
+  grain:  {o:3, sat:'#9fcdb5', light:'var(--sage-light)',   dark:'rgba(58,112,96,0.17)',  dt:'grains'},
+  dairy:  {o:4, sat:'#a0cce0', light:'var(--sky-light)',     dark:'rgba(58,112,144,0.18)', dt:'dairy'},
+  nuts:   {o:6, sat:'#c4b4e6', light:'var(--lav-light)',     dark:'rgba(110,94,154,0.18)', dt:'nuts'},
 };
 
 // demo recipes: grams drive the weighting; trace ingredients excluded from the fingerprint
@@ -81,8 +81,8 @@ const card = (rec) => {
   const wm = fp.ranked.map((i, k) =>
     `<span class="wi ${SLOTS[k]}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg></span>`).join('');
   const chips = rec.ings.map(i => {
-    const t = DOM[i.dom !== 'trace' ? i.dom : i.td];   // domain tint (trace maps via td)
-    return `<span class="gh-chip" style="background:${t.light};border-color:color-mix(in srgb, ${t.ac} 55%, transparent)"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`;
+    const dk = i.dom !== 'trace' ? i.dom : i.td;       // trace items tint via mapped domain
+    return `<span class="gh-chip dt-${DOM[dk].dt}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`;
   }).join('');
   return `<article class="gh" style="--stripe:${fp.stripe};--fl:${fp.fadeL};--fd:${fp.fadeD}">
     <div class="gh-wm">${wm}</div>
@@ -155,8 +155,21 @@ const html = `<!DOCTYPE html>
   .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:33px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin-bottom:var(--sp-8);max-width:80%;}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.45;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
-  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);border:1px solid transparent;border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
+  .gh-chip{display:inline-flex;align-items:center;gap:var(--sp-4);background-color:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-full);padding:var(--sp-4) var(--sp-10);font-size:var(--fs-xs);font-weight:700;color:var(--text);}
   .gh-chip .zi{width:15px;height:15px;flex:0 0 auto;}
+  /* food-domain WHISPER FADE — verbatim from the decided library record (transparent 40% → accent .22) */
+  .dt-grains{background-image:linear-gradient(135deg,transparent 40%,rgba(181,213,197,0.22));border-color:rgba(181,213,197,0.7);}
+  .dt-fruits{background-image:linear-gradient(135deg,transparent 40%,rgba(242,168,184,0.22));border-color:rgba(242,168,184,0.7);}
+  .dt-vegs  {background-image:linear-gradient(135deg,transparent 40%,rgba(250,212,180,0.30));border-color:rgba(245,196,150,0.8);}
+  .dt-legume{background-image:linear-gradient(135deg,transparent 40%,rgba(232,184,109,0.24));border-color:rgba(232,184,109,0.7);}
+  .dt-dairy {background-image:linear-gradient(135deg,transparent 40%,rgba(168,207,224,0.22));border-color:rgba(168,207,224,0.7);}
+  .dt-nuts  {background-image:linear-gradient(135deg,transparent 40%,rgba(201,184,232,0.22));border-color:rgba(201,184,232,0.7);}
+  [data-theme="dark"] .dt-grains{background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,96,0.18));border-color:rgba(122,192,160,0.4);}
+  [data-theme="dark"] .dt-fruits{background-image:linear-gradient(135deg,transparent 30%,rgba(158,62,82,0.20));border-color:rgba(224,144,168,0.4);}
+  [data-theme="dark"] .dt-vegs  {background-image:linear-gradient(135deg,transparent 30%,rgba(138,101,32,0.20));border-color:rgba(232,184,112,0.4);}
+  [data-theme="dark"] .dt-legume{background-image:linear-gradient(135deg,transparent 30%,rgba(150,110,40,0.20));border-color:rgba(212,168,72,0.4);}
+  [data-theme="dark"] .dt-dairy {background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,144,0.18));border-color:rgba(128,184,216,0.4);}
+  [data-theme="dark"] .dt-nuts  {background-image:linear-gradient(135deg,transparent 30%,rgba(110,94,154,0.20));border-color:rgba(184,168,224,0.4);}
   .gh-foot{position:relative;z-index:1;display:flex;align-items:center;gap:var(--sp-14);}
   .gh-meta{display:flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-xs);color:var(--mid);}
   .gh-meta .zi{width:14px;height:14px;}.gh-meta b{color:var(--text);font-weight:700;}
