@@ -1534,9 +1534,17 @@ function renderLanding() {
     ? _tsfCollectEvents() : { events: [], noTimeEvents: [] };
   const totalCount = (collected.events ? collected.events.length : 0)
                    + (collected.noTimeEvents ? collected.noTimeEvents.length : 0);
-  const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
-  const summary = (typeof _tsfGenerateSummary === 'function')
-    ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  // Empty-day register is PROSPECTIVE at app-open ("nothing logged yet, let's
+  // begin"), not the Today-So-Far mid-day retrospective ("Quiet day so far.").
+  // Same data, right voice for the front door (Vela V-V-1).
+  let summary;
+  if (totalCount === 0) {
+    summary = 'A fresh day with Ziva — nothing logged yet.';
+  } else {
+    const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
+    summary = (typeof _tsfGenerateSummary === 'function')
+      ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  }
   html += '<div class="card ld-glance col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
   html += '<div class="ld-glance-text">' + escHtml(summary) + '</div>';
   if (totalCount === 0) {
@@ -1552,7 +1560,7 @@ function renderLanding() {
         +   '<span class="ld-door-label">Log</span>'
         + '</button>';
   html += '<button class="ld-door" data-action="switchTab" data-arg="home">'
-        +   '<span class="icon icon-lav">' + zi('clock') + '</span>'
+        +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
         +   '<span class="ld-door-label">Today</span>'
         + '</button>';
   html += '<button class="ld-door" data-action="ldAsk">'
