@@ -1469,19 +1469,31 @@ function renderInfoMilestoneSleepCorrelation() {
 // predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
 function _ldCareAlerts() {
   const out = [];
+  // Illness episodes — "being tracked" (calm-loud, severity med), route to Medical.
   const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
   if (posture && posture.active && posture.active.length) {
     const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
     const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
     posture.active.forEach(function(ep) {
       out.push({
+        severity: 'med',
         icon: iconMap[ep.type] || 'siren',
         title: (labelMap[ep.type] || 'Illness') + ' being tracked',
         sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
-        action: 'switchTab', arg: 'home'
+        action: 'navTabSub', arg: 'track', arg2: 'medical'
       });
     });
   }
+  // Time-axis Care signals — overdue vaccines, due/missed meds, post-vacc
+  // monitoring, overdue CareTickets (flip-gate detector, spec §4.4 / Maren).
+  if (typeof getActiveCareSignals === 'function') {
+    getActiveCareSignals().forEach(function(s) { out.push(s); });
+  }
+  // Hottest-first (high → med → low); action-needed surfaces above being-tracked.
+  const rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) {
+    return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]);
+  });
   return out;
 }
 
@@ -1515,8 +1527,10 @@ function renderLanding() {
   if (alerts.length) {
     html += '<div class="ld-care col-full">';
     alerts.forEach(function(a) {
-      html += '<button class="card card-action ld-care-card" data-action="' + escAttr(a.action) + '"'
-            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '') + '>'
+      var urgent = (a.severity === 'high');
+      html += '<button class="card card-action ld-care-card' + (urgent ? ' ld-care-hot' : '') + '" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '')
+            + (a.arg2 ? ' data-arg2="' + escAttr(a.arg2) + '"' : '') + '>'
             + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
             + '<span class="ld-care-body">'
             +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'

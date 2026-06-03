@@ -5588,6 +5588,9 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ld-care-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
 .ld-care-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
 .ld-care-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* action-needed (overdue / due) runs hotter than calm "being-tracked" (Maren) */
+.ld-care-hot .icon { background:var(--rose); color:var(--tc-rose); }
+.ld-care-hot .ld-care-title { color:var(--tc-rose); }
 
 /* 1 · The day's glance as the signature HERO. Reuses .card.card-hero.hero-home
    for the body gradient; ld-hero overrides the top stripe with the warm-wave. */
@@ -28111,6 +28114,121 @@ function renderRemindersAndAlerts() {
 
   // v2.3: Store HTML — renderHomeContextAlerts will combine and render both
   window._remindersHTML = html;
+}
+
+// ── Lean-landing Care pre-empt detector (flip-gate, spec §4.4; Maren-gated) ──
+// Returns the ACTIONABLE Care signals only (the unresolved subset of the
+// renderRemindersAndAlerts predicates above) as structured data, summarised
+// one-per-category, hottest-first ranked, each deep-linking to its fix. This is
+// the source the landing's _ldCareAlerts() reads — so a calm landing can NEVER
+// hide a hard-deadline signal (overdue vaccine / due dose / overdue follow-up).
+// Mirrors the predicates above (kept adjacent to bound drift); illness episodes
+// are added separately by _ldCareAlerts via getActiveIllnessPosture().
+// Signal shape: { id, severity:'high'|'med'|'low', icon, title, sub, action, arg, arg2 }
+// title/sub are RAW (escaped at render). Care route = Track→Medical via navTabSub.
+function getActiveCareSignals() {
+  var out = [];
+  var todayStr = (typeof today === 'function') ? today() : null;
+  if (!todayStr) return out;
+  var yesterdayStr = _offsetDateStr(todayStr, -1);
+  var med = function(id, severity, icon, title, sub) {
+    out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
+               action: 'navTabSub', arg: 'track', arg2: 'medical' });
+  };
+
+  // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
+  if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
+    var overdue = vaccData.filter(function(v) {
+      if (!v.upcoming) return false;
+      return Math.ceil((new Date(v.date) - new Date()) / 86400000) < 0;
+    });
+    if (overdue.length) {
+      var oNames = overdue.map(function(v) { return v.name; });
+      med('vacc-overdue', 'high', 'siren',
+          overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
+          'Tap to reschedule or mark done');
+    }
+    // 1b · Urgent upcoming (≤7 days, mirrors :601)
+    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+      .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
+    if (upNext) {
+      var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        med('vacc-soon', 'low', 'dot-red',
+            daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
+            'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
+      }
+    }
+    // 1c · Post-vacc 48h monitoring window (mirrors :613)
+    var recentVacc = vaccData.filter(function(v) {
+      return !v.upcoming && !v.reaction && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (recentVacc.length) {
+      var rvNames = recentVacc.map(function(v) { return v.name; });
+      med('vacc-monitor', 'med', 'syringe',
+          (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
+          'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
+    }
+    // 1d · Logged-reaction monitoring tail (mirrors :637)
+    var loggedRecent = vaccData.filter(function(v) {
+      return !v.upcoming && v.reaction && v.reaction !== 'none' && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (loggedRecent.length) {
+      var until = _offsetDateStr(loggedRecent[0].date, 2);
+      med('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+          'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
+    }
+  }
+
+  // 2 · Meds — missed-day streaks (≥ as hot as today-pending, mirrors :655) + today-pending (:696)
+  if (typeof meds !== 'undefined' && Array.isArray(meds) && typeof medChecks !== 'undefined') {
+    var activeMeds = meds.filter(function(m) { return m.active; });
+    var trackingSince = medChecks._trackingSince || todayStr;
+    activeMeds.forEach(function(m) {
+      var startDate = m.start || '2025-09-04';
+      var earliest = startDate > trackingSince ? startDate : trackingSince;
+      var missed = 0;
+      for (var i = 1; i <= 14; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var ds = toDateStr(d);
+        if (ds < earliest) continue;
+        var dayLog = medChecks[ds];
+        if (!dayLog || !dayLog[m.name]) missed++;
+      }
+      if (missed > 0) {
+        med('med-missed-' + m.name, 'high', 'dot-red',
+            missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
+            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'));
+      }
+      // today-pending
+      var todayLog = medChecks[todayStr] || {};
+      var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
+      var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
+      if (!resolved) {
+        med('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
+      }
+    });
+  }
+
+  // 3 · Overdue CareTickets — the parent's own escalation going silent (Maren M-2).
+  // ctNextDueTime(t) → ms timestamp of the next follow-up (Infinity if none);
+  // overdue = a finite due time in the past.
+  if (typeof _careTickets !== 'undefined' && Array.isArray(_careTickets) && typeof ctNextDueTime === 'function') {
+    var nowMs = Date.now();
+    _careTickets.forEach(function(t) {
+      if (t.status !== 'active' && t.status !== 'escalated') return;
+      var due = ctNextDueTime(t);
+      if (isFinite(due) && due < nowMs) {
+        med('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in');
+      }
+    });
+  }
+
+  // Hottest-first
+  var rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) { return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]); });
+  return out;
 }
 
 // Mark vaccination as booked — step 1: save booked state, then ask for details
@@ -71907,19 +72025,31 @@ function renderInfoMilestoneSleepCorrelation() {
 // predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
 function _ldCareAlerts() {
   const out = [];
+  // Illness episodes — "being tracked" (calm-loud, severity med), route to Medical.
   const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
   if (posture && posture.active && posture.active.length) {
     const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
     const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
     posture.active.forEach(function(ep) {
       out.push({
+        severity: 'med',
         icon: iconMap[ep.type] || 'siren',
         title: (labelMap[ep.type] || 'Illness') + ' being tracked',
         sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
-        action: 'switchTab', arg: 'home'
+        action: 'navTabSub', arg: 'track', arg2: 'medical'
       });
     });
   }
+  // Time-axis Care signals — overdue vaccines, due/missed meds, post-vacc
+  // monitoring, overdue CareTickets (flip-gate detector, spec §4.4 / Maren).
+  if (typeof getActiveCareSignals === 'function') {
+    getActiveCareSignals().forEach(function(s) { out.push(s); });
+  }
+  // Hottest-first (high → med → low); action-needed surfaces above being-tracked.
+  const rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) {
+    return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]);
+  });
   return out;
 }
 
@@ -71953,8 +72083,10 @@ function renderLanding() {
   if (alerts.length) {
     html += '<div class="ld-care col-full">';
     alerts.forEach(function(a) {
-      html += '<button class="card card-action ld-care-card" data-action="' + escAttr(a.action) + '"'
-            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '') + '>'
+      var urgent = (a.severity === 'high');
+      html += '<button class="card card-action ld-care-card' + (urgent ? ' ld-care-hot' : '') + '" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '')
+            + (a.arg2 ? ' data-arg2="' + escAttr(a.arg2) + '"' : '') + '>'
             + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
             + '<span class="ld-care-body">'
             +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'

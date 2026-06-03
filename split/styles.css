@@ -5581,6 +5581,9 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ld-care-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
 .ld-care-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
 .ld-care-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* action-needed (overdue / due) runs hotter than calm "being-tracked" (Maren) */
+.ld-care-hot .icon { background:var(--rose); color:var(--tc-rose); }
+.ld-care-hot .ld-care-title { color:var(--tc-rose); }
 
 /* 1 · The day's glance as the signature HERO. Reuses .card.card-hero.hero-home
    for the body gradient; ld-hero overrides the top stripe with the warm-wave. */
