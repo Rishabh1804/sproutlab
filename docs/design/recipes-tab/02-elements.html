@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · Diet → Recipes tab — S2 ELEVATED renderings (design record)
+  ─────────────────────────────────────────────────────────────────────────
+  Rebuild after "we can do a lot better." All four directions:
+   • Richer cookbook cards — tinted header band + motif watermark + Fraunces
+     title + meta/food-group chips + a one-line nutrition "why".
+   • Hero + editorial layout — a real Hero-register card for the top
+     "Suggested for Ziva" pick (diet's sage→amber 135° gradient + 5px stripe,
+     per DESIGN_PRINCIPLES Tint System), then a varied grid.
+   • Warmth & imagery — soft domain-icon motif watermarks; the tab sits in
+     diet's sage Ambient wash; warmer cream.
+   • Polish — tighter type/spacing.
+  DOCTRINE-HONEST: food domain is carried by the Receded register
+  (--*-light fill + border + --tc text + motif), matching the shipped
+  _foodColorMap/_foodBorderMap/_foodTextMap (grains→sage, fruits→rose,
+  vegs→peach, dairy→sky, nuts→lav, nonveg→rose). The polarity collision is
+  respected: "Can I give this?" verdicts use the Signaling register
+  (--surface-* + border) so the safety read (sage=safe / rose=avoid) is never
+  drowned by a recipe's category tint. Real styles.css tokens throughout.
+-->
+<html lang="en" data-zoom="default">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../split/styles.css">
+<style>
+  html,body{background:#e7dbd1;margin:0;}
+  body{font-family:'Nunito',sans-serif;color:var(--text);}
+  /* simulate the Diet tab's sage Ambient wash over --warm */
+  .r-phone{max-width:412px;margin:0 auto;min-height:100vh;padding:var(--sp-16);box-sizing:border-box;box-shadow:0 0 40px rgba(0,0,0,0.10);
+    background:linear-gradient(rgba(181,213,197,0.10),rgba(181,213,197,0.10)), var(--warm,#faf3ec);}
+  .r-caption{font-size:var(--fs-2xs);color:var(--light);font-style:italic;margin:var(--sp-6) 0 var(--sp-20);padding-left:var(--sp-6);border-left:2px solid var(--card-border);line-height:1.55;}
+  .r-eyebrow{font-family:'Fraunces',serif;font-size:var(--fs-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.09em;color:var(--mid);margin:var(--sp-24) 0 var(--sp-10);}
+  .r-eyebrow:first-of-type{margin-top:var(--sp-4);}
+  .r-title{font-family:'Fraunces',serif;font-size:var(--fs-2xl);font-weight:600;color:var(--text);margin:0 0 2px;}
+  .r-lede{font-size:var(--fs-sm);color:var(--mid);margin:0 0 var(--sp-12);line-height:1.5;}
+  .r-divider{height:1px;background:linear-gradient(90deg,var(--card-border),transparent);margin:var(--sp-28) 0 0;}
+  .r-stack{display:flex;flex-direction:column;gap:var(--sp-12);}
+  .r-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-10);}
+
+  /* ───────────────────────── chips ───────────────────────── */
+  .rc-chips{display:flex;flex-wrap:wrap;gap:var(--sp-6);align-items:center;}
+  .rc-chip{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-2xs);font-weight:700;border-radius:var(--r-full);padding:2px var(--sp-8);background:var(--warm);color:var(--mid);border:1px solid var(--card-border);}
+  .rc-chip .zi{width:12px;height:12px;}
+  .rc-chip.dom{border:none;}
+  .rc-chip.c-grains{background:var(--sage-light);color:var(--tc-sage);}
+  .rc-chip.c-fruits{background:var(--rose-light);color:var(--tc-rose);}
+  .rc-chip.c-vegs{background:var(--peach-light);color:var(--tc-caution);}
+  .rc-chip.c-dairy{background:var(--sky-light);color:var(--tc-sky);}
+  .rc-chip.c-nuts{background:var(--lav-light);color:var(--tc-lav);}
+
+  /* ──────────────── HERO — "Suggested for Ziva" top pick ──────────────── */
+  /* Hero register: diet sage→amber 135° gradient body + 5px sage→amber stripe */
+  .rc-hero{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:var(--sp-20) var(--sp-18) var(--sp-16);
+    background:linear-gradient(135deg, var(--sage-light) 0%, var(--amber-light) 100%);
+    box-shadow:0 4px 18px var(--shadow);}
+  .rc-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg, var(--sage), var(--amber));}
+  .rc-hero-motif{position:absolute;right:-14px;bottom:-22px;color:var(--tc-sage);opacity:0.13;pointer-events:none;}
+  .rc-hero-motif .zi{width:128px;height:128px;}
+  .rc-hero-eyebrow{display:inline-flex;align-items:center;gap:var(--sp-6);font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--tc-sage);margin-bottom:var(--sp-8);}
+  .rc-hero-eyebrow .zi{width:14px;height:14px;}
+  .rc-hero-title{position:relative;font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-2xl);line-height:1.12;color:var(--text);margin-bottom:var(--sp-6);max-width:84%;}
+  .rc-hero-why{position:relative;display:flex;align-items:flex-start;gap:var(--sp-6);font-size:var(--fs-sm);color:var(--ink,#5a4a3f);line-height:1.45;margin-bottom:var(--sp-12);max-width:88%;}
+  .rc-hero-why .zi{width:var(--icon-sm);height:var(--icon-sm);color:var(--tc-sage);flex:0 0 auto;margin-top:2px;}
+  .rc-hero-foot{position:relative;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-10);}
+  .rc-hero-cta{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:var(--fs-sm);color:var(--tc-sage);}
+  .rc-hero-cta .zi{width:var(--icon-sm);height:var(--icon-sm);}
+
+  /* ──────────────── COOKBOOK CARD — tinted header band + motif ──────────────── */
+  .rc-card{display:flex;flex-direction:column;width:100%;text-align:left;background:var(--card-bg);border-radius:var(--r-lg);
+    overflow:hidden;box-shadow:0 1px 9px var(--shadow);border:1px solid var(--card-border);}
+  .rc-card-hd{position:relative;overflow:hidden;padding:var(--sp-12) var(--sp-14);min-height:64px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .rc-card-motif{position:absolute;right:-8px;top:-12px;opacity:0.18;pointer-events:none;}
+  .rc-card-motif .zi{width:74px;height:74px;}
+  .rc-card-kicker{position:relative;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;opacity:0.85;margin-bottom:1px;}
+  .rc-card-title{position:relative;font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);line-height:1.12;color:var(--text);}
+  .rc-card-body{padding:var(--sp-10) var(--sp-14) var(--sp-12);display:flex;flex-direction:column;gap:var(--sp-8);}
+  .rc-why{display:flex;align-items:flex-start;gap:5px;font-size:var(--fs-xs);color:var(--mid);line-height:1.4;}
+  .rc-why .zi{width:13px;height:13px;flex:0 0 auto;margin-top:2px;}
+
+  /* header-band tints per FOOD_TAX domain (Receded --*-light + matching motif/kicker text) */
+  .dt-grains .rc-card-hd{background:var(--sage-light);} .dt-grains .rc-card-motif,.dt-grains .rc-card-kicker,.dt-grains .rc-why .zi{color:var(--tc-sage);}
+  .dt-fruits .rc-card-hd{background:var(--rose-light);} .dt-fruits .rc-card-motif,.dt-fruits .rc-card-kicker,.dt-fruits .rc-why .zi{color:var(--tc-rose);}
+  .dt-vegs   .rc-card-hd{background:var(--peach-light);} .dt-vegs .rc-card-motif,.dt-vegs .rc-card-kicker,.dt-vegs .rc-why .zi{color:var(--tc-caution);}
+  .dt-dairy  .rc-card-hd{background:var(--sky-light);} .dt-dairy .rc-card-motif,.dt-dairy .rc-card-kicker,.dt-dairy .rc-why .zi{color:var(--tc-sky);}
+  .dt-nuts   .rc-card-hd{background:var(--lav-light);} .dt-nuts .rc-card-motif,.dt-nuts .rc-card-kicker,.dt-nuts .rc-why .zi{color:var(--tc-lav);}
+  .dt-nonveg .rc-card-hd{background:var(--rose-light);} .dt-nonveg .rc-card-motif,.dt-nonveg .rc-card-kicker,.dt-nonveg .rc-why .zi{color:var(--tc-rose);}
+
+  /* slot header */
+  .rc-slot{display:flex;align-items:center;gap:var(--sp-8);font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);color:var(--text);margin:var(--sp-4) 0 var(--sp-12);}
+  .rc-slot .zi{width:var(--icon-md);height:var(--icon-md);color:var(--tc-caution);}
+  .rc-slot-count{margin-left:auto;font-size:var(--fs-2xs);font-weight:800;color:var(--light);background:var(--warm);border-radius:var(--r-full);padding:2px var(--sp-8);}
+
+  /* ──────────────── EXPAND-IN-PLACE DETAIL ──────────────── */
+  .rc-detail{background:var(--card-bg);border-radius:var(--r-lg);box-shadow:0 1px 9px var(--shadow);border:1px solid var(--card-border);overflow:hidden;}
+  .rc-detail-hd{background:var(--sage-light);padding:var(--sp-14) var(--sp-16);position:relative;overflow:hidden;}
+  .rc-detail-hd .rc-card-motif .zi{width:88px;height:88px;}
+  .rc-detail-hd-title{position:relative;font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-lg);color:var(--text);}
+  .rc-detail-bd{padding:var(--sp-14) var(--sp-16);}
+  .rc-sub{font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--mid);margin:var(--sp-14) 0 var(--sp-6);}
+  .rc-sub:first-child{margin-top:0;}
+  .rc-ing{display:flex;align-items:center;gap:var(--sp-8);font-size:var(--fs-sm);color:var(--text);padding:var(--sp-5) 0;border-bottom:1px solid var(--card-border);}
+  .rc-ing:last-child{border-bottom:none;}
+  .rc-ing-ic{width:15px;height:15px;flex:0 0 auto;}
+  .rc-ing-qty{margin-left:auto;color:var(--mid);font-size:var(--fs-xs);}
+  .rc-ing-flag{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;border-radius:var(--r-full);padding:1px var(--sp-6);}
+  .rc-ing-flag.ok{color:var(--tc-sage);background:var(--sage-light);}
+  .rc-ing-flag.aged{color:var(--tc-caution);background:var(--peach-light);}
+  .rc-ing-flag .zi{width:11px;height:11px;}
+  .rc-steps{margin:0;padding-left:var(--sp-18);font-size:var(--fs-sm);color:var(--text);line-height:1.6;}
+  .rc-steps li{margin-bottom:var(--sp-6);}
+  .rc-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-8);}
+  .rc-dd-col{background:var(--warm);border-radius:var(--r-md);padding:var(--sp-8) var(--sp-10);}
+  .rc-dd-h{display:flex;align-items:center;gap:4px;font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);margin-bottom:var(--sp-4);}
+  .rc-dd-h .zi{width:12px;height:12px;}
+  .rc-dd-h.do{color:var(--tc-sage);} .rc-dd-h.dont{color:var(--tc-rose);}
+  .rc-dd ul{margin:0;padding-left:var(--sp-14);font-size:var(--fs-xs);color:var(--text);line-height:1.5;}
+  .rc-source{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--light);margin-top:var(--sp-12);}
+  .rc-source .zi{width:11px;height:11px;}
+
+  /* ──────────────── "Can I give this?" — Signaling register verdicts ──────────────── */
+  .cig{border-radius:var(--r-lg);padding:var(--sp-14) var(--sp-16);}
+  .cig.avoid{background:var(--surface-rose,rgba(158,62,82,0.10));border-left:4px solid var(--rose);}
+  .cig.safe{background:var(--surface-sage,rgba(61,122,96,0.10));border-left:4px solid var(--sage);}
+  .cig-verdict{display:flex;align-items:center;gap:var(--sp-8);font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);}
+  .cig-verdict .zi{width:var(--icon-md);height:var(--icon-md);}
+  .cig.avoid .cig-verdict{color:var(--tc-rose);} .cig.safe .cig-verdict{color:var(--tc-sage);}
+  .cig-reason{font-size:var(--fs-sm);color:var(--text);line-height:1.5;margin-top:var(--sp-6);}
+  .cig-handoff{font-size:var(--fs-xs);color:var(--mid);margin:var(--sp-10) 0 var(--sp-6);}
+
+  /* Home compact recipe card */
+  .qa-rec{display:flex;align-items:center;gap:var(--sp-10);background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--r-md);padding:var(--sp-10) var(--sp-12);}
+  .qa-rec-av{flex:0 0 auto;width:36px;height:36px;border-radius:var(--r-sm);background:var(--sage-light);color:var(--tc-sage);display:flex;align-items:center;justify-content:center;}
+  .qa-rec-av .zi{width:var(--icon-base);height:var(--icon-base);}
+  .qa-rec-b{flex:1;min-width:0;}
+  .qa-rec-k{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--mid);}
+  .qa-rec-t{font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-sm);color:var(--text);}
+  .qa-rec-go{flex:0 0 auto;color:var(--tc-sage);font-weight:800;font-size:var(--fs-sm);display:inline-flex;align-items:center;gap:3px;}
+  .qa-rec-go .zi{width:var(--icon-sm);height:var(--icon-sm);}
+</style>
+</head>
+<body class="libr-render">
+<svg style="display:none;">
+<symbol id="zi-bowl" viewBox="0 0 24 24"><path d="M2.5 10.5h19a9.5 9.5 0 01-19 0z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" fill-opacity="0.10"/><path d="M7.5 7.2c0-1.6 1.1-2.4 1.1-2.4M12 6.6c0-1.6 1.1-2.4 1.1-2.4M16.5 7.2c0-1.6 1.1-2.4 1.1-2.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-sprout" viewBox="0 0 24 24"><path d="M12 21v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 13c-1-3-3.5-3.8-5.5-3.8C6 12 8 13.5 12 13z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 12c0.6-3.4 3-4.6 5.4-4.6C17.4 11 15 12.3 12 12z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+<symbol id="zi-spoon" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="4.2" ry="5" stroke="currentColor" stroke-width="1.4" fill="currentColor" fill-opacity="0.10"/><line x1="12" y1="11.5" x2="12" y2="21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+<symbol id="zi-drop" viewBox="0 0 24 24"><path d="M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
+<symbol id="zi-legume" viewBox="0 0 24 24"><path d="M8 5c5 0 9 3.5 9 8s-3 6-7 6-6-2.5-6-6c0-2 1-4 4-8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
+<symbol id="zi-leaf" viewBox="0 0 24 24"><path d="M4 20C4 11 11 4 20 4c0 9-7 16-16 16z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/><path d="M4 20C8 16 12 12 18 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-baby" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.1"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+<symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="zi-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-star" viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19l1-5.8L3.5 9.2l5.9-.9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
+<symbol id="zi-note" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="zi-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h12v18H6a2 2 0 01-2-2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M9 3v18" stroke="currentColor" stroke-width="1.2"/></symbol>
+</svg>
+
+<div class="r-phone">
+  <h1 class="r-title">Recipes</h1>
+  <p class="r-lede">Sourced for Ziva's stage · cooked from what you log. S2 elevated · for sign-off.</p>
+
+  <div class="r-eyebrow">Suggested for Ziva — featured</div>
+  <div class="rc-hero">
+    <div class="rc-hero-motif"><svg class="zi"><use href="#zi-sprout"/></svg></div>
+    <div class="rc-hero-eyebrow"><svg class="zi"><use href="#zi-star"/></svg>Today's pick · fills a gap</div>
+    <div class="rc-hero-title">Palak &amp; Moong Dal Khichdi</div>
+    <div class="rc-hero-why"><svg class="zi"><use href="#zi-leaf"/></svg>No leafy greens in 7 days — this is iron-rich, and pairs dal with spinach for absorption.</div>
+    <div class="rc-hero-foot">
+      <div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-clock"/></svg>20 min</span><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>7m+</span><span class="rc-chip dom c-grains">Dal</span><span class="rc-chip dom c-vegs">Greens</span></div>
+      <span class="rc-hero-cta">See recipe <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
+    </div>
+  </div>
+  <p class="r-caption"><b>Hero register</b> (DESIGN_PRINCIPLES Tint System) — diet's semantic <b>sage→amber</b> 135° gradient + 5px stripe, the section's top card. Soft sprout motif for warmth; the "why" reuses <code>getGroupSuggestion</code> copy.</p>
+
+  <div class="r-eyebrow">More for Ziva</div>
+  <div class="r-grid">
+    <button class="rc-card dt-grains"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-sprout"/></svg></div><span class="rc-card-kicker">Indian · Breakfast</span><span class="rc-card-title">Ragi Banana Porridge</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-clock"/></svg>10m</span><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>6m+</span></div><div class="rc-why"><svg class="zi"><use href="#zi-star"/></svg>Uses Ziva's favourite: banana</div></div></button>
+    <button class="rc-card dt-vegs"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-spoon"/></svg></div><span class="rc-card-kicker">Global · Snack</span><span class="rc-card-title">Sweet Potato &amp; Ghee Mash</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-clock"/></svg>18m</span><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>6m+</span></div><div class="rc-why"><svg class="zi"><use href="#zi-leaf"/></svg>Vitamin-A rich, naturally sweet</div></div></button>
+  </div>
+  <p class="r-caption"><b>Cookbook cards</b> — tinted header band per the food domain (grains→sage, vegs→peach), soft motif watermark, Fraunces title, meta chips + a one-line "why". Domain reads through the Receded register (matches the app's shipped <code>_foodColorMap</code>), not a flood.</p>
+
+  <div class="r-eyebrow">Browse — by meal</div>
+  <div class="rc-slot"><svg class="zi"><use href="#zi-sun"/></svg>Breakfast<span class="rc-slot-count">6</span></div>
+  <div class="r-grid">
+    <button class="rc-card dt-grains"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-bowl"/></svg></div><span class="rc-card-kicker">Global</span><span class="rc-card-title">Oats &amp; Berry Porridge</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>7m+</span><span class="rc-chip dom c-dairy">Dairy</span></div></div></button>
+    <button class="rc-card dt-fruits"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-spoon"/></svg></div><span class="rc-card-kicker">Global</span><span class="rc-card-title">Avocado Banana Mash</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>6m+</span><span class="rc-chip dom c-fruits">Fruit</span></div></div></button>
+    <button class="rc-card dt-dairy"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-drop"/></svg></div><span class="rc-card-kicker">Indian</span><span class="rc-card-title">Suji Milk Porridge</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>8m+</span><span class="rc-chip dom c-grains">Grain</span></div></div></button>
+    <button class="rc-card dt-nuts"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-leaf"/></svg></div><span class="rc-card-kicker">Global · allergen-intro</span><span class="rc-card-title">Almond-Butter Banana</span></div><div class="rc-card-body"><div class="rc-chips"><span class="rc-chip"><svg class="zi"><use href="#zi-baby"/></svg>6m+</span><span class="rc-chip dom c-nuts">Nut</span></div></div></button>
+  </div>
+  <p class="r-caption"><b>Editorial grid</b> — catalog grouped by meal slot; varied food-domain header bands give a cookbook palette while the diet sage Ambient wash holds the page together.</p>
+
+  <div class="r-eyebrow">Open recipe — expand in place</div>
+  <div class="rc-detail">
+    <div class="rc-detail-hd dt-grains"><div class="rc-card-motif"><svg class="zi"><use href="#zi-sprout"/></svg></div><div class="rc-card-kicker" style="color:var(--tc-sage)">Indian · Breakfast · 10 min</div><div class="rc-detail-hd-title">Ragi Banana Porridge</div></div>
+    <div class="rc-detail-bd">
+      <div class="rc-sub">Ingredients</div>
+      <div class="rc-ing"><svg class="zi rc-ing-ic" style="color:var(--tc-sage)"><use href="#zi-sprout"/></svg>Ragi<span class="rc-ing-flag ok"><svg class="zi"><use href="#zi-check"/></svg>6m+</span><span class="rc-ing-qty">1 tbsp</span></div>
+      <div class="rc-ing"><svg class="zi rc-ing-ic" style="color:var(--tc-rose)"><use href="#zi-spoon"/></svg>Banana<span class="rc-ing-flag ok"><svg class="zi"><use href="#zi-check"/></svg>6m+</span><span class="rc-ing-qty">¼ ripe</span></div>
+      <div class="rc-ing"><svg class="zi rc-ing-ic" style="color:var(--tc-sky)"><use href="#zi-drop"/></svg>Ghee<span class="rc-ing-flag ok"><svg class="zi"><use href="#zi-check"/></svg>ok</span><span class="rc-ing-qty">½ tsp</span></div>
+      <div class="rc-sub">Method</div>
+      <ol class="rc-steps"><li>Dry-roast ragi 2–3 min until aromatic, then whisk into water and cook, stirring, 5–8 min to a smooth porridge.</li><li>Mash ¼ ripe banana and stir in off the heat.</li><li>Finish with ½ tsp ghee. Smooth at 6–8m; soft lumps at 8–10m.</li></ol>
+      <div class="rc-sub">Good to know</div>
+      <div class="rc-dd">
+        <div class="rc-dd-col"><div class="rc-dd-h do"><svg class="zi"><use href="#zi-check"/></svg>Do</div><ul><li>Pair iron with a vitamin-C fruit</li><li>Start with a small quantity</li></ul></div>
+        <div class="rc-dd-col"><div class="rc-dd-h dont"><svg class="zi"><use href="#zi-warn"/></svg>Don't</div><ul><li>No honey/sugar under 1</li><li>Don't store mashed banana</li></ul></div>
+      </div>
+      <div class="rc-source"><svg class="zi"><use href="#zi-book"/></svg>Source: ICMR-NIN — Dietary Guidelines for Indians 2024</div>
+    </div>
+  </div>
+  <p class="r-caption"><b>Detail</b> — header band carries the domain; per-ingredient safety chips run the LIVE resolver (<code>_fdAgeRule</code>/<code>getFoodEffect</code>) — never gated; method, do/don't, and the <b>cited source</b> (the "no assumptions" guarantee, surfaced).</p>
+
+  <div class="r-eyebrow">"Can I give this?" — three revised states</div>
+  <div class="r-stack">
+    <div class="cig avoid"><div class="cig-verdict"><svg class="zi"><use href="#zi-warn"/></svg>Not yet — honey</div><div class="cig-reason">Honey isn't safe before 12 months — risk of infant botulism. A hard age gate, not a timing nudge.</div></div>
+    <div>
+      <div class="cig safe"><div class="cig-verdict"><svg class="zi"><use href="#zi-check"/></svg>Yes — ragi + banana</div><div class="cig-reason">Iron-rich grain + a vitamin-C fruit. Good to give, smooth at this age.</div><div class="cig-handoff">Here's a recipe for it:</div></div>
+      <button class="rc-card dt-grains" style="margin-top:var(--sp-8)"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-sprout"/></svg></div><span class="rc-card-kicker">Recipe · Breakfast · 6m+</span><span class="rc-card-title">Ragi Banana Porridge</span></div></button>
+    </div>
+    <div>
+      <div class="cig safe"><div class="cig-verdict"><svg class="zi"><use href="#zi-check"/></svg>Yes — amaranth</div><div class="cig-reason">Fine to give. No dedicated recipe yet — here's the closest one, plus a simple way to make it.</div><div class="cig-handoff">Nearest recipe (similar millet):</div></div>
+      <button class="rc-card dt-grains" style="margin-top:var(--sp-8)"><div class="rc-card-hd"><div class="rc-card-motif"><svg class="zi"><use href="#zi-sprout"/></svg></div><span class="rc-card-kicker">Nearest · Breakfast · 6m+</span><span class="rc-card-title">Rajgira (Amaranth) Porridge</span></div></button>
+    </div>
+  </div>
+  <p class="r-caption"><b>Signaling register</b> for the verdict (deep-hue <code>--surface-rose/sage</code> + 4px rail) — so the safety read (rose=avoid / sage=safe) is never drowned by a recipe's category tint (the <b>polarity collision</b>, respected). <b>Not-applicable → reason, no recipe; applicable → recipe; applicable+none → nearest + auto.</b></p>
+
+  <div class="r-eyebrow">Home Smart-Q&amp;A — compact card + tap-through</div>
+  <div class="qa-rec"><span class="qa-rec-av"><svg class="zi"><use href="#zi-note"/></svg></span><span class="qa-rec-b"><span class="qa-rec-k">Recipe available</span><span class="qa-rec-t">Ragi Banana Porridge</span></span><span class="qa-rec-go">Recipe <svg class="zi"><use href="#zi-arrow-right"/></svg></span></div>
+  <p class="r-caption">On Home the answer stays compact: title + "Recipe →" → <code>openRecipeInTab</code> (Track→Diet→Recipes). The full recipe lives in one place — the Recipes tab.</p>
+
+  <div class="r-divider"></div>
+</div>
+</body>
+</html>
