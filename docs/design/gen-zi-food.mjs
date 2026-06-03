@@ -78,6 +78,43 @@ tofu:`<path d="M12 3.5l7.5 3.8v9L12 20l-7.5-3.7v-9z" fill="currentColor" stroke=
 // ── fats & sweeteners ──
 jaggery:`<path d="M4.6 14.2l1.3-4.4 4.2-2.1 4.7.3 3.4 2.9-.6 5-4.4 2.7-6 .2z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M5.9 9.8l4.4 1.9 4.5-1.6M10.3 11.7l-.5 7.2" stroke="rgba(74,48,22,.28)" stroke-width=".8" fill="none"/><path d="M17.4 17.2l2 .6-.5 1.9-1.9-.5z" fill="currentColor" stroke="${ol}" stroke-width=".8" stroke-linejoin="round"/><g fill="rgba(74,48,22,.32)"><circle cx="8.4" cy="13.4" r=".4"/><circle cx="12" cy="14.2" r=".4"/><circle cx="13.8" cy="12.6" r=".4"/><circle cx="10.2" cy="15.4" r=".4"/></g>`,
 honey:`<path d="M7 5h10v2l-1.5 1.5v3L17 14v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4l1.5-2.5v-3L7 7z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M9 15h6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none"/>`,
+// ── batch 2 (coverage fill) ──
+dalia:`<path d="M4 12h16c0 4.4-3.6 8-8 8s-8-3.6-8-8z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(74,48,22,.32)"><rect x="8" y="13" width="1.5" height="1.5" rx=".3"/><rect x="11.2" y="12.6" width="1.5" height="1.5" rx=".3"/><rect x="14" y="13" width="1.5" height="1.5" rx=".3"/><rect x="9.6" y="15.2" width="1.5" height="1.5" rx=".3"/><rect x="12.7" y="15.2" width="1.5" height="1.5" rx=".3"/></g>`,
+barley:`<path d="M12 21V11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><g stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".75"><path d="M12 9l-3.5-5.5M12 9l3.5-5.5M12 7l-2.8-4.5M12 7l2.8-4.5M12 11l-3.2-4.5M12 11l3.2-4.5"/></g><g fill="currentColor"><ellipse cx="12" cy="10" rx="1.2" ry="2"/><ellipse cx="9.7" cy="11.6" rx="1.1" ry="1.8" transform="rotate(-25 9.7 11.6)"/><ellipse cx="14.3" cy="11.6" rx="1.1" ry="1.8" transform="rotate(25 14.3 11.6)"/></g>`,
+quinoa:`<g fill="currentColor" stroke="${ol}" stroke-width=".7"><circle cx="9" cy="10" r="2"/><circle cx="13" cy="9.4" r="2"/><circle cx="15.2" cy="12.4" r="2"/><circle cx="11" cy="12.8" r="2"/><circle cx="13.6" cy="15.4" r="2"/><circle cx="9.4" cy="14.6" r="2"/></g><g fill="none" stroke="rgba(74,48,22,.3)" stroke-width=".6"><circle cx="9" cy="10" r=".9"/><circle cx="13" cy="9.4" r=".9"/><circle cx="15.2" cy="12.4" r=".9"/><circle cx="11" cy="12.8" r=".9"/><circle cx="13.6" cy="15.4" r=".9"/><circle cx="9.4" cy="14.6" r=".9"/></g>`,
+brinjal:`<path d="M13.6 7c3 0 5.4 2.8 5.4 6.2 0 3.8-3 6.8-6.6 6.8s-6.4-3-6.4-6.8C6 9.8 9 7 12 7z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M12 7c-.3-1.6.4-3 1.8-3.7M12 7c.6-1.2 1.8-1.6 3-1.2M12 7c-1-.8-2.3-.7-3.2.2" stroke="${leaf}" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M12.6 4.4l1.3-1.3" stroke="${stem}" stroke-width="1.4" stroke-linecap="round" fill="none"/>`,
+okra:`<path d="M12 4.5c-.6 0-1 .5-1 1.1l-.2 1.2c-.8.4-1.3 1-1.5 2l-1.2 8.4c-.2 1.4.8 2.8 2.2 2.8h1.4c1.4 0 2.4-1.4 2.2-2.8l-1.2-8.4c-.2-1-.7-1.6-1.5-2L13 5.6c0-.6-.4-1.1-1-1.1z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><g stroke="${ol}" stroke-width=".55" fill="none" opacity=".6"><path d="M10.2 9v9.5M13.8 9v9.5M12 8.5v11"/></g>`,
+drumstick:`<path d="M12 3.5v17" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" fill="none"/><g fill="currentColor" stroke="${ol}" stroke-width=".6"><circle cx="12" cy="6" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="12" cy="14" r="2"/><circle cx="12" cy="18" r="2"/></g>`,
+cabbage:`<circle cx="12" cy="13" r="8" fill="currentColor" stroke="${ol}" stroke-width="1"/><g stroke="rgba(255,255,255,.5)" stroke-width=".9" fill="none"><path d="M12 5c-3 2-4 6-3 10M12 5c3 2 4 6 3 10M8 8c-2 2.5-2 6.5 0 9M16 8c2 2.5 2 6.5 0 9M12 5v16"/></g>`,
+apricot:`<circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="${ol}" stroke-width="1"/><path d="M12 7.2v12.6" stroke="${ol}" stroke-width=".8" opacity=".5" fill="none"/><path d="M12 7.5c.2-1.2 1.2-2 2.4-2.1" stroke="${leaf}" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M14 5.2c1-.5 2-.2 2.5.6-.8.7-1.9.5-2.5-.6z" fill="${leaf}"/>`,
+fig:`<path d="M12 6.5c-3.3 0-5.8 2.8-5.8 6.3 0 3.8 2.6 6.7 5.8 6.7s5.8-2.9 5.8-6.7c0-3.5-2.5-6.3-5.8-6.3z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M12 6.5V4.4" stroke="${stem}" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M12 5c1-1.2 2.4-1.4 3.4-1-.3 1.4-1.7 1.8-3.4 1z" fill="${leaf}"/><g fill="rgba(216,71,73,.35)"><circle cx="10.5" cy="13" r=".5"/><circle cx="13.5" cy="13" r=".5"/><circle cx="12" cy="15" r=".5"/><circle cx="11.5" cy="11.5" r=".5"/></g>`,
+prune:`<ellipse cx="12" cy="13" rx="6" ry="7" fill="currentColor" stroke="${ol}" stroke-width="1"/><g stroke="rgba(0,0,0,.2)" stroke-width=".8" fill="none"><path d="M9 8c-1 3-1 7 .5 10M15 8c1 3 1 7-.5 10M12 6.5v13"/></g>`,
+raisin:`<g fill="currentColor" stroke="${ol}" stroke-width=".9"><ellipse cx="9.5" cy="11" rx="2.6" ry="3.4" transform="rotate(-15 9.5 11)"/><ellipse cx="14.5" cy="13.5" rx="2.6" ry="3.4" transform="rotate(12 14.5 13.5)"/></g><g stroke="rgba(0,0,0,.22)" stroke-width=".6" fill="none"><path d="M8.6 9c.5 2 .5 3.5 0 5M15.4 11.5c.5 2 .5 3.5 0 5"/></g>`,
+custardapple:`<circle cx="12" cy="13" r="7" fill="currentColor" stroke="${ol}" stroke-width="1"/><g stroke="${ol}" stroke-width=".7" fill="none" opacity=".65"><path d="M8 9.5l2 2M12 7.5v2.5M16 9.5l-2 2M7 13.5h2.5M17 13.5h-2.5M9 17l1.5-1.5M15 17l-1.5-1.5M12 12l-1.5 1.5M12 12l1.5 1.5"/></g><path d="M12 6c0-1 .8-1.8 2-2" stroke="${stem}" stroke-width="1.3" stroke-linecap="round" fill="none"/>`,
+sapota:`<ellipse cx="12" cy="13" rx="6.5" ry="7" fill="currentColor" stroke="${ol}" stroke-width="1"/><path d="M12 6c0-1 .6-1.8 1.6-2" stroke="${stem}" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M11 6c-1-.5-2.2-.2-2.8.8 1 .6 2.2.3 2.8-.8z" fill="${leaf}"/>`,
+pineapple:`<ellipse cx="12" cy="15" rx="5.5" ry="6.3" fill="currentColor" stroke="${ol}" stroke-width="1"/><g stroke="${ol}" stroke-width=".6" fill="none" opacity=".7"><path d="M7.5 12l8 7.5M16.5 12l-8 7.5M8 15.5l4 3.5M16 15.5l-4 3.5"/></g><g fill="${leaf}"><path d="M12 9.5c-1-2.5-.5-4.5.5-5.7 1 1.6 1.2 3.7.5 5.7zM10 10c-1.5-2-2-4-1.5-5.6 1.5 1 2.3 2.9 1.5 5.6zM14 10c1.5-2 2-4 1.5-5.6-1.5 1-2.3 2.9-1.5 5.6z"/></g>`,
+peach:`<circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="${ol}" stroke-width="1"/><path d="M12 7.3c-.6 3-.6 9 0 12.4" stroke="${ol}" stroke-width=".8" opacity=".45" fill="none"/><path d="M12 7.5c.3-1.4 1.4-2.2 2.8-2.2" stroke="${leaf}" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M14.2 5.3c1-.6 2.2-.4 2.8.5-.8.7-2 .6-2.8-.5z" fill="${leaf}"/>`,
+plum:`<ellipse cx="12" cy="13" rx="6" ry="6.8" fill="currentColor" stroke="${ol}" stroke-width="1"/><path d="M12 6.4c-.6 3-.6 9.6 0 13.2" stroke="rgba(0,0,0,.2)" stroke-width=".9" fill="none"/><path d="M12 6.5c.2-1 1-1.7 2-1.9" stroke="${stem}" stroke-width="1.2" stroke-linecap="round" fill="none"/>`,
+muskmelon:`<circle cx="12" cy="13" r="7" fill="currentColor" stroke="${ol}" stroke-width="1"/><g stroke="rgba(74,48,22,.3)" stroke-width=".55" fill="none"><path d="M6 11c3-1 9-1 12 0M5.5 14c3.5-.8 9.5-.8 13 0M7 17c2.5-.6 7.5-.6 10 0M8 8.5c2-.5 6-.5 8 0M9 13c1 1 5 1 6 0"/></g>`,
+guava:`<circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="${ol}" stroke-width="1"/><circle cx="12" cy="13.5" r="2.6" fill="rgba(216,71,73,.22)"/><g fill="rgba(74,48,22,.4)"><circle cx="11" cy="13" r=".4"/><circle cx="13" cy="13" r=".4"/><circle cx="12" cy="14.6" r=".4"/></g><path d="M12 7c0-1 .8-1.8 2-2" stroke="${leaf}" stroke-width="1.3" stroke-linecap="round" fill="none"/>`,
+raspberry:`<g fill="currentColor" stroke="${ol}" stroke-width=".7"><circle cx="10" cy="12.5" r="1.9"/><circle cx="14" cy="12.5" r="1.9"/><circle cx="12" cy="11" r="1.9"/><circle cx="11" cy="15" r="1.9"/><circle cx="13" cy="15" r="1.9"/><circle cx="12" cy="17.2" r="1.9"/></g><g fill="${leaf}"><path d="M12 8c-1-1.5-2.5-1.8-4-1.2.8 1.4 2.3 1.8 4 1.2zM12 8c1-1.5 2.5-1.8 4-1.2-.8 1.4-2.3 1.8-4 1.2z"/></g>`,
+cranberry:`<g fill="currentColor" stroke="${ol}" stroke-width="1"><circle cx="9.5" cy="13" r="4"/><circle cx="15" cy="12.5" r="3.6"/></g><g fill="rgba(0,0,0,.22)"><circle cx="9.5" cy="9.2" r=".5"/><circle cx="15" cy="9.1" r=".5"/></g>`,
+lemon:`<ellipse cx="12" cy="13" rx="7.5" ry="6" fill="currentColor" stroke="${ol}" stroke-width="1" transform="rotate(-12 12 13)"/><path d="M4.8 11.4l-1.4-.4M19.2 14.6l1.4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M12 7.6c1-1 2.5-1 3.2-.2" stroke="${leaf}" stroke-width="1.3" stroke-linecap="round" fill="none"/>`,
+buttermilk:`<path d="M8 6h8l-.6 13c-.07 1.1-1 2-2.1 2h-2.6c-1.1 0-2-.9-2.1-2z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M8.3 9c1.5-.8 2.7.8 4.2 0s3.2.6 3.2.6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none" stroke-linecap="round"/><g fill="rgba(255,255,255,.5)"><circle cx="10" cy="7.5" r=".5"/><circle cx="13" cy="7.2" r=".5"/></g>`,
+pistachio:`<path d="M12 4c-3.5 1.6-5.5 5-5.5 8.6 0 3.5 2.2 6.4 5.5 7.4 3.3-1 5.5-3.9 5.5-7.4C17.5 9 15.5 5.6 12 4z" fill="#cfe0a0" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M12 4c-3 1.4-4.8 4.3-5.3 7.4 3.5.5 7.1.5 10.6 0C16.8 8.3 15 5.4 12 4z" fill="currentColor"/><path d="M8 13l3 2 2-2 3 1.6" stroke="rgba(0,0,0,.16)" stroke-width=".8" fill="none"/>`,
+pumpkinseed:`<g fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"><path d="M10 6.5c-2 1.5-3 4-3 6.5 0 2 1.3 3.5 3 3.5s3-1.5 3-3.5c0-2.5-1-5-3-6.5z" transform="rotate(-15 10 11.5)"/><path d="M15 9c-2 1.5-3 4-3 6.5 0 2 1.3 3.5 3 3.5s3-1.5 3-3.5c0-2.5-1-5-3-6.5z" transform="rotate(12 15 14)"/></g>`,
+chia:`<g fill="currentColor"><ellipse cx="8" cy="9" rx="1.3" ry="1"/><ellipse cx="12" cy="8" rx="1.3" ry="1" transform="rotate(20 12 8)"/><ellipse cx="15.5" cy="10" rx="1.3" ry="1"/><ellipse cx="9.5" cy="12" rx="1.3" ry="1" transform="rotate(-15 9.5 12)"/><ellipse cx="13" cy="11.5" rx="1.3" ry="1"/><ellipse cx="11" cy="15" rx="1.3" ry="1" transform="rotate(15 11 15)"/><ellipse cx="14.5" cy="14.5" rx="1.3" ry="1"/></g>`,
+flaxseed:`<g fill="currentColor" stroke="${ol}" stroke-width=".7"><path d="M7 11c2-1.5 5-1.5 7 0-2 1.5-5 1.5-7 0z"/><path d="M11 14c2-1.5 5-1.5 7 0-2 1.5-5 1.5-7 0z"/><path d="M9 8c1.8-1.3 4.2-1.3 6 0-1.8 1.3-4.2 1.3-6 0z"/></g>`,
+sesame:`<g fill="currentColor" stroke="${ol}" stroke-width=".55"><ellipse cx="8.5" cy="10" rx="1.6" ry="1"/><ellipse cx="12" cy="9" rx="1.6" ry="1"/><ellipse cx="15.5" cy="10.5" rx="1.6" ry="1"/><ellipse cx="10" cy="13" rx="1.6" ry="1"/><ellipse cx="13.5" cy="12.5" rx="1.6" ry="1"/><ellipse cx="11.5" cy="15.5" rx="1.6" ry="1"/></g>`,
+prawn:`<path d="M16 6c-4 0-7 3-7 7 0 3 2 5 5 5h2c.6 0 1-.5 1-1s-.4-1-1-1h-2c-1.6 0-3-1.3-3-3 0-2.5 2-4.5 5-4.5.6 0 1-.5 1-1s-.4-1-1-1z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M16 6c1-.5 2-.3 2.5.5M9.5 16l-2 2M11 18l-1.5 1.8" stroke="${ol}" stroke-width="1" stroke-linecap="round" fill="none"/><circle cx="16" cy="8.5" r=".7" fill="rgba(0,0,0,.5)"/>`,
+mutton:`<path d="M7 9.5a4.5 4.5 0 014.5-4.5h1A4.5 4.5 0 0117 9.5v.5a3 3 0 01-3 3h-.5v4.5a2 2 0 11-4 0V13H9a3 3 0 01-3-3z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M9.7 17.6l-1.6 1.6M12.3 17.6l1.6 1.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/>`,
+oil:`<path d="M9 4.5h6v2.5l3 2v8.5a2 2 0 01-2 2H8a2 2 0 01-2-2V9l3-2z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M11 4.5h2V3h-2z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M6.2 12h11.6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none"/><path d="M11 15c0 1 1.5 1.2 1.5 2.6" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round" fill="none"/>`,
+turmeric:`<path d="M6.5 12c-1-.3-1.4-1.4-.8-2.3.5-.7 1.4-.8 2.1-.4.2-1.1 1.2-1.8 2.3-1.5.5-1 1.7-1.3 2.6-.6.8-.6 1.9-.4 2.4.5.9-.1 1.6.5 1.6 1.4 0 .8-.5 1.4-1.3 1.5.3 1-.3 2.1-1.3 2.3-.4 1-1.6 1.5-2.5 1-.7.7-1.9.6-2.5-.2-.9.2-1.8-.4-1.9-1.3-.9 0-1.5-.9-1.2-1.7z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><g stroke="${ol}" stroke-width=".5" fill="none" opacity=".5"><path d="M9 11c.8.6 1.2 1.8 1 3M13 10.5c-.3 1.1.2 2.4 1 3"/></g>`,
+blackpepper:`<g fill="currentColor" stroke="${ol}" stroke-width=".8"><circle cx="9" cy="10" r="2.4"/><circle cx="14" cy="9.5" r="2.4"/><circle cx="11.5" cy="13.6" r="2.4"/><circle cx="15.6" cy="13.6" r="2.4"/></g><g stroke="rgba(0,0,0,.3)" stroke-width=".5" fill="none"><path d="M8 9c.5.8 1.5 1 2 .5M13 8.8c.5.8 1.5 1 2 .5"/></g>`,
+cinnamon:`<rect x="8" y="4" width="8" height="16" rx="3" fill="currentColor" stroke="${ol}" stroke-width="1" transform="rotate(12 12 12)"/><g stroke="rgba(0,0,0,.2)" stroke-width=".8" fill="none" transform="rotate(12 12 12)"><path d="M11 4.5v15M14 4v15.5"/></g>`,
+cardamom:`<path d="M12 4c-2.5 0-4 2.5-4 6s1.5 10 4 10 4-6.5 4-10-1.5-6-4-6z" fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"/><path d="M12 5v14" stroke="${ol}" stroke-width=".7" opacity=".5" fill="none"/><path d="M12 4c0-1 .6-1.6 1.5-1.8" stroke="${stem}" stroke-width="1.2" stroke-linecap="round" fill="none"/>`,
+coriander:`<g fill="currentColor" stroke="${ol}" stroke-width=".6"><path d="M9 7.5c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M12 6c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M15 7.5c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M10.5 10c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M13.5 10c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/></g><g stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"><path d="M9 8l1.3 11.5M12 6.5l0 13M15 8l-1.3 11.5"/></g>`,
+mint:`<g fill="currentColor" stroke="${ol}" stroke-width="1" stroke-linejoin="round"><path d="M11 5c-3 1-5 4-4.3 7.5C9.2 12 11.2 9.3 11 5z"/><path d="M13 7c3 1 4.5 4 3.7 7.5C13.5 13.7 12.6 10.6 13 7z"/></g><g stroke="rgba(255,255,255,.5)" stroke-width=".8" fill="none"><path d="M10 6.5c-1.5 1.5-2.5 3.5-2.6 5.2M14 8.5c1.3 1.3 2 3.1 2 4.7"/></g><path d="M12 13.5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>`,
 };
 
 // ── category layout: which foods show, in what group, with what colour ────────
@@ -85,10 +122,12 @@ const CATS = [
   ['Grains & Cereals', [
     ['rice','rice','#e6d9bd'],['millet','ragi / millet','#b06a44'],['oats','oats','#d4bb7c'],
     ['wheat','wheat','#d9a945'],['suji','suji / poha','#e7dcc2'],['corn','corn','#ecc84e'],
+    ['dalia','dalia','#d8c0a0'],['barley','barley','#d6c486'],['quinoa','quinoa','#d2b288'],
   ]],
   ['Legumes & Pulses', [
     ['dal','toor dal','#e8bd4e'],['dal','moong dal','#9bb24a','v'],['dal','masoor dal','#d98a55','v'],
-    ['chana','chana','#cda05c'],['rajma','rajma','#9c4338'],['peanut','peanut','#d9b27a'],['sprouts','sprouts','#bcd089'],
+    ['dal','urad dal','#7a7066','v'],['chana','chana','#cda05c'],['rajma','rajma','#9c4338'],
+    ['peanut','peanut','#d9b27a'],['sprouts','sprouts','#bcd089'],
   ]],
   ['Vegetables', [
     ['carrot','carrot','#e8843a'],['carrot','carrot purple','#8a4fa0','v'],['spinach','spinach','#5a9a42'],
@@ -98,25 +137,37 @@ const CATS = [
     ['pepper','bell pepper','#d23b32'],['pepper','pepper yellow','#ecc23e','v'],['pepper','pepper green','#5b9a3f','v'],
     ['cucumber','cucumber','#7bb34a'],['zucchini','zucchini','#4f7a3a'],['peas','peas','#86c258'],
     ['onion','onion','#c9a3c0'],['garlic','garlic','#ece4d5'],['ginger','ginger','#d6b483'],['mushroom','mushroom','#cdb79a'],
+    ['brinjal','brinjal','#7b4a86'],['okra','okra / bhindi','#5f9a3f'],['drumstick','drumstick','#6aa83f'],['cabbage','cabbage','#bcd99a'],
   ]],
   ['Fruits', [
     ['banana','banana','#e9c44a'],['pear','pear','#bcc758'],['apple','apple','#d2473f'],['mango','mango','#f0a83a'],
     ['avocado','avocado','#5f7f33'],['blueberry','blueberry','#5560a8'],['strawberry','strawberry','#d63f49'],
     ['grapes','grapes','#7d4f9e'],['date','date','#7a4a2c'],['papaya','papaya','#e88a4a'],['orange','orange','#e58a30'],
     ['pomegranate','pomegranate','#c23a52'],['watermelon','watermelon','#d6473b'],['kiwi','kiwi','#7ba33f'],['coconut','coconut','#f0ebe0'],
+    ['apricot','apricot','#e8a55a'],['fig','fig','#8a4f6e'],['prune','prune','#6a4452'],['raisin','raisin','#7a4a32'],
+    ['custardapple','custard apple','#bcd0a0'],['sapota','sapota / chikoo','#9c7a52'],['pineapple','pineapple','#ecc24e'],
+    ['peach','peach','#f0a87a'],['plum','plum','#8a3a5e'],['muskmelon','muskmelon','#dcb96a'],['guava','guava','#bcd08a'],
+    ['raspberry','raspberry','#c83a5a'],['cranberry','cranberry','#c23a3a'],['lemon','lemon','#ecd24e'],
   ]],
   ['Dairy & Eggs', [
     ['paneer','paneer','#ece2c9'],['milk','milk','#f1eee4'],['ghee','ghee','#e8b94f'],['curd','curd / yogurt','#e4ddcd'],
-    ['cheese','cheese','#edc85e'],['butter','butter','#f0d480'],['egg','egg','#efe6d0'],
+    ['cheese','cheese','#edc85e'],['butter','butter','#f0d480'],['buttermilk','buttermilk','#f1ede2'],['egg','egg','#efe6d0'],
   ]],
   ['Nuts & Seeds', [
-    ['almond','almond','#b9824e'],['walnut','walnut','#a9743f'],['cashew','cashew','#e6d6b4'],['cumin','cumin / jeera','#9c7548'],
+    ['almond','almond','#b9824e'],['walnut','walnut','#a9743f'],['cashew','cashew','#e6d6b4'],['pistachio','pistachio','#9bbf5a'],
+    ['cumin','cumin / jeera','#9c7548'],['pumpkinseed','pumpkin seed','#8ab04a'],['chia','chia','#4a4038'],
+    ['flaxseed','flaxseed','#a5743f'],['sesame','sesame','#d8c8a8'],
   ]],
   ['Proteins', [
     ['fish','fish','#86a6b6'],['chicken','chicken','#d59a62'],['tofu','tofu','#f0ece0','v'],
+    ['prawn','prawn','#e89a7a'],['mutton','mutton','#c8746a'],
   ]],
   ['Fats & Sweeteners', [
-    ['jaggery','jaggery','#a5623a'],['honey','honey','#e8a93a'],
+    ['jaggery','jaggery','#a5623a'],['honey','honey','#e8a93a'],['oil','oil','#ecc86a'],
+  ]],
+  ['Spices & Herbs', [
+    ['turmeric','turmeric','#e0962e'],['cumin','cumin','#9c7548'],['blackpepper','black pepper','#4a4038'],
+    ['cinnamon','cinnamon','#a5623a'],['cardamom','cardamom','#bcc77a'],['coriander','coriander','#5a9a42'],['mint','mint','#5aa05a'],
   ]],
 ];
 

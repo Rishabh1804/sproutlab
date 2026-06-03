@@ -5,23 +5,23 @@ import { writeFileSync } from 'node:fs';
 // done = has a zif-* icon (incl. via a shared symbol/variant). pending = roadmap.
 const CORPUS = [
   ['Grains & Cereals',
-    [['rice',1],['ragi / millet',1],['oats',1],['wheat',1],['suji / semolina',1],['poha',1],['corn',1],['dalia / broken wheat',0],['barley',0],['quinoa',0]]],
+    [['rice',1],['ragi / millet',1],['oats',1],['wheat',1],['suji / semolina',1],['poha',1],['corn',1],['dalia / broken wheat',1],['barley',1],['quinoa',1]]],
   ['Legumes & Pulses',
-    [['toor dal',1],['moong dal',1],['masoor dal',1],['chana dal',1],['urad dal',0],['rajma',1],['chickpeas',1],['green peas',1],['sprouts',1],['peanut',1]]],
+    [['toor dal',1],['moong dal',1],['masoor dal',1],['chana dal',1],['urad dal',1],['rajma',1],['chickpeas',1],['green peas',1],['sprouts',1],['peanut',1]]],
   ['Vegetables',
-    [['carrot',1],['spinach / palak',1],['green beans',1],['bottle gourd',1],['beetroot',1],['pumpkin',1],['sweet potato',1],['potato',1],['broccoli',1],['cauliflower',1],['tomato',1],['bell pepper / capsicum',1],['cucumber',1],['zucchini',1],['onion',1],['garlic',1],['ginger',1],['mushroom',1],['brinjal / eggplant',0],['okra / bhindi',0],['drumstick',0],['cabbage',0]]],
+    [['carrot',1],['spinach / palak',1],['green beans',1],['bottle gourd',1],['beetroot',1],['pumpkin',1],['sweet potato',1],['potato',1],['broccoli',1],['cauliflower',1],['tomato',1],['bell pepper / capsicum',1],['cucumber',1],['zucchini',1],['onion',1],['garlic',1],['ginger',1],['mushroom',1],['brinjal / eggplant',1],['okra / bhindi',1],['drumstick',1],['cabbage',1]]],
   ['Fruits',
-    [['banana',1],['pear',1],['apple',1],['mango',1],['avocado',1],['blueberry',1],['strawberry',1],['grapes',1],['date',1],['papaya',1],['orange',1],['pomegranate',1],['watermelon',1],['kiwi',1],['coconut',1],['apricot',0],['fig',0],['prune',0],['raisin',0],['custard apple',0],['sapota / chikoo',0],['pineapple',0],['peach',0],['plum',0],['muskmelon',0],['guava',0],['raspberry',0],['cranberry',0],['lemon',0]]],
+    [['banana',1],['pear',1],['apple',1],['mango',1],['avocado',1],['blueberry',1],['strawberry',1],['grapes',1],['date',1],['papaya',1],['orange',1],['pomegranate',1],['watermelon',1],['kiwi',1],['coconut',1],['apricot',1],['fig',1],['prune',1],['raisin',1],['custard apple',1],['sapota / chikoo',1],['pineapple',1],['peach',1],['plum',1],['muskmelon',1],['guava',1],['raspberry',1],['cranberry',1],['lemon',1]]],
   ['Dairy & Eggs',
-    [['paneer',1],['milk',1],['ghee',1],['curd / yogurt',1],['cheese',1],['butter',1],['egg',1],['buttermilk',0]]],
+    [['paneer',1],['milk',1],['ghee',1],['curd / yogurt',1],['cheese',1],['butter',1],['egg',1],['buttermilk',1]]],
   ['Nuts & Seeds',
-    [['almond',1],['walnut',1],['cashew',1],['cumin / jeera',1],['pistachio',0],['pumpkin seed',0],['chia seed',0],['flaxseed',0],['sesame',0]]],
+    [['almond',1],['walnut',1],['cashew',1],['cumin / jeera',1],['pistachio',1],['pumpkin seed',1],['chia seed',1],['flaxseed',1],['sesame',1]]],
   ['Proteins',
-    [['fish',1],['chicken',1],['tofu',1],['prawn',0],['mutton',0]]],
+    [['fish',1],['chicken',1],['tofu',1],['prawn',1],['mutton',1]]],
   ['Fats & Sweeteners',
-    [['jaggery',1],['honey',1],['oil',0]]],
+    [['jaggery',1],['honey',1],['oil',1]]],
   ['Spices & Herbs',
-    [['turmeric',0],['black pepper',0],['cinnamon',0],['cardamom',0],['coriander leaf',0],['mint',0]]],
+    [['turmeric',1],['black pepper',1],['cinnamon',1],['cardamom',1],['coriander leaf',1],['mint',1]]],
 ];
 
 const total = CORPUS.reduce((a,[,it]) => a+it.length, 0);
