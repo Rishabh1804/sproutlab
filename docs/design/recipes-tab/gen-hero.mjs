@@ -25,26 +25,66 @@ const DOM = {
 };
 
 // demo recipes: grams drive the weighting; trace ingredients excluded from the fingerprint
+// Research-backed curated set (deep-research 2026-06-03, cross-verified WHO 2023 /
+// WHO-PAHO NBK148957 / IAP Ch-040 / ICMR-NIN DGI-2024 / NHS Start4Life / FAO am866e /
+// AAP / CDC). Grams are raw/as-prepared so the weighting fingerprint is real.
+// Safety rules applied: no honey/salt/added sugar <12m (fruit sweetens); nuts ground;
+// egg fully cooked; cow-milk only in cooking <12m.
 const RECIPES = [
-  { title:'Veg & Paneer Khichdi', badge:'Lunch', tags:['a soft, savoury one-pot','gentle on little tummies','comfort in a bowl'], why:'Rice-led one-pot — soft grain base, a little carrot for colour and beta-carotene, paneer for protein.',
+  { title:'Moong Dal Khichdi', badge:'Lunch', tags:['a soft, savoury first khichdi','gentle on little tummies','cereal + pulse, complete protein'], why:'The classic first khichdi — rice and moong dal cooked soft together with a pinch of turmeric and a drop of ghee. Cereal + pulse makes a complete protein.',
     ings:[
-      {n:'Rice', g:60, dom:'grain', icon:'rice', c:'#d8c79f'},
-      {n:'Carrot', g:24, dom:'veg', icon:'carrot', c:'#e8843a'},
-      {n:'Paneer', g:14, dom:'dairy', icon:'paneer', c:'#cdbf93'},
-      {n:'Ghee', g:5, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
-    ], time:'25 min', age:'7m+' },
-  { title:'Almond Banana Mash', badge:'Breakfast', tags:['a five-minute creamy breakfast','naturally sweet, no added sugar','soft, spoonable, mess-free'], why:'Banana-forward mash, a spoon of almond powder folded in for healthy fats and a nutty note.',
+      {n:'Rice', g:12, dom:'grain', icon:'rice', c:'#d8c79f'},
+      {n:'Moong dal', g:8, dom:'legume', icon:'dal', c:'#9bb24a'},
+      {n:'Ghee', g:2, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'20 min', age:'7m+' },
+  { title:'Veg & Moong Khichdi', badge:'Lunch', tags:['a one-pot with hidden veg','soft, lumpy, spoonable','grain, pulse & two veggies'], why:'Rice and moong dal pressure-cooked soft with carrot and pumpkin — a balanced one-pot with beta-carotene and iron.',
     ings:[
-      {n:'Banana', g:100, dom:'fruit', icon:'banana', c:'#e9c44a'},
-      {n:'Almond powder', g:12, dom:'nuts', icon:'almond', c:'#b9824e'},
-    ], time:'5 min', age:'6m+' },
-  { title:'Ragi Banana Porridge', badge:'Breakfast', tags:['iron-rich & naturally sweet','a warm morning bowl','ragi’s gentle first porridge'], why:'Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.',
+      {n:'Rice', g:15, dom:'grain', icon:'rice', c:'#d8c79f'},
+      {n:'Moong dal', g:10, dom:'legume', icon:'dal', c:'#9bb24a'},
+      {n:'Carrot', g:20, dom:'veg', icon:'carrot', c:'#e8843a'},
+      {n:'Pumpkin', g:20, dom:'veg', icon:'pumpkin', c:'#e2913f'},
+      {n:'Ghee', g:2, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'25 min', age:'8m+' },
+  { title:'Ragi Banana Porridge', badge:'Breakfast', tags:['iron-rich & naturally sweet','a warm morning bowl','ragi’s gentle first porridge'], why:'Finger-millet whisked smooth and cooked till thick, sweetened with mashed banana — banana’s vitamin C helps the iron absorb.',
     ings:[
-      {n:'Banana', g:50, dom:'fruit', icon:'banana', c:'#e9c44a'},
-      {n:'Ragi', g:30, dom:'grain', icon:'millet', c:'#b06a44'},
+      {n:'Ragi', g:24, dom:'grain', icon:'millet', c:'#b06a44'},
+      {n:'Banana', g:20, dom:'fruit', icon:'banana', c:'#e9c44a'},
       {n:'Milk', g:8, dom:'trace', td:'dairy', icon:'milk', c:'#cdbf93'},
     ], time:'12 min', age:'7m+' },
-  // 4th = an UNCURATED mix (no tags) → proves the generative fallback
+  { title:'Oats & Apple Porridge', badge:'Breakfast', tags:['warm oats, sweetened by apple','fibre for tiny tummies','no sugar — just fruit'], why:'Soft-cooked oats with grated apple and a pinch of cinnamon. Apple is grated and cooked — never raw — and there’s no added sugar.',
+    ings:[
+      {n:'Oats', g:24, dom:'grain', icon:'oats', c:'#d4bb7c'},
+      {n:'Apple', g:20, dom:'fruit', icon:'apple', c:'#d2473f'},
+      {n:'Cinnamon', g:1, dom:'trace', td:'legume', icon:'cinnamon', c:'#a5623a'},
+    ], time:'10 min', age:'7m+' },
+  { title:'Dal–Rice with Palak', badge:'Lunch', tags:['iron-rich dal, rice & greens','a soft everyday lunch','cereal, pulse & leafy iron'], why:'Soft rice and toor dal folded with wilted spinach and a little ghee — iron from the dal and palak, with vitamin C to help it along.',
+    ings:[
+      {n:'Rice', g:45, dom:'grain', icon:'rice', c:'#d8c79f'},
+      {n:'Toor dal', g:25, dom:'legume', icon:'dal', c:'#e8bd4e'},
+      {n:'Spinach', g:15, dom:'veg', icon:'spinach', c:'#5a9a42'},
+      {n:'Ghee', g:2, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'25 min', age:'8m+' },
+  { title:'Carrot Beetroot Potato Mash', badge:'Lunch', tags:['a bright root-veg mash','beta-carotene & folate','earthy, sweet & soft'], why:'Carrot, beetroot and potato steamed soft and mashed with a touch of fat — a ruby, beta-carotene-rich bowl.',
+    ings:[
+      {n:'Carrot', g:40, dom:'veg', icon:'carrot', c:'#e8843a'},
+      {n:'Beetroot', g:30, dom:'veg', icon:'beetroot', c:'#9c3b6b'},
+      {n:'Potato', g:40, dom:'veg', icon:'potato', c:'#cda36a'},
+      {n:'Ghee', g:1, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'20 min', age:'7m+' },
+  { title:'Curd & Banana Bowl', badge:'Snack', tags:['cooling curd & sweet banana','calcium + probiotics','a no-cook snack'], why:'Plain full-fat curd whisked smooth and folded with mashed banana — calcium and probiotics, no cooking, no sugar.',
+    ings:[
+      {n:'Curd', g:60, dom:'dairy', icon:'curd', c:'#e4ddcd'},
+      {n:'Banana', g:25, dom:'fruit', icon:'banana', c:'#e9c44a'},
+    ], time:'3 min', age:'8m+' },
+  { title:'Almond Ragi Kheer', badge:'Breakfast', tags:['a creamy, milk-led kheer','calcium, iron & good fats','sweetened only by dates'], why:'Ragi cooked in milk till thick, with a little smooth almond paste and mashed date for sweetness. Almond is ground fine — never whole.',
+    ings:[
+      {n:'Milk', g:120, dom:'dairy', icon:'milk', c:'#cdbf93'},
+      {n:'Ragi', g:15, dom:'grain', icon:'millet', c:'#b06a44'},
+      {n:'Date', g:15, dom:'fruit', icon:'date', c:'#7a4a2c'},
+      {n:'Almond', g:3, dom:'nuts', icon:'almond', c:'#b9824e'},
+      {n:'Ghee', g:1, dom:'trace', td:'legume', icon:'ghee', c:'#e8b94f'},
+    ], time:'18 min', age:'9m+' },
+  // UNCURATED (no tags) → composed by taglines.mjs from the bank
   { title:'Carrot Moong Mash', badge:'Lunch', why:'A quick veg-and-dal mash — carrot for sweetness, moong for easy protein.',
     ings:[
       {n:'Carrot', g:45, dom:'veg', icon:'carrot', c:'#e8843a'},
