@@ -72,12 +72,12 @@
   .emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
     background:var(--rose-light); border-left:3px solid var(--rose); border-radius:var(--r-2xl); border-top:none; border-right:none; border-bottom:none;
     padding:var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
-  .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--rose); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:#fff; display:flex; align-items:center; justify-content:center; }
   .emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
   .emerg-entry-txt { flex:1; min-width:0; }
-  .emerg-entry-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--tc-rose); line-height:var(--lh-snug); }
-  .emerg-entry-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); }
-  .emerg-entry-go { flex:0 0 auto; color:var(--tc-rose); }
+  .emerg-entry-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); line-height:var(--lh-snug); }
+  .emerg-entry-sub { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+  .emerg-entry-go { flex:0 0 auto; align-self:center; color:var(--tc-rose); }
   .emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
 
   /* group header */
@@ -246,7 +246,7 @@
     <button class="lib-wing lib-wing--active" data-action="switchWing" data-wing="browse"><svg class="zi"><use href="#zi-book"/></svg>Browse foods</button>
     <button class="lib-wing" data-action="switchWing" data-wing="guides"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
   </div>
-  <button class="emerg-entry" data-action="openEmergency"><span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="emerg-entry-txt"><span class="emerg-entry-title">In an emergency</span><span class="emerg-entry-sub">Choking · allergic reaction · delayed vomiting · poisoning</span></span><span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+  <button class="emerg-entry" data-action="openEmergency"><span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="emerg-entry-txt"><span class="emerg-entry-title">In an emergency</span><span class="emerg-entry-sub">Choking, allergic reactions &amp; first aid</span></span><span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
 
   <!-- ══ BROWSE FOODS WING ══ -->
   <div id="wing-browse">
