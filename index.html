@@ -39294,15 +39294,7 @@ function renderDietNutIntro() {
   foods.forEach(function(f){
     (f.severeSigns || []).forEach(function(s){ if (severe.indexOf(s) === -1) severe.push(s); });
   });
-  if (severe.length) {
-    pinned += '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
-      '<span>If this happens, it’s an emergency</span></div><ul class="cons-severe-list">' +
-      severe.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
-    if (lead.seekCare) {
-      pinned += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(lead.seekCare) + '</span></p>';
-    }
-    pinned += '</div>';
-  }
+  pinned += _libBuildGuide(severe, lead.seekCare, 'If this happens, it’s an emergency');
 
   // ── How-to protocol (the introduce-safely steps) → BODY ──
   var hti = lead.howToIntroduce || {};
@@ -39392,7 +39384,7 @@ function renderDietMilkIntro() {
       // and the mild watch-fors drop to the calm body instead.
       // M-M-2 (Maren): scope to the SEVERE path — "reacts to dairy" over-read as any reaction
       // being an emergency, contradicting the mild-path the seekCare line and body watch-fors draw.
-      cPin += _milkSevereStrip(cow, 'A severe reaction to dairy is an emergency');
+      cPin += _libBuildGuide(cow.severeSigns, cow.seekCare, 'A severe reaction to dairy is an emergency');
       // BODY (collapsible): how-to (after-12mo) → mild watch-fors → myth.
       var chti = cow.howToIntroduce || {};
       if (chti.amount || chti.when || chti.watch) {
@@ -39472,17 +39464,23 @@ function _milkFormBlock(sf, okLabel, neverLabel) {
   return h;
 }
 
-// Present-only CMPA severe strip for a drink-timing card (milk-spec §6/V-V-4/M-1). Renders
-// the anaphylaxis red-flags + the call-112/108 emergency line ONLY when severeSigns is a
-// non-empty array (never on a class/allergen-flag proxy — M-1). `scopeHeader` separates the
-// ALLERGY floor from the TIMING gate so a parent never conflates the two axes (V-V-4).
-function _milkSevereStrip(eff, scopeHeader) {
-  if (!eff || !Array.isArray(eff.severeSigns) || !eff.severeSigns.length) return '';
+// ── _libBuildGuide — THE canonical never-cross emergency-floor builder (food-effects-v2 S0).
+// One renderer for every Library safety floor: the nut / milk / choking guide cards today,
+// and the Safety-guides wing + Emergency Deck reuse it when wired. Consolidates what
+// renderDietNutIntro used to open-code and what _milkSevereStrip rendered for milk/choking,
+// so the floor markup is provably byte-identical wherever a floor appears (the never-cross
+// proof). Present-only: renders nothing unless severeSigns is a non-empty array (M-1 — never
+// on a class/allergen-flag proxy). `scopeHeader` scopes each floor to ITS hazard so floors
+// never cross — choking first-aid never renders under an allergic-reaction header, and vice
+// versa (the floor follows the hazard; enforced by audit-floor-fidelity-v1).
+function _libBuildGuide(severeSigns, seekCare, scopeHeader) {
+  var signs = Array.isArray(severeSigns) ? severeSigns : [];
+  if (!signs.length) return '';
   var h = '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
     '<span>' + escHtml(scopeHeader) + '</span></div><ul class="cons-severe-list">' +
-    eff.severeSigns.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
-  if (eff.seekCare) {
-    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(eff.seekCare) + '</span></p>';
+    signs.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+  if (seekCare) {
+    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(seekCare) + '</span></p>';
   }
   h += '</div>';
   return h;
@@ -39552,7 +39550,7 @@ function renderDietChokingIntro() {
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
   // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _milkSevereStrip(chk, 'If your baby is choking, it\'s an emergency');
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
