@@ -800,10 +800,15 @@ function getActiveCareSignals() {
   var todayStr = (typeof today === 'function') ? today() : null;
   if (!todayStr) return out;
   var yesterdayStr = _offsetDateStr(todayStr, -1);
-  var med = function(id, severity, icon, title, sub) {
+  // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
+  // a generic Medical tab). vaccines → medVaccCard, meds → medMedsCard (both in
+  // Track→Medical), CareTickets → ctEntryPoint (on the Today surface).
+  var push = function(id, severity, icon, title, sub, navArg, navTarget) {
     out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
-               action: 'navTabSub', arg: 'track', arg2: 'medical' });
+               action: 'ldGoto', arg: navArg, arg2: navTarget });
   };
+  var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
+  var medSig  = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medMedsCard'); };
 
   // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
   if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
@@ -813,7 +818,7 @@ function getActiveCareSignals() {
     });
     if (overdue.length) {
       var oNames = overdue.map(function(v) { return v.name; });
-      med('vacc-overdue', 'high', 'siren',
+      vaccSig('vacc-overdue', 'high', 'siren',
           overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
           'Tap to reschedule or mark done');
     }
@@ -823,7 +828,7 @@ function getActiveCareSignals() {
     if (upNext) {
       var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
       if (daysTo >= 0 && daysTo <= 7) {
-        med('vacc-soon', 'low', 'dot-red',
+        vaccSig('vacc-soon', 'low', 'dot-red',
             daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
             'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
       }
@@ -834,7 +839,7 @@ function getActiveCareSignals() {
     });
     if (recentVacc.length) {
       var rvNames = recentVacc.map(function(v) { return v.name; });
-      med('vacc-monitor', 'med', 'syringe',
+      vaccSig('vacc-monitor', 'med', 'syringe',
           (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
           'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
     }
@@ -844,7 +849,7 @@ function getActiveCareSignals() {
     });
     if (loggedRecent.length) {
       var until = _offsetDateStr(loggedRecent[0].date, 2);
-      med('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+      vaccSig('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
           'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
     }
   }
@@ -865,7 +870,7 @@ function getActiveCareSignals() {
         if (!dayLog || !dayLog[m.name]) missed++;
       }
       if (missed > 0) {
-        med('med-missed-' + m.name, 'high', 'dot-red',
+        medSig('med-missed-' + m.name, 'high', 'dot-red',
             missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
             'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'));
       }
@@ -874,7 +879,7 @@ function getActiveCareSignals() {
       var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
       var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
       if (!resolved) {
-        med('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
+        medSig('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
       }
     });
   }
@@ -888,8 +893,8 @@ function getActiveCareSignals() {
       if (t.status !== 'active' && t.status !== 'escalated') return;
       var due = ctNextDueTime(t);
       if (isFinite(due) && due < nowMs) {
-        med('ct-overdue-' + (t.id || t.title), 'high', 'bell',
-            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in');
+        push('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in', 'home', 'ctEntryPoint');
       }
     });
   }

@@ -1041,7 +1041,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
 
 /* ── Dark mode: Vaccination Upgrade ── */
-[data-theme="dark"] .vc-complete-card { background: transparent; }
+[data-theme="dark"] .vc-complete-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--sp-12) var(--sp-16); }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
 [data-theme="dark"] .vc-delay-card { background: transparent; }
@@ -20725,6 +20725,22 @@ function init() {
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
     else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
     else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
+    else if (action === 'ldGoto') {
+      // Deep-link from the landing Care pre-empt. arg = tab OR track-sub; arg2 =
+      // scroll-target element id, stashed in _ldPendingScroll and consumed by the
+      // destination right after ITS own scrollTo({top:0}) — so it can't be raced.
+      if (typeof switchTab === 'function') {
+        if (typeof TRACK_SUB_ORDER !== 'undefined' && TRACK_SUB_ORDER.includes(arg)) {
+          switchTab('track');
+          // set the target just before the medical sub-switch so switchTab('track')'s
+          // own (default-sub) consume doesn't fire it early.
+          setTimeout(function() { _ldPendingScroll = arg2 || null; if (typeof switchTrackSub === 'function') switchTrackSub(arg); }, 140);
+        } else {
+          _ldPendingScroll = arg2 || null;
+          switchTab(arg);
+        }
+      }
+    }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -23557,6 +23573,32 @@ function getAlertNavAction(alertKey, alertTitle) {
   return "switchTab('insights');setTimeout(()=>{const el=document.getElementById('insightsAlertsCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},150)";
 }
 
+// One-shot deep-link scroll target (landing Care pre-empt). Consumed in a rAF
+// immediately after a tab / sub-tab's own scrollTo({top:0}) — so the scroll
+// runs AFTER the reset, in the same flow, and can't be raced. (Architect: the
+// pre-empt must land ON the Vit D3 / vaccine / CareTicket card.)
+let _ldPendingScroll = null;
+function _ldConsumePendingScroll() {
+  if (!_ldPendingScroll) return;
+  const _tgt = _ldPendingScroll; _ldPendingScroll = null;
+  // The target card's CONTENT may not be rendered yet when the destination
+  // tab/sub fires this (orderMedicalCards only reorders; the card body fills
+  // elsewhere) — so a single measure reads height 0 and "scrolls" nowhere.
+  // Poll (~1.2s) until it has real height, then scroll the WINDOW (the proven
+  // scroller) to its computed position.
+  let _n = 0;
+  const _go = function() {
+    const _e = document.getElementById(_tgt);
+    if (_e && _e.getBoundingClientRect().height > 4) {
+      const rect = _e.getBoundingClientRect();
+      const y = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 70; // 70 ≈ tab bar + breathing room
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else if (_n++ < 12) {
+      setTimeout(_go, 100);
+    }
+  };
+  requestAnimationFrame(_go);
+}
 function switchTab(name) {
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
@@ -23606,6 +23648,7 @@ function switchTab(name) {
   if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
   if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // ── Card navigation with a breadcrumb trail (PR-O) ──
@@ -23671,6 +23714,7 @@ function switchTrackSub(sub) {
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 function renderTrackSubBar() {
@@ -28134,10 +28178,15 @@ function getActiveCareSignals() {
   var todayStr = (typeof today === 'function') ? today() : null;
   if (!todayStr) return out;
   var yesterdayStr = _offsetDateStr(todayStr, -1);
-  var med = function(id, severity, icon, title, sub) {
+  // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
+  // a generic Medical tab). vaccines → medVaccCard, meds → medMedsCard (both in
+  // Track→Medical), CareTickets → ctEntryPoint (on the Today surface).
+  var push = function(id, severity, icon, title, sub, navArg, navTarget) {
     out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
-               action: 'navTabSub', arg: 'track', arg2: 'medical' });
+               action: 'ldGoto', arg: navArg, arg2: navTarget });
   };
+  var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
+  var medSig  = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medMedsCard'); };
 
   // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
   if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
@@ -28147,7 +28196,7 @@ function getActiveCareSignals() {
     });
     if (overdue.length) {
       var oNames = overdue.map(function(v) { return v.name; });
-      med('vacc-overdue', 'high', 'siren',
+      vaccSig('vacc-overdue', 'high', 'siren',
           overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
           'Tap to reschedule or mark done');
     }
@@ -28157,7 +28206,7 @@ function getActiveCareSignals() {
     if (upNext) {
       var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
       if (daysTo >= 0 && daysTo <= 7) {
-        med('vacc-soon', 'low', 'dot-red',
+        vaccSig('vacc-soon', 'low', 'dot-red',
             daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
             'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
       }
@@ -28168,7 +28217,7 @@ function getActiveCareSignals() {
     });
     if (recentVacc.length) {
       var rvNames = recentVacc.map(function(v) { return v.name; });
-      med('vacc-monitor', 'med', 'syringe',
+      vaccSig('vacc-monitor', 'med', 'syringe',
           (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
           'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
     }
@@ -28178,7 +28227,7 @@ function getActiveCareSignals() {
     });
     if (loggedRecent.length) {
       var until = _offsetDateStr(loggedRecent[0].date, 2);
-      med('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+      vaccSig('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
           'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
     }
   }
@@ -28199,7 +28248,7 @@ function getActiveCareSignals() {
         if (!dayLog || !dayLog[m.name]) missed++;
       }
       if (missed > 0) {
-        med('med-missed-' + m.name, 'high', 'dot-red',
+        medSig('med-missed-' + m.name, 'high', 'dot-red',
             missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
             'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'));
       }
@@ -28208,7 +28257,7 @@ function getActiveCareSignals() {
       var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
       var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
       if (!resolved) {
-        med('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
+        medSig('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
       }
     });
   }
@@ -28222,8 +28271,8 @@ function getActiveCareSignals() {
       if (t.status !== 'active' && t.status !== 'escalated') return;
       var due = ctNextDueTime(t);
       if (isFinite(due) && due < nowMs) {
-        med('ct-overdue-' + (t.id || t.title), 'high', 'bell',
-            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in');
+        push('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in', 'home', 'ctEntryPoint');
       }
     });
   }
@@ -72039,7 +72088,7 @@ function _ldCareAlerts() {
         icon: iconMap[ep.type] || 'siren',
         title: (labelMap[ep.type] || 'Illness') + ' being tracked',
         sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
-        action: 'navTabSub', arg: 'track', arg2: 'medical'
+        action: 'ldGoto', arg: 'home', arg2: ''
       });
     });
   }

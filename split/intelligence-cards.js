@@ -1480,7 +1480,7 @@ function _ldCareAlerts() {
         icon: iconMap[ep.type] || 'siren',
         title: (labelMap[ep.type] || 'Illness') + ' being tracked',
         sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
-        action: 'navTabSub', arg: 'track', arg2: 'medical'
+        action: 'ldGoto', arg: 'home', arg2: ''
       });
     });
   }

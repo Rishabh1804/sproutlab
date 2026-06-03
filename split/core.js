@@ -636,6 +636,22 @@ function init() {
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
     else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
     else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
+    else if (action === 'ldGoto') {
+      // Deep-link from the landing Care pre-empt. arg = tab OR track-sub; arg2 =
+      // scroll-target element id, stashed in _ldPendingScroll and consumed by the
+      // destination right after ITS own scrollTo({top:0}) — so it can't be raced.
+      if (typeof switchTab === 'function') {
+        if (typeof TRACK_SUB_ORDER !== 'undefined' && TRACK_SUB_ORDER.includes(arg)) {
+          switchTab('track');
+          // set the target just before the medical sub-switch so switchTab('track')'s
+          // own (default-sub) consume doesn't fire it early.
+          setTimeout(function() { _ldPendingScroll = arg2 || null; if (typeof switchTrackSub === 'function') switchTrackSub(arg); }, 140);
+        } else {
+          _ldPendingScroll = arg2 || null;
+          switchTab(arg);
+        }
+      }
+    }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -3468,6 +3484,32 @@ function getAlertNavAction(alertKey, alertTitle) {
   return "switchTab('insights');setTimeout(()=>{const el=document.getElementById('insightsAlertsCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},150)";
 }
 
+// One-shot deep-link scroll target (landing Care pre-empt). Consumed in a rAF
+// immediately after a tab / sub-tab's own scrollTo({top:0}) — so the scroll
+// runs AFTER the reset, in the same flow, and can't be raced. (Architect: the
+// pre-empt must land ON the Vit D3 / vaccine / CareTicket card.)
+let _ldPendingScroll = null;
+function _ldConsumePendingScroll() {
+  if (!_ldPendingScroll) return;
+  const _tgt = _ldPendingScroll; _ldPendingScroll = null;
+  // The target card's CONTENT may not be rendered yet when the destination
+  // tab/sub fires this (orderMedicalCards only reorders; the card body fills
+  // elsewhere) — so a single measure reads height 0 and "scrolls" nowhere.
+  // Poll (~1.2s) until it has real height, then scroll the WINDOW (the proven
+  // scroller) to its computed position.
+  let _n = 0;
+  const _go = function() {
+    const _e = document.getElementById(_tgt);
+    if (_e && _e.getBoundingClientRect().height > 4) {
+      const rect = _e.getBoundingClientRect();
+      const y = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 70; // 70 ≈ tab bar + breathing room
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else if (_n++ < 12) {
+      setTimeout(_go, 100);
+    }
+  };
+  requestAnimationFrame(_go);
+}
 function switchTab(name) {
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
@@ -3517,6 +3559,7 @@ function switchTab(name) {
   if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
   if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // ── Card navigation with a breadcrumb trail (PR-O) ──
@@ -3582,6 +3625,7 @@ function switchTrackSub(sub) {
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 function renderTrackSubBar() {
