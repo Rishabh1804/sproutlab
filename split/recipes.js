@@ -7,8 +7,12 @@
 // structured ingredients (in the form the LIVE resolver classifies), a meal
 // slot, an age gate, FOOD_TAX food-groups (for gap-fill scoring + card
 // colour), steps/dos/donts, cuisine, and a per-recipe SOURCE citation —
-// "no assumptions" (WIRING_PLAN §6). COMBO_RECIPES stays as-is and folds
-// into the catalog at render; this is the curated, deep-researched spine.
+// "no assumptions" (WIRING_PLAN §6). This is the curated, deep-researched
+// spine; it is the SOLE source for the catalog render. The legacy
+// COMBO_RECIPES map stays as-is and still powers the combo-checker; folding
+// its uncited, slot-less entries into THIS cited catalog is a deferred
+// follow-up (cipher Edict-V honesty nit, PR #223) — not done here, because
+// they lack the structured slot/age/citation fields the catalog renders.
 //
 // SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
 //   • No honey / added salt / added sugar < 12 m (fruit sweetens).
