@@ -5644,24 +5644,41 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ld-door-primary .ld-door-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); }
 
 /* 3 · Emergency — always-present quick access (rose whisper-fade + outline:
-   calm by default, unmistakable in a panic). Opens the chooser overlay. */
+   calm by default, unmistakable in a panic). The container carries no action;
+   .ld-emergency-main opens the chooser; the call pills are independent tel:
+   links (dial straight through, never open the chooser). */
 .ld-emergency {
-  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
   background-color:var(--surface);
   background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
   border:1.5px solid var(--rose); border-radius:var(--r-2xl);
-  padding:var(--sp-16); min-height:44px;
+  padding:var(--sp-12);
   box-shadow:0 4px 20px var(--shadow);
-  transition:transform var(--ease-fast);
+  display:flex; flex-direction:column; gap:var(--sp-10);
 }
 [data-theme="dark"] .ld-emergency { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
-.ld-emergency:active { transform:scale(0.98); }
-.ld-emergency .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-emergency-main {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:none; padding:var(--sp-4); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+.ld-emergency-main:active { transform:scale(0.98); }
+.ld-emergency-main .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
 .ld-emergency-body { display:flex; flex-direction:column; flex:1; min-width:0; }
 .ld-emergency-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
 .ld-emergency-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
 .ld-emergency-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
 .ld-emergency-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Quick-dial pills — independent tap targets (≥44px), dark-safe rose chip */
+.ld-emergency-calls { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
+.ld-emergency-call {
+  flex:1 1 40%; min-width:130px; min-height:44px;
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-8);
+  background:var(--rose-light); color:var(--tc-rose);
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  text-decoration:none; padding:var(--sp-8) var(--sp-12);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+}
+.ld-emergency-call svg.zi { width:var(--icon-base); height:var(--icon-base); flex-shrink:0; }
 
 /* Emergency chooser overlay (bottom sheet) — mirrors .ob-overlay */
 .ld-em-overlay {
@@ -71960,17 +71977,28 @@ function renderLanding() {
   html += '</div>';
 
   // Emergency — always-present quick access (STUB; live wiring in PR #216).
-  // Calm by default (rose whisper-fade + outline), but unmistakable. Opens a
-  // chooser: Food emergency → Track→Diet→Library; General → Coming soon (the
-  // general-emergency experience is a new concept, design pending).
-  html += '<button class="ld-emergency col-full" data-action="ldEmergency">'
-        +   '<span class="icon icon-rose">' + zi('siren') + '</span>'
-        +   '<span class="ld-emergency-body">'
-        +     '<span class="ld-emergency-label">Emergency</span>'
-        +     '<span class="ld-emergency-sub">Food or general — get help fast</span>'
-        +   '</span>'
-        +   '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
-        + '</button>';
+  // The card body (.ld-emergency-main) opens the chooser; the 108/112 tel:
+  // links are SIBLINGS of that button (not descendants), so a tap dials
+  // straight through and the data-action delegation never opens the chooser —
+  // the surround does nothing either (the container carries no data-action).
+  // Numbers from EMERGENCY_CONTACTS (108 national ambulance / 112 unified).
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary) ? _emReg.ambulancePrimary.number : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+  html += '<div class="ld-emergency col-full">'
+        +   '<button class="ld-emergency-main" data-action="ldEmergency">'
+        +     '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +     '<span class="ld-emergency-body">'
+        +       '<span class="ld-emergency-label">Emergency</span>'
+        +       '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +     '</span>'
+        +     '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        +   '</button>'
+        +   '<div class="ld-emergency-calls">'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>Ambulance · ' + escHtml(ambNum) + '</span></a>'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>Emergency · ' + escHtml(emgNum) + '</span></a>'
+        +   '</div>'
+        + '</div>';
 
   el.innerHTML = html;
   _ldAnimateIn(el);

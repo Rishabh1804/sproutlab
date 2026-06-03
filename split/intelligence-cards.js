@@ -1586,17 +1586,28 @@ function renderLanding() {
   html += '</div>';
 
   // Emergency — always-present quick access (STUB; live wiring in PR #216).
-  // Calm by default (rose whisper-fade + outline), but unmistakable. Opens a
-  // chooser: Food emergency → Track→Diet→Library; General → Coming soon (the
-  // general-emergency experience is a new concept, design pending).
-  html += '<button class="ld-emergency col-full" data-action="ldEmergency">'
-        +   '<span class="icon icon-rose">' + zi('siren') + '</span>'
-        +   '<span class="ld-emergency-body">'
-        +     '<span class="ld-emergency-label">Emergency</span>'
-        +     '<span class="ld-emergency-sub">Food or general — get help fast</span>'
-        +   '</span>'
-        +   '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
-        + '</button>';
+  // The card body (.ld-emergency-main) opens the chooser; the 108/112 tel:
+  // links are SIBLINGS of that button (not descendants), so a tap dials
+  // straight through and the data-action delegation never opens the chooser —
+  // the surround does nothing either (the container carries no data-action).
+  // Numbers from EMERGENCY_CONTACTS (108 national ambulance / 112 unified).
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary) ? _emReg.ambulancePrimary.number : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+  html += '<div class="ld-emergency col-full">'
+        +   '<button class="ld-emergency-main" data-action="ldEmergency">'
+        +     '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +     '<span class="ld-emergency-body">'
+        +       '<span class="ld-emergency-label">Emergency</span>'
+        +       '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +     '</span>'
+        +     '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        +   '</button>'
+        +   '<div class="ld-emergency-calls">'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>Ambulance · ' + escHtml(ambNum) + '</span></a>'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>Emergency · ' + escHtml(emgNum) + '</span></a>'
+        +   '</div>'
+        + '</div>';
 
   el.innerHTML = html;
   _ldAnimateIn(el);
