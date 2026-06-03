@@ -1545,10 +1545,17 @@ function renderLanding() {
     summary = (typeof _tsfGenerateSummary === 'function')
       ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
   }
-  html += '<div class="card ld-glance col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
-  html += '<div class="ld-glance-text">' + escHtml(summary) + '</div>';
+  // 1 · The day's glance, worn as the signature HERO (gradient body + rainbow
+  // stripe, reusing hero-home) — the warmth anchor "home leans on" (DP §72).
+  // No score/number (C2: a number is a verdict, not calm) — just the day's
+  // one-line story in Fraunces, with an honest, prospective empty-state.
+  const heroIcon = (totalCount === 0) ? 'sprout' : 'sparkle';
+  const heroIconTint = (totalCount === 0) ? 'icon-sage' : 'icon-lav';
+  html += '<div class="card card-hero hero-home ld-hero col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
+  html += '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>';
+  html += '<div class="ld-hero-text">' + escHtml(summary) + '</div>';
   if (totalCount === 0) {
-    html += '<button class="ld-glance-action" data-action="toggleQuickLog">Start with breakfast?</button>';
+    html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
   }
   html += '</div>';
 
@@ -1557,15 +1564,20 @@ function renderLanding() {
   html += '<div class="ld-doors col-full">';
   html += '<button class="ld-door ld-door-primary" data-action="toggleQuickLog">'
         +   '<span class="icon icon-sage">' + zi('note') + '</span>'
-        +   '<span class="ld-door-label">Log</span>'
+        +   '<span class="ld-door-body">'
+        +     '<span class="ld-door-label">Log</span>'
+        +     '<span class="ld-door-sub">Feed, nap, diaper &amp; more</span>'
+        +   '</span>'
         + '</button>';
   html += '<button class="ld-door" data-action="switchTab" data-arg="home">'
         +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
         +   '<span class="ld-door-label">Today</span>'
+        +   '<span class="ld-door-sub">Full day</span>'
         + '</button>';
   html += '<button class="ld-door" data-action="ldAsk">'
         +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
         +   '<span class="ld-door-label">Ask</span>'
+        +   '<span class="ld-door-sub">About Ziva</span>'
         + '</button>';
   html += '</div>';
 
