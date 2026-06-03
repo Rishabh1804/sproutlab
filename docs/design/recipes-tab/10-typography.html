@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · Diet → Recipes — S10 TYPOGRAPHY DIRECTIONS (design record)
+  ─────────────────────────────────────────────────────────────────────
+  The parked typography lever, picked up after the watermark/stripe/fade +
+  pill-fade rounds. Decision surface, not a final pick:
+   • Part 1 — four hero-title treatments (A current · B display · C italic
+     warmth · D editorial mixed) on the same recipe, to choose the recipe-
+     name VOICE.
+   • Part 2 — the recipe text hierarchy mapped to the real --fs-* / --lh /
+     --ls tokens (eyebrow→title→why→chips→meta→section header), light + dark.
+  Fonts: Fraunces (opsz + ital axes) for display, Nunito for text — per brief.
+-->
+<html lang="en" data-zoom="default"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../../split/styles.css">
+<style>
+  html,body{background:#cfc6bf;margin:0;}
+  body{font-family:'Nunito',sans-serif;padding:26px;color:var(--text);}
+  h1.pg{font-family:'Fraunces',serif;font-weight:600;font-size:26px;color:#3a322c;margin:0 0 2px;}
+  .pglead{font-size:13px;color:#5f554d;margin:0 0 22px;max-width:760px;}
+  .stage{display:flex;gap:26px;align-items:flex-start;}
+  .col{width:430px;flex:0 0 auto;}
+  .mode{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 10px;color:#4a4038;}
+  .phone{background:#faf6f3;border-radius:22px;padding:18px;box-shadow:0 6px 30px rgba(0,0,0,.14);}
+  .phone[data-theme="dark"]{background:#1a1620;box-shadow:0 6px 30px rgba(0,0,0,.5);}
+  .sect{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--mid);margin:2px 0 10px;letter-spacing:.02em;}
+
+  /* shared hero-snippet shell (type-focused; fade pill language reused) */
+  .snip{position:relative;border-radius:var(--r-xl);background:var(--card-bg);box-shadow:0 2px 12px var(--shadow);padding:16px 18px;margin:0 0 12px;overflow:hidden;}
+  .snip::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ecae7e,#9fcdb5 60%,#a0cce0);}
+  .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--card-bg);background:var(--tc-sage);border-radius:var(--r-full);padding:2px 8px;margin-bottom:9px;}
+  .eyb{display:block;font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--tc-sage);margin-bottom:7px;}
+  .why{font-size:var(--fs-sm);color:var(--mid);line-height:var(--lh-relaxed);margin:7px 0 0;max-width:92%;}
+  .note{font-size:11px;color:var(--light);margin:7px 0 0;font-style:italic;}
+
+  /* A — current */
+  .tA .ttl{font-family:'Fraunces',serif;font-weight:700;font-size:32px;line-height:1.05;letter-spacing:-0.01em;color:var(--text);margin:0;}
+  /* B — display (large optical size, lighter weight, airier) */
+  .tB .ttl{font-family:'Fraunces',serif;font-weight:540;font-size:37px;line-height:1.0;letter-spacing:-0.02em;color:var(--text);margin:0;font-variation-settings:'opsz' 144;}
+  /* C — italic warmth (roman title + Fraunces italic descriptor) */
+  .tC .ttl{font-family:'Fraunces',serif;font-weight:680;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin:0;}
+  .tC .sub{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:18px;color:var(--mid);margin:3px 0 0;}
+  /* D — editorial mixed (Nunito caps kicker + Fraunces title + italic line) */
+  .tD .ttl{font-family:'Fraunces',serif;font-weight:600;font-size:33px;line-height:1.04;letter-spacing:-0.015em;color:var(--text);margin:0;}
+  .tD .sub{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:16px;color:var(--mid);margin:4px 0 0;}
+
+  /* type-scale specimen */
+  .spec{background:var(--card-bg);border-radius:var(--r-xl);box-shadow:0 2px 12px var(--shadow);padding:16px 18px;}
+  .row{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px dashed var(--card-border);}
+  .row:last-child{border-bottom:0;}
+  .lbl{flex:0 0 116px;font-size:10px;font-weight:700;color:var(--light);line-height:1.3;}
+  .lbl b{display:block;color:var(--mid);font-size:10.5px;}
+  .samp{flex:1;min-width:0;}
+  .s-eyb{font-family:'Nunito';font-size:var(--fs-2xs);font-weight:800;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--tc-sage);}
+  .s-sect{font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-xl);color:var(--text);}
+  .s-ttl{font-family:'Fraunces',serif;font-weight:700;font-size:var(--fs-2xl);letter-spacing:-0.01em;color:var(--text);}
+  .s-why{font-family:'Nunito';font-size:var(--fs-sm);font-weight:400;line-height:var(--lh-relaxed);color:var(--mid);}
+  .s-chip{font-family:'Nunito';font-size:var(--fs-xs);font-weight:700;color:var(--text);}
+  .s-meta{font-family:'Nunito';font-size:var(--fs-xs);font-weight:600;color:var(--mid);}
+  .s-meta b{color:var(--text);font-weight:700;}
+</style></head><body>
+<h1 class="pg">Recipe typography — directions</h1>
+<p class="pglead">Two parts: <b>① four hero-title treatments</b> to pick the recipe-name voice, and <b>② the text hierarchy</b> mapped to the real type tokens. Fraunces (display, with optical-size + italic) + Nunito (text), per the brief. Pick a title direction and I'll thread it through the hero + rows.</p>
+
+<div class="stage">
+  <div class="col">
+    <p class="mode">① Hero-title treatments · Light</p>
+
+    <div class="snip tA"><span class="eyb">Recipe of the day</span>
+      <p class="ttl">Veg &amp; Paneer Khichdi</p>
+      <p class="why">Rice-led one-pot — soft grain base, a little carrot, paneer for protein.</p>
+      <p class="note">A · current — Fraunces 700, 32px, tight. Sturdy, confident.</p></div>
+
+    <div class="snip tB"><span class="eyb">Recipe of the day</span>
+      <p class="ttl">Veg &amp; Paneer Khichdi</p>
+      <p class="why">Rice-led one-pot — soft grain base, a little carrot, paneer for protein.</p>
+      <p class="note">B · display — Fraunces 540 at large optical size, 37px. Airier, editorial, higher contrast.</p></div>
+
+    <div class="snip tC"><span class="eyb">Recipe of the day</span>
+      <p class="ttl">Veg &amp; Paneer Khichdi</p>
+      <p class="sub">a warm one-pot for lunch</p>
+      <p class="note">C · italic warmth — roman title + Fraunces italic descriptor. Cozy nursery-journal voice.</p></div>
+
+    <div class="snip tD"><span class="eyb">Recipe of the day</span>
+      <p class="ttl">Veg &amp; Paneer Khichdi</p>
+      <p class="sub">grain-led · gentle on tummies</p>
+      <p class="note">D · editorial mixed — Nunito caps eyebrow + Fraunces 600 title + italic kicker line.</p></div>
+  </div>
+
+  <div class="col">
+    <p class="mode">② Type hierarchy → tokens · Light</p>
+    <div class="spec">
+      <div class="row"><div class="lbl"><b>eyebrow</b>Nunito 800 · 2xs · caps · ls-wide</div><div class="samp"><span class="s-eyb">Recipe of the day</span></div></div>
+      <div class="row"><div class="lbl"><b>section</b>Fraunces 600 · xl</div><div class="samp"><span class="s-sect">Breakfast</span></div></div>
+      <div class="row"><div class="lbl"><b>recipe title</b>Fraunces 700 · 2xl · ls-tight</div><div class="samp"><span class="s-ttl">Ragi Banana Porridge</span></div></div>
+      <div class="row"><div class="lbl"><b>why / body</b>Nunito 400 · sm · lh-relaxed</div><div class="samp"><span class="s-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</span></div></div>
+      <div class="row"><div class="lbl"><b>ingredient chip</b>Nunito 700 · xs</div><div class="samp"><span class="s-chip">Ragi · Banana · Milk</span></div></div>
+      <div class="row"><div class="lbl"><b>meta</b>Nunito 600/700 · xs</div><div class="samp"><span class="s-meta"><b>12 min</b> · <b>7m+</b></span></div></div>
+    </div>
+
+    <p class="mode" style="margin-top:20px;">Hierarchy · Dark</p>
+    <div class="phone" data-theme="dark"><div class="spec" style="box-shadow:none;">
+      <div class="row"><div class="lbl"><b>eyebrow</b>2xs caps</div><div class="samp"><span class="s-eyb">Recipe of the day</span></div></div>
+      <div class="row"><div class="lbl"><b>recipe title</b>Fraunces 700 · 2xl</div><div class="samp"><span class="s-ttl">Ragi Banana Porridge</span></div></div>
+      <div class="row"><div class="lbl"><b>why / body</b>Nunito · sm</div><div class="samp"><span class="s-why">Banana sweetens a ragi porridge — fruit leads, millet gives iron and body.</span></div></div>
+      <div class="row"><div class="lbl"><b>meta</b>xs</div><div class="samp"><span class="s-meta"><b>12 min</b> · <b>7m+</b></span></div></div>
+    </div></div>
+  </div>
+</div>
+</body></html>
