@@ -9,11 +9,16 @@ const COMBOS = [
   ['Almond Banana Mash',   [['banana',100],['almond',12]]],
   ['Veg & Paneer Khichdi', [['rice',60],['carrot',24],['paneer',14]]],
   ['Carrot Moong Mash',    [['carrot',45],['dal',30]]],
-  ['Ragi Banana Porridge', [['banana',50],['millet',30]]],
   ['Oats & Apple',         [['oats',50],['apple',50]]],
   ['Banana Grape Mash',    [['banana',70],['grapes',30]]],
   ['Sweet Potato Bowl',    [['sweetpotato',60],['spinach',25],['peanut',15]]],
-  ['Honey Oats',           [['oats',80],['honey',10]]],
+  // expanded-bank coverage: egg(cooked) · fish(boneless) · chia(soaked) · jaggery(strict)
+  ['Egg & Spinach Mash',   [['egg',50],['spinach',20],['potato',30]]],
+  ['Fish & Rice',          [['fish',40],['rice',35]]],
+  ['Chia Banana',          [['banana',85],['chia',5]]],
+  ['Beetroot Curd',        [['curd',60],['beetroot',30]]],
+  ['Honey Oats (strict)',  [['oats',80],['honey',10]]],
+  ['Jaggery Suji (strict)',[['suji',70],['jaggery',8]]],
 ];
 const SEED = 0;   // "today" for the static render
 
