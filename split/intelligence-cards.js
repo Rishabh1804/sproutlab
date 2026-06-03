@@ -1452,6 +1452,119 @@ function renderInfoMilestoneSleepCorrelation() {
   _setCardPriority('infoMilestoneSleepCard', 'notable');
 }
 
+// ─────────────────────────────────────────
+// LEAN LANDING (app-open surface) — render-first
+// ─────────────────────────────────────────
+// The calm front door: a greeting (reused from #headerFull), one honest
+// "today at a glance" line, and three soft doors. "Calm by default, Care
+// pre-empts the calm" — a live Care signal escalates a loud-rose action card
+// above the calm content (Maren C1). Neutral cream, no domain wash (home-family
+// surfaces take none by design); domain identity rides only on each door's icon.
+// Composition cap: ≤3 elements (Vela C2). renderLanding() stays off the heavy
+// compute path (Kael C3): greeting + age + glance + a cheap Care check only.
+
+// Care pre-empt detector. Stage 1: active illness episodes (real predicate).
+// Stage 2 (Maren C1) extends with overdue/same-day vaccines, due meds (Vit D3),
+// overdue CareTickets, and post-vacc monitoring via the renderRemindersAndAlerts
+// predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
+function _ldCareAlerts() {
+  const out = [];
+  const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
+  if (posture && posture.active && posture.active.length) {
+    const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
+    const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
+    posture.active.forEach(function(ep) {
+      out.push({
+        icon: iconMap[ep.type] || 'siren',
+        title: (labelMap[ep.type] || 'Illness') + ' being tracked',
+        sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
+        action: 'switchTab', arg: 'home'
+      });
+    });
+  }
+  return out;
+}
+
+// Staggered fade-up, gated on Motion with a reduced-motion floor (no CSS
+// pre-hide, so content is visible if JS/Motion is absent — accessible default).
+function _ldAnimateIn(container) {
+  if (!container) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !(window.Motion && window.Motion.animate)) return;
+  const kids = container.children;
+  for (let i = 0; i < kids.length; i++) {
+    window.Motion.animate(kids[i],
+      { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0)'] },
+      { duration: 0.35, delay: i * 0.06, easing: [0.22, 0.61, 0.36, 1] });
+  }
+}
+
+function renderLanding() {
+  // Greeting + age live in the shared #headerFull block. Refresh them.
+  // Stage 2 (Kael C3): swap updateHeader() for a lean greeting-only helper to
+  // keep the cold start light.
+  if (typeof updateHeader === 'function') updateHeader();
+
+  const el = document.getElementById('ldContent');
+  if (!el) return;
+
+  let html = '';
+
+  // 0 · Care pre-empt — calm by default, Care pre-empts the calm (Maren C1).
+  const alerts = _ldCareAlerts();
+  if (alerts.length) {
+    html += '<div class="ld-care col-full">';
+    alerts.forEach(function(a) {
+      html += '<button class="card card-action ld-care-card" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '') + '>'
+            + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
+            + '<span class="ld-care-body">'
+            +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'
+            +   '<span class="ld-care-sub">' + escHtml(a.sub) + '</span>'
+            + '</span>'
+            + '<span class="ld-care-chev">' + zi('arrow-right') + '</span>'
+            + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // 1 · Glance line — neutral, honest empty-state (Vela C2). Reuse the TSF
+  // summary generator and clone its honest-empty pattern (never a bare "No data").
+  const collected = (typeof _tsfCollectEvents === 'function')
+    ? _tsfCollectEvents() : { events: [], noTimeEvents: [] };
+  const totalCount = (collected.events ? collected.events.length : 0)
+                   + (collected.noTimeEvents ? collected.noTimeEvents.length : 0);
+  const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
+  const summary = (typeof _tsfGenerateSummary === 'function')
+    ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  html += '<div class="card ld-glance col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
+  html += '<div class="ld-glance-text">' + escHtml(summary) + '</div>';
+  if (totalCount === 0) {
+    html += '<button class="ld-glance-action" data-action="toggleQuickLog">Start with breakfast?</button>';
+  }
+  html += '</div>';
+
+  // 2 · Three doors — Log (primary) / Today / Ask. Domain identity on the icon
+  // only; the door surfaces stay neutral cream.
+  html += '<div class="ld-doors col-full">';
+  html += '<button class="ld-door ld-door-primary" data-action="toggleQuickLog">'
+        +   '<span class="icon icon-sage">' + zi('note') + '</span>'
+        +   '<span class="ld-door-label">Log</span>'
+        + '</button>';
+  html += '<button class="ld-door" data-action="switchTab" data-arg="home">'
+        +   '<span class="icon icon-lav">' + zi('clock') + '</span>'
+        +   '<span class="ld-door-label">Today</span>'
+        + '</button>';
+  html += '<button class="ld-door" data-action="ldAsk">'
+        +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
+        +   '<span class="ld-door-label">Ask</span>'
+        + '</button>';
+  html += '</div>';
+
+  el.innerHTML = html;
+  _ldAnimateIn(el);
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();

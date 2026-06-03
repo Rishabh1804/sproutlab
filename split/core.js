@@ -634,6 +634,7 @@ function init() {
     else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -3476,9 +3477,10 @@ function switchTab(name) {
   // Auto-scroll tab bar to centre the active tab
   if (activeBtn) scrollTabIntoView(activeBtn);
 
-  // Toggle header: full on Home only
+  // Toggle header: full greeting on the lean Landing (and the dense Home, which
+  // keeps id 'home' = "Today" surface per the id-contract; label is presentation).
   const fullHeader = document.getElementById('headerFull');
-  fullHeader.style.display = name === 'home' ? '' : 'none';
+  fullHeader.style.display = (name === 'home' || name === 'landing') ? '' : 'none';
 
   if (name === 'growth') { renderGrowthStats(); setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (name === 'track') {
@@ -3487,6 +3489,7 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
 }
 

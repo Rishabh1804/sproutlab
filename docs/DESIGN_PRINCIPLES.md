@@ -422,6 +422,7 @@ See ARCHITECTURE_PATTERNS.md §7.1 for the full convention: `{module}{Verb}{Targ
 | `dqp-*` | Diet Quick Picker | Diet tab quick picker pills (home.js) |
 | `mb-*` | Meal Breakdown | Meal breakdown intel card (intelligence.js) |
 | `wg-*` | Welcome Guide | Onboarding guide (core.js) |
+| `ld-*` | Landing | Lean app-open surface — greeting + glance + doors (intelligence-cards.js) |
 
 **Rule:** New features pick a 2–3 letter prefix and use it consistently for all CSS classes and data-action values in that feature. The prefix is registered in this table before writing code.
 
