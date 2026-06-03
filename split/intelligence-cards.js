@@ -1545,15 +1545,19 @@ function renderLanding() {
     summary = (typeof _tsfGenerateSummary === 'function')
       ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
   }
-  // 1 · The day's glance, worn as the signature HERO (gradient body + rainbow
-  // stripe, reusing hero-home) — the warmth anchor "home leans on" (DP §72).
-  // No score/number (C2: a number is a verdict, not calm) — just the day's
-  // one-line story in Fraunces, with an honest, prospective empty-state.
+  // 1 · The day's glance as the signature HERO. Per DP §9 (Recipes design
+  // language, ratified 2026-06-03): typography C — a Nunito structural eyebrow
+  // over the day's story as a Fraunces *italic* "voice" line (italic = voice
+  // only); a 4px de-neoned wavelength warm-wave stripe sweeps over the top
+  // (§9.3/§9.4). No score (C2: warmth, not a verdict).
   const heroIcon = (totalCount === 0) ? 'sprout' : 'sparkle';
   const heroIconTint = (totalCount === 0) ? 'icon-sage' : 'icon-lav';
   html += '<div class="card card-hero hero-home ld-hero col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
-  html += '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>';
-  html += '<div class="ld-hero-text">' + escHtml(summary) + '</div>';
+  html += '<div class="ld-hero-eyebrow">'
+        +   '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>'
+        +   '<span class="ld-hero-label">Today so far</span>'
+        + '</div>';
+  html += '<div class="ld-hero-voice">' + escHtml(summary) + '</div>';
   if (totalCount === 0) {
     html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
   }
@@ -1569,12 +1573,12 @@ function renderLanding() {
         +     '<span class="ld-door-sub">Feed, nap, diaper &amp; more</span>'
         +   '</span>'
         + '</button>';
-  html += '<button class="ld-door" data-action="switchTab" data-arg="home">'
+  html += '<button class="ld-door ld-door-today" data-action="switchTab" data-arg="home">'
         +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
         +   '<span class="ld-door-label">Today</span>'
         +   '<span class="ld-door-sub">Full day</span>'
         + '</button>';
-  html += '<button class="ld-door" data-action="ldAsk">'
+  html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
         +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
         +   '<span class="ld-door-label">Ask</span>'
         +   '<span class="ld-door-sub">About Ziva</span>'
