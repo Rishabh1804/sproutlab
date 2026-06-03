@@ -27,7 +27,7 @@
     --rose:#f2a8b8; --rose-light:#fde8ed; --tc-rose:#9e3e52;
     --amber:#e8b86d; --amber-light:#fef6e8; --tc-amber:#8a6520; --amber-deep:#d4a04a;
     --sky:#a8cfe0; --sky-light:#e8f4fa; --tc-sky:#336580;
-    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4;
+    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4; --tc-indigo:#4a5080;
     --sp-2:2px; --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-10:10px; --sp-12:12px; --sp-16:16px; --sp-20:20px; --sp-24:24px;
     --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem; --fs-base:0.85rem; --fs-md:0.95rem; --fs-lg:1.1rem; --fs-xl:1.35rem;
     --icon-xs:12px; --icon-sm:14px; --icon-base:16px; --icon-md:18px; --icon-lg:22px;
@@ -38,7 +38,7 @@
     --cream:#1a1520; --warm:#221c28; --text:#e8e0ec; --mid:#b0a0b8; --light:#9a8aa2;
     --shadow:rgba(0,0,0,0.30); --surface:#2a2230; --surface-alt:#221c28; --card-bg:#2a2230;
     --sage-light:#1e3028; --rose-light:#3a2030; --amber-light:#352e1e; --sky-light:#1e2838;
-    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0;
+    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0; --tc-indigo:#a0b0e0;
     --harness:#0f0b14;
   }
   html, body { background:var(--harness); }
@@ -91,6 +91,20 @@
   .fp-chip--ok { background:var(--sage-light); color:var(--tc-sage); }
   .fp-chip--never { background:var(--rose-light); color:var(--tc-rose); }
   .fp-chip--nutri { background:var(--sky-light); color:var(--tc-sky); }
+  /* nutrient colour system — tint-fade chips, one per nutrient-domain (see nutrient-colours.html) */
+  .nutri-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-weight:700; font-size:var(--fs-2xs); }
+  .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+  .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+  .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+  .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+  .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+  .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 28%, rgba(155,168,216,0.34)); color:var(--tc-indigo); }
+  [data-theme="dark"] .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+  [data-theme="dark"] .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+  [data-theme="dark"] .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+  [data-theme="dark"] .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+  [data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+  [data-theme="dark"] .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
   .fp-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0 0 var(--sp-8); }
 
   /* footer — single Quick-Act + a deep link (HR-9: no multi-field editing) */
@@ -150,11 +164,11 @@
         <div>
           <div class="fp-sec-h">Key nutrients</div>
           <div class="fp-chips">
-            <span class="fp-chip fp-chip--nutri">Protein</span>
-            <span class="fp-chip fp-chip--nutri">Choline</span>
-            <span class="fp-chip fp-chip--nutri">Vitamin D</span>
-            <span class="fp-chip fp-chip--nutri">Vitamin B12</span>
-            <span class="fp-chip fp-chip--nutri">Iron</span>
+            <span class="nutri-chip nutri-chip--growth">Protein</span>
+            <span class="nutri-chip nutri-chip--brain">Choline</span>
+            <span class="nutri-chip nutri-chip--bones">Vitamin D</span>
+            <span class="nutri-chip nutri-chip--blood">Vitamin B12</span>
+            <span class="nutri-chip nutri-chip--blood">Iron</span>
           </div>
         </div>
         <div>
@@ -204,11 +218,11 @@
         <div>
           <div class="fp-sec-h">Key nutrients</div>
           <div class="fp-chips">
-            <span class="fp-chip fp-chip--nutri">Protein</span>
-            <span class="fp-chip fp-chip--nutri">Choline</span>
-            <span class="fp-chip fp-chip--nutri">Vitamin D</span>
-            <span class="fp-chip fp-chip--nutri">Vitamin B12</span>
-            <span class="fp-chip fp-chip--nutri">Iron</span>
+            <span class="nutri-chip nutri-chip--growth">Protein</span>
+            <span class="nutri-chip nutri-chip--brain">Choline</span>
+            <span class="nutri-chip nutri-chip--bones">Vitamin D</span>
+            <span class="nutri-chip nutri-chip--blood">Vitamin B12</span>
+            <span class="nutri-chip nutri-chip--blood">Iron</span>
           </div>
         </div>
         <div>
