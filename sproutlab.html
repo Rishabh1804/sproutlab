@@ -5643,6 +5643,74 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ld-door-primary .ld-door-body { display:flex; flex-direction:column; gap:var(--sp-2); align-items:flex-start; }
 .ld-door-primary .ld-door-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); }
 
+/* 3 · Emergency — always-present quick access (rose whisper-fade + outline:
+   calm by default, unmistakable in a panic). Opens the chooser overlay. */
+.ld-emergency {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-2xl);
+  padding:var(--sp-16); min-height:44px;
+  box-shadow:0 4px 20px var(--shadow);
+  transition:transform var(--ease-fast);
+}
+[data-theme="dark"] .ld-emergency { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-emergency:active { transform:scale(0.98); }
+.ld-emergency .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-emergency-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-emergency-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.ld-emergency-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-emergency-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-emergency-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* Emergency chooser overlay (bottom sheet) — mirrors .ob-overlay */
+.ld-em-overlay {
+  position:fixed; inset:0; z-index:1010;
+  background:var(--overlay-bg);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; padding:var(--sp-16);
+  transition:opacity var(--ease-med);
+}
+.ld-em-overlay.open { opacity:1; pointer-events:auto; }
+.ld-em-sheet {
+  width:100%; max-width:480px;
+  background:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20);
+  box-shadow:0 8px 32px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-12);
+  transform:translateY(16px); transition:transform var(--ease-slow);
+}
+.ld-em-overlay.open .ld-em-sheet { transform:translateY(0); }
+.ld-em-head { display:flex; align-items:center; justify-content:space-between; }
+.ld-em-title { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-lg); color:var(--tc-rose); }
+.ld-em-title svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-em-close {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); border:none;
+  background:var(--surface-alt); color:var(--mid);
+  font-size:var(--fs-lg); line-height:var(--lh-none); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-em-prompt { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.ld-em-opt {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  padding:var(--sp-16); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+[data-theme="dark"] .ld-em-opt { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-em-opt:active { transform:scale(0.98); }
+.ld-em-opt .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-em-opt-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-em-opt-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-em-opt-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-em-opt-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-em-opt-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+@media (prefers-reduced-motion: reduce) {
+  .ld-em-overlay, .ld-em-sheet { transition:none; }
+}
+
 /* Growth hero — rose to peach (body/physical) */
 .card.card-hero.hero-growth {
   background:linear-gradient(135deg, #fff0f3, var(--peach-light));
@@ -20611,6 +20679,7 @@ function init() {
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
     else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
+    else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -71890,8 +71959,88 @@ function renderLanding() {
         + '</button>';
   html += '</div>';
 
+  // Emergency — always-present quick access (STUB; live wiring in PR #216).
+  // Calm by default (rose whisper-fade + outline), but unmistakable. Opens a
+  // chooser: Food emergency → Track→Diet→Library; General → Coming soon (the
+  // general-emergency experience is a new concept, design pending).
+  html += '<button class="ld-emergency col-full" data-action="ldEmergency">'
+        +   '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +   '<span class="ld-emergency-body">'
+        +     '<span class="ld-emergency-label">Emergency</span>'
+        +     '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +   '</span>'
+        +   '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        + '</button>';
+
   el.innerHTML = html;
   _ldAnimateIn(el);
+}
+
+// Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing
+// dynamic-overlay pattern: build → animate open → lock scroll → close on the
+// × / outside-tap. Two paths: Food (→ Track→Diet→Library, where PR #216 is
+// adding the food emergency room) and General (Coming soon — new concept).
+function openEmergencyChooser() {
+  var existing = document.getElementById('ldEmOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ld-em-overlay';
+  overlay.id = 'ldEmOverlay';
+  document.body.appendChild(overlay);
+
+  overlay.innerHTML =
+    '<div class="ld-em-sheet" role="dialog" aria-label="Emergency help">'
+    + '<div class="ld-em-head">'
+    +   '<span class="ld-em-title">' + zi('siren') + '<span>Emergency</span></span>'
+    +   '<button class="ld-em-close" id="ldEmClose" aria-label="Close">×</button>'
+    + '</div>'
+    + '<p class="ld-em-prompt">What kind of help do you need?</p>'
+    + '<button class="ld-em-opt" id="ldEmFood">'
+    +   '<span class="icon icon-rose">' + zi('bowl') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">Food emergency</span>'
+    +     '<span class="ld-em-opt-sub">Choking, allergic reaction &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '<button class="ld-em-opt" id="ldEmGeneral">'
+    +   '<span class="icon icon-rose">' + zi('shield') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">General emergency</span>'
+    +     '<span class="ld-em-opt-sub">Fall, cut, burn &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#ldEmClose').addEventListener('click', _ldCloseEmergency);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _ldCloseEmergency(); });
+
+  // Food emergency → lead directly to the Library sub-tab (Track→Diet→Library);
+  // PR #216 wires the food emergency room (4 emergencies) there.
+  overlay.querySelector('#ldEmFood').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof switchTab === 'function') switchTab('track');
+    setTimeout(function() {
+      if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+      setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+    }, 60);
+    if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
+  });
+
+  // General emergency → new concept, design pending; stub per HR-8.
+  overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+  });
+}
+
+function _ldCloseEmergency() {
+  var overlay = document.getElementById('ldEmOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
 }
 
 function renderInfo() {

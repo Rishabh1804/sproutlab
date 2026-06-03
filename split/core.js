@@ -635,6 +635,7 @@ function init() {
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
     else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
+    else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |

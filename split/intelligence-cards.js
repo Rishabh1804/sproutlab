@@ -1585,8 +1585,88 @@ function renderLanding() {
         + '</button>';
   html += '</div>';
 
+  // Emergency — always-present quick access (STUB; live wiring in PR #216).
+  // Calm by default (rose whisper-fade + outline), but unmistakable. Opens a
+  // chooser: Food emergency → Track→Diet→Library; General → Coming soon (the
+  // general-emergency experience is a new concept, design pending).
+  html += '<button class="ld-emergency col-full" data-action="ldEmergency">'
+        +   '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +   '<span class="ld-emergency-body">'
+        +     '<span class="ld-emergency-label">Emergency</span>'
+        +     '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +   '</span>'
+        +   '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        + '</button>';
+
   el.innerHTML = html;
   _ldAnimateIn(el);
+}
+
+// Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing
+// dynamic-overlay pattern: build → animate open → lock scroll → close on the
+// × / outside-tap. Two paths: Food (→ Track→Diet→Library, where PR #216 is
+// adding the food emergency room) and General (Coming soon — new concept).
+function openEmergencyChooser() {
+  var existing = document.getElementById('ldEmOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ld-em-overlay';
+  overlay.id = 'ldEmOverlay';
+  document.body.appendChild(overlay);
+
+  overlay.innerHTML =
+    '<div class="ld-em-sheet" role="dialog" aria-label="Emergency help">'
+    + '<div class="ld-em-head">'
+    +   '<span class="ld-em-title">' + zi('siren') + '<span>Emergency</span></span>'
+    +   '<button class="ld-em-close" id="ldEmClose" aria-label="Close">×</button>'
+    + '</div>'
+    + '<p class="ld-em-prompt">What kind of help do you need?</p>'
+    + '<button class="ld-em-opt" id="ldEmFood">'
+    +   '<span class="icon icon-rose">' + zi('bowl') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">Food emergency</span>'
+    +     '<span class="ld-em-opt-sub">Choking, allergic reaction &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '<button class="ld-em-opt" id="ldEmGeneral">'
+    +   '<span class="icon icon-rose">' + zi('shield') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">General emergency</span>'
+    +     '<span class="ld-em-opt-sub">Fall, cut, burn &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#ldEmClose').addEventListener('click', _ldCloseEmergency);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _ldCloseEmergency(); });
+
+  // Food emergency → lead directly to the Library sub-tab (Track→Diet→Library);
+  // PR #216 wires the food emergency room (4 emergencies) there.
+  overlay.querySelector('#ldEmFood').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof switchTab === 'function') switchTab('track');
+    setTimeout(function() {
+      if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+      setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+    }, 60);
+    if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
+  });
+
+  // General emergency → new concept, design pending; stub per HR-8.
+  overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+  });
+}
+
+function _ldCloseEmergency() {
+  var overlay = document.getElementById('ldEmOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
 }
 
 function renderInfo() {
