@@ -4853,6 +4853,15 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   -webkit-text-fill-color:transparent; color:transparent;
   animation:ld-wave 4.4s ease-in-out infinite;
 }
+/* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
+   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
+   wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
+[data-theme="dark"] .footer-name {
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--tc-rose), var(--tc-caution), var(--tc-amber), var(--tc-sage), var(--tc-sky), var(--tc-indigo), var(--tc-lav));
+}
 .footer-heart {
   width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
   transform-origin:center; animation:footer-beat 2.4s ease-in-out infinite;
@@ -5566,6 +5575,9 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ld-care-card .icon {
   width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md);
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* calm "being-tracked" chip (matches .icon-rose); .ld-care-hot lifts to the
+     louder solid --rose so action-needed reads hotter than tracked (Vela V-V-4) */
+  background:var(--rose-light); color:var(--tc-rose);
 }
 .ld-care-body { display:flex; flex-direction:column; flex:1; min-width:0; }
 .ld-care-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }

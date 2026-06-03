@@ -5214,7 +5214,7 @@ function toggleDarkMode() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = !isDark;
   // Redraw charts with updated colours
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (currentTab === 'growth') { setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (currentTab === 'sleep') { setTimeout(drawSleepChart, 60); }
   if (currentTab === 'poop') { setTimeout(drawPoopChart, 60); }
