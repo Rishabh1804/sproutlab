@@ -3849,17 +3849,20 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
   }
 })();
 
-// ── Safe Exit — two-step: go home first, then confirm ──
+// ── Safe Exit — two-step: go to the front door first, then confirm ──
+// Post-landing-flip the front door is `landing`, not the dense `home` ("Today")
+// surface — an exit gesture should return to the calm landing, not pull the
+// parent into the cockpit (Cipher Edict V seam-catch, PR #219).
 function handleSafeExit() {
   const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
-  if (currentTab !== 'home') {
-    // Step 1: go to Home first
-    switchTab('home');
+  if (currentTab !== 'landing') {
+    // Step 1: go to the landing (front door) first
+    switchTab('landing');
     return;
   }
 
-  // Step 2: already on Home — confirm exit
+  // Step 2: already on the landing — confirm exit
   confirmAction(zi('check') + ' Exit dashboard?\n\nYour data will be auto-saved before closing.', () => {
     // Force autosave to the older slot
     forceAutosave();
