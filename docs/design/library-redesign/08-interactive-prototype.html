@@ -96,6 +96,8 @@
   .lib-group:not(.open) .lib-shelf-row { display:none; }
   .lib-group.open .lib-shelf-row { animation:shelfIn var(--ease-med); }
   @keyframes shelfIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .wing-in { animation:fadeUp var(--ease-med); }
 
   /* book row */
   .lib-book-wrap { display:flex; flex-direction:column; }
@@ -221,7 +223,7 @@
 </svg>
 
 <div class="ctrl">
-  <span class="ctrl-title">Diet → Library · living prototype</span>
+  <span class="ctrl-title">Diet → Library · swipe / drag ← → between wings</span>
   <button class="theme-btn" data-action="toggleTheme"><svg class="zi" id="themeIcon"><use href="#zi-moon"/></svg><span id="themeLabel">Dark</span></button>
 </div>
 
@@ -458,11 +460,7 @@
     } else if(a==='toggleGroup'){
       t.closest('.lib-group').classList.toggle('open');
     } else if(a==='switchWing'){
-      document.querySelectorAll('.lib-wing').forEach(function(x){ x.classList.remove('lib-wing--active'); });
-      t.classList.add('lib-wing--active');
-      var wing = t.getAttribute('data-wing');
-      document.getElementById('wing-browse').classList.toggle('hidden', wing!=='browse');
-      document.getElementById('wing-guides').classList.toggle('hidden', wing!=='guides');
+      setWing(t.getAttribute('data-wing'));
     } else if(a==='toggleTheme'){
       var html = document.documentElement;
       var dark = html.getAttribute('data-theme')==='dark';
@@ -474,6 +472,51 @@
     } else if(a==='closeEmergency'){
       if(e.target.id==='deck' || e.target.classList.contains('deck-close')) document.getElementById('deck').classList.remove('open');
     }
+  });
+
+  // ── wing navigation (shared by the toggle + swipe) ──
+  var WINGS = ['browse','guides'];
+  function setWing(wing){
+    document.querySelectorAll('.lib-wing').forEach(function(x){ x.classList.toggle('lib-wing--active', x.getAttribute('data-wing')===wing); });
+    var br = document.getElementById('wing-browse'), gu = document.getElementById('wing-guides');
+    br.classList.toggle('hidden', wing!=='browse');
+    gu.classList.toggle('hidden', wing!=='guides');
+    // re-trigger the fadeUp on the wing now shown (matches the app's tab-change feel)
+    var shown = wing==='browse' ? br : gu;
+    shown.classList.remove('wing-in'); void shown.offsetWidth; shown.classList.add('wing-in');
+  }
+  function currentWing(){ return document.getElementById('wing-guides').classList.contains('hidden') ? 'browse' : 'guides'; }
+
+  // ── swipe between wings — the app's handleSwipe rules (core.js):
+  //    horizontal must dominate (|dx|>=60 AND |dy| <= 0.7*|dx|), no swipe while an
+  //    overlay is open or the gesture starts on an input / horizontally-scrollable
+  //    element, clamp at the ends (no wrap). Pointer events so mouse-drag works too. ──
+  var sx=0, sy=0, armed=false;
+  var phone = document.getElementById('phone');
+  function scrollableX(node){
+    for(var el=node; el && el!==phone.parentNode; el=el.parentElement){
+      if(el.scrollWidth > el.clientWidth + 2){
+        var ox = getComputedStyle(el).overflowX;
+        if(ox!=='hidden' && ox!=='visible') return true;
+      }
+    }
+    return false;
+  }
+  phone.addEventListener('pointerdown', function(e){
+    sx=e.screenX; sy=e.screenY; armed=true;
+    var tag = e.target.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA') armed=false;          // guard: inputs
+    if(scrollableX(e.target)) armed=false;                       // guard: horizontal scroller
+  });
+  phone.addEventListener('pointerup', function(e){
+    if(!armed) return; armed=false;
+    if(document.getElementById('deck').classList.contains('open')) return;  // guard: overlay open
+    var dx=e.screenX-sx, dy=e.screenY-sy;
+    if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)*0.7) return;        // horizontal-dominant rule
+    var i = WINGS.indexOf(currentWing());
+    if(dx < 0 && i < WINGS.length-1) setWing(WINGS[i+1]);                   // swipe left → next wing
+    else if(dx > 0 && i > 0) setWing(WINGS[i-1]);                           // swipe right → prev wing
+    // else: at an edge — clamp (no wrap)
   });
 })();
 </script>
