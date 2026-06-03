@@ -3362,7 +3362,7 @@ function matchSuggestionsAfterSave(dateStr) {
     dayData.adoptionRate = adoptedCount / dayData.items.length;
     save(KEYS.suggestions, _suggestionsData);
     // Refresh Home card if visible
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'home') renderHomeSuggestions();
   }
 }

@@ -1755,7 +1755,7 @@ function undoLastQL() {
     t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'diet') { initFeeding(); renderDietStats(); }
     if (curTab === 'poop') { renderPoop(); }
     if (curTab === 'sleep') { renderSleep(); }
@@ -2119,7 +2119,7 @@ function qlFeedSkipMeal() {
     feedingData = f;
     if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
     if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-    var curTab2 = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+    var curTab2 = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
     if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
     if (curTab2 === 'home') renderHome();
   };
@@ -2132,7 +2132,7 @@ function qlFeedSkipMeal() {
   // Skip toggles so a subsequent tap on the now-stale legacy Skip button
   // doesn't silently UNSKIP the meal we just skipped via FOB.
   if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-  var curTab = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+  var curTab = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
   if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -2267,7 +2267,7 @@ function saveQLFeed() {
   matchSuggestionsAfterSave(dateStr);
 
   // Refresh if on diet tab or home
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'diet') { initFeeding(); renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -2304,7 +2304,7 @@ function saveQLSleep() {
   var sleepToastMsg = zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlInsight ? ' \u00b7 ' + qlInsight : '');
   showQLToast(sleepToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -2341,7 +2341,7 @@ function saveQLNap() {
   var napToastMsg = zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlNapInsight ? ' \u00b7 ' + qlNapInsight : '');
   showQLToast(napToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -2378,7 +2378,7 @@ function saveQLPoop() {
   var poopToastMsg = zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlPoopIns ? ' \u00b7 ' + qlPoopIns : '');
   showQLToast(poopToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
   if (curTab === 'home') renderHome();
 }

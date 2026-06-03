@@ -23503,6 +23503,14 @@ function getTabAvatarFull(tab) {
 // TABS
 // ─────────────────────────────────────────
 const TAB_ORDER = ['home','growth','track','insights','history','info'];
+// PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
+// = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
+// on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
+// post-log/undo re-render guards, handleSafeExit, essential-mode re-render —
+// MUST iterate PANEL_IDS; nav-ORDER sites (swipe index, button highlight,
+// keyboard nav) keep TAB_ORDER. (Governor K-1; deduped so it is correct both
+// pre- and post-flip.)
+const PANEL_IDS = [...new Set([...TAB_ORDER, 'home'])];
 const TRACK_SUB_ORDER = ['diet','sleep','poop','medical','milestones'];
 const TRACK_SUB_CONFIG = [
   { key:'diet', icon:zi('bowl'), label:'Diet' },
@@ -23882,7 +23890,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
 
 // ── Safe Exit — two-step: go home first, then confirm ──
 function handleSafeExit() {
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
   if (currentTab !== 'home') {
     // Step 1: go to Home first
@@ -25146,7 +25154,7 @@ function toggleEssentialMode() {
     localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (on && (currentTab === 'insights' || currentTab === 'info')) {
     switchTab('home');
   }
@@ -61659,7 +61667,7 @@ function matchSuggestionsAfterSave(dateStr) {
     dayData.adoptionRate = adoptedCount / dayData.items.length;
     save(KEYS.suggestions, _suggestionsData);
     // Refresh Home card if visible
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'home') renderHomeSuggestions();
   }
 }
@@ -66649,7 +66657,7 @@ function undoLastQL() {
     t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'diet') { initFeeding(); renderDietStats(); }
     if (curTab === 'poop') { renderPoop(); }
     if (curTab === 'sleep') { renderSleep(); }
@@ -67013,7 +67021,7 @@ function qlFeedSkipMeal() {
     feedingData = f;
     if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
     if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-    var curTab2 = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+    var curTab2 = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
     if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
     if (curTab2 === 'home') renderHome();
   };
@@ -67026,7 +67034,7 @@ function qlFeedSkipMeal() {
   // Skip toggles so a subsequent tap on the now-stale legacy Skip button
   // doesn't silently UNSKIP the meal we just skipped via FOB.
   if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-  var curTab = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+  var curTab = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
   if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -67161,7 +67169,7 @@ function saveQLFeed() {
   matchSuggestionsAfterSave(dateStr);
 
   // Refresh if on diet tab or home
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'diet') { initFeeding(); renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -67198,7 +67206,7 @@ function saveQLSleep() {
   var sleepToastMsg = zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlInsight ? ' \u00b7 ' + qlInsight : '');
   showQLToast(sleepToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -67235,7 +67243,7 @@ function saveQLNap() {
   var napToastMsg = zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlNapInsight ? ' \u00b7 ' + qlNapInsight : '');
   showQLToast(napToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -67272,7 +67280,7 @@ function saveQLPoop() {
   var poopToastMsg = zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlPoopIns ? ' \u00b7 ' + qlPoopIns : '');
   showQLToast(poopToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
   if (curTab === 'home') renderHome();
 }
@@ -76332,11 +76340,11 @@ function _syncGetGlobal(name) {
 // 'track:<sub>' | 'history' | 'insights' | 'info' | null. Mirrors the
 // idiom at intelligence.js:10773 + core.js:2620 (track sub-tab dispatch).
 function _syncReadActiveTab() {
-  if (typeof TAB_ORDER === 'undefined' || typeof document === 'undefined') return null;
+  if (typeof PANEL_IDS === 'undefined' || typeof document === 'undefined') return null;
   var top = null;
-  for (var i = 0; i < TAB_ORDER.length; i++) {
-    var el = document.getElementById('tab-' + TAB_ORDER[i]);
-    if (el && el.classList.contains('active')) { top = TAB_ORDER[i]; break; }
+  for (var i = 0; i < PANEL_IDS.length; i++) {
+    var el = document.getElementById('tab-' + PANEL_IDS[i]);
+    if (el && el.classList.contains('active')) { top = PANEL_IDS[i]; break; }
   }
   if (!top) return null;
   if (top !== 'track') return top;

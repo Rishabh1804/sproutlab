@@ -3403,6 +3403,14 @@ function getTabAvatarFull(tab) {
 // TABS
 // ─────────────────────────────────────────
 const TAB_ORDER = ['home','growth','track','insights','history','info'];
+// PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
+// = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
+// on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
+// post-log/undo re-render guards, handleSafeExit, essential-mode re-render —
+// MUST iterate PANEL_IDS; nav-ORDER sites (swipe index, button highlight,
+// keyboard nav) keep TAB_ORDER. (Governor K-1; deduped so it is correct both
+// pre- and post-flip.)
+const PANEL_IDS = [...new Set([...TAB_ORDER, 'home'])];
 const TRACK_SUB_ORDER = ['diet','sleep','poop','medical','milestones'];
 const TRACK_SUB_CONFIG = [
   { key:'diet', icon:zi('bowl'), label:'Diet' },
@@ -3782,7 +3790,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
 
 // ── Safe Exit — two-step: go home first, then confirm ──
 function handleSafeExit() {
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
   if (currentTab !== 'home') {
     // Step 1: go to Home first
@@ -5046,7 +5054,7 @@ function toggleEssentialMode() {
     localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (on && (currentTab === 'insights' || currentTab === 'info')) {
     switchTab('home');
   }
