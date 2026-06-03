@@ -6,6 +6,7 @@
   living-library INTERACTIONS, not just look:
     • tap a book → expand-in-place DETAIL (why · safe forms · the never-cross
       floor · journey · "open full breakdown in Info") — accordion (one at a time)
+    • Browse-foods SHELVES are collapsible, all closed by default (tap a header)
     • the two WINGS toggle (Browse foods / Safety guides)
     • LIGHT/DARK toggle (top-right)
     • Emergency entry → the EMERGENCY DECK overlay (4 never-cross floors,
@@ -81,14 +82,20 @@
 
   /* group header */
   .lib-group { margin-bottom:var(--sp-16); }
-  .lib-group-label { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug); margin:var(--sp-12) 0 var(--sp-10); padding-left:var(--sp-4); }
+  .lib-group-label { display:flex; align-items:center; gap:var(--sp-8); width:100%; border:none; background:transparent; cursor:pointer; text-align:left; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug); margin:var(--sp-12) 0 var(--sp-10); padding:var(--sp-4); min-height:36px; }
   .lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
   .lib-group-count { margin-left:auto; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+  .lib-group-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+  .lib-group-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-group.open .lib-group-chev { transform:rotate(90deg); }
   .lib-group--encourage   .lib-group-label { color:var(--tc-sage); }
   .lib-group--conditional .lib-group-label { color:var(--tc-amber); }
   .lib-group--warn        .lib-group-label { color:var(--tc-rose); }
   .lib-group--inform      .lib-group-label { color:var(--tc-sky); }
   .lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+  .lib-group:not(.open) .lib-shelf-row { display:none; }
+  .lib-group.open .lib-shelf-row { animation:shelfIn var(--ease-med); }
+  @keyframes shelfIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
 
   /* book row */
   .lib-book-wrap { display:flex; flex-direction:column; }
@@ -224,7 +231,7 @@
   <div id="wing-browse">
 
     <div class="lib-group lib-group--encourage">
-      <div class="lib-group-label"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early<span class="lib-group-count">5</span></div>
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early<span class="lib-group-count">5</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
       <div class="lib-shelf-row">
 
         <div class="lib-book-wrap">
@@ -284,7 +291,7 @@
     </div>
 
     <div class="lib-group lib-group--conditional">
-      <div class="lib-group-label"><svg class="zi"><use href="#zi-clock"/></svg>Right time, right form<span class="lib-group-count">2</span></div>
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-clock"/></svg>Right time, right form<span class="lib-group-count">2</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
       <div class="lib-shelf-row">
 
         <div class="lib-book-wrap">
@@ -311,7 +318,7 @@
     </div>
 
     <div class="lib-group lib-group--warn">
-      <div class="lib-group-label"><svg class="zi"><use href="#zi-warn"/></svg>Wait — and here's why<span class="lib-group-count">2</span></div>
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-warn"/></svg>Wait — and here's why<span class="lib-group-count">2</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
       <div class="lib-shelf-row">
 
         <div class="lib-book-wrap">
@@ -336,7 +343,7 @@
     </div>
 
     <div class="lib-group lib-group--inform">
-      <div class="lib-group-label"><svg class="zi"><use href="#zi-info"/></svg>Good to know<span class="lib-group-count">1</span></div>
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-info"/></svg>Good to know<span class="lib-group-count">1</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
       <div class="lib-shelf-row">
         <div class="lib-book-wrap">
           <button class="lib-book lib-book--inform dt-dairy" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Plant milks</span><span class="lib-book-voice">mild &amp; plant-based</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-info"/></svg>Not a substitute under 1</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
@@ -404,6 +411,8 @@
       document.querySelectorAll('.lib-detail.open').forEach(function(x){ x.classList.remove('open'); });
       document.querySelectorAll('.lib-book.expanded').forEach(function(x){ x.classList.remove('expanded'); });
       if(!isOpen){ d.classList.add('open'); t.classList.add('expanded'); }
+    } else if(a==='toggleGroup'){
+      t.closest('.lib-group').classList.toggle('open');
     } else if(a==='switchWing'){
       document.querySelectorAll('.lib-wing').forEach(function(x){ x.classList.remove('lib-wing--active'); });
       t.classList.add('lib-wing--active');
