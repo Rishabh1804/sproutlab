@@ -4835,7 +4835,33 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chevron-open { transform:rotate(180deg); }
 
 /* Footer text */
-.footer-text-style { font-size:var(--fs-sm); color:var(--light); letter-spacing:var(--ls-wide); }
+/* Footer credit — special treatment now that it sits front-and-centre on the
+   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
+   italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
+.app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
+.footer-text-style {
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--light); letter-spacing:var(--ls-wide);
+}
+.footer-name {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:700;
+  background:linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+}
+.footer-heart {
+  width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
+  transform-origin:center; animation:footer-beat 2.4s ease-in-out infinite;
+}
+@keyframes footer-beat {
+  0%, 30%, 100% { transform:scale(1); }
+  8%  { transform:scale(1.18); }
+  16% { transform:scale(1); }
+  22% { transform:scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) { .footer-heart { animation:none; } }
 
 /* Vitals expanded inner divider */
 .vitals-expanded-inner { border-top:1px solid var(--border-subtle); margin-top:var(--sp-12); padding-top:var(--sp-12); }
@@ -13553,8 +13579,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- FOOTER -->
 
-  <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva <svg class="zi"><use href="#zi-heart"/></svg></div>
+  <div class="app-footer">
+    <div class="footer-text footer-text-style">
+      <span>Built for</span>
+      <span class="footer-name">Ziva</span>
+      <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
+    </div>
   </div>
 
 </div><!-- /app -->
