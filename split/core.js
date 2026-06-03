@@ -1443,15 +1443,29 @@ function init() {
   // set foodDate default
   document.getElementById('foodDate').value = today();
 
-  // Restore last active tab on refresh
-  const savedTab = localStorage.getItem('ziva_active_tab');
-  if (savedTab && savedTab !== 'home') {
-    if (TAB_ORDER.includes(savedTab)) {
-      switchTab(savedTab);
-    } else if (TRACK_SUB_ORDER.includes(savedTab)) {
-      // Old saved domain tab → redirect to Track with that sub-tab
-      switchTab(savedTab); // switchTab auto-redirects domain names to track
+  // ── Stage-2 default flip: 'landing' is the new default-open screen ──
+  // One-shot migration of pre-flip users (saved 'home' = the OLD default) →
+  // landing. Flag-guarded: NOT idempotent-by-construction (there is no old key
+  // to delete), so without the flag a post-flip parent who deliberately chose
+  // "Today" (writes ziva_active_tab='home') would be pulled back to landing on
+  // every boot (Governor K-2). Runs BEFORE the restore read (K-3).
+  try {
+    if (localStorage.getItem('ziva_landing_migrated') === null) {
+      const at0 = localStorage.getItem('ziva_active_tab');
+      if (at0 === null || at0 === 'home') localStorage.setItem('ziva_active_tab', 'landing');
+      localStorage.setItem('ziva_landing_migrated', '1');
     }
+  } catch (e) { /* localStorage unavailable; the template's default landing panel stands */ }
+
+  // Restore last active tab on refresh. 'landing' is the default panel; 'home'
+  // (= "Today") is a door-reached panel that is still legitimately restorable
+  // (PANEL_IDS, not TAB_ORDER). switchTab('landing') renders the default case
+  // (the template marks the panel .active but renderLanding only runs via switchTab).
+  const savedTab = localStorage.getItem('ziva_active_tab');
+  if (savedTab && savedTab !== 'landing' && (PANEL_IDS.includes(savedTab) || TRACK_SUB_ORDER.includes(savedTab))) {
+    switchTab(savedTab); // switchTab auto-redirects domain names to track
+  } else {
+    switchTab('landing');
   }
 
   // Check if data was lost and autosave is available
@@ -3402,7 +3416,7 @@ function getTabAvatarFull(tab) {
 
 // TABS
 // ─────────────────────────────────────────
-const TAB_ORDER = ['home','growth','track','insights','history','info'];
+const TAB_ORDER = ['landing','growth','track','insights','history','info'];
 // PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
 // = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
 // on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
@@ -3422,11 +3436,13 @@ const TRACK_SUB_CONFIG = [
 let _activeTrackSub = localStorage.getItem('ziva_track_sub') || 'diet';
 
 function homeFabAction() {
-  const currentTab = localStorage.getItem('ziva_active_tab') || 'home';
-  if (currentTab === 'home') {
+  // Post-flip "go home" returns to the lean landing (the new front door), not
+  // the dense "Today" surface.
+  const currentTab = localStorage.getItem('ziva_active_tab') || 'landing';
+  if (currentTab === 'landing') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    switchTab('home');
+    switchTab('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -3498,6 +3514,7 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
   if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
 }

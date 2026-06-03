@@ -5564,15 +5564,6 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    ───────────────────────────────────────── */
 #ldContent { display:flex; flex-direction:column; gap:var(--sp-16); }
 
-/* TEMP Stage-1 preview link — removed when the landing becomes default (Stage 2) */
-.ld-preview-link {
-  display:flex; align-items:center; justify-content:center; gap:var(--sp-8);
-  font-family:'Nunito', sans-serif; font-weight:600; font-size:var(--fs-sm);
-  color:var(--tc-lav); background:var(--lav-light);
-  border:1.5px dashed var(--lavender); cursor:pointer; min-height:44px;
-}
-.ld-preview-chev { font-size:var(--fs-md); line-height:var(--lh-none); }
-
 /* 0 · Care pre-empt — loud-rose action cards (reuse .card.card-action), persistent */
 .ld-care { display:flex; flex-direction:column; gap:var(--sp-12); }
 .ld-care-card {
@@ -11255,7 +11246,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="home" aria-label="Home tab">
+    <button class="tab-btn active" data-tab="landing" aria-label="Home tab">
       <span class="tab-icon"><svg class="zi"><use href="#zi-lotus"/></svg></span><span class="tab-label">Home</span>
     </button>
     <button class="tab-btn" data-tab="growth" aria-label="Growth tab">
@@ -11312,22 +11303,17 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
-  <!-- ══════════════ LANDING (lean app-open surface, render-first) ══════════════ -->
-  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors. -->
-  <div class="tab-panel" id="tab-landing">
+  <!-- ══════════════ LANDING (lean app-open surface — the default-open screen) ══════════════ -->
+  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors + emergency. -->
+  <div class="tab-panel active" id="tab-landing">
     <div class="grid">
       <div id="ldContent" class="col-full"></div>
     </div>
   </div>
 
-  <!-- ══════════════ TAB 1: HOME ══════════════ -->
-  <div class="tab-panel active" id="tab-home">
+  <!-- ══════════════ "TODAY" (the dense dashboard; id stays 'home' per the contract) ══════════════ -->
+  <div class="tab-panel" id="tab-home">
     <div class="grid">
-
-      <!-- TEMP STAGE-1 PREVIEW — remove when the landing becomes default (Stage 2) -->
-      <button class="card col-full ld-preview-link" data-action="switchTab" data-arg="landing">
-        Preview new landing <span class="ld-preview-chev">&rsaquo;</span>
-      </button>
 
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
       <div class="card col-full card-hero welcome-guide" id="welcomeGuide" style="display:none;">
@@ -21546,15 +21532,29 @@ function init() {
   // set foodDate default
   document.getElementById('foodDate').value = today();
 
-  // Restore last active tab on refresh
-  const savedTab = localStorage.getItem('ziva_active_tab');
-  if (savedTab && savedTab !== 'home') {
-    if (TAB_ORDER.includes(savedTab)) {
-      switchTab(savedTab);
-    } else if (TRACK_SUB_ORDER.includes(savedTab)) {
-      // Old saved domain tab → redirect to Track with that sub-tab
-      switchTab(savedTab); // switchTab auto-redirects domain names to track
+  // ── Stage-2 default flip: 'landing' is the new default-open screen ──
+  // One-shot migration of pre-flip users (saved 'home' = the OLD default) →
+  // landing. Flag-guarded: NOT idempotent-by-construction (there is no old key
+  // to delete), so without the flag a post-flip parent who deliberately chose
+  // "Today" (writes ziva_active_tab='home') would be pulled back to landing on
+  // every boot (Governor K-2). Runs BEFORE the restore read (K-3).
+  try {
+    if (localStorage.getItem('ziva_landing_migrated') === null) {
+      const at0 = localStorage.getItem('ziva_active_tab');
+      if (at0 === null || at0 === 'home') localStorage.setItem('ziva_active_tab', 'landing');
+      localStorage.setItem('ziva_landing_migrated', '1');
     }
+  } catch (e) { /* localStorage unavailable; the template's default landing panel stands */ }
+
+  // Restore last active tab on refresh. 'landing' is the default panel; 'home'
+  // (= "Today") is a door-reached panel that is still legitimately restorable
+  // (PANEL_IDS, not TAB_ORDER). switchTab('landing') renders the default case
+  // (the template marks the panel .active but renderLanding only runs via switchTab).
+  const savedTab = localStorage.getItem('ziva_active_tab');
+  if (savedTab && savedTab !== 'landing' && (PANEL_IDS.includes(savedTab) || TRACK_SUB_ORDER.includes(savedTab))) {
+    switchTab(savedTab); // switchTab auto-redirects domain names to track
+  } else {
+    switchTab('landing');
   }
 
   // Check if data was lost and autosave is available
@@ -23505,7 +23505,7 @@ function getTabAvatarFull(tab) {
 
 // TABS
 // ─────────────────────────────────────────
-const TAB_ORDER = ['home','growth','track','insights','history','info'];
+const TAB_ORDER = ['landing','growth','track','insights','history','info'];
 // PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
 // = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
 // on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
@@ -23525,11 +23525,13 @@ const TRACK_SUB_CONFIG = [
 let _activeTrackSub = localStorage.getItem('ziva_track_sub') || 'diet';
 
 function homeFabAction() {
-  const currentTab = localStorage.getItem('ziva_active_tab') || 'home';
-  if (currentTab === 'home') {
+  // Post-flip "go home" returns to the lean landing (the new front door), not
+  // the dense "Today" surface.
+  const currentTab = localStorage.getItem('ziva_active_tab') || 'landing';
+  if (currentTab === 'landing') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    switchTab('home');
+    switchTab('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -23601,6 +23603,7 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
   if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
 }

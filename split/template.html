@@ -164,7 +164,7 @@
 
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="home" aria-label="Home tab">
+    <button class="tab-btn active" data-tab="landing" aria-label="Home tab">
       <span class="tab-icon"><svg class="zi"><use href="#zi-lotus"/></svg></span><span class="tab-label">Home</span>
     </button>
     <button class="tab-btn" data-tab="growth" aria-label="Growth tab">
@@ -221,22 +221,17 @@
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
-  <!-- ══════════════ LANDING (lean app-open surface, render-first) ══════════════ -->
-  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors. -->
-  <div class="tab-panel" id="tab-landing">
+  <!-- ══════════════ LANDING (lean app-open surface — the default-open screen) ══════════════ -->
+  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors + emergency. -->
+  <div class="tab-panel active" id="tab-landing">
     <div class="grid">
       <div id="ldContent" class="col-full"></div>
     </div>
   </div>
 
-  <!-- ══════════════ TAB 1: HOME ══════════════ -->
-  <div class="tab-panel active" id="tab-home">
+  <!-- ══════════════ "TODAY" (the dense dashboard; id stays 'home' per the contract) ══════════════ -->
+  <div class="tab-panel" id="tab-home">
     <div class="grid">
-
-      <!-- TEMP STAGE-1 PREVIEW — remove when the landing becomes default (Stage 2) -->
-      <button class="card col-full ld-preview-link" data-action="switchTab" data-arg="landing">
-        Preview new landing <span class="ld-preview-chev">&rsaquo;</span>
-      </button>
 
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
       <div class="card col-full card-hero welcome-guide" id="welcomeGuide" style="display:none;">

@@ -5557,15 +5557,6 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    ───────────────────────────────────────── */
 #ldContent { display:flex; flex-direction:column; gap:var(--sp-16); }
 
-/* TEMP Stage-1 preview link — removed when the landing becomes default (Stage 2) */
-.ld-preview-link {
-  display:flex; align-items:center; justify-content:center; gap:var(--sp-8);
-  font-family:'Nunito', sans-serif; font-weight:600; font-size:var(--fs-sm);
-  color:var(--tc-lav); background:var(--lav-light);
-  border:1.5px dashed var(--lavender); cursor:pointer; min-height:44px;
-}
-.ld-preview-chev { font-size:var(--fs-md); line-height:var(--lh-none); }
-
 /* 0 · Care pre-empt — loud-rose action cards (reuse .card.card-action), persistent */
 .ld-care { display:flex; flex-direction:column; gap:var(--sp-12); }
 .ld-care-card {
