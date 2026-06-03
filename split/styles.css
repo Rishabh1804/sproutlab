@@ -1039,7 +1039,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
 
 /* ── Dark mode: Vaccination Upgrade ── */
-[data-theme="dark"] .vc-complete-card { background: transparent; }
+[data-theme="dark"] .vc-complete-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--sp-12) var(--sp-16); }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
 [data-theme="dark"] .vc-delay-card { background: transparent; }
@@ -4833,7 +4833,51 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chevron-open { transform:rotate(180deg); }
 
 /* Footer text */
-.footer-text-style { font-size:var(--fs-sm); color:var(--light); letter-spacing:var(--ls-wide); }
+/* Footer credit — special treatment now that it sits front-and-centre on the
+   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
+   italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
+.app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
+.footer-text-style {
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--light); letter-spacing:var(--ls-wide);
+}
+.footer-name {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:700;
+  /* Same warm-wave as the hero stripe: a sheen sweeps over the fixed
+     wavelength gradient, clipped to the glyphs — reuses @keyframes ld-wave so
+     the cadence matches the hero exactly. */
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+/* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
+   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
+   wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
+[data-theme="dark"] .footer-name {
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--tc-rose), var(--tc-caution), var(--tc-amber), var(--tc-sage), var(--tc-sky), var(--tc-indigo), var(--tc-lav));
+}
+.footer-heart {
+  width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
+  transform-origin:center; animation:footer-beat 2.4s ease-in-out infinite;
+}
+@keyframes footer-beat {
+  0%, 30%, 100% { transform:scale(1); }
+  8%  { transform:scale(1.18); }
+  16% { transform:scale(1); }
+  22% { transform:scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) { .footer-heart, .footer-name { animation:none; } }
 
 /* Vitals expanded inner divider */
 .vitals-expanded-inner { border-top:1px solid var(--border-subtle); margin-top:var(--sp-12); padding-top:var(--sp-12); }
@@ -5516,6 +5560,212 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 [data-theme="dark"] .card.card-hero.hero-home {
   background:linear-gradient(135deg, rgba(60,35,45,0.4), rgba(60,45,35,0.3), rgba(40,60,50,0.3));
+}
+
+/* ─────────────────────────────────────────
+   LEAN LANDING (app-open surface) — ld-*
+   Built to the Recipes design language (DP §9, ratified 2026-06-03):
+   • hero stripe = 4px de-neoned WAVELENGTH warm-wave with a sweeping sheen (§9.3/§9.4)
+   • day's story = Fraunces *italic* "voice" line over a Nunito eyebrow (typography C, §9.6)
+   • doors = whisper-fade (transparent→domain rgba) + domain border (§9.2, reaffirms HR-6)
+   "Home leans on its hero" (DP §72) — warmth, not a score (C2).
+   ───────────────────────────────────────── */
+#ldContent { display:flex; flex-direction:column; gap:var(--sp-16); }
+
+/* 0 · Care pre-empt — loud-rose action cards (reuse .card.card-action), persistent */
+.ld-care { display:flex; flex-direction:column; gap:var(--sp-12); }
+.ld-care-card {
+  display:flex; align-items:center; gap:var(--sp-12);
+  width:100%; text-align:left; cursor:pointer; min-height:44px;
+}
+.ld-care-card .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* calm "being-tracked" chip (matches .icon-rose); .ld-care-hot lifts to the
+     louder solid --rose so action-needed reads hotter than tracked (Vela V-V-4) */
+  background:var(--rose-light); color:var(--tc-rose);
+}
+.ld-care-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-care-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-care-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-care-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-care-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* action-needed (overdue / due) runs hotter than calm "being-tracked" (Maren) */
+.ld-care-hot .icon { background:var(--rose); color:var(--tc-rose); }
+.ld-care-hot .ld-care-title { color:var(--tc-rose); }
+
+/* 1 · The day's glance as the signature HERO. Reuses .card.card-hero.hero-home
+   for the body gradient; ld-hero overrides the top stripe with the warm-wave. */
+.ld-hero { display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-10); }
+
+/* Warm-wave stripe (§9.3/§9.4): a fixed wavelength gradient (rose→…→lav) with a
+   translucent sheen sweeping left→right — only the sheen moves. Later + equal
+   specificity to .hero-home::before, so it overrides it. */
+.card.card-hero.ld-hero::before {
+  height:4px;
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.6) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+@keyframes ld-wave {
+  0%   { background-position:-35% 0, 0 0; }
+  100% { background-position:135% 0, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.card-hero.ld-hero::before { animation:none; background-position:0 0, 0 0; }
+}
+
+.ld-hero-eyebrow { display:flex; align-items:center; gap:var(--sp-8); }
+.ld-hero-icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-hero-icon svg.zi { width:var(--icon-md); height:var(--icon-md); }
+.ld-hero-label {
+  font-family:'Nunito', sans-serif; font-size:var(--fs-sm); font-weight:700;
+  text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid);
+}
+/* The "voice" line — Fraunces ITALIC (italic reserved for voice, §9.6) */
+.ld-hero-voice {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-xl); line-height:var(--lh-snug); color:var(--text);
+  max-width:92%; text-wrap:balance;
+}
+.ld-hero[data-empty="true"] .ld-hero-voice { color:var(--mid); }
+.ld-hero-action {
+  display:inline-flex; align-items:center; gap:var(--sp-8);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+  color:var(--tc-sage); background:var(--surface);
+  border:1.5px solid var(--sage); border-radius:var(--r-full);
+  padding:var(--sp-8) var(--sp-16); min-height:44px; cursor:pointer;
+}
+.ld-hero-action svg.zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* 2 · Three doors — soft floating tap-cards carrying the whisper-fade (§9.2):
+   a domain corner-glow over the surface + a domain-tinted border (reaffirms
+   HR-6). rgba stops are the domain accents @ .22 (light) / deep --tc hues
+   @ .30 (dark), per the §9.2 hue-swap. Log primary: stronger sage + dominance. */
+.ld-doors { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-12); }
+.ld-door {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-8);
+  background-color:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20) var(--sp-12); cursor:pointer;
+  font-family:'Nunito', sans-serif; text-align:center;
+  box-shadow:0 4px 20px var(--shadow);
+  transition:transform var(--ease-fast), box-shadow var(--ease-med);
+}
+.ld-door:active { transform:scale(0.97); }
+.ld-door .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-door .icon svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-door-label { font-family:'Nunito', sans-serif; font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-snug); }
+.ld-door-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-snug); }
+
+/* whisper-fade — Today (sky) + Ask (lavender) */
+.ld-door-today { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); border:1.5px solid var(--sky); }
+.ld-door-ask   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); border:1.5px solid var(--lavender); }
+[data-theme="dark"] .ld-door-today { background-image:linear-gradient(135deg, transparent 30%, rgba(51,101,128,0.30)); }
+[data-theme="dark"] .ld-door-ask   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.30)); }
+
+/* Primary Log door — full-width row, stronger sage whisper, dominant */
+.ld-door-primary {
+  grid-column:1 / -1; flex-direction:row; justify-content:flex-start; align-items:center;
+  gap:var(--sp-16); padding:var(--sp-20); text-align:left;
+  background-image:linear-gradient(135deg, transparent 30%, rgba(181,213,197,0.40)); border:1.5px solid var(--sage);
+}
+[data-theme="dark"] .ld-door-primary { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.45)); }
+.ld-door-primary .ld-door-body { display:flex; flex-direction:column; gap:var(--sp-2); align-items:flex-start; }
+.ld-door-primary .ld-door-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); }
+
+/* 3 · Emergency — always-present quick access (rose whisper-fade + outline:
+   calm by default, unmistakable in a panic). The container carries no action;
+   .ld-emergency-main opens the chooser; the call pills are independent tel:
+   links (dial straight through, never open the chooser). */
+.ld-emergency {
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-2xl);
+  padding:var(--sp-12);
+  box-shadow:0 4px 20px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-10);
+}
+[data-theme="dark"] .ld-emergency { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-emergency-main {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:none; padding:var(--sp-4); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+.ld-emergency-main:active { transform:scale(0.98); }
+.ld-emergency-main .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-emergency-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-emergency-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.ld-emergency-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-emergency-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-emergency-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Quick-dial pills — independent tap targets (≥44px), dark-safe rose chip */
+.ld-emergency-calls { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
+.ld-emergency-call {
+  flex:1 1 40%; min-width:130px; min-height:44px;
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-8);
+  background:var(--rose-light); color:var(--tc-rose);
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  text-decoration:none; padding:var(--sp-8) var(--sp-12);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+}
+.ld-emergency-call svg.zi { width:var(--icon-base); height:var(--icon-base); flex-shrink:0; }
+
+/* Emergency chooser overlay (bottom sheet) — mirrors .ob-overlay */
+.ld-em-overlay {
+  position:fixed; inset:0; z-index:1010;
+  background:var(--overlay-bg);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; padding:var(--sp-16);
+  transition:opacity var(--ease-med);
+}
+.ld-em-overlay.open { opacity:1; pointer-events:auto; }
+.ld-em-sheet {
+  width:100%; max-width:480px;
+  background:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20);
+  box-shadow:0 8px 32px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-12);
+  transform:translateY(16px); transition:transform var(--ease-slow);
+}
+.ld-em-overlay.open .ld-em-sheet { transform:translateY(0); }
+.ld-em-head { display:flex; align-items:center; justify-content:space-between; }
+.ld-em-title { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-lg); color:var(--tc-rose); }
+.ld-em-title svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-em-close {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); border:none;
+  background:var(--surface-alt); color:var(--mid);
+  font-size:var(--fs-lg); line-height:var(--lh-none); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-em-prompt { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.ld-em-opt {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  padding:var(--sp-16); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+[data-theme="dark"] .ld-em-opt { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-em-opt:active { transform:scale(0.98); }
+.ld-em-opt .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-em-opt-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-em-opt-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-em-opt-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-em-opt-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-em-opt-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+@media (prefers-reduced-motion: reduce) {
+  .ld-em-overlay, .ld-em-sheet { transition:none; }
 }
 
 /* Growth hero — rose to peach (body/physical) */

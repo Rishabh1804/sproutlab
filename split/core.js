@@ -638,6 +638,24 @@ function init() {
     else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
+    else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
+    else if (action === 'ldGoto') {
+      // Deep-link from the landing Care pre-empt. arg = tab OR track-sub; arg2 =
+      // scroll-target element id, stashed in _ldPendingScroll and consumed by the
+      // destination right after ITS own scrollTo({top:0}) — so it can't be raced.
+      if (typeof switchTab === 'function') {
+        if (typeof TRACK_SUB_ORDER !== 'undefined' && TRACK_SUB_ORDER.includes(arg)) {
+          switchTab('track');
+          // set the target just before the medical sub-switch so switchTab('track')'s
+          // own (default-sub) consume doesn't fire it early.
+          setTimeout(function() { _ldPendingScroll = arg2 || null; if (typeof switchTrackSub === 'function') switchTrackSub(arg); }, 140);
+        } else {
+          _ldPendingScroll = arg2 || null;
+          switchTab(arg);
+        }
+      }
+    }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -1445,15 +1463,29 @@ function init() {
   // set foodDate default
   document.getElementById('foodDate').value = today();
 
-  // Restore last active tab on refresh
-  const savedTab = localStorage.getItem('ziva_active_tab');
-  if (savedTab && savedTab !== 'home') {
-    if (TAB_ORDER.includes(savedTab)) {
-      switchTab(savedTab);
-    } else if (TRACK_SUB_ORDER.includes(savedTab)) {
-      // Old saved domain tab → redirect to Track with that sub-tab
-      switchTab(savedTab); // switchTab auto-redirects domain names to track
+  // ── Stage-2 default flip: 'landing' is the new default-open screen ──
+  // One-shot migration of pre-flip users (saved 'home' = the OLD default) →
+  // landing. Flag-guarded: NOT idempotent-by-construction (there is no old key
+  // to delete), so without the flag a post-flip parent who deliberately chose
+  // "Today" (writes ziva_active_tab='home') would be pulled back to landing on
+  // every boot (Governor K-2). Runs BEFORE the restore read (K-3).
+  try {
+    if (localStorage.getItem('ziva_landing_migrated') === null) {
+      const at0 = localStorage.getItem('ziva_active_tab');
+      if (at0 === null || at0 === 'home') localStorage.setItem('ziva_active_tab', 'landing');
+      localStorage.setItem('ziva_landing_migrated', '1');
     }
+  } catch (e) { /* localStorage unavailable; the template's default landing panel stands */ }
+
+  // Restore last active tab on refresh. 'landing' is the default panel; 'home'
+  // (= "Today") is a door-reached panel that is still legitimately restorable
+  // (PANEL_IDS, not TAB_ORDER). switchTab('landing') renders the default case
+  // (the template marks the panel .active but renderLanding only runs via switchTab).
+  const savedTab = localStorage.getItem('ziva_active_tab');
+  if (savedTab && savedTab !== 'landing' && (PANEL_IDS.includes(savedTab) || TRACK_SUB_ORDER.includes(savedTab))) {
+    switchTab(savedTab); // switchTab auto-redirects domain names to track
+  } else {
+    switchTab('landing');
   }
 
   // Check if data was lost and autosave is available
@@ -3404,7 +3436,15 @@ function getTabAvatarFull(tab) {
 
 // TABS
 // ─────────────────────────────────────────
-const TAB_ORDER = ['home','growth','track','insights','history','info'];
+const TAB_ORDER = ['landing','growth','track','insights','history','info'];
+// PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
+// = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
+// on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
+// post-log/undo re-render guards, handleSafeExit, essential-mode re-render —
+// MUST iterate PANEL_IDS; nav-ORDER sites (swipe index, button highlight,
+// keyboard nav) keep TAB_ORDER. (Governor K-1; deduped so it is correct both
+// pre- and post-flip.)
+const PANEL_IDS = [...new Set([...TAB_ORDER, 'home'])];
 const TRACK_SUB_ORDER = ['diet','sleep','poop','medical','milestones'];
 const TRACK_SUB_CONFIG = [
   { key:'diet', icon:zi('bowl'), label:'Diet' },
@@ -3416,11 +3456,13 @@ const TRACK_SUB_CONFIG = [
 let _activeTrackSub = localStorage.getItem('ziva_track_sub') || 'diet';
 
 function homeFabAction() {
-  const currentTab = localStorage.getItem('ziva_active_tab') || 'home';
-  if (currentTab === 'home') {
+  // Post-flip "go home" returns to the lean landing (the new front door), not
+  // the dense "Today" surface.
+  const currentTab = localStorage.getItem('ziva_active_tab') || 'landing';
+  if (currentTab === 'landing') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    switchTab('home');
+    switchTab('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -3446,6 +3488,32 @@ function getAlertNavAction(alertKey, alertTitle) {
   return "switchTab('insights');setTimeout(()=>{const el=document.getElementById('insightsAlertsCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},150)";
 }
 
+// One-shot deep-link scroll target (landing Care pre-empt). Consumed in a rAF
+// immediately after a tab / sub-tab's own scrollTo({top:0}) — so the scroll
+// runs AFTER the reset, in the same flow, and can't be raced. (Architect: the
+// pre-empt must land ON the Vit D3 / vaccine / CareTicket card.)
+let _ldPendingScroll = null;
+function _ldConsumePendingScroll() {
+  if (!_ldPendingScroll) return;
+  const _tgt = _ldPendingScroll; _ldPendingScroll = null;
+  // The target card's CONTENT may not be rendered yet when the destination
+  // tab/sub fires this (orderMedicalCards only reorders; the card body fills
+  // elsewhere) — so a single measure reads height 0 and "scrolls" nowhere.
+  // Poll (~1.2s) until it has real height, then scroll the WINDOW (the proven
+  // scroller) to its computed position.
+  let _n = 0;
+  const _go = function() {
+    const _e = document.getElementById(_tgt);
+    if (_e && _e.getBoundingClientRect().height > 4) {
+      const rect = _e.getBoundingClientRect();
+      const y = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 70; // 70 ≈ tab bar + breathing room
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else if (_n++ < 12) {
+      setTimeout(_go, 100);
+    }
+  };
+  requestAnimationFrame(_go);
+}
 function switchTab(name) {
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
@@ -3480,9 +3548,10 @@ function switchTab(name) {
   // Auto-scroll tab bar to centre the active tab
   if (activeBtn) scrollTabIntoView(activeBtn);
 
-  // Toggle header: full on Home only
+  // Toggle header: full greeting on the lean Landing (and the dense Home, which
+  // keeps id 'home' = "Today" surface per the id-contract; label is presentation).
   const fullHeader = document.getElementById('headerFull');
-  fullHeader.style.display = name === 'home' ? '' : 'none';
+  fullHeader.style.display = (name === 'home' || name === 'landing') ? '' : 'none';
 
   if (name === 'growth') { renderGrowthStats(); setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (name === 'track') {
@@ -3491,7 +3560,10 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
+  if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // ── Card navigation with a breadcrumb trail (PR-O) ──
@@ -3557,6 +3629,7 @@ function switchTrackSub(sub) {
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // Diet → Recipes tap-through (WIRING_PLAN §10). From the Home Smart-Q&A
@@ -3798,17 +3871,20 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
   }
 })();
 
-// ── Safe Exit — two-step: go home first, then confirm ──
+// ── Safe Exit — two-step: go to the front door first, then confirm ──
+// Post-landing-flip the front door is `landing`, not the dense `home` ("Today")
+// surface — an exit gesture should return to the calm landing, not pull the
+// parent into the cockpit (Cipher Edict V seam-catch, PR #219).
 function handleSafeExit() {
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
-  if (currentTab !== 'home') {
-    // Step 1: go to Home first
-    switchTab('home');
+  if (currentTab !== 'landing') {
+    // Step 1: go to the landing (front door) first
+    switchTab('landing');
     return;
   }
 
-  // Step 2: already on Home — confirm exit
+  // Step 2: already on the landing — confirm exit
   confirmAction(zi('check') + ' Exit dashboard?\n\nYour data will be auto-saved before closing.', () => {
     // Force autosave to the older slot
     forceAutosave();
@@ -5064,7 +5140,7 @@ function toggleEssentialMode() {
     localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (on && (currentTab === 'insights' || currentTab === 'info')) {
     switchTab('home');
   }
@@ -5163,7 +5239,7 @@ function toggleDarkMode() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = !isDark;
   // Redraw charts with updated colours
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (currentTab === 'growth') { setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (currentTab === 'sleep') { setTimeout(drawSleepChart, 60); }
   if (currentTab === 'poop') { setTimeout(drawPoopChart, 60); }

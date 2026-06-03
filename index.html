@@ -1046,7 +1046,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
 
 /* ── Dark mode: Vaccination Upgrade ── */
-[data-theme="dark"] .vc-complete-card { background: transparent; }
+[data-theme="dark"] .vc-complete-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--sp-12) var(--sp-16); }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
 [data-theme="dark"] .vc-delay-card { background: transparent; }
@@ -4840,7 +4840,51 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chevron-open { transform:rotate(180deg); }
 
 /* Footer text */
-.footer-text-style { font-size:var(--fs-sm); color:var(--light); letter-spacing:var(--ls-wide); }
+/* Footer credit — special treatment now that it sits front-and-centre on the
+   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
+   italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
+.app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
+.footer-text-style {
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--light); letter-spacing:var(--ls-wide);
+}
+.footer-name {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:700;
+  /* Same warm-wave as the hero stripe: a sheen sweeps over the fixed
+     wavelength gradient, clipped to the glyphs — reuses @keyframes ld-wave so
+     the cadence matches the hero exactly. */
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+/* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
+   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
+   wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
+[data-theme="dark"] .footer-name {
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--tc-rose), var(--tc-caution), var(--tc-amber), var(--tc-sage), var(--tc-sky), var(--tc-indigo), var(--tc-lav));
+}
+.footer-heart {
+  width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
+  transform-origin:center; animation:footer-beat 2.4s ease-in-out infinite;
+}
+@keyframes footer-beat {
+  0%, 30%, 100% { transform:scale(1); }
+  8%  { transform:scale(1.18); }
+  16% { transform:scale(1); }
+  22% { transform:scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) { .footer-heart, .footer-name { animation:none; } }
 
 /* Vitals expanded inner divider */
 .vitals-expanded-inner { border-top:1px solid var(--border-subtle); margin-top:var(--sp-12); padding-top:var(--sp-12); }
@@ -5523,6 +5567,212 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 [data-theme="dark"] .card.card-hero.hero-home {
   background:linear-gradient(135deg, rgba(60,35,45,0.4), rgba(60,45,35,0.3), rgba(40,60,50,0.3));
+}
+
+/* ─────────────────────────────────────────
+   LEAN LANDING (app-open surface) — ld-*
+   Built to the Recipes design language (DP §9, ratified 2026-06-03):
+   • hero stripe = 4px de-neoned WAVELENGTH warm-wave with a sweeping sheen (§9.3/§9.4)
+   • day's story = Fraunces *italic* "voice" line over a Nunito eyebrow (typography C, §9.6)
+   • doors = whisper-fade (transparent→domain rgba) + domain border (§9.2, reaffirms HR-6)
+   "Home leans on its hero" (DP §72) — warmth, not a score (C2).
+   ───────────────────────────────────────── */
+#ldContent { display:flex; flex-direction:column; gap:var(--sp-16); }
+
+/* 0 · Care pre-empt — loud-rose action cards (reuse .card.card-action), persistent */
+.ld-care { display:flex; flex-direction:column; gap:var(--sp-12); }
+.ld-care-card {
+  display:flex; align-items:center; gap:var(--sp-12);
+  width:100%; text-align:left; cursor:pointer; min-height:44px;
+}
+.ld-care-card .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* calm "being-tracked" chip (matches .icon-rose); .ld-care-hot lifts to the
+     louder solid --rose so action-needed reads hotter than tracked (Vela V-V-4) */
+  background:var(--rose-light); color:var(--tc-rose);
+}
+.ld-care-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-care-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-care-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-care-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-care-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* action-needed (overdue / due) runs hotter than calm "being-tracked" (Maren) */
+.ld-care-hot .icon { background:var(--rose); color:var(--tc-rose); }
+.ld-care-hot .ld-care-title { color:var(--tc-rose); }
+
+/* 1 · The day's glance as the signature HERO. Reuses .card.card-hero.hero-home
+   for the body gradient; ld-hero overrides the top stripe with the warm-wave. */
+.ld-hero { display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-10); }
+
+/* Warm-wave stripe (§9.3/§9.4): a fixed wavelength gradient (rose→…→lav) with a
+   translucent sheen sweeping left→right — only the sheen moves. Later + equal
+   specificity to .hero-home::before, so it overrides it. */
+.card.card-hero.ld-hero::before {
+  height:4px;
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.6) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+@keyframes ld-wave {
+  0%   { background-position:-35% 0, 0 0; }
+  100% { background-position:135% 0, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.card-hero.ld-hero::before { animation:none; background-position:0 0, 0 0; }
+}
+
+.ld-hero-eyebrow { display:flex; align-items:center; gap:var(--sp-8); }
+.ld-hero-icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-hero-icon svg.zi { width:var(--icon-md); height:var(--icon-md); }
+.ld-hero-label {
+  font-family:'Nunito', sans-serif; font-size:var(--fs-sm); font-weight:700;
+  text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid);
+}
+/* The "voice" line — Fraunces ITALIC (italic reserved for voice, §9.6) */
+.ld-hero-voice {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-xl); line-height:var(--lh-snug); color:var(--text);
+  max-width:92%; text-wrap:balance;
+}
+.ld-hero[data-empty="true"] .ld-hero-voice { color:var(--mid); }
+.ld-hero-action {
+  display:inline-flex; align-items:center; gap:var(--sp-8);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+  color:var(--tc-sage); background:var(--surface);
+  border:1.5px solid var(--sage); border-radius:var(--r-full);
+  padding:var(--sp-8) var(--sp-16); min-height:44px; cursor:pointer;
+}
+.ld-hero-action svg.zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* 2 · Three doors — soft floating tap-cards carrying the whisper-fade (§9.2):
+   a domain corner-glow over the surface + a domain-tinted border (reaffirms
+   HR-6). rgba stops are the domain accents @ .22 (light) / deep --tc hues
+   @ .30 (dark), per the §9.2 hue-swap. Log primary: stronger sage + dominance. */
+.ld-doors { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-12); }
+.ld-door {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-8);
+  background-color:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20) var(--sp-12); cursor:pointer;
+  font-family:'Nunito', sans-serif; text-align:center;
+  box-shadow:0 4px 20px var(--shadow);
+  transition:transform var(--ease-fast), box-shadow var(--ease-med);
+}
+.ld-door:active { transform:scale(0.97); }
+.ld-door .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-door .icon svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-door-label { font-family:'Nunito', sans-serif; font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-snug); }
+.ld-door-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-snug); }
+
+/* whisper-fade — Today (sky) + Ask (lavender) */
+.ld-door-today { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); border:1.5px solid var(--sky); }
+.ld-door-ask   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); border:1.5px solid var(--lavender); }
+[data-theme="dark"] .ld-door-today { background-image:linear-gradient(135deg, transparent 30%, rgba(51,101,128,0.30)); }
+[data-theme="dark"] .ld-door-ask   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.30)); }
+
+/* Primary Log door — full-width row, stronger sage whisper, dominant */
+.ld-door-primary {
+  grid-column:1 / -1; flex-direction:row; justify-content:flex-start; align-items:center;
+  gap:var(--sp-16); padding:var(--sp-20); text-align:left;
+  background-image:linear-gradient(135deg, transparent 30%, rgba(181,213,197,0.40)); border:1.5px solid var(--sage);
+}
+[data-theme="dark"] .ld-door-primary { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.45)); }
+.ld-door-primary .ld-door-body { display:flex; flex-direction:column; gap:var(--sp-2); align-items:flex-start; }
+.ld-door-primary .ld-door-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); }
+
+/* 3 · Emergency — always-present quick access (rose whisper-fade + outline:
+   calm by default, unmistakable in a panic). The container carries no action;
+   .ld-emergency-main opens the chooser; the call pills are independent tel:
+   links (dial straight through, never open the chooser). */
+.ld-emergency {
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-2xl);
+  padding:var(--sp-12);
+  box-shadow:0 4px 20px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-10);
+}
+[data-theme="dark"] .ld-emergency { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-emergency-main {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:none; padding:var(--sp-4); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+.ld-emergency-main:active { transform:scale(0.98); }
+.ld-emergency-main .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-emergency-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-emergency-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.ld-emergency-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-emergency-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-emergency-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Quick-dial pills — independent tap targets (≥44px), dark-safe rose chip */
+.ld-emergency-calls { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
+.ld-emergency-call {
+  flex:1 1 40%; min-width:130px; min-height:44px;
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-8);
+  background:var(--rose-light); color:var(--tc-rose);
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  text-decoration:none; padding:var(--sp-8) var(--sp-12);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+}
+.ld-emergency-call svg.zi { width:var(--icon-base); height:var(--icon-base); flex-shrink:0; }
+
+/* Emergency chooser overlay (bottom sheet) — mirrors .ob-overlay */
+.ld-em-overlay {
+  position:fixed; inset:0; z-index:1010;
+  background:var(--overlay-bg);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; padding:var(--sp-16);
+  transition:opacity var(--ease-med);
+}
+.ld-em-overlay.open { opacity:1; pointer-events:auto; }
+.ld-em-sheet {
+  width:100%; max-width:480px;
+  background:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20);
+  box-shadow:0 8px 32px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-12);
+  transform:translateY(16px); transition:transform var(--ease-slow);
+}
+.ld-em-overlay.open .ld-em-sheet { transform:translateY(0); }
+.ld-em-head { display:flex; align-items:center; justify-content:space-between; }
+.ld-em-title { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-lg); color:var(--tc-rose); }
+.ld-em-title svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-em-close {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); border:none;
+  background:var(--surface-alt); color:var(--mid);
+  font-size:var(--fs-lg); line-height:var(--lh-none); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-em-prompt { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.ld-em-opt {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  padding:var(--sp-16); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+[data-theme="dark"] .ld-em-opt { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-em-opt:active { transform:scale(0.98); }
+.ld-em-opt .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-em-opt-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-em-opt-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-em-opt-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-em-opt-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-em-opt-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+@media (prefers-reduced-motion: reduce) {
+  .ld-em-overlay, .ld-em-sheet { transition:none; }
 }
 
 /* Growth hero — rose to peach (body/physical) */
@@ -11213,7 +11463,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="home" aria-label="Home tab">
+    <button class="tab-btn active" data-tab="landing" aria-label="Home tab">
       <span class="tab-icon"><svg class="zi"><use href="#zi-lotus"/></svg></span><span class="tab-label">Home</span>
     </button>
     <button class="tab-btn" data-tab="growth" aria-label="Growth tab">
@@ -11270,8 +11520,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
-  <!-- ══════════════ TAB 1: HOME ══════════════ -->
-  <div class="tab-panel active" id="tab-home">
+  <!-- ══════════════ LANDING (lean app-open surface — the default-open screen) ══════════════ -->
+  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors + emergency. -->
+  <div class="tab-panel active" id="tab-landing">
+    <div class="grid">
+      <div id="ldContent" class="col-full"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ "TODAY" (the dense dashboard; id stays 'home' per the contract) ══════════════ -->
+  <div class="tab-panel" id="tab-home">
     <div class="grid">
 
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
@@ -13549,8 +13807,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- FOOTER -->
 
-  <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva <svg class="zi"><use href="#zi-heart"/></svg></div>
+  <div class="app-footer">
+    <div class="footer-text footer-text-style">
+      <span>Built for</span>
+      <span class="footer-name">Ziva</span>
+      <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
+    </div>
   </div>
 
 </div><!-- /app -->
@@ -21191,6 +21453,24 @@ function init() {
     else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
+    else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
+    else if (action === 'ldGoto') {
+      // Deep-link from the landing Care pre-empt. arg = tab OR track-sub; arg2 =
+      // scroll-target element id, stashed in _ldPendingScroll and consumed by the
+      // destination right after ITS own scrollTo({top:0}) — so it can't be raced.
+      if (typeof switchTab === 'function') {
+        if (typeof TRACK_SUB_ORDER !== 'undefined' && TRACK_SUB_ORDER.includes(arg)) {
+          switchTab('track');
+          // set the target just before the medical sub-switch so switchTab('track')'s
+          // own (default-sub) consume doesn't fire it early.
+          setTimeout(function() { _ldPendingScroll = arg2 || null; if (typeof switchTrackSub === 'function') switchTrackSub(arg); }, 140);
+        } else {
+          _ldPendingScroll = arg2 || null;
+          switchTab(arg);
+        }
+      }
+    }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -21998,15 +22278,29 @@ function init() {
   // set foodDate default
   document.getElementById('foodDate').value = today();
 
-  // Restore last active tab on refresh
-  const savedTab = localStorage.getItem('ziva_active_tab');
-  if (savedTab && savedTab !== 'home') {
-    if (TAB_ORDER.includes(savedTab)) {
-      switchTab(savedTab);
-    } else if (TRACK_SUB_ORDER.includes(savedTab)) {
-      // Old saved domain tab → redirect to Track with that sub-tab
-      switchTab(savedTab); // switchTab auto-redirects domain names to track
+  // ── Stage-2 default flip: 'landing' is the new default-open screen ──
+  // One-shot migration of pre-flip users (saved 'home' = the OLD default) →
+  // landing. Flag-guarded: NOT idempotent-by-construction (there is no old key
+  // to delete), so without the flag a post-flip parent who deliberately chose
+  // "Today" (writes ziva_active_tab='home') would be pulled back to landing on
+  // every boot (Governor K-2). Runs BEFORE the restore read (K-3).
+  try {
+    if (localStorage.getItem('ziva_landing_migrated') === null) {
+      const at0 = localStorage.getItem('ziva_active_tab');
+      if (at0 === null || at0 === 'home') localStorage.setItem('ziva_active_tab', 'landing');
+      localStorage.setItem('ziva_landing_migrated', '1');
     }
+  } catch (e) { /* localStorage unavailable; the template's default landing panel stands */ }
+
+  // Restore last active tab on refresh. 'landing' is the default panel; 'home'
+  // (= "Today") is a door-reached panel that is still legitimately restorable
+  // (PANEL_IDS, not TAB_ORDER). switchTab('landing') renders the default case
+  // (the template marks the panel .active but renderLanding only runs via switchTab).
+  const savedTab = localStorage.getItem('ziva_active_tab');
+  if (savedTab && savedTab !== 'landing' && (PANEL_IDS.includes(savedTab) || TRACK_SUB_ORDER.includes(savedTab))) {
+    switchTab(savedTab); // switchTab auto-redirects domain names to track
+  } else {
+    switchTab('landing');
   }
 
   // Check if data was lost and autosave is available
@@ -23957,7 +24251,15 @@ function getTabAvatarFull(tab) {
 
 // TABS
 // ─────────────────────────────────────────
-const TAB_ORDER = ['home','growth','track','insights','history','info'];
+const TAB_ORDER = ['landing','growth','track','insights','history','info'];
+// PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
+// = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
+// on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
+// post-log/undo re-render guards, handleSafeExit, essential-mode re-render —
+// MUST iterate PANEL_IDS; nav-ORDER sites (swipe index, button highlight,
+// keyboard nav) keep TAB_ORDER. (Governor K-1; deduped so it is correct both
+// pre- and post-flip.)
+const PANEL_IDS = [...new Set([...TAB_ORDER, 'home'])];
 const TRACK_SUB_ORDER = ['diet','sleep','poop','medical','milestones'];
 const TRACK_SUB_CONFIG = [
   { key:'diet', icon:zi('bowl'), label:'Diet' },
@@ -23969,11 +24271,13 @@ const TRACK_SUB_CONFIG = [
 let _activeTrackSub = localStorage.getItem('ziva_track_sub') || 'diet';
 
 function homeFabAction() {
-  const currentTab = localStorage.getItem('ziva_active_tab') || 'home';
-  if (currentTab === 'home') {
+  // Post-flip "go home" returns to the lean landing (the new front door), not
+  // the dense "Today" surface.
+  const currentTab = localStorage.getItem('ziva_active_tab') || 'landing';
+  if (currentTab === 'landing') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    switchTab('home');
+    switchTab('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -23999,6 +24303,32 @@ function getAlertNavAction(alertKey, alertTitle) {
   return "switchTab('insights');setTimeout(()=>{const el=document.getElementById('insightsAlertsCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},150)";
 }
 
+// One-shot deep-link scroll target (landing Care pre-empt). Consumed in a rAF
+// immediately after a tab / sub-tab's own scrollTo({top:0}) — so the scroll
+// runs AFTER the reset, in the same flow, and can't be raced. (Architect: the
+// pre-empt must land ON the Vit D3 / vaccine / CareTicket card.)
+let _ldPendingScroll = null;
+function _ldConsumePendingScroll() {
+  if (!_ldPendingScroll) return;
+  const _tgt = _ldPendingScroll; _ldPendingScroll = null;
+  // The target card's CONTENT may not be rendered yet when the destination
+  // tab/sub fires this (orderMedicalCards only reorders; the card body fills
+  // elsewhere) — so a single measure reads height 0 and "scrolls" nowhere.
+  // Poll (~1.2s) until it has real height, then scroll the WINDOW (the proven
+  // scroller) to its computed position.
+  let _n = 0;
+  const _go = function() {
+    const _e = document.getElementById(_tgt);
+    if (_e && _e.getBoundingClientRect().height > 4) {
+      const rect = _e.getBoundingClientRect();
+      const y = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 70; // 70 ≈ tab bar + breathing room
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else if (_n++ < 12) {
+      setTimeout(_go, 100);
+    }
+  };
+  requestAnimationFrame(_go);
+}
 function switchTab(name) {
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
@@ -24033,9 +24363,10 @@ function switchTab(name) {
   // Auto-scroll tab bar to centre the active tab
   if (activeBtn) scrollTabIntoView(activeBtn);
 
-  // Toggle header: full on Home only
+  // Toggle header: full greeting on the lean Landing (and the dense Home, which
+  // keeps id 'home' = "Today" surface per the id-contract; label is presentation).
   const fullHeader = document.getElementById('headerFull');
-  fullHeader.style.display = name === 'home' ? '' : 'none';
+  fullHeader.style.display = (name === 'home' || name === 'landing') ? '' : 'none';
 
   if (name === 'growth') { renderGrowthStats(); setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (name === 'track') {
@@ -24044,7 +24375,10 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
+  if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // ── Card navigation with a breadcrumb trail (PR-O) ──
@@ -24110,6 +24444,7 @@ function switchTrackSub(sub) {
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // Diet → Recipes tap-through (WIRING_PLAN §10). From the Home Smart-Q&A
@@ -24351,17 +24686,20 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
   }
 })();
 
-// ── Safe Exit — two-step: go home first, then confirm ──
+// ── Safe Exit — two-step: go to the front door first, then confirm ──
+// Post-landing-flip the front door is `landing`, not the dense `home` ("Today")
+// surface — an exit gesture should return to the calm landing, not pull the
+// parent into the cockpit (Cipher Edict V seam-catch, PR #219).
 function handleSafeExit() {
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
-  if (currentTab !== 'home') {
-    // Step 1: go to Home first
-    switchTab('home');
+  if (currentTab !== 'landing') {
+    // Step 1: go to the landing (front door) first
+    switchTab('landing');
     return;
   }
 
-  // Step 2: already on Home — confirm exit
+  // Step 2: already on the landing — confirm exit
   confirmAction(zi('check') + ' Exit dashboard?\n\nYour data will be auto-saved before closing.', () => {
     // Force autosave to the older slot
     forceAutosave();
@@ -25617,7 +25955,7 @@ function toggleEssentialMode() {
     localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (on && (currentTab === 'insights' || currentTab === 'info')) {
     switchTab('home');
   }
@@ -25716,7 +26054,7 @@ function toggleDarkMode() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = !isDark;
   // Redraw charts with updated colours
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (currentTab === 'growth') { setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (currentTab === 'sleep') { setTimeout(drawSleepChart, 60); }
   if (currentTab === 'poop') { setTimeout(drawPoopChart, 60); }
@@ -28574,6 +28912,126 @@ function renderRemindersAndAlerts() {
 
   // v2.3: Store HTML — renderHomeContextAlerts will combine and render both
   window._remindersHTML = html;
+}
+
+// ── Lean-landing Care pre-empt detector (flip-gate, spec §4.4; Maren-gated) ──
+// Returns the ACTIONABLE Care signals only (the unresolved subset of the
+// renderRemindersAndAlerts predicates above) as structured data, summarised
+// one-per-category, hottest-first ranked, each deep-linking to its fix. This is
+// the source the landing's _ldCareAlerts() reads — so a calm landing can NEVER
+// hide a hard-deadline signal (overdue vaccine / due dose / overdue follow-up).
+// Mirrors the predicates above (kept adjacent to bound drift); illness episodes
+// are added separately by _ldCareAlerts via getActiveIllnessPosture().
+// Signal shape: { id, severity:'high'|'med'|'low', icon, title, sub, action, arg, arg2 }
+// title/sub are RAW (escaped at render). Care route = Track→Medical via navTabSub.
+function getActiveCareSignals() {
+  var out = [];
+  var todayStr = (typeof today === 'function') ? today() : null;
+  if (!todayStr) return out;
+  var yesterdayStr = _offsetDateStr(todayStr, -1);
+  // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
+  // a generic Medical tab). vaccines → medVaccCard, meds → medMedsCard (both in
+  // Track→Medical), CareTickets → ctEntryPoint (on the Today surface).
+  var push = function(id, severity, icon, title, sub, navArg, navTarget) {
+    out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
+               action: 'ldGoto', arg: navArg, arg2: navTarget });
+  };
+  var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
+  var medSig  = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medMedsCard'); };
+
+  // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
+  if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
+    var overdue = vaccData.filter(function(v) {
+      if (!v.upcoming) return false;
+      return Math.ceil((new Date(v.date) - new Date()) / 86400000) < 0;
+    });
+    if (overdue.length) {
+      var oNames = overdue.map(function(v) { return v.name; });
+      vaccSig('vacc-overdue', 'high', 'siren',
+          overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
+          'Tap to reschedule or mark done');
+    }
+    // 1b · Urgent upcoming (≤7 days, mirrors :601)
+    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+      .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
+    if (upNext) {
+      var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        vaccSig('vacc-soon', 'low', 'dot-red',
+            daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
+            'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
+      }
+    }
+    // 1c · Post-vacc 48h monitoring window (mirrors :613)
+    var recentVacc = vaccData.filter(function(v) {
+      return !v.upcoming && !v.reaction && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (recentVacc.length) {
+      var rvNames = recentVacc.map(function(v) { return v.name; });
+      vaccSig('vacc-monitor', 'med', 'syringe',
+          (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
+          'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
+    }
+    // 1d · Logged-reaction monitoring tail (mirrors :637)
+    var loggedRecent = vaccData.filter(function(v) {
+      return !v.upcoming && v.reaction && v.reaction !== 'none' && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (loggedRecent.length) {
+      var until = _offsetDateStr(loggedRecent[0].date, 2);
+      vaccSig('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+          'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
+    }
+  }
+
+  // 2 · Meds — missed-day streaks (≥ as hot as today-pending, mirrors :655) + today-pending (:696)
+  if (typeof meds !== 'undefined' && Array.isArray(meds) && typeof medChecks !== 'undefined') {
+    var activeMeds = meds.filter(function(m) { return m.active; });
+    var trackingSince = medChecks._trackingSince || todayStr;
+    activeMeds.forEach(function(m) {
+      var startDate = m.start || '2025-09-04';
+      var earliest = startDate > trackingSince ? startDate : trackingSince;
+      var missed = 0;
+      for (var i = 1; i <= 14; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var ds = toDateStr(d);
+        if (ds < earliest) continue;
+        var dayLog = medChecks[ds];
+        if (!dayLog || !dayLog[m.name]) missed++;
+      }
+      if (missed > 0) {
+        medSig('med-missed-' + m.name, 'high', 'dot-red',
+            missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
+            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'));
+      }
+      // today-pending
+      var todayLog = medChecks[todayStr] || {};
+      var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
+      var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
+      if (!resolved) {
+        medSig('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
+      }
+    });
+  }
+
+  // 3 · Overdue CareTickets — the parent's own escalation going silent (Maren M-2).
+  // ctNextDueTime(t) → ms timestamp of the next follow-up (Infinity if none);
+  // overdue = a finite due time in the past.
+  if (typeof _careTickets !== 'undefined' && Array.isArray(_careTickets) && typeof ctNextDueTime === 'function') {
+    var nowMs = Date.now();
+    _careTickets.forEach(function(t) {
+      if (t.status !== 'active' && t.status !== 'escalated') return;
+      var due = ctNextDueTime(t);
+      if (isFinite(due) && due < nowMs) {
+        push('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in', 'home', 'ctEntryPoint');
+      }
+    });
+  }
+
+  // Hottest-first
+  var rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) { return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]); });
+  return out;
 }
 
 // Mark vaccination as booked — step 1: save booked state, then ask for details
@@ -62564,7 +63022,7 @@ function matchSuggestionsAfterSave(dateStr) {
     dayData.adoptionRate = adoptedCount / dayData.items.length;
     save(KEYS.suggestions, _suggestionsData);
     // Refresh Home card if visible
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'home') renderHomeSuggestions();
   }
 }
@@ -67554,7 +68012,7 @@ function undoLastQL() {
     t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'diet') { initFeeding(); renderDietStats(); }
     if (curTab === 'poop') { renderPoop(); }
     if (curTab === 'sleep') { renderSleep(); }
@@ -67918,7 +68376,7 @@ function qlFeedSkipMeal() {
     feedingData = f;
     if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
     if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-    var curTab2 = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+    var curTab2 = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
     if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
     if (curTab2 === 'home') renderHome();
   };
@@ -67931,7 +68389,7 @@ function qlFeedSkipMeal() {
   // Skip toggles so a subsequent tap on the now-stale legacy Skip button
   // doesn't silently UNSKIP the meal we just skipped via FOB.
   if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-  var curTab = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+  var curTab = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
   if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -68066,7 +68524,7 @@ function saveQLFeed() {
   matchSuggestionsAfterSave(dateStr);
 
   // Refresh if on diet tab or home
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'diet') { initFeeding(); renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -68103,7 +68561,7 @@ function saveQLSleep() {
   var sleepToastMsg = zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlInsight ? ' \u00b7 ' + qlInsight : '');
   showQLToast(sleepToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -68140,7 +68598,7 @@ function saveQLNap() {
   var napToastMsg = zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlNapInsight ? ' \u00b7 ' + qlNapInsight : '');
   showQLToast(napToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -68177,7 +68635,7 @@ function saveQLPoop() {
   var poopToastMsg = zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlPoopIns ? ' \u00b7 ' + qlPoopIns : '');
   showQLToast(poopToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
   if (curTab === 'home') renderHome();
 }
@@ -72787,6 +73245,248 @@ function renderInfoMilestoneSleepCorrelation() {
   _setCardPriority('infoMilestoneSleepCard', 'notable');
 }
 
+// ─────────────────────────────────────────
+// LEAN LANDING (app-open surface) — render-first
+// ─────────────────────────────────────────
+// The calm front door: a greeting (reused from #headerFull), one honest
+// "today at a glance" line, and three soft doors. "Calm by default, Care
+// pre-empts the calm" — a live Care signal escalates a loud-rose action card
+// above the calm content (Maren C1). Neutral cream, no domain wash (home-family
+// surfaces take none by design); domain identity rides only on each door's icon.
+// Composition cap: ≤3 elements (Vela C2). renderLanding() stays off the heavy
+// compute path (Kael C3): greeting + age + glance + a cheap Care check only.
+
+// Care pre-empt detector. Stage 1: active illness episodes (real predicate).
+// Stage 2 (Maren C1) extends with overdue/same-day vaccines, due meds (Vit D3),
+// overdue CareTickets, and post-vacc monitoring via the renderRemindersAndAlerts
+// predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
+function _ldCareAlerts() {
+  const out = [];
+  // Illness episodes — "being tracked" (calm-loud, severity med), route to Medical.
+  const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
+  if (posture && posture.active && posture.active.length) {
+    const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
+    const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
+    posture.active.forEach(function(ep) {
+      out.push({
+        severity: 'med',
+        icon: iconMap[ep.type] || 'siren',
+        title: (labelMap[ep.type] || 'Illness') + ' being tracked',
+        sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
+        action: 'ldGoto', arg: 'home', arg2: ''
+      });
+    });
+  }
+  // Time-axis Care signals — overdue vaccines, due/missed meds, post-vacc
+  // monitoring, overdue CareTickets (flip-gate detector, spec §4.4 / Maren).
+  if (typeof getActiveCareSignals === 'function') {
+    getActiveCareSignals().forEach(function(s) { out.push(s); });
+  }
+  // Hottest-first (high → med → low); action-needed surfaces above being-tracked.
+  const rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) {
+    return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]);
+  });
+  return out;
+}
+
+// Staggered fade-up, gated on Motion with a reduced-motion floor (no CSS
+// pre-hide, so content is visible if JS/Motion is absent — accessible default).
+function _ldAnimateIn(container) {
+  if (!container) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !(window.Motion && window.Motion.animate)) return;
+  const kids = container.children;
+  for (let i = 0; i < kids.length; i++) {
+    window.Motion.animate(kids[i],
+      { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0)'] },
+      { duration: 0.35, delay: i * 0.06, easing: [0.22, 0.61, 0.36, 1] });
+  }
+}
+
+function renderLanding() {
+  // Greeting + age live in the shared #headerFull block. Refresh them.
+  // Stage 2 (Kael C3): swap updateHeader() for a lean greeting-only helper to
+  // keep the cold start light.
+  if (typeof updateHeader === 'function') updateHeader();
+
+  const el = document.getElementById('ldContent');
+  if (!el) return;
+
+  let html = '';
+
+  // 0 · Care pre-empt — calm by default, Care pre-empts the calm (Maren C1).
+  const alerts = _ldCareAlerts();
+  if (alerts.length) {
+    html += '<div class="ld-care col-full">';
+    alerts.forEach(function(a) {
+      var urgent = (a.severity === 'high');
+      html += '<button class="card card-action ld-care-card' + (urgent ? ' ld-care-hot' : '') + '" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '')
+            + (a.arg2 ? ' data-arg2="' + escAttr(a.arg2) + '"' : '') + '>'
+            + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
+            + '<span class="ld-care-body">'
+            +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'
+            +   '<span class="ld-care-sub">' + escHtml(a.sub) + '</span>'
+            + '</span>'
+            + '<span class="ld-care-chev">' + zi('arrow-right') + '</span>'
+            + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // 1 · Glance line — neutral, honest empty-state (Vela C2). Reuse the TSF
+  // summary generator and clone its honest-empty pattern (never a bare "No data").
+  const collected = (typeof _tsfCollectEvents === 'function')
+    ? _tsfCollectEvents() : { events: [], noTimeEvents: [] };
+  const totalCount = (collected.events ? collected.events.length : 0)
+                   + (collected.noTimeEvents ? collected.noTimeEvents.length : 0);
+  // Empty-day register is PROSPECTIVE at app-open ("nothing logged yet, let's
+  // begin"), not the Today-So-Far mid-day retrospective ("Quiet day so far.").
+  // Same data, right voice for the front door (Vela V-V-1).
+  let summary;
+  if (totalCount === 0) {
+    summary = 'A fresh day with Ziva — nothing logged yet.';
+  } else {
+    const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
+    summary = (typeof _tsfGenerateSummary === 'function')
+      ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  }
+  // 1 · The day's glance as the signature HERO. Per DP §9 (Recipes design
+  // language, ratified 2026-06-03): typography C — a Nunito structural eyebrow
+  // over the day's story as a Fraunces *italic* "voice" line (italic = voice
+  // only); a 4px de-neoned wavelength warm-wave stripe sweeps over the top
+  // (§9.3/§9.4). No score (C2: warmth, not a verdict).
+  const heroIcon = (totalCount === 0) ? 'sprout' : 'sparkle';
+  const heroIconTint = (totalCount === 0) ? 'icon-sage' : 'icon-lav';
+  html += '<div class="card card-hero hero-home ld-hero col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
+  html += '<div class="ld-hero-eyebrow">'
+        +   '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>'
+        +   '<span class="ld-hero-label">Today so far</span>'
+        + '</div>';
+  html += '<div class="ld-hero-voice">' + escHtml(summary) + '</div>';
+  if (totalCount === 0) {
+    html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
+  }
+  html += '</div>';
+
+  // 2 · Three doors — Log (primary) / Today / Ask. Domain identity on the icon
+  // only; the door surfaces stay neutral cream.
+  html += '<div class="ld-doors col-full">';
+  html += '<button class="ld-door ld-door-primary" data-action="toggleQuickLog">'
+        +   '<span class="icon icon-sage">' + zi('note') + '</span>'
+        +   '<span class="ld-door-body">'
+        +     '<span class="ld-door-label">Log</span>'
+        +     '<span class="ld-door-sub">Feed, nap, diaper &amp; more</span>'
+        +   '</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-today" data-action="switchTab" data-arg="home">'
+        +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
+        +   '<span class="ld-door-label">Today</span>'
+        +   '<span class="ld-door-sub">Full day</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
+        +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
+        +   '<span class="ld-door-label">Ask</span>'
+        +   '<span class="ld-door-sub">About Ziva</span>'
+        + '</button>';
+  html += '</div>';
+
+  // Emergency — always-present quick access (STUB; live wiring in PR #216).
+  // The card body (.ld-emergency-main) opens the chooser; the 108/112 tel:
+  // links are SIBLINGS of that button (not descendants), so a tap dials
+  // straight through and the data-action delegation never opens the chooser —
+  // the surround does nothing either (the container carries no data-action).
+  // Numbers from EMERGENCY_CONTACTS (108 national ambulance / 112 unified).
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary) ? _emReg.ambulancePrimary.number : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+  html += '<div class="ld-emergency col-full">'
+        +   '<button class="ld-emergency-main" data-action="ldEmergency">'
+        +     '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +     '<span class="ld-emergency-body">'
+        +       '<span class="ld-emergency-label">Emergency</span>'
+        +       '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +     '</span>'
+        +     '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        +   '</button>'
+        +   '<div class="ld-emergency-calls">'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>Ambulance · ' + escHtml(ambNum) + '</span></a>'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>Emergency · ' + escHtml(emgNum) + '</span></a>'
+        +   '</div>'
+        + '</div>';
+
+  el.innerHTML = html;
+  _ldAnimateIn(el);
+}
+
+// Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing
+// dynamic-overlay pattern: build → animate open → lock scroll → close on the
+// × / outside-tap. Two paths: Food (→ Track→Diet→Library, where PR #216 is
+// adding the food emergency room) and General (Coming soon — new concept).
+function openEmergencyChooser() {
+  var existing = document.getElementById('ldEmOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ld-em-overlay';
+  overlay.id = 'ldEmOverlay';
+  document.body.appendChild(overlay);
+
+  overlay.innerHTML =
+    '<div class="ld-em-sheet" role="dialog" aria-label="Emergency help">'
+    + '<div class="ld-em-head">'
+    +   '<span class="ld-em-title">' + zi('siren') + '<span>Emergency</span></span>'
+    +   '<button class="ld-em-close" id="ldEmClose" aria-label="Close">×</button>'
+    + '</div>'
+    + '<p class="ld-em-prompt">What kind of help do you need?</p>'
+    + '<button class="ld-em-opt" id="ldEmFood">'
+    +   '<span class="icon icon-rose">' + zi('bowl') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">Food emergency</span>'
+    +     '<span class="ld-em-opt-sub">Choking, allergic reaction &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '<button class="ld-em-opt" id="ldEmGeneral">'
+    +   '<span class="icon icon-rose">' + zi('shield') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">General emergency</span>'
+    +     '<span class="ld-em-opt-sub">Fall, cut, burn &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#ldEmClose').addEventListener('click', _ldCloseEmergency);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _ldCloseEmergency(); });
+
+  // Food emergency → lead directly to the Library sub-tab (Track→Diet→Library);
+  // PR #216 wires the food emergency room (4 emergencies) there.
+  overlay.querySelector('#ldEmFood').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof switchTab === 'function') switchTab('track');
+    setTimeout(function() {
+      if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+      setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+    }, 60);
+    if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
+  });
+
+  // General emergency → new concept, design pending; stub per HR-8.
+  overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+  });
+}
+
+function _ldCloseEmergency() {
+  var overlay = document.getElementById('ldEmOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -77009,11 +77709,11 @@ function _syncGetGlobal(name) {
 // 'track:<sub>' | 'history' | 'insights' | 'info' | null. Mirrors the
 // idiom at intelligence.js:10773 + core.js:2620 (track sub-tab dispatch).
 function _syncReadActiveTab() {
-  if (typeof TAB_ORDER === 'undefined' || typeof document === 'undefined') return null;
+  if (typeof PANEL_IDS === 'undefined' || typeof document === 'undefined') return null;
   var top = null;
-  for (var i = 0; i < TAB_ORDER.length; i++) {
-    var el = document.getElementById('tab-' + TAB_ORDER[i]);
-    if (el && el.classList.contains('active')) { top = TAB_ORDER[i]; break; }
+  for (var i = 0; i < PANEL_IDS.length; i++) {
+    var el = document.getElementById('tab-' + PANEL_IDS[i]);
+    if (el && el.classList.contains('active')) { top = PANEL_IDS[i]; break; }
   }
   if (!top) return null;
   if (top !== 'track') return top;

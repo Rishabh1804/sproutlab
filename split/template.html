@@ -266,7 +266,7 @@
 
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="home" aria-label="Home tab">
+    <button class="tab-btn active" data-tab="landing" aria-label="Home tab">
       <span class="tab-icon"><svg class="zi"><use href="#zi-lotus"/></svg></span><span class="tab-label">Home</span>
     </button>
     <button class="tab-btn" data-tab="growth" aria-label="Growth tab">
@@ -323,8 +323,16 @@
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
-  <!-- ══════════════ TAB 1: HOME ══════════════ -->
-  <div class="tab-panel active" id="tab-home">
+  <!-- ══════════════ LANDING (lean app-open surface — the default-open screen) ══════════════ -->
+  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors + emergency. -->
+  <div class="tab-panel active" id="tab-landing">
+    <div class="grid">
+      <div id="ldContent" class="col-full"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ "TODAY" (the dense dashboard; id stays 'home' per the contract) ══════════════ -->
+  <div class="tab-panel" id="tab-home">
     <div class="grid">
 
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
@@ -2602,8 +2610,12 @@
 
   <!-- FOOTER -->
 
-  <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva <svg class="zi"><use href="#zi-heart"/></svg></div>
+  <div class="app-footer">
+    <div class="footer-text footer-text-style">
+      <span>Built for</span>
+      <span class="footer-name">Ziva</span>
+      <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
+    </div>
   </div>
 
 </div><!-- /app -->

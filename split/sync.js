@@ -329,11 +329,11 @@ function _syncGetGlobal(name) {
 // 'track:<sub>' | 'history' | 'insights' | 'info' | null. Mirrors the
 // idiom at intelligence.js:10773 + core.js:2620 (track sub-tab dispatch).
 function _syncReadActiveTab() {
-  if (typeof TAB_ORDER === 'undefined' || typeof document === 'undefined') return null;
+  if (typeof PANEL_IDS === 'undefined' || typeof document === 'undefined') return null;
   var top = null;
-  for (var i = 0; i < TAB_ORDER.length; i++) {
-    var el = document.getElementById('tab-' + TAB_ORDER[i]);
-    if (el && el.classList.contains('active')) { top = TAB_ORDER[i]; break; }
+  for (var i = 0; i < PANEL_IDS.length; i++) {
+    var el = document.getElementById('tab-' + PANEL_IDS[i]);
+    if (el && el.classList.contains('active')) { top = PANEL_IDS[i]; break; }
   }
   if (!top) return null;
   if (top !== 'track') return top;
