@@ -3,7 +3,7 @@
 **Type:** Feature Spec (8-pass; render-first, built-before-spec — this document
 ratifies and freezes what was proven in PR #219).
 **Companion:** Lyra (Builder). **Governors at IMPL:** Vela (render) · Maren (Care) · Kael (engine) · Cipher (final-pass).
-**Status:** Stage 1 (render) built + Architect-reviewed on the live preview; Stage 2 (wiring) + the General Emergency Room are specced here for build.
+**Status:** Stage 1 (render) built + Architect-reviewed on the live preview; **Governor spec-reviewed 2026-06-03 (Maren/Kael/Vela; amendments folded — see §0.5)**; Stage 2 (wiring) + the General Emergency Room are specced here for build.
 **Branch / PR:** `claude/focused-sagan-O11WS` → PR #219 (draft).
 **Created:** 2026-06-03.
 
@@ -22,6 +22,32 @@ Locked decisions, carried forward verbatim:
 7. **Emergency** affordance on the landing — placement (bottom of the landing) **approved**. Opens a two-option chooser; **108/112** are independent `tel:` quick-dial targets.
 8. **General-emergency** is a **new concept, designed fully in this spec** (§5).
 9. The **footer credit** ("Built for Ziva ♥") gets the signature treatment (gradient name + heartbeat + shared warm-wave).
+
+---
+
+## 0.5 Governor spec-review record (Mode-2, 2026-06-03)
+
+Three Governors reviewed this spec. Verdicts: **Maren** `amendments-required`, **Kael** `amendments-required`, **Vela** `endorse-with-amendments`. All amendments folded below (Lyra synthesis). This record is advisory; the canon-cc-008 IMPL gate still runs on the real diff (§10).
+
+| ID | Gov | Finding | Disposition |
+|----|-----|---------|-------------|
+| **M-1** | Maren | Flip-gate detector omits **post-vacc 48h monitoring + logged-reaction tail** (`home.js:612-653`) — a calm screen would silence a reaction-watch window. | **Folded → §4.4.** Added to the blocking flip-gate set. |
+| **M-2** | Maren | "Overdue CareTickets" has **no** `renderRemindersAndAlerts` predicate; it lives in `ctProcessAllOverdue`/`ctMsUntilDue` (caretickets.js, Kael's engine). | **Folded → §4.4** with the named accessor + Kael coordination. |
+| **M-3** | Maren | Detector conflates **missed-day med streaks** vs **today-pending** (`home.js:655-728`). | **Folded → §4.4** — surface both; missed-streak ranked ≥ today-pending. |
+| **M-4** | Maren | Weigh **anaphylaxis/severe allergic reaction** in/out of the Room set (Ziva is in allergen introduction). | **Folded → §5.3 content-gate** open item (Maren rules at content audit). |
+| **M-5** | Maren | Room critical-sort must not contradict existing `SEQUENCE_CRITICAL_IDS` ordering (`config.js:70`). | **Folded → §5.3** reconciliation note. |
+| **K-1** | Kael | **BLOCKING:** `home` active-but-not-in-`TAB_ORDER` silently breaks active-tab *resolvers* (`_syncReadActiveTab` sync.js:331; 7 `curTab` guards; swipe/keyboard; `handleSafeExit`) → dense "Today" fails to re-render on sync write / after a log. My §6/§8.3 "Acceptable" was wrong. | **Folded → §6/§8** — introduce `PANEL_IDS = [...TAB_ORDER, 'home']`; resolvers iterate it; grep widened to `TAB_ORDER.find/indexOf/for` sites. |
+| **K-2** | Kael | Migration needs an **explicit one-shot flag** (`ziva_landing_migrated`) — the `ziva_simple_mode` analogy is idempotent-by-construction; a tab migration is not, and without a flag it yanks a post-flip "Today" chooser back to landing every boot. | **Folded → §6.** |
+| **K-3** | Kael | Boot-restore ordering: migration must run **before** restore; restore early-returns when resolved tab is the default landing (avoid double `renderLanding`). | **Folded → §6.** |
+| **K-4** | Kael | Chooser's General option must gate on **presence of ready content**, not function existence — an all-placeholder registry → stub, not a half-built Room. | **Folded → §5.2/§5.3** (`ready` predicate). |
+| **K-5** | Kael | Selector audit must include `[data-tab="home"]` attribute selectors, not just `#home`; confirm `getActiveIllnessPosture` is cheap on the cold landing path. | **Folded → §6** + §IMPL risk. |
+| **V-1** | Vela | **Room-1 (highest):** sticky callbar needs an explicit stacking + scroll-container contract. | **Folded → §5.3** — callbar `position:sticky; top:0` as a direct child of the overlay's single scroll container; `.ge-item` list scrolls beneath it. |
+| **V-2** | Vela | **Room-2:** "one-open-at-a-time" could collapse the critical CPR item out from under a parent. | **Folded → §5.3** — the `critical` item is **pinned-open / exempt** from the accordion; accordion governs non-critical only. (Vela/Maren boundary.) |
+| **V-3** | Vela | **Room-3:** the critical row's **collapsed** state must carry the call imperative, not just the `name`. | **Folded → §5.3** — critical rows render the "Call 112 now" lead in collapsed state. |
+| **V-4** | Vela | **Room-4:** Room z-index must sit above the chooser (1010) + toast band → **≥1050**. | **Folded → §5.3** (z-index 1060). |
+| **V-5** | Vela | **Room-5:** scroll-lock handoff — Room must lock before the chooser releases (no scroll-bleed frame). | **Folded → §5.3.** |
+| **V-6** | Vela | Door-vs-Emergency contrast: Emergency reads at door-weight; state intent or lift one rung. | **Folded → §4.7** — Emergency gets a thin rose top-rail (one rung up; Maren-coord). |
+| **V-7** | Vela | Room opens with **no item-stagger** (instant content); dark parity for the loud-rose critical; focus to ×/callbar on open; reuse `.ld-emergency-call` tel: pill. | **Folded → §5.3.** |
 
 ---
 
@@ -125,16 +151,23 @@ Doors de-twinned by tint so they don't read as a pair (Vela V-V-2).
 persistent loud-rose `.card.card-action` above the calm, one tap to the fix; no
 auto-dissolve.
 - **Stage 1 (built):** active illness episodes via `getActiveIllnessPosture()`.
-- **Stage 2 ship-gates (Maren, required before the default-flip):**
-  (a) extend the detector to **due meds (Vit D3) + overdue/same-day vaccines + overdue CareTickets** (the silent, time-axis signals) via the `renderRemindersAndAlerts` predicate set;
-  (b) give **action-needed** cards a **hotter icon tone** than the calm "being-tracked" `icon-rose`;
-  (c) prefer deep-linking due-meds to the med tracker over the generic `switchTab home`.
+- **Stage 2 ship-gates (Maren, BLOCKING before the default-flip).** The detector must surface the COMPLETE set of silent, time-axis signals — an incomplete set defeats the flip-gate (a calm screen hiding a hard-deadline signal). Sources are `home.js:520-786` (`renderRemindersAndAlerts`) **except CareTickets** (M-2):
+  - (a1) **Today-pending meds** — Vit D3 still due today (`home.js:696-728`).
+  - (a2) **Missed-day med streaks** — up to 14 days back (`home.js:655-683`); ranked **≥ as hot** as today-pending (M-3).
+  - (a3) **Overdue / same-day vaccines** (`home.js` vaccine reminder block).
+  - (a4) **Post-vaccination 48h monitoring window** (`home.js:612-635`) **and** the **logged-reaction monitoring tail** (`home.js:636-653`) — a reaction-watch must not go silent behind a calm screen (M-1).
+  - (a5) **Overdue CareTickets** — NOT in `renderRemindersAndAlerts`; read via `ctProcessAllOverdue()` / `ctMsUntilDue()` (`intelligence-caretickets.js:211-215, 614`). **Cross-jurisdiction read — Kael owns the accessor, Maren owns the surfacing** (M-2). The pre-empt names this exact accessor, not a hand-wave.
+  - (b) **action-needed** cards get a **hotter icon tone** than the calm "being-tracked" `icon-rose`.
+  - (c) deep-link due-meds to the med tracker (and overdue CareTickets to the ticket) over the generic `switchTab home`.
 
 ### 4.5 Motion
 `_ldAnimateIn()` — staggered fade-up (greeting→hero→doors→emergency), gated on `window.Motion`; no CSS pre-hide (accessible default); reduced-motion skips. The two warm-wave sweeps (hero stripe + footer name) share `@keyframes ld-wave`.
 
 ### 4.6 Footer credit (global, `.app-footer`)
 "Built for **Ziva** ♥": "Ziva" wears the wavelength gradient via `background-clip:text` and the **shared `ld-wave` sheen sweep** (a bookend to the hero stripe); the `zi-heart` turns `--tc-rose` and beats (`@keyframes footer-beat`, reduced-motion off); set in Fraunces italic. Replaced the legacy inline `opacity:0.4` (HR-2 fix).
+
+### 4.7 Door-vs-Emergency contrast ladder (V-6)
+As built, the Emergency card sits at the same visual weight as a door (whisper-fade + 1.5px border). Calm-by-default is intended, but the Emergency affordance should land the eye one rung **before** the doors in a hurry. **Decided:** the Emergency card gets one extra rung of contrast — a **thin rose top-rail** (a 3px `--accent-w`-style rose top border, echoing the action-card accent) — lifting it above door-weight without going loud. Maren coordinates the exact loudness (the calm/findable tension on an always-present help affordance).
 
 ---
 
@@ -148,7 +181,7 @@ Container carries **no** `data-action`. Children:
 ### 5.2 Chooser (built; `openEmergencyChooser()`)
 Bottom-sheet overlay (mirrors `openOutingBriefing`: build → animate → scroll-lock → close on ×/outside-tap; reduced-motion floor). Two options:
 - **Food emergency** → `switchTab('track')` → `switchTrackSub('diet')` → `switchDietSub('library')` (leads directly to the Library sub-tab, where **PR #216** wires the food emergency room of 4 emergencies). Toast on transit.
-- **General emergency** → opens the **General Emergency Room** (§5.3). *(Stage-1 stub = "Coming soon" toast; this spec replaces it.)*
+- **General emergency** → opens the **General Emergency Room** (§5.3) **only when ready content is present** — the option gates on a `ready` predicate over `GENERAL_EMERGENCIES` (records whose `source` is non-placeholder), NOT on the render function existing (K-4). An all-placeholder registry resolves to the "Coming soon" stub, so the Room can ship dark behind Maren's content gate without a half-built Room reaching a parent. *(Stage-1 stub = "Coming soon" toast; this spec replaces it once the content gate clears.)*
 
 ### 5.3 General Emergency Room — NEW CONCEPT (full design)
 
@@ -207,7 +240,21 @@ GENERAL_EMERGENCIES = [
 
 **Food↔object choking cross-link (ratified):** the *choking (object)* item carries a one-line link to the Diet→Library food emergency room — "Choking on **food**? →" → `switchTab('track')`→`switchTrackSub('diet')`→`switchDietSub('library')`. **Coordination note for PR #216:** the food emergency room should reciprocally link back to the General Room for object/non-food choking, so a panicking parent who picks the wrong door is one tap from the right one.
 
-**Design language:** rose domain throughout; `.ge-item` uses the §9.2 whisper-fade; `critical` gets the Emergency-Deck loud rose (louder than every tint). zi icons only; tokens only; dark parity.
+**Design language:** rose domain throughout; `.ge-item` uses the §9.2 whisper-fade; `critical` gets the Emergency-Deck loud rose (louder than every tint, `DESIGN_PRINCIPLES.md` line 120) **with an explicit `[data-theme="dark"]` rule** (V-7). zi icons only; tokens only; dark parity.
+
+**Render contract (Governor amendments — decided, so the builder doesn't):**
+- **Callbar pinning (V-1, highest risk):** `.ge-callbar` is `position:sticky; top:0` and is a **direct child of the overlay's single scroll container**; the `.ge-item` list scrolls *beneath* it in that same container. (Not the overlay-is-the-scroller layout — sticky would then scroll away.) The bar must survive both scroll and any item expansion.
+- **Critical item is pinned-open (V-2):** the `severity:'critical'` item is **non-collapsible / always-expanded** and exempt from the accordion. The one-open-at-a-time rule governs **only non-critical** items, so tapping "Burn" can NEVER collapse the CPR steps. (Vela/Maren boundary — interaction is Vela's, the call-lead content is Maren's floor.)
+- **Collapsed row carries the action (V-3):** a critical row renders its **call imperative in the COLLAPSED state** ("Call 112 now" lead chip on the row), not only inside the expanded body — a parent who never expands still sees the action.
+- **Overlay stacking (V-4):** Room `z-index: 1060` — above the chooser (`1010`) and the toast band, so a lingering transit toast can never render over it.
+- **Scroll-lock handoff (V-5):** the Room **acquires the body scroll-lock before the chooser releases it** (open Room → then close chooser, or a shared lock-count) — no scroll-bleed frame on a panic surface.
+- **No item-stagger (V-7):** the Room opens with **instant content** (overlay fade only; `.ge-item`s at final state immediately) — a panicking parent must not wait for a cascade to read step one.
+- **Focus (V-7):** focus moves to the Room's × (or callbar) on open, returns to the Emergency card on close.
+- **tel: reuse (V-7):** the pinned 112/108 reuse the landing's `.ld-emergency-call` sibling-`tel:` pill pattern exactly — not a reinvention.
+
+**Content-gate open items (Maren rules at the content audit):**
+- **Anaphylaxis / severe allergic reaction (M-4):** explicitly rule **in or out** with a documented reason — Ziva is in active allergen introduction; a sudden airway/whole-body reaction is distinct from choking and poison and the cross-link does not cover it. Do not let it fall through the gap.
+- **Ordering reconciliation (M-5):** the Room's critical-first sort must not contradict the existing `SEQUENCE_CRITICAL_IDS` ordering doctrine (`config.js:70`, which already orders `choking`/`seizure`/`breathing-difficulty`/`head-injury`/`fall-injury`/`allergic-reaction`). Reconcile the two registries at content-audit time.
 
 ---
 
@@ -219,15 +266,16 @@ guards** (`intelligence-quicklog.js` + `intelligence-qa-handlers.js`). Therefore
 
 - Keep id `home` = dense dashboard (`#tab-home`, `renderHome()` unchanged); **UI label → "Today."**
 - New id `landing` is the default-open; nav slot index 0 (label "Home", `zi-lotus`).
-- `TAB_ORDER` stays **6**: `['landing','growth','track','insights','history','info']` → no swipe/keyboard index shift. `switchTab('home')` stays valid for the Today door (guarded `indexOf === -1`).
-- **Code-clarity comments** at both sites: id `home` ⇒ "Today"; id `landing` ⇒ "Home."
+- `TAB_ORDER` stays **6**: `['landing','growth','track','insights','history','info']` → no swipe/keyboard index shift. `switchTab('home')` stays valid for the Today door (panel activates by id; button-highlight no-ops on `indexOf === -1`).
+- **K-1 (BLOCKING) — `home` is active-but-not-in-`TAB_ORDER`, which silently breaks every active-tab *resolver*.** Panel activation is fine, but the resolvers that discover the active tab by iterating `TAB_ORDER` and testing `#tab-<id>.active` — **`_syncReadActiveTab` (`sync.js:331-342`)**, the **7 `curTab` re-render guards** (`intelligence-quicklog.js:1758/2122/2135/2270/2307/2344/2381`, `intelligence-qa-handlers.js:3365`), and the swipe/keyboard/`handleSafeExit` resolvers (`core.js:3693/3785/5049/5148`) — all return `null`/miss when the active panel is the dense "Today" (`home`). **Failure mode (silent):** on "Today," a Firestore sync write or a logged action does **not** re-render the dashboard — stale surface, no error. **Fix:** introduce `const PANEL_IDS = [...TAB_ORDER, 'home'];` and route **every active-panel-resolution site** through `PANEL_IDS` (not `TAB_ORDER`). Nav-order sites (swipe index, button highlight) keep `TAB_ORDER`; **panel-resolution** sites use `PANEL_IDS`.
+- **Code-clarity comments** at both sites: id `home` ⇒ "Today"; id `landing` ⇒ "Home." `TAB_ORDER` = nav order (6); `PANEL_IDS` = all activatable panels (7, includes `home`).
 
 **Touch-points:**
 - `core.js` `TAB_ORDER`; the `landing` render-trigger (built); `#headerFull` toggle (built).
-- **Boot restore + migration** (`core.js` boot): one-shot, version-flagged (mirror `ziva_simple_mode → ziva_essential_mode`): if `ziva_active_tab` absent OR `=== 'home'` → resolve to `landing`; else restore saved. **Never write an unrecognized tab key.**
+- **Boot restore + migration (K-2 / K-3):** the migration needs a **dedicated one-shot flag** — `ziva_simple_mode→essential` is idempotent-by-construction (deletes the old key); a tab migration cannot copy that shape (there is no old key to delete), so without a flag it would yank a *post-flip* user who deliberately chose "Today" (`ziva_active_tab='home'`) back to landing on every boot. Use a `ziva_landing_migrated` key: `if (!ziva_landing_migrated) { if (ziva_active_tab absent || === 'home') write 'landing'; set ziva_landing_migrated='1'; }`. **Ordering (K-3):** migration runs **before** the boot-restore read; the restore early-returns when the resolved tab is the default landing (the template `.active` panel already shows it — don't call `switchTab` into the already-active panel, a wasted `renderLanding`). Revisit the existing `savedTab !== 'home'` restore guard (`core.js:1448`). **Never write an unrecognized tab key.**
 - `template.html`: nav button `data-tab` → `landing` (label "Home"); `#tab-landing` becomes the `.active` panel; **remove the TEMP preview link** + its `.ld-preview-*` CSS.
-- **Performance:** `renderLanding()` stays off the heavy path — greeting + glance + ≤1 cached Care signal; no scoring recompute, charts, ISL summaries, combo init, sleep renders. Move init-time `renderHome()` off cold-start → lazy on first "Today" open.
-- **Essential-mode + header selector audit** (`styles.css` selectors keyed on `aria-label` / `#home*` / `name==='home'`): audit each against the relabel so the dense surface still hides heavy cards and the header still toggles. Grep every `'home'` / `#home` / `aria-label="*tab"` / `headerFull` ref before the diff is final.
+- **Performance:** `renderLanding()` stays off the heavy path — greeting + glance + ≤1 cached Care signal; no scoring recompute, charts, ISL summaries, combo init, sleep renders. Move init-time `renderHome()` off cold-start → lazy on first "Today" open. **Confirm `getActiveIllnessPosture()` is cheap + side-effect-free on the cold landing path** (it now runs every app-open via `_ldCareAlerts()`; must not pull ISL summary generation — K-5 risk).
+- **Selector audit (K-5):** audit `styles.css` selectors keyed on `aria-label` / `#home*` / `name==='home'` **and `[data-tab="home"]` attribute selectors** against the relabel so the dense surface still hides heavy cards (essential mode) and the header still toggles. Grep every `'home'` / `#home` / `[data-tab="home"]` / `aria-label="*tab"` / `headerFull` ref **and every `TAB_ORDER.find` / `TAB_ORDER.indexOf` / `for…TAB_ORDER` active-panel-resolution site** (per K-1) before the diff is final.
 
 ---
 
@@ -247,7 +295,7 @@ No new storage. All derived:
 
 1. **Empty day** → prospective hero copy + "Start with breakfast" (not "Quiet day so far.").
 2. **Motion absent / reduced-motion** → static rainbow stripe + name; fade-ins land at final state; heartbeat off.
-3. **`switchTab('home')` while `home` not in `TAB_ORDER`** → panel still activates by id; no nav button highlights (guarded). Acceptable.
+3. **`switchTab('home')` while `home` not in `TAB_ORDER`** → panel activates by id; nav button no-ops (guarded). **But active-panel *resolvers* must use `PANEL_IDS` (§6 K-1)** — otherwise sync writes / log re-renders silently skip the dense "Today." Resolved by the `PANEL_IDS` fix; verified by test #12.
 4. **Care signal + Emergency both relevant** → Care pre-empt (slot 0, illness/overdue) is distinct from Emergency (slot 3, sudden events). Both may show; they don't compete (different registers, different positions).
 5. **Multiple active illnesses** → one pre-empt card per active episode (existing posture array).
 6. **tel: on a device with no dialer (desktop preview)** → browser handles `tel:`; no crash. The card-open still works.
@@ -289,6 +337,10 @@ Diff touches `intelligence-cards.js` (**Vela**), `home.js` + Care pre-empt + Gen
 9. **Essential mode:** dense "Today" still hides heavy cards; header toggles correctly.
 10. **Performance:** `renderHome()` not on cold start; landing open is fast.
 11. **Motion:** reduced-motion → static stripe/name, no heartbeat, fades at final state; light + dark + 3 zoom tiers.
+12. **K-1 resolver guard:** on the dense "Today" surface, (a) receive a Firestore sync write → dashboard re-renders; (b) log a feed/sleep/etc → dashboard + suggestions re-render. Neither goes stale. (Regression guard for the `PANEL_IDS` fix.)
+13. **K-2 migration idempotency:** post-flip, deliberately tap "Today" (writes `ziva_active_tab='home'`), refresh → stays on "Today" (NOT yanked to landing); `ziva_landing_migrated` set once.
+14. **K-4 Room content gate:** with an all-placeholder `GENERAL_EMERGENCIES`, the chooser's General option → "Coming soon" stub, never a half-built Room.
+15. **Room panic render:** callbar survives scroll + expansion (V-1); tapping a non-critical item never collapses the critical CPR item (V-2); critical row shows "Call 112 now" while collapsed (V-3); Room renders above any transit toast (V-4); no scroll-bleed frame on chooser→Room (V-5).
 
 ---
 
