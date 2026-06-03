@@ -6,6 +6,7 @@
 //   • WATERMARK uses the real zif_food icons (food colours), repositioned so they
 //     never touch; dominant ingredient gets the big slot.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { compose } from '../taglines.mjs';
 
 // pull the canonical zif sprite (61 symbols) from the approved sheet — no duplication
 const sheet = readFileSync('docs/design/zi-food-sheet.html', 'utf8');
@@ -85,48 +86,43 @@ function fingerprint(rec) {
 
 // ── tagline system ───────────────────────────────────────────────────────────
 // Curated recipes carry 2–3 taglines, rotated by a day-seed (novelty, not random).
-// Uncurated mixes fall back to a generated line: {texture}, {dominant-domain} {form}.
-const FORM = [
-  [/khichdi/i,            ['a soft',   'one-pot']],
-  [/porridge|kheer|malt/i,['a warm',   'porridge']],
-  [/mash|pur[eé]e/i,      ['a smooth', 'mash']],
-  [/soup|broth/i,         ['a cosy',   'soup']],
-  [/dosa|idli|upma|poha/i,['a light',  'bite']],
-];
-const DOMPHRASE = {grain:'grain-led', veg:'veggie-forward', fruit:'fruit-sweet', legume:'protein-rich', dairy:'creamy', nuts:'nutty'};
-const fallbackTag = (rec, fp) => {
-  let tex = 'a gentle', form = 'bowl';
-  for (const [re, [t, f]] of FORM) if (re.test(rec.title)) { tex = t; form = f; break; }
-  return `${tex}, ${DOMPHRASE[fp.dominant] || 'wholesome'} ${form}`;
-};
-// deterministic day-seed → same dish reads fresh across days, stable within a day
+// Uncurated mixes COMPOSE from the shared bank (taglines.mjs): weighted by quantity,
+// epithets rotate, soft prep-cautions fold in, strict no's lead.
 const DAYSEED = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5);
-const pickTag = (rec, fp) => {
-  const pool = (rec.tags && rec.tags.length) ? rec.tags : [fallbackTag(rec, fp)];
-  return { tag: pool[DAYSEED % pool.length], pool, generated: !(rec.tags && rec.tags.length) };
+const pickTag = (rec) => {
+  if (rec.tags && rec.tags.length)
+    return { tag: rec.tags[DAYSEED % rec.tags.length], pool: rec.tags, generated: false };
+  const parts = rec.ings.filter(i => i.dom !== 'trace').map(i => ({ id: i.icon, w: i.g }));
+  return { composed: compose(parts, DAYSEED), generated: true };
 };
 
 const SLOTS = ['s1', 's2', 's3'];
 const card = (rec) => {
   const fp = fingerprint(rec);
-  const t = pickTag(rec, fp);
+  const t = pickTag(rec);
   const wm = fp.ranked.map((i, k) =>
     `<span class="wi ${SLOTS[k]}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg></span>`).join('');
   const chips = rec.ings.map(i => {
     const dk = i.dom !== 'trace' ? i.dom : i.td;       // trace items tint via mapped domain
     return `<span class="gh-chip dt-${DOM[dk].dt}"><svg class="zi" style="color:${i.c}"><use href="#zif-${i.icon}"/></svg>${i.n}</span>`;
   }).join('');
-  // design-record only: show the tagline bank so the rotation is legible
-  const others = t.pool.filter(x => x !== t.tag);
-  const bank = t.generated
-    ? `<span class="bk-gen">generated fallback</span>`
-    : (others.length ? `+${others.length} more · rotates daily` : '');
+  // tagline: curated (rotates) or composed from the bank (uncurated). strict warns lead.
+  let tagHtml, bank;
+  if (t.generated) {
+    const { strict, body } = t.composed;
+    tagHtml = (strict.length ? `<span class="gh-warn">${strict.join('; ')}</span> ` : '') + body;
+    bank = `<span class="bk-gen">composed</span>`;
+  } else {
+    const others = t.pool.filter(x => x !== t.tag);
+    tagHtml = t.tag;
+    bank = others.length ? `+${others.length} more · rotates daily` : '';
+  }
   return `<article class="gh" style="--stripe:${fp.stripe};--fl:${fp.fadeL};--fd:${fp.fadeD}">
     <div class="gh-wm">${wm}</div>
     <div class="gh-top"><span class="gh-eyebrow"><svg class="zi"><use href="#zi-sparkle"/></svg>Recipe of the day</span>
       <span class="gh-badge">${rec.badge}</span></div>
     <h3 class="gh-title">${rec.title}</h3>
-    <p class="gh-tag">${t.tag}${bank ? `<span class="gh-bank"> · ${bank}</span>` : ''}</p>
+    <p class="gh-tag">${tagHtml}${bank ? `<span class="gh-bank"> · ${bank}</span>` : ''}</p>
     <p class="gh-why">${rec.why}</p>
     <div class="gh-ings">${chips}</div>
     <div class="gh-foot"><span class="gh-meta"><svg class="zi"><use href="#zi-clock"/></svg><b>${rec.time}</b></span>
@@ -194,6 +190,7 @@ const html = `<!DOCTYPE html>
   .gh-title{position:relative;z-index:1;font-family:'Fraunces',serif;font-weight:700;font-size:31px;line-height:1.06;letter-spacing:-0.01em;color:var(--text);margin-bottom:2px;max-width:92%;text-wrap:balance;}
   .gh-tag{position:relative;z-index:1;font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:var(--fs-lg);line-height:1.25;color:var(--mid);margin:0 0 var(--sp-10);max-width:82%;}
   .gh-bank{font-family:'Nunito',sans-serif;font-style:normal;font-size:10.5px;font-weight:700;color:var(--light);opacity:.85;}
+  .gh-warn{font-family:'Nunito',sans-serif;font-style:normal;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--tc-rose);}
   .bk-gen{font-family:'Nunito',sans-serif;font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--tc-sage);}
   .gh-why{position:relative;z-index:1;font-size:var(--fs-sm);color:var(--mid);line-height:1.5;margin-bottom:var(--sp-12);max-width:78%;}
   .gh-ings{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:var(--sp-6);margin-bottom:var(--sp-16);max-width:82%;}
