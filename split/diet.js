@@ -798,6 +798,7 @@ function foodLibToggleTried(name) {
 
 // Lazy-render hook — called by switchDietSub when the Library sub-tab opens.
 function renderDietLibrary() {
+  renderLibShelves();
   renderFoods();
   renderFoodLibFilters();
   renderFoodLibResults();
@@ -822,6 +823,146 @@ function switchLibWing(btn) {
   var gu = document.getElementById('dietLibGuides');
   if (br) br.hidden = (wing !== 'browse');
   if (gu) gu.hidden = (wing !== 'guides');
+}
+
+// ════════════════════════════════════════
+// food-effects-v2 Library redesign (S3b) — the living polarity shelves.
+// Groups every FOOD_EFFECTS record by _effPolarity (core.js) into 4 collapsible
+// shelves; each book carries its journey (tried/settled/watching/established from
+// the foods[] log) + an expand-in-place detail (reusing the shipped .enc-form via
+// _milkFormBlock and the never-cross floor via _libBuildGuide). Shelves closed by
+// default; untried books float to the top of their shelf. The whisper-fade (dt-*)
+// is a follow-up. Warn-shelf books carry NO journey chip (we never celebrate a
+// feed the app told a parent to hold).
+// ════════════════════════════════════════
+var LIB_SHELVES = [
+  { pol: 'encourage',   label: 'Introduce early',        icon: 'sprout' },
+  { pol: 'conditional', label: 'Right time, right form', icon: 'clock' },
+  { pol: 'warn',        label: 'Wait — and here\'s why', icon: 'warn' },
+  { pol: 'inform',      label: 'Good to know',           icon: 'info' }
+];
+
+// Ziva's journey with a food, from the foods[] log. Real data only:
+// _fdIsFoodTried + the entry's reaction ('ok'|'watch') + isFoodFavorite.
+// Established (graduated) = favourite + settled + introduced >= 21 days ago.
+function _libJourney(name) {
+  var base = _baseFoodName(String(name).toLowerCase().trim());
+  var entry = null;
+  if (typeof foods !== 'undefined' && Array.isArray(foods)) {
+    for (var i = 0; i < foods.length; i++) {
+      if (_fdSameFood(base, foods[i].name)) { entry = foods[i]; break; }
+    }
+  }
+  var tried = !!entry;
+  var reaction = entry ? (entry.reaction || 'ok') : null;
+  var fav = (typeof isFoodFavorite === 'function') ? isFoodFavorite(name) : false;
+  var daysSince = (entry && entry.date) ? daysBetween(entry.date, today()) : null;
+  var established = !!(tried && reaction === 'ok' && fav && daysSince !== null && daysSince >= 21);
+  return { tried: tried, reaction: reaction, favorite: fav, date: entry && entry.date, daysSince: daysSince, established: established };
+}
+
+// Clean display name: the food name before the polarity framing (the shelf header
+// carries the framing). FE titles read "Egg — good to introduce early"; take "Egg".
+function _libDisplayName(key, eff) {
+  if (eff && eff.title && eff.title.indexOf('—') !== -1) return eff.title.split('—')[0].trim();
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function _libBookDetail(key, eff, j) {
+  var h = '';
+  var why = eff.whyGood || eff.why || '';
+  if (why) h += '<p class="lib-why">' + escHtml(why) + '</p>';
+  if (eff.safeForm && typeof _milkFormBlock === 'function') {
+    h += _milkFormBlock(eff.safeForm, 'Safe forms', 'Never');
+  }
+  // never-cross floor (present-only): choking record gets the choking-scoped header,
+  // every other (allergen/CMPA) gets the reaction header (the floor follows the hazard).
+  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+  var floorHeader = isChoke ? 'If your baby is choking, it\'s an emergency' : 'If a reaction happens — an emergency';
+  h += _libBuildGuide(eff.severeSigns, eff.seekCare, floorHeader);
+  if (j.tried) {
+    var note = (j.reaction === 'watch') ? 'keeping an eye on it' : 'settled fine';
+    var when = j.date ? ('Introduced ' + escHtml(j.date)) : 'Introduced';
+    h += '<p class="lib-why">' + when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.</p>';
+  }
+  return h;
+}
+
+function _libBookHtml(key, eff, pol) {
+  var name = _libDisplayName(key, eff);
+  var glance = (eff.safeForm && eff.safeForm.glance) || eff.headline || '';
+  var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
+  var j = _libJourney(key);
+  var glanceIcon = (pol === 'warn') ? 'warn' : 'spoon';
+  var titleHtml = escHtml(name) + (j.established ? ' <span class="lib-book-reg">· a regular now</span>' : '');
+  var journeyHtml = '';
+  if (pol !== 'warn') { // warn-shelf books carry no journey chip
+    if (!j.tried) {
+      journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
+    } else if (j.established) {
+      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+    } else if (j.reaction === 'watch') {
+      journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+    } else {
+      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+    }
+  }
+  var body = '<span class="lib-book-body"><span class="lib-book-title">' + titleHtml + '</span>' +
+    (glance ? '<span class="lib-book-glance">' + zi(glanceIcon) + escHtml(glance) + '</span>' : '') +
+    journeyHtml + '</span>';
+  var siren = hasFloor ? '<span class="lib-book-siren">' + zi('siren') + '</span>' : '';
+  var go = '<span class="lib-book-go">' + zi('arrow-right') + '</span>';
+  return '<div class="lib-book-wrap">' +
+    '<button class="lib-book lib-book--' + pol + '" data-action="libToggleBook" data-arg="' + escHtml(key) + '">' +
+    body + siren + go + '</button>' +
+    '<div class="lib-detail"><div class="lib-detail-inner">' + _libBookDetail(key, eff, j) + '</div></div></div>';
+}
+
+function renderLibShelves() {
+  var root = document.getElementById('dietShelvesRoot');
+  if (!root) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) { root.innerHTML = ''; return; }
+  var groups = { encourage: [], conditional: [], warn: [], inform: [] };
+  Object.keys(FE).forEach(function(k) {
+    var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
+    (groups[pol] || groups.inform).push(k);
+  });
+  var html = '';
+  LIB_SHELVES.forEach(function(s) {
+    var keys = groups[s.pol];
+    if (!keys || !keys.length) return;
+    // untried float to the top of the shelf (what's left to try)
+    keys.sort(function(a, b) { return (_fdIsFoodTried(a) ? 1 : 0) - (_fdIsFoodTried(b) ? 1 : 0); });
+    html += '<div class="lib-group lib-group--' + s.pol + '">' +
+      '<button class="lib-group-label" data-action="libToggleGroup">' + zi(s.icon) + escHtml(s.label) +
+      '<span class="lib-group-count">' + keys.length + '</span>' +
+      '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
+      '<div class="lib-shelf-row">';
+    keys.forEach(function(k) { html += _libBookHtml(k, FE[k], s.pol); });
+    html += '</div></div>';
+  });
+  root.innerHTML = html;
+}
+
+// Collapsible shelf toggle (data-action="libToggleGroup").
+function libToggleGroup(btn) {
+  var g = btn && btn.closest('.lib-group');
+  if (g) g.classList.toggle('open');
+}
+
+// Expand-in-place book detail — accordion within the shelves (data-action="libToggleBook").
+function libToggleBook(btn) {
+  var wrap = btn && btn.closest('.lib-book-wrap');
+  if (!wrap) return;
+  var d = wrap.querySelector('.lib-detail');
+  var wasOpen = d && d.classList.contains('open');
+  var root = document.getElementById('dietShelvesRoot');
+  if (root) {
+    root.querySelectorAll('.lib-detail.open').forEach(function(x) { x.classList.remove('open'); });
+    root.querySelectorAll('.lib-book.expanded').forEach(function(x) { x.classList.remove('expanded'); });
+  }
+  if (!wasOpen && d) { d.classList.add('open'); btn.classList.add('expanded'); }
 }
 
 // ════════════════════════════════════════

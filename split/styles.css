@@ -10919,6 +10919,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-detail.open { max-height:1200px; }
 .lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
 .lib-detail-inner > * + * { margin-top:var(--sp-12); }
+.lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
 
 /* Emergency Deck — overlay of the four never-cross floors (both faces stacked) */
 .lib-deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-12); overflow:auto; z-index:1200; }
