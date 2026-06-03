@@ -908,7 +908,17 @@
     <div class="diet-sub-panel" id="diet-sub-library" role="tabpanel" aria-labelledby="dietSubLibrary">
       <div class="grid">
 
-        <div class="home-section-label sec-t3 col-full">Foods reference</div>
+        <!-- food-effects-v2 Library redesign: two wings (Browse foods / Safety guides),
+             toggled by switchLibWing (diet.js). Browse = polarity shelves [S3b] + the
+             foods search/grid; Safety guides = the knowledge cards (re-homed from the
+             old eager scroll). -->
+        <div class="lib-wings col-full" role="tablist" aria-label="Food library">
+          <button class="lib-wing lib-wing--active" data-action="switchLibWing" data-arg="browse" role="tab" aria-selected="true"><svg class="zi"><use href="#zi-book"/></svg>Browse foods</button>
+          <button class="lib-wing" data-action="switchLibWing" data-arg="guides" role="tab" aria-selected="false"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
+        </div>
+
+        <div id="dietLibBrowse" class="col-full">
+        <div class="home-section-label sec-t3">Foods reference</div>
 
         <!-- Foods Introduced (preserved IDs; F-3 will add typeahead-search + filter chips here) -->
         <div class="card card-info col-full">
@@ -942,6 +952,10 @@
             <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
           </div>
         </div>
+
+        </div><!-- /dietLibBrowse -->
+
+        <div id="dietLibGuides" class="col-full" hidden>
 
         <!-- Introducing nuts early (food-effects v2 — guided-introduction KNOWLEDGE card;
              lives in the Library, the diet knowledge base, NOT the Info analytics tab).
@@ -1021,6 +1035,8 @@
             <div id="dietChokingIntroMore" class="mt-4"></div>
           </div>
         </div>
+
+        </div><!-- /dietLibGuides -->
 
       </div>
     </div>

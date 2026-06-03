@@ -806,6 +806,24 @@ function renderDietLibrary() {
   renderDietChokingIntro();
 }
 
+// food-effects-v2 Library redesign — toggle the Browse foods / Safety guides wings.
+// Dispatched from core.js (data-action="switchLibWing", data-arg=browse|guides).
+function switchLibWing(btn) {
+  var wing = btn && btn.getAttribute('data-arg');
+  if (!wing) return;
+  var panel = document.getElementById('diet-sub-library');
+  if (!panel) return;
+  panel.querySelectorAll('.lib-wing').forEach(function(b){
+    var on = b.getAttribute('data-arg') === wing;
+    b.classList.toggle('lib-wing--active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  var br = document.getElementById('dietLibBrowse');
+  var gu = document.getElementById('dietLibGuides');
+  if (br) br.hidden = (wing !== 'browse');
+  if (gu) gu.hidden = (wing !== 'guides');
+}
+
 // ════════════════════════════════════════
 // Introducing nuts early — guided-introduction KNOWLEDGE card (food-effects v2)
 // ════════════════════════════════════════

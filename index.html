@@ -11867,7 +11867,17 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <div class="diet-sub-panel" id="diet-sub-library" role="tabpanel" aria-labelledby="dietSubLibrary">
       <div class="grid">
 
-        <div class="home-section-label sec-t3 col-full">Foods reference</div>
+        <!-- food-effects-v2 Library redesign: two wings (Browse foods / Safety guides),
+             toggled by switchLibWing (diet.js). Browse = polarity shelves [S3b] + the
+             foods search/grid; Safety guides = the knowledge cards (re-homed from the
+             old eager scroll). -->
+        <div class="lib-wings col-full" role="tablist" aria-label="Food library">
+          <button class="lib-wing lib-wing--active" data-action="switchLibWing" data-arg="browse" role="tab" aria-selected="true"><svg class="zi"><use href="#zi-book"/></svg>Browse foods</button>
+          <button class="lib-wing" data-action="switchLibWing" data-arg="guides" role="tab" aria-selected="false"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
+        </div>
+
+        <div id="dietLibBrowse" class="col-full">
+        <div class="home-section-label sec-t3">Foods reference</div>
 
         <!-- Foods Introduced (preserved IDs; F-3 will add typeahead-search + filter chips here) -->
         <div class="card card-info col-full">
@@ -11901,6 +11911,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
           </div>
         </div>
+
+        </div><!-- /dietLibBrowse -->
+
+        <div id="dietLibGuides" class="col-full" hidden>
 
         <!-- Introducing nuts early (food-effects v2 — guided-introduction KNOWLEDGE card;
              lives in the Library, the diet knowledge base, NOT the Info analytics tab).
@@ -11980,6 +11994,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div id="dietChokingIntroMore" class="mt-4"></div>
           </div>
         </div>
+
+        </div><!-- /dietLibGuides -->
 
       </div>
     </div>
@@ -20569,6 +20585,7 @@ function init() {
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'switchDietSub' && typeof switchDietSub === 'function') switchDietSub(btn);
+    else if (action === 'switchLibWing' && typeof switchLibWing === 'function') switchLibWing(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -39328,6 +39345,24 @@ function renderDietLibrary() {
   renderDietNutIntro();
   renderDietMilkIntro();
   renderDietChokingIntro();
+}
+
+// food-effects-v2 Library redesign — toggle the Browse foods / Safety guides wings.
+// Dispatched from core.js (data-action="switchLibWing", data-arg=browse|guides).
+function switchLibWing(btn) {
+  var wing = btn && btn.getAttribute('data-arg');
+  if (!wing) return;
+  var panel = document.getElementById('diet-sub-library');
+  if (!panel) return;
+  panel.querySelectorAll('.lib-wing').forEach(function(b){
+    var on = b.getAttribute('data-arg') === wing;
+    b.classList.toggle('lib-wing--active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  var br = document.getElementById('dietLibBrowse');
+  var gu = document.getElementById('dietLibGuides');
+  if (br) br.hidden = (wing !== 'browse');
+  if (gu) gu.hidden = (wing !== 'guides');
 }
 
 // ════════════════════════════════════════
