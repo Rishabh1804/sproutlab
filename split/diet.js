@@ -918,6 +918,33 @@ function _libBookHtml(key, eff, pol) {
     '<div class="lib-detail"><div class="lib-detail-inner">' + _libBookDetail(key, eff, j) + '</div></div></div>';
 }
 
+// "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
+// untried priority-allergen foods (the early-introduction shelf), real-data-driven
+// (FOOD_EFFECTS + _effPolarity + _fdIsFoodTried). Empty once they're all introduced.
+function _libSuggestions() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) return [];
+  var out = [];
+  Object.keys(FE).forEach(function(k) {
+    if (out.length >= 3) return;
+    if (_effPolarity(FE[k]) === 'encourage' && !_fdIsFoodTried(k)) out.push(k);
+  });
+  return out;
+}
+
+function _libLeadHtml() {
+  var sugg = _libSuggestions();
+  if (!sugg.length) return '';
+  var chips = sugg.map(function(k) {
+    return '<button class="lib-lead-chip" data-action="libJumpToBook" data-arg="' + escHtml(k) + '">' +
+      zi('sprout') + escHtml(_libDisplayName(k, FOOD_EFFECTS[k])) + '</button>';
+  }).join('');
+  return '<div class="lib-lead">' +
+    '<div class="lib-lead-h">' + zi('star') + 'Suggested for Ziva</div>' +
+    '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>' +
+    '<div class="lib-lead-chips">' + chips + '</div></div>';
+}
+
 function renderLibShelves() {
   var root = document.getElementById('dietShelvesRoot');
   if (!root) return;
@@ -928,7 +955,7 @@ function renderLibShelves() {
     var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
     (groups[pol] || groups.inform).push(k);
   });
-  var html = '';
+  var html = _libLeadHtml();
   LIB_SHELVES.forEach(function(s) {
     var keys = groups[s.pol];
     if (!keys || !keys.length) return;
@@ -963,6 +990,24 @@ function libToggleBook(btn) {
     root.querySelectorAll('.lib-book.expanded').forEach(function(x) { x.classList.remove('expanded'); });
   }
   if (!wasOpen && d) { d.classList.add('open'); btn.classList.add('expanded'); }
+}
+
+// Lead tap-through (data-action="libJumpToBook") — open the food's shelf, expand
+// its book, and scroll to it. The "follow the lead into the library" flow.
+function libJumpToBook(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  var root = document.getElementById('dietShelvesRoot');
+  if (!root) return;
+  var target = null;
+  root.querySelectorAll('.lib-book').forEach(function(b) {
+    if (b.getAttribute('data-arg') === key) target = b;
+  });
+  if (!target) return;
+  var grp = target.closest('.lib-group');
+  if (grp) grp.classList.add('open');
+  libToggleBook(target);
+  if (target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ════════════════════════════════════════

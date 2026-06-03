@@ -918,19 +918,20 @@
         </div>
 
         <div id="dietLibBrowse" class="col-full">
-        <!-- S3b: polarity shelves (living books) render here, above the foods grid -->
+        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-Ziva
+             lead card is prepended by renderLibShelves. The foods log is collapsed by
+             default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
-        <div class="home-section-label sec-t3">Foods reference</div>
 
-        <!-- Foods Introduced (preserved IDs; F-3 will add typeahead-search + filter chips here) -->
+        <!-- Foods Introduced — the full log of tried foods + search + add. Collapsed by
+             default so the Library opens to the lead + shelves, not a wall of foods. -->
         <div class="card card-info col-full">
-          <div class="card-header">
-            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced <button class="help-btn" aria-label="Help" data-help="help-foods"><span class="t-sm">ⓘ</span></button></div>
+          <div class="card-header" data-collapse-target="foodsRefBody" data-collapse-chevron="foodsRefChevron">
+            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced</div>
             <span class="t-sm t-light" id="foodsTotalCount"></span>
+            <span class="collapse-chevron" id="foodsRefChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
           </div>
-          <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
-          <!-- F-3: search + filter rail. Typing or tapping a chip flattens the
-               accordion (#foodsGrid) into the filtered NUTRITION list (#foodLibResults). -->
+          <div id="foodsRefBody" class="collapse-body fx-col g8" style="display:none;">
           <div class="food-lib-controls">
             <input type="text" id="foodLibSearch" class="food-lib-search" placeholder="Search foods…" data-action="foodLibOnSearch" data-action-on="input" autocomplete="off" aria-label="Search the food library">
             <div class="food-lib-filter-rail" id="foodLibFilterRail" role="group" aria-label="Filter foods"></div>
@@ -952,6 +953,7 @@
               <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
             </div>
             <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
+          </div>
           </div>
         </div>
 

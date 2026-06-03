@@ -10920,6 +10920,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
 .lib-detail-inner > * + * { margin-top:var(--sp-12); }
 .lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+/* Suggested-for-Ziva lead card — the entry point the eye lands on */
+.lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
+.lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
+.lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-lead-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+.lib-lead-chips { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-10); }
+.lib-lead-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-6) var(--sp-12); min-height:36px; border:1.5px solid var(--sage); border-radius:var(--r-2xl); background:var(--card-bg); color:var(--tc-sage); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); cursor:pointer; }
+.lib-lead-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
 
 /* Emergency Deck — overlay of the four never-cross floors (both faces stacked) */
 .lib-deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-12); overflow:auto; z-index:1200; }

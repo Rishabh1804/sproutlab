@@ -617,6 +617,7 @@ function init() {
     else if (action === 'switchLibWing' && typeof switchLibWing === 'function') switchLibWing(btn);
     else if (action === 'libToggleGroup' && typeof libToggleGroup === 'function') libToggleGroup(btn);
     else if (action === 'libToggleBook' && typeof libToggleBook === 'function') libToggleBook(btn);
+    else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);

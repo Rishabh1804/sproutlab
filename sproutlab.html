@@ -10927,6 +10927,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
 .lib-detail-inner > * + * { margin-top:var(--sp-12); }
 .lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+/* Suggested-for-Ziva lead card — the entry point the eye lands on */
+.lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
+.lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
+.lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-lead-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+.lib-lead-chips { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-10); }
+.lib-lead-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-6) var(--sp-12); min-height:36px; border:1.5px solid var(--sage); border-radius:var(--r-2xl); background:var(--card-bg); color:var(--tc-sage); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); cursor:pointer; }
+.lib-lead-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
 
 /* Emergency Deck — overlay of the four never-cross floors (both faces stacked) */
 .lib-deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-12); overflow:auto; z-index:1200; }
@@ -11878,19 +11886,20 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </div>
 
         <div id="dietLibBrowse" class="col-full">
-        <!-- S3b: polarity shelves (living books) render here, above the foods grid -->
+        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-Ziva
+             lead card is prepended by renderLibShelves. The foods log is collapsed by
+             default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
-        <div class="home-section-label sec-t3">Foods reference</div>
 
-        <!-- Foods Introduced (preserved IDs; F-3 will add typeahead-search + filter chips here) -->
+        <!-- Foods Introduced — the full log of tried foods + search + add. Collapsed by
+             default so the Library opens to the lead + shelves, not a wall of foods. -->
         <div class="card card-info col-full">
-          <div class="card-header">
-            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced <button class="help-btn" aria-label="Help" data-help="help-foods"><span class="t-sm">ⓘ</span></button></div>
+          <div class="card-header" data-collapse-target="foodsRefBody" data-collapse-chevron="foodsRefChevron">
+            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-spoon"/></svg></div> Foods Introduced</div>
             <span class="t-sm t-light" id="foodsTotalCount"></span>
+            <span class="collapse-chevron" id="foodsRefChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
           </div>
-          <div class="help-tip" id="help-foods">Track every new food Ziva tries. The 3-day rule: introduce one new food at a time and wait 3 days before the next to spot any reactions. Mark foods as "Watch" if you notice rash, loose stools, or fussiness. The "X of Y" count shows how much variety she has in each food group.</div>
-          <!-- F-3: search + filter rail. Typing or tapping a chip flattens the
-               accordion (#foodsGrid) into the filtered NUTRITION list (#foodLibResults). -->
+          <div id="foodsRefBody" class="collapse-body fx-col g8" style="display:none;">
           <div class="food-lib-controls">
             <input type="text" id="foodLibSearch" class="food-lib-search" placeholder="Search foods…" data-action="foodLibOnSearch" data-action-on="input" autocomplete="off" aria-label="Search the food library">
             <div class="food-lib-filter-rail" id="foodLibFilterRail" role="group" aria-label="Filter foods"></div>
@@ -11912,6 +11921,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
               <button class="rtog" id="rtog-watch" data-reaction="watch"><svg class="zi"><use href="#zi-warn"/></svg> Watch</button>
             </div>
             <button class="btn btn-sky" id="foodAddBtn" data-action="addFood">Add</button>
+          </div>
           </div>
         </div>
 
@@ -20591,6 +20601,7 @@ function init() {
     else if (action === 'switchLibWing' && typeof switchLibWing === 'function') switchLibWing(btn);
     else if (action === 'libToggleGroup' && typeof libToggleGroup === 'function') libToggleGroup(btn);
     else if (action === 'libToggleBook' && typeof libToggleBook === 'function') libToggleBook(btn);
+    else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -39464,6 +39475,33 @@ function _libBookHtml(key, eff, pol) {
     '<div class="lib-detail"><div class="lib-detail-inner">' + _libBookDetail(key, eff, j) + '</div></div></div>';
 }
 
+// "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
+// untried priority-allergen foods (the early-introduction shelf), real-data-driven
+// (FOOD_EFFECTS + _effPolarity + _fdIsFoodTried). Empty once they're all introduced.
+function _libSuggestions() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) return [];
+  var out = [];
+  Object.keys(FE).forEach(function(k) {
+    if (out.length >= 3) return;
+    if (_effPolarity(FE[k]) === 'encourage' && !_fdIsFoodTried(k)) out.push(k);
+  });
+  return out;
+}
+
+function _libLeadHtml() {
+  var sugg = _libSuggestions();
+  if (!sugg.length) return '';
+  var chips = sugg.map(function(k) {
+    return '<button class="lib-lead-chip" data-action="libJumpToBook" data-arg="' + escHtml(k) + '">' +
+      zi('sprout') + escHtml(_libDisplayName(k, FOOD_EFFECTS[k])) + '</button>';
+  }).join('');
+  return '<div class="lib-lead">' +
+    '<div class="lib-lead-h">' + zi('star') + 'Suggested for Ziva</div>' +
+    '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>' +
+    '<div class="lib-lead-chips">' + chips + '</div></div>';
+}
+
 function renderLibShelves() {
   var root = document.getElementById('dietShelvesRoot');
   if (!root) return;
@@ -39474,7 +39512,7 @@ function renderLibShelves() {
     var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
     (groups[pol] || groups.inform).push(k);
   });
-  var html = '';
+  var html = _libLeadHtml();
   LIB_SHELVES.forEach(function(s) {
     var keys = groups[s.pol];
     if (!keys || !keys.length) return;
@@ -39509,6 +39547,24 @@ function libToggleBook(btn) {
     root.querySelectorAll('.lib-book.expanded').forEach(function(x) { x.classList.remove('expanded'); });
   }
   if (!wasOpen && d) { d.classList.add('open'); btn.classList.add('expanded'); }
+}
+
+// Lead tap-through (data-action="libJumpToBook") — open the food's shelf, expand
+// its book, and scroll to it. The "follow the lead into the library" flow.
+function libJumpToBook(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  var root = document.getElementById('dietShelvesRoot');
+  if (!root) return;
+  var target = null;
+  root.querySelectorAll('.lib-book').forEach(function(b) {
+    if (b.getAttribute('data-arg') === key) target = b;
+  });
+  if (!target) return;
+  var grp = target.closest('.lib-group');
+  if (grp) grp.classList.add('open');
+  libToggleBook(target);
+  if (target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ════════════════════════════════════════
