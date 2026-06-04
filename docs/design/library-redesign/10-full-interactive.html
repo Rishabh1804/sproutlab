@@ -64,6 +64,12 @@
   .lib-lead-chips { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-10); }
   .lib-lead-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-6) var(--sp-12); min-height:36px; border:1.5px solid var(--sage); border-radius:var(--r-2xl); background:var(--card-bg); color:var(--tc-sage); font-weight:700; font-size:var(--fs-sm); cursor:pointer; }
   .lib-lead-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .lib-search { margin-top:var(--sp-20); }
+  .lib-search-h { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--mid); margin:0 0 var(--sp-8); }
+  .lib-search-input { width:100%; box-sizing:border-box; border:1.5px solid var(--line); background:var(--card-bg); color:var(--text); border-radius:var(--r-2xl); padding:var(--sp-10) var(--sp-16); min-height:44px; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); }
+  .lib-search-input::placeholder { color:var(--light); }
+  .lib-search-results { display:flex; flex-direction:column; gap:var(--sp-10); margin-top:var(--sp-10); }
+  .lib-search-empty { font-size:var(--fs-sm); color:var(--light); padding:var(--sp-8) var(--sp-4); }
 
   .emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-2xl); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
   .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:#fff; display:flex; align-items:center; justify-content:center; }
@@ -259,7 +265,20 @@ var SHELVES = [
   {pol:'inform',label:'Good to know',icon:'info'}
 ];
 var POL = {encourage:{label:'Good to introduce early',icon:'sprout'},conditional:{label:'Right time, right form',icon:'clock'},warn:{label:'Wait — and here’s why',icon:'warn'},inform:{label:'Good to know',icon:'info'}};
-var byKey = {}; FOODS.forEach(function(f){ byKey[f.k]=f; });
+// broader corpus (no FOOD_EFFECTS — nutrition + a neutral safety note); search-only
+var CORPUS = [
+ {k:'rice',name:'Rice',dt:'grains',voice:'soft & gentle',journey:'settled',pol:'inform',note:'A gentle first grain. Introduce on its own and watch 3 days.',nutrients:[['Carbs','energy'],['Energy','energy']],age:'From around 6 months.',history:'Given many times · settled.'},
+ {k:'banana',name:'Banana',dt:'fruits',voice:'creamy & sweet',journey:'regular',pol:'inform',note:'An easy first fruit — mash ripe. No specific allergen note on file.',nutrients:[['Carbs','energy'],['Potassium','energy'],['Vitamin B6','brain'],['Fibre','energy']],age:'From around 6 months.',history:'A favourite · many times.'},
+ {k:'carrot',name:'Carrot',dt:'vegs',voice:'sweet & bright',journey:'settled',pol:'inform',note:'Cook soft — raw carrot is a choking shape.',nutrients:[['Vitamin A','immunity'],['Beta-carotene','immunity'],['Fibre','energy']],age:'From around 6 months, cooked soft.',history:'Given · settled.'},
+ {k:'moong',name:'Moong dal',dt:'grains',voice:'savoury & hearty',journey:'settled',pol:'inform',note:'A staple first protein. Cook soft.',nutrients:[['Protein','growth'],['Iron','blood'],['Folate','blood'],['Fibre','energy']],age:'From around 6 months.',history:'Given often · settled.'},
+ {k:'paneer',name:'Paneer',dt:'dairy',voice:'mild & milky',journey:'untried',pol:'inform',note:'Soft fresh cheese — a dairy allergen; introduce on its own and watch.',nutrients:[['Protein','growth'],['Calcium','bones'],['Vitamin B12','blood']],age:'From around 6 months.',history:''},
+ {k:'apple',name:'Apple',dt:'fruits',voice:'sweet & stewed',journey:'untried',pol:'inform',note:'Stew or grate — raw apple is a choking shape.',nutrients:[['Fibre','energy'],['Vitamin C','immunity']],age:'From around 6 months, stewed.',history:''},
+ {k:'oats',name:'Oats',dt:'grains',voice:'wholesome & warm',journey:'untried',pol:'inform',note:'A gentle wholegrain — cook into porridge.',nutrients:[['Fibre','energy'],['Iron','blood'],['Magnesium','bones'],['Zinc','immunity']],age:'From around 6 months.',history:''},
+ {k:'sweetpotato',name:'Sweet potato',dt:'vegs',voice:'velvety & golden',journey:'settled',pol:'inform',note:'A sweet, smooth first veg — cook soft and mash.',nutrients:[['Vitamin A','immunity'],['Beta-carotene','immunity'],['Fibre','energy'],['Potassium','energy']],age:'From around 6 months.',history:'Given · settled.'},
+ {k:'curd',name:'Curd',dt:'dairy',voice:'cooling & tangy',journey:'untried',pol:'inform',note:'Plain whole-milk curd — a dairy allergen; watch on introduction.',nutrients:[['Calcium','bones'],['Protein','growth'],['Vitamin B12','blood']],age:'From around 6 months.',history:''},
+ {k:'spinach',name:'Spinach',dt:'vegs',voice:'leafy & iron-rich',journey:'untried',pol:'inform',note:'Iron-rich leafy green — cook and chop fine.',nutrients:[['Iron','blood'],['Folate','blood'],['Vitamin A','immunity'],['Fibre','energy']],age:'From around 6 months.',history:''}
+];
+var byKey = {}; FOODS.concat(CORPUS).forEach(function(f){ byKey[f.k]=f; });
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function zi(n){ return '<svg class="zi"><use href="#zi-'+n+'"/></svg>'; }
@@ -300,7 +319,25 @@ function renderBrowse(){
       '<span class="lib-group-count">'+fs.length+'</span><span class="lib-group-chev">'+zi('arrow-right')+'</span></button>'+
       '<div class="lib-shelf-row">'+fs.map(bookHtml).join('')+'</div></div>';
   });
+  html += searchSectionHtml();
   document.getElementById('wingBrowse').innerHTML = html;
+}
+function searchSectionHtml(){
+  return '<div class="lib-search"><div class="lib-search-h">Look up any food</div>'+
+    '<input class="lib-search-input" id="libSearch" placeholder="Search foods…" autocomplete="off">'+
+    '<div class="lib-search-results" id="libSearchResults"></div></div>';
+}
+function searchRow(f){
+  return '<button class="lib-book dt-'+f.dt+'" data-food="'+f.k+'"><span class="lib-book-body">'+
+    '<span class="lib-book-title">'+esc(f.name)+'</span>'+(f.voice?'<span class="lib-book-voice">'+esc(f.voice)+'</span>':'')+journeyChip(f)+'</span>'+
+    '<span class="lib-book-go">'+zi('arrow-right')+'</span></button>';
+}
+function renderSearch(q){
+  var r=document.getElementById('libSearchResults'); if(!r) return;
+  q=(q||'').trim().toLowerCase();
+  if(q.length<1){ r.innerHTML=''; return; }
+  var all=FOODS.concat(CORPUS).filter(function(f){ return f.name.toLowerCase().indexOf(q)!==-1; });
+  r.innerHTML = all.length ? all.map(searchRow).join('') : '<div class="lib-search-empty">No match — try another food.</div>';
 }
 
 function popHtml(f){
@@ -316,7 +353,7 @@ function popHtml(f){
   return '<div class="food-pop"><div class="fp-head dt-'+f.dt+'"><button class="fp-close" data-closepop="1">×</button>'+
     '<div class="fp-name">'+esc(f.name)+'</div>'+voice+jchip+'</div>'+
     '<div class="fp-body"><div>'+
-      '<div class="fp-flag fp-flag--'+f.pol+'">'+zi(p.icon)+'<span><b>'+esc(p.label)+'.</b> '+esc(f.why)+'</span></div>'+
+      (f.note ? '<div class="fp-flag fp-flag--inform">'+zi('info')+'<span>'+esc(f.note)+'</span></div>' : '<div class="fp-flag fp-flag--'+f.pol+'">'+zi(p.icon)+'<span><b>'+esc(p.label)+'.</b> '+esc(f.why||'')+'</span></div>')+
       (f.age?'<div class="fp-flag fp-flag--age">'+zi('warn')+'<span>'+esc(f.age)+'</span></div>':'')+floor+
     '</div>'+forms+nutri+hist+'</div>'+
     '<div class="fp-foot"><button class="fp-foot-btn" data-logserve="1">'+zi('plus')+'Log a serving</button>'+
@@ -386,6 +423,7 @@ phone.addEventListener('pointerup',function(e){
   else if(dx>0 && w==='guides') setWing('browse');
 });
 
+document.addEventListener('input', function(e){ if(e.target && e.target.id==='libSearch') renderSearch(e.target.value); });
 renderBrowse(); renderGuides();
 </script>
 </body>
