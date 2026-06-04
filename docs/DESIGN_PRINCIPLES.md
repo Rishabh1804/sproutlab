@@ -735,11 +735,18 @@ Every `pnpm build` runs these gates sequentially in `split/build.sh`; any failur
 
 ---
 
-## 9. Recipes — Generative Food System (incoming patterns)
+## 9. Recipes — Generative Food System (SHIPPED)
 
-> Patterns established in the **Diet → Recipes design exploration** (2026-06-03, `docs/design/recipes-tab/`).
-> **Forward-looking** — these describe how the recipes feature should be built when wired into `split/`.
-> The exploration is generator-backed (deterministic, data-driven); the wiring runs the canon-cc-008 Governor gate.
+> Patterns established in the **Diet → Recipes design exploration** (2026-06-03, `docs/design/recipes-tab/`)
+> and **wired live** at **#223** (the 4th Diet sub-tab + recipe-aware "Can I give this?") and **#228**
+> (the Tier C generative system — fingerprint hero, §9.5 tagline composer, warm-wave). The descriptions below
+> are now the **as-built** reference, not forward-looking. Live code: `split/recipes.js` (corpus + `RECIPE_EP`
+> composer + `recipeFoodIcon`), `split/diet.js` (`_recipeFingerprint` + `_recipeTagline` + `renderDietRecipes`),
+> `split/styles.css` (`.recipe-hero-gen` / `.dt-*` / `.zif`), `split/template.html` (the 97-symbol `zif-*` sprite).
+> **Safety-floor amendment from the #228 chain:** the §9.7 "strict no's lead" rule is load-bearing through the
+> composer — an ingredient carrying a `strict:` clause (honey/jaggery) must reach the composer even when it is
+> trace-excluded from the fingerprint, or the strict lead silently drops (the M-T-1/K-T-1 catch). Both Governors
+> caught it; an e2e guard now pins it.
 
 ### 9.1 `zi_food` — the food-icon system (`zif-*` symbols)
 A dedicated **full-colour** ingredient icon set (system name `zi_food`, symbol namespace `zif-*`), separate from the monochrome `zi()` system.
@@ -786,6 +793,7 @@ Cross-verified against WHO 2023 / WHO-PAHO / IAP / ICMR-NIN 2024 / NHS / FAO am8
 |---------|------|--------|
 | 1.0 | 9 Apr 2026 | Initial version. Forked from DESIGN_SYSTEM_TEMPLATE.md v1.0. Filled from styles.css audit (7,772 lines), template.html SVG sprite (54 icons), VISUAL_AUDIT.md. |
 | 1.1 | 3 Jun 2026 | Added §9 — Recipes Generative Food System (incoming patterns): `zi_food` full-colour icon system (`zif-*` symbols), whisper-fade ingredient pills, quantity-weighted generative fingerprint, warm-wave stripe, 3-layer tagline system, typography "voice" line (direction C), and the infant-food safety content floor. From the Diet→Recipes design exploration (`docs/design/recipes-tab/`). |
+| 1.2 | 5 Jun 2026 | §9 promoted **incoming → SHIPPED**: wired live at #223 (4th Diet sub-tab + recipe-aware "Can I give this?") and #228 (Tier C generative — fingerprint hero, §9.5 composer port, warm-wave reusing `@keyframes ld-wave`). Added the §9.7 strict-lead-through-the-composer amendment (the M-T-1/K-T-1 catch: a `strict:` ingredient must reach the composer even when trace-excluded from the fingerprint). |
 
 ---
 

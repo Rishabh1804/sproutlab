@@ -1,6 +1,6 @@
 # Session Handoff — SproutLab
 
-**Latest:** [SESSION_HANDOFF_2026-06-02.md](./SESSION_HANDOFF_2026-06-02.md) — **broader food classes** research arc: cow milk + plant milks · fish · the choking set (3 briefs) + the milk polarity spec (Governor-reviewed, Kael/Vela/Maren all `amended`, folded). The full food-effects-v2 taxonomy is now instantiated (11 manifest records, all 5 foodClasses). Docs-only (PR #210, draft); FOOD_EFFECTS wiring is the next code arc.
+**Latest:** [SESSION_HANDOFF_2026-06-05.md](./SESSION_HANDOFF_2026-06-05.md) — **Diet → Recipes: wiring + the Tier C generative system.** #223 wired the 4th Diet sub-tab (cited corpus, logged-data "Suggested for Ziva", meal-slot catalog, recipe-aware "Can I give this?" via one shared resolver) + #228 upgraded it to the full §9 generative food system (grams-weighted fingerprint hero, §9.5 tagline composer, warm-wave reusing the landing's `ld-wave`). New module `recipes.js` → **Kael re-overtakes Maren as tightest** (28,394 / ~1,606 headroom). Signature catch: Maren **and** Kael independently caught the composer dropping the honey strict-lead. Both PRs full canon-cc-008.
 
 ---
 
@@ -8,6 +8,8 @@
 
 | Date | File | Highlight |
 |------|------|-----------|
+| 2026-06-05 | [SESSION_HANDOFF_2026-06-05.md](./SESSION_HANDOFF_2026-06-05.md) | **Diet → Recipes — wiring (#223) + Tier C generative system (#228) · new `recipes.js` module · the trace-for-cosmetics≠trace-for-safety catch · Kael re-tightest** |
+| 2026-06-04 | [SESSION_HANDOFF_2026-06-04.md](./SESSION_HANDOFF_2026-06-04.md) | **The lean landing — calm front door (#219) + refinements (#226); warm-wave hero, three doors, live Care pre-empt deep-linking to the fix** |
 | 2026-06-02 | [SESSION_HANDOFF_2026-06-02.md](./SESSION_HANDOFF_2026-06-02.md) | **Broader food classes — milk · fish · choking-set briefs + the milk polarity spec (Governor-reviewed) · full v2 taxonomy instantiated (11 records) · PR #210 draft, docs-only** |
 | 2026-05-31 (PM) | [SESSION_HANDOFF_2026-05-31_PM.md](./SESSION_HANDOFF_2026-05-31_PM.md) | food-effects v2 Phase γ — the persistent *encourage* Info-tab card (#187) |
 | 2026-05-31 (AM) | [SESSION_HANDOFF_2026-05-31.md](./SESSION_HANDOFF_2026-05-31.md) | guided-introduction model — #181 P0.1 gate, #182 unification, #183 v2 spec, #184 P1a peanut/tree-nut |

@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git --no-pager diff)",
+      "Bash(git --no-pager diff *)",
+      "Bash(git --no-pager status)",
+      "Bash(git --no-pager status *)",
+      "Bash(git --no-pager log)",
+      "Bash(git --no-pager log *)",
+      "Bash(git --no-pager branch *)",
+      "Bash(git --no-pager ls-tree *)",
+      "Bash(git --no-pager ls-files *)",
+      "Bash(git --no-pager show *)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthesis — Recipes generative arc — 2026-06-05</title>
+<style>
+  :root {
+    --bg: #15121a; --panel: #1e1a26; --panel-2: #262031; --ink: #ece6f2;
+    --mid: #b3a9c4; --line: rgba(180,160,210,0.18);
+    --rose: #e090a8; --sage: #7ac0a0; --amber: #d4a848; --sky: #80b8d8; --lav: #b8a8e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+    padding: 32px 20px 64px; }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; margin: 0 0 4px; }
+  header .sub { color: var(--mid); font-size: 0.95rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 28px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 13px; font-size: 0.82rem; color: var(--mid); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  h2 { font-family: Georgia, serif; font-size: 1.15rem; margin: 34px 0 12px;
+    padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; }
+  .card.accent-rose { border-left: 3px solid var(--rose); }
+  .card.accent-sage { border-left: 3px solid var(--sage); }
+  .card.accent-lav  { border-left: 3px solid var(--lav); }
+  .card.accent-amber{ border-left: 3px solid var(--amber); }
+  .card.accent-sky  { border-left: 3px solid var(--sky); }
+  .card h3 { margin: 0 0 7px; font-size: 1rem; }
+  .card p { margin: 0 0 8px; font-size: 0.88rem; color: var(--mid); }
+  .card .tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--lav); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--mid); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tight { color: var(--rose); font-weight: 700; }
+  .lead { font-size: 0.95rem; color: var(--ink); }
+  .foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--mid); font-size: 0.85rem; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Recipes — the generative arc</h1>
+    <div class="sub">Synthesis &middot; 2026-06-05 &middot; Lyra (The Weaver)</div>
+  </header>
+
+  <div class="meta">
+    <span class="chip"><b>PR #223</b> Diet &rarr; Recipes wiring</span>
+    <span class="chip"><b>PR #228</b> Tier C generative</span>
+    <span class="chip"><b>2</b> BLOCKING folds</span>
+    <span class="chip"><b>11/11</b> recipe e2e</span>
+    <span class="chip"><b>17th</b> module: recipes.js</span>
+  </div>
+
+  <p class="lead">The app could track a baby's food but never help a parent make a meal. This arc gave it a Recipes tab &mdash; first the plumbing (a cited corpus, a meal-slot catalog, a "Can I give this?" that stops handing a parent an empty recipe for honey), then the full generative food system: a colour fingerprint weighted by what's in the bowl, a voice composed from the ingredients, a warm-wave sheen in time with the app's front door.</p>
+
+  <h2>Four durable patterns</h2>
+  <div class="grid">
+    <div class="card accent-rose">
+      <div class="tag">Pattern 1 &middot; safety</div>
+      <h3>Trace-for-cosmetics &ne; trace-for-safety</h3>
+      <p>The fingerprint excludes "trace" ingredients so colours don't mud. The tagline composer reused that exclusion &mdash; and honey, filtered as trace, never reached the composer, so the rose <b>"honey &mdash; only from age 1"</b> strict lead was dead code. A warm honey-recipe voice would have shipped with the caution silently gone.</p>
+      <p>Maren <b>and</b> Kael caught it independently. The &sect;9 sibling of M-&gamma;-1: a consolidation for presentation must never drop a safety obligation.</p>
+    </div>
+    <div class="card accent-lav">
+      <div class="tag">Pattern 2 &middot; process</div>
+      <h3>Render-first tier-discussion</h3>
+      <p>When an upgrade exceeds a locked design, present a small ladder of options &mdash; each tied to a real artifact (a record, a canon section, a <b>live</b> surface). The Architect picks the altitude; then build render-first, preview as sign-off, before the gate. Tier A / B / C &rarr; C chosen.</p>
+    </div>
+    <div class="card accent-sage">
+      <div class="tag">Pattern 3 &middot; craft</div>
+      <h3>Live-pattern reuse over parallel invention</h3>
+      <p>The Tier C hero reused the lean-landing's shipped <code>@keyframes ld-wave</code> rather than authoring a new sheen. Three warm-wave surfaces now beat in unison at 4.4s, share one reduced-motion contract, and inherit the prior Governor sign-off &mdash; one CSS line, not a new motion system.</p>
+    </div>
+    <div class="card accent-sky">
+      <div class="tag">Pattern 4 &middot; architecture</div>
+      <h3>One resolver, two surfaces</h3>
+      <p>"Can I give this?" runs through one shared <code>_resolveRecipeAnswer</code> on both the Patterns bar and Home Q&amp;A &mdash; no two-path divergence (the fish/milk defect class). Kael proved the gates algebraically equal; the refactor to <i>shared</i> (not merely equal) is a pinned carry-forward.</p>
+    </div>
+  </div>
+
+  <h2>30K frontier &mdash; closing on two jurisdictions</h2>
+  <table>
+    <thead><tr><th>Jurisdiction</th><th>Modules</th><th class="num">LOC</th><th class="num">Headroom</th></tr></thead>
+    <tbody>
+      <tr><td><b>Kael</b> &middot; Intelligence engine</td><td>+ recipes.js (new)</td><td class="num">28,394</td><td class="num tight">~1,606 &larr; tightest</td></tr>
+      <tr><td><b>Maren</b> &middot; Care</td><td>home + diet + medical</td><td class="num">28,097</td><td class="num tight">~1,903</td></tr>
+      <tr><td><b>Vela</b> &middot; Surfacing render</td><td>cards + quicklog</td><td class="num">8,946</td><td class="num">~21,054</td></tr>
+      <tr><td>Shared &middot; triple-Gov</td><td>styles + template</td><td class="num">14,684</td><td class="num">&mdash;</td></tr>
+      <tr><td colspan="2"><b>Total split-file source</b></td><td class="num"><b>80,121</b></td><td class="num">(was 79,367)</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--mid);font-size:0.85rem;margin-top:10px;">The new <code>recipes.js</code> (593) landed in Kael's data jurisdiction, so Kael <b>re-overtook Maren</b> as the nearest-term split candidate. Both Care and Engine are now &lt;2,000 from the 30K Rule frontier &mdash; the next move (P0) is to draw the engine seam before the Rule draws it.</p>
+
+  <h2>To Codex &mdash; candidate canon</h2>
+  <table>
+    <thead><tr><th class="num">#</th><th>Pattern</th><th>One-line</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Trace-for-cosmetics &ne; trace-for-safety</td><td>A cosmetic exclusion must never be reused where a safety contract rides.</td></tr>
+      <tr><td class="num">2</td><td>Render-first tier-discussion</td><td>Exceed a lock &rarr; tiered options tied to real artifacts; Architect picks the altitude.</td></tr>
+      <tr><td class="num">3</td><td>Live-pattern reuse</td><td>Align to an existing live, audited pattern before inventing a parallel one.</td></tr>
+      <tr><td class="num">4</td><td>One resolver, two surfaces</td><td>Route one judgement through one function; if only equal, pin it and refactor to shared.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="foot">&mdash; Lyra, 2026-06-05. The app learned to cook &mdash; and the lesson that outlives the recipes is the oldest one in a new coat: a thing made warmer, more consolidated, more beautiful, must never become a thing made less safe. The fingerprint was the beauty; the strict lead was the floor; the chain held the floor up while the beauty went on.</div>
+</div>
+</body>
+</html>
