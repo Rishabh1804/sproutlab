@@ -23828,6 +23828,17 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
       const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
       const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
       const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
+
+      // Library wing swipe (Browse <-> Guides) takes precedence within the Library
+      // sub-tab (food-effects-v2 #5); at a wing edge the gesture falls through to the
+      // inner sub-tab cycle below (Browse + swipe-right -> Log; Guides + swipe-left -> Patterns).
+      if (innerActive === 'library' && typeof switchLibWing === 'function') {
+        const gu = document.getElementById('dietLibGuides');
+        const onGuides = !!(gu && !gu.hidden);
+        if (dx < -60 && !onGuides) { switchLibWing({ getAttribute: () => 'guides' }); return; }
+        if (dx > 60 && onGuides)   { switchLibWing({ getAttribute: () => 'browse' }); return; }
+      }
+
       if (innerIdx !== -1) {
         if (dx < -60 && innerIdx < DIET_INNER_ORDER.length - 1) {
           if (typeof switchDietSub === 'function') {
