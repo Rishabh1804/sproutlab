@@ -1462,7 +1462,9 @@ function _libDeckFloors() {
   var out = [];
   var chk = FE['choking hazards'];
   if (chk && chk.severeSigns && chk.severeSigns.length) {
-    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare });
+    // choking is MECHANICAL (back-blows/chest-thrusts, no adrenaline) → amber caution, not
+    // the anaphylaxis rose (mirrors V-M-224 on the pop-up floor).
+    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare, caution: true });
   }
   var ana = FE['egg'];   // representative allergen floor (shared adrenaline response)
   if (ana && ana.severeSigns && ana.severeSigns.length) {
@@ -1473,18 +1475,18 @@ function _libDeckFloors() {
     // V-M-222 (Maren): botulism is sub-acute, not a call-112-now event — its calm
     // seekCare is medically right but sits beside two acute protocols here. Label the
     // tempo so the calm copy reads as deliberate, not as a truncated emergency protocol.
-    out.push({ type: 'After honey — suspected botulism', tempo: 'Not a sudden emergency — watch over the next days and call your doctor.', signs: hon.watchFor, act: hon.seekCare });
+    out.push({ type: 'After honey — suspected botulism', tempo: 'Not a sudden emergency — watch over the next days and call your doctor.', signs: hon.watchFor, act: hon.seekCare, caution: true });
   }
   return out;
 }
 
 function _libDeckHtml() {
   var cards = _libDeckFloors().map(function(f) {
-    var signs = f.signs.map(function(s) { return escHtml(s); }).join(' · ');
-    return '<div class="lib-floor-card">' +
+    var signs = f.signs.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('');
+    return '<div class="lib-floor-card' + (f.caution ? ' lib-floor-card--caution' : '') + '">' +
       '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
       (f.tempo ? '<div class="lib-floor-tempo">' + escHtml(f.tempo) + '</div>' : '') +
-      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><p>' + signs + '</p></div>' +
+      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><ul class="lib-floor-signs">' + signs + '</ul></div>' +
       '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
   }).join('');
   return '<div class="lib-deck-sheet">' +

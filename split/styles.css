@@ -10950,7 +10950,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-floor-face { margin-top:var(--sp-8); }
 .lib-floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
 .lib-floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
-.lib-floor-aid { color:var(--tc-rose); font-weight:700; }
+.lib-floor-signs { margin:0; padding-left:var(--sp-16); }
+.lib-floor-signs li { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-2); }
+.lib-floor-aid { color:var(--tc-rose); font-weight:600; }
+/* per-hazard chrome — choking (mechanical) + botulism (sub-acute) read amber, not the
+   anaphylaxis rose (Deck mirror of V-M-224). */
+.lib-floor-card--caution { border-left-color:var(--amber); }
+.lib-floor-card--caution .lib-floor-card-t { color:var(--tc-amber); }
+.lib-floor-card--caution .lib-floor-aid { color:var(--tc-amber); }
 
 /* ═══ Nutrient colour system — tint-fade chips, one per nutrient-domain (§10.4 DESIGN_PRINCIPLES).
    6 nutrient-domains mapped onto 6 of the 7 house domains (peach reserved for food-domain veg). ═══ */
