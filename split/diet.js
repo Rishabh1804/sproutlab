@@ -1047,6 +1047,9 @@ function _libJourneyChip(pol, j) {
 // collapsed for ALL foods; first-aid stays one tap in the card and always one tap in the
 // Emergency Deck). The floor COPY is still FOOD_EFFECTS-sourced — only its placement moved.
 var _LIB_VERDICT_CLASS = { encourage: 'yes', conditional: 'wait', warn: 'no', inform: 'info' };
+// Verdict icon derives from the SAME verClass as the band colour (V-V-7) so colour and
+// icon can never drift apart: yes→check, wait→clock, no→warn, info→info.
+var _LIB_VERDICT_ICON = { yes: 'check', wait: 'clock', no: 'warn', info: 'info' };
 
 function _libVerdictBand(verClass, icon, headline, sub) {
   return '<div class="fp-verdict fp-verdict--' + verClass + '">' + zi(icon) +
@@ -1079,11 +1082,14 @@ function _libFormsRowBody(sf) {
 }
 
 // Reaction-floor row body — the signs + the FOOD_EFFECTS seekCare action, then the Deck
-// deep-link. Never-cross fidelity unchanged (copy is from the record); placement collapsed.
-function _libFloorRowBody(eff) {
-  var signs = (eff.severeSigns || []).map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
+// deep-link. `signs` is the resolved list (severeSigns, or watchFor when a record carries
+// no acute strip — e.g. honey's sub-acute botulism signs, V-M-223). Never-cross fidelity
+// unchanged (copy is from the record); placement collapsed.
+function _libFloorRowBody(eff, signs) {
+  var list = (signs && signs.length) ? signs : (eff.severeSigns || eff.watchFor || []);
+  var li = list.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
   var act = eff.seekCare ? '<p class="lib-prow-act">' + escHtml(eff.seekCare) + '</p>' : '';
-  return '<ul class="lib-prow-signs">' + signs + '</ul>' + act +
+  return '<ul class="lib-prow-signs">' + li + '</ul>' + act +
     '<button class="lib-prow-deck" data-action="libPopToDeck">' + zi('siren') +
     '<span>Full first aid — In an emergency</span>' + zi('arrow-right') + '</button>';
 }
@@ -1150,18 +1156,25 @@ function _libPopHtml(key, eff, pol, j) {
   else { vPrimary = glance || lead.phrase; vSecondary = ''; }
   var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
   var nutri = _libNutriRowParts(key);
-  var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
+  // Floor row fires on an acute strip (severeSigns) OR a sub-acute watch list (watchFor —
+  // e.g. honey's botulism signs, V-M-223), so a food's own card always carries its signs.
+  var acute = !!(eff.severeSigns && eff.severeSigns.length);
+  var floorSigns = acute ? eff.severeSigns : (eff.watchFor || []);
+  var hasFloor = floorSigns.length > 0;
+  // Chrome: anaphylaxis (acute allergen) = rose; choking + sub-acute watch = amber caution
+  // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
+  var floorCaution = isChoke || !acute;
+  var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
+  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var rows =
     _libPopRow('why', 'info', (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
       why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
     _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
-    (hasFloor ? _libPopRow('floor', 'siren',
-      (isChoke ? 'If your baby is choking' : 'If a reaction happens'),
-      (isChoke ? 'the choking signs' : 'rare, but know the signs'),
-      _libFloorRowBody(eff), false) : '') +
+    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns), false) : '') +
     (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
   var body = '<div class="fp-body fp-body--rows">' +
-    _libVerdictBand(verClass, lead.icon, vPrimary, vSecondary) +
+    _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], vPrimary, vSecondary) +
     '<div class="lib-prows">' + rows + '</div></div>';
 
   // foot — single Quick-Act + the flip-to-history link
@@ -1386,12 +1399,12 @@ function _libCorpusPopHtml(name, j) {
     _libJourneyChip('inform', j) + '</div>';
 
   // ── 6-second body: a concrete verdict leads, then disclosure rows ──
-  var verClass, verIcon, verHead;
-  if (aged) { verClass = 'wait'; verIcon = 'clock'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
-  else if (ageR && ageR.minMonth) { verClass = 'yes'; verIcon = 'check'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
-  else { verClass = 'info'; verIcon = 'info'; verHead = 'Good to know'; }
+  var verClass, verHead;
+  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
+  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
+  else { verClass = 'info'; verHead = 'Good to know'; }
   var rows =
-    (allerg ? _libPopRow('floor', 'warn', 'Allergen — introduce with care', 'watch the first few times',
+    (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
       '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
     (aged ? _libPopRow('why', 'info', 'Why wait', '',
       '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
@@ -1400,7 +1413,7 @@ function _libCorpusPopHtml(name, j) {
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
     '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
   var body = '<div class="fp-body fp-body--rows">' +
-    _libVerdictBand(verClass, verIcon, verHead, tagsLine) +
+    _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], verHead, tagsLine) +
     '<div class="lib-prows">' + rows + '</div></div>';
   var foot = '<div class="fp-foot">' +
     '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(name) + '">' + zi('plus') + 'Log a serving</button>' +
