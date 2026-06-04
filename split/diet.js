@@ -802,9 +802,10 @@ function renderDietLibrary() {
   renderFoods();
   renderFoodLibFilters();
   renderFoodLibResults();
-  renderDietNutIntro();
-  renderDietMilkIntro();
-  renderDietChokingIntro();
+  renderLibGuides();   // #5b: light collapsible Safety-guides cards (floors live in the Deck).
+  // The heavy knowledge cards (renderDietNutIntro / renderDietMilkIntro /
+  // renderDietChokingIntro) are retired from the Guides wing — their floors moved to
+  // the Emergency Deck (libOpenDeck) and their reference distilled into renderLibGuides.
 }
 
 // food-effects-v2 Library redesign — toggle the Browse foods / Safety guides wings.
@@ -1395,6 +1396,64 @@ function libOpenDeck() {
 function _libCloseDeck() {
   var ov = document.getElementById('libDeckOv');
   if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+}
+
+// ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
+// the old heavy knowledge cards: the never-cross emergency FLOORS now live in the
+// always-accessible Emergency Deck, so each guide defers first-aid to the Deck (a
+// pointer) and carries quick reference only — genuine collapsibles, nothing pinned.
+// The priority-allergen list is SOURCED from FOOD_EFFECTS (allergen-introduce-early
+// records, coloured by their food-domain via LIB_SHELF_VOICE); the form-transform +
+// milk/age reference is curated standard guidance (Maren-audited at the gate). ────────
+function _libGuideDeckLink() {
+  return '<button class="lib-guide-deck" data-action="libOpenDeck">' + zi('siren') +
+    '<span>If a reaction or choking happens — open <b>In an emergency</b></span>' + zi('arrow-right') + '</button>';
+}
+
+function renderLibGuides() {
+  var root = document.getElementById('dietLibGuidesRoot');
+  if (!root) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+
+  // (1) priority-allergen chips — sourced from the allergen-introduce-early records,
+  // coloured by food-domain (LIB_SHELF_VOICE.dom → .fdom-chip).
+  var allergenChips = '';
+  if (FE) {
+    Object.keys(FE).forEach(function(k) {
+      var fc = FE[k].foodClass;
+      var isA = Array.isArray(fc) ? fc.indexOf('allergen-introduce-early') !== -1 : fc === 'allergen-introduce-early';
+      if (!isA) return;
+      var meta = LIB_SHELF_VOICE[k];
+      var dom = (meta && meta.dom) ? ' fdom-chip--' + meta.dom : '';
+      allergenChips += '<span class="fdom-chip' + dom + '">' + escHtml(_libDisplayName(k, FE[k])) + '</span>';
+    });
+  }
+
+  // (2) form-transform chips — the approved (record 10) curated set, domain-coded.
+  var formChips = [
+    ['Nuts → ground', 'nuts'], ['Whole grapes → quartered', 'fruits'],
+    ['Hard veg → cooked soft', 'vegs'], ['Hard round sweets → skip', 'spices']
+  ].map(function(c) { return '<span class="fdom-chip fdom-chip--' + c[1] + '">' + escHtml(c[0]) + '</span>'; }).join('');
+
+  var guides = [
+    { pol: 'sage', icon: 'sprout', t: 'Introducing allergens early',
+      body: '<p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
+        '<div><div class="ld-h">The priority allergens</div><div class="ld-chips">' + allergenChips + '</div></div>' },
+    { pol: 'amber', icon: 'spoon', t: 'Safe shapes & textures',
+      body: '<p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
+        '<div><div class="ld-h">Change the form</div><div class="ld-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
+    { pol: 'sky', icon: 'info', t: 'Milk & drinks',
+      body: '<p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+    { pol: 'lav', icon: 'clock', t: 'First foods, by age',
+      body: '<p class="ld-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+  ];
+
+  root.innerHTML = guides.map(function(g) {
+    return '<div class="lib-group lib-group--' + g.pol + ' lib-group--guide">' +
+      '<button class="lib-group-label" data-action="libToggleGroup">' + zi(g.icon) + escHtml(g.t) +
+      '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
+      '<div class="lib-shelf-row"><div class="ld-inner">' + g.body + '</div></div></div>';
+  }).join('');
 }
 
 // ════════════════════════════════════════

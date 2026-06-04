@@ -11045,3 +11045,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-search-results:empty { margin-top:0; }
 .lib-search-empty { font-size:var(--fs-sm); color:var(--light); padding:var(--sp-8) var(--sp-4); }
 .lib-book--lookup { border-left-color:var(--light); }
+
+/* ═══ Safety-guides reference cards (#5b) — light collapsible lib-group bodies. The
+   .lib-group--guide / label-colour rules already ship above; these style the body. ═══ */
+.ld-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+.ld-inner > * + * { margin-top:var(--sp-12); }
+.ld-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
+.ld-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+.ld-why b { font-weight:800; color:var(--text); }
+.ld-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.lib-guide-deck { display:flex; align-items:center; gap:var(--sp-8); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); color:var(--tc-rose); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.lib-guide-deck > span { flex:1; }
+.lib-guide-deck b { font-weight:800; }
+.lib-guide-deck .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; }

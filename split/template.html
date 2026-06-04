@@ -981,84 +981,13 @@
 
         <div id="dietLibGuides" class="col-full" hidden>
 
-        <!-- Introducing nuts early (food-effects v2 — guided-introduction KNOWLEDGE card;
-             lives in the Library, the diet knowledge base, NOT the Info analytics tab).
-             Emergency-floor invariant (§4.3, A-1/V-1): the severe-reaction strip — and the
-             never-whole/choking form-gate (A-2) — must never sit inside an accordion. The
-             always-visible PINNED slot (#dietNutIntro) carries benefit → safe-form gate →
-             SEVERE STRIP; the collapse body (#dietNutIntroBody) carries the how-to protocol
-             → high-risk note → MILD watch-fors → the "delay" myth (§4.4 calm-secondary). The
-             chevron toggles the body (the bulk); the pinned floor + choking gate never fold.
-             renderDietNutIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
-        <div class="card card-info col-full" id="dietNutIntroCard">
-          <div class="card-header" data-collapse-target="dietNutIntroBody" data-collapse-chevron="dietNutIntroChevron">
-            <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-sprout"/></svg></div> Introducing nuts early</div>
-            <span class="collapse-chevron" id="dietNutIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-          </div>
-          <div id="dietNutIntro" class="mt-4"></div>
-          <div id="dietNutIntroBody" class="collapse-body fx-col g8" style="display:none;">
-            <div id="dietNutIntroMore" class="mt-4"></div>
-          </div>
-        </div>
-
-        <!-- Cow's milk — good in food, wait as a drink (food-effects-v2 P1c, the
-             drink-timing polarity; spec docs/specs/food-effects-v2-p1c-milk-polarities.md §4).
-             Conditional, NOT avoid and NOT encourage — the SPLIT lead (sage carve-out band
-             "dairy in food is good now" over an amber gate band "not the main drink before 12mo",
-             V-V-2 / M-2 skim-proof). The CMPA severe strip is PINNED (present-only via
-             severeSigns, §6) and carries a class-aware scope header (V-V-4) so the timing gate is
-             never mistaken for the allergy floor. Pinned: split banner → drink-vs-food block →
-             SEVERE STRIP; body: how-to (after-12mo) → mild watch-fors → myth.
-             renderDietMilkIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
-        <div class="card card-info col-full" id="dietMilkIntroCard">
-          <div class="card-header" data-collapse-target="dietMilkIntroBody" data-collapse-chevron="dietMilkIntroChevron">
-            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-clock"/></svg></div> Cow's milk — in food and as a drink</div>
-            <span class="collapse-chevron" id="dietMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-          </div>
-          <div id="dietMilkIntro" class="mt-4"></div>
-          <div id="dietMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
-            <div id="dietMilkIntroMore" class="mt-4"></div>
-          </div>
-        </div>
-
-        <!-- Plant milks — not a substitute for breastmilk/formula (food-effects-v2 P1c, the
-             substitute-caveat polarity; spec §5). INFORM, not avoid and not encourage — a SKY
-             banner (V-V-3, .enc-inform) leading with the single hardest fact (rice drinks: none
-             under 5, arsenic). No severe strip — the harm is nutritional / chronic, not an acute
-             reaction (§5.3, the floor follows the hazard). Pinned: inform banner → is/isn't block;
-             body: myth → the soy-milk allergen cross-reference. renderDietMilkIntro() fills both. -->
-        <div class="card card-info col-full" id="dietPlantMilkIntroCard">
-          <div class="card-header" data-collapse-target="dietPlantMilkIntroBody" data-collapse-chevron="dietPlantMilkIntroChevron">
-            <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-info"/></svg></div> Plant milks (almond, oat, rice)</div>
-            <span class="collapse-chevron" id="dietPlantMilkIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-          </div>
-          <div id="dietPlantMilkIntro" class="mt-4"></div>
-          <div id="dietPlantMilkIntroBody" class="collapse-body fx-col g8" style="display:none;">
-            <div id="dietPlantMilkIntroMore" class="mt-4"></div>
-          </div>
-        </div>
-
-        <!-- Choking hazards — cut it to make it safe (food-effects-v2 P1c, the choking set;
-             spec docs/specs/food-effects-v2-p1c-milk-polarities.md §9). The FIRST
-             choking-by-form-PRIMARY render. CONDITIONAL, not avoid and not encourage — the model
-             is MODIFY, DON'T BAN: a SPLIT lead (sage carve-out "safe in the right form" over an
-             amber gate "whole forms wait until ~5"), then the cut-it-this-way safeForm block.
-             The emergency floor is CHOKING FIRST AID, NOT anaphylaxis (the floor follows the
-             hazard, §9) — back blows + chest thrusts, NEVER abdominal thrusts under 1, NO
-             adrenaline. Pinned: split lead → cut-rules → the gagging-vs-choking discriminator
-             (V-V-12, the highest-value line, kept above the fold by the floor) → CHOKING-FIRST-AID
-             strip; body: how-to → "normal, let it resolve" reassurance → India note.
-             renderDietChokingIntro() (diet.js, lazy-rendered by renderDietLibrary) fills both. -->
-        <div class="card card-info col-full" id="dietChokingIntroCard">
-          <div class="card-header" data-collapse-target="dietChokingIntroBody" data-collapse-chevron="dietChokingIntroChevron">
-            <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-shield"/></svg></div> Choking hazards — cut it to make it safe</div>
-            <span class="collapse-chevron" id="dietChokingIntroChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
-          </div>
-          <div id="dietChokingIntro" class="mt-4"></div>
-          <div id="dietChokingIntroBody" class="collapse-body fx-col g8" style="display:none;">
-            <div id="dietChokingIntroMore" class="mt-4"></div>
-          </div>
-        </div>
+        <!-- Safety guides — light, collapsible lib-group reference cards (food-effects-v2 #5b).
+             Lightened from the old heavy knowledge cards: the never-cross emergency FLOORS now
+             live in the always-accessible Emergency Deck (the "In an emergency" entry above),
+             so these cards defer first-aid to the Deck and carry quick reference only. Genuine
+             collapsibles (the whole body folds — no pinned floor to keep visible). renderLibGuides()
+             (diet.js, lazy-rendered by renderDietLibrary) fills #dietLibGuidesRoot. -->
+        <div id="dietLibGuidesRoot" class="col-full"></div>
 
         </div><!-- /dietLibGuides -->
 
