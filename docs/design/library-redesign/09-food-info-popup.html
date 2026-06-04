@@ -12,6 +12,12 @@
   arg=food key) — NOT data-quick-modal, which is bound ONCE at init (core.js) and
   would miss this dynamically-rendered button. Handler: openQuickModal('feed') then
   qlFeedAddItem(food) to pre-add the serving.
+  CARD FLIP: "Full history in Info" does NOT navigate away — it FLIPS the card
+  (3D rotateY) to a BACK face = "History & analysis" (her log + a pattern-read
+  insight drawn from the food→poop pipeline + reaction log; empty/wait states when
+  there's no data). "← Back to food info" flips front. Front + back are the two
+  .fp-face children of a .fp-flip (see 10-full-interactive.html for the live flip).
+  This record shows both faces stacked per theme; the trigger is data-action="popFlip".
   TEMPLATE: sections are conditional (only render what a food has); Egg is the
   worked example (it has everything). Wires later over .modal-overlay; content
   reuses the app's getFoodEffect / _effPolarity / _libBuildGuide / NUTRITION + the
@@ -118,6 +124,16 @@
   .fp-foot-btn .zi { width:var(--icon-base); height:var(--icon-base); }
   .fp-foot-link { display:inline-flex; align-items:center; gap:var(--sp-4); color:var(--tc-lav); font-weight:700; font-size:var(--fs-sm); cursor:pointer; white-space:nowrap; }
   .fp-foot-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  /* card-flip back face (front = food info, back = history & analysis; in-app: a rotateY flip,
+     front + back as the two .fp-face children of a .fp-flip — see 10-full-interactive.html) */
+  .fp-insight { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+  .fp-insight .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+  .fp-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:var(--sp-10); padding:var(--sp-24) var(--sp-16); color:var(--light); }
+  .fp-empty .zi { width:30px; height:30px; } .fp-empty p { margin:0; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+  .fp-back-arrow { transform:scaleX(-1); }
+  .fp-foot-btn--ghost { background:var(--surface-alt); color:var(--mid); }
+  .face-label { font-family:'Nunito',sans-serif; font-weight:800; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--light); text-align:center; margin:0 0 8px; }
+  .flip-note { text-align:center; font-size:12px; color:var(--mid); font-weight:700; margin:12px 0; }
 </style>
 </head>
 <body>
@@ -137,6 +153,7 @@
 <!-- the pop-up markup (one instance; rendered into each themed stage by the duplicated block) -->
 <div class="stage">
   <p class="stage-label">Light</p>
+  <p class="face-label">Front — food info</p>
   <div class="fp-backdrop">
     <div class="food-pop">
       <div class="fp-head dt-nonveg">
@@ -176,21 +193,34 @@
             <span class="nutri-chip nutri-chip--blood">Iron</span>
           </div>
         </div>
-        <div>
-          <div class="fp-sec-h">Ziva's history</div>
-          <p class="fp-why">First given 2 Mar · 9 servings · always settled · a favourite. Well established in her diet.</p>
-        </div>
       </div>
       <div class="fp-foot">
         <button class="fp-foot-btn" data-action="libLogServing" data-arg="egg"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
-        <span class="fp-foot-link">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
+        <span class="fp-foot-link" data-action="popFlip">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
       </div>
+    </div>
+  </div>
+  <p class="flip-note">↻ "Full history in Info" flips to ↓</p>
+  <p class="face-label">Back — history &amp; analysis</p>
+  <div class="fp-backdrop">
+    <div class="food-pop">
+      <div class="fp-head dt-nonveg">
+        <button class="fp-close" aria-label="Close">×</button>
+        <div class="fp-name">Egg</div>
+        <div class="fp-voice">History &amp; analysis</div>
+      </div>
+      <div class="fp-body">
+        <div><div class="fp-sec-h">Her log</div><p class="fp-why">First given 2 Mar · 9 servings · always settled · a favourite. Well established.</p></div>
+        <div><div class="fp-sec-h">What the patterns say</div><div class="fp-insight"><svg class="zi"><use href="#zi-info"/></svg><span>Egg days and her poop scores look unrelated — it agrees with her digestion.</span></div></div>
+      </div>
+      <div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost"><svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>
     </div>
   </div>
 </div>
 
 <div class="stage" data-theme="dark">
   <p class="stage-label">Dark</p>
+  <p class="face-label">Front — food info</p>
   <div class="fp-backdrop">
     <div class="food-pop">
       <div class="fp-head dt-nonveg">
@@ -230,15 +260,27 @@
             <span class="nutri-chip nutri-chip--blood">Iron</span>
           </div>
         </div>
-        <div>
-          <div class="fp-sec-h">Ziva's history</div>
-          <p class="fp-why">First given 2 Mar · 9 servings · always settled · a favourite. Well established in her diet.</p>
-        </div>
       </div>
       <div class="fp-foot">
         <button class="fp-foot-btn" data-action="libLogServing" data-arg="egg"><svg class="zi"><use href="#zi-plus"/></svg>Log a serving</button>
-        <span class="fp-foot-link">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
+        <span class="fp-foot-link" data-action="popFlip">Full history in Info <svg class="zi"><use href="#zi-arrow-right"/></svg></span>
       </div>
+    </div>
+  </div>
+  <p class="flip-note">↻ "Full history in Info" flips to ↓</p>
+  <p class="face-label">Back — history &amp; analysis</p>
+  <div class="fp-backdrop">
+    <div class="food-pop">
+      <div class="fp-head dt-nonveg">
+        <button class="fp-close" aria-label="Close">×</button>
+        <div class="fp-name">Egg</div>
+        <div class="fp-voice">History &amp; analysis</div>
+      </div>
+      <div class="fp-body">
+        <div><div class="fp-sec-h">Her log</div><p class="fp-why">First given 2 Mar · 9 servings · always settled · a favourite. Well established.</p></div>
+        <div><div class="fp-sec-h">What the patterns say</div><div class="fp-insight"><svg class="zi"><use href="#zi-info"/></svg><span>Egg days and her poop scores look unrelated — it agrees with her digestion.</span></div></div>
+      </div>
+      <div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost"><svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>
     </div>
   </div>
 </div>
