@@ -1139,14 +1139,20 @@ function _libPopHtml(key, eff, pol, j) {
     (voiceTxt ? '<div class="fp-voice">' + escHtml(voiceTxt) + '</div>' : '') +
     _libJourneyChip(pol, j) + '</div>';
 
-  // ── 6-second body: verdict band leads, then progressive-disclosure rows ──
+  // ── 6-second body: verdict band leads (concrete answer first), then disclosure rows ──
   var glance = (eff.safeForm && eff.safeForm.glance) || eff.gate || '';
   var verClass = _LIB_VERDICT_CLASS[pol] || 'info';
+  // Lead with the CONCRETE answer: encourage/warn carry it in the polarity phrase
+  // ("Good to introduce early" / "Wait — and here's why"); conditional/inform carry it in
+  // the glance ("Fine in food; wait as a drink"). Never lead with the vague category.
+  var vPrimary, vSecondary;
+  if (pol === 'encourage' || pol === 'warn') { vPrimary = lead.phrase; vSecondary = glance; }
+  else { vPrimary = glance || lead.phrase; vSecondary = ''; }
   var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
   var nutri = _libNutriRowParts(key);
   var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
   var rows =
-    _libPopRow('why', lead.icon, (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
+    _libPopRow('why', 'info', (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
       why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
     _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
     (hasFloor ? _libPopRow('floor', 'siren',
@@ -1155,13 +1161,13 @@ function _libPopHtml(key, eff, pol, j) {
       _libFloorRowBody(eff), false) : '') +
     (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
   var body = '<div class="fp-body fp-body--rows">' +
-    _libVerdictBand(verClass, lead.icon, lead.phrase, glance) +
+    _libVerdictBand(verClass, lead.icon, vPrimary, vSecondary) +
     '<div class="lib-prows">' + rows + '</div></div>';
 
   // foot — single Quick-Act + the flip-to-history link
   var foot = '<div class="fp-foot">' +
     (canLog ? '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(key) + '">' + zi('plus') + 'Log a serving</button>' : '') +
-    '<span class="fp-foot-link" data-action="popFlip">Full history in Info ' + zi('arrow-right') + '</span></div>';
+    '<span class="fp-foot-link" data-action="popFlip">Full history ' + zi('arrow-right') + '</span></div>';
 
   return '<div class="food-pop"><div class="fp-flip">' +
     '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
@@ -1379,24 +1385,26 @@ function _libCorpusPopHtml(name, j) {
     (tagsLine ? '<div class="fp-voice">' + escHtml(tagsLine) + '</div>' : '') +
     _libJourneyChip('inform', j) + '</div>';
 
-  // ── 6-second body: a verdict band (age-aware) leads, then disclosure rows ──
-  var verClass = aged ? 'wait' : 'info';
-  var verHead = aged ? ('Wait — from ' + ageR.minMonth + ' months') : 'Good to know';
+  // ── 6-second body: a concrete verdict leads, then disclosure rows ──
+  var verClass, verIcon, verHead;
+  if (aged) { verClass = 'wait'; verIcon = 'clock'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
+  else if (ageR && ageR.minMonth) { verClass = 'yes'; verIcon = 'check'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
+  else { verClass = 'info'; verIcon = 'info'; verHead = 'Good to know'; }
   var rows =
     (allerg ? _libPopRow('floor', 'warn', 'Allergen — introduce with care', 'watch the first few times',
       '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
-    (aged ? _libPopRow('why', 'clock', 'Why wait', '',
+    (aged ? _libPopRow('why', 'info', 'Why wait', '',
       '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
     '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
   var body = '<div class="fp-body fp-body--rows">' +
-    _libVerdictBand(verClass, aged ? 'clock' : 'info', verHead, tagsLine) +
+    _libVerdictBand(verClass, verIcon, verHead, tagsLine) +
     '<div class="lib-prows">' + rows + '</div></div>';
   var foot = '<div class="fp-foot">' +
     '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(name) + '">' + zi('plus') + 'Log a serving</button>' +
-    '<span class="fp-foot-link" data-action="popFlip">Full history in Info ' + zi('arrow-right') + '</span></div>';
+    '<span class="fp-foot-link" data-action="popFlip">Full history ' + zi('arrow-right') + '</span></div>';
 
   return '<div class="food-pop"><div class="fp-flip">' +
     '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
