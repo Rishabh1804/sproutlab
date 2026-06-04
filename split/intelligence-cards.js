@@ -1512,11 +1512,10 @@ function _ldAnimateIn(container) {
 }
 
 function renderLanding() {
-  // Greeting + age live in the shared #headerFull block. Refresh them.
-  // Stage 2 (Kael C3): swap updateHeader() for a lean greeting-only helper to
-  // keep the cold start light.
-  if (typeof updateHeader === 'function') updateHeader();
-
+  // The dense #headerFull greeting card (avatar + age + weather) is hidden on
+  // the lean Landing (switchTab toggles it to the dense "Today" only); the
+  // warm-wave "Today so far" hero below is the Landing's own warm anchor, so we
+  // no longer refresh #headerFull from here.
   const el = document.getElementById('ldContent');
   if (!el) return;
 
