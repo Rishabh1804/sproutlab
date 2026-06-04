@@ -1151,11 +1151,13 @@ function libOpenBook(btn) {
   var j = _libJourney(key);
   ov.innerHTML = _libPopHtml(key, eff, pol, j);
   ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
 }
 
 function _libClosePop() {
   var ov = document.getElementById('libPopOv');
   if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  document.body.classList.remove('lib-overlay-open');
 }
 
 function popFlip() {
@@ -1308,6 +1310,7 @@ function libOpenCorpus(btn) {
   var j = _libJourney(name);
   ov.innerHTML = _libCorpusPopHtml(name, j);
   ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
 }
 
 function _libCorpusPopHtml(name, j) {
@@ -1416,10 +1419,12 @@ function libOpenDeck() {
   if (!ov) return;
   ov.innerHTML = _libDeckHtml();
   ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
 }
 function _libCloseDeck() {
   var ov = document.getElementById('libDeckOv');
   if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  document.body.classList.remove('lib-overlay-open');
 }
 
 // ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
