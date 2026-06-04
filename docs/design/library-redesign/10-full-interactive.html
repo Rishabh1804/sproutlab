@@ -173,7 +173,21 @@
   /* the food pop-up + deck overlays */
   .ov { position:absolute; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:flex-start; justify-content:center; padding:24px 12px; overflow:auto; z-index:50; }
   .ov.open { display:flex; }
-  .food-pop { width:100%; max-width:372px; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 18px 60px rgba(0,0,0,0.4); overflow:hidden; animation:fadeUp var(--ease-med) both; }
+  .food-pop { width:100%; max-width:372px; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 18px 60px rgba(0,0,0,0.4); overflow:hidden; animation:fadeUp var(--ease-med) both; perspective:1400px; }
+  /* card flip — front = food info, back = history & analysis */
+  .fp-flip { position:relative; transform-style:preserve-3d; transition:transform var(--ease-slow); }
+  .fp-flip.flipped { transform:rotateY(180deg); }
+  .fp-face { backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  .fp-front { position:relative; }
+  .fp-back { position:absolute; inset:0; transform:rotateY(180deg); background:var(--cream); border-radius:var(--r-2xl); display:flex; flex-direction:column; }
+  .fp-back .fp-body { flex:1; }
+  .fp-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:var(--sp-10); padding:var(--sp-24) var(--sp-16); color:var(--light); }
+  .fp-empty .zi { width:30px; height:30px; }
+  .fp-empty p { margin:0; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+  .fp-insight { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+  .fp-insight .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+  .fp-back-arrow { transform:scaleX(-1); }
+  .fp-foot-btn--ghost { background:var(--surface-alt); color:var(--mid); }
   .fp-head { position:relative; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
   .fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
   .fp-voice { font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-md); color:var(--mid); margin-top:2px; }
@@ -347,17 +361,38 @@ function popHtml(f){
   var forms = (ok.length||nv.length) ? '<div><div class="fp-sec-h">Safe forms</div><div class="fp-chips">'+ok.join('')+nv.join('')+'</div></div>' : '';
   var floor = f.floor ? '<div class="ld-floor"><div class="ld-floor-h">'+zi('siren')+esc(f.floor.head||'If a reaction happens — an emergency')+'</div><ul><li>'+esc(f.floor.signs)+'</li></ul><p>'+esc(f.floor.act)+'</p></div>' : '';
   var nutri = (f.nutrients&&f.nutrients.length) ? '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">'+f.nutrients.map(function(n){ return '<span class="nutri-chip nutri-chip--'+n[1]+'">'+esc(n[0])+'</span>'; }).join('')+'</div></div>' : '';
-  var hist = f.history ? '<div><div class="fp-sec-h">Ziva\'s history</div><p class="fp-why">'+esc(f.history)+'</p></div>' : '';
   var jchip = journeyChip(f);
   var voice = f.voice ? '<div class="fp-voice">'+esc(f.voice)+'</div>' : '';
-  return '<div class="food-pop"><div class="fp-head dt-'+f.dt+'"><button class="fp-close" data-closepop="1">×</button>'+
-    '<div class="fp-name">'+esc(f.name)+'</div>'+voice+jchip+'</div>'+
-    '<div class="fp-body"><div>'+
+  var head = '<div class="fp-head dt-'+f.dt+'"><button class="fp-close" data-closepop="1">×</button><div class="fp-name">'+esc(f.name)+'</div>'+voice+jchip+'</div>';
+  var body = '<div class="fp-body"><div>'+
       (f.note ? '<div class="fp-flag fp-flag--inform">'+zi('info')+'<span>'+esc(f.note)+'</span></div>' : '<div class="fp-flag fp-flag--'+f.pol+'">'+zi(p.icon)+'<span><b>'+esc(p.label)+'.</b> '+esc(f.why||'')+'</span></div>')+
       (f.age?'<div class="fp-flag fp-flag--age">'+zi('warn')+'<span>'+esc(f.age)+'</span></div>':'')+floor+
-    '</div>'+forms+nutri+hist+'</div>'+
-    '<div class="fp-foot"><button class="fp-foot-btn" data-logserve="1">'+zi('plus')+'Log a serving</button>'+
-    '<span class="fp-foot-link">Full history in Info '+zi('arrow-right')+'</span></div></div>';
+    '</div>'+forms+nutri+'</div>';
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn" data-logserve="1">'+zi('plus')+'Log a serving</button>'+
+    '<span class="fp-foot-link" data-flip="1">Full history in Info '+zi('arrow-right')+'</span></div>';
+  return '<div class="food-pop"><div class="fp-flip">'+
+    '<div class="fp-face fp-front">'+head+body+foot+'</div>'+
+    '<div class="fp-face fp-back">'+popBackHtml(f)+'</div>'+
+    '</div></div>';
+}
+
+// the flipped face — history & analysis (or an empty/wait state if no data)
+function popBackHtml(f){
+  var head = '<div class="fp-head dt-'+f.dt+'"><button class="fp-close" data-closepop="1">×</button><div class="fp-name">'+esc(f.name)+'</div><div class="fp-voice">History &amp; analysis</div></div>';
+  var inner;
+  if(f.journey==='warn'){
+    inner = '<div class="fp-empty">'+zi('warn')+'<p>This one waits until the age limit — there’s no history to show yet, and that’s as it should be.</p></div>';
+  } else if(f.journey==='untried' || !f.journey){
+    inner = '<div class="fp-empty">'+zi('eye')+'<p>Not tried yet. Once you log '+esc(f.name)+', her servings and any patterns will appear here.</p></div>';
+  } else {
+    var analysis = f.analysis || (f.journey==='watching'
+      ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
+      : (f.journey==='regular' ? 'Well established — no patterns of concern across her logs.' : 'Settling in — not enough logged yet to show a clear pattern.'));
+    inner = '<div><div class="fp-sec-h">Her log</div><p class="fp-why">'+esc(f.history||'Logged a few times · settled.')+'</p></div>'+
+      '<div><div class="fp-sec-h">What the patterns say</div><div class="fp-insight">'+zi('info')+'<span>'+esc(analysis)+'</span></div></div>';
+  }
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-flipback="1"><svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
+  return head+'<div class="fp-body">'+inner+'</div>'+foot;
 }
 
 var GUIDES = [
@@ -405,6 +440,8 @@ document.addEventListener('click', function(e){
   var jc=t.closest('[data-jump]'); if(jc){ jump(jc.getAttribute('data-jump')); return; }
   var bk=t.closest('[data-food]'); if(bk){ openPop(bk.getAttribute('data-food')); return; }
   if(t.closest('[data-logserve]')){ toast('Log a serving → Quick Log (not linked in this prototype)'); return; }
+  if(t.closest('[data-flip]')){ var fl=document.querySelector('#popOv .fp-flip'); if(fl) fl.classList.add('flipped'); return; }
+  if(t.closest('[data-flipback]')){ var fl2=document.querySelector('#popOv .fp-flip'); if(fl2) fl2.classList.remove('flipped'); return; }
   if(t.closest('[data-closepop]') || t.id==='popOv'){ document.getElementById('popOv').classList.remove('open'); return; }
   if(t.closest('[data-closedeck]') || t.id==='deckOv'){ document.getElementById('deckOv').classList.remove('open'); return; }
   if(t.closest('#themeBtn')){ var h=document.documentElement, d=h.getAttribute('data-theme')==='dark'; h.setAttribute('data-theme',d?'':'dark'); document.getElementById('themeIcon').firstElementChild.setAttribute('href',d?'#zi-moon':'#zi-sun'); document.getElementById('themeLabel').textContent=d?'Dark':'Light'; return; }
