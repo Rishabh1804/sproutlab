@@ -11986,6 +11986,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <button class="lib-wing" data-action="switchLibWing" data-arg="guides" role="tab" aria-selected="false"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
         </div>
 
+        <!-- "In an emergency" entry — a standing safety entry visible in both wings. Opens
+             the Deck (#libDeckOv): every never-cross floor in one place, sourced from
+             FOOD_EFFECTS (choking / anaphylaxis / botulism). libOpenDeck (diet.js). -->
+        <button class="emerg-entry col-full" data-action="libOpenDeck">
+          <span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span>
+          <span class="emerg-entry-txt"><span class="emerg-entry-title">In an emergency</span><span class="emerg-entry-sub">Choking, allergic reactions &amp; first aid</span></span>
+          <span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span>
+        </button>
+
         <div id="dietLibBrowse" class="col-full">
         <!-- S3b: polarity shelves (living books) render here; the Suggested-for-Ziva
              lead card is prepended by renderLibShelves. The foods log is collapsed by
@@ -12125,6 +12134,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
              libOpenBook (diet.js). Backdrop-tap closes via libClosePopSelf (e.target gate
              so inner taps don't close); the × inside closes via libClosePop. -->
         <div class="lib-pop-ov" id="libPopOv" data-action="libClosePopSelf"></div>
+
+        <!-- Emergency Deck (Read overlay) — libOpenDeck (diet.js) renders every never-cross
+             floor here from FOOD_EFFECTS. Backdrop-tap closes via libCloseDeckSelf; the ×
+             inside closes via libCloseDeck. -->
+        <div class="lib-deck" id="libDeckOv" data-action="libCloseDeckSelf"></div>
 
       </div>
     </div>
@@ -20723,6 +20737,9 @@ function init() {
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
     else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
     else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
+    else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
+    else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();
+    else if (action === 'libCloseDeckSelf' && typeof _libCloseDeck === 'function') { if (e.target === btn) _libCloseDeck(); }
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
@@ -40025,6 +40042,56 @@ function _libCorpusBackHtml(name, dt, j) {
   var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-action="popFlipBack">' +
     '<svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
   return head + '<div class="fp-body">' + inner + '</div>' + foot;
+}
+
+// ── Emergency Deck — every never-cross floor in one place (data-action="libOpenDeck").
+// Data-sourced from FOOD_EFFECTS, never hand-coded: the choking-by-form floor, the
+// allergen anaphylaxis floor (egg is the representative — all 7 priority allergens
+// share the identical adrenaline response, per audit-floor-fidelity), and honey's
+// botulism floor (watchFor signs + seekCare). The floor follows the hazard — choking
+// guidance stays mechanical (no adrenaline), the allergen floor stays adrenaline. ────
+function _libDeckFloors() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) return [];
+  var out = [];
+  var chk = FE['choking hazards'];
+  if (chk && chk.severeSigns && chk.severeSigns.length) {
+    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare });
+  }
+  var ana = FE['egg'];   // representative allergen floor (shared adrenaline response)
+  if (ana && ana.severeSigns && ana.severeSigns.length) {
+    out.push({ type: 'Allergic reaction (anaphylaxis)', signs: ana.severeSigns, act: ana.seekCare });
+  }
+  var hon = FE['honey']; // botulism — signs live in watchFor, not severeSigns
+  if (hon && hon.watchFor && hon.watchFor.length) {
+    out.push({ type: 'After honey — suspected botulism', signs: hon.watchFor, act: hon.seekCare });
+  }
+  return out;
+}
+
+function _libDeckHtml() {
+  var cards = _libDeckFloors().map(function(f) {
+    var signs = f.signs.map(function(s) { return escHtml(s); }).join(' · ');
+    return '<div class="lib-floor-card">' +
+      '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
+      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><p>' + signs + '</p></div>' +
+      '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
+  }).join('');
+  return '<div class="lib-deck-sheet">' +
+    '<div class="lib-deck-head">' + zi('siren') + '<span class="lib-deck-title">In an emergency</span>' +
+    '<button class="lib-deck-close" data-action="libCloseDeck" aria-label="Close">&times;</button></div>' +
+    cards + '</div>';
+}
+
+function libOpenDeck() {
+  var ov = document.getElementById('libDeckOv');
+  if (!ov) return;
+  ov.innerHTML = _libDeckHtml();
+  ov.classList.add('open');
+}
+function _libCloseDeck() {
+  var ov = document.getElementById('libDeckOv');
+  if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
 }
 
 // ════════════════════════════════════════

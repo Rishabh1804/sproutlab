@@ -1347,6 +1347,56 @@ function _libCorpusBackHtml(name, dt, j) {
   return head + '<div class="fp-body">' + inner + '</div>' + foot;
 }
 
+// ── Emergency Deck — every never-cross floor in one place (data-action="libOpenDeck").
+// Data-sourced from FOOD_EFFECTS, never hand-coded: the choking-by-form floor, the
+// allergen anaphylaxis floor (egg is the representative — all 7 priority allergens
+// share the identical adrenaline response, per audit-floor-fidelity), and honey's
+// botulism floor (watchFor signs + seekCare). The floor follows the hazard — choking
+// guidance stays mechanical (no adrenaline), the allergen floor stays adrenaline. ────
+function _libDeckFloors() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) return [];
+  var out = [];
+  var chk = FE['choking hazards'];
+  if (chk && chk.severeSigns && chk.severeSigns.length) {
+    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare });
+  }
+  var ana = FE['egg'];   // representative allergen floor (shared adrenaline response)
+  if (ana && ana.severeSigns && ana.severeSigns.length) {
+    out.push({ type: 'Allergic reaction (anaphylaxis)', signs: ana.severeSigns, act: ana.seekCare });
+  }
+  var hon = FE['honey']; // botulism — signs live in watchFor, not severeSigns
+  if (hon && hon.watchFor && hon.watchFor.length) {
+    out.push({ type: 'After honey — suspected botulism', signs: hon.watchFor, act: hon.seekCare });
+  }
+  return out;
+}
+
+function _libDeckHtml() {
+  var cards = _libDeckFloors().map(function(f) {
+    var signs = f.signs.map(function(s) { return escHtml(s); }).join(' · ');
+    return '<div class="lib-floor-card">' +
+      '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
+      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><p>' + signs + '</p></div>' +
+      '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
+  }).join('');
+  return '<div class="lib-deck-sheet">' +
+    '<div class="lib-deck-head">' + zi('siren') + '<span class="lib-deck-title">In an emergency</span>' +
+    '<button class="lib-deck-close" data-action="libCloseDeck" aria-label="Close">&times;</button></div>' +
+    cards + '</div>';
+}
+
+function libOpenDeck() {
+  var ov = document.getElementById('libDeckOv');
+  if (!ov) return;
+  ov.innerHTML = _libDeckHtml();
+  ov.classList.add('open');
+}
+function _libCloseDeck() {
+  var ov = document.getElementById('libDeckOv');
+  if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+}
+
 // ════════════════════════════════════════
 // Introducing nuts early — guided-introduction KNOWLEDGE card (food-effects v2)
 // ════════════════════════════════════════

@@ -623,6 +623,9 @@ function init() {
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
     else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
     else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
+    else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
+    else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();
+    else if (action === 'libCloseDeckSelf' && typeof _libCloseDeck === 'function') { if (e.target === btn) _libCloseDeck(); }
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
