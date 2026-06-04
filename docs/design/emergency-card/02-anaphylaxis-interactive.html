@@ -99,6 +99,9 @@
   .doc-row .k{flex:0 0 124px;color:#9e3e52;font-weight:800;} .doc-row .v{flex:1;color:#2a2020;} .doc-row .v em{color:#9a8a8a;font-style:normal;}
   .doc-stamp{flex:1;text-align:left;background:none;border:none;padding:0;font:inherit;color:#2a2020;cursor:pointer;border-bottom:1px dashed #d8b9c2;align-self:flex-start;}
   .doc-stamp[data-stamped]{color:#9e3e52;font-weight:800;border-bottom-color:transparent;}
+  .doc-stamp[data-na]{color:#9a8a8a;font-weight:800;border-bottom-color:transparent;}
+  .doc-na{flex:0 0 auto;margin-left:var(--sp-8);align-self:flex-start;background:none;border:1px solid #d8b9c2;border-radius:999px;padding:2px 10px;font-family:'Nunito';font-size:11px;font-weight:800;color:#9a8a8a;cursor:pointer;line-height:1.4;}
+  .doc-na[data-on]{background:#9e3e52;color:#fff;border-color:#9e3e52;}
   .doc-note{margin-top:var(--sp-12);font-size:var(--fs-xs);color:#3a2c2c;line-height:var(--lh-normal);background:#fdeef1;border-radius:var(--r-md);padding:var(--sp-12);}
   .doc-note b{color:#9e3e52;}
   .doc-actions{display:flex;gap:var(--sp-10);padding:var(--sp-12) var(--sp-20);border-top:1px solid #ecdfe2;background:#faf2f4;}
@@ -175,8 +178,8 @@
       <div class="doc-brand"><b>SproutLab</b><span id="docTime">Emergency summary</span></div>
       <p class="doc-who">Ziva Jain · 9 months · 8.1 kg</p>
       <div class="doc-row"><span class="k">Suspected</span><span class="v">Anaphylaxis (severe allergic reaction)</span></div>
-      <div class="doc-row"><span class="k">Time of reaction</span><button class="doc-stamp" id="stampReaction"><em>tap to stamp now</em></button></div>
-      <div class="doc-row"><span class="k">Adrenaline given at</span><button class="doc-stamp" id="stampAdren"><em>tap to stamp now</em></button></div>
+      <div class="doc-row"><span class="k">Time of reaction</span><button class="doc-stamp" id="stampReaction"><em>tap to stamp now</em></button><button class="doc-na" data-for="stampReaction">N/A</button></div>
+      <div class="doc-row"><span class="k">Adrenaline given at</span><button class="doc-stamp" id="stampAdren"><em>tap to stamp now</em></button><button class="doc-na" data-for="stampAdren">N/A</button></div>
       <div class="doc-row"><span class="k">Trigger food</span><span class="v">Peanut</span></div>
       <div class="doc-row"><span class="k">Symptoms seen</span><span class="v">trouble breathing · facial swelling</span></div>
       <div class="doc-row"><span class="k">Adrenaline given</span><span class="v">Yes / No</span></div>
@@ -215,15 +218,25 @@
   // tap-to-stamp the time fields (a one-tap Quick act, not a text form — HR-9-clean).
   // tap → current time; tap again → clear back to the placeholder.
   function nowTime(){ var d=new Date(), h=d.getHours(), m=d.getMinutes(), ap=h>=12?'PM':'AM'; h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap; }
+  // each field has THREE states: blank → stamped time → (or) N/A. The stamp button toggles
+  // blank⇄time; the N/A pill toggles N/A (clearing any stamp). N/A = deliberately not
+  // applicable (e.g. adrenaline not given), distinct from an un-filled blank.
+  function placeholder(btn){ btn.removeAttribute('data-stamped'); btn.removeAttribute('data-na'); btn.innerHTML='<em>tap to stamp now</em>'; }
   function wireStamp(id){
     var btn=$(id);
+    var na=document.querySelector('.doc-na[data-for="'+id+'"]');
     btn.addEventListener('click', function(){
-      if (btn.dataset.stamped){ btn.removeAttribute('data-stamped'); btn.innerHTML='<em>tap to stamp now</em>'; }
-      else { btn.textContent = nowTime(); btn.dataset.stamped='1'; toast('Time stamped'); }
+      if (na) na.removeAttribute('data-on');
+      if (btn.dataset.stamped){ placeholder(btn); }
+      else { btn.removeAttribute('data-na'); btn.textContent = nowTime(); btn.dataset.stamped='1'; toast('Time stamped'); }
+    });
+    if (na) na.addEventListener('click', function(){
+      if (na.dataset.on){ na.removeAttribute('data-on'); placeholder(btn); }
+      else { na.dataset.on='1'; btn.removeAttribute('data-stamped'); btn.dataset.na='1'; btn.textContent='N/A'; toast('Marked N/A'); }
     });
   }
   wireStamp('stampReaction'); wireStamp('stampAdren');
-  function stampVal(id){ var b=$(id); return b.dataset.stamped ? b.textContent : '____'; }
+  function stampVal(id){ var b=$(id); if (b.dataset.na) return 'N/A'; return b.dataset.stamped ? b.textContent : '____'; }
 
   // the Notes-app-readable plain text (spec §5.1) — built live so stamped times flow through
   function docText(){

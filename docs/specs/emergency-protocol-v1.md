@@ -127,13 +127,15 @@ One builder `_emCardHtml(hazard)`; every hazard fills it. Structure (matches the
 
 Tapping **"For the doctor"** opens the doc-prep as a **pop-up card** (Read overlay — ×
 + tap-outside + Esc, the `.fp-*` pattern). It is a **generated summary** — every field is
-auto-filled or read-only **except the two time fields**, which are **tap-to-stamp**: a
-single tap records the current time (`HH:MM AM/PM`), a second tap clears it. This is a
-**one-tap Quick act, not a text form** — HR-9-clean (the overlay never becomes a
-multi-field editor; the parent cannot type, only stamp). In an emergency the parent taps
-once when the reaction starts and once when adrenaline is given — faster and more accurate
-than typing. Unstamped, the field copies/prints as `____` for handwriting. **HR-12: the
-stamp uses timezone-safe local-time construction.**
+auto-filled or read-only **except the two time fields**, which are **tap-to-stamp** with **three states**: blank → tap the field → current time
+(`HH:MM AM/PM`) → tap again → blank; **and an `N/A` pill** marks the field *deliberately
+not applicable* (e.g. adrenaline not given / not owned), clearing any stamp. `N/A` is
+distinct from a blank — a blank reads as "not filled," `N/A` tells the clinician it was
+considered and doesn't apply. All one-tap Quick acts, **not a text form** — HR-9-clean
+(the parent taps/toggles, never types). Field value flows to Copy/print as the time, `N/A`,
+or `____` (unfilled). **HR-12: the stamp uses timezone-safe local-time construction.**
+*(Wiring note: the static "Adrenaline given: Yes/No" row becomes a Yes / No / N-A selector
+to match — the same three-state affordance, Maren to confirm at the code gate.)*
 
 **Schema** `_emDocModel(hazard, ctx)` — field ORDER matters (V-M-230: time-of-reaction is
 the clinician's first question, so it sits high, not mid-list):
