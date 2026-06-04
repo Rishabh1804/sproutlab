@@ -1063,7 +1063,7 @@ function _libNutriChips(key) {
 // Journey chip for the pop-up head (same states as the shelf book; warn carries none).
 function _libJourneyChip(pol, j) {
   if (pol === 'warn') return '';
-  if (!j.tried) return '<span class="fp-journey fp-journey--untried">' + zi('eye') + 'Not tried yet</span>';
+  if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
   if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
@@ -1168,11 +1168,31 @@ function popFlipBack() {
 }
 
 // "Log a serving" → close the pop-up, open the quick FEED modal, pre-add this food.
+// V-M-220 (Maren, canon-cc-008): a Library "Log a serving" must clear the SAME
+// V-M-205 age-gate consequence card as markFoodTried — the corpus pop-up can offer
+// Log for a food it just flagged below-gate, and this path feeds QuickLog directly
+// (consequence-card-free). Warn-and-allow: the card proceeds on confirm, aborts on
+// cancel; we never hard-block (the parent may be recording an exposure that happened).
 function libLogServing(btn) {
   var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
   _libClosePop();
-  if (typeof openQuickModal === 'function') openQuickModal('feed');
-  if (key && typeof qlFeedAddItem === 'function') qlFeedAddItem(key, 'library');
+  var proceed = function() {
+    if (typeof openQuickModal === 'function') openQuickModal('feed');
+    if (typeof qlFeedAddItem === 'function') qlFeedAddItem(key, 'library');
+  };
+  var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
+  if (ageR && typeof getAgeInMonths === 'function' && ageR.minMonth > getAgeInMonths() && typeof foodConsequenceCard === 'function') {
+    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(key) : null;
+    foodConsequenceCard(eff ? {
+      severity: eff.severity || 'critical', title: eff.title, why: eff.why,
+      watchFor: eff.watchFor, severeSigns: eff.severeSigns, seekCare: eff.seekCare
+    } : {
+      severity: 'caution', title: 'Not before ' + ageR.minMonth + ' months', why: ageR.reason
+    }, proceed);
+    return;
+  }
+  proceed();
 }
 
 // Lead tap-through (data-action="libJumpToBook") — open the food's shelf and its pop-up.
@@ -1368,7 +1388,10 @@ function _libDeckFloors() {
   }
   var hon = FE['honey']; // botulism — signs live in watchFor, not severeSigns
   if (hon && hon.watchFor && hon.watchFor.length) {
-    out.push({ type: 'After honey — suspected botulism', signs: hon.watchFor, act: hon.seekCare });
+    // V-M-222 (Maren): botulism is sub-acute, not a call-112-now event — its calm
+    // seekCare is medically right but sits beside two acute protocols here. Label the
+    // tempo so the calm copy reads as deliberate, not as a truncated emergency protocol.
+    out.push({ type: 'After honey — suspected botulism', tempo: 'Not a sudden emergency — watch over the next days and call your doctor.', signs: hon.watchFor, act: hon.seekCare });
   }
   return out;
 }
@@ -1378,6 +1401,7 @@ function _libDeckHtml() {
     var signs = f.signs.map(function(s) { return escHtml(s); }).join(' · ');
     return '<div class="lib-floor-card">' +
       '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
+      (f.tempo ? '<div class="lib-floor-tempo">' + escHtml(f.tempo) + '</div>' : '') +
       '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><p>' + signs + '</p></div>' +
       '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
   }).join('');
