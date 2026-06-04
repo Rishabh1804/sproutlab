@@ -97,6 +97,8 @@
   .doc-who{font-weight:800;font-size:var(--fs-base);color:#2a2020;margin:0 0 var(--sp-12);}
   .doc-row{display:flex;gap:var(--sp-10);font-size:var(--fs-sm);padding:var(--sp-8) 0;border-bottom:1px solid #f0e6e9;line-height:var(--lh-normal);}
   .doc-row .k{flex:0 0 124px;color:#9e3e52;font-weight:800;} .doc-row .v{flex:1;color:#2a2020;} .doc-row .v em{color:#9a8a8a;font-style:normal;}
+  .doc-stamp{flex:1;text-align:left;background:none;border:none;padding:0;font:inherit;color:#2a2020;cursor:pointer;border-bottom:1px dashed #d8b9c2;align-self:flex-start;}
+  .doc-stamp[data-stamped]{color:#9e3e52;font-weight:800;border-bottom-color:transparent;}
   .doc-note{margin-top:var(--sp-12);font-size:var(--fs-xs);color:#3a2c2c;line-height:var(--lh-normal);background:#fdeef1;border-radius:var(--r-md);padding:var(--sp-12);}
   .doc-note b{color:#9e3e52;}
   .doc-actions{display:flex;gap:var(--sp-10);padding:var(--sp-12) var(--sp-20);border-top:1px solid #ecdfe2;background:#faf2f4;}
@@ -173,8 +175,8 @@
       <div class="doc-brand"><b>SproutLab</b><span id="docTime">Emergency summary</span></div>
       <p class="doc-who">Ziva Jain · 9 months · 8.1 kg</p>
       <div class="doc-row"><span class="k">Suspected</span><span class="v">Anaphylaxis (severe allergic reaction)</span></div>
-      <div class="doc-row"><span class="k">Time of reaction</span><span class="v"><em>tap to add</em></span></div>
-      <div class="doc-row"><span class="k">Adrenaline given at</span><span class="v"><em>tap to add</em></span></div>
+      <div class="doc-row"><span class="k">Time of reaction</span><button class="doc-stamp" id="stampReaction"><em>tap to stamp now</em></button></div>
+      <div class="doc-row"><span class="k">Adrenaline given at</span><button class="doc-stamp" id="stampAdren"><em>tap to stamp now</em></button></div>
       <div class="doc-row"><span class="k">Trigger food</span><span class="v">Peanut</span></div>
       <div class="doc-row"><span class="k">Symptoms seen</span><span class="v">trouble breathing · facial swelling</span></div>
       <div class="doc-row"><span class="k">Adrenaline given</span><span class="v">Yes / No</span></div>
@@ -210,31 +212,47 @@
   var toastT;
   function toast(msg){ var t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); },2200); }
 
-  // the Notes-app-readable plain text (spec §5.1) — the copy payload
-  var DOC_TEXT = [
-    'SproutLab — Emergency summary',
-    'Ziva Jain · 9 months · 8.1 kg',
-    '',
-    'Suspected: Anaphylaxis (severe allergic reaction)',
-    'Time of reaction: ____',
-    'Adrenaline given at: ____',
-    'Trigger food: Peanut',
-    'Symptoms seen: trouble breathing, facial swelling',
-    'Adrenaline given: Yes / No',
-    'Known allergies: none recorded yet (this may be a first reaction)',
-    '',
-    'For the team: suspected anaphylaxis after peanut; see the',
-    '"adrenaline given" line; please observe for a biphasic reaction.'
-  ].join('\n');
+  // tap-to-stamp the time fields (a one-tap Quick act, not a text form — HR-9-clean).
+  // tap → current time; tap again → clear back to the placeholder.
+  function nowTime(){ var d=new Date(), h=d.getHours(), m=d.getMinutes(), ap=h>=12?'PM':'AM'; h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap; }
+  function wireStamp(id){
+    var btn=$(id);
+    btn.addEventListener('click', function(){
+      if (btn.dataset.stamped){ btn.removeAttribute('data-stamped'); btn.innerHTML='<em>tap to stamp now</em>'; }
+      else { btn.textContent = nowTime(); btn.dataset.stamped='1'; toast('Time stamped'); }
+    });
+  }
+  wireStamp('stampReaction'); wireStamp('stampAdren');
+  function stampVal(id){ var b=$(id); return b.dataset.stamped ? b.textContent : '____'; }
+
+  // the Notes-app-readable plain text (spec §5.1) — built live so stamped times flow through
+  function docText(){
+    return [
+      'SproutLab — Emergency summary',
+      'Ziva Jain · 9 months · 8.1 kg',
+      '',
+      'Suspected: Anaphylaxis (severe allergic reaction)',
+      'Time of reaction: ' + stampVal('stampReaction'),
+      'Adrenaline given at: ' + stampVal('stampAdren'),
+      'Trigger food: Peanut',
+      'Symptoms seen: trouble breathing, facial swelling',
+      'Adrenaline given: Yes / No',
+      'Known allergies: none recorded yet (this may be a first reaction)',
+      '',
+      'For the team: suspected anaphylaxis after peanut; see the',
+      '"adrenaline given" line; please observe for a biphasic reaction.'
+    ].join('\n');
+  }
 
   $('docCopy').addEventListener('click', function(){
+    var text = docText();
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(DOC_TEXT).then(function(){ toast('Copied for the doctor'); },
-        function(){ legacyCopy(); });
-    } else { legacyCopy(); }
+      navigator.clipboard.writeText(text).then(function(){ toast('Copied for the doctor'); },
+        function(){ legacyCopy(text); });
+    } else { legacyCopy(text); }
   });
-  function legacyCopy(){
-    var ta=document.createElement('textarea'); ta.value=DOC_TEXT; document.body.appendChild(ta); ta.select();
+  function legacyCopy(text){
+    var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
     try{ document.execCommand('copy'); toast('Copied for the doctor'); }catch(e){ toast('Copy not supported here'); }
     document.body.removeChild(ta);
   }

@@ -126,9 +126,14 @@ One builder `_emCardHtml(hazard)`; every hazard fills it. Structure (matches the
 ## 5. The doc-prep card (`#emDocOv`) — Read overlay
 
 Tapping **"For the doctor"** opens the doc-prep as a **pop-up card** (Read overlay — ×
-+ tap-outside, the `.fp-*` pattern). **HR-9-clean: it is a GENERATED, READ-ONLY summary —
-no in-app form fields.** Blanks the parent must fill (time) render as literal `____`
-placeholders in the text, completed when they paste/print/handwrite.
++ tap-outside + Esc, the `.fp-*` pattern). It is a **generated summary** — every field is
+auto-filled or read-only **except the two time fields**, which are **tap-to-stamp**: a
+single tap records the current time (`HH:MM AM/PM`), a second tap clears it. This is a
+**one-tap Quick act, not a text form** — HR-9-clean (the overlay never becomes a
+multi-field editor; the parent cannot type, only stamp). In an emergency the parent taps
+once when the reaction starts and once when adrenaline is given — faster and more accurate
+than typing. Unstamped, the field copies/prints as `____` for handwriting. **HR-12: the
+stamp uses timezone-safe local-time construction.**
 
 **Schema** `_emDocModel(hazard, ctx)` — field ORDER matters (V-M-230: time-of-reaction is
 the clinician's first question, so it sits high, not mid-list):
@@ -137,7 +142,7 @@ the clinician's first question, so it sits high, not mid-list):
 |---|---|---|
 | 1 | `who` | Ziva's name · age (months) · **weight** (from her record — weight is load-bearing for dosing, V-M-230) |
 | 2 | `suspected` | the hazard title |
-| 3 | `time` | **Time of reaction: `____`** + (anaphylaxis) **Adrenaline given at: `____`** — promoted directly under `suspected` (V-M-230) |
+| 3 | `time` | **Time of reaction** + (anaphylaxis) **Adrenaline given at** — promoted directly under `suspected` (V-M-230). **Tap-to-stamp** (one-tap current time, second tap clears; HR-9 single-Quick, HR-12 local-time). Unstamped → `____`. |
 | 4 | `trigger` | the food that deep-linked here (or "—" if opened from the standing entry) |
 | 5 | `symptoms` | the hazard's recognise list (comma-joined) |
 | 6 | `actionTaken` | hazard-specific prompt (`docAction`, e.g. "Adrenaline given: Yes/No — time ____") |
