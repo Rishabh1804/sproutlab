@@ -888,8 +888,29 @@ function _libBookDetail(key, eff, j) {
   return h;
 }
 
+// Per-shelf-food voice + whisper domain (the design-ratified mapping; the broader
+// corpus uses classifyFoodToGroup when search wires). Warn-shelf foods carry a
+// domain whisper but NO voice line — a wait-food's character is the rule, not the taste.
+var LIB_SHELF_VOICE = {
+  'egg':        { dom:'nonveg', eps:['soft','protein-rich'] },
+  'peanut':     { dom:'nuts',   eps:['nutty','rich'] },
+  'tree nut':   { dom:'nuts',   eps:['nutty','buttery'] },
+  'soy':        { dom:'grains', eps:['mild','silky'] },
+  'wheat':      { dom:'grains', eps:['hearty','wholesome'] },
+  'sesame':     { dom:'nuts',   eps:['nutty','toasty'] },
+  'fish':       { dom:'nonveg', eps:['tender','omega-rich'] },
+  'cow milk':   { dom:'dairy',  eps:['creamy','gentle'] },
+  'citrus':     { dom:'fruits', eps:['bright','tangy'] },
+  'plant milk': { dom:'dairy',  eps:['mild','plant-based'] },
+  'honey':      { dom:'spices', eps:[] },
+  'choking hazards': { dom:'', eps:[] }
+};
+
 function _libBookHtml(key, eff, pol) {
   var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var voiceTxt = (pol !== 'warn' && meta && meta.eps && meta.eps.length) ? meta.eps.join(' & ') : '';
   var glance = (eff.safeForm && eff.safeForm.glance) || eff.headline || '';
   var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
   var j = _libJourney(key);
@@ -908,12 +929,13 @@ function _libBookHtml(key, eff, pol) {
     }
   }
   var body = '<span class="lib-book-body"><span class="lib-book-title">' + titleHtml + '</span>' +
+    (voiceTxt ? '<span class="lib-book-voice">' + escHtml(voiceTxt) + '</span>' : '') +
     (glance ? '<span class="lib-book-glance">' + zi(glanceIcon) + escHtml(glance) + '</span>' : '') +
     journeyHtml + '</span>';
   var siren = hasFloor ? '<span class="lib-book-siren">' + zi('siren') + '</span>' : '';
   var go = '<span class="lib-book-go">' + zi('arrow-right') + '</span>';
   return '<div class="lib-book-wrap">' +
-    '<button class="lib-book lib-book--' + pol + '" data-action="libToggleBook" data-arg="' + escHtml(key) + '">' +
+    '<button class="lib-book lib-book--' + pol + dt + '" data-action="libToggleBook" data-arg="' + escHtml(key) + '">' +
     body + siren + go + '</button>' +
     '<div class="lib-detail"><div class="lib-detail-inner">' + _libBookDetail(key, eff, j) + '</div></div></div>';
 }

@@ -10894,6 +10894,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .dt-dairy  { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); }
 .dt-nuts   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); }
 .dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.22)); }
+.dt-vegs   { background-image:linear-gradient(135deg, transparent 40%, rgba(250,212,180,0.22)); }
 /* whisper — dark (hue-swap to deep --tc tones) */
 [data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.16)); }
 [data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
@@ -10901,6 +10902,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 [data-theme="dark"] .dt-dairy  { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,144,0.16)); }
 [data-theme="dark"] .dt-nuts   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.18)); }
 [data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+[data-theme="dark"] .dt-vegs   { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
 
 /* journey channel — Receded register, a second channel beside the safety rail/siren */
 .lib-untried { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:600; font-size:var(--fs-2xs); color:var(--light); }
