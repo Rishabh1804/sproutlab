@@ -50,16 +50,19 @@ const RECIPE_SOURCES = {
 };
 
 // Each recipe:
-//   { id, title, slot, minAgeMonths,
-//     ingredients:[{name, qty}],   // name = the LIVE-resolver classifying form
+//   { id, title, slot, minAgeMonths, prepMinutes,
+//     ingredients:[{name, qty, g}], // name = the LIVE-resolver classifying form;
+//                                   // g = grams (drives the quantity-weighted
+//                                   // generative fingerprint §9.3; trace items
+//                                   // ghee/oil/spices excluded at render)
 //     foodGroups:[FOOD_TAX gid],   // gap-fill scoring + card colour
 //     steps:[…], dos:[…], donts:[…],
 //     cuisine, source:[sourceKey…] }
 const RECIPES = [
   // ─────────────────────────── BREAKFAST ───────────────────────────
   {
-    id: 'ragi-banana-porridge', title: 'Ragi Banana Porridge', slot: 'breakfast', minAgeMonths: 7,
-    ingredients: [{ name: 'ragi', qty: '1 tbsp (24 g)' }, { name: 'banana', qty: '¼, mashed (20 g)' }],
+    id: 'ragi-banana-porridge', title: 'Ragi Banana Porridge', slot: 'breakfast', minAgeMonths: 7, prepMinutes: 12,
+    ingredients: [{ name: 'ragi', qty: '1 tbsp (24 g)', g: 24 }, { name: 'banana', qty: '¼, mashed (20 g)', g: 20 }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
     steps: [
       'Dry-roast 1 tbsp ragi flour on low for 2 min until fragrant.',
@@ -72,8 +75,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'oats-apple-porridge', title: 'Oats & Apple Porridge', slot: 'breakfast', minAgeMonths: 7,
-    ingredients: [{ name: 'oats', qty: '1 tbsp ground (24 g)' }, { name: 'apple', qty: '¼ grated (20 g)' }, { name: 'cinnamon', qty: 'a pinch' }],
+    id: 'oats-apple-porridge', title: 'Oats & Apple Porridge', slot: 'breakfast', minAgeMonths: 7, prepMinutes: 10,
+    ingredients: [{ name: 'oats', qty: '1 tbsp ground (24 g)', g: 24 }, { name: 'apple', qty: '¼ grated (20 g)', g: 20 }, { name: 'cinnamon', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'fruits', 'spices'], cuisine: 'Global',
     steps: [
       'Grind 1 tbsp plain rolled oats to a coarse powder.',
@@ -86,8 +89,8 @@ const RECIPES = [
     source: ['nhs', 'aap'],
   },
   {
-    id: 'almond-ragi-kheer', title: 'Almond Ragi Kheer (12 m+)', slot: 'breakfast', minAgeMonths: 12,
-    ingredients: [{ name: 'milk', qty: '½ cup (in cooking)' }, { name: 'ragi', qty: '1 tbsp (15 g)' }, { name: 'date', qty: '1, deseeded paste' }, { name: 'almond', qty: '¼ tsp ground (3 g)' }],
+    id: 'almond-ragi-kheer', title: 'Almond Ragi Kheer (12 m+)', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 18,
+    ingredients: [{ name: 'milk', qty: '½ cup (in cooking)', g: 60 }, { name: 'ragi', qty: '1 tbsp (15 g)', g: 15 }, { name: 'date', qty: '1, deseeded paste', g: 8 }, { name: 'almond', qty: '¼ tsp ground (3 g)', g: 3 }],
     foodGroups: ['dairy', 'grains', 'fruits', 'nuts'], cuisine: 'Indian',
     steps: [
       'Soak 2 almonds, peel, and grind to an absolutely smooth paste.',
@@ -100,8 +103,8 @@ const RECIPES = [
     source: ['iap', 'aap'],
   },
   {
-    id: 'suji-veg-upma', title: 'Suji & Veg Upma', slot: 'breakfast', minAgeMonths: 8,
-    ingredients: [{ name: 'suji', qty: '2 tbsp (30 g)' }, { name: 'carrot', qty: '2 tbsp grated' }, { name: 'peas', qty: '1 tbsp, mashed' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'suji-veg-upma', title: 'Suji & Veg Upma', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 15,
+    ingredients: [{ name: 'suji', qty: '2 tbsp (30 g)', g: 30 }, { name: 'carrot', qty: '2 tbsp grated', g: 20 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
     steps: [
       'Dry-roast 2 tbsp suji on low until aromatic, set aside.',
@@ -114,8 +117,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'poha-peas-potato', title: 'Poha with Peas & Potato', slot: 'breakfast', minAgeMonths: 8,
-    ingredients: [{ name: 'poha', qty: '3 tbsp (30 g)' }, { name: 'potato', qty: '2 tbsp, boiled & mashed' }, { name: 'peas', qty: '1 tbsp, mashed' }, { name: 'turmeric', qty: 'a pinch' }],
+    id: 'poha-peas-potato', title: 'Poha with Peas & Potato', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 12,
+    ingredients: [{ name: 'poha', qty: '3 tbsp (30 g)', g: 30 }, { name: 'potato', qty: '2 tbsp, boiled & mashed', g: 30 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'vegs', 'spices'], cuisine: 'Indian',
     steps: [
       'Rinse 3 tbsp thin poha in a sieve until just soft, drain.',
@@ -128,8 +131,8 @@ const RECIPES = [
     source: ['icmr', 'iap'],
   },
   {
-    id: 'banana-oats-egg-pancake', title: 'Banana Oats Egg Pancake', slot: 'breakfast', minAgeMonths: 8,
-    ingredients: [{ name: 'banana', qty: '½, mashed' }, { name: 'oats', qty: '1 tbsp ground' }, { name: 'egg', qty: '1, well beaten' }],
+    id: 'banana-oats-egg-pancake', title: 'Banana Oats Egg Pancake', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 10,
+    ingredients: [{ name: 'banana', qty: '½, mashed', g: 25 }, { name: 'oats', qty: '1 tbsp ground', g: 20 }, { name: 'egg', qty: '1, well beaten', g: 50 }],
     foodGroups: ['fruits', 'grains', 'nonveg'], cuisine: 'Global',
     steps: [
       'Mash ½ ripe banana smooth.',
@@ -142,8 +145,8 @@ const RECIPES = [
     source: ['nhs', 'aap'],
   },
   {
-    id: 'dalia-porridge', title: 'Broken-Wheat Dalia Porridge', slot: 'breakfast', minAgeMonths: 8,
-    ingredients: [{ name: 'dalia', qty: '2 tbsp (30 g)' }, { name: 'date', qty: '1, paste' }],
+    id: 'dalia-porridge', title: 'Broken-Wheat Dalia Porridge', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 15,
+    ingredients: [{ name: 'dalia', qty: '2 tbsp (30 g)', g: 30 }, { name: 'date', qty: '1, paste', g: 8 }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
     steps: [
       'Dry-roast 2 tbsp dalia (broken wheat) 2 min.',
@@ -158,8 +161,8 @@ const RECIPES = [
 
   // ─────────────────────────── LUNCH ───────────────────────────
   {
-    id: 'moong-dal-khichdi', title: 'Moong Dal Khichdi', slot: 'lunch', minAgeMonths: 7,
-    ingredients: [{ name: 'rice', qty: '1 tbsp (12 g)' }, { name: 'moong dal', qty: '½ tbsp (8 g)' }, { name: 'ghee', qty: '½ tsp' }, { name: 'turmeric', qty: 'a pinch' }],
+    id: 'moong-dal-khichdi', title: 'Moong Dal Khichdi', slot: 'lunch', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '1 tbsp (12 g)', g: 12 }, { name: 'moong dal', qty: '½ tbsp (8 g)', g: 8 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'dairy', 'spices'], cuisine: 'Indian',
     steps: [
       'Wash 1 tbsp rice and ½ tbsp moong dal, soak 20 min.',
@@ -172,8 +175,8 @@ const RECIPES = [
     source: ['iap', 'whopaho'],
   },
   {
-    id: 'veg-moong-khichdi', title: 'Veg & Moong Khichdi', slot: 'lunch', minAgeMonths: 8,
-    ingredients: [{ name: 'rice', qty: '1 tbsp (15 g)' }, { name: 'moong dal', qty: '½ tbsp (10 g)' }, { name: 'carrot', qty: '2 tbsp (20 g)' }, { name: 'pumpkin', qty: '2 tbsp (20 g)' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'veg-moong-khichdi', title: 'Veg & Moong Khichdi', slot: 'lunch', minAgeMonths: 8, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '1 tbsp (15 g)', g: 15 }, { name: 'moong dal', qty: '½ tbsp (10 g)', g: 10 }, { name: 'carrot', qty: '2 tbsp (20 g)', g: 20 }, { name: 'pumpkin', qty: '2 tbsp (20 g)', g: 20 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
     steps: [
       'Wash rice and moong dal, soak 20 min.',
@@ -186,8 +189,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'dal-rice-palak', title: 'Dal–Rice with Palak', slot: 'lunch', minAgeMonths: 8,
-    ingredients: [{ name: 'rice', qty: '3 tbsp (45 g)' }, { name: 'toor dal', qty: '1½ tbsp (25 g)' }, { name: 'spinach', qty: '1 tbsp, blanched (15 g)' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'dal-rice-palak', title: 'Dal–Rice with Palak', slot: 'lunch', minAgeMonths: 8, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '3 tbsp (45 g)', g: 45 }, { name: 'toor dal', qty: '1½ tbsp (25 g)', g: 25 }, { name: 'spinach', qty: '1 tbsp, blanched (15 g)', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
     steps: [
       'Blanch a few spinach (palak) leaves 2 min, chop fine or puree.',
@@ -200,8 +203,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'masoor-lauki-rice', title: 'Masoor Dal & Bottle Gourd Rice', slot: 'lunch', minAgeMonths: 7,
-    ingredients: [{ name: 'rice', qty: '2 tbsp' }, { name: 'masoor dal', qty: '1 tbsp' }, { name: 'bottle gourd', qty: '2 tbsp, diced' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'masoor-lauki-rice', title: 'Masoor Dal & Bottle Gourd Rice', slot: 'lunch', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '2 tbsp', g: 30 }, { name: 'masoor dal', qty: '1 tbsp', g: 15 }, { name: 'bottle gourd', qty: '2 tbsp, diced', g: 25 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
     steps: [
       'Wash rice and masoor dal, soak 20 min.',
@@ -214,8 +217,8 @@ const RECIPES = [
     source: ['icmr', 'iap'],
   },
   {
-    id: 'soft-curd-rice', title: 'Soft Curd Rice', slot: 'lunch', minAgeMonths: 8,
-    ingredients: [{ name: 'rice', qty: '2 tbsp, very soft' }, { name: 'curd', qty: '1 tbsp, fresh' }],
+    id: 'soft-curd-rice', title: 'Soft Curd Rice', slot: 'lunch', minAgeMonths: 8, prepMinutes: 10,
+    ingredients: [{ name: 'rice', qty: '2 tbsp, very soft', g: 30 }, { name: 'curd', qty: '1 tbsp, fresh', g: 40 }],
     foodGroups: ['grains', 'dairy'], cuisine: 'Indian',
     steps: [
       'Cook 2 tbsp rice until very soft and mashable.',
@@ -228,8 +231,8 @@ const RECIPES = [
     source: ['icmr', 'iap'],
   },
   {
-    id: 'paneer-veg-pulao', title: 'Paneer & Veg Soft Pulao', slot: 'lunch', minAgeMonths: 9,
-    ingredients: [{ name: 'rice', qty: '3 tbsp' }, { name: 'paneer', qty: '1 tbsp, crumbled' }, { name: 'carrot', qty: '1 tbsp, grated' }, { name: 'peas', qty: '1 tbsp, mashed' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'paneer-veg-pulao', title: 'Paneer & Veg Soft Pulao', slot: 'lunch', minAgeMonths: 9, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'paneer', qty: '1 tbsp, crumbled', g: 15 }, { name: 'carrot', qty: '1 tbsp, grated', g: 20 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'dairy', 'vegs'], cuisine: 'Indian',
     steps: [
       'Soften grated carrot and mashed peas in ½ tsp ghee for 2 min.',
@@ -242,8 +245,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'rohu-fish-rice', title: 'Rohu Fish & Rice Mash', slot: 'lunch', minAgeMonths: 8,
-    ingredients: [{ name: 'rice', qty: '3 tbsp' }, { name: 'rohu fish', qty: '1 tbsp, cooked & deboned' }, { name: 'ghee', qty: '½ tsp' }, { name: 'turmeric', qty: 'a pinch' }],
+    id: 'rohu-fish-rice', title: 'Rohu Fish & Rice Mash', slot: 'lunch', minAgeMonths: 8, prepMinutes: 18,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'rohu fish', qty: '1 tbsp, cooked & deboned', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'nonveg', 'dairy'], cuisine: 'Indian',
     steps: [
       'Steam a small piece of rohu with a pinch of turmeric until flaky.',
@@ -258,8 +261,8 @@ const RECIPES = [
 
   // ─────────────────────────── DINNER ───────────────────────────
   {
-    id: 'carrot-beet-potato-mash', title: 'Carrot Beetroot Potato Mash', slot: 'dinner', minAgeMonths: 7,
-    ingredients: [{ name: 'carrot', qty: '3 tbsp (40 g)' }, { name: 'beetroot', qty: '2 tbsp (30 g)' }, { name: 'potato', qty: '3 tbsp (40 g)' }, { name: 'ghee', qty: '¼ tsp' }],
+    id: 'carrot-beet-potato-mash', title: 'Carrot Beetroot Potato Mash', slot: 'dinner', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'carrot', qty: '3 tbsp (40 g)', g: 40 }, { name: 'beetroot', qty: '2 tbsp (30 g)', g: 30 }, { name: 'potato', qty: '3 tbsp (40 g)', g: 40 }, { name: 'ghee', qty: '¼ tsp', g: 3 }],
     foodGroups: ['vegs', 'dairy'], cuisine: 'Indian',
     steps: [
       'Peel and dice carrot, beetroot and potato.',
@@ -272,8 +275,8 @@ const RECIPES = [
     source: ['icmr', 'nhs'],
   },
   {
-    id: 'sweet-potato-moong-mash', title: 'Sweet Potato & Moong Mash', slot: 'dinner', minAgeMonths: 7,
-    ingredients: [{ name: 'sweet potato', qty: '½ small (50 g)' }, { name: 'moong dal', qty: '1 tbsp' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'sweet-potato-moong-mash', title: 'Sweet Potato & Moong Mash', slot: 'dinner', minAgeMonths: 7, prepMinutes: 18,
+    ingredients: [{ name: 'sweet potato', qty: '½ small (50 g)', g: 50 }, { name: 'moong dal', qty: '1 tbsp', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['vegs', 'grains', 'dairy'], cuisine: 'Indian',
     steps: [
       'Steam cubed sweet potato 10 min until very soft.',
@@ -286,8 +289,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'palak-paneer-rice', title: 'Palak Paneer Rice', slot: 'dinner', minAgeMonths: 9,
-    ingredients: [{ name: 'rice', qty: '3 tbsp' }, { name: 'paneer', qty: '1 tbsp, crumbled' }, { name: 'spinach', qty: '1 tbsp, blanched' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'palak-paneer-rice', title: 'Palak Paneer Rice', slot: 'dinner', minAgeMonths: 9, prepMinutes: 18,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'paneer', qty: '1 tbsp, crumbled', g: 15 }, { name: 'spinach', qty: '1 tbsp, blanched', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'dairy', 'vegs'], cuisine: 'Indian',
     steps: [
       'Blanch spinach 2 min, puree smooth.',
@@ -300,8 +303,8 @@ const RECIPES = [
     source: ['iap', 'icmr'],
   },
   {
-    id: 'chicken-rice-bowl', title: 'Soft Chicken & Rice Bowl', slot: 'dinner', minAgeMonths: 9,
-    ingredients: [{ name: 'rice', qty: '3 tbsp' }, { name: 'chicken', qty: '1 tbsp, shredded' }, { name: 'carrot', qty: '1 tbsp, grated' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'chicken-rice-bowl', title: 'Soft Chicken & Rice Bowl', slot: 'dinner', minAgeMonths: 9, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'chicken', qty: '1 tbsp, shredded', g: 15 }, { name: 'carrot', qty: '1 tbsp, grated', g: 20 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'nonveg', 'vegs'], cuisine: 'Global',
     steps: [
       'Boil a small piece of boneless chicken until fully cooked and tender.',
@@ -314,8 +317,8 @@ const RECIPES = [
     source: ['aap', 'nhs'],
   },
   {
-    id: 'mixed-veg-dal-soup', title: 'Mixed Veg & Dal Soup', slot: 'dinner', minAgeMonths: 8,
-    ingredients: [{ name: 'moong dal', qty: '1 tbsp' }, { name: 'carrot', qty: '1 tbsp' }, { name: 'tomato', qty: '1 tbsp' }, { name: 'bottle gourd', qty: '1 tbsp' }],
+    id: 'mixed-veg-dal-soup', title: 'Mixed Veg & Dal Soup', slot: 'dinner', minAgeMonths: 8, prepMinutes: 20,
+    ingredients: [{ name: 'moong dal', qty: '1 tbsp', g: 12 }, { name: 'carrot', qty: '1 tbsp', g: 20 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'bottle gourd', qty: '1 tbsp', g: 25 }],
     foodGroups: ['grains', 'vegs'], cuisine: 'Indian',
     steps: [
       'Pressure-cook moong dal with diced carrot, tomato and bottle gourd until very soft.',
@@ -330,8 +333,8 @@ const RECIPES = [
 
   // ─────────────────────────── SNACK ───────────────────────────
   {
-    id: 'curd-banana-bowl', title: 'Curd & Banana Bowl', slot: 'snack', minAgeMonths: 8,
-    ingredients: [{ name: 'curd', qty: '3 tbsp (60 g)' }, { name: 'banana', qty: '¼, mashed (25 g)' }],
+    id: 'curd-banana-bowl', title: 'Curd & Banana Bowl', slot: 'snack', minAgeMonths: 8, prepMinutes: 3,
+    ingredients: [{ name: 'curd', qty: '3 tbsp (60 g)', g: 60 }, { name: 'banana', qty: '¼, mashed (25 g)', g: 25 }],
     foodGroups: ['dairy', 'fruits'], cuisine: 'Indian',
     steps: [
       'Whisk 3 tbsp fresh full-fat curd smooth.',
@@ -343,8 +346,8 @@ const RECIPES = [
     source: ['icmr', 'nhs'],
   },
   {
-    id: 'carrot-moong-mash', title: 'Carrot Moong Mash', slot: 'snack', minAgeMonths: 6,
-    ingredients: [{ name: 'carrot', qty: '3 tbsp, grated' }, { name: 'moong dal', qty: '2 tbsp' }, { name: 'ghee', qty: '½ tsp' }],
+    id: 'carrot-moong-mash', title: 'Carrot Moong Mash', slot: 'snack', minAgeMonths: 6, prepMinutes: 18,
+    ingredients: [{ name: 'carrot', qty: '3 tbsp, grated', g: 20 }, { name: 'moong dal', qty: '2 tbsp', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['vegs', 'grains', 'dairy'], cuisine: 'Indian',
     steps: [
       'Grate carrot and wash moong dal.',
@@ -357,8 +360,8 @@ const RECIPES = [
     source: ['whopaho', 'iap'],
   },
   {
-    id: 'avocado-banana-mash', title: 'Avocado & Banana Mash', slot: 'snack', minAgeMonths: 6,
-    ingredients: [{ name: 'avocado', qty: '2 tbsp' }, { name: 'banana', qty: '¼, mashed' }],
+    id: 'avocado-banana-mash', title: 'Avocado & Banana Mash', slot: 'snack', minAgeMonths: 6, prepMinutes: 3,
+    ingredients: [{ name: 'avocado', qty: '2 tbsp', g: 30 }, { name: 'banana', qty: '¼, mashed', g: 25 }],
     foodGroups: ['fruits'], cuisine: 'Global',
     steps: [
       'Scoop 2 tbsp ripe avocado.',
@@ -370,8 +373,8 @@ const RECIPES = [
     source: ['aap', 'nhs'],
   },
   {
-    id: 'stewed-apple-date', title: 'Stewed Apple & Date', slot: 'snack', minAgeMonths: 6,
-    ingredients: [{ name: 'apple', qty: '½, peeled & diced' }, { name: 'date', qty: '1, deseeded' }],
+    id: 'stewed-apple-date', title: 'Stewed Apple & Date', slot: 'snack', minAgeMonths: 6, prepMinutes: 10,
+    ingredients: [{ name: 'apple', qty: '½, peeled & diced', g: 40 }, { name: 'date', qty: '1, deseeded', g: 8 }],
     foodGroups: ['fruits'], cuisine: 'Global',
     steps: [
       'Peel, core and dice ½ apple.',
@@ -384,8 +387,8 @@ const RECIPES = [
     source: ['nhs', 'iap'],
   },
   {
-    id: 'mango-curd-bowl', title: 'Mango & Curd Bowl', slot: 'snack', minAgeMonths: 8,
-    ingredients: [{ name: 'mango', qty: '2 tbsp, ripe' }, { name: 'curd', qty: '1 tbsp, fresh' }],
+    id: 'mango-curd-bowl', title: 'Mango & Curd Bowl', slot: 'snack', minAgeMonths: 8, prepMinutes: 3,
+    ingredients: [{ name: 'mango', qty: '2 tbsp, ripe', g: 30 }, { name: 'curd', qty: '1 tbsp, fresh', g: 40 }],
     foodGroups: ['fruits', 'dairy'], cuisine: 'Indian',
     steps: [
       'Mash 2 tbsp ripe mango smooth.',
@@ -399,8 +402,8 @@ const RECIPES = [
 
   // ─── 12 m+ catalog item — age-gated, never suggested for an under-1 (honey) ───
   {
-    id: 'banana-honey-toast', title: 'Banana & Honey Toast (12 m+)', slot: 'snack', minAgeMonths: 12,
-    ingredients: [{ name: 'bread', qty: '1 slice, soft' }, { name: 'banana', qty: '½, mashed' }, { name: 'honey', qty: '½ tsp (12 m+ only)' }],
+    id: 'banana-honey-toast', title: 'Banana & Honey Toast (12 m+)', slot: 'snack', minAgeMonths: 12, prepMinutes: 5,
+    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (12 m+ only)', g: 5 }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Global',
     steps: [
       'Lightly toast a soft slice of whole-wheat bread, remove crusts, cut into soft fingers.',
@@ -485,6 +488,99 @@ function recipeFoodIcon(name) {
   return null;
 }
 
+// ── §9.5 Tagline composer (ported from docs/design/taglines.mjs) ─────────
+// The generative "voice" line for any recipe/combo: each ingredient
+// contributes an epithet + noun; the minor-share ratio picks the connector so
+// quantity shows in the words. Soft prep-cautions FOLD into the phrase (ground
+// almond / halved grape); STRICT no's (honey / added sugar) keep a prominent
+// LEADING clause. Epithets rotate by a day-seed (fresh daily, deterministic
+// within a day). Adapted to the app's global-script style (no ES exports);
+// keyed by zif icon id (recipeFoodIcon(name).icon) so it shares one vocabulary.
+const RECIPE_EP = {
+  // grains & cereals
+  rice:{eps:['soft','gentle','silky'],noun:'rice'}, millet:{eps:['earthy','iron-rich','nutty'],noun:'ragi'},
+  oats:{eps:['wholesome','warm','hearty'],noun:'oats'}, wheat:{eps:['hearty','wholesome'],noun:'wheat'},
+  suji:{eps:['smooth','light'],noun:'suji'}, corn:{eps:['sweet','sunny'],noun:'corn'},
+  dalia:{eps:['hearty','nutty'],noun:'dalia'}, barley:{eps:['nutty','wholesome'],noun:'barley'},
+  quinoa:{eps:['nutty','light'],noun:'quinoa'},
+  // legumes & pulses
+  dal:{eps:['savoury','soupy','hearty'],noun:'dal'}, chana:{eps:['nutty','hearty'],noun:'chana'},
+  rajma:{eps:['hearty','earthy'],noun:'rajma'}, peanut:{eps:['nutty','rich'],noun:'peanut',fold:'ground'},
+  sprouts:{eps:['fresh','green'],noun:'sprouts'},
+  // vegetables
+  carrot:{eps:['sweet','bright','sunny'],noun:'carrot'}, spinach:{eps:['leafy','green','iron-rich'],noun:'spinach'},
+  beans:{eps:['crisp','green'],noun:'green beans'}, bottlegourd:{eps:['light','soothing'],noun:'bottle gourd'},
+  beetroot:{eps:['earthy','ruby','sweet'],noun:'beetroot'}, pumpkin:{eps:['silky','golden','sweet'],noun:'pumpkin'},
+  sweetpotato:{eps:['velvety','golden','creamy'],noun:'sweet potato'}, potato:{eps:['soft','comforting'],noun:'potato'},
+  broccoli:{eps:['green','tender'],noun:'broccoli'}, cauliflower:{eps:['mild','tender'],noun:'cauliflower'},
+  tomato:{eps:['tangy','bright'],noun:'tomato'}, peas:{eps:['sweet','green'],noun:'peas'},
+  drumstick:{eps:['earthy','green'],noun:'drumstick'}, zucchini:{eps:['soft','mild'],noun:'zucchini'},
+  // fruits
+  banana:{eps:['creamy','sweet','soft'],noun:'banana'}, pear:{eps:['juicy','gentle'],noun:'pear'},
+  apple:{eps:['sweet','stewed','crisp'],noun:'apple'}, mango:{eps:['golden','silky','sweet'],noun:'mango'},
+  avocado:{eps:['buttery','creamy'],noun:'avocado'}, blueberry:{eps:['sweet','jewel-like'],noun:'blueberry'},
+  date:{eps:['caramel-sweet','rich'],noun:'date'}, coconut:{eps:['creamy','rich'],noun:'coconut'},
+  pomegranate:{eps:['ruby','jewel-like'],noun:'pomegranate'},
+  // dairy & eggs
+  paneer:{eps:['mild','soft','milky'],noun:'paneer'}, milk:{eps:['creamy','gentle'],noun:'milk'},
+  ghee:{eps:['rich','golden'],noun:'ghee'}, curd:{eps:['cooling','tangy','creamy'],noun:'curd'},
+  cheese:{eps:['savoury','melty'],noun:'cheese'}, butter:{eps:['rich','soft'],noun:'butter'},
+  buttermilk:{eps:['cooling','tangy'],noun:'buttermilk'}, egg:{eps:['protein-rich','soft'],noun:'egg',fold:'cooked'},
+  // nuts & seeds
+  almond:{eps:['nutty','buttery'],noun:'almond',fold:'ground'}, walnut:{eps:['earthy','rich'],noun:'walnut',fold:'ground'},
+  cashew:{eps:['buttery','mild'],noun:'cashew',fold:'ground'}, sesame:{eps:['nutty','toasty'],noun:'sesame',fold:'ground'},
+  chia:{eps:['tiny','nutty'],noun:'chia',fold:'soaked'}, flaxseed:{eps:['nutty','wholesome'],noun:'flaxseed',fold:'ground'},
+  // proteins
+  fish:{eps:['tender','omega-rich'],noun:'fish',fold:'boneless'}, chicken:{eps:['lean','tender'],noun:'chicken',fold:'shredded'},
+  prawn:{eps:['tender','sweet'],noun:'prawn'}, mutton:{eps:['rich','tender'],noun:'mutton',fold:'soft-cooked'},
+  // fats & sweeteners
+  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'go easy — added sugar'},
+  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 1'}, oil:{eps:['light'],noun:'oil'},
+  // spices & herbs
+  turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
+  cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
+  mint:{eps:['cool','fresh'],noun:'mint'}, ginger:{eps:['warming','zingy'],noun:'ginger'},
+  // fold-completeness (K-T-2): keys present in the fingerprint icon map must also
+  // carry a voice, or a recipe paints a colour band for an unnamed ingredient.
+  poha:{eps:['light','flaky'],noun:'poha'}, okra:{eps:['tender','green'],noun:'okra'},
+  cabbage:{eps:['crisp','leafy'],noun:'cabbage'}, brinjal:{eps:['silky','mellow'],noun:'brinjal'},
+  mushroom:{eps:['earthy','tender'],noun:'mushroom'}, onion:{eps:['sweet','mellow'],noun:'onion'},
+  strawberry:{eps:['sweet','fragrant'],noun:'strawberry'}, grapes:{eps:['juicy','sweet'],noun:'grape',fold:'halved'},
+  papaya:{eps:['soft','sweet'],noun:'papaya'}, orange:{eps:['juicy','bright'],noun:'orange'},
+  pistachio:{eps:['nutty','green'],noun:'pistachio',fold:'ground'}, pumpkinseed:{eps:['nutty','crunchy'],noun:'pumpkin seed',fold:'ground'},
+  tofu:{eps:['silky','mild'],noun:'tofu'},
+};
+const _recipeConnector = s =>
+  s < 0.12 ? 'with just a hint of' : s < 0.22 ? 'with a touch of' :
+  s < 0.33 ? 'with a little' : s < 0.45 ? 'balanced with' : 'meets';
+const _recEpOf = (it, seed) => it.eps[seed % it.eps.length];
+const _recNounOf = it => it.fold ? `${it.fold} ${it.noun}` : it.noun;
+
+// parts: [{id, w}] (id = a RECIPE_EP key; w = grams) · seed: day-seed.
+// Returns { strict:[lead clauses], body }. Render strict first (prominent).
+function _recipeComposeTagline(parts, seed) {
+  seed = seed || 0;
+  const items = parts.map(p => ({ ...RECIPE_EP[p.id], w: p.w })).filter(i => i.noun).sort((a, b) => b.w - a.w);
+  if (!items.length) return { strict: [], body: '' };
+  const total = items.reduce((s, i) => s + i.w, 0) || 1;
+  const strict = [...new Set(items.filter(i => i.strict).map(i => i.strict))];
+  const dom = items[0];
+  let body;
+  if (items.length === 1) {
+    body = `${_recEpOf(dom, seed)} ${_recNounOf(dom)}`;
+  } else if (items.length === 2) {
+    const m = items[1], con = _recipeConnector(m.w / total);
+    body = con === 'meets'
+      ? `${_recEpOf(dom, seed)} ${_recNounOf(dom)} meets ${_recEpOf(m, seed)} ${_recNounOf(m)}`
+      : `${_recEpOf(dom, seed)} ${_recNounOf(dom)}, ${con} ${_recNounOf(m)}`;
+  } else {
+    const mids = items.slice(1, -1).map(_recNounOf);
+    const last = items.at(-1), lastCon = (last.w / total) < 0.15 ? 'a touch of' : 'a little';
+    body = `${_recEpOf(dom, seed)} ${_recNounOf(dom)}, with ${mids.join(', ')} and ${lastCon} ${_recNounOf(last)}`;
+  }
+  return { strict, body };
+}
+
 // O(1) lookup for the tap-through dispatcher (openRecipeInTab) + render helpers.
 const RECIPES_BY_ID = RECIPES.reduce((m, r) => { m[r.id] = r; return m; }, {});
 
@@ -494,3 +590,4 @@ window.RECIPES = RECIPES;
 window.RECIPES_BY_ID = RECIPES_BY_ID;
 window.RECIPE_SOURCES = RECIPE_SOURCES;
 window.recipeFoodIcon = recipeFoodIcon;
+window._recipeComposeTagline = _recipeComposeTagline;
