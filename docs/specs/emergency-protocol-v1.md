@@ -1,6 +1,6 @@
 # Emergency Protocol v1 — spec
 
-**Status:** draft for Maren content-audit → Architect sign-off → wiring
+**Status:** Maren content-audit **PASSED (amended — V-M-225…235 folded)** → Architect sign-off → wiring
 **Feature:** deep-linkable per-hazard **Emergency Cards**, landed from a food, with
 actionable numbered steps, recognise/after, and a save/copy/share **doc-prep** card.
 **Surface owner:** **Maren** (Governor of Care) — this is a safety surface; every
@@ -29,9 +29,9 @@ or **Share**.
 
 | Hazard id | Title | Chrome | Call | Recognise source | Notes |
 |---|---|---|---|---|---|
-| `anaphylaxis` | Severe allergic reaction · anaphylaxis | rose | 112 | `FOOD_EFFECTS[allergen].severeSigns` | the acute adrenaline floor |
-| `choking` | Choking | amber (caution) | 112 / 108 | `FOOD_EFFECTS['choking hazards'].severeSigns` | MECHANICAL — back-blows/chest-thrusts, **never adrenaline** |
-| `botulism` | After honey — suspected botulism | amber (caution) | doctor (not 112) | `FOOD_EFFECTS['honey'].watchFor` | **sub-acute** — not a call-112-now event; tempo-labelled |
+| `anaphylaxis` | Severe allergic reaction · anaphylaxis | rose | `tel:112` | **authored** (V-M-232) | the acute adrenaline floor |
+| `choking` | Choking | amber (caution) | `tel:112` (V-M-226) | **authored** — no FOOD_EFFECTS source exists (V-M-225) | MECHANICAL — back-blows/chest-thrusts, **never adrenaline** |
+| `botulism` | After honey — suspected botulism | amber (caution) | none (→ your doctor) | `FOOD_EFFECTS['honey'].watchFor` | **sub-acute** — not a call-112-now event; tempo-labelled + acute escape-hatch (V-M-229) |
 
 **FPIES** (delayed forceful vomiting, soy/grains) is a **v2 candidate** — deferred; soy's
 `seekCare` already names it inline, and it has no dedicated `FOOD_EFFECTS` floor today.
@@ -130,18 +130,19 @@ Tapping **"For the doctor"** opens the doc-prep as a **pop-up card** (Read overl
 no in-app form fields.** Blanks the parent must fill (time) render as literal `____`
 placeholders in the text, completed when they paste/print/handwrite.
 
-**Schema** `_emDocModel(hazard, ctx)`:
+**Schema** `_emDocModel(hazard, ctx)` — field ORDER matters (V-M-230: time-of-reaction is
+the clinician's first question, so it sits high, not mid-list):
 
-| Field | Source |
-|---|---|
-| `who` | Ziva's name · age (months) · weight (from her record) |
-| `suspected` | the hazard title |
-| `trigger` | the food that deep-linked here (or "—" if opened from the standing entry) |
-| `time` | `____` (parent fills) |
-| `symptoms` | the hazard's recognise list (comma-joined) |
-| `actionTaken` | hazard-specific prompt (e.g. "Adrenaline given: Yes/No — time ____") |
-| `knownAllergies` | from her record (or "none on file") |
-| `forTeam` | one authored sentence per hazard — what to tell the clinician |
+| # | Field | Source |
+|---|---|---|
+| 1 | `who` | Ziva's name · age (months) · **weight** (from her record — weight is load-bearing for dosing, V-M-230) |
+| 2 | `suspected` | the hazard title |
+| 3 | `time` | **Time of reaction: `____`** + (anaphylaxis) **Adrenaline given at: `____`** — promoted directly under `suspected` (V-M-230) |
+| 4 | `trigger` | the food that deep-linked here (or "—" if opened from the standing entry) |
+| 5 | `symptoms` | the hazard's recognise list (comma-joined) |
+| 6 | `actionTaken` | hazard-specific prompt (`docAction`, e.g. "Adrenaline given: Yes/No — time ____") |
+| 7 | `knownAllergies` | from her record, or — when empty — **"none recorded yet (this may be a first reaction)"** (V-M-231: never "none on file", which reads as *cleared* mid-event) |
+| 8 | `forTeam` | the authored sentence (V-M-230: neutral — does **not** assert an intervention that may not have happened) |
 
 **Actions (footer):**
 - **Copy** → `navigator.clipboard.writeText(_emDocText(model))` — the **Notes-readable
@@ -160,14 +161,15 @@ SproutLab — Emergency summary
 Ziva Jain · 9 months · 8.1 kg
 
 Suspected: Anaphylaxis (severe allergic reaction)
-Trigger food: Peanut
 Time of reaction: ____
+Adrenaline given at: ____
+Trigger food: Peanut
 Symptoms seen: trouble breathing, facial swelling
-Adrenaline given: Yes — time ____
-Known allergies: (from record)
+Adrenaline given: Yes / No
+Known allergies: none recorded yet (this may be a first reaction)
 
-For the team: suspected anaphylaxis after peanut; adrenaline
-given; please observe for a biphasic reaction.
+For the team: suspected anaphylaxis after peanut; see the
+"adrenaline given" line; please observe for a biphasic reaction.
 ```
 
 Built by joining `key: value` lines from `_emDocModel`; every value `escHtml`-free (plain
@@ -183,8 +185,11 @@ renderers (no divergence).
 
 ## 6. Data model — `EMERGENCY_PROTOCOL` (Maren content · `data.js`, beside FOOD_EFFECTS)
 
-A structured map; **recognise reuses FOOD_EFFECTS** (single source for the signs);
-**steps / after / forTeam / call are authored** (the new content Maren audits).
+A structured map. **recognise is AUTHORED per hazard** (Maren V-M-225: no `FOOD_EFFECTS`
+record holds the choking signs — its record is only `minMonth`+`reason`; and V-M-232:
+don't hard-couple anaphylaxis to egg's floor). Botulism's recognise may reuse
+`FOOD_EFFECTS['honey'].watchFor` (a real field). **steps / after / forTeam / call /
+recognise are authored** (the content Maren audits).
 
 ```js
 const EMERGENCY_PROTOCOL = {
@@ -192,49 +197,74 @@ const EMERGENCY_PROTOCOL = {
     title: 'Severe allergic reaction · anaphylaxis',
     chrome: 'rose',
     call: '112',                       // tel:112 (India unified emergency)
-    recogniseFrom: { key:'egg', field:'severeSigns' },   // representative allergen floor
+    recognise: [                       // AUTHORED (V-M-232 — not coupled to egg's floor)
+      'trouble breathing or wheezing',
+      'swelling of the face, lips, or tongue',
+      'going floppy, pale, or very sleepy',
+    ],
     steps: [ /* authored — see §6.1 */ ],
     after: [ /* authored */ ],
     docAction: 'Adrenaline given: Yes / No — time ____',
-    forTeam: 'suspected anaphylaxis after {food}; adrenaline given; please observe for a biphasic reaction.',
+    // V-M-230: forTeam must NOT assert adrenaline was given (it may not have been) — neutral.
+    forTeam: 'suspected anaphylaxis after {food}; see the "adrenaline given" line; please observe for a biphasic reaction.',
   },
-  choking:  { title:'Choking', chrome:'amber', call:'112',
-              recogniseFrom:{ key:'choking hazards', field:'severeSigns' }, steps:[…], after:[…],
+  choking:  { title:'Choking', chrome:'amber', call:'112',   // V-M-226: pill + step both 112
+              recognise: [             // AUTHORED (V-M-225 — no FOOD_EFFECTS source exists)
+                'silent — cannot cough, cry, or make a sound',
+                'cannot breathe, or a high-pitched squeak',
+                'going blue around the lips, or going floppy',
+              ],
+              steps:[…], after:[…],
               docAction:'Back blows / chest thrusts given · object cleared: Yes / No',
-              forTeam:'choking on {food}; back blows + chest thrusts given; …' },
+              forTeam:'choking on {food}; back blows + chest thrusts given; object cleared per the line above.' },
   botulism: { title:'After honey — suspected botulism', chrome:'amber', call:null,  // doctor, not 112
-              recogniseFrom:{ key:'honey', field:'watchFor' }, tempo:'Not a sudden emergency — watch over the next days and call your doctor.',
+              recogniseFrom:{ key:'honey', field:'watchFor' },   // real field — single source ok
+              tempo:'Not a sudden emergency — watch over the next days and call your doctor.',
               steps:[…], after:[…], docAction:'Honey given on/around ____', forTeam:'…' },
 };
 window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 ```
 
+> **Recognise sourcing (post-Maren):** `anaphylaxis` + `choking` recognise lists are
+> **authored** in `EMERGENCY_PROTOCOL` (choking has no FOOD_EFFECTS source — V-M-225 block;
+> anaphylaxis authored to avoid the egg hard-coupling — V-M-232). `botulism` reuses
+> `FOOD_EFFECTS['honey'].watchFor` (a real field, kept single-source).
+
 ### 6.1 DRAFT content — **Maren audits every line**
 
-**Anaphylaxis — Do now**
-1. **Adrenaline auto-injector** if you have one — outer thigh, hold 10 seconds.
-2. **Call 112** — say the word **"anaphylaxis."**
-3. **Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. Never stand her up.
+> **Maren content audit: AFFIRMED clinically.** Adrenaline-first (V-M-227), the infant
+> choking algorithm incl. the abdominal-thrust ban (V-M-228), and the botulism sub-acute
+> framing (V-M-229) are all correct. The wording fixes below are folded.
+
+**Anaphylaxis — Do now** (V-M-227 no-injector escape · V-M-234 don't gate the call on a diagnosis)
+1. **If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. *(Most families won't have one — if not, go straight to step 2.)*
+2. **Call 112** — tell them your baby has trouble breathing after food; say **"anaphylaxis"** if you can.
+3. **Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**
 4. No better after **5 minutes**? A second dose, if you have one.
-**After:** Go to hospital even if she settles — a reaction can return hours later. · Note the time, the food, and what you gave.
+**After:** Go to hospital even if she settles — a reaction can return hours later. · Note the **time** of the reaction, the **food**, and what you **gave**.
 
 **Choking — Do now** (MECHANICAL — never adrenaline)
+*Recognise (authored — V-M-225):* silent · cannot cough/cry/make a sound · cannot breathe or a high-pitched squeak · going blue or floppy. (A coughing, crying baby is **not** this — that's step 1.)
 1. **Can she cough / cry?** Encourage coughing — don't intervene.
-2. **Silent / can't breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades.
+2. **Silent / can't breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. *(If someone is with you, have them call 112 now.)*
 3. **Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**
-4. **Alternate** back blows + chest thrusts. Not clearing → **Call 112 / 108**. Unresponsive → start **CPR**.
+4. **Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.
 **After:** Even once cleared, get her checked — a retained fragment or airway irritation can follow.
 
-**Botulism (after honey) — sub-acute, watch** (no 112 dash)
+**Botulism (after honey) — sub-acute, watch** (no Call pill — routes to your doctor)
 - This is **not a sudden emergency** — watch over the next days.
 - Over the coming days, watch for: constipation · a weak cry or weak suck · unusual floppiness.
 - If any appear, **call your doctor promptly** and say honey was given.
+- **But if she struggles to breathe, can't feed, or goes limp — don't wait. Call 112.** *(V-M-229 deterioration escape-hatch — the one acute path out of the sub-acute frame.)*
 
-> These three Do/After blocks + the `forTeam` sentences are the **authored** content. The
-> **recognise** lists come verbatim from `FOOD_EFFECTS` (unchanged). Maren's audit gates
-> ship: (a) clinical accuracy vs the cited guidance, (b) the never-cross rule (choking has
-> **no** adrenaline; anaphylaxis has **no** mechanical aid), (c) the botulism sub-acute
-> framing isn't read as a 112-now protocol.
+> The Do / After blocks + the `forTeam` sentences + the `anaphylaxis`/`choking` **recognise**
+> lists are **authored** content (botulism recognise reuses `FOOD_EFFECTS['honey'].watchFor`).
+> **Maren content audit — PASSED (amended):** affirmed clinically; the folded amendments are
+> V-M-225 (choking recognise authored, not the non-existent `severeSigns`), V-M-226 (Call
+> `tel:112`, step text matches), V-M-227 (no-injector escape), V-M-228 (call-in-parallel),
+> V-M-229 (botulism acute escape-hatch), V-M-230/231 (doc-prep time-prominence + neutral
+> forTeam + allergies fallback), V-M-232 (anaphylaxis recognise authored). Never-cross
+> confirmed clean in the authored copy (choking ∌ adrenaline; anaphylaxis ∌ mechanical aid).
 
 ---
 
@@ -255,10 +285,14 @@ window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 **Locked:** print-to-PDF + share (no PDF dep) · Anaphylaxis the template-first hazard ·
 "For the doctor" opens a pop-up card · doc-prep is read-only/generated (HR-9) · primary-
-hazard = anaphylaxis for multi-class foods · `tel:112` (India unified emergency).
-**Open (for Architect/Maren):** (a) does the Deck show **only** the deep-linked hazard or
-**all three** (spec assumes all-three + anchor)? (b) botulism Call pill — confirm **none**
-(routes to doctor)? (c) FPIES deferred to v2 — confirm.
+hazard = anaphylaxis for multi-class foods (Maren-affirmed V-M-233) · `tel:112`.
+**Resolved by Maren's audit:** (a) Deck shows **all three** + anchor — confirmed (a parent
+who deep-links to Anaphylaxis but faces choking must reach the choking card). (b) Botulism
+**no Call pill** — confirmed, conditional on the V-M-229 escape-hatch line (now folded).
+(c) FPIES deferred to v2 — concurred (soy's `seekCare` names it inline, no gap).
+**Folded nit (V-M-233):** the Anaphylaxis card carries a one-line cross-link — *"Choking on
+it instead? See the Choking card below."* — so a mis-routed choking parent is handed the
+bridge, not left to scroll-discover.
 
 ---
 
