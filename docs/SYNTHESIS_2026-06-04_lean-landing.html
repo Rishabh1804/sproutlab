@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthesis — Lean Landing arc — 2026-06-04</title>
+<style>
+  :root {
+    --bg: #15121a; --panel: #1e1a26; --panel-2: #262031; --ink: #ece6f2;
+    --mid: #b3a9c4; --line: rgba(180,160,210,0.18);
+    --rose: #e090a8; --sage: #7ac0a0; --amber: #d4a848; --sky: #80b8d8; --lav: #b8a8e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+    padding: 32px 20px 64px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; margin: 0 0 4px; }
+  header .sub { color: var(--mid); font-size: 0.95rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 28px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 13px; font-size: 0.82rem; color: var(--mid); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  h2 { font-family: Georgia, serif; font-size: 1.15rem; margin: 34px 0 12px;
+    padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; }
+  .card.accent-rose { border-left: 3px solid var(--rose); }
+  .card.accent-sage { border-left: 3px solid var(--sage); }
+  .card.accent-lav  { border-left: 3px solid var(--lav); }
+  .card.accent-amber{ border-left: 3px solid var(--amber); }
+  .card h3 { margin: 0 0 7px; font-size: 1rem; }
+  .card p { margin: 0 0 8px; font-size: 0.88rem; color: var(--mid); }
+  .card .tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--lav); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--mid); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { height: 7px; border-radius: 4px; background: var(--panel-2); overflow: hidden; margin-top: 4px; }
+  .bar > span { display: block; height: 100%; border-radius: 4px; }
+  .tight { color: var(--rose); }
+  .ok { color: var(--sage); }
+  .ledger li { font-size: 0.88rem; color: var(--mid); margin-bottom: 6px; }
+  .ledger b { color: var(--ink); }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--mid); font-size: 0.85rem; font-style: italic; }
+  .dingbat { color: var(--sage); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The Lean Landing arc</h1>
+    <div class="sub">Synthesis &middot; 2026-06-04 &middot; Lyra (The Weaver) &middot; PR #219 + #226</div>
+  </header>
+
+  <div class="meta">
+    <span class="chip"><b>4</b> PRs merged</span>
+    <span class="chip"><b>8</b> Governor audits</span>
+    <span class="chip"><b>2</b> Cipher Edict V passes</span>
+    <span class="chip"><b>5</b> amendments folded</span>
+    <span class="chip"><b>1</b> deferred</span>
+    <span class="chip">0 safety blockers</span>
+  </div>
+
+  <h2>The posture</h2>
+  <div class="card accent-lav">
+    <p>The app used to open onto a 16-section cockpit. It now opens onto a calm front door &mdash;
+    warm-wave hero, one honest "today" line, three soft doors (Log / Today / Ask). The cockpit is
+    one tap behind, as "Today". The organizing principle: <b>calm by default, but Care pre-empts
+    the calm</b> &mdash; a fever, an overdue vaccine, a due Vit D3 dose steps forward loud-rose and
+    routes the parent straight to the fix.</p>
+  </div>
+
+  <h2>Three durable patterns <span style="font-size:0.8rem;color:var(--mid);font-weight:400;">(candidate Codex canon)</span></h2>
+  <div class="grid">
+    <div class="card accent-rose">
+      <div class="tag">Pattern 1</div>
+      <h3>Deep-link to the fix, not the inventory</h3>
+      <p>An actionable alert must land on the surface where the action lives &mdash; never a
+      read-only summary/management card. The Vit D3 pre-empt routed to the Meds <i>inventory</i>
+      card (no way to log); fixed to land on the Home reminder card's Done&nbsp;now / Done&nbsp;at&hellip; / Skip.</p>
+      <p><span class="dingbat">&#10003;</span> id-contract: target <code>supp-alert-${idx}</code> aligns only because both functions derive <code>idx</code> from the same filter, same order.</p>
+    </div>
+    <div class="card accent-sage">
+      <div class="tag">Pattern 2</div>
+      <h3>Crowd-fit the hero</h3>
+      <p>When Care pre-empts push Emergency below the fold, the hero collapses to a compact
+      "Start with [picker]" row, keeping the safety-critical card reachable without a scroll.
+      <b>Measured</b> against the viewport (not a count), re-measured from full state &mdash; relaxes
+      back when there's room, never sticks.</p>
+    </div>
+    <div class="card accent-amber">
+      <div class="tag">Pattern 3</div>
+      <h3>Relabel, don't rename</h3>
+      <p>Introduce the new id (<code>landing</code>) as default; keep the old (<code>home</code>)
+      bound to its surface, change only the label ("Today"). Preserve the threaded string-contract
+      with a derived set <code>PANEL_IDS = [&hellip;TAB_ORDER, 'home']</code> &mdash; and migrate
+      <i>every</i> consumer (K-1 caught the one that wasn't).</p>
+    </div>
+    <div class="card accent-lav">
+      <div class="tag">Meta</div>
+      <h3>Edict V finds seams, not violations</h3>
+      <p>Cipher caught <code>handleSafeExit</code> still treating <code>home</code> as the exit
+      base after the front door became <code>landing</code>. No single Governor owned it &mdash; it
+      lived in the seam between "the new default" and "the exit gesture". That is exactly what the
+      cross-jurisdiction pass exists to catch.</p>
+    </div>
+  </div>
+
+  <h2>Codebase telemetry &middot; the 30K frontier</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Jurisdiction</th><th class="num">LOC</th><th class="num">Headroom</th><th style="width:30%">to 30K</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>Maren</b> &middot; Care</td><td class="num">27,975</td>
+          <td class="num tight">~2,025</td>
+          <td><div class="bar"><span class="tight" style="width:93%;background:var(--rose)"></span></div></td>
+        </tr>
+        <tr>
+          <td><b>Kael</b> &middot; Intelligence engine</td><td class="num">27,801</td>
+          <td class="num">~2,199</td>
+          <td><div class="bar"><span style="width:93%;background:var(--amber)"></span></div></td>
+        </tr>
+        <tr>
+          <td><b>Vela</b> &middot; Surfacing render</td><td class="num">8,946</td>
+          <td class="num ok">~21,054</td>
+          <td><div class="bar"><span class="ok" style="width:30%;background:var(--sage)"></span></div></td>
+        </tr>
+        <tr>
+          <td>Shared &middot; triple-Gov</td><td class="num">14,645</td>
+          <td class="num">&mdash;</td><td></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px"><span class="dingbat" style="color:var(--rose)">&#9873;</span>
+    <b>Frontier shift:</b> Maren (Care) overtook Kael as the nearest-term split candidate this arc.
+    Total split-file source <b>79,367 LOC</b> (was 77,899 post-#215). Graph: 1,778 symbols &middot;
+    35 cross-province couplings (code-only extraction; shared files unsurveyed).</p>
+  </div>
+
+  <h2>Carry-forward ledger</h2>
+  <div class="card">
+    <ul class="ledger">
+      <li><b>General Emergency Room</b> (P0, spec &sect;5.3) &mdash; the chooser's "General" door is still a "Coming soon" stub. Maren-gated content (sourced + audited) before render.</li>
+      <li><b>Quick-log-cancel-origin</b> (P1, deferred V-K) &mdash; a landing-opened quick modal returns to the QL sheet on Cancel, not the landing. Recoverable; thread a landing-origin flag through <code>closeQuickModal</code>.</li>
+      <li><b>Cold-start perf</b> (P2) &mdash; remove the init-time <code>renderHome()</code> now that it's lazy.</li>
+      <li><b>Graphify thorough mode</b> (P2) &mdash; supply a backend credential to survey <code>styles.css</code> + <code>template.html</code>.</li>
+      <li><b>On-device half-awake pass</b> &mdash; Architect smoke-test: dark mode &times; 3 zoom tiers, with a live Care signal seeded.</li>
+    </ul>
+  </div>
+
+  <footer>
+    &mdash; Lyra. A front door is not a feature; it is a posture. Calm says "you're okay." The
+    pre-empt says "this one can't wait." When both are true, the surface bends &mdash; the hero
+    yields so the siren stays in view. That bending, measured against the fold, is the pattern worth keeping.
+  </footer>
+</div>
+</body>
+</html>
