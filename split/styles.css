@@ -62,6 +62,7 @@
   --amber-light:#fef6e8;
   --tc-amber:   #8a6520;
   --tc-indigo:  #4a5080;
+  --tc-peach:   #9a5f30;   /* v1.4 — peach text-on-wash, defined for the food-domain vegetables chip (.fdom-chip--vegs, §10.5). Retires the long-standing dangling reference. */
   /* Polish-4: tonal variants + border-accents (token-family naming rule per
      DESIGN_PRINCIPLES.md). 9 tokens introduced; substitution sweep ships
      in same PR per spec-amendment-in-substitution-PR doctrine candidate. */
@@ -5262,6 +5263,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   --tc-caution:#e8b870;
   --tc-amber:  #d4a848;
   --tc-indigo: #a0b0e0;
+  --tc-peach:  #e8b488;   /* v1.4 — peach text-on-wash, dark theme (§10.5). */
   --surface-danger:  rgba(242,168,184,0.08);
   --surface-warn:    rgba(255,193,7,0.06);
   --surface-warn-grad: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(255,193,7,0.04));
@@ -10917,10 +10919,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-book-nudge .lib-go { width:var(--icon-xs); height:var(--icon-xs); opacity:0.8; }
 
 /* expand-in-place detail (content reuses .enc-form / .cons-severe / .enc-emergency) */
-.lib-detail { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
-.lib-detail.open { max-height:1200px; }
-.lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
-.lib-detail-inner > * + * { margin-top:var(--sp-12); }
 .lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
 /* Suggested-for-Ziva lead card — the entry point the eye lands on */
 .lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
@@ -10947,3 +10945,92 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
 .lib-floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
 .lib-floor-aid { color:var(--tc-rose); font-weight:700; }
+
+/* ═══ Nutrient colour system — tint-fade chips, one per nutrient-domain (§10.4 DESIGN_PRINCIPLES).
+   6 nutrient-domains mapped onto 6 of the 7 house domains (peach reserved for food-domain veg). ═══ */
+.nutri-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); }
+.nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+.nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+.nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+.nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+.nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 28%, rgba(155,168,216,0.34)); color:var(--tc-indigo); }
+[data-theme="dark"] .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+[data-theme="dark"] .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+[data-theme="dark"] .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+[data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+[data-theme="dark"] .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
+
+/* ═══ Food-domain chips (§10.5) — tint-fade coloured by FOOD_TAX domain. The chip variant of
+   the .dt-* whisper. grains→sage · fruits & nonveg→rose · vegs→peach · dairy→sky · nuts→lavender · spices→amber. ═══ */
+.fdom-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); }
+.fdom-chip--grains { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+.fdom-chip--fruits { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 28%, rgba(250,212,180,0.40)); color:var(--tc-peach); }
+.fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+.fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+.fdom-chip--spices { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+[data-theme="dark"] .fdom-chip--grains { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+[data-theme="dark"] .fdom-chip--fruits { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+[data-theme="dark"] .fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+[data-theme="dark"] .fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+[data-theme="dark"] .fdom-chip--spices { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+
+/* ═══ Food info pop-up (Read overlay) — records 09/10. Domain-whisper head + EP voice + journey,
+   safety-first body, a single Quick-Act footer, and a 3D card flip to a history/analysis face. ═══ */
+.lib-pop-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:flex-start; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1200; }
+.lib-pop-ov.open { display:flex; }
+.food-pop { width:100%; max-width:372px; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 18px 60px rgba(0,0,0,0.4); overflow:hidden; perspective:1400px; }
+/* 3D flip — both faces share one grid cell so the card sizes to the taller face (no clip) */
+.fp-flip { display:grid; transform-style:preserve-3d; transition:transform var(--ease-slow); }
+.fp-flip > .fp-face { grid-area:1 / 1; backface-visibility:hidden; -webkit-backface-visibility:hidden; min-width:0; }
+.fp-back { transform:rotateY(180deg); }
+.fp-flip.flipped { transform:rotateY(180deg); }
+
+.fp-head { position:relative; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
+.fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
+.fp-voice { font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-md); color:var(--mid); line-height:var(--lh-snug); margin-top:var(--sp-2); }
+.fp-close { position:absolute; top:var(--sp-12); right:var(--sp-12); width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--card-bg); color:var(--mid); font-size:18px; line-height:1; cursor:pointer; box-shadow:0 1px 6px var(--shadow); }
+.fp-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-10); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+.fp-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.fp-journey--settled, .fp-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+.fp-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+.fp-journey--untried { background:var(--surface-alt); color:var(--light); }
+
+.fp-body { padding:var(--sp-16); }
+.fp-body > * + * { margin-top:var(--sp-16); }
+.fp-sec-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-8); }
+
+.fp-flag { display:flex; align-items:flex-start; gap:var(--sp-8); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.fp-flag + .fp-flag { margin-top:var(--sp-8); }
+.fp-flag .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.fp-flag b { font-weight:800; }
+.fp-flag--encourage { background:var(--sage-light); color:var(--tc-sage); }
+.fp-flag--conditional { background:var(--amber-light); color:var(--tc-amber); }
+.fp-flag--warn { background:var(--rose-light); color:var(--tc-rose); }
+.fp-flag--inform { background:var(--sky-light); color:var(--tc-sky); }
+.fp-flag--age { background:var(--amber-light); color:var(--tc-amber); }
+
+.fp-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.fp-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-size:var(--fs-2xs); font-weight:700; line-height:var(--lh-snug); }
+.fp-chip .zi { width:11px; height:11px; flex:0 0 auto; }
+.fp-chip--ok { background:var(--sage-light); color:var(--tc-sage); }
+.fp-chip--never { background:var(--rose-light); color:var(--tc-rose); }
+
+.fp-insight { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.fp-insight .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.fp-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:var(--sp-10); padding:var(--sp-24) var(--sp-16); color:var(--light); }
+.fp-empty .zi { width:30px; height:30px; }
+.fp-empty p { margin:0; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+
+.fp-foot { display:flex; align-items:center; gap:var(--sp-10); padding:var(--sp-12) var(--sp-16); border-top:1px solid var(--surface-alt); }
+.fp-foot-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border:none; border-radius:var(--r-2xl); background:var(--sage); color:var(--tc-sage); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; }
+.fp-foot-btn .zi { width:var(--icon-base); height:var(--icon-base); }
+.fp-foot-btn--ghost { background:var(--surface-alt); color:var(--mid); }
+.fp-foot-link { display:inline-flex; align-items:center; gap:var(--sp-4); color:var(--tc-lav); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); cursor:pointer; white-space:nowrap; }
+.fp-foot-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.fp-back-arrow { transform:scaleX(-1); }

@@ -72,6 +72,7 @@
 <symbol id="zi-trending-flat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/></symbol>
 <symbol id="zi-trending-mixed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></symbol>
 <symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="zi-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 <symbol id="zi-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5"/><path d="M5 5l12 4-12 4"/></symbol>
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
@@ -1041,6 +1042,11 @@
         </div>
 
         </div><!-- /dietLibGuides -->
+
+        <!-- Food info pop-up (Read overlay) — a tapped book renders into #libPopOv via
+             libOpenBook (diet.js). Backdrop-tap closes via libClosePopSelf (e.target gate
+             so inner taps don't close); the × inside closes via libClosePop. -->
+        <div class="lib-pop-ov" id="libPopOv" data-action="libClosePopSelf"></div>
 
       </div>
     </div>

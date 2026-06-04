@@ -868,26 +868,6 @@ function _libDisplayName(key, eff) {
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
-function _libBookDetail(key, eff, j) {
-  var h = '';
-  var why = eff.whyGood || eff.why || '';
-  if (why) h += '<p class="lib-why">' + escHtml(why) + '</p>';
-  if (eff.safeForm && typeof _milkFormBlock === 'function') {
-    h += _milkFormBlock(eff.safeForm, 'Safe forms', 'Never');
-  }
-  // never-cross floor (present-only): choking record gets the choking-scoped header,
-  // every other (allergen/CMPA) gets the reaction header (the floor follows the hazard).
-  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
-  var floorHeader = isChoke ? 'If your baby is choking, it\'s an emergency' : 'If a reaction happens — an emergency';
-  h += _libBuildGuide(eff.severeSigns, eff.seekCare, floorHeader);
-  if (j.tried) {
-    var note = (j.reaction === 'watch') ? 'keeping an eye on it' : 'settled fine';
-    var when = j.date ? ('Introduced ' + escHtml(j.date)) : 'Introduced';
-    h += '<p class="lib-why">' + when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.</p>';
-  }
-  return h;
-}
-
 // Per-shelf-food voice + whisper domain (the design-ratified mapping; the broader
 // corpus uses classifyFoodToGroup when search wires). Warn-shelf foods carry a
 // domain whisper but NO voice line — a wait-food's character is the rule, not the taste.
@@ -904,6 +884,33 @@ var LIB_SHELF_VOICE = {
   'plant milk': { dom:'dairy',  eps:['mild','plant-based'] },
   'honey':      { dom:'spices', eps:[] },
   'choking hazards': { dom:'', eps:[] }
+};
+
+// Per-shelf-food KEY NUTRIENTS, each tagged with one of the 6 nutrient-domains
+// (growth/blood/bones/brain/immunity/energy — the .nutri-chip colour system, §10
+// DESIGN_PRINCIPLES). Curated for the 11 FOOD_EFFECTS shelf foods, design-ratified
+// in docs/design/library-redesign/ (records 09/10); the broader corpus reads the
+// live NUTRITION table when search wires in. Warn/non-food keys carry none.
+var LIB_SHELF_NUTRIENTS = {
+  'egg':        [['Protein','growth'],['Choline','brain'],['Vitamin D','bones'],['Vitamin B12','blood'],['Iron','blood']],
+  'peanut':     [['Protein','growth'],['Healthy fats','growth'],['Vitamin E','immunity'],['Magnesium','bones']],
+  'tree nut':   [['Healthy fats','growth'],['Protein','growth'],['Vitamin E','immunity'],['Magnesium','bones']],
+  'soy':        [['Protein','growth'],['Iron','blood'],['Folate','blood'],['Calcium','bones']],
+  'wheat':      [['Carbs','energy'],['Fibre','energy'],['Iron','blood'],['Protein','growth']],
+  'sesame':     [['Healthy fats','growth'],['Calcium','bones'],['Iron','blood'],['Zinc','immunity']],
+  'fish':       [['Omega-3','brain'],['Protein','growth'],['Vitamin D','bones'],['Iodine','brain'],['Selenium','immunity']],
+  'cow milk':   [['Calcium','bones'],['Protein','growth'],['Vitamin B12','blood'],['Vitamin D','bones']],
+  'plant milk': [['Calcium','bones'],['Fibre','energy']],
+  'honey':      [],
+  'choking hazards': []
+};
+
+// Polarity → the lead phrase + icon for the pop-up's safety flag (mirrors the shelf header).
+var LIB_POL_LEAD = {
+  encourage:   { phrase: 'Good to introduce early', icon: 'sprout' },
+  conditional: { phrase: 'Right time, right form',  icon: 'clock' },
+  warn:        { phrase: "Wait — and here's why",    icon: 'warn' },
+  inform:      { phrase: 'Good to know',             icon: 'info' }
 };
 
 function _libBookHtml(key, eff, pol) {
@@ -935,9 +942,8 @@ function _libBookHtml(key, eff, pol) {
   var siren = hasFloor ? '<span class="lib-book-siren">' + zi('siren') + '</span>' : '';
   var go = '<span class="lib-book-go">' + zi('arrow-right') + '</span>';
   return '<div class="lib-book-wrap">' +
-    '<button class="lib-book lib-book--' + pol + dt + '" data-action="libToggleBook" data-arg="' + escHtml(key) + '">' +
-    body + siren + go + '</button>' +
-    '<div class="lib-detail"><div class="lib-detail-inner">' + _libBookDetail(key, eff, j) + '</div></div></div>';
+    '<button class="lib-book lib-book--' + pol + dt + '" data-action="libOpenBook" data-arg="' + escHtml(key) + '">' +
+    body + siren + go + '</button></div>';
 }
 
 // "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
@@ -1000,22 +1006,160 @@ function libToggleGroup(btn) {
   if (g) g.classList.toggle('open');
 }
 
-// Expand-in-place book detail — accordion within the shelves (data-action="libToggleBook").
-function libToggleBook(btn) {
-  var wrap = btn && btn.closest('.lib-book-wrap');
-  if (!wrap) return;
-  var d = wrap.querySelector('.lib-detail');
-  var wasOpen = d && d.classList.contains('open');
-  var root = document.getElementById('dietShelvesRoot');
-  if (root) {
-    root.querySelectorAll('.lib-detail.open').forEach(function(x) { x.classList.remove('open'); });
-    root.querySelectorAll('.lib-book.expanded').forEach(function(x) { x.classList.remove('expanded'); });
-  }
-  if (!wasOpen && d) { d.classList.add('open'); btn.classList.add('expanded'); }
+// ── Food info POP-UP (the Read overlay a parent gets on tapping a book) ──────────
+// Brings the living-shelf language to the food detail: domain whisper header, name +
+// EP voice, the journey strip, then the safety-first body (polarity flag → age gate →
+// the never-cross floor via _libBuildGuide), safe-form chips, nutrient chips — and a
+// single Quick-Act footer (Log a serving → quick FEED modal). "Full history in Info"
+// FLIPS the card to a back face (her log + a pattern-read; empty/wait states when no
+// data). HR-9: a Read overlay (view + one Quick-Act + flip), not multi-field editing.
+// Faithful to docs/design/library-redesign/ records 09 (template) + 10 (live flip).
+
+// The floor header follows the hazard (the never-cross rule): a choking-by-form record
+// gets the choking-scoped header, every allergen/CMPA record the reaction header.
+function _libFloorHeader(eff) {
+  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+  return isChoke ? "If your baby is choking, it's an emergency" : 'If a reaction happens — an emergency';
 }
 
-// Lead tap-through (data-action="libJumpToBook") — open the food's shelf, expand
-// its book, and scroll to it. The "follow the lead into the library" flow.
+// Safe-form chips (the canonical pop-up render: ok → sage check chip, never → rose chip).
+function _libFormChips(sf) {
+  sf = sf || {};
+  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
+  var never = (sf.never && sf.never.length) ? sf.never : [];
+  if (!ok.length && !never.length) return '';
+  var chips = ok.map(function(x) { return '<span class="fp-chip fp-chip--ok">' + zi('check') + escHtml(x) + '</span>'; }).join('') +
+    never.map(function(x) { return '<span class="fp-chip fp-chip--never">' + escHtml(x) + '</span>'; }).join('');
+  return '<div><div class="fp-sec-h">Safe forms</div><div class="fp-chips">' + chips + '</div></div>';
+}
+
+// Key-nutrient chips, one per nutrient-domain colour (LIB_SHELF_NUTRIENTS → .nutri-chip).
+function _libNutriChips(key) {
+  var list = LIB_SHELF_NUTRIENTS[key] || [];
+  if (!list.length) return '';
+  var chips = list.map(function(n) {
+    return '<span class="nutri-chip nutri-chip--' + n[1] + '">' + escHtml(n[0]) + '</span>';
+  }).join('');
+  return '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">' + chips + '</div></div>';
+}
+
+// Journey chip for the pop-up head (same states as the shelf book; warn carries none).
+function _libJourneyChip(pol, j) {
+  if (pol === 'warn') return '';
+  if (!j.tried) return '<span class="fp-journey fp-journey--untried">' + zi('eye') + 'Not tried yet</span>';
+  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+}
+
+function _libPopHtml(key, eff, pol, j) {
+  var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var voiceTxt = (pol !== 'warn' && meta && meta.eps && meta.eps.length) ? meta.eps.join(' & ') : '';
+  var lead = LIB_POL_LEAD[pol] || LIB_POL_LEAD.inform;
+  var why = eff.whyGood || eff.why || '';
+  var canLog = (pol === 'encourage' || pol === 'conditional') && key !== 'choking hazards';
+
+  // head — whisper + name + voice + journey + close
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(name) + '</div>' +
+    (voiceTxt ? '<div class="fp-voice">' + escHtml(voiceTxt) + '</div>' : '') +
+    _libJourneyChip(pol, j) + '</div>';
+
+  // body — polarity flag → age gate → never-cross floor, then safe forms, then nutrients
+  var flag = '<div class="fp-flag fp-flag--' + pol + '">' + zi(lead.icon) +
+    '<span><b>' + escHtml(lead.phrase) + '.</b>' + (why ? ' ' + escHtml(why) : '') + '</span></div>';
+  var ageFlag = eff.gate ? '<div class="fp-flag fp-flag--age">' + zi('warn') + '<span>' + escHtml(eff.gate) + '</span></div>' : '';
+  var floor = _libBuildGuide(eff.severeSigns, eff.seekCare, _libFloorHeader(eff));
+  var body = '<div class="fp-body"><div>' + flag + ageFlag + floor + '</div>' +
+    _libFormChips(eff.safeForm) + _libNutriChips(key) + '</div>';
+
+  // foot — single Quick-Act + the flip-to-history link
+  var foot = '<div class="fp-foot">' +
+    (canLog ? '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(key) + '">' + zi('plus') + 'Log a serving</button>' : '') +
+    '<span class="fp-foot-link" data-action="popFlip">Full history in Info ' + zi('arrow-right') + '</span></div>';
+
+  return '<div class="food-pop"><div class="fp-flip">' +
+    '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
+    '<div class="fp-face fp-back">' + _libPopBackHtml(key, eff, pol, j) + '</div>' +
+    '</div></div>';
+}
+
+// The flipped face — her history + an honest pattern-read (empty/wait states when no data).
+function _libPopBackHtml(key, eff, pol, j) {
+  var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(name) + '</div>' +
+    '<div class="fp-voice">History &amp; analysis</div></div>';
+  var inner;
+  if (pol === 'warn') {
+    inner = '<div class="fp-empty">' + zi('warn') +
+      '<p>This one waits until the age limit — there&rsquo;s no history to show yet, and that&rsquo;s as it should be.</p></div>';
+  } else if (!j.tried) {
+    inner = '<div class="fp-empty">' + zi('eye') +
+      '<p>Not tried yet. Once you log ' + escHtml(name) + ', her servings and any patterns will appear here.</p></div>';
+  } else {
+    var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
+    var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
+    var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + (j.established ? ' · well established' : '') + '.';
+    var insight = j.established
+      ? 'Well established — no patterns of concern across her logs so far.'
+      : (j.reaction === 'watch'
+        ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
+        : 'Settling in — not enough logged yet to show a clear pattern.');
+    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      '<div><div class="fp-sec-h">What the patterns say</div>' +
+      '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
+  }
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-action="popFlipBack">' +
+    '<svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
+  return head + '<div class="fp-body">' + inner + '</div>' + foot;
+}
+
+// Open the pop-up for a book (data-action="libOpenBook").
+function libOpenBook(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var eff = FE ? FE[key] : null;
+  if (!eff) return;
+  var ov = document.getElementById('libPopOv');
+  if (!ov) return;
+  var pol = (typeof _effPolarity === 'function') ? _effPolarity(eff) : 'inform';
+  var j = _libJourney(key);
+  ov.innerHTML = _libPopHtml(key, eff, pol, j);
+  ov.classList.add('open');
+}
+
+function _libClosePop() {
+  var ov = document.getElementById('libPopOv');
+  if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+}
+
+function popFlip() {
+  var fl = document.querySelector('#libPopOv .fp-flip');
+  if (fl) fl.classList.add('flipped');
+}
+function popFlipBack() {
+  var fl = document.querySelector('#libPopOv .fp-flip');
+  if (fl) fl.classList.remove('flipped');
+}
+
+// "Log a serving" → close the pop-up, open the quick FEED modal, pre-add this food.
+function libLogServing(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  _libClosePop();
+  if (typeof openQuickModal === 'function') openQuickModal('feed');
+  if (key && typeof qlFeedAddItem === 'function') qlFeedAddItem(key, 'library');
+}
+
+// Lead tap-through (data-action="libJumpToBook") — open the food's shelf and its pop-up.
+// The "follow the lead into the library" flow.
 function libJumpToBook(btn) {
   var key = btn && btn.getAttribute('data-arg');
   if (!key) return;
@@ -1028,8 +1172,7 @@ function libJumpToBook(btn) {
   if (!target) return;
   var grp = target.closest('.lib-group');
   if (grp) grp.classList.add('open');
-  libToggleBook(target);
-  if (target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  libOpenBook(target);
 }
 
 // ════════════════════════════════════════
