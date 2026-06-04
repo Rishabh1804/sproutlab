@@ -1128,9 +1128,9 @@ function _libNutriTokenParts(tokens, max) {
   };
 }
 
-// Toggle a disclosure row; deep-link a floor row to the Emergency Deck.
+// Toggle a disclosure row. (The floor-row → Deck deep-link is libPopToDeck(btn), defined
+// with the Emergency-Card system below — it carries the hazard + food.)
 function libPopRow(btn) { var r = btn && btn.closest('.lib-prow'); if (r) r.classList.toggle('open'); }
-function libPopToDeck() { _libClosePop(); if (typeof libOpenDeck === 'function') libOpenDeck(); }
 
 function _libPopHtml(key, eff, pol, j) {
   var name = _libDisplayName(key, eff);
@@ -1485,6 +1485,10 @@ function _emHazardForEff(eff) {
   if (has('allergen-introduce-early')) return 'anaphylaxis';
   if (has('choking-by-form')) return 'choking';
   if (has('acute-toxin')) return 'botulism';
+  // V-M-237: a food with a full ACUTE allergen floor but no hazard class — cow's milk
+  // (foodClass 'drink-timing', but its severeSigns ARE the anaphylaxis floor / CMPA) —
+  // routes to anaphylaxis. Sits AFTER choking-by-form, so a choking food never falls here.
+  if (eff.severeSigns && eff.severeSigns.length) return 'anaphylaxis';
   return null;
 }
 function _emRecognise(hz) {
@@ -1578,7 +1582,7 @@ function _libCloseDeck() {
 function _emDocWho() {
   var bits = ['Ziva'];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
-  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (typeof w === 'number' && w > 0) bits.push(w + ' kg'); } } catch (e) {}
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
   return bits.join(' · ');
 }
 function _emStampRow(s) {

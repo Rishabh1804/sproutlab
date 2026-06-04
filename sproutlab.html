@@ -10950,21 +10950,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
 .lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .lib-deck-close .zi { width:var(--icon-base); height:var(--icon-base); }
-.lib-floor-card { border-radius:var(--r-lg); background:var(--card-bg); box-shadow:0 1px 8px var(--shadow); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-10); border-left:3px solid var(--rose); }
-.lib-floor-card-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); display:flex; align-items:center; gap:var(--sp-8); }
-.lib-floor-card-t .zi { width:var(--icon-base); height:var(--icon-base); }
-.lib-floor-tempo { margin-top:var(--sp-4); font-size:var(--fs-2xs); font-weight:700; color:var(--mid); font-style:italic; line-height:var(--lh-normal); }
-.lib-floor-face { margin-top:var(--sp-8); }
-.lib-floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
-.lib-floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
-.lib-floor-signs { margin:0; padding-left:var(--sp-16); }
-.lib-floor-signs li { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-2); }
-.lib-floor-aid { color:var(--tc-rose); font-weight:600; }
-/* per-hazard chrome — choking (mechanical) + botulism (sub-acute) read amber, not the
-   anaphylaxis rose (Deck mirror of V-M-224). */
-.lib-floor-card--caution { border-left-color:var(--amber); }
-.lib-floor-card--caution .lib-floor-card-t { color:var(--tc-amber); }
-.lib-floor-card--caution .lib-floor-aid { color:var(--tc-amber); }
 
 /* ═══ Nutrient colour system — tint-fade chips, one per nutrient-domain (§10.4 DESIGN_PRINCIPLES).
    6 nutrient-domains mapped onto 6 of the 7 house domains (peach reserved for food-domain veg). ═══ */
@@ -11153,7 +11138,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .ec-step { display:flex; gap:var(--sp-12); margin-bottom:var(--sp-14); }
 .ec-step:last-of-type { margin-bottom:0; }
 .ec-step-n { flex:0 0 auto; width:24px; height:24px; border-radius:var(--r-full); background:var(--rose); color:#fff; font-weight:800; font-size:var(--fs-sm); display:flex; align-items:center; justify-content:center; margin-top:1px; }
-.ecard--amber .ec-step-n { background:var(--amber); color:var(--tc-amber); }
+.ecard--amber .ec-step-n { background:var(--tc-amber); color:#fff; }  /* V-V-1: filled badge, step order must not blur */
 .ec-step-t { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); font-weight:600; }
 .ec-step-t b { font-weight:800; } .ec-step-t i { font-style:italic; color:var(--mid); font-weight:600; }
 /* Call — the fade flow: a continuously flowing rose gradient + soft pulse */
@@ -40015,9 +40000,9 @@ function _libNutriTokenParts(tokens, max) {
   };
 }
 
-// Toggle a disclosure row; deep-link a floor row to the Emergency Deck.
+// Toggle a disclosure row. (The floor-row → Deck deep-link is libPopToDeck(btn), defined
+// with the Emergency-Card system below — it carries the hazard + food.)
 function libPopRow(btn) { var r = btn && btn.closest('.lib-prow'); if (r) r.classList.toggle('open'); }
-function libPopToDeck() { _libClosePop(); if (typeof libOpenDeck === 'function') libOpenDeck(); }
 
 function _libPopHtml(key, eff, pol, j) {
   var name = _libDisplayName(key, eff);
@@ -40372,6 +40357,10 @@ function _emHazardForEff(eff) {
   if (has('allergen-introduce-early')) return 'anaphylaxis';
   if (has('choking-by-form')) return 'choking';
   if (has('acute-toxin')) return 'botulism';
+  // V-M-237: a food with a full ACUTE allergen floor but no hazard class — cow's milk
+  // (foodClass 'drink-timing', but its severeSigns ARE the anaphylaxis floor / CMPA) —
+  // routes to anaphylaxis. Sits AFTER choking-by-form, so a choking food never falls here.
+  if (eff.severeSigns && eff.severeSigns.length) return 'anaphylaxis';
   return null;
 }
 function _emRecognise(hz) {
@@ -40465,7 +40454,7 @@ function _libCloseDeck() {
 function _emDocWho() {
   var bits = ['Ziva'];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
-  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (typeof w === 'number' && w > 0) bits.push(w + ' kg'); } } catch (e) {}
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
   return bits.join(' · ');
 }
 function _emStampRow(s) {

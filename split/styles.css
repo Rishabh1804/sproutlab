@@ -10943,21 +10943,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
 .lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .lib-deck-close .zi { width:var(--icon-base); height:var(--icon-base); }
-.lib-floor-card { border-radius:var(--r-lg); background:var(--card-bg); box-shadow:0 1px 8px var(--shadow); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-10); border-left:3px solid var(--rose); }
-.lib-floor-card-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); display:flex; align-items:center; gap:var(--sp-8); }
-.lib-floor-card-t .zi { width:var(--icon-base); height:var(--icon-base); }
-.lib-floor-tempo { margin-top:var(--sp-4); font-size:var(--fs-2xs); font-weight:700; color:var(--mid); font-style:italic; line-height:var(--lh-normal); }
-.lib-floor-face { margin-top:var(--sp-8); }
-.lib-floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
-.lib-floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
-.lib-floor-signs { margin:0; padding-left:var(--sp-16); }
-.lib-floor-signs li { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-2); }
-.lib-floor-aid { color:var(--tc-rose); font-weight:600; }
-/* per-hazard chrome — choking (mechanical) + botulism (sub-acute) read amber, not the
-   anaphylaxis rose (Deck mirror of V-M-224). */
-.lib-floor-card--caution { border-left-color:var(--amber); }
-.lib-floor-card--caution .lib-floor-card-t { color:var(--tc-amber); }
-.lib-floor-card--caution .lib-floor-aid { color:var(--tc-amber); }
 
 /* ═══ Nutrient colour system — tint-fade chips, one per nutrient-domain (§10.4 DESIGN_PRINCIPLES).
    6 nutrient-domains mapped onto 6 of the 7 house domains (peach reserved for food-domain veg). ═══ */
@@ -11146,7 +11131,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .ec-step { display:flex; gap:var(--sp-12); margin-bottom:var(--sp-14); }
 .ec-step:last-of-type { margin-bottom:0; }
 .ec-step-n { flex:0 0 auto; width:24px; height:24px; border-radius:var(--r-full); background:var(--rose); color:#fff; font-weight:800; font-size:var(--fs-sm); display:flex; align-items:center; justify-content:center; margin-top:1px; }
-.ecard--amber .ec-step-n { background:var(--amber); color:var(--tc-amber); }
+.ecard--amber .ec-step-n { background:var(--tc-amber); color:#fff; }  /* V-V-1: filled badge, step order must not blur */
 .ec-step-t { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); font-weight:600; }
 .ec-step-t b { font-weight:800; } .ec-step-t i { font-style:italic; color:var(--mid); font-weight:600; }
 /* Call — the fade flow: a continuously flowing rose gradient + soft pulse */
