@@ -1,5 +1,5 @@
 # SproutLab — Design Principles
-**Version:** 1.0 · **Created:** 9 April 2026 · **Updated:** 9 April 2026
+**Version:** 1.4 · **Created:** 9 April 2026 · **Updated:** 3 June 2026
 **Forked from:** DESIGN_SYSTEM_TEMPLATE.md v1.0
 **App:** Baby development tracker for Ziva (born Sep 2025)
 **Architecture:** Split-file HTML PWA (build-concatenated), localStorage persistence, no backend
@@ -95,7 +95,7 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Authoring rule.** Never hand-mix a wash at the call site. Reach for the register that matches the job — Hero gradient for a section header, Ambient for a body card in a tinted tab, the **Food-domain whisper (`.dt-*`) for a food/recipe card**, Signaling `--surface-*` when the surface must read alone, Receded `--*-light` for a bordered info-card or chip — or a component alias. No raw light-hex (`#e8f5ef`, `#f0ebfb`, …) in CSS or innerHTML — that is the 8th-instance `running-beats-reading` drift class (see Polish-3/-4 `--lav-light` corrective, line ~147).
 
-**Peach is accent-only — no `--tc-*` text token (light _or_ dark).** The `—` in the `--tc-*` column of the Domain Colors table (and in both Text columns of the dark-mode table, line ~594) is intentional: peach is reserved for warmth/accent surfaces (outing planner, ambient borders), never for text-on-wash. So `--peach-light` is a *backing* tint only — do not place domain-coloured body text on it. If a future surface genuinely needs peach text-on-wash, that token must be **defined first** (light + dark), not improvised at the call site.
+**Peach text-on-wash — only via `--tc-peach` (defined v1.4).** Peach was historically accent-only, with no `--tc-*` text token (the `—` in the `--tc-*` column of the Domain Colors table and the dark-mode table, line ~594) — `--peach-light` a *backing* tint only, never text-on-wash. **As of v1.4 `--tc-peach` IS defined** (light `#9a5f30` / dark `#e8b488`), introduced for the food-domain **vegetables** chip (`.fdom-chip--vegs`, §10.5) — the sanctioned "define first" path — which also retires the long-standing referenced-but-undefined `--tc-peach` dangling reference (`styles.css` `.meal-time-input:focus`). Peach text-on-wash is now permitted, but **only via the `--tc-peach` token**, never an improvised call-site hex; and the *card* register (Hero / Signaling) still keeps peach to warmth/accent, not body copy.
 
 **Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from any register above — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint system; do not "tokenize" them into `--*-light`.
 
@@ -821,12 +821,31 @@ Cross-verified against WHO 2023 / WHO-PAHO / IAP / ICMR-NIN 2024 / NHS / FAO am8
 
 ---
 
+## 10. Library — Living Shelf, Food Detail & Nutrient Colours (incoming patterns)
+
+The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wiring under food-effects-v2). Forward-looking; canonical CSS lands in `styles.css` as it wires.
+
+**10.1 The living shelf.** The Browse-foods wing groups every `FOOD_EFFECTS` record by `_effPolarity` (core.js) into four **collapsible polarity shelves** — encourage→sage / conditional→amber / warn→rose / inform→sky — each a "living book" (`.lib-book`): polarity **rail** (the safety channel) + name + EP voice + safe-form glance + allergen siren + the **journey channel**. Shelves closed by default; untried books float to the top of their shelf. A "**Suggested for Ziva**" lead card (untried priority allergens) is the entry point the eye lands on (the 6-second test); the foods-log collapses to a drawer — the shelves are the browse.
+
+**10.2 The journey channel (`.lib-journey`).** A *second*, Receded-register channel beside the safety rail/siren — never on it (polarity-collision rule). The book's lived state, real-data-only: `_fdIsFoodTried` + `foods[].reaction` (`ok`/`watch`) + `isFoodFavorite`. Four states: **invitation** (untried) → **settled** (`ok`, sage check) → **watching** (`watch`, amber eye, hands off to Info) → **established** (favourite + `ok` + introduced ≥ 21 days, star "a regular"). Warn-shelf books carry **no** journey chip — the app never celebrates a feed it told a parent to hold.
+
+**10.3 The food info pop-up (`.food-pop`).** Tapping a food NAME opens a **Read overlay** (HR-9 — view, not multi-field edit; × + tap-outside): domain-whisper header + name + EP voice + journey chip, then the **safety-first** body (polarity flag → age gate → the never-cross floor via `_libBuildGuide`), safe-form chips, nutrient chips (§10.4), Ziva's history, and a single Quick-Act footer — "Log a serving" → `openQuickModal('feed')` + `qlFeedAddItem`, via a **delegated** `data-action` (the pop-up renders dynamically, so init-bound `data-quick-modal` would miss it). Supersedes `renderFoodDetailSheet`. Record: `09-food-info-popup.html`.
+
+**10.4 Nutrient colour system (`.nutri-chip`).** Nutrients must not read as one blob — each maps to one of **six nutrient-domains**, a palette colour rendered as a **tint-fade chip** (the whisper-fade language, on a chip): `growth`(sage) · `blood & iron`(rose) · `bones`(sky) · `brain`(lavender) · `immunity`(amber) · `energy & gut`(indigo). Peach is excluded (it is the food-domain *vegetables* colour, not a nutrient group); indigo carries the 6th. The `NUTRI_DOMAIN` taxonomy (nutrient → domain) ships in `data.js`/`core.js`. Reference: `nutrient-colours.html`.
+
+**10.5 Food-domain chips (`.fdom-chip`).** Food chips (priority-allergen lists, form-transforms, search results) are **tint-fade coloured by their `FOOD_TAX` domain** — grains→sage · fruits & nonveg→rose · vegs→peach (`--tc-peach`, §Tint) · dairy→sky · nuts→lavender · spices→amber. Same tint-fade language as `.nutri-chip` and the `.dt-*` whisper — the chip variant of the food-domain colour.
+
+**Tint-fade-on-chips (the extension).** The §Tint System historically kept chips to the **flat Receded fill**; §10.4–10.5 extend the **whisper-fade** (transparent → domain accent) onto *small* chips for **colour-coded taxonomies** (nutrients, food domains). Flat Receded stays the default chip fill; tint-fade is reserved for these meaning-bearing colour systems.
+
 ## Changelog
 
 | Version | Date | Change |
 |---------|------|--------|
 | 1.0 | 9 Apr 2026 | Initial version. Forked from DESIGN_SYSTEM_TEMPLATE.md v1.0. Filled from styles.css audit (7,772 lines), template.html SVG sprite (54 icons), VISUAL_AUDIT.md. |
 | 1.1 | 3 Jun 2026 | Added §9 — Recipes Generative Food System (incoming patterns): `zi_food` full-colour icon system (`zif-*` symbols), whisper-fade ingredient pills, quantity-weighted generative fingerprint, warm-wave stripe, 3-layer tagline system, typography "voice" line (direction C), and the infant-food safety content floor. From the Diet→Recipes design exploration (`docs/design/recipes-tab/`). |
+| 1.2 | 3 Jun 2026 | **Backfill** — Food-domain whisper-fade (`.dt-*`) ratified into the §Tint System (the food/recipe-card fade: transparent→accent over cream, hue-swap dark, polarity-collision companion channel). Added at the Library-rework / Recipes ratification without a changelog row at the time. |
+| 1.3 | 3 Jun 2026 | **Backfill** — §Swipe & Gesture Navigation: codifies the code-only `handleSwipe` rules (\|Δx\|≥60 + \|Δy\|≤0.7\|Δx\|; input/scrollable/overlay guards; clamp-never-wrap; innermost-wins cascade; order arrays; right-edge back-gesture; the `DIET_SUB_ORDER`/`DIET_INNER_ORDER` duplicated-literal drift hazard). Added without a changelog row at the time. |
+| 1.4 | 3 Jun 2026 | §10 — Library Living Shelf, Food Detail & Nutrient Colours: the living shelf + journey channel, the food info pop-up (Read overlay), the **nutrient colour system** (`.nutri-chip`, 6 nutrient-domains) and **food-domain chips** (`.fdom-chip`), the tint-fade-on-chips extension, and **`--tc-peach` defined** (retiring its long-standing dangling reference). From `docs/design/library-redesign/`. |
 
 ---
 
