@@ -924,6 +924,16 @@
              default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
 
+        <!-- Look up any food — the gateway to the food info pop-up for ANY food, not just
+             the shelf books. A hit that resolves to a curated allergen record opens the rich
+             pop-up; every other food opens a NUTRITION-backed corpus pop-up. libLookup (diet.js)
+             fills #libLookupResults; rows dispatch libOpenBook / libOpenCorpus. -->
+        <div class="lib-search col-full" id="libLookup">
+          <div class="lib-search-h">Look up any food</div>
+          <input type="text" id="libLookupInput" class="lib-search-input" placeholder="Search foods…" data-action="libLookup" data-action-on="input" autocomplete="off" aria-label="Look up any food">
+          <div class="lib-search-results" id="libLookupResults"></div>
+        </div>
+
         <!-- Foods Introduced — the full log of tried foods + search + add. Collapsed by
              default so the Library opens to the lead + shelves, not a wall of foods. -->
         <div class="card card-info col-full">

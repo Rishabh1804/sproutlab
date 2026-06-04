@@ -617,6 +617,7 @@ function init() {
     else if (action === 'switchLibWing' && typeof switchLibWing === 'function') switchLibWing(btn);
     else if (action === 'libToggleGroup' && typeof libToggleGroup === 'function') libToggleGroup(btn);
     else if (action === 'libOpenBook' && typeof libOpenBook === 'function') libOpenBook(btn);
+    else if (action === 'libOpenCorpus' && typeof libOpenCorpus === 'function') libOpenCorpus(btn);
     else if (action === 'libClosePop' && typeof _libClosePop === 'function') _libClosePop();
     else if (action === 'libClosePopSelf' && typeof _libClosePop === 'function') { if (e.target === btn) _libClosePop(); }
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
@@ -1100,6 +1101,7 @@ function init() {
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
     else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
     else if (action === 'foodLibOnSearch' && typeof foodLibOnSearch === 'function') foodLibOnSearch(el);
+    else if (action === 'libLookup' && typeof libLookup === 'function') libLookup(el);
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──

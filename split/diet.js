@@ -905,6 +905,22 @@ var LIB_SHELF_NUTRIENTS = {
   'choking hazards': []
 };
 
+// Nutrient token (from the live NUTRITION table) → nutrient-domain colour, for the
+// corpus pop-up's chips (the broader-food path the "Look up any food" search feeds).
+// Only the headline nutrients are mapped; bioactives/trace tokens fall through and
+// are skipped — natural curation to what a parent reads at a glance.
+var NUTRIENT_DOMAIN = {
+  'protein':'growth', 'healthy fats':'growth', 'lysine':'growth',
+  'iron':'blood', 'folate':'blood', 'vitamin b12':'blood', 'copper':'blood',
+  'calcium':'bones', 'phosphorus':'bones', 'magnesium':'bones', 'vitamin k':'bones', 'vitamin d':'bones',
+  'omega-3':'brain', 'choline':'brain', 'iodine':'brain', 'vitamin b6':'brain', 'mcts':'brain',
+  'vitamin c':'immunity', 'vitamin a':'immunity', 'vitamin e':'immunity', 'zinc':'immunity',
+  'selenium':'immunity', 'beta-carotene':'immunity', 'probiotics':'immunity',
+  'carbs':'energy', 'energy':'energy', 'fibre':'energy', 'potassium':'energy', 'beta-glucan':'energy',
+  'thiamine':'energy', 'vitamin b1':'energy', 'vitamin b':'energy', 'b vitamins':'energy',
+  'manganese':'energy', 'natural sugars':'energy'
+};
+
 // Polarity → the lead phrase + icon for the pop-up's safety flag (mirrors the shelf header).
 var LIB_POL_LEAD = {
   encourage:   { phrase: 'Good to introduce early', icon: 'sprout' },
@@ -1173,6 +1189,162 @@ function libJumpToBook(btn) {
   var grp = target.closest('.lib-group');
   if (grp) grp.classList.add('open');
   libOpenBook(target);
+}
+
+// ── "Look up any food" search — the gateway to the pop-up for ANY food, not just
+// the 11 shelf books. Searches the union of the safety tables + the NUTRITION
+// corpus; a hit that resolves to a FOOD_EFFECTS record opens the RICH pop-up
+// (libOpenBook), every other food opens a NUTRITION-backed corpus pop-up
+// (libOpenCorpus). One detail surface for the whole library. ────────────────────
+
+function _libTitleCase(s) {
+  return String(s).replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+// The FOOD_EFFECTS key a name resolves to (via the shared resolver), or null. Lets a
+// search hit route to the rich pop-up by its canonical key (egg yolk → 'egg', etc.).
+function _libFEKeyFor(name) {
+  if (typeof getFoodEffect !== 'function' || typeof FOOD_EFFECTS === 'undefined') return null;
+  var eff = getFoodEffect(name);
+  if (!eff) return null;
+  var keys = Object.keys(FOOD_EFFECTS);
+  for (var i = 0; i < keys.length; i++) { if (FOOD_EFFECTS[keys[i]] === eff) return keys[i]; }
+  return null;
+}
+
+// Searchable index — the same union the legacy detail-sheet search uses
+// (_FD_SEARCH_INDEX = NUTRITION ∪ AGE_RULES ∪ ALLERGENS), so nothing findable
+// there becomes unfindable here.
+function _libLookupCandidates(q) {
+  q = String(q || '').trim().toLowerCase();
+  if (q.length < 1) return [];
+  var idx = (typeof _FD_SEARCH_INDEX !== 'undefined') ? _FD_SEARCH_INDEX : Object.keys(NUTRITION || {});
+  return idx.filter(function(k) { return k.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+}
+
+function _libLookupRow(name) {
+  var feKey = _libFEKeyFor(name);
+  var action = feKey ? 'libOpenBook' : 'libOpenCorpus';
+  var arg = feKey || name;
+  var disp = feKey ? _libDisplayName(feKey, FOOD_EFFECTS[feKey]) : _libTitleCase(name);
+  var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
+  var j = _libJourney(name);
+  var journeyHtml = '';
+  if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
+  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
+    '<span class="lib-book-body"><span class="lib-book-title">' + escHtml(disp) + '</span>' + journeyHtml + '</span>' +
+    '<span class="lib-book-go">' + zi('arrow-right') + '</span></button>';
+}
+
+// data-action="libLookup" (input event) — render the result rows.
+function libLookup(el) {
+  var host = document.getElementById('libLookupResults');
+  if (!host) return;
+  var q = el ? el.value : '';
+  if (String(q || '').trim().length < 1) { host.innerHTML = ''; return; }
+  var hits = _libLookupCandidates(q);
+  host.innerHTML = hits.length
+    ? hits.map(_libLookupRow).join('')
+    : '<div class="lib-search-empty">No match — try another food.</div>';
+}
+
+// Humanise a NUTRITION tags[] array into a short character line ("Iron rich · easy digest").
+function _libTagsLine(tags) {
+  if (!tags || !tags.length) return '';
+  return tags.slice(0, 3).map(function(t) {
+    var s = String(t).replace(/-/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }).join(' · ');
+}
+
+// Nutrient chips from raw NUTRITION tokens (the corpus path; maps via NUTRIENT_DOMAIN,
+// skips unmapped bioactives, caps the count).
+function _libNutriChipsFromTokens(tokens, max) {
+  var out = [], seen = {};
+  (tokens || []).forEach(function(t) {
+    var dom = NUTRIENT_DOMAIN[String(t).toLowerCase()];
+    if (!dom || seen[t]) return;
+    seen[t] = 1;
+    out.push('<span class="nutri-chip nutri-chip--' + dom + '">' + escHtml(_libTitleCase(String(t))) + '</span>');
+  });
+  if (!out.length) return '';
+  if (max) out = out.slice(0, max);
+  return '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">' + out.join('') + '</div></div>';
+}
+
+// A NUTRITION-backed pop-up for any food without a curated FOOD_EFFECTS record.
+// Real data only: NUTRITION nutrients/tags, the live age gate + allergen note, the
+// journey. No emergency floor — that's reserved for the curated allergen records.
+function libOpenCorpus(btn) {
+  var name = btn && btn.getAttribute('data-arg');
+  if (!name) return;
+  var ov = document.getElementById('libPopOv');
+  if (!ov) return;
+  var j = _libJourney(name);
+  ov.innerHTML = _libCorpusPopHtml(name, j);
+  ov.classList.add('open');
+}
+
+function _libCorpusPopHtml(name, j) {
+  var disp = _libTitleCase(name);
+  var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
+  var entry = (typeof NUTRITION !== 'undefined') ? NUTRITION[String(name).toLowerCase()] : null;
+  var tagsLine = entry ? _libTagsLine(entry.tags) : '';
+  var allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(name) : null;
+  var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(name) : null;
+  var aged = ageR && (typeof getAgeInMonths === 'function') && ageR.minMonth > getAgeInMonths();
+
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(disp) + '</div>' +
+    (tagsLine ? '<div class="fp-voice">' + escHtml(tagsLine) + '</div>' : '') +
+    _libJourneyChip('inform', j) + '</div>';
+
+  var flags = '';
+  if (allerg) flags += '<div class="fp-flag fp-flag--conditional">' + zi('warn') + '<span><b>Allergen.</b> ' + escHtml(allerg) + '</span></div>';
+  if (aged) flags += '<div class="fp-flag fp-flag--age">' + zi('warn') + '<span><b>Not before ' + ageR.minMonth + ' months.</b> ' + escHtml(ageR.reason) + '</span></div>';
+  if (!flags) flags = '<div class="fp-flag fp-flag--inform">' + zi('info') + '<span>In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</span></div>';
+
+  var nutri = entry ? _libNutriChipsFromTokens(entry.nutrients, 5) : '';
+  var body = '<div class="fp-body"><div>' + flags + '</div>' + nutri + '</div>';
+  var foot = '<div class="fp-foot">' +
+    '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(name) + '">' + zi('plus') + 'Log a serving</button>' +
+    '<span class="fp-foot-link" data-action="popFlip">Full history in Info ' + zi('arrow-right') + '</span></div>';
+
+  return '<div class="food-pop"><div class="fp-flip">' +
+    '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
+    '<div class="fp-face fp-back">' + _libCorpusBackHtml(name, dt, j) + '</div>' +
+    '</div></div>';
+}
+
+function _libCorpusBackHtml(name, dt, j) {
+  var disp = _libTitleCase(name);
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(disp) + '</div><div class="fp-voice">History &amp; analysis</div></div>';
+  var inner;
+  if (!j.tried) {
+    inner = '<div class="fp-empty">' + zi('eye') +
+      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', her servings and any patterns will appear here.</p></div>';
+  } else {
+    var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
+    var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
+    var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.';
+    var insight = (j.reaction === 'watch')
+      ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
+      : 'Settling into her diet — no patterns of concern logged so far.';
+    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      '<div><div class="fp-sec-h">What the patterns say</div>' +
+      '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
+  }
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-action="popFlipBack">' +
+    '<svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
+  return head + '<div class="fp-body">' + inner + '</div>' + foot;
 }
 
 // ════════════════════════════════════════
