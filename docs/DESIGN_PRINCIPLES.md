@@ -1,5 +1,5 @@
 # SproutLab — Design Principles
-**Version:** 1.4 · **Created:** 9 April 2026 · **Updated:** 3 June 2026
+**Version:** 1.5 · **Created:** 9 April 2026 · **Updated:** 4 June 2026
 **Forked from:** DESIGN_SYSTEM_TEMPLATE.md v1.0
 **App:** Baby development tracker for Ziva (born Sep 2025)
 **Architecture:** Split-file HTML PWA (build-concatenated), localStorage persistence, no backend
@@ -464,6 +464,9 @@ See ARCHITECTURE_PATTERNS.md §7.1 for the full convention: `{module}{Verb}{Targ
 | `dqp-*` | Diet Quick Picker | Diet tab quick picker pills (home.js) |
 | `mb-*` | Meal Breakdown | Meal breakdown intel card (intelligence.js) |
 | `wg-*` | Welcome Guide | Onboarding guide (core.js) |
+| `lib-*` | Library | Diet→Library living-shelf rework — wings, polarity shelves, books, journey, search, deck, guides (`lib-guide-*`) (diet.js). NB: distinct from main's `ld-*` Landing (#219) — the guide-detail classes are `lib-guide-*`, never `ld-*`. |
+| `fp-*` | Food Pop-up | Food info pop-up — header, verdict band (`fp-verdict-*`), disclosure rows (`lib-prow-*`), 3D flip (diet.js) |
+| `ec-*` | Emergency Card | Deep-linked per-hazard emergency protocol cards — Do-now steps, recognise, after, doc-prep (diet.js). Reserved at design stage (`docs/design/emergency-card/`); wires under emergency-protocol-v1. |
 
 **Rule:** New features pick a 2–3 letter prefix and use it consistently for all CSS classes and data-action values in that feature. The prefix is registered in this table before writing code.
 
@@ -846,6 +849,7 @@ The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wirin
 | 1.2 | 3 Jun 2026 | **Backfill** — Food-domain whisper-fade (`.dt-*`) ratified into the §Tint System (the food/recipe-card fade: transparent→accent over cream, hue-swap dark, polarity-collision companion channel). Added at the Library-rework / Recipes ratification without a changelog row at the time. |
 | 1.3 | 3 Jun 2026 | **Backfill** — §Swipe & Gesture Navigation: codifies the code-only `handleSwipe` rules (\|Δx\|≥60 + \|Δy\|≤0.7\|Δx\|; input/scrollable/overlay guards; clamp-never-wrap; innermost-wins cascade; order arrays; right-edge back-gesture; the `DIET_SUB_ORDER`/`DIET_INNER_ORDER` duplicated-literal drift hazard). Added without a changelog row at the time. |
 | 1.4 | 3 Jun 2026 | §10 — Library Living Shelf, Food Detail & Nutrient Colours: the living shelf + journey channel, the food info pop-up (Read overlay), the **nutrient colour system** (`.nutri-chip`, 6 nutrient-domains) and **food-domain chips** (`.fdom-chip`), the tint-fade-on-chips extension, and **`--tc-peach` defined** (retiring its long-standing dangling reference). From `docs/design/library-redesign/`. |
+| 1.5 | 4 Jun 2026 | **Prefix registry** — registered the Library-redesign prefixes `lib-*` (living shelf / wings / pop-up / deck / guides), `fp-*` (food pop-up + verdict band), and reserved `ec-*` (Emergency Card, design stage). **Reconcile with main #219 "Lean landing page":** main registered `ld-*` for Landing; this branch's Safety-guides guide-detail classes were renamed `ld-*` → `lib-guide-*` to vacate the collision. No content/colour-system change. |
 
 ---
 

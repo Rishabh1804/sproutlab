@@ -11118,12 +11118,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* ═══ Safety-guides reference cards (#5b) — light collapsible lib-group bodies. The
    .lib-group--guide / label-colour rules already ship above; these style the body. ═══ */
-.ld-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
-.ld-inner > * + * { margin-top:var(--sp-12); }
-.ld-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
-.ld-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
-.ld-why b { font-weight:800; color:var(--text); }
-.ld-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.lib-guide-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+.lib-guide-inner > * + * { margin-top:var(--sp-12); }
+.lib-guide-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
+.lib-guide-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+.lib-guide-why b { font-weight:800; color:var(--text); }
+.lib-guide-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
 .lib-guide-deck { display:flex; align-items:center; gap:var(--sp-8); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); color:var(--tc-rose); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-normal); }
 .lib-guide-deck > span { flex:1; }
 .lib-guide-deck b { font-weight:800; }
@@ -40264,22 +40264,22 @@ function renderLibGuides() {
 
   var guides = [
     { pol: 'sage', icon: 'sprout', t: 'Introducing allergens early',
-      body: '<p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
-        '<div><div class="ld-h">The priority allergens</div><div class="ld-chips">' + allergenChips + '</div></div>' },
+      body: '<p class="lib-guide-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
+        '<div><div class="lib-guide-h">The priority allergens</div><div class="lib-guide-chips">' + allergenChips + '</div></div>' },
     { pol: 'amber', icon: 'spoon', t: 'Safe shapes & textures',
-      body: '<p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
-        '<div><div class="ld-h">Change the form</div><div class="ld-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
+      body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
+        '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="ld-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
     return '<div class="lib-group lib-group--' + g.pol + ' lib-group--guide">' +
       '<button class="lib-group-label" data-action="libToggleGroup">' + zi(g.icon) + escHtml(g.t) +
       '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
-      '<div class="lib-shelf-row"><div class="ld-inner">' + g.body + '</div></div></div>';
+      '<div class="lib-shelf-row"><div class="lib-guide-inner">' + g.body + '</div></div></div>';
   }).join('');
 }
 

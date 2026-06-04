@@ -1547,22 +1547,22 @@ function renderLibGuides() {
 
   var guides = [
     { pol: 'sage', icon: 'sprout', t: 'Introducing allergens early',
-      body: '<p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
-        '<div><div class="ld-h">The priority allergens</div><div class="ld-chips">' + allergenChips + '</div></div>' },
+      body: '<p class="lib-guide-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
+        '<div><div class="lib-guide-h">The priority allergens</div><div class="lib-guide-chips">' + allergenChips + '</div></div>' },
     { pol: 'amber', icon: 'spoon', t: 'Safe shapes & textures',
-      body: '<p class="ld-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
-        '<div><div class="ld-h">Change the form</div><div class="ld-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
+      body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
+        '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="ld-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
     return '<div class="lib-group lib-group--' + g.pol + ' lib-group--guide">' +
       '<button class="lib-group-label" data-action="libToggleGroup">' + zi(g.icon) + escHtml(g.t) +
       '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
-      '<div class="lib-shelf-row"><div class="ld-inner">' + g.body + '</div></div></div>';
+      '<div class="lib-shelf-row"><div class="lib-guide-inner">' + g.body + '</div></div></div>';
   }).join('');
 }
 
