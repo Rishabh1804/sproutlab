@@ -540,6 +540,15 @@ const RECIPE_EP = {
   turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
   cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
   mint:{eps:['cool','fresh'],noun:'mint'}, ginger:{eps:['warming','zingy'],noun:'ginger'},
+  // fold-completeness (K-T-2): keys present in the fingerprint icon map must also
+  // carry a voice, or a recipe paints a colour band for an unnamed ingredient.
+  poha:{eps:['light','flaky'],noun:'poha'}, okra:{eps:['tender','green'],noun:'okra'},
+  cabbage:{eps:['crisp','leafy'],noun:'cabbage'}, brinjal:{eps:['silky','mellow'],noun:'brinjal'},
+  mushroom:{eps:['earthy','tender'],noun:'mushroom'}, onion:{eps:['sweet','mellow'],noun:'onion'},
+  strawberry:{eps:['sweet','fragrant'],noun:'strawberry'}, grapes:{eps:['juicy','sweet'],noun:'grape',fold:'halved'},
+  papaya:{eps:['soft','sweet'],noun:'papaya'}, orange:{eps:['juicy','bright'],noun:'orange'},
+  pistachio:{eps:['nutty','green'],noun:'pistachio',fold:'ground'}, pumpkinseed:{eps:['nutty','crunchy'],noun:'pumpkin seed',fold:'ground'},
+  tofu:{eps:['silky','mild'],noun:'tofu'},
 };
 const _recipeConnector = s =>
   s < 0.12 ? 'with just a hint of' : s < 0.22 ? 'with a touch of' :

@@ -679,13 +679,13 @@ const _RECIPE_FP_BY_ICON = {
   almond: 'nuts', walnut: 'nuts', cashew: 'nuts', pistachio: 'nuts', sesame: 'nuts', chia: 'nuts', flaxseed: 'nuts', pumpkinseed: 'nuts',
   egg: 'protein', fish: 'protein', chicken: 'protein', prawn: 'protein', mutton: 'protein', tofu: 'protein',
 };
-// Trace ingredients — excluded from the fingerprint + the tagline (fats,
-// spices, sweeteners; matched as substrings so "cow ghee" / "black pepper" hit).
+// Trace ingredients — excluded from the fingerprint + the tagline BODY (fats,
+// spices, sweeteners). Word-boundary matched (K-T-3) so "oil" doesn't catch an
+// unrelated word; the corpus is curated, so the documented edge ("pepper" would
+// match a future "bell pepper") is a known invariant, not a live collision.
 const _RECIPE_TRACE = ['ghee', 'oil', 'turmeric', 'cinnamon', 'cumin', 'coriander', 'mint', 'jaggery', 'honey', 'salt', 'sugar', 'cardamom', 'pepper', 'ginger', 'garlic', 'lemon'];
-function _recipeIsTrace(name) {
-  const n = String(name).toLowerCase();
-  return _RECIPE_TRACE.some(t => n.indexOf(t) !== -1);
-}
+const _RECIPE_TRACE_RE = new RegExp('\\b(' + _RECIPE_TRACE.join('|') + ')\\b', 'i');
+function _recipeIsTrace(name) { return _RECIPE_TRACE_RE.test(String(name)); }
 function _recipeFpDomain(name) {
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
   return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
@@ -756,15 +756,35 @@ function _recipeRailColor(group) {
   return 'var(--tc-sage)';
 }
 
+// When an ingredient shares a zif icon with a differently-named food, the
+// composer would voice the wrong noun (M-T-2: poha shares the 'suji' icon →
+// voiced "suji"). Resolve the tagline EP key from the name first, then the icon.
+const _RECIPE_EP_KEY_OVERRIDE = { poha: 'poha' };
+function _recipeEpKey(name) {
+  const n = String(name).toLowerCase();
+  for (const k in _RECIPE_EP_KEY_OVERRIDE) if (n.indexOf(k) !== -1) return _RECIPE_EP_KEY_OVERRIDE[k];
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? ic.icon : null;
+}
 // The italic "voice" descriptor (§9.5/§9.6) — the ported tagline composer,
-// quantity-weighted from the non-trace ingredients, epithets day-seed-rotated.
-// Returns { strict:[lead clauses], body } — render strict first (prominent),
-// then the italic body. Reserved for the hero (Typography C: italic = voice).
+// quantity-weighted, epithets day-seed-rotated. Returns { strict:[lead clauses],
+// body } — render strict FIRST (prominent), then the italic body. Reserved for
+// the hero (Typography C: italic = voice).
+//
+// M-T-1 / K-T-1 (BLOCKING fold): trace items are dropped from the BODY, but an
+// ingredient carrying a STRICT safety clause (honey/jaggery → RECIPE_EP[].strict)
+// is kept so the composer surfaces it as the rose lead (§9.7: strict no's lead,
+// never folded). Its tiny gram weight keeps it a "touch of" in the body while the
+// strict clause leads. (The fingerprint path excludes it separately, unchanged.)
 function _recipeTagline(r) {
-  if (typeof _recipeComposeTagline !== 'function') return { strict: [], body: '' };
-  const parts = (r.ingredients || [])
-    .filter(i => !_recipeIsTrace(i.name) && typeof recipeFoodIcon === 'function' && recipeFoodIcon(i.name))
-    .map(i => ({ id: recipeFoodIcon(i.name).icon, w: i.g || 10 }));
+  if (typeof _recipeComposeTagline !== 'function' || typeof RECIPE_EP === 'undefined') return { strict: [], body: '' };
+  const parts = [];
+  for (const i of (r.ingredients || [])) {
+    const key = _recipeEpKey(i.name);
+    if (!key || !RECIPE_EP[key]) continue;
+    if (_recipeIsTrace(i.name) && !RECIPE_EP[key].strict) continue;
+    parts.push({ id: key, w: i.g || 10 });
+  }
   return _recipeComposeTagline(parts, _recipeDaySeed());
 }
 

@@ -11179,10 +11179,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-hero-head .recipe-hero-eyebrow { margin-bottom:0; }
 .recipe-hero-badge { flex:0 0 auto; display:inline-flex; align-items:center; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-2xs); font-weight:800; }
 /* strict no's lead the tagline (rose, never folded) */
-.recipe-strict { font-family:'Nunito', sans-serif; font-style:normal; font-weight:800; font-size:var(--fs-2xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
+.recipe-strict { font-family:'Nunito', sans-serif; font-style:normal; font-weight:800; font-size:var(--fs-2xs); text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-rose); }
 .recipe-hero-foot { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); flex-wrap:wrap; }
 .recipe-hero-meta { display:flex; align-items:center; gap:var(--sp-8); flex-wrap:wrap; }
 .recipe-hero-meta span { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); color:var(--mid); }
+.recipe-hero-meta span:not(:first-child)::before { content:'·'; margin-right:var(--sp-4); color:var(--light); }
 .recipe-hero-meta .zi { width:13px; height:13px; }
 .recipe-hero-cta { display:inline-flex; align-items:center; gap:var(--sp-4); min-height:36px; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-6) var(--sp-12); font-size:var(--fs-xs); font-weight:700; }
 .recipe-hero-cta .zi { width:14px; height:14px; transition:transform var(--ease-med); }
@@ -20917,6 +20918,15 @@ const RECIPE_EP = {
   turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
   cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
   mint:{eps:['cool','fresh'],noun:'mint'}, ginger:{eps:['warming','zingy'],noun:'ginger'},
+  // fold-completeness (K-T-2): keys present in the fingerprint icon map must also
+  // carry a voice, or a recipe paints a colour band for an unnamed ingredient.
+  poha:{eps:['light','flaky'],noun:'poha'}, okra:{eps:['tender','green'],noun:'okra'},
+  cabbage:{eps:['crisp','leafy'],noun:'cabbage'}, brinjal:{eps:['silky','mellow'],noun:'brinjal'},
+  mushroom:{eps:['earthy','tender'],noun:'mushroom'}, onion:{eps:['sweet','mellow'],noun:'onion'},
+  strawberry:{eps:['sweet','fragrant'],noun:'strawberry'}, grapes:{eps:['juicy','sweet'],noun:'grape',fold:'halved'},
+  papaya:{eps:['soft','sweet'],noun:'papaya'}, orange:{eps:['juicy','bright'],noun:'orange'},
+  pistachio:{eps:['nutty','green'],noun:'pistachio',fold:'ground'}, pumpkinseed:{eps:['nutty','crunchy'],noun:'pumpkin seed',fold:'ground'},
+  tofu:{eps:['silky','mild'],noun:'tofu'},
 };
 const _recipeConnector = s =>
   s < 0.12 ? 'with just a hint of' : s < 0.22 ? 'with a touch of' :
@@ -40447,13 +40457,13 @@ const _RECIPE_FP_BY_ICON = {
   almond: 'nuts', walnut: 'nuts', cashew: 'nuts', pistachio: 'nuts', sesame: 'nuts', chia: 'nuts', flaxseed: 'nuts', pumpkinseed: 'nuts',
   egg: 'protein', fish: 'protein', chicken: 'protein', prawn: 'protein', mutton: 'protein', tofu: 'protein',
 };
-// Trace ingredients — excluded from the fingerprint + the tagline (fats,
-// spices, sweeteners; matched as substrings so "cow ghee" / "black pepper" hit).
+// Trace ingredients — excluded from the fingerprint + the tagline BODY (fats,
+// spices, sweeteners). Word-boundary matched (K-T-3) so "oil" doesn't catch an
+// unrelated word; the corpus is curated, so the documented edge ("pepper" would
+// match a future "bell pepper") is a known invariant, not a live collision.
 const _RECIPE_TRACE = ['ghee', 'oil', 'turmeric', 'cinnamon', 'cumin', 'coriander', 'mint', 'jaggery', 'honey', 'salt', 'sugar', 'cardamom', 'pepper', 'ginger', 'garlic', 'lemon'];
-function _recipeIsTrace(name) {
-  const n = String(name).toLowerCase();
-  return _RECIPE_TRACE.some(t => n.indexOf(t) !== -1);
-}
+const _RECIPE_TRACE_RE = new RegExp('\\b(' + _RECIPE_TRACE.join('|') + ')\\b', 'i');
+function _recipeIsTrace(name) { return _RECIPE_TRACE_RE.test(String(name)); }
 function _recipeFpDomain(name) {
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
   return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
@@ -40524,15 +40534,35 @@ function _recipeRailColor(group) {
   return 'var(--tc-sage)';
 }
 
+// When an ingredient shares a zif icon with a differently-named food, the
+// composer would voice the wrong noun (M-T-2: poha shares the 'suji' icon →
+// voiced "suji"). Resolve the tagline EP key from the name first, then the icon.
+const _RECIPE_EP_KEY_OVERRIDE = { poha: 'poha' };
+function _recipeEpKey(name) {
+  const n = String(name).toLowerCase();
+  for (const k in _RECIPE_EP_KEY_OVERRIDE) if (n.indexOf(k) !== -1) return _RECIPE_EP_KEY_OVERRIDE[k];
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? ic.icon : null;
+}
 // The italic "voice" descriptor (§9.5/§9.6) — the ported tagline composer,
-// quantity-weighted from the non-trace ingredients, epithets day-seed-rotated.
-// Returns { strict:[lead clauses], body } — render strict first (prominent),
-// then the italic body. Reserved for the hero (Typography C: italic = voice).
+// quantity-weighted, epithets day-seed-rotated. Returns { strict:[lead clauses],
+// body } — render strict FIRST (prominent), then the italic body. Reserved for
+// the hero (Typography C: italic = voice).
+//
+// M-T-1 / K-T-1 (BLOCKING fold): trace items are dropped from the BODY, but an
+// ingredient carrying a STRICT safety clause (honey/jaggery → RECIPE_EP[].strict)
+// is kept so the composer surfaces it as the rose lead (§9.7: strict no's lead,
+// never folded). Its tiny gram weight keeps it a "touch of" in the body while the
+// strict clause leads. (The fingerprint path excludes it separately, unchanged.)
 function _recipeTagline(r) {
-  if (typeof _recipeComposeTagline !== 'function') return { strict: [], body: '' };
-  const parts = (r.ingredients || [])
-    .filter(i => !_recipeIsTrace(i.name) && typeof recipeFoodIcon === 'function' && recipeFoodIcon(i.name))
-    .map(i => ({ id: recipeFoodIcon(i.name).icon, w: i.g || 10 }));
+  if (typeof _recipeComposeTagline !== 'function' || typeof RECIPE_EP === 'undefined') return { strict: [], body: '' };
+  const parts = [];
+  for (const i of (r.ingredients || [])) {
+    const key = _recipeEpKey(i.name);
+    if (!key || !RECIPE_EP[key]) continue;
+    if (_recipeIsTrace(i.name) && !RECIPE_EP[key].strict) continue;
+    parts.push({ id: key, w: i.g || 10 });
+  }
   return _recipeComposeTagline(parts, _recipeDaySeed());
 }
 

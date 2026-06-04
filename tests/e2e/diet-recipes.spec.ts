@@ -98,6 +98,20 @@ test.describe('Diet → Recipes sub-tab', () => {
     expect(html).toContain('Dal');   // a dal/leafy recipe is present in the corpus
   });
 
+  // 5b — §9.7 strict-lead floor: a honey recipe's composed voice must LEAD with
+  // the honey caution (M-T-1/K-T-1 fold — the strict clause must reach the
+  // composer, not be filtered out as a trace ingredient).
+  test('strict safety lead surfaces for a honey recipe (§9.7 floor)', async ({ page }) => {
+    const strict = await page.evaluate(() => {
+      const rec = (window as any).RECIPES_BY_ID['banana-honey-toast'];
+      const fn = (window as any)._recipeTagline;
+      const t = typeof fn === 'function' ? fn(rec) : null;
+      return t ? t.strict : null;
+    });
+    expect(Array.isArray(strict)).toBe(true);
+    expect((strict as string[]).join(' ').toLowerCase()).toContain('honey');
+  });
+
   // 6 — ingredient names resolve through the LIVE resolver (alias-precedence)
   test('corpus ingredient forms resolve correctly through the live resolver', async ({ page }) => {
     const r = await page.evaluate(() => ({
