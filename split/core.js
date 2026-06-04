@@ -1131,6 +1131,7 @@ function init() {
     if (ca) {
       const action = ca.dataset.changeAction;
       if (action === 'handleAvatar') handleAvatar(e);
+      else if (action === 'ldQuickStart' && typeof ldQuickStart === 'function') ldQuickStart(e);
     }
   });
 

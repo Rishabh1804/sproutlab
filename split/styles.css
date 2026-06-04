@@ -5644,6 +5644,26 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   padding:var(--sp-8) var(--sp-16); min-height:44px; cursor:pointer;
 }
 .ld-hero-action svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Compact hero — when _ldFitHero marks #ldContent .ld-crowded (Care pre-empts
+   pushed Emergency below the fold), the hero drops its voice line + Start-with-
+   breakfast button and reveals a single "Start with [picker]" row, reclaiming
+   the vertical space so Emergency stays reachable without a scroll. */
+.ld-hero-compact {
+  display:none; align-items:center; gap:var(--sp-8); flex-wrap:wrap; margin-top:var(--sp-4);
+}
+.ld-crowded .ld-hero-voice,
+.ld-crowded .ld-hero-action { display:none; }
+.ld-crowded .ld-hero-compact { display:flex; }
+.ld-hero-compact-label {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--text);
+}
+.ld-hero-select {
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-base);
+  color:var(--text); background:var(--warm);
+  border:1.5px solid var(--border-subtle); border-radius:var(--r-md);
+  padding:var(--sp-8) var(--sp-12); min-height:44px; cursor:pointer;
+}
 
 /* 2 · Three doors — soft floating tap-cards carrying the whisper-fade (§9.2):
    a domain corner-glow over the surface + a domain-tinted border (reaffirms
