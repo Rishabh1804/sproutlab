@@ -801,14 +801,16 @@ function getActiveCareSignals() {
   if (!todayStr) return out;
   var yesterdayStr = _offsetDateStr(todayStr, -1);
   // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
-  // a generic Medical tab). vaccines → medVaccCard, meds → medMedsCard (both in
-  // Track→Medical), CareTickets → ctEntryPoint (on the Today surface).
+  // a generic Medical tab). vaccines → medVaccCard (Track→Medical); meds → the
+  // Home "Today" reminder card (supp-alert-${idx} for due, missed-${name}-${ds}
+  // for a missed streak) where the dose is actually LOGGED — the Meds inventory
+  // card is read-only and gives a parent no way to act on it; CareTickets →
+  // ctEntryPoint (on the Today surface).
   var push = function(id, severity, icon, title, sub, navArg, navTarget) {
     out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
                action: 'ldGoto', arg: navArg, arg2: navTarget });
   };
   var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
-  var medSig  = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medMedsCard'); };
 
   // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
   if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
@@ -858,28 +860,38 @@ function getActiveCareSignals() {
   if (typeof meds !== 'undefined' && Array.isArray(meds) && typeof medChecks !== 'undefined') {
     var activeMeds = meds.filter(function(m) { return m.active; });
     var trackingSince = medChecks._trackingSince || todayStr;
-    activeMeds.forEach(function(m) {
+    // idx matches renderRemindersAndAlerts' supp-alert-${idx} (same activeMeds
+    // filter, same order) so the due-today deep-link lands on that med's card.
+    activeMeds.forEach(function(m, idx) {
       var startDate = m.start || '2025-09-04';
       var earliest = startDate > trackingSince ? startDate : trackingSince;
       var missed = 0;
+      var firstMissedDs = null;  // most-recent missed day (i=1 backwards)
       for (var i = 1; i <= 14; i++) {
         var d = new Date(); d.setDate(d.getDate() - i);
         var ds = toDateStr(d);
         if (ds < earliest) continue;
         var dayLog = medChecks[ds];
-        if (!dayLog || !dayLog[m.name]) missed++;
+        if (!dayLog || !dayLog[m.name]) { missed++; if (!firstMissedDs) firstMissedDs = ds; }
       }
       if (missed > 0) {
-        medSig('med-missed-' + m.name, 'high', 'dot-red',
+        // Land on the Home missed-resolution card (Was given / Not given) — same
+        // id scheme as renderRemindersAndAlerts: missed-${name}-${ds} sanitised.
+        var missedUid = ('missed-' + m.name + '-' + firstMissedDs).replace(/[^a-zA-Z0-9-]/g, '_');
+        push('med-missed-' + m.name, 'high', 'dot-red',
             missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
-            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'));
+            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'),
+            'home', missedUid);
       }
       // today-pending
       var todayLog = medChecks[todayStr] || {};
       var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
       var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
       if (!resolved) {
-        medSig('med-due-' + m.name, 'med', 'warn', m.name + ' due today', m.dose ? m.dose : 'Tap to log the dose');
+        // Land on the pending reminder card (Done now / Done at… / Skip) — where
+        // the dose is logged — not the read-only Meds inventory card.
+        push('med-due-' + m.name, 'med', 'warn', m.name + ' due today',
+            m.dose ? m.dose : 'Tap to log the dose', 'home', 'supp-alert-' + idx);
       }
     });
   }

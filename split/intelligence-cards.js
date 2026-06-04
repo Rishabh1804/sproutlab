@@ -1512,11 +1512,10 @@ function _ldAnimateIn(container) {
 }
 
 function renderLanding() {
-  // Greeting + age live in the shared #headerFull block. Refresh them.
-  // Stage 2 (Kael C3): swap updateHeader() for a lean greeting-only helper to
-  // keep the cold start light.
-  if (typeof updateHeader === 'function') updateHeader();
-
+  // The dense #headerFull greeting card (avatar + age + weather) is hidden on
+  // the lean Landing (switchTab toggles it to the dense "Today" only); the
+  // warm-wave "Today so far" hero below is the Landing's own warm anchor, so we
+  // no longer refresh #headerFull from here.
   const el = document.getElementById('ldContent');
   if (!el) return;
 
@@ -1575,6 +1574,22 @@ function renderLanding() {
   if (totalCount === 0) {
     html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
   }
+  // Compact picker — revealed only when _ldFitHero adds .ld-crowded (Care
+  // pre-empts have pushed the Emergency card below the fold). The hero collapses
+  // to "Today so far · Start with [picker]" so a tired parent can jump straight
+  // into logging a category without the full hero's vertical cost. The <select>
+  // routes through the delegated change-action dispatcher to openQuickModal.
+  html += '<div class="ld-hero-compact">'
+        +   '<span class="ld-hero-compact-label">Start with</span>'
+        +   '<select class="ld-hero-select" data-change-action="ldQuickStart" aria-label="Start logging">'
+        +     '<option value="">Choose…</option>'
+        +     '<option value="feed">Food</option>'
+        +     '<option value="sleep">Sleep</option>'
+        +     '<option value="nap">Nap</option>'
+        +     '<option value="poop">Poop</option>'
+        +     '<option value="activity">Activity</option>'
+        +   '</select>'
+        + '</div>';
   html += '</div>';
 
   // 2 · Three doors — Log (primary) / Today / Ask. Domain identity on the icon
@@ -1624,7 +1639,45 @@ function renderLanding() {
         + '</div>';
 
   el.innerHTML = html;
-  _ldAnimateIn(el);
+  // Fit the hero to the viewport (compact it if the Emergency card is below the
+  // fold), then animate. rAF so layout + fonts are settled before we measure.
+  requestAnimationFrame(function() { _ldFitHero(el); _ldAnimateIn(el); });
+  // Re-fit on rotate / zoom / resize while the landing is the active panel
+  // (bound once; idempotent — _ldFitHero re-measures from the full state).
+  if (!window._ldFitBound) {
+    window._ldFitBound = true;
+    window.addEventListener('resize', function() {
+      var lc = document.getElementById('ldContent');
+      var panel = document.getElementById('tab-landing');
+      if (lc && panel && panel.classList.contains('active')) _ldFitHero(lc);
+    });
+  }
+}
+
+// Crowd-fit: if the Care pre-empts have pushed the Emergency card below the
+// fold, collapse the hero to its compact "Start with …" picker to reclaim the
+// vertical space (Architect: keep Emergency reachable without a scroll). Always
+// re-measures from the full state, so it relaxes back when the viewport grows.
+function _ldFitHero(el) {
+  if (!el) return;
+  el.classList.remove('ld-crowded');
+  var em = el.querySelector('.ld-emergency');
+  if (!em) return;
+  if (em.getBoundingClientRect().bottom > window.innerHeight) {
+    el.classList.add('ld-crowded');
+  }
+}
+
+// Compact-hero picker handler — opens the category quick-log modal directly.
+// openQuickModal assumes the body is already scroll-locked (it's normally
+// reached via openQuickLog), so we lock first. The <select> is reset so the
+// same category can be re-picked next time.
+function ldQuickStart(e) {
+  var type = (e && e.target) ? e.target.value : '';
+  if (e && e.target) e.target.value = '';
+  if (!type) return;
+  if (typeof qlLockBody === 'function') qlLockBody();
+  if (typeof openQuickModal === 'function') openQuickModal(type);
 }
 
 // Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing

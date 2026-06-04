@@ -1131,6 +1131,7 @@ function init() {
     if (ca) {
       const action = ca.dataset.changeAction;
       if (action === 'handleAvatar') handleAvatar(e);
+      else if (action === 'ldQuickStart' && typeof ldQuickStart === 'function') ldQuickStart(e);
     }
   });
 
@@ -3548,10 +3549,17 @@ function switchTab(name) {
   // Auto-scroll tab bar to centre the active tab
   if (activeBtn) scrollTabIntoView(activeBtn);
 
-  // Toggle header: full greeting on the lean Landing (and the dense Home, which
-  // keeps id 'home' = "Today" surface per the id-contract; label is presentation).
+  // Toggle header: the full greeting card shows only on the dense Home ("Today")
+  // surface. The lean Landing has its own warm-wave "Today so far" hero as its
+  // warm anchor, so the dense greeting card (avatar + age + weather) is hidden
+  // there — keeps the front door calm and lean (id 'home' = "Today"; label is
+  // presentation, per the id-contract).
+  // NB (Kael): #headerFull has no inline display:none in template — on the lean
+  // landing it's hidden by this synchronous toggle (essential-mode also CSS-
+  // suppresses it). Keep this call synchronous within init/restore, or a
+  // non-essential-mode landing restore would flash the header before it hides.
   const fullHeader = document.getElementById('headerFull');
-  fullHeader.style.display = (name === 'home' || name === 'landing') ? '' : 'none';
+  fullHeader.style.display = (name === 'home') ? '' : 'none';
 
   if (name === 'growth') { renderGrowthStats(); setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (name === 'track') {
