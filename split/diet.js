@@ -1085,12 +1085,15 @@ function _libFormsRowBody(sf) {
 // deep-link. `signs` is the resolved list (severeSigns, or watchFor when a record carries
 // no acute strip — e.g. honey's sub-acute botulism signs, V-M-223). Never-cross fidelity
 // unchanged (copy is from the record); placement collapsed.
-function _libFloorRowBody(eff, signs) {
+function _libFloorRowBody(eff, signs, hazard, food) {
   var list = (signs && signs.length) ? signs : (eff.severeSigns || eff.watchFor || []);
   var li = list.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
   var act = eff.seekCare ? '<p class="lib-prow-act">' + escHtml(eff.seekCare) + '</p>' : '';
+  // Deck deep-link carries the hazard (→ scroll to that Emergency Card) + the food (→ doc-prep).
+  var argH = hazard ? ' data-arg="' + escHtml(hazard) + '"' : '';
+  var argF = food ? ' data-food="' + escHtml(food) + '"' : '';
   return '<ul class="lib-prow-signs">' + li + '</ul>' + act +
-    '<button class="lib-prow-deck" data-action="libPopToDeck">' + zi('siren') +
+    '<button class="lib-prow-deck" data-action="libPopToDeck"' + argH + argF + '>' + zi('siren') +
     '<span>Full first aid — In an emergency</span>' + zi('arrow-right') + '</button>';
 }
 
@@ -1167,11 +1170,12 @@ function _libPopHtml(key, eff, pol, j) {
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
   var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
+  var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
     _libPopRow('why', 'info', (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
       why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
     _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
-    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns), false) : '') +
+    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns, _emHz, name), false) : '') +
     (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
   var body = '<div class="fp-body fp-body--rows">' +
     _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], vPrimary, vSecondary) +
@@ -1456,57 +1460,203 @@ function _libCorpusBackHtml(name, dt, j) {
 // share the identical adrenaline response, per audit-floor-fidelity), and honey's
 // botulism floor (watchFor signs + seekCare). The floor follows the hazard — choking
 // guidance stays mechanical (no adrenaline), the allergen floor stays adrenaline. ────
-function _libDeckFloors() {
-  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
-  if (!FE) return [];
-  var out = [];
-  var chk = FE['choking hazards'];
-  if (chk && chk.severeSigns && chk.severeSigns.length) {
-    // choking is MECHANICAL (back-blows/chest-thrusts, no adrenaline) → amber caution, not
-    // the anaphylaxis rose (mirrors V-M-224 on the pop-up floor).
-    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare, caution: true });
-  }
-  var ana = FE['egg'];   // representative allergen floor (shared adrenaline response)
-  if (ana && ana.severeSigns && ana.severeSigns.length) {
-    out.push({ type: 'Allergic reaction (anaphylaxis)', signs: ana.severeSigns, act: ana.seekCare });
-  }
-  var hon = FE['honey']; // botulism — signs live in watchFor, not severeSigns
-  if (hon && hon.watchFor && hon.watchFor.length) {
-    // V-M-222 (Maren): botulism is sub-acute, not a call-112-now event — its calm
-    // seekCare is medically right but sits beside two acute protocols here. Label the
-    // tempo so the calm copy reads as deliberate, not as a truncated emergency protocol.
-    out.push({ type: 'After honey — suspected botulism', tempo: 'Not a sudden emergency — watch over the next days and call your doctor.', signs: hon.watchFor, act: hon.seekCare, caution: true });
-  }
+// ════════════════════════════════════════
+// Emergency Cards — deep-linkable per-hazard protocol (emergency-protocol-v1).
+// The Deck renders the full EMERGENCY_PROTOCOL set as ec-* cards; a food deep-links
+// to its hazard (anaphylaxis / choking / botulism) and the deck scrolls to it. Each
+// card ends in a doc-prep pop-up (Copy / Save). Maren-ratified content; never-cross
+// locked by audit-emergency-floor-v1.
+// ════════════════════════════════════════
+var _EM_HAZ_ORDER = ['anaphylaxis', 'choking', 'botulism'];
+var _emFood = null;   // the food that deep-linked into the deck (→ doc-prep Trigger)
+var _emDocHz = null;  // the hazard whose doc-prep is open
+
+// **bold** / _italic_ → HR-4-safe markup (escHtml first, then re-introduce the tags).
+function _emFmt(s) {
+  var out = escHtml(String(s));
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  out = out.replace(/_([^_]+)_/g, '<i>$1</i>');
   return out;
 }
+// foodClass (multi-valued) → hazard id. allergen wins (PRIMARY) on a multi-class food.
+function _emHazardForEff(eff) {
+  if (!eff || !eff.foodClass) return null;
+  var fc = eff.foodClass, has = function(c) { return Array.isArray(fc) ? fc.indexOf(c) !== -1 : fc === c; };
+  if (has('allergen-introduce-early')) return 'anaphylaxis';
+  if (has('choking-by-form')) return 'choking';
+  if (has('acute-toxin')) return 'botulism';
+  return null;
+}
+function _emRecognise(hz) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return [];
+  if (p.recognise) return p.recognise;
+  if (p.recogniseFrom && typeof FOOD_EFFECTS !== 'undefined') {
+    var r = FOOD_EFFECTS[p.recogniseFrom.key];
+    return (r && r[p.recogniseFrom.field]) || [];
+  }
+  return [];
+}
+function _emNowTime() {
+  // HR-12: current local instant, formatted in the app's en-IN convention (no part-construction).
+  return new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
 
-function _libDeckHtml() {
-  var cards = _libDeckFloors().map(function(f) {
-    var signs = f.signs.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('');
-    return '<div class="lib-floor-card' + (f.caution ? ' lib-floor-card--caution' : '') + '">' +
-      '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
-      (f.tempo ? '<div class="lib-floor-tempo">' + escHtml(f.tempo) + '</div>' : '') +
-      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><ul class="lib-floor-signs">' + signs + '</ul></div>' +
-      '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
+function _emCardHtml(hz, food) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return '';
+  var amber = p.chrome === 'amber';
+  var name = food ? escHtml(food) : escHtml(p.title);
+  var sub = food ? escHtml(p.title) : '';
+  var head = '<div class="ec-head"><div class="ec-name">' + name + '</div>' +
+    (sub ? '<div class="ec-sub">' + sub + '</div>' : '') + '</div>';
+  var tempo = p.tempo ? '<div class="ec-tempo">' + zi('info') + '<span>' + escHtml(p.tempo) + '</span></div>' : '';
+  var steps = (p.steps || []).map(function(s, i) {
+    return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + _emFmt(s) + '</span></div>';
   }).join('');
+  var call = p.call ? '<a class="ec-call" href="tel:' + escHtml(p.call) + '">' + zi('phone') + 'Call ' + escHtml(p.call) + '</a>' : '';
+  var doNow = '<div class="ec-do"><div class="ec-do-h">' + zi('siren') + (amber ? 'What to do' : 'Do now') + '</div>' + steps + call + '</div>';
+  var rec = _emRecognise(hz);
+  var xlink = p.xlink ? '<button class="ec-xlink" data-action="emScrollHazard" data-arg="' + escHtml(p.xlink.hazard) + '">' + zi('warn') + escHtml(p.xlink.label) + '</button>' : '';
+  var recH = rec.length ? '<div class="ec-sec"><div class="ec-sec-h">' + (amber && hz === 'botulism' ? 'Watch over the next days' : 'Recognise — any one') + '</div><ul class="ec-signs">' +
+    rec.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>' + xlink + '</div>' : '';
+  var aft = (p.after && p.after.length) ? '<div class="ec-sec"><div class="ec-sec-h">After</div><ul class="ec-next">' +
+    p.after.map(function(s) { return '<li>' + _emFmt(s) + '</li>'; }).join('') + '</ul></div>' : '';
+  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + hz + '">' +
+    '<span class="ec-docprep-row"><span class="ec-docprep-ic">' + zi('doc') + '</span>' +
+    '<span class="ec-docprep-t">For the doctor</span><span class="ec-docprep-go">' + zi('arrow-right') + '</span></span>' +
+    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></button>';
+  return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + '" id="ec-' + hz + '">' + head +
+    '<div class="ec-body">' + tempo + '<div class="ec-sec">' + doNow + '</div>' + recH + aft + dp + '</div></div>';
+}
+
+function _libDeckHtml(focusHz) {
+  var cards = _EM_HAZ_ORDER.filter(function(hz) { return typeof EMERGENCY_PROTOCOL !== 'undefined' && EMERGENCY_PROTOCOL[hz]; })
+    .map(function(hz) { return _emCardHtml(hz, (hz === focusHz) ? _emFood : null); }).join('');
   return '<div class="lib-deck-sheet">' +
     '<div class="lib-deck-head">' + zi('siren') + '<span class="lib-deck-title">In an emergency</span>' +
     '<button class="lib-deck-close" data-action="libCloseDeck" aria-label="Close">&times;</button></div>' +
     cards + '</div>';
 }
 
-function libOpenDeck() {
+function _emRenderDeck(focusHz) {
   var ov = document.getElementById('libDeckOv');
   if (!ov) return;
-  ov.innerHTML = _libDeckHtml();
+  ov.innerHTML = _libDeckHtml(focusHz);
   ov.classList.add('open');
   document.body.classList.add('lib-overlay-open');
+  if (focusHz) _emScrollTo(focusHz);
+}
+function _emScrollTo(hz) {
+  var ov = document.getElementById('libDeckOv');
+  var card = ov && ov.querySelector('#ec-' + hz);
+  if (!card) return;
+  if (card.scrollIntoView) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  card.classList.add('ec-focus');
+  setTimeout(function() { card.classList.remove('ec-focus'); }, 1600);
+}
+function emScrollHazard(btn) { var hz = btn && btn.getAttribute('data-arg'); if (hz) _emScrollTo(hz); }
+
+// standing "In an emergency" entry — opens the deck at the top, no food context.
+function libOpenDeck() { _emFood = null; _emRenderDeck(null); }
+// deep-link from a food pop-up's floor row — carries the hazard + food.
+function libPopToDeck(btn) {
+  var hz = btn && btn.getAttribute('data-arg');
+  _emFood = (btn && btn.getAttribute('data-food')) || null;
+  _libClosePop();
+  _emRenderDeck(hz || null);
 }
 function _libCloseDeck() {
   var ov = document.getElementById('libDeckOv');
   if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  _emFood = null;
   document.body.classList.remove('lib-overlay-open');
 }
+
+// ── Doc-prep pop-up (#emDocOv) — Read overlay over the deck. Generated summary;
+// the time fields are tap-to-stamp + N/A (one-tap Quick acts, HR-9). ──────────────
+function _emDocWho() {
+  var bits = ['Ziva'];
+  try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (typeof w === 'number' && w > 0) bits.push(w + ' kg'); } } catch (e) {}
+  return bits.join(' · ');
+}
+function _emStampRow(s) {
+  return '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
+    '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
+    '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+}
+function _emDocPrepHtml(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, sym = _emRecognise(hz).join(' · ');
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) { rows += _emStampRow(s); });
+  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
+  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var team = String(d.forTeam).replace('{food}', food || 'the food');
+  return '<div class="doc"><div class="doc-body">' +
+    '<button class="doc-x" data-action="emCloseDocPrep" aria-label="Close">&times;</button>' +
+    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
+    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
+    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
+    '<div class="doc-actions">' +
+    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc">' + zi('copy') + 'Copy</button>' +
+    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save / share</button></div></div>';
+}
+function emOpenDocPrep(btn) {
+  var hz = btn && btn.getAttribute('data-arg'); if (!hz) return;
+  var ov = document.getElementById('emDocOv'); if (!ov) return;
+  _emDocHz = hz;
+  ov.innerHTML = _emDocPrepHtml(hz);
+  ov.classList.add('open');
+}
+function _emCloseDocPrep() { var ov = document.getElementById('emDocOv'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } }
+function emStampTime(btn) {
+  if (!btn) return;
+  var na = btn.parentNode.querySelector('.doc-na');
+  if (na) na.removeAttribute('data-on');
+  if (btn.dataset.stamped) { btn.removeAttribute('data-stamped'); btn.removeAttribute('data-na'); btn.innerHTML = '<em>tap to stamp now</em>'; }
+  else { btn.removeAttribute('data-na'); btn.textContent = _emNowTime(); btn.dataset.stamped = '1'; }
+}
+function emToggleNA(btn) {
+  if (!btn) return;
+  var stamp = btn.parentNode.querySelector('.doc-stamp');
+  if (btn.dataset.on) { btn.removeAttribute('data-on'); if (stamp) { stamp.removeAttribute('data-stamped'); stamp.removeAttribute('data-na'); stamp.innerHTML = '<em>tap to stamp now</em>'; } }
+  else { btn.dataset.on = '1'; if (stamp) { stamp.removeAttribute('data-stamped'); stamp.dataset.na = '1'; stamp.textContent = 'N/A'; } }
+}
+function _emStampValDOM(id) {
+  var b = document.querySelector('#emDocOv .doc-stamp[data-arg="' + id + '"]');
+  if (!b) return '____';
+  if (b.dataset.na) return 'N/A';
+  return b.dataset.stamped ? b.textContent : '____';
+}
+function _emDocText(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, L = ['SproutLab — Emergency summary', _emDocWho(), '', 'Suspected: ' + d.suspected];
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id)); });
+  if (food) L.push('Trigger food: ' + food);
+  var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);
+  if (d.action) L.push(d.action.label + ': ' + d.action.value);
+  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
+  return L.join('\n');
+}
+function emCopyDoc() {
+  var text = _emDocText(_emDocHz);
+  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
+  } else { _emLegacyCopy(text); }
+}
+function _emLegacyCopy(text) {
+  var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+  ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); } catch (e) {}
+  document.body.removeChild(ta);
+}
+function emSaveDoc() { window.print(); }
 
 // ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
 // the old heavy knowledge cards: the never-cross emergency FLOORS now live in the

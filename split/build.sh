@@ -156,6 +156,14 @@ if ! bash audit-shelf-totality-v1.sh >&2; then
   echo "BUILD ABORTED: shelf-totality audit failed. A FOOD_EFFECTS record would land on the default shelf unchosen (see above)." >&2
   exit 1
 fi
+# Emergency-floor never-cross ship-gate (15th audit gate, emergency-protocol-v1):
+# audit-emergency-floor-v1.sh — locks the AUTHORED EMERGENCY_PROTOCOL.steps the Emergency
+# Cards render (anaphylaxis adrenaline-only, choking mechanical-only, botulism doctor-routed
+# + acute escape-hatch). Node evals EMERGENCY_PROTOCOL; green-but-empty guard (exit 2).
+if ! bash audit-emergency-floor-v1.sh >&2; then
+  echo "BUILD ABORTED: emergency-floor never-cross audit failed. An Emergency Card step names the wrong first-aid (see above)." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

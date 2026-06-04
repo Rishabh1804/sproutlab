@@ -74,6 +74,8 @@
 <symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
 <symbol id="zi-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 <symbol id="zi-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 6-14 16-14c0 10-6 16-16 14z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1" stroke-linejoin="round"/><path d="M9 15c2-3 5-5 8-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.1" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.08"/><path d="M16 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></symbol>
 <symbol id="zi-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5"/><path d="M5 5l12 4-12 4"/></symbol>
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
@@ -1001,6 +1003,10 @@
              floor here from FOOD_EFFECTS. Backdrop-tap closes via libCloseDeckSelf; the ×
              inside closes via libCloseDeck. -->
         <div class="lib-deck" id="libDeckOv" data-action="libCloseDeckSelf"></div>
+
+        <!-- Emergency doc-prep pop-up (emergency-protocol-v1) — opens OVER the Deck from an
+             Emergency Card's "For the doctor"; emOpenDocPrep (diet.js) fills it. -->
+        <div class="em-doc-ov" id="emDocOv" data-action="emCloseDocPrepSelf"></div>
 
       </div>
     </div>

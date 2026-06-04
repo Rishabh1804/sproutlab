@@ -623,12 +623,21 @@ function init() {
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
     else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
     else if (action === 'libPopRow' && typeof libPopRow === 'function') libPopRow(btn);
-    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck();
+    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck(btn);
     else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
     else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
     else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();
     else if (action === 'libCloseDeckSelf' && typeof _libCloseDeck === 'function') { if (e.target === btn) _libCloseDeck(); }
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
+    // Emergency Cards (emergency-protocol-v1)
+    else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
+    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
+    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
+    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
+    else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
+    else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
+    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
+    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);

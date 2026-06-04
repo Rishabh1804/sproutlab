@@ -11128,6 +11128,89 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .lib-guide-deck > span { flex:1; }
 .lib-guide-deck b { font-weight:800; }
 .lib-guide-deck .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; }
+
+/* ═══ Emergency Cards (emergency-protocol-v1) — deep-linked per-hazard protocol cards
+   rendered in the Deck; per-hazard chrome (anaphylaxis rose / choking·botulism amber). ═══ */
+.ecard { background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 6px 26px var(--shadow); overflow:hidden; margin-bottom:var(--sp-16); scroll-margin-top:64px; }
+.ecard:last-child { margin-bottom:0; }
+.ecard.ec-focus { box-shadow:0 0 0 3px var(--rose), 0 6px 26px var(--shadow); }
+.ecard--amber.ec-focus { box-shadow:0 0 0 3px var(--amber), 0 6px 26px var(--shadow); }
+.ec-head { padding:var(--sp-16) var(--sp-16) var(--sp-12); background:var(--rose-light); border-bottom:3px solid var(--rose); }
+.ecard--amber .ec-head { background:var(--amber-light); border-bottom-color:var(--amber); }
+.ec-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); line-height:var(--lh-snug); }
+.ec-sub { font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--tc-rose); margin-top:var(--sp-2); }
+.ecard--amber .ec-sub { color:var(--tc-amber); }
+.ec-body { padding:var(--sp-16); }
+.ec-sec { margin-bottom:var(--sp-16); } .ec-sec:last-child { margin-bottom:0; }
+.ec-sec-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.07em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-8); }
+.ec-tempo { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); font-weight:700; line-height:var(--lh-normal); margin-bottom:var(--sp-16); }
+.ec-tempo .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.ec-do { background:var(--card-bg); border-radius:var(--r-lg); border-left:3px solid var(--rose); box-shadow:0 2px 12px var(--shadow); padding:var(--sp-16); }
+.ecard--amber .ec-do { border-left-color:var(--amber); }
+.ec-do-h { display:flex; align-items:center; gap:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); letter-spacing:0.04em; text-transform:uppercase; color:var(--tc-rose); margin-bottom:var(--sp-14); }
+.ecard--amber .ec-do-h { color:var(--tc-amber); }
+.ec-do-h .zi { width:var(--icon-md); height:var(--icon-md); }
+.ec-step { display:flex; gap:var(--sp-12); margin-bottom:var(--sp-14); }
+.ec-step:last-of-type { margin-bottom:0; }
+.ec-step-n { flex:0 0 auto; width:24px; height:24px; border-radius:var(--r-full); background:var(--rose); color:#fff; font-weight:800; font-size:var(--fs-sm); display:flex; align-items:center; justify-content:center; margin-top:1px; }
+.ecard--amber .ec-step-n { background:var(--amber); color:var(--tc-amber); }
+.ec-step-t { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); font-weight:600; }
+.ec-step-t b { font-weight:800; } .ec-step-t i { font-style:italic; color:var(--mid); font-weight:600; }
+/* Call — the fade flow: a continuously flowing rose gradient + soft pulse */
+.ec-call { display:flex; align-items:center; justify-content:center; gap:var(--sp-8); width:100%; min-height:50px; margin-top:var(--sp-16); border:none; border-radius:var(--r-2xl); text-decoration:none; color:#fff; font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-md); cursor:pointer;
+  background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%); background-size:280% 100%;
+  animation:ecCallFlow 3.4s ease-in-out infinite, ecCallPulse 2.2s ease-in-out infinite; }
+.ec-call .zi { width:var(--icon-md); height:var(--icon-md); }
+@keyframes ecCallFlow { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+@keyframes ecCallPulse { 0%,100%{box-shadow:0 6px 18px rgba(158,62,82,0.30);} 50%{box-shadow:0 8px 30px rgba(158,62,82,0.55);} }
+@media (prefers-reduced-motion:reduce) { .ec-call { animation:none; background-position:0 50%; } }
+.ec-signs, .ec-next { margin:0; padding-left:var(--sp-16); }
+.ec-signs li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-4); }
+.ec-next li { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin-bottom:var(--sp-6); }
+.ec-next li b { color:var(--text); font-weight:800; }
+.ec-xlink { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); border:none; background:none; cursor:pointer; font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:700; color:var(--tc-amber); padding:0; }
+.ec-xlink .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.ec-docprep { display:flex; flex-direction:column; gap:var(--sp-6); width:100%; text-align:left; cursor:pointer; background:var(--sky-light); border:none; border-left:3px solid var(--sky); border-radius:var(--r-lg); padding:var(--sp-14) var(--sp-16); }
+.ec-docprep-row { display:flex; align-items:center; gap:var(--sp-10); }
+.ec-docprep-ic { flex:0 0 auto; width:34px; height:34px; border-radius:var(--r-full); background:var(--tc-sky); color:var(--card-bg); display:flex; align-items:center; justify-content:center; }
+.ec-docprep-ic .zi { width:var(--icon-base); height:var(--icon-base); }
+.ec-docprep-t { flex:1; font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); color:var(--tc-sky); }
+.ec-docprep-go { flex:0 0 auto; color:var(--tc-sky); } .ec-docprep-go .zi { width:var(--icon-base); height:var(--icon-base); }
+.ec-docprep-d { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-normal); }
+
+/* doc-prep pop-up — Read overlay above the Deck */
+.em-doc-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:center; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1300; }
+.em-doc-ov.open { display:flex; }
+.em-doc-ov .doc { width:100%; max-width:380px; background:#fff; border-radius:var(--r-2xl); box-shadow:0 20px 60px rgba(0,0,0,.4); overflow:hidden; }
+.em-doc-ov .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; }
+.em-doc-ov .doc-x { position:absolute; top:var(--sp-12); right:var(--sp-12); width:30px; height:30px; border:none; border-radius:var(--r-full); background:#f3e7ea; color:#6e5858; font-size:17px; cursor:pointer; }
+.em-doc-ov .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:34px; }
+.em-doc-ov .doc-brand b { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:#9e3e52; }
+.em-doc-ov .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
+.em-doc-ov .doc-who { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
+.em-doc-ov .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
+.em-doc-ov .doc-row .k { flex:0 0 124px; color:#9e3e52; font-weight:800; }
+.em-doc-ov .doc-row .v { flex:1; color:#2a2020; }
+.em-doc-ov .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
+.em-doc-ov .doc-stamp em { color:#9a8a8a; font-style:normal; }
+.em-doc-ov .doc-stamp[data-stamped] { color:#9e3e52; font-weight:800; border-bottom-color:transparent; }
+.em-doc-ov .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
+.em-doc-ov .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
+.em-doc-ov .doc-na[data-on] { background:#9e3e52; color:#fff; border-color:#9e3e52; }
+.em-doc-ov .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
+.em-doc-ov .doc-note b { color:#9e3e52; }
+.em-doc-ov .doc-actions { display:flex; gap:var(--sp-10); padding:var(--sp-12) var(--sp-20); border-top:1px solid #ecdfe2; background:#faf2f4; }
+.em-doc-ov .doc-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:42px; border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
+.em-doc-ov .doc-btn .zi { width:var(--icon-base); height:var(--icon-base); }
+.em-doc-ov .doc-btn--copy { background:#fff; color:#9e3e52; border:1.5px solid #e6b9c4; }
+.em-doc-ov .doc-btn--save { background:#9e3e52; color:#fff; }
+@media print {
+  body * { visibility:hidden; }
+  .em-doc-ov, .em-doc-ov * { visibility:visible; }
+  .em-doc-ov { position:absolute; inset:0; background:#fff; display:block; padding:0; overflow:visible; }
+  .em-doc-ov .doc { box-shadow:none; max-width:100%; }
+  .em-doc-ov .doc-x, .em-doc-ov .doc-actions { display:none; }
+}
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
@@ -11218,6 +11301,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
 <symbol id="zi-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 <symbol id="zi-leaf" viewBox="0 0 24 24"><path d="M4 20c0-8 6-14 16-14c0 10-6 16-16 14z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1" stroke-linejoin="round"/><path d="M9 15c2-3 5-5 8-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.1" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.08"/><path d="M16 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></symbol>
 <symbol id="zi-goal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5"/><path d="M5 5l12 4-12 4"/></symbol>
 <symbol id="zi-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="4" rx="1"/><path d="M6 7h12v13a1 1 0 01-1 1H7a1 1 0 01-1-1V7z"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="16" x2="14" y2="16"/></symbol>
 <symbol id="zi-follow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/><path d="M19 15l2 2-2 2"/></symbol>
@@ -12145,6 +12230,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
              floor here from FOOD_EFFECTS. Backdrop-tap closes via libCloseDeckSelf; the ×
              inside closes via libCloseDeck. -->
         <div class="lib-deck" id="libDeckOv" data-action="libCloseDeckSelf"></div>
+
+        <!-- Emergency doc-prep pop-up (emergency-protocol-v1) — opens OVER the Deck from an
+             Emergency Card's "For the doctor"; emOpenDocPrep (diet.js) fills it. -->
+        <div class="em-doc-ov" id="emDocOv" data-action="emCloseDocPrepSelf"></div>
 
       </div>
     </div>
@@ -17451,6 +17540,78 @@ const FOOD_EFFECTS = {
   },
 };
 
+// ── EMERGENCY PROTOCOL (emergency-protocol-v1, Maren-ratified) ──
+// Per-hazard Emergency Cards, deep-linked from a food. Authored first-aid content
+// (Resus Council UK / AAP / NHS), Maren content-audit PASSED (V-M-225…235). Steps use
+// **bold** / _italic_ markers, rendered HR-4-safe via _emFmt (diet.js). Never-cross:
+// choking steps carry mechanical aid only (no adrenaline); anaphylaxis carries adrenaline
+// only (no back-blows) — locked by audit-emergency-floor-v1.
+const EMERGENCY_PROTOCOL = {
+  anaphylaxis: {
+    title: 'Severe allergic reaction · anaphylaxis', chrome: 'rose', call: '112',
+    recognise: [
+      'trouble breathing or wheezing',
+      'swelling of the face, lips, or tongue',
+      'going floppy, pale, or very sleepy',
+    ],
+    steps: [
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. _(Most families won’t have one — if not, go straight to step 2.)_',
+      '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
+      '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
+      'No better after **5 minutes**? A second dose, if you have one.',
+    ],
+    after: [
+      '**Go to hospital even if she settles** — a reaction can return hours later.',
+      'Note the **time**, the **food**, and what you **gave**.',
+    ],
+    xlink: { hazard: 'choking', label: 'Choking on it instead? See the Choking card.' },
+    doc: {
+      suspected: 'Anaphylaxis (severe allergic reaction)',
+      stamps: [ { id: 'reaction', label: 'Time of reaction' }, { id: 'adren', label: 'Adrenaline given at' } ],
+      action: { label: 'Adrenaline given', value: 'Yes / No' },
+      forTeam: 'suspected anaphylaxis after {food}; see the “adrenaline given” line; please observe for a biphasic reaction.',
+    },
+  },
+  choking: {
+    title: 'Choking', chrome: 'amber', call: '112',
+    recognise: [
+      'silent — cannot cough, cry, or make a sound',
+      'cannot breathe, or a high-pitched squeak',
+      'going blue around the lips, or going floppy',
+    ],
+    steps: [
+      '**Can she cough or cry?** Encourage coughing — don’t intervene.',
+      '**Silent / can’t breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
+      '**Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**',
+      '**Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
+    ],
+    after: [ 'Even once cleared, get her checked — a retained fragment or airway irritation can follow.' ],
+    doc: {
+      suspected: 'Choking',
+      stamps: [ { id: 'reaction', label: 'Time it happened' } ],
+      action: { label: 'Back blows / chest thrusts given · object cleared', value: 'Yes / No' },
+      forTeam: 'choking on {food}; back blows + chest thrusts given; see the “cleared” line above.',
+    },
+  },
+  botulism: {
+    title: 'After honey — suspected botulism', chrome: 'amber', call: null,
+    tempo: 'Not a sudden emergency — watch over the next days and call your doctor.',
+    recogniseFrom: { key: 'honey', field: 'watchFor' },
+    steps: [
+      '**Call your doctor** and say honey was given — this is the right first step, not 112.',
+      '**But if she struggles to breathe, can’t feed, or goes limp — don’t wait. Call 112.**',
+    ],
+    after: [],
+    doc: {
+      suspected: 'Suspected infant botulism (after honey)',
+      stamps: [ { id: 'honey', label: 'Honey given on / around' } ],
+      action: null,
+      forTeam: 'honey given to a baby under 1; watching for constipation, weak cry/suck, floppiness; advise on review.',
+    },
+  },
+};
+window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
+
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
   'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
@@ -20743,12 +20904,21 @@ function init() {
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
     else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
     else if (action === 'libPopRow' && typeof libPopRow === 'function') libPopRow(btn);
-    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck();
+    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck(btn);
     else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
     else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
     else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();
     else if (action === 'libCloseDeckSelf' && typeof _libCloseDeck === 'function') { if (e.target === btn) _libCloseDeck(); }
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
+    // Emergency Cards (emergency-protocol-v1)
+    else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
+    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
+    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
+    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
+    else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
+    else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
+    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
+    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -39802,12 +39972,15 @@ function _libFormsRowBody(sf) {
 // deep-link. `signs` is the resolved list (severeSigns, or watchFor when a record carries
 // no acute strip — e.g. honey's sub-acute botulism signs, V-M-223). Never-cross fidelity
 // unchanged (copy is from the record); placement collapsed.
-function _libFloorRowBody(eff, signs) {
+function _libFloorRowBody(eff, signs, hazard, food) {
   var list = (signs && signs.length) ? signs : (eff.severeSigns || eff.watchFor || []);
   var li = list.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
   var act = eff.seekCare ? '<p class="lib-prow-act">' + escHtml(eff.seekCare) + '</p>' : '';
+  // Deck deep-link carries the hazard (→ scroll to that Emergency Card) + the food (→ doc-prep).
+  var argH = hazard ? ' data-arg="' + escHtml(hazard) + '"' : '';
+  var argF = food ? ' data-food="' + escHtml(food) + '"' : '';
   return '<ul class="lib-prow-signs">' + li + '</ul>' + act +
-    '<button class="lib-prow-deck" data-action="libPopToDeck">' + zi('siren') +
+    '<button class="lib-prow-deck" data-action="libPopToDeck"' + argH + argF + '>' + zi('siren') +
     '<span>Full first aid — In an emergency</span>' + zi('arrow-right') + '</button>';
 }
 
@@ -39884,11 +40057,12 @@ function _libPopHtml(key, eff, pol, j) {
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
   var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
+  var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
     _libPopRow('why', 'info', (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
       why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
     _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
-    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns), false) : '') +
+    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns, _emHz, name), false) : '') +
     (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
   var body = '<div class="fp-body fp-body--rows">' +
     _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], vPrimary, vSecondary) +
@@ -40173,57 +40347,203 @@ function _libCorpusBackHtml(name, dt, j) {
 // share the identical adrenaline response, per audit-floor-fidelity), and honey's
 // botulism floor (watchFor signs + seekCare). The floor follows the hazard — choking
 // guidance stays mechanical (no adrenaline), the allergen floor stays adrenaline. ────
-function _libDeckFloors() {
-  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
-  if (!FE) return [];
-  var out = [];
-  var chk = FE['choking hazards'];
-  if (chk && chk.severeSigns && chk.severeSigns.length) {
-    // choking is MECHANICAL (back-blows/chest-thrusts, no adrenaline) → amber caution, not
-    // the anaphylaxis rose (mirrors V-M-224 on the pop-up floor).
-    out.push({ type: 'Choking', signs: chk.severeSigns, act: chk.seekCare, caution: true });
-  }
-  var ana = FE['egg'];   // representative allergen floor (shared adrenaline response)
-  if (ana && ana.severeSigns && ana.severeSigns.length) {
-    out.push({ type: 'Allergic reaction (anaphylaxis)', signs: ana.severeSigns, act: ana.seekCare });
-  }
-  var hon = FE['honey']; // botulism — signs live in watchFor, not severeSigns
-  if (hon && hon.watchFor && hon.watchFor.length) {
-    // V-M-222 (Maren): botulism is sub-acute, not a call-112-now event — its calm
-    // seekCare is medically right but sits beside two acute protocols here. Label the
-    // tempo so the calm copy reads as deliberate, not as a truncated emergency protocol.
-    out.push({ type: 'After honey — suspected botulism', tempo: 'Not a sudden emergency — watch over the next days and call your doctor.', signs: hon.watchFor, act: hon.seekCare, caution: true });
-  }
+// ════════════════════════════════════════
+// Emergency Cards — deep-linkable per-hazard protocol (emergency-protocol-v1).
+// The Deck renders the full EMERGENCY_PROTOCOL set as ec-* cards; a food deep-links
+// to its hazard (anaphylaxis / choking / botulism) and the deck scrolls to it. Each
+// card ends in a doc-prep pop-up (Copy / Save). Maren-ratified content; never-cross
+// locked by audit-emergency-floor-v1.
+// ════════════════════════════════════════
+var _EM_HAZ_ORDER = ['anaphylaxis', 'choking', 'botulism'];
+var _emFood = null;   // the food that deep-linked into the deck (→ doc-prep Trigger)
+var _emDocHz = null;  // the hazard whose doc-prep is open
+
+// **bold** / _italic_ → HR-4-safe markup (escHtml first, then re-introduce the tags).
+function _emFmt(s) {
+  var out = escHtml(String(s));
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  out = out.replace(/_([^_]+)_/g, '<i>$1</i>');
   return out;
 }
+// foodClass (multi-valued) → hazard id. allergen wins (PRIMARY) on a multi-class food.
+function _emHazardForEff(eff) {
+  if (!eff || !eff.foodClass) return null;
+  var fc = eff.foodClass, has = function(c) { return Array.isArray(fc) ? fc.indexOf(c) !== -1 : fc === c; };
+  if (has('allergen-introduce-early')) return 'anaphylaxis';
+  if (has('choking-by-form')) return 'choking';
+  if (has('acute-toxin')) return 'botulism';
+  return null;
+}
+function _emRecognise(hz) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return [];
+  if (p.recognise) return p.recognise;
+  if (p.recogniseFrom && typeof FOOD_EFFECTS !== 'undefined') {
+    var r = FOOD_EFFECTS[p.recogniseFrom.key];
+    return (r && r[p.recogniseFrom.field]) || [];
+  }
+  return [];
+}
+function _emNowTime() {
+  // HR-12: current local instant, formatted in the app's en-IN convention (no part-construction).
+  return new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
 
-function _libDeckHtml() {
-  var cards = _libDeckFloors().map(function(f) {
-    var signs = f.signs.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('');
-    return '<div class="lib-floor-card' + (f.caution ? ' lib-floor-card--caution' : '') + '">' +
-      '<div class="lib-floor-card-t">' + zi('warn') + escHtml(f.type) + '</div>' +
-      (f.tempo ? '<div class="lib-floor-tempo">' + escHtml(f.tempo) + '</div>' : '') +
-      '<div class="lib-floor-face"><div class="lib-floor-face-h">Recognise</div><ul class="lib-floor-signs">' + signs + '</ul></div>' +
-      '<div class="lib-floor-face"><div class="lib-floor-face-h">Do</div><p class="lib-floor-aid">' + escHtml(f.act) + '</p></div></div>';
+function _emCardHtml(hz, food) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return '';
+  var amber = p.chrome === 'amber';
+  var name = food ? escHtml(food) : escHtml(p.title);
+  var sub = food ? escHtml(p.title) : '';
+  var head = '<div class="ec-head"><div class="ec-name">' + name + '</div>' +
+    (sub ? '<div class="ec-sub">' + sub + '</div>' : '') + '</div>';
+  var tempo = p.tempo ? '<div class="ec-tempo">' + zi('info') + '<span>' + escHtml(p.tempo) + '</span></div>' : '';
+  var steps = (p.steps || []).map(function(s, i) {
+    return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + _emFmt(s) + '</span></div>';
   }).join('');
+  var call = p.call ? '<a class="ec-call" href="tel:' + escHtml(p.call) + '">' + zi('phone') + 'Call ' + escHtml(p.call) + '</a>' : '';
+  var doNow = '<div class="ec-do"><div class="ec-do-h">' + zi('siren') + (amber ? 'What to do' : 'Do now') + '</div>' + steps + call + '</div>';
+  var rec = _emRecognise(hz);
+  var xlink = p.xlink ? '<button class="ec-xlink" data-action="emScrollHazard" data-arg="' + escHtml(p.xlink.hazard) + '">' + zi('warn') + escHtml(p.xlink.label) + '</button>' : '';
+  var recH = rec.length ? '<div class="ec-sec"><div class="ec-sec-h">' + (amber && hz === 'botulism' ? 'Watch over the next days' : 'Recognise — any one') + '</div><ul class="ec-signs">' +
+    rec.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>' + xlink + '</div>' : '';
+  var aft = (p.after && p.after.length) ? '<div class="ec-sec"><div class="ec-sec-h">After</div><ul class="ec-next">' +
+    p.after.map(function(s) { return '<li>' + _emFmt(s) + '</li>'; }).join('') + '</ul></div>' : '';
+  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + hz + '">' +
+    '<span class="ec-docprep-row"><span class="ec-docprep-ic">' + zi('doc') + '</span>' +
+    '<span class="ec-docprep-t">For the doctor</span><span class="ec-docprep-go">' + zi('arrow-right') + '</span></span>' +
+    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></button>';
+  return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + '" id="ec-' + hz + '">' + head +
+    '<div class="ec-body">' + tempo + '<div class="ec-sec">' + doNow + '</div>' + recH + aft + dp + '</div></div>';
+}
+
+function _libDeckHtml(focusHz) {
+  var cards = _EM_HAZ_ORDER.filter(function(hz) { return typeof EMERGENCY_PROTOCOL !== 'undefined' && EMERGENCY_PROTOCOL[hz]; })
+    .map(function(hz) { return _emCardHtml(hz, (hz === focusHz) ? _emFood : null); }).join('');
   return '<div class="lib-deck-sheet">' +
     '<div class="lib-deck-head">' + zi('siren') + '<span class="lib-deck-title">In an emergency</span>' +
     '<button class="lib-deck-close" data-action="libCloseDeck" aria-label="Close">&times;</button></div>' +
     cards + '</div>';
 }
 
-function libOpenDeck() {
+function _emRenderDeck(focusHz) {
   var ov = document.getElementById('libDeckOv');
   if (!ov) return;
-  ov.innerHTML = _libDeckHtml();
+  ov.innerHTML = _libDeckHtml(focusHz);
   ov.classList.add('open');
   document.body.classList.add('lib-overlay-open');
+  if (focusHz) _emScrollTo(focusHz);
+}
+function _emScrollTo(hz) {
+  var ov = document.getElementById('libDeckOv');
+  var card = ov && ov.querySelector('#ec-' + hz);
+  if (!card) return;
+  if (card.scrollIntoView) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  card.classList.add('ec-focus');
+  setTimeout(function() { card.classList.remove('ec-focus'); }, 1600);
+}
+function emScrollHazard(btn) { var hz = btn && btn.getAttribute('data-arg'); if (hz) _emScrollTo(hz); }
+
+// standing "In an emergency" entry — opens the deck at the top, no food context.
+function libOpenDeck() { _emFood = null; _emRenderDeck(null); }
+// deep-link from a food pop-up's floor row — carries the hazard + food.
+function libPopToDeck(btn) {
+  var hz = btn && btn.getAttribute('data-arg');
+  _emFood = (btn && btn.getAttribute('data-food')) || null;
+  _libClosePop();
+  _emRenderDeck(hz || null);
 }
 function _libCloseDeck() {
   var ov = document.getElementById('libDeckOv');
   if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  _emFood = null;
   document.body.classList.remove('lib-overlay-open');
 }
+
+// ── Doc-prep pop-up (#emDocOv) — Read overlay over the deck. Generated summary;
+// the time fields are tap-to-stamp + N/A (one-tap Quick acts, HR-9). ──────────────
+function _emDocWho() {
+  var bits = ['Ziva'];
+  try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (typeof w === 'number' && w > 0) bits.push(w + ' kg'); } } catch (e) {}
+  return bits.join(' · ');
+}
+function _emStampRow(s) {
+  return '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
+    '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
+    '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+}
+function _emDocPrepHtml(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, sym = _emRecognise(hz).join(' · ');
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) { rows += _emStampRow(s); });
+  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
+  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var team = String(d.forTeam).replace('{food}', food || 'the food');
+  return '<div class="doc"><div class="doc-body">' +
+    '<button class="doc-x" data-action="emCloseDocPrep" aria-label="Close">&times;</button>' +
+    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
+    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
+    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
+    '<div class="doc-actions">' +
+    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc">' + zi('copy') + 'Copy</button>' +
+    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save / share</button></div></div>';
+}
+function emOpenDocPrep(btn) {
+  var hz = btn && btn.getAttribute('data-arg'); if (!hz) return;
+  var ov = document.getElementById('emDocOv'); if (!ov) return;
+  _emDocHz = hz;
+  ov.innerHTML = _emDocPrepHtml(hz);
+  ov.classList.add('open');
+}
+function _emCloseDocPrep() { var ov = document.getElementById('emDocOv'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } }
+function emStampTime(btn) {
+  if (!btn) return;
+  var na = btn.parentNode.querySelector('.doc-na');
+  if (na) na.removeAttribute('data-on');
+  if (btn.dataset.stamped) { btn.removeAttribute('data-stamped'); btn.removeAttribute('data-na'); btn.innerHTML = '<em>tap to stamp now</em>'; }
+  else { btn.removeAttribute('data-na'); btn.textContent = _emNowTime(); btn.dataset.stamped = '1'; }
+}
+function emToggleNA(btn) {
+  if (!btn) return;
+  var stamp = btn.parentNode.querySelector('.doc-stamp');
+  if (btn.dataset.on) { btn.removeAttribute('data-on'); if (stamp) { stamp.removeAttribute('data-stamped'); stamp.removeAttribute('data-na'); stamp.innerHTML = '<em>tap to stamp now</em>'; } }
+  else { btn.dataset.on = '1'; if (stamp) { stamp.removeAttribute('data-stamped'); stamp.dataset.na = '1'; stamp.textContent = 'N/A'; } }
+}
+function _emStampValDOM(id) {
+  var b = document.querySelector('#emDocOv .doc-stamp[data-arg="' + id + '"]');
+  if (!b) return '____';
+  if (b.dataset.na) return 'N/A';
+  return b.dataset.stamped ? b.textContent : '____';
+}
+function _emDocText(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, L = ['SproutLab — Emergency summary', _emDocWho(), '', 'Suspected: ' + d.suspected];
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id)); });
+  if (food) L.push('Trigger food: ' + food);
+  var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);
+  if (d.action) L.push(d.action.label + ': ' + d.action.value);
+  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
+  return L.join('\n');
+}
+function emCopyDoc() {
+  var text = _emDocText(_emDocHz);
+  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
+  } else { _emLegacyCopy(text); }
+}
+function _emLegacyCopy(text) {
+  var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+  ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); } catch (e) {}
+  document.body.removeChild(ta);
+}
+function emSaveDoc() { window.print(); }
 
 // ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
 // the old heavy knowledge cards: the never-cross emergency FLOORS now live in the
