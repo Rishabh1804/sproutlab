@@ -1032,34 +1032,6 @@ function libToggleGroup(btn) {
 // data). HR-9: a Read overlay (view + one Quick-Act + flip), not multi-field editing.
 // Faithful to docs/design/library-redesign/ records 09 (template) + 10 (live flip).
 
-// The floor header follows the hazard (the never-cross rule): a choking-by-form record
-// gets the choking-scoped header, every allergen/CMPA record the reaction header.
-function _libFloorHeader(eff) {
-  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
-  return isChoke ? "If your baby is choking, it's an emergency" : 'If a reaction happens — an emergency';
-}
-
-// Safe-form chips (the canonical pop-up render: ok → sage check chip, never → rose chip).
-function _libFormChips(sf) {
-  sf = sf || {};
-  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
-  var never = (sf.never && sf.never.length) ? sf.never : [];
-  if (!ok.length && !never.length) return '';
-  var chips = ok.map(function(x) { return '<span class="fp-chip fp-chip--ok">' + zi('check') + escHtml(x) + '</span>'; }).join('') +
-    never.map(function(x) { return '<span class="fp-chip fp-chip--never">' + escHtml(x) + '</span>'; }).join('');
-  return '<div><div class="fp-sec-h">Safe forms</div><div class="fp-chips">' + chips + '</div></div>';
-}
-
-// Key-nutrient chips, one per nutrient-domain colour (LIB_SHELF_NUTRIENTS → .nutri-chip).
-function _libNutriChips(key) {
-  var list = LIB_SHELF_NUTRIENTS[key] || [];
-  if (!list.length) return '';
-  var chips = list.map(function(n) {
-    return '<span class="nutri-chip nutri-chip--' + n[1] + '">' + escHtml(n[0]) + '</span>';
-  }).join('');
-  return '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">' + chips + '</div></div>';
-}
-
 // Journey chip for the pop-up head (same states as the shelf book; warn carries none).
 function _libJourneyChip(pol, j) {
   if (pol === 'warn') return '';
@@ -1068,6 +1040,88 @@ function _libJourneyChip(pol, j) {
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
 }
+
+// ── 6-second card primitives (S11, Architect-ratified). A verdict band LEADS (the 6-sec
+// payload), then progressive-disclosure rows the parent OPENS — content invited, not
+// dumped. The emergency floor collapses to a rose row + a Deck deep-link (ratified:
+// collapsed for ALL foods; first-aid stays one tap in the card and always one tap in the
+// Emergency Deck). The floor COPY is still FOOD_EFFECTS-sourced — only its placement moved.
+var _LIB_VERDICT_CLASS = { encourage: 'yes', conditional: 'wait', warn: 'no', inform: 'info' };
+
+function _libVerdictBand(verClass, icon, headline, sub) {
+  return '<div class="fp-verdict fp-verdict--' + verClass + '">' + zi(icon) +
+    '<span class="fp-verdict-tx"><span class="fp-verdict-t">' + escHtml(headline) + '</span>' +
+    (sub ? '<span class="fp-verdict-s">' + escHtml(sub) + '</span>' : '') + '</span></div>';
+}
+
+// A collapsible disclosure row (data-action="libPopRow" toggles .open). Returns '' if empty.
+function _libPopRow(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return '<div class="lib-prow lib-prow--' + variant + (open ? ' open' : '') + '">' +
+    '<button class="lib-prow-head" data-action="libPopRow">' +
+      '<span class="lib-prow-ic">' + zi(icon) + '</span>' +
+      '<span class="lib-prow-txt"><span class="lib-prow-t">' + escHtml(title) + '</span>' +
+        (teaser ? '<span class="lib-prow-d">' + escHtml(teaser) + '</span>' : '') + '</span>' +
+      '<span class="lib-prow-chev">' + zi('arrow-right') + '</span></button>' +
+    '<div class="lib-prow-body"><div class="lib-prow-inner">' + bodyHtml + '</div></div></div>';
+}
+
+// Safe-forms row body — ok (sage) + never (rose) chips + the cut note.
+function _libFormsRowBody(sf) {
+  sf = sf || {};
+  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
+  var never = (sf.never && sf.never.length) ? sf.never : [];
+  if (!ok.length && !never.length) return '';
+  return '<div class="fp-chips">' +
+    ok.map(function(x){ return '<span class="fp-chip fp-chip--ok">' + zi('check') + escHtml(x) + '</span>'; }).join('') +
+    never.map(function(x){ return '<span class="fp-chip fp-chip--never">' + escHtml(x) + '</span>'; }).join('') +
+    '</div>' + (sf.note ? '<p class="lib-prow-p">' + escHtml(sf.note) + '</p>' : '');
+}
+
+// Reaction-floor row body — the signs + the FOOD_EFFECTS seekCare action, then the Deck
+// deep-link. Never-cross fidelity unchanged (copy is from the record); placement collapsed.
+function _libFloorRowBody(eff) {
+  var signs = (eff.severeSigns || []).map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
+  var act = eff.seekCare ? '<p class="lib-prow-act">' + escHtml(eff.seekCare) + '</p>' : '';
+  return '<ul class="lib-prow-signs">' + signs + '</ul>' + act +
+    '<button class="lib-prow-deck" data-action="libPopToDeck">' + zi('siren') +
+    '<span>Full first aid — In an emergency</span>' + zi('arrow-right') + '</button>';
+}
+
+// Nutrition row parts (curated shelf map) — {teaser, body}, or null.
+function _libNutriRowParts(key) {
+  var list = LIB_SHELF_NUTRIENTS[key] || [];
+  if (!list.length) return null;
+  return {
+    teaser: list.slice(0, 3).map(function(n){ return n[0]; }).join(' · '),
+    body: '<div class="fp-chips">' + list.map(function(n){
+      return '<span class="nutri-chip nutri-chip--' + n[1] + '">' + escHtml(n[0]) + '</span>';
+    }).join('') + '</div>'
+  };
+}
+
+// Nutrition row parts from raw NUTRITION tokens (the corpus path).
+function _libNutriTokenParts(tokens, max) {
+  var out = [], seen = {};
+  (tokens || []).forEach(function(t) {
+    var dom = NUTRIENT_DOMAIN[String(t).toLowerCase()];
+    if (!dom || seen[t]) return;
+    seen[t] = 1;
+    out.push({ label: _libTitleCase(String(t)), dom: dom });
+  });
+  if (!out.length) return null;
+  if (max) out = out.slice(0, max);
+  return {
+    teaser: out.slice(0, 3).map(function(n){ return n.label; }).join(' · '),
+    body: '<div class="fp-chips">' + out.map(function(n){
+      return '<span class="nutri-chip nutri-chip--' + n.dom + '">' + escHtml(n.label) + '</span>';
+    }).join('') + '</div>'
+  };
+}
+
+// Toggle a disclosure row; deep-link a floor row to the Emergency Deck.
+function libPopRow(btn) { var r = btn && btn.closest('.lib-prow'); if (r) r.classList.toggle('open'); }
+function libPopToDeck() { _libClosePop(); if (typeof libOpenDeck === 'function') libOpenDeck(); }
 
 function _libPopHtml(key, eff, pol, j) {
   var name = _libDisplayName(key, eff);
@@ -1085,13 +1139,24 @@ function _libPopHtml(key, eff, pol, j) {
     (voiceTxt ? '<div class="fp-voice">' + escHtml(voiceTxt) + '</div>' : '') +
     _libJourneyChip(pol, j) + '</div>';
 
-  // body — polarity flag → age gate → never-cross floor, then safe forms, then nutrients
-  var flag = '<div class="fp-flag fp-flag--' + pol + '">' + zi(lead.icon) +
-    '<span><b>' + escHtml(lead.phrase) + '.</b>' + (why ? ' ' + escHtml(why) : '') + '</span></div>';
-  var ageFlag = eff.gate ? '<div class="fp-flag fp-flag--age">' + zi('warn') + '<span>' + escHtml(eff.gate) + '</span></div>' : '';
-  var floor = _libBuildGuide(eff.severeSigns, eff.seekCare, _libFloorHeader(eff));
-  var body = '<div class="fp-body"><div>' + flag + ageFlag + floor + '</div>' +
-    _libFormChips(eff.safeForm) + _libNutriChips(key) + '</div>';
+  // ── 6-second body: verdict band leads, then progressive-disclosure rows ──
+  var glance = (eff.safeForm && eff.safeForm.glance) || eff.gate || '';
+  var verClass = _LIB_VERDICT_CLASS[pol] || 'info';
+  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+  var nutri = _libNutriRowParts(key);
+  var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
+  var rows =
+    _libPopRow('why', lead.icon, (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
+      why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
+    _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
+    (hasFloor ? _libPopRow('floor', 'siren',
+      (isChoke ? 'If your baby is choking' : 'If a reaction happens'),
+      (isChoke ? 'the choking signs' : 'rare, but know the signs'),
+      _libFloorRowBody(eff), false) : '') +
+    (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
+  var body = '<div class="fp-body fp-body--rows">' +
+    _libVerdictBand(verClass, lead.icon, lead.phrase, glance) +
+    '<div class="lib-prows">' + rows + '</div></div>';
 
   // foot — single Quick-Act + the flip-to-history link
   var foot = '<div class="fp-foot">' +
@@ -1284,21 +1349,6 @@ function _libTagsLine(tags) {
   }).join(' · ');
 }
 
-// Nutrient chips from raw NUTRITION tokens (the corpus path; maps via NUTRIENT_DOMAIN,
-// skips unmapped bioactives, caps the count).
-function _libNutriChipsFromTokens(tokens, max) {
-  var out = [], seen = {};
-  (tokens || []).forEach(function(t) {
-    var dom = NUTRIENT_DOMAIN[String(t).toLowerCase()];
-    if (!dom || seen[t]) return;
-    seen[t] = 1;
-    out.push('<span class="nutri-chip nutri-chip--' + dom + '">' + escHtml(_libTitleCase(String(t))) + '</span>');
-  });
-  if (!out.length) return '';
-  if (max) out = out.slice(0, max);
-  return '<div><div class="fp-sec-h">Key nutrients</div><div class="fp-chips">' + out.join('') + '</div></div>';
-}
-
 // A NUTRITION-backed pop-up for any food without a curated FOOD_EFFECTS record.
 // Real data only: NUTRITION nutrients/tags, the live age gate + allergen note, the
 // journey. No emergency floor — that's reserved for the curated allergen records.
@@ -1329,13 +1379,21 @@ function _libCorpusPopHtml(name, j) {
     (tagsLine ? '<div class="fp-voice">' + escHtml(tagsLine) + '</div>' : '') +
     _libJourneyChip('inform', j) + '</div>';
 
-  var flags = '';
-  if (allerg) flags += '<div class="fp-flag fp-flag--conditional">' + zi('warn') + '<span><b>Allergen.</b> ' + escHtml(allerg) + '</span></div>';
-  if (aged) flags += '<div class="fp-flag fp-flag--age">' + zi('warn') + '<span><b>Not before ' + ageR.minMonth + ' months.</b> ' + escHtml(ageR.reason) + '</span></div>';
-  if (!flags) flags = '<div class="fp-flag fp-flag--inform">' + zi('info') + '<span>In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</span></div>';
-
-  var nutri = entry ? _libNutriChipsFromTokens(entry.nutrients, 5) : '';
-  var body = '<div class="fp-body"><div>' + flags + '</div>' + nutri + '</div>';
+  // ── 6-second body: a verdict band (age-aware) leads, then disclosure rows ──
+  var verClass = aged ? 'wait' : 'info';
+  var verHead = aged ? ('Wait — from ' + ageR.minMonth + ' months') : 'Good to know';
+  var rows =
+    (allerg ? _libPopRow('floor', 'warn', 'Allergen — introduce with care', 'watch the first few times',
+      '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
+    (aged ? _libPopRow('why', 'clock', 'Why wait', '',
+      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
+  var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
+  if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
+  if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
+    '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
+  var body = '<div class="fp-body fp-body--rows">' +
+    _libVerdictBand(verClass, aged ? 'clock' : 'info', verHead, tagsLine) +
+    '<div class="lib-prows">' + rows + '</div></div>';
   var foot = '<div class="fp-foot">' +
     '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(name) + '">' + zi('plus') + 'Log a serving</button>' +
     '<span class="fp-foot-link" data-action="popFlip">Full history in Info ' + zi('arrow-right') + '</span></div>';

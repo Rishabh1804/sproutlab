@@ -622,6 +622,8 @@ function init() {
     else if (action === 'libClosePopSelf' && typeof _libClosePop === 'function') { if (e.target === btn) _libClosePop(); }
     else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
     else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
+    else if (action === 'libPopRow' && typeof libPopRow === 'function') libPopRow(btn);
+    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck();
     else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
     else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
     else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();

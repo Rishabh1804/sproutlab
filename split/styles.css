@@ -11045,6 +11045,44 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fp-foot-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .fp-back-arrow { transform:scaleX(-1); }
 
+/* ═══ 6-second card — verdict band + progressive-disclosure rows (S11) ═══ */
+.fp-body--rows { padding:0; }
+.fp-verdict { display:flex; align-items:flex-start; gap:var(--sp-10); margin:var(--sp-16) var(--sp-16) var(--sp-12); padding:var(--sp-12) var(--sp-14); border-radius:var(--r-lg); }
+.fp-verdict .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; margin-top:2px; }
+.fp-verdict-tx { display:flex; flex-direction:column; min-width:0; }
+.fp-verdict-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); line-height:var(--lh-snug); }
+.fp-verdict-s { font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); opacity:.85; margin-top:var(--sp-2); line-height:var(--lh-snug); }
+.fp-verdict--yes { background:var(--sage-light); color:var(--tc-sage); }
+.fp-verdict--wait { background:var(--amber-light); color:var(--tc-amber); }
+.fp-verdict--no { background:var(--rose-light); color:var(--tc-rose); }
+.fp-verdict--info { background:var(--sky-light); color:var(--tc-sky); }
+
+.lib-prows { border-top:1px solid var(--surface-alt); }
+.lib-prow { border-bottom:1px solid var(--surface-alt); }
+.lib-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; border:none; background:none; cursor:pointer; text-align:left; padding:var(--sp-12) var(--sp-16); font-family:'Nunito',sans-serif; min-height:44px; }
+.lib-prow-ic { flex:0 0 auto; width:28px; height:28px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--surface-alt); color:var(--mid); }
+.lib-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.lib-prow--why .lib-prow-ic, .lib-prow--forms .lib-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
+.lib-prow--floor .lib-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.lib-prow--nutri .lib-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
+.lib-prow-txt { flex:1; min-width:0; }
+.lib-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.lib-prow--floor .lib-prow-t { color:var(--tc-rose); }
+.lib-prow-d { display:block; font-size:var(--fs-2xs); color:var(--light); margin-top:1px; }
+.lib-prow-chev { flex:0 0 auto; color:var(--light); display:inline-flex; transition:transform var(--ease-fast); }
+.lib-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-prow.open .lib-prow-chev { transform:rotate(90deg); }
+.lib-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.lib-prow.open .lib-prow-body { max-height:1200px; }
+.lib-prow-inner { padding:0 var(--sp-16) var(--sp-16) 54px; }
+.lib-prow-p { margin:0; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
+.lib-prow-signs { margin:0 0 var(--sp-8); padding-left:var(--sp-16); }
+.lib-prow-signs li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-2); }
+.lib-prow-act { margin:0 0 var(--sp-10); font-size:var(--fs-xs); color:var(--tc-rose); font-weight:700; line-height:var(--lh-normal); }
+.lib-prow-deck { display:flex; align-items:center; gap:var(--sp-6); width:100%; border:none; cursor:pointer; background:var(--rose-light); color:var(--tc-rose); border-radius:var(--r-md); padding:var(--sp-8) var(--sp-10); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-xs); }
+.lib-prow-deck > span { flex:1; text-align:left; }
+.lib-prow-deck .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+
 /* ═══ "Look up any food" search — the gateway to the pop-up for any food (#3, record 10) ═══ */
 .lib-search { margin-top:var(--sp-20); }
 .lib-search-h { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--mid); margin:0 0 var(--sp-8); }
