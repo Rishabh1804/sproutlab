@@ -1732,10 +1732,20 @@ function openEmergencyChooser() {
     if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
   });
 
-  // General emergency → new concept, design pending; stub per HR-8.
+  // General emergency → the General Emergency Room (§5.3), gated on the
+  // `ready` predicate over GENERAL_EMERGENCIES (K-4: content presence, not
+  // function existence). All-placeholder registry → keeps the HR-8 stub.
+  // V-5 scroll-lock handoff: open the Room (acquires the lock) BEFORE the
+  // chooser releases it, then re-assert in the same tick — no bleed frame.
   overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
-    _ldCloseEmergency();
-    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+    if (_geReady()) {
+      openGeneralEmergencyRoom();
+      _ldCloseEmergency();
+      document.body.style.overflow = 'hidden';
+    } else {
+      _ldCloseEmergency();
+      if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+    }
   });
 }
 
@@ -1745,6 +1755,146 @@ function _ldCloseEmergency() {
   overlay.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(function() { overlay.remove(); }, 300);
+}
+
+// ── General Emergency Room (lean-landing-v1 §5.3) ──────────────────────
+// Full-screen rose overlay opened from the chooser's General option. The
+// `.ge-sheet` is the single scroll container (V-1); `.ge-callbar` is a
+// direct sticky child so 112/108 stay one tap regardless of scroll. The
+// `critical` item is pinned-open and exempt from the accordion (V-2); the
+// one-open-at-a-time rule governs only non-critical items, so tapping any
+// row can never collapse the CPR steps.
+
+// Ready gate (K-4): the chooser routes here only when ready content is
+// present — every registry item carries a non-placeholder `source`. An
+// all-placeholder registry resolves to the "Coming soon" stub instead, so
+// the Room never ships half-built behind Maren's content gate.
+function _geReady() {
+  return typeof GENERAL_EMERGENCIES !== 'undefined'
+    && GENERAL_EMERGENCIES.length > 0
+    && GENERAL_EMERGENCIES.every(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+}
+
+function _geItemHtml(e) {
+  var crit = e.severity === 'critical';
+  // V-3: the call imperative shows on the COLLAPSED row, not only expanded.
+  var lead = e.callLead ? '<span class="ge-lead">' + zi('phone') + '<span>Call 112 now</span></span>' : '';
+  var steps = '<ol class="ge-steps">'
+    + (e.immediate || []).map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('')
+    + '</ol>';
+  var flags;
+  if (e.call112When == null) {
+    // Time-critical items: the call is unconditional — lead with it.
+    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>Call 112 immediately.</span></div>';
+  } else {
+    flags = '<div class="ge-flags"><div class="ge-flags-h">' + zi('phone') + '<span>Call 112 if</span></div><ul>'
+      + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('')
+      + '</ul></div>';
+  }
+  var xlink = e.xlink ? '<button class="ge-xlink" data-ge-act="foodlink">' + zi('bowl') + '<span>' + escHtml(e.xlink.label) + '</span></button>' : '';
+  var src = '<div class="ge-src">' + escHtml('Source: ' + e.source) + '</div>';
+  var body = '<div class="ge-item-body">' + steps + flags + xlink + src + '</div>';
+  if (crit) {
+    return '<div class="ge-item ge-item--critical ge-open">'
+      + '<div class="ge-item-head ge-item-head--static">'
+      +   '<span class="ge-item-ic icon icon-rose">' + zi(e.icon) + '</span>'
+      +   '<span class="ge-item-name">' + escHtml(e.name) + '</span>' + lead
+      + '</div>' + body + '</div>';
+  }
+  return '<div class="ge-item" data-ge-id="' + escHtml(e.id) + '">'
+    + '<button class="ge-item-head" data-ge-act="toggle" aria-expanded="false">'
+    +   '<span class="ge-item-ic icon icon-rose">' + zi(e.icon) + '</span>'
+    +   '<span class="ge-item-name">' + escHtml(e.name) + '</span>' + lead
+    +   '<span class="ge-item-chev">' + zi('chevron-down') + '</span>'
+    + '</button>' + body + '</div>';
+}
+
+function openGeneralEmergencyRoom() {
+  var existing = document.getElementById('geOverlay');
+  if (existing) existing.remove();
+
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary)  ? _emReg.ambulancePrimary.number  : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+
+  var items = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
+    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; })
+    .map(_geItemHtml).join('');
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ge-overlay';
+  overlay.id = 'geOverlay';
+  document.body.appendChild(overlay);
+
+  // Callbar tel: pills reuse the landing's .ld-emergency-call sibling pattern
+  // exactly (V-7). 112 (unified emergency) leads, 108 (ambulance) follows.
+  overlay.innerHTML =
+    '<div class="ge-sheet" role="dialog" aria-label="General emergency help">'
+    + '<div class="ge-head">'
+    +   '<span class="ge-title">' + zi('siren') + '<span>General Emergency</span></span>'
+    +   '<button class="ge-close" id="geClose" aria-label="Close">&times;</button>'
+    + '</div>'
+    + '<div class="ge-callbar">'
+    +   '<span class="ge-callbar-label">' + zi('phone') + '<span>Call now</span></span>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>' + escHtml(emgNum) + '</span></a>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>' + escHtml(ambNum) + '</span></a>'
+    + '</div>'
+    + '<div class="ge-list">' + items + '</div>'
+    + '<div class="ge-disclaimer">' + zi('info') + '<span>This is first-aid guidance, not a diagnosis. When in doubt, call 112.</span></div>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#geClose').addEventListener('click', _geClose);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _geClose(); });
+  if (!window._geKeyHandler) {
+    window._geKeyHandler = function(ev) { if (ev.key === 'Escape') _geClose(); };
+    document.addEventListener('keydown', window._geKeyHandler);
+  }
+
+  // Accordion: one open at a time among NON-critical items (V-2). The
+  // critical row has a static (non-button) head, so it never toggles.
+  var sheet = overlay.querySelector('.ge-sheet');
+  sheet.addEventListener('click', function(ev) {
+    var hit = ev.target.closest ? ev.target.closest('[data-ge-act]') : null;
+    if (!hit) return;
+    var act = hit.getAttribute('data-ge-act');
+    if (act === 'toggle') {
+      var item = hit.closest('.ge-item');
+      var wasOpen = item.classList.contains('ge-open');
+      var others = sheet.querySelectorAll('.ge-item:not(.ge-item--critical)');
+      for (var i = 0; i < others.length; i++) {
+        others[i].classList.remove('ge-open');
+        var h = others[i].querySelector('.ge-item-head');
+        if (h) h.setAttribute('aria-expanded', 'false');
+      }
+      if (!wasOpen) { item.classList.add('ge-open'); hit.setAttribute('aria-expanded', 'true'); }
+    } else if (act === 'foodlink') {
+      // Choking-on-food → the Diet→Library food emergency room (§5.3 cross-link).
+      _geClose();
+      if (typeof switchTab === 'function') switchTab('track');
+      setTimeout(function() {
+        if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+        setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+      }, 60);
+      if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food choking — opening the Library');
+    }
+  });
+
+  // V-7: focus moves to the × on open (returns to the Emergency card on close).
+  requestAnimationFrame(function() { var x = document.getElementById('geClose'); if (x) x.focus(); });
+}
+
+function _geClose() {
+  var overlay = document.getElementById('geOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (window._geKeyHandler) { document.removeEventListener('keydown', window._geKeyHandler); window._geKeyHandler = null; }
+  setTimeout(function() { overlay.remove(); }, 300);
+  var card = document.querySelector('.ld-emergency-main');
+  if (card && card.focus) card.focus();
 }
 
 function renderInfo() {
