@@ -5813,7 +5813,8 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ge-title { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-lg); color:var(--tc-rose); }
 .ge-title svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
 .ge-close {
-  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); border:none;
+  /* 44px tap target on a panic surface (N-V-1) — the only non-tel exit. */
+  width:44px; height:44px; border-radius:var(--r-full); border:none;
   background:var(--surface-alt); color:var(--mid);
   font-size:var(--fs-lg); line-height:var(--lh-none); cursor:pointer;
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -5872,7 +5873,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ge-flags ul { margin:0; padding-left:var(--sp-16); }
 .ge-flags li { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
 /* Unconditional-call items (poison / unresponsive) — lead loud, no list. */
-.ge-flags--always { display:flex; align-items:center; gap:var(--sp-8); background:var(--rose-light); border-left:var(--accent-w) solid var(--rose-deep); }
+.ge-flags--always { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--rose-light); border-left:var(--accent-w) solid var(--rose-deep); }
 [data-theme="dark"] .ge-flags--always { background:rgba(158,62,82,0.30); }
 .ge-flags--always svg.zi { width:var(--icon-base); height:var(--icon-base); color:var(--rose-deep); flex-shrink:0; }
 .ge-flags--always span { font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-md); color:var(--rose-deep); }

@@ -106,8 +106,17 @@ if (typeof window !== 'undefined') {
 // Render policy:
 //   severity 'critical' → pinned-open, hottest, exempt from the accordion
 //                         (one item per the locked §5.3 wireframe).
+//   severity 'urgent'/'serious' → both render as non-critical accordion
+//                         items today (render keys only on 'critical'); the
+//                         call chip is driven by callLead, not severity. The
+//                         tiers are retained as a content-priority label (N-1).
 //   callLead:true       → row shows a "Call 112 now" lead chip even
 //                         COLLAPSED (V-3), so the action shows without a tap.
+//   call112When:null    → unconditional-call item; the loud "Call 112"
+//                         band reads `call112Label` when present, else the
+//                         default "Call 112 immediately." (B-1: lets the
+//                         unresponsive item carry the lone-rescuer conditional
+//                         in the chip itself instead of contradicting it).
 //   xlink               → cross-link out (choking-object → food room).
 //
 // Ordering (M-5 reconciliation): life-threat-first, ids aligned with
@@ -126,18 +135,19 @@ const GENERAL_EMERGENCIES = [
     id: 'unresponsive', icon: 'heart', name: 'Not breathing / unresponsive',
     severity: 'critical', callLead: true,
     immediate: [
-      'Shout for help and call 112 now. (On your own? Give 1 minute of CPR first, then call.)',
+      'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
       'Head to neutral, clear any obvious blockage, then give 5 rescue breaths — seal your mouth over baby’s mouth and nose and blow gently over 1 second until the chest rises.',
       '30 chest compressions: 2 fingertips on the centre of the breastbone, push about 4 cm deep, fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,
+    call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
     source: 'NHS · British Red Cross'
   },
   {
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
     severity: 'urgent', callLead: true,
     immediate: [
-      'Use the adrenaline auto-injector (e.g. EpiPen) now if one has been prescribed — firmly into the outer thigh.',
+      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh, hold 10 seconds. Most families won’t have one — if not, go straight to the next step.',
       'Call 112 and say “anaphylaxis”. Lay baby down; if breathing is hard, raise the shoulders or hold them slightly upright. Do not stand or walk them.',
       'No better after 5 minutes? Give a second auto-injector if you have one.'
     ],
@@ -188,7 +198,7 @@ const GENERAL_EMERGENCIES = [
     call112When: [
       'Was knocked out, even briefly, or is hard to wake / very drowsy',
       'Repeated vomiting, a fit, or fluid or blood from the nose or ears',
-      'Under 1 year with any vomiting, a worsening cry, or a fall from higher than their own height'
+      'Under 1 year with any vomiting, a worsening cry, or a fall from a height (more than ~1 metre / about 5 steps)'
     ],
     source: 'NHS · British Red Cross'
   },

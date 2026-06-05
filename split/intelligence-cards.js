@@ -1784,8 +1784,12 @@ function _geItemHtml(e) {
     + '</ol>';
   var flags;
   if (e.call112When == null) {
-    // Time-critical items: the call is unconditional — lead with it.
-    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>Call 112 immediately.</span></div>';
+    // Time-critical items: the call is unconditional — lead with it. The
+    // label comes from the registry (call112Label) so an item with a
+    // lone-rescuer conditional (unresponsive) carries it in the chip itself
+    // rather than being contradicted by a flat "immediately" (B-1 / V-V-1).
+    var callTxt = e.call112Label || 'Call 112 immediately.';
+    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>' + escHtml(callTxt) + '</span></div>';
   } else {
     flags = '<div class="ge-flags"><div class="ge-flags-h">' + zi('phone') + '<span>Call 112 if</span></div><ul>'
       + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('')
