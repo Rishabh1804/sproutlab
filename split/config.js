@@ -104,17 +104,31 @@ if (typeof window !== 'undefined') {
 // St John Ambulance / NICE NG232 / Resuscitation Council UK).
 //
 // Content provenance: each entry was adversarially fact-checked against
-// current authoritative guidance (deep-research pass, 2026-06-05). That
-// pass folded: RCUK 2025 infant CPR + choking technique (two-finger →
-// two-THUMB encircling, in force Jan 2026); EpiPen hold-time 10s → 3s
-// (device-specific); anaphylaxis lie-flat-legs-raised default; burns
+// current authoritative guidance (deep-research pass, 2026-06-05; key
+// claims then primary-source-verified via Firecrawl scrape of the live
+// source pages). That pass folded: RCUK 2025 infant CPR + choking
+// technique (two-finger → two-THUMB encircling); EpiPen hold-time 10s →
+// 3s (device-specific); anaphylaxis lie-flat-legs-raised default; burns
 // hypothermia/keep-warm caveat; bleeding limb-elevation (deprecated) →
 // leg-raise-for-shock; seizure do-not-move; head-injury infant fall
 // threshold + tense-fontanelle / scalp-injury red flags. NUMBERS are
 // India-localised (112 unified / 108 ambulance, EMERGENCY_CONTACTS) — the
-// PROTOCOLS are UK-sourced (clearest public infant first-aid). Two items
-// flagged for pediatrician confirmation: the RCUK-2025 two-thumb infant
-// CPR + choking-thrust technique (just-effective guideline transition).
+// PROTOCOLS are UK-sourced (clearest public infant first-aid).
+//
+// VERIFIED (primary source, 2026-06-05):
+//   • Two-thumb infant CPR + choking chest-thrust — confirmed against RCUK
+//     live public guidance (resus.org.uk/public-resource/how-do-cpr:
+//     "two-thumb encircling technique … both thumbs together in the centre
+//     of the chest, hands encircling the chest"; fallback for a lone
+//     rescuer is one/two-hand for children >1yr, NOT two-finger) + the 2025
+//     paediatric BLS guideline (chest thrusts "as advised for chest
+//     compressions, but compressing the sternum more sharply").
+//   • EpiPen 3s — confirmed against FDA DailyMed prescribing info + Teva +
+//     AAP (healthychildren.org).
+//   NOTE: the NHS public CPR page STILL shows the older two-finger infant
+//     method, so two UK authorities currently disagree; we cite RCUK (the
+//     resuscitation authority) for that line, not NHS. Pediatrician
+//     sign-off remains desirable but is no longer a blocking uncertainty.
 //
 // Render policy:
 //   severity 'critical' → pinned-open, hottest, exempt from the accordion
