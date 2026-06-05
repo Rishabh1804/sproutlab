@@ -636,8 +636,8 @@ function init() {
     else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
     else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
-    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
-    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
+    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc(btn);
+    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc(btn);
     // General Emergency Room v2 — pop-up cards + flip + doc-prep (intelligence-cards.js)
     else if (action === 'geOpenCard' && typeof geOpenCard === 'function') geOpenCard(btn);
     else if (action === 'geCloseCard' && typeof _geCloseCard === 'function') _geCloseCard();

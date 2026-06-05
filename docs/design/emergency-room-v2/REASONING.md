@@ -86,3 +86,38 @@ separate `#emDocOv`; M3 unifies it onto the flip.
 
 **Build:** clean; `audit-emergency-floor-v1` + `audit-floor-fidelity-v1` PASS; emoji/icon-text/
 hr12 gates green; all modules `node --check` OK.
+
+**Live-deploy verification (Vercel preview, deployment ETySyEFFHsUjPdgV812XcKWoFqLH):**
+Drove the real deploy (Vercel share-bypass + headless browser), asserted against the live DOM:
+- Room: `rows=7`, `pinned=1` (CPR), `callpills=2`; row chip `animationName=ecCallFlow` (wave live).
+- Card open (choking): `frontSteps=3`, waved `.ec-call` CTA, callbar pill `animationName=ecCallFlow`.
+- Flip: `flipped=true`; doc-prep back `docRows=5`, `stamps=2`, `doc-row display=flex` (the `.docface`
+  layout applies correctly — the scoping fix holds on the real deploy, unlike the static mockup).
+- a11y at **high** zoom: all rows render with correct teasers + callLead chips
+  (head-injury/bleeding/burn correctly carry NO call chip); pinned CPR + open card full structure
+  intact; "Choking on food? →" xlink present.
+- **Caveat:** post-interaction *pixel* screenshots aren't downloadable via the current browser
+  tool (saved to a non-public bucket); verification this milestone is live-DOM + computed-style
+  assertions. Pixel review lands with the Architect on the Vercel preview at out-of-draft.
+
+### M2 — Food room: doc-prep → flip (built; live-verifying)
+**Decisions:**
+- `_emCardHtml` now returns a flip card: `.ecard.ecard-flip` → `.fp-flip` → front (head + body,
+  unchanged first-aid content) + back (`_emDocFace`, the doc-prep). Same `.fp-flip` / `.docface`
+  as M1 → both rooms share one card+flip+doc language.
+- **"For the doctor"** button: `emOpenDocPrep` → **`cardFlip`** (flips in place; no `#emDocOv`).
+- `id="ec-<hz>"` stays on the outer `.ecard` so the deck deep-link scroll + `.ec-focus`
+  highlight still work unchanged.
+- **Copy/Save made container-aware**: `_emStampValDOM(id, container)` / `_emDocText(hz, container)`
+  / `emCopyDoc(btn)` read stamps from the card's own `.fp-back` (not the retired overlay).
+  `emSaveDoc(btn)` marks the host `.doc-print` + body `.doc-printing` and prints.
+- **Print rule rewritten + scoped** to `body.doc-printing` — isolates the flipped `.docface`,
+  neutralises the flip `transform`. Side-benefit: the old rule's UNSCOPED `body *{visibility:hidden}`
+  would have blanked any other print (e.g. Print Dashboard); now scoped, that latent bug is closed.
+- **Dead now (cleanup at M4/gate):** `emOpenDocPrep`, `_emDocPrepHtml`, `_emCloseDocPrep`, the
+  `#emDocOv` template container + its routes — unused but harmless; removed at the styles/cleanup pass.
+
+**Build:** clean; emergency-floor + floor-fidelity PASS; diet/core `node --check` OK; food flip
+wired in bundle.
+
+### M3 — Cross-link pop-up-in-place (pending) · M4 — shared styles cleanup + triple-Gov (pending)

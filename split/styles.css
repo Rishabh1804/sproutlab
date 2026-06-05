@@ -11551,6 +11551,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* ═══ Emergency Cards (emergency-protocol-v1) — deep-linked per-hazard protocol cards
    rendered in the Deck; per-hazard chrome (anaphylaxis rose / choking·botulism amber). ═══ */
 .ecard { background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 6px 26px var(--shadow); overflow:hidden; margin-bottom:var(--sp-16); scroll-margin-top:64px; }
+.ecard-flip { perspective:1400px; }  /* food card → flip host (front=first aid, back=doc-prep) */
 .ecard:last-child { margin-bottom:0; }
 .ecard.ec-focus { box-shadow:0 0 0 3px var(--rose), 0 6px 26px var(--shadow); }
 .ecard--amber.ec-focus { box-shadow:0 0 0 3px var(--amber), 0 6px 26px var(--shadow); }
@@ -11624,11 +11625,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .em-doc-ov .doc-btn--copy { background:#fff; color:#9e3e52; border:1.5px solid #e6b9c4; }
 .em-doc-ov .doc-btn--save { background:#9e3e52; color:#fff; }
 @media print {
-  body * { visibility:hidden; }
-  .em-doc-ov, .em-doc-ov * { visibility:visible; }
-  .em-doc-ov { position:absolute; inset:0; background:#fff; display:block; padding:0; overflow:visible; }
-  .em-doc-ov .doc { box-shadow:none; max-width:100%; }
-  .em-doc-ov .doc-x, .em-doc-ov .doc-actions { display:none; }
+  /* Doc-prep print (emSaveDoc): isolate the flipped card's .docface and lay it
+     flat (neutralise the flip transform). Scoped to the .doc-printing body flag
+     so it never affects an ordinary "Print Dashboard". */
+  body.doc-printing * { visibility:hidden; }
+  body.doc-printing .doc-print .fp-back, body.doc-printing .doc-print .fp-back * { visibility:visible; }
+  body.doc-printing .doc-print { position:absolute; inset:0; }
+  body.doc-printing .doc-print .fp-flip, body.doc-printing .doc-print .fp-back { transform:none !important; position:static !important; backface-visibility:visible !important; }
+  body.doc-printing .doc-print .docface, body.doc-printing .doc-print .docface .doc { box-shadow:none; max-width:100%; }
+  body.doc-printing .doc-print .docface .doc-actions { display:none; }
 }
 /* ═══════════════════════════════════════════════════════════════════════
    Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/, LOCKED.md

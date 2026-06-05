@@ -2133,13 +2133,45 @@ function _emCardHtml(hz, food) {
     rec.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>' + xlink + '</div>' : '';
   var aft = (p.after && p.after.length) ? '<div class="ec-sec"><div class="ec-sec-h">After</div><ul class="ec-next">' +
     p.after.map(function(s) { return '<li>' + _emFmt(s) + '</li>'; }).join('') + '</ul></div>' : '';
-  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + escHtml(hz) + '">' +
+  // "For the doctor" now FLIPS the card to its doc-prep face (one surface, both
+  // jobs) — no separate overlay. Reuses the .fp-flip pattern + cardFlip handler.
+  var dp = '<button class="ec-docprep" data-action="cardFlip">' +
     '<span class="ec-docprep-ic">' + zi('doc') + '</span>' +
-    '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor</span>' +
-    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></span>' +
+    '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor — note &amp; share</span>' +
+    '<span class="ec-docprep-d">A summary to fill, copy, or share.</span></span>' +
     '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
-  return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + '" id="ec-' + hz + '">' + head +
+  var front = '<div class="fp-face fp-front">' + head +
     '<div class="ec-body">' + tempo + '<div class="ec-sec">' + doNow + '</div>' + recH + aft + dp + '</div></div>';
+  var back = '<div class="fp-face fp-back">' + _emDocFace(hz, food) + '</div>';
+  return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + ' ecard-flip" id="ec-' + hz + '">' +
+    '<div class="fp-flip">' + front + back + '</div></div>';
+}
+
+// Doc-prep BACK face — the same generated summary as the old #emDocOv overlay,
+// rendered as a container-neutral .docface so it lives on the card flip-back.
+function _emDocFace(hz, food) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p || !p.doc) return '<div class="docface"></div>';
+  var d = p.doc, sym = _emRecognise(hz).join(' · ');
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) {
+    rows += '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
+      '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
+      '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+  });
+  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
+  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var team = String(d.forTeam).replace('{food}', food || 'the food');
+  return '<div class="docface"><div class="doc"><div class="doc-body">' +
+    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
+    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
+    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
+    '<div class="doc-actions">' +
+    '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>' +
+    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc" data-arg="' + escHtml(hz) + '">' + zi('copy') + 'Copy</button>' +
+    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc" data-arg="' + escHtml(hz) + '">' + zi('share') + 'Save</button></div></div>';
 }
 
 function _libDeckHtml(focusHz) {
@@ -2238,16 +2270,17 @@ function emToggleNA(btn) {
   if (btn.dataset.on) { btn.removeAttribute('data-on'); if (stamp) { stamp.removeAttribute('data-stamped'); stamp.removeAttribute('data-na'); stamp.innerHTML = '<em>tap to stamp now</em>'; } }
   else { btn.dataset.on = '1'; if (stamp) { stamp.removeAttribute('data-stamped'); stamp.dataset.na = '1'; stamp.textContent = 'N/A'; } }
 }
-function _emStampValDOM(id) {
-  var b = document.querySelector('#emDocOv .doc-stamp[data-arg="' + id + '"]');
+function _emStampValDOM(id, container) {
+  var scope = container || document;
+  var b = scope.querySelector('.doc-stamp[data-arg="' + id + '"]');
   if (!b) return '____';
   if (b.dataset.na) return 'N/A';
   return b.dataset.stamped ? b.textContent : '____';
 }
-function _emDocText(hz) {
+function _emDocText(hz, container) {
   var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
   var d = p.doc, food = _emFood, L = ['SproutLab — Emergency summary', _emDocWho(), '', 'Suspected: ' + d.suspected];
-  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id)); });
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id, container)); });
   if (food) L.push('Trigger food: ' + food);
   var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
@@ -2255,8 +2288,10 @@ function _emDocText(hz) {
   L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
   return L.join('\n');
 }
-function emCopyDoc() {
-  var text = _emDocText(_emDocHz);
+function emCopyDoc(btn) {
+  var hz = (btn && btn.getAttribute('data-arg')) || _emDocHz;
+  var container = (btn && btn.closest) ? btn.closest('.fp-back') : null;
+  var text = _emDocText(hz, container);
   var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
@@ -2268,7 +2303,16 @@ function _emLegacyCopy(text) {
   try { document.execCommand('copy'); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); } catch (e) {}
   document.body.removeChild(ta);
 }
-function emSaveDoc() { window.print(); }
+// Print the flipped card's doc-prep face. Mark the host (+ a body flag) so the
+// @media print stylesheet isolates the .docface and neutralises the flip transform.
+function emSaveDoc(btn) {
+  var host = (btn && btn.closest) ? btn.closest('.ecard-flip, .food-pop, .ge-pinned-card') : null;
+  if (host) host.classList.add('doc-print');
+  document.body.classList.add('doc-printing');
+  try { window.print(); } finally {
+    setTimeout(function() { document.body.classList.remove('doc-printing'); if (host) host.classList.remove('doc-print'); }, 800);
+  }
+}
 
 // ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
 // the old heavy knowledge cards: the never-cross emergency FLOORS now live in the
