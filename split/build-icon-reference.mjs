@@ -28,9 +28,24 @@ const zi  = symbols.filter(s => s.ns === 'zi');
 const zif = symbols.filter(s => s.ns === 'zif');
 const sprite = symbols.map(s => s.markup).join('');
 
-const cell = s => `<button class="cell" data-name="${esc(s.ns)}-${esc(s.name)}">`
-  + `<svg class="${s.ns}"><use href="#${esc(s.ns)}-${esc(s.name)}"/></svg>`
-  + `<span class="nm">${esc(s.name)}</span></button>`;
+// Per-food colors from the FOOD_ICON registry (recipes.js), read as source text the way
+// build-poop-reference reads its tokens — so the gallery shows each food icon in its true in-app
+// color rather than one flat tint (Vela V-V-1). Multiple foods can share an icon; first colour wins.
+const REC = readFileSync(join(ROOT, 'split', 'recipes.js'), 'utf8');
+const foodColor = {};
+{ let fm; const fre = /icon:\s*'([^']+)',\s*c:\s*'(#[0-9a-fA-F]+)'/g;
+  while ((fm = fre.exec(REC)) !== null) if (!foodColor[fm[1]]) foodColor[fm[1]] = fm[2]; }
+
+const cell = s => {
+  const id = esc(s.ns) + '-' + esc(s.name);
+  // zif renders against --warm (the cream the icons' white highlights were drawn for, not --card white — V-V-2),
+  // and in its true per-food colour where the registry has one (V-V-1).
+  const col = s.ns === 'zif' ? (foodColor[s.name] || '') : '';
+  const style = col ? ` style="--zif-c:${col}"` : '';
+  return `<button class="cell${s.ns === 'zif' ? ' cell-warm' : ''}" data-name="${id}">`
+    + `<svg class="${s.ns}"${style}><use href="#${id}"/></svg>`
+    + `<span class="nm">${esc(s.name)}</span></button>`;
+};
 
 const grid = (list, ns) => list.length
   ? `<div class="grid">${list.map(cell).join('')}</div>`
@@ -70,6 +85,7 @@ const html = `<!DOCTYPE html>
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:14px 0;}
   .cell{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;background:var(--card);border:1px solid var(--line);border-radius:12px;cursor:pointer;font:inherit;color:var(--mid);transition:border-color .12s,transform .12s;}
   .cell:hover{border-color:var(--sage);transform:translateY(-1px);box-shadow:0 3px 12px var(--shadow);}
+  .cell-warm{background:var(--warm);}  /* zif icons carry #fff highlights drawn for the warm app bg, not card-white (V-V-2) */
   .cell.copied{border-color:var(--tc-sage);color:var(--tc-sage);}
   .cell .nm{font-size:.7rem;text-align:center;word-break:break-word;line-height:1.25;}
   svg.zi{width:28px;height:28px;color:var(--text);}
