@@ -1,5 +1,5 @@
 # SproutLab — Design Principles
-**Version:** 1.5 · **Created:** 9 April 2026 · **Updated:** 4 June 2026
+**Version:** 1.7 · **Created:** 9 April 2026 · **Updated:** 5 June 2026
 **Forked from:** DESIGN_SYSTEM_TEMPLATE.md v1.0
 **App:** Baby development tracker for Ziva (born Sep 2025)
 **Architecture:** Split-file HTML PWA (build-concatenated), localStorage persistence, no backend

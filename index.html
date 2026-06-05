@@ -11623,6 +11623,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-serving { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
 .rcp-serving .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; color:var(--tc-sage); }
 .rcp-serving strong { color:var(--text); font-weight:700; }
+.rcp-serving-src { color:var(--light); font-weight:700; white-space:nowrap; }
 
 /* Progressive-disclosure rows (recipe-namespaced sibling of .lib-prow). */
 .rcp-prows { margin-top:var(--sp-8); }
@@ -11633,7 +11634,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
 .rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
-.rcp-prow--safety .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+/* V-1: the safety prow's disc echoes the summary band (amber caution / rose flag),
+   so a green-summary recipe never meets a fixed-rose safety disc. */
+.rcp-prow--safety-flag .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.rcp-prow--safety-caution .rcp-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
 .rcp-prow--source .rcp-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
 .rcp-prow-txt { flex:1; min-width:0; }
 .rcp-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
@@ -41167,18 +41171,25 @@ function _recipeIngredientSafety(name, ageMonths) {
 // Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
 // and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
 function _recipeSafetySummary(r, ageMonths) {
-  const aged = []; let agedMin = 0; const watch = [];
+  const aged = []; const gates = new Set(); let agedMin = 0; const watch = [];
   for (const ing of (r.ingredients || [])) {
     const lower = String(ing.name).toLowerCase().trim();
     const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
-    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
+    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); gates.add(ageR.minMonth); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
     const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
     const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
     const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
     if (hasFloor || allerg) watch.push(ing.name);
   }
-  if (aged.length) return { level: 'flag', icon: 'warn',
-    text: `${[...new Set(aged)].join(', ')} — not before ${agedMin} months. See Safety below for the full guidance.` };
+  if (aged.length) {
+    const names = [...new Set(aged)].join(', ');
+    // M-2 (Maren): mixed gates → a range, never the max applied to every name
+    // (that over-states the lower-gated food; the full Safety row clarifies each).
+    const tail = (gates.size > 1)
+      ? `not yet age-appropriate (gates ${Math.min.apply(null, [...gates])}–${agedMin} months) — see Safety below for each`
+      : `not before ${agedMin} months. See Safety below for the full guidance`;
+    return { level: 'flag', icon: 'warn', text: `${names} — ${tail}.` };
+  }
   if (watch.length) return { level: 'caution', icon: 'note',
     text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
   return { level: 'safe', icon: 'check',
@@ -41231,7 +41242,9 @@ function _recipeDetailHtml(r, ageMonths) {
     const servAge = gated ? effMin : ageNow;
     const serving = _recipeServing(r.slot, servAge);
     const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
-    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead.</span></div>`;
+    // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
+    // the line, independent of the recipe's r.source (which often cites other bodies).
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">WHO/PAHO · IAP</span></span></div>`;
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
@@ -41253,7 +41266,9 @@ function _recipeDetailHtml(r, ageMonths) {
   // summary above leads, the breakdown is one tap away.
   let safety = '';
   for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
-  if (safety) rows += _recipeProw('safety', 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
+  // V-1 (Vela): state-key the safety prow's icon disc to ECHO the summary band
+  // (amber on caution, rose on flag) — not an unconditional rose category marker.
+  if (safety) rows += _recipeProw(`safety-${ss.level}`, 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
   if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
     const srcs = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean);
     const cites = srcs.map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
