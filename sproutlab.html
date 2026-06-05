@@ -1042,7 +1042,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .vc-book-btn { padding: var(--sp-6) var(--sp-16); font-size: var(--fs-xs); }
 
 /* ── Dark mode: Vaccination Upgrade ── */
-[data-theme="dark"] .vc-complete-card { background: transparent; }
+[data-theme="dark"] .vc-complete-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--sp-12) var(--sp-16); }
 [data-theme="dark"] .vc-complete-check { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .vc-complete-check.checked { background: rgba(110,94,154,0.15); }
 [data-theme="dark"] .vc-delay-card { background: transparent; }
@@ -4836,7 +4836,51 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .chevron-open { transform:rotate(180deg); }
 
 /* Footer text */
-.footer-text-style { font-size:var(--fs-sm); color:var(--light); letter-spacing:var(--ls-wide); }
+/* Footer credit — special treatment now that it sits front-and-centre on the
+   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
+   italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
+.app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
+.footer-text-style {
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6);
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--light); letter-spacing:var(--ls-wide);
+}
+.footer-name {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:700;
+  /* Same warm-wave as the hero stripe: a sheen sweeps over the fixed
+     wavelength gradient, clipped to the glyphs — reuses @keyframes ld-wave so
+     the cadence matches the hero exactly. */
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:transparent;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+/* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
+   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
+   wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
+[data-theme="dark"] .footer-name {
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%),
+    linear-gradient(90deg, var(--tc-rose), var(--tc-caution), var(--tc-amber), var(--tc-sage), var(--tc-sky), var(--tc-indigo), var(--tc-lav));
+}
+.footer-heart {
+  width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose);
+  transform-origin:center; animation:footer-beat 2.4s ease-in-out infinite;
+}
+@keyframes footer-beat {
+  0%, 30%, 100% { transform:scale(1); }
+  8%  { transform:scale(1.18); }
+  16% { transform:scale(1); }
+  22% { transform:scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) { .footer-heart, .footer-name { animation:none; } }
 
 /* Vitals expanded inner divider */
 .vitals-expanded-inner { border-top:1px solid var(--border-subtle); margin-top:var(--sp-12); padding-top:var(--sp-12); }
@@ -5519,6 +5563,232 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 [data-theme="dark"] .card.card-hero.hero-home {
   background:linear-gradient(135deg, rgba(60,35,45,0.4), rgba(60,45,35,0.3), rgba(40,60,50,0.3));
+}
+
+/* ─────────────────────────────────────────
+   LEAN LANDING (app-open surface) — ld-*
+   Built to the Recipes design language (DP §9, ratified 2026-06-03):
+   • hero stripe = 4px de-neoned WAVELENGTH warm-wave with a sweeping sheen (§9.3/§9.4)
+   • day's story = Fraunces *italic* "voice" line over a Nunito eyebrow (typography C, §9.6)
+   • doors = whisper-fade (transparent→domain rgba) + domain border (§9.2, reaffirms HR-6)
+   "Home leans on its hero" (DP §72) — warmth, not a score (C2).
+   ───────────────────────────────────────── */
+#ldContent { display:flex; flex-direction:column; gap:var(--sp-16); }
+
+/* 0 · Care pre-empt — loud-rose action cards (reuse .card.card-action), persistent */
+.ld-care { display:flex; flex-direction:column; gap:var(--sp-12); }
+.ld-care-card {
+  display:flex; align-items:center; gap:var(--sp-12);
+  width:100%; text-align:left; cursor:pointer; min-height:44px;
+}
+.ld-care-card .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  /* calm "being-tracked" chip (matches .icon-rose); .ld-care-hot lifts to the
+     louder solid --rose so action-needed reads hotter than tracked (Vela V-V-4) */
+  background:var(--rose-light); color:var(--tc-rose);
+}
+.ld-care-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-care-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-care-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-care-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-care-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* action-needed (overdue / due) runs hotter than calm "being-tracked" (Maren) */
+.ld-care-hot .icon { background:var(--rose); color:var(--tc-rose); }
+.ld-care-hot .ld-care-title { color:var(--tc-rose); }
+
+/* 1 · The day's glance as the signature HERO. Reuses .card.card-hero.hero-home
+   for the body gradient; ld-hero overrides the top stripe with the warm-wave. */
+.ld-hero { display:flex; flex-direction:column; align-items:flex-start; gap:var(--sp-10); }
+
+/* Warm-wave stripe (§9.3/§9.4): a fixed wavelength gradient (rose→…→lav) with a
+   translucent sheen sweeping left→right — only the sheen moves. Later + equal
+   specificity to .hero-home::before, so it overrides it. */
+.card.card-hero.ld-hero::before {
+  height:4px;
+  background-image:
+    linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.6) 50%, transparent 65%),
+    linear-gradient(90deg, var(--rose), var(--peach), var(--amber), var(--sage), var(--sky), var(--indigo), var(--lavender));
+  background-size:35% 100%, 100% 100%;
+  background-repeat:no-repeat;
+  background-position:-35% 0, 0 0;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+@keyframes ld-wave {
+  0%   { background-position:-35% 0, 0 0; }
+  100% { background-position:135% 0, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.card-hero.ld-hero::before { animation:none; background-position:0 0, 0 0; }
+}
+
+.ld-hero-eyebrow { display:flex; align-items:center; gap:var(--sp-8); }
+.ld-hero-icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-hero-icon svg.zi { width:var(--icon-md); height:var(--icon-md); }
+.ld-hero-label {
+  font-family:'Nunito', sans-serif; font-size:var(--fs-sm); font-weight:700;
+  text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid);
+}
+/* The "voice" line — Fraunces ITALIC (italic reserved for voice, §9.6) */
+.ld-hero-voice {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-xl); line-height:var(--lh-snug); color:var(--text);
+  max-width:92%; text-wrap:balance;
+}
+.ld-hero[data-empty="true"] .ld-hero-voice { color:var(--mid); }
+.ld-hero-action {
+  display:inline-flex; align-items:center; gap:var(--sp-8);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+  color:var(--tc-sage); background:var(--surface);
+  border:1.5px solid var(--sage); border-radius:var(--r-full);
+  padding:var(--sp-8) var(--sp-16); min-height:44px; cursor:pointer;
+}
+.ld-hero-action svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Compact hero — when _ldFitHero marks #ldContent .ld-crowded (Care pre-empts
+   pushed Emergency below the fold), the hero drops its voice line + Start-with-
+   breakfast button and reveals a single "Start with [picker]" row, reclaiming
+   the vertical space so Emergency stays reachable without a scroll. */
+.ld-hero-compact {
+  display:none; align-items:center; gap:var(--sp-8); flex-wrap:wrap; margin-top:var(--sp-4);
+}
+.ld-crowded .ld-hero-voice,
+.ld-crowded .ld-hero-action { display:none; }
+.ld-crowded .ld-hero-compact { display:flex; }
+.ld-hero-compact-label {
+  font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+  font-size:var(--fs-base); color:var(--text);
+}
+.ld-hero-select {
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-base);
+  color:var(--text); background:var(--warm);
+  border:1.5px solid var(--border-subtle); border-radius:var(--r-md);
+  padding:var(--sp-8) var(--sp-12); min-height:44px; cursor:pointer;
+}
+
+/* 2 · Three doors — soft floating tap-cards carrying the whisper-fade (§9.2):
+   a domain corner-glow over the surface + a domain-tinted border (reaffirms
+   HR-6). rgba stops are the domain accents @ .22 (light) / deep --tc hues
+   @ .30 (dark), per the §9.2 hue-swap. Log primary: stronger sage + dominance. */
+.ld-doors { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-12); }
+.ld-door {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-8);
+  background-color:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20) var(--sp-12); cursor:pointer;
+  font-family:'Nunito', sans-serif; text-align:center;
+  box-shadow:0 4px 20px var(--shadow);
+  transition:transform var(--ease-fast), box-shadow var(--ease-med);
+}
+.ld-door:active { transform:scale(0.97); }
+.ld-door .icon {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full);
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-door .icon svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-door-label { font-family:'Nunito', sans-serif; font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-snug); }
+.ld-door-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-snug); }
+
+/* whisper-fade — Today (sky) + Ask (lavender) */
+.ld-door-today { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); border:1.5px solid var(--sky); }
+.ld-door-ask   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); border:1.5px solid var(--lavender); }
+[data-theme="dark"] .ld-door-today { background-image:linear-gradient(135deg, transparent 30%, rgba(51,101,128,0.30)); }
+[data-theme="dark"] .ld-door-ask   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.30)); }
+
+/* Primary Log door — full-width row, stronger sage whisper, dominant */
+.ld-door-primary {
+  grid-column:1 / -1; flex-direction:row; justify-content:flex-start; align-items:center;
+  gap:var(--sp-16); padding:var(--sp-20); text-align:left;
+  background-image:linear-gradient(135deg, transparent 30%, rgba(181,213,197,0.40)); border:1.5px solid var(--sage);
+}
+[data-theme="dark"] .ld-door-primary { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.45)); }
+.ld-door-primary .ld-door-body { display:flex; flex-direction:column; gap:var(--sp-2); align-items:flex-start; }
+.ld-door-primary .ld-door-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); }
+
+/* 3 · Emergency — always-present quick access (rose whisper-fade + outline:
+   calm by default, unmistakable in a panic). The container carries no action;
+   .ld-emergency-main opens the chooser; the call pills are independent tel:
+   links (dial straight through, never open the chooser). */
+.ld-emergency {
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-2xl);
+  padding:var(--sp-12);
+  box-shadow:0 4px 20px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-10);
+}
+[data-theme="dark"] .ld-emergency { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-emergency-main {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:transparent; border:none; padding:var(--sp-4); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+.ld-emergency-main:active { transform:scale(0.98); }
+.ld-emergency-main .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-emergency-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-emergency-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.ld-emergency-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-emergency-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-emergency-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+/* Quick-dial pills — independent tap targets (≥44px), dark-safe rose chip */
+.ld-emergency-calls { display:flex; gap:var(--sp-8); flex-wrap:wrap; }
+.ld-emergency-call {
+  flex:1 1 40%; min-width:130px; min-height:44px;
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-8);
+  background:var(--rose-light); color:var(--tc-rose);
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  text-decoration:none; padding:var(--sp-8) var(--sp-12);
+  font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm);
+}
+.ld-emergency-call svg.zi { width:var(--icon-base); height:var(--icon-base); flex-shrink:0; }
+
+/* Emergency chooser overlay (bottom sheet) — mirrors .ob-overlay */
+.ld-em-overlay {
+  position:fixed; inset:0; z-index:1010;
+  background:var(--overlay-bg);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; padding:var(--sp-16);
+  transition:opacity var(--ease-med);
+}
+.ld-em-overlay.open { opacity:1; pointer-events:auto; }
+.ld-em-sheet {
+  width:100%; max-width:480px;
+  background:var(--surface); border-radius:var(--r-2xl);
+  padding:var(--sp-20);
+  box-shadow:0 8px 32px var(--shadow);
+  display:flex; flex-direction:column; gap:var(--sp-12);
+  transform:translateY(16px); transition:transform var(--ease-slow);
+}
+.ld-em-overlay.open .ld-em-sheet { transform:translateY(0); }
+.ld-em-head { display:flex; align-items:center; justify-content:space-between; }
+.ld-em-title { display:flex; align-items:center; gap:var(--sp-8); font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-lg); color:var(--tc-rose); }
+.ld-em-title svg.zi { width:var(--icon-lg); height:var(--icon-lg); }
+.ld-em-close {
+  width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); border:none;
+  background:var(--surface-alt); color:var(--mid);
+  font-size:var(--fs-lg); line-height:var(--lh-none); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.ld-em-prompt { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.ld-em-opt {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22));
+  border:1.5px solid var(--rose); border-radius:var(--r-xl);
+  padding:var(--sp-16); min-height:44px;
+  transition:transform var(--ease-fast);
+}
+[data-theme="dark"] .ld-em-opt { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.30)); }
+.ld-em-opt:active { transform:scale(0.98); }
+.ld-em-opt .icon { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ld-em-opt-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.ld-em-opt-label { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.ld-em-opt-sub { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--mid); }
+.ld-em-opt-chev { color:var(--tc-rose); display:inline-flex; flex-shrink:0; }
+.ld-em-opt-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+@media (prefers-reduced-motion: reduce) {
+  .ld-em-overlay, .ld-em-sheet { transition:none; }
 }
 
 /* Growth hero — rose to peach (body/physical) */
@@ -11196,6 +11466,141 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   .em-doc-ov .doc { box-shadow:none; max-width:100%; }
   .em-doc-ov .doc-x, .em-doc-ov .doc-actions { display:none; }
 }
+/* ═══════════════════════════════════════════════════════════════════════
+   Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/, LOCKED.md
+   05-meal-rows). Two-channel colour (DESIGN_PRINCIPLES §Tint System):
+   a DOMAIN LEFT-RAIL (border-left in the primary ingredient's FOOD_TAX
+   domain) + a FOOD-DOMAIN WHISPER FADE (.dt-*, transparent→accent, never a
+   flat fill). Featured "Suggested for Ziva" hero on top; browsable catalog
+   grouped by meal slot as full-width .recipe-row rows; expand-in-place detail
+   reuses .combo-*/.fd-flag*. Light + dark first-class (dark hue-swaps).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Food-domain WHISPER FADE — verbatim from the ratified design record
+   (transparent 40% -> domain accent). Keyed by FOOD_TAX domain pid. */
+.dt-grains { background-image:linear-gradient(135deg,transparent 40%,rgba(181,213,197,0.22)); }
+.dt-fruits { background-image:linear-gradient(135deg,transparent 40%,rgba(242,168,184,0.22)); }
+.dt-vegs   { background-image:linear-gradient(135deg,transparent 40%,rgba(250,212,180,0.30)); }
+.dt-dairy  { background-image:linear-gradient(135deg,transparent 40%,rgba(168,207,224,0.22)); }
+.dt-nuts   { background-image:linear-gradient(135deg,transparent 40%,rgba(201,184,232,0.22)); }
+.dt-spices { background-image:linear-gradient(135deg,transparent 40%,rgba(232,184,109,0.24)); }
+.dt-nonveg { background-image:linear-gradient(135deg,transparent 40%,rgba(242,168,184,0.22)); }
+[data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,96,0.18)); }
+[data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg,transparent 30%,rgba(158,62,82,0.20)); }
+[data-theme="dark"] .dt-vegs   { background-image:linear-gradient(135deg,transparent 30%,rgba(138,101,32,0.20)); }
+[data-theme="dark"] .dt-dairy  { background-image:linear-gradient(135deg,transparent 30%,rgba(58,112,144,0.18)); }
+[data-theme="dark"] .dt-nuts   { background-image:linear-gradient(135deg,transparent 30%,rgba(110,94,154,0.20)); }
+[data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg,transparent 30%,rgba(150,110,40,0.20)); }
+[data-theme="dark"] .dt-nonveg { background-image:linear-gradient(135deg,transparent 30%,rgba(158,62,82,0.20)); }
+
+/* zif food-icon — full-colour sibling of .zi; consumer sets hue via --zif-c
+   (the established diet.js --dyn-* idiom). Falls back to currentColor. */
+.zif { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--zif-c, currentColor); }
+
+/* Section labels inside the Recipes panel */
+.recipes-sec-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); margin:var(--sp-4) 0 var(--sp-8); }
+.recipes-sub-note { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-12); line-height:var(--lh-relaxed); }
+
+/* Featured "Suggested for Ziva" hero card */
+.recipe-hero { position:relative; overflow:hidden; border-radius:var(--r-2xl); padding:var(--sp-20) var(--sp-20) var(--sp-16); box-shadow:0 8px 32px var(--shadow); margin-bottom:var(--sp-10); background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); cursor:pointer; }
+.recipe-hero-eyebrow { display:inline-flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-2xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sage); margin-bottom:var(--sp-6); }
+.recipe-hero-eyebrow .zi { width:15px; height:15px; }
+.recipe-hero-title { font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-2xl); line-height:1.08; color:var(--text); margin:0 0 2px; text-wrap:balance; }
+.recipe-hero-tag { font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:var(--fs-lg); line-height:1.25; color:var(--mid); margin:0 0 var(--sp-8); }
+.recipe-hero-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:0 0 var(--sp-8); }
+/* Panel header (LOCKED 05-meal-rows) */
+.recipes-header { margin-bottom:var(--sp-8); }
+.recipes-h1 { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0 0 2px; }
+.recipes-subtitle { font-size:var(--fs-sm); color:var(--mid); margin:0; line-height:var(--lh-relaxed); }
+
+/* ── Generative "Suggested for Ziva" hero (§9.3/§9.4) ──
+   grams-weighted wavelength FADE body (--rc-fl light / --rc-fd dark) + a 4px
+   warm-wave STRIPE (--rc-stripe) with a sheen sweep (reuses @keyframes ld-wave)
+   + a corner zif watermark. Two-channel colour: the domain left-rail leads,
+   the fingerprint fade rides under. */
+.recipe-hero-gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .recipe-hero-gen { background:var(--rc-fd, var(--surface)); }
+.recipe-hero-gen > * { position:relative; z-index:1; }
+.recipe-hero-gen::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:4px; z-index:2; border-radius:var(--r-2xl) var(--r-2xl) 0 0;
+  background-image:linear-gradient(100deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%), var(--rc-stripe, var(--tc-sage));
+  background-size:35% 100%, 100% 100%; background-repeat:no-repeat; background-position:-35% 0, 0 0;
+  animation:ld-wave 4.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .recipe-hero-gen::before { animation:none; background-position:0 0, 0 0; } }
+/* corner watermark — dominant ingredient gets the big slot, non-overlapping */
+.recipe-hero-wm { position:absolute; right:0; bottom:0; width:200px; height:100px; pointer-events:none; z-index:0; }
+.recipe-hero-wm .recipe-wm { position:absolute; }
+.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.30; }
+[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.40; }
+.recipe-hero-wm .wm-1 { width:78px; height:78px; right:-4px; bottom:-6px; }
+.recipe-hero-wm .wm-2 { width:46px; height:46px; right:78px; bottom:6px; }
+.recipe-hero-wm .wm-3 { width:34px; height:34px; right:140px; bottom:-2px; }
+.recipe-hero-head { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-6); }
+.recipe-hero-head .recipe-hero-eyebrow { margin-bottom:0; }
+.recipe-hero-badge { flex:0 0 auto; display:inline-flex; align-items:center; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-2xs); font-weight:800; }
+/* strict no's lead the tagline (rose, never folded) */
+.recipe-strict { font-family:'Nunito', sans-serif; font-style:normal; font-weight:800; font-size:var(--fs-2xs); text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-rose); }
+.recipe-hero-foot { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); flex-wrap:wrap; }
+.recipe-hero-meta { display:flex; align-items:center; gap:var(--sp-8); flex-wrap:wrap; }
+.recipe-hero-meta span { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); color:var(--mid); }
+.recipe-hero-meta span:not(:first-child)::before { content:'·'; margin-right:var(--sp-4); color:var(--light); }
+.recipe-hero-meta .zi { width:13px; height:13px; }
+.recipe-hero-cta { display:inline-flex; align-items:center; gap:var(--sp-4); min-height:36px; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-6) var(--sp-12); font-size:var(--fs-xs); font-weight:700; }
+.recipe-hero-cta .zi { width:14px; height:14px; transition:transform var(--ease-med); }
+.recipe-hero[aria-expanded="true"] .recipe-hero-cta .zi { transform:rotate(90deg); }
+
+/* Meal-slot groups + full-width recipe rows (.lib-book idiom) */
+.recipe-group { margin-bottom:var(--sp-16); }
+.recipe-group-head { display:flex; align-items:center; gap:var(--sp-8); margin:var(--sp-8) 0 var(--sp-8); }
+.recipe-group-head .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--tc-sage); }
+.recipe-group-title { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
+.recipe-group-count { font-size:var(--fs-xs); color:var(--light); font-weight:600; }
+
+.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
+.recipe-row:hover, .recipe-row:focus-visible { box-shadow:0 4px 18px var(--shadow); }
+.recipe-row[aria-expanded="true"] { box-shadow:0 6px 22px var(--shadow); }
+.recipe-row-top { position:relative; z-index:1; display:flex; align-items:center; gap:var(--sp-10); }
+.recipe-row-icon { width:34px; height:34px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.recipe-row-icon .zif { width:30px; height:30px; }
+.recipe-row-main { flex:1; min-width:0; }
+.recipe-row-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-base); color:var(--text); line-height:1.15; }
+.recipe-row-meta { display:flex; align-items:center; gap:var(--sp-8); margin-top:var(--sp-4); flex-wrap:wrap; }
+.recipe-row-meta span { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); color:var(--mid); }
+.recipe-row-meta span:not(:first-child)::before { content:'·'; margin-right:var(--sp-4); color:var(--light); }
+.recipe-row-meta .zi { width:13px; height:13px; }
+.recipe-row-rel { color:var(--tc-sage); font-weight:700; }
+.recipe-row-chev { flex:0 0 auto; color:var(--light); transition:transform var(--ease-med); }
+.recipe-row[aria-expanded="true"] .recipe-row-chev { transform:rotate(180deg); }
+
+/* age-gate badge on a catalog row (withheld from Suggested) */
+.recipe-age-badge { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-2xs); font-weight:700; color:var(--tc-caution); background:var(--amber-light); border-radius:var(--r-full); padding:2px var(--sp-8); }
+.recipe-age-badge .zi { width:12px; height:12px; }
+
+/* Ingredient chips */
+.recipe-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin:var(--sp-8) 0 0; }
+.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
+.recipe-chip .zif { width:15px; height:15px; }
+
+/* Expand-in-place detail (reuses .combo-*/.do/.dont/.fd-flag*) */
+.recipe-detail { position:relative; z-index:1; margin-top:var(--sp-12); padding-top:var(--sp-12); border-top:1px solid var(--card-border); }
+.recipe-detail-sec { margin-bottom:var(--sp-12); }
+.recipe-detail-title { display:flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); margin-bottom:var(--sp-6); }
+.recipe-detail-title .zi { width:14px; height:14px; }
+.recipe-steps { margin:0; padding-left:var(--sp-16); }
+.recipe-steps li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
+.recipe-warn { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
+.recipe-source { font-size:var(--fs-2xs); font-style:italic; color:var(--light); margin-top:var(--sp-8); line-height:var(--lh-relaxed); }
+
+/* empty / cold-start state */
+.recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
+
+/* compact recipe card on the Home Smart-Q&A answer */
+.qa-recipe-card { display:flex; align-items:center; gap:var(--sp-8); min-height:44px; margin-top:var(--sp-6); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); background:var(--card-bg); border:1px solid var(--card-border); border-left:3px solid var(--rc-rail, var(--tc-sage)); }
+.qa-recipe-card .zif { width:20px; height:20px; }
+.qa-recipe-card-main { flex:1; min-width:0; }
+.qa-recipe-card-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); }
+.qa-recipe-card-cta { font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
@@ -11330,6 +11735,108 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <!-- Reserved sprites (registered for future use, no current call sites): zi-flag-eu, zi-flag-cn. Authored alongside zi-flag-in for region-picker symmetry — currently inert because <option> tags cannot host SVG (HTML spec); slated for a future non-<option> Settings surface (e.g. region pill, schedule header). Per user mandate "industrial scale for future usage" (2026-05-16). zi-undo was previously reserved but is now wired into 3 surfaces (home.js milestone Move-back, core.js note-toggle, intelligence.js meal-skip toggle) per round-3 strict-pass cleanup. -->
 </defs>
 </svg>
+<!-- zif-* food-icon sprite — full-colour sibling of the zi() system (Diet→Recipes,
+     WIRING_PLAN §7). 97 food symbols; flesh uses currentColor (consumer sets hue via
+     --zif-c), natural accents baked in. A deliberate departure from the monochrome zi()
+     currentColor system; NOT a drop-in zi() call and does NOT satisfy HR-1 alone.
+     Ported from docs/design/gen-zi-food.mjs → zi-food-sheet.html. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;"><symbol id="zif-rice" viewBox="0 0 24 24"><path d="M3.5 11.5h17c0 4.8-3.8 8.7-8.5 8.7S3.5 16.3 3.5 11.5z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1.1" stroke-linejoin="round"/><g fill="#fff" stroke="rgba(74,48,22,.18)" stroke-width=".8"><ellipse cx="9" cy="8.7" rx="1.1" ry="2.2" transform="rotate(-20 9 8.7)"/><ellipse cx="12" cy="7.9" rx="1.1" ry="2.2"/><ellipse cx="15" cy="8.7" rx="1.1" ry="2.2" transform="rotate(20 15 8.7)"/></g></symbol>
+<symbol id="zif-millet" viewBox="0 0 24 24"><path d="M12 21v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><g fill="currentColor"><circle cx="12" cy="4.4" r="1.15"/><circle cx="10.1" cy="6" r="1.15"/><circle cx="13.9" cy="6" r="1.15"/><circle cx="9.5" cy="8" r="1.15"/><circle cx="12" cy="7.7" r="1.15"/><circle cx="14.5" cy="8" r="1.15"/><circle cx="10.4" cy="10" r="1.15"/><circle cx="13.6" cy="10" r="1.15"/><circle cx="12" cy="11.5" r="1.15"/></g></symbol>
+<symbol id="zif-oats" viewBox="0 0 24 24"><path d="M12 21V7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".8"><ellipse cx="8.8" cy="7" rx="1.7" ry="2.7" transform="rotate(33 8.8 7)"/><ellipse cx="15.2" cy="7" rx="1.7" ry="2.7" transform="rotate(-33 15.2 7)"/><ellipse cx="8.4" cy="11.5" rx="1.7" ry="2.7" transform="rotate(33 8.4 11.5)"/><ellipse cx="15.6" cy="11.5" rx="1.7" ry="2.7" transform="rotate(-33 15.6 11.5)"/></g></symbol>
+<symbol id="zif-wheat" viewBox="0 0 24 24"><path d="M12 21V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><g stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M12 5.5L9.5 3.5M12 5.5l2.5-2M12 8.5l-3-1.6M12 8.5l3-1.6"/></g><g fill="currentColor"><ellipse cx="12" cy="4.6" rx="1.3" ry="2.1"/><ellipse cx="9.8" cy="7.2" rx="1.2" ry="2" transform="rotate(-28 9.8 7.2)"/><ellipse cx="14.2" cy="7.2" rx="1.2" ry="2" transform="rotate(28 14.2 7.2)"/><ellipse cx="9.6" cy="10.2" rx="1.2" ry="2" transform="rotate(-28 9.6 10.2)"/><ellipse cx="14.4" cy="10.2" rx="1.2" ry="2" transform="rotate(28 14.4 10.2)"/></g></symbol>
+<symbol id="zif-suji" viewBox="0 0 24 24"><path d="M4 12h16c0 4.4-3.6 8-8 8s-8-3.6-8-8z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(74,48,22,.28)"><circle cx="9" cy="14" r=".5"/><circle cx="12" cy="13" r=".5"/><circle cx="15" cy="14" r=".5"/><circle cx="10.5" cy="16" r=".5"/><circle cx="13.5" cy="16" r=".5"/></g></symbol>
+<symbol id="zif-corn" viewBox="0 0 24 24"><path d="M8 18.5c-2.2.3-4-1-4.8-3 1.6-.8 3.4-.5 4.8.6M16 18.5c2.2.3 4-1 4.8-3-1.6-.8-3.4-.5-4.8.6z" fill="#5f9e42" stroke="rgba(74,48,22,.22)" stroke-width=".9" stroke-linejoin="round"/><path d="M12 4.3c2.9 0 4.6 2.4 4.6 6.7 0 4.6-2 8.2-4.6 8.2s-4.6-3.6-4.6-8.2C7.4 6.7 9.1 4.3 12 4.3z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.22)" stroke-width=".65" fill="none"><path d="M12 5v13.6M9 8c2 .6 4 .6 6 0M8.5 11c2.3.6 4.7.6 7 0M8.5 14c2.3.6 4.7.6 7 0M10.5 6.4c1 .4 2 .4 3 0M10.3 16.6c1.1.4 2.3.4 3.4 0"/><path d="M9 9.5c2 .5 4 .5 6 0M8.6 12.5c2.3.5 4.8.5 6.8 0M9 15.5c2 .5 4 .5 6 0" opacity=".6"/></g></symbol>
+<symbol id="zif-dalia" viewBox="0 0 24 24"><path d="M4 12h16c0 4.4-3.6 8-8 8s-8-3.6-8-8z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(74,48,22,.32)"><rect x="8" y="13" width="1.5" height="1.5" rx=".3"/><rect x="11.2" y="12.6" width="1.5" height="1.5" rx=".3"/><rect x="14" y="13" width="1.5" height="1.5" rx=".3"/><rect x="9.6" y="15.2" width="1.5" height="1.5" rx=".3"/><rect x="12.7" y="15.2" width="1.5" height="1.5" rx=".3"/></g></symbol>
+<symbol id="zif-barley" viewBox="0 0 24 24"><path d="M12 21V11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><g stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".75"><path d="M12 9l-3.5-5.5M12 9l3.5-5.5M12 7l-2.8-4.5M12 7l2.8-4.5M12 11l-3.2-4.5M12 11l3.2-4.5"/></g><g fill="currentColor"><ellipse cx="12" cy="10" rx="1.2" ry="2"/><ellipse cx="9.7" cy="11.6" rx="1.1" ry="1.8" transform="rotate(-25 9.7 11.6)"/><ellipse cx="14.3" cy="11.6" rx="1.1" ry="1.8" transform="rotate(25 14.3 11.6)"/></g></symbol>
+<symbol id="zif-quinoa" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="8.5" cy="11" r="1.5"/><circle cx="11.5" cy="10" r="1.5"/><circle cx="14.5" cy="11" r="1.5"/><circle cx="10" cy="13" r="1.5"/><circle cx="13" cy="13" r="1.5"/><circle cx="11.5" cy="15.2" r="1.5"/></g><g fill="none" stroke="rgba(255,255,255,.6)" stroke-width=".6"><path d="M8.5 10.1c.7.4.8 1.3.2 1.9M11.5 9.1c.7.4.8 1.3.2 1.9M14.5 10.1c.7.4.8 1.3.2 1.9M10 12.1c.7.4.8 1.3.2 1.9M13 12.1c.7.4.8 1.3.2 1.9"/></g></symbol>
+<symbol id="zif-dal" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><ellipse cx="8.4" cy="9.8" rx="4.1" ry="2.5" transform="rotate(-12 8.4 9.8)"/><ellipse cx="15.2" cy="11.4" rx="4.1" ry="2.5" transform="rotate(14 15.2 11.4)"/><ellipse cx="11" cy="15" rx="4.1" ry="2.5" transform="rotate(-5 11 15)"/></g></symbol>
+<symbol id="zif-chana" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><circle cx="9" cy="10" r="3.4"/><circle cx="15" cy="11.5" r="3.4"/><circle cx="11.5" cy="15.2" r="3.4"/></g><g fill="rgba(74,48,22,.25)"><circle cx="9" cy="10" r=".5"/><circle cx="15" cy="11.5" r=".5"/><circle cx="11.5" cy="15.2" r=".5"/></g></symbol>
+<symbol id="zif-rajma" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"><path d="M9.5 5.5c-3 0-5.3 2.6-5.3 5.8s2.3 5.8 5.3 5.8c1.1 0 2.2-.4 3-1.1.4-.3.3-.9-.2-1.1-1.3-.6-2.1-1.9-2.1-3.6 0-1.9 1-3.2 1-4.7 0-.6-.2-1-.6-1z"/><path d="M16 8c-2.6 0-4.6 2.2-4.6 5s2 5 4.6 5c.9 0 1.8-.3 2.5-.9.4-.3.3-.8-.1-1-1.1-.5-1.8-1.6-1.8-3 0-1.6.9-2.7.9-4 0-.6-.4-1.1-1.4-1.1z"/></g></symbol>
+<symbol id="zif-peanut" viewBox="0 0 24 24"><path d="M12 3.5c-2 0-3.5 1.5-3.5 3.4 0 1.3.7 2.1.7 3.1 0 1-.7 1.8-.7 3.1 0 1.9 1.5 3.4 3.5 3.4s3.5-1.5 3.5-3.4c0-1.3-.7-2.1-.7-3.1 0-1 .7-1.8.7-3.1 0-1.9-1.5-3.4-3.5-3.4z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M9.5 9.5c1.6.7 3.4.7 5 0M9.8 6.5c1.4.5 3 .5 4.4 0M9.8 13.5c1.4.5 3 .5 4.4 0" stroke="rgba(74,48,22,.22)" stroke-width=".7" fill="none"/></symbol>
+<symbol id="zif-sprouts" viewBox="0 0 24 24"><g stroke="#5f9e42" stroke-width="1.4" stroke-linecap="round" fill="none"><path d="M10 14c1-3 3.2-4 2.6-7.6"/><path d="M14 14.2c-.5-2.2 1.2-3.8 3.6-4.4"/><path d="M9.6 14.2C8 12.8 7 10.6 7.7 8.4"/></g><g fill="#5f9e42"><path d="M12 5.6c1.4-.4 2.4.5 2.4 1.8-1.4.4-2.4-.5-2.4-1.8z"/><path d="M7.2 8.1c-1.3-.5-1.7-1.7-1.3-2.9 1.3.5 1.7 1.7 1.3 2.9z"/><path d="M17.6 9.6c1.3-.5 1.7-1.7 1.3-2.9-1.3.5-1.7 1.7-1.3 2.9z"/></g><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><ellipse cx="9.6" cy="16.6" rx="2.5" ry="3.3" transform="rotate(-14 9.6 16.6)"/><ellipse cx="14.4" cy="16.9" rx="2.5" ry="3.3" transform="rotate(12 14.4 16.9)"/></g></symbol>
+<symbol id="zif-carrot" viewBox="0 0 24 24"><path d="M8.4 8.6L11.5 20c.16.6.84.6 1 0L15.6 8.6c.12-.45-.12-.8-.55-.8H8.95c-.43 0-.67.35-.55.8z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="#5f9e42"><path d="M12 8c-.4-2-1.7-3-3.2-3.2.3 1.9 1.4 3 3.2 3.2z"/><path d="M12 8c.4-2 1.7-3 3.2-3.2-.3 1.9-1.4 3-3.2 3.2z"/><path d="M12 8c0-1.9.05-3.3.05-3.3-1.1.15-1.75 1.8-.05 3.3z"/></g><g stroke="rgba(255,255,255,.5)" stroke-width=".8" stroke-linecap="round"><path d="M10.2 11.5h3.4M10.7 14.5h2.4"/></g></symbol>
+<symbol id="zif-spinach" viewBox="0 0 24 24"><path d="M5 19C5 11.3 11.3 5 19 5c0 7.7-6.3 14-14 14z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(255,255,255,.55)" stroke-width="1" stroke-linecap="round" fill="none"><path d="M6.5 17.5C10 14 13.5 10.5 17 7"/><path d="M11 13l-2 .3M14 10l-1.8.2M9 15l-1.8.3"/></g></symbol>
+<symbol id="zif-beans" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="3.4" stroke-linecap="round" fill="none"><path d="M5 8.5C9.5 9.5 14.5 14 18 19.5"/><path d="M8 6.5C12.5 7.5 17 12 19.5 17"/></g><g fill="rgba(74,48,22,.25)"><circle cx="9" cy="11.5" r=".5"/><circle cx="12" cy="14" r=".5"/><circle cx="13" cy="10.5" r=".5"/></g></symbol>
+<symbol id="zif-bottlegourd" viewBox="0 0 24 24"><path d="M12 4c-1.2 0-2 .8-1.8 2 .1.6.5 1 .5 1.6 0 1-1 1.6-1.6 2.6-1.5 2.4-1.6 6 .4 8.4C9.3 19.6 10.6 20 12 20s2.7-.4 3.5-1.4c2-2.4 1.9-6 .4-8.4-.6-1-1.6-1.6-1.6-2.6 0-.6.4-1 .5-1.6.2-1.2-.6-2-1.8-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 4V2.6" stroke="#7a5a36" stroke-width="1.4" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-beetroot" viewBox="0 0 24 24"><path d="M12 8.5c-3.3 0-5.3 2.4-5.3 4.7 0 1.7 1 3.2 2.3 4.4l3 2.6 3-2.6c1.3-1.2 2.3-2.7 2.3-4.4 0-2.3-2-4.7-5.3-4.7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 20.2c.5 1 .5 1.8.5 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><g fill="#5f9e42"><path d="M10 8c-1-2.5-.5-4.5.5-5.5 1 1.5 1.2 3.5.5 5.5zM13.5 8c1.2-2.3 2.8-3.3 4-3.3-.3 2.3-1.8 3.5-4 3.3z"/></g><path d="M11.5 8V4" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-pumpkin" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><ellipse cx="5.7" cy="14.6" rx="2.4" ry="4.3"/><ellipse cx="18.3" cy="14.6" rx="2.4" ry="4.3"/><ellipse cx="8.5" cy="14.2" rx="3" ry="5.4"/><ellipse cx="15.5" cy="14.2" rx="3" ry="5.4"/><ellipse cx="12" cy="14" rx="3.5" ry="6"/></g><g stroke="rgba(74,48,22,.22)" stroke-width=".8" fill="none" opacity=".5"><path d="M12 8.4v11.4"/></g><path d="M12 8.4c0-2.2 1.1-3.5 3-3.7" stroke="#7a5a36" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-sweetpotato" viewBox="0 0 24 24"><path d="M5.6 13.8c-1.6-3 .8-7 4.9-7.8 4.9-1 8.8 1 8.8 4.4 0 4.3-5.1 7.5-9.4 7.5-1.9 0-3.4-1.5-4.3-4.1z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.3)" stroke-width="1" stroke-linecap="round"><path d="M6 7l-1.4-1.2M19 11.2l1.6-.4"/></g><g fill="rgba(74,48,22,.22)"><circle cx="10" cy="11" r=".5"/><circle cx="14" cy="12.5" r=".5"/></g></symbol>
+<symbol id="zif-potato" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="8" ry="6" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(-12 12 13)"/><g fill="rgba(74,48,22,.3)"><circle cx="9" cy="11" r=".6"/><circle cx="13" cy="10" r=".6"/><circle cx="14.5" cy="14" r=".6"/><circle cx="10" cy="15" r=".6"/></g></symbol>
+<symbol id="zif-broccoli" viewBox="0 0 24 24"><path d="M10.6 12.5h2.8l1.4 6.5c.12.6-.3 1-1 1h-3.6c-.7 0-1.12-.4-1-1z" fill="#7a9a5a" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="currentColor" stroke="rgba(74,48,22,.18)" stroke-width=".9"><circle cx="8.4" cy="8" r="3"/><circle cx="12.6" cy="6.4" r="3.3"/><circle cx="15.8" cy="9" r="2.9"/><circle cx="11.4" cy="10.3" r="3"/></g></symbol>
+<symbol id="zif-cauliflower" viewBox="0 0 24 24"><path d="M10.6 12.5h2.8l1.2 6.5c.12.6-.3 1-1 1h-3.2c-.7 0-1.12-.4-1-1z" fill="#e7e2cf" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M6 13c-2-1-2.5-3-1.5-4.5 1.5 0 2.7 1 3 2.5M18 13c2-1 2.5-3 1.5-4.5-1.5 0-2.7 1-3 2.5z" fill="#5f9e42" stroke="rgba(74,48,22,.22)" stroke-width=".8" stroke-linejoin="round"/><g fill="currentColor" stroke="rgba(74,48,22,.18)" stroke-width=".9"><circle cx="8.4" cy="8" r="3"/><circle cx="12.6" cy="6.4" r="3.3"/><circle cx="15.8" cy="9" r="2.9"/><circle cx="11.4" cy="10.3" r="3"/></g></symbol>
+<symbol id="zif-tomato" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6.6" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g fill="#5f9e42"><path d="M12 8.2c0-1.8-1-2.6-1-2.6-.3 1.5.2 2.3 1 2.6zM12 8.2c0-1.8 1-2.6 1-2.6.3 1.5-.2 2.3-1 2.6zM12 8.2l-2.4-1.5c-.3 1.4.9 1.9 2.4 1.5zM12 8.2l2.4-1.5c.3 1.4-.9 1.9-2.4 1.5z"/><rect x="11.4" y="4.8" width="1.2" height="2.6" rx=".6"/></g><ellipse cx="9.5" cy="11.6" rx="1.6" ry="1" fill="rgba(255,255,255,.4)" transform="rotate(-35 9.5 11.6)"/></symbol>
+<symbol id="zif-pepper" viewBox="0 0 24 24"><path d="M7 9.5c0-1.5 1.3-2.5 2.5-2 .8-.8 2.2-.8 3 0 1.2-.6 2.5.4 2.5 2 1.5.5 2.5 2.3 2.5 4.5 0 3.5-2.2 6.5-5 6.5s-5-3-5-6.5c0-2.2 1-4 2.5-4.5z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 8V5.4" stroke="#5f9e42" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M10.4 6c1-1 2.6-1 3.3-.2" stroke="#5f9e42" stroke-width="1.6" stroke-linecap="round" fill="none"/><ellipse cx="9.7" cy="13" rx="1.3" ry="2.4" fill="rgba(255,255,255,.3)"/></symbol>
+<symbol id="zif-cucumber" viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="6" rx="3" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(38 12 12)"/><g stroke="rgba(255,255,255,.4)" stroke-width=".7" fill="none" transform="rotate(38 12 12)"><path d="M7 10.5v3M10 10v4M13 10v4M16 10.5v3"/></g></symbol>
+<symbol id="zif-zucchini" viewBox="0 0 24 24"><rect x="3.5" y="9.5" width="16" height="5.4" rx="2.7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(38 12 12)"/><path d="M17 6.5l1.5-1.5" stroke="#7a5a36" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-peas" viewBox="0 0 24 24"><path d="M3.5 11c4.5-2 9.5-1.5 16 2.5-1 1.8-2.6 2.8-4.5 3-3.5.3-7-.8-9.5-2.8-1.5-1.2-2.2-1.8-2-2.7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(255,255,255,.55)" stroke="rgba(74,48,22,.22)" stroke-width=".7"><circle cx="7.5" cy="12" r="1.8"/><circle cx="11.5" cy="13.2" r="1.8"/><circle cx="15.5" cy="14.2" r="1.8"/></g></symbol>
+<symbol id="zif-onion" viewBox="0 0 24 24"><path d="M12 7.4c-3.6 0-6.2 2.9-6.2 6.4 0 3.6 2.8 6.5 6.2 6.5s6.2-2.9 6.2-6.5C18.2 10.3 15.6 7.4 12 7.4z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(255,255,255,.42)" stroke-width=".8" fill="none"><path d="M12 8v12M9.2 13.6c0 3 1.1 5.1 2.8 6.3M14.8 13.6c0 3-1.1 5.1-2.8 6.3"/></g><path d="M12 7.4c-.5-1.7.1-3.1 1.4-3.9M12 7.4c.5-1.7-.1-3.1-1.4-3.9" stroke="#7a5a36" stroke-width="1.2" stroke-linecap="round" fill="none"/><g stroke="rgba(74,48,22,.32)" stroke-width=".8" stroke-linecap="round"><path d="M11 20.2l-.4 1.4M13 20.2l.4 1.4"/></g></symbol>
+<symbol id="zif-garlic" viewBox="0 0 24 24"><path d="M12 6.4c-.9 0-1.4.7-1.3 1.6-2 .9-3.4 3-3.4 5.6 0 3.6 2.1 6.4 4.7 6.4s4.7-2.8 4.7-6.4c0-2.6-1.4-4.7-3.4-5.6.1-.9-.4-1.6-1.3-1.6z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.22)" stroke-width=".8" fill="none"><path d="M12 8.6v11.2M9.4 9.6c-1 2-1 6 .3 9M14.6 9.6c1 2 1 6-.3 9"/></g><path d="M12 6.4c0-1 .6-1.8 1.6-2.1" stroke="#7a5a36" stroke-width="1.2" stroke-linecap="round" fill="none"/><g stroke="rgba(74,48,22,.3)" stroke-width=".7" stroke-linecap="round"><path d="M10.6 19.8l-.4 1.2M13.4 19.8l.4 1.2M12 20v1.4"/></g></symbol>
+<symbol id="zif-ginger" viewBox="0 0 24 24"><path d="M4.5 12.5c-.3-1.6 1-3 2.6-2.8.4-1.4 2-2 3.3-1.2 1-1 2.7-.9 3.4.4 1.6-.4 3 .9 2.8 2.5 1.3.6 1.7 2.2.9 3.4.7 1.4-.2 3-1.7 3.1-.3 1.5-2 2.2-3.3 1.4-1 1-2.7.7-3.3-.6-1.5.3-2.9-.9-2.7-2.4-1.4-.4-2.1-1.9-1.3-3.2-.5-.5-.7-1.2-.4-1.8z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.22)" stroke-width=".6" fill="none"><path d="M9 11c1 1 1.5 3 1 4.5M14 10.5c-.5 1.5 0 3.5 1 4.5"/></g></symbol>
+<symbol id="zif-mushroom" viewBox="0 0 24 24"><path d="M4.5 12.5c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7c0 .6-.5 1-1.1 1H5.6c-.6 0-1.1-.4-1.1-1z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M9.5 13.5v3.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5v-3.5z" fill="#ede4d2" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(255,255,255,.45)"><circle cx="9" cy="9.5" r=".9"/><circle cx="14" cy="8.8" r=".7"/><circle cx="12" cy="10.5" r=".6"/></g></symbol>
+<symbol id="zif-brinjal" viewBox="0 0 24 24"><path d="M13.6 7c3 0 5.4 2.8 5.4 6.2 0 3.8-3 6.8-6.6 6.8s-6.4-3-6.4-6.8C6 9.8 9 7 12 7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 7c-.3-1.6.4-3 1.8-3.7M12 7c.6-1.2 1.8-1.6 3-1.2M12 7c-1-.8-2.3-.7-3.2.2" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M12.6 4.4l1.3-1.3" stroke="#7a5a36" stroke-width="1.4" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-okra" viewBox="0 0 24 24"><path d="M12 4.5c-.6 0-1 .5-1 1.1l-.2 1.2c-.8.4-1.3 1-1.5 2l-1.2 8.4c-.2 1.4.8 2.8 2.2 2.8h1.4c1.4 0 2.4-1.4 2.2-2.8l-1.2-8.4c-.2-1-.7-1.6-1.5-2L13 5.6c0-.6-.4-1.1-1-1.1z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.22)" stroke-width=".55" fill="none" opacity=".6"><path d="M10.2 9v9.5M13.8 9v9.5M12 8.5v11"/></g></symbol>
+<symbol id="zif-drumstick" viewBox="0 0 24 24"><path d="M12 3.5v17" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" fill="none"/><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".6"><circle cx="12" cy="6" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="12" cy="14" r="2"/><circle cx="12" cy="18" r="2"/></g></symbol>
+<symbol id="zif-cabbage" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(255,255,255,.5)" stroke-width=".9" fill="none"><path d="M12 5c-3 2-4 6-3 10M12 5c3 2 4 6 3 10M8 8c-2 2.5-2 6.5 0 9M16 8c2 2.5 2 6.5 0 9M12 5v16"/></g></symbol>
+<symbol id="zif-banana" viewBox="0 0 24 24"><path d="M4 7c1 6.8 6.3 11.8 13.4 11.8 1.1 0 1.9-.5 1.9-1.4 0-.7-.6-1-1.3-1.1C12 15.7 8.1 11 7.3 6.2 7.1 5.4 6.6 5 5.8 5 4.8 5 3.9 5.8 4 7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M4.9 5.6c.3-.5.9-.8 1.5-.6" stroke="#7a5a36" stroke-width="1.4" stroke-linecap="round" fill="none"/><circle cx="18.6" cy="17" r="1" fill="#7a5a36"/></symbol>
+<symbol id="zif-pear" viewBox="0 0 24 24"><path d="M12 5.6c-1 0-1.6 1-1.3 2.2-.2.2-1.7 1.1-2.2 3.2-.6 2.5.3 5.8 1.6 7.5 1 1.4 3 1.4 4 0 1.3-1.7 2.2-5 1.6-7.5-.5-2.1-2-3-2.2-3.2.3-1.2-.3-2.2-1.3-2.2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 5.6V3.8" stroke="#7a5a36" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M12 5c1-1.5 2.6-1.7 3.5-1.4-.2 1.6-1.7 2.1-3.5 1.4z" fill="#5f9e42"/></symbol>
+<symbol id="zif-apple" viewBox="0 0 24 24"><path d="M12 7.5c-1.3-1-3-1.3-4.5-.6C5.5 7.8 4.5 10 4.8 12.5c.4 3.5 2.7 7 4.7 7.5 1 .3 1.7-.3 2.5-.3s1.5.6 2.5.3c2-.5 4.3-4 4.7-7.5.3-2.5-.7-4.7-2.7-5.6-1.5-.7-3.2-.4-4.5.6z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 7.5V4.5" stroke="#7a5a36" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M12 6c1-2 3-2.3 4-2-.2 2-2 2.6-4 2z" fill="#5f9e42"/><ellipse cx="8.8" cy="11.5" rx="1.3" ry="2.2" fill="rgba(255,255,255,.35)" transform="rotate(-20 8.8 11.5)"/></symbol>
+<symbol id="zif-mango" viewBox="0 0 24 24"><path d="M13.6 5.4c3.3.2 5.9 2.9 5.9 6.5 0 4.6-3.5 8.4-7.7 8.4-3.5 0-6.3-2.4-6.3-5.9 0-4.9 4-9.3 8.1-9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M13.6 5.4c.2-1 1.1-1.7 2.3-1.8" stroke="#7a5a36" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M15.6 3.9c1-.6 2.2-.4 2.9.4-.8.9-2.1.8-2.9-.4z" fill="#5f9e42"/><ellipse cx="10" cy="11.3" rx="1.6" ry="2.7" fill="rgba(255,255,255,.28)" transform="rotate(-28 10 11.3)"/></symbol>
+<symbol id="zif-avocado" viewBox="0 0 24 24"><path d="M12 3.4c3.7 0 5.8 4.1 5.8 9 0 4.9-2.9 8.4-5.8 8.4S6.2 17.3 6.2 12.4c0-4.9 2.1-9 5.8-9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 6.2c2.4 0 3.7 3 3.7 6.4 0 3.5-1.9 6-3.7 6s-3.7-2.5-3.7-6c0-3.4 1.3-6.4 3.7-6.4z" fill="#d3e3a3"/><circle cx="12" cy="14" r="2.7" fill="#9a6b3f"/></symbol>
+<symbol id="zif-blueberry" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><circle cx="8.5" cy="13" r="4"/><circle cx="15.5" cy="13" r="4"/><circle cx="12" cy="9.8" r="4"/></g><g stroke="rgba(255,255,255,.6)" stroke-width=".8" stroke-linecap="round" fill="none"><path d="M12 9.8l-1.1-1M12 9.8l1.1-1M12 9.8V8.3"/></g></symbol>
+<symbol id="zif-strawberry" viewBox="0 0 24 24"><path d="M12 20.5c-3-1.5-6.5-5-6.5-9 0-1.8 1.5-2.8 3-2.5 1-.8 2-1.2 3.5-1.2s2.5.4 3.5 1.2c1.5-.3 3 .7 3 2.5 0 4-3.5 7.5-6.5 9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="#5f9e42"><path d="M12 8c-1.2-1.2-2.6-1.5-4-1 .8 1.4 2.2 1.8 4 1zM12 8c1.2-1.2 2.6-1.5 4-1-.8 1.4-2.2 1.8-4 1z"/><rect x="11.4" y="5.2" width="1.2" height="2.8" rx=".6"/></g><g fill="rgba(255,255,255,.65)"><circle cx="10" cy="12" r=".5"/><circle cx="13.5" cy="12.5" r=".5"/><circle cx="12" cy="14.5" r=".5"/><circle cx="9.5" cy="15" r=".5"/><circle cx="14" cy="15.5" r=".5"/></g></symbol>
+<symbol id="zif-grapes" viewBox="0 0 24 24"><path d="M12 5.5V8" stroke="#7a5a36" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M12 6c1-1.3 2.6-1.5 3.6-1-.2 1.6-1.8 2.1-3.6 1z" fill="#5f9e42"/><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".8"><circle cx="9.5" cy="11" r="2"/><circle cx="14.5" cy="11" r="2"/><circle cx="12" cy="12.5" r="2"/><circle cx="8.5" cy="14.5" r="2"/><circle cx="15.5" cy="14.5" r="2"/><circle cx="11" cy="15.5" r="2"/><circle cx="13.5" cy="16.5" r="2"/><circle cx="12" cy="19" r="2"/></g></symbol>
+<symbol id="zif-date" viewBox="0 0 24 24"><ellipse cx="12" cy="12.5" rx="3.8" ry="7.4" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(255,255,255,.3)" stroke-width=".7" fill="none"><path d="M12 5.5v14M10 6.5c-.7 4-.7 8 0 11M14 6.5c.7 4 .7 8 0 11"/></g><ellipse cx="12" cy="5.4" rx="1.3" ry=".8" fill="#7a5a36"/></symbol>
+<symbol id="zif-papaya" viewBox="0 0 24 24"><path d="M4 10.5c0-2.2 3.6-4 8-4s8 1.8 8 4c0 4.2-3.6 9-8 9s-8-4.8-8-9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g fill="rgba(74,48,22,.55)"><circle cx="10" cy="11.5" r=".8"/><circle cx="13.5" cy="11" r=".8"/><circle cx="12" cy="13.5" r=".8"/><circle cx="9.5" cy="14" r=".8"/><circle cx="14" cy="14" r=".8"/><circle cx="11.5" cy="15.8" r=".8"/></g></symbol>
+<symbol id="zif-orange" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(255,255,255,.4)" stroke-width=".8" fill="none"><path d="M12 13V6M12 13l6 3.5M12 13l-6 3.5M12 13l6-3.5M12 13l-6-3.5M12 13v7"/></g><circle cx="12" cy="6" r="1" fill="#7a5a36"/><path d="M12.5 6c1-1 2.4-1 3-.4-.4 1.2-1.8 1.4-3 .4z" fill="#5f9e42"/></symbol>
+<symbol id="zif-pomegranate" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6.6" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><path d="M12 7.4l-1.6-2.4 1.6 1.2 1.6-1.2-1.6 2.4z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M9.8 5.5l2.2 1.9 2.2-1.9" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none"/><g fill="rgba(255,255,255,.55)"><circle cx="10" cy="13" r=".7"/><circle cx="13.5" cy="12.5" r=".7"/><circle cx="12" cy="15" r=".7"/><circle cx="14.5" cy="15" r=".7"/><circle cx="9.5" cy="15.5" r=".7"/></g></symbol>
+<symbol id="zif-watermelon" viewBox="0 0 24 24"><path d="M3.5 16C9 19 15 19 20.5 16L12 4z" fill="#5f9e42" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M5.5 15.3C9.7 17.4 14.3 17.4 18.5 15.3L12 6.8z" fill="currentColor"/><g fill="rgba(74,48,22,.6)"><circle cx="12" cy="12" r=".6"/><circle cx="10" cy="14" r=".6"/><circle cx="14" cy="14" r=".6"/><circle cx="12" cy="15.2" r=".6"/></g></symbol>
+<symbol id="zif-kiwi" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="#8a6a3a" stroke="rgba(74,48,22,.22)" stroke-width="1"/><circle cx="12" cy="13" r="5.4" fill="currentColor"/><circle cx="12" cy="13" r="1.4" fill="rgba(255,255,255,.7)"/><g fill="rgba(74,48,22,.5)"><circle cx="12" cy="9" r=".5"/><circle cx="15.5" cy="11" r=".5"/><circle cx="15" cy="15" r=".5"/><circle cx="12" cy="17" r=".5"/><circle cx="9" cy="15" r=".5"/><circle cx="8.5" cy="11" r=".5"/></g></symbol>
+<symbol id="zif-coconut" viewBox="0 0 24 24"><circle cx="12" cy="12.6" r="8" fill="#8a6a3a" stroke="rgba(74,48,22,.22)" stroke-width="1"/><circle cx="12" cy="12.6" r="6" fill="currentColor"/><circle cx="12" cy="12.6" r="2.9" fill="rgba(74,48,22,.16)"/><g stroke="rgba(74,48,22,.3)" stroke-width=".7" fill="none" stroke-linecap="round"><path d="M5.2 9.6c.9.4 1.4 1.2 1.5 2.2M18.8 15.6c-.9-.4-1.4-1.2-1.5-2.2M6 16.5c.8-.3 1.7-.2 2.3.3"/></g></symbol>
+<symbol id="zif-apricot" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><path d="M12 7.2v12.6" stroke="rgba(74,48,22,.22)" stroke-width=".8" opacity=".5" fill="none"/><path d="M12 7.5c.2-1.2 1.2-2 2.4-2.1" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M14 5.2c1-.5 2-.2 2.5.6-.8.7-1.9.5-2.5-.6z" fill="#5f9e42"/></symbol>
+<symbol id="zif-fig" viewBox="0 0 24 24"><path d="M12 6.5c-3.3 0-5.8 2.8-5.8 6.3 0 3.8 2.6 6.7 5.8 6.7s5.8-2.9 5.8-6.7c0-3.5-2.5-6.3-5.8-6.3z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 6.5V4.4" stroke="#7a5a36" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M12 5c1-1.2 2.4-1.4 3.4-1-.3 1.4-1.7 1.8-3.4 1z" fill="#5f9e42"/><g fill="rgba(216,71,73,.35)"><circle cx="10.5" cy="13" r=".5"/><circle cx="13.5" cy="13" r=".5"/><circle cx="12" cy="15" r=".5"/><circle cx="11.5" cy="11.5" r=".5"/></g></symbol>
+<symbol id="zif-prune" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="6" ry="7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(0,0,0,.2)" stroke-width=".8" fill="none"><path d="M9 8c-1 3-1 7 .5 10M15 8c1 3 1 7-.5 10M12 6.5v13"/></g></symbol>
+<symbol id="zif-raisin" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".9"><ellipse cx="9.5" cy="11" rx="2.6" ry="3.4" transform="rotate(-15 9.5 11)"/><ellipse cx="14.5" cy="13.5" rx="2.6" ry="3.4" transform="rotate(12 14.5 13.5)"/></g><g stroke="rgba(0,0,0,.22)" stroke-width=".6" fill="none"><path d="M8.6 9c.5 2 .5 3.5 0 5M15.4 11.5c.5 2 .5 3.5 0 5"/></g></symbol>
+<symbol id="zif-custardapple" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(74,48,22,.22)" stroke-width=".7" fill="none" opacity=".65"><path d="M8 9.5l2 2M12 7.5v2.5M16 9.5l-2 2M7 13.5h2.5M17 13.5h-2.5M9 17l1.5-1.5M15 17l-1.5-1.5M12 12l-1.5 1.5M12 12l1.5 1.5"/></g><path d="M12 6c0-1 .8-1.8 2-2" stroke="#7a5a36" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-sapota" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="6.5" ry="7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><path d="M12 6c0-1 .6-1.8 1.6-2" stroke="#7a5a36" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M11 6c-1-.5-2.2-.2-2.8.8 1 .6 2.2.3 2.8-.8z" fill="#5f9e42"/></symbol>
+<symbol id="zif-pineapple" viewBox="0 0 24 24"><ellipse cx="12" cy="15" rx="5.5" ry="6.3" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(74,48,22,.22)" stroke-width=".6" fill="none" opacity=".7"><path d="M7.5 12l8 7.5M16.5 12l-8 7.5M8 15.5l4 3.5M16 15.5l-4 3.5"/></g><g fill="#5f9e42"><path d="M12 9.5c-1-2.5-.5-4.5.5-5.7 1 1.6 1.2 3.7.5 5.7zM10 10c-1.5-2-2-4-1.5-5.6 1.5 1 2.3 2.9 1.5 5.6zM14 10c1.5-2 2-4 1.5-5.6-1.5 1-2.3 2.9-1.5 5.6z"/></g></symbol>
+<symbol id="zif-peach" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><path d="M12 7.3c-.6 3-.6 9 0 12.4" stroke="rgba(74,48,22,.22)" stroke-width=".8" opacity=".45" fill="none"/><path d="M12 7.5c.3-1.4 1.4-2.2 2.8-2.2" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M14.2 5.3c1-.6 2.2-.4 2.8.5-.8.7-2 .6-2.8-.5z" fill="#5f9e42"/></symbol>
+<symbol id="zif-plum" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="6" ry="6.8" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><path d="M12 6.4c-.6 3-.6 9.6 0 13.2" stroke="rgba(0,0,0,.2)" stroke-width=".9" fill="none"/><path d="M12 6.5c.2-1 1-1.7 2-1.9" stroke="#7a5a36" stroke-width="1.2" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-muskmelon" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><g stroke="rgba(74,48,22,.3)" stroke-width=".55" fill="none"><path d="M6 11c3-1 9-1 12 0M5.5 14c3.5-.8 9.5-.8 13 0M7 17c2.5-.6 7.5-.6 10 0M8 8.5c2-.5 6-.5 8 0M9 13c1 1 5 1 6 0"/></g></symbol>
+<symbol id="zif-guava" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6.5" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><circle cx="12" cy="13.5" r="2.6" fill="rgba(216,71,73,.22)"/><g fill="rgba(74,48,22,.4)"><circle cx="11" cy="13" r=".4"/><circle cx="13" cy="13" r=".4"/><circle cx="12" cy="14.6" r=".4"/></g><path d="M12 7c0-1 .8-1.8 2-2" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-raspberry" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".7"><circle cx="10" cy="12.5" r="1.9"/><circle cx="14" cy="12.5" r="1.9"/><circle cx="12" cy="11" r="1.9"/><circle cx="11" cy="15" r="1.9"/><circle cx="13" cy="15" r="1.9"/><circle cx="12" cy="17.2" r="1.9"/></g><g fill="#5f9e42"><path d="M12 8c-1-1.5-2.5-1.8-4-1.2.8 1.4 2.3 1.8 4 1.2zM12 8c1-1.5 2.5-1.8 4-1.2-.8 1.4-2.3 1.8-4 1.2z"/></g></symbol>
+<symbol id="zif-cranberry" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"><circle cx="9.5" cy="13" r="4"/><circle cx="15" cy="12.5" r="3.6"/></g><g fill="rgba(0,0,0,.22)"><circle cx="9.5" cy="9.2" r=".5"/><circle cx="15" cy="9.1" r=".5"/></g></symbol>
+<symbol id="zif-lemon" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="7.5" ry="6" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(-12 12 13)"/><path d="M4.8 11.4l-1.4-.4M19.2 14.6l1.4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M12 7.6c1-1 2.5-1 3.2-.2" stroke="#5f9e42" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-paneer" viewBox="0 0 24 24"><path d="M12 3.5l7.5 3.8v9L12 20l-7.5-3.7v-9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M4.5 7.3L12 11l7.5-3.7M12 11v9" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none" stroke-linejoin="round"/></symbol>
+<symbol id="zif-milk" viewBox="0 0 24 24"><path d="M8 7h8l-.7 11.5c-.07 1.1-1 2-2.1 2h-2.4c-1.1 0-2-.9-2.1-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M9 4.5h6V7H9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M8.3 11h7.4" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none"/></symbol>
+<symbol id="zif-ghee" viewBox="0 0 24 24"><rect x="7" y="3.3" width="10" height="2.9" rx=".9" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M6.4 6.2h11.2v9.6a3.7 3.7 0 01-3.7 3.7h-3.8a3.7 3.7 0 01-3.7-3.7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M6.7 10.4c1.6-1 2.9.8 4.4 0s2.9.8 4.4 0l.8-.4" stroke="rgba(74,48,22,.28)" stroke-width="1" fill="none" stroke-linecap="round"/><ellipse cx="9" cy="8.2" rx="1" ry="1.7" fill="rgba(255,255,255,.42)"/></symbol>
+<symbol id="zif-curd" viewBox="0 0 24 24"><path d="M4 12h16c0 4.4-3.6 8-8 8s-8-3.6-8-8z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4z" fill="#fff" stroke="rgba(74,48,22,.18)" stroke-width=".9" stroke-linejoin="round"/></symbol>
+<symbol id="zif-cheese" viewBox="0 0 24 24"><path d="M4 18V13l15-4c.6 2 1 4.5 1 9H4z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M4 13l15-4" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none"/><g fill="rgba(74,48,22,.25)"><circle cx="9" cy="16" r="1.1"/><circle cx="14" cy="15.5" r="1"/><circle cx="16.5" cy="13" r=".8"/></g></symbol>
+<symbol id="zif-butter" viewBox="0 0 24 24"><path d="M4 14l4-3h9a2 2 0 012 2v3a2 2 0 01-2 2H6a2 2 0 01-2-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M4 14l4-3M8 11v8" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none"/></symbol>
+<symbol id="zif-buttermilk" viewBox="0 0 24 24"><path d="M8 6h8l-.6 13c-.07 1.1-1 2-2.1 2h-2.6c-1.1 0-2-.9-2.1-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M8.3 9c1.5-.8 2.7.8 4.2 0s3.2.6 3.2.6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none" stroke-linecap="round"/><g fill="rgba(255,255,255,.5)"><circle cx="10" cy="7.5" r=".5"/><circle cx="13" cy="7.2" r=".5"/></g></symbol>
+<symbol id="zif-egg" viewBox="0 0 24 24"><ellipse cx="12" cy="13.5" rx="6" ry="8" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1"/><circle cx="12" cy="14.5" r="2.7" fill="#f4b740"/></symbol>
+<symbol id="zif-almond" viewBox="0 0 24 24"><path d="M12 3.5c3.8 1.9 5.9 5.6 5.9 9.4 0 3.7-2.3 6.7-5.9 7.8-3.6-1.1-5.9-4.1-5.9-7.8 0-3.8 2.1-7.5 5.9-9.4z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 5.5v13.5" stroke="rgba(74,48,22,.3)" stroke-width=".9" fill="none"/></symbol>
+<symbol id="zif-walnut" viewBox="0 0 24 24"><path d="M12 3.4c4.4 0 7.4 3.6 7.4 8.1 0 5-3.4 9-7.4 9s-7.4-4-7.4-9c0-4.5 3-8.1 7.4-8.1z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 4.1v15.8" stroke="rgba(74,48,22,.3)" stroke-width="1" fill="none"/><g stroke="rgba(74,48,22,.3)" stroke-width=".9" fill="none" stroke-linecap="round"><path d="M9.4 6.6c-2 2.6-2.1 7.2.3 10.8M14.6 6.6c2 2.6 2.1 7.2-.3 10.8M10.7 9.2c-1 1.6-.8 4.2.6 6.2M13.3 9.2c1 1.6.8 4.2-.6 6.2"/></g></symbol>
+<symbol id="zif-cashew" viewBox="0 0 24 24"><path d="M15.5 4.5c-1.2 0-2 .8-2.2 1.9-.9 1.7-2.6 2.7-2.6 4.8 0 1.7-1.5 2.6-3 2.8-1.4.2-2.7 1.2-2.7 2.8 0 1.6 1.3 2.9 2.9 2.9 3.6 0 6.5-2.9 6.5-6.5 0-1.6-.6-2.4-.6-3.4 0-1.3 1-2 1-3.3 0-1.5-1-2.7-2.8-2.7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/></symbol>
+<symbol id="zif-pistachio" viewBox="0 0 24 24"><path d="M12 4c-3.5 1.6-5.5 5-5.5 8.6 0 3.5 2.2 6.4 5.5 7.4 3.3-1 5.5-3.9 5.5-7.4C17.5 9 15.5 5.6 12 4z" fill="#cfe0a0" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 4c-3 1.4-4.8 4.3-5.3 7.4 3.5.5 7.1.5 10.6 0C16.8 8.3 15 5.4 12 4z" fill="currentColor"/><path d="M8 13l3 2 2-2 3 1.6" stroke="rgba(0,0,0,.16)" stroke-width=".8" fill="none"/></symbol>
+<symbol id="zif-cumin" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".6"><path d="M8 7c1.5 1 2 3 1.5 5.5" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M12 6c1.2 1.2 1.5 3.3.8 5.8" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M16 7.5c1 1.3 1 3.4 0 5.7" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M9.5 14c1.5 1 2 3 1.5 5" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M14 13.5c1.2 1.2 1.3 3.3.6 5.3" stroke-width="1.6" stroke-linecap="round" fill="none"/></g></symbol>
+<symbol id="zif-pumpkinseed" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"><path d="M10 6.5c-2 1.5-3 4-3 6.5 0 2 1.3 3.5 3 3.5s3-1.5 3-3.5c0-2.5-1-5-3-6.5z" transform="rotate(-15 10 11.5)"/><path d="M15 9c-2 1.5-3 4-3 6.5 0 2 1.3 3.5 3 3.5s3-1.5 3-3.5c0-2.5-1-5-3-6.5z" transform="rotate(12 15 14)"/></g></symbol>
+<symbol id="zif-chia" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="8" cy="9" rx="1.3" ry="1"/><ellipse cx="12" cy="8" rx="1.3" ry="1" transform="rotate(20 12 8)"/><ellipse cx="15.5" cy="10" rx="1.3" ry="1"/><ellipse cx="9.5" cy="12" rx="1.3" ry="1" transform="rotate(-15 9.5 12)"/><ellipse cx="13" cy="11.5" rx="1.3" ry="1"/><ellipse cx="11" cy="15" rx="1.3" ry="1" transform="rotate(15 11 15)"/><ellipse cx="14.5" cy="14.5" rx="1.3" ry="1"/></g></symbol>
+<symbol id="zif-flaxseed" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".7"><path d="M7 11c2-1.5 5-1.5 7 0-2 1.5-5 1.5-7 0z"/><path d="M11 14c2-1.5 5-1.5 7 0-2 1.5-5 1.5-7 0z"/><path d="M9 8c1.8-1.3 4.2-1.3 6 0-1.8 1.3-4.2 1.3-6 0z"/></g></symbol>
+<symbol id="zif-sesame" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".55"><ellipse cx="8.5" cy="10" rx="1.6" ry="1"/><ellipse cx="12" cy="9" rx="1.6" ry="1"/><ellipse cx="15.5" cy="10.5" rx="1.6" ry="1"/><ellipse cx="10" cy="13" rx="1.6" ry="1"/><ellipse cx="13.5" cy="12.5" rx="1.6" ry="1"/><ellipse cx="11.5" cy="15.5" rx="1.6" ry="1"/></g></symbol>
+<symbol id="zif-fish" viewBox="0 0 24 24"><path d="M3 12c3-4.2 8-5.2 12-5.2-1 1.6-1 3.6 0 5.2 1 1.6 1 3.6 0 5.2-4 0-9-1-12-5.2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M15 6.8l5-2v14.4l-5-2" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><circle cx="6.3" cy="10.8" r="1" fill="#fff"/><circle cx="6.3" cy="10.8" r=".45" fill="rgba(74,48,22,.7)"/><path d="M9 12h4" stroke="rgba(255,255,255,.45)" stroke-width="1" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-chicken" viewBox="0 0 24 24"><path d="M15.5 4.5a5 5 0 00-7.2 6.8l.6.7-3.4 3.4a2 2 0 102.8 2.8l3.4-3.4.7.6a5 5 0 003.1-10.9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M6.2 15.5l-1.6 1.6M8 17.3l-1.6 1.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-tofu" viewBox="0 0 24 24"><path d="M12 3.5l7.5 3.8v9L12 20l-7.5-3.7v-9z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M4.5 7.3L12 11l7.5-3.7M12 11v9" stroke="rgba(74,48,22,.22)" stroke-width="1" fill="none" stroke-linejoin="round"/></symbol>
+<symbol id="zif-prawn" viewBox="0 0 24 24"><path d="M16 6c-4 0-7 3-7 7 0 3 2 5 5 5h2c.6 0 1-.5 1-1s-.4-1-1-1h-2c-1.6 0-3-1.3-3-3 0-2.5 2-4.5 5-4.5.6 0 1-.5 1-1s-.4-1-1-1z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M16 6c1-.5 2-.3 2.5.5M9.5 16l-2 2M11 18l-1.5 1.8" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linecap="round" fill="none"/><circle cx="16" cy="8.5" r=".7" fill="rgba(0,0,0,.5)"/></symbol>
+<symbol id="zif-mutton" viewBox="0 0 24 24"><ellipse cx="13.5" cy="12" rx="6" ry="5.4" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(-22 13.5 12)"/><path d="M11 14.5l-6 5.5" stroke="#f1ead8" stroke-width="3.2" stroke-linecap="round"/><circle cx="5.2" cy="19.6" r="1.7" fill="#f1ead8" stroke="rgba(74,48,22,.22)" stroke-width=".8"/><circle cx="6.6" cy="18.2" r="1.5" fill="#f1ead8" stroke="rgba(74,48,22,.22)" stroke-width=".8"/><ellipse cx="12" cy="10" rx="1.6" ry="1" fill="rgba(255,255,255,.3)" transform="rotate(-22 12 10)"/></symbol>
+<symbol id="zif-jaggery" viewBox="0 0 24 24"><path d="M4.6 14.2l1.3-4.4 4.2-2.1 4.7.3 3.4 2.9-.6 5-4.4 2.7-6 .2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M5.9 9.8l4.4 1.9 4.5-1.6M10.3 11.7l-.5 7.2" stroke="rgba(74,48,22,.28)" stroke-width=".8" fill="none"/><path d="M17.4 17.2l2 .6-.5 1.9-1.9-.5z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".8" stroke-linejoin="round"/><g fill="rgba(74,48,22,.32)"><circle cx="8.4" cy="13.4" r=".4"/><circle cx="12" cy="14.2" r=".4"/><circle cx="13.8" cy="12.6" r=".4"/><circle cx="10.2" cy="15.4" r=".4"/></g></symbol>
+<symbol id="zif-honey" viewBox="0 0 24 24"><path d="M7 5h10v2l-1.5 1.5v3L17 14v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4l1.5-2.5v-3L7 7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M9 15h6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none"/></symbol>
+<symbol id="zif-oil" viewBox="0 0 24 24"><path d="M9 4.5h6v2.5l3 2v8.5a2 2 0 01-2 2H8a2 2 0 01-2-2V9l3-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M11 4.5h2V3h-2z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M6.2 12h11.6" stroke="rgba(74,48,22,.25)" stroke-width="1" fill="none"/><path d="M11 15c0 1 1.5 1.2 1.5 2.6" stroke="rgba(255,255,255,.5)" stroke-width="1" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-turmeric" viewBox="0 0 24 24"><path d="M6.5 12c-1-.3-1.4-1.4-.8-2.3.5-.7 1.4-.8 2.1-.4.2-1.1 1.2-1.8 2.3-1.5.5-1 1.7-1.3 2.6-.6.8-.6 1.9-.4 2.4.5.9-.1 1.6.5 1.6 1.4 0 .8-.5 1.4-1.3 1.5.3 1-.3 2.1-1.3 2.3-.4 1-1.6 1.5-2.5 1-.7.7-1.9.6-2.5-.2-.9.2-1.8-.4-1.9-1.3-.9 0-1.5-.9-1.2-1.7z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><g stroke="rgba(74,48,22,.22)" stroke-width=".5" fill="none" opacity=".5"><path d="M9 11c.8.6 1.2 1.8 1 3M13 10.5c-.3 1.1.2 2.4 1 3"/></g></symbol>
+<symbol id="zif-blackpepper" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".8"><circle cx="9" cy="10" r="2.4"/><circle cx="14" cy="9.5" r="2.4"/><circle cx="11.5" cy="13.6" r="2.4"/><circle cx="15.6" cy="13.6" r="2.4"/></g><g stroke="rgba(0,0,0,.3)" stroke-width=".5" fill="none"><path d="M8 9c.5.8 1.5 1 2 .5M13 8.8c.5.8 1.5 1 2 .5"/></g></symbol>
+<symbol id="zif-cinnamon" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="3" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" transform="rotate(12 12 12)"/><g stroke="rgba(0,0,0,.2)" stroke-width=".8" fill="none" transform="rotate(12 12 12)"><path d="M11 4.5v15M14 4v15.5"/></g></symbol>
+<symbol id="zif-cardamom" viewBox="0 0 24 24"><path d="M12 4c-2.5 0-4 2.5-4 6s1.5 10 4 10 4-6.5 4-10-1.5-6-4-6z" fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"/><path d="M12 5v14" stroke="rgba(74,48,22,.22)" stroke-width=".7" opacity=".5" fill="none"/><path d="M12 4c0-1 .6-1.6 1.5-1.8" stroke="#7a5a36" stroke-width="1.2" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zif-coriander" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width=".6"><path d="M9 7.5c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M12 6c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M15 7.5c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M10.5 10c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/><path d="M13.5 10c-1.5 0-2.5 1-2.5 2.5 1.5 0 2.5-1 2.5-2.5z"/></g><g stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"><path d="M9 8l1.3 11.5M12 6.5l0 13M15 8l-1.3 11.5"/></g></symbol>
+<symbol id="zif-mint" viewBox="0 0 24 24"><g fill="currentColor" stroke="rgba(74,48,22,.22)" stroke-width="1" stroke-linejoin="round"><path d="M11 5c-3 1-5 4-4.3 7.5C9.2 12 11.2 9.3 11 5z"/><path d="M13 7c3 1 4.5 4 3.7 7.5C13.5 13.7 12.6 10.6 13 7z"/></g><g stroke="rgba(255,255,255,.5)" stroke-width=".8" fill="none"><path d="M10 6.5c-1.5 1.5-2.5 3.5-2.6 5.2M14 8.5c1.3 1.3 2 3.1 2 4.7"/></g><path d="M12 13.5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/></symbol></svg>
 <div class="app">
 
   <!-- STATUS STRIP (Phase 2 PR-2.5).
@@ -11381,7 +11888,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- TAB BAR (above header) -->
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="home" aria-label="Home tab">
+    <button class="tab-btn active" data-tab="landing" aria-label="Home tab">
       <span class="tab-icon"><svg class="zi"><use href="#zi-lotus"/></svg></span><span class="tab-label">Home</span>
     </button>
     <button class="tab-btn" data-tab="growth" aria-label="Growth tab">
@@ -11438,8 +11945,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <button type="button" class="offline-badge__action" data-action="syncReload" hidden>Reload</button>
   </div>
 
-  <!-- ══════════════ TAB 1: HOME ══════════════ -->
-  <div class="tab-panel active" id="tab-home">
+  <!-- ══════════════ LANDING (lean app-open surface — the default-open screen) ══════════════ -->
+  <!-- renderLanding() fills #ldContent: greeting (via #headerFull) + glance + doors + emergency. -->
+  <div class="tab-panel active" id="tab-landing">
+    <div class="grid">
+      <div id="ldContent" class="col-full"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ "TODAY" (the dense dashboard; id stays 'home' per the contract) ══════════════ -->
+  <div class="tab-panel" id="tab-home">
     <div class="grid">
 
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
@@ -12047,6 +12562,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <div class="diet-sub-bar" id="dietSubBar" role="tablist">
       <button class="track-sub-btn diet-sub-btn active" data-action="switchDietSub" data-diet-sub="log" role="tab" aria-selected="true">Log</button>
       <button class="track-sub-btn diet-sub-btn" data-action="switchDietSub" data-diet-sub="library" role="tab" aria-selected="false">Library</button>
+      <button class="track-sub-btn diet-sub-btn" data-action="switchDietSub" data-diet-sub="recipes" role="tab" aria-selected="false">Recipes</button>
       <button class="track-sub-btn diet-sub-btn" data-action="switchDietSub" data-diet-sub="patterns" role="tab" aria-selected="false">Patterns</button>
     </div>
 
@@ -12252,6 +12768,18 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </div>
 
       </div>
+    </div>
+
+    <!-- ═══ RECIPES SUB-TAB — suggested-for-Ziva + browsable cited corpus ═══
+         WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md §2. One panel, three
+         stacked sections (no nested tabs): (a) "Suggested for Ziva" logged-data-
+         driven cards, (b) browsable catalog grouped by meal slot, (c) expand-in-
+         place detail. renderDietRecipes() (diet.js, lazy-rendered when this
+         sub-tab opens) fills #dietRecipesRoot. Corpus = window.RECIPES (cited,
+         recipes.js) + legacy COMBO_RECIPES folded in at render. Two-pass gate:
+         surfacing (_dietAllowsFood, hides) + safety (never gated, §5). -->
+    <div class="diet-sub-panel" id="diet-sub-recipes" role="tabpanel" aria-labelledby="dietSubRecipes">
+      <div class="grid" id="dietRecipesRoot"></div>
     </div>
 
   </div>
@@ -13686,8 +14214,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
   <!-- FOOTER -->
 
-  <div class="text-center" style="padding:24px 0 8px;opacity:0.4;">
-    <div class="footer-text footer-text-style" >Built for Ziva <svg class="zi"><use href="#zi-heart"/></svg></div>
+  <div class="app-footer">
+    <div class="footer-text footer-text-style">
+      <span>Built for</span>
+      <span class="footer-name">Ziva</span>
+      <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
+    </div>
   </div>
 
 </div><!-- /app -->
@@ -20264,6 +20796,599 @@ const RECOMMENDATION_ROSTER = {
   },
   // Future rows: tummyTime · vitD3Adherence · vaccinationOnSchedule · screenTimeCeiling · etc.
 };
+// ═══════════════════════════════════════════════════════════════════════
+// recipes.js — Diet → Recipes corpus (food-sub-tab Recipes, WIRING_PLAN §3)
+// Spec: docs/design/recipes-tab/WIRING_PLAN.md (+ SESSION_HANDOFF.md, LOCKED.md)
+//
+// A structured, cited recipe corpus for 6–12-month complementary feeding.
+// Distinct from the flat COMBO_RECIPES map (data.js): each entry carries
+// structured ingredients (in the form the LIVE resolver classifies), a meal
+// slot, an age gate, FOOD_TAX food-groups (for gap-fill scoring + card
+// colour), steps/dos/donts, cuisine, and a per-recipe SOURCE citation —
+// "no assumptions" (WIRING_PLAN §6). This is the curated, deep-researched
+// spine; it is the SOLE source for the catalog render. The legacy
+// COMBO_RECIPES map stays as-is and still powers the combo-checker; folding
+// its uncited, slot-less entries into THIS cited catalog is a deferred
+// follow-up (cipher Edict-V honesty nit, PR #223) — not done here, because
+// they lack the structured slot/age/citation fields the catalog renders.
+//
+// SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
+//   • No honey / added salt / added sugar < 12 m (fruit sweetens).
+//   • Allergens (egg, fish, nuts, dairy, sesame) introduced early ~6 m, one
+//     at a time — never laundered as a prevention claim.
+//   • Nuts NEVER whole — ground fine / smooth paste (choking).
+//   • Egg fully cooked; fish boneless + low-mercury species; cow milk only in
+//     cooking < 12 m, not as the main drink.
+//   • minAgeMonths ≥ max(ingredient age-gate); the app's AGE_RULES /
+//     FOOD_EFFECTS table WINS on any disagreement (the recipe flags, never
+//     overrides — enforced live at render, WIRING_PLAN §5 Pass B).
+//
+// ALIAS-PRECEDENCE DISCIPLINE (the fish/milk lesson, NEXT_SESSION_TARGET):
+//   every `ingredients[].name` is stored in the form the live
+//   _lookupByFoodName resolver classifies correctly — verified per-recipe at
+//   authoring, pinned by tests/e2e/diet-recipes.spec.ts against the resolver.
+//   "egg" → eggs (not "egg"≠eggplant); "rohu fish" → fish (low-mercury, not
+//   the bare-fish green leak); honey → acute-toxin avoid (never suggested).
+//
+// Jurisdiction: Kael (file/engine — concat + window export), Maren (CONTENT —
+// sources, age gates, allergen/choking forms; clinically audited at the gate).
+// ═══════════════════════════════════════════════════════════════════════
+
+// Source shorthand — the Tier-1 authoritative bodies from RECIPE_RESEARCH.md.
+// Per-gram Indian ratios are RD-sourced best-practice; every nutrition/safety
+// claim traces to these. (Citations are organisation + document, not deep
+// per-page URLs — the framework, not a fabricated locator.)
+const RECIPE_SOURCES = {
+  who:    { org: 'WHO', doc: 'Complementary feeding (IYCF) 2023 · NBK596423' },
+  whopaho:{ org: 'WHO/PAHO', doc: 'Guiding principles for complementary feeding · NBK148957' },
+  iap:    { org: 'IAP', doc: 'Infant & Young Child Feeding Guidelines · Ch-040' },
+  icmr:   { org: 'ICMR-NIN', doc: 'Dietary Guidelines for Indians 2024' },
+  nhs:    { org: 'NHS', doc: 'Start4Life — baby weaning & first foods' },
+  aap:    { org: 'AAP', doc: 'HealthyChildren — starting solid foods' },
+};
+
+// Each recipe:
+//   { id, title, slot, minAgeMonths, prepMinutes,
+//     ingredients:[{name, qty, g}], // name = the LIVE-resolver classifying form;
+//                                   // g = grams (drives the quantity-weighted
+//                                   // generative fingerprint §9.3; trace items
+//                                   // ghee/oil/spices excluded at render)
+//     foodGroups:[FOOD_TAX gid],   // gap-fill scoring + card colour
+//     steps:[…], dos:[…], donts:[…],
+//     cuisine, source:[sourceKey…] }
+const RECIPES = [
+  // ─────────────────────────── BREAKFAST ───────────────────────────
+  {
+    id: 'ragi-banana-porridge', title: 'Ragi Banana Porridge', slot: 'breakfast', minAgeMonths: 7, prepMinutes: 12,
+    ingredients: [{ name: 'ragi', qty: '1 tbsp (24 g)', g: 24 }, { name: 'banana', qty: '¼, mashed (20 g)', g: 20 }],
+    foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
+    steps: [
+      'Dry-roast 1 tbsp ragi flour on low for 2 min until fragrant.',
+      'Add ½ cup water, whisk continuously to avoid lumps, cook 5–6 min until thick.',
+      'Loosen with a little expressed breastmilk or water off the heat.',
+      'Cool slightly, fold in mashed banana. Serve warm.',
+    ],
+    dos: ['Whisk continuously for a smooth, lump-free porridge', "Banana's vitamin C helps the ragi iron absorb", 'Cook to a thick, spoonable consistency'],
+    donts: ['No added sugar — ripe banana sweetens', 'Use water or expressed breastmilk; cow’s milk as a main drink waits until 12 months', 'Serve fresh, not stored'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'oats-apple-porridge', title: 'Oats & Apple Porridge', slot: 'breakfast', minAgeMonths: 7, prepMinutes: 10,
+    ingredients: [{ name: 'oats', qty: '1 tbsp ground (24 g)', g: 24 }, { name: 'apple', qty: '¼ grated (20 g)', g: 20 }, { name: 'cinnamon', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'fruits', 'spices'], cuisine: 'Global',
+    steps: [
+      'Grind 1 tbsp plain rolled oats to a coarse powder.',
+      'Cook in ½ cup water on low for 5 min, stirring.',
+      'Add grated apple and a pinch of cinnamon, cook 2 min until soft.',
+      'Cool to warm and serve.',
+    ],
+    dos: ['Use plain rolled oats, not flavoured instant packets', 'Apple is grated and cooked — never raw at this age', 'Cinnamon adds warmth, no sugar needed'],
+    donts: ['No added sugar or honey', "Don't make it too thick for a beginner", 'Watch for a gluten reaction if there is family history'],
+    source: ['nhs', 'aap'],
+  },
+  {
+    id: 'almond-ragi-kheer', title: 'Almond Ragi Kheer (12 m+)', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 18,
+    ingredients: [{ name: 'milk', qty: '½ cup (in cooking)', g: 60 }, { name: 'ragi', qty: '1 tbsp (15 g)', g: 15 }, { name: 'date', qty: '1, deseeded paste', g: 8 }, { name: 'almond', qty: '¼ tsp ground (3 g)', g: 3 }],
+    foodGroups: ['dairy', 'grains', 'fruits', 'nuts'], cuisine: 'Indian',
+    steps: [
+      'Soak 2 almonds, peel, and grind to an absolutely smooth paste.',
+      'Soak 1 date 15 min, deseed, mash to a paste.',
+      'Cook 1 tbsp ragi in ½ cup whole milk on low, stirring, until thick (6–8 min).',
+      'Stir in the almond and date paste, cook 1 min. Cool and serve.',
+    ],
+    dos: ['Cow’s milk as the main liquid is a first-birthday food — this is a 12 m+ treat', 'Grind almond to a completely smooth paste — never whole', 'Date provides all the sweetness needed'],
+    donts: ['Not before 12 months — cow’s milk as a main drink/liquid waits until the first birthday', 'NEVER serve whole or chopped nuts — choking risk', 'No added sugar'],
+    source: ['iap', 'aap'],
+  },
+  {
+    id: 'suji-veg-upma', title: 'Suji & Veg Upma', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 15,
+    ingredients: [{ name: 'suji', qty: '2 tbsp (30 g)', g: 30 }, { name: 'carrot', qty: '2 tbsp grated', g: 20 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Dry-roast 2 tbsp suji on low until aromatic, set aside.',
+      'In ½ tsp ghee, soften grated carrot and mashed peas for 2 min.',
+      'Add 1 cup water, bring to a simmer, then rain in the suji while stirring.',
+      'Cook 3–4 min until soft and fluffy. Mash any lumps. Serve warm.',
+    ],
+    dos: ['Roast the suji for a non-sticky upma', 'Grate vegetables fine and cook until very soft', 'A little ghee adds energy density'],
+    donts: ['No salt before 12 months', "Don't leave whole peas — mash them (choking)", 'Skip mustard-seed tempering and green chilli'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'poha-peas-potato', title: 'Poha with Peas & Potato', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 12,
+    ingredients: [{ name: 'poha', qty: '3 tbsp (30 g)', g: 30 }, { name: 'potato', qty: '2 tbsp, boiled & mashed', g: 30 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'vegs', 'spices'], cuisine: 'Indian',
+    steps: [
+      'Rinse 3 tbsp thin poha in a sieve until just soft, drain.',
+      'Soften boiled mashed potato and mashed peas with a pinch of turmeric in ½ tsp ghee.',
+      'Fold in the poha with a splash of water, cover and steam 3 min.',
+      'Mash lightly to an even, soft texture. Serve warm.',
+    ],
+    dos: ['Use thin poha — it softens easily', 'Mash peas and potato well', 'A pinch of turmeric is gentle and anti-inflammatory'],
+    donts: ['No salt or green chilli', "Don't use thick poha for young babies", 'Serve fresh — poha dries out'],
+    source: ['icmr', 'iap'],
+  },
+  {
+    id: 'banana-oats-egg-pancake', title: 'Banana Oats Egg Pancake', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 10,
+    ingredients: [{ name: 'banana', qty: '½, mashed', g: 25 }, { name: 'oats', qty: '1 tbsp ground', g: 20 }, { name: 'egg', qty: '1, well beaten', g: 50 }],
+    foodGroups: ['fruits', 'grains', 'nonveg'], cuisine: 'Global',
+    steps: [
+      'Mash ½ ripe banana smooth.',
+      'Mix in 1 tbsp finely ground oats and 1 well-beaten egg to a thick batter.',
+      'Cook small thin pancakes on a lightly greased tawa on low until fully set on both sides.',
+      'Cool and tear into soft pieces. Egg must be cooked through — firm, no runny centre.',
+    ],
+    dos: ['Cook the egg fully — firm white and yolk', 'Introduce egg on its own for 3 days first', 'Soft finger-food texture suits 8 m+'],
+    donts: ['Never serve runny or undercooked egg', 'No added sugar — banana sweetens', 'Watch for an egg reaction the first few times'],
+    source: ['nhs', 'aap'],
+  },
+  {
+    id: 'dalia-porridge', title: 'Broken-Wheat Dalia Porridge', slot: 'breakfast', minAgeMonths: 8, prepMinutes: 15,
+    ingredients: [{ name: 'dalia', qty: '2 tbsp (30 g)', g: 30 }, { name: 'date', qty: '1, paste', g: 8 }],
+    foodGroups: ['grains', 'fruits'], cuisine: 'Indian',
+    steps: [
+      'Dry-roast 2 tbsp dalia (broken wheat) 2 min.',
+      'Pressure-cook with ½ cup water until very soft (2–3 whistles).',
+      'Add ½ cup water (or expressed breastmilk) and mashed date, simmer 3 min until creamy.',
+      'Mash to an even texture. Serve warm.',
+    ],
+    dos: ['Cook dalia until very soft', 'Date sweetens naturally', 'Good source of fibre and iron'],
+    donts: ['No added sugar', 'Skip if there is a known wheat (gluten) reaction', 'Cow’s milk as a main drink waits until 12 months — use water or breastmilk here'],
+    source: ['iap', 'icmr'],
+  },
+
+  // ─────────────────────────── LUNCH ───────────────────────────
+  {
+    id: 'moong-dal-khichdi', title: 'Moong Dal Khichdi', slot: 'lunch', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '1 tbsp (12 g)', g: 12 }, { name: 'moong dal', qty: '½ tbsp (8 g)', g: 8 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'dairy', 'spices'], cuisine: 'Indian',
+    steps: [
+      'Wash 1 tbsp rice and ½ tbsp moong dal, soak 20 min.',
+      'Pressure-cook with 1 cup water and a pinch of turmeric — 4 whistles.',
+      'Mash smooth, stir in ½ tsp ghee.',
+      'Adjust to a semi-liquid, spoonable consistency. Serve warm.',
+    ],
+    dos: ['The classic first khichdi — cereal + pulse is a complete protein', 'Mash very smooth for beginners', 'Ghee adds brain-healthy fats'],
+    donts: ['No salt or spices beyond turmeric', "Don't make it too thick", 'Serve fresh'],
+    source: ['iap', 'whopaho'],
+  },
+  {
+    id: 'veg-moong-khichdi', title: 'Veg & Moong Khichdi', slot: 'lunch', minAgeMonths: 8, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '1 tbsp (15 g)', g: 15 }, { name: 'moong dal', qty: '½ tbsp (10 g)', g: 10 }, { name: 'carrot', qty: '2 tbsp (20 g)', g: 20 }, { name: 'pumpkin', qty: '2 tbsp (20 g)', g: 20 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Wash rice and moong dal, soak 20 min.',
+      'Add diced carrot and pumpkin, a pinch of turmeric, and 1 cup water.',
+      'Pressure-cook 4 whistles until everything is very soft.',
+      'Mash, stir in ghee, and serve warm.',
+    ],
+    dos: ['A balanced one-pot — grain, pulse and two vegetables', 'Beta-carotene from carrot and pumpkin', 'Cook until everything mashes easily'],
+    donts: ['No salt', "Don't leave vegetable chunks — mash well", 'Introduce each new vegetable on its own first'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'dal-rice-palak', title: 'Dal–Rice with Palak', slot: 'lunch', minAgeMonths: 8, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '3 tbsp (45 g)', g: 45 }, { name: 'toor dal', qty: '1½ tbsp (25 g)', g: 25 }, { name: 'spinach', qty: '1 tbsp, blanched (15 g)', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Blanch a few spinach (palak) leaves 2 min, chop fine or puree.',
+      'Pressure-cook rice and toor dal soft with a pinch of turmeric.',
+      'Fold in the spinach and cook 2 min.',
+      'Mash with ghee and a few drops of lemon for iron absorption. Serve warm.',
+    ],
+    dos: ['Iron from dal + palak, with vitamin C to help it along', 'Blanch spinach first to reduce oxalates', 'A leafy-green everyday lunch'],
+    donts: ["Don't use raw spinach", "Don't reheat — make fresh", 'No salt'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'masoor-lauki-rice', title: 'Masoor Dal & Bottle Gourd Rice', slot: 'lunch', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '2 tbsp', g: 30 }, { name: 'masoor dal', qty: '1 tbsp', g: 15 }, { name: 'bottle gourd', qty: '2 tbsp, diced', g: 25 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Wash rice and masoor dal, soak 20 min.',
+      'Add peeled, diced bottle gourd (lauki) and a pinch of turmeric.',
+      'Pressure-cook with ¾ cup water — 3 whistles until very soft.',
+      'Mash, add ghee, serve warm.',
+    ],
+    dos: ['Bottle gourd is light and easy to digest', 'Masoor cooks soft quickly', 'Gentle on little tummies'],
+    donts: ['No salt', 'Peel the gourd fully', 'Taste the gourd — discard if bitter'],
+    source: ['icmr', 'iap'],
+  },
+  {
+    id: 'soft-curd-rice', title: 'Soft Curd Rice', slot: 'lunch', minAgeMonths: 8, prepMinutes: 10,
+    ingredients: [{ name: 'rice', qty: '2 tbsp, very soft', g: 30 }, { name: 'curd', qty: '1 tbsp, fresh', g: 40 }],
+    foodGroups: ['grains', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Cook 2 tbsp rice until very soft and mashable.',
+      'Cool to room temperature.',
+      'Mash 1 tbsp fresh homemade curd into the rice until creamy.',
+      'Serve at room temperature.',
+    ],
+    dos: ['Use fresh homemade curd', 'Great for hot weather — cooling and probiotic', 'Serve at room temperature'],
+    donts: ["Don't heat the curd — it kills the good bacteria", "Don't serve fridge-cold", 'No salt or tempering'],
+    source: ['icmr', 'iap'],
+  },
+  {
+    id: 'paneer-veg-pulao', title: 'Paneer & Veg Soft Pulao', slot: 'lunch', minAgeMonths: 9, prepMinutes: 20,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'paneer', qty: '1 tbsp, crumbled', g: 15 }, { name: 'carrot', qty: '1 tbsp, grated', g: 20 }, { name: 'peas', qty: '1 tbsp, mashed', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'dairy', 'vegs'], cuisine: 'Indian',
+    steps: [
+      'Soften grated carrot and mashed peas in ½ tsp ghee for 2 min.',
+      'Add washed rice and water, cook until very soft.',
+      'Fold in crumbled fresh paneer, cook 2 min more.',
+      'Mash lightly to a soft, even texture. Serve warm.',
+    ],
+    dos: ['Calcium + protein from paneer', 'Use fresh homemade paneer, crumbled small', 'A gentle, mild pulao — no whole spices'],
+    donts: ['No salt or garam masala', 'Avoid market paneer with preservatives', 'Crumble paneer small — no cubes (choking)'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'rohu-fish-rice', title: 'Rohu Fish & Rice Mash', slot: 'lunch', minAgeMonths: 8, prepMinutes: 18,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'rohu fish', qty: '1 tbsp, cooked & deboned', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'nonveg', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Steam a small piece of rohu with a pinch of turmeric until flaky.',
+      'Flake it completely and check meticulously for bones.',
+      'Mash into soft-cooked rice with ½ tsp ghee.',
+      'Serve warm, deboned and smooth.',
+    ],
+    dos: ['Choose low-mercury freshwater fish like rohu or pomfret', 'Debone meticulously — check twice', 'Omega-3 for brain development; introduce on its own first'],
+    donts: ['Never high-mercury fish (seer/surmai, shark, swordfish)', "Don't leave any bone", 'Watch for a fish reaction the first few times'],
+    source: ['aap', 'nhs'],
+  },
+
+  // ─────────────────────────── DINNER ───────────────────────────
+  {
+    id: 'carrot-beet-potato-mash', title: 'Carrot Beetroot Potato Mash', slot: 'dinner', minAgeMonths: 7, prepMinutes: 20,
+    ingredients: [{ name: 'carrot', qty: '3 tbsp (40 g)', g: 40 }, { name: 'beetroot', qty: '2 tbsp (30 g)', g: 30 }, { name: 'potato', qty: '3 tbsp (40 g)', g: 40 }, { name: 'ghee', qty: '¼ tsp', g: 3 }],
+    foodGroups: ['vegs', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Peel and dice carrot, beetroot and potato.',
+      'Steam 10–12 min until very soft.',
+      'Mash together with a little ghee.',
+      'Serve warm — a ruby, beta-carotene-rich bowl.',
+    ],
+    dos: ['Steam to preserve nutrients', 'Beta-carotene and folate', 'A little fat helps absorb vitamin A'],
+    donts: ['Use a bib — beetroot stains, and pink stools are normal', 'No salt', "Don't use canned vegetables"],
+    source: ['icmr', 'nhs'],
+  },
+  {
+    id: 'sweet-potato-moong-mash', title: 'Sweet Potato & Moong Mash', slot: 'dinner', minAgeMonths: 7, prepMinutes: 18,
+    ingredients: [{ name: 'sweet potato', qty: '½ small (50 g)', g: 50 }, { name: 'moong dal', qty: '1 tbsp', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['vegs', 'grains', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Steam cubed sweet potato 10 min until very soft.',
+      'Separately cook moong dal soft with a pinch of turmeric.',
+      'Mash together with ½ tsp ghee.',
+      'Serve warm.',
+    ],
+    dos: ['Naturally sweet — babies love it', 'Sweet potato is rich in vitamin A', 'Ghee helps the fat-soluble vitamins absorb'],
+    donts: ['No salt or sugar', 'Steam, don\'t microwave', 'Mash smooth for younger babies'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'palak-paneer-rice', title: 'Palak Paneer Rice', slot: 'dinner', minAgeMonths: 9, prepMinutes: 18,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'paneer', qty: '1 tbsp, crumbled', g: 15 }, { name: 'spinach', qty: '1 tbsp, blanched', g: 15 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'dairy', 'vegs'], cuisine: 'Indian',
+    steps: [
+      'Blanch spinach 2 min, puree smooth.',
+      'Fold the spinach puree into soft-cooked rice.',
+      'Add crumbled fresh paneer and ½ tsp ghee, warm through 2 min.',
+      'Mash to a soft texture. Serve warm.',
+    ],
+    dos: ['Iron from palak + calcium and protein from paneer', 'Blanch spinach first', 'Crumble paneer small'],
+    donts: ['No salt', "Don't reheat spinach dishes — make fresh", 'Avoid market paneer'],
+    source: ['iap', 'icmr'],
+  },
+  {
+    id: 'chicken-rice-bowl', title: 'Soft Chicken & Rice Bowl', slot: 'dinner', minAgeMonths: 9, prepMinutes: 25,
+    ingredients: [{ name: 'rice', qty: '3 tbsp', g: 30 }, { name: 'chicken', qty: '1 tbsp, shredded', g: 15 }, { name: 'carrot', qty: '1 tbsp, grated', g: 20 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['grains', 'nonveg', 'vegs'], cuisine: 'Global',
+    steps: [
+      'Boil a small piece of boneless chicken until fully cooked and tender.',
+      'Shred finely or pulse to a soft mince — no strings or chunks.',
+      'Cook soft rice with grated carrot.',
+      'Mash the chicken into the rice with ½ tsp ghee. Serve warm.',
+    ],
+    dos: ['Cook chicken thoroughly — no pink', 'Shred or mince very fine (choking)', 'Iron and protein; introduce on its own first'],
+    donts: ['Never undercooked chicken', "Don't leave stringy or chunky pieces", 'No salt or masala'],
+    source: ['aap', 'nhs'],
+  },
+  {
+    id: 'mixed-veg-dal-soup', title: 'Mixed Veg & Dal Soup', slot: 'dinner', minAgeMonths: 8, prepMinutes: 20,
+    ingredients: [{ name: 'moong dal', qty: '1 tbsp', g: 12 }, { name: 'carrot', qty: '1 tbsp', g: 20 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'bottle gourd', qty: '1 tbsp', g: 25 }],
+    foodGroups: ['grains', 'vegs'], cuisine: 'Indian',
+    steps: [
+      'Pressure-cook moong dal with diced carrot, tomato and bottle gourd until very soft.',
+      'Blend or mash to a smooth soup.',
+      'Strain lightly if needed for a younger baby; add ½ tsp ghee.',
+      'Serve warm in a sippy bowl or spoon.',
+    ],
+    dos: ['A light, hydrating, protein-rich soup', 'Good when a baby is recovering or off solids', 'Vitamin C from tomato helps iron absorb'],
+    donts: ['No salt', 'Cool to warm before serving', 'Introduce tomato on its own first if new'],
+    source: ['whopaho', 'icmr'],
+  },
+
+  // ─────────────────────────── SNACK ───────────────────────────
+  {
+    id: 'curd-banana-bowl', title: 'Curd & Banana Bowl', slot: 'snack', minAgeMonths: 8, prepMinutes: 3,
+    ingredients: [{ name: 'curd', qty: '3 tbsp (60 g)', g: 60 }, { name: 'banana', qty: '¼, mashed (25 g)', g: 25 }],
+    foodGroups: ['dairy', 'fruits'], cuisine: 'Indian',
+    steps: [
+      'Whisk 3 tbsp fresh full-fat curd smooth.',
+      'Fold in ¼ mashed ripe banana.',
+      'Serve at room temperature.',
+    ],
+    dos: ['Calcium and probiotics, no cooking', 'Use fresh full-fat homemade curd', 'Banana sweetens — no sugar'],
+    donts: ["Don't serve fridge-cold", "Don't add honey or sugar", 'Make fresh'],
+    source: ['icmr', 'nhs'],
+  },
+  {
+    id: 'carrot-moong-mash', title: 'Carrot Moong Mash', slot: 'snack', minAgeMonths: 6, prepMinutes: 18,
+    ingredients: [{ name: 'carrot', qty: '3 tbsp, grated', g: 20 }, { name: 'moong dal', qty: '2 tbsp', g: 12 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
+    foodGroups: ['vegs', 'grains', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Grate carrot and wash moong dal.',
+      'Pressure-cook together with ¾ cup water and a pinch of turmeric — 3 whistles.',
+      'Mash smooth with ½ tsp ghee.',
+      'Serve warm.',
+    ],
+    dos: ['Vitamin A + easy protein', 'Carrot adds natural sweetness', 'A good early first-foods combo from 6 m'],
+    donts: ['No salt', 'Cook until very soft', 'Mash smooth'],
+    source: ['whopaho', 'iap'],
+  },
+  {
+    id: 'avocado-banana-mash', title: 'Avocado & Banana Mash', slot: 'snack', minAgeMonths: 6, prepMinutes: 3,
+    ingredients: [{ name: 'avocado', qty: '2 tbsp', g: 30 }, { name: 'banana', qty: '¼, mashed', g: 25 }],
+    foodGroups: ['fruits'], cuisine: 'Global',
+    steps: [
+      'Scoop 2 tbsp ripe avocado.',
+      'Mash with ¼ ripe banana until smooth.',
+      'Serve immediately.',
+    ],
+    dos: ['No cooking — brain-healthy fats from both', 'Under 3 minutes to prepare', 'A great no-cook first food from 6 m'],
+    donts: ['Both oxidise fast — serve fresh', "Don't store mashed", "Don't blend too smooth — a little texture is good"],
+    source: ['aap', 'nhs'],
+  },
+  {
+    id: 'stewed-apple-date', title: 'Stewed Apple & Date', slot: 'snack', minAgeMonths: 6, prepMinutes: 10,
+    ingredients: [{ name: 'apple', qty: '½, peeled & diced', g: 40 }, { name: 'date', qty: '1, deseeded', g: 8 }],
+    foodGroups: ['fruits'], cuisine: 'Global',
+    steps: [
+      'Peel, core and dice ½ apple.',
+      'Steam with 1 deseeded date for 6–7 min until very soft.',
+      'Mash or puree smooth.',
+      'Cool and serve.',
+    ],
+    dos: ['A natural, gentle stool-softener', 'Date adds iron and sweetness', 'Steam to preserve nutrients'],
+    donts: ['Deseed the date completely', "Don't serve apple raw before 8 months", 'No added sugar'],
+    source: ['nhs', 'iap'],
+  },
+  {
+    id: 'mango-curd-bowl', title: 'Mango & Curd Bowl', slot: 'snack', minAgeMonths: 8, prepMinutes: 3,
+    ingredients: [{ name: 'mango', qty: '2 tbsp, ripe', g: 30 }, { name: 'curd', qty: '1 tbsp, fresh', g: 40 }],
+    foodGroups: ['fruits', 'dairy'], cuisine: 'Indian',
+    steps: [
+      'Mash 2 tbsp ripe mango smooth.',
+      'Fold in 1 tbsp fresh curd.',
+      'Serve at room temperature.',
+    ],
+    dos: ['Vitamin C from mango + probiotics from curd', 'Use only ripe, sweet mango', 'A great summer snack'],
+    donts: ["Don't heat the curd", 'Limit mango — high natural sugar', 'Use fresh homemade curd'],
+    source: ['icmr', 'iap'],
+  },
+
+  // ─── 12 m+ catalog item — age-gated, never suggested for an under-1 (honey) ───
+  {
+    id: 'banana-honey-toast', title: 'Banana & Honey Toast (12 m+)', slot: 'snack', minAgeMonths: 12, prepMinutes: 5,
+    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (12 m+ only)', g: 5 }],
+    foodGroups: ['grains', 'fruits'], cuisine: 'Global',
+    steps: [
+      'Lightly toast a soft slice of whole-wheat bread, remove crusts, cut into soft fingers.',
+      'Spread with mashed banana.',
+      'For ONE-YEAR-OLDS AND OVER ONLY, drizzle ½ tsp honey.',
+      'Serve as soft fingers.',
+    ],
+    dos: ['Only from the first birthday — honey is for 12 m+', 'Soft fingers suit self-feeding toddlers', 'Whole-wheat bread adds fibre'],
+    donts: ['NEVER give honey before 12 months — risk of infant botulism', 'No honey of any kind for a baby — raw, cooked, or baked', 'Cut bread into soft, manageable fingers'],
+    source: ['who', 'nhs'],
+  },
+];
+
+// ── Food-icon map — ingredient base name → { icon: zif-* sprite id, c: food
+// colour } (WIRING_PLAN §7 zif sub-system; colours from the ratified
+// docs/design/taglines.mjs EP bank + gen-hero.mjs). The zif sprite (97 symbols)
+// lives in template.html; flesh uses currentColor so the consumer sets the hue
+// via a --zif-c custom property (the established diet.js dynamic-colour idiom).
+// Lookup is LONGEST-KEY-FIRST so "moong dal"→dal, "rohu fish"→fish, "sweet
+// potato"→sweetpotato resolve before their shorter substrings.
+const FOOD_ICON = {
+  // grains & cereals
+  rice: { icon: 'rice', c: '#d8c79f' }, ragi: { icon: 'millet', c: '#b06a44' },
+  oats: { icon: 'oats', c: '#d4bb7c' }, wheat: { icon: 'wheat', c: '#d9a945' },
+  bread: { icon: 'wheat', c: '#d9a945' }, suji: { icon: 'suji', c: '#e7dcc2' },
+  poha: { icon: 'suji', c: '#e7dcc2' }, dalia: { icon: 'dalia', c: '#d8c0a0' },
+  barley: { icon: 'barley', c: '#d6c486' }, quinoa: { icon: 'quinoa', c: '#d2b288' },
+  corn: { icon: 'corn', c: '#ecc84e' },
+  // dals & legumes
+  'moong dal': { icon: 'dal', c: '#9bb24a' }, 'toor dal': { icon: 'dal', c: '#e8bd4e' },
+  'masoor dal': { icon: 'dal', c: '#d98a55' }, 'chana dal': { icon: 'dal', c: '#cda05c' },
+  'urad dal': { icon: 'dal', c: '#7a7066' }, dal: { icon: 'dal', c: '#9bb24a' },
+  chana: { icon: 'chana', c: '#cda05c' }, rajma: { icon: 'rajma', c: '#9c4338' },
+  peanut: { icon: 'peanut', c: '#d9b27a' }, sprouts: { icon: 'sprouts', c: '#86c258' },
+  // vegetables
+  carrot: { icon: 'carrot', c: '#e8843a' }, spinach: { icon: 'spinach', c: '#5a9a42' },
+  'sweet potato': { icon: 'sweetpotato', c: '#c56b3e' }, potato: { icon: 'potato', c: '#cda36a' },
+  beetroot: { icon: 'beetroot', c: '#9c3b6b' }, pumpkin: { icon: 'pumpkin', c: '#e2913f' },
+  'bottle gourd': { icon: 'bottlegourd', c: '#9bbe63' }, peas: { icon: 'peas', c: '#86c258' },
+  tomato: { icon: 'tomato', c: '#d6473b' }, beans: { icon: 'beans', c: '#6aa83f' },
+  broccoli: { icon: 'broccoli', c: '#4f8a3a' }, cauliflower: { icon: 'cauliflower', c: '#e7e2cf' },
+  drumstick: { icon: 'drumstick', c: '#6aa83f' }, zucchini: { icon: 'zucchini', c: '#4f7a3a' },
+  // fruits
+  banana: { icon: 'banana', c: '#e9c44a' }, apple: { icon: 'apple', c: '#d2473f' },
+  pear: { icon: 'pear', c: '#bcc758' }, mango: { icon: 'mango', c: '#f0a83a' },
+  avocado: { icon: 'avocado', c: '#5f7f33' }, date: { icon: 'date', c: '#7a4a2c' },
+  papaya: { icon: 'papaya', c: '#e88a4a' }, pomegranate: { icon: 'pomegranate', c: '#c23a52' },
+  blueberry: { icon: 'blueberry', c: '#5560a8' }, coconut: { icon: 'coconut', c: '#9c7a52' },
+  // dairy & fats
+  curd: { icon: 'curd', c: '#e4ddcd' }, paneer: { icon: 'paneer', c: '#cdbf93' },
+  milk: { icon: 'milk', c: '#cdbf93' }, ghee: { icon: 'ghee', c: '#e8b94f' },
+  cheese: { icon: 'cheese', c: '#edc85e' }, butter: { icon: 'butter', c: '#f0d480' },
+  buttermilk: { icon: 'buttermilk', c: '#f1ede2' },
+  // nuts & seeds
+  almond: { icon: 'almond', c: '#b9824e' }, walnut: { icon: 'walnut', c: '#a9743f' },
+  cashew: { icon: 'cashew', c: '#e6d6b4' }, pistachio: { icon: 'pistachio', c: '#9bbf5a' },
+  sesame: { icon: 'sesame', c: '#c8b890' }, chia: { icon: 'chia', c: '#4a4038' },
+  flaxseed: { icon: 'flaxseed', c: '#a5743f' },
+  // proteins
+  egg: { icon: 'egg', c: '#efe6d0' }, fish: { icon: 'fish', c: '#86a6b6' },
+  chicken: { icon: 'chicken', c: '#d59a62' }, prawn: { icon: 'prawn', c: '#e89a7a' },
+  mutton: { icon: 'mutton', c: '#c8746a' },
+  // spices & sweeteners
+  turmeric: { icon: 'turmeric', c: '#e0962e' }, cinnamon: { icon: 'cinnamon', c: '#a5623a' },
+  cumin: { icon: 'cumin', c: '#9c7548' }, coriander: { icon: 'coriander', c: '#5a9a42' },
+  mint: { icon: 'mint', c: '#5aa05a' }, ginger: { icon: 'ginger', c: '#d6b483' },
+  jaggery: { icon: 'jaggery', c: '#a5623a' }, honey: { icon: 'honey', c: '#e8a93a' },
+  oil: { icon: 'oil', c: '#ecc86a' },
+};
+// Longest-key-first index for substring resolution.
+const _FOOD_ICON_KEYS = Object.keys(FOOD_ICON).sort((a, b) => b.length - a.length);
+
+// Resolve an ingredient name to its food icon + colour. Returns the matched
+// { icon, c } or a neutral fallback ({ icon: 'bowl' is a zi() glyph, c: null }
+// → caller renders the monochrome zi('bowl') when icon has no zif).
+function recipeFoodIcon(name) {
+  const n = (name || '').toLowerCase();
+  if (FOOD_ICON[n]) return FOOD_ICON[n];
+  for (const k of _FOOD_ICON_KEYS) {
+    if (n.indexOf(k) !== -1) return FOOD_ICON[k];
+  }
+  return null;
+}
+
+// ── §9.5 Tagline composer (ported from docs/design/taglines.mjs) ─────────
+// The generative "voice" line for any recipe/combo: each ingredient
+// contributes an epithet + noun; the minor-share ratio picks the connector so
+// quantity shows in the words. Soft prep-cautions FOLD into the phrase (ground
+// almond / halved grape); STRICT no's (honey / added sugar) keep a prominent
+// LEADING clause. Epithets rotate by a day-seed (fresh daily, deterministic
+// within a day). Adapted to the app's global-script style (no ES exports);
+// keyed by zif icon id (recipeFoodIcon(name).icon) so it shares one vocabulary.
+const RECIPE_EP = {
+  // grains & cereals
+  rice:{eps:['soft','gentle','silky'],noun:'rice'}, millet:{eps:['earthy','iron-rich','nutty'],noun:'ragi'},
+  oats:{eps:['wholesome','warm','hearty'],noun:'oats'}, wheat:{eps:['hearty','wholesome'],noun:'wheat'},
+  suji:{eps:['smooth','light'],noun:'suji'}, corn:{eps:['sweet','sunny'],noun:'corn'},
+  dalia:{eps:['hearty','nutty'],noun:'dalia'}, barley:{eps:['nutty','wholesome'],noun:'barley'},
+  quinoa:{eps:['nutty','light'],noun:'quinoa'},
+  // legumes & pulses
+  dal:{eps:['savoury','soupy','hearty'],noun:'dal'}, chana:{eps:['nutty','hearty'],noun:'chana'},
+  rajma:{eps:['hearty','earthy'],noun:'rajma'}, peanut:{eps:['nutty','rich'],noun:'peanut',fold:'ground'},
+  sprouts:{eps:['fresh','green'],noun:'sprouts'},
+  // vegetables
+  carrot:{eps:['sweet','bright','sunny'],noun:'carrot'}, spinach:{eps:['leafy','green','iron-rich'],noun:'spinach'},
+  beans:{eps:['crisp','green'],noun:'green beans'}, bottlegourd:{eps:['light','soothing'],noun:'bottle gourd'},
+  beetroot:{eps:['earthy','ruby','sweet'],noun:'beetroot'}, pumpkin:{eps:['silky','golden','sweet'],noun:'pumpkin'},
+  sweetpotato:{eps:['velvety','golden','creamy'],noun:'sweet potato'}, potato:{eps:['soft','comforting'],noun:'potato'},
+  broccoli:{eps:['green','tender'],noun:'broccoli'}, cauliflower:{eps:['mild','tender'],noun:'cauliflower'},
+  tomato:{eps:['tangy','bright'],noun:'tomato'}, peas:{eps:['sweet','green'],noun:'peas'},
+  drumstick:{eps:['earthy','green'],noun:'drumstick'}, zucchini:{eps:['soft','mild'],noun:'zucchini'},
+  // fruits
+  banana:{eps:['creamy','sweet','soft'],noun:'banana'}, pear:{eps:['juicy','gentle'],noun:'pear'},
+  apple:{eps:['sweet','stewed','crisp'],noun:'apple'}, mango:{eps:['golden','silky','sweet'],noun:'mango'},
+  avocado:{eps:['buttery','creamy'],noun:'avocado'}, blueberry:{eps:['sweet','jewel-like'],noun:'blueberry'},
+  date:{eps:['caramel-sweet','rich'],noun:'date'}, coconut:{eps:['creamy','rich'],noun:'coconut'},
+  pomegranate:{eps:['ruby','jewel-like'],noun:'pomegranate'},
+  // dairy & eggs
+  paneer:{eps:['mild','soft','milky'],noun:'paneer'}, milk:{eps:['creamy','gentle'],noun:'milk'},
+  ghee:{eps:['rich','golden'],noun:'ghee'}, curd:{eps:['cooling','tangy','creamy'],noun:'curd'},
+  cheese:{eps:['savoury','melty'],noun:'cheese'}, butter:{eps:['rich','soft'],noun:'butter'},
+  buttermilk:{eps:['cooling','tangy'],noun:'buttermilk'}, egg:{eps:['protein-rich','soft'],noun:'egg',fold:'cooked'},
+  // nuts & seeds
+  almond:{eps:['nutty','buttery'],noun:'almond',fold:'ground'}, walnut:{eps:['earthy','rich'],noun:'walnut',fold:'ground'},
+  cashew:{eps:['buttery','mild'],noun:'cashew',fold:'ground'}, sesame:{eps:['nutty','toasty'],noun:'sesame',fold:'ground'},
+  chia:{eps:['tiny','nutty'],noun:'chia',fold:'soaked'}, flaxseed:{eps:['nutty','wholesome'],noun:'flaxseed',fold:'ground'},
+  // proteins
+  fish:{eps:['tender','omega-rich'],noun:'fish',fold:'boneless'}, chicken:{eps:['lean','tender'],noun:'chicken',fold:'shredded'},
+  prawn:{eps:['tender','sweet'],noun:'prawn'}, mutton:{eps:['rich','tender'],noun:'mutton',fold:'soft-cooked'},
+  // fats & sweeteners
+  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'go easy — added sugar'},
+  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 1'}, oil:{eps:['light'],noun:'oil'},
+  // spices & herbs
+  turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
+  cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
+  mint:{eps:['cool','fresh'],noun:'mint'}, ginger:{eps:['warming','zingy'],noun:'ginger'},
+  // fold-completeness (K-T-2): keys present in the fingerprint icon map must also
+  // carry a voice, or a recipe paints a colour band for an unnamed ingredient.
+  poha:{eps:['light','flaky'],noun:'poha'}, okra:{eps:['tender','green'],noun:'okra'},
+  cabbage:{eps:['crisp','leafy'],noun:'cabbage'}, brinjal:{eps:['silky','mellow'],noun:'brinjal'},
+  mushroom:{eps:['earthy','tender'],noun:'mushroom'}, onion:{eps:['sweet','mellow'],noun:'onion'},
+  strawberry:{eps:['sweet','fragrant'],noun:'strawberry'}, grapes:{eps:['juicy','sweet'],noun:'grape',fold:'halved'},
+  papaya:{eps:['soft','sweet'],noun:'papaya'}, orange:{eps:['juicy','bright'],noun:'orange'},
+  pistachio:{eps:['nutty','green'],noun:'pistachio',fold:'ground'}, pumpkinseed:{eps:['nutty','crunchy'],noun:'pumpkin seed',fold:'ground'},
+  tofu:{eps:['silky','mild'],noun:'tofu'},
+};
+const _recipeConnector = s =>
+  s < 0.12 ? 'with just a hint of' : s < 0.22 ? 'with a touch of' :
+  s < 0.33 ? 'with a little' : s < 0.45 ? 'balanced with' : 'meets';
+const _recEpOf = (it, seed) => it.eps[seed % it.eps.length];
+const _recNounOf = it => it.fold ? `${it.fold} ${it.noun}` : it.noun;
+
+// parts: [{id, w}] (id = a RECIPE_EP key; w = grams) · seed: day-seed.
+// Returns { strict:[lead clauses], body }. Render strict first (prominent).
+function _recipeComposeTagline(parts, seed) {
+  seed = seed || 0;
+  const items = parts.map(p => ({ ...RECIPE_EP[p.id], w: p.w })).filter(i => i.noun).sort((a, b) => b.w - a.w);
+  if (!items.length) return { strict: [], body: '' };
+  const total = items.reduce((s, i) => s + i.w, 0) || 1;
+  const strict = [...new Set(items.filter(i => i.strict).map(i => i.strict))];
+  const dom = items[0];
+  let body;
+  if (items.length === 1) {
+    body = `${_recEpOf(dom, seed)} ${_recNounOf(dom)}`;
+  } else if (items.length === 2) {
+    const m = items[1], con = _recipeConnector(m.w / total);
+    body = con === 'meets'
+      ? `${_recEpOf(dom, seed)} ${_recNounOf(dom)} meets ${_recEpOf(m, seed)} ${_recNounOf(m)}`
+      : `${_recEpOf(dom, seed)} ${_recNounOf(dom)}, ${con} ${_recNounOf(m)}`;
+  } else {
+    const mids = items.slice(1, -1).map(_recNounOf);
+    const last = items.at(-1), lastCon = (last.w / total) < 0.15 ? 'a touch of' : 'a little';
+    body = `${_recEpOf(dom, seed)} ${_recNounOf(dom)}, with ${mids.join(', ')} and ${lastCon} ${_recNounOf(last)}`;
+  }
+  return { strict, body };
+}
+
+// O(1) lookup for the tap-through dispatcher (openRecipeInTab) + render helpers.
+const RECIPES_BY_ID = RECIPES.reduce((m, r) => { m[r.id] = r; return m; }, {});
+
+// Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so
+// consumers (diet.js renderDietRecipes, core.js openRecipeInTab) read a global.
+window.RECIPES = RECIPES;
+window.RECIPES_BY_ID = RECIPES_BY_ID;
+window.RECIPE_SOURCES = RECIPE_SOURCES;
+window.recipeFoodIcon = recipeFoodIcon;
+window._recipeComposeTagline = _recipeComposeTagline;
 // ─────────────────────────────────────────
 // SVG ICON HELPER — Ziva Sketch icon set
 // ─────────────────────────────────────────
@@ -20904,6 +22029,10 @@ function init() {
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
     else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
     else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
+    // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
+    // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
+    else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
+    else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
@@ -20924,6 +22053,24 @@ function init() {
     else if (action === 'toggleAlertTip' && typeof toggleAlertTip === 'function') toggleAlertTip(arg);
     else if (action === 'execAlertAction' && typeof execAlertAction === 'function') execAlertAction(arg);
     else if (action === 'switchTab' && typeof switchTab === 'function') switchTab(arg);
+    else if (action === 'ldAsk') { if (typeof switchTab === 'function') switchTab('home'); const _qi = document.getElementById('qaInput'); if (_qi) { _qi.focus(); _qi.scrollIntoView({ block:'center' }); } }
+    else if (action === 'ldEmergency' && typeof openEmergencyChooser === 'function') openEmergencyChooser();
+    else if (action === 'ldGoto') {
+      // Deep-link from the landing Care pre-empt. arg = tab OR track-sub; arg2 =
+      // scroll-target element id, stashed in _ldPendingScroll and consumed by the
+      // destination right after ITS own scrollTo({top:0}) — so it can't be raced.
+      if (typeof switchTab === 'function') {
+        if (typeof TRACK_SUB_ORDER !== 'undefined' && TRACK_SUB_ORDER.includes(arg)) {
+          switchTab('track');
+          // set the target just before the medical sub-switch so switchTab('track')'s
+          // own (default-sub) consume doesn't fire it early.
+          setTimeout(function() { _ldPendingScroll = arg2 || null; if (typeof switchTrackSub === 'function') switchTrackSub(arg); }, 140);
+        } else {
+          _ldPendingScroll = arg2 || null;
+          switchTab(arg);
+        }
+      }
+    }
     else if (action === 'toggleUpcomingSubcat' && typeof toggleUpcomingSubcat === 'function') toggleUpcomingSubcat(arg);
     // Polish-10c: HR-3 onclick batch — Intelligence + Diet (15 sites).
     // arg = elapsed-time selector ('feAction' | 'deHydra' | 'deAction' | 'voHydra' |
@@ -21401,6 +22548,7 @@ function init() {
     if (ca) {
       const action = ca.dataset.changeAction;
       if (action === 'handleAvatar') handleAvatar(e);
+      else if (action === 'ldQuickStart' && typeof ldQuickStart === 'function') ldQuickStart(e);
     }
   });
 
@@ -21733,15 +22881,29 @@ function init() {
   // set foodDate default
   document.getElementById('foodDate').value = today();
 
-  // Restore last active tab on refresh
-  const savedTab = localStorage.getItem('ziva_active_tab');
-  if (savedTab && savedTab !== 'home') {
-    if (TAB_ORDER.includes(savedTab)) {
-      switchTab(savedTab);
-    } else if (TRACK_SUB_ORDER.includes(savedTab)) {
-      // Old saved domain tab → redirect to Track with that sub-tab
-      switchTab(savedTab); // switchTab auto-redirects domain names to track
+  // ── Stage-2 default flip: 'landing' is the new default-open screen ──
+  // One-shot migration of pre-flip users (saved 'home' = the OLD default) →
+  // landing. Flag-guarded: NOT idempotent-by-construction (there is no old key
+  // to delete), so without the flag a post-flip parent who deliberately chose
+  // "Today" (writes ziva_active_tab='home') would be pulled back to landing on
+  // every boot (Governor K-2). Runs BEFORE the restore read (K-3).
+  try {
+    if (localStorage.getItem('ziva_landing_migrated') === null) {
+      const at0 = localStorage.getItem('ziva_active_tab');
+      if (at0 === null || at0 === 'home') localStorage.setItem('ziva_active_tab', 'landing');
+      localStorage.setItem('ziva_landing_migrated', '1');
     }
+  } catch (e) { /* localStorage unavailable; the template's default landing panel stands */ }
+
+  // Restore last active tab on refresh. 'landing' is the default panel; 'home'
+  // (= "Today") is a door-reached panel that is still legitimately restorable
+  // (PANEL_IDS, not TAB_ORDER). switchTab('landing') renders the default case
+  // (the template marks the panel .active but renderLanding only runs via switchTab).
+  const savedTab = localStorage.getItem('ziva_active_tab');
+  if (savedTab && savedTab !== 'landing' && (PANEL_IDS.includes(savedTab) || TRACK_SUB_ORDER.includes(savedTab))) {
+    switchTab(savedTab); // switchTab auto-redirects domain names to track
+  } else {
+    switchTab('landing');
   }
 
   // Check if data was lost and autosave is available
@@ -23692,7 +24854,15 @@ function getTabAvatarFull(tab) {
 
 // TABS
 // ─────────────────────────────────────────
-const TAB_ORDER = ['home','growth','track','insights','history','info'];
+const TAB_ORDER = ['landing','growth','track','insights','history','info'];
+// PANEL_IDS — every ACTIVATABLE panel id, including the dense dashboard ('home'
+// = "Today"), which is reachable by the Log/Today doors but (post-flip) is NOT
+// on the nav rail (TAB_ORDER). Active-PANEL resolvers — sync re-render dispatch,
+// post-log/undo re-render guards, handleSafeExit, essential-mode re-render —
+// MUST iterate PANEL_IDS; nav-ORDER sites (swipe index, button highlight,
+// keyboard nav) keep TAB_ORDER. (Governor K-1; deduped so it is correct both
+// pre- and post-flip.)
+const PANEL_IDS = [...new Set([...TAB_ORDER, 'home'])];
 const TRACK_SUB_ORDER = ['diet','sleep','poop','medical','milestones'];
 const TRACK_SUB_CONFIG = [
   { key:'diet', icon:zi('bowl'), label:'Diet' },
@@ -23704,11 +24874,13 @@ const TRACK_SUB_CONFIG = [
 let _activeTrackSub = localStorage.getItem('ziva_track_sub') || 'diet';
 
 function homeFabAction() {
-  const currentTab = localStorage.getItem('ziva_active_tab') || 'home';
-  if (currentTab === 'home') {
+  // Post-flip "go home" returns to the lean landing (the new front door), not
+  // the dense "Today" surface.
+  const currentTab = localStorage.getItem('ziva_active_tab') || 'landing';
+  if (currentTab === 'landing') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
-    switchTab('home');
+    switchTab('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -23734,6 +24906,32 @@ function getAlertNavAction(alertKey, alertTitle) {
   return "switchTab('insights');setTimeout(()=>{const el=document.getElementById('insightsAlertsCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},150)";
 }
 
+// One-shot deep-link scroll target (landing Care pre-empt). Consumed in a rAF
+// immediately after a tab / sub-tab's own scrollTo({top:0}) — so the scroll
+// runs AFTER the reset, in the same flow, and can't be raced. (Architect: the
+// pre-empt must land ON the Vit D3 / vaccine / CareTicket card.)
+let _ldPendingScroll = null;
+function _ldConsumePendingScroll() {
+  if (!_ldPendingScroll) return;
+  const _tgt = _ldPendingScroll; _ldPendingScroll = null;
+  // The target card's CONTENT may not be rendered yet when the destination
+  // tab/sub fires this (orderMedicalCards only reorders; the card body fills
+  // elsewhere) — so a single measure reads height 0 and "scrolls" nowhere.
+  // Poll (~1.2s) until it has real height, then scroll the WINDOW (the proven
+  // scroller) to its computed position.
+  let _n = 0;
+  const _go = function() {
+    const _e = document.getElementById(_tgt);
+    if (_e && _e.getBoundingClientRect().height > 4) {
+      const rect = _e.getBoundingClientRect();
+      const y = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.top - 70; // 70 ≈ tab bar + breathing room
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else if (_n++ < 12) {
+      setTimeout(_go, 100);
+    }
+  };
+  requestAnimationFrame(_go);
+}
 function switchTab(name) {
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
@@ -23768,9 +24966,17 @@ function switchTab(name) {
   // Auto-scroll tab bar to centre the active tab
   if (activeBtn) scrollTabIntoView(activeBtn);
 
-  // Toggle header: full on Home only
+  // Toggle header: the full greeting card shows only on the dense Home ("Today")
+  // surface. The lean Landing has its own warm-wave "Today so far" hero as its
+  // warm anchor, so the dense greeting card (avatar + age + weather) is hidden
+  // there — keeps the front door calm and lean (id 'home' = "Today"; label is
+  // presentation, per the id-contract).
+  // NB (Kael): #headerFull has no inline display:none in template — on the lean
+  // landing it's hidden by this synchronous toggle (essential-mode also CSS-
+  // suppresses it). Keep this call synchronous within init/restore, or a
+  // non-essential-mode landing restore would flash the header before it hides.
   const fullHeader = document.getElementById('headerFull');
-  fullHeader.style.display = name === 'home' ? '' : 'none';
+  fullHeader.style.display = (name === 'home') ? '' : 'none';
 
   if (name === 'growth') { renderGrowthStats(); setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (name === 'track') {
@@ -23779,7 +24985,10 @@ function switchTab(name) {
   if (name === 'history') { renderHistoryPreviews(); renderFeedingHistory(); renderMedLog(); renderMilestoneHistory(); renderVaccHistory(); renderGrowthHistory(); renderNotesHistory(); renderScrapbookHistory(); renderSleepHistoryPreview(); renderPoopHistoryPreview(); renderAlertHistory(); renderNotes(); renderScrapbook(); }
   if (name === 'insights') { renderInsights(); }
   if (name === 'info') { renderInfo(); }
+  if (name === 'home') renderHome(); // lazy: the dense "Today" renders on open, not at cold start
+  if (name === 'landing' && typeof renderLanding === 'function') renderLanding();
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
 }
 
 // ── Card navigation with a breadcrumb trail (PR-O) ──
@@ -23845,6 +25054,25 @@ function switchTrackSub(sub) {
   if (sub === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
 
   window.scrollTo({ top: 0 });
+  _ldConsumePendingScroll();
+}
+
+// Diet → Recipes tap-through (WIRING_PLAN §10). From the Home Smart-Q&A
+// compact recipe card: land on Track → Diet → Recipes and expand the named
+// recipe. switchTab('diet') auto-redirects to Track and sets _activeTrackSub;
+// switchDietSub renders the Recipes panel; expandRecipeRow opens + scrolls.
+function openRecipeInTab(recipeId) {
+  if (!recipeId) return;
+  // K-R-4: validate the id against the corpus index before switching tabs, so
+  // a stale/unknown id is a no-op rather than a tab-switch to a missing row.
+  if (window.RECIPES_BY_ID && !window.RECIPES_BY_ID[recipeId]) return;
+  if (typeof switchTab === 'function') switchTab('diet');
+  if (typeof switchDietSub === 'function') switchDietSub({ dataset: { dietSub: 'recipes' } });
+  // The Recipes panel renders synchronously in switchDietSub's lazy hook; a
+  // short defer lets layout settle before scrolling the row into view.
+  setTimeout(function () {
+    if (typeof expandRecipeRow === 'function') expandRecipeRow(recipeId);
+  }, 80);
 }
 
 function renderTrackSubBar() {
@@ -23988,7 +25216,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     // falls through to the Track sub-tab block below, which itself bubbles
     // to top-level tabs at Track-sub-tab edges.
     if (currentTab === 'track' && _activeTrackSub === 'diet') {
-      const DIET_INNER_ORDER = ['log', 'library', 'patterns'];
+      const DIET_INNER_ORDER = ['log', 'library', 'recipes', 'patterns'];
       const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
       const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
       const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
@@ -24079,17 +25307,20 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
   }
 })();
 
-// ── Safe Exit — two-step: go home first, then confirm ──
+// ── Safe Exit — two-step: go to the front door first, then confirm ──
+// Post-landing-flip the front door is `landing`, not the dense `home` ("Today")
+// surface — an exit gesture should return to the calm landing, not pull the
+// parent into the cockpit (Cipher Edict V seam-catch, PR #219).
 function handleSafeExit() {
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
 
-  if (currentTab !== 'home') {
-    // Step 1: go to Home first
-    switchTab('home');
+  if (currentTab !== 'landing') {
+    // Step 1: go to the landing (front door) first
+    switchTab('landing');
     return;
   }
 
-  // Step 2: already on Home — confirm exit
+  // Step 2: already on the landing — confirm exit
   confirmAction(zi('check') + ' Exit dashboard?\n\nYour data will be auto-saved before closing.', () => {
     // Force autosave to the older slot
     forceAutosave();
@@ -25345,7 +26576,7 @@ function toggleEssentialMode() {
     localStorage.setItem('ziva_essential_mode', 'false');
   }
   // If currently on a hidden tab, redirect to home
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (on && (currentTab === 'insights' || currentTab === 'info')) {
     switchTab('home');
   }
@@ -25444,7 +26675,7 @@ function toggleDarkMode() {
   const darkEl = document.getElementById('settingsDarkMode');
   if (darkEl) darkEl.checked = !isDark;
   // Redraw charts with updated colours
-  const currentTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const currentTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (currentTab === 'growth') { setTimeout(() => { drawChart(); drawHeightChart(); }, 60); }
   if (currentTab === 'sleep') { setTimeout(drawSleepChart, 60); }
   if (currentTab === 'poop') { setTimeout(drawPoopChart, 60); }
@@ -28302,6 +29533,138 @@ function renderRemindersAndAlerts() {
 
   // v2.3: Store HTML — renderHomeContextAlerts will combine and render both
   window._remindersHTML = html;
+}
+
+// ── Lean-landing Care pre-empt detector (flip-gate, spec §4.4; Maren-gated) ──
+// Returns the ACTIONABLE Care signals only (the unresolved subset of the
+// renderRemindersAndAlerts predicates above) as structured data, summarised
+// one-per-category, hottest-first ranked, each deep-linking to its fix. This is
+// the source the landing's _ldCareAlerts() reads — so a calm landing can NEVER
+// hide a hard-deadline signal (overdue vaccine / due dose / overdue follow-up).
+// Mirrors the predicates above (kept adjacent to bound drift); illness episodes
+// are added separately by _ldCareAlerts via getActiveIllnessPosture().
+// Signal shape: { id, severity:'high'|'med'|'low', icon, title, sub, action, arg, arg2 }
+// title/sub are RAW (escaped at render). Care route = Track→Medical via navTabSub.
+function getActiveCareSignals() {
+  var out = [];
+  var todayStr = (typeof today === 'function') ? today() : null;
+  if (!todayStr) return out;
+  var yesterdayStr = _offsetDateStr(todayStr, -1);
+  // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
+  // a generic Medical tab). vaccines → medVaccCard (Track→Medical); meds → the
+  // Home "Today" reminder card (supp-alert-${idx} for due, missed-${name}-${ds}
+  // for a missed streak) where the dose is actually LOGGED — the Meds inventory
+  // card is read-only and gives a parent no way to act on it; CareTickets →
+  // ctEntryPoint (on the Today surface).
+  var push = function(id, severity, icon, title, sub, navArg, navTarget) {
+    out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
+               action: 'ldGoto', arg: navArg, arg2: navTarget });
+  };
+  var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
+
+  // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
+  if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
+    var overdue = vaccData.filter(function(v) {
+      if (!v.upcoming) return false;
+      return Math.ceil((new Date(v.date) - new Date()) / 86400000) < 0;
+    });
+    if (overdue.length) {
+      var oNames = overdue.map(function(v) { return v.name; });
+      vaccSig('vacc-overdue', 'high', 'siren',
+          overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
+          'Tap to reschedule or mark done');
+    }
+    // 1b · Urgent upcoming (≤7 days, mirrors :601)
+    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+      .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
+    if (upNext) {
+      var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        vaccSig('vacc-soon', 'low', 'dot-red',
+            daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
+            'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
+      }
+    }
+    // 1c · Post-vacc 48h monitoring window (mirrors :613)
+    var recentVacc = vaccData.filter(function(v) {
+      return !v.upcoming && !v.reaction && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (recentVacc.length) {
+      var rvNames = recentVacc.map(function(v) { return v.name; });
+      vaccSig('vacc-monitor', 'med', 'syringe',
+          (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
+          'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
+    }
+    // 1d · Logged-reaction monitoring tail (mirrors :637)
+    var loggedRecent = vaccData.filter(function(v) {
+      return !v.upcoming && v.reaction && v.reaction !== 'none' && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (loggedRecent.length) {
+      var until = _offsetDateStr(loggedRecent[0].date, 2);
+      vaccSig('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+          'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
+    }
+  }
+
+  // 2 · Meds — missed-day streaks (≥ as hot as today-pending, mirrors :655) + today-pending (:696)
+  if (typeof meds !== 'undefined' && Array.isArray(meds) && typeof medChecks !== 'undefined') {
+    var activeMeds = meds.filter(function(m) { return m.active; });
+    var trackingSince = medChecks._trackingSince || todayStr;
+    // idx matches renderRemindersAndAlerts' supp-alert-${idx} (same activeMeds
+    // filter, same order) so the due-today deep-link lands on that med's card.
+    activeMeds.forEach(function(m, idx) {
+      var startDate = m.start || '2025-09-04';
+      var earliest = startDate > trackingSince ? startDate : trackingSince;
+      var missed = 0;
+      var firstMissedDs = null;  // most-recent missed day (i=1 backwards)
+      for (var i = 1; i <= 14; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var ds = toDateStr(d);
+        if (ds < earliest) continue;
+        var dayLog = medChecks[ds];
+        if (!dayLog || !dayLog[m.name]) { missed++; if (!firstMissedDs) firstMissedDs = ds; }
+      }
+      if (missed > 0) {
+        // Land on the Home missed-resolution card (Was given / Not given) — same
+        // id scheme as renderRemindersAndAlerts: missed-${name}-${ds} sanitised.
+        var missedUid = ('missed-' + m.name + '-' + firstMissedDs).replace(/[^a-zA-Z0-9-]/g, '_');
+        push('med-missed-' + m.name, 'high', 'dot-red',
+            missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
+            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'),
+            'home', missedUid);
+      }
+      // today-pending
+      var todayLog = medChecks[todayStr] || {};
+      var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
+      var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
+      if (!resolved) {
+        // Land on the pending reminder card (Done now / Done at… / Skip) — where
+        // the dose is logged — not the read-only Meds inventory card.
+        push('med-due-' + m.name, 'med', 'warn', m.name + ' due today',
+            m.dose ? m.dose : 'Tap to log the dose', 'home', 'supp-alert-' + idx);
+      }
+    });
+  }
+
+  // 3 · Overdue CareTickets — the parent's own escalation going silent (Maren M-2).
+  // ctNextDueTime(t) → ms timestamp of the next follow-up (Infinity if none);
+  // overdue = a finite due time in the past.
+  if (typeof _careTickets !== 'undefined' && Array.isArray(_careTickets) && typeof ctNextDueTime === 'function') {
+    var nowMs = Date.now();
+    _careTickets.forEach(function(t) {
+      if (t.status !== 'active' && t.status !== 'escalated') return;
+      var due = ctNextDueTime(t);
+      if (isFinite(due) && due < nowMs) {
+        push('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in', 'home', 'ctEntryPoint');
+      }
+    });
+  }
+
+  // Hottest-first
+  var rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) { return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]); });
+  return out;
 }
 
 // Mark vaccination as booked — step 1: save booked state, then ask for details
@@ -38885,7 +40248,7 @@ function renderSleepArc3Insights() {
 // chips to the Library sub-tab; F-4 will add the nutrient heatmap +
 // allergen trend to the Patterns sub-tab; F-5 lands parseFeeding (v3-8).
 // ═══════════════════════════════════════════════════════════════════════
-const DIET_SUB_ORDER = ['log', 'library', 'patterns'];
+const DIET_SUB_ORDER = ['log', 'library', 'recipes', 'patterns'];
 
 function switchDietSub(target) {
   const subKey = (target && target.dataset && target.dataset.dietSub) || 'log';
@@ -38905,6 +40268,8 @@ function switchDietSub(target) {
   // when its sub-tab opens. renderDietLibrary is defined below with the rest
   // of the relocated Library code.
   if (subKey === 'library' && typeof renderDietLibrary === 'function') renderDietLibrary();
+  // Recipes sub-tab — lazy-render the suggested + catalog surface (WIRING_PLAN §1).
+  if (subKey === 'recipes' && typeof renderDietRecipes === 'function') renderDietRecipes();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -39496,6 +40861,507 @@ function foodLibFilter(key) {
 function foodLibDetail(name) {
   renderFoodDetailSheet(name);
   openModal('foodDetailSheet');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md)
+// One lazy-rendered panel, three stacked sections: (a) "Suggested for Ziva"
+// (logged-data-driven, ranked by §4) with a featured hero card, (b) a
+// browsable catalog grouped by meal slot, (c) expand-in-place detail. Corpus =
+// window.RECIPES (cited, recipes.js). TWO separate passes (§5):
+//   Pass A — surfacing gate (_dietAllowsFood): hides off-preference recipes.
+//   Pass B — safety (NEVER gated): every ingredient of a DISPLAYED recipe gets
+//            its live _fdAgeRule / getFoodEffect / _fdAllergenNote rendering.
+// Card colour = primary ingredient's FOOD_TAX domain (left-rail + .dt-* whisper).
+// ═══════════════════════════════════════════════════════════════════════
+
+const RECIPE_SLOT_META = {
+  breakfast: { label: 'Breakfast', icon: 'sun' },
+  lunch:     { label: 'Lunch',     icon: 'bowl' },
+  dinner:    { label: 'Dinner',    icon: 'moon' },
+  snack:     { label: 'Snack',     icon: 'spoon' },
+};
+const RECIPE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
+// Polarity → flag chrome (mirrors renderFoodDetailSheet FD_POLARITY, M-S / K-6).
+const _RECIPE_FD_POLARITY = {
+  encourage:   { cls: 'fd-flag-encourage',   ic: 'sprout' },
+  warn:        { cls: 'fd-flag-allergen',    ic: 'siren'  },
+  conditional: { cls: 'fd-flag-conditional', ic: 'clock'  },
+  inform:      { cls: 'fd-flag-inform',      ic: 'info'   },
+};
+// ── Generative fingerprint (§9.3) — quantity-weighted, wavelength-ordered ──
+// Each recipe's hero renders a deterministic colour fingerprint from its
+// ingredients: a STRIPE (top ribbon) + a FADE (body wash), band-widths weighted
+// by grams, wavelength-ordered (rose→peach→amber→sage→sky→lav). Trace items
+// (ghee/oil/spices) are excluded so the fingerprint never muds; cap ≤4 domains.
+const RECIPE_FP_DOM = {
+  fruit:   { o: 0,   sat: '#e59cb0', light: 'var(--rose-light)',  dark: 'rgba(158,62,82,0.20)' },
+  protein: { o: 0.6, sat: '#e0a285', light: 'var(--rose-light)',  dark: 'rgba(150,72,60,0.20)' },
+  veg:     { o: 1,   sat: '#ecae7e', light: 'var(--peach-light)', dark: 'rgba(138,101,32,0.18)' },
+  legume:  { o: 2,   sat: '#e6c078', light: 'var(--amber-light)', dark: 'rgba(150,110,40,0.18)' },
+  grain:   { o: 3,   sat: '#9fcdb5', light: 'var(--sage-light)',  dark: 'rgba(58,112,96,0.17)' },
+  dairy:   { o: 4,   sat: '#a0cce0', light: 'var(--sky-light)',   dark: 'rgba(58,112,144,0.18)' },
+  nuts:    { o: 6,   sat: '#c4b4e6', light: 'var(--lav-light)',   dark: 'rgba(110,94,154,0.18)' },
+};
+// zif icon id → fingerprint domain (distinguishes legumes from grains, which
+// FOOD_TAX folds together — the fingerprint wants the dal/rice colour split).
+const _RECIPE_FP_BY_ICON = {
+  rice: 'grain', millet: 'grain', oats: 'grain', wheat: 'grain', suji: 'grain', dalia: 'grain', barley: 'grain', quinoa: 'grain', corn: 'grain',
+  dal: 'legume', chana: 'legume', rajma: 'legume', peanut: 'legume', sprouts: 'legume',
+  carrot: 'veg', spinach: 'veg', beans: 'veg', bottlegourd: 'veg', beetroot: 'veg', pumpkin: 'veg', sweetpotato: 'veg', potato: 'veg', broccoli: 'veg', cauliflower: 'veg', tomato: 'veg', peas: 'veg', drumstick: 'veg', zucchini: 'veg', okra: 'veg', cabbage: 'veg', brinjal: 'veg', mushroom: 'veg', onion: 'veg',
+  banana: 'fruit', pear: 'fruit', apple: 'fruit', mango: 'fruit', avocado: 'fruit', blueberry: 'fruit', strawberry: 'fruit', grapes: 'fruit', date: 'fruit', papaya: 'fruit', orange: 'fruit', pomegranate: 'fruit', coconut: 'fruit',
+  paneer: 'dairy', milk: 'dairy', curd: 'dairy', cheese: 'dairy', butter: 'dairy', buttermilk: 'dairy',
+  almond: 'nuts', walnut: 'nuts', cashew: 'nuts', pistachio: 'nuts', sesame: 'nuts', chia: 'nuts', flaxseed: 'nuts', pumpkinseed: 'nuts',
+  egg: 'protein', fish: 'protein', chicken: 'protein', prawn: 'protein', mutton: 'protein', tofu: 'protein',
+};
+// Trace ingredients — excluded from the fingerprint + the tagline BODY (fats,
+// spices, sweeteners). Word-boundary matched (K-T-3) so "oil" doesn't catch an
+// unrelated word; the corpus is curated, so the documented edge ("pepper" would
+// match a future "bell pepper") is a known invariant, not a live collision.
+const _RECIPE_TRACE = ['ghee', 'oil', 'turmeric', 'cinnamon', 'cumin', 'coriander', 'mint', 'jaggery', 'honey', 'salt', 'sugar', 'cardamom', 'pepper', 'ginger', 'garlic', 'lemon'];
+const _RECIPE_TRACE_RE = new RegExp('\\b(' + _RECIPE_TRACE.join('|') + ')\\b', 'i');
+function _recipeIsTrace(name) { return _RECIPE_TRACE_RE.test(String(name)); }
+function _recipeFpDomain(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
+}
+// Build the weighted fingerprint: { stripe, fadeL, fadeD, ranked } or null.
+function _recipeFingerprint(r) {
+  const prim = (r.ingredients || []).filter(i => !_recipeIsTrace(i.name) && _recipeFpDomain(i.name));
+  if (!prim.length) return null;
+  const byDom = {};
+  for (const i of prim) { const d = _recipeFpDomain(i.name); byDom[d] = (byDom[d] || 0) + (i.g || 10); }
+  let doms = Object.entries(byDom).map(([d, g]) => ({ d, g, ...RECIPE_FP_DOM[d] })).sort((a, b) => a.o - b.o);
+  if (doms.length > 4) doms = doms.slice().sort((a, b) => b.g - a.g).slice(0, 4).sort((a, b) => a.o - b.o);
+  const total = doms.reduce((s, x) => s + x.g, 0) || 1;
+  doms.forEach(x => { x.frac = x.g / total; });
+  const r2 = n => Math.round(n * 10) / 10;
+  const stopsAt = key => { let cum = 0; const s = []; for (const x of doms) { const mid = cum + x.frac / 2; s.push(`${x[key]} ${r2(mid * 100)}%`); cum += x.frac; } return s; };
+  const stripe = `linear-gradient(90deg, ${doms[0].sat} 0%, ${stopsAt('sat').join(', ')}, ${doms.at(-1).sat} 100%)`;
+  const fadeL = `linear-gradient(135deg, ${doms[0].light} 0%, ${stopsAt('light').join(', ')}, ${doms.at(-1).light} 100%)`;
+  const fadeD = `linear-gradient(135deg, ${doms[0].dark} 0%, ${stopsAt('dark').join(', ')}, ${doms.at(-1).dark} 100%)`;
+  const ranked = prim.slice().sort((a, b) => (b.g || 0) - (a.g || 0)).slice(0, 3);
+  return { stripe, fadeL, fadeD, ranked };
+}
+
+// Day-of-year seed — rotates the tagline epithets daily (deterministic within a
+// day). Cosmetic only; local date, timezone-safe construction (HR-12).
+function _recipeDaySeed() {
+  const d = new Date();
+  return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+}
+
+// Relevance tag for a catalog row (the LOCKED "uses banana"/"vitamin-A" meta) —
+// a nutrient highlight scanned from the recipe's own dos/steps, else cuisine.
+const _RECIPE_NUTRIENT_HINTS = [
+  [/\biron\b/i, 'iron-rich'], [/calcium/i, 'calcium'], [/protein/i, 'protein'],
+  [/vitamin a|beta-?carotene/i, 'vitamin A'], [/vitamin c/i, 'vitamin C'],
+  [/omega|brain-health/i, 'omega-3'], [/probiotic/i, 'probiotic'],
+  [/fibre|fiber/i, 'fibre'], [/healthy fat|brain-healthy fat/i, 'healthy fats'],
+];
+function _recipeRelevanceTag(r) {
+  const hay = ((r.dos || []).join(' ') + ' ' + (r.steps || []).join(' '));
+  for (const [re, label] of _RECIPE_NUTRIENT_HINTS) if (re.test(hay)) return label;
+  return r.cuisine || '';
+}
+
+// Pass A — surfacing gate. Every ingredient must pass the household diet
+// preference; any fail withholds the recipe (fail-OPEN if the gate is absent).
+function _recipeAllowedForHousehold(r) {
+  if (typeof _dietAllowsFood !== 'function') return true;
+  return (r.ingredients || []).every(ing => _dietAllowsFood(ing.name));
+}
+
+// Primary ingredient's FOOD_TAX domain pid (drives card colour). Falls back to
+// the recipe's first declared foodGroup, then 'grains'.
+function _recipePrimaryGroup(r) {
+  const first = (r.ingredients && r.ingredients[0]) ? r.ingredients[0].name : '';
+  const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(first) : null;
+  if (cls && cls.group) return cls.group;
+  if (r.foodGroups && r.foodGroups.length) return r.foodGroups[0];
+  return 'grains';
+}
+
+// Rail colour for a FOOD_TAX domain pid (reuses _foodTextMap by colour token).
+function _recipeRailColor(group) {
+  if (typeof FOOD_TAX !== 'undefined' && FOOD_TAX[group] && typeof _foodTextMap !== 'undefined') {
+    const col = FOOD_TAX[group].color;
+    if (_foodTextMap[col]) return _foodTextMap[col];
+  }
+  return 'var(--tc-sage)';
+}
+
+// When an ingredient shares a zif icon with a differently-named food, the
+// composer would voice the wrong noun (M-T-2: poha shares the 'suji' icon →
+// voiced "suji"). Resolve the tagline EP key from the name first, then the icon.
+const _RECIPE_EP_KEY_OVERRIDE = { poha: 'poha' };
+function _recipeEpKey(name) {
+  const n = String(name).toLowerCase();
+  for (const k in _RECIPE_EP_KEY_OVERRIDE) if (n.indexOf(k) !== -1) return _RECIPE_EP_KEY_OVERRIDE[k];
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? ic.icon : null;
+}
+// The italic "voice" descriptor (§9.5/§9.6) — the ported tagline composer,
+// quantity-weighted, epithets day-seed-rotated. Returns { strict:[lead clauses],
+// body } — render strict FIRST (prominent), then the italic body. Reserved for
+// the hero (Typography C: italic = voice).
+//
+// M-T-1 / K-T-1 (BLOCKING fold): trace items are dropped from the BODY, but an
+// ingredient carrying a STRICT safety clause (honey/jaggery → RECIPE_EP[].strict)
+// is kept so the composer surfaces it as the rose lead (§9.7: strict no's lead,
+// never folded). Its tiny gram weight keeps it a "touch of" in the body while the
+// strict clause leads. (The fingerprint path excludes it separately, unchanged.)
+function _recipeTagline(r) {
+  if (typeof _recipeComposeTagline !== 'function' || typeof RECIPE_EP === 'undefined') return { strict: [], body: '' };
+  const parts = [];
+  for (const i of (r.ingredients || [])) {
+    const key = _recipeEpKey(i.name);
+    if (!key || !RECIPE_EP[key]) continue;
+    if (_recipeIsTrace(i.name) && !RECIPE_EP[key].strict) continue;
+    parts.push({ id: key, w: i.g || 10 });
+  }
+  return _recipeComposeTagline(parts, _recipeDaySeed());
+}
+
+// The highest ingredient age-gate (months) — recipe-level age floor (§5).
+function _recipeMaxIngredientGate(r) {
+  let mx = 0;
+  for (const ing of (r.ingredients || [])) {
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(ing.name) : null;
+    if (ageR && ageR.minMonth > mx) mx = ageR.minMonth;
+  }
+  return mx;
+}
+
+// Effective minimum age = max(declared minAgeMonths, the live ingredient gates)
+// — the app's AGE_RULES table WINS on any disagreement (§6: flag, don't override).
+function _recipeEffectiveMinAge(r) {
+  return Math.max(r.minAgeMonths || 0, _recipeMaxIngredientGate(r));
+}
+
+// Pass B — per-ingredient safety stack (NEVER gated). Mirrors the
+// renderFoodDetailSheet floor/allergen/age rendering, prefixed with the
+// ingredient name so a multi-ingredient recipe never hides one entity's floor.
+function _recipeIngredientSafety(name, ageMonths) {
+  const lower = String(name).toLowerCase().trim();
+  const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+  const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+  const aged = ageR && ageR.minMonth > ageMonths;
+  const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const floor = (eff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(eff) : '';
+  let h = '';
+  if (floor) {
+    const pol = _RECIPE_FD_POLARITY[(typeof _effPolarity === 'function') ? _effPolarity(eff) : 'warn'] || _RECIPE_FD_POLARITY.warn;
+    const head = (eff && eff.title) ? escHtml(eff.title) : escHtml(name);
+    const sub = (eff && eff.safeForm && eff.safeForm.note) ? escHtml(eff.safeForm.note) : (allerg ? escHtml(allerg) : '');
+    h += `<div class="fd-flag ${pol.cls}">${zi(pol.ic)} <span><strong>${escHtml(name)} — ${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    h += floor;
+  } else if (allerg) {
+    h += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>${escHtml(name)} — allergen.</strong> ${escHtml(allerg)}</span></div>`;
+  }
+  if (aged) {
+    h += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>${escHtml(name)} — not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  }
+  return h;
+}
+
+// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
+// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+function _recipeDetailHtml(r, ageMonths) {
+  let h = '';
+  // Ingredients (chips with food icon)
+  h += '<div class="recipe-chips">';
+  for (const ing of (r.ingredients || [])) {
+    const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
+    const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+  }
+  h += '</div>';
+  // Steps
+  if (r.steps && r.steps.length) {
+    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
+    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
+    h += '</ol></div>';
+  }
+  // Per-ingredient safety (Pass B — never gated)
+  let safety = '';
+  for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
+  if (safety) {
+    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
+  } else {
+    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
+  }
+  // Dos & Don'ts (reuse the combo classes)
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
+    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    h += '</div></div>';
+  }
+  // Source citation (no assumptions)
+  if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
+    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
+      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+  }
+  return h;
+}
+
+// One catalog/suggested row (full-width .recipe-row, expand-in-place). Per the
+// LOCKED 05-meal-rows: food icon + Fraunces title + a factual meta line
+// (prep · age · slot · relevance). The italic "voice" is reserved for the hero
+// (§9.6: italic = descriptor only), so rows carry facts, not voice.
+function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
+  opts = opts || {};
+  const uid = uidPrefix + '-' + r.id;
+  const grp = _recipePrimaryGroup(r);
+  const rail = _recipeRailColor(grp);
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
+  const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+  const effMin = _recipeEffectiveMinAge(r);
+  const withheld = effMin > ageMonths;
+  // V-R-1: one age statement per row — the badge IS the age signal when withheld.
+  const ageBadge = withheld ? `<span class="recipe-age-badge">${zi('baby')} ${effMin}m+</span>` : '';
+  const ageMeta = withheld ? '' : `<span>${zi('baby')} ${effMin}m+</span>`;
+  const slot = RECIPE_SLOT_META[r.slot];
+  const slotMeta = (opts.showSlot && slot) ? `<span>${zi(slot.icon)} ${escHtml(slot.label)}</span>` : '';
+  const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
+  const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
+  const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
+  return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+    <div class="recipe-row-top">
+      <span class="recipe-row-icon">${glyph}</span>
+      <span class="recipe-row-main">
+        <span class="recipe-row-title">${escHtml(r.title)}</span>
+        <span class="recipe-row-meta">${prepMeta}${ageMeta}${slotMeta}${relMeta}${ageBadge}</span>
+      </span>
+      <span class="recipe-row-chev">${zi('chevron-down')}</span>
+    </div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+  </div>`;
+}
+
+// The featured "Suggested for Ziva" hero (top pick) — the GENERATIVE card
+// (§9.3/§9.4): a grams-weighted wavelength fingerprint stripe + warm-wave sheen
+// + corner zif watermark, the Fraunces-italic composed voice (strict no's lead),
+// the data-driven why, a prep·age·slot meta line, and a "See recipe →" CTA.
+// Expand-in-place like the rows.
+function _recipeHeroHtml(r, whyText, ageMonths) {
+  const uid = 'h-' + r.id;
+  const grp = _recipePrimaryGroup(r);
+  const rail = _recipeRailColor(grp);
+  const fp = _recipeFingerprint(r);
+  const slot = RECIPE_SLOT_META[r.slot];
+  const effMin = _recipeEffectiveMinAge(r);
+  const tag = _recipeTagline(r);
+  let wm = '';
+  if (fp && fp.ranked && fp.ranked.length) {
+    const slots = ['wm-1', 'wm-2', 'wm-3'];
+    wm = '<div class="recipe-hero-wm" aria-hidden="true">' + fp.ranked.map((ing, k) => {
+      const ic = recipeFoodIcon(ing.name);
+      return ic ? `<span class="recipe-wm ${slots[k]}"><svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg></span>` : '';
+    }).join('') + '</div>';
+  }
+  const fpStyle = fp ? `--rc-stripe:${fp.stripe};--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '';
+  const strictLead = (tag.strict && tag.strict.length) ? `<span class="recipe-strict">${escHtml(tag.strict.join('; '))}</span> ` : '';
+  const meta = [];
+  if (r.prepMinutes) meta.push(`<span>${zi('clock')} ${r.prepMinutes} min</span>`);
+  meta.push(`<span>${zi('baby')} ${effMin}m+</span>`);
+  if (slot) meta.push(`<span>${zi(slot.icon)} ${escHtml(slot.label)}</span>`);
+  return `<div class="recipe-hero recipe-hero-gen dt-${grp}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+    ${wm}
+    <div class="recipe-hero-head">
+      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for Ziva</span>
+      ${slot ? `<span class="recipe-hero-badge">${escHtml(slot.label)}</span>` : ''}
+    </div>
+    <h3 class="recipe-hero-title">${escHtml(r.title)}</h3>
+    <p class="recipe-hero-tag">${strictLead}${escHtml(tag.body)}</p>
+    <p class="recipe-hero-why">${escHtml(whyText || '')}</p>
+    <div class="recipe-hero-foot">
+      <span class="recipe-hero-meta">${meta.join('')}</span>
+      <span class="recipe-hero-cta">See recipe ${zi('arrow-right')}</span>
+    </div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+  </div>`;
+}
+
+// §4 — rank surfaced + age-fit recipes by logged-data signal. Returns
+// [{ r, score, why }] sorted desc. No new engine — composes existing scorers.
+function _recipeSuggestForZiva(surfaced, ageMonths) {
+  const vs = (typeof computeVarietyScore === 'function') ? computeVarietyScore(7) : null;
+  const gaps = (vs && vs.gaps) ? vs.gaps : [];
+  const subGaps = (vs && vs.subcategoryGaps) ? vs.subcategoryGaps : [];
+  const gapGroups = new Set(gaps.map(g => g.group));
+  const subGapGroups = new Set(subGaps.map(g => g.group));
+  const gapWhy = {};
+  gaps.forEach(g => { gapWhy[g.group] = g.suggestion || ('More ' + (g.label || g.group).toLowerCase() + ' this week'); });
+  const untried = (typeof getUntriedSuggestions === 'function') ? (getUntriedSuggestions(8) || []) : [];
+  const untriedNames = new Set(untried.map(u => (u.name || '').toLowerCase()));
+  const untriedWhy = {};
+  untried.forEach(u => { untriedWhy[(u.name || '').toLowerCase()] = u.reason; });
+
+  const candidates = surfaced.filter(r => _recipeEffectiveMinAge(r) <= ageMonths);
+  const scored = candidates.map(r => {
+    let score = 0; let why = '';
+    for (const g of (r.foodGroups || [])) {
+      if (gapGroups.has(g)) { score += 3; if (!why) why = gapWhy[g]; }
+      if (subGapGroups.has(g)) score += 2;
+    }
+    for (const ing of (r.ingredients || [])) {
+      const base = (typeof _baseFoodName === 'function') ? _baseFoodName(ing.name) : ing.name.toLowerCase();
+      if (untriedNames.has(ing.name.toLowerCase()) || untriedNames.has(base)) {
+        score += 2; if (!why) why = untriedWhy[ing.name.toLowerCase()] || ('A fresh way to try ' + ing.name);
+      }
+      if (typeof isFoodFavorite === 'function' && isFoodFavorite(base)) score += 1;
+    }
+    // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
+    score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
+    if (!why) why = r.steps && r.steps.length ? null : '';
+    return { r, score, why };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 5);
+}
+
+// Lazy entry — fills #dietRecipesRoot when the Recipes sub-tab opens.
+function renderDietRecipes() {
+  const root = document.getElementById('dietRecipesRoot');
+  if (!root) return;
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  // Pass A — surfacing gate.
+  const surfaced = corpus.filter(_recipeAllowedForHousehold);
+
+  let html = '';
+
+  // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
+  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+
+  // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
+  const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
+  html += `<div class="col-full">`;
+  if (suggested.length) {
+    const top = suggested[0];
+    const topWhy = top.why || (top.r.dos && top.r.dos[0]) || 'A wholesome, age-appropriate pick for today.';
+    html += _recipeHeroHtml(top.r, topWhy, ageMonths);
+    const more = suggested.slice(1);
+    if (more.length) {
+      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for Ziva</span><span class="recipe-group-count">${more.length}</span></div>`;
+      for (const s of more) html += _recipeRowHtml(s.r, 's', ageMonths, { showSlot: true });
+    }
+  } else {
+    html += `<div class="recipe-empty">${zi('spoon')} Keep logging meals for a few days and personalised recipe ideas will appear here. Meanwhile, browse the catalog below.</div>`;
+  }
+  html += '</div>';
+
+  // ── (b) Browsable catalog grouped by meal slot ──
+  html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
+  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  for (const slot of RECIPE_SLOT_ORDER) {
+    const inSlot = surfaced.filter(r => r.slot === slot);
+    if (!inSlot.length) continue;
+    inSlot.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+    const meta = RECIPE_SLOT_META[slot];
+    html += `<div class="recipe-group"><div class="recipe-group-head">${zi(meta.icon)}<span class="recipe-group-title">${escHtml(meta.label)}</span><span class="recipe-group-count">${inSlot.length}</span></div>`;
+    for (const r of inSlot) html += _recipeRowHtml(r, 'c', ageMonths, { showSlot: false });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  root.innerHTML = html;
+}
+
+// Toggle a recipe row's expand-in-place detail (data-action target).
+function toggleRecipeRow(uid) {
+  const det = document.getElementById('rdet-' + uid);
+  const row = document.getElementById('rrow-' + uid);
+  if (!det || !row) return;
+  const open = det.style.display !== 'none';
+  det.style.display = open ? 'none' : 'block';
+  row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Force-open a catalog recipe row + scroll it into view (used by the Home
+// Smart-Q&A tap-through, openRecipeInTab → core.js dispatcher).
+function expandRecipeRow(recipeId) {
+  const uid = 'c-' + recipeId;
+  const det = document.getElementById('rdet-' + uid);
+  const row = document.getElementById('rrow-' + uid);
+  if (!det || !row) return false;
+  det.style.display = 'block';
+  row.setAttribute('aria-expanded', 'true');
+  if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return true;
+}
+
+// ── §10 "Can I give this?" — recipe-aware shared resolver ────────────────
+// ONE resolver powers BOTH "Can I give this?" surfaces (Patterns combo bar +
+// Home Smart-Q&A) so they never diverge — that two-path divergence is the
+// fish/milk defect class. Applicability = the verdict is NOT 'avoid' AND not
+// preference-blocked; a non-veg food for a veg household is "not applicable for
+// THIS household" → reason, no recipe — but the SAFETY path still renders,
+// never gated. Returns null (not applicable → suppress recipe), or
+//   { kind:'recipe', recipeId, title, recipe, dos, donts }   (curated corpus hit)
+//   { kind:'suggest', recipe, dos, donts, nearest }          (none → nearest + auto)
+
+// Steps of a corpus recipe as a \n-joined string (renders like COMBO_RECIPES).
+function _recipeStepsText(r) {
+  return (r.steps || []).join('\n');
+}
+
+// Count how many query foods appear in a recipe's ingredient names.
+function _recipeQueryOverlap(r, rawFoods) {
+  let n = 0;
+  for (const q of rawFoods) {
+    const qn = String(q).toLowerCase().trim();
+    if (!qn) continue;
+    if ((r.ingredients || []).some(ing => {
+      const inm = ing.name.toLowerCase();
+      return inm.indexOf(qn) !== -1 || qn.indexOf(inm) !== -1;
+    })) n++;
+  }
+  return n;
+}
+
+// Best corpus recipe where EVERY query food maps to an ingredient — age- and
+// preference-gated. Returns the recipe or null.
+function _recipeCorpusMatch(rawFoods) {
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  let best = null; let bestScore = 0;
+  for (const r of corpus) {
+    if (!_recipeAllowedForHousehold(r)) continue;
+    if (_recipeEffectiveMinAge(r) > ageMonths) continue;
+    const overlap = _recipeQueryOverlap(r, rawFoods);
+    if (overlap >= rawFoods.length && overlap > bestScore) { best = r; bestScore = overlap; }
+  }
+  return best;
+}
+
+// Closest cited recipe by ingredient overlap (partial ok) + age-fit + diet-gate.
+function _recipeNearest(rawFoods) {
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  let best = null; let bestScore = 0;
+  for (const r of corpus) {
+    if (!_recipeAllowedForHousehold(r)) continue;
+    if (_recipeEffectiveMinAge(r) > ageMonths) continue;
+    const overlap = _recipeQueryOverlap(r, rawFoods);
+    if (overlap > bestScore) { best = r; bestScore = overlap; }
+  }
+  return (best && bestScore > 0) ? { id: best.id, title: best.title } : null;
+}
+
+function _resolveRecipeAnswer(rawFoods, applicable, ctx) {
+  ctx = ctx || {};
+  if (!applicable) return null;
+  const corpus = _recipeCorpusMatch(rawFoods);
+  if (corpus) {
+    return { kind: 'recipe', recipeId: corpus.id, title: corpus.title,
+      recipe: _recipeStepsText(corpus), dos: corpus.dos || [], donts: corpus.donts || [] };
+  }
+  return { kind: 'suggest', recipe: ctx.recipeText || '', dos: ctx.dos || [],
+    donts: ctx.donts || [], nearest: _recipeNearest(rawFoods) };
 }
 
 function renderFoodDetailSheet(name) {
@@ -41626,6 +43492,19 @@ function checkFoodCombo() {
     headline = encourage.title;
   }
 
+  // ── §10: recipe is applicability-gated + corpus-sourced (the shared
+  // resolver, also used by the Home Smart-Q&A bar). An 'avoid' food or an
+  // off-preference food shows the reason, NOT a recipe — fixes the empty
+  // recipe block that rendered for honey/salt/sugar. The safety path
+  // (severe_floors / toxin / allergen_notes) is untouched and still fires.
+  const _recipeApplicable = verdict !== 'avoid' && offPref.length === 0;
+  const _recAns = _resolveRecipeAnswer(rawFoods, _recipeApplicable, { recipeText, dos, donts, mo });
+  recipeText = _recAns ? _recAns.recipe : '';
+  dos = _recAns ? _recAns.dos : [];
+  donts = _recAns ? _recAns.donts : [];
+  const _recipeId = (_recAns && _recAns.kind === 'recipe') ? _recAns.recipeId : null;
+  const _nearestRecipe = (_recAns && _recAns.kind === 'suggest') ? _recAns.nearest : null;
+
   const result = {
     verdict, verdict_emoji: verdictEmoji, headline,
     explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.` : ''),
@@ -41633,6 +43512,8 @@ function checkFoodCombo() {
     new_foods: newFoods,
     allergen_notes: allergenNotes,
     recipe: recipeText,
+    recipe_id: _recipeId,
+    nearest_recipe: _nearestRecipe,
     dos, donts,
     pairs_well_with: pairsWellWith,
     _queryFoods: rawFoods,
@@ -41888,7 +43769,18 @@ function renderComboResult(r) {
   }
 
   if (r.recipe) {
-    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Recipe</div><div class="combo-recipe">${escHtml(r.recipe).replace(/\n/g,'<br>')}</div></div>`;
+    // §10: when the recipe came from the cited corpus, offer a tap-through to
+    // the full Recipes-tab card. When it's an auto-generated "or make it
+    // simply" fallback and a cited recipe is nearby, surface that too.
+    let recipeFoot = '';
+    if (r.recipe_id) {
+      recipeFoot = `<button class="btn btn-ghost btn-min80 mt-4" data-action="openRecipeInTab" data-arg="${escAttr(r.recipe_id)}">Open in Recipes ${zi('arrow-right')}</button>`;
+    } else if (r.nearest_recipe && r.nearest_recipe.id) {
+      recipeFoot = `<button class="btn btn-ghost btn-min80 mt-4" data-action="openRecipeInTab" data-arg="${escAttr(r.nearest_recipe.id)}">Closest cited recipe: ${escHtml(r.nearest_recipe.title)} ${zi('arrow-right')}</button>`;
+    }
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Recipe</div><div class="combo-recipe">${escHtml(r.recipe).replace(/\n/g,'<br>')}</div>${recipeFoot}</div>`;
+  } else if (r.nearest_recipe && r.nearest_recipe.id) {
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} A cited recipe to try</div><button class="btn btn-ghost btn-min80" data-action="openRecipeInTab" data-arg="${escAttr(r.nearest_recipe.id)}">${escHtml(r.nearest_recipe.title)} ${zi('arrow-right')}</button></div>`;
   }
 
   if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
@@ -58323,10 +60215,27 @@ function qaHandleFoodSafety(classified) {
     });
   }
 
+  // §10 (WIRING_PLAN): a compact recipe affordance, applicability-gated +
+  // corpus-sourced via the SHARED resolver (the same _resolveRecipeAnswer the
+  // Patterns combo bar uses, so the two surfaces never diverge — the fish/milk
+  // two-path defect class). Applicability = NOT 'avoid' AND not preference-
+  // blocked; an 'avoid' or off-preference food shows the reason only. The
+  // safety sections above always render regardless (the floor is never gated).
+  var _recipeApplicable = verdict !== 'avoid' &&
+    (typeof _dietAllowsFood !== 'function' || rawFoods.every(function (f) { return _dietAllowsFood(f); }));
+  var _recAns = (typeof _resolveRecipeAnswer === 'function')
+    ? _resolveRecipeAnswer(rawFoods, _recipeApplicable, {}) : null;
+  var _recipeCard = null;
+  if (_recAns) {
+    if (_recAns.kind === 'recipe') _recipeCard = { id: _recAns.recipeId, title: _recAns.title };
+    else if (_recAns.nearest) _recipeCard = { id: _recAns.nearest.id, title: _recAns.nearest.title };
+  }
+
   return {
     icon: 'shield',
     domain: 'peach',
     title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
+    recipeCard: _recipeCard,
     // headline from the record (food-effects v2 \u00a73.1/\u00a73.2, M-S-2): the hazard for
     // an acute-toxin, the encourage title for an age-appropriate allergen \u2014 never
     // a bare "Safe" synthesized next to the food name. Falls back to the verdict.
@@ -58891,6 +60800,16 @@ function qaRenderAnswer(container, answer) {
       }
       html += '</div>';
     });
+  }
+
+  // §10 (WIRING_PLAN): compact recipe card — taps through to Track → Diet →
+  // Recipes via the global data-action delegation (openRecipeInTab, core.js).
+  // The full recipe lives only in the Recipes tab (one renderer, no divergence).
+  if (answer.recipeCard && answer.recipeCard.id) {
+    html += '<button class="qa-recipe-card" data-action="openRecipeInTab" data-arg="' + escHtml(answer.recipeCard.id) + '">' +
+      zi('chef') +
+      '<span class="qa-recipe-card-main"><span class="qa-recipe-card-title">' + escHtml(answer.recipeCard.title) + '</span></span>' +
+      '<span class="qa-recipe-card-cta">Recipe ' + zi('arrow-right') + '</span></button>';
   }
 
   // Actions (CTA buttons)
@@ -62771,7 +64690,7 @@ function matchSuggestionsAfterSave(dateStr) {
     dayData.adoptionRate = adoptedCount / dayData.items.length;
     save(KEYS.suggestions, _suggestionsData);
     // Refresh Home card if visible
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'home') renderHomeSuggestions();
   }
 }
@@ -67761,7 +69680,7 @@ function undoLastQL() {
     t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
     // Refresh views
-    const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+    const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
     if (curTab === 'diet') { initFeeding(); renderDietStats(); }
     if (curTab === 'poop') { renderPoop(); }
     if (curTab === 'sleep') { renderSleep(); }
@@ -68125,7 +70044,7 @@ function qlFeedSkipMeal() {
     feedingData = f;
     if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
     if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-    var curTab2 = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+    var curTab2 = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
     if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
     if (curTab2 === 'home') renderHome();
   };
@@ -68138,7 +70057,7 @@ function qlFeedSkipMeal() {
   // Skip toggles so a subsequent tap on the now-stale legacy Skip button
   // doesn't silently UNSKIP the meal we just skipped via FOB.
   if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-  var curTab = TAB_ORDER.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
+  var curTab = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
   if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -68273,7 +70192,7 @@ function saveQLFeed() {
   matchSuggestionsAfterSave(dateStr);
 
   // Refresh if on diet tab or home
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'diet') { initFeeding(); renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
@@ -68310,7 +70229,7 @@ function saveQLSleep() {
   var sleepToastMsg = zi('check') + ' Sleep logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlInsight ? ' \u00b7 ' + qlInsight : '');
   showQLToast(sleepToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -68347,7 +70266,7 @@ function saveQLNap() {
   var napToastMsg = zi('check') + ' Nap logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlNapInsight ? ' \u00b7 ' + qlNapInsight : '');
   showQLToast(napToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
   if (curTab === 'home') { renderHome(); renderHomeSleep(); }
 }
@@ -68384,7 +70303,7 @@ function saveQLPoop() {
   var poopToastMsg = zi('check') + ' Poop logged' + (dateStr !== today() ? ' for ' + formatDate(dateStr) : '') + (qlPoopIns ? ' \u00b7 ' + qlPoopIns : '');
   showQLToast(poopToastMsg, 3000, undoFn);
 
-  const curTab = TAB_ORDER.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
+  const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
   if (curTab === 'poop') { renderPoop(); setTimeout(drawPoopChart, 60); }
   if (curTab === 'home') renderHome();
 }
@@ -72994,6 +74913,301 @@ function renderInfoMilestoneSleepCorrelation() {
   _setCardPriority('infoMilestoneSleepCard', 'notable');
 }
 
+// ─────────────────────────────────────────
+// LEAN LANDING (app-open surface) — render-first
+// ─────────────────────────────────────────
+// The calm front door: a greeting (reused from #headerFull), one honest
+// "today at a glance" line, and three soft doors. "Calm by default, Care
+// pre-empts the calm" — a live Care signal escalates a loud-rose action card
+// above the calm content (Maren C1). Neutral cream, no domain wash (home-family
+// surfaces take none by design); domain identity rides only on each door's icon.
+// Composition cap: ≤3 elements (Vela C2). renderLanding() stays off the heavy
+// compute path (Kael C3): greeting + age + glance + a cheap Care check only.
+
+// Care pre-empt detector. Stage 1: active illness episodes (real predicate).
+// Stage 2 (Maren C1) extends with overdue/same-day vaccines, due meds (Vit D3),
+// overdue CareTickets, and post-vacc monitoring via the renderRemindersAndAlerts
+// predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
+function _ldCareAlerts() {
+  const out = [];
+  // Illness episodes — "being tracked" (calm-loud, severity med), route to Medical.
+  const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
+  if (posture && posture.active && posture.active.length) {
+    const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
+    const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
+    posture.active.forEach(function(ep) {
+      out.push({
+        severity: 'med',
+        icon: iconMap[ep.type] || 'siren',
+        title: (labelMap[ep.type] || 'Illness') + ' being tracked',
+        sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
+        action: 'ldGoto', arg: 'home', arg2: ''
+      });
+    });
+  }
+  // Time-axis Care signals — overdue vaccines, due/missed meds, post-vacc
+  // monitoring, overdue CareTickets (flip-gate detector, spec §4.4 / Maren).
+  if (typeof getActiveCareSignals === 'function') {
+    getActiveCareSignals().forEach(function(s) { out.push(s); });
+  }
+  // Hottest-first (high → med → low); action-needed surfaces above being-tracked.
+  const rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) {
+    return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]);
+  });
+  return out;
+}
+
+// Staggered fade-up, gated on Motion with a reduced-motion floor (no CSS
+// pre-hide, so content is visible if JS/Motion is absent — accessible default).
+function _ldAnimateIn(container) {
+  if (!container) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !(window.Motion && window.Motion.animate)) return;
+  const kids = container.children;
+  for (let i = 0; i < kids.length; i++) {
+    window.Motion.animate(kids[i],
+      { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0)'] },
+      { duration: 0.35, delay: i * 0.06, easing: [0.22, 0.61, 0.36, 1] });
+  }
+}
+
+function renderLanding() {
+  // The dense #headerFull greeting card (avatar + age + weather) is hidden on
+  // the lean Landing (switchTab toggles it to the dense "Today" only); the
+  // warm-wave "Today so far" hero below is the Landing's own warm anchor, so we
+  // no longer refresh #headerFull from here.
+  const el = document.getElementById('ldContent');
+  if (!el) return;
+
+  let html = '';
+
+  // 0 · Care pre-empt — calm by default, Care pre-empts the calm (Maren C1).
+  const alerts = _ldCareAlerts();
+  if (alerts.length) {
+    html += '<div class="ld-care col-full">';
+    alerts.forEach(function(a) {
+      var urgent = (a.severity === 'high');
+      html += '<button class="card card-action ld-care-card' + (urgent ? ' ld-care-hot' : '') + '" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '')
+            + (a.arg2 ? ' data-arg2="' + escAttr(a.arg2) + '"' : '') + '>'
+            + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
+            + '<span class="ld-care-body">'
+            +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'
+            +   '<span class="ld-care-sub">' + escHtml(a.sub) + '</span>'
+            + '</span>'
+            + '<span class="ld-care-chev">' + zi('arrow-right') + '</span>'
+            + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // 1 · Glance line — neutral, honest empty-state (Vela C2). Reuse the TSF
+  // summary generator and clone its honest-empty pattern (never a bare "No data").
+  const collected = (typeof _tsfCollectEvents === 'function')
+    ? _tsfCollectEvents() : { events: [], noTimeEvents: [] };
+  const totalCount = (collected.events ? collected.events.length : 0)
+                   + (collected.noTimeEvents ? collected.noTimeEvents.length : 0);
+  // Empty-day register is PROSPECTIVE at app-open ("nothing logged yet, let's
+  // begin"), not the Today-So-Far mid-day retrospective ("Quiet day so far.").
+  // Same data, right voice for the front door (Vela V-V-1).
+  let summary;
+  if (totalCount === 0) {
+    summary = 'A fresh day with Ziva — nothing logged yet.';
+  } else {
+    const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
+    summary = (typeof _tsfGenerateSummary === 'function')
+      ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  }
+  // 1 · The day's glance as the signature HERO. Per DP §9 (Recipes design
+  // language, ratified 2026-06-03): typography C — a Nunito structural eyebrow
+  // over the day's story as a Fraunces *italic* "voice" line (italic = voice
+  // only); a 4px de-neoned wavelength warm-wave stripe sweeps over the top
+  // (§9.3/§9.4). No score (C2: warmth, not a verdict).
+  const heroIcon = (totalCount === 0) ? 'sprout' : 'sparkle';
+  const heroIconTint = (totalCount === 0) ? 'icon-sage' : 'icon-lav';
+  html += '<div class="card card-hero hero-home ld-hero col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
+  html += '<div class="ld-hero-eyebrow">'
+        +   '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>'
+        +   '<span class="ld-hero-label">Today so far</span>'
+        + '</div>';
+  html += '<div class="ld-hero-voice">' + escHtml(summary) + '</div>';
+  if (totalCount === 0) {
+    html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
+  }
+  // Compact picker — revealed only when _ldFitHero adds .ld-crowded (Care
+  // pre-empts have pushed the Emergency card below the fold). The hero collapses
+  // to "Today so far · Start with [picker]" so a tired parent can jump straight
+  // into logging a category without the full hero's vertical cost. The <select>
+  // routes through the delegated change-action dispatcher to openQuickModal.
+  html += '<div class="ld-hero-compact">'
+        +   '<span class="ld-hero-compact-label">Start with</span>'
+        +   '<select class="ld-hero-select" data-change-action="ldQuickStart" aria-label="Start logging">'
+        +     '<option value="">Choose…</option>'
+        +     '<option value="feed">Food</option>'
+        +     '<option value="sleep">Sleep</option>'
+        +     '<option value="nap">Nap</option>'
+        +     '<option value="poop">Poop</option>'
+        +     '<option value="activity">Activity</option>'
+        +   '</select>'
+        + '</div>';
+  html += '</div>';
+
+  // 2 · Three doors — Log (primary) / Today / Ask. Domain identity on the icon
+  // only; the door surfaces stay neutral cream.
+  html += '<div class="ld-doors col-full">';
+  html += '<button class="ld-door ld-door-primary" data-action="toggleQuickLog">'
+        +   '<span class="icon icon-sage">' + zi('note') + '</span>'
+        +   '<span class="ld-door-body">'
+        +     '<span class="ld-door-label">Log</span>'
+        +     '<span class="ld-door-sub">Feed, nap, diaper &amp; more</span>'
+        +   '</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-today" data-action="switchTab" data-arg="home">'
+        +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
+        +   '<span class="ld-door-label">Today</span>'
+        +   '<span class="ld-door-sub">Full day</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
+        +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
+        +   '<span class="ld-door-label">Ask</span>'
+        +   '<span class="ld-door-sub">About Ziva</span>'
+        + '</button>';
+  html += '</div>';
+
+  // Emergency — always-present quick access (STUB; live wiring in PR #216).
+  // The card body (.ld-emergency-main) opens the chooser; the 108/112 tel:
+  // links are SIBLINGS of that button (not descendants), so a tap dials
+  // straight through and the data-action delegation never opens the chooser —
+  // the surround does nothing either (the container carries no data-action).
+  // Numbers from EMERGENCY_CONTACTS (108 national ambulance / 112 unified).
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary) ? _emReg.ambulancePrimary.number : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+  html += '<div class="ld-emergency col-full">'
+        +   '<button class="ld-emergency-main" data-action="ldEmergency">'
+        +     '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +     '<span class="ld-emergency-body">'
+        +       '<span class="ld-emergency-label">Emergency</span>'
+        +       '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +     '</span>'
+        +     '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        +   '</button>'
+        +   '<div class="ld-emergency-calls">'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>Ambulance · ' + escHtml(ambNum) + '</span></a>'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>Emergency · ' + escHtml(emgNum) + '</span></a>'
+        +   '</div>'
+        + '</div>';
+
+  el.innerHTML = html;
+  // Fit the hero to the viewport (compact it if the Emergency card is below the
+  // fold), then animate. rAF so layout + fonts are settled before we measure.
+  requestAnimationFrame(function() { _ldFitHero(el); _ldAnimateIn(el); });
+  // Re-fit on rotate / zoom / resize while the landing is the active panel
+  // (bound once; idempotent — _ldFitHero re-measures from the full state).
+  if (!window._ldFitBound) {
+    window._ldFitBound = true;
+    window.addEventListener('resize', function() {
+      var lc = document.getElementById('ldContent');
+      var panel = document.getElementById('tab-landing');
+      if (lc && panel && panel.classList.contains('active')) _ldFitHero(lc);
+    });
+  }
+}
+
+// Crowd-fit: if the Care pre-empts have pushed the Emergency card below the
+// fold, collapse the hero to its compact "Start with …" picker to reclaim the
+// vertical space (Architect: keep Emergency reachable without a scroll). Always
+// re-measures from the full state, so it relaxes back when the viewport grows.
+function _ldFitHero(el) {
+  if (!el) return;
+  el.classList.remove('ld-crowded');
+  var em = el.querySelector('.ld-emergency');
+  if (!em) return;
+  if (em.getBoundingClientRect().bottom > window.innerHeight) {
+    el.classList.add('ld-crowded');
+  }
+}
+
+// Compact-hero picker handler — opens the category quick-log modal directly.
+// openQuickModal assumes the body is already scroll-locked (it's normally
+// reached via openQuickLog), so we lock first. The <select> is reset so the
+// same category can be re-picked next time.
+function ldQuickStart(e) {
+  var type = (e && e.target) ? e.target.value : '';
+  if (e && e.target) e.target.value = '';
+  if (!type) return;
+  if (typeof qlLockBody === 'function') qlLockBody();
+  if (typeof openQuickModal === 'function') openQuickModal(type);
+}
+
+// Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing
+// dynamic-overlay pattern: build → animate open → lock scroll → close on the
+// × / outside-tap. Two paths: Food (→ Track→Diet→Library, where PR #216 is
+// adding the food emergency room) and General (Coming soon — new concept).
+function openEmergencyChooser() {
+  var existing = document.getElementById('ldEmOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ld-em-overlay';
+  overlay.id = 'ldEmOverlay';
+  document.body.appendChild(overlay);
+
+  overlay.innerHTML =
+    '<div class="ld-em-sheet" role="dialog" aria-label="Emergency help">'
+    + '<div class="ld-em-head">'
+    +   '<span class="ld-em-title">' + zi('siren') + '<span>Emergency</span></span>'
+    +   '<button class="ld-em-close" id="ldEmClose" aria-label="Close">×</button>'
+    + '</div>'
+    + '<p class="ld-em-prompt">What kind of help do you need?</p>'
+    + '<button class="ld-em-opt" id="ldEmFood">'
+    +   '<span class="icon icon-rose">' + zi('bowl') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">Food emergency</span>'
+    +     '<span class="ld-em-opt-sub">Choking, allergic reaction &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '<button class="ld-em-opt" id="ldEmGeneral">'
+    +   '<span class="icon icon-rose">' + zi('shield') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">General emergency</span>'
+    +     '<span class="ld-em-opt-sub">Fall, cut, burn &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#ldEmClose').addEventListener('click', _ldCloseEmergency);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _ldCloseEmergency(); });
+
+  // Food emergency → lead directly to the Library sub-tab (Track→Diet→Library);
+  // PR #216 wires the food emergency room (4 emergencies) there.
+  overlay.querySelector('#ldEmFood').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof switchTab === 'function') switchTab('track');
+    setTimeout(function() {
+      if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+      setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+    }, 60);
+    if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
+  });
+
+  // General emergency → new concept, design pending; stub per HR-8.
+  overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+  });
+}
+
+function _ldCloseEmergency() {
+  var overlay = document.getElementById('ldEmOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
@@ -77216,11 +79430,11 @@ function _syncGetGlobal(name) {
 // 'track:<sub>' | 'history' | 'insights' | 'info' | null. Mirrors the
 // idiom at intelligence.js:10773 + core.js:2620 (track sub-tab dispatch).
 function _syncReadActiveTab() {
-  if (typeof TAB_ORDER === 'undefined' || typeof document === 'undefined') return null;
+  if (typeof PANEL_IDS === 'undefined' || typeof document === 'undefined') return null;
   var top = null;
-  for (var i = 0; i < TAB_ORDER.length; i++) {
-    var el = document.getElementById('tab-' + TAB_ORDER[i]);
-    if (el && el.classList.contains('active')) { top = TAB_ORDER[i]; break; }
+  for (var i = 0; i < PANEL_IDS.length; i++) {
+    var el = document.getElementById('tab-' + PANEL_IDS[i]);
+    if (el && el.classList.contains('active')) { top = PANEL_IDS[i]; break; }
   }
   if (!top) return null;
   if (top !== 'track') return top;

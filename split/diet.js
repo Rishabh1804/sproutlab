@@ -13,7 +13,7 @@
 // chips to the Library sub-tab; F-4 will add the nutrient heatmap +
 // allergen trend to the Patterns sub-tab; F-5 lands parseFeeding (v3-8).
 // ═══════════════════════════════════════════════════════════════════════
-const DIET_SUB_ORDER = ['log', 'library', 'patterns'];
+const DIET_SUB_ORDER = ['log', 'library', 'recipes', 'patterns'];
 
 function switchDietSub(target) {
   const subKey = (target && target.dataset && target.dataset.dietSub) || 'log';
@@ -33,6 +33,8 @@ function switchDietSub(target) {
   // when its sub-tab opens. renderDietLibrary is defined below with the rest
   // of the relocated Library code.
   if (subKey === 'library' && typeof renderDietLibrary === 'function') renderDietLibrary();
+  // Recipes sub-tab — lazy-render the suggested + catalog surface (WIRING_PLAN §1).
+  if (subKey === 'recipes' && typeof renderDietRecipes === 'function') renderDietRecipes();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -624,6 +626,507 @@ function foodLibFilter(key) {
 function foodLibDetail(name) {
   renderFoodDetailSheet(name);
   openModal('foodDetailSheet');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md)
+// One lazy-rendered panel, three stacked sections: (a) "Suggested for Ziva"
+// (logged-data-driven, ranked by §4) with a featured hero card, (b) a
+// browsable catalog grouped by meal slot, (c) expand-in-place detail. Corpus =
+// window.RECIPES (cited, recipes.js). TWO separate passes (§5):
+//   Pass A — surfacing gate (_dietAllowsFood): hides off-preference recipes.
+//   Pass B — safety (NEVER gated): every ingredient of a DISPLAYED recipe gets
+//            its live _fdAgeRule / getFoodEffect / _fdAllergenNote rendering.
+// Card colour = primary ingredient's FOOD_TAX domain (left-rail + .dt-* whisper).
+// ═══════════════════════════════════════════════════════════════════════
+
+const RECIPE_SLOT_META = {
+  breakfast: { label: 'Breakfast', icon: 'sun' },
+  lunch:     { label: 'Lunch',     icon: 'bowl' },
+  dinner:    { label: 'Dinner',    icon: 'moon' },
+  snack:     { label: 'Snack',     icon: 'spoon' },
+};
+const RECIPE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
+// Polarity → flag chrome (mirrors renderFoodDetailSheet FD_POLARITY, M-S / K-6).
+const _RECIPE_FD_POLARITY = {
+  encourage:   { cls: 'fd-flag-encourage',   ic: 'sprout' },
+  warn:        { cls: 'fd-flag-allergen',    ic: 'siren'  },
+  conditional: { cls: 'fd-flag-conditional', ic: 'clock'  },
+  inform:      { cls: 'fd-flag-inform',      ic: 'info'   },
+};
+// ── Generative fingerprint (§9.3) — quantity-weighted, wavelength-ordered ──
+// Each recipe's hero renders a deterministic colour fingerprint from its
+// ingredients: a STRIPE (top ribbon) + a FADE (body wash), band-widths weighted
+// by grams, wavelength-ordered (rose→peach→amber→sage→sky→lav). Trace items
+// (ghee/oil/spices) are excluded so the fingerprint never muds; cap ≤4 domains.
+const RECIPE_FP_DOM = {
+  fruit:   { o: 0,   sat: '#e59cb0', light: 'var(--rose-light)',  dark: 'rgba(158,62,82,0.20)' },
+  protein: { o: 0.6, sat: '#e0a285', light: 'var(--rose-light)',  dark: 'rgba(150,72,60,0.20)' },
+  veg:     { o: 1,   sat: '#ecae7e', light: 'var(--peach-light)', dark: 'rgba(138,101,32,0.18)' },
+  legume:  { o: 2,   sat: '#e6c078', light: 'var(--amber-light)', dark: 'rgba(150,110,40,0.18)' },
+  grain:   { o: 3,   sat: '#9fcdb5', light: 'var(--sage-light)',  dark: 'rgba(58,112,96,0.17)' },
+  dairy:   { o: 4,   sat: '#a0cce0', light: 'var(--sky-light)',   dark: 'rgba(58,112,144,0.18)' },
+  nuts:    { o: 6,   sat: '#c4b4e6', light: 'var(--lav-light)',   dark: 'rgba(110,94,154,0.18)' },
+};
+// zif icon id → fingerprint domain (distinguishes legumes from grains, which
+// FOOD_TAX folds together — the fingerprint wants the dal/rice colour split).
+const _RECIPE_FP_BY_ICON = {
+  rice: 'grain', millet: 'grain', oats: 'grain', wheat: 'grain', suji: 'grain', dalia: 'grain', barley: 'grain', quinoa: 'grain', corn: 'grain',
+  dal: 'legume', chana: 'legume', rajma: 'legume', peanut: 'legume', sprouts: 'legume',
+  carrot: 'veg', spinach: 'veg', beans: 'veg', bottlegourd: 'veg', beetroot: 'veg', pumpkin: 'veg', sweetpotato: 'veg', potato: 'veg', broccoli: 'veg', cauliflower: 'veg', tomato: 'veg', peas: 'veg', drumstick: 'veg', zucchini: 'veg', okra: 'veg', cabbage: 'veg', brinjal: 'veg', mushroom: 'veg', onion: 'veg',
+  banana: 'fruit', pear: 'fruit', apple: 'fruit', mango: 'fruit', avocado: 'fruit', blueberry: 'fruit', strawberry: 'fruit', grapes: 'fruit', date: 'fruit', papaya: 'fruit', orange: 'fruit', pomegranate: 'fruit', coconut: 'fruit',
+  paneer: 'dairy', milk: 'dairy', curd: 'dairy', cheese: 'dairy', butter: 'dairy', buttermilk: 'dairy',
+  almond: 'nuts', walnut: 'nuts', cashew: 'nuts', pistachio: 'nuts', sesame: 'nuts', chia: 'nuts', flaxseed: 'nuts', pumpkinseed: 'nuts',
+  egg: 'protein', fish: 'protein', chicken: 'protein', prawn: 'protein', mutton: 'protein', tofu: 'protein',
+};
+// Trace ingredients — excluded from the fingerprint + the tagline BODY (fats,
+// spices, sweeteners). Word-boundary matched (K-T-3) so "oil" doesn't catch an
+// unrelated word; the corpus is curated, so the documented edge ("pepper" would
+// match a future "bell pepper") is a known invariant, not a live collision.
+const _RECIPE_TRACE = ['ghee', 'oil', 'turmeric', 'cinnamon', 'cumin', 'coriander', 'mint', 'jaggery', 'honey', 'salt', 'sugar', 'cardamom', 'pepper', 'ginger', 'garlic', 'lemon'];
+const _RECIPE_TRACE_RE = new RegExp('\\b(' + _RECIPE_TRACE.join('|') + ')\\b', 'i');
+function _recipeIsTrace(name) { return _RECIPE_TRACE_RE.test(String(name)); }
+function _recipeFpDomain(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
+}
+// Build the weighted fingerprint: { stripe, fadeL, fadeD, ranked } or null.
+function _recipeFingerprint(r) {
+  const prim = (r.ingredients || []).filter(i => !_recipeIsTrace(i.name) && _recipeFpDomain(i.name));
+  if (!prim.length) return null;
+  const byDom = {};
+  for (const i of prim) { const d = _recipeFpDomain(i.name); byDom[d] = (byDom[d] || 0) + (i.g || 10); }
+  let doms = Object.entries(byDom).map(([d, g]) => ({ d, g, ...RECIPE_FP_DOM[d] })).sort((a, b) => a.o - b.o);
+  if (doms.length > 4) doms = doms.slice().sort((a, b) => b.g - a.g).slice(0, 4).sort((a, b) => a.o - b.o);
+  const total = doms.reduce((s, x) => s + x.g, 0) || 1;
+  doms.forEach(x => { x.frac = x.g / total; });
+  const r2 = n => Math.round(n * 10) / 10;
+  const stopsAt = key => { let cum = 0; const s = []; for (const x of doms) { const mid = cum + x.frac / 2; s.push(`${x[key]} ${r2(mid * 100)}%`); cum += x.frac; } return s; };
+  const stripe = `linear-gradient(90deg, ${doms[0].sat} 0%, ${stopsAt('sat').join(', ')}, ${doms.at(-1).sat} 100%)`;
+  const fadeL = `linear-gradient(135deg, ${doms[0].light} 0%, ${stopsAt('light').join(', ')}, ${doms.at(-1).light} 100%)`;
+  const fadeD = `linear-gradient(135deg, ${doms[0].dark} 0%, ${stopsAt('dark').join(', ')}, ${doms.at(-1).dark} 100%)`;
+  const ranked = prim.slice().sort((a, b) => (b.g || 0) - (a.g || 0)).slice(0, 3);
+  return { stripe, fadeL, fadeD, ranked };
+}
+
+// Day-of-year seed — rotates the tagline epithets daily (deterministic within a
+// day). Cosmetic only; local date, timezone-safe construction (HR-12).
+function _recipeDaySeed() {
+  const d = new Date();
+  return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+}
+
+// Relevance tag for a catalog row (the LOCKED "uses banana"/"vitamin-A" meta) —
+// a nutrient highlight scanned from the recipe's own dos/steps, else cuisine.
+const _RECIPE_NUTRIENT_HINTS = [
+  [/\biron\b/i, 'iron-rich'], [/calcium/i, 'calcium'], [/protein/i, 'protein'],
+  [/vitamin a|beta-?carotene/i, 'vitamin A'], [/vitamin c/i, 'vitamin C'],
+  [/omega|brain-health/i, 'omega-3'], [/probiotic/i, 'probiotic'],
+  [/fibre|fiber/i, 'fibre'], [/healthy fat|brain-healthy fat/i, 'healthy fats'],
+];
+function _recipeRelevanceTag(r) {
+  const hay = ((r.dos || []).join(' ') + ' ' + (r.steps || []).join(' '));
+  for (const [re, label] of _RECIPE_NUTRIENT_HINTS) if (re.test(hay)) return label;
+  return r.cuisine || '';
+}
+
+// Pass A — surfacing gate. Every ingredient must pass the household diet
+// preference; any fail withholds the recipe (fail-OPEN if the gate is absent).
+function _recipeAllowedForHousehold(r) {
+  if (typeof _dietAllowsFood !== 'function') return true;
+  return (r.ingredients || []).every(ing => _dietAllowsFood(ing.name));
+}
+
+// Primary ingredient's FOOD_TAX domain pid (drives card colour). Falls back to
+// the recipe's first declared foodGroup, then 'grains'.
+function _recipePrimaryGroup(r) {
+  const first = (r.ingredients && r.ingredients[0]) ? r.ingredients[0].name : '';
+  const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(first) : null;
+  if (cls && cls.group) return cls.group;
+  if (r.foodGroups && r.foodGroups.length) return r.foodGroups[0];
+  return 'grains';
+}
+
+// Rail colour for a FOOD_TAX domain pid (reuses _foodTextMap by colour token).
+function _recipeRailColor(group) {
+  if (typeof FOOD_TAX !== 'undefined' && FOOD_TAX[group] && typeof _foodTextMap !== 'undefined') {
+    const col = FOOD_TAX[group].color;
+    if (_foodTextMap[col]) return _foodTextMap[col];
+  }
+  return 'var(--tc-sage)';
+}
+
+// When an ingredient shares a zif icon with a differently-named food, the
+// composer would voice the wrong noun (M-T-2: poha shares the 'suji' icon →
+// voiced "suji"). Resolve the tagline EP key from the name first, then the icon.
+const _RECIPE_EP_KEY_OVERRIDE = { poha: 'poha' };
+function _recipeEpKey(name) {
+  const n = String(name).toLowerCase();
+  for (const k in _RECIPE_EP_KEY_OVERRIDE) if (n.indexOf(k) !== -1) return _RECIPE_EP_KEY_OVERRIDE[k];
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? ic.icon : null;
+}
+// The italic "voice" descriptor (§9.5/§9.6) — the ported tagline composer,
+// quantity-weighted, epithets day-seed-rotated. Returns { strict:[lead clauses],
+// body } — render strict FIRST (prominent), then the italic body. Reserved for
+// the hero (Typography C: italic = voice).
+//
+// M-T-1 / K-T-1 (BLOCKING fold): trace items are dropped from the BODY, but an
+// ingredient carrying a STRICT safety clause (honey/jaggery → RECIPE_EP[].strict)
+// is kept so the composer surfaces it as the rose lead (§9.7: strict no's lead,
+// never folded). Its tiny gram weight keeps it a "touch of" in the body while the
+// strict clause leads. (The fingerprint path excludes it separately, unchanged.)
+function _recipeTagline(r) {
+  if (typeof _recipeComposeTagline !== 'function' || typeof RECIPE_EP === 'undefined') return { strict: [], body: '' };
+  const parts = [];
+  for (const i of (r.ingredients || [])) {
+    const key = _recipeEpKey(i.name);
+    if (!key || !RECIPE_EP[key]) continue;
+    if (_recipeIsTrace(i.name) && !RECIPE_EP[key].strict) continue;
+    parts.push({ id: key, w: i.g || 10 });
+  }
+  return _recipeComposeTagline(parts, _recipeDaySeed());
+}
+
+// The highest ingredient age-gate (months) — recipe-level age floor (§5).
+function _recipeMaxIngredientGate(r) {
+  let mx = 0;
+  for (const ing of (r.ingredients || [])) {
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(ing.name) : null;
+    if (ageR && ageR.minMonth > mx) mx = ageR.minMonth;
+  }
+  return mx;
+}
+
+// Effective minimum age = max(declared minAgeMonths, the live ingredient gates)
+// — the app's AGE_RULES table WINS on any disagreement (§6: flag, don't override).
+function _recipeEffectiveMinAge(r) {
+  return Math.max(r.minAgeMonths || 0, _recipeMaxIngredientGate(r));
+}
+
+// Pass B — per-ingredient safety stack (NEVER gated). Mirrors the
+// renderFoodDetailSheet floor/allergen/age rendering, prefixed with the
+// ingredient name so a multi-ingredient recipe never hides one entity's floor.
+function _recipeIngredientSafety(name, ageMonths) {
+  const lower = String(name).toLowerCase().trim();
+  const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+  const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+  const aged = ageR && ageR.minMonth > ageMonths;
+  const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const floor = (eff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(eff) : '';
+  let h = '';
+  if (floor) {
+    const pol = _RECIPE_FD_POLARITY[(typeof _effPolarity === 'function') ? _effPolarity(eff) : 'warn'] || _RECIPE_FD_POLARITY.warn;
+    const head = (eff && eff.title) ? escHtml(eff.title) : escHtml(name);
+    const sub = (eff && eff.safeForm && eff.safeForm.note) ? escHtml(eff.safeForm.note) : (allerg ? escHtml(allerg) : '');
+    h += `<div class="fd-flag ${pol.cls}">${zi(pol.ic)} <span><strong>${escHtml(name)} — ${head}</strong>${sub ? ' ' + sub : ''}</span></div>`;
+    h += floor;
+  } else if (allerg) {
+    h += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>${escHtml(name)} — allergen.</strong> ${escHtml(allerg)}</span></div>`;
+  }
+  if (aged) {
+    h += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>${escHtml(name)} — not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  }
+  return h;
+}
+
+// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
+// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+function _recipeDetailHtml(r, ageMonths) {
+  let h = '';
+  // Ingredients (chips with food icon)
+  h += '<div class="recipe-chips">';
+  for (const ing of (r.ingredients || [])) {
+    const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
+    const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+  }
+  h += '</div>';
+  // Steps
+  if (r.steps && r.steps.length) {
+    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
+    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
+    h += '</ol></div>';
+  }
+  // Per-ingredient safety (Pass B — never gated)
+  let safety = '';
+  for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
+  if (safety) {
+    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
+  } else {
+    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
+  }
+  // Dos & Don'ts (reuse the combo classes)
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
+    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    h += '</div></div>';
+  }
+  // Source citation (no assumptions)
+  if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
+    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
+      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+  }
+  return h;
+}
+
+// One catalog/suggested row (full-width .recipe-row, expand-in-place). Per the
+// LOCKED 05-meal-rows: food icon + Fraunces title + a factual meta line
+// (prep · age · slot · relevance). The italic "voice" is reserved for the hero
+// (§9.6: italic = descriptor only), so rows carry facts, not voice.
+function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
+  opts = opts || {};
+  const uid = uidPrefix + '-' + r.id;
+  const grp = _recipePrimaryGroup(r);
+  const rail = _recipeRailColor(grp);
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
+  const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+  const effMin = _recipeEffectiveMinAge(r);
+  const withheld = effMin > ageMonths;
+  // V-R-1: one age statement per row — the badge IS the age signal when withheld.
+  const ageBadge = withheld ? `<span class="recipe-age-badge">${zi('baby')} ${effMin}m+</span>` : '';
+  const ageMeta = withheld ? '' : `<span>${zi('baby')} ${effMin}m+</span>`;
+  const slot = RECIPE_SLOT_META[r.slot];
+  const slotMeta = (opts.showSlot && slot) ? `<span>${zi(slot.icon)} ${escHtml(slot.label)}</span>` : '';
+  const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
+  const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
+  const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
+  return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+    <div class="recipe-row-top">
+      <span class="recipe-row-icon">${glyph}</span>
+      <span class="recipe-row-main">
+        <span class="recipe-row-title">${escHtml(r.title)}</span>
+        <span class="recipe-row-meta">${prepMeta}${ageMeta}${slotMeta}${relMeta}${ageBadge}</span>
+      </span>
+      <span class="recipe-row-chev">${zi('chevron-down')}</span>
+    </div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+  </div>`;
+}
+
+// The featured "Suggested for Ziva" hero (top pick) — the GENERATIVE card
+// (§9.3/§9.4): a grams-weighted wavelength fingerprint stripe + warm-wave sheen
+// + corner zif watermark, the Fraunces-italic composed voice (strict no's lead),
+// the data-driven why, a prep·age·slot meta line, and a "See recipe →" CTA.
+// Expand-in-place like the rows.
+function _recipeHeroHtml(r, whyText, ageMonths) {
+  const uid = 'h-' + r.id;
+  const grp = _recipePrimaryGroup(r);
+  const rail = _recipeRailColor(grp);
+  const fp = _recipeFingerprint(r);
+  const slot = RECIPE_SLOT_META[r.slot];
+  const effMin = _recipeEffectiveMinAge(r);
+  const tag = _recipeTagline(r);
+  let wm = '';
+  if (fp && fp.ranked && fp.ranked.length) {
+    const slots = ['wm-1', 'wm-2', 'wm-3'];
+    wm = '<div class="recipe-hero-wm" aria-hidden="true">' + fp.ranked.map((ing, k) => {
+      const ic = recipeFoodIcon(ing.name);
+      return ic ? `<span class="recipe-wm ${slots[k]}"><svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg></span>` : '';
+    }).join('') + '</div>';
+  }
+  const fpStyle = fp ? `--rc-stripe:${fp.stripe};--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '';
+  const strictLead = (tag.strict && tag.strict.length) ? `<span class="recipe-strict">${escHtml(tag.strict.join('; '))}</span> ` : '';
+  const meta = [];
+  if (r.prepMinutes) meta.push(`<span>${zi('clock')} ${r.prepMinutes} min</span>`);
+  meta.push(`<span>${zi('baby')} ${effMin}m+</span>`);
+  if (slot) meta.push(`<span>${zi(slot.icon)} ${escHtml(slot.label)}</span>`);
+  return `<div class="recipe-hero recipe-hero-gen dt-${grp}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+    ${wm}
+    <div class="recipe-hero-head">
+      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for Ziva</span>
+      ${slot ? `<span class="recipe-hero-badge">${escHtml(slot.label)}</span>` : ''}
+    </div>
+    <h3 class="recipe-hero-title">${escHtml(r.title)}</h3>
+    <p class="recipe-hero-tag">${strictLead}${escHtml(tag.body)}</p>
+    <p class="recipe-hero-why">${escHtml(whyText || '')}</p>
+    <div class="recipe-hero-foot">
+      <span class="recipe-hero-meta">${meta.join('')}</span>
+      <span class="recipe-hero-cta">See recipe ${zi('arrow-right')}</span>
+    </div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+  </div>`;
+}
+
+// §4 — rank surfaced + age-fit recipes by logged-data signal. Returns
+// [{ r, score, why }] sorted desc. No new engine — composes existing scorers.
+function _recipeSuggestForZiva(surfaced, ageMonths) {
+  const vs = (typeof computeVarietyScore === 'function') ? computeVarietyScore(7) : null;
+  const gaps = (vs && vs.gaps) ? vs.gaps : [];
+  const subGaps = (vs && vs.subcategoryGaps) ? vs.subcategoryGaps : [];
+  const gapGroups = new Set(gaps.map(g => g.group));
+  const subGapGroups = new Set(subGaps.map(g => g.group));
+  const gapWhy = {};
+  gaps.forEach(g => { gapWhy[g.group] = g.suggestion || ('More ' + (g.label || g.group).toLowerCase() + ' this week'); });
+  const untried = (typeof getUntriedSuggestions === 'function') ? (getUntriedSuggestions(8) || []) : [];
+  const untriedNames = new Set(untried.map(u => (u.name || '').toLowerCase()));
+  const untriedWhy = {};
+  untried.forEach(u => { untriedWhy[(u.name || '').toLowerCase()] = u.reason; });
+
+  const candidates = surfaced.filter(r => _recipeEffectiveMinAge(r) <= ageMonths);
+  const scored = candidates.map(r => {
+    let score = 0; let why = '';
+    for (const g of (r.foodGroups || [])) {
+      if (gapGroups.has(g)) { score += 3; if (!why) why = gapWhy[g]; }
+      if (subGapGroups.has(g)) score += 2;
+    }
+    for (const ing of (r.ingredients || [])) {
+      const base = (typeof _baseFoodName === 'function') ? _baseFoodName(ing.name) : ing.name.toLowerCase();
+      if (untriedNames.has(ing.name.toLowerCase()) || untriedNames.has(base)) {
+        score += 2; if (!why) why = untriedWhy[ing.name.toLowerCase()] || ('A fresh way to try ' + ing.name);
+      }
+      if (typeof isFoodFavorite === 'function' && isFoodFavorite(base)) score += 1;
+    }
+    // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
+    score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
+    if (!why) why = r.steps && r.steps.length ? null : '';
+    return { r, score, why };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 5);
+}
+
+// Lazy entry — fills #dietRecipesRoot when the Recipes sub-tab opens.
+function renderDietRecipes() {
+  const root = document.getElementById('dietRecipesRoot');
+  if (!root) return;
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  // Pass A — surfacing gate.
+  const surfaced = corpus.filter(_recipeAllowedForHousehold);
+
+  let html = '';
+
+  // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
+  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+
+  // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
+  const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
+  html += `<div class="col-full">`;
+  if (suggested.length) {
+    const top = suggested[0];
+    const topWhy = top.why || (top.r.dos && top.r.dos[0]) || 'A wholesome, age-appropriate pick for today.';
+    html += _recipeHeroHtml(top.r, topWhy, ageMonths);
+    const more = suggested.slice(1);
+    if (more.length) {
+      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for Ziva</span><span class="recipe-group-count">${more.length}</span></div>`;
+      for (const s of more) html += _recipeRowHtml(s.r, 's', ageMonths, { showSlot: true });
+    }
+  } else {
+    html += `<div class="recipe-empty">${zi('spoon')} Keep logging meals for a few days and personalised recipe ideas will appear here. Meanwhile, browse the catalog below.</div>`;
+  }
+  html += '</div>';
+
+  // ── (b) Browsable catalog grouped by meal slot ──
+  html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
+  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  for (const slot of RECIPE_SLOT_ORDER) {
+    const inSlot = surfaced.filter(r => r.slot === slot);
+    if (!inSlot.length) continue;
+    inSlot.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+    const meta = RECIPE_SLOT_META[slot];
+    html += `<div class="recipe-group"><div class="recipe-group-head">${zi(meta.icon)}<span class="recipe-group-title">${escHtml(meta.label)}</span><span class="recipe-group-count">${inSlot.length}</span></div>`;
+    for (const r of inSlot) html += _recipeRowHtml(r, 'c', ageMonths, { showSlot: false });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  root.innerHTML = html;
+}
+
+// Toggle a recipe row's expand-in-place detail (data-action target).
+function toggleRecipeRow(uid) {
+  const det = document.getElementById('rdet-' + uid);
+  const row = document.getElementById('rrow-' + uid);
+  if (!det || !row) return;
+  const open = det.style.display !== 'none';
+  det.style.display = open ? 'none' : 'block';
+  row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Force-open a catalog recipe row + scroll it into view (used by the Home
+// Smart-Q&A tap-through, openRecipeInTab → core.js dispatcher).
+function expandRecipeRow(recipeId) {
+  const uid = 'c-' + recipeId;
+  const det = document.getElementById('rdet-' + uid);
+  const row = document.getElementById('rrow-' + uid);
+  if (!det || !row) return false;
+  det.style.display = 'block';
+  row.setAttribute('aria-expanded', 'true');
+  if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return true;
+}
+
+// ── §10 "Can I give this?" — recipe-aware shared resolver ────────────────
+// ONE resolver powers BOTH "Can I give this?" surfaces (Patterns combo bar +
+// Home Smart-Q&A) so they never diverge — that two-path divergence is the
+// fish/milk defect class. Applicability = the verdict is NOT 'avoid' AND not
+// preference-blocked; a non-veg food for a veg household is "not applicable for
+// THIS household" → reason, no recipe — but the SAFETY path still renders,
+// never gated. Returns null (not applicable → suppress recipe), or
+//   { kind:'recipe', recipeId, title, recipe, dos, donts }   (curated corpus hit)
+//   { kind:'suggest', recipe, dos, donts, nearest }          (none → nearest + auto)
+
+// Steps of a corpus recipe as a \n-joined string (renders like COMBO_RECIPES).
+function _recipeStepsText(r) {
+  return (r.steps || []).join('\n');
+}
+
+// Count how many query foods appear in a recipe's ingredient names.
+function _recipeQueryOverlap(r, rawFoods) {
+  let n = 0;
+  for (const q of rawFoods) {
+    const qn = String(q).toLowerCase().trim();
+    if (!qn) continue;
+    if ((r.ingredients || []).some(ing => {
+      const inm = ing.name.toLowerCase();
+      return inm.indexOf(qn) !== -1 || qn.indexOf(inm) !== -1;
+    })) n++;
+  }
+  return n;
+}
+
+// Best corpus recipe where EVERY query food maps to an ingredient — age- and
+// preference-gated. Returns the recipe or null.
+function _recipeCorpusMatch(rawFoods) {
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  let best = null; let bestScore = 0;
+  for (const r of corpus) {
+    if (!_recipeAllowedForHousehold(r)) continue;
+    if (_recipeEffectiveMinAge(r) > ageMonths) continue;
+    const overlap = _recipeQueryOverlap(r, rawFoods);
+    if (overlap >= rawFoods.length && overlap > bestScore) { best = r; bestScore = overlap; }
+  }
+  return best;
+}
+
+// Closest cited recipe by ingredient overlap (partial ok) + age-fit + diet-gate.
+function _recipeNearest(rawFoods) {
+  const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
+  const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
+  let best = null; let bestScore = 0;
+  for (const r of corpus) {
+    if (!_recipeAllowedForHousehold(r)) continue;
+    if (_recipeEffectiveMinAge(r) > ageMonths) continue;
+    const overlap = _recipeQueryOverlap(r, rawFoods);
+    if (overlap > bestScore) { best = r; bestScore = overlap; }
+  }
+  return (best && bestScore > 0) ? { id: best.id, title: best.title } : null;
+}
+
+function _resolveRecipeAnswer(rawFoods, applicable, ctx) {
+  ctx = ctx || {};
+  if (!applicable) return null;
+  const corpus = _recipeCorpusMatch(rawFoods);
+  if (corpus) {
+    return { kind: 'recipe', recipeId: corpus.id, title: corpus.title,
+      recipe: _recipeStepsText(corpus), dos: corpus.dos || [], donts: corpus.donts || [] };
+  }
+  return { kind: 'suggest', recipe: ctx.recipeText || '', dos: ctx.dos || [],
+    donts: ctx.donts || [], nearest: _recipeNearest(rawFoods) };
 }
 
 function renderFoodDetailSheet(name) {
@@ -2754,6 +3257,19 @@ function checkFoodCombo() {
     headline = encourage.title;
   }
 
+  // ── §10: recipe is applicability-gated + corpus-sourced (the shared
+  // resolver, also used by the Home Smart-Q&A bar). An 'avoid' food or an
+  // off-preference food shows the reason, NOT a recipe — fixes the empty
+  // recipe block that rendered for honey/salt/sugar. The safety path
+  // (severe_floors / toxin / allergen_notes) is untouched and still fires.
+  const _recipeApplicable = verdict !== 'avoid' && offPref.length === 0;
+  const _recAns = _resolveRecipeAnswer(rawFoods, _recipeApplicable, { recipeText, dos, donts, mo });
+  recipeText = _recAns ? _recAns.recipe : '';
+  dos = _recAns ? _recAns.dos : [];
+  donts = _recAns ? _recAns.donts : [];
+  const _recipeId = (_recAns && _recAns.kind === 'recipe') ? _recAns.recipeId : null;
+  const _nearestRecipe = (_recAns && _recAns.kind === 'suggest') ? _recAns.nearest : null;
+
   const result = {
     verdict, verdict_emoji: verdictEmoji, headline,
     explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.` : ''),
@@ -2761,6 +3277,8 @@ function checkFoodCombo() {
     new_foods: newFoods,
     allergen_notes: allergenNotes,
     recipe: recipeText,
+    recipe_id: _recipeId,
+    nearest_recipe: _nearestRecipe,
     dos, donts,
     pairs_well_with: pairsWellWith,
     _queryFoods: rawFoods,
@@ -3016,7 +3534,18 @@ function renderComboResult(r) {
   }
 
   if (r.recipe) {
-    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Recipe</div><div class="combo-recipe">${escHtml(r.recipe).replace(/\n/g,'<br>')}</div></div>`;
+    // §10: when the recipe came from the cited corpus, offer a tap-through to
+    // the full Recipes-tab card. When it's an auto-generated "or make it
+    // simply" fallback and a cited recipe is nearby, surface that too.
+    let recipeFoot = '';
+    if (r.recipe_id) {
+      recipeFoot = `<button class="btn btn-ghost btn-min80 mt-4" data-action="openRecipeInTab" data-arg="${escAttr(r.recipe_id)}">Open in Recipes ${zi('arrow-right')}</button>`;
+    } else if (r.nearest_recipe && r.nearest_recipe.id) {
+      recipeFoot = `<button class="btn btn-ghost btn-min80 mt-4" data-action="openRecipeInTab" data-arg="${escAttr(r.nearest_recipe.id)}">Closest cited recipe: ${escHtml(r.nearest_recipe.title)} ${zi('arrow-right')}</button>`;
+    }
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Recipe</div><div class="combo-recipe">${escHtml(r.recipe).replace(/\n/g,'<br>')}</div>${recipeFoot}</div>`;
+  } else if (r.nearest_recipe && r.nearest_recipe.id) {
+    html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} A cited recipe to try</div><button class="btn btn-ghost btn-min80" data-action="openRecipeInTab" data-arg="${escAttr(r.nearest_recipe.id)}">${escHtml(r.nearest_recipe.title)} ${zi('arrow-right')}</button></div>`;
   }
 
   if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {

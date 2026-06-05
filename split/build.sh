@@ -211,6 +211,7 @@ cat <<'SCRIPT'
 SCRIPT
 cat config.js
 cat data.js
+cat recipes.js
 cat core.js
 cat home.js
 cat diet.js

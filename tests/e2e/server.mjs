@@ -7,9 +7,13 @@
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const PORT = Number(process.argv[2] || process.env.PORT || 5173);
-const ROOT = resolve(new URL('../..', import.meta.url).pathname);
+// fileURLToPath (not URL.pathname) so the repo root resolves correctly on
+// Windows — `.pathname` yields a leading-slash "/C:/…" that resolve() doubles
+// into "C:\C:\…". Cross-platform identical on POSIX.
+const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

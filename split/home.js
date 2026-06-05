@@ -785,6 +785,138 @@ function renderRemindersAndAlerts() {
   window._remindersHTML = html;
 }
 
+// ── Lean-landing Care pre-empt detector (flip-gate, spec §4.4; Maren-gated) ──
+// Returns the ACTIONABLE Care signals only (the unresolved subset of the
+// renderRemindersAndAlerts predicates above) as structured data, summarised
+// one-per-category, hottest-first ranked, each deep-linking to its fix. This is
+// the source the landing's _ldCareAlerts() reads — so a calm landing can NEVER
+// hide a hard-deadline signal (overdue vaccine / due dose / overdue follow-up).
+// Mirrors the predicates above (kept adjacent to bound drift); illness episodes
+// are added separately by _ldCareAlerts via getActiveIllnessPosture().
+// Signal shape: { id, severity:'high'|'med'|'low', icon, title, sub, action, arg, arg2 }
+// title/sub are RAW (escaped at render). Care route = Track→Medical via navTabSub.
+function getActiveCareSignals() {
+  var out = [];
+  var todayStr = (typeof today === 'function') ? today() : null;
+  if (!todayStr) return out;
+  var yesterdayStr = _offsetDateStr(todayStr, -1);
+  // Deep-link helpers (Architect: a tapped pre-empt lands on its EXACT fix, not
+  // a generic Medical tab). vaccines → medVaccCard (Track→Medical); meds → the
+  // Home "Today" reminder card (supp-alert-${idx} for due, missed-${name}-${ds}
+  // for a missed streak) where the dose is actually LOGGED — the Meds inventory
+  // card is read-only and gives a parent no way to act on it; CareTickets →
+  // ctEntryPoint (on the Today surface).
+  var push = function(id, severity, icon, title, sub, navArg, navTarget) {
+    out.push({ id: id, severity: severity, icon: icon, title: title, sub: sub,
+               action: 'ldGoto', arg: navArg, arg2: navTarget });
+  };
+  var vaccSig = function(id, severity, icon, title, sub) { push(id, severity, icon, title, sub, 'medical', 'medVaccCard'); };
+
+  // 1 · Overdue vaccinations (past-due only; same-day is Medical-tab-only, mirrors :541)
+  if (typeof vaccData !== 'undefined' && Array.isArray(vaccData)) {
+    var overdue = vaccData.filter(function(v) {
+      if (!v.upcoming) return false;
+      return Math.ceil((new Date(v.date) - new Date()) / 86400000) < 0;
+    });
+    if (overdue.length) {
+      var oNames = overdue.map(function(v) { return v.name; });
+      vaccSig('vacc-overdue', 'high', 'siren',
+          overdue.length === 1 ? (oNames[0] + ' overdue') : (overdue.length + ' vaccinations overdue'),
+          'Tap to reschedule or mark done');
+    }
+    // 1b · Urgent upcoming (≤7 days, mirrors :601)
+    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+      .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
+    if (upNext) {
+      var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
+      if (daysTo >= 0 && daysTo <= 7) {
+        vaccSig('vacc-soon', 'low', 'dot-red',
+            daysTo === 0 ? (upNext.name + ' due today') : (daysTo + ' day' + (daysTo > 1 ? 's' : '') + ' to ' + upNext.name),
+            'Due ' + (typeof formatDate === 'function' ? formatDate(upNext.date) : upNext.date));
+      }
+    }
+    // 1c · Post-vacc 48h monitoring window (mirrors :613)
+    var recentVacc = vaccData.filter(function(v) {
+      return !v.upcoming && !v.reaction && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (recentVacc.length) {
+      var rvNames = recentVacc.map(function(v) { return v.name; });
+      vaccSig('vacc-monitor', 'med', 'syringe',
+          (rvNames.length === 1 ? rvNames[0] : recentVacc.length + ' vaccinations') + ' — monitoring',
+          'Watch 48h: fever >102°F, rash, inconsolable crying, refusal to feed');
+    }
+    // 1d · Logged-reaction monitoring tail (mirrors :637)
+    var loggedRecent = vaccData.filter(function(v) {
+      return !v.upcoming && v.reaction && v.reaction !== 'none' && (v.date === todayStr || v.date === yesterdayStr);
+    });
+    if (loggedRecent.length) {
+      var until = _offsetDateStr(loggedRecent[0].date, 2);
+      vaccSig('vacc-reaction', 'med', 'syringe', 'Vaccine reaction logged — monitoring',
+          'Until ' + (typeof formatDate === 'function' ? formatDate(until) : until));
+    }
+  }
+
+  // 2 · Meds — missed-day streaks (≥ as hot as today-pending, mirrors :655) + today-pending (:696)
+  if (typeof meds !== 'undefined' && Array.isArray(meds) && typeof medChecks !== 'undefined') {
+    var activeMeds = meds.filter(function(m) { return m.active; });
+    var trackingSince = medChecks._trackingSince || todayStr;
+    // idx matches renderRemindersAndAlerts' supp-alert-${idx} (same activeMeds
+    // filter, same order) so the due-today deep-link lands on that med's card.
+    activeMeds.forEach(function(m, idx) {
+      var startDate = m.start || '2025-09-04';
+      var earliest = startDate > trackingSince ? startDate : trackingSince;
+      var missed = 0;
+      var firstMissedDs = null;  // most-recent missed day (i=1 backwards)
+      for (var i = 1; i <= 14; i++) {
+        var d = new Date(); d.setDate(d.getDate() - i);
+        var ds = toDateStr(d);
+        if (ds < earliest) continue;
+        var dayLog = medChecks[ds];
+        if (!dayLog || !dayLog[m.name]) { missed++; if (!firstMissedDs) firstMissedDs = ds; }
+      }
+      if (missed > 0) {
+        // Land on the Home missed-resolution card (Was given / Not given) — same
+        // id scheme as renderRemindersAndAlerts: missed-${name}-${ds} sanitised.
+        var missedUid = ('missed-' + m.name + '-' + firstMissedDs).replace(/[^a-zA-Z0-9-]/g, '_');
+        push('med-missed-' + m.name, 'high', 'dot-red',
+            missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
+            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'),
+            'home', missedUid);
+      }
+      // today-pending
+      var todayLog = medChecks[todayStr] || {};
+      var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
+      var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
+      if (!resolved) {
+        // Land on the pending reminder card (Done now / Done at… / Skip) — where
+        // the dose is logged — not the read-only Meds inventory card.
+        push('med-due-' + m.name, 'med', 'warn', m.name + ' due today',
+            m.dose ? m.dose : 'Tap to log the dose', 'home', 'supp-alert-' + idx);
+      }
+    });
+  }
+
+  // 3 · Overdue CareTickets — the parent's own escalation going silent (Maren M-2).
+  // ctNextDueTime(t) → ms timestamp of the next follow-up (Infinity if none);
+  // overdue = a finite due time in the past.
+  if (typeof _careTickets !== 'undefined' && Array.isArray(_careTickets) && typeof ctNextDueTime === 'function') {
+    var nowMs = Date.now();
+    _careTickets.forEach(function(t) {
+      if (t.status !== 'active' && t.status !== 'escalated') return;
+      var due = ctNextDueTime(t);
+      if (isFinite(due) && due < nowMs) {
+        push('ct-overdue-' + (t.id || t.title), 'high', 'bell',
+            (t.title || 'Follow-up') + ' — check-in overdue', 'Tap to check in', 'home', 'ctEntryPoint');
+      }
+    });
+  }
+
+  // Hottest-first
+  var rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) { return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]); });
+  return out;
+}
+
 // Mark vaccination as booked — step 1: save booked state, then ask for details
 function markVaccBooked(vaccName) {
   save(KEYS.vaccBooked, { vaccName, bookedAt: new Date().toISOString() });

@@ -1452,6 +1452,301 @@ function renderInfoMilestoneSleepCorrelation() {
   _setCardPriority('infoMilestoneSleepCard', 'notable');
 }
 
+// ─────────────────────────────────────────
+// LEAN LANDING (app-open surface) — render-first
+// ─────────────────────────────────────────
+// The calm front door: a greeting (reused from #headerFull), one honest
+// "today at a glance" line, and three soft doors. "Calm by default, Care
+// pre-empts the calm" — a live Care signal escalates a loud-rose action card
+// above the calm content (Maren C1). Neutral cream, no domain wash (home-family
+// surfaces take none by design); domain identity rides only on each door's icon.
+// Composition cap: ≤3 elements (Vela C2). renderLanding() stays off the heavy
+// compute path (Kael C3): greeting + age + glance + a cheap Care check only.
+
+// Care pre-empt detector. Stage 1: active illness episodes (real predicate).
+// Stage 2 (Maren C1) extends with overdue/same-day vaccines, due meds (Vit D3),
+// overdue CareTickets, and post-vacc monitoring via the renderRemindersAndAlerts
+// predicate set. Returns an ordered list of {icon,title,sub,action,arg}.
+function _ldCareAlerts() {
+  const out = [];
+  // Illness episodes — "being tracked" (calm-loud, severity med), route to Medical.
+  const posture = (typeof getActiveIllnessPosture === 'function') ? getActiveIllnessPosture() : null;
+  if (posture && posture.active && posture.active.length) {
+    const labelMap = { fever:'Fever', diarrhoea:'Diarrhoea', vomiting:'Vomiting', cold:'Cold' };
+    const iconMap  = { fever:'flame', diarrhoea:'drop', vomiting:'warn', cold:'drop' };
+    posture.active.forEach(function(ep) {
+      out.push({
+        severity: 'med',
+        icon: iconMap[ep.type] || 'siren',
+        title: (labelMap[ep.type] || 'Illness') + ' being tracked',
+        sub: ep.daysActive ? ('Day ' + ep.daysActive + ' · tap to view') : 'Tap to view',
+        action: 'ldGoto', arg: 'home', arg2: ''
+      });
+    });
+  }
+  // Time-axis Care signals — overdue vaccines, due/missed meds, post-vacc
+  // monitoring, overdue CareTickets (flip-gate detector, spec §4.4 / Maren).
+  if (typeof getActiveCareSignals === 'function') {
+    getActiveCareSignals().forEach(function(s) { out.push(s); });
+  }
+  // Hottest-first (high → med → low); action-needed surfaces above being-tracked.
+  const rank = { high: 0, med: 1, low: 2 };
+  out.sort(function(a, b) {
+    return (rank[a.severity] == null ? 1 : rank[a.severity]) - (rank[b.severity] == null ? 1 : rank[b.severity]);
+  });
+  return out;
+}
+
+// Staggered fade-up, gated on Motion with a reduced-motion floor (no CSS
+// pre-hide, so content is visible if JS/Motion is absent — accessible default).
+function _ldAnimateIn(container) {
+  if (!container) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !(window.Motion && window.Motion.animate)) return;
+  const kids = container.children;
+  for (let i = 0; i < kids.length; i++) {
+    window.Motion.animate(kids[i],
+      { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0)'] },
+      { duration: 0.35, delay: i * 0.06, easing: [0.22, 0.61, 0.36, 1] });
+  }
+}
+
+function renderLanding() {
+  // The dense #headerFull greeting card (avatar + age + weather) is hidden on
+  // the lean Landing (switchTab toggles it to the dense "Today" only); the
+  // warm-wave "Today so far" hero below is the Landing's own warm anchor, so we
+  // no longer refresh #headerFull from here.
+  const el = document.getElementById('ldContent');
+  if (!el) return;
+
+  let html = '';
+
+  // 0 · Care pre-empt — calm by default, Care pre-empts the calm (Maren C1).
+  const alerts = _ldCareAlerts();
+  if (alerts.length) {
+    html += '<div class="ld-care col-full">';
+    alerts.forEach(function(a) {
+      var urgent = (a.severity === 'high');
+      html += '<button class="card card-action ld-care-card' + (urgent ? ' ld-care-hot' : '') + '" data-action="' + escAttr(a.action) + '"'
+            + (a.arg ? ' data-arg="' + escAttr(a.arg) + '"' : '')
+            + (a.arg2 ? ' data-arg2="' + escAttr(a.arg2) + '"' : '') + '>'
+            + '<span class="icon icon-rose">' + zi(a.icon) + '</span>'
+            + '<span class="ld-care-body">'
+            +   '<span class="ld-care-title">' + escHtml(a.title) + '</span>'
+            +   '<span class="ld-care-sub">' + escHtml(a.sub) + '</span>'
+            + '</span>'
+            + '<span class="ld-care-chev">' + zi('arrow-right') + '</span>'
+            + '</button>';
+    });
+    html += '</div>';
+  }
+
+  // 1 · Glance line — neutral, honest empty-state (Vela C2). Reuse the TSF
+  // summary generator and clone its honest-empty pattern (never a bare "No data").
+  const collected = (typeof _tsfCollectEvents === 'function')
+    ? _tsfCollectEvents() : { events: [], noTimeEvents: [] };
+  const totalCount = (collected.events ? collected.events.length : 0)
+                   + (collected.noTimeEvents ? collected.noTimeEvents.length : 0);
+  // Empty-day register is PROSPECTIVE at app-open ("nothing logged yet, let's
+  // begin"), not the Today-So-Far mid-day retrospective ("Quiet day so far.").
+  // Same data, right voice for the front door (Vela V-V-1).
+  let summary;
+  if (totalCount === 0) {
+    summary = 'A fresh day with Ziva — nothing logged yet.';
+  } else {
+    const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
+    summary = (typeof _tsfGenerateSummary === 'function')
+      ? _tsfGenerateSummary(today(), collected, summaryCtx) : '';
+  }
+  // 1 · The day's glance as the signature HERO. Per DP §9 (Recipes design
+  // language, ratified 2026-06-03): typography C — a Nunito structural eyebrow
+  // over the day's story as a Fraunces *italic* "voice" line (italic = voice
+  // only); a 4px de-neoned wavelength warm-wave stripe sweeps over the top
+  // (§9.3/§9.4). No score (C2: warmth, not a verdict).
+  const heroIcon = (totalCount === 0) ? 'sprout' : 'sparkle';
+  const heroIconTint = (totalCount === 0) ? 'icon-sage' : 'icon-lav';
+  html += '<div class="card card-hero hero-home ld-hero col-full"' + (totalCount === 0 ? ' data-empty="true"' : '') + '>';
+  html += '<div class="ld-hero-eyebrow">'
+        +   '<span class="icon ' + heroIconTint + ' ld-hero-icon">' + zi(heroIcon) + '</span>'
+        +   '<span class="ld-hero-label">Today so far</span>'
+        + '</div>';
+  html += '<div class="ld-hero-voice">' + escHtml(summary) + '</div>';
+  if (totalCount === 0) {
+    html += '<button class="ld-hero-action" data-action="toggleQuickLog">' + zi('note') + '<span>Start with breakfast</span></button>';
+  }
+  // Compact picker — revealed only when _ldFitHero adds .ld-crowded (Care
+  // pre-empts have pushed the Emergency card below the fold). The hero collapses
+  // to "Today so far · Start with [picker]" so a tired parent can jump straight
+  // into logging a category without the full hero's vertical cost. The <select>
+  // routes through the delegated change-action dispatcher to openQuickModal.
+  html += '<div class="ld-hero-compact">'
+        +   '<span class="ld-hero-compact-label">Start with</span>'
+        +   '<select class="ld-hero-select" data-change-action="ldQuickStart" aria-label="Start logging">'
+        +     '<option value="">Choose…</option>'
+        +     '<option value="feed">Food</option>'
+        +     '<option value="sleep">Sleep</option>'
+        +     '<option value="nap">Nap</option>'
+        +     '<option value="poop">Poop</option>'
+        +     '<option value="activity">Activity</option>'
+        +   '</select>'
+        + '</div>';
+  html += '</div>';
+
+  // 2 · Three doors — Log (primary) / Today / Ask. Domain identity on the icon
+  // only; the door surfaces stay neutral cream.
+  html += '<div class="ld-doors col-full">';
+  html += '<button class="ld-door ld-door-primary" data-action="toggleQuickLog">'
+        +   '<span class="icon icon-sage">' + zi('note') + '</span>'
+        +   '<span class="ld-door-body">'
+        +     '<span class="ld-door-label">Log</span>'
+        +     '<span class="ld-door-sub">Feed, nap, diaper &amp; more</span>'
+        +   '</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-today" data-action="switchTab" data-arg="home">'
+        +   '<span class="icon icon-sky">' + zi('clock') + '</span>'
+        +   '<span class="ld-door-label">Today</span>'
+        +   '<span class="ld-door-sub">Full day</span>'
+        + '</button>';
+  html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
+        +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
+        +   '<span class="ld-door-label">Ask</span>'
+        +   '<span class="ld-door-sub">About Ziva</span>'
+        + '</button>';
+  html += '</div>';
+
+  // Emergency — always-present quick access (STUB; live wiring in PR #216).
+  // The card body (.ld-emergency-main) opens the chooser; the 108/112 tel:
+  // links are SIBLINGS of that button (not descendants), so a tap dials
+  // straight through and the data-action delegation never opens the chooser —
+  // the surround does nothing either (the container carries no data-action).
+  // Numbers from EMERGENCY_CONTACTS (108 national ambulance / 112 unified).
+  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  var ambNum = (_emReg && _emReg.ambulancePrimary) ? _emReg.ambulancePrimary.number : '108';
+  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
+  html += '<div class="ld-emergency col-full">'
+        +   '<button class="ld-emergency-main" data-action="ldEmergency">'
+        +     '<span class="icon icon-rose">' + zi('siren') + '</span>'
+        +     '<span class="ld-emergency-body">'
+        +       '<span class="ld-emergency-label">Emergency</span>'
+        +       '<span class="ld-emergency-sub">Food or general — get help fast</span>'
+        +     '</span>'
+        +     '<span class="ld-emergency-chev">' + zi('arrow-right') + '</span>'
+        +   '</button>'
+        +   '<div class="ld-emergency-calls">'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>Ambulance · ' + escHtml(ambNum) + '</span></a>'
+        +     '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>Emergency · ' + escHtml(emgNum) + '</span></a>'
+        +   '</div>'
+        + '</div>';
+
+  el.innerHTML = html;
+  // Fit the hero to the viewport (compact it if the Emergency card is below the
+  // fold), then animate. rAF so layout + fonts are settled before we measure.
+  requestAnimationFrame(function() { _ldFitHero(el); _ldAnimateIn(el); });
+  // Re-fit on rotate / zoom / resize while the landing is the active panel
+  // (bound once; idempotent — _ldFitHero re-measures from the full state).
+  if (!window._ldFitBound) {
+    window._ldFitBound = true;
+    window.addEventListener('resize', function() {
+      var lc = document.getElementById('ldContent');
+      var panel = document.getElementById('tab-landing');
+      if (lc && panel && panel.classList.contains('active')) _ldFitHero(lc);
+    });
+  }
+}
+
+// Crowd-fit: if the Care pre-empts have pushed the Emergency card below the
+// fold, collapse the hero to its compact "Start with …" picker to reclaim the
+// vertical space (Architect: keep Emergency reachable without a scroll). Always
+// re-measures from the full state, so it relaxes back when the viewport grows.
+function _ldFitHero(el) {
+  if (!el) return;
+  el.classList.remove('ld-crowded');
+  var em = el.querySelector('.ld-emergency');
+  if (!em) return;
+  if (em.getBoundingClientRect().bottom > window.innerHeight) {
+    el.classList.add('ld-crowded');
+  }
+}
+
+// Compact-hero picker handler — opens the category quick-log modal directly.
+// openQuickModal assumes the body is already scroll-locked (it's normally
+// reached via openQuickLog), so we lock first. The <select> is reset so the
+// same category can be re-picked next time.
+function ldQuickStart(e) {
+  var type = (e && e.target) ? e.target.value : '';
+  if (e && e.target) e.target.value = '';
+  if (!type) return;
+  if (typeof qlLockBody === 'function') qlLockBody();
+  if (typeof openQuickModal === 'function') openQuickModal(type);
+}
+
+// Emergency chooser — STUB (wiring in PR #216). Mirrors the openOutingBriefing
+// dynamic-overlay pattern: build → animate open → lock scroll → close on the
+// × / outside-tap. Two paths: Food (→ Track→Diet→Library, where PR #216 is
+// adding the food emergency room) and General (Coming soon — new concept).
+function openEmergencyChooser() {
+  var existing = document.getElementById('ldEmOverlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ld-em-overlay';
+  overlay.id = 'ldEmOverlay';
+  document.body.appendChild(overlay);
+
+  overlay.innerHTML =
+    '<div class="ld-em-sheet" role="dialog" aria-label="Emergency help">'
+    + '<div class="ld-em-head">'
+    +   '<span class="ld-em-title">' + zi('siren') + '<span>Emergency</span></span>'
+    +   '<button class="ld-em-close" id="ldEmClose" aria-label="Close">×</button>'
+    + '</div>'
+    + '<p class="ld-em-prompt">What kind of help do you need?</p>'
+    + '<button class="ld-em-opt" id="ldEmFood">'
+    +   '<span class="icon icon-rose">' + zi('bowl') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">Food emergency</span>'
+    +     '<span class="ld-em-opt-sub">Choking, allergic reaction &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '<button class="ld-em-opt" id="ldEmGeneral">'
+    +   '<span class="icon icon-rose">' + zi('shield') + '</span>'
+    +   '<span class="ld-em-opt-body"><span class="ld-em-opt-label">General emergency</span>'
+    +     '<span class="ld-em-opt-sub">Fall, cut, burn &amp; more</span></span>'
+    +   '<span class="ld-em-opt-chev">' + zi('arrow-right') + '</span>'
+    + '</button>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#ldEmClose').addEventListener('click', _ldCloseEmergency);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _ldCloseEmergency(); });
+
+  // Food emergency → lead directly to the Library sub-tab (Track→Diet→Library);
+  // PR #216 wires the food emergency room (4 emergencies) there.
+  overlay.querySelector('#ldEmFood').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof switchTab === 'function') switchTab('track');
+    setTimeout(function() {
+      if (typeof switchTrackSub === 'function') switchTrackSub('diet');
+      setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
+    }, 60);
+    if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
+  });
+
+  // General emergency → new concept, design pending; stub per HR-8.
+  overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
+    _ldCloseEmergency();
+    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+  });
+}
+
+function _ldCloseEmergency() {
+  var overlay = document.getElementById('ldEmOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function() { overlay.remove(); }, 300);
+}
+
 function renderInfo() {
   renderInfoFoodIntro();
   renderInfoNutrientHeatmap();
