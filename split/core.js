@@ -631,9 +631,6 @@ function init() {
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // Emergency Cards (emergency-protocol-v1)
     else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
-    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
-    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
-    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
     else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
     else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc(btn);

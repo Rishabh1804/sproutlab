@@ -2076,7 +2076,6 @@ function _libCorpusBackHtml(name, dt, j) {
 // ════════════════════════════════════════
 var _EM_HAZ_ORDER = ['anaphylaxis', 'choking', 'botulism'];
 var _emFood = null;   // the food that deep-linked into the deck (→ doc-prep Trigger)
-var _emDocHz = null;  // the hazard whose doc-prep is open
 
 // **bold** / _italic_ → HR-4-safe markup (escHtml first, then re-introduce the tags).
 function _emFmt(s) {
@@ -2217,46 +2216,17 @@ function _libCloseDeck() {
   document.body.classList.remove('lib-overlay-open');
 }
 
-// ── Doc-prep pop-up (#emDocOv) — Read overlay over the deck. Generated summary;
-// the time fields are tap-to-stamp + N/A (one-tap Quick acts, HR-9). ──────────────
+// ── Doc-prep (card flip-back) — generated summary; the time fields are
+// tap-to-stamp + N/A (one-tap Quick acts, HR-9). Shared with the General room. ────
 function _emDocWho() {
   var bits = ['Ziva'];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
   try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
   return bits.join(' · ');
 }
-function _emStampRow(s) {
-  return '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
-    '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
-    '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
-}
-function _emDocPrepHtml(hz) {
-  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
-  var d = p.doc, food = _emFood, sym = _emRecognise(hz).join(' · ');
-  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
-  (d.stamps || []).forEach(function(s) { rows += _emStampRow(s); });
-  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
-  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
-  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
-  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
-  var team = String(d.forTeam).replace('{food}', food || 'the food');
-  return '<div class="doc"><div class="doc-body">' +
-    '<button class="doc-x" data-action="emCloseDocPrep" aria-label="Close">&times;</button>' +
-    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
-    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
-    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
-    '<div class="doc-actions">' +
-    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc">' + zi('copy') + 'Copy</button>' +
-    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save / share</button></div></div>';
-}
-function emOpenDocPrep(btn) {
-  var hz = btn && btn.getAttribute('data-arg'); if (!hz) return;
-  var ov = document.getElementById('emDocOv'); if (!ov) return;
-  _emDocHz = hz;
-  ov.innerHTML = _emDocPrepHtml(hz);
-  ov.classList.add('open');
-}
-function _emCloseDocPrep() { var ov = document.getElementById('emDocOv'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } }
+// Doc-prep is now a card FLIP (see _emDocFace + cardFlip). The old separate
+// #emDocOv overlay path (_emStampRow / _emDocPrepHtml / emOpenDocPrep /
+// _emCloseDocPrep) was retired in emergency-room-v2 M2.
 function emStampTime(btn) {
   if (!btn) return;
   var na = btn.parentNode.querySelector('.doc-na');
@@ -2289,7 +2259,7 @@ function _emDocText(hz, container) {
   return L.join('\n');
 }
 function emCopyDoc(btn) {
-  var hz = (btn && btn.getAttribute('data-arg')) || _emDocHz;
+  var hz = btn && btn.getAttribute('data-arg');
   var container = (btn && btn.closest) ? btn.closest('.fp-back') : null;
   var text = _emDocText(hz, container);
   var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };

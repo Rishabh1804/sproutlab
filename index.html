@@ -5839,40 +5839,8 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ge-callbar-label svg.zi { width:var(--icon-base); height:var(--icon-base); }
 .ge-callbar .ld-emergency-call { font-size:var(--fs-md); font-weight:700; }
 .ge-list { display:flex; flex-direction:column; gap:var(--sp-12); padding:var(--sp-16) var(--sp-20); }
-.ge-item {
-  background-color:var(--surface);
-  background-image:linear-gradient(135deg, transparent 45%, rgba(242,168,184,0.16));
-  border:1.5px solid var(--rose); border-radius:var(--r-xl); overflow:hidden;
-}
-[data-theme="dark"] .ge-item { background-image:linear-gradient(135deg, transparent 35%, rgba(158,62,82,0.24)); }
-/* Critical — pinned-open, loud rose, louder than every tint (DESIGN_PRINCIPLES line 120). */
-.ge-item--critical {
-  border:2.5px solid var(--tc-rose);
-  background-color:var(--rose-light);
-  background-image:none;
-}
-[data-theme="dark"] .ge-item--critical { background-color:rgba(158,62,82,0.34); border-color:var(--rose); }
-.ge-item-head {
-  display:flex; align-items:center; gap:var(--sp-10); width:100%; text-align:left;
-  background:transparent; border:none; cursor:pointer;
-  padding:var(--sp-12) var(--sp-16); min-height:44px;
-}
-.ge-item-head--static { cursor:default; }
-.ge-item-ic { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
-.ge-item-ic svg.zi { width:var(--icon-base); height:var(--icon-base); }
-.ge-item-name { flex:1; min-width:0; font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
-.ge-item--critical .ge-item-name { color:var(--tc-rose); }
-/* V-3: the call imperative shows even on the COLLAPSED row. */
-.ge-lead { display:inline-flex; align-items:center; gap:var(--sp-4); flex-shrink:0; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-full); background:var(--tc-rose); color:var(--cream); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-xs); }
-.ge-lead svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
-.ge-item-chev { display:inline-flex; flex-shrink:0; color:var(--tc-rose); transition:transform var(--ease-med); }
-.ge-item-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
-.ge-item.ge-open .ge-item-chev { transform:rotate(180deg); }
-.ge-item-body { display:none; padding:0 var(--sp-16) var(--sp-16); }
-.ge-item.ge-open > .ge-item-body { display:block; }
-.ge-steps { margin:0 0 var(--sp-12); padding-left:var(--sp-20); }
-.ge-steps li { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-8); }
-.ge-steps li::marker { color:var(--tc-rose); font-weight:700; }
+/* (The old accordion .ge-item* / .ge-lead / .ge-steps styles were retired in
+   emergency-room-v2 M1 — the room is now teaser rows (.ge-row) + pop-up flip cards.) */
 .ge-flags { background:var(--rose-light); border-left:var(--accent-w) solid var(--tc-rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); }
 [data-theme="dark"] .ge-flags { background:rgba(158,62,82,0.22); }
 .ge-flags-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--tc-rose); margin-bottom:var(--sp-6); }
@@ -11605,32 +11573,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .ec-docprep-d { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-normal); }
 .ec-docprep-go { flex:0 0 auto; color:var(--tc-sky); } .ec-docprep-go .zi { width:var(--icon-base); height:var(--icon-base); }
 
-/* doc-prep pop-up — Read overlay above the Deck */
-.em-doc-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:center; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1300; }
-.em-doc-ov.open { display:flex; }
-.em-doc-ov .doc { width:100%; max-width:380px; background:#fff; border-radius:var(--r-2xl); box-shadow:0 20px 60px rgba(0,0,0,.4); overflow:hidden; }
-.em-doc-ov .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; }
-.em-doc-ov .doc-x { position:absolute; top:var(--sp-12); right:var(--sp-12); width:30px; height:30px; border:none; border-radius:var(--r-full); background:#f3e7ea; color:#6e5858; font-size:17px; cursor:pointer; }
-.em-doc-ov .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:34px; }
-.em-doc-ov .doc-brand b { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:#9e3e52; }
-.em-doc-ov .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
-.em-doc-ov .doc-who { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
-.em-doc-ov .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
-.em-doc-ov .doc-row .k { flex:0 0 124px; color:#9e3e52; font-weight:800; }
-.em-doc-ov .doc-row .v { flex:1; color:#2a2020; }
-.em-doc-ov .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
-.em-doc-ov .doc-stamp em { color:#9a8a8a; font-style:normal; }
-.em-doc-ov .doc-stamp[data-stamped] { color:#9e3e52; font-weight:800; border-bottom-color:transparent; }
-.em-doc-ov .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
-.em-doc-ov .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
-.em-doc-ov .doc-na[data-on] { background:#9e3e52; color:#fff; border-color:#9e3e52; }
-.em-doc-ov .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
-.em-doc-ov .doc-note b { color:#9e3e52; }
-.em-doc-ov .doc-actions { display:flex; gap:var(--sp-10); padding:var(--sp-12) var(--sp-20); border-top:1px solid #ecdfe2; background:#faf2f4; }
-.em-doc-ov .doc-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:42px; border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
-.em-doc-ov .doc-btn .zi { width:var(--icon-base); height:var(--icon-base); }
-.em-doc-ov .doc-btn--copy { background:#fff; color:#9e3e52; border:1.5px solid #e6b9c4; }
-.em-doc-ov .doc-btn--save { background:#9e3e52; color:#fff; }
+/* (The old #emDocOv doc-prep overlay styles were retired in emergency-room-v2 M2 —
+   doc-prep now renders on the card flip-back via the container-neutral .docface set.) */
 @media print {
   /* Doc-prep print (emSaveDoc): isolate the flipped card's .docface and lay it
      flat (neutralise the flip transform). Scoped to the .doc-printing body flag
@@ -12965,10 +12909,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
              floor here from FOOD_EFFECTS. Backdrop-tap closes via libCloseDeckSelf; the ×
              inside closes via libCloseDeck. -->
         <div class="lib-deck" id="libDeckOv" data-action="libCloseDeckSelf"></div>
-
-        <!-- Emergency doc-prep pop-up (emergency-protocol-v1) — opens OVER the Deck from an
-             Emergency Card's "For the doctor"; emOpenDocPrep (diet.js) fills it. -->
-        <div class="em-doc-ov" id="emDocOv" data-action="emCloseDocPrepSelf"></div>
 
       </div>
     </div>
@@ -22513,9 +22453,6 @@ function init() {
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // Emergency Cards (emergency-protocol-v1)
     else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
-    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
-    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
-    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
     else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
     else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc(btn);
@@ -42810,7 +42747,6 @@ function _libCorpusBackHtml(name, dt, j) {
 // ════════════════════════════════════════
 var _EM_HAZ_ORDER = ['anaphylaxis', 'choking', 'botulism'];
 var _emFood = null;   // the food that deep-linked into the deck (→ doc-prep Trigger)
-var _emDocHz = null;  // the hazard whose doc-prep is open
 
 // **bold** / _italic_ → HR-4-safe markup (escHtml first, then re-introduce the tags).
 function _emFmt(s) {
@@ -42951,46 +42887,17 @@ function _libCloseDeck() {
   document.body.classList.remove('lib-overlay-open');
 }
 
-// ── Doc-prep pop-up (#emDocOv) — Read overlay over the deck. Generated summary;
-// the time fields are tap-to-stamp + N/A (one-tap Quick acts, HR-9). ──────────────
+// ── Doc-prep (card flip-back) — generated summary; the time fields are
+// tap-to-stamp + N/A (one-tap Quick acts, HR-9). Shared with the General room. ────
 function _emDocWho() {
   var bits = ['Ziva'];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
   try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
   return bits.join(' · ');
 }
-function _emStampRow(s) {
-  return '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
-    '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
-    '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
-}
-function _emDocPrepHtml(hz) {
-  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
-  var d = p.doc, food = _emFood, sym = _emRecognise(hz).join(' · ');
-  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
-  (d.stamps || []).forEach(function(s) { rows += _emStampRow(s); });
-  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
-  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
-  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
-  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
-  var team = String(d.forTeam).replace('{food}', food || 'the food');
-  return '<div class="doc"><div class="doc-body">' +
-    '<button class="doc-x" data-action="emCloseDocPrep" aria-label="Close">&times;</button>' +
-    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
-    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
-    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
-    '<div class="doc-actions">' +
-    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc">' + zi('copy') + 'Copy</button>' +
-    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save / share</button></div></div>';
-}
-function emOpenDocPrep(btn) {
-  var hz = btn && btn.getAttribute('data-arg'); if (!hz) return;
-  var ov = document.getElementById('emDocOv'); if (!ov) return;
-  _emDocHz = hz;
-  ov.innerHTML = _emDocPrepHtml(hz);
-  ov.classList.add('open');
-}
-function _emCloseDocPrep() { var ov = document.getElementById('emDocOv'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } }
+// Doc-prep is now a card FLIP (see _emDocFace + cardFlip). The old separate
+// #emDocOv overlay path (_emStampRow / _emDocPrepHtml / emOpenDocPrep /
+// _emCloseDocPrep) was retired in emergency-room-v2 M2.
 function emStampTime(btn) {
   if (!btn) return;
   var na = btn.parentNode.querySelector('.doc-na');
@@ -43023,7 +42930,7 @@ function _emDocText(hz, container) {
   return L.join('\n');
 }
 function emCopyDoc(btn) {
-  var hz = (btn && btn.getAttribute('data-arg')) || _emDocHz;
+  var hz = btn && btn.getAttribute('data-arg');
   var container = (btn && btn.closest) ? btn.closest('.fp-back') : null;
   var text = _emDocText(hz, container);
   var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };

@@ -120,4 +120,38 @@ Drove the real deploy (Vercel share-bypass + headless browser), asserted against
 **Build:** clean; emergency-floor + floor-fidelity PASS; diet/core `node --check` OK; food flip
 wired in bundle.
 
-### M3 — Cross-link pop-up-in-place (pending) · M4 — shared styles cleanup + triple-Gov (pending)
+**Live/logic verification:** the firecrawl browser-agent went flaky this session (kept returning
+stale page snapshots instead of eval results), so the food deck was verified **deterministically
+in Node** instead: `_emCardHtml('anaphylaxis'|'choking'|'botulism')` all render without throwing,
+each with `ecard-flip` + `fp-flip` + front/back faces + `docface` + `cardFlip` + doc-who +
+Copy/Save + correct `id` + stamps. The shared flip mechanism itself is M1-live-verified. Deck
+*visual* (layout/animation) defers to Vela/Maren at the gate + the Architect's preview review.
+
+### M3 — Cross-link pop-up-in-place
+**Status: satisfied by M1 + existing food behavior — no tab redirects remain.**
+- General room "Choking on food? →" (`geXlink`) opens the **food choking card as a pop-up in
+  place** (`geCardOv`); with M2 that card is itself a flip card. No `switchTab`.
+- Food room "Choking on it instead?" (`emScrollHazard`) scrolls to the choking card **within the
+  same deck** (the deck is the in-place surface) + `.ec-focus` highlight. No redirect.
+- No general card links to another general card today (the CPR mention in choking's flags is prose,
+  not a link); the `xlink.id` branch in `geXlink` is ready if one is ever added.
+
+### M4 — Shared cleanup (dead code) + styles/template (done)
+Removed the retired `#emDocOv` overlay path everywhere:
+- `diet.js`: deleted `_emStampRow` / `_emDocPrepHtml` / `emOpenDocPrep` / `_emCloseDocPrep` + the
+  `_emDocHz` state + its `emCopyDoc` fallback.
+- `core.js`: dropped the `emOpenDocPrep` / `emCloseDocPrep` / `emCloseDocPrepSelf` dispatch routes.
+- `template.html`: removed the `#emDocOv` container (a shared-file change → triple-Gov).
+- `styles.css`: removed the dead `.em-doc-ov .doc-*` block **and** the old accordion `.ge-item*` /
+  `.ge-lead` / `.ge-steps` block (the room is rows + flip cards now).
+Remaining name occurrences are comments only (no live refs). Build clean.
+
+### M5 — QA gate (canon-cc-008)
+Summon-set (by touched jurisdiction):
+- **Maren** — `config.js` (general doc models + teasers, content/safety) + `diet.js` (food flip,
+  Copy/Save, the food-room safety surface). BLOCKING.
+- **Vela** — `intelligence-cards.js` (room render, rows, pop-up cards, flip, wave).
+- **Kael** — `core.js` (dispatch lifecycle) + `config.js`/`data.js` engine shapes + flip/overlay
+  z-index + listener lifecycle.
+- **Triple-Gov** — `styles.css` + `template.html` (shared).
+- **Cipher** — Edict V cross-cutting final pass.

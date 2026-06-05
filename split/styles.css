@@ -5832,40 +5832,8 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .ge-callbar-label svg.zi { width:var(--icon-base); height:var(--icon-base); }
 .ge-callbar .ld-emergency-call { font-size:var(--fs-md); font-weight:700; }
 .ge-list { display:flex; flex-direction:column; gap:var(--sp-12); padding:var(--sp-16) var(--sp-20); }
-.ge-item {
-  background-color:var(--surface);
-  background-image:linear-gradient(135deg, transparent 45%, rgba(242,168,184,0.16));
-  border:1.5px solid var(--rose); border-radius:var(--r-xl); overflow:hidden;
-}
-[data-theme="dark"] .ge-item { background-image:linear-gradient(135deg, transparent 35%, rgba(158,62,82,0.24)); }
-/* Critical — pinned-open, loud rose, louder than every tint (DESIGN_PRINCIPLES line 120). */
-.ge-item--critical {
-  border:2.5px solid var(--tc-rose);
-  background-color:var(--rose-light);
-  background-image:none;
-}
-[data-theme="dark"] .ge-item--critical { background-color:rgba(158,62,82,0.34); border-color:var(--rose); }
-.ge-item-head {
-  display:flex; align-items:center; gap:var(--sp-10); width:100%; text-align:left;
-  background:transparent; border:none; cursor:pointer;
-  padding:var(--sp-12) var(--sp-16); min-height:44px;
-}
-.ge-item-head--static { cursor:default; }
-.ge-item-ic { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
-.ge-item-ic svg.zi { width:var(--icon-base); height:var(--icon-base); }
-.ge-item-name { flex:1; min-width:0; font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
-.ge-item--critical .ge-item-name { color:var(--tc-rose); }
-/* V-3: the call imperative shows even on the COLLAPSED row. */
-.ge-lead { display:inline-flex; align-items:center; gap:var(--sp-4); flex-shrink:0; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-full); background:var(--tc-rose); color:var(--cream); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-xs); }
-.ge-lead svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
-.ge-item-chev { display:inline-flex; flex-shrink:0; color:var(--tc-rose); transition:transform var(--ease-med); }
-.ge-item-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
-.ge-item.ge-open .ge-item-chev { transform:rotate(180deg); }
-.ge-item-body { display:none; padding:0 var(--sp-16) var(--sp-16); }
-.ge-item.ge-open > .ge-item-body { display:block; }
-.ge-steps { margin:0 0 var(--sp-12); padding-left:var(--sp-20); }
-.ge-steps li { font-family:'Nunito', sans-serif; font-size:var(--fs-base); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-8); }
-.ge-steps li::marker { color:var(--tc-rose); font-weight:700; }
+/* (The old accordion .ge-item* / .ge-lead / .ge-steps styles were retired in
+   emergency-room-v2 M1 — the room is now teaser rows (.ge-row) + pop-up flip cards.) */
 .ge-flags { background:var(--rose-light); border-left:var(--accent-w) solid var(--tc-rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); }
 [data-theme="dark"] .ge-flags { background:rgba(158,62,82,0.22); }
 .ge-flags-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--tc-rose); margin-bottom:var(--sp-6); }
@@ -11598,32 +11566,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .ec-docprep-d { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-normal); }
 .ec-docprep-go { flex:0 0 auto; color:var(--tc-sky); } .ec-docprep-go .zi { width:var(--icon-base); height:var(--icon-base); }
 
-/* doc-prep pop-up — Read overlay above the Deck */
-.em-doc-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:center; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1300; }
-.em-doc-ov.open { display:flex; }
-.em-doc-ov .doc { width:100%; max-width:380px; background:#fff; border-radius:var(--r-2xl); box-shadow:0 20px 60px rgba(0,0,0,.4); overflow:hidden; }
-.em-doc-ov .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; }
-.em-doc-ov .doc-x { position:absolute; top:var(--sp-12); right:var(--sp-12); width:30px; height:30px; border:none; border-radius:var(--r-full); background:#f3e7ea; color:#6e5858; font-size:17px; cursor:pointer; }
-.em-doc-ov .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:34px; }
-.em-doc-ov .doc-brand b { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:#9e3e52; }
-.em-doc-ov .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
-.em-doc-ov .doc-who { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
-.em-doc-ov .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
-.em-doc-ov .doc-row .k { flex:0 0 124px; color:#9e3e52; font-weight:800; }
-.em-doc-ov .doc-row .v { flex:1; color:#2a2020; }
-.em-doc-ov .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
-.em-doc-ov .doc-stamp em { color:#9a8a8a; font-style:normal; }
-.em-doc-ov .doc-stamp[data-stamped] { color:#9e3e52; font-weight:800; border-bottom-color:transparent; }
-.em-doc-ov .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
-.em-doc-ov .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
-.em-doc-ov .doc-na[data-on] { background:#9e3e52; color:#fff; border-color:#9e3e52; }
-.em-doc-ov .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
-.em-doc-ov .doc-note b { color:#9e3e52; }
-.em-doc-ov .doc-actions { display:flex; gap:var(--sp-10); padding:var(--sp-12) var(--sp-20); border-top:1px solid #ecdfe2; background:#faf2f4; }
-.em-doc-ov .doc-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:42px; border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
-.em-doc-ov .doc-btn .zi { width:var(--icon-base); height:var(--icon-base); }
-.em-doc-ov .doc-btn--copy { background:#fff; color:#9e3e52; border:1.5px solid #e6b9c4; }
-.em-doc-ov .doc-btn--save { background:#9e3e52; color:#fff; }
+/* (The old #emDocOv doc-prep overlay styles were retired in emergency-room-v2 M2 —
+   doc-prep now renders on the card flip-back via the container-neutral .docface set.) */
 @media print {
   /* Doc-prep print (emSaveDoc): isolate the flipped card's .docface and lay it
      flat (neutralise the flip transform). Scoped to the .doc-printing body flag
