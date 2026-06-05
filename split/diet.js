@@ -839,7 +839,12 @@ function _recipeDetailHtml(r, ageMonths) {
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
-    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+    // §9.2: each pill carries its OWN food-domain whisper fade (dt-*), never flat.
+    // cls.group is a controlled FOOD_TAX pid (grains/fruits/vegs/dairy/nuts/spices/
+    // nonveg) — each has a matching .dt-* rule; unclassified → flat fallback.
+    const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(ing.name) : null;
+    const dt = (cls && cls.group) ? ` dt-${cls.group}` : '';
+    h += `<span class="recipe-chip${dt}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
   // Steps

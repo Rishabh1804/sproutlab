@@ -11222,7 +11222,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* Ingredient chips */
 .recipe-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin:var(--sp-8) 0 0; }
-.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
+/* background-COLOR longhand (not the shorthand) so the per-ingredient .dt-*
+   domain whisper background-image layers over the pill base in both themes —
+   same cascade fix as .recipe-row (the shorthand reset background-image:none). */
+.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background-color:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
 .recipe-chip .zif { width:15px; height:15px; }
 
 /* Expand-in-place detail (reuses .combo-*/.do/.dont/.fd-flag*) */
@@ -40621,7 +40624,12 @@ function _recipeDetailHtml(r, ageMonths) {
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
-    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+    // §9.2: each pill carries its OWN food-domain whisper fade (dt-*), never flat.
+    // cls.group is a controlled FOOD_TAX pid (grains/fruits/vegs/dairy/nuts/spices/
+    // nonveg) — each has a matching .dt-* rule; unclassified → flat fallback.
+    const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(ing.name) : null;
+    const dt = (cls && cls.group) ? ` dt-${cls.group}` : '';
+    h += `<span class="recipe-chip${dt}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
   // Steps
