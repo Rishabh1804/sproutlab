@@ -3891,7 +3891,7 @@ const MILESTONE_STANDARDS = {
     { text:'Tracks moving objects across midline', icon:zi('eye'), desc:'Follows a toy moving from one side of the body to the other with eyes — bilateral visual coordination strengthening.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Turns head toward soft sounds', icon:zi('chat'), desc:'Localises quieter sounds — a rattle in another room, your voice from the kitchen. Auditory mapping refining.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Explores textures with hands and mouth', icon:zi('sparkle'), desc:'Squeezes a soft toy, mouths a wooden ring, pats a textured book. Tactile discrimination building.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
-    { text:'Plays peek-a-boo with interest', icon:zi('face'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Plays peek-a-boo with interest', icon:zi('baby'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Imitates simple sounds back', icon:zi('chat'), desc:'Hears you say "ba" and tries "ba" back — early conversational turn-taking.', advanced:false, domain:'language', source:'unverified' },
   ],
   8: [
