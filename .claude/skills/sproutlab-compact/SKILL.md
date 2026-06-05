@@ -1,15 +1,20 @@
-<!-- Canonical spec — authored and maintained in Codex per canon-cc-026.
-     Promoted to the Codex docs/specs/skills/ canonical home 2026-06-04 (PR #85).
-     Province-local utility skill — single-Province deployment. Deploys byte-identical
-     to sproutlab/.claude/skills/sproutlab-compact.md per canon-cc-026 §Per-Province-Layout.
-     DEPLOY: the SproutLab mirror at .claude/skills/sproutlab-compact.md was deployed
-     byte-identical 2026-06-05, closing the prior deploy gap.
-     Amendment path: canon-cc-027 signing chain. -->
-
 ---
 name: sproutlab-compact
 description: Prepare a SproutLab session for /compact. Use BEFORE running /compact on a long SproutLab build session — it writes a graph-anchored, ephemeral resume handoff so post-compact work starts exactly where it left off (PR/branch state, next action, the canon-cc-008 summon-set, and file→symbol anchors). Trigger on "/sproutlab-compact", "prep for compact", "write a handoff before compacting".
+trigger: /sproutlab-compact
 ---
+
+<!-- Canonical spec — authored and maintained in Codex per canon-cc-026.
+     Promoted to the Codex docs/specs/skills/ canonical home 2026-06-04 (PR #85).
+     Province-local utility skill — single-Province deployment. Deploys byte-identical
+     to sproutlab/.claude/skills/sproutlab-compact/SKILL.md per canon-cc-026
+     §Per-Province-Layout — the loadable SKILL.md directory shape (matching the
+     /design-principles and /doc-render slash-skills). A bare .claude/skills/*.md
+     file is a spec mirror Claude Code does NOT discover as an invocable skill, and
+     frontmatter MUST be line 1 (no leading comment) for the loader to register it —
+     which is why this body is frontmatter-first with the provenance note below it.
+     DEPLOY: deployed to the SKILL.md directory form 2026-06-05.
+     Amendment path: canon-cc-027 signing chain. -->
 
 # /sproutlab-compact — pre-compaction ritual
 
