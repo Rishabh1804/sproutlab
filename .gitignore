@@ -27,3 +27,8 @@ playwright/.cache/
 .Trash-*
 .DS_Store
 Thumbs.db
+
+# local debug screenshots (not for the repo)
+tmp-shot*.mjs
+tmp-shots/
+tmp-shots2/

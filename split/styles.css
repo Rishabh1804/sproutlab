@@ -5891,31 +5891,50 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 /* Doc-prep face (.docface) — the same fields as the food room's doc-prep, but
    container-neutral so it renders inside the flip-back (not only the #emDocOv
    overlay). Mirrors the .em-doc-ov .doc-* rules; tokenised for the 3 zoom tiers. */
-.docface { display:flex; flex-direction:column; min-height:0; flex:1; }
-.docface .doc { width:100%; background:#fff; overflow:hidden; display:flex; flex-direction:column; min-height:0; flex:1; }
-.docface .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; overflow:auto; min-height:0; flex:1; }
-.docface .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:40px; }
+/* Doc-face colours are component-scoped tokens (light/paper defaults). Dark-theme
+   overrides below make the on-screen face match the front card (PR#235 dark-mode fix);
+   the @media print block re-forces these to paper values so any printout stays white. */
+.docface {
+  --doc-paper:#fff; --doc-ink:#2a2020; --doc-ink-soft:#3a2c2c;
+  --doc-line:#ecdfe2; --doc-line-soft:#f0e6e9; --doc-muted:#7a6a6a;
+  --doc-placeholder:#9a8a8a; --doc-dash:#d8b9c2; --doc-note-bg:#fdeef1;
+  --doc-foot-bg:#faf2f4; --doc-btn-bg:#fff; --doc-btn-ghost-border:#e6dcdf;
+  --doc-btn-copy-border:#e6b9c4;
+  display:flex; flex-direction:column; min-height:0; flex:1;
+}
+.docface .doc { width:100%; background:var(--doc-paper); overflow:hidden; display:flex; flex-direction:column; min-height:0; flex:1; }
+.docface .doc-body { padding:var(--sp-20); position:relative; color:var(--doc-ink); overflow:auto; min-height:0; flex:1; }
+.docface .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid var(--doc-line); padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:40px; }
 .docface .doc-brand b { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
-.docface .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
-.docface .doc-who { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
-.docface .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
+.docface .doc-brand span { font-size:var(--fs-2xs); color:var(--doc-muted); font-weight:700; }
+.docface .doc-who { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-base); color:var(--doc-ink); margin:0 0 var(--sp-12); }
+.docface .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid var(--doc-line-soft); line-height:var(--lh-normal); }
 .docface .doc-row .k { flex:0 0 38%; max-width:140px; color:var(--tc-rose); font-weight:800; }
-.docface .doc-row .v { flex:1; color:#2a2020; }
-.docface .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
-.docface .doc-stamp em { color:#9a8a8a; font-style:normal; }
+.docface .doc-row .v { flex:1; color:var(--doc-ink); }
+.docface .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--doc-ink); cursor:pointer; border-bottom:1px dashed var(--doc-dash); }
+.docface .doc-stamp em { color:var(--doc-placeholder); font-style:normal; }
 .docface .doc-stamp[data-stamped] { color:var(--tc-rose); font-weight:800; border-bottom-color:transparent; }
-.docface .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
-.docface .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito', sans-serif; font-size:var(--fs-xs); font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
+.docface .doc-stamp[data-na] { color:var(--doc-placeholder); font-weight:800; border-bottom-color:transparent; }
+.docface .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid var(--doc-dash); border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito', sans-serif; font-size:var(--fs-xs); font-weight:800; color:var(--doc-placeholder); cursor:pointer; line-height:1.4; }
 .docface .doc-na[data-on] { background:var(--tc-rose); color:#fff; border-color:var(--tc-rose); }
-.docface .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
+.docface .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:var(--doc-ink-soft); line-height:var(--lh-normal); background:var(--doc-note-bg); border-radius:var(--r-md); padding:var(--sp-12); }
 .docface .doc-note b { color:var(--tc-rose); }
-.docface .doc-actions { display:flex; gap:var(--sp-8); padding:var(--sp-12) var(--sp-16); border-top:1px solid #ecdfe2; background:#faf2f4; flex-shrink:0; }
+.docface .doc-actions { display:flex; gap:var(--sp-8); padding:var(--sp-12) var(--sp-16); border-top:1px solid var(--doc-line); background:var(--doc-foot-bg); flex-shrink:0; }
 .docface .doc-btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border-radius:var(--r-xl); font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
 .docface .doc-btn svg.zi { width:var(--icon-base); height:var(--icon-base); }
-.docface .doc-btn--ghost { flex:0 0 auto; padding:0 var(--sp-12); background:#fff; color:var(--mid); border:1.5px solid #e6dcdf; }
-.docface .doc-btn--copy { flex:1; background:#fff; color:var(--tc-rose); border:1.5px solid #e6b9c4; }
+.docface .doc-btn--ghost { flex:0 0 auto; padding:0 var(--sp-12); background:var(--doc-btn-bg); color:var(--mid); border:1.5px solid var(--doc-btn-ghost-border); }
+.docface .doc-btn--copy { flex:1; background:var(--doc-btn-bg); color:var(--tc-rose); border:1.5px solid var(--doc-btn-copy-border); }
 .docface .doc-btn--save { flex:1; background:var(--tc-rose); color:#fff; }
 .docface .doc-btn--copied { background:var(--sage-light); color:var(--tc-sage); border:1.5px solid var(--sage); }  /* V-K-1 inline copy confirmation */
+/* Dark theme — the doctor face becomes a dark panel consistent with the front card
+   (front uses --surface / --text). Print path re-forces paper values (see @media print). */
+[data-theme="dark"] .docface {
+  --doc-paper:var(--surface); --doc-ink:var(--text); --doc-ink-soft:var(--mid);
+  --doc-line:var(--border-subtle); --doc-line-soft:var(--border-subtle); --doc-muted:var(--mid);
+  --doc-placeholder:var(--light); --doc-dash:rgba(224,144,168,0.40); --doc-note-bg:var(--surface-rose);
+  --doc-foot-bg:var(--surface-alt); --doc-btn-bg:var(--surface-alt); --doc-btn-ghost-border:var(--border-subtle);
+  --doc-btn-copy-border:rgba(224,144,168,0.40);
+}
 @media (prefers-reduced-motion: reduce) { .ge-card-ov { transition:none; } }
 
 /* Growth hero — rose to peach (body/physical) */
@@ -11576,6 +11595,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   body.doc-printing .doc-print .fp-flip, body.doc-printing .doc-print .fp-back { transform:none !important; position:static !important; backface-visibility:visible !important; }
   body.doc-printing .doc-print .docface, body.doc-printing .doc-print .docface .doc { box-shadow:none; max-width:100%; }
   body.doc-printing .doc-print .docface .doc-actions { display:none; }
+  /* A printout is always white paper — re-force the paper tokens even when the app is
+     in dark mode (data-theme="dark" stays set during print). PR#235 dark-mode fix. */
+  body.doc-printing .doc-print .docface {
+    --doc-paper:#fff; --doc-ink:#2a2020; --doc-ink-soft:#3a2c2c;
+    --doc-line:#ecdfe2; --doc-line-soft:#f0e6e9; --doc-muted:#7a6a6a;
+    --doc-placeholder:#9a8a8a; --doc-dash:#d8b9c2; --doc-note-bg:#fdeef1;
+    --doc-foot-bg:#faf2f4; --doc-btn-bg:#fff; --doc-btn-ghost-border:#e6dcdf;
+    --doc-btn-copy-border:#e6b9c4;
+  }
 }
 /* ═══════════════════════════════════════════════════════════════════════
    Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/, LOCKED.md
