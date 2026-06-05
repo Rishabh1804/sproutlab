@@ -244,7 +244,7 @@ below are a convenience mirror; the doc wins on any disagreement.
 **Rule:** Every new card/section/feature uses one of these domain colors. No ad-hoc hex values.
 
 ### Icon System
-**zi()** — 109 custom SVG symbols as `<symbol>` sprite in template.html (was 105 at PR-EF base; +4 added by PR-EF Phase A: trending-down, trending-flat, trending-mixed, arrow-right). Rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`.
+**zi()** — custom SVG symbols as `<symbol>` sprites in template.html, two namespaces: **`zi-` general** (rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`) and **`zif-` food** (rendered via the diet.js food-icon path → `<svg class="zif"><use href="#zif-{name}"/></svg>`). The live count + list is the auto-generated gallery `docs/ICON_REFERENCE.html` (built each build by `split/build-icon-reference.mjs`) — **the authoritative source; do not hard-code a count here** (this line once said "109" and the DESIGN_PRINCIPLES floor "54" while the sprite held 114 zi- + 97 zif-).
 
 ### Text Zoom
 Three tiers (default, medium, large) via `data-zoom` on `:root`. Header block exempt.

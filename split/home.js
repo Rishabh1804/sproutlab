@@ -2978,7 +2978,7 @@ function renderMsTrajectoryRibbon() {
 
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-      + zi('chart-up') + '</div> Trajectory</div></div>'
+      + zi('trending-up') + '</div> Trajectory</div></div>'
       + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
@@ -3113,7 +3113,7 @@ function renderMsTrajectoryRibbon() {
   }
 
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-    + zi('chart-up') + '</div> Trajectory</div></div>'
+    + zi('trending-up') + '</div> Trajectory</div></div>'
     + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + G.width + ' ' + G.height + '"'
     + ' preserveAspectRatio="xMidYMid meet" role="img"'
     + ' aria-label="Milestone trajectory: '
@@ -3205,7 +3205,7 @@ function renderMsPediatricPrep() {
   // Build narration (CV3-002 narrate-vs-list). Observation-counts only per
   // V-K-120 — never engine-internal labels.
   const parts = [];
-  parts.push('<div class="card-header"><div class="card-title"><div class="icon icon-rose">' + zi('hospital') + '</div> Pediatric-visit prep</div></div>');
+  parts.push('<div class="card-header"><div class="card-title"><div class="icon icon-rose">' + zi('medical') + '</div> Pediatric-visit prep</div></div>');
   parts.push('<div class="ms-pediatric-prep-narration">');
   parts.push('Next visit: not yet scheduled. Things to mention this month:');
   parts.push('</div>');
