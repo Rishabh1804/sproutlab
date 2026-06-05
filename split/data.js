@@ -2924,7 +2924,7 @@ const EMERGENCY_PROTOCOL = {
       'going floppy, pale, or very sleepy',
     ],
     steps: [
-      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. _(Most families won’t have one — if not, go straight to step 2.)_',
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 3 seconds (count to 10 if you’re unsure). _(Most families won’t have one — if not, go straight to step 2.)_',
       '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
       '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
       'No better after **5 minutes**? A second dose, if you have one.',

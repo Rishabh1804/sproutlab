@@ -5843,18 +5843,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    emergency-room-v2 M1 — the room is now teaser rows (.ge-row) + pop-up flip cards.) */
 .ge-flags { background:var(--rose-light); border-left:var(--accent-w) solid var(--tc-rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); }
 [data-theme="dark"] .ge-flags { background:rgba(158,62,82,0.22); }
-.ge-flags-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--tc-rose); margin-bottom:var(--sp-6); }
-.ge-flags-h svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
-.ge-flags ul { margin:0; padding-left:var(--sp-16); }
-.ge-flags li { font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
 /* Unconditional-call items (poison / unresponsive) — lead loud, no list. */
 .ge-flags--always { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--rose-light); border-left:var(--accent-w) solid var(--rose-deep); }
 [data-theme="dark"] .ge-flags--always { background:rgba(158,62,82,0.30); }
 .ge-flags--always svg.zi { width:var(--icon-base); height:var(--icon-base); color:var(--rose-deep); flex-shrink:0; }
 .ge-flags--always span { font-family:'Fraunces', serif; font-weight:700; font-size:var(--fs-md); color:var(--rose-deep); }
 [data-theme="dark"] .ge-flags--always span, [data-theme="dark"] .ge-flags--always svg.zi { color:var(--rose); }
-.ge-xlink { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-12); padding:var(--sp-8) var(--sp-12); background:transparent; border:1.5px solid var(--rose); border-radius:var(--r-full); color:var(--tc-rose); font-family:'Nunito', sans-serif; font-weight:600; font-size:var(--fs-sm); cursor:pointer; min-height:44px; }
-.ge-xlink svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
 .ge-src { margin-top:var(--sp-10); font-family:'Nunito', sans-serif; font-size:var(--fs-xs); color:var(--mid); }
 .ge-disclaimer { display:flex; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-12) var(--sp-20) var(--sp-20); border-top:1px solid var(--rose-light); }
 .ge-disclaimer svg.zi { width:var(--icon-base); height:var(--icon-base); color:var(--tc-rose); flex-shrink:0; margin-top:var(--sp-2); }
@@ -5928,6 +5922,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .docface .doc-btn--ghost { flex:0 0 auto; padding:0 var(--sp-12); background:#fff; color:var(--mid); border:1.5px solid #e6dcdf; }
 .docface .doc-btn--copy { flex:1; background:#fff; color:var(--tc-rose); border:1.5px solid #e6b9c4; }
 .docface .doc-btn--save { flex:1; background:var(--tc-rose); color:#fff; }
+.docface .doc-btn--copied { background:var(--sage-light); color:var(--tc-sage); border:1.5px solid var(--sage); }  /* V-K-1 inline copy confirmation */
 @media (prefers-reduced-motion: reduce) { .ge-card-ov { transition:none; } }
 
 /* Growth hero — rose to peach (body/physical) */
@@ -15397,7 +15392,7 @@ const GENERAL_EMERGENCIES = [
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
     source: 'Resuscitation Council UK 2025 · NHS',
-    teaser: '5 rescue breaths, then 30 compressions',
+    teaser: '5 rescue breaths, then start compressions',
     doc: {
       suspected: 'Not breathing / unresponsive',
       stamps: [ { id: 'collapse', label: 'Found unresponsive at' }, { id: 'cpr', label: 'CPR started at' } ],
@@ -18481,7 +18476,7 @@ const EMERGENCY_PROTOCOL = {
       'going floppy, pale, or very sleepy',
     ],
     steps: [
-      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. _(Most families won’t have one — if not, go straight to step 2.)_',
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 3 seconds (count to 10 if you’re unsure). _(Most families won’t have one — if not, go straight to step 2.)_',
       '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
       '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
       'No better after **5 minutes**? A second dose, if you have one.',
@@ -42929,14 +42924,24 @@ function _emDocText(hz, container) {
   L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
   return L.join('\n');
 }
+// Inline copy-confirmation (V-K-1): the doc cards sit above the toast band, so a
+// "Copied" toast is occluded. Flip the Copy button to a sage "Copied" state in
+// place — the parent gets the signal on the surface they're looking at.
+function _docCopiedFlash(btn) {
+  if (!btn || btn._copiedT) return;
+  var orig = btn.innerHTML;
+  btn.innerHTML = zi('check') + 'Copied';
+  btn.classList.add('doc-btn--copied');
+  btn._copiedT = setTimeout(function() { btn.innerHTML = orig; btn.classList.remove('doc-btn--copied'); btn._copiedT = null; }, 1700);
+}
 function emCopyDoc(btn) {
   var hz = btn && btn.getAttribute('data-arg');
   var container = (btn && btn.closest) ? btn.closest('.fp-back') : null;
   var text = _emDocText(hz, container);
-  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  var done = function() { _docCopiedFlash(btn); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
-  } else { _emLegacyCopy(text); }
+    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); _docCopiedFlash(btn); });
+  } else { _emLegacyCopy(text); _docCopiedFlash(btn); }
 }
 function _emLegacyCopy(text) {
   var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
@@ -75988,9 +75993,10 @@ function geCopyDoc(btn) {
   if (!e) return;
   var container = (btn.closest && btn.closest('.fp-face')) || document;
   var text = _geDocText(e, container);
-  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); });
-  else if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text);
+  var flash = function() { if (typeof _docCopiedFlash === 'function') _docCopiedFlash(btn); };
+  var done = function() { flash(); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); });
+  else { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); }
 }
 
 function _geClose() {

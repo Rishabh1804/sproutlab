@@ -155,3 +155,36 @@ Summon-set (by touched jurisdiction):
   z-index + listener lifecycle.
 - **Triple-Gov** — `styles.css` + `template.html` (shared).
 - **Cipher** — Edict V cross-cutting final pass.
+
+**Gate results — all three Governors `clear-with-notes`, NO BLOCKS:**
+- **Vela (render):** §11 6-second rule PASS; flip reuses `.fp-flip` PASS; 3-zoom-tier legibility
+  PASS; HR-1..12 PASS. Flags: V-V-235-1 (landing-pill wave scope → Architect call), V-V-235-2
+  (high-zoom pinned-card scroll watch), dead CSS (`.ge-xlink`/`.ge-flags-h`).
+- **Maren (care, BLOCKING):** food-flip refactor is render-only, no first-aid content altered
+  (V-M-241 safety-tier CLEAR); Copy/Save container-read CLEAR; print isolation CLEAR; all 8 general
+  `doc` models clinically appropriate; HR-4/HR-12 PASS. Folds: V-M-238 (teaser numeric collision),
+  V-M-239 (cross-room anaphylaxis hold-time 10s vs 3s).
+- **Kael (engine/lifecycle):** dispatch total; z-stack 1010<1060<1280 correct; scroll-lock
+  single-owner; listener teardown clean; data-shape parity + cross-room sharing collision-free;
+  HR-12 PASS. Flag: V-K-1 (Copy-confirmation toast occluded by the doc overlays).
+
+**Synthesis (folded):**
+- V-M-238 → `unresponsive` teaser "5 rescue breaths, then **start compressions**" (kills the
+  5/30-vs-30:2 numeric near-collision).
+- V-M-239 → food `EMERGENCY_PROTOCOL.anaphylaxis` step 1 "hold **3 seconds** (count to 10 if
+  unsure)" — aligns with the firecrawl-verified General copy (FDA/Teva/AAP). Floor audits re-PASS.
+- V-K-1 → inline "Copied" button state (`_docCopiedFlash` + `.doc-btn--copied` sage) shared by
+  both rooms — confirmation lands on the surface the parent is looking at, not a buried toast.
+- Vela dead-CSS → removed `.ge-xlink`, `.ge-flags-h`, `.ge-flags ul/li`.
+
+**Surfaced for the Architect (NOT silently overridden):**
+- **V-V-235-1 — landing-pill wave scope.** You said "whisper-wave wherever it appears"; Vela
+  recommends scoping it to the Room so the calm front door stays dormant. Shipping per your
+  explicit directive (wave everywhere); the one-line scoping fix is ready if you want it on the
+  preview. **This is the #1 item for your preview review.**
+- **V-V-235-2** — at `high` zoom the pinned CPR card is long; confirm the first teaser row is still
+  discoverable (one short scroll). No code change unless the live preview shows it buries the list.
+- **V-K-1 residual** — the underlying toast-band occlusion is pre-existing (food deck too); the
+  inline confirmation is the contained fix for the emergency surfaces.
+
+Cipher Edict V → next.

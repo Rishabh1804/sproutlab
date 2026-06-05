@@ -169,7 +169,7 @@ const GENERAL_EMERGENCIES = [
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
     source: 'Resuscitation Council UK 2025 · NHS',
-    teaser: '5 rescue breaths, then 30 compressions',
+    teaser: '5 rescue breaths, then start compressions',
     doc: {
       suspected: 'Not breathing / unresponsive',
       stamps: [ { id: 'collapse', label: 'Found unresponsive at' }, { id: 'cpr', label: 'CPR started at' } ],

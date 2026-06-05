@@ -1973,9 +1973,10 @@ function geCopyDoc(btn) {
   if (!e) return;
   var container = (btn.closest && btn.closest('.fp-face')) || document;
   var text = _geDocText(e, container);
-  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); });
-  else if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text);
+  var flash = function() { if (typeof _docCopiedFlash === 'function') _docCopiedFlash(btn); };
+  var done = function() { flash(); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); });
+  else { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); }
 }
 
 function _geClose() {

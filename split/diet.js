@@ -2258,14 +2258,24 @@ function _emDocText(hz, container) {
   L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
   return L.join('\n');
 }
+// Inline copy-confirmation (V-K-1): the doc cards sit above the toast band, so a
+// "Copied" toast is occluded. Flip the Copy button to a sage "Copied" state in
+// place — the parent gets the signal on the surface they're looking at.
+function _docCopiedFlash(btn) {
+  if (!btn || btn._copiedT) return;
+  var orig = btn.innerHTML;
+  btn.innerHTML = zi('check') + 'Copied';
+  btn.classList.add('doc-btn--copied');
+  btn._copiedT = setTimeout(function() { btn.innerHTML = orig; btn.classList.remove('doc-btn--copied'); btn._copiedT = null; }, 1700);
+}
 function emCopyDoc(btn) {
   var hz = btn && btn.getAttribute('data-arg');
   var container = (btn && btn.closest) ? btn.closest('.fp-back') : null;
   var text = _emDocText(hz, container);
-  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  var done = function() { _docCopiedFlash(btn); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
-  } else { _emLegacyCopy(text); }
+    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); _docCopiedFlash(btn); });
+  } else { _emLegacyCopy(text); _docCopiedFlash(btn); }
 }
 function _emLegacyCopy(text) {
   var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
