@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<!-- GENERATED from docs/SPROUTLAB_QUICK_REFERENCE.md by split/build-doc-views.mjs — do NOT hand-edit.
+     The .md is the source of truth; this is a styled view, rebuilt each build. -->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SproutLab — Quick Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fffaf7;--warm:#fef6f0;--text:#3d2e2e;--mid:#6e5858;--light:#806c6c;--card:#fff;--line:#ece2dc;
+    --sage:#b5d5c5;--sage-light:#e8f5ef;--tc-sage:#3a7060;--rose:#f2a8b8;--rose-light:#fde8ed;--tc-rose:#9e3e52;
+    --amber:#e8b86d;--amber-light:#fef6e8;--tc-amber:#8a6520;--sky:#a8cfe0;--sky-light:#e8f4fa;--tc-sky:#336580;
+    --lav:#c9b8e8;--lav-light:#f0ebf9;--tc-lav:#6e5e9a;--shadow:rgba(180,120,120,.13);--codebg:#f4ece8;--codefg:#9e3e52;
+  }
+  [data-theme="dark"]{
+    --cream:#1a1520;--warm:#221c28;--text:#e8e0ec;--mid:#b0a0b8;--light:#9a8aa2;--card:#2a2230;--line:#3a3040;
+    --sage-light:#1e3028;--rose-light:#3a2030;--amber-light:#352e1e;--sky-light:#1e2838;--lav-light:#241d33;
+    --tc-sage:#7ac0a0;--tc-rose:#e090a8;--tc-amber:#d4a848;--tc-sky:#80b8d8;--tc-lav:#b8a8e0;--shadow:rgba(0,0,0,.3);--codebg:#2f2636;--codefg:#e090a8;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--warm);color:var(--text);font-family:'Nunito',sans-serif;line-height:1.6;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:236px 1fr;gap:40px;}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr;}.toc{display:none;}}
+  .toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:28px 0;}
+  .toc-h{font-family:'Nunito';font-weight:800;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--light);margin:0 0 10px;}
+  .toc a{display:block;font-size:.8rem;color:var(--mid);text-decoration:none;padding:5px 10px;border-radius:8px;border-left:2px solid transparent;line-height:1.35;}
+  .toc a:hover{background:var(--sage-light);color:var(--tc-sage);border-left-color:var(--sage);}
+  main{padding:40px 0 90px;min-width:0;}
+  .doc-head{border-bottom:2px solid var(--line);padding-bottom:20px;margin-bottom:8px;}
+  .eyebrow{font-weight:800;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--tc-lav);}
+  .gennote{margin-top:12px;font-size:.72rem;color:var(--light);background:var(--lav-light);border-radius:999px;padding:6px 14px;display:inline-block;}
+  .gennote code{background:none;color:var(--tc-lav);font-weight:700;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2.4rem;line-height:1.1;margin:.3em 0 .1em;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;color:var(--text);margin:1.9em 0 .5em;padding-bottom:.25em;border-bottom:1px solid var(--line);scroll-margin-top:16px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;color:var(--tc-sage);margin:1.5em 0 .35em;}
+  h4{font-family:'Nunito';font-weight:800;font-size:.95rem;color:var(--tc-rose);letter-spacing:.01em;margin:1.3em 0 .3em;}
+  p{margin:.7em 0;}
+  a{color:var(--tc-sky);}
+  strong{font-weight:800;color:var(--text);}
+  em{font-style:italic;color:var(--mid);}
+  code{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:.82em;background:var(--codebg);color:var(--codefg);border-radius:5px;padding:1px 6px;}
+  pre{background:var(--codebg);border-radius:12px;padding:16px 18px;overflow:auto;border:1px solid var(--line);}
+  pre code{background:none;color:var(--text);padding:0;font-size:.8rem;line-height:1.5;}
+  ul,ol{margin:.6em 0;padding-left:1.4em;} li{margin:.3em 0;}
+  blockquote{margin:1em 0;background:var(--amber-light);border-left:3px solid var(--amber);border-radius:10px;padding:12px 16px;color:var(--text);}
+  blockquote strong{color:var(--tc-amber);}
+  hr{border:none;border-top:1px solid var(--line);margin:2.2em 0;}
+  .tbl-wrap{overflow-x:auto;margin:1em 0;border-radius:12px;border:1px solid var(--line);}
+  table{border-collapse:collapse;width:100%;font-size:.84rem;}
+  th{background:var(--sage-light);color:var(--tc-sage);font-weight:800;text-align:left;padding:10px 13px;border-bottom:2px solid var(--sage);white-space:nowrap;}
+  td{padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mid);}
+  tr:last-child td{border-bottom:none;} td strong{color:var(--text);}
+  tbody tr:nth-child(even){background:rgba(181,213,197,.06);}
+  .theme-btn{position:fixed;top:16px;right:18px;z-index:10;font-family:'Nunito';font-weight:700;font-size:12px;color:var(--mid);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;box-shadow:0 2px 10px var(--shadow);}
+</style>
+</head>
+<body>
+<button class="theme-btn" id="themeBtn">◐ Dark</button>
+<div class="wrap">
+  <nav class="toc"><div class="toc-h">On this page</div><a href="#1-architecture">1. Architecture</a><a href="#2-data-gateway">2. Data Gateway</a><a href="#3-localstorage-keys">3. localStorage Keys</a><a href="#4-hard-rules-hr-1-through-hr-12">4. Hard Rules (HR-1 through HR-12)</a><a href="#5-domain-color-system">5. Domain Color System</a><a href="#6-css-token-scale">6. CSS Token Scale</a><a href="#7-format-function-registry">7. Format Function Registry</a><a href="#8-icon-system">8. Icon System</a><a href="#9-data-action-convention">9. data-action Convention</a><a href="#10-sync-classification-for-device-sync">10. Sync Classification (for Device Sync)</a><a href="#11-save-call-frequency-by-key">11. save() Call Frequency by Key</a><a href="#12-qa-gate-system-summary">12. QA Gate System (Summary)</a><a href="#13-spec-process-summary">13. Spec Process (Summary)</a><a href="#14-session-conventions">14. Session Conventions</a><a href="#15-current-queue-as-of-april-2026">15. Current Queue (as of April 2026)</a></nav>
+  <main>
+    <div class="doc-head">
+      <div class="eyebrow">SproutLab</div>
+      <span class="gennote">Generated from <code>docs/SPROUTLAB_QUICK_REFERENCE.md</code> — the source of truth. Rebuilt each build; don't hand-edit this HTML.</span>
+    </div>
+    <h1 id="sproutlab-quick-reference">SproutLab — Quick Reference</h1><p><strong>Version:</strong> 1.0 · <strong>Created:</strong> 13 April 2026 <strong>Use:</strong> Open alongside code during every build session</p><hr><h2 id="1-architecture">1. Architecture</h2><p><strong>Type:</strong> Split-file HTML PWA, build-concatenated, localStorage persistence, no backend (Firebase sync layer in progress) <strong>Repo:</strong> <code>rishabh1804.github.io/sproutlab/</code> <strong>Live:</strong> <code>https://rishabh1804.github.io/sproutlab/</code> <strong>Baby:</strong> Ziva Jain, born 4 Sep 2025</p><h3 id="module-structure">Module Structure</h3><div class="tbl-wrap"><table><thead><tr><th>File</th><th>Lines</th><th>Purpose</th></tr></thead><tbody><tr><td><code>data.js</code></td><td>3,561</td><td>Constants, EVIDENCE_PATTERNS, MILESTONE_ACTIVITIES, DEFAULT_* data</td></tr><tr><td><code>core.js</code></td><td>4,815</td><td>save/load, init, ISL scoring, intelligence modifiers, escHtml, zi(), notes, scrapbook</td></tr><tr><td><code>home.js</code></td><td>9,180</td><td>Home tab, Quick Log, poop tracking, alerts, sleep (from home), vaccination booking, Tomorrow's Plan, outing</td></tr><tr><td><code>diet.js</code></td><td>4,087</td><td>Diet tab, food intelligence, meal logging, food favorites, Tomorrow's Plan diet</td></tr><tr><td><code>medical.js</code></td><td>9,359</td><td>Medical tab, growth, vaccination, milestones, sleep tab, doctor management, episodes</td></tr><tr><td><code>intelligence.js</code></td><td>~8,000+</td><td>Smart Q&amp;A, CareTickets, cross-domain intelligence, activity logging</td></tr><tr><td><code>start.js</code></td><td>~500+</td><td>App init, event delegation, service worker, tab switching</td></tr><tr><td><code>template.html</code></td><td>—</td><td>HTML structure, zi() SVG sprite, CSS token definitions</td></tr><tr><td><code>styles.css</code></td><td>—</td><td>(if separated) All CSS</td></tr></tbody></table></div><h3 id="build-order-buildsh">Build Order (build.sh)</h3><pre><code>styles.css → template.html → data.js → core.js → home.js → diet.js → medical.js → intelligence.js → start.js</code></pre><p>Output: <code>sproutlab.html</code> → copy to <code>index.html</code> for GitHub Pages</p><h3 id="deploy-workflow">Deploy Workflow</h3><pre><code>cd ~/SproutLab
+pnpm build              # bumps manifest version + builds sproutlab.html + copies to index.html
+git add -A &amp;&amp; git commit -m "message" &amp;&amp; git push</code></pre><p><code>pnpm build</code> is the canonical entry — calls <code>split/build-safe.sh</code> which wraps <code>bash build.sh &gt; sproutlab.html 2&gt; /tmp/build.log</code>, validates the output starts with <code>&lt;!DOCTYPE html&gt;</code>, ends with <code>&lt;/html&gt;</code>, and is &gt; 100KB, then mirrors to <code>index.html</code>. (Post-PR #120; closes the PR #117/#118 STDERR-leak class.) The manifest version bump runs inside <code>build.sh</code> (<code>split/bump-version.mjs</code>); audit gates + version bump + doc-generator output go to stderr so the stdout HTML stream stays clean. <code>build-safe.sh</code> captures stderr to a log and tails it back to the caller for visibility. <strong>NEVER invoke <code>bash split/build.sh &gt; out.html 2&gt;&amp;1</code> directly</strong> — the <code>2&gt;&amp;1</code> captures STDERR into the output file and corrupts the HTML.</p><hr><h2 id="2-data-gateway">2. Data Gateway</h2><pre><code>// THE critical abstraction — every data read/write goes through these
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  triggerAutosave();
+}
+// NOTE: Device Sync (Phase 1) will modify save() to:
+//   1. Snapshot old value before overwrite
+//   2. Use _remoteWriteDepth counter for autosave guard
+//   3. Call syncWrite(key, val, old) if available
+// See DEVICE_SYNC_SPEC.md §7.1 for target state.</code></pre><hr><h2 id="3-localstorage-keys">3. localStorage Keys</h2><pre><code>const KEYS = {
+  avatar:     'ziva_avatar',
+  growth:     'ziva_growth',
+  feeding:    'ziva_feeding',
+  milestones: 'ziva_milestones',
+  foods:      'ziva_foods',
+  vacc:       'ziva_vacc',
+  notes:      'ziva_notes',
+  meds:       'ziva_meds',
+  visits:     'ziva_visits',
+  medChecks:  'ziva_med_checks',
+  events:     'ziva_events',
+  scrapbook:  'ziva_scrapbook',
+  doctors:    'ziva_doctors',
+  sleep:      'ziva_sleep',
+  poop:       'ziva_poop',
+  alertsActive:  'ziva_alerts_active',
+  alertsHistory: 'ziva_alerts_history',
+  vaccBooked:    'ziva_vacc_booked',
+  suggestions:   'ziva_suggestions',
+  feverEpisodes: 'ziva_fever_episodes',
+  diarrhoeaEpisodes: 'ziva_diarrhoea_episodes',
+  vomitingEpisodes: 'ziva_vomiting_episodes',
+  coldEpisodes: 'ziva_cold_episodes',
+  activityLog: 'ziva_activity_log',
+  tomorrowPlanned: 'ziva_tomorrow_planned',
+  tomorrowOuting: 'ziva_tomorrow_outing',
+  powerOutage: 'ziva_power_outage',
+  bugReportPhone: 'ziva_bug_report_phone',
+  bugTooltipSeen: 'ziva_bug_tooltip_seen',
+  qlPredictions: 'ziva_ql_predictions',
+  careTickets:   'ziva_care_tickets',
+  notifPermission: 'ziva_notif_permission',
+  ctEverUsed:    'ziva_ct_ever_used',
+};</code></pre><hr><h2 id="4-hard-rules-hr-1-through-hr-12">4. Hard Rules (HR-1 through HR-12)</h2><div class="tbl-wrap"><table><thead><tr><th>Rule</th><th>Constraint</th></tr></thead><tbody><tr><td>HR-1</td><td>No emojis — use <code>zi()</code> SVG icons only</td></tr><tr><td>HR-2</td><td>No inline styles — CSS classes with tokens</td></tr><tr><td>HR-3</td><td>No inline onclick — <code>data-action</code> delegation</td></tr><tr><td>HR-4</td><td>No raw px in CSS — use <code>--sp-*</code>, <code>--fs-*</code>, <code>--r-*</code> tokens</td></tr><tr><td>HR-5</td><td>No text-overflow ellipsis — ever</td></tr><tr><td>HR-6</td><td>Domain colors for every surface (7-domain palette)</td></tr><tr><td>HR-7</td><td>Dark mode token coverage on all new CSS</td></tr><tr><td>HR-8</td><td>Minimum 36×36px tap targets</td></tr><tr><td>HR-9</td><td>No persistent editing in overlays (Read/Act only)</td></tr><tr><td>HR-10</td><td>All formatting through named functions</td></tr><tr><td>HR-11</td><td>Chip text must wrap (no nowrap on variable content)</td></tr><tr><td>HR-12</td><td><code>escHtml()</code> on all user-sourced text in innerHTML</td></tr></tbody></table></div><hr><h2 id="5-domain-color-system">5. Domain Color System</h2><div class="tbl-wrap"><table><thead><tr><th>Domain</th><th>Accent</th><th>Light BG</th><th>Text Color</th><th>Usage</th></tr></thead><tbody><tr><td>sage</td><td><code>#b5d5c5</code></td><td><code>#e8f5ef</code></td><td><code>#3a7060</code></td><td>Diet, nutrition, positive</td></tr><tr><td>rose</td><td><code>#f2a8b8</code></td><td><code>#fde8ed</code></td><td><code>#9e3e52</code></td><td>Medical, alerts, action needed</td></tr><tr><td>amber</td><td><code>#e8b86d</code></td><td><code>#fef6e8</code></td><td><code>#8a6520</code></td><td>Caution, trends, poop</td></tr><tr><td>lavender</td><td><code>#c9b8e8</code></td><td><code>#f0ebfb</code></td><td><code>#6e5e9a</code></td><td>Milestones, intelligence, activity</td></tr><tr><td>sky</td><td><code>#a8cfe0</code></td><td><code>#e8f4fa</code></td><td><code>#336580</code></td><td>Sleep, hydration</td></tr><tr><td>indigo</td><td><code>#9ba8d8</code></td><td><code>#edf0fa</code></td><td><code>#4a5080</code></td><td>Sleep intelligence, night data</td></tr><tr><td>peach</td><td><code>#fad4b4</code></td><td><code>#fef3ea</code></td><td>—</td><td>Warm accents, outing</td></tr></tbody></table></div><hr><h2 id="6-css-token-scale">6. CSS Token Scale</h2><pre><code>/* Spacing */
+--sp-2: 2px; --sp-4: 4px; --sp-6: 6px; --sp-8: 8px; --sp-10: 10px;
+--sp-12: 12px; --sp-16: 16px; --sp-20: 20px; --sp-24: 24px; --sp-32: 32px;
+
+/* Font sizes */
+--fs-2xs: 10px; --fs-xs: 11px; --fs-sm: 13px; --fs-base: 15px;
+--fs-lg: 17px; --fs-xl: 20px; --fs-2xl: 24px; --fs-3xl: 30px;
+
+/* Radius */
+--r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-full: 50%;</code></pre><hr><h2 id="7-format-function-registry">7. Format Function Registry</h2><div class="tbl-wrap"><table><thead><tr><th>Function</th><th>Input</th><th>Output</th><th>File</th></tr></thead><tbody><tr><td><code>escHtml(s)</code></td><td>any string</td><td>HTML-safe string</td><td>core.js</td></tr><tr><td><code>escAttr(s)</code></td><td>any string</td><td>attribute-safe string</td><td>core.js</td></tr><tr><td><code>formatDate(s)</code></td><td>dateStr</td><td><code>'Mon DD'</code> or <code>'Mon DD, YYYY'</code></td><td>core.js</td></tr><tr><td><code>formatTimeShort(t)</code></td><td><code>'HH:MM'</code></td><td><code>'H:MM am/pm'</code></td><td>core.js</td></tr><tr><td><code>toDateStr(d)</code></td><td>Date</td><td><code>'YYYY-MM-DD'</code></td><td>core.js</td></tr><tr><td><code>ageAtDate(dateStr)</code></td><td>dateStr</td><td><code>'Nm Nd'</code></td><td>core.js</td></tr><tr><td><code>formatHeight(cm)</code></td><td>number</td><td>ft/in or cm string</td><td>medical.js</td></tr><tr><td><code>normalizeFoodName(raw)</code></td><td>string</td><td>normalized base name</td><td>core.js</td></tr><tr><td><code>showQLToast(msg)</code></td><td>string</td><td>Shows toast notification</td><td>core.js</td></tr></tbody></table></div><hr><h2 id="8-icon-system">8. Icon System</h2><p><strong><code>zi(name)</code></strong> — returns SVG HTML string. 54 custom icons in sprite.</p><p>Common icons: <code>feed</code>, <code>sleep</code>, <code>poop</code>, <code>med</code>, <code>milestone</code>, <code>activity</code>, <code>alert</code>, <code>check</code>, <code>clock</code>, <code>calendar</code>, <code>chart</code>, <code>star</code>, <code>edit</code>, <code>delete</code>, <code>close</code>, <code>back</code>, <code>search</code>, <code>settings</code>, <code>export</code>, <code>import</code>, <code>bug</code>, <code>camera</code>, <code>mic</code>, <code>note</code>, <code>baby</code>, <code>weight</code>, <code>height</code>, <code>temp</code>, <code>vaccine</code>, <code>pill</code>, <code>doctor</code>, <code>growth</code></p><hr><h2 id="9-data-action-convention">9. data-action Convention</h2><p>Pattern: <code>{module}{Verb}{Target}</code></p><div class="tbl-wrap"><table><thead><tr><th>Prefix</th><th>Module</th></tr></thead><tbody><tr><td><code>ql</code></td><td>Quick Log</td></tr><tr><td><code>al</code></td><td>Activity Log</td></tr><tr><td><code>sl</code></td><td>Sleep</td></tr><tr><td><code>ct</code></td><td>CareTickets</td></tr><tr><td><code>vacc</code></td><td>Vaccination</td></tr><tr><td><code>diet</code></td><td>Diet tab</td></tr><tr><td><code>med</code></td><td>Medical tab</td></tr><tr><td><code>ms</code></td><td>Milestones</td></tr><tr><td><code>tp</code></td><td>Tomorrow's Plan</td></tr></tbody></table></div><p>Example: <code>data-action="qlLogFeed"</code>, <code>data-action="ctCreate"</code>, <code>data-action="vaccBook"</code></p><hr><h2 id="10-sync-classification-for-device-sync">10. Sync Classification (for Device Sync)</h2><p><strong>SYNC keys (Firestore):</strong> <code>feeding</code>, <code>sleep</code>, <code>poop</code>, <code>careTickets</code>, <code>notes</code>, <code>activityLog</code>, <code>milestones</code>, <code>growth</code>, <code>vacc</code>, <code>vaccBooked</code>, <code>meds</code>, <code>visits</code>, <code>doctors</code>, <code>medChecks</code>, <code>feverEpisodes</code>, <code>diarrhoeaEpisodes</code>, <code>vomitingEpisodes</code>, <code>coldEpisodes</code>, <code>foods</code></p><p><strong>LOCAL-ONLY:</strong> <code>avatar</code>, <code>scrapbook</code>, <code>events</code>, <code>suggestions</code>, <code>tomorrowPlanned</code>, <code>tomorrowOuting</code>, <code>powerOutage</code>, <code>alertsActive</code>, <code>alertsHistory</code>, <code>bugReportPhone</code>, <code>bugTooltipSeen</code>, <code>qlPredictions</code>, <code>notifPermission</code>, <code>ctEverUsed</code></p><hr><h2 id="11-save-call-frequency-by-key">11. save() Call Frequency by Key</h2><div class="tbl-wrap"><table><thead><tr><th>Key</th><th>Saves</th><th>Files</th></tr></thead><tbody><tr><td><code>vacc</code></td><td>7</td><td>core, home, medical</td></tr><tr><td><code>medChecks</code></td><td>6</td><td>core, home</td></tr><tr><td><code>foods</code></td><td>6</td><td>home, diet</td></tr><tr><td><code>sleep</code></td><td>4</td><td>medical</td></tr><tr><td><code>milestones</code></td><td>4</td><td>core, home, medical</td></tr><tr><td><code>vaccBooked</code></td><td>3</td><td>home, medical</td></tr><tr><td><code>feeding</code></td><td>2</td><td>home, diet</td></tr><tr><td><code>poop</code></td><td>2</td><td>home</td></tr><tr><td><code>notes</code></td><td>2</td><td>core, home</td></tr><tr><td>All others</td><td>1 each</td><td>various</td></tr></tbody></table></div><p><strong>Total: 48 save() calls across 4 files, all through the same gateway.</strong></p><hr><h2 id="12-qa-gate-system-summary">12. QA Gate System (Summary)</h2><div class="tbl-wrap"><table><thead><tr><th>Gate</th><th>When</th><th>What</th></tr></thead><tbody><tr><td>Gate 1</td><td>Before writing code</td><td>Verify all dependencies (functions, constants, DOM elements, CSS classes)</td></tr><tr><td>Gate 2</td><td>After writing code</td><td>4-layer audit: Mechanical → Structural → Logic → Visual</td></tr><tr><td>Gate 3</td><td>After Gate 2 passes</td><td>User review, cosmetic polish</td></tr></tbody></table></div><p><strong>Rule:</strong> Code is not presented until Gate 2 passes with zero defects in layers 1-3.</p><hr><h2 id="13-spec-process-summary">13. Spec Process (Summary)</h2><div class="tbl-wrap"><table><thead><tr><th>Pass</th><th>Lens</th></tr></thead><tbody><tr><td>1</td><td>Concept — "Is this the right thing?"</td></tr><tr><td>2</td><td>Data flow — "Can this be built?"</td></tr><tr><td>3</td><td>Integration — "Where does it collide?"</td></tr><tr><td>4</td><td>Bugs today — "What breaks?"</td></tr><tr><td>5</td><td>Drift bugs — "What breaks in 3 months?"</td></tr><tr><td>6</td><td>Builder questions — "What makes someone stop and ask?"</td></tr><tr><td>7</td><td>Consistency — "Does it agree with itself?"</td></tr><tr><td>8</td><td>Completion — "Am I done?"</td></tr></tbody></table></div><p><strong>Build-ready when:</strong> The builder never has to make an undocumented decision.</p><hr><h2 id="14-session-conventions">14. Session Conventions</h2><ul><li>Always read spec + design principles + source files before writing code</li><li>Handoff documents and session prompts are two distinct artifacts</li><li>Build estimates should be realistic, not optimistic</li><li>Micro-specs preferred over large specs</li><li>Never assume build/deploy commands — ask for exact process</li><li>Multi-round QA after every build; continue until only cosmetic bugs remain</li><li>"Keep going" = autonomous execution until done</li></ul><hr><h2 id="15-current-queue-as-of-april-2026">15. Current Queue (as of April 2026)</h2><ol><li><strong>Device Sync (Firebase)</strong> ← NEXT BUILD (spec complete, 748 lines)</li><li>Snapshot Sharing (Text v1)</li><li>EVIDENCE_PATTERNS Expansion</li><li>Inline Insights + Parent Celebration</li><li>CareTickets Phase 2</li></ol><hr><p><em>This document is the builder's cheat sheet. Full specs are in the docs/ directory.</em></p>
+  </main>
+</div>
+<script>
+  var btn=document.getElementById('themeBtn');
+  btn.addEventListener('click',function(){var d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'':'dark');btn.textContent=d?'◐ Dark':'◐ Light';});
+</script>
+</body>
+</html>
