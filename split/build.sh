@@ -179,6 +179,10 @@ node build-poop-reference.mjs >&2
 # 6 transitions and the implementation's status-assignment sites surfaces as
 # block/should flags in the chart's drift report.
 node build-careticket-state-machine.mjs >&2
+# Render docs/DESIGN_PRINCIPLES.html from the canonical docs/DESIGN_PRINCIPLES.md so the
+# design-principles doc matches the other auto-generated reference HTMLs. The .md stays the
+# source of truth (CLAUDE.md @imports it); this is a generated view, rebuilt each build.
+node build-design-principles.mjs >&2
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">
