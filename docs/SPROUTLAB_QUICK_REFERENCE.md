@@ -19,9 +19,11 @@
 | Module(s) | Governor |
 |-----------|----------|
 | `home.js` · `diet.js` · `medical.js` | **Maren** — Care |
-| `intelligence-isl.js` · `intelligence-qa.js` · `intelligence-qa-handlers.js` · `intelligence-illness.js` · `intelligence-correlate.js` · `intelligence-caretickets.js` · `core.js` · `data.js` · `recipes.js` · `sync.js` · `config.js` · `start.js` | **Kael** — Intelligence (engine: what the data *does* before it renders) |
+| `intelligence-isl.js` · `intelligence-qa.js` · `intelligence-qa-handlers.js` · `intelligence-illness.js` · `intelligence-correlate.js` · `intelligence-caretickets.js` · `core.js` · `data.js` · `sync.js` · `config.js` · `start.js` | **Kael** — Intelligence (engine: what the data *does* before it renders) |
 | `intelligence-cards.js` · `intelligence-quicklog.js` | **Vela** — Surfacing (render: where data becomes parent-legible; canon-gen-001 2nd-gen Governor) |
 | `styles.css` · `template.html` (shared) | **all three** — sequential triple-jurisdiction review (Maren → Kael → Vela) |
+
+> **Unsettled:** `recipes.js` (food-icon / recipe data, consumed by `diet.js`) is **not yet mapped** in `qa-route.sh`, and `CLAUDE.md` treats Recipes as `diet.js` content (Maren). Until its Governor is settled in `qa-route.sh` + `CLAUDE.md`, route a `recipes.js` diff to **Lyra** to assign.
 
 ### Concat order (split/build.sh)
 

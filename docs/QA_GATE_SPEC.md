@@ -174,7 +174,7 @@ this gate clears.
 | Step | Who | Trigger |
 |------|-----|---------|
 | Care audit | **Maren** (Mode-1 subagent) | diff touches `home.js` / `diet.js` / `medical.js` |
-| Intelligence-engine audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-isl/qa/qa-handlers/illness/correlate/caretickets.js` / `core.js` / `data.js` / `recipes.js` / `sync.js` / `config.js` / `start.js` |
+| Intelligence-engine audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-isl/qa/qa-handlers/illness/correlate/caretickets.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` |
 | Surfacing-render audit | **Vela** (Mode-1 subagent) | diff touches `intelligence-cards.js` / `intelligence-quicklog.js` |
 | Engine **+** render | **both Kael and Vela** (parallel) | diff spans both Regions |
 | Shared-module review | **all three** Governors — sequential triple-jurisdiction (rotation Maren → Kael → Vela, first-Governor by heaviest-touched Region) | diff touches `styles.css` / `template.html` |
@@ -182,6 +182,8 @@ this gate clears.
 | Edict V final-pass | **Cipher** (Censor of Cluster A) | always — cross-cutting sign-off |
 
 **`pnpm qa-route`** computes the summon-set from the diff — file-level routing **plus** cross-province ripple traced through the graph's `calls` edges. It is **advisory**: it widens the set, never narrows it, and **does not discharge the gate**. The gate is discharged only by summoning the named Governors and running Cipher's final-pass. The four-Scribe detail (canon-proc-006) may parallelize recon/checks under any companion, but Scribes never sign or gate.
+
+> **Unmapped:** `recipes.js` is not yet in `qa-route.sh`'s `MODULE_PROVINCE` map (it falls through to "flag to Lyra"). Until its Governor is settled in both `qa-route.sh` and `CLAUDE.md`, route a `recipes.js` diff to Lyra to assign.
 
 **Gate 2.5 passes when:** every touched-jurisdiction Governor has audited,
 Lyra has synthesized the findings, and Cipher has returned an `LGTM` or
