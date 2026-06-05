@@ -137,6 +137,33 @@ if ! bash audit-food-effects-sync-v1.sh >&2; then
   echo "BUILD ABORTED: P0.1 food-effects sync audit failed. Reconcile FOOD_EFFECTS ↔ food-effects.manifest.js ↔ AGE_RULES." >&2
   exit 1
 fi
+# Never-cross safety-floor ship-gate (13th audit gate, food-effects-v2 S0):
+# audit-floor-fidelity-v1.sh — locks the emergency-floor first-aid copy per
+# hazard: the choking floor names back-blows/chest-thrusts and NOT the adrenaline
+# auto-injector; every allergen floor names the auto-injector and NOT mechanical
+# aid; no floor carries both (a crossed floor). Node engine evals FOOD_EFFECTS;
+# green-but-empty self-test guard (exit 2). Stderr-redirected per precedent.
+if ! bash audit-floor-fidelity-v1.sh >&2; then
+  echo "BUILD ABORTED: never-cross floor audit failed. A safety floor names the wrong first-aid (see above)." >&2
+  exit 1
+fi
+# Polarity-shelf totality ship-gate (14th audit gate, food-effects-v2 S0):
+# audit-shelf-totality-v1.sh — proves every FOOD_EFFECTS record resolves to a
+# chosen polarity shelf via the live _effPolarity (extracted from core.js), never
+# the default 'inform' fall-through (an absent/unknown foodClass). Self-test ties
+# the recognised-class map to the resolver + asserts the default exists; exit 2.
+if ! bash audit-shelf-totality-v1.sh >&2; then
+  echo "BUILD ABORTED: shelf-totality audit failed. A FOOD_EFFECTS record would land on the default shelf unchosen (see above)." >&2
+  exit 1
+fi
+# Emergency-floor never-cross ship-gate (15th audit gate, emergency-protocol-v1):
+# audit-emergency-floor-v1.sh — locks the AUTHORED EMERGENCY_PROTOCOL.steps the Emergency
+# Cards render (anaphylaxis adrenaline-only, choking mechanical-only, botulism doctor-routed
+# + acute escape-hatch). Node evals EMERGENCY_PROTOCOL; green-but-empty guard (exit 2).
+if ! bash audit-emergency-floor-v1.sh >&2; then
+  echo "BUILD ABORTED: emergency-floor never-cross audit failed. An Emergency Card step names the wrong first-aid (see above)." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

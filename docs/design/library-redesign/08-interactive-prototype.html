@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · Diet → Library redesign — S8 INTERACTIVE PROTOTYPE (design record)
+  ─────────────────────────────────────────────────────────────────────────
+  Self-contained, openable in any browser (tokens inlined). Demonstrates the
+  living-library INTERACTIONS, not just look:
+    • tap a book → expand-in-place DETAIL (why · safe forms · the never-cross
+      floor · journey · "open full breakdown in Info") — accordion (one at a time)
+    • Browse-foods SHELVES are collapsible, all closed by default (tap a header)
+    • the two WINGS toggle (Browse foods / Safety guides)
+    • LIGHT/DARK toggle (top-right)
+    • Emergency entry → the EMERGENCY DECK overlay (4 never-cross floors,
+      both faces stacked: recognition + first-aid)
+  data-action delegation (models the app's HR-3 pattern). Prototype copy is
+  faithful-representative; real strings come from FOOD_EFFECTS at wiring.
+-->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── inlined design tokens (from styles.css) ── */
+  :root {
+    --cream:#fffaf7; --warm:#fef6f0; --phone-bg:#faf6f3; --text:#3d2e2e; --mid:#6e5858; --light:#806c6c;
+    --shadow:rgba(180,120,120,0.10); --line:rgba(120,90,90,0.16); --card-bg:#ffffff; --surface-alt:#fef6f0;
+    --sage:#b5d5c5; --sage-light:#e8f5ef; --tc-sage:#3a7060;
+    --rose:#f2a8b8; --rose-light:#fde8ed; --tc-rose:#9e3e52;
+    --amber:#e8b86d; --amber-light:#fef6e8; --tc-amber:#8a6520;
+    --sky:#a8cfe0; --sky-light:#e8f4fa; --tc-sky:#336580;
+    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --peach:#fad4b4;
+    --sp-2:2px; --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-10:10px; --sp-12:12px; --sp-16:16px; --sp-20:20px; --sp-24:24px;
+    --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem; --fs-base:0.85rem; --fs-md:0.95rem; --fs-lg:1.1rem; --fs-2xl:1.6rem;
+    --icon-xs:12px; --icon-sm:14px; --icon-base:16px; --icon-md:18px; --icon-lg:22px;
+    --r-md:8px; --r-lg:12px; --r-2xl:20px; --r-full:9999px;
+    --lh-snug:1.3; --lh-normal:1.4; --ease-fast:0.15s ease; --ease-med:0.22s ease; --ease-slow:0.35s ease;
+    --harness-bg:#cfc6bf;
+  }
+  [data-theme="dark"] {
+    --cream:#1a1520; --warm:#221c28; --phone-bg:#1a1620; --text:#e8e0ec; --mid:#b0a0b8; --light:#9a8aa2;
+    --shadow:rgba(0,0,0,0.30); --line:rgba(255,255,255,0.10); --surface:#2a2230; --surface-alt:#221c28; --card-bg:#2a2230;
+    --sage-light:#1e3028; --rose-light:#3a2030; --amber-light:#352e1e; --sky-light:#1e2838;
+    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-amber:#d4a848; --tc-sky:#80b8d8; --tc-lav:#b8a8e0;
+    --harness-bg:#0f0b14;
+  }
+
+  html, body { background:var(--harness-bg); transition:background var(--ease-med); }
+  body { margin:0; font-family:'Nunito',sans-serif; padding:24px 12px 64px; display:flex; flex-direction:column; align-items:center; }
+  .ctrl { width:412px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .ctrl-title { font-family:'Fraunces',serif; font-weight:600; font-size:14px; color:var(--mid); letter-spacing:0.03em; }
+  .theme-btn { display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--line); background:var(--card-bg); color:var(--mid);
+    border-radius:999px; padding:6px 12px; min-height:34px; font-family:'Nunito',sans-serif; font-weight:700; font-size:12px; cursor:pointer; }
+  .theme-btn .zi { width:16px; height:16px; }
+
+  .r-phone { width:412px; box-sizing:border-box; background:var(--phone-bg); color:var(--text);
+    border-radius:22px; padding:var(--sp-16); box-shadow:0 6px 30px var(--shadow); position:relative; transition:background var(--ease-med); }
+  .r-h { font-family:'Fraunces',serif; font-size:var(--fs-2xl); font-weight:600; color:var(--text); margin:0 0 var(--sp-4); }
+  .r-sub { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-16); }
+
+  .zi { display:inline-block; vertical-align:middle; }
+  .hidden { display:none !important; }
+
+  /* wings + emergency */
+  .lib-wings { display:flex; gap:var(--sp-4); background:var(--surface-alt); border-radius:var(--r-2xl); padding:var(--sp-4); margin-bottom:var(--sp-16); }
+  .lib-wing { flex:1; padding:var(--sp-10) var(--sp-8); min-height:36px; border:none; border-radius:var(--r-2xl); background:transparent; cursor:pointer;
+    font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:700; color:var(--mid); display:flex; align-items:center; justify-content:center; gap:var(--sp-6); white-space:nowrap; transition:all var(--ease-fast); }
+  .lib-wing--active { background:var(--card-bg); color:var(--tc-sage); box-shadow:0 2px 10px var(--shadow); }
+  .lib-wing .zi { width:var(--icon-base); height:var(--icon-base); }
+
+  .emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+    background:var(--rose-light); border-left:3px solid var(--rose); border-radius:var(--r-2xl); border-top:none; border-right:none; border-bottom:none;
+    padding:var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
+  .emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
+  .emerg-entry-txt { flex:1; min-width:0; }
+  .emerg-entry-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); line-height:var(--lh-snug); }
+  .emerg-entry-sub { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+  .emerg-entry-go { flex:0 0 auto; align-self:center; color:var(--tc-rose); }
+  .emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
+
+  /* group header */
+  .lib-group { margin-bottom:var(--sp-16); }
+  .lib-group-label { display:flex; align-items:center; gap:var(--sp-8); width:100%; border:none; background:transparent; cursor:pointer; text-align:left; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug); margin:var(--sp-12) 0 var(--sp-10); padding:var(--sp-4); min-height:36px; }
+  .lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+  .lib-group-count { margin-left:auto; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+  .lib-group-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+  .lib-group-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-group.open .lib-group-chev { transform:rotate(90deg); }
+  .lib-group--encourage   .lib-group-label { color:var(--tc-sage); }
+  .lib-group--conditional .lib-group-label { color:var(--tc-amber); }
+  .lib-group--warn        .lib-group-label { color:var(--tc-rose); }
+  .lib-group--inform      .lib-group-label { color:var(--tc-sky); }
+  .lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+  .lib-group:not(.open) .lib-shelf-row { display:none; }
+  .lib-group.open .lib-shelf-row { animation:shelfIn var(--ease-med); }
+  @keyframes shelfIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .wing-in { animation:fadeUp var(--ease-med); }
+
+  /* book row */
+  .lib-book-wrap { display:flex; flex-direction:column; }
+  .lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; border-radius:var(--r-lg);
+    padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 1px 8px var(--shadow); cursor:pointer;
+    background-color:var(--card-bg); border:none; border-left:3px solid var(--mid); transition:box-shadow var(--ease-fast); }
+  .lib-book:hover { box-shadow:0 2px 14px var(--shadow); }
+  .lib-book.expanded { box-shadow:0 3px 18px var(--shadow); }
+  .lib-book--encourage   { border-left-color:var(--sage); }
+  .lib-book--conditional { border-left-color:var(--amber); }
+  .lib-book--warn        { border-left-color:var(--rose); }
+  .lib-book--inform      { border-left-color:var(--sky); }
+
+  .dt-nonveg { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+  .dt-nuts   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); }
+  .dt-grains { background-image:linear-gradient(135deg, transparent 40%, rgba(181,213,197,0.22)); }
+  .dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.22)); }
+  .dt-fruits { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+  .dt-dairy  { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); }
+  [data-theme="dark"] .dt-nonveg { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+  [data-theme="dark"] .dt-nuts   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.18)); }
+  [data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.16)); }
+  [data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+  [data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+  [data-theme="dark"] .dt-dairy  { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,144,0.16)); }
+
+  .lib-book-body { flex:1; min-width:0; }
+  .lib-book-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+  .lib-book-reg { font-weight:400; color:var(--tc-sage); font-size:var(--fs-sm); }
+  .lib-book-voice { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-snug); margin-top:1px; }
+  .lib-book-glance { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+  .lib-book-glance .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--tc-amber); }
+  .lib-book-siren { flex:0 0 auto; color:var(--rose); display:flex; align-items:center; align-self:center; }
+  .lib-book-siren .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .lib-book-go { flex:0 0 auto; color:var(--light); align-self:center; transition:transform var(--ease-fast); }
+  .lib-book-go .zi { width:var(--icon-base); height:var(--icon-base); }
+  .lib-book.expanded .lib-book-go { transform:rotate(90deg); }
+
+  /* journey */
+  .lib-untried { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:600; font-size:var(--fs-2xs); color:var(--light); }
+  .lib-untried .dot { width:6px; height:6px; border-radius:var(--r-full); border:1.5px solid var(--light); }
+  .lib-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); width:fit-content; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+  .lib-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+  .lib-journey .zi-go { width:var(--icon-xs); height:var(--icon-xs); margin-left:var(--sp-2); opacity:0.8; }
+  .lib-journey--settled, .lib-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+  .lib-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+  .lib-book-nudge { font-size:var(--fs-sm); color:var(--tc-sage); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); font-weight:600; }
+  .lib-book-nudge .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+  .lib-book-nudge .zi-go { width:var(--icon-xs); height:var(--icon-xs); opacity:0.8; }
+
+  /* ── expand-in-place DETAIL ── */
+  .lib-detail { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+  .lib-detail.open { max-height:720px; }
+  .lib-detail-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+  .ld-sec { margin-top:var(--sp-12); }
+  .ld-sec:first-child { margin-top:0; }
+  .ld-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
+  .ld-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+  .ld-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+  .ld-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-size:var(--fs-2xs); font-weight:700; }
+  .ld-chip--ok { background:var(--sage-light); color:var(--tc-sage); }
+  .ld-chip--never { background:var(--rose-light); color:var(--tc-rose); }
+  .ld-chip .zi { width:11px; height:11px; }
+  /* the never-cross floor */
+  .ld-floor { margin-top:var(--sp-12); border-left:3px solid var(--rose); border-radius:var(--r-md); background:var(--rose-light); padding:var(--sp-10) var(--sp-12); }
+  .ld-floor-h { display:flex; align-items:center; gap:var(--sp-6); color:var(--tc-rose); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-xs); margin-bottom:var(--sp-6); }
+  .ld-floor-h .zi { width:var(--icon-sm); height:var(--icon-sm); }
+  .ld-floor ul { margin:0; padding-left:var(--sp-16); }
+  .ld-floor li { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); margin-bottom:2px; }
+  .ld-floor-act { margin:var(--sp-6) 0 0; font-size:var(--fs-xs); color:var(--tc-rose); font-weight:700; line-height:var(--lh-normal); }
+  .ld-journey-line { font-size:var(--fs-sm); color:var(--mid); margin:0; line-height:var(--lh-normal); }
+  .ld-link { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-12); font-size:var(--fs-sm); font-weight:700; color:var(--tc-lav); cursor:pointer; }
+  .ld-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
+  /* guides wing — reuses the Browse section-header (lib-group) collapsible pattern */
+  .lib-group--sage  .lib-group-label { color:var(--tc-sage); }
+  .lib-group--amber .lib-group-label { color:var(--tc-amber); }
+  .lib-group--rose  .lib-group-label { color:var(--tc-rose); }
+  .lib-group--sky   .lib-group-label { color:var(--tc-sky); }
+  .lib-group--lav   .lib-group-label { color:var(--tc-lav); }
+  .lib-group--guide .lib-group-chev { margin-left:auto; }
+  .ld-steps { margin:0; padding:0; list-style:none; }
+  .ld-step { display:flex; gap:var(--sp-8); margin-bottom:var(--sp-8); }
+  .ld-step:last-child { margin-bottom:0; }
+  .ld-step-age { flex:0 0 auto; font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); color:var(--tc-lav); width:48px; padding-top:1px; }
+  .ld-step-txt { font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
+
+  /* emergency deck overlay */
+  .deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:flex-start; justify-content:center; padding:32px 12px; overflow:auto; z-index:50; }
+  .deck.open { display:flex; }
+  .deck-sheet { width:412px; box-sizing:border-box; background:var(--phone-bg); border-radius:22px; padding:var(--sp-16); box-shadow:0 12px 50px rgba(0,0,0,0.5); }
+  .deck-head { display:flex; align-items:center; gap:var(--sp-10); margin-bottom:var(--sp-12); }
+  .deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
+  .deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
+  .deck-close { border:1.5px solid var(--line); background:var(--card-bg); color:var(--mid); border-radius:999px; width:32px; height:32px; cursor:pointer; font-size:16px; line-height:1; }
+  .floor-card { border-radius:var(--r-lg); background:var(--card-bg); box-shadow:0 1px 8px var(--shadow); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-10); border-left:3px solid var(--rose); }
+  .floor-card-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); display:flex; align-items:center; gap:var(--sp-8); }
+  .floor-card-t .zi { width:var(--icon-base); height:var(--icon-base); }
+  .floor-face { margin-top:var(--sp-8); }
+  .floor-face-h { font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.05em; text-transform:uppercase; color:var(--light); margin-bottom:var(--sp-4); }
+  .floor-face p { margin:0; font-size:var(--fs-xs); color:var(--text); line-height:var(--lh-normal); }
+  .floor-aid { color:var(--tc-rose); font-weight:700; }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+<symbol id="zi-sprout" viewBox="0 0 24 24"><path d="M12 22v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8c0-3 2.5-5 5-6c2.5 1 5 3 5 6c0 3.5-3 6-5 7c-2-1-5-3.5-5-7z" fill="currentColor" opacity="0.12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14c-3-1-5-4-4-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-spoon" viewBox="0 0 24 24"><path d="M12 3c2.5 0 4.5 2 4.5 4.5S14.5 12 12 12s-4.5-2-4.5-4.5S9.5 3 12 3z" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="zi-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/></symbol>
+<symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="zi-siren" viewBox="0 0 24 24"><path d="M6 15v-3a6 6 0 0112 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><rect x="4" y="15" width="16" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><line x1="12" y1="5" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5" y1="8" x2="3.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="19" y1="8" x2="20.5" y2="6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-book" viewBox="0 0 24 24"><path d="M4 4.5C4 3.1 5.1 2 6.5 2H20v20H6.5A2.5 2.5 0 014 19.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><line x1="9" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/><line x1="9" y1="11" x2="14" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/></symbol>
+<symbol id="zi-shield" viewBox="0 0 24 24"><path d="M12 3L4 7v5c0 5 3.5 8.5 8 10c4.5-1.5 8-5 8-10V7l-8-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.08"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="zi-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.08"/><circle cx="12" cy="12" r="2.8" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+<symbol id="zi-star" viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5-5-3-5 3 1-5.5-4-4 5.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
+<symbol id="zi-bowl" viewBox="0 0 24 24"><path d="M3 12c0 4.5 4 8 9 8s9-3.5 9-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 8c0-1.5.5-3 .5-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/><path d="M12 7c0-2 .5-3 .5-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/><path d="M16 8c0-1.5.5-3 .5-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="zi-moon" viewBox="0 0 24 24"><path d="M21 12.8A8.5 8.5 0 1111.2 3a6.5 6.5 0 109.8 9.8z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.12" stroke-linejoin="round"/></symbol>
+<symbol id="zi-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.12"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.2" y1="5.2" x2="6.9" y2="6.9"/><line x1="17.1" y1="17.1" x2="18.8" y2="18.8"/><line x1="18.8" y1="5.2" x2="17.1" y2="6.9"/><line x1="6.9" y1="17.1" x2="5.2" y2="18.8"/></g></symbol>
+</svg>
+
+<div class="ctrl">
+  <span class="ctrl-title">Diet → Library · swipe / drag ← → between wings</span>
+  <button class="theme-btn" data-action="toggleTheme"><svg class="zi" id="themeIcon"><use href="#zi-moon"/></svg><span id="themeLabel">Dark</span></button>
+</div>
+
+<div class="r-phone" id="phone">
+  <h1 class="r-h">Food library</h1>
+  <p class="r-sub">What Ziva's tried, when, and in what form.</p>
+  <div class="lib-wings">
+    <button class="lib-wing lib-wing--active" data-action="switchWing" data-wing="browse"><svg class="zi"><use href="#zi-book"/></svg>Browse foods</button>
+    <button class="lib-wing" data-action="switchWing" data-wing="guides"><svg class="zi"><use href="#zi-shield"/></svg>Safety guides</button>
+  </div>
+  <button class="emerg-entry" data-action="openEmergency"><span class="emerg-entry-icon"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="emerg-entry-txt"><span class="emerg-entry-title">In an emergency</span><span class="emerg-entry-sub">Choking, allergic reactions &amp; first aid</span></span><span class="emerg-entry-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+
+  <!-- ══ BROWSE FOODS WING ══ -->
+  <div id="wing-browse">
+
+    <div class="lib-group lib-group--encourage">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-sprout"/></svg>Introduce early<span class="lib-group-count">5</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row">
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--encourage dt-grains" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Soy</span><span class="lib-book-voice">mild &amp; silky</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Soft tofu — not whole edamame</span><span class="lib-untried"><span class="dot"></span>Not tried yet</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">A top allergen worth introducing early, and a gentle plant protein. Offer as soft tofu or well-cooked, mashed.</p></div>
+            <div class="ld-sec"><div class="ld-h">Safe forms</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Soft tofu</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Mashed, well-cooked</span><span class="ld-chip ld-chip--never">Never whole edamame</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If a reaction happens — an emergency</div><ul><li>Swelling of lips/face, hives spreading, trouble breathing, sudden floppiness</li></ul><p class="ld-floor-act">Call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--encourage dt-nuts" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Sesame</span><span class="lib-book-voice">nutty &amp; toasty</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Thinned tahini — not whole seeds</span><span class="lib-untried"><span class="dot"></span>Not tried yet</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">One of the priority allergens. Easiest as tahini thinned into purées — whole seeds are a choking risk.</p></div>
+            <div class="ld-sec"><div class="ld-h">Safe forms</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Thinned tahini</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Stirred into purée</span><span class="ld-chip ld-chip--never">Never whole seeds</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If a reaction happens — an emergency</div><ul><li>Hives spreading, swelling, wheeze or trouble breathing, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--encourage dt-nuts" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Peanut</span><span class="lib-book-voice">nutty &amp; rich</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Ground or smooth — never whole</span><span class="lib-journey lib-journey--settled"><svg class="zi"><use href="#zi-check"/></svg>Tried · agreed with her</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">Early, regular exposure markedly lowers the chance of a peanut allergy. Keep it up once it's going well.</p></div>
+            <div class="ld-sec"><div class="ld-h">Safe forms</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Smooth peanut butter, thinned</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Peanut flour in purée</span><span class="ld-chip ld-chip--never">Never whole / halved nuts</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If a reaction happens — an emergency</div><ul><li>Hives spreading, swelling of lips/tongue, wheeze, repeated vomiting, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-sec"><div class="ld-h">Ziva's journey</div><p class="ld-journey-line">First given 12 Apr · 3 times · settled fine each time.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--encourage dt-nonveg" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Fish</span><span class="lib-book-voice">tender &amp; omega-rich</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Low-mercury, deboned, well-cooked</span><span class="lib-journey lib-journey--watching"><svg class="zi"><use href="#zi-eye"/></svg>Tried · keeping an eye on it<svg class="zi zi-go"><use href="#zi-arrow-right"/></svg></span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">A priority allergen and a great source of omega-3 and protein. Choose low-mercury fish, deboned and well-cooked.</p></div>
+            <div class="ld-sec"><div class="ld-h">Safe forms</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Flaked, deboned</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Low-mercury (salmon, etc.)</span><span class="ld-chip ld-chip--never">No high-mercury (shark, swordfish)</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If a reaction happens — an emergency</div><ul><li>Hives, swelling, wheeze or trouble breathing, floppiness — an antihistamine does not treat anaphylaxis</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-sec"><div class="ld-h">Ziva's journey</div><p class="ld-journey-line">First given 28 May · 1 time · marked <b>watch</b> — a little fussy after. Keeping an eye on it.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--encourage dt-nonveg" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Egg <span class="lib-book-reg">· a regular now</span></span><span class="lib-book-voice">soft &amp; protein-rich</span><span class="lib-book-nudge"><svg class="zi"><use href="#zi-bowl"/></svg>Try it in egg &amp; spinach khichdi<svg class="zi zi-go"><use href="#zi-arrow-right"/></svg></span><span class="lib-journey lib-journey--regular"><svg class="zi"><use href="#zi-star"/></svg>A regular for Ziva</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">A regular for Ziva now — well-cooked egg is a complete protein and one of the easiest allergens to keep in rotation.</p></div>
+            <div class="ld-sec"><div class="ld-h">Cook it into</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-bowl"/></svg>Egg &amp; spinach khichdi</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-bowl"/></svg>Soft scramble fingers</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-bowl"/></svg>Veg omelette strips</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>Still an allergen — if a reaction happens</div><ul><li>Hives spreading, swelling, wheeze, repeated vomiting, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-sec"><div class="ld-h">Ziva's journey</div><p class="ld-journey-line">First given 2 Mar · 9 times · always settled · ★ favourite. Well established.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="lib-group lib-group--conditional">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-clock"/></svg>Right time, right form<span class="lib-group-count">2</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row">
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--conditional dt-fruits" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Citrus</span><span class="lib-book-voice">bright &amp; tangy</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Soft segments, no seeds</span><span class="lib-untried"><span class="dot"></span>Not tried yet</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">Fine to offer early. A harmless red rash can appear around the mouth from the acidity — it's contact irritation, not an allergy.</p></div>
+            <div class="ld-sec"><div class="ld-h">Safe forms</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Soft segments, membrane off</span><span class="ld-chip ld-chip--never">No seeds</span></div></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--conditional dt-dairy" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Cow's milk</span><span class="lib-book-voice">creamy &amp; gentle</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-spoon"/></svg>Fine in food; wait as a drink</span><span class="lib-journey lib-journey--settled"><svg class="zi"><use href="#zi-check"/></svg>Tried · agreed with her</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">Whole cow's milk is fine cooked into food now (in porridge, paneer, curd). As a <b>main drink</b>, wait until 12 months — it doesn't replace breastmilk or formula.</p></div>
+            <div class="ld-sec"><div class="ld-h">Right now</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>In food: porridge, curd, paneer</span><span class="ld-chip ld-chip--never">Not as the main drink yet</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If a reaction happens — an emergency</div><ul><li>Hives, swelling, wheeze, repeated vomiting or floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+            <div class="ld-sec"><div class="ld-h">Ziva's journey</div><p class="ld-journey-line">First given 18 Apr (in food) · 5 times · settled fine.</p></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="lib-group lib-group--warn">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-warn"/></svg>Wait — and here's why<span class="lib-group-count">2</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row">
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--warn dt-spices" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Honey before 12 months</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-warn"/></svg>Wait until age 1 — a firm rule</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">Honey can carry spores that cause <b>infant botulism</b> in babies under 1. A baby's gut can't handle them yet. This includes honey cooked or baked into food.</p></div>
+            <div class="ld-sec"><div class="ld-h">The rule</div><div class="ld-chips"><span class="ld-chip ld-chip--never">No honey at all before 12 months</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-warn"/></svg>If honey was given</div><ul><li>Watch over the next days for constipation, weak cry, poor feeding, floppiness</li></ul><p class="ld-floor-act">If any appear, seek medical care promptly and mention the honey.</p></div>
+          </div></div>
+        </div>
+
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--warn dt-nuts" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Whole nuts &amp; hard round foods</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-warn"/></svg>Choking shape — change the form</span></span><span class="lib-book-siren"><svg class="zi"><use href="#zi-siren"/></svg></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">It's the <b>shape</b>, not the food — whole nuts, whole grapes, hard raw veg and round sweets are the classic choking forms. Change the form and the food is fine.</p></div>
+            <div class="ld-sec"><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Nuts → ground / smooth butter</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Grapes → quartered lengthwise</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Hard veg → cooked soft</span></div></div>
+            <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If choking — a mechanical emergency, NO adrenaline</div><ul><li>Silent or weak cough, can't breathe/cry, turning blue, going limp</li></ul><p class="ld-floor-act">Alternate 5 back blows and 5 chest thrusts (never abdominal thrusts under 1). Call 112/108. If unresponsive, start CPR.</p></div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="lib-group lib-group--inform">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-info"/></svg>Good to know<span class="lib-group-count">1</span><span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row">
+        <div class="lib-book-wrap">
+          <button class="lib-book lib-book--inform dt-dairy" data-action="toggleBook"><span class="lib-book-body"><span class="lib-book-title">Plant milks</span><span class="lib-book-voice">mild &amp; plant-based</span><span class="lib-book-glance"><svg class="zi"><use href="#zi-info"/></svg>Not a substitute under 1</span></span><span class="lib-book-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+          <div class="lib-detail"><div class="lib-detail-inner">
+            <div class="ld-sec"><p class="ld-why">Almond, oat and soy drinks can be used in small amounts in cooking, but under 1 they are <b>not</b> a substitute for breastmilk or formula — they don't carry the fat and nutrients a baby needs.</p></div>
+            <div class="ld-sec"><div class="ld-h">Good to know</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Small amounts in food</span><span class="ld-chip ld-chip--never">Not a main milk under 1</span></div></div>
+            <div class="ld-link"><svg class="zi"><use href="#zi-info"/></svg>Open full breakdown in Info</div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ SAFETY GUIDES WING — same collapsible-section pattern as Browse foods ══ -->
+  <div id="wing-guides" class="hidden">
+
+    <div class="lib-group lib-group--sage lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-sprout"/></svg>Introducing allergens early<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Waiting does not help.</p></div>
+        <div class="ld-sec"><div class="ld-h">The priority allergens</div><div class="ld-chips"><span class="ld-chip ld-chip--ok">Egg</span><span class="ld-chip ld-chip--ok">Peanut</span><span class="ld-chip ld-chip--ok">Tree nuts</span><span class="ld-chip ld-chip--ok">Fish</span><span class="ld-chip ld-chip--ok">Sesame</span><span class="ld-chip ld-chip--ok">Soy</span><span class="ld-chip ld-chip--ok">Wheat</span><span class="ld-chip ld-chip--ok">Dairy</span></div></div>
+        <div class="ld-sec"><div class="ld-h">How to do it</div><p class="ld-why">One new allergen at a time, on a calm day, earlier in the day. Once it's tolerated, keep it in ~2× a week — regular exposure is what protects. Always in a smooth, age-safe form.</p></div>
+        <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>Know the reaction signs</div><ul><li>Hives spreading, swelling of lips/face, wheeze or trouble breathing, repeated vomiting, floppiness</li></ul><p class="ld-floor-act">Call 112 and use a prescribed adrenaline auto-injector if you have one.</p></div>
+      </div></div>
+    </div>
+
+    <div class="lib-group lib-group--amber lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-spoon"/></svg>Safe shapes &amp; textures<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Most choking risk is the <b>shape</b>, not the food — round, hard, or coin-shaped. Change the form and the food is safe.</p></div>
+        <div class="ld-sec"><div class="ld-h">Change the form</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Nuts → ground or smooth butter</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Grapes &amp; tomatoes → quartered lengthwise</span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Hard veg &amp; fruit → cooked soft or grated</span><span class="ld-chip ld-chip--never">No whole nuts, popcorn, hard sweets</span></div></div>
+        <div class="ld-sec"><div class="ld-h">Every time</div><p class="ld-why">Baby sitting upright, never propped or in a car seat, and always within arm's reach while eating.</p></div>
+        <div class="ld-floor"><div class="ld-floor-h"><svg class="zi"><use href="#zi-siren"/></svg>If choking — a mechanical emergency, NO adrenaline</div><ul><li>Silent or weak cough, can't breathe/cry, turning blue, going limp</li></ul><p class="ld-floor-act">Alternate 5 back blows and 5 chest thrusts (never abdominal thrusts under 1). Call 112/108. If unresponsive, start CPR.</p></div>
+      </div></div>
+    </div>
+
+    <div class="lib-group lib-group--sky lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-bowl"/></svg>Milk &amp; drinks<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><p class="ld-why">Under 1, <b>breastmilk or formula stays the main drink</b> — nothing replaces it for the fat and nutrients a baby needs.</p></div>
+        <div class="ld-sec"><div class="ld-h">Around now</div><div class="ld-chips"><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Cow's milk fine <em>in food</em></span><span class="ld-chip ld-chip--ok"><svg class="zi"><use href="#zi-check"/></svg>Sips of water in an open cup with meals</span><span class="ld-chip ld-chip--never">Cow's milk not as the main drink yet</span><span class="ld-chip ld-chip--never">Plant milks not a substitute</span></div></div>
+        <div class="ld-sec"><div class="ld-h">At 12 months</div><p class="ld-why">Whole cow's milk can become a main drink. No sugary drinks or juice before then (or after, ideally).</p></div>
+      </div></div>
+    </div>
+
+    <div class="lib-group lib-group--lav lib-group--guide">
+      <button class="lib-group-label" data-action="toggleGroup"><svg class="zi"><use href="#zi-clock"/></svg>First foods, by age<span class="lib-group-chev"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></button>
+      <div class="lib-shelf-row"><div class="lib-detail-inner">
+        <div class="ld-sec"><ul class="ld-steps">
+          <li class="ld-step"><span class="ld-step-age">~6 mo</span><span class="ld-step-txt">Smooth purées &amp; soft single foods. Start iron-rich foods, and begin introducing the allergens.</span></li>
+          <li class="ld-step"><span class="ld-step-age">~9 mo</span><span class="ld-step-txt">Lumpier textures and soft finger foods. More variety, more self-feeding. Ziva is here.</span></li>
+          <li class="ld-step"><span class="ld-step-age">12 mo+</span><span class="ld-step-txt">Family foods. Whole cow's milk can be the main drink, and honey is finally safe.</span></li>
+        </ul></div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ EMERGENCY DECK ══ -->
+<div class="deck" id="deck" data-action="closeEmergency">
+  <div class="deck-sheet">
+    <div class="deck-head"><svg class="zi"><use href="#zi-siren"/></svg><span class="deck-title">In an emergency</span><button class="deck-close" data-action="closeEmergency">×</button></div>
+
+    <div class="floor-card">
+      <div class="floor-card-t"><svg class="zi"><use href="#zi-warn"/></svg>Choking</div>
+      <div class="floor-face"><div class="floor-face-h">Recognise</div><p>Silent or weak cough, can't breathe / cry / make noise, turning blue, going limp.</p></div>
+      <div class="floor-face"><div class="floor-face-h">Do</div><p class="floor-aid">A mechanical emergency — NO adrenaline. Alternate 5 back blows and 5 chest thrusts. Never abdominal thrusts (Heimlich) under 1. Call 112/108. If unresponsive, start CPR.</p></div>
+    </div>
+
+    <div class="floor-card">
+      <div class="floor-card-t"><svg class="zi"><use href="#zi-siren"/></svg>Allergic reaction (anaphylaxis)</div>
+      <div class="floor-face"><div class="floor-face-h">Recognise</div><p>Hives spreading, swelling of lips / face / tongue, wheeze or trouble breathing, repeated vomiting, sudden floppiness.</p></div>
+      <div class="floor-face"><div class="floor-face-h">Do</div><p class="floor-aid">Call 112 right away and use a prescribed adrenaline auto-injector if you have one. An antihistamine does not treat anaphylaxis.</p></div>
+    </div>
+
+    <div class="floor-card">
+      <div class="floor-card-t"><svg class="zi"><use href="#zi-warn"/></svg>Delayed vomiting (FPIES)</div>
+      <div class="floor-face"><div class="floor-face-h">Recognise</div><p>Repeated forceful vomiting 1–4 hours after a food, with paleness, lethargy or floppiness — no rash.</p></div>
+      <div class="floor-face"><div class="floor-face-h">Do</div><p class="floor-aid">Seek urgent care for fluids — babies can dehydrate fast. Note the food and time; mention FPIES.</p></div>
+    </div>
+
+    <div class="floor-card">
+      <div class="floor-card-t"><svg class="zi"><use href="#zi-warn"/></svg>Suspected poisoning / botulism</div>
+      <div class="floor-face"><div class="floor-face-h">Recognise</div><p>After honey or an unsafe food: constipation, weak cry, poor feeding, drooping, floppiness.</p></div>
+      <div class="floor-face"><div class="floor-face-h">Do</div><p class="floor-aid">Seek medical care promptly and say what was eaten and when. Keep the packaging if any.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-action]');
+    if(!t) return;
+    var a = t.getAttribute('data-action');
+    if(a==='toggleBook'){
+      var wrap = t.closest('.lib-book-wrap');
+      var d = wrap.querySelector('.lib-detail');
+      var isOpen = d.classList.contains('open');
+      document.querySelectorAll('.lib-detail.open').forEach(function(x){ x.classList.remove('open'); });
+      document.querySelectorAll('.lib-book.expanded').forEach(function(x){ x.classList.remove('expanded'); });
+      if(!isOpen){ d.classList.add('open'); t.classList.add('expanded'); }
+    } else if(a==='toggleGroup'){
+      t.closest('.lib-group').classList.toggle('open');
+    } else if(a==='switchWing'){
+      setWing(t.getAttribute('data-wing'));
+    } else if(a==='toggleTheme'){
+      var html = document.documentElement;
+      var dark = html.getAttribute('data-theme')==='dark';
+      html.setAttribute('data-theme', dark ? '' : 'dark');
+      document.getElementById('themeIcon').firstElementChild.setAttribute('href', dark ? '#zi-moon' : '#zi-sun');
+      document.getElementById('themeLabel').textContent = dark ? 'Dark' : 'Light';
+    } else if(a==='openEmergency'){
+      document.getElementById('deck').classList.add('open');
+    } else if(a==='closeEmergency'){
+      if(e.target.id==='deck' || e.target.classList.contains('deck-close')) document.getElementById('deck').classList.remove('open');
+    }
+  });
+
+  // ── wing navigation (shared by the toggle + swipe) ──
+  var WINGS = ['browse','guides'];
+  function setWing(wing){
+    document.querySelectorAll('.lib-wing').forEach(function(x){ x.classList.toggle('lib-wing--active', x.getAttribute('data-wing')===wing); });
+    var br = document.getElementById('wing-browse'), gu = document.getElementById('wing-guides');
+    br.classList.toggle('hidden', wing!=='browse');
+    gu.classList.toggle('hidden', wing!=='guides');
+    // re-trigger the fadeUp on the wing now shown (matches the app's tab-change feel)
+    var shown = wing==='browse' ? br : gu;
+    shown.classList.remove('wing-in'); void shown.offsetWidth; shown.classList.add('wing-in');
+  }
+  function currentWing(){ return document.getElementById('wing-guides').classList.contains('hidden') ? 'browse' : 'guides'; }
+
+  // ── swipe between wings — the app's handleSwipe rules (core.js):
+  //    horizontal must dominate (|dx|>=60 AND |dy| <= 0.7*|dx|), no swipe while an
+  //    overlay is open or the gesture starts on an input / horizontally-scrollable
+  //    element, clamp at the ends (no wrap). Pointer events so mouse-drag works too. ──
+  var sx=0, sy=0, armed=false;
+  var phone = document.getElementById('phone');
+  function scrollableX(node){
+    for(var el=node; el && el!==phone.parentNode; el=el.parentElement){
+      if(el.scrollWidth > el.clientWidth + 2){
+        var ox = getComputedStyle(el).overflowX;
+        if(ox!=='hidden' && ox!=='visible') return true;
+      }
+    }
+    return false;
+  }
+  phone.addEventListener('pointerdown', function(e){
+    sx=e.screenX; sy=e.screenY; armed=true;
+    var tag = e.target.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA') armed=false;          // guard: inputs
+    if(scrollableX(e.target)) armed=false;                       // guard: horizontal scroller
+  });
+  phone.addEventListener('pointerup', function(e){
+    if(!armed) return; armed=false;
+    if(document.getElementById('deck').classList.contains('open')) return;  // guard: overlay open
+    var dx=e.screenX-sx, dy=e.screenY-sy;
+    if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)*0.7) return;        // horizontal-dominant rule
+    var i = WINGS.indexOf(currentWing());
+    if(dx < 0 && i < WINGS.length-1) setWing(WINGS[i+1]);                   // swipe left → next wing
+    else if(dx > 0 && i > 0) setWing(WINGS[i-1]);                           // swipe right → prev wing
+    // else: at an edge — clamp (no wrap)
+  });
+})();
+</script>
+</body>
+</html>

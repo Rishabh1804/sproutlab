@@ -1,5 +1,5 @@
 # SproutLab — Design Principles
-**Version:** 1.0 · **Created:** 9 April 2026 · **Updated:** 9 April 2026
+**Version:** 1.5 · **Created:** 9 April 2026 · **Updated:** 4 June 2026
 **Forked from:** DESIGN_SYSTEM_TEMPLATE.md v1.0
 **App:** Baby development tracker for Ziva (born Sep 2025)
 **Architecture:** Split-file HTML PWA (build-concatenated), localStorage persistence, no backend
@@ -71,6 +71,12 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
   **Coverage gap (deliberate):** `home` and `info/intelligence` body cards take **no** ambient wash — home leans on its hero, info-tab cards are the Receded register below. A new card in those tabs is *supposed* to be untinted; don't "fix" it.
 
+- **Food-domain whisper** (`.dt-*` — the food/recipe-card fade; ratified 2026-06-03, Library-rework + Recipes tab). A **single-domain directional gradient layered over a cream card — a fade, never a flat fill**:
+  - light: `background-image: linear-gradient(135deg, transparent 40%, rgba(<accent>, 0.22))`
+  - dark (hue-swap, Law 1): `linear-gradient(135deg, transparent 30%, rgba(<deep --tc>, 0.16–0.18))`
+
+  It carries a food's **FOOD_TAX domain** (grains→sage, fruits→rose, vegs→peach, dairy→sky, nuts→lavender, spices→amber, nonveg→rose) as **warmth, not a label**, so it always rides a **separate companion channel** (Law 2): a `border-left` rail + `--tc` text/icon. **Polarity-collision rule (load-bearing):** the food-domain palette overlaps the safety palette (sage reads "safe", rose reads "alert"), so the food domain stays a *corner whisper* and the **safety/polarity signal lives on its own channel** — the rail in the Library's polarity grouping (encourage→sage / conditional→amber / warn→rose / inform→sky), the verdict shell in "Can I give this?" — so domain and safety never compete. Per-domain accent rgba (light): sage `181,213,197` · rose `242,168,184` · peach `250,212,180` · sky `168,207,224` · lav `201,184,232` · amber `232,184,109`. Deep hue (dark): sage `58,112,96` · rose `158,62,82` · sky `58,112,144` · lav `110,94,154` · amber/peach `138,101,32`. Lands as shared `.dt-*` classes in `styles.css` when wired. **This — not the flat `_foodColorMap` `--*-light` fill — is the food/recipe *card* treatment;** the flat fill remains only for small food chips/pills (Receded, below).
+
 **Family 2 — Colored-card tints** *(the wash IS the surface)*
 
 - **Signaling** (`--surface-*`, defs `styles.css:81–86` light / `:5269–5274` dark). The wash that reads on its own: the **deep / `--tc` hue at ~10–12% α** (`--surface-sage: rgba(61,122,96,0.12)` — note: deep hue, *not* the pale accent). Use when the surface itself must say "domain X." Always paired with a `border-left` accent (e.g. `.enc-benefit`, `.cons-severe`, `.combo-result.caution`).
@@ -87,9 +93,9 @@ Never use system fonts, Arial, or Helvetica in new code. Both Fraunces and Nunit
 
 **Developmental-domain remap (`--al-tint`).** The Activity-Log alias is the one place tint crosses *namespaces*: the five **developmental** domains (`data-domain="motor|language|cognitive|social|sensory"`) remap onto **colour** domains — Motor→sage, Language→lavender, Cognitive→sky, Social→peach, Sensory→amber (`styles.css:9408–9416`). Intentional, not a collision: a developmental domain is not a colour domain, and the mapping is documented at its definition so a Governor auditing a `data-domain` block knows it is a deliberate cross-walk, not an ad-hoc pick.
 
-**Authoring rule.** Never hand-mix a wash at the call site. Reach for the register that matches the job — Hero gradient for a section header, Ambient for a body card in a tinted tab, Signaling `--surface-*` when the surface must read alone, Receded `--*-light` for a bordered info-card — or a component alias. No raw light-hex (`#e8f5ef`, `#f0ebfb`, …) in CSS or innerHTML — that is the 8th-instance `running-beats-reading` drift class (see Polish-3/-4 `--lav-light` corrective, line ~147).
+**Authoring rule.** Never hand-mix a wash at the call site. Reach for the register that matches the job — Hero gradient for a section header, Ambient for a body card in a tinted tab, the **Food-domain whisper (`.dt-*`) for a food/recipe card**, Signaling `--surface-*` when the surface must read alone, Receded `--*-light` for a bordered info-card or chip — or a component alias. No raw light-hex (`#e8f5ef`, `#f0ebfb`, …) in CSS or innerHTML — that is the 8th-instance `running-beats-reading` drift class (see Polish-3/-4 `--lav-light` corrective, line ~147).
 
-**Peach is accent-only — no `--tc-*` text token (light _or_ dark).** The `—` in the `--tc-*` column of the Domain Colors table (and in both Text columns of the dark-mode table, line ~594) is intentional: peach is reserved for warmth/accent surfaces (outing planner, ambient borders), never for text-on-wash. So `--peach-light` is a *backing* tint only — do not place domain-coloured body text on it. If a future surface genuinely needs peach text-on-wash, that token must be **defined first** (light + dark), not improvised at the call site.
+**Peach text-on-wash — only via `--tc-peach` (defined v1.4).** Peach was historically accent-only, with no `--tc-*` text token (the `—` in the `--tc-*` column of the Domain Colors table and the dark-mode table, line ~594) — `--peach-light` a *backing* tint only, never text-on-wash. **As of v1.4 `--tc-peach` IS defined** (light `#9a5f30` / dark `#e8b488`), introduced for the food-domain **vegetables** chip (`.fdom-chip--vegs`, §10.5) — the sanctioned "define first" path — which also retires the long-standing referenced-but-undefined `--tc-peach` dangling reference (`styles.css` `.meal-time-input:focus`). Peach text-on-wash is now permitted, but **only via the `--tc-peach` token**, never an improvised call-site hex; and the *card* register (Hero / Signaling) still keeps peach to warmth/accent, not body copy.
 
 **Not tints (runtime-computed, palette-exempt).** Some surfaces *look* tinted but are computed at render-time from runtime data, not drawn from any register above — chiefly the **Growth-gauge ring percentile-tint** (`medical.js:1912–1932`). These are `--dyn-*` / locked-exclusion surfaces (see CSS-Custom-Property Pivot Convention below) and are explicitly **out of scope** for the tint system; do not "tokenize" them into `--*-light`.
 
@@ -246,6 +252,42 @@ The fallback engages for offline parents (in-flight), blocked CDNs, or HTML cach
 **FLIP pattern for list-reorder** (PR #164). Snapshot rects pre-render → state change + re-render → compute deltas → `Motion.animate` from delta back to 0. Helpers: `_msSnapshotInWindowRects()` + `_msFLIPCards(beforeRects, opts)` in home.js. Used for milestones-tab-v1 Not-yet card slide-to-bottom + Confirm/Practicing sibling reflow. Reusable for any future list-reorder surface.
 
 **Carve-out for `currentColor` pass-through** — see HR-2 §Carve-outs below.
+
+### Swipe & Gesture Navigation
+
+**Swipe-to-navigate is a first-class navigation primitive**, not an enhancement — parents browse one-handed, thumb-first. The behaviour lives in `handleSwipe()` (`split/core.js:3654`) and was code-defined only until this section. Any new tab, sub-tab, or tabbed surface (a Recipes sub-tab, the Library's wings, etc.) **must** honour these rules so the gesture stays predictable everywhere (Vela's half-awake test: one gesture, one predictable result).
+
+**The disambiguation rule (load-bearing).** A horizontal swipe registers only when horizontal travel dominates:
+- `|Δx| ≥ 60px` **and** `|Δy| ≤ 0.7 × |Δx|` (`core.js:3662`).
+- Distance + ratio only — **no velocity term**. A lazy diagonal is ignored, so vertical scrolling never mis-fires a tab change.
+
+**Guards — swipe is suppressed when** (in order, `core.js:3665-3678`):
+1. focus is in an `INPUT` / `TEXTAREA`;
+2. the gesture **starts inside a horizontally-scrollable element** — walk ancestors, abort if any has `scrollWidth > clientWidth + 2` and `overflow-x` is not `hidden`/`visible` (so a scrollable chip-rail or chart keeps its own pan);
+3. **any overlay is open** (`.modal-overlay.open, .crop-overlay.open, .avatar-lightbox.open, .confirm-overlay, .ql-sheet.open, .ql-modal-overlay.open, .score-popup.open, .insights-popup.open`).
+
+**Clamp, never wrap.** Every level is index-guarded and clamps at its ends — the last tab does not loop to the first. The only edge movement is the deliberate cascade below.
+
+**Multi-level cascade (innermost wins; edges bubble up).** One gesture, resolved top-down so the outcome is never ambiguous (`core.js:3698-3769`):
+1. innermost inner-sub-tabs (Diet / Milestones `log → library → patterns`) — at an inner edge the gesture **falls through** rather than dead-ending;
+2. Track sub-tabs (`TRACK_SUB_ORDER`) — at an edge, steps to the prev/next **top-level** tab;
+3. top-level tabs (`TAB_ORDER`).
+
+**Order arrays (the source of truth for direction):**
+- `TAB_ORDER` — `['home','growth','track','insights','history','info']` (`core.js:3403`)
+- `TRACK_SUB_ORDER` — `['diet','sleep','poop','medical','milestones']` (`core.js:3404`)
+- `DIET_SUB_ORDER` — `['log','library','patterns']` (`diet.js:16`)
+- `MS_SUB_ORDER` — `['log','library','patterns']` (`core.js:3729`)
+
+> **Drift hazard (active).** `DIET_SUB_ORDER` (diet.js) and `DIET_INNER_ORDER` (`core.js:3699`) are **duplicated literals, not a shared reference** — the swipe handler hard-codes its own copy. Any sub-tab added to the Diet bar (e.g. **Recipes**) MUST be added to **both** or swipe silently de-syncs from the tab bar; same for Milestones. Unifying these into one exported constant is owed tech-debt — flag it at any touch.
+
+**Right-edge back-gesture.** A swipe that *starts* in the rightmost 10% of the viewport and moves left (`touchStartClientX > screenW*0.90 && Δx < -60`, `core.js:3681`) is the **back/exit** gesture → `handleSafeExit()` (any tab → Home; Home → confirm-exit). It uses viewport-relative `clientX` for edge detection vs `screenX` for travel. Don't repurpose the right edge for content swipes.
+
+**User override.** Swipe-nav is toggleable (`ziva_swipe_tabs` in localStorage; Settings). Honour it — `handleSwipe` early-returns when off (`core.js:3656`).
+
+**Transition.** A top-level tab change plays `fadeUp 0.3s` (`styles.css:295, 3556`) + scroll-reset to top; sub-panel changes are an instant display swap. Swipe adds **no** directional slide — the fade reads as "navigated" regardless of direction.
+
+**No visible affordance.** Swipe is discoverable-by-feel; the tab/sub-tab bar is the visible control. Don't add page-dots or hint arrows without an explicit charter.
 
 ### Icon System
 
@@ -422,6 +464,9 @@ See ARCHITECTURE_PATTERNS.md §7.1 for the full convention: `{module}{Verb}{Targ
 | `dqp-*` | Diet Quick Picker | Diet tab quick picker pills (home.js) |
 | `mb-*` | Meal Breakdown | Meal breakdown intel card (intelligence.js) |
 | `wg-*` | Welcome Guide | Onboarding guide (core.js) |
+| `lib-*` | Library | Diet→Library living-shelf rework — wings, polarity shelves, books, journey, search, deck, guides (`lib-guide-*`) (diet.js). NB: distinct from main's `ld-*` Landing (#219) — the guide-detail classes are `lib-guide-*`, never `ld-*`. |
+| `fp-*` | Food Pop-up | Food info pop-up — header, verdict band (`fp-verdict-*`), disclosure rows (`lib-prow-*`), 3D flip (diet.js) |
+| `ec-*` | Emergency Card | Deep-linked per-hazard emergency protocol cards — Do-now steps, recognise, after, doc-prep (diet.js). Reserved at design stage (`docs/design/emergency-card/`); wires under emergency-protocol-v1. |
 | `ld-*` | Landing | Lean app-open surface — greeting + glance + doors (intelligence-cards.js) |
 
 **Rule:** New features pick a 2–3 letter prefix and use it consistently for all CSS classes and data-action values in that feature. The prefix is registered in this table before writing code.
@@ -780,12 +825,32 @@ Cross-verified against WHO 2023 / WHO-PAHO / IAP / ICMR-NIN 2024 / NHS / FAO am8
 
 ---
 
+## 10. Library — Living Shelf, Food Detail & Nutrient Colours (incoming patterns)
+
+The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wiring under food-effects-v2). Forward-looking; canonical CSS lands in `styles.css` as it wires.
+
+**10.1 The living shelf.** The Browse-foods wing groups every `FOOD_EFFECTS` record by `_effPolarity` (core.js) into four **collapsible polarity shelves** — encourage→sage / conditional→amber / warn→rose / inform→sky — each a "living book" (`.lib-book`): polarity **rail** (the safety channel) + name + EP voice + safe-form glance + allergen siren + the **journey channel**. Shelves closed by default; untried books float to the top of their shelf. A "**Suggested for Ziva**" lead card (untried priority allergens) is the entry point the eye lands on (the 6-second test); the foods-log collapses to a drawer — the shelves are the browse.
+
+**10.2 The journey channel (`.lib-journey`).** A *second*, Receded-register channel beside the safety rail/siren — never on it (polarity-collision rule). The book's lived state, real-data-only: `_fdIsFoodTried` + `foods[].reaction` (`ok`/`watch`) + `isFoodFavorite`. Four states: **invitation** (untried) → **settled** (`ok`, sage check) → **watching** (`watch`, amber eye, hands off to Info) → **established** (favourite + `ok` + introduced ≥ 21 days, star "a regular"). Warn-shelf books carry **no** journey chip — the app never celebrates a feed it told a parent to hold.
+
+**10.3 The food info pop-up (`.food-pop`).** Tapping a food NAME opens a **Read overlay** (HR-9 — view, not multi-field edit; × + tap-outside): domain-whisper header + name + EP voice + journey chip, then the **safety-first** body (polarity flag → age gate → the never-cross floor via `_libBuildGuide`), safe-form chips, nutrient chips (§10.4), Ziva's history, and a single Quick-Act footer — "Log a serving" → `openQuickModal('feed')` + `qlFeedAddItem`, via a **delegated** `data-action` (the pop-up renders dynamically, so init-bound `data-quick-modal` would miss it). Supersedes `renderFoodDetailSheet`. Record: `09-food-info-popup.html`.
+
+**10.4 Nutrient colour system (`.nutri-chip`).** Nutrients must not read as one blob — each maps to one of **six nutrient-domains**, a palette colour rendered as a **tint-fade chip** (the whisper-fade language, on a chip): `growth`(sage) · `blood & iron`(rose) · `bones`(sky) · `brain`(lavender) · `immunity`(amber) · `energy & gut`(indigo). Peach is excluded (it is the food-domain *vegetables* colour, not a nutrient group); indigo carries the 6th. The `NUTRI_DOMAIN` taxonomy (nutrient → domain) ships in `data.js`/`core.js`. Reference: `nutrient-colours.html`.
+
+**10.5 Food-domain chips (`.fdom-chip`).** Food chips (priority-allergen lists, form-transforms, search results) are **tint-fade coloured by their `FOOD_TAX` domain** — grains→sage · fruits & nonveg→rose · vegs→peach (`--tc-peach`, §Tint) · dairy→sky · nuts→lavender · spices→amber. Same tint-fade language as `.nutri-chip` and the `.dt-*` whisper — the chip variant of the food-domain colour.
+
+**Tint-fade-on-chips (the extension).** The §Tint System historically kept chips to the **flat Receded fill**; §10.4–10.5 extend the **whisper-fade** (transparent → domain accent) onto *small* chips for **colour-coded taxonomies** (nutrients, food domains). Flat Receded stays the default chip fill; tint-fade is reserved for these meaning-bearing colour systems.
+
 ## Changelog
 
 | Version | Date | Change |
 |---------|------|--------|
 | 1.0 | 9 Apr 2026 | Initial version. Forked from DESIGN_SYSTEM_TEMPLATE.md v1.0. Filled from styles.css audit (7,772 lines), template.html SVG sprite (54 icons), VISUAL_AUDIT.md. |
 | 1.1 | 3 Jun 2026 | Added §9 — Recipes Generative Food System (incoming patterns): `zi_food` full-colour icon system (`zif-*` symbols), whisper-fade ingredient pills, quantity-weighted generative fingerprint, warm-wave stripe, 3-layer tagline system, typography "voice" line (direction C), and the infant-food safety content floor. From the Diet→Recipes design exploration (`docs/design/recipes-tab/`). |
+| 1.2 | 3 Jun 2026 | **Backfill** — Food-domain whisper-fade (`.dt-*`) ratified into the §Tint System (the food/recipe-card fade: transparent→accent over cream, hue-swap dark, polarity-collision companion channel). Added at the Library-rework / Recipes ratification without a changelog row at the time. |
+| 1.3 | 3 Jun 2026 | **Backfill** — §Swipe & Gesture Navigation: codifies the code-only `handleSwipe` rules (\|Δx\|≥60 + \|Δy\|≤0.7\|Δx\|; input/scrollable/overlay guards; clamp-never-wrap; innermost-wins cascade; order arrays; right-edge back-gesture; the `DIET_SUB_ORDER`/`DIET_INNER_ORDER` duplicated-literal drift hazard). Added without a changelog row at the time. |
+| 1.4 | 3 Jun 2026 | §10 — Library Living Shelf, Food Detail & Nutrient Colours: the living shelf + journey channel, the food info pop-up (Read overlay), the **nutrient colour system** (`.nutri-chip`, 6 nutrient-domains) and **food-domain chips** (`.fdom-chip`), the tint-fade-on-chips extension, and **`--tc-peach` defined** (retiring its long-standing dangling reference). From `docs/design/library-redesign/`. |
+| 1.5 | 4 Jun 2026 | **Prefix registry** — registered the Library-redesign prefixes `lib-*` (living shelf / wings / pop-up / deck / guides), `fp-*` (food pop-up + verdict band), and reserved `ec-*` (Emergency Card, design stage). **Reconcile with main #219 "Lean landing page":** main registered `ld-*` for Landing; this branch's Safety-guides guide-detail classes were renamed `ld-*` → `lib-guide-*` to vacate the collision. No content/colour-system change. |
 
 ---
 

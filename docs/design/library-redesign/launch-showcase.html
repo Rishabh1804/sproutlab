@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diet → Library — interactive launch showcase</title>
+<!--
+  INTERACTIVE showcase, not screenshots. The device frame below embeds the REAL
+  built app (../../../index.html) — real diet.js / styles.css, real interactions,
+  real spacing. The control rail drives the live build into each flow so you can
+  feel it; or just reach in and use it. Open from the repo or the Vercel preview
+  (the iframe resolves index.html at the site root). ?nosync keeps it local-only.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fffaf7;--text:#3d2e2e;--mid:#6e5858;--light:#806c6c;--card:#fff;--line:#ece2dc;
+    --sage:#b5d5c5;--tc-sage:#3a7060;--rose:#f2a8b8;--tc-rose:#9e3e52;--amber:#e8b86d;--tc-amber:#8a6520;
+    --lav:#c9b8e8;--tc-lav:#6e5e9a;--sky:#a8cfe0;--tc-sky:#336580;--shadow:rgba(180,120,120,.16);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#efe6e0;color:var(--text);font-family:'Nunito',sans-serif;line-height:1.5;}
+  .stage{display:grid;grid-template-columns:minmax(320px,1fr) auto;gap:48px;max-width:1180px;margin:0 auto;padding:44px 28px 70px;align-items:start;}
+  @media(max-width:880px){.stage{grid-template-columns:1fr;gap:28px;justify-items:center;}}
+
+  .eyebrow{font-weight:800;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--tc-lav);}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2.5rem;line-height:1.08;margin:.18em 0 .25em;}
+  .lede{font-size:1.02rem;color:var(--mid);max-width:30em;}
+  .meta{margin:16px 0 30px;display:flex;gap:8px;flex-wrap:wrap;}
+  .tag{font-size:.7rem;font-weight:700;color:var(--mid);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;}
+
+  .tour-h{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;margin:0 0 4px;}
+  .tour-sub{font-size:.85rem;color:var(--light);margin:0 0 16px;}
+  .steps{display:flex;flex-direction:column;gap:10px;max-width:380px;}
+  .step{display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;cursor:pointer;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent,var(--lav));border-radius:14px;padding:13px 15px;transition:box-shadow .18s,transform .18s;font-family:'Nunito';}
+  .step:hover{box-shadow:0 6px 22px var(--shadow);transform:translateY(-1px);}
+  .step.on{box-shadow:0 6px 22px var(--shadow);border-color:var(--accent,var(--lav));}
+  .step .n{flex:0 0 auto;width:26px;height:26px;border-radius:999px;background:var(--accent,var(--lav));color:#fff;font-weight:800;font-size:.78rem;display:flex;align-items:center;justify-content:center;}
+  .step .t{font-weight:800;font-size:.9rem;color:var(--text);}
+  .step .d{font-size:.78rem;color:var(--mid);margin-top:1px;}
+  .step--sage{--accent:var(--sage);} .step--lav{--accent:var(--lav);} .step--sky{--accent:var(--sky);}
+  .step--amber{--accent:var(--amber);} .step--rose{--accent:var(--rose);}
+  .freeroam{margin-top:16px;font-size:.8rem;color:var(--light);font-style:italic;max-width:30em;}
+
+  /* device frame */
+  .device-col{display:flex;flex-direction:column;align-items:center;gap:14px;position:sticky;top:32px;}
+  .device{width:412px;max-width:92vw;background:#1c1620;border-radius:42px;padding:14px;box-shadow:0 30px 80px rgba(60,30,40,.4),0 0 0 1px rgba(0,0,0,.3);}
+  .device-notch{height:22px;display:flex;justify-content:center;}
+  .device-notch::before{content:"";width:120px;height:22px;background:#1c1620;border-radius:0 0 16px 16px;}
+  .screen{width:100%;height:780px;max-height:78vh;border-radius:30px;overflow:hidden;background:var(--cream);}
+  iframe{width:100%;height:100%;border:0;display:block;}
+  .device-cap{font-size:.78rem;color:var(--light);text-align:center;}
+  .device-cap b{color:var(--mid);}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="intro">
+    <div class="eyebrow">SproutLab · food-effects-v2 · launch</div>
+    <h1>The living Food&nbsp;Library</h1>
+    <p class="lede">The real build, running right here — not screenshots. Drive it through each flow with the tour, or just reach in and use it. Watch the spacing, the collapses, the pop-up, the swipe between wings.</p>
+    <div class="meta"><span class="tag">PR #216</span><span class="tag">live build · index.html</span><span class="tag">?nosync · local data</span></div>
+
+    <div class="tour-h">Guided tour</div>
+    <p class="tour-sub">Tap a step to drive the phone — then keep interacting yourself.</p>
+    <div class="steps" id="steps">
+      <button class="step step--sage on" data-flow="browse"><span class="n">1</span><span><span class="t">Browse — the living shelves</span><span class="d">Four polarity shelves; each book carries Ziva’s journey + voice. Tap a shelf to open it.</span></span></button>
+      <button class="step step--lav" data-flow="open"><span class="n">2</span><span><span class="t">Open a food → the pop-up</span><span class="d">Domain whisper, EP voice, the never-cross floor, safe-form &amp; nutrient chips.</span></span></button>
+      <button class="step step--lav" data-flow="flip"><span class="n">3</span><span><span class="t">Flip to history</span><span class="d">“Full history in Info” flips the card to her log &amp; an honest pattern-read.</span></span></button>
+      <button class="step step--sky" data-flow="search"><span class="n">4</span><span><span class="t">Look up any food</span><span class="d">One search → the same pop-up (NUTRITION-backed for the wider corpus).</span></span></button>
+      <button class="step step--rose" data-flow="deck"><span class="n">5</span><span><span class="t">In an emergency — the Deck</span><span class="d">Every never-cross floor in one place, sourced from FOOD_EFFECTS.</span></span></button>
+      <button class="step step--amber" data-flow="guides"><span class="n">6</span><span><span class="t">Safety guides wing</span><span class="d">Swipe ← from Browse, or tap. Collapsible reference; floors live in the Deck.</span></span></button>
+    </div>
+    <p class="freeroam">The phone is fully live — collapses, taps, the search field, the pop-up flip and the swipe between wings all work. The tour just drives it to each starting point.</p>
+  </div>
+
+  <div class="device-col">
+    <div class="device">
+      <div class="device-notch"></div>
+      <div class="screen"><iframe id="app" src="../../../index.html?nosync" title="SproutLab live build"></iframe></div>
+    </div>
+    <div class="device-cap"><b>Live build</b> · Track → Diet → Library</div>
+  </div>
+
+</div>
+
+<script>
+  var frame = document.getElementById('app');
+  function w(){ try { return frame.contentWindow; } catch(e){ return null; } }
+  function ready(cb, tries){
+    tries = tries || 0;
+    var win = w();
+    if (win && typeof win.switchTab === 'function' && win.document.querySelector('[data-diet-sub="library"]')) { cb(win); return; }
+    if (tries > 60) return;
+    setTimeout(function(){ ready(cb, tries + 1); }, 120);
+  }
+  function toLibrary(win){
+    win.switchTab('diet');
+    var libBtn = win.document.querySelector('[data-diet-sub="library"]');
+    if (libBtn) win.switchDietSub(libBtn);
+    if (typeof win.switchLibWing === 'function') win.switchLibWing({ getAttribute: function(){ return 'browse'; } });
+    if (typeof win.renderLibShelves === 'function') win.renderLibShelves();
+    if (typeof win.renderLibGuides === 'function') win.renderLibGuides();
+  }
+  function closeOverlays(win){
+    if (typeof win._libClosePop === 'function') win._libClosePop();
+    if (typeof win._libCloseDeck === 'function') win._libCloseDeck();
+  }
+
+  var FLOWS = {
+    browse: function(win){
+      toLibrary(win); closeOverlays(win);
+      var first = win.document.querySelector('.lib-group--encourage .lib-group-label');
+      if (first) first.click();
+    },
+    open: function(win){
+      toLibrary(win); closeOverlays(win);
+      var bk = win.document.querySelector('.lib-book[data-arg="peanut"]') || win.document.querySelector('.lib-book');
+      if (bk) bk.click();
+    },
+    flip: function(win){
+      FLOWS.open(win);
+      setTimeout(function(){ if (typeof win.popFlip === 'function') win.popFlip(); }, 350);
+    },
+    search: function(win){
+      toLibrary(win); closeOverlays(win);
+      var inp = win.document.getElementById('libLookupInput');
+      if (inp){ inp.scrollIntoView({block:'center'}); inp.focus(); inp.value='paneer'; inp.dispatchEvent(new win.Event('input',{bubbles:true})); }
+    },
+    deck: function(win){
+      toLibrary(win); closeOverlays(win);
+      if (typeof win.libOpenDeck === 'function') win.libOpenDeck();
+    },
+    guides: function(win){
+      closeOverlays(win); toLibrary(win);
+      if (typeof win.switchLibWing === 'function') win.switchLibWing({ getAttribute: function(){ return 'guides'; } });
+    }
+  };
+
+  function run(flow){ ready(function(win){ (FLOWS[flow] || FLOWS.browse)(win); }); }
+
+  document.getElementById('steps').addEventListener('click', function(e){
+    var btn = e.target.closest('.step'); if (!btn) return;
+    document.querySelectorAll('.step').forEach(function(s){ s.classList.remove('on'); });
+    btn.classList.add('on');
+    run(btn.getAttribute('data-flow'));
+  });
+
+  frame.addEventListener('load', function(){ run('browse'); });
+</script>
+</body>
+</html>

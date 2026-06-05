@@ -1301,12 +1301,927 @@ function foodLibToggleTried(name) {
 
 // Lazy-render hook — called by switchDietSub when the Library sub-tab opens.
 function renderDietLibrary() {
+  renderLibShelves();
   renderFoods();
   renderFoodLibFilters();
   renderFoodLibResults();
-  renderDietNutIntro();
-  renderDietMilkIntro();
-  renderDietChokingIntro();
+  renderLibGuides();   // #5b: light collapsible Safety-guides cards (floors live in the Deck).
+  // The heavy knowledge cards (renderDietNutIntro / renderDietMilkIntro /
+  // renderDietChokingIntro) are retired from the Guides wing — their floors moved to
+  // the Emergency Deck (libOpenDeck) and their reference distilled into renderLibGuides.
+}
+
+// food-effects-v2 Library redesign — toggle the Browse foods / Safety guides wings.
+// Dispatched from core.js (data-action="switchLibWing", data-arg=browse|guides).
+function switchLibWing(btn) {
+  var wing = btn && btn.getAttribute('data-arg');
+  if (!wing) return;
+  var panel = document.getElementById('diet-sub-library');
+  if (!panel) return;
+  panel.querySelectorAll('.lib-wing').forEach(function(b){
+    var on = b.getAttribute('data-arg') === wing;
+    b.classList.toggle('lib-wing--active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  var br = document.getElementById('dietLibBrowse');
+  var gu = document.getElementById('dietLibGuides');
+  if (br) br.hidden = (wing !== 'browse');
+  if (gu) gu.hidden = (wing !== 'guides');
+}
+
+// ════════════════════════════════════════
+// food-effects-v2 Library redesign (S3b) — the living polarity shelves.
+// Groups every FOOD_EFFECTS record by _effPolarity (core.js) into 4 collapsible
+// shelves; each book carries its journey (tried/settled/watching/established from
+// the foods[] log) + an expand-in-place detail (reusing the shipped .enc-form via
+// _milkFormBlock and the never-cross floor via _libBuildGuide). Shelves closed by
+// default; untried books float to the top of their shelf. The whisper-fade (dt-*)
+// is a follow-up. Warn-shelf books carry NO journey chip (we never celebrate a
+// feed the app told a parent to hold).
+// ════════════════════════════════════════
+var LIB_SHELVES = [
+  { pol: 'encourage',   label: 'Introduce early',        icon: 'sprout' },
+  { pol: 'conditional', label: 'Right time, right form', icon: 'clock' },
+  { pol: 'warn',        label: 'Wait — and here\'s why', icon: 'warn' },
+  { pol: 'inform',      label: 'Good to know',           icon: 'info' }
+];
+
+// Ziva's journey with a food, from the foods[] log. Real data only:
+// _fdIsFoodTried + the entry's reaction ('ok'|'watch') + isFoodFavorite.
+// Established (graduated) = favourite + settled + introduced >= 21 days ago.
+function _libJourney(name) {
+  var base = _baseFoodName(String(name).toLowerCase().trim());
+  var entry = null;
+  if (typeof foods !== 'undefined' && Array.isArray(foods)) {
+    for (var i = 0; i < foods.length; i++) {
+      if (_fdSameFood(base, foods[i].name)) { entry = foods[i]; break; }
+    }
+  }
+  var tried = !!entry;
+  var reaction = entry ? (entry.reaction || 'ok') : null;
+  var fav = (typeof isFoodFavorite === 'function') ? isFoodFavorite(name) : false;
+  var daysSince = (entry && entry.date) ? daysBetween(entry.date, today()) : null;
+  var established = !!(tried && reaction === 'ok' && fav && daysSince !== null && daysSince >= 21);
+  return { tried: tried, reaction: reaction, favorite: fav, date: entry && entry.date, daysSince: daysSince, established: established };
+}
+
+// Clean display name: the food name before the polarity framing (the shelf header
+// carries the framing). FE titles read "Egg — good to introduce early"; take "Egg".
+function _libDisplayName(key, eff) {
+  if (eff && eff.title && eff.title.indexOf('—') !== -1) return eff.title.split('—')[0].trim();
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+// Per-shelf-food voice + whisper domain (the design-ratified mapping; the broader
+// corpus uses classifyFoodToGroup when search wires). Warn-shelf foods carry a
+// domain whisper but NO voice line — a wait-food's character is the rule, not the taste.
+var LIB_SHELF_VOICE = {
+  'egg':        { dom:'nonveg', eps:['soft','protein-rich'] },
+  'peanut':     { dom:'nuts',   eps:['nutty','rich'] },
+  'tree nut':   { dom:'nuts',   eps:['nutty','buttery'] },
+  'soy':        { dom:'grains', eps:['mild','silky'] },
+  'wheat':      { dom:'grains', eps:['hearty','wholesome'] },
+  'sesame':     { dom:'nuts',   eps:['nutty','toasty'] },
+  'fish':       { dom:'nonveg', eps:['tender','omega-rich'] },
+  'cow milk':   { dom:'dairy',  eps:['creamy','gentle'] },
+  'citrus':     { dom:'fruits', eps:['bright','tangy'] },
+  'plant milk': { dom:'dairy',  eps:['mild','plant-based'] },
+  'honey':      { dom:'spices', eps:[] },
+  'choking hazards': { dom:'', eps:[] }
+};
+
+// Per-shelf-food KEY NUTRIENTS, each tagged with one of the 6 nutrient-domains
+// (growth/blood/bones/brain/immunity/energy — the .nutri-chip colour system, §10
+// DESIGN_PRINCIPLES). Curated for the 11 FOOD_EFFECTS shelf foods, design-ratified
+// in docs/design/library-redesign/ (records 09/10); the broader corpus reads the
+// live NUTRITION table when search wires in. Warn/non-food keys carry none.
+var LIB_SHELF_NUTRIENTS = {
+  'egg':        [['Protein','growth'],['Choline','brain'],['Vitamin D','bones'],['Vitamin B12','blood'],['Iron','blood']],
+  'peanut':     [['Protein','growth'],['Healthy fats','growth'],['Vitamin E','immunity'],['Magnesium','bones']],
+  'tree nut':   [['Healthy fats','growth'],['Protein','growth'],['Vitamin E','immunity'],['Magnesium','bones']],
+  'soy':        [['Protein','growth'],['Iron','blood'],['Folate','blood'],['Calcium','bones']],
+  'wheat':      [['Carbs','energy'],['Fibre','energy'],['Iron','blood'],['Protein','growth']],
+  'sesame':     [['Healthy fats','growth'],['Calcium','bones'],['Iron','blood'],['Zinc','immunity']],
+  'fish':       [['Omega-3','brain'],['Protein','growth'],['Vitamin D','bones'],['Iodine','brain'],['Selenium','immunity']],
+  'cow milk':   [['Calcium','bones'],['Protein','growth'],['Vitamin B12','blood'],['Vitamin D','bones']],
+  'plant milk': [['Calcium','bones'],['Fibre','energy']],
+  'honey':      [],
+  'choking hazards': []
+};
+
+// Nutrient token (from the live NUTRITION table) → nutrient-domain colour, for the
+// corpus pop-up's chips (the broader-food path the "Look up any food" search feeds).
+// Only the headline nutrients are mapped; bioactives/trace tokens fall through and
+// are skipped — natural curation to what a parent reads at a glance.
+var NUTRIENT_DOMAIN = {
+  'protein':'growth', 'healthy fats':'growth', 'lysine':'growth',
+  'iron':'blood', 'folate':'blood', 'vitamin b12':'blood', 'copper':'blood',
+  'calcium':'bones', 'phosphorus':'bones', 'magnesium':'bones', 'vitamin k':'bones', 'vitamin d':'bones',
+  'omega-3':'brain', 'choline':'brain', 'iodine':'brain', 'vitamin b6':'brain', 'mcts':'brain',
+  'vitamin c':'immunity', 'vitamin a':'immunity', 'vitamin e':'immunity', 'zinc':'immunity',
+  'selenium':'immunity', 'beta-carotene':'immunity', 'probiotics':'immunity',
+  'carbs':'energy', 'energy':'energy', 'fibre':'energy', 'potassium':'energy', 'beta-glucan':'energy',
+  'thiamine':'energy', 'vitamin b1':'energy', 'vitamin b':'energy', 'b vitamins':'energy',
+  'manganese':'energy', 'natural sugars':'energy'
+};
+
+// Polarity → the lead phrase + icon for the pop-up's safety flag (mirrors the shelf header).
+var LIB_POL_LEAD = {
+  encourage:   { phrase: 'Good to introduce early', icon: 'sprout' },
+  conditional: { phrase: 'Right time, right form',  icon: 'clock' },
+  warn:        { phrase: "Wait — and here's why",    icon: 'warn' },
+  inform:      { phrase: 'Good to know',             icon: 'info' }
+};
+
+function _libBookHtml(key, eff, pol) {
+  var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var voiceTxt = (pol !== 'warn' && meta && meta.eps && meta.eps.length) ? meta.eps.join(' & ') : '';
+  var glance = (eff.safeForm && eff.safeForm.glance) || eff.headline || '';
+  var hasFloor = !!(eff.severeSigns && eff.severeSigns.length);
+  var j = _libJourney(key);
+  var glanceIcon = (pol === 'warn') ? 'warn' : 'spoon';
+  var titleHtml = escHtml(name) + (j.established ? ' <span class="lib-book-reg">· a regular now</span>' : '');
+  var journeyHtml = '';
+  if (pol !== 'warn') { // warn-shelf books carry no journey chip
+    if (!j.tried) {
+      journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
+    } else if (j.established) {
+      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+    } else if (j.reaction === 'watch') {
+      journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+    } else {
+      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+    }
+  }
+  var body = '<span class="lib-book-body"><span class="lib-book-title">' + titleHtml + '</span>' +
+    (voiceTxt ? '<span class="lib-book-voice">' + escHtml(voiceTxt) + '</span>' : '') +
+    (glance ? '<span class="lib-book-glance">' + zi(glanceIcon) + escHtml(glance) + '</span>' : '') +
+    journeyHtml + '</span>';
+  var siren = hasFloor ? '<span class="lib-book-siren">' + zi('siren') + '</span>' : '';
+  var go = '<span class="lib-book-go">' + zi('arrow-right') + '</span>';
+  return '<div class="lib-book-wrap">' +
+    '<button class="lib-book lib-book--' + pol + dt + '" data-action="libOpenBook" data-arg="' + escHtml(key) + '">' +
+    body + siren + go + '</button></div>';
+}
+
+// "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
+// untried priority-allergen foods (the early-introduction shelf), real-data-driven
+// (FOOD_EFFECTS + _effPolarity + _fdIsFoodTried). Empty once they're all introduced.
+function _libSuggestions() {
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) return [];
+  var out = [];
+  Object.keys(FE).forEach(function(k) {
+    if (out.length >= 3) return;
+    if (_effPolarity(FE[k]) === 'encourage' && !_fdIsFoodTried(k)) out.push(k);
+  });
+  return out;
+}
+
+function _libLeadHtml() {
+  var sugg = _libSuggestions();
+  if (!sugg.length) return '';
+  var chips = sugg.map(function(k) {
+    return '<button class="lib-lead-chip" data-action="libJumpToBook" data-arg="' + escHtml(k) + '">' +
+      zi('sprout') + escHtml(_libDisplayName(k, FOOD_EFFECTS[k])) + '</button>';
+  }).join('');
+  return '<div class="lib-lead">' +
+    '<div class="lib-lead-h">' + zi('star') + 'Suggested for Ziva</div>' +
+    '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>' +
+    '<div class="lib-lead-chips">' + chips + '</div></div>';
+}
+
+function renderLibShelves() {
+  var root = document.getElementById('dietShelvesRoot');
+  if (!root) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  if (!FE) { root.innerHTML = ''; return; }
+  var groups = { encourage: [], conditional: [], warn: [], inform: [] };
+  Object.keys(FE).forEach(function(k) {
+    var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
+    (groups[pol] || groups.inform).push(k);
+  });
+  var html = _libLeadHtml();
+  LIB_SHELVES.forEach(function(s) {
+    var keys = groups[s.pol];
+    if (!keys || !keys.length) return;
+    // untried float to the top of the shelf (what's left to try)
+    keys.sort(function(a, b) { return (_fdIsFoodTried(a) ? 1 : 0) - (_fdIsFoodTried(b) ? 1 : 0); });
+    html += '<div class="lib-group lib-group--' + s.pol + '">' +
+      '<button class="lib-group-label" data-action="libToggleGroup">' + zi(s.icon) + escHtml(s.label) +
+      '<span class="lib-group-count">' + keys.length + '</span>' +
+      '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
+      '<div class="lib-shelf-row">';
+    keys.forEach(function(k) { html += _libBookHtml(k, FE[k], s.pol); });
+    html += '</div></div>';
+  });
+  root.innerHTML = html;
+}
+
+// Collapsible shelf toggle (data-action="libToggleGroup").
+function libToggleGroup(btn) {
+  var g = btn && btn.closest('.lib-group');
+  if (g) g.classList.toggle('open');
+}
+
+// ── Food info POP-UP (the Read overlay a parent gets on tapping a book) ──────────
+// Brings the living-shelf language to the food detail: domain whisper header, name +
+// EP voice, the journey strip, then the safety-first body (polarity flag → age gate →
+// the never-cross floor via _libBuildGuide), safe-form chips, nutrient chips — and a
+// single Quick-Act footer (Log a serving → quick FEED modal). "Full history in Info"
+// FLIPS the card to a back face (her log + a pattern-read; empty/wait states when no
+// data). HR-9: a Read overlay (view + one Quick-Act + flip), not multi-field editing.
+// Faithful to docs/design/library-redesign/ records 09 (template) + 10 (live flip).
+
+// Journey chip for the pop-up head (same states as the shelf book; warn carries none).
+function _libJourneyChip(pol, j) {
+  if (pol === 'warn') return '';
+  if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
+  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+}
+
+// ── 6-second card primitives (S11, Architect-ratified). A verdict band LEADS (the 6-sec
+// payload), then progressive-disclosure rows the parent OPENS — content invited, not
+// dumped. The emergency floor collapses to a rose row + a Deck deep-link (ratified:
+// collapsed for ALL foods; first-aid stays one tap in the card and always one tap in the
+// Emergency Deck). The floor COPY is still FOOD_EFFECTS-sourced — only its placement moved.
+var _LIB_VERDICT_CLASS = { encourage: 'yes', conditional: 'wait', warn: 'no', inform: 'info' };
+// Verdict icon derives from the SAME verClass as the band colour (V-V-7) so colour and
+// icon can never drift apart: yes→check, wait→clock, no→warn, info→info.
+var _LIB_VERDICT_ICON = { yes: 'check', wait: 'clock', no: 'warn', info: 'info' };
+
+function _libVerdictBand(verClass, icon, headline, sub) {
+  return '<div class="fp-verdict fp-verdict--' + verClass + '">' + zi(icon) +
+    '<span class="fp-verdict-tx"><span class="fp-verdict-t">' + escHtml(headline) + '</span>' +
+    (sub ? '<span class="fp-verdict-s">' + escHtml(sub) + '</span>' : '') + '</span></div>';
+}
+
+// A collapsible disclosure row (data-action="libPopRow" toggles .open). Returns '' if empty.
+function _libPopRow(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return '<div class="lib-prow lib-prow--' + variant + (open ? ' open' : '') + '">' +
+    '<button class="lib-prow-head" data-action="libPopRow">' +
+      '<span class="lib-prow-ic">' + zi(icon) + '</span>' +
+      '<span class="lib-prow-txt"><span class="lib-prow-t">' + escHtml(title) + '</span>' +
+        (teaser ? '<span class="lib-prow-d">' + escHtml(teaser) + '</span>' : '') + '</span>' +
+      '<span class="lib-prow-chev">' + zi('arrow-right') + '</span></button>' +
+    '<div class="lib-prow-body"><div class="lib-prow-inner">' + bodyHtml + '</div></div></div>';
+}
+
+// Safe-forms row body — ok (sage) + never (rose) chips + the cut note.
+function _libFormsRowBody(sf) {
+  sf = sf || {};
+  var ok = (sf.ok && sf.ok.length) ? sf.ok : [];
+  var never = (sf.never && sf.never.length) ? sf.never : [];
+  if (!ok.length && !never.length) return '';
+  return '<div class="fp-chips">' +
+    ok.map(function(x){ return '<span class="fp-chip fp-chip--ok">' + zi('check') + escHtml(x) + '</span>'; }).join('') +
+    never.map(function(x){ return '<span class="fp-chip fp-chip--never">' + escHtml(x) + '</span>'; }).join('') +
+    '</div>' + (sf.note ? '<p class="lib-prow-p">' + escHtml(sf.note) + '</p>' : '');
+}
+
+// Reaction-floor row body — the signs + the FOOD_EFFECTS seekCare action, then the Deck
+// deep-link. `signs` is the resolved list (severeSigns, or watchFor when a record carries
+// no acute strip — e.g. honey's sub-acute botulism signs, V-M-223). Never-cross fidelity
+// unchanged (copy is from the record); placement collapsed.
+function _libFloorRowBody(eff, signs, hazard, food) {
+  var list = (signs && signs.length) ? signs : (eff.severeSigns || eff.watchFor || []);
+  var li = list.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('');
+  var act = eff.seekCare ? '<p class="lib-prow-act">' + escHtml(eff.seekCare) + '</p>' : '';
+  // Deck deep-link carries the hazard (→ scroll to that Emergency Card) + the food (→ doc-prep).
+  var argH = hazard ? ' data-arg="' + escHtml(hazard) + '"' : '';
+  var argF = food ? ' data-food="' + escHtml(food) + '"' : '';
+  return '<ul class="lib-prow-signs">' + li + '</ul>' + act +
+    '<button class="lib-prow-deck" data-action="libPopToDeck"' + argH + argF + '>' + zi('siren') +
+    '<span>Full first aid — In an emergency</span>' + zi('arrow-right') + '</button>';
+}
+
+// Nutrition row parts (curated shelf map) — {teaser, body}, or null.
+function _libNutriRowParts(key) {
+  var list = LIB_SHELF_NUTRIENTS[key] || [];
+  if (!list.length) return null;
+  return {
+    teaser: list.slice(0, 3).map(function(n){ return n[0]; }).join(' · '),
+    body: '<div class="fp-chips">' + list.map(function(n){
+      return '<span class="nutri-chip nutri-chip--' + n[1] + '">' + escHtml(n[0]) + '</span>';
+    }).join('') + '</div>'
+  };
+}
+
+// Nutrition row parts from raw NUTRITION tokens (the corpus path).
+function _libNutriTokenParts(tokens, max) {
+  var out = [], seen = {};
+  (tokens || []).forEach(function(t) {
+    var dom = NUTRIENT_DOMAIN[String(t).toLowerCase()];
+    if (!dom || seen[t]) return;
+    seen[t] = 1;
+    out.push({ label: _libTitleCase(String(t)), dom: dom });
+  });
+  if (!out.length) return null;
+  if (max) out = out.slice(0, max);
+  return {
+    teaser: out.slice(0, 3).map(function(n){ return n.label; }).join(' · '),
+    body: '<div class="fp-chips">' + out.map(function(n){
+      return '<span class="nutri-chip nutri-chip--' + n.dom + '">' + escHtml(n.label) + '</span>';
+    }).join('') + '</div>'
+  };
+}
+
+// Toggle a disclosure row. (The floor-row → Deck deep-link is libPopToDeck(btn), defined
+// with the Emergency-Card system below — it carries the hazard + food.)
+function libPopRow(btn) { var r = btn && btn.closest('.lib-prow'); if (r) r.classList.toggle('open'); }
+
+function _libPopHtml(key, eff, pol, j) {
+  var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var voiceTxt = (pol !== 'warn' && meta && meta.eps && meta.eps.length) ? meta.eps.join(' & ') : '';
+  var lead = LIB_POL_LEAD[pol] || LIB_POL_LEAD.inform;
+  var why = eff.whyGood || eff.why || '';
+  var canLog = (pol === 'encourage' || pol === 'conditional') && key !== 'choking hazards';
+
+  // head — whisper + name + voice + journey + close
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(name) + '</div>' +
+    (voiceTxt ? '<div class="fp-voice">' + escHtml(voiceTxt) + '</div>' : '') +
+    _libJourneyChip(pol, j) + '</div>';
+
+  // ── 6-second body: verdict band leads (concrete answer first), then disclosure rows ──
+  var glance = (eff.safeForm && eff.safeForm.glance) || eff.gate || '';
+  var verClass = _LIB_VERDICT_CLASS[pol] || 'info';
+  // Lead with the CONCRETE answer: encourage/warn carry it in the polarity phrase
+  // ("Good to introduce early" / "Wait — and here's why"); conditional/inform carry it in
+  // the glance ("Fine in food; wait as a drink"). Never lead with the vague category.
+  var vPrimary, vSecondary;
+  if (pol === 'encourage' || pol === 'warn') { vPrimary = lead.phrase; vSecondary = glance; }
+  else { vPrimary = glance || lead.phrase; vSecondary = ''; }
+  var isChoke = (typeof _effHasClass === 'function') && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+  var nutri = _libNutriRowParts(key);
+  // Floor row fires on an acute strip (severeSigns) OR a sub-acute watch list (watchFor —
+  // e.g. honey's botulism signs, V-M-223), so a food's own card always carries its signs.
+  var acute = !!(eff.severeSigns && eff.severeSigns.length);
+  var floorSigns = acute ? eff.severeSigns : (eff.watchFor || []);
+  var hasFloor = floorSigns.length > 0;
+  // Chrome: anaphylaxis (acute allergen) = rose; choking + sub-acute watch = amber caution
+  // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
+  var floorCaution = isChoke || !acute;
+  var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
+  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
+  var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
+  var rows =
+    _libPopRow('why', 'info', (pol === 'warn' ? 'Why wait' : 'Why it\'s good'), '',
+      why ? '<p class="lib-prow-p">' + escHtml(why) + '</p>' : '', false) +
+    _libPopRow('forms', 'check', 'Safe forms', '', _libFormsRowBody(eff.safeForm), false) +
+    (hasFloor ? _libPopRow(floorVariant, 'siren', floorTitle, floorTeaser, _libFloorRowBody(eff, floorSigns, _emHz, name), false) : '') +
+    (nutri ? _libPopRow('nutri', 'leaf', 'Nutrition', nutri.teaser, nutri.body, false) : '');
+  var body = '<div class="fp-body fp-body--rows">' +
+    _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], vPrimary, vSecondary) +
+    '<div class="lib-prows">' + rows + '</div></div>';
+
+  // foot — single Quick-Act + the flip-to-history link
+  var foot = '<div class="fp-foot">' +
+    (canLog ? '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(key) + '">' + zi('plus') + 'Log a serving</button>' : '') +
+    '<span class="fp-foot-link" data-action="popFlip">Full history ' + zi('arrow-right') + '</span></div>';
+
+  return '<div class="food-pop"><div class="fp-flip">' +
+    '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
+    '<div class="fp-face fp-back">' + _libPopBackHtml(key, eff, pol, j) + '</div>' +
+    '</div></div>';
+}
+
+// The flipped face — her history + an honest pattern-read (empty/wait states when no data).
+function _libPopBackHtml(key, eff, pol, j) {
+  var name = _libDisplayName(key, eff);
+  var meta = LIB_SHELF_VOICE[key] || null;
+  var dt = (meta && meta.dom) ? ' dt-' + meta.dom : '';
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(name) + '</div>' +
+    '<div class="fp-voice">History &amp; analysis</div></div>';
+  var inner;
+  if (pol === 'warn') {
+    inner = '<div class="fp-empty">' + zi('warn') +
+      '<p>This one waits until the age limit — there&rsquo;s no history to show yet, and that&rsquo;s as it should be.</p></div>';
+  } else if (!j.tried) {
+    inner = '<div class="fp-empty">' + zi('eye') +
+      '<p>Not tried yet. Once you log ' + escHtml(name) + ', her servings and any patterns will appear here.</p></div>';
+  } else {
+    var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
+    var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
+    var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + (j.established ? ' · well established' : '') + '.';
+    var insight = j.established
+      ? 'Well established — no patterns of concern across her logs so far.'
+      : (j.reaction === 'watch'
+        ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
+        : 'Settling in — not enough logged yet to show a clear pattern.');
+    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      '<div><div class="fp-sec-h">What the patterns say</div>' +
+      '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
+  }
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-action="popFlipBack">' +
+    '<svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
+  return head + '<div class="fp-body">' + inner + '</div>' + foot;
+}
+
+// Open the pop-up for a book (data-action="libOpenBook").
+function libOpenBook(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+  var eff = FE ? FE[key] : null;
+  if (!eff) return;
+  var ov = document.getElementById('libPopOv');
+  if (!ov) return;
+  var pol = (typeof _effPolarity === 'function') ? _effPolarity(eff) : 'inform';
+  var j = _libJourney(key);
+  ov.innerHTML = _libPopHtml(key, eff, pol, j);
+  ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
+}
+
+function _libClosePop() {
+  var ov = document.getElementById('libPopOv');
+  if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  document.body.classList.remove('lib-overlay-open');
+}
+
+function popFlip() {
+  var fl = document.querySelector('#libPopOv .fp-flip');
+  if (fl) fl.classList.add('flipped');
+}
+function popFlipBack() {
+  var fl = document.querySelector('#libPopOv .fp-flip');
+  if (fl) fl.classList.remove('flipped');
+}
+
+// "Log a serving" → close the pop-up, open the quick FEED modal, pre-add this food.
+// V-M-220 (Maren, canon-cc-008): a Library "Log a serving" must clear the SAME
+// V-M-205 age-gate consequence card as markFoodTried — the corpus pop-up can offer
+// Log for a food it just flagged below-gate, and this path feeds QuickLog directly
+// (consequence-card-free). Warn-and-allow: the card proceeds on confirm, aborts on
+// cancel; we never hard-block (the parent may be recording an exposure that happened).
+function libLogServing(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  _libClosePop();
+  var proceed = function() {
+    if (typeof openQuickModal === 'function') openQuickModal('feed');
+    if (typeof qlFeedAddItem === 'function') qlFeedAddItem(key, 'library');
+  };
+  var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
+  if (ageR && typeof getAgeInMonths === 'function' && ageR.minMonth > getAgeInMonths() && typeof foodConsequenceCard === 'function') {
+    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(key) : null;
+    foodConsequenceCard(eff ? {
+      severity: eff.severity || 'critical', title: eff.title, why: eff.why,
+      watchFor: eff.watchFor, severeSigns: eff.severeSigns, seekCare: eff.seekCare
+    } : {
+      severity: 'caution', title: 'Not before ' + ageR.minMonth + ' months', why: ageR.reason
+    }, proceed);
+    return;
+  }
+  proceed();
+}
+
+// Lead tap-through (data-action="libJumpToBook") — open the food's shelf and its pop-up.
+// The "follow the lead into the library" flow.
+function libJumpToBook(btn) {
+  var key = btn && btn.getAttribute('data-arg');
+  if (!key) return;
+  var root = document.getElementById('dietShelvesRoot');
+  if (!root) return;
+  var target = null;
+  root.querySelectorAll('.lib-book').forEach(function(b) {
+    if (b.getAttribute('data-arg') === key) target = b;
+  });
+  if (!target) return;
+  var grp = target.closest('.lib-group');
+  if (grp) grp.classList.add('open');
+  libOpenBook(target);
+}
+
+// ── "Look up any food" search — the gateway to the pop-up for ANY food, not just
+// the 11 shelf books. Searches the union of the safety tables + the NUTRITION
+// corpus; a hit that resolves to a FOOD_EFFECTS record opens the RICH pop-up
+// (libOpenBook), every other food opens a NUTRITION-backed corpus pop-up
+// (libOpenCorpus). One detail surface for the whole library. ────────────────────
+
+function _libTitleCase(s) {
+  return String(s).replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+// The FOOD_EFFECTS key a name resolves to (via the shared resolver), or null. Lets a
+// search hit route to the rich pop-up by its canonical key (egg yolk → 'egg', etc.).
+function _libFEKeyFor(name) {
+  if (typeof getFoodEffect !== 'function' || typeof FOOD_EFFECTS === 'undefined') return null;
+  var eff = getFoodEffect(name);
+  if (!eff) return null;
+  var keys = Object.keys(FOOD_EFFECTS);
+  for (var i = 0; i < keys.length; i++) { if (FOOD_EFFECTS[keys[i]] === eff) return keys[i]; }
+  return null;
+}
+
+// Searchable index — the same union the legacy detail-sheet search uses
+// (_FD_SEARCH_INDEX = NUTRITION ∪ AGE_RULES ∪ ALLERGENS), so nothing findable
+// there becomes unfindable here.
+function _libLookupCandidates(q) {
+  q = String(q || '').trim().toLowerCase();
+  if (q.length < 1) return [];
+  var idx = (typeof _FD_SEARCH_INDEX !== 'undefined') ? _FD_SEARCH_INDEX : Object.keys(NUTRITION || {});
+  return idx.filter(function(k) { return k.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+}
+
+function _libLookupRow(name) {
+  var feKey = _libFEKeyFor(name);
+  var action = feKey ? 'libOpenBook' : 'libOpenCorpus';
+  var arg = feKey || name;
+  var disp = feKey ? _libDisplayName(feKey, FOOD_EFFECTS[feKey]) : _libTitleCase(name);
+  var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
+  var j = _libJourney(name);
+  var journeyHtml = '';
+  if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
+  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
+  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
+    '<span class="lib-book-body"><span class="lib-book-title">' + escHtml(disp) + '</span>' + journeyHtml + '</span>' +
+    '<span class="lib-book-go">' + zi('arrow-right') + '</span></button>';
+}
+
+// data-action="libLookup" (input event) — render the result rows.
+function libLookup(el) {
+  var host = document.getElementById('libLookupResults');
+  if (!host) return;
+  var q = el ? el.value : '';
+  if (String(q || '').trim().length < 1) { host.innerHTML = ''; return; }
+  var hits = _libLookupCandidates(q);
+  host.innerHTML = hits.length
+    ? hits.map(_libLookupRow).join('')
+    : '<div class="lib-search-empty">No match — try another food.</div>';
+}
+
+// Humanise a NUTRITION tags[] array into a short character line ("Iron rich · easy digest").
+function _libTagsLine(tags) {
+  if (!tags || !tags.length) return '';
+  return tags.slice(0, 3).map(function(t) {
+    var s = String(t).replace(/-/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }).join(' · ');
+}
+
+// A NUTRITION-backed pop-up for any food without a curated FOOD_EFFECTS record.
+// Real data only: NUTRITION nutrients/tags, the live age gate + allergen note, the
+// journey. No emergency floor — that's reserved for the curated allergen records.
+function libOpenCorpus(btn) {
+  var name = btn && btn.getAttribute('data-arg');
+  if (!name) return;
+  var ov = document.getElementById('libPopOv');
+  if (!ov) return;
+  var j = _libJourney(name);
+  ov.innerHTML = _libCorpusPopHtml(name, j);
+  ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
+}
+
+function _libCorpusPopHtml(name, j) {
+  var disp = _libTitleCase(name);
+  var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
+  var entry = (typeof NUTRITION !== 'undefined') ? NUTRITION[String(name).toLowerCase()] : null;
+  var tagsLine = entry ? _libTagsLine(entry.tags) : '';
+  var allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(name) : null;
+  var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(name) : null;
+  var aged = ageR && (typeof getAgeInMonths === 'function') && ageR.minMonth > getAgeInMonths();
+
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(disp) + '</div>' +
+    (tagsLine ? '<div class="fp-voice">' + escHtml(tagsLine) + '</div>' : '') +
+    _libJourneyChip('inform', j) + '</div>';
+
+  // ── 6-second body: a concrete verdict leads, then disclosure rows ──
+  var verClass, verHead;
+  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
+  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
+  else { verClass = 'info'; verHead = 'Good to know'; }
+  var rows =
+    (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
+      '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
+    (aged ? _libPopRow('why', 'info', 'Why wait', '',
+      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
+  var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
+  if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
+  if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
+    '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
+  var body = '<div class="fp-body fp-body--rows">' +
+    _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], verHead, tagsLine) +
+    '<div class="lib-prows">' + rows + '</div></div>';
+  var foot = '<div class="fp-foot">' +
+    '<button class="fp-foot-btn" data-action="libLogServing" data-arg="' + escHtml(name) + '">' + zi('plus') + 'Log a serving</button>' +
+    '<span class="fp-foot-link" data-action="popFlip">Full history ' + zi('arrow-right') + '</span></div>';
+
+  return '<div class="food-pop"><div class="fp-flip">' +
+    '<div class="fp-face fp-front">' + head + body + foot + '</div>' +
+    '<div class="fp-face fp-back">' + _libCorpusBackHtml(name, dt, j) + '</div>' +
+    '</div></div>';
+}
+
+function _libCorpusBackHtml(name, dt, j) {
+  var disp = _libTitleCase(name);
+  var head = '<div class="fp-head' + dt + '">' +
+    '<button class="fp-close" data-action="libClosePop" aria-label="Close">&times;</button>' +
+    '<div class="fp-name">' + escHtml(disp) + '</div><div class="fp-voice">History &amp; analysis</div></div>';
+  var inner;
+  if (!j.tried) {
+    inner = '<div class="fp-empty">' + zi('eye') +
+      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', her servings and any patterns will appear here.</p></div>';
+  } else {
+    var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
+    var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
+    var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.';
+    var insight = (j.reaction === 'watch')
+      ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
+      : 'Settling into her diet — no patterns of concern logged so far.';
+    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      '<div><div class="fp-sec-h">What the patterns say</div>' +
+      '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
+  }
+  var foot = '<div class="fp-foot"><button class="fp-foot-btn fp-foot-btn--ghost" data-action="popFlipBack">' +
+    '<svg class="zi fp-back-arrow"><use href="#zi-arrow-right"/></svg>Back to food info</button></div>';
+  return head + '<div class="fp-body">' + inner + '</div>' + foot;
+}
+
+// ── Emergency Deck — every never-cross floor in one place (data-action="libOpenDeck").
+// Data-sourced from FOOD_EFFECTS, never hand-coded: the choking-by-form floor, the
+// allergen anaphylaxis floor (egg is the representative — all 7 priority allergens
+// share the identical adrenaline response, per audit-floor-fidelity), and honey's
+// botulism floor (watchFor signs + seekCare). The floor follows the hazard — choking
+// guidance stays mechanical (no adrenaline), the allergen floor stays adrenaline. ────
+// ════════════════════════════════════════
+// Emergency Cards — deep-linkable per-hazard protocol (emergency-protocol-v1).
+// The Deck renders the full EMERGENCY_PROTOCOL set as ec-* cards; a food deep-links
+// to its hazard (anaphylaxis / choking / botulism) and the deck scrolls to it. Each
+// card ends in a doc-prep pop-up (Copy / Save). Maren-ratified content; never-cross
+// locked by audit-emergency-floor-v1.
+// ════════════════════════════════════════
+var _EM_HAZ_ORDER = ['anaphylaxis', 'choking', 'botulism'];
+var _emFood = null;   // the food that deep-linked into the deck (→ doc-prep Trigger)
+var _emDocHz = null;  // the hazard whose doc-prep is open
+
+// **bold** / _italic_ → HR-4-safe markup (escHtml first, then re-introduce the tags).
+function _emFmt(s) {
+  var out = escHtml(String(s));
+  out = out.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  out = out.replace(/_([^_]+)_/g, '<i>$1</i>');
+  return out;
+}
+// foodClass (multi-valued) → hazard id. allergen wins (PRIMARY) on a multi-class food.
+function _emHazardForEff(eff) {
+  if (!eff || !eff.foodClass) return null;
+  var fc = eff.foodClass, has = function(c) { return Array.isArray(fc) ? fc.indexOf(c) !== -1 : fc === c; };
+  if (has('allergen-introduce-early')) return 'anaphylaxis';
+  if (has('choking-by-form')) return 'choking';
+  if (has('acute-toxin')) return 'botulism';
+  // V-M-237: a food with a full ACUTE allergen floor but no hazard class — cow's milk
+  // (foodClass 'drink-timing', but its severeSigns ARE the anaphylaxis floor / CMPA) —
+  // routes to anaphylaxis. Sits AFTER choking-by-form, so a choking food never falls here.
+  if (eff.severeSigns && eff.severeSigns.length) return 'anaphylaxis';
+  return null;
+}
+function _emRecognise(hz) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return [];
+  if (p.recognise) return p.recognise;
+  if (p.recogniseFrom && typeof FOOD_EFFECTS !== 'undefined') {
+    var r = FOOD_EFFECTS[p.recogniseFrom.key];
+    return (r && r[p.recogniseFrom.field]) || [];
+  }
+  return [];
+}
+function _emNowTime() {
+  // HR-12: current local instant, formatted in the app's en-IN convention (no part-construction).
+  return new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+function _emCardHtml(hz, food) {
+  var p = (typeof EMERGENCY_PROTOCOL !== 'undefined') ? EMERGENCY_PROTOCOL[hz] : null;
+  if (!p) return '';
+  var amber = p.chrome === 'amber';
+  var name = food ? escHtml(food) : escHtml(p.title);
+  var sub = food ? escHtml(p.title) : '';
+  var head = '<div class="ec-head"><div class="ec-name">' + name + '</div>' +
+    (sub ? '<div class="ec-sub">' + sub + '</div>' : '') + '</div>';
+  var tempo = p.tempo ? '<div class="ec-tempo">' + zi('info') + '<span>' + escHtml(p.tempo) + '</span></div>' : '';
+  var steps = (p.steps || []).map(function(s, i) {
+    return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + _emFmt(s) + '</span></div>';
+  }).join('');
+  var call = p.call ? '<a class="ec-call" href="tel:' + escHtml(p.call) + '">' + zi('phone') + 'Call ' + escHtml(p.call) + '</a>' : '';
+  var doNow = '<div class="ec-do"><div class="ec-do-h">' + zi('siren') + (amber ? 'What to do' : 'Do now') + '</div>' + steps + call + '</div>';
+  var rec = _emRecognise(hz);
+  var xlink = p.xlink ? '<button class="ec-xlink" data-action="emScrollHazard" data-arg="' + escHtml(p.xlink.hazard) + '">' + zi('warn') + escHtml(p.xlink.label) + '</button>' : '';
+  var recH = rec.length ? '<div class="ec-sec"><div class="ec-sec-h">' + (amber && hz === 'botulism' ? 'Watch over the next days' : 'Recognise — any one') + '</div><ul class="ec-signs">' +
+    rec.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>' + xlink + '</div>' : '';
+  var aft = (p.after && p.after.length) ? '<div class="ec-sec"><div class="ec-sec-h">After</div><ul class="ec-next">' +
+    p.after.map(function(s) { return '<li>' + _emFmt(s) + '</li>'; }).join('') + '</ul></div>' : '';
+  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + escHtml(hz) + '">' +
+    '<span class="ec-docprep-ic">' + zi('doc') + '</span>' +
+    '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor</span>' +
+    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></span>' +
+    '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
+  return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + '" id="ec-' + hz + '">' + head +
+    '<div class="ec-body">' + tempo + '<div class="ec-sec">' + doNow + '</div>' + recH + aft + dp + '</div></div>';
+}
+
+function _libDeckHtml(focusHz) {
+  var cards = _EM_HAZ_ORDER.filter(function(hz) { return typeof EMERGENCY_PROTOCOL !== 'undefined' && EMERGENCY_PROTOCOL[hz]; })
+    .map(function(hz) { return _emCardHtml(hz, (hz === focusHz) ? _emFood : null); }).join('');
+  return '<div class="lib-deck-sheet">' +
+    '<div class="lib-deck-head">' + zi('siren') + '<span class="lib-deck-title">In an emergency</span>' +
+    '<button class="lib-deck-close" data-action="libCloseDeck" aria-label="Close">&times;</button></div>' +
+    cards + '</div>';
+}
+
+function _emRenderDeck(focusHz) {
+  var ov = document.getElementById('libDeckOv');
+  if (!ov) return;
+  ov.innerHTML = _libDeckHtml(focusHz);
+  ov.classList.add('open');
+  document.body.classList.add('lib-overlay-open');
+  if (focusHz) _emScrollTo(focusHz);
+}
+function _emScrollTo(hz) {
+  var ov = document.getElementById('libDeckOv');
+  var card = ov && ov.querySelector('#ec-' + hz);
+  if (!card) return;
+  if (card.scrollIntoView) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  card.classList.add('ec-focus');
+  setTimeout(function() { card.classList.remove('ec-focus'); }, 1600);
+}
+function emScrollHazard(btn) { var hz = btn && btn.getAttribute('data-arg'); if (hz) _emScrollTo(hz); }
+
+// standing "In an emergency" entry — opens the deck at the top, no food context.
+function libOpenDeck() { _emFood = null; _emRenderDeck(null); }
+// deep-link from a food pop-up's floor row — carries the hazard + food.
+function libPopToDeck(btn) {
+  var hz = btn && btn.getAttribute('data-arg');
+  _emFood = (btn && btn.getAttribute('data-food')) || null;
+  _libClosePop();
+  _emRenderDeck(hz || null);
+}
+function _libCloseDeck() {
+  var ov = document.getElementById('libDeckOv');
+  if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; }
+  _emFood = null;
+  document.body.classList.remove('lib-overlay-open');
+}
+
+// ── Doc-prep pop-up (#emDocOv) — Read overlay over the deck. Generated summary;
+// the time fields are tap-to-stamp + N/A (one-tap Quick acts, HR-9). ──────────────
+function _emDocWho() {
+  var bits = ['Ziva'];
+  try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
+  return bits.join(' · ');
+}
+function _emStampRow(s) {
+  return '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>' +
+    '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>' +
+    '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+}
+function _emDocPrepHtml(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, sym = _emRecognise(hz).join(' · ');
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) { rows += _emStampRow(s); });
+  if (food) rows += '<div class="doc-row"><span class="k">Trigger food</span><span class="v">' + escHtml(food) + '</span></div>';
+  if (sym) rows += '<div class="doc-row"><span class="k">Symptoms seen</span><span class="v">' + escHtml(sym) + '</span></div>';
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var team = String(d.forTeam).replace('{food}', food || 'the food');
+  return '<div class="doc"><div class="doc-body">' +
+    '<button class="doc-x" data-action="emCloseDocPrep" aria-label="Close">&times;</button>' +
+    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
+    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
+    '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
+    '<div class="doc-actions">' +
+    '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc">' + zi('copy') + 'Copy</button>' +
+    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save / share</button></div></div>';
+}
+function emOpenDocPrep(btn) {
+  var hz = btn && btn.getAttribute('data-arg'); if (!hz) return;
+  var ov = document.getElementById('emDocOv'); if (!ov) return;
+  _emDocHz = hz;
+  ov.innerHTML = _emDocPrepHtml(hz);
+  ov.classList.add('open');
+}
+function _emCloseDocPrep() { var ov = document.getElementById('emDocOv'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } }
+function emStampTime(btn) {
+  if (!btn) return;
+  var na = btn.parentNode.querySelector('.doc-na');
+  if (na) na.removeAttribute('data-on');
+  if (btn.dataset.stamped) { btn.removeAttribute('data-stamped'); btn.removeAttribute('data-na'); btn.innerHTML = '<em>tap to stamp now</em>'; }
+  else { btn.removeAttribute('data-na'); btn.textContent = _emNowTime(); btn.dataset.stamped = '1'; }
+}
+function emToggleNA(btn) {
+  if (!btn) return;
+  var stamp = btn.parentNode.querySelector('.doc-stamp');
+  if (btn.dataset.on) { btn.removeAttribute('data-on'); if (stamp) { stamp.removeAttribute('data-stamped'); stamp.removeAttribute('data-na'); stamp.innerHTML = '<em>tap to stamp now</em>'; } }
+  else { btn.dataset.on = '1'; if (stamp) { stamp.removeAttribute('data-stamped'); stamp.dataset.na = '1'; stamp.textContent = 'N/A'; } }
+}
+function _emStampValDOM(id) {
+  var b = document.querySelector('#emDocOv .doc-stamp[data-arg="' + id + '"]');
+  if (!b) return '____';
+  if (b.dataset.na) return 'N/A';
+  return b.dataset.stamped ? b.textContent : '____';
+}
+function _emDocText(hz) {
+  var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
+  var d = p.doc, food = _emFood, L = ['SproutLab — Emergency summary', _emDocWho(), '', 'Suspected: ' + d.suspected];
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id)); });
+  if (food) L.push('Trigger food: ' + food);
+  var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);
+  if (d.action) L.push(d.action.label + ': ' + d.action.value);
+  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  L.push(''); L.push('For the team: ' + String(d.forTeam).replace('{food}', food || 'the food'));
+  return L.join('\n');
+}
+function emCopyDoc() {
+  var text = _emDocText(_emDocHz);
+  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function() { _emLegacyCopy(text); });
+  } else { _emLegacyCopy(text); }
+}
+function _emLegacyCopy(text) {
+  var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+  ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); } catch (e) {}
+  document.body.removeChild(ta);
+}
+function emSaveDoc() { window.print(); }
+
+// ── Safety guides — light, collapsible lib-group reference cards (#5b). Lightened from
+// the old heavy knowledge cards: the never-cross emergency FLOORS now live in the
+// always-accessible Emergency Deck, so each guide defers first-aid to the Deck (a
+// pointer) and carries quick reference only — genuine collapsibles, nothing pinned.
+// The priority-allergen list is SOURCED from FOOD_EFFECTS (allergen-introduce-early
+// records, coloured by their food-domain via LIB_SHELF_VOICE); the form-transform +
+// milk/age reference is curated standard guidance (Maren-audited at the gate). ────────
+function _libGuideDeckLink() {
+  return '<button class="lib-guide-deck" data-action="libOpenDeck">' + zi('siren') +
+    '<span>If a reaction or choking happens — open <b>In an emergency</b></span>' + zi('arrow-right') + '</button>';
+}
+
+function renderLibGuides() {
+  var root = document.getElementById('dietLibGuidesRoot');
+  if (!root) return;
+  var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
+
+  // (1) priority-allergen chips — sourced from the allergen-introduce-early records,
+  // coloured by food-domain (LIB_SHELF_VOICE.dom → .fdom-chip).
+  var allergenChips = '';
+  if (FE) {
+    Object.keys(FE).forEach(function(k) {
+      var fc = FE[k].foodClass;
+      var isA = Array.isArray(fc) ? fc.indexOf('allergen-introduce-early') !== -1 : fc === 'allergen-introduce-early';
+      if (!isA) return;
+      var meta = LIB_SHELF_VOICE[k];
+      var dom = (meta && meta.dom) ? ' fdom-chip--' + meta.dom : '';
+      allergenChips += '<span class="fdom-chip' + dom + '">' + escHtml(_libDisplayName(k, FE[k])) + '</span>';
+    });
+  }
+
+  // (2) form-transform chips — the approved (record 10) curated set, domain-coded.
+  var formChips = [
+    ['Nuts → ground', 'nuts'], ['Whole grapes → quartered', 'fruits'],
+    ['Hard veg → cooked soft', 'vegs'], ['Hard round sweets → skip', 'spices']
+  ].map(function(c) { return '<span class="fdom-chip fdom-chip--' + c[1] + '">' + escHtml(c[0]) + '</span>'; }).join('');
+
+  var guides = [
+    { pol: 'sage', icon: 'sprout', t: 'Introducing allergens early',
+      body: '<p class="lib-guide-why">Offering the common allergens from around 6 months — and keeping them in the diet — markedly lowers the chance of a food allergy. Tap any food in Browse for its safe form.</p>' +
+        '<div><div class="lib-guide-h">The priority allergens</div><div class="lib-guide-chips">' + allergenChips + '</div></div>' },
+    { pol: 'amber', icon: 'spoon', t: 'Safe shapes & textures',
+      body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
+        '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
+    { pol: 'sky', icon: 'info', t: 'Milk & drinks',
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+    { pol: 'lav', icon: 'clock', t: 'First foods, by age',
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+  ];
+
+  root.innerHTML = guides.map(function(g) {
+    return '<div class="lib-group lib-group--' + g.pol + ' lib-group--guide">' +
+      '<button class="lib-group-label" data-action="libToggleGroup">' + zi(g.icon) + escHtml(g.t) +
+      '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
+      '<div class="lib-shelf-row"><div class="lib-guide-inner">' + g.body + '</div></div></div>';
+  }).join('');
 }
 
 // ════════════════════════════════════════
@@ -1389,15 +2304,7 @@ function renderDietNutIntro() {
   foods.forEach(function(f){
     (f.severeSigns || []).forEach(function(s){ if (severe.indexOf(s) === -1) severe.push(s); });
   });
-  if (severe.length) {
-    pinned += '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
-      '<span>If this happens, it’s an emergency</span></div><ul class="cons-severe-list">' +
-      severe.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
-    if (lead.seekCare) {
-      pinned += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(lead.seekCare) + '</span></p>';
-    }
-    pinned += '</div>';
-  }
+  pinned += _libBuildGuide(severe, lead.seekCare, 'If this happens, it’s an emergency');
 
   // ── How-to protocol (the introduce-safely steps) → BODY ──
   var hti = lead.howToIntroduce || {};
@@ -1487,7 +2394,7 @@ function renderDietMilkIntro() {
       // and the mild watch-fors drop to the calm body instead.
       // M-M-2 (Maren): scope to the SEVERE path — "reacts to dairy" over-read as any reaction
       // being an emergency, contradicting the mild-path the seekCare line and body watch-fors draw.
-      cPin += _milkSevereStrip(cow, 'A severe reaction to dairy is an emergency');
+      cPin += _libBuildGuide(cow.severeSigns, cow.seekCare, 'A severe reaction to dairy is an emergency');
       // BODY (collapsible): how-to (after-12mo) → mild watch-fors → myth.
       var chti = cow.howToIntroduce || {};
       if (chti.amount || chti.when || chti.watch) {
@@ -1567,17 +2474,23 @@ function _milkFormBlock(sf, okLabel, neverLabel) {
   return h;
 }
 
-// Present-only CMPA severe strip for a drink-timing card (milk-spec §6/V-V-4/M-1). Renders
-// the anaphylaxis red-flags + the call-112/108 emergency line ONLY when severeSigns is a
-// non-empty array (never on a class/allergen-flag proxy — M-1). `scopeHeader` separates the
-// ALLERGY floor from the TIMING gate so a parent never conflates the two axes (V-V-4).
-function _milkSevereStrip(eff, scopeHeader) {
-  if (!eff || !Array.isArray(eff.severeSigns) || !eff.severeSigns.length) return '';
+// ── _libBuildGuide — THE canonical never-cross emergency-floor builder (food-effects-v2 S0).
+// One renderer for every Library safety floor: the nut / milk / choking guide cards today,
+// and the Safety-guides wing + Emergency Deck reuse it when wired. Consolidates what
+// renderDietNutIntro used to open-code and what _milkSevereStrip rendered for milk/choking,
+// so the floor markup is provably byte-identical wherever a floor appears (the never-cross
+// proof). Present-only: renders nothing unless severeSigns is a non-empty array (M-1 — never
+// on a class/allergen-flag proxy). `scopeHeader` scopes each floor to ITS hazard so floors
+// never cross — choking first-aid never renders under an allergic-reaction header, and vice
+// versa (the floor follows the hazard; enforced by audit-floor-fidelity-v1).
+function _libBuildGuide(severeSigns, seekCare, scopeHeader) {
+  var signs = Array.isArray(severeSigns) ? severeSigns : [];
+  if (!signs.length) return '';
   var h = '<div class="cons-severe"><div class="cons-severe-h">' + zi('siren') +
     '<span>' + escHtml(scopeHeader) + '</span></div><ul class="cons-severe-list">' +
-    eff.severeSigns.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
-  if (eff.seekCare) {
-    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(eff.seekCare) + '</span></p>';
+    signs.map(function(s){ return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>';
+  if (seekCare) {
+    h += '<p class="enc-emergency">' + zi('siren') + '<span>' + escHtml(seekCare) + '</span></p>';
   }
   h += '</div>';
   return h;
@@ -1647,7 +2560,7 @@ function renderDietChokingIntro() {
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
   // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _milkSevereStrip(chk, 'If your baby is choking, it\'s an emergency');
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).

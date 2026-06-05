@@ -2647,7 +2647,7 @@ const FOOD_EFFECTS = {
     },
     watchFor:   ['hives or a rash', 'swelling around the mouth or eyes', 'vomiting or diarrhoea', 'forceful or repeated vomiting a few hours after eating, not just right away (possible FPIES)'],
     severeSigns:['trouble breathing or wheezing', 'swelling of the face, lips, or tongue', 'going floppy, pale, or very sleepy', 'repeated forceful vomiting with paleness or floppiness a few hours later (possible FPIES)'],
-    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away. Repeated forceful vomiting with paleness or floppiness a few hours after soy (possible FPIES): seek urgent care even without a rash.',
+    seekCare:   'A mild rash alone: stop, watch closely, and call your doctor. Any trouble breathing, face or throat swelling, or floppiness: call emergency services (112) right away and use a prescribed adrenaline auto-injector if you have one. Repeated forceful vomiting with paleness or floppiness a few hours after soy (possible FPIES): seek urgent care even without a rash.',
     confidence: 'high',
   },
   'wheat': {
@@ -2908,6 +2908,78 @@ const FOOD_EFFECTS = {
     confidence: 'high',
   },
 };
+
+// ── EMERGENCY PROTOCOL (emergency-protocol-v1, Maren-ratified) ──
+// Per-hazard Emergency Cards, deep-linked from a food. Authored first-aid content
+// (Resus Council UK / AAP / NHS), Maren content-audit PASSED (V-M-225…235). Steps use
+// **bold** / _italic_ markers, rendered HR-4-safe via _emFmt (diet.js). Never-cross:
+// choking steps carry mechanical aid only (no adrenaline); anaphylaxis carries adrenaline
+// only (no back-blows) — locked by audit-emergency-floor-v1.
+const EMERGENCY_PROTOCOL = {
+  anaphylaxis: {
+    title: 'Severe allergic reaction · anaphylaxis', chrome: 'rose', call: '112',
+    recognise: [
+      'trouble breathing or wheezing',
+      'swelling of the face, lips, or tongue',
+      'going floppy, pale, or very sleepy',
+    ],
+    steps: [
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. _(Most families won’t have one — if not, go straight to step 2.)_',
+      '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
+      '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
+      'No better after **5 minutes**? A second dose, if you have one.',
+    ],
+    after: [
+      '**Go to hospital even if she settles** — a reaction can return hours later.',
+      'Note the **time**, the **food**, and what you **gave**.',
+    ],
+    xlink: { hazard: 'choking', label: 'Choking on it instead? See the Choking card.' },
+    doc: {
+      suspected: 'Anaphylaxis (severe allergic reaction)',
+      stamps: [ { id: 'reaction', label: 'Time of reaction' }, { id: 'adren', label: 'Adrenaline given at' } ],
+      action: { label: 'Adrenaline given', value: 'Yes / No' },
+      forTeam: 'suspected anaphylaxis after {food}; see the “adrenaline given” line; please observe for a biphasic reaction.',
+    },
+  },
+  choking: {
+    title: 'Choking', chrome: 'amber', call: '112',
+    recognise: [
+      'silent — cannot cough, cry, or make a sound',
+      'cannot breathe, or a high-pitched squeak',
+      'going blue around the lips, or going floppy',
+    ],
+    steps: [
+      '**Can she cough or cry?** Encourage coughing — don’t intervene.',
+      '**Silent / can’t breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
+      '**Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**',
+      '**Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
+    ],
+    after: [ 'Even once cleared, get her checked — a retained fragment or airway irritation can follow.' ],
+    doc: {
+      suspected: 'Choking',
+      stamps: [ { id: 'reaction', label: 'Time it happened' } ],
+      action: { label: 'Back blows / chest thrusts given · object cleared', value: 'Yes / No' },
+      forTeam: 'choking on {food}; back blows + chest thrusts given; see the “cleared” line above.',
+    },
+  },
+  botulism: {
+    title: 'After honey — suspected botulism', chrome: 'amber', call: null,
+    tempo: 'Not a sudden emergency — watch over the next days and call your doctor.',
+    recogniseFrom: { key: 'honey', field: 'watchFor' },
+    steps: [
+      '**Call your doctor** and say honey was given — this is the right first step, not 112.',
+      '**But if she struggles to breathe, can’t feed, or goes limp — don’t wait. Call 112.**',
+    ],
+    after: [],
+    doc: {
+      suspected: 'Suspected infant botulism (after honey)',
+      stamps: [ { id: 'honey', label: 'Honey given on / around' } ],
+      action: null,
+      forTeam: 'honey given to a baby under 1; watching for constipation, weak cry/suck, floppiness; advise on review.',
+    },
+  },
+};
+window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
