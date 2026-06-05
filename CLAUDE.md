@@ -93,6 +93,8 @@ Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **7
 
 **CareTicket state machine:** [docs/CARETICKET_STATE_MACHINE.html](docs/CARETICKET_STATE_MACHINE.html) — 6-transition lifecycle, spec vs implementation side-by-side. Auto-generated each build by `split/build-careticket-state-machine.mjs`; reads §Lifecycle from `docs/CARETICKETS_SPEC_v5.md` and `ct*` handler functions from `intelligence-caretickets.js` (post-PR-G split). Drift report flags spec/implementation divergence (Maren-primary consult; CareTicket transitions are an active audit surface where drift could silently mark a parent's escalation resolved without the spec gate firing).
 
+**Design-principles view:** [docs/DESIGN_PRINCIPLES.html](docs/DESIGN_PRINCIPLES.html) — a styled, self-contained HTML twin of the design floor. Auto-generated each build by `split/build-design-principles.mjs` from `docs/DESIGN_PRINCIPLES.md` (which stays source-of-truth — `@import`ed here, read by the QA chain); the `.html` is a regenerated VIEW with a don't-hand-edit banner, so it cannot drift. The Markdown→styled-HTML-view pattern is registered as Lyra's Builder skill **`/doc-render`** (`.claude/skills/doc-render/SKILL.md`) — the reusable instrument for giving any `docs/*.md` reference a presentable HTML page wired into the build, with PROVINCE_MAP / POOP_COLOR_REFERENCE / CARETICKET_STATE_MACHINE as its siblings.
+
 **Authoritative source:** when this file and the maps disagree on LOC counts, token values, or layout snapshots, **the maps win** (they're regenerated from committed source). When they disagree on rules, HRs, build commands, or persona — **this file wins** (it's the policy floor).
 
 ```
