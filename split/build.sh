@@ -183,6 +183,12 @@ node build-careticket-state-machine.mjs >&2
 # design-principles doc matches the other auto-generated reference HTMLs. The .md stays the
 # source of truth (CLAUDE.md @imports it); this is a generated view, rebuilt each build.
 node build-design-principles.mjs >&2
+# Prose reference-doc views (the /doc-render pattern, manifest-driven): SESSION_CLOSE_SEQUENCE,
+# QA_GATE_SPEC, SPROUTLAB_QUICK_REFERENCE → styled HTML twins, rebuilt each build from the .md.
+node build-doc-views.mjs >&2
+# Icon reference: a visual gallery of every zi-/zif- symbol in the sprite, auto-generated from
+# template.html so the icon count/list can never drift from the actual sprite.
+node build-icon-reference.mjs >&2
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">

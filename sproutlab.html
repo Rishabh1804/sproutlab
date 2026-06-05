@@ -19443,7 +19443,7 @@ const MILESTONE_STANDARDS = {
     { text:'Tracks moving objects across midline', icon:zi('eye'), desc:'Follows a toy moving from one side of the body to the other with eyes — bilateral visual coordination strengthening.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Turns head toward soft sounds', icon:zi('chat'), desc:'Localises quieter sounds — a rattle in another room, your voice from the kitchen. Auditory mapping refining.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Explores textures with hands and mouth', icon:zi('sparkle'), desc:'Squeezes a soft toy, mouths a wooden ring, pats a textured book. Tactile discrimination building.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
-    { text:'Plays peek-a-boo with interest', icon:zi('face'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Plays peek-a-boo with interest', icon:zi('baby'), desc:'Reacts with anticipation and delight to peek-a-boo — early object permanence + social game.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Imitates simple sounds back', icon:zi('chat'), desc:'Hears you say "ba" and tries "ba" back — early conversational turn-taking.', advanced:false, domain:'language', source:'unverified' },
   ],
   8: [
@@ -32159,7 +32159,7 @@ function renderMsTrajectoryRibbon() {
 
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-      + zi('chart-up') + '</div> Trajectory</div></div>'
+      + zi('chart') + '</div> Trajectory</div></div>'
       + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
@@ -32294,7 +32294,7 @@ function renderMsTrajectoryRibbon() {
   }
 
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-    + zi('chart-up') + '</div> Trajectory</div></div>'
+    + zi('chart') + '</div> Trajectory</div></div>'
     + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + G.width + ' ' + G.height + '"'
     + ' preserveAspectRatio="xMidYMid meet" role="img"'
     + ' aria-label="Milestone trajectory: '
@@ -32386,7 +32386,7 @@ function renderMsPediatricPrep() {
   // Build narration (CV3-002 narrate-vs-list). Observation-counts only per
   // V-K-120 — never engine-internal labels.
   const parts = [];
-  parts.push('<div class="card-header"><div class="card-title"><div class="icon icon-rose">' + zi('hospital') + '</div> Pediatric-visit prep</div></div>');
+  parts.push('<div class="card-header"><div class="card-title"><div class="icon icon-rose">' + zi('medical') + '</div> Pediatric-visit prep</div></div>');
   parts.push('<div class="ms-pediatric-prep-narration">');
   parts.push('Next visit: not yet scheduled. Things to mention this month:');
   parts.push('</div>');

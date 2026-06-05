@@ -42,6 +42,15 @@ Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/d
 
 **Full invocation procedure:** `invocation.md` — per-Companion modes, brief shape, the Scribe Worker Tier, the canon-cc-008 invocation sequence, and a routing quick reference.
 
+### Session-lifecycle skills (operational, not Companion mirrors)
+
+Two utility slash-skills bookend a session. They are Codex-canon-homed (`docs/specs/skills/`) and deploy byte-identical to the loadable `SKILL.md` directory shape per canon-cc-026 — invocable, not persona mirrors:
+
+| Skill | When | What it does |
+|-------|------|--------------|
+| **`/sproutlab-compact`** (`.claude/skills/sproutlab-compact/SKILL.md`) | BEFORE `/compact` on a long session | Writes a graph-anchored, ephemeral `/tmp` resume handoff (PR/branch state, next action, the canon-cc-008 summon-set, file→symbol anchors) so post-compact work resumes precisely, then hands back to `/compact`. A convenience ritual — does **not** discharge canon-cc-008. |
+| **`/session-close`** (`.claude/skills/session-close/SKILL.md`) | At the END of a session, after work is merged | Runs the close sequence — pre-close gate → five close artifacts (handoff + next-session target, synthesis-if-warranted, governance/facts refresh, copiable opening prompt) → lands them as a docs-only PR. Portable skeleton that **defers to [`docs/SESSION_CLOSE_SEQUENCE.md`](docs/SESSION_CLOSE_SEQUENCE.md)** as the authoritative local floor. |
+
 ## QA Chain — Mandatory Pre-Merge Gate (canon-cc-008)
 
 **NON-NEGOTIABLE. This is a release gate, not a guideline.** Every SproutLab
@@ -235,7 +244,7 @@ below are a convenience mirror; the doc wins on any disagreement.
 **Rule:** Every new card/section/feature uses one of these domain colors. No ad-hoc hex values.
 
 ### Icon System
-**zi()** — 109 custom SVG symbols as `<symbol>` sprite in template.html (was 105 at PR-EF base; +4 added by PR-EF Phase A: trending-down, trending-flat, trending-mixed, arrow-right). Rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`.
+**zi()** — custom SVG symbols as `<symbol>` sprites in template.html, two namespaces: **`zi-` general** (rendered via `zi(name)` → `<svg class="zi"><use href="#zi-{name}"/></svg>`) and **`zif-` food** (rendered via the diet.js food-icon path → `<svg class="zif"><use href="#zif-{name}"/></svg>`). The live count + list is the auto-generated gallery `docs/ICON_REFERENCE.html` (built each build by `split/build-icon-reference.mjs`) — **the authoritative source; do not hard-code a count here** (this line once said "109" and the DESIGN_PRINCIPLES floor "54" while the sprite held 114 zi- + 97 zif-).
 
 ### Text Zoom
 Three tiers (default, medium, large) via `data-zoom` on `:root`. Header block exempt.

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!-- GENERATED from docs/SESSION_CLOSE_SEQUENCE.md by split/build-doc-views.mjs — do NOT hand-edit.
+     The .md is the source of truth; this is a styled view, rebuilt each build. -->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SproutLab — Session Close Sequence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fffaf7;--warm:#fef6f0;--text:#3d2e2e;--mid:#6e5858;--light:#806c6c;--card:#fff;--line:#ece2dc;
+    --sage:#b5d5c5;--sage-light:#e8f5ef;--tc-sage:#3a7060;--rose:#f2a8b8;--rose-light:#fde8ed;--tc-rose:#9e3e52;
+    --amber:#e8b86d;--amber-light:#fef6e8;--tc-amber:#8a6520;--sky:#a8cfe0;--sky-light:#e8f4fa;--tc-sky:#336580;
+    --lav:#c9b8e8;--lav-light:#f0ebf9;--tc-lav:#6e5e9a;--shadow:rgba(180,120,120,.13);--codebg:#f4ece8;--codefg:#9e3e52;
+  }
+  [data-theme="dark"]{
+    --cream:#1a1520;--warm:#221c28;--text:#e8e0ec;--mid:#b0a0b8;--light:#9a8aa2;--card:#2a2230;--line:#3a3040;
+    --sage-light:#1e3028;--rose-light:#3a2030;--amber-light:#352e1e;--sky-light:#1e2838;--lav-light:#241d33;
+    --tc-sage:#7ac0a0;--tc-rose:#e090a8;--tc-amber:#d4a848;--tc-sky:#80b8d8;--tc-lav:#b8a8e0;--shadow:rgba(0,0,0,.3);--codebg:#2f2636;--codefg:#e090a8;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--warm);color:var(--text);font-family:'Nunito',sans-serif;line-height:1.6;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:236px 1fr;gap:40px;}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr;}.toc{display:none;}}
+  .toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:28px 0;}
+  .toc-h{font-family:'Nunito';font-weight:800;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--light);margin:0 0 10px;}
+  .toc a{display:block;font-size:.8rem;color:var(--mid);text-decoration:none;padding:5px 10px;border-radius:8px;border-left:2px solid transparent;line-height:1.35;}
+  .toc a:hover{background:var(--sage-light);color:var(--tc-sage);border-left-color:var(--sage);}
+  main{padding:40px 0 90px;min-width:0;}
+  .doc-head{border-bottom:2px solid var(--line);padding-bottom:20px;margin-bottom:8px;}
+  .eyebrow{font-weight:800;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--tc-lav);}
+  .gennote{margin-top:12px;font-size:.72rem;color:var(--light);background:var(--lav-light);border-radius:999px;padding:6px 14px;display:inline-block;}
+  .gennote code{background:none;color:var(--tc-lav);font-weight:700;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2.4rem;line-height:1.1;margin:.3em 0 .1em;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;color:var(--text);margin:1.9em 0 .5em;padding-bottom:.25em;border-bottom:1px solid var(--line);scroll-margin-top:16px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;color:var(--tc-sage);margin:1.5em 0 .35em;}
+  h4{font-family:'Nunito';font-weight:800;font-size:.95rem;color:var(--tc-rose);letter-spacing:.01em;margin:1.3em 0 .3em;}
+  p{margin:.7em 0;}
+  a{color:var(--tc-sky);}
+  strong{font-weight:800;color:var(--text);}
+  em{font-style:italic;color:var(--mid);}
+  code{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:.82em;background:var(--codebg);color:var(--codefg);border-radius:5px;padding:1px 6px;}
+  pre{background:var(--codebg);border-radius:12px;padding:16px 18px;overflow:auto;border:1px solid var(--line);}
+  pre code{background:none;color:var(--text);padding:0;font-size:.8rem;line-height:1.5;}
+  ul,ol{margin:.6em 0;padding-left:1.4em;} li{margin:.3em 0;}
+  blockquote{margin:1em 0;background:var(--amber-light);border-left:3px solid var(--amber);border-radius:10px;padding:12px 16px;color:var(--text);}
+  blockquote strong{color:var(--tc-amber);}
+  hr{border:none;border-top:1px solid var(--line);margin:2.2em 0;}
+  .tbl-wrap{overflow-x:auto;margin:1em 0;border-radius:12px;border:1px solid var(--line);}
+  table{border-collapse:collapse;width:100%;font-size:.84rem;}
+  th{background:var(--sage-light);color:var(--tc-sage);font-weight:800;text-align:left;padding:10px 13px;border-bottom:2px solid var(--sage);white-space:nowrap;}
+  td{padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mid);}
+  tr:last-child td{border-bottom:none;} td strong{color:var(--text);}
+  tbody tr:nth-child(even){background:rgba(181,213,197,.06);}
+  .theme-btn{position:fixed;top:16px;right:18px;z-index:10;font-family:'Nunito';font-weight:700;font-size:12px;color:var(--mid);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;box-shadow:0 2px 10px var(--shadow);}
+</style>
+</head>
+<body>
+<button class="theme-btn" id="themeBtn">◐ Dark</button>
+<div class="wrap">
+  <nav class="toc"><div class="toc-h">On this page</div></nav>
+  <main>
+    <div class="doc-head">
+      <div class="eyebrow">SproutLab</div>
+      <span class="gennote">Generated from <code>docs/SESSION_CLOSE_SEQUENCE.md</code> — the source of truth. Rebuilt each build; don't hand-edit this HTML.</span>
+    </div>
+    <p># Session Close Sequence — SproutLab</p><p><strong>Companion:</strong> Lyra (The Weaver) <strong>Purpose:</strong> The canonical, repeatable procedure for closing a SproutLab build session. Run this at the end of every session so the next weaver picks up a clean, fully-recorded thread. Mirrors the rhythm established at the 2026-05-30 close (#180: "handoff / synthesis / next-target + governance factual refresh"). <strong>Status:</strong> Format doc — ratified format (2026-05-31), re-run each session. Amend this file if the rhythm changes; it is the policy floor for closing, the way <code>QA_GATE_SPEC.md</code> is the policy floor for shipping.</p><hr><p>## When to run</p><p>At the end of a session, after the session's feature work is <strong>merged to <code>main</code></strong> (or explicitly parked), and the Architect calls the close. Do <strong>not</strong> close with un-merged Capital work in flight unless the Architect rules it parked and it's recorded as a carry-forward.</p><hr><p>## Pre-close gate (must all be true before writing any close docs)</p><ol><li value="1"><strong>Tree clean, on <code>main</code>.</strong> All session PRs merged; local <code>main</code> hard-synced to <code>origin/main</code>; <code>git status</code> clean in both repos (SproutLab + Codex).</li><li value="2"><strong>No orphaned drafts.</strong> Every PR opened this session is merged, closed, or explicitly parked-and-recorded.</li><li value="3"><strong>No active PR subscriptions</strong> left unhandled (unsubscribe from merged PRs).</li><li value="4"><strong>Build + gates green on <code>main</code></strong> (<code>pnpm build</code> clean, e2e green) — the state the next session inherits.</li></ol><p>State each explicitly in the close; a failed pre-close item is recorded as a carry-forward, never silently skipped.</p><hr><p>## The five close artifacts</p><p>A full close produces (or refreshes) these five, bundled into <strong>one docs-only PR</strong> through the docs-waiver path (no Governor code audit; Cipher Edict V optional for docs-only — state the waiver):</p><p>### 1. Session Handoff — <code>docs/SESSION_HANDOFF_&lt;YYYY-MM-DD&gt;.md</code> (+ <code>_PM</code> if a second same-day session) <em>The "we just closed it" record — the past.</em> Sections:</p><ul><li><strong>Header:</strong> Companion · Date · Branch(es) merged · Session theme.</li><li><strong>What shipped (the record):</strong> numbered list of every merged PR + what it delivered.</li><li><strong>QA chain that ran:</strong> which Governors audited, key findings, Cipher verdict — especially any safety-tier catch.</li><li><strong>Carry-forwards (open):</strong> everything started-not-finished or inherited-not-addressed, so nothing drops.</li><li><strong>The copiable opening-prompt box</strong> (artifact 5) lives as the final section.</li><li>Sign-off line in Lyra's voice.</li></ul><p>### 2. Synthesis — <code>docs/SYNTHESIS_&lt;YYYY-MM-DD&gt;_&lt;arc&gt;.md</code> <strong>+ companion <code>.html</code></strong> (only when the session produced a durable pattern) <em>The pattern-read — what now outlives the feature.</em> Write this only if the session established a convention, architecture, or doctrine worth carrying forward (not every session warrants one). It feeds candidate Codex-canon entries.</p><ul><li><strong>Companion HTML</strong> (<code>SYNTHESIS_&lt;date&gt;_&lt;arc&gt;.html</code>): a legible dashboard mirroring the research-layer dashboard format (<code>docs/research/*-infant-safety.visual.html</code>) — the skim layer over the prose synthesis, for a human or agent who wants the pattern at a glance. Self-contained single-file HTML, prefers-color-scheme dark, no external deps, dingbats not emoji.</li></ul><p>### 3. Next-Session Target — <code>docs/NEXT_SESSION_TARGET_&lt;YYYY-MM-DD&gt;.md</code> <em>The intended future — the pointer.</em> Sections:</p><ul><li><strong>The recommended next move</strong> (one highest-value thing, with the why).</li><li><strong>Priority ladder</strong> (P0/P1/P2…), each with enough context to start cold.</li><li><strong>Carry-forward register</strong> (inherited + newly-opened), grouped (human-only gates · successors · test/data debt · housekeeping · candidate canon).</li><li>The target file is the <em>standing</em> pointer; if priorities shift between sessions, amend <strong>this</strong> file, not the handoff.</li></ul><p>### 4. Governance factual refresh <em>Keep the policy floor honest.</em> Update wherever the session changed a fact the maps/CLAUDE.md assert:</p><ul><li><strong>LOC counts + jurisdiction headroom</strong> in <code>CLAUDE.md</code> (the 30K-rule table) — refresh from <code>wc -l split/*</code>.</li><li><strong>Audit-gate count / list</strong> if a build gate was added (e.g. the Nth ship-gate).</li><li><strong>Module map / subsystem notes</strong> if a module's role changed.</li><li>Any persona/routing change ratified this session.</li></ul><p>"The maps win on facts; CLAUDE.md wins on rules" — so refresh the asserted facts here.</p><p>### 5. Next-session opening prompt — a copiable text box <em>The cold-start handoff to the next weaver.</em> A single <strong>fenced code block</strong> (so the Architect can copy-paste it verbatim to open the next session), carrying: the one-line recap of where we are, the next session's goal, the required-context read list (absolute paths), the required-at-start checklist, and the Architect directives in force. Lives as the final section of the <strong>handoff</strong> (artifact 1) — the established pattern. The prose around it is for the record; the box is for the paste.</p><hr><p>## Execution order</p><ol><li value="1"><strong>Verify the pre-close gate</strong> (above); state each item.</li><li value="2"><strong>Branch</strong> off fresh <code>main</code>: <code>claude/session-close-&lt;YYYY-MM-DD&gt;-*</code>.</li><li value="3"><strong>Write/refresh the artifacts.</strong> Handoff (incl. the copiable opening-prompt box) + next-target always; synthesis <code>.md</code> + companion <code>.html</code> if warranted; governance refresh if facts moved.</li><li value="4"><strong>Self-check:</strong> <code>pnpm build</code> clean (docs changes don't break the build; the version-bump + generated docs are expected churn — commit them or discard per the build-artifact convention), links resolve, the synthesis HTML parses (balanced tags) + has no emoji (dingbats ✓/⚑/✗ OK), LOC numbers match <code>wc -l</code>.</li><li value="5"><strong>Commit</strong> (<code>docs: session-close &lt;date&gt; — …</code>), <strong>push</strong>, open a <strong>draft</strong> docs PR.</li><li value="6"><strong>Gate:</strong> docs-only → Governor code-audit <strong>waived</strong> (state it); Cipher Edict V optional for docs-only (state the call). Mark ready.</li><li value="7"><strong>Merge</strong> (Architect's call, or pre-authorized for docs-only close).</li><li value="8"><strong>Final hygiene:</strong> unsubscribe any PR activity; confirm both repos clean on synced <code>main</code>; note any stale remote branches for the housekeeping carry-forward.</li></ol><hr><p>## Carry-forward discipline</p><p>A carry-forward is a promise. Every open thread at close lands in the <strong>next-target register</strong> with enough context to resume cold. Categories:</p><ul><li><strong>Human-only / Architect gates</strong> (e.g. AT smoke-pass on real devices).</li><li><strong>Successors</strong> (the next phase of in-flight work — e.g. Phase γ after P1a-β).</li><li><strong>Test / data debt.</strong></li><li><strong>Housekeeping</strong> (stale branches, etc.).</li><li><strong>Candidate Codex-canon entries</strong> (patterns surfaced, not yet ratified).</li></ul><hr><p>## Codex reconciliation note</p><p>If the session made Architect-waiver edits to <code>.claude/agents/*</code> or <code>.claude/skills/*</code> on the SproutLab side while Codex was unreachable, record a <strong>Codex canon-reconciliation</strong> carry-forward so the canonical bodies are reconciled when Codex is next reachable (per canon-cc-026).</p><hr><p><em>— Lyra. A session closes clean when the next weaver needs no archaeology: the record is written, the pointer is set, the facts are true, and the opening prompt is one copy away.</em></p>
+  </main>
+</div>
+<script>
+  var btn=document.getElementById('themeBtn');
+  btn.addEventListener('click',function(){var d=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',d?'':'dark');btn.textContent=d?'◐ Dark':'◐ Light';});
+</script>
+</body>
+</html>

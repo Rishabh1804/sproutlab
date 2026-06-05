@@ -291,16 +291,11 @@ The fallback engages for offline parents (in-flight), blocked CDNs, or HTML cach
 
 ### Icon System
 
-**zi() — Ziva Sketch icon set.** 54 custom SVG symbols defined as a `<symbol>` sprite in `template.html`. Rendered via the `zi(name)` helper function which returns `<svg class="zi"><use href="#zi-{name}"/></svg>`.
+**zi() — Ziva Sketch icon set.** Custom SVG symbols defined as `<symbol>` sprites in `template.html`, in two namespaces:
+- **`zi-` — general icons**, rendered via the `zi(name)` helper → `<svg class="zi"><use href="#zi-{name}"/></svg>`.
+- **`zif-` — food icons**, rendered via the food-icon path in `diet.js` → `<svg class="zif" style="--zif-c:…"><use href="#zif-{name}"/></svg>` (carries a per-food colour; falls back to `zi('bowl')`).
 
-Available icons (54):
-```
-baby balloon bars bell bolt book bowl brain bulb camera chart chat check
-chef clock crystal diaper dot-red drop flame flask halfcircle handshake
-hourglass info link list lotus medical moon note palette party pill
-rainbow ruler run scale scope shield siren sleep sparkle spoon sprout
-star steth sun syringe target timer trophy warn zzz
-```
+**The authoritative, drift-proof list is the auto-generated gallery — [`docs/ICON_REFERENCE.html`](ICON_REFERENCE.html)**, regenerated every build from the sprite by `split/build-icon-reference.mjs`, so the count and names cannot go stale. Consult it for the live set before adding or reusing an icon; do **not** hand-maintain a list here. *(This section once hard-coded "54" and silently drifted to ~4× that as the sprite grew — hence the generated reference.)*
 
 Icon sizing via tokens: `--icon-xs(12) --icon-sm(14) --icon-base(16) --icon-md(18) --icon-lg(22)`
 

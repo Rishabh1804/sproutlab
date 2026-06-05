@@ -1,6 +1,6 @@
 # SproutLab — Build QA Gate Spec
 **Created:** 9 April 2026
-**Updated:** 22 May 2026 — added Gate 2.5 (canon-cc-008 Governor audit chain)
+**Updated:** 5 June 2026 — Gate 2.5 routing updated for canon-gen-001 (three Governors; engine/render split; `qa-route` oracle); icon validation now reads the generated `ICON_REFERENCE.html` instead of a hard-coded list. *(22 May 2026 — added Gate 2.5.)*
 **Applies to:** Every SproutLab build session
 **Philosophy:** The user never asks for a QA audit. Code is not presented until it passes.
 
@@ -108,7 +108,7 @@ These checks are **run as bash commands**, not mental checks. The builder must e
 
 ```
 CHECKS:
-1. zi() icon validation     — every zi('name') cross-referenced against the 52-icon set
+1. zi() icon validation     — every zi('name') cross-referenced against the live sprite ids in template.html (NOT a hard-coded list — see docs/ICON_REFERENCE.html); zif- food icons resolve via recipeFoodIcon()
 2. Attribute escaping       — every data-arg with JSON uses escHtml (escapes " since #107; JSON.stringify neutralises \n before escHtml runs). The _alAttrSafe helper was retired in #109/V-K-47.
 3. XSS: escHtml             — all user-originated text in innerHTML passes through escHtml()
 4. No emojis                — Unicode range grep (U+1F300–1F9FF, U+2600–27BF)
@@ -169,13 +169,21 @@ the 30K-Rule QA chain. It is mandatory for every Capital change (any edit
 under `split/`). A draft PR may be opened first, but it stays draft until
 this gate clears.
 
+**Post canon-gen-001 (2026-05-23): three Governors, split at the data→render boundary.**
+
 | Step | Who | Trigger |
 |------|-----|---------|
 | Care audit | **Maren** (Mode-1 subagent) | diff touches `home.js` / `diet.js` / `medical.js` |
-| Intelligence audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-*.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` |
-| Shared-module review | **both** Governors | diff touches `styles.css` / `template.html` |
+| Intelligence-engine audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-isl/qa/qa-handlers/illness/correlate/caretickets.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` |
+| Surfacing-render audit | **Vela** (Mode-1 subagent) | diff touches `intelligence-cards.js` / `intelligence-quicklog.js` |
+| Engine **+** render | **both Kael and Vela** (parallel) | diff spans both Regions |
+| Shared-module review | **all three** Governors — sequential triple-jurisdiction (rotation Maren → Kael → Vela, first-Governor by heaviest-touched Region) | diff touches `styles.css` / `template.html` |
 | Synthesis | **Lyra** | always — fold Governor findings into fixes |
-| Edict V final-pass | **Cipher** | always — cross-cutting sign-off |
+| Edict V final-pass | **Cipher** (Censor of Cluster A) | always — cross-cutting sign-off |
+
+**`pnpm qa-route`** computes the summon-set from the diff — file-level routing **plus** cross-province ripple traced through the graph's `calls` edges. It is **advisory**: it widens the set, never narrows it, and **does not discharge the gate**. The gate is discharged only by summoning the named Governors and running Cipher's final-pass. The four-Scribe detail (canon-proc-006) may parallelize recon/checks under any companion, but Scribes never sign or gate.
+
+> **Unmapped:** `recipes.js` is not yet in `qa-route.sh`'s `MODULE_PROVINCE` map (it falls through to "flag to Lyra"). Until its Governor is settled in both `qa-route.sh` and `CLAUDE.md`, route a `recipes.js` diff to Lyra to assign.
 
 **Gate 2.5 passes when:** every touched-jurisdiction Governor has audited,
 Lyra has synthesized the findings, and Cipher has returned an `LGTM` or
@@ -254,11 +262,12 @@ The builder adapts this template for each session. The specific checks vary by f
 ```bash
 echo "═══════════════ GATE 2: MECHANICAL ═══════════════"
 
-echo "── 1. zi() icon validation ──"
-VALID="baby balloon bars bell bolt book bowl brain bulb camera chart chat check chef clock crystal diaper dot-red drop flame flask halfcircle handshake hourglass info link list lotus medical moon note palette party pill rainbow ruler run scale scope shield siren sleep sparkle spoon sprout star steth sun syringe target timer trophy warn zzz"
+echo "── 1. zi() icon validation (derive VALID from the live sprite — never hard-code) ──"
+VALID=$(grep -oE '<symbol[^>]*id="zi-[^"]+"' split/template.html | grep -oE 'zi-[^"]+' | sed 's/zi-//' | sort -u)
 grep -oP "zi\('\K[^']+" $FILE | sort -u | while read icon; do
-  echo "$VALID" | grep -qw "$icon" && echo "  ✓ $icon" || echo "  ✗ $icon — INVALID"
+  echo "$VALID" | grep -qw "$icon" && echo "  ✓ $icon" || echo "  ✗ $icon — INVALID (not in sprite — see docs/ICON_REFERENCE.html)"
 done
+# zif- food icons use a separate namespace, resolved via recipeFoodIcon(); validate against zif- sprite ids if the diff touches food rendering.
 
 echo "── 2. Attribute escaping (JSON in data-arg) ──"
 grep 'data-arg=.*JSON\|data-arg=.*stringify\|data-arg=.*payload' $FILE | grep -v '_alAttrSafe\|_attrSafe\|escHtml' && echo "  ✗ UNESCAPED JSON" || echo "  ✓ PASS"
@@ -334,7 +343,7 @@ grep 'font-family' $CSS | grep -v 'Nunito\|Fraunces' || echo "  ✓ PASS"
 | Past failure | Which gate catches it | How |
 |---|---|---|
 | `escHtml` doesn't escape `"` → broken data-arg | Gate 1 | Dependency scan: "using escHtml for attribute context — need to verify implementation" |
-| `zi('lightbulb')` not in icon set → broken SVG | Gate 2 Layer 1 | Bash grep against 52-icon list |
+| `zi('lightbulb')` not in icon set → broken SVG (e.g. the `chart-up`/`face`/`hospital` blanks fixed in #239) | Gate 2 Layer 1 | Bash grep against the live sprite ids (derived, not hard-coded) |
 | Wrong CSS tokens (`--sage-50`, `--sp-1`) → unstyled elements | Gate 2 Layer 1 | Token validation grep |
 | Missing dark mode for `:active` state | Gate 2 Layer 1 | Dark mode coverage check |
 | Timer not cancelled on re-trigger → premature dismiss | Gate 2 Layer 2 | Timer lifecycle check |

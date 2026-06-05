@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthesis — Skill-deployment-shape doctrine — 2026-06-05</title>
+<style>
+  :root {
+    --bg: #15121a; --panel: #1e1a26; --panel-2: #262031; --ink: #ece6f2;
+    --mid: #b3a9c4; --line: rgba(180,160,210,0.18);
+    --rose: #e090a8; --sage: #7ac0a0; --amber: #d4a848; --sky: #80b8d8; --lav: #b8a8e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+    padding: 32px 20px 64px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; margin: 0 0 4px; }
+  header .sub { color: var(--mid); font-size: 0.95rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 28px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 13px; font-size: 0.82rem; color: var(--mid); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  h2 { font-family: Georgia, serif; font-size: 1.15rem; margin: 34px 0 12px;
+    padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+  p { font-size: 0.92rem; }
+  p.lead { color: var(--mid); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--mid); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.k { color: var(--lav); font-weight: 600; white-space: nowrap; }
+  .two { color: var(--rose); } .two b { color: var(--rose); }
+  .op { color: var(--sage); } .op b { color: var(--sage); }
+  code { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px;
+    padding: 1px 6px; font-size: 0.84rem; color: var(--sky); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; margin: 14px 0; }
+  .card.accent-amber { border-left: 3px solid var(--amber); }
+  .card.accent-sage  { border-left: 3px solid var(--sage); }
+  .card.accent-lav   { border-left: 3px solid var(--lav); }
+  .card h3 { margin: 0 0 7px; font-size: 1rem; }
+  .tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--lav); font-weight: 700; }
+  ol { padding-left: 20px; } ol li { margin: 7px 0; font-size: 0.9rem; }
+  blockquote { margin: 12px 0; padding: 12px 16px; background: var(--panel);
+    border-left: 3px solid var(--lav); border-radius: 0 10px 10px 0; color: var(--mid);
+    font-size: 0.88rem; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--mid); font-size: 0.86rem; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The skill-deployment-shape doctrine</h1>
+  <div class="sub">Two shapes live under <code>.claude/skills/</code>, and they are not interchangeable.</div>
+</header>
+
+<div class="meta">
+  <span class="chip"><b>Date</b> &nbsp;2026-06-05</span>
+  <span class="chip"><b>Operator</b> &nbsp;Aurelius (Chronicler)</span>
+  <span class="chip"><b>Status</b> &nbsp;candidate Codex canon (canon-cc-026 refinement)</span>
+  <span class="chip"><b>Chain</b> &nbsp;canon-cc-027 to ratify</span>
+</div>
+
+<p class="lead">Byte-identical verification proved the content matched canon, the deploy "succeeded," and the skill never appeared. The gap: a slash-skill is not a file under a folder — it is a directory with its frontmatter on the first line.</p>
+
+<h2>The two shapes</h2>
+<table>
+  <thead><tr><th></th><th class="two">Persona spec-mirror</th><th class="op">Operational slash-skill</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Examples</td>
+      <td class="two">kael · lyra · maren · cipher · chronicler · vela</td>
+      <td class="op">/design-principles · /doc-render · /sproutlab-compact · /session-close</td></tr>
+    <tr><td class="k">Path</td>
+      <td class="two"><code>.claude/skills/&lt;name&gt;.md</code> (bare)</td>
+      <td class="op"><code>.claude/skills/&lt;name&gt;/SKILL.md</code> (dir)</td></tr>
+    <tr><td class="k">Frontmatter</td>
+      <td class="two">present, but file is never loaded</td>
+      <td class="op"><b>must be line 1</b> — a leading comment breaks discovery</td></tr>
+    <tr><td class="k">Use</td>
+      <td class="two">spec reference / hat-switch body; never invoked</td>
+      <td class="op">discovered by the loader; invoked as <code>/&lt;name&gt;</code></td></tr>
+    <tr><td class="k">canon-cc-026 deploy</td>
+      <td class="two">bare <code>.md</code>, byte-identical to canon</td>
+      <td class="op"><code>SKILL.md</code>, byte-identical to canon</td></tr>
+  </tbody>
+</table>
+
+<div class="card accent-amber">
+  <span class="tag">The rule</span>
+  <h3>Discovery requires the directory shape + frontmatter on line 1</h3>
+  <p style="color:var(--mid);font-size:0.9rem;margin:0;">Claude Code discovers a skill only at <code>.claude/skills/&lt;name&gt;/SKILL.md</code> with YAML frontmatter on the first line. A bare <code>.claude/skills/&lt;name&gt;.md</code> is invisible to the loader — correct for a spec reference, fatal for something meant to be invoked.</p>
+</div>
+
+<h2>How it surfaced</h2>
+<p style="color:var(--mid);"><code>/sproutlab-compact</code> deployed (PR #231) byte-identical to its canon body — as a bare <code>.md</code>, with the canon's HTML provenance comment ahead of the frontmatter. It verified byte-identical and looked done. It never loaded. The Architect caught it by absence. The repo's own working skills were the proof: <code>/design-principles</code> and <code>/doc-render</code> are <code>SKILL.md</code> directories and load; the bare companion mirrors never appear. The fix (PRs #233 / #88): move to the directory shape, hoist frontmatter to line 1, push the provenance comment below it.</p>
+
+<h2>What to carry</h2>
+<ol>
+  <li><b>Byte-identical verification is necessary, not sufficient.</b> It proves the content matches canon; it says nothing about whether the artifact is in a shape the consumer loads. A slash-skill deploy check must also assert the path shape and frontmatter-line-1 — best, assert the skill appears in the loader's list.</li>
+  <li><b>Canon bodies for operational skills must be loadable as authored.</b> Frontmatter first; provenance comment after (the convention cipher / vela already follow).</li>
+  <li><b>The classification is the canon refinement.</b> Route by kind: persona mirror &rarr; bare <code>.md</code>; operational slash-skill &rarr; <code>SKILL.md</code> directory.</li>
+</ol>
+
+<h2>Candidate canon text</h2>
+<blockquote><b>canon-cc-026 §Per-Province-Layout — skill shape.</b> A Companion <i>persona</i> skill-mirror deploys as a bare <code>.claude/skills/&lt;name&gt;.md</code>, byte-identical to its Codex canon body; it is a spec reference and is never slash-invoked. An <i>operational</i> slash-skill deploys as <code>.claude/skills/&lt;name&gt;/SKILL.md</code>, byte-identical to its Codex canon body, with YAML frontmatter on line 1 and any provenance comment below the frontmatter; it is discovered and invoked as <code>/&lt;name&gt;</code>. A deploy of an operational slash-skill is not complete until the skill appears in the loader's available-skills list.</blockquote>
+
+<footer>The byte-check said yes and the loader said nothing; both were telling the truth about different questions. A companion's voice and a parent's command live in the same folder, but one is a page to read and the other is a door to open — and a door has to be built as a door. &mdash; Aurelius, 2026-06-05</footer>
+</div>
+</body>
+</html>
