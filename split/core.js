@@ -641,6 +641,7 @@ function init() {
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
+    else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);

@@ -11604,15 +11604,42 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background-color:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
 .recipe-chip .zif { width:15px; height:15px; }
 
-/* Expand-in-place detail (reuses .combo-*/.do/.dont/.fd-flag*) */
+/* Expand-in-place detail — the 6-second recipe template: an at-a-glance
+   ingredient row + an always-visible safety summary, then progressive-disclosure
+   rows (content invited, not dumped). */
 .recipe-detail { position:relative; z-index:1; margin-top:var(--sp-12); padding-top:var(--sp-12); border-top:1px solid var(--card-border); }
-.recipe-detail-sec { margin-bottom:var(--sp-12); }
-.recipe-detail-title { display:flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); margin-bottom:var(--sp-6); }
-.recipe-detail-title .zi { width:14px; height:14px; }
 .recipe-steps { margin:0; padding-left:var(--sp-16); }
 .recipe-steps li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
 .recipe-warn { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
-.recipe-source { font-size:var(--fs-2xs); font-style:italic; color:var(--light); margin-top:var(--sp-8); line-height:var(--lh-relaxed); }
+
+/* Safety summary — the 6-second LEAD, always visible (never collapsed, §9.7). */
+.rcp-safe { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-12) 0 var(--sp-4); padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-snug); }
+.rcp-safe .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; }
+.rcp-safe--safe { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-safe--caution { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-safe--flag { background:var(--rose-light); color:var(--tc-rose); }
+
+/* Progressive-disclosure rows (recipe-namespaced sibling of .lib-prow). */
+.rcp-prows { margin-top:var(--sp-8); }
+.rcp-prow { border-bottom:1px solid var(--card-border); }
+.rcp-prow:first-child { border-top:1px solid var(--card-border); }
+.rcp-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; border:none; background:none; cursor:pointer; text-align:left; padding:var(--sp-10) 0; font-family:'Nunito',sans-serif; min-height:44px; }
+.rcp-prow-ic { flex:0 0 auto; width:28px; height:28px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--surface-alt); color:var(--mid); }
+.rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
+.rcp-prow--safety .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.rcp-prow--source .rcp-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
+.rcp-prow-txt { flex:1; min-width:0; }
+.rcp-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.rcp-prow-d { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
+.rcp-prow-chev { flex:0 0 auto; color:var(--light); display:inline-flex; transition:transform var(--ease-fast); }
+.rcp-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.rcp-prow.open .rcp-prow-chev { transform:rotate(90deg); }
+.rcp-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.rcp-prow.open .rcp-prow-body { max-height:2400px; }
+.rcp-prow-inner { padding:0 0 var(--sp-12) 38px; }
+.rcp-prow-p { margin:0; font-size:var(--fs-2xs); font-style:italic; color:var(--light); line-height:var(--lh-relaxed); }
 
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
@@ -22054,6 +22081,7 @@ function init() {
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
+    else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
@@ -41106,50 +41134,93 @@ function _recipeIngredientSafety(name, ageMonths) {
   return h;
 }
 
-// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
-// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+// 6-second safety LEAD (§ the 6-second rule) — the single most-important safety
+// line, ALWAYS visible above the collapsed detail, never hidden behind a tap
+// (§9.7 safety-first). Derived from the SAME per-ingredient signals the full
+// Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
+// and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
+function _recipeSafetySummary(r, ageMonths) {
+  const aged = []; let agedMin = 0; const watch = [];
+  for (const ing of (r.ingredients || [])) {
+    const lower = String(ing.name).toLowerCase().trim();
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
+    const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+    if (hasFloor || allerg) watch.push(ing.name);
+  }
+  if (aged.length) return { level: 'flag', icon: 'warn',
+    text: `${[...new Set(aged)].join(', ')} — not before ${agedMin} months. See Safety below for the full guidance.` };
+  if (watch.length) return { level: 'caution', icon: 'note',
+    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  return { level: 'safe', icon: 'check',
+    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+}
+
+// A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
+// teaser (what's inside) + chevron, body collapsed until tapped. Recipe-namespaced
+// sibling of the library's .lib-prow. Toggled by data-action="toggleRecipeProw".
+// Returns '' when there's no body.
+function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return `<div class="rcp-prow rcp-prow--${variant}${open ? ' open' : ''}">`
+    + `<button class="rcp-prow-head" data-action="toggleRecipeProw">`
+    + `<span class="rcp-prow-ic">${zi(icon)}</span>`
+    + `<span class="rcp-prow-txt"><span class="rcp-prow-t">${escHtml(title)}</span>`
+    + (teaser ? `<span class="rcp-prow-d">${escHtml(teaser)}</span>` : '') + `</span>`
+    + `<span class="rcp-prow-chev">${zi('arrow-right')}</span></button>`
+    + `<div class="rcp-prow-body"><div class="rcp-prow-inner">${bodyHtml}</div></div></div>`;
+}
+
+// Expand-in-place detail body for a recipe — the 6-second template: an at-a-glance
+// ingredient row + an always-visible safety summary lead, then progressive-
+// disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
+// · Guidance) — teasers tell what's inside; content invited, not dumped.
 function _recipeDetailHtml(r, ageMonths) {
   let h = '';
-  // Ingredients (chips with food icon)
+  // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
     // §9.2/§10.5: each pill carries its OWN food-domain wash — the #216 .fdom-chip--*
-    // system (stronger than the large-card .dt-* whisper, legible at pill size).
-    // Domain via the icon-based resolver (full coverage; no flat-pill gaps).
+    // system (legible at pill size). Domain via the icon-based resolver (full coverage).
     const dom = _recipeChipDomain(ing.name);
     const fdom = dom ? ` fdom-chip--${dom}` : '';
     h += `<span class="recipe-chip${fdom}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
-  // Steps
+  // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
+  const ss = _recipeSafetySummary(r, ageMonths);
+  h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
+  let rows = '';
   if (r.steps && r.steps.length) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
-    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
-    h += '</ol></div>';
+    const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
+    const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
+    rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
   }
-  // Per-ingredient safety (Pass B — never gated)
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    let body = '<div class="combo-dos">';
+    if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) body += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    body += '</div>';
+    const nd = (r.dos ? r.dos.length : 0), nn = (r.donts ? r.donts.length : 0);
+    const teaser = [nd ? `${nd} to do` : '', nn ? `${nn} to avoid` : ''].filter(Boolean).join(' · ');
+    rows += _recipeProw('dos', 'sparkle', 'Dos & don’ts', teaser, body, false);
+  }
+  // Full per-ingredient safety stack (Pass B — never gated) — collapsed; the
+  // summary above leads, the breakdown is one tap away.
   let safety = '';
   for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
-  if (safety) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
-  } else {
-    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
-  }
-  // Dos & Don'ts (reuse the combo classes)
-  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
-    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
-    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
-    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
-    h += '</div></div>';
-  }
-  // Source citation (no assumptions)
+  if (safety) rows += _recipeProw('safety', 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
   if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
-    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
-      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
-    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+    const srcs = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean);
+    const cites = srcs.map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) rows += _recipeProw('source', 'note', 'Guidance & sources', srcs.map(s => s.org).join(' · '), `<p class="rcp-prow-p">${cites}</p>`, false);
   }
+  h += `<div class="rcp-prows">${rows}</div>`;
   return h;
 }
 
@@ -41331,6 +41402,14 @@ function toggleRecipeRow(uid) {
   const open = det.style.display !== 'none';
   det.style.display = open ? 'none' : 'block';
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Toggle a recipe detail's progressive-disclosure row (§ 6-second rule). The
+// document-level delegation dispatches the INNERMOST data-action, so tapping a
+// row never collapses the parent recipe card.
+function toggleRecipeProw(btn) {
+  const r = btn && btn.closest('.rcp-prow');
+  if (r) r.classList.toggle('open');
 }
 
 // Force-open a catalog recipe row + scroll it into view (used by the Home

@@ -849,50 +849,93 @@ function _recipeIngredientSafety(name, ageMonths) {
   return h;
 }
 
-// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
-// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+// 6-second safety LEAD (§ the 6-second rule) — the single most-important safety
+// line, ALWAYS visible above the collapsed detail, never hidden behind a tap
+// (§9.7 safety-first). Derived from the SAME per-ingredient signals the full
+// Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
+// and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
+function _recipeSafetySummary(r, ageMonths) {
+  const aged = []; let agedMin = 0; const watch = [];
+  for (const ing of (r.ingredients || [])) {
+    const lower = String(ing.name).toLowerCase().trim();
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
+    const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+    if (hasFloor || allerg) watch.push(ing.name);
+  }
+  if (aged.length) return { level: 'flag', icon: 'warn',
+    text: `${[...new Set(aged)].join(', ')} — not before ${agedMin} months. See Safety below for the full guidance.` };
+  if (watch.length) return { level: 'caution', icon: 'note',
+    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  return { level: 'safe', icon: 'check',
+    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+}
+
+// A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
+// teaser (what's inside) + chevron, body collapsed until tapped. Recipe-namespaced
+// sibling of the library's .lib-prow. Toggled by data-action="toggleRecipeProw".
+// Returns '' when there's no body.
+function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return `<div class="rcp-prow rcp-prow--${variant}${open ? ' open' : ''}">`
+    + `<button class="rcp-prow-head" data-action="toggleRecipeProw">`
+    + `<span class="rcp-prow-ic">${zi(icon)}</span>`
+    + `<span class="rcp-prow-txt"><span class="rcp-prow-t">${escHtml(title)}</span>`
+    + (teaser ? `<span class="rcp-prow-d">${escHtml(teaser)}</span>` : '') + `</span>`
+    + `<span class="rcp-prow-chev">${zi('arrow-right')}</span></button>`
+    + `<div class="rcp-prow-body"><div class="rcp-prow-inner">${bodyHtml}</div></div></div>`;
+}
+
+// Expand-in-place detail body for a recipe — the 6-second template: an at-a-glance
+// ingredient row + an always-visible safety summary lead, then progressive-
+// disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
+// · Guidance) — teasers tell what's inside; content invited, not dumped.
 function _recipeDetailHtml(r, ageMonths) {
   let h = '';
-  // Ingredients (chips with food icon)
+  // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
     // §9.2/§10.5: each pill carries its OWN food-domain wash — the #216 .fdom-chip--*
-    // system (stronger than the large-card .dt-* whisper, legible at pill size).
-    // Domain via the icon-based resolver (full coverage; no flat-pill gaps).
+    // system (legible at pill size). Domain via the icon-based resolver (full coverage).
     const dom = _recipeChipDomain(ing.name);
     const fdom = dom ? ` fdom-chip--${dom}` : '';
     h += `<span class="recipe-chip${fdom}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
-  // Steps
+  // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
+  const ss = _recipeSafetySummary(r, ageMonths);
+  h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
+  let rows = '';
   if (r.steps && r.steps.length) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
-    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
-    h += '</ol></div>';
+    const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
+    const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
+    rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
   }
-  // Per-ingredient safety (Pass B — never gated)
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    let body = '<div class="combo-dos">';
+    if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) body += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    body += '</div>';
+    const nd = (r.dos ? r.dos.length : 0), nn = (r.donts ? r.donts.length : 0);
+    const teaser = [nd ? `${nd} to do` : '', nn ? `${nn} to avoid` : ''].filter(Boolean).join(' · ');
+    rows += _recipeProw('dos', 'sparkle', 'Dos & don’ts', teaser, body, false);
+  }
+  // Full per-ingredient safety stack (Pass B — never gated) — collapsed; the
+  // summary above leads, the breakdown is one tap away.
   let safety = '';
   for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
-  if (safety) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
-  } else {
-    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
-  }
-  // Dos & Don'ts (reuse the combo classes)
-  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
-    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
-    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
-    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
-    h += '</div></div>';
-  }
-  // Source citation (no assumptions)
+  if (safety) rows += _recipeProw('safety', 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
   if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
-    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
-      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
-    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+    const srcs = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean);
+    const cites = srcs.map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) rows += _recipeProw('source', 'note', 'Guidance & sources', srcs.map(s => s.org).join(' · '), `<p class="rcp-prow-p">${cites}</p>`, false);
   }
+  h += `<div class="rcp-prows">${rows}</div>`;
   return h;
 }
 
@@ -1074,6 +1117,14 @@ function toggleRecipeRow(uid) {
   const open = det.style.display !== 'none';
   det.style.display = open ? 'none' : 'block';
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Toggle a recipe detail's progressive-disclosure row (§ 6-second rule). The
+// document-level delegation dispatches the INNERMOST data-action, so tapping a
+// row never collapses the parent recipe card.
+function toggleRecipeProw(btn) {
+  const r = btn && btn.closest('.rcp-prow');
+  if (r) r.classList.toggle('open');
 }
 
 // Force-open a catalog recipe row + scroll it into view (used by the Home
