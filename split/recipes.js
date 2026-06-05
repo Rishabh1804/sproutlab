@@ -584,6 +584,26 @@ function _recipeComposeTagline(parts, seed) {
 // O(1) lookup for the tap-through dispatcher (openRecipeInTab) + render helpers.
 const RECIPES_BY_ID = RECIPES.reduce((m, r) => { m[r.id] = r; return m; }, {});
 
+// ── Responsive-feeding portion GUIDANCE by age band (Maren CONTENT) ──────────
+// The amount to OFFER at a feed — a guide, never a target. Babies self-regulate;
+// the framing must stay responsive-feeding (let appetite lead, never force).
+// Amounts cross-verified: WHO IYCF 2023 (NBK596423) + WHO/PAHO guiding principles
+// + IAP IYCF — the canonical complementary-feeding quantities:
+//   6–8 m:  2–3 tbsp per feed, building toward ~½ cup · 2–3 meals/day
+//   9–11 m: ~½ cup (125 ml) · 3–4 meals + 1–2 snacks
+//   12 m+:  ~¾–1 cup (190–250 ml) · 3–4 meals + 1–2 snacks
+// Snacks are roughly half a meal portion. Source keys map into RECIPE_SOURCES.
+const RECIPE_SERVING = [
+  { maxMonth: 8,   meal: '2–3 tbsp, building toward about ½ cup', snack: '1–2 tbsp' },
+  { maxMonth: 11,  meal: 'about ½ cup (125 ml)',                  snack: '2–3 tbsp' },
+  { maxMonth: 999, meal: 'about ¾–1 cup (190–250 ml)',           snack: 'about ½ cup' },
+];
+// Resolve the offer-amount for a recipe's slot at a given age (snacks ~half a meal).
+function _recipeServing(slot, ageMonths) {
+  const band = RECIPE_SERVING.find(b => ageMonths <= b.maxMonth) || RECIPE_SERVING[RECIPE_SERVING.length - 1];
+  return (slot === 'snack') ? band.snack : band.meal;
+}
+
 // Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so
 // consumers (diet.js renderDietRecipes, core.js openRecipeInTab) read a global.
 window.RECIPES = RECIPES;
@@ -591,3 +611,4 @@ window.RECIPES_BY_ID = RECIPES_BY_ID;
 window.RECIPE_SOURCES = RECIPE_SOURCES;
 window.recipeFoodIcon = recipeFoodIcon;
 window._recipeComposeTagline = _recipeComposeTagline;
+window._recipeServing = _recipeServing;

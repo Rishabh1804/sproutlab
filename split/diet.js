@@ -909,6 +909,18 @@ function _recipeDetailHtml(r, ageMonths) {
   // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
   const ss = _recipeSafetySummary(r, ageMonths);
   h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
+  // amount to OFFER — a guide, never a target; appetite leads. An age-gated
+  // recipe (effMin > Ziva's age) frames the portion at its own start age.
+  if (typeof _recipeServing === 'function') {
+    const ageNow = Math.floor(ageMonths);
+    const effMin = _recipeEffectiveMinAge(r);
+    const gated = effMin && effMin > ageNow;
+    const servAge = gated ? effMin : ageNow;
+    const serving = _recipeServing(r.slot, servAge);
+    const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead.</span></div>`;
+  }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
   if (r.steps && r.steps.length) {

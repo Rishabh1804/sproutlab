@@ -11612,6 +11612,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-safe--caution { background:var(--amber-light); color:var(--tc-amber); }
 .rcp-safe--flag { background:var(--rose-light); color:var(--tc-rose); }
 
+/* Serving guidance — calm, informational (responsive feeding: a guide, not an alarm). */
+.rcp-serving { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
+.rcp-serving .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; color:var(--tc-sage); }
+.rcp-serving strong { color:var(--text); font-weight:700; }
+
 /* Progressive-disclosure rows (recipe-namespaced sibling of .lib-prow). */
 .rcp-prows { margin-top:var(--sp-8); }
 .rcp-prow { border-bottom:1px solid var(--card-border); }
