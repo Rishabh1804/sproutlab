@@ -21440,15 +21440,16 @@ const RECIPES_BY_ID = RECIPES.reduce((m, r) => { m[r.id] = r; return m; }, {});
 // The amount to OFFER at a feed — a guide, never a target. Babies self-regulate;
 // the framing must stay responsive-feeding (let appetite lead, never force).
 // Amounts cross-verified: WHO IYCF 2023 (NBK596423) + WHO/PAHO guiding principles
-// + IAP IYCF — the canonical complementary-feeding quantities:
+// + IAP IYCF — the canonical complementary-feeding quantities (tbsp equivalents at
+// 1 cup = 16 tbsp ≈ 240 ml, so ½ cup ≈ 8 tbsp, ¾ cup ≈ 12 tbsp):
 //   6–8 m:  2–3 tbsp per feed, building toward ~½ cup · 2–3 meals/day
-//   9–11 m: ~½ cup (125 ml) · 3–4 meals + 1–2 snacks
-//   12 m+:  ~¾–1 cup (190–250 ml) · 3–4 meals + 1–2 snacks
+//   9–11 m: ~½ cup (≈ 8 tbsp · 125 ml) · 3–4 meals + 1–2 snacks
+//   12 m+:  ~¾–1 cup (≈ 12–16 tbsp · 190–250 ml) · 3–4 meals + 1–2 snacks
 // Snacks are roughly half a meal portion. Source keys map into RECIPE_SOURCES.
 const RECIPE_SERVING = [
-  { maxMonth: 8,   meal: '2–3 tbsp, building toward about ½ cup', snack: '1–2 tbsp' },
-  { maxMonth: 11,  meal: 'about ½ cup (125 ml)',                  snack: '2–3 tbsp' },
-  { maxMonth: 999, meal: 'about ¾–1 cup (190–250 ml)',           snack: 'about ½ cup' },
+  { maxMonth: 8,   meal: '2–3 tbsp, building toward about ½ cup (≈ 8 tbsp)', snack: '1–2 tbsp' },
+  { maxMonth: 11,  meal: 'about ½ cup (≈ 8 tbsp · 125 ml)',                  snack: '2–3 tbsp' },
+  { maxMonth: 999, meal: 'about ¾–1 cup (≈ 12–16 tbsp · 190–250 ml)',       snack: 'about ½ cup (≈ 8 tbsp)' },
 ];
 // Resolve the offer-amount for a recipe's slot at a given age (snacks ~half a meal).
 function _recipeServing(slot, ageMonths) {
