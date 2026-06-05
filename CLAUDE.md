@@ -42,6 +42,15 @@ Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/d
 
 **Full invocation procedure:** `invocation.md` — per-Companion modes, brief shape, the Scribe Worker Tier, the canon-cc-008 invocation sequence, and a routing quick reference.
 
+### Session-lifecycle skills (operational, not Companion mirrors)
+
+Two utility slash-skills bookend a session. They are Codex-canon-homed (`docs/specs/skills/`) and deploy byte-identical to the loadable `SKILL.md` directory shape per canon-cc-026 — invocable, not persona mirrors:
+
+| Skill | When | What it does |
+|-------|------|--------------|
+| **`/sproutlab-compact`** (`.claude/skills/sproutlab-compact/SKILL.md`) | BEFORE `/compact` on a long session | Writes a graph-anchored, ephemeral `/tmp` resume handoff (PR/branch state, next action, the canon-cc-008 summon-set, file→symbol anchors) so post-compact work resumes precisely, then hands back to `/compact`. A convenience ritual — does **not** discharge canon-cc-008. |
+| **`/session-close`** (`.claude/skills/session-close/SKILL.md`) | At the END of a session, after work is merged | Runs the close sequence — pre-close gate → five close artifacts (handoff + next-session target, synthesis-if-warranted, governance/facts refresh, copiable opening prompt) → lands them as a docs-only PR. Portable skeleton that **defers to [`docs/SESSION_CLOSE_SEQUENCE.md`](docs/SESSION_CLOSE_SEQUENCE.md)** as the authoritative local floor. |
+
 ## QA Chain — Mandatory Pre-Merge Gate (canon-cc-008)
 
 **NON-NEGOTIABLE. This is a release gate, not a guideline.** Every SproutLab
