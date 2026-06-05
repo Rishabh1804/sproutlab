@@ -690,6 +690,25 @@ function _recipeFpDomain(name) {
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
   return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
 }
+// Ingredient → food-domain key for the §10.5 .fdom-chip whisper (the #216 library
+// chip system: grains/fruits/vegs/dairy/nuts/spices/nonveg). ICON-based so chip
+// coverage matches the chip glyph itself — classifyFoodToGroup's FOOD_TAX substring
+// keys miss 'oats' entirely and mis-snap 'honey' onto 'honeydew' → fruits. The
+// fingerprint map splits legume from grain (for the stripe); .fdom folds them back
+// (FOOD_TAX has no legume domain). Trace icons (fats/spices/sweeteners) carry no
+// fingerprint domain → mapped here. Falls back to classifyFoodToGroup, then null.
+const _RECIPE_FP_TO_FDOM = { grain: 'grains', legume: 'grains', veg: 'vegs', fruit: 'fruits', dairy: 'dairy', nuts: 'nuts', protein: 'nonveg' };
+const _RECIPE_TRACE_FDOM = { ghee: 'dairy', oil: 'spices', turmeric: 'spices', cinnamon: 'spices', cumin: 'spices', coriander: 'spices', mint: 'spices', ginger: 'spices', jaggery: 'spices', honey: 'spices' };
+function _recipeChipDomain(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  if (ic) {
+    const fp = _RECIPE_FP_BY_ICON[ic.icon];
+    if (fp && _RECIPE_FP_TO_FDOM[fp]) return _RECIPE_FP_TO_FDOM[fp];
+    if (_RECIPE_TRACE_FDOM[ic.icon]) return _RECIPE_TRACE_FDOM[ic.icon];
+  }
+  const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  return (cls && cls.group) ? cls.group : null;
+}
 // Build the weighted fingerprint: { stripe, fadeL, fadeD, ranked } or null.
 function _recipeFingerprint(r) {
   const prim = (r.ingredients || []).filter(i => !_recipeIsTrace(i.name) && _recipeFpDomain(i.name));
@@ -839,12 +858,12 @@ function _recipeDetailHtml(r, ageMonths) {
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
-    // §9.2: each pill carries its OWN food-domain whisper fade (dt-*), never flat.
-    // cls.group is a controlled FOOD_TAX pid (grains/fruits/vegs/dairy/nuts/spices/
-    // nonveg) — each has a matching .dt-* rule; unclassified → flat fallback.
-    const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(ing.name) : null;
-    const dt = (cls && cls.group) ? ` dt-${cls.group}` : '';
-    h += `<span class="recipe-chip${dt}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+    // §9.2/§10.5: each pill carries its OWN food-domain wash — the #216 .fdom-chip--*
+    // system (stronger than the large-card .dt-* whisper, legible at pill size).
+    // Domain via the icon-based resolver (full coverage; no flat-pill gaps).
+    const dom = _recipeChipDomain(ing.name);
+    const fdom = dom ? ` fdom-chip--${dom}` : '';
+    h += `<span class="recipe-chip${fdom}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
   // Steps
