@@ -11189,7 +11189,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-group-title { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
 .recipe-group-count { font-size:var(--fs-xs); color:var(--light); font-weight:600; }
 
-.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
+/* background-COLOR (not the `background` shorthand) so the .dt-* domain whisper
+   background-image layers over the card base in BOTH themes — the shorthand reset
+   background-image:none, which (at equal specificity, source-order winning) killed
+   the whisper in light mode while dark survived on [data-theme] specificity. */
+.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background-color:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
 .recipe-row:hover, .recipe-row:focus-visible { box-shadow:0 4px 18px var(--shadow); }
 .recipe-row[aria-expanded="true"] { box-shadow:0 6px 22px var(--shadow); }
 .recipe-row-top { position:relative; z-index:1; display:flex; align-items:center; gap:var(--sp-10); }
