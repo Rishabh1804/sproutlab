@@ -6,9 +6,12 @@
 // tokens inline, light + dark, a section TOC from the ## headings — the same house style as
 // build-design-principles.mjs (the worked instance). To add a doc, append to DOCS below.
 //
-// Renderer is the worked instance's, with two hardening tweaks for denser docs: a collision-safe
-// code-span placeholder (the worked instance's space-digit-space sentinel can clash with bare numbers
-// like "30K"/"2.5"), and inline *italic* support (these docs use it; bold-only would leak asterisks).
+// Renderer is the worked instance's, with hardening for denser/arbitrary docs: a collision-safe NUL
+// code-span sentinel (the worked instance's space-digit-space one can clash with bare numbers like
+// "30K"/"2.5"), inline *italic* support, ordered-list ordinals preserved via <li value=N>, and a link
+// protocol allow-list (http(s)/mailto/#/relative only; javascript:/data: dropped).
+// Known coverage gaps (fine for the current corpus; mind them before adding a doc that uses them):
+// no nested/indented lists (they flatten), no inline images, no HTML passthrough.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,7 +35,10 @@ function inline(s) {
   s = esc(s);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/\*(\S[^*\n]*?\S|\S)\*/g, '<em>$1</em>');           // *italic* (no leading/trailing space)
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, u) => '<a href="' + esc(u) + '">' + esc(t) + '</a>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, u) => {       // links — protocol allow-list (Cipher: drop javascript:/data: etc.)
+    const url = u.trim(), safe = /^(https?:\/\/|mailto:|#)/i.test(url) || !url.includes(':');
+    return safe ? '<a href="' + esc(url) + '">' + esc(t) + '</a>' : esc(t);
+  });
   s = s.replace(/\u0000(\d+)\u0000/g, (m, idx) => '<code>' + esc(codes[idx]) + '</code>');
   return s;
 }
