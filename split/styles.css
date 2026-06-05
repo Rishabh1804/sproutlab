@@ -62,11 +62,7 @@
   --amber-light:#fef6e8;
   --tc-amber:   #8a6520;
   --tc-indigo:  #4a5080;
-  /* Diet→Recipes: the peach-domain text/accent token. Was referenced
-     (.meal-time-input:focus) but never defined — defining it here closes the
-     dangling reference and retires the recipes-tab stripe's deep-peach literal
-     (#df9356) per docs/design/recipes-tab/SESSION_HANDOFF.md. */
-  --tc-peach:   #cf7a3e;
+  --tc-peach:   #9a5f30;   /* v1.4 — peach text-on-wash, defined for the food-domain vegetables chip (.fdom-chip--vegs, §10.5). Retires the long-standing dangling reference. */
   /* Polish-4: tonal variants + border-accents (token-family naming rule per
      DESIGN_PRINCIPLES.md). 9 tokens introduced; substitution sweep ships
      in same PR per spec-amendment-in-substitution-PR doctrine candidate. */
@@ -5308,10 +5304,10 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   --tc-sky:    #80b8d8;
   --tc-warn:   #d4b040;
   --tc-danger: #f09090;
-  --tc-peach:  #e8a86a;
   --tc-caution:#e8b870;
   --tc-amber:  #d4a848;
   --tc-indigo: #a0b0e0;
+  --tc-peach:  #e8b488;   /* v1.4 — peach text-on-wash, dark theme (§10.5). */
   --surface-danger:  rgba(242,168,184,0.08);
   --surface-warn:    rgba(255,193,7,0.06);
   --surface-warn-grad: linear-gradient(135deg, rgba(255,193,7,0.08), rgba(255,193,7,0.04));
@@ -11098,6 +11094,371 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 [data-theme="dark"] .food-lib-card { background:rgba(255,255,255,0.04); }
 [data-theme="dark"] .fd-chip { background:rgba(255,255,255,0.08); }
 
+/* ════════════════════════════════════════════════════════════════════════
+   Diet → Library redesign (food-effects-v2) — the living shelf.
+   Two wings (Browse foods / Safety guides), collapsible polarity shelves of
+   living books (journey + EP voice + food-domain whisper), expand-in-place
+   detail (reuses .enc-form / .cons-severe / .enc-emergency for content), and
+   the Emergency Deck. Detail floor renders via _libBuildGuide. Design record:
+   docs/design/library-redesign/ (S4–S8). All tokens; no raw hex.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* wing control */
+.lib-wings { display:flex; gap:var(--sp-4); background:var(--surface-alt); border-radius:var(--r-2xl); padding:var(--sp-4); margin-bottom:var(--sp-16); }
+.lib-wing { flex:1; padding:var(--sp-10) var(--sp-8); min-height:36px; border:none; border-radius:var(--r-2xl); background:transparent; cursor:pointer; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:700; color:var(--mid); display:flex; align-items:center; justify-content:center; gap:var(--sp-6); white-space:nowrap; transition:all var(--ease-fast); }
+.lib-wing--active { background:var(--card-bg); color:var(--tc-sage); box-shadow:0 2px 10px var(--shadow); }
+.lib-wing .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-wing-in { animation:fadeUp var(--ease-med) both; }
+
+/* emergency entry — pinned, loud-but-calm; opens the deck */
+.emerg-entry { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-2xl); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 3px 14px var(--shadow); margin-bottom:var(--sp-20); }
+.emerg-entry-icon { flex:0 0 auto; width:40px; height:40px; border-radius:var(--r-full); background:var(--tc-rose); color:var(--card-bg); display:flex; align-items:center; justify-content:center; }
+.emerg-entry-icon .zi { width:var(--icon-lg); height:var(--icon-lg); }
+.emerg-entry-txt { flex:1; min-width:0; }
+.emerg-entry-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); line-height:var(--lh-snug); }
+.emerg-entry-sub { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+.emerg-entry-go { flex:0 0 auto; align-self:center; color:var(--tc-rose); }
+.emerg-entry-go .zi { width:var(--icon-md); height:var(--icon-md); }
+
+/* collapsible section header (shared by Browse shelves + Safety guides) */
+.lib-group { margin-bottom:var(--sp-16); }
+.lib-group-label { display:flex; align-items:center; gap:var(--sp-8); width:100%; border:none; background:transparent; cursor:pointer; text-align:left; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); line-height:var(--lh-snug); margin:var(--sp-12) 0 var(--sp-10); padding:var(--sp-4); min-height:36px; color:var(--text); }
+.lib-group-label .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+.lib-group-count { margin-left:auto; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); opacity:0.7; }
+.lib-group-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+.lib-group-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-group.open .lib-group-chev { transform:rotate(90deg); }
+.lib-group--guide .lib-group-chev { margin-left:auto; }
+.lib-group--encourage .lib-group-label, .lib-group--sage  .lib-group-label { color:var(--tc-sage); }
+.lib-group--conditional .lib-group-label, .lib-group--amber .lib-group-label { color:var(--tc-amber); }
+.lib-group--warn .lib-group-label, .lib-group--rose .lib-group-label { color:var(--tc-rose); }
+.lib-group--inform .lib-group-label, .lib-group--sky .lib-group-label { color:var(--tc-sky); }
+.lib-group--lav .lib-group-label { color:var(--tc-lav); }
+.lib-shelf-row { display:flex; flex-direction:column; gap:var(--sp-10); }
+.lib-group:not(.open) .lib-shelf-row { display:none; }
+.lib-group.open .lib-shelf-row { animation:fadeUp var(--ease-med) both; }
+
+/* the living book row */
+.lib-book-wrap { display:flex; flex-direction:column; }
+.lib-book { display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); min-height:44px; box-shadow:0 1px 8px var(--shadow); cursor:pointer; background-color:var(--card-bg); border:none; border-left:3px solid var(--mid); transition:box-shadow var(--ease-fast); }
+.lib-book:hover, .lib-book.expanded { box-shadow:0 3px 18px var(--shadow); }
+.lib-book--encourage   { border-left-color:var(--sage); }
+.lib-book--conditional { border-left-color:var(--amber); }
+.lib-book--warn        { border-left-color:var(--rose); }
+.lib-book--inform      { border-left-color:var(--sky); }
+.lib-book--lav         { border-left-color:var(--lavender); }
+.lib-book-body { flex:1; min-width:0; }
+.lib-book-title { display:block; font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+.lib-book-reg { font-weight:400; color:var(--tc-sage); font-size:var(--fs-sm); }
+.lib-book-voice { display:block; font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-snug); margin-top:1px; }
+.lib-book-glance { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); }
+.lib-book-glance .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; color:var(--tc-amber); }
+/* V-V-2 (Vela): a warn book's at-a-glance triangle is a STOP cue — rose, not amber-caution. */
+.lib-book--warn .lib-book-glance .zi { color:var(--tc-rose); }
+.lib-book-siren { flex:0 0 auto; color:var(--rose); display:flex; align-items:center; align-self:center; }
+.lib-book-siren .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.lib-book-go { flex:0 0 auto; color:var(--light); align-self:center; transition:transform var(--ease-fast); }
+.lib-book-go .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-book.expanded .lib-book-go { transform:rotate(90deg); }
+
+/* food-domain whisper (#217/#218) — light */
+.dt-grains { background-image:linear-gradient(135deg, transparent 40%, rgba(181,213,197,0.22)); }
+.dt-fruits { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+.dt-nonveg { background-image:linear-gradient(135deg, transparent 40%, rgba(242,168,184,0.22)); }
+.dt-dairy  { background-image:linear-gradient(135deg, transparent 40%, rgba(168,207,224,0.22)); }
+.dt-nuts   { background-image:linear-gradient(135deg, transparent 40%, rgba(201,184,232,0.22)); }
+.dt-spices { background-image:linear-gradient(135deg, transparent 40%, rgba(232,184,109,0.22)); }
+.dt-vegs   { background-image:linear-gradient(135deg, transparent 40%, rgba(250,212,180,0.22)); }
+/* whisper — dark (hue-swap to deep --tc tones) */
+[data-theme="dark"] .dt-grains { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,96,0.16)); }
+[data-theme="dark"] .dt-fruits { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+[data-theme="dark"] .dt-nonveg { background-image:linear-gradient(135deg, transparent 30%, rgba(158,62,82,0.18)); }
+[data-theme="dark"] .dt-dairy  { background-image:linear-gradient(135deg, transparent 30%, rgba(58,112,144,0.16)); }
+[data-theme="dark"] .dt-nuts   { background-image:linear-gradient(135deg, transparent 30%, rgba(110,94,154,0.18)); }
+[data-theme="dark"] .dt-spices { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+[data-theme="dark"] .dt-vegs   { background-image:linear-gradient(135deg, transparent 30%, rgba(138,101,32,0.18)); }
+
+/* journey channel — Receded register, a second channel beside the safety rail/siren */
+.lib-untried { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:600; font-size:var(--fs-2xs); color:var(--light); }
+.lib-untried .lib-dot { width:6px; height:6px; border-radius:var(--r-full); border:1.5px solid var(--light); }
+.lib-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); width:fit-content; font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+.lib-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.lib-journey .lib-go { width:var(--icon-xs); height:var(--icon-xs); margin-left:var(--sp-2); opacity:0.8; }
+.lib-journey--settled, .lib-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+.lib-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+.lib-book-nudge { font-size:var(--fs-sm); color:var(--tc-sage); margin-top:var(--sp-6); display:flex; align-items:center; gap:var(--sp-6); font-weight:600; }
+.lib-book-nudge .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.lib-book-nudge .lib-go { width:var(--icon-xs); height:var(--icon-xs); opacity:0.8; }
+
+/* expand-in-place detail (content reuses .enc-form / .cons-severe / .enc-emergency) */
+.lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+/* Suggested-for-Ziva lead card — the entry point the eye lands on */
+.lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
+.lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
+.lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-lead-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); line-height:var(--lh-normal); }
+.lib-lead-chips { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-10); }
+.lib-lead-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-6) var(--sp-12); min-height:36px; border:1.5px solid var(--sage); border-radius:var(--r-2xl); background:var(--card-bg); color:var(--tc-sage); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); cursor:pointer; }
+.lib-lead-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
+/* Emergency Deck — overlay of the four never-cross floors (both faces stacked) */
+.lib-deck { position:fixed; inset:0; background:rgba(20,12,16,0.55); display:none; align-items:center; justify-content:center; padding:var(--sp-32) var(--sp-12); overflow:auto; z-index:1200; }
+.lib-deck.open { display:flex; }
+.lib-deck-sheet { width:100%; max-width:460px; max-height:calc(100vh - var(--sp-32) * 2); overflow-y:auto; box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); padding:var(--sp-16); box-shadow:0 12px 50px rgba(0,0,0,0.5); }
+.lib-deck-head { position:sticky; top:0; z-index:1; background:var(--cream); display:flex; align-items:center; gap:var(--sp-10); padding-bottom:var(--sp-8); margin-bottom:var(--sp-8); }
+/* hide the quick-log FAB while a Library overlay is open so it can't clutter or
+   intercept the pinned pop-up / deck footer (the overlay sits above it at z-1200). */
+.lib-overlay-open .ql-fab { display:none; }
+.lib-deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
+.lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
+.lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.lib-deck-close .zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* ═══ Nutrient colour system — tint-fade chips, one per nutrient-domain (§10.4 DESIGN_PRINCIPLES).
+   6 nutrient-domains mapped onto 6 of the 7 house domains (peach reserved for food-domain veg). ═══ */
+.nutri-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); }
+.nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+.nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+.nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+.nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+.nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 28%, rgba(155,168,216,0.34)); color:var(--tc-indigo); }
+[data-theme="dark"] .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+[data-theme="dark"] .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+[data-theme="dark"] .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+[data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+[data-theme="dark"] .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
+
+/* ═══ Food-domain chips (§10.5) — tint-fade coloured by FOOD_TAX domain. The chip variant of
+   the .dt-* whisper. grains→sage · fruits & nonveg→rose · vegs→peach · dairy→sky · nuts→lavender · spices→amber. ═══ */
+.fdom-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); }
+.fdom-chip--grains { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+.fdom-chip--fruits { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+.fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 28%, rgba(250,212,180,0.40)); color:var(--tc-peach); }
+.fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+.fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+.fdom-chip--spices { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+[data-theme="dark"] .fdom-chip--grains { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+[data-theme="dark"] .fdom-chip--fruits { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .fdom-chip--nonveg { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+[data-theme="dark"] .fdom-chip--vegs   { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+[data-theme="dark"] .fdom-chip--dairy  { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+[data-theme="dark"] .fdom-chip--nuts   { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+[data-theme="dark"] .fdom-chip--spices { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+
+/* ═══ Food info pop-up (Read overlay) — records 09/10. Domain-whisper head + EP voice + journey,
+   safety-first body, a single Quick-Act footer, and a 3D card flip to a history/analysis face. ═══ */
+.lib-pop-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:center; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1200; }
+.lib-pop-ov.open { display:flex; }
+/* Bound the card to the viewport: head + foot pin, the body scrolls inside — so a tall
+   pop-up (cow's milk / choking) never buries the footer action below the fold. */
+.food-pop { width:100%; max-width:372px; max-height:calc(100vh - var(--sp-24) * 2); box-sizing:border-box; background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 18px 60px rgba(0,0,0,0.4); overflow:hidden; perspective:1400px; display:flex; flex-direction:column; }
+/* 3D flip — both faces share one grid cell so the card sizes to the taller face (no clip) */
+.fp-flip { flex:1 1 auto; min-height:0; display:grid; transform-style:preserve-3d; transition:transform var(--ease-slow); }
+.fp-flip > .fp-face { grid-area:1 / 1; min-height:0; min-width:0; display:flex; flex-direction:column; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.fp-back { transform:rotateY(180deg); }
+.fp-flip.flipped { transform:rotateY(180deg); }
+
+.fp-head { position:relative; flex:0 0 auto; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
+.fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
+.fp-voice { font-family:'Fraunces',serif; font-style:italic; font-weight:400; font-size:var(--fs-md); color:var(--mid); line-height:var(--lh-snug); margin-top:var(--sp-2); }
+.fp-close { position:absolute; top:var(--sp-12); right:var(--sp-12); width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--card-bg); color:var(--mid); font-size:18px; line-height:1; cursor:pointer; box-shadow:0 1px 6px var(--shadow); }
+.fp-journey { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-10); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); line-height:1; }
+.fp-journey .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.fp-journey--settled, .fp-journey--regular { background:var(--sage-light); color:var(--tc-sage); }
+.fp-journey--watching { background:var(--amber-light); color:var(--tc-amber); }
+.fp-journey--untried { background:var(--surface-alt); color:var(--light); }
+/* V-V-1 (Vela): untried uses a hollow dot (matching the shelf), not the eye that means "watching". */
+.fp-dot { width:7px; height:7px; border-radius:var(--r-full); border:1.5px solid currentColor; display:inline-block; flex:0 0 auto; }
+
+.fp-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:var(--sp-16); }
+.fp-body > * + * { margin-top:var(--sp-16); }
+.fp-sec-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-8); }
+
+.fp-flag { display:flex; align-items:flex-start; gap:var(--sp-8); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.fp-flag + .fp-flag { margin-top:var(--sp-8); }
+.fp-flag .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.fp-flag b { font-weight:800; }
+.fp-flag--encourage { background:var(--sage-light); color:var(--tc-sage); }
+.fp-flag--conditional { background:var(--amber-light); color:var(--tc-amber); }
+.fp-flag--warn { background:var(--rose-light); color:var(--tc-rose); }
+.fp-flag--inform { background:var(--sky-light); color:var(--tc-sky); }
+.fp-flag--age { background:var(--amber-light); color:var(--tc-amber); }
+
+.fp-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.fp-chip { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-size:var(--fs-2xs); font-weight:700; line-height:var(--lh-snug); }
+.fp-chip .zi { width:11px; height:11px; flex:0 0 auto; }
+.fp-chip--ok { background:var(--sage-light); color:var(--tc-sage); }
+.fp-chip--never { background:var(--rose-light); color:var(--tc-rose); }
+
+.fp-insight { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.fp-insight .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.fp-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:var(--sp-10); padding:var(--sp-24) var(--sp-16); color:var(--light); }
+.fp-empty .zi { width:30px; height:30px; }
+.fp-empty p { margin:0; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+
+.fp-foot { flex:0 0 auto; display:flex; align-items:center; gap:var(--sp-10); padding:var(--sp-12) var(--sp-16); border-top:1px solid var(--surface-alt); }
+.fp-foot-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border:none; border-radius:var(--r-2xl); background:var(--sage); color:var(--tc-sage); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; }
+.fp-foot-btn .zi { width:var(--icon-base); height:var(--icon-base); }
+.fp-foot-btn--ghost { background:var(--surface-alt); color:var(--mid); }
+.fp-foot-link { display:inline-flex; align-items:center; gap:var(--sp-4); color:var(--tc-lav); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); cursor:pointer; white-space:nowrap; }
+.fp-foot-link .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.fp-back-arrow { transform:scaleX(-1); }
+
+/* ═══ 6-second card — verdict band + progressive-disclosure rows (S11) ═══ */
+.fp-body--rows { padding:0; }
+.fp-verdict { display:flex; align-items:flex-start; gap:var(--sp-10); margin:var(--sp-16) var(--sp-16) var(--sp-12); padding:var(--sp-12) var(--sp-14); border-radius:var(--r-lg); }
+.fp-verdict .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; margin-top:2px; }
+.fp-verdict-tx { display:flex; flex-direction:column; min-width:0; }
+.fp-verdict-t { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-md); letter-spacing:-0.01em; line-height:var(--lh-snug); }
+.fp-verdict-s { font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); opacity:.9; margin-top:var(--sp-2); line-height:var(--lh-snug); }
+.fp-verdict--yes { background:var(--sage-light); color:var(--tc-sage); }
+.fp-verdict--wait { background:var(--amber-light); color:var(--tc-amber); }
+.fp-verdict--no { background:var(--rose-light); color:var(--tc-rose); }
+.fp-verdict--info { background:var(--sky-light); color:var(--tc-sky); }
+
+.lib-prows { margin-top:var(--sp-6); }
+.lib-prow { border-bottom:1px solid var(--surface-alt); }
+.lib-prow:first-child { border-top:1px solid var(--surface-alt); }
+.lib-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; border:none; background:none; cursor:pointer; text-align:left; padding:var(--sp-12) var(--sp-16); font-family:'Nunito',sans-serif; min-height:44px; }
+.lib-prow-ic { flex:0 0 auto; width:28px; height:28px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--surface-alt); color:var(--mid); }
+.lib-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.lib-prow--why .lib-prow-ic, .lib-prow--forms .lib-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
+.lib-prow--floor .lib-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.lib-prow--nutri .lib-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
+.lib-prow-txt { flex:1; min-width:0; }
+.lib-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.lib-prow--floor .lib-prow-t { color:var(--tc-rose); }
+.lib-prow-d { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
+.lib-prow-chev { flex:0 0 auto; color:var(--light); display:inline-flex; transition:transform var(--ease-fast); }
+.lib-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.lib-prow.open .lib-prow-chev { transform:rotate(90deg); }
+.lib-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+/* V-V-10: headroom so a long severeSigns list at large text-zoom can't clip the Deck button. */
+.lib-prow.open .lib-prow-body { max-height:2400px; }
+.lib-prow-inner { padding:0 var(--sp-16) var(--sp-16) 54px; }
+.lib-prow-p { margin:0; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
+.lib-prow-signs { margin:0 0 var(--sp-8); padding-left:var(--sp-16); }
+.lib-prow-signs li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-2); }
+.lib-prow-act { margin:0 0 var(--sp-10); font-size:var(--fs-xs); color:var(--tc-rose); font-weight:700; line-height:var(--lh-normal); }
+.lib-prow-deck { display:flex; align-items:center; gap:var(--sp-6); width:100%; border:none; cursor:pointer; background:var(--rose-light); color:var(--tc-rose); border-radius:var(--r-md); padding:var(--sp-8) var(--sp-10); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-xs); }
+.lib-prow-deck > span { flex:1; text-align:left; }
+.lib-prow-deck .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+/* Caution floor (V-M-224): choking + sub-acute watch lists carry AMBER chrome, not the
+   anaphylaxis rose — choking is mechanical/conditional, honey's botulism watch is sub-acute. */
+.lib-prow--caution .lib-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
+.lib-prow--caution .lib-prow-t { color:var(--tc-amber); }
+.lib-prow--caution .lib-prow-act { color:var(--tc-amber); }
+.lib-prow--caution .lib-prow-deck { background:var(--amber-light); color:var(--tc-amber); }
+
+/* ═══ "Look up any food" search — the gateway to the pop-up for any food (#3, record 10) ═══ */
+.lib-search { margin-top:var(--sp-20); }
+.lib-search-h { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--mid); margin:0 0 var(--sp-8); }
+.lib-search-input { width:100%; box-sizing:border-box; border:1.5px solid var(--border-subtle); background:var(--card-bg); color:var(--text); border-radius:var(--r-2xl); padding:var(--sp-10) var(--sp-16); min-height:44px; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); }
+.lib-search-input::placeholder { color:var(--light); }
+.lib-search-input:focus { outline:none; border-color:var(--sage); }
+.lib-search-results { display:flex; flex-direction:column; gap:var(--sp-10); margin-top:var(--sp-10); }
+.lib-search-results:empty { margin-top:0; }
+.lib-search-empty { font-size:var(--fs-sm); color:var(--light); padding:var(--sp-8) var(--sp-4); }
+.lib-book--lookup { border-left-color:var(--light); }
+
+/* ═══ Safety-guides reference cards (#5b) — light collapsible lib-group bodies. The
+   .lib-group--guide / label-colour rules already ship above; these style the body. ═══ */
+.lib-guide-inner { margin:var(--sp-6) 0 var(--sp-2); padding:var(--sp-12) var(--sp-16) var(--sp-16); border-radius:var(--r-lg); background:var(--surface-alt); }
+.lib-guide-inner > * + * { margin-top:var(--sp-12); }
+.lib-guide-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.06em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-6); }
+.lib-guide-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
+.lib-guide-why b { font-weight:800; color:var(--text); }
+.lib-guide-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.lib-guide-deck { display:flex; align-items:center; gap:var(--sp-8); width:100%; text-align:left; cursor:pointer; background:var(--rose-light); border:none; border-left:3px solid var(--rose); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); color:var(--tc-rose); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-normal); }
+.lib-guide-deck > span { flex:1; }
+.lib-guide-deck b { font-weight:800; }
+.lib-guide-deck .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; }
+
+/* ═══ Emergency Cards (emergency-protocol-v1) — deep-linked per-hazard protocol cards
+   rendered in the Deck; per-hazard chrome (anaphylaxis rose / choking·botulism amber). ═══ */
+.ecard { background:var(--cream); border-radius:var(--r-2xl); box-shadow:0 6px 26px var(--shadow); overflow:hidden; margin-bottom:var(--sp-16); scroll-margin-top:64px; }
+.ecard:last-child { margin-bottom:0; }
+.ecard.ec-focus { box-shadow:0 0 0 3px var(--rose), 0 6px 26px var(--shadow); }
+.ecard--amber.ec-focus { box-shadow:0 0 0 3px var(--amber), 0 6px 26px var(--shadow); }
+.ec-head { padding:var(--sp-16) var(--sp-16) var(--sp-12); background:var(--rose-light); border-bottom:3px solid var(--rose); }
+.ecard--amber .ec-head { background:var(--amber-light); border-bottom-color:var(--amber); }
+.ec-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); line-height:var(--lh-snug); }
+.ec-sub { font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--tc-rose); margin-top:var(--sp-2); }
+.ecard--amber .ec-sub { color:var(--tc-amber); }
+.ec-body { padding:var(--sp-16); }
+.ec-sec { margin-bottom:var(--sp-16); } .ec-sec:last-child { margin-bottom:0; }
+.ec-sec-h { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-2xs); letter-spacing:0.07em; text-transform:uppercase; color:var(--light); margin:0 0 var(--sp-8); }
+.ec-tempo { display:flex; align-items:flex-start; gap:var(--sp-8); background:var(--sky-light); color:var(--tc-sky); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); font-size:var(--fs-sm); font-weight:700; line-height:var(--lh-normal); margin-bottom:var(--sp-16); }
+.ec-tempo .zi { width:var(--icon-base); height:var(--icon-base); flex:0 0 auto; margin-top:1px; }
+.ec-do { background:var(--card-bg); border-radius:var(--r-lg); border-left:3px solid var(--rose); box-shadow:0 2px 12px var(--shadow); padding:var(--sp-16); }
+.ecard--amber .ec-do { border-left-color:var(--amber); }
+.ec-do-h { display:flex; align-items:center; gap:var(--sp-8); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); letter-spacing:0.04em; text-transform:uppercase; color:var(--tc-rose); margin-bottom:var(--sp-14); }
+.ecard--amber .ec-do-h { color:var(--tc-amber); }
+.ec-do-h .zi { width:var(--icon-md); height:var(--icon-md); }
+.ec-step { display:flex; gap:var(--sp-12); margin-bottom:var(--sp-14); }
+.ec-step:last-of-type { margin-bottom:0; }
+.ec-step-n { flex:0 0 auto; width:24px; height:24px; border-radius:var(--r-full); background:var(--rose); color:#fff; font-weight:800; font-size:var(--fs-sm); display:flex; align-items:center; justify-content:center; margin-top:1px; }
+.ecard--amber .ec-step-n { background:var(--tc-amber); color:#fff; }  /* V-V-1: filled badge, step order must not blur */
+.ec-step-t { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); font-weight:600; }
+.ec-step-t b { font-weight:800; } .ec-step-t i { font-style:italic; color:var(--mid); font-weight:600; }
+/* Call — the fade flow: a continuously flowing rose gradient + soft pulse */
+.ec-call { display:flex; align-items:center; justify-content:center; gap:var(--sp-8); width:100%; min-height:50px; margin-top:var(--sp-16); border:none; border-radius:var(--r-2xl); text-decoration:none; color:#fff; font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-md); cursor:pointer;
+  background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%); background-size:280% 100%;
+  animation:ecCallFlow 3.4s ease-in-out infinite, ecCallPulse 2.2s ease-in-out infinite; }
+.ec-call .zi { width:var(--icon-md); height:var(--icon-md); }
+@keyframes ecCallFlow { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+@keyframes ecCallPulse { 0%,100%{box-shadow:0 6px 18px rgba(158,62,82,0.30);} 50%{box-shadow:0 8px 30px rgba(158,62,82,0.55);} }
+@media (prefers-reduced-motion:reduce) { .ec-call { animation:none; background-position:0 50%; } }
+.ec-signs, .ec-next { margin:0; padding-left:var(--sp-16); }
+.ec-signs li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-normal); margin-bottom:var(--sp-4); }
+.ec-next li { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin-bottom:var(--sp-6); }
+.ec-next li b { color:var(--text); font-weight:800; }
+.ec-xlink { display:inline-flex; align-items:center; gap:var(--sp-6); margin-top:var(--sp-8); border:none; background:none; cursor:pointer; font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:700; color:var(--tc-amber); padding:0; }
+.ec-xlink .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.ec-docprep { display:flex; align-items:center; gap:var(--sp-10); width:100%; text-align:left; cursor:pointer; background:var(--sky-light); border:none; border-left:3px solid var(--sky); border-radius:var(--r-lg); padding:var(--sp-14) var(--sp-16); }
+.ec-docprep-ic { flex:0 0 auto; width:34px; height:34px; border-radius:var(--r-full); background:var(--tc-sky); color:var(--card-bg); display:flex; align-items:center; justify-content:center; }
+.ec-docprep-ic .zi { width:var(--icon-base); height:var(--icon-base); }
+.ec-docprep-tx { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--sp-2); }
+.ec-docprep-t { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); color:var(--tc-sky); line-height:var(--lh-snug); }
+.ec-docprep-d { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-normal); }
+.ec-docprep-go { flex:0 0 auto; color:var(--tc-sky); } .ec-docprep-go .zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* doc-prep pop-up — Read overlay above the Deck */
+.em-doc-ov { position:fixed; inset:0; background:rgba(20,12,16,0.5); display:none; align-items:center; justify-content:center; padding:var(--sp-24) var(--sp-12); overflow:auto; z-index:1300; }
+.em-doc-ov.open { display:flex; }
+.em-doc-ov .doc { width:100%; max-width:380px; background:#fff; border-radius:var(--r-2xl); box-shadow:0 20px 60px rgba(0,0,0,.4); overflow:hidden; }
+.em-doc-ov .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; }
+.em-doc-ov .doc-x { position:absolute; top:var(--sp-12); right:var(--sp-12); width:30px; height:30px; border:none; border-radius:var(--r-full); background:#f3e7ea; color:#6e5858; font-size:17px; cursor:pointer; }
+.em-doc-ov .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:34px; }
+.em-doc-ov .doc-brand b { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:#9e3e52; }
+.em-doc-ov .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
+.em-doc-ov .doc-who { font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
+.em-doc-ov .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
+.em-doc-ov .doc-row .k { flex:0 0 124px; color:#9e3e52; font-weight:800; }
+.em-doc-ov .doc-row .v { flex:1; color:#2a2020; }
+.em-doc-ov .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
+.em-doc-ov .doc-stamp em { color:#9a8a8a; font-style:normal; }
+.em-doc-ov .doc-stamp[data-stamped] { color:#9e3e52; font-weight:800; border-bottom-color:transparent; }
+.em-doc-ov .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
+.em-doc-ov .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito',sans-serif; font-size:11px; font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
+.em-doc-ov .doc-na[data-on] { background:#9e3e52; color:#fff; border-color:#9e3e52; }
+.em-doc-ov .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
+.em-doc-ov .doc-note b { color:#9e3e52; }
+.em-doc-ov .doc-actions { display:flex; gap:var(--sp-10); padding:var(--sp-12) var(--sp-20); border-top:1px solid #ecdfe2; background:#faf2f4; }
+.em-doc-ov .doc-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:42px; border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
+.em-doc-ov .doc-btn .zi { width:var(--icon-base); height:var(--icon-base); }
+.em-doc-ov .doc-btn--copy { background:#fff; color:#9e3e52; border:1.5px solid #e6b9c4; }
+.em-doc-ov .doc-btn--save { background:#9e3e52; color:#fff; }
+@media print {
+  body * { visibility:hidden; }
+  .em-doc-ov, .em-doc-ov * { visibility:visible; }
+  .em-doc-ov { position:absolute; inset:0; background:#fff; display:block; padding:0; overflow:visible; }
+  .em-doc-ov .doc { box-shadow:none; max-width:100%; }
+  .em-doc-ov .doc-x, .em-doc-ov .doc-actions { display:none; }
+}
 /* ═══════════════════════════════════════════════════════════════════════
    Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/, LOCKED.md
    05-meal-rows). Two-channel colour (DESIGN_PRINCIPLES §Tint System):

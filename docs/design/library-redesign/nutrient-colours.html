@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · NUTRIENT COLOUR SYSTEM (reference + template, food-effects-v2)
+  ─────────────────────────────────────────────────────────────────────────
+  Nutrients shouldn't read as one undifferentiated blob. This is the nutrient →
+  domain taxonomy: every nutrient maps to ONE of six nutrient-domains, each a
+  SproutLab palette colour rendered as a TINT-FADE chip (the whisper-fade
+  language, on a chip). Peach is excluded — it has no --tc text token (design
+  floor: "peach is accent-only"). indigo carries the 6th group.
+
+  NUTRI_DOMAIN (wire into data.js/core.js later; default unmapped -> neutral):
+    growth   (sage):     protein, healthy fats, MCTs, lysine
+    blood    (rose):     iron, folate, vitamin B12, copper
+    bones    (sky):      calcium, vitamin D, vitamin K, phosphorus, magnesium
+    brain    (lavender): omega-3, choline, vitamin B6, B vitamins, thiamine, vitamin B1, iodine
+    immunity (amber):    vitamin C, vitamin A, beta-carotene, zinc, selenium, vitamin E,
+                         antioxidants, quercetin, lycopene, sulforaphane, fat-soluble vitamins
+    energy   (indigo):   carbs, energy, fibre, potassium, manganese, water, natural sugars, sorbitol
+
+  The .nutri-chip / .nutri-chip--<domain> classes below are the reusable system
+  (land in styles.css when wired). Real tokens, inlined so it opens anywhere.
+-->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#fffaf7; --text:#3d2e2e; --mid:#6e5858; --light:#806c6c; --card-bg:#ffffff; --surface-alt:#fef6f0; --shadow:rgba(180,120,120,0.10);
+    --tc-sage:#3a7060; --tc-rose:#9e3e52; --tc-sky:#336580; --tc-lav:#6e5e9a; --tc-amber:#8a6520; --tc-indigo:#4a5080;
+    --sp-4:4px; --sp-6:6px; --sp-8:8px; --sp-10:10px; --sp-12:12px; --sp-16:16px; --sp-20:20px;
+    --fs-2xs:0.56rem; --fs-xs:0.65rem; --fs-sm:0.75rem; --fs-md:0.95rem; --fs-lg:1.1rem; --fs-xl:1.35rem;
+    --r-md:8px; --r-lg:12px; --r-2xl:20px; --lh-snug:1.3; --lh-normal:1.4; --harness:#cfc6bf;
+  }
+  [data-theme="dark"] {
+    --cream:#1a1520; --text:#e8e0ec; --mid:#b0a0b8; --light:#9a8aa2; --card-bg:#2a2230; --surface-alt:#221c28; --shadow:rgba(0,0,0,0.30);
+    --tc-sage:#7ac0a0; --tc-rose:#e090a8; --tc-sky:#80b8d8; --tc-lav:#b8a8e0; --tc-amber:#d4a848; --tc-indigo:#a0b0e0; --harness:#0f0b14;
+  }
+  html, body { background:var(--harness); }
+  body { margin:0; font-family:'Nunito',sans-serif; padding:28px 18px; display:flex; gap:28px; justify-content:center; align-items:flex-start; }
+  .stage { width:380px; }
+  .stage-label { font-family:'Fraunces',serif; font-weight:600; font-size:16px; color:var(--mid); text-align:center; margin:0 0 12px; }
+  [data-theme="dark"] .stage-label { color:#cfc6bf; }
+  .panel { background:var(--cream); border-radius:var(--r-2xl); padding:var(--sp-20) var(--sp-16); box-shadow:0 6px 30px var(--shadow); }
+  .panel-h { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); margin:0 0 var(--sp-4); }
+  .panel-sub { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-20); line-height:var(--lh-normal); }
+
+  .dom-row { padding:var(--sp-12) 0; border-top:1px solid var(--surface-alt); }
+  .dom-row:first-of-type { border-top:none; }
+  .dom-label { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); margin-bottom:var(--sp-8); display:flex; align-items:center; gap:var(--sp-8); }
+  .dom-dot { width:10px; height:10px; border-radius:9999px; }
+  .dom-label--growth   { color:var(--tc-sage); }  .dom-dot--growth   { background:var(--tc-sage); }
+  .dom-label--blood    { color:var(--tc-rose); }  .dom-dot--blood    { background:var(--tc-rose); }
+  .dom-label--bones    { color:var(--tc-sky); }   .dom-dot--bones    { background:var(--tc-sky); }
+  .dom-label--brain    { color:var(--tc-lav); }   .dom-dot--brain    { background:var(--tc-lav); }
+  .dom-label--immunity { color:var(--tc-amber); } .dom-dot--immunity { background:var(--tc-amber); }
+  .dom-label--energy   { color:var(--tc-indigo); }.dom-dot--energy   { background:var(--tc-indigo); }
+
+  .dom-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+
+  /* THE SYSTEM — tint-fade nutrient chips (whisper-fade language, on a chip) */
+  .nutri-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-2xl); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-2xs); }
+  .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 28%, rgba(181,213,197,0.34)); color:var(--tc-sage); }
+  .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 28%, rgba(242,168,184,0.34)); color:var(--tc-rose); }
+  .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 28%, rgba(168,207,224,0.34)); color:var(--tc-sky); }
+  .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 28%, rgba(201,184,232,0.34)); color:var(--tc-lav); }
+  .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 28%, rgba(232,184,109,0.34)); color:var(--tc-amber); }
+  .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 28%, rgba(155,168,216,0.34)); color:var(--tc-indigo); }
+  [data-theme="dark"] .nutri-chip--growth   { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,96,0.30)); }
+  [data-theme="dark"] .nutri-chip--blood    { background-image:linear-gradient(135deg, transparent 20%, rgba(158,62,82,0.30)); }
+  [data-theme="dark"] .nutri-chip--bones    { background-image:linear-gradient(135deg, transparent 20%, rgba(58,112,144,0.30)); }
+  [data-theme="dark"] .nutri-chip--brain    { background-image:linear-gradient(135deg, transparent 20%, rgba(110,94,154,0.30)); }
+  [data-theme="dark"] .nutri-chip--immunity { background-image:linear-gradient(135deg, transparent 20%, rgba(138,101,32,0.32)); }
+  [data-theme="dark"] .nutri-chip--energy   { background-image:linear-gradient(135deg, transparent 20%, rgba(74,80,128,0.34)); }
+
+  .note { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-normal); margin:var(--sp-16) 0 0; }
+</style>
+</head>
+<body>
+<script>
+  // render both themed panels from one template so light + dark never drift
+  var DOMAINS = [
+    { k:'growth',   name:'Growth',        members:['Protein','Healthy fats','MCTs','Lysine'] },
+    { k:'blood',    name:'Blood & iron',  members:['Iron','Folate','Vitamin B12','Copper'] },
+    { k:'bones',    name:'Bones',         members:['Calcium','Vitamin D','Vitamin K','Phosphorus','Magnesium'] },
+    { k:'brain',    name:'Brain',         members:['Omega-3','Choline','Vitamin B6','B vitamins','Iodine'] },
+    { k:'immunity', name:'Immunity',      members:['Vitamin C','Vitamin A','Beta-carotene','Zinc','Selenium','Vitamin E','Antioxidants'] },
+    { k:'energy',   name:'Energy & gut',  members:['Carbs','Energy','Fibre','Potassium','Manganese','Water'] }
+  ];
+  function panel() {
+    var rows = DOMAINS.map(function(d){
+      var chips = d.members.map(function(m){ return '<span class="nutri-chip nutri-chip--'+d.k+'">'+m+'</span>'; }).join('');
+      return '<div class="dom-row"><div class="dom-label dom-label--'+d.k+'"><span class="dom-dot dom-dot--'+d.k+'"></span>'+d.name+'</div><div class="dom-chips">'+chips+'</div></div>';
+    }).join('');
+    return '<div class="panel"><h1 class="panel-h">Nutrient colours</h1><p class="panel-sub">Six nutrient-domains, each a palette colour as a tint-fade chip — so a nutrient reads its meaning at a glance.</p>'+rows+'<p class="note">Tint-fade = the whisper-fade language on a chip (transparent → domain accent), with the domain’s --tc text. Peach is excluded (no --tc text token); indigo carries Energy &amp; gut.</p></div>';
+  }
+  document.write(
+    '<div class="stage"><p class="stage-label">Light</p>'+panel()+'</div>'+
+    '<div class="stage" data-theme="dark"><p class="stage-label">Dark</p>'+panel()+'</div>'
+  );
+</script>
+</body>
+</html>

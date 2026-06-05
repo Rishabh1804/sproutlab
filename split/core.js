@@ -614,6 +614,30 @@ function init() {
     else if (action === 'deleteFeedingEntry' && typeof deleteFeedingEntry === 'function') deleteFeedingEntry(arg);
     else if (action === 'switchFoodCatSub' && typeof switchFoodCatSub === 'function') switchFoodCatSub(arg, arg2);
     else if (action === 'switchDietSub' && typeof switchDietSub === 'function') switchDietSub(btn);
+    else if (action === 'switchLibWing' && typeof switchLibWing === 'function') switchLibWing(btn);
+    else if (action === 'libToggleGroup' && typeof libToggleGroup === 'function') libToggleGroup(btn);
+    else if (action === 'libOpenBook' && typeof libOpenBook === 'function') libOpenBook(btn);
+    else if (action === 'libOpenCorpus' && typeof libOpenCorpus === 'function') libOpenCorpus(btn);
+    else if (action === 'libClosePop' && typeof _libClosePop === 'function') _libClosePop();
+    else if (action === 'libClosePopSelf' && typeof _libClosePop === 'function') { if (e.target === btn) _libClosePop(); }
+    else if (action === 'popFlip' && typeof popFlip === 'function') popFlip();
+    else if (action === 'popFlipBack' && typeof popFlipBack === 'function') popFlipBack();
+    else if (action === 'libPopRow' && typeof libPopRow === 'function') libPopRow(btn);
+    else if (action === 'libPopToDeck' && typeof libPopToDeck === 'function') libPopToDeck(btn);
+    else if (action === 'libLogServing' && typeof libLogServing === 'function') libLogServing(btn);
+    else if (action === 'libOpenDeck' && typeof libOpenDeck === 'function') libOpenDeck();
+    else if (action === 'libCloseDeck' && typeof _libCloseDeck === 'function') _libCloseDeck();
+    else if (action === 'libCloseDeckSelf' && typeof _libCloseDeck === 'function') { if (e.target === btn) _libCloseDeck(); }
+    else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
+    // Emergency Cards (emergency-protocol-v1)
+    else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
+    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
+    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
+    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
+    else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
+    else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
+    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
+    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
@@ -1113,6 +1137,8 @@ function init() {
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
     else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
     else if (action === 'foodLibOnSearch' && typeof foodLibOnSearch === 'function') foodLibOnSearch(el);
+    // libLookup is input-event-only (mirrors foodLibOnSearch above); it has no click route by design.
+    else if (action === 'libLookup' && typeof libLookup === 'function') libLookup(el);
   });
 
   // ── Checkbox delegation (vacc completion multi-check) ──
@@ -3803,6 +3829,17 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
       const activePanel = document.querySelector('#tab-diet .diet-sub-panel.active');
       const innerActive = activePanel ? activePanel.id.replace('diet-sub-', '') : 'log';
       const innerIdx = DIET_INNER_ORDER.indexOf(innerActive);
+
+      // Library wing swipe (Browse <-> Guides) takes precedence within the Library
+      // sub-tab (food-effects-v2 #5); at a wing edge the gesture falls through to the
+      // inner sub-tab cycle below (Browse + swipe-right -> Log; Guides + swipe-left -> Patterns).
+      if (innerActive === 'library' && typeof switchLibWing === 'function') {
+        const gu = document.getElementById('dietLibGuides');
+        const onGuides = !!(gu && !gu.hidden);
+        if (dx < -60 && !onGuides) { switchLibWing({ getAttribute: () => 'guides' }); return; }
+        if (dx > 60 && onGuides)   { switchLibWing({ getAttribute: () => 'browse' }); return; }
+      }
+
       if (innerIdx !== -1) {
         if (dx < -60 && innerIdx < DIET_INNER_ORDER.length - 1) {
           if (typeof switchDietSub === 'function') {

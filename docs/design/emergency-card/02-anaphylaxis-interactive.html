@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+  SproutLab · EMERGENCY CARD — INTERACTIVE (Anaphylaxis, from Peanut)
+  ──────────────────────────────────────────────────────────────────
+  Live functions wired:
+   · Call 112 — animated "fade flow" gradient (continuous) + tel:112 href.
+   · "For the doctor" → opens the doc-prep as a POP-UP card (× + tap-outside).
+   · Copy → clipboard, the Notes-app-readable plain text (spec §5.1) + toast.
+   · Save / share → window.print() against a print stylesheet that isolates the doc.
+  Content is the Maren-RATIFIED v1 copy (no-injector escape, call wording, neutral
+  doc-prep, "none recorded yet" allergies). Real styles.css tokens, inlined.
+-->
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fffaf7;--warm:#fef6f0;--text:#3d2e2e;--mid:#6e5858;--light:#806c6c;--card-bg:#fff;--surface-alt:#fef6f0;
+    --sage:#b5d5c5;--sage-light:#e8f5ef;--tc-sage:#3a7060;--rose:#f2a8b8;--rose-light:#fde8ed;--tc-rose:#9e3e52;--rose-deep:#7a2c3e;
+    --amber:#e8b86d;--amber-light:#fef6e8;--tc-amber:#8a6520;--sky:#a8cfe0;--sky-light:#e8f4fa;--tc-sky:#336580;--lav:#c9b8e8;--tc-lav:#6e5e9a;
+    --shadow:rgba(180,120,120,.12);
+    --sp-2:2px;--sp-4:4px;--sp-6:6px;--sp-8:8px;--sp-10:10px;--sp-12:12px;--sp-14:14px;--sp-16:16px;--sp-20:20px;--sp-24:24px;
+    --fs-2xs:.56rem;--fs-xs:.65rem;--fs-sm:.75rem;--fs-base:.85rem;--fs-md:.95rem;--fs-lg:1.1rem;--fs-xl:1.35rem;
+    --icon-sm:14px;--icon-base:16px;--icon-md:18px;--icon-lg:22px;--r-md:8px;--r-lg:12px;--r-2xl:20px;--r-full:9999px;--lh-snug:1.3;--lh-normal:1.5;
+    --harness:#cfc6bf;
+  }
+  [data-theme="dark"]{--cream:#1a1520;--warm:#221c28;--text:#e8e0ec;--mid:#b0a0b8;--light:#9a8aa2;--card-bg:#2a2230;--surface-alt:#221c28;
+    --sage-light:#1e3028;--rose-light:#3a2030;--amber-light:#352e1e;--sky-light:#1e2838;
+    --tc-sage:#7ac0a0;--tc-rose:#e090a8;--rose-deep:#f0a6bd;--tc-amber:#d4a848;--tc-sky:#80b8d8;--tc-lav:#b8a8e0;--shadow:rgba(0,0,0,.3);--harness:#0f0b14;}
+  *{box-sizing:border-box;}
+  html,body{background:var(--harness);}
+  body{margin:0;font-family:'Nunito',sans-serif;min-height:100vh;padding:28px 16px 48px;display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .toolbar{display:flex;gap:8px;}
+  .tb-btn{font-family:'Nunito';font-weight:700;font-size:12px;color:var(--mid);background:var(--card-bg);border:1px solid var(--surface-alt);border-radius:999px;padding:6px 13px;cursor:pointer;box-shadow:0 1px 6px var(--shadow);}
+  [data-theme="dark"] .tb-btn{color:#cfc6bf;}
+  .zi{display:inline-block;vertical-align:middle;flex:0 0 auto;}
+
+  .ecard{width:392px;max-width:96vw;background:var(--cream);border-radius:var(--r-2xl);box-shadow:0 18px 60px var(--shadow);overflow:hidden;}
+  .ec-head{position:relative;padding:var(--sp-20) var(--sp-20) var(--sp-16);background:var(--rose-light);border-bottom:3px solid var(--rose);}
+  .ec-head-k{display:flex;align-items:center;gap:var(--sp-8);font-weight:800;font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;color:var(--tc-rose);}
+  .ec-head-k .zi{width:var(--icon-base);height:var(--icon-base);}
+  .ec-name{font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-xl);color:var(--text);line-height:var(--lh-snug);margin-top:var(--sp-4);}
+  .ec-sub{font-weight:700;font-size:var(--fs-sm);color:var(--tc-rose);margin-top:var(--sp-2);}
+  .ec-close{position:absolute;top:var(--sp-12);right:var(--sp-12);width:30px;height:30px;border:none;border-radius:var(--r-full);background:var(--card-bg);color:var(--mid);font-size:17px;cursor:pointer;box-shadow:0 1px 6px var(--shadow);}
+
+  .ec-body{padding:var(--sp-20) var(--sp-20) var(--sp-16);}
+  .ec-sec{margin-bottom:var(--sp-20);}
+  .ec-sec:last-child{margin-bottom:0;}
+  .ec-sec-h{font-weight:800;font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;color:var(--light);margin:0 0 var(--sp-8);}
+
+  .ec-do{background:var(--card-bg);border-radius:var(--r-lg);border-left:3px solid var(--rose);box-shadow:0 2px 12px var(--shadow);padding:var(--sp-16);}
+  .ec-do-h{display:flex;align-items:center;gap:var(--sp-8);font-weight:800;font-size:var(--fs-sm);letter-spacing:.04em;text-transform:uppercase;color:var(--tc-rose);margin-bottom:var(--sp-14);}
+  .ec-do-h .zi{width:var(--icon-md);height:var(--icon-md);}
+  .ec-step{display:flex;gap:var(--sp-12);margin-bottom:var(--sp-14);}
+  .ec-step-n{flex:0 0 auto;width:24px;height:24px;border-radius:var(--r-full);background:var(--rose);color:#fff;font-weight:800;font-size:var(--fs-sm);display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .ec-step-t{font-size:var(--fs-sm);color:var(--text);line-height:var(--lh-normal);font-weight:600;}
+  .ec-step-t b{font-weight:800;} .ec-step-t i{font-style:italic;color:var(--mid);font-weight:600;}
+
+  /* Call 112 — the FADE FLOW: a continuously flowing rose gradient + a soft pulse */
+  .ec-call{display:flex;align-items:center;justify-content:center;gap:var(--sp-8);width:100%;min-height:50px;margin-top:var(--sp-16);border:none;border-radius:var(--r-2xl);
+    text-decoration:none;color:#fff;font-family:'Nunito';font-weight:800;font-size:var(--fs-md);cursor:pointer;
+    background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%);
+    background-size:280% 100%;
+    animation:callFlow 3.4s ease-in-out infinite, callPulse 2.2s ease-in-out infinite;}
+  [data-theme="dark"] .ec-call{background:linear-gradient(110deg, #c06880, #a8506a, #8e4258, #a8506a, #c06880);background-size:280% 100%;}
+  .ec-call .zi{width:var(--icon-md);height:var(--icon-md);}
+  @keyframes callFlow{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+  @keyframes callPulse{0%,100%{box-shadow:0 6px 18px rgba(158,62,82,0.30);}50%{box-shadow:0 8px 30px rgba(158,62,82,0.55);}}
+  @media (prefers-reduced-motion:reduce){.ec-call{animation:none;background-position:0 50%;}}
+
+  .ec-signs,.ec-next{margin:0;padding-left:var(--sp-16);}
+  .ec-signs li{font-size:var(--fs-sm);color:var(--text);line-height:var(--lh-normal);margin-bottom:var(--sp-4);}
+  .ec-next li{font-size:var(--fs-sm);color:var(--mid);line-height:var(--lh-normal);margin-bottom:var(--sp-6);}
+  .ec-next li b{color:var(--text);font-weight:800;}
+  .ec-xlink{display:inline-flex;align-items:center;gap:var(--sp-6);margin-top:var(--sp-8);font-size:var(--fs-xs);font-weight:700;color:var(--tc-amber);}
+  .ec-xlink .zi{width:var(--icon-sm);height:var(--icon-sm);}
+
+  .ec-docprep{display:flex;flex-direction:column;gap:var(--sp-6);width:100%;text-align:left;cursor:pointer;background:var(--sky-light);border:none;border-left:3px solid var(--sky);border-radius:var(--r-lg);padding:var(--sp-14) var(--sp-16);}
+  .ec-docprep-row{display:flex;align-items:center;gap:var(--sp-10);}
+  .ec-docprep-ic{flex:0 0 auto;width:34px;height:34px;border-radius:var(--r-full);background:var(--tc-sky);color:var(--card-bg);display:flex;align-items:center;justify-content:center;}
+  .ec-docprep-ic .zi{width:var(--icon-base);height:var(--icon-base);}
+  .ec-docprep-t{flex:1;font-weight:800;font-size:var(--fs-sm);color:var(--tc-sky);}
+  .ec-docprep-go{flex:0 0 auto;color:var(--tc-sky);} .ec-docprep-go .zi{width:var(--icon-base);height:var(--icon-base);}
+  .ec-docprep-d{font-size:var(--fs-xs);color:var(--mid);line-height:var(--lh-normal);}
+
+  /* doc-prep POP-UP overlay */
+  .doc-ov{position:fixed;inset:0;background:rgba(20,12,16,.5);display:none;align-items:center;justify-content:center;padding:24px 14px;z-index:50;overflow:auto;}
+  .doc-ov.open{display:flex;}
+  .doc{width:100%;max-width:380px;background:#fff;border-radius:var(--r-2xl);box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden;}
+  .doc-body{padding:var(--sp-20);color:#2a2020;position:relative;}
+  .doc-x{position:absolute;top:var(--sp-12);right:var(--sp-12);width:30px;height:30px;border:none;border-radius:var(--r-full);background:#f3e7ea;color:#6e5858;font-size:17px;cursor:pointer;}
+  .doc-brand{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid #ecdfe2;padding-bottom:var(--sp-10);margin-bottom:var(--sp-12);padding-right:34px;}
+  .doc-brand b{font-family:'Fraunces',serif;font-weight:600;font-size:var(--fs-md);color:#9e3e52;}
+  .doc-brand span{font-size:var(--fs-2xs);color:#7a6a6a;font-weight:700;}
+  .doc-who{font-weight:800;font-size:var(--fs-base);color:#2a2020;margin:0 0 var(--sp-12);}
+  .doc-row{display:flex;gap:var(--sp-10);font-size:var(--fs-sm);padding:var(--sp-8) 0;border-bottom:1px solid #f0e6e9;line-height:var(--lh-normal);}
+  .doc-row .k{flex:0 0 124px;color:#9e3e52;font-weight:800;} .doc-row .v{flex:1;color:#2a2020;} .doc-row .v em{color:#9a8a8a;font-style:normal;}
+  .doc-stamp{flex:1;text-align:left;background:none;border:none;padding:0;font:inherit;color:#2a2020;cursor:pointer;border-bottom:1px dashed #d8b9c2;align-self:flex-start;}
+  .doc-stamp[data-stamped]{color:#9e3e52;font-weight:800;border-bottom-color:transparent;}
+  .doc-stamp[data-na]{color:#9a8a8a;font-weight:800;border-bottom-color:transparent;}
+  .doc-na{flex:0 0 auto;margin-left:var(--sp-8);align-self:flex-start;background:none;border:1px solid #d8b9c2;border-radius:999px;padding:2px 10px;font-family:'Nunito';font-size:11px;font-weight:800;color:#9a8a8a;cursor:pointer;line-height:1.4;}
+  .doc-na[data-on]{background:#9e3e52;color:#fff;border-color:#9e3e52;}
+  .doc-note{margin-top:var(--sp-12);font-size:var(--fs-xs);color:#3a2c2c;line-height:var(--lh-normal);background:#fdeef1;border-radius:var(--r-md);padding:var(--sp-12);}
+  .doc-note b{color:#9e3e52;}
+  .doc-actions{display:flex;gap:var(--sp-10);padding:var(--sp-12) var(--sp-20);border-top:1px solid #ecdfe2;background:#faf2f4;}
+  .doc-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-6);min-height:42px;border-radius:var(--r-2xl);font-family:'Nunito';font-weight:800;font-size:var(--fs-sm);cursor:pointer;border:none;}
+  .doc-btn .zi{width:var(--icon-base);height:var(--icon-base);}
+  .doc-btn--copy{background:#fff;color:#9e3e52;border:1.5px solid #e6b9c4;} .doc-btn--save{background:#9e3e52;color:#fff;}
+
+  .toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);background:#2a2230;color:#fff;font-weight:700;font-size:13px;padding:10px 18px;border-radius:999px;opacity:0;transition:all .25s;z-index:80;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media print{
+    body *{visibility:hidden;}
+    .doc-ov,.doc-ov *{visibility:visible;}
+    .doc-ov{position:absolute;inset:0;background:#fff;display:block;padding:0;}
+    .doc{box-shadow:none;max-width:100%;} .doc-x,.doc-actions{display:none;}
+  }
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+<symbol id="zi-siren" viewBox="0 0 24 24"><path d="M6 15v-3a6 6 0 0112 0v3" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="4" y="15" width="16" height="5" rx="2" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity=".1"/><line x1="12" y1="5" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+<symbol id="zi-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-3 2a12 12 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity=".18" stroke-linejoin="round"/></symbol>
+<symbol id="zi-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity=".1" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="zi-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity=".08"/><path d="M16 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2h3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></symbol>
+<symbol id="zi-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/></symbol>
+<symbol id="zi-warn" viewBox="0 0 24 24"><path d="M12 3L2 20h20L12 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity=".08"/><line x1="12" y1="10" x2="12" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="zi-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+
+<div class="toolbar">
+  <button class="tb-btn" id="themeBtn">◐ Dark</button>
+  <span class="tb-btn" style="cursor:default">Emergency Card · interactive · Call 112 fade-flow live</span>
+</div>
+
+<div class="ecard">
+  <div class="ec-head">
+    <button class="ec-close" title="close">&times;</button>
+    <div class="ec-head-k"><svg class="zi"><use href="#zi-siren"/></svg>In an emergency</div>
+    <div class="ec-name">Peanut</div>
+    <div class="ec-sub">Severe allergic reaction · anaphylaxis</div>
+  </div>
+  <div class="ec-body">
+    <div class="ec-sec">
+      <div class="ec-do">
+        <div class="ec-do-h"><svg class="zi"><use href="#zi-siren"/></svg>Do now</div>
+        <div class="ec-step"><span class="ec-step-n">1</span><span class="ec-step-t"><b>If you have an adrenaline auto-injector — use it now.</b> Outer thigh, hold 10 seconds. <i>(Most families won't have one — if not, go straight to step 2.)</i></span></div>
+        <div class="ec-step"><span class="ec-step-n">2</span><span class="ec-step-t"><b>Call 112</b> — tell them your baby has trouble breathing after food; say <b>&ldquo;anaphylaxis&rdquo;</b> if you can.</span></div>
+        <div class="ec-step"><span class="ec-step-n">3</span><span class="ec-step-t"><b>Lie her flat, legs raised.</b> Hard to breathe → let her sit up. Vomiting → on her side. <b>Never stand her up.</b></span></div>
+        <div class="ec-step"><span class="ec-step-n">4</span><span class="ec-step-t">No better after <b>5 minutes</b>? A second dose, if you have one.</span></div>
+        <a class="ec-call" href="tel:112"><svg class="zi"><use href="#zi-phone"/></svg>Call 112</a>
+      </div>
+    </div>
+    <div class="ec-sec">
+      <div class="ec-sec-h">Recognise — any one</div>
+      <ul class="ec-signs"><li>trouble breathing or wheezing</li><li>swelling of the face, lips, or tongue</li><li>going floppy, pale, or very sleepy</li></ul>
+      <span class="ec-xlink"><svg class="zi"><use href="#zi-warn"/></svg>Choking on it instead? See the Choking card.</span>
+    </div>
+    <div class="ec-sec">
+      <div class="ec-sec-h">After</div>
+      <ul class="ec-next"><li><b>Go to hospital even if she settles</b> — a reaction can return hours later.</li><li>Note the <b>time</b>, the <b>food</b>, and what you <b>gave</b>.</li></ul>
+    </div>
+    <button class="ec-docprep" id="docOpen">
+      <span class="ec-docprep-row"><span class="ec-docprep-ic"><svg class="zi"><use href="#zi-doc"/></svg></span><span class="ec-docprep-t">For the doctor</span><span class="ec-docprep-go"><svg class="zi"><use href="#zi-arrow-right"/></svg></span></span>
+      <span class="ec-docprep-d">A summary to copy, save, or share — food · time · symptoms · what you gave.</span>
+    </button>
+  </div>
+</div>
+
+<!-- doc-prep POP-UP -->
+<div class="doc-ov" id="docOv">
+  <div class="doc">
+    <div class="doc-body">
+      <button class="doc-x" id="docClose">&times;</button>
+      <div class="doc-brand"><b>SproutLab</b><span id="docTime">Emergency summary</span></div>
+      <p class="doc-who">Ziva Jain · 9 months · 8.1 kg</p>
+      <div class="doc-row"><span class="k">Suspected</span><span class="v">Anaphylaxis (severe allergic reaction)</span></div>
+      <div class="doc-row"><span class="k">Time of reaction</span><button class="doc-stamp" id="stampReaction"><em>tap to stamp now</em></button><button class="doc-na" data-for="stampReaction">N/A</button></div>
+      <div class="doc-row"><span class="k">Adrenaline given at</span><button class="doc-stamp" id="stampAdren"><em>tap to stamp now</em></button><button class="doc-na" data-for="stampAdren">N/A</button></div>
+      <div class="doc-row"><span class="k">Trigger food</span><span class="v">Peanut</span></div>
+      <div class="doc-row"><span class="k">Symptoms seen</span><span class="v">trouble breathing · facial swelling</span></div>
+      <div class="doc-row"><span class="k">Adrenaline given</span><span class="v">Yes / No</span></div>
+      <div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>
+      <div class="doc-note"><b>For the team:</b> suspected anaphylaxis after peanut; see the &ldquo;adrenaline given&rdquo; line; please observe for a biphasic reaction.</div>
+    </div>
+    <div class="doc-actions">
+      <button class="doc-btn doc-btn--copy" id="docCopy"><svg class="zi"><use href="#zi-copy"/></svg>Copy</button>
+      <button class="doc-btn doc-btn--save" id="docSave"><svg class="zi"><use href="#zi-share"/></svg>Save / share</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var $ = function(id){ return document.getElementById(id); };
+  // theme toggle
+  $('themeBtn').addEventListener('click', function(){
+    var d = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', d ? '' : 'dark');
+    this.textContent = d ? '◐ Dark' : '◐ Light';
+  });
+  // doc-prep pop-up open/close
+  function openDoc(){ $('docOv').classList.add('open'); }
+  function closeDoc(){ $('docOv').classList.remove('open'); }
+  $('docOpen').addEventListener('click', openDoc);
+  $('docClose').addEventListener('click', closeDoc);
+  $('docOv').addEventListener('click', function(e){ if(e.target === this) closeDoc(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDoc(); });
+
+  // toast
+  var toastT;
+  function toast(msg){ var t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('show'); },2200); }
+
+  // tap-to-stamp the time fields (a one-tap Quick act, not a text form — HR-9-clean).
+  // tap → current time; tap again → clear back to the placeholder.
+  function nowTime(){ var d=new Date(), h=d.getHours(), m=d.getMinutes(), ap=h>=12?'PM':'AM'; h=h%12||12; return h+':'+(m<10?'0':'')+m+' '+ap; }
+  // each field has THREE states: blank → stamped time → (or) N/A. The stamp button toggles
+  // blank⇄time; the N/A pill toggles N/A (clearing any stamp). N/A = deliberately not
+  // applicable (e.g. adrenaline not given), distinct from an un-filled blank.
+  function placeholder(btn){ btn.removeAttribute('data-stamped'); btn.removeAttribute('data-na'); btn.innerHTML='<em>tap to stamp now</em>'; }
+  function wireStamp(id){
+    var btn=$(id);
+    var na=document.querySelector('.doc-na[data-for="'+id+'"]');
+    btn.addEventListener('click', function(){
+      if (na) na.removeAttribute('data-on');
+      if (btn.dataset.stamped){ placeholder(btn); }
+      else { btn.removeAttribute('data-na'); btn.textContent = nowTime(); btn.dataset.stamped='1'; toast('Time stamped'); }
+    });
+    if (na) na.addEventListener('click', function(){
+      if (na.dataset.on){ na.removeAttribute('data-on'); placeholder(btn); }
+      else { na.dataset.on='1'; btn.removeAttribute('data-stamped'); btn.dataset.na='1'; btn.textContent='N/A'; toast('Marked N/A'); }
+    });
+  }
+  wireStamp('stampReaction'); wireStamp('stampAdren');
+  function stampVal(id){ var b=$(id); if (b.dataset.na) return 'N/A'; return b.dataset.stamped ? b.textContent : '____'; }
+
+  // the Notes-app-readable plain text (spec §5.1) — built live so stamped times flow through
+  function docText(){
+    return [
+      'SproutLab — Emergency summary',
+      'Ziva Jain · 9 months · 8.1 kg',
+      '',
+      'Suspected: Anaphylaxis (severe allergic reaction)',
+      'Time of reaction: ' + stampVal('stampReaction'),
+      'Adrenaline given at: ' + stampVal('stampAdren'),
+      'Trigger food: Peanut',
+      'Symptoms seen: trouble breathing, facial swelling',
+      'Adrenaline given: Yes / No',
+      'Known allergies: none recorded yet (this may be a first reaction)',
+      '',
+      'For the team: suspected anaphylaxis after peanut; see the',
+      '"adrenaline given" line; please observe for a biphasic reaction.'
+    ].join('\n');
+  }
+
+  $('docCopy').addEventListener('click', function(){
+    var text = docText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ toast('Copied for the doctor'); },
+        function(){ legacyCopy(text); });
+    } else { legacyCopy(text); }
+  });
+  function legacyCopy(text){
+    var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('Copied for the doctor'); }catch(e){ toast('Copy not supported here'); }
+    document.body.removeChild(ta);
+  }
+  $('docSave').addEventListener('click', function(){ window.print(); });
+</script>
+</body>
+</html>
