@@ -11401,6 +11401,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fp-flip > .fp-face { grid-area:1 / 1; min-height:0; min-width:0; display:flex; flex-direction:column; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 .fp-back { transform:rotateY(180deg); }
 .fp-flip.flipped { transform:rotateY(180deg); }
+/* Reduced-motion: suppress the 3D flip rotation (Vela PR#235, V-V-1) — the back doc-prep
+   face still arrives, only the spin is removed. Shared with the food-room flip. */
+@media (prefers-reduced-motion: reduce) { .fp-flip { transition:none; } }
 
 .fp-head { position:relative; flex:0 0 auto; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
 .fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
@@ -15404,7 +15407,8 @@ const GENERAL_EMERGENCIES = [
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
     severity: 'urgent', callLead: true,
     immediate: [
-      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place (EpiPen 3 seconds; if unsure, count to 10). Most families won’t have one — if not, go straight to the next step.',
+      // Hold-time: EpiPen delivers in ≤3s; parent-facing copy says "slowly count to 10" so a panicking parent guarantees the dose without arbitrating 3-vs-10 (Maren V-M-237). Kept consistent with the food-room anaphylaxis card (data.js EMERGENCY_PROTOCOL.anaphylaxis).
+      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place; slowly count to 10 to be sure. Most families won’t have one — if not, go straight to the next step.',
       'Call 112 and say “anaphylaxis”. Lay baby down and raise their legs; if breathing is hard, raise the shoulders or sit them up slightly instead; if vomiting, lay them on their side. Never stand or walk them.',
       'No better after 5 minutes, or getting worse? Give a second auto-injector — in the other thigh — if you have one.'
     ],
@@ -18476,9 +18480,11 @@ const EMERGENCY_PROTOCOL = {
       'going floppy, pale, or very sleepy',
     ],
     steps: [
-      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 3 seconds (count to 10 if you’re unsure). _(Most families won’t have one — if not, go straight to step 2.)_',
+      // Hold-time: modern auto-injectors deliver the dose in ≤3s (EpiPen/Teva). Parent-facing copy says "slowly count to 10" — this guarantees ≥3s without asking a panicking parent to arbitrate two numbers (Maren V-M-237). Over-holding a 3s device is harmless; under-holding risks an incomplete dose.
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold it in place — slowly count to 10 to be sure. _(Most families won’t have one — if not, go straight to step 2.)_',
       '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
-      '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
+      // Positioning harmonized with the General-room surface (Maren V-M-238): "raise shoulders / sit up slightly" — fully uprighting a hypotensive baby is the one posture anaphylaxis guidance warns against.
+      '**Lie her flat, legs raised.** Hard to breathe → raise her shoulders or sit her up slightly. Vomiting → on her side. **Never stand her up.**',
       'No better after **5 minutes**? A second dose, if you have one.',
     ],
     after: [
@@ -75823,7 +75829,7 @@ function _geRowHtml(e) {
 }
 
 // FRONT face — the first-aid card (reuses the .ecard / ec-* family for cross-room consistency).
-function _geCardFront(e) {
+function _geCardFront(e, pop) {
   var nums = _geNums();
   var steps = (e.immediate || []).map(function(s, i) {
     return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + escHtml(s) + '</span></div>';
@@ -75839,11 +75845,14 @@ function _geCardFront(e) {
       + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('') + '</ul>' + xlink + '</div>';
   }
   var src = '<div class="ge-src">' + escHtml('Source: ' + e.source) + '</div>';
-  var dp = '<button class="ec-docprep" data-action="cardFlip">'
+  // V-V-2 (Vela): the pinned critical card (CPR) omits the doc-prep flip so a parent
+  // mid-compression can never flip the life-saving steps out of view. Doc-prep stays on
+  // every other surface (pop cards + non-critical), where flipping away is safe.
+  var dp = (!pop && e.severity === 'critical') ? '' : ('<button class="ec-docprep" data-action="cardFlip">'
     + '<span class="ec-docprep-ic">' + zi('doc') + '</span>'
     + '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor — note &amp; share</span>'
     + '<span class="ec-docprep-d">A summary to fill, copy, or share.</span></span>'
-    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
+    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>');
   return '<div class="ecard ecard--rose ge-cardface"><div class="ec-head"><div class="ec-name">' + escHtml(e.name) + '</div></div>'
     + '<div class="ec-body">' + doNow + flags + src + dp + '</div></div>';
 }
@@ -75873,8 +75882,16 @@ function _geDocFace(e) {
 // The flip card (front + back). `pop` adds the close × (the room-level pinned card has none).
 function _geFlipCard(e, pop) {
   var x = pop ? '<button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>' : '';
+  // V-V-2 (Vela): the pinned critical card (CPR) renders front-only — no back face, no flip —
+  // so the life-saving steps can never be flipped out of view mid-compression. _geCardFront
+  // omits the doc-prep button in the same case, so there is no dangling trigger.
+  if (!pop && e.severity === 'critical') {
+    return '<div class="fp-flip">'
+      + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
+      + '</div>';
+  }
   return '<div class="fp-flip">'
-    + '<div class="fp-face fp-front">' + x + _geCardFront(e) + '</div>'
+    + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
     + '<div class="fp-face fp-back">' + x + _geDocFace(e) + '</div>'
     + '</div>';
 }

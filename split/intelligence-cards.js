@@ -1803,7 +1803,7 @@ function _geRowHtml(e) {
 }
 
 // FRONT face — the first-aid card (reuses the .ecard / ec-* family for cross-room consistency).
-function _geCardFront(e) {
+function _geCardFront(e, pop) {
   var nums = _geNums();
   var steps = (e.immediate || []).map(function(s, i) {
     return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + escHtml(s) + '</span></div>';
@@ -1819,11 +1819,14 @@ function _geCardFront(e) {
       + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('') + '</ul>' + xlink + '</div>';
   }
   var src = '<div class="ge-src">' + escHtml('Source: ' + e.source) + '</div>';
-  var dp = '<button class="ec-docprep" data-action="cardFlip">'
+  // V-V-2 (Vela): the pinned critical card (CPR) omits the doc-prep flip so a parent
+  // mid-compression can never flip the life-saving steps out of view. Doc-prep stays on
+  // every other surface (pop cards + non-critical), where flipping away is safe.
+  var dp = (!pop && e.severity === 'critical') ? '' : ('<button class="ec-docprep" data-action="cardFlip">'
     + '<span class="ec-docprep-ic">' + zi('doc') + '</span>'
     + '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor — note &amp; share</span>'
     + '<span class="ec-docprep-d">A summary to fill, copy, or share.</span></span>'
-    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
+    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>');
   return '<div class="ecard ecard--rose ge-cardface"><div class="ec-head"><div class="ec-name">' + escHtml(e.name) + '</div></div>'
     + '<div class="ec-body">' + doNow + flags + src + dp + '</div></div>';
 }
@@ -1853,8 +1856,16 @@ function _geDocFace(e) {
 // The flip card (front + back). `pop` adds the close × (the room-level pinned card has none).
 function _geFlipCard(e, pop) {
   var x = pop ? '<button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>' : '';
+  // V-V-2 (Vela): the pinned critical card (CPR) renders front-only — no back face, no flip —
+  // so the life-saving steps can never be flipped out of view mid-compression. _geCardFront
+  // omits the doc-prep button in the same case, so there is no dangling trigger.
+  if (!pop && e.severity === 'critical') {
+    return '<div class="fp-flip">'
+      + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
+      + '</div>';
+  }
   return '<div class="fp-flip">'
-    + '<div class="fp-face fp-front">' + x + _geCardFront(e) + '</div>'
+    + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
     + '<div class="fp-face fp-back">' + x + _geDocFace(e) + '</div>'
     + '</div>';
 }

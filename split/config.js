@@ -181,7 +181,8 @@ const GENERAL_EMERGENCIES = [
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
     severity: 'urgent', callLead: true,
     immediate: [
-      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place (EpiPen 3 seconds; if unsure, count to 10). Most families won’t have one — if not, go straight to the next step.',
+      // Hold-time: EpiPen delivers in ≤3s; parent-facing copy says "slowly count to 10" so a panicking parent guarantees the dose without arbitrating 3-vs-10 (Maren V-M-237). Kept consistent with the food-room anaphylaxis card (data.js EMERGENCY_PROTOCOL.anaphylaxis).
+      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place; slowly count to 10 to be sure. Most families won’t have one — if not, go straight to the next step.',
       'Call 112 and say “anaphylaxis”. Lay baby down and raise their legs; if breathing is hard, raise the shoulders or sit them up slightly instead; if vomiting, lay them on their side. Never stand or walk them.',
       'No better after 5 minutes, or getting worse? Give a second auto-injector — in the other thigh — if you have one.'
     ],

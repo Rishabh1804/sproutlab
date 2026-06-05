@@ -11394,6 +11394,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fp-flip > .fp-face { grid-area:1 / 1; min-height:0; min-width:0; display:flex; flex-direction:column; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 .fp-back { transform:rotateY(180deg); }
 .fp-flip.flipped { transform:rotateY(180deg); }
+/* Reduced-motion: suppress the 3D flip rotation (Vela PR#235, V-V-1) — the back doc-prep
+   face still arrives, only the spin is removed. Shared with the food-room flip. */
+@media (prefers-reduced-motion: reduce) { .fp-flip { transition:none; } }
 
 .fp-head { position:relative; flex:0 0 auto; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
 .fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
