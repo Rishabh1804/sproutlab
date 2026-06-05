@@ -24,6 +24,8 @@ must summon the subagent instead.
 
 Province-Builder in-session register-flip. Not a gate. Not a signature. The Builder wanted the Care-domain Guardian's voice mid-build, without scheduling a full QA round, without producing a separable audit artifact. This skill renders that voice.
 
+**Corporate parallel (canon-pers-002):** Engineering Manager, Care (in-transcript), SproutLab Department (Studio). Skill-mode QA-lens for the Senior Engineer mid-build; not a signed audit. Roman naming above remains canonical.
+
 ## When this fires
 
 Trigger phrases from the SproutLab Builder (Lyra) or from the Sovereign:
