@@ -638,6 +638,13 @@ function init() {
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
     else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
     else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
+    // General Emergency Room v2 — pop-up cards + flip + doc-prep (intelligence-cards.js)
+    else if (action === 'geOpenCard' && typeof geOpenCard === 'function') geOpenCard(btn);
+    else if (action === 'geCloseCard' && typeof _geCloseCard === 'function') _geCloseCard();
+    else if (action === 'cardFlip' && typeof cardFlip === 'function') cardFlip(btn);
+    else if (action === 'cardFlipBack' && typeof cardFlipBack === 'function') cardFlipBack(btn);
+    else if (action === 'geXlink' && typeof geXlink === 'function') geXlink(btn);
+    else if (action === 'geCopyDoc' && typeof geCopyDoc === 'function') geCopyDoc(btn);
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);

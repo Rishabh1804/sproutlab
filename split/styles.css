@@ -5888,6 +5888,73 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   .ge-overlay, .ge-sheet, .ge-item-chev { transition:none; }
 }
 
+/* ── Emergency Room v2 — whisper-wave call pills, teaser rows, pop-up flip card ── */
+/* Whisper-wave on every Call-112/108 pill, wherever it appears (Architect floor).
+   Reuses the food .ec-call flow gradient (ecCallFlow). Reduced-motion → static. */
+.ld-emergency-call, .ge-call-chip {
+  background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%);
+  background-size:280% 100%; color:#fff; border-color:transparent;
+  animation:ecCallFlow 3.4s ease-in-out infinite;
+}
+.ld-emergency-call svg.zi, .ge-call-chip svg.zi { color:#fff; }
+@media (prefers-reduced-motion: reduce) { .ld-emergency-call, .ge-call-chip { animation:none; background-position:0 50%; } }
+
+/* Teaser rows (§11 move 3) — name + one-line gist; opens the card on tap. */
+.ge-row {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:var(--surface); box-shadow:0 1px 6px var(--shadow);
+  border:none; border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); min-height:60px; font-family:inherit;
+}
+.ge-row-ic { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ge-row-ic svg.zi { width:var(--icon-base); height:var(--icon-base); }
+.ge-row-tx { display:flex; flex-direction:column; min-width:0; gap:var(--sp-2); flex:1; }
+.ge-row-name { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+.ge-row-teaser { font-family:'Nunito', sans-serif; font-weight:600; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-snug); }
+.ge-call-chip { display:inline-flex; align-items:center; gap:var(--sp-4); flex-shrink:0; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-full); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-xs); white-space:nowrap; }
+.ge-call-chip svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
+.ge-row-chev { flex-shrink:0; color:var(--tc-rose); display:inline-flex; }
+.ge-row-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* Pinned critical card (inline) + pop-up card overlay — both host the flip. */
+.ge-pinned-card { margin:0 var(--sp-20) var(--sp-16); perspective:1400px; border-radius:var(--r-2xl); box-shadow:0 6px 26px var(--shadow); overflow:hidden; background:var(--cream); }
+.ge-card-ov { position:fixed; inset:0; z-index:1280; background:var(--overlay-bg); display:flex; align-items:center; justify-content:center; padding:var(--sp-16); opacity:0; pointer-events:none; transition:opacity var(--ease-med); overflow:auto; }
+.ge-card-ov.open { opacity:1; pointer-events:auto; }
+.ge-pop { perspective:1400px; }
+.ge-card-close { z-index:4; }
+/* The ecard fills the host; the host (pinned card / food-pop) provides the chrome. */
+.ge-cardface { margin:0; box-shadow:none; border-radius:0; background:transparent; display:flex; flex-direction:column; min-height:0; flex:1; }
+.ge-pop .ge-cardface .ec-body { overflow:auto; min-height:0; }
+.ge-card-ov .fp-flip, .ge-pinned-card .fp-flip { perspective:1400px; }
+
+/* Doc-prep face (.docface) — the same fields as the food room's doc-prep, but
+   container-neutral so it renders inside the flip-back (not only the #emDocOv
+   overlay). Mirrors the .em-doc-ov .doc-* rules; tokenised for the 3 zoom tiers. */
+.docface { display:flex; flex-direction:column; min-height:0; flex:1; }
+.docface .doc { width:100%; background:#fff; overflow:hidden; display:flex; flex-direction:column; min-height:0; flex:1; }
+.docface .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; overflow:auto; min-height:0; flex:1; }
+.docface .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:40px; }
+.docface .doc-brand b { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.docface .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
+.docface .doc-who { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
+.docface .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
+.docface .doc-row .k { flex:0 0 38%; max-width:140px; color:var(--tc-rose); font-weight:800; }
+.docface .doc-row .v { flex:1; color:#2a2020; }
+.docface .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
+.docface .doc-stamp em { color:#9a8a8a; font-style:normal; }
+.docface .doc-stamp[data-stamped] { color:var(--tc-rose); font-weight:800; border-bottom-color:transparent; }
+.docface .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
+.docface .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito', sans-serif; font-size:var(--fs-xs); font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
+.docface .doc-na[data-on] { background:var(--tc-rose); color:#fff; border-color:var(--tc-rose); }
+.docface .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
+.docface .doc-note b { color:var(--tc-rose); }
+.docface .doc-actions { display:flex; gap:var(--sp-8); padding:var(--sp-12) var(--sp-16); border-top:1px solid #ecdfe2; background:#faf2f4; flex-shrink:0; }
+.docface .doc-btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border-radius:var(--r-xl); font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
+.docface .doc-btn svg.zi { width:var(--icon-base); height:var(--icon-base); }
+.docface .doc-btn--ghost { flex:0 0 auto; padding:0 var(--sp-12); background:#fff; color:var(--mid); border:1.5px solid #e6dcdf; }
+.docface .doc-btn--copy { flex:1; background:#fff; color:var(--tc-rose); border:1.5px solid #e6b9c4; }
+.docface .doc-btn--save { flex:1; background:var(--tc-rose); color:#fff; }
+@media (prefers-reduced-motion: reduce) { .ge-card-ov { transition:none; } }
+
 /* Growth hero — rose to peach (body/physical) */
 .card.card-hero.hero-growth {
   background:linear-gradient(135deg, #fff0f3, var(--peach-light));

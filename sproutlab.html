@@ -5895,6 +5895,73 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   .ge-overlay, .ge-sheet, .ge-item-chev { transition:none; }
 }
 
+/* ── Emergency Room v2 — whisper-wave call pills, teaser rows, pop-up flip card ── */
+/* Whisper-wave on every Call-112/108 pill, wherever it appears (Architect floor).
+   Reuses the food .ec-call flow gradient (ecCallFlow). Reduced-motion → static. */
+.ld-emergency-call, .ge-call-chip {
+  background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%);
+  background-size:280% 100%; color:#fff; border-color:transparent;
+  animation:ecCallFlow 3.4s ease-in-out infinite;
+}
+.ld-emergency-call svg.zi, .ge-call-chip svg.zi { color:#fff; }
+@media (prefers-reduced-motion: reduce) { .ld-emergency-call, .ge-call-chip { animation:none; background-position:0 50%; } }
+
+/* Teaser rows (§11 move 3) — name + one-line gist; opens the card on tap. */
+.ge-row {
+  display:flex; align-items:center; gap:var(--sp-12); width:100%; text-align:left; cursor:pointer;
+  background:var(--surface); box-shadow:0 1px 6px var(--shadow);
+  border:none; border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); min-height:60px; font-family:inherit;
+}
+.ge-row-ic { width:var(--sp-32); height:var(--sp-32); border-radius:var(--r-md); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ge-row-ic svg.zi { width:var(--icon-base); height:var(--icon-base); }
+.ge-row-tx { display:flex; flex-direction:column; min-width:0; gap:var(--sp-2); flex:1; }
+.ge-row-name { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--text); line-height:var(--lh-snug); }
+.ge-row-teaser { font-family:'Nunito', sans-serif; font-weight:600; font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-snug); }
+.ge-call-chip { display:inline-flex; align-items:center; gap:var(--sp-4); flex-shrink:0; padding:var(--sp-4) var(--sp-8); border-radius:var(--r-full); font-family:'Nunito', sans-serif; font-weight:700; font-size:var(--fs-xs); white-space:nowrap; }
+.ge-call-chip svg.zi { width:var(--icon-sm); height:var(--icon-sm); }
+.ge-row-chev { flex-shrink:0; color:var(--tc-rose); display:inline-flex; }
+.ge-row-chev svg.zi { width:var(--icon-base); height:var(--icon-base); }
+
+/* Pinned critical card (inline) + pop-up card overlay — both host the flip. */
+.ge-pinned-card { margin:0 var(--sp-20) var(--sp-16); perspective:1400px; border-radius:var(--r-2xl); box-shadow:0 6px 26px var(--shadow); overflow:hidden; background:var(--cream); }
+.ge-card-ov { position:fixed; inset:0; z-index:1280; background:var(--overlay-bg); display:flex; align-items:center; justify-content:center; padding:var(--sp-16); opacity:0; pointer-events:none; transition:opacity var(--ease-med); overflow:auto; }
+.ge-card-ov.open { opacity:1; pointer-events:auto; }
+.ge-pop { perspective:1400px; }
+.ge-card-close { z-index:4; }
+/* The ecard fills the host; the host (pinned card / food-pop) provides the chrome. */
+.ge-cardface { margin:0; box-shadow:none; border-radius:0; background:transparent; display:flex; flex-direction:column; min-height:0; flex:1; }
+.ge-pop .ge-cardface .ec-body { overflow:auto; min-height:0; }
+.ge-card-ov .fp-flip, .ge-pinned-card .fp-flip { perspective:1400px; }
+
+/* Doc-prep face (.docface) — the same fields as the food room's doc-prep, but
+   container-neutral so it renders inside the flip-back (not only the #emDocOv
+   overlay). Mirrors the .em-doc-ov .doc-* rules; tokenised for the 3 zoom tiers. */
+.docface { display:flex; flex-direction:column; min-height:0; flex:1; }
+.docface .doc { width:100%; background:#fff; overflow:hidden; display:flex; flex-direction:column; min-height:0; flex:1; }
+.docface .doc-body { padding:var(--sp-20); position:relative; color:#2a2020; overflow:auto; min-height:0; flex:1; }
+.docface .doc-brand { display:flex; align-items:baseline; justify-content:space-between; border-bottom:2px solid #ecdfe2; padding-bottom:var(--sp-10); margin-bottom:var(--sp-12); padding-right:40px; }
+.docface .doc-brand b { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-rose); }
+.docface .doc-brand span { font-size:var(--fs-2xs); color:#7a6a6a; font-weight:700; }
+.docface .doc-who { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-base); color:#2a2020; margin:0 0 var(--sp-12); }
+.docface .doc-row { display:flex; gap:var(--sp-10); align-items:flex-start; font-size:var(--fs-sm); padding:var(--sp-8) 0; border-bottom:1px solid #f0e6e9; line-height:var(--lh-normal); }
+.docface .doc-row .k { flex:0 0 38%; max-width:140px; color:var(--tc-rose); font-weight:800; }
+.docface .doc-row .v { flex:1; color:#2a2020; }
+.docface .doc-stamp { flex:1; text-align:left; background:none; border:none; padding:0; font-family:'Nunito', sans-serif; font-size:var(--fs-sm); color:#2a2020; cursor:pointer; border-bottom:1px dashed #d8b9c2; }
+.docface .doc-stamp em { color:#9a8a8a; font-style:normal; }
+.docface .doc-stamp[data-stamped] { color:var(--tc-rose); font-weight:800; border-bottom-color:transparent; }
+.docface .doc-stamp[data-na] { color:#9a8a8a; font-weight:800; border-bottom-color:transparent; }
+.docface .doc-na { flex:0 0 auto; margin-left:var(--sp-8); background:none; border:1px solid #d8b9c2; border-radius:var(--r-full); padding:2px 10px; font-family:'Nunito', sans-serif; font-size:var(--fs-xs); font-weight:800; color:#9a8a8a; cursor:pointer; line-height:1.4; }
+.docface .doc-na[data-on] { background:var(--tc-rose); color:#fff; border-color:var(--tc-rose); }
+.docface .doc-note { margin-top:var(--sp-12); font-size:var(--fs-xs); color:#3a2c2c; line-height:var(--lh-normal); background:#fdeef1; border-radius:var(--r-md); padding:var(--sp-12); }
+.docface .doc-note b { color:var(--tc-rose); }
+.docface .doc-actions { display:flex; gap:var(--sp-8); padding:var(--sp-12) var(--sp-16); border-top:1px solid #ecdfe2; background:#faf2f4; flex-shrink:0; }
+.docface .doc-btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:44px; border-radius:var(--r-xl); font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-sm); cursor:pointer; border:none; }
+.docface .doc-btn svg.zi { width:var(--icon-base); height:var(--icon-base); }
+.docface .doc-btn--ghost { flex:0 0 auto; padding:0 var(--sp-12); background:#fff; color:var(--mid); border:1.5px solid #e6dcdf; }
+.docface .doc-btn--copy { flex:1; background:#fff; color:var(--tc-rose); border:1.5px solid #e6b9c4; }
+.docface .doc-btn--save { flex:1; background:var(--tc-rose); color:#fff; }
+@media (prefers-reduced-motion: reduce) { .ge-card-ov { transition:none; } }
+
 /* Growth hero — rose to peach (body/physical) */
 .card.card-hero.hero-growth {
   background:linear-gradient(135deg, #fff0f3, var(--peach-light));
@@ -15384,7 +15451,14 @@ const GENERAL_EMERGENCIES = [
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
-    source: 'Resuscitation Council UK 2025 · NHS'
+    source: 'Resuscitation Council UK 2025 · NHS',
+    teaser: '5 rescue breaths, then 30 compressions',
+    doc: {
+      suspected: 'Not breathing / unresponsive',
+      stamps: [ { id: 'collapse', label: 'Found unresponsive at' }, { id: 'cpr', label: 'CPR started at' } ],
+      action: { label: 'Rescue breaths + compressions given', value: 'Yes / No' },
+      forTeam: 'infant found unresponsive; rescue breaths and chest compressions given from the time above; please assess airway, breathing, circulation.'
+    }
   },
   {
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
@@ -15399,7 +15473,14 @@ const GENERAL_EMERGENCIES = [
       'Noisy or struggling breathing, wheeze, or a hoarse cry',
       'Pale, blue, floppy, or suddenly drowsy / unresponsive'
     ],
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Auto-injector · lie flat, legs up',
+    doc: {
+      suspected: 'Severe allergic reaction (anaphylaxis)',
+      stamps: [ { id: 'reaction', label: 'Reaction started at' }, { id: 'adren', label: 'Adrenaline given at' } ],
+      action: { label: 'Adrenaline given', value: 'Yes / No' },
+      forTeam: 'suspected anaphylaxis; see the adrenaline-given line; please observe for a biphasic reaction.'
+    }
   },
   {
     id: 'choking', icon: 'warn', name: 'Choking (object)',
@@ -15413,8 +15494,15 @@ const GENERAL_EMERGENCIES = [
       'The blockage does not clear after the first cycles',
       'Baby becomes limp, silent, or stops breathing → start CPR (top of this list)'
     ],
-    xlink: { label: 'Choking on food? →' },
-    source: 'Resuscitation Council UK 2025 · NHS · British Red Cross'
+    xlink: { label: 'Choking on food? →', room: 'food', hazard: 'choking' },
+    source: 'Resuscitation Council UK 2025 · NHS · British Red Cross',
+    teaser: '5 back blows + 5 chest thrusts',
+    doc: {
+      suspected: 'Choking (airway obstruction)',
+      stamps: [ { id: 'reaction', label: 'Choking started at' }, { id: 'call', label: '112 called at' } ],
+      action: { label: 'Back blows + chest thrusts given · cleared', value: 'Yes / No' },
+      forTeam: 'infant choking; back blows and chest thrusts given; please assess the airway and for injury from the thrusts.'
+    }
   },
   {
     id: 'seizure', icon: 'bolt', name: 'Seizure / fit',
@@ -15429,7 +15517,14 @@ const GENERAL_EMERGENCIES = [
       'Trouble breathing, one-sided stiffness or twitching, or another seizure follows',
       'Stays very drowsy or unresponsive more than 1 hour afterwards'
     ],
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Time it · cushion the head · don’t restrain',
+    doc: {
+      suspected: 'Seizure / fit',
+      stamps: [ { id: 'start', label: 'Seizure started at' }, { id: 'stop', label: 'Seizure stopped at' } ],
+      action: { label: 'First seizure', value: 'Yes / No' },
+      forTeam: 'infant seizure; note the start and stop times above; please assess.'
+    }
   },
   {
     id: 'head-injury', icon: 'fall', name: 'Bad fall / head injury',
@@ -15444,7 +15539,14 @@ const GENERAL_EMERGENCIES = [
       'A tense or bulging soft spot (fontanelle), or any swelling or cut on the head in a baby',
       'Under 1 year with any vomiting, a worsening or high-pitched cry, or a fall from any height (off a bed, sofa, or changing table, or from your arms)'
     ],
-    source: 'NHS · British Red Cross · NICE NG232'
+    source: 'NHS · British Red Cross · NICE NG232',
+    teaser: 'Cold compress · watch closely 24h',
+    doc: {
+      suspected: 'Head injury (fall)',
+      stamps: [ { id: 'fall', label: 'Time of the fall' } ],
+      action: { label: 'Knocked out / any vomiting', value: 'Yes / No' },
+      forTeam: 'infant head injury from a fall; note any loss of consciousness, vomiting, or change in behaviour; please assess.'
+    }
   },
   {
     id: 'bleeding', icon: 'blood-drop', name: 'Heavy bleeding / deep cut',
@@ -15458,7 +15560,14 @@ const GENERAL_EMERGENCIES = [
       'Bleeding is severe or will not slow with firm pressure',
       'Blood soaks through, or baby becomes pale, cold, or floppy'
     ],
-    source: 'British Red Cross · St John Ambulance'
+    source: 'British Red Cross · St John Ambulance',
+    teaser: 'Press firmly · don’t lift to check',
+    doc: {
+      suspected: 'Heavy bleeding / deep cut',
+      stamps: [ { id: 'start', label: 'Bleeding started at' } ],
+      action: { label: 'Firm pressure applied · slowing', value: 'Yes / No' },
+      forTeam: 'heavy bleeding; firm pressure applied; note the site and whether it is slowing; please assess.'
+    }
   },
   {
     id: 'burn', icon: 'flame', name: 'Burn or scald',
@@ -15473,7 +15582,14 @@ const GENERAL_EMERGENCIES = [
       'It was caused by chemicals or electricity — or you are unsure',
       'Always seek medical advice for any burn on a baby'
     ],
-    source: 'NHS · British Red Cross'
+    source: 'NHS · British Red Cross',
+    teaser: 'Cool under water 20 min · keep warm',
+    doc: {
+      suspected: 'Burn / scald',
+      stamps: [ { id: 'burn', label: 'Time of the burn' }, { id: 'cool', label: 'Cooling started at' } ],
+      action: { label: 'Cause (heat / chemical / electrical)', value: '____' },
+      forTeam: 'infant burn or scald; cooled under running water; note the cause and the site; please assess depth and area.'
+    }
   },
   {
     id: 'poison', icon: 'flask', name: 'Swallowed something / poison',
@@ -15484,7 +15600,14 @@ const GENERAL_EMERGENCIES = [
       'If drowsy but breathing, lay them on their side; do not give any food or drink — not even water or milk.'
     ],
     call112When: null,
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Call 112 · don’t make her sick',
+    doc: {
+      suspected: 'Swallowed something / possible poison',
+      stamps: [ { id: 'swallow', label: 'Swallowed / found at' } ],
+      action: { label: 'What was swallowed', value: '____' },
+      forTeam: 'infant swallowed a possible poison; packaging kept; vomiting NOT induced; please advise and assess.'
+    }
   }
 ];
 // SproutLab v2.38 — Pure Data Constants
@@ -22392,6 +22515,13 @@ function init() {
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
     else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
     else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
+    // General Emergency Room v2 — pop-up cards + flip + doc-prep (intelligence-cards.js)
+    else if (action === 'geOpenCard' && typeof geOpenCard === 'function') geOpenCard(btn);
+    else if (action === 'geCloseCard' && typeof _geCloseCard === 'function') _geCloseCard();
+    else if (action === 'cardFlip' && typeof cardFlip === 'function') cardFlip(btn);
+    else if (action === 'cardFlipBack' && typeof cardFlipBack === 'function') cardFlipBack(btn);
+    else if (action === 'geXlink' && typeof geXlink === 'function') geXlink(btn);
+    else if (action === 'geCopyDoc' && typeof geCopyDoc === 'function') geCopyDoc(btn);
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
@@ -75704,63 +75834,110 @@ function _geReady() {
     && GENERAL_EMERGENCIES.every(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
 }
 
-function _geItemHtml(e) {
-  var crit = e.severity === 'critical';
-  // V-3: the call imperative shows on the COLLAPSED row, not only expanded.
-  var lead = e.callLead ? '<span class="ge-lead">' + zi('phone') + '<span>Call 112 now</span></span>' : '';
-  var steps = '<ol class="ge-steps">'
-    + (e.immediate || []).map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('')
-    + '</ol>';
+// ── Pop-up Emergency Card + flip (emergency-room-v2) ───────────────────────
+// Each emergency renders as a flip CARD (reusing the .fp-flip pattern for
+// design consistency): FRONT = first aid, BACK = a doc-prep summary the parent
+// fills (tap-to-stamp times, reusing the food room's container-agnostic
+// emStampTime / emToggleNA / emSaveDoc) and shares with the pediatrician —
+// one surface, both jobs. The critical CPR card is pinned-open inline (§9.7
+// safety-first, never behind a tap); every other emergency is a teaser ROW
+// that opens its card on tap (§11 6-second rule — lead, then disclose).
+
+function _geNums() {
+  var r = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  return {
+    amb: (r && r.ambulancePrimary)  ? r.ambulancePrimary.number  : '108',
+    emg: (r && r.emergencyFallback) ? r.emergencyFallback.number : '112'
+  };
+}
+
+// Teaser ROW (§11 move 3): icon + name + one-line gist + (waved call chip) → opens the card.
+function _geRowHtml(e) {
+  var lead = e.callLead ? '<span class="ge-call-chip">' + zi('phone') + '<span>Call ' + escHtml(_geNums().emg) + '</span></span>' : '';
+  return '<button class="ge-row" data-action="geOpenCard" data-arg="' + escHtml(e.id) + '">'
+    + '<span class="ge-row-ic icon icon-rose">' + zi(e.icon) + '</span>'
+    + '<span class="ge-row-tx"><span class="ge-row-name">' + escHtml(e.name) + '</span>'
+    + '<span class="ge-row-teaser">' + escHtml(e.teaser || '') + '</span></span>'
+    + lead + '<span class="ge-row-chev">' + zi('arrow-right') + '</span></button>';
+}
+
+// FRONT face — the first-aid card (reuses the .ecard / ec-* family for cross-room consistency).
+function _geCardFront(e) {
+  var nums = _geNums();
+  var steps = (e.immediate || []).map(function(s, i) {
+    return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + escHtml(s) + '</span></div>';
+  }).join('');
+  var call = e.callLead ? '<a class="ec-call" href="tel:' + escAttr(nums.emg) + '">' + zi('phone') + 'Call ' + escHtml(nums.emg) + ' now</a>' : '';
+  var doNow = '<div class="ec-sec"><div class="ec-do"><div class="ec-do-h">' + zi('siren') + 'Do now</div>' + steps + call + '</div></div>';
+  var xlink = e.xlink ? '<button class="ec-xlink" data-action="geXlink" data-arg="' + escHtml(e.id) + '">' + zi('warn') + escHtml(e.xlink.label) + '</button>' : '';
   var flags;
   if (e.call112When == null) {
-    // Time-critical items: the call is unconditional — lead with it. The
-    // label comes from the registry (call112Label) so an item with a
-    // lone-rescuer conditional (unresponsive) carries it in the chip itself
-    // rather than being contradicted by a flat "immediately" (B-1 / V-V-1).
-    var callTxt = e.call112Label || 'Call 112 immediately.';
-    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>' + escHtml(callTxt) + '</span></div>';
+    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>' + escHtml(e.call112Label || ('Call ' + nums.emg + ' now.')) + '</span></div>';
   } else {
-    flags = '<div class="ge-flags"><div class="ge-flags-h">' + zi('phone') + '<span>Call 112 if</span></div><ul>'
-      + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('')
-      + '</ul></div>';
+    flags = '<div class="ec-sec"><div class="ec-sec-h">Call ' + escHtml(nums.emg) + ' if — any one</div><ul class="ec-signs">'
+      + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('') + '</ul>' + xlink + '</div>';
   }
-  var xlink = e.xlink ? '<button class="ge-xlink" data-ge-act="foodlink">' + zi('bowl') + '<span>' + escHtml(e.xlink.label) + '</span></button>' : '';
   var src = '<div class="ge-src">' + escHtml('Source: ' + e.source) + '</div>';
-  var body = '<div class="ge-item-body">' + steps + flags + xlink + src + '</div>';
-  if (crit) {
-    return '<div class="ge-item ge-item--critical ge-open">'
-      + '<div class="ge-item-head ge-item-head--static">'
-      +   '<span class="ge-item-ic icon icon-rose">' + zi(e.icon) + '</span>'
-      +   '<span class="ge-item-name">' + escHtml(e.name) + '</span>' + lead
-      + '</div>' + body + '</div>';
-  }
-  return '<div class="ge-item" data-ge-id="' + escHtml(e.id) + '">'
-    + '<button class="ge-item-head" data-ge-act="toggle" aria-expanded="false">'
-    +   '<span class="ge-item-ic icon icon-rose">' + zi(e.icon) + '</span>'
-    +   '<span class="ge-item-name">' + escHtml(e.name) + '</span>' + lead
-    +   '<span class="ge-item-chev">' + zi('chevron-down') + '</span>'
-    + '</button>' + body + '</div>';
+  var dp = '<button class="ec-docprep" data-action="cardFlip">'
+    + '<span class="ec-docprep-ic">' + zi('doc') + '</span>'
+    + '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor — note &amp; share</span>'
+    + '<span class="ec-docprep-d">A summary to fill, copy, or share.</span></span>'
+    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
+  return '<div class="ecard ecard--rose ge-cardface"><div class="ec-head"><div class="ec-name">' + escHtml(e.name) + '</div></div>'
+    + '<div class="ec-body">' + doNow + flags + src + dp + '</div></div>';
+}
+
+// BACK face — doc-prep the parent fills + shares (reuses .docface doc styling + the
+// food room's container-agnostic emStampTime / emToggleNA / emSaveDoc handlers).
+function _geDocFace(e) {
+  var d = e.doc; if (!d) return '<div class="docface"></div>';
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) {
+    rows += '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>'
+      + '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>'
+      + '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+  });
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  return '<div class="docface"><div class="doc"><div class="doc-body">'
+    + '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>'
+    + '<p class="doc-who">' + escHtml(typeof _emDocWho === 'function' ? _emDocWho() : 'Ziva') + '</p>' + rows
+    + '<div class="doc-note"><b>For the team:</b> ' + escHtml(d.forTeam) + '</div></div>'
+    + '<div class="doc-actions">'
+    + '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>'
+    + '<button class="doc-btn doc-btn--copy" data-action="geCopyDoc" data-arg="' + escHtml(e.id) + '">' + zi('copy') + 'Copy</button>'
+    + '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save</button></div></div>';
+}
+
+// The flip card (front + back). `pop` adds the close × (the room-level pinned card has none).
+function _geFlipCard(e, pop) {
+  var x = pop ? '<button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>' : '';
+  return '<div class="fp-flip">'
+    + '<div class="fp-face fp-front">' + x + _geCardFront(e) + '</div>'
+    + '<div class="fp-face fp-back">' + x + _geDocFace(e) + '</div>'
+    + '</div>';
 }
 
 function openGeneralEmergencyRoom() {
   var existing = document.getElementById('geOverlay');
   if (existing) existing.remove();
 
-  var _emReg = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
-  var ambNum = (_emReg && _emReg.ambulancePrimary)  ? _emReg.ambulancePrimary.number  : '108';
-  var emgNum = (_emReg && _emReg.emergencyFallback) ? _emReg.emergencyFallback.number : '112';
-
-  var items = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
-    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; })
-    .map(_geItemHtml).join('');
+  var nums = _geNums();
+  var all = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
+    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+  // Hybrid (§9.7 safety-first): the critical card is pinned-open inline — its
+  // steps are never behind a tap; every other emergency is a teaser row.
+  var pinnedHtml = all.filter(function(e) { return e.severity === 'critical'; })
+    .map(function(e) { return '<div class="ge-pinned-card" data-ge-id="' + escHtml(e.id) + '">' + _geFlipCard(e, false) + '</div>'; }).join('');
+  var rowsHtml = all.filter(function(e) { return e.severity !== 'critical'; }).map(_geRowHtml).join('');
 
   var overlay = document.createElement('div');
   overlay.className = 'ge-overlay';
   overlay.id = 'geOverlay';
   document.body.appendChild(overlay);
 
-  // Callbar tel: pills reuse the landing's .ld-emergency-call sibling pattern
-  // exactly (V-7). 112 (unified emergency) leads, 108 (ambulance) follows.
+  // Callbar tel: pills reuse the landing's .ld-emergency-call pattern (V-7),
+  // now carrying the whisper-wave. 112 (unified emergency) leads, 108 follows.
   overlay.innerHTML =
     '<div class="ge-sheet" role="dialog" aria-label="General emergency help">'
     + '<div class="ge-head">'
@@ -75769,11 +75946,12 @@ function openGeneralEmergencyRoom() {
     + '</div>'
     + '<div class="ge-callbar">'
     +   '<span class="ge-callbar-label">' + zi('phone') + '<span>Call now</span></span>'
-    +   '<a class="ld-emergency-call" href="tel:' + escAttr(emgNum) + '">' + zi('phone') + '<span>' + escHtml(emgNum) + '</span></a>'
-    +   '<a class="ld-emergency-call" href="tel:' + escAttr(ambNum) + '">' + zi('phone') + '<span>' + escHtml(ambNum) + '</span></a>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(nums.emg) + '">' + zi('phone') + '<span>' + escHtml(nums.emg) + '</span></a>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(nums.amb) + '">' + zi('phone') + '<span>' + escHtml(nums.amb) + '</span></a>'
     + '</div>'
-    + '<div class="ge-list">' + items + '</div>'
-    + '<div class="ge-disclaimer">' + zi('info') + '<span>This is first-aid guidance, not a diagnosis. When in doubt, call 112.</span></div>'
+    + pinnedHtml
+    + '<div class="ge-list">' + rowsHtml + '</div>'
+    + '<div class="ge-disclaimer">' + zi('info') + '<span>This is first-aid guidance, not a diagnosis. When in doubt, call ' + escHtml(nums.emg) + '.</span></div>'
     + '</div>';
 
   requestAnimationFrame(function() { overlay.classList.add('open'); });
@@ -75782,44 +75960,85 @@ function openGeneralEmergencyRoom() {
   overlay.querySelector('#geClose').addEventListener('click', _geClose);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) _geClose(); });
   if (!window._geKeyHandler) {
-    window._geKeyHandler = function(ev) { if (ev.key === 'Escape') _geClose(); };
+    window._geKeyHandler = function(ev) { if (ev.key === 'Escape') { if (document.getElementById('geCardOv')) _geCloseCard(); else _geClose(); } };
     document.addEventListener('keydown', window._geKeyHandler);
   }
-
-  // Accordion: one open at a time among NON-critical items (V-2). The
-  // critical row has a static (non-button) head, so it never toggles.
-  var sheet = overlay.querySelector('.ge-sheet');
-  sheet.addEventListener('click', function(ev) {
-    var hit = ev.target.closest ? ev.target.closest('[data-ge-act]') : null;
-    if (!hit) return;
-    var act = hit.getAttribute('data-ge-act');
-    if (act === 'toggle') {
-      var item = hit.closest('.ge-item');
-      var wasOpen = item.classList.contains('ge-open');
-      var others = sheet.querySelectorAll('.ge-item:not(.ge-item--critical)');
-      for (var i = 0; i < others.length; i++) {
-        others[i].classList.remove('ge-open');
-        var h = others[i].querySelector('.ge-item-head');
-        if (h) h.setAttribute('aria-expanded', 'false');
-      }
-      if (!wasOpen) { item.classList.add('ge-open'); hit.setAttribute('aria-expanded', 'true'); }
-    } else if (act === 'foodlink') {
-      // Choking-on-food → the Diet→Library food emergency room (§5.3 cross-link).
-      _geClose();
-      if (typeof switchTab === 'function') switchTab('track');
-      setTimeout(function() {
-        if (typeof switchTrackSub === 'function') switchTrackSub('diet');
-        setTimeout(function() { if (typeof switchDietSub === 'function') switchDietSub('library'); }, 60);
-      }, 60);
-      if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food choking — opening the Library');
-    }
-  });
 
   // V-7: focus moves to the × on open (returns to the Emergency card on close).
   requestAnimationFrame(function() { var x = document.getElementById('geClose'); if (x) x.focus(); });
 }
 
+// Tap a teaser row → open its pop-up card (the flip card in an overlay).
+function geOpenCard(btn) { var id = btn && btn.getAttribute('data-arg'); if (id) _geShowCard(id); }
+function _geShowCard(id) {
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  if (!e) return;
+  var ov = document.getElementById('geCardOv');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
+  ov.innerHTML = '<div class="food-pop ge-pop">' + _geFlipCard(e, true) + '</div>';
+  requestAnimationFrame(function() { ov.classList.add('open'); });
+  ov.onclick = function(ev) { if (ev.target === ov) _geCloseCard(); };
+  requestAnimationFrame(function() { var x = ov.querySelector('.ge-card-close'); if (x && x.focus) x.focus(); });
+}
+function _geCloseCard() {
+  var ov = document.getElementById('geCardOv');
+  if (!ov) return;
+  ov.classList.remove('open');
+  setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
+}
+
+// Generic flip — reused by both rooms (container-agnostic: nearest .fp-flip).
+function cardFlip(btn) { var fl = (btn && btn.closest) ? btn.closest('.fp-flip') : null; if (fl) fl.classList.add('flipped'); }
+function cardFlipBack(btn) { var fl = (btn && btn.closest) ? btn.closest('.fp-flip') : null; if (fl) fl.classList.remove('flipped'); }
+
+// Cross-link (geXlink) → open the target emergency card as a pop-up in place
+// (no tab redirect). Food-room hazards reuse the food card builder; same-room
+// ids reuse the general card. (Wiring finalised in milestone 3.)
+function geXlink(btn) {
+  var id = btn && btn.getAttribute('data-arg');
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  var xl = e && e.xlink; if (!xl) return;
+  if (xl.room === 'food' && typeof _emCardHtml === 'function') {
+    var ov = document.getElementById('geCardOv');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
+    ov.innerHTML = '<div class="food-pop ge-pop"><button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>'
+      + '<div class="ge-foodcard-wrap">' + _emCardHtml(xl.hazard, null) + '</div></div>';
+    requestAnimationFrame(function() { ov.classList.add('open'); });
+    ov.onclick = function(ev) { if (ev.target === ov) _geCloseCard(); };
+  } else if (xl.id) {
+    _geShowCard(xl.id);
+  }
+}
+
+// Copy the doc-prep summary — reads tap-to-stamp values from the open card face.
+function _geStampVal(container, id) {
+  var b = container && container.querySelector('.doc-stamp[data-arg="' + id + '"]');
+  if (!b) return '____';
+  if (b.dataset.na) return 'N/A';
+  return b.dataset.stamped ? b.textContent : '____';
+}
+function _geDocText(e, container) {
+  var d = e.doc; if (!d) return '';
+  var L = ['SproutLab — Emergency summary', (typeof _emDocWho === 'function' ? _emDocWho() : 'Ziva'), '', 'Suspected: ' + d.suspected];
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
+  if (d.action) L.push(d.action.label + ': ' + d.action.value);
+  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  L.push(''); L.push('For the team: ' + d.forTeam);
+  return L.join('\n');
+}
+function geCopyDoc(btn) {
+  var id = btn && btn.getAttribute('data-arg'); if (!id) return;
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  if (!e) return;
+  var container = (btn.closest && btn.closest('.fp-face')) || document;
+  var text = _geDocText(e, container);
+  var done = function() { if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); });
+  else if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text);
+}
+
 function _geClose() {
+  if (document.getElementById('geCardOv')) _geCloseCard();
   var overlay = document.getElementById('geOverlay');
   if (!overlay) return;
   overlay.classList.remove('open');

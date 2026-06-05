@@ -168,7 +168,14 @@ const GENERAL_EMERGENCIES = [
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
-    source: 'Resuscitation Council UK 2025 · NHS'
+    source: 'Resuscitation Council UK 2025 · NHS',
+    teaser: '5 rescue breaths, then 30 compressions',
+    doc: {
+      suspected: 'Not breathing / unresponsive',
+      stamps: [ { id: 'collapse', label: 'Found unresponsive at' }, { id: 'cpr', label: 'CPR started at' } ],
+      action: { label: 'Rescue breaths + compressions given', value: 'Yes / No' },
+      forTeam: 'infant found unresponsive; rescue breaths and chest compressions given from the time above; please assess airway, breathing, circulation.'
+    }
   },
   {
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
@@ -183,7 +190,14 @@ const GENERAL_EMERGENCIES = [
       'Noisy or struggling breathing, wheeze, or a hoarse cry',
       'Pale, blue, floppy, or suddenly drowsy / unresponsive'
     ],
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Auto-injector · lie flat, legs up',
+    doc: {
+      suspected: 'Severe allergic reaction (anaphylaxis)',
+      stamps: [ { id: 'reaction', label: 'Reaction started at' }, { id: 'adren', label: 'Adrenaline given at' } ],
+      action: { label: 'Adrenaline given', value: 'Yes / No' },
+      forTeam: 'suspected anaphylaxis; see the adrenaline-given line; please observe for a biphasic reaction.'
+    }
   },
   {
     id: 'choking', icon: 'warn', name: 'Choking (object)',
@@ -197,8 +211,15 @@ const GENERAL_EMERGENCIES = [
       'The blockage does not clear after the first cycles',
       'Baby becomes limp, silent, or stops breathing → start CPR (top of this list)'
     ],
-    xlink: { label: 'Choking on food? →' },
-    source: 'Resuscitation Council UK 2025 · NHS · British Red Cross'
+    xlink: { label: 'Choking on food? →', room: 'food', hazard: 'choking' },
+    source: 'Resuscitation Council UK 2025 · NHS · British Red Cross',
+    teaser: '5 back blows + 5 chest thrusts',
+    doc: {
+      suspected: 'Choking (airway obstruction)',
+      stamps: [ { id: 'reaction', label: 'Choking started at' }, { id: 'call', label: '112 called at' } ],
+      action: { label: 'Back blows + chest thrusts given · cleared', value: 'Yes / No' },
+      forTeam: 'infant choking; back blows and chest thrusts given; please assess the airway and for injury from the thrusts.'
+    }
   },
   {
     id: 'seizure', icon: 'bolt', name: 'Seizure / fit',
@@ -213,7 +234,14 @@ const GENERAL_EMERGENCIES = [
       'Trouble breathing, one-sided stiffness or twitching, or another seizure follows',
       'Stays very drowsy or unresponsive more than 1 hour afterwards'
     ],
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Time it · cushion the head · don’t restrain',
+    doc: {
+      suspected: 'Seizure / fit',
+      stamps: [ { id: 'start', label: 'Seizure started at' }, { id: 'stop', label: 'Seizure stopped at' } ],
+      action: { label: 'First seizure', value: 'Yes / No' },
+      forTeam: 'infant seizure; note the start and stop times above; please assess.'
+    }
   },
   {
     id: 'head-injury', icon: 'fall', name: 'Bad fall / head injury',
@@ -228,7 +256,14 @@ const GENERAL_EMERGENCIES = [
       'A tense or bulging soft spot (fontanelle), or any swelling or cut on the head in a baby',
       'Under 1 year with any vomiting, a worsening or high-pitched cry, or a fall from any height (off a bed, sofa, or changing table, or from your arms)'
     ],
-    source: 'NHS · British Red Cross · NICE NG232'
+    source: 'NHS · British Red Cross · NICE NG232',
+    teaser: 'Cold compress · watch closely 24h',
+    doc: {
+      suspected: 'Head injury (fall)',
+      stamps: [ { id: 'fall', label: 'Time of the fall' } ],
+      action: { label: 'Knocked out / any vomiting', value: 'Yes / No' },
+      forTeam: 'infant head injury from a fall; note any loss of consciousness, vomiting, or change in behaviour; please assess.'
+    }
   },
   {
     id: 'bleeding', icon: 'blood-drop', name: 'Heavy bleeding / deep cut',
@@ -242,7 +277,14 @@ const GENERAL_EMERGENCIES = [
       'Bleeding is severe or will not slow with firm pressure',
       'Blood soaks through, or baby becomes pale, cold, or floppy'
     ],
-    source: 'British Red Cross · St John Ambulance'
+    source: 'British Red Cross · St John Ambulance',
+    teaser: 'Press firmly · don’t lift to check',
+    doc: {
+      suspected: 'Heavy bleeding / deep cut',
+      stamps: [ { id: 'start', label: 'Bleeding started at' } ],
+      action: { label: 'Firm pressure applied · slowing', value: 'Yes / No' },
+      forTeam: 'heavy bleeding; firm pressure applied; note the site and whether it is slowing; please assess.'
+    }
   },
   {
     id: 'burn', icon: 'flame', name: 'Burn or scald',
@@ -257,7 +299,14 @@ const GENERAL_EMERGENCIES = [
       'It was caused by chemicals or electricity — or you are unsure',
       'Always seek medical advice for any burn on a baby'
     ],
-    source: 'NHS · British Red Cross'
+    source: 'NHS · British Red Cross',
+    teaser: 'Cool under water 20 min · keep warm',
+    doc: {
+      suspected: 'Burn / scald',
+      stamps: [ { id: 'burn', label: 'Time of the burn' }, { id: 'cool', label: 'Cooling started at' } ],
+      action: { label: 'Cause (heat / chemical / electrical)', value: '____' },
+      forTeam: 'infant burn or scald; cooled under running water; note the cause and the site; please assess depth and area.'
+    }
   },
   {
     id: 'poison', icon: 'flask', name: 'Swallowed something / poison',
@@ -268,6 +317,13 @@ const GENERAL_EMERGENCIES = [
       'If drowsy but breathing, lay them on their side; do not give any food or drink — not even water or milk.'
     ],
     call112When: null,
-    source: 'NHS'
+    source: 'NHS',
+    teaser: 'Call 112 · don’t make her sick',
+    doc: {
+      suspected: 'Swallowed something / possible poison',
+      stamps: [ { id: 'swallow', label: 'Swallowed / found at' } ],
+      action: { label: 'What was swallowed', value: '____' },
+      forTeam: 'infant swallowed a possible poison; packaging kept; vomiting NOT induced; please advise and assess.'
+    }
   }
 ];
