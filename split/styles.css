@@ -5851,15 +5851,17 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 }
 
 /* ── Emergency Room v2 — whisper-wave call pills, teaser rows, pop-up flip card ── */
-/* Whisper-wave on every Call-112/108 pill, wherever it appears (Architect floor).
+/* Whisper-wave on every Call-112/108 pill inside the emergency surfaces (Room
+   callbar pills, teaser-row chips; the in-card .ec-call carries it separately).
+   Scoped to the Room (V-V-235-1) — the landing's quick-dial pills stay calm/static.
    Reuses the food .ec-call flow gradient (ecCallFlow). Reduced-motion → static. */
-.ld-emergency-call, .ge-call-chip {
+.ge-callbar .ld-emergency-call, .ge-call-chip {
   background:linear-gradient(110deg, #c0607a 0%, var(--tc-rose) 28%, var(--rose-deep) 50%, var(--tc-rose) 72%, #c0607a 100%);
   background-size:280% 100%; color:#fff; border-color:transparent;
   animation:ecCallFlow 3.4s ease-in-out infinite;
 }
-.ld-emergency-call svg.zi, .ge-call-chip svg.zi { color:#fff; }
-@media (prefers-reduced-motion: reduce) { .ld-emergency-call, .ge-call-chip { animation:none; background-position:0 50%; } }
+.ge-callbar .ld-emergency-call svg.zi, .ge-call-chip svg.zi { color:#fff; }
+@media (prefers-reduced-motion: reduce) { .ge-callbar .ld-emergency-call, .ge-call-chip { animation:none; background-position:0 50%; } }
 
 /* Teaser rows (§11 move 3) — name + one-line gist; opens the card on tap. */
 .ge-row {
