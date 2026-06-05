@@ -2978,7 +2978,7 @@ function renderMsTrajectoryRibbon() {
 
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-      + zi('trending-up') + '</div> Trajectory</div></div>'
+      + zi('chart') + '</div> Trajectory</div></div>'
       + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
@@ -3113,7 +3113,7 @@ function renderMsTrajectoryRibbon() {
   }
 
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
-    + zi('trending-up') + '</div> Trajectory</div></div>'
+    + zi('chart') + '</div> Trajectory</div></div>'
     + '<svg class="ms-trajectory-svg" viewBox="0 0 ' + G.width + ' ' + G.height + '"'
     + ' preserveAspectRatio="xMidYMid meet" role="img"'
     + ' aria-label="Milestone trajectory: '
