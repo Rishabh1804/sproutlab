@@ -1,283 +1,185 @@
 # SproutLab — Quick Reference
-**Version:** 1.0 · **Created:** 13 April 2026
-**Use:** Open alongside code during every build session
+**Version:** 2.0 · **Updated:** 5 June 2026 (was v1.0, 13 April 2026 — methodology rewrite)
+**Use:** Open alongside code during every build session — the builder's cheat sheet.
+
+> **Authoritative-source rule** (mirrors `CLAUDE.md`): when this sheet and the maps disagree on **counts / LOC / token values**, the maps win (`docs/PROVINCE_MAP.html`, `docs/ICON_REFERENCE.html` — regenerated each build). When they disagree on **rules / HRs / persona / build commands**, `CLAUDE.md` wins. This sheet points at the live sources for drift-prone facts rather than re-asserting them (the v1.0 sheet froze "54 icons" and drifted ~4×).
 
 ---
 
 ## 1. Architecture
 
-**Type:** Split-file HTML PWA, build-concatenated, localStorage persistence, no backend (Firebase sync layer in progress)
-**Repo:** `rishabh1804.github.io/sproutlab/`
-**Live:** `https://rishabh1804.github.io/sproutlab/`
-**Baby:** Ziva Jain, born 4 Sep 2025
+**Type:** Split-file HTML PWA — build-concatenated, localStorage + Firebase (Firestore) sync, no backend server. Used one-handed on a phone by tired parents.
+**Repo:** `rishabh1804.github.io/sproutlab/` · **Live:** `https://rishabh1804.github.io/sproutlab/`
+**Baby:** Ziva Jain, born 4 Sep 2025.
 
-### Module Structure
+### Modules + Governor jurisdiction (30K Rule)
 
-| File | Lines | Purpose |
-|------|:-----:|---------|
-| `data.js` | 3,561 | Constants, EVIDENCE_PATTERNS, MILESTONE_ACTIVITIES, DEFAULT_* data |
-| `core.js` | 4,815 | save/load, init, ISL scoring, intelligence modifiers, escHtml, zi(), notes, scrapbook |
-| `home.js` | 9,180 | Home tab, Quick Log, poop tracking, alerts, sleep (from home), vaccination booking, Tomorrow's Plan, outing |
-| `diet.js` | 4,087 | Diet tab, food intelligence, meal logging, food favorites, Tomorrow's Plan diet |
-| `medical.js` | 9,359 | Medical tab, growth, vaccination, milestones, sleep tab, doctor management, episodes |
-| `intelligence.js` | ~8,000+ | Smart Q&A, CareTickets, cross-domain intelligence, activity logging |
-| `start.js` | ~500+ | App init, event delegation, service worker, tab switching |
-| `template.html` | — | HTML structure, zi() SVG sprite, CSS token definitions |
-| `styles.css` | — | (if separated) All CSS |
+16 JS modules + 2 shared files. **Live LOC + headroom: `docs/PROVINCE_MAP.html`.** Jurisdiction (who audits what under canon-cc-008) is stable:
 
-### Build Order (build.sh)
+| Module(s) | Governor |
+|-----------|----------|
+| `home.js` · `diet.js` · `medical.js` | **Maren** — Care |
+| `intelligence-isl.js` · `intelligence-qa.js` · `intelligence-qa-handlers.js` · `intelligence-illness.js` · `intelligence-correlate.js` · `intelligence-caretickets.js` · `core.js` · `data.js` · `sync.js` · `config.js` · `start.js` | **Kael** — Intelligence (engine: what the data *does* before it renders) |
+| `intelligence-cards.js` · `intelligence-quicklog.js` | **Vela** — Surfacing (render: where data becomes parent-legible; canon-gen-001 2nd-gen Governor) |
+| `styles.css` · `template.html` (shared) | **all three** — sequential triple-jurisdiction review (Maren → Kael → Vela) |
+
+> **Unsettled:** `recipes.js` (food-icon / recipe data, consumed by `diet.js`) is **not yet mapped** in `qa-route.sh`, and `CLAUDE.md` treats Recipes as `diet.js` content (Maren). Until its Governor is settled in `qa-route.sh` + `CLAUDE.md`, route a `recipes.js` diff to **Lyra** to assign.
+
+### Concat order (split/build.sh)
 
 ```
-styles.css → template.html → data.js → core.js → home.js → diet.js → medical.js → intelligence.js → start.js
+config → data → recipes → core → home → diet → medical →
+intelligence-isl → intelligence-qa → intelligence-qa-handlers →
+intelligence-illness → intelligence-correlate → intelligence-quicklog →
+intelligence-cards → intelligence-caretickets → sync → start
 ```
 
-Output: `sproutlab.html` → copy to `index.html` for GitHub Pages
+`template.html` (shell + zi()/zif() sprite + CSS tokens) and `styles.css` are injected by the build; two CDN scripts ride in fixed order — **Chart.js** (blocking) then **Motion One** (`defer`).
 
-### Deploy Workflow
+### Build & deploy
 
 ```bash
-cd ~/SproutLab
-pnpm build              # bumps manifest version + builds sproutlab.html + copies to index.html
-git add -A && git commit -m "message" && git push
+pnpm build      # → split/build-safe.sh: builds sproutlab.html, validates (<!DOCTYPE…>, >100KB), mirrors to index.html
+git add -A && git commit -m "msg" && git --no-pager push
 ```
 
-`pnpm build` is the canonical entry — calls `split/build-safe.sh` which wraps `bash build.sh > sproutlab.html 2> /tmp/build.log`, validates the output starts with `<!DOCTYPE html>`, ends with `</html>`, and is > 100KB, then mirrors to `index.html`. (Post-PR #120; closes the PR #117/#118 STDERR-leak class.) The manifest version bump runs inside `build.sh` (`split/bump-version.mjs`); audit gates + version bump + doc-generator output go to stderr so the stdout HTML stream stays clean. `build-safe.sh` captures stderr to a log and tails it back to the caller for visibility. **NEVER invoke `bash split/build.sh > out.html 2>&1` directly** — the `2>&1` captures STDERR into the output file and corrupts the HTML.
+- **NEVER** `bash split/build.sh > out.html 2>&1` — the `2>&1` merges STDERR (audit gates + version bump) into the HTML and corrupts it (PR #118 lesson). `build-safe.sh` enforces `> $OUT 2> $LOG`.
+- The build also (non-fatally) regenerates the **auto-generated reference docs** — all rebuilt from committed source so they can't drift: `PROVINCE_MAP.html`, `POOP_COLOR_REFERENCE.html`, `CARETICKET_STATE_MACHINE.html`, `DESIGN_PRINCIPLES.html`, the doc-views (`SESSION_CLOSE_SEQUENCE` / `QA_GATE_SPEC` / `SPROUTLAB_QUICK_REFERENCE`), and `ICON_REFERENCE.html`, plus the Graphify graph (`split/graphify-out/`, gitignored).
 
 ---
 
-## 2. Data Gateway
+## 2. The QA chain — canon-cc-008 (NON-NEGOTIABLE pre-merge gate)
 
-```javascript
-// THE critical abstraction — every data read/write goes through these
-function load(key, def) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
-  catch { return def; }
-}
-function save(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-  triggerAutosave();
-}
-// NOTE: Device Sync (Phase 1) will modify save() to:
-//   1. Snapshot old value before overwrite
-//   2. Use _remoteWriteDepth counter for autosave guard
-//   3. Call syncWrite(key, val, old) if available
-// See DEVICE_SYNC_SPEC.md §7.1 for target state.
-```
+**Lyra builds alone; Governors activate only during QA rounds.** Every `split/` change headed for a PR clears the chain *before* the PR leaves draft or merges. Full procedure: `docs/QA_GATE_SPEC.md`.
+
+1. **Build & self-check** — `pnpm build` clean, audit gates pass, e2e green.
+2. **Governor audit** (Mode-1 subagents, parallel, by jurisdiction above) — summon **Maren** / **Kael** / **Vela** for whichever Region the diff touches; **both** Kael+Vela if it spans engine+render; **all three** for `styles.css`/`template.html`. Docs-/test-only → audit waivable (state it).
+3. **Lyra synthesizes** the Governor reports and folds the fixes.
+4. **Cipher** (Censor of Cluster A) runs the Edict V cross-cutting final-pass.
+5. *Only now* — mark PR ready / merge.
+
+- **`pnpm qa-route`** computes the summon-set from a diff (file routing + graph-traced cross-province ripple). **Advisory — widens, never narrows; does not discharge the gate.**
+- **`/code-review` is NOT a Governor audit** (canon-cc-022 artifact test — a skill is an in-transcript smell-check, no signature, no Edict V entry). It may supplement; it never replaces.
+- **Scribe Worker Tier** (canon-proc-006): each senior companion may command four task-Scribes — `scribe-scout` (recon) · `scribe-draft` (compose) · `scribe-verify` (mechanical checks) · `scribe-record` (chronicle). They support, never deliberate/commit/ratify.
+- An **Architect waiver** ("merge it directly") is valid only when *explicitly* given. Silence is not a waiver.
 
 ---
 
-## 3. localStorage Keys
+## 3. Hard Rules (HR-1 … HR-12) — canonical, from CLAUDE.md
 
-```javascript
-const KEYS = {
-  avatar:     'ziva_avatar',
-  growth:     'ziva_growth',
-  feeding:    'ziva_feeding',
-  milestones: 'ziva_milestones',
-  foods:      'ziva_foods',
-  vacc:       'ziva_vacc',
-  notes:      'ziva_notes',
-  meds:       'ziva_meds',
-  visits:     'ziva_visits',
-  medChecks:  'ziva_med_checks',
-  events:     'ziva_events',
-  scrapbook:  'ziva_scrapbook',
-  doctors:    'ziva_doctors',
-  sleep:      'ziva_sleep',
-  poop:       'ziva_poop',
-  alertsActive:  'ziva_alerts_active',
-  alertsHistory: 'ziva_alerts_history',
-  vaccBooked:    'ziva_vacc_booked',
-  suggestions:   'ziva_suggestions',
-  feverEpisodes: 'ziva_fever_episodes',
-  diarrhoeaEpisodes: 'ziva_diarrhoea_episodes',
-  vomitingEpisodes: 'ziva_vomiting_episodes',
-  coldEpisodes: 'ziva_cold_episodes',
-  activityLog: 'ziva_activity_log',
-  tomorrowPlanned: 'ziva_tomorrow_planned',
-  tomorrowOuting: 'ziva_tomorrow_outing',
-  powerOutage: 'ziva_power_outage',
-  bugReportPhone: 'ziva_bug_report_phone',
-  bugTooltipSeen: 'ziva_bug_tooltip_seen',
-  qlPredictions: 'ziva_ql_predictions',
-  careTickets:   'ziva_care_tickets',
-  notifPermission: 'ziva_notif_permission',
-  ctEverUsed:    'ziva_ct_ever_used',
-};
-```
+| HR | Rule |
+|----|------|
+| HR-1 | No emojis. All icons via `zi()` SVG system. |
+| HR-2 | No inline styles. CSS classes + design tokens only. |
+| HR-3 | No inline handlers. `data-action` delegation only. |
+| HR-4 | `escHtml()` at all render boundaries. |
+| HR-5 | All spacing/font/radius via CSS tokens. |
+| HR-6 | `data-action` delegation universal. |
+| HR-7 | `zi()` returns SVG HTML, set via innerHTML. |
+| HR-8 | Stub features show "Coming soon" toast via `showQLToast()`. |
+| HR-9 | Post-build multi-round QA audit. |
+| HR-10 | No text-overflow ellipsis. |
+| HR-11 | `Math.floor` for all currency display. |
+| HR-12 | Timezone-safe date construction. |
+
+*(The v1.0 sheet carried a different, conflicting HR numbering — this table is the canonical one. `CLAUDE.md` wins on any disagreement.)*
 
 ---
 
-## 4. Hard Rules (HR-1 through HR-12)
+## 4. Design system
 
-| Rule | Constraint |
-|------|-----------|
-| HR-1 | No emojis — use `zi()` SVG icons only |
-| HR-2 | No inline styles — CSS classes with tokens |
-| HR-3 | No inline onclick — `data-action` delegation |
-| HR-4 | No raw px in CSS — use `--sp-*`, `--fs-*`, `--r-*` tokens |
-| HR-5 | No text-overflow ellipsis — ever |
-| HR-6 | Domain colors for every surface (7-domain palette) |
-| HR-7 | Dark mode token coverage on all new CSS |
-| HR-8 | Minimum 36×36px tap targets |
-| HR-9 | No persistent editing in overlays (Read/Act only) |
-| HR-10 | All formatting through named functions |
-| HR-11 | Chip text must wrap (no nowrap on variable content) |
-| HR-12 | `escHtml()` on all user-sourced text in innerHTML |
+**Design floor — read it before touching any surface: `docs/DESIGN_PRINCIPLES.md`** (skill: `/design-principles`). The doc wins on any disagreement below.
 
----
+**Type:** Fraunces (serif — hero/scores/card-titles/gauges) · Nunito (sans — body/labels/buttons/nav).
+**Text zoom:** 3 tiers via `data-zoom` on `:root` (header block exempt).
 
-## 5. Domain Color System
-
-| Domain | Accent | Light BG | Text Color | Usage |
-|--------|--------|----------|------------|-------|
+### 7 domain colors
+| Domain | Accent | Light BG | Text | Usage |
+|--------|--------|----------|------|-------|
 | sage | `#b5d5c5` | `#e8f5ef` | `#3a7060` | Diet, nutrition, positive |
 | rose | `#f2a8b8` | `#fde8ed` | `#9e3e52` | Medical, alerts, action needed |
-| amber | `#e8b86d` | `#fef6e8` | `#8a6520` | Caution, trends, poop |
-| lavender | `#c9b8e8` | `#f0ebfb` | `#6e5e9a` | Milestones, intelligence, activity |
+| amber | `#e8b86d` | `#fef6e8` | `#8a6520` | Caution, trends, food warnings |
+| lavender | `#c9b8e8` | `#f0ebf9` | `#6e5e9a` | Milestones, achievements, intelligence |
 | sky | `#a8cfe0` | `#e8f4fa` | `#336580` | Sleep, hydration |
 | indigo | `#9ba8d8` | `#edf0fa` | `#4a5080` | Sleep intelligence, night data |
-| peach | `#fad4b4` | `#fef3ea` | — | Warm accents, outing |
+| peach | `#fad4b4` | `#fef3ea` | — | Warm accents, outing planner |
 
----
+Every new card/section uses one domain color. No ad-hoc hex.
 
-## 6. CSS Token Scale
+### Icons — two namespaces
+- **`zi(name)`** → `<svg class="zi"><use href="#zi-{name}"/></svg>` — general icon set.
+- **`zif-`** food icons → `<svg class="zif" style="--zif-c:…"><use href="#zif-{name}"/></svg>` (per-food color; resolved via `recipeFoodIcon()` in recipes.js; falls back to `zi('bowl')`).
 
+**The live, complete, per-namespace icon list is `docs/ICON_REFERENCE.html`** (auto-generated from the `template.html` sprite each build — the authoritative source; do not hard-code a count).
+
+### CSS tokens (scale; `styles.css` is source of truth)
 ```css
-/* Spacing */
---sp-2: 2px; --sp-4: 4px; --sp-6: 6px; --sp-8: 8px; --sp-10: 10px;
---sp-12: 12px; --sp-16: 16px; --sp-20: 20px; --sp-24: 24px; --sp-32: 32px;
-
-/* Font sizes */
---fs-2xs: 10px; --fs-xs: 11px; --fs-sm: 13px; --fs-base: 15px;
---fs-lg: 17px; --fs-xl: 20px; --fs-2xl: 24px; --fs-3xl: 30px;
-
-/* Radius */
---r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-full: 50%;
+--sp-2..--sp-32     /* spacing: 2,4,6,8,10,12,16,20,24,32 */
+--fs-2xs..--fs-3xl  /* font sizes */
+--r-sm..--r-full    /* radius */
 ```
 
 ---
 
-## 7. Format Function Registry
+## 5. Data layer
 
-| Function | Input | Output | File |
-|----------|-------|--------|------|
-| `escHtml(s)` | any string | HTML-safe string | core.js |
-| `escAttr(s)` | any string | attribute-safe string | core.js |
-| `formatDate(s)` | dateStr | `'Mon DD'` or `'Mon DD, YYYY'` | core.js |
-| `formatTimeShort(t)` | `'HH:MM'` | `'H:MM am/pm'` | core.js |
-| `toDateStr(d)` | Date | `'YYYY-MM-DD'` | core.js |
-| `ageAtDate(dateStr)` | dateStr | `'Nm Nd'` | core.js |
-| `formatHeight(cm)` | number | ft/in or cm string | medical.js |
-| `normalizeFoodName(raw)` | string | normalized base name | core.js |
-| `showQLToast(msg)` | string | Shows toast notification | core.js |
+### The gateway — every read/write goes through these (core.js)
+```javascript
+function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } }
+function save(key, val) { /* persists + autosave + (if SYNC_KEYS) Firestore write path */ }
+```
 
----
+### localStorage KEYS (core.js — current set)
+`avatar · growth · feeding · milestones · foods · vacc · notes · meds · visits · medChecks · events · scrapbook · doctors · sleep · poop · alertsActive · alertsHistory · vaccBooked · suggestions · feverEpisodes · diarrhoeaEpisodes · vomitingEpisodes · coldEpisodes · activityLog · tomorrowPlanned · tomorrowOuting · powerOutage · bugReportPhone · bugTooltipSeen · qlPredictions · careTickets · notifPermission · ctEverUsed · lastWriters · milestoneSuppress · activityMeta`
+*(All `ziva_*`-prefixed. `lastWriters` / `milestoneSuppress` / `activityMeta` are post-v1.0 additions.)*
 
-## 8. Icon System
+### Firebase sync (sync.js)
+Auth + Firestore. `SYNC_KEYS` (sync.js) is the authoritative sync allow-list — sync-internal metadata (`lastWriters`) is **never** roundtripped. Crash circuit breaker auto-disables after 3 errors; joining devices must not seed.
 
-**`zi(name)`** — returns SVG HTML string. 54 custom icons in sprite.
+### data-action convention — `{module}{Verb}{Target}`
+| Prefix | Module | | Prefix | Module |
+|--------|--------|-|--------|--------|
+| `ql` | Quick Log | | `ct` | CareTickets |
+| `al` | Activity Log | | `vacc` | Vaccination |
+| `sl` | Sleep | | `tp` | Tomorrow's Plan |
+| `diet` | Diet tab | | `ms` | Milestones |
+| `med` | Medical tab | | | |
 
-Common icons: `feed`, `sleep`, `poop`, `med`, `milestone`, `activity`, `alert`, `check`, `clock`, `calendar`, `chart`, `star`, `edit`, `delete`, `close`, `back`, `search`, `settings`, `export`, `import`, `bug`, `camera`, `mic`, `note`, `baby`, `weight`, `height`, `temp`, `vaccine`, `pill`, `doctor`, `growth`
+e.g. `data-action="qlLogFeed"`, `data-action="ctCreate"`.
 
----
-
-## 9. data-action Convention
-
-Pattern: `{module}{Verb}{Target}`
-
-| Prefix | Module |
-|--------|--------|
-| `ql` | Quick Log |
-| `al` | Activity Log |
-| `sl` | Sleep |
-| `ct` | CareTickets |
-| `vacc` | Vaccination |
-| `diet` | Diet tab |
-| `med` | Medical tab |
-| `ms` | Milestones |
-| `tp` | Tomorrow's Plan |
-
-Example: `data-action="qlLogFeed"`, `data-action="ctCreate"`, `data-action="vaccBook"`
+### Key helpers
+`escHtml(s)` · `escAttr(s)` · `formatDate(s)` · `formatTimeShort(t)` · `toDateStr(d)` — **core.js**. `showQLToast(msg)` — **intelligence-quicklog.js**. `formatHeight(cm)` — **medical.js**. `recipeFoodIcon(name)` — **recipes.js**.
 
 ---
 
-## 10. Sync Classification (for Device Sync)
+## 6. Key subsystems
 
-**SYNC keys (Firestore):** `feeding`, `sleep`, `poop`, `careTickets`, `notes`, `activityLog`, `milestones`, `growth`, `vacc`, `vaccBooked`, `meds`, `visits`, `doctors`, `medChecks`, `feverEpisodes`, `diarrhoeaEpisodes`, `vomitingEpisodes`, `coldEpisodes`, `foods`
-
-**LOCAL-ONLY:** `avatar`, `scrapbook`, `events`, `suggestions`, `tomorrowPlanned`, `tomorrowOuting`, `powerOutage`, `alertsActive`, `alertsHistory`, `bugReportPhone`, `bugTooltipSeen`, `qlPredictions`, `notifPermission`, `ctEverUsed`
-
----
-
-## 11. save() Call Frequency by Key
-
-| Key | Saves | Files |
-|-----|:-----:|-------|
-| `vacc` | 7 | core, home, medical |
-| `medChecks` | 6 | core, home |
-| `foods` | 6 | home, diet |
-| `sleep` | 4 | medical |
-| `milestones` | 4 | core, home, medical |
-| `vaccBooked` | 3 | home, medical |
-| `feeding` | 2 | home, diet |
-| `poop` | 2 | home |
-| `notes` | 2 | core, home |
-| All others | 1 each | various |
-
-**Total: 48 save() calls across 4 files, all through the same gateway.**
+- **ISL (Intelligence Service Layer)** — temporal query parser + 6 domain-data accessors + day/range summary generators (`intelligence-isl.js`).
+- **Smart Q&A** — 30 intents (registry in `intelligence-qa.js`); handlers in `intelligence-qa-handlers.js`.
+- **UIB (Unified Intelligence Bar)** — ingredient combos, food safety, symptom guidance.
+- **CareTickets** — concern tracking with notification-driven follow-ups. 21-field model, 6-transition state machine (`docs/CARETICKET_STATE_MACHINE.html`). Engine in `intelligence-caretickets.js`.
+- **Today So Far** — chronological daily activity timeline (`intelligence-quicklog.js`).
+- **Illness episodes** — fever / diarrhoea / vomiting / cold state machines (`intelligence-illness.js`).
 
 ---
 
-## 12. QA Gate System (Summary)
+## 7. Session lifecycle (operational slash-skills)
 
-| Gate | When | What |
-|------|------|------|
-| Gate 1 | Before writing code | Verify all dependencies (functions, constants, DOM elements, CSS classes) |
-| Gate 2 | After writing code | 4-layer audit: Mechanical → Structural → Logic → Visual |
-| Gate 3 | After Gate 2 passes | User review, cosmetic polish |
+| Skill | When | What |
+|-------|------|------|
+| `/design-principles` | before ANY UI work | surfaces the design floor (`DESIGN_PRINCIPLES.md`) |
+| `/doc-render` | giving a `docs/*.md` an HTML twin | the build-wired Markdown→view pattern |
+| `/sproutlab-compact` | BEFORE `/compact` on a long session | graph-anchored `/tmp` resume handoff |
+| `/session-close` | END of a session, after merge | the close sequence → `docs/SESSION_CLOSE_SEQUENCE.md` |
 
-**Rule:** Code is not presented until Gate 2 passes with zero defects in layers 1-3.
-
----
-
-## 13. Spec Process (Summary)
-
-| Pass | Lens |
-|------|------|
-| 1 | Concept — "Is this the right thing?" |
-| 2 | Data flow — "Can this be built?" |
-| 3 | Integration — "Where does it collide?" |
-| 4 | Bugs today — "What breaks?" |
-| 5 | Drift bugs — "What breaks in 3 months?" |
-| 6 | Builder questions — "What makes someone stop and ask?" |
-| 7 | Consistency — "Does it agree with itself?" |
-| 8 | Completion — "Am I done?" |
-
-**Build-ready when:** The builder never has to make an undocumented decision.
+**Spec process** (micro-spec discipline, 8 passes): `docs/SPEC_ITERATION_PROCESS.md`. Build-ready when the builder never makes an undocumented decision.
 
 ---
 
-## 14. Session Conventions
+## 8. Ziva context
 
-- Always read spec + design principles + source files before writing code
-- Handoff documents and session prompts are two distinct artifacts
-- Build estimates should be realistic, not optimistic
-- Micro-specs preferred over large specs
-- Never assume build/deploy commands — ask for exact process
-- Multi-round QA after every build; continue until only cosmetic bugs remain
-- "Keep going" = autonomous execution until done
+Born 4 Sep 2025 (~9 months). Milestones in flight: crawling, pulling to stand, cruising, pincer grasp, babbling, object permanence. Takes Vit D3 — track administration *timing*, not just taken/not-taken.
 
 ---
 
-## 15. Current Queue (as of April 2026)
-
-1. **Device Sync (Firebase)** ← NEXT BUILD (spec complete, 748 lines)
-2. Snapshot Sharing (Text v1)
-3. EVIDENCE_PATTERNS Expansion
-4. Inline Insights + Parent Celebration
-5. CareTickets Phase 2
-
----
-
-*This document is the builder's cheat sheet. Full specs are in the docs/ directory.*
+*The builder's cheat sheet. Full specs in `docs/`. The maps win on facts; `CLAUDE.md` wins on rules; this sheet points you to both.*
