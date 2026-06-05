@@ -905,7 +905,13 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const uid = uidPrefix + '-' + r.id;
   const grp = _recipePrimaryGroup(r);
   const rail = _recipeRailColor(grp);
-  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
+  // §9.3 — the same grams-weighted fingerprint the hero renders, now on every row
+  // (weighted FADE body + static wavelength top-stripe; animated sheen + watermark
+  // stay hero-only). Falls back to the flat .dt-* whisper when fp is null.
+  const fp = _recipeFingerprint(r);
+  const genCls = fp ? ' recipe-row-gen' : ` dt-${grp}`;
+  const fpStyle = fp ? `--rc-stripe:${fp.stripe};--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '';
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(((r.ingredients || [])[0] || {}).name) : null;
   const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
   const effMin = _recipeEffectiveMinAge(r);
   const withheld = effMin > ageMonths;
@@ -917,7 +923,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
   const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
   const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
-  return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
     <div class="recipe-row-top">
       <span class="recipe-row-icon">${glyph}</span>
       <span class="recipe-row-main">

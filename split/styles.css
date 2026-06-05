@@ -11522,13 +11522,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 }
 @media (prefers-reduced-motion: reduce) { .recipe-hero-gen::before { animation:none; background-position:0 0, 0 0; } }
 /* corner watermark — dominant ingredient gets the big slot, non-overlapping */
-.recipe-hero-wm { position:absolute; right:0; bottom:0; width:200px; height:100px; pointer-events:none; z-index:0; }
+/* watermark — center-right faded-ingredient motif, vertically centered and
+   hugging the right edge so it clears the bottom foot/CTA (was bottom-right,
+   colliding with the "See recipe" pill). Behind text (z-index 0, low opacity). */
+.recipe-hero-wm { position:absolute; right:0; top:50%; transform:translateY(-50%); width:184px; height:92px; pointer-events:none; z-index:0; }
 .recipe-hero-wm .recipe-wm { position:absolute; }
-.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.30; }
-[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.40; }
-.recipe-hero-wm .wm-1 { width:78px; height:78px; right:-4px; bottom:-6px; }
-.recipe-hero-wm .wm-2 { width:46px; height:46px; right:78px; bottom:6px; }
-.recipe-hero-wm .wm-3 { width:34px; height:34px; right:140px; bottom:-2px; }
+.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.28; }
+[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.38; }
+.recipe-hero-wm .wm-1 { width:74px; height:74px; right:-2px; top:9px; }
+.recipe-hero-wm .wm-2 { width:44px; height:44px; right:70px; top:0; }
+.recipe-hero-wm .wm-3 { width:32px; height:32px; right:128px; top:30px; }
 .recipe-hero-head { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-6); }
 .recipe-hero-head .recipe-hero-eyebrow { margin-bottom:0; }
 .recipe-hero-badge { flex:0 0 auto; display:inline-flex; align-items:center; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-2xs); font-weight:800; }
@@ -11557,6 +11560,18 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background-color:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
 .recipe-row:hover, .recipe-row:focus-visible { box-shadow:0 4px 18px var(--shadow); }
 .recipe-row[aria-expanded="true"] { box-shadow:0 6px 22px var(--shadow); }
+/* Generative row (§9.3) — brings the hero's quantity-weighted multi-domain
+   fingerprint to the catalog/suggested rows so every card shares one generative
+   language: a grams-weighted FADE body (--rc-fl light / --rc-fd dark) + a static
+   wavelength top-stripe (--rc-stripe). The animated sheen sweep + corner watermark
+   stay HERO-ONLY (the featured pick leads; the list stays calm). Rows with no
+   classifiable primary ingredient fall back to the flat .dt-* whisper. */
+.recipe-row-gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .recipe-row-gen { background:var(--rc-fd, var(--surface)); }
+.recipe-row-gen::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px; z-index:2;
+  border-radius:var(--r-xl) var(--r-xl) 0 0; background-image:var(--rc-stripe, var(--tc-sage));
+}
 .recipe-row-top { position:relative; z-index:1; display:flex; align-items:center; gap:var(--sp-10); }
 .recipe-row-icon { width:34px; height:34px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
 .recipe-row-icon .zif { width:30px; height:30px; }
