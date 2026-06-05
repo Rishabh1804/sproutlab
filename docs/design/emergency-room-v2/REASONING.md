@@ -187,4 +187,16 @@ Summon-set (by touched jurisdiction):
 - **V-K-1 residual** — the underlying toast-band occlusion is pre-existing (food deck too); the
   inline confirmation is the contained fix for the emergency surfaces.
 
-Cipher Edict V → next.
+**Cipher Edict V — `amended` → LGTM after one fold:**
+- **V-C-235-1** (the catch no single Governor could see): `geXlink`'s food cross-render shows
+  `food=null` correctly, but Copy/Save read the module-global `_emFood` — so a Library deep-linked
+  food would bleed a stale "Trigger food: …" into the General-room doctor summary. Folded the
+  one-line clear (`_emFood = null` before the cross-render). Render-neutral; no Governor re-summon.
+- Cipher concurred: `#emDocOv` retirement total; HR-1..12 clean on new code; **V-V-235-1 — ship**
+  (an explicit Architect directive on a render-aesthetic question; nothing in Cipher's lens
+  overrides it). Note: the `main...HEAD` three-dot diff hides the intra-branch born-and-retired
+  `#emDocOv` add/removes (they net to zero) — verified against per-commit history.
+
+**Gate (canon-cc-008) DISCHARGED.** Build clean; all audit gates PASS. PR marked ready.
+Per the Architect's standing instruction, holding at the Vercel preview for review — leading with
+**V-V-235-1** (the wave on the calm landing pills) as the one decision kept open.

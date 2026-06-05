@@ -75960,6 +75960,10 @@ function geXlink(btn) {
   var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
   var xl = e && e.xlink; if (!xl) return;
   if (xl.room === 'food' && typeof _emCardHtml === 'function') {
+    // V-C-235-1: clear the Library deep-link trigger food so the shared copy/print
+    // builder can't bleed a stale "Trigger food: …" into this General-room summary
+    // (the parent reached this card via "Choking on food?", not a specific food).
+    if (typeof _emFood !== 'undefined') _emFood = null;
     var ov = document.getElementById('geCardOv');
     if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
     ov.innerHTML = '<div class="food-pop ge-pop"><button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>'
