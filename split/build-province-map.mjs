@@ -269,5 +269,25 @@ const html = `<!DOCTYPE html>
 </body></html>
 `;
 
+// ── write only when the SUBSTANTIVE content changed (kill regeneration churn) ──
+// PROVINCE_MAP.html is the one committed graph-derived artifact, so every rewrite
+// is a git diff that trips the stop-hook. Three header fields wobble on every
+// rebuild with no real change behind them:
+//   - builtAt   — a hash of the graph's internals, not the repo commit
+//   - now       — the generated date, which flips daily
+//   - totalEdges — graphify's extraction jitters the relation count +/-1 run-to-run
+// Normalize those three out and compare against the committed file; if only they
+// differ, leave it untouched. A genuine content change (LOC, symbols, the
+// coupling table, the hub degrees) still lands in the body and forces a rewrite.
+const normalize = (s) => s
+  .replace(/generated \d{4}-\d{2}-\d{2}/, 'generated <DATE>')
+  .replace(/graph @ <code>[^<]*<\/code>/, 'graph @ <code><HASH></code>')
+  .replace(/<b>[\d,]+<\/b> relations/, '<b><RELATIONS></b> relations');
+
+if (existsSync(outPath) && normalize(readFileSync(outPath, 'utf8')) === normalize(html)) {
+  console.error(`[province-map] no substantive change (graph-hash/date/relation-jitter only); left ${outPath} untouched.`);
+  process.exit(0);
+}
+
 writeFileSync(outPath, html, 'utf8');
 console.error(`[province-map] wrote ${outPath} (${(html.length / 1024).toFixed(1)} KB; ${totalNodes} symbols, ${crossRoads.length} cross-province couplings, extraction=${sharedSurveyed ? 'thorough' : 'code-only'}).`);
