@@ -1526,10 +1526,11 @@ function _emCardHtml(hz, food) {
     rec.map(function(s) { return '<li>' + escHtml(s) + '</li>'; }).join('') + '</ul>' + xlink + '</div>' : '';
   var aft = (p.after && p.after.length) ? '<div class="ec-sec"><div class="ec-sec-h">After</div><ul class="ec-next">' +
     p.after.map(function(s) { return '<li>' + _emFmt(s) + '</li>'; }).join('') + '</ul></div>' : '';
-  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + hz + '">' +
-    '<span class="ec-docprep-row"><span class="ec-docprep-ic">' + zi('doc') + '</span>' +
-    '<span class="ec-docprep-t">For the doctor</span><span class="ec-docprep-go">' + zi('arrow-right') + '</span></span>' +
-    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></button>';
+  var dp = '<button class="ec-docprep" data-action="emOpenDocPrep" data-arg="' + escHtml(hz) + '">' +
+    '<span class="ec-docprep-ic">' + zi('doc') + '</span>' +
+    '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor</span>' +
+    '<span class="ec-docprep-d">A summary to copy, save, or share.</span></span>' +
+    '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>';
   return '<div class="ecard ecard--' + (amber ? 'amber' : 'rose') + '" id="ec-' + hz + '">' + head +
     '<div class="ec-body">' + tempo + '<div class="ec-sec">' + doNow + '</div>' + recH + aft + dp + '</div></div>';
 }
