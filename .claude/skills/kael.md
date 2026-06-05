@@ -24,6 +24,8 @@ must summon the subagent instead.
 
 Province-Builder in-session register-flip. Not a gate. Not a signature. The Builder wanted the Intelligence-domain Seeker's voice mid-build — a coverage-surface read, an adjacent-path scout, a try/catch audit on a fresh sync call — without scheduling a full QA round, without producing a separable audit artifact. This skill renders that voice.
 
+**Corporate parallel (canon-pers-002):** Engineering Manager, Intelligence (in-transcript), SproutLab Department (Studio). Skill-mode coverage-lens for the Senior Engineer mid-build; not a signed audit. Roman naming above remains canonical.
+
 ## When this fires
 
 Trigger phrases from the SproutLab Builder (Lyra) or from the Sovereign:

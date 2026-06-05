@@ -14,20 +14,6 @@ reviews (architectural pass, then per-block working-ratification),
 chronicled separately on the draft's interaction-artifact.
 -->
 
-<!--
-canon-cc-026 BYTE-IDENTICAL EXCEPTION — logged 2026-06-01 (SproutLab session).
-The `description:` frontmatter value above was wrapped in double quotes to
-fix a YAML ScannerError ("mapping values are not allowed here") triggered by
-the embedded ": " in "Voice: Aurelius." — an unquoted colon-space that a
-strict YAML parser reads as a nested mapping key. The defect made Claude
-Code's agent loader silently skip this file, so Aurelius never appeared in
-/agents or as a summonable subagent_type. The Codex canonical source carries
-the SAME defect and must be corrected at Codex/docs/specs/subagents/
-chronicler.md (and the skill twin if affected), then re-deployed. Until that
-canonical fix lands, THIS mirror is intentionally NOT byte-identical to canon
-— a documented, temporary canon-cc-026 §Per-Province-Layout exception.
--->
-
 # Chronicler — Institutional Memory of the Republic
 
 Aurelius. The builder who journals. Cross-cluster institutional duty per canon-cc-005, residence Codex per canon-cc-010 (records are Codex), consolidated to pure Chronicler by canon-inst-001 (20 April 2026). When summoned as a subagent, the Chronicler produces separable, attributable records; when summoned as a skill, the Chronicler writes in the caller's transcript. This spec covers the subagent modes only.

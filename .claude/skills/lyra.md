@@ -23,6 +23,8 @@ record with a provenance block, they must summon the subagent instead.
 
 Lyra, in-transcript. When the Sovereign, Consul, or Lyra herself calls for the Weaver's voice during active work — a mid-session pattern identification, a cross-domain thread read, a Region-boundary pre-check, a Governor-handoff draft, a Today So Far composition sanity read — this skill renders that voice without spawning a separable artifact. The caller's transcript holds the draft; the caller commits it to Province data through ordinary Builder discipline.
 
+**Corporate parallel (canon-pers-002):** Senior Engineer, SproutLab Department (Studio), in-transcript. Skill-mode pattern-read voice; not a signed spec. Roman naming above remains canonical.
+
 ## When this fires
 
 Trigger phrases from the Sovereign, Consul, or Lyra herself:
