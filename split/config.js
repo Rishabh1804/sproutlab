@@ -101,7 +101,20 @@ if (typeof window !== 'undefined') {
 // red flags (null = call-always for the time-critical items), and
 // `source` carries the authority citation. No invented clinical prose —
 // all copy is faithful to the cited bodies (NHS / British Red Cross /
-// St John Ambulance), pending Maren's content audit.
+// St John Ambulance / NICE NG232 / Resuscitation Council UK).
+//
+// Content provenance: each entry was adversarially fact-checked against
+// current authoritative guidance (deep-research pass, 2026-06-05). That
+// pass folded: RCUK 2025 infant CPR + choking technique (two-finger →
+// two-THUMB encircling, in force Jan 2026); EpiPen hold-time 10s → 3s
+// (device-specific); anaphylaxis lie-flat-legs-raised default; burns
+// hypothermia/keep-warm caveat; bleeding limb-elevation (deprecated) →
+// leg-raise-for-shock; seizure do-not-move; head-injury infant fall
+// threshold + tense-fontanelle / scalp-injury red flags. NUMBERS are
+// India-localised (112 unified / 108 ambulance, EMERGENCY_CONTACTS) — the
+// PROTOCOLS are UK-sourced (clearest public infant first-aid). Two items
+// flagged for pediatrician confirmation: the RCUK-2025 two-thumb infant
+// CPR + choking-thrust technique (just-effective guideline transition).
 //
 // Render policy:
 //   severity 'critical' → pinned-open, hottest, exempt from the accordion
@@ -137,19 +150,19 @@ const GENERAL_EMERGENCIES = [
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
       'Head to neutral, clear any obvious blockage, then give 5 rescue breaths — seal your mouth over baby’s mouth and nose and blow gently over 1 second until the chest rises.',
-      '30 chest compressions: 2 fingertips on the centre of the breastbone, push about 4 cm deep, fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
+      '30 chest compressions: both thumbs together on the centre of the breastbone, hands encircling the chest, push about 4 cm deep (a third of the way) and fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
-    source: 'NHS · British Red Cross'
+    source: 'Resuscitation Council UK 2025 · NHS'
   },
   {
     id: 'allergic-reaction', icon: 'alert-circle', name: 'Severe allergic reaction',
     severity: 'urgent', callLead: true,
     immediate: [
-      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh, hold 10 seconds. Most families won’t have one — if not, go straight to the next step.',
-      'Call 112 and say “anaphylaxis”. Lay baby down; if breathing is hard, raise the shoulders or hold them slightly upright. Do not stand or walk them.',
-      'No better after 5 minutes? Give a second auto-injector if you have one.'
+      'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place (EpiPen 3 seconds; if unsure, count to 10). Most families won’t have one — if not, go straight to the next step.',
+      'Call 112 and say “anaphylaxis”. Lay baby down and raise their legs; if breathing is hard, raise the shoulders or sit them up slightly instead; if vomiting, lay them on their side. Never stand or walk them.',
+      'No better after 5 minutes, or getting worse? Give a second auto-injector — in the other thigh — if you have one.'
     ],
     call112When: [
       'Swelling of the lips, tongue, throat or face',
@@ -163,23 +176,23 @@ const GENERAL_EMERGENCIES = [
     severity: 'urgent', callLead: true,
     immediate: [
       'Lay baby face-down along your forearm, head low. Give up to 5 sharp back blows between the shoulder blades with the heel of your hand — check the mouth after each.',
-      'Still stuck? Turn baby face-up, 2 fingers on the breastbone just below the nipple line, give up to 5 sharp chest thrusts — check the mouth after each.',
-      'Never use abdominal thrusts on a baby, and do not sweep the mouth blindly. Repeat 5 back blows + 5 chest thrusts; call 112 if it does not clear.'
+      'Still stuck? Turn baby face-up, both thumbs together on the breastbone just below the nipple line (hands around the chest), give up to 5 sharp chest thrusts — check the mouth after each.',
+      'Never use abdominal thrusts on a baby, and do not sweep the mouth blindly. Repeat 5 back blows + 5 chest thrusts; call 112 if it does not clear. Even once it clears, get baby checked — chest thrusts can injure inside.'
     ],
     call112When: [
       'The blockage does not clear after the first cycles',
       'Baby becomes limp, silent, or stops breathing → start CPR (top of this list)'
     ],
     xlink: { label: 'Choking on food? →' },
-    source: 'NHS · British Red Cross'
+    source: 'Resuscitation Council UK 2025 · NHS · British Red Cross'
   },
   {
     id: 'seizure', icon: 'bolt', name: 'Seizure / fit',
     severity: 'urgent', callLead: true,
     immediate: [
-      'Note the time it starts. Ease baby onto a soft surface and cushion the head; move hard objects away.',
+      'Note the time it starts. Cushion the head and pad around them with something soft; move hard objects away. Do not lift or move baby unless they are in danger.',
       'Do not restrain them and do not put anything in their mouth.',
-      'When it stops, turn baby onto their side (recovery position) and gently clear the mouth.'
+      'When it stops, turn baby onto their side (recovery position) and check nothing is blocking the mouth.'
     ],
     call112When: [
       'It is the first seizure, or it lasts more than 5 minutes',
@@ -193,21 +206,22 @@ const GENERAL_EMERGENCIES = [
     severity: 'serious', callLead: false,
     immediate: [
       'Hold something cold (e.g. frozen veg in a tea towel) to the bump for up to 20 minutes.',
-      'Keep baby calm and resting; watch closely over the next 24–48 hours.'
+      'Keep baby calm and resting; a responsible adult should stay with them and check closely for at least the first 24 hours.'
     ],
     call112When: [
       'Was knocked out, even briefly, or is hard to wake / very drowsy',
       'Repeated vomiting, a fit, or fluid or blood from the nose or ears',
-      'Under 1 year with any vomiting, a worsening cry, or a fall from a height (more than ~1 metre / about 5 steps)'
+      'A tense or bulging soft spot (fontanelle), or any swelling or cut on the head in a baby',
+      'Under 1 year with any vomiting, a worsening or high-pitched cry, or a fall from any height (off a bed, sofa, or changing table, or from your arms)'
     ],
-    source: 'NHS · British Red Cross'
+    source: 'NHS · British Red Cross · NICE NG232'
   },
   {
     id: 'bleeding', icon: 'blood-drop', name: 'Heavy bleeding / deep cut',
     severity: 'serious', callLead: false,
     immediate: [
-      'Press firmly on the wound with a clean cloth or dressing and keep pressing — do not lift to check.',
-      'Raise the injured part above the level of the heart if you can; lay baby down.',
+      'Press firmly on the wound with a clean (non-fluffy) cloth or dressing and keep pressing — do not lift to check.',
+      'Lay baby down and keep pressing. If baby looks pale, cold, or floppy, raise their legs to help with shock — but never stop pressing on the wound to do it.',
       'Do not wash a heavily-bleeding wound; if an object is embedded, press around it — do not pull it out.'
     ],
     call112When: [
@@ -220,7 +234,7 @@ const GENERAL_EMERGENCIES = [
     id: 'burn', icon: 'flame', name: 'Burn or scald',
     severity: 'serious', callLead: false,
     immediate: [
-      'Cool the burn under cool running water for at least 20 minutes — start now.',
+      'Cool the burn under cool running water for 20 minutes — start now. Keep the rest of baby warm (a blanket or clothing) and stop if they shiver — babies lose heat fast.',
       'Gently remove clothing or anything tight near the burn — but not anything stuck to it.',
       'After cooling, loosely cover with cling film or a clean plastic bag. No creams, ice, butter, or fluffy dressings.'
     ],
@@ -237,7 +251,7 @@ const GENERAL_EMERGENCIES = [
     immediate: [
       'Call 112 now. Do not make baby sick — it can cause more harm.',
       'Find what they swallowed; keep the packaging, container, or a sample to show the doctors.',
-      'If drowsy but breathing, lay them on their side; do not give food or drink.'
+      'If drowsy but breathing, lay them on their side; do not give any food or drink — not even water or milk.'
     ],
     call112When: null,
     source: 'NHS'
