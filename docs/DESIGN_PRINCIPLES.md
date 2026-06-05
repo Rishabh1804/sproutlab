@@ -1,5 +1,5 @@
 # SproutLab — Design Principles
-**Version:** 1.5 · **Created:** 9 April 2026 · **Updated:** 4 June 2026
+**Version:** 1.7 · **Created:** 9 April 2026 · **Updated:** 5 June 2026
 **Forked from:** DESIGN_SYSTEM_TEMPLATE.md v1.0
 **App:** Baby development tracker for Ziva (born Sep 2025)
 **Architecture:** Split-file HTML PWA (build-concatenated), localStorage persistence, no backend
@@ -798,7 +798,9 @@ Food/ingredient chips carry the **food-domain whisper fade** (`dt-*`), not a fla
 `background: linear-gradient(135deg, transparent 40%, rgba(<accent>,.22))` over the card base + a domain-tinted border; dark theme swaps to `transparent 30%` + the deep `--tc-*` hue. This is the decided language (ported from the library rework) — reaffirms **HR-6 (domain colour on every surface)**.
 
 ### 9.3 Generative recipe fingerprint (quantity-weighted)
-A recipe's hero renders a deterministic fingerprint from its ingredients:
+**Every recipe card — the featured hero *and* the catalog/suggested rows — renders this fingerprint** (the shared generative language; rows no longer fall back to a flat single-domain whisper). The **hero leads** with two extra flourishes reserved to it: the animated sheen sweep (§9.4) and the corner ingredient watermark. Rows carry the static fingerprint (weighted fade + wavelength stripe) — generative, but calm in a long list. A recipe with no classifiable primary ingredient falls back to the flat `.dt-*` whisper.
+
+A recipe's card renders a deterministic fingerprint from its ingredients:
 - **STRIPE** (top ribbon) + **FADE** (body wash) are the recipe's primary-ingredient **domains, wavelength-ordered** (rose → peach → amber → sage → sky → indigo → lav ≈ red→violet).
 - **Band-widths are weighted by ingredient quantity (grams)** — a 60% rice / 25% carrot / 15% paneer khichdi reads sage-dominant. Trace ingredients (ghee/salt/spices) are excluded so the fingerprint never muds; cap ≤ ~4 domains.
 - Domain → colour: fruit→rose, veg→peach, legume→amber, grain→sage, dairy→sky, nuts→lavender. Fade uses `--*-light` (light) / deep `rgba` hue (dark).
@@ -821,6 +823,7 @@ Cross-verified against WHO 2023 / WHO-PAHO / IAP / ICMR-NIN 2024 / NHS / FAO am8
 - **Allergens** (egg, peanut, tree nuts, dairy, sesame, fish) — introduce early (~6m), one at a time.
 - **Choking/prep** — nuts/seeds ground (never whole), grapes halved, hard veg/fruit cooked soft, egg fully cooked, fish deboned, chia soaked, raisins softened.
 - **Cow's milk** — in cooking from 6m; not a main drink until 12m.
+- **Portions = responsive feeding (never a target).** Any serving-size guidance is the amount to *offer* — a guide, never a quota; the baby self-regulates, so the framing must **let appetite lead** and never read as a feed-this-much pressure (over- or under-feeding anxiety is the harm). Age-banded amounts trace to WHO IYCF 2023 / WHO-PAHO / IAP: ~2–3 tbsp→½ cup at 6–8m, ~½ cup at 9–11m, ~¾–1 cup at 12m+ (snacks ≈ half a meal). An age-gated recipe frames its portion at *its own* start age, not the baby's current age.
 - **In taglines:** soft prep-cautions **fold into the phrase** ("ground almond", "halved grape"); **strict no's lead** as a prominent clause ("honey — only from age 1"). Safety **always shows first.**
 
 ---
@@ -841,6 +844,19 @@ The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wirin
 
 **Tint-fade-on-chips (the extension).** The §Tint System historically kept chips to the **flat Receded fill**; §10.4–10.5 extend the **whisper-fade** (transparent → domain accent) onto *small* chips for **colour-coded taxonomies** (nutrients, food domains). Flat Receded stays the default chip fill; tint-fade is reserved for these meaning-bearing colour systems.
 
+---
+
+## 11. The 6-second rule (text blocks)
+
+**A parent reads SproutLab one-handed, at 2 a.m., holding a baby. Any block of detail must answer the question in ~6 seconds — lead with the answer, invite the rest.** Established by the Library food card (§10.3, ~1150px → ~480px) and now the standing rule for *every* multi-section text surface (recipe detail, food info, future detail panels).
+
+**The three moves:**
+1. **Lead with the answer, always visible.** The one thing the parent came for sits at the top, never behind a tap — the food card's **verdict band** (`.fp-verdict`), the recipe detail's **safety summary** (`.rcp-safe`). For a safety-bearing surface this lead is **safety-first** (§9.7): the single most-important caution shows before anything else and is *never* collapsed.
+2. **Progressive-disclosure the rest.** Secondary detail lives in **collapsed rows** opened on tap — `.lib-prow` (Library), `.rcp-prow` (recipes). Body hidden until invited (`max-height` 0 → open). **Never dump** a wall of steps / flags / prose open by default.
+3. **Teasers, not mystery.** Every collapsed row carries a one-line **teaser** under its title (`.lib-prow-d` / `.rcp-prow-d` — "6 steps · 20 min", "age gates · allergens · forms", "WHO · IAP") so the parent knows what's inside *before* tapping. A chevron rotates on open. Min 44px tap target.
+
+**Component family.** `*-prow` (progressive-disclosure row: icon-disc + title + teaser + chevron + collapsing body) and the always-visible lead band (`fp-verdict` / `rcp-safe`). New detail surfaces reuse the nearest sibling or add a namespaced one (`<prefix>-prow`) — same anatomy, same 44px / teaser / chevron contract. The lead band's colour follows the safety/polarity palette (sage = clear, amber = caution, rose = flag), **not** the food-domain palette (polarity-collision rule).
+
 ## Changelog
 
 | Version | Date | Change |
@@ -851,6 +867,8 @@ The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wirin
 | 1.3 | 3 Jun 2026 | **Backfill** — §Swipe & Gesture Navigation: codifies the code-only `handleSwipe` rules (\|Δx\|≥60 + \|Δy\|≤0.7\|Δx\|; input/scrollable/overlay guards; clamp-never-wrap; innermost-wins cascade; order arrays; right-edge back-gesture; the `DIET_SUB_ORDER`/`DIET_INNER_ORDER` duplicated-literal drift hazard). Added without a changelog row at the time. |
 | 1.4 | 3 Jun 2026 | §10 — Library Living Shelf, Food Detail & Nutrient Colours: the living shelf + journey channel, the food info pop-up (Read overlay), the **nutrient colour system** (`.nutri-chip`, 6 nutrient-domains) and **food-domain chips** (`.fdom-chip`), the tint-fade-on-chips extension, and **`--tc-peach` defined** (retiring its long-standing dangling reference). From `docs/design/library-redesign/`. |
 | 1.5 | 4 Jun 2026 | **Prefix registry** — registered the Library-redesign prefixes `lib-*` (living shelf / wings / pop-up / deck / guides), `fp-*` (food pop-up + verdict band), and reserved `ec-*` (Emergency Card, design stage). **Reconcile with main #219 "Lean landing page":** main registered `ld-*` for Landing; this branch's Safety-guides guide-detail classes were renamed `ld-*` → `lib-guide-*` to vacate the collision. No content/colour-system change. |
+| 1.6 | 5 Jun 2026 | **§9.3 evolution** — the quantity-weighted fingerprint is now the language of *every* recipe card (hero **and** rows), not hero-only; the hero keeps the animated sheen + corner watermark as its distinction, rows carry the static fingerprint. **New §11 — the 6-second rule (text blocks):** lead with the always-visible answer (safety-first), progressive-disclose the rest in teaser-bearing `*-prow` rows, never dump. Registered `rcp-*` (recipe detail: `rcp-safe` lead band + `rcp-prow` disclosure rows). From the Recipes Tier-C render review (PR #228 follow-up). |
+| 1.7 | 5 Jun 2026 | **§9.7 — responsive-feeding portions.** Added age-adaptive serving guidance to the recipe detail (`rcp-serving`): the amount to *offer* by age band (WHO IYCF / WHO-PAHO / IAP), framed responsive-feeding ("a guide, not a target; let her appetite lead") — never a quota. Age-gated recipes frame the portion at their own start age. |
 
 ---
 

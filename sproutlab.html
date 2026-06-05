@@ -11529,13 +11529,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 }
 @media (prefers-reduced-motion: reduce) { .recipe-hero-gen::before { animation:none; background-position:0 0, 0 0; } }
 /* corner watermark — dominant ingredient gets the big slot, non-overlapping */
-.recipe-hero-wm { position:absolute; right:0; bottom:0; width:200px; height:100px; pointer-events:none; z-index:0; }
+/* watermark — center-right faded-ingredient motif, vertically centered and
+   hugging the right edge so it clears the bottom foot/CTA (was bottom-right,
+   colliding with the "See recipe" pill). Behind text (z-index 0, low opacity). */
+.recipe-hero-wm { position:absolute; right:0; top:50%; transform:translateY(-50%); width:184px; height:92px; pointer-events:none; z-index:0; }
 .recipe-hero-wm .recipe-wm { position:absolute; }
-.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.30; }
-[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.40; }
-.recipe-hero-wm .wm-1 { width:78px; height:78px; right:-4px; bottom:-6px; }
-.recipe-hero-wm .wm-2 { width:46px; height:46px; right:78px; bottom:6px; }
-.recipe-hero-wm .wm-3 { width:34px; height:34px; right:140px; bottom:-2px; }
+.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.28; }
+[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.38; }
+.recipe-hero-wm .wm-1 { width:74px; height:74px; right:-2px; top:9px; }
+.recipe-hero-wm .wm-2 { width:44px; height:44px; right:70px; top:0; }
+.recipe-hero-wm .wm-3 { width:32px; height:32px; right:128px; top:30px; }
 .recipe-hero-head { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-6); }
 .recipe-hero-head .recipe-hero-eyebrow { margin-bottom:0; }
 .recipe-hero-badge { flex:0 0 auto; display:inline-flex; align-items:center; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-2xs); font-weight:800; }
@@ -11557,9 +11560,25 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-group-title { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
 .recipe-group-count { font-size:var(--fs-xs); color:var(--light); font-weight:600; }
 
-.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
+/* background-COLOR (not the `background` shorthand) so the .dt-* domain whisper
+   background-image layers over the card base in BOTH themes — the shorthand reset
+   background-image:none, which (at equal specificity, source-order winning) killed
+   the whisper in light mode while dark survived on [data-theme] specificity. */
+.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background-color:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
 .recipe-row:hover, .recipe-row:focus-visible { box-shadow:0 4px 18px var(--shadow); }
 .recipe-row[aria-expanded="true"] { box-shadow:0 6px 22px var(--shadow); }
+/* Generative row (§9.3) — brings the hero's quantity-weighted multi-domain
+   fingerprint to the catalog/suggested rows so every card shares one generative
+   language: a grams-weighted FADE body (--rc-fl light / --rc-fd dark) + a static
+   wavelength top-stripe (--rc-stripe). The animated sheen sweep + corner watermark
+   stay HERO-ONLY (the featured pick leads; the list stays calm). Rows with no
+   classifiable primary ingredient fall back to the flat .dt-* whisper. */
+.recipe-row-gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .recipe-row-gen { background:var(--rc-fd, var(--surface)); }
+.recipe-row-gen::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px; z-index:2;
+  border-radius:var(--r-xl) var(--r-xl) 0 0; background-image:var(--rc-stripe, var(--tc-sage));
+}
 .recipe-row-top { position:relative; z-index:1; display:flex; align-items:center; gap:var(--sp-10); }
 .recipe-row-icon { width:34px; height:34px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
 .recipe-row-icon .zif { width:30px; height:30px; }
@@ -11579,18 +11598,57 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* Ingredient chips */
 .recipe-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin:var(--sp-8) 0 0; }
-.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
+/* background-COLOR longhand (not the shorthand) so the per-ingredient .dt-*
+   domain whisper background-image layers over the pill base in both themes —
+   same cascade fix as .recipe-row (the shorthand reset background-image:none). */
+.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background-color:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
 .recipe-chip .zif { width:15px; height:15px; }
 
-/* Expand-in-place detail (reuses .combo-*/.do/.dont/.fd-flag*) */
+/* Expand-in-place detail — the 6-second recipe template: an at-a-glance
+   ingredient row + an always-visible safety summary, then progressive-disclosure
+   rows (content invited, not dumped). */
 .recipe-detail { position:relative; z-index:1; margin-top:var(--sp-12); padding-top:var(--sp-12); border-top:1px solid var(--card-border); }
-.recipe-detail-sec { margin-bottom:var(--sp-12); }
-.recipe-detail-title { display:flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); margin-bottom:var(--sp-6); }
-.recipe-detail-title .zi { width:14px; height:14px; }
 .recipe-steps { margin:0; padding-left:var(--sp-16); }
 .recipe-steps li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
 .recipe-warn { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
-.recipe-source { font-size:var(--fs-2xs); font-style:italic; color:var(--light); margin-top:var(--sp-8); line-height:var(--lh-relaxed); }
+
+/* Safety summary — the 6-second LEAD, always visible (never collapsed, §9.7). */
+.rcp-safe { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-12) 0 var(--sp-4); padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-snug); }
+.rcp-safe .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; }
+.rcp-safe--safe { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-safe--caution { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-safe--flag { background:var(--rose-light); color:var(--tc-rose); }
+
+/* Serving guidance — calm, informational (responsive feeding: a guide, not an alarm). */
+.rcp-serving { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
+.rcp-serving .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; color:var(--tc-sage); }
+.rcp-serving strong { color:var(--text); font-weight:700; }
+.rcp-serving-src { color:var(--light); font-weight:700; white-space:nowrap; }
+
+/* Progressive-disclosure rows (recipe-namespaced sibling of .lib-prow). */
+.rcp-prows { margin-top:var(--sp-8); }
+.rcp-prow { border-bottom:1px solid var(--card-border); }
+.rcp-prow:first-child { border-top:1px solid var(--card-border); }
+.rcp-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; border:none; background:none; cursor:pointer; text-align:left; padding:var(--sp-10) 0; font-family:'Nunito',sans-serif; min-height:44px; }
+.rcp-prow-ic { flex:0 0 auto; width:28px; height:28px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--surface-alt); color:var(--mid); }
+.rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
+/* V-1: the safety prow's disc echoes the summary band (amber caution / rose flag),
+   so a green-summary recipe never meets a fixed-rose safety disc. */
+.rcp-prow--safety-flag .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.rcp-prow--safety-caution .rcp-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-prow--source .rcp-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
+.rcp-prow-txt { flex:1; min-width:0; }
+.rcp-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.rcp-prow-d { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
+.rcp-prow-chev { flex:0 0 auto; color:var(--light); display:inline-flex; transition:transform var(--ease-fast); }
+.rcp-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.rcp-prow.open .rcp-prow-chev { transform:rotate(90deg); }
+.rcp-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.rcp-prow.open .rcp-prow-body { max-height:2400px; }
+.rcp-prow-inner { padding:0 0 var(--sp-12) 38px; }
+.rcp-prow-p { margin:0; font-size:var(--fs-2xs); font-style:italic; color:var(--light); line-height:var(--lh-relaxed); }
 
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
@@ -21382,6 +21440,27 @@ function _recipeComposeTagline(parts, seed) {
 // O(1) lookup for the tap-through dispatcher (openRecipeInTab) + render helpers.
 const RECIPES_BY_ID = RECIPES.reduce((m, r) => { m[r.id] = r; return m; }, {});
 
+// ── Responsive-feeding portion GUIDANCE by age band (Maren CONTENT) ──────────
+// The amount to OFFER at a feed — a guide, never a target. Babies self-regulate;
+// the framing must stay responsive-feeding (let appetite lead, never force).
+// Amounts cross-verified: WHO IYCF 2023 (NBK596423) + WHO/PAHO guiding principles
+// + IAP IYCF — the canonical complementary-feeding quantities (tbsp equivalents at
+// 1 cup = 16 tbsp ≈ 240 ml, so ½ cup ≈ 8 tbsp, ¾ cup ≈ 12 tbsp):
+//   6–8 m:  2–3 tbsp per feed, building toward ~½ cup · 2–3 meals/day
+//   9–11 m: ~½ cup (≈ 8 tbsp · 125 ml) · 3–4 meals + 1–2 snacks
+//   12 m+:  ~¾–1 cup (≈ 12–16 tbsp · 190–250 ml) · 3–4 meals + 1–2 snacks
+// Snacks are roughly half a meal portion. Source keys map into RECIPE_SOURCES.
+const RECIPE_SERVING = [
+  { maxMonth: 8,   meal: '2–3 tbsp, building toward about ½ cup (≈ 8 tbsp)', snack: '1–2 tbsp' },
+  { maxMonth: 11,  meal: 'about ½ cup (≈ 8 tbsp · 125 ml)',                  snack: '2–3 tbsp' },
+  { maxMonth: 999, meal: 'about ¾–1 cup (≈ 12–16 tbsp · 190–250 ml)',       snack: 'about ½ cup (≈ 8 tbsp)' },
+];
+// Resolve the offer-amount for a recipe's slot at a given age (snacks ~half a meal).
+function _recipeServing(slot, ageMonths) {
+  const band = RECIPE_SERVING.find(b => ageMonths <= b.maxMonth) || RECIPE_SERVING[RECIPE_SERVING.length - 1];
+  return (slot === 'snack') ? band.snack : band.meal;
+}
+
 // Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so
 // consumers (diet.js renderDietRecipes, core.js openRecipeInTab) read a global.
 window.RECIPES = RECIPES;
@@ -21389,6 +21468,7 @@ window.RECIPES_BY_ID = RECIPES_BY_ID;
 window.RECIPE_SOURCES = RECIPE_SOURCES;
 window.recipeFoodIcon = recipeFoodIcon;
 window._recipeComposeTagline = _recipeComposeTagline;
+window._recipeServing = _recipeServing;
 // ─────────────────────────────────────────
 // SVG ICON HELPER — Ziva Sketch icon set
 // ─────────────────────────────────────────
@@ -22032,6 +22112,7 @@ function init() {
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
+    else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
@@ -40925,6 +41006,25 @@ function _recipeFpDomain(name) {
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
   return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
 }
+// Ingredient → food-domain key for the §10.5 .fdom-chip whisper (the #216 library
+// chip system: grains/fruits/vegs/dairy/nuts/spices/nonveg). ICON-based so chip
+// coverage matches the chip glyph itself — classifyFoodToGroup's FOOD_TAX substring
+// keys miss 'oats' entirely and mis-snap 'honey' onto 'honeydew' → fruits. The
+// fingerprint map splits legume from grain (for the stripe); .fdom folds them back
+// (FOOD_TAX has no legume domain). Trace icons (fats/spices/sweeteners) carry no
+// fingerprint domain → mapped here. Falls back to classifyFoodToGroup, then null.
+const _RECIPE_FP_TO_FDOM = { grain: 'grains', legume: 'grains', veg: 'vegs', fruit: 'fruits', dairy: 'dairy', nuts: 'nuts', protein: 'nonveg' };
+const _RECIPE_TRACE_FDOM = { ghee: 'dairy', oil: 'spices', turmeric: 'spices', cinnamon: 'spices', cumin: 'spices', coriander: 'spices', mint: 'spices', ginger: 'spices', jaggery: 'spices', honey: 'spices' };
+function _recipeChipDomain(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  if (ic) {
+    const fp = _RECIPE_FP_BY_ICON[ic.icon];
+    if (fp && _RECIPE_FP_TO_FDOM[fp]) return _RECIPE_FP_TO_FDOM[fp];
+    if (_RECIPE_TRACE_FDOM[ic.icon]) return _RECIPE_TRACE_FDOM[ic.icon];
+  }
+  const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  return (cls && cls.group) ? cls.group : null;
+}
 // Build the weighted fingerprint: { stripe, fadeL, fadeD, ranked } or null.
 function _recipeFingerprint(r) {
   const prim = (r.ingredients || []).filter(i => !_recipeIsTrace(i.name) && _recipeFpDomain(i.name));
@@ -41065,45 +41165,116 @@ function _recipeIngredientSafety(name, ageMonths) {
   return h;
 }
 
-// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
-// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+// 6-second safety LEAD (§ the 6-second rule) — the single most-important safety
+// line, ALWAYS visible above the collapsed detail, never hidden behind a tap
+// (§9.7 safety-first). Derived from the SAME per-ingredient signals the full
+// Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
+// and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
+function _recipeSafetySummary(r, ageMonths) {
+  const aged = []; const gates = new Set(); let agedMin = 0; const watch = [];
+  for (const ing of (r.ingredients || [])) {
+    const lower = String(ing.name).toLowerCase().trim();
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); gates.add(ageR.minMonth); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
+    const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+    if (hasFloor || allerg) watch.push(ing.name);
+  }
+  if (aged.length) {
+    const names = [...new Set(aged)].join(', ');
+    // M-2 (Maren): mixed gates → a range, never the max applied to every name
+    // (that over-states the lower-gated food; the full Safety row clarifies each).
+    const tail = (gates.size > 1)
+      ? `not yet age-appropriate (gates ${Math.min.apply(null, [...gates])}–${agedMin} months) — see Safety below for each`
+      : `not before ${agedMin} months. See Safety below for the full guidance`;
+    return { level: 'flag', icon: 'warn', text: `${names} — ${tail}.` };
+  }
+  if (watch.length) return { level: 'caution', icon: 'note',
+    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  return { level: 'safe', icon: 'check',
+    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+}
+
+// A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
+// teaser (what's inside) + chevron, body collapsed until tapped. Recipe-namespaced
+// sibling of the library's .lib-prow. Toggled by data-action="toggleRecipeProw".
+// Returns '' when there's no body.
+function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return `<div class="rcp-prow rcp-prow--${variant}${open ? ' open' : ''}">`
+    + `<button class="rcp-prow-head" data-action="toggleRecipeProw">`
+    + `<span class="rcp-prow-ic">${zi(icon)}</span>`
+    + `<span class="rcp-prow-txt"><span class="rcp-prow-t">${escHtml(title)}</span>`
+    + (teaser ? `<span class="rcp-prow-d">${escHtml(teaser)}</span>` : '') + `</span>`
+    + `<span class="rcp-prow-chev">${zi('arrow-right')}</span></button>`
+    + `<div class="rcp-prow-body"><div class="rcp-prow-inner">${bodyHtml}</div></div></div>`;
+}
+
+// Expand-in-place detail body for a recipe — the 6-second template: an at-a-glance
+// ingredient row + an always-visible safety summary lead, then progressive-
+// disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
+// · Guidance) — teasers tell what's inside; content invited, not dumped.
 function _recipeDetailHtml(r, ageMonths) {
   let h = '';
-  // Ingredients (chips with food icon)
+  // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
-    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+    // §9.2/§10.5: each pill carries its OWN food-domain wash — the #216 .fdom-chip--*
+    // system (legible at pill size). Domain via the icon-based resolver (full coverage).
+    const dom = _recipeChipDomain(ing.name);
+    const fdom = dom ? ` fdom-chip--${dom}` : '';
+    h += `<span class="recipe-chip${fdom}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
-  // Steps
-  if (r.steps && r.steps.length) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
-    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
-    h += '</ol></div>';
+  // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
+  const ss = _recipeSafetySummary(r, ageMonths);
+  h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
+  // amount to OFFER — a guide, never a target; appetite leads. An age-gated
+  // recipe (effMin > Ziva's age) frames the portion at its own start age.
+  if (typeof _recipeServing === 'function') {
+    const ageNow = Math.floor(ageMonths);
+    const effMin = _recipeEffectiveMinAge(r);
+    const gated = effMin && effMin > ageNow;
+    const servAge = gated ? effMin : ageNow;
+    const serving = _recipeServing(r.slot, servAge);
+    const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
+    // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
+    // the line, independent of the recipe's r.source (which often cites other bodies).
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">WHO/PAHO · IAP</span></span></div>`;
   }
-  // Per-ingredient safety (Pass B — never gated)
+  // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
+  let rows = '';
+  if (r.steps && r.steps.length) {
+    const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
+    const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
+    rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
+  }
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    let body = '<div class="combo-dos">';
+    if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) body += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    body += '</div>';
+    const nd = (r.dos ? r.dos.length : 0), nn = (r.donts ? r.donts.length : 0);
+    const teaser = [nd ? `${nd} to do` : '', nn ? `${nn} to avoid` : ''].filter(Boolean).join(' · ');
+    rows += _recipeProw('dos', 'sparkle', 'Dos & don’ts', teaser, body, false);
+  }
+  // Full per-ingredient safety stack (Pass B — never gated) — collapsed; the
+  // summary above leads, the breakdown is one tap away.
   let safety = '';
   for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
-  if (safety) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
-  } else {
-    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
-  }
-  // Dos & Don'ts (reuse the combo classes)
-  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
-    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
-    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
-    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
-    h += '</div></div>';
-  }
-  // Source citation (no assumptions)
+  // V-1 (Vela): state-key the safety prow's icon disc to ECHO the summary band
+  // (amber on caution, rose on flag) — not an unconditional rose category marker.
+  if (safety) rows += _recipeProw(`safety-${ss.level}`, 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
   if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
-    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
-      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
-    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+    const srcs = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean);
+    const cites = srcs.map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) rows += _recipeProw('source', 'note', 'Guidance & sources', srcs.map(s => s.org).join(' · '), `<p class="rcp-prow-p">${cites}</p>`, false);
   }
+  h += `<div class="rcp-prows">${rows}</div>`;
   return h;
 }
 
@@ -41116,7 +41287,13 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const uid = uidPrefix + '-' + r.id;
   const grp = _recipePrimaryGroup(r);
   const rail = _recipeRailColor(grp);
-  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
+  // §9.3 — the same grams-weighted fingerprint the hero renders, now on every row
+  // (weighted FADE body + static wavelength top-stripe; animated sheen + watermark
+  // stay hero-only). Falls back to the flat .dt-* whisper when fp is null.
+  const fp = _recipeFingerprint(r);
+  const genCls = fp ? ' recipe-row-gen' : ` dt-${grp}`;
+  const fpStyle = fp ? `--rc-stripe:${fp.stripe};--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '';
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(((r.ingredients || [])[0] || {}).name) : null;
   const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
   const effMin = _recipeEffectiveMinAge(r);
   const withheld = effMin > ageMonths;
@@ -41128,7 +41305,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
   const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
   const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
-  return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
     <div class="recipe-row-top">
       <span class="recipe-row-icon">${glyph}</span>
       <span class="recipe-row-main">
@@ -41279,6 +41456,14 @@ function toggleRecipeRow(uid) {
   const open = det.style.display !== 'none';
   det.style.display = open ? 'none' : 'block';
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Toggle a recipe detail's progressive-disclosure row (§ 6-second rule). The
+// document-level delegation dispatches the INNERMOST data-action, so tapping a
+// row never collapses the parent recipe card.
+function toggleRecipeProw(btn) {
+  const r = btn && btn.closest('.rcp-prow');
+  if (r) r.classList.toggle('open');
 }
 
 // Force-open a catalog recipe row + scroll it into view (used by the Home

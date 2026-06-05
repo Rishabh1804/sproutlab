@@ -690,6 +690,25 @@ function _recipeFpDomain(name) {
   const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
   return (ic && _RECIPE_FP_BY_ICON[ic.icon]) ? _RECIPE_FP_BY_ICON[ic.icon] : null;
 }
+// Ingredient → food-domain key for the §10.5 .fdom-chip whisper (the #216 library
+// chip system: grains/fruits/vegs/dairy/nuts/spices/nonveg). ICON-based so chip
+// coverage matches the chip glyph itself — classifyFoodToGroup's FOOD_TAX substring
+// keys miss 'oats' entirely and mis-snap 'honey' onto 'honeydew' → fruits. The
+// fingerprint map splits legume from grain (for the stripe); .fdom folds them back
+// (FOOD_TAX has no legume domain). Trace icons (fats/spices/sweeteners) carry no
+// fingerprint domain → mapped here. Falls back to classifyFoodToGroup, then null.
+const _RECIPE_FP_TO_FDOM = { grain: 'grains', legume: 'grains', veg: 'vegs', fruit: 'fruits', dairy: 'dairy', nuts: 'nuts', protein: 'nonveg' };
+const _RECIPE_TRACE_FDOM = { ghee: 'dairy', oil: 'spices', turmeric: 'spices', cinnamon: 'spices', cumin: 'spices', coriander: 'spices', mint: 'spices', ginger: 'spices', jaggery: 'spices', honey: 'spices' };
+function _recipeChipDomain(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  if (ic) {
+    const fp = _RECIPE_FP_BY_ICON[ic.icon];
+    if (fp && _RECIPE_FP_TO_FDOM[fp]) return _RECIPE_FP_TO_FDOM[fp];
+    if (_RECIPE_TRACE_FDOM[ic.icon]) return _RECIPE_TRACE_FDOM[ic.icon];
+  }
+  const cls = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
+  return (cls && cls.group) ? cls.group : null;
+}
 // Build the weighted fingerprint: { stripe, fadeL, fadeD, ranked } or null.
 function _recipeFingerprint(r) {
   const prim = (r.ingredients || []).filter(i => !_recipeIsTrace(i.name) && _recipeFpDomain(i.name));
@@ -830,45 +849,116 @@ function _recipeIngredientSafety(name, ageMonths) {
   return h;
 }
 
-// Expand-in-place detail body for a recipe (steps, dos/donts, per-ingredient
-// safety stack, source citation). Reuses .combo-dos / .do / .dont / .fd-flag*.
+// 6-second safety LEAD (§ the 6-second rule) — the single most-important safety
+// line, ALWAYS visible above the collapsed detail, never hidden behind a tap
+// (§9.7 safety-first). Derived from the SAME per-ingredient signals the full
+// Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
+// and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
+function _recipeSafetySummary(r, ageMonths) {
+  const aged = []; const gates = new Set(); let agedMin = 0; const watch = [];
+  for (const ing of (r.ingredients || [])) {
+    const lower = String(ing.name).toLowerCase().trim();
+    const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
+    if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); gates.add(ageR.minMonth); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
+    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
+    const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
+    if (hasFloor || allerg) watch.push(ing.name);
+  }
+  if (aged.length) {
+    const names = [...new Set(aged)].join(', ');
+    // M-2 (Maren): mixed gates → a range, never the max applied to every name
+    // (that over-states the lower-gated food; the full Safety row clarifies each).
+    const tail = (gates.size > 1)
+      ? `not yet age-appropriate (gates ${Math.min.apply(null, [...gates])}–${agedMin} months) — see Safety below for each`
+      : `not before ${agedMin} months. See Safety below for the full guidance`;
+    return { level: 'flag', icon: 'warn', text: `${names} — ${tail}.` };
+  }
+  if (watch.length) return { level: 'caution', icon: 'note',
+    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  return { level: 'safe', icon: 'check',
+    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+}
+
+// A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
+// teaser (what's inside) + chevron, body collapsed until tapped. Recipe-namespaced
+// sibling of the library's .lib-prow. Toggled by data-action="toggleRecipeProw".
+// Returns '' when there's no body.
+function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
+  if (!bodyHtml) return '';
+  return `<div class="rcp-prow rcp-prow--${variant}${open ? ' open' : ''}">`
+    + `<button class="rcp-prow-head" data-action="toggleRecipeProw">`
+    + `<span class="rcp-prow-ic">${zi(icon)}</span>`
+    + `<span class="rcp-prow-txt"><span class="rcp-prow-t">${escHtml(title)}</span>`
+    + (teaser ? `<span class="rcp-prow-d">${escHtml(teaser)}</span>` : '') + `</span>`
+    + `<span class="rcp-prow-chev">${zi('arrow-right')}</span></button>`
+    + `<div class="rcp-prow-body"><div class="rcp-prow-inner">${bodyHtml}</div></div></div>`;
+}
+
+// Expand-in-place detail body for a recipe — the 6-second template: an at-a-glance
+// ingredient row + an always-visible safety summary lead, then progressive-
+// disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
+// · Guidance) — teasers tell what's inside; content invited, not dumped.
 function _recipeDetailHtml(r, ageMonths) {
   let h = '';
-  // Ingredients (chips with food icon)
+  // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
   for (const ing of (r.ingredients || [])) {
     const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(ing.name) : null;
     const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
-    h += `<span class="recipe-chip">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
+    // §9.2/§10.5: each pill carries its OWN food-domain wash — the #216 .fdom-chip--*
+    // system (legible at pill size). Domain via the icon-based resolver (full coverage).
+    const dom = _recipeChipDomain(ing.name);
+    const fdom = dom ? ` fdom-chip--${dom}` : '';
+    h += `<span class="recipe-chip${fdom}">${glyph}${escHtml(ing.name)}${ing.qty ? ' · ' + escHtml(ing.qty) : ''}</span>`;
   }
   h += '</div>';
-  // Steps
-  if (r.steps && r.steps.length) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('chef')} How to make it</div><ol class="recipe-steps">`;
-    h += r.steps.map(s => `<li>${escHtml(s)}</li>`).join('');
-    h += '</ol></div>';
+  // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
+  const ss = _recipeSafetySummary(r, ageMonths);
+  h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
+  // amount to OFFER — a guide, never a target; appetite leads. An age-gated
+  // recipe (effMin > Ziva's age) frames the portion at its own start age.
+  if (typeof _recipeServing === 'function') {
+    const ageNow = Math.floor(ageMonths);
+    const effMin = _recipeEffectiveMinAge(r);
+    const gated = effMin && effMin > ageNow;
+    const servAge = gated ? effMin : ageNow;
+    const serving = _recipeServing(r.slot, servAge);
+    const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
+    // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
+    // the line, independent of the recipe's r.source (which often cites other bodies).
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">WHO/PAHO · IAP</span></span></div>`;
   }
-  // Per-ingredient safety (Pass B — never gated)
+  // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
+  let rows = '';
+  if (r.steps && r.steps.length) {
+    const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
+    const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
+    rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
+  }
+  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
+    let body = '<div class="combo-dos">';
+    if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
+    if (r.donts) body += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
+    body += '</div>';
+    const nd = (r.dos ? r.dos.length : 0), nn = (r.donts ? r.donts.length : 0);
+    const teaser = [nd ? `${nd} to do` : '', nn ? `${nn} to avoid` : ''].filter(Boolean).join(' · ');
+    rows += _recipeProw('dos', 'sparkle', 'Dos & don’ts', teaser, body, false);
+  }
+  // Full per-ingredient safety stack (Pass B — never gated) — collapsed; the
+  // summary above leads, the breakdown is one tap away.
   let safety = '';
   for (const ing of (r.ingredients || [])) safety += _recipeIngredientSafety(ing.name, ageMonths);
-  if (safety) {
-    h += `<div class="recipe-detail-sec"><div class="recipe-detail-title">${zi('shield')} Safety for Ziva</div>${safety}</div>`;
-  } else {
-    h += `<div class="recipe-detail-sec"><div class="fd-flag fd-flag-neutral">${zi('check')} <span>Every ingredient here is age-appropriate for Ziva. Introduce any brand-new food on its own and watch for 3 days.</span></div></div>`;
-  }
-  // Dos & Don'ts (reuse the combo classes)
-  if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
-    h += '<div class="recipe-detail-sec"><div class="combo-dos">';
-    if (r.dos) h += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
-    if (r.donts) h += r.donts.map(d => `<div class="dont">${zi('warn')} ${escHtml(d)}</div>`).join('');
-    h += '</div></div>';
-  }
-  // Source citation (no assumptions)
+  // V-1 (Vela): state-key the safety prow's icon disc to ECHO the summary band
+  // (amber on caution, rose on flag) — not an unconditional rose category marker.
+  if (safety) rows += _recipeProw(`safety-${ss.level}`, 'shield', 'Safety, ingredient by ingredient', 'age gates · allergens · forms', safety, false);
   if (r.source && r.source.length && typeof RECIPE_SOURCES !== 'undefined') {
-    const cites = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean)
-      .map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
-    if (cites) h += `<div class="recipe-source">${zi('note')} Guidance from ${cites}.</div>`;
+    const srcs = r.source.map(k => RECIPE_SOURCES[k]).filter(Boolean);
+    const cites = srcs.map(s => `${escHtml(s.org)} — ${escHtml(s.doc)}`).join(' · ');
+    if (cites) rows += _recipeProw('source', 'note', 'Guidance & sources', srcs.map(s => s.org).join(' · '), `<p class="rcp-prow-p">${cites}</p>`, false);
   }
+  h += `<div class="rcp-prows">${rows}</div>`;
   return h;
 }
 
@@ -881,7 +971,13 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const uid = uidPrefix + '-' + r.id;
   const grp = _recipePrimaryGroup(r);
   const rail = _recipeRailColor(grp);
-  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon((r.ingredients[0] || {}).name) : null;
+  // §9.3 — the same grams-weighted fingerprint the hero renders, now on every row
+  // (weighted FADE body + static wavelength top-stripe; animated sheen + watermark
+  // stay hero-only). Falls back to the flat .dt-* whisper when fp is null.
+  const fp = _recipeFingerprint(r);
+  const genCls = fp ? ' recipe-row-gen' : ` dt-${grp}`;
+  const fpStyle = fp ? `--rc-stripe:${fp.stripe};--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '';
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(((r.ingredients || [])[0] || {}).name) : null;
   const glyph = ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
   const effMin = _recipeEffectiveMinAge(r);
   const withheld = effMin > ageMonths;
@@ -893,7 +989,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
   const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
   const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
-  return `<div class="recipe-row dt-${grp}" id="rrow-${escAttr(uid)}" style="--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
     <div class="recipe-row-top">
       <span class="recipe-row-icon">${glyph}</span>
       <span class="recipe-row-main">
@@ -1044,6 +1140,14 @@ function toggleRecipeRow(uid) {
   const open = det.style.display !== 'none';
   det.style.display = open ? 'none' : 'block';
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+
+// Toggle a recipe detail's progressive-disclosure row (§ 6-second rule). The
+// document-level delegation dispatches the INNERMOST data-action, so tapping a
+// row never collapses the parent recipe card.
+function toggleRecipeProw(btn) {
+  const r = btn && btn.closest('.rcp-prow');
+  if (r) r.classList.toggle('open');
 }
 
 // Force-open a catalog recipe row + scroll it into view (used by the Home

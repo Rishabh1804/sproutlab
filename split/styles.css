@@ -11522,13 +11522,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 }
 @media (prefers-reduced-motion: reduce) { .recipe-hero-gen::before { animation:none; background-position:0 0, 0 0; } }
 /* corner watermark — dominant ingredient gets the big slot, non-overlapping */
-.recipe-hero-wm { position:absolute; right:0; bottom:0; width:200px; height:100px; pointer-events:none; z-index:0; }
+/* watermark — center-right faded-ingredient motif, vertically centered and
+   hugging the right edge so it clears the bottom foot/CTA (was bottom-right,
+   colliding with the "See recipe" pill). Behind text (z-index 0, low opacity). */
+.recipe-hero-wm { position:absolute; right:0; top:50%; transform:translateY(-50%); width:184px; height:92px; pointer-events:none; z-index:0; }
 .recipe-hero-wm .recipe-wm { position:absolute; }
-.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.30; }
-[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.40; }
-.recipe-hero-wm .wm-1 { width:78px; height:78px; right:-4px; bottom:-6px; }
-.recipe-hero-wm .wm-2 { width:46px; height:46px; right:78px; bottom:6px; }
-.recipe-hero-wm .wm-3 { width:34px; height:34px; right:140px; bottom:-2px; }
+.recipe-hero-wm .recipe-wm svg.zif { width:100%; height:100%; opacity:0.28; }
+[data-theme="dark"] .recipe-hero-wm .recipe-wm svg.zif { opacity:0.38; }
+.recipe-hero-wm .wm-1 { width:74px; height:74px; right:-2px; top:9px; }
+.recipe-hero-wm .wm-2 { width:44px; height:44px; right:70px; top:0; }
+.recipe-hero-wm .wm-3 { width:32px; height:32px; right:128px; top:30px; }
 .recipe-hero-head { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); margin-bottom:var(--sp-6); }
 .recipe-hero-head .recipe-hero-eyebrow { margin-bottom:0; }
 .recipe-hero-badge { flex:0 0 auto; display:inline-flex; align-items:center; background:var(--tc-sage); color:var(--card-bg); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-2xs); font-weight:800; }
@@ -11550,9 +11553,25 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipe-group-title { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
 .recipe-group-count { font-size:var(--fs-xs); color:var(--light); font-weight:600; }
 
-.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
+/* background-COLOR (not the `background` shorthand) so the .dt-* domain whisper
+   background-image layers over the card base in BOTH themes — the shorthand reset
+   background-image:none, which (at equal specificity, source-order winning) killed
+   the whisper in light mode while dark survived on [data-theme] specificity. */
+.recipe-row { position:relative; overflow:hidden; display:block; width:100%; text-align:left; background-color:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-xl); padding:var(--sp-12) var(--sp-12); margin-bottom:var(--sp-8); cursor:pointer; transition:box-shadow var(--ease-med), transform var(--ease-med); }
 .recipe-row:hover, .recipe-row:focus-visible { box-shadow:0 4px 18px var(--shadow); }
 .recipe-row[aria-expanded="true"] { box-shadow:0 6px 22px var(--shadow); }
+/* Generative row (§9.3) — brings the hero's quantity-weighted multi-domain
+   fingerprint to the catalog/suggested rows so every card shares one generative
+   language: a grams-weighted FADE body (--rc-fl light / --rc-fd dark) + a static
+   wavelength top-stripe (--rc-stripe). The animated sheen sweep + corner watermark
+   stay HERO-ONLY (the featured pick leads; the list stays calm). Rows with no
+   classifiable primary ingredient fall back to the flat .dt-* whisper. */
+.recipe-row-gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .recipe-row-gen { background:var(--rc-fd, var(--surface)); }
+.recipe-row-gen::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px; z-index:2;
+  border-radius:var(--r-xl) var(--r-xl) 0 0; background-image:var(--rc-stripe, var(--tc-sage));
+}
 .recipe-row-top { position:relative; z-index:1; display:flex; align-items:center; gap:var(--sp-10); }
 .recipe-row-icon { width:34px; height:34px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
 .recipe-row-icon .zif { width:30px; height:30px; }
@@ -11572,18 +11591,57 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* Ingredient chips */
 .recipe-chips { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin:var(--sp-8) 0 0; }
-.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
+/* background-COLOR longhand (not the shorthand) so the per-ingredient .dt-*
+   domain whisper background-image layers over the pill base in both themes —
+   same cascade fix as .recipe-row (the shorthand reset background-image:none). */
+.recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background-color:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
 .recipe-chip .zif { width:15px; height:15px; }
 
-/* Expand-in-place detail (reuses .combo-*/.do/.dont/.fd-flag*) */
+/* Expand-in-place detail — the 6-second recipe template: an at-a-glance
+   ingredient row + an always-visible safety summary, then progressive-disclosure
+   rows (content invited, not dumped). */
 .recipe-detail { position:relative; z-index:1; margin-top:var(--sp-12); padding-top:var(--sp-12); border-top:1px solid var(--card-border); }
-.recipe-detail-sec { margin-bottom:var(--sp-12); }
-.recipe-detail-title { display:flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); margin-bottom:var(--sp-6); }
-.recipe-detail-title .zi { width:14px; height:14px; }
 .recipe-steps { margin:0; padding-left:var(--sp-16); }
 .recipe-steps li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
 .recipe-warn { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
-.recipe-source { font-size:var(--fs-2xs); font-style:italic; color:var(--light); margin-top:var(--sp-8); line-height:var(--lh-relaxed); }
+
+/* Safety summary — the 6-second LEAD, always visible (never collapsed, §9.7). */
+.rcp-safe { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-12) 0 var(--sp-4); padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-snug); }
+.rcp-safe .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; }
+.rcp-safe--safe { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-safe--caution { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-safe--flag { background:var(--rose-light); color:var(--tc-rose); }
+
+/* Serving guidance — calm, informational (responsive feeding: a guide, not an alarm). */
+.rcp-serving { display:flex; align-items:flex-start; gap:var(--sp-8); margin:var(--sp-8) 0 var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); }
+.rcp-serving .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:1px; color:var(--tc-sage); }
+.rcp-serving strong { color:var(--text); font-weight:700; }
+.rcp-serving-src { color:var(--light); font-weight:700; white-space:nowrap; }
+
+/* Progressive-disclosure rows (recipe-namespaced sibling of .lib-prow). */
+.rcp-prows { margin-top:var(--sp-8); }
+.rcp-prow { border-bottom:1px solid var(--card-border); }
+.rcp-prow:first-child { border-top:1px solid var(--card-border); }
+.rcp-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; border:none; background:none; cursor:pointer; text-align:left; padding:var(--sp-10) 0; font-family:'Nunito',sans-serif; min-height:44px; }
+.rcp-prow-ic { flex:0 0 auto; width:28px; height:28px; border-radius:var(--r-full); display:flex; align-items:center; justify-content:center; background:var(--surface-alt); color:var(--mid); }
+.rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
+.rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
+/* V-1: the safety prow's disc echoes the summary band (amber caution / rose flag),
+   so a green-summary recipe never meets a fixed-rose safety disc. */
+.rcp-prow--safety-flag .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }
+.rcp-prow--safety-caution .rcp-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-prow--source .rcp-prow-ic { background:var(--lav-light); color:var(--tc-lav); }
+.rcp-prow-txt { flex:1; min-width:0; }
+.rcp-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.rcp-prow-d { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
+.rcp-prow-chev { flex:0 0 auto; color:var(--light); display:inline-flex; transition:transform var(--ease-fast); }
+.rcp-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.rcp-prow.open .rcp-prow-chev { transform:rotate(90deg); }
+.rcp-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.rcp-prow.open .rcp-prow-body { max-height:2400px; }
+.rcp-prow-inner { padding:0 0 var(--sp-12) 38px; }
+.rcp-prow-p { margin:0; font-size:var(--fs-2xs); font-style:italic; color:var(--light); line-height:var(--lh-relaxed); }
 
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
