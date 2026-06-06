@@ -29,6 +29,6 @@ playwright/.cache/
 Thumbs.db
 
 # local debug screenshots (not for the repo)
-tmp-shot*.mjs
+tmp-*.mjs
 tmp-shots/
 tmp-shots2/
