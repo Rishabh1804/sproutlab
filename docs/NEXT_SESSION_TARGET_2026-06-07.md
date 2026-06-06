@@ -47,9 +47,13 @@ Pick up the live product target. Any `split/` change runs the **full canon-cc-00
 - *Inherited (from the 2026-06-05 close):* the skill-deployment-shape doctrine.
 - *Inherited (from the product arc):* two-tier evidence discipline; the floor follows the hazard; `safeForm` as the general gate-carrier; the alias-precedence host-guard pattern; the research→manifest→FOOD_EFFECTS pipeline.
 
+### Maren-tier finding — surfaced by the new contrast-audit tool (NEW)
+- **`--doc-placeholder` on the printed doctor card = 3.29:1 (below AA 4.5).** Found by `tools/contrast_audit.py`. Two-part issue, both on the *printed* emergency handoff (`.fp-back`, which prints): **(a) contrast** — the `.doc-na` "N/A" markers and unstamped fields render at 3.29:1; **(b) semantics** — an unstamped field prints its literal screen instruction `<em>tap to stamp now</em>`, which is meaningless and faint on paper. Render: `_geDocFace` (`intelligence-cards.js`) + `_emDocFace` (`diet.js`); colour: `--doc-placeholder` in `styles.css` `.docface` + `@media print` block. **Recommended fix** (same pattern as the PR #235 `--tc-rose` re-force): in the print docface block, re-force `--doc-placeholder` to ≥4.5:1 on `#fff` (≈`#6e6060`), and ideally suppress the "tap to stamp now" instruction in print. **Touches `styles.css` (shared, triple-Gov) + the two render modules → full canon-cc-008 gate + Architect go-ahead required.** Route to **Maren** (Care; medical-printout legibility) with **Vela** consult (render). Not fixed this session — documented only.
+
 ### Quality / debt (inherited, unchanged)
 - Amber-on-amber margin; `${food}` HR-4 at `diet.js:1195`; F-4/F-5 (`parseFeeding`); milestones-tab-v1 e2e; `CURATED_COMBOS maxAgeMonths`; `_qlPredictFood` SKIPPED_MEAL; `NUTRITION_QTY_DEFAULTS` coverage; comma-dish-name parse.
 - *Inherited cosmetic:* residual empty space on the shorter doctor face (dark padding; not pursued — cosmetic).
+- *Contrast-audit candidate (likely false positive):* `--tc-sage-light` measures 3.66:1 on bare card, but its real backgrounds are tinted badges / dark-theme severity chips, not bare card — the tool pairs by naming convention, so confirm the actual render context before treating as a bug.
 
 ### Housekeeping
 - Stale merged `claude/*` remote branches (env blocks delete-push) — clear via the GitHub UI.

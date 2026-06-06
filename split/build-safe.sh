@@ -102,3 +102,23 @@ if [ "${SKIP_GRAPH:-}" != "1" ]; then
 else
   echo "SKIP_GRAPH=1 — graph + Province Map not regenerated this build." >&2
 fi
+
+# ── WCAG contrast audit (advisory) ──
+# Reads the colour tokens out of styles.css and reports text-on-background
+# contrast for the light/dark/print-from-dark contexts. Strictly NON-FATAL and
+# ADVISORY — it never blocks a build (a contrast finding is a Governor judgment
+# call, not a build error; e.g. a low-contrast value may be a large-text or
+# placeholder role that passes in context). Writes to STDERR only, AFTER the
+# HTML build is closed to $OUT — so it cannot leak into the page (PR #118
+# lesson). SKIP_CONTRAST=1 bypasses it. tools/contrast_audit.py is pure stdlib.
+if [ "${SKIP_CONTRAST:-}" != "1" ]; then
+  PY="$(command -v python3 || command -v python || true)"
+  if [ -n "$PY" ] && [ -f "$ROOT/tools/contrast_audit.py" ]; then
+    "$PY" "$ROOT/tools/contrast_audit.py" 1>&2 \
+      || echo "Contrast audit failed to run (non-fatal)." >&2
+  else
+    echo "Contrast audit skipped (python or tools/contrast_audit.py not found; non-fatal)." >&2
+  fi
+else
+  echo "SKIP_CONTRAST=1 — contrast audit not run this build." >&2
+fi
