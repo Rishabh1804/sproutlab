@@ -197,6 +197,19 @@ Summon-set (by touched jurisdiction):
   overrides it). Note: the `main...HEAD` three-dot diff hides the intra-branch born-and-retired
   `#emDocOv` add/removes (they net to zero) — verified against per-commit history.
 
-**Gate (canon-cc-008) DISCHARGED.** Build clean; all audit gates PASS. PR marked ready.
-Per the Architect's standing instruction, holding at the Vercel preview for review — leading with
-**V-V-235-1** (the wave on the calm landing pills) as the one decision kept open.
+**Gate (canon-cc-008) DISCHARGED.** Build clean; all audit gates PASS. PR ready.
+
+**Post-preview folds:**
+- **V-V-235-1 — RESOLVED (Architect: take it off the landing).** Wave scoped to
+  `.ge-callbar .ld-emergency-call` (Room callbar) + `.ge-call-chip` (Room row chips); the in-card
+  `.ec-call` keeps its own. The landing's quick-dial pills revert to their calm static outline —
+  the calm front door wins; the wave stays where its panic-signal value matters (inside the Room).
+- **Parallel-synthesis reconciliation.** While holding at the preview, a second session pushed a
+  `main`-merge + "Governor synthesis" commit folding the deferred copy/motion findings
+  (V-M-238 teaser, V-M-239 anaphylaxis, reduced-motion / pinned-card flip guard). It resolved the
+  anaphylaxis hold-time CONSISTENTLY across both rooms — general (`config.js`) **and** food
+  (`data.js`) now read "hold it in place; slowly count to 10 to be sure" (device-agnostic, safe;
+  over-holding an EpiPen causes no harm). Respected that resolution; reset onto the remote tip and
+  re-applied only the unique wave-scope (above) to avoid clobbering. (Minor doc-debt: the config
+  provenance header still cites "EpiPen 3s VERIFIED" while the copy now says count-to-10 — the
+  conservative simplification is safe; flagging the comment/copy mismatch for a later tidy.)
