@@ -1843,9 +1843,11 @@ function _geDocFace(e) {
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
   rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var _docName = (typeof _emDocName === 'function' ? _emDocName() : 'Ziva');
+  var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
-    + '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>'
-    + '<p class="doc-who">' + escHtml(typeof _emDocWho === 'function' ? _emDocWho() : 'Ziva') + '</p>' + rows
+    + '<div class="doc-brand"><b>' + escHtml(_docName) + '</b><span>Emergency summary</span></div>'
+    + (_docVitals ? '<p class="doc-who">' + escHtml(_docVitals) + '</p>' : '') + rows
     + '<div class="doc-note"><b>For the team:</b> ' + escHtml(d.forTeam) + '</div></div>'
     + '<div class="doc-actions">'
     + '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>'
@@ -1975,7 +1977,7 @@ function _geStampVal(container, id) {
 }
 function _geDocText(e, container) {
   var d = e.doc; if (!d) return '';
-  var L = ['SproutLab — Emergency summary', (typeof _emDocWho === 'function' ? _emDocWho() : 'Ziva'), '', 'Suspected: ' + d.suspected];
+  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary', (typeof _emDocVitals === 'function' ? _emDocVitals() : ''), '', 'Suspected: ' + d.suspected];
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
   L.push('Known allergies: none recorded yet (this may be a first reaction)');

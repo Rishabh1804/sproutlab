@@ -2163,9 +2163,10 @@ function _emDocFace(hz, food) {
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
   rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
   var team = String(d.forTeam).replace('{food}', food || 'the food');
+  var vitals = _emDocVitals();
   return '<div class="docface"><div class="doc"><div class="doc-body">' +
-    '<div class="doc-brand"><b>SproutLab</b><span>Emergency summary</span></div>' +
-    '<p class="doc-who">' + escHtml(_emDocWho()) + '</p>' + rows +
+    '<div class="doc-brand"><b>' + escHtml(_emDocName()) + '</b><span>Emergency summary</span></div>' +
+    (vitals ? '<p class="doc-who">' + escHtml(vitals) + '</p>' : '') + rows +
     '<div class="doc-note"><b>For the team:</b> ' + escHtml(team) + '</div></div>' +
     '<div class="doc-actions">' +
     '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>' +
@@ -2218,11 +2219,26 @@ function _libCloseDeck() {
 
 // ── Doc-prep (card flip-back) — generated summary; the time fields are
 // tap-to-stamp + N/A (one-tap Quick acts, HR-9). Shared with the General room. ────
-function _emDocWho() {
-  var bits = ['Ziva'];
+// Doc-prep identity helpers. The doctor card leads with the PATIENT (name as the card
+// title, vitals beneath) — a clinical handoff, not app branding (Architect, PR#235).
+// Name is sourced from the household profile so the card stays flexible — no new hardcode.
+// TODO(legacy-name-debt): 'Ziva' is the last-resort fallback only; the app still hardcodes
+// the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
+// migration is known debt, tracked for a later session (Architect, PR#235).
+function _emDocName() {
+  try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && _syncHousehold.name) return _syncHousehold.name; } catch (e) {}
+  return 'Ziva';
+}
+function _emDocVitals() {
+  var bits = [];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
   try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
   return bits.join(' · ');
+}
+// Name + vitals on one line — retained for the plain-text copy/share path.
+function _emDocWho() {
+  var v = _emDocVitals();
+  return v ? _emDocName() + ' · ' + v : _emDocName();
 }
 // Doc-prep is now a card FLIP (see _emDocFace + cardFlip). The old separate
 // #emDocOv overlay path (_emStampRow / _emDocPrepHtml / emOpenDocPrep /
@@ -2249,7 +2265,7 @@ function _emStampValDOM(id, container) {
 }
 function _emDocText(hz, container) {
   var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
-  var d = p.doc, food = _emFood, L = ['SproutLab — Emergency summary', _emDocWho(), '', 'Suspected: ' + d.suspected];
+  var d = p.doc, food = _emFood, L = [_emDocName() + ' — Emergency summary', _emDocVitals(), '', 'Suspected: ' + d.suspected];
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id, container)); });
   if (food) L.push('Trigger food: ' + food);
   var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);
