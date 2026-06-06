@@ -9,10 +9,10 @@
 
 You are **Lyra**, The Weaver. You see connections across domains — how a sleep regression correlates with a dietary change, how a vaccination timeline intersects with a milestone window. You weave the threads of a baby's development into a coherent tapestry that tired parents can actually read.
 
-**QA chain (30K Rule — 79,367 LOC split-file source; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; LOC refreshed 2026-06-04 post-#226):**
-1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js (27,975 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
-2. **Kael** (Governor of Intelligence — engine layer) audits intelligence-isl.js + intelligence-qa.js + intelligence-qa-handlers.js + intelligence-illness.js + intelligence-correlate.js + intelligence-caretickets.js + core.js + data.js + sync.js + config.js + start.js (27,801 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, illness state machines, the cross-domain correlation primitive, CareTicket lifecycle data, Firebase sync boundaries. **The engine layer — what the data does before it renders.**
-3. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (8,946 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data and Maren's safe data become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
+**QA chain (30K Rule — 82,386 LOC split-file source; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; LOC refreshed 2026-06-07 post-#235):**
+1. **Maren** (Governor of Care) audits home.js + diet.js + medical.js + recipes.js (29,774 lines — **within ~226 of the 30K split trigger; recipes.js filed provisionally under Care, jurisdiction pending Architect ratification — see jurisdiction summary**). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
+2. **Kael** (Governor of Intelligence — engine layer) audits intelligence-isl.js + intelligence-qa.js + intelligence-qa-handlers.js + intelligence-illness.js + intelligence-correlate.js + intelligence-caretickets.js + core.js + data.js + sync.js + config.js + start.js (28,153 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, illness state machines, the cross-domain correlation primitive, CareTicket lifecycle data, Firebase sync boundaries. **The engine layer — what the data does before it renders.**
+3. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (9,210 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data and Maren's safe data become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
 4. **Shared modules** (styles.css + template.html = 14,645 lines) get sequential triple-jurisdiction review from all three Governors (rotation: Maren → Kael → Vela, with first-Governor by heaviest-touched Region).
 5. Lyra synthesizes all three Governor reports and implements fixes.
 6. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across all three Governor jurisdictions.
@@ -92,7 +92,7 @@ Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: spli
 
 ## Architecture
 
-Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **79,367 lines total** (split-file source; refreshed 2026-06-04 post-#226; was 77,899 post-#215, 76,500 post-#187, 76,308 post-#184, 67,442 at the canon-gen-001 ratification 2026-05-23). *(The Province Map reports a larger figure — it counts the split-file source plus the `split/*.mjs` + shell build tooling that carry graph nodes, filed under the Public Works province; this total tracks only the split-file source the 30K Rule governs. See the reconciliation note under the jurisdiction summary.)*
+Split-file PWA. 17 JS modules + 2 shared files (styles.css + template.html), **82,386 lines total** (split-file source; refreshed 2026-06-07 post-#235; was 79,367 post-#226, 77,899 post-#215, 76,500 post-#187, 76,308 post-#184, 67,442 at the canon-gen-001 ratification 2026-05-23). *(The Province Map reports a larger figure — it counts the split-file source plus the `split/*.mjs` + shell build tooling that carry graph nodes, filed under the Public Works province; this total tracks only the split-file source the 30K Rule governs. See the reconciliation note under the jurisdiction summary.)*
 
 **Jurisdiction overview:** [docs/PROVINCE_MAP.html](docs/PROVINCE_MAP.html) — a graph-derived **exec summary** (NOT a navigation tool): one card per Province with symbol/LOC counts and a headroom bar to the 30K-rule frontier, plus cross-province coupling and the top connectivity hubs. Auto-generated each build by `split/build-province-map.mjs` from `split/graphify-out/graph.json`. **Supersedes the hand-maintained `docs/MODULE_MAP.html`** — regenerated from committed source every build, so it cannot drift (no more `wc -l split/*` drift-check). *(MODULE_MAP.html is retained for now but deprecated; delete once this is trusted.)*
 
@@ -109,13 +109,14 @@ Split-file PWA. 16 JS modules + 2 shared files (styles.css + template.html), **7
 ```
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
-├── template.html      ← HTML shell + zi() symbol sprite (3,449 lines)        [shared — triple-Gov review]
-├── styles.css         ← All CSS (11,196 lines)                               [shared — triple-Gov review]
-├── config.js          ← Firebase config (94 lines)                           [Kael]
-├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,578) [Kael]
-├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,322) [Kael]
+├── template.html      ← HTML shell + zi() symbol sprite (3,432 lines)        [shared — triple-Gov review]
+├── styles.css         ← All CSS (11,817 lines)                               [shared — triple-Gov review]
+├── config.js          ← Firebase config + GENERAL_EMERGENCIES registry (330 lines) [Kael]
+├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,652) [Kael]
+├── recipes.js         ← Diet → Recipes cited corpus, 6–12m complementary feeding (615) [Maren — provisional; jurisdiction pending Architect ratification]
+├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,364) [Kael]
 ├── home.js            ← Home tab, Today So Far, hero score (11,485 lines)    [Maren]
-├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (5,776) [Maren]
+├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (6,960) [Maren]
 ├── medical.js         ← Medical tab, vaccinations, CareTickets (10,714)      [Maren]
 ├── intelligence-isl.js          ← ISL: typeahead, time-query, domain-data (1,244)  [Kael — engine]
 ├── intelligence-qa.js           ← Q&A engine, UIB, classifier (2,324)                [Kael — engine]
@@ -123,21 +124,21 @@ split/
 ├── intelligence-illness.js      ← fever / diarrhoea / vomiting / cold episodes (2,667) [Kael — engine]
 ├── intelligence-correlate.js    ← v3-3 cross-domain correlation primitive (274)     [Kael — engine]
 ├── intelligence-caretickets.js  ← CareTickets data + lifecycle (2,230)               [Kael — engine]
-├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* + lean landing (3,410) [Vela — render]
+├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* + lean landing + emergency-room flip cards (3,674) [Vela — render]
 ├── intelligence-quicklog.js     ← Activity Log + Smart Quick Log + Today So Far (5,536) [Vela — render]
 ├── sync.js            ← Firebase auth + Firestore sync (2,393 lines)         [Kael]
 └── start.js           ← Init + event delegation bootstrap (19 lines)          [Kael]
 ```
 
-**Jurisdiction summary (post-canon-gen-001; LOC refreshed 2026-06-04 post-#226):**
-- **Maren (Care):** home + diet + medical = 27,975 LOC (≈2,025 headroom to 30K — **nearest-term split candidate**; overtook Kael post-#226 — the lean-landing Care detector landed in home.js, the Recipes work in diet.js)
-- **Kael (Intelligence engine):** isl + qa + qa-handlers + illness + correlate + caretickets + core + data + sync + config + start = 27,801 LOC (≈2,199 headroom to 30K; core.js + data.js carry the steepest engine growth)
-- **Vela (Surfacing render):** cards + quicklog = 8,946 LOC (≈21,054 headroom to 30K)
-- **Shared (triple-Gov):** styles.css + template.html = 14,645 LOC
+**Jurisdiction summary (post-canon-gen-001; LOC refreshed 2026-06-07 post-#235):**
+- **Maren (Care):** home + diet + medical + recipes = 29,774 LOC (≈**226 headroom to 30K — AT THE SPLIT CLIFF**; the next Care-heavy build likely crosses it. `recipes.js` (615) is filed here **provisionally** by domain (diet/food-safety corpus); its jurisdiction + whether to trigger a `canon-gen-001` Care split is a pending **Architect decision** — see `docs/NEXT_SESSION_TARGET_2026-06-07.md` P0. Without recipes.js, Care = 29,159.)
+- **Kael (Intelligence engine):** isl + qa + qa-handlers + illness + correlate + caretickets + core + data + sync + config + start = 28,153 LOC (≈1,847 headroom to 30K; core.js + data.js carry the steepest engine growth; config.js grew with the GENERAL_EMERGENCIES registry)
+- **Vela (Surfacing render):** cards + quicklog = 9,210 LOC (≈20,790 headroom to 30K)
+- **Shared (triple-Gov):** styles.css + template.html = 15,249 LOC
 
-> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **79,367 LOC** of split-file source (the four jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports a larger figure (**~83,100 LOC** = 79,367 split-file + ~3,700 build tooling) because it sums *every file carrying a graph node* — that includes the ~3,700 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. Both numbers are correct for their scope; per the authoritative-source rule below, the map wins on the raw count, this file wins on which scope the Rule applies to.
+> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **82,386 LOC** of split-file source (the four jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports a larger figure (**~86,100 LOC** = 82,386 split-file + ~3,700 build tooling) because it sums *every file carrying a graph node* — that includes the ~3,700 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. Both numbers are correct for their scope; per the authoritative-source rule below, the map wins on the raw count, this file wins on which scope the Rule applies to.
 
-**Concat order:** config → data → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-correlate → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
+**Concat order:** config → data → recipes → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-correlate → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
 
 ### Build
 
