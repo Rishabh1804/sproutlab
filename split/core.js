@@ -631,13 +631,17 @@ function init() {
     else if (action === 'libJumpToBook' && typeof libJumpToBook === 'function') libJumpToBook(btn);
     // Emergency Cards (emergency-protocol-v1)
     else if (action === 'emScrollHazard' && typeof emScrollHazard === 'function') emScrollHazard(btn);
-    else if (action === 'emOpenDocPrep' && typeof emOpenDocPrep === 'function') emOpenDocPrep(btn);
-    else if (action === 'emCloseDocPrep' && typeof _emCloseDocPrep === 'function') _emCloseDocPrep();
-    else if (action === 'emCloseDocPrepSelf' && typeof _emCloseDocPrep === 'function') { if (e.target === btn) _emCloseDocPrep(); }
     else if (action === 'emStampTime' && typeof emStampTime === 'function') emStampTime(btn);
     else if (action === 'emToggleNA' && typeof emToggleNA === 'function') emToggleNA(btn);
-    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc();
-    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc();
+    else if (action === 'emCopyDoc' && typeof emCopyDoc === 'function') emCopyDoc(btn);
+    else if (action === 'emSaveDoc' && typeof emSaveDoc === 'function') emSaveDoc(btn);
+    // General Emergency Room v2 — pop-up cards + flip + doc-prep (intelligence-cards.js)
+    else if (action === 'geOpenCard' && typeof geOpenCard === 'function') geOpenCard(btn);
+    else if (action === 'geCloseCard' && typeof _geCloseCard === 'function') _geCloseCard();
+    else if (action === 'cardFlip' && typeof cardFlip === 'function') cardFlip(btn);
+    else if (action === 'cardFlipBack' && typeof cardFlipBack === 'function') cardFlipBack(btn);
+    else if (action === 'geXlink' && typeof geXlink === 'function') geXlink(btn);
+    else if (action === 'geCopyDoc' && typeof geCopyDoc === 'function') geCopyDoc(btn);
     // Diet → Recipes (WIRING_PLAN §1/§10): expand-in-place row toggle + the
     // Home Smart-Q&A tap-through that lands on Track→Diet→Recipes.
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);

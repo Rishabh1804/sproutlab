@@ -2924,9 +2924,11 @@ const EMERGENCY_PROTOCOL = {
       'going floppy, pale, or very sleepy',
     ],
     steps: [
-      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold 10 seconds. _(Most families won’t have one — if not, go straight to step 2.)_',
+      // Hold-time: modern auto-injectors deliver the dose in ≤3s (EpiPen/Teva). Parent-facing copy says "slowly count to 10" — this guarantees ≥3s without asking a panicking parent to arbitrate two numbers (Maren V-M-237). Over-holding a 3s device is harmless; under-holding risks an incomplete dose.
+      '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold it in place — slowly count to 10 to be sure. _(Most families won’t have one — if not, go straight to step 2.)_',
       '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
-      '**Lie her flat, legs raised.** Hard to breathe → let her sit up. Vomiting → on her side. **Never stand her up.**',
+      // Positioning harmonized with the General-room surface (Maren V-M-238): "raise shoulders / sit up slightly" — fully uprighting a hypotensive baby is the one posture anaphylaxis guidance warns against.
+      '**Lie her flat, legs raised.** Hard to breathe → raise her shoulders or sit her up slightly. Vomiting → on her side. **Never stand her up.**',
       'No better after **5 minutes**? A second dose, if you have one.',
     ],
     after: [

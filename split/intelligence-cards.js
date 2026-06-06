@@ -1732,10 +1732,20 @@ function openEmergencyChooser() {
     if (typeof showQLToast === 'function') showQLToast(zi('bowl') + ' Food safety — opening the Library');
   });
 
-  // General emergency → new concept, design pending; stub per HR-8.
+  // General emergency → the General Emergency Room (§5.3), gated on the
+  // `ready` predicate over GENERAL_EMERGENCIES (K-4: content presence, not
+  // function existence). All-placeholder registry → keeps the HR-8 stub.
+  // V-5 scroll-lock handoff: open the Room (acquires the lock) BEFORE the
+  // chooser releases it, then re-assert in the same tick — no bleed frame.
   overlay.querySelector('#ldEmGeneral').addEventListener('click', function() {
-    _ldCloseEmergency();
-    if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+    if (_geReady()) {
+      openGeneralEmergencyRoom();
+      _ldCloseEmergency();
+      document.body.style.overflow = 'hidden';
+    } else {
+      _ldCloseEmergency();
+      if (typeof showQLToast === 'function') showQLToast(zi('hourglass') + ' General emergencies — coming soon');
+    }
   });
 }
 
@@ -1745,6 +1755,260 @@ function _ldCloseEmergency() {
   overlay.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(function() { overlay.remove(); }, 300);
+}
+
+// ── General Emergency Room (lean-landing-v1 §5.3) ──────────────────────
+// Full-screen rose overlay opened from the chooser's General option. The
+// `.ge-sheet` is the single scroll container (V-1); `.ge-callbar` is a
+// direct sticky child so 112/108 stay one tap regardless of scroll. The
+// `critical` item is pinned-open and exempt from the accordion (V-2); the
+// one-open-at-a-time rule governs only non-critical items, so tapping any
+// row can never collapse the CPR steps.
+
+// Ready gate (K-4): the chooser routes here only when ready content is
+// present — every registry item carries a non-placeholder `source`. An
+// all-placeholder registry resolves to the "Coming soon" stub instead, so
+// the Room never ships half-built behind Maren's content gate.
+function _geReady() {
+  return typeof GENERAL_EMERGENCIES !== 'undefined'
+    && GENERAL_EMERGENCIES.length > 0
+    && GENERAL_EMERGENCIES.every(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+}
+
+// ── Pop-up Emergency Card + flip (emergency-room-v2) ───────────────────────
+// Each emergency renders as a flip CARD (reusing the .fp-flip pattern for
+// design consistency): FRONT = first aid, BACK = a doc-prep summary the parent
+// fills (tap-to-stamp times, reusing the food room's container-agnostic
+// emStampTime / emToggleNA / emSaveDoc) and shares with the pediatrician —
+// one surface, both jobs. The critical CPR card is pinned-open inline (§9.7
+// safety-first, never behind a tap); every other emergency is a teaser ROW
+// that opens its card on tap (§11 6-second rule — lead, then disclose).
+
+function _geNums() {
+  var r = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
+  return {
+    amb: (r && r.ambulancePrimary)  ? r.ambulancePrimary.number  : '108',
+    emg: (r && r.emergencyFallback) ? r.emergencyFallback.number : '112'
+  };
+}
+
+// Teaser ROW (§11 move 3): icon + name + one-line gist + (waved call chip) → opens the card.
+function _geRowHtml(e) {
+  var lead = e.callLead ? '<span class="ge-call-chip">' + zi('phone') + '<span>Call ' + escHtml(_geNums().emg) + '</span></span>' : '';
+  return '<button class="ge-row" data-action="geOpenCard" data-arg="' + escHtml(e.id) + '">'
+    + '<span class="ge-row-ic icon icon-rose">' + zi(e.icon) + '</span>'
+    + '<span class="ge-row-tx"><span class="ge-row-name">' + escHtml(e.name) + '</span>'
+    + '<span class="ge-row-teaser">' + escHtml(e.teaser || '') + '</span></span>'
+    + lead + '<span class="ge-row-chev">' + zi('arrow-right') + '</span></button>';
+}
+
+// FRONT face — the first-aid card (reuses the .ecard / ec-* family for cross-room consistency).
+function _geCardFront(e, pop) {
+  var nums = _geNums();
+  var steps = (e.immediate || []).map(function(s, i) {
+    return '<div class="ec-step"><span class="ec-step-n">' + (i + 1) + '</span><span class="ec-step-t">' + escHtml(s) + '</span></div>';
+  }).join('');
+  var call = e.callLead ? '<a class="ec-call" href="tel:' + escAttr(nums.emg) + '">' + zi('phone') + 'Call ' + escHtml(nums.emg) + ' now</a>' : '';
+  var doNow = '<div class="ec-sec"><div class="ec-do"><div class="ec-do-h">' + zi('siren') + 'Do now</div>' + steps + call + '</div></div>';
+  var xlink = e.xlink ? '<button class="ec-xlink" data-action="geXlink" data-arg="' + escHtml(e.id) + '">' + zi('warn') + escHtml(e.xlink.label) + '</button>' : '';
+  var flags;
+  if (e.call112When == null) {
+    flags = '<div class="ge-flags ge-flags--always">' + zi('siren') + '<span>' + escHtml(e.call112Label || ('Call ' + nums.emg + ' now.')) + '</span></div>';
+  } else {
+    flags = '<div class="ec-sec"><div class="ec-sec-h">Call ' + escHtml(nums.emg) + ' if — any one</div><ul class="ec-signs">'
+      + e.call112When.map(function(f) { return '<li>' + escHtml(f) + '</li>'; }).join('') + '</ul>' + xlink + '</div>';
+  }
+  var src = '<div class="ge-src">' + escHtml('Source: ' + e.source) + '</div>';
+  // V-V-2 (Vela): the pinned critical card (CPR) omits the doc-prep flip so a parent
+  // mid-compression can never flip the life-saving steps out of view. Doc-prep stays on
+  // every other surface (pop cards + non-critical), where flipping away is safe.
+  var dp = (!pop && e.severity === 'critical') ? '' : ('<button class="ec-docprep" data-action="cardFlip">'
+    + '<span class="ec-docprep-ic">' + zi('doc') + '</span>'
+    + '<span class="ec-docprep-tx"><span class="ec-docprep-t">For the doctor — note &amp; share</span>'
+    + '<span class="ec-docprep-d">A summary to fill, copy, or share.</span></span>'
+    + '<span class="ec-docprep-go">' + zi('arrow-right') + '</span></button>');
+  return '<div class="ecard ecard--rose ge-cardface"><div class="ec-head"><div class="ec-name">' + escHtml(e.name) + '</div></div>'
+    + '<div class="ec-body">' + doNow + flags + src + dp + '</div></div>';
+}
+
+// BACK face — doc-prep the parent fills + shares (reuses .docface doc styling + the
+// food room's container-agnostic emStampTime / emToggleNA / emSaveDoc handlers).
+function _geDocFace(e) {
+  var d = e.doc; if (!d) return '<div class="docface"></div>';
+  var rows = '<div class="doc-row"><span class="k">Suspected</span><span class="v">' + escHtml(d.suspected) + '</span></div>';
+  (d.stamps || []).forEach(function(s) {
+    rows += '<div class="doc-row"><span class="k">' + escHtml(s.label) + '</span>'
+      + '<button class="doc-stamp" data-action="emStampTime" data-arg="' + escHtml(s.id) + '"><em>tap to stamp now</em></button>'
+      + '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
+  });
+  if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
+  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  var _docName = (typeof _emDocName === 'function' ? _emDocName() : 'Ziva');
+  var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
+  return '<div class="docface"><div class="doc"><div class="doc-body">'
+    + '<div class="doc-brand"><b>' + escHtml(_docName) + '</b><span>Emergency summary</span></div>'
+    + (_docVitals ? '<p class="doc-who">' + escHtml(_docVitals) + '</p>' : '') + rows
+    + '<div class="doc-note"><b>For the team:</b> ' + escHtml(d.forTeam) + '</div></div>'
+    + '<div class="doc-actions">'
+    + '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>'
+    + '<button class="doc-btn doc-btn--copy" data-action="geCopyDoc" data-arg="' + escHtml(e.id) + '">' + zi('copy') + 'Copy</button>'
+    + '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save</button></div></div>';
+}
+
+// The flip card (front + back). `pop` adds the close × (the room-level pinned card has none).
+function _geFlipCard(e, pop) {
+  var x = pop ? '<button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>' : '';
+  // V-V-2 (Vela): the pinned critical card (CPR) renders front-only — no back face, no flip —
+  // so the life-saving steps can never be flipped out of view mid-compression. _geCardFront
+  // omits the doc-prep button in the same case, so there is no dangling trigger.
+  if (!pop && e.severity === 'critical') {
+    return '<div class="fp-flip">'
+      + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
+      + '</div>';
+  }
+  return '<div class="fp-flip">'
+    + '<div class="fp-face fp-front">' + x + _geCardFront(e, pop) + '</div>'
+    + '<div class="fp-face fp-back">' + x + _geDocFace(e) + '</div>'
+    + '</div>';
+}
+
+function openGeneralEmergencyRoom() {
+  var existing = document.getElementById('geOverlay');
+  if (existing) existing.remove();
+
+  var nums = _geNums();
+  var all = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
+    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+  // Hybrid (§9.7 safety-first): the critical card is pinned-open inline — its
+  // steps are never behind a tap; every other emergency is a teaser row.
+  var pinnedHtml = all.filter(function(e) { return e.severity === 'critical'; })
+    .map(function(e) { return '<div class="ge-pinned-card" data-ge-id="' + escHtml(e.id) + '">' + _geFlipCard(e, false) + '</div>'; }).join('');
+  var rowsHtml = all.filter(function(e) { return e.severity !== 'critical'; }).map(_geRowHtml).join('');
+
+  var overlay = document.createElement('div');
+  overlay.className = 'ge-overlay';
+  overlay.id = 'geOverlay';
+  document.body.appendChild(overlay);
+
+  // Callbar tel: pills reuse the landing's .ld-emergency-call pattern (V-7),
+  // now carrying the whisper-wave. 112 (unified emergency) leads, 108 follows.
+  overlay.innerHTML =
+    '<div class="ge-sheet" role="dialog" aria-label="General emergency help">'
+    + '<div class="ge-head">'
+    +   '<span class="ge-title">' + zi('siren') + '<span>General Emergency</span></span>'
+    +   '<button class="ge-close" id="geClose" aria-label="Close">&times;</button>'
+    + '</div>'
+    + '<div class="ge-callbar">'
+    +   '<span class="ge-callbar-label">' + zi('phone') + '<span>Call now</span></span>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(nums.emg) + '">' + zi('phone') + '<span>' + escHtml(nums.emg) + '</span></a>'
+    +   '<a class="ld-emergency-call" href="tel:' + escAttr(nums.amb) + '">' + zi('phone') + '<span>' + escHtml(nums.amb) + '</span></a>'
+    + '</div>'
+    + pinnedHtml
+    + '<div class="ge-list">' + rowsHtml + '</div>'
+    + '<div class="ge-disclaimer">' + zi('info') + '<span>This is first-aid guidance, not a diagnosis. When in doubt, call ' + escHtml(nums.emg) + '.</span></div>'
+    + '</div>';
+
+  requestAnimationFrame(function() { overlay.classList.add('open'); });
+  document.body.style.overflow = 'hidden';
+
+  overlay.querySelector('#geClose').addEventListener('click', _geClose);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) _geClose(); });
+  if (!window._geKeyHandler) {
+    window._geKeyHandler = function(ev) { if (ev.key === 'Escape') { if (document.getElementById('geCardOv')) _geCloseCard(); else _geClose(); } };
+    document.addEventListener('keydown', window._geKeyHandler);
+  }
+
+  // V-7: focus moves to the × on open (returns to the Emergency card on close).
+  requestAnimationFrame(function() { var x = document.getElementById('geClose'); if (x) x.focus(); });
+}
+
+// Tap a teaser row → open its pop-up card (the flip card in an overlay).
+function geOpenCard(btn) { var id = btn && btn.getAttribute('data-arg'); if (id) _geShowCard(id); }
+function _geShowCard(id) {
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  if (!e) return;
+  var ov = document.getElementById('geCardOv');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
+  ov.innerHTML = '<div class="food-pop ge-pop">' + _geFlipCard(e, true) + '</div>';
+  requestAnimationFrame(function() { ov.classList.add('open'); });
+  ov.onclick = function(ev) { if (ev.target === ov) _geCloseCard(); };
+  requestAnimationFrame(function() { var x = ov.querySelector('.ge-card-close'); if (x && x.focus) x.focus(); });
+}
+function _geCloseCard() {
+  var ov = document.getElementById('geCardOv');
+  if (!ov) return;
+  ov.classList.remove('open');
+  setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
+}
+
+// Generic flip — reused by both rooms (container-agnostic: nearest .fp-flip).
+function cardFlip(btn) { var fl = (btn && btn.closest) ? btn.closest('.fp-flip') : null; if (fl) fl.classList.add('flipped'); }
+function cardFlipBack(btn) { var fl = (btn && btn.closest) ? btn.closest('.fp-flip') : null; if (fl) fl.classList.remove('flipped'); }
+
+// Cross-link (geXlink) → open the target emergency card as a pop-up in place
+// (no tab redirect). Food-room hazards reuse the food card builder; same-room
+// ids reuse the general card. (Wiring finalised in milestone 3.)
+function geXlink(btn) {
+  var id = btn && btn.getAttribute('data-arg');
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  var xl = e && e.xlink; if (!xl) return;
+  if (xl.room === 'food' && typeof _emCardHtml === 'function') {
+    // V-C-235-1: clear the Library deep-link trigger food so the shared copy/print
+    // builder can't bleed a stale "Trigger food: …" into this General-room summary
+    // (the parent reached this card via "Choking on food?", not a specific food).
+    if (typeof _emFood !== 'undefined') _emFood = null;
+    var ov = document.getElementById('geCardOv');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
+    ov.innerHTML = '<div class="food-pop ge-pop"><button class="fp-close ge-card-close" data-action="geCloseCard" aria-label="Close">&times;</button>'
+      + '<div class="ge-foodcard-wrap">' + _emCardHtml(xl.hazard, null) + '</div></div>';
+    requestAnimationFrame(function() { ov.classList.add('open'); });
+    ov.onclick = function(ev) { if (ev.target === ov) _geCloseCard(); };
+  } else if (xl.id) {
+    _geShowCard(xl.id);
+  }
+}
+
+// Copy the doc-prep summary — reads tap-to-stamp values from the open card face.
+function _geStampVal(container, id) {
+  var b = container && container.querySelector('.doc-stamp[data-arg="' + id + '"]');
+  if (!b) return '____';
+  if (b.dataset.na) return 'N/A';
+  return b.dataset.stamped ? b.textContent : '____';
+}
+function _geDocText(e, container) {
+  var d = e.doc; if (!d) return '';
+  var _v = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
+  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary'];
+  if (_v) L.push(_v);                                    // V-V-237: omit empty vitals line (no double gap)
+  L.push('', 'Suspected: ' + d.suspected);
+  (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
+  if (d.action) L.push(d.action.label + ': ' + d.action.value);
+  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  L.push(''); L.push('For the team: ' + d.forTeam);
+  return L.join('\n');
+}
+function geCopyDoc(btn) {
+  var id = btn && btn.getAttribute('data-arg'); if (!id) return;
+  var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
+  if (!e) return;
+  var container = (btn.closest && btn.closest('.fp-face')) || document;
+  var text = _geDocText(e, container);
+  var flash = function() { if (typeof _docCopiedFlash === 'function') _docCopiedFlash(btn); };
+  var done = function() { flash(); if (typeof showQLToast === 'function') showQLToast('Copied for the doctor', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function() { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); });
+  else { if (typeof _emLegacyCopy === 'function') _emLegacyCopy(text); flash(); }
+}
+
+function _geClose() {
+  if (document.getElementById('geCardOv')) _geCloseCard();
+  var overlay = document.getElementById('geOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (window._geKeyHandler) { document.removeEventListener('keydown', window._geKeyHandler); window._geKeyHandler = null; }
+  setTimeout(function() { overlay.remove(); }, 300);
+  var card = document.querySelector('.ld-emergency-main');
+  if (card && card.focus) card.focus();
 }
 
 function renderInfo() {
