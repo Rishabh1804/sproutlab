@@ -11603,6 +11603,10 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     --doc-placeholder:#9a8a8a; --doc-dash:#d8b9c2; --doc-note-bg:#fdeef1;
     --doc-foot-bg:#faf2f4; --doc-btn-bg:#fff; --doc-btn-ghost-border:#e6dcdf;
     --doc-btn-copy-border:#e6b9c4;
+    /* Maren safety-tier (PR#235): the field labels and the stamped adrenaline/reaction
+       TIME render directly off --tc-rose. Re-force it to the paper-safe light rose so a
+       dark-mode printout shows the time at 6.4:1, not a faint 2.4:1 pink. */
+    --tc-rose:#9e3e52;
   }
 }
 /* ═══════════════════════════════════════════════════════════════════════
