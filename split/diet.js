@@ -2226,7 +2226,9 @@ function _libCloseDeck() {
 // the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
 // migration is known debt, tracked for a later session (Architect, PR#235).
 function _emDocName() {
-  try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && _syncHousehold.name) return _syncHousehold.name; } catch (e) {}
+  // Trim-guard (Maren V-M-237): reject a blank/whitespace household name so the doctor
+  // card's title slot can never render empty — a nameless medical handoff.
+  try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && typeof _syncHousehold.name === 'string' && _syncHousehold.name.trim()) return _syncHousehold.name.trim(); } catch (e) {}
   return 'Ziva';
 }
 function _emDocVitals() {
@@ -2265,7 +2267,10 @@ function _emStampValDOM(id, container) {
 }
 function _emDocText(hz, container) {
   var p = EMERGENCY_PROTOCOL[hz]; if (!p) return '';
-  var d = p.doc, food = _emFood, L = [_emDocName() + ' — Emergency summary', _emDocVitals(), '', 'Suspected: ' + d.suspected];
+  var d = p.doc, food = _emFood, _v = _emDocVitals();
+  var L = [_emDocName() + ' — Emergency summary'];
+  if (_v) L.push(_v);                                    // V-M-238: omit empty vitals line (no double gap)
+  L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _emStampValDOM(s.id, container)); });
   if (food) L.push('Trigger food: ' + food);
   var sym = _emRecognise(hz).join(', '); if (sym) L.push('Symptoms seen: ' + sym);

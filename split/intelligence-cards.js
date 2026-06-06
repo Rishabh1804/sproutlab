@@ -1977,7 +1977,10 @@ function _geStampVal(container, id) {
 }
 function _geDocText(e, container) {
   var d = e.doc; if (!d) return '';
-  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary', (typeof _emDocVitals === 'function' ? _emDocVitals() : ''), '', 'Suspected: ' + d.suspected];
+  var _v = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
+  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary'];
+  if (_v) L.push(_v);                                    // V-V-237: omit empty vitals line (no double gap)
+  L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
   L.push('Known allergies: none recorded yet (this may be a first reaction)');
