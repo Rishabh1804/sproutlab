@@ -1,14 +1,14 @@
 # Memory.md
 **Scope:** Persistent institutional knowledge across all repos
 **Owner:** The Consul (cross-repo overseer)
-**Updated:** 27 May 2026 (PM — Milestones arc closure + Option C two-spec sequence ratification)
+**Updated:** 7 June 2026 (PR #235 emergency-room-v2 — patient-first doc card + flexible-name decision)
 
 ---
 
 ## The Architect
 
 **Rishabh Jain**, age 33, based in Jharkhand, India.
-CA by background. Business Manager at Soma Electro Products (zinc electroplating). Creative Head for AdapTea (green tea brand). Solo PWA developer.
+(Removed by the Architect). - Business Manager at Soma Electro Products (zinc electroplating). Creative Head for AdapTea (green tea brand). Solo PWA developer.
 
 ### Personal
 - Has a young daughter (**Ziva Jain**, born 4 Sep 2025; ~8.7 months as of session date) whose development is tracked in SproutLab.
@@ -80,6 +80,7 @@ CA by background. Business Manager at Soma Electro Products (zinc electroplating
 - **Option C two-spec sequence pattern (ratified 2026-05-27).** When a single spec carries both engine-substrate concerns and surface-consumer concerns, split into two specs: engine substrate first (governor-primary on engine), surface consumer second (governor-primary on consumer; reads pre-ratified substrate). Closes the "spec-against-memory" failure mode by construction — the consumer spec ratifies against verified primitives, not remembered ones. Precedent: v3-3 → sleep-arc-3 (PR #137 spec; PR #143 IMPL); milestone-engine-prep-v1 → milestones-tab-v1 (PR #148 + PR #149). See invocation.md §10 for the full pattern.
 - **Scribe-scout-before-spec-body pattern (ratified 2026-05-27).** Before any substrate-touching spec body lands, deploy `scribe-scout` for codebase reconnaissance: enumerate every cited identifier with `file:line` location, grep-verify every storage shape claim, trace every sync claim to actual `SYNC_KEYS` + `_postReceive*` registrations, verify every `template.html` id the spec references. Closes the "spec-against-memory" failure mode at draft-time, not at canon-cc-008 chain-time. See invocation.md §10.1.
 - **Lyra fold-authority register-flip pattern (canon-cc-022 sub-pattern, ratified 2026-05-27).** When the Architect explicitly grants Lyra fold-authority in advance of a canon-cc-008 chain run on a docs-only spec PR — typically with narrow scope — Lyra applies all in-scope BLOCKING + NOTE folds inline without Architect roundtrip. Cipher Edict V terminal pass verifies canon-cc-027 spec amendment authority was NOT exceeded. Silence is not a waiver. See invocation.md §10.3.
+- **Flexible-name sourcing + deferred hardcode debt (Architect decision, 2026-06-07, PR #235).** Configurable values — the baby's name being canonical — must be **sourced from runtime config**, not hardcoded. The household profile field `_syncHousehold.name` (sync.js; the create flow labels it "Baby's name") is the single source of truth; new code reads it with at most one fallback literal marked `TODO(legacy-name-debt)`. The Architect's principle: *"keep hardcoded name out of the code as far as possible — keeps us flexible."* **Known legacy debt:** the app still hardcodes `'Ziva'` in several modules (`core.js` avatar `alt`, `medical.js` growth-chart labels, `diet.js` `_emDocName` fallback). This is acknowledged and **deferred to a later session** — migrate deliberately, do NOT fix opportunistically without the Architect re-opening it. First application: the PR #235 doc-prep "For the doctor" card was reworked to lead with the **patient** (baby's name as the card title + age·weight beneath) instead of "SproutLab" branding — a clinical handoff identifies the patient, not the app.
 
 ## Companion Registry (Quick Reference)
 
