@@ -11422,9 +11422,20 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .fp-flip > .fp-face { grid-area:1 / 1; min-height:0; min-width:0; display:flex; flex-direction:column; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 .fp-back { transform:rotateY(180deg); }
 .fp-flip.flipped { transform:rotateY(180deg); }
+/* backface-visibility fallback (PR#235): some browsers/GPUs bleed the away-facing face
+   THROUGH the visible one — doubling the close-× and slicing the header (the mirrored
+   front × lands top-left, over the name). Don't trust backface-visibility alone: swap
+   each face's visibility at the 0.175s edge-on midpoint of the 0.35s flip, so exactly
+   one face is ever visible — in every browser. Shared by the food-room + emergency flip. */
+.fp-flip > .fp-face { transition:visibility 0s linear 0.175s; }
+.fp-flip:not(.flipped) > .fp-front { visibility:visible; }
+.fp-flip:not(.flipped) > .fp-back  { visibility:hidden; }
+.fp-flip.flipped > .fp-front { visibility:hidden; }
+.fp-flip.flipped > .fp-back  { visibility:visible; }
 /* Reduced-motion: suppress the 3D flip rotation (Vela PR#235, V-V-1) — the back doc-prep
-   face still arrives, only the spin is removed. Shared with the food-room flip. */
-@media (prefers-reduced-motion: reduce) { .fp-flip { transition:none; } }
+   face still arrives, only the spin is removed. The visibility swap goes instant too,
+   to match the no-spin flip. Shared with the food-room flip. */
+@media (prefers-reduced-motion: reduce) { .fp-flip { transition:none; } .fp-flip > .fp-face { transition:none; } }
 
 .fp-head { position:relative; flex:0 0 auto; padding:var(--sp-20) var(--sp-16) var(--sp-16); }
 .fp-name { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-xl); color:var(--text); line-height:var(--lh-snug); padding-right:36px; }
