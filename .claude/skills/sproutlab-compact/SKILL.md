@@ -26,7 +26,7 @@ Stock `/compact` summarizes the transcript but loses navigation precision and th
    `pnpm graph` *(or `SKIP_GRAPH=1` was set; then run `pnpm graph` explicitly)*
 
 2. **Compute the QA summon-set** for the in-flight diff (graph-derived ripple):
-   `pnpm qa-route` — capture the SUMMON list (Maren/Kael/Vela + shared-file triple-Gov).
+   `pnpm qa-route` — capture the SUMMON list (Maren/Ceres/Kael/Vela + shared-file quad-Gov).
 
 3. **Write the ephemeral handoff** to `/tmp/sproutlab-<feature>-handoff.md`. It MUST contain:
    - **Where we are**: branch, PR # + draft state, preview URL, one-line feature status.

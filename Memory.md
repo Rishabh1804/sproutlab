@@ -89,8 +89,9 @@
 | Aurelius | Builder | The Chronicler | Codex |
 | Lyra | Builder | The Weaver | SproutLab |
 | Solara | Builder | The Strategist | SEP Invoicing |
-| Maren | Governor of Care | — | SproutLab (home + diet + medical) |
-| Kael | Governor of Intelligence — engine | — | SproutLab (isl + qa + qa-handlers + illness + caretickets + core + data + sync + config + start) |
+| Maren | Governor of Care | — | SproutLab (home + medical) |
+| Ceres | Governor of Nutrition — canon-gen-001 2nd-gen (parents Maren + Lyra) | The Provisioner | SproutLab (diet + recipes) |
+| Kael | Governor of Intelligence — engine | — | SproutLab (isl + qa + qa-handlers + illness + correlate + caretickets + core + data + sync + config + start) |
 | Vela | Governor of Surfacing — render (canon-gen-001) | — | SproutLab (cards + quicklog) |
 | Cipher | Censor (QA) — Edict V final-pass | The Codewright | Cluster A (Codex + SproutLab); SproutLab Province mirror per canon-cc-026 |
 | scribe-scout / scribe-draft / scribe-verify / scribe-record | Worker tier (canon-proc-006) | Junior subagents | Per-Province; alike at birth, voice absorbed from summoner |

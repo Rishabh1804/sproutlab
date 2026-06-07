@@ -37,9 +37,10 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); // apostrophe too (Vela NIT-1): context-agnostic helper
 
 // ── jurisdiction map (mirrors CLAUDE.md canon-cc-008 routing) ──
-const CARE='care', ENG='intel', REN='render', SHARED='shared', WORKS='works';
+const CARE='care', NUTR='nutrition', ENG='intel', REN='render', SHARED='shared', WORKS='works';
 const MODULE_PROVINCE = {
-  'home.js':CARE, 'diet.js':CARE, 'medical.js':CARE,
+  'home.js':CARE, 'medical.js':CARE,
+  'diet.js':NUTR, 'recipes.js':NUTR,
   'intelligence-isl.js':ENG, 'intelligence-qa.js':ENG, 'intelligence-qa-handlers.js':ENG,
   'intelligence-illness.js':ENG, 'intelligence-correlate.js':ENG, 'intelligence-caretickets.js':ENG,
   'core.js':ENG, 'data.js':ENG, 'sync.js':ENG, 'config.js':ENG, 'start.js':ENG,
@@ -48,9 +49,10 @@ const MODULE_PROVINCE = {
 };
 const PROVINCES = {
   [ENG]:   { name:'Provincia Intelligentiae', latin:'the engine layer', gov:'Kael',  accent:'#9ba8d8', jurisdiction:true },
-  [CARE]:  { name:'Provincia Curae',          latin:'home / diet / medical', gov:'Maren', accent:'#b5d5c5', jurisdiction:true },
+  [CARE]:  { name:'Provincia Curae',          latin:'home / medical', gov:'Maren', accent:'#b5d5c5', jurisdiction:true },
+  [NUTR]:  { name:'Provincia Nutritionis',    latin:'diet / recipes', gov:'Ceres', accent:'#a8cfe0', jurisdiction:true },
   [REN]:   { name:'Provincia Superficiei',    latin:'the render layer', gov:'Vela',  accent:'#c9b8e8', jurisdiction:true },
-  [SHARED]:{ name:'Territorium Commune',      latin:'styles.css + template.html', gov:'Maren + Kael + Vela', accent:'#e8b86d', jurisdiction:false },
+  [SHARED]:{ name:'Territorium Commune',      latin:'styles.css + template.html', gov:'Ceres + Kael + Maren + Vela', accent:'#e8b86d', jurisdiction:false },
   [WORKS]: { name:'Opera Publica',            latin:'build + audit corps', gov:'(tooling)', accent:'#fad4b4', jurisdiction:false },
 };
 const FRONTIER = 30000; // the 30K rule
@@ -132,8 +134,8 @@ for (const [f, m] of modules) {
 const sharedSurveyed = provStats[SHARED].nodes > 0;
 
 // ── render: province cards (exec summary) ──
-const provName = { [ENG]:'Intelligence', [CARE]:'Care', [REN]:'Surfacing', [SHARED]:'Shared', [WORKS]:'Public Works' };
-const cardOrder = [ENG, CARE, REN, SHARED, WORKS];
+const provName = { [ENG]:'Intelligence', [CARE]:'Care', [NUTR]:'Nutrition', [REN]:'Surfacing', [SHARED]:'Shared', [WORKS]:'Public Works' };
+const cardOrder = [ENG, CARE, NUTR, REN, SHARED, WORKS];
 const shortMod = (f) => f.replace(/^intelligence-/, 'i-');
 
 let cards = '';
