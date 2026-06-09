@@ -4,8 +4,11 @@ description: Use this skill when Lyra (the Builder) wants an in-transcript Nutri
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
-Deploys byte-identical to sproutlab/.claude/skills/ceres.md per canon-cc-026
+Province-authoritative spec — SproutLab governs this copy (canon-cc-026
+amended 2026-06-10, Province self-governance). Codex keeps a reference copy
+under docs/specs/skills/ceres.md for record-keeping, not routing; the session-
+start overlay gap-fills from Codex and never clobbers this Province-owned
+copy. Per canon-cc-026
 §Per-Province-Layout. Province-Governor skill — single-Province deployment.
 Amendment path: canon-cc-027 signing chain; Governor self-review forbidden
 per canon-gov-002, so Rung 2 falls to Maren under the cross-Governor peer-

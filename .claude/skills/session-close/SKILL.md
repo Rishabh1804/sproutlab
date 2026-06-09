@@ -4,7 +4,9 @@ description: Run the end-of-session close sequence — the repeatable ritual for
 trigger: /session-close
 ---
 
-<!-- Canonical spec — authored and maintained in Codex per canon-cc-026.
+<!-- Province-authoritative portable skill — SproutLab governs its in-Province
+     copy (canon-cc-026 amended 2026-06-10, Province self-governance); Codex keeps a
+     reference copy in docs/specs/skills/ for record-keeping, not routing.
      Portable close ritual — deploys to any Province that runs session closes.
      Deploys byte-identical to <repo>/.claude/skills/session-close/SKILL.md per
      canon-cc-026 §Per-Province-Layout — the loadable SKILL.md directory shape

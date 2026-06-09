@@ -5,7 +5,9 @@ tools: Read, Grep, Glob, Bash
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026, with the
+Cross-cluster worker-tier spec — Codex holds the canonical record (per
+canon-cc-026, amended 2026-06-10: the in-Province copy is Province-editable and
+wins on materialization), with the
 Scribe-tier carve-out ratified by decree-0019 / canon-proc-006: the body below
 deploys to every Province's .claude/agents/scribe-scout.md byte-identical
 EXCEPT the "Serving voice" section, which each Province's Builder tunes to that

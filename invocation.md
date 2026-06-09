@@ -32,10 +32,12 @@ Claude Code harness. Cross-model invocation is out of scope — see §9.
 | scribe-verify | Worker tier — mechanical checks | `.claude/agents/scribe-verify.md` | — |
 | scribe-record | Worker tier — chronicling | `.claude/agents/scribe-record.md` | — |
 
-The canonical spec bodies are authored in Codex (`docs/specs/subagents/`,
-`docs/specs/skills/`); the `.claude/` paths above are the byte-identical
-Province mirrors per canon-cc-026 §Per-Province-Layout — with the Scribe
-serving-voice carve-out ratified by decree-0019 / canon-proc-006. **Invoke the
+The `.claude/` paths above are the **Province-authoritative** spec bodies
+(canon-cc-026 amended 2026-06-10 — Province self-governance); Codex keeps
+reference copies (`docs/specs/subagents/`, `docs/specs/skills/`) for record-
+keeping, not routing. The Scribe serving-voice carve-out (decree-0019 /
+canon-proc-006) and the cross-cluster Cipher/Chronicler records remain Codex-
+sourced but Province-editable in their in-Province copy. **Invoke the
 mirrors.** Cipher's mirror is a deploy of the Codex canon: Cipher remains Censor
 of Cluster A, not a Province seat — the mirror exists so the Edict V final-pass
 can be invoked without leaving Province context.

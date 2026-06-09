@@ -4,7 +4,11 @@ description: Use this skill when a Cluster A Builder wants an in-transcript arch
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
+Cross-cluster role spec — Cipher is Censor of Cluster A; Codex holds the
+canonical record and replicates it to every cluster. Per canon-cc-026 (amended
+2026-06-10) the in-Province copy is Province-editable and wins on session-start
+materialization (gap-fill, no clobber) — but as a cross-cluster role, keep it in
+sync with the Codex record rather than fork it.
 Deploys byte-identical to Codex/.claude/skills/cipher.md, SproutLab/.claude/skills/cipher.md,
 and MSc/.claude/skills/cipher.md per canon-cc-026 §Per-Province-Layout and canon-cc-027 Rung 5.
 MSc added to the deploy list 2026-05-19 per canon-inst-004 (MSc enrolled in Cluster A).

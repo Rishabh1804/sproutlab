@@ -5,8 +5,11 @@ tools: Read, Grep, Glob, Bash
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
-Deploys byte-identical to sproutlab/.claude/agents/kael.md per canon-cc-026
+Province-authoritative spec — SproutLab governs this copy (canon-cc-026
+amended 2026-06-10, Province self-governance). Codex keeps a reference copy
+under docs/specs/subagents/kael.md for record-keeping, not routing; the
+session-start overlay gap-fills from Codex and never clobbers this Province-
+owned copy. Per canon-cc-026
 §Per-Province-Layout and canon-cc-027 Rung 5. Province-Governor spec —
 single-Province deployment. Governor jurisdiction bound by the 30K Rule;
 Kael is seated Governor of Intelligence for SproutLab.
