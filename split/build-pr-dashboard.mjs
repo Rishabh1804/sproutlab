@@ -55,6 +55,26 @@ if (bad.length) {
   process.exit(0);
 }
 
+const template = readFileSync(tplPath, 'utf8');
+
+// Taxonomy membership (Cipher F-3): an off-taxonomy category renders a silent
+// gray wedge; fail generation loudly instead. The template's CAT_COLORS map IS
+// the taxonomy — extract its keys rather than maintain a second list.
+const taxonomy = new Set([...template.matchAll(/^\s*"((?:Product|Platform|Governance|Records|Lore) \/ [^"]+)":/gm)].map(m => m[1]));
+const offTax = data.filter(r => !taxonomy.has(r.category));
+if (taxonomy.size && offTax.length) {
+  console.error(`[pr-dashboard] ${offTax.length} record(s) carry a category outside the template taxonomy (first: #${offTax[0].number} "${offTax[0].category}"); skipping (non-fatal). View left as-is.`);
+  process.exit(0);
+}
+
+// Duplicate guard (Cipher F-4): a double-appended record renders twice.
+const seen = new Set();
+const dupes = data.filter(r => seen.size === seen.add(r.number).size);
+if (dupes.length) {
+  console.error(`[pr-dashboard] duplicate PR number(s) in data (first: #${dupes[0].number}); skipping (non-fatal). View left as-is.`);
+  process.exit(0);
+}
+
 data.sort((a, b) => a.number - b.number);
 const nums  = data.map(r => r.number);
 const lo    = nums[0], hi = nums[nums.length - 1];
@@ -71,18 +91,22 @@ const subtitle = `SproutLab pull requests ${range} · ${data.length} PRs · ` +
   `categorized as a tree — branch out from the trunk, or click the rings.`;
 const today    = new Date().toISOString().slice(0, 10);
 
-const html = readFileSync(tplPath, 'utf8')
-  .replace('__RANGE__', range)
-  .replace('__SUBTITLE__', subtitle)
-  .replace('__THROUGH__', `#${hi}`)
-  .replace('__GENERATED__', today)
-  .replace('__PR_DATA__', JSON.stringify(data));
+// Cipher Edict V amendment (PR #250): replacer-FUNCTION form so `$&`/`$'`-class
+// replacement patterns in record prose can never corrupt the payload, and
+// escape `<` so a literal `</script>` in a summary can never terminate the
+// inline script block. The corpus is hand-appended free prose — harden, don't hope.
+const html = template
+  .replace('__RANGE__', () => range)
+  .replace('__SUBTITLE__', () => subtitle)
+  .replace('__THROUGH__', () => `#${hi}`)
+  .replace('__GENERATED__', () => today)
+  .replace('__PR_DATA__', () => JSON.stringify(data).replace(/</g, '\\u003c'));
 
 // Write only when the SUBSTANTIVE content changed (kill regeneration churn —
 // PROVINCE_MAP PR #232 doctrine). The generated date flips daily with nothing
 // real behind it; normalize it out before comparing. A genuine change (a new
 // PR record, an edited summary, a template change) still forces a rewrite.
-const normalize = (s) => s.replace(/Generated \d{4}-\d{2}-\d{2}/, 'Generated <DATE>');
+const normalize = (s) => s.replace(/Generated \d{4}-\d{2}-\d{2}/g, 'Generated <DATE>');
 
 if (existsSync(outPath) && normalize(readFileSync(outPath, 'utf8')) === normalize(html)) {
   console.error(`[pr-dashboard] no substantive change (date-jitter only); left ${outPath} untouched.`);
