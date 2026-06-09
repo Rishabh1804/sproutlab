@@ -66,8 +66,8 @@
     padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--tc-lav)}
   .fact .dot{width:8px;height:8px;border-radius:50%;flex:none}
   .dot.moon{background:var(--moonlight);box-shadow:0 0 0 1px rgba(180,150,90,.4)}
-  .dot.lyre{background:var(--lavender)}
-  .dot.ringed{background:var(--peach)}
+  .dot.lyre{background:var(--lavender);box-shadow:0 0 7px var(--lavender)}
+  .dot.sun{background:var(--peach)}
 
   /* ── controls ── */
   .controls{padding:14px 18px 18px}
@@ -84,6 +84,12 @@
     border-radius:50%;background:var(--moonlight);box-shadow:0 2px 8px rgba(58,51,64,.3);cursor:pointer}
   .clock{font-family:var(--disp);font-weight:600;font-size:18px;color:var(--tc-lav);
     min-width:96px;text-align:right}
+  .moment-note{display:flex;align-items:center;gap:9px;margin:0 0 14px;
+    font-family:var(--disp);font-style:italic;font-size:13.5px;color:var(--tc-lav);
+    transition:opacity .25s}
+  .moment-note.past{opacity:.5}
+  .m-star{width:9px;height:9px;flex:none;background:var(--lavender);
+    box-shadow:0 0 8px var(--lavender);transform:rotate(45deg);border-radius:1.5px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--mid);
     background:var(--warm);border:1.5px solid rgba(201,184,232,.4);border-radius:var(--r-full);
@@ -103,8 +109,8 @@
   <div class="masthead">
     <p class="eyebrow">The night she arrived</p>
     <h1>Ziva's First Sky</h1>
-    <p class="place">Jamshedpur · 22.8°N 86.2°E · 4 September 2025</p>
-    <p class="dedication">Born beneath the Lyre, under an almost-full moon —<br>three nights before the sky turned to eclipse.</p>
+    <p class="place">Jamshedpur · 22.8°N 86.2°E · 4 September 2025 · 5:09 pm</p>
+    <p class="dedication">Born at 5:09 in the evening, beneath Lyra blazing high in the east —<br>under an almost-full moon, three nights before the sky turned to eclipse.</p>
   </div>
 
   <div class="skywrap">
@@ -118,17 +124,18 @@
   </div>
 
   <div class="facts">
-    <span class="fact"><span class="dot moon"></span>89% waxing-gibbous moon</span>
-    <span class="fact"><span class="dot lyre"></span>Lyra near the zenith</span>
-    <span class="fact"><span class="dot ringed"></span>Saturn rising in the east</span>
+    <span class="fact"><span class="dot lyre"></span>Lyra, radiant in the east</span>
+    <span class="fact"><span class="dot moon"></span>An almost-full moon, just risen</span>
+    <span class="fact"><span class="dot sun"></span>The sun an hour from setting</span>
   </div>
 
   <div class="controls">
     <div class="scrub">
-      <label for="time">Through the night</label>
-      <input id="time" type="range" min="1140" max="1560" value="1260" step="5" aria-label="Time of night, IST" />
-      <span class="clock" id="clock">9:00 pm</span>
+      <label for="time">From her moment</label>
+      <input id="time" type="range" min="1029" max="1560" value="1029" step="3" aria-label="Time from her birth moment, IST" />
+      <span class="clock" id="clock">5:09 pm</span>
     </div>
+    <p class="moment-note" id="moment"><span class="m-star"></span>5:09 pm — the moment Ziva arrived. Drag to watch her sky deepen into night.</p>
     <div class="chips">
       <button class="chip" id="c-lines" aria-pressed="true">Constellations</button>
       <button class="chip" id="c-labels" aria-pressed="true">Names</button>
@@ -140,10 +147,13 @@
   <p class="ledger">
     <b>How this is drawn.</b> Star positions are computed from a real catalogue
     (right ascension / declination / magnitude) projected to the sky over
-    Jamshedpur at the chosen moment — the stars are true. The <b>moon and planet
-    positions are close approximations</b> for 4&nbsp;Sep&nbsp;2025, good for
-    placement, not arc-minute exact; a later pass can replace them with precise
-    ephemeris. Drag <em>Through the night</em> to find a particular hour.
+    Jamshedpur at the chosen moment — the stars are true. At <b>5:09 pm the sun
+    was still up</b>, about an hour from setting, so the heavens below were not
+    yet visible to the eye — this is a <em>star map</em> of where they stood at
+    her arrival, drawn as if the day had already given way (you can see the last
+    warmth of the sun low in the west). The <b>moon and planet positions are
+    close approximations</b> for 4&nbsp;Sep&nbsp;2025, good for placement, not
+    arc-minute exact; a later pass can replace them with precise ephemeris.
   </p>
 </div>
 
@@ -298,7 +308,8 @@ const LINES=[
 // the Summer Triangle, drawn faintly as the night's signature asterism
 const TRIANGLE=['Vega','Deneb','Altair'];
 
-/* ── moon + planets: APPROXIMATE for 2025-09-04 evening (see ledger) ────── */
+/* ── sun, moon + planets: APPROXIMATE for 2025-09-04 (see ledger) ───────── */
+const SUN={ra:162.5,dec:7.0};                               // ~10° up in the W at 5:09pm
 const MOON={ra:309.0,dec:-19.5,illum:0.89};                 // waxing gibbous, Capricornus
 const PLANETS=[
   {n:'Saturn',ra:354.0,dec:-6.0,m:0.6,c:C.y,ring:true},     // Pisces, low E
@@ -345,7 +356,8 @@ function project(alt,az){
 }
 
 /* ── state ──────────────────────────────────────────────────────────────── */
-const S={ istMin:1260, lines:true, labels:true, mw:true, moon:true };
+const BIRTH_IST=1029;   // 17:09 — Ziva's birth moment
+const S={ istMin:BIRTH_IST, lines:true, labels:true, mw:true, moon:true };
 const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 
 /* ── helpers ───────────────────────────────────────────────────────────── */
@@ -379,6 +391,31 @@ function milkyWay(lst){
   }
   ctx.restore();
 }
+function drawSun(lst){
+  // the last warmth of the day, low in the west — she was born before sunset
+  const pa=altaz(SUN.ra,SUN.dec,lst,OBS.lat); if(pa.alt<0) return;
+  const p=project(pa.alt,pa.az); if(!p) return;
+  const fade=Math.max(0,Math.min(1,pa.alt/12));   // fades out as it nears the horizon
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  softGlow(p.x,p.y, R*0.42, rgbsoft([250,212,180], 0.16*fade));   // peach afterglow
+  softGlow(p.x,p.y, R*0.20, rgbsoft([255,228,190], 0.20*fade));
+  if(pa.alt>0) softGlow(p.x,p.y, Math.max(7,R*0.03), rgbsoft([255,244,224], 0.5*fade));
+  ctx.restore();
+}
+function lyraRadiance(lst,t){
+  // Lyra — her constellation — given a living aura so the whole harp glows
+  const mem=STARS.filter(s=>s.con==='Lyra');
+  let mx=0,my=0,n=0;
+  for(const s of mem){ const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<0) continue;
+    const p=project(pa.alt,pa.az); if(!p) continue; mx+=p.x; my+=p.y; n++; }
+  if(n<3) return;            // wait until most of the harp is risen
+  mx/=n; my/=n;
+  const pulse = reduceMotion ? 1 : (1+0.06*Math.sin(t*0.0013));
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  softGlow(mx,my, R*0.22*pulse, rgbsoft([201,184,232], 0.16));
+  softGlow(mx,my, R*0.12*pulse, rgbsoft([224,214,248], 0.20));
+  ctx.restore();
+}
 function faintStars(lst,t){
   for(const f of FAINT){
     const pa=altaz(f.ra,f.dec,lst,OBS.lat); if(pa.alt<2) continue;
@@ -402,13 +439,20 @@ function triangle(lst){
 }
 function constellationLines(lst){
   if(!S.lines) return;
-  ctx.lineWidth=1.1;
   for(const [a,b] of LINES){
     const sa=SBY[a], sb=SBY[b]; if(!sa||!sb) continue;
     const pa=altaz(sa.ra,sa.dec,lst,OBS.lat), pb=altaz(sb.ra,sb.dec,lst,OBS.lat);
     const A=project(pa.alt,pa.az), B=project(pb.alt,pb.az); if(!A||!B) continue;
     const hero = sa.con==='Lyra' || sb.con==='Lyra';
-    ctx.strokeStyle = hero ? 'rgba(201,184,232,.55)' : 'rgba(201,184,232,.26)';
+    if(hero){
+      ctx.save(); ctx.globalCompositeOperation='screen';
+      ctx.strokeStyle='rgba(201,184,232,.30)'; ctx.lineWidth=4.5;   // outer radiance
+      ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle='rgba(228,219,250,.95)'; ctx.lineWidth=1.4;   // bright core
+    } else {
+      ctx.strokeStyle='rgba(201,184,232,.26)'; ctx.lineWidth=1.1;
+    }
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
   }
 }
@@ -416,9 +460,17 @@ function drawStar(p,s,t){
   const r=starRadius(s.m);
   let a=Math.min(1,1.05-0.12*s.m); a=Math.max(0.35,a);
   if(!reduceMotion){ a*=0.9+0.1*Math.sin(t*0.002+(s.ra*0.7)%6.28); }
+  const isLyra = s.con==='Lyra';
   ctx.save(); ctx.globalCompositeOperation='screen';
   if(s.m<2.0) softGlow(p.x,p.y,r*5.5, rgbsoft(s.c,0.18*a));
   if(s.hero) softGlow(p.x,p.y,r*7, rgbsoft(s.c,0.14*a));
+  if(isLyra){                                        // the harp's own stars blaze
+    softGlow(p.x,p.y,r*10, rgbsoft([201,184,232],0.18*a));
+    softGlow(p.x,p.y,r*5, rgbsoft([236,229,252],0.26*a));
+    ctx.fillStyle=rgbsoft([245,240,255],Math.min(1,a+0.15));
+    ctx.beginPath(); ctx.arc(p.x,p.y, r*(s.n==='Vega'?1.5:1.25), 0,7); ctx.fill();
+    ctx.restore(); return;
+  }
   ctx.fillStyle=rgbsoft(s.c,a);
   ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
   ctx.restore();
@@ -469,23 +521,43 @@ function label(x,y,txt,kind){
   ctx.shadowColor='rgba(8,10,24,.85)'; ctx.shadowBlur=4;
   ctx.fillText(txt,x,y); ctx.restore();
 }
+function lyraLabel(lst){
+  const arr=[]; STARS.filter(s=>s.con==='Lyra').forEach(s=>{
+    const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<2) return;
+    const p=project(pa.alt,pa.az); if(p) arr.push(p); });
+  if(arr.length<3) return;
+  let mx=0,my=0; arr.forEach(p=>{mx+=p.x;my+=p.y;}); mx/=arr.length; my/=arr.length;
+  ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(201,184,232,.9)'; ctx.shadowBlur=14;
+  ctx.font="600 19px 'Fraunces',serif"; ctx.fillStyle='rgba(244,238,255,.96)';
+  ctx.fillText('Lyra', mx, my - R*0.16);
+  ctx.shadowBlur=6; ctx.font="italic 400 12px 'Fraunces',serif";
+  ctx.fillStyle='rgba(214,202,242,.8)';
+  ctx.fillText('the Weaver', mx, my - R*0.16 + 19);
+  ctx.restore();
+}
 function labels(lst,moonEnv,planetEnvs){
   if(!S.labels) return;
   // constellation names at centroid (above-horizon members only)
   const cons={};
-  STARS.forEach(s=>{ const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<6) return;
+  STARS.forEach(s=>{ if(s.con==='Lyra') return;   // Lyra gets her own radiant label
+    const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<6) return;
     const p=project(pa.alt,pa.az); if(!p) return; (cons[s.con]=cons[s.con]||[]).push(p); });
   for(const k in cons){ const arr=cons[k]; if(arr.length<2 && k!=='Piscis Austrinus') continue;
     let mx=0,my=0; arr.forEach(p=>{mx+=p.x;my+=p.y;}); mx/=arr.length; my/=arr.length;
-    label(mx,my,k.toUpperCase()==='LYRA'?'Lyra':k,'con'); }
+    label(mx,my,k,'con'); }
   // bright named stars
-  ['Vega','Altair','Deneb','Arcturus','Antares','Fomalhaut','Polaris','Spica'].forEach(n=>{
+  ['Altair','Deneb','Arcturus','Antares','Fomalhaut','Polaris','Spica'].forEach(n=>{
     const s=SBY[n]; const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<3) return;
     const p=project(pa.alt,pa.az); if(!p) return;
-    label(p.x+8,p.y, n, n==='Vega'?'warm':'name'); });
+    label(p.x+8,p.y, n, 'name'); });
   // moon + planets
   if(moonEnv) label(moonEnv.p.x+moonEnv.r+8, moonEnv.p.y, 'Moon', 'warm');
   planetEnvs.forEach(e=>{ if(e&&e.env) label(e.env.p.x+e.env.r+7, e.env.p.y, e.name, 'warm'); });
+  // the sun, low in the west — the day not yet gone
+  { const pa=altaz(SUN.ra,SUN.dec,lst,OBS.lat); if(pa.alt>=0){ const p=project(pa.alt,pa.az);
+    if(p) label(p.x+10,p.y,'Sun','warm'); } }
+  lyraLabel(lst);                                    // her constellation, radiant
 }
 
 /* ── frame ─────────────────────────────────────────────────────────────── */
@@ -494,8 +566,10 @@ function frame(t){
   ctx.clearRect(0,0,W,H);
   clipDisk();
   nightDisk();
+  drawSun(lst);
   milkyWay(lst);
   faintStars(lst,t);
+  lyraRadiance(lst,t);
   triangle(lst);
   if(S.lines) constellationLines(lst);
   // stars
@@ -516,7 +590,9 @@ function fmtClock(istMin){
   return h+':'+String(mm).padStart(2,'0')+' '+ap;
 }
 const timeEl=document.getElementById('time'), clockEl=document.getElementById('clock');
-function syncClock(){ clockEl.textContent=fmtClock(S.istMin); }
+const momentEl=document.getElementById('moment');
+function syncClock(){ clockEl.textContent=fmtClock(S.istMin);
+  momentEl.classList.toggle('past', S.istMin > BIRTH_IST); }
 timeEl.addEventListener('input',()=>{ S.istMin=+timeEl.value; syncClock(); });
 function toggle(id,key){ const el=document.getElementById(id);
   el.addEventListener('click',()=>{ S[key]=!S[key]; el.setAttribute('aria-pressed',S[key]); }); }
