@@ -38,8 +38,8 @@ reference copies (`docs/specs/subagents/`, `docs/specs/skills/`) for record-
 keeping, not routing. The Scribe serving-voice carve-out (decree-0019 /
 canon-proc-006) and the cross-cluster Cipher/Chronicler records remain Codex-
 sourced but Province-editable in their in-Province copy. **Invoke the
-mirrors.** Cipher's mirror is a deploy of the Codex canon: Cipher remains Censor
-of Cluster A, not a Province seat — the mirror exists so the Edict V final-pass
+mirrors.** Cipher's in-Province copy mirrors the cross-cluster Codex record:
+Cipher remains Censor of Cluster A, not a Province seat — the mirror exists so the Edict V final-pass
 can be invoked without leaving Province context.
 
 ## 3. Subagent or skill — the artifact test (canon-cc-022)
