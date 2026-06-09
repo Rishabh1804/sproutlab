@@ -103,6 +103,18 @@ else
   echo "SKIP_GRAPH=1 — graph + Province Map not regenerated this build." >&2
 fi
 
+# ── PR Tree Dashboard regeneration ──
+# Renders docs/PR_TREE_DASHBOARD.html from the curated PR record corpus
+# (docs/pr-dashboard-data.json) + template (split/pr-dashboard-template.html).
+# Same doctrine as the Province Map: the .html is a regenerated VIEW that
+# cannot drift from its committed source; strictly NON-FATAL; STDERR only,
+# after the HTML build is closed to $OUT (PR #118 lesson). The data file is
+# curated, not scraped — append new PR records when PRs merge, then rebuild.
+if command -v node >/dev/null 2>&1; then
+  node "$ROOT/split/build-pr-dashboard.mjs" 1>&2 \
+    || echo "PR dashboard generation failed (non-fatal); docs/PR_TREE_DASHBOARD.html may be stale." >&2
+fi
+
 # ── WCAG contrast audit (advisory) ──
 # Reads the colour tokens out of styles.css and reports text-on-background
 # contrast for the light/dark/print-from-dark contexts. Strictly NON-FATAL and
