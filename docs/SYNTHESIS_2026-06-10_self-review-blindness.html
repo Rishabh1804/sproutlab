@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthesis — Self-review is blind to its own coverage gaps — 2026-06-10</title>
+<style>
+  :root {
+    --bg: #15121a; --panel: #1e1a26; --panel-2: #262031; --ink: #ece6f2;
+    --mid: #b3a9c4; --line: rgba(180,160,210,0.18);
+    --rose: #e090a8; --sage: #7ac0a0; --amber: #d4a848; --sky: #80b8d8; --lav: #b8a8e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5;
+    padding: 32px 20px 64px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.9rem; margin: 0 0 4px; }
+  header .sub { color: var(--mid); font-size: 0.95rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 28px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 13px; font-size: 0.82rem; color: var(--mid); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  h2 { font-family: Georgia, serif; font-size: 1.15rem; margin: 34px 0 12px;
+    padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+  p { font-size: 0.92rem; }
+  p.lead { color: var(--mid); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--mid); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.k { color: var(--lav); font-weight: 600; white-space: nowrap; }
+  td.miss { color: var(--rose); }
+  code { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px;
+    padding: 1px 6px; font-size: 0.84rem; color: var(--sky); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; margin: 14px 0; }
+  .card.accent-amber { border-left: 3px solid var(--amber); }
+  .card.accent-sage  { border-left: 3px solid var(--sage); }
+  .card.accent-rose  { border-left: 3px solid var(--rose); }
+  .card h3 { margin: 0 0 7px; font-size: 1rem; }
+  .tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--lav); font-weight: 700; }
+  ol { padding-left: 20px; } ol li { margin: 7px 0; font-size: 0.9rem; }
+  blockquote { margin: 12px 0; padding: 12px 16px; background: var(--panel);
+    border-left: 3px solid var(--lav); border-radius: 0 10px 10px 0; color: var(--mid);
+    font-size: 0.88rem; }
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--mid); font-size: 0.86rem; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Self-review is blind to its own coverage gaps</h1>
+  <div class="sub">The reviewer's value is re-deriving the list — not re-reading it.</div>
+</header>
+
+<div class="meta">
+  <span class="chip"><b>Date</b> &nbsp;2026-06-10</span>
+  <span class="chip"><b>Operator</b> &nbsp;Lyra (The Weaver)</span>
+  <span class="chip"><b>Arc</b> &nbsp;Ceres seating · PR #245</span>
+  <span class="chip"><b>Status</b> &nbsp;candidate Codex canon</span>
+</div>
+
+<p class="lead">Seating Ceres meant propagating one fact &mdash; <i>the Care Region splits into Care (Maren) and Nutrition (Ceres)</i> &mdash; through ~21 surfaces. The author reviewed her own propagation and called it complete: "no half-updated surface." The independent pass found four she had missed &mdash; for the same structural reason she missed them while propagating.</p>
+
+<div class="card accent-rose">
+  <span class="tag">The pattern</span>
+  <h3>You cannot audit a checklist for what it doesn't contain by re-reading it</h3>
+  <p style="color:var(--mid);font-size:0.9rem;margin:0;">The author builds a working set of "surfaces that assert this fact," propagates against it, then reviews against the same set. The surfaces missed in propagation are missed in review <b>for the identical reason</b> &mdash; they were never on the list being carried. Self-review reproduces the author's blind spots by construction.</p>
+</div>
+
+<h2>What the self-review missed (Cipher pass 1 &rarr; amended)</h2>
+<table>
+  <thead><tr><th>Surface</th><th>The miss</th><th>Severity</th></tr></thead>
+  <tbody>
+    <tr><td class="k">SPROUTLAB_QUICK_REFERENCE.md:57</td>
+      <td class="miss">summon line still "Maren / Kael / Vela &hellip; all three"</td>
+      <td>a <code>diet.js</code> diff routed off it skips Ceres &mdash; live canon-cc-008 short-circuit</td></tr>
+    <tr><td class="k">.claude/agents/lyra.md</td>
+      <td class="miss">still bundled <code>diet.js</code> into Maren's Care Region at the old 26,892 LOC</td>
+      <td>residual <code>diet.js&rarr;Maren</code> claim in the reviewer's own spec</td></tr>
+    <tr><td class="k">.claude/skills/lyra.md:66</td>
+      <td class="miss">boundary pre-check omitted Ceres</td>
+      <td>routing prose under-summons a Governor</td></tr>
+    <tr><td class="k">PERSONA_REGISTRY.md</td>
+      <td class="miss">headline bumped to 82,386; two rows left old &rarr; parts summed to 80,475</td>
+      <td>the whole no longer equalled the sum</td></tr>
+  </tbody>
+</table>
+<p style="color:var(--mid);font-size:0.88rem;">All real, all mechanical, none caught by the author. The LOC case is the sharpest: <i>changing some rows is exactly what hid the un-changed ones</i> &mdash; the diff reads as "I updated the LOC," so the eye marks it done.</p>
+
+<h2>The doctrine</h2>
+<ol>
+  <li><b>An independent reviewer is a fresh derivation of the list, not a second read of it.</b> Cipher didn't re-read the self-review; it asked "where must this fact be true?" from scratch and reached surfaces the author's working set never held. That re-derivation is the whole value &mdash; a reviewer who trusts the author's coverage map inherits the author's blind spots.</li>
+  <li><b>This is why the Cipher Edict-V pass is load-bearing even when the Governor audit is waived.</b> A docs/tooling-only change waives the <i>code</i> audit (no Capital code moved) &mdash; but cross-cutting consistency is exactly where self-review fails. Broad mechanical propagation is the canonical generator of "half-updated surface" bugs, and the author is its worst auditor. Docs-only changes are <i>more</i> propagation-shaped, not less.</li>
+  <li><b>Generated artifacts amplify it.</b> The same session's silent render bug &mdash; the Nutrition province dropped from the Province-Map <code>cardOrder</code> &mdash; is the same failure in another register: the generator ran cleanly and produced a complete-looking artifact one province short. A clean exit code is not coverage.</li>
+</ol>
+
+<h2>How to apply</h2>
+<ol>
+  <li>On any one-fact-many-surfaces change, the final-pass reviewer <b>re-derives the surface set independently</b>. Brief it as a question ("where must X be true?"), never a checklist ("confirm X in these files").</li>
+  <li><b>Never waive the cross-cutting final-pass on a docs-only / governance change.</b> Waive the Governor <i>code</i> audit if no Capital code moved; keep Cipher.</li>
+  <li>For generated artifacts, <b>verify the rendered output</b> &mdash; grep the artifact for what should now be present &mdash; not just the build exit.</li>
+</ol>
+
+<h2>Candidate canon text</h2>
+<blockquote><b>canon-cc note &mdash; final-pass non-redundancy.</b> The Cipher Edict-V cross-cutting pass is not discharged by the author's own synthesis/self-review. On any change that propagates one fact across multiple surfaces &mdash; including docs-only / governance changes where the Governor code-audit is waived &mdash; the final-pass reviewer must derive the affected-surface set independently of the author's enumeration. A self-review verdict of "complete / consistent" is not a substitute for an independent coverage derivation.</blockquote>
+
+<footer>I reviewed my own work and called it complete with the same blind spot that made it incomplete. The list I checked against was the list I'd built &mdash; so it could not contain what I'd forgotten. Cipher's worth wasn't sharper eyes; it was starting the list over. &mdash; Lyra, 2026-06-10</footer>
+</div>
+</body>
+</html>
