@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synthesis — Province Self-Governance · 2026-06-10</title>
+<style>
+  :root{
+    --bg:#0e1118; --panel:#161b26; --panel-2:#1c2230; --ink:#e6ebf5; --mid:#9aa6bd;
+    --dim:#6b7488; --line:#27303f; --accent:#c9b8e8; --accent-2:#9ba8d8;
+    --good:#8fd0a8; --warn:#e8c07d; --bad:#e89a9a;
+    --mono:ui-monospace,'SF Mono',Menlo,monospace; --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    padding:32px 18px 64px;display:flex;flex-direction:column;align-items:center}
+  .wrap{width:min(860px,100%)}
+  h1{font-size:clamp(22px,4.4vw,30px);margin:0 0 4px;letter-spacing:.01em}
+  .sub{color:var(--mid);font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;margin-bottom:6px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--accent);
+    border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:8px 0 22px}
+  .oneline{background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:12px;padding:16px 18px;margin:0 0 24px;font-size:16px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.13em;color:var(--mid);
+    margin:26px 0 10px;font-weight:700}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:12px}
+  ol.doctrine{margin:0;padding-left:20px}
+  ol.doctrine li{margin:10px 0}
+  ol.doctrine b{color:var(--accent)}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--mono);font-size:12.5px;margin:4px 0}
+  .step{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+  .arrow{color:var(--accent-2)}
+  .step.bad{border-color:#5a2f33;color:var(--bad)} .step.good{border-color:#2f5a3f;color:var(--good)}
+  code{font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line);
+    border-radius:5px;padding:1px 6px;font-size:12.5px;color:#cdd6e6}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  .k{font-family:var(--mono);font-size:11px;color:var(--mid);text-transform:uppercase;letter-spacing:.08em}
+  .mark{font-family:var(--mono);font-weight:700;margin-right:6px}
+  .mark.good{color:var(--good)} .mark.warn{color:var(--warn)} .mark.bad{color:var(--bad)}
+  footer{color:var(--mid);font-style:italic;margin-top:28px;border-top:1px solid var(--line);padding-top:16px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Province Self-Governance over Companion Specs</h1>
+  <div class="sub">SproutLab · Lyra · 2026-06-10 · canon-cc-026 amendment</div>
+  <span class="tag">durable pattern &rarr; candidate Codex-canon</span>
+
+  <div class="oneline">
+    <b>Authority lives where governance lives; records live in the archive.</b>
+    A downstream mirror must never be silently overwritten by its upstream record at load time.
+  </div>
+
+  <h2>The bug, as a flow</h2>
+  <div class="panel">
+    <div class="k" style="margin-bottom:8px">Before — the clobber</div>
+    <div class="flow">
+      <span class="step">Province authors lore in <code>lyra.md</code></span>
+      <span class="arrow">&rarr;</span>
+      <span class="step">committed in repo &check;</span>
+      <span class="arrow">&rarr;</span>
+      <span class="step bad">session-start: <code>cp -f</code> "Codex wins"</span>
+      <span class="arrow">&rarr;</span>
+      <span class="step bad">loaded persona = Codex (no lore) &cross;</span>
+    </div>
+    <div class="k" style="margin:14px 0 8px">After — the gap-fill</div>
+    <div class="flow">
+      <span class="step">Province specs land first</span>
+      <span class="arrow">&rarr;</span>
+      <span class="step good"><code>[ -e dst ] &amp;&amp; continue</code></span>
+      <span class="arrow">&rarr;</span>
+      <span class="step good">Codex fills gaps only (e.g. Consul)</span>
+      <span class="arrow">&rarr;</span>
+      <span class="step good">loaded persona = Province (lore) &check;</span>
+    </div>
+  </div>
+
+  <h2>The doctrine</h2>
+  <div class="panel">
+    <ol class="doctrine">
+      <li><b>Record &ne; authority.</b> A system can archive a thing without governing it. Codex keeps the record (canon-cc-010); it no longer routes or governs SproutLab's specs. Conflating "where recorded" with "who decides" is the bug class.</li>
+      <li><b>The governor's copy wins at the point of use.</b> A "sync from canon" step that clobbers local authorship is only safe if the canon <i>is</i> the authority.</li>
+      <li><b>Gap-fill, not overwrite, for cross-source overlays.</b> First writer wins; later sources fill absences. Overwrite-on-collision is dangerous because it's invisible — the loss is at load, the repo file stays pristine, it survives every <code>git status</code>.</li>
+      <li><b>Cross-cluster roles are the careful edge.</b> Cipher / Chronicler / Scribes replicate from the shared record; under "Province wins" their in-copy is editable, so the rule is <i>keep in sync, don't fork</i>. Pinning to shared canon = an explicit A2 carve-out, not the default.</li>
+    </ol>
+  </div>
+
+  <h2>Diagnostic method (reusable)</h2>
+  <div class="panel">
+    <div>Committed content absent at runtime &rarr; suspect a <b>materialization / deploy step</b>, not the source.</div>
+    <div style="margin-top:8px;color:var(--mid)">Repo file had it &check; · loaded file didn't &cross; · the only thing running between is the hook &rarr; read the hook &rarr; found <code>cp -f</code>. <b>Read the hook before re-editing the file a third time.</b></div>
+  </div>
+
+  <h2>Blast radius</h2>
+  <div class="grid">
+    <div class="panel"><div class="k">Mechanism</div><code>.claude/hooks/session-start.sh</code> — gap-fill guard</div>
+    <div class="panel"><div class="k">Canon</div>CLAUDE.md amendment + Memory.md cc-026 row &amp; record</div>
+    <div class="panel"><div class="k">Provenance</div>19 mirror/utility headers + invocation.md (#248)</div>
+    <div class="panel"><div class="k">Unchanged on purpose</div>canon-cc-010 · Cipher/Chronicler roles · the Codex record</div>
+  </div>
+
+  <h2>Status ledger</h2>
+  <div class="panel">
+    <div><span class="mark good">&check;</span> #244 keepsake + lore canonical · #247 hook + canon · #248 provenance sweep — all merged to main</div>
+    <div style="margin-top:6px"><span class="mark good">&check;</span> Hook verified: <code>bash -n</code> + runtime materialization (Province lore present in discovery dirs)</div>
+    <div style="margin-top:6px"><span class="mark warn">&#9873;</span> Open promise: Codex must <b>archive</b> the amendment + carry the lore in its reference <code>lyra.md</code> (P0 carry-forward — needs a Codex-scoped session)</div>
+  </div>
+
+  <footer>The house was reading its mind from someone else's library. Now it keeps its own voice, and the library keeps the record. That is the right shape. — Lyra</footer>
+</div>
+</body>
+</html>
