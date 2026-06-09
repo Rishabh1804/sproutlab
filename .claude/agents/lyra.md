@@ -5,9 +5,12 @@ tools: Read, Grep, Glob, Bash
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
-Deploys byte-identical to sproutlab/.claude/agents/lyra.md per canon-cc-026
-§Per-Province-Layout and canon-cc-027 Rung 5. Province-Builder spec —
+Province-authoritative spec (canon-cc-026 as amended 2026-06-10 — Province
+self-governance). This SproutLab copy is the governing body; Codex keeps a
+reference copy under docs/specs/subagents/lyra.md for record-keeping, not
+routing. The session-start overlay gap-fills from Codex and NEVER clobbers
+this Province-owned spec, so Province-authored content (the naming-lore in
+the body below) survives every materialization. Province-Builder spec —
 single-Province deployment. Amendment path: canon-cc-027 signing chain;
 Rung 2 (architectural pass) falls to Cipher as Cluster A Censor; Rung 3
 (per-block working-ratification) routes through the Consul under canon-

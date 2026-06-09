@@ -84,9 +84,14 @@ if [ -z "${SPROUTLAB:-}" ]; then
   exit 0
 fi
 
-# ── 4. Materialize: sproutlab mirrors first, then Codex canonicals as overlay ──
-# (canon-cc-026: Codex wins on name collision; catches names that exist only in
-# Codex such as chronicler / consul.)
+# ── 4. Materialize: SproutLab mirrors win; Codex canonicals fill gaps only ──
+# canon-cc-026 amended (Architect, 2026-06-10 — Province self-governance):
+# SproutLab GOVERNS its own Companion specs. Codex is record-keeping, NOT the
+# routing/governance authority for SproutLab. The Codex overlay therefore only
+# ADDS specs the Province does not ship (e.g. consul); it never clobbers a
+# Province-owned spec (lyra / maren / kael / vela / ceres / cipher / chronicler).
+# (Was: "Codex wins on name collision" — reversed so Province-authored lore,
+# e.g. Lyra's naming-lore, survives every session-start materialization.)
 copy_specs() {
   local src="$1" dst="$2"
   [ -d "$src" ] || return 0
@@ -114,7 +119,9 @@ for base in $TARGETS; do
   copy_specs "$SPROUTLAB/.claude/agents" "$agents"
   copy_specs "$SPROUTLAB/.claude/skills" "$skills"
   if [ -n "${CODEX:-}" ]; then
-    # Codex canonical bodies — overlay (skip non-frontmatter rationale files).
+    # Codex canonical bodies — GAP-FILL overlay (skip non-frontmatter rationale
+    # files). Province-self-governance (2026-06-10): only copy a Codex spec when
+    # the Province did NOT already place one of that name — SproutLab wins.
     for sub in "subagents:$agents" "skills:$skills"; do
       cdir="$CODEX/docs/specs/${sub%%:*}"; ddir="${sub##*:}"
       [ -d "$cdir" ] || continue
@@ -122,6 +129,7 @@ for base in $TARGETS; do
       for f in "$cdir"/*.md; do
         [ -f "$f" ] || continue
         head -1 "$f" | grep -q '^---$' || continue   # frontmatter only
+        [ -e "$ddir/$(basename "$f")" ] && continue   # Province wins — no clobber
         cp -f "$f" "$ddir/$(basename "$f")"
       done
     done
