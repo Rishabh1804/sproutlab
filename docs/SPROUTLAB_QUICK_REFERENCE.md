@@ -54,7 +54,7 @@ git add -A && git commit -m "msg" && git --no-pager push
 **Lyra builds alone; Governors activate only during QA rounds.** Every `split/` change headed for a PR clears the chain *before* the PR leaves draft or merges. Full procedure: `docs/QA_GATE_SPEC.md`.
 
 1. **Build & self-check** — `pnpm build` clean, audit gates pass, e2e green.
-2. **Governor audit** (Mode-1 subagents, parallel, by jurisdiction above) — summon **Maren** / **Kael** / **Vela** for whichever Region the diff touches; **both** Kael+Vela if it spans engine+render; **all three** for `styles.css`/`template.html`. Docs-/test-only → audit waivable (state it).
+2. **Governor audit** (Mode-1 subagents, parallel, by jurisdiction above) — summon **Maren** / **Ceres** / **Kael** / **Vela** for whichever Region the diff touches (home/medical→Maren, diet/recipes→Ceres, engine→Kael, render→Vela); **each named Governor** if it spans Regions; **all four** for `styles.css`/`template.html`. Docs-/test-only → audit waivable (state it).
 3. **Lyra synthesizes** the Governor reports and folds the fixes.
 4. **Cipher** (Censor of Cluster A) runs the Edict V cross-cutting final-pass.
 5. *Only now* — mark PR ready / merge.

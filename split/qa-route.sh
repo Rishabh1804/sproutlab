@@ -78,7 +78,7 @@ CARE = ("Care", "Maren")
 NUTR = ("Nutrition", "Ceres")
 ENG  = ("Intelligence (engine)", "Kael")
 REN  = ("Surfacing (render)", "Vela")
-SHARED = ("Shared territory", "Ceres + Kael + Maren + Vela (quad)")
+SHARED = ("Shared territory", "Maren + Ceres + Kael + Vela (quad)")
 MODULE_PROVINCE = {
     "home.js": CARE, "medical.js": CARE,
     "diet.js": NUTR, "recipes.js": NUTR,
@@ -99,7 +99,7 @@ for m in changed:
     prov, gov = MODULE_PROVINCE.get(m, ("(unmapped)", "(unknown — flag to Lyra)"))
     print(f"  - {m:32s} -> {prov} [{gov}]")
     if m in ("styles.css", "template.html"):
-        for g in ("Ceres", "Kael", "Maren", "Vela"):
+        for g in ("Maren", "Ceres", "Kael", "Vela"):
             add(g, f"shared file {m} (quad-Gov review)")
     else:
         add(gov, f"direct edit: {m}")
@@ -126,7 +126,7 @@ if graph_path:
         if any(out_calls.get(lf, 0) > 0 for lf in LEAVES):
             ripple_note.append("  !! DIRECTION INVARIANT BROKEN (V-K-G2): a known leaf has outgoing calls;")
             ripple_note.append("     ripple may be inverted. FAIL-SAFE: summoning ALL Governors.")
-            for gname in ("Ceres", "Kael", "Maren", "Vela"):
+            for gname in ("Maren", "Ceres", "Kael", "Vela"):
                 add(gname, "fail-safe: graph edge-direction invariant broken (V-K-G2)")
         # downstream: who CALLS into a changed module (reverse of calls edge =
         # dependents). edge source --calls--> target ; if target lives in a
@@ -160,7 +160,7 @@ else:
     print("  none detected — change appears jurisdiction-local.")
 
 print("\n================  SUMMON SET (canon-cc-008 step 2)  ================")
-order = ["Ceres", "Kael", "Maren", "Vela", "Ceres + Kael + Maren + Vela (quad)"]
+order = ["Maren", "Ceres", "Kael", "Vela", "Maren + Ceres + Kael + Vela (quad)"]
 for gov in sorted(summon, key=lambda x: order.index(x) if x in order else 99):
     print(f"  SUMMON {gov}")
     for r in sorted(summon[gov]):

@@ -52,7 +52,7 @@ const PROVINCES = {
   [CARE]:  { name:'Provincia Curae',          latin:'home / medical', gov:'Maren', accent:'#b5d5c5', jurisdiction:true },
   [NUTR]:  { name:'Provincia Nutritionis',    latin:'diet / recipes', gov:'Ceres', accent:'#a8cfe0', jurisdiction:true },
   [REN]:   { name:'Provincia Superficiei',    latin:'the render layer', gov:'Vela',  accent:'#c9b8e8', jurisdiction:true },
-  [SHARED]:{ name:'Territorium Commune',      latin:'styles.css + template.html', gov:'Ceres + Kael + Maren + Vela', accent:'#e8b86d', jurisdiction:false },
+  [SHARED]:{ name:'Territorium Commune',      latin:'styles.css + template.html', gov:'Maren + Ceres + Kael + Vela', accent:'#e8b86d', jurisdiction:false },
   [WORKS]: { name:'Opera Publica',            latin:'build + audit corps', gov:'(tooling)', accent:'#fad4b4', jurisdiction:false },
 };
 const FRONTIER = 30000; // the 30K rule

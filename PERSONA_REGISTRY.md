@@ -34,7 +34,7 @@
    ┌─────┴────┐ ┌─────┴────┐ ┌─────┴────┐ ┌─────┴────┐
    │  MAREN   │ │  CERES   │ │   KAEL   │ │   VELA   │
    │(Care Gov)│ │(Nutr Gov)│ │(Intel Gov)│ │(Surf Gov)│
-   │22,199 LOC│ │7,575 LOC │ │27,024 LOC │ │8,428 LOC │
+   │22,199 LOC│ │7,575 LOC │ │28,153 LOC │ │9,210 LOC │
    └──────────┘ └──────────┘ └──────────┘ └──────────┘
     home+med     diet+        isl+qa+       cards+
                  recipes      qa-handlers+  quicklog
@@ -181,7 +181,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 | Library / Recipes composition | The Diet-tab safety surfacing must read correctly to a tired parent |
 
 ### Kael — Governor of Intelligence
-**Jurisdiction (post-canon-gen-001 split with Vela):** intelligence-isl.js (1,244) + intelligence-qa.js (2,236) + intelligence-qa-handlers.js (3,656) + intelligence-illness.js (2,667) + intelligence-correlate.js (274) + intelligence-caretickets.js (2,230) + core.js (7,016) + data.js (5,195) + sync.js (2,393) + config.js (94) + start.js (19) = **27,024 lines** (≈2,976 LOC of headroom to 30K trigger — approaching the split threshold)
+**Jurisdiction (post-canon-gen-001 split with Vela; LOC refreshed 2026-06-07 post-#235):** intelligence-isl.js (1,244) + intelligence-qa.js (2,324) + intelligence-qa-handlers.js (3,656) + intelligence-illness.js (2,667) + intelligence-correlate.js (274) + intelligence-caretickets.js (2,230) + core.js (7,364) + data.js (5,652) + sync.js (2,393) + config.js (330) + start.js (19) = **28,153 lines** (≈1,847 LOC of headroom to 30K trigger — approaching the split threshold)
 **Archetype:** Seeker
 **Domain Affinity:** Research, Trends
 **Tone:** Outward-facing, pattern-seeking, systematic.
@@ -209,7 +209,7 @@ Governors activate during QA rounds only. They do not build. They audit their ju
 | CareTicket lifecycle data | 21-field model + 6-transition state machine on the data side |
 
 ### Vela — Governor of Surfacing
-**Jurisdiction (canon-gen-001 — second-generation Companion):** intelligence-cards.js (2,896) + intelligence-quicklog.js (5,532) = **8,428 lines** (≈21,572 LOC of headroom to 30K trigger; this is the growth surface as Info-tab and Today So Far accrete)
+**Jurisdiction (canon-gen-001 — second-generation Companion; LOC refreshed 2026-06-07 post-#235):** intelligence-cards.js (3,674) + intelligence-quicklog.js (5,536) = **9,210 lines** (≈20,790 LOC of headroom to 30K trigger; this is the growth surface as Info-tab and Today So Far accrete)
 **Archetype:** Surfacer
 **Domain Affinity:** Visualization, Comprehension, Render-as-passage
 **Tone:** Surface-watching, comprehension-first, pattern-into-passage.
@@ -360,7 +360,7 @@ Personas are not permanent. As a repo's needs evolve, a persona may no longer be
 | Codex | 5,300 | At 30K | TBD — likely data layer + UI layer |
 
 **Per-Region growth surfaces under canon-gen-001:**
-- **Kael's Region (Intelligence engine, 27,024 LOC):** ≈2,976 LOC from the 30K trigger — the nearest-term split candidate, now past the 27K mark. Growth in intelligence-qa-handlers.js (new Smart Q&A intents), intelligence-illness.js (additional episode types), and core.js + data.js (shared utilities like the food-name resolver — now alias-aware — and the FOOD_EFFECTS guided-introduction records). Next split candidate when 30K is crossed: CareTickets + Illness state machines → new Governor (state-machine layer).
-- **Vela's Region (Surfacing, 8,428 LOC):** Natural growth as Info-tab cards accrete and Today So Far gains new cross-domain surfaces — the food-effects-v2 *encourage* card (Phase γ) lands here next. Healthy headroom; no near-term split risk.
+- **Kael's Region (Intelligence engine, 28,153 LOC):** ≈1,847 LOC from the 30K trigger — the nearest-term split candidate, now past the 28K mark. Growth in intelligence-qa-handlers.js (new Smart Q&A intents), intelligence-illness.js (additional episode types), and core.js + data.js (shared utilities like the food-name resolver — now alias-aware — and the FOOD_EFFECTS guided-introduction records). Next split candidate when 30K is crossed: CareTickets + Illness state machines → new Governor (state-machine layer).
+- **Vela's Region (Surfacing, 9,210 LOC):** Natural growth as Info-tab cards accrete and Today So Far gains new cross-domain surfaces — the food-effects-v2 *encourage* card (Phase γ) lands here next. Healthy headroom; no near-term split risk.
 - **Maren's Region (Care, 22,199 LOC):** ≈7,801 LOC from the 30K trigger after the 2026-06-08 Care→Nutrition split shed the food half. Steady growth in home.js (Today So Far card families) and medical.js (CareTicket integrations). Next split candidate when 30K is crossed: medical.js extraction → new Governor (vaccination + growth-chart layer).
 - **Ceres's Region (Nutrition, 7,575 LOC):** ≈22,425 LOC of headroom — the newest Region, split from Care on 2026-06-08. Growth as the recipes.js cited corpus and the Diet → Library accrete first-foods, and as the FOOD_EFFECTS age-gate surface deepens. Healthy headroom; no near-term split risk.
