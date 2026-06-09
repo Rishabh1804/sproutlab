@@ -18,12 +18,13 @@
 
 | Module(s) | Governor |
 |-----------|----------|
-| `home.js` · `diet.js` · `medical.js` | **Maren** — Care |
+| `home.js` · `medical.js` | **Maren** — Care |
+| `diet.js` · `recipes.js` | **Ceres** — Nutrition (food logging, Library, Recipes, adequacy; canon-gen-001 2nd-gen Governor, split from Care 2026-06-08) |
 | `intelligence-isl.js` · `intelligence-qa.js` · `intelligence-qa-handlers.js` · `intelligence-illness.js` · `intelligence-correlate.js` · `intelligence-caretickets.js` · `core.js` · `data.js` · `sync.js` · `config.js` · `start.js` | **Kael** — Intelligence (engine: what the data *does* before it renders) |
 | `intelligence-cards.js` · `intelligence-quicklog.js` | **Vela** — Surfacing (render: where data becomes parent-legible; canon-gen-001 2nd-gen Governor) |
-| `styles.css` · `template.html` (shared) | **all three** — sequential triple-jurisdiction review (Maren → Kael → Vela) |
+| `styles.css` · `template.html` (shared) | **all four** — sequential quadruple-jurisdiction review (Maren → Ceres → Kael → Vela) |
 
-> **Unsettled:** `recipes.js` (food-icon / recipe data, consumed by `diet.js`) is **not yet mapped** in `qa-route.sh`, and `CLAUDE.md` treats Recipes as `diet.js` content (Maren). Until its Governor is settled in `qa-route.sh` + `CLAUDE.md`, route a `recipes.js` diff to **Lyra** to assign.
+> `recipes.js` is mapped to **Ceres** (Nutrition) in `qa-route.sh` + `CLAUDE.md` as of the 2026-06-08 Care→Nutrition split.
 
 ### Concat order (split/build.sh)
 
@@ -53,7 +54,7 @@ git add -A && git commit -m "msg" && git --no-pager push
 **Lyra builds alone; Governors activate only during QA rounds.** Every `split/` change headed for a PR clears the chain *before* the PR leaves draft or merges. Full procedure: `docs/QA_GATE_SPEC.md`.
 
 1. **Build & self-check** — `pnpm build` clean, audit gates pass, e2e green.
-2. **Governor audit** (Mode-1 subagents, parallel, by jurisdiction above) — summon **Maren** / **Kael** / **Vela** for whichever Region the diff touches; **both** Kael+Vela if it spans engine+render; **all three** for `styles.css`/`template.html`. Docs-/test-only → audit waivable (state it).
+2. **Governor audit** (Mode-1 subagents, parallel, by jurisdiction above) — summon **Maren** / **Ceres** / **Kael** / **Vela** for whichever Region the diff touches (home/medical→Maren, diet/recipes→Ceres, engine→Kael, render→Vela); **each named Governor** if it spans Regions; **all four** for `styles.css`/`template.html`. Docs-/test-only → audit waivable (state it).
 3. **Lyra synthesizes** the Governor reports and folds the fixes.
 4. **Cipher** (Censor of Cluster A) runs the Edict V cross-cutting final-pass.
 5. *Only now* — mark PR ready / merge.
