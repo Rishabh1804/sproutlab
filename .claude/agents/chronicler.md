@@ -5,7 +5,11 @@ tools: Read, Grep, Glob, Bash
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
+Cross-cluster role spec — the Chronicler (Aurelius) is a cross-cluster visitor;
+Codex holds the canonical record and replicates it to every Province. Per
+canon-cc-026 (amended 2026-06-10) the in-Province copy is Province-editable and
+wins on session-start materialization (gap-fill, no clobber); keep it in sync
+with the Codex record rather than fork it.
 Deploys byte-identical to every Province's .claude/agents/chronicler.md per
 canon-cc-026 §Per-Province-Layout (cross-cluster role replicates everywhere).
 Amendment path: canon-cc-027 signing chain, with the institutional-spec

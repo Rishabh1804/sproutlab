@@ -4,7 +4,9 @@ description: Prepare a SproutLab session for /compact. Use BEFORE running /compa
 trigger: /sproutlab-compact
 ---
 
-<!-- Canonical spec — authored and maintained in Codex per canon-cc-026.
+<!-- Province-authoritative utility skill — SproutLab governs this copy
+     (canon-cc-026 amended 2026-06-10, Province self-governance); Codex keeps a
+     reference copy in docs/specs/skills/ for record-keeping, not routing.
      Promoted to the Codex docs/specs/skills/ canonical home 2026-06-04 (PR #85).
      Province-local utility skill — single-Province deployment. Deploys byte-identical
      to sproutlab/.claude/skills/sproutlab-compact/SKILL.md per canon-cc-026
