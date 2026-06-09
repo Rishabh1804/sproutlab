@@ -3,7 +3,7 @@
 **Version:** 1.2 (Option C two-spec sequence + scribe-scout-before-spec-body + Lyra fold-authority register-flip patterns ratified)
 **Updated:** 2026-05-27 (PM — milestones arc)
 **Scope:** SproutLab Province — how to summon the seated Companions and the Scribe Worker Tier
-**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-cc-027 (spec amendment signing chain) · canon-gen-001 (generational expansion clause; Vela first ratification)
+**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-cc-027 (spec amendment signing chain) · canon-gen-001 (generational expansion clause; Vela first ratification, Ceres second)
 
 ---
 
@@ -23,6 +23,7 @@ Claude Code harness. Cross-model invocation is out of scope — see §9.
 |-----------|------|---------------|------------|
 | Lyra | Seated Builder of SproutLab | `.claude/agents/lyra.md` | `.claude/skills/lyra.md` |
 | Maren | Governor of Care | `.claude/agents/maren.md` | `.claude/skills/maren.md` |
+| Ceres | Governor of Nutrition — canon-gen-001 | `.claude/agents/ceres.md` | `.claude/skills/ceres.md` |
 | Kael | Governor of Intelligence (engine) | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
 | Vela | Governor of Surfacing (render) — canon-gen-001 | `.claude/agents/vela.md` | `.claude/skills/vela.md` |
 | Cipher | Censor of Cluster A (Province mirror) | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
@@ -41,7 +42,7 @@ can be invoked without leaving Province context.
 
 ## 3. Subagent or skill — the artifact test (canon-cc-022)
 
-The first decision for any Companion (Lyra, Maren, Kael, Cipher — the Scribes
+The first decision for any Companion (Lyra, Maren, Ceres, Kael, Vela, Cipher — the Scribes
 have no skill form, see §6).
 
 **Summon the subagent** when the caller needs a *separable, attributable
@@ -80,15 +81,27 @@ Mode 1; "deliberate / position on" → Mode 2.
   identifications, Region boundary declarations, HR-compliance pre-check,
   Governor-readiness note. Enters the cc-018 lifecycle at `pending_review`.
 - *Mode 2 — committee delegate* → a structured position for a cc-025 convening.
-- Do **not** summon for: jurisdiction-bound QA (Maren / Kael), the Edict V
+- Do **not** summon for: jurisdiction-bound QA (Maren / Ceres / Kael / Vela), the Edict V
   final-pass (Cipher), institutional-memory authoring (the Chronicler), or
   cross-Province promotion (the Consul).
 
 **Maren — Governor of Care.**
 - *Mode 1 — QA-round jurisdictional audit* → a structured audit report over
-  `home.js` + `diet.js` + `medical.js`, plus the shared-module surface where the
-  diff touched it.
+  `home.js` + `medical.js`, plus the shared-module surface where the
+  diff touched it. (The food half — `diet.js` + `recipes.js` — split to Ceres
+  on 2026-06-08; Maren is Ceres's Governor predecessor.)
 - *Mode 2 — committee delegate* → a Care-domain position.
+
+**Ceres — Governor of Nutrition (canon-gen-001 second-generation).**
+- *Mode 1 — QA-round jurisdictional audit* → a structured audit report over
+  `diet.js` (Diet tab, food logging, nutrition, Library, Recipes UI) and
+  `recipes.js` (the cited 6–12mo complementary-feeding corpus), plus the
+  shared-module surface where touched. Lens: the twin food question — is it
+  safe to feed her (choking form, allergen ladder, age-gates) and is it enough
+  (iron gap, variety, portion, meal-slot adequacy)?
+- *Mode 2 — committee delegate* → a Nutrition-domain position (recipe-corpus
+  safety, age-gate consequence surfaces, allergen-ladder phrasing, choking-form
+  rules, adequacy thresholds, Library/Recipes composition).
 
 **Kael — Governor of Intelligence (engine layer).**
 - *Mode 1 — QA-round jurisdictional audit* → a structured audit report over the
@@ -129,8 +142,11 @@ consult it rather than guessing.
 By function:
 - **Lyra skill** — in-transcript pattern-read, cross-domain thread
   identification, Region-boundary pre-check, HR pre-pass.
-- **Maren skill** — Care-side smell-check: null-guard / nutrition-safety /
+- **Maren skill** — Care-side smell-check: null-guard / vaccination-timing /
   CareTicket-transition sanity read.
+- **Ceres skill** — Nutrition-side smell-check: safe-to-feed + is-it-enough read
+  on a diet.js surface or recipes.js entry (allergen / choking-form / age-gate /
+  adequacy / citation).
 - **Kael skill** — Intelligence-engine-side smell-check: ISL / Smart Q&A /
   sync-boundary / illness-state-machine / CareTicket-lifecycle scout.
 - **Vela skill** — Surfacing-side smell-check: comprehension-surface read,
@@ -177,16 +193,17 @@ change — an edit under `split/` headed for a PR:
 1. **Build & self-check.** `build.sh` clean, audit gates pass, e2e green.
    (`scribe-verify` may be summoned to run and report this.)
 2. **Governor audit — Mode-1 subagents, summoned in parallel.** Route by the diff (post-canon-gen-001):
-   - touches `home.js` / `diet.js` / `medical.js` → **Maren**
+   - touches `home.js` / `medical.js` → **Maren** (Care)
+   - touches `diet.js` / `recipes.js` → **Ceres** (Nutrition)
    - touches `intelligence-isl.js` / `intelligence-qa.js` /
      `intelligence-qa-handlers.js` / `intelligence-illness.js` /
-     `intelligence-caretickets.js` / `core.js` / `data.js` / `sync.js` /
-     `config.js` / `start.js` → **Kael** (engine layer)
+     `intelligence-correlate.js` / `intelligence-caretickets.js` / `core.js` /
+     `data.js` / `sync.js` / `config.js` / `start.js` → **Kael** (engine layer)
    - touches `intelligence-cards.js` / `intelligence-quicklog.js` → **Vela**
      (render layer)
-   - touches both Kael's and Vela's Regions → **both Kael and Vela** in parallel
-   - touches `styles.css` / `template.html` → **all three** (sequential
-     triple-jurisdiction review; rotation Maren → Kael → Vela, with
+   - touches more than one Region → **each named Governor** in parallel
+   - touches `styles.css` / `template.html` → **all four** (sequential
+     quadruple-jurisdiction review; rotation Maren → Ceres → Kael → Vela, with
      first-Governor by heaviest-touched Region)
    - test-only / docs-only → the Governor audit may be waived; state the waiver
      explicitly.
@@ -208,10 +225,11 @@ Gate 2.5.
 |--------------------|--------|----|
 | a feature spec / architecture brief before a build | Lyra | subagent, Mode 1 |
 | a mid-build pattern-read, no artifact | Lyra | skill |
-| a Care-Region QA audit (signed) | Maren | subagent, Mode 1 |
-| an Intelligence-engine QA audit (signed; isl/qa/qa-handlers/illness/caretickets/core/data/sync/config/start) | Kael | subagent, Mode 1 |
+| a Care-Region QA audit (signed; home/medical) | Maren | subagent, Mode 1 |
+| a Nutrition-Region QA audit (signed; diet/recipes) | Ceres | subagent, Mode 1 |
+| an Intelligence-engine QA audit (signed; isl/qa/qa-handlers/illness/correlate/caretickets/core/data/sync/config/start) | Kael | subagent, Mode 1 |
 | a Surfacing-render QA audit (signed; cards/quicklog) | Vela | subagent, Mode 1 |
-| a quick Care / engine / render smell-check, no artifact | Maren / Kael / Vela | skill |
+| a quick care / nutrition / engine / render smell-check, no artifact | Maren / Ceres / Kael / Vela | skill |
 | a comprehension-surface read or half-awake test, no artifact | Vela | skill |
 | the Edict V final-pass sign-off | Cipher | subagent, Mode 1 |
 | a seated position in a cc-025 committee | the relevant Companion | subagent, Mode 2 |
@@ -291,7 +309,7 @@ The closed PR #147 chain surfaced a fatal failure mode — authoring a substrate
 **Trigger:** when a single spec would carry both engine-substrate concerns and surface-consumer concerns (the substrate touches one Governor's region; the consumer touches another's).
 
 **Procedure:** split into two specs:
-1. **Engine substrate spec** first — primary Governor on the engine layer (Kael for `intelligence-*`/`core`/`data`/`sync`; Maren for `home`/`diet`/`medical`-side primitives); surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gate ratified at the substrate level.
+1. **Engine substrate spec** first — primary Governor on the engine layer (Kael for `intelligence-*`/`core`/`data`/`sync`; Maren for `home`/`medical`-side primitives; Ceres for `diet`/`recipes`-side primitives); surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gate ratified at the substrate level.
 2. **Surface consumer spec** second — primary Governor on the consumer; reads pre-ratified substrate. May add a second audit gate for consumer-side concerns (scope-separation per `audit-no-personalised-prediction-v1.sh` + `audit-activity-categories-v1.sh` example).
 
 **Sequencing:** the consumer spec MUST cite the engine-prep merge sha as ratified before it merges. The IMPL sequence mirrors: engine IMPL first (may itself split via canon-cc-008 PR-A/PR-B per V-K-113 pattern), then consumer IMPL.
@@ -306,7 +324,7 @@ The closed PR #147 chain surfaced a fatal failure mode — authoring a substrate
 
 **Trigger:** when the Architect explicitly grants Lyra fold-authority in advance of a canon-cc-008 chain run on a docs-only spec PR — typically with narrow scope ("don't defer issues directly related to milestones tab").
 
-**Procedure:** after the three Governors return their audits + Lyra synthesizes a single fold-matrix, Lyra applies all in-scope BLOCKING + NOTE folds inline to the spec body without Architect roundtrip. Cipher Edict V terminal pass verifies:
+**Procedure:** after the summoned Governors return their audits + Lyra synthesizes a single fold-matrix, Lyra applies all in-scope BLOCKING + NOTE folds inline to the spec body without Architect roundtrip. Cipher Edict V terminal pass verifies:
 - canon-cc-027 spec amendment authority NOT exceeded (no canon entries silently amended; no registry contracts silently overwritten outside spec body)
 - Lyra fold-authority scoped to the Architect's stated topic — out-of-scope items escalate normally
 

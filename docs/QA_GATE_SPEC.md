@@ -1,6 +1,6 @@
 # SproutLab — Build QA Gate Spec
 **Created:** 9 April 2026
-**Updated:** 5 June 2026 — Gate 2.5 routing updated for canon-gen-001 (three Governors; engine/render split; `qa-route` oracle); icon validation now reads the generated `ICON_REFERENCE.html` instead of a hard-coded list. *(22 May 2026 — added Gate 2.5.)*
+**Updated:** 8 June 2026 — Gate 2.5 routing updated for the canon-gen-001 second split (four Governors; Ceres seated for Nutrition at the general-care→nourishment boundary; `diet.js` + `recipes.js` → Ceres). *(5 June 2026 — engine/render split, `qa-route` oracle, icon validation reads generated `ICON_REFERENCE.html`; 22 May 2026 — added Gate 2.5.)*
 **Applies to:** Every SproutLab build session
 **Philosophy:** The user never asks for a QA audit. Code is not presented until it passes.
 
@@ -169,21 +169,22 @@ the 30K-Rule QA chain. It is mandatory for every Capital change (any edit
 under `split/`). A draft PR may be opened first, but it stays draft until
 this gate clears.
 
-**Post canon-gen-001 (2026-05-23): three Governors, split at the data→render boundary.**
+**Post canon-gen-001: four Governors. First split at the data→render boundary (Vela, 2026-05-23); second at the general-care→nourishment boundary (Ceres, 2026-06-08).**
 
 | Step | Who | Trigger |
 |------|-----|---------|
-| Care audit | **Maren** (Mode-1 subagent) | diff touches `home.js` / `diet.js` / `medical.js` |
+| Care audit | **Maren** (Mode-1 subagent) | diff touches `home.js` / `medical.js` |
+| Nutrition audit | **Ceres** (Mode-1 subagent) | diff touches `diet.js` / `recipes.js` |
 | Intelligence-engine audit | **Kael** (Mode-1 subagent) | diff touches `intelligence-isl/qa/qa-handlers/illness/correlate/caretickets.js` / `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` |
 | Surfacing-render audit | **Vela** (Mode-1 subagent) | diff touches `intelligence-cards.js` / `intelligence-quicklog.js` |
-| Engine **+** render | **both Kael and Vela** (parallel) | diff spans both Regions |
-| Shared-module review | **all three** Governors — sequential triple-jurisdiction (rotation Maren → Kael → Vela, first-Governor by heaviest-touched Region) | diff touches `styles.css` / `template.html` |
+| Multiple Regions | **each named Governor** (parallel) | diff spans more than one Region |
+| Shared-module review | **all four** Governors — sequential quadruple-jurisdiction (rotation Maren → Ceres → Kael → Vela, first-Governor by heaviest-touched Region) | diff touches `styles.css` / `template.html` |
 | Synthesis | **Lyra** | always — fold Governor findings into fixes |
 | Edict V final-pass | **Cipher** (Censor of Cluster A) | always — cross-cutting sign-off |
 
 **`pnpm qa-route`** computes the summon-set from the diff — file-level routing **plus** cross-province ripple traced through the graph's `calls` edges. It is **advisory**: it widens the set, never narrows it, and **does not discharge the gate**. The gate is discharged only by summoning the named Governors and running Cipher's final-pass. The four-Scribe detail (canon-proc-006) may parallelize recon/checks under any companion, but Scribes never sign or gate.
 
-> **Unmapped:** `recipes.js` is not yet in `qa-route.sh`'s `MODULE_PROVINCE` map (it falls through to "flag to Lyra"). Until its Governor is settled in both `qa-route.sh` and `CLAUDE.md`, route a `recipes.js` diff to Lyra to assign.
+> **`recipes.js`** is mapped to **Ceres** (Nutrition) in `qa-route.sh`'s `MODULE_PROVINCE` map as of the 2026-06-08 Care→Nutrition split.
 
 **Gate 2.5 passes when:** every touched-jurisdiction Governor has audited,
 Lyra has synthesized the findings, and Cipher has returned an `LGTM` or
