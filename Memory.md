@@ -1,7 +1,7 @@
 # Memory.md
 **Scope:** Persistent institutional knowledge across all repos
 **Owner:** The Consul (cross-repo overseer)
-**Updated:** 7 June 2026 (PR #235 emergency-room-v2 — patient-first doc card + flexible-name decision)
+**Updated:** 8 June 2026 (Ceres seated as 4th Governor — canon-gen-001 Care→Nutrition split; was 7 June 2026, PR #235 emergency-room-v2)
 
 ---
 
@@ -38,7 +38,7 @@
 - **Wave 2 reservoir:** 9 nodes at `forward` status — R-1 (silver capstone, adaptive layer) now has a real adaptive signal post-sleep-arc-3
 - **canon-cc-008 chain operational:** 7 audit gates on main (8th + 9th queued for milestone-engine-prep IMPL + milestones-tab IMPL)
 - **Tree state:** 34 nodes on `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` (post-PR #150 §9-bis refresh)
-- **LOC:** 67,442 (post-canon-gen-001 ratification at 2026-05-23)
+- **LOC:** 82,386 split-file source (post-#235, 2026-06-07). Four Governors seated: Maren (Care 22,199) + Ceres (Nutrition 7,575) + Kael (Intelligence engine 28,153) + Vela (Surfacing render 9,210); shared styles.css + template.html 15,249.
 
 ### SEP Invoicing (Active)
 - Phase 8D complete: IM desktop table + detail panel
@@ -65,7 +65,7 @@
 | cc-026 | global | Per-Province-Layout — Companion specs in Codex, byte-identical Province mirrors |
 | cc-027 | global | Spec amendment signing chain — canon entries require explicit authority |
 | proc-006 | global | Scribe Worker Tier (Book II Art. 3-bis) — 4 task-specialised junior subagents |
-| gen-001 | global | Generational expansion clause — first ratification: Vela seated at SproutLab 2026-05-23 |
+| gen-001 | global | Generational expansion clause — 1st ratification: Vela (Surfacing) 2026-05-23; 2nd: Ceres (Nutrition) 2026-06-08 |
 | CV3-001..006 | sproutlab | v3.0 Charter (Honesty / Extensibility / Warmth tri-axis; Warmth + Honesty co-primary on milestones-tab and v3-6) |
 
 ### Methodology Decisions
@@ -74,7 +74,8 @@
 - **Aurelius snippet format** is the canonical content import mechanism. Core principle: minimal manual input.
 - **QA multi-round** continues until only cosmetic bugs remain. Caught 8 critical bugs pre-build in CareTickets spec alone.
 - **QA chain is a pre-merge gate (canon-cc-008), enforced from 22 May 2026.** A SproutLab session built and merged PRs #99 and #100 — and staged #101 — running only the `/code-review` *skill*, with the Maren/Kael Governor audits and Cipher's Edict V pass skipped. The skill is an in-transcript smell-check (canon-cc-022 artifact test), not a Governor audit, and does not discharge the chain. Correction codified in CLAUDE.md §QA Chain and QA_GATE_SPEC.md Gate 2.5: no SproutLab Capital change leaves draft or merges until the Governor→synthesis→Cipher chain has run. Silence from the Architect is not a waiver — waivers must be explicit.
-- **canon-gen-001 generational expansion (2026-05-23).** When a Governor's jurisdiction crosses 30K LOC, a second-generation Governor splits off. First ratification: Vela (Governor of Surfacing — render layer) seated under Kael (Governor of Intelligence — engine layer), splitting the Intelligence Region at the data→render boundary. Vela owns `intelligence-cards.js` + `intelligence-quicklog.js` (7,079 LOC); Kael retains `intelligence-isl.js` + `intelligence-qa.js` + `intelligence-qa-handlers.js` + `intelligence-illness.js` + `intelligence-caretickets.js` + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js` (23,646 LOC).
+- **canon-gen-001 generational expansion (2026-05-23).** When a Governor's jurisdiction crosses 30K LOC, a second-generation Governor splits off. First ratification: Vela (Governor of Surfacing — render layer) seated under Kael (Governor of Intelligence — engine layer), splitting the Intelligence Region at the data→render boundary. Vela owns `intelligence-cards.js` + `intelligence-quicklog.js` (7,079 LOC at split); Kael retains `intelligence-isl.js` + `intelligence-qa.js` + `intelligence-qa-handlers.js` + `intelligence-illness.js` + `intelligence-caretickets.js` + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js` (23,646 LOC at split). Each second-generation Governor has two parents — the Builder ancestor (Lyra) + the Governor predecessor — and an archetype distinct from both; the predecessor takes Rung-2 of the new spec's first amendment cycle.
+- **canon-gen-001 second ratification — Ceres (2026-06-08).** The Care Region, approaching the 30K trigger, split at the general-care→nourishment boundary. **Ceres (Governor of Nutrition — The Provisioner)** seated under Maren (Governor predecessor) + Lyra (Builder ancestor). Ceres owns `diet.js` + `recipes.js` (7,575 LOC) — food logging, nutrition, Library, the Recipes corpus; her lens is the twin food question, "is it safe to feed her — and is it enough?" Maren retains `home.js` + `medical.js` (22,199 LOC). This also ratified the pending `recipes.js` jurisdiction decision (P0 in NEXT_SESSION_TARGET_2026-06-07). Shared-module review is now **quadruple-jurisdiction** (rotation Maren → Ceres → Kael → Vela). Routing across CLAUDE.md / AGENTS.md / PERSONA_REGISTRY.md / invocation.md / QA_GATE_SPEC.md / qa-route.sh / build-province-map.mjs updated in one pass; `recipes.js` → Ceres in `qa-route.sh`. Note: `.claude/` is git-ignored — new persona specs (`ceres.md` pair) must be `git add -f`'d like the other tracked Governor mirrors.
 - **Scribe Worker Tier (canon-proc-006, 2026-05-23).** Four task-specialised junior subagents — `scribe-scout` (reconnaissance), `scribe-draft` (composition), `scribe-verify` (mechanical checks), `scribe-record` (chronicling) — that any senior Companion may command in parallel. Production debut: PR #148 + PR #149 milestones arc (2026-05-27 PM). Scribes are alike at birth and absorb the voice of whoever summons them; they support but do not deliberate. Permission floor: no Scribe may commit, push, open or merge a PR, ratify anything, or summon another Scribe.
 - **§9-bis session-end ritual (2026-05-25).** At the end of every session, Lyra refreshes `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` to reflect the current state of every node on the v3.0 progression DAG. Sometimes own PR (`tree-update: session YYYY-MM-DD`), sometimes folded into a session-end handoff doc PR or the last arc PR of the session. The refresh is *not* optional.
 - **Option C two-spec sequence pattern (ratified 2026-05-27).** When a single spec carries both engine-substrate concerns and surface-consumer concerns, split into two specs: engine substrate first (governor-primary on engine), surface consumer second (governor-primary on consumer; reads pre-ratified substrate). Closes the "spec-against-memory" failure mode by construction — the consumer spec ratifies against verified primitives, not remembered ones. Precedent: v3-3 → sleep-arc-3 (PR #137 spec; PR #143 IMPL); milestone-engine-prep-v1 → milestones-tab-v1 (PR #148 + PR #149). See invocation.md §10 for the full pattern.
