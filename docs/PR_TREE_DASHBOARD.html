@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SproutLab — Last 50 PRs · Tree Dashboard (#200–#249)</title>
+<style>
+:root{
+  --sage:#b5d5c5; --rose:#f2a8b8; --amber:#e8b86d; --lavender:#c9b8e8;
+  --sky:#a8cfe0; --indigo:#9ba8d8; --peach:#fad4b4;
+  --ink:#3d3833; --ink-soft:#6b635a; --paper:#faf7f2; --card:#ffffff;
+  --line:#e8e1d6; --shadow:0 2px 10px rgba(61,56,51,.08);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+header h1{font-family:var(--serif);font-weight:600;font-size:30px;margin:0 0 4px}
+header .sub{color:var(--ink-soft);font-size:14px;margin:0 0 14px}
+.banner{background:#fdf3e3;border:1px solid #f0ddb8;border-radius:10px;padding:10px 14px;font-size:13px;color:#7a5c1e;margin-bottom:22px}
+.banner b{font-weight:700}
+
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);min-width:110px}
+.stat .num{font-family:var(--serif);font-size:24px;font-weight:600}
+.stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.controls input[type=search]{flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);font:inherit;font-size:14px;outline:none}
+.controls input[type=search]:focus{border-color:var(--indigo)}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink-soft);user-select:none}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip .ct{opacity:.65;font-size:11px;margin-left:4px}
+.clearbtn{font-size:12.5px;color:var(--ink-soft);background:none;border:none;cursor:pointer;text-decoration:underline}
+
+.layout{display:grid;grid-template-columns:460px 1fr;gap:26px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.panel h2{font-family:var(--serif);font-size:18px;font-weight:600;margin:0 0 10px}
+.panel .hint{font-size:12px;color:var(--ink-soft);margin:0 0 8px}
+
+#sunburst{width:100%;height:auto;display:block}
+#sunburst path{cursor:pointer;transition:opacity .15s}
+#sunburst path.dim{opacity:.18}
+#sunburst text{pointer-events:none;font-family:var(--sans)}
+.centerlabel{font-family:var(--serif)}
+.crumb{font-size:13px;color:var(--ink-soft);min-height:20px;margin-top:8px}
+.crumb b{color:var(--ink)}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.legend .key{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+.tree .branch{margin-bottom:6px}
+.bhead{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
+.bhead:hover{background:var(--paper)}
+.bhead .tw{width:14px;color:var(--ink-soft);font-size:11px;transition:transform .15s;display:inline-block}
+.branch.open>.bhead .tw{transform:rotate(90deg)}
+.bhead .sw{width:12px;height:12px;border-radius:4px;flex:none}
+.bhead .bname{font-family:var(--serif);font-weight:600;font-size:15.5px}
+.bhead .bname.l2{font-size:14px;font-weight:600}
+.bhead .bct{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.bkids{display:none;margin-left:20px;border-left:2px solid var(--line);padding-left:12px}
+.branch.open>.bkids{display:block}
+
+.pr{border:1px solid var(--line);border-radius:12px;margin:7px 0;background:var(--card);overflow:hidden}
+.pr.hidden{display:none}
+.prhead{display:flex;align-items:baseline;gap:8px;padding:9px 12px;cursor:pointer}
+.prhead:hover{background:var(--paper)}
+.prnum{font-family:var(--mono);font-size:12px;color:var(--ink-soft);flex:none}
+.prtitle{font-size:13.5px;font-weight:600;flex:1}
+.prkind{flex:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:2px 8px;color:#5c5346;background:var(--paper);border:1px solid var(--line)}
+.prdate{flex:none;font-size:11.5px;color:var(--ink-soft)}
+.prbody{display:none;padding:4px 14px 12px;border-top:1px dashed var(--line);font-size:13px}
+.pr.open .prbody{display:block}
+.prbody dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin-top:9px}
+.prbody dd{margin:2px 0 0}
+.prlink{display:inline-block;margin-top:10px;font-size:12.5px;color:#5a6db8;text-decoration:none}
+.prlink:hover{text-decoration:underline}
+.k-feature{background:#e9f3ee;border-color:#cfe4d9}
+.k-fix{background:#fdeef1;border-color:#f4d3da}
+.k-docs{background:#fdf3e3;border-color:#f0ddb8}
+.k-build{background:#e9f2f7;border-color:#cfe2ec}
+.k-governance{background:#f1ecfa;border-color:#ddd2ef}
+.k-research{background:#fdf0e4;border-color:#f3dcc4}
+.k-design-spec{background:#fdf0e4;border-color:#f3dcc4}
+.k-lore{background:#ecEFfa;border-color:#d4daf0}
+
+footer{margin-top:34px;font-size:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The Last Fifty Threads</h1>
+  <p class="sub">SproutLab pull requests #200–#249 · merged 31 May → 9 Jun 2026 · categorized as a tree — branch out from the trunk, or click the rings.</p>
+  <div class="banner"><b>Snapshot artifact.</b> Hand-synthesized on 2026-06-09 from the GitHub PR record. Not build-regenerated — it describes the PRs as merged, and will not update itself.</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="controls">
+  <input type="search" id="q" placeholder="Search titles, summaries, PR numbers…">
+  <span id="kindchips"></span>
+  <button class="clearbtn" id="clear">reset</button>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h2>The rings</h2>
+    <p class="hint">Inner ring: arc of work · outer ring: one segment per PR. Click a wedge to focus the tree; click the center to reset.</p>
+    <svg id="sunburst" viewBox="0 0 420 420"></svg>
+    <div class="crumb" id="crumb">Showing all 50 PRs</div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <h2>The tree</h2>
+    <p class="hint">Click a branch to unfold it; click a PR for what it was, what it achieved, and what it solved.</p>
+    <div class="tree" id="tree"></div>
+  </div>
+</div>
+
+<footer>Generated from the merged-PR record of rishabh1804/sproutlab. Branch colors follow the SproutLab domain palette (sage · rose · amber · lavender · sky · indigo · peach).</footer>
+</div>
+
+<script>
+const PR_DATA = [{"number":200,"title":"R2: reconcile the Q&A food-safety answer onto FOOD_EFFECTS (food-effects v2 #189)","date":"2026-05-31","what":"Third reconciliation round wiring the Smart Q&A 'can I give X?' answer onto the FOOD_EFFECTS model in intelligence-qa.js.","achieved":"Routed age/allergen lookups through the alias-aware resolver, added a verdict state-machine (honey hard-avoid, allergens encourage), and fixed section ordering so the severe floor renders right after SAFETY.","solved":"Bare AGE_RULES/ALLERGENS lookups silently missed aliases like badam/groundnut/kaju, so parents asking about those foods got no warning (the #182 silent-fail under-warn).","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"fix"},{"number":201,"title":"fix: repair chronicler agent frontmatter so Aurelius loads (#193 regression)","date":"2026-05-31","what":"One-line YAML frontmatter fix to the chronicler subagent spec.","achieved":"Quoted the description field containing 'Voice: Aurelius.' so the YAML parses and the Chronicler agent registers, with an exception note documenting the upstream Codex defect.","solved":"An unquoted colon-space in the frontmatter broke YAML parsing and Claude Code silently skipped the agent, so Aurelius never appeared as a summonable subagent since #193.","category":"Platform / Companion Skills & Agents","kind":"fix"},{"number":202,"title":"R3: reconcile the diet allergen note onto FOOD_EFFECTS (food-effects v2 #189)","date":"2026-05-31","what":"Final reconciliation round upgrading the food-detail allergen flag in diet.js to source from FOOD_EFFECTS.","achieved":"The detail-sheet allergen note now shows the record's encourage-aware framing, safe-form gate, and the shared severe-reaction floor (_severeFloorHtml), with a terse-string fallback when no record exists.","solved":"The browse-surface allergen note named only mild signs and omitted anaphylaxis, so a parent tapping 'peanut' saw a mild-only warning while the severe floor lived only on the log-time path.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"fix"},{"number":203,"title":"Analytics prototype (LOCKED REFERENCE): Allergen Introduction Info-tab card","date":"2026-06-01","what":"First card of the new Info-tab analysis layer, shipped via prototype-freeze, spec, and the full QA chain.","achieved":"An Allergen Introduction card tracking the six introduce-early allergens with per-allergen state derived through the FOOD_EFFECTS spine, ordered by actionability and never urgent.","solved":"No existing surface answered 'where am I in the high-allergen introduction sequence and what should I offer next?' for the parent.","category":"Product / Diet & Nutrition / Allergen Analytics","kind":"feature"},{"number":204,"title":"docs(graphify): first dated field-observation entry (PR #203 run)","date":"2026-06-01","what":"Docs-only addition of a dated 'Field observations' section to the Graphify integration doc.","achieved":"Recorded honest, grounded estimates from the PR #203 run: graphify's navigation wins (~160K tokens avoided), the bigger subagent-isolation lever, and logged CLI friction.","solved":"The Graphify pilot had only generic self-benchmarks, with no real session data for future runs to compare against.","category":"Platform / Build & Doc Tooling","kind":"docs"},{"number":205,"title":"Fix A: allergen card ready-row meta wraps on a phone","date":"2026-06-01","what":"Render-only layout fix to the Allergen Introduction card's ready-state meta line.","achieved":"Trimmed egg's fallback cue to its first sentence and added a 44-char length gate that points longer safety copy to the tap-through, verified single-line at 390px phone width.","solved":"Long safe-form text (peanut ~150 chars, egg's two-sentence reason) wrapped the ready rows to 2-3 lines on a phone, and mid-sentence truncation of safety copy would have been unsafe.","category":"Product / Diet & Nutrition / Allergen Analytics","kind":"fix"},{"number":206,"title":"Phase \u03b4 research: egg, soy, wheat, sesame infant-safety briefs + manifest","date":"2026-06-01","what":"Deep-research pass producing four cited infant-safety briefs and four food-effects manifest records for the remaining big-9 allergens.","achieved":"Established a two-tier evidence split \u2014 egg's prevention claim is RCT-backed (PETIT/EAT) while soy/wheat/sesame may claim only 'introduce early, safe' \u2014 plus per-allergen depth (FPIES, celiac/gluten timing, sesame persistence).","solved":"Egg, soy, wheat, and sesame lacked the evidence base needed to give them the same encourage-paradigm treatment peanut/tree-nut already had, without laundering unproven prevention claims.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"research"},{"number":207,"title":"Phase \u03b4 renders: egg/soy/wheat/sesame dashboards + long-forms (animated template)","date":"2026-06-01","what":"Docs-layer render pass completing the md/html/visual 3-layer set for the four Phase-\u03b4 allergen briefs.","achieved":"Four skim dashboards and long-forms, plus five CSS-only entrance animations added to the canonical food-dashboard template (reduced-motion gated), inherited by all four dashboards.","solved":"The Phase-\u03b4 briefs existed only as Markdown with no skimmable visual layer, and the dashboard template lacked the entrance animations its own improve-the-template rule required.","category":"Product / Care Research Hub","kind":"docs"},{"number":208,"title":"food-effects-v2 Phase \u03b4: wire egg/soy/wheat/sesame + polarity-aware banner","date":"2026-06-01","what":"Product wiring of the four Phase-\u03b4 allergen records into the app plus a polarity-aware detail-sheet banner.","achieved":"Four FOOD_EFFECTS records with two-tier honesty, three new AGE_RULES gates, a sage encourage banner for introduce-early allergens (rose siren reserved for true avoid), and culinary aliases (tofu\u2192soy, roti\u2192wheat) closing the Kael B-1 gap.","solved":"Egg/soy/wheat/sesame rendered as terse red one-liners, and the all-rose banner sent the wrong 'red = don't give' message for allergens parents should actually introduce early.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"feature"},{"number":209,"title":"Care Research Hub \u2014 manifest-driven Index \u00b7 Compare \u00b7 Reactions","date":"2026-06-01","what":"Docs-layer rebuild of the research index into a unified, manifest-driven hub with three view modes.","achieved":"An Index of all 7 foods grouped by polarity, a 2-4-food Compare table, and a Reactions cross-cut by reactionType \u2014 all rendered from food-effects.manifest.js with zero hardcoded food data.","solved":"The static honey/peanut-only research index could drift from the manifest spine and gave no way to compare foods or browse by reaction type.","category":"Product / Care Research Hub","kind":"feature"},{"number":210,"title":"Broader food classes \u2014 milk \u00b7 fish \u00b7 the choking set (research briefs + milk polarity spec) \u00b7 food-effects v2 P1c","date":"2026-06-02","what":"Docs-only research arc adding three primary-sourced briefs, a Governor-reviewed milk polarity spec, and four manifest records.","achieved":"First instances of the drink-timing (cow milk), substitute-caveat (plant milk), and choking-by-form-PRIMARY classes, instantiating all 5 foodClasses of the v2 taxonomy (manifest at 11 records).","solved":"The food-effects taxonomy had never been fully instantiated \u2014 milk timing, fish mercury/allergy, and form-based choking hazards had no evidence base or spec for the upcoming code wiring.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"research"},{"number":211,"title":"Wire fish (finfish) into FOOD_EFFECTS \u2014 restore green sync-gate build \u00b7 food-effects v2 P1c","date":"2026-06-02","what":"Engine-only data.js wiring of the fish record to bring the failing build gate back to green.","achieved":"A FOOD_EFFECTS fish record (introduce-early-and-safe framing, mercury species selection in safeForm, anaphylaxis floor) plus reconciled AGE_RULES, with Maren's M-F-1 fix trimming aliases to the safe-to-encourage subset.","solved":"PR #210 merged the fish manifest entry ahead of app wiring, failing the P0.1 sync-gate and leaving main red on pnpm build for every branch; high-mercury aliases like surmai also risked firing a false-safe verdict.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"fix"},{"number":212,"title":"Wire milk polarities \u2014 cow milk (drink-timing) + plant milk (substitute-caveat) \u00b7 food-effects v2 P1c","date":"2026-06-02","what":"Product wiring of the two never-rendered v2 foodClasses as sibling knowledge cards in Diet \u2192 Library.","achieved":"A cow-milk split card (sage 'good in food now' over an amber main-drink gate plus a pinned CMPA strip), a plant-milk sky inform card fronting the rice-arsenic rule, the shared _effPolarity resolver, and a plant-milk-drink alias redirect.","solved":"Milk mis-rendered as a rose avoid siren via a two-state polarity switch, and almond/cashew milk drinks wrongly resolved to the tree-nut encourage card.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"feature"},{"number":213,"title":"Wire the choking set \u2014 choking-by-form PRIMARY render \u00b7 food-effects v2 P1c","date":"2026-06-02","what":"Product wiring of the first choking-by-form-PRIMARY record and a dedicated Library card.","achieved":"A combined 'choking hazards' FOOD_EFFECTS record with per-food cut rules and a choking-first-aid floor (back blows/chest thrusts, never abdominal thrusts under 1), rendered via renderDietChokingIntro with the gagging-vs-choking discriminator, plus a 10-test alias-precedence battery.","solved":"The form-gated mechanical hazard \u2014 the fifth food-truth \u2014 had no standalone render; choking only rode secondary to allergen records, and unsafe homograph aliases (chana/carrot/tomato) needed deliberate exclusion.","category":"Product / Diet & Nutrition / Food-Effects v2","kind":"feature"},{"number":214,"title":"Diet-preference surfacing gate \u2014 4 classes (veg / eggetarian / pescatarian / non-veg)","date":"2026-06-02","what":"Generalization of the binary veg/non-veg filter into a four-class diet-preference surfacing gate across five modules.","achieved":"Eggetarian and pescatarian classes with one source of truth in core.js, gating the Library grid, meal-search dropdowns, Foods-to-Try, and the combo-checker note, with a vegan spec deferred.","solved":"The app surfaced the wrong foods to the wrong preference set, while the gate had to stay surfacing-only \u2014 a food given despite preference still fires its full safety record when logged (e2e-pinned).","category":"Product / Diet & Nutrition / Library","kind":"feature"},{"number":215,"title":"CLAUDE.md LOC refresh + Province Map regen + /design-principles skill + styles.css cascade anchor","date":"2026-06-02","what":"Maintenance bundle: a new /design-principles skill, a CLAUDE.md design-floor directive and LOC refresh, Province Map regen, and a drift-proof CSS comment anchor.","achieved":"Made the design floor unmissable via an invocable skill, refreshed all CLAUDE.md LOC figures to 77,899 with a map-reconciliation note, and replaced a stale line-number cascade reference with a symbolic search anchor.","solved":"Design principles were easy to skip when building UI, CLAUDE.md LOC figures were stale and disagreed confusingly with the Province Map, and the cascade comment's line-number pointer went stale on every insertion.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":216,"title":"Diet \u2192 Library redesign: living shelves, 6-second food cards & deep-linked Emergency Cards","date":"2026-06-05","what":"Major redesign of Diet \u2192 Library into a room/shelves/open-to-read experience with two new product systems layered on top.","achieved":"Two wings with polarity shelves of living books, a 6-second food card pop-up with verdict band and progressive disclosure (~1150px \u2192 ~480px), a unified food search, and deep-linked per-hazard Emergency Cards with Call-112 and a copy/print doc-prep summary.","solved":"The Library was one long scroll, food cards dumped content instead of answering fast, and emergency protocols (anaphylaxis/choking/botulism) were not reachable directly from the food a parent was looking at.","category":"Product / Diet & Nutrition / Library","kind":"feature"},{"number":217,"title":"docs: Tint System subsection in DESIGN_PRINCIPLES","date":"2026-06-02","what":"Docs-only addition of a Tint System subsection to DESIGN_PRINCIPLES.md, split out of PR #216.","achieved":"Codified the app's tint conventions as two families across four registers plus two cross-cutting laws (light/dark hue-swap; tint is never a bare fill), with verified styles.css line references.","solved":"The tint conventions were shipped but undocumented (only 2 incidental references), leaving designers and reviewers without a written floor.","category":"Records / Design System Docs","kind":"docs"},{"number":218,"title":"docs: Food-Domain Colour & the Polarity Collision in DESIGN_PRINCIPLES","date":"2026-06-02","what":"Docs-only addition documenting the food-category colour system and its collision with safety-polarity colour.","achieved":"Added a 'Food-Domain Colour & the Polarity Collision' subsection covering the FOOD_TAX colour taxonomy, the shared-token collision (e.g. rose = danger AND non-veg), and the resolution rule: safety wins the structural channel, food-domain rides a whisper fade.","solved":"Food-domain and safety colours share the same 7 tokens with opposite meanings, risking a non-veg pill reading as 'unsafe'; the constraint was shipped but undocumented.","category":"Records / Design System Docs","kind":"docs"},{"number":219,"title":"Lean landing page \u2014 calm front door (default-flip + Care pre-empt)","date":"2026-06-03","what":"Major product feature making a calm lean landing page the app's default open screen.","achieved":"Shipped renderLanding with a warm-wave hero, glance line, and three doors (Log / Today / Ask), a loud-rose Care pre-empt card that deep-links to live Care signals, an emergency chooser stub with 108/112 quick-dial, and a one-shot default-flip migration keeping the dense dashboard one tap away as 'Today'.","solved":"The app previously opened onto the dense 16-section home cockpit, overwhelming tired parents, while time-sensitive Care signals needed to stay surfaced rather than hidden behind a tap.","category":"Product / Landing & Emergency","kind":"feature"},{"number":220,"title":"docs: Recipes design-system principles (\u00a79) + session handoff","date":"2026-06-03","what":"Docs-only session-close landing the Recipes Generative Food System design principles and a session handoff.","achieved":"Added DESIGN_PRINCIPLES.md \u00a79 (zif food icons, whisper-fade pills, quantity-weighted generative fingerprint, warm-wave stripe, 3-layer taglines, voice line, infant-food safety content floor) plus the recipes-tab SESSION_HANDOFF.md.","solved":"The recipes design decisions lived only on the PR #216 working branch; this landed the durable, app-wide design floor independently so the wiring session could build against it.","category":"Records / Design System Docs","kind":"design-spec"},{"number":221,"title":"docs(design): land Recipes design-system records on main","date":"2026-06-03","what":"Docs-only relocation of 43 Recipes design-record files from the PR #216 branch onto main.","achieved":"Landed the zi_food icon system, 3-layer tagline generators, generative-hero renders S1\u2013S10, RECIPE_RESEARCH.md, LOCKED.md, and DESIGN_RENDER_CHECKLIST.md on the trunk, byte-identical to their #216 origin.","solved":"Two design arcs (Recipes and Library redesign) were tangled on one branch; this scoped #216 purely to the Library work and put the Recipes records where the wiring session would branch from.","category":"Records / Design System Docs","kind":"docs"},{"number":222,"title":"docs(design): add Diet\u2192Recipes wiring plan","date":"2026-06-03","what":"Docs-only implementation blueprint (WIRING_PLAN.md) for wiring the Recipes tab into the live app.","achieved":"Landed the full \u00a71\u2013\u00a710 spec on main: tab scaffolding, the recipes.js data model, 'Suggested for Ziva' ranking, the two-pass veg-gate/safety invariant, research methodology, jurisdictions, canon-cc-008 routing, e2e suites, and the 'Can I give this?' revision.","solved":"The parallel recipes-wiring session only had the ratified decisions in SESSION_HANDOFF.md, not the detailed implementation spec it needed to build from.","category":"Product / Diet & Nutrition / Recipes","kind":"design-spec"},{"number":223,"title":"Diet \u2192 Recipes: wire the locked recipes-tab design (4th sub-tab + recipe-aware Can-I-give-this)","date":"2026-06-03","what":"Product feature wiring the ratified Recipes design into the live app as a 4th Diet sub-tab.","achieved":"Shipped a new split/recipes.js with a cited 25-recipe corpus for 6\u201312 months, a renderDietRecipes sub-tab ('Suggested for Ziva' + meal-slot catalog with expand-in-place detail), the two-pass preference/safety invariant, a shared _resolveRecipeAnswer making 'Can I give this?' recipe-aware on both surfaces, and the 97-symbol zif food-icon sprite.","solved":"The locked Recipes design existed only as records; parents had no in-app recipe catalog, and 'Can I give this?' could return an empty recipe instead of the avoid/off-preference reason.","category":"Product / Diet & Nutrition / Recipes","kind":"feature"},{"number":224,"title":"Skill: /sproutlab-compact \u2014 pre-compaction handoff ritual","date":"2026-06-03","what":"Docs-only addition of the /sproutlab-compact skill as a tracked canonical spec body.","achieved":"Codified the pre-compaction ritual: refresh the code graph, run pnpm qa-route for the canon-cc-008 summon-set, write a graph-anchored ephemeral resume handoff to /tmp, then hand back to /compact.","solved":"Stock /compact summarizes the transcript but loses navigation precision and the resume plan, so post-compact work on long build sessions restarted imprecisely.","category":"Platform / Companion Skills & Agents","kind":"feature"},{"number":225,"title":"Remove /sproutlab-compact tracked stopgap (now canonical in Codex)","date":"2026-06-03","what":"Docs-only cleanup removing the tracked stopgap copy of the /sproutlab-compact skill spec.","achieved":"Deleted docs/specs/skills/sproutlab-compact.md now that the skill is promoted to Codex canon, restoring the Codex-canonical-body / Province-mirror alignment under canon-cc-026.","solved":"A SproutLab-scoped session that couldn't reach Codex had left a redundant tracked copy that violated canon alignment once the Codex promotion landed.","category":"Governance / Canon & Province","kind":"governance"},{"number":226,"title":"Landing refinements: hide greeting header \u00b7 wire D3 logging \u00b7 crowd-fit hero","date":"2026-06-04","what":"Three product refinements to the new lean landing page.","achieved":"Hid the redundant dense greeting header on the landing, deep-linked the Vitamin D3/meds Care pre-empt to the actual logging reminder cards instead of a read-only inventory, and added _ldFitHero which collapses the hero to a compact picker row when Care pre-empts push Emergency below the fold.","solved":"The landing doubled up warm anchors, the D3 alert dead-ended on a card with no way to act, and Care pre-empts could push the Emergency card out of reach without scrolling.","category":"Product / Landing & Emergency","kind":"feature"},{"number":227,"title":"docs: session-close 2026-06-04 \u2014 lean landing arc + governance LOC refresh","date":"2026-06-04","what":"Docs-only session-close artifacts for the lean-landing session (PRs #219, #224, #225, #226).","achieved":"Landed the five close artifacts: session handoff with telemetry, next-session target (P0 = General Emergency Room), a lean-landing synthesis, a CLAUDE.md governance LOC refresh to 79,367 (flagging Maren/Care as the nearest 30K split candidate), and the copiable opening prompt.","solved":"Closed the session cleanly so the next session inherits accurate LOC governance figures, carry-forwards, and a recorded thread per SESSION_CLOSE_SEQUENCE.md.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":228,"title":"Recipes Tier C: generative warm-wave hero + tagline composer + LOCKED polish","date":"2026-06-04","what":"Product feature upgrading the live Recipes tab to the full \u00a79 generative food system.","achieved":"Added prepMinutes and per-ingredient grams to all 25 recipes, ported the three-layer tagline composer, and shipped the generative hero: grams-weighted wavelength-ordered fingerprint stripe + fade, warm-wave sheen sweep, corner zif watermark, Fraunces-italic voice line, and the LOCKED meal-rows polish with factual meta.","solved":"The shipped Recipes tab (PR #223) lacked the ratified generative hero aesthetic and tagline voice, leaving gaps against the LOCKED 05-meal-rows design and the live lean-landing warm-wave look.","category":"Product / Diet & Nutrition / Recipes","kind":"feature"},{"number":229,"title":"Recipes follow-up: domain whisper fade on rows + ingredient chips (light + dark)","date":"2026-06-05","what":"CSS-layer bug fix restoring the food-domain whisper fade on recipe rows and ingredient chips.","achieved":"Switched .recipe-row and .recipe-chip from the background shorthand to background-color so the .dt-* whisper gradient survives in both themes, and gave each ingredient chip its FOOD_TAX domain whisper class via classifyFoodToGroup().","solved":"The background shorthand reset background-image, erasing the domain tint fade on every recipe row in light mode, and the ingredient chips rendered flat in both themes against the \u00a79.2 design floor.","category":"Product / Diet & Nutrition / Recipes","kind":"fix"},{"number":230,"title":"docs(tooling): render DESIGN_PRINCIPLES.html from the .md each build","date":"2026-06-05","what":"Build-tooling addition generating a styled HTML view of the design-principles doc every build.","achieved":"Shipped split/build-design-principles.mjs (markdown-to-HTML renderer with TOC and light/dark toggle) wired into build.sh, and registered the pattern as Lyra's /doc-render Builder skill.","solved":"DESIGN_PRINCIPLES.md was the lone plain .md among the docs/ reference pages (Province Map etc. are auto-generated HTML), lacking a presentable, drift-proof HTML twin.","category":"Platform / Build & Doc Tooling","kind":"build"},{"number":231,"title":"chore(.claude): redeploy companion mirrors byte-identical from Codex canon","date":"2026-06-05","what":"Spec-mirror redeploy reconciling SproutLab's live .claude/ companion specs with merged Codex canon.","achieved":"Redeployed the kael/lyra/maren agent+skill mirrors byte-identical (restoring missing canon-pers-002 blocks), dropped sproutlab-compact into .claude/skills/ to close the deploy gap, and retired the chronicler exception note; all seven mirrors verified identical to canon.","solved":"SproutLab's Companion mirrors had drifted behind the canon-cc-026 reconciliation merged to Codex main, leaving missing persona blocks and an open skill-deploy gap.","category":"Platform / Companion Skills & Agents","kind":"governance"},{"number":232,"title":"build(province-map): write only on substantive change, kill regeneration churn","date":"2026-06-05","what":"Build-tooling fix making the Province Map generator idempotent on no-op rebuilds.","achieved":"build-province-map.mjs now normalizes out three volatile header fields (graph content-hash, generated date, jittery relation count) and skips the write when only those differ, leaving the committed file untouched.","solved":"Every pnpm build produced a meaningless git diff on docs/PROVINCE_MAP.html from volatile header fields, repeatedly tripping the stop-hook between sessions.","category":"Platform / Build & Doc Tooling","kind":"build"},{"number":233,"title":"fix(.claude): deploy sproutlab-compact as loadable SKILL.md, not bare .md","date":"2026-06-05","what":"Fix to the /sproutlab-compact skill deployment shape so Claude Code actually discovers it.","achieved":"Moved the skill to .claude/skills/sproutlab-compact/SKILL.md with YAML frontmatter on line 1 (provenance comment relocated below, trigger added), byte-identical to the corrected Codex canon body; verified discoverable in the available-skills set.","solved":"The #231 redeploy dropped the skill as a bare .md with a comment before the frontmatter, so /sproutlab-compact never appeared as an invocable slash skill.","category":"Platform / Companion Skills & Agents","kind":"fix"},{"number":234,"title":"feat(.claude): add /session-close skill (loadable SKILL.md)","date":"2026-06-05","what":"New invocable skill packaging the end-of-session close ritual.","achieved":"Added .claude/skills/session-close/SKILL.md \u2014 a portable close skeleton (pre-close gate, five close artifacts) deferring to the repo's local SESSION_CLOSE_SEQUENCE.md floor.","solved":"The close sequence existed only as a doc; this made it a discoverable /session-close slash-skill, the counterpart to /sproutlab-compact at the other end of a session.","category":"Platform / Companion Skills & Agents","kind":"feature"},{"number":235,"title":"feat(landing): General Emergency Room + emergency-room-v2 (pop-up flip cards, wave, doc-prep)","date":"2026-06-06","what":"Major product feature: the General Emergency Room plus a v2 redesign unifying both emergency rooms on one card language.","achieved":"Shipped CPR pinned-open inline, teaser rows opening pop-up flip cards (first aid front, fill-and-share doctor summary back), a whisper-wave on call pills, in-place cross-links, and verified first-aid copy \u2014 full canon-cc-008 gate discharged.","solved":"Replaced the one-open accordion and the separate doc overlay with a faster, safety-first emergency surface a panicked parent can use one-handed, with doc-prep built into every card.","category":"Product / Landing & Emergency","kind":"feature"},{"number":236,"title":"docs(CLAUDE): reference /sproutlab-compact and /session-close skills","date":"2026-06-05","what":"Docs-only CLAUDE.md update adding a session-lifecycle skills subsection.","achieved":"Documented /sproutlab-compact and /session-close in the policy floor with a two-row table distinguishing them from Companion mirrors.","solved":"The two operational slash-skills had been shipped but were unreferenced in CLAUDE.md, so sessions could miss them.","category":"Platform / Companion Skills & Agents","kind":"docs"},{"number":237,"title":"docs: session-close 2026-06-05 \u2014 cross-province skill plumbing","date":"2026-06-05","what":"Docs-only session-close PR \u2014 the first real run of the /session-close skill that session built.","achieved":"Landed the handoff for 7 merged PRs, a next-session target pointing back to the food-effects/Recipes product arc, and a skill-deployment-shape synthesis.","solved":"Closed the cross-province skill-plumbing session with full records and zero Codex reconciliation debt.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":238,"title":"build(doc-views): SESSION_CLOSE_SEQUENCE / QA_GATE_SPEC / QUICK_REFERENCE HTML views","date":"2026-06-05","what":"Build-tooling change generalizing the /doc-render pattern into a manifest-driven doc-view generator.","achieved":"Shipped split/build-doc-views.mjs rendering three standing .md reference docs into styled, self-contained HTML views rebuilt every build.","solved":"Gave dense prose reference docs presentable, drift-proof HTML twins (with hardened code-span and italic handling) instead of one-off generators per doc.","category":"Platform / Build & Doc Tooling","kind":"build"},{"number":239,"title":"fix(icons): repair 3 broken zi() refs + auto-generated icon reference + doc truth-up","date":"2026-06-05","what":"Icon-system fix plus a new auto-generated icon reference gallery.","achieved":"Repointed three blank-rendering zi() calls (chart-up, hospital, face) to existing symbols and added build-icon-reference.mjs generating a filterable gallery of all 211 sprite symbols each build.","solved":"Docs claimed 54 (or 109) icons against a real 211-symbol sprite; the drift had hidden three broken icon references rendering blank on live surfaces.","category":"Records / Design System Docs","kind":"fix"},{"number":240,"title":"docs: update QA_GATE_SPEC + QUICK_REFERENCE to current methodology","date":"2026-06-05","what":"Major refresh of two standing reference docs to match current methodology.","achieved":"Rewrote SPROUTLAB_QUICK_REFERENCE.md (v2.0) with real module/Governor jurisdictions and drift-resistant pointers, and updated QA_GATE_SPEC.md's Gate 2.5 routing to the three-Governor split.","solved":"Both docs had frozen at early-April content while the methodology evolved (Governor split, canon updates, Scribe tier, graphify), including a conflicting HR numbering table.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":241,"title":"docs: session-close 2026-06-07 \u2014 General Emergency Room v2 (#235) + LOC refresh","date":"2026-06-06","what":"Docs-only session-close PR for the Emergency Room v2 session.","achieved":"Landed the handoff and next-session target for #235 and refreshed CLAUDE.md's governance LOC table from 79,367 to 82,386.","solved":"Recorded the #235 QA chain and surfaced the headline carry-forward that Maren's Care Region was ~226 LOC from the 30K Governor-split trigger.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":242,"title":"tools: WCAG contrast audit + advisory build wiring","date":"2026-06-06","what":"New dev-side QA tooling: a pure-stdlib WCAG AA contrast auditor wired into the build as a non-fatal advisory step.","achieved":"Shipped tools/contrast_audit.py, which parses styles.css tokens, alpha-composites washes, and checks text/background contrast in light, dark, and print-from-dark contexts.","solved":"Contrast claims were unverifiable comments (it proved the #235 --tc-rose 6.43:1 fix and surfaced a real 3.29:1 printed-placeholder finding), so accessibility regressions could only be caught by eye.","category":"Platform / Build & Doc Tooling","kind":"build"},{"number":243,"title":"docs: refresh PROVINCE_MAP + true up LOC reconciliation note","date":"2026-06-06","what":"Docs-only refresh of the committed PROVINCE_MAP and CLAUDE.md's LOC reconciliation note.","achieved":"Committed the regenerated map (+20 LOC from #242's tooling) and replaced estimated reconciliation figures with ground truth (87,017 / ~4,631 tooling).","solved":"The committed graph-derived map had drifted from source after #242 merged without a rebuild, and the reconciliation note carried stale estimates plus an undocumented recipes.js jurisdiction subtlety.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":244,"title":"meridian: Ziva's First Sky \u2014 birth-night keepsake render (4 Sep 2025)","date":"2026-06-09","what":"Standalone keepsake artifact rendering the real night sky over Jamshedpur on Ziva's birth night.","achieved":"Shipped an all-sky stereographic render (~65-star catalogue, Lyra/Summer Triangle at zenith, moon, Saturn, Milky Way) with a through-the-night scrubber, in SproutLab's warm design language.","solved":"Turned the earlier Venus\u2013Jupiter 'Meridian' astronomy brief into a reusable birth-sky keepsake anchoring the Lyra naming-lore, kept outside split/ so it bypasses the QA gate until folded into the app.","category":"Lore / Keepsake","kind":"lore"},{"number":245,"title":"gov: seat Ceres as 4th Governor (Nutrition) \u2014 canon-gen-001 Care\u2192Nutrition split","date":"2026-06-09","what":"Governance change seating Ceres as the fourth Governor under the canon-gen-001 generational-expansion process.","achieved":"Split the food half of Maren's Care Region (diet.js + recipes.js, 7,575 LOC) into a new Nutrition Region governed by Ceres, with agent/skill specs and QA-chain routing updated.","solved":"Maren's Care jurisdiction was ~226 LOC from the 30K-rule split trigger; the general-care\u2192nourishment boundary split retired that cliff and gave the growing food corpus a dedicated auditor.","category":"Governance / Canon & Province","kind":"governance"},{"number":246,"title":"docs: session-close 2026-06-10 \u2014 seat Ceres (canon-gen-001 Care\u2192Nutrition split, #245)","date":"2026-06-09","what":"Docs-only session-close PR for the session that seated Ceres (#245).","achieved":"Landed the close artifacts (handoff, next-session target) recording the Care\u2192Nutrition Governor split.","solved":"Preserved the record of the Ceres-seating session so subsequent sessions inherit the new four-Governor jurisdiction state.","category":"Records / Session Close & Doc Refresh","kind":"docs"},{"number":247,"title":"gov: Province self-governance over Companion specs \u2014 Codex = record-keeping (canon-cc-026 amendment)","date":"2026-06-09","what":"Canon-cc-026 amendment making SproutLab govern its own Companion specs, with a session-start hook fix.","achieved":"Flipped the Codex overlay in session-start.sh from clobber to gap-fill and reframed CLAUDE.md/Memory.md so Province specs win on collision.","solved":"The hook's 'Codex wins' cp -f was clobbering Province-authored content (Lyra's naming-lore) at every session load, making it read as missing.","category":"Governance / Canon & Province","kind":"governance"},{"number":248,"title":"docs(gov): provenance sweep \u2014 Companion mirror headers Province-first (follow-up to #247)","date":"2026-06-09","what":"Prose-only provenance sweep across 19 Companion agent/skill mirror files and invocation.md.","achieved":"Rewrote mirror headers to say Province-authoritative with Codex as record-keeping reference, eliminating all 'authored and maintained in Codex' claims.","solved":"After #247 flipped governance to the Province, ~28 header lines still asserted Codex authority, contradicting the new canon.","category":"Governance / Canon & Province","kind":"governance"},{"number":249,"title":"docs: session-close 2026-06-10 PM \u2014 Ziva's First Sky + Province self-governance","date":"2026-06-09","what":"Docs-only session-close PR wrapping the meridian/lore/governance session.","achieved":"Landed the session handoff, a province-self-governance synthesis doc, and a next-session target with P0 Codex reconciliation.","solved":"Recorded what shipped (#244/#247/#248) and the carry-forwards so the next session resumes cleanly with no lost context.","category":"Records / Session Close & Doc Refresh","kind":"docs"}];
+
+const REPO = "https://github.com/rishabh1804/sproutlab/pull/";
+
+const TOP_COLORS = {
+  "Product":"#b5d5c5", "Platform":"#a8cfe0", "Governance":"#c9b8e8",
+  "Records":"#e8b86d", "Lore":"#9ba8d8"
+};
+const CAT_COLORS = {
+  "Product / Diet & Nutrition / Food-Effects v2":"#9cc7b2",
+  "Product / Diet & Nutrition / Recipes":"#b5d5c5",
+  "Product / Diet & Nutrition / Library":"#cde3d8",
+  "Product / Diet & Nutrition / Allergen Analytics":"#86b89f",
+  "Product / Landing & Emergency":"#f2a8b8",
+  "Product / Care Research Hub":"#fad4b4",
+  "Platform / Build & Doc Tooling":"#a8cfe0",
+  "Platform / Companion Skills & Agents":"#c2dcEA".toLowerCase(),
+  "Governance / Canon & Province":"#c9b8e8",
+  "Records / Session Close & Doc Refresh":"#e8b86d",
+  "Records / Design System Docs":"#f0d09a",
+  "Lore / Keepsake":"#9ba8d8"
+};
+const KINDS = ["feature","fix","docs","build","governance","research","design-spec","lore"];
+
+// ---------- build tree ----------
+function buildTree(data){
+  const root = {name:"All PRs", depth:0, children:new Map(), prs:[], path:""};
+  for(const pr of data){
+    const parts = pr.category.split(" / ");
+    let node = root;
+    let path = "";
+    for(const part of parts){
+      path = path ? path + " / " + part : part;
+      if(!node.children.has(part)){
+        node.children.set(part, {name:part, depth:node.depth+1, children:new Map(), prs:[], path});
+      }
+      node = node.children.get(part);
+    }
+    node.prs.push(pr);
+  }
+  return root;
+}
+function countPRs(node){
+  let n = node.prs.length;
+  for(const c of node.children.values()) n += countPRs(c);
+  node.count = n;
+  return n;
+}
+function leafNodes(node, out=[]){
+  if(node.children.size===0){ out.push(node); return out; }
+  for(const c of node.children.values()) leafNodes(c, out);
+  return out;
+}
+const ROOT = buildTree(PR_DATA);
+countPRs(ROOT);
+
+// ---------- state ----------
+let focusPath = "";          // category-path prefix filter from sunburst clicks
+let kindFilter = new Set();  // active kind chips
+let query = "";
+
+function prVisible(pr){
+  if(focusPath && !pr.category.startsWith(focusPath)) return false;
+  if(kindFilter.size && !kindFilter.has(pr.kind)) return false;
+  if(query){
+    const hay = (pr.number + " " + pr.title + " " + pr.what + " " + pr.achieved + " " + pr.solved + " " + pr.category).toLowerCase();
+    if(!hay.includes(query)) return false;
+  }
+  return true;
+}
+
+// ---------- stats ----------
+function renderStats(){
+  const el = document.getElementById("stats");
+  const counts = {};
+  for(const pr of PR_DATA) counts[pr.kind]=(counts[pr.kind]||0)+1;
+  const dietCount = PR_DATA.filter(p=>p.category.startsWith("Product / Diet")).length;
+  const items = [
+    ["50","PRs merged"],
+    ["10","days of work"],
+    [String(dietCount),"diet & nutrition"],
+    [String(counts.feature||0),"features"],
+    [String(counts.fix||0),"fixes"],
+    [String((counts.docs||0)+(counts["design-spec"]||0)),"docs & specs"],
+    [String(counts.governance||0),"governance"],
+  ];
+  el.innerHTML = items.map(([n,l])=>`<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join("");
+}
+
+// ---------- kind chips ----------
+function renderChips(){
+  const counts = {};
+  for(const pr of PR_DATA) counts[pr.kind]=(counts[pr.kind]||0)+1;
+  const el = document.getElementById("kindchips");
+  el.innerHTML = KINDS.filter(k=>counts[k]).map(k=>
+    `<button class="chip${kindFilter.has(k)?" on":""}" data-kind="${k}">${k}<span class="ct">${counts[k]}</span></button>`
+  ).join(" ");
+  el.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+    const k=c.dataset.kind;
+    kindFilter.has(k)?kindFilter.delete(k):kindFilter.add(k);
+    refresh();
+  }));
+}
+
+// ---------- sunburst ----------
+const CX=210, CY=210, R0=52, RING=[ [56,108], [112,164], [168,204] ];
+function arcPath(a0,a1,r0,r1){
+  const large = (a1-a0) > Math.PI ? 1 : 0;
+  const x0o=CX+r1*Math.cos(a0), y0o=CY+r1*Math.sin(a0);
+  const x1o=CX+r1*Math.cos(a1), y1o=CY+r1*Math.sin(a1);
+  const x1i=CX+r0*Math.cos(a1), y1i=CY+r0*Math.sin(a1);
+  const x0i=CX+r0*Math.cos(a0), y0i=CY+r0*Math.sin(a0);
+  return `M${x0o},${y0o} A${r1},${r1} 0 ${large} 1 ${x1o},${y1o} L${x1i},${y1i} A${r0},${r0} 0 ${large} 0 ${x0i},${y0i} Z`;
+}
+function shade(hex, f){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.round(r+(255-r)*f); g=Math.round(g+(255-g)*f); b=Math.round(b+(255-b)*f);
+  return `rgb(${r},${g},${b})`;
+}
+function renderSunburst(){
+  const svg = document.getElementById("sunburst");
+  let segs = [];
+  const total = ROOT.count;
+  let a = -Math.PI/2;
+  const SPAN = Math.PI*2;
+  // ring 1: top-level; ring 2: leaf categories; ring 3: PRs
+  for(const [topName, topNode] of ROOT.children){
+    const a0=a, a1=a + SPAN*topNode.count/total;
+    segs.push({path:arcPath(a0,a1,RING[0][0],RING[0][1]), fill:TOP_COLORS[topName]||"#ccc",
+               sel:topNode.path, label:topName, ring:0, a0,a1});
+    let b = a0;
+    for(const leaf of leafNodes(topNode)){
+      const b0=b, b1=b + SPAN*leaf.count/total;
+      segs.push({path:arcPath(b0,b1,RING[1][0],RING[1][1]), fill:CAT_COLORS[leaf.path]||"#ddd",
+                 sel:leaf.path, label:leaf.name, ring:1, a0:b0,a1:b1});
+      let c = b0;
+      const prs = leaf.prs.slice().sort((x,y)=>x.number-y.number);
+      for(const pr of prs){
+        const c0=c, c1=c + SPAN/total;
+        segs.push({path:arcPath(c0+0.004,c1-0.004,RING[2][0],RING[2][1]),
+                   fill:shade(CAT_COLORS[leaf.path]||"#ddd", 0.35),
+                   sel:leaf.path, pr, ring:2, a0:c0,a1:c1});
+        c = c1;
+      }
+      b = b1;
+    }
+    a = a1;
+  }
+  let out = "";
+  for(const s of segs){
+    const dim = s.pr ? !prVisible(s.pr) : (focusPath && !(s.sel.startsWith(focusPath)||focusPath.startsWith(s.sel)));
+    const tip = s.pr ? `#${s.pr.number} ${esc(s.pr.title)}` : `${esc(s.sel)} — click to focus`;
+    out += `<path d="${s.path}" fill="${s.fill}" class="${dim?"dim":""}" data-sel="${esc(s.sel)}" ${s.pr?`data-pr="${s.pr.number}"`:""} stroke="#faf7f2" stroke-width="1"><title>${tip}</title></path>`;
+  }
+  const visCount = PR_DATA.filter(prVisible).length;
+  out += `<circle cx="${CX}" cy="${CY}" r="${R0}" fill="#fff" stroke="#e8e1d6" data-center="1" style="cursor:pointer"><title>Reset focus</title></circle>`;
+  out += `<text x="${CX}" y="${CY-4}" text-anchor="middle" class="centerlabel" font-size="26" font-weight="600" fill="#3d3833">${visCount}</text>`;
+  out += `<text x="${CX}" y="${CY+15}" text-anchor="middle" font-size="10.5" fill="#6b635a">of 50 PRs</text>`;
+  svg.innerHTML = out;
+  svg.querySelectorAll("path").forEach(p=>p.addEventListener("click",()=>{
+    if(p.dataset.pr){ openPR(+p.dataset.pr); return; }
+    focusPath = (focusPath===p.dataset.sel) ? "" : p.dataset.sel;
+    refresh();
+  }));
+  svg.querySelector("[data-center]").addEventListener("click",()=>{ focusPath=""; refresh(); });
+  document.getElementById("crumb").innerHTML = focusPath
+    ? `Focused on <b>${esc(focusPath)}</b> — ${visCount} PR${visCount===1?"":"s"}`
+    : `Showing ${visCount} of 50 PRs`;
+}
+function renderLegend(){
+  document.getElementById("legend").innerHTML = Object.entries(TOP_COLORS).map(([n,c])=>
+    `<span class="key"><span class="sw" style="background:${c}"></span>${n}</span>`).join("");
+}
+
+// ---------- tree ----------
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function prCard(pr){
+  return `<div class="pr" data-num="${pr.number}">
+    <div class="prhead">
+      <span class="prnum">#${pr.number}</span>
+      <span class="prtitle">${esc(pr.title)}</span>
+      <span class="prkind k-${pr.kind}">${pr.kind}</span>
+      <span class="prdate">${pr.date}</span>
+    </div>
+    <dl class="prbody">
+      <dt>What it was</dt><dd>${esc(pr.what)}</dd>
+      <dt>What it achieved</dt><dd>${esc(pr.achieved)}</dd>
+      <dt>What it solved</dt><dd>${esc(pr.solved)}</dd>
+      <a class="prlink" href="${REPO}${pr.number}" target="_blank" rel="noopener">View PR #${pr.number} on GitHub →</a>
+    </dl>
+  </div>`;
+}
+function branchHTML(node){
+  const color = node.depth===1 ? (TOP_COLORS[node.name]||"#ccc") : (CAT_COLORS[node.path]||"#ddd");
+  let kids = "";
+  for(const c of node.children.values()) kids += branchHTML(c);
+  const prs = node.prs.slice().sort((a,b)=>b.number-a.number);
+  for(const pr of prs) kids += prCard(pr);
+  return `<div class="branch" data-path="${esc(node.path)}">
+    <div class="bhead"><span class="tw">▶</span><span class="sw" style="background:${color}"></span>
+      <span class="bname ${node.depth>1?"l2":""}">${esc(node.name)}</span>
+      <span class="bct" data-bct>${node.count}</span></div>
+    <div class="bkids">${kids}</div>
+  </div>`;
+}
+function renderTree(){
+  let html = "";
+  for(const c of ROOT.children.values()) html += branchHTML(c);
+  const el = document.getElementById("tree");
+  el.innerHTML = html;
+  el.querySelectorAll(".bhead").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("open")));
+  el.querySelectorAll(".prhead").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("open")));
+}
+function applyTreeFilter(){
+  const el = document.getElementById("tree");
+  const visByNum = {};
+  for(const pr of PR_DATA) visByNum[pr.number]=prVisible(pr);
+  el.querySelectorAll(".pr").forEach(p=>p.classList.toggle("hidden", !visByNum[+p.dataset.num]));
+  el.querySelectorAll(".branch").forEach(b=>{
+    const vis = [...b.querySelectorAll(".pr")].filter(p=>!p.classList.contains("hidden")).length;
+    b.style.display = vis ? "" : "none";
+    b.querySelector("[data-bct]").textContent = vis;
+    if((focusPath || kindFilter.size || query) && vis) b.classList.add("open");
+  });
+  if(!focusPath && !kindFilter.size && !query)
+    el.querySelectorAll(".branch").forEach(b=>b.classList.remove("open"));
+}
+function openPR(num){
+  focusPath=""; refresh();
+  const card = document.querySelector(`.pr[data-num="${num}"]`);
+  if(!card) return;
+  let b = card.closest(".branch");
+  while(b){ b.classList.add("open"); b = b.parentElement.closest(".branch"); }
+  card.classList.add("open");
+  card.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+// ---------- wiring ----------
+function refresh(){ renderSunburst(); renderChips(); applyTreeFilter(); }
+document.getElementById("q").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); refresh(); });
+document.getElementById("clear").addEventListener("click",()=>{
+  focusPath=""; kindFilter.clear(); query=""; document.getElementById("q").value=""; refresh();
+});
+renderStats(); renderLegend(); renderTree(); refresh();
+</script>
+</body>
+</html>
