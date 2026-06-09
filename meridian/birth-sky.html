@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#fffaf7" />
+<title>Ziva's First Sky — 4 September 2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ── SproutLab design floor: cream warmth, Fraunces + Nunito, night = indigo/sky/lavender ── */
+  :root{
+    --cream:#fffaf7; --warm:#fef6f0; --card:#ffffff;
+    --ink:#3a3340; --mid:#7a7088; --light:#a89fb2;
+    --indigo:#9ba8d8; --tc-indigo:#4a5080; --indigo-deep:#2a3060;
+    --sky:#a8cfe0; --tc-sky:#336580;
+    --lavender:#c9b8e8; --tc-lav:#6e5e9a; --lav-light:#f0ebfb;
+    --peach:#fad4b4;
+    /* the night itself */
+    --night-zenith:#10162e; --night-mid:#1a2347; --night-horizon:#2b3358;
+    --star:#f4f2ff; --line:rgba(201,184,232,.30); --line-hero:rgba(201,184,232,.55);
+    --moonlight:#fff6e2;
+    --r-lg:18px; --r-2xl:22px; --r-full:999px;
+    --disp:'Fraunces',Georgia,serif;
+    --sans:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --shadow:0 10px 34px rgba(58,51,64,.13);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--cream);color:var(--ink);
+    font-family:var(--sans);-webkit-tap-highlight-color:transparent}
+  body{display:flex;flex-direction:column;align-items:center;
+    padding:max(20px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+
+  /* ── the keepsake card ── */
+  .keepsake{width:min(560px,100%);background:var(--card);border-radius:var(--r-2xl);
+    box-shadow:var(--shadow);overflow:hidden}
+  .masthead{padding:22px 24px 16px;
+    background:linear-gradient(135deg,var(--lav-light),var(--warm));}
+  .eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--tc-lav);margin:0 0 6px}
+  .masthead h1{font-family:var(--disp);font-weight:600;font-size:clamp(26px,7vw,34px);
+    line-height:1.06;margin:0;color:var(--ink);letter-spacing:.005em}
+  .masthead .place{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--mid);
+    margin:8px 0 0}
+  .dedication{font-family:var(--disp);font-style:italic;font-weight:400;font-size:15px;
+    color:var(--tc-lav);margin:10px 0 0;line-height:1.45}
+
+  /* ── the sky disk ── */
+  .skywrap{position:relative;background:var(--card);padding:18px 18px 6px}
+  .sky-disk{position:relative;width:100%;aspect-ratio:1/1;border-radius:var(--r-full);
+    overflow:hidden;box-shadow:inset 0 0 0 1.5px rgba(201,184,232,.35),0 6px 22px rgba(16,22,46,.22)}
+  canvas{display:block;width:100%;height:100%}
+  .cardinal{position:absolute;font-family:var(--sans);font-weight:800;font-size:12px;
+    letter-spacing:.1em;color:rgba(244,242,255,.62);pointer-events:none;
+    text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .cardinal.n{top:7px;left:50%;transform:translateX(-50%)}
+  .cardinal.s{bottom:7px;left:50%;transform:translateX(-50%)}
+  .cardinal.e{top:50%;left:9px;transform:translateY(-50%)}
+  .cardinal.w{top:50%;right:9px;transform:translateY(-50%)}
+
+  /* ── facts strip ── */
+  .facts{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px 2px}
+  .fact{display:inline-flex;align-items:center;gap:7px;background:var(--warm);
+    border:1px solid rgba(201,184,232,.4);border-radius:var(--r-full);
+    padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--tc-lav)}
+  .fact .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot.moon{background:var(--moonlight);box-shadow:0 0 0 1px rgba(180,150,90,.4)}
+  .dot.lyre{background:var(--lavender)}
+  .dot.ringed{background:var(--peach)}
+
+  /* ── controls ── */
+  .controls{padding:14px 18px 18px}
+  .scrub{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .scrub label{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--mid);
+    text-transform:uppercase;white-space:nowrap}
+  .scrub input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;
+    border-radius:var(--r-full);outline:none;
+    background:linear-gradient(90deg,var(--indigo),var(--lavender),var(--peach))}
+  .scrub input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+    border-radius:50%;background:var(--moonlight);border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(58,51,64,.3);cursor:pointer}
+  .scrub input[type=range]::-moz-range-thumb{width:20px;height:20px;border:2px solid #fff;
+    border-radius:50%;background:var(--moonlight);box-shadow:0 2px 8px rgba(58,51,64,.3);cursor:pointer}
+  .clock{font-family:var(--disp);font-weight:600;font-size:18px;color:var(--tc-lav);
+    min-width:96px;text-align:right}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--mid);
+    background:var(--warm);border:1.5px solid rgba(201,184,232,.4);border-radius:var(--r-full);
+    padding:9px 15px;min-height:40px;cursor:pointer;user-select:none;
+    transition:background .18s,color .18s,border-color .18s}
+  .chip[aria-pressed=true]{background:var(--lav-light);color:var(--tc-lav);
+    border-color:var(--lavender)}
+  .chip:focus-visible{outline:2px solid var(--lavender);outline-offset:2px}
+
+  .ledger{padding:0 24px 22px;font-size:12px;line-height:1.55;color:var(--light)}
+  .ledger b{color:var(--mid);font-weight:700}
+  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="keepsake">
+  <div class="masthead">
+    <p class="eyebrow">The night she arrived</p>
+    <h1>Ziva's First Sky</h1>
+    <p class="place">Jamshedpur · 22.8°N 86.2°E · 4 September 2025</p>
+    <p class="dedication">Born beneath the Lyre, under an almost-full moon —<br>three nights before the sky turned to eclipse.</p>
+  </div>
+
+  <div class="skywrap">
+    <div class="sky-disk">
+      <canvas id="sky"></canvas>
+      <span class="cardinal n">N</span>
+      <span class="cardinal e">E</span>
+      <span class="cardinal s">S</span>
+      <span class="cardinal w">W</span>
+    </div>
+  </div>
+
+  <div class="facts">
+    <span class="fact"><span class="dot moon"></span>89% waxing-gibbous moon</span>
+    <span class="fact"><span class="dot lyre"></span>Lyra near the zenith</span>
+    <span class="fact"><span class="dot ringed"></span>Saturn rising in the east</span>
+  </div>
+
+  <div class="controls">
+    <div class="scrub">
+      <label for="time">Through the night</label>
+      <input id="time" type="range" min="1140" max="1560" value="1260" step="5" aria-label="Time of night, IST" />
+      <span class="clock" id="clock">9:00 pm</span>
+    </div>
+    <div class="chips">
+      <button class="chip" id="c-lines" aria-pressed="true">Constellations</button>
+      <button class="chip" id="c-labels" aria-pressed="true">Names</button>
+      <button class="chip" id="c-mw" aria-pressed="true">Milky Way</button>
+      <button class="chip" id="c-moon" aria-pressed="true">Moonlight</button>
+    </div>
+  </div>
+
+  <p class="ledger">
+    <b>How this is drawn.</b> Star positions are computed from a real catalogue
+    (right ascension / declination / magnitude) projected to the sky over
+    Jamshedpur at the chosen moment — the stars are true. The <b>moon and planet
+    positions are close approximations</b> for 4&nbsp;Sep&nbsp;2025, good for
+    placement, not arc-minute exact; a later pass can replace them with precise
+    ephemeris. Drag <em>Through the night</em> to find a particular hour.
+  </p>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   ZIVA'S FIRST SKY — all-sky keepsake renderer (single-file exploration)
+   Observer: Jamshedpur 22.80°N, 86.20°E · Night of 4 Sep 2025
+   Stars: real RA/Dec/mag catalogue → alt/az → stereographic disk (zenith centre)
+   Moon/planets: approximate positions for the date (see ledger)
+   ════════════════════════════════════════════════════════════════════════ */
+const DEG=Math.PI/180, RAD=180/Math.PI;
+const OBS={lat:22.80, lon:86.20};
+
+/* ── time: IST minutes → UTC Date on 2025-09-04 ─────────────────────────── */
+function dateFromIST(istMin){
+  return new Date(Date.UTC(2025,8,4,0,0,0) + (istMin-330)*60000);
+}
+function julian(d){ return d.getTime()/86400000 + 2440587.5; }
+function gmstDeg(jd){ const d=jd-2451545.0; let g=280.46061837+360.98564736629*d;
+  g%=360; if(g<0)g+=360; return g; }
+function lstDeg(jd,lonE){ let l=(gmstDeg(jd)+lonE)%360; if(l<0)l+=360; return l; }
+function altaz(raDeg,decDeg,lst,lat){
+  let H=((lst-raDeg)%360+540)%360-180;
+  const Hr=H*DEG, dec=decDeg*DEG, la=lat*DEG;
+  const sinAlt=Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(Hr);
+  const alt=Math.asin(Math.max(-1,Math.min(1,sinAlt)))*RAD;
+  let cosAz=(Math.sin(dec)-Math.sin(la)*sinAlt)/(Math.cos(la)*Math.cos(alt*DEG));
+  cosAz=Math.max(-1,Math.min(1,cosAz));
+  let az=Math.acos(cosAz)*RAD;
+  if(Math.sin(Hr)>0) az=360-az;
+  return {alt,az};
+}
+
+/* ── spectral tints ─────────────────────────────────────────────────────── */
+const C={ bw:[208,222,255], w:[240,242,255], y:[255,246,214], o:[255,206,150],
+  r:[255,176,150], g:[255,224,170] /* gold */ };
+
+/* ── star catalogue (early-Sep evening hemisphere, ~22.8°N) ─────────────── */
+const STARS=[
+  // Lyra — the harp, near the zenith. HER constellation.
+  {n:'Vega',ra:279.23,dec:38.78,m:0.03,c:C.bw,con:'Lyra',hero:true},
+  {n:'Sheliak',ra:282.52,dec:33.36,m:3.5,c:C.w,con:'Lyra'},
+  {n:'Sulafat',ra:284.74,dec:32.69,m:3.2,c:C.w,con:'Lyra'},
+  {n:'ZetaLyr',ra:281.08,dec:37.60,m:4.3,c:C.w,con:'Lyra'},
+  {n:'DeltaLyr',ra:283.62,dec:36.90,m:4.2,c:C.r,con:'Lyra'},
+  // Cygnus — the Northern Cross / swan
+  {n:'Deneb',ra:310.36,dec:45.28,m:1.25,c:C.w,con:'Cygnus'},
+  {n:'Sadr',ra:305.56,dec:40.26,m:2.2,c:C.y,con:'Cygnus'},
+  {n:'Gienah',ra:311.55,dec:33.97,m:2.5,c:C.o,con:'Cygnus'},
+  {n:'DeltaCyg',ra:296.24,dec:45.13,m:2.9,c:C.bw,con:'Cygnus'},
+  {n:'Albireo',ra:292.68,dec:27.96,m:3.1,c:C.g,con:'Cygnus'},
+  // Aquila — the eagle
+  {n:'Altair',ra:297.70,dec:8.87,m:0.76,c:C.w,con:'Aquila'},
+  {n:'Tarazed',ra:296.56,dec:10.61,m:2.7,c:C.o,con:'Aquila'},
+  {n:'Alshain',ra:298.83,dec:6.41,m:3.7,c:C.y,con:'Aquila'},
+  // Delphinus — little dolphin
+  {n:'Sualocin',ra:309.39,dec:15.91,m:3.8,c:C.w,con:'Delphinus'},
+  {n:'Rotanev',ra:309.00,dec:14.60,m:3.6,c:C.w,con:'Delphinus'},
+  // Bootes — kite, setting west
+  {n:'Arcturus',ra:213.92,dec:19.18,m:-0.05,c:C.o,con:'Bootes',hero:true},
+  {n:'Izar',ra:221.25,dec:27.07,m:2.4,c:C.o,con:'Bootes'},
+  // Corona Borealis
+  {n:'Alphecca',ra:233.67,dec:26.71,m:2.2,c:C.bw,con:'Corona Borealis'},
+  // Hercules (anchor)
+  {n:'Kornephoros',ra:247.55,dec:21.49,m:2.8,c:C.y,con:'Hercules'},
+  {n:'Rasalgethi',ra:258.66,dec:14.39,m:3.1,c:C.r,con:'Hercules'},
+  // Ophiuchus
+  {n:'Rasalhague',ra:263.73,dec:12.56,m:2.1,c:C.w,con:'Ophiuchus'},
+  // Scorpius — low SW, the scorpion, with red Antares
+  {n:'Antares',ra:247.35,dec:-26.43,m:1.06,c:C.r,con:'Scorpius',hero:true},
+  {n:'Dschubba',ra:240.08,dec:-22.62,m:2.3,c:C.bw,con:'Scorpius'},
+  {n:'Acrab',ra:241.36,dec:-19.80,m:2.5,c:C.bw,con:'Scorpius'},
+  {n:'Sargas',ra:264.33,dec:-42.99,m:1.9,c:C.y,con:'Scorpius'},
+  {n:'Shaula',ra:263.40,dec:-37.10,m:1.6,c:C.bw,con:'Scorpius'},
+  // Sagittarius — the Teapot, over the galactic centre
+  {n:'KausAus',ra:276.04,dec:-34.38,m:1.85,c:C.bw,con:'Sagittarius'},
+  {n:'KausMedia',ra:275.25,dec:-29.83,m:2.7,c:C.o,con:'Sagittarius'},
+  {n:'KausBor',ra:276.99,dec:-25.42,m:2.8,c:C.o,con:'Sagittarius'},
+  {n:'Nunki',ra:283.82,dec:-26.30,m:2.05,c:C.bw,con:'Sagittarius'},
+  {n:'Ascella',ra:285.65,dec:-29.88,m:2.6,c:C.w,con:'Sagittarius'},
+  {n:'PhiSgr',ra:281.41,dec:-26.99,m:3.2,c:C.w,con:'Sagittarius'},
+  // Capricornus — low SE (near the moon/Saturn)
+  {n:'DenebAlgedi',ra:326.76,dec:-16.13,m:2.85,c:C.w,con:'Capricornus'},
+  {n:'Dabih',ra:305.25,dec:-14.78,m:3.05,c:C.o,con:'Capricornus'},
+  {n:'Algedi',ra:304.51,dec:-12.54,m:3.6,c:C.y,con:'Capricornus'},
+  // Aquarius
+  {n:'Sadalsuud',ra:322.89,dec:-5.57,m:2.9,c:C.y,con:'Aquarius'},
+  {n:'Sadalmelik',ra:331.45,dec:-0.32,m:2.95,c:C.y,con:'Aquarius'},
+  // Piscis Austrinus — lonely Fomalhaut, SE
+  {n:'Fomalhaut',ra:344.41,dec:-29.62,m:1.16,c:C.w,con:'Piscis Austrinus',hero:true},
+  // Pegasus — the Great Square, rising east
+  {n:'Enif',ra:326.05,dec:9.88,m:2.4,c:C.o,con:'Pegasus'},
+  {n:'Markab',ra:346.19,dec:15.21,m:2.49,c:C.bw,con:'Pegasus'},
+  {n:'Scheat',ra:345.94,dec:28.08,m:2.42,c:C.o,con:'Pegasus'},
+  {n:'Algenib',ra:3.31,dec:15.18,m:2.83,c:C.bw,con:'Pegasus'},
+  {n:'Alpheratz',ra:2.10,dec:29.09,m:2.06,c:C.bw,con:'Andromeda'},
+  {n:'Mirach',ra:17.43,dec:35.62,m:2.07,c:C.r,con:'Andromeda'},
+  // Cassiopeia — the W, rising NE
+  {n:'Schedar',ra:10.13,dec:56.54,m:2.24,c:C.o,con:'Cassiopeia'},
+  {n:'Caph',ra:2.29,dec:59.15,m:2.27,c:C.w,con:'Cassiopeia'},
+  {n:'GammaCas',ra:14.18,dec:60.72,m:2.15,c:C.bw,con:'Cassiopeia'},
+  {n:'Ruchbah',ra:21.45,dec:60.24,m:2.68,c:C.w,con:'Cassiopeia'},
+  {n:'Segin',ra:28.60,dec:63.67,m:3.35,c:C.bw,con:'Cassiopeia'},
+  // Ursa Major — the Plough, low NW
+  {n:'Dubhe',ra:165.93,dec:61.75,m:1.79,c:C.o,con:'Ursa Major'},
+  {n:'Merak',ra:165.46,dec:56.38,m:2.37,c:C.w,con:'Ursa Major'},
+  {n:'Phecda',ra:178.46,dec:53.69,m:2.44,c:C.w,con:'Ursa Major'},
+  {n:'Megrez',ra:183.86,dec:57.03,m:3.31,c:C.w,con:'Ursa Major'},
+  {n:'Alioth',ra:193.51,dec:55.96,m:1.77,c:C.w,con:'Ursa Major'},
+  {n:'Mizar',ra:200.98,dec:54.93,m:2.23,c:C.w,con:'Ursa Major'},
+  {n:'Alkaid',ra:206.89,dec:49.31,m:1.86,c:C.bw,con:'Ursa Major'},
+  // Ursa Minor — Polaris holds the north
+  {n:'Polaris',ra:37.95,dec:89.26,m:1.98,c:C.y,con:'Ursa Minor',hero:true},
+  {n:'Kochab',ra:222.68,dec:74.16,m:2.08,c:C.o,con:'Ursa Minor'},
+  // Draco threads between the bears
+  {n:'Eltanin',ra:269.15,dec:51.49,m:2.36,c:C.o,con:'Draco'},
+  {n:'Rastaban',ra:262.61,dec:52.30,m:2.79,c:C.y,con:'Draco'},
+  // Virgo — Spica low west
+  {n:'Spica',ra:201.30,dec:-11.16,m:1.04,c:C.bw,con:'Virgo'},
+];
+const SBY={}; STARS.forEach(s=>SBY[s.n]=s);
+
+const LINES=[
+  // Lyra — Vega + the harp's parallelogram
+  ['Vega','ZetaLyr'],['Vega','DeltaLyr'],['ZetaLyr','Sheliak'],
+  ['DeltaLyr','Sulafat'],['Sheliak','Sulafat'],
+  // Cygnus — the cross
+  ['Deneb','Sadr'],['Sadr','Albireo'],['DeltaCyg','Sadr'],['Sadr','Gienah'],
+  // Aquila — eagle head
+  ['Tarazed','Altair'],['Altair','Alshain'],
+  // Delphinus
+  ['Sualocin','Rotanev'],
+  // Bootes
+  ['Arcturus','Izar'],
+  // Scorpius — head + tail
+  ['Acrab','Dschubba'],['Dschubba','Antares'],['Antares','Shaula'],['Shaula','Sargas'],
+  // Sagittarius — the Teapot
+  ['KausAus','KausMedia'],['KausMedia','KausBor'],['KausBor','PhiSgr'],
+  ['PhiSgr','Nunki'],['Nunki','Ascella'],['Ascella','KausAus'],['PhiSgr','KausMedia'],
+  // Pegasus — Great Square + Andromeda chain
+  ['Markab','Scheat'],['Scheat','Alpheratz'],['Alpheratz','Algenib'],['Algenib','Markab'],
+  ['Markab','Enif'],['Alpheratz','Mirach'],
+  // Cassiopeia — the W
+  ['Caph','Schedar'],['Schedar','GammaCas'],['GammaCas','Ruchbah'],['Ruchbah','Segin'],
+  // Ursa Major — the Plough
+  ['Dubhe','Merak'],['Merak','Phecda'],['Phecda','Megrez'],['Megrez','Dubhe'],
+  ['Megrez','Alioth'],['Alioth','Mizar'],['Mizar','Alkaid'],
+  // Capricornus (loose triangle)
+  ['Dabih','DenebAlgedi'],['DenebAlgedi','Algedi'],['Algedi','Dabih'],
+];
+
+// the Summer Triangle, drawn faintly as the night's signature asterism
+const TRIANGLE=['Vega','Deneb','Altair'];
+
+/* ── moon + planets: APPROXIMATE for 2025-09-04 evening (see ledger) ────── */
+const MOON={ra:309.0,dec:-19.5,illum:0.89};                 // waxing gibbous, Capricornus
+const PLANETS=[
+  {n:'Saturn',ra:354.0,dec:-6.0,m:0.6,c:C.y,ring:true},     // Pisces, low E
+  {n:'Mars',  ra:197.0,dec:-9.5,m:1.6,c:C.r,ring:false},    // Virgo, low W (faint)
+];
+
+/* ── milky way nodes (RA/Dec along the galactic equator, summer arc) ────── */
+const MW=[
+  {ra:266,dec:-29,w:1.0},  // galactic centre, Sagittarius (brightest)
+  {ra:276,dec:-15,w:0.8},
+  {ra:283,dec:-4,w:0.7},   // Scutum star cloud
+  {ra:295,dec:6,w:0.6},    // near Altair
+  {ra:303,dec:20,w:0.6},
+  {ra:307,dec:38,w:0.85},  // Cygnus rift / Sadr
+  {ra:330,dec:55,w:0.6},   // Cepheus
+  {ra:5,dec:60,w:0.55},    // Cassiopeia
+  {ra:30,dec:60,w:0.45},
+];
+
+/* ── procedural faint field (stable across frames) ─────────────────────── */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const FAINT=[]; {const r=mulberry(20250904);
+  for(let i=0;i<460;i++){ FAINT.push({ra:r()*360, dec:(r()*2-1)*88, m:4.5+r()*1.6, tw:r()*6.28}); }}
+
+/* ── canvas + projection (stereographic from zenith) ───────────────────── */
+const cv=document.getElementById('sky'), ctx=cv.getContext('2d');
+let W=0,H=0,R=0,CX=0,CY=0,DPR=1;
+function resize(){
+  const rect=cv.getBoundingClientRect();
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=rect.width; H=rect.height;
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  CX=W/2; CY=H/2; R=Math.min(W,H)/2 - 2;
+}
+// alt/az → disk point. N up, E left, S down, W right (looking up). null if below horizon.
+function project(alt,az){
+  if(alt<0) return null;
+  const zd=90-alt;
+  const rr=Math.tan((zd/2)*DEG);            // stereographic, horizon (zd=90)→1
+  const A=az*DEG;
+  return { x:CX - R*rr*Math.sin(A), y:CY - R*rr*Math.cos(A), rr };
+}
+
+/* ── state ──────────────────────────────────────────────────────────────── */
+const S={ istMin:1260, lines:true, labels:true, mw:true, moon:true };
+const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ── helpers ───────────────────────────────────────────────────────────── */
+function starRadius(m){ return Math.max(0.5, 2.9-0.46*m); }
+function rgbsoft(c,a){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+/* ── layers ────────────────────────────────────────────────────────────── */
+function nightDisk(){
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,R);
+  g.addColorStop(0,'#10162e'); g.addColorStop(.55,'#1a2347');
+  g.addColorStop(.85,'#26305a'); g.addColorStop(1,'#2f3a64');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(CX,CY,R,0,7); ctx.fill();
+}
+function softGlow(x,y,rad,col){
+  const g=ctx.createRadialGradient(x,y,0,x,y,rad);
+  g.addColorStop(0,col); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fill();
+}
+function clipDisk(){ ctx.save(); ctx.beginPath(); ctx.arc(CX,CY,R,0,7); ctx.clip(); }
+
+function milkyWay(lst){
+  if(!S.mw) return;
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  for(const node of MW){
+    const pa=altaz(node.ra,node.dec,lst,OBS.lat); if(pa.alt<0) continue;
+    const p=project(pa.alt,pa.az); if(!p) continue;
+    const rad=R*0.20*node.w;
+    // dimmed by the bright moon — this night's Milky Way is a whisper
+    softGlow(p.x,p.y,rad, rgbsoft([150,165,210], 0.05*node.w));
+    softGlow(p.x,p.y,rad*0.55, rgbsoft([170,185,225], 0.05*node.w));
+  }
+  ctx.restore();
+}
+function faintStars(lst,t){
+  for(const f of FAINT){
+    const pa=altaz(f.ra,f.dec,lst,OBS.lat); if(pa.alt<2) continue;
+    const p=project(pa.alt,pa.az); if(!p) continue;
+    let a=0.42*Math.max(0,(pa.alt-2)/30); a=Math.min(a,0.42);
+    if(a<=0.02) continue;
+    if(!reduceMotion) a*=0.75+0.25*Math.sin(t*0.0016+f.tw);
+    ctx.fillStyle=rgbsoft([222,226,246],a);
+    ctx.beginPath(); ctx.arc(p.x,p.y,0.7,0,7); ctx.fill();
+  }
+}
+function triangle(lst){
+  if(!S.lines) return;
+  const pts=TRIANGLE.map(n=>{const s=SBY[n];const pa=altaz(s.ra,s.dec,lst,OBS.lat);
+    return pa.alt<0?null:project(pa.alt,pa.az);});
+  if(pts.some(p=>!p)) return;
+  ctx.save(); ctx.strokeStyle='rgba(168,207,224,.22)'; ctx.lineWidth=1; ctx.setLineDash([4,5]);
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  ctx.lineTo(pts[1].x,pts[1].y); ctx.lineTo(pts[2].x,pts[2].y); ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
+function constellationLines(lst){
+  if(!S.lines) return;
+  ctx.lineWidth=1.1;
+  for(const [a,b] of LINES){
+    const sa=SBY[a], sb=SBY[b]; if(!sa||!sb) continue;
+    const pa=altaz(sa.ra,sa.dec,lst,OBS.lat), pb=altaz(sb.ra,sb.dec,lst,OBS.lat);
+    const A=project(pa.alt,pa.az), B=project(pb.alt,pb.az); if(!A||!B) continue;
+    const hero = sa.con==='Lyra' || sb.con==='Lyra';
+    ctx.strokeStyle = hero ? 'rgba(201,184,232,.55)' : 'rgba(201,184,232,.26)';
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+  }
+}
+function drawStar(p,s,t){
+  const r=starRadius(s.m);
+  let a=Math.min(1,1.05-0.12*s.m); a=Math.max(0.35,a);
+  if(!reduceMotion){ a*=0.9+0.1*Math.sin(t*0.002+(s.ra*0.7)%6.28); }
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  if(s.m<2.0) softGlow(p.x,p.y,r*5.5, rgbsoft(s.c,0.18*a));
+  if(s.hero) softGlow(p.x,p.y,r*7, rgbsoft(s.c,0.14*a));
+  ctx.fillStyle=rgbsoft(s.c,a);
+  ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+  ctx.restore();
+}
+function drawMoon(lst,t){
+  if(!S.moon) return null;
+  const pa=altaz(MOON.ra,MOON.dec,lst,OBS.lat); if(pa.alt<0) return null;
+  const p=project(pa.alt,pa.az); if(!p) return null;
+  const r=Math.max(9,R*0.05);
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  softGlow(p.x,p.y,r*5.5,'rgba(255,246,226,0.16)');
+  softGlow(p.x,p.y,r*2.6,'rgba(255,246,226,0.22)');
+  ctx.restore();
+  // bright lit disk
+  ctx.save();
+  const gd=ctx.createRadialGradient(p.x-r*0.3,p.y-r*0.3,r*0.2,p.x,p.y,r);
+  gd.addColorStop(0,'#fffdf6'); gd.addColorStop(.7,'#fff3da'); gd.addColorStop(1,'#f3e2bd');
+  ctx.fillStyle=gd; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+  // faint unlit sliver on the eastern (left) limb — waxing gibbous, ~89%
+  ctx.globalCompositeOperation='source-atop';
+  const gs=ctx.createLinearGradient(p.x-r,p.y,p.x-r*0.2,p.y);
+  gs.addColorStop(0,'rgba(40,48,80,0.5)'); gs.addColorStop(1,'rgba(40,48,80,0)');
+  ctx.fillStyle=gs; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+  ctx.restore();
+  return {p,r,alt:pa.alt};
+}
+function drawPlanet(pl,lst,t){
+  const pa=altaz(pl.ra,pl.dec,lst,OBS.lat); if(pa.alt<0) return null;
+  const p=project(pa.alt,pa.az); if(!p) return null;
+  const r=Math.max(2.4,3.6-0.5*pl.m);
+  ctx.save(); ctx.globalCompositeOperation='screen';
+  softGlow(p.x,p.y,r*6, rgbsoft(pl.c,0.2));
+  ctx.fillStyle=rgbsoft(pl.c,1); ctx.beginPath(); ctx.arc(p.x,p.y,r,0,7); ctx.fill();
+  if(pl.ring){ ctx.strokeStyle=rgbsoft(pl.c,0.7); ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.ellipse(p.x,p.y,r*2.1,r*0.7,0,0,7); ctx.stroke(); }
+  ctx.restore();
+  return {p,r,alt:pa.alt};
+}
+function label(x,y,txt,kind){
+  ctx.save();
+  ctx.font = kind==='con' ? "400 12px 'Fraunces',serif"
+           : kind==='warm' ? "700 11px 'Nunito',sans-serif"
+           : "600 11px 'Nunito',sans-serif";
+  ctx.fillStyle = kind==='con' ? 'rgba(190,200,230,.5)'
+               : kind==='warm' ? 'rgba(255,243,216,.92)'
+               : 'rgba(210,216,236,.78)';
+  ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(8,10,24,.85)'; ctx.shadowBlur=4;
+  ctx.fillText(txt,x,y); ctx.restore();
+}
+function labels(lst,moonEnv,planetEnvs){
+  if(!S.labels) return;
+  // constellation names at centroid (above-horizon members only)
+  const cons={};
+  STARS.forEach(s=>{ const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<6) return;
+    const p=project(pa.alt,pa.az); if(!p) return; (cons[s.con]=cons[s.con]||[]).push(p); });
+  for(const k in cons){ const arr=cons[k]; if(arr.length<2 && k!=='Piscis Austrinus') continue;
+    let mx=0,my=0; arr.forEach(p=>{mx+=p.x;my+=p.y;}); mx/=arr.length; my/=arr.length;
+    label(mx,my,k.toUpperCase()==='LYRA'?'Lyra':k,'con'); }
+  // bright named stars
+  ['Vega','Altair','Deneb','Arcturus','Antares','Fomalhaut','Polaris','Spica'].forEach(n=>{
+    const s=SBY[n]; const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<3) return;
+    const p=project(pa.alt,pa.az); if(!p) return;
+    label(p.x+8,p.y, n, n==='Vega'?'warm':'name'); });
+  // moon + planets
+  if(moonEnv) label(moonEnv.p.x+moonEnv.r+8, moonEnv.p.y, 'Moon', 'warm');
+  planetEnvs.forEach(e=>{ if(e&&e.env) label(e.env.p.x+e.env.r+7, e.env.p.y, e.name, 'warm'); });
+}
+
+/* ── frame ─────────────────────────────────────────────────────────────── */
+function frame(t){
+  const lst=lstDeg(julian(dateFromIST(S.istMin)), OBS.lon);
+  ctx.clearRect(0,0,W,H);
+  clipDisk();
+  nightDisk();
+  milkyWay(lst);
+  faintStars(lst,t);
+  triangle(lst);
+  if(S.lines) constellationLines(lst);
+  // stars
+  for(const s of STARS){ const pa=altaz(s.ra,s.dec,lst,OBS.lat); if(pa.alt<0) continue;
+    const p=project(pa.alt,pa.az); if(!p) continue; drawStar(p,s,t); }
+  // planets then moon (moon on top)
+  const planetEnvs=PLANETS.map(pl=>({name:pl.n, env:drawPlanet(pl,lst,t)}));
+  const moonEnv=drawMoon(lst,t);
+  labels(lst,moonEnv,planetEnvs);
+  ctx.restore(); // un-clip
+  requestAnimationFrame(frame);
+}
+
+/* ── controls ──────────────────────────────────────────────────────────── */
+function fmtClock(istMin){
+  let m=Math.round(istMin)%1440; const h24=Math.floor(m/60), mm=m%60;
+  const ap=h24>=12?'pm':'am'; let h=h24%12; if(h===0) h=12;
+  return h+':'+String(mm).padStart(2,'0')+' '+ap;
+}
+const timeEl=document.getElementById('time'), clockEl=document.getElementById('clock');
+function syncClock(){ clockEl.textContent=fmtClock(S.istMin); }
+timeEl.addEventListener('input',()=>{ S.istMin=+timeEl.value; syncClock(); });
+function toggle(id,key){ const el=document.getElementById(id);
+  el.addEventListener('click',()=>{ S[key]=!S[key]; el.setAttribute('aria-pressed',S[key]); }); }
+toggle('c-lines','lines'); toggle('c-labels','labels'); toggle('c-mw','mw'); toggle('c-moon','moon');
+
+window.addEventListener('resize',()=>resize());
+resize(); syncClock();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
