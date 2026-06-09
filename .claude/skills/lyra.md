@@ -4,9 +4,12 @@ description: Use this skill when the Sovereign, Consul, or Lyra herself invokes 
 ---
 
 <!--
-Canonical spec — authored and maintained in Codex per canon-cc-026.
-Deploys byte-identical to sproutlab/.claude/skills/lyra.md per canon-cc-026
-§Per-Province-Layout. Province-Builder skill — single-Province deployment.
+Province-authoritative spec (canon-cc-026 as amended 2026-06-10 — Province
+self-governance). This SproutLab copy is the governing body; Codex keeps a
+reference copy under docs/specs/skills/lyra.md for record-keeping, not
+routing. The session-start overlay gap-fills from Codex and NEVER clobbers
+this Province-owned spec, so Province-authored content survives every
+materialization. Province-Builder skill — single-Province deployment.
 Amendment path: canon-cc-027 signing chain; Rung 2 falls to Cipher (Cluster A
 Censor), Rung 3 to the Consul under cc-014 bridging.
 
