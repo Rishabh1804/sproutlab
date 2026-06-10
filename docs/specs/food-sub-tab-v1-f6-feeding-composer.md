@@ -324,7 +324,7 @@ All four Governors are therefore summoned (parallel Mode-1 audits where jurisdic
 
 ---
 
-## §Resolved questions (Governor consensus, folded 2026-06-10 — **pending Architect ratification; the Architect has the final word**)
+## §Resolved questions (Governor consensus, folded 2026-06-10 — **Architect-RATIFIED 2026-06-10**; Q1 KEEP / Q2 FOLD + REGISTER / Q3 bound as written)
 
 The three §Open questions of v1 are resolved by Governor consensus and bound into the body above; they are restated here for the ratification pass. The eight Architect decisions were not, and are not, relitigated.
 
