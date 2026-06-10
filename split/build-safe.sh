@@ -113,8 +113,10 @@ fi
 if command -v node >/dev/null 2>&1; then
   node "$ROOT/split/build-pr-dashboard.mjs" 1>&2 \
     || echo "PR dashboard generation failed (non-fatal); docs/PR_TREE_DASHBOARD.html may be stale." >&2
+  node "$ROOT/split/build-app-evolution.mjs" 1>&2 \
+    || echo "App-evolution generation failed (non-fatal); docs/APP_EVOLUTION.html may be stale." >&2
 else
-  echo "PR dashboard skipped (node not found; non-fatal)." >&2
+  echo "PR dashboard + app-evolution skipped (node not found; non-fatal)." >&2
 fi
 
 # ── WCAG contrast audit (advisory) ──
