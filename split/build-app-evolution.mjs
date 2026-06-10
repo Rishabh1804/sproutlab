@@ -44,9 +44,10 @@ try {
 }
 
 const REQUIRED = ['number', 'title', 'date', 'what', 'achieved', 'solved', 'category', 'kind'];
-const bad = data.filter(r => REQUIRED.some(k => r[k] === undefined || r[k] === null || r[k] === ''));
+const bad = data.filter(r => REQUIRED.some(k => r[k] === undefined || r[k] === null || r[k] === '')
+  || !Number.isInteger(r.number));
 if (bad.length) {
-  console.error(`[app-evolution] ${bad.length} record(s) missing required fields (first: #${bad[0].number ?? '?'}); skipping (non-fatal). View left as-is.`);
+  console.error(`[app-evolution] ${bad.length} record(s) missing required fields or non-integer number (first: #${bad[0].number ?? '?'}); skipping (non-fatal). View left as-is.`);
   process.exit(0);
 }
 
@@ -69,6 +70,19 @@ if (dupes.length) {
 data.sort((a, b) => a.number - b.number);
 const nums  = data.map(r => r.number);
 const lo    = nums[0], hi = nums[nums.length - 1];
+
+const tpl = readFileSync(tplPath, 'utf8');
+
+// Era-horizon guard (Cipher F-1, advisory): the chapters are curated in the
+// template while the corpus grows a record per merged PR — warn when the data
+// outruns the last era's `hi` so the gap is loud, not silent. Still writes the
+// view: dots beyond the horizon render fine; only the narrative lags.
+const eraHi = Math.max(0, ...[...tpl.matchAll(/\bhi:\s*(\d+)/g)].map(m => +m[1]));
+if (eraHi && hi > eraHi) {
+  const orphans = data.filter(r => r.number > eraHi).length;
+  console.error(`[app-evolution] data reaches #${hi} but curated eras end at #${eraHi}; ` +
+    `${orphans} PR(s) have no chapter — extend the last era or open a new one in app-evolution-template.html.`);
+}
 const dates = data.map(r => r.date).sort();
 const fmt   = (iso) => {
   const [y, m, d] = iso.split('-').map(Number);
@@ -85,7 +99,7 @@ const today    = new Date().toISOString().slice(0, 10);
 // Cipher Edict V doctrine (PR #250): replacer-FUNCTION form so `$&`-class
 // patterns in record prose can never corrupt the payload; escape `<` so a
 // literal `</script>` in a summary can never terminate the script block.
-const html = readFileSync(tplPath, 'utf8')
+const html = tpl
   .replace('__RANGE__', () => range)
   .replace('__SUBTITLE__', () => subtitle)
   .replace('__THROUGH__', () => `#${hi}`)

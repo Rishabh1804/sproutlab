@@ -49,9 +49,10 @@ try {
 // a wrong sunburst count, so fail the GENERATION (still non-fatal to the build)
 // loudly instead of shipping a silently-wrong view.
 const REQUIRED = ['number', 'title', 'date', 'what', 'achieved', 'solved', 'category', 'kind'];
-const bad = data.filter(r => REQUIRED.some(k => r[k] === undefined || r[k] === null || r[k] === ''));
+const bad = data.filter(r => REQUIRED.some(k => r[k] === undefined || r[k] === null || r[k] === '')
+  || !Number.isInteger(r.number));
 if (bad.length) {
-  console.error(`[pr-dashboard] ${bad.length} record(s) missing required fields (first: #${bad[0].number ?? '?'}); skipping (non-fatal). View left as-is.`);
+  console.error(`[pr-dashboard] ${bad.length} record(s) missing required fields or non-integer number (first: #${bad[0].number ?? '?'}); skipping (non-fatal). View left as-is.`);
   process.exit(0);
 }
 

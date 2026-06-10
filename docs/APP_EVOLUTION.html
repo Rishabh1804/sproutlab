@@ -148,7 +148,6 @@ const NDAYS = Math.round((D1-D0)/86400000)+1;
 const dayIdx = iso => Math.round((new Date(iso)-D0)/86400000);
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const fmt = iso => { const [y,m,d]=iso.split('-').map(Number); return `${d} ${MON[m-1]}`; };
-const eraOf = n => ERAS.find(e=>n>=e.lo&&n<=e.hi);
 const eraPRs = e => PR_DATA.filter(p=>p.number>=e.lo&&p.number<=e.hi);
 
 // ── stats ──
@@ -231,6 +230,7 @@ const eraPRs = e => PR_DATA.filter(p=>p.number>=e.lo&&p.number<=e.hi);
   el.querySelectorAll("[data-pr]").forEach(c=>c.addEventListener("click",()=>window.open(REPO+c.dataset.pr,"_blank","noopener")));
   el.querySelectorAll("[data-era]").forEach(b=>b.addEventListener("click",()=>{
     const card=document.getElementById(b.dataset.era);
+    if(!card) return;
     document.querySelectorAll(".era.lit").forEach(x=>x.classList.remove("lit"));
     card.classList.add("lit");
     card.scrollIntoView({behavior:"smooth",block:"start"});
@@ -259,7 +259,7 @@ const eraPRs = e => PR_DATA.filter(p=>p.number>=e.lo&&p.number<=e.hi);
     }).join("");
     html+=`<div class="era" id="${e.id}" style="border-left-color:${e.color}">
       <div class="ehead"><span class="enum">Era ${i+1} · #${e.lo}–#${e.hi}</span><h3>${esc(e.name)}</h3>
-        <span class="emeta">${fmt(dates[0])} → ${fmt(dates[dates.length-1])} 2026 · ${prs.length} PRs</span></div>
+        <span class="emeta">${fmt(dates[0])} → ${fmt(dates[dates.length-1])} ${dates[dates.length-1].slice(0,4)} · ${prs.length} PRs</span></div>
       <p class="story">${esc(e.story)}</p>
       <p class="could"><b>By the end of this era, the app could</b> ${esc(e.could)}</p>
       <div class="bars">${bars}</div>
