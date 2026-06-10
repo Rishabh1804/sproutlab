@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SproutLab — Evolution of the App (__RANGE__)</title>
+<style>
+:root{
+  --sage:#b5d5c5; --rose:#f2a8b8; --amber:#e8b86d; --lavender:#c9b8e8;
+  --sky:#a8cfe0; --indigo:#9ba8d8; --peach:#fad4b4;
+  --ink:#3d3833; --ink-soft:#6b635a; --paper:#faf7f2; --card:#ffffff;
+  --line:#e8e1d6; --shadow:0 2px 10px rgba(61,56,51,.08);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+header h1{font-family:var(--serif);font-weight:600;font-size:30px;margin:0 0 4px}
+header .sub{color:var(--ink-soft);font-size:14px;margin:0 0 14px}
+.banner{background:#fdf3e3;border:1px solid #f0ddb8;border-radius:10px;padding:10px 14px;font-size:13px;color:#7a5c1e;margin-bottom:22px}
+.banner b{font-weight:700}
+.banner code{font-family:var(--mono);font-size:12px}
+
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);min-width:110px}
+.stat .num{font-family:var(--serif);font-size:24px;font-weight:600}
+.stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:26px}
+.panel h2{font-family:var(--serif);font-size:18px;font-weight:600;margin:0 0 10px}
+.panel .hint{font-size:12px;color:var(--ink-soft);margin:0 0 8px}
+
+#timeline{width:100%;height:auto;display:block}
+#timeline circle{cursor:pointer}
+#timeline .eraband{cursor:pointer;transition:opacity .15s}
+#timeline .eraband:hover{opacity:.85}
+#timeline text{font-family:var(--sans)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.legend .key{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.legend .sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+.chapters{display:flex;flex-direction:column;gap:18px}
+.era{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px 22px;scroll-margin-top:14px}
+.era.lit{outline:2px solid var(--ink);outline-offset:2px}
+.era .ehead{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+.era .enum{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.era h3{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;flex:1}
+.era .emeta{font-size:12px;color:var(--ink-soft)}
+.era .story{font-size:14px;margin:8px 0 0;max-width:75ch}
+.era .could{font-size:13px;margin:10px 0 0;padding:9px 13px;background:var(--paper);border:1px solid var(--line);border-radius:10px;max-width:75ch}
+.era .could b{font-family:var(--serif)}
+.era .bars{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-width:560px}
+.era .bar{display:grid;grid-template-columns:250px 1fr 26px;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft)}
+.era .bar .track{height:8px;border-radius:999px;background:var(--paper);overflow:hidden}
+.era .bar .fill{height:100%;border-radius:999px}
+.era .keyprs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.kpr{font-size:12px;text-decoration:none;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.kpr:hover{border-color:var(--ink-soft)}
+.kpr .n{font-family:var(--mono);color:var(--ink-soft);margin-right:4px}
+
+footer{margin-top:34px;font-size:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>How SproutLab Grew</h1>
+  <p class="sub">__SUBTITLE__</p>
+  <div class="banner"><b>Auto-generated VIEW — do not hand-edit.</b> Rendered each build by <code>split/build-app-evolution.mjs</code> from <code>docs/pr-dashboard-data.json</code> (the same corpus as the PR Tree Dashboard). Data curated through PR __THROUGH__, refreshed in batches every 10 merged PRs; era chapters are curated in <code>split/app-evolution-template.html</code> — when a new era opens, add its chapter there.</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="panel">
+  <h2>The river</h2>
+  <p class="hint">Every dot is a PR, stacked by day, colored by branch of work. The bands beneath are the eras — click one to jump to its chapter. Flags mark the inflection points. Click a dot to open its PR.</p>
+  <svg id="timeline"></svg>
+  <div class="legend" id="legend"></div>
+</div>
+
+<h2 style="font-family:var(--serif);font-size:22px;margin:6px 0 14px">The chapters</h2>
+<div class="chapters" id="chapters"></div>
+
+<footer>Generated __GENERATED__ from the PR record of rishabh1804/sproutlab. Branch colors follow the SproutLab domain palette (sage · rose · amber · lavender · sky · indigo · peach).</footer>
+</div>
+
+<script>
+const PR_DATA = __PR_DATA__;
+
+const REPO = "https://github.com/rishabh1804/sproutlab/pull/";
+const TOP_COLORS = {
+  "Product":"#b5d5c5", "Platform":"#a8cfe0", "Governance":"#c9b8e8",
+  "Records":"#e8b86d", "Lore":"#9ba8d8"
+};
+
+// ── Curated era chapters (the narrative layer; PR stats computed from data) ──
+const ERAS = [
+ {id:"e1", lo:1, hi:22, color:"#a8cfe0", name:"The Foundation",
+  story:"The Province was seated — Lyra, Maren and Kael ratified in PR #1 — and the app learned to tell the truth about itself. Sync stopped being invisible: a three-state indicator, a live offline badge, and per-entry attribution said what was saved, where, and by whom. The PWA grew up too — a versioned service worker, real precaching, and an update toast replaced silent staleness.",
+  could:"a parent could log offline on a phone, see exactly when data reached the cloud, know which device wrote what, and get a clean in-app update instead of a stale cache.",
+  key:[[1,"Province seated"],[4,"Sync indicator"],[12,"SW externalized"],[14,"Update toast"],[20,"Per-entry attribution"]]},
+ {id:"e2", lo:23, hi:44, color:"#e8b86d", name:"The Great Polish",
+  story:"Before building more, the floor was sanded. The Polish arc turned the Hard Rules from intention into law: hex literals swept into tokens, inline onclick handlers into data-action delegation, SVG-in-data unwound, breakpoints canonicalized. Sixteen of this era's twenty-two PRs were fixes. The service worker was bound by canon to never cache HTML, and BUGS.md gave defects a ledger.",
+  could:"look and behave consistently — one token vocabulary, one event-delegation pattern, one icon system — so every later feature inherited discipline instead of debt.",
+  key:[[23,"Polish charter"],[27,"Hex-token sweep"],[35,"onclick batch: Care+Home"],[42,"SW never caches HTML"],[44,"BUGS.md"]]},
+ {id:"e3", lo:45, hi:64, color:"#c9b8e8", name:"Memories & Milestones",
+  story:"The app stopped merely counting milestones and started keeping them. The renderer was split open, the Recent Evidence feed aggregated rollups, entries got edit and delete, and the PR-ε arc landed stable IDs with scrapbook sync and memory-to-milestone linkage. Alongside, the design system was written down — surface inventory, pattern catalog, uniformity contract — and escAttr closed an escaping doctrine gap.",
+  could:"hold a scrapbook: milestones linked to memories with stable identities that survive sync, in an app whose design patterns were now a written contract.",
+  key:[[47,"Recent Evidence rollup"],[50,"Edit/delete entries"],[62,"Stable IDs + scrapbook"],[63,"escAttr global fix"],[61,"Uniformity contract"]]},
+ {id:"e4", lo:65, hi:81, color:"#f2a8b8", name:"The Symptom Checker",
+  story:"The first guided-care surface. The Symptom Checker went from bridge build to D1 polish (severity rail, sticky CTA, severity-aware doctor card) to D2 structure with twenty-two authored symptom entries. The same era purged all 132 emoji and armed the HR-1 audit gate so they could never return, while the PR-A..D governance quadrilogy ratified the methodology beneath it all.",
+  could:"guide a worried parent through a symptom at 2 AM — severity-ranked, with DO-NOT callouts and a doctor card — inside an app policed by its own audit gates.",
+  key:[[67,"Bridge build"],[69,"D1 severity rail"],[73,"22 symptom entries"],[74,"Emoji purge 132→0"],[75,"HR-1 audit gate"]]},
+ {id:"e5", lo:82, hi:126, color:"#fad4b4", name:"Intelligence Blooms",
+  story:"The largest single leap in surface area. The Info tab grew eight rich visualization cards and tap-through interactivity; intelligence.js burst its 30K banks and was split into seven subsystem files. Home was redesigned around a Today hero, four-mode alerts and a vaccination Gantt. Vitamin D3 tracking went from checkbox to truth — timing, context, pattern, then two tiers of verified fixes. The QA chain became a codified pre-merge gate, and build-safe.sh ended a class of production corruption.",
+  could:"explain itself: scores, trends, alerts and vaccination timelines a tired parent could read, backed by an intelligence layer big enough to need its own provinces.",
+  key:[[83,"intelligence.js split"],[90,"Home redesign"],[98,"Food-chemistry DB"],[102,"QA gate codified"],[116,"Vit D3 meaningful"],[120,"build-safe.sh"]]},
+ {id:"e6", lo:127, hi:170, color:"#9ba8d8", name:"v3.0 — The Engine Era",
+  story:"The roundtable chartered v3.0 and the app stopped being a logger that displays and became an engine that reasons. The five-primitive engine spine landed first, then its consumers: the unified chip-state taxonomy with the Today So Far story arc, card priority and information hierarchy, the sleep arc, the narrative-prose layer. Milestones got a full tab (Log / Library / Patterns) via the Option C two-spec sequence, and the Food sub-tab scaffold opened the door Diet would later walk through.",
+  could:"reason across domains — one engine spine feeding chips, cards, prose and priorities — with milestones and food logging restructured on top of it.",
+  key:[[129,"v3.0 roundtable"],[135,"Engine spine"],[138,"Chip taxonomy + TSF"],[144,"Card priority"],[159,"Milestones tab"],[165,"Food sub-tab F-1"]]},
+ {id:"e7", lo:171, hi:208, color:"#86b89f", name:"The Food-Effects Spine",
+  story:"Food safety got a single source of truth. P0 gates locked FOOD_EFFECTS to its manifest and routed lookups through a word-boundary resolver; the v2 guided-introduction model brought peanut and tree nut in with cited research; reconciliation rounds R0–R3 rewired every legacy surface — combo checker, Q&A, diet notes — onto the spine. Phase δ added egg, soy, wheat and sesame with dashboards, and the Allergen Introduction card became the Info tab's first analytics surface. Graphify gave the codebase itself a queryable map.",
+  could:"answer \"can I give her this?\" from one cited, age-aware spine — every food surface agreeing — while tracking where she stands in the allergen-introduction sequence.",
+  key:[[181,"P0 sync ship-gate"],[184,"FOOD_EFFECTS v2"],[186,"Graphify pilot"],[197,"R1: combo checker"],[203,"Allergen analytics card"],[208,"Phase δ wired"]]},
+ {id:"e8", lo:209, hi:249, color:"#b5d5c5", name:"The Nutrition Province & the Front Door",
+  story:"The food half became a province of its own. Milk, fish and the choking set joined the spine; the Library was rebuilt as living shelves with six-second food cards; Recipes arrived as the Diet tab's fourth sub-tab with a cited 6–12-month corpus. The app got a calm front door — the lean landing — and behind it the General Emergency Room with flip cards. Governance kept pace: Ceres was seated as fourth Governor at the care→nourishment boundary, the Province took self-governance over its Companion specs, and Ziva's birth sky was rendered as a keepsake.",
+  could:"feed her with confidence — recipes, shelves, emergency cards and preference-aware guidance under a Governor of Nutrition — behind a front door calm enough for 2 AM.",
+  key:[[213,"Choking-by-form"],[216,"Library shelves"],[219,"Lean landing"],[223,"Recipes tab"],[235,"Emergency Room v2"],[244,"Ziva's First Sky"],[245,"Ceres seated"]]}
+];
+
+// ── Milestone flags on the river (x = the PR's date) ──
+const FLAGS = [
+ [1,"Province seated"],[23,"Polish charter"],[62,"Stable IDs"],[74,"Emoji purge"],
+ [83,"intelligence split"],[90,"Home redesign"],[102,"QA gate"],[120,"build-safe.sh"],
+ [129,"v3.0 charter"],[159,"Milestones tab"],[165,"Food sub-tab"],[184,"FOOD_EFFECTS v2"],
+ [223,"Recipes tab"],[235,"Emergency Room"],[245,"Ceres seated"]
+];
+
+// ── helpers ──
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const byNum = new Map(PR_DATA.map(p=>[p.number,p]));
+const D0 = new Date(PR_DATA.reduce((a,p)=>p.date<a?p.date:a, PR_DATA[0].date));
+const D1 = new Date(PR_DATA.reduce((a,p)=>p.date>a?p.date:a, PR_DATA[0].date));
+const NDAYS = Math.round((D1-D0)/86400000)+1;
+const dayIdx = iso => Math.round((new Date(iso)-D0)/86400000);
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = iso => { const [y,m,d]=iso.split('-').map(Number); return `${d} ${MON[m-1]}`; };
+const eraPRs = e => PR_DATA.filter(p=>p.number>=e.lo&&p.number<=e.hi);
+
+// ── stats ──
+(function(){
+  const dates=PR_DATA.map(p=>p.date).sort();
+  const span=Math.round((new Date(dates[dates.length-1])-new Date(dates[0]))/86400000)+1;
+  const feats=PR_DATA.filter(p=>p.kind==="feature").length;
+  const fixes=PR_DATA.filter(p=>p.kind==="fix").length;
+  const peak=Object.entries(PR_DATA.reduce((m,p)=>(m[p.date]=(m[p.date]||0)+1,m),{})).sort((a,b)=>b[1]-a[1])[0];
+  const items=[[String(PR_DATA.length),"PRs"],[String(span),"days"],[String(ERAS.length),"eras"],
+    [String(feats),"features"],[String(fixes),"fixes"],[String(peak[1]),`peak day (${fmt(peak[0])})`]];
+  document.getElementById("stats").innerHTML =
+    items.map(([n,l])=>`<div class="stat"><div class="num">${n}</div><div class="lbl">${esc(l)}</div></div>`).join("");
+})();
+
+// ── the river ──
+(function(){
+  const W=1140, ML=34, MR=10, plotW=W-ML-MR;
+  const dayW=plotW/NDAYS, R=Math.min(4,dayW*0.38), step=R*2+1.4;
+  const perDay={};
+  let maxStack=1;
+  for(const p of PR_DATA){ (perDay[p.date]=perDay[p.date]||[]).push(p); }
+  for(const d in perDay){ perDay[d].sort((a,b)=>a.number-b.number); maxStack=Math.max(maxStack,perDay[d].length); }
+  const FLAGROWS=4, flagH=16, topPad=FLAGROWS*flagH+14;
+  const dotsH=maxStack*step+8;
+  const baseY=topPad+dotsH;          // baseline of the dot stacks
+  const bandY=baseY+8, bandH=16, axisY=bandY+bandH+16;
+  const H=axisY+8;
+  const x=i=>ML+i*dayW+dayW/2;
+  let svg="";
+
+  // era bands (start at the era's first PR date; end where the next era starts)
+  const starts=ERAS.map(e=>dayIdx(eraPRs(e).map(p=>p.date).sort()[0]));
+  for(let i=0;i<ERAS.length;i++){
+    const e=ERAS[i];
+    const x0=ML+starts[i]*dayW;
+    const x1=i+1<ERAS.length ? ML+starts[i+1]*dayW : ML+plotW;
+    svg+=`<rect class="eraband" data-era="${e.id}" x="${x0.toFixed(1)}" y="${bandY}" width="${(x1-x0).toFixed(1)}" height="${bandH}" rx="5" fill="${e.color}"><title>${esc(e.name)} (#${e.lo}–#${e.hi}) — click for the chapter</title></rect>`;
+    if(x1-x0>46) svg+=`<text x="${((x0+x1)/2).toFixed(1)}" y="${bandY+bandH-4}" text-anchor="middle" font-size="9.5" fill="#3d3833">${esc(e.id.toUpperCase())}</text>`;
+  }
+
+  // axis ticks: every 7th day
+  for(let i=0;i<NDAYS;i+=7){
+    const iso=new Date(D0.getTime()+i*86400000).toISOString().slice(0,10);
+    svg+=`<line x1="${x(i)}" y1="${baseY+2}" x2="${x(i)}" y2="${baseY+6}" stroke="#c9c1b4"/>`;
+    svg+=`<text x="${x(i)}" y="${axisY}" text-anchor="middle" font-size="10" fill="#6b635a">${fmt(iso)}</text>`;
+  }
+
+  // dots
+  for(const d in perDay){
+    const i=dayIdx(d);
+    perDay[d].forEach((p,j)=>{
+      const cy=baseY-6-j*step;
+      const col=TOP_COLORS[p.category.split(" / ")[0]]||"#ccc";
+      svg+=`<circle cx="${x(i).toFixed(1)}" cy="${cy.toFixed(1)}" r="${R}" fill="${col}" stroke="#faf7f2" stroke-width="0.8" data-pr="${p.number}"><title>#${p.number} ${esc(p.title)}${p.merged===false?" (unmerged)":""}</title></circle>`;
+    });
+  }
+
+  // milestone flags — greedy row placement so neighbouring labels never collide
+  const rowEnd=Array(FLAGROWS).fill(-1e9);
+  FLAGS.forEach(([n,label])=>{
+    const p=byNum.get(n); if(!p) return;
+    const i=dayIdx(p.date), fx=x(i);
+    const wEst=(label.length+String(n).length+2)*6.4+10;
+    const anchor = fx>W-90 ? "end" : (fx<90 ? "start" : "middle");
+    const x0 = anchor==="middle" ? fx-wEst/2 : (anchor==="end" ? fx-wEst : fx);
+    let row=rowEnd.findIndex(e=>e<x0-14);
+    if(row<0) row=rowEnd.indexOf(Math.min(...rowEnd));
+    rowEnd[row]=x0+wEst;
+    const ty=8+row*flagH;
+    const stack=(perDay[p.date]||[]).length;
+    const dotTop=baseY-6-(stack-1)*step-R;
+    svg+=`<line x1="${fx.toFixed(1)}" y1="${ty+4}" x2="${fx.toFixed(1)}" y2="${dotTop.toFixed(1)}" stroke="#c9c1b4" stroke-dasharray="2,3"/>`;
+    svg+=`<text x="${fx.toFixed(1)}" y="${ty}" text-anchor="${anchor}" font-size="10" fill="#3d3833" font-weight="600">${esc(label)} <tspan fill="#6b635a" font-weight="400">#${n}</tspan></text>`;
+  });
+
+  const el=document.getElementById("timeline");
+  el.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  el.innerHTML=svg;
+  el.querySelectorAll("[data-pr]").forEach(c=>c.addEventListener("click",()=>window.open(REPO+c.dataset.pr,"_blank","noopener")));
+  el.querySelectorAll("[data-era]").forEach(b=>b.addEventListener("click",()=>{
+    const card=document.getElementById(b.dataset.era);
+    if(!card) return;
+    document.querySelectorAll(".era.lit").forEach(x=>x.classList.remove("lit"));
+    card.classList.add("lit");
+    card.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  document.getElementById("legend").innerHTML = Object.entries(TOP_COLORS).map(([n,c])=>
+    `<span class="key"><span class="sw" style="background:${c}"></span>${n}</span>`).join("");
+})();
+
+// ── the chapters ──
+(function(){
+  let html="";
+  ERAS.forEach((e,i)=>{
+    const prs=eraPRs(e);
+    const dates=prs.map(p=>p.date).sort();
+    const cats={};
+    for(const p of prs) cats[p.category]=(cats[p.category]||0)+1;
+    const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const maxN=top.length?top[0][1]:1;
+    const bars=top.map(([c,n])=>{
+      const col=TOP_COLORS[c.split(" / ")[0]]||"#ccc";
+      return `<div class="bar"><span>${esc(c)}</span><span class="track"><span class="fill" style="width:${(100*n/maxN).toFixed(0)}%;background:${col}"></span></span><span>${n}</span></div>`;
+    }).join("");
+    const keys=e.key.map(([n,l])=>{
+      const p=byNum.get(n);
+      return `<a class="kpr" href="${REPO}${n}" target="_blank" rel="noopener" title="${p?esc(p.title):""}"><span class="n">#${n}</span>${esc(l)}</a>`;
+    }).join("");
+    html+=`<div class="era" id="${e.id}" style="border-left-color:${e.color}">
+      <div class="ehead"><span class="enum">Era ${i+1} · #${e.lo}–#${e.hi}</span><h3>${esc(e.name)}</h3>
+        <span class="emeta">${fmt(dates[0])} → ${fmt(dates[dates.length-1])} ${dates[dates.length-1].slice(0,4)} · ${prs.length} PRs</span></div>
+      <p class="story">${esc(e.story)}</p>
+      <p class="could"><b>By the end of this era, the app could</b> ${esc(e.could)}</p>
+      <div class="bars">${bars}</div>
+      <div class="keyprs">${keys}</div>
+    </div>`;
+  });
+  document.getElementById("chapters").innerHTML=html;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SproutLab — PR Tree Dashboard (__RANGE__)</title>
+<style>
+:root{
+  --sage:#b5d5c5; --rose:#f2a8b8; --amber:#e8b86d; --lavender:#c9b8e8;
+  --sky:#a8cfe0; --indigo:#9ba8d8; --peach:#fad4b4;
+  --ink:#3d3833; --ink-soft:#6b635a; --paper:#faf7f2; --card:#ffffff;
+  --line:#e8e1d6; --shadow:0 2px 10px rgba(61,56,51,.08);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+header h1{font-family:var(--serif);font-weight:600;font-size:30px;margin:0 0 4px}
+header .sub{color:var(--ink-soft);font-size:14px;margin:0 0 14px}
+.banner{background:#fdf3e3;border:1px solid #f0ddb8;border-radius:10px;padding:10px 14px;font-size:13px;color:#7a5c1e;margin-bottom:22px}
+.banner b{font-weight:700}
+.banner code{font-family:var(--mono);font-size:12px}
+
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);min-width:110px}
+.stat .num{font-family:var(--serif);font-size:24px;font-weight:600}
+.stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+.controls input[type=search]{flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);font:inherit;font-size:14px;outline:none}
+.controls input[type=search]:focus{border-color:var(--indigo)}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink-soft);user-select:none}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip .ct{opacity:.65;font-size:11px;margin-left:4px}
+.clearbtn{font-size:12.5px;color:var(--ink-soft);background:none;border:none;cursor:pointer;text-decoration:underline}
+
+.layout{display:grid;grid-template-columns:460px 1fr;gap:26px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.panel h2{font-family:var(--serif);font-size:18px;font-weight:600;margin:0 0 10px}
+.panel .hint{font-size:12px;color:var(--ink-soft);margin:0 0 8px}
+.sticky{position:sticky;top:14px}
+@media(max-width:900px){.sticky{position:static}}
+
+#sunburst{width:100%;height:auto;display:block}
+#sunburst path{cursor:pointer;transition:opacity .15s}
+#sunburst path.dim{opacity:.18}
+#sunburst text{pointer-events:none;font-family:var(--sans)}
+.centerlabel{font-family:var(--serif)}
+.crumb{font-size:13px;color:var(--ink-soft);min-height:20px;margin-top:8px}
+.crumb b{color:var(--ink)}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.legend .key{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+.tree .branch{margin-bottom:6px}
+.bhead{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none}
+.bhead:hover{background:var(--paper)}
+.bhead .tw{width:14px;color:var(--ink-soft);font-size:11px;transition:transform .15s;display:inline-block}
+.branch.open>.bhead .tw{transform:rotate(90deg)}
+.bhead .sw{width:12px;height:12px;border-radius:4px;flex:none}
+.bhead .bname{font-family:var(--serif);font-weight:600;font-size:15.5px}
+.bhead .bname.l2{font-size:14px;font-weight:600}
+.bhead .bct{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.bkids{display:none;margin-left:20px;border-left:2px solid var(--line);padding-left:12px}
+.branch.open>.bkids{display:block}
+
+.pr{border:1px solid var(--line);border-radius:12px;margin:7px 0;background:var(--card);overflow:hidden}
+.pr.hidden{display:none}
+.pr.unmerged{opacity:.75}
+.prhead{display:flex;align-items:baseline;gap:8px;padding:9px 12px;cursor:pointer}
+.prhead:hover{background:var(--paper)}
+.prnum{font-family:var(--mono);font-size:12px;color:var(--ink-soft);flex:none}
+.prtitle{font-size:13.5px;font-weight:600;flex:1}
+.prkind{flex:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:2px 8px;color:#5c5346;background:var(--paper);border:1px solid var(--line)}
+.prunm{flex:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:2px 8px;color:#9a4a5e;background:#fdeef1;border:1px solid #f4d3da}
+.prdate{flex:none;font-size:11.5px;color:var(--ink-soft)}
+.prbody{display:none;padding:4px 14px 12px;border-top:1px dashed var(--line);font-size:13px}
+.pr.open .prbody{display:block}
+.prbody dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin-top:9px}
+.prbody dd{margin:2px 0 0}
+.prlink{display:inline-block;margin-top:10px;font-size:12.5px;color:#5a6db8;text-decoration:none}
+.prlink:hover{text-decoration:underline}
+.k-feature{background:#e9f3ee;border-color:#cfe4d9}
+.k-fix{background:#fdeef1;border-color:#f4d3da}
+.k-docs{background:#fdf3e3;border-color:#f0ddb8}
+.k-build{background:#e9f2f7;border-color:#cfe2ec}
+.k-governance{background:#f1ecfa;border-color:#ddd2ef}
+.k-research{background:#fdf0e4;border-color:#f3dcc4}
+.k-design-spec{background:#fdf0e4;border-color:#f3dcc4}
+.k-lore{background:#eceffa;border-color:#d4daf0}
+
+footer{margin-top:34px;font-size:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Every Thread So Far</h1>
+  <p class="sub">__SUBTITLE__</p>
+  <div class="banner"><b>Auto-generated VIEW — do not hand-edit.</b> Rendered each build by <code>split/build-pr-dashboard.mjs</code> from <code>docs/pr-dashboard-data.json</code> (the source of truth). Data curated through PR __THROUGH__; records are appended in batches every 10 merged PRs (the build warns when the lag hits the cadence).</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="controls">
+  <input type="search" id="q" placeholder="Search titles, summaries, PR numbers…">
+  <span id="kindchips"></span>
+  <button class="clearbtn" id="clear">reset</button>
+</div>
+
+<div class="layout">
+  <div class="panel sticky">
+    <h2>The rings</h2>
+    <p class="hint">Inner ring: arc of work · outer ring: one segment per PR. Click a wedge to focus the tree; click the center to reset.</p>
+    <svg id="sunburst" viewBox="0 0 420 420"></svg>
+    <div class="crumb" id="crumb"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <h2>The tree</h2>
+    <p class="hint">Click a branch to unfold it; click a PR for what it was, what it achieved, and what it solved.</p>
+    <div class="tree" id="tree"></div>
+  </div>
+</div>
+
+<footer>Generated __GENERATED__ from the PR record of rishabh1804/sproutlab. Branch colors follow the SproutLab domain palette (sage · rose · amber · lavender · sky · indigo · peach).</footer>
+</div>
+
+<script>
+const PR_DATA = __PR_DATA__;
+
+const REPO = "https://github.com/rishabh1804/sproutlab/pull/";
+const TOTAL = PR_DATA.length;
+
+const TOP_COLORS = {
+  "Product":"#b5d5c5", "Platform":"#a8cfe0", "Governance":"#c9b8e8",
+  "Records":"#e8b86d", "Lore":"#9ba8d8"
+};
+const CAT_COLORS = {
+  "Product / Diet & Nutrition / Food-Effects v2":"#9cc7b2",
+  "Product / Diet & Nutrition / Recipes":"#b5d5c5",
+  "Product / Diet & Nutrition / Library":"#cde3d8",
+  "Product / Diet & Nutrition / Allergen Analytics":"#86b89f",
+  "Product / Diet & Nutrition / Food Sub-Tab & Logging":"#a3cebb",
+  "Product / Diet & Nutrition / Food DB & Chemistry":"#c2dcc9",
+  "Product / Landing & Emergency":"#f2a8b8",
+  "Product / Care Research Hub":"#fad4b4",
+  "Product / Symptom Checker":"#eb98ab",
+  "Product / Vitamin D3 Tracking":"#f5c98e",
+  "Product / Medical & Care":"#f7bcc8",
+  "Product / Milestones & Memories":"#c9b8e8",
+  "Product / Sleep":"#9ec6db",
+  "Product / Home & Today":"#f8c9a0",
+  "Product / Intelligence & Scoring":"#b4a6dd",
+  "Product / Sync, PWA & Offline":"#8fb8cf",
+  "Platform / Build & Doc Tooling":"#a8cfe0",
+  "Platform / Companion Skills & Agents":"#c2dcea",
+  "Platform / Testing & QA Infra":"#93bed8",
+  "Platform / HR Compliance & Polish":"#7fb0c9",
+  "Governance / Canon & Province":"#c9b8e8",
+  "Records / Session Close & Doc Refresh":"#e8b86d",
+  "Records / Design System Docs":"#f0d09a",
+  "Records / Chronicles & Tree Updates":"#d9a85c",
+  "Lore / Keepsake":"#9ba8d8"
+};
+const KINDS = ["feature","fix","docs","build","governance","research","design-spec","lore"];
+
+// ---------- build tree ----------
+function buildTree(data){
+  const root = {name:"All PRs", depth:0, children:new Map(), prs:[], path:""};
+  for(const pr of data){
+    const parts = pr.category.split(" / ");
+    let node = root;
+    let path = "";
+    for(const part of parts){
+      path = path ? path + " / " + part : part;
+      if(!node.children.has(part)){
+        node.children.set(part, {name:part, depth:node.depth+1, children:new Map(), prs:[], path});
+      }
+      node = node.children.get(part);
+    }
+    node.prs.push(pr);
+  }
+  return root;
+}
+function countPRs(node){
+  let n = node.prs.length;
+  for(const c of node.children.values()) n += countPRs(c);
+  node.count = n;
+  return n;
+}
+function leafNodes(node, out=[]){
+  if(node.children.size===0){ out.push(node); return out; }
+  for(const c of [...node.children.values()].sort((a,b)=>b.count-a.count)) leafNodes(c, out);
+  return out;
+}
+const ROOT = buildTree(PR_DATA);
+countPRs(ROOT);
+const sortedChildren = (node) => [...node.children.values()].sort((a,b)=>b.count-a.count);
+
+// ---------- state ----------
+let focusPath = "";          // category-path prefix filter from sunburst clicks
+let kindFilter = new Set();  // active kind chips
+let query = "";
+
+function prVisible(pr){
+  if(focusPath && !pr.category.startsWith(focusPath)) return false;
+  if(kindFilter.size && !kindFilter.has(pr.kind)) return false;
+  if(query){
+    const hay = (pr.number + " " + pr.title + " " + pr.what + " " + pr.achieved + " " + pr.solved + " " + pr.category).toLowerCase();
+    if(!hay.includes(query)) return false;
+  }
+  return true;
+}
+
+// ---------- stats ----------
+function renderStats(){
+  const el = document.getElementById("stats");
+  const counts = {};
+  for(const pr of PR_DATA) counts[pr.kind]=(counts[pr.kind]||0)+1;
+  const dates = PR_DATA.map(p=>p.date).sort();
+  const spanDays = Math.round((new Date(dates[dates.length-1]) - new Date(dates[0]))/86400000)+1;
+  const dietCount = PR_DATA.filter(p=>p.category.startsWith("Product / Diet")).length;
+  const items = [
+    [String(TOTAL),"PRs"],
+    [String(spanDays),"days of work"],
+    [String(dietCount),"diet & nutrition"],
+    [String(counts.feature||0),"features"],
+    [String(counts.fix||0),"fixes"],
+    [String((counts.docs||0)+(counts["design-spec"]||0)),"docs & specs"],
+    [String(counts.governance||0),"governance"],
+  ];
+  el.innerHTML = items.map(([n,l])=>`<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join("");
+}
+
+// ---------- kind chips ----------
+function renderChips(){
+  const counts = {};
+  for(const pr of PR_DATA) counts[pr.kind]=(counts[pr.kind]||0)+1;
+  const el = document.getElementById("kindchips");
+  el.innerHTML = KINDS.filter(k=>counts[k]).map(k=>
+    `<button class="chip${kindFilter.has(k)?" on":""}" data-kind="${k}">${k}<span class="ct">${counts[k]}</span></button>`
+  ).join(" ");
+  el.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+    const k=c.dataset.kind;
+    kindFilter.has(k)?kindFilter.delete(k):kindFilter.add(k);
+    refresh();
+  }));
+}
+
+// ---------- sunburst ----------
+const CX=210, CY=210, R0=52, RING=[ [56,108], [112,164], [168,204] ];
+function arcPath(a0,a1,r0,r1){
+  const large = (a1-a0) > Math.PI ? 1 : 0;
+  const x0o=CX+r1*Math.cos(a0), y0o=CY+r1*Math.sin(a0);
+  const x1o=CX+r1*Math.cos(a1), y1o=CY+r1*Math.sin(a1);
+  const x1i=CX+r0*Math.cos(a1), y1i=CY+r0*Math.sin(a1);
+  const x0i=CX+r0*Math.cos(a0), y0i=CY+r0*Math.sin(a0);
+  return `M${x0o},${y0o} A${r1},${r1} 0 ${large} 1 ${x1o},${y1o} L${x1i},${y1i} A${r0},${r0} 0 ${large} 0 ${x0i},${y0i} Z`;
+}
+function shade(hex, f){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.round(r+(255-r)*f); g=Math.round(g+(255-g)*f); b=Math.round(b+(255-b)*f);
+  return `rgb(${r},${g},${b})`;
+}
+function renderSunburst(){
+  const svg = document.getElementById("sunburst");
+  let segs = [];
+  const total = ROOT.count;
+  let a = -Math.PI/2;
+  const SPAN = Math.PI*2;
+  const GAP = Math.min(0.004, SPAN/total/6);
+  // ring 1: top-level; ring 2: leaf categories; ring 3: PRs
+  for(const topNode of sortedChildren(ROOT)){
+    const topName = topNode.name;
+    const a0=a, a1=a + SPAN*topNode.count/total;
+    segs.push({path:arcPath(a0,a1,RING[0][0],RING[0][1]), fill:TOP_COLORS[topName]||"#ccc",
+               sel:topNode.path, label:topName, ring:0, a0,a1});
+    let b = a0;
+    for(const leaf of leafNodes(topNode)){
+      const b0=b, b1=b + SPAN*leaf.count/total;
+      segs.push({path:arcPath(b0,b1,RING[1][0],RING[1][1]), fill:CAT_COLORS[leaf.path]||"#ddd",
+                 sel:leaf.path, label:leaf.name, ring:1, a0:b0,a1:b1});
+      let c = b0;
+      const prs = leaf.prs.slice().sort((x,y)=>x.number-y.number);
+      for(const pr of prs){
+        const c0=c, c1=c + SPAN/total;
+        segs.push({path:arcPath(c0+GAP,c1-GAP,RING[2][0],RING[2][1]),
+                   fill:shade(CAT_COLORS[leaf.path]||"#ddd", pr.merged===false ? 0.65 : 0.35),
+                   sel:leaf.path, pr, ring:2, a0:c0,a1:c1});
+        c = c1;
+      }
+      b = b1;
+    }
+    a = a1;
+  }
+  let out = "";
+  for(const s of segs){
+    const dim = s.pr ? !prVisible(s.pr) : (focusPath && !(s.sel.startsWith(focusPath)||focusPath.startsWith(s.sel)));
+    const tip = s.pr ? `#${s.pr.number} ${esc(s.pr.title)}${s.pr.merged===false?" (unmerged)":""}` : `${esc(s.sel)} — click to focus`;
+    out += `<path d="${s.path}" fill="${s.fill}" class="${dim?"dim":""}" data-sel="${esc(s.sel)}" ${s.pr?`data-pr="${s.pr.number}"`:""} stroke="#faf7f2" stroke-width="1"><title>${tip}</title></path>`;
+  }
+  const visCount = PR_DATA.filter(prVisible).length;
+  out += `<circle cx="${CX}" cy="${CY}" r="${R0}" fill="#fff" stroke="#e8e1d6" data-center="1" style="cursor:pointer"><title>Reset focus</title></circle>`;
+  out += `<text x="${CX}" y="${CY-4}" text-anchor="middle" class="centerlabel" font-size="26" font-weight="600" fill="#3d3833">${visCount}</text>`;
+  out += `<text x="${CX}" y="${CY+15}" text-anchor="middle" font-size="10.5" fill="#6b635a">of ${TOTAL} PRs</text>`;
+  svg.innerHTML = out;
+  svg.querySelectorAll("path").forEach(p=>p.addEventListener("click",()=>{
+    if(p.dataset.pr){ openPR(+p.dataset.pr); return; }
+    focusPath = (focusPath===p.dataset.sel) ? "" : p.dataset.sel;
+    refresh();
+  }));
+  svg.querySelector("[data-center]").addEventListener("click",()=>{ focusPath=""; refresh(); });
+  document.getElementById("crumb").innerHTML = focusPath
+    ? `Focused on <b>${esc(focusPath)}</b> — ${visCount} PR${visCount===1?"":"s"}`
+    : `Showing ${visCount} of ${TOTAL} PRs`;
+}
+function renderLegend(){
+  document.getElementById("legend").innerHTML = Object.entries(TOP_COLORS).map(([n,c])=>
+    `<span class="key"><span class="sw" style="background:${c}"></span>${n}</span>`).join("");
+}
+
+// ---------- tree ----------
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function prCard(pr){
+  const unm = pr.merged===false;
+  return `<div class="pr${unm?" unmerged":""}" data-num="${pr.number}">
+    <div class="prhead">
+      <span class="prnum">#${pr.number}</span>
+      <span class="prtitle">${esc(pr.title)}</span>
+      ${unm?`<span class="prunm">unmerged</span>`:""}
+      <span class="prkind k-${pr.kind}">${pr.kind}</span>
+      <span class="prdate">${pr.date}</span>
+    </div>
+    <dl class="prbody">
+      <dt>What it was</dt><dd>${esc(pr.what)}</dd>
+      <dt>What it ${unm?"attempted":"achieved"}</dt><dd>${esc(pr.achieved)}</dd>
+      <dt>What it solved</dt><dd>${esc(pr.solved)}</dd>
+      <a class="prlink" href="${REPO}${pr.number}" target="_blank" rel="noopener">View PR #${pr.number} on GitHub →</a>
+    </dl>
+  </div>`;
+}
+function branchHTML(node){
+  const color = node.depth===1 ? (TOP_COLORS[node.name]||"#ccc") : (CAT_COLORS[node.path]||"#ddd");
+  let kids = "";
+  for(const c of sortedChildren(node)) kids += branchHTML(c);
+  const prs = node.prs.slice().sort((a,b)=>b.number-a.number);
+  for(const pr of prs) kids += prCard(pr);
+  return `<div class="branch" data-path="${esc(node.path)}">
+    <div class="bhead"><span class="tw">▶</span><span class="sw" style="background:${color}"></span>
+      <span class="bname ${node.depth>1?"l2":""}">${esc(node.name)}</span>
+      <span class="bct" data-bct>${node.count}</span></div>
+    <div class="bkids">${kids}</div>
+  </div>`;
+}
+function renderTree(){
+  let html = "";
+  for(const c of sortedChildren(ROOT)) html += branchHTML(c);
+  const el = document.getElementById("tree");
+  el.innerHTML = html;
+  el.querySelectorAll(".bhead").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("open")));
+  el.querySelectorAll(".prhead").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("open")));
+}
+function applyTreeFilter(){
+  const el = document.getElementById("tree");
+  const visByNum = {};
+  for(const pr of PR_DATA) visByNum[pr.number]=prVisible(pr);
+  el.querySelectorAll(".pr").forEach(p=>p.classList.toggle("hidden", !visByNum[+p.dataset.num]));
+  el.querySelectorAll(".branch").forEach(b=>{
+    const vis = [...b.querySelectorAll(".pr")].filter(p=>!p.classList.contains("hidden")).length;
+    b.style.display = vis ? "" : "none";
+    b.querySelector("[data-bct]").textContent = vis;
+    if((focusPath || kindFilter.size || query) && vis) b.classList.add("open");
+  });
+  if(!focusPath && !kindFilter.size && !query)
+    el.querySelectorAll(".branch").forEach(b=>b.classList.remove("open"));
+}
+function openPR(num){
+  focusPath=""; refresh();
+  const card = document.querySelector(`.pr[data-num="${num}"]`);
+  if(!card) return;
+  let b = card.closest(".branch");
+  while(b){ b.classList.add("open"); b = b.parentElement.closest(".branch"); }
+  card.classList.add("open");
+  card.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+// ---------- wiring ----------
+function refresh(){ renderSunburst(); renderChips(); applyTreeFilter(); }
+document.getElementById("q").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); refresh(); });
+document.getElementById("clear").addEventListener("click",()=>{
+  focusPath=""; kindFilter.clear(); query=""; document.getElementById("q").value=""; refresh();
+});
+renderStats(); renderLegend(); renderTree(); refresh();
+</script>
+</body>
+</html>

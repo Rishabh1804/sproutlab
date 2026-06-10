@@ -103,6 +103,44 @@ else
   echo "SKIP_GRAPH=1 — graph + Province Map not regenerated this build." >&2
 fi
 
+# ── PR Tree Dashboard regeneration ──
+# Renders docs/PR_TREE_DASHBOARD.html from the curated PR record corpus
+# (docs/pr-dashboard-data.json) + template (split/pr-dashboard-template.html).
+# Same doctrine as the Province Map: the .html is a regenerated VIEW that
+# cannot drift from its committed source; strictly NON-FATAL; STDERR only,
+# after the HTML build is closed to $OUT (PR #118 lesson). The data file is
+# curated, not scraped — append new PR records when PRs merge, then rebuild.
+if command -v node >/dev/null 2>&1; then
+  node "$ROOT/split/build-pr-dashboard.mjs" 1>&2 \
+    || echo "PR dashboard generation failed (non-fatal); docs/PR_TREE_DASHBOARD.html may be stale." >&2
+  node "$ROOT/split/build-app-evolution.mjs" 1>&2 \
+    || echo "App-evolution generation failed (non-fatal); docs/APP_EVOLUTION.html may be stale." >&2
+else
+  echo "PR dashboard + app-evolution skipped (node not found; non-fatal)." >&2
+fi
+
+# ── PR-views curation cadence (advisory, 10-PR threshold) ──
+# The data file is curated by hand (the build is offline), so it can lag the
+# repo. Policy: records are appended in BATCHES on a 10-PR cadence — a lag
+# under 10 is normal slack; at 10+ this check gets loud. The latest merged PR
+# is read from the git merge-commit record ("Merge pull request #N"), the
+# curation high-water mark from the data file. Strictly NON-FATAL + STDERR.
+if command -v git >/dev/null 2>&1 && [ -f "$ROOT/docs/pr-dashboard-data.json" ]; then
+  LATEST_PR="$(git -C "$ROOT" log --pretty=%s -500 2>/dev/null \
+    | grep -oE '^Merge pull request #[0-9]+' | grep -oE '[0-9]+' | sort -n | tail -1 || true)"
+  DATA_PR="$(grep -oE '"number": ?[0-9]+' "$ROOT/docs/pr-dashboard-data.json" \
+    | grep -oE '[0-9]+' | sort -n | tail -1 || true)"
+  if [ -n "$LATEST_PR" ] && [ -n "$DATA_PR" ] && [ "$LATEST_PR" -gt "$DATA_PR" ]; then
+    LAG=$((LATEST_PR - DATA_PR))
+    if [ "$LAG" -ge 10 ]; then
+      echo "PR-VIEWS CADENCE DUE: pr-dashboard-data.json curated through #$DATA_PR but the repo has merged #$LATEST_PR (lag $LAG >= 10)." >&2
+      echo "  Run the curation ritual: append the missing PR records to docs/pr-dashboard-data.json (and extend the era chapters in split/app-evolution-template.html), then rebuild." >&2
+    else
+      echo "PR-views data lag: $LAG PR(s) behind #$LATEST_PR (cadence threshold 10; within slack)." >&2
+    fi
+  fi
+fi
+
 # ── WCAG contrast audit (advisory) ──
 # Reads the colour tokens out of styles.css and reports text-on-background
 # contrast for the light/dark/print-from-dark contexts. Strictly NON-FATAL and
