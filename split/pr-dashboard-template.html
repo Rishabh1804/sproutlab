@@ -102,7 +102,7 @@ footer{margin-top:34px;font-size:12px;color:var(--ink-soft)}
 <header>
   <h1>Every Thread So Far</h1>
   <p class="sub">__SUBTITLE__</p>
-  <div class="banner"><b>Auto-generated VIEW — do not hand-edit.</b> Rendered each build by <code>split/build-pr-dashboard.mjs</code> from <code>docs/pr-dashboard-data.json</code> (the source of truth). Data curated through PR __THROUGH__; when new PRs merge, append their records to the data file and rebuild.</div>
+  <div class="banner"><b>Auto-generated VIEW — do not hand-edit.</b> Rendered each build by <code>split/build-pr-dashboard.mjs</code> from <code>docs/pr-dashboard-data.json</code> (the source of truth). Data curated through PR __THROUGH__; records are appended in batches every 10 merged PRs (the build warns when the lag hits the cadence).</div>
 </header>
 
 <div class="stats" id="stats"></div>
