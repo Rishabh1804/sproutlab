@@ -935,10 +935,14 @@ function _qlComputeMealWindow() {
     if (dateStr < cutoffStr) return;
     var day = feedingData[dateStr];
     ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
-      if (!day[meal] || !day[meal].trim()) return;
-      var tKey = meal + '_time';
-      if (day[tKey]) {
-        var parts = day[tKey].split(':');
+      // L-3 fold (Q2) — read via _fdReadDayMeal so the SKIPPED_MEAL sentinel
+      // is NOT counted as slot signal (it would skew the adaptive windows
+      // that now pick which of four mounted composers shows the prefill).
+      var rec = window._fdReadDayMeal(day, meal);
+      if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
+      var t = rec.time || day[meal + '_time'];
+      if (t) {
+        var parts = t.split(':');
         var mins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
         if (!isNaN(mins)) mealTimes[meal].push(mins);
       }
@@ -990,10 +994,15 @@ function _qlPredictFood(meal) {
   Object.keys(feedingData).forEach(function(dateStr) {
     if (dateStr < cutoffStr || dateStr > todayStr) return;
     var day = feedingData[dateStr];
-    if (!day[meal] || !day[meal].trim()) return;
+    // L-3 fold (item 1) — read via _fdReadDayMeal: the SKIPPED_MEAL sentinel
+    // is truthy and would comma-split into a phantom "food"; an object-shaped
+    // value would throw on .trim(). The reader drops skipped days and returns
+    // canonical items.
+    var rec = window._fdReadDayMeal(day, meal);
+    if (!rec || rec.skipped || !rec.items || rec.items.length === 0) return;
     dayCount++;
-    day[meal].split(',').forEach(function(item) {
-      var name = item.trim();
+    rec.items.forEach(function(item) {
+      var name = String(item.name || '').trim();
       if (name.length < 2) return;
       var base = _baseFoodName(name);
       if (!counts[base]) counts[base] = { name: name, freq: 0 };
@@ -1006,10 +1015,11 @@ function _qlPredictFood(meal) {
   // Exclude foods already served today for this meal
   var todayDay = feedingData[todayStr];
   var todayFoods = new Set();
-  if (todayDay && todayDay[meal]) {
-    todayDay[meal].split(',').forEach(function(item) {
-      todayFoods.add(_baseFoodName(item.trim()));
-    });
+  if (todayDay) {
+    var todayRec = window._fdReadDayMeal(todayDay, meal);
+    if (todayRec && !todayRec.skipped && todayRec.items) {
+      todayRec.items.forEach(function(item) { todayFoods.add(_baseFoodName(String(item.name || '').trim())); });
+    }
   }
 
   var scored = Object.keys(counts).filter(function(base) {
@@ -1552,7 +1562,12 @@ function _qlFeedInsight(foodArg) {
     var todayStr = today();
     var day = feedingData[todayStr];
     if (!day) return null;
-    var mealCount = ['breakfast', 'lunch', 'dinner'].filter(function(m) { return day[m] && day[m].trim(); }).length;
+    // L-3 fold (Q2) \u2014 read via _fdReadDayMeal so SKIPPED_MEAL is not counted
+    // as a logged meal in the variety tally.
+    var mealCount = ['breakfast', 'lunch', 'dinner'].filter(function(m) {
+      var r = window._fdReadDayMeal(day, m);
+      return r && !r.skipped && r.items && r.items.length > 0;
+    }).length;
     if (mealCount >= 3) return '3rd meal today \u2014 great variety!';
 
     // F-2 fix (C3/E_e): saveQLFeed now clears qlFeedInput AFTER folding
@@ -1567,9 +1582,14 @@ function _qlFeedInsight(foodArg) {
 
       var yestStr = toDateStr(new Date(new Date().setDate(new Date().getDate() - 1)));
       var yest = feedingData[yestStr];
-      if (yest && yest[_qlMeal]) {
-        var yestBases = yest[_qlMeal].split(',').map(function(f) { return _baseFoodName(f.trim()); });
-        if (yestBases.indexOf(base) >= 0) return 'Same as yesterday \u2014 must be a favorite!';
+      if (yest) {
+        // L-3 fold (Q2) \u2014 _fdReadDayMeal: skipped yesterday drops out; items
+        // come back canonical (no comma-split on the sentinel).
+        var yRec = window._fdReadDayMeal(yest, _qlMeal);
+        if (yRec && !yRec.skipped && yRec.items && yRec.items.length) {
+          var yestBases = yRec.items.map(function(it) { return _baseFoodName(String(it.name || '').trim()); });
+          if (yestBases.indexOf(base) >= 0) return 'Same as yesterday \u2014 must be a favorite!';
+        }
       }
     }
 
@@ -1711,10 +1731,10 @@ function setQLMeal(meal) {
   _qlMeal = meal;
   _qlMealExplicit = true;
   document.querySelectorAll('.ql-meal-pill').forEach(p => p.classList.toggle('active', p.dataset.meal === meal));
-  // F-2: re-hydrate items from the new meal slot (preserves multi-save flow
-  // when parent switches B→L→D) + refresh autofill regions.
-  if (typeof _qlFeedReset === 'function') _qlFeedReset();
-  if (typeof _qlRenderFeedSheet === 'function') _qlRenderFeedSheet();
+  // F-6a: re-point the sheet composer instance to the new slot + re-hydrate
+  // (preserves the multi-save flow when the parent switches B→L→D).
+  _qlIntakeExplicit = false;
+  if (typeof _qlMountSheetComposer === 'function') _qlMountSheetComposer();
 }
 
 function adjQLWake(delta) {
@@ -1738,7 +1758,7 @@ function showQLToast(msg, duration, undoFn) {
   const t = document.getElementById('qlToast');
   if (undoFn) {
     _lastQLUndo = undoFn;
-    t.innerHTML = msg + ' <span data-action="undoLastQL" data-stop="1" style="text-decoration:underline;font-weight:700;cursor:pointer;margin-left:8px;">Undo</span>';
+    t.innerHTML = msg + ' <span class="ql-toast-undo" data-action="undoLastQL" data-stop="1">Undo</span>';
   } else {
     _lastQLUndo = null;
     t.innerHTML = msg;
@@ -1754,9 +1774,11 @@ function undoLastQL() {
     const t = document.getElementById('qlToast');
     t.textContent = 'Undone';
     setTimeout(() => t.classList.remove('show'), 1200);
-    // Refresh views
+    // Refresh views. F-6a (V-V-222/S1): re-hydrate the composer cards for
+    // the diet tab's CURRENT date — never initFeeding (which would snap a
+    // date-navved panel back to today).
     const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
-    if (curTab === 'diet') { initFeeding(); renderDietStats(); }
+    if (curTab === 'diet') { if (typeof _fcRefreshCards === 'function') _fcRefreshCards(); renderDietStats(); }
     if (curTab === 'poop') { renderPoop(); }
     if (curTab === 'sleep') { renderSleep(); }
     if (curTab === 'home') renderHome();
@@ -1764,406 +1786,69 @@ function undoLastQL() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// F-2 — FOB Feed sheet render + handlers
-// Spec: docs/specs/food-sub-tab-v1.md §F-2
-// State: _qlFeedItems is the current items array being built. Stays in
-// sync with the rendered Items list via _qlRenderItemsList. Save writes
-// structured shape via _fdWriteStructuredMeal (data.js).
+// F-6a — FAB Feed sheet → feeding composer glue (Mount A)
+// Spec: docs/specs/food-sub-tab-v1-f6-feeding-composer.md §Mount A.
+// The F-2 renderers (_qlRender*) + handlers (qlFeed*) were EXTRACTED into
+// the shared feeding composer (_fc*, diet.js). The shell stays here in the
+// quick-log layer: meal pills, backfill date, suggestion card, intake pills,
+// keyboard reflow, showQLToast. openQuickModal('feed') mounts/refreshes the
+// sheet composer instance into #fcSheetMount; saveQLFeed thins to
+// fold-typed → read instance.items → write via _fdWriteStructuredMeal.
 // ═══════════════════════════════════════════════════════════════
 
-var _qlFeedItems = [];
-var _qlFeedSourceFlow = 'fob-feed';  // 'fob-repeat' | 'fob-combo' | 'fob-novel' | 'fob-feed'
+// C4 provenance — tracks whether the parent touched a sheet intake pill this
+// open (the writer records intakeExplicit only when true).
+var _qlIntakeExplicit = false;
 
-function _qlFeedReset() {
-  _qlFeedItems = [];
-  _qlFeedSourceFlow = 'fob-feed';
-  var inp = document.getElementById('qlFeedInput');
-  if (inp) inp.value = '';
-  var dd = document.getElementById('qlFeedDropdown');
-  if (dd) { dd.innerHTML = ''; dd.classList.remove('open'); }
-  // F-2 fix (B1): if the slot is already logged for the active date,
-  // hydrate _qlFeedItems from the existing meal so re-opening the FOB
-  // Feed sheet on an already-logged meal preserves prior items. Without
-  // this, the historical "log a few items, come back, add more" flow
-  // silently destroys the prior save (REPLACE semantic + empty Items
-  // list on reopen). Skipped meals don't hydrate — parent re-opening
-  // a skipped slot is intentionally starting fresh.
-  var dateStr = _qlBackfillDate || today();
-  var fd = (typeof feedingData !== 'undefined' && feedingData) || {};
-  if (fd[dateStr] && _qlMeal && typeof window._fdReadDayMeal === 'function') {
-    var rec = window._fdReadDayMeal(fd[dateStr], _qlMeal);
-    if (rec && !rec.skipped && rec.items && rec.items.length > 0) {
-      _qlFeedItems = rec.items.map(function(it) {
-        if (it.qty !== undefined && it.unit) return Object.assign({}, it);
-        var defaults = window._fdResolveQtyDefaults(it.name);
-        return Object.assign({}, it, { qty: defaults.qty, unit: defaults.unit });
-      });
-      // Preserve the original sourceFlow so re-save doesn't downgrade
-      // a 'fob-combo' meal to 'fob-feed' on an unchanged re-save.
-      _qlFeedSourceFlow = rec.sourceFlow || 'fob-feed';
-    }
-  }
-}
-
-// Render all dynamic regions of the FOB Feed sheet. Called on open + after
-// every state change (item add/remove/qty adjust, meal slot change).
-function _qlRenderFeedSheet() {
-  _qlRenderRepeatRail();
-  _qlRenderCombosRail();
-  _qlRenderItemsList();
-  _qlRenderNextItemRibbon();
-}
-
-// L1 — Repeat rail. Surfaces yesterday's/recent matching-slot meals as
-// one-tap apply chips. For dinner, "Same as today's lunch" leads if logged.
-// F-2 fix (A6): hidden once items are present (mirror the combos-rail
-// behavior). Otherwise an accidental tap on a still-visible repeat chip
-// silently wipes the parent's in-progress items with no undo affordance.
-// L1↔L2 dedup: the repeat rail (your actual history) and the combo rail
-// (templates / curated cold-start) can surface the identical food-set as two
-// differently-coloured chips. The repeat rail stashes its signatures here so
-// the combo rail can drop the duplicate and keep the more-authoritative
-// history chip. Reset at the top of every repeat-rail render. (V-V-204)
-var _qlRepeatSigs = [];
-function _qlFeedRailSig(itemsText) {
-  return String(itemsText || '').toLowerCase().split(',')
-    .map(function(s) { return s.trim(); })
-    .filter(function(s) { return s; })
-    .sort()
-    .join('|');
-}
-
-function _qlRenderRepeatRail() {
-  _qlRepeatSigs = [];
-  var wrap = document.getElementById('qlFeedRepeatWrap');
-  var rail = document.getElementById('qlFeedRepeatRail');
-  if (!wrap || !rail) return;
-  if (_qlFeedItems.length > 0) {
-    wrap.style.display = 'none';
-    rail.innerHTML = '';
-    return;
-  }
-  var candidates = window._fdGetRepeatCandidates(_qlMeal, 3, { fromDate: _qlBackfillDate || today() });
-  if (!candidates || candidates.length === 0) {
-    wrap.style.display = 'none';
-    rail.innerHTML = '';
-    return;
-  }
-  _qlRepeatSigs = candidates.map(function(c) { return _qlFeedRailSig(c.itemsText); });
-  wrap.style.display = '';
-  rail.innerHTML = candidates.map(function(c, i) {
-    return '<div class="ql-feed-repeat-chip' + (i === 0 ? ' primary' : '') + '"' +
-           ' data-action="qlFeedApplyRepeat" data-arg="' + escAttr(c.id) + '">' +
-           '<div class="ql-feed-repeat-head">' +
-             '<svg class="zi"><use href="#zi-rainbow"/></svg> ' + escHtml(c.label) +
-           '</div>' +
-           '<div class="ql-feed-repeat-sub">' + escHtml(c.itemsText) + '</div>' +
-           '</div>';
-  }).join('');
-}
-
-// L2 — Combo template rail. Hidden once items present (parent has
-// committed to building manually; offering full-replace combos would
-// confuse). Shows rolling-14d top combos OR curated cold-start fallback.
-function _qlRenderCombosRail() {
-  var wrap = document.getElementById('qlFeedCombosWrap');
-  var rail = document.getElementById('qlFeedCombosRail');
-  var label = document.getElementById('qlFeedCombosLabel');
-  if (!wrap || !rail) return;
-  if (_qlFeedItems.length > 0) {
-    wrap.style.display = 'none';
-    rail.innerHTML = '';
-    return;
-  }
-  var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 3 });
-  // Drop any combo whose food-set duplicates a repeat-rail chip already shown
-  // above (the history chip is more authoritative). (V-V-204)
-  if (combos && combos.length && _qlRepeatSigs.length) {
-    combos = combos.filter(function(c) {
-      return _qlRepeatSigs.indexOf(_qlFeedRailSig(c.itemsText)) === -1;
-    });
-  }
-  if (!combos || combos.length === 0) {
-    wrap.style.display = 'none';
-    rail.innerHTML = '';
-    return;
-  }
-  wrap.style.display = '';
-  if (label) {
-    label.textContent = combos[0].source === 'curated'
-      ? 'Suggested combos'
-      : 'Your usual ' + _qlMeal;
-  }
-  rail.innerHTML = combos.map(function(c) {
-    var freq = c.freq ? '<span class="ql-feed-combo-conf">' + c.freq + '×</span>' : '';
-    return '<div class="ql-feed-combo-chip" data-action="qlFeedApplyCombo" data-arg="' + escAttr(c.id) + '">' +
-           '<div class="ql-feed-combo-head">' +
-             '<svg class="zi"><use href="#zi-bowl"/></svg> ' + escHtml(c.label) + freq +
-           '</div>' +
-           '<div class="ql-feed-combo-sub">' + escHtml(c.itemsText) + '</div>' +
-           '</div>';
-  }).join('');
-}
-
-// Items list — current meal items with qty stepper + remove.
-function _qlRenderItemsList() {
-  var list = document.getElementById('qlFeedItemsList');
-  if (!list) return;
-  if (_qlFeedItems.length === 0) {
-    list.innerHTML = '<div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>';
-    return;
-  }
-  // Stable alphabetical order so the list has a fixed scan position across
-  // the four entry rails (combo-replace, repeat-replace, next/typeahead push)
-  // — sorting the array in place keeps the data-arg idx consistent with the
-  // qty-stepper / remove handlers. (V-V-202)
-  _qlFeedItems.sort(function(a, b) {
-    return String(a.name || '').toLowerCase().localeCompare(String(b.name || '').toLowerCase());
+// Mount (or refresh) the sheet composer instance for the active slot/date.
+// Returns the instance. setQLMeal re-points instance.slot + re-hydrates
+// (preserves the F-2 multi-save B→L→D flow).
+function _qlMountSheetComposer() {
+  var mount = document.getElementById('fcSheetMount');
+  if (!mount || typeof window._fcMount !== 'function') return null;
+  var inst = window._fcMount(mount, {
+    slot: _qlMeal,
+    variant: 'sheet',
+    dateOf: function() { return _qlBackfillDate || today(); },
   });
-  list.innerHTML = _qlFeedItems.map(function(item, idx) {
-    var initial = (item.name || '?').charAt(0).toUpperCase();
-    var qtyDisplay = _qlFormatQty(item.qty);
-    return '<div class="ql-feed-item-row">' +
-           '<span class="ql-feed-item-icon">' + escHtml(initial) + '</span>' +
-           '<div class="ql-feed-item-name">' + escHtml(item.name) + '</div>' +
-           '<div class="ql-feed-qty-stepper">' +
-             '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="dec" type="button" aria-label="Decrease quantity">−</button>' +
-             '<span class="ql-feed-qty-val">' + qtyDisplay +
-               '<span class="ql-feed-qty-unit"> ' + escHtml(item.unit || '') + '</span>' +
-             '</span>' +
-             '<button class="ql-feed-qty-step" data-action="qlFeedAdjustQty" data-arg="' + idx + '" data-arg2="inc" type="button" aria-label="Increase quantity">+</button>' +
-           '</div>' +
-           '<button class="ql-feed-item-x" data-action="qlFeedRemoveItem" data-arg="' + idx + '" type="button" aria-label="Remove ' + escAttr(item.name) + '">×</button>' +
-           '</div>';
-  }).join('');
+  inst.slot = _qlMeal;
+  inst.hydrate();
+  inst.render();
+  return inst;
 }
 
-// Format qty as a unicode vulgar fraction when possible (¼ ½ ¾) plus
-// mixed numbers (1¼, 1½, 2¾). Outside the common set, falls back to
-// decimal with 2dp rounding.
-function _qlFormatQty(q) {
-  if (typeof q !== 'number' || isNaN(q)) return '1';
-  if (q === 0.25) return '¼';
-  if (q === 0.5)  return '½';
-  if (q === 0.75) return '¾';
-  var whole = Math.floor(q);
-  var frac = Math.round((q - whole) * 100) / 100;
-  if (frac === 0) return String(whole);
-  if (frac === 0.25) return whole + '¼';
-  if (frac === 0.5)  return whole + '½';
-  if (frac === 0.75) return whole + '¾';
-  return (Math.round(q * 100) / 100).toString();
-}
-
-// L3 — Next-item ribbon. Only appears after first item added. Confidence
-// % surfaced per chip (CV3-006 Honesty axis: parent sees WHY suggested).
-function _qlRenderNextItemRibbon() {
-  var wrap = document.getElementById('qlFeedNextWrap');
-  var ribbon = document.getElementById('qlFeedNextRibbon');
-  var label = document.getElementById('qlFeedNextLabel');
-  if (!wrap || !ribbon) return;
-  if (_qlFeedItems.length === 0) {
-    wrap.style.display = 'none';
-    ribbon.innerHTML = '';
-    return;
-  }
-  var predictions = window._fdGetNextItemPredictions(_qlFeedItems, _qlMeal, 4);
-  if (!predictions || predictions.length === 0) {
-    wrap.style.display = 'none';
-    ribbon.innerHTML = '';
-    return;
-  }
-  wrap.style.display = '';
-  if (label) {
-    var anchorName = _qlFeedItems[_qlFeedItems.length - 1].name;
-    label.textContent = _qlFeedItems.length === 1
-      ? 'You usually add (with ' + anchorName + ')'
-      : 'You usually add';
-  }
-  ribbon.innerHTML = predictions.map(function(p) {
-    return '<button class="ql-feed-next-chip" data-action="qlFeedAddItem"' +
-           ' data-arg="' + escAttr(p.name) + '" data-arg2="next" type="button">' +
-           '+ ' + escHtml(p.name) +
-           '<span class="ql-feed-next-conf">' + p.confidence + '%</span>' +
-           '</button>';
-  }).join('');
-}
-
-// ── F-2 handlers ──
-
-function qlFeedApplyRepeat(id) {
-  var cands = window._fdGetRepeatCandidates(_qlMeal, 6, { fromDate: _qlBackfillDate || today() });
-  var found = cands.find(function(c) { return c.id === id; });
-  if (!found) return;
-  _qlFeedItems = found.items.slice().map(function(it) { return Object.assign({}, it); });
-  _qlFeedSourceFlow = 'fob-repeat';
-  _qlRenderFeedSheet();
-}
-
-function qlFeedApplyCombo(id) {
-  var combos = window._fdGetCombosForMeal(_qlMeal, { maxResults: 6 });
-  var found = combos.find(function(c) { return c.id === id; });
-  if (!found) return;
-  _qlFeedItems = found.items.slice().map(function(it) { return Object.assign({}, it); });
-  _qlFeedSourceFlow = 'fob-combo';
-  _qlRenderFeedSheet();
-}
-
+// Compatibility shim — external callers (Library "Log a serving"
+// diet.js:libLogServing, Smart-guidance sgTapChip, Q&A suggestion push) and
+// the suggest card pre-add a food into the open sheet. Route to the sheet
+// composer instance's fcAddItem so the item lands in the structured Items
+// list (not just a typeahead input).
 function qlFeedAddItem(name, source) {
-  if (!name) return;
-  // F-2 fix (B4): dedup by base name. Same food added via L3 next-item +
-  // L4 typeahead would otherwise produce duplicate rows in _qlFeedItems,
-  // each with its own qty stepper, and double-count in the post-save
-  // nutrient flash + autoIntroduceFoodsFromDay. For F-2 a meal entry
-  // carries one item per food; quantity adjustments use the stepper.
-  var normalized = String(name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
-  var alreadyPresent = _qlFeedItems.some(function(it) {
-    var n = String(it.name).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
-    return n === normalized;
-  });
-  // Clear typeahead input + dropdown regardless (parent's input was consumed)
-  var inp = document.getElementById('qlFeedInput');
-  if (inp) inp.value = '';
-  var dd = document.getElementById('qlFeedDropdown');
-  if (dd) { dd.innerHTML = ''; dd.classList.remove('open'); }
-  if (alreadyPresent) {
-    if (typeof showQLToast === 'function') showQLToast(name + ' already added — adjust qty with +/-', 2000);
-    return;
-  }
-  var defaults = window._fdResolveQtyDefaults(name);
-  _qlFeedItems.push({
-    name: name,
-    qty: defaults.qty,
-    unit: defaults.unit,
-    nutritionRef: window._fdNutritionRef(name),
-    source: source || 'manual',
-  });
-  if (source === 'next' || source === 'typeahead') {
-    if (_qlFeedSourceFlow === 'fob-feed') _qlFeedSourceFlow = 'fob-novel';
-  }
-  _qlRenderFeedSheet();
+  var inst = _fcSheetInstance || _qlMountSheetComposer();
+  if (inst && typeof fcAddItem === 'function') fcAddItem(inst, name, source);
 }
 
-function qlFeedAdjustQty(idxStr, dir) {
-  var idx = parseInt(idxStr, 10);
-  if (isNaN(idx) || !_qlFeedItems[idx]) return;
-  var item = _qlFeedItems[idx];
-  var defaults = window._fdResolveQtyDefaults(item.name);
-  var step = defaults.step || 0.25;
-  var delta = (dir === 'inc') ? step : -step;
-  var newQty = item.qty + delta;
-  if (newQty <= 0) return;  // don't allow zero — use × to remove
-  item.qty = Math.round(newQty * 100) / 100;
-  _qlRenderItemsList();
-}
+// R8 (F-6a) — the old press-Enter-to-add no-match copy is RETIRED (it was a
+// false affordance: no Enter/keydown handler ever existed). The C1 tappable
+// add-row in the composer's L4 typeahead is the successor (V-V-210).
 
-function qlFeedRemoveItem(idxStr) {
-  var idx = parseInt(idxStr, 10);
-  if (isNaN(idx) || !_qlFeedItems[idx]) return;
-  _qlFeedItems.splice(idx, 1);
-  _qlRenderFeedSheet();
-}
 
-function qlFeedTypeaheadInput() {
-  var inp = document.getElementById('qlFeedInput');
-  if (!inp) return;
-  var q = inp.value.trim();
-  var dd = document.getElementById('qlFeedDropdown');
-  if (!dd) return;
-  if (q.length < 1) {
-    dd.classList.remove('open');
-    dd.innerHTML = '';
-    return;
-  }
-  var matches = window._fdSearchNutrition(q, { max: 8 });
-  if (matches.length === 0) {
-    dd.innerHTML = '<div class="meal-dropdown-empty">No match. Press Enter to add as new food.</div>';
-    dd.classList.add('open');
-    return;
-  }
-  dd.innerHTML = matches.map(function(m) {
-    return '<div class="meal-dropdown-row ql-feed-ta-row"' +
-           ' data-action="qlFeedAddItem" data-arg="' + escAttr(m.name) + '" data-arg2="typeahead">' +
-           '<span class="ql-feed-ta-name">' + escHtml(m.name) + '</span>' +
-           '<span class="ql-feed-ta-meta">' + escHtml(m.source) + ' · ' +
-             _qlFormatQty(m.qty) + ' ' + escHtml(m.unit) +
-           '</span>' +
-           '</div>';
-  }).join('');
-  dd.classList.add('open');
-}
-
-function qlFeedSkipMeal() {
-  var dateStr = _qlBackfillDate || today();
-  if (!_qlMeal) return;
-  // F-2 fix (A3 + B3): capture FULL prev state for atomic undo —
-  // legacy [meal] string + [meal+'_v1'] sidecar + [meal+'_time'] +
-  // [meal+'_intake']. Otherwise undo restores only the legacy string
-  // and leaves a phantom time/intake or loses the structured shape.
-  var fd = load(KEYS.feeding, {}) || {};
-  var prevDay = fd[dateStr] || {};
-  var prevVal = prevDay[_qlMeal];
-  var prevSidecar = prevDay[_qlMeal + '_v1'];
-  var prevTime = prevDay[_qlMeal + '_time'];
-  var prevIntake = prevDay[_qlMeal + '_intake'];
-  window._fdMarkMealSkipped(dateStr, _qlMeal);
-  var meal = _qlMeal;
-  var undoFn = function() {
-    var f = load(KEYS.feeding, {}) || {};
-    if (!f[dateStr]) f[dateStr] = { breakfast: '', lunch: '', dinner: '', snack: '' };
-    if (prevVal !== undefined) f[dateStr][meal] = prevVal; else f[dateStr][meal] = '';
-    if (prevSidecar !== undefined) f[dateStr][meal + '_v1'] = prevSidecar; else delete f[dateStr][meal + '_v1'];
-    if (prevTime !== undefined) f[dateStr][meal + '_time'] = prevTime; else delete f[dateStr][meal + '_time'];
-    if (prevIntake !== undefined) f[dateStr][meal + '_intake'] = prevIntake; else delete f[dateStr][meal + '_intake'];
-    save(KEYS.feeding, f);
-    feedingData = f;
-    if (typeof _islMarkDirty === 'function') _islMarkDirty('diet');
-    if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-    var curTab2 = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
-    if (curTab2 === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
-    if (curTab2 === 'home') renderHome();
-  };
-  // F-2 fix (A4): reset _qlBackfillDate so subsequent QL opens (sleep/nap/poop/etc.)
-  // don't inherit stale backfill state across modal types.
-  _qlBackfillDate = null;
-  closeQuickLogAll();
-  showQLToast(capitalize(meal) + ' marked as skipped', 4000, undoFn);
-  // F-2 fix (R1): updateMealSkipButtons refreshes the Diet tab's per-meal
-  // Skip toggles so a subsequent tap on the now-stale legacy Skip button
-  // doesn't silently UNSKIP the meal we just skipped via FOB.
-  if (typeof updateMealSkipButtons === 'function') updateMealSkipButtons();
-  var curTab = PANEL_IDS.find(function(t) { return document.getElementById('tab-' + t) && document.getElementById('tab-' + t).classList.contains('active'); });
-  if (curTab === 'diet') { if (typeof initFeeding === 'function') initFeeding(); if (typeof renderDietStats === 'function') renderDietStats(); }
-  if (curTab === 'home') renderHome();
-}
 
 // ── Quick Log Save Functions ──
 
 function saveQLFeed() {
   const dateStr = _qlBackfillDate || today();
 
-  // F-2: Fold any unsubmitted typed text in qlFeedInput as a final item
-  // (covers the "typed without picking typeahead → pressed Save" case).
-  // Comma-split for parents who paste a multi-item line.
-  const typedRaw = (document.getElementById('qlFeedInput')?.value || '').trim();
-  if (typedRaw) {
-    typedRaw.split(',').map(function(s) { return s.trim(); }).filter(Boolean).forEach(function(nm) {
-      const defaults = window._fdResolveQtyDefaults(nm);
-      _qlFeedItems.push({
-        name: nm,
-        qty: defaults.qty,
-        unit: defaults.unit,
-        nutritionRef: String(nm).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim(),
-        source: 'typed',
-      });
-    });
-    if (_qlFeedSourceFlow === 'fob-feed') _qlFeedSourceFlow = 'fob-novel';
-    document.getElementById('qlFeedInput').value = '';
-  }
+  // F-6a — the sheet's item-builder is the composer instance. Fold any
+  // unsubmitted typed text (belt-and-braces behind the C1 add-row, which is
+  // the primary path), then read the structured items off the instance.
+  const inst = _fcSheetInstance || _qlMountSheetComposer();
+  if (!inst) return;
+  inst.foldTypedText();
 
   // Guard: must have at least one item to save.
-  if (_qlFeedItems.length === 0) {
-    document.getElementById('qlFeedInput')?.focus();
+  if (inst.items.length === 0) {
+    const ta = inst.container && inst.container.querySelector('.fc-ta-input');
+    if (ta) ta.focus();
     return;
   }
 
@@ -2180,22 +1865,23 @@ function saveQLFeed() {
   const prevTime = prevDay[undoMealKey + '_time'];
   const prevIntake = prevDay[undoMealKey + '_intake'];
 
-  // Build the structured payload + write via the canonical F-2 writer.
+  // Build the structured payload + write via the canonical writer.
   const qlTime = (document.getElementById('qlFeedTime')?.value) || null;
   const overallIntake = (typeof _qlSelectedIntake === 'number' && _qlSelectedIntake > 0)
     ? _qlSelectedIntake
     : 0.75;  // ratified default "Most"
   const payload = {
-    items: _qlFeedItems.slice(),
+    items: inst.items.slice(),
     time: qlTime,
     overallIntake: overallIntake,
-    sourceFlow: _qlFeedSourceFlow,
+    intakeExplicit: _qlIntakeExplicit === true,   // C4 provenance
+    sourceFlow: inst.sourceFlow,
   };
   window._fdWriteStructuredMeal(dateStr, _qlMeal, payload);
 
   // Build legacy `food` string for downstream callers (toast nutrient flash,
   // autoIntroduceFoodsFromDay, _qlFeedInsight). Comma-joined item names.
-  const food = _qlFeedItems.map(function(it) { return it.name; }).join(', ');
+  const food = inst.items.map(function(it) { return it.name; }).join(', ');
 
   _tsfMarkDirty();
 
@@ -2266,9 +1952,11 @@ function saveQLFeed() {
   showQLToast(toastMsg, hasNutrientFlash ? 4000 : 3000, undoFn);
   matchSuggestionsAfterSave(dateStr);
 
-  // Refresh if on diet tab or home
+  // Refresh if on diet tab or home. F-6a: re-render the composer cards for
+  // the diet tab's current date (NOT initFeeding \u2014 that would snap a
+  // date-navved diet panel back to today, S1/V-V-222).
   const curTab = PANEL_IDS.find(t => document.getElementById('tab-' + t)?.classList.contains('active'));
-  if (curTab === 'diet') { initFeeding(); renderDietStats(); }
+  if (curTab === 'diet') { if (typeof _fcRefreshCards === 'function') _fcRefreshCards(); renderDietStats(); }
   if (curTab === 'home') renderHome();
 }
 
@@ -3839,33 +3527,27 @@ function skipMeals(mealKeys) {
   showQLToast(mealKeys.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' & ') + ' marked as skipped');
 }
 
+// skipSingleMeal / unskipSingleMeal — canonical Log-tab skip writers, KEPT
+// (already sidecar-atomic per F-2 fix Alt1). F-6a re-targets them: the skip
+// pill markup moved into the composer card header (data-action="fcSkipMeal",
+// which routes here-equivalent toggle logic + an undo), the legacy
+// .meal-input / dqp manipulation is removed (those surfaces are gone), and
+// the refresh re-points to the composer cards via _fcRefreshCards.
 function skipSingleMeal(mealKey) {
   const dateStr = document.getElementById('feedingDate')?.value || today();
   if (!feedingData[dateStr]) feedingData[dateStr] = { breakfast:'', lunch:'', dinner:'', snack:'' };
-
   // If already skipped → unskip
-  if (feedingData[dateStr][mealKey] === '—skipped—') {
-    unskipSingleMeal(mealKey);
-    return;
-  }
-
-  if (feedingData[dateStr][mealKey] && feedingData[dateStr][mealKey] !== '—skipped—') return; // already has food
-  feedingData[dateStr][mealKey] = '—skipped—';
-  // F-2 fix (Alt1): clear the structured sidecar + legacy _time/_intake
-  // so a skip is atomic. Matches _fdMarkMealSkipped contract.
+  if (feedingData[dateStr][mealKey] === SKIPPED_MEAL) { unskipSingleMeal(mealKey); return; }
+  if (feedingData[dateStr][mealKey] && feedingData[dateStr][mealKey] !== SKIPPED_MEAL) return; // already has food
+  feedingData[dateStr][mealKey] = SKIPPED_MEAL;
+  // Atomic skip — clear structured sidecar + legacy _time/_intake.
   delete feedingData[dateStr][mealKey + '_v1'];
   delete feedingData[dateStr][mealKey + '_time'];
   delete feedingData[dateStr][mealKey + '_intake'];
   save(KEYS.feeding, feedingData);
-  // V-M-70: complete the _refreshTodayMedWithFat contract.
   if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
-  const input = document.getElementById('meal-' + mealKey);
-  if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
-  const timeInput = document.getElementById('mealtime-' + mealKey);
-  if (timeInput) { timeInput.value = ''; timeInput.disabled = true; }
   updateMealSkipButtons();
   renderHomeMealProgress();
-  renderDietQuickPicker();
   showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' skipped');
 }
 
@@ -3874,54 +3556,20 @@ function unskipSingleMeal(mealKey) {
   if (!feedingData[dateStr]) return;
   feedingData[dateStr][mealKey] = '';
   save(KEYS.feeding, feedingData);
-  // V-M-70: complete the _refreshTodayMedWithFat contract.
   if (dateStr === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
-  const input = document.getElementById('meal-' + mealKey);
-  if (input) { input.value = ''; input.placeholder = 'Type to search foods...'; input.disabled = false; }
-  const timeInput = document.getElementById('mealtime-' + mealKey);
-  if (timeInput) { timeInput.value = ''; timeInput.disabled = false; }
   updateMealSkipButtons();
   renderHomeMealProgress();
-  renderDietQuickPicker();
   showQLToast(mealKey.charAt(0).toUpperCase() + mealKey.slice(1) + ' unskipped');
 }
 
+// updateMealSkipButtons — F-6a: the per-slot skip state now lives in each
+// composer card's own render (header pill). This re-renders the live card
+// instances for the active date. The legacy style.display toggles on
+// #skip-<m> + the .meal-input manipulation (HR-2 purge) are gone with the
+// old markup.
 function updateMealSkipButtons() {
-  const dateStr = document.getElementById('feedingDate')?.value || today();
-  const isToday = dateStr === today();
-  const entry = feedingData[dateStr] || {};
-  ['breakfast','lunch','dinner','snack'].forEach(m => {
-    const btn = document.getElementById('skip-' + m);
-    const input = document.getElementById('meal-' + m);
-    if (!btn) return;
-    const val = entry[m] || '';
-    if (val === '—skipped—') {
-      btn.style.display = '';
-      btn.innerHTML = 'skipped ' + zi('undo');
-      btn.classList.add('skipped');
-      btn.title = 'Tap to unskip';
-      if (input) { input.value = ''; input.placeholder = 'Skipped'; input.disabled = true; }
-    } else if (val && val.trim()) {
-      btn.style.display = 'none'; // has food, no skip needed
-      if (input) input.disabled = false;
-    } else {
-      btn.style.display = isToday ? '' : 'none'; // show skip only for today's empty meals
-      btn.textContent = 'skip';
-      btn.classList.remove('skipped');
-      if (input) { input.disabled = false; input.placeholder = 'Type to search foods...'; }
-    }
-  });
+  if (typeof _fcRefreshCards === 'function') _fcRefreshCards();
 }
-
-// Close QL dropdown on blur
-document.addEventListener('focusout', function(e) {
-  if (e.target && e.target.id === 'qlFeedInput') {
-    setTimeout(() => {
-      const dd = document.getElementById('qlFeedDropdown');
-      if (dd) dd.classList.remove('open');
-    }, 200);
-  }
-});
 
 // Detect mobile keyboard open/close via visualViewport
 if (window.visualViewport) {

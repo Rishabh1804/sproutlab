@@ -471,10 +471,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
   border:1.5px solid transparent;
   overflow:visible;
 }
-.meal-card.breakfast { background:var(--peach-light); border-color:rgba(250,212,180,0.5); }
-.meal-card.lunch     { background:var(--sage-light);  border-color:rgba(181,213,197,0.5); }
-.meal-card.dinner    { background:var(--lav-light);   border-color:rgba(201,184,232,0.5); }
-.meal-card.snack     { background:var(--amber-light); border-color:rgba(240,200,120,0.5); }
+/* F-6a: the legacy .meal-card markup is retired (replaced by composer
+   .fc-card mounts). These rules are dead; the rgba domain borders are
+   replaced with domain accent tokens (HR-5) in case any reference survives. */
+.meal-card.breakfast { background:var(--peach-light); border-color:var(--peach); }
+.meal-card.lunch     { background:var(--sage-light);  border-color:var(--sage); }
+.meal-card.dinner    { background:var(--lav-light);   border-color:var(--lavender); }
+.meal-card.snack     { background:var(--amber-light); border-color:var(--amber); }
 
 .meal-label { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:var(--sp-6); display:flex; align-items:center; gap:var(--sp-8); }
 .meal-time-input {
@@ -7222,7 +7225,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
   transition:all var(--ease-fast); min-height:44px;
   display:flex; align-items:center; justify-content:center; gap:var(--sp-4);
 }
-.ql-meal-pill.active { background:#966525; color:white; border-color:#966525; }
+.ql-meal-pill.active { background:var(--tc-peach); color:white; border-color:var(--tc-peach); }
 .ql-intake-pill {
   flex:1 1 0; min-width:0; padding:var(--sp-8) var(--sp-4); border-radius:var(--r-lg); border:1.5px solid var(--border-subtle);
   background:var(--warm); cursor:pointer; text-align:center;
@@ -7269,7 +7272,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 }
 .ql-save:hover { filter:brightness(1.05); transform:translateY(-1px); }
 .ql-save:active { transform:scale(0.98); }
-.ql-save-feed  { background:linear-gradient(135deg, #966525, #906228); }
+.ql-save-feed  { background:linear-gradient(135deg, var(--tc-peach), var(--tc-amber)); }
 .ql-save-sleep { background:linear-gradient(135deg, #5a6498, #606a98); }
 .ql-save-nap   { background:linear-gradient(135deg, #7e66b4, #7060a8); }
 .ql-save-poop  { background:linear-gradient(135deg, #8a6520, #946225); }
@@ -7525,6 +7528,198 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 [data-theme="dark"] .ql-feed-next-chip { background:#1e3028; color:#7ac0a0; border-color:var(--tc-sage); }
 [data-theme="dark"] .ql-feed-next-conf { background:var(--surface); color:#7ac0a0; }
 [data-theme="dark"] .ql-save-skip { background:#221c28; color:var(--mid); border-color:#3a2e3e; }
+
+/* ═══════════════════════════════════════════════════════════════
+   F-6a — FEEDING COMPOSER (.fc-*)
+   Spec: docs/specs/food-sub-tab-v1-f6-feeding-composer.md §Visual refresh.
+   One shared component, two mounts. The Log-tab cards adopt the Receded
+   register (Law 2): domain --*-light wash + a border-left rail in the slot's
+   domain ACCENT token + the slot label in the matching --tc-*. Dark mode
+   hue-swaps to the deep --tc hue (Law 1), never the pale accent over dark.
+   Slot→domain: breakfast→peach, lunch→sage, dinner→lavender, snack→amber.
+   ═══════════════════════════════════════════════════════════════ */
+
+.fc-hidden { display:none !important; }
+
+/* Undo affordance inside the QL toast (HR-2 — was an inline style span). */
+.ql-toast-undo { text-decoration:underline; font-weight:700; cursor:pointer; margin-left:var(--sp-8); }
+
+/* ── Mount B — per-slot composer cards ── */
+.fc-cards { display:flex; flex-direction:column; gap:var(--sp-8); margin-top:var(--sp-12); }
+.fc-card {
+  border-radius:var(--r-xl);
+  padding:var(--sp-12);
+  border:1px solid transparent;
+  border-left:3px solid var(--mid);
+  overflow:visible;
+}
+/* Receded register — light wash + domain accent rail (border-left). */
+.fc-card-breakfast { background:var(--peach-light); border-left-color:var(--peach); }
+.fc-card-lunch     { background:var(--sage-light);  border-left-color:var(--sage); }
+.fc-card-dinner    { background:var(--lav-light);   border-left-color:var(--lavender); }
+.fc-card-snack     { background:var(--amber-light); border-left-color:var(--amber); }
+.fc-card.fc-skipped { opacity:0.72; }
+
+.fc-card-head { display:flex; align-items:center; gap:var(--sp-8); margin-bottom:var(--sp-8); }
+.fc-slot-label {
+  font-size:var(--fs-sm); font-weight:700; text-transform:uppercase;
+  letter-spacing:var(--ls-wide); display:flex; align-items:center; gap:var(--sp-6);
+}
+.fc-card-breakfast .fc-slot-label { color:var(--tc-peach); }
+.fc-card-lunch     .fc-slot-label { color:var(--tc-sage); }
+.fc-card-dinner    .fc-slot-label { color:var(--tc-lav); }
+.fc-card-snack     .fc-slot-label { color:var(--tc-caution); }
+.fc-slot-label .zi { width:var(--icon-base); height:var(--icon-base); }
+.fc-head-right { margin-left:auto; display:flex; align-items:center; gap:var(--sp-6); }
+.fc-time {
+  width:84px; padding:var(--sp-2) var(--sp-6);
+  border:1px solid var(--border-subtle); border-radius:var(--r-md);
+  font-family:'Nunito',sans-serif; font-size:var(--fs-xs); font-weight:500;
+  color:var(--mid); background:transparent; outline:none;
+}
+.fc-time:focus { border-color:var(--tc-peach); color:var(--text); }
+.fc-mic {
+  width:32px; height:32px; border-radius:var(--r-full); border:1px solid var(--border-subtle);
+  background:var(--surface); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+}
+.fc-skip-pill {
+  font-size:var(--fs-xs); font-weight:500; color:var(--light); cursor:pointer;
+  padding:var(--sp-4) var(--sp-8); border-radius:var(--r-md);
+  background:var(--surface); border:1px solid var(--border-subtle);
+  transition:all var(--ease-fast); display:inline-flex; align-items:center; gap:var(--sp-4);
+}
+.fc-skip-pill:hover { background:var(--peach-light); color:var(--tc-caution); }
+.fc-skip-pill.skipped { background:var(--peach-light); color:var(--tc-caution); }
+.fc-skipped-note { font-size:var(--fs-sm); font-style:italic; color:var(--light); padding:var(--sp-8) 0; }
+.fc-show-suggest {
+  display:inline-flex; align-items:center; gap:var(--sp-6);
+  background:transparent; border:1px dashed var(--border-subtle); border-radius:var(--r-full);
+  color:var(--mid); font-weight:600; font-size:var(--fs-sm); font-family:'Nunito',sans-serif;
+  padding:var(--sp-6) var(--sp-12); cursor:pointer; min-height:40px; margin-top:var(--sp-4);
+}
+.fc-show-suggest .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
+/* ── Prefill offer (V-V-219) — interrogative ghost/dashed + explicit Add verb;
+   shape-distinct from committed items (which are 48px rows, never chips). ── */
+.fc-prefill {
+  display:flex; align-items:center; gap:var(--sp-8); flex-wrap:wrap;
+  background:transparent; border:1.5px dashed var(--peach);
+  border-radius:var(--r-lg); padding:var(--sp-8) var(--sp-10); margin-bottom:var(--sp-8);
+}
+.fc-prefill-q { flex:1; min-width:0; font-weight:600; font-size:var(--fs-sm); color:var(--mid); }
+.fc-prefill-actions { display:flex; gap:var(--sp-6); }
+.fc-prefill-add {
+  background:var(--tc-peach); color:white; border:none; border-radius:var(--r-full);
+  font-weight:700; font-size:var(--fs-sm); font-family:'Nunito',sans-serif;
+  padding:var(--sp-6) var(--sp-14); cursor:pointer; min-height:36px;
+}
+.fc-prefill-edit {
+  background:transparent; color:var(--mid); border:1px solid var(--border-subtle);
+  border-radius:var(--r-full); font-weight:600; font-size:var(--fs-sm); font-family:'Nunito',sans-serif;
+  padding:var(--sp-6) var(--sp-12); cursor:pointer; min-height:36px;
+}
+
+/* ── Rails (shared by both variants) ── */
+.fc-rail-wrap { display:flex; flex-direction:column; gap:var(--sp-4); margin-bottom:var(--sp-8); }
+.fc-rail { display:flex; flex-direction:column; gap:var(--sp-6); }
+.fc-repeat-chip {
+  background:var(--white); border:1.5px solid var(--sage); border-radius:var(--r-xl);
+  padding:var(--sp-10) var(--sp-12); cursor:pointer; min-height:36px;
+  transition:transform var(--ease-fast), background-color var(--ease-fast);
+  box-shadow:0 1px 3px rgba(60,40,40,0.04);
+}
+.fc-repeat-chip:active { transform:scale(0.985); }
+.fc-repeat-chip.primary { background:var(--sage-light); border-width:2px; }
+.fc-repeat-head { display:flex; align-items:center; gap:var(--sp-6); font-weight:700; color:var(--tc-sage); font-size:var(--fs-sm); }
+.fc-repeat-head .zi { width:var(--icon-base); height:var(--icon-base); }
+.fc-repeat-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-4); font-weight:500; line-height:var(--lh-snug); }
+.fc-combo-chip {
+  background:var(--lav-light); border:1.5px solid var(--lavender); border-radius:var(--r-xl);
+  padding:var(--sp-10) var(--sp-12); cursor:pointer; min-height:36px; transition:transform var(--ease-fast);
+}
+.fc-combo-chip:active { transform:scale(0.985); }
+.fc-combo-head { display:flex; align-items:center; gap:var(--sp-6); font-weight:700; color:var(--tc-lav); font-size:var(--fs-sm); }
+.fc-combo-head .zi { width:var(--icon-base); height:var(--icon-base); }
+.fc-combo-conf { margin-left:auto; font-size:var(--fs-2xs); background:var(--lavender); color:var(--text); padding:var(--sp-2) var(--sp-6); border-radius:var(--r-full); font-weight:700; }
+.fc-combo-sub { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-4); font-weight:500; line-height:var(--lh-snug); }
+
+/* ── Items list ── */
+.fc-items-wrap { display:flex; flex-direction:column; gap:var(--sp-4); margin-bottom:var(--sp-8); }
+.fc-items-list { background:var(--white); border:1px solid var(--border-subtle); border-radius:var(--r-xl); overflow:hidden; }
+.fc-items-empty { text-align:center; color:var(--light); padding:var(--sp-16); font-style:italic; font-size:var(--fs-sm); }
+.fc-item-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) var(--sp-10); border-bottom:1px solid var(--border-subtle); min-height:48px; }
+.fc-item-row:last-of-type { border-bottom:none; }
+.fc-item-icon { width:28px; height:28px; background:var(--sage-light); color:var(--tc-sage); border-radius:var(--r-full); display:inline-flex; align-items:center; justify-content:center; font-size:var(--fs-sm); font-weight:700; flex-shrink:0; }
+.fc-item-name { flex:1; font-weight:600; font-size:var(--fs-base); line-height:var(--lh-snug); }
+.fc-qty-stepper { display:inline-flex; align-items:center; background:var(--warm); border-radius:var(--r-full); padding:var(--sp-2); flex-shrink:0; }
+.fc-qty-step { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-full); background:var(--white); color:var(--tc-sage); font-weight:700; font-size:var(--fs-base); border:1px solid var(--border-subtle); cursor:pointer; font-family:'Nunito',sans-serif; transition:transform var(--ease-fast); }
+.fc-qty-step:active { transform:scale(0.92); background:var(--sage-light); }
+.fc-qty-val { padding:0 var(--sp-8); font-weight:700; min-width:52px; text-align:center; font-size:var(--fs-sm); color:var(--text); }
+.fc-qty-unit { font-size:var(--fs-2xs); color:var(--mid); letter-spacing:0; font-weight:500; }
+.fc-item-x { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-full); background:var(--rose-light); color:var(--tc-rose); font-weight:700; font-size:var(--fs-md); border:none; cursor:pointer; flex-shrink:0; margin-left:var(--sp-2); transition:transform var(--ease-fast); }
+.fc-item-x:active { transform:scale(0.9); }
+
+/* ── L3 next-item ribbon ── */
+.fc-next-ribbon { display:flex; gap:var(--sp-6); overflow-x:auto; padding:var(--sp-4) 0; -webkit-overflow-scrolling:touch; }
+.fc-next-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background:var(--sage-light); color:var(--tc-sage); font-weight:700; font-size:var(--fs-sm); padding:var(--sp-6) var(--sp-12); border-radius:var(--r-full); border:1px solid var(--sage); flex-shrink:0; min-height:36px; cursor:pointer; font-family:'Nunito',sans-serif; transition:transform var(--ease-fast); }
+.fc-next-chip:active { transform:scale(0.94); }
+.fc-next-conf { font-size:var(--fs-2xs); background:var(--white); color:var(--tc-sage); border-radius:var(--r-full); padding:1px var(--sp-6); margin-left:var(--sp-2); font-weight:700; letter-spacing:0; }
+
+/* ── L4 typeahead + dropdown ── */
+.fc-add-wrap { display:flex; flex-direction:column; gap:var(--sp-4); }
+.fc-input-wrap { position:relative; z-index:30; }
+.fc-ta-input { width:100%; }
+.fc-dropdown {
+  position:absolute; left:0; right:0; top:100%; z-index:50;
+  background:var(--card-bg); border-radius:0 0 var(--r-lg) var(--r-lg);
+  border:1.5px solid var(--peach); border-top:none;
+  box-shadow:0 8px 24px rgba(180,120,120,0.15);
+  max-height:200px; overflow-y:auto; display:none;
+}
+.fc-dropdown.open { display:block; }
+/* C3 — card-variant dropdown stacking (the :511 fix reborn deliberately):
+   an open dropdown must clear the next slot card below. Raise the open card
+   above its lower siblings. */
+.fc-card:has(.fc-dropdown.open) { z-index:10; position:relative; }
+.fc-ta-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) var(--sp-10); border-bottom:1px solid var(--border-subtle); cursor:pointer; min-height:36px; }
+.fc-ta-row:last-of-type { border-bottom:none; }
+.fc-ta-row:active { background:var(--sage-light); }
+.fc-ta-name { flex:1; font-weight:600; font-size:var(--fs-base); color:var(--text); }
+.fc-ta-meta { font-size:var(--fs-2xs); color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-wide); font-weight:500; }
+/* C1 — no-match add-as-new-food row (the .meal-dd-add pattern reborn). */
+.fc-dd-add { font-size:var(--fs-base); padding:var(--sp-8) var(--sp-12); cursor:pointer; color:var(--sage); font-weight:700; display:flex; align-items:center; gap:var(--sp-8); transition:background var(--ease-fast); }
+.fc-dd-add:hover { background:var(--sage-light); }
+
+/* ── Card footer — intake editor + insight + saved cue ── */
+.fc-card-foot { display:flex; flex-direction:column; gap:var(--sp-6); margin-top:var(--sp-8); }
+.fc-intake { margin:0; }
+.fc-insight { display:flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-snug); }
+.fc-saved-cue { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-2xs); color:var(--tc-sage); font-weight:600; }
+.fc-saved-cue .zi { width:var(--icon-xs); height:var(--icon-xs); }
+
+/* ── Mount A — sheet mount (rails render directly into the sheet body) ── */
+.fc-mount-sheet { display:flex; flex-direction:column; gap:var(--sp-8); }
+
+/* ── Dark mode — preserve domain identity; deepen backgrounds (Law 1) ── */
+[data-theme="dark"] .fc-card-breakfast { background:rgba(250,212,180,0.10); }
+[data-theme="dark"] .fc-card-lunch     { background:rgba(181,213,197,0.10); }
+[data-theme="dark"] .fc-card-dinner    { background:rgba(201,184,232,0.10); }
+[data-theme="dark"] .fc-card-snack     { background:rgba(240,200,120,0.10); }
+[data-theme="dark"] .fc-repeat-chip { background:var(--surface-alt); border-color:var(--tc-sage); }
+[data-theme="dark"] .fc-repeat-chip.primary { background:#1e3028; }
+[data-theme="dark"] .fc-repeat-head { color:#7ac0a0; }
+[data-theme="dark"] .fc-combo-chip { background:#2a2240; border-color:var(--tc-lav); }
+[data-theme="dark"] .fc-combo-head { color:#b8a8e0; }
+[data-theme="dark"] .fc-combo-conf { background:#3a2f55; color:#e6dcf5; }
+[data-theme="dark"] .fc-items-list { background:var(--surface); border-color:#3a2e3e; }
+[data-theme="dark"] .fc-item-row { border-bottom-color:#3a2e3e; }
+[data-theme="dark"] .fc-qty-stepper { background:#221c28; }
+[data-theme="dark"] .fc-qty-step { background:var(--surface); border-color:#3a2e3e; color:#7ac0a0; }
+[data-theme="dark"] .fc-next-chip { background:#1e3028; color:#7ac0a0; border-color:var(--tc-sage); }
+[data-theme="dark"] .fc-next-conf { background:var(--surface); color:#7ac0a0; }
+[data-theme="dark"] .fc-skip-pill { background:#221c28; color:var(--mid); border-color:#3a2e3e; }
+[data-theme="dark"] .fc-time { border-color:rgba(255,255,255,0.1); color:var(--mid); }
+[data-theme="dark"] .fc-dropdown { border-color:var(--tc-peach); }
 
 /* ── Quick Log Toast ── */
 .ql-toast {

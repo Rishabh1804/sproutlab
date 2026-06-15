@@ -3541,8 +3541,8 @@ window.CURATED_COMBOS = [
   { slot: 'snack', items: ['Coconut water', 'Cucumber'],
     rationale: 'hot-day hydration — electrolytes + cooling',
     minAgeMonths: 7 },
-  { slot: 'snack', items: ['Banana', 'Almonds'],
-    rationale: 'calorie-dense snack — fruit + nut for sustained energy',
+  { slot: 'snack', items: ['Banana', 'Almonds (ground)'],
+    rationale: 'calorie-dense snack — fruit + nut (ground/soaked, never whole) for sustained energy',
     minAgeMonths: 8 },
 ];
 
@@ -3671,6 +3671,13 @@ window._fdWriteStructuredMeal = function(dateKey, meal, payload) {
     items: items,
     time: payload.time || null,
     overallIntake: (typeof payload.overallIntake === 'number') ? payload.overallIntake : 0.75,  // ratified DEFAULT "Most"
+    // F-6a clause C4 (intake provenance — F6-3): the writer still defaults
+    // the overallIntake mirror to 0.75, but it records whether a PARENT
+    // actually touched an intake pill. With saveFeedingDay retired, the
+    // post-save prompt can no longer infer "unset" from a missing _intake
+    // field (the writer always writes one) — so it checks this provenance
+    // flag instead. `true` only when the caller passes intakeExplicit.
+    intakeExplicit: payload.intakeExplicit === true,
     note: payload.note || '',
     sourceFlow: payload.sourceFlow || 'fob-feed',
     schemaVersion: window._FEEDING_V1_SCHEMA_VERSION,

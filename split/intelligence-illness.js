@@ -1992,101 +1992,40 @@ function promptColdTrack() {
   setTimeout(function() { renderColdEpisodeCard(); renderHomeColdBanner(); renderColdHistory(); document.getElementById('coldEpisodeCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
 }
 
-// Get top foods for a specific meal slot
-function getMealSlotTopFoods(mealKey, n) {
-  const counts = {};
-  Object.values(feedingData).forEach(day => {
-    const val = day[mealKey];
-    if (!val || val === '—skipped—') return;
-    val.split(',').forEach(item => {
-      const trimmed = item.trim();
-      if (trimmed.length <= 2) return;
-      const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
-      if (!counts[normalized]) counts[normalized] = { display: trimmed, count: 0 };
-      counts[normalized].count++;
-    });
-  });
-  return Object.values(counts)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, n)
-    .map(m => ({ name: m.display.charAt(0).toUpperCase() + m.display.slice(1), count: m.count }));
-}
+// R3 (F-6a) — RETIRED `getMealSlotTopFoods`: sole live caller was
+// renderDietQuickPicker (R1, the dqp zone). Deleted, no migration.
 
+// insertDietFood / fillDietMeal — RE-TARGETED (F-6a). The dqp pill taps they
+// served die with the dqp zone, but renderDietIntelBanner (a kept surface)
+// still emits these two actions for its "log this combo" + synergy-partner
+// pills. So rather than retire the names, they now route into the composer's
+// Mount-B card for the slot (structured save-on-action via fcAddItem /
+// instance.items), not the gone free-text .meal-input. Skipped slots no-op.
 function insertDietFood(meal, food) {
-  const inp = document.getElementById('meal-' + meal);
-  if (!inp || inp.disabled) return;
-  const current = inp.value.trim();
-  inp.value = current ? current + ', ' + food : food;
-  updateMealInsight(meal);
-  // Hide the zone after inserting since meal now has content
-  const zone = document.getElementById('dqp-' + meal);
-  if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
-  renderDietIntelBanner();
-  inp.focus();
+  if (typeof _fcInstances === 'undefined') return;
+  var inst = _fcInstances.find(function(i) { return i.variant === 'card' && i.slot === meal; });
+  if (!inst || inst.skipped) return;
+  if (typeof fcAddItem === 'function') fcAddItem(inst, food, 'banner');
 }
 
 function fillDietMeal(meal, value) {
-  const inp = document.getElementById('meal-' + meal);
-  if (!inp || inp.disabled) return;
-  inp.value = value;
-  updateMealInsight(meal);
-  // Hide the zone after filling
-  const zone = document.getElementById('dqp-' + meal);
-  if (zone) { zone.innerHTML = ''; zone.classList.remove('has-pills'); }
-  renderDietIntelBanner();
-  inp.focus();
+  if (typeof _fcInstances === 'undefined') return;
+  var inst = _fcInstances.find(function(i) { return i.variant === 'card' && i.slot === meal; });
+  if (!inst || inst.skipped) return;
+  inst.items = String(value).split(/[,+]/).map(function(s) { return s.trim(); }).filter(Boolean).map(function(nm) {
+    var d = window._fdResolveQtyDefaults(nm);
+    return { name: nm, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(nm), source: 'banner' };
+  });
+  inst.sourceFlow = 'diet-tab';
+  if (typeof _fcAfterItemChange === 'function') _fcAfterItemChange(inst);
 }
 
-function saveFeedingDay() {
-  const d = document.getElementById('feedingDate').value;
-  const existing = feedingData[d] || {};
-  feedingData[d] = {
-    breakfast: document.getElementById('meal-breakfast').disabled ? (existing.breakfast || '') : document.getElementById('meal-breakfast').value,
-    lunch:     document.getElementById('meal-lunch').disabled ? (existing.lunch || '') : document.getElementById('meal-lunch').value,
-    dinner:    document.getElementById('meal-dinner').disabled ? (existing.dinner || '') : document.getElementById('meal-dinner').value,
-    snack:     document.getElementById('meal-snack').disabled ? (existing.snack || '') : document.getElementById('meal-snack').value,
-  };
-  // Save optional meal times + preserve F-2 sidecar when text unchanged
-  ['breakfast','lunch','dinner','snack'].forEach(m => {
-    const timeVal = document.getElementById('mealtime-' + m)?.value || '';
-    if (timeVal) {
-      feedingData[d][m + '_time'] = timeVal;
-    } else if (existing[m + '_time']) {
-      feedingData[d][m + '_time'] = existing[m + '_time'];
-    }
-    // Preserve existing intake values
-    if (existing[m + '_intake'] !== undefined) {
-      feedingData[d][m + '_intake'] = existing[m + '_intake'];
-    }
-    // F-2 fix (E_a): preserve the [meal + '_v1'] structured sidecar when
-    // the meal text didn't change. Without this, every Diet tab editor
-    // save silently drops the rich shape (items[], qty/unit, sourceFlow,
-    // overallIntake) that the FOB Feed sheet had written — Today So Far
-    // + L1-L4 helpers + future F-3 review surface all degrade to legacy
-    // comma-split with synthesized default qty.
-    if (existing[m + '_v1'] && feedingData[d][m] === (existing[m] || '')) {
-      feedingData[d][m + '_v1'] = existing[m + '_v1'];
-    }
-    // If text changed, the sidecar is intentionally dropped — the legacy
-    // string is now the source of truth post-edit (matches the pre-F-2
-    // behavior that this writer used to maintain implicitly).
-  });
-  save(KEYS.feeding, feedingData);
-  _tsfMarkDirty();
-  _islMarkDirty('diet');
-  // CR-14: re-evaluate with-fat for today's dose entries that were logged before this meal.
-  if (d === today() && typeof _refreshTodayMedWithFat === 'function') _refreshTodayMedWithFat();
-  // Auto-introduce any new foods from all meal slots
-  autoIntroduceFoodsFromDay(d);
-  renderFeedingHistory();
-  renderTips();
-  renderFoods();
-  renderDietStats();
-  renderDietIntelBanner();
-  showPostSaveFlash(d);
-  matchSuggestionsAfterSave(d);
-  _miRenderDietTabIntake();
-}
+// R7 (F-6a) — RETIRED `saveFeedingDay`: the legacy-string whole-day writer
+// whose text-changed branch intentionally dropped the `_v1` sidecar. The
+// composer is the one writer (save-on-action via _fdWriteStructuredMeal); the
+// edit-path sidecar-drop regression is closed because there is no longer any
+// editor that writes legacy-only. This retires the last large legacy-string
+// producer (the stated reason F-5 sequences after F-6 and lands cleaner).
 
 // ── Post-Save Nutrition Flash ──
 
@@ -2444,10 +2383,11 @@ function openQuickModal(type) {
     });
     const qlTimeEl = document.getElementById('qlFeedTime');
     if (qlTimeEl) qlTimeEl.value = '';
-    // F-2: reset items list state + render the four autofill regions
-    // (L1 repeat / L2 combo / items list / L3 next-item ribbon).
-    if (typeof _qlFeedReset === 'function') _qlFeedReset();
-    if (typeof _qlRenderFeedSheet === 'function') _qlRenderFeedSheet();
+    // F-6a: mount/refresh the shared feeding composer (variant 'sheet') into
+    // the sheet body — it renders the L1 repeat / L2 combo / items list / L3
+    // next-item ribbon / L4 typeahead, hydrated from the active slot+date.
+    if (typeof _qlIntakeExplicit !== 'undefined') _qlIntakeExplicit = false;
+    if (typeof _qlMountSheetComposer === 'function') _qlMountSheetComposer();
     // Reset intake pills to default (Most)
     _miWireQLIntakePills();
     // Hide backfill UI unless in backfill mode

@@ -954,65 +954,37 @@
       <div class="grid">
 
         <!-- Domain score hero (preserved ID; renderers in diet.js read this) -->
-        <div class="card col-full card-hero hero-diet" id="dietDomainHero" style="display:none;"></div>
+        <div class="card col-full card-hero hero-diet fc-hidden" id="dietDomainHero"></div>
 
         <!-- Stats pills (preserved ID) -->
         <div class="col-full stat-pills-grid" id="dietStats"></div>
 
         <div class="home-section-label sec-t1 col-full">Log &amp; Check</div>
 
-        <!-- Today's Meals — daily entry, primary Log-sub-tab surface (F-2 replaces with structured item builder) -->
+        <!-- Today's Meals — daily entry, primary Log-sub-tab surface.
+             F-6a: four composer mount points (Mount B), one per slot. The
+             composer (diet.js _fc*) renders each card's header (slot label +
+             skip pill + time + reserved mic), rails / items / next-item /
+             typeahead, and footer (intake + insight + saved cue). The
+             whole-day Save button is removed — save-on-action everywhere. -->
         <div class="card card-action col-full card-overflow-visible">
           <div class="card-header">
-            <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-bowl"/></svg></div> Today's Meals <button class="help-btn" aria-label="Help" data-help="help-meals"><span class="t-sm">ⓘ</span></button></div>
+            <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-bowl"/></svg></div> Today's Meals <button class="help-btn" aria-label="Help" data-help="help-meals"><svg class="zi" aria-hidden="true"><use href="#zi-info"/></svg></button></div>
             <div class="date-nav">
               <button data-action="datePrev" aria-label="Previous day">‹</button>
               <input type="date" id="feedingDate">
               <button data-action="dateNext" aria-label="Next day">›</button>
-              <button class="btn-primary bp-peach" id="saveFeedBtn" data-action="saveFeedingDay">Save</button>
             </div>
           </div>
-          <div class="help-tip" id="help-meals">Log what Ziva eats each day. Type a food name and the autocomplete will suggest options. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+          <div class="help-tip" id="help-meals">Log what Ziva eats each day. Tap a "Your usual" or suggested combo, or type a food — each meal saves the moment you tap, with an Undo if you slip. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
 
           <div id="dietIntelBanner"></div>
 
-          <div class="meal-cards">
-            <div class="meal-card breakfast">
-              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Breakfast <span class="meal-skip-btn" id="skip-breakfast" data-skip-meal="breakfast" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-breakfast" title="Meal time (optional)" placeholder="--:--"></div>
-              <div class="dqp-zone" id="dqp-breakfast"></div>
-              <div class="meal-input-wrap">
-                <input type="text" id="meal-breakfast" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-                <div class="meal-dropdown" id="md-breakfast"></div>
-              </div>
-              <div class="meal-insight" id="insight-breakfast" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-breakfast-text"></span></div>
-            </div>
-            <div class="meal-card lunch">
-              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> Lunch <span class="meal-skip-btn" id="skip-lunch" data-skip-meal="lunch" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-lunch" title="Meal time (optional)" placeholder="--:--"></div>
-              <div class="dqp-zone" id="dqp-lunch"></div>
-              <div class="meal-input-wrap">
-                <input type="text" id="meal-lunch" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-                <div class="meal-dropdown" id="md-lunch"></div>
-              </div>
-              <div class="meal-insight" id="insight-lunch" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-lunch-text"></span></div>
-            </div>
-            <div class="meal-card dinner">
-              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-moon"/></svg> Dinner <span class="meal-skip-btn" id="skip-dinner" data-skip-meal="dinner" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-dinner" title="Meal time (optional)" placeholder="--:--"></div>
-              <div class="dqp-zone" id="dqp-dinner"></div>
-              <div class="meal-input-wrap">
-                <input type="text" id="meal-dinner" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-                <div class="meal-dropdown" id="md-dinner"></div>
-              </div>
-              <div class="meal-insight" id="insight-dinner" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-dinner-text"></span></div>
-            </div>
-            <div class="meal-card snack">
-              <div class="meal-label"><svg class="zi" aria-hidden="true"><use href="#zi-spoon"/></svg> Snack <span class="meal-skip-btn" id="skip-snack" data-skip-meal="snack" style="display:none;">skip</span><input type="time" class="meal-time-input" id="mealtime-snack" title="Meal time (optional)" placeholder="--:--"></div>
-              <div class="dqp-zone" id="dqp-snack"></div>
-              <div class="meal-input-wrap">
-                <input type="text" id="meal-snack" class="meal-input" placeholder="Type to search foods..." autocomplete="off">
-                <div class="meal-dropdown" id="md-snack"></div>
-              </div>
-              <div class="meal-insight" id="insight-snack" style="display:none;"><span class="meal-insight-icon icon-amber"><svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></span><span id="insight-snack-text"></span></div>
-            </div>
+          <div class="fc-cards">
+            <div class="fc-card fc-card-breakfast" id="fc-card-breakfast" data-fc-slot="breakfast" data-fc-variant="card"></div>
+            <div class="fc-card fc-card-lunch" id="fc-card-lunch" data-fc-slot="lunch" data-fc-variant="card"></div>
+            <div class="fc-card fc-card-dinner" id="fc-card-dinner" data-fc-slot="dinner" data-fc-variant="card"></div>
+            <div class="fc-card fc-card-snack" id="fc-card-snack" data-fc-slot="snack" data-fc-variant="card"></div>
           </div>
         </div>
 
@@ -2667,36 +2639,13 @@
         <label class="micro-label">Date</label>
         <div class="ql-bf-row" id="qlBackfillPills"></div>
       </div>
-      <!-- F-2: L1 Repeat rail — "Same as yesterday's B" / "Same as today's lunch" (dinner only, ratification #6) -->
-      <div id="qlFeedRepeatWrap" class="ql-feed-rail-wrap" style="display:none;">
-        <label class="micro-label">Your usual</label>
-        <div class="ql-feed-rail" id="qlFeedRepeatRail"></div>
-      </div>
-      <!-- F-2: L2 Combo template rail — "Your usual breakfast" rolling-14d or curated cold-start -->
-      <div id="qlFeedCombosWrap" class="ql-feed-rail-wrap" style="display:none;">
-        <label class="micro-label" id="qlFeedCombosLabel">Suggested combos</label>
-        <div class="ql-feed-rail" id="qlFeedCombosRail"></div>
-      </div>
-      <!-- F-2: Items list — populated as items added; qty steppers per row -->
-      <div id="qlFeedItemsWrap">
-        <label class="micro-label">Items</label>
-        <div class="ql-feed-items-list" id="qlFeedItemsList">
-          <div class="ql-feed-items-empty">Tap a combo above, or type an item below</div>
-        </div>
-      </div>
-      <!-- F-2: L3 Next-item prediction ribbon — appears after first item; co-occurrence ranked -->
-      <div id="qlFeedNextWrap" class="ql-feed-rail-wrap" style="display:none;">
-        <label class="micro-label" id="qlFeedNextLabel">You usually add</label>
-        <div class="ql-feed-next-ribbon" id="qlFeedNextRibbon"></div>
-      </div>
-      <!-- F-2: L4 Typeahead input — NUTRITION + introduced foods + recent; default qty/unit inlined -->
-      <div>
-        <label class="micro-label">Add item</label>
-        <div class="meal-input-wrap">
-          <input type="text" id="qlFeedInput" class="form-input input-ctx-peach" placeholder="Type to add (e.g. 'av' for avocado mash)" autocomplete="off" data-action="qlFeedTypeaheadInput" data-action-on="input">
-          <div class="meal-dropdown" id="qlFeedDropdown"></div>
-        </div>
-      </div>
+      <!-- F-6a: feeding composer mount (Mount A, variant 'sheet'). The
+           composer (_fcMount, diet.js) renders the L1 repeat rail / L2 combo
+           rail / items list / L3 next-item ribbon / L4 typeahead + the C1
+           no-match add-row into here. The shell around it (meal pills,
+           backfill, time, intake pills, skip + save buttons) stays in the
+           quick-log layer. -->
+      <div id="fcSheetMount" class="fc-mount-sheet" data-fc-slot="breakfast" data-fc-variant="sheet"></div>
       <div class="d-flex gap-8 items-center">
         <label class="micro-label" style="margin:0;">Time</label>
         <input type="time" id="qlFeedTime" class="form-input input-ctx-peach" style="width:90px;padding:5px 8px;font-size:var(--fs-sm);">
@@ -2712,7 +2661,7 @@
         </div>
       </div>
       <div class="d-flex gap-8" style="align-items:stretch;">
-        <button class="ql-save-skip" data-action="qlFeedSkipMeal" type="button" title="Mark this meal as intentionally skipped">Skip this meal</button>
+        <button class="ql-save-skip" data-action="fcSkipMeal" type="button" title="Mark this meal as intentionally skipped">Skip this meal</button>
         <button class="ql-save ql-save-feed flex-1-min100">Save Feed <svg class="zi"><use href="#zi-check"/></svg></button>
       </div>
     </div>
