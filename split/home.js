@@ -4462,6 +4462,11 @@ function renderMedLog() {
 function initFeeding() {
   const t = today();
   document.getElementById('feedingDate').value = t;
+  // F-6a — mount the four composer cards (idempotent; reuses existing
+  // instances on re-entry). NOTE: initFeeding is reserved for TAB ENTRY — it
+  // hard-resets feedingDate to today(); it must NEVER be called from a
+  // composer onCommit (S1/F6-1 — that would snap a date-navved panel back).
+  if (typeof _fcMountDietCards === 'function') _fcMountDietCards();
   renderFoodChips();
   loadFeedingDay();
   renderDietStats();
@@ -4945,25 +4950,16 @@ function getMealInsight(mealStr) {
 }
 
 function updateMealInsight(meal) {
-  const val = document.getElementById('meal-' + meal).value;
-  const insight = getMealInsight(val);
-  const box  = document.getElementById('insight-' + meal);
-  const text = document.getElementById('insight-' + meal + '-text');
-  if (insight) {
-    // Add diversity hint for multi-food meals
-    let diversityHint = '';
-    const foodItems = val.split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
-    if (foodItems.length >= 2) {
-      const groupSet = new Set();
-      foodItems.forEach(f => { const cls = classifyFoodToGroup(f); if (cls) groupSet.add(cls.groupLabel); });
-      if (groupSet.size >= 3) diversityHint = ' · ' + zi('rainbow') + ' ' + groupSet.size + ' food groups';
-      else if (groupSet.size === 1 && foodItems.length >= 3) diversityHint = ' · ' + zi('hourglass') + ' all from ' + [...groupSet][0].toLowerCase();
-    }
-    text.innerHTML = insight + diversityHint;
-    box.style.display = 'flex';
-  } else {
-    box.style.display = 'none';
-  }
+  // F-6a (F6-9) — re-targeted from the legacy `.meal-input` value to the
+  // composer's items[]. The composer renders the per-meal insight inline in
+  // its card footer (_fcRenderInsight, class-toggled — the old
+  // box.style.display 'flex'/'none' writes are purged, HR-2). Re-rendering
+  // the matching card refreshes the insight. getMealInsight +
+  // classifyFoodToGroup stay the underlying helpers (now read inside
+  // _fcRenderInsight).
+  if (typeof _fcInstances === 'undefined') return;
+  var inst = _fcInstances.find(function(i) { return i.variant === 'card' && i.slot === meal; });
+  if (inst) inst.render();
 }
 
 // ─────────────────────────────────────────
@@ -5103,81 +5099,25 @@ function renderMilestoneHighlights() {
 }
 
 function renderFoodChips() {
-  // No-op — autocomplete is now inline on the input itself
-  // Close dropdowns on outside click
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.meal-input-wrap')) {
-      document.querySelectorAll('.meal-dropdown.open').forEach(d => d.classList.remove('open'));
-    }
-  });
-
-  // Meal-dropdown pick / add — pointerdown delegation with preventDefault.
-  // Architect bug-report 2026-05-28: tapping a dropdown item dismissed the
-  // mobile keyboard because the input's blur fired before the pick handler
-  // could call inp.focus(). Pointerdown fires BEFORE blur, and
-  // preventDefault on pointerdown stops the input from blurring at all —
-  // keyboard stays summoned across multi-food picks. Unifies mouse +
-  // touch via the Pointer Events API. Same listener handles both
-  // .meal-dd-item (pick existing food) and .meal-dd-add (add new food).
-  // Replaces the inline onmousedown handlers — incidental HR-3 cleanup
-  // (data-action delegation universal). Guard against renderFoodChips
-  // being called multiple times — listener attaches once per page load.
-  if (!window._mealDropdownPointerWired) {
-    window._mealDropdownPointerWired = true;
-    document.addEventListener('pointerdown', e => {
-      const pickEl = e.target.closest('[data-meal-pick]');
-      const addEl  = e.target.closest('[data-meal-add]');
-      if (!pickEl && !addEl) return;
-      // CRITICAL: preventDefault BEFORE blur — keeps input focused + keyboard up.
-      e.preventDefault();
-      if (pickEl) {
-        pickMealFood(pickEl.dataset.mealPick, pickEl.dataset.mealFood);
-      } else if (addEl) {
-        addNewFoodFromMeal(addEl.dataset.mealAdd, addEl.dataset.mealFood);
-      }
-    });
-  }
+  // F-6a — no-op. This used to wire the R4 last-token meal-dropdown (the
+  // outside-click close + the pointerdown pick/add delegation for
+  // .meal-dd-item / .meal-dd-add). Those die with the legacy .meal-input
+  // cards; the composer owns its own L4 typeahead dropdown with per-instance
+  // blur-dismiss (clause C2). Kept as a named no-op since initFeeding calls it.
 }
 
-// Get the last "token" being typed (after last comma)
-function getLastToken(val) {
-  const parts = val.split(',');
-  return parts[parts.length - 1].trim();
-}
-
-function onMealFocus(meal) {
-  const inp = document.getElementById('meal-' + meal);
-  const token = getLastToken(inp.value);
-  if (token.length > 0) {
-    showMealDropdown(meal, token);
-  }
-}
-
-function onMealInput(meal) {
-  const inp = document.getElementById('meal-' + meal);
-  const token = getLastToken(inp.value);
-  updateMealInsight(meal);
-  updateFeedingSaveBtn();
-  if (token.length >= 1) {
-    showMealDropdown(meal, token);
-  } else {
-    closeMealDropdown(meal);
-  }
-}
+// R4 (F-6a) — RETIRED the meal-input glue `getLastToken` / `onMealFocus` /
+// `onMealInput`: the four legacy `.meal-input`s are replaced by composer
+// instances whose L4 typeahead routes through `fcTypeaheadInput` (delegated
+// input event), so there is no last-token typeahead to drive.
 
 // Wire the Diet panel's static inputs (HR-3 — no inline handlers). These
 // elements ship in template.html, so a single addEventListener pass at init
-// suffices; called from init() in core.js.
+// suffices; called from init() in core.js. F-6a: the four `.meal-input`s are
+// gone (composer mounts replace them); only the non-meal Diet inputs wire here.
 function wireDietPanelEvents() {
   const feedingDate = document.getElementById('feedingDate');
   if (feedingDate) feedingDate.addEventListener('change', loadFeedingDay);
-
-  ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
-    const inp = document.getElementById('meal-' + meal);
-    if (!inp) return;
-    inp.addEventListener('input', () => onMealInput(meal));
-    inp.addEventListener('focus', () => onMealFocus(meal));
-  });
 
   const combo = document.getElementById('comboInput');
   if (combo) {
@@ -5192,242 +5132,38 @@ function wireDietPanelEvents() {
   }
 }
 
-function updateFeedingSaveBtn() {
-  const b = document.getElementById('meal-breakfast')?.value.trim();
-  const l = document.getElementById('meal-lunch')?.value.trim();
-  const d = document.getElementById('meal-dinner')?.value.trim();
-  activateBtn('saveFeedBtn', b || l || d);
-}
-
-function showMealDropdown(meal, query) {
-  const dd = document.getElementById('md-' + meal);
-  const q = query.toLowerCase();
-  let html = '';
-  let totalMatches = 0;
-
-  Object.entries(FOOD_SUGGESTIONS).forEach(([cat, items]) => {
-    // Surfacing gate (4-class diet preference): within the non-veg category keep only the
-    // items the preference surfaces — eggetarian → egg only, pescatarian → egg + fish, veg →
-    // none (category drops out). Per-item sid, since the list mixes egg/chicken/fish/meat.
-    const isNonvegCat = cat.includes('Non-Veg');
-    let filtered = items.filter(f => f.toLowerCase().includes(q));
-    if (isNonvegCat) filtered = filtered.filter(f => _dietAllowsNonvegSid(_dietNonvegSid(f)));
-    if (filtered.length === 0) return;
-    html += `<div class="meal-dd-cat">${cat}</div>`;
-    filtered.forEach(food => {
-      totalMatches++;
-      // Architect bug-report 2026-05-28: dropdown picks dismissed the
-      // keyboard + dropped the cursor on mobile. Migrating from inline
-      // onmousedown (HR-3 carve-out) to data-attribute delegation with a
-      // global pointerdown listener that preventDefault's BEFORE the input
-      // blurs. Closes keyboard-dismiss friction on multi-food meals.
-      html += `<div class="meal-dd-item" data-meal-pick="${escAttr(meal)}" data-meal-food="${escAttr(food)}">
-        ${highlightMatch(food, q)}
-      </div>`;
-    });
-  });
-
-  // Always show "Add as new food" at the bottom if query doesn't exactly match
-  const allFoods = Object.values(FOOD_SUGGESTIONS).flat();
-  const exactMatch = allFoods.some(f => f.toLowerCase() === q);
-  if (query.length >= 2 && !exactMatch) {
-    const capitalized = query.charAt(0).toUpperCase() + query.slice(1);
-    html += `<div class="meal-dd-add" data-meal-add="${escAttr(meal)}" data-meal-food="${escAttr(capitalized)}">
-      ＋ Add "<strong>${escHtml(capitalized)}</strong>" as new food
-    </div>`;
-  }
-
-  if (totalMatches === 0 && query.length < 2) {
-    html = '<div class="meal-dd-empty">Keep typing to search...</div>';
-  }
-
-  dd.innerHTML = html;
-  dd.classList.add('open');
-}
-
-function highlightMatch(food, query) {
-  const idx = food.toLowerCase().indexOf(query);
-  if (idx === -1) return escHtml(food);
-  const before = food.slice(0, idx);
-  const match = food.slice(idx, idx + query.length);
-  const after = food.slice(idx + query.length);
-  return `${escHtml(before)}<span style="color:var(--tc-rose);font-weight:700;">${escHtml(match)}</span>${escHtml(after)}`;
-}
-
-function closeMealDropdown(meal) {
-  document.getElementById('md-' + meal).classList.remove('open');
-}
-
-function pickMealFood(meal, food) {
-  const inp = document.getElementById('meal-' + meal);
-  if (!inp) return;
-  const parts = inp.value.split(',').map(s => s.trim()).filter(Boolean);
-  // Replace the last token (what user was typing) with the picked food
-  if (parts.length > 0) {
-    parts[parts.length - 1] = food;
-  } else {
-    parts.push(food);
-  }
-  inp.value = parts.join(', ') + ', ';
-  closeMealDropdown(meal);
-  updateMealInsight(meal);
-  inp.focus();
-  // Architect bug-report 2026-05-28: cursor was landing at position 0
-  // after value assignment, so parents had to drag the caret to the end
-  // before typing the next food. setSelectionRange parks the cursor at
-  // the end of the new value (after the trailing ", ") so the next
-  // keystroke continues naturally. Paired with the pointerdown-preventDefault
-  // wiring below to keep the on-screen keyboard summoned across picks.
-  const _len = inp.value.length;
-  try { inp.setSelectionRange(_len, _len); } catch (e) { /* unsupported input type — ignore */ }
-  // Auto-add to Foods Introduced if not already tracked (base food matching)
-  const lower = food.toLowerCase().trim();
-  const base = _baseFoodName(lower);
-  const alreadyIntroduced = foods.some(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
-  if (!alreadyIntroduced && lower.length > 1) {
-    foods.push({ name: food, reaction: 'ok', date: today() });
-    save(KEYS.foods, foods);
-    renderFoods();
-  }
-}
-
-function addNewFoodFromMeal(meal, foodName) {
-  // Check if base food already introduced
-  const base = _baseFoodName(foodName.toLowerCase().trim());
-  const alreadyExists = foods.some(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
-  if (!alreadyExists) {
-    foods.push({ name: foodName, reaction: 'ok', date: today() });
-    save(KEYS.foods, foods);
-    renderFoods();
-  }
-
-  // Add to FOOD_SUGGESTIONS under a dynamic "Added" category so it shows in future searches
-  if (!FOOD_SUGGESTIONS['Added']) FOOD_SUGGESTIONS['Added'] = [];
-  if (!FOOD_SUGGESTIONS['Added'].includes(foodName)) {
-    FOOD_SUGGESTIONS['Added'].push(foodName);
-  }
-
-  // Manual nutrition tagging for unknown foods (resolves via _FOOD_ALIASES)
-  if (!getNutrition(foodName)) {
-    showNutrientTagModal(foodName);
-  }
-
-  // Pick it into the meal input
-  pickMealFood(meal, foodName);
-}
+// R7 (F-6a) — RETIRED `updateFeedingSaveBtn`: the whole-day #saveFeedBtn it
+// gated is removed (the composer is save-on-action; there is no Save button).
+// R4 (F-6a) — RETIRED the last-token typeahead pair `showMealDropdown` /
+// `closeMealDropdown` / `pickMealFood` / `addNewFoodFromMeal`: superseded by
+// the composer's L4 typeahead (fcTypeaheadInput → _fdSearchNutrition) + the
+// C1 no-match add-row. The unknown-food nutrient-tag prompt that
+// addNewFoodFromMeal carried is KEPT (Honesty delta #1) — it now fires on
+// commit of an unmatched C1 add inside fcAddItem.
+// R5 (F-6a) — RETIRED `highlightMatch`: both callers (R4 here + R6 in diet.js)
+// die with their parents; this purges its inline-style match span (HR-2).
 
 function loadFeedingDay() {
-  const d = document.getElementById('feedingDate').value;
-  const entry = feedingData[d] || { breakfast:'', lunch:'', dinner:'', snack:'' };
-  ['breakfast','lunch','dinner','snack'].forEach(m => {
-    const input = document.getElementById('meal-' + m);
-    const timeInput = document.getElementById('mealtime-' + m);
-    const val = entry[m] || '';
-    if (val === '—skipped—') {
-      input.value = '';
-      input.disabled = true;
-      if (timeInput) { timeInput.value = ''; timeInput.disabled = true; }
-    } else {
-      input.value = val;
-      input.disabled = false;
-      if (timeInput) {
-        timeInput.value = entry[m + '_time'] || '';
-        timeInput.disabled = false;
-      }
-    }
-  });
-  ['breakfast','lunch','dinner','snack'].forEach(m => updateMealInsight(m));
-  updateFeedingSaveBtn();
-  updateMealSkipButtons();
-  renderDietQuickPicker();
+  // F-6a — the four legacy .meal-input cards are replaced by composer
+  // instances. First close any open card burst as an INTENT boundary
+  // (V-V-225): date-nav / tab-driven reload must not leave a burst whose
+  // undo toast + flash later fire over a panel now showing a different day
+  // (false attribution — the captured dateStr is correct, but the surface
+  // would name the wrong day). Then re-hydrate + render all four for the
+  // selected date (condensed-slot default inside _fcRefreshCards), and
+  // refresh the date-scoped intel banner.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
+  if (typeof _fcRefreshCards === 'function') _fcRefreshCards();
   renderDietIntelBanner();
-  _miRenderDietTabIntake();
 }
 
-// ── Diet Quick Picker: per-meal frequent + same-as zones ──
-
-function renderDietQuickPicker() {
-  const currentDate = document.getElementById('feedingDate')?.value || today();
-  const topFoods = getTopMeals(6);
-
-  // Get previous days' meals for same-as pills
-  const prevDays = [];
-  for (let i = 1; i <= 3; i++) {
-    const d = new Date(currentDate); d.setDate(d.getDate() - i);
-    const ds = toDateStr(d);
-    const entry = feedingData[ds];
-    if (entry) prevDays.push({ offset: i, date: ds, entry });
-  }
-
-  const MEAL_KEYS = ['breakfast','lunch','dinner','snack'];
-  const MEAL_LABELS = { breakfast:'B', lunch:'L', dinner:'D', snack:'S' };
-  const DAY_LABELS = { 1:'Yd', 2:'2d ago', 3:'3d ago' };
-
-  MEAL_KEYS.forEach(meal => {
-    const zone = document.getElementById('dqp-' + meal);
-    if (!zone) return;
-
-    const inp = document.getElementById('meal-' + meal);
-    const isDisabled = inp && inp.disabled;
-    const hasValue = inp && inp.value && inp.value !== '—skipped—';
-
-    // Don't show pills if meal already has content or is skipped
-    if (isDisabled || hasValue) {
-      zone.innerHTML = '';
-      zone.classList.remove('has-pills');
-      return;
-    }
-
-    let pills = [];
-
-    // 1. Same-as: same meal slot from previous days
-    prevDays.forEach(pd => {
-      const val = pd.entry[meal];
-      if (!val || val === '—skipped—') return;
-      const short = val.length > 22 ? val.substring(0, 20) + '…' : val;
-      const label = DAY_LABELS[pd.offset] || pd.offset + 'd';
-      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${label} <span class="op-60">${escHtml(short)}</span></div>`);
-    });
-
-    // 2. Same-as: today's OTHER meal slots that already have content
-    const todayEntry = feedingData[currentDate] || {};
-    const MEAL_EMOJI = { breakfast:zi('sun'), lunch:zi('sun'), dinner:zi('moon'), snack:zi('spoon') };
-    MEAL_KEYS.forEach(otherMeal => {
-      if (otherMeal === meal) return;
-      const val = document.getElementById('meal-' + otherMeal)?.value || todayEntry[otherMeal] || '';
-      if (!val || val === '—skipped—') return;
-      const short = val.length > 20 ? val.substring(0, 18) + '…' : val;
-      pills.push(`<div class="dqp-same" data-action="fillDietMeal" data-arg="${escAttr(meal)}" data-arg2="${escHtml(val)}" title="${escAttr(val)}">${MEAL_EMOJI[otherMeal]} ${MEAL_LABELS[otherMeal]} <span class="op-60">${escHtml(short)}</span></div>`);
-    });
-
-    // 2. Top frequent foods for this meal slot (from meal-specific history)
-    const mealFreq = getMealSlotTopFoods(meal, 4);
-    mealFreq.forEach(f => {
-      pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× in ${MEAL_LABELS[meal]}">${escHtml(f.name)}</div>`);
-    });
-
-    // 3. If no meal-specific foods, show general top foods
-    if (mealFreq.length === 0 && topFoods.length > 0) {
-      topFoods.slice(0, 3).forEach(f => {
-        pills.push(`<div class="dqp-pill" data-action="insertDietFood" data-arg="${escAttr(meal)}" data-arg2="${escHtml(f.name)}" title="${f.count}× logged">${escHtml(f.name)}</div>`);
-      });
-    }
-
-    if (pills.length > 0) {
-      zone.innerHTML = '<div class="dqp-pills">' + pills.join('') + '</div>';
-      zone.classList.add('has-pills');
-    } else {
-      zone.innerHTML = '';
-      zone.classList.remove('has-pills');
-    }
-  });
-}
+// R1 (F-6a) — RETIRED `renderDietQuickPicker` (the dqp zone). Its
+// same-as-yesterday / cross-slot fill / top-frequent surfaces are superseded
+// by the composer's L1 repeat rail + L2 combo rail. Behavior delta #2 (F6-11,
+// disclosed): the dqp's cross-slot "same as today's other meal" fill loses
+// generality — the L1 successor covers same-as-yesterday (fromDate) and the
+// lunch→dinner echo only; broader cross-slot generalization is registered as
+// F-4 future work. R2 (getTopMeals) and R3 (getMealSlotTopFoods) died with it.
 
 // ── Diet Intelligence Banner: reaction window + synergy suggestions ──
 
@@ -5485,10 +5221,12 @@ function renderDietIntelBanner() {
   const todayFoodsPerMeal = {};
   const emptyMeals = [];
   MEAL_KEYS.forEach(m => {
-    const val = document.getElementById('meal-' + m)?.value || todayEntry[m] || '';
+    // F-6a — the legacy .meal-input is gone; read committed state from
+    // feedingData (the composer writes through immediately, so this is live).
+    const val = todayEntry[m] || '';
     if (isRealMeal(val)) {
       todayFoodsPerMeal[m] = val.split(/[,+]/).map(f => f.trim().toLowerCase()).filter(f => f.length > 1);
-    } else if (val !== '—skipped—') {
+    } else if (val !== SKIPPED_MEAL) {
       emptyMeals.push(m);
     }
   });

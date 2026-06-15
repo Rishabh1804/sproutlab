@@ -1,41 +1,38 @@
 #!/usr/bin/env bash
-# audit-feed-sheet-wiring-v1.sh — F-2 structural wiring guard.
-# Spec: docs/specs/food-sub-tab-v1.md §F-2 (ratification #5 — hard tap-budget).
+# audit-feed-sheet-wiring-v1.sh — feeding-entry structural wiring guard.
+# Spec: docs/specs/food-sub-tab-v1-f6-feeding-composer.md (F-6a, ratified
+# 2026-06-10), amending docs/specs/food-sub-tab-v1.md §F-2 (ratification #5 —
+# hard tap-budget). Updated in the F-6a PR per §Retirements → audit gates.
 #
-# Unlike the banned-pattern audits (chip taxonomy, card priority, activity
-# categories, no-personalised-prediction), this is a REQUIRED-PRESENCE
-# audit: it asserts that the wiring enabling the 3-tap-repeat / 4-tap-
-# combo / 6-tap-novel tap budgets stays connected. If a refactor silently
-# unwires the autofill rails or the structured-shape writer, the parent's
-# tap-count for the common case explodes from 4 → 12+ and the build fails
-# loud rather than shipping a regression.
+# F-6a extracted the FAB sheet's item-builder into the shared feeding
+# composer (_fc*, diet.js) with TWO mounts: the FAB sheet (variant 'sheet')
+# and the four Diet→Log cards (variant 'card'). This is a REQUIRED-PRESENCE
+# audit: it asserts the wiring enabling the 3-tap-repeat / 6-tap-novel tap
+# budgets stays connected across BOTH mounts. If a refactor silently unwires
+# the autofill rails or the structured-shape writer, the parent's tap-count
+# for the common case explodes and the build fails loud.
 #
-# Six structural assertions:
-#
-#   1. TEMPLATE WRAPS — qlModal-feed contains the four F-2 wrap IDs
-#      (qlFeedRepeatWrap / qlFeedCombosWrap / qlFeedItemsWrap /
-#      qlFeedNextWrap). Removing any silently kills its rail surface.
-#
-#   2. WRITER CALL — saveQLFeed routes through _fdWriteStructuredMeal.
-#      A regression that reverts to direct day[meal] = string writes
-#      loses qty/unit/sourceFlow on disk + breaks F-3 review surface.
-#
-#   3. HANDLERS — the seven F-2 handlers exist:
-#      qlFeedApplyRepeat / qlFeedApplyCombo / qlFeedAddItem /
-#      qlFeedAdjustQty / qlFeedRemoveItem / qlFeedSkipMeal /
-#      qlFeedTypeaheadInput.
-#
-#   4. DISPATCHER — core.js routes each of the 7 actions. Missing
-#      dispatcher line = tappable element is dead.
-#
-#   5. NUTRITION_QTY_DEFAULTS — ≥30 entries (the top-used floor per
-#      ratification #4). Drops below this and the qty stepper falls
-#      through to category-resolver defaults for foods that should have
-#      explicit values.
-#
-#   6. CURATED_COMBOS — ≥10 entries spanning all four slots (breakfast/
-#      lunch/dinner/snack). L2 cold-start fallback requires variety per
-#      slot; below the floor, new parents see thin combo surface.
+# Assertions:
+#   1. MOUNTS — template carries the four Log-card composer mounts
+#      (fc-card-breakfast/lunch/dinner/snack) + the FAB sheet mount
+#      (fcSheetMount). Removing any silently kills that surface.
+#   2. WRITER CALL — BOTH variants write via _fdWriteStructuredMeal:
+#      saveQLFeed (sheet Save) AND _fcCommit (card save-on-action).
+#   3. HANDLERS — the composer handlers exist in diet.js:
+#      fcApplyRepeat / fcApplyCombo / fcAddItem / fcAdjustQty /
+#      fcRemoveItem / fcSkipMeal + the L4 typeahead handler _fcOnTypeahead.
+#   4. DISPATCHER — core.js routes each composer action.
+#   5. NUTRITION_QTY_DEFAULTS — ≥30 entries (top-used floor).
+#   6. CURATED_COMBOS — ≥10 entries spanning all four slots.
+#   7. NUTRITION join-integrity (V-K-203) — every qty-default key + every
+#      curated-combo item's nutritionRef resolves to a NUTRITION row.
+#   8. C1 NO-MATCH ADD-ROW (V-V-210) — the composer's L4 typeahead renders a
+#      tappable add-row (data-action="fcAddItem", .fc-dd-add) and the retired
+#      "Press Enter to add as new food" copy is ABSENT everywhere.
+#   9. NO-PREFILL-ON-PAST-DAYS (V-V-219) — _fcRenderPrefill is gated to today
+#      (a dateOf() !== today() early-return).
+#  10. NO initFeeding IN CARD COMMIT (F6-1/S1) — the composer's scoped-refresh
+#      path must NOT call initFeeding (which would snap a date-navved panel).
 #
 # Usage:   bash split/audit-feed-sheet-wiring-v1.sh   (0 = pass)
 
@@ -48,61 +45,56 @@ import sys
 
 FAILS = []
 
-# ── 1. Template wraps ──
-# The 4 F-2 wrap IDs are F-2-specific + appear nowhere else in the
-# codebase, so a file-wide grep is sufficient (avoids brittle balanced-
-# brace template parsing). The qlModal-feed block they live inside is
-# the only consumer.
 with open('split/template.html') as f:
     template = f.read()
-if 'id="qlModal-feed"' not in template:
-    FAILS.append(('template-wraps', 'qlModal-feed block not found in template.html'))
-else:
-    required_wraps = ['qlFeedRepeatWrap', 'qlFeedCombosWrap', 'qlFeedItemsWrap', 'qlFeedNextWrap']
-    missing = [w for w in required_wraps if 'id="' + w + '"' not in template]
-    if missing:
-        FAILS.append(('template-wraps', f'missing required F-2 wrap IDs in template: {missing}'))
-
-# ── 2. Writer call ──
 with open('split/intelligence-quicklog.js') as f:
     qlog = f.read()
+with open('split/diet.js') as f:
+    data_diet = f.read()
+with open('split/core.js') as f:
+    core = f.read()
+with open('split/data.js') as f:
+    data = f.read()
+
+# ── 1. Composer mounts ──
+if 'id="qlModal-feed"' not in template:
+    FAILS.append(('mounts', 'qlModal-feed block not found in template.html'))
+required_mounts = ['fcSheetMount', 'fc-card-breakfast', 'fc-card-lunch', 'fc-card-dinner', 'fc-card-snack']
+missing = [w for w in required_mounts if 'id="' + w + '"' not in template]
+if missing:
+    FAILS.append(('mounts', f'missing required composer mount IDs in template: {missing}'))
+
+# ── 2. Writer call — both variants ──
 save_match = re.search(r'function saveQLFeed\(\)\s*\{(.*?)^\}', qlog, re.S | re.M)
 if not save_match:
     FAILS.append(('writer-call', 'saveQLFeed function not found in intelligence-quicklog.js'))
 elif '_fdWriteStructuredMeal' not in save_match.group(1):
-    FAILS.append(('writer-call', 'saveQLFeed does not call _fdWriteStructuredMeal — structured shape would not persist'))
+    FAILS.append(('writer-call', 'saveQLFeed (sheet Save) does not call _fdWriteStructuredMeal'))
+commit_match = re.search(r'function _fcCommit\(inst[^)]*\)\s*\{(.*?)^\}', data_diet, re.S | re.M)
+if not commit_match:
+    FAILS.append(('writer-call', '_fcCommit function not found in diet.js (card save-on-action writer)'))
+elif '_fdWriteStructuredMeal' not in commit_match.group(1):
+    FAILS.append(('writer-call', '_fcCommit (card save-on-action) does not call _fdWriteStructuredMeal'))
 
 # ── 3. Handlers ──
 required_handlers = [
-    'qlFeedApplyRepeat',
-    'qlFeedApplyCombo',
-    'qlFeedAddItem',
-    'qlFeedAdjustQty',
-    'qlFeedRemoveItem',
-    'qlFeedSkipMeal',
-    'qlFeedTypeaheadInput',
+    'fcApplyRepeat', 'fcApplyCombo', 'fcAddItem', 'fcAdjustQty',
+    'fcRemoveItem', 'fcSkipMeal', '_fcOnTypeahead',
 ]
-missing_handlers = []
-for h in required_handlers:
-    if not re.search(r'function\s+' + re.escape(h) + r'\s*\(', qlog):
-        missing_handlers.append(h)
+missing_handlers = [h for h in required_handlers
+                    if not re.search(r'function\s+' + re.escape(h) + r'\s*\(', data_diet)]
 if missing_handlers:
-    FAILS.append(('handlers', f'missing F-2 handler function(s) in intelligence-quicklog.js: {missing_handlers}'))
+    FAILS.append(('handlers', f'missing composer handler function(s) in diet.js: {missing_handlers}'))
 
 # ── 4. Dispatcher ──
-with open('split/core.js') as f:
-    core = f.read()
-missing_dispatch = []
-for h in required_handlers:
-    # Match either: action === 'handlerName'  OR  routes through handlerName
-    if not re.search(r"action\s*===\s*['\"]" + re.escape(h) + r"['\"]", core):
-        missing_dispatch.append(h)
+dispatch_actions = ['fcApplyRepeat', 'fcApplyCombo', 'fcAddItem', 'fcAdjustQty',
+                    'fcRemoveItem', 'fcSkipMeal', 'fcTypeaheadInput']
+missing_dispatch = [h for h in dispatch_actions
+                    if not re.search(r"action\s*===\s*['\"]" + re.escape(h) + r"['\"]", core)]
 if missing_dispatch:
     FAILS.append(('dispatcher', f'core.js dispatcher missing route(s) for: {missing_dispatch}'))
 
 # ── 5. NUTRITION_QTY_DEFAULTS count ──
-with open('split/data.js') as f:
-    data = f.read()
 qty_block = re.search(r'window\.NUTRITION_QTY_DEFAULTS\s*=\s*\{(.*?)^\};', data, re.S | re.M)
 if not qty_block:
     FAILS.append(('nutrition-qty-defaults', 'NUTRITION_QTY_DEFAULTS registry not found in data.js'))
@@ -120,21 +112,12 @@ else:
     combo_count = len(re.findall(r"slot:\s*'[^']+'", combos_text))
     if combo_count < 10:
         FAILS.append(('curated-combos', f'CURATED_COMBOS has {combo_count} entries (floor: 10)'))
-    # Slot coverage
     slots_in_combos = set(re.findall(r"slot:\s*'([^']+)'", combos_text))
-    expected_slots = {'breakfast', 'lunch', 'dinner', 'snack'}
-    missing_slots = expected_slots - slots_in_combos
+    missing_slots = {'breakfast', 'lunch', 'dinner', 'snack'} - slots_in_combos
     if missing_slots:
         FAILS.append(('curated-combos', f'CURATED_COMBOS missing slot coverage for: {sorted(missing_slots)}'))
 
 # ── 7. NUTRITION join-integrity (V-K-203) ──
-# The qty-defaults registry and curated-combo items are only load-bearing if
-# they join to a real NUTRITION row — F-5 nutrient compute keys off
-# nutritionRef, and the qty resolver's explicit override depends on the key
-# existing. This enforces the contract the nutritionRef comment claims but
-# the gate never actually checked (a typo'd or suffix-only food would ship
-# green, contributing zero nutrient signal). Ref derivation mirrors
-# _fdNutritionRef in data.js: paren-strip, then prep-suffix-stripped stem.
 nutr_block = re.search(r'const NUTRITION\s*=\s*\{(.*?)^\};', data, re.S | re.M)
 if not nutr_block:
     FAILS.append(('nutrition-join', 'NUTRITION knowledge base not found in data.js'))
@@ -148,13 +131,11 @@ else:
         if stem and stem != base and stem in nutr_keys:
             return stem
         return base
-    # 7a. every explicit qty-default key resolves to a NUTRITION row
     if qty_block:
         qty_keys = re.findall(r"^\s*'([^']+)'\s*:\s*\{", qty_block.group(1), re.M)
         orphan_qty = [k for k in qty_keys if k not in nutr_keys]
         if orphan_qty:
             FAILS.append(('nutrition-join', f'NUTRITION_QTY_DEFAULTS keys with no NUTRITION row: {orphan_qty}'))
-    # 7b. every curated-combo item's derived nutritionRef resolves to NUTRITION
     if combos_block:
         combo_items = []
         for grp in re.findall(r"items:\s*\[([^\]]*)\]", combos_block.group(1)):
@@ -163,9 +144,38 @@ else:
         if orphan_combo:
             FAILS.append(('nutrition-join', f'CURATED_COMBOS items whose nutritionRef misses NUTRITION: {orphan_combo}'))
 
+# ── 8. C1 no-match add-row (V-V-210) ──
+ta_match = re.search(r'function _fcOnTypeahead\([^)]*\)\s*\{(.*?)^\}', data_diet, re.S | re.M)
+if not ta_match:
+    FAILS.append(('c1-add-row', '_fcOnTypeahead not found — cannot verify the C1 no-match add-row'))
+else:
+    body = ta_match.group(1)
+    if 'fc-dd-add' not in body or 'fcAddItem' not in body:
+        FAILS.append(('c1-add-row', 'L4 typeahead no-match branch lacks the C1 tappable add-row (.fc-dd-add / fcAddItem)'))
+# retired false affordance must be gone everywhere
+for fn, txt in (('intelligence-quicklog.js', qlog), ('diet.js', data_diet), ('template.html', template)):
+    if 'Press Enter to add as new food' in txt:
+        FAILS.append(('c1-add-row', f'retired "Press Enter to add as new food" copy still present in {fn}'))
+
+# ── 9. No prefill on past days (V-V-219) ──
+prefill_match = re.search(r'function _fcRenderPrefill\(inst\)\s*\{(.*?)^\}', data_diet, re.S | re.M)
+if not prefill_match:
+    FAILS.append(('no-prefill-past', '_fcRenderPrefill not found — cannot verify the today-only gate'))
+elif "inst.dateOf() !== today()" not in prefill_match.group(1):
+    FAILS.append(('no-prefill-past', '_fcRenderPrefill is not structurally gated to today (no dateOf() !== today() return)'))
+
+# ── 10. No initFeeding in the card commit / scoped-refresh path (F6-1/S1) ──
+scoped_match = re.search(r'function _fcScopedRefresh\(inst\)\s*\{(.*?)^\}', data_diet, re.S | re.M)
+if not scoped_match:
+    FAILS.append(('no-initfeeding', '_fcScopedRefresh not found — cannot verify the S1 no-initFeeding contract'))
+elif 'initFeeding' in scoped_match.group(1):
+    FAILS.append(('no-initfeeding', '_fcScopedRefresh calls initFeeding — S1/F6-1 violation (would snap a date-navved panel back to today)'))
+if commit_match and 'initFeeding' in commit_match.group(1):
+    FAILS.append(('no-initfeeding', '_fcCommit calls initFeeding — S1/F6-1 violation'))
+
 # ── Report ──
 if not FAILS:
-    print(f'audit-feed-sheet-wiring-v1: PASS (4 template wraps + 1 writer call + 7 handlers + 7 dispatchers + 30+ qty defaults + 10+ curated combos with full slot coverage + NUTRITION join-integrity)')
+    print('audit-feed-sheet-wiring-v1: PASS (5 mounts + 2-variant writer + 7 handlers + 7 dispatchers + 30+ qty defaults + 10+ curated combos + NUTRITION join + C1 add-row + no-prefill-past + no-initFeeding-in-commit)')
     sys.exit(0)
 
 print(f'audit-feed-sheet-wiring-v1: FAIL ({len(FAILS)} structural assertion(s) failed)')
@@ -173,14 +183,17 @@ for axis, msg in FAILS:
     print(f'  [{axis}] {msg}')
 print()
 print('Resolution:')
-print('  • template-wraps  — restore the 4 F-2 wrap IDs in qlModal-feed (template.html)')
-print('  • writer-call     — saveQLFeed must call _fdWriteStructuredMeal(dateStr, meal, payload)')
-print('  • handlers        — add/restore the F-2 handler functions in intelligence-quicklog.js')
-print('  • dispatcher      — wire each handler in core.js click delegation block')
-print('  • nutrition-qty-defaults — keep ≥30 explicit per-food qty entries (top-used floor)')
+print('  • mounts          — restore the 4 Log-card mounts (fc-card-*) + fcSheetMount in template.html')
+print('  • writer-call     — saveQLFeed AND _fcCommit must call _fdWriteStructuredMeal')
+print('  • handlers        — restore the fc* composer handlers + _fcOnTypeahead in diet.js')
+print('  • dispatcher      — wire each fc* action in core.js click delegation')
+print('  • nutrition-qty-defaults — keep ≥30 explicit per-food qty entries')
 print('  • curated-combos  — keep ≥10 entries with all 4 slots represented')
-print('  • nutrition-join  — every qty-default key + curated-combo nutritionRef must resolve to a NUTRITION row')
+print('  • nutrition-join  — every qty-default key + curated-combo nutritionRef must resolve to NUTRITION')
+print('  • c1-add-row      — keep the C1 no-match add-row; the "Press Enter" copy must stay retired (V-V-210)')
+print('  • no-prefill-past — _fcRenderPrefill must early-return on past days (V-V-219)')
+print('  • no-initfeeding  — the card commit/scoped-refresh path must never call initFeeding (F6-1/S1)')
 print()
-print('Spec: docs/specs/food-sub-tab-v1.md §F-2 / ratification #5 hard tap-budget')
+print('Spec: docs/specs/food-sub-tab-v1-f6-feeding-composer.md (F-6a)')
 sys.exit(1)
 PYEOF

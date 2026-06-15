@@ -732,7 +732,6 @@ function init() {
     else if (action === 'checkSymptoms') checkSymptoms();
     else if (action === 'datePrev') changeDate(-1);
     else if (action === 'dateNext') changeDate(1);
-    else if (action === 'saveFeedingDay') saveFeedingDay();
     else if (action === 'addFood') addFood();
     else if (action === 'toggleHomeNotes') toggleHomeNotes();
     else if (action === 'addNote') addNote();
@@ -853,8 +852,6 @@ function init() {
     else if (action === 'deleteFeedingEntry') deleteFeedingEntry(arg);
     else if (action === 'selectQLBackfillDate') selectQLBackfillDate(arg);
     else if (action === 'startBackfill') startBackfill(arg);
-    else if (action === 'fillDietMeal') fillDietMeal(arg);
-    else if (action === 'insertDietFood') insertDietFood(arg);
     else if (action === 'navFeedDay') { document.getElementById('feedingDate').value = arg; loadFeedingDay(); switchTab('diet'); }
     else if (action === 'navTabSub') { switchTab(arg); setTimeout(() => switchTrackSub(arg2), 100); }
     else if (action === 'closeScoreAndNav') { closeScorePopup(); setTimeout(() => switchTab(arg), 350); }
@@ -1061,13 +1058,21 @@ function init() {
     else if (action === 'qlOpenPoop') { _qlSuggestUsed = true; openQuickModal('poop'); }
     else if (action === 'qlOpenActivity') { _qlSuggestUsed = true; openQuickModal('activity'); }
     else if (action === 'qlSwitchSuggest') _qlSwitchSuggest(arg);
-    // ── F-2 FOB Feed sheet handlers (spec: docs/specs/food-sub-tab-v1.md §F-2) ──
-    else if (action === 'qlFeedApplyRepeat' && typeof qlFeedApplyRepeat === 'function') qlFeedApplyRepeat(arg);
-    else if (action === 'qlFeedApplyCombo' && typeof qlFeedApplyCombo === 'function') qlFeedApplyCombo(arg);
-    else if (action === 'qlFeedAddItem' && typeof qlFeedAddItem === 'function') qlFeedAddItem(arg, arg2);
-    else if (action === 'qlFeedAdjustQty' && typeof qlFeedAdjustQty === 'function') qlFeedAdjustQty(arg, arg2);
-    else if (action === 'qlFeedRemoveItem' && typeof qlFeedRemoveItem === 'function') qlFeedRemoveItem(arg);
-    else if (action === 'qlFeedSkipMeal' && typeof qlFeedSkipMeal === 'function') qlFeedSkipMeal();
+    // ── F-6a feeding composer handlers (spec: food-sub-tab-v1-f6-feeding-composer.md §Events) ──
+    // One handler set serves all five mounts (1 FAB sheet + 4 Log cards);
+    // the instance is resolved from the tapped element via
+    // closest('[data-fc-slot]') inside _fcInstanceForEl.
+    else if (action === 'fcApplyRepeat' && typeof fcApplyRepeat === 'function') fcApplyRepeat(_fcInstanceForEl(btn), arg);
+    else if (action === 'fcApplyCombo' && typeof fcApplyCombo === 'function') fcApplyCombo(_fcInstanceForEl(btn), arg);
+    else if (action === 'fcAddItem' && typeof fcAddItem === 'function') fcAddItem(_fcInstanceForEl(btn), arg, arg2);
+    else if (action === 'fcAdjustQty' && typeof fcAdjustQty === 'function') fcAdjustQty(_fcInstanceForEl(btn), arg, arg2);
+    else if (action === 'fcRemoveItem' && typeof fcRemoveItem === 'function') fcRemoveItem(_fcInstanceForEl(btn), arg);
+    else if (action === 'fcSkipMeal' && typeof fcSkipMeal === 'function') fcSkipMeal(_fcInstanceForEl(btn));
+    else if (action === 'fcConfirmPrefill' && typeof fcConfirmPrefill === 'function') fcConfirmPrefill(_fcInstanceForEl(btn), arg);
+    else if (action === 'fcEditPrefill' && typeof fcEditPrefill === 'function') fcEditPrefill(_fcInstanceForEl(btn));
+    else if (action === 'fcShowSuggestions' && typeof fcShowSuggestions === 'function') fcShowSuggestions(_fcInstanceForEl(btn));
+    else if (action === 'fcSetIntake' && typeof fcSetIntake === 'function') fcSetIntake(_fcInstanceForEl(btn), arg);
+    else if (action === 'fcVoiceStart' && typeof fcVoiceStart === 'function') fcVoiceStart(_fcInstanceForEl(btn));
     // ── Food Favorites ──
     else if (action === 'foodToggleFavorite') {
       toggleFoodFavorite(arg);
@@ -1140,7 +1145,7 @@ function init() {
     const action = el.dataset.action;
     if (action === 'checkVaccDateShift') checkVaccDateShift();
     else if (action === 'ctInputAnswer' && typeof ctInputAnswer === 'function') ctInputAnswer(el.dataset.arg);
-    else if (action === 'qlFeedTypeaheadInput' && typeof qlFeedTypeaheadInput === 'function') qlFeedTypeaheadInput();
+    else if (action === 'fcTypeaheadInput' && typeof _fcOnTypeahead === 'function') _fcOnTypeahead(el);
     else if (action === 'foodLibOnSearch' && typeof foodLibOnSearch === 'function') foodLibOnSearch(el);
     // libLookup is input-event-only (mirrors foodLibOnSearch above); it has no click route by design.
     else if (action === 'libLookup' && typeof libLookup === 'function') libLookup(el);
@@ -3508,8 +3513,8 @@ function getAlertNavAction(alertKey, alertTitle) {
   if (k.includes('sleep'))      return "switchTab('sleep')";
   if (k.includes('missing-meal') || k.includes('no-feed')) {
     const meal = ['dinner','lunch','breakfast','snack'].find(m => t.includes(m));
-    if (meal) return "switchTab('diet');setTimeout(()=>{const el=document.getElementById('meal-" + meal + "');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus()}},200)";
-    return "switchTab('diet');setTimeout(()=>{const el=document.getElementById('meal-breakfast');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},200)";
+    if (meal) return "switchTab('diet');setTimeout(()=>{const el=document.getElementById('fc-card-" + meal + "');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});const ta=el.querySelector('.fc-ta-input');if(ta)ta.focus()}},200)";
+    return "switchTab('diet');setTimeout(()=>{const el=document.getElementById('fc-card-breakfast');if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}},200)";
   }
   if (k.includes('feed') || k.includes('meal') || k.includes('food') || k.includes('iron') || k.includes('calcium') || k.includes('protein') || k.includes('nutrient') || k.includes('variety') || k.includes('diet'))
                                 return "switchTab('diet')";
@@ -3547,6 +3552,11 @@ function _ldConsumePendingScroll() {
   requestAnimationFrame(_go);
 }
 function switchTab(name) {
+  // F-6a (V-V-225) — leaving (or entering) any tab is an INTENT boundary for
+  // the feeding composer: close any open card burst now so its undo toast +
+  // flash fire here, against the day the parent just edited, rather than
+  // later over whatever tab/date they moved to.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
   if (!_gotoCardActive) _cardNavStack = [];
