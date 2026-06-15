@@ -2261,8 +2261,10 @@ function _suggestFoodForNutrient(nutrient) {
 }
 
 function _psfFallbackToast() {
-  const btn = document.getElementById('saveFeedBtn');
-  if (btn) { btn.textContent = 'Saved!'; setTimeout(() => btn.textContent = 'Save', 1500); }
+  // F-6a (Cipher Edict V) — R7 removed the whole-day #saveFeedBtn this used
+  // to poke "Saved!". On the live zero-meal-day path (_miShowPostSavePrompt),
+  // confirm via the toast instead so the affordance survives the retirement.
+  if (typeof showQLToast === 'function') showQLToast('Saved', 1500);
 }
 
 // Scan all meals for a given date and auto-add new foods to Foods Introduced
