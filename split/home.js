@@ -5145,12 +5145,14 @@ function wireDietPanelEvents() {
 
 function loadFeedingDay() {
   // F-6a — the four legacy .meal-input cards are replaced by composer
-  // instances. Re-hydrate + render all four for the selected date (with the
-  // condensed-slot default applied inside _fcRefreshCards), which carries
-  // skip state, per-meal time, intake editor, insight, and saved cue. Then
-  // refresh the date-scoped intel banner. The retired R1 dqp zone, the
-  // whole-day Save button (R7), and the separate _miRenderDietTabIntake
-  // injection all go away — the composer owns those surfaces now.
+  // instances. First close any open card burst as an INTENT boundary
+  // (V-V-225): date-nav / tab-driven reload must not leave a burst whose
+  // undo toast + flash later fire over a panel now showing a different day
+  // (false attribution — the captured dateStr is correct, but the surface
+  // would name the wrong day). Then re-hydrate + render all four for the
+  // selected date (condensed-slot default inside _fcRefreshCards), and
+  // refresh the date-scoped intel banner.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
   if (typeof _fcRefreshCards === 'function') _fcRefreshCards();
   renderDietIntelBanner();
 }

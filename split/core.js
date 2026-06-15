@@ -3552,6 +3552,11 @@ function _ldConsumePendingScroll() {
   requestAnimationFrame(_go);
 }
 function switchTab(name) {
+  // F-6a (V-V-225) — leaving (or entering) any tab is an INTENT boundary for
+  // the feeding composer: close any open card burst now so its undo toast +
+  // flash fire here, against the day the parent just edited, rather than
+  // later over whatever tab/date they moved to.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
   if (!_gotoCardActive) _cardNavStack = [];

@@ -25571,6 +25571,11 @@ function _ldConsumePendingScroll() {
   requestAnimationFrame(_go);
 }
 function switchTab(name) {
+  // F-6a (V-V-225) — leaving (or entering) any tab is an INTENT boundary for
+  // the feeding composer: close any open card burst now so its undo toast +
+  // flash fire here, against the day the parent just edited, rather than
+  // later over whatever tab/date they moved to.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
   // A manual tab switch (tab bar, not a gotoCard jump) abandons the
   // card-navigation breadcrumb — back should not then rewind a stale trail.
   if (!_gotoCardActive) _cardNavStack = [];
@@ -34533,12 +34538,14 @@ function wireDietPanelEvents() {
 
 function loadFeedingDay() {
   // F-6a — the four legacy .meal-input cards are replaced by composer
-  // instances. Re-hydrate + render all four for the selected date (with the
-  // condensed-slot default applied inside _fcRefreshCards), which carries
-  // skip state, per-meal time, intake editor, insight, and saved cue. Then
-  // refresh the date-scoped intel banner. The retired R1 dqp zone, the
-  // whole-day Save button (R7), and the separate _miRenderDietTabIntake
-  // injection all go away — the composer owns those surfaces now.
+  // instances. First close any open card burst as an INTENT boundary
+  // (V-V-225): date-nav / tab-driven reload must not leave a burst whose
+  // undo toast + flash later fire over a panel now showing a different day
+  // (false attribution — the captured dateStr is correct, but the surface
+  // would name the wrong day). Then re-hydrate + render all four for the
+  // selected date (condensed-slot default inside _fcRefreshCards), and
+  // refresh the date-scoped intel banner.
+  if (typeof _fcCloseAllBursts === 'function') _fcCloseAllBursts();
   if (typeof _fcRefreshCards === 'function') _fcRefreshCards();
   renderDietIntelBanner();
 }
@@ -46626,7 +46633,7 @@ function _fcOnTypeahead(el) {
     // The retired "Press Enter" copy was a false affordance (no keydown
     // handler existed anywhere). Typed text is parent input — escaped.
     dd.innerHTML = '<div class="fc-dd-add" data-action="fcAddItem" data-arg="' + escAttr(_fcCapFirst(q)) + '" data-arg2="add-new">' +
-                   '＋ Add "<strong>' + escHtml(_fcCapFirst(q)) + '</strong>" as a new food</div>';
+                   '+ Add "<strong>' + escHtml(_fcCapFirst(q)) + '</strong>" as a new food</div>';
     dd.classList.add('open');
     return;
   }
@@ -68555,7 +68562,12 @@ function autoIntroduceFoodsFromDay(dateStr) {
 
 function changeDate(dir) {
   const inp = document.getElementById('feedingDate');
-  const d = new Date(inp.value);
+  // HR-12 (V-V-226): parse the YYYY-MM-DD value with explicit y/m/d so the
+  // date doesn't roll back a day via new Date(str)'s UTC-midnight parse in a
+  // behind-UTC timezone. The composer now leans on this for cross-date
+  // hydration, so the date-walk must be timezone-safe.
+  const p = (inp.value || today()).split('-');
+  const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
   d.setDate(d.getDate() + dir);
   inp.value = toDateStr(d);
   loadFeedingDay();

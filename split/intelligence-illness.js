@@ -2291,7 +2291,12 @@ function autoIntroduceFoodsFromDay(dateStr) {
 
 function changeDate(dir) {
   const inp = document.getElementById('feedingDate');
-  const d = new Date(inp.value);
+  // HR-12 (V-V-226): parse the YYYY-MM-DD value with explicit y/m/d so the
+  // date doesn't roll back a day via new Date(str)'s UTC-midnight parse in a
+  // behind-UTC timezone. The composer now leans on this for cross-date
+  // hydration, so the date-walk must be timezone-safe.
+  const p = (inp.value || today()).split('-');
+  const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
   d.setDate(d.getDate() + dir);
   inp.value = toDateStr(d);
   loadFeedingDay();

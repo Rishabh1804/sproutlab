@@ -6017,7 +6017,7 @@ function _fcOnTypeahead(el) {
     // The retired "Press Enter" copy was a false affordance (no keydown
     // handler existed anywhere). Typed text is parent input — escaped.
     dd.innerHTML = '<div class="fc-dd-add" data-action="fcAddItem" data-arg="' + escAttr(_fcCapFirst(q)) + '" data-arg2="add-new">' +
-                   '＋ Add "<strong>' + escHtml(_fcCapFirst(q)) + '</strong>" as a new food</div>';
+                   '+ Add "<strong>' + escHtml(_fcCapFirst(q)) + '</strong>" as a new food</div>';
     dd.classList.add('open');
     return;
   }
